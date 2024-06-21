@@ -1,9 +1,0 @@
-{
-  "short_name": "ARPEJ IA",
-  "id": "/",
-  "start_url": "/",
-  "background_color": "#ffffff",
-  "scope": "/",
-  "theme_color": "#ffffff",
-  "display": "fullscreen"
-}
