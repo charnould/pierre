@@ -1,0 +1,49 @@
+{
+  "author": "Charles-Henri ARNOULD <charnould@icloud.com>",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "name": "pierre",
+  "module": "app.ts",
+  "scripts": {
+    "start:memory": "bash utils/run.sh init_db",
+    "download": "bash utils/run.sh download_db",
+    "--- format ---": "",
+    "format:biome": "bunx @biomejs/biome check --config-path './config/lint+format.json' --write --unsafe .",
+    "format:prettier": "bunx prettier --write .",
+    "format:css": "find ./assets -type f -name '*.css' -exec bunx lightningcss --targets '>= 0.25%' {} -o {} \\;",
+    "format:toc": "bunx markdown-toc -i README.md",
+    "format": "bun format:toc && bun format:prettier && bun format:biome && bun format:css",
+    "--- build ---": "",
+    "build:rag": "bun run utils/knowledge/1-Scrap-wikipedia.ts && bun format:prettier && bun run utils/knowledge/2-Build-knowledge.ts",
+    "--- start ---": "",
+    "dev:update": "bun upgrade && bun update --latest && bun install",
+    "dev:build": "bun dev:update && bun format && bun test",
+    "dev:start": "rm -rf telemetry && mkdir telemetry && bun start:memory && bun --watch run app.ts",
+    "start": "bun start:memory && bun run app.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^0.0.27",
+    "@ai-sdk/mistral": "^0.0.20",
+    "@ai-sdk/openai": "^0.0.34",
+    "ai": "^3.2.15",
+    "date-fns": "^3.6.0",
+    "hono": "^4.4.10",
+    "lodash": "^4.17.21",
+    "sqlite-vss": "^0.1.2",
+    "sqlite-vss-linux-x64": "^0.1.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.8.3",
+    "@types/bun": "^1.1.6",
+    "@types/lodash": "^4.17.6",
+    "@types/turndown": "^5.0.4",
+    "lightningcss-cli": "^1.25.1",
+    "llamaindex": "^0.4.6",
+    "markdown-toc": "^1.2.0",
+    "promptfoo": "^0.67.0",
+    "puppeteer": "^22.12.1",
+    "turndown": "^7.2.0",
+    "typescript": "^5.5.2"
+  }
+}

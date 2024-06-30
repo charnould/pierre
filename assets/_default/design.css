@@ -1,0 +1,306 @@
+@import "https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap";
+@import "https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@300..900&display=swap";
+
+:root {
+  --rgb-black: 66, 65, 59;
+  --serif-font: "Frank Ruhl Libre", "Noto Serif", serif;
+  --sans-serif-font: "Inter", sans-serif;
+}
+
+*, :before, :after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+html {
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: none;
+  -moz-text-size-adjust: none;
+  -ms-text-size-adjust: none;
+  text-size-adjust: none;
+  font-family: var(--serif-font);
+  font-size: 16px;
+}
+
+body {
+  color: rgb(var(--rgb-black));
+  background-color: #fff;
+  flex-direction: column;
+  justify-content: space-between;
+  max-width: 750px;
+  height: 100dvh;
+  margin: auto;
+  padding: 0 25px;
+  display: flex;
+}
+
+main::-webkit-scrollbar {
+  display: none;
+}
+
+main {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  position: relative;
+  overflow-y: scroll;
+}
+
+div[data-role="example"] > p {
+  font-family: var(--sans-serif-font);
+  color: rgba(var(--rgb-black), .6);
+  letter-spacing: .05rem;
+  margin: 20px 0 10px;
+  font-size: .65rem;
+  font-weight: 700;
+}
+
+button {
+  font-family: var(--sans-serif-font);
+  text-align: left;
+  cursor: pointer;
+  font-optical-sizing: auto;
+  color: rgba(var(--rgb-black), .9);
+  border: 1px solid rgba(var(--rgb-black), .1);
+  width: -webkit-fit-content;
+  width: -moz-fit-content;
+  font-size: .85rem;
+  font-style: normal;
+  font-weight: 500;
+  background-color: rgba(255, 255, 255, 0);
+  border-radius: 5px;
+  width: fit-content;
+  margin: 0 0 6px;
+  padding: 6px 12px;
+  font-weight: 450;
+  line-height: 1.2rem;
+  display: block;
+}
+
+button:hover {
+  background-color: rgba(var(--rgb-black), .07);
+}
+
+button:nth-child(2) {
+  animation: 2s ease-in-out infinite shining;
+}
+
+button:disabled, button:disabled:hover {
+  cursor: not-allowed;
+  background-color: inherit;
+}
+
+footer {
+  flex-direction: column;
+  row-gap: 6px;
+  width: 100%;
+  margin-bottom: 10px;
+  display: flex;
+}
+
+#prompt {
+  background-color: rgba(var(--rgb-black), .04);
+  border: 1px solid rgba(var(--rgb-black), .1);
+  border-radius: 10px;
+  flex-flow: row;
+  justify-content: space-between;
+  align-items: center;
+  column-gap: 6px;
+  width: 100%;
+  padding: 8px 8px 8px 12px;
+  display: flex;
+}
+
+#prompt__input {
+  field-sizing: content;
+  resize: none;
+  color: rgba(var(--rgb-black), 1);
+  font-family: var(--sans-serif-font);
+  background-color: rgba(255, 255, 255, 0);
+  border: none;
+  outline: none;
+  width: 94%;
+  font-size: 1rem;
+}
+
+#prompt__input::placeholder {
+  color: rgba(var(--rgb-black), .45);
+}
+
+#prompt__input::placeholder {
+  color: rgba(var(--rgb-black), .45);
+}
+
+#prompt__submit {
+  text-align: center;
+  cursor: pointer;
+  color: rgba(var(--rgb-black), .9);
+  background-color: rgba(var(--rgb-black), .04);
+  border: 1px solid rgba(var(--rgb-black), .1);
+  border-radius: 9px;
+  width: 33px;
+  height: 33px;
+}
+
+#prompt__submit:disabled, #prompt__submit:disabled:hover {
+  cursor: not-allowed;
+  color: rgba(var(--rgb-black), .5);
+  background-color: inherit;
+}
+
+#prompt__submit:hover {
+  background-color: rgba(var(--rgb-black), .1);
+}
+
+#footprint {
+  font-family: var(--sans-serif-font);
+  text-align: center;
+  color: rgba(var(--rgb-black), .6);
+  margin: 0;
+  font-size: .65rem;
+  line-height: 1.4;
+}
+
+#footprint > a {
+  color: rgba(var(--rgb-black), .6) !important;
+  border-bottom: 1px solid rgba(var(--rgb-black), .25) !important;
+}
+
+div[data-role="user"] {
+  font-size: .9rem;
+  font-weight: 400;
+  font-family: var(--sans-serif-font);
+  float: right;
+  background-color: rgba(var(--rgb-black), .07);
+  border-radius: 30px;
+  max-width: 80%;
+  margin: 35px 0;
+  padding: 10px 20px;
+}
+
+div[data-role="system"] {
+  clear: both;
+  position: relative;
+}
+
+div[data-role="system__logo"] {
+  clear: both;
+  font-weight: 400;
+  font-family: var(--sans-serif-font);
+  background-color: rgba(var(--rgb-black), .07);
+  width: -webkit-fit-content;
+  width: -moz-fit-content;
+  border-radius: 100px;
+  width: fit-content;
+  margin: 20px 0 20px 35px;
+  padding: 2px 10px;
+  font-size: .8rem;
+  position: relative;
+}
+
+div[data-role="system__logo"]:before {
+  content: url("system.svg");
+  position: absolute;
+  top: -1px;
+  left: -35px;
+}
+
+div[data-role="system"]:last-child {
+  margin-bottom: 50px;
+}
+
+div[data-role="system"]:first-child {
+  margin-top: 20px;
+}
+
+div[data-role="system__loading"] {
+  aspect-ratio: 1;
+  background: rgba(var(--rgb-black), 1);
+  border-radius: 50%;
+  width: 13px;
+  margin-top: 20px;
+  margin-left: 5px;
+  animation: 1.25s ease-in-out infinite pulsing;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--sans-serif-font);
+  color: #000;
+  margin: 20px 0 10px;
+  font-size: .9rem;
+  font-weight: 600;
+}
+
+ol, ul {
+  padding-left: 15px;
+  list-style-type: "•  ";
+}
+
+pre {
+  white-space: break-spaces;
+  border: 1px solid rgba(var(--rgb-black), .25);
+  border-radius: 15px;
+  padding: 10px 20px 30px;
+}
+
+pre, pre > * {
+  font-size: 14px;
+  font-family: var(--sans-serif-font);
+  line-height: 1.4;
+}
+
+p {
+  margin: 12px 0;
+  font-size: 1rem;
+  font-weight: 450;
+  line-height: 1.35;
+}
+
+li, li > p {
+  margin: 5px 0;
+  font-weight: 450;
+  line-height: 1.35;
+}
+
+b, strong {
+  font-weight: 650;
+}
+
+a {
+  border-bottom: 1px dashed rgba(0, 0, 255, .5);
+  text-decoration: none;
+  color: #00f !important;
+}
+
+hr {
+  border: none;
+  border-bottom: 1px solid rgba(var(--rgb-black), .4);
+}
+
+@keyframes pulsing {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.4);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes shining {
+  0% {
+    border-color: rgba(var(--rgb-black), .1);
+  }
+
+  50% {
+    border-color: rgba(var(--rgb-black), .3);
+  }
+
+  100% {
+    border-color: rgba(var(--rgb-black), .1);
+  }
+}

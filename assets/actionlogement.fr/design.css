@@ -1,0 +1,6 @@
+div[data-role="system__logo"]:before {
+  content: url("system.svg");
+  position: absolute;
+  top: -1px;
+  left: -35px;
+}
