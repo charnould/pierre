@@ -10,9 +10,9 @@ export default {
     'Comment puis-je vous aider ?'
   ],
   examples: [
-    "Connaissez-vous des associations pouvant m'aider dans le cadre de violences conjugales dans le Vaucluse ?",
+    "Y-a-t-il des associations pouvant m'aider dans le cadre de violences conjugales dans le Vaucluse ?",
     'Comment déposer mon congé pour mon logement ? Et avez-vous un modèle de courrier ?',
-    "Bonjour, c'est quoi l'enquête SLS et suis-je concerné ?",
+    "C'est quoi l'enquête SLS ? Et suis-je concerné ?",
     'Je cherche un logement social dans le Cantal. Comment déposer un dossier ?'
   ]
 } as Config
