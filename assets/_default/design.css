@@ -19,7 +19,7 @@ html {
   -ms-text-size-adjust: none;
   text-size-adjust: none;
   font-family: var(--serif-font);
-  font-size: 16px;
+  font-size: 15px;
 }
 
 body {
@@ -122,7 +122,7 @@ footer {
   font-size: 1rem;
 }
 
-#prompt__input::-ms-input-placeholder {
+#prompt__input::placeholder {
   color: rgba(var(--rgb-black), .45);
 }
 
