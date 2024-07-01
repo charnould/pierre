@@ -138,6 +138,9 @@ export const answer_user = async (context: AIContext) => {
       7. Translate your answer in ${context.lang}.
       8. Now only show your final response! Do not provide any explanations or details.
 
+      ### IMPORTANT ###
+      ${context.config.context}
+
       ### CONTEXT ###
       ${context.chunks}
 
@@ -220,6 +223,9 @@ export const reach_deadlock = async (context: AIContext) => {
       ${context.lang === 'french' ? 'Answer in french' : `Accurately translate your answer into ${context.lang} while preserving the meaning, tone, and nuance of your original answer.`}
       Format your answer with line breaks to improve readability.
       Use a thoughtful tone.
+
+      ### CONTEXT ###
+      ${context.chunks}
 
       ### USER QUESTION ###
 
