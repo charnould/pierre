@@ -40,6 +40,15 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
       rel="stylesheet"
     />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Martel:wght@200;300;400;600;700;800;900&family=Space+Grotesk:wght@300..700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap"
+      rel="stylesheet"
+    />
+
     <script
       defer
       data-domain="charnould.github.io/pierre"
@@ -54,28 +63,26 @@
   <body>
     <p class="smartphone">
       Pour une meilleure expérience, affichez PIERRE en plein écran. Choisissez
-      votre habillage :
-      <a href="https://pierre-ai.org/c/?config=default">Généraliste</a>
-      <!-- ,
-      <a href="https://pierre-ai.org/c/?config=arpej">ARPEJ</a>,
-      <a href="https://pierre-ai.org/c/?config=domofrance">Domofrance</a> ou
-      <a href="https://pierre-ai.org/c/?config=actionlogement">Action Logement</a> -->
-      .
+      l'habillage :
+      <a href="https://pierre-ai.org/c/?config=_default">Généraliste</a>
+      ,
+      <a href="https://pierre-ai.org/c/?config=arpej.fr">ARPEJ</a>,
+      <a href="https://pierre-ai.org/c/?config=actionlogement.fr"
+        >Action Logement</a
+      >
+      <a href="https://pierre-ai.org/c/?config=domofrance.fr">Domofrance</a> ou
+      <a href="https://pierre-ai.org/c/?config=plainecommunehabitat.fr"
+        >Plaine Commune Habitat</a
+      >.
     </p>
 
     <main>
       <div class="explanation">
-        <!-- <a
-          target="_blank"
-          class="github disabled"
-          >GitHub</a
-        > -->
+        <a target="_blank" class="github disabled">GitHub</a>
 
-        <img class="illustration" src="assets/illustration.png" />
-
-        <p class="small"><b>REMARQUES LIMINAIRES</b></p>
+        <p class="small"><br /><br /><b>REMARQUES IMPORTANTES</b></p>
         <p class="small">
-          PIERRE <b>(ALPHA)</b> est une démonstration, à la croisée du monde du
+          PIERRE (alpha) est une démonstration, à la croisée du monde du
           logement réglementé et de celui des grands modèles de langage (LLM).
           De fait, toutes les précautions d'usage propres aux LLM s'appliquent,
           notamment parce que
@@ -95,12 +102,12 @@
         <p class="small">
           Le code-source et la base de connaissance de PIERRE seront accessibles
           d'ici quelques semaines ; les liens vers GitHub sont donc à ce stade
-          inactifs.<br /><br /><br />
+          inactifs.<br /><br /><br /><br />
         </p>
 
         <h1>PIERRE</h1>
         <h2>
-          Une intelligence artificielle <span>open source</span> et <span>multilingue</span> au service du
+          Une intelligence artificielle open source et multilingue au service du
           mouvement HLM, des locataires, des étudiants et des citoyens.
         </h2>
 
@@ -246,31 +253,31 @@
         <ul>
           <li>
             <b>Logement étudiant</b> —
-            <a class="disabled"
+            <a href="?config=arpej.fr"
               >Cliquez pour accéder à PIERRE en mode 'ARPEJ'</a
             >
-            <b>(bientôt)</b>, puis demandez-lui s'il vous est possible
-            d'accueillir un animal de compagnie chez vous. Vous pouvez le
-            demander en français, anglais, allemand, italien...
+            , puis demandez-lui s'il vous est possible d'accueillir un animal de
+            compagnie chez vous. Vous pouvez le demander en français, anglais,
+            allemand, italien...
           </li>
 
           <li>
             <b>Locataire HLM</b> —
-            <a class="disabled"
+            <a href="?config=domofrance.fr"
               >Cliquez pour accéder à PIERRE en mode 'Domofrance'</a
             >
-            <b>(bientôt)</b>, puis posez-lui des questions sur votre état des
-            lieux, les travaux que vous pouvez réaliser dans votre logement, les
-            coordonnées du service-client, ou les charges locatives.
+            , puis posez-lui des questions sur votre état des lieux, les travaux
+            que vous pouvez réaliser dans votre logement, les coordonnées du
+            service-client, ou les charges locatives.
           </li>
 
           <li>
             <b>Salarié</b> —
-            <a class="disabled"
+            <a href="?config=actionlogement.fr"
               >Cliquez pour accéder à PIERRE en mode 'Action Logement'</a
             >
-            <b>(bientôt)</b>, puis interrogez-le sur la Garantie Visale, ou les
-            prêts et aides disponibles.
+            , puis interrogez-le sur la Garantie Visale, ou les prêts et aides
+            disponibles.
           </li>
 
           <!-- <li>
@@ -284,7 +291,7 @@
 
           <li>
             <b>Demandeur de logement social</b> ou <b>simple curieux</b> —
-            <a href="?config=default">Demandez-lui en mode 'Généraliste'</a>
+            <a href="?config=_default">Demandez-lui en mode 'Généraliste'</a>
             comment obtenir un logement social, interrogez-le sur l'histoire du
             logement social, le Ministre, la loi SRU, sur les APL...
           </li>
@@ -324,9 +331,10 @@
           <b>CHANGELOG</b>
         </p>
         <p class="small">
+          2024-07-04 — Alpha-2 release (est. knowledge quality: 5%)<br />
           2024-06-25 — UI Bug fixes<br />
           2024-06-19 — Bug fixes<br />
-          2024-04-30 — Alpha release (est. knowledge quality: 5%)
+          2024-04-30 — Alpha-1 release (est. knowledge quality: 5%)
         </p>
 
         <p class="small">
@@ -377,13 +385,14 @@
           "https://pierre-ai.org/c/" +
           self.crypto.randomUUID() +
           "?config=" +
-          config;
+          config +
+          ".fr";
       } else {
         document.querySelector("#pierre").classList.add("default");
         document.getElementById("pierre").src =
           "https://pierre-ai.org/c/" +
           self.crypto.randomUUID() +
-          "?config=default";
+          "?config=_default";
       }
     </script>
   </body>
