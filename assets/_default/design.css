@@ -1,9 +1,8 @@
-@import "https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap";
-@import "https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@300..900&display=swap";
+@import "https://fonts.googleapis.com/css2?family=Gelasio:ital,wght@0,400..700;1,400..700&family=Inter:wght@100..900&display=swap";
 
 :root {
   --rgb-black: 66, 65, 59;
-  --serif-font: "Frank Ruhl Libre", "Noto Serif", serif;
+  --serif-font: "Gelasio", serif;
   --sans-serif-font: "Inter", sans-serif;
 }
 
@@ -123,7 +122,7 @@ footer {
   font-size: 1rem;
 }
 
-#prompt__input::placeholder {
+#prompt__input::-ms-input-placeholder {
   color: rgba(var(--rgb-black), .45);
 }
 
@@ -226,8 +225,8 @@ div[data-role="system__loading"] {
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--sans-serif-font);
   color: #000;
-  margin: 20px 0 10px;
-  font-size: .9rem;
+  margin: 25px 0 15px;
+  font-size: .95rem;
   font-weight: 600;
 }
 
@@ -252,18 +251,18 @@ pre, pre > * {
 p {
   margin: 12px 0;
   font-size: 1rem;
-  font-weight: 450;
-  line-height: 1.35;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 li, li > p {
   margin: 5px 0;
   font-weight: 450;
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 b, strong {
-  font-weight: 650;
+  font-weight: 575;
 }
 
 a {
