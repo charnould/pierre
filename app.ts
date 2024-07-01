@@ -20,16 +20,13 @@ app.post('/c/:id/telemetry', post_telemetry)
 
 app.notFound(async (c) => {
   try {
-    await import(`../assets/${c.req.query('config')}/config`)
+    await import(`./assets/${c.req.query('config')}/config`)
     return c.redirect(`/c/${crypto.randomUUID()}?config=${c.req.query('config')}`)
   } catch {
     return c.redirect(`/c/${crypto.randomUUID()}?config=_default`)
   }
 })
 
-app.onError((err, c) => {
-  console.log(err)
-  return c.notFound()
-})
+app.onError((_err, c) => c.notFound())
 
 export default app

@@ -46,7 +46,7 @@ export const AIContext = z.object({
   .refine(async (content) => {
     // verify that config exists
     if (typeof content.config === 'string') {
-      const config = (await import('../assets/_default/config')).default
+      const config = (await import(`../assets/${content.config}/config`)).default
       content.config = config
     }
 
