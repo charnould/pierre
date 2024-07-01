@@ -6,7 +6,7 @@ export default {
   context: 'The user is interested in housing, and their questions should be considered with this in mind.',
   greeting: [
     'Bonjour 👋,',
-    'Je suis Pierre, une intelligence artificielle open source multilingue au service du Mouvement HLM. (Pour rappel, je suis une version alpha et mes connaissances sont à ce jour très limitées.)',
+    'Je suis Pierre, une intelligence artificielle open source et multilingue au service du Mouvement HLM. (Pour rappel, je suis une version alpha et mes connaissances sont à ce jour très limitées.)',
     'Comment puis-je vous aider ?'
   ],
   examples: [
