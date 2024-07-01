@@ -253,7 +253,7 @@
         <ul>
           <li>
             <b>Logement étudiant</b> —
-            <a href="?config=arpej.fr"
+            <a href="?config=arpej"
               >Cliquez pour accéder à PIERRE en mode 'ARPEJ'</a
             >
             , puis demandez-lui s'il vous est possible d'accueillir un animal de
@@ -263,7 +263,7 @@
 
           <li>
             <b>Locataire HLM</b> —
-            <a href="?config=domofrance.fr"
+            <a href="?config=domofrance"
               >Cliquez pour accéder à PIERRE en mode 'Domofrance'</a
             >
             , puis posez-lui des questions sur votre état des lieux, les travaux
@@ -273,7 +273,7 @@
 
           <li>
             <b>Salarié</b> —
-            <a href="?config=actionlogement.fr"
+            <a href="?config=actionlogement"
               >Cliquez pour accéder à PIERRE en mode 'Action Logement'</a
             >
             , puis interrogez-le sur la Garantie Visale, ou les prêts et aides
@@ -384,7 +384,9 @@
         document.getElementById("pierre").src =
           "https://pierre-ai.org/c/" +
           self.crypto.randomUUID() +
-          "?config=" + config + ".fr";
+          "?config=" +
+          config +
+          ".fr";
       } else {
         document.querySelector("#pierre").classList.add("default");
         document.getElementById("pierre").src =
