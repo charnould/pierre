@@ -19,8 +19,8 @@ export const controller = async (c: Context) => {
     let ai_context = await AIContext.parseAsync({
       role: 'user',
       uuid: c.req.param('id') as string,
-      config: c.req.query('config') || '_default',
-      raw: c.req.query('message') || ''
+      config: c.req.query('config'),
+      raw: c.req.query('message')
     })
 
     console.log('ejpofjezopfjezopfj', ai_context)

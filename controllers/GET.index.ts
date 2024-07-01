@@ -8,7 +8,8 @@ export const controller = async (c: Context) => {
     const config: Config = (await import(`../assets/${c.req.query('config')}/config`)).default
     z.string().uuid().parse(c.req.param('id'))
     return c.html(view(config))
-  } catch {
+  } catch (e) {
+    console.log(e)
     return c.notFound()
   }
 }
