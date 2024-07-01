@@ -10,10 +10,10 @@
 - [Comment contribuer à PIERRE ?](#comment-contribuer-a-pierre-)
   - [Contribuer au code ou à sa documentation](#contribuer-au-code-ou-a-sa-documentation)
   - [Contribuer à la base de connaissance (le plus important et le plus simple)](#contribuer-a-la-base-de-connaissance-le-plus-important-et-le-plus-simple)
-- [Qualité de la base de connaissance](#qualite-de-la-base-de-connaissance)
-- [Feuille de route](#feuille-de-route)
-  - [Corrections](#corrections)
-  - [Fonctionnalités supplémentaires (= idées) ?](#fonctionnalites-supplementaires--idees-)
+- [Changelog & Release notes](#changelog--release-notes)
+- [Roadmap](#roadmap)
+  - [Correctifs](#correctifs)
+  - [Fonctionnalités (et/ou idées) ?](#fonctionnalites-etou-idees-)
 - [Quelques limites de connaissances constatées (à résoudre)](#quelques-limites-de-connaissances-constatees-a-resoudre)
 - [Fonctionnement et architecture de PIERRE](#fonctionnement-et-architecture-de-pierre)
   - [Simplement, comment fonctionne PIERRE ?](#simplement-comment-fonctionne-pierre-)
@@ -45,13 +45,14 @@ TODO
 
 TODO
 
-## Qualité de la base de connaissance
+## Changelog & Release notes
 
-- 2024-06-19 : 5 %
+- `2024-07-01` : Version alpha-2 (estimated knowledge quality: 5%)
+- `2024-04-30` : Version alpha-1 (estimated knowledge quality: 5%)
 
-## Feuille de route
+## Roadmap
 
-### Corrections
+### Correctifs
 
 - Migrer sur `Tailwind 4.0` (?) et en profiter pour reprendre le CSS
 - Migrer sur `DuckDB` quand le [bug de Bun](https://github.com/oven-sh/bun/issues/11699) sera résolu. Pourquoi migrer sur DuckDB ?
@@ -62,22 +63,25 @@ TODO
 - Ajouter une recherche par `keywords` (en utilisant le stemmer `snowball` ?)
 - Ajouter des tests
 - Corriger Typescript + refactor
-- Ajouter de la télémétrie simple ?
-- S'assurer que la telemetry s'applique quel que soit le domaine de déploiement
+- Ajouter de la télémétrie simple:
+  - Créer une page protégée par `basic auth` ?
+  - Pouvoir consulter, voire supprimer, les conversations ?
+  - Pouvoir télécharger la BDD sans passer par un script `scp` ?
+  - Faire en sorte que - quel que soit le domaine de déploiement - la télémétrie se sauvegarde également sur Pierre (doit pouvoir être débrayable) ?
 - Mettre en place un CI/CD ?
 
 - Tronquer les réponses si le nombre de `tokens` dépasse le `context` ?
 
-### Fonctionnalités supplémentaires (= idées) ?
+### Fonctionnalités (et/ou idées) ?
 
-- [ ] Permettre à l'utilisateur de noter les réponses de l'IA (+ KPI ?)
-- [ ] Ajout un `dark mode` ?
-- [ ] Ajouter la lecture à haute voix des réponses ?
+- Permettre à l'utilisateur de noter les réponses de l'IA (+ KPI ?)
+- Ajout un `dark mode` ?
+- Ajouter la lecture à haute voix des réponses ?
 
 ## Quelques limites de connaissances constatées (à résoudre)
 
-- C'est quoi une CAL ou CALEOL ?
-- < Compare ARPEJ et les CROUS > -> PIERRE ne retourne pas d'éléments probants
+- "C'est quoi une CAL ou CALEOL ?"
+- "Quelles différences entre ARPEJ et les CROUS" -> PIERRE ne retourne pas d'éléments probants
 
 ## Fonctionnement et architecture de PIERRE
 
