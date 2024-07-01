@@ -10,9 +10,9 @@ export default {
     'Comment puis-je vous aider ?'
   ],
   examples: [
-    "Comment joindre l'agence Domofrance de Pessac ?",
-    'Comment déposer mon congé pour mon logement ?',
-    "C'est quoi l'enquête SLS et suis-je concerné ?",
-    'Je cherche un logement social dans le Cantal ?'
+    "Que contient l'article 1 du réglement intérieur ?",
+    "Puis-je avoir un animal de compagnie dans ma résidence ? C'est un gros chien par contre...",
+    "C'est quoi les grandes différences entre ARPEJ et les CROUS ?",
+    '我可以让我的家人入住我的住处吗'
   ]
 } as Config

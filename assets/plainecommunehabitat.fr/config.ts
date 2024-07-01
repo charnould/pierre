@@ -2,7 +2,7 @@ import type { Config } from '../../utils/_schema'
 
 export default {
   id: 'plainecommunehabitat.fr',
-  assistant: 'Assistant IA',
+  assistant: 'Denis (IA)',
   context: 'The user is a client of Plaine Commune Habitat, a social housing company.',
   greeting: [
     'Bonjour 👋,',
