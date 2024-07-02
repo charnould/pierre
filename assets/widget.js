@@ -23,6 +23,14 @@ document.getElementById("pierre-ai").addEventListener("click", (event) => {
   iframe.id = "pierre-ai_iframe";
   iframe.src = "https://pierre-ai.org?config=" + configuration;
 
+  var close = document.createElement("p");
+  close.id = "pierre-ai_close";
+  close.textContent = "✕";
+  close.style.backgroundColor = "#c5c5c5";
+  close.style.padding = "4px 8px";
+  close.style.borderRadius = "6px";
+
+  container.appendChild(close);
   container.appendChild(iframe);
   document.body.appendChild(container);
 
