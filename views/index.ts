@@ -34,19 +34,13 @@ export const view = (config: Config) => {
         </main>
 
         <footer>
-          <div id="prompt">
-            <input
-              id="prompt__input"
-              type="text"
-              name="message"
-              placeholder="Poser une question..."
-            />
-            <input id="prompt__submit" type="button" value="➔" />
-          </div>
-          <p id="footprint">
-            L'IA peut se tromper, vérifiez les informations ·
-            <a id="footprint__link" href="/">Effacer</a>
-          </p>
+          <input
+            id="prompt__input"
+            type="text"
+            name="message"
+            placeholder="Poser une question..."
+          />
+          <input id="prompt__submit" type="button" value="➔" />
         </footer>
       </body>
     </html>`
