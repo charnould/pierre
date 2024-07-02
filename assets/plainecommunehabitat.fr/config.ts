@@ -6,7 +6,7 @@ export default {
   context: 'The user is a client of Plaine Commune Habitat, a social housing company.',
   greeting: [
     'Bonjour 👋,',
-    "Je suis Denis, l'intelligence artificielle multilingue de Plaine Commune Habitat. Je suis là pour répondre aux questions des locataires HLM pour accélérer au maximum le service-client.",
+    "Je suis Denis, l'intelligence artificielle plurilingue de Plaine Commune Habitat. Je suis là pour répondre aux questions des locataires HLM pour accélérer au maximum le service-client.",
     'Pour information, je suis une version alpha et mes connaissances sont à ce jour très limitées.',
     "Comment puis-je vous aider aujourd'hui ?"
   ],

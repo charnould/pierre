@@ -6,7 +6,7 @@ export default {
   context: 'The user is a client of ARPEJ, a non-profit specialized in student housing in France.',
   greeting: [
     'Bonjour 👋,',
-    "Je suis une IA open source, multilingue et suis spécialisée dans le logement étudiant. Je suis à votre écoute qu'il s'agisse du réglement intérieur d'ARPEJ, du paiement du loyer ou de toutes questions qu'un étudiant et ses parents peuvent se poser.",
+    "Je suis une IA open source, plurilingue et suis spécialisée dans le logement étudiant. Je suis à votre écoute qu'il s'agisse du réglement intérieur d'ARPEJ, du paiement du loyer ou de toutes questions qu'un étudiant et ses parents peuvent se poser.",
     'Comment puis-je vous aider ?'
   ],
   examples: [
