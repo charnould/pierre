@@ -1,5 +1,5 @@
 {
   "scripts": {
-    "format": "bunx prettier . --write"
+    "format": "bunx prettier . --write && bunx lightningcss --targets '>= 0.25%' assets/widget.css -o assets/widget.css"
   }
 }
