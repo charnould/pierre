@@ -1,4 +1,4 @@
-#pierre-ai {
+#pierre-ia {
   z-index: 9990;
   cursor: pointer;
   color: #fff;
@@ -12,11 +12,11 @@
   box-shadow: 0 0 6px #4e4e4e;
 }
 
-#pierre-ai:hover {
+#pierre-ia:hover {
   transform: scale(1.15);
 }
 
-#pierre-ai_wrapper {
+#pierre-ia_wrapper {
   -webkit-backdrop-filter: blur();
   backdrop-filter: blur();
   z-index: 9998;
@@ -32,7 +32,7 @@
   left: 0;
 }
 
-#pierre-ai_iframe {
+#pierre-ia_iframe {
   z-index: 9999;
   opacity: 0;
   border: none;

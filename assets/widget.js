@@ -5,7 +5,7 @@ var pierre_is_open = false;
 // (e.g. actionlogement.fr, arpej.fr)
 var configuration;
 document.addEventListener("DOMContentLoaded", () => {
-  configuration = document.getElementById("pierre-ai").dataset.configuration;
+  configuration = document.getElementById("pierre-ia").dataset.configuration;
 });
 
 //
@@ -13,18 +13,18 @@ document.addEventListener("DOMContentLoaded", () => {
 //
 // OPEN PIERRE MODAL
 // Afterwards, listen to any click on PIERRE button
-document.getElementById("pierre-ai").addEventListener("click", (event) => {
+document.getElementById("pierre-ia").addEventListener("click", (event) => {
   // If a click occurs:
   // create PIERE modal (wrapper + iframe)
   var container = document.createElement("div");
-  container.id = "pierre-ai_wrapper";
+  container.id = "pierre-ia_wrapper";
 
   var iframe = document.createElement("iframe");
-  iframe.id = "pierre-ai_iframe";
-  iframe.src = "https://pierre-ai.org?config=" + configuration;
+  iframe.id = "pierre-ia_iframe";
+  iframe.src = "https://assistant.pierre-ia.org?config=" + configuration;
 
   var close = document.createElement("p");
-  close.id = "pierre-ai_close";
+  close.id = "pierre-ia_close";
   close.textContent = "✕";
   close.style.backgroundColor = "#c5c5c5";
   close.style.padding = "4px 8px";
@@ -45,7 +45,7 @@ document.getElementById("pierre-ai").addEventListener("click", (event) => {
 // Listen to Escape click to close modal
 document.addEventListener("keydown", (event) => {
   if (pierre_is_open === true && event.key === "Escape") {
-    document.getElementById("pierre-ai_wrapper").remove();
+    document.getElementById("pierre-ia_wrapper").remove();
   }
 });
 
@@ -53,9 +53,9 @@ document.addEventListener("keydown", (event) => {
 document.addEventListener("click", (event) => {
   if (
     pierre_is_open === true &&
-    event.target.id !== "pierre-ai" &&
-    document.getElementById("pierre-ai_wrapper") !== null
+    event.target.id !== "pierre-ia" &&
+    document.getElementById("pierre-ia_wrapper") !== null
   ) {
-    document.getElementById("pierre-ai_wrapper").remove();
+    document.getElementById("pierre-ia_wrapper").remove();
   }
 });
