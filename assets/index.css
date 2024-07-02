@@ -1,4 +1,4 @@
-@import "https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap";
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap");
 
 :root {
   --rgb-black: 31, 51, 25;
@@ -13,8 +13,7 @@
   margin: 0;
   padding: 0;
   font-variant-numeric: tabular-nums;
-  font-family: "Source Serif 4", "IBM Plex Serif", "Martel", "Space Grotesk",
-    Inter, sans-serif;
+  font-family: "Source Serif 4", sans-serif;
   font-style: normal;
   font-weight: 400;
 }
