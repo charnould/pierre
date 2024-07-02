@@ -61,14 +61,14 @@
     <p class="smartphone">
       Pour une meilleure expérience, affichez PIERRE en plein écran. Choisissez
       l'habillage :
-      <a href="https://pierre-ai.org/c/?config=_default">Généraliste</a>
+      <a href="https://assistant.pierre-ia.org/c/?config=_default">Généraliste</a>
       ,
-      <a href="https://pierre-ai.org/c/?config=arpej.fr">ARPEJ</a>,
-      <a href="https://pierre-ai.org/c/?config=actionlogement.fr"
+      <a href="https://assistant.pierre-ia.org/c/?config=arpej.fr">ARPEJ</a>,
+      <a href="https://assistant.pierre-ia.org/c/?config=actionlogement.fr"
         >Action Logement</a
       >
-      <a href="https://pierre-ai.org/c/?config=domofrance.fr">Domofrance</a> ou
-      <a href="https://pierre-ai.org/c/?config=plainecommunehabitat.fr"
+      <a href="https://assistant.pierre-ia.org/c/?config=domofrance.fr">Domofrance</a> ou
+      <a href="https://assistant.pierre-ia.org/c/?config=plainecommunehabitat.fr"
         >Plaine Commune Habitat</a
       >.
     </p>
@@ -378,7 +378,7 @@
       if (configs.includes(config) === true) {
         document.querySelector("#pierre").classList.add(config);
         document.getElementById("pierre").src =
-          "https://pierre-ai.org/c/" +
+          "https://assistant.pierre-ia.org/c/" +
           self.crypto.randomUUID() +
           "?config=" +
           config +
@@ -386,7 +386,7 @@
       } else {
         document.querySelector("#pierre").classList.add("default");
         document.getElementById("pierre").src =
-          "https://pierre-ai.org/c/" +
+          "https://assistant.pierre-ia.org/c/" +
           self.crypto.randomUUID() +
           "?config=_default";
       }
