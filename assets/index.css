@@ -207,6 +207,10 @@ main {
     margin-top: 25px;
   }
 
+ #pierre {
+    max-width: 94% !important;
+  }
+
   .robot {
     display: none;
   }
