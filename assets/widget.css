@@ -1,15 +1,9 @@
 #pierre-ia {
   z-index: 9990;
   cursor: pointer;
-  color: #fff;
-  background-color: #363636;
-  border-radius: 100px;
-  padding: 15px 20px;
-  font-family: monospace;
-  font-size: 15px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Oxygen, Open Sans, sans-serif;
   transition: transform .35s;
   position: fixed;
-  box-shadow: 0 0 6px #4e4e4e;
 }
 
 #pierre-ia:hover {
@@ -47,26 +41,23 @@
   box-shadow: 0 0 0 1px rgba(15, 33, 50, .05), 0 .1em 2.8em -.8em rgba(15, 33, 50, .1), 0 .2em 3.2em -1.2em rgba(15, 33, 50, .2), 0 .4em 2em -1.2em rgba(15, 33, 50, .3), 0 .6em 2.4em -1.6em rgba(15, 33, 50, .4), 0 .8em 2.8em -2em rgba(15, 33, 50, .5);
 }
 
-
-
 #pierre-ia_close {
-  display: none;
   cursor: pointer;
   z-index: 9999;
+  display: none;
   position: absolute;
   top: 14px;
   right: 14px;
 }
 
-
 @media (max-width: 600px) {
   #pierre-ia_iframe {
+    box-shadow: none;
     border-radius: 0;
     width: 100dvw;
     height: 100dvh;
-    box-shadow: none;
-
   }
+
   #pierre-ia_close {
     display: block;
   }
