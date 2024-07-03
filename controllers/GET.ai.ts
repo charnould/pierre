@@ -18,7 +18,7 @@ export const controller = async (c: Context) => {
     // Build AI context
     let ai_context = await AIContext.parseAsync({
       role: 'user',
-      uuid: c.req.param('id') as string,
+      id: c.req.param('id') as string,
       config: c.req.query('config'),
       raw: c.req.query('message')
     })
@@ -33,7 +33,7 @@ export const controller = async (c: Context) => {
     // Get back all conversation from memory
     ai_context = await AIContext.parseAsync({
       ...ai_context,
-      ...get_conversation(ai_context.uuid)
+      ...get_conversation(ai_context.id)
     })
     ai_context = await AIContext.parseAsync({
       ...ai_context,

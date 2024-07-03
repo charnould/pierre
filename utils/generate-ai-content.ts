@@ -25,10 +25,19 @@ const anthropic = createAnthropic({ apiKey: Bun.env.ANTHROPIC_API_KEY })
 // ENHANCE_QUERY
 //
 // Cette fonction transforme une "simple" requête de l'utilisateur
-// en un "objet augmenté" permettant de comprendre ses intentions
-// et d'optimiser la recherche future des connaissance pertinentes.
+// en un "objet augmenté" permettant de comprendre ses intentions et
+// d'optimiser la recherche des connaissances/informations pertinentes.
 //
 export const enhance_query = async (context: AIContext) => {
+  //
+  //
+  let textified_conversation = ''
+  for (const c of context.conversation) {
+    const role = c.role.toUpperCase()
+    textified_conversation += `<${role}>${c.content}</${role}>\n`
+  }
+
+  //
   const { object } = await generateObject({
     ////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////
@@ -57,7 +66,7 @@ export const enhance_query = async (context: AIContext) => {
         content: `
           ### CONVERSATION ###
           
-          ${context.text_conversation}
+          ${textified_conversation}
           
           ### CONTEXT ###
 
@@ -122,7 +131,7 @@ export const enhance_query = async (context: AIContext) => {
 // langue de l'utilisateur
 //
 export const answer_user = async (context: AIContext) => {
-  context.raw_conversation.push({
+  context.conversation.push({
     role: 'assistant',
     content: `
       ### INSTRUCTIONS ###
@@ -162,7 +171,7 @@ export const answer_user = async (context: AIContext) => {
     ////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////
 
-    messages: context.raw_conversation,
+    messages: context.conversation,
 
     //
     async onFinish({ text, usage }) {
@@ -191,7 +200,7 @@ export const answer_user = async (context: AIContext) => {
 // De fait, PIERRE ne peut lui répondre.
 //
 export const reach_deadlock = async (context: AIContext) => {
-  context.raw_conversation.push({
+  context.conversation.push({
     role: 'assistant',
     content: `
       You're Pierre, a helpful artificial intelligence and social housing expert. You're also an alpha version and currently learning.
@@ -245,7 +254,7 @@ export const reach_deadlock = async (context: AIContext) => {
     ////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////
 
-    messages: context.raw_conversation,
+    messages: context.conversation,
 
     //
     async onFinish({ text, usage, finishReason }) {

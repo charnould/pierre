@@ -19,19 +19,21 @@
     "--- start ---": "",
     "dev:update": "bun upgrade && bun update --latest && bun install",
     "dev:build": "bun dev:update && bun format && bun test",
-    "dev:start": "rm -rf telemetry && mkdir telemetry && bun start:memory && bun --watch run app.ts",
+    "dev:start": "bun --watch run app.ts",
     "start": "bun start:memory && bun run app.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^0.0.30",
     "@ai-sdk/mistral": "^0.0.22",
     "@ai-sdk/openai": "^0.0.36",
-    "ai": "^3.2.24",
+    "ai": "^3.2.22",
     "date-fns": "^3.6.0",
     "hono": "^4.4.13",
     "lodash": "^4.17.21",
+    "marked": "^13.0.1",
     "sqlite-vss": "^0.1.2",
     "sqlite-vss-linux-x64": "^0.1.2",
+    "tailwindcss": "^4.0.0-alpha.17",
     "zod": "^3.23.8"
   },
   "devDependencies": {
