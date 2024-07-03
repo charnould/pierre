@@ -207,10 +207,6 @@ main {
     margin-top: 25px;
   }
 
-  iframe {
-    max-width: 94% !important;
-  }
-
   .robot {
     display: none;
   }

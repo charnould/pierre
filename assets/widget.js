@@ -16,8 +16,11 @@ document.addEventListener("DOMContentLoaded", () => {
 document.getElementById("pierre-ia").addEventListener("click", (event) => {
   // If a click occurs:
   // create PIERE modal (wrapper + iframe)
-  var container = document.createElement("div");
-  container.id = "pierre-ia_wrapper";
+  var wrapper = document.createElement("div");
+  wrapper.id = "pierre-ia_wrapper";
+
+  var subwrapper = document.createElement("div");
+  subwrapper.id = "pierre-ia_subwrapper";
 
   var iframe = document.createElement("iframe");
   iframe.id = "pierre-ia_iframe";
@@ -30,9 +33,10 @@ document.getElementById("pierre-ia").addEventListener("click", (event) => {
   close.style.padding = "4px 8px";
   close.style.borderRadius = "6px";
 
-  container.appendChild(close);
-  container.appendChild(iframe);
-  document.body.appendChild(container);
+  wrapper.appendChild(subwrapper);
+  subwrapper.appendChild(close);
+  subwrapper.appendChild(iframe);
+  document.body.appendChild(wrapper);
 
   // Finally set PIERRE state
   pierre_is_open = true;
@@ -51,6 +55,17 @@ document.addEventListener("keydown", (event) => {
 
 // Listen to click outside of modal to close modal
 document.addEventListener("click", (event) => {
+  if (
+    pierre_is_open === true &&
+    event.target.id !== "pierre-ia" &&
+    document.getElementById("pierre-ia_wrapper") !== null
+  ) {
+    document.getElementById("pierre-ia_wrapper").remove();
+  }
+});
+
+// Listen to click outside of modal to close modal
+document.addEventListener("touchstart", (event) => {
   if (
     pierre_is_open === true &&
     event.target.id !== "pierre-ia" &&
