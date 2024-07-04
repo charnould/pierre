@@ -10,7 +10,12 @@ const app = new Hono()
 
 // To allow other websites to iframe Pierre
 // Must be modified to allow only a few domains
-app.use(secureHeaders({ contentSecurityPolicy: { frameAncestors: ['*'] } }))
+app.use(
+  secureHeaders({
+    contentSecurityPolicy: { frameAncestors: ['*'] },
+    crossOriginResourcePolicy: false
+  })
+)
 
 app.use('/assets/*', serveStatic({ root: './' }))
 
