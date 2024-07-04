@@ -6,6 +6,10 @@ export const view = (config: Config) => {
     <html lang="fr">
       <head>
         <meta charset="UTF-8" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
         <link rel="stylesheet" href="../assets/_default/design.css" />
         <link rel="stylesheet" href="../assets/${config.id}/design.css" />
         <link rel="manifest" href="../assets/${config.id}/manifest.json" />
