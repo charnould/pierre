@@ -17,7 +17,7 @@
     }
   },
   "linter": {
-    "ignore": ["utils/bun-ponyfill.ts"],
+    "ignore": ["utils/bun-ponyfill.ts", "assets/_default/scripts/build/*"],
     "enabled": true,
     "rules": {
       "recommended": true
