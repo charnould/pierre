@@ -1,6 +1,6 @@
-*(en cours de rédaction)*
+_(en cours de rédaction)_
 
-# PIERRE, l'intelligence artificielle *open source* et *plurilingue* du Mouvement HLM
+# PIERRE, l'intelligence artificielle _open source_ et _plurilingue_ du Mouvement HLM
 
 ## Avertissement
 
@@ -10,7 +10,6 @@ PIERRE (**alpha**) est actuellement en développement actif. De fait, les conven
 
 <!-- toc -->
 
-- [Avertissement](#avertissement)
 - [Comment contribuer à PIERRE ?](#comment-contribuer-a-pierre-)
   - [Contribuer au code ou à sa documentation](#contribuer-au-code-ou-a-sa-documentation)
   - [Contribuer à la base de connaissance (le plus important et le plus simple)](#contribuer-a-la-base-de-connaissance-le-plus-important-et-le-plus-simple)
