@@ -1,6 +1,10 @@
-# PIERRE (alpha)
+*(en cours de rédaction)*
 
-> En cours de rédaction
+# PIERRE, l'intelligence artificielle *open source* et *plurilingue* du Mouvement HLM
+
+## Avertissement
+
+PIERRE (**alpha**) est actuellement en développement actif. De fait, les conventions de montée de version (`semver`) ne sont pas actuellement respectées. De plus des régressions peuvent apparaître. De nombreuses corrections de bugs interviennent ici et là.
 
 ## Sommaire
 
@@ -31,10 +35,6 @@
 - [License](#license)
 
 <!-- tocstop -->
-
-## Avertissement
-
-PIERRE (alpha) est actuellement en développement actif. De fait, les conventions de montée de version (`semver`) ne sont pas actuellement respectées. De plus des régressions peuvent apparaître. De nombreuses corrections de bugs interviennent ici et là.
 
 ## Comment contribuer à PIERRE ?
 
@@ -231,6 +231,6 @@ GROUP BY uuid;
 
 ## License
 
-Le code-source du présent répertoire est sous license GPL-3.0-only. La base de connaissance est sous license Creative Commons BY-NC-SA 4.0.
+Le code-source du présent répertoire est sous license [GPL-3.0-only](https://spdx.org/licenses/GPL-3.0-only). La base de connaissance (dossier `knowledge`) est sous license [Creative Commons BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 
-Copyright (C) 2024, Charles-Henri Arnould (charnould@icloud.com) et les contributeurs.
+Copyright (c) 2024, Charles-Henri Arnould (charnould@pierre-ia.org) et les contributeurs.
