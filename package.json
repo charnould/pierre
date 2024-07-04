@@ -15,6 +15,7 @@
     "format": "bun format:toc && bun format:prettier && bun format:biome && bun format:css",
     "--- build ---": "",
     "build:rag": "bun run utils/knowledge/1-Scrap-wikipedia.ts && bun format:prettier && bun run utils/knowledge/2-Build-knowledge.ts",
+    "build:js": "bun build --entrypoints assets/_default/scripts/*.ts --outdir assets/_default/scripts/build --minify --target browser --watch",
     "--- start ---": "",
     "dev:update": "bun upgrade && bun update --latest && bun install",
     "dev:build": "bun dev:update && bun format && bun test",
