@@ -18,10 +18,11 @@
 - [Fonctionnement et architecture de PIERRE](#fonctionnement-et-architecture-de-pierre)
   - [Simplement, comment fonctionne PIERRE ?](#simplement-comment-fonctionne-pierre-)
   - [Technologies utilisées](#technologies-utilisees)
-- [Déploiment de PIERRE](#deploiment-de-pierre)
+- [Comment installer/déployer PIERRE ?](#comment-installerdeployer-pierre-)
   - [Combien cela coûte-t-il de déployer et d'utiliser PIERRE ?](#combien-cela-coute-t-il-de-deployer-et-dutiliser-pierre-)
   - [Comment déployer PIERRE sur son propre serveur en moins 10 minutes ?](#comment-deployer-pierre-sur-son-propre-serveur-en-moins-10-minutes-)
   - [Personnaliser PIERRE](#personnaliser-pierre)
+  - [Comment installer PIERRE sur votre site web ou votre extranet-locataire ?](#comment-installer-pierre-sur-votre-site-web-ou-votre-extranet-locataire-)
   - [Les principales commandes pour gérer le déploiement](#les-principales-commandes-pour-gerer-le-deploiement)
   - [Comment télécharger la base de données qui contient les conversations](#comment-telecharger-la-base-de-donnees-qui-contient-les-conversations)
   - [Requête SQLite pour extraire et organiser les conversations](#requete-sqlite-pour-extraire-et-organiser-les-conversations)
@@ -107,7 +108,7 @@ PIERRE est basé sur le principe du "choose your LLM model". C'est-à-dire qu'il
 - les vecteurs/embeddings sont générés avec `text-embedding-3-large` (OpenAI)
 - le texte est généré avec `gpt-4o` (OpenAI)
 
-## Déploiment de PIERRE
+## Comment installer/déployer PIERRE ?
 
 ### Combien cela coûte-t-il de déployer et d'utiliser PIERRE ?
 
@@ -129,6 +130,39 @@ PIERRE est basé sur le principe du "choose your LLM model". C'est-à-dire qu'il
 ### Personnaliser PIERRE
 
 - Générer les icônes : https://www.pwabuilder.com/imageGenerator
+
+### Comment installer PIERRE sur votre site web ou votre extranet-locataire ?
+
+- **Prérequis :** Disposer d'une version fonctionnelle de PIERRE installée sur un VPS
+- **Étape 1a.** Si vous auto-hebergé PIERRE.  
+  Copier/coller le code ci-dessous sur votre page web.
+
+```html
+<script defer src="../assets/_default/scripts/build/widget.js"></script>
+<p
+  id="pierre-ia"
+  data-configuration="_default"
+  style="
+        right: 20px;
+        bottom: 20px;
+        color: #000;
+        font-size: 30px;
+        font-weight: bold;
+        padding: 2px 12px;
+        background-color: #fff;
+        border-radius: 8px;
+        border: 4px solid black;
+        box-shadow: 2px 2px 6px #00000080;"
+>
+  iA?
+</p>
+```
+
+avec :
+
+- `iA?` : le nom d'affichage du boutton (libre à vous de le modifier)
+- `style` : le style `CSS` du boutton (libre à vous de le modifier).
+- `data-configuration` : doit être le nom de votre domaine
 
 ### Les principales commandes pour gérer le déploiement
 
