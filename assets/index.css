@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap");
+@import "https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap";
 
 :root {
   --rgb-black: 31, 51, 25;
@@ -10,20 +10,20 @@
   box-sizing: border-box;
   font-optical-sizing: auto;
   font-variation-settings: "slnt" 0;
+  font-variant-numeric: tabular-nums;
   margin: 0;
   padding: 0;
-  font-variant-numeric: tabular-nums;
   font-family: "Source Serif 4", sans-serif;
   font-style: normal;
   font-weight: 400;
 }
 
 ::selection {
-  background: rgba(0, 0, 255, 0.1);
+  background: rgba(0, 0, 255, .1);
 }
 
 html {
-  background-color: rgb(244, 246, 247);
+  background-color: #f4f6f7;
   font-size: 15px;
 }
 
@@ -56,9 +56,9 @@ main {
 }
 
 .explanation > h1 {
+  letter-spacing: -.05rem;
   font-family: Inter, sans-serif;
   font-size: 4rem;
-  letter-spacing: -0.05rem;
   font-weight: 700;
 }
 
@@ -70,14 +70,14 @@ main {
 }
 
 .explanation > h2 > span {
-  font-weight: 900;
   color: inherit;
+  font-weight: 900;
 }
 
 .explanation > h3 {
-  font-family: Inter, sans-serif;
   margin-top: 30px;
   margin-bottom: 15px;
+  font-family: Inter, sans-serif;
   font-size: 1.45rem;
   font-weight: 650;
 }
@@ -91,24 +91,21 @@ main {
 
 .explanation > p.small {
   max-width: 515px;
-  font-family: Inter, sans-serif;
   margin: 0 0 4px;
-  font-size: 0.7rem;
+  font-family: Inter, sans-serif;
+  font-size: .7rem;
   font-weight: 300;
   line-height: 1.45;
 }
 
-.explanation > p.bold,
-.explanation > p > b {
+.explanation > p.bold, .explanation > p > b {
   font-family: Inter, sans-serif;
   font-weight: 600;
 }
 
-.explanation > p > a,
-.explanation > p > b > a,
-.explanation > ul > li > a {
+.explanation > p > a, .explanation > p > b > a, .explanation > ul > li > a {
+  border-bottom: 1px solid rgba(0, 0, 255, .5);
   font-family: Inter, sans-serif;
-  border-bottom: 1px solid rgba(0, 0, 255, 0.5);
   text-decoration: none;
   color: #00f !important;
 }
@@ -138,26 +135,26 @@ main {
   text-align: center;
   background-color: #ff6363;
   padding: 4px 20px;
-  font-size: 0.75rem;
+  font-size: .75rem;
   font-weight: 300;
   line-height: 1.4;
 }
 
 .smartphone {
-  font-family: Inter, sans-serif;
   color: #fff;
   text-align: center;
   background-color: #00f;
   padding: 10px 20px;
-  font-size: 0.85rem;
+  font-family: Inter, sans-serif;
+  font-size: .85rem;
   font-weight: 300;
   line-height: 1.4;
   display: none;
 }
 
 .smartphone > a {
-  font-family: Inter, sans-serif;
   border-bottom: 1px solid #fff;
+  font-family: Inter, sans-serif;
   font-weight: 400;
   text-decoration: none;
   color: #fff !important;
@@ -169,10 +166,10 @@ main {
 }
 
 .github {
+  color: #00f;
   font-family: Inter, sans-serif;
   font-size: 1.3rem;
   font-weight: 800;
-  color: blue;
   display: block;
 }
 
@@ -217,87 +214,31 @@ main {
 }
 
 .default {
-  border: 2px solid rgba(0, 0, 255);
+  border: 2px solid #00f;
   border-radius: 8px;
-  box-shadow:
-    5px 5px rgba(0, 0, 255, 0.4),
-    10px 10px rgba(0, 0, 255, 0.3),
-    15px 15px rgba(0, 0, 255, 0.2),
-    20px 20px rgba(0, 0, 255, 0.1),
-    25px 25px rgba(0, 0, 255, 0.05),
-    0 0 0 1px rgba(15, 33, 50, 0.05),
-    0 0.1em 2.8em -0.8em rgba(15, 33, 50, 0.1),
-    0 0.2em 3.2em -1.2em rgba(15, 33, 50, 0.2),
-    0 0.4em 2em -1.2em rgba(15, 33, 50, 0.3),
-    0 0.6em 2.4em -1.6em rgba(15, 33, 50, 0.4),
-    0 0.8em 2.8em -2em rgba(15, 33, 50, 0.5);
+  box-shadow: 5px 5px rgba(0, 0, 255, .4), 10px 10px rgba(0, 0, 255, .3), 15px 15px rgba(0, 0, 255, .2), 20px 20px rgba(0, 0, 255, .1), 25px 25px rgba(0, 0, 255, .05), 0 0 0 1px rgba(15, 33, 50, .05), 0 .1em 2.8em -.8em rgba(15, 33, 50, .1), 0 .2em 3.2em -1.2em rgba(15, 33, 50, .2), 0 .4em 2em -1.2em rgba(15, 33, 50, .3), 0 .6em 2.4em -1.6em rgba(15, 33, 50, .4), 0 .8em 2.8em -2em rgba(15, 33, 50, .5);
 }
 
 .arpej {
-  border: 3px solid rgb(255, 169, 55);
+  border: 3px solid #ffa937;
   border-radius: 7px;
-  box-shadow:
-    5px 5px rgba(223, 77, 79, 0.4),
-    10px 10px rgba(223, 77, 79, 0.3),
-    15px 15px rgba(223, 77, 79, 0.2),
-    20px 20px rgba(223, 77, 79, 0.1),
-    25px 25px rgba(223, 77, 79, 0.05),
-    0 0 0 1px rgba(15, 33, 50, 0.05),
-    0 0.1em 2.8em -0.8em rgba(15, 33, 50, 0.1),
-    0 0.2em 3.2em -1.2em rgba(15, 33, 50, 0.2),
-    0 0.4em 2em -1.2em rgba(15, 33, 50, 0.3),
-    0 0.6em 2.4em -1.6em rgba(15, 33, 50, 0.4),
-    0 0.8em 2.8em -2em rgba(15, 33, 50, 0.5);
+  box-shadow: 5px 5px rgba(223, 77, 79, .4), 10px 10px rgba(223, 77, 79, .3), 15px 15px rgba(223, 77, 79, .2), 20px 20px rgba(223, 77, 79, .1), 25px 25px rgba(223, 77, 79, .05), 0 0 0 1px rgba(15, 33, 50, .05), 0 .1em 2.8em -.8em rgba(15, 33, 50, .1), 0 .2em 3.2em -1.2em rgba(15, 33, 50, .2), 0 .4em 2em -1.2em rgba(15, 33, 50, .3), 0 .6em 2.4em -1.6em rgba(15, 33, 50, .4), 0 .8em 2.8em -2em rgba(15, 33, 50, .5);
 }
 
 .domofrance {
-  border: 2px solid rgb(0, 62, 122);
+  border: 2px solid #003e7a;
   border-radius: 6px;
-  box-shadow:
-    5px 5px rgba(0, 62, 122, 0.4),
-    10px 10px rgba(0, 62, 122, 0.3),
-    15px 15px rgba(0, 62, 122, 0.2),
-    20px 20px rgba(0, 62, 122, 0.1),
-    25px 25px rgba(0, 62, 122, 0.05),
-    0 0 0 1px rgba(15, 33, 50, 0.05),
-    0 0.1em 2.8em -0.8em rgba(15, 33, 50, 0.1),
-    0 0.2em 3.2em -1.2em rgba(15, 33, 50, 0.2),
-    0 0.4em 2em -1.2em rgba(15, 33, 50, 0.3),
-    0 0.6em 2.4em -1.6em rgba(15, 33, 50, 0.4),
-    0 0.8em 2.8em -2em rgba(15, 33, 50, 0.5);
+  box-shadow: 5px 5px rgba(0, 62, 122, .4), 10px 10px rgba(0, 62, 122, .3), 15px 15px rgba(0, 62, 122, .2), 20px 20px rgba(0, 62, 122, .1), 25px 25px rgba(0, 62, 122, .05), 0 0 0 1px rgba(15, 33, 50, .05), 0 .1em 2.8em -.8em rgba(15, 33, 50, .1), 0 .2em 3.2em -1.2em rgba(15, 33, 50, .2), 0 .4em 2em -1.2em rgba(15, 33, 50, .3), 0 .6em 2.4em -1.6em rgba(15, 33, 50, .4), 0 .8em 2.8em -2em rgba(15, 33, 50, .5);
 }
 
 .plainecommunehabitat {
-  border: 3px solid rgb(255, 169, 55);
+  border: 3px solid #ffa937;
   border-radius: 7px;
-  box-shadow:
-    5px 5px rgba(223, 77, 79, 0.4),
-    10px 10px rgba(223, 77, 79, 0.3),
-    15px 15px rgba(223, 77, 79, 0.2),
-    20px 20px rgba(223, 77, 79, 0.1),
-    25px 25px rgba(223, 77, 79, 0.05),
-    0 0 0 1px rgba(15, 33, 50, 0.05),
-    0 0.1em 2.8em -0.8em rgba(15, 33, 50, 0.1),
-    0 0.2em 3.2em -1.2em rgba(15, 33, 50, 0.2),
-    0 0.4em 2em -1.2em rgba(15, 33, 50, 0.3),
-    0 0.6em 2.4em -1.6em rgba(15, 33, 50, 0.4),
-    0 0.8em 2.8em -2em rgba(15, 33, 50, 0.5);
+  box-shadow: 5px 5px rgba(223, 77, 79, .4), 10px 10px rgba(223, 77, 79, .3), 15px 15px rgba(223, 77, 79, .2), 20px 20px rgba(223, 77, 79, .1), 25px 25px rgba(223, 77, 79, .05), 0 0 0 1px rgba(15, 33, 50, .05), 0 .1em 2.8em -.8em rgba(15, 33, 50, .1), 0 .2em 3.2em -1.2em rgba(15, 33, 50, .2), 0 .4em 2em -1.2em rgba(15, 33, 50, .3), 0 .6em 2.4em -1.6em rgba(15, 33, 50, .4), 0 .8em 2.8em -2em rgba(15, 33, 50, .5);
 }
 
 .actionlogement {
-  border: 3px solid rgb(0, 62, 122);
+  border: 3px solid #003e7a;
   border-radius: 6px;
-  box-shadow:
-    0 0 0 1px rgba(32, 28, 51, 0.02),
-    0 0.2em 1.6em -0.8em rgba(32, 28, 51, 0.2),
-    0 0.4em 2.4em -1.2em rgba(32, 28, 51, 0.3),
-    0 0.4em 0.8em -1.2em rgba(32, 28, 51, 0.4),
-    0 0.8em 1.2em -1.6em rgba(32, 28, 51, 0.5),
-    0 1.2em 1.6em -2em rgba(32, 28, 51, 0.6),
-    0 0 0 1px rgba(15, 33, 50, 0.05),
-    0 0.1em 2.8em -0.8em rgba(15, 33, 50, 0.1),
-    0 0.2em 3.2em -1.2em rgba(15, 33, 50, 0.2),
-    0 0.4em 2em -1.2em rgba(15, 33, 50, 0.3),
-    0 0.6em 2.4em -1.6em rgba(15, 33, 50, 0.4),
-    0 0.8em 2.8em -2em rgba(15, 33, 50, 0.5);
+  box-shadow: 0 0 0 1px rgba(32, 28, 51, .02), 0 .2em 1.6em -.8em rgba(32, 28, 51, .2), 0 .4em 2.4em -1.2em rgba(32, 28, 51, .3), 0 .4em .8em -1.2em rgba(32, 28, 51, .4), 0 .8em 1.2em -1.6em rgba(32, 28, 51, .5), 0 1.2em 1.6em -2em rgba(32, 28, 51, .6), 0 0 0 1px rgba(15, 33, 50, .05), 0 .1em 2.8em -.8em rgba(15, 33, 50, .1), 0 .2em 3.2em -1.2em rgba(15, 33, 50, .2), 0 .4em 2em -1.2em rgba(15, 33, 50, .3), 0 .6em 2.4em -1.6em rgba(15, 33, 50, .4), 0 .8em 2.8em -2em rgba(15, 33, 50, .5);
 }
