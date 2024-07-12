@@ -113,7 +113,7 @@ Je vous donne donc congé, lequel prendra effet, eu égard du délai de préavis
 
 [Le cas échéant, si pour un motif : mutation, licenciement...] Conformément à l'article 15 de la loi du 6 juillet 1989, je bénéficie, du droit à préavis réduit en raison des circonstances suivantes : (indiquer le motif). Pour ce faire, je joins à mon courrier les justificatifs nécessaires.
 
-Je me tiens à votre disposition pour convenir d’un rendez-vous afin d’établir l’état des lieux de sortie.
+Je me tiens à votre disposition pour convenir d’un rendez-vous afin d'organiser une pré-visite (ou visite-conseil) en amont de l’état des lieux de sortie.
 
 Veuillez agréer, Madame, Monsieur, l’expression de mes sentiments distingués.
 
