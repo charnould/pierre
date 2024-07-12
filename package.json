@@ -23,12 +23,12 @@
     "start": "bun start:memory && bun run app.ts"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^0.0.27",
-    "@ai-sdk/mistral": "^0.0.20",
-    "@ai-sdk/openai": "^0.0.34",
-    "ai": "^3.2.16",
+    "@ai-sdk/anthropic": "^0.0.30",
+    "@ai-sdk/mistral": "^0.0.22",
+    "@ai-sdk/openai": "^0.0.36",
+    "ai": "^3.2.22",
     "date-fns": "^3.6.0",
-    "hono": "^4.4.11",
+    "hono": "^4.4.13",
     "lodash": "^4.17.21",
     "sqlite-vss": "^0.1.2",
     "sqlite-vss-linux-x64": "^0.1.2",
@@ -40,10 +40,10 @@
     "@types/lodash": "^4.17.6",
     "@types/turndown": "^5.0.4",
     "lightningcss-cli": "^1.25.1",
-    "llamaindex": "^0.4.12",
+    "llamaindex": "^0.5.1",
     "markdown-toc": "^1.2.0",
-    "promptfoo": "^0.68.3",
-    "puppeteer": "^22.12.1",
+    "promptfoo": "^0.70.1",
+    "puppeteer": "^22.13.0",
     "turndown": "^7.2.0",
     "typescript": "^5.5.3"
   }
