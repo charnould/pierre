@@ -27,15 +27,3 @@ En tant que locataire, vous devez entretenir et maintenir propre votre logement.
 Aussi, avant votre état des lieux de sortie, assurez-vous que l'état de votre logement est conforme à celui qui figure dans l'état des lieux d'entrée (si nécessaire, rebouchez les trous aux murs, changez les joints noircis dans la salle de bains, etc.). L'état des lieux de sortie prendra néanmoins en compte la vétusté résultant d'un usage normal du logement et dont vous n'êtes pas responsable.
 
 Nous vous conseillons de faire une "visite conseil" gratuite (il s'agit d'une prévisite d'état des lieux) avant votre départ du logement avec un représentant de votre bailleur. La "visite conseil" permet de faire le point sur les éventuels travaux à réaliser dans votre logement, mais aussi sur les démarches administratives à effectuer avant votre départ.
-
-# Je souhaite quitter mon logement / mettre fin à mon bail, que dois-je faire ?
-
-Si vous souhaitez quitter votre logement, vous devez résilier votre contrat de location (bail) et pour cela, donner congé à votre propriétaire. Ce congé doit respecter certaines formes et ouvre une période dite "de préavis" de un à trois mois, en fonction de la zone d'habitation. Pendant le délai de préavis, vous devez payer les loyers et charges même si vous avez définitivement quitté les lieux, effectuer l’état des lieux de sortie et restituer les clés au bailleur.
-
-Vous pouvez donner congé à votre propriétaire à tout moment et sans motivation par courrier recommandé avec demande d’avis de réception.
-
-# Quelle est la durée de préavis en cas de départ de mon logement ?
-
-La durée du préavis varie entre 1 et 3 mois selon votre zone d'habitation (zone tendue ou détendue) ou votre situation personnelle (mutation professionnelle, état de santé, etc.).
-
-La date de début du préavis démarre à la réception de votre demande de congé par votre bailleur. Dans certains cas (mutation professionnelle, handicap…), votre préavis peut être réduit.
