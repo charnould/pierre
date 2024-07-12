@@ -1,10 +1,20 @@
 _(en cours de rédaction)_
 
-# PIERRE, l'intelligence artificielle _open source_ et _plurilingue_ du Mouvement HLM
+> PIERRE (**alpha**) est actuellement en développement actif. De fait, les conventions de montée de version (`semver`) ne sont pas actuellement respectées. De plus des régressions peuvent apparaître. De nombreuses corrections de bugs interviennent ici et là.
 
-## Avertissement
+# PIERRE
 
-PIERRE (**alpha**) est actuellement en développement actif. De fait, les conventions de montée de version (`semver`) ne sont pas actuellement respectées. De plus des régressions peuvent apparaître. De nombreuses corrections de bugs interviennent ici et là.
+## PIERRE, qu'est ce que c'est ?
+
+PIERRE est l'intelligence artificielle (IA) **open source** et **plurilingue** du Mouvement HLM. Plus précisément, c'est :
+
+1. Un **chatbot open source** ([démonstration](https://pierre-ia.org)).
+2. Une **base de connaissances** en **open data**, utilisable indépendamment du chatbot, et indispensable à la mise en oeuvre de toutes approches `RAG` (_retrieval augmented generation_).
+
+## Changelog & Release notes
+
+- `2024-07-01` : Version alpha-2 (estimated knowledge quality: 5%)
+- `2024-04-30` : Version alpha-1 (estimated knowledge quality: 5%)
 
 ## Sommaire
 
@@ -13,7 +23,8 @@ PIERRE (**alpha**) est actuellement en développement actif. De fait, les conven
 - [Comment contribuer à PIERRE ?](#comment-contribuer-a-pierre-)
   - [Contribuer au code ou à sa documentation](#contribuer-au-code-ou-a-sa-documentation)
   - [Contribuer à la base de connaissance (le plus important et le plus simple)](#contribuer-a-la-base-de-connaissance-le-plus-important-et-le-plus-simple)
-- [Changelog & Release notes](#changelog--release-notes)
+    - [Régles et consignes de rédaction pour la base de connaissances](#regles-et-consignes-de-redaction-pour-la-base-de-connaissances)
+    - [Avancement de la base de connaissances](#avancement-de-la-base-de-connaissances)
 - [Roadmap](#roadmap)
   - [Correctifs](#correctifs)
   - [Fonctionnalités (et/ou idées) ?](#fonctionnalites-etou-idees-)
@@ -30,7 +41,6 @@ PIERRE (**alpha**) est actuellement en développement actif. De fait, les conven
   - [Comment télécharger la base de données qui contient les conversations](#comment-telecharger-la-base-de-donnees-qui-contient-les-conversations)
   - [Requête SQLite pour extraire et organiser les conversations](#requete-sqlite-pour-extraire-et-organiser-les-conversations)
   - [Comment visualier agréablement les données](#comment-visualier-agreablement-les-donnees)
-- [Régles et consignes de rédaction pour la base de connaissances](#regles-et-consignes-de-redaction-pour-la-base-de-connaissances)
 - [License](#license)
 
 <!-- tocstop -->
@@ -45,10 +55,24 @@ TODO
 
 TODO
 
-## Changelog & Release notes
+#### Régles et consignes de rédaction pour la base de connaissances
 
-- `2024-07-01` : Version alpha-2 (estimated knowledge quality: 5%)
-- `2024-04-30` : Version alpha-1 (estimated knowledge quality: 5%)
+- Toujours expliciter les acronymes.
+- Le moins d'acronyme possible (ex : Mme -> Madame).
+- Ne jamais dire "nous": parler au neutre.
+- Toujours mettre téléphone avant le numéro, adresse avant l'adresse, etc.
+- Chaque article doit inclure les mots-clefs les plus pertinents ?
+- Rédiger avec le moins de "bruit" possible.
+- La structure des dossiers/sous-dossier et le nommage n'ont aucune importance.
+- Chaque fichier doit impérativement commencer par un titre (#)
+- Les sous-titres doivent rappeler le contexte du titre de niveau supérieur
+
+#### Avancement de la base de connaissances
+
+| Thématique        | Avancement | Validation |
+| ----------------- | ---------- | ---------- |
+| Impayés           | 100 %      | Non        |
+| Déposer son congé | 100 %      | Non        |
 
 ## Roadmap
 
@@ -215,18 +239,6 @@ GROUP BY uuid;
 - Télécharger VS Code
 - Ouvrir le fichier.json
 - Ouvrir la palette, chercher `word wrap` puis clic droit `format file`
-
-## Régles et consignes de rédaction pour la base de connaissances
-
-- Toujours expliciter les acronymes.
-- Le moins d'acronyme possible (ex : Mme -> Madame).
-- Ne jamais dire "nous": parler au neutre.
-- Toujours mettre téléphone avant le numéro, adresse avant l'adresse, etc.
-- Chaque article doit inclure les mots-clefs les plus pertinents ?
-- Rédiger avec le moins de "bruit" possible.
-- La structure des dossiers/sous-dossier et le nommage n'ont aucune importance.
-- Chaque fichier doit impérativement commencer par un titre (#)
-- Les sous-titres doivent rappeler le contexte du titre de niveau supérieur
 
 ## License
 
