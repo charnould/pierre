@@ -37,8 +37,6 @@ Denis Dessus, président de l'ordre des architectes, considère que la loi « s
 
 Le permis de louer ne sera pas gratuit (la FNAIM regrette que son prix puisse être fixé, éventuellement arbitrairement, par les collectivités.\[réf. nécessaire\]
 
-### Réception par des associations de personnes handicapées
-
 La loi Elan est critiquée par le Groupement pour l'insertion des handicapés physiques et le Collectif Luttes et handicaps pour l'égalité et l'émancipation. Il est question d'un retour sur la loi Veil de 1975 sur l'obligation d'accessibilité des bâtiments publics et d'habitation, ainsi que d'une victoire du lobby des promoteurs immobiliers.
 
 ## Références

@@ -110,30 +110,24 @@ Ainsi, en janvier 2005, au lendemain du tsunami en Asie du Sud-Est, la fondation
 
 L'action de la fondation Abbé-Pierre s'articule autour de plusieurs grandes missions liées au logement :
 
-- accueillir les personnes en grande précarité via son réseau de boutiques solidarité et de pensions de famille ;
+- accueillir les personnes en grande précarité via son réseau de boutiques solidarité et de pensions de famille\[source insuffisante\] ;
 - construire des logements sociaux. Depuis 2005, la fondation Abbé-Pierre apporte un important soutien financier à la création de logements très sociaux, des logements financés par le prêt locatif aidé d’intégration (PLAI) via plusieurs programmes successifs : 1 500 logements très sociaux, 2 000 toits pour 2000 familles et Toits d’abord\[source insuffisante\] lancé en 2012 ;
 - réhabiliter les logements indignes (très dégradés, insalubres, présentant un danger pour la santé ou la sécurité des habitants). En 2017, la fondation Abbé-Pierre estime que 600 000 ménages vivent dans des taudis en France ;
 - conseiller, accompagner et informer sur leurs droits les personnes en situation de mal-logement ou menacées d’expulsion. C’est le rôle de l’Espace Solidarité Habitat, structure ouverte par la Fondation en 2000 en Île-de-France, et d’une plate-forme téléphonique : Allô Prévention Expulsion.
 
 ### Interpeller
 
-Le 1er février 2012, en présentant son dix-septième Rapport annuel sur « L'État du mal-logement en France », la Fondation témoigne d'une situation qui ne cesse de se dégrader pendant vingt ans pour devenir insupportable, revenant sur deux décennies de politique du logement. Afin qu’un véritable changement de cap soit porté au plus haut niveau de l’État, la Fondation invite, le même jour, les principaux candidats à l’élection présidentielle à s’engager solennellement en faveur d’un « contrat social pour une nouvelle politique du logement ».
-
-La fondation Abbé-Pierre est souvent mobilisée pour mettre en œuvre des actions symboliques destinées à sensibiliser le grand public autour d’images fortes, comme, en décembre 2008, devant l’Assemblée nationale ou, le 8 juillet 2010, en déposant une statue de glace représentant un SDF devant la pyramide du Louvre, laissant la statue fondre sous l’effet de la chaleur.
+La fondation Abbé-Pierre est souvent mobilisée pour mettre en œuvre des actions symboliques destinées à sensibiliser le grand public autour d’images fortes, comme, en décembre 2008, devant l’Assemblée nationale ou, le 8 juillet 2010, en déposant une statue de glace représentant un SDF devant la pyramide du Louvre, laissant la statue fondre sous l’effet de la chaleur\[réf. nécessaire\].
 
 Lors de la présentation de son vingt-deuxième rapport annuel sur l'État du mal-logement en France le 31 janvier 2017, la fondation Abbé-Pierre « juge durement le quinquennat de François Hollande, estimant qu’il n’a pas rempli ses objectifs » pour lutter contre ce fléau. Elle reçoit à nouveau les principaux candidats à l’élection présidentielle, dont Emmanuel Macron, et réitère son interpellation face à une situation de plus en plus alarmante : quatre millions de personnes mal logées en France et douze millions de personnes souffrant par extension de la crise du logement (surpeuplement, précarité énergétique, copropriétés en difficulté…).
 
-En 2017, des bénévoles de la Fondation placardent des affiches dans plusieurs villes de France pour dénoncer les mobiliers anti-SDF avec le message : « Au lieu d'empêcher les SDF de dormir ici, offrons-leur un logement décent ailleurs ».
+En 2017, des bénévoles de la Fondation placardent des affiches dans plusieurs villes de France pour dénoncer les mobiliers anti-SDF. Le 4 avril 2017, la fondation Abbé-Pierre interpelle les candidats à l’élection présidentielle en leur soumettant un plan intitulé Sans-domicile : objectif zéro !. Ce document propose un ensemble de solutions pour loger durablement d’ici cinq à dix ans les 143 000 personnes actuellement sans domicile en France. Un chiffre qui a augmenté de 50 % en dix ans (de 2001 à 2012).
 
-Le 4 avril 2017, la fondation Abbé-Pierre interpelle les candidats à l’élection présidentielle en leur soumettant un plan intitulé Sans-domicile : objectif zéro !. Ce document propose un ensemble de solutions pour loger durablement d’ici cinq à dix ans les 143 000 personnes actuellement sans domicile en France. Un chiffre qui a augmenté de 50 % en dix ans (de 2001 à 2012).
-
-Entre les deux tours de l'élection présidentielle de 2017 qui oppose Marine Le Pen et Emmanuel Macron, la fondation Abbé-Pierre appelle implicitement dans une tribune avec soixante autres associations à faire barrage à la candidate FN,.
+Entre les deux tours de l'élection présidentielle de 2017 qui oppose Marine Le Pen et Emmanuel Macron, la fondation Abbé-Pierre appelle implicitement dans une tribune avec soixante autres associations à faire barrage à la candidate du Front national,.
 
 En 2019, la Fondation organise la première cérémonie des « Pics d’or » récompensant, de façon satirique, les équipements urbains anti-SDF. Les catégories sont : « Fallait oser » (dispositif le plus décomplexé) ; « Faites ce que je dis, pas ce que je fais » (dispositif le plus contradictoire) ; « Ni vu ni connu » (installation déguisée) ; Pic de l’arrêté anti-mendicité « Bouge de là » ; « Le Clou » (dispositif le plus agressif) et, pour l'étranger, le prix « C’est pas mieux ailleurs ». Une deuxième édition de cette manifestation a lieu en 2020.
 
-La Fondation dépose un paillasson aussi devant le ministère du Logement en guise de symbole des familles mises à la rue. La fondation Abbé-Pierre souhaite alors alerter sur l'absence de politique de prévention et attirer l’attention des politiques sur les 30 000 personnes menacées de perdre leur toit. Elle réclame également un plan de 100 millions d’euros pour aider les locataires en difficulté.
-
-La fondation Abbé-Pierre est souvent mobilisée pour mettre en œuvre ces actions symboliques destinées à sensibiliser le grand public autour d’images fortes, comme en décembre 2008 devant l’assemblée nationale ou le 8 juillet 2010 en déposant une statue de glace représentant un SDF devant la pyramide du Louvre, laissant la statue fondre sous l’effet de la chaleur.\[réf. nécessaire\]
+La Fondation dépose un paillasson aussi devant le ministère du Logement en guise de symbole des familles mises à la rue. La fondation Abbé-Pierre souhaite alors alerter sur l'absence de politique de prévention et attirer l’attention des politiques sur les 30 000 personnes menacées de perdre leur toit. Elle réclame également un plan de 100 millions d’euros pour aider les locataires en difficulté.
 
 Par ailleurs, Christophe Robert, délégué général de la fondation Abbé-Pierre, évoque « beaucoup de contradictions dans l'action du gouvernement ». La Fondation propose cinq axes aux futurs candidats à l’élection présidentielle : faire de l'habitat la priorité du prochain mandat, produire massivement des logements accessibles et rééquilibrer l'offre de logement social, résoudre la question de l'habitat indigne, résorber le sans-abrisme et les bidonvilles, garantir l'accès et le maintien dans le logement.
 
@@ -164,15 +158,6 @@ En 2024, la direction de la Fondation est composée de :
 - Vice-présidents : Aminata Koné
 - Délégué général : Christophe Robert ;
 - Déléguée générale adjointe : Sonia Hurcet ;
-- Trésorier : Christian Alibay ;
-- Secrétaire : Patrick Rouyer ;
-- Directrice administrative et financière : Ghzala Jebrani ;
-- Directeur de la communication : Yves Colin ;
-- Directeur de l’animation territoriale : Frédérique Mozer ;
-- Directeur des études : Manuel Domergue ;
-- Directrice des missions sociales : Frédérique Kaba ;
-- Directeur des ressources et donateurs : Michel Raynaud ;
-- Directrice des ressources humaines : Marie-Pierre Alerini-Donnary.
 
 La fondation Abbé-Pierre fait également partie de la branche « Action sociale et Logement » du mouvement Emmaüs.
 
@@ -192,7 +177,7 @@ Il est également auteur de plusieurs ouvrages comme Pour les sans-voix (éditio
 
 De 1994 à 2004, il est responsable d’études et du développement au sein du bureau d’études FORS Recherche Sociale, spécialisé dans l’habitat, la politique de la ville, l’exclusion et le développement culturel.
 
-Il milite pour davantage de débats avec les citoyens sur les grands sujets sociaux, écologiques et démocratiques. Par ses responsabilités, il est souvent interviewé dans les médias,.
+Par ses responsabilités, il est souvent interviewé dans les médias,.
 
 ## Financement
 
@@ -204,25 +189,25 @@ La fondation Abbé-Pierre reçoit en 2006 les félicitations de la Cour des comp
 
 ## Communication
 
-### Campagne de communication
+### Campagnes de communication
 
 En 2021, la Fondation dévoile sa campagne de sensibilisation intitulée : « Il y a une vie après la rue », déclinée en version print et en format vidéo,.
 
 L’année suivante, l’association dévoile sa nouvelle campagne d’hiver : « Quitter la rue, c’est retrouver la vie,,. » Le film, réalisé par Arnaud Desplechin, raconte la descente aux enfers d'un jeune qui se retrouve à la rue à la suite d'une dispute familiale. La rencontre avec un bénévole de la Fondation l'aide à retrouver un travail, un logement et à reconstruire sa vie,.
 
-### Colloque
+### Colloques
 
 La fondation Abbé-Pierre organise également des colloques comme en 2019 sur le thème « Inégalité territoriales et mal-logement ».
 
 Le 24 novembre 2022, à l’occasion de la Journée nationale contre la précarité énergétique, la fondation Abbé-Pierre organise un colloque dédié à cette problématique.
 
-### Concert
+### Concerts
 
 La Fondation organise régulièrement l’« Abbé Road », un concert caritatif au bénéfice de la fondation Abbé-Pierre. De nombreux artistes y participeront dont Fianso, Black M, Rim'K, Chilla, Vald…
 
 En 2014, l’« Abbé Road » est accompagnée de la sortie du clip Le Chemin de pierre, interprété par Nolwenn Leroy, Renan Luce et Disiz La Peste. Un bus aménagé parcourt aussi les festivals afin de sensibiliser le grand public aux logements insalubres.
 
-Depuis cette date, la Fondation participe régulièrement à des festivals en été pour sensibiliser les jeunes, parmi les premières victimes du mal-logement, et le grand public à son combat. Elle distribue à cette occasion le « Guide du logement des jeunes » qu’elle porte depuis sa parution en 2018.
+Depuis cette date, la Fondation participe régulièrement à des festivals en été pour sensibiliser les jeunes, parmi les premières victimes du mal-logement, et le grand public à son combat\[réf. nécessaire\].
 
 ## Publications
 
@@ -242,7 +227,7 @@ En 2019, la fondation Abbé-Pierre met en avant les sorties d’institutions (pr
 
 À la fin des années 2010, la Fondation souligne les difficultés d’accès au logement des personnes en situation irrégulière. Elle fait le lien entre précarité administrative et habitat indigne.
 
-En 2021, la fondation Abbé-Pierre constate que la crise du logement se superpose à la crise sanitaire, faisant bondir la précarité.
+En 2021, la fondation Abbé-Pierre constate que la crise du logement se superpose à la crise sanitaire\[source insuffisante\], faisant bondir la précarité.
 
 Dans son rapport de 2022, la Fondation pointe du doigt la baisse des APL, la baisse du budget des organismes HLM, la baisse du nombre de logements sociaux autorisés chaque année ainsi qu’une politique trop timide en matière d'encadrement des loyers. Elle regrette aussi que les aides publiques au logement, qui diminuent depuis dix ans, soient aussi basses (1,6 % du PIB en 2020).
 

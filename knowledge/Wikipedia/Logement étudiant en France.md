@@ -44,6 +44,8 @@ Ils se heurtent cependant à de nombreux obstacles : parc social trop modeste d
 
 Ces difficultés d'accès au logement privé ont fait émerger de nouveaux acteurs qui se distinguent dans le monde de l'immobilier par une offre de services globale et exclusivement destinée au marché du logement étudiant (logements adaptés, avance dépôt garantie, formalités administratives, aide à l'aménagement, carte club, etc.).
 
+Le marché du logement privé est en constante évolution, influencé par des facteurs économiques, démographiques et réglementaires. Dans ce contexte dynamique, trouver un locataire fiable et gérer efficacement son bien immobilier peut représenter un véritable défi.
+
 L’Association interprofessionnelle des résidences étudiants et services (AIRES) est née en 1994 et regroupe les principaux acteurs de la profession. Elle réunit les promoteurs, constructeurs, gestionnaires et exploitants de résidences étudiants avec services, informe les pouvoirs publics nationaux et locaux ainsi que tous les milieux socio-économiques sur l’ensemble des aspects professionnels, sociaux et économiques de cette activité. L’originalité de ce secteur repose sur des offres d’habitat en secteur conventionné et/ou d’un habitat en secteur libre, gérées par des associations à but non lucratif ou des sociétés commerciales.
 
 Plusieurs sites internets se spécialisent alors dans le regroupement de l'offre des résidences étudiantes privées en France. C'est le cas notamment de AlloStudentRentals.com, un site pour les étudiants qui font leurs études en France, ou Bed&School structure créée en 2008 à Tours, puis déployée sur Poitiers, Rennes, Angers, Nancy et Paris ou du site ImmoJeune.com, un portail créé en 2011 qui propose près de 80 000 annonces de logements étudiants.
