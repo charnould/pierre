@@ -242,6 +242,6 @@ GROUP BY uuid;
 
 ## License
 
-Le code-source du présent répertoire est sous license [GPL-3.0-only](https://spdx.org/licenses/GPL-3.0-only). La base de connaissance (dossier `knowledge`) est sous license [Creative Commons BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+Le code-source du présent répertoire est sous license [GNU Affero General Public License Version 3](https://github.com/charnould/pierre/blob/master/LICENSE.md). La base de connaissance (dossier `knowledge`) est sous license [Creative Commons BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 
-Copyright (c) 2024, Charles-Henri Arnould (charnould@pierre-ia.org) et les contributeurs.
+Copyright (c) 2024, Charles-Henri Arnould/BECKREL (charnould@pierre-ia.org) et les contributeurs.
