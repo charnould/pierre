@@ -2,7 +2,7 @@ import { $ } from 'bun'
 import TurndownService from 'turndown'
 
 // Delete old Wikipédia files
-await $`rm -rf ./utils/knowledge/source/Wikipedia/{*,.*}`
+await $`rm -rf knowledge/Wikipedia/{*,.*}`
 console.log(' 👉 Outdated Wikipédia files deleted')
 
 const pages = [
@@ -73,7 +73,7 @@ for await (const u of pages) {
       const turndownService = new TurndownService({ headingStyle: 'atx' })
       const markdown = turndownService.turndown(result)
 
-      await Bun.write(`utils/knowledge/source/Wikipedia/${page.title}.md`, markdown)
+      await Bun.write(`knowledge/Wikipedia/${page.title}.md`, markdown)
       console.log(`  👉 ${u} saved to .md`)
     }
   } catch {
