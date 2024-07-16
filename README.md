@@ -104,7 +104,6 @@ TODO
 
 ## Quelques limites de connaissances constatées (à résoudre)
 
-- "C'est quoi une CAL ou CALEOL ?"
 - "Quelles différences entre ARPEJ et les CROUS" -> PIERRE ne retourne pas d'éléments probants
 
 ## Fonctionnement et architecture de PIERRE

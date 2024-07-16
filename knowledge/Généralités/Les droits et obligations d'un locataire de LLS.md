@@ -5,6 +5,7 @@
 Le locataire utilise librement son logement pendant toute la durée de la location, mais il doit accorder l'accès de son logement au propriétaire dans certaines situations (notamment lorsque le propriétaire doit y faire des travaux).
 
 Le logement loué est le domicile du locataire. En conséquence, il en a la jouissance exclusive (il peut y vivre librement) à la condition de se conformer au contrat de location et, si le logement se situe dans une copropriété, au réglement de la copropriété. Ce règlement peut par exemple encadrer ou interdire certaines pratiques, notamment :
+
 - Étendre du linge aux fenêtres
 - Faire des barbecues
 - Installer des pare-vues sur les balcons (canisse, bambou...)
@@ -13,6 +14,7 @@ Le logement loué est le domicile du locataire. En conséquence, il en a la joui
 Le logement loué est le domicile du locataire. Le locataire a donc droit d'aménager et d'utiliser les lieux librement. Il peut aussi inviter ou héberger (gratuitement) les personnes de son choix.
 
 Par conséquent, le propriétaire n'a notamment pas le droit :
+
 - d'imposer un droit de visite à son locataire en dehors de tout cadre légal,
 - d'interdire l'accès au logement à des personnes autres que la famille du locataire,
 - de pénétrer dans le logement sans l'accord du locataire,
@@ -52,8 +54,6 @@ Le locataire peut alors demander au juge :
 l'interdiction des travaux entrepris
 ou l'interruption des travaux entrepris
 ou, lorsque les travaux rendent le logement inhabitable, la résiliation du bail : Rupture du bail ou du contrat de location.
-
-
 
 # J’habite un logement social dont l’immeuble doit-être prochainement démoli. Quels sont mes droits ?
 
