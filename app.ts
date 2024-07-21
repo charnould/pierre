@@ -8,6 +8,7 @@ import { controller as get_ai } from './controllers/GET.ai'
 import { controller as get_index } from './controllers/GET.index'
 import { controller as get_review } from './controllers/GET.review'
 import { controller as post_review } from './controllers/POST.review'
+import { controller as post_telemetry } from './controllers/POST.telemetry'
 
 const app = new Hono()
 
@@ -24,6 +25,7 @@ app.use('/assets/*', serveStatic({ root: './' }))
 
 app.get('/ai/:id', get_ai)
 app.get('/c/:id', get_index)
+app.post('/telemetry', post_telemetry)
 app.post('/review', post_review)
 app.get(
   '/review',

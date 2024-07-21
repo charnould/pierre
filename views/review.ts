@@ -1,8 +1,8 @@
 import { html, raw } from 'hono/html'
 import { marked } from 'marked'
-import type { Conversation } from '../utils/_schema'
+import type { Reply } from '../utils/_schema'
 
-export const view = (data, conversation: Conversation) => {
+export const view = (data, conversation: Reply[]) => {
   return html`<!doctype html>
     <html lang="fr">
       <head>
@@ -104,6 +104,7 @@ export const view = (data, conversation: Conversation) => {
               />
               <fieldset>
                 <input
+                  required
                   id="s0"
                   type="radio"
                   class="peer/s0 hidden"

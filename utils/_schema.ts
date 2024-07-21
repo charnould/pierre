@@ -19,21 +19,19 @@ export const Config = z.object({
 // prettier-ignore
 // biome-ignore format: readability
 // Reflects telemetry database schema
-export const Conversation = z.array(
-  z.object({
-    id                  : z.string(),
+export const Reply = z.object({
+    id                  : z.string().uuid(),
     config              : z.string(),
     role                : z.enum(['assistant', 'user', 'system']),
     timestamp           : z.string(),
     content             : z.string(),
-    user_score          : z.number(),
-    reviewer_score      : z.number(),
-    reviewer_comment    : z.string(),
+    user_score          : z.number().nullish(),
+    reviewer_score      : z.number().nullish(),
+    reviewer_comment    : z.string().nullish(),
     prompt_tokens       : z.number().nullish(),
     completion_tokens   : z.number().nullish(),
     total_tokens        : z.number().nullish()
   })
-)
 
 //
 //
@@ -41,8 +39,9 @@ export const Conversation = z.array(
 // prettier-ignore
 // biome-ignore format: readability
 export const AIContext = z.object({
+    timestamp         : z.string().datetime().default(new Date().toISOString()),
     role              : z.enum(['assistant', 'user', 'system']),
-    raw               : z.string(),
+    content           : z.string(),
     chunks            : z.array(z.string()).nullish().default(null),
     id                : z.string().uuid(),
     config            : z.string().or(Config),
@@ -74,6 +73,6 @@ export const AIContext = z.object({
 //
 //
 //
-export type Conversation = z.infer<typeof Conversation>
-export type AIContext = z.infer<typeof AIContext>
+export type Reply = z.infer<typeof Reply>
 export type Config = z.infer<typeof Config>
+export type AIContext = z.infer<typeof AIContext>

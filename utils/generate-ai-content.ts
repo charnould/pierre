@@ -5,7 +5,7 @@ import { generateObject, streamText } from 'ai'
 import { format } from 'date-fns/format'
 import { z } from 'zod'
 import type { AIContext } from './_schema'
-import { save_conversation } from './run-telemetry'
+import { save_reply } from './handle-conversation'
 
 const openai = createOpenAI({
   apiKey: Bun.env.OPENAI_API_KEY,
@@ -43,7 +43,7 @@ export const enhance_query = async (context: AIContext) => {
     ////////////////////////////////////////////////////////////////////
     // TODO : Vous pouvez changer ici le modèle (LLM) utilisé
     // Ex.  : openai('gpt-4o-2024-05-13'), openai('gpt-3.5-turbo')...
-    model: openai('gpt-4o-2024-05-13'),
+    model: openai('gpt-4o-mini-2024-07-18'),
     ////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////
 
@@ -157,7 +157,7 @@ export const answer_user = async (context: AIContext) => {
       ${context.followup}
       
       ### OTHER INFORMATION ###
-      Knowledge cutoff: 2024-07.
+      Knowledge cutoff: 2024-08.
       Current date: ${format(new Date(), 'yyyy-MM-dd')}.
       `.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
   })
@@ -167,7 +167,7 @@ export const answer_user = async (context: AIContext) => {
     ////////////////////////////////////////////////////////////////////
     // TODO : Vous pouvez changer ici le modèle (LLM) utilisé
     // Ex.  : openai('gpt-4o-2024-05-13'), openai('gpt-3.5-turbo')...
-    model: openai('gpt-4o-2024-05-13'),
+    model: openai('gpt-4o-mini-2024-07-18'),
     ////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////
 
@@ -179,8 +179,8 @@ export const answer_user = async (context: AIContext) => {
       context.usage.prompt_tokens = usage.promptTokens
       context.usage.total_tokens = usage.totalTokens
       context.role = 'assistant'
-      context.raw = text
-      save_conversation(context)
+      context.content = text
+      save_reply(context, true)
     }
   })
 }
@@ -210,7 +210,7 @@ export const reach_deadlock = async (context: AIContext) => {
 
       ###### Case 1 ######
       If user's question contains any bad words or profanity.
-      Then answer how can only handle polite and respectful chats.
+      Then answer you can only handle polite and respectful chats.
 
       ###### Case 2 ######
       If user's question is about yourself.
@@ -250,7 +250,7 @@ export const reach_deadlock = async (context: AIContext) => {
     //  openai('gpt-4o-2024-05-13')
     //  openai('gpt-3.5-turbo')
     //  anthropic('claude-3-5-sonnet-20240620')
-    model: openai('gpt-4o-2024-05-13'),
+    model: openai('gpt-4o-mini-2024-07-18'),
     ////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////
 
@@ -262,8 +262,8 @@ export const reach_deadlock = async (context: AIContext) => {
       context.usage.prompt_tokens = usage.promptTokens
       context.usage.total_tokens = usage.totalTokens
       context.role = 'assistant'
-      context.raw = text
-      save_conversation(context)
+      context.content = text
+      save_reply(context, true)
     }
   })
 }
