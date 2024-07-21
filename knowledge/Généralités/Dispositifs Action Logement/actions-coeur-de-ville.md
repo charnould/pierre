@@ -1,5 +1,3 @@
-<meta name='geo' content='85396d43fffffff'>
-
 # Action Coeur de ville
 
 ## Peut-il y avoir à terme plusieurs propriétaires dans l’immeuble réhabilité ? Les immeubles en copropriétés sont-ils éligibles ?

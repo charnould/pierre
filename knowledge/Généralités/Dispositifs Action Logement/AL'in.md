@@ -4,18 +4,10 @@
 
 Née le 15 juillet 2020, AL’in est le nom d’une plateforme digitale dédiée aux logements sociaux en France et créée par Action Logement. Elle est accessible très facilement sur internet, à l’adresse suivante : https://al-in.fr.
 
-## À quoi sert la plateforme AL’in ?
-
 AL’in permet aux salariés de trouver plus facilement un logement social, en centralisant :
 
 - Toutes les demandes de personnes en recherche d’une location sociale.
 - Toutes les offres de biens immobiliers sociaux proposées par les bailleurs partenaires d’Action Logement.
-
-## Quels sont ses avantages d’AL’in ?
-
-Grâce à la plateforme AL’in, la recherche et la demande de logements sociaux sont entièrement centralisées et digitalisées.
-
-## À qui s’adresse la plateforme AL’in ?
 
 Les services AL’in ne sont pas accessibles à tous. Des conditions spécifiques doivent être réunies pour prétendre à un logement social :
 
@@ -28,11 +20,9 @@ Les services AL’in ne sont pas accessibles à tous. Des conditions spécifique
 
 Tous les autres demandeurs ne sont pas éligibles à trouver un logement social via la plateforme AL’in.
 
-Bon à savoir : des règles d’accès supplémentaires peuvent être prévues directement par les employeurs. Par exemple, des conditions d’ancienneté ou selon le type de contrat de travail. Renseignez-vous auprès de votre service RH.
-
 ## Comment fonctionne la plateforme AL’in ?
 
-Plusieurs étapes sont nécessaires pour déposer une demande de logement. Mais rassurez-vous, l’ensemble ne doit pas vous prendre plus de 30 minutes.
+Plusieurs étapes sont nécessaires pour déposer une demande de logement. Mais rassurez-vous, l’ensemble ne doit pas vous prendre plus de 30 minutes :
 
 1. Créer une demande de logement social pour obtenir un numéro unique
 2. Créer un compte AL’in
