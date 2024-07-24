@@ -195,38 +195,6 @@ kamal deploy
 
 L'intégralité des commandes : https://kamal-deploy.org/docs/commands/view-all-commands/
 
-### Comment télécharger la base de données qui contient les conversations
-
-`scp root@ip:/var/lib/docker/volumes/telemetry/_data/datastore.sqlite ~/Desktop/`
-
-avec : `ip` est l'`ip` du serveur, et `~/Desktop/` là où vous voulez télécharger la BDD sur votre ordinateur (`~/Desktop/` correspond au Bureau sur OS X).
-
-### Requête SQLite pour extraire et organiser les conversations
-
-```sql
-SELECT
-  id,
-  json_group_array(
-    json_object(
-      'timestamp', timestamp,
-      'content', content,
-      'role', role
-      )
-  ) AS conversation
-
-FROM (
-  SELECT
-    id,
-    content,
-    timestamp,
-    role
-  FROM telemetry
-  ORDER BY id, timestamp
-)
-
-GROUP BY id;
-```
-
 ## License
 
 Le code-source du présent répertoire est sous license [GNU Affero General Public License Version 3](https://github.com/charnould/pierre/blob/master/LICENSE.md). La base de connaissance (dossier `knowledge`) est sous license [Creative Commons BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).

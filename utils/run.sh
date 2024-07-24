@@ -23,15 +23,4 @@ sqlite3 telemetry/datastore.sqlite "CREATE TABLE IF NOT EXISTS telemetry (id TEX
 
 }
 
-# download database
-download_db () {
-    
-    sqlite3 $( pwd; )/telemetry/datastore.sqlite "VACUUM INTO '$( pwd; )/telemetry/backup.sqlite'";    
-    scp $( pwd; )/telemetry/backup.sqlite /Desktop
-    rm -f $( pwd; )/telemetry/backup.sqlite
-
-    }
-
-
-    
 "$@"

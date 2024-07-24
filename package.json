@@ -5,8 +5,6 @@
   "name": "pierre",
   "module": "app.ts",
   "scripts": {
-    "start:memory": "bash utils/run.sh init_db",
-    "download": "bash utils/run.sh download_db",
     "--- format ---": "",
     "format:biome": "bunx @biomejs/biome check --config-path './config/lint+format.json' --write --unsafe .",
     "format:prettier": "bunx prettier --write . --plugin=prettier-plugin-tailwindcss",
@@ -21,7 +19,7 @@
     "dev:update": "bun upgrade && bun update --latest && bun install",
     "dev:build": "bun dev:update && bun format && bun test",
     "dev:start": "bun --watch run app.ts",
-    "start": "bun start:memory && bun run app.ts"
+    "start": "bash utils/run.sh init_db && bun run app.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^0.0.31",
