@@ -1,5 +1,3 @@
-Source : https://www.actionlogement.fr/guides/financer-vos-travaux/eco-pret-taux-zero
-
 # L’éco-PTZ : le prêt à taux zéro pour les travaux d’économie d’énergie
 
 L’éco-prêt à taux zéro (éco-PTZ) est un type de prêt accordé par les banques ayant signé une convention avec l’Etat, sans intérêt, ni condition de ressources. Il permet le financement de la fourniture et de la pose, par un professionnel Reconnu Garant de l'Environnement (RGE), des matériaux et équipements nécessaires à la réalisation de travaux d’économies d’énergie dans les logements.

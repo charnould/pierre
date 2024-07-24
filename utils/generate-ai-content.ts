@@ -5,7 +5,7 @@ import { generateObject, streamText } from 'ai'
 import { format } from 'date-fns/format'
 import { z } from 'zod'
 import type { AIContext } from './_schema'
-import { save_conversation } from './run-telemetry'
+import { save_reply } from './handle-conversation'
 
 const openai = createOpenAI({
   apiKey: Bun.env.OPENAI_API_KEY,
@@ -25,16 +25,25 @@ const anthropic = createAnthropic({ apiKey: Bun.env.ANTHROPIC_API_KEY })
 // ENHANCE_QUERY
 //
 // Cette fonction transforme une "simple" requête de l'utilisateur
-// en un "objet augmenté" permettant de comprendre ses intentions
-// et d'optimiser la recherche future des connaissance pertinentes.
+// en un "objet augmenté" permettant de comprendre ses intentions et
+// d'optimiser la recherche des connaissances/informations pertinentes.
 //
 export const enhance_query = async (context: AIContext) => {
+  //
+  //
+  let textified_conversation = ''
+  for (const c of context.conversation) {
+    const role = c.role.toUpperCase()
+    textified_conversation += `<${role}>${c.content}</${role}>\n`
+  }
+
+  //
   const { object } = await generateObject({
     ////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////
     // TODO : Vous pouvez changer ici le modèle (LLM) utilisé
     // Ex.  : openai('gpt-4o-2024-05-13'), openai('gpt-3.5-turbo')...
-    model: openai('gpt-4o-2024-05-13'),
+    model: openai('gpt-4o-mini-2024-07-18'),
     ////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////
 
@@ -57,7 +66,7 @@ export const enhance_query = async (context: AIContext) => {
         content: `
           ### CONVERSATION ###
           
-          ${context.text_conversation}
+          ${textified_conversation}
           
           ### CONTEXT ###
 
@@ -122,7 +131,7 @@ export const enhance_query = async (context: AIContext) => {
 // langue de l'utilisateur
 //
 export const answer_user = async (context: AIContext) => {
-  context.raw_conversation.push({
+  context.conversation.push({
     role: 'assistant',
     content: `
       ### INSTRUCTIONS ###
@@ -148,7 +157,7 @@ export const answer_user = async (context: AIContext) => {
       ${context.followup}
       
       ### OTHER INFORMATION ###
-      Knowledge cutoff: 2024-07.
+      Knowledge cutoff: 2024-08.
       Current date: ${format(new Date(), 'yyyy-MM-dd')}.
       `.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
   })
@@ -158,11 +167,11 @@ export const answer_user = async (context: AIContext) => {
     ////////////////////////////////////////////////////////////////////
     // TODO : Vous pouvez changer ici le modèle (LLM) utilisé
     // Ex.  : openai('gpt-4o-2024-05-13'), openai('gpt-3.5-turbo')...
-    model: openai('gpt-4o-2024-05-13'),
+    model: openai('gpt-4o-mini-2024-07-18'),
     ////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////
 
-    messages: context.raw_conversation,
+    messages: context.conversation,
 
     //
     async onFinish({ text, usage }) {
@@ -170,8 +179,8 @@ export const answer_user = async (context: AIContext) => {
       context.usage.prompt_tokens = usage.promptTokens
       context.usage.total_tokens = usage.totalTokens
       context.role = 'assistant'
-      context.raw = text
-      save_conversation(context)
+      context.content = text
+      save_reply(context, true)
     }
   })
 }
@@ -191,7 +200,7 @@ export const answer_user = async (context: AIContext) => {
 // De fait, PIERRE ne peut lui répondre.
 //
 export const reach_deadlock = async (context: AIContext) => {
-  context.raw_conversation.push({
+  context.conversation.push({
     role: 'assistant',
     content: `
       You're Pierre, a helpful artificial intelligence and social housing expert. You're also an alpha version and currently learning.
@@ -201,7 +210,7 @@ export const reach_deadlock = async (context: AIContext) => {
 
       ###### Case 1 ######
       If user's question contains any bad words or profanity.
-      Then answer how can only handle polite and respectful chats.
+      Then answer you can only handle polite and respectful chats.
 
       ###### Case 2 ######
       If user's question is about yourself.
@@ -241,11 +250,11 @@ export const reach_deadlock = async (context: AIContext) => {
     //  openai('gpt-4o-2024-05-13')
     //  openai('gpt-3.5-turbo')
     //  anthropic('claude-3-5-sonnet-20240620')
-    model: openai('gpt-4o-2024-05-13'),
+    model: openai('gpt-4o-mini-2024-07-18'),
     ////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////
 
-    messages: context.raw_conversation,
+    messages: context.conversation,
 
     //
     async onFinish({ text, usage, finishReason }) {
@@ -253,8 +262,8 @@ export const reach_deadlock = async (context: AIContext) => {
       context.usage.prompt_tokens = usage.promptTokens
       context.usage.total_tokens = usage.totalTokens
       context.role = 'assistant'
-      context.raw = text
-      save_conversation(context)
+      context.content = text
+      save_reply(context, true)
     }
   })
 }

@@ -18,11 +18,32 @@ export const Config = z.object({
 //
 // prettier-ignore
 // biome-ignore format: readability
+// Reflects telemetry database schema
+export const Reply = z.object({
+    id                  : z.string().uuid(),
+    config              : z.string(),
+    role                : z.enum(['assistant', 'user', 'system']),
+    timestamp           : z.string(),
+    content             : z.string(),
+    user_score          : z.number().nullish(),
+    reviewer_score      : z.number().nullish(),
+    reviewer_comment    : z.string().nullish(),
+    prompt_tokens       : z.number().nullish(),
+    completion_tokens   : z.number().nullish(),
+    total_tokens        : z.number().nullish()
+  })
+
+//
+//
+//
+// prettier-ignore
+// biome-ignore format: readability
 export const AIContext = z.object({
+    timestamp         : z.string().datetime().default(new Date().toISOString()),
     role              : z.enum(['assistant', 'user', 'system']),
-    raw               : z.string(),
+    content           : z.string(),
     chunks            : z.array(z.string()).nullish().default(null),
-    uuid              : z.string().uuid(),
+    id                : z.string().uuid(),
     config            : z.string().or(Config),
     about_housing     : z.boolean().default(true),
     vagueness         : z.number().default(0),
@@ -32,8 +53,7 @@ export const AIContext = z.object({
     stepback          : z.string().nullish().default(null),
     hyde              : z.array(z.string()).nullish().default(null),
     keywords          : z.array(z.string()).nullish().default(null),
-    text_conversation : z.string().nullish().default(null),
-    raw_conversation  : z.array(z.object({
+    conversation      : z.array(z.object({
                           role    : z.enum(['assistant', 'user', 'system']),
                           content : z.string()
                         })).default([]),
@@ -43,19 +63,16 @@ export const AIContext = z.object({
                           total_tokens      : z.number().nullish().default(null)
                         }).default({})
   })
-  .refine(async (content) => {
-    // verify that config exists
-    if (typeof content.config === 'string') {
-      const config = (await import(`../assets/${content.config}/config`)).default
-      content.config = config
-    }
 
-    // For Zod
+  // Change config name for config content
+  .refine(async (c) => {
+    if (typeof c.config === 'string') c.config = (await import(`../assets/${c.config}/config`)).default
     return true
   })
 
 //
 //
 //
+export type Reply = z.infer<typeof Reply>
 export type Config = z.infer<typeof Config>
 export type AIContext = z.infer<typeof AIContext>

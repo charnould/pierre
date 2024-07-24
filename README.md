@@ -4,7 +4,7 @@ _(en cours de rédaction)_
 
 # PIERRE
 
-## PIERRE, qu'est ce que c'est ?
+## PIERRE, qu'est-ce que c'est ?
 
 PIERRE est l'intelligence artificielle (IA) **open source** et **plurilingue** du Mouvement HLM. Plus précisément, c'est :
 
@@ -40,7 +40,6 @@ PIERRE est l'intelligence artificielle (IA) **open source** et **plurilingue** d
   - [Les principales commandes pour gérer le déploiement](#les-principales-commandes-pour-gerer-le-deploiement)
   - [Comment télécharger la base de données qui contient les conversations](#comment-telecharger-la-base-de-donnees-qui-contient-les-conversations)
   - [Requête SQLite pour extraire et organiser les conversations](#requete-sqlite-pour-extraire-et-organiser-les-conversations)
-  - [Comment visualier agréablement les données](#comment-visualier-agreablement-les-donnees)
 - [License](#license)
 
 <!-- tocstop -->
@@ -87,11 +86,6 @@ TODO
 - Ajouter une recherche par `keywords` (en utilisant le stemmer `snowball` ?)
 - Ajouter des tests
 - Corriger Typescript + refactor
-- Ajouter de la télémétrie simple:
-  - Créer une page protégée par `basic auth` ?
-  - Pouvoir consulter, voire supprimer, les conversations ?
-  - Pouvoir télécharger la BDD sans passer par un script `scp` ?
-  - Faire en sorte que - quel que soit le domaine de déploiement - la télémétrie se sauvegarde également sur Pierre (doit pouvoir être débrayable) ?
 - Mettre en place un CI/CD ?
 
 - Tronquer les réponses si le nombre de `tokens` dépasse le `context` ?
@@ -211,7 +205,7 @@ avec : `ip` est l'`ip` du serveur, et `~/Desktop/` là où vous voulez télécha
 
 ```sql
 SELECT
-  uuid,
+  id,
   json_group_array(
     json_object(
       'timestamp', timestamp,
@@ -222,22 +216,16 @@ SELECT
 
 FROM (
   SELECT
-    uuid,
+    id,
     content,
     timestamp,
     role
   FROM telemetry
-  ORDER BY uuid, timestamp
+  ORDER BY id, timestamp
 )
 
-GROUP BY uuid;
+GROUP BY id;
 ```
-
-### Comment visualier agréablement les données
-
-- Télécharger VS Code
-- Ouvrir le fichier.json
-- Ouvrir la palette, chercher `word wrap` puis clic droit `format file`
 
 ## License
 

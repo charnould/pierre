@@ -1,0 +1,2 @@
+Un opérateur qui auto héberge PIERRE, s'il veut rajouter du contenu spécific doit par convention l'ajouter dans son dossier dans un sous-dossier _custom.
+Cela facilitera ses futures rebases/forks
