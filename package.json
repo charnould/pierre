@@ -22,10 +22,10 @@
     "start": "bash utils/run.sh init_db && bun run app.ts"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^0.0.31",
-    "@ai-sdk/mistral": "^0.0.23",
-    "@ai-sdk/openai": "^0.0.38",
-    "ai": "^3.2.34",
+    "@ai-sdk/anthropic": "^0.0.32",
+    "@ai-sdk/mistral": "^0.0.24",
+    "@ai-sdk/openai": "^0.0.39",
+    "ai": "^3.2.35",
     "date-fns": "^3.6.0",
     "hono": "^4.5.1",
     "lodash": "^4.17.21",
@@ -42,9 +42,9 @@
     "@types/lodash": "^4.17.7",
     "@types/turndown": "^5.0.5",
     "lightningcss-cli": "^1.25.1",
-    "llamaindex": "^0.5.8",
+    "llamaindex": "^0.5.9",
     "markdown-toc": "^1.2.0",
-    "promptfoo": "^0.73.4",
+    "promptfoo": "^0.73.5",
     "turndown": "^7.2.0",
     "typescript": "^5.5.4"
   }

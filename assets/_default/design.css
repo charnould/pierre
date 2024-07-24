@@ -2,7 +2,7 @@
 
 :root {
   --rgb-black: 66, 65, 59;
-  --serif-font: "Gelasio", serif;
+  --serif-font: "Inter", sans-serif;
   --sans-serif-font: "Inter", sans-serif;
 }
 
@@ -67,7 +67,6 @@ button {
   width: -moz-fit-content;
   font-size: 0.85rem;
   font-style: normal;
-  font-weight: 500;
   background-color: rgba(255, 255, 255, 0);
   border-radius: 5px;
   width: fit-content;
@@ -255,14 +254,14 @@ pre > * {
 p {
   margin: 12px 0;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.4;
 }
 
 li,
 li > p {
   margin: 5px 0;
-  font-weight: 450;
+  font-weight: 400;
   line-height: 1.4;
 }
 
