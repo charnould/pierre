@@ -18,6 +18,9 @@ env:
   secret:
     - OPENAI_API_KEY
     - REGISTRY_TOKEN
+    - AUTH_SECRET
+    - PASSWORDS
+    - TELEMETRY
 
 healthcheck:
   path: /
