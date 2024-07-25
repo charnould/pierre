@@ -38,8 +38,6 @@ PIERRE est l'intelligence artificielle (IA) **open source** et **plurilingue** d
   - [Personnaliser PIERRE](#personnaliser-pierre)
   - [Comment installer PIERRE sur votre site web ou votre extranet-locataire ?](#comment-installer-pierre-sur-votre-site-web-ou-votre-extranet-locataire-)
   - [Les principales commandes pour gérer le déploiement](#les-principales-commandes-pour-gerer-le-deploiement)
-  - [Comment télécharger la base de données qui contient les conversations](#comment-telecharger-la-base-de-donnees-qui-contient-les-conversations)
-  - [Requête SQLite pour extraire et organiser les conversations](#requete-sqlite-pour-extraire-et-organiser-les-conversations)
 - [License](#license)
 
 <!-- tocstop -->

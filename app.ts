@@ -1,14 +1,14 @@
 import { Hono } from 'hono'
-import { basicAuth } from 'hono/basic-auth'
 import { serveStatic } from 'hono/bun'
-import { HTTPException } from 'hono/http-exception'
 import { secureHeaders } from 'hono/secure-headers'
 
 import { controller as get_ai } from './controllers/GET.ai'
 import { controller as get_index } from './controllers/GET.index'
 import { controller as get_review } from './controllers/GET.review'
+import { controller as post_login } from './controllers/POST.login'
 import { controller as post_review } from './controllers/POST.review'
 import { controller as post_telemetry } from './controllers/POST.telemetry'
+import { authenticate } from './utils/authenticate-reviewer'
 
 const app = new Hono()
 
@@ -27,14 +27,8 @@ app.get('/ai/:id', get_ai)
 app.get('/c/:id', get_index)
 app.post('/telemetry', post_telemetry)
 app.post('/review', post_review)
-app.get(
-  '/review',
-  basicAuth({
-    username: Bun.env.USERNAME as string,
-    password: Bun.env.PASSWORD as string
-  }),
-  get_review
-)
+app.post('/login', post_login)
+app.get('/review', authenticate, get_review)
 
 app.notFound(async (c) => {
   const baseurl = `/c/${crypto.randomUUID()}?config=`
@@ -46,10 +40,6 @@ app.notFound(async (c) => {
   }
 })
 
-app.onError((err, c) => {
-  if (err instanceof HTTPException) return err.getResponse()
-  console.log(err)
-  return c.notFound()
-})
+app.onError((_err, c) => c.notFound())
 
 export default app
