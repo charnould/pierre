@@ -17,5 +17,5 @@ export const controller = async (c: Context) => {
     deleteCookie(c, 'pierre')
   }
 
-  return c.redirect('/review')
+  return c.redirect('/admin/chats')
 }

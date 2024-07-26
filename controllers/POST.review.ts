@@ -15,5 +15,5 @@ export const controller = async (c: Context) => {
     true
   )
 
-  return c.redirect('/review')
+  return c.redirect('/admin/chats')
 }

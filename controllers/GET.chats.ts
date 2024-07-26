@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 import _ from 'lodash'
-import { view } from '../views/review'
+import { view } from '../views/chats'
 
 import type { Reply } from '../utils/_schema'
 import { get_conversation, get_conversations_for_review } from '../utils/handle-conversation'

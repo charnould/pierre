@@ -3,8 +3,8 @@ import { serveStatic } from 'hono/bun'
 import { secureHeaders } from 'hono/secure-headers'
 
 import { controller as get_ai } from './controllers/GET.ai'
+import { controller as get_chats } from './controllers/GET.chats'
 import { controller as get_index } from './controllers/GET.index'
-import { controller as get_review } from './controllers/GET.review'
 import { controller as post_login } from './controllers/POST.login'
 import { controller as post_review } from './controllers/POST.review'
 import { controller as post_telemetry } from './controllers/POST.telemetry'
@@ -25,10 +25,13 @@ app.use('/assets/*', serveStatic({ root: './' }))
 
 app.get('/ai/:id', get_ai)
 app.get('/c/:id', get_index)
+
 app.post('/telemetry', post_telemetry)
-app.post('/review', post_review)
-app.post('/login', post_login)
-app.get('/review', authenticate, get_review)
+
+app.get('/admin', (c) => c.redirect('/admin/chats'))
+app.get('/admin/chats', authenticate, get_chats)
+app.post('/admin/chats', authenticate, post_review)
+app.post('/admin/login', post_login)
 
 app.notFound(async (c) => {
   const baseurl = `/c/${crypto.randomUUID()}?config=`

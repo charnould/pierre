@@ -15,7 +15,7 @@
     "build:rag": "bun run utils/knowledge/1-Scrap-wikipedia.ts && bun format:prettier && bun run utils/knowledge/2-Build-knowledge.ts",
     "build:js": "bun build --entrypoints assets/_default/scripts/*.ts --outdir assets/_default/scripts/build --minify --target browser --watch",
     "--- start ---": "",
-    "dev:css": "bunx @tailwindcss/cli@next -i assets/_default/review.css -o assets/_default/dist/review.css --watch --minify",
+    "dev:css": "bunx @tailwindcss/cli@next -i assets/_default/admin.css -o assets/_default/dist/admin.css --watch --minify",
     "dev:update": "bun upgrade && bun update --latest && bun install",
     "dev:build": "bun dev:update && bun format && bun test",
     "dev:start": "bun --watch run app.ts",

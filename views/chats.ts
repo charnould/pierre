@@ -8,33 +8,108 @@ export const view = (is_auth, data, conversation: Reply[]) => {
       <head>
         <meta charset="UTF-8" />
         <script src="https://unpkg.com/@hotwired/turbo@8.0.4/dist/turbo.es2017-umd.js"></script>
-        <link rel="stylesheet" href="../assets/_default/dist/review.css" />
+        <link rel="stylesheet" href="../assets/_default/dist/admin.css" />
         <title>PIERRE</title>
       </head>
 
       ${
         is_auth === true
-          ? html`<body class="flex h-dvh flex-col justify-between">
-            <div class="flex h-dvh">
-              <div
-                class="no-scrollbar flex flex-col gap-x-6 overflow-y-scroll border-r-1 border-slate-300 p-5"
-              >
-                <form action="/login" method="post">
-                  <input type="hidden" name="action" value="logout" />
-                  <input
-                    type="submit"
-                    value="Se déconnecter"
-                    class="cursor-pointer text-sm text-blue-700 underline decoration-2 underline-offset-2"
+          ? html`<body class="flex h-dvh flex-col justify-between bg-[#FFFCF9]">
+            <form
+              action="/admin/login"
+              method="post"
+              class="flex justify-center gap-x-5 p-4 font-bold text-slate-700"
+            >
+              <input type="hidden" name="action" value="logout" />
+              <div class="flex gap-x-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="size-6"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"
                   />
-                  <!--
-                  <a href="" class="text-blue-700 underline decoration-2 underline-offset-2">toutes</a>,
-                  <a href="" class="text-blue-700 underline decoration-2 underline-offset-2">non revues</a>.
-                  -->
-                </form>
+                </svg>
+                <a href="">Conversations</a>
+              </div>
 
+              <div class="flex gap-x-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="size-6"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605"
+                  />
+                </svg>
+
+                <a href="" class="line-through">Statistiques</a>
+              </div>
+
+              <div class="flex gap-x-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="size-6"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M14.25 9.75 16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z"
+                  />
+                </svg>
+
+                <a href="" class="line-through">Logs</a>
+              </div>
+
+              <div class="flex gap-x-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="size-6"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
+                  />
+                </svg>
+
+                <input
+                  type="submit"
+                  value="Logout"
+                  class="cursor-pointer font-medium"
+                />
+              </div>
+            </form>
+
+            <div
+              class="mx-auto mb-4 flex h-[90%] w-[1100px] rounded-lg border-1 border-slate-200 bg-white shadow-lg"
+            >
+              <div
+                class="no-scrollbar flex flex-col gap-x-6 overflow-y-scroll border-r-1 border-slate-200 p-6"
+              >
                 ${data.map(
                   (conv) =>
-                    html` <a href="/review?id=${conv[0].id}">
+                    html` <a href="/admin/chats?id=${conv[0].id}">
                       <table
                         class="my-2 w-[450px] border-separate border-spacing-0 rounded border-1 border-current border-slate-200"
                       >
@@ -93,12 +168,12 @@ export const view = (is_auth, data, conversation: Reply[]) => {
               <div class="flex flex-1 flex-col justify-between">
                 <div
                   id="conversation"
-                  class="no-scrollbar overflow-y-scroll p-4"
+                  class="no-scrollbar overflow-y-scroll p-6"
                 >
                   ${conversation.map(
                     (c) =>
                       html`<div
-                        class="text-sm odd:float-right odd:my-6 odd:w-fit odd:rounded-lg odd:bg-gray-200 odd:p-3 even:clear-both"
+                        class="mb-6 text-sm odd:float-right odd:w-fit odd:rounded-lg odd:bg-gray-200 odd:p-3 even:clear-both"
                       >
                         ${raw(marked.parse(c.content))}
                       </div>`
@@ -107,7 +182,7 @@ export const view = (is_auth, data, conversation: Reply[]) => {
                 <form
                   action=""
                   method="post"
-                  class="flex flex-row items-center gap-x-4 border-t-1 border-slate-300 bg-slate-100 p-2"
+                  class="flex flex-row items-center gap-x-4 border-t-1 border-slate-200 bg-slate-50 p-2"
                 >
                   <input
                     name="comment"
@@ -189,17 +264,18 @@ export const view = (is_auth, data, conversation: Reply[]) => {
           : html`
             <body>
               <form
-                action="/login"
+                action="/admin/login"
                 method="post"
-                class="flex h-dvh items-center justify-center gap-x-2"
+                class="flex h-dvh items-center justify-center gap-x-2 bg-[#FFFCF9]"
               >
                 <input type="hidden" name="action" value="login" />
                 <input
+                  autofocus
                   name="password"
                   type="password"
                   autocomplete="PIERRE password"
                   placeholder="Password"
-                  class="rounded border-slate-400 p-3 text-3xl outline-none placeholder:text-slate-400"
+                  class="rounded border-slate-300 bg-white p-3 text-3xl outline-none placeholder:text-slate-400"
                 />
 
                 <input
