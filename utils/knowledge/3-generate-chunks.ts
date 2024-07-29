@@ -31,14 +31,7 @@ for await (const file of files) {
 
     for (let index = 1; index < splitted_data.length; index++) {
       const chunk = `${splitted_data[0]}\n## ${splitted_data[index].trim()}`
-
-      if (chunk.length > 8000) {
-        const split = chunk.split(/[^#]###\s/)
-        const split2 = `${splitted_data[0]}\n## ${splitted_data[index].trim()}`
-
-
-      }
-      console.log('############\n', chunk)
+      console.log('######################################\n', chunk)
       db.prepare('INSERT INTO chunks(chunk) VALUES(?);').run(chunk)
     }
   }
