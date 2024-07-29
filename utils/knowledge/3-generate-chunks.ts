@@ -26,7 +26,7 @@ for await (const file of files) {
       const chunk = `${splitted_data[0]}\n## ${splitted_data[index].trim()}`;
       const filepath = `${file.split(".")[0]}/${index}`.split("/").join(" / ");
 
-      chunks_report += `\n| ${filepath} | ${chunk.length} | ${chunk.length >= 7000 ? "🟢" : "🔴"} |`;
+      chunks_report += `\n| ${filepath} | ${chunk.length} | ${chunk.length >= 7800 ? "🟢" : "🔴"} |`;
       db.prepare("INSERT INTO chunks(chunk) VALUES(?);").run(chunk);
     }
   }
