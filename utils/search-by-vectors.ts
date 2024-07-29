@@ -15,7 +15,7 @@ export const vector_search = async (data) => {
       `
       select rowid as id, distance as score, 'vectors' as type
       from vectors
-      where vss_search(vector, ?)
+      where vss_search(chunk_vector, ?)
       order by score
       limit 3;`
     )

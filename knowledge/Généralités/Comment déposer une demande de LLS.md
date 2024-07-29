@@ -1,11 +1,15 @@
-# Comment déposer une demande de logement social ou HLM ?
+# Déposer une demande de logement social
+
+## Comment déposer une demande de logement social ou HLM ?
 
 Pour obtenir un logement social, il faut en faire la demande, et cette demande de logement social peut être faite :
 
 - soit par internet sur le [système national d'enregistrement](https://www.demande-logement-social.gouv.fr) ou via un sytème local d'enregistrement pour certains départements (exemples : Allier, Yonne, Finistère, etc.) ;
 - soit en complétant et retournant un formulaire Cerfa 14069\*05 à un guichet enregistreur (exemples de guichets enregistreurs : les bailleurs sociaux, les mairies, les préfectures, etc.).
 
-## Faire une demande de logement social ou HLM, par internet
+Pour information, une fois la demande de logement social validée, le délai d'obtention d'un logement dépend du nombre de logements disponibles au sein de la commune de votre choix ou du département demandé. Pour les villes très demandées, l'attente pourra être longue, pouvant durer de quelques mois à quelques années.
+
+### Faire une demande de logement social ou HLM, par internet
 
 La demande de logement social en ligne s'effectue sur https://www.demande-logement-social.gouv.fr. Votre demande sera ainsi accessible à tous les bailleurs et réservataires de logements locatifs sociaux.
 
@@ -71,7 +75,7 @@ Après validation de la demande de logement social :
 
 La demande et le numéro d'enregistrement (NUR ou NUD) sont valables dans tout le département, et dans toute la région pour l'Île- de-France.
 
-## Faire une demande de logement social ou HLM, par papier
+### Faire une demande de logement social ou HLM, par papier
 
 La demande de logement social peut également se faire au moyen d’un formulaire (Cerfa 14069\*05) que vous devez compléter et retourner à un guichet enregistreur.
 
@@ -97,7 +101,9 @@ La demande et le numéro d'enregistrement sont valables dans tout le départemen
 
 Le formulaire de demande de logement social n'est rempli qu'une seule fois, même si la demande de logement porte sur plusieurs communes à la fois.
 
-## Comment modifier ou mettre à jour une demande de logement social ?
+## Modifier, mettre à jour et renouveler une demande de logement social
+
+### Comment modifier ou mettre à jour une demande de logement social ?
 
 À tout moment, vous pouvez modifier votre demande de logement :
 
@@ -106,7 +112,7 @@ Le formulaire de demande de logement social n'est rempli qu'une seule fois, mêm
 
 Selon les modifications effectuées, de nouvelles pièces justificatives peuvent vous être demandées.
 
-## Comment renouveler une demande de logement social ?
+### Comment renouveler une demande de logement social ?
 
 A la date anniversaire de votre inscription initiale, vous devrez renouveler votre demande de logement social, et ce, jusqu’à obtention d’un logement.
 
@@ -116,9 +122,3 @@ Vous pouvez renouveler votre demande de logement :
 - en complétant et retournant à un guichet enregistreur un nouveau formulaire Cerfa 14069\*05.
 
 Chaque année, il est indispensable que le demandeur actualisent ses avis d'imposition.
-
-## Quel délai d’attente pour obtenir un logement social ou HLM ?
-
-Une fois la demande de logement social validée, le délai d'obtention d'un logement dépend du nombre de logements disponibles au sein de la commune de votre choix ou du département demandé.
-
-Pour les villes très demandées, l'attente pourra être longue, pouvant durer de quelques mois à quelques années.

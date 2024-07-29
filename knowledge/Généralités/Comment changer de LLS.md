@@ -1,8 +1,10 @@
-# Comment changer de logement social ?
+# Changer de logement social
+
+## Comment changer de logement social ?
 
 Vous êtes déjà locataire dans le parc social et vous souhaitez changer de logement. Cette recherche peut être motivée par votre changement de situation ou vos souhaits qui évoluent.
 
-## Les situations pouvant amener à changer de logement social
+### Les situations pouvant amener à changer de logement social
 
 Changer de logement social nécessite de suivre une procédure et de répondre à des critères d’éligibilité :
 
@@ -19,7 +21,7 @@ En fonction de leur degré d'urgence, ces situations sont :
 
 A noter : La situation de la commune dans laquelle vous souhaitez habiter peut avoir un impact sur votre demande de changement de logement social. En effet, dans certaines villes, le temps d’attente est plus ou moins long.
 
-## Les démarches pour faire une demande de changement de logement social
+### Les démarches pour faire une demande de changement de logement social
 
 La demande de changement de logement social est considérée comme une nouvelle demande de logement qui nécessite de :
 
@@ -28,7 +30,7 @@ La demande de changement de logement social est considérée comme une nouvelle 
 - Disposer d’une attestation d’assurance habitation de votre logement actuel
 - Conserver votre logement actuel en bon état
 
-## Comment obtenir un changement de logement social ?
+### Comment obtenir un changement de logement social ?
 
 Une fois votre dossier déposé et validé, votre demande de mutation est enregistrée. Vous recevez une attestation d’enregistrement par e-mail ou par courrier.
 
@@ -38,6 +40,6 @@ Si vous êtes salarié d’une entreprise du secteur privé de plus de 10 salari
 - Découvrir les offres de logements sociaux correspondant à votre situation
 - Vous positionner sur une offre de logement social
 
-## Quels sont les délais d'attente pour une mutation de logement social ?
+### Quels sont les délais d'attente pour une mutation de logement social ?
 
 Les délais d’obtention peuvent être longs, même pour une demande prioritaire. Ils dépendent notamment du nombre de logements disponibles au sein de la commune demandée.

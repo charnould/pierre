@@ -1,6 +1,8 @@
-# Comment devenir propriétaire d’un logement social ?
+# Acquérir ou acheter un logement social
 
-## Qui peut devenir propriétaire d’un logement social ?
+## Comment devenir propriétaire d’un logement social ?
+
+### Qui peut devenir propriétaire d’un logement social ?
 
 Il est possible d'acheter le logement social que l'on occupe ou même de devenir propriétaire d'un logement social, mais des conditions doivent être respectées, en fonction de votre situation et de vos revenus.
 
@@ -16,13 +18,13 @@ L'achat n'est pas réservé au locataire : son conjoint, mais aussi, sous condit
 
 Si vous occupez un logement social, votre bailleur doit informer le locataire s'il souhaite le mettre en vente. Néanmoins, le locataire peut aussi prendre l'initiative et se rapprocher de son bailleur pour savoir les logements actuellement en vente.
 
-## Comment se passe l’achat d’un logement social ou HLM ?
+### Comment se passe l’achat d’un logement social ou HLM ?
 
 Avant de commencer les démarches, comme pour l'achat d'un appartement ou d'une maison dans le parc privé, vous devez définir votre budget : votre apport personnel, votre capacité d'emprunt et sans oublier les frais annexes comme les frais de notaire.
 
 Ensuite, en fonction de votre situation, vous pouvez bénéficier d'aides. Vous pouvez vous renseigner sur l'outil de l'ANIL, qui recense l'ensemble des aides locales pour l'accession à la propriété. Des prêts peuvent également être mobilisés : Prêt à taux zéro (PTZ), Prêt Accession Sociale (PAS), Prêt Action Logement…
 
-## Quels sont les dispositifs d’accession sociale ?
+### Quels sont les dispositifs d’accession sociale ?
 
 - Le PSLA (Prêt social location-accession) permet aux ménages, sous conditions de ressources, d’acheter, sans apport initial, un logement neuf ou ancien. Le prix de vente est plafonné et l’opération comporte des avantages fiscaux (TVA à taux réduit, exonération de taxe foncière) ;
 - le Bail réel solidaire permet aux ménages modestes d’acheter le bâti (et non le foncier) sur une longue durée (jusqu’à 99 ans). Il peut s’agir d’un logement neuf ou ancien . Ce dispositif comporte de nombreux avantages : un prix d’acquisition accessible, une TVA au taux réduit (pour le neuf).

@@ -14,6 +14,7 @@
 ARPEJ, Association de Résidences pour Etudiants et Jeunes, est une association loi 1901 fondée en 1989 à l'initiative d'une filiale de la Caisse des Dépôts et Consignations. Elle est spécialisée dans la gestion de résidences pour étudiants, jeunes actifs et chercheurs.
 
 ARPEJ en chiffres :
+
 - 86 résidences gérées en France
 - 13 250 jeunes logés
 - 91 % des résidents satisfaits
@@ -90,4 +91,3 @@ Notre ambition dépasse la simple vocation d’attribuer un logement aux jeunes.
 #### ARPEJ, une association à visée sociale et solidaire
 
 Acteur de l’Economie Sociale et Solidaire et spécialiste dans la gestion de résidences pour étudiants, jeunes actifs et chercheurs, nous œuvrons chaque jour pour garantir et accroître notre offre de logements et ainsi accueillir les jeunes dans les meilleures conditions avec un panel complet de services.
-

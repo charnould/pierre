@@ -86,8 +86,6 @@ L'UMJ se trouve dans un hôpital.
 
 Pour que l'auteur des violences conjugales que vous avez subies soit poursuivi en justice, et qu'il soit condamné pour son acte, vous devez porter plainte. Il n’est pas possible de déposer une main courante dans le cadre de violences sexuelles, sexistes ou conjugales.
 
-
-
 ## Comment la justice peut-elle aider ceux qui les subissent ?
 
 ### Contrôle judiciaire et interdiction de rentrer en contact

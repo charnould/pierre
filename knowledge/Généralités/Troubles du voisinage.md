@@ -1,4 +1,3 @@
-
 # Troubles du voisinage
 
 ## Que puis-je faire en cas de troubles du voisinage ?
