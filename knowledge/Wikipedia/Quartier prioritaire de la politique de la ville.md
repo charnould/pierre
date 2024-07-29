@@ -43,3 +43,14 @@ Les principaux axes des mesures prises dans ces quartiers sont la cohésion soci
 Sur les quelque 1 500 quartiers prioritaires français, l'Agence nationale pour la rénovation urbaine en a sélectionné 480 dans le cadre de projets de renouvellement sur la période 2014-2030, destinés à y améliorer les conditions de vie en rénovant l'habitat et améliorant la mixité sociale. Parmi eux, 216 sont classés « d'intérêt national » car concentrant les plus grandes difficultés sociales, dont une cinquantaine compte plus de 10 000 habitants en 2018, présentés dans la liste ci-dessous.
 
 Plusieurs de ces quartiers prioritaires, parmi les plus peuplés, regroupent en réalité différents quartiers proches et parfois étalés sur plusieurs villes. Le plus peuplé est « Franc Moisin-Cosmonautes-Cristino Garcia-Landy » avec 126 034 habitants, à cheval entre trois communes de Seine-Saint-Denis. Avec un taux de pauvreté record de 71 %, Pissevin-Valdegour concentre le plus d'exclusions sociales. La plupart sont inclus au sein des 80 zones de sécurité prioritaire.
+
+## Notes et références
+
+## Liens externes
+
+- Carte des quartiers prioritaires de la politique de la ville sur le site du Système d'information géographique (SIG) de la politique de la ville.
+- « La nouvelle géographie prioritaire » sur le site gouvernemental.
+- Site de l’Observatoire national de la politique de la ville (ONPV).
+
+- Portail de la France
+- Portail de l’architecture et de l’urbanisme

@@ -270,3 +270,28 @@ L’association recommande aussi d’instaurer une taxe additionnelle sur les tr
 La Fondation milite pour la création d'un fonds national pour les impayés (loyers, charges), afin de venir en aide aux ménages en difficulté. La fondation Abbé-Pierre propose par ailleurs de durcir les sanctions contre les communes qui ne respectent pas la loi SRU.
 
 Elle suggère enfin aux candidats à la présidentielle la création d’une agence nationale des travaux d’office pour lutter contre l’habitat indigne. Cette agence pourrait engager le recouvrement des sommes avancées auprès des propriétaires défaillants.
+
+## Notes et références
+
+## Voir aussi
+
+### Bibliographie
+
+- Thierry Delahaye, Fondation Abbé-Pierre, Editions Actes Sud, janvier 2014 (ISBN 978-2-330-02825-1, lire en ligne)
+- Axelle Brodiez-Dolino, Emmaüs et l’abbé Pierre, Presses de Sciences Po, 2013, 431 p. (ISBN 978-2-7246-1391-9)
+
+### Liens externes
+
+- Site officiel
+- Ressources relatives aux organisations :
+  - SIREN
+  - Registre de transparence de l'UE
+- Ressource relative à la santé :
+  - Fichier national des établissements sanitaires et sociaux
+- Ressource relative à plusieurs domaines :
+
+  - Radio France
+
+- Portail de l’humanitaire
+- Portail des droits de l’homme
+- Portail des associations

@@ -45,3 +45,20 @@ Les élections des élus étudiants ont lieu tous les deux ans dans chaque acad�
 Ces élections étudiantes font l'objet d'une intense préparation au CNOUS et dans les CROUS pour amener l'augmentation de la participation : distribution de tracts, panneaux placardés dans les universités, encarts publicitaires achetés dans les journaux, etc. Le taux de participation varie entre 4 et 8 % suivant les années, il était néanmoins en augmentation jusqu'en 2006. En 2006, les élections, qui ont eu lieu en plein mouvement anti-CPE, ont été fortement perturbées, un certain nombre de points de vote ayant connu un ou plusieurs incidents comme des vols d'urnes et/ou de bulletins, voire une fermeture. Depuis la rentrée 2006, à la suite de recours administratifs, de nombreuses élections ont été annulées : Versailles, Paris, Dijon, Toulouse, Nancy-Metz, Lyon, etc. Ainsi, de nouvelles élections ont été organisées à la fin de l'année 2006, pour que la représentation des étudiants aux CROUS (mais pas au CNOUS) soit à l'image des réalités du milieu estudiantin.
 
 Le taux de participation varie suivant les académies, au plus bas à Paris (guère plus de 5 %), au plus haut dans le Limousin et en Corse (plus de 30 %).
+
+## Notes et références
+
+## Annexes
+
+### Articles connexes
+
+- Logement étudiant en France
+- Restaurant universitaire
+- Centre national des œuvres universitaires et scolaires
+- Organisation de représentation étudiante
+- Contribution à la vie étudiante et de campus
+- Izly
+
+### Liens externes
+
+- Portail des universités françaises

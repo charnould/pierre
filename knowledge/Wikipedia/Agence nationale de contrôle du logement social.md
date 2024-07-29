@@ -28,3 +28,14 @@ Le directeur général est nommé par arrêté du ministre de la cohésion des t
 Étude soutenabilité financière d'une baisse de loyers pour un nombre significatif de logements sociaux situés hors QPV (quartier prioritaire de la politique de la ville) - Simulations globales et études de cas (2016)
 
 Par ailleurs l'Agence publie un rapport annuel de contrôle.
+
+## Notes et références
+
+## Annexes
+
+### Lien externe
+
+- Site officiel
+
+- Portail de l’économie
+- Portail des Hauts-de-Seine

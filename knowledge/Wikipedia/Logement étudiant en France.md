@@ -61,3 +61,18 @@ Le montant des APL varie généralement entre 77 € et 230 €, mais dépend 
 L'impact des APL est important sur le budget des étudiants, car en moyenne “avant les aides, 50 % du budget des bénéficiaires est dédié au loyer ou au remboursement d’un prêt immobilier. Après versement, le chiffre tombe à 23 %”. Les étudiants ont désormais accès à des logements de qualité supérieure, puisqu’ils ont plus d’argent à consacrer au loyer de leur logement.
 
 Enfin, la colocation est de plus en plus prisée par les étudiants car elle permet de réaliser des économies sur un loyer tout en créant du lien social. Aujourd'hui 70 % des 18-24 ans envisagent de vivre en colocation\[réf. nécessaire\]. L'AFEV a développé sur le modèle de la colocation à Louvain-la-Neuve des colocations à projet solidaires : les KAPS.
+
+## Notes et références
+
+## Articles connexes
+
+- Fédération des résidences universitaires de France
+- Études supérieures en France
+- CROUS
+- CNOUS
+- Conseil de résidence
+- Thurne
+
+- Portail de l’éducation
+- Portail de l’architecture et de l’urbanisme
+- Portail des universités françaises

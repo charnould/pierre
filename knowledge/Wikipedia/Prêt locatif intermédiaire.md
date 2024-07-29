@@ -42,3 +42,19 @@ Engagement de location à usage d'habitation à titre de résidence principale p
 Plafond de ressources (sans dérogation possible).
 
 Plafonds de loyer
+
+## Notes et références
+
+## Voir aussi
+
+### Articles connexes
+
+- Prêt immobilier
+- Glossaire de l'immobilier
+
+### Liens externes
+
+- www.logement.gouv.fr
+- Code de la Construction et de l'Habitation, Art. R391-1 et suivants
+
+- Portail de la finance

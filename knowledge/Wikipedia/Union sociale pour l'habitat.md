@@ -57,3 +57,25 @@ Depuis le 1er janvier 2008, et conformément aux dispositions de l'ordonnance du
 Elles regroupent l’ensemble des organismes de chaque région. Elles ont notamment pour mission : la représentation du Mouvement Hlm à l’échelle territoriale, le lien entre les organismes, l’Union sociale pour l’habitat et les fédérations qui la composent, une animation technique et professionnelle, la diffusion d’informations et de pratiques territorialisées.
 
 Il existe 12 associations régionales en métropole\[Quand ?\] et une association qui regroupe les organismes d’habitat social d’Outre-mer.
+
+## Notes et références
+
+## Voir aussi
+
+### Articles connexes
+
+- Logement social
+- Habitation à loyer modéré
+- Organisme d'habitations à loyer modéré
+
+### Liens externes
+
+- Site de l'Union sociale pour l'habitat
+- Site du Réseau des acteurs de l'habitat : L'Union sociale pour l'habitat, Caisse des Dépôts et huit associations d'élus : ACUF, ADCF, AMGVF, ADF, AMF, FNAU, Villes et Banlieues, Villes de France
+- Site de la Fédération des Offices publics de l'habitat
+- Site de la Fédération des entreprises sociales pour l'habitat
+- Site de la Fédération nationale des sociétés coopératives d'Hlm
+
+- Portail du bâtiment et des travaux publics
+- Portail des politiques sociales
+- Portail de la France

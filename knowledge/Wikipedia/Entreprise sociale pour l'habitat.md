@@ -11,3 +11,22 @@ En France, 50 % des logements sociaux sont gérés par une ESH, le reste revena
 ## La fédération des ESH
 
 Les ESH sont représentées par une fédération dirigée par Didier Poussou. Valérie Fournier préside le bureau fédéral de l'organisation. La fédération des ESH est l'une des familles composant l'USH.
+
+## Notes et références
+
+## Voir aussi
+
+### Articles connexes
+
+- Organisme d'habitations à loyer modéré (France)
+- Logement social en France
+
+### Liens externes
+
+- Ressources relatives aux organisations :
+
+  - SIREN
+  - Répertoire national des associations
+
+- Portail de l’économie
+- Portail du bâtiment et des travaux publics

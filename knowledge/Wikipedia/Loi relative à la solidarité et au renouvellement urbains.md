@@ -90,3 +90,22 @@ Au bout de vingt années d'application, il apparaît que la moitié des 1,8 mil
 Au-delà de ces résultats quantitatifs, le journal Le Monde considère que la loi SRU a échoué à mélanger ménages aisés et modestes dans les mêmes quartiers. Citant l'Institut des hautes études pour l’action dans le logement (Idheal), il estime que la loi a réussi à mieux répartir géographiquement l’offre de logement social dans les communes urbaines mais n'est pas parvenue à combler les écarts de revenus entre quartiers « ni à contrecarrer une tendance de fond au creusement de l'inégalité entre enclaves de richesse et de pauvreté ».
 
 De son côté, le géographe Grégoire Fauconnier, auteur d'une thèse sur le sujet, considère que la loi SRU a permis de stimuler la construction de logements sociaux dans les communes où il y en avait peu mais que la mixité sociale souhaitée par le législateur n'est pas au rendez-vous du fait du contournement de l'esprit de la loi. Ses conclusions convergent avec celles de la plupart des chercheurs ayant travaillé sur la loi SRU. Ainsi, en 2006, Philippe Subra et Didier Desponds avaient montré les difficultés d’application de la loi SRU en raison de l’opposition, voire de l’hostilité, des élus locaux et des habitants. De son côté, le politiste Fabien Desage, a montré dans ses recherches comment les maires des communes concernées par la loi ne construisent des logements sociaux qu'après s'être assurés d'en contrôler l'attribution, privilégiant les ménages de leurs communes. Cette contrepartie informelle limite fortement les effets déségrégatifs de la loi.
+
+## Notes et références
+
+## Voir aussi
+
+### Articles connexes
+
+- Documents d'urbanisme : Schéma de cohérence territoriale, Plan d'occupation des sols destiné à être remplacé par le Plan local d'urbanisme, et carte communale.
+
+### Liens externes
+
+- Texte de la loi SRU
+- « Article L. 302-5 du code de la construction et de l'habitation : Version en vigueur », sur legifrance.gouv.fr
+- Document de la DGUHC : communes concernées par l’article 55 de la loi SRU où les logements locatifs sociaux représentent moins de 20 % du nombre de résidences principales.
+
+- Portail du droit français
+- Portail de l’architecture et de l’urbanisme
+- Portail de la politique française
+- Portail des années 2000

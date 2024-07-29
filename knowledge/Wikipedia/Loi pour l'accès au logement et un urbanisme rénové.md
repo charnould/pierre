@@ -201,3 +201,31 @@ Manuel Valls annonce le 29 août 2014 plusieurs rectifications de la loi Duflot�
 - Par ailleurs, les professionnels se plaignant de la complexité induite par la loi, 50 mesures de simplification doivent être prises avant le 1er janvier 2015.
 
 Ces mesures sont prises dans le cadre plus large d'une relance du logement.
+
+## Notes et références
+
+## Voir aussi
+
+### Articles connexes
+
+### Bibliographie
+
+- Raimbert B (2013). À propos du projet de loi pour l'accès au logement et un urbanisme rénové. Gazette du palais: Recueil bimestral, 133(5), 3428-3432.
+- DREAL Pays-de-Loire (2013) Identifier et comprendre la rétention foncière-2013-10-09 ; synthèse : DREAL-PaysLoire-AC90_Identifier ComprendreRetentionV2 (format pdf - 4,1 Mo - 30/12/2013) et le rapport : DREAL-PaysLoire_Identifier_Comprendre_RetentionFonciereOct2013 (format pdf - 1,9 Mo - 11/10/2013).
+- Devaux C (2013) « L'habitat participatif: de l'émergence d'une initiative habitante à son intégration dans l'action publique » (Thèse) ; résumé).
+
+### Liens externes
+
+- Loi no 2014-366 du 24 mars 2014 pour l’accès au logement et un urbanisme rénové (Legifrance)
+- Étude d'impact (socioéconomique et juridique) du projet de loi ALUR (sur le site de l'Assemblée nationale)
+- Dossier législatif Alur (sur le site du Sénat)
+- Sur territoires.gouv.fr
+
+  - Dossier Alur (en intégralité)
+  - Dossier de presse : loi pour l’accès au logement et un urbanisme rénové (Alur) (PDF- 1 Mo)
+  - « Ce que la loi ALUR pourrait changer »
+
+- Portail du droit français
+- Portail de l’architecture et de l’urbanisme
+- Portail de l’économie
+- Portail de la société

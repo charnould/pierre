@@ -139,3 +139,34 @@ Le 12 juin 2023, quatre députés du parti politique La France Insoumise, Franç
 Le 7 février 2024, France Stratégie fait paraître un rapport rédigé par Pierre-Yves Cusset, Clément Dherbécourt et Gabrielle Jacob dédié à l'évaluation du PNRU. Le rapport estime que le PNRU a certes eu un « impact causal significatif sur l’offre de logements et le peuplement des quartiers ciblés » mais que cet impact « s’observe essentiellement dans les quartiers où les opérations de démolition ont été les plus intenses, des quartiers en moyenne moins peuplés que les autres quartiers ciblés ». Toujours selon France Stratégie, la mise en œuvre du PNRU s'est néanmoins traduite par une « diminution notable de la part de logements sociaux et par une réduction de la part des ménages les plus pauvres ». Ainsi, « dans le quart des quartiers où les démolitions ont été les plus intenses, le PNRU a causé une diminution de plus de 9% de la part de logements sociaux, ainsi qu'une baisse de 17% de la part des ménages les plus pauvres ». Le PNRU a donc « en partie atteint son objectif de renforcer la mixité sociale dans les quartiers concernés, en agissant sur l'offre de logements et le peuplement ».
 
 Le 7 février 2024 également, l'entreprise de sondages d'opinion Harris Interactive et la société mère Toluna dont elle est filiale font paraître le troisième volet de l'enquête « Les Français dans leur quartier » commandée par l'ANRU. Elle observe que l'image des quartiers s'améliore particulièrement parmi les habitants d'un QPV ayant fait l'objet d'opérations de renouvellement urbain.
+
+## Notes et références
+
+- Cet article est partiellement ou en totalité issu de l'article intitulé « Dossier ANRU » (voir la liste des auteurs).
+
+## Voir aussi
+
+### Bibliographie
+
+- \[PDF\] Dossier : Rénovation urbaine : enjeux, mise en œuvre, qualités, dans la Revue Urbanisme Hors-série no 30, février 2007 - (84 pages, 4,5 Mo)
+
+### Articles connexes
+
+- Politique de la ville
+- Quartier prioritaire de la politique de la ville
+- Liste des zones franches urbaines
+- Grand projet de ville (dispositif supprimé par la réforme créant l'Anru)
+- Contrat urbain de cohésion sociale
+- Glossaire de l'immobilier
+- Participation des employeurs à l'effort de construction
+
+### Liens externes
+
+- Site officiel
+- \[PDF\]État du PNRU au 15 janvier 2014
+- Décret statutaire de l'ANRU du 9 février 2004
+- Règlement général de l'ANRU (Arrêté du 20 mars 2007)
+
+- Portail du droit français
+- Portail de l’architecture et de l’urbanisme
+- Portail des politiques sociales

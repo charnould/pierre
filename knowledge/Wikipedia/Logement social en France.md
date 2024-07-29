@@ -122,3 +122,52 @@ Le logement social est confronté à des problématiques spécifiques.
 ## Vente de logements sociaux
 
 Les politiques publiques favorisent la vente de logements sociaux à leurs locataires ou à d'autres locataires du parc social. Dans ce cas, une décote peut avoir lieu par rapport au prix du marché. Certains départements (Hauts-de-Seine, Essonne) ont voté des délibérations pour réduire la part départemental des droits de mutation à titres onéreux (frais de notaires) de ces logements sociaux vendus. L'acheteur doit s'engager à faire de ce logement sa résidence principale pendant cinq ans, et de ne pas le revendre en faisant une plus-value pendant cette période. Certaines communes, dont Paris, interdisent la vente de logements sociaux sur leur territoire. D'autres pays (ex-Europe de l'Est, comme pour la Karl-Marx-Allee à Berlin, ou Grande-Bretagne dans les années 80) ont également connu des ventes massives de logements sociaux.
+
+## Notes et références
+
+## Voir aussi
+
+### Articles connexes
+
+- Bail social
+- Cité-jardin
+- Cité ouvrière
+- Comité des mal-logés
+- Glossaire de l'immobilier
+- Grand ensemble • Grand ensemble en France
+- Habitation à loyer modéré • Habitation à loyer modéré en France
+- Logement étudiant en France
+- Logement intermédiaire
+- Participation des employeurs à l'effort de construction • Créances 1 % logement
+- Répertoire des logements locatifs des bailleurs sociaux
+
+### Bibliographie
+
+- Rémy Butler et Patrice Noisette, Le Logement social en France : 1815-1981, de la cité ouvrière au grand ensemble, Paris, Éditions Maspero, 1983, 200 p. (ISBN 978-2-7071-1379-5)
+- Catherine Bonvalet, Jacques Brun et Marion Segaud (dir.), Logement et habitat : l'état des savoirs, Paris, La Découverte, 1998, 411 p. (ISBN 978-2-7071-2841-6)
+- Marie-Jeanne Dumont, Le Logement social à Paris 1850-1930 : les habitations à bon marché, Bruxelles, Mardaga, 1991, 192 p. (ISBN 978-2-87009-349-8, lire en ligne)
+- Monique Eleb et Anne Debarre, L'invention de l'habitation moderne, Paris 1880-1914, Éditions Hazan, 1995 (ISBN 978-2-85025-384-3)
+- Jean-Paul Flamand, Loger le peuple : essai sur l'histoire du logement social en France, Paris, La Découverte, 1989, 369 p. (ISBN 978-2-7071-1875-2)
+- Jean-Paul Frey, La Généalogie des types de logements patronaux : 1836-1939, Paris, coll. « Société et urbanistique patronale » (no 3), 1987
+- Romain Graëffly, Le logement social : étude comparée de l’intervention publique en France et en Europe occidentale, Paris, Librairie générale de droit et de jurisprudence, 2006, 626 p. (ISBN 978-2-275-03016-6)
+- Serge Guérin (dir.), Habitat social et vieillissement. Représentations, formes et liens, Paris, La Documentation française, 2008, 237 p. (ISBN 978-2-11-007089-0)
+- Roger-Henri Guerrand, Propriétaires et locataires : les origines du logement social en France, (1850-1914), Paris, Quintette, 1987, 345 p. (ISBN 978-2-86850-009-0)
+- Roger-Henri Guerrand, Une Europe en construction : deux siècles d'habitat social en Europe, Paris, La Découverte, 1992, 230 p. (ISBN 978-2-7071-2131-8)
+- Roger-Henri Guerrand, Les origines du logement social en France. 1850-1914, Paris, La Villette, 2010, 287 p. (ISBN 978-2-915456-57-8)
+- Jean-Marc Stébé, Le Logement social en France, Paris, PUF, coll. « Que sais-je ? », 2007, 128 p. (ISBN 978-2-13-055594-0, présentation en ligne)
+- Christian Topalov, Le Logement en France : histoire d'une marchandise impossible, Paris, Presses de la Fondation nationale des sciences politiques, 1987, 437 p. (ISBN 978-2-7246-0545-7)
+- Revue de l'économie sociale, no XIII, janvier 1988, L'habitat social.
+
+### Liens externes
+
+- « L'Union sociale pour l'habitat » – Union des organismes HLM (France)
+- « La Confédération Nationale du Logement » – CNL (France)
+- « UNLI : Union Nationale des Locataires Indépendants » (France)
+- « Agence Nationale pour l'Information sur le Logement » – ANIL (France)
+- « Réseau des acteurs de l'habitat », fondé en 2007 par quatre associations d'élus, ACUF, ADCF, AMGVF, ADF et l'Union sociale pour l'habitat
+- « Fédération Logement Consommation » (FLC)
+
+- Portail de l’économie
+- Portail du bâtiment et des travaux publics
+- Portail de l’architecture et de l’urbanisme
+- Portail de la France

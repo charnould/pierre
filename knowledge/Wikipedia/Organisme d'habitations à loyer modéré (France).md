@@ -82,3 +82,29 @@ D'après le code de la construction et de l'habitation, trois types d'organismes
 - les fondations d'habitations à loyer modéré.
 
 Depuis le 1er janvier 2009, les sociétés anonymes de crédit immobilier (SACI) ne sont plus des organismes de HLM, conformément aux dispositions de l'ordonnance du 25 août 2006.
+
+## Notes et références
+
+## Voir aussi
+
+### Articles connexes
+
+- Logement social
+- Agence nationale de contrôle du logement social (ANCOLS)
+- Habitation à loyer modéré
+- Coopérative d'habitation
+- Glossaire de l'immobilier
+
+### Liens externes
+
+- « L'Union sociale pour l'habitat », union nationale des fédérations d'organisme d'HLM
+- « Réseau des acteurs de l'habitat » créé en 2007 par quatre associations d'élus, ACUF, ADCF, AMGVF, ADF et l'Union sociale pour l'habitat
+- « Fédération nationale des Offices Publics de l'Habitat »
+- « Fédération des entreprises sociales pour l'habitat »
+- « Fédération nationale des sociétés coopératives d'HLM »
+
+- Portail du droit français
+- Portail de l’économie
+- Portail du bâtiment et des travaux publics
+- Portail de l’architecture et de l’urbanisme
+- Portail de la France

@@ -105,3 +105,29 @@ Un dispositif équivalent existe pour les salariés agricoles ; il est financé
 ### Activité de lobbying en France
 
 Pour l'année 2017, Action Logement déclare à la Haute Autorité pour la transparence de la vie publique exercer des activités de lobbying en France pour un montant qui n'excède pas 50 000 euros.
+
+## Notes et références
+
+## Voir aussi
+
+### Articles connexes
+
+- Logement
+- Code de la construction et de l'habitation (France)
+- Agence nationale de contrôle du logement social (ANCLS)
+
+### Bibliographie
+
+- Cour des comptes, La participation des employeurs à l’effort de construction : Rapport public annuel 2006, Cour des comptes, 2006 (lire en ligne)
+- Cour des comptes, Les enjeux de la participation des employeurs à l’effort de construction : Rapport public annuel 2009, Cour des comptes, 2009 (lire en ligne)
+- Cour des comptes, La réforme de l’organisation et de la gestion du « 1 % logement » : Rapport public annuel 2010, Cour des comptes, 2010 (lire en ligne)
+- Cour des comptes, Le 1 % logement : une réforme à mi-parcours : Rapport annuel de la Cour des comptes de 2013, Cour des comptes, 2013 (lire en ligne)
+- Thomas Sigaud, « Quel avenir pour le 1 % Logement ? », sur Metropolitiques.eu, 9 mars 2012
+
+### Liens externes
+
+- « ANCOLS – Agence nationale de contrôle du logement social »
+- « Action logement »
+
+- Portail de la France
+- Portail de l’économie

@@ -2,9 +2,9 @@
 
 Guillaume Kasbarian, né le 28 février 1987 à Marseille, est un homme politique français.
 
-Membre de La République en marche (LREM), il est élu député dans la première circonscription d'Eure-et-Loir lors des élections législatives de 2017. Libéral économique, proche du Printemps républicain et favorable au libre-échange, il appartient à la droite du parti. De 2017 à 2021, il est membre du bureau exécutif de LREM. Réélu sous les couleurs de la majorité présidentielle lors des législatives de 2022, il occupa de 2022 à 2024 la présidence de la commission des Affaires économiques de l'Assemblée nationale.
+Membre de La République en marche (LREM), il est élu député dans la première circonscription d'Eure-et-Loir lors des élections législatives de 2017. Libéral économique, proche du Printemps républicain et favorable au libre-échange, il appartient à la droite du parti. De 2017 à 2021, il est membre du bureau exécutif de LREM. Réélu sous les couleurs de la majorité présidentielle lors des législatives de 2022, il occupe de 2022 à 2024 la présidence de la commission des Affaires économiques de l'Assemblée nationale.
 
-Après avoir porté le projet de loi dit "anti-squatteurs", il est nommé ministre délégué chargé du Logement le 8 février 2024 dans le gouvernement Gabriel Attal, sous la présidence d'Emmanuel Macron.
+Après avoir porté le projet de loi dit « anti-squatteurs », il est nommé ministre délégué chargé du Logement le 8 février 2024 dans le gouvernement Gabriel Attal, sous la présidence d'Emmanuel Macron.
 
 ## Biographie
 

@@ -147,3 +147,7 @@ Le comité de suivi a notamment mis en place 2 cellules de veille :
 Cependant, malgré un contexte récent d’aggravation de la crise du logement, le nombre de ménages reconnus au titre du droit au logement opposable est en baisse depuis 2014. Selon le comité de suivi, cette situation est due à de pratiques de plus en plus restrictives des commissions de médiation chargées d’instruire les recours. Ceci entraîne une baisse du dépôt du nombre de recours, ce qui met en péril l’existence même du droit au logement opposable dans certains territoires.
 
 Depuis plusieurs années, le HCLPD et le Comité de suivi du Dalo constatent que l’offre de logement destinée aux ménages reconnus au titre du Dalo n’est que partiellement mobilisée. Le contingent de logements de l’État n’est pas pleinement utilisé, l’objectif prévu par la loi de 25 % d’attributions d’Action Logement n’atteint en réalité que 8 ou 9 %, et la mobilisation du parc privé à travers les logements conventionnés reste à un niveau dérisoire.
+
+## Notes et références
+
+- Portail du droit français
