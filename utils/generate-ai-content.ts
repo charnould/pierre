@@ -13,6 +13,10 @@ const openai = createOpenAI({
 })
 const mistral = createMistral({ apiKey: Bun.env.MISTRAL_API_KEY })
 const anthropic = createAnthropic({ apiKey: Bun.env.ANTHROPIC_API_KEY })
+const groq = createOpenAI({
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: 'https://api.groq.com/openai/v1'
+})
 
 //
 //
@@ -57,7 +61,6 @@ export const enhance_query = async (context: AIContext) => {
       queries         : z.array(z.string()).describe('Best search queries for web search engine'),
       stepback        : z.string().describe('A more generic question'),
       hyde            : z.array(z.string()).describe('Three short sentences answering queries and stepback'),
-      keywords        : z.array(z.string()).describe('Keywords describing query')
     }),
     mode: 'json',
     messages: [
@@ -101,10 +104,7 @@ export const enhance_query = async (context: AIContext) => {
           ###### Step 7 ######
           Provide in french informative answers to your results from step 2, step 3, step 4, step 5.
           Use your extensive knowledge base to offer clear, concise, and accurate responses to inquiries.
-          Be carefule to use context.
-          
-          ###### Step 8 ######
-          Using all your previous results: infer keywords optimized for web search.
+          Be careful to use context.
           
           Answer only in french language.
           Return results in JSON.
@@ -113,6 +113,7 @@ export const enhance_query = async (context: AIContext) => {
     ]
   })
 
+  console.log(object)
   return object
 }
 
@@ -166,7 +167,7 @@ export const answer_user = async (context: AIContext) => {
     ////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////
     // TODO : Vous pouvez changer ici le modèle (LLM) utilisé
-    // Ex.  : openai('gpt-4o-2024-05-13'), openai('gpt-3.5-turbo')...
+    // Ex.  : openai('gpt-4o-2024-05-13'), openai('gpt-3.5-turbo'), groq('llama-3.1-70b-versatile')...
     model: openai('gpt-4o-mini-2024-07-18'),
     ////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////
