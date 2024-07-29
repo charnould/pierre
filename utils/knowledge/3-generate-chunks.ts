@@ -13,7 +13,7 @@ db.exec("CREATE VIRTUAL TABLE chunks USING FTS5(chunk);");
 
 const files = await readdir("knowledge", { recursive: true });
 
-let chunks_report = `| chunk_path | length | status |
+let chunks_report = `| chunkpath/index | length | status |
                      |------------|--------|--------|`;
 
 for await (const file of files) {
