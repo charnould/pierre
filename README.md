@@ -75,17 +75,9 @@ TODO
 
 ### Correctifs
 
-- Migrer sur `Tailwind 4.0` (?) et en profiter pour reprendre le CSS
-- Migrer sur `DuckDB` quand le [bug de Bun](https://github.com/oven-sh/bun/issues/11699) sera résolu. Pourquoi migrer sur DuckDB ?
-  - Recherche vectorielle native
-  - Recherche FTS5/BM25 native
-  - Stemmer (`snowball`) intégré
-  - Base de données performante et embarquée (à la SQLite)
-- Ajouter une recherche par `keywords` (en utilisant le stemmer `snowball` ?)
 - Ajouter des tests
 - Corriger Typescript + refactor
 - Mettre en place un CI/CD ?
-
 - Tronquer les réponses si le nombre de `tokens` dépasse le `context` ?
 
 ### Fonctionnalités (et/ou idées) ?
