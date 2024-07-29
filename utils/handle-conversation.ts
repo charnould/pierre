@@ -1,13 +1,12 @@
-import { db } from '../utils/database'
-import type { AIContext, Reply } from './_schema'
+import { db } from "../utils/database";
+import type { AIContext, Reply } from "./_schema";
 
 //
 //
 //
 //
 //
-export const get_conversation = (id: string): Reply[] =>
-  db('telemetry').prepare('SELECT * FROM telemetry WHERE id = $id ORDER BY timestamp ASC').all({ $id: id })
+export const get_conversation = (id: string): Reply[] => db("telemetry").prepare("SELECT * FROM telemetry WHERE id = $id ORDER BY timestamp ASC").all({ $id: id });
 
 //
 //
@@ -16,7 +15,7 @@ export const get_conversation = (id: string): Reply[] =>
 //
 export const save_reply = async (context: AIContext, telemetry: boolean) => {
   try {
-    db('telemetry')
+    db("telemetry")
       .prepare(
         `INSERT INTO telemetry (
         id,
@@ -28,29 +27,20 @@ export const save_reply = async (context: AIContext, telemetry: boolean) => {
         completion_tokens,
         total_tokens
       ) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run([
-        context.id,
-        context.config.id,
-        context.role,
-        context.content,
-        context.timestamp,
-        context.usage.prompt_tokens,
-        context.usage.completion_tokens,
-        context.usage.total_tokens
-      ])
+      .run([context.id, context.config.id, context.role, context.content, context.timestamp, context.usage.prompt_tokens, context.usage.completion_tokens, context.usage.total_tokens]);
 
-    if (Bun.env.TELEMETRY === 'true' && telemetry === true) {
-      await fetch('https://pierre-ia.org/telemetry', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(context)
-      })
+    if (Bun.env.TELEMETRY === "true" && telemetry === true) {
+      await fetch("https://pierre-ia.org/telemetry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(context),
+      });
     }
   } catch {}
-  return
-}
+  return;
+};
 
 //
 //
@@ -59,39 +49,38 @@ export const save_reply = async (context: AIContext, telemetry: boolean) => {
 //
 export const score_conversation = async ({ id, scorer, score, comment }, telemetry: boolean) => {
   try {
-    db('telemetry')
+    db("telemetry")
       .prepare(
         ` UPDATE telemetry
           SET
-            ${scorer === 'reviewer' ? 'reviewer_score = $score ,' : ''}
-            ${scorer === 'reviewer' ? 'reviewer_comment = $comment' : ''}
-            ${scorer === 'user' ? 'user_score = $score' : ''}    
-        WHERE id = $id `
+            ${scorer === "reviewer" ? "reviewer_score = $score ," : ""}
+            ${scorer === "reviewer" ? "reviewer_comment = $comment" : ""}
+            ${scorer === "user" ? "user_score = $score" : ""}    
+        WHERE id = $id `,
       )
 
-      .run({ $id: id, $score: score, $comment: comment })
+      .run({ $id: id, $score: score, $comment: comment });
 
-    if (Bun.env.TELEMETRY === 'true' && telemetry === true) {
-      await fetch('https://pierre-ia.org/telemetry', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+    if (Bun.env.TELEMETRY === "true" && telemetry === true) {
+      await fetch("https://pierre-ia.org/telemetry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: id,
           scorer: scorer,
           score: score,
-          comment: comment
-        })
-      })
+          comment: comment,
+        }),
+      });
     }
   } catch {}
 
-  return
-}
+  return;
+};
 
 //
 //
 //
 //
 //
-export const get_conversations_for_review = (): Reply[] =>
-  db('telemetry').prepare('SELECT * FROM telemetry ORDER BY timestamp ASC').all()
+export const get_conversations_for_review = (): Reply[] => db("telemetry").prepare("SELECT * FROM telemetry ORDER BY timestamp ASC").all();

@@ -1,8 +1,4 @@
-var z = !1,
-  D
-document.addEventListener('DOMContentLoaded', () => {
-  const x = document.createElement('style')
-  ;(x.innerText = `
+var z=!1,D;document.addEventListener("DOMContentLoaded",()=>{const x=document.createElement("style");x.innerText=`
     #pierre-ia {
       margin: 0;
       z-index: 9990;
@@ -79,41 +75,4 @@ document.addEventListener('DOMContentLoaded', () => {
   from  { -webkit-backdrop-filter: blur(); backdrop-filter: blur(); }
   to    { -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
 }
-`),
-    document.head.appendChild(x)
-  const j = document.getElementById('pierre-ia')
-  if (j !== null)
-    (D = j.dataset.configuration),
-      j.addEventListener('click', () => {
-        const q = document.createElement('div')
-        q.id = 'pierre-ia_wrapper'
-        const A = document.createElement('div')
-        A.id = 'pierre-ia_subwrapper'
-        const B = document.createElement('iframe')
-        ;(B.id = 'pierre-ia_iframe'), (B.src = `https://assistant.pierre-ia.org?config=${D}`)
-        const C = document.createElement('p')
-        ;(C.id = 'pierre-ia_close'),
-          (C.textContent = '\u2715'),
-          q.appendChild(A),
-          A.appendChild(C),
-          A.appendChild(B),
-          document.body.appendChild(q),
-          (z = !0)
-      })
-})
-document.addEventListener('keydown', (x) => {
-  if (z === !0 && x.key === 'Escape') {
-    const j = document.getElementById('pierre-ia_wrapper')
-    if (j !== null) j.remove()
-  }
-})
-document.addEventListener('click', (x) => {
-  const j = document.getElementById('pierre-ia_wrapper'),
-    q = x.target
-  if (z === !0 && q && q.id !== 'pierre-ia' && j !== null) j.remove(), (z = !1)
-})
-document.addEventListener('touchstart', (x) => {
-  const j = document.getElementById('pierre-ia_wrapper'),
-    q = x.target
-  if (z === !0 && q && q.id !== 'pierre-ia' && j !== null) j.remove(), (z = !1)
-})
+`,document.head.appendChild(x);const j=document.getElementById("pierre-ia");if(j!==null)D=j.dataset.configuration,j.addEventListener("click",()=>{const q=document.createElement("div");q.id="pierre-ia_wrapper";const A=document.createElement("div");A.id="pierre-ia_subwrapper";const B=document.createElement("iframe");B.id="pierre-ia_iframe",B.src=`https://assistant.pierre-ia.org?config=${D}`;const C=document.createElement("p");C.id="pierre-ia_close",C.textContent="\u2715",q.appendChild(A),A.appendChild(C),A.appendChild(B),document.body.appendChild(q),z=!0})});document.addEventListener("keydown",(x)=>{if(z===!0&&x.key==="Escape"){const j=document.getElementById("pierre-ia_wrapper");if(j!==null)j.remove()}});document.addEventListener("click",(x)=>{const j=document.getElementById("pierre-ia_wrapper"),q=x.target;if(z===!0&&q&&q.id!=="pierre-ia"&&j!==null)j.remove(),z=!1});document.addEventListener("touchstart",(x)=>{const j=document.getElementById("pierre-ia_wrapper"),q=x.target;if(z===!0&&q&&q.id!=="pierre-ia"&&j!==null)j.remove(),z=!1});

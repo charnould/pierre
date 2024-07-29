@@ -1,17 +1,17 @@
 //
 //
 // initial state
-let pierre_is_open = false
-let configuration: string | undefined
+let pierre_is_open = false;
+let configuration: string | undefined;
 
 //
 //
 // After DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   //
   //
   // Set PIERRE stylesheet
-  const styleSheet = document.createElement('style')
+  const styleSheet = document.createElement("style");
   styleSheet.innerText = `
     #pierre-ia {
       margin: 0;
@@ -89,76 +89,76 @@ document.addEventListener('DOMContentLoaded', () => {
   from  { -webkit-backdrop-filter: blur(); backdrop-filter: blur(); }
   to    { -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
 }
-`
-  document.head.appendChild(styleSheet)
+`;
+  document.head.appendChild(styleSheet);
 
-  const el = document.getElementById('pierre-ia')
+  const el = document.getElementById("pierre-ia");
   //
   //
   // If PIERRE button exists
   if (el !== null) {
     //
     // Get configuration
-    configuration = el.dataset.configuration
+    configuration = el.dataset.configuration;
 
     //
     // and create PIERRE modal if button is clicked
-    el.addEventListener('click', () => {
+    el.addEventListener("click", () => {
       // If a click occurs:
       // create PIERE modal (wrapper + iframe)
-      const wrapper = document.createElement('div')
-      wrapper.id = 'pierre-ia_wrapper'
+      const wrapper = document.createElement("div");
+      wrapper.id = "pierre-ia_wrapper";
 
-      const subwrapper = document.createElement('div')
-      subwrapper.id = 'pierre-ia_subwrapper'
+      const subwrapper = document.createElement("div");
+      subwrapper.id = "pierre-ia_subwrapper";
 
-      const iframe = document.createElement('iframe')
-      iframe.id = 'pierre-ia_iframe'
-      iframe.src = `https://assistant.pierre-ia.org?config=${configuration}`
+      const iframe = document.createElement("iframe");
+      iframe.id = "pierre-ia_iframe";
+      iframe.src = `https://assistant.pierre-ia.org?config=${configuration}`;
 
-      const close = document.createElement('p')
-      close.id = 'pierre-ia_close'
-      close.textContent = '✕'
+      const close = document.createElement("p");
+      close.id = "pierre-ia_close";
+      close.textContent = "✕";
 
-      wrapper.appendChild(subwrapper)
-      subwrapper.appendChild(close)
-      subwrapper.appendChild(iframe)
-      document.body.appendChild(wrapper)
+      wrapper.appendChild(subwrapper);
+      subwrapper.appendChild(close);
+      subwrapper.appendChild(iframe);
+      document.body.appendChild(wrapper);
 
       // Finally set PIERRE state
-      pierre_is_open = true
-    })
+      pierre_is_open = true;
+    });
   }
-})
+});
 
 //
 //
 //
 // CLOSE PIERRE MODAL
 // Listen to Escape click to close modal
-document.addEventListener('keydown', (event) => {
-  if (pierre_is_open === true && event.key === 'Escape') {
-    const el = document.getElementById('pierre-ia_wrapper')
-    if (el !== null) el.remove()
+document.addEventListener("keydown", (event) => {
+  if (pierre_is_open === true && event.key === "Escape") {
+    const el = document.getElementById("pierre-ia_wrapper");
+    if (el !== null) el.remove();
   }
-})
+});
 
 // Listen to click outside of modal to close modal
-document.addEventListener('click', (event) => {
-  const el = document.getElementById('pierre-ia_wrapper')
-  const target = event.target as HTMLElement
-  if (pierre_is_open === true && target && target.id !== 'pierre-ia' && el !== null) {
-    el.remove()
-    pierre_is_open = false
+document.addEventListener("click", (event) => {
+  const el = document.getElementById("pierre-ia_wrapper");
+  const target = event.target as HTMLElement;
+  if (pierre_is_open === true && target && target.id !== "pierre-ia" && el !== null) {
+    el.remove();
+    pierre_is_open = false;
   }
-})
+});
 
 // Listen to click outside of modal to close modal
-document.addEventListener('touchstart', (event) => {
-  const el = document.getElementById('pierre-ia_wrapper')
-  const target = event.target as HTMLElement
-  if (pierre_is_open === true && target && target.id !== 'pierre-ia' && el !== null) {
-    el.remove()
-    pierre_is_open = false
+document.addEventListener("touchstart", (event) => {
+  const el = document.getElementById("pierre-ia_wrapper");
+  const target = event.target as HTMLElement;
+  if (pierre_is_open === true && target && target.id !== "pierre-ia" && el !== null) {
+    el.remove();
+    pierre_is_open = false;
   }
-})
+});

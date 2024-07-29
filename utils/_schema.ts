@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from "zod";
 
 //
 //
@@ -73,6 +73,6 @@ export const AIContext = z.object({
 //
 //
 //
-export type Reply = z.infer<typeof Reply>
-export type Config = z.infer<typeof Config>
-export type AIContext = z.infer<typeof AIContext>
+export type Reply = z.infer<typeof Reply>;
+export type Config = z.infer<typeof Config>;
+export type AIContext = z.infer<typeof AIContext>;

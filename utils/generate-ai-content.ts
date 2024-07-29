@@ -1,22 +1,22 @@
-import { createAnthropic } from '@ai-sdk/anthropic'
-import { createMistral } from '@ai-sdk/mistral'
-import { createOpenAI } from '@ai-sdk/openai'
-import { generateObject, streamText } from 'ai'
-import { format } from 'date-fns/format'
-import { z } from 'zod'
-import type { AIContext } from './_schema'
-import { save_reply } from './handle-conversation'
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createMistral } from "@ai-sdk/mistral";
+import { createOpenAI } from "@ai-sdk/openai";
+import { generateObject, streamText } from "ai";
+import { format } from "date-fns/format";
+import { z } from "zod";
+import type { AIContext } from "./_schema";
+import { save_reply } from "./handle-conversation";
 
 const openai = createOpenAI({
   apiKey: Bun.env.OPENAI_API_KEY,
-  compatibility: 'strict'
-})
-const mistral = createMistral({ apiKey: Bun.env.MISTRAL_API_KEY })
-const anthropic = createAnthropic({ apiKey: Bun.env.ANTHROPIC_API_KEY })
+  compatibility: "strict",
+});
+const mistral = createMistral({ apiKey: Bun.env.MISTRAL_API_KEY });
+const anthropic = createAnthropic({ apiKey: Bun.env.ANTHROPIC_API_KEY });
 const groq = createOpenAI({
   apiKey: process.env.GROQ_API_KEY,
-  baseURL: 'https://api.groq.com/openai/v1'
-})
+  baseURL: "https://api.groq.com/openai/v1",
+});
 
 //
 //
@@ -35,10 +35,10 @@ const groq = createOpenAI({
 export const enhance_query = async (context: AIContext) => {
   //
   //
-  let textified_conversation = ''
+  let textified_conversation = "";
   for (const c of context.conversation) {
-    const role = c.role.toUpperCase()
-    textified_conversation += `<${role}>${c.content}</${role}>\n`
+    const role = c.role.toUpperCase();
+    textified_conversation += `<${role}>${c.content}</${role}>\n`;
   }
 
   //
@@ -47,7 +47,7 @@ export const enhance_query = async (context: AIContext) => {
     ////////////////////////////////////////////////////////////////////
     // TODO : Vous pouvez changer ici le modèle (LLM) utilisé
     // Ex.  : openai('gpt-4o-2024-05-13'), openai('gpt-3.5-turbo')...
-    model: openai('gpt-4o-mini-2024-07-18'),
+    model: openai("gpt-4o-mini-2024-07-18"),
     ////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////
 
@@ -62,10 +62,10 @@ export const enhance_query = async (context: AIContext) => {
       stepback        : z.string().describe('A more generic question'),
       hyde            : z.array(z.string()).describe('Three short sentences answering queries and stepback'),
     }),
-    mode: 'json',
+    mode: "json",
     messages: [
       {
-        role: 'system',
+        role: "system",
         content: `
           ### CONVERSATION ###
           
@@ -108,14 +108,14 @@ export const enhance_query = async (context: AIContext) => {
           
           Answer only in french language.
           Return results in JSON.
-          `.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
-      }
-    ]
-  })
+          `.trim(), // Some LLMs don't allow trailing white space (e.g. Anthropic)
+      },
+    ],
+  });
 
-  console.log(object)
-  return object
-}
+  console.log(object);
+  return object;
+};
 
 //
 //
@@ -133,7 +133,7 @@ export const enhance_query = async (context: AIContext) => {
 //
 export const answer_user = async (context: AIContext) => {
   context.conversation.push({
-    role: 'assistant',
+    role: "assistant",
     content: `
       ### INSTRUCTIONS ###
       You are a customer support agent, helping users by following directives and answering questions.
@@ -159,16 +159,16 @@ export const answer_user = async (context: AIContext) => {
       
       ### OTHER INFORMATION ###
       Knowledge cutoff: 2024-08.
-      Current date: ${format(new Date(), 'yyyy-MM-dd')}.
-      `.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
-  })
+      Current date: ${format(new Date(), "yyyy-MM-dd")}.
+      `.trim(), // Some LLMs don't allow trailing white space (e.g. Anthropic)
+  });
 
   return await streamText({
     ////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////
     // TODO : Vous pouvez changer ici le modèle (LLM) utilisé
     // Ex.  : openai('gpt-4o-2024-05-13'), openai('gpt-3.5-turbo'), groq('llama-3.1-70b-versatile')...
-    model: openai('gpt-4o-mini-2024-07-18'),
+    model: openai("gpt-4o-mini-2024-07-18"),
     ////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////
 
@@ -176,15 +176,15 @@ export const answer_user = async (context: AIContext) => {
 
     //
     async onFinish({ text, usage }) {
-      context.usage.completion_tokens = usage.completionTokens
-      context.usage.prompt_tokens = usage.promptTokens
-      context.usage.total_tokens = usage.totalTokens
-      context.role = 'assistant'
-      context.content = text
-      save_reply(context, true)
-    }
-  })
-}
+      context.usage.completion_tokens = usage.completionTokens;
+      context.usage.prompt_tokens = usage.promptTokens;
+      context.usage.total_tokens = usage.totalTokens;
+      context.role = "assistant";
+      context.content = text;
+      save_reply(context, true);
+    },
+  });
+};
 
 //
 //
@@ -202,7 +202,7 @@ export const answer_user = async (context: AIContext) => {
 //
 export const reach_deadlock = async (context: AIContext) => {
   context.conversation.push({
-    role: 'assistant',
+    role: "assistant",
     content: `
       You're Pierre, a helpful artificial intelligence and social housing expert. You're also an alpha version and currently learning.
       Using USER QUESTION below, your task is to follow these instructions step by step.
@@ -230,7 +230,7 @@ export const reach_deadlock = async (context: AIContext) => {
       Then explain you can help to submit an application for social housing if user provides more details (e.g. location).
 
       ###### In all cases ######
-      ${context.lang === 'french' ? 'Answer in french' : `Accurately translate your answer into ${context.lang} while preserving the meaning, tone, and nuance of your original answer.`}
+      ${context.lang === "french" ? "Answer in french" : `Accurately translate your answer into ${context.lang} while preserving the meaning, tone, and nuance of your original answer.`}
       Format your answer with line breaks to improve readability.
       Use a thoughtful tone.
 
@@ -240,8 +240,8 @@ export const reach_deadlock = async (context: AIContext) => {
       ### USER QUESTION ###
 
       ${context.followup}
-      `.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
-  })
+      `.trim(), // Some LLMs don't allow trailing white space (e.g. Anthropic)
+  });
 
   return await streamText({
     ////////////////////////////////////////////////////////////////////
@@ -251,7 +251,7 @@ export const reach_deadlock = async (context: AIContext) => {
     //  openai('gpt-4o-2024-05-13')
     //  openai('gpt-3.5-turbo')
     //  anthropic('claude-3-5-sonnet-20240620')
-    model: openai('gpt-4o-mini-2024-07-18'),
+    model: openai("gpt-4o-mini-2024-07-18"),
     ////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////
 
@@ -259,12 +259,12 @@ export const reach_deadlock = async (context: AIContext) => {
 
     //
     async onFinish({ text, usage, finishReason }) {
-      context.usage.completion_tokens = usage.completionTokens
-      context.usage.prompt_tokens = usage.promptTokens
-      context.usage.total_tokens = usage.totalTokens
-      context.role = 'assistant'
-      context.content = text
-      save_reply(context, true)
-    }
-  })
-}
+      context.usage.completion_tokens = usage.completionTokens;
+      context.usage.prompt_tokens = usage.promptTokens;
+      context.usage.total_tokens = usage.totalTokens;
+      context.role = "assistant";
+      context.content = text;
+      save_reply(context, true);
+    },
+  });
+};
