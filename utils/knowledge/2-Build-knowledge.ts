@@ -2,7 +2,7 @@ import { Database } from 'bun:sqlite'
 import { readdir } from 'node:fs/promises'
 import { openai } from '@ai-sdk/openai'
 import { embed } from 'ai'
-import { generateObject} from 'ai'
+import { generateObject } from 'ai'
 import { $ } from 'bun'
 import * as sqlite_vss from 'sqlite-vss'
 import { z } from 'zod'
@@ -40,7 +40,7 @@ for await (const file of files) {
 
     for (let index = 1; index < splitted_data.length; index++) {
       const chunk = `${splitted_data[0]}\n## ${splitted_data[index].trim()}`
-      
+
       const { object } = await generateObject({
         model: openai('gpt-4o-mini-2024-07-18'),
         schema: z.object({
@@ -66,7 +66,7 @@ for await (const file of files) {
       const { questions } = object
       let questions_list = ''
       for (const q of questions) {
-        questions_list += '- ' + q + '\n'
+        questions_list += `- ${q}\n`
       }
 
       db.prepare('INSERT INTO chunks(chunk, questions) VALUES(?, ?);').run(chunk, questions_list)
@@ -88,7 +88,11 @@ for await (const q of query) {
     value: q.questions
   })
 
-  db.prepare('INSERT INTO vectors(rowid, chunk_vector, questions_vector) VALUES (?, ?, ?)').run(q.rowid, JSON.stringify(chunk_vector), JSON.stringify(questions_vector))
+  db.prepare('INSERT INTO vectors(rowid, chunk_vector, questions_vector) VALUES (?, ?, ?)').run(
+    q.rowid,
+    JSON.stringify(chunk_vector),
+    JSON.stringify(questions_vector)
+  )
 }
 
 console.log(' ')
