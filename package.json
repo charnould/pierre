@@ -5,7 +5,7 @@
   "name": "pierre",
   "module": "app.ts",
   "scripts": {
-    "--- BUILD KNOWLEDGE DATABASE ---": "",
+    "--- BUILD KNOWLEDGE DB ---": "",
     "rag:wikipedia": "bun run utils/knowledge/1-scrap-wikipedia.ts",
     "rag:toc": "bun run utils/knowledge/2-generate-toc.ts",
     "rag:chunks": "bun run utils/knowledge/3-generate-chunks.ts",
@@ -14,13 +14,15 @@
     "--- LINT + FORMAT ---": "",
     "build:lint": "bunx @biomejs/biome check --config-path './config/lint+format.json' --write --unsafe .",
     "build:format": "bunx markdown-toc -i README.md && bunx prettier --write . --plugin=prettier-plugin-tailwindcss --print-width 200 '!**/*.{js,css}'",
-    "build:transpile": "bun build --entrypoints assets/_default/scripts/*.ts --outdir assets/_default/scripts/build --minify --target browser --watch",
+    "build:transpile": "bun build --entrypoints assets/_default/scripts/*.ts --outdir assets/_default/scripts/build --minify --target browser",
     "build:all": "bun build:format && bun build:lint && bun build:transpile",
-    "--- start ---": "",
+    "--- DEVELOPMENT START ---": "",
+    "dev:transpile": "bun build --entrypoints assets/_default/scripts/*.ts --outdir assets/_default/scripts/build --minify --target browser --watch",
     "dev:css": "bunx @tailwindcss/cli@next -i assets/_default/admin.css -o assets/_default/dist/admin.css --watch --minify",
     "dev:update": "bun upgrade && bun update --latest && bun install",
     "dev:build": "bun dev:update && bun format && bun test",
     "dev:start": "bun --watch run app.ts",
+    "--- PRODUCTION START ---": "",
     "start": "bash utils/run.sh init_db && bun run app.ts"
   },
   "dependencies": {
