@@ -1,4 +1,4 @@
-# Je souhaite quitter mon logement : comment déposer mon préavis de congé ?
+# Je souhaite quitter mon logement : comment faire ?
 
 ## Comment donner congé à son bailleur ?
 
@@ -28,11 +28,11 @@ Lorsque les deux époux veulent quitter le logement au même moment, ils doivent
 
 #### Option 2 : Un des époux veut quitter le logement
 
-###### Cas général
+##### Cas général
 
 L'époux qui veut quitter le logement doit donner son préavis (congé) au bailleur. Le bail se poursuit avec l'autre époux, mais l'époux qui a donné son préavis reste solidairement obligé de payer le loyer et les charges dus jusqu'à la fin du préavis donné par l'autre époux, ou dus jusqu'à ce que le divorce soit noté sur l'acte d'état civil.
 
-###### En cas de violences
+##### En cas de violences
 
 Lorsque l'un des époux est violent, l'autre époux peut donner son congé avec un délai de préavis de 1 mois.
 
@@ -91,15 +91,6 @@ Pour savoir si votre commune se situe en zone tendue, utilisez : https://www.ser
 Vous pouvez également quitter le logement sans préavis, lorsque le logement est en péril ou insalubre. Mais au préalable, vous devez avoir averti le propriétaire des désordres constatés et avoir fait les démarches pour l'obliger à faire les travaux.
 
 ## Modèle de lettre pour déposer son congé
-
-Nom et prénom du locataire  
-Référence client du locataire  
-Adresse du locataire
-
-Nom du bailleur  
-Adresse du bailleur
-
-Date
 
 Objet : Résiliation de bail
 
