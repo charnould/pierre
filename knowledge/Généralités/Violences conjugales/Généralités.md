@@ -1,6 +1,34 @@
 # Violences conjugales
 
+## Qu'appelle-t-on violences conjugales ?
+
 L'expression « violences conjugales » désigne l'ensemble des violences (physiques, psychologiques et économiques) commises au sein du couple par le conjoint, le ou la partenaire de Pacs ou d'union libre. Les violences conjugales sont punies par la loi et vous devez porter plainte si vous en êtes victime. Vous pouvez aussi demander l'aide à des associations et à des organismes publics. Nous vous guidons dans les démarches.
+
+La violence conjugale peut être de la violence physique ou sexuelle, de la violence psychologique ou de la violence économique.
+
+La violence physique se caractérise par l'emploi de gestes violents dans le but de vous blesser.
+
+La violence sexuelle est un geste à caractère sexuel commis sans votre consentement, sous la menace ou le chantage. Voici quelques exemples de violence physique et/ou sexuelle :
+
+- Être giflé
+- Recevoir des coups de poing, des coups de ceinture ou autre
+- Être tiré par les cheveux ou être poussé
+- Subir des attouchements sexuels sous la contrainte
+- Subir une relation sexuelle sous la contrainte
+
+La violence psychologique est un comportement ou un ensemble d'actes qui visent à vous rabaisser ou à vous dénigrer. Voici quelques exemples de violence psychologique :
+
+- Propos dévalorisants ou dénigrants, tenus en privé ou en public
+- Insultes
+- Menaces (de diffusion de vidéos à caractère sexuelle par exemple)
+
+La violence économique est un comportement qui vise à vous priver d'autonomie financière, et à vous placer sous le contrôle de votre conjoint, ou de votre partenaire de Pacs ou d'union libre. Voici quelques exemples de violence économique :
+
+- Contrôle total des ressources du couple et de leur utilisation
+- Privation de ressources de l'autre membre du couple
+- Mise en danger de votre patrimoine (signature d'hypothèque, souscription de crédits à la consommation)
+
+Vous êtes victime de violence conjugale si vous subissez un ou plusieurs des faits cités ci-dessus de la part de votre conjoint, ou de la part de votre partenaire de Pacs ou d'union libre.
 
 ## Que pouvez-vous faire en tant que victime de violences conjugales ?
 
@@ -58,41 +86,9 @@ L'UMJ se trouve dans un hôpital.
 
 Pour que l'auteur des violences conjugales que vous avez subies soit poursuivi en justice, et qu'il soit condamné pour son acte, vous devez porter plainte. Il n’est pas possible de déposer une main courante dans le cadre de violences sexuelles, sexistes ou conjugales.
 
-## Qu'appelle-t-on violences conjugales ?
 
-La violence conjugale peut être de la violence physique ou sexuelle, de la violence psychologique ou de la violence économique.
 
-La violence physique se caractérise par l'emploi de gestes violents dans le but de vous blesser.
-
-La violence sexuelle est un geste à caractère sexuel commis sans votre consentement, sous la menace ou le chantage. Voici quelques exemples de violence physique et/ou sexuelle :
-
-- Être giflé
-- Recevoir des coups de poing, des coups de ceinture ou autre
-- Être tiré par les cheveux ou être poussé
-- Subir des attouchements sexuels sous la contrainte
-- Subir une relation sexuelle sous la contrainte
-
-La violence psychologique est un comportement ou un ensemble d'actes qui visent à vous rabaisser ou à vous dénigrer. Voici quelques exemples de violence psychologique :
-
-- Propos dévalorisants ou dénigrants, tenus en privé ou en public
-- Insultes
-- Menaces (de diffusion de vidéos à caractère sexuelle par exemple)
-
-La violence économique est un comportement qui vise à vous priver d'autonomie financière, et à vous placer sous le contrôle de votre conjoint, ou de votre partenaire de Pacs ou d'union libre. Voici quelques exemples de violence économique :
-
-- Contrôle total des ressources du couple et de leur utilisation
-- Privation de ressources de l'autre membre du couple
-- Mise en danger de votre patrimoine (signature d'hypothèque, souscription de crédits à la consommation)
-
-Vous êtes victime de violence conjugale si vous subissez un ou plusieurs des faits cités ci-dessus de la part de votre conjoint, ou de la part de votre partenaire de Pacs ou d'union libre.
-
-## Comment la justice peut-elle vous aider ?
-
-Si vous avez porté plainte pour violences conjugales, votre conjoint ou partenaire de Pacs ou d'union libre violent peut être placé sous contrôle judiciaire par le juge des libertés et de la détention.
-
-Si vous n'avez pas porté plainte et que vous vous sentez menacé (e) par conjoint ou partenaire de Pacs ou d'union libre violent, vous pouvez demander au juge aux affaires familiales de prendre une ordonnance de protection ou de mettre en place un bracelet anti-rapprochement.
-
-Dans les cas les plus graves, le juge aux affaires familiales ou le procureur de la République peuvent décider de vous équiper d'un téléphone grave danger.
+## Comment la justice peut-elle aider ceux qui les subissent ?
 
 ### Contrôle judiciaire et interdiction de rentrer en contact
 
@@ -117,42 +113,6 @@ Vous pouvez faire cette démarche même si vous ne vivez pas en cohabitation ave
 La demande d'ordonnance de protection doit être introduite par requête auprès du juge aux affaires familiales compétent pour votre domicile.
 
 Vous pouvez joindre à la demande toutes les preuves des violences subies : certificats médicaux, photo des blessures, témoignages...
-
-#### Traitement de la requête
-
-Le juge aux affaires familiales doit fixer par ordonnance la date d'audience.
-
-Il doit rendre sa décision au plus tard dans les 6 jours qui suivent la fixation de cette date d'audience.
-
-Si vous êtes assisté par un avocat, vous devez transmettre par commissaire de justice l'ordonnance fixant la date d'audience et la requête à l'auteur présumé des violences, dans un délai de 2 jours.
-
-Les frais de commissaires de justice sont à la charge de l'État.
-
-Si vous n'êtes pas assisté par un avocat, c'est le greffe qui doit transmettre l'ordonnance fixant la date d'audience à l'auteur présumé des violences.
-
-Le juge peut aussi décider d'informer de la date d'audience l'auteur présumé des violences par tout moyen, s'il l'estime nécessaire.
-
-#### Décision favorable
-
-En cas de décision favorable, votre conjoint ou partenaire a l'obligation de respecter les obligations et interdictions contenues dans l'ordonnance de protection.
-
-La décision est en vigueur pendant une durée de 6 mois et peut être renouvelée.
-
-En cas de violation, vous devez en informer la police qui prévient le procureur de la République.
-
-La violation de l'ordonnance de protection est punissable d'une peine de 2 ans d'emprisonnement et d'une amende de 15 000 €.
-
-Si vous avez obtenu une ordonnance de protectionDécision urgente du juge aux affaires familiales instaurant des mesures destinées à protéger une victime de violence conjugale de son agresseur, vous pouvez bénéficier de l'accompagnement d'associations spécialisées pour trouver un logement.
-
-Ces associations peuvent vous sous-louer des logements meublés ou non meublés qu'elles louent auprès des organismes de HLM.
-
-En fonction de votre situation, vous pourrez avoir des facilités pour le paiement de la caution et des premiers mois de loyer.
-
-Vous pouvez également demander le déblocage anticipé de votre épargne salariale.
-
-#### Rejet de la demande
-
-En cas de refus d'ordonnance de protection, le juge peut fixer une autre audience pour statuer sur les autres demandes que vous avez formulées dans le cadre du conflit familial.
 
 ### Bracelet anti-rapprochement
 

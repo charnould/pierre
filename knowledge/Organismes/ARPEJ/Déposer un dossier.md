@@ -1,18 +1,8 @@
 # Préparer mon dossier pour intégrer une résidence ARPEJ (gestionnaire de résidences)
 
-Mettez toutes les chances de votre côté, voici les étapes à suivre pour constituer un dossier en béton !
-
-Comme tous les jeunes qui cherchent un logement, vous devez préparer un dossier de location. Pour que vos efforts ne soient pas inutiles, il vaut mieux l’élaborer avec soin !
-
-Chaque année, vous êtes de plus en plus nombreux à chercher un logement, dans ce contexte, le dossier de candidature devient déterminant.
-
-Si vous le réalisez avec soin, il vous permettra d’obtenir un logement correspondant à vos attentes. Alors, quels documents doit-on fournir dans son dossier ? Quelles sont les pièces justificatives à joindre ?
-
-Voici les informations que vous devez renseigner afin de vous proposer un logement adapté à votre situation.
-
 ## Etudiant non boursier
 
-Vous êtes étudiant et vous disposez d’une pension alimentaire d’un tiers (parents, famille, proches, …) pour assurer le financement de vos études (Frais d’inscription, logement, transports…).
+Vous êtes étudiant et vous disposez d’une pension alimentaire d’un tiers (parents, famille, proches…) pour assurer le financement de vos études (Frais d’inscription, logement, transports…).
 
 Les pièces à joindre sont :
 

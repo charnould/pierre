@@ -2,12 +2,11 @@
 
 ## Coordonnées et contacts
 
-Plaine Commune Habitat
-5 bis rue Danielle Casanova, 93207 Saint-Denis
+Siège social : 5 bis rue Danielle Casanova, 93207 Saint-Denis
 Téléphone : 01 48 13 93 33
 Email : contact@plainecommunehabitat.fr
 
-## Missions et valeurs
+## Présentation, missions et valeurs
 
 L’office public Plaine Commune Habitat est la concrétisation de la volonté de l’agglomération d’avoir un outil entièrement dédié à la gestion et au développement d’un habitat de qualité sur son territoire.
 

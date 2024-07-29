@@ -1,10 +1,6 @@
 # Garantie Visale
 
-## Locataires
-
-### Mon logement et mon bail
-
-#### Quels sont les types de logement pouvant être garantis par Visale ?
+## Quels sont les types de logement pouvant être garantis par Visale ?
 
 - Logement du parc privé pour tous les publics
   - Logement conventionné ou non PLS ou ANAH, appartenant à des propriétaires personnes physiques ou morales, en gestion directe ou déléguée.
@@ -15,7 +11,7 @@
   - Logement appartenant à des organismes HLM ou SEM.
   - Logement conventionné APL appartenant aux organismes publics/parapublics.
 
-#### Où le logement doit-il être situé pour pouvoir bénéficier de Visale?
+## Où le logement doit-il être situé pour pouvoir bénéficier de Visale?
 
 Le logement doit être situé sur :
 
@@ -24,15 +20,15 @@ Le logement doit être situé sur :
 
 Visale ne peut garantir les logements situés dans les COM (Collectivités d’Outre-Mer) : Saint Barthelemy, Saint Martin, Polynésie Française, Saint Pierre et Miquelon, Wallis et Futuna, Nouvelle Calédonie.
 
-#### Un locataire hébergé chez l’habitant est-il éligible ?
+## Un locataire hébergé chez l’habitant est-il éligible ?
 
 Oui, à condition que le locataire soit éligible à Visale et qu’un contrat de bail soit signé (ou une convention d’hébergement).
 
-#### Une location dans une résidence touristique ou dans une résidence hôtelière à vocation sociale est-elle possible ?
+## Une location dans une résidence touristique ou dans une résidence hôtelière à vocation sociale est-elle possible ?
 
 Non, une location dans une résidence touristique ou hôtelière à vocation sociale ne peut être couverte par Visale.
 
-#### Quelles sont les conditions liées à la date de signature et d’effet du bail ?
+## Quelles sont les conditions liées à la date de signature et d’effet du bail ?
 
 Attention, le contrat de cautionnement Visale doit être validé (par le bailleur dans son espace) avant la signature du bail.
 
@@ -40,7 +36,7 @@ La date de signature du bail doit intervenir au plus tôt le jour de la validati
 
 Exemple : Validité du visa du locataire du 01/01 au 25/02 et validation du contrat de cautionnement par le bailleur le 15/02. La date de signature du bail peut intervenir à partir du 15/02 et au plus tard le 25/02. La date d’effet du bail peut intervenir au plus tard le 01/03.
 
-#### La garantie Visale est-elle cumulable avec d’autres aides Action Logement ?
+## La garantie Visale est-elle cumulable avec d’autres aides Action Logement ?
 
 Action Logement propose des aides pour faciliter l’installation dans le logement et soutenir la reprise d’emploi ou l’accès au premier emploi. Toutes ces aides sont cumulables avec Visale et soumises à conditions :
 
@@ -49,7 +45,7 @@ Action Logement propose des aides pour faciliter l’installation dans le logeme
 - La plateforme alternant.actionlogement affiche les aides disponibles pour améliorer la qualité de vie pendant toute la durée de l’alternance : alternant.actionlogement.fr/
   Toutes les solutions Action Logement sont disponibles sur ce lien : www.actionlogement.fr/
 
-#### Quelles sont les obligations du bailleur en matière de logement décent ?
+## Quelles sont les obligations du bailleur en matière de logement décent ?
 
 Qu’il soit loué vide ou meublé, le propriétaire doit fournir au locataire un logement décent. Cette obligation concerne la résidence principale du locataire. Un logement est décent si :
 
@@ -63,9 +59,7 @@ Pour toutes questions ou situations concernant l’insalubrité d’un logement 
 
 Plus d’informations sur le site de l’ANIL : https://www.anil.org/parole-expert-logement-habitat-indigne-logement-non-decent/
 
-### Locataire de 30 ans ou moins, suis-je éligible ?
-
-#### A quel public jeune s’adresse Visale ?
+## A quel public jeune s’adresse Visale ?
 
 Visale s’adresse aux jeunes de 18 à 30 ans (inclus), entrant dans un logement du parc locatif privé, quelle que soit leur situation.
 
@@ -73,21 +67,48 @@ Pour les étudiants et alternants, Visale est éligible quel que soit le parc de
 
 Pour tous les jeunes de 30 ans ou moins (étudiants ou alternants inclus), Visale est éligible également pour les structures collectives (résidence universitaire, logement foyer, foyer jeune travailleur).
 
-#### Les personnes mineures sont-elles éligibles à Visale?
+### Les personnes mineures sont-elles éligibles à Visale?
 
 Selon la Loi française, seules les personnes majeures et mineurs émancipés (avec justificatif d’émancipation) sont autorisés à s’engager juridiquement.
 
 Toutefois, un demandeur non émancipé, au moins âgé de 17 ans et 10 mois, peut formuler une demande de visa dans le cadre du Dispositif VISALE. Cependant, conformément à la législation, il ne pourra signer son bail que le jour de sa majorité avec son futur propriétaire.
 
-#### Quelles sont les conditions d’éligibilité des jeunes salariés ?
+### Quelles sont les conditions d’éligibilité des jeunes salariés ?
 
 Aucune condition liée au contrat de travail (type ou durée), à l’employeur ou au secteur d’activité n’est requise.
 
-#### Quelles sont les conditions d’éligibilité de l’étudiant ?
+### Quelles sont les conditions d’éligibilité de l’étudiant ?
 
 Pour être éligible, un étudiant doit justifier de son inscription dans un établissement post-secondaire pour l’année scolaire en cours en France. Il doit obligatoirement fournir un justificatif d’identité en cours de validité.
 
-#### Quelles sont les conditions d’éligibilité relatives à l’état civil du demandeur ?
+### Un jeune stagiaire est-il éligible ?
+
+Oui les stagiaires, de 18 à 30 ans inclus, sont éligibles à Visale. Il conviendra de fournir la convention de stage et la dernière attestation de compensation de stage. En l’absence d’attestation, l’indemnité de stage retenue est celle indiquée sur la convention.
+
+### Un jeune salarié d’une entreprise du secteur privé ou du régime social agricole est-il éligible à Visale ?
+
+Oui, un jeune salarié d’une entreprise du secteur privé ou relevant du régime social agricole est éligible à Visale.
+
+### Un jeune sans emploi ou bénéficiaire des minima sociaux est-il éligible ?
+
+Oui, tous les jeunes de 18 à 30 ans inclus sont éligibles à Visale y compris les demandeurs d’emploi et les bénéficiaires des minimas sociaux. Il conviendra de fournir la dernière attestation de paiement Pôle emploi (ou la notification d’ouverture de droits) ou la dernière attestation de paiement RSA (ou notification d’ouverture de droits).
+
+### Un travailleur non salarié, indépendant ou entrepreneur, de – de 31 ans, est-il éligible ?
+
+Oui. Si vous avez moins de 31 ans et que vous êtes travailleur non salarié, indépendant ou entrepreneur, vous êtes éligible à Visale. Téléchargez la liste des pièces justificatives à fournir.
+
+### Un salarié employé à domicile par un particulier (Assistante maternelle ou autre) est-il éligible ?
+
+Oui
+
+### Un intermittent du spectacle de – de 30 ans est-il éligible ?
+
+Oui, les intermittents de moins de 31 ans sont éligibles au dispositif Visale, quel que soit leur situation au moment de leur demande. Cependant pour calculer un loyer minimum ils doivent renseigner les revenus obtenus au cours du dernier mois (et les justifier).
+
+Pour les contrats inférieurs ou égaux à un mois, l’ancienneté des justificatifs fournis doit concerner la période des 3 derniers mois précédant la demande de Visa. Il est nécessaire d’indiquer la moyenne des ressources sur les 3 mois précédant la demande.
+
+
+### Quelles sont les conditions d’éligibilité relatives à l’état civil du demandeur ?
 
 Le dispositif Visale s’adresse aux personnes :
 
@@ -97,7 +118,9 @@ Le dispositif Visale s’adresse aux personnes :
 - Etudiant(es) hors Union Européenne justifiant d’un visa long séjour valant titre de séjour mention étudiant ou passeport talent en cours de validité, ou d’un titre de séjour mention étudiant en cours de validité (le Visa avec mention « dispense temporaire de carte de séjour » où la mention « Etudiant » n’apparait pas, n’est pas recevable pour une demande visale).
   Téléchargez la liste des pièces justificatives à fournir.
 
-#### Quelles sont les ressources prises en compte ?
+## Quelles sont les ressources prises et non prises en compte ?
+
+### Les ressources prises en compte
 
 L’ensemble des ressources du ménage sont prises en compte (Télécharger la Fiche-locataire des ressources-prises-en-compte) :
 
@@ -105,7 +128,7 @@ L’ensemble des ressources du ménage sont prises en compte (Télécharger la F
 - Revenus de remplacement (ex. allocations Pôle Emploi, indemnités journalières)
 - Revenus dits de complément (ex. allocation logement, allocations familiales, complément familial, allocation d’éducation de l’enfant handicapé (AEEH), allocation de soutien familial, allocation journalière de présence parentale (AJPP)).
 
-#### Quelles sont les ressources non prises en compte ?
+### Les ressources non prises en compte
 
 Les revenus de complément suivants :
 
@@ -122,27 +145,11 @@ Les autres revenus suivants :
 - Intérêts et placements
 - Plus-values mobilières ou immobilières.
 
-#### La garantie jeune est elle acceptée ?
+### La garantie jeune est elle acceptée ?
 
 Oui, la garantie jeune est acceptée dans les ressources prises en compte par Visale. Les pièces justificatives à fournir sont : la dernière attestation de paiement ou la copie du contrat signé avec la mission locale.
 
-#### Un jeune stagiaire est-il éligible ?
-
-Oui les stagiaires, de 18 à 30 ans inclus, sont éligibles à Visale. Il conviendra de fournir la convention de stage et la dernière attestation de compensation de stage. En l’absence d’attestation, l’indemnité de stage retenue est celle indiquée sur la convention.
-
-#### Un jeune salarié d’une entreprise du secteur privé ou du régime social agricole est-il éligible à Visale ?
-
-Oui, un jeune salarié d’une entreprise du secteur privé ou relevant du régime social agricole est éligible à Visale.
-
-#### Un jeune sans emploi ou bénéficiaire des minima sociaux est-il éligible ?
-
-Oui, tous les jeunes de 18 à 30 ans inclus sont éligibles à Visale y compris les demandeurs d’emploi et les bénéficiaires des minimas sociaux. Il conviendra de fournir la dernière attestation de paiement Pôle emploi (ou la notification d’ouverture de droits) ou la dernière attestation de paiement RSA (ou notification d’ouverture de droits).
-
-#### Un travailleur non salarié, indépendant ou entrepreneur, de – de 31 ans, est-il éligible ?
-
-Oui. Si vous avez moins de 31 ans et que vous êtes travailleur non salarié, indépendant ou entrepreneur, vous êtes éligible à Visale. Téléchargez la liste des pièces justificatives à fournir.
-
-#### Quelles sont les conditions de solvabilité requises pour le locataire ?
+### Quelles sont les conditions de solvabilité requises pour le locataire ?
 
 Le ménage locataire est éligible dans la limite d’un loyer maximum, calculé à partir d’un effort logement basé sur l’ensemble des ressources des co-titulaires du bail.
 
@@ -157,43 +164,32 @@ Les étudiants sont éligibles sans justification de ressources dans la limite d
 
 \*Liste des départements d’Île de France : Paris (75), Seine-et-Marne (77), Yvelines (78), Essonne (91), Hauts-de-Seine (92), Seine-Saint-Denis (93), Val-de-Marne (94), Val-d’Oise (95).
 
-#### Quels justificatifs de ressources doit produire un travailleur non salarié, indépendant ou entrepreneur ?
+### Quels justificatifs de ressources doit produire un travailleur non salarié, indépendant ou entrepreneur ?
 
 - Pour les auto-entrepreneurs : la déclaration mensuelle ou trimestrielle de chiffre d’affaires (faites à l’URSSAF), à défaut les autres ressources perçues par ailleurs.
 - Pour les artisans, professions libérales, commerçants, expert-comptable : La Déclaration Sociale des Indépendants (DSI)
 - Pour les professionnels de santé, conventionné ou non : L’avis d’imposition ou les déclarations trimestrielles URSSAF, à défaut les autres ressources perçues par ailleurs.
 
-#### Un salarié employé à domicile par un particulier (Assistante maternelle ou autre) est-il éligible ?
-
-Oui
-
-#### Quel justificatif doit produire un étudiant boursier, s’il perçoit des revenus supérieurs au plafond forfaitaire (> 1600€ en Région Île de France ou >1200€ ailleurs) ?
+### Quel justificatif doit produire un étudiant boursier, s’il perçoit des revenus supérieurs au plafond forfaitaire (> 1600€ en Région Île de France ou >1200€ ailleurs) ?
 
 Les étudiants sont éligibles sans justification de ressources dans la limite d’un loyer forfaitaire de 800€ en Région Île-de-France et de 600€ pour le reste de la France. Un étudiant boursier ou salarié peut augmenter son loyer plafond en fournissant une notification définitive ou provisoire de bourse d’état ou les justificatifs relatifs à ses revenus (contrat de travail, bulletins de salaire…).
 
-#### Quel justificatif doit produire un alternant, s’il perçoit des revenus supérieurs au plafond forfaitaire ? (> 1600€ en Région Île de France ou > 1200€ ailleurs)
+### Quel justificatif doit produire un alternant, s’il perçoit des revenus supérieurs au plafond forfaitaire ? (> 1600€ en Région Île de France ou > 1200€ ailleurs)
 
 Une copie de son contrat d’apprentissage ou de professionnalisation et le bulletin de salaire du mois de la demande de visa.
 
-#### Quelles sont les ressources prises en compte pour les travailleurs transfrontaliers ?
+### Quelles sont les ressources prises en compte pour les travailleurs transfrontaliers ?
 
 Les revenus des travailleurs transfrontaliers sont pris en compte si l’un des deux demandeurs est éligible à Visale.
 
 Les pays transfrontaliers concernés sont : Belgique, Luxembourg, Allemagne, Suisse, Italie, Monaco, Andorre, Espagne.
 
-#### Lors de la demande de Visa, le demandeur peut-il indiquer son adresse et son numéro de téléphone à l’étranger ?
+### Lors de la demande de Visa, le demandeur peut-il indiquer son adresse et son numéro de téléphone à l’étranger ?
 
 Oui, si le demandeur ne réside pas encore en France.
 
-#### Un intermittent du spectacle de – de 30 ans est-il éligible ?
 
-Oui, les intermittents de moins de 31 ans sont éligibles au dispositif Visale, quel que soit leur situation au moment de leur demande. Cependant pour calculer un loyer minimum ils doivent renseigner les revenus obtenus au cours du dernier mois (et les justifier).
-
-Pour les contrats inférieurs ou égaux à un mois, l’ancienneté des justificatifs fournis doit concerner la période des 3 derniers mois précédant la demande de Visa. Il est nécessaire d’indiquer la moyenne des ressources sur les 3 mois précédant la demande.
-
-### Ma demande de visa
-
-#### Comment obtenir la caution Visale ?
+## Comment obtenir la caution Visale ?
 
 La demande de visa est à l’initiative du locataire et se fait en ligne sur le site www.visale.fr (de préférence en amont de la recherche de logement). Le visa est validé en quelques jours (hors week-end et jour férié). Le locataire télécharge le visa certifié et le remet au bailleur (propriétaire, agence, résidence, foyer..) lors de ses recherches de logement.
 
@@ -272,32 +268,6 @@ En cas d’incomplétude, le locataire dispose d’un délai de 15 jours après 
 #### Qu’est-ce qu’une demande de visa obsolète ?
 
 Le locataire doit signer un bail et entrer dans un logement dans les délais de validité du visa (ou au plus tard le 1er du mois suivant la date de fin de validité du visa concernant la date d’effet du bail). Lorsque les délais de validité du visa sont dépassés, le visa devient obsolète. Le demandeur peut alors effectuer une nouvelle demande de visa à condition qu’il réponde toujours aux conditions d’éligibilité Visale.
-
-### Le bail mobilité
-
-#### Qui est éligible au bail mobilité ?
-
-Un bail mobilité peut être signé avec un candidat locataire majeur en formation professionnelle, en études supérieures étudiant, stagiaires, volontaire dans le cadre d’un service civique, en mutation professionnelle ou en mission temporaire dans le cadre de son activité professionnelle.
-
-#### Pour quels logements ?
-
-Le bail mobilité concerne les logements meublés du parc locatif privé au sens de l’article 25-4 de la loi de 1989 loués à titre de résidence principale ou non.
-
-#### Quelle est la durée du bail mobilité ?
-
-Le bail mobilité est conclu pour une durée minimale d’un mois et une durée maximale de dix mois, non renouvelable et non reconductible. Le locataire peut résilier le bail à tout moment en respectant un préavis d’un mois. Et à l’issue des 10 mois ? Le bail ne peut être reconduit. Si le locataire et le bailleur s’accordent, un bail meublé ordinaire d’une durée de 12 mois peut être conclu.
-
-#### Dois-je fournir un dépôt de garantie ?
-
-Non, le locataire doit uniquement s’acquitter de son loyer et des charges. Le dépôt de garantie n’est pas autorisé.
-
-#### Comment bénéficier de Visale avec un bail mobilité ?
-
-Vous devez créer votre espace personnel et faire une demande de visa en fournissant vos pièces justificatives. Une fois la demande analysée par Action Logement, le visa certifié sera disponible dans votre espace et pourra être présenté au bailleur pour qu’il valide en ligne le contrat de cautionnement Visale.
-
-## Bailleurs
-
-### Les garanties loyer impayé
 
 #### Qu’est-ce que Visale prend en charge exactement ?
 
@@ -650,74 +620,3 @@ Si l’impayé n’excède pas un mois de loyer + charges, la garantie Visale ne
 
 Il vous est possible de déclarer le dernier mois de loyer en même temps que les dégradations éventuelles. En cas de dégradations locatives, Visale prendra en charge les travaux à hauteur maximum de 2 mois de loyer + charges.
 
-### Le bail mobilité
-
-#### Qui est éligible au bail mobilité ?
-
-Un bail mobilité peut être signé avec un candidat locataire majeur en formation professionnelle, en études supérieures étudiant, stagiaires, volontaire dans le cadre d’un service civique, en mutation professionnelle ou en mission temporaire dans le cadre de son activité professionnelle.
-
-#### Pour quels logements ?
-
-Le bail mobilité concerne les logements meublés du parc locatif privé au sens de l’article 25-4 de la loi de 1989 loués à titre de résidence principale ou non.
-
-Il ne nécessite aucune autorisation de changement d’usage et ne s’applique ni aux logements-foyers, ni aux logements des organismes HLM, conventionnés ou non à l’APL.
-
-#### Quelle est la durée du bail mobilité ?
-
-Le bail mobilité est conclu pour une durée minimale d’un mois et une durée maximale de dix mois, non renouvelable et non reconductible.
-
-La durée du contrat de location, peut être modifiée une fois par avenant sans que la durée totale du contrat ne dépasse dix mois. Si, au terme du contrat, les parties concluent un nouveau bail portant sur le même logement meublé, il prend la forme d’un bail meublé ordinaire.
-
-- Un bail mobilité d’une durée initiale de 10 mois ne peut pas être renouvelé.
-- Un bail mobilité d’une durée initiale de 5 mois peut faire l’objet d’un avenant, mais ne peut dépasser 10 mois au total.
-  Attention, cet avenant devra être transmis en cas de mise en jeu de la caution.
-
-#### Quelles sont les mentions obligatoires devant figurer dans le bail mobilité ?
-
-Le bail mobilité précise par écrit, outre les mentions du bail meublé ordinaire :
-
-- une mention selon laquelle le contrat de location est soumis au régime du bail mobilité ;
-- le motif justifiant le bénéfice du bail mobilité conformément à l’article 25-12 de la loi de 1989. une mention informant le locataire de l’interdiction pour le bailleur d’exiger le versement d’un dépôt de garantie ;
-- la durée du contrat de location ;
-
-#### Comment souscrire mon contrat de cautionnement ?
-
-La demande de cautionnement se fait en ligne après avoir créé un espace personnel bailleur. Le locataire doit au préalable obtenir un visa sur le site Visale.
-
-#### Quelle est la durée du cautionnement Visale pour le bail mobilité ?
-
-Le cautionnement Visale a une durée maximale de 10 mois.
-
-#### Puis-je demander un dépôt de garantie à mon locataire ?
-
-Non le locataire doit uniquement s’acquitter de son loyer et des charges. Le dépôt de garantie n’est pas autorisé.
-
-#### Quel est le préavis dû par mon locataire ?
-
-Le locataire peut résilier le bail à tout moment en respectant un préavis d’un mois.
-
-#### Comment calculer les charges locatives durant la durée du bail ?
-
-Les charges locatives doivent être forfaitisées selon la durée du bail. Il n’y a pas de possibilité de demander une provision pour charges, ni complément ou régularisation.
-
-#### Les dégradations locatives sont-elles prise en charge en présence d’un bail mobilité ?
-
-Oui, à concurrence d’un montant maximum de deux mois de loyer et charges inscrits au bail.
-
-#### Comment demander une prise en charge en cas de dégradations locatives ?
-
-La demande de prise en charge des dégradations locatives doit être faite sur visale.fr depuis l’espace personnel du bailleur. Le bailleur devra fournir un état des dommages (état des lieux contradictoire d’entrée et de sortie, solde de tout compte transmis au locataire détaillant les dommages imputables à son occupation), ainsi que les justificatifs des dépenses de réparation.
-
-#### Dans quel délai dois-je déclarer les dégradations locatives ?
-
-En cas d’état des lieux de sortie contradictoire ou fait par huissier mentionnant des dégradations du logement imputable au locataire, le bailleur s’engage à déclarer dans un délai de 30 jours sa demande de prise en charge de dégradations locatives à Visale. La sortie des lieux du locataire peut être caractérisée par la remise des clés au bailleur ou au mandataire, par l’état des lieux de sortie ou la reprise par huissier.
-
-#### Quelles sont les dégradations locatives couvertes ?
-
-Les frais de remise en état du logement en cas de dégradations locatives imputables au locataire.
-
-#### Quelles sont les dégradations locatives non couvertes ?
-
-- L’usure normale, la vétusté, les dommages causés aux espaces verts, aménagements extérieurs, arbres, plantations, éléments de clôture et de fermeture de terrains privatifs.
-- Les dommages causés aux biens mobiliers (meubles meublants) et aux éléments d’équipement qui peuvent être enlevés ou démontés sans les détériorer ou détériorer leur support.
-- Les dommages causés par la transformation des lieux loués, autorisée par le Bailleur.

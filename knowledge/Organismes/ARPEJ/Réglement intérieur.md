@@ -1,6 +1,8 @@
-# Réglement intérieur d'ARPEJ
+# ARPEJ : Association de Résidences pour Etudiants et Jeunes
 
-## Article 1 : Jouissance paisible
+## Réglement intérieur
+
+### Article 1 : Jouissance paisible
 
 Les dispositions du présent règlement intérieur, adaptées aux conditions particulières liées à la durée du séjour des Résidents, déterminent le cadre général de la vie collective dans la résidence.
 
@@ -14,13 +16,13 @@ Les dispositions du présent règlement visent également à répondre aux oblig
 
 En conséquence, les Résidents devront se conformer à toute prescription ou rappel de la règlementation.
 
-## Article 2 : Champ d'application
+### Article 2 : Champ d'application
 
 Outre, les Résidents titulaires d’une convention de sous-location, le présent règlement intérieur s'applique à toute personne présente dans l'établissement y compris, les visiteurs.
 
 La résidence étant entendue comme un ensemble comprenant les espaces privatifs, les locaux communs affectés à la vie collective, les locaux techniques, le cas échéant, les aires de stationnement, les espaces verts et s’agissant de la tranquillité publique, les abords.
 
-## Article 3 : Accès à l'établissement
+### Article 3 : Accès à l'établissement
 
 3-1 Accueil des Résidents
 
@@ -37,7 +39,7 @@ Il est remis une clé de logement par Résident. En cas de perte, les changement
 
 Dans le cadre d’une intervention concernant l’ensemble de l’établissement et de ses Résidents, telle qu’une opération de désinsectisation ou une visite technique annuelle, ARPEJ communiquera la date d’intervention, par voie d’affichage, à l’attention de l’ensemble des Résidents concernés.
 
-## Article 4 : Règles relatives au maintien en état, à la propreté, à l'hygiène et à la salubrité
+### Article 4 : Règles relatives au maintien en état, à la propreté, à l'hygiène et à la salubrité
 
 Le Résident doit assurer un entretien régulier du logement qu’il occupe. A son départ, le local devra être restitué dans un bon état de propreté. A défaut, une prestation de ménage lui sera facturée. Le matériel et les équipements du logement mis à disposition du Résident sont placés sous sa responsabilité. Il devra en répondre en cas de dégradation ou perte constatée dans le logement.
 
@@ -53,7 +55,7 @@ Toute anomalie ou dysfonctionnement des équipements dans l’établissement doi
 
 Les Résidents ne pourront exercer de recours contre le gestionnaire en cas de perte, de vol, de détérioration de biens placés dans leur logement.
 
-## Article 5 : Règles de vie en collectivité
+### Article 5 : Règles de vie en collectivité
 
 Le Résident s’engage à respecter la tranquillité d’autrui. De jour comme de nuit, le Résident doit veiller à se conformer à la réglementation et éviter le tapage
 nocturne et/ou diurne, en contrôlant le niveau sonore des appareils dont il fait usage.
@@ -68,7 +70,7 @@ La consommation d’alcool dans les espaces communs (entrée de la résidence, c
 
 Tout Résident doit veiller à la propreté des espaces communs et ne rien entreposer dans les couloirs.
 
-## Article 6 : Règles relatives à la sécurité
+### Article 6 : Règles relatives à la sécurité
 
 Les Résidents mineurs ne sont pas autorisés à sortir de la résidence après 21h. Un veilleur de nuit est présent à partir de 19h pour assurer la sécurité des locaux et contrôler le respect de cette obligation.
 
@@ -79,6 +81,6 @@ La détention et l’introduction au sein de l’établissement d’animaux dang
 
 Pour la sécurité des biens et des personnes, les parties communes sont placées sous vidéosurveillance; un affichage réglementaire est effectué au sein de la résidence en conséquence.
 
-## Article 7 : Publicité
+### Article 7 : Publicité
 
 Le présent règlement est affiché dans les parties communes de la résidence

@@ -35,8 +35,6 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "tailwindcss": "^4.0.0-alpha.18",
-    "prettier-plugin-tailwindcss": "^0.6.5",
     "@biomejs/biome": "^1.8.3",
     "@types/bun": "^1.1.6",
     "@types/lodash": "^4.17.7",
@@ -44,7 +42,10 @@
     "lightningcss-cli": "^1.25.1",
     "llamaindex": "^0.5.11",
     "markdown-toc": "^1.2.0",
+    "prettier-plugin-tailwindcss": "^0.6.5",
     "promptfoo": "^0.73.8",
+    "tailwindcss": "^4.0.0-alpha.18",
+    "tiktoken": "^1.0.15",
     "turndown": "^7.2.0",
     "typescript": "^5.5.4"
   }

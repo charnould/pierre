@@ -1,4 +1,4 @@
-# Les questions fréquemment posées à ARPEJ (gestionnaire de résidences étudiantes)
+# Foire aux questions pour ARPEJ (gestionnaire de résidences étudiantes)
 
 ## Quel est le processus de réservation d’un logement ?
 
@@ -65,15 +65,6 @@ Seul un motif valable permettra un changement de logement durant le contrat de b
 ## Puis-je choisir mon appartement ?
 
 La liberté de choix des appartements est accordée aux futurs locataires parmi les disponibilités. Bien entendu, l’étudiant constituant son dossier de candidature le plus en amont de la rentrée scolaire se verra obtenir un choix beaucoup plus large.
-
-## Qu’est ce qu’un état des lieux ?
-
-L’état des lieux est une procédure entre le locataire et la résidence, permettant de décrire le logement en l’état avant et après votre habitation. Il se matérialise sous la forme d’un document rédigé en deux exemplaires (un pour le locataire et un pour la résidence).
-Si des dégradations sont constatées pendant votre location, la résidence se verra le droit de retenir le montant des réparations à effectuer sur le dépôt de garantie, fournie lors de votre arrivée.
-
-Si vous ne pouvez pas être présent lors de l’état des lieux, vous avez la possibilité de désigner une personne pour le réaliser à votre place, il faudra faire une procuration à la personne désignée qui devra venir le jour de rendez-vous avec sa pièce d’identité.
-
-Pour gagner du temps, pensez à faire un pré-état des lieux !
 
 ## Y a -t-il des événements organisés dans les résidences ?
 
