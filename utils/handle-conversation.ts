@@ -6,7 +6,8 @@ import type { AIContext, Reply } from "./_schema";
 //
 //
 //
-export const get_conversation = (id: string): Reply[] => db("telemetry").prepare("SELECT * FROM telemetry WHERE id = $id ORDER BY timestamp ASC").all({ $id: id });
+export const get_conversation = (id: string): Reply[] =>
+  db("telemetry").prepare("SELECT * FROM telemetry WHERE id = $id ORDER BY timestamp ASC").all({ $id: id });
 
 //
 //
@@ -29,7 +30,16 @@ export const save_reply = async (context: AIContext, telemetry: boolean) => {
       ) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run([context.id, context.config.id, context.role, context.content, context.timestamp, context.usage.prompt_tokens, context.usage.completion_tokens, context.usage.total_tokens]);
+      .run([
+        context.id,
+        context.config.id,
+        context.role,
+        context.content,
+        context.timestamp,
+        context.usage.prompt_tokens,
+        context.usage.completion_tokens,
+        context.usage.total_tokens,
+      ]);
 
     if (Bun.env.TELEMETRY === "true" && telemetry === true) {
       await fetch("https://pierre-ia.org/telemetry", {
@@ -83,4 +93,5 @@ export const score_conversation = async ({ id, scorer, score, comment }, telemet
 //
 //
 //
-export const get_conversations_for_review = (): Reply[] => db("telemetry").prepare("SELECT * FROM telemetry ORDER BY timestamp ASC").all();
+export const get_conversations_for_review = (): Reply[] =>
+  db("telemetry").prepare("SELECT * FROM telemetry ORDER BY timestamp ASC").all();

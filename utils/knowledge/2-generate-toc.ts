@@ -11,7 +11,12 @@ let filepath: undefined | BunFile;
 
 for await (const file of files) {
   try {
-    if (file.endsWith(".md") && !file.endsWith("TABLE_OF_CONTENTS.md") && !file.endsWith("CHUNKS_REPORT.md")) {
+    if (
+      file.endsWith(".md") &&
+      !file.endsWith("TABLE_OF_CONTENTS.md") &&
+      !file.endsWith("CHUNKS_REPORT.md") &&
+      !file.endsWith("README.md")
+    ) {
       const content = Bun.file(`knowledge/${file}`);
       filepath = content;
       const data = await content.text();

@@ -10,5 +10,9 @@ export default {
     "Pour information, je suis une version alpha et mes connaissances sont à ce jour très limitées.",
     "Comment puis-je vous aider aujourd'hui ?",
   ],
-  examples: ["Comment contacter le gardien de la résidence Anatole France ?", "Je ne comprends pas les charges locatives sur ma quittance...", "كيفية الاتصال بخدمة العملاء؟"],
+  examples: [
+    "Comment contacter le gardien de la résidence Anatole France ?",
+    "Je ne comprends pas les charges locatives sur ma quittance...",
+    "كيفية الاتصال بخدمة العملاء؟",
+  ],
 } as Config;

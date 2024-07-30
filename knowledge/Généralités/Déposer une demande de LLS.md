@@ -101,7 +101,11 @@ La demande et le numéro d'enregistrement sont valables dans tout le départemen
 
 Le formulaire de demande de logement social n'est rempli qu'une seule fois, même si la demande de logement porte sur plusieurs communes à la fois.
 
-## Modifier, mettre à jour et renouveler une demande de logement social
+## Consulter, modifier, mettre à jour et renouveler une demande de logement social
+
+### Comment savoir où en est une demande de logement ?
+
+Il suffit de vous rendre sur le site https://www.demande-logement-social.gouv.fr ou le site du système local d'enregistrement correspondant pour obtenir des informations sur la demande de logement social.
 
 ### Comment modifier ou mettre à jour une demande de logement social ?
 
@@ -114,7 +118,7 @@ Selon les modifications effectuées, de nouvelles pièces justificatives peuvent
 
 ### Comment renouveler une demande de logement social ?
 
-A la date anniversaire de votre inscription initiale, vous devrez renouveler votre demande de logement social, et ce, jusqu’à obtention d’un logement.
+A la date anniversaire de votre inscription initiale, vous devrez renouveler votre demande de logement social pour qu'elle reste valable, et ce, jusqu’à obtention d’un logement.
 
 Vous pouvez renouveler votre demande de logement :
 

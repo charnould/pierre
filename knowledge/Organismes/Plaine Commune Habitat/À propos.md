@@ -1,12 +1,14 @@
-# Plaine Commune Habitat
+# Plaine Commune Habitat, ou PCH
 
-## Coordonnées et contacts
+## À propos
+
+### Coordonnées et contacts
 
 Siège social : 5 bis rue Danielle Casanova, 93207 Saint-Denis
 Téléphone : 01 48 13 93 33
 Email : contact@plainecommunehabitat.fr
 
-## Présentation, missions et valeurs
+### Présentation
 
 L’office public Plaine Commune Habitat est la concrétisation de la volonté de l’agglomération d’avoir un outil entièrement dédié à la gestion et au développement d’un habitat de qualité sur son territoire.
 
@@ -21,7 +23,7 @@ Construire, réhabiliter, attribuer des logements, assurer un cadre de vie agré
 
 Avec plus de 20 000 logements Plaine Commune Habitat gère un patrimoine de logements sociaux sur 8 communes de l’agglomération et a une politique volontariste de développement de ses activités au service de la diversité, de la solidarité et de la qualité.
 
-## Comment contacter Plaine Commune Habitat quand j'habite dans la résidence "Anatole France" ?
+### Comment contacter Plaine Commune Habitat quand j'habite dans la résidence "Anatole France" ?
 
 Vous habitez au 70 au 100 rue Anatole France à La Courneuve.
 

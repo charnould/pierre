@@ -1,14 +1,12 @@
 # Domofrance
 
-## Contacts
+## Coordonnées du siège social, des agences et bureaux de gestion
 
 - Centre de Relation Client :
   - Email : domocontact@domofrance.fr
   - Téléphone : 09 70 83 00 03
   - Via l'espace-locataire en ligne : https://espace-extranet.domofrance.fr
 - Siège social : 110 avenue de la Jallère, Bordeaux (33042)
-
-## Coordonnées des agences et bureaux de gestion de Domofrance
 
 - Agence de Bordeaux
 
@@ -107,26 +105,28 @@
   - Accueil du public sans rendez-vous du lundi au vendredi de 13h30 à 16h15
   - 0970 830 003
 
-## Une déjà longue histoire et un ancrage régional
+## Présentation de Domofrance
+
+### Une déjà longue histoire et un ancrage régional
 
 Domofrance c’est avant tout une entreprise Sociale pour l’Habitat (ESH) fondée à Bordeaux en 1958. Son histoire s’est construite avec la métropole bordelaise qu’elle a accompagnée dans son développement avec l’aménagement de quartiers qui dessinent la ville et son agglomération.
 
 Née de la volonté des employeurs de favoriser le logement de leurs salariés, Domofrance est une Filiale du groupe Action Logement Immobilier. L’équilibre entre les intérêts des parties prenantes est garanti par sa gouvernance paritaire ; son Conseil d’Administration regroupe chefs d’entreprises et représentants des organisations syndicales, à laquelle sont également associées collectivités territoriales et locataires.
 
-## Notre raison d’être
+### Raison d’être
 
 "Domofrance, créateur d’utilité sociale et de solutions durables d’habitat au service du développement des territoires Néo-Aquitains".
 
 Véritable fil conducteur, notre raison d’être irrigue les transformations de Domofrance. Nous voulons, en effet, continuer à entreprendre et innover pour proposer des logements abordables et de qualité à chaque étape de la vie, en cohérence avec les orientations du groupe Action Logement.
 
-## Chiffres-clés
+### Chiffres-clés
 
 - Logements en gestion : 40 712
 - Personnes logées : 112 700
 - Collaborateurs : 733
 - Implantations : 13
 
-## Plus de 60 ans d'histoire
+### Plus de 60 ans d'histoire
 
 - 2024 : Domofrance lance son nouveau projet stratégique « vivant 2024-2028 »
 - 2023 : Domofrance définit sa raison d'être
@@ -150,3 +150,22 @@ Véritable fil conducteur, notre raison d’être irrigue les transformations de
 - 1970 > 1980 : La diversification de l’offre
 - 1960 > 1970 : La production urbaine intensive
 - 1958 : Naissance de la SA d’HLM La Gironde
+
+## La filiale ExterrA
+
+### Coordonnées
+
+Espace de vente :
+
+- 10 bis Allées de Tourny, 33000 Bordeaux
+- 05 40 13 12 13
+
+### La genèse d'exterrA par Domofrance
+
+Filiale du groupe Action Logement Immobilier, Domofrance, à travers sa marque exterrA, propose des appartements et maisons en accession à la propriété dans le neuf. Depuis sa création en septembre 2013, exterrA par Domofrance, n’a eu de cesse de confirmer la pertinence de ses solutions pour rendre accessible l’accession à la propriété au plus grand nombre et aux foyers aux revenus modestes grâce à des niveaux de prix inférieurs à ceux du marché.
+
+Spécialiste de l’accession sociale, exterrA est devenu un acteur de référence pour le Prêt Social Location Accession (PSLA) puis pour le Bail Réel Solidaire (BRS). L’équipe dédiée accompagne les familles dans leur parcours résidentiel avec des conditions économiques adaptées et sécurisées.
+
+La qualité d’un paysage urbain ou périurbain et la satisfaction des acquéreurs passent également par la diversification de l’offre proposée. Maisons individuelles et logements collectifs participent à cet équilibre et comblent toutes les envies d’habiter. ExtrerrA propose aussi des lots à bâtir qui viennent compléter son offre.
+
+Pour renforcer la mission d’exterrA, Domofrance a besoin de la coopération des collectivités qui bénéficient d’outils pour mobiliser les ressources foncières abordables et de qualité. Favoriser l’accession sociale à la propriété, dans une conjoncture économique tendue, un défi qu’exterrA relève avec des réponses globales performantes, en s’appuyant sur les 60 ans d’expérience de Domofrance dans l’accession à la propriété et en développant des partenariats forts avec les collectivités dans toute la Nouvelle-Aquitaine.

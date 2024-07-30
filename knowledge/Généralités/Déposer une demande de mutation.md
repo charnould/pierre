@@ -1,4 +1,4 @@
-# Changer de logement social
+# Déposer une demande de mutation pour changer de logment social
 
 ## Comment changer de logement social ?
 
@@ -21,6 +21,12 @@ En fonction de leur degré d'urgence, ces situations sont :
 
 A noter : La situation de la commune dans laquelle vous souhaitez habiter peut avoir un impact sur votre demande de changement de logement social. En effet, dans certaines villes, le temps d’attente est plus ou moins long.
 
+#### Cas particulier : la mutation du fait d'un immeuble à démolir
+
+Le bailleur doit proposer au locataire, s'il occupe le logement de bonne foi, un relogement: le logement doit être en bon état d'habitabilité, remplir les conditions d'hygiène normales ou au moins équivalentes à celles du logement que qu'il doit quitter et correspondre à ses besoins personnels, familiaux et, le cas échéant, professionnels, ainsi qu'à ses ressources ; il doit également être situé dans certaines limites géographiques.
+
+Toutefois, le locataire qui refuse trois offres de relogement respectant les conditions d’hygiène, ses besoins personnels, familiaux, professionnels et situé au maximum à une certaine distance (Loi 1.9.48 : art 13 bis), ne bénéficie plus du droit au maintien dans les lieux.
+
 ### Les démarches pour faire une demande de changement de logement social
 
 La demande de changement de logement social est considérée comme une nouvelle demande de logement qui nécessite de :
@@ -32,13 +38,19 @@ La demande de changement de logement social est considérée comme une nouvelle 
 
 ### Comment obtenir un changement de logement social ?
 
-Une fois votre dossier déposé et validé, votre demande de mutation est enregistrée. Vous recevez une attestation d’enregistrement par e-mail ou par courrier.
+#### Option 1 : Se rapprocher de votre bailleur social
 
-Si vous êtes salarié d’une entreprise du secteur privé de plus de 10 salariés et souhaitez changer de logement, vous avez la possibilité de :
+Le locataire souhitant changer de logement social se rapproche du service-client de son bailleur actuel et lui expose sa situation. Selon, le bailleur pourra être en capacité de proposer une nouvelle solution-logement répondant aux critères du locataire.
+
+#### Option 2 : Déposer une demande sur la plateforme AL’in d'Action Logement
+
+Cette option est réservée aux salariés d’une entreprise du secteur privé de plus de 10 salariés qui souhaitent changer de logement.
 
 - Créer votre compte sur la plateforme AL’in grâce à votre numéro unique d’enregistrement
 - Découvrir les offres de logements sociaux correspondant à votre situation
 - Vous positionner sur une offre de logement social
+
+Une fois votre dossier déposé et validé, votre demande de mutation est enregistrée. Vous recevez une attestation d’enregistrement par e-mail ou par courrier.
 
 ### Quels sont les délais d'attente pour une mutation de logement social ?
 

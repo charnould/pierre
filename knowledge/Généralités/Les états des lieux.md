@@ -1,18 +1,20 @@
-# Comment se déroule l'état des lieux d'entrée
+# Les états des lieux
 
-## Quel est le délai pour modifier mon état des lieux d'entrée ?
+## L'état des lieux d'entrée
 
-Lorsque vous entrez dans votre logement, vous signez un état des lieux d'entrée. Vous disposez ensuite de 10 jours pour le modifier. Si le document a été établi en période de chauffe (d'octobre à avril environ) et que votre/vos modification(s) concerne(nt) le chauffage, vous disposez alors d'un délai d'un mois.
-
-# Quels documents dois-je apporter lors de l'état des lieux d'entrée dans le logement ?
+### Quels documents dois-je apporter lors de l'état des lieux d'entrée dans le logement ?
 
 L'état des lieux est un document contractuel, signé par un représentant de votre bailleur et par vous-même. Il décrit l'état de votre logement au moment de votre entrée. Vous n'avez pas besoin d'apporter un document particulier.
 
 Si vous agissez pour le compte du locataire qui ne peut être présent, munissez-vous d'une procuration qui atteste que le locataire vous a mandaté pour le représenter.
 
-# Comment se déroule l'état des lieux de sortie
+### Quel est le délai pour modifier mon état des lieux d'entrée ?
 
-## Dois-je être présent pour l'état des lieux de sortie ?
+Lorsque vous entrez dans votre logement, vous signez un état des lieux d'entrée. Vous disposez ensuite de 10 jours pour le modifier. Si le document a été établi en période de chauffe (d'octobre à avril environ) et que votre/vos modification(s) concerne(nt) le chauffage, vous disposez alors d'un délai d'un mois.
+
+## L'état des lieux de sortie
+
+### Dois-je être présent pour l'état des lieux de sortie ?
 
 Votre présence est indispensable au moment de l'état des lieux de sortie, lequel doit être réalisé en présence des deux parties (le locataire et le bailleur), et ce au plus tard le dernier jour du bail, dans un logement vide de tout meuble et nettoyé.
 
@@ -20,7 +22,7 @@ Si vous ne pouvez pas être présent, vous pouvez vous faire représenter par un
 
 Si cette solution n'est pas possible, un huissier de justice peut vous représenter, mais il faut savoir que les frais de son intervention seront partagés entre votre bailleur et vous-même.
 
-## Quels travaux dois-je réaliser avant l'état des lieux de sortie ?
+### Quels travaux dois-je réaliser avant l'état des lieux de sortie ?
 
 En tant que locataire, vous devez entretenir et maintenir propre votre logement. C'est une obligation légale, et vous engagez votre responsabilité si des dégradations sont survenues dans le logement pendant que vous l'occupiez.
 
@@ -28,6 +30,6 @@ Aussi, avant votre état des lieux de sortie, assurez-vous que l'état de votre 
 
 Nous vous conseillons de faire une "visite conseil" gratuite (il s'agit d'une prévisite d'état des lieux) avant votre départ du logement avec un représentant de votre bailleur. La "visite conseil" permet de faire le point sur les éventuels travaux à réaliser dans votre logement, mais aussi sur les démarches administratives à effectuer avant votre départ.
 
-# Je souhaite prendre rendez-vous pour mon état des lieux (d'entrée/de sortie)
+### Je souhaite prendre rendez-vous pour mon état des lieux (d'entrée/de sortie)
 
 Pour votre état des lieux (d'entrée ou de sortie), votre gardien, votre manager de proximité ou votre chargé de clientèle vous contactera pour vous proposer un rendez-vous.

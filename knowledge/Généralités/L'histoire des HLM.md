@@ -1,5 +1,7 @@
 # L'histoire du logement social
 
+## Résumé de l'histoire du logement social de 1984 à 2000+
+
 L'histoire du logement social en France est étroitement liée à celle de la révolution industrielle. Entre 1875 et 1914, la population urbaine passe de 12 à 18 millions, alors que la population totale reste pratiquement stable. En milieu urbain, le surpeuplement devient la règle. En 1906, 62% des personnes habitant des villes de plus de 5 000 habitants vivent à deux ou plus par pièce. De nombreuses enquêtes font alors état des conditions misérables d'habitat des ouvriers, avec des risques importants de propagation des épidémies, notamment la tuberculose, qui fait à elle seule près de 100 000 morts par an.
 
 Pour ceux qui vont donner naissance au logement social, il s'agit aussi de protéger la famille - pivot de la société - et donc de favoriser la natalité. Car, depuis 1890, toutes les analyses montrent une chute de la fécondité, avec une mortalité infantile qui touche 1 enfant de moins de un an sur 5. A la veille de la première guerre mondiale, la "dépopulation" est vécue comme un véritable drame national.

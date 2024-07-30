@@ -1,7 +1,12 @@
 import { beforeAll, expect, it } from "bun:test";
 import { AIContext } from "../../utils/_schema";
 import { db } from "../../utils/database";
-import { get_conversation, get_conversations_for_review, save_reply, score_conversation } from "../../utils/handle-conversation";
+import {
+  get_conversation,
+  get_conversations_for_review,
+  save_reply,
+  score_conversation,
+} from "../../utils/handle-conversation";
 
 beforeAll(() => db("telemetry").query("DELETE FROM telemetry").run());
 

@@ -17,7 +17,12 @@ let chunks_report = `| chunkpath/index | length | status |
                      |------------|--------|--------|`;
 
 for await (const file of files) {
-  if (file.endsWith(".md") && !file.endsWith("TABLE_OF_CONTENTS.md") && !file.endsWith("CHUNKS_REPORT.md")) {
+  if (
+    file.endsWith(".md") &&
+    !file.endsWith("TABLE_OF_CONTENTS.md") &&
+    !file.endsWith("CHUNKS_REPORT.md") &&
+    !file.endsWith("README.md")
+  ) {
     const content = Bun.file(`knowledge/${file}`);
     const data = await content.text();
     const splitted_data = data.split(/[^#]##\s/);
