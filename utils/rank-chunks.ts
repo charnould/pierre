@@ -2,21 +2,21 @@ import { _ } from "lodash";
 
 export const rank_chunks = (arr) => {
   const flat = _.flattenDeep(arr);
-  const grouped = _.groupBy(flat, "id");
+  const grouped = _.groupBy(flat, "rowid");
 
   const best = [];
   for (const property in grouped) {
-    const max = _.maxBy(grouped[property], "score");
-    best.push(max);
+    const min = _.minBy(grouped[property], "distance");
+    best.push(min);
   }
 
-  const rev = _.reverse(_.sortBy(best, ["score"]));
+  const rev = _.sortBy(best, ["distance"]);
+
+  const only_first = _.take(rev, 5);
+
   const final = [];
 
-  for (const r of rev) {
-    // TODO: supprimer les "\n\t\t\t\t" ... ?
-    final.push(r.chunk.replace(/\n/g, " "));
-  }
+  for (const r of only_first) final.push(r.chunk.replace(/\n/g, " ").trim());
 
   return final;
 };

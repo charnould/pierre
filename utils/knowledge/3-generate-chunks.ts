@@ -6,15 +6,12 @@ import * as prettier from "prettier";
 Database.setCustomSQLite("/opt/homebrew/opt/sqlite/lib/libsqlite3.dylib"); // when coding on Mac OS X
 const db = new Database("./utils/knowledge/datastore.sqlite");
 
-// const version = db.prepare('select vss_version()').get()
-// console.log(version)
-
 db.exec("CREATE VIRTUAL TABLE chunks USING FTS5(chunk);");
 
 const files = await readdir("knowledge", { recursive: true });
 
 let chunks_report = `| chunkpath/index | length | status |
-                     |------------|--------|--------|`;
+                     |-----------------|--------|--------|`;
 
 for await (const file of files) {
   if (
@@ -31,7 +28,7 @@ for await (const file of files) {
       const chunk = `${splitted_data[0]}\n## ${splitted_data[index].trim()}`;
       const filepath = `${file.split(".")[0]}/${index}`.split("/").join(" / ");
 
-      chunks_report += `\n| ${filepath} | ${chunk.length} | ${chunk.length >= 7800 ? "🟢" : "🔴"} |`;
+      chunks_report += `\n| ${filepath} | ${chunk.length} | ${chunk.length <= 7800 ? "🟢" : "🔴"} |`;
       db.prepare("INSERT INTO chunks(chunk) VALUES(?);").run(chunk);
     }
   }

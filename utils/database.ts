@@ -1,5 +1,6 @@
 import { Database } from "bun:sqlite";
-import * as sqlite_vss from "sqlite-vss";
+import * as sqliteVec from "sqlite-vec";
+// MacOS *might* have to do this, as the builtin SQLite library on MacOS doesn't allow extensions
 Database.setCustomSQLite("/opt/homebrew/opt/sqlite/lib/libsqlite3.dylib");
 
 export const db = (db_name: string) => {
@@ -8,7 +9,7 @@ export const db = (db_name: string) => {
 
   if (db_name === "knowledge") {
     db = new Database("./utils/knowledge/datastore.sqlite");
-    sqlite_vss.load(db);
+    sqliteVec.load(db);
   }
 
   if (db_name === "telemetry") {

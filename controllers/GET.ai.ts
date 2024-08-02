@@ -47,9 +47,7 @@ export const controller = async (c: Context) => {
       answer = await reach_deadlock(ai_context);
     } else {
       // Step 2. Retrieval
-      // Rechercher les chunks (= parties de documents)
-      // les plus pertinentes avec une double recherche :
-      // sémantique et vectorielle
+      // Rechercher les chunks (= parties de documents) les plus pertinents
 
       const chunks = await Promise.all([
         vector_search(ai_context.content),

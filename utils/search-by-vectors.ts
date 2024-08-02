@@ -13,23 +13,15 @@ export const vector_search = async (data) => {
   const vectors = db("knowledge")
     .prepare(
       `
-      select rowid as id, distance as score, 'vectors' as type
-      from vectors
-      where vss_search(vector, ?)
-      order by score
-      limit 3;`,
+    SELECT rowid, distance
+    FROM vectors
+    WHERE vector MATCH ? AND k = 4
+    `,
     )
-    .all(JSON.stringify(embedding));
+    .all(new Float32Array(embedding));
 
   for (const v of vectors) {
-    const test = db("knowledge")
-      .prepare(
-        `
-        select * from chunks
-        where rowid = ?;`,
-      )
-      .get(v.id);
-
+    const test = db("knowledge").prepare('SELECT * FROM chunks WHERE rowid = ?;').get(v.rowid);
     results.push({ ...v, ...test });
   }
 

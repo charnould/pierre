@@ -1,132 +1,686 @@
 # Base de connaissances
 
-## ANCOLS ou Ancols : Agence Nationale de Contrôle du Logement Social
+## Code de la construction et de l'habitation
 
-### Direction générale et gouvernance de l'ANCOLS
+### Histoire
 
----
+- Création
+- Évolutions
+  - Sécurité dans les immeubles
 
-## Plaine Commune Habitat
+### Plan du code
 
-### Coordonnées et contacts
+### Évolution en 2020-2021
 
-### Présentation, missions et valeurs
+### Références
 
-### Comment contacter Plaine Commune Habitat quand j'habite dans la résidence "Anatole France" ?
+### Voir aussi
 
----
-
-## Questions fréquente des clients et locataires Domofrance
-
-### Je suis locataire d’un logement chez Domofrance et je souhaite en faire l’acquisition. Est-ce possible ?
-
-### Les logements neufs vendus par Domofrance sont-ils financièrement plus intéressants que ceux que l’on trouve dans les annonces immobilières classiques ?
-
-    - En consultant la carte du patrimoine, j’ai trouvé un logement qui m’intéressait. Comment faire ma demande ?
-    - Comment savoir où en est ma demande de logement ?
-    - J’ai effectué une demande de logement mais je n’ai pas encore été contacté pour l’attribution d’un logement. Est-ce normal ?
-    - J’ai reçu un courrier m’indiquant que je n’avais pas obtenu de logement car mon dossier n’avait pas été classé en « rang 1 ». Serai-je prioritaire pour l’obtention d’un autre logement ?
-    - Combien de temps ma demande de logement est-elle valable ?
-    - Je n'arrive pas à me connecter à mon compte locataire, mon mot de passe est refusé
-    - Je ne trouve pas l'identifiant et le mot de passe temporaires qui me sont demandés pour activer mon compte locataire. Comment dois-je faire ?
-    - Je suis inscrit en liste d’attente pour un logement étudiant. J’ai effectué une recherche sur votre site et j’ai vu qu’il y avait beaucoup de résidences disponibles. Pourquoi ne m’a-t-on pas contacté ?
-    - Notre famille va s’agrandir et nous avons besoin d’un nouveau logement. Doit-on redéposer une demande chez Domofrance ?
-    - La location d’un local professionnel est-elle accessible à tous ?
-    - Puis-je louer ou acheter un parking même si je ne suis pas locataire ou propriétaire chez Domofrance ?
+### Liens externes
 
 ---
 
-## Domofrance
+## Loi relative à la solidarité et au renouvellement urbains
 
-### Contacts
+### Orientation
 
-### Coordonnées des agences et bureaux de gestion de Domofrance
+### Contenu
 
-### Une déjà longue histoire et un ancrage régional
+### Évolution de l'article 55
 
-### Notre raison d’être
+### L'article 55 : les communes déficitaires
 
-### Chiffres-clés
+- Île-de-France
+- Côte d'Azur
 
-### Plus de 60 ans d'histoire
+### Bilan
 
----
+### Notes et références
 
-## "Vivant" - Domofrance dévoile son nouveau projet stratégique 2024-2028 !
+### Voir aussi
 
-### Les 4 piliers du projet stratégique Domofrance : "Vivant"
-
-### Les 5 chantiers du projet stratégique Domofrance : "Vivant"
-
----
-
-## ExterrA par Domofrance
-
-### Coordonnées
-
-### La genèse d'exterrA par Domofrance
-
-### Les dispositifs d'achat
-
-- Le Bail Réel Solidaire (BRS)
-  - Le Bail Réel Solidaire, c’est quoi ?
-  - Le Bail Réel Solidaire, pour qui ?
-  - Le Bail Réel Solidaire, comment ça fonctionne ?
-  - Quels sont les avantages de ce dispositif ?
-- Location-Accession
-  - Le dispositif de la location accession
-  - Les avantages
-- Accession Directe
-  - Comment ça marche ?
-  - Quels avantages ?​
-
-### Comment financer son bien/acquisition ?
-
-- PTZ – Prêt à taux zéro
-- PTZ Bordeaux Métropole
-- Etre primo accédants et bénéficier du PTZ
-- Prêt bancaire au taux du marché
+- Articles connexes
+- Liens externes
 
 ---
 
-## Changer de logement social
+## Prêt locatif social
 
-### Comment changer de logement social ?
+### Voir aussi
 
-- Les situations pouvant amener à changer de logement social
-- Les démarches pour faire une demande de changement de logement social
-- Comment obtenir un changement de logement social ?
-- Quels sont les délais d'attente pour une mutation de logement social ?
+- Articles connexes
+- Lien externe
 
 ---
 
-## Déposer une demande de logement social
+## Loi d'orientation et de programmation pour la ville et la rénovation urbaine
 
-### Comment déposer une demande de logement social ou HLM ?
+### Contenu
 
-- Faire une demande de logement social ou HLM, par internet
-- Faire une demande de logement social ou HLM, par papier
+- Politique de la ville et rénovation urbaine
+- Développement économique des quartiers prioritaires
+- Procédure de rétablissement personnel
+- Dispositions diverses
 
-### Modifier, mettre à jour et renouveler une demande de logement social
+### Annexes
 
-- Comment modifier ou mettre à jour une demande de logement social ?
-- Comment renouveler une demande de logement social ?
+- Articles connexes
+- Lien externe
 
 ---
 
-## Comment se déroule l'état des lieux d'entrée
+## Participation des employeurs à l'effort de construction
 
-### Quel est le délai pour modifier mon état des lieux d'entrée ?
+### Historique
 
-## Quels documents dois-je apporter lors de l'état des lieux d'entrée dans le logement ?
+### Fonctionnement
 
-## Comment se déroule l'état des lieux de sortie
+- Ressources
+- Emplois
+  - Concours aux personnes physiques
+  - Concours aux personnes morales
+  - Concours aux politiques nationales
+- Gouvernance
 
-### Dois-je être présent pour l'état des lieux de sortie ?
+### Participation des employeurs agricoles à l'effort de construction
 
-### Quels travaux dois-je réaliser avant l'état des lieux de sortie ?
+### Communication
 
-## Je souhaite prendre rendez-vous pour mon état des lieux (d'entrée/de sortie)
+- Activité de lobbying en France
+
+### Notes et références
+
+### Voir aussi
+
+- Articles connexes
+- Bibliographie
+- Liens externes
+
+---
+
+## Droit au logement en France
+
+### Droit constitutionnel
+
+### Droit fondamental, mais non sanctionné juridiquement
+
+### Droit au logement opposable (DALO)
+
+### Évolutions législatives de 2007
+
+### Les bénéficiaires de la loi
+
+### Les étapes de la procédure
+
+### Réactions à la loi sur le DALO
+
+### Mise en œuvre de la loi DALO
+
+- Comité de Suivi de la loi DALO
+
+### Bilan du DALO en 2016
+
+### Notes et références
+
+---
+
+## Guillaume Kasbarian
+
+### Biographie
+
+- Jeunesse, formation et carrière professionnelle
+- Cadre de La République en marche
+- Député de la XVe législature
+- Député de la XVIe législature
+- Ministre du Logement
+
+### Références
+
+### Voir aussi
+
+- Articles connexes
+- Liens externes
+
+---
+
+## Agence nationale de contrôle du logement social
+
+### Objectifs
+
+### Fonctionnement
+
+### Rapports d'étude
+
+### Notes et références
+
+### Annexes
+
+- Lien externe
+
+---
+
+## Loi pour l'accès au logement et un urbanisme rénové
+
+### Genèse du texte
+
+- Objectifs du gouvernement
+- Réserves des économistes du Conseil d'analyse économique
+- Parcours législatif
+
+### Les grands traits de la loi Alur
+
+- Mesures concernant les locations
+  - Encadrement des loyers
+  - De nouvelles règles locatives
+  - Un dispositif non appliqué : la Garantie universelle des loyers (GUL)
+  - Concernant les expulsions
+  - Protection du dépôt de garantie
+- Lutte contre l'« habitat indigne »
+- Réforme des copropriétés et des professions de l'immobilier
+  - Prévention et prise en charge de la dégradation des copropriétés
+  - Gestion des copropriétés
+  - Les syndics de copropriété
+- Dispositions relatives à l'offre de construction
+- Création des organismes de foncier solidaire
+- Urbanisme
+  - Promotion de l'habitat participatif, mobile et nomade
+- Attribution des logements sociaux et des marchés fonciers
+
+### Une loi très diversement appréciée
+
+- Une loi appréciée par EELV et une partie de la gauche
+- Les critiques des économistes libéraux
+- La critique des professionnels de l'immobilier
+- La réception de la presse internationale
+- Remise en question par le gouvernement Valls 2
+  - Raisons de la remise en question
+  - Parties de la loi revue
+
+### Notes et références
+
+### Voir aussi
+
+- Articles connexes
+- Bibliographie
+- Liens externes
+
+---
+
+## Centre national des œuvres universitaires et scolaires
+
+### Historique
+
+### Rôle
+
+### Présidence et direction
+
+### Le conseil d'administration
+
+- Élections étudiantes
+
+### Annexes
+
+- Notes et références
+- Articles connexes
+
+---
+
+## Entreprise sociale pour l'habitat
+
+### Présentation des ESH
+
+### La fédération des ESH
+
+### Notes et références
+
+### Voir aussi
+
+- Articles connexes
+- Liens externes
+
+---
+
+## Logement social en France
+
+### Histoire
+
+### Évolutions de la loi
+
+### Mixité sociale
+
+### Objectifs
+
+### Données statistiques
+
+- Dans les Hauts-de-Seine
+
+### Définition d'un logement locatif social
+
+### Organismes sociaux
+
+### Types de logement social
+
+### Financement
+
+### Limites
+
+### Vente de logements sociaux
+
+### Notes et références
+
+### Voir aussi
+
+- Articles connexes
+- Bibliographie
+- Liens externes
+
+---
+
+## Historique du logement social en France
+
+### Le temps des précurseurs
+
+- Les conséquences de la deuxième pandémie de choléra à Paris
+- Les premières cités ouvrières de Paris et de Lille
+- La première loi concernant le logement ouvrier
+- Les précurseurs
+  - Le Familistère de Guise
+  - Les cités ouvrières du Creusot
+  - Le modèle mulhousien
+  - La cité Jouffroy-Renault à Clichy
+  - La cité Menier à Noisiel
+  - Autres cités
+
+### La naissance du logement bon marché
+
+- Les « habitations à bon marché »
+- Les premières lois
+- L'implication des collectivités locales et de la puissance publique
+
+### Le temps des bâtisseurs
+
+### Les dernières lois
+
+### Pour approfondir
+
+- Bibliographie
+- Articles connexes
+- Liens externes
+
+### Notes et références
+
+---
+
+## Mixité sociale en France
+
+### La notion de mixité sociale
+
+### Mesures de la mixité sociale
+
+### Mixité sociale et urbanisme
+
+- Mixité sociale et urbanisme en France
+
+### Mixité sociale et mixité ethnique
+
+### Mixité sociale à l'école (ou mixité sociale et éducation)
+
+- Enjeux
+  - Généralités
+  - Enjeux spécifiques à la France
+- Mixité sociale à l'école (ou mixité sociale et éducation) en France : état des lieux, études scientifiques et dispositifs mis en place
+  - États des lieux
+  - Propositions concernant la mixité sociale dans les établissements d'enseignement
+    - Propositions parlementaires
+    - Propositions de la Cour des comptes
+    - Propositions de la mission Azéma-Mathiot
+    - Propositions de chercheurs
+    - Propositions de l'OCDE
+    - Propositions de l'Observatoire de la laïcité
+  - Dans les grands textes réglementaires à partir de 2013
+  - Expérimentations à partir de 2015
+- Un sujet qui inspire le cinéma et la télévision
+
+### Mixité sociale et diversité territoriale dans l'enseignement supérieur et dans les grandes écoles publiques
+
+- Mixité sociale et diversité territoriale dans l'enseignement supérieur en France
+
+### Limites et critiques
+
+- Généralités
+- Limites et critiques concernant la mixité sociale en milieu scolaire en France
+- Effets de la mixité sociale sur les résultats scolaires
+
+### Références
+
+### Annexes
+
+- Bibliographie
+- Articles connexes
+- Liens externes
+
+---
+
+## Organisme d'habitations à loyer modéré (France)
+
+### Mission des organismes d'habitations à loyer modéré
+
+### Établissements publics d'habitations à loyer modéré
+
+- Offices publics d'habitations à loyer modéré (OPHLM)
+- Offices publics d'aménagement et de construction (OPAC)
+- Les Offices publics de l'habitat (OPH)
+
+### Organismes privés d'habitations à loyer modéré
+
+### Notes et références
+
+### Voir aussi
+
+- Articles connexes
+- Liens externes
+
+---
+
+## Loi portant évolution du logement, de l'aménagement et du numérique
+
+### Principaux sujets
+
+### Résultats et critiques
+
+### Références
+
+---
+
+## Quartier prioritaire de la politique de la ville
+
+### Caractéristiques
+
+### Le périmètre de ces quartiers
+
+### Population, vieillissement démographique
+
+### Typologie
+
+### Grands quartiers d'intérêt
+
+### Notes et références
+
+### Liens externes
+
+---
+
+## Union sociale pour l'habitat
+
+### Histoire
+
+### Les missions
+
+### Les types d'organismes Hlm
+
+- Les offices publics de l’habitat (OPH)
+- Les entreprises sociales pour l’habitat (ESH)
+- Les sociétés coopératives HLM
+- Les SACICAP
+
+### Les associations régionales Hlm
+
+### Notes et références
+
+### Voir aussi
+
+- Articles connexes
+- Liens externes
+
+---
+
+## Garantie universelle des loyers
+
+### Historique
+
+### Remise en cause
+
+### Conditions d'application
+
+### Mise en œuvre
+
+### Références
+
+### Voir aussi
+
+- Articles connexes
+- Liens externes
+
+---
+
+## Agence nationale pour la rénovation urbaine
+
+### Objectif
+
+### Instance
+
+### Moyens financiers
+
+### Direction
+
+- Présidents
+- Directeurs généraux
+
+### Dossier ANRU
+
+- Élaboration
+- Instruction
+- Approbation
+
+### Les projets retenus ou financés par l'ANRU au 15 janvier 2014
+
+### Programmes mis en œuvre
+
+- Programme national de rénovation urbaine (PNRU)
+- Nouveau programme de renouvellement urbain (NPNRU) 2014-2024
+  - Objectifs
+  - Nouvelle procédure
+- Programme national de revitalisation des quartiers anciens dégradés (PNRQAD)
+- Programme d’investissements d’avenir
+- Suivi et évaluation des programmes
+
+### Notes et références
+
+### Voir aussi
+
+- Bibliographie
+- Articles connexes
+- Liens externes
+
+---
+
+## Centre régional des œuvres universitaires et scolaires
+
+### Histoire
+
+### Organisation
+
+### Liste des Crous
+
+### Élections d'étudiants
+
+### Notes et références
+
+### Annexes
+
+- Articles connexes
+- Liens externes
+
+---
+
+## Fondation Abbé-Pierre pour le logement des défavorisés
+
+### Origine et création
+
+- Origine d'un combat
+- Fondation d'Emmaüs
+- Appel dit « L'insurrection de bonté »
+- Création
+
+### Combats
+
+- Mal-logement
+- Logement social
+- Précarité énergétique
+- Expulsions
+- Solidarité internationale
+
+### Actions
+
+- Agir
+- Interpeller
+
+### Organisation
+
+### Direction
+
+- Conseil d'administration
+- Délégué général
+
+### Financement
+
+### Agréments
+
+### Communication
+
+- Campagnes de communication
+- Colloques
+- Concerts
+
+### Publications
+
+- Rapport annuel
+- Sondages
+- Rapports inter-associatifs
+- Livre
+
+### Propositions
+
+### Notes et références
+
+### Voir aussi
+
+- Bibliographie
+- Liens externes
+
+---
+
+## Prêt locatif intermédiaire
+
+### Opérations Finançables
+
+### La situation des opérations
+
+### Les caractéristiques du prêt
+
+### Les conditions de la location
+
+### Notes et références
+
+### Voir aussi
+
+- Articles connexes
+- Liens externes
+
+---
+
+## Logement étudiant en France
+
+### Histoire du logement étudiant
+
+### Les résidences universitaires
+
+### Le marché du logement privé
+
+### Notes et références
+
+### Articles connexes
+
+---
+
+## Prêt locatif à usage social
+
+### Rôle
+
+### Historique
+
+### Octroi
+
+- Plafond de loyer
+- Plafond de ressources
+- Normes d'habitabilité
+
+### Bases juridiques
+
+### Dispositions financières
+
+### Notes
+
+### Voir aussi
+
+---
+
+## Ministre du Logement
+
+### Historique
+
+### Liste des ministres
+
+- Troisième République
+- Quatrième République
+  - Ministre ou secrétaire d'État
+  - Sous-secrétaire d'État (1956–1957)
+- Cinquième République
+
+### Galerie
+
+### Notes et références
+
+### Voir aussi
+
+- Articles connexes
+- Liens externes
+
+---
+
+## Les droits et obligations du locataire
+
+### Les droits du locataire
+
+- Le locataire jouit librement de son logement dans le respect du cadre légal et réglementaire
+  - Le Droit de visite en cas de travaux faits par le bailleur
+
+---
+
+## Comment se déroule le processus d’attribution d'un logement social ou HLM ?
+
+### Qu’est-ce qu’une commission d’attribution, CAL ou CALEOL ?
+
+- La présentation de votre dossier en commission d'attribution locative
+  - Qui est prioritaire ?
+  - Comment sont attribués les logements ?
+  - Les décisions possibles lors de la commission d'attribution locative
+  - J’ai reçu un courrier m’indiquant que je n’avais pas obtenu de logement car mon dossier n’avait pas été classé en « rang 1 ». Serai-je prioritaire pour l’obtention d’un autre logement ?
+
+---
+
+## Les états des lieux
+
+### L'état des lieux d'entrée
+
+- Quels documents dois-je apporter lors de l'état des lieux d'entrée dans le logement ?
+- Quel est le délai pour modifier mon état des lieux d'entrée ?
+
+### L'état des lieux de sortie
+
+- Dois-je être présent pour l'état des lieux de sortie ?
+- Quels travaux dois-je réaliser avant l'état des lieux de sortie ?
+- Je souhaite prendre rendez-vous pour mon état des lieux (d'entrée/de sortie)
 
 ---
 
@@ -150,44 +704,37 @@
 
 ## L’aide au logement ne m’a pas été versée ce mois-ci, puis-je déduire la somme que je perçois habituellement du montant de mon loyer ?
 
-## Je touche l’aide personnalisée au logement : dois-je répondre à l’enquête sur le supplément loyer solidarité (SLS) et vais-je avoir un SLS à payer ?
+---
 
-## Mon fils majeur habite chez moi avec sa compagne : que dois-je faire pour bien répondre à l’enquête SLS sur le supplément de loyer solidarité ?
+## Les enquêtes-locataires
 
-## J'héberge ma mère : dois-je la mentionner en répondant à votre enquête sur le supplément de loyer solidarité (SLS) ?
+### Les enquêtes adressées aux locataires
+
+- L'enquête sur l’Occupation du Parc Social (ou enquête OPS)
+  - À quoi sert l’enquête OPS ?
+  - Qui est concerné par l’enquête OPS ?
+- L'enquête "Supplément de Loyer de Solidarité", ou enquête SLS
+  - À quoi sert l’enquête SLS ?
+  - Qui est concerné par l’enquête SLS ?
+  - Quels sont généralement les documents demandées dans le cadre de l’enquête SLS ?
+  - Questions fréquentes relatives à l'enquête SLS
+    - Mon enfant majeur habite chez moi avec sa compagne : dois-je le mentionner en répondant à votre enquête SLS ?
+    - J'héberge un ascendant (père ou mère) : dois-je le mentionner en répondant à votre enquête SLS ?
 
 ---
 
-## Les droits et obligations du locataire
+## Déposer une demande de logement social
 
-### Les droits du locataire
+### Comment déposer une demande de logement social ou HLM ?
 
-## Droit de visite en cas de travaux faits par le propriétaire
+- Faire une demande de logement social ou HLM, par internet
+- Faire une demande de logement social ou HLM, par papier
 
-## J’habite un logement social dont l’immeuble doit-être prochainement démoli. Quels sont mes droits ?
+### Consulter, modifier, mettre à jour et renouveler une demande de logement social
 
-## Mes ressources viennent d’augmenter, puis-je conserver mon logement social ?
-
-## Je viens de me séparer de mon ami, puis-je rester dans le logement social dans lequel nous vivions ensemble ?
-
----
-
-## Quelles solutions de logement pour les étudiants ?
-
-### Habiter en résidence étudiante privée
-
-### Loger dans une résidence CROUS
-
-### Louer un appartement auprès d'un bailleur
-
-- Dans le parc privé
-- Dans le parc social
-
-### Vivre en colocation
-
-### Loger dans un foyer étudiant
-
-### Louer une chambre chez l'habitant
+- Comment savoir où en est une demande de logement ?
+- Comment modifier ou mettre à jour une demande de logement social ?
+- Comment renouveler une demande de logement social ?
 
 ---
 
@@ -197,78 +744,15 @@
 
 ---
 
-## Comment et pourquoi assurer son logement ?
+## L'assurance habitation
 
-### Quand cette assurance habitation est-elle nécessaire et exigible ?
+### Comment et pourquoi assurer son logement ?
 
-### L'assurance habitation proposée par la Ville de Paris
-
-## Dans quels cas un locataire doit-il contacter son assurance ?
-
----
-
-## L'enquête sur l’Occupation du Parc Social, ou enquête OPS
-
-### A quoi sert l’enquête OPS ?
-
-### Qui est concerné par l’enquête OPS ?
-
-## L'enquête "Supplément de Loyer de Solidarité", ou enquête SLS
-
-### À quoi sert l’enquête SLS ?
-
-### Qui est concerné par l’enquête SLS ?
-
-### Quels sont généralement les documents demandées dans le cadre de l’enquête SLS ?
-
----
-
-## La location meublée
-
-### La location meublée, qu'est ce c'est ?
-
-### Le meublé, un statut mieux encadré avec la loi Alur
-
-### Le contrat de location en meublé
-
-### La révision du loyer des locations meublées
-
-### La résiliation d'une location meublée
-
----
-
-## Acquérir ou acheter un logement social
-
-### Comment devenir propriétaire d’un logement social ?
-
-- Qui peut devenir propriétaire d’un logement social ?
-- Comment se passe l’achat d’un logement social ou HLM ?
-- Quels sont les dispositifs d’accession sociale ?
-
----
-
-## Comment se déroule le processus d’attribution d'un logement social ou HLM ?
-
-- Qu’est-ce qu’une commission d’attribution, CAL ou CALEOL ?
-- La présentation de votre dossier en commission d'attribution locative
-  - Qui est prioritaire ?
-  - Comment sont attribués les logements ?
-  - Les décisions possibles lors de la commission d'attribution locative
-
-## Enquête "Supplément de Loyer de Solidarité" (SLS)
-
-### À quoi sert l’enquête "Supplément de Loyer de Solidarité" (SLS) ?
-
-### Comment est calculé le Supplément de Loyer de Solidarité (SLS) ?
-
-### Qui est concerné par l’enquête "Supplément de Loyer de Solidarité" (SLS) ?
-
-### Quels sont généralement les documents demandées dans le cadre de l’enquête "Supplément de Loyer de Solidarité" (SLS) ?
-
-### Questions/réponses
-
-- J’ai reçu l’enquête "Supplément de Loyer de Solidarité" (SLS), suis-je obligé de répondre ?
-- Les pièces jointes sont-elles obligatoires pour l’enquête "Supplément de Loyer de Solidarité" (SLS) ?
+- L'assurance habitation : une obligation
+- Quand cette assurance habitation est-elle nécessaire et exigible ?
+- L'assurance habitation proposée par la Ville de Paris
+- Dans quels cas un locataire doit-il contacter son assurance ?
+- La convention Cidre pour l’assurance contre les dégâts des eaux : qu’est-ce que c’est ?
 
 ---
 
@@ -295,41 +779,88 @@
 
 ---
 
-## Les travaux et l'aménagement d'un logement social
+## Déposer une demande de mutation pour changer de logment social
 
-### Jusqu'à quelle heure puis-je faire des travaux dans mon logement ?
+### Comment changer de logement social ?
 
-### Quels travaux dans mon logement nécessitent l'autorisation du bailleur ?
+- Les situations pouvant amener à changer de logement social
+  - Cas particulier : la mutation du fait d'un immeuble à démolir
+- Les démarches pour faire une demande de changement de logement social
+- Comment obtenir un changement de logement social ?
+  - Option 1 : Se rapprocher de votre bailleur social
+  - Option 2 : Déposer une demande sur la plateforme AL’in d'Action Logement
+- Quels sont les délais d'attente pour une mutation de logement social ?
 
-### Puis-je bénéficier d'aménagements dans mon logement en lien avec mon handicap ou mon âge ?
+---
 
-### Que dois-je entretenir et quels sont les travaux à ma charge dans mon logement ?
+## Les travaux, l'aménagement et l'entretien d'un logement social ou HLM
+
+### Quels travaux le locataire peut-il réaliser dans son logement et quand ?
+
+- Que dois-je entretenir et quels sont les travaux à ma charge dans mon logement ?
+- Quels travaux dans mon logement nécessitent l'autorisation du bailleur ?
+- Au départ du locataire, que se passe-t-il s'il a fait des travaux sans l'accord du bailleur ?
+- Jusqu'à quelle heure le locataire peut-il faire des travaux dans son logement ?
+- Qui réalise les travaux d'adaptation en cas de handicap ou perte d'autonomie ?
+
+### Comment réagir en cas de panne ?
+
+- Que faire en cas de problème électrique dans mon logement ?
+- Que faire en cas de problème de plomberie dans mon logement (robinet, évier, lavabo, toilettes, etc.) ?
+- Que faire en cas de problème avec l’un des équipements collectifs de ma résidence ?
+- Que faire en cas de panne d’ascenseur dans ma résidence ?
 
 ### Comment connaître mon type de chauffage ?
 
-### Quelles sont les précautions à prendre en terme de branchement électrique ?
-
-### Que faire en cas de problème électrique dans mon logement ?
-
-### Que faire en cas de problème de plomberie dans mon logement (robinet, évier, lavabo, toilettes, etc.) ?
-
 ### Ma résidence est-elle reliée à la fibre optique ?
 
-### On m’a parlé de la convention Cidre pour l’assurance contre les dégâts des eaux : qu’est-ce que c’est ?
+---
 
-### Que faire en cas de problème avec l’un des équipements collectifs de ma résidence ?
+## Acquérir ou acheter un logement social
 
-### Que faire en cas de panne d’ascenseur dans ma résidence ?
+### Comment devenir propriétaire d’un logement social ?
 
-### Travaux faits par le locataire
+- Qui peut devenir propriétaire d’un logement social ?
+- Comment se passe l’achat d’un logement social ou HLM ?
 
-- Travaux de transformation
-- Travaux d'adaptation (handicap, perte d'autonomie)
-- Travaux de rénovation énergétique
+### Quels sont les dispositifs d’accession sociale, d'achat de son logement social ?
+
+- Le Bail Réel Solidaire (BRS)
+  - Le Bail Réel Solidaire, c’est quoi ?
+  - Le Bail Réel Solidaire, pour qui ?
+  - Le Bail Réel Solidaire, comment ça fonctionne ?
+  - Quels sont les avantages de ce dispositif ?
+- La Location-Accession via le Prêt social location-accession (PSLA)
+  - Le dispositif de la location accession
+  - Les avantages
+- L'accession Directe
+  - Comment ça marche ?
+  - Quels avantages ?​
+
+---
+
+## Quelles solutions de logement pour les étudiants ?
+
+### Habiter en résidence étudiante privée
+
+### Loger dans une résidence CROUS
+
+### Louer un appartement auprès d'un bailleur
+
+- Dans le parc privé
+- Dans le parc social
+
+### Vivre en colocation
+
+### Loger dans un foyer étudiant
+
+### Louer une chambre chez l'habitant
 
 ---
 
 ## L'histoire du logement social
+
+### Résumé de l'histoire du logement social de 1984 à 2000+
 
 ### 1894-1910 : Les Habitations à Bon marché (HBM), premier jalon
 
@@ -393,6 +924,961 @@
 
 ---
 
+## Le projet stragégique Domofrance 2024-2028 : "Vivant"
+
+### Le projet stragégique Domofrance 2024-2028 : "Vivant"
+
+- Les 4 piliers du projet stratégique
+- Les 5 chantiers du projet stratégique
+
+---
+
+## Domofrance
+
+### Coordonnées du siège social, des agences et bureaux de gestion
+
+### Présentation de Domofrance
+
+- Une déjà longue histoire et un ancrage régional
+- Raison d’être
+- Chiffres-clés
+- Plus de 60 ans d'histoire
+
+### La filiale ExterrA
+
+- Coordonnées
+- La genèse d'exterrA par Domofrance
+
+---
+
+## Domofrance
+
+### Question fréquentes concernant le patrimoine
+
+- Je suis locataire d’un logement chez Domofrance et je souhaite en faire l’acquisition. Est-ce possible ?
+- Les logements neufs vendus par Domofrance sont-ils financièrement plus intéressants que ceux que l’on trouve dans les annonces immobilières classiques ?
+- En consultant la carte du patrimoine, j’ai trouvé un logement qui m’intéressait. Comment faire ma demande ?
+  - La location d’un local professionnel est-elle accessible à tous ?
+  - Puis-je louer ou acheter un parking même si je ne suis pas locataire ou propriétaire chez Domofrance ?
+
+### Question fréquentes concernant le compte et l'espace locataire
+
+- Je n'arrive pas à me connecter à mon compte locataire, mon mot de passe est refusé
+- Je ne trouve pas l'identifiant et le mot de passe temporaires qui me sont demandés pour activer mon compte locataire. Comment dois-je faire ?
+
+---
+
+## ANCOLS ou Ancols : Agence Nationale de Contrôle du Logement Social
+
+### Direction générale et gouvernance de l'ANCOLS
+
+---
+
+## Quelles sont les aides au logement pour les alternants, en contrat d'apprentissage ou de professionnalisation ?
+
+### Les aides pour l’installation dans son logement
+
+### La garantie VISALE, une caution locative gratuite
+
+### L’AVANCE LOCA-PASS®, une aide pour le dépôt de garantie
+
+- Comment fonctionne l’AVANCE LOCA-PASS® ?
+- Comment puis-je obtenir cette aide au logement apprentis/étudiants en alternance/contrats de professionnalisation ?
+
+### Les aides pour le paiement du loyer
+
+- L’AIDE MOBILI-JEUNE®
+- Le plan 1 jeune, 1 solution
+- L’aide (ALF), Allocation de Logement Familiale
+- L’ALS, Allocation de Logement Social
+- L’APL, l’Aide Personnalisée au Logement
+
+---
+
+## Trouver un garant, quelles solutions pour vous ?
+
+### Comment choisir un garant ?
+
+- Solliciter un membre de votre entourage
+- Recourir à un garant payant
+- Faire une demande de garantie VISALE
+- Utiliser le dispositif de la caution bancaire
+
+### Quels organismes peuvent se porter garant pour vous ?
+
+### Avantages et conditions des 4 solutions proposées
+
+### Garantie VISALE : une caution pour votre location
+
+- Pourquoi choisir la garantie VISALE ?
+- Quel est le délai pour obtenir une garantie VISALE ?
+- La durée de validité du VISA
+- Quels documents sont à fournir au moment de votre demande ?
+
+---
+
+## Le bail mobilité
+
+### Qui est éligible au bail mobilité ?
+
+### Pour quels logements ?
+
+### Quelle est la durée du bail mobilité ?
+
+### Quelles sont les mentions obligatoires devant figurer dans le bail mobilité ?
+
+### Comment souscrire mon contrat de cautionnement ?
+
+### Généralités
+
+- Quelle est la durée du cautionnement Visale pour le bail mobilité ?
+- Puis-je demander un dépôt de garantie à mon locataire ?
+- Quel est le préavis dû par mon locataire ?
+- Comment calculer les charges locatives durant la durée du bail ?
+- Les dégradations locatives sont-elles prise en charge en présence d’un bail mobilité ?
+- Comment demander une prise en charge en cas de dégradations locatives ?
+- Dans quel délai dois-je déclarer les dégradations locatives ?
+- Quelles sont les dégradations locatives couvertes ?
+- Quelles sont les dégradations locatives non couvertes ?
+
+---
+
+## Action Coeur de ville
+
+### Peut-il y avoir à terme plusieurs propriétaires dans l’immeuble réhabilité ? Les immeubles en copropriétés sont-ils éligibles ?
+
+### Les locations meublées sont-elles éligibles au dispositif Action Cœur de Ville? Les locations touristiques (Airbnb ?)
+
+### L’assurance dommage-ouvrage est-elle obligatoire ?
+
+### Les opérations de démolition-reconstruction ou de construction neuve sont-elles éligibles ?
+
+### Un conventionnement Anah est-il obligatoire pour bénéficier d’une aide par Action Logement ?
+
+### Peut-on obtenir un accord de financement avant de signer l’acte d'acquisition pour stabiliser son plan de financement ?
+
+### Peut-on bénéficier d’une aide par Action Logement au titre d’Action Cœur de Ville sans prévoir de travaux ?
+
+### Quels travaux sont finançables dans le cadre du dispositif ?
+
+### Est-il possible de commencer les travaux avant l’accord de financement d’Action Logement Services ?
+
+### Le plafonnement des loyers est-il obligatoire sur tous les logements ? Est-il possible d’intégrer des logements à loyer libre ?
+
+### Quels locataires sont éligibles au dispositif Action Coeur de Ville ?
+
+### Les logements loués hors plafonds (loyers libres) peuvent-ils également être mis à disposition de salariés proposés par Action Logement ?
+
+### Est-il possible de cumuler les aides Action Logement avec les aides d’autres partenaires ? Avec d’autres produits Action Logement ?
+
+### Quel est le financement maximum possible pour l’opération ?
+
+### Une opération peut-elle être financée par Action Logement uniquement en subvention ?
+
+### Quelle durée et quel taux pour le prêt délivré par Action Logement au titre du dispositif Action Cœur de Ville ?
+
+### Faut-il souscrire des assurances spécifiques avec le prêt Action Logement ? Des garanties a minima sont-elles à apporter ?
+
+### Prise d’hypothèque, que faut-il savoir ?
+
+    - Le financement Action Cœur de Ville d’Action Logement est-il cumulable avec d'autres dispositifs fiscaux tels que le dispositif Denormandie ?
+
+---
+
+## Le Droit Au Logement Opposable (DALO)
+
+### Qu’est-ce que le droit au logement opposable (DALO) ?
+
+### La commission de méditation pour être reconnu DALO
+
+- Le dossier DALO à soumettre à la commission de médiation
+- Comment contacter votre commission de médiation départementale ?
+- Les critères pour être reconnu DALO
+- Les conditions de revenus pour être reconnu DALO
+
+### Les conditions obligatoires avant de déposer un dossier DALO
+
+### Délai et attribution d’un logement par la commission de médiation
+
+- Puis-je refuser une proposition de logement ?
+- Quelle différence avec le DAHO ?
+
+### Vous souhaitez être accompagné face à une difficulté logement ?
+
+---
+
+## L’éco-PTZ : le prêt à taux zéro pour les travaux d’économie d’énergie
+
+### Les critères d'éligibilité à l'éco-prêt travaux
+
+- Qui peut demander un éco-prêt ?
+- Quels logements sont éligibles à l'éco-PTZ ?
+- Les avantages de l’éco-PTZ ?
+
+### Les travaux d'isolation et d'économie d'énergie finançables avec l'éco-PTZ
+
+- Jusqu'à 30 000 € pour des travaux d'isolation ou d'installation d'équipement durables de chauffage et d'eau chaude
+- Jusqu'à 50 000 € pour améliorer la performance énergétique du logement
+- Jusqu'à 10 000 € pour réhabiliter un système d'assainissement individuel
+
+### Le prêt éco-PTZ est-il cumulable à d’autres dispositifs ?
+
+### Quels sont les modalités de remboursement et de versement ?
+
+### Comment demander un éco-ptz ?
+
+### Obtenir un devis pour finaliser sa demande d'éco-PTZ
+
+- Trouver l'artisan certifié pour vos travaux d'isolation ou de rénovation énergétique
+
+---
+
+## Louer un logement en contrat court (CDD, saisonnier ou intérim)
+
+### Convaincre un bailleur lorsqu’on est salarié en contrat court
+
+### Louer sans garant : comment rassurer votre propriétaire
+
+### Découvrez les aides Action Logement
+
+- La garantie VISALE, une caution locative gratuite
+- L’AVANCE LOCA-PASS®, financer votre dépôt de garantie
+- L’aide aux saisonniers agricoles
+
+### Les salariés en CDD et intérimaires ont-ils droit de bénéficier d’un logement social ?
+
+- Faire une demande de logement temporaire
+- Les avantages de louer un logement dans le parc privé avec Action Logement
+- Avant de commencer vos démarches
+
+---
+
+## Prêt Accession
+
+### Le prêt accession peut-il financer un bien situé à l'étranger ?
+
+### Le prêt accession permet-il de financer le rachat de la part de son ex-conjoint(e) (soulte) ?
+
+### Peut-on demander le prêt pour une acquisition en SCI ?
+
+### Qu'est-ce que le TAEA ?
+
+### Puis-je me rendre en agence pour demander un dossier de prêt accession ?
+
+### Que se passe-t-il si je vends mon logement acquis avec un prêt Action Logement ?
+
+### Comment vérifier mon éligibilité à ce prêt ?
+
+### J’envisage de faire construire un bien pour l'occuper au moment de ma retraite, puis-je bénéficier du prêt accession ?
+
+### En couple, tous deux salariés du secteur privé non agricole, pouvons-nous bénéficier de deux demandes de prêt ?
+
+### Quels sont les plafonds de ressources à ne pas dépasser pour obtenir ce prêt ?
+
+### Divorcé(e) et anciennement propriétaire, peut-on bénéficier du prêt accession ?
+
+### Votre entreprise ne cotise pas à Action Logement, pouvez-vous bénéficier du prêt accession ?
+
+### Que signifie "Il pourra être admis jusqu'à 20% de bénéficiaires ayant un revenu fiscal de référence supérieur à des plafonds de ressources réglementaires..." ?
+
+### Que comprend l'accession sociale sécurisée qui est financée par le prêt accession ?
+
+### Le prêt accession permet-il de financer l'achat d'un terrain seul ?
+
+### Locataire d'un bailleur social, peut-on solliciter le prêt accession pour acheter le logement ?
+
+### Peut-on solliciter le prêt accession pour acheter un bien en Bail Réel Solidaire (BRS) ?
+
+### Le prêt accession permet-il de financer le démembrement de propriété ?
+
+### Peut-on solliciter le prêt accession pour une opération en PSLA (Prêt social pour la Location-Accession) ?
+
+### Sans évaluation de la performance énergétique, peut-on obtenir le prêt ?
+
+### Le montant du prêt principal peut-il être inférieur au montant de prêt accession demandé ?
+
+### En cas d'apport personnel et sans prêt bancaire, est-il possible de bénéficier d’un prêt accession ?
+
+### Faut-il être primo-accédant pour bénéficier du prêt Accession ?
+
+### Le financement d’une maison mobile (habitation légère de loisirs) est-il possible ?
+
+### Où le logement doit-il être situé pour pouvoir bénéficier du prêt accession ?
+
+### Est-il possible d’octroyer un prêt accession à un salarié qui souhaite acheter 50 % du logement de son partenaire/concubin ?
+
+### Faut-il souscrire une assurance dommages-ouvrage dans le cadre d'un projet de construction ?
+
+### Y a-t-il un plafonnement du montant du prêt au regard du coût de l'opération ?
+
+### Souscrire à une assurance est-il obligatoire pour bénéficier de ce prêt ?
+
+### Une majoration de prêt est-elle effectuée en cas de travaux spécifiques d’accessibilité ou d'adaptation du logement au handicap ?
+
+### Peut-on inclure le montant des frais de notaire dans le prêt accession ?
+
+### Peut-on bénéficier du prêt accession sans apport personnel ?
+
+### Quels sont les frais liés à cet emprunt ?
+
+### Comment faire sa demande de prêt accession ?
+
+### Le prêt accession est-il cumulable avec d'autres prêts ?
+
+---
+
+## Faire sa demande de prêt travaux
+
+### Prêts travaux : quels travaux sont éligibles ?
+
+### Les documents à fournir pour obtenir un prêt travaux
+
+### Auprès de qui demander un prêt travaux pour votre logement ?
+
+### Quelle différence entre un prêt travaux et un prêt personnel ?
+
+- Caractéristiques du prêt personnel
+- Caractéristiques du prêt travaux
+- Le prêt travaux est-il un prêt affecté ?
+
+### Les taux des prêts finançant les travaux
+
+- Le prêt travaux à taux fixe
+- Le prêt travaux à taux variable
+
+### Qu’est-ce que le taux annuel effectif global (TAEG) ?
+
+### La durée du prêt travaux
+
+### Prêt travaux : connaître sa capacité d'emprunt
+
+### Remboursement du prêt travaux
+
+- Comment procéder à un remboursement anticipé ?
+- Attention aux termes de votre contrat
+
+### Les autres solutions et aides pour financer des travaux
+
+---
+
+## Aide aux saisonniers agricoles
+
+### Les mineurs sont-ils éligibles à l'aide ?
+
+### Quels sont les contrats de travails éligibles ?
+
+### Quelle est la durée minimum du contrat de travail pour être éligible à l'aide ?
+
+### Les salariés des employeurs particuliers (auxiliaires de vie…) sont-ils éligibles ?
+
+### Les stagiaires sont-ils éligibles ?
+
+### En couple, peut-on bénéficier de l'aide individuellement ?
+
+### Les salariés étrangers sont-ils éligibles à l'aide ?
+
+### Les occupants à titre gracieux sont-ils éligibles ?
+
+### Calcul du montant de l'aide : faut-il prendre en compte le loyer charges comprises ou hors charges ?
+
+### Je perçois de l'aide au logement : dois-je la déduire du montant de mon loyer ?
+
+### Je suis travailleur frontalier, suis-je éligible à l'aide ?
+
+### Quels plafonds de ressources pour être éligible ?
+
+### Je suis hébergé, suis-je éligible à l'aide ?
+
+### J'ai signé mon contrat de location avant de commencer mon travail de saisonner, suis-je éligible ?
+
+### Je participe au loyer mais le contrat de location n'est pas à mon nom, suis-je éligibile à l'aide ?
+
+### Les colocations sont-elles éligibles à l'aide ?
+
+### Les sous-locations et chambres chez l'habitant sont-elles éligibles ?
+
+### Les frais d'hôtel sont-ils éligibles à l'aide ?
+
+### Quelle est la durée de cette aide ?
+
+### Quel est le montant de la subvention ?
+
+### Quel est le délai maximum pour faire une demande ?
+
+### Mon entreprise ne cotise pas à Action Logement, suis-je éligible à l'aide ?
+
+### Je suis éligible, quand l'aide me sera-t-elle versée ?
+
+### En combien de fois l'aide sera-t-elle versée ?
+
+### Où dois-je envoyer mon dossier ?
+
+### Cette aide est-elle cumulable avec d'autres aides existantes ?
+
+### Je n'ai pas de quittance car je n'ai pas réglé mon loyer, que puis-je joindre comme justificatif ?
+
+### Puis-je bénéficier plusieurs fois de l’aide au logement des saisonniers agricoles ?
+
+---
+
+## AL'in, ALIN, alin, al in : la plateforme dédiée au logement social d'Action Logement
+
+### Qu’est-ce que la plateforme AL’in ?
+
+### Comment fonctionne la plateforme AL’in ?
+
+---
+
+### Montant de l’AIDE MOBILI-JEUNE®, comment est-il calculé ?
+
+### Quand effectuer sa demande d'AIDE MOBILI-JEUNE® ?
+
+### Quand l’AIDE MOBILI-JEUNE® est-elle versée ?
+
+### Pour calculer l’AIDE MOBILI-JEUNE®, faut-il prendre en compte le loyer charges comprises ou le loyer hors charges ?
+
+### Un alternant est-il éligible à l’AIDE MOBILI-JEUNE ® suite au déménagement de son employeur ?
+
+### Un bénéficiaire de l'AIDE MOBILI-JEUNE® qui change de logement doit-il déposer une nouvelle demande ?
+
+### Action Logement peut-il verser l’AIDE MOBILI-JEUNE® à un tiers ?
+
+### Travailler plus de 35h a-t-il une incidence sur l’octroi de l’AIDE MOBILI-JEUNE® ?
+
+### En contrat d’apprentissage ou de professionnalisation avec une entreprise de travail temporaire peut-on bénéficier d’une AIDE MOBILI-JEUNE® ?
+
+### Un jeune peut-il continuer à percevoir l’AIDE MOBILI-JEUNE® si son salaire devient supérieur au SMIC ?
+
+### Le montant de l’AIDE MOBILI-JEUNE® peut-il être versé sur le compte des parents du bénéficiaire de l’aide ?
+
+### Comment déterminer la date de fin de l’AIDE MOBILI-JEUNE® ? S’agit-il de la fin de la période en entreprise ou la fin de la période à l’école ?
+
+### Comment faire sa demande d'AIDE MOBILI-JEUNE® ?
+
+### Un jeune en colocation peut-il bénéficier de l'AIDE MOBILI-JEUNE® ?
+
+### Pendant combien de temps le jeune peut-il percevoir l'AIDE MOBILI-JEUNE®?
+
+### Le jeune peut-il déménager durant la période de son contrat d'alternance ?
+
+### Si la durée du contrat en alternance est de 3 ans, peut-on bénéficier de l'AIDE MOBILI-JEUNE® pendant toute cette durée ?
+
+### Quelle date doit être prise en compte pour le contrat de location ou la convention d'occupation lors de la demande d'AIDE MOBILI-JEUNE® ?
+
+### Un locataire de moins de 30 ans signe un contrat d'alternance dans une entreprise à proximité de son logement avant de réaliser sa demande d'AIDE MOBILI-JEUNE®, est-il éligible ?
+
+### À défaut de respecter la distance de 70 km entre le nouveau logement et l'ancienne adresse, comment vérifier que le temps de trajet est supérieur à 40 minutes ?
+
+### Un alternant peut-il bénéficier de l’AIDE MOBILI JEUNE® suite à la signature d’un contrat de mission CIRFE ?
+
+### Quel est le délai à respecter pour renouveler sa demande d'AIDE MOBILI-JEUNE® ?
+
+---
+
+## Garantie Visale
+
+### Qu'est-ce que la Garantie Visale ?
+
+- Objet et objectifs
+- Que prend en charge la garantie Visale ?
+- Combien coûte la garantie Visale ?
+- La garantie Visale est-elle cumulable avec d’autres aides Action Logement ?
+
+### A quels publics jeunes s’adresse Visale ?
+
+    - Qui peut bénéficier de la garantie Visale ?
+      - Conditions d’éligibilité relatives à l’état civil du demandeur
+      - Conditions d’éligibilité des jeunes salariés
+      - Conditions d’éligibilité des étudiants
+      - Conditions d'éligibilité des jeunes stagiaires
+      - Conditions d'éligibilité des jeunes salariés d’une entreprise du secteur privé ou du régime social agricole
+      - Conditions d'éligibilité des jeunes sans emploi ou bénéficiaires des minima sociaux
+      - Conditions d'éligibilité des travailleurs non salariés, indépendants ou entrepreneurs, de moins de 31 ans
+      - Conditions d'éligibilité des intermittents du spectacle de moins de 31 ans
+
+### Quelles sont les conditions de solvabilité et de justification requises pour le locataire ?
+
+- Quelles sont les ressources prises et non prises en compte ?
+  - Les ressources prises en compte
+  - Les ressources non prises en compte
+- Quels justificatifs doivent être fournis ?
+  - Je suis un travailleur non salarié, indépendant ou entrepreneur
+  - Je suis un étudiant boursier qui perçoit des revenus supérieurs au plafond forfaitaire (supérieur à 1600 € en Région Île-de-France ou supérieur à 1200 € ailleurs)
+  - Je suis un alternant qui perçoit des revenus supérieurs au plafond forfaitaire (supérieur à 1600 € en Région Île-de-France ou supérieur à 1200 € ailleurs)
+
+### Comment obtenir la caution Visale ?
+
+- Étape 1 sur 2 : Obtention d'un Visa pour le futur Locataire
+  - Qu'est-ce qu'un visa Visale ?
+  - Processus de demande de visa
+  - Utilisation du visa pour un nouveau logement
+  - Que faire en cas de demande de visa incomplète ou non conforme ?
+- Etape 2 sur 2 : le bailleur active la garantie Visale
+
+### Quelles sont les obligations du bailleur pour bénéficier de la garantie Visale ?
+
+- Conditions du bailleur liées au loyer
+- Obligations du bailleur en matière de logement décent
+
+### En cas de colocation, comment se passe la demande de Visa par les candidats locataires ?
+
+- Quelles sont les conditions d’éligibilité liées à la colocation ?
+- Que se passe-t-il en cas de départ d’un des deux co-titulaires ou colocataires ?
+
+### Les garanties détériorations
+
+- Pour quels logements les dégradations locatives sont-elles prises en charge ?
+- Quel est le montant de la prise en charge ?
+- Les dégradations locatives sont-elles prise en charge en présence d’un bail mobilité ?
+- Quelles sont les dégradations locatives couvertes ?
+- Quelles sont les dégradations locatives non couvertes ?
+- Comment demander une prise en charge en cas de dégradations locatives ?
+- Le bailleur peut-il cumuler une déclaration d’impayés et une détérioration locative ?
+
+### La gestion des impayés de loyer par le bailleur
+
+- A partir de quel moment le bailleur doit-il déclarer un impayé de loyer ?
+- Les charges seules peuvent-elles faire l’objet d’une première déclaration ?
+- Comment déclarer les impayés ?
+- Quelles sont les étapes à suivre par le bailleur au moment de la survenance de l’impayé de loyer ?
+- Quand déclarer un impayé partiel ?
+- Que doit faire le bailleur si le locataire perçoit des allocations logements ?
+- Quelles sont les obligations du bailleur une fois la déclaration d’impayé validée par la caution ?
+- Que doit faire le bailleur (déjà indemnisé) si le locataire lui rembourse ses impayés ?
+- La procédure de recouvrement sera-t-elle menée par la caution ?
+- Que faire en cas de nouvel impayé ?
+- Quels sont les délais de paiement par la caution ?
+- Le Locataire a quitté le logement et rendu les clés
+- Le locataire ne paie pas le dernier mois de loyer, que devez-vous faire ?
+
+---
+
+## Rénovation énergétique : découvrez notre prêt
+
+### Rénovation énergétique : de quoi parlons-nous ?
+
+### Quels travaux d'économie d'énergie réaliser ?
+
+- Une bonne isolation thermique pour économiser sur le long terme
+- Remplacer son chauffage pour améliorer le rendement
+- Opter pour l'énergie renouvelable
+
+### Comment construire son projet de rénovation énergétique ?
+
+### Comment financer ses travaux d’énergie ?
+
+- Le prêt Action Logement
+- Les travaux concernés
+
+### Les autres primes, aides et prêts pour la rénovation énergétique en 2023 :
+
+### Dispositif Denormandie : Une réduction d'impôts pour les bailleurs
+
+- Comment bénéficier de la défiscalisation ?
+
+### Effectuer des travaux de rénovation
+
+---
+
+## Qui peut se porter garant pour un locataire ?
+
+### Les conditions pour se porter garant d’un locataire
+
+- Quelles pièces à fournir en tant que garant ?
+- Les obligations du garant
+- Les risques pour le garant
+
+### Se porter garant pour un étudiant
+
+### Quelles sont les différents types de caution locative ?
+
+### Quelle différence entre se porter garant et se porter caution ?
+
+---
+
+## LOCA-PASS
+
+### Quelle est la différence entre caution et dépôt de garantie ?
+
+### Quand faire sa demande d'AVANCE LOCA-PASS® ?
+
+### Qu'est-ce que l’AVANCE LOCA-PASS® ?
+
+### Un salarié géré dans le cadre du Titre Emploi Service Entreprise (TESE) peut-il bénéficier de l’AVANCE LOCA-PASS® ?
+
+### Peut-on bénéficier de l’AVANCE LOCA-PASS® avec une bourse versée par la Région ?
+
+### Les jeunes non-émancipés et les mineurs sous tutelle peuvent-ils bénéficier de l’AVANCE LOCA-PASS® ?
+
+### Quelle est la durée de l’AVANCE LOCA-PASS® pour un contrat de location meublée de moins de 3 ans?
+
+### Un enseignant en établissement d’enseignement privé sous contrat peut-il bénéficier de l’AVANCE LOCA-PASS®?
+
+### La location d’un garage ou d’un parking peut-elle faire l’objet d’une AVANCE LOCA-PASS® ?
+
+### Les étudiants bénéficiant d’une bourse de l’enseignement supérieur accordée par un Centre d’étude peuvent-ils bénéficier de l’AVANCE LOCA-PASS®?
+
+### Les étudiants effectuant leur(s) CDD à l’étranger dans des entreprises étrangères peuvent-ils bénéficier de l’AVANCE LOCA-PASS® ?
+
+### Quel est le délai maximum pour faire une demande d’AVANCE LOCA-PASS® ?
+
+### Les jeunes occupant un emploi d’auxiliaire, de contractuel ou de vacataire au sein de la fonction publique peuvent-ils bénéficier de l'AVANCE LOCA-PASS® ?
+
+### Peut-on bénéficier de l'AVANCE LOCA-PASS® dans le cadre d'une mutation?
+
+### Peut-on bénéficier de l'AVANCE LOCA-PASS® en tant que retraité ?
+
+### L'AVANCE LOCA-PASS® peut-elle être accordée à des travailleurs frontaliers?
+
+### Votre société ne cotise pas à Action Logement, pouvez-vous bénéficier de l’AVANCE LOCA-PASS®?
+
+### Peut-on bénéficier de l’AVANCE LOCA-PASS® en tant que militaire ?
+
+### Peut-on bénéficier de l’AVANCE LOCA-PASS® en tant qu'artisan ?
+
+### Un étudiant peut-il bénéficier de l’AVANCE LOCA-PASS® ?
+
+### Comment contacter Action Logement pour toutes questions relatives à votre dossier ?
+
+### Comment faire une demande d'AVANCE LOCA-PASS® ?
+
+---
+
+## Prêt travaux
+
+### Quelle durée pour les prêts travaux ?
+
+### Quel taux pour les prêts travaux ?
+
+### Comment bénéficier d’un prêt travaux Action Logement ?
+
+### Quels types de travaux peut-on faire avec un prêt travaux Action Logement ?
+
+### Quel est le montant maximum d’un prêt travaux Action Logement ?
+
+### De quel délai dispose-t-on pour présenter les factures après l’achèvement des travaux ?
+
+### Prêt travaux d’adaptation du logement au handicap : quels documents indispensables sont à fournir préalablement ?
+
+### L’avis préalable délivré par un organisme est-il obligatoire pour l’obtention du prêt travaux adaptation du logement au handicap ?
+
+### Peut-on financer l'installation de panneaux photovoltaïques avec un prêt travaux ?
+
+### Comment demander un déblocage de fonds dans le cadre d’un prêt travaux ?
+
+### Quelles sont les conditions liées à la réalisation des travaux ?
+
+### Quelles conditions de logement pour l’obtention d’un prêt travaux ?
+
+### Le prêt travaux est-il cumulable avec d'autres aides d’Action logement ?
+
+### Qui contacter pour toutes questions relatives à un prêt travaux ?
+
+### Comment faire votre demande de prêt travaux ?
+
+---
+
+## Financement des travaux : nos différents prêts
+
+### Financement des travaux : nos différents prêts
+
+- Les prêts Action Logement pour vos travaux
+- Les avantages des prêts travaux Action Logement
+
+### Le prêt travaux d’amélioration
+
+- Les travaux éligibles au prêt d’amélioration
+- Modalités du prêt travaux amélioration
+
+### Le prêt travaux d’amélioration de la performance énergétique
+
+- Les travaux éligibles pour l’amélioration de la performance énergétique
+- Modalités du prêt travaux rénovation énergétique
+
+### Le prêt travaux d'adaptation du logement au handicap
+
+- Quels travaux peut-on financer ?
+- Modalités de ce prêt travaux
+
+### Les autres aides financières à la rénovation
+
+### Les démarches pour financer ses travaux
+
+---
+
+## Logement temporaire
+
+### Qu'est-ce qu'un logement temporaire meublé ?
+
+### Quel est la durée d'un bail pour un logement temporaire meublé ?
+
+### Quel est le montant du dépôt de garantie pour un logement temporaire meublé ?
+
+### Puis-je faire une recherche de logement temporaire sur plusieurs communes ou plusieurs départements ?
+
+### Combien de fois puis-je postuler sur des offres ?
+
+### Je suis inscrit(e) sur la plateforme du logement temporaire, mais je suis également suivi(e) par un(e) conseiller(ère) de l'Accompagnement social d'Action Logement, suis-je prioritaire ?
+
+### J'ai des difficultés financières, le service d'Accompagnement Social d'Action Logement pourrait-il prendre en charge ma redevance ?
+
+### Un numéro unique de demandeur de logement social est-il obligatoire pour s'inscrire sur la plateforme du logement temporaire ?
+
+### Quels sont les publics prioritaires pour l'obtention d'un logement temporaire ?
+
+### Combien de temps une demande de logement reste-t-elle active sur la plateforme ?
+
+### Puis-je héberger une personne qui n'est pas sur le bail du logement temporaire ?
+
+### Les animaux sont-ils acceptés au sein des résidences de logement temporaire ?
+
+### Je ne suis pas hébergé, je dors dans ma voiture, ma demande est elle prioritaire ?
+
+### Victime de violence, suis-je prioritaire ?
+
+### Puis-je déposer ma candidature sur une offre de logement social AL'in en parallèle de ma candidature sur une offre de logement temporaire ?
+
+### Y a-t-il un âge mininimum ou maximum pour déposer une demande sur la plateforme du logement temporaire ?
+
+### Peut-on bénéficier de l'aide personnalisée au logement (APL) si l'on est locataire d'un logement temporaire ?
+
+### Un étudiant peut-il déposer sa candidature sur des offres de logement temporaire ?
+
+### Je recherche un logement de type T2 (avec une chambre séparée), voire de typologie supérieure (T3, etc.). Est-ce que la plateforme de logement temporaire propose ce type de logement ?
+
+### Nous sommes une famille de plus de deux personnes. Pouvons-nous bénéficier d'un logement temporaire ?
+
+### J'ai déjà fourni tous mes justificatifs pour ma demande de logement social, dois-je les fournir de nouveau pour ma demande de Logement temporaire ?
+
+### Pourquoi ne puis-je pas voir les offres de logement temporaire ?
+
+### Quels sont les délais d'attribution d'un logement temporaire ?
+
+### Existe-til des logements temporaires pour les familles monoparentales ?
+
+### Est-il possible de visiter un logement temporaire avant de poser sa candidature ?
+
+### Sous quel délai vais-je savoir si ma candidature sur un logement temporaire a été retenue ?
+
+### Pourquoi mes candidatures sur des logements temporaires ne sont-elles jamais retenues par Action Logement ?
+
+### Finalement, je souhaite annuler ma candidature sur un logement temporaire. Comment dois-je faire ?
+
+### Que se passe-t-il après que j'ai posé ma candidature sur un logement temporaire ?
+
+### Ma candidature a été acceptée. Quel est le délai pour être contacté(e) par le gestionnaire du logement temporaire ?
+
+### Finalement, j'ai trouvé une autre solution alors que ma candidature sur un logement temporaire a été acceptée, que dois-je faire ?
+
+### Comment fonctionne l'attribution d'un logement temporaire ?
+
+### Puis-je refuser un logement après attribution ?
+
+### Qu'est-ce qu'un rendez-vous de pré-admission après l'attribution d'un logement temporaire ?
+
+### Est-il toujours nécessaire de signer un bail ?
+
+### Faut-il obligatoirement un garant pour entrer dans un logement temporaire ?
+
+### Un logement temporaire m'a été attribué, mais j'aimerais refaire une demande, est-ce possible ?
+
+---
+
+## Service accompagnement social
+
+### Votre situation relève principalement d’une demande logement ? Le service accompagnement social peut-il vous aider ?
+
+### Dans quelles situations le service accompagnement social peut-il vous aider ?
+
+### Le service accompagnement social est-il accessible aux intérimaires, pré-retraité(e)s et CDD ?
+
+### En recherche de logement depuis de nombreuses années, le service accompagnement social peut-il vous aider ?
+
+### Difficultés de paiement de loyers ou de crédit(s) immobilier(s), comment le service accompagnement social peut-il vous aider ?
+
+### Votre employeur sera-t-il informé de votre demande de service accompagnement social ?
+
+### Comment être contacté par son conseiller social dans le cadre d'un suivi ou d'un accompagnement ?
+
+### Comment être aidé par le service accompagnement social ?
+
+---
+
+## Inclusion bancaire
+
+### Qu’est-ce que l’inclusion bancaire ?
+
+### Comment Action Logement agit pour prévenir les situations d’exclusion bancaire ?
+
+### Que va apporter l’accompagnement proposé par Action Logement ?
+
+---
+
+## Louer pour l'emploi
+
+### Quels sont les bailleurs éligibles à l'offre Louer pour l'Emploi ?
+
+### Quels professionnels de l'immobilier peuvent être partenaires ?
+
+### Quelles sont les démarches pour devenir professionnel de l'immobilier partenaire ?
+
+### Quels sont les logements éligibles à l'offre Louer pour l'Emploi ?
+
+### Quelles sont les conditions d'adhésion à l'offre Louer pour l'Emploi ?
+
+### Quels sont les critères de décence à respecter ?
+
+### Quels sont les engagements à respecter en tant que bailleur ?
+
+### Comment le loyer maîtrisé est-il défini ?
+
+### La révision du loyer est-elle possible en cours de contrat Louer pour l'Emploi ?
+
+### Que signifie la période d'exclusivité de 30 jours pour la mise en location ?
+
+### Que se passe-t-il à l'issue de la période d'exclusivité ?
+
+### Pour les propriétaires bailleurs, quelle est la durée d'engagement ?
+
+### Le logement peut-il être loué en colocation ?
+
+### Que comprend l'offre Louer pour l'Emploi ?
+
+### Quel est l'objectif pour Action Logement ?
+
+### Quelles sont les 3 formules proposées dans le cadre de l'offre ?
+
+### Que comprend la formule prêt travaux ?
+
+### Quels sont les travaux de rénovation énergétique éligibles ?
+
+### Quelles sont les conditions pour bénéficier du prêt travaux ?
+
+### L’isolation des parois vitrées est-elle prise en compte dans le cadre du prêt ?
+
+### Les travaux envisagés sont exécutés dans le cadre d'une copropriété, le demandeur peut-il néanmoins profiter de la subvention ?
+
+### Est-il nécessaire de souscrire une assurance pour bénéficier du prêt travaux ?
+
+### Quelles sont les garanties demandées par ALS pour obtenir ce prêt ?
+
+### Est-il possible de réaliser des travaux avec le prêt alors qu'un locataire certifié Action Logement occupe le logement ?
+
+### Quelles sont les obligations légales quant à la réalisation de travaux ?
+
+### Que comprend la formule d'aide à l'entrée dans les lieux ?
+
+### Quelle est la nature des honoraires de location pris en charge ?
+
+### Quel est le montant des honoraires pris en charge ?
+
+### À qui sont versés les honoraires de location ?
+
+### Quelles sont les conditions pour bénéficier de la prise en charge des honoraires de location ?
+
+### L'offre Louer pour l'Emploi est-elle cumulable avec d'autres aides ?
+
+### Quelles sont les démarches à réaliser pour bénéficier de l'offre Louer pour l'Emploi ?
+
+### Quand les options doivent-elles être choisies ?
+
+### Quel est le document formalisant le prêt travaux ?
+
+### Quel est le document formalisant l'aide à l'entrée dans les lieux ?
+
+### Que se passe-t-il si les honoraires de mise en location sont supérieurs à 1000 euros ?
+
+### En cas de démembrement de propriété, le demandeur usufruitier du bien peut-il bénéficier du contrat Louer pour l’Emploi ?
+
+---
+
+## Bail mobilité : les choses à savoir
+
+### Les avantages d'un bail mobilité
+
+### Qui peut bénéficier d'un bail mobilité ?
+
+### Caractéristiques du bail
+
+- Montant du loyer
+- Durée de la location
+- Préavis
+- Les clauses interdites au bail mobilité
+
+### Qui paye la taxe d'habitation dans le cadre d'un bail mobilité ?
+
+### Quelles-sont les différences avec les baux classiques ?
+
+---
+
+## Dépôt de garantie : on vous éclaire sur le sujet
+
+### Le montant du dépôt de garantie est-il plafonné ?
+
+### Quand le dépôt de garantie doit-il être versé au bailleur ?
+
+### Que couvre le dépôt de garantie ?
+
+### Peut-on utiliser le dépôt de garantie pour payer le dernier mois de loyer ?
+
+### Quel montant peut-on prélever sur le dépôt de garantie ?
+
+### Le dépôt de garantie est-il obligatoire ?
+
+### Est-il toujours encaissé ?
+
+### Délai de restitution du dépôt de garantie
+
+### Comment récupérer son dépôt de garantie ?
+
+### Dépôt de garantie : qu'est-ce que l'aide LOCA-PASS ?
+
+### Qui peut bénéficier de l'aide LOCA-PASS ?
+
+### Quelle différence entre caution et dépôt de garantie ?
+
+---
+
+## Charges locatives : que devez-vous payer ?
+
+### Qu'est-ce qui est compris dans les charges locatives ?
+
+### Quelles sont les charges locatives non récupérables sur le locataire ?
+
+### Comment calculer les charges locatives ?
+
+### Quelle est la différence entre charges locatives au réel ou au forfait ?
+
+### Les charges locatives selon le bail
+
+### La régularisation des charges locatives
+
+- Provisions et justificatifs
+- Régularisation annuelle et justificatifs
+
+### Est-ce que le propriétaire a le droit d’augmenter les charges ?
+
+- Comment calculer l'augmentation des charges locatives ?
+- Le délai de régularisation des charges locatives
+  - Pour les locations vides
+  - Pour les locations meublées
+- Un locataire peut-il demander des justificatifs ?
+- Que faire en cas de régularisation abusive ?
+
+### Le cas des charges locatives en copropriété
+
+---
+
+## Plaine Commune Habitat, ou PCH
+
+### À propos
+
+- Coordonnées et contacts
+- Présentation
+- Comment contacter Plaine Commune Habitat quand j'habite dans la résidence "Anatole France" ?
+
+---
+
 ## Préparer mon dossier pour intégrer une résidence ARPEJ (gestionnaire de résidences)
 
 ### Etudiant non boursier
@@ -408,131 +1894,6 @@
 ### Chercheur, doctorant ou post-doctorant
 
 ### Jeune actif
-
----
-
-## ARPEJ : Association de Résidences pour Etudiants et Jeunes
-
-### Réglement intérieur
-
-- Article 1 : Jouissance paisible
-- Article 2 : Champ d'application
-- Article 3 : Accès à l'établissement
-- Article 4 : Règles relatives au maintien en état, à la propreté, à l'hygiène et à la salubrité
-- Article 5 : Règles de vie en collectivité
-- Article 6 : Règles relatives à la sécurité
-- Article 7 : Publicité
-
----
-
-## Foire aux questions pour ARPEJ (gestionnaire de résidences étudiantes)
-
-### Quel est le processus de réservation d’un logement ?
-
-### La colocation est-elle autorisée ?
-
-### Puis-je faire une réservation dans plusieurs résidences ?
-
-### Est-ce que je peux faire une demande pour un court séjour ?
-
-### Qu’est-ce qu’un garant ?
-
-### Que se passe-t-il si mon dossier n’est pas complet ?
-
-### Quelles sont les pièces nécessaires pour constituer mon dossier ?
-
-    - Pour le futur locataire
-    - Pour le garant
-
-### Combien de temps à l’avance dois-je faire ma demande de logement ?
-
-### Puis-je changer d’appartement si le mien ne me convient pas ?
-
-### Puis-je choisir mon appartement ?
-
-### Y a -t-il des événements organisés dans les résidences ?
-
-### Les résidences sont sécurisées ?
-
-### Pouvons-nous avoir un animal de compagnie au sein de la résidence ?
-
-### Où trouver le réglement intérieur de la résidence ?
-
-### Puis-je inviter quelqu’un pour recevoir ou dormir ?
-
-### Les espaces communs sont accessibles en libre service ?
-
-### Il y a-t-il une laverie ?
-
-### Les résidences ont-elles un parking ?
-
-### Puis-je déplacer des meubles dans mon logement ?
-
-### Comment est équipée la salle de bain ?
-
-### Que comprend la kitchenette ?
-
-### Comment sont équipés les logements ?
-
-### La résidence prête des équipements ?
-
-### Quels sont les espaces communs ?
-
-### Que comprend mon loyer ?
-
-### Qu’est-ce qu’ un dépôt de garantie ? Quel est son montant et quand serai-je remboursé ?
-
-### Qu’est ce que la taxe d’habitation ? Est-elle obligatoire ?
-
-### Qu’est ce que l’assurance habitation ? Est-elle obligatoire ?
-
-### A quelle date dois-je régler mon loyer ?
-
-### Que dois-je payer à la réservation?
-
-### Qu’est-ce qu’une aide au logement ?
-
-### Puis-je bénéficier de l’aide au logement si je suis en colocation ?
-
-### A quel moment dois-je effectuer ma demande d’aide au logement ?
-
-### Quel sera le montant de mon aide au logement ?
-
-### Qu’est-ce qu’un logement conventionné ? Est-ce que les logements ARPEJ sont conventionnés ?
-
-### Est-il possible de continuer à habiter au sein des résidences après obtention du diplôme ?
-
-### Est-ce que je dois faire un état des lieux de sortie ?
-
-### Quelles sont les démarches à faire avant de quitter mon logement ?
-
-### Ai-je besoin d'une carte bleue pour réserver un logement ?
-
-### Comment avoir des précisions sur les logements proposés ?
-
-### De combien de temps disposons-nous pour accepter une proposition de logement ?
-
-### En quoi accepter le logement engage-t-il pour les démarches suivantes ?
-
-### Est-ce que des places peuvent se libérer en cours d'année ?
-
-### Est-ce que je peux demander un logement si je suis mineur ?
-
-### Est-ce que je peux faire une demande de logement si je n'ai pas encore reçu mon visa ?
-
-### Est-il possible de réserver dans une résidence complète ?
-
-### Est-il possible de visiter un logement ?
-
-### Je me suis désisté par erreur, comment annuler cette action ?
-
-### Quelles sont les conditions de désistement après avoir signé le bail ?
-
-### Je n'arrive pas à réserver
-
-### Je suis alternant, à quel type de résidence dois-je postuler ?
-
-### Quelle est la composition et le prix du Kit dodo et vaisselle ?
 
 ---
 
@@ -1490,897 +2851,127 @@
 
 ---
 
-## Quelles sont les aides au logement pour les alternants, en contrat d'apprentissage ou de professionnalisation ?
+## Foire aux questions pour ARPEJ (gestionnaire de résidences étudiantes)
 
-### Les aides pour l’installation dans son logement
+### Quel est le processus de réservation d’un logement ?
 
-### La garantie VISALE, une caution locative gratuite
+### La colocation est-elle autorisée ?
 
-### L’AVANCE LOCA-PASS®, une aide pour le dépôt de garantie
+### Puis-je faire une réservation dans plusieurs résidences ?
 
-- Comment fonctionne l’AVANCE LOCA-PASS® ?
-- Comment puis-je obtenir cette aide au logement apprentis/étudiants en alternance/contrats de professionnalisation ?
+### Est-ce que je peux faire une demande pour un court séjour ?
 
-### Les aides pour le paiement du loyer
+### Qu’est-ce qu’un garant ?
 
-- L’AIDE MOBILI-JEUNE®
-- Le plan 1 jeune, 1 solution
-- L’aide (ALF), Allocation de Logement Familiale
-- L’ALS, Allocation de Logement Social
-- L’APL, l’Aide Personnalisée au Logement
+### Que se passe-t-il si mon dossier n’est pas complet ?
 
----
+### Quelles sont les pièces nécessaires pour constituer mon dossier ?
 
-## Trouver un garant, quelles solutions pour vous ?
+    - Pour le futur locataire
+    - Pour le garant
 
-### Comment choisir un garant ?
+### Combien de temps à l’avance dois-je faire ma demande de logement ?
 
-- Solliciter un membre de votre entourage
-- Recourir à un garant payant
-- Faire une demande de garantie VISALE
-- Utiliser le dispositif de la caution bancaire
+### Puis-je changer d’appartement si le mien ne me convient pas ?
 
-### Quels organismes peuvent se porter garant pour vous ?
+### Puis-je choisir mon appartement ?
 
-### Avantages et conditions des 4 solutions proposées
+### Y a -t-il des événements organisés dans les résidences ?
 
-### Garantie VISALE : une caution pour votre location
+### Les résidences sont sécurisées ?
 
-- Pourquoi choisir la garantie VISALE ?
-- Quel est le délai pour obtenir une garantie VISALE ?
-- La durée de validité du VISA
-- Quels documents sont à fournir au moment de votre demande ?
+### Pouvons-nous avoir un animal de compagnie au sein de la résidence ?
 
----
+### Où trouver le réglement intérieur de la résidence ?
 
-## Le bail mobilité
+### Puis-je inviter quelqu’un pour recevoir ou dormir ?
 
-### Qui est éligible au bail mobilité ?
+### Les espaces communs sont accessibles en libre service ?
 
-### Pour quels logements ?
+### Il y a-t-il une laverie ?
 
-### Quelle est la durée du bail mobilité ?
+### Les résidences ont-elles un parking ?
 
-### Quelles sont les mentions obligatoires devant figurer dans le bail mobilité ?
+### Puis-je déplacer des meubles dans mon logement ?
 
-### Comment souscrire mon contrat de cautionnement ?
+### Comment est équipée la salle de bain ?
 
-### Généralités
+### Que comprend la kitchenette ?
 
-- Quelle est la durée du cautionnement Visale pour le bail mobilité ?
-- Puis-je demander un dépôt de garantie à mon locataire ?
-- Quel est le préavis dû par mon locataire ?
-- Comment calculer les charges locatives durant la durée du bail ?
-- Les dégradations locatives sont-elles prise en charge en présence d’un bail mobilité ?
-- Comment demander une prise en charge en cas de dégradations locatives ?
-- Dans quel délai dois-je déclarer les dégradations locatives ?
-- Quelles sont les dégradations locatives couvertes ?
-- Quelles sont les dégradations locatives non couvertes ?
+### Comment sont équipés les logements ?
 
----
+### La résidence prête des équipements ?
 
-## Action Coeur de ville
+### Quels sont les espaces communs ?
 
-### Peut-il y avoir à terme plusieurs propriétaires dans l’immeuble réhabilité ? Les immeubles en copropriétés sont-ils éligibles ?
+### Que comprend mon loyer ?
 
-### Les locations meublées sont-elles éligibles au dispositif Action Cœur de Ville? Les locations touristiques (Airbnb ?)
+### Qu’est-ce qu’ un dépôt de garantie ? Quel est son montant et quand serai-je remboursé ?
 
-### L’assurance dommage-ouvrage est-elle obligatoire ?
+### Qu’est ce que la taxe d’habitation ? Est-elle obligatoire ?
 
-### Les opérations de démolition-reconstruction ou de construction neuve sont-elles éligibles ?
+### Qu’est ce que l’assurance habitation ? Est-elle obligatoire ?
 
-### Un conventionnement Anah est-il obligatoire pour bénéficier d’une aide par Action Logement ?
+### A quelle date dois-je régler mon loyer ?
 
-### Peut-on obtenir un accord de financement avant de signer l’acte d'acquisition pour stabiliser son plan de financement ?
+### Que dois-je payer à la réservation?
 
-### Peut-on bénéficier d’une aide par Action Logement au titre d’Action Cœur de Ville sans prévoir de travaux ?
+### Qu’est-ce qu’une aide au logement ?
 
-### Quels travaux sont finançables dans le cadre du dispositif ?
+### Puis-je bénéficier de l’aide au logement si je suis en colocation ?
 
-### Est-il possible de commencer les travaux avant l’accord de financement d’Action Logement Services ?
+### A quel moment dois-je effectuer ma demande d’aide au logement ?
 
-### Le plafonnement des loyers est-il obligatoire sur tous les logements ? Est-il possible d’intégrer des logements à loyer libre ?
+### Quel sera le montant de mon aide au logement ?
 
-### Quels locataires sont éligibles au dispositif Action Coeur de Ville ?
+### Qu’est-ce qu’un logement conventionné ? Est-ce que les logements ARPEJ sont conventionnés ?
 
-### Les logements loués hors plafonds (loyers libres) peuvent-ils également être mis à disposition de salariés proposés par Action Logement ?
+### Est-il possible de continuer à habiter au sein des résidences après obtention du diplôme ?
 
-### Est-il possible de cumuler les aides Action Logement avec les aides d’autres partenaires ? Avec d’autres produits Action Logement ?
+### Est-ce que je dois faire un état des lieux de sortie ?
 
-### Quel est le financement maximum possible pour l’opération ?
+### Quelles sont les démarches à faire avant de quitter mon logement ?
 
-### Une opération peut-elle être financée par Action Logement uniquement en subvention ?
+### Ai-je besoin d'une carte bleue pour réserver un logement ?
 
-### Quelle durée et quel taux pour le prêt délivré par Action Logement au titre du dispositif Action Cœur de Ville ?
+### Comment avoir des précisions sur les logements proposés ?
 
-### Faut-il souscrire des assurances spécifiques avec le prêt Action Logement ? Des garanties a minima sont-elles à apporter ?
+### De combien de temps disposons-nous pour accepter une proposition de logement ?
 
-### Prise d’hypothèque, que faut-il savoir ?
+### En quoi accepter le logement engage-t-il pour les démarches suivantes ?
 
-    - Le financement Action Cœur de Ville d’Action Logement est-il cumulable avec d'autres dispositifs fiscaux tels que le dispositif Denormandie ?
+### Est-ce que des places peuvent se libérer en cours d'année ?
 
----
+### Est-ce que je peux demander un logement si je suis mineur ?
 
-## Le Droit Au Logement Opposable (DALO)
+### Est-ce que je peux faire une demande de logement si je n'ai pas encore reçu mon visa ?
 
-### Qu’est-ce que le droit au logement opposable (DALO) ?
+### Est-il possible de réserver dans une résidence complète ?
 
-### La commission de méditation pour être reconnu DALO
+### Est-il possible de visiter un logement ?
 
-- Le dossier DALO à soumettre à la commission de médiation
-- Comment contacter votre commission de médiation départementale ?
-- Les critères pour être reconnu DALO
-- Les conditions de revenus pour être reconnu DALO
+### Je me suis désisté par erreur, comment annuler cette action ?
 
-### Les conditions obligatoires avant de déposer un dossier DALO
+### Quelles sont les conditions de désistement après avoir signé le bail ?
 
-### Délai et attribution d’un logement par la commission de médiation
+### Je n'arrive pas à réserver
 
-- Puis-je refuser une proposition de logement ?
-- Quelle différence avec le DAHO ?
+### Je suis alternant, à quel type de résidence dois-je postuler ?
 
-### Vous souhaitez être accompagné face à une difficulté logement ?
+### Quelle est la composition et le prix du Kit dodo et vaisselle ?
 
 ---
 
-## L’éco-PTZ : le prêt à taux zéro pour les travaux d’économie d’énergie
-
-### Les critères d'éligibilité à l'éco-prêt travaux
-
-- Qui peut demander un éco-prêt ?
-- Quels logements sont éligibles à l'éco-PTZ ?
-- Les avantages de l’éco-PTZ ?
-
-### Les travaux d'isolation et d'économie d'énergie finançables avec l'éco-PTZ
-
-- Jusqu'à 30 000 € pour des travaux d'isolation ou d'installation d'équipement durables de chauffage et d'eau chaude
-- Jusqu'à 50 000 € pour améliorer la performance énergétique du logement
-- Jusqu'à 10 000 € pour réhabiliter un système d'assainissement individuel
-
-### Le prêt éco-PTZ est-il cumulable à d’autres dispositifs ?
-
-### Quels sont les modalités de remboursement et de versement ?
-
-### Comment demander un éco-ptz ?
-
-### Obtenir un devis pour finaliser sa demande d'éco-PTZ
-
-- Trouver l'artisan certifié pour vos travaux d'isolation ou de rénovation énergétique
-
----
-
-## Louer un logement en contrat court (CDD, saisonnier ou intérim)
-
-### Convaincre un bailleur lorsqu’on est salarié en contrat court
-
-### Louer sans garant : comment rassurer votre propriétaire
-
-### Découvrez les aides Action Logement
-
-- La garantie VISALE, une caution locative gratuite
-- L’AVANCE LOCA-PASS®, financer votre dépôt de garantie
-- L’aide aux saisonniers agricoles
-
-### Les salariés en CDD et intérimaires ont-ils droit de bénéficier d’un logement social ?
-
-- Faire une demande de logement temporaire
-- Les avantages de louer un logement dans le parc privé avec Action Logement
-- Avant de commencer vos démarches
-
----
-
-## Prêt Accession
-
-### Le prêt accession peut-il financer un bien situé à l'étranger ?
-
-### Le prêt accession permet-il de financer le rachat de la part de son ex-conjoint(e) (soulte) ?
-
-### Peut-on demander le prêt pour une acquisition en SCI ?
-
-### Qu'est-ce que le TAEA ?
-
-### Puis-je me rendre en agence pour demander un dossier de prêt accession ?
-
-### Que se passe-t-il si je vends mon logement acquis avec un prêt Action Logement ?
-
-### Comment vérifier mon éligibilité à ce prêt ?
-
-### J’envisage de faire construire un bien pour l'occuper au moment de ma retraite, puis-je bénéficier du prêt accession ?
-
-### En couple, tous deux salariés du secteur privé non agricole, pouvons-nous bénéficier de deux demandes de prêt ?
-
-### Quels sont les plafonds de ressources à ne pas dépasser pour obtenir ce prêt ?
-
-### Divorcé(e) et anciennement propriétaire, peut-on bénéficier du prêt accession ?
-
-### Votre entreprise ne cotise pas à Action Logement, pouvez-vous bénéficier du prêt accession ?
-
-### Que signifie "Il pourra être admis jusqu'à 20% de bénéficiaires ayant un revenu fiscal de référence supérieur à des plafonds de ressources réglementaires..." ?
-
-### Que comprend l'accession sociale sécurisée qui est financée par le prêt accession ?
-
-### Le prêt accession permet-il de financer l'achat d'un terrain seul ?
-
-### Locataire d'un bailleur social, peut-on solliciter le prêt accession pour acheter le logement ?
-
-### Peut-on solliciter le prêt accession pour acheter un bien en Bail Réel Solidaire (BRS) ?
-
-### Le prêt accession permet-il de financer le démembrement de propriété ?
-
-### Peut-on solliciter le prêt accession pour une opération en PSLA (Prêt social pour la Location-Accession) ?
-
-### Sans évaluation de la performance énergétique, peut-on obtenir le prêt ?
-
-### Le montant du prêt principal peut-il être inférieur au montant de prêt accession demandé ?
-
-### En cas d'apport personnel et sans prêt bancaire, est-il possible de bénéficier d’un prêt accession ?
-
-### Faut-il être primo-accédant pour bénéficier du prêt Accession ?
-
-### Le financement d’une maison mobile (habitation légère de loisirs) est-il possible ?
-
-### Où le logement doit-il être situé pour pouvoir bénéficier du prêt accession ?
-
-### Est-il possible d’octroyer un prêt accession à un salarié qui souhaite acheter 50 % du logement de son partenaire/concubin ?
-
-### Faut-il souscrire une assurance dommages-ouvrage dans le cadre d'un projet de construction ?
-
-### Y a-t-il un plafonnement du montant du prêt au regard du coût de l'opération ?
-
-### Souscrire à une assurance est-il obligatoire pour bénéficier de ce prêt ?
-
-### Une majoration de prêt est-elle effectuée en cas de travaux spécifiques d’accessibilité ou d'adaptation du logement au handicap ?
-
-### Peut-on inclure le montant des frais de notaire dans le prêt accession ?
-
-### Peut-on bénéficier du prêt accession sans apport personnel ?
-
-### Quels sont les frais liés à cet emprunt ?
-
-### Comment faire sa demande de prêt accession ?
-
-### Le prêt accession est-il cumulable avec d'autres prêts ?
-
----
-
-## Faire sa demande de prêt travaux
-
-### Prêts travaux : quels travaux sont éligibles ?
-
-### Les documents à fournir pour obtenir un prêt travaux
-
-### Auprès de qui demander un prêt travaux pour votre logement ?
-
-### Quelle différence entre un prêt travaux et un prêt personnel ?
-
-- Caractéristiques du prêt personnel
-- Caractéristiques du prêt travaux
-- Le prêt travaux est-il un prêt affecté ?
-
-### Les taux des prêts finançant les travaux
-
-- Le prêt travaux à taux fixe
-- Le prêt travaux à taux variable
-
-### Qu’est-ce que le taux annuel effectif global (TAEG) ?
-
-### La durée du prêt travaux
-
-### Prêt travaux : connaître sa capacité d'emprunt
-
-### Remboursement du prêt travaux
-
-- Comment procéder à un remboursement anticipé ?
-- Attention aux termes de votre contrat
-
-### Les autres solutions et aides pour financer des travaux
-
----
-
-## Aide aux saisonniers agricoles
-
-### Les mineurs sont-ils éligibles à l'aide ?
-
-### Quels sont les contrats de travails éligibles ?
-
-### Quelle est la durée minimum du contrat de travail pour être éligible à l'aide ?
-
-### Les salariés des employeurs particuliers (auxiliaires de vie…) sont-ils éligibles ?
-
-### Les stagiaires sont-ils éligibles ?
-
-### En couple, peut-on bénéficier de l'aide individuellement ?
-
-### Les salariés étrangers sont-ils éligibles à l'aide ?
-
-### Les occupants à titre gracieux sont-ils éligibles ?
-
-### Calcul du montant de l'aide : faut-il prendre en compte le loyer charges comprises ou hors charges ?
-
-### Je perçois de l'aide au logement : dois-je la déduire du montant de mon loyer ?
-
-### Je suis travailleur frontalier, suis-je éligible à l'aide ?
-
-### Quels plafonds de ressources pour être éligible ?
-
-### Je suis hébergé, suis-je éligible à l'aide ?
-
-### J'ai signé mon contrat de location avant de commencer mon travail de saisonner, suis-je éligible ?
-
-### Je participe au loyer mais le contrat de location n'est pas à mon nom, suis-je éligibile à l'aide ?
-
-### Les colocations sont-elles éligibles à l'aide ?
-
-### Les sous-locations et chambres chez l'habitant sont-elles éligibles ?
-
-### Les frais d'hôtel sont-ils éligibles à l'aide ?
-
-### Quelle est la durée de cette aide ?
-
-### Quel est le montant de la subvention ?
-
-### Quel est le délai maximum pour faire une demande ?
-
-### Mon entreprise ne cotise pas à Action Logement, suis-je éligible à l'aide ?
-
-### Je suis éligible, quand l'aide me sera-t-elle versée ?
-
-### En combien de fois l'aide sera-t-elle versée ?
-
-### Où dois-je envoyer mon dossier ?
-
-### Cette aide est-elle cumulable avec d'autres aides existantes ?
-
-### Je n'ai pas de quittance car je n'ai pas réglé mon loyer, que puis-je joindre comme justificatif ?
-
-### Puis-je bénéficier plusieurs fois de l’aide au logement des saisonniers agricoles ?
-
----
-
-## AL'in, ALIN, alin, al in : la plateforme dédiée au logement social d'Action Logement
-
-### Qu’est-ce que la plateforme AL’in ?
-
-### Comment fonctionne la plateforme AL’in ?
-
----
-
-### Montant de l’AIDE MOBILI-JEUNE®, comment est-il calculé ?
-
-### Quand effectuer sa demande d'AIDE MOBILI-JEUNE® ?
-
-### Quand l’AIDE MOBILI-JEUNE® est-elle versée ?
-
-### Pour calculer l’AIDE MOBILI-JEUNE®, faut-il prendre en compte le loyer charges comprises ou le loyer hors charges ?
-
-### Un alternant est-il éligible à l’AIDE MOBILI-JEUNE ® suite au déménagement de son employeur ?
-
-### Un bénéficiaire de l'AIDE MOBILI-JEUNE® qui change de logement doit-il déposer une nouvelle demande ?
-
-### Action Logement peut-il verser l’AIDE MOBILI-JEUNE® à un tiers ?
-
-### Travailler plus de 35h a-t-il une incidence sur l’octroi de l’AIDE MOBILI-JEUNE® ?
-
-### En contrat d’apprentissage ou de professionnalisation avec une entreprise de travail temporaire peut-on bénéficier d’une AIDE MOBILI-JEUNE® ?
-
-### Un jeune peut-il continuer à percevoir l’AIDE MOBILI-JEUNE® si son salaire devient supérieur au SMIC ?
-
-### Le montant de l’AIDE MOBILI-JEUNE® peut-il être versé sur le compte des parents du bénéficiaire de l’aide ?
-
-### Comment déterminer la date de fin de l’AIDE MOBILI-JEUNE® ? S’agit-il de la fin de la période en entreprise ou la fin de la période à l’école ?
-
-### Comment faire sa demande d'AIDE MOBILI-JEUNE® ?
-
-### Un jeune en colocation peut-il bénéficier de l'AIDE MOBILI-JEUNE® ?
-
-### Pendant combien de temps le jeune peut-il percevoir l'AIDE MOBILI-JEUNE®?
-
-### Le jeune peut-il déménager durant la période de son contrat d'alternance ?
-
-### Si la durée du contrat en alternance est de 3 ans, peut-on bénéficier de l'AIDE MOBILI-JEUNE® pendant toute cette durée ?
-
-### Quelle date doit être prise en compte pour le contrat de location ou la convention d'occupation lors de la demande d'AIDE MOBILI-JEUNE® ?
-
-### Un locataire de moins de 30 ans signe un contrat d'alternance dans une entreprise à proximité de son logement avant de réaliser sa demande d'AIDE MOBILI-JEUNE®, est-il éligible ?
-
-### À défaut de respecter la distance de 70 km entre le nouveau logement et l'ancienne adresse, comment vérifier que le temps de trajet est supérieur à 40 minutes ?
-
-### Un alternant peut-il bénéficier de l’AIDE MOBILI JEUNE® suite à la signature d’un contrat de mission CIRFE ?
-
-### Quel est le délai à respecter pour renouveler sa demande d'AIDE MOBILI-JEUNE® ?
-
----
-
-## Garantie Visale
-
-### Qu'est-ce que la Garantie Visale ?
-
-- Objet et objectifs
-- Que prend en charge la garantie Visale ?
-- Combien coûte la garantie Visale ?
-- La garantie Visale est-elle cumulable avec d’autres aides Action Logement ?
-
-### A quels publics jeunes s’adresse Visale ?
-
-    - Qui peut bénéficier de la garantie Visale ?
-      - Conditions d’éligibilité relatives à l’état civil du demandeur
-      - Conditions d’éligibilité des jeunes salariés
-      - Conditions d’éligibilité des étudiants
-      - Conditions d'éligibilité des jeunes stagiaires
-      - Conditions d'éligibilité des jeunes salariés d’une entreprise du secteur privé ou du régime social agricole
-      - Conditions d'éligibilité des jeunes sans emploi ou bénéficiaires des minima sociaux
-      - Conditions d'éligibilité des travailleurs non salariés, indépendants ou entrepreneurs, de moins de 31 ans
-      - Conditions d'éligibilité des intermittents du spectacle de moins de 31 ans
-
-### Quelles sont les conditions de solvabilité et de justification requises pour le locataire ?
-
-- Quelles sont les ressources prises et non prises en compte ?
-  - Les ressources prises en compte
-  - Les ressources non prises en compte
-- Quels justificatifs doivent être fournis ?
-  - Je suis un travailleur non salarié, indépendant ou entrepreneur
-  - Je suis un étudiant boursier qui perçoit des revenus supérieurs au plafond forfaitaire (supérieur à 1600 € en Région Île-de-France ou supérieur à 1200 € ailleurs)
-  - Je suis un alternant qui perçoit des revenus supérieurs au plafond forfaitaire (supérieur à 1600 € en Région Île-de-France ou supérieur à 1200 € ailleurs)
-
-### Comment obtenir la caution Visale ?
-
-- Étape 1 sur 2 : Obtention d'un Visa pour le futur Locataire
-  - Qu'est-ce qu'un visa Visale ?
-  - Processus de demande de visa
-  - Utilisation du visa pour un nouveau logement
-  - Que faire en cas de demande de visa incomplète ou non conforme ?
-- Etape 2 sur 2 : le bailleur active la garantie Visale
-
-### Quelles sont les obligations du bailleur pour bénéficier de la garantie Visale ?
-
-- Conditions du bailleur liées au loyer
-- Obligations du bailleur en matière de logement décent
-
-### En cas de colocation, comment se passe la demande de Visa par les candidats locataires ?
-
-- Quelles sont les conditions d’éligibilité liées à la colocation ?
-- Que se passe-t-il en cas de départ d’un des deux co-titulaires ou colocataires ?
-
-### Les garanties détériorations
-
-- Pour quels logements les dégradations locatives sont-elles prises en charge ?
-- Quel est le montant de la prise en charge ?
-- Les dégradations locatives sont-elles prise en charge en présence d’un bail mobilité ?
-- Quelles sont les dégradations locatives couvertes ?
-- Quelles sont les dégradations locatives non couvertes ?
-- Comment demander une prise en charge en cas de dégradations locatives ?
-- Le bailleur peut-il cumuler une déclaration d’impayés et une détérioration locative ?
-
-### La gestion des impayés de loyer par le bailleur
-
-- A partir de quel moment le bailleur doit-il déclarer un impayé de loyer ?
-- Les charges seules peuvent-elles faire l’objet d’une première déclaration ?
-- Comment déclarer les impayés ?
-- Quelles sont les étapes à suivre par le bailleur au moment de la survenance de l’impayé de loyer ?
-- Quand déclarer un impayé partiel ?
-- Que doit faire le bailleur si le locataire perçoit des allocations logements ?
-- Quelles sont les obligations du bailleur une fois la déclaration d’impayé validée par la caution ?
-- Que doit faire le bailleur (déjà indemnisé) si le locataire lui rembourse ses impayés ?
-- La procédure de recouvrement sera-t-elle menée par la caution ?
-- Que faire en cas de nouvel impayé ?
-- Quels sont les délais de paiement par la caution ?
-- Le Locataire a quitté le logement et rendu les clés
-- Le locataire ne paie pas le dernier mois de loyer, que devez-vous faire ?
-
----
-
-## Rénovation énergétique : découvrez notre prêt
-
-### Rénovation énergétique : de quoi parlons-nous ?
-
-### Quels travaux d'économie d'énergie réaliser ?
-
-- Une bonne isolation thermique pour économiser sur le long terme
-- Remplacer son chauffage pour améliorer le rendement
-- Opter pour l'énergie renouvelable
-
-### Comment construire son projet de rénovation énergétique ?
-
-### Comment financer ses travaux d’énergie ?
-
-- Le prêt Action Logement
-- Les travaux concernés
-
-### Les autres primes, aides et prêts pour la rénovation énergétique en 2023 :
-
-### Dispositif Denormandie : Une réduction d'impôts pour les bailleurs
-
-- Comment bénéficier de la défiscalisation ?
-
-### Effectuer des travaux de rénovation
-
----
-
-## Qui peut se porter garant pour un locataire ?
-
-### Les conditions pour se porter garant d’un locataire
-
-- Quelles pièces à fournir en tant que garant ?
-- Les obligations du garant
-- Les risques pour le garant
-
-### Se porter garant pour un étudiant
-
-### Quelles sont les différents types de caution locative ?
-
-### Quelle différence entre se porter garant et se porter caution ?
-
----
-
-## LOCA-PASS
-
-### Quelle est la différence entre caution et dépôt de garantie ?
-
-### Quand faire sa demande d'AVANCE LOCA-PASS® ?
-
-### Qu'est-ce que l’AVANCE LOCA-PASS® ?
-
-### Un salarié géré dans le cadre du Titre Emploi Service Entreprise (TESE) peut-il bénéficier de l’AVANCE LOCA-PASS® ?
-
-### Peut-on bénéficier de l’AVANCE LOCA-PASS® avec une bourse versée par la Région ?
-
-### Les jeunes non-émancipés et les mineurs sous tutelle peuvent-ils bénéficier de l’AVANCE LOCA-PASS® ?
-
-### Quelle est la durée de l’AVANCE LOCA-PASS® pour un contrat de location meublée de moins de 3 ans?
-
-### Un enseignant en établissement d’enseignement privé sous contrat peut-il bénéficier de l’AVANCE LOCA-PASS®?
-
-### La location d’un garage ou d’un parking peut-elle faire l’objet d’une AVANCE LOCA-PASS® ?
-
-### Les étudiants bénéficiant d’une bourse de l’enseignement supérieur accordée par un Centre d’étude peuvent-ils bénéficier de l’AVANCE LOCA-PASS®?
-
-### Les étudiants effectuant leur(s) CDD à l’étranger dans des entreprises étrangères peuvent-ils bénéficier de l’AVANCE LOCA-PASS® ?
-
-### Quel est le délai maximum pour faire une demande d’AVANCE LOCA-PASS® ?
-
-### Les jeunes occupant un emploi d’auxiliaire, de contractuel ou de vacataire au sein de la fonction publique peuvent-ils bénéficier de l'AVANCE LOCA-PASS® ?
-
-### Peut-on bénéficier de l'AVANCE LOCA-PASS® dans le cadre d'une mutation?
-
-### Peut-on bénéficier de l'AVANCE LOCA-PASS® en tant que retraité ?
-
-### L'AVANCE LOCA-PASS® peut-elle être accordée à des travailleurs frontaliers?
-
-### Votre société ne cotise pas à Action Logement, pouvez-vous bénéficier de l’AVANCE LOCA-PASS®?
-
-### Peut-on bénéficier de l’AVANCE LOCA-PASS® en tant que militaire ?
-
-### Peut-on bénéficier de l’AVANCE LOCA-PASS® en tant qu'artisan ?
-
-### Un étudiant peut-il bénéficier de l’AVANCE LOCA-PASS® ?
-
-### Comment contacter Action Logement pour toutes questions relatives à votre dossier ?
-
-### Comment faire une demande d'AVANCE LOCA-PASS® ?
-
----
-
-## Prêt travaux
-
-### Quelle durée pour les prêts travaux ?
-
-### Quel taux pour les prêts travaux ?
-
-### Comment bénéficier d’un prêt travaux Action Logement ?
-
-### Quels types de travaux peut-on faire avec un prêt travaux Action Logement ?
-
-### Quel est le montant maximum d’un prêt travaux Action Logement ?
-
-### De quel délai dispose-t-on pour présenter les factures après l’achèvement des travaux ?
-
-### Prêt travaux d’adaptation du logement au handicap : quels documents indispensables sont à fournir préalablement ?
-
-### L’avis préalable délivré par un organisme est-il obligatoire pour l’obtention du prêt travaux adaptation du logement au handicap ?
-
-### Peut-on financer l'installation de panneaux photovoltaïques avec un prêt travaux ?
-
-### Comment demander un déblocage de fonds dans le cadre d’un prêt travaux ?
-
-### Quelles sont les conditions liées à la réalisation des travaux ?
-
-### Quelles conditions de logement pour l’obtention d’un prêt travaux ?
-
-### Le prêt travaux est-il cumulable avec d'autres aides d’Action logement ?
-
-### Qui contacter pour toutes questions relatives à un prêt travaux ?
-
-### Comment faire votre demande de prêt travaux ?
-
----
-
-## Financement des travaux : nos différents prêts
-
-### Financement des travaux : nos différents prêts
-
-- Les prêts Action Logement pour vos travaux
-- Les avantages des prêts travaux Action Logement
-
-### Le prêt travaux d’amélioration
-
-- Les travaux éligibles au prêt d’amélioration
-- Modalités du prêt travaux amélioration
-
-### Le prêt travaux d’amélioration de la performance énergétique
-
-- Les travaux éligibles pour l’amélioration de la performance énergétique
-- Modalités du prêt travaux rénovation énergétique
-
-### Le prêt travaux d'adaptation du logement au handicap
-
-- Quels travaux peut-on financer ?
-- Modalités de ce prêt travaux
-
-### Les autres aides financières à la rénovation
-
-### Les démarches pour financer ses travaux
-
----
-
-## Logement temporaire
-
-### Qu'est-ce qu'un logement temporaire meublé ?
-
-### Quel est la durée d'un bail pour un logement temporaire meublé ?
-
-### Quel est le montant du dépôt de garantie pour un logement temporaire meublé ?
-
-### Puis-je faire une recherche de logement temporaire sur plusieurs communes ou plusieurs départements ?
-
-### Combien de fois puis-je postuler sur des offres ?
-
-### Je suis inscrit(e) sur la plateforme du logement temporaire, mais je suis également suivi(e) par un(e) conseiller(ère) de l'Accompagnement social d'Action Logement, suis-je prioritaire ?
-
-### J'ai des difficultés financières, le service d'Accompagnement Social d'Action Logement pourrait-il prendre en charge ma redevance ?
-
-### Un numéro unique de demandeur de logement social est-il obligatoire pour s'inscrire sur la plateforme du logement temporaire ?
-
-### Quels sont les publics prioritaires pour l'obtention d'un logement temporaire ?
-
-### Combien de temps une demande de logement reste-t-elle active sur la plateforme ?
-
-### Puis-je héberger une personne qui n'est pas sur le bail du logement temporaire ?
-
-### Les animaux sont-ils acceptés au sein des résidences de logement temporaire ?
-
-### Je ne suis pas hébergé, je dors dans ma voiture, ma demande est elle prioritaire ?
-
-### Victime de violence, suis-je prioritaire ?
-
-### Puis-je déposer ma candidature sur une offre de logement social AL'in en parallèle de ma candidature sur une offre de logement temporaire ?
-
-### Y a-t-il un âge mininimum ou maximum pour déposer une demande sur la plateforme du logement temporaire ?
-
-### Peut-on bénéficier de l'aide personnalisée au logement (APL) si l'on est locataire d'un logement temporaire ?
-
-### Un étudiant peut-il déposer sa candidature sur des offres de logement temporaire ?
-
-### Je recherche un logement de type T2 (avec une chambre séparée), voire de typologie supérieure (T3, etc.). Est-ce que la plateforme de logement temporaire propose ce type de logement ?
-
-### Nous sommes une famille de plus de deux personnes. Pouvons-nous bénéficier d'un logement temporaire ?
-
-### J'ai déjà fourni tous mes justificatifs pour ma demande de logement social, dois-je les fournir de nouveau pour ma demande de Logement temporaire ?
-
-### Pourquoi ne puis-je pas voir les offres de logement temporaire ?
-
-### Quels sont les délais d'attribution d'un logement temporaire ?
-
-### Existe-til des logements temporaires pour les familles monoparentales ?
-
-### Est-il possible de visiter un logement temporaire avant de poser sa candidature ?
-
-### Sous quel délai vais-je savoir si ma candidature sur un logement temporaire a été retenue ?
-
-### Pourquoi mes candidatures sur des logements temporaires ne sont-elles jamais retenues par Action Logement ?
-
-### Finalement, je souhaite annuler ma candidature sur un logement temporaire. Comment dois-je faire ?
-
-### Que se passe-t-il après que j'ai posé ma candidature sur un logement temporaire ?
-
-### Ma candidature a été acceptée. Quel est le délai pour être contacté(e) par le gestionnaire du logement temporaire ?
-
-### Finalement, j'ai trouvé une autre solution alors que ma candidature sur un logement temporaire a été acceptée, que dois-je faire ?
-
-### Comment fonctionne l'attribution d'un logement temporaire ?
-
-### Puis-je refuser un logement après attribution ?
-
-### Qu'est-ce qu'un rendez-vous de pré-admission après l'attribution d'un logement temporaire ?
-
-### Est-il toujours nécessaire de signer un bail ?
-
-### Faut-il obligatoirement un garant pour entrer dans un logement temporaire ?
-
-### Un logement temporaire m'a été attribué, mais j'aimerais refaire une demande, est-ce possible ?
-
----
-
-## Service accompagnement social
-
-### Votre situation relève principalement d’une demande logement ? Le service accompagnement social peut-il vous aider ?
-
-### Dans quelles situations le service accompagnement social peut-il vous aider ?
-
-### Le service accompagnement social est-il accessible aux intérimaires, pré-retraité(e)s et CDD ?
-
-### En recherche de logement depuis de nombreuses années, le service accompagnement social peut-il vous aider ?
-
-### Difficultés de paiement de loyers ou de crédit(s) immobilier(s), comment le service accompagnement social peut-il vous aider ?
-
-### Votre employeur sera-t-il informé de votre demande de service accompagnement social ?
-
-### Comment être contacté par son conseiller social dans le cadre d'un suivi ou d'un accompagnement ?
-
-### Comment être aidé par le service accompagnement social ?
-
----
-
-## Inclusion bancaire
-
-### Qu’est-ce que l’inclusion bancaire ?
-
-### Comment Action Logement agit pour prévenir les situations d’exclusion bancaire ?
-
-### Que va apporter l’accompagnement proposé par Action Logement ?
-
----
-
-## Louer pour l'emploi
-
-### Quels sont les bailleurs éligibles à l'offre Louer pour l'Emploi ?
-
-### Quels professionnels de l'immobilier peuvent être partenaires ?
-
-### Quelles sont les démarches pour devenir professionnel de l'immobilier partenaire ?
-
-### Quels sont les logements éligibles à l'offre Louer pour l'Emploi ?
-
-### Quelles sont les conditions d'adhésion à l'offre Louer pour l'Emploi ?
-
-### Quels sont les critères de décence à respecter ?
-
-### Quels sont les engagements à respecter en tant que bailleur ?
-
-### Comment le loyer maîtrisé est-il défini ?
-
-### La révision du loyer est-elle possible en cours de contrat Louer pour l'Emploi ?
-
-### Que signifie la période d'exclusivité de 30 jours pour la mise en location ?
-
-### Que se passe-t-il à l'issue de la période d'exclusivité ?
-
-### Pour les propriétaires bailleurs, quelle est la durée d'engagement ?
-
-### Le logement peut-il être loué en colocation ?
-
-### Que comprend l'offre Louer pour l'Emploi ?
-
-### Quel est l'objectif pour Action Logement ?
-
-### Quelles sont les 3 formules proposées dans le cadre de l'offre ?
-
-### Que comprend la formule prêt travaux ?
-
-### Quels sont les travaux de rénovation énergétique éligibles ?
-
-### Quelles sont les conditions pour bénéficier du prêt travaux ?
-
-### L’isolation des parois vitrées est-elle prise en compte dans le cadre du prêt ?
-
-### Les travaux envisagés sont exécutés dans le cadre d'une copropriété, le demandeur peut-il néanmoins profiter de la subvention ?
-
-### Est-il nécessaire de souscrire une assurance pour bénéficier du prêt travaux ?
-
-### Quelles sont les garanties demandées par ALS pour obtenir ce prêt ?
-
-### Est-il possible de réaliser des travaux avec le prêt alors qu'un locataire certifié Action Logement occupe le logement ?
-
-### Quelles sont les obligations légales quant à la réalisation de travaux ?
-
-### Que comprend la formule d'aide à l'entrée dans les lieux ?
-
-### Quelle est la nature des honoraires de location pris en charge ?
-
-### Quel est le montant des honoraires pris en charge ?
-
-### À qui sont versés les honoraires de location ?
-
-### Quelles sont les conditions pour bénéficier de la prise en charge des honoraires de location ?
-
-### L'offre Louer pour l'Emploi est-elle cumulable avec d'autres aides ?
-
-### Quelles sont les démarches à réaliser pour bénéficier de l'offre Louer pour l'Emploi ?
-
-### Quand les options doivent-elles être choisies ?
-
-### Quel est le document formalisant le prêt travaux ?
-
-### Quel est le document formalisant l'aide à l'entrée dans les lieux ?
-
-### Que se passe-t-il si les honoraires de mise en location sont supérieurs à 1000 euros ?
-
-### En cas de démembrement de propriété, le demandeur usufruitier du bien peut-il bénéficier du contrat Louer pour l’Emploi ?
-
----
-
-## Bail mobilité : les choses à savoir
-
-### Les avantages d'un bail mobilité
-
-### Qui peut bénéficier d'un bail mobilité ?
-
-### Caractéristiques du bail
-
-- Montant du loyer
-- Durée de la location
-- Préavis
-- Les clauses interdites au bail mobilité
-
-### Qui paye la taxe d'habitation dans le cadre d'un bail mobilité ?
-
-### Quelles-sont les différences avec les baux classiques ?
-
----
-
-## Dépôt de garantie : on vous éclaire sur le sujet
-
-### Le montant du dépôt de garantie est-il plafonné ?
-
-### Quand le dépôt de garantie doit-il être versé au bailleur ?
-
-### Que couvre le dépôt de garantie ?
-
-### Peut-on utiliser le dépôt de garantie pour payer le dernier mois de loyer ?
-
-### Quel montant peut-on prélever sur le dépôt de garantie ?
-
-### Le dépôt de garantie est-il obligatoire ?
-
-### Est-il toujours encaissé ?
-
-### Délai de restitution du dépôt de garantie
-
-### Comment récupérer son dépôt de garantie ?
-
-### Dépôt de garantie : qu'est-ce que l'aide LOCA-PASS ?
-
-### Qui peut bénéficier de l'aide LOCA-PASS ?
-
-### Quelle différence entre caution et dépôt de garantie ?
-
----
-
-## Charges locatives : que devez-vous payer ?
-
-### Qu'est-ce qui est compris dans les charges locatives ?
-
-### Quelles sont les charges locatives non récupérables sur le locataire ?
-
-### Comment calculer les charges locatives ?
-
-### Quelle est la différence entre charges locatives au réel ou au forfait ?
-
-### Les charges locatives selon le bail
-
-### La régularisation des charges locatives
-
-- Provisions et justificatifs
-- Régularisation annuelle et justificatifs
-
-### Est-ce que le propriétaire a le droit d’augmenter les charges ?
-
-- Comment calculer l'augmentation des charges locatives ?
-- Le délai de régularisation des charges locatives
-  - Pour les locations vides
-  - Pour les locations meublées
-- Un locataire peut-il demander des justificatifs ?
-- Que faire en cas de régularisation abusive ?
-
-### Le cas des charges locatives en copropriété
+## ARPEJ : Association de Résidences pour Etudiants et Jeunes
+
+### Réglement intérieur
+
+- Article 1 : Jouissance paisible
+- Article 2 : Champ d'application
+- Article 3 : Accès à l'établissement
+- Article 4 : Règles relatives au maintien en état, à la propreté, à l'hygiène et à la salubrité
+- Article 5 : Règles de vie en collectivité
+- Article 6 : Règles relatives à la sécurité
+- Article 7 : Publicité
 
 ---
