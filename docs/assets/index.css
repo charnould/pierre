@@ -1,0 +1,300 @@
+@import 'https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap';
+
+:root {
+  --rgb-black: 31, 51, 25;
+}
+
+* {
+  color: rgb(var(--rgb-black));
+  font-optical-sizing: auto;
+  box-sizing: border-box;
+  font-optical-sizing: auto;
+  font-variation-settings: 'slnt' 0;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+  padding: 0;
+  font-family: 'Source Serif 4', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+}
+
+::selection {
+  background: rgba(0, 0, 255, 0.1);
+}
+
+html {
+  background-color: #f4f6f7;
+  font-size: 15px;
+}
+
+main {
+  width: -webkit-fit-content;
+  width: -moz-fit-content;
+  column-gap: 100px;
+  width: fit-content;
+  margin: auto;
+  padding: 0;
+  display: flex;
+}
+
+#pierre {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 75px;
+}
+
+.explanation {
+  max-width: 600px;
+  margin-top: 40px;
+  margin-bottom: 200px;
+  font-size: 15px;
+}
+
+.illustration {
+  max-width: 100%;
+  max-height: 350px;
+}
+
+.explanation > h1 {
+  letter-spacing: -0.05rem;
+  font-family: Inter, sans-serif;
+  font-size: 4rem;
+  font-weight: 700;
+}
+
+.explanation > h2 {
+  color: #959595;
+  font-size: 2rem;
+  font-weight: 450;
+  line-height: 1.15;
+}
+
+.explanation > h2 > span {
+  color: inherit;
+  font-weight: 900;
+}
+
+.explanation > h3 {
+  margin-top: 30px;
+  margin-bottom: 15px;
+  font-family: Inter, sans-serif;
+  font-size: 1.45rem;
+  font-weight: 650;
+}
+
+.explanation > p {
+  margin-bottom: 10px;
+  font-size: 1.05rem;
+  font-weight: 350;
+  line-height: 1.45;
+}
+
+.explanation > p.small {
+  max-width: 515px;
+  margin: 0 0 4px;
+  font-family: Inter, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 300;
+  line-height: 1.45;
+}
+
+.explanation > p.bold,
+.explanation > p > b {
+  font-family: Inter, sans-serif;
+  font-weight: 600;
+}
+
+.explanation > p > a,
+.explanation > p > b > a,
+.explanation > ul > li > a {
+  border-bottom: 1px solid rgba(0, 0, 255, 0.5);
+  font-family: Inter, sans-serif;
+  text-decoration: none;
+  color: #00f !important;
+}
+
+.explanation > ul {
+  margin-left: 20px;
+}
+
+.explanation > ul > li {
+  margin-bottom: 10px;
+  font-size: 1.05rem;
+  font-weight: 350;
+  line-height: 1.45;
+}
+
+.explanation > ul > li > b {
+  font-family: Inter, sans-serif;
+  font-weight: 550;
+}
+
+.bug {
+  color: #fff;
+  text-align: center;
+  background-color: #ff6363;
+  padding: 4px 20px;
+  font-size: 0.75rem;
+  font-weight: 300;
+  line-height: 1.4;
+}
+
+.smartphone {
+  color: #fff;
+  text-align: center;
+  background-color: #00f;
+  padding: 10px 20px;
+  font-family: Inter, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 300;
+  line-height: 1.4;
+  display: none;
+}
+
+.smartphone > a {
+  border-bottom: 1px solid #fff;
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+  text-decoration: none;
+  color: #fff !important;
+}
+
+.robot {
+  float: right;
+  height: 160px;
+}
+
+.github {
+  text-decoration: none;
+  color: #00f;
+  font-family: Inter, sans-serif;
+  font-size: 1.3rem;
+  font-weight: 800;
+  display: block;
+}
+
+@media screen and (max-width: 1100px) {
+  main {
+    width: -webkit-fit-content;
+    width: -moz-fit-content;
+    flex-direction: column-reverse;
+    align-items: center;
+    column-gap: 100px;
+    width: fit-content;
+    margin: 60px auto auto;
+    padding: 0;
+    display: flex;
+  }
+
+  #pierre {
+    position: unset;
+  }
+
+  .explanation {
+    margin: 40px 15px 40px 20px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .smartphone {
+    display: block;
+  }
+
+  main {
+    margin-top: 25px;
+  }
+
+  #pierre {
+    max-width: 94% !important;
+  }
+
+  .robot {
+    display: none;
+  }
+}
+
+.pierre-ia {
+  border: 2px solid #00f;
+  border-radius: 8px;
+  box-shadow:
+    5px 5px rgba(0, 0, 255, 0.4),
+    10px 10px rgba(0, 0, 255, 0.3),
+    15px 15px rgba(0, 0, 255, 0.2),
+    20px 20px rgba(0, 0, 255, 0.1),
+    25px 25px rgba(0, 0, 255, 0.05),
+    0 0 0 1px rgba(15, 33, 50, 0.05),
+    0 0.1em 2.8em -0.8em rgba(15, 33, 50, 0.1),
+    0 0.2em 3.2em -1.2em rgba(15, 33, 50, 0.2),
+    0 0.4em 2em -1.2em rgba(15, 33, 50, 0.3),
+    0 0.6em 2.4em -1.6em rgba(15, 33, 50, 0.4),
+    0 0.8em 2.8em -2em rgba(15, 33, 50, 0.5);
+}
+
+.arpej {
+  border: 3px solid #ffa937;
+  border-radius: 7px;
+  box-shadow:
+    5px 5px rgba(223, 77, 79, 0.4),
+    10px 10px rgba(223, 77, 79, 0.3),
+    15px 15px rgba(223, 77, 79, 0.2),
+    20px 20px rgba(223, 77, 79, 0.1),
+    25px 25px rgba(223, 77, 79, 0.05),
+    0 0 0 1px rgba(15, 33, 50, 0.05),
+    0 0.1em 2.8em -0.8em rgba(15, 33, 50, 0.1),
+    0 0.2em 3.2em -1.2em rgba(15, 33, 50, 0.2),
+    0 0.4em 2em -1.2em rgba(15, 33, 50, 0.3),
+    0 0.6em 2.4em -1.6em rgba(15, 33, 50, 0.4),
+    0 0.8em 2.8em -2em rgba(15, 33, 50, 0.5);
+}
+
+.domofrance {
+  border: 2px solid #003e7a;
+  border-radius: 6px;
+  box-shadow:
+    5px 5px rgba(0, 62, 122, 0.4),
+    10px 10px rgba(0, 62, 122, 0.3),
+    15px 15px rgba(0, 62, 122, 0.2),
+    20px 20px rgba(0, 62, 122, 0.1),
+    25px 25px rgba(0, 62, 122, 0.05),
+    0 0 0 1px rgba(15, 33, 50, 0.05),
+    0 0.1em 2.8em -0.8em rgba(15, 33, 50, 0.1),
+    0 0.2em 3.2em -1.2em rgba(15, 33, 50, 0.2),
+    0 0.4em 2em -1.2em rgba(15, 33, 50, 0.3),
+    0 0.6em 2.4em -1.6em rgba(15, 33, 50, 0.4),
+    0 0.8em 2.8em -2em rgba(15, 33, 50, 0.5);
+}
+
+.plainecommunehabitat {
+  border: 3px solid #ffa937;
+  border-radius: 7px;
+  box-shadow:
+    5px 5px rgba(223, 77, 79, 0.4),
+    10px 10px rgba(223, 77, 79, 0.3),
+    15px 15px rgba(223, 77, 79, 0.2),
+    20px 20px rgba(223, 77, 79, 0.1),
+    25px 25px rgba(223, 77, 79, 0.05),
+    0 0 0 1px rgba(15, 33, 50, 0.05),
+    0 0.1em 2.8em -0.8em rgba(15, 33, 50, 0.1),
+    0 0.2em 3.2em -1.2em rgba(15, 33, 50, 0.2),
+    0 0.4em 2em -1.2em rgba(15, 33, 50, 0.3),
+    0 0.6em 2.4em -1.6em rgba(15, 33, 50, 0.4),
+    0 0.8em 2.8em -2em rgba(15, 33, 50, 0.5);
+}
+
+.actionlogement {
+  border: 3px solid #003e7a;
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 1px rgba(32, 28, 51, 0.02),
+    0 0.2em 1.6em -0.8em rgba(32, 28, 51, 0.2),
+    0 0.4em 2.4em -1.2em rgba(32, 28, 51, 0.3),
+    0 0.4em 0.8em -1.2em rgba(32, 28, 51, 0.4),
+    0 0.8em 1.2em -1.6em rgba(32, 28, 51, 0.5),
+    0 1.2em 1.6em -2em rgba(32, 28, 51, 0.6),
+    0 0 0 1px rgba(15, 33, 50, 0.05),
+    0 0.1em 2.8em -0.8em rgba(15, 33, 50, 0.1),
+    0 0.2em 3.2em -1.2em rgba(15, 33, 50, 0.2),
+    0 0.4em 2em -1.2em rgba(15, 33, 50, 0.3),
+    0 0.6em 2.4em -1.6em rgba(15, 33, 50, 0.4),
+    0 0.8em 2.8em -2em rgba(15, 33, 50, 0.5);
+}

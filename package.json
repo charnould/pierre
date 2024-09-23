@@ -1,0 +1,51 @@
+{
+  "author": "Charles-Henri ARNOULD <charnould@pierre-ia.org>",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "name": "pierre",
+  "module": "app.ts",
+  "scripts": {
+    "--- BUILD COMMANDS ---": "",
+    "build:db": "bun run utils/knowledge/4-build-knowledge.ts",
+    "build:sc": "bun run config/build.ts",
+    "--- DEVELOPMENT COMMANDS ---": "",
+    "css:chat": "bunx @tailwindcss/cli@next -i assets/pierre-ia.org/tailwind/chat.css -o assets/pierre-ia.org/dist/css/chat.css --minify --watch",
+    "css:admin": "bunx @tailwindcss/cli@next -i assets/pierre-ia.org/tailwind/admin.css -o assets/pierre-ia.org/dist/css/admin.css --watch --minify",
+    "transpile": "bun build --entrypoints assets/pierre-ia.org/scripts/*.ts --outdir assets/pierre-ia.org/dist/js --minify --target browser --watch",
+    "format": "bunx prettier '!**/*.js' '!assets/pierre-ia.org/dist' --write . --plugin=prettier-plugin-tailwindcss --single-quote --no-semi --trailing-comma none --print-width 100",
+    "lint": "bunx @biomejs/biome check --write --unsafe . --config-path=config/biome.jsonc",
+    "dev": "bash config/telemetry.sh init_db && bun --watch run app.ts",
+    "--- PRODUCTION COMMANDS ---": "",
+    "logs": "kamal app logs",
+    "bash": "kamal app exec -i bash",
+    "start": "bash config/telemetry.sh init_db && bun run app.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^0.0.50",
+    "@ai-sdk/cohere": "^0.0.24",
+    "@ai-sdk/google": "^0.0.48",
+    "@ai-sdk/mistral": "^0.0.41",
+    "@ai-sdk/openai": "^0.0.61",
+    "ai": "^3.4.1",
+    "date-fns": "^4.1.0",
+    "hono": "^4.6.2",
+    "lodash": "^4.17.21",
+    "marked": "^14.1.2",
+    "sqlite-vec": "^0.1.2",
+    "sqlite-vec-darwin-arm64": "^0.1.3-alpha.2",
+    "sqlite-vec-linux-x64": "^0.1.3-alpha.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.2",
+    "@types/bun": "^1.1.10",
+    "@types/lodash": "^4.17.9",
+    "@types/turndown": "^5.0.5",
+    "llamaindex": "^0.6.7",
+    "markdown-toc": "^1.2.0",
+    "prettier-plugin-tailwindcss": "^0.6.6",
+    "tailwindcss": "^4.0.0-alpha.24",
+    "turndown": "^7.2.0",
+    "typescript": "^5.6.2"
+  }
+}

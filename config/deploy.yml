@@ -1,0 +1,33 @@
+service: pierre
+
+# DSI : Remplacer `charnould/pierre` par le chemin
+# d'accès à votre propre dépôt GitHub (ex : 3f/pierre)
+image: charnould/pierre
+
+# DSI : Remplacer l'IP par celui de votre VPS
+servers:
+  - 49.13.68.101
+
+registry:
+  server: ghcr.io
+  # DSI : Remplacer `charnould` par votre identifiant GitHub (ex : 3f)
+  username: charnould
+  password:
+    - REGISTRY_TOKEN
+
+volumes:
+  - 'telemetry:/app/telemetry/'
+
+env:
+  secret:
+    # DSI : Ajoutez/supprimez ici les variables d'environnement nécessaires
+    # (ex : ajouter celle d'Anthropic si vous utilisez Claude, etc.)
+    # Les items ci-dessous doivent être le reflet de votre fichier .env
+    - OPENAI_API_KEY
+    - REGISTRY_TOKEN
+    - AUTH_SECRET
+    - PASSWORDS
+    - TELEMETRY
+
+healthcheck:
+  path: /

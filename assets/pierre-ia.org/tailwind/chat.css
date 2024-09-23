@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import 'tailwindcss';
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.user {
+  @apply float-right mb-2 mt-8 rounded-xl bg-stone-100 px-5 py-2 font-['Work_Sans'] text-base;
+}
+
+.thinking {
+  background-color: black;
+  border-radius: 9999px;
+  width: 15px;
+  height: 15px;
+  margin-left: 5px;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  animation: 1.5s ease-in-out infinite pulsing;
+}
+
+@keyframes pulsing {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.4);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@utility prose {
+  code {
+    border-radius: 10px;
+    background-color: #0000ff05;
+    margin: 20px 0 20px 0;
+    padding: 0 20px 20px 20px;
+    display: block;
+    color: #000000b0;
+    white-space: pre-wrap;
+    font-family: sans-serif;
+    font-size: 1rem;
+  }
+
+  /* Typography */
+
+  p {
+    @apply my-2 font-['Inter'] text-[17px] font-[370] leading-[24px] empty:hidden;
+  }
+
+  b,
+  strong {
+    @apply font-[600];
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply my-4 text-[19px] font-medium empty:hidden;
+  }
+
+  a {
+    @apply underline-offset-3 text-blue-700 underline;
+  }
+
+  hr {
+    @apply border-1 my-2 border-zinc-200;
+  }
+
+  /* Lists */
+
+  ol,
+  ul {
+    @apply my-4;
+
+    ol,
+    ul {
+      @apply my-1;
+    }
+
+    li {
+      @apply my-1 ml-6;
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      p {
+        @apply my-1;
+      }
+    }
+  }
+
+  ol {
+    @apply list-decimal;
+
+    ol {
+      @apply list-[lower-alpha];
+
+      ol {
+        @apply list-[lower-roman];
+      }
+    }
+  }
+
+  ul {
+    @apply list-disc;
+  }
+}
