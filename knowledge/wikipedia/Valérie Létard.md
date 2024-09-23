@@ -1,0 +1,127 @@
+# Valérie Létard
+
+Valérie Létard, née le 13 octobre 1962 à Orchies (Nord), est une femme politique française.
+
+Membre de plusieurs partis centristes durant sa carrière (UDF, PSD, FD, NC, UDI), elle est proche de Jean-Louis Borloo, comme elle implanté dans le Nord.
+
+Au niveau local, elle est notamment présidente de la communauté d'agglomération de Valenciennes, première vice-présidente du conseil régional des Hauts-de-France et conseillère départementale du Nord.
+
+Elle est plusieurs fois sénatrice et députée du Nord à partir de 2001. Elle occupe la fonction de vice-présidente du Sénat de 2017 à 2023.
+
+Sous la présidence de Nicolas Sarkozy, elle est secrétaire d'État (chargée de la Solidarité puis des Technologies vertes et des Négociations sur le climat) entre 2007 et 2010.
+
+Dans le gouvernement Michel Barnier, formé le 21 septembre 2024, elle est nommée ministre du Logement et de la Rénovation urbaine.
+
+## Biographie
+
+### Enfance et études
+
+Fille de l'ancien député européen, président du Valenciennes Football Club, Francis Decourrière, Valérie Létard est assistante sociale de formation. Elle est également titulaire d'un DESS de développement local et économie solidaire.
+
+### Parcours politique
+
+Adhérente du Parti social-démocrate, Valérie Létard participe, au début de son activité professionnelle, à la mise en application concrète de nouveaux dispositifs d'action sociale à la mairie de Saint-Amand-les-Eaux, dans le Nord. De ses débuts, elle acquiert la mise en œuvre de projets et du travail en équipe. Du travail social, elle évolue vers le développement social des quartiers et la politique de la ville. Directrice du contrat de ville à Valenciennes, Jean-Louis Borloo lui propose de rejoindre l'équipe municipale comme adjointe au maire responsable de la politique de la ville.
+
+#### Conseillère régionale et sénatrice du Nord
+
+Valérie Létard est également élue conseillère régionale en 1998 et devient vice-présidente de la commission habitat-politique de la ville au conseil régional du Nord-Pas-de-Calais. En septembre 2001, lors des élections sénatoriales, elle conduit avec Jean-René Lecerf la liste d'union RPR-UDF et malgré des dissidences nombreuses à droite, ils font tous deux leur entrée au Sénat.
+
+Adjointe au maire, puis conseillère municipale déléguée de Valenciennes d'octobre 2001 à mars 2004, elle est alors chargée du contrat de ville et du Grand projet de ville. En mars 2004, elle est à nouveau conseillère régionale (tête de liste UDF) et présidente du groupe UDF de la région Nord-Pas-de-Calais ; elle préside également la commission Aménagement du territoire et politique de la ville.
+
+Parmi ses travaux au Sénat, on peut retenir sa réflexion sur les minima sociaux et le retour à l'activité ainsi que sa proposition de loi pour renforcer la parité dans les exécutifs municipaux.
+
+#### Secrétaire d'État de Nicolas Sarkozy et tête de liste aux élections régionales
+
+Le 19 juin 2007, Valérie Létard est nommée secrétaire d'État chargée de la Solidarité dans le gouvernement Fillon II, par le président de la République, Nicolas Sarkozy. Ses premiers axes de travail sont alors un Plan Solidarité-Grand âge 2007-2012, la scolarisation des enfants handicapés, l'intégration des aveugles dans la vie de la cité, un plan pour la lutte contre les violences faites aux femmes, l'égalité professionnelle hommes-femmes, un plan national des métiers de la dépendance, et le second Plan Autisme, dont elle publie le bilan fin 2011, soit 70 % des créations de places prévues en institution réalisées, et une progression de la scolarisation des enfants et adolescents autistes, 25 000 d'entre eux étant désormais intégrés à l'école de la république.
+
+Le 9 mars 2008, en seconde position sur la liste de Dominique Riquet, Valérie Létard est réélue conseillère municipale de Valenciennes dès le premier tour des élections municipales, et devient première adjointe lors de l'entrée en fonction du nouveau conseil le 15 mars. Le 10 avril suivant, elle est élue, avec 83 % des suffrages exprimés, présidente de la Communauté d'agglomération de Valenciennes Métropole.
+
+Elle devient secrétaire d'État auprès du ministre d'État, ministre de l'Écologie, du Développement durable et de la Mer, chargée des Technologies vertes et des Négociations sur le climat, à la faveur d'un remaniement du second gouvernement Fillon, le 23 juin 2009. Le 26 juillet 2009, elle annonce que « 220 000 emplois verts sont à créer d'ici 2012 ». Après avoir pris part au Sommet de Copenhague, œuvré notamment pour la promotion et l'encadrement des métiers de la croissance verte, mis en place, dans le cadre de Médiaterre, les volontaires en service civique pour sensibiliser des familles modestes aux éco-gestes, lancer un plan de formation pour les travailleurs sociaux aux éco-gestes, lutter contre la précarité énergétique, elle quitte le gouvernement le 13 novembre 2010 après la nomination du troisième gouvernement de François Fillon.
+
+Le 17 novembre 2009, elle est officiellement désignée par l'UMP et son secrétaire général Xavier Bertrand pour conduire la liste d'union UMP-Nouveau centre-Gauche moderne aux élections régionales de 2010 pour la région Nord-Pas-de-Calais. Après une campagne engagée face à Daniel Percheron (PS) et Marine Le Pen, la liste « Ma Vie, Ma Région, Mon Avenir avec Valérie Létard » réalise 19 % au premier tour et 25,91 % au deuxième tour à chaque fois devant la liste de Marine Le Pen. Le groupe Majorité présidentielle se voit attribuer 22 sièges.
+
+En quittant le gouvernement Fillon avec Jean-Louis Borloo, elle annonce vouloir se consacrer à sa Communauté d'agglomération de Valenciennes Métropole, retrouver son siège au Sénat et participer à la création d'une « confédération des centres » après la réunion du 15 novembre 2010 à l'Assemblée nationale. En mai 2011, elle contribue à la création de l'Alliance républicaine, écologiste et sociale.
+
+#### Sénatrice, présidente de Valenciennes Métropole et membre fondatrice de l'UDI
+
+En tant que présidente de Valenciennes Métropole, Valérie Létard a notamment lancé les 3 pôles d'excellence du Valenciennois : transports terrestres, numérique et logistique, le lancement du centre d'expositions et des congrès de Valenciennes Métropole, le lancement de l'Institut de recherche supérieur Railenium, le lancement de Transalley - Technopôle Transports Terrestres, le lancement du programme Rîves Créatives de l’Escaut, le lancement du Terminal Dock Seine Nord Europe Escaut, réalise le programme ANRU du Valenciennois, le programme national de requalification des quartiers anciens dégradés, inaugure le stade du Hainaut, concourt au déploiement du très haut débit, lance l'éco-port de plaisance de Valenciennes, lance le complexe hôtelier et immobilier hôpital du Hainaut de Valenciennes, accueille de grands acteurs économiques (CIV, Oxylane, Agrati, etc.), participe à la rénovation des boulevards extérieurs de Valenciennes, à la création de Plateau multisports et Commerce de proximité Communes Rurales, au lancement de l'aéroport Valenciennes-Denain Charles Nungesser, etc.
+
+Le 25 septembre 2011, Valérie Létard est réélue sénatrice du Nord en deuxième position sur la liste « République et territoires, des élus libres et responsables pour l’avenir du Nord », emmenée par Jean-René Lecerf (UMP-NC-NI) non investie par l'UMP et soutenue par Jean-Pierre Raffarin et Jean-Louis Borloo. Le 1er octobre suivant, après avoir été désignée candidate du groupe centriste à la présidence du Sénat, elle obtient 29 voix face à Gérard Larcher et Jean-Pierre Bel. Elle est ainsi la deuxième femme à se présenter à la présidence du Sénat, plusieurs années après la communiste Hélène Luc. Le 8 décembre 2011, elle est élue vice-présidente de l'Association des maires de France, rapporteur de la commission Villes et territoires urbains.
+
+Valérie Létard rend le 12 janvier 2012 son rapport sur l'évaluation de l'impact du Plan Autisme 2008-2010 à Roselyne Bachelot, ministre des Solidarités et de la Cohésion sociale, un document qui fait référence. À la faveur de la démission de Dominique Riquet de la mairie de Valenciennes le 21 juin 2012, elle est, en tant que première adjointe, chargée de l'intérim du 22 au 28 juin, avant l'élection de Laurent Degallaix comme nouveau maire de la ville.
+
+Valérie Létard est membre fondateur de l'Union des démocrates et indépendants. Elle est élue présidente de l'UDI Nord le 11 juin 2013 à Valenciennes lors de la convention départementale. Elle est nommée 2e vice-présidente, chargée de la Rénovation Urbaine et Politique de la Ville, après l'élection de Jean-Christophe Lagarde au poste de président, le 13 novembre 2014.
+
+Le 15 juillet 2013, Valérie Létard et Jean-Louis Touraine, député PS du Rhône, acceptent une mission de concertation en vue de la réforme du droit d'asile confiée par Manuel Valls, ministre de l'Intérieur. Les conclusions de la mission parlementaire sont rendues le 28 novembre 2013 dans le contexte médiatique particulier de l'affaire Leonarda.
+
+Au cours des élections municipales de 2014, sur la liste de Laurent Degallaix, elle est réélue conseillère municipale de Valenciennes le 30 mars, et est réélue présidente de la Communauté d'agglomération de Valenciennes Métropole le 17 avril 2014. À la faveur du renouvellement du Sénat en septembre 2014, elle intègre le bureau du Sénat sous la présidence de Gérard Larcher. Présidente de l’UDI Nord, elle prend une part active aux élections municipales de 2014 et à l’élection de Jean-René Lecerf à la présidence du conseil départemental du Nord.
+
+#### Première vice-présidente du conseil régional des Hauts-de-France
+
+Le 26 septembre 2015, elle est nommée vice-présidente du conseil national des villes. Chef de file UDI Nord-Pas-de-Calais-Picardie et candidate à l'élection régionale de 2015 en Nord-Pas-de-Calais-Picardie, elle est tête de la liste de Xavier Bertrand sur le département du Nord, qui totalise 24,96 % des suffrages au premier tour et 57,77 % au second tour, remportant ainsi l'élection. Elle est ensuite élue première vice-présidente du conseil régional des Hauts-de-France, chargée des solidarités avec les territoires, contrat de plan État-région, des fonds structurels européens, et de l'aménagement du territoire. Le 9 mars 2016, elle est élue Présidente de l'Établissement Public Foncier (EPF) du Nord-Pas-de-Calais. Lors de la Séance Plénière du Conseil Régional des Hauts-de-France du 8 juillet 2016, elle présente et fait adopter les délibérations Cadre Politique Aménagement du Territoire et Ingénierie Territoriale des Hauts-de-France. Le 2 décembre 2016, elle est élue par ses collègues Présidente du Groupe UDI-Union Centriste du Conseil Régional des Hauts-de-France (42 élus).
+
+Elle soutient Alain Juppé pour la primaire présidentielle des Républicains de 2016. Le 2 mars 2017, dans le cadre de l'affaire Fillon, elle demande le retrait du candidat LR François Fillon à l'élection présidentielle. Reçue par le Président Emmanuel Macron le 13 mai 2017, elle refuse d’être ministre du Logement et de la Ville du gouvernement d’Édouard Philippe le 15 mai 2017.
+
+Elle s'implique avec des élus des Hauts-de-France pour la réalisation du canal Seine-Nord-Europe.
+
+#### Vice-présidente du Sénat
+
+Le 24 septembre 2017, Valérie Létard est réélue sénatrice du Nord pour la troisième fois, en tant que tête de la liste « République & Territoires » qui rassemble des élus UDI, LR et non-inscrits, qui obtient le meilleur score dans le département du Nord. Olivier Henno est également élu sur cette liste. Ils intègrent le groupe Union Centriste. Elle est nommée vice-présidente du Sénat le 4 octobre 2017 et secrétaire de la commission des affaires économiques le 5 octobre. Au sein du bureau du Sénat, elle préside la délégation chargée du travail parlementaire, de la législation en commission, des votes et du contrôle.
+
+Le 23 novembre 2017, en raison de l'application de la nouvelle loi sur le cumul des mandats, Valérie Létard cède les délégations de sa vice-présidence au conseil régional des Hauts-de-France à Nicolas Lebas et Salvatore Castiglione, nouveau vice-président, ainsi que la présidence de l'EPF du Nord-Pas-de-Calais. Elle reste conseillère régionale et présidente du groupe UDI-UC, composé de 42 élus. Le 17 mars 2018, à l'occasion du Congrès de l'UDI, Valérie Létard est nommée présidente du conseil national du parti.
+
+En tant que sénatrice du Nord et ancienne présidente de Valenciennes Métropole, elle est impliquée sur le dossier de reprise de l'aciérie Ascoval à Saint-Saulve,. Elle initie la mise en place d'une mission d'information sénatoriale sur l'avenir de la sidérurgie, dont elle est nommée rapporteur. Remis le 10 juillet, le rapport formule 7 priorités et 30 propositions, dont celle d'un « ministère de l'Industrie, avec une administration, des ressources budgétaires, avec un État stratège pour être au rendez-vous des enjeux industriels ». Le 13 mars 2019 est adopté sa proposition de loi destinée à améliorer la lisibilité du droit en supprimant des lois obsolètes. Le 12 avril 2019, elle dépose une proposition de loi tendant à protéger les mineurs des usages dangereux du protoxyde d'azote et le 24 juin 2019, elle intègre le Conseil d'Administration de l'ANRU.
+
+Le 11 décembre 2019, sa proposition de loi tendant à protéger les mineurs des usages dangereux du protoxyde d'azote est adoptée à l'unanimité au Sénat. La mesure phare est l’interdiction de la vente aux mineurs, y compris sur les sites de commerce en ligne. Le texte propose aussi de pénaliser l’incitation d’un mineur à faire un usage détourné d’un produit de consommation courante pour en obtenir des effets psychoactifs. Il prévoit encore d’accompagner la politique de prévention menée à l’école. La loi est définitivement adoptée le 25 mai 2021 et promulguée le 1er juin 2021.
+
+Le 6 octobre 2020, Valérie Létard est confirmée dans ses fonctions de vice-présidente de la haute assemblée lors du renouvellement des instances de l'institution.
+
+Candidate aux élections départementales des 20 et 27 juin 2021, Valérie Létard est élue, avec Laurent Degallaix, conseillère départementale sur le canton de Valenciennes. Le Président du Département Christian Poiret lui confie une Mission d'information et d'évaluation de l'allocation personnalisée d'autonomie (APA). Elle s'investit également sur la mise en place d'un RSA d'urgence à destination des victimes de violences conjugales et mène l'expérimentation sur le valenciennois. En mai 2022, son nom est évoqué pour le poste de Première ministre à la suite de la réélection du président Emmanuel Macron. En septembre 2022, elle dépose une proposition de loi créant une Aide universelle d'urgence pour les victimes des violences conjugales, un texte issu de l'expérimentation de terrain et qui vise à répondre à la problématique de l'emprise financière du conjoint violent. « Cette aide universelle s'adresse à l'ensemble des victimes de violences conjugales, quels que soient leur sexe, leur origine, leur statut ou leur âge. Elle se veut un moyen de rendre la dignité, de permettre aux victimes de relever la tête, de s'extraire d'une situation personnelle qui n'apporte que souffrance et douleur » explique-t-elle dans l'hémicycle du Sénat. Le texte est adopté à l'unanimité au Sénat le 20 octobre 2022 en première lecture, puis adopté également en première lecture et à l'unanimité à l'Assemblée nationale le 16 janvier 2023. Voté conforme, et à l'unanimité, en deuxième lecture le 16 février 2023 au Sénat, il est définitivement adopté. La loi Létard est promulguée le 28 février 2023. Un décret doit encore venir fixer la date précise d'application de cette aide. Elle sera accessible, au plus tard, d'ici fin 2023, auprès des caisses d'allocations familiales (CAF) et des caisses de la Mutualité sociale agricole (MSA).
+
+#### Fin de mandat au Sénat et ZAN
+
+Elle annonce en octobre 2022 qu'après trois mandats de sénatrice, elle ne se représentera pas aux élections sénatoriales de 2023. Elle s'implique sur la question du Zéro artificialisation nette, à la suite d'un décret du gouvernement. Au Sénat, elle préside ainsi la commission spéciale relative à la mise en application des mesures de « Zéro artificialisation nette » de la loi Climat-résilience, dépose une proposition de loi le 14 décembre 2022. Elle est adoptée au Sénat le 16 mars 2023, à l'Assemblée nationale le 27 juin 2023 et fait l'objet d'une commission mixte paritaire, qu'elle préside, conclusive le 6 juillet 2023 : « Nous avons su surmonter nos profondes divergences pour élaborer un texte qui réponde concrètement aux difficultés et blocages qui nous sont remontés des élus et des acteurs du ZAN. Nous préservons les capacités de développement des territoires, sans rien sacrifier de nos ambitions écologiques ».
+
+Au Sénat, elle a été l'auteure du rapport sur l'affaire Benalla.
+
+#### Députée du Nord
+
+Le 7 juillet 2024, elle est élue députée de la 21e circonscription du Nord. Elle intègre le groupe Libertés, indépendants, outre-mer et territoires.
+
+Son nom est un temps évoqué pour la présidence de l'Assemblée nationale, mais elle coupe court, privilégiant l'investissement sur son territoire.
+
+## Détail des mandats et fonctions
+
+### Mandats et nominations actuels
+
+- Depuis le 7 juillet 2024 : Députée de la 21e circonscription du Nord.
+- Depuis le 27 juin 2021 : Conseillère départementale du Nord.
+- Depuis le 16 novembre 2021: Présidente de la fédération UDI du Nord
+
+### Anciens mandats et nominations
+
+- Du 4 octobre 2017 au 24 septembre 2023 : Vice-présidente du Sénat.
+- D'octobre 2001 à juillet 2007 et de décembre 2010 à septembre 2023 : Sénatrice du Nord.
+- 13 décembre 2015 - 1er juillet 2021 : Conseillère régionale des Hauts-de-France
+- 2 décembre 2016 - 1er juillet 2021 : Présidente du groupe UDI – Union centriste au conseil régional des Hauts-de-France
+- 17 mars 2018 - 1er octobre 2019 : Présidente du Conseil national de l'Union des démocrates et indépendants (UDI)
+- 10 juin 2013 - 1er octobre 2019 : Présidente de la fédération UDI du Nord
+- Janvier 2013 - mars 2018 : 2e vice-présidente de l'Union des démocrates et indépendants (UDI).
+- Mars 2016 - janvier 2018 : présidente du conseil d'administration de l'Établissement public foncier du Nord-Pas-de-Calais.
+- 13 décembre 2015 - 23 novembre 2017 : 1re vice-présidente du conseil régional des Hauts-de-France.
+- Septembre 2015 - décembre 2016 : vice-présidente du Conseil national des villes.
+- 10 avril 2008 - 12 janvier 2016 : présidente de la communauté d'agglomération de Valenciennes Métropole.
+- 30 mars 2014 - 12 janvier 2016 : conseillère municipale de Valenciennes.
+- 8 décembre 2011 - 31 décembre 2015 : vice-présidente de l'Association des maires de France, rapporteur de la commission Villes et territoires urbains.
+- 15 mars 2008 - 30 mars 2014 : 1re adjointe au maire de Valenciennes.
+- Mai 2008 - janvier 2013 : présidente déléguée du Nouveau Centre.
+- 22 - 28 juin 2012 : maire de Valenciennes (par intérim).
+- 23 juin 2009 - 13 novembre 2010 : secrétaire d'État auprès du ministre d'État, ministre de l'Écologie, de l'Énergie, du Développement durable et de la Mer, chargée des Technologies vertes et des Négociations sur le climat dans le gouvernement Fillon II.
+- 22 mars 1998 - 22 juin 2010 : conseillère régionale du Nord-Pas-de-Calais.
+- 19 juin 2007 - 23 juin 2009 : secrétaire d'État auprès du ministre du Travail, des Relations sociales et de la Solidarité, chargée de la Solidarité dans le gouvernement Fillon II.
+- Octobre 2004 - juillet 2007 : vice-présidente de la commission des Affaires sociales du Sénat.
+- Octobre 2004 - juillet 2007 : vice-présidente du groupe Union centriste – UDF au Sénat.
+- Avril 2006 - mai 2007 : vice-présidente de l'Union pour la démocratie française (UDF).
+- 2002 - 2007 : membre du comité exécutif de l'UDF.
+- Octobre 2001 - mars 2004 : adjointe au maire de Valenciennes, puis conseillère municipale déléguée, chargée de la Politique de la ville.
+- 2004 - 2010 : présidente du groupe centriste au conseil régional du Nord-Pas-de-Calais.

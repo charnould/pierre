@@ -1,0 +1,4 @@
+/node_modules
+/telemetry
+.DS_Store
+.env

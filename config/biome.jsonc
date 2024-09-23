@@ -1,0 +1,20 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
+
+  "formatter": {
+    // Formatting is handled by Prettier until
+    // all used languages are handled by Biome.
+    "enabled": false
+  },
+
+  "linter": {
+    "enabled": true,
+    // Transpiled .js MUST not be lint (it throws errors).
+    // CSS files are handled by TailwindCSS; no need for Biome here.
+    "ignore": ["*.js", "*.css"]
+  },
+
+  "organizeImports": {
+    "enabled": true
+  }
+}

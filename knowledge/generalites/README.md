@@ -1,0 +1,5 @@
+---
+icon: message-question
+---
+
+# Généralités
