@@ -1,0 +1,133 @@
+// Bun Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`should insert 3 replies and get 2 conversations 1`] = `
+[
+  {
+    "completion_tokens": null,
+    "config": "pierre-ia.org",
+    "content": "Bonjour, qui es-tu ?",
+    "id": "49bead3b-5e21-4c15-aa25-c8c6ba6ea94c",
+    "model": "gpt-4o-mini-2024-07-18",
+    "prompt_tokens": null,
+    "reviewer_comment": null,
+    "reviewer_score": null,
+    "role": "user",
+    "timestamp": "2024-12-12T21:12:00.000Z",
+    "total_tokens": null,
+    "user_score": null,
+  },
+  {
+    "completion_tokens": null,
+    "config": "pierre-ia.org",
+    "content": "Je suis Pierre",
+    "id": "49bead3b-5e21-4c15-aa25-c8c6ba6ea94c",
+    "model": "gpt-4o-mini-2024-07-18",
+    "prompt_tokens": null,
+    "reviewer_comment": null,
+    "reviewer_score": null,
+    "role": "assistant",
+    "timestamp": "2024-12-12T21:12:00.000Z",
+    "total_tokens": null,
+    "user_score": null,
+  },
+]
+`;
+
+exports[`should insert 3 replies and get 2 conversations 2`] = `
+[
+  {
+    "completion_tokens": null,
+    "config": "pierre-ia.org",
+    "content": "Bonjour",
+    "id": "6e6f3b06-4754-4ca0-b4ff-0fb941bcb254",
+    "model": "gpt-4o-mini-2024-07-18",
+    "prompt_tokens": null,
+    "reviewer_comment": null,
+    "reviewer_score": null,
+    "role": "user",
+    "timestamp": "2024-12-12T21:12:00.000Z",
+    "total_tokens": null,
+    "user_score": null,
+  },
+]
+`;
+
+exports[`should score a conversation for user and reviewer 1`] = `
+[
+  {
+    "completion_tokens": null,
+    "config": "pierre-ia.org",
+    "content": "Bonjour, qui es-tu ?",
+    "id": "49bead3b-5e21-4c15-aa25-c8c6ba6ea94c",
+    "model": "gpt-4o-mini-2024-07-18",
+    "prompt_tokens": null,
+    "reviewer_comment": "Réponse peu précise",
+    "reviewer_score": 2,
+    "role": "user",
+    "timestamp": "2024-12-12T21:12:00.000Z",
+    "total_tokens": null,
+    "user_score": 0,
+  },
+  {
+    "completion_tokens": null,
+    "config": "pierre-ia.org",
+    "content": "Je suis Pierre",
+    "id": "49bead3b-5e21-4c15-aa25-c8c6ba6ea94c",
+    "model": "gpt-4o-mini-2024-07-18",
+    "prompt_tokens": null,
+    "reviewer_comment": "Réponse peu précise",
+    "reviewer_score": 2,
+    "role": "assistant",
+    "timestamp": "2024-12-12T21:12:00.000Z",
+    "total_tokens": null,
+    "user_score": 0,
+  },
+]
+`;
+
+exports[`should get all conversations 1`] = `
+[
+  {
+    "completion_tokens": null,
+    "config": "pierre-ia.org",
+    "content": "Bonjour, qui es-tu ?",
+    "id": "49bead3b-5e21-4c15-aa25-c8c6ba6ea94c",
+    "model": "gpt-4o-mini-2024-07-18",
+    "prompt_tokens": null,
+    "reviewer_comment": "Réponse peu précise",
+    "reviewer_score": 2,
+    "role": "user",
+    "timestamp": "2024-12-12T21:12:00.000Z",
+    "total_tokens": null,
+    "user_score": 0,
+  },
+  {
+    "completion_tokens": null,
+    "config": "pierre-ia.org",
+    "content": "Je suis Pierre",
+    "id": "49bead3b-5e21-4c15-aa25-c8c6ba6ea94c",
+    "model": "gpt-4o-mini-2024-07-18",
+    "prompt_tokens": null,
+    "reviewer_comment": "Réponse peu précise",
+    "reviewer_score": 2,
+    "role": "assistant",
+    "timestamp": "2024-12-12T21:12:00.000Z",
+    "total_tokens": null,
+    "user_score": 0,
+  },
+  {
+    "completion_tokens": null,
+    "config": "pierre-ia.org",
+    "content": "Bonjour",
+    "id": "6e6f3b06-4754-4ca0-b4ff-0fb941bcb254",
+    "model": "gpt-4o-mini-2024-07-18",
+    "prompt_tokens": null,
+    "reviewer_comment": null,
+    "reviewer_score": null,
+    "role": "user",
+    "timestamp": "2024-12-12T21:12:00.000Z",
+    "total_tokens": null,
+    "user_score": null,
+  },
+]
+`;
