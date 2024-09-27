@@ -1,7 +1,7 @@
 # PIERRE – L'IA open source du mouvement HLM
 
 > [!IMPORTANT]
-> PIERRE est actuellement en version `0.9.0` avec une qualité de base de connaissances estimée à 10 %. Par ailleurs, **la documentation ci-dessous est en cours de rédaction**. En cas de difficultés, créer une `issue` (ou envoyer un email à charnould@pierre-ia.org).
+> PIERRE est actuellement en version `0.9.x` avec une **qualité de base de connaissances estimée à `10 %`**. Par ailleurs, la documentation ci-dessous est en cours de rédaction. En cas de difficultés, créer une `issue` (ou envoyer un email à charnould@pierre-ia.org).
 
 ## PIERRE : kézako ?
 
@@ -9,28 +9,28 @@ PIERRE est une intelligence artificielle (IA) **open source** et **plurilingue**
 
 Plus concrètement encore, PIERRE c'est à la fois :
 
-1. Un **chatbot open source** ([démonstration](https://pierre-ia.org)) optimisé pour le mouvement HLM.
+1. Un **chatbot open source** optimisé pour le mouvement HLM ([démonstration](https://pierre-ia.org)).
 2. Une **base de connaissances** en **open data** ([consultation](https://kdb.pierre-ia.org)), utilisable indépendamment du chatbot et indispensable à la mise en oeuvre de toutes approches « Retrieval Augmented Generation » ([RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation)) via un LLM.
 
 ## Sommaire
 
 <!-- toc -->
 
-- [Contribuer à PIERRE](#contribuer-a-pierre)
+- [Contribuer à PIERRE](#contribuer-%C3%A0-pierre)
 - [Changelog + roadmap](#changelog--roadmap)
 - [Fonctionnement + architecture de PIERRE](#fonctionnement--architecture-de-pierre)
-  - [Comment fonctionne PIERRE ?](#comment-fonctionne-pierre-)
+  - [Comment fonctionne PIERRE ?](#comment-fonctionne-pierre)
   - [Technologies](#technologies)
-  - [Modèle de langage](#modele-de-langage)
-- [Comment déployer PIERRE ?](#comment-deployer-pierre-)
-  - [Faire héberger PIERRE (le plus simple)](#faire-heberger-pierre-le-plus-simple)
-  - [Auto-héberger PIERRE (self-hosting)](#auto-heberger-pierre-self-hosting)
+  - [Modèle de langage](#mod%C3%A8le-de-langage)
+- [Comment déployer PIERRE ?](#comment-d%C3%A9ployer-pierre)
+  - [Faire héberger PIERRE (le plus simple)](#faire-h%C3%A9berger-pierre-le-plus-simple)
+  - [Auto-héberger PIERRE (self-hosting)](#auto-h%C3%A9berger-pierre-self-hosting)
 - [Personnaliser PIERRE (self-hosting)](#personnaliser-pierre-self-hosting)
   - [Personnaliser l'interface du chatbot](#personnaliser-linterface-du-chatbot)
-  - [Personnaliser la personnalité du chatbot](#personnaliser-la-personnalite-du-chatbot)
+  - [Personnaliser la personnalité du chatbot](#personnaliser-la-personnalit%C3%A9-du-chatbot)
 - [Installer PIERRE sur votre site web ou extranet-locataire (self-hosting)](#installer-pierre-sur-votre-site-web-ou-extranet-locataire-self-hosting)
-- [Modifier le modèle de langage/LLM utilisé (self-hosting)](#modifier-le-modele-de-langagellm-utilise-self-hosting)
-- [Suivre et évaluer les conversations de PIERRE (self-hosting)](#suivre-et-evaluer-les-conversations-de-pierre-self-hosting)
+- [Modifier le modèle de langage/LLM utilisé (self-hosting)](#modifier-le-mod%C3%A8le-de-langagellm-utilis%C3%A9-self-hosting)
+- [Suivre et évaluer les conversations de PIERRE (self-hosting)](#suivre-et-%C3%A9valuer-les-conversations-de-pierre-self-hosting)
 - [License](#license)
 
 <!-- tocstop -->
@@ -103,8 +103,8 @@ Déployer PIERRE sur vos propres serveurs génére des coûts (minimes) :
 #### Faire fonctionner PIERRE en local
 
 1. Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour Linux).
-2. Installer `WSL` ([instructions](https://learn.microsoft.com/fr-fr/windows/wsl/install)) et vérifier sa bonne installation.
-3. Installer `Bun` ([instructions](https://bun.sh/docs/installation)) et vérifier sa bonne installation.
+2. Installer `WSL` et vérifier sa bonne installation ([instructions](https://learn.microsoft.com/fr-fr/windows/wsl/install)).
+3. Installer `Bun` et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
 4. Cloner/forker le présent dépôt.
 5. Lancer `bun install` dans votre terminal pour installer les dépendances.
 6. Renommer le fichier `.env.example` en `.env` et :
@@ -119,8 +119,8 @@ Déployer PIERRE sur vos propres serveurs génére des coûts (minimes) :
 #### Déployer pour la première fois PIERRE sur un serveur
 
 1. Pour déployer PIERRE sur votre propre serveur, il est indispensable d'être parvenu à le faire fonctionner en local (_cf._ supra).
-2. Installer `Docker Desktop` ([instructions](https://www.docker.com/products/docker-desktop/)) et le lancer. `Docker` gérera la conteneurisation de PIERRE.
-3. Installer `Kamal` ([instructions](https://kamal-deploy.org/docs/installation/)). `Kamal` gérera le déploiement de PIERRE.
+2. Installer `Docker Desktop` et le lancer ([instructions](https://www.docker.com/products/docker-desktop/)). `Docker` gérera la conteneurisation de PIERRE.
+3. Lancer `gem install kamal -v 1.9` pour installer `Kamal` qui gérera le déploiement de PIERRE ([instructions](https://kamal-deploy.org/docs/installation/)).
 4. Disposer d'un compte `GitHub` et [générer une clef](https://github.com/settings/tokens). `GitHub` fera office de registre de conteneurs lors des déploiements.
    - on: `write:packagesUpload`
    - on: `delete:packagesDelete`
