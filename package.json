@@ -21,19 +21,19 @@
     "start": "bash config/telemetry.sh init_db && bun run app.ts"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^0.0.50",
-    "@ai-sdk/cohere": "^0.0.24",
-    "@ai-sdk/google": "^0.0.48",
-    "@ai-sdk/mistral": "^0.0.41",
-    "@ai-sdk/openai": "^0.0.61",
-    "ai": "^3.4.1",
+    "@ai-sdk/anthropic": "^0.0.51",
+    "@ai-sdk/cohere": "^0.0.25",
+    "@ai-sdk/google": "^0.0.51",
+    "@ai-sdk/mistral": "^0.0.42",
+    "@ai-sdk/openai": "^0.0.63",
+    "ai": "^3.4.6",
     "date-fns": "^4.1.0",
-    "hono": "^4.6.2",
+    "hono": "^4.6.3",
     "lodash": "^4.17.21",
     "marked": "^14.1.2",
-    "sqlite-vec": "^0.1.2",
-    "sqlite-vec-darwin-arm64": "^0.1.3-alpha.2",
-    "sqlite-vec-linux-x64": "^0.1.3-alpha.2",
+    "sqlite-vec": "^0.1.3",
+    "sqlite-vec-darwin-arm64": "^0.1.3",
+    "sqlite-vec-linux-x64": "^0.1.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -41,10 +41,10 @@
     "@types/bun": "^1.1.10",
     "@types/lodash": "^4.17.9",
     "@types/turndown": "^5.0.5",
-    "llamaindex": "^0.6.7",
+    "llamaindex": "^0.6.10",
     "markdown-toc": "^1.2.0",
-    "prettier-plugin-tailwindcss": "^0.6.6",
-    "tailwindcss": "^4.0.0-alpha.24",
+    "prettier-plugin-tailwindcss": "^0.6.8",
+    "tailwindcss": "^4.0.0-alpha.25",
     "turndown": "^7.2.0",
     "typescript": "^5.6.2"
   }
