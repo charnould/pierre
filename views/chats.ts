@@ -13,11 +13,11 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
       </head>
 
       ${is_auth === true
-        ? html`<body class="ml-6 mr-6 mt-6 flex min-h-screen items-start justify-center">
+        ? html`<body class="mt-6 mr-6 ml-6 flex min-h-screen items-start justify-center">
             <div class="sticky top-16 h-[700px] w-[430px]">
               <!-- START: conversations list -->
               <div
-                class="no-scrollbar border-1 h-[650px] overflow-y-auto overflow-y-scroll rounded-lg border-neutral-200 shadow-[0_0_14px_4px_rgba(0,0,0,0.0.075)]"
+                class="no-scrollbar h-[650px] overflow-y-auto overflow-y-scroll rounded-lg border-1 border-neutral-200 shadow-[0_0_14px_4px_rgba(0,0,0,0.0.075)]"
               >
                 ${data.map(
                   (conv) =>
@@ -71,7 +71,7 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
                     ${conversation.map(
                       (c) =>
                         html`<div
-                          class="prose odd:float-right odd:my-8 odd:max-w-lg odd:rounded-xl odd:bg-stone-100 odd:px-5 odd:py-2 odd:font-['Work_Sans'] odd:text-base even:clear-both"
+                          class="prose odd:float-right odd:my-8 odd:max-w-lg odd:rounded-xl odd:bg-stone-100 odd:py-2 odd:px-5 odd:font-['Work_Sans'] odd:text-base even:clear-both"
                         >
                           ${raw(marked.parse(c.content))}
                         </div>`
@@ -79,7 +79,7 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
                     <!-- START: Score conversation -->
                     <form method="post" class="mt-12 flex flex-col">
                       <div
-                        class="flex flex-row items-center gap-x-4 rounded-lg p-2 pl-3 pr-3 shadow-[0_0_14px_14px_rgba(0,0,0,0.05)]"
+                        class="flex flex-row items-center gap-x-4 rounded-lg p-2 pr-3 pl-3 shadow-[0_0_14px_14px_rgba(0,0,0,0.05)]"
                       >
                         <input
                           name="comment"
@@ -99,7 +99,7 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
                           />
                           <label
                             for="s0"
-                            class="peer-checked/s0:ring-3 cursor-pointer rounded-full bg-red-500 px-[2px] text-2xl peer-checked/s0:rounded-full"
+                            class="cursor-pointer rounded-full bg-red-500 px-[2px] text-2xl peer-checked/s0:rounded-full peer-checked/s0:ring-3"
                             >&nbsp;&nbsp;&nbsp;&nbsp;</label
                           >
 
@@ -113,7 +113,7 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
                           />
                           <label
                             for="s1"
-                            class="peer-checked/s1:ring-3 cursor-pointer rounded-full bg-orange-400 px-[2px] text-2xl peer-checked/s1:rounded-full"
+                            class="cursor-pointer rounded-full bg-orange-400 px-[2px] text-2xl peer-checked/s1:rounded-full peer-checked/s1:ring-3"
                             >&nbsp;&nbsp;&nbsp;&nbsp;</label
                           >
 
@@ -127,7 +127,7 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
                           />
                           <label
                             for="s2"
-                            class="peer-checked/s2:ring-3 cursor-pointer rounded-full bg-lime-300 px-[2px] text-2xl peer-checked/s2:rounded-full"
+                            class="cursor-pointer rounded-full bg-lime-300 px-[2px] text-2xl peer-checked/s2:rounded-full peer-checked/s2:ring-3"
                             >&nbsp;&nbsp;&nbsp;&nbsp;</label
                           >
 
@@ -141,7 +141,7 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
                           />
                           <label
                             for="s3"
-                            class="peer-checked/s3:ring-3 cursor-pointer rounded-full bg-green-500 px-[2px] text-2xl peer-checked/s3:rounded-full"
+                            class="cursor-pointer rounded-full bg-green-500 px-[2px] text-2xl peer-checked/s3:rounded-full peer-checked/s3:ring-3"
                             >&nbsp;&nbsp;&nbsp;&nbsp;</label
                           >
                         </fieldset>
@@ -158,7 +158,7 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
                       <button
                         name="deletion"
                         value="true"
-                        class="underline-offset-3 mb-10 mt-2 cursor-pointer text-xs text-blue-700 underline"
+                        class="mt-2 mb-10 cursor-pointer text-xs text-blue-700 underline underline-offset-3"
                       >
                         Supprimer définitivement cette conversation
                       </button>
@@ -175,14 +175,14 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
                 method="post"
                 class="flex h-dvh items-center justify-center"
               >
-                <div class="border-1 flex items-center gap-x-4 rounded-2xl border-neutral-300 p-3">
+                <div class="flex items-center gap-x-4 rounded-2xl border-1 border-neutral-300 p-3">
                   <input type="hidden" name="action" value="login" />
                   <input
                     autofocus
                     name="password"
                     type="password"
                     placeholder="Mot de passe"
-                    class="border-none px-4 py-3 text-4xl outline-none placeholder:text-neutral-300"
+                    class="border-none py-3 px-4 text-4xl outline-none placeholder:text-neutral-300"
                   />
 
                   <input
