@@ -15,7 +15,7 @@ export const view = (config: Config) => {
 
       <body class="mx-auto flex h-dvh max-w-4xl flex-col bg-white px-6">
         <main class="no-scrollbar flex-1 overflow-scroll pb-12">
-          <div class="clear-both flex gap-2 pb-2 pt-6" data-role="system__logo">
+          <div class="clear-both flex gap-2 pt-6 pb-2" data-role="system__logo">
             <img src="../assets/${config.id}/system.svg" height="26" width="26" />
           </div>
           <div class="prose" data-role="system">
@@ -23,13 +23,13 @@ export const view = (config: Config) => {
           </div>
 
           <div data-role="example">
-            <p class="mb-2 mt-4 font-['Work_Sans'] text-xs font-semibold text-stone-500">
+            <p class="mt-4 mb-2 font-['Work_Sans'] text-xs font-semibold text-stone-500">
               EXEMPLES
             </p>
             ${config.examples.map(
               (eg: string) =>
                 html`<button
-                  class="mb-2 block cursor-pointer rounded border border-stone-300 px-3 py-2 text-left font-['Work_Sans'] text-sm text-stone-800"
+                  class="mb-2 block cursor-pointer rounded border border-stone-300 py-2 px-3 text-left font-['Work_Sans'] text-sm text-stone-800"
                 >
                   ${eg}
                 </button>`
@@ -38,7 +38,7 @@ export const view = (config: Config) => {
         </main>
 
         <footer
-          class="mb-6 flex h-14 flex-none items-center justify-between rounded-lg border border-stone-200 bg-stone-50 pl-5 pr-3 shadow-[0_0_40px_40px_rgba(255,255,255,1)] backdrop-blur-xl"
+          class="mb-6 flex h-14 flex-none items-center justify-between rounded-lg border border-stone-200 bg-stone-50 pr-3 pl-5 shadow-[0_0_40px_40px_rgba(255,255,255,1)] backdrop-blur-xl"
         >
           <input
             class="flex-1 border-none font-['Work_Sans'] text-xl outline-0"
