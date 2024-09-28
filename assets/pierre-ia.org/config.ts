@@ -2,9 +2,11 @@ import type { Config } from '../../utils/_schema'
 
 export default {
   id: 'pierre-ia.org',
+  whatsapp: 'whatsapp:+14155238886',
   // NE PAS MODIFIER LE MODELE
   // Cette fonctionnalité n'est pas encore finalisée
   model: "openai('gpt-4o-mini-2024-07-18')",
+  phone: '+339_pierre_by_sms',
   context:
     'The user is interested in housing and more precisely social housing in France. Therefore, its questions should be considered with this in mind.',
   persona:
