@@ -1,0 +1,22 @@
+{
+  "from": {
+    "number": "+33611834431",
+    "name": ""
+  },
+  "to": {
+    "number": "+33901010101"
+  },
+  "message": {
+    "text": " This is an example message from 2 ",
+    "media": {
+      "mediaUri": "",
+      "contentType": "",
+      "title": ""
+    },
+    "custom": {}
+  },
+  "reference": "2f2d42ac-3809-40fb-bce5-dc720e400000",
+  "groupings": ["39373ce0-f4aa-4918-8ff1-3cef7f77b112", "messagesApi", ""],
+  "timeUtc": "2019-11-05T08:32:33",
+  "channel": "SMS"
+}

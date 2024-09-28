@@ -7,6 +7,7 @@ import { z } from 'zod'
 // biome-ignore format: readability
 export const Config = z.object({
   id                  : z.string(),
+  whatsapp            : z.string().nullable(),
   model               : z.string(),
   persona             : z.string(),
   context             : z.string(),
@@ -21,7 +22,7 @@ export const Config = z.object({
 // biome-ignore format: readability
 // Reflects telemetry database schema
 export const Reply = z.object({
-    id                  : z.string().uuid(),
+    id                  : z.string(),
     config              : z.string(),
     // TODO: make DSI able to pass the model they are using (for telemetry)
     model               : z.string().default('gpt-4o-mini-2024-07-18'),
@@ -48,7 +49,7 @@ export const AIContext = z.object({
     model               : z.string().default('gpt-4o-mini-2024-07-18'),
     content             : z.string(),
     chunks              : z.array(z.string()).nullish().default(null),
-    id                  : z.string().uuid(),
+    id                  : z.string(),
     config              : z.string().or(Config),
     contains_profanity  : z.boolean().default(false),
     is_greeting         : z.boolean().default(false),
