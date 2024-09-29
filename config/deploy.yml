@@ -6,7 +6,7 @@ image: charnould/pierre
 
 # DSI : Remplacer l'IP par celui de votre VPS
 servers:
-  - 49.13.68.101
+  - 138.201.246.225
 
 registry:
   server: ghcr.io
