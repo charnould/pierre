@@ -1,15 +1,15 @@
 # PIERRE – L'IA open source du mouvement HLM
 
 > [!IMPORTANT]
-> PIERRE est actuellement en version `0.9.x` avec une **qualité de base de connaissances estimée à `10 %`**. Par ailleurs, la documentation ci-dessous est en cours de rédaction. En cas de difficultés, créer une `issue` (ou envoyer un email à charnould@pierre-ia.org).
+> PIERRE est actuellement en version `0.10.x` (consulter les [releases](https://github.com/charnould/pierre/releases)) avec une **qualité de base de connaissances estimée à `10 %`**. Par ailleurs, la documentation ci-dessous est en cours de rédaction. En cas de difficultés, créer une `issue` ou envoyer un email à charnould@pierre-ia.org.
 
 ## PIERRE : kézako ?
 
-PIERRE est une intelligence artificielle (IA) **open source** et **plurilingue** au service du mouvement HLM et plus précisément des candidats et des locataires de logements sociaux.
+PIERRE est une intelligence artificielle (IA) **open source**, **plurilingue** et **multicanale** au service du mouvement HLM et plus précisément de ses candidats et locataires.
 
 Plus concrètement encore, PIERRE c'est à la fois :
 
-1. Un **chatbot open source** optimisé pour le mouvement HLM ([démonstration](https://pierre-ia.org)).
+1. Un **chatbot open source** qui répond à 100 % des questions de « premier niveau » des locataires et demandeurs HLM, disponible sur le **Web** ([démonstration](https://pierre-ia.org)) et par **SMS**.
 2. Une **base de connaissances** en **open data** ([consultation](https://kdb.pierre-ia.org)), utilisable indépendamment du chatbot et indispensable à la mise en oeuvre de toutes approches « Retrieval Augmented Generation » ([RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation)) via un LLM.
 
 ## Sommaire
@@ -17,19 +17,23 @@ Plus concrètement encore, PIERRE c'est à la fois :
 <!-- toc -->
 
 - [Contribuer à PIERRE](#contribuer-%C3%A0-pierre)
-- [Changelog + roadmap](#changelog--roadmap)
 - [Fonctionnement + architecture de PIERRE](#fonctionnement--architecture-de-pierre)
   - [Comment fonctionne PIERRE ?](#comment-fonctionne-pierre)
-  - [Technologies](#technologies)
-  - [Modèle de langage](#mod%C3%A8le-de-langage)
+  - [Modèle(s) de langage](#mod%C3%A8les-de-langage)
+  - [L'universel SMS pour les échanges de « premier niveau »](#luniversel-sms-pour-les-%C3%A9changes-de-%C2%AB-premier-niveau-%C2%BB)
+  - [Technologies + Services](#technologies--services)
+  - [Les coûts associés à l'usage de PIERRE](#les-co%C3%BBts-associ%C3%A9s-%C3%A0-lusage-de-pierre)
 - [Comment déployer PIERRE ?](#comment-d%C3%A9ployer-pierre)
   - [Faire héberger PIERRE (le plus simple)](#faire-h%C3%A9berger-pierre-le-plus-simple)
   - [Auto-héberger PIERRE (self-hosting)](#auto-h%C3%A9berger-pierre-self-hosting)
 - [Personnaliser PIERRE (self-hosting)](#personnaliser-pierre-self-hosting)
-  - [Personnaliser l'interface du chatbot](#personnaliser-linterface-du-chatbot)
-  - [Personnaliser la personnalité du chatbot](#personnaliser-la-personnalit%C3%A9-du-chatbot)
+  - [Modifier l'interface du chatbot](#modifier-linterface-du-chatbot)
+  - [Modifier la personnalité du chatbot](#modifier-la-personnalit%C3%A9-du-chatbot)
 - [Installer PIERRE sur votre site web ou extranet-locataire (self-hosting)](#installer-pierre-sur-votre-site-web-ou-extranet-locataire-self-hosting)
+- [Paramétrer PIERRE pour l'utiliser par SMS (self-hosting)](#param%C3%A9trer-pierre-pour-lutiliser-par-sms-self-hosting)
 - [Modifier le modèle de langage/LLM utilisé (self-hosting)](#modifier-le-mod%C3%A8le-de-langagellm-utilis%C3%A9-self-hosting)
+  - [Comment modifier le modèle de langage ?](#comment-modifier-le-mod%C3%A8le-de-langage)
+  - [Quels modèles est-il possible d'utiliser ?](#quels-mod%C3%A8les-est-il-possible-dutiliser)
 - [Suivre et évaluer les conversations de PIERRE (self-hosting)](#suivre-et-%C3%A9valuer-les-conversations-de-pierre-self-hosting)
 - [License](#license)
 
@@ -40,42 +44,64 @@ Plus concrètement encore, PIERRE c'est à la fois :
 - Pour contribuer à la **base de connaissances** de PIERRE, consultez [README.md](https://kdb.pierre-ia.org) (c'est simplissime, y compris pour ceux peu à l'aise avec l'informatique, et cela profite automatiquement à l'ensemble du mouvement HLM).
 - Pour contribuer au code-source du chatbot/LLM, consultez [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-## Changelog + roadmap
-
 Les `releases` de PIERRE [sont consultables ici](https://github.com/charnould/pierre/releases).
-
-- `todo:` Décider du modèle de langage par défault (🇫🇷 Mistral ?)
-- `todo:` Ajouter des statistiques/KPI d'usage et pertinence sur la page `admin`
-- `idea:` Ajouter un `dark mode` ?
-- `idea:` Permettre à l'utilisateur de noter les réponses de PIERRE ?
-- `idea:` Ajouter la lecture à haute voix des réponses ?
 
 ## Fonctionnement + architecture de PIERRE
 
 ### Comment fonctionne PIERRE ?
 
-1. Un utilisateur pose une question à PIERRE.
+1. Un utilisateur pose une question à PIERRE via le web ou par SMS.
 2. Une première passe de LLM/IA corrige et augmente la requête initiale.
 3. Une deuxième passe de LLM/IA s'assure de la validité et sécurité de la requête initiale (ex : impossible d'insulter PIERRE ou d'adresser une question sans lien avec le logement).
 4. La requête validée et augmentée est vectorisée, puis interroge la base de connaissances de PIERRE.
-5. Une dernière passe de LLM/IA génère une réponse sur la base des résultats retournés par la base de connaissances.
+5. Une dernière passe de LLM/IA génère une réponse sur la base des résultats retournés puis réordonnancés de la base de connaissances.
+6. La réponse est retournée quelques secondes plus tard à l'utilisateur via le web ou par SMS.
+7. La conversation se poursuit jusqu'à satisfaction de l'utilisateur (goto 1).
 
-### Technologies
+### Modèle(s) de langage
+
+PIERRE utilise « trois (passes de) LLM » dans cet ordre successif :
+
+1. Un **modèle de génération d'`objets`** transforme la requête de l'utilisateur en une « requête augmentée » (en utilisant des techiques de type HyDE ou Stepback). Tous les LLM ne peuvent générer de tels `objets`. De fait, **le modèle utilisé à ce jour ne peut pas être modifié** (`gpt-4o-mini-2024-07-18`). En conséquence, il est indispensable — lorsque l'on auto-héberge PIERRE — de disposer d'une clef d'API OpenAI.
+
+2. Un **modèle de génération d'`embeddings`** transforme la « requête augmentée » en vecteurs de valeurs numériques qui sont ensuite utilisés pour rechercher les éléments de réponse les plus pertinents dans la base de connaissances de PIERRE. **À ce jour, ce modèle ne peut pas être modifié** (`text-embedding-3-large`). En conséquence, il est indispensable — lorsque l'on auto-héberge PIERRE — de disposer d'une clef d'API OpenAI.
+
+3. Un **modèle de génération de `textes`** génére les réponses textuelles aux utilisateurs. Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Choose Your LLM Model »** — **il est possible de choisir le modèle utilisé** (Mistral, Anthropic, Cohere...) et ce, en modifiant le fichier de configuation (_cf._ infra). Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
+
+### L'universel SMS pour les échanges de « premier niveau »
+
+> [!NOTE]
+> PIERRE propose à ce jour deux modalités d'interaction : via le Web ([démonstration](https://pierre-ia.org)) ou par SMS (Text-to-Text). À court terme, PIERRE va également investiguer une interaction Voice-to-Voice.
+
+En réponse au nouveau plan de numérotation mis en place par l'ARCEP en 2023 (avec l'introduction des numéros commerciaux 09 3x xx xx xx) et pour proposer aux entreprises une **solution universelle** pour converser avec leurs clients, les opérateurs téléphoniques français ont lançé en 2023 (déploiement opérationnel en octobre 2024) une nouvelle offre de SMS conversationnel à destination des entreprises (dite `Time2chat`) qui (i) permet de s'affranchir des plateformes propriétaires (WhatsApp, Telegram, Messenger, etc.) utilisées au maximum par 50 % de la population française et (ii) une instantanéité et délivrabilité exceptionnelles (100 % des téléphones disposent nativement du SMS).
+
+Principales caratéristiques de `Time2chat` (en savoir plus via l'[ARCEP](https://af2m.org/sms-conversationnel-time2chat/) ou via [Orange](https://payservices.orange.com/fr/business-messaging/time2chat)) :
+
+- Une **conversation** est une série de SMS entre une entreprise et un utilisateur.
+- Elle dure maximum 24h et le nombre de SMS échangés durant cette période est illimité.
+- Elle peut être initiée par l'entreprise ou l’utilisateur.
+
+### Technologies + Services
 
 - Language: `Javascript`
 - Framework: [`Hono`](https://github.com/honojs/hono) (with [`Bun`](https://github.com/oven-sh/bun) runtime)
 - Database + Vectorstore: [`SQLite3`](https://sqlite.org) (extended with [`sqlite-vec`](https://github.com/asg017/sqlite-vec))
 - Deployment: [`Kamal`](https://kamal-deploy.org) (with [`Docker`](https://www.docker.com))
+- LLM: « Choose Your LLM Model », par défaut `OpenAI`
+- SMS: `Time2Chat` via [`CM`](https://www.cm.com/fr-fr/)
 - Collaborative writing tool (knowledge database): [`Gitbook`](https://www.gitbook.com)
 
-### Modèle de langage
+### Les coûts associés à l'usage de PIERRE
 
-À ce jour et par défaut, PIERRE utilise l'API d'`OpenAI` :
+Déployer PIERRE sur un serveur génére des coûts (minimes) :
 
-- les vecteurs sont générés avec `text-embedding-3-large`
-- les réponses sont générées avec `gpt-4o-mini-2024-07-18`
-
-Néanmoins, PIERRE est basé sur le principe du **« Choose Your LLM Model »**, c'est-à-dire que – si vous faites le choix d'auto-héberger PIERRE – il vous est possible de choisir le modèle de langage utilisé (Mistral, Anthropic, Cohere...) et ce, en modifiant une ligne dans le fichier de configuation (_cf._ infra).
+- La location d'un serveur (par exemple `CX22` d'[Hetzner](https://www.hetzner.com/cloud/)) : env. 10 € par mois.
+- L'usage d'un LLM via une API, soit (sur la base d'OpenAI utilisée par défaut) :  
+  • Génération de vecteurs : 0.13 $US / 1M tokens avec `text-embedding-3-large`  
+  • Génération de textes : 0,15 $US (input) et 0,60 $US (output) / 1M tokens avec `gpt-4o-mini`
+- (Optionnellement) Les conversations SMS :  
+  • Location d'un numéro de téléphone : 10 € par mois  
+  • Envoi de SMS : 0.09 € par conversation
 
 ## Comment déployer PIERRE ?
 
@@ -84,89 +110,73 @@ Néanmoins, PIERRE est basé sur le principe du **« Choose Your LLM Model »**,
 Principaux avantages :
 
 - Ne jamais avoir à se soucier de serveurs et d'API
-- Bénéficier tout le temps de la dernière version tout en personnalisant PIERRE à l'image de votre organisme
+- Bénéficier tout le temps de la dernière version tout en personnalisant PIERRE à l'image d'un organisme HLM
 
 Adresser un email à charnould@pierre-ia.org (ou charnould@beckrel.com).
 
 ### Auto-héberger PIERRE (self-hosting)
 
-#### Quels sont les coûts associés au déploiement et à l'usage de PIERRE ?
-
-Déployer PIERRE sur vos propres serveurs génére des coûts (minimes) :
-
-- La location d'un serveur (par exemple `cpx11` via [Hetzner](https://www.hetzner.com/cloud/)) : env. 10 € par mois (nul besoin de GPU).
-- L'usage d'un LLM via une API.  
-  Sur la base de l'API d'OpenAI actuellement utilisée par PIERRE :
-  - Génération de vecteurs : 0,13 $US par million de tokens (`text-embedding-3-large`)
-  - Génération de textes : 5 $US (input) ou 15 $US (output) par million de tokens (`gpt-4o-mini`)
-
 #### Faire fonctionner PIERRE en local
 
-1. Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour Linux).
-2. Installer `WSL` et vérifier sa bonne installation ([instructions](https://learn.microsoft.com/fr-fr/windows/wsl/install)).
-3. Installer `Bun` et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
-4. Cloner/forker le présent dépôt.
-5. Lancer `bun install` dans votre terminal pour installer les dépendances.
-6. Renommer le fichier `.env.example` en `.env` et :
+Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour Linux).
 
-   - Renseigner votre clé d'API OpenAI dans la variable d'environnement `OPENAI_API_KEY`. Vous pouvez l'obtenir [ici](https://platform.openai.com/api-keys).
-   - Créer un mot de passe solide (via [Lastpass](https://www.lastpass.com/fr/features/password-generator) par exemple) et le renseigner dans la variable d'environnement `AUTH_SECRET`.
-   - Modifier les mots de passe dans la variable d'environnement `PASSWORDS`. Ces mots de passe permettront notamment de consulter l'historique des conversations entre PIERRE et vos utilisateurs dans une interface web.
-
-7. Lancer PIERRE avec `bun dev`
-8. Et voilà : PIERRE est accessible à http://localhost:3000 et répond à vos questions !
+1. Installer `WSL` et vérifier sa bonne installation ([instructions](https://learn.microsoft.com/fr-fr/windows/wsl/install)).
+2. Installer `Bun` et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
+3. Cloner/forker le présent dépôt.
+4. Lancer `bun install` dans votre terminal pour installer les dépendances.
+5. Renommer le fichier `.env.example` en `.env` et compléter le en suivant ses consignes.
+6. Lancer PIERRE avec `bun dev`.
+7. Et voilà : PIERRE est accessible à http://localhost:3000 et répond à vos questions !
 
 #### Déployer pour la première fois PIERRE sur un serveur
 
-1. Pour déployer PIERRE sur votre propre serveur, il est indispensable d'être parvenu à le faire fonctionner en local (_cf._ supra).
-2. Installer `Docker Desktop` et le lancer ([instructions](https://www.docker.com/products/docker-desktop/)). `Docker` gérera la conteneurisation de PIERRE.
-3. Lancer `gem install kamal -v 1.9` pour installer `Kamal` qui gérera le déploiement de PIERRE ([instructions](https://kamal-deploy.org/docs/installation/)).
-4. Disposer d'un compte `GitHub` et [générer une clef](https://github.com/settings/tokens). `GitHub` fera office de registre de conteneurs lors des déploiements.
-   - on: `write:packagesUpload`
-   - on: `delete:packagesDelete`
-5. Disposer d'un `VPS` (par exemple via [Hetzner](https://www.hetzner.com)) et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
+Pour déployer PIERRE sur votre propre serveur, il est indispensable d'être parvenu à le faire fonctionner en local (_cf._ supra).
+
+1. Installer `Docker Desktop` et le lancer ([instructions](https://www.docker.com/products/docker-desktop/)). `Docker` gérera la conteneurisation de PIERRE.
+2. Lancer `gem install kamal -v 1.9` pour installer `Kamal` qui gérera le déploiement de PIERRE ([instructions](https://kamal-deploy.org/docs/installation/)).
+3. Disposer d'un compte `GitHub` et [générer une clef](https://github.com/settings/tokens). `GitHub` sera le registre de conteneurs lors du déploiement.
+4. Disposer d'un VPS (par exemple `CX22` d'[Hetzner](https://www.hetzner.com/cloud/)) et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
+5. Finaliser les modifications du fichier `.env` que vous avez créé précédemment.
 6. Modifier le fichier de configuration `config/deploy.yml` en suivant les instructions qu'il contient.
 7. Saississez dans votre terminal `kamal setup` et patientez quelques minutes.
 8. Et voilà, PIERRE est accessible à l'adresse IP de votre serveur.
-9. Étapes suivantes (optionnelles) :
-
-- Placer votre IP derrière un proxy pour servir PIERRE via un nom de domaine (via Cloudflare par exemple).
-- Personnaliser PIERRE (_cf._ infra).
-- Afficher PIERRE sur votre site internet ou extranet-locataire (_cf._ infra).
+9. Étapes suivantes (optionnelles) :  
+   • Placer votre IP derrière un proxy pour servir PIERRE via un nom de domaine (ex. Cloudflare)  
+   • Personnaliser PIERRE  
+   • Faire fonctionner PIERRE par SMS  
+   • Afficher PIERRE sur votre site internet ou extranet-locataire
 
 #### Redéployer PIERRE sur un serveur
 
-PIERRE — et notamment sa base de connaissances — [évolue régulièrement](https://github.com/charnould/pierre/releases) et suit la convention `semver`. Pour le mettre à jour :
+PIERRE — notamment sa base de connaissances — [évolue régulièrement](https://github.com/charnould/pierre/releases) et suit la convention `semver`.  
+Pour le mettre à jour :
 
 - Mettez à jour votre fork, puis saississez `kamal deploy` dans votre terminal.
-- Si vous modifiez les variables d'environnement après le premier déploiement, il sera impératif de lancer `kamal env push` avant `kamal deploy`. L'intégralité des commandes de Kamal sont disponibles [ici](https://kamal-deploy.org/docs/commands/view-all-commands).
+- Si vous modifiez les variables d'environnement après le premier déploiement, il sera impératif de lancer `kamal env push` avant `kamal deploy`. L'intégralité des commandes de Kamal est disponible [ici](https://kamal-deploy.org/docs/commands/view-all-commands).
 
 ## Personnaliser PIERRE (self-hosting)
 
 > [!NOTE]
 > Dans les instructions ci-dessous, nous considérons un bailleur social fictif nommé `Stone Habitat` dont le site institutionnel est accessible à `stone-habitat.fr` et qui a déployé sa propre version de PIERRE à l'adresse/IP `180.81.82.83`.
 
-### Personnaliser l'interface du chatbot
+### Modifier l'interface du chatbot
 
 <img src="docs/assets/images/personnalisation-de-pierre.webp" height="400">
 
-1. Dans le répertoire `/assets`, dupliquer le dossier `plainecommunehabitat.fr` et le nommer `stone-habitat.fr`. Les consignes suivantes s'appliquent à ce nouveau répertoire `assets/stone-habitat.fr`. (Vous pouvez supprimer l'ensemble des sous-dossiers contenus dans `/assets` à l'exception de `pierre-ia.org` qui à la fois est la version par défaut et contient des fichiers indispensables au fonctionnement de PIERRE.)
+1. Dans le répertoire `./assets`, dupliquer le dossier `plainecommunehabitat.fr` et le nommer `stone-habitat.fr`. Les consignes suivantes s'appliquent à ce nouveau répertoire. (Vous pouvez supprimer l'ensemble des sous-dossiers contenus dans `./assets` à l'exception de `pierre-ia.org` qui est à la fois la version par défaut et contient des fichiers indispensables au fonctionnement de PIERRE.)
 2. Créer une icône `system.svg` et remplacer la précédente. Cette icône est celle qui apparait dans l'interface du chatbot (au dessus de « Bonjour 👋 »).
-3. [Générer les icônes](https://www.pwabuilder.com/imageGenerator) qui permettront d'ajouter votre chatbot sur l'écran d'accueil des smartphones de vos utilisateurs et glisser les dans le dossier `icons`. Conservez la structure du répertoire et le nommage des fichiers (automatique).
-4. Modifier dans `manifest.json` :
-
-- `short_name` par le nom souhaité de votre chatbot
-- `start_url` par `/?config=stone-habitat.fr`
-
-5. Modifier dans `config.ts` :
-
-- `id` avec `stone-habitat.fr`
-- `greeting` qui est le message d'accueil de votre chatbot
-- `examples` qui sont les exemples proposés après votre message d'accueil
+3. [Générer les icônes](https://www.pwabuilder.com/imageGenerator) qui permettront d'ajouter votre chatbot sur l'écran d'accueil des smartphones de vos utilisateurs et les glisser dans le dossier `icons`. Conservez la structure du répertoire et le nommage des fichiers (automatique).
+4. Modifier dans `manifest.json` :  
+   • `short_name` par le nom souhaité de votre chatbot  
+   • `start_url` par `/?config=stone-habitat.fr`
+5. Modifier dans `config.ts` :  
+   • `id` avec `stone-habitat.fr`  
+   • `greeting` qui est le message d'accueil de votre chatbot  
+   • `examples` qui sont les exemples proposés après votre message d'accueil
 
 6. Et voilà, votre chabot personnalisé est disponible à http://localhost:3000/?config=stone-habitat.fr.
 
-### Personnaliser la personnalité du chatbot
+### Modifier la personnalité du chatbot
 
 Si vous avez à ce stade personnalisé visuellement votre chatbot (_cf_. supra), et bien qu'il affiche des icônes et les salutations de votre organisme, **il ne se présente PAS encore comme le chatbot de votre organisme** (essayez en lui demandant qui il est !).
 
@@ -213,32 +223,39 @@ avec :
 - `data-url` : le domaine/IP (sans slash de fin) du serveur où PIERRE est accessible
 - `data-configuration` : le nom de domaine de votre organisme qui est également le nom du répertoire que vous avez créé plus tôt dans `./assets` (_cf._ supra) ou `pierre-ia.org` pour la version par défaut.
 
+## Paramétrer PIERRE pour l'utiliser par SMS (self-hosting)
+
+1. Obtenir un numéro de téléphone compatible
+2. Modifier `phone` dans votre fichier `config.ts` avec votre numéro de téléphone
+
+TODO/À FINALISER
+
 ## Modifier le modèle de langage/LLM utilisé (self-hosting)
 
-TODO / À FINALISER
-
 > [!IMPORTANT]
-> Il est très fortement recommandé – à des fins de tests – de disposer d'une version fonctionnelle de PIERRE en local avant de changer le modèle de langage (LLM).
+> Il est très fortement recommandé de disposer d'une version fonctionnelle de PIERRE en local avant de changer le modèle de langage (LLM) et ce, pour être en mesure d'effectuer des tests. En effet, modifier le modèle de langage peut avoir quelques effets sur la qualité et vitesse des réponses de PIERRE.
 
-> [!NOTE]
-> Modifier le modèle de langage de PIERRE peut avoir des effets indésirables, à savoir : (1) une moindre qualité des réponses du fait de l'usage d'un LLM possiblement moins performant, (2) une moindre qualité des réponses car les _prompts_ sont à ce jour optimisés pour `gpt-4o-mini` et (3) des réponses moins rapides si l'API utilisée est moins performante.
+### Comment modifier le modèle de langage ?
 
-PIERRE utilise – en fait – deux « LLM » :
+Pour modifier le **modèle de génération de `textes`**, il suffit de :
 
-- Un **modèle de génération d'`embedding`** qui transforme les questions des utilisateurs en vecteurs de valeurs numériques qui sont ensuite utilisés pour rechercher les éléments de réponse les plus pertinents dans la base de connaissances (par similarité-cosinus). **À ce jour, ce modèle ne peut pas être modifié**. En conséquence, il est indispensable – lorsque l'on auto-héberge PIERRE – de disposer d'une clef d'API OpenAI (PIERRE utilise `text-embedding-3-large`).
+- Modifier `model` dans votre fichier `config.ts` par la valeur souhaitée
+- Renseigner la clef d'API correspondante dans les variables d'environnement (`.env`)
 
-- Un **modèle de génération de texte** qui génére les réponses aux utilisateurs. Lorsque l'on auto-héberge PIERRE, **il est possible de changer ce modèle** par ceux de Mistral, Anthropic, Cohere ou Google. Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
+### Quels modèles est-il possible d'utiliser ?
+
+PIERRE permet – à ce stade – l'usage des principaux modèles de langage, à savoir : `Anthropic`, `Cohere`, `Google`, `Mistral` et `OpenAI`.
 
 ## Suivre et évaluer les conversations de PIERRE (self-hosting)
 
 Si vous auto-hébergez PIERRE :
 
 1. Rendez-vous à l'adresse https://180.81.82.83/eval (à remplacer par votre domaine/IP)
-2. Saisisssez un des mots de passe contenus dans la variable d'environnement `PASSWORDS` (`.env`)
+2. Saisissez un des mots de passe contenus dans la variable d'environnement `AUTH_PASSWORDS` (`.env`)
 3. Vous pouvez dorénavant consulter, noter et annoter les échanges de PIERRE avec vos utilisateurs
 
 ## License
 
-Le code-source du présent dépôt est sous license [GNU Affero General Public License Version 3](https://github.com/charnould/pierre/blob/master/LICENSE.md). La base de connaissance (dossier `knowledge`) est sous license [Creative Commons BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+Le code-source du présent dépôt est sous license [GNU Affero General Public License Version 3](https://github.com/charnould/pierre/blob/master/LICENSE.md). La base de connaissances (dossier `knowledge`) et `utils/knowledge/datastore.sqlite` sont sous license [Creative Commons BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 
-Copyright (c) 2024, Charles-Henri Arnould/BECKREL (charnould@pierre-ia.org) et les contributeurs.
+Copyright (c) 2024-aujourd'hui, Charles-Henri Arnould/BECKREL (charnould@pierre-ia.org) et les contributeurs.
