@@ -5,7 +5,7 @@ export const controller = async (c: Context) => {
   const { password, action } = await c.req.parseBody()
 
   if (action === 'login') {
-    const passwords = Bun.env.PASSWORDS?.split(',')
+    const passwords = Bun.env.AUTH_PASSWORDS?.split(',')
     const is_legit = passwords?.includes(password as string)
 
     if (is_legit === true) {
