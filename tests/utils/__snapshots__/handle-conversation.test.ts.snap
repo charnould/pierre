@@ -1,16 +1,16 @@
 // Bun Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`should insert 3 replies and get 2 conversations 1`] = `
+exports[`should insert 3 replies and retrieve 2 conversations 1`] = `
 [
   {
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Qui es-tu ?",
+    "conv_id": "id_1",
     "cus_comment": null,
     "cus_satisfaction": null,
     "ext_comment": null,
     "ext_satisfaction": null,
-    "id": "id_1",
     "model": "openai('gpt-4o-mini-2024-07-18')",
     "org_comment": null,
     "org_satisfaction": null,
@@ -23,11 +23,11 @@ exports[`should insert 3 replies and get 2 conversations 1`] = `
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Je suis Pierre !",
+    "conv_id": "id_1",
     "cus_comment": null,
     "cus_satisfaction": null,
     "ext_comment": null,
     "ext_satisfaction": null,
-    "id": "id_1",
     "model": "openai('gpt-4o-mini-2024-07-18')",
     "org_comment": null,
     "org_satisfaction": null,
@@ -39,17 +39,17 @@ exports[`should insert 3 replies and get 2 conversations 1`] = `
 ]
 `;
 
-exports[`should insert 3 replies and get 2 conversations 2`] = `
+exports[`should insert 3 replies and retrieve 2 conversations 2`] = `
 [
   {
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Bonjour",
+    "conv_id": "id_2",
     "cus_comment": null,
     "cus_satisfaction": null,
     "ext_comment": null,
     "ext_satisfaction": null,
-    "id": "id_2",
     "model": "openai('gpt-4o-mini-2024-07-18')",
     "org_comment": null,
     "org_satisfaction": null,
@@ -61,19 +61,19 @@ exports[`should insert 3 replies and get 2 conversations 2`] = `
 ]
 `;
 
-exports[`should score a conversation for customer, organization and external 1`] = `
+exports[`should score 2 conversations for customer + organization + external 1`] = `
 [
   {
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Qui es-tu ?",
+    "conv_id": "id_1",
     "cus_comment": "C'est nul pour le Customer",
     "cus_satisfaction": 0,
     "ext_comment": null,
     "ext_satisfaction": null,
-    "id": "id_1",
     "model": "openai('gpt-4o-mini-2024-07-18')",
-    "org_comment": "C'est 1 pour l'Organzation",
+    "org_comment": "C'est 1 pour l'Organization",
     "org_satisfaction": 1,
     "prompt_tokens": null,
     "role": "user",
@@ -84,13 +84,13 @@ exports[`should score a conversation for customer, organization and external 1`]
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Je suis Pierre !",
+    "conv_id": "id_1",
     "cus_comment": "C'est nul pour le Customer",
     "cus_satisfaction": 0,
     "ext_comment": null,
     "ext_satisfaction": null,
-    "id": "id_1",
     "model": "openai('gpt-4o-mini-2024-07-18')",
-    "org_comment": "C'est 1 pour l'Organzation",
+    "org_comment": "C'est 1 pour l'Organization",
     "org_satisfaction": 1,
     "prompt_tokens": null,
     "role": "assistant",
@@ -100,17 +100,17 @@ exports[`should score a conversation for customer, organization and external 1`]
 ]
 `;
 
-exports[`should score a conversation for customer, organization and external 2`] = `
+exports[`should score 2 conversations for customer + organization + external 2`] = `
 [
   {
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Bonjour",
+    "conv_id": "id_2",
     "cus_comment": null,
     "cus_satisfaction": null,
     "ext_comment": "C'est 2 pour l'External",
     "ext_satisfaction": 2,
-    "id": "id_2",
     "model": "openai('gpt-4o-mini-2024-07-18')",
     "org_comment": null,
     "org_satisfaction": null,
@@ -128,11 +128,11 @@ exports[`should insert 2 replies (from 1 conversation) and delete this conversat
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Conv 3_1",
+    "conv_id": "id_3",
     "cus_comment": null,
     "cus_satisfaction": null,
     "ext_comment": null,
     "ext_satisfaction": null,
-    "id": "id_3",
     "model": "openai('gpt-4o-mini-2024-07-18')",
     "org_comment": null,
     "org_satisfaction": null,
@@ -145,11 +145,11 @@ exports[`should insert 2 replies (from 1 conversation) and delete this conversat
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Conv 3_2",
+    "conv_id": "id_3",
     "cus_comment": null,
     "cus_satisfaction": null,
     "ext_comment": null,
     "ext_satisfaction": null,
-    "id": "id_3",
     "model": "openai('gpt-4o-mini-2024-07-18')",
     "org_comment": null,
     "org_satisfaction": null,
@@ -168,75 +168,19 @@ exports[`should insert 2 replies (from 1 conversation) and delete this conversat
 }
 `;
 
-exports[`should get ALL conversations 1`] = `
-[
-  {
-    "completion_tokens": null,
-    "config": "pierre-ia.org",
-    "content": "Qui es-tu ?",
-    "cus_comment": "C'est nul pour le Customer",
-    "cus_satisfaction": 0,
-    "ext_comment": null,
-    "ext_satisfaction": null,
-    "id": "id_1",
-    "model": "openai('gpt-4o-mini-2024-07-18')",
-    "org_comment": "C'est 1 pour l'Organzation",
-    "org_satisfaction": 1,
-    "prompt_tokens": null,
-    "role": "user",
-    "timestamp": "2012-11-10T09:08:07Z",
-    "total_tokens": null,
-  },
-  {
-    "completion_tokens": null,
-    "config": "pierre-ia.org",
-    "content": "Je suis Pierre !",
-    "cus_comment": "C'est nul pour le Customer",
-    "cus_satisfaction": 0,
-    "ext_comment": null,
-    "ext_satisfaction": null,
-    "id": "id_1",
-    "model": "openai('gpt-4o-mini-2024-07-18')",
-    "org_comment": "C'est 1 pour l'Organzation",
-    "org_satisfaction": 1,
-    "prompt_tokens": null,
-    "role": "assistant",
-    "timestamp": "2012-11-10T09:08:07Z",
-    "total_tokens": null,
-  },
-  {
-    "completion_tokens": null,
-    "config": "pierre-ia.org",
-    "content": "Bonjour",
-    "cus_comment": null,
-    "cus_satisfaction": null,
-    "ext_comment": "C'est 2 pour l'External",
-    "ext_satisfaction": 2,
-    "id": "id_2",
-    "model": "openai('gpt-4o-mini-2024-07-18')",
-    "org_comment": null,
-    "org_satisfaction": null,
-    "prompt_tokens": null,
-    "role": "user",
-    "timestamp": "2012-11-10T09:08:07Z",
-    "total_tokens": null,
-  },
-]
-`;
-
 exports[`should retrieve all conversations 1`] = `
 [
   {
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Qui es-tu ?",
+    "conv_id": "id_1",
     "cus_comment": "C'est nul pour le Customer",
     "cus_satisfaction": 0,
     "ext_comment": null,
     "ext_satisfaction": null,
-    "id": "id_1",
     "model": "openai('gpt-4o-mini-2024-07-18')",
-    "org_comment": "C'est 1 pour l'Organzation",
+    "org_comment": "C'est 1 pour l'Organization",
     "org_satisfaction": 1,
     "prompt_tokens": null,
     "role": "user",
@@ -247,13 +191,13 @@ exports[`should retrieve all conversations 1`] = `
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Je suis Pierre !",
+    "conv_id": "id_1",
     "cus_comment": "C'est nul pour le Customer",
     "cus_satisfaction": 0,
     "ext_comment": null,
     "ext_satisfaction": null,
-    "id": "id_1",
     "model": "openai('gpt-4o-mini-2024-07-18')",
-    "org_comment": "C'est 1 pour l'Organzation",
+    "org_comment": "C'est 1 pour l'Organization",
     "org_satisfaction": 1,
     "prompt_tokens": null,
     "role": "assistant",
@@ -264,194 +208,11 @@ exports[`should retrieve all conversations 1`] = `
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Bonjour",
+    "conv_id": "id_2",
     "cus_comment": null,
     "cus_satisfaction": null,
     "ext_comment": "C'est 2 pour l'External",
     "ext_satisfaction": 2,
-    "id": "id_2",
-    "model": "openai('gpt-4o-mini-2024-07-18')",
-    "org_comment": null,
-    "org_satisfaction": null,
-    "prompt_tokens": null,
-    "role": "user",
-    "timestamp": "2012-11-10T09:08:07Z",
-    "total_tokens": null,
-  },
-]
-`;
-
-exports[`should insert 3 replies and retrieve 2 conversations 1`] = `
-[
-  {
-    "completion_tokens": null,
-    "config": "pierre-ia.org",
-    "content": "Qui es-tu ?",
-    "cus_comment": null,
-    "cus_satisfaction": null,
-    "ext_comment": null,
-    "ext_satisfaction": null,
-    "id": "id_1",
-    "model": "openai('gpt-4o-mini-2024-07-18')",
-    "org_comment": null,
-    "org_satisfaction": null,
-    "prompt_tokens": null,
-    "role": "user",
-    "timestamp": "2012-11-10T09:08:07Z",
-    "total_tokens": null,
-  },
-  {
-    "completion_tokens": null,
-    "config": "pierre-ia.org",
-    "content": "Je suis Pierre !",
-    "cus_comment": null,
-    "cus_satisfaction": null,
-    "ext_comment": null,
-    "ext_satisfaction": null,
-    "id": "id_1",
-    "model": "openai('gpt-4o-mini-2024-07-18')",
-    "org_comment": null,
-    "org_satisfaction": null,
-    "prompt_tokens": null,
-    "role": "assistant",
-    "timestamp": "2012-11-10T09:08:07Z",
-    "total_tokens": null,
-  },
-]
-`;
-
-exports[`should insert 3 replies and retrieve 2 conversations 2`] = `
-[
-  {
-    "completion_tokens": null,
-    "config": "pierre-ia.org",
-    "content": "Bonjour",
-    "cus_comment": null,
-    "cus_satisfaction": null,
-    "ext_comment": null,
-    "ext_satisfaction": null,
-    "id": "id_2",
-    "model": "openai('gpt-4o-mini-2024-07-18')",
-    "org_comment": null,
-    "org_satisfaction": null,
-    "prompt_tokens": null,
-    "role": "user",
-    "timestamp": "2012-11-10T09:08:07Z",
-    "total_tokens": null,
-  },
-]
-`;
-
-exports[`should score 1 conversation for customer + organization + external 1`] = `
-[
-  {
-    "completion_tokens": null,
-    "config": "pierre-ia.org",
-    "content": "Qui es-tu ?",
-    "cus_comment": "C'est nul pour le Customer",
-    "cus_satisfaction": 0,
-    "ext_comment": null,
-    "ext_satisfaction": null,
-    "id": "id_1",
-    "model": "openai('gpt-4o-mini-2024-07-18')",
-    "org_comment": "C'est 1 pour l'Organzation",
-    "org_satisfaction": 1,
-    "prompt_tokens": null,
-    "role": "user",
-    "timestamp": "2012-11-10T09:08:07Z",
-    "total_tokens": null,
-  },
-  {
-    "completion_tokens": null,
-    "config": "pierre-ia.org",
-    "content": "Je suis Pierre !",
-    "cus_comment": "C'est nul pour le Customer",
-    "cus_satisfaction": 0,
-    "ext_comment": null,
-    "ext_satisfaction": null,
-    "id": "id_1",
-    "model": "openai('gpt-4o-mini-2024-07-18')",
-    "org_comment": "C'est 1 pour l'Organzation",
-    "org_satisfaction": 1,
-    "prompt_tokens": null,
-    "role": "assistant",
-    "timestamp": "2012-11-10T09:08:07Z",
-    "total_tokens": null,
-  },
-]
-`;
-
-exports[`should score 1 conversation for customer + organization + external 2`] = `
-[
-  {
-    "completion_tokens": null,
-    "config": "pierre-ia.org",
-    "content": "Bonjour",
-    "cus_comment": null,
-    "cus_satisfaction": null,
-    "ext_comment": "C'est 2 pour l'External",
-    "ext_satisfaction": 2,
-    "id": "id_2",
-    "model": "openai('gpt-4o-mini-2024-07-18')",
-    "org_comment": null,
-    "org_satisfaction": null,
-    "prompt_tokens": null,
-    "role": "user",
-    "timestamp": "2012-11-10T09:08:07Z",
-    "total_tokens": null,
-  },
-]
-`;
-
-exports[`should score 2 conversations for customer + organization + external 1`] = `
-[
-  {
-    "completion_tokens": null,
-    "config": "pierre-ia.org",
-    "content": "Qui es-tu ?",
-    "cus_comment": "C'est nul pour le Customer",
-    "cus_satisfaction": 0,
-    "ext_comment": null,
-    "ext_satisfaction": null,
-    "id": "id_1",
-    "model": "openai('gpt-4o-mini-2024-07-18')",
-    "org_comment": "C'est 1 pour l'Organzation",
-    "org_satisfaction": 1,
-    "prompt_tokens": null,
-    "role": "user",
-    "timestamp": "2012-11-10T09:08:07Z",
-    "total_tokens": null,
-  },
-  {
-    "completion_tokens": null,
-    "config": "pierre-ia.org",
-    "content": "Je suis Pierre !",
-    "cus_comment": "C'est nul pour le Customer",
-    "cus_satisfaction": 0,
-    "ext_comment": null,
-    "ext_satisfaction": null,
-    "id": "id_1",
-    "model": "openai('gpt-4o-mini-2024-07-18')",
-    "org_comment": "C'est 1 pour l'Organzation",
-    "org_satisfaction": 1,
-    "prompt_tokens": null,
-    "role": "assistant",
-    "timestamp": "2012-11-10T09:08:07Z",
-    "total_tokens": null,
-  },
-]
-`;
-
-exports[`should score 2 conversations for customer + organization + external 2`] = `
-[
-  {
-    "completion_tokens": null,
-    "config": "pierre-ia.org",
-    "content": "Bonjour",
-    "cus_comment": null,
-    "cus_satisfaction": null,
-    "ext_comment": "C'est 2 pour l'External",
-    "ext_satisfaction": 2,
-    "id": "id_2",
     "model": "openai('gpt-4o-mini-2024-07-18')",
     "org_comment": null,
     "org_satisfaction": null,

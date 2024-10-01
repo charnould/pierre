@@ -2,10 +2,8 @@ import type { Config } from '../../utils/_schema'
 
 export default {
   id: 'domofrance.fr',
-  whatsapp: 'whatsapp:+00000000000',
-  // NE PAS MODIFIER LE MODELE
-  // Cette fonctionnalité n'est pas encore finalisée
   model: "openai('gpt-4o-mini-2024-07-18')",
+  phone: '+3393xxxxxxx',
   context:
     'The user is a client of Domofrance, a social housing company around Bordeaux in France.',
   persona:
