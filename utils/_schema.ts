@@ -2,40 +2,58 @@ import { z } from 'zod'
 
 //
 //
+// prettier-ignore
+// biome-ignore format: readability
+// Incoming SMS parsing schema
+export const SMS = z.object({
+  role      : z.string(),
+  config    : z.string(),
+  conv_id   : z.string(),
+  phone     : z.string().nullable(),
+  to        : z.string(),
+  content   : z.string().trim()
+}).or(z.null())
+
+//
 //
 // prettier-ignore
 // biome-ignore format: readability
+// `./assets/Config` schema
 export const Config = z.object({
-  id                  : z.string(),
-  whatsapp            : z.string().nullable(),
-  model               : z.string(),
-  persona             : z.string(),
-  context             : z.string(),
-  greeting            : z.array(z.string()),
-  examples            : z.array(z.string()),
+  id        : z.string(),
+  phone     : z.string().nullable(), // SMS + Voice phone number
+  model     : z.string(),
+  persona   : z.string(),
+  context   : z.string(),
+  greeting  : z.array(z.string()),
+  examples  : z.array(z.string())
 })
 
-//
 //
 //
 // prettier-ignore
 // biome-ignore format: readability
 // Reflects telemetry database schema
 export const Reply = z.object({
-    id                  : z.string(),
-    config              : z.string(),
-    // TODO: make DSI able to pass the model they are using (for telemetry)
-    model               : z.string().default('gpt-4o-mini-2024-07-18'),
-    role                : z.enum(['assistant', 'user', 'system']),
-    timestamp           : z.string(),
-    content             : z.string(),
-    user_score          : z.number().nullish(),
-    reviewer_score      : z.number().nullish(),
-    reviewer_comment    : z.string().nullish(),
-    prompt_tokens       : z.number().nullish(),
-    completion_tokens   : z.number().nullish(),
-    total_tokens        : z.number().nullish()
-  })
+  // Globals
+  conv_id           : z.string(),
+  role              : z.enum(['assistant', 'user', 'system']).default('user'),
+  model             : z.string(),
+  config            : z.string(),
+  content           : z.string(),
+  timestamp         : z.string(),
+  // Satisfaction
+  cus_satisfaction  : z.number().nullish(), // customer satisfaction
+  org_satisfaction  : z.number().nullish(), // social housing organization satisfaction
+  ext_satisfaction  : z.number().nullish(), // pierre `external `satisfaction
+  cus_comment       : z.string().nullish(),
+  org_comment       : z.string().nullish(),
+  ext_comment       : z.string().nullish(),
+  // LLM usage
+  prompt_tokens     : z.number().nullish(),
+  completion_tokens : z.number().nullish(),
+  total_tokens      : z.number().nullish()
+})
 
 //
 //
@@ -45,11 +63,9 @@ export const Reply = z.object({
 export const AIContext = z.object({
     timestamp           : z.string().datetime().nullish().default(null),
     role                : z.enum(['assistant', 'user', 'system']),
-    // TODO: make DSI able to pass the model they are using (for telemetry)
-    model               : z.string().default('gpt-4o-mini-2024-07-18'),
     content             : z.string(),
     chunks              : z.array(z.string()).nullish().default(null),
-    id                  : z.string(),
+    conv_id             : z.string(),
     config              : z.string().or(Config),
     contains_profanity  : z.boolean().default(false),
     is_greeting         : z.boolean().default(false),
@@ -58,10 +74,10 @@ export const AIContext = z.object({
     original_followup   : z.string().nullish().default(null),
     translated_followup : z.string().nullish().default(null),
     lang                : z.string().nullish().default(null),
-    queries             : z.array(z.string()).nullish().default(null),
+    queries             : z.array(z.string()).length(3).nullish().default(null),
     stepback            : z.string().nullish().default(null),
     hyde                : z.array(z.string()).nullish().default(null),
-    keywords            : z.array(z.string()).nullish().default(null),
+    keywords            : z.array(z.string()).length(3).nullish().default(null),
     conversation        : z.array(z.object({
                           role    : z.enum(['assistant', 'user', 'system']),
                           content : z.string()
@@ -81,6 +97,7 @@ export const AIContext = z.object({
 //
 //
 //
+export type SMS = z.infer<typeof SMS>
 export type Reply = z.infer<typeof Reply>
 export type Config = z.infer<typeof Config>
 export type AIContext = z.infer<typeof AIContext>
