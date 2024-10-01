@@ -31,14 +31,14 @@ beforeAll(() => {
 it('should insert 3 replies and retrieve 2 conversations', async () => {
   // id_1
   const r_1_1 = await AIContext.parseAsync({
-    id: 'id_1',
+    conv_id: 'id_1',
     config: 'pierre-ia.org',
     role: 'user',
     content: 'Qui es-tu ?'
   })
 
   const r_1_2 = await AIContext.parseAsync({
-    id: 'id_1',
+    conv_id: 'id_1',
     config: 'pierre-ia.org',
     role: 'assistant',
     content: 'Je suis Pierre !'
@@ -46,7 +46,7 @@ it('should insert 3 replies and retrieve 2 conversations', async () => {
 
   // id_2
   const r_2_1 = await AIContext.parseAsync({
-    id: 'id_2',
+    conv_id: 'id_2',
     config: 'pierre-ia.org',
     role: 'user',
     content: 'Bonjour'
@@ -57,8 +57,8 @@ it('should insert 3 replies and retrieve 2 conversations', async () => {
   save_reply(r_2_1, false)
 
   // Tests
-  expect(get_conversation(r_1_1.id)).toMatchSnapshot()
-  expect(get_conversation(r_2_1.id)).toMatchSnapshot()
+  expect(get_conversation(r_1_1.conv_id)).toMatchSnapshot()
+  expect(get_conversation(r_2_1.conv_id)).toMatchSnapshot()
 })
 
 //
@@ -70,7 +70,7 @@ it('should insert 3 replies and retrieve 2 conversations', async () => {
 it('should score 2 conversations for customer + organization + external', () => {
   score_conversation(
     {
-      id: 'id_1',
+      conv_id: 'id_1',
       scorer: 'customer',
       score: 0,
       comment: "C'est nul pour le Customer"
@@ -80,17 +80,17 @@ it('should score 2 conversations for customer + organization + external', () => 
 
   score_conversation(
     {
-      id: 'id_1',
+      conv_id: 'id_1',
       scorer: 'organization',
       score: 1,
-      comment: "C'est 1 pour l'Organzation"
+      comment: "C'est 1 pour l'Organization"
     },
     false
   )
 
   score_conversation(
     {
-      id: 'id_2',
+      conv_id: 'id_2',
       scorer: 'external',
       score: 2,
       comment: "C'est 2 pour l'External"
@@ -111,14 +111,14 @@ it('should score 2 conversations for customer + organization + external', () => 
 it('should insert 2 replies (from 1 conversation) and delete this conversation', async () => {
   // id_3
   const r_3_1 = await AIContext.parseAsync({
-    id: 'id_3',
+    conv_id: 'id_3',
     config: 'pierre-ia.org',
     role: 'user',
     content: 'Conv 3_1'
   })
 
   const r_3_2 = await AIContext.parseAsync({
-    id: 'id_3',
+    conv_id: 'id_3',
     config: 'pierre-ia.org',
     role: 'assistant',
     content: 'Conv 3_2'
@@ -128,8 +128,8 @@ it('should insert 2 replies (from 1 conversation) and delete this conversation',
   save_reply(r_3_2, false)
 
   // Tests
-  expect(get_conversation(r_3_1.id)).toMatchSnapshot()
-  expect(delete_conversation(r_3_1.id)).toMatchSnapshot()
+  expect(get_conversation(r_3_1.conv_id)).toMatchSnapshot()
+  expect(delete_conversation(r_3_1.conv_id)).toMatchSnapshot()
 })
 
 //

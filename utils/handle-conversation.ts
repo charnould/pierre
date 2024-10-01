@@ -12,8 +12,8 @@ export const get_conversation = (conv_id: string) => {
 
   if (tdb instanceof Database) {
     return tdb
-      .prepare('SELECT * FROM telemetry WHERE id = $id ORDER BY timestamp ')
-      .all({ $id: conv_id }) as Reply[]
+      .prepare('SELECT * FROM telemetry WHERE conv_id = $conv_id ORDER BY timestamp ')
+      .all({ $conv_id: conv_id }) as Reply[]
   }
 
   throw new Error('Invalid database type for telemetry_db')
@@ -27,7 +27,7 @@ export const delete_conversation = (conv_id: string) => {
   const tdb = db('telemetry')
 
   if (tdb instanceof Database) {
-    return tdb.prepare('DELETE FROM telemetry WHERE id = $id').run({ $id: conv_id })
+    return tdb.prepare('DELETE FROM telemetry WHERE conv_id = $conv_id').run({ $conv_id: conv_id })
   }
 
   throw new Error('Invalid database type for telemetry_db')
@@ -46,7 +46,7 @@ export const save_reply = async (context: AIContext, telemetry: boolean) => {
       telemetry_db
         .prepare(
           `INSERT INTO telemetry (
-            id,
+            conv_id,
             config,
             model,
             role,
@@ -59,7 +59,7 @@ export const save_reply = async (context: AIContext, telemetry: boolean) => {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
         )
         .run(
-          context.id,
+          context.conv_id,
           context.config.id,
           context.config.model,
           context.role,
@@ -88,7 +88,10 @@ export const save_reply = async (context: AIContext, telemetry: boolean) => {
 // Score ONE conversation (= all parts/replies)
 // Test: ok
 // TODO: Test "outside telemetry"
-export const score_conversation = async ({ id, scorer, score, comment }, telemetry: boolean) => {
+export const score_conversation = async (
+  { conv_id, scorer, score, comment },
+  telemetry: boolean
+) => {
   try {
     const tdb = db('telemetry')
 
@@ -103,9 +106,9 @@ export const score_conversation = async ({ id, scorer, score, comment }, telemet
             ${scorer === 'external' ? 'ext_comment = $comment' : ''}
             ${scorer === 'organization' ? 'org_satisfaction = $score ,' : ''}
             ${scorer === 'organization' ? 'org_comment = $comment' : ''}
-          WHERE id = $id `
+          WHERE conv_id = $conv_id `
         )
-        .run({ $id: id, $score: score, $comment: comment })
+        .run({ $conv_id: conv_id, $score: score, $comment: comment })
     }
 
     // Telemetry
@@ -114,7 +117,7 @@ export const score_conversation = async ({ id, scorer, score, comment }, telemet
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: id,
+          conv_id: conv_id,
           scorer: scorer,
           score: score,
           comment: comment
