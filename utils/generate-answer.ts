@@ -20,12 +20,12 @@ export const answer_user = async (context: AIContext, options: { is_sms: boolean
   //
   // Add prompt to conversation history
   context.conversation.push({
-    role: 'assistant',
+    role: 'user',
     content: `
     
 # YOUR PERSONA #
 
-${context.config.persona}
+${(context.config as { persona: string }).persona}
       
 # OBJECTIVE #
 
@@ -90,7 +90,7 @@ YOUR ANSWER:
 
 export const reach_deadlock = async (context: AIContext, options: { is_sms: boolean }) => {
   // Start with a prompt containing only chatbot persona
-  let prompt = `# YOUR PERSONA #\n\n${context.config.persona}\n\n`
+  let prompt = `# YOUR PERSONA #\n\n${(context.config as { persona: string }).persona}\n\n`
 
   // If context DOES contain profanity
   if (context.contains_profanity === true) {
@@ -124,7 +124,7 @@ YOUR ANSWER:`
     }
     if (context.is_about_yourself === true) {
       prompt +=
-        '- Provide a **brief and professional introduction** about yourself in 20-40 words.\n'
+        '- Provide a **brief and professional introduction** about yourself in 30-50 words.\n'
     }
     if (context.is_about_housing === false) {
       prompt += `- Answer user question in 10-30 words and explain that while you have general knowledge about the user's query, you are **specifically designed to answer only questions about housing**.\n`
@@ -146,7 +146,7 @@ YOUR ANSWER:`
 
   // Add prompt to conversation history
   context.conversation.push({
-    role: 'assistant',
+    role: 'user',
     content: prompt.trim()
   })
 
