@@ -3,7 +3,7 @@ import { generateObject } from 'ai'
 import { z } from 'zod'
 import type { AIContext } from './_schema'
 
-const openai = createOpenAI({ apiKey: Bun.env.OPENAI_API_KEY, compatibility: 'strict' })
+const openai = createOpenAI({ compatibility: 'strict' })
 
 //
 // ███████╗███╗   ██╗██╗  ██╗ █████╗ ███╗   ██╗ ██████╗███████╗
@@ -21,11 +21,10 @@ const openai = createOpenAI({ apiKey: Bun.env.OPENAI_API_KEY, compatibility: 'st
 
 export const enhance_query = async (context: AIContext) => {
   //
-  //
-  let textified_conversation = ''
+  let txt_conversation = ''
   for (const c of context.conversation) {
     const role = c.role.toUpperCase()
-    textified_conversation += `<${role}>${c.content}</${role}>\n`
+    txt_conversation += `<${role}>${c.content}</${role}>\n`
   }
 
   //
@@ -35,79 +34,52 @@ export const enhance_query = async (context: AIContext) => {
     // prettier-ignore
     // biome-ignore format: readability
     schema: z.object({
-        lang                : z.string().describe('User language (in english)'),
-        contains_profanity  : z.boolean().describe('Does user last input contains profanity?'),
-        is_greeting         : z.boolean().describe('Does user last input is a greeting?'),
-        is_about_yourself   : z.boolean().describe('Does user question is about yourself?'),
-        is_about_housing    : z.boolean().describe('Is translated follow up about housing?'),
-        original_followup   : z.string().describe('User follow up'),
-        translated_followup : z.string().describe('User follow up in french language'),
-        queries             : z.array(z.string()).describe('Best search queries for web search engine'),
-        stepback            : z.string().describe('A more generic question'),
-        hyde                : z.array(z.string()).describe('Three short sentences answering queries and stepback'),
+      lang                : z.string().min(1).toLowerCase().describe('User language (in English)'),
+      contains_profanity  : z.boolean().describe('Does the user input contain profanity?'),
+      is_greeting         : z.boolean().describe('Is the input a greeting?'),
+      is_about_yourself   : z.boolean().describe('Is the input about the assistant itself?'),
+      is_about_housing    : z.boolean().describe('Is the input about housing?'),
+      original_followup   : z.string().min(1).describe('Original user follow-up'),
+      translated_followup : z.string().min(1).describe('Original user follow-up, or follow-up translated into French if needed'),
+      queries             : z.array(z.string()).length(3).describe('Optimized search queries for a web search'),
+      stepback            : z.string().min(1).describe('A more generic step-back question'),
+      hyde                : z.array(z.string()).length(3).describe('Three short sentences for queries and step-back')
       }),
     mode: 'json',
     messages: [
       {
         role: 'system',
         content: `
-            ### CONVERSATION ###
-            
-            ${textified_conversation}
-            
-            ### CONTEXT ###
-  
-            ${context.config.context}
-            
-            ### INSTRUCTIONS ###
-  
-            Given conversation and context above between a USER and yourself, ordered from oldest to newest, where the last one is a USER follow up question, your task is to follow these instructions step by step.
-            
-            ###### Step 1 ######
-            Determine (in english) what's user language in the original follow up (e.g. french, english, spanish, german, italian, georgian, arabic, spanish, chinese, japanese...).
-  
-            ###### Step 2 ######
-            Determine if this sentence contains profanity or bad words: "${context.conversation[context.conversation.length - 1]?.content}".
-  
-            ###### Step 3 ######
-            Determine if this sentence is greetings or thanks signaling the end of a discussion: "${context.conversation[context.conversation.length - 1]?.content}".
-  
-            ###### Step 4 ######
-            Determine if this sentence is a question about yourself (your name, status, license, creator, etc.): "${context.conversation[context.conversation.length - 1]?.content}".
-            Some examples of question about yourself:
-            - Qui es tu ?
-            - Qui t'a créé ?
-            - À qui ai je l'honneur de parler ?
-            - À qui ai je l'honneur ?
-            - "es tu..." or "tu es"...
-            
-            ###### Step 5 ######
-            Rephrase the follow up question to be a standalone question.
-  
-            ###### Step 6 ######
-            Translate in french (if needed) your result from Step 5.
-                      
-            ###### Step 7 ######
-            Using your result from step 6, context and your knowledge, determine if USER question is about housing.
-            
-            ###### Step 8 ######
-            Using your result from step 6 and context, provide in french 3 better search queries for web search engine to answer the given question.
-            
-            ###### Step 9 ######
-            Using your result from step 6 and context, step back and paraphrase in french given question to a more generic step-back question.
-            
-            ###### Step 10 ######
-            Provide in french informative answers to your results from step 6, step 7, step 8 and step 9.
-            Use your extensive knowledge base to offer clear, concise, and accurate responses to inquiries.
-            Be careful to use context.
-            
-            Answer only in french language.
-            Return results in JSON.
-            `.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
+### CONVERSATION ###
+
+${txt_conversation}
+
+### CONTEXT ###
+
+- **user**: ${(context.config as { context: string }).context}
+- **assistant**: ${(context.config as { persona: string }).persona}
+
+### INSTRUCTIONS ###
+
+You are an advanced AI assistant specializing in social housing-related queries.
+Given the conversation and context above, tour task is to analyze user input and provide structured information to enhance the retrieval and generation process.
+
+1. **Detect Language**: Identify the language used in the follow-up.
+2. **Profanity Check**: Check if there is any offensive language in the last message.
+3. **Greeting Detection**: Determine if the last input is a greeting or signals the end of the discussion.
+4. **Self-Reference**: Check if the user’s question is about the assistant (such as its identity, creator, etc.).
+5. **Rephrase**: Reword the user’s follow-up into a clearer standalone question.
+6. **Translation**: If required, translate the follow-up into French.
+7. **Housing Relevance**: Determine if the user’s question relates to housing topics.
+8. **Query Generation**: Suggest three optimized search queries in French for web-based retrieval.
+9. **Step-back Question**: Paraphrase the original question to make it more generic.
+10. **Response**: Provide concise and accurate answers in French based on the previous steps.
+
+Be careful to use context and conversation.
+Answer only in French language.
+Your response should be returned in JSON format.`.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
       }
     ]
   })
-
-  console.log(object)
   return object
 }
