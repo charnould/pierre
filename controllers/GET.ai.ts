@@ -1,7 +1,7 @@
 import type { CoreTool, StreamTextResult } from 'ai'
 import type { Context } from 'hono'
 import { streamText } from 'hono/streaming'
-import { AIContext, SMS } from '../utils/_schema'
+import { AIContext, type SMS } from '../utils/_schema'
 import { enhance_query } from '../utils/enhance-query'
 import { answer_user, reach_deadlock } from '../utils/generate-answer'
 import { get_conversation, save_reply } from '../utils/handle-conversation'
