@@ -15,11 +15,11 @@ test('should get config from phone number', async () => {
     const config_1 = await parse_incoming_sms(data)
 
     expect(config_1).toStrictEqual({
-      config: 'pierre-ia.org',
-      conv_id: 'sms-with-+33611834431',
-      phone: '+339_pierre_by_sms',
       role: 'user',
-      to: '+33611834431',
+      config: 'pierre-ia.org',
+      conv_id: 'sms-with-+33621804969',
+      phone: '0033939070074',
+      to: '+33621804969',
       content: 'This is an example message from 1'
     })
   }
