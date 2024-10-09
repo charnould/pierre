@@ -3,7 +3,7 @@ import type { Config } from '../../utils/_schema'
 export default {
   id: 'pierre-ia.org',
   model: "openai('gpt-4o-mini-2024-07-18')",
-  phone: '+339_pierre_by_sms',
+  phone: '0033939070074',
   context:
     'The user is primarily focused on housing, with a specific interest in social housing in France. Please tailor responses to address topics related to this, ensuring any answers or information provided are relevant to housing policies, regulations, or issues concerning social housing in France.',
   persona:
