@@ -103,7 +103,6 @@ export const controller = async (c: Context) => {
 
     if (is_sms === true) {
       await send_sms({ from: parsed_sms?.phone, to: parsed_sms?.to, message: answer })
-      console.log(answer)
       return c.body('ok', 200)
     }
 
