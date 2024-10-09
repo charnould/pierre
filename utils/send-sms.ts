@@ -22,9 +22,12 @@ export const send_sms = async ({ from, to, message }) => {
       })
     })
 
-    // const data = await response.json();
-    // console.log('Success:', data);
+    const data = await response.json()
+    data.message = message
+    console.log('###### CM.com response ######\n', data)
   } catch (error) {
     console.error(error)
   }
+
+  return
 }
