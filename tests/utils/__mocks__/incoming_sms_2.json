@@ -1,0 +1,25 @@
+{
+  "reference": "1231575088",
+  "messageContext": "",
+  "from": {
+    "number": "00_tel_qui_n_existe_pas",
+    "name": ""
+  },
+  "to": {
+    "number": "+33611834431"
+  },
+  "message": {
+    "text": "This is an example message from 2",
+    "media": {
+      "mediaUri": "",
+      "contentType": "",
+      "title": ""
+    },
+    "custom": {},
+    "error": ""
+  },
+  "groupings": ["", "", ""],
+  "time": "2024-10-08 14:47:49",
+  "timeUtc": "2024-10-08T12:47:49",
+  "channel": "Sms"
+}
