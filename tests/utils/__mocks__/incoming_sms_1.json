@@ -1,22 +1,25 @@
 {
+  "reference": "1231575088",
+  "messageContext": "",
   "from": {
-    "number": "+33611834431",
+    "number": "+33621804969",
     "name": ""
   },
   "to": {
-    "number": "+339_pierre_by_sms"
+    "number": "0033939070074"
   },
   "message": {
-    "text": " This is an example message from 1 ",
+    "text": "This is an example message from 1",
     "media": {
       "mediaUri": "",
       "contentType": "",
       "title": ""
     },
-    "custom": {}
+    "custom": {},
+    "error": ""
   },
-  "reference": "2f2d42ac-3809-40fb-bce5-dc720e400000",
-  "groupings": ["39373ce0-f4aa-4918-8ff1-3cef7f77b112", "messagesApi", ""],
-  "timeUtc": "2019-11-05T08:32:33",
-  "channel": "SMS"
+  "groupings": ["", "", ""],
+  "time": "2024-10-08 14:47:49",
+  "timeUtc": "2024-10-08T12:47:49",
+  "channel": "Sms"
 }
