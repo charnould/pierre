@@ -20,7 +20,8 @@ export const parse_incoming_sms = async (data) => {
       return SMS.parse({
         role: 'user',
         config: config.id,
-        conv_id: `sms-with-${data.from.number}`,
+        // `+` breaks conv_id when used in an URL
+        conv_id: `sms-with-${data.from.number.replace('+', '')}`,
         phone: data.to.number,
         to: data.from.number,
         content: data.message.text.trim()
