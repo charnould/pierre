@@ -12,7 +12,7 @@
 }
 
 .user {
-  @apply float-right mb-2 mt-8 rounded-xl bg-stone-100 px-5 py-2 font-['Work_Sans'] text-base;
+  @apply float-right mt-8 mb-2 rounded-xl bg-stone-100 py-2 px-5 font-['Work_Sans'] text-base;
 }
 
 .thinking {
@@ -72,11 +72,11 @@
   }
 
   a {
-    @apply underline-offset-3 text-blue-700 underline;
+    @apply text-blue-700 underline underline-offset-3;
   }
 
   hr {
-    @apply border-1 my-2 border-zinc-200;
+    @apply my-2 border-1 border-zinc-200;
   }
 
   /* Lists */

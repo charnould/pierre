@@ -12,8 +12,8 @@ import { authenticate } from './utils/authenticate-reviewer'
 
 const app = new Hono()
 
-// To allow other websites to iframe Pierre
-// Must be modified to allow only a few domains
+// To allow other websites to iframe Pierre.
+// TODO: Must be modified to allow only a few domains.
 app.use(
   secureHeaders({
     contentSecurityPolicy: { frameAncestors: ['*'] },
@@ -23,9 +23,9 @@ app.use(
 
 app.use('/assets/*', serveStatic({ root: './' }))
 
-app.get('/ai/:id', get_ai)
 app.get('/c/:id', get_index)
-
+app.get('/ai/:id', get_ai)
+app.post('/sms', get_ai)
 app.post('/telemetry', post_telemetry)
 
 app.get('/eval', (c) => c.redirect('/eval/chats'))

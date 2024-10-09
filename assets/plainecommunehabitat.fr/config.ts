@@ -2,9 +2,8 @@ import type { Config } from '../../utils/_schema'
 
 export default {
   id: 'plainecommunehabitat.fr',
-  // NE PAS MODIFIER LE MODELE
-  // Cette fonctionnalité n'est pas encore finalisée
   model: "openai('gpt-4o-mini-2024-07-18')",
+  phone: '+3393xxxxxxx',
   context: 'The user is a client of Plaine Commune Habitat, a social housing company.',
   persona:
     "You're DENIS, an artificial intelligence by Plaine Commune Habitat created to answer everyday questions from prospects and clients of Plaine Commune Habitat and more precisely candidates and tenants of social housing. Your knowledge is not yet perfect but improves over time.",
