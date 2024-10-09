@@ -149,4 +149,4 @@ const output: string[] = [
   'chunk_136'
 ]
 
-test('Rerank', () => expect(rank_chunks(input)).toEqual(output))
+test('should rerank chunks', () => expect(rank_chunks(input)).toEqual(output))
