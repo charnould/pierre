@@ -21,7 +21,7 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
               >
                 ${data.map(
                   (conv) =>
-                    html` <a href="/eval/chats?id=${conv[0].id}">
+                    html` <a href="/eval/chats?id=${conv[0].conv_id}">
                       <div class="mx-6 mt-3 flex items-center text-[13px] text-neutral-400">
                         ${conv[0].org_satisfaction === 0
                           ? html`<span class="h-3 w-6 rounded-full bg-red-500">&nbsp;</span>`

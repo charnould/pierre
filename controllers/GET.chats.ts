@@ -13,7 +13,7 @@ export const controller = async (c: Context) => {
   if (id !== null) displayed_conversation = get_conversation(id)
 
   const conversations: Reply[] = get_conversations_for_review()
-  const conversations_grouped_by_id = _.map(_.groupBy(conversations, 'id'), (group) =>
+  const conversations_grouped_by_id = _.map(_.groupBy(conversations, 'conv_id'), (group) =>
     _.reverse(group)
   )
 
