@@ -5,6 +5,7 @@ import toc from 'markdown-toc'
 await $`rm -rf assets/pierre-ia.org/dist/css`
 await $`rm -rf assets/pierre-ia.org/dist/js`
 await $`rm -f docs/assets/widget.js`
+await $`find . -name ".DS_Store" -type f -delete` // Delete all .DS_Store
 
 // Upgrade Bun and dependencies
 await $`bun upgrade --stable && bun update && bun install`
@@ -28,9 +29,8 @@ await Bun.write('README.md', updated_content)
 // Transpile and minify .ts scripts into .js to work in browser
 await $`bun build --entrypoints assets/pierre-ia.org/scripts/*.ts --outdir assets/pierre-ia.org/dist/js --minify --target browser`
 
-// Compile production CSS files
-await $`bunx @tailwindcss/cli@next -i assets/pierre-ia.org/tailwind/chat.css -o assets/pierre-ia.org/dist/css/chat.css --minify`
-await $`bunx @tailwindcss/cli@next -i assets/pierre-ia.org/tailwind/admin.css -o assets/pierre-ia.org/dist/css/admin.css --minify`
+// Compile production CSS file
+await $`bunx @tailwindcss/cli@next -i assets/pierre-ia.org/tailwind/style.css -o assets/pierre-ia.org/dist/css/style.css --minify`
 
 // Copy transpile/minify widget.js in `docs` folder, aka PIERRE website
 await $`cp assets/pierre-ia.org/dist/js/widget.js docs/assets`
