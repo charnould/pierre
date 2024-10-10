@@ -7,7 +7,7 @@ export const view = (config: Config) => {
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/chat.css" />
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.css" />
         <link rel="manifest" href="../assets/${config.id}/manifest.json" />
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
         <script defer src="../assets/pierre-ia.org/dist/js/ai.js"></script>
