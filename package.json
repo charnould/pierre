@@ -15,6 +15,7 @@
     "format": "bunx prettier '!**/*.js' '!assets/pierre-ia.org/dist' --write . --plugin=prettier-plugin-tailwindcss --single-quote --no-semi --trailing-comma none --print-width 100",
     "ngrok": "ngrok http --url=mule-exotic-raven.ngrok-free.app 3000",
     "lint": "bunx @biomejs/biome check --write --unsafe . --config-path=config/biome.jsonc",
+    "css": "bunx @tailwindcss/cli@next -i assets/pierre-ia.org/tailwind/style.css -o assets/pierre-ia.org/dist/css/style.css --minify --watch",
     "dev": "bash config/telemetry.sh init_db && bun --watch run app.ts",
     "--- PRODUCTION COMMANDS ---": "",
     "logs": "kamal app logs",
