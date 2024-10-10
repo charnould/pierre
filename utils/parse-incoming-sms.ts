@@ -13,7 +13,7 @@ export const parse_incoming_sms = async (data) => {
     })
   )
 
-  // For each `config.ts`, find the right one (= contains the right Whatsapp phone number)
+  // For each `config.ts`, find the right one (= contains the correct phone number)
   // and build a simple and useful object
   for (const config of configs) {
     if (config && config.phone === data.to.number) {
