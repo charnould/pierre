@@ -41,11 +41,14 @@ export const Reply = z.object({
   model             : z.string(),
   config            : z.string(),
   content           : z.string(),
+  topics            : z.string(),
   timestamp         : z.string(),
   // Satisfaction
-  cus_satisfaction  : z.number().nullish(), // customer satisfaction
-  org_satisfaction  : z.number().nullish(), // social housing organization satisfaction
-  ext_satisfaction  : z.number().nullish(), // pierre `external `satisfaction
+  ai_satisfaction   : z.number().nullish(), // AI generated customer satisfaction (CSAT)
+  cus_satisfaction  : z.number().nullish(), // Customer satisfaction
+  org_satisfaction  : z.number().nullish(), // Social housing organization satisfaction
+  ext_satisfaction  : z.number().nullish(), // Pierre `external `satisfaction
+  ai_comment        : z.string().nullish(),
   cus_comment       : z.string().nullish(),
   org_comment       : z.string().nullish(),
   ext_comment       : z.string().nullish(),

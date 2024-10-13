@@ -3,6 +3,8 @@
 exports[`should insert 3 replies and retrieve 2 conversations 1`] = `
 [
   {
+    "ai_comment": null,
+    "ai_satisfaction": null,
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Qui es-tu ?",
@@ -17,9 +19,12 @@ exports[`should insert 3 replies and retrieve 2 conversations 1`] = `
     "prompt_tokens": null,
     "role": "user",
     "timestamp": "2012-11-10T09:08:07Z",
+    "topics": null,
     "total_tokens": null,
   },
   {
+    "ai_comment": null,
+    "ai_satisfaction": null,
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Je suis Pierre !",
@@ -34,6 +39,7 @@ exports[`should insert 3 replies and retrieve 2 conversations 1`] = `
     "prompt_tokens": null,
     "role": "assistant",
     "timestamp": "2012-11-10T09:08:07Z",
+    "topics": null,
     "total_tokens": null,
   },
 ]
@@ -42,6 +48,8 @@ exports[`should insert 3 replies and retrieve 2 conversations 1`] = `
 exports[`should insert 3 replies and retrieve 2 conversations 2`] = `
 [
   {
+    "ai_comment": null,
+    "ai_satisfaction": null,
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Bonjour",
@@ -56,6 +64,7 @@ exports[`should insert 3 replies and retrieve 2 conversations 2`] = `
     "prompt_tokens": null,
     "role": "user",
     "timestamp": "2012-11-10T09:08:07Z",
+    "topics": null,
     "total_tokens": null,
   },
 ]
@@ -64,6 +73,8 @@ exports[`should insert 3 replies and retrieve 2 conversations 2`] = `
 exports[`should score 2 conversations for customer + organization + external 1`] = `
 [
   {
+    "ai_comment": null,
+    "ai_satisfaction": null,
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Qui es-tu ?",
@@ -78,9 +89,12 @@ exports[`should score 2 conversations for customer + organization + external 1`]
     "prompt_tokens": null,
     "role": "user",
     "timestamp": "2012-11-10T09:08:07Z",
+    "topics": null,
     "total_tokens": null,
   },
   {
+    "ai_comment": null,
+    "ai_satisfaction": null,
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Je suis Pierre !",
@@ -95,6 +109,7 @@ exports[`should score 2 conversations for customer + organization + external 1`]
     "prompt_tokens": null,
     "role": "assistant",
     "timestamp": "2012-11-10T09:08:07Z",
+    "topics": null,
     "total_tokens": null,
   },
 ]
@@ -103,6 +118,8 @@ exports[`should score 2 conversations for customer + organization + external 1`]
 exports[`should score 2 conversations for customer + organization + external 2`] = `
 [
   {
+    "ai_comment": null,
+    "ai_satisfaction": null,
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Bonjour",
@@ -117,6 +134,7 @@ exports[`should score 2 conversations for customer + organization + external 2`]
     "prompt_tokens": null,
     "role": "user",
     "timestamp": "2012-11-10T09:08:07Z",
+    "topics": null,
     "total_tokens": null,
   },
 ]
@@ -125,6 +143,8 @@ exports[`should score 2 conversations for customer + organization + external 2`]
 exports[`should insert 2 replies (from 1 conversation) and delete this conversation 1`] = `
 [
   {
+    "ai_comment": null,
+    "ai_satisfaction": null,
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Conv 3_1",
@@ -139,9 +159,12 @@ exports[`should insert 2 replies (from 1 conversation) and delete this conversat
     "prompt_tokens": null,
     "role": "user",
     "timestamp": "2012-11-10T09:08:07Z",
+    "topics": null,
     "total_tokens": null,
   },
   {
+    "ai_comment": null,
+    "ai_satisfaction": null,
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Conv 3_2",
@@ -156,6 +179,7 @@ exports[`should insert 2 replies (from 1 conversation) and delete this conversat
     "prompt_tokens": null,
     "role": "assistant",
     "timestamp": "2012-11-10T09:08:07Z",
+    "topics": null,
     "total_tokens": null,
   },
 ]
@@ -171,6 +195,8 @@ exports[`should insert 2 replies (from 1 conversation) and delete this conversat
 exports[`should retrieve all conversations 1`] = `
 [
   {
+    "ai_comment": null,
+    "ai_satisfaction": null,
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Qui es-tu ?",
@@ -185,9 +211,12 @@ exports[`should retrieve all conversations 1`] = `
     "prompt_tokens": null,
     "role": "user",
     "timestamp": "2012-11-10T09:08:07Z",
+    "topics": null,
     "total_tokens": null,
   },
   {
+    "ai_comment": null,
+    "ai_satisfaction": null,
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Je suis Pierre !",
@@ -202,9 +231,12 @@ exports[`should retrieve all conversations 1`] = `
     "prompt_tokens": null,
     "role": "assistant",
     "timestamp": "2012-11-10T09:08:07Z",
+    "topics": null,
     "total_tokens": null,
   },
   {
+    "ai_comment": null,
+    "ai_satisfaction": null,
     "completion_tokens": null,
     "config": "pierre-ia.org",
     "content": "Bonjour",
@@ -219,6 +251,7 @@ exports[`should retrieve all conversations 1`] = `
     "prompt_tokens": null,
     "role": "user",
     "timestamp": "2012-11-10T09:08:07Z",
+    "topics": null,
     "total_tokens": null,
   },
 ]
