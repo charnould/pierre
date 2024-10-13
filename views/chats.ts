@@ -23,13 +23,13 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
                   (conv) =>
                     html` <a href="/eval/chats?id=${conv[0].conv_id}">
                       <div class="mx-6 mt-3 flex items-center text-[13px] text-neutral-400">
-                        ${conv[0].org_satisfaction === 0
+                        ${conv[0].metadata.evaluation.organization.score === 0
                           ? html`<span class="h-3 w-6 rounded-full bg-red-500">&nbsp;</span>`
-                          : conv[0].org_satisfaction === 1
+                          : conv[0].metadata.evaluation.organization.score === 1
                             ? html`<span class="h-3 w-6 rounded-full bg-orange-400">&nbsp;</span>`
-                            : conv[0].org_satisfaction === 2
+                            : conv[0].metadata.evaluation.organization.score === 2
                               ? html`<span class="h-3 w-6 rounded-full bg-lime-300">&nbsp;</span>`
-                              : conv[0].org_satisfaction === 3
+                              : conv[0].metadata.evaluation.organization.score === 3
                                 ? html`<span class="h-3 w-6 rounded-full bg-green-500"
                                     >&nbsp;</span
                                   >`
@@ -85,7 +85,7 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
                           name="comment"
                           type="text"
                           placeholder="Votre commentaire sur la conversation"
-                          value="${conversation[0]?.org_comment}"
+                          value="${conversation[0]?.metadata.evaluation.organization.comment}"
                           class="flex-1 border-0 p-2 outline-none"
                         />
                         <fieldset>
@@ -95,7 +95,9 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
                             class="peer/s0 hidden"
                             name="score"
                             value="0"
-                            ${conversation[0]?.org_satisfaction === 0 ? 'checked' : ''}
+                            ${conversation[0]?.metadata.evaluation.organization.score === 0
+                              ? 'checked'
+                              : ''}
                           />
                           <label
                             for="s0"
@@ -109,7 +111,9 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
                             class="peer/s1 hidden"
                             name="score"
                             value="1"
-                            ${conversation[0]?.org_satisfaction === 1 ? 'checked' : ''}
+                            ${conversation[0]?.metadata.evaluation.organization.score === 1
+                              ? 'checked'
+                              : ''}
                           />
                           <label
                             for="s1"
@@ -123,7 +127,9 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
                             class="peer/s2 hidden"
                             name="score"
                             value="2"
-                            ${conversation[0]?.org_satisfaction === 2 ? 'checked' : ''}
+                            ${conversation[0]?.metadata.evaluation.organization.score === 2
+                              ? 'checked'
+                              : ''}
                           />
                           <label
                             for="s2"
@@ -137,7 +143,9 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
                             class="peer/s3 hidden"
                             name="score"
                             value="3"
-                            ${conversation[0]?.org_satisfaction === 3 ? 'checked' : ''}
+                            ${conversation[0]?.metadata.evaluation.organization.score === 3
+                              ? 'checked'
+                              : ''}
                           />
                           <label
                             for="s3"

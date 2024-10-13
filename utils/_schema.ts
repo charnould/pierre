@@ -6,13 +6,14 @@ import { z } from 'zod'
 // biome-ignore format: readability
 // Incoming SMS parsing schema
 export const SMS = z.object({
-  role      : z.string(),
-  config    : z.string(),
-  conv_id   : z.string(),
-  phone     : z.string().nullable(),
-  to        : z.string(),
-  content   : z.string().trim()
-}).or(z.null())
+    role    : z.string(),
+    config  : z.string(),
+    conv_id : z.string(),
+    phone   : z.string().nullable(),
+    to      : z.string(),
+    content : z.string().trim()
+  })
+  .or(z.null())
 
 //
 //
@@ -36,23 +37,53 @@ export const Config = z.object({
 // Reflects telemetry database schema
 export const Reply = z.object({
   // Globals
-  conv_id           : z.string(),
-  role              : z.enum(['assistant', 'user', 'system']).default('user'),
-  model             : z.string(),
-  config            : z.string(),
-  content           : z.string(),
-  timestamp         : z.string(),
-  // Satisfaction
-  cus_satisfaction  : z.number().nullish(), // customer satisfaction
-  org_satisfaction  : z.number().nullish(), // social housing organization satisfaction
-  ext_satisfaction  : z.number().nullish(), // pierre `external `satisfaction
-  cus_comment       : z.string().nullish(),
-  org_comment       : z.string().nullish(),
-  ext_comment       : z.string().nullish(),
-  // LLM usage
-  prompt_tokens     : z.number().nullish(),
-  completion_tokens : z.number().nullish(),
-  total_tokens      : z.number().nullish()
+  conv_id   : z.string(),
+  config    : z.string().or(Config.omit({ greeting: true, examples: true })),
+  role      : z.enum(['assistant', 'user', 'system']).default('user'),
+  timestamp : z.string().datetime().nullish().default(null),
+  content   : z.string(),
+  // Metadata
+  metadata: z.object({
+      topics: z.string().trim().toLowerCase().nullish().default(null),
+      origin: z.string().url().nullish().default(null),
+      // Evaluation + satisfaction
+      evaluation: z.object({
+          // CSAT
+          customer: z.object({
+              score   : z.number().nullish().default(null),
+              comment : z.string().nullish().default(null)
+            })
+            .default({}),
+          // Social housing organization satisfaction
+          organization: z.object({
+              score   : z.number().nullish().default(null),
+              comment : z.string().nullish().default(null)
+            })
+            .default({}),
+          // AI generated customer satisfaction (CSAT)
+          ai: z.object({
+              score   : z.number().nullish().default(null),
+              comment : z.string().nullish().default(null)
+            })
+            .default({}),
+          // PIERRE own evaluation
+          pierre: z.object({
+              score   : z.number().nullish().default(null),
+              comment : z.string().nullish().default(null)
+            })
+            .default({})
+        })
+        .default({}),
+      // LLM usage
+      tokens: z.object({
+          // cache : z.number().nullish().default(null),
+          prompt      : z.number().nullish().default(null),
+          completion  : z.number().nullish().default(null),
+          total       : z.number().nullish().default(null)
+        })
+        .default({})
+    })
+    .default({})
 })
 
 //
@@ -60,13 +91,9 @@ export const Reply = z.object({
 //
 // prettier-ignore
 // biome-ignore format: readability
-export const AIContext = z.object({
-    timestamp           : z.string().datetime().nullish().default(null),
-    role                : z.enum(['assistant', 'user', 'system']),
-    content             : z.string(),
+export const AIContext = Reply.merge(
+  z.object({
     chunks              : z.array(z.string()).nullish().default(null),
-    conv_id             : z.string(),
-    config              : z.string().or(Config),
     contains_profanity  : z.boolean().default(false),
     is_greeting         : z.boolean().default(false),
     is_about_yourself   : z.boolean().default(false),
@@ -78,21 +105,20 @@ export const AIContext = z.object({
     stepback            : z.string().nullish().default(null),
     hyde                : z.array(z.string()).nullish().default(null),
     keywords            : z.array(z.string()).length(3).nullish().default(null),
-    conversation        : z.array(z.object({
-                          role    : z.enum(['assistant', 'user', 'system']),
-                          content : z.string()
-                        })).default([]),
-    usage               : z.object({
-                          prompt_tokens     : z.number().nullish().default(null),
-                          completion_tokens : z.number().nullish().default(null),
-                          total_tokens      : z.number().nullish().default(null)
-                        }).default({})
+    conversation: z.array(
+        z.object({
+          role    : z.enum(['assistant', 'user', 'system']),
+          content : z.string()
+        })
+      )
+      .default([])
   })
-  .refine(async (c) => {
-    // Change config name for config content
-    if (typeof c.config === 'string') c.config = (await import(`../assets/${c.config}/config`)).default
-    return true
-  })
+).refine(async (c) => {
+  // Change config name for config content
+  if (typeof c.config === 'string')
+    c.config = (await import(`../assets/${c.config}/config`)).default
+  return true
+})
 
 //
 //
