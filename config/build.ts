@@ -10,6 +10,8 @@ await $`find . -name ".DS_Store" -type f -delete` // Delete all .DS_Store
 // Upgrade Bun and dependencies
 await $`bun upgrade --stable && bun update && bun install`
 
+// gem "kamal", ">= 2.2.2"
+
 // Generate README table of contents
 const content = await Bun.file('README.md').text()
 const updated_content = toc.insert(content, {
