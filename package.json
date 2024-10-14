@@ -16,11 +16,16 @@
     "ngrok": "ngrok http --url=mule-exotic-raven.ngrok-free.app 3000",
     "lint": "bunx @biomejs/biome check --write --unsafe . --config-path=config/biome.jsonc",
     "css": "bunx @tailwindcss/cli@next -i assets/pierre-ia.org/tailwind/style.css -o assets/pierre-ia.org/dist/css/style.css --minify --watch",
-    "dev": "bash config/telemetry.sh init_db && bun --watch run app.ts",
-    "--- PRODUCTION COMMANDS ---": "",
-    "logs": "kamal app logs",
-    "bash": "kamal app exec -i bash",
-    "start": "bash config/telemetry.sh init_db && bun run app.ts"
+    "-------- START --------": "",
+    "dev": "bash config/telemetry.sh init_db && dotenvx run -f .env.production -- bun --watch run app.ts",
+    "start": "bash config/telemetry.sh init_db && bun run app.ts",
+    "-------- DEPLOYMENT --------": "",
+    "staging:deploy": "dotenvx run -f .env.staging -- kamal deploy",
+    "staging:logs": "dotenvx run -f .env.staging -- kamal app logs",
+    "staging:shell": "dotenvx run -f .env.staging -- kamal app exec -i bash",
+    "production:deploy": "dotenvx run -f .env.production -- kamal deploy",
+    "production:logs": "dotenvx run -f .env.production -- kamal app logs",
+    "production:shell": "dotenvx run -f .env.production -- kamal app exec -i bash"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^0.0.51",

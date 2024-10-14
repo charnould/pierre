@@ -1,29 +1,26 @@
-#
-# Remplacer `charnould/pierre` par le chemin d'accès
-# à votre propre dépôt GitHub (ex : 3f/pierre)
-image: charnould/pierre
+minimum_version: 2.2.0
 
-#
-# Remplacer l'IP par celui de votre serveur
+service: pierre
+
+image: <%= ENV['REPO_PATH'] %>
+
 servers:
-  - 138.201.246.225
+  - <%= ENV['IP'] %>
 
 registry:
-  #
-  # Remplacer `charnould` par votre identifiant GitHub (ex : 3f)
-  username: charnould
+  username: <%= ENV['USERNAME'] %>
   server: ghcr.io
   password:
     - REGISTRY_TOKEN
 
-#
-#
-# NE PAS MODIFIER LES ITEMS CI-DESSOUS
-
-service: pierre
-
 volumes:
   - 'telemetry:/app/telemetry/'
+
+proxy:
+  app_port: 3000
+
+builder:
+  arch: amd64
 
 env:
   secret:
@@ -37,6 +34,3 @@ env:
     - AUTH_PASSWORDS
     - TELEMETRY
     - SMS_API_KEY
-
-healthcheck:
-  path: /

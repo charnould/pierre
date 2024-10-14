@@ -12,6 +12,8 @@ Plus concrètement encore, PIERRE c'est à la fois :
 1. Un **chatbot open source** qui répond à 100 % des questions de « premier niveau » des locataires et demandeurs HLM, disponible sur le **Web** ([démonstration](https://pierre-ia.org)) et par **SMS**.
 2. Une **base de connaissances** en **open data** ([consultation](https://kdb.pierre-ia.org)), utilisable indépendamment du chatbot et indispensable à la mise en oeuvre de toutes approches « Retrieval Augmented Generation » ([RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation)) via un LLM.
 
+→ [Télécharger une présentation de PIERRE](<docs/assets/pierre-(ia)-en-3-min.pdf>) (PDF · 2,6 Mo)
+
 ## Sommaire
 
 <!-- toc -->
@@ -29,7 +31,7 @@ Plus concrètement encore, PIERRE c'est à la fois :
 - [Personnaliser PIERRE (self-hosting)](#personnaliser-pierre-self-hosting)
   - [Modifier l'interface du chatbot](#modifier-linterface-du-chatbot)
   - [Modifier la personnalité du chatbot](#modifier-la-personnalit%C3%A9-du-chatbot)
-- [Installer PIERRE sur votre site web ou extranet-locataire (self-hosting)](#installer-pierre-sur-votre-site-web-ou-extranet-locataire-self-hosting)
+- [Installer PIERRE sur votre site web (self-hosting)](#installer-pierre-sur-votre-site-web-self-hosting)
 - [Paramétrer PIERRE pour l'utiliser par SMS (self-hosting)](#param%C3%A9trer-pierre-pour-lutiliser-par-sms-self-hosting)
 - [Modifier le modèle de langage/LLM utilisé (self-hosting)](#modifier-le-mod%C3%A8le-de-langagellm-utilis%C3%A9-self-hosting)
   - [Comment modifier le modèle de langage ?](#comment-modifier-le-mod%C3%A8le-de-langage)
@@ -100,8 +102,8 @@ Déployer PIERRE sur un serveur génére des coûts (minimes) :
   • Génération de vecteurs : 0.13 $US / 1M tokens avec `text-embedding-3-large`  
   • Génération de textes : 0,15 $US (input) et 0,60 $US (output) / 1M tokens avec `gpt-4o-mini`
 - (Optionnellement) Les conversations SMS :  
-  • Location d'un numéro de téléphone : 10 € par mois  
-  • Envoi de SMS : 0.09 € par conversation
+  – Location d'un numéro de téléphone : 10 € par mois  
+  – Envoi de SMS : 0.09 € par conversation
 
 ## Comment déployer PIERRE ?
 
@@ -124,35 +126,47 @@ Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour
 2. Installer `Bun` et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
 3. Cloner/forker le présent dépôt.
 4. Lancer `bun install` dans votre terminal pour installer les dépendances.
-5. Renommer le fichier `.env.example` en `.env` et compléter le en suivant ses consignes.
+5. Renommer le fichier `.env.example` en `.env.production` et compléter le.
 6. Lancer PIERRE avec `bun dev`.
 7. Et voilà : PIERRE est accessible à http://localhost:3000 et répond à vos questions !
 
-#### Déployer pour la première fois PIERRE sur un serveur
+#### Déployer pour la première fois PIERRE sur un serveur de production
 
 Pour déployer PIERRE sur votre propre serveur, il est indispensable d'être parvenu à le faire fonctionner en local (_cf._ supra).
 
-1. Installer `Docker Desktop` et le lancer ([instructions](https://www.docker.com/products/docker-desktop/)). `Docker` gérera la conteneurisation de PIERRE.
-2. Lancer `gem install kamal -v 1.9` pour installer `Kamal` qui gérera le déploiement de PIERRE ([instructions](https://kamal-deploy.org/docs/installation/)).
+1. Installer `Docker Desktop` et le lancer ([instructions](https://www.docker.com/products/docker-desktop/)). `Docker` gérera la conteneurisation.
+2. Lancer `gem install kamal` pour installer `Kamal` (≥`2.2.2`) qui gérera le déploiement ([instructions](https://kamal-deploy.org/docs/installation/)).
 3. Disposer d'un compte `GitHub` et [générer une clef](https://github.com/settings/tokens). `GitHub` sera le registre de conteneurs lors du déploiement.
 4. Disposer d'un VPS (par exemple `CX22` d'[Hetzner](https://www.hetzner.com/cloud/)) et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
-5. Finaliser les modifications du fichier `.env` que vous avez créé précédemment.
-6. Modifier le fichier de configuration `config/deploy.yml` en suivant les instructions qu'il contient.
-7. Saississez dans votre terminal `kamal setup` et patientez quelques minutes.
-8. Et voilà, PIERRE est accessible à l'adresse IP de votre serveur.
-9. Étapes suivantes (optionnelles) :  
-   • Placer votre IP derrière un proxy pour servir PIERRE via un nom de domaine (ex. Cloudflare)  
-   • Personnaliser PIERRE  
-   • Faire fonctionner PIERRE par SMS  
-   • Afficher PIERRE sur votre site internet ou extranet-locataire
+5. Finaliser les modifications du fichier `.env.production` que vous avez créé précédemment.
+6. Saississez dans votre terminal `dotenvx run -f .env.production -- kamal setup` et patientez quelques minutes (`dotenvx run -f .env.production --` est indispensable pour interpoler les variables d'environnement).
+7. Et voilà, PIERRE est accessible à l'adresse IP de votre serveur.
+8. Étapes suivantes (optionnelles et décrites ci-dessous) :  
+   – Placer votre IP derrière un proxy pour le servir via un domaine  
+   – Déployer PIERRE sur un second serveur de tests  
+   – Personnaliser PIERRE  
+   – Faire fonctionner PIERRE par SMS  
+   – Afficher PIERRE sur votre site internet ou extranet-locataire
 
-#### Redéployer PIERRE sur un serveur
+#### Redéployer PIERRE sur un serveur de production
 
-PIERRE — notamment sa base de connaissances — [évolue régulièrement](https://github.com/charnould/pierre/releases) et suit la convention `semver`.  
-Pour le mettre à jour :
+PIERRE — et notamment sa base de connaissances — évolue régulièrement et suit la convention `semver`. Pour le mettre à jour :
 
-- Mettez à jour votre fork, puis saississez `kamal deploy` dans votre terminal.
-- Si vous modifiez les variables d'environnement après le premier déploiement, il sera impératif de lancer `kamal env push` avant `kamal deploy`. L'intégralité des commandes de Kamal est disponible [ici](https://kamal-deploy.org/docs/commands/view-all-commands).
+1. Consulter les [releases](https://github.com/charnould/pierre/releases) pour connaitre les modifications et les éventuels _breaking changes_.
+2. Mettez à jour votre fork.
+3. Saississez `dotenvx run -f .env.production -- kamal deploy` dans votre terminal (ou le raccourci `bun production:deploy`).
+
+#### Déployer et redéployer PIERRE sur un serveur de tests
+
+Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE :
+
+1. Disposer d'un **second** VPS et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
+2. Dupliquer `.env.production` en `.env.staging` et modifier le (a priori uniquement l'IP).
+3. Lancer `dotenvx run -f .env.staging -- kamal setup` pour déployer la première fois.
+4. Lancer `dotenvx run -f .env.staging -- kamal deploy` pour redéployer (ou le raccourci `bun staging:deploy`).
+
+> [!NOTE]
+> Il est très fortement recommandé que les environnements de `production` et `staging` aient le même système d'exploitation (Ubuntu, Debian, etc.) et la même architecture de processeur (x86).
 
 ## Personnaliser PIERRE (self-hosting)
 
@@ -167,12 +181,12 @@ Pour le mettre à jour :
 2. Créer une icône `system.svg` et remplacer la précédente. Cette icône est celle qui apparait dans l'interface du chatbot (au dessus de « Bonjour 👋 »).
 3. [Générer les icônes](https://www.pwabuilder.com/imageGenerator) qui permettront d'ajouter votre chatbot sur l'écran d'accueil des smartphones de vos utilisateurs et les glisser dans le dossier `icons`. Conservez la structure du répertoire et le nommage des fichiers (automatique).
 4. Modifier dans `manifest.json` :  
-   • `short_name` par le nom souhaité de votre chatbot  
-   • `start_url` par `/?config=stone-habitat.fr`
+   – `short_name` par le nom souhaité de votre chatbot  
+   – `start_url` par `/?config=stone-habitat.fr`
 5. Modifier dans `config.ts` :  
-   • `id` avec `stone-habitat.fr`  
-   • `greeting` qui est le message d'accueil de votre chatbot  
-   • `examples` qui sont les exemples proposés après votre message d'accueil
+   – `id` avec `stone-habitat.fr`  
+   – `greeting` qui est le message d'accueil de votre chatbot  
+   – `examples` qui sont les exemples proposés après votre message d'accueil
 
 6. Et voilà, votre chabot personnalisé est disponible à http://localhost:3000/?config=stone-habitat.fr.
 
@@ -226,7 +240,8 @@ avec :
 ## Paramétrer PIERRE pour l'utiliser par SMS (self-hosting)
 
 1. Obtenir un numéro de téléphone compatible
-2. Modifier `phone` dans votre fichier `config.ts` avec votre numéro de téléphone
+2. Paramétrer votre webhook
+3. Modifier `phone` dans votre fichier `config.ts` avec votre numéro de téléphone
 
 TODO/À FINALISER
 
