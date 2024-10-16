@@ -1,7 +1,10 @@
 # PIERRE – L'IA open source du mouvement HLM
 
 > [!IMPORTANT]
-> PIERRE est actuellement en version `0.10.x` (consulter les [releases](https://github.com/charnould/pierre/releases)) avec une **qualité de base de connaissances estimée à `10 %`**. Par ailleurs, la documentation ci-dessous est en cours de rédaction. En cas de difficultés, créer une `issue` ou envoyer un email à charnould@pierre-ia.org.
+> PIERRE est actuellement en version `0.11.x` (consulter les [releases](https://github.com/charnould/pierre/releases)) avec une **qualité de base de connaissances estimée à `10 %`**. Par ailleurs, la documentation ci-dessous est en cours de rédaction. En cas de difficultés, créer une `issue` ou envoyer un email à charnould@pierre-ia.org.
+
+> [!IMPORTANT]
+> PIERRE ne connait pas les spécificités des bailleurs (ex : la taille de leur parc, les coordonnées des gardiens, les procédures internes, etc.). Tous ces éléments peuvent néanmoins lui être aisément « enseignés » en modifiant l'équivalent d'un document Word (_cf._ [Contribuer à PIERRE](#contribuer-%C3%A0-pierre)).
 
 ## PIERRE : kézako ?
 
@@ -9,7 +12,7 @@ PIERRE est une intelligence artificielle (IA) **open source**, **plurilingue** e
 
 Plus concrètement encore, PIERRE c'est à la fois :
 
-1. Un **chatbot open source** qui répond à 100 % des questions de « premier niveau » des locataires et demandeurs HLM, disponible sur le **Web** ([démonstration](https://pierre-ia.org)) et par **SMS**.
+1. Un **chatbot** (ou mieux : un **resolution bot**) **open source** qui répond à 100 % des questions de « premier niveau » des locataires et demandeurs HLM, disponible sur le **Web** ([démonstration](https://pierre-ia.org)) et par **SMS**.
 2. Une **base de connaissances** en **open data** ([consultation](https://kdb.pierre-ia.org)), utilisable indépendamment du chatbot et indispensable à la mise en oeuvre de toutes approches « Retrieval Augmented Generation » ([RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation)) via un LLM.
 
 → [Télécharger une présentation de PIERRE](<docs/assets/pierre-(ia)-en-3-min.pdf>) (PDF · 2,6 Mo)
@@ -43,7 +46,7 @@ Plus concrètement encore, PIERRE c'est à la fois :
 
 ## Contribuer à PIERRE
 
-- Pour contribuer à la **base de connaissances** de PIERRE, consultez [README.md](https://kdb.pierre-ia.org) (c'est simplissime, y compris pour ceux peu à l'aise avec l'informatique, et cela profite automatiquement à l'ensemble du mouvement HLM).
+- Pour contribuer à la **base de connaissances** de PIERRE, consultez [README.md](https://kdb.pierre-ia.org) (c'est aussi simple que de modifier un document Word, et cela profite automatiquement à l'ensemble du mouvement HLM).
 - Pour contribuer au code-source du chatbot/LLM, consultez [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 Les `releases` de PIERRE [sont consultables ici](https://github.com/charnould/pierre/releases).
@@ -68,7 +71,7 @@ PIERRE utilise « trois (passes de) LLM » dans cet ordre successif :
 
 2. Un **modèle de génération d'`embeddings`** transforme la « requête augmentée » en vecteurs de valeurs numériques qui sont ensuite utilisés pour rechercher les éléments de réponse les plus pertinents dans la base de connaissances de PIERRE. **À ce jour, ce modèle ne peut pas être modifié** (`text-embedding-3-large`). En conséquence, il est indispensable — lorsque l'on auto-héberge PIERRE — de disposer d'une clef d'API OpenAI.
 
-3. Un **modèle de génération de `textes`** génére les réponses textuelles aux utilisateurs. Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Choose Your LLM Model »** — **il est possible de choisir le modèle utilisé** (Mistral, Anthropic, Cohere...) et ce, en modifiant le fichier de configuation (_cf._ infra). Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
+3. Un **modèle de génération de `textes`** génére les réponses textuelles aux utilisateurs. Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Bring Your Own LLM Key/Model »** (BYOK) — **il est possible de choisir le modèle utilisé** (Mistral, Anthropic, Cohere...) et ce, en modifiant le fichier de configuation (_cf._ infra). Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
 
 ### L'universel SMS pour les échanges de « premier niveau »
 
@@ -89,7 +92,7 @@ Principales caratéristiques de `Time2chat` (en savoir plus via l'[ARCEP](https:
 - Framework: [`Hono`](https://github.com/honojs/hono) (with [`Bun`](https://github.com/oven-sh/bun) runtime)
 - Database + Vectorstore: [`SQLite3`](https://sqlite.org) (extended with [`sqlite-vec`](https://github.com/asg017/sqlite-vec))
 - Deployment: [`Kamal`](https://kamal-deploy.org) (with [`Docker`](https://www.docker.com))
-- LLM: « Choose Your LLM Model », par défaut `OpenAI`
+- LLM: « Bring Your Own LLM Key/Model » (BYOK), par défaut `OpenAI`
 - SMS: `Time2Chat` via [`CM`](https://www.cm.com/fr-fr/)
 - Collaborative writing tool (knowledge database): [`Gitbook`](https://www.gitbook.com)
 
@@ -99,8 +102,8 @@ Déployer PIERRE sur un serveur génére des coûts (minimes) :
 
 - La location d'un serveur (par exemple `CX22` d'[Hetzner](https://www.hetzner.com/cloud/)) : env. 10 € par mois.
 - L'usage d'un LLM via une API, soit (sur la base d'OpenAI utilisée par défaut) :  
-  • Génération de vecteurs : 0.13 $US / 1M tokens avec `text-embedding-3-large`  
-  • Génération de textes : 0,15 $US (input) et 0,60 $US (output) / 1M tokens avec `gpt-4o-mini`
+  – Génération de vecteurs : 0.13 $US / MTokens avec `text-embedding-3-large`  
+  – Génération de textes : 0,15 $US (input) et 0,60 $US (output) / MTokens avec `gpt-4o-mini`
 - (Optionnellement) Les conversations SMS :  
   – Location d'un numéro de téléphone : 10 € par mois  
   – Envoi de SMS : 0.09 € par conversation
@@ -124,7 +127,11 @@ Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour
 
 1. Installer `WSL` et vérifier sa bonne installation ([instructions](https://learn.microsoft.com/fr-fr/windows/wsl/install)).
 2. Installer `Bun` et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
-3. Cloner/forker le présent dépôt.
+3. Forker le présent dépôt.
+
+> [!IMPORTANT]
+> Il est important de **forker** (et non de cloner) le dépôt afin de pouvoir aisément le mettre à jour des évolutions de PIERRE, et notamment de sa base de connaissances qui évolue régulièrement.
+
 4. Lancer `bun install` dans votre terminal pour installer les dépendances.
 5. Renommer le fichier `.env.example` en `.env.production` et compléter le.
 6. Lancer PIERRE avec `bun dev`.
@@ -199,7 +206,10 @@ Pour modifier cela, modifier dans le fichier `config.ts` :
 - `persona` qui définit l'identité et la personnalité du chatbot
 - `context` qui définit le contexte dans lequel le chabot doit considérer son interlocuteur
 
-## Installer PIERRE sur votre site web ou extranet-locataire (self-hosting)
+> [!NOTE]
+> Pour faciliter la lecture de `persona` et `context` dans VSCode, ou plus généralement activer le _word wrap_ : utilisez le raccourci `Alt` + `z` (Windows) ou `⌥` + `z` (Mac).
+
+## Installer PIERRE sur votre site web (self-hosting)
 
 > [!IMPORTANT]
 > Pour installer PIERRE sur votre site internet, il est indispensable de disposer d'une version fonctionnelle de PIERRE installée sur un VPS.
