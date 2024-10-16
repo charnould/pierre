@@ -11,12 +11,13 @@ export const view = (config: Config) => {
         <link rel="manifest" href="../assets/${config.id}/manifest.json" />
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
         <script defer src="../assets/pierre-ia.org/dist/js/ai.js"></script>
+        <title>Bonjour 👋, comment puis-je vous aider aujourd'hui ?</title>
       </head>
 
       <body class="mx-auto flex h-dvh max-w-4xl flex-col bg-white px-6">
         <main class="no-scrollbar flex-1 overflow-scroll pb-12">
           <div class="clear-both flex gap-2 pt-6 pb-2" data-role="system__logo">
-            <img src="../assets/${config.id}/system.svg" height="26" width="26" />
+            <img src="../assets/${config.id}/system.svg" height="26" width="26" alt="AI" />
           </div>
           <div class="prose" data-role="system">
             ${config.greeting.map((g: string) => html`<p>${g}</p>`)}
