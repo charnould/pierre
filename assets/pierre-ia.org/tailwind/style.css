@@ -1,6 +1,38 @@
-@import url('https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+/* User font */
+/* https://weiweihuanghuang.github.io/Work-Sans/ */
+@font-face {
+  font-family: 'Work Sans';
+  font-weight: normal;
+  font-style: normal;
+  src:
+    url('../fonts/WorkSans-Regular.woff2') format('woff2'),
+    url('../fonts/WorkSans-Regular.ttf') format('truetype');
+}
+
+/* Bot font */
+/* https://rsms.me/inter/ */
+/* https://webfont.yabe.land/en/misc/convert-ttf-woff2/ */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  font-optical-sizing: auto;
+  src:
+    url('../fonts/InterVariable.woff2') format('woff2'),
+    url('../fonts/InterVariable.ttf') format('truetype');
+}
+
 @import 'tailwindcss';
+
+@theme {
+  --font-family-sans: 'Inter', 'sans-serif';
+  /* TODO: make it works only for fontFamily Sans */
+  /* https://rsms.me/inter/#features */
+  --default-font-feature-settings: 'ss03', 'liga', 'calt', 'ss01', 'cv10', 'cv08';
+}
+
+/* Hide scrollbars */
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
@@ -11,9 +43,14 @@
   scrollbar-width: none;
 }
 
+/* Style user inputs */
+/* TODO: handle right-to-left language */
+
 .user {
   @apply float-right mt-8 mb-2 rounded-xl bg-stone-100 py-2 px-5 font-['Work_Sans'] text-base;
 }
+
+/* Bot styles */
 
 .thinking {
   background-color: black;
@@ -30,9 +67,11 @@
   0% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.4);
   }
+
   100% {
     transform: scale(1);
   }
@@ -54,7 +93,7 @@
   /* Typography */
 
   p {
-    @apply my-2 font-['Inter'] text-[17px] font-[370] leading-[24px] empty:hidden;
+    @apply my-2 text-[17px] font-[370] leading-[24px] empty:hidden;
   }
 
   b,
