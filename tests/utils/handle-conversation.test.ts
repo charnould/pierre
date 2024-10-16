@@ -5,21 +5,33 @@ import { db } from '../../utils/database'
 import {
   delete_conversation,
   get_conversation,
-  get_conversations_for_review,
+  get_conversations,
   save_reply,
   score_conversation
 } from '../../utils/handle-conversation'
 
 //
 //
-//
-//
-//
-//
-beforeAll(() => {
-  setSystemTime(new Date('2012-11-10T09:08:07'))
-  const tdb = db('telemetry')
-  if (tdb instanceof Database) tdb.query('DELETE FROM telemetry').run()
+// Dummy replies for testing purpose
+const r_1_1 = await AIContext.parseAsync({
+  conv_id: 'id_1',
+  config: 'pierre-ia.org',
+  role: 'user',
+  content: 'Qui es-tu ?'
+})
+
+const r_1_2 = await AIContext.parseAsync({
+  conv_id: 'id_1',
+  config: 'pierre-ia.org',
+  role: 'assistant',
+  content: 'Je suis Pierre !'
+})
+
+const r_2_1 = await AIContext.parseAsync({
+  conv_id: 'id_2',
+  config: 'pierre-ia.org',
+  role: 'user',
+  content: 'Bonjour'
 })
 
 //
@@ -28,34 +40,41 @@ beforeAll(() => {
 //
 //
 //
-it('should insert 3 replies and retrieve 2 conversations', async () => {
-  // id_1
-  const r_1_1 = await AIContext.parseAsync({
-    conv_id: 'id_1',
-    config: 'pierre-ia.org',
-    role: 'user',
-    content: 'Qui es-tu ?'
-  })
+beforeAll(() => {
+  const database = db('telemetry')
+  if (database instanceof Database) database.query('DELETE FROM telemetry').run()
+})
 
-  const r_1_2 = await AIContext.parseAsync({
-    conv_id: 'id_1',
-    config: 'pierre-ia.org',
-    role: 'assistant',
-    content: 'Je suis Pierre !'
-  })
+afterAll(() => {
+  setSystemTime()
+})
 
-  // id_2
-  const r_2_1 = await AIContext.parseAsync({
-    conv_id: 'id_2',
-    config: 'pierre-ia.org',
-    role: 'user',
-    content: 'Bonjour'
-  })
-
+//
+//
+//
+//
+//
+//
+it('should insert 3 replies', async () => {
+  setSystemTime(new Date('2012-12-12T12:05:00'))
   save_reply(r_1_1, false)
+  setSystemTime(new Date('2012-12-12T12:10:00'))
   save_reply(r_1_2, false)
+  setSystemTime(new Date('2012-12-12T12:15:00'))
   save_reply(r_2_1, false)
 
+  const database = db('telemetry')
+  if (database instanceof Database)
+    expect(database.query('SELECT * FROM telemetry').all()).toMatchSnapshot()
+})
+
+//
+//
+//
+//
+//
+//
+it('should retrieve 2 conversations', async () => {
   // Tests
   expect(get_conversation(r_1_1.conv_id)).toMatchSnapshot()
   expect(get_conversation(r_2_1.conv_id)).toMatchSnapshot()
@@ -67,13 +86,13 @@ it('should insert 3 replies and retrieve 2 conversations', async () => {
 //
 //
 //
-it('should score 2 conversations for customer + organization + external', () => {
+it('should score conversations', () => {
   score_conversation(
     {
       conv_id: 'id_1',
       scorer: 'customer',
-      score: 0,
-      comment: "C'est nul pour le Customer"
+      score: 1,
+      comment: 'customer comment'
     },
     false
   )
@@ -82,23 +101,44 @@ it('should score 2 conversations for customer + organization + external', () => 
     {
       conv_id: 'id_1',
       scorer: 'organization',
-      score: 1,
-      comment: "C'est 1 pour l'Organization"
+      score: 2,
+      comment: 'organization comment'
     },
     false
   )
 
   score_conversation(
     {
-      conv_id: 'id_2',
-      scorer: 'external',
-      score: 2,
-      comment: "C'est 2 pour l'External"
+      conv_id: 'id_1',
+      scorer: 'pierre',
+      score: 3,
+      comment: 'pierre comment'
+    },
+    false
+  )
+
+  score_conversation(
+    {
+      conv_id: 'id_1',
+      scorer: 'ai',
+      score: 4,
+      comment: 'ai comment'
     },
     false
   )
 
   expect(get_conversation('id_1')).toMatchSnapshot()
+
+  score_conversation(
+    {
+      conv_id: 'id_2',
+      scorer: 'ai',
+      score: 5,
+      comment: 'outstanding answer!'
+    },
+    false
+  )
+
   expect(get_conversation('id_2')).toMatchSnapshot()
 })
 
@@ -108,28 +148,9 @@ it('should score 2 conversations for customer + organization + external', () => 
 //
 //
 //
-it('should insert 2 replies (from 1 conversation) and delete this conversation', async () => {
-  // id_3
-  const r_3_1 = await AIContext.parseAsync({
-    conv_id: 'id_3',
-    config: 'pierre-ia.org',
-    role: 'user',
-    content: 'Conv 3_1'
-  })
-
-  const r_3_2 = await AIContext.parseAsync({
-    conv_id: 'id_3',
-    config: 'pierre-ia.org',
-    role: 'assistant',
-    content: 'Conv 3_2'
-  })
-
-  save_reply(r_3_1, false)
-  save_reply(r_3_2, false)
-
-  // Tests
-  expect(get_conversation(r_3_1.conv_id)).toMatchSnapshot()
-  expect(delete_conversation(r_3_1.conv_id)).toMatchSnapshot()
+it('should delete a full conversation', async () => {
+  delete_conversation(r_1_1.conv_id)
+  expect(get_conversation(r_1_1.conv_id)).toStrictEqual([])
 })
 
 //
@@ -139,7 +160,7 @@ it('should insert 2 replies (from 1 conversation) and delete this conversation',
 //
 //
 it('should retrieve all conversations', () => {
-  expect(get_conversations_for_review()).toMatchSnapshot()
+  expect(get_conversations()).toMatchSnapshot()
 })
 
 //

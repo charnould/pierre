@@ -8,12 +8,15 @@ import type { AIContext, Reply } from './_schema'
 // Get ONE conversation
 // Test: OK
 export const get_conversation = (conv_id: string) => {
-  const tdb = db('telemetry')
+  const database = db('telemetry')
 
-  if (tdb instanceof Database) {
-    return tdb
+  if (database instanceof Database) {
+    const records = database
       .prepare('SELECT * FROM telemetry WHERE conv_id = $conv_id ORDER BY timestamp ')
-      .all({ $conv_id: conv_id }) as Reply[]
+      .all({ $conv_id: conv_id })
+
+    for (const record of records) record.metadata = JSON.parse(record.metadata)
+    return records
   }
 
   throw new Error('Invalid database type for telemetry_db')
@@ -24,10 +27,12 @@ export const get_conversation = (conv_id: string) => {
 // Delete ONE conversation
 // Test : OK
 export const delete_conversation = (conv_id: string) => {
-  const tdb = db('telemetry')
+  const database = db('telemetry')
 
-  if (tdb instanceof Database) {
-    return tdb.prepare('DELETE FROM telemetry WHERE conv_id = $conv_id').run({ $conv_id: conv_id })
+  if (database instanceof Database) {
+    return database
+      .prepare('DELETE FROM telemetry WHERE conv_id = $conv_id')
+      .run({ $conv_id: conv_id })
   }
 
   throw new Error('Invalid database type for telemetry_db')
@@ -40,34 +45,22 @@ export const delete_conversation = (conv_id: string) => {
 // TODO: Test "outside telemetry"
 export const save_reply = async (context: AIContext, telemetry: boolean) => {
   try {
-    const telemetry_db = db('telemetry')
+    const database = db('telemetry')
 
-    if (telemetry_db instanceof Database && typeof context.config !== 'string') {
-      telemetry_db
+    if (database instanceof Database && typeof context.config !== 'string') {
+      database
         .prepare(
-          `INSERT INTO telemetry (
-            conv_id,
-            config,
-            model,
-            role,
-            content,
-            timestamp,
-            prompt_tokens,
-            completion_tokens,
-            total_tokens
-            ) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          `
+          INSERT INTO telemetry (conv_id, config, role, content, timestamp, metadata)
+          VALUES (?, ?, ?, ?, ?, ?)`
         )
         .run(
           context.conv_id,
           context.config.id,
-          context.config.model,
           context.role,
           context.content,
           format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX"),
-          context.usage.prompt_tokens,
-          context.usage.completion_tokens,
-          context.usage.total_tokens
+          JSON.stringify(context.metadata)
         )
     }
 
@@ -93,20 +86,21 @@ export const score_conversation = async (
   telemetry: boolean
 ) => {
   try {
-    const tdb = db('telemetry')
+    const database = db('telemetry')
 
-    if (tdb instanceof Database) {
-      tdb
+    if (database instanceof Database) {
+      database
         .prepare(
-          `UPDATE telemetry
-           SET
-            ${scorer === 'customer' ? 'cus_satisfaction = $score ,' : ''}
-            ${scorer === 'customer' ? 'cus_comment = $comment' : ''}
-            ${scorer === 'external' ? 'ext_satisfaction = $score ,' : ''}
-            ${scorer === 'external' ? 'ext_comment = $comment' : ''}
-            ${scorer === 'organization' ? 'org_satisfaction = $score ,' : ''}
-            ${scorer === 'organization' ? 'org_comment = $comment' : ''}
-          WHERE conv_id = $conv_id `
+          `
+          UPDATE telemetry
+          SET metadata = json_set(
+            metadata,
+            ${scorer === 'customer' ? "'$.evaluation.customer.score', $score, '$.evaluation.customer.comment', $comment" : ''}
+            ${scorer === 'organization' ? "'$.evaluation.organization.score', $score, '$.evaluation.organization.comment', $comment" : ''}
+            ${scorer === 'pierre' ? "'$.evaluation.pierre.score', $score, '$.evaluation.pierre.comment', $comment" : ''}
+            ${scorer === 'ai' ? "'$.evaluation.ai.score', $score, '$.evaluation.ai.comment', $comment" : ''}
+          )
+          WHERE conv_id = $conv_id`
         )
         .run({ $conv_id: conv_id, $score: score, $comment: comment })
     }
@@ -133,11 +127,16 @@ export const score_conversation = async (
 //
 // Get ALL conversations for review (./eval)
 // Test: OK
-export const get_conversations_for_review = (): Reply[] => {
-  const tdb = db('telemetry')
+export const get_conversations = (): Reply[] => {
+  const database = db('telemetry')
 
-  if (tdb instanceof Database) {
-    return tdb.prepare('SELECT * FROM telemetry ORDER BY timestamp DESC').all() as Reply[]
+  if (database instanceof Database) {
+    const stringified_results = database
+      .prepare('SELECT * FROM telemetry ORDER BY timestamp DESC')
+      .all() as Reply[]
+
+    for (const record of stringified_results) record.metadata = JSON.parse(record.metadata)
+    return stringified_results
   }
 
   throw new Error('Invalid database type for telemetry_db')

@@ -32,9 +32,9 @@ export const stream_answer = async (context: AIContext) =>
     model: eval((context.config as { model: string }).model),
     messages: context.conversation,
     async onFinish({ text, usage }) {
-      context.usage.completion_tokens = usage.completionTokens
-      context.usage.prompt_tokens = usage.promptTokens
-      context.usage.total_tokens = usage.totalTokens
+      context.metadata.tokens.completion = usage.completionTokens
+      context.metadata.tokens.prompt = usage.promptTokens
+      context.metadata.tokens.total = usage.totalTokens
       context.role = 'assistant'
       context.content = text
 
@@ -63,9 +63,9 @@ export const generate_answer = async (context: AIContext) => {
 
   const plain_text = remove_markdown(text)
 
-  context.usage.completion_tokens = usage.completionTokens
-  context.usage.prompt_tokens = usage.promptTokens
-  context.usage.total_tokens = usage.totalTokens
+  context.metadata.tokens.completion = usage.completionTokens
+  context.metadata.tokens.prompt = usage.promptTokens
+  context.metadata.tokens.total = usage.totalTokens
   context.role = 'assistant'
   context.content = plain_text
 
