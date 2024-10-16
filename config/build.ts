@@ -2,6 +2,7 @@ import { $ } from 'bun'
 import toc from 'markdown-toc'
 
 // Remove old files
+await $`rm -rf assets/pierre-ia.org/dist/fonts`
 await $`rm -rf assets/pierre-ia.org/dist/css`
 await $`rm -rf assets/pierre-ia.org/dist/js`
 await $`rm -f docs/assets/widget.js`
@@ -33,6 +34,9 @@ await $`bun build --entrypoints assets/pierre-ia.org/scripts/*.ts --outdir asset
 
 // Compile production CSS file
 await $`bunx @tailwindcss/cli@next -i assets/pierre-ia.org/tailwind/style.css -o assets/pierre-ia.org/dist/css/style.css --minify`
+
+// Copy fonts in production `dist` folder
+await $`cp -r assets/pierre-ia.org/fonts assets/pierre-ia.org/dist/fonts`
 
 // Copy transpile/minify widget.js in `docs` folder, aka PIERRE website
 await $`cp assets/pierre-ia.org/dist/js/widget.js docs/assets`
