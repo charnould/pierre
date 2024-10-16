@@ -15,7 +15,7 @@ Plus concrètement encore, PIERRE c'est à la fois :
 1. Un **chatbot** (ou mieux : un **resolution bot**) **open source** qui répond à 100 % des questions de « premier niveau » des locataires et demandeurs HLM, disponible sur le **Web** ([démonstration](https://pierre-ia.org)) et par **SMS**.
 2. Une **base de connaissances** en **open data** ([consultation](https://kdb.pierre-ia.org)), utilisable indépendamment du chatbot et indispensable à la mise en oeuvre de toutes approches « Retrieval Augmented Generation » ([RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation)) via un LLM.
 
-→ [Télécharger une présentation de PIERRE](/docs/assets/2024-10%20-%20PIERRE%20-%20L'IA%20open%20source%20du%20mouvement%20HLM.pdf) (PDF · 2,6 Mo)
+→ [Télécharger une présentation de PIERRE](/docs/assets/pierre-(ia)-en-3-min.pdf) (PDF · 2,6 Mo)
 
 ## Sommaire
 
