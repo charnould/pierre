@@ -1,3 +1,6 @@
+// Import Marked to make a single full JS bundle
+import { marked } from 'marked'
+
 //
 //
 //
