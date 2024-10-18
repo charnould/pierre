@@ -7,11 +7,11 @@ export const view = (config: Config) => {
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.css" />
         <link rel="icon" href="../assets/${config.id}/system.svg" type="image/svg+xml" />
         <link rel="manifest" href="../assets/${config.id}/manifest.json" />
-        <script type="module" src="../assets/pierre-ia.org/dist/js/ai.js"></script>
-        <title>Bonjour 👋, comment puis-je vous aider aujourd'hui ?</title>
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1729251341005.css" />
+        <script type="module" src="../assets/pierre-ia.org/dist/js/ai.1729251341005.js"></script>
+        <title>Comment puis-je vous aider ? 👋</title>
       </head>
 
       <body class="mx-auto flex h-dvh max-w-4xl flex-col bg-white px-6">

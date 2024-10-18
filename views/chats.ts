@@ -7,8 +7,8 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
     <html lang="fr">
       <head>
         <meta charset="UTF-8" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.css" />
-        <script src="https://unpkg.com/@hotwired/turbo@8.0.4/dist/turbo.es2017-umd.js"></script>
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1729251341005.css" />
+        <script src="https://unpkg.com/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
         <title>PIERRE - Évaluation des conversations</title>
       </head>
 
