@@ -15,7 +15,7 @@ Plus concrètement encore, PIERRE c'est à la fois :
 1. Un **chatbot** (ou mieux : un **resolution bot**) **open source** qui répond à 100 % des questions de « premier niveau » des locataires et demandeurs HLM, disponible sur le **Web** ([démonstration](https://pierre-ia.org)) et par **SMS**.
 2. Une **base de connaissances** en **open data** ([consultation](https://kdb.pierre-ia.org)), utilisable indépendamment du chatbot et indispensable à la mise en oeuvre de toutes approches « Retrieval Augmented Generation » ([RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation)) via un LLM.
 
-→ [Télécharger une présentation de PIERRE](<docs/assets/pierre-(ia)-en-3-min.pdf>) (PDF · 2,6 Mo)
+→ [Télécharger une présentation de PIERRE](./docs/assets/pierre-en-3-min.pdf) (PDF · 2,6 Mo)
 
 ## Sommaire
 
@@ -67,11 +67,11 @@ Les `releases` de PIERRE [sont consultables ici](https://github.com/charnould/pi
 
 PIERRE utilise « trois (passes de) LLM » dans cet ordre successif :
 
-1. Un **modèle de génération d'`objets`** transforme la requête de l'utilisateur en une « requête augmentée » (en utilisant des techiques de type HyDE ou Stepback). Tous les LLM ne peuvent générer de tels `objets`. De fait, **le modèle utilisé à ce jour ne peut pas être modifié** (`gpt-4o-mini-2024-07-18`). En conséquence, il est indispensable — lorsque l'on auto-héberge PIERRE — de disposer d'une clef d'API OpenAI.
+1. Un **modèle de génération d'`objets`** qui transforme la requête de l'utilisateur en une « requête augmentée » (en utilisant des techiques de type HyDE ou Stepback). Tous les LLM ne peuvent générer de tels `objets`. De fait, **le modèle utilisé à ce jour ne peut pas être modifié** (`gpt-4o-mini-2024-07-18`). En conséquence, il est indispensable — lorsque l'on auto-héberge PIERRE — de disposer d'une clef d'API OpenAI.
 
-2. Un **modèle de génération d'`embeddings`** transforme la « requête augmentée » en vecteurs de valeurs numériques qui sont ensuite utilisés pour rechercher les éléments de réponse les plus pertinents dans la base de connaissances de PIERRE. **À ce jour, ce modèle ne peut pas être modifié** (`text-embedding-3-large`). En conséquence, il est indispensable — lorsque l'on auto-héberge PIERRE — de disposer d'une clef d'API OpenAI.
+2. Un **modèle de génération d'`embeddings`** qui transforme la « requête augmentée » en vecteurs de valeurs numériques qui sont ensuite utilisés pour rechercher les éléments de réponse les plus pertinents dans la base de connaissances de PIERRE. **À ce jour, ce modèle ne peut pas être modifié** (`text-embedding-3-large`). En conséquence, il est indispensable — lorsque l'on auto-héberge PIERRE — de disposer d'une clef d'API OpenAI.
 
-3. Un **modèle de génération de `textes`** génére les réponses textuelles aux utilisateurs. Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Bring Your Own LLM Key/Model »** (BYOK) — **il est possible de choisir le modèle utilisé** (Mistral, Anthropic, Cohere...) et ce, en modifiant le fichier de configuation (_cf._ infra). Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
+3. Un **modèle de génération de `textes`** qui génére les réponses textuelles aux utilisateurs. Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Bring Your Own LLM Key/Model »** (BYOK) — **il est possible de choisir le modèle utilisé** (Mistral, Anthropic, Cohere...) et ce, en modifiant le fichier de configuation (_cf._ infra). Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
 
 ### L'universel SMS pour les échanges de « premier niveau »
 
