@@ -1,14 +1,31 @@
 import { $ } from 'bun'
 import toc from 'markdown-toc'
 
+//
+//
+//
+// A timestamp used in filename to avoid caching issue (CSS + JS)
+const timestamp = Date.now()
+
+//
+//
+//
 // Remove old files
+await $`rm -rf assets/pierre-ia.org/dist/fonts`
 await $`rm -rf assets/pierre-ia.org/dist/css`
 await $`rm -rf assets/pierre-ia.org/dist/js`
 await $`rm -f docs/assets/widget.js`
+await $`find . -name ".DS_Store" -type f -delete` // Delete all .DS_Store
 
+//
+//
+//
 // Upgrade Bun and dependencies
 await $`bun upgrade --stable && bun update && bun install`
 
+//
+//
+//
 // Generate README table of contents
 const content = await Bun.file('README.md').text()
 const updated_content = toc.insert(content, {
@@ -25,42 +42,65 @@ const updated_content = toc.insert(content, {
 })
 await Bun.write('README.md', updated_content)
 
-// Transpile and minify .ts scripts into .js to work in browser
+//
+//
+//
+// Compile production CSS file
+await $`bunx @tailwindcss/cli@next -i assets/pierre-ia.org/tailwind/style.css -o assets/pierre-ia.org/dist/css/style.${timestamp}.css --minify`
+
+//
+//
+//
+// Transpile and minify .ts scripts into .js to work in browser.
+// Rename one of these files (ai.js) to include a hash/timestamp (to avoid caching issue).
+// Add "timestamped filepath" in Views (index + chat).
 await $`bun build --entrypoints assets/pierre-ia.org/scripts/*.ts --outdir assets/pierre-ia.org/dist/js --minify --target browser`
+await $`mv ./assets/pierre-ia.org/dist/js/ai.js ./assets/pierre-ia.org/dist/js/ai.${timestamp}.js`
+const view_1 = await Bun.file('./views/index.ts').text()
+await Bun.write(
+  './views/index.ts',
+  view_1
+    .replace(
+      /..\/assets\/pierre-ia\.org\/dist\/js\/ai\.\d+\.js/,
+      `../assets/pierre-ia.org/dist/js/ai.${timestamp}.js`
+    )
+    .replace(
+      /..\/assets\/pierre-ia\.org\/dist\/css\/style\.\d+\.css/,
+      `../assets/pierre-ia.org/dist/css/style.${timestamp}.css`
+    )
+)
+const view_2 = await Bun.file('./views/chats.ts').text()
+await Bun.write(
+  './views/chats.ts',
+  view_2.replace(
+    /..\/assets\/pierre-ia\.org\/dist\/css\/style\.\d+\.css/,
+    `../assets/pierre-ia.org/dist/css/style.${timestamp}.css`
+  )
+)
 
-// Compile production CSS files
-await $`bunx @tailwindcss/cli@next -i assets/pierre-ia.org/tailwind/chat.css -o assets/pierre-ia.org/dist/css/chat.css --minify`
-await $`bunx @tailwindcss/cli@next -i assets/pierre-ia.org/tailwind/admin.css -o assets/pierre-ia.org/dist/css/admin.css --minify`
+//
+//
+//
+// Copy fonts in production `dist` folder
+await $`cp -r assets/pierre-ia.org/fonts assets/pierre-ia.org/dist/fonts`
 
+//
+//
+//
 // Copy transpile/minify widget.js in `docs` folder, aka PIERRE website
 await $`cp assets/pierre-ia.org/dist/js/widget.js docs/assets`
 
+//
+//
+//
 // Lint, format, test code
 await $`bun lint`
 await $`bun format`
 await $`bun test`
 await $`clear`
 
+//
+//
+//
 // Output something when done
-// Ascii generator: https://www.asciiart.eu/text-to-ascii-art (ANSI Shadow)
-console.log(`
-
-
-██████╗ ██╗   ██╗██╗██╗     ██████╗   
-██╔══██╗██║   ██║██║██║     ██╔══██╗  
-██████╔╝██║   ██║██║██║     ██║  ██║  
-██╔══██╗██║   ██║██║██║     ██║  ██║  
-██████╔╝╚██████╔╝██║███████╗██████╔╝  
-╚═════╝  ╚═════╝ ╚═╝╚══════╝╚═════╝   
-                                      
-██████╗  ██████╗ ███╗   ██╗███████╗██╗
-██╔══██╗██╔═══██╗████╗  ██║██╔════╝██║
-██║  ██║██║   ██║██╔██╗ ██║█████╗  ██║
-██║  ██║██║   ██║██║╚██╗██║██╔══╝  ╚═╝
-██████╔╝╚██████╔╝██║ ╚████║███████╗██╗
-╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚══════╝╚═╝
-
-    You can safely close your shell.
-
-
-`)
+console.log('\n\nBUILD DONE!\nYou can safely close your shell.\n\n')
