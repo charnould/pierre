@@ -12,7 +12,7 @@ export const controller = async (c: Context) => {
       {
         conv_id: id,
         scorer: body.scorer,
-        score: body.score,
+        score: Number(body.score),
         comment: body.comment
       },
       true
