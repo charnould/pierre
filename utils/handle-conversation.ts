@@ -6,7 +6,6 @@ import type { AIContext, Reply } from './_schema'
 //
 //
 // Get ONE conversation
-// Test: OK
 export const get_conversation = (conv_id: string) => {
   const database = db('telemetry')
 
@@ -16,6 +15,7 @@ export const get_conversation = (conv_id: string) => {
       .all({ $conv_id: conv_id })
 
     for (const record of records) record.metadata = JSON.parse(record.metadata)
+
     return records
   }
 
@@ -24,8 +24,7 @@ export const get_conversation = (conv_id: string) => {
 
 //
 //
-// Delete ONE conversation
-// Test : OK
+// Delete a full conversation
 export const delete_conversation = (conv_id: string) => {
   const database = db('telemetry')
 
@@ -40,9 +39,7 @@ export const delete_conversation = (conv_id: string) => {
 
 //
 //
-// Save ONE reply (a single part of a conversation)
-// Test: OK
-// TODO: Test "outside telemetry"
+// Save a reply (to a conversation)
 export const save_reply = async (context: AIContext, telemetry: boolean) => {
   try {
     const database = db('telemetry')
@@ -50,9 +47,7 @@ export const save_reply = async (context: AIContext, telemetry: boolean) => {
     if (database instanceof Database && typeof context.config !== 'string') {
       database
         .prepare(
-          `
-          INSERT INTO telemetry (conv_id, config, role, content, timestamp, metadata)
-          VALUES (?, ?, ?, ?, ?, ?)`
+          `INSERT INTO telemetry (conv_id, config, role, content, timestamp, metadata) VALUES (?, ?, ?, ?, ?, ?)`
         )
         .run(
           context.conv_id,
@@ -66,21 +61,20 @@ export const save_reply = async (context: AIContext, telemetry: boolean) => {
 
     // Telemetry
     if (Bun.env.TELEMETRY === 'true' && telemetry === true) {
-      await fetch('https://pierre-ia.org/telemetry', {
+      await fetch('https://assistant.pierre-ia.org/telemetry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(context)
       })
     }
   } catch {}
+
   return
 }
 
 //
 //
-// Score ONE conversation (= all parts/replies)
-// Test: ok
-// TODO: Test "outside telemetry"
+// Score a full conversation
 export const score_conversation = async (
   { conv_id, scorer, score, comment },
   telemetry: boolean
@@ -91,9 +85,7 @@ export const score_conversation = async (
     if (database instanceof Database) {
       database
         .prepare(
-          `
-          UPDATE telemetry
-          SET metadata = json_set(
+          `UPDATE telemetry SET metadata = json_set(
             metadata,
             ${scorer === 'customer' ? "'$.evaluation.customer.score', $score, '$.evaluation.customer.comment', $comment" : ''}
             ${scorer === 'organization' ? "'$.evaluation.organization.score', $score, '$.evaluation.organization.comment', $comment" : ''}
@@ -107,7 +99,7 @@ export const score_conversation = async (
 
     // Telemetry
     if (Bun.env.TELEMETRY === 'true' && telemetry === true) {
-      await fetch('https://pierre-ia.org/telemetry', {
+      await fetch('https://assistant.pierre-ia.org/telemetry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -125,8 +117,7 @@ export const score_conversation = async (
 
 //
 //
-// Get ALL conversations for review (./eval)
-// Test: OK
+// Get all conversations for review (./eval)
 export const get_conversations = (): Reply[] => {
   const database = db('telemetry')
 
@@ -136,6 +127,7 @@ export const get_conversations = (): Reply[] => {
       .all() as Reply[]
 
     for (const record of stringified_results) record.metadata = JSON.parse(record.metadata)
+
     return stringified_results
   }
 
