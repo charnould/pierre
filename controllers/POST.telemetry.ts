@@ -7,8 +7,9 @@ export const controller = async (c: Context) => {
     if (data.scorer) {
       score_conversation(data, false)
     } else {
-      save_reply(data, false)
+      await save_reply(data, false)
     }
   } catch {}
+
   return c.body(null, 200)
 }
