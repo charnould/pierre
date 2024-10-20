@@ -47,7 +47,7 @@ export const save_reply = async (context: AIContext, telemetry: boolean) => {
     if (database instanceof Database && typeof context.config !== 'string') {
       database
         .prepare(
-          `INSERT INTO telemetry (conv_id, config, role, content, timestamp, metadata) VALUES (?, ?, ?, ?, ?, ?)`
+          `INSERT OR IGNORE INTO telemetry (conv_id, config, role, content, timestamp, metadata) VALUES (?, ?, ?, ?, ?, ?)`
         )
         .run(
           context.conv_id,
