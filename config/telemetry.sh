@@ -16,7 +16,8 @@ init_db () {
             role TEXT,
             timestamp TEXT,
             content TEXT,
-            metadata TEXT
+            metadata TEXT,
+            UNIQUE(conv_id, timestamp)
         );
 EOF
 }
