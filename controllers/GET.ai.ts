@@ -2,7 +2,7 @@ import type { CoreTool, StreamTextResult } from 'ai'
 import type { Context } from 'hono'
 import { streamText } from 'hono/streaming'
 import { AIContext, type SMS } from '../utils/_schema'
-import { enhance_query } from '../utils/enhance-query'
+import { augment_query } from '../utils/augment-query'
 import { answer_user, reach_deadlock } from '../utils/generate-answer'
 import { get_conversation, save_reply } from '../utils/handle-conversation'
 import { parse_incoming_sms } from '../utils/parse-incoming-sms'
@@ -46,39 +46,30 @@ export const controller = async (c: Context) => {
     }
 
     //
-    // Step 3.
-    // Apply all IA and retrieval logic...!
+    // Step 3. Apply retrieval logic
     if (context) {
-      //
-      // 1. Save user query in DB
-      // 2. Get the ALL conversation and assign it
-      // 3. Parse and enhance user query
+
+      // Save raw user query in DB
       save_reply(context, true)
-      context.conversation = get_conversation(context.conv_id)
-      context = await AIContext.parseAsync({ ...context, ...(await enhance_query(context)) })
+
+      // Get the all conversation,
+      // then parse and augment user query
+      // prettier-ignore
+      context = await AIContext
+        .parseAsync({ ...context, conversation: get_conversation(context.conv_id) })
+        .then(async (context) => ({ ...context, query: await augment_query(context) }))
 
       // If query/request is not good, prepare a deadlock answer
-      if (
-        (context.is_about_housing === false && context.is_about_yourself === true) ||
-        (context.is_about_housing === false && context.is_greeting === true) ||
-        context.is_about_housing === false ||
-        context.contains_profanity === true
-      ) {
+      if (context.is_releveant === false || context.contains_profanity === true) {
         answer = await reach_deadlock(context, { is_sms: is_sms })
       } else {
-        //
         // If query/request is good,
         // retrieve the best possible chunks...
-        const chunks = await Promise.all([
-          vector_search(context.content),
-          vector_search(context.stepback),
-          vector_search((context.hyde as string[])[0]),
-          vector_search((context.hyde as string[])[1]),
-          vector_search((context.hyde as string[])[2]),
-          vector_search((context.queries as string[])[0]),
-          vector_search((context.queries as string[])[1]),
-          vector_search((context.queries as string[])[2])
-        ])
+        const chunks = await Promise.all(
+          [ ...context.query.standalone_questions, ...context.query.stepback_questions,
+            ...context.query.search_queries, ...context.query.hyde_answers
+          ].map((q) => vector_search(q))
+        )
 
         // Deduplicate and rank them
         context.chunks = rank_chunks(chunks)
