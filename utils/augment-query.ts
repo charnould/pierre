@@ -12,12 +12,7 @@ const openai = createOpenAI({ compatibility: 'strict' })
 //
 
 export const augment_query = async (context: AIContext) => {
-  // Parse `context.conversation` to get rid of `timestamp`, `config` and `conv_id`.
-  // In other words, keep only `role` and `content` (order it that of conversation)
-  context.conversation = z
-    .array(z.object({ role: z.enum(['assistant', 'user', 'system']), content: z.string() }))
-    .parse(context.conversation)
-
+  //
   // Push this custom `system` prompt at the end of the conversation
   context.conversation.push({
     role: 'system',
@@ -107,6 +102,9 @@ Examples :
     schema: Augmented_Query, // See `_schema.ts`
     temperature: 0.5
   })
+
+  // Remove `system` prompt to not polute conversation history
+  context.conversation.pop()
 
   return object
 }

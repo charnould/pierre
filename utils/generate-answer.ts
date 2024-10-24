@@ -3,12 +3,6 @@ import type { AIContext } from './_schema'
 import { generate_answer, stream_answer } from './deliver-answer'
 
 //
-// ██╗   ██╗███████╗███████╗██████╗      █████╗ ███████╗██╗  ██╗███████╗    ███████╗ ██████╗ ██████╗
-// ██║   ██║██╔════╝██╔════╝██╔══██╗    ██╔══██╗██╔════╝██║ ██╔╝██╔════╝    ██╔════╝██╔═══██╗██╔══██╗
-// ██║   ██║███████╗█████╗  ██████╔╝    ███████║███████╗█████╔╝ ███████╗    █████╗  ██║   ██║██████╔╝
-// ██║   ██║╚════██║██╔══╝  ██╔══██╗    ██╔══██║╚════██║██╔═██╗ ╚════██║    ██╔══╝  ██║   ██║██╔══██╗
-// ╚██████╔╝███████║███████╗██║  ██║    ██║  ██║███████║██║  ██╗███████║    ██║     ╚██████╔╝██║  ██║
-//  ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝    ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═╝
 //  ██████╗██╗     ███████╗██╗   ██╗███████╗██████╗ ███╗   ██╗███████╗███████╗███████╗
 // ██╔════╝██║     ██╔════╝██║   ██║██╔════╝██╔══██╗████╗  ██║██╔════╝██╔════╝██╔════╝
 // ██║     ██║     █████╗  ██║   ██║█████╗  ██████╔╝██╔██╗ ██║█████╗  ███████╗███████╗
@@ -55,7 +49,7 @@ Maintain a professional and supportive tone, appropriate for engaging with indiv
 
 # RESPONSE #
 
-- The response must be in ${context.lang}.
+- The response must be in ${context.query.lang}.
 - Ensure answers are brief when appropriate but provide explanations where required for clarity.
 
 # CONTEXT #
@@ -64,7 +58,7 @@ ${context.chunks}
 
 ---
 
-QUESTION: ${context.translated_followup}
+QUESTION: ${context.content}
 YOUR ANSWER:
 `.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
   })
@@ -75,17 +69,11 @@ YOUR ANSWER:
 }
 
 //
-// ██╗   ██╗███████╗███████╗██████╗     ██████╗ ███████╗ █████╗  ██████╗██╗  ██╗███████╗███████╗
-// ██║   ██║██╔════╝██╔════╝██╔══██╗    ██╔══██╗██╔════╝██╔══██╗██╔════╝██║  ██║██╔════╝██╔════╝
-// ██║   ██║███████╗█████╗  ██████╔╝    ██████╔╝█████╗  ███████║██║     ███████║█████╗  ███████╗
-// ██║   ██║╚════██║██╔══╝  ██╔══██╗    ██╔══██╗██╔══╝  ██╔══██║██║     ██╔══██║██╔══╝  ╚════██║
-// ╚██████╔╝███████║███████╗██║  ██║    ██║  ██║███████╗██║  ██║╚██████╗██║  ██║███████╗███████║
-//  ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝    ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚══════╝
-//  █████╗     ██████╗ ███████╗ █████╗ ██████╗ ██╗      ██████╗  ██████╗██╗  ██╗
-// ██╔══██╗    ██╔══██╗██╔════╝██╔══██╗██╔══██╗██║     ██╔═══██╗██╔════╝██║ ██╔╝
-// ███████║    ██║  ██║█████╗  ███████║██║  ██║██║     ██║   ██║██║     █████╔╝
-// ██╔══██║    ██║  ██║██╔══╝  ██╔══██║██║  ██║██║     ██║   ██║██║     ██╔═██╗
-// ██║  ██║    ██████╔╝███████╗██║  ██║██████╔╝███████╗╚██████╔╝╚██████╗██║  ██╗
+// ██████╗ ███████╗ █████╗ ██████╗ ██╗      ██████╗  ██████╗██╗  ██╗
+// ██╔══██╗██╔════╝██╔══██╗██╔══██╗██║     ██╔═══██╗██╔════╝██║ ██╔╝
+// ██║  ██║█████╗  ███████║██║  ██║██║     ██║   ██║██║     █████╔╝
+// ██║  ██║██╔══╝  ██╔══██║██║  ██║██║     ██║   ██║██║     ██╔═██╗
+// ██████╔╝███████╗██║  ██║██████╔╝███████╗╚██████╔╝╚██████╗██║  ██╗
 //
 
 export const reach_deadlock = async (context: AIContext, options: { is_sms: boolean }) => {
@@ -93,55 +81,51 @@ export const reach_deadlock = async (context: AIContext, options: { is_sms: bool
   let prompt = `# YOUR PERSONA #\n\n${(context.config as { persona: string }).persona}\n\n`
 
   // If context DOES contain profanity
-  if (context.contains_profanity === true) {
+  if (context.query.contains_profanity) {
     prompt += `
-# OBJECTIVE #
+# CORE OBJECTIVES
+- Maintain a composed, professional demeanor
+- Redirect the conversation constructively
+- Preserve the relationship while setting clear boundaries
+- Continue offering assistance once boundaries are established
 
-- Politely explain that, even if your an AI, only respectful communication will be answered.
-- Politely explain also you are here to help according to your persona.
+# TONE & STYLE
+- Professional yet approachable
+- Firm but understanding
+- Clear and direct without being confrontational
+- Cultural sensitivity in language choice
+- Language-specific considerations (formal "vous" in French)
 
-# TONE #
-
-- Respond in a formal and respectful tone at all times.
-- Use formal, professional yet accessible tone.
-
-# RESPONSE #
-
-- The response must be in ${context.lang} ${context.lang === 'french' ? '(always use the formal "vous")' : ''}.
-- The response must **not** contain smileys or emojis.
+# MESSAGE STRUCTURE
+- Acknowledge receipt of the message without repeating inappropriate language
+- Express understanding that strong feelings may be present
+- Establish the importance of mutual respect
+- Omit emoticons, emojis, or informal punctuation
+- Explain you are here to help according to your persona
 
 ---
-YOUR ANSWER:`
+Your answer in ${context.query.lang}:`
   }
 
   // If context DOES NOT contain profanity
-  if (context.contains_profanity === false) {
-    prompt += '# OBJECTIVE #\n\n'
+  else {
+    prompt += `# INSTRUCTIONS
 
-    if (context.is_greeting === true) {
-      prompt +=
-        '- Respond to the greeting in an **enthusiastic and friendly** manner in a few words.\n'
-    }
-    if (context.is_about_yourself === true) {
-      prompt +=
-        '- Provide a **brief and professional introduction** about yourself in 30-50 words.\n'
-    }
-    if (context.is_about_housing === false) {
-      prompt += `- Answer user question in 10-30 words and explain that while you have general knowledge about the user's query, you are **specifically designed to answer only questions about housing**.\n`
-    }
+1. Provide concise, focused responses (10-20 words) for general questions. For questions about your capabilities and role, offer more detailed responses when relevant.
 
-    prompt += `
+2. Acknowledge the question, then explain that while you have broad knowledge, you specialize in french social housing topics
 
-# YOUR RESPONSE #
-
-- The response must be in ${context.lang} ${context.lang === 'french' ? '(always use the formal "vous")' : ''}.
-- The response must **not** contain smileys or emojis.
-- ${options.is_sms === true ? 'Ensure response is suited for SMS interactions.' : 'Format your answer to improve readability.'}
+3. Dynamically adapt responses to maintain natural conversation flow:
+- Use context from previous messages
+- Avoid repetitive disclaimers 
+- Transition smoothly between topics
+- Language-specific considerations: formal "vous" in French
+- When questions fall outside housing expertise, acknowledge the question and gently redirect: "While I can share some general thoughts on [topic], I'd be especially helpful with [relevant housing aspect]. Would you like to explore that?"
 
 ---
 
-QUESTION: ${context.translated_followup}
-YOUR ANSWER:`
+Question: ${context.content}
+Your answer in ${context.query.lang}:`
   }
 
   // Add prompt to conversation history

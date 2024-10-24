@@ -113,7 +113,7 @@ export const Augmented_Query = z.object({
 //
 // prettier-ignore
 // biome-ignore format: readability
-export const AIContext = Reply.merge(
+export const AIContext = Reply.extend({query: Augmented_Query}).merge(
   z.object({
     chunks        : z.array(z.string()).nullish().default([]),
     conversation  : z.array(z.object({
