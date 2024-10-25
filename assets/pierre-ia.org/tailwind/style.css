@@ -47,7 +47,7 @@
 /* TODO: handle right-to-left language */
 
 .user {
-  @apply float-right mt-8 mb-2 rounded-xl bg-stone-100 py-2 px-5 font-['Work_Sans'] text-base;
+  @apply float-right mt-8 mb-2 rounded-xl bg-stone-100 px-5 py-2 font-['Work_Sans'] text-base;
 }
 
 /* Bot styles */
@@ -93,7 +93,7 @@
   /* Typography */
 
   p {
-    @apply my-2 text-[17px] font-[370] leading-[24px] empty:hidden;
+    @apply my-2 text-[17px] leading-[24px] font-[370] empty:hidden;
   }
 
   b,
