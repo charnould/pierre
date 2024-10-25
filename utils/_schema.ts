@@ -88,37 +88,46 @@ export const Reply = z.object({
 
 //
 //
+// prettier-ignore
+// biome-ignore format: readability
+// Structured JSON LLM must output for each request
+export const Augmented_Query = z.object({
+  lang                  : z.string().describe('User language (ISO 639-1)'),
+  about_user            : z.string().describe('Key user details'),
+  is_relevant           : z.boolean().describe('Whether the input relates to housing or domestic violence'),
+  contains_profanity    : z.boolean().describe('Whether the input contains profanity'),
+  standalone_questions  : z.array(z.string()).describe('Standalone user questions'),
+  stepback_questions    : z.array(z.string()).describe('Step back questions'),
+  search_queries        : z.array(z.string()).describe('Optimized web search queries'),
+  hyde_answers          : z.array(z.string()).describe('Hypothetical document answers'),
+  location: z.object({
+    region              : z.string().nullable().describe('Region name'),
+    department          : z.array(z.string()).nullable().describe('Departement involved'),
+    city                : z.array(z.string()).nullable().describe('Cities involved'),
+    zipcode             : z.array(z.string()).nullable().describe('Zip codes')
+    }).describe('Geographic location')
+})
+
+//
+//
 //
 // prettier-ignore
 // biome-ignore format: readability
-export const AIContext = Reply.merge(
-  z.object({
-    chunks              : z.array(z.string()).nullish().default(null),
-    contains_profanity  : z.boolean().default(false),
-    is_greeting         : z.boolean().default(false),
-    is_about_yourself   : z.boolean().default(false),
-    is_about_housing    : z.boolean().default(true),
-    original_followup   : z.string().nullish().default(null),
-    translated_followup : z.string().nullish().default(null),
-    lang                : z.string().nullish().default(null),
-    queries             : z.array(z.string()).length(3).nullish().default(null),
-    stepback            : z.string().nullish().default(null),
-    hyde                : z.array(z.string()).nullish().default(null),
-    keywords            : z.array(z.string()).length(3).nullish().default(null),
-    conversation: z.array(
+export const AIContext = Reply
+  .extend({ query: Augmented_Query.nullable().default(null) })
+  .merge(z.object({
+      chunks: z.array(z.string()).nullish().default([]),
+      conversation: z.array(
         z.object({
-          role    : z.enum(['assistant', 'user', 'system']),
-          content : z.string()
-        })
-      )
-      .default([])
+            role: z.enum(['assistant', 'user', 'system']),
+            content: z.string()
+          })).default([])
+    })).refine(async (c) => {
+    // Change config name for config content
+    if (typeof c.config === 'string')
+      c.config = (await import(`../assets/${c.config}/config`)).default
+    return true
   })
-).refine(async (c) => {
-  // Change config name for config content
-  if (typeof c.config === 'string')
-    c.config = (await import(`../assets/${c.config}/config`)).default
-  return true
-})
 
 //
 //
@@ -127,3 +136,4 @@ export type SMS = z.infer<typeof SMS>
 export type Reply = z.infer<typeof Reply>
 export type Config = z.infer<typeof Config>
 export type AIContext = z.infer<typeof AIContext>
+export type Augmented_Query = z.infer<typeof Augmented_Query>

@@ -9,8 +9,8 @@ export const view = (config: Config) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" href="../assets/${config.id}/system.svg" type="image/svg+xml" />
         <link rel="manifest" href="../assets/${config.id}/manifest.json" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1729251341005.css" />
-        <script type="module" src="../assets/pierre-ia.org/dist/js/ai.1729251341005.js"></script>
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1729862317841.css" />
+        <script type="module" src="../assets/pierre-ia.org/dist/js/ai.1729862317841.js"></script>
         <title>Comment puis-je vous aider ? 👋</title>
       </head>
 
@@ -30,7 +30,7 @@ export const view = (config: Config) => {
             ${config.examples.map(
               (eg: string) =>
                 html`<button
-                  class="mb-2 block cursor-pointer rounded border border-stone-300 py-2 px-3 text-left font-['Work_Sans'] text-sm text-stone-800"
+                  class="mb-2 block cursor-pointer rounded border border-stone-300 px-3 py-2 text-left font-['Work_Sans'] text-sm text-stone-800"
                 >
                   ${eg}
                 </button>`
