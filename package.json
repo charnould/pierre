@@ -13,6 +13,7 @@
     "ngrok": "ngrok http --url=mule-exotic-raven.ngrok-free.app 3000",
     "lint": "bunx @biomejs/biome check --write --unsafe . --config-path=config/biome.jsonc",
     "css": "bunx @tailwindcss/cli@next -i assets/pierre-ia.org/tailwind/style.css -o assets/pierre-ia.org/dist/css/style.css --minify --watch",
+    "eval:query": "dotenvx run -f .env.production -- bun test eval-augment-query --watch",
     "-------- START --------": "",
     "dev": "bash config/telemetry.sh init_db && dotenvx run -f .env.production -- bun --watch run app.ts",
     "start": "bash config/telemetry.sh init_db && bun run app.ts",
