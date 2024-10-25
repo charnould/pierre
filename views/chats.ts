@@ -7,7 +7,7 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
     <html lang="fr">
       <head>
         <meta charset="UTF-8" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1729251341005.css" />
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1729862317841.css" />
         <script src="https://unpkg.com/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
         <title>PIERRE - Évaluation des conversations</title>
       </head>
@@ -71,7 +71,7 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
                     ${conversation.map(
                       (c) =>
                         html`<div
-                          class="prose odd:float-right odd:my-8 odd:max-w-lg odd:rounded-xl odd:bg-stone-100 odd:py-2 odd:px-5 odd:font-['Work_Sans'] odd:text-base even:clear-both"
+                          class="prose odd:float-right odd:my-8 odd:max-w-lg odd:rounded-xl odd:bg-stone-100 odd:px-5 odd:py-2 odd:font-['Work_Sans'] odd:text-base even:clear-both"
                         >
                           ${raw(marked.parse(c.content))}
                         </div>`
@@ -190,7 +190,7 @@ export const view = (is_auth, data, conversation: Reply[] | []) => {
                     name="password"
                     type="password"
                     placeholder="Mot de passe"
-                    class="border-none py-3 px-4 text-4xl outline-none placeholder:text-neutral-300"
+                    class="border-none px-4 py-3 text-4xl outline-none placeholder:text-neutral-300"
                   />
 
                   <input
