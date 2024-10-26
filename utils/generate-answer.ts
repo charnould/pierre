@@ -1,94 +1,119 @@
-import { CoreTool, StreamTextResult } from 'ai'
 import type { AIContext } from './_schema'
 import { generate_answer, stream_answer } from './deliver-answer'
 
 //
-//  ██████╗██╗     ███████╗██╗   ██╗███████╗██████╗ ███╗   ██╗███████╗███████╗███████╗
-// ██╔════╝██║     ██╔════╝██║   ██║██╔════╝██╔══██╗████╗  ██║██╔════╝██╔════╝██╔════╝
-// ██║     ██║     █████╗  ██║   ██║█████╗  ██████╔╝██╔██╗ ██║█████╗  ███████╗███████╗
-// ██║     ██║     ██╔══╝  ╚██╗ ██╔╝██╔══╝  ██╔══██╗██║╚██╗██║██╔══╝  ╚════██║╚════██║
-// ╚██████╗███████╗███████╗ ╚████╔╝ ███████╗██║  ██║██║ ╚████║███████╗███████║███████║
+//
+//
+//
+//
+// Answer with intelligence
+//
+//
+//
+//
 //
 
 export const answer_user = async (context: AIContext, options: { is_sms: boolean }) => {
-  //
   // Add prompt to conversation history
   context.conversation.push({
     role: 'user',
     content: `
     
-# YOUR PERSONA #
+# YOUR PERSONA
 
 ${(context.config as { persona: string }).persona}
-      
-# OBJECTIVE #
 
-1. Answer questions strictly based on the context provided below.
-2. Do not generate information outside the provided context.
-3. Break the question down into smaller, atomic questions as needed to clarify the response.
-4. For each atomic question:
-  - Define key terms clearly.
-  -	Extract and prioritize the most relevant information from the context, considering the conversation history.
-  -	Generate a concise and clear draft using the selected information, ensuring explanations are appropriate to the user’s needs.
-  -	Exclude any content already answered in the conversation and remove duplicate content.
-5. Ensure the final response is adjusted for accuracy and relevance, providing clarity and depth where needed.
+# ABOUT THE USER
 
-# STYLE #
+- ${(context.config as { context: string }).context}.
+- ${context.query?.about_user}.
+- user's location: ${context.query?.location.city !== null ? `${context.query?.location.city} (${context.query?.location.zipcode}),` : ''} ${context.query?.location.department !== null ? `${context.query?.location.department}, ` : ''} ${context.query?.location.region !== null ? `${context.query?.location.region}.` : ''}
 
-- Adopt the writing style of social housing experts, ensuring the language is professional yet accessible.
-- ${options.is_sms === true ? 'Tailor the response for communication via SMS.' : 'Use formal, professional language.'}
+# OBJECTIVE
 
-# TONE #
+Your task is to provide responses rooted strictly in the provided context.
+Follow these steps to ensure clarity, relevance, and accuracy:
 
-Maintain a professional and supportive tone, appropriate for engaging with individuals who are candidates or tenants of social housing.
+1. Engage with Empathy
+  - Start with a brief, friendly acknowledgment of the user’s question (e.g. "Happy to help with this!").
+  - Use approachable language to show understanding and respect.
 
-# AUDIENCE #
+2. Clarify & Break Down Questions
+  - Break down each question into smaller, manageable parts.
+  - Define key terms as needed to ensure understanding.
+  
+3. Context-Based Responses Only
+  - Answer using only information from the context below, enriched by conversation history if helpful.
+  - Exclude repetition and previously answered content to maintain a fresh, relevant response.
 
-- Your audience consists of social housing candidates or tenants seeking clear, straightforward answers to everyday questions.
-- ${options.is_sms === true ? 'Ensure the communication is suited for SMS interactions.' : 'Provide clarity and thoroughness in your response.'}
+4. Draft Thoughtfully
+  - Identify and prioritize essential information for each part of the question.
+  - Ensure the answer remains concise, complete, and appropriately detailed based on the user’s needs.
 
-# RESPONSE #
+${
+  options.is_sms === true
+    ? `
+  5. Keep Responses Easy to Follow
+  - Add quick transitions where it helps responses feel natural and friendly.
+  - Use line breaks between ideas for clarity.
+  - No bullet points, titles, or hyperlinks—only line breaks and dashes to organize information and include full web addresses when needed.
+  `
+    : `
+  5. Organize Response
+  - Where suitable, structure the answer with relevant titles or bullet points for clarity and flow.
+  - When appropriate, include brief transitional phrases to ensure a smooth, conversational flow.
+`
+}
 
-- The response must be in ${context.query.lang}.
-- Ensure answers are brief when appropriate but provide explanations where required for clarity.
+6. Finalize for Clarity & Precision
+  - Adjust for both accuracy and relevance, ensuring explanations are as clear and thorough as necessary.
+  - Proofread for coherence, removing unnecessary jargon and enhancing readability.
 
-# CONTEXT #
+# STYLE
+
+Adopt the professional, accessible tone of social housing specialists.
+Maintain clarity and simplicity in language, ensuring accessibility for all audiences.
+
+# AUDIENCE
+
+You’re speaking to social housing candidates or tenants, so be empathetic and straightforward, aiming to answer their everyday questions clearly.
+
+# CONTEXT
 
 ${context.chunks}
 
 ---
 
-QUESTION: ${context.content}
-YOUR ANSWER:
-`.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
+Question: ${context.content}.
+
+Your answer in "${context.query?.lang}" (ISO 639-1 format):`.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
   })
 
-  // Return...
   if (options.is_sms === false) return stream_answer(context)
   if (options.is_sms === true) return generate_answer(context)
 }
 
 //
-// ██████╗ ███████╗ █████╗ ██████╗ ██╗      ██████╗  ██████╗██╗  ██╗
-// ██╔══██╗██╔════╝██╔══██╗██╔══██╗██║     ██╔═══██╗██╔════╝██║ ██╔╝
-// ██║  ██║█████╗  ███████║██║  ██║██║     ██║   ██║██║     █████╔╝
-// ██║  ██║██╔══╝  ██╔══██║██║  ██║██║     ██║   ██║██║     ██╔═██╗
-// ██████╔╝███████╗██║  ██║██████╔╝███████╗╚██████╔╝╚██████╗██║  ██╗
+//
+//
+//
+//
+// Answer with deadlock
+//
+//
+//
+//
 //
 
 export const reach_deadlock = async (context: AIContext, options: { is_sms: boolean }) => {
   // Start with a prompt containing only chatbot persona
-  let prompt = `
-
-# YOUR PERSONA #
-
-${(context.config as { persona: string }).persona}`
+  let prompt = `# YOUR PERSONA\n\n ${(context.config as { persona: string }).persona}`
 
   // If context DOES contain profanity
   if (context.query?.contains_profanity) {
     prompt += `
 
-# INSTRUCTION
+# INSTRUCTIONS
 
 - You are a polite and respectful AI assistant.
 - Respond with a calm, friendly reminder that you are here to help but will only respond to polite, respectful conversation.
@@ -99,7 +124,7 @@ ${(context.config as { persona: string }).persona}`
 
 ---
 
-Your answer in ${context.query.lang} (ISO 639-1 format):`
+Your answer in "${context.query.lang}" (ISO 639-1 format):`
   }
 
   // If context DOES NOT contain profanity
@@ -121,17 +146,13 @@ Your answer in ${context.query.lang} (ISO 639-1 format):`
 
 ---
 
-Question: ${context.content}
-Your answer in ${context.query?.lang}:`
+Question: ${context.content}.
+
+Your answer in "${context.query?.lang}" (ISO 639-1 format):`
   }
 
-  // Add prompt to conversation history
-  context.conversation.push({
-    role: 'user',
-    content: prompt.trim()
-  })
+  context.conversation.push({ role: 'user', content: prompt.trim() })
 
-  // Return...
   if (options.is_sms === false) return stream_answer(context)
   if (options.is_sms === true) return generate_answer(context)
 }
