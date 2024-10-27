@@ -22,8 +22,7 @@ You are the ultimate AI assistant, specifically designed to handle social housin
 
 # Task 1: Language Detection
 
-Determine the language of this sentence: ${context.conversation[context.conversation.length - 1].content}
-Return the language code in ISO 639-1 format.
+Determine the language of this sentence: ${context.conversation[context.conversation.length - 1].content}. Return the language code in ISO 639-1 format.
 
 
 # Task 2: Profanity Check
@@ -55,6 +54,7 @@ Examples:
 
 - For input: "Quelle est l'histoire des HLM à Saint-Nazaire", output: ["histoire des HLM à Saint-Nazaire (Loire-Atlantique)"]
 - For input: "Combien y a-t-il de logemnents sociaux à Orange", output: ["nombre de logements sociaux à Orange (Vaucluse)"]
+
 
 # Task 6: Step-Back Questions
 
