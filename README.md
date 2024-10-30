@@ -15,7 +15,7 @@ Plus concrètement encore, PIERRE c'est à la fois :
 1. Un **chatbot** (ou mieux : un **resolution bot**) **open source** qui répond à 100 % des questions de « premier niveau » des locataires et demandeurs HLM, disponible sur le **Web** ([démonstration](https://pierre-ia.org)) et par **SMS**.
 2. Une **base de connaissances** en **open data** ([consultation](https://kdb.pierre-ia.org)), utilisable indépendamment du chatbot et indispensable à la mise en oeuvre de toutes approches « Retrieval Augmented Generation » ([RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation)) via un LLM.
 
-→ [Télécharger une présentation de PIERRE](./docs/assets/pierre-en-3-min.pdf) (PDF · 2,6 Mo)
+→ [Télécharger une présentation de PIERRE](./docs/assets/pierre-en-3-min.pdf) (PDF · 2,7 Mo)
 
 ## Sommaire
 
@@ -92,7 +92,7 @@ Principales caratéristiques de `Time2chat` (en savoir plus via l'[ARCEP](https:
 - Framework: [`Hono`](https://github.com/honojs/hono) (with [`Bun`](https://github.com/oven-sh/bun) runtime)
 - Database + Vectorstore: [`SQLite3`](https://sqlite.org) (extended with [`sqlite-vec`](https://github.com/asg017/sqlite-vec))
 - Deployment: [`Kamal`](https://kamal-deploy.org) (with [`Docker`](https://www.docker.com))
-- LLM: « Bring Your Own LLM Key/Model » (BYOK), par défaut `OpenAI`
+- LLM: « Bring Your Own LLM Key/Model » (BYOK)
 - SMS: `Time2Chat` via [`CM`](https://www.cm.com/fr-fr/)
 - Collaborative writing tool (knowledge database): [`Gitbook`](https://www.gitbook.com)
 
@@ -100,13 +100,13 @@ Principales caratéristiques de `Time2chat` (en savoir plus via l'[ARCEP](https:
 
 Déployer PIERRE sur un serveur génére des coûts (minimes) :
 
-- La location d'un serveur (par exemple `CX22` d'[Hetzner](https://www.hetzner.com/cloud/)) : env. 10 € par mois.
+- La location d'un serveur (par exemple `CX22` d'[Hetzner](https://www.hetzner.com/cloud/)) : env. €10 par mois.
 - L'usage d'un LLM via une API, soit (sur la base d'OpenAI utilisée par défaut) :  
-  – Génération de vecteurs : 0.13 $US / MTokens avec `text-embedding-3-large`  
-  – Génération de textes : 0,15 $US (input) et 0,60 $US (output) / MTokens avec `gpt-4o-mini`
+  – Génération de vecteurs : $0.13 / MTokens avec `text-embedding-3-large`  
+  – Génération de textes : $0,15 (input) et $0,60 (output) / MTokens avec `gpt-4o-mini`
 - (Optionnellement) Les conversations SMS :  
-  – Location d'un numéro de téléphone : 10 € par mois  
-  – Envoi de SMS : 0.09 € par conversation
+  – Location d'un numéro de téléphone : €10 par mois  
+  – Envoi de SMS : €0.09 par conversation
 
 ## Comment déployer PIERRE ?
 
@@ -128,10 +128,6 @@ Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour
 1. Installer `WSL` et vérifier sa bonne installation ([instructions](https://learn.microsoft.com/fr-fr/windows/wsl/install)).
 2. Installer `Bun` et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
 3. Forker le présent dépôt.
-
-> [!IMPORTANT]
-> Il est important de **forker** (et non de cloner) le dépôt afin de pouvoir aisément le mettre à jour des évolutions de PIERRE, et notamment de sa base de connaissances qui évolue régulièrement.
-
 4. Lancer `bun install` dans votre terminal pour installer les dépendances.
 5. Renommer le fichier `.env.example` en `.env.production` et compléter le.
 6. Lancer PIERRE avec `bun dev`.
@@ -266,7 +262,7 @@ TODO/À FINALISER
 Pour modifier le **modèle de génération de `textes`**, il suffit de :
 
 - Modifier `model` dans votre fichier `config.ts` par la valeur souhaitée
-- Renseigner la clef d'API correspondante dans les variables d'environnement (`.env`)
+- Renseigner la clef d'API correspondante dans les variables d'environnement (`.env.production`)
 
 ### Quels modèles est-il possible d'utiliser ?
 
@@ -277,7 +273,7 @@ PIERRE permet – à ce stade – l'usage des principaux modèles de langage, à
 Si vous auto-hébergez PIERRE :
 
 1. Rendez-vous à l'adresse https://180.81.82.83/eval (à remplacer par votre domaine/IP)
-2. Saisissez un des mots de passe contenus dans la variable d'environnement `AUTH_PASSWORDS` (`.env`)
+2. Saisissez un des mots de passe contenus dans la variable d'environnement `AUTH_PASSWORDS` (`.env.production`)
 3. Vous pouvez dorénavant consulter, noter et annoter les échanges de PIERRE avec vos utilisateurs
 
 ## License
