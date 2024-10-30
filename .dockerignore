@@ -2,3 +2,5 @@
 /telemetry
 .DS_Store
 .env
+.env.production
+.env.staging
