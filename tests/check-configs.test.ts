@@ -5,7 +5,6 @@ import { Config } from '../utils/_schema'
 test('check if configs parse successfully', async () => {
   const directories = await readdir('./assets')
 
-  console.log('?????????????? Bun env ', Bun.env.GITHUB_ACTIONS)
   // Check official `config.ts` for each organization
   // (These files are git-ignored.)
   for await (const directory of directories) {
