@@ -31,7 +31,7 @@
     "@ai-sdk/google": "^0.0.55",
     "@ai-sdk/mistral": "^0.0.46",
     "@ai-sdk/openai": "^0.0.70",
-    "ai": "^3.4.29",
+    "ai": "^3.4.30",
     "date-fns": "^4.1.0",
     "hono": "^4.6.8",
     "lodash": "^4.17.21",
@@ -44,12 +44,12 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@dotenvx/dotenvx": "^1.21.0",
+    "@dotenvx/dotenvx": "^1.21.1",
     "@biomejs/biome": "^1.9.4",
     "@types/bun": "^1.1.12",
     "@types/lodash": "^4.17.13",
     "@types/turndown": "^5.0.5",
-    "llamaindex": "^0.8.0",
+    "llamaindex": "^0.8.1",
     "markdown-toc": "^1.2.0",
     "prettier-plugin-tailwindcss": "^0.6.8",
     "@tailwindcss/cli": "^4.0.0-alpha.31",
