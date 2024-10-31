@@ -178,24 +178,25 @@ Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE :
 ## Personnaliser PIERRE (self-hosting)
 
 > [!NOTE]
-> Dans les instructions ci-dessous, nous considérons un bailleur social fictif nommé `Stone Habitat` dont le site institutionnel est accessible à `stone-habitat.fr` et qui a déployé sa propre version de PIERRE à l'adresse/IP `180.81.82.83`.
+> Dans les instructions ci-dessous, nous considérons un bailleur social fictif nommé `Pierre Habitat` dont le site institutionnel est accessible à `pierre-habitat.fr` et qui a déployé sa propre version de PIERRE à l'adresse/IP `180.81.82.83`.
 
 ### Modifier l'interface du chatbot
 
 <img src="docs/assets/images/personnalisation-de-pierre.webp" height="400">
 
-1. Dans le répertoire `./assets`, dupliquer le dossier `plainecommunehabitat.fr` et le nommer `stone-habitat.fr`. Les consignes suivantes s'appliquent à ce nouveau répertoire. (Vous pouvez supprimer l'ensemble des sous-dossiers contenus dans `./assets` à l'exception de `pierre-ia.org` qui est à la fois la version par défaut et contient des fichiers indispensables au fonctionnement de PIERRE.)
-2. Créer une icône `system.svg` et remplacer la précédente. Cette icône est celle qui apparait dans l'interface du chatbot (au dessus de « Bonjour 👋 »).
-3. [Générer les icônes](https://www.pwabuilder.com/imageGenerator) qui permettront d'ajouter votre chatbot sur l'écran d'accueil des smartphones de vos utilisateurs et les glisser dans le dossier `icons`. Conservez la structure du répertoire et le nommage des fichiers (automatique).
-4. Modifier dans `manifest.json` :  
+1. Dans le répertoire `./assets`, dupliquer le dossier `pierre-ia.org` et le nommer `pierre-habitat.fr`. Les consignes suivantes s'appliquent à ce nouveau répertoire.
+2. Supprimer les sous-répertoires `/dist`, `/fonts`, `/scripts`, `/tailwind`.
+3. Créer une icône `system.svg` et remplacer la précédente. Cette icône est celle qui apparait dans l'interface du chatbot (au dessus de « Bonjour 👋 »).
+4. [Générer les icônes](https://www.pwabuilder.com/imageGenerator) qui permettront d'ajouter votre chatbot sur l'écran d'accueil des smartphones de vos utilisateurs et remplacer celles dans le dossier `icons`. Conservez la structure du répertoire et le nommage des fichiers (automatique).
+5. Modifier dans `manifest.json` :  
    – `short_name` par le nom souhaité de votre chatbot  
-   – `start_url` par `/?config=stone-habitat.fr`
-5. Modifier dans `config.ts` :  
-   – `id` avec `stone-habitat.fr`  
+   – `start_url` par `/?config=pierre-habitat.fr`
+6. Renommer `config.example.ts` en `config.ts` et modifier :  
+   – `id` avec `pierre-habitat.fr`  
    – `greeting` qui est le message d'accueil de votre chatbot  
    – `examples` qui sont les exemples proposés après votre message d'accueil
 
-6. Et voilà, votre chabot personnalisé est disponible à http://localhost:3000/?config=stone-habitat.fr.
+7. Et voilà, votre chabot personnalisé est disponible à http://localhost:3000/?config=pierre-habitat.fr.
 
 ### Modifier la personnalité du chatbot
 
@@ -222,7 +223,7 @@ Pour modifier cela, modifier dans le fichier `config.ts` :
 <p
   id="pierre-ia"
   data-url="http://180.81.82.83"
-  data-configuration="stone-habitat.fr"
+  data-configuration="pierre-habitat.fr"
   style="
         right: 20px;
         bottom: 20px;
