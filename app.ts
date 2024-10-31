@@ -12,8 +12,8 @@ import { authenticate } from './utils/authenticate-reviewer'
 
 const app = new Hono()
 
-// To allow other websites to iframe Pierre.
-// TODO: Must be modified to allow only a few domains.
+// To allow other websites to iframe PIERRE.
+// TODO: Must be modified to allow only a few domains?
 app.use(
   secureHeaders({
     contentSecurityPolicy: { frameAncestors: ['*'] },
@@ -21,8 +21,14 @@ app.use(
   })
 )
 
+// Static files
+// Important: `./assets/:domain/config.ts` MUST return 404/redirect
+// (indeed it might contain some user credentials).
+// All others files in `assets/` is statically served.
+app.get('/assets/:domain/config.ts', (c) => c.notFound())
 app.use('/assets/*', serveStatic({ root: './' }))
 
+// Routes
 app.get('/c/:id', get_index)
 app.get('/ai/:id', get_ai)
 app.post('/sms', get_ai)
@@ -33,16 +39,18 @@ app.get('/eval/chats', authenticate, get_chats)
 app.post('/eval/chats', authenticate, post_review)
 app.post('/eval/login', post_login)
 
+// Catch-all? + Not found
 app.notFound(async (c) => {
-  const baseurl = `/c/${crypto.randomUUID()}?config=`
+  const url = `/c/${crypto.randomUUID()}?config=`
   try {
     await import(`./assets/${c.req.query('config')}/config`)
-    return c.redirect(baseurl + c.req.query('config'))
+    return c.redirect(url + c.req.query('config'))
   } catch {
-    return c.redirect(`${baseurl}pierre-ia.org`)
+    return c.redirect(`${url}pierre-ia.org`)
   }
 })
 
+// Error
 app.onError((_err, c) => c.notFound())
 
 export default app
