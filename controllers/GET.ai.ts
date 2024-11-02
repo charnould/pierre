@@ -32,7 +32,8 @@ export const controller = async (c: Context) => {
         role: 'user',
         conv_id: c.req.param('id'),
         config: c.req.query('config'),
-        content: c.req.query('message')
+        content: c.req.query('message'),
+        current_context: c.req.query('context')
       })
     }
 

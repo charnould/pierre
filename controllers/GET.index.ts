@@ -9,14 +9,14 @@ export const controller = async (c: Context) => {
     const config: Config = (await import(`../assets/${c.req.query('config')}/config`)).default
 
     const has_valid_uuid = z.string().uuid().safeParse(c.req.param('id')).success
-    const scenario_query = c.req.query('scenario')
-    const has_valid_scenario = scenario_query ? Boolean(config.scenario[scenario_query]) : false
+    const context_query = c.req.query('context')
+    const has_valid_context = context_query ? Boolean(config.context[context_query]) : false
 
-    if (has_valid_uuid && has_valid_scenario) {
-      return c.html(view(config, scenario_query as string))
+    if (has_valid_uuid && has_valid_context) {
+      return c.html(view(config, context_query as string))
     }
-    const scenario = has_valid_scenario ? scenario_query : 'default'
-    return c.redirect(`/c/${randomUUIDv7()}?config=${config.id}&scenario=${scenario}`)
+    const context = has_valid_context ? context_query : 'default'
+    return c.redirect(`/c/${randomUUIDv7()}?config=${config.id}&context=${context}`)
   } catch {
     return c.redirect(`/c/${randomUUIDv7()}?config=pierre-ia.org`)
   }

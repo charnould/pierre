@@ -1,7 +1,7 @@
 import { html } from 'hono/html'
 import type { Config } from '../utils/_schema'
 
-export const view = (config: Config) => {
+export const view = (config: Config, context: string) => {
   return html`<!doctype html>
     <html lang="fr">
       <head>
@@ -9,9 +9,9 @@ export const view = (config: Config) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" href="../assets/${config.id}/system.svg" type="image/svg+xml" />
         <link rel="manifest" href="../assets/${config.id}/manifest.json" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1729862317841.css" />
-        <script type="module" src="../assets/pierre-ia.org/dist/js/ai.1729862317841.js"></script>
-        <title>Comment puis-je vous aider ? 👋</title>
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1730544596700.css" />
+        <script type="module" src="../assets/pierre-ia.org/dist/js/ai.1730544596700.js"></script>
+        <title>Comment puis-je vous aider ? 🖐️</title>
       </head>
 
       <body class="mx-auto flex h-dvh max-w-4xl flex-col bg-white px-6">
@@ -20,14 +20,14 @@ export const view = (config: Config) => {
             <img src="../assets/${config.id}/system.svg" height="26" width="26" alt="AI" />
           </div>
           <div class="prose" data-role="system">
-            ${config.greeting.map((g: string) => html`<p>${g}</p>`)}
+            ${config.context[context].greeting.map((g: string) => html`<p>${g}</p>`)}
           </div>
 
           <div data-role="example">
             <p class="mt-4 mb-2 font-['Work_Sans'] text-xs font-semibold text-stone-500">
               EXEMPLES
             </p>
-            ${config.examples.map(
+            ${config.context[context].examples.map(
               (eg: string) =>
                 html`<button
                   class="mb-2 block cursor-pointer rounded border border-stone-300 px-3 py-2 text-left font-['Work_Sans'] text-sm text-stone-800"

@@ -1,7 +1,7 @@
 {
-  "short_name": "𝘿𝙊𝙈𝙊 (IA)",
+  "short_name": "DOMO(IA)",
   "id": "/",
-  "start_url": "/?config=domofrance.fr",
+  "start_url": "https://assistant.pierre-ia.org/?config=domofrance.fr&context=default",
   "background_color": "#ffffff",
   "scope": "/",
   "theme_color": "#ffffff",
