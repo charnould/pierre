@@ -1,7 +1,7 @@
 # PIERRE – L'IA open source du mouvement HLM
 
 > [!IMPORTANT]
-> PIERRE est actuellement en version `0.12.x` (consulter les [releases](https://github.com/charnould/pierre/releases)) avec une **qualité de base de connaissances estimée à `10 %`**. Par ailleurs, la documentation ci-dessous est en cours de rédaction. En cas de difficultés, créer une `issue` ou envoyer un email à charnould@pierre-ia.org.
+> PIERRE est actuellement en version `0.13.x` (consulter les [releases](https://github.com/charnould/pierre/releases)) avec une **qualité de base de connaissances estimée à `10 %`**. Par ailleurs, la documentation ci-dessous est en cours de rédaction. En cas de difficultés, créer une `issue` ou envoyer un email à charnould@pierre-ia.org.
 
 > [!IMPORTANT]
 > PIERRE ne connait pas les spécificités des bailleurs (ex : la taille de leur parc, les coordonnées des gardiens, les procédures internes, etc.). Tous ces éléments peuvent néanmoins lui être aisément « enseignés » en modifiant l'équivalent d'un document Word (_cf._ [Contribuer à PIERRE](#contribuer-%C3%A0-pierre)).
@@ -126,7 +126,7 @@ Adresser un email à charnould@pierre-ia.org.
 Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour Linux).
 
 1. Installer `WSL` et vérifier sa bonne installation ([instructions](https://learn.microsoft.com/fr-fr/windows/wsl/install)).
-2. Installer `Bun` et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
+2. Installer `Bun` (≥ `1.1.34`) et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
 3. Forker le présent dépôt.
 4. Lancer `bun install` dans votre terminal pour installer les dépendances.
 5. Renommer le fichier `.env.example` en `.env.production` et compléter le.
@@ -138,7 +138,7 @@ Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour
 Pour déployer PIERRE sur votre propre serveur, il est indispensable d'être parvenu à le faire fonctionner en local (_cf._ supra).
 
 1. Installer `Docker Desktop` et le lancer ([instructions](https://www.docker.com/products/docker-desktop/)). `Docker` gérera la conteneurisation.
-2. Lancer `gem install kamal` pour installer `Kamal` (≥`2.2.2`) qui gérera le déploiement ([instructions](https://kamal-deploy.org/docs/installation/)).
+2. Lancer `gem install kamal` pour installer `Kamal` (≥`2.3.0`) qui gérera le déploiement ([instructions](https://kamal-deploy.org/docs/installation/)).
 3. Disposer d'un compte `GitHub` et [générer une clef](https://github.com/settings/tokens). `GitHub` sera le registre de conteneurs lors du déploiement.
 4. Disposer d'un VPS (par exemple `CX22` d'[Hetzner](https://www.hetzner.com/cloud/)) et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
 5. Finaliser les modifications du fichier `.env.production` que vous avez créé précédemment.
