@@ -30,7 +30,7 @@ Plus concrètement encore, PIERRE c'est à la fois :
   - [Les coûts associés à l'usage de PIERRE](#les-co%C3%BBts-associ%C3%A9s-%C3%A0-lusage-de-pierre)
 - [Comment déployer PIERRE ?](#comment-d%C3%A9ployer-pierre)
   - [Faire héberger PIERRE (le plus simple)](#faire-h%C3%A9berger-pierre-le-plus-simple)
-  - [Auto-héberger PIERRE (self-hosting)](#auto-h%C3%A9berger-pierre-self-hosting)
+  - [Héberger PIERRE (self-hosting)](#h%C3%A9berger-pierre-self-hosting)
 - [Personnaliser PIERRE (self-hosting)](#personnaliser-pierre-self-hosting)
   - [Modifier l'interface du chatbot](#modifier-linterface-du-chatbot)
   - [Modifier la personnalité du chatbot](#modifier-la-personnalit%C3%A9-du-chatbot)
@@ -106,20 +106,20 @@ Déployer PIERRE sur un serveur génére des coûts (minimes) :
   – Génération de textes : $0,15 (input) et $0,60 (output) / MTokens avec `gpt-4o-mini`
 - (Optionnellement) Les conversations SMS :  
   – Location d'un numéro de téléphone : €10 par mois  
-  – Envoi de SMS : €0.09 par conversation
+  – Envoi de SMS : €0.09 par conversation (= SMS illimités par fenêtre de 24h)
 
 ## Comment déployer PIERRE ?
 
 ### Faire héberger PIERRE (le plus simple)
 
-Principaux avantages :
+Avantages :
 
 - Ne jamais avoir à se soucier de serveurs et d'API
-- Bénéficier tout le temps de la dernière version tout en personnalisant PIERRE à l'image d'un organisme HLM
+- Bénéficier tout le temps (24h sur 24) de la toute dernière version de PIERRE
 
-Adresser un email à charnould@pierre-ia.org (ou charnould@beckrel.com).
+Adresser un email à charnould@pierre-ia.org.
 
-### Auto-héberger PIERRE (self-hosting)
+### Héberger PIERRE (self-hosting)
 
 #### Faire fonctionner PIERRE en local
 
@@ -174,7 +174,7 @@ Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE :
 ## Personnaliser PIERRE (self-hosting)
 
 > [!NOTE]
-> Dans les instructions ci-dessous, nous considérons un bailleur social fictif nommé `Pierre Habitat` dont le site institutionnel est accessible à `pierre-habitat.fr` et qui a déployé sa propre version de PIERRE à l'adresse/IP `180.81.82.83`.
+> Dans les instructions ci-dessous, nous considérons un bailleur social fictif nommé `Pierre Habitat` dont le site institutionnel est accessible à `pierre-habitat.fr` et qui a déployé sa propre version de PIERRE à l'adresse/IP `180.81.82.83`, et le scénario `en_agence`.
 
 ### Modifier l'interface du chatbot
 
@@ -184,15 +184,17 @@ Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE :
 2. Supprimer les sous-répertoires `/dist`, `/fonts`, `/scripts`, `/tailwind`.
 3. Créer une icône `system.svg` et remplacer la précédente. Cette icône est celle qui apparait dans l'interface du chatbot (au dessus de « Bonjour 👋 »).
 4. [Générer les icônes](https://www.pwabuilder.com/imageGenerator) qui permettront d'ajouter votre chatbot sur l'écran d'accueil des smartphones de vos utilisateurs et remplacer celles dans le dossier `icons`. Conservez la structure du répertoire et le nommage des fichiers (automatique).
-5. Modifier dans `manifest.json` :  
-   – `short_name` par le nom souhaité de votre chatbot  
-   – `start_url` par `/?config=pierre-habitat.fr`
-6. Renommer `config.example.ts` en `config.ts` et modifier :  
+5. Renommer `config.example.ts` en `config.ts` et modifier :  
    – `id` avec `pierre-habitat.fr`  
-   – `greeting` qui est le message d'accueil de votre chatbot  
-   – `examples` qui sont les exemples proposés après votre message d'accueil
-
-7. Et voilà, votre chabot personnalisé est disponible à http://localhost:3000/?config=pierre-habitat.fr.
+   – `context.default.greeting` qui est le message d'accueil de votre chatbot  
+   – `context.default.examples` qui sont les exemples proposés après votre message d'accueil  
+   – `context.en_agence` pour créer des scénarios/personnalités supplémentaires.
+6. Modifier dans `manifest.json` :  
+   – `short_name` par le nom souhaité de votre chatbot  
+   – `start_url` par `/?config=pierre-habitat.fr&context=en_agence`
+7. Et voilà, votre chabot personnalisé est disponible à :  
+   – http://localhost:3000/?config=pierre-habitat.fr  
+   – http://localhost:3000/?config=pierre-habitat.fr&context=en_agence
 
 ### Modifier la personnalité du chatbot
 
@@ -200,11 +202,11 @@ Si vous avez à ce stade personnalisé visuellement votre chatbot (_cf_. supra),
 
 Pour modifier cela, modifier dans le fichier `config.ts` :
 
-- `persona` qui définit l'identité et la personnalité du chatbot
-- `context` qui définit le contexte dans lequel le chabot doit considérer son interlocuteur
+- `context.default.persona` qui définit l'identité et la personnalité du chatbot
+- `context.default.audience` qui définit le contexte dans lequel le chabot doit considérer son interlocuteur
 
 > [!NOTE]
-> Pour faciliter la lecture de `persona` et `context` dans VSCode, ou plus généralement activer le _word wrap_ : utilisez le raccourci `Alt` + `z` (Windows) ou `⌥` + `z` (Mac).
+> Pour faciliter la lecture et manipulation du fichier `config.ts` dans VSCode, ou plus généralement activer le _word wrap_ : utilisez le raccourci `Alt` + `z` (Windows) ou `⌥` + `z` (Mac).
 
 ## Installer PIERRE sur votre site web (self-hosting)
 
@@ -220,6 +222,7 @@ Pour modifier cela, modifier dans le fichier `config.ts` :
   id="pierre-ia"
   data-url="http://180.81.82.83"
   data-configuration="pierre-habitat.fr"
+  data-context="default"
   style="
         right: 20px;
         bottom: 20px;
@@ -242,6 +245,7 @@ avec :
 - `style` : le style CSS du bouton (libre à vous de le modifier)
 - `180.81.82.83` dans l'URL du script le domaine/IP du serveur où le script est accessible
 - `data-url` : le domaine/IP (sans slash de fin) du serveur où PIERRE est accessible
+- `data-context` : le scénario (ou la personnalité) qu'utilise PIERRE
 - `data-configuration` : le nom de domaine de votre organisme qui est également le nom du répertoire que vous avez créé plus tôt dans `./assets` (_cf._ supra) ou `pierre-ia.org` pour la version par défaut.
 
 ## Paramétrer PIERRE pour l'utiliser par SMS (self-hosting)
@@ -270,7 +274,7 @@ PIERRE permet – à ce stade – l'usage des principaux modèles de langage, à
 
 ## Suivre et évaluer les conversations de PIERRE (self-hosting)
 
-Si vous auto-hébergez PIERRE :
+Si vous hébergez PIERRE :
 
 1. Rendez-vous à l'adresse https://180.81.82.83/eval (à remplacer par votre domaine/IP)
 2. Saisissez un des mots de passe contenus dans la variable d'environnement `AUTH_PASSWORDS` (`.env.production`)

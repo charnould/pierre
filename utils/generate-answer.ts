@@ -21,13 +21,7 @@ export const answer_user = async (context: AIContext, options: { is_sms: boolean
     
 # YOUR PERSONA
 
-${(context.config as { persona: string }).persona}
-
-# ABOUT THE USER
-
-- ${(context.config as { context: string }).context}.
-- ${context.query?.about_user}.
-- user's location: ${context.query?.location.city !== null ? `${context.query?.location.city} (${context.query?.location.zipcode}),` : ''} ${context.query?.location.department !== null ? `${context.query?.location.department}, ` : ''} ${context.query?.location.region !== null ? `${context.query?.location.region}.` : ''}
+${context.config.context[`${context.current_context}`].persona}.
 
 # OBJECTIVE
 
@@ -74,9 +68,11 @@ ${
 Adopt the professional, accessible tone of social housing specialists.
 Maintain clarity and simplicity in language, ensuring accessibility for all audiences.
 
-# AUDIENCE
+# YOUR AUDIENCE
 
-You’re speaking to social housing candidates or tenants, so be empathetic and straightforward, aiming to answer their everyday questions clearly.
+- ${context.config.context[`${context.current_context}`].audience}.
+- ${context.query?.about_user}.
+- user's location: ${context.query?.location.city !== null ? `${context.query?.location.city} (${context.query?.location.zipcode}),` : ''} ${context.query?.location.department !== null ? `${context.query?.location.department}, ` : ''} ${context.query?.location.region !== null ? `${context.query?.location.region}.` : ''}
 
 # CONTEXT
 
@@ -107,7 +103,7 @@ Your answer in "${context.query?.lang}" (ISO 639-1 format):`.trim() // Some LLMs
 
 export const reach_deadlock = async (context: AIContext, options: { is_sms: boolean }) => {
   // Start with a prompt containing only chatbot persona
-  let prompt = `# YOUR PERSONA\n\n ${(context.config as { persona: string }).persona}`
+  let prompt = `# YOUR PERSONA\n\n ${context.config.context[`${context.current_context}`].persona}.`
 
   // If context DOES contain profanity
   if (context.query?.contains_profanity) {

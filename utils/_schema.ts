@@ -6,12 +6,13 @@ import { z } from 'zod'
 // biome-ignore format: readability
 // Incoming SMS parsing schema
 export const SMS = z.object({
-    role    : z.string(),
-    config  : z.string(),
-    conv_id : z.string(),
-    phone   : z.string().nullable(),
-    to      : z.string(),
-    content : z.string().trim()
+    role              : z.string(),
+    config            : z.string(),
+    conv_id           : z.string(),
+    current_context   : z.string().default('default'),
+    phone             : z.string().nullable(),
+    to                : z.string(),
+    content           : z.string().trim()
   })
   .or(z.null())
 
@@ -21,13 +22,28 @@ export const SMS = z.object({
 // biome-ignore format: readability
 // `./assets/Config` schema
 export const Config = z.object({
-  id        : z.string(),
-  phone     : z.string().nullable(), // SMS + Voice phone number
-  model     : z.string(),
-  persona   : z.string(),
-  context   : z.string(),
-  greeting  : z.array(z.string()),
-  examples  : z.array(z.string())
+  id                : z.string(),
+  phone             : z.string().nullable(), // SMS + Voice phone number
+  model             : z.string(),
+  context           : z.object({
+      default : z.object({
+        audience  : z.string(),
+        persona   : z.string(),
+        greeting  : z.array(z.string()),
+        examples  : z.array(z.string())
+      })
+    })
+    .and(
+      z.record(
+        z.string(),
+        z.object({
+          audience  : z.string(),
+          persona   : z.string(),
+          greeting  : z.array(z.string()),
+          examples  : z.array(z.string())
+        })
+      )
+    )
 })
 
 //
@@ -38,7 +54,7 @@ export const Config = z.object({
 export const Reply = z.object({
   // Globals
   conv_id   : z.string(),
-  config    : z.string().or(Config.omit({ greeting: true, examples: true })),
+  config    : z.string().or(Config),
   role      : z.enum(['assistant', 'user', 'system']).default('user'),
   timestamp : z.string().datetime().nullish().default(null),
   content   : z.string(),
@@ -116,11 +132,12 @@ export const Augmented_Query = z.object({
 export const AIContext = Reply
   .extend({ query: Augmented_Query.nullable().default(null) })
   .merge(z.object({
-      chunks: z.array(z.string()).nullish().default([]),
-      conversation: z.array(
+      chunks            : z.array(z.string()).nullish().default([]),
+      current_context   : z.string().default('default'),
+      conversation      : z.array(
         z.object({
-            role: z.enum(['assistant', 'user', 'system']),
-            content: z.string()
+            role    : z.enum(['assistant', 'user', 'system']),
+            content : z.string()
           })).default([])
     })).refine(async (c) => {
     // Change config name for config content
