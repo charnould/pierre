@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
 import { secureHeaders } from 'hono/secure-headers'
 
+import { randomUUIDv7 } from 'bun'
 import { controller as get_ai } from './controllers/GET.ai'
 import { controller as get_chats } from './controllers/GET.chats'
 import { controller as get_index } from './controllers/GET.index'
@@ -39,16 +40,12 @@ app.get('/eval/chats', authenticate, get_chats)
 app.post('/eval/chats', authenticate, post_review)
 app.post('/eval/login', post_login)
 
-// Catch-all? + Not found
-app.notFound(async (c) => {
-  const url = `/c/${crypto.randomUUID()}?config=`
-  try {
-    await import(`./assets/${c.req.query('config')}/config`)
-    return c.redirect(url + c.req.query('config'))
-  } catch {
-    return c.redirect(`${url}pierre-ia.org`)
-  }
-})
+// Catch-all + Not found
+app.notFound(async (c) =>
+  c.redirect(
+    `/c/${randomUUIDv7()}?config=${c.req.query('config')}&scenario=${c.req.query('scenario')}`
+  )
+)
 
 // Error
 app.onError((_err, c) => c.notFound())
