@@ -3,6 +3,7 @@
 // Initial state
 let pierre_is_open = false
 let configuration: string
+let context: string
 let url: string
 
 //
@@ -33,6 +34,7 @@ document.addEventListener('click', (event) => {
   if ((event.target as HTMLInputElement)?.id === 'pierre-ia') {
     //
     configuration = pierre_button.dataset.configuration ?? 'pierre-ia.org' // default value
+    context = pierre_button.dataset.context ?? 'default' // default value
     url = pierre_button.dataset.url ?? 'https://assistant.pierre-ia.org' // default value
 
     const wrapper = document.createElement('div')
@@ -43,7 +45,7 @@ document.addEventListener('click', (event) => {
     wrapper.id = 'pierre-wrapper'
     modal.id = 'pierre-modal'
     iframe.id = 'pierre-iframe'
-    iframe.src = `${url}/?config=${configuration}`
+    iframe.src = `${url}/?config=${configuration}&context=${context}`
     close.id = 'pierre-close'
     close.textContent = '✕'
 

@@ -43,7 +43,7 @@ app.post('/eval/login', post_login)
 // Catch-all + Not found
 app.notFound(async (c) =>
   c.redirect(
-    `/c/${randomUUIDv7()}?config=${c.req.query('config')}&scenario=${c.req.query('scenario')}`
+    `/c/${randomUUIDv7()}?config=${c.req.query('config')}&context=${c.req.query('context')}`
   )
 )
 

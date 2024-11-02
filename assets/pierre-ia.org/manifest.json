@@ -1,7 +1,7 @@
 {
-  "short_name": "𝙋𝙄𝙀𝙍𝙍𝙀 (IA)",
+  "short_name": "PIERRE (IA)",
   "id": "/",
-  "start_url": "/",
+  "start_url": "https://assistant.pierre-ia.org/?config=pierre-ia.org&context=default",
   "background_color": "#ffffff",
   "scope": "/",
   "theme_color": "#ffffff",

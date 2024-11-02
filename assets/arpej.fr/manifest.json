@@ -1,7 +1,7 @@
 {
-  "short_name": "𝘼𝙍𝙋𝙀𝙅 (IA)",
+  "short_name": "ARPEJ (IA)",
   "id": "/",
-  "start_url": "/?config=arpej.fr",
+  "start_url": "https://assistant.pierre-ia.org/?config=arpej.fr&context=default",
   "background_color": "#ffffff",
   "scope": "/",
   "theme_color": "#ffffff",
