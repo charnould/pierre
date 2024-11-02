@@ -174,9 +174,10 @@ function get_ai_answer(prompt: string) {
 
   // Retrieve the 'config' parameter from the current URL
   const config = new URLSearchParams(window.location.search).get('config')
+  const context = new URLSearchParams(window.location.search).get('context')
 
   // Build the API request URL
-  const url = `/ai/${pathSegment}?message=${encodeURIComponent(prompt)}&config=${encodeURIComponent(config || '')}`
+  const url = `/ai/${pathSegment}?message=${encodeURIComponent(prompt)}&config=${encodeURIComponent(config || '')}&context=${encodeURIComponent(context || '')}`
 
   // Create an EventSource for real-time updates
   const eventSource = new EventSource(url)

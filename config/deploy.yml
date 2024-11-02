@@ -21,7 +21,6 @@ proxy:
 
 builder:
   arch: amd64
-  context: .
 
 env:
   secret:
