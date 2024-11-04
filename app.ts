@@ -13,8 +13,9 @@ import { authenticate } from './utils/authenticate-reviewer'
 
 const app = new Hono()
 
-// To allow other websites to iframe PIERRE.
-// TODO: Must be modified to allow only a few domains?
+// Configure the secure headers for the app
+// This allows other websites to iframe PIERRE
+// TODO: This should be modified to allow only a few trusted domains
 app.use(
   secureHeaders({
     contentSecurityPolicy: { frameAncestors: ['*'] },
@@ -22,32 +23,31 @@ app.use(
   })
 )
 
-// Static files
-// Important: `./assets/:domain/config.ts` MUST return 404/redirect
-// (indeed it might contain some user credentials).
-// All others files in `assets/` is statically served.
+// Serve static files from the assets directory
+// Except for the config.ts file, which should return a 404 or redirect
 app.get('/assets/:domain/config.ts', (c) => c.notFound())
 app.use('/assets/*', serveStatic({ root: './' }))
 
-// Routes
+// Define the routes for the application
 app.get('/c/:id', get_index)
 app.get('/ai/:id', get_ai)
 app.post('/sms', get_ai)
 app.post('/telemetry', post_telemetry)
 
+// Provide an /eval route with authentication
 app.get('/eval', (c) => c.redirect('/eval/chats'))
 app.get('/eval/chats', authenticate, get_chats)
 app.post('/eval/chats', authenticate, post_review)
 app.post('/eval/login', post_login)
 
-// Catch-all + Not found
+// Catch-all route that redirects to a new conversation with
+// a randomly generated ID and optional query parameters
 app.notFound(async (c) =>
   c.redirect(
     `/c/${randomUUIDv7()}?config=${c.req.query('config')}&context=${c.req.query('context')}`
   )
 )
 
-// Error
 app.onError((_err, c) => c.notFound())
 
 export default app
