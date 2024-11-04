@@ -184,14 +184,14 @@ Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE :
 2. Supprimer les sous-répertoires `/dist`, `/fonts`, `/scripts`, `/tailwind`.
 3. Créer une icône `system.svg` et remplacer la précédente. Cette icône est celle qui apparait dans l'interface du chatbot (au dessus de « Bonjour 👋 »).
 4. [Générer les icônes](https://www.pwabuilder.com/imageGenerator) qui permettront d'ajouter votre chatbot sur l'écran d'accueil des smartphones de vos utilisateurs et remplacer celles dans le dossier `icons`. Conservez la structure du répertoire et le nommage des fichiers (automatique).
-5. Renommer `config.example.ts` en `config.ts` et modifier :  
+5. Modifier `config.ts` :  
    – `id` avec `pierre-habitat.fr`  
    – `context.default.greeting` qui est le message d'accueil de votre chatbot  
    – `context.default.examples` qui sont les exemples proposés après votre message d'accueil  
    – `context.en_agence` pour créer des scénarios/personnalités supplémentaires.
 6. Modifier dans `manifest.json` :  
    – `short_name` par le nom souhaité de votre chatbot  
-   – `start_url` par `/?config=pierre-habitat.fr&context=en_agence`
+   – `start_url` par `https://180.81.82.83/?config=pierre-habitat.fr&context=en_agence`
 7. Et voilà, votre chabot personnalisé est disponible à :  
    – http://localhost:3000/?config=pierre-habitat.fr  
    – http://localhost:3000/?config=pierre-habitat.fr&context=en_agence
