@@ -1,5 +1,0 @@
----
-icon: apartment
----
-
-# Organismes
