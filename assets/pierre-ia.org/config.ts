@@ -9,16 +9,14 @@ export default {
   // Ci-dessous, des exemples non-exhaustifs de modèles utilisables
   // (il est impératif que la clef d'API correspondante soit renseignée
   // dans les variables d'environnement).
-  // - cohere('command-r-plus')"
-  // - mistral('mistral-large-latest')
-  // - mistral('mistral-small-latest')
-  // - google('gemini-1.5-pro-latest')
-  // - google('gemini-1.5-flash-latest')
-  // - anthropic('claude-3-5-sonnet-20241022')
-  // - anthropic('claude-3-5-sonnet-20240620')
-  // - anthropic('claude-3-opus-20240229')
-  // - anthropic('claude-3-haiku-20240307')
-  // - openai('gpt-4o-mini-2024-07-18')...
+  // model: "cohere('command-r-plus')"
+  // model: "mistral('mistral-large-latest')"
+  // model: "mistral('mistral-small-latest')"
+  // model: "google('gemini-1.5-pro-latest')"
+  // model: "google('gemini-1.5-flash-latest')"
+  // model: "anthropic('claude-3-5-sonnet-20241022')"
+  // model: "anthropic('claude-3-5-haiku-20241022')"
+  // model: "openai('gpt-4o-mini-2024-07-18')"
   model: "openai('gpt-4o-mini-2024-07-18')",
 
   // Le numéro de téléphone qui permet d'utiliser PIERRE via SMS.
