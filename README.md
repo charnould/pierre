@@ -94,7 +94,6 @@ Principales caratéristiques de `Time2chat` (en savoir plus via l'[ARCEP](https:
 - Deployment: [`Kamal`](https://kamal-deploy.org) (with [`Docker`](https://www.docker.com))
 - LLM: « Bring Your Own LLM Key/Model » (BYOK)
 - SMS: `Time2Chat` via [`CM`](https://www.cm.com/fr-fr/)
-- Collaborative writing tool (knowledge database): [`Gitbook`](https://www.gitbook.com)
 
 ### Les coûts associés à l'usage de PIERRE
 
