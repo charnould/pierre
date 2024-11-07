@@ -13,7 +13,7 @@ PIERRE est une intelligence artificielle (IA) **open source**, **plurilingue** e
 Plus concrètement encore, PIERRE c'est à la fois :
 
 1. Un **chatbot** (ou mieux : un **resolution bot**) **open source** qui répond à 100 % des questions de « premier niveau » des locataires et demandeurs HLM, disponible sur le **Web** ([démonstration](https://pierre-ia.org)) et par **SMS**.
-2. Une **base de connaissances** en **open data** ([consultation](https://kdb.pierre-ia.org)), utilisable indépendamment du chatbot et indispensable à la mise en oeuvre de toutes approches « Retrieval Augmented Generation » ([RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation)) via un LLM.
+2. Une **base de connaissances** en **open data** ([consultation](./knowledge/)), utilisable indépendamment du chatbot et indispensable à la mise en oeuvre de toutes approches « Retrieval Augmented Generation » ([RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation)) via un LLM.
 
 → [Télécharger une présentation de PIERRE](./docs/assets/pierre-en-3-min.pdf) (PDF · 2,7 Mo)
 
@@ -46,8 +46,8 @@ Plus concrètement encore, PIERRE c'est à la fois :
 
 ## Contribuer à PIERRE
 
-- Pour contribuer à la **base de connaissances** de PIERRE, consultez [README.md](https://kdb.pierre-ia.org) (c'est aussi simple que de modifier un document Word, et cela profite automatiquement à l'ensemble du mouvement HLM).
-- Pour contribuer au code-source du chatbot/LLM, consultez [CONTRIBUTING.md](./CONTRIBUTING.md).
+- Pour contribuer à la **base de connaissances** de PIERRE, consultez [CONTRIBUTING.md](./CONTRIBUTING.md) (c'est aussi simple que de modifier un document Word, et cela profite automatiquement à l'ensemble du mouvement HLM).
+- Pour contribuer au code-source du chatbot/LLM, créez une `issue` dans GitHub et suivez les us et coutumes des projets open source.
 
 Les `releases` de PIERRE [sont consultables ici](https://github.com/charnould/pierre/releases).
 
