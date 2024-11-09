@@ -19,5 +19,5 @@ export const controller = async (c: Context) => {
     )
   }
 
-  return c.redirect('/eval/chats')
+  return c.redirect('/a/conversations')
 }
