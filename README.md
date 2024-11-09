@@ -39,7 +39,7 @@ Plus concrètement encore, PIERRE c'est à la fois :
 - [Modifier le modèle de langage/LLM utilisé (self-hosting)](#modifier-le-mod%C3%A8le-de-langagellm-utilis%C3%A9-self-hosting)
   - [Comment modifier le modèle de langage ?](#comment-modifier-le-mod%C3%A8le-de-langage)
   - [Quels modèles est-il possible d'utiliser ?](#quels-mod%C3%A8les-est-il-possible-dutiliser)
-- [Suivre et évaluer les conversations de PIERRE (self-hosting)](#suivre-et-%C3%A9valuer-les-conversations-de-pierre-self-hosting)
+- [Administrer PIERRE (self-hosting)](#administrer-pierre-self-hosting)
 - [License](#license)
 
 <!-- tocstop -->
@@ -271,13 +271,13 @@ Pour modifier le **modèle de génération de `textes`**, il suffit de :
 
 PIERRE permet – à ce stade – l'usage des principaux modèles de langage, à savoir : `Anthropic`, `Cohere`, `Google`, `Mistral` et `OpenAI`.
 
-## Suivre et évaluer les conversations de PIERRE (self-hosting)
+## Administrer PIERRE (self-hosting)
 
 Si vous hébergez PIERRE :
 
-1. Rendez-vous à l'adresse https://180.81.82.83/eval (à remplacer par votre domaine/IP)
-2. Saisissez un des mots de passe contenus dans la variable d'environnement `AUTH_PASSWORDS` (`.env.production`)
-3. Vous pouvez dorénavant consulter, noter et annoter les échanges de PIERRE avec vos utilisateurs
+1. Rendez-vous à l'adresse https://180.81.82.83/a (à remplacer par votre domaine/IP).
+2. Saisissez (la première fois) `admin@pierre-ia.org` et le mot de passe contenu dans la variable d'environnement `AUTH_PASSWORD`.
+3. Vous pouvez désormais créer autant d'utilisateurs que nécessaire (n'oubliez pas de transmettre les mots de passe !) qui pourront modifier les utilisateurs ou l'encyclopédie, consulter les conversations ou les statistiques, et utiliser « l'aide de camp ».
 
 ## License
 
