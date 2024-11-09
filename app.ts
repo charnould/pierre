@@ -9,7 +9,8 @@ import { controller as get_index } from './controllers/GET.index'
 import { controller as post_login } from './controllers/POST.login'
 import { controller as post_review } from './controllers/POST.review'
 import { controller as post_telemetry } from './controllers/POST.telemetry'
-import { authenticate } from './utils/authenticate-reviewer'
+import { controller as post_users } from './controllers/POST.users'
+import { authenticate } from './utils/authenticate-user'
 
 const app = new Hono()
 
