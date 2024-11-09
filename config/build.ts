@@ -1,3 +1,4 @@
+import { readdir } from 'node:fs/promises'
 import { $ } from 'bun'
 import toc from 'markdown-toc'
 
@@ -53,30 +54,28 @@ await $`bunx @tailwindcss/cli@next -i assets/pierre-ia.org/tailwind/style.css -o
 //
 // Transpile and minify .ts scripts into .js to work in browser.
 // Rename one of these files (ai.js) to include a hash/timestamp (to avoid caching issue).
-// Add "timestamped filepath" in Views (index + chat).
 await $`bun build --entrypoints assets/pierre-ia.org/scripts/*.ts --outdir assets/pierre-ia.org/dist/js --minify --target browser`
 await $`mv ./assets/pierre-ia.org/dist/js/ai.js ./assets/pierre-ia.org/dist/js/ai.${timestamp}.js`
-const view_1 = await Bun.file('./views/index.ts').text()
-await Bun.write(
-  './views/index.ts',
-  view_1
-    .replace(
-      /..\/assets\/pierre-ia\.org\/dist\/js\/ai\.\d+\.js/,
-      `../assets/pierre-ia.org/dist/js/ai.${timestamp}.js`
-    )
-    .replace(
-      /..\/assets\/pierre-ia\.org\/dist\/css\/style\.\d+\.css/,
-      `../assets/pierre-ia.org/dist/css/style.${timestamp}.css`
-    )
-)
-const view_2 = await Bun.file('./views/chats.ts').text()
-await Bun.write(
-  './views/chats.ts',
-  view_2.replace(
-    /..\/assets\/pierre-ia\.org\/dist\/css\/style\.\d+\.css/,
-    `../assets/pierre-ia.org/dist/css/style.${timestamp}.css`
+
+// Update "timestamped filepath" in all Views
+const views = await readdir('views')
+
+for (const view of views) {
+  const content = await Bun.file(`./views/${view}`).text()
+
+  await Bun.write(
+    `./views/${view}`,
+    content
+      .replace(
+        /..\/assets\/pierre-ia\.org\/dist\/js\/ai\.\d+\.js/,
+        `../assets/pierre-ia.org/dist/js/ai.${timestamp}.js`
+      )
+      .replace(
+        /..\/assets\/pierre-ia\.org\/dist\/css\/style\.\d+\.css/,
+        `../assets/pierre-ia.org/dist/css/style.${timestamp}.css`
+      )
   )
-)
+}
 
 //
 //
@@ -87,7 +86,7 @@ await $`cp -r assets/pierre-ia.org/fonts assets/pierre-ia.org/dist/fonts`
 //
 //
 //
-// Copy transpile/minify widget.js in `docs` folder, aka PIERRE website
+// Copy transpiled/minified widget.js in `docs` folder, aka PIERRE website
 await $`cp assets/pierre-ia.org/dist/js/widget.js docs/assets`
 
 //
