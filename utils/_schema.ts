@@ -4,6 +4,18 @@ import { z } from 'zod'
 //
 // prettier-ignore
 // biome-ignore format: readability
+// User
+export const User = z.object({
+  config        : z.string(),
+  email         : z.string(),
+  role          : z.enum(['administrator', 'contributor', 'collaborator']).default('collaborator'),
+  password_hash : z.string()
+})
+
+//
+//
+// prettier-ignore
+// biome-ignore format: readability
 // Incoming SMS parsing schema
 export const SMS = z.object({
     role              : z.string(),
@@ -150,6 +162,7 @@ export const AIContext = Reply
 //
 //
 export type SMS = z.infer<typeof SMS>
+export type User = z.infer<typeof User>
 export type Reply = z.infer<typeof Reply>
 export type Config = z.infer<typeof Config>
 export type AIContext = z.infer<typeof AIContext>
