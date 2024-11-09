@@ -117,7 +117,7 @@ export const score_conversation = async (
 
 //
 //
-// Get all conversations for review (./eval)
+// Get all conversations for review (./a)
 export const get_conversations = (): Reply[] => {
   const database = db('telemetry')
 
