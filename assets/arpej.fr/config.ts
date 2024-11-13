@@ -6,6 +6,11 @@ export default {
   phone: '+3393xxxxxxx',
   context: {
     default: {
+      protected: false,
+      knowledge: {
+        community: true,
+        self: { public: false, collaborators: false }
+      },
       audience:
         'The user is a client of ARPEJ, a non-profit specialized in student housing in France.',
       persona:

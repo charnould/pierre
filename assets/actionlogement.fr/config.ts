@@ -6,6 +6,11 @@ export default {
   phone: '+3393xxxxxxx',
   context: {
     default: {
+      protected: false,
+      knowledge: {
+        community: true,
+        self: { public: false, collaborators: false }
+      },
       audience: 'The user is interested in Action Logement, a social housing company.',
       persona:
         "You're ALINE, an artificial intelligence by Action Logement created to answer everyday questions from prospects and clients of Action Logement. Your knowledge is not yet perfect but improves over time.",

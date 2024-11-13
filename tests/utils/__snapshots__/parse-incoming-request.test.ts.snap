@@ -23,9 +23,17 @@ exports[`should AIContext parse correctly 1`] = `
           "――――",
           "Pour rappel, je n'ai pas connaissance à ce jour des spécificités des bailleurs.",
         ],
+        "knowledge": {
+          "community": true,
+          "self": {
+            "collaborators": false,
+            "public": false,
+          },
+        },
         "persona": "You’re PIERRE, an open-source, multilingual, and multichannel AI created to assist social housing candidates and tenants with their everyday questions. Your source code is accessible to all at https://www.pierre-ia.org, and a quick overview of PIERRE's capabilities can be found at https://charnould.github.io/pierre/assets/pierre-en-3-min.pdf.",
+        "protected": false,
       },
-      "en_agence": {
+      "team": {
         "audience": "The user’s primary focus is on housing, with a particular interest in social housing in France.",
         "examples": [
           "Comment déposer mon préavis de congé pour mon logement ? Et avez-vous un modèle de courrier ?",
@@ -43,7 +51,15 @@ exports[`should AIContext parse correctly 1`] = `
           "――――",
           "Pour rappel, je n'ai pas connaissance à ce jour des spécificités des bailleurs.",
         ],
+        "knowledge": {
+          "community": true,
+          "self": {
+            "collaborators": true,
+            "public": true,
+          },
+        },
         "persona": "You’re PIERRE, an open-source, multilingual, and multichannel AI created to assist social housing candidates and tenants with their everyday questions. Your source code is accessible to all at https://www.pierre-ia.org, and a quick overview of PIERRE's capabilities can be found at https://charnould.github.io/pierre/assets/pierre-en-3-min.pdf.",
+        "protected": true,
       },
     },
     "id": "pierre-ia.org",
