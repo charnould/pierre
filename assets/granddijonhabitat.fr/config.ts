@@ -6,6 +6,11 @@ export default {
   phone: '0033939070074',
   context: {
     default: {
+      protected: false,
+      knowledge: {
+        community: true,
+        self: { public: false, collaborators: false }
+      },
       audience:
         'The user is a client of Grand Dijon Habitat, a social housing provider in the Dijon region of France.',
       persona:
@@ -24,6 +29,11 @@ export default {
       ]
     },
     en_agence: {
+      protected: false,
+      knowledge: {
+        community: true,
+        self: { public: false, collaborators: false }
+      },
       audience:
         'The user is a client of Grand Dijon Habitat, a social housing provider in the Dijon region of France. He or she is currently at a Grand Dijon Habitat office or agency location, seeking to meet with an employee to address his/her concerns.',
       persona:
@@ -45,6 +55,11 @@ export default {
       ]
     },
     staff: {
+      protected: true,
+      knowledge: {
+        community: true,
+        self: { public: true, collaborators: true }
+      },
       audience:
         'Your audience is Grand Dijon Habitat employees who manage a range of responsibilities, from tenant relations to administrative tasks and compliance. They rely on the assistant to improve productivity by streamlining tasks, organizing information, and providing clear, ready-to-use communication tools. This audience seeks a tool that not only simplifies day-to-day work but also ensures that interactions—especially with tenants—are professional, empathetic, and efficient. The assistant’s role is to handle time-consuming details, allowing employees to focus on delivering high-quality service in social housing.',
       persona:

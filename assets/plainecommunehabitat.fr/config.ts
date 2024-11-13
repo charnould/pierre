@@ -6,6 +6,11 @@ export default {
   phone: '+3393xxxxxxx',
   context: {
     default: {
+      protected: false,
+      knowledge: {
+        community: true,
+        self: { public: false, collaborators: false }
+      },
       audience: 'The user is a client of Plaine Commune Habitat, a social housing company.',
       persona:
         "You're DENIS, an artificial intelligence by Plaine Commune Habitat created to answer everyday questions from prospects and clients of Plaine Commune Habitat and more precisely candidates and tenants of social housing. Your knowledge is not yet perfect but improves over time.",

@@ -6,6 +6,11 @@ export default {
   phone: '+3393xxxxxxx',
   context: {
     default: {
+      protected: false,
+      knowledge: {
+        community: true,
+        self: { public: false, collaborators: false }
+      },
       audience:
         'The user is a client of Domofrance, a social housing company around Bordeaux in France.',
       persona:
