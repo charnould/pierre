@@ -34,25 +34,40 @@ export const SMS = z.object({
 // biome-ignore format: readability
 // `./assets/Config` schema
 export const Config = z.object({
-  id                : z.string(),
-  phone             : z.string().nullable(), // SMS + Voice phone number
-  model             : z.string(),
-  context           : z.object({
-      default : z.object({
-        audience  : z.string(),
-        persona   : z.string(),
-        greeting  : z.array(z.string()),
-        examples  : z.array(z.string())
+  id: z.string(),
+  phone: z.string().nullable(), // SMS + Voice phone number
+  model: z.string(),
+  context: z
+    .object({
+      default: z.object({
+        protected : z.boolean().default(false),
+        knowledge : z.object({
+          community : z.boolean().default(true),
+          self      : z.object({
+            public        : z.boolean().default(false),
+            collaborators : z.boolean().default(false)
+          })}),
+        audience: z.string(),
+        persona: z.string(),
+        greeting: z.array(z.string()),
+        examples: z.array(z.string())
       })
     })
     .and(
       z.record(
         z.string(),
         z.object({
-          audience  : z.string(),
-          persona   : z.string(),
-          greeting  : z.array(z.string()),
-          examples  : z.array(z.string())
+          protected: z.boolean().default(false),
+          knowledge : z.object({
+            community : z.boolean().default(true),
+            self      : z.object({
+              public        : z.boolean().default(false),
+              collaborators : z.boolean().default(false)
+            })}),
+          audience: z.string(),
+          persona: z.string(),
+          greeting: z.array(z.string()),
+          examples: z.array(z.string())
         })
       )
     )
