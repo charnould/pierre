@@ -1,8 +1,8 @@
+import { randomUUIDv7 } from 'bun'
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
 import { secureHeaders } from 'hono/secure-headers'
 
-import { randomUUIDv7 } from 'bun'
 import { controller as get_admin } from './controllers/GET.admin'
 import { controller as get_ai } from './controllers/GET.ai'
 import { controller as get_conversations } from './controllers/GET.conversations'
@@ -34,24 +34,27 @@ app.use(
 app.get('/assets/:domain/config.ts', (c) => c.notFound())
 app.use('/assets/*', serveStatic({ root: './' }))
 
-// Define the routes for the application
-app.get('/c/:id', get_index)
-app.get('/ai/:id', get_ai)
-
-app.post('/sms', get_ai)
-app.post('/a/login', post_login)
-app.post('/telemetry', post_telemetry)
-
-// `/a` routes with authentication
-app.get('/a', authenticate, get_admin)
-app.get('/a/login', get_login)
-app.get('/a/users', authenticate, get_users)
-app.get('/a/statistics', authenticate, get_statistics)
-app.get('/a/encyclopedia', authenticate, get_encyplopedia)
-app.get('/a/conversations', authenticate, get_conversations)
-
-app.post('/a/users', authenticate, post_users)
-app.post('/a/conversations', authenticate, post_conversation)
+// prettier-ignore
+// biome-ignore format: readability
+// biome-ignore lint: readability
+{
+  // AI generation routes
+  app.get('/c/:id'            , authenticate, get_index)
+  app.get('/ai/:id'                         , get_ai) // TODO: need to check for auth?
+  app.post('/telemetry'                     , post_telemetry)
+  app.post('/sms'                           , get_ai)
+  
+  // Admin routes
+  app.get('/a'                , authenticate, get_admin)
+  app.get('/a/users'          , authenticate, get_users)
+  app.get('/a/statistics'     , authenticate, get_statistics)
+  app.get('/a/encyclopedia'   , authenticate, get_encyplopedia)
+  app.get('/a/conversations'  , authenticate, get_conversations)
+  app.post('/a/conversations' , authenticate, post_conversation)
+  app.post('/a/users'         , authenticate, post_users)
+  app.get('/a/login'                        , get_login)
+  app.post('/a/login'                       , post_login)
+}
 
 // Catch-all route that redirects to a new conversation with
 // a randomly generated ID and optional query parameters
