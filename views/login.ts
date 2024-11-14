@@ -21,17 +21,19 @@ export const view = (message) => {
           <input type="hidden" name="action" value="login" />
 
           <input
+            required
             type="email"
             name="email"
-            required
+            autocomplete="current-email"
             placeholder="charnould@pierre-ia.org"
             class="rounded-lg border-1 border-neutral-300 p-4 text-4xl"
           />
 
           <input
+            required
             type="password"
             name="password"
-            required
+            autocomplete="current-password"
             placeholder="Mot de passe (vN}3bQ3_iG)"
             class="rounded-lg border-1 border-neutral-300 p-4 text-4xl"
           />
