@@ -1,14 +1,14 @@
 import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, expect, it, setSystemTime } from 'bun:test'
-import { AIContext } from '../../utils/_schema'
-import { db } from '../../utils/database'
+import { AIContext } from '../../../utils/_schema'
+import { db } from '../../../utils/database'
 import {
   delete_conversation,
   get_conversation,
   get_conversations,
   save_reply,
   score_conversation
-} from '../../utils/handle-conversation'
+} from '../../../utils/handle-conversation'
 
 //
 //
