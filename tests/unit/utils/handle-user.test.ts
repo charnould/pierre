@@ -1,8 +1,8 @@
 import { Database } from 'bun:sqlite'
 import { beforeAll, expect, it } from 'bun:test'
-import { User } from '../../utils/_schema'
-import { db } from '../../utils/database'
-import { delete_user, get_user, get_users, save_user } from '../../utils/handle-user'
+import { User } from '../../../utils/_schema'
+import { db } from '../../../utils/database'
+import { delete_user, get_user, get_users, save_user } from '../../../utils/handle-user'
 
 //
 //

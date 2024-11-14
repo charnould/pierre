@@ -1,5 +1,5 @@
 import { expect, it } from 'bun:test'
-import { decrypt, encrypt } from '../../utils/authenticate-user'
+import { decrypt, encrypt } from '../../../utils/authenticate-user'
 
 it('should cipher/decipher a string', async () => {
   const secret_key = '34b1c47a554c911b7b8701cd152c681c'

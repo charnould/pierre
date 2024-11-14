@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test'
-import { AIContext } from '../../utils/_schema'
+import { AIContext } from '../../../utils/_schema'
 
 test('should AIContext parse correctly', async () => {
   expect(
