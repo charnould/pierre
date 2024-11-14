@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test'
-import { augment_query } from '../utils/augment-query'
+import { augment_query } from '../../utils/augment-query'
 
 // Add `.skip` to make `bun test` pass, otherwise, it'll fail
 // because a missing OPENAI_API_KEY. Remove `.skip` for testing
