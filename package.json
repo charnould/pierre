@@ -51,6 +51,7 @@
     "@types/turndown": "^5.0.5",
     "llamaindex": "^0.8.8",
     "markdown-toc": "^1.2.0",
+    "puppeteer": "^23.8.0",
     "prettier-plugin-tailwindcss": "^0.6.8",
     "@tailwindcss/cli": "^4.0.0-alpha.31",
     "tailwindcss": "^4.0.0-alpha.31",
