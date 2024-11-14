@@ -25,7 +25,7 @@ export const view = (users: User[]) => {
           <div>
             <label for="email" class="mb-1 block text-sm font-medium text-gray-900">Email</label>
             <input
-              type="text"
+              type="email"
               id="email"
               name="email"
               placeholder="charnould@pierre-ia.org"
