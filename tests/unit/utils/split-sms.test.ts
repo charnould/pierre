@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test'
-import { split_sms } from '../../utils/split-sms'
+import { split_sms } from '../../../utils/split-sms'
 
 test('should split outgoing sms', async () => {
   const i1 =

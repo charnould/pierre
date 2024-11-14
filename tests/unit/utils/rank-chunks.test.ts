@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test'
-import { rank_chunks } from '../../utils/rank-chunks'
+import { rank_chunks } from '../../../utils/rank-chunks'
 
 const input = [
   [

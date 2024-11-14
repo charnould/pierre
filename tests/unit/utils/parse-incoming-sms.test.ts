@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test'
-import { parse_incoming_sms } from '../../utils/parse-incoming-sms'
+import { parse_incoming_sms } from '../../../utils/parse-incoming-sms'
 
 test('should get config from phone number', async () => {
   //
@@ -8,7 +8,7 @@ test('should get config from phone number', async () => {
   // Test 1
   //
   {
-    const path = './tests/utils/__mocks__/incoming_sms_1.json'
+    const path = './tests/unit/utils/__mocks__/incoming_sms_1.json'
     const file = Bun.file(path)
     const data = await file.json()
 
@@ -31,7 +31,7 @@ test('should get config from phone number', async () => {
   // Test 2
   //
   {
-    const path = './tests/utils/__mocks__/incoming_sms_2.json'
+    const path = './tests/unit/utils/__mocks__/incoming_sms_2.json'
     const file = Bun.file(path)
     const data = await file.json()
 
