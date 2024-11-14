@@ -1,4 +1,4 @@
-import { html, raw } from 'hono/html'
+import { html } from 'hono/html'
 
 export const view = (user) => {
   return html`<!doctype html>
