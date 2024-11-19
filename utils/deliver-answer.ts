@@ -27,7 +27,7 @@ const cohere = createCohere()
 //
 
 export const stream_answer = async (context: AIContext) =>
-  await streamText({
+  streamText({
     // biome-ignore lint: server-side eval to keep `config.ts` simple
     model: eval((context.config as { model: string }).model),
     messages: context.conversation,
