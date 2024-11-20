@@ -1,0 +1,218 @@
+// Bun Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`should flatten chunks 1 1`] = `
+[
+  {
+    "chunk": "community_110",
+    "distance": 110.1,
+    "rowid": 110,
+    "source": "community",
+  },
+  {
+    "chunk": "community_120",
+    "distance": 120.1,
+    "rowid": 120,
+    "source": "community",
+  },
+  {
+    "chunk": "community_130",
+    "distance": 130.3,
+    "rowid": 130,
+    "source": "community",
+  },
+  {
+    "chunk": "community_140",
+    "distance": 140.1,
+    "rowid": 140,
+    "source": "community",
+  },
+  {
+    "chunk": "community_150",
+    "distance": 150.2,
+    "rowid": 150,
+    "source": "community",
+  },
+  {
+    "chunk": "community_160",
+    "distance": 160.3,
+    "rowid": 160,
+    "source": "community",
+  },
+  {
+    "chunk": "collaborators_210",
+    "distance": 210.1,
+    "rowid": 210,
+    "source": "private",
+  },
+  {
+    "chunk": "collaborators_220",
+    "distance": 220.2,
+    "rowid": 220,
+    "source": "private",
+  },
+  {
+    "chunk": "collaborators_230",
+    "distance": 230.3,
+    "rowid": 230,
+    "source": "private",
+  },
+  {
+    "chunk": "collaborators_240",
+    "distance": 240.1,
+    "rowid": 240,
+    "source": "private",
+  },
+  {
+    "chunk": "collaborators_250",
+    "distance": 250.7,
+    "rowid": 250,
+    "source": "private",
+  },
+  {
+    "chunk": "collaborators_260",
+    "distance": 260.9,
+    "rowid": 260,
+    "source": "private",
+  },
+  {
+    "chunk": "public_310",
+    "distance": 310.1,
+    "rowid": 310,
+    "source": "public",
+  },
+  {
+    "chunk": "public_320",
+    "distance": 320.2,
+    "rowid": 320,
+    "source": "public",
+  },
+  {
+    "chunk": "public_330",
+    "distance": 330.3,
+    "rowid": 330,
+    "source": "public",
+  },
+  {
+    "chunk": "public_340",
+    "distance": 340.5,
+    "rowid": 340,
+    "source": "public",
+  },
+  {
+    "chunk": "public_350",
+    "distance": 350.1,
+    "rowid": 350,
+    "source": "public",
+  },
+  {
+    "chunk": "public_360",
+    "distance": 360.7,
+    "rowid": 360,
+    "source": "public",
+  },
+  {
+    "chunk": "public_370",
+    "distance": 370.9,
+    "rowid": 370,
+    "source": "public",
+  },
+]
+`;
+
+exports[`should flatten chunks 2 1`] = `
+[
+  {
+    "chunk": "chunk_191",
+    "distance": 0.9503848552703857,
+    "rowid": 191,
+    "source": "community",
+  },
+  {
+    "chunk": "chunk_163",
+    "distance": 0.9566802382469177,
+    "rowid": 163,
+    "source": "community",
+  },
+  {
+    "chunk": "chunk_364",
+    "distance": 0.9570896625518799,
+    "rowid": 364,
+    "source": "community",
+  },
+  {
+    "chunk": "chunk_45",
+    "distance": 0.9799457788467407,
+    "rowid": 45,
+    "source": "community",
+  },
+  {
+    "chunk": "chunk_46",
+    "distance": 0.9854297041893005,
+    "rowid": 46,
+    "source": "community",
+  },
+  {
+    "chunk": "chunk_136",
+    "distance": 0.9931496977806091,
+    "rowid": 136,
+    "source": "community",
+  },
+  {
+    "chunk": "chunk_156",
+    "distance": 1.005388617515564,
+    "rowid": 156,
+    "source": "community",
+  },
+  {
+    "chunk": "chunk_158",
+    "distance": 1.0095767974853516,
+    "rowid": 158,
+    "source": "community",
+  },
+  {
+    "chunk": "chunk_166",
+    "distance": 1.010939598083496,
+    "rowid": 166,
+    "source": "community",
+  },
+  {
+    "chunk": "chunk_148",
+    "distance": 1.019416093826294,
+    "rowid": 148,
+    "source": "community",
+  },
+  {
+    "chunk": "chunk_154",
+    "distance": 1.0257253646850586,
+    "rowid": 154,
+    "source": "community",
+  },
+  {
+    "chunk": "chunk_165",
+    "distance": 1.0343191623687744,
+    "rowid": 165,
+    "source": "community",
+  },
+  {
+    "chunk": 
+"chunk_198
+
+"
+,
+    "distance": 1.0500069856643677,
+    "rowid": 198,
+    "source": "community",
+  },
+  {
+    "chunk": 
+"chunk_626
+
+
+"
+,
+    "distance": 1.0614837408065796,
+    "rowid": 626,
+    "source": "community",
+  },
+]
+`;
