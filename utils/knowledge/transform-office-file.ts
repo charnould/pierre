@@ -61,9 +61,10 @@ export const transform_office_file = async (args: Args) => {
         XLSX.set_cptable(cpexcel)
         XLSX.stream.set_readable(Readable)
         const xlsx = XLSX.read(await Bun.file(file.filepath).arrayBuffer(), { cellDates: true })
-        const sheet = xlsx.Sheets[xlsx.SheetNames[0]]
 
-        console.log('??????? nom des tab : ', xlsx.SheetNames)
+        // TODO: Determine how to handle cells with strikethrough formatting.
+        //       Consider both fully strikethrough and partially strikethrough text.
+        const sheet = xlsx.Sheets[xlsx.SheetNames[file.sheet]]
 
         // Unmerged cells
         const merges = sheet['!merges'] || []

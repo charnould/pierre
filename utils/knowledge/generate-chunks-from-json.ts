@@ -1,5 +1,8 @@
 import type Database from 'bun:sqlite'
 import chalk from 'chalk'
+import { isValid, parseISO } from 'date-fns'
+import { formatInTimeZone } from 'date-fns-tz'
+import { fr } from 'date-fns/locale'
 import ora from 'ora'
 import { db } from '../database'
 import type { Args } from './_run'
@@ -28,7 +31,15 @@ export const generate_chunks_from_json = async (args: Args) => {
         // Generate and save chunks in the right DB
         for (const j of json) {
           let chunk = Object.entries(j)
-            .map(([key, value]) => `- ${key.toLowerCase().replace(/\s{2,}/g, ' ')} : ${value}`)
+            .map(([key, value]) => {
+              // Verify if the value is a valid date string.
+              // If valid, parse and format it into a human-readable date using date-fns.
+              if (typeof value === 'string' && isValid(parseISO(value))) {
+                value = formatInTimeZone(value, 'Europe/Paris', 'PPPP à HH:mm', { locale: fr })
+              }
+
+              return `- ${key.toLowerCase().replace(/\s{2,}/g, ' ')} : ${value}`
+            })
             .join('\n')
 
           if (file.description !== null) chunk = `${file.description} \n${chunk}`
