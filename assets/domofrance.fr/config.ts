@@ -9,7 +9,7 @@ export default {
       protected: false,
       knowledge: {
         community: true,
-        self: { public: false, collaborators: false }
+        proprietary: { public: false, private: false }
       },
       audience:
         'The user is a client of Domofrance, a social housing company around Bordeaux in France.',
@@ -26,7 +26,8 @@ export default {
         'Comment déposer mon congé pour mon logement ?',
         'Enquête SLS, kézako + suis-je concerné ?',
         "Est-il possible d'acheter mon logement social ?"
-      ]
+      ],
+      disclaimer: null
     }
   }
 } as Config

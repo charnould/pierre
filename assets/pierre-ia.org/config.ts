@@ -119,7 +119,7 @@ export default {
       protected: false,
       knowledge: {
         community: true,
-        self: { public: true, collaborators: true }
+        proprietary: { public: true, private: true }
       },
       audience:
         'The user is an employee of Pierre Habitat, a fictional social housing company operating in France.',
@@ -148,7 +148,7 @@ export default {
       protected: true,
       knowledge: {
         community: true,
-        self: { public: false, collaborators: false }
+        proprietary: { public: false, private: false }
       },
       audience:
         'The user’s primary focus is on housing, with a particular interest in social housing in France.',

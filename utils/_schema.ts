@@ -35,43 +35,45 @@ export const SMS = z.object({
 // `./assets/Config` schema
 export const Config = z.object({
   id: z.string(),
-  phone: z.string().nullable(), // SMS + Voice phone number
+  phone: z.string().nullable(),
   model: z.string(),
   context: z
     .object({
       default: z.object({
-        protected : z.boolean().default(false),
+        protected : z.boolean(),
         knowledge : z.object({
-          community : z.boolean().default(true),
-          self      : z.object({
-            public        : z.boolean().default(false),
-            collaborators : z.boolean().default(false)
+          community   : z.boolean(),
+          proprietary : z.object({
+            public  : z.boolean(),
+            private : z.boolean()
           })}),
         audience: z.string(),
         persona: z.string(),
         greeting: z.array(z.string()),
-        examples: z.array(z.string())
-      })
+        examples: z.array(z.string()),
+        disclaimer: z.string().nullable(),
+      }).strict()
     })
     .and(
       z.record(
         z.string(),
         z.object({
-          protected: z.boolean().default(false),
+          protected: z.boolean(),
           knowledge : z.object({
-            community : z.boolean().default(true),
-            self      : z.object({
-              public        : z.boolean().default(false),
-              collaborators : z.boolean().default(false)
+            community   : z.boolean(),
+            proprietary : z.object({
+              public  : z.boolean(),
+              private : z.boolean()
             })}),
           audience: z.string(),
           persona: z.string(),
           greeting: z.array(z.string()),
-          examples: z.array(z.string())
-        })
+          examples: z.array(z.string()),
+          disclaimer: z.string().nullable(),
+        }).strict()
       )
     )
-})
+}).strict()
 
 //
 //

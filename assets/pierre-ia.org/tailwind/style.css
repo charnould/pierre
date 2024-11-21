@@ -52,6 +52,10 @@
 
 /* Bot styles */
 
+[data-role='disclaimer'] {
+  @apply max-w-sm text-[11px] leading-tight font-light text-gray-500;
+}
+
 .thinking {
   background-color: black;
   border-radius: 9999px;
@@ -93,7 +97,7 @@
   /* Typography */
 
   p {
-    @apply my-2 text-[17px] leading-[24px] font-[370] empty:hidden;
+    @apply my-2 text-[16px] leading-[23px] font-[370] empty:hidden;
   }
 
   b,
@@ -107,7 +111,7 @@
   h4,
   h5,
   h6 {
-    @apply my-4 text-[19px] font-medium empty:hidden;
+    @apply my-4 text-[18px] font-medium empty:hidden;
   }
 
   a {

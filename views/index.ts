@@ -9,12 +9,20 @@ export const view = (config: Config, context: string) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" href="../assets/${config.id}/system.svg" type="image/svg+xml" />
         <link rel="manifest" href="../assets/${config.id}/manifest.json" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1731159647797.css" />
-        <script type="module" src="../assets/pierre-ia.org/dist/js/ai.1731159647797.js"></script>
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1733060398234.css" />
+        <script type="module" src="../assets/pierre-ia.org/dist/js/ai.1733060398234.js"></script>
         <title>Comment puis-je vous aider ? 🖐️</title>
       </head>
 
       <body class="mx-auto flex h-dvh max-w-4xl flex-col bg-white px-6">
+        ${config.context[context].disclaimer === null
+          ? null
+          : html` <input
+              type="hidden"
+              id="disclaimer"
+              value="${config.context[context].disclaimer}"
+            />`}
+
         <main class="no-scrollbar flex-1 overflow-scroll pb-12">
           <div class="clear-both flex gap-2 pt-6 pb-2" data-role="system__logo">
             <img src="../assets/${config.id}/system.svg" height="26" width="26" alt="AI" />
