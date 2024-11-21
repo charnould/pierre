@@ -228,6 +228,9 @@ Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE :
    – http://localhost:3000/?config=pierre-habitat.fr  
    – http://localhost:3000/?config=pierre-habitat.fr&context=en_agence
 
+> [!TIP]
+> Pour vous assurer que `config.ts` est correctement paramétré, notamment lors des montées de version qui peuvent en modifier la structure, lancer `bun test:config`.
+
 ### Modifier la personnalité du chatbot
 
 Si vous avez à ce stade personnalisé visuellement votre chatbot (_cf_. supra), et bien qu'il affiche des icônes et les salutations de votre organisme, **il ne se présente PAS encore comme le chatbot de votre organisme** (essayez en lui demandant qui il est !).

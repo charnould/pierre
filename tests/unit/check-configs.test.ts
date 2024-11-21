@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test'
 import { readdir } from 'node:fs/promises'
+import chalk from 'chalk'
 import { Config } from '../../utils/_schema'
 
 test('check if configs parse successfully', async () => {
