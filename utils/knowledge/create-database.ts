@@ -4,14 +4,14 @@ import ora from 'ora'
 import * as sqliteVec from 'sqlite-vec'
 import type { Args } from './_run'
 
+// Builtin SQLite library on MacOS doesn't allow extensions
+//Database.setCustomSQLite('/opt/homebrew/opt/sqlite/lib/libsqlite3.dylib')
+
 export const create_database = async (args: Args) => {
   // No need for try/catch because this function should never throw
 
   // Start spinner
   const spinner = ora('Initialisation des bases de connaissances').start()
-
-  // Builtin SQLite library on MacOS doesn't allow extensions
-  Database.setCustomSQLite('/opt/homebrew/opt/sqlite/lib/libsqlite3.dylib')
 
   // Helper function to initialize a database
   const initialize_db = (path: string) => {

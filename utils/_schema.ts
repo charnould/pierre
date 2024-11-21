@@ -158,15 +158,24 @@ export const Augmented_Query = z.object({
 // biome-ignore format: readability
 export const AIContext = Reply
   .extend({ query: Augmented_Query.nullable().default(null) })
-  .merge(z.object({
-      chunks            : z.array(z.string()).nullish().default([]),
-      current_context   : z.string().default('default'),
-      conversation      : z.array(
-        z.object({
-            role    : z.enum(['assistant', 'user', 'system']),
-            content : z.string()
-          })).default([])
-    })).refine(async (c) => {
+  .merge(
+    z.object({
+      chunks: z.object({
+        community : z.array(z.string()).nullish().default([]),
+        private   : z.array(z.string()).nullish().default([]),
+        public    : z.array(z.string()).nullish().default([])
+      }).default({
+        community : [],
+        private   : [],
+        public    : [],
+      }),
+      current_context : z.string().default('default'),
+      conversation    : z
+        .array(z.object({ role: z.enum(['assistant', 'user', 'system']), content: z.string() }))
+        .default([])
+    })
+  )
+  .refine(async (c) => {
     // Change config name for config content
     if (typeof c.config === 'string')
       c.config = (await import(`../assets/${c.config}/config`)).default
