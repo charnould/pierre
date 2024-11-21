@@ -11,6 +11,7 @@ exports[`should AIContext parse correctly 1`] = `
     "context": {
       "default": {
         "audience": "The user’s primary focus is on housing, with a particular interest in social housing in France.",
+        "disclaimer": "Une IA peut se tromper. Vérifiez les informations importantes.",
         "examples": [
           "Comment déposer mon préavis de congé pour mon logement ? Et avez-vous un modèle de courrier ?",
           "Y-a-t-il des associations proposant des logements d'urgence dans le cadre de violences conjugales dans le Vaucluse ?",
@@ -29,8 +30,8 @@ exports[`should AIContext parse correctly 1`] = `
         ],
         "knowledge": {
           "community": true,
-          "self": {
-            "collaborators": false,
+          "proprietary": {
+            "private": false,
             "public": false,
           },
         },
@@ -39,6 +40,7 @@ exports[`should AIContext parse correctly 1`] = `
       },
       "en_agence": {
         "audience": "The user’s primary focus is on housing, with a particular interest in social housing in France.",
+        "disclaimer": null,
         "examples": [
           "Comment déposer mon préavis de congé pour mon logement ? Et avez-vous un modèle de courrier ?",
           "Y-a-t-il des associations proposant des logements d'urgence dans le cadre de violences conjugales dans le Vaucluse ?",
@@ -57,8 +59,8 @@ exports[`should AIContext parse correctly 1`] = `
         ],
         "knowledge": {
           "community": true,
-          "self": {
-            "collaborators": false,
+          "proprietary": {
+            "private": false,
             "public": false,
           },
         },
@@ -85,8 +87,8 @@ exports[`should AIContext parse correctly 1`] = `
         ],
         "knowledge": {
           "community": true,
-          "self": {
-            "collaborators": true,
+          "proprietary": {
+            "private": true,
             "public": true,
           },
         },

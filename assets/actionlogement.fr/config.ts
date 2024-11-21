@@ -9,7 +9,7 @@ export default {
       protected: false,
       knowledge: {
         community: true,
-        self: { public: false, collaborators: false }
+        proprietary: { public: false, private: false }
       },
       audience: 'The user is interested in Action Logement, a social housing company.',
       persona:
@@ -25,7 +25,8 @@ export default {
         "Je suis saisonnier, et j'ai des problèmes pour me loger sur mon lieu de travail, Action Logement propose-t-il des aides ou solutions ?",
         "Je suis propriétaire d'un apparement et je me demandais quels étaient les avantages de la garantie VISALE",
         "C'est quoi l'Éco-PTZ ?"
-      ]
+      ],
+      disclaimer: null
     }
   }
 } as Config

@@ -9,7 +9,7 @@ export default {
       protected: false,
       knowledge: {
         community: true,
-        self: { public: false, collaborators: false }
+        proprietary: { public: false, private: false }
       },
       audience:
         'The user is a client of ARPEJ, a non-profit specialized in student housing in France.',
@@ -25,7 +25,8 @@ export default {
         "Puis-je avoir un animal de compagnie dans ma résidence ? C'est un gros chien par contre...",
         "C'est quoi les grandes différences entre ARPEJ et les CROUS ?",
         '我可以让我的家人入住我的住处吗'
-      ]
+      ],
+      disclaimer: null
     }
   }
 } as Config
