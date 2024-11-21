@@ -194,6 +194,17 @@ function get_ai_answer(prompt: string) {
       for (const button of buttons) {
         button.disabled = false
       }
+      // Append disclaimer paragraph
+      const disclaimerInput = document.getElementById('disclaimer') as HTMLInputElement
+      if (disclaimerInput) {
+        const disclaimerValue = disclaimerInput.value
+        const disclaimerParagraph = document.createElement('div')
+        disclaimerParagraph.setAttribute('data-role', 'disclaimer')
+        disclaimerParagraph.textContent = disclaimerValue
+
+        const mainElement = document.querySelector('main')
+        if (mainElement) mainElement.appendChild(disclaimerParagraph)
+      }
     }
   }
 

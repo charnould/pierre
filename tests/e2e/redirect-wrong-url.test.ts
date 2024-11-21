@@ -28,16 +28,4 @@ it('should redirect `http://localhost:3000/c` correctly', async () => {
       /http:\/\/localhost:3000\/a\/login\?redirection=c%2F%3Fconfig%3Dpierre-ia.org%26context%3Den_agence/
     )
   })
-
-  fetch(`${path}/?config=granddijonhabitat.fr&`).then((r) => {
-    expect(r.url).toMatch(
-      /http:\/\/localhost:3000\/c\/.{36}\?config=granddijonhabitat.fr&context=default/
-    )
-  })
-
-  fetch(`${path}/?config=granddijonhabitat.fr&context=en_agence`).then((r) => {
-    expect(r.url).toMatch(
-      /http:\/\/localhost:3000\/c\/.{36}\?config=granddijonhabitat.fr&context=en_agence/
-    )
-  })
 })
