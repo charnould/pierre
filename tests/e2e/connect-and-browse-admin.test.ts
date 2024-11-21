@@ -19,7 +19,7 @@ it('`admin` should pass e2e test', async () => {
   //
   //
   // Go to `/a` without being logged
-  const browser = await puppeteer.launch({ slowMo: 10 })
+  const browser = await puppeteer.launch({ slowMo: 10 }) // headless: false
   const page = await browser.newPage()
   // Set timeout to 60 seconds to run this long e2e test
   page.setDefaultNavigationTimeout(60000)
