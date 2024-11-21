@@ -1,5 +1,6 @@
 import { readdir } from 'node:fs/promises'
 import { $ } from 'bun'
+import chalk from 'chalk'
 import toc from 'markdown-toc'
 
 //
@@ -16,12 +17,13 @@ await $`rm -rf assets/pierre-ia.org/dist/fonts`
 await $`rm -rf assets/pierre-ia.org/dist/css`
 await $`rm -rf assets/pierre-ia.org/dist/js`
 await $`rm -f docs/assets/widget.js`
-await $`find . -name ".DS_Store" -type f -delete` // Delete all .DS_Store
+await $`find . -name ".DS_Store" -type f -delete`
 
 //
 //
 //
 // Upgrade Bun and dependencies
+await $`clear`
 await $`bun upgrade --stable && bun update && bun install`
 
 //
@@ -96,11 +98,16 @@ await $`cp assets/pierre-ia.org/dist/js/widget.js docs/assets`
 // Lint, format, test code
 await $`bun lint`
 await $`bun format`
-await $`bun test`
+await $`bun test:unit`
+await $`bun test:e2e`
 await $`clear`
 
 //
 //
 //
 // Output something when done
-console.log('\n\nBUILD DONE!\nYou can safely close your shell.\n\n')
+console.log('\n')
+console.log(chalk.bgGreen.bold('                '))
+console.log(chalk.bgGreen.bold('   BUILD DONE   '))
+console.log(chalk.bgGreen.bold('                '))
+console.log('\n')
