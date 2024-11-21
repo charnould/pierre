@@ -2,7 +2,11 @@
 
 exports[`should AIContext parse correctly 1`] = `
 {
-  "chunks": [],
+  "chunks": {
+    "community": [],
+    "private": [],
+    "public": [],
+  },
   "config": {
     "context": {
       "default": {
