@@ -41,6 +41,7 @@ export const view = (config: Config, context: string) => {
         <footer
           class="mb-6 flex h-14 flex-none items-center justify-between rounded-lg border border-stone-200 bg-stone-50 pr-3 pl-5 shadow-[0_0_40px_40px_rgba(255,255,255,1)] backdrop-blur-xl"
         >
+          <!-- TODO: https://tailwindcss.com/docs/v4-beta#field-sizing-utilities -->
           <input
             class="flex-1 border-none font-['Work_Sans'] text-xl outline-0"
             id="prompt__input"
