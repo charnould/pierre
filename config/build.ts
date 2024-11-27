@@ -28,6 +28,7 @@ await $`bun upgrade --stable && bun update && bun install`
 //
 //
 // Generate README table of contents
+// TODO: Some links still do not work
 const content = await Bun.file('README.md').text()
 const updated_content = toc.insert(content, {
   maxdepth: 3,
