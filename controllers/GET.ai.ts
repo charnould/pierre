@@ -3,7 +3,7 @@ import type { Context } from 'hono'
 import { streamText } from 'hono/streaming'
 import { AIContext, type Config, type SMS } from '../utils/_schema'
 import { augment_query } from '../utils/augment-query'
-import { answer_user, reach_deadlock } from '../utils/generate-answer'
+import { answer_collaborator, answer_user, reach_deadlock } from '../utils/generate-answer'
 import { get_conversation, save_reply } from '../utils/handle-conversation'
 import { parse_incoming_sms } from '../utils/parse-incoming-sms'
 import { rank_chunks } from '../utils/rank-chunks'
@@ -12,19 +12,33 @@ import { send_sms } from '../utils/send-sms'
 
 export const controller = async (c: Context) => {
   try {
-    // Step 1. Set variables and types
+    //
+    // Step 1.
+    // Set variables and types
+    //
+
     let is_sms = false
     let parsed_sms: SMS = null
     let context: AIContext
     let answer: string | StreamTextResult<Record<string, CoreTool>>
 
-    // Step 2. Check if incoming request is a valid SMS
+    //
+    // Step 2.
+    // Check if incoming request is a valid SMS
+    // TODO: handle wrong `/sms` request
+    //
+
     if (c.req.path === '/sms') {
       parsed_sms = await parse_incoming_sms(await c.req.json())
       if (parsed_sms !== null) is_sms = true
     }
 
-    // Step 3. Create/parse an answer context
+    //
+    // Step 3.
+    // Parse and initialize the answer context
+    // to prepare it for further processing.
+    //
+
     if (is_sms) {
       context = await AIContext.parseAsync(parsed_sms)
     } else {
@@ -37,47 +51,103 @@ export const controller = async (c: Context) => {
       })
     }
 
-    // Step 4. Apply AI logic
+    //
+    // Step 4.
+    // The Main Part: "Apply AI Logic"
+    //
 
+    // Save reply (= what the user just said) and because
+    // of `true` save also this reply to PIERRE (= telemetry)
+    // if `telemetry` env. variable is also `true`
     save_reply(context, true)
 
+    // Add up conversation context with full conversation
+    // (= everything user/AI have said) and augment+enrich
+    // last user input
     context = await AIContext.parseAsync({
       ...context,
       conversation: get_conversation(context.conv_id)
     }).then(async (context) => ({ ...context, query: await augment_query(context) }))
 
-    // If query is relevant and does not contain profanity, answer with intelligence
+    // If query is relevant and does not contain profanity,
+    // answer with intelligence
     if (context.query?.is_relevant && !context.query.contains_profanity) {
+      //
+      //
+      //
       console.debug('🤖 should answer with intelligence')
+      //
+      //
+      //
 
-      const chunks = await Promise.all(
-        [
-          ...context.query.standalone_questions,
-          ...context.query.stepback_questions,
-          ...context.query.search_queries,
-          ...context.query.hyde_answers
-        ].map((q) => vector_search(q))
+      // Get knowledge access for user query considering current context
+      let knowledge_access = { community: true, proprietary: { public: false, private: false } }
+      if (typeof context.config !== 'string') {
+        knowledge_access = context.config.context[context.current_context].knowledge
+      }
+
+      // Get relevant chunks and rerank them.
+      // This is here that "intelligence" must occur.
+      // If `context.chunks` contains bullshit, PIERRE
+      // answer will probably be bullshit!
+      context.chunks = await rank_chunks(
+        (
+          await Promise.all(
+            [
+              ...context.query.standalone_questions,
+              ...context.query.stepback_questions,
+              ...context.query.search_queries,
+              ...context.query.hyde_answers
+            ].map((q) => vector_search(q, context))
+          )
+        ).filter((chunk) => chunk !== undefined), // TODO: vector_search must not return undefined
+        context
       )
 
-      context.chunks = rank_chunks(chunks)
+      //
+      //
+      //
+      console.debug('-----------------------------------------')
+      console.debug('🤖 augments the user query to:')
+      console.debug(context)
+      console.debug('-----------------------------------------')
+      //
+      //
+      //
 
-      console.debug('🤖 augments the user query to:\n', context)
-
-      answer = (await answer_user(context, { is_sms: is_sms })) as
-        | string
-        | StreamTextResult<Record<string, CoreTool>>
+      // If private knowledge access is `true` (e.g. internal process),
+      // it means that user MUST be a collaborator. Hence, answer
+      // must be specific to this use case.
+      if (knowledge_access.proprietary.private === true) {
+        console.debug('🤖 will answser to a collaborator.')
+        answer = await answer_collaborator(context, { is_sms: is_sms })
+      } else {
+        // If private knowledge access is `false`,
+        // answer user like a normal user
+        console.debug('🤖 will answer to a normal user.')
+        answer = await answer_user(context, { is_sms: is_sms })
+      }
     } else {
-      // If query is irrelevant and/or contains profanity, make a deadlock answer
+      //
+      //
+      //
       console.debug('🤖 should answer with a deadlock')
+      //
+      //
+      //
 
-      answer = (await reach_deadlock(context, { is_sms: is_sms })) as
-        | string
-        | StreamTextResult<Record<string, CoreTool>>
+      // If query is irrelevant and/or contains profanity,
+      // make a deadlock answer
+      answer = await reach_deadlock(context, { is_sms: is_sms })
     }
 
-    // Step 5. Send answer to the user
+    //
+    // Step 5.
+    // Send answer to the user
+    //
 
-    // If incoming request is a SMS, return a full-text answer
+    // If incoming request is a SMS,
+    // return a full-text answer
     if (is_sms && parsed_sms !== null) {
       await send_sms({
         from: (context.config as Config).phone,
@@ -88,9 +158,9 @@ export const controller = async (c: Context) => {
       return c.body('ok', 200)
     }
 
-    // If incoming request comes from the WWW, return a text stream
-
+    // If incoming request comes from the web, return a text stream.
     // TODO: optimize stream (see. Hono/Vercel SDK Core)
+    // https://sdk.vercel.ai/cookbook/api-servers/hono#hono
     return streamText(c, async (stream) => {
       c.header('Content-Type', 'text/event-stream')
 
