@@ -11,7 +11,7 @@ import { delete_user, get_user, get_users, save_user } from '../../../utils/hand
 //
 //
 beforeAll(() => {
-  const database = db('telemetry')
+  const database = db('datastore')
   if (database instanceof Database) database.query('DELETE FROM users').run()
 })
 
@@ -40,7 +40,7 @@ it('should insert 2 users', async () => {
 
   save_user(user_2)
 
-  const database = db('telemetry')
+  const database = db('datastore')
   if (database instanceof Database)
     expect(database.query('SELECT * FROM users').all()).toStrictEqual([
       {

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "0193785f-9520-7000-9679-bd508683fc5f",
+    "filepath": "knowledge/proprietary/test-excel-file.xlsx",
+    "type": "xlsx",
+    "heading_row": 2,
+    "sheet": 0,
+    "access": "private",
+    "description": "Ci-après les caractéristiques techniques d'un programme immobilier de Pierre Habitat :",
+    "last_modified": "2024-11-29T15:42:30+01:00"
+  },
+  {
+    "id": "0193785f-9520-7001-a07f-b6419950beff",
+    "filepath": "knowledge/proprietary/test-excel-file.xlsx",
+    "type": "xlsx",
+    "heading_row": 0,
+    "sheet": 1,
+    "access": "public",
+    "description": "Ci-après les noms des collaborateurs en charge chez Pierre Habitat :",
+    "last_modified": "2024-11-29T15:42:30+01:00"
+  },
+  {
+    "id": "0193785f-9520-7002-bb90-00811e63bd66",
+    "filepath": "knowledge/proprietary/test-folder/test-excel-file-from-folder.xlsx",
+    "type": "xlsx",
+    "heading_row": 2,
+    "sheet": 0,
+    "access": "private",
+    "description": null,
+    "last_modified": "2024-11-29T15:42:30+01:00"
+  },
+  {
+    "id": "0193785f-9520-7003-9997-be79a54a7c8a",
+    "filepath": "knowledge/proprietary/test-markdown-file.md",
+    "type": "md",
+    "heading_row": 0,
+    "sheet": 0,
+    "access": "private",
+    "description": null,
+    "last_modified": "2024-11-29T15:42:30+01:00"
+  },
+  {
+    "id": "0193785f-9520-7004-a8f4-6ac6469f589d",
+    "filepath": "knowledge/proprietary/test-word-file.docx",
+    "type": "docx",
+    "heading_row": 0,
+    "sheet": 0,
+    "access": "public",
+    "description": null,
+    "last_modified": "2024-11-29T15:42:30+01:00"
+  }
+]

@@ -12,31 +12,31 @@ Database.setCustomSQLite('/opt/homebrew/opt/sqlite/lib/libsqlite3.dylib')
 // For vector databases, the `sqlite_vec` module is loaded to provide vector search.
 export const db = (db_name: Db_Name): Database | (Database & sqlite_vec.Db) => {
   if (db_name === 'community') {
-    const db = new Database('./knowledge/.data.sqlite')
+    const db = new Database('./datastores/community.sqlite')
     sqlite_vec.load(db)
     return db
   }
 
   if (db_name === 'proprietary.private') {
-    const db = new Database('./knowledge/proprietary/.data.private.sqlite')
+    const db = new Database('./datastores/proprietary.private.sqlite')
     sqlite_vec.load(db)
     return db
   }
 
   if (db_name === 'proprietary.public') {
-    const db = new Database('./knowledge/proprietary/.data.public.sqlite')
+    const db = new Database('./datastores/proprietary.public.sqlite')
     sqlite_vec.load(db)
     return db
   }
 
-  if (db_name === 'telemetry') {
-    const telemetry_db: Database = new Database('./telemetry/datastore.sqlite')
-    return telemetry_db
+  if (db_name === 'datastore') {
+    const db = new Database('./datastores/datastore.sqlite')
+    return db as Database
   }
 
   throw new Error('Invalid db_name. Database not initialized.')
 }
 
 // Zod schema/TS type
-const Db_Name = z.enum(['community', 'proprietary.private', 'proprietary.public', 'telemetry'])
+const Db_Name = z.enum(['community', 'proprietary.private', 'proprietary.public', 'datastore'])
 export type Db_Name = z.infer<typeof Db_Name>
