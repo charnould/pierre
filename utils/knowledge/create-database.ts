@@ -1,0 +1,39 @@
+import { Database } from 'bun:sqlite'
+import chalk from 'chalk'
+import ora from 'ora'
+import * as sqliteVec from 'sqlite-vec'
+import type { Args } from './_run'
+
+export const create_database = async (args: Args) => {
+  // No need for try/catch because this function should never throw
+
+  // Start spinner
+  const spinner = ora('Initialisation des bases de connaissances').start()
+
+  // Builtin SQLite library on MacOS doesn't allow extensions
+  Database.setCustomSQLite('/opt/homebrew/opt/sqlite/lib/libsqlite3.dylib')
+
+  // Helper function to initialize a database
+  const initialize_db = (path: string) => {
+    const db = new Database(path)
+    sqliteVec.load(db)
+    db.exec('CREATE VIRTUAL TABLE chunks USING FTS5(chunk);')
+    db.exec('CREATE VIRTUAL TABLE vectors USING vec0(vector float[3072])')
+    return db
+  }
+
+  if (args['--community'] === true) {
+    // Create `knowledge/.data/community.sqlite`
+    initialize_db('./datastores/community.sqlite')
+  }
+
+  if (args['--proprietary'] === true) {
+    // Create `knowledge/.data/proprietary.*.sqlite`
+    initialize_db('./datastores/proprietary.private.sqlite')
+    initialize_db('./datastores/proprietary.public.sqlite')
+  }
+
+  // End spinner
+  spinner.succeed(chalk.green('Bases de connaissances initialisées'))
+  return
+}

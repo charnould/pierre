@@ -41,7 +41,7 @@ const r_2_1 = await AIContext.parseAsync({
 //
 //
 beforeAll(() => {
-  const database = db('telemetry')
+  const database = db('datastore')
   if (database instanceof Database) database.query('DELETE FROM telemetry').run()
 })
 
@@ -63,7 +63,7 @@ it('should insert 3 replies', async () => {
   setSystemTime(new Date('2012-12-12T12:15:00'))
   save_reply(r_2_1, false)
 
-  const database = db('telemetry')
+  const database = db('datastore')
   if (database instanceof Database)
     expect(database.query('SELECT * FROM telemetry').all()).toMatchSnapshot()
 })

@@ -1,5 +1,5 @@
-/telemetry
 /node_modules
+/datastores/datastore.sqlite
 .DS_Store
 .env
 .env.production

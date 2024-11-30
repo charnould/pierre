@@ -77,7 +77,7 @@ export const Config = z.object({
 //
 // prettier-ignore
 // biome-ignore format: readability
-// Reflects telemetry database schema
+// Reflects datastore database schema
 export const Reply = z.object({
   // Globals
   conv_id   : z.string(),

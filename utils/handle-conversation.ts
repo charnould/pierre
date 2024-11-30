@@ -7,7 +7,7 @@ import type { AIContext, Reply } from './_schema'
 //
 // Get ONE conversation
 export const get_conversation = (conv_id: string) => {
-  const database = db('telemetry')
+  const database = db('datastore')
 
   if (database instanceof Database) {
     const records = database
@@ -19,14 +19,14 @@ export const get_conversation = (conv_id: string) => {
     return records
   }
 
-  throw new Error('Invalid database type for telemetry_db')
+  throw new Error('Invalid database type for datastore_db')
 }
 
 //
 //
 // Delete a full conversation
 export const delete_conversation = (conv_id: string) => {
-  const database = db('telemetry')
+  const database = db('datastore')
 
   if (database instanceof Database) {
     return database
@@ -34,7 +34,7 @@ export const delete_conversation = (conv_id: string) => {
       .run({ $conv_id: conv_id })
   }
 
-  throw new Error('Invalid database type for telemetry_db')
+  throw new Error('Invalid database type for datastore_db')
 }
 
 //
@@ -42,7 +42,7 @@ export const delete_conversation = (conv_id: string) => {
 // Save a reply (to a conversation)
 export const save_reply = async (context: AIContext, telemetry: boolean) => {
   try {
-    const database = db('telemetry')
+    const database = db('datastore')
 
     if (database instanceof Database && typeof context.config !== 'string') {
       database
@@ -80,7 +80,7 @@ export const score_conversation = async (
   telemetry: boolean
 ) => {
   try {
-    const database = db('telemetry')
+    const database = db('datastore')
 
     if (database instanceof Database) {
       database
@@ -119,7 +119,7 @@ export const score_conversation = async (
 //
 // Get all conversations for review (./a)
 export const get_conversations = (): Reply[] => {
-  const database = db('telemetry')
+  const database = db('datastore')
 
   if (database instanceof Database) {
     const stringified_results = database
@@ -131,5 +131,5 @@ export const get_conversations = (): Reply[] => {
     return stringified_results
   }
 
-  throw new Error('Invalid database type for telemetry_db')
+  throw new Error('Invalid database type for datastore_db')
 }
