@@ -14,7 +14,7 @@ registry:
     - REGISTRY_TOKEN
 
 volumes:
-  - 'telemetry:/app/telemetry/'
+  - 'datastores:/app/datastores/'
 
 proxy:
   app_port: 3000
