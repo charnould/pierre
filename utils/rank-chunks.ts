@@ -74,7 +74,6 @@ export type Relevant_Chunks = z.infer<typeof Relevant_Chunks>
 //
 //
 // Simplify vector search results into a flat array,
-// retaining only the most relevant entries
 export const flatten_vector_searches = (data: Vector_Search_Result[]): Flatten_Chunk[] =>
   _.chain(data)
     .flatMap((o) =>
@@ -95,7 +94,7 @@ export const flatten_vector_searches = (data: Vector_Search_Result[]): Flatten_C
         .map((group) => _.minBy(group, 'distance'))
         .compact()
         .orderBy('distance')
-        .take(6)
+        .take(50)
         .value()
     )
     .values()
