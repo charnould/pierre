@@ -46,16 +46,14 @@ export const authenticate = async (c: Context, next: Next) => {
 
   // Validate if a signed cookie is present and decrypt it to retrieve user data
   // Check if user (still) exists in `users` table
-  // Check if the user’s config matches the current config ID to determine access to protected context
   let can_access_protected_context = false
   let user: User | undefined = undefined
   const cookie = await getSignedCookie(c, Bun.env.AUTH_SECRET as string, 'pierre-ia')
   if (cookie) {
     user = JSON.parse(decrypt(cookie, Bun.env.AUTH_SECRET as string)) as User
     const user_exists = get_user(user.email) !== undefined
-    // Grant access to protected context if the user's config matches the expected config id
-    if (user_exists && user.config === config.id) can_access_protected_context = true
-    if (!user_exists) user = undefined
+    if (user_exists) can_access_protected_context = true
+    else user = undefined
   }
 
   //
