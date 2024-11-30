@@ -1,10 +1,7 @@
 # PIERRE – L'IA open source du mouvement HLM
 
 > [!IMPORTANT]
-> PIERRE est actuellement en version `0.15.x` (consulter les [releases](https://github.com/charnould/pierre/releases)) avec une **qualité de base de connaissances estimée à `10 %`**. Par ailleurs, la documentation ci-dessous est en cours de rédaction. En cas de difficultés, créer une `issue` ou envoyer un email à charnould@pierre-ia.org.
-
-> [!IMPORTANT]
-> PIERRE ne connait pas les spécificités des bailleurs (ex : la taille de leur parc, les coordonnées des gardiens, les procédures internes, etc.). Tous ces éléments peuvent néanmoins lui être aisément « enseignés » en modifiant l'équivalent d'un document Word (_cf._ [Contribuer à PIERRE](#contribuer-%C3%A0-pierre)).
+> PIERRE est actuellement en version `0.16.x` (consulter les [releases](https://github.com/charnould/pierre/releases)) avec une **qualité de base de connaissances estimée à `10 %`**. Par ailleurs, la documentation ci-dessous est en cours de rédaction. En cas de difficultés, créer une `issue` ou envoyer un email à charnould@pierre-ia.org.<br><br>PIERRE ne connait pas les spécificités des bailleurs (ex : taille des parcs, coordonnées des agences, procédures internes, etc.). **Ces éléments peuvent néanmoins lui être « enseignés en deux clics ».**
 
 ## PIERRE : kézako ?
 
