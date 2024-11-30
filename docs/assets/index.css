@@ -264,23 +264,6 @@ main {
     0 0.8em 2.8em -2em rgba(15, 33, 50, 0.5);
 }
 
-.plainecommunehabitat {
-  border: 3px solid #ffa937;
-  border-radius: 7px;
-  box-shadow:
-    5px 5px rgba(223, 77, 79, 0.4),
-    10px 10px rgba(223, 77, 79, 0.3),
-    15px 15px rgba(223, 77, 79, 0.2),
-    20px 20px rgba(223, 77, 79, 0.1),
-    25px 25px rgba(223, 77, 79, 0.05),
-    0 0 0 1px rgba(15, 33, 50, 0.05),
-    0 0.1em 2.8em -0.8em rgba(15, 33, 50, 0.1),
-    0 0.2em 3.2em -1.2em rgba(15, 33, 50, 0.2),
-    0 0.4em 2em -1.2em rgba(15, 33, 50, 0.3),
-    0 0.6em 2.4em -1.6em rgba(15, 33, 50, 0.4),
-    0 0.8em 2.8em -2em rgba(15, 33, 50, 0.5);
-}
-
 .actionlogement {
   border: 3px solid #003e7a;
   border-radius: 6px;
