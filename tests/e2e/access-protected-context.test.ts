@@ -7,11 +7,11 @@ it('admin@pierre-ia.org should access `team` context', async () => {
   const page = await browser.newPage()
 
   // Try to accesss a protected context without being logged
-  await page.goto('http://localhost:3000/?config=pierre-ia.org&context=team')
+  await page.goto('http://localhost:3000/?config=pierre-ia.org&context=en_agence')
   await page.setViewport({ width: 1080, height: 1024 })
 
   expect(page.url()).toBe(
-    'http://localhost:3000/a/login?redirection=c%2F%3Fconfig%3Dpierre-ia.org%26context%3Dteam'
+    'http://localhost:3000/a/login?redirection=c%2F%3Fconfig%3Dpierre-ia.org%26context%3Den_agence'
   )
 
   // Log in
@@ -25,7 +25,9 @@ it('admin@pierre-ia.org should access `team` context', async () => {
   expect(cookie).toBeDefined()
 
   // ...and URL must be the one to the protected context
-  expect(page.url()).toMatch(/http:\/\/localhost:3000\/c\/.{36}\?config=pierre-ia.org&context=team/)
+  expect(page.url()).toMatch(
+    /http:\/\/localhost:3000\/c\/.{36}\?config=pierre-ia.org&context=en_agence/
+  )
 
   // e2e test is done!
   await browser.close()
