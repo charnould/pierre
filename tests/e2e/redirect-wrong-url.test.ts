@@ -25,7 +25,7 @@ it('should redirect `http://localhost:3000/c` correctly', async () => {
 
   fetch(`${path}/?config=pierre-ia.org&context=en_agence`).then((r) => {
     expect(r.url).toMatch(
-      /http:\/\/localhost:3000\/c\/.{36}\?config=pierre-ia.org&context=en_agence/
+      /http:\/\/localhost:3000\/a\/login\?redirection=c%2F%3Fconfig%3Dpierre-ia.org%26context%3Den_agence/
     )
   })
 
