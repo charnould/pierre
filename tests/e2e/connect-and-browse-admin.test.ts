@@ -7,7 +7,7 @@ import { db } from '../../utils/database'
 //
 // Delete all users
 beforeAll(() => {
-  const database = db('telemetry')
+  const database = db('datastore')
   if (database instanceof Database) database.query('DELETE FROM users').run()
 })
 

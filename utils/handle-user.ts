@@ -6,7 +6,7 @@ import type { User } from './_schema'
 //
 // Save user
 export const save_user = async (user: User) => {
-  const database = db('telemetry')
+  const database = db('datastore')
 
   if (database instanceof Database) {
     database
@@ -23,7 +23,7 @@ export const save_user = async (user: User) => {
 //
 // Get user
 export const get_user = (email: string) => {
-  const database = db('telemetry')
+  const database = db('datastore')
 
   if (database instanceof Database) {
     const user = database.prepare('SELECT * FROM users WHERE email = $email').all({ $email: email })
@@ -31,14 +31,14 @@ export const get_user = (email: string) => {
     return user[0]
   }
 
-  throw new Error('Invalid database type for telemetry_db')
+  throw new Error('Invalid database type for datastore_db')
 }
 
 //
 //
 // Get all users
 export const get_users = () => {
-  const database = db('telemetry')
+  const database = db('datastore')
 
   if (database instanceof Database) {
     const users = database.prepare('SELECT * FROM users ORDER BY email').all()
@@ -46,18 +46,18 @@ export const get_users = () => {
     return users
   }
 
-  throw new Error('Invalid database type for telemetry_db')
+  throw new Error('Invalid database type for datastore_db')
 }
 
 //
 //
 // Delete user
 export const delete_user = (email: string) => {
-  const database = db('telemetry')
+  const database = db('datastore')
 
   if (database instanceof Database) {
     return database.prepare('DELETE FROM users WHERE email = $email').run({ $email: email })
   }
 
-  throw new Error('Invalid database type for telemetry_db')
+  throw new Error('Invalid database type for datastore_db')
 }
