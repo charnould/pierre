@@ -63,7 +63,7 @@ export const vector_search = async (query: string, context: AIContext) => {
 const query_db = (db_name: Db_Name, embedding: Float32Array) => {
   const db_instance = db(db_name)
   const results = db_instance
-    .prepare('SELECT rowid, distance FROM vectors WHERE vector MATCH ? AND k = 5')
+    .prepare('SELECT rowid, distance FROM vectors WHERE vector MATCH ? AND k = 10')
     .all(embedding) as { rowid: number; distance: number }[]
 
   return results.map((result) => ({

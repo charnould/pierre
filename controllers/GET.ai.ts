@@ -3,7 +3,12 @@ import type { Context } from 'hono'
 import { streamText } from 'hono/streaming'
 import { AIContext, type Config, type SMS } from '../utils/_schema'
 import { augment_query } from '../utils/augment-query'
-import { answer_collaborator, answer_user, reach_deadlock } from '../utils/generate-answer'
+import {
+  answer_collaborator,
+  answer_user,
+  reach_profanity_deadlock,
+  reach_relevancy_deadlock
+} from '../utils/generate-answer'
 import { get_conversation, save_reply } from '../utils/handle-conversation'
 import { parse_incoming_sms } from '../utils/parse-incoming-sms'
 import { rank_chunks } from '../utils/rank-chunks'
@@ -71,7 +76,7 @@ export const controller = async (c: Context) => {
 
     // If query is relevant and does not contain profanity,
     // answer with intelligence
-    if (context.query?.is_relevant && !context.query.contains_profanity) {
+    if (context.query && !context.query.contains_profanity) {
       //
       //
       //
@@ -115,30 +120,42 @@ export const controller = async (c: Context) => {
       //
       //
 
+      // If the reranker returns no relevant results, it indicates that
+      // either the question is unrelated to housing  or PIERRE lacks
+      // the necessary knowledge to address it. In both cases, respond
+      // with a deadlock.
+      if (
+        context.chunks.community.length === 0 &&
+        context.chunks.private.length === 0 &&
+        context.chunks.public.length === 0
+      ) {
+        console.debug('🤖 responding with a no-knowledge deadlock.')
+        answer = await reach_relevancy_deadlock(context, { is_sms: is_sms })
+      }
       // If private knowledge access is `true` (e.g. internal process),
       // it means that user MUST be a collaborator. Hence, answer
       // must be specific to this use case.
-      if (knowledge_access.proprietary.private === true) {
-        console.debug('🤖 will answser to a collaborator.')
+      else if (knowledge_access.proprietary.private === true) {
+        console.debug('🤖 responding to a collaborator.')
         answer = await answer_collaborator(context, { is_sms: is_sms })
       } else {
         // If private knowledge access is `false`,
         // answer user like a normal user
-        console.debug('🤖 will answer to a normal user.')
+        console.debug('🤖 responding to a normal user.')
         answer = await answer_user(context, { is_sms: is_sms })
       }
     } else {
       //
       //
       //
-      console.debug('🤖 should answer with a deadlock')
+      console.debug('🤖 responding with a profanity deadlock')
       //
       //
       //
 
       // If query is irrelevant and/or contains profanity,
       // make a deadlock answer
-      answer = await reach_deadlock(context, { is_sms: is_sms })
+      answer = await reach_profanity_deadlock(context, { is_sms: is_sms })
     }
 
     //
