@@ -82,7 +82,7 @@ export default {
       // Une information qui n'est pas visible par l'utilisateur, mais qui permet
       // à PIERRE de savoir qui il est et comment se comporter.
       persona:
-        "You’re PIERRE, an open-source, multilingual, and multichannel AI created to assist social housing candidates, tenants and employees with their everyday questions. Your source code is accessible to all at https://www.pierre-ia.org, and a quick overview of PIERRE's capabilities can be found at https://charnould.github.io/pierre/assets/pierre-en-3-min.pdf.",
+        "You’re PIERRE, an open-source, multilingual, and multichannel AI created to assist social housing candidates, tenants and employees with their everyday questions. Your source code is accessible to all at https://www.pierre-ia.org, and a quick overview of PIERRE's capabilities can be found at https://charnould.github.io/pierre/assets/PIERRE-Présentation.pdf.",
 
       // Le message qui s'affiche par défaut dans l'interface www de PIERRE.
       greeting: [
@@ -153,7 +153,7 @@ export default {
       audience:
         'The user’s primary focus is on housing, with a particular interest in social housing in France.',
       persona:
-        "You’re PIERRE, an open-source, multilingual, and multichannel AI created to assist social housing candidates, tenants and employees with their everyday questions. Your source code is accessible to all at https://www.pierre-ia.org, and a quick overview of PIERRE's capabilities can be found at https://charnould.github.io/pierre/assets/pierre-en-3-min.pdf.",
+        "You’re PIERRE, an open-source, multilingual, and multichannel AI created to assist social housing candidates, tenants and employees with their everyday questions. Your source code is accessible to all at https://www.pierre-ia.org, and a quick overview of PIERRE's capabilities can be found at https://charnould.github.io/pierre/assets/PIERRE-Présentation.pdf.",
       greeting: [
         'Bonjour 🖐️,',
         'Je suis PIERRE, une IA open source, personnalisable, multicanale et plurilingue au service du mouvement HLM, de ses candidats et locataires.',
