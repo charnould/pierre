@@ -313,10 +313,6 @@ Plus précisément, cette base `proprietary` contient deux types de données :
 2. Déposer vos fichiers `.docx` (Word), `.xlsx` (Excel) ou `.md` (Markdown) dans ce même répertoire. Vous êtes libre de créer une arborescence selon vos besoins. Les fichiers avec d'autres extensions que celles précédemment citées ne seront pas pris en compte.
 3. Compléter le fichier `_metadata.xlsx`. C'est notamment dans ce fichier que vous pourrez arbitrer si les connaissances doivent être `privées` ou `publiques`. Uniquement les fichiers référencés dans `_metadata.xlsx` seront pris en compte.
 4. Lancer `bun generate --proprietary` pour lancer la (re)construction automatique de votre base de connaissances `proprietary` et patienter quelques minutes (il est impératif que vos variables d'environnement contiennent une clef d'API `OpenAI`).
-
-> [!CAUTION]
-> Au 1er décembre 2024, vous rencontrerez probablement cette erreur `error: Cannot find module '@llamaindex/readers/obsidian'...`. Il s'agit d'un bug dans une librairie utilisée par PIERRE qui est [en cours de correction](https://github.com/run-llama/LlamaIndexTS/issues/1534). D'ici là, accéder au fichier `node_modules/llamaindex/dist/readers/index.js` référencé dans l'erreur, supprimer la ligne 14 (`export * from "@llamaindex/readers/obsidian";`), sauvegarder et relancer `bun generate --proprietary`.
-
 5. **Indispensable** : Configurer vos `context` dans `config.ts` de manière à permettre l'utilisation des connaissances `proprietary` et protéger votre `context` s'il utilise des données `privées`/`private`.
 6. Effectuer un commit des modifications, tester en local et redéployer.
 
