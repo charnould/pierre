@@ -23,14 +23,12 @@ export const create_database = async (args: Args) => {
   }
 
   if (args['--community'] === true) {
-    // Create `knowledge/.data/community.sqlite`
-    initialize_db('./datastores/community.sqlite')
+    initialize_db('./knowledge/.data/community.sqlite')
   }
 
   if (args['--proprietary'] === true) {
-    // Create `knowledge/.data/proprietary.*.sqlite`
-    initialize_db('./datastores/proprietary.private.sqlite')
-    initialize_db('./datastores/proprietary.public.sqlite')
+    initialize_db('./knowledge/.data/proprietary.private.sqlite')
+    initialize_db('./knowledge/.data/proprietary.public.sqlite')
   }
 
   // End spinner
