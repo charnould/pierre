@@ -8,7 +8,7 @@ export const view = (user) => {
         <script src="https://unpkg.com/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
         <link rel="icon" href="../assets/pierre-ia.org/system.svg" type="image/svg+xml" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1733060398234.css" />
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1733259390640.css" />
         <title>PIERRE — Administration</title>
       </head>
 
