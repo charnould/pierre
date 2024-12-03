@@ -92,6 +92,8 @@ Son nom est un temps évoqué pour la présidence de l'Assemblée nationale. Ell
 
 Dans le gouvernement Michel Barnier, constitué le 21 septembre 2024, elle est nommée ministre du Logement et de la Rénovation urbaine.
 
+En tant que ministre, elle souhaite développer le prêt à taux zéro, construire davantage de logements sociaux (16 000 logements sociaux supplémentaires pour 2027) et simplifier le droit de l’urbanisme. Elle déclare vouloir une baisse du taux du Livret A pour « donner une respiration aux bailleurs sociaux ». Elle veut aussi défiscaliser les donations aux enfants et petits-enfants afin de mobiliser davantage « les capitaux dormants ».
+
 ## Détail des mandats et fonctions
 
 ### Mandats et nominations actuels
