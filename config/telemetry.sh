@@ -2,9 +2,9 @@
 
 init_db () {
     
-    # Ensure that `telemetry` folder exists.
-    # If `telemetry` directory already exists, it won’t raise any errors.
-    # mkdir -p telemetry
+    # Ensure that `datastores` folder exists.
+    # If `datastores` directory already exists, it won’t raise any errors.
+    mkdir -p datastores
 
     # Create `datastore.sqlite` if it does not exist.
     sqlite3 datastores/datastore.sqlite <<EOF
