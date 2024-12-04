@@ -1,4 +1,5 @@
 import { randomUUIDv7 } from 'bun'
+import type { Serve } from 'bun'
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
 import { secureHeaders } from 'hono/secure-headers'
@@ -66,4 +67,4 @@ app.notFound(async (c) =>
 
 app.onError((_err, c) => c.notFound())
 
-export default app
+export default { idleTimeout: 90, fetch: app.fetch } satisfies Serve
