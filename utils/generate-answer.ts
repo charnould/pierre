@@ -150,25 +150,39 @@ When answering questions, follow this knowledge priority order:
 ## Collaborators Knowledge
 
 <collaborators_knowledge>
-${context.chunks.private}
+${context.chunks.private?.map((c) => `<chunk>\n${c.trim()}\n</chunk>\n`).join('')}
 </collaborators_knowledge>
 
 ## Public Knowledge
 
 <public_knowledge>
-${context.chunks.public}
+${context.chunks.public?.map((c) => `<chunk>\n${c.trim()}\n</chunk>\n`).join('')}
 </public_knowledge>
 
-##Community Knowledge
+## Community Knowledge
 
 <community_knowledge>
-${context.chunks.community}
+${context.chunks.community?.map((c) => `<chunk>\n${c.trim()}\n</chunk>\n`).join('')}
 </community_knowledge>
 
 If any of these knowledge types are irrelevant or empty, disregard them in your response.
 
+---
+
+Your answer in "${context.query?.lang}" (ISO 639-1 format):
 `.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
   })
+
+  //
+  //
+  //
+  console.debug('-----------------------------------------')
+  console.debug('🤖 passes this prompt to LLM:')
+  console.debug(context.conversation.at(-1))
+  console.debug('-----------------------------------------')
+  //
+  //
+  //
 
   if (options.is_sms === true) return generate_answer(context)
   return stream_answer(context)
