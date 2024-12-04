@@ -113,9 +113,8 @@ function update_ui_with_ai(message: string) {
   parentElement.classList.add('prose')
 
   // Clean and format the message for safe rendering
-  const cleanMessage = message.replace(/<br\/>/g, '\n\n').replace(/\n{3,}/g, '\n\n')
-
   // Safely parse the cleanMessage as Markdown
+  const cleanMessage = message.replace(/<br\/>/g, '\n\n').replace(/\n{3,}/g, '\n\n')
   parentElement.innerHTML = marked.parse(cleanMessage)
 
   add_blank_target_to_links()
@@ -158,65 +157,71 @@ function update_ui(message: string) {
 }
 
 //
+//
+//
+//
 // Get ai answer from PIERRE
-function get_ai_answer(prompt: string) {
-  // Disable the submit button and all buttons on the page
-  const submitButton = document.getElementById('prompt__submit')
-  ;(submitButton as HTMLButtonElement).disabled = true
+//
+//
+//
+//
 
-  const buttons = document.getElementsByTagName('button')
-  for (const button of buttons) {
+async function get_ai_answer(prompt: string) {
+  //
+  // Disable all buttons
+  ;(document.getElementById('prompt__submit') as HTMLButtonElement).disabled = true
+  for (const button of document.querySelectorAll<HTMLButtonElement>('button')) {
     button.disabled = true
   }
 
-  // Derive the path segment for the request
-  const pathSegment = window.location.pathname.substring(3)
+  try {
+    //
+    // Construct URL parameters
+    const pathSegment = window.location.pathname.substring(3)
+    const searchParams = new URLSearchParams(window.location.search)
+    const config = searchParams.get('config') || ''
+    const context = searchParams.get('context') || ''
 
-  // Retrieve the 'config' parameter from the current URL
-  const config = new URLSearchParams(window.location.search).get('config')
-  const context = new URLSearchParams(window.location.search).get('context')
+    // Build the API request URL
+    const url = `/ai/${pathSegment}?message=${encodeURIComponent(prompt)}&config=${encodeURIComponent(config)}&context=${encodeURIComponent(context)}`
 
-  // Build the API request URL
-  const url = `/ai/${pathSegment}?message=${encodeURIComponent(prompt)}&config=${encodeURIComponent(config || '')}&context=${encodeURIComponent(context || '')}`
+    const response = await fetch(url, { method: 'GET' })
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
 
-  // Create an EventSource for real-time updates
-  const eventSource = new EventSource(url)
-  let message = ''
+    let fullText = ''
 
-  eventSource.onmessage = (event) => {
-    if (event.data !== 'pierre_event_stream_closed') {
-      message += event.data
-      update_ui_with_ai(message)
-    } else {
-      eventSource.close()
-      // Re-enable buttons
-      ;(submitButton as HTMLButtonElement).disabled = false
-      for (const button of buttons) {
-        button.disabled = false
+    // Stream processing
+    while (true) {
+      const { done, value } = await reader.read()
+
+      if (done) {
+        // Add disclaimer if exists
+        const disclaimerInput = document.getElementById('disclaimer') as HTMLInputElement
+        if (disclaimerInput) {
+          const disclaimerParagraph = document.createElement('div')
+          disclaimerParagraph.setAttribute('data-role', 'disclaimer')
+          disclaimerParagraph.textContent = disclaimerInput.value
+
+          const mainElement = document.querySelector('main')
+          if (mainElement) mainElement.appendChild(disclaimerParagraph)
+        }
+        break
       }
-      // Append disclaimer paragraph
-      const disclaimerInput = document.getElementById('disclaimer') as HTMLInputElement
-      if (disclaimerInput) {
-        const disclaimerValue = disclaimerInput.value
-        const disclaimerParagraph = document.createElement('div')
-        disclaimerParagraph.setAttribute('data-role', 'disclaimer')
-        disclaimerParagraph.textContent = disclaimerValue
 
-        const mainElement = document.querySelector('main')
-        if (mainElement) mainElement.appendChild(disclaimerParagraph)
-      }
+      fullText += decoder.decode(value)
+      update_ui_with_ai(fullText)
     }
-  }
 
-  eventSource.onerror = (event) => {
-    console.error('An error occurred with the EventSource:', event)
-
-    // Close connection on error or incomplete transmission
-    if (eventSource.readyState === EventSource.CLOSED) {
-      console.error('Connection closed due to incomplete chunked encoding.')
-      message += ' **/ Erreur-réseau : vérifier votre connexion et rafraichissez la page.** '
-      update_ui_with_ai(message)
-      eventSource.close()
+    console.log(fullText)
+  } catch (error) {
+    console.error('Error fetching AI response:', error)
+  } finally {
+    //
+    // Re-enable all buttons
+    ;(document.getElementById('prompt__submit') as HTMLButtonElement).disabled = false
+    for (const button of document.querySelectorAll<HTMLButtonElement>('button')) {
+      button.disabled = false
     }
   }
 }
