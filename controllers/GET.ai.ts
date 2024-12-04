@@ -1,6 +1,6 @@
 import type { CoreTool, StreamTextResult } from 'ai'
 import type { Context } from 'hono'
-import { streamText } from 'hono/streaming'
+import { stream } from 'hono/streaming'
 import { AIContext, type Config, type SMS } from '../utils/_schema'
 import { augment_query } from '../utils/augment-query'
 import {
@@ -175,18 +175,12 @@ export const controller = async (c: Context) => {
       return c.body('ok', 200)
     }
 
-    // If incoming request comes from the web, return a text stream.
-    // TODO: optimize stream (see. Hono/Vercel SDK Core)
-    // https://sdk.vercel.ai/cookbook/api-servers/hono#hono
-    return streamText(c, async (stream) => {
-      c.header('Content-Type', 'text/event-stream')
-
-      for await (const textPart of answer.textStream) {
-        await stream.write(`data: ${textPart.replace(/\n/g, '<br/>')}\n\n` ?? '')
-      }
-
-      await stream.write('data: pierre_event_stream_closed\n\n')
-    })
+    // If incoming request comes from
+    // the web, return a text stream.
+    c.header('Content-Type', 'text/plain; charset=utf-8')
+    return stream(c, (stream) =>
+      stream.pipe((answer as StreamTextResult<Record<string, CoreTool>>).textStream)
+    )
   } catch (e) {
     console.error(e)
   }
