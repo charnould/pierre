@@ -10,7 +10,7 @@ export const clean_outdated_data = async (args: Args) => {
   // Start spinner
   const spinner = ora('Ménage en cours').start()
 
-  await $`mkdir ./knowledge/.data/`
+  await $`mkdir -p ./knowledge/.data/`
 
   if (args['--community'] === true) {
     await $`rm -rf ./knowledge/wikipedia`
