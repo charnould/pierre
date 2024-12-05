@@ -1,4 +1,5 @@
 /node_modules
+/__temp__
 /datastores/datastore.sqlite
 .DS_Store
 .env
