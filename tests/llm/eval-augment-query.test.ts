@@ -14,10 +14,12 @@ test.skip('evaluate query augmentation perf.', async () => {
     role: 'user',
     timestamp: null,
     conversation: [
-      {
-        role: 'user',
-        content: 'je subis des violences conjugales à Angers, que puis je faire ?'
-      }
+      // { role: 'user', content: "bonjour" },
+      { role: 'user', content: 'qui est xavier nicolas ?' }
+
+      //{ role: 'user', content: "Qui est d'astrein,te en ce moment ?" },
+      // { role: 'user', content: "qui est d'astreinte en ce moment" },
+      //  { role: 'user', content: 'qui al es clés des portes anti-squat ?' },
       // { role: 'user', content: "Bonjour, mon voisin fait du bruit tous les soirs, que puis-je faire et il en tord ? j'hahbite à piolenc et orange" },
       // { role: 'user', content: 'comment déposer une demande de logement social' },
       // { role: 'assistant', content: 'Rendez-vous sur le site dédié' },
