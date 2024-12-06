@@ -1,10 +1,10 @@
 # Centre d'hébergement d'urgence
 
-Un centre d'hébergement d'urgence (CHU) est une catégorie d'établissements sociaux intervenant dans le domaine de l'accueil, de l'hébergement et de la réinsertion sociale et professionnelle de toute personne sans domicile fixe.
+Un centre d'hébergement d'urgence (CHU) est une catégorie d'établissements sociaux intervenant dans le domaine de l'accueil, de l'hébergement et de la réinsertion sociale et professionnelle de toute personne sans domicile fixe. Il permet de mettre immédiatement à l’abri des personnes sans abri en situation de détresse médicale, psychique ou sociale. Il offre des prestations assurant le gîte, le couvert et l'hygiène, une première évaluation médicale, psychique et sociale et une orientation vers un professionnel ou une structure susceptible d'apporter à la personne l'aide justifiée par son état.
 
 ## Public accueilli
 
-Il n'existe pas de conditions réglementaires de ressources. Il s’agit d’un accueil « inconditionnel », c’est-à-dire sans sélection des publics accueillis, et notamment sans condition de régularité du séjour.
+Toute personne sans abri en situation de détresse médicale, psychique ou sociale, isolée ou en famille. Il n'existe pas de conditions réglementaires de ressources. Il s’agit d’un accueil « inconditionnel », c’est-à-dire sans sélection des publics accueillis, et notamment sans condition de régularité du séjour.
 
 ## Durée de séjour
 
@@ -13,6 +13,8 @@ Conformément à l'article 4 de la loi DALO, le séjour dure aussi longtemps qu'
 ## Droits des personnes accueillies
 
 Les droits fondamentaux des personnes accueillies sont identiques à ceux des autres catégories de publics accueillis ou accompagnés dans les autres catégories d’établissements et services sociaux et médico-sociaux (ESSMS).
+
+Principaux texte de référence dans la loie française L. 322-1 à L. 322-8, L. 345-2-2, L. 345-2-3 et L. 345-2-11 du code de l’action sociale et des familles.
 
 ## L'apport du secteur associatif
 

@@ -8,10 +8,7 @@ import { z } from 'zod'
 import type { Args } from './_run'
 
 export const get_and_save_metadata = async (args: Args) => {
-  // No need for try/catch because this function should never throw
-
-  // At this moment, this function applies
-  // only to `proprietary` knowledge
+  // This function applies only to `proprietary` knowledge
   if (args['--proprietary'] === true) {
     // Start spinner
     const spinner = ora('Obtention des métadonnées').start()
@@ -30,6 +27,9 @@ export const get_and_save_metadata = async (args: Args) => {
         Accès: string
         Description: string
         last_modified: null
+        "Colonne de l'entité": number
+        "Type de l'entité": string
+        Découpage: string
       }>(sheet, { range: 1 })
       .map((item) => ({
         id: randomUUIDv7(),
@@ -37,8 +37,11 @@ export const get_and_save_metadata = async (args: Args) => {
         sheet: (item.Onglet || 1) - 1,
         heading_row: (item["Ligne d'en-tête"] || 1) - 1,
         access: item.Accès || 'private',
-        description: item.Description || null,
-        last_modified: null
+        description: item.Description,
+        last_modified: null,
+        entity_column: item["Colonne de l'entité"],
+        entity_type: item["Type de l'entité"],
+        chunk: item.Découpage === 'true'
       }))
 
     Bun.write(
@@ -67,7 +70,10 @@ export const Metadata = z.array(
       sheet: z.number(),
       access: z.enum(['private', 'public']).default('private'),
       description: z.string().trim().nullable().default(null),
-      last_modified: z.string().nullable().default(null)
+      last_modified: z.string().nullable().default(null),
+      entity_column: z.number().nullable().default(null),
+      entity_type: z.string().nullable().default(null),
+      chunk: z.boolean().default(false)
     })
     .strict()
     .transform((m) => {
