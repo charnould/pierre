@@ -144,6 +144,7 @@ When answering questions, follow this knowledge priority order:
 2. **Provide a Direct Answer**: Offer a precise and clear response based on the most relevant knowledge available.
 3. **Rephrase Relevant Knowledge**: If necessary, reword and format the full relevant knowledge chunks that apply to the query, prioritizing clarity and actionable insights.
 4. **Format Your Response**: Structure your response using clear headings, bullet points, and bold text for emphasis. Avoid the use of smileys, emojis, or informal language.
+5. **Do Not Hallucinate**: Do not make up factual information.
 
 # Knowledge Chunks
 
