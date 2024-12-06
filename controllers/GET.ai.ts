@@ -12,6 +12,7 @@ import {
 import { get_conversation, save_reply } from '../utils/handle-conversation'
 import { parse_incoming_sms } from '../utils/parse-incoming-sms'
 import { rank_chunks } from '../utils/rank-chunks'
+import { bm25_search } from '../utils/search-by-bm25'
 import { vector_search } from '../utils/search-by-vectors'
 import { send_sms } from '../utils/send-sms'
 
@@ -95,17 +96,21 @@ export const controller = async (c: Context) => {
       // This is here that "intelligence" must occur.
       // If `context.chunks` contains bullshit, PIERRE
       // answer will probably be bullshit!
+
+      const v_results = await Promise.all(
+        [
+          ...context.query.standalone_questions,
+          ...context.query.stepback_questions,
+          ...context.query.search_queries,
+          ...context.query.hyde_answers
+        ].map((q) => vector_search(q, context))
+      )
+
+      const k_results = context.query.bm25_keywords.map((k) => bm25_search(k, context))
+
       context.chunks = await rank_chunks(
-        (
-          await Promise.all(
-            [
-              ...context.query.standalone_questions,
-              ...context.query.stepback_questions,
-              ...context.query.search_queries,
-              ...context.query.hyde_answers
-            ].map((q) => vector_search(q, context))
-          )
-        ).filter((chunk) => chunk !== undefined), // TODO: vector_search must not return undefined
+        v_results.filter((chunk) => chunk !== undefined), // TODO: vector_search must not return undefined
+        k_results.filter((chunk) => chunk !== undefined), // TODO: vector_search must not return undefined
         context
       )
 
