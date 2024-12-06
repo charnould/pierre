@@ -17,8 +17,9 @@ export const create_database = async (args: Args) => {
   const initialize_db = (path: string) => {
     const db = new Database(path)
     sqliteVec.load(db)
-    db.exec('CREATE VIRTUAL TABLE chunks USING FTS5(chunk);')
-    db.exec('CREATE VIRTUAL TABLE vectors USING vec0(vector float[3072])')
+    db.exec('CREATE TABLE chunks (chunk TEXT NOT NULL);')
+    db.exec('CREATE VIRTUAL TABLE stems USING FTS5(stem);')
+    db.exec('CREATE VIRTUAL TABLE vectors USING vec0(vector float[3072]);')
     return db
   }
 

@@ -1,0 +1,25 @@
+// Bun Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`should bm25 search works 1`] = `
+[
+  {
+    "chunk_hash": "J1GB8pSSTsK98FEURDyYKQ7uJrNz8ipSZxcF6mPyoz0",
+    "chunk_text": 
+"# skydome
+
+Ci-après la procédure et la répartition des responsabilités entre la société de télésurveillance et l'agent/cadre d'astreinte chez Pierre Habitat :
+
+- thématique : equipements et accès
+- zone : skydome
+- motif : skydom ouvert
+- symptôme : l'appel concerne un skydom ouvert
+- degré d’urgence : 1- pas d'urgence
+- la société de télésurveillance appelle agent astreinte ? : non
+- consigne/commentaire pour la société de télésurveillance : faire une main courante avec toutes les coordonnées (adresse cage d'escalier, étage...) + le week-end ou jour férié en journée uniquement, la société de télésurveillance appelle l'entreprise skydome 01 80 87 45 97 (intervention en 4h). code à transmettre au télésurveilleur : 0210.
+"
+,
+    "distance": -5.363186029570297,
+    "entity_hash": "dFNKit50RDtcM6WNE45Mz0TAHVvIFfDhgQ5VfkG9Jw4",
+  },
+]
+`;
