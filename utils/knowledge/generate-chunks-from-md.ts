@@ -4,6 +4,7 @@ import chalk from 'chalk'
 import { Document, MarkdownNodeParser } from 'llamaindex'
 import ora from 'ora'
 import { db } from '../database'
+import { stem } from '../stem-text'
 import type { Args } from './_run'
 import type { Metadata } from './save-metadata'
 
@@ -70,6 +71,7 @@ const go = async (files) => {
 
         // Save chunk in the right DB
         database.prepare('INSERT INTO chunks(chunk) VALUES(?);').run(chunk)
+        database.prepare('INSERT INTO stems(stem) VALUES(?);').run(stem(chunk))
       }
     }
   }

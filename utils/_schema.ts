@@ -142,6 +142,7 @@ export const Augmented_Query = z.object({
   is_relevant           : z.boolean().describe('Whether the input relates to housing or domestic violence'),
   contains_profanity    : z.boolean().describe('Whether the input contains profanity'),
   standalone_questions  : z.array(z.string()).describe('Standalone user questions'),
+  bm25_keywords         : z.array(z.string()).describe('Optimized BM25 keywords'),
   stepback_questions    : z.array(z.string()).describe('Step back questions'),
   search_queries        : z.array(z.string()).describe('Optimized web search queries'),
   hyde_answers          : z.array(z.string()).describe('Hypothetical document answers'),
