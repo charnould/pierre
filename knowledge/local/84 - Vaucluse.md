@@ -1,6 +1,6 @@
 # Associations du département du Vaucluse (84 ou 84000) de protection contre les violence conjugales
 
-## CIDFF du Vaucluse
+**CIDFF du Vaucluse**
 
 - Téléphone : 04 90 86 41 00
 - Email : [https://vaucluse.cidff.info/contact/](https://vaucluse.cidff.info/contact/)
@@ -8,7 +8,7 @@
 - Site web : [https://vaucluse.cidff.info](https://vaucluse.cidff.info/)
 - Permanences : Apt, Avignon, Carpentras, Cavaillon, Isle-sur-Sorgue, Le Pontet, Le Thor, Montfavet, Monteux, Orange, Pertuis, Pertuis, Sorgues, Valreas, Vedene.
 
-## Rhéso 84
+**Rhéso 84**
 
 - Téléphone : 04 90 60 36 84
 - Email : contact@rheso.fr

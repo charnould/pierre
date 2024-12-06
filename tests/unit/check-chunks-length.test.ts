@@ -13,7 +13,7 @@ it('community chunks should not be too big', async () => {
     const MAX_LENGTH = 8300 // embedding LLM limits chunk size!
     if (length > MAX_LENGTH) console.log(`#######\nROWID: ${c.rowid}\nCHUNK: ${c.chunk_text}`)
 
-    expect(c.chunk.length).toBeLessThanOrEqual(MAX_LENGTH)
+    expect(c.chunk_text.length).toBeLessThanOrEqual(MAX_LENGTH)
   }
 })
 

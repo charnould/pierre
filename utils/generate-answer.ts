@@ -21,7 +21,7 @@ export const answer_user = async (context: AIContext, options: { is_sms: boolean
     role: 'user',
     content: `
 
-The current date and time is ${new Date().toLocaleString('fr-FR')}.
+The current date and time is ${today_is()}.
 
 # YOUR PERSONA
 
@@ -116,7 +116,7 @@ export const answer_collaborator = async (context: AIContext, options: { is_sms:
     role: 'user',
     content: `
 
-The current date and time is ${new Date().toLocaleString('fr-FR')}.
+The current date and time is ${today_is()}.
 
 Your responses will be guided by the following context:
 
@@ -201,7 +201,7 @@ export const reach_relevancy_deadlock = async (
     role: 'user',
     content: `
   
-The current date and time is ${new Date().toLocaleString('fr-FR')}.
+The current date and time is ${today_is()}.
 
 Your responses will be guided by the following context:
 
@@ -249,7 +249,7 @@ export const reach_profanity_deadlock = async (
     role: 'user',
     content: `
   
-The current date and time is ${new Date().toLocaleString('fr-FR')}.
+The current date and time is ${today_is()}.
 
 Your responses will be guided by the following context:
 

@@ -9,8 +9,8 @@ export const view = (config: Config, context: string) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" href="../assets/${config.id}/system.svg" type="image/svg+xml" />
         <link rel="manifest" href="../assets/${config.id}/manifest.json" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1733471449947.css" />
-        <script type="module" src="../assets/pierre-ia.org/dist/js/ai.1733471449947.js"></script>
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1734255227039.css" />
+        <script type="module" src="../assets/pierre-ia.org/dist/js/ai.1734255227039.js"></script>
         <title>Comment puis-je vous aider ? 🖐️</title>
       </head>
 

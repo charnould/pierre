@@ -2,7 +2,7 @@
 
 Valérie Létard, née le 13 octobre 1962 à Orchies (Nord), est une femme politique française.
 
-Proche de Jean-Louis Borloo, elle a adhéré à plusieurs partis centristes au cours de son parcours politique (UDF, PSD, FD, NC, UDI).
+Proche de Jean-Louis Borloo, elle adhère à plusieurs partis centristes au cours de son parcours politique (UDF, PSD, FD, NC, UDI).
 
 Au niveau local, elle est présidente de la communauté d'agglomération de Valenciennes, vice-présidente du conseil régional des Hauts-de-France et conseillère départementale du Nord.
 
@@ -20,11 +20,11 @@ Fille de l'ancien député européen, président du Valenciennes Football Club, 
 
 ### Parcours politique
 
-Adhérente du Parti social-démocrate, Valérie Létard participe, au début de son activité professionnelle, à la mise en application concrète de nouveaux dispositifs d'action sociale à la mairie de Saint-Amand-les-Eaux, dans le Nord. De ses débuts, elle acquiert la mise en œuvre de projets et du travail en équipe. Du travail social, elle évolue vers le développement social des quartiers et la politique de la ville. Directrice du contrat de ville à Valenciennes, Jean-Louis Borloo lui propose de rejoindre l'équipe municipale comme adjointe au maire responsable de la politique de la ville.
+Adhérente du Parti social-démocrate, Valérie Létard participe, au début de son activité professionnelle\[Quand ?\], à la mise en application concrète de nouveaux dispositifs d'action sociale à la mairie de Saint-Amand-les-Eaux, dans le Nord. De ses débuts, elle acquiert la mise en œuvre de projets et du travail en équipe. Du travail social, elle évolue vers le développement social des quartiers et la politique de la ville. Directrice du contrat de ville à Valenciennes, Jean-Louis Borloo lui propose de rejoindre l'équipe municipale comme adjointe au maire responsable de la politique de la ville.
 
 #### Conseillère régionale et sénatrice du Nord
 
-Valérie Létard est également élue conseillère régionale en 1998 et devient vice-présidente de la commission habitat-politique de la ville au conseil régional du Nord-Pas-de-Calais. En septembre 2001, lors des élections sénatoriales, elle conduit avec Jean-René Lecerf la liste d'union RPR-UDF et malgré des dissidences nombreuses à droite, ils font tous deux leur entrée au Sénat.
+En 1998, elle est élue conseillère régionale et devient vice-présidente de la commission habitat-politique de la ville au conseil régional du Nord-Pas-de-Calais. En septembre 2001, lors des élections sénatoriales, elle conduit avec Jean-René Lecerf la liste d'union RPR-UDF et malgré des dissidences nombreuses à droite, ils font tous deux leur entrée au Sénat.
 
 Adjointe au maire, puis conseillère municipale déléguée de Valenciennes d'octobre 2001 à mars 2004, elle est alors chargée du contrat de ville et du Grand projet de ville. En mars 2004, elle est à nouveau conseillère régionale (tête de liste UDF) et présidente du groupe UDF de la région Nord-Pas-de-Calais ; elle préside également la commission Aménagement du territoire et politique de la ville.
 
@@ -36,7 +36,7 @@ Le 19 juin 2007, Valérie Létard est nommée secrétaire d'État chargée de la
 
 Le 9 mars 2008, en seconde position sur la liste de Dominique Riquet, Valérie Létard est réélue conseillère municipale de Valenciennes dès le premier tour des élections municipales. Le 15 mars, elle devient première adjointe lors de l'entrée en fonction du nouveau conseil. Le 10 avril suivant, elle est élue, avec 83 % des suffrages exprimés, présidente de la Communauté d'agglomération de Valenciennes Métropole.
 
-Elle est nommée secrétaire d'État auprès du ministre d'État, ministre de l'Écologie, du Développement durable et de la Mer, chargée des Technologies vertes et des négociations sur le climat, à la faveur d'un remaniement du second gouvernement Fillon, le 23 juin 2009. Le 26 juillet 2009, elle annonce que « 220 000 emplois verts sont à créer d'ici 2012 ». Après avoir pris part au Sommet de Copenhague, œuvré notamment pour la promotion et l'encadrement des métiers de la croissance verte, mis en place, dans le cadre de Médiaterre, les volontaires en service civique pour sensibiliser des familles modestes aux éco-gestes, lancer un plan de formation pour les travailleurs sociaux aux éco-gestes, lutter contre la précarité énergétique, elle quitte le gouvernement le 13 novembre 2010 après la nomination du troisième gouvernement de François Fillon.
+Elle est nommée secrétaire d'État auprès du ministre d'État, ministre de l'Écologie, du Développement durable et de la Mer, chargée des Technologies vertes et des négociations sur le climat, à la faveur d'un remaniement du second gouvernement Fillon, le 23 juin 2009. Le 26 juillet 2009, elle annonce que « 220 000 emplois verts sont à créer d'ici 2012 ». Après avoir pris part au Sommet de Copenhague, œuvré notamment pour la promotion et l'encadrement des métiers de la croissance verte, mis en place, dans le cadre de « Médiaterre », les volontaires en service civique pour sensibiliser des familles modestes aux éco-gestes, lancer un plan de formation pour les travailleurs sociaux aux éco-gestes, lutter contre la précarité énergétique, elle quitte le gouvernement le 13 novembre 2010 après la nomination du troisième gouvernement de François Fillon.
 
 Le 17 novembre 2009, elle est officiellement désignée par l'UMP et son secrétaire général Xavier Bertrand pour conduire la liste d'union UMP-Nouveau centre-Gauche moderne aux élections régionales de 2010 pour la région Nord-Pas-de-Calais. Après une campagne engagée face à Daniel Percheron (PS) et Marine Le Pen, la liste « Ma Vie, Ma Région, Mon Avenir avec Valérie Létard » réalise 19 % au premier tour et 25,91 % au deuxième tour à chaque fois devant la liste de Marine Le Pen. Le groupe Majorité présidentielle se voit attribuer 22 sièges.
 
@@ -44,7 +44,7 @@ En quittant le gouvernement Fillon avec Jean-Louis Borloo, elle annonce vouloir 
 
 #### Sénatrice, présidente de Valenciennes Métropole et membre fondatrice de l'UDI
 
-En tant que présidente de Valenciennes Métropole, Valérie Létard a notamment lancé les 3 pôles d'excellence du Valenciennois : transports terrestres, numérique et logistique, le lancement du centre d'expositions et des congrès de Valenciennes Métropole, le lancement de l'Institut de recherche supérieur Railenium, le lancement de Transalley - Technopôle Transports Terrestres, le lancement du programme Rîves Créatives de l’Escaut, le lancement du Terminal Dock Seine Nord Europe Escaut, réalise le programme ANRU du Valenciennois, le programme national de requalification des quartiers anciens dégradés, inaugure le stade du Hainaut, concourt au déploiement du très haut débit, lance l'éco-port de plaisance de Valenciennes, lance le complexe hôtelier et immobilier hôpital du Hainaut de Valenciennes, accueille de grands acteurs économiques (CIV, Oxylane, Agrati, etc.), participe à la rénovation des boulevards extérieurs de Valenciennes, à la création de Plateau multisports et Commerce de proximité Communes Rurales, au lancement de l'aéroport Valenciennes-Denain Charles Nungesser, etc.
+En tant que présidente de Valenciennes Métropole, Valérie Létard a notamment lancé les trois pôles d'excellence du Valenciennois : transports terrestres, numérique et logistique, le lancement du centre d'expositions et des congrès de Valenciennes Métropole, le lancement de l'Institut de recherche supérieur Railenium, le lancement de Transalley - Technopôle Transports Terrestres, le lancement du programme Rîves Créatives de l’Escaut, le lancement du Terminal Dock Seine Nord Europe Escaut, réalise le programme ANRU du Valenciennois, le programme national de requalification des quartiers anciens dégradés, inaugure le stade du Hainaut, concourt au déploiement du très haut débit, lance l'éco-port de plaisance de Valenciennes, lance le complexe hôtelier et immobilier hôpital du Hainaut de Valenciennes, accueille de grands acteurs économiques (CIV, Oxylane, Agrati, etc.), participe à la rénovation des boulevards extérieurs de Valenciennes, à la création de Plateau multisports et Commerce de proximité Communes Rurales, au lancement de l'aéroport Valenciennes-Denain Charles Nungesser, etc.
 
 Le 25 septembre 2011, Valérie Létard est réélue sénatrice du Nord en deuxième position sur la liste « République et territoires, des élus libres et responsables pour l’avenir du Nord », emmenée par Jean-René Lecerf (UMP-NC-NI) non investie par l'UMP et soutenue par Jean-Pierre Raffarin et Jean-Louis Borloo. Le 1er octobre suivant, après avoir été désignée candidate du groupe centriste à la présidence du Sénat, elle obtient 29 voix face à Gérard Larcher et Jean-Pierre Bel. Elle est ainsi la deuxième femme à se présenter à la présidence du Sénat, plusieurs années après la communiste Hélène Luc. Le 8 décembre 2011, elle est élue vice-présidente de l'Association des maires de France, rapporteur de la commission Villes et territoires urbains.
 
@@ -146,6 +146,7 @@ En tant que ministre, elle souhaite développer le prêt à taux zéro, construi
   - Assemblée nationale
   - Haute Autorité pour la transparence de la vie publique
   - Sénat
+  - Base Sycomore
 
 ## Notes et références
 
