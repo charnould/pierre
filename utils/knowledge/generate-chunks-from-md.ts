@@ -3,6 +3,7 @@ import { readdir } from 'node:fs/promises'
 import chalk from 'chalk'
 import { Document, MarkdownNodeParser } from 'llamaindex'
 import ora from 'ora'
+import { generate_hash } from '../../utils/knowledge/generate-hash'
 import { db } from '../database'
 import { stem } from '../stem-text'
 import type { Args } from './_run'
@@ -70,8 +71,16 @@ const go = async (files) => {
         else database = db('community')
 
         // Save chunk in the right DB
-        database.prepare('INSERT INTO chunks(chunk) VALUES(?);').run(chunk)
-        database.prepare('INSERT INTO stems(stem) VALUES(?);').run(stem(chunk))
+        database
+          .prepare(
+            `
+            INSERT INTO chunks (chunk_hash, chunk_text, chunk_stem, entity_hash, entity_text)
+            VALUES (?, ?, ?, ?, ?);
+            `
+          )
+          .run(generate_hash(chunk), chunk, stem(chunk), generate_hash('none'), 'none')
+
+        database.prepare('INSERT INTO stems(chunk_stem) VALUES(?);').run(stem(chunk))
       }
     }
   }

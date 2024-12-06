@@ -12,15 +12,23 @@ Dans la plupart des pays européens, mais dans des proportions variables, l’au
 
 Pour les pays de l'Union européenne l'article 19 du Socle européen des droits sociaux adopté en 2017 précise " Logement et aide aux sans-abri a. Un accès au logement social ou à une aide à un logement de qualité doit être fourni aux personnes dans le besoin. b. Les personnes vulnérables ont droit à une assistance et une protection appropriées contre les expulsions forcées. c. Un abri et des services adéquats doivent être fournis aux sans-abri afin de promouvoir leur inclusion sociale".
 
-## Description
-
 Les aides au logement, aides « à la personne », sont l'une des composantes des aides au logement, aux côtés des aides « à la pierre ». Elles sont versées par les caisses d'allocations familiales (CAF) ou la mutualité sociale agricole (MSA) et cofinancées pour l'essentiel par l'État (ministère du Logement) et les régimes de prestations familiales.
+
+## Typologie
 
 Il existe trois types d'aides personnelles au logement ou APL :
 
-- l’aide personnalisée au logement, également désignée sous le sigle APL, à ne pas confondre avec l'ensemble des aides personnelles au logement. Créée en 1977, elle est limitée au logement social et régie par les articles L. 351-1 et suivants du code de la construction et de l'habitation ;
-- l’allocation de logement familiale (ALF), créée en 1948 pour le logement privé. Versée en cas de personnes à charge, elle est définie aux articles L. 542-1 et suivants du code de la sécurité sociale. Elle s'adresse au public suivant, en situation de séjour régulier : marié depuis plus de 5 ans, bénéficiaire de prestations familiales ou de l'allocation d'éducation de l'enfant handicapé, non-bénéficiaire mais comportant un enfant à charge de moins de 22 ans, personne en enceinte post-quatrième mois de grossesse jusqu'au mois civil de naissance de l'enfant, disposant d'un ascendant à charge de plus de 65 ans (60 ans s'il est inapte, ancien déporté ou ancien combattant) sans ressource excédant le plafond de l'Aspa, ou d'un ascendant, descendants ou collatéral en incapacité permanente d'au moins 80 %.
-- l’allocation de logement sociale (ALS), créée en 1972, également pour le logement privé. Versée à des publics présentant des situations sociales particulières mais autres que les familles, elle est soumise aux articles L. 831-1 et suivants du même code. Elle est destinée au public inéligible à l'ALF et aux APL, sous conditions de ressources et de besoins (revenu, nombre d'enfants, personnes à charges, lieu de résidence, prix du loyer ou remboursement de crédit).
+### Aide personnalisée au logement (APL)
+
+À ne pas confondre avec l'ensemble des aides personnelles au logement, l'aide personnalisée au logement (APL), créée en 1977, est limitée au logement social et régie par les articles L. 351-1 et suivants du code de la construction et de l'habitation.
+
+### Allocation de logement familiale (ALF)
+
+L'allocation de logement familiale (ALF) est créée en 1948 pour le logement privé. Elle est versée en cas de personnes à charge, elle est définie aux articles L. 542-1 et suivants du code de la sécurité sociale. Elle s'adresse au public suivant, en situation de séjour régulier : marié depuis plus de 5 ans, bénéficiaire de prestations familiales ou de l'allocation d'éducation de l'enfant handicapé, non-bénéficiaire mais comportant un enfant à charge de moins de 22 ans, personne en enceinte post-quatrième mois de grossesse jusqu'au mois civil de naissance de l'enfant, disposant d'un ascendant à charge de plus de 65 ans (60 ans s'il est inapte, ancien déporté ou ancien combattant) sans ressource excédant le plafond de l'Aspa, ou d'un ascendant, descendants ou collatéral en incapacité permanente d'au moins 80 %.
+
+### Allocation de logement sociale (ALS)
+
+L'allocation de logement sociale (ALS) est créée en 1972, également pour le logement privé. Elle est versée à des publics présentant des situations sociales particulières mais autres que les familles, elle est soumise aux articles L. 831-1 et suivants du même code. Elle est destinée au public inéligible à l'ALF et aux APL, sous conditions de ressources et de besoins (revenu, nombre d'enfants, personnes à charges, lieu de résidence, prix du loyer ou remboursement de crédit).
 
 ## Historique
 
@@ -60,7 +68,7 @@ L'article L. 351-3 du code de la construction et de l'habitation détermine les 
 
 À partir du 11 octobre 2016, le patrimoine mobilier et immobilier (à partir de 30 000 euros,) est pris en compte dans le calcul et l'attribution de l'APL,.
 
-### Calcul de l'aide au logement familiale
+### Calcul de l'aide au logement familiale (ALF)
 
 L’ALF est attribué sous conditions de ressources. Au 31 décembre 2012, 1,3 million de foyers la percevaient, pour un versement moyen de 272 €. Son montant est calculé en fonction de barèmes combinant :
 
@@ -116,13 +124,15 @@ En 2000, une enquête conduite sur la Caisse d’Allocation Familiale (CAF) du H
 
 ## Notes et références
 
-### Source
+### Sources
 
 - « Les aides publiques au logement en France », Lucie Couet, septembre 2007
 - Site des caisses d'allocations familiales
 - Loi
 
-## Articles connexes
+## Voir aussi
+
+### Articles connexes
 
 - Glossaire de l'immobilier
 - Caisse d'allocations familiales
@@ -130,6 +140,8 @@ En 2000, une enquête conduite sur la Caisse d’Allocation Familiale (CAF) du H
 - Assistanat
 - Droit au logement
 - Marchand de sommeil
+
+### Liens externes
 
 - Portail de la France
 - Portail de l’économie
