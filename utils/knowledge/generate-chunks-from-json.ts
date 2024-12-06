@@ -5,6 +5,7 @@ import { formatInTimeZone } from 'date-fns-tz'
 import { fr } from 'date-fns/locale'
 import ora from 'ora'
 import { db } from '../database'
+import { stem } from '../stem-text'
 import type { Args } from './_run'
 import type { Metadata } from './save-metadata'
 
@@ -45,6 +46,7 @@ export const generate_chunks_from_json = async (args: Args) => {
           if (file.description !== null) chunk = `${file.description} \n${chunk}`
 
           database.prepare('INSERT INTO chunks(chunk) VALUES(?);').run(chunk)
+          database.prepare('INSERT INTO stems(stem) VALUES(?);').run(stem(chunk))
         }
       }
     }

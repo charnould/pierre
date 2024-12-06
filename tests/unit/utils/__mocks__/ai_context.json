@@ -1,0 +1,100 @@
+{
+  "conv_id": "019398b4-7de0-7000-b01d-7ec7fd1bf418",
+  "config": {
+    "id": "pierre-ia.org",
+    "phone": "0033939070074",
+    "model": "openai('gpt-4o-mini-2024-07-18')",
+    "context": {
+      "default": {
+        "protected": false,
+        "knowledge": {
+          "community": true,
+          "proprietary": { "public": true, "private": true }
+        },
+        "audience": ".",
+        "persona": "You are PIERRE, the ultimate AI assistant, expertly designed to support all collaborators at Pierre Habitat (a fictional social housing company operating around Dijon, France) in their day-to-day tasks. With an extensive knowledge of social housing, regulations, and internal processes, you’re here to streamline workflows, provide accurate information, and deliver efficient solutions. Always up-to-date and fully aligned with the company’s values, GUSTAVE is the dependable, knowledgeable coworker that everyone can rely on.",
+        "greeting": [
+          "Bonjour 🖐️,",
+          "Je suis PIERRE, l'assistant des collaborateurs de Pierre Habitat, un bailleur social fictif.",
+          "Ma mission : donner à voir comment une IA peut aider les collaborateurs des bailleurs sociaux au quotidien.",
+          "Choisissez un exemple ci-dessous.",
+          "――――",
+          "Pour info., je peux apprendre en quelques secondes tout ce qu'il a à savoir de vos fichiers Word et Excel."
+        ],
+        "examples": [
+          "Qui est d'astreinte la semaine du 25 février prochain ?",
+          "Quelle est la procédure si un locataire est bloqué dans un ascenseur ?",
+          "Qui est le prestataire ascenseur de la résidence du 13 rue Becquerel ?",
+          "Un locataire me demande comment régler un problème de voisinnage, rédige moi un email.",
+          "Quels impacts du PACS lorsqu'un locataire veut rompre son contrat de bail ?"
+        ],
+        "disclaimer": "Les données retournées par l'IA sont ici strictement fictives."
+      }
+    }
+  },
+  "role": "user",
+  "timestamp": null,
+  "content": "Enquête SLS, kézako + suis-je concerné ?",
+  "metadata": {
+    "topics": null,
+    "origin": null,
+    "evaluation": {
+      "customer": { "score": null, "comment": null },
+      "organization": { "score": null, "comment": null },
+      "ai": { "score": null, "comment": null },
+      "pierre": { "score": null, "comment": null }
+    },
+    "tokens": { "prompt": null, "completion": null, "total": null }
+  },
+  "query": {
+    "lang": "fr",
+    "about_user": "",
+    "is_relevant": false,
+    "contains_profanity": false,
+    "standalone_questions": [
+      "Qu'est-ce que l'enquête SLS ?",
+      "Suis-je concerné par l'enquête SLS ?"
+    ],
+    "bm25_keywords": [
+      "enquête SLS",
+      "suis-je concerné",
+      "définition enquête SLS",
+      "impact enquête SLS",
+      "objectifs enquête SLS"
+    ],
+    "stepback_questions": [
+      "Pourquoi l'enquête SLS est-elle importante ?",
+      "Comment l'enquête SLS peut-elle affecter ma situation ?"
+    ],
+    "search_queries": [
+      "Qu'est-ce que l'enquête SLS ?",
+      "Enquête SLS, qui est concerné ?",
+      "Objectifs de l'enquête SLS",
+      "Définition enquête SLS",
+      "Impact de l'enquête SLS sur les citoyens"
+    ],
+    "hyde_answers": [
+      "L'enquête SLS, ou enquête sur les logements sociaux, vise à collecter des données sur les conditions de logement des ménages en France. Elle permet d'évaluer les besoins en matière de logement social et d'améliorer les politiques publiques.",
+      "Vous pourriez être concerné par l'enquête SLS si vous vivez dans un logement social ou si vous êtes en attente d'un logement. Les résultats de l'enquête peuvent influencer les décisions concernant le développement de logements sociaux dans votre région.",
+      "L'enquête SLS est importante car elle aide à identifier les besoins en matière de logement dans la population. Les résultats peuvent également influencer les financements et les politiques de logement.",
+      "L'enquête SLS peut affecter votre situation si vous êtes dans une situation précaire concernant votre logement, car elle peut mener à des changements dans les ressources disponibles pour le logement social.",
+      "Les objectifs de l'enquête SLS incluent l'analyse des conditions de vie des ménages et la planification des politiques de logement en fonction des résultats obtenus."
+    ],
+    "location": {
+      "region": null,
+      "department": null,
+      "city": null,
+      "zipcode": null
+    }
+  },
+  "chunks": {
+    "community": [
+      "# Les enquêtes adressées aux locataires\n## Enquête \"Supplément de Loyer de Solidarité\", ou enquête SLS\nEnquête \"Supplément de Loyer de Solidarité\", ou enquête SLS\n\n**À quoi sert l’enquête SLS ?**\n\nLa réglementation impose aux bailleurs sociaux de vérifier chaque année la situation familiale, les ressources et les activités professionnelles de leurs locataires par le biais de l’enquête \"Supplément de Loyer de Solidarité\", ou enquête SLS.\n\nLes informations communiquées permettent de calculer l’éventuel dépassement du plafond de ressources et de déterminer si vous êtes redevable du Supplément de Loyer de Solidarité (SLS) si les ressources dépassent de plus de 20 % ces plafonds. Il s’ajoute alors, chaque mois, au loyer principal et aux charges locatives.\n\nToutefois, les familles qui résident en zones Quartier Prioritaire de la Ville (QPV) et/ou qui bénéficient de l’aide au logement (APL/AL) ne sont pas concernées.\n\n**Qui est concerné par l’enquête SLS ?**\n\nL’enquête \"Supplément de Loyer de Solidarité\" (ou enquête SLS) concerne toutes les personnes qui occupent leur logement au 1er janvier de l'année N au regard de leurs revenus durant l'année N-2.\n\nSi un locataire n'y répond pas dans le délai imparti, il peut s'exposer à :\n\n- une mise en demeure ;\n- l’application de frais de dossier ;\n- au paiement d’un Supplément de Loyer de Solidarité (SLS) maximum appliqué jusqu’au retour de l’enquête Supplément de Loyer de Solidarité et qui sera régularisé au retour de l’enquête.\n\n**Quels sont généralement les documents demandées dans le cadre de l’enquête SLS ?**\n\nLes documents généralement demandés sont :\n\n- Le questionnaire recto-verso, complété avec tous les renseignements concernant toutes les personnes occupant le logement au 1er janvier 2024.\n- La copie de l’intégralité de l’avis d’impôt 2023 sur les revenus de l’année 2022 de toutes les personnes occupant le logement au 1er janvier 2024 (y compris ceux non mentionnés dans le bail) qu’elles soient imposables ou non à l’impôt sur le revenu\n- Le cas échéant, la copie des justificatifs attestant d’un changement de situation, (baisse significative des ressources, mariage, naissance, pacs, séparation, divorce…).\n\nCes documents doivent impérativement et obligatoiremetn être envoyées au bailleur social pour lui permettre d’évaluer la situation du foyer du locataire au regard des plafonds de ressources réglementaires. Il est donc indispensable de joindre les justificatifs demandés pour toutes les personnes présentes au sein du logement.\n",
+      "# Les enquêtes adressées aux locataires\n## Enquête \"Supplément de Loyer de Solidarité\", ou enquête SLS\n### Questions fréquentes relatives à l'enquête SLS\n#### **J'héberge un ascendant (père ou mère) : dois-je le mentionner en répondant à votre enquête SLS ?**\n**J'héberge un ascendant (père ou mère) : dois-je le mentionner en répondant à votre enquête SLS ?**\n\nLe calcul du supplément de loyer de solidarité prend en compte le nombre de personnes vivant au foyer.\n\nSelon la loi du 25 mars 2009 de mobilisation pour le logement et la lutte contre l'exclusion les personnes à la charge de, de la ou des titulaire(s) du bail sont considérées comme telles.\n\nSi votre ascendant est à votre charge, vous devez donc la mentionner en répondant à notre enquête SLS.\n\nEn plus du questionnaire rempli, daté et signé, il faudra envoyer à votre bailleur un justificatif.\n\nSachez que votre ascendant ne peut être considéré à votre charge pour le calcul du SLS que dans deux cas :\n\n- Cas n° 1 : elle figure sur votre dernier avis d’imposition (vous devez alors joindre une copie de cet avis à votre réponse à notre enquête) ;\n- Cas n° 2 : elle est titulaire d’une carte d’invalidité (vous devez alors joindre une copie de cette carte à votre réponse à notre enquête).\n\nSi votre ascendant est hébergé chez vous, mais pas à votre charge, vous n’avez pas à la mentionner dans votre réponse à l’enquête. Il n’est pas prise en compte dans le calcul du SLS.\n"
+    ],
+    "private": [],
+    "public": []
+  },
+  "current_context": "default",
+  "conversation": [{ "role": "user", "content": "Enquête SLS, kézako + suis-je concerné ?" }]
+}

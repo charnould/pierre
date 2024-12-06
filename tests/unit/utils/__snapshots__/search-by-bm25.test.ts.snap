@@ -1,0 +1,40 @@
+// Bun Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`should bm25 search works 1`] = `
+[
+  {
+    "chunk": 
+"Ci-après les caractéristiques techniques d'un programme immobilier de Pierre Habitat : 
+- programme : Becquerel
+- adresse : 13 rue Henri Becquerel, Nantes
+- nombre de logements : 30
+- type : Copropriété
+- niveau : R+3
+- ascenseur : Otis
+- prestataire plomberie : Plombier Malraux
+- mode de chauffage : Collectif par chaudière
+- chargé de proximité : ezola@pierre-habitat.fr
+- gardien : hgranger@pierre-habitat.fr"
+,
+    "distance": -5.859238779511559,
+    "rowid": 2,
+  },
+  {
+    "chunk": 
+"Ci-après les caractéristiques techniques d'un programme immobilier de Pierre Habitat : 
+- programme : Becquerel
+- adresse : 13 rue Henri Becquerel, Nantes
+- nombre de logements : 40
+- type : Copropriété
+- niveau : RDC
+- ascenseur : Sito
+- prestataire plomberie : Plombier Malraux
+- mode de chauffage : Collectif par chaudière
+- chargé de proximité : ezola@pierre-habitat.fr
+- gardien : hgranger@pierre-habitat.fr"
+,
+    "distance": -5.859238779511559,
+    "rowid": 3,
+  },
+]
+`;
