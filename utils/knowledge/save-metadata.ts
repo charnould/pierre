@@ -30,6 +30,8 @@ export const get_and_save_metadata = async (args: Args) => {
         Accès: string
         Description: string
         last_modified: null
+        "Colonne de l'entité": number
+        "Type de l'entité": string
       }>(sheet, { range: 1 })
       .map((item) => ({
         id: randomUUIDv7(),
@@ -37,8 +39,10 @@ export const get_and_save_metadata = async (args: Args) => {
         sheet: (item.Onglet || 1) - 1,
         heading_row: (item["Ligne d'en-tête"] || 1) - 1,
         access: item.Accès || 'private',
-        description: item.Description || null,
-        last_modified: null
+        description: item.Description,
+        last_modified: null,
+        entity_column: item["Colonne de l'entité"],
+        entity_type: item["Type de l'entité"]
       }))
 
     Bun.write(
@@ -67,7 +71,9 @@ export const Metadata = z.array(
       sheet: z.number(),
       access: z.enum(['private', 'public']).default('private'),
       description: z.string().trim().nullable().default(null),
-      last_modified: z.string().nullable().default(null)
+      last_modified: z.string().nullable().default(null),
+      entity_column: z.number().nullable().default(null),
+      entity_type: z.string().nullable().default(null)
     })
     .strict()
     .transform((m) => {
