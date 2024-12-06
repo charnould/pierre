@@ -11,6 +11,7 @@ export const clean_outdated_data = async (args: Args) => {
   const spinner = ora('Ménage en cours').start()
 
   await $`mkdir -p ./knowledge/.data/`
+  await $`rm -rf ./datastores/__temp__`
 
   if (args['--community'] === true) {
     await $`rm -rf ./knowledge/wikipedia`

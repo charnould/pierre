@@ -5,6 +5,7 @@ import chalk from 'chalk'
 import _ from 'lodash'
 import ora from 'ora'
 import { z } from 'zod'
+import { generate_hash } from '../../utils/knowledge/generate-hash'
 import { db } from '../database'
 import type { Args } from './_run'
 
@@ -16,7 +17,7 @@ export const generate_embeddings = async (args: Args) => {
     // Generate and save `community` embeddings
     if (args['--community'] === true) {
       const database = db('community')
-      const query = database.query('SELECT rowid, * FROM chunks ORDER BY rowid;').all() as Chunk[]
+      const query = database.query('SELECT * FROM chunks;').all() as Chunk[]
       await go(query, database)
     }
 
@@ -27,12 +28,12 @@ export const generate_embeddings = async (args: Args) => {
 
       // Handle `proprietary.private`
       database = db('proprietary.private')
-      query = database.query('SELECT rowid, * FROM chunks ORDER BY rowid;').all() as Chunk[]
+      query = database.query('SELECT * FROM chunks;').all() as Chunk[]
       await go(query, database)
 
       // Handle `proprietary.public`
       database = db('proprietary.public')
-      query = database.query('SELECT rowid, * FROM chunks ORDER BY rowid;').all() as Chunk[]
+      query = database.query('SELECT * FROM chunks;').all() as Chunk[]
       await go(query, database)
     }
   } catch (e) {
@@ -56,22 +57,36 @@ export const generate_embeddings = async (args: Args) => {
 // (2) save them in DB
 const go = async (query: Chunk[], database: Database) => {
   for await (const group of _.chunk(query, 100)) {
-    const chunks = group.map((item) => item.chunk)
-
-    const { embeddings } = await embedMany({
-      model: openai.embedding('text-embedding-3-large'),
-      values: chunks
-    })
+    const chunk_texts = group.map((item) => item.chunk_text)
+    const chunk_text_vectors = await get_embeddings(chunk_texts)
+    const entity_texts = group.map((item) => item.entity_text)
+    const entity_text_vectors = await get_embeddings(entity_texts)
 
     const vectors = group.map((item, index) => ({
-      rowid: item.rowid,
-      vector: embeddings[index]
+      entity_hash: item.entity_hash,
+      entity_vector: entity_text_vectors[index],
+      entity_text: item.entity_text,
+      chunk_vector: chunk_text_vectors[index],
+      chunk_stem: item.chunk_stem,
+      chunk_text: item.chunk_text
     }))
 
     for (const v of vectors) {
       database
-        .prepare('INSERT INTO vectors(rowid, vector) VALUES (?, vec_f32(?))')
-        .run(v.rowid, new Float32Array(v.vector))
+        .prepare(
+          `
+          INSERT INTO vectors (chunk_hash, chunk_text, chunk_vector, entity_hash, entity_text, entity_vector)
+          VALUES (?, ?, vec_f32(?), ?, ?, vec_f32(?))
+          `
+        )
+        .run(
+          generate_hash(v.chunk_text),
+          v.chunk_text,
+          new Float32Array(v.chunk_vector),
+          v.entity_hash,
+          v.entity_text,
+          new Float32Array(v.entity_vector)
+        )
     }
   }
   return
@@ -81,10 +96,27 @@ const go = async (query: Chunk[], database: Database) => {
 //
 //
 //
+// Helper to generate embeddings
+async function get_embeddings(data: string[]) {
+  const { embeddings } = await embedMany({
+    model: openai.embedding('text-embedding-3-large'),
+    values: data
+  })
+
+  return embeddings
+}
+
+//
+//
+//
+//
 // Zod schema/TS type
 export const Chunk = z.object({
-  rowid: z.number(),
-  chunk: z.string()
+  chunk_hash: z.string(),
+  chunk_text: z.string(),
+  chunk_stem: z.string(),
+  entity_text: z.string(),
+  entity_hash: z.string()
 })
 
 export type Chunk = z.infer<typeof Chunk>

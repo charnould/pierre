@@ -146,6 +146,7 @@ En tant que ministre, elle souhaite développer le prêt à taux zéro, construi
   - Assemblée nationale
   - Haute Autorité pour la transparence de la vie publique
   - Sénat
+  - Base Sycomore
 
 ## Notes et références
 

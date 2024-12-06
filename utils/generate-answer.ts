@@ -21,7 +21,7 @@ export const answer_user = async (context: AIContext, options: { is_sms: boolean
     role: 'user',
     content: `
 
-The current date and time is ${new Date().toLocaleString('fr-FR')}.
+The current date and time is ${today_is()}.
 
 # YOUR PERSONA
 
@@ -116,7 +116,7 @@ export const answer_collaborator = async (context: AIContext, options: { is_sms:
     role: 'user',
     content: `
 
-The current date and time is ${new Date().toLocaleString('fr-FR')}.
+The current date and time is ${today_is()}.
 
 Your responses will be guided by the following context:
 
@@ -201,7 +201,7 @@ export const reach_relevancy_deadlock = async (
     role: 'user',
     content: `
   
-The current date and time is ${new Date().toLocaleString('fr-FR')}.
+The current date and time is ${today_is()}.
 
 Your responses will be guided by the following context:
 
@@ -249,7 +249,7 @@ export const reach_profanity_deadlock = async (
     role: 'user',
     content: `
   
-The current date and time is ${new Date().toLocaleString('fr-FR')}.
+The current date and time is ${today_is()}.
 
 Your responses will be guided by the following context:
 
@@ -274,4 +274,19 @@ Your answer in "${context.query?.lang}" (ISO 639-1 format):
 
   if (options.is_sms === true) return generate_answer(context)
   return stream_answer(context)
+}
+
+const today_is = () => {
+  const date = new Date()
+
+  return date.toLocaleString('en-US', {
+    weekday: 'long', // Full day name
+    year: 'numeric',
+    month: 'long', // Full month name
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hour12: true // Use 12-hour clock
+  })
 }
