@@ -6,14 +6,11 @@ it('chunks should not be too big', async () => {
   const chunks = db('community').query('SELECT rowid, * FROM chunks').all()
 
   // For each chunk
-  for (const c of chunks as {
-    rowid: number
-    chunk: string
-  }[]) {
-    const length = c.chunk.length
+  for (const c of chunks) {
+    const length = c.chunk_text.length
     const MAX_LENGTH = 7800 // embedding LLM limits chunk size!
-    if (length > MAX_LENGTH) console.log(`#######\nROWID: ${c.rowid}\nCHUNK: ${c.chunk}`)
+    if (length > MAX_LENGTH) console.log(`#######\nROWID: ${c.rowid}\nCHUNK: ${c.chunk_text}`)
 
-    expect(c.chunk.length).toBeLessThanOrEqual(MAX_LENGTH)
+    expect(c.chunk_text.length).toBeLessThanOrEqual(MAX_LENGTH)
   }
 })
