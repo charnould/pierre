@@ -20,7 +20,7 @@ export const create_database = async (args: Args) => {
 
     db.exec(`
       CREATE TABLE chunks (
-        chunk_hash TEXT PRIMARY KEY,
+        chunk_hash TEXT,
         chunk_text TEXT NOT NULL,
         chunk_stem TEXT NOT NULL,
         entity_hash TEXT DEFAULT NULL,
@@ -33,7 +33,7 @@ export const create_database = async (args: Args) => {
 
     db.exec(`
       CREATE VIRTUAL TABLE vectors USING vec0(
-        chunk_hash TEXT PRIMARY KEY,
+        chunk_hash TEXT,
         chunk_text TEXT,
         chunk_vector FLOAT[3072],
         entity_hash TEXT DEFAULT NULL,
