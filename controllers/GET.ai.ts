@@ -97,6 +97,8 @@ export const controller = async (c: Context) => {
       // If `context.chunks` contains bullshit, PIERRE
       // answer will probably be bullshit!
 
+      console.debug('Vector searches starts')
+
       const v_results = await Promise.all(
         [
           ...context.query.standalone_questions,
@@ -106,7 +108,11 @@ export const controller = async (c: Context) => {
         ].map((q) => vector_search(q, context))
       )
 
+      console.debug('Fulltext searches starts')
+
       const k_results = context.query.bm25_keywords.map((k) => bm25_search(k, context))
+
+      console.log('Reranking starts')
 
       context.chunks = await rank_chunks(
         v_results.filter((chunk) => chunk !== undefined), // TODO: vector_search must not return undefined
