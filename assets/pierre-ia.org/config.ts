@@ -97,7 +97,7 @@ export default {
       // Les exemples qui s'affichent par défaut dans l'interface www de PIERRE.
       examples: [
         'Comment déposer mon préavis de congé pour mon logement ? Et avez-vous un modèle de courrier ?',
-        "Y-a-t-il des associations proposant des logements d'urgence dans le cadre de violences conjugales dans le Vaucluse ?",
+        "Y-a-t-il des associations d'entraide dans le cadre de violences conjugales dans le Vaucluse ?",
         'Enquête SLS, kézako + suis-je concerné ?',
         "Qu'est-ce que l'avance Loca-Pass et comment savoir si j'y suis éligible ?",
         'Je cherche un logement social dans le Cantal. Comment déposer un dossier et quel est le processus ?',
@@ -136,7 +136,7 @@ export default {
       examples: [
         "Qui est d'astreinte la semaine du 25 février prochain ?",
         'Quelle est la procédure si un locataire est bloqué dans un ascenseur ?',
-        'Qui est le prestataire ascenseur de la résidence du 13 rue Becquerel ?',
+        'Qui est le prestataire ascenseur de la résidence Becquerel ?',
         'Un locataire me demande comment régler un problème de voisinnage, rédige moi un email.',
         "Quels impacts du PACS lorsqu'un locataire veut rompre son contrat de bail ?"
       ],

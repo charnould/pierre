@@ -14,7 +14,7 @@ exports[`should AIContext parse correctly 1`] = `
         "disclaimer": "Une IA peut se tromper. Vérifiez les informations importantes.",
         "examples": [
           "Comment déposer mon préavis de congé pour mon logement ? Et avez-vous un modèle de courrier ?",
-          "Y-a-t-il des associations proposant des logements d'urgence dans le cadre de violences conjugales dans le Vaucluse ?",
+          "Y-a-t-il des associations d'entraide dans le cadre de violences conjugales dans le Vaucluse ?",
           "Enquête SLS, kézako + suis-je concerné ?",
           "Qu'est-ce que l'avance Loca-Pass et comment savoir si j'y suis éligible ?",
           "Je cherche un logement social dans le Cantal. Comment déposer un dossier et quel est le processus ?",
