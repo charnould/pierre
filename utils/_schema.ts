@@ -137,20 +137,24 @@ export const Reply = z.object({
 // biome-ignore format: readability
 // Structured JSON LLM must output for each request
 export const Augmented_Query = z.object({
-  lang                  : z.string().describe('User language (ISO 639-1)'),
-  about_user            : z.string().describe('Key user details'),
-  is_relevant           : z.boolean().describe('Whether the input relates to housing or domestic violence'),
-  contains_profanity    : z.boolean().describe('Whether the input contains profanity'),
-  standalone_questions  : z.array(z.string()).describe('Standalone user questions'),
-  bm25_keywords         : z.array(z.string()).describe('Optimized BM25 keywords'),
-  stepback_questions    : z.array(z.string()).describe('Step back questions'),
-  search_queries        : z.array(z.string()).describe('Optimized web search queries'),
-  hyde_answers          : z.array(z.string()).describe('Hypothetical document answers'),
-  location: z.object({
-    region              : z.string().nullable().describe('Region name'),
-    department          : z.array(z.string()).nullable().describe('Departement involved'),
-    city                : z.array(z.string()).nullable().describe('Cities involved'),
-    zipcode             : z.array(z.string()).nullable().describe('Zip codes')
+  lang                      : z.string().describe('User language (ISO 639-1)'),
+  about_user                : z.string().describe('Key user details'),
+  is_relevant               : z.boolean().describe('Whether the input relates to housing or domestic violence'),
+  contains_profanity        : z.boolean().describe('Whether the input contains profanity'),
+  standalone_questions      : z.array(z.string()).describe('Standalone user questions'),
+  bm25_keywords             : z.array(z.string()).describe('Optimized BM25 keywords'),
+  named_entities              : z.object({
+    building                  : z.string().nullable(),
+    process                   : z.string().nullable()
+  }).describe('Named entities'),
+  stepback_questions        : z.array(z.string()).describe('Step back questions'),
+  search_queries            : z.array(z.string()).describe('Optimized web search queries'),
+  hyde_answers              : z.array(z.string()).describe('Hypothetical document answers'),
+  location                  : z.object({
+    region                    : z.string().nullable().describe('Region name'),
+    department                : z.array(z.string()).nullable().describe('Departement involved'),
+    city                      : z.array(z.string()).nullable().describe('Cities involved'),
+    zipcode                   : z.array(z.string()).nullable().describe('Zip codes')
     }).describe('Geographic location')
 })
 
