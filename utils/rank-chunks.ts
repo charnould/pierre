@@ -20,29 +20,60 @@ export const rank_chunks = async (
   bm25_data: Vector_Search_Result[],
   context: AIContext
 ) => {
+  // Flatten chunks and combine them
+  // TODO: Think again if it's clever to do this way (adding chunks)
   const vect_chunks = flatten_vector_searches(vect_data)
-  const bm25_chunks = _.differenceBy(flatten_vector_searches(bm25_data), vect_chunks, 'rowid')
+  const bm25_chunks = _.differenceBy(flatten_vector_searches(bm25_data), vect_chunks, 'chunk_hash')
   const chunks = [...vect_chunks, ...bm25_chunks]
 
+  // Score chunks...
   const chunk_scores = await Promise.all(chunks.map((chunk) => score_chunk(context, chunk)))
-  const relevant_chunks = pick_relevant_chunks(chunks, chunk_scores)
 
+  // Retrive chunk content and its source (community, private, public)...
+  const scored_chunks = _.orderBy(
+    chunks.map((chunk, index) => ({
+      score: chunk_scores[index],
+      global_score:
+        chunk_scores[index].building_score +
+        chunk_scores[index].process_score +
+        chunk_scores[index].relevancy_score,
+      chunk_text: chunk.chunk_text,
+      source: chunk.source
+    })),
+    ['global_score'],
+    ['desc']
+  )
+
+  // Finally keep only the most relevant ones...
+  // TODO: when possible, upgrade model (gpt4-o-mini has flaws)
+  const relevant_chunks = pick_relevant_chunks(scored_chunks)
+
+  //
+  //
   // For debugging purpose only
   if (Bun.env.DEBUG) {
-    Bun.write(
-      '__temp__/all_chunks.json',
-      await prettier.format(JSON.stringify(chunks), { parser: 'json' })
-    )
-    Bun.write(
-      '__temp__/chunks_scores.json',
-      await prettier.format(JSON.stringify(_.orderBy(chunk_scores, ['score'], ['desc'])), {
-        parser: 'json'
-      })
-    )
-    Bun.write(
-      '__temp__/relevant_chunks.json',
-      await prettier.format(JSON.stringify(relevant_chunks), { parser: 'json' })
-    )
+    const print = async (
+      data:
+        | {
+            chunk_hash: string
+            chunk_text: string
+            entity_hash: string
+            distance: number
+            source: string
+          }[]
+        | {
+            score: { building_score: number; process_score: number; relevancy_score: number }
+            global_score: number
+            chunk_text: string
+            source: string
+          }[]
+        | { community: string[]; private: string[]; public: string[] }
+    ) => await prettier.format(JSON.stringify(data), { parser: 'json' })
+    Bun.write('__temp__/1.chunks_from_vect_search.json', await print(vect_chunks))
+    Bun.write('__temp__/2.chunks_from_bm25_search.json', await print(bm25_chunks))
+    Bun.write('__temp__/3.chunks_combined.json', await print(chunks))
+    Bun.write('__temp__/4.chunks_scores.json', await print(scored_chunks))
+    Bun.write('__temp__/5.relevant_chunks.json', await print(relevant_chunks))
   }
 
   return Relevant_Chunks.parse(relevant_chunks)
@@ -61,18 +92,19 @@ export const rank_chunks = async (
 // prettier-ignore
 // biome-ignore format: readability
 const Flatten_Chunk = z.object({
-  rowid     : z.number(),
-  distance  : z.number(),
-  chunk     : z.string(),
-  source    : z.string()
+  chunk_hash  : z.string(),
+  entity_hash : z.string(),
+  distance    : z.number(),
+  chunk_text  : z.string(),
+  source      : z.string()
 })
 
 // prettier-ignore
 // biome-ignore format: readability
-const Score = z.object({
-  rowid   : z.number(),
-  source  : z.string(),
-  score   : z.number() })
+const Score = z.object({ building_score : z.number(),
+  process_score : z.number(),
+  relevancy_score : z.number()
+ })
 
 // prettier-ignore
 // biome-ignore format: readability
@@ -116,7 +148,7 @@ export const flatten_vector_searches = (data: Vector_Search_Result[]): Flatten_C
     .groupBy('source')
     .mapValues((entries) =>
       _(entries)
-        .groupBy('rowid')
+        .groupBy('chunk_hash')
         .map((group) => _.minBy(group, 'distance'))
         .compact()
         .orderBy('distance')
@@ -130,17 +162,25 @@ export const flatten_vector_searches = (data: Vector_Search_Result[]): Flatten_C
 //
 //
 //
-// Reconcile chunk rankings/scores with their content
-// This function returns the result of the reranking process
-export const pick_relevant_chunks = (chunks: Flatten_Chunk[], scores: Score[]): Relevant_Chunks =>
-  _(scores)
-    .filter((o) => o.score > 69)
-    .orderBy(['score'], ['desc'])
+// Build final chunks object keeping only relevant ones.
+// This function returns the final result of the reranking process
+export const pick_relevant_chunks = (
+  scores: {
+    score: { building_score: number; process_score: number; relevancy_score: number }
+    global_score: number
+    chunk_text: string
+    source: string
+  }[]
+): Relevant_Chunks =>
+  _.chain(scores)
     .groupBy('source')
-    .mapValues((g) =>
-      g
-        .map(({ rowid, source }) => _.get(_.find(chunks, { rowid, source }), 'chunk'))
-        .filter(Boolean)
+    .mapValues((array) =>
+      _.chain(array)
+        .orderBy('global_score', 'desc')
+        .filter((o) => o.global_score > 500)
+        .take(5)
+        .map('chunk_text')
+        .value()
     )
     .defaults({ public: [], private: [], community: [] })
     .value()
@@ -148,85 +188,90 @@ export const pick_relevant_chunks = (chunks: Flatten_Chunk[], scores: Score[]): 
 //
 //
 //
-// Evaluate if a chunk from the vector search is relevant to the user query,
-// with a focus on standalone questions.
+// Evaluate if a chunk from the vector search is relevant
+// to the user query, with a focus on standalone questions.
 export const score_chunk = async (context: AIContext, chunk: Flatten_Chunk): Promise<Score> => {
   const openai = createOpenAI({ compatibility: 'strict' })
   const { object } = await generateObject({
-    schema: z.object({ rowid: z.number(), source: z.string(), score: z.number() }),
-    model: openai('gpt-4o-2024-11-20', { structuredOutputs: true }),
-    // model: openai('gpt-4o-mini-2024-07-18', { structuredOutputs: true }),
-    temperature: 1,
+    schema: z.object({
+      reasoning: z.string().describe('Justification for the scores'),
+      building_score: z.number().describe('Building score'),
+      process_score: z.number().describe('Process score'),
+      relevancy_score: z.number().describe('Global relevancy score')
+    }),
+    //model: openai('gpt-4o-2024-11-20', { structuredOutputs: true }),
+    model: openai('gpt-4o-mini-2024-07-18', { structuredOutputs: true }),
+    temperature: 0.3,
     prompt: `
 
-You are an advanced semantic relevance evaluator with expertise in precise text analysis. Your task is to evaluate how well a given chunk of text answers a user's query, assigning a relevance score that reflects a nuanced understanding beyond simple keyword matching.
+You are an advanced semantic relevance evaluator with expertise in nuanced text analysis and contextual comprehension. Your task is to evaluate how effectively a given text answers a user query, assigning relevance scores based on a deep understanding of semantic alignment, precision, and context.
 
-Here are the inputs you'll be working with:
+# Inputs
 
-<row_id>${chunk.rowid}</row_id>
-<source>${chunk.source}</source>
+## Chunk
+
+<chunk>
+${chunk.chunk_text}
+</chunk>
+
+## User Query
 
 <user_query>
 ${context.query?.standalone_questions.length !== 0 ? context.query?.standalone_questions.map((q: string) => `- ${q}\n`) : context.content}
 </user_query>
 
-<chunk>
-${chunk.chunk}
-</chunk>
+# Evaluation Steps
 
-Evaluation Criteria:
-1. Direct Answer Precision
-   - Exact match of query intent
-   - Completeness of answer
-   - Contextual comprehensiveness
-   - Clarity of information provided
+Think step by step and describe in 10-20 words your reasoning for choosing these scores.
+Tasks are totally independant.
 
-2. Semantic Matching
-   - Depth of semantic alignment
-   - Relevance of implicit and explicit information
-   - Contextual richness surrounding the answer
+## Task: Identify the Building of the Chunk
+${
+  context.query?.named_entities.building !== null
+    ? `
+  
+  Assess whether the chunk explicitly or implicitly refers to a building (e.g., building, house, residence, housing program, etc.) with a name resembling “${context.query?.named_entities.building}”. Be cautious of cases where the name might also belong to a person, such as distinguishing between a person named “Jean Racine” and a house called “Racine”:
 
-3. Information Quality
-   - Specificity of details
-   - Unambiguity of response
-   - Immediate actionability of information
-
-Scoring Guidelines:
-- 100: PERFECT MATCH
-  - Query answered with absolute precision
-  - Multiple confirmatory passages
-  - Comprehensive contextual explanation
-  - No ambiguity whatsoever
-  - Immediate, actionable information
-
-- Lower scores should be assigned based on how well the chunk meets the above criteria, with scores decreasing as fewer criteria are met or met less fully.
-
-Evaluation Process:
-1. Identify exact query matches in the chunk.
-2. Assess the comprehensiveness of the context provided.
-3. Verify the actionability of the answer.
-4. Apply the nuanced scoring methodology based on the criteria and guidelines above.
-
-Before providing your final score and explanation, break down your evaluation process in <evaluation_breakdown> tags. In your evaluation breakdown:
-- Explicitly quote relevant parts of the chunk that address the query.
-- Evaluate each criterion separately, assigning a sub-score out of 33 for each (Direct Answer Precision, Semantic Matching, Information Quality).
-- List out how well each evaluation criterion is met, using a numbered list for clarity.
-- Combine sub-scores to get an initial overall score.
-- If you initially assign a low score (below 50), double-check to ensure you haven't overlooked a clear answer in the chunk.
-
-After your evaluation breakdown, provide your final evaluation in JSON format. Include a 'score' field (integer from 0 to 100) and an 'explanation' field (string explaining the rationale for the score).
-
-Example output structure:
-
-<evaluation_breakdown>
-[Your step-by-step evaluation process here]
-</evaluation_breakdown>
-
-{
-  "rowid": [Rowid],
-  "source": [Source], 
-  "score": [Your final score]
+  - Score 0: The chunk mention another building.
+	- Score 1000: The chunk explicitly and unambiguously discusses the building in question.
+	- Score 1-999: The reference to a building is unclear, ambiguous, or only loosely connected, requiring further clarification.
+`
+    : 'Assign a building score of 0.'
 }
+
+## Task: Identify the Building of the Chunk (if any)
+
+${
+  context.query?.named_entities.process !== null
+    ? `
+
+Evaluate whether the chunk pertains to the process “${context.query?.named_entities.process}”, specifically focusing on the company’s procedures, workflows, or standard ways of working. This includes assessing if the chunk describes, references, or aligns with the operational or organizational methods associated with the specified process:
+
+- Score 0: The chunk mention another process or no process is evocated
+- Score 1000: The chunk explicitly addresses the process with high accuracy.
+- Score 1-999: Partial or nuanced relevance (e.g., related processes but not an exact match). Example: “Une panne d’ascenseur” is distinct from “Un locataire bloqué dans l’ascenseur”.
+`
+    : 'Assign a building score of 0.'
+}
+
+## Task: Evaluate Overall Relevance
+
+Assess the chunk’s alignment with the user query, considering that relevant answers might be explicit, implicit, or require interpretation from the context. Use the following criteria:
+1. Direct Answer Precision
+  - Determines if the chunk directly addresses the query intent.
+	- Evaluates how clear, comprehensive, and unambiguous the response is.
+2. Semantic Matching
+  - Examines the degree of alignment between the query’s intent and the chunk’s content.
+  - Accounts for both explicit information and implicit clues that may require deeper understanding to uncover relevance.
+3. Information Quality
+  - Evaluates the specificity and richness of the details provided in the chunk.
+	- Assesses how actionable, precise, and unambiguous the information is, even if the answer is partially hidden within broader context.
+
+Scoring Scale:
+- 1000 (Perfect Match): Fully answers the query, provides multiple confirmatory points, comprehensive explanation, and actionable information.
+- 1-999 (Partial Match): Varies based on the degree of alignment, detail, and clarity.
+- 0 (No Match): No relevant connection to the query.
+**For low scores (<500), re-check the chunk for **overlooked** relevance.**
 
 Please proceed with your analysis and evaluation of the given query and chunk
 
