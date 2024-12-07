@@ -1,3 +1,4 @@
+import * as prettier from 'prettier'
 import type { AIContext } from './_schema'
 import { generate_answer, stream_answer } from './deliver-answer'
 
@@ -173,17 +174,6 @@ If any of these knowledge types are irrelevant or empty, disregard them in your 
 Your answer in "${context.query?.lang}" (ISO 639-1 format):
 `.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
   })
-
-  //
-  //
-  //
-  console.debug('-----------------------------------------')
-  console.debug('🤖 passes this prompt to LLM:')
-  console.debug(context.conversation.at(-1))
-  console.debug('-----------------------------------------')
-  //
-  //
-  //
 
   if (options.is_sms === true) return generate_answer(context)
   return stream_answer(context)
