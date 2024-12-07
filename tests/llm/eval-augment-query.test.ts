@@ -15,7 +15,13 @@ test.skip('evaluate query augmentation perf.', async () => {
     timestamp: null,
     conversation: [
       // { role: 'user', content: "bonjour" },
-      { role: 'user', content: 'qui est xavier nicolas ?' }
+      //      { role: 'user', content: 'qui est xavier nicolas ?' }
+      //{ role: 'user', content: 'quell est el chauffage de la résidence Les Pleiades ?' },
+      {
+        role: 'user',
+        content:
+          "Si il y a une absence partielle d'électricité dans les parties communes à 23h dans l'ilot Corse, dois je sortir (je suis agent d'astreinte)"
+      }
 
       //{ role: 'user', content: "Qui est d'astrein,te en ce moment ?" },
       // { role: 'user', content: "qui est d'astreinte en ce moment" },
