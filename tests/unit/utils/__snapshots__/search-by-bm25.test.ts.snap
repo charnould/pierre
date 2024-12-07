@@ -3,7 +3,8 @@
 exports[`should bm25 search works 1`] = `
 [
   {
-    "chunk": 
+    "chunk_hash": "N4XkelGKlbd4eSneeYqHfjVQTM4FagH3drMeOgLQ4",
+    "chunk_text": 
 "Ci-après les caractéristiques techniques d'un programme immobilier de Pierre Habitat : 
 - programme : Becquerel
 - adresse : 13 rue Henri Becquerel, Nantes
@@ -16,11 +17,12 @@ exports[`should bm25 search works 1`] = `
 - chargé de proximité : ezola@pierre-habitat.fr
 - gardien : hgranger@pierre-habitat.fr"
 ,
-    "distance": -5.859238779511559,
-    "rowid": 2,
+    "distance": -9.588962841869133,
+    "entity_hash": "I_jHDMXXODFHNWOeGQOlF3kQ3xjbe4zRLOJD9in1Neg",
   },
   {
-    "chunk": 
+    "chunk_hash": "RZhpP6hUa5RTA6XwFPXw5WfspcuZefwIuXsN4y3XP6c",
+    "chunk_text": 
 "Ci-après les caractéristiques techniques d'un programme immobilier de Pierre Habitat : 
 - programme : Becquerel
 - adresse : 13 rue Henri Becquerel, Nantes
@@ -33,8 +35,8 @@ exports[`should bm25 search works 1`] = `
 - chargé de proximité : ezola@pierre-habitat.fr
 - gardien : hgranger@pierre-habitat.fr"
 ,
-    "distance": -5.859238779511559,
-    "rowid": 3,
+    "distance": -9.588962841869133,
+    "entity_hash": "I_jHDMXXODFHNWOeGQOlF3kQ3xjbe4zRLOJD9in1Neg",
   },
 ]
 `;

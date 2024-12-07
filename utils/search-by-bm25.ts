@@ -46,17 +46,35 @@ export const bm25_search = (keyword: string, context: AIContext) => {
 //
 // Query the database with the keyword to retrieve the matching chunks
 export const query_db = (db_name: Db_Name, keyword: string) => {
-  // The rank column is the negative bm25 score
-  // https://www.sqlite.org/fts5.html#:~:text=The%20%22%2D1%22%20term,numerically%20lower%20scores.
-  // https://alexgarcia.xyz/blog/2024/sqlite-vec-hybrid-search/index.html
-  const data = db(db_name)
-    .prepare(
-      `
-      SELECT s.rowid, s.rank AS distance, c.chunk FROM stems s 
-      JOIN chunks c ON s.rowid = c.rowid WHERE s.stems
-      MATCH ? ORDER BY distance LIMIT 15;`
-    )
-    .all(stem(keyword)) as { rowid: number; distance: number; chunk: string }[]
+  const stemmed_keywords = stem(keyword)
 
-  return data
+  if (stemmed_keywords !== '') {
+    // The rank column is the negative bm25 score
+    // https://www.sqlite.org/fts5.html#:~:text=The%20%22%2D1%22%20term,numerically%20lower%20scores.
+    // https://alexgarcia.xyz/blog/2024/sqlite-vec-hybrid-search/index.html
+    const data = db(db_name)
+      .prepare(
+        `
+    SELECT
+      c.entity_hash,
+      c.chunk_hash,
+      c.chunk_text,
+      s.rank AS distance
+    FROM stems s 
+    JOIN chunks c ON s.rowid = c.rowid
+    WHERE s.chunk_stem MATCH ?
+    ORDER BY distance
+    LIMIT 15;
+    `
+      )
+      .all(stemmed_keywords) as {
+      entity_hash: string
+      chunk_hash: string
+      chunk_text: string
+      distance: number
+    }[]
+
+    return data
+  }
+  return
 }
