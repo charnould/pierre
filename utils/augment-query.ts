@@ -141,7 +141,23 @@ Examples:
   - departement: null
   - city: null
   - zipcode: null
-  `.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
+
+
+# Task 10: Named Entity Recognition
+
+For each standalone question derived from the conversation history in Task 4, perform the following:
+1. **Building**: Identify any specific building or named entity mentioned (e.g., residence, house, or building). Extract its name in a concise form. For example:
+  - "Résidence Les Pléiades" → "Les Pléiades"
+  - "Immeuble York" → "York"
+  - "Villa Medicis" → "Medicis
+  - "Ecole Gambetta" → "Gambetta"
+  - "Foyer Zola" → "Zola"
+  - "Ilot Corse" → "Ilot Corse"
+  - "Batîment Jules Renard" → "Jules Renard"
+  - "Programme Voltaire" → "Voltaire"
+2. **Process/Issue**: Identify and extract any described events, issues, or processes (e.g., a lack of electricity, a maintenance request, or a specific problem).
+
+`.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
   })
 
   // Generate a JSON object and return it
