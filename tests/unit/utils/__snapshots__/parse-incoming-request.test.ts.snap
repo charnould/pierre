@@ -73,7 +73,7 @@ exports[`should AIContext parse correctly 1`] = `
         "examples": [
           "Qui est d'astreinte la semaine du 25 février prochain ?",
           "Quelle est la procédure si un locataire est bloqué dans un ascenseur ?",
-          "Qui est le prestataire ascenseur de la résidence du 13 rue Becquerel ?",
+          "Qui est le prestataire ascenseur de la résidence Becquerel ?",
           "Un locataire me demande comment régler un problème de voisinnage, rédige moi un email.",
           "Quels impacts du PACS lorsqu'un locataire veut rompre son contrat de bail ?",
         ],
