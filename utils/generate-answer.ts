@@ -276,7 +276,7 @@ Your answer in "${context.query?.lang}" (ISO 639-1 format):
   return stream_answer(context)
 }
 
-const today_is = () => {
+export const today_is = () => {
   const date = new Date()
 
   return date.toLocaleString('en-US', {

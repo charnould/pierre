@@ -1,6 +1,7 @@
 import { createOpenAI } from '@ai-sdk/openai'
 import { generateObject } from 'ai'
 import { type AIContext, Augmented_Query } from './_schema'
+import { today_is } from './generate-answer'
 
 const openai = createOpenAI({ compatibility: 'strict' })
 
@@ -44,7 +45,7 @@ Analyze the complete conversation history to generate clear and independent ques
 2. **Clarity and Structure**: Each question must stand alone and provide enough detail to be understood independently.
 3. **Multi-Part Inquiries**: Break down complex inquiries into individual questions, each as a separate element in an array.
 4. **Contextual Details**: Incorporate any referenced locations or departments into the question, ensuring the phrasing remains accurate.
-5. **Dates and Times**: If the inquiry involves a date, explicitly include it in the rephrased question (today’s date is: ${new Date().toLocaleString('fr-FR')}).
+5. **Dates and Times**: If the inquiry involves a date, explicitly include it in the rephrased question (today’s date is: ${today_is()}).
 6. **Roles and Responsibilities**: For queries about specific roles, operational details, or resource access, ensure they are phrased clearly and unambiguously.
 
 **Fallback Rule**:
@@ -52,7 +53,7 @@ Analyze the complete conversation history to generate clear and independent ques
 
 Examples:
 
-- "Qui est d'astreinte en ce moment ?" → ["Qui est d'astreinte le ${new Date().toLocaleString('fr-FR')} ?"]
+- "Qui est d'astreinte en ce moment ?" → ["Qui est d'astreinte le ${today_is()} ?"]
 - "Bonjour, je cherche un logement social à Nantes comment faire ?" → ["Comment obtenir un logement social à Nantes (Loire-Atlantique)"]
 - "Bonjour ! Qui es tu ? Et connais-tu des solution d'hébergement d'urgence à Piolenc pour violence conjugale ?" → ["Qui es-tu ?", "Quelles sont les solutions d'hébergement d'urgence pour les cas de violence conjugale à Piolenc (Vaucluse) ?"]
 - "Bonjour ! C'est quoi un logement social, c'est quoi son histoire et combien y en a-t-il à Angers ?" → ["Qu'est-ce qu'un logement social ?", "Quelle est l'histoire du logement social ?, "Combien y a-t-il de logements sociaux à Angers (Maine-et-Loire) ?"]
