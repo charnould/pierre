@@ -275,3 +275,18 @@ Your answer in "${context.query?.lang}" (ISO 639-1 format):
   if (options.is_sms === true) return generate_answer(context)
   return stream_answer(context)
 }
+
+export const today_is = () => {
+  const date = new Date()
+
+  return date.toLocaleString('en-US', {
+    weekday: 'long', // Full day name
+    year: 'numeric',
+    month: 'long', // Full month name
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hour12: true // Use 12-hour clock
+  })
+}
