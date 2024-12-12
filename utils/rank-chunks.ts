@@ -4,6 +4,7 @@ import _ from 'lodash'
 import * as prettier from 'prettier'
 import { z } from 'zod'
 import type { AIContext } from './_schema'
+import { today_is } from './generate-answer'
 import type { Vector_Search_Result } from './search-by-vectors'
 
 //
@@ -199,9 +200,8 @@ export const score_chunk = async (context: AIContext, chunk: Flatten_Chunk): Pro
       process_score: z.number().describe('Process score'),
       relevancy_score: z.number().describe('Global relevancy score')
     }),
-    //model: openai('gpt-4o-2024-11-20', { structuredOutputs: true }),
     model: openai('gpt-4o-mini-2024-07-18', { structuredOutputs: true }),
-    temperature: 0.3,
+    temperature: 0,
     prompt: `
 
 You are an advanced semantic relevance evaluator with expertise in nuanced text analysis and contextual comprehension. Your task is to evaluate how effectively a given text answers a user query, assigning relevance scores based on a deep understanding of semantic alignment, precision, and context.
@@ -223,7 +223,7 @@ ${context.query?.standalone_questions.length !== 0 ? context.query?.standalone_q
 # Evaluation Steps
 
 Think step by step and describe in 10-20 words your reasoning for choosing these scores.
-Tasks are totally independant.
+Tasks are totally independant. Today is ${today_is()}.
 
 ## Task: Identify the Building of the Chunk
 ${
@@ -239,7 +239,7 @@ ${
     : 'Assign a building score of 0.'
 }
 
-## Task: Identify the Building of the Chunk (if any)
+## Task: Determine if the Chunk Discusses a Specific Company Process or Guideline
 
 ${
   context.query?.named_entities.process !== null
