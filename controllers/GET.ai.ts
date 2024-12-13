@@ -188,7 +188,10 @@ export const controller = async (c: Context) => {
 
     // If incoming request comes from
     // the web, return a text stream.
-    c.header('Content-Type', 'text/plain; charset=utf-8')
+
+    // c.header('Content-Type', 'text/plain; charset=utf-8')
+    c.header('Content-Type', 'text/event-stream')
+
     return stream(c, (stream) =>
       stream.pipe((answer as StreamTextResult<Record<string, CoreTool>>).textStream)
     )
