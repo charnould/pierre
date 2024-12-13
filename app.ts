@@ -67,4 +67,4 @@ app.notFound(async (c) =>
 
 app.onError((_err, c) => c.notFound())
 
-export default { idleTimeout: 90, fetch: app.fetch } satisfies Serve
+export default { idleTimeout: 240, fetch: app.fetch } satisfies Serve
