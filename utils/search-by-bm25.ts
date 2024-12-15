@@ -48,8 +48,6 @@ export const bm25_search = (keyword: string, context: AIContext) => {
 export const query_db = (db_name: Db_Name, keyword: string) => {
   const stemmed_keywords = stem(keyword)
 
-  console.log('FTS5 search with: ', stemmed_keywords)
-
   if (stemmed_keywords !== '') {
     // The rank column is the negative bm25 score
     // https://www.sqlite.org/fts5.html#:~:text=The%20%22%2D1%22%20term,numerically%20lower%20scores.
