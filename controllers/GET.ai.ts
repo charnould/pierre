@@ -18,6 +18,9 @@ import { send_sms } from '../utils/send-sms'
 
 export const controller = async (c: Context) => {
   try {
+    console.time('full_request')
+    console.time('augment_query')
+
     //
     // Step 1.
     // Set variables and types
@@ -75,6 +78,8 @@ export const controller = async (c: Context) => {
       conversation: get_conversation(context.conv_id)
     }).then(async (context) => ({ ...context, query: await augment_query(context) }))
 
+    console.timeEnd('augment_query')
+
     // If query is relevant and does not contain profanity,
     // answer with intelligence
     if (context.query && !context.query.contains_profanity) {
@@ -97,7 +102,7 @@ export const controller = async (c: Context) => {
       // If `context.chunks` contains bullshit, PIERRE
       // answer will probably be bullshit!
 
-      console.debug('Vector searches starts')
+      console.time('vector_search')
 
       const v_results = await Promise.all(
         [
@@ -108,17 +113,21 @@ export const controller = async (c: Context) => {
         ].map((q) => vector_search(q, context))
       )
 
-      console.debug('Fulltext searches starts')
+      console.timeEnd('vector_search')
+      console.time('bm25_search')
 
       const k_results = context.query.bm25_keywords.map((k) => bm25_search(k, context))
 
-      console.log('Reranking starts')
+      console.timeEnd('bm25_search')
+      console.time('reranker')
 
       context.chunks = await rank_chunks(
         v_results.filter((chunk) => chunk !== undefined), // TODO: vector_search must not return undefined
         k_results.filter((chunk) => chunk !== undefined), // TODO: vector_search must not return undefined
         context
       )
+
+      console.timeEnd('reranker')
 
       //
       //
@@ -185,6 +194,8 @@ export const controller = async (c: Context) => {
 
       return c.body('ok', 200)
     }
+
+    console.timeEnd('full_request')
 
     // If incoming request comes from
     // the web, return a text stream.
