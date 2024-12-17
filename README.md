@@ -9,7 +9,8 @@ PIERRE est une intelligence artificielle (IA) **open source**, **plurilingue** e
 
 Plus concrètement, PIERRE c'est à la fois :
 
-1. Un **chatbot** (ou mieux : un **resolution bot**) **open source** qui répond à 100 % des questions de « premier niveau » des locataires, demandeurs et collaborateurs HLM, disponible sur le **Web** ([démonstration](https://pierre-ia.org)) et par **SMS**.
+1. Un **chatbot** (ou mieux : un **resolution bot**) **open source** — disponible sur le **Web** ([démonstration](https://pierre-ia.org)) et par **SMS** — qui répond 24/7/365 à 100 % des questions de « premier niveau » des locataires et demandeurs HLM, et épaule au quotidien les collaborateurs des bailleurs sociaux (processus, données patrimoniales, aide à la rédaction, etc.).
+
 2. Une **base de connaissances** en **open data** ([consultation](./knowledge/community)), utilisable indépendamment du chatbot et indispensable à la mise en oeuvre de toutes approches « Retrieval Augmented Generation » ([RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation)) via un LLM.
 
 → [Télécharger une présentation de PIERRE](./docs/assets/PIERRE-Présentation.pdf) (PDF · 2,7 Mo)
@@ -21,6 +22,9 @@ Plus concrètement, PIERRE c'est à la fois :
 - [Contribuer à PIERRE](#contribuer-%C3%A0-pierre)
   - [Contribuer au code-source](#contribuer-au-code-source)
   - [Contribuer à la base de connaissances](#contribuer-%C3%A0-la-base-de-connaissances)
+    - [Contribuer à « améliorer la base de connaissances » : kézako ?](#contribuer-%C3%A0-%C2%AB-am%C3%A9liorer-la-base-de-connaissances-%C2%BB--k%C3%A9zako)
+    - [Thématiques couvertes par la base de connaissances](#th%C3%A9matiques-couvertes-par-la-base-de-connaissances)
+    - [Concrétement comment contribuer ?](#concr%C3%A9tement-comment-contribuer)
 - [Fonctionnement + architecture de PIERRE](#fonctionnement--architecture-de-pierre)
   - [Comment fonctionne PIERRE ?](#comment-fonctionne-pierre)
   - [Modèles de langage (ou LLM)](#mod%C3%A8les-de-langage-ou-llm)
@@ -30,27 +34,37 @@ Plus concrètement, PIERRE c'est à la fois :
 - [Comment déployer PIERRE ?](#comment-d%C3%A9ployer-pierre)
   - [Faire héberger PIERRE (le plus simple)](#faire-h%C3%A9berger-pierre-le-plus-simple)
   - [Héberger PIERRE (self-hosting)](#h%C3%A9berger-pierre-self-hosting)
+    - [Faire fonctionner PIERRE en local](#faire-fonctionner-pierre-en-local)
+    - [Déployer pour la première fois PIERRE sur un serveur de production](#d%C3%A9ployer-pour-la-premi%C3%A8re-fois-pierre-sur-un-serveur-de-production)
+    - [Redéployer PIERRE sur un serveur de production](#red%C3%A9ployer-pierre-sur-un-serveur-de-production)
+    - [Déployer et redéployer PIERRE sur un serveur de tests](#d%C3%A9ployer-et-red%C3%A9ployer-pierre-sur-un-serveur-de-tests)
 - [Modifier et paramétrer PIERRE (self-hosting)](#modifier-et-param%C3%A9trer-pierre-self-hosting)
   - [Modifier l'interface du chatbot](#modifier-linterface-du-chatbot)
   - [Modifier la personnalité du chatbot](#modifier-la-personnalit%C3%A9-du-chatbot)
-  - [Installer PIERRE sur votre site web](#installer-pierre-sur-votre-site-web)
-  - [Paramétrer PIERRE pour l'utiliser par SMS](#param%C3%A9trer-pierre-pour-lutiliser-par-sms)
-  - [Apprendre à PIERRE de nouvelles connaissances](#apprendre-%C3%A0-pierre-de-nouvelles-connaissances)
   - [Modifier le modèle de langage utilisé](#modifier-le-mod%C3%A8le-de-langage-utilis%C3%A9)
-  - [Administrer PIERRE](#administrer-pierre)
+    - [Comment modifier le modèle de langage ?](#comment-modifier-le-mod%C3%A8le-de-langage)
+    - [Quels modèles est-il possible d'utiliser ?](#quels-mod%C3%A8les-est-il-possible-dutiliser)
+  - [Installer PIERRE sur votre site web](#installer-pierre-sur-votre-site-web)
+    - [Via une fenêtre modale](#via-une-fen%C3%AAtre-modale)
+    - [Via une iframe](#via-une-iframe)
+  - [Paramétrer PIERRE pour l'utiliser par SMS](#param%C3%A9trer-pierre-pour-lutiliser-par-sms)
+  - [Administrer PIERRE avec une interface graphique](#administrer-pierre-avec-une-interface-graphique)
+- [Apprendre à PIERRE des connaissances (self-hosting)](#apprendre-%C3%A0-pierre-des-connaissances-self-hosting)
+  - [Connaissances « communautaires » vs. « propriétaires »](#connaissances-%C2%AB-communautaires-%C2%BB-vs-%C2%AB-propri%C3%A9taires-%C2%BB)
+  - [Comment faire apprendre des connaissances à PIERRE ?](#comment-faire-apprendre-des-connaissances-%C3%A0-pierre)
 - [License](#license)
 
 <!-- tocstop -->
 
-## Contribuer à PIERRE
+# Contribuer à PIERRE
 
-### Contribuer au code-source
+## Contribuer au code-source
 
-Pour contribuer au code-source du chatbot/LLM, créer une `issue` dans GitHub et suivre les us et coutumes des projets open source. Les `releases` de PIERRE [sont consultables ici](https://github.com/charnould/pierre/releases).
+Pour contribuer au code-source, créer une `issue` dans GitHub et suivre les us et coutumes des projets open source. Les `releases` de PIERRE [sont consultables ici](https://github.com/charnould/pierre/releases).
 
-### Contribuer à la base de connaissances
+## Contribuer à la base de connaissances
 
-#### Contribuer à « améliorer la base de connaissances » : kézako ?
+### Contribuer à « améliorer la base de connaissances » : kézako ?
 
 Lorsque l'on comprend [comment fonctionne](#fonctionnement--architecture-de-pierre) PIERRE, on comprend le rôle de la base de connaissances : elle est le **coeur de l'intelligence de PIERRE** et n'est — ni plus ni moins — que des fichiers-textes transformés. Par exemple, [ce fichier](./knowledge/global/Les%20enquêtes-locataires.md) contient tout ce que sait PIERRE sur les enquêtes-locataires.
 
@@ -58,7 +72,7 @@ Ce document peut être incomplet ou imprécis, et **c'est tout l'enjeu que de l'
 
 « Améliorer la base de connaissances », ce n'est donc que cela : (1) améliorer le contenu des fichiers-textes existants et (2) créer des fichiers-textes sur les thématiques manquantes.
 
-#### Thématiques couvertes par la base de connaissances
+### Thématiques couvertes par la base de connaissances
 
 La base de connaissances — en co-construction avec les bailleurs — couvre plusieurs thématiques :
 
@@ -67,7 +81,7 @@ La base de connaissances — en co-construction avec les bailleurs — couvre pl
 - `org` : les connaissances relatives à un organisme HLM en particulier (ex : qu'est-ce que Grand Dijon Habitat et quelles sont les coordonnées du service-client et des agences ?).
 - `wikipedia` : des connaissances importées de Wikipédia (ex : l'histoire du logement social).
 
-#### Concrétement comment contribuer ?
+### Concrétement comment contribuer ?
 
 1. Consulter la [base de connaissances](https://github.com/charnould/pierre/tree/master/knowledge/)
 2. Et si vous identifiez un manque, une imprécision ou une erreur :  
@@ -76,14 +90,14 @@ La base de connaissances — en co-construction avec les bailleurs — couvre pl
 
 Au fur et à mesure de l'amélioration de la base de connaissances, la pertinence de PIERRE s'améliorera automatiquement et profitera à l'ensemble du mouvement HLM.
 
-## Fonctionnement + architecture de PIERRE
+# Fonctionnement + architecture de PIERRE
 
-### Comment fonctionne PIERRE ?
+## Comment fonctionne PIERRE ?
 
 1. Un utilisateur pose une question à PIERRE via le web ou par SMS.
-2. Une première passe de LLM/IA corrige et augmente la requête initiale.
+2. Une première passe de LLM/IA augmente la requête initiale.
 3. Une deuxième passe de LLM/IA s'assure de la validité et sécurité de la requête initiale (ex : impossible d'insulter PIERRE ou d'adresser une question sans lien avec le logement).
-4. La requête validée et augmentée est vectorisée, puis interroge les bases de connaissances de PIERRE.
+4. La requête validée et augmentée est vectorisée, puis est utilisée pour interroger les bases de connaissances de PIERRE.
 5. Les résultats retournés sont _rerankés_ par un LLM/IA pour ne conserver que les plus pertinents.
 6. Une dernière passe de LLM/IA génère une réponse sur la base des résultats retournés, réordonnancés puis _rerankés_ des bases de connaissances.
 7. La réponse est retournée quelques secondes plus tard à l'utilisateur via le web ou par SMS.
@@ -92,7 +106,7 @@ Au fur et à mesure de l'amélioration de la base de connaissances, la pertinenc
 > [!NOTE]
 > On comprend ici aisément le rôle des bases de connaissances : **elles sont le coeur de l'intelligence de PIERRE** ou de toute IA mettant en oeuvre une approche « Retrieval Augmented Generation » ([RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation)) via un LLM. Ces bases de connaissances sont [améliorables](#contribuer-%C3%A0-la-base-de-connaissances) et [personnalisables](#apprendre-%C3%A0-pierre-de-nouvelles-connaissances) ; et c'est simplissime !
 
-### Modèles de langage (ou LLM)
+## Modèles de langage (ou LLM)
 
 PIERRE utilise — à ce jour — plusieurs (passes de) LLM dans cet ordre successif :
 
@@ -104,10 +118,10 @@ PIERRE utilise — à ce jour — plusieurs (passes de) LLM dans cet ordre succe
 
 4. Un **modèle de génération de `textes`** qui génére les réponses textuelles aux utilisateurs. Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Bring Your Own LLM Key/Model »** (BYOK) — **il est possible de choisir le modèle utilisé** (Mistral, Anthropic, Cohere...) et ce, en modifiant le fichier de configuation (_cf._ infra). Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
 
-### L'universel SMS pour les échanges de « premier niveau »
+## L'universel SMS pour les échanges de « premier niveau »
 
 > [!NOTE]
-> PIERRE propose à ce jour deux modalités d'interaction : via le Web ([démonstration](https://pierre-ia.org)) ou par SMS (Text-to-Text). À court terme, PIERRE va également investiguer une interaction Voice-to-Voice.
+> PIERRE propose à ce jour deux modalités d'interaction : `Text-to-Text` via le Web ([démonstration](https://pierre-ia.org)) ou par SMS, et `Voice-to-Text` sur smartphone. À court terme, PIERRE va également investiguer une interaction `Voice-to-Voice`.
 
 En réponse au nouveau plan de numérotation mis en place par l'ARCEP en 2023 (avec l'introduction des numéros commerciaux 09 3x xx xx xx) et pour proposer aux entreprises une **solution universelle** pour converser avec leurs clients, les opérateurs téléphoniques français ont lançé en 2023 (déploiement opérationnel en octobre 2024) une nouvelle offre de SMS conversationnel à destination des entreprises (dite `Time2chat`) qui (i) permet de s'affranchir des plateformes propriétaires (WhatsApp, Telegram, Messenger, etc.) utilisées au maximum par 50 % de la population française et (ii) une instantanéité et délivrabilité exceptionnelles (100 % des téléphones disposent nativement du SMS).
 
@@ -117,7 +131,7 @@ Principales caratéristiques de `Time2chat` (en savoir plus via l'[ARCEP](https:
 - Elle dure maximum 24h et le nombre de SMS échangés durant cette période est illimité.
 - Elle peut être initiée par l'entreprise ou l’utilisateur.
 
-### Technologies + Services
+## Technologies + Services
 
 - Language: `Typescript`/`Javascript`
 - Framework: [`Hono`](https://github.com/honojs/hono) (with [`Bun`](https://github.com/oven-sh/bun) runtime)
@@ -126,7 +140,7 @@ Principales caratéristiques de `Time2chat` (en savoir plus via l'[ARCEP](https:
 - LLM: « Bring Your Own LLM Key/Model » (BYOK)
 - SMS: `Time2Chat` via [`CM`](https://www.cm.com/fr-fr/)
 
-### Les coûts associés à l'usage de PIERRE
+## Les coûts associés à l'usage de PIERRE
 
 Déployer PIERRE sur un serveur génére des coûts (minimes) :
 
@@ -138,37 +152,37 @@ Déployer PIERRE sur un serveur génére des coûts (minimes) :
   – Location d'un numéro de téléphone : €10 par mois  
   – Envoi de SMS : €0.09 par conversation (= SMS illimités par fenêtre de 24h)
 
-## Comment déployer PIERRE ?
+# Comment déployer PIERRE ?
 
-### Faire héberger PIERRE (le plus simple)
+## Faire héberger PIERRE (le plus simple)
 
 Avantages :
 
 - Ne jamais avoir à se soucier de serveurs et d'API.
-- Bénéficier 365/24/7 de la dernière version.
+- Bénéficier 24/7/365 de la dernière version.
 
 Adresser un email à charnould@pierre-ia.org.
 
-### Héberger PIERRE (self-hosting)
+## Héberger PIERRE (self-hosting)
 
-#### Faire fonctionner PIERRE en local
+### Faire fonctionner PIERRE en local
 
 Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour Linux).
 
 1. Installer `WSL` et vérifier sa bonne installation ([instructions](https://learn.microsoft.com/fr-fr/windows/wsl/install)).
-2. Installer `Bun` (≥ `1.1.34`) et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
+2. Installer `Bun` (≥ `1.1.40`) et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
 3. Forker/cloner le présent dépôt.
 4. Lancer `bun install` dans votre terminal pour installer les dépendances.
 5. Renommer le fichier `.env.example` en `.env.production` et compléter le.
 6. Lancer PIERRE avec `bun dev`.
 7. Et voilà : PIERRE est accessible à http://localhost:3000 et répond à vos questions !
 
-#### Déployer pour la première fois PIERRE sur un serveur de production
+### Déployer pour la première fois PIERRE sur un serveur de production
 
-Pour déployer PIERRE sur votre propre serveur, il est indispensable d'être parvenu à le faire fonctionner en local.
+Pour déployer PIERRE sur un serveur, il est indispensable d'être parvenu à le faire fonctionner en local.
 
 1. Installer `Docker Desktop` et le lancer ([instructions](https://www.docker.com/products/docker-desktop/)). `Docker` gérera la conteneurisation.
-2. Lancer `gem install kamal` pour installer `Kamal` (≥`2.3.0`) qui gérera le déploiement ([instructions](https://kamal-deploy.org/docs/installation/)).
+2. Lancer `gem install kamal` pour installer `Kamal` (≥`2.4.0`) qui gérera le déploiement ([instructions](https://kamal-deploy.org/docs/installation/)).
 3. Disposer d'un compte `GitHub` et [générer une clef](https://github.com/settings/tokens). `GitHub` sera le registre de conteneurs lors du déploiement.
 4. Disposer d'un VPS (par exemple `CX22` d'[Hetzner](https://www.hetzner.com/cloud/)) et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
 5. Finaliser les modifications du fichier `.env.production` que vous avez créé précédemment.
@@ -181,15 +195,16 @@ Pour déployer PIERRE sur votre propre serveur, il est indispensable d'être par
    – Faire fonctionner PIERRE par SMS  
    – Afficher PIERRE sur votre site internet ou extranet-locataire
 
-#### Redéployer PIERRE sur un serveur de production
+### Redéployer PIERRE sur un serveur de production
 
 PIERRE — et notamment sa base de connaissances — évolue régulièrement et suit la convention `semver`. Pour le mettre à jour :
 
 1. Consulter les [releases](https://github.com/charnould/pierre/releases) pour connaitre les modifications et les éventuels _breaking changes_.
 2. Mettez à jour votre fork/clone.
-3. Saississez `dotenvx run -f .env.production -- kamal deploy` dans votre terminal (ou le raccourci `bun production:deploy`).
+3. Saississez `bun test:config` pour vous assurer que `config.ts` est correctement paramétré.
+4. Saississez `dotenvx run -f .env.production -- kamal deploy` dans votre terminal (ou le raccourci `bun production:deploy`).
 
-#### Déployer et redéployer PIERRE sur un serveur de tests
+### Déployer et redéployer PIERRE sur un serveur de tests
 
 Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE :
 
@@ -201,12 +216,12 @@ Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE :
 > [!NOTE]
 > Il est très fortement recommandé que les environnements de `production` et `staging` aient le même système d'exploitation (Ubuntu, Debian, etc.) et la même architecture de processeur (x86).
 
-## Modifier et paramétrer PIERRE (self-hosting)
+# Modifier et paramétrer PIERRE (self-hosting)
 
 > [!NOTE]
 > Dans les instructions ci-dessous, nous considérons un bailleur social fictif nommé `Pierre Habitat` dont le site institutionnel est accessible à `pierre-habitat.fr` et qui a déployé sa propre version de PIERRE à l'adresse/IP `180.81.82.83`, et le scénario `en_agence`.
 
-### Modifier l'interface du chatbot
+## Modifier l'interface du chatbot
 
 <img src="docs/assets/images/personnalisation-de-pierre.webp" height="400">
 
@@ -218,8 +233,7 @@ Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE :
    – `id` avec `pierre-habitat.fr`  
    – `context.default.greeting` qui est le message d'accueil de votre chatbot  
    – `context.default.examples` qui sont les exemples proposés après votre message d'accueil  
-   – `context.default.disclaimer` qui est le court message après chaque réponse générée par PIERRE (ex : _Une IA peut se tromper, vérifier les informations._)  
-   – `context.default.examples` qui sont les exemples proposés après votre message d'accueil  
+   – `context.default.disclaimer` qui est le message s'affichant après chaque réponse générée (ex : _Une IA peut se tromper, vérifier les informations._)  
    – `context.en_agence` pour créer des scénarios/personnalités supplémentaires.
 6. Modifier dans `manifest.json` :  
    – `short_name` par le nom souhaité de votre chatbot  
@@ -231,7 +245,7 @@ Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE :
 > [!TIP]
 > Pour vous assurer que `config.ts` est correctement paramétré, notamment lors des montées de version qui peuvent en modifier la structure, lancer `bun test:config`.
 
-### Modifier la personnalité du chatbot
+## Modifier la personnalité du chatbot
 
 Si vous avez à ce stade personnalisé visuellement votre chatbot (_cf_. supra), et bien qu'il affiche des icônes et les salutations de votre organisme, **il ne se présente PAS encore comme le chatbot de votre organisme** (essayez en lui demandant qui il est !).
 
@@ -243,10 +257,28 @@ Pour modifier cela, modifier dans le fichier `config.ts` :
 > [!NOTE]
 > Pour faciliter la lecture et manipulation du fichier `config.ts` dans VSCode, ou plus généralement activer le _word wrap_ : utilisez le raccourci `Alt` + `z` (Windows) ou `⌥` + `z` (Mac).
 
-### Installer PIERRE sur votre site web
+## Modifier le modèle de langage utilisé
+
+> [!IMPORTANT]
+> Il est très fortement recommandé de disposer d'une version fonctionnelle de PIERRE en local avant de changer le modèle de langage (LLM) et ce, pour être en mesure d'effectuer des tests. En effet, modifier le modèle de langage peut avoir quelques effets sur la qualité et vitesse des réponses de PIERRE.
+
+### Comment modifier le modèle de langage ?
+
+Pour modifier le **modèle de génération de `textes`**, il suffit de :
+
+- Modifier `model` dans votre fichier `config.ts` par la valeur souhaitée
+- Renseigner la clef d'API correspondante dans les variables d'environnement (`.env.production`). **Attention**, il faut a minima et impérativement disposer d'une clef `OpenAI` pour la génération d'`objets ` et d'`embeddings`.
+
+### Quels modèles est-il possible d'utiliser ?
+
+PIERRE permet – à ce stade – l'usage des principaux modèles de langage, à savoir : `Anthropic`, `Cohere`, `Google`, `Mistral` et `OpenAI`.
+
+## Installer PIERRE sur votre site web
 
 > [!IMPORTANT]
 > Pour installer PIERRE sur votre site internet, il est indispensable de disposer d'une version fonctionnelle de PIERRE installée sur un VPS.
+
+### Via une fenêtre modale
 
 ```html
 <script
@@ -283,7 +315,26 @@ avec :
 - `data-context` : le scénario (ou la personnalité) qu'utilise PIERRE
 - `data-configuration` : le nom de domaine de votre organisme qui est également le nom du répertoire que vous avez créé plus tôt dans `./assets` (_cf._ supra) ou `pierre-ia.org` pour la version par défaut.
 
-### Paramétrer PIERRE pour l'utiliser par SMS
+### Via une iframe
+
+```html
+<iframe
+  id="pierre"
+  title="PIERRE - l'IA de Mouvement HLM"
+  style="..."
+  width="450"
+  height="620"
+  src="http://180.81.82.83/?config=pierre-ia.org&context=default"
+>
+</iframe>
+```
+
+avec :
+
+- `style` : le style CSS de l'iframe (libre à vous de le modifier)
+- `src` : l'URL d'accès à PIERRE (libre à vous de modifier `config` et `context`)
+
+## Paramétrer PIERRE pour l'utiliser par SMS
 
 1. Obtenir un numéro de téléphone compatible
 2. Paramétrer votre webhook
@@ -291,51 +342,7 @@ avec :
 
 TODO/À FINALISER
 
-### Apprendre à PIERRE de nouvelles connaissances
-
-PIERRE dispose — en fait — de deux bases de connaissances :
-
-- Une [base](https://github.com/charnould/pierre/tree/master/knowledge/) (dite `community`) qui correspond aux connaissances partagées universellement au sein du mouvemement HLM (ex : comment déposer une demande de logement social, qu'est ce que le SLS, les associations d'hébergement d'urgence dans le Vaucluse, etc.). Cette base `community` correspond aux répertoires `global`, `local`, `org` et `wikipedia` du dossier `knowledge`. NE PAS MODIFIER CES FICHIERS.
-
-- Une [base](https://github.com/charnould/pierre/tree/master/knowledge/proprietary) (dite `proprietary`) qui correspond aux connaissances créées par un organisme HLM hébergeant sa propre version de PIERRE et qui ne souhaite pas partager ses connaissances avec `community` (ex : des procédures internes).
-
-Plus précisément, cette base `proprietary` contient deux types de données :
-
-- des données `privées` accessibles uniquement aux collaborateurs de l'organisme (ex : les processus et procédures internes).
-- des données `publiques` accessibles aux candidats et locataires HLM, ainsi qu'aux collaborateurs (ex : l'histoire de l'organisme).
-
-> [!IMPORTANT]
-> Il est généralement plus pertinent de contribuer à la base `community` que d'utiliser les données `publiques` de `proprietary`.
-
-#### Comment faire apprendre des connaissances `proprietary` à PIERRE ?
-
-1. Supprimer du dossier `knowledge/proprietary` tous les fichiers et répertoires **à l'exception** de `_metadata.xlsx` qu'il faut impérativement conserver
-2. Déposer vos fichiers `.docx` (Word), `.xlsx` (Excel) ou `.md` (Markdown) dans ce même répertoire. Vous êtes libre de créer une arborescence selon vos besoins. Les fichiers avec d'autres extensions que celles précédemment citées ne seront pas pris en compte.
-3. Compléter le fichier `_metadata.xlsx`. C'est notamment dans ce fichier que vous pourrez arbitrer si les connaissances doivent être `privées` ou `publiques`. Uniquement les fichiers référencés dans `_metadata.xlsx` seront pris en compte.
-4. Lancer `bun generate --proprietary` pour lancer la (re)construction automatique de votre base de connaissances `proprietary` et patienter quelques minutes (il est impératif que vos variables d'environnement contiennent une clef d'API `OpenAI`).
-5. **Indispensable** : Configurer vos `context` dans `config.ts` de manière à permettre l'utilisation des connaissances `proprietary` et protéger votre `context` s'il utilise des données `privées`/`private`.
-6. Effectuer un commit des modifications, tester en local et redéployer.
-
-> [!TIP]
-> Dans un futur proche (objectif : février 2025), vous pourrez enseigner à PIERRE des connaissances `proprietary` sans nécessiter de redéploiement et, simplement en associant un SharePoint à PIERRE (en cours de réflexion).
-
-### Modifier le modèle de langage utilisé
-
-> [!IMPORTANT]
-> Il est très fortement recommandé de disposer d'une version fonctionnelle de PIERRE en local avant de changer le modèle de langage (LLM) et ce, pour être en mesure d'effectuer des tests. En effet, modifier le modèle de langage peut avoir quelques effets sur la qualité et vitesse des réponses de PIERRE.
-
-#### Comment modifier le modèle de langage ?
-
-Pour modifier le **modèle de génération de `textes`**, il suffit de :
-
-- Modifier `model` dans votre fichier `config.ts` par la valeur souhaitée
-- Renseigner la clef d'API correspondante dans les variables d'environnement (`.env.production`). Attention, il est néanmoins impératif de disposer tout de même d'un clef `OpenAI` ppur la génération d'`objet ` et d'`embeddings`.
-
-#### Quels modèles est-il possible d'utiliser ?
-
-PIERRE permet – à ce stade – l'usage des principaux modèles de langage, à savoir : `Anthropic`, `Cohere`, `Google`, `Mistral` et `OpenAI`.
-
-### Administrer PIERRE
+## Administrer PIERRE avec une interface graphique
 
 Si vous hébergez PIERRE :
 
@@ -343,7 +350,38 @@ Si vous hébergez PIERRE :
 2. Saisissez (la première fois) `admin@pierre-ia.org` et le mot de passe contenu dans la variable d'environnement `AUTH_PASSWORD`.
 3. Vous pouvez désormais créer autant d'utilisateurs que nécessaire (n'oubliez pas de transmettre les mots de passe !) qui pourront modifier les utilisateurs ou l'encyclopédie, consulter les conversations ou les statistiques, et utiliser « l'aide de camp ».
 
-## License
+# Apprendre à PIERRE des connaissances (self-hosting)
+
+## Connaissances « communautaires » vs. « propriétaires »
+
+PIERRE dispose — en fait — de deux bases de connaissances :
+
+- Une [base](https://github.com/charnould/pierre/tree/master/knowledge/) (dite `community`) qui correspond aux connaissances partagées universellement au sein du mouvemement HLM (ex : comment déposer une demande de logement social, qu'est ce que le SLS, les associations d'hébergement d'urgence dans le Vaucluse, etc.). Cette base `community` correspond aux répertoires `global`, `local`, `org` et `wikipedia` du dossier `knowledge`. NE PAS MODIFIER CES FICHIERS.
+
+- Une [base](https://github.com/charnould/pierre/tree/master/knowledge/proprietary) (dite `proprietary`) qui correspond aux connaissances créées par un organisme HLM hébergeant sa propre version de PIERRE et qu'il ne souhaite pas partager avec `community` (ex : des procédures internes).
+
+Plus précisément, cette base `proprietary` contient deux types de données :
+
+- Des données `privées` accessibles uniquement aux collaborateurs de l'organisme (ex : les processus et procédures internes).
+- Des données `publiques` accessibles aux candidats et locataires HLM, ainsi qu'aux collaborateurs (ex : l'histoire de l'organisme).
+
+> [!IMPORTANT]
+> Il est généralement plus pertinent de contribuer à la base `community` que d'utiliser les données `publiques` de `proprietary`.
+
+## Comment faire apprendre des connaissances à PIERRE ?
+
+1. Supprimer du dossier `knowledge/proprietary` tous les fichiers et répertoires **à l'exception** de `_metadata.example.xlsx`.
+2. Dupliquer `_metadata.example.xlsx` et le renommer `_metadata.xlsx`.
+3. Déposer vos fichiers `.docx` (Word), `.xlsx` (Excel) ou `.md` (Markdown) dans ce même répertoire. Vous êtes libre de créer une arborescence selon vos besoins. Les fichiers avec d'autres extensions que celles précédemment citées ne seront pas pris en compte.
+4. Compléter le fichier `_metadata.xlsx`. C'est notamment dans ce fichier que vous pourrez arbitrer si les connaissances doivent être `privées` ou `publiques`. Uniquement les fichiers référencés dans `_metadata.xlsx` seront pris en compte. Attention, un fichier référencé dans `_metadata.xlsx` et qui n'existe pas à l'emplacement indiqué générera une erreur.
+5. Lancer `bun generate --proprietary` pour lancer la (re)construction automatique de votre base de connaissances `proprietary` et patienter quelques minutes (il est impératif que vos variables d'environnement contiennent une clef d'API `OpenAI`).
+6. **Indispensable** : [Configurer](https://github.com/charnould/pierre/blob/master/assets/pierre-ia.org/config.ts#L73) vos `context` dans `config.ts` de manière à permettre l'utilisation des connaissances `proprietary` et protéger votre `context` s'il utilise des données `privées`/`private`.
+7. Effectuer un commit des modifications, tester en local et redéployer.
+
+> [!TIP]
+> Dans un futur proche (objectif : février 2025), vous pourrez enseigner à PIERRE des connaissances `proprietary` sans nécessiter de redéploiement et ce, simplement en associant un SharePoint à PIERRE (en cours de réflexion).<br><br>En cas de difficultés pour « enseigner » à PIERRE vos propres données, créer une `issue` sur GitHub ou adresser un email à charnould@pierre-ia.org.
+
+# License
 
 Le code-source du présent dépôt est sous license [GNU Affero General Public License Version 3](https://github.com/charnould/pierre/blob/master/LICENSE.md). La base de connaissances (dossier `/knowledge`) est sous license [Creative Commons BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 
