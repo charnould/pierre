@@ -251,7 +251,7 @@ Evaluate whether the chunk pertains to the process “${context.query?.named_ent
 - Score 1000: The chunk explicitly addresses the process with high accuracy.
 - Score 1-999: Partial or nuanced relevance (e.g., related processes but not an exact match). Example: “Une panne d’ascenseur” is distinct from “Un locataire bloqué dans l’ascenseur”.
 `
-    : 'Assign a building score of 0.'
+    : 'Assign a process/guideline score of 0.'
 }
 
 ## Task: Evaluate Overall Relevance
