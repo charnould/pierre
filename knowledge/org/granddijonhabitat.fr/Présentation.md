@@ -20,7 +20,7 @@
 
 Avec plus de 10 000 logements sur le territoire de la communauté urbaine Dijon métropole, l’Office public de l’habitat Grand Dijon Habitat est le 1er bailleur social et l’un des premiers donneurs d’ordre de l’agglomération.
 
-Cette forte implantation locale lui donne la responsabilité de l’action et le devoir de tendre vers l’excellence. Grand Dijon Habitat est ainsi un acteur essentiel de la politique locale de l’habitat, au service de l’intérêt général du logement social.
+Grand Dijon Habitat est ainsi un acteur essentiel de la politique locale de l’habitat, au service de l’intérêt général du logement social et du développement de son territoire.
 
 Le 22 décembre 1925, le conseil municipal de Dijon délibérait en vue de la création de l’Office, prenant dans le même temps l’engagement de lui fournir une dotation initiale de 250 000 francs. Le décret de création a été signé par le président de la République Gaston Doumergue le 18 août 1926. Dès lors, l'organisme s’est engagé dans la construction de logements à loyer modéré. Il a ainsi inscrit son savoir-faire dans chaque grande époque et période phare de l’urbanisation de la ville.
 
@@ -50,12 +50,11 @@ En 2017, conformément à la loi, l’Office passe d’une échelle communale à
 
 ### La société de coordination "Amplitudes"
 
-La loi portant évolution du logement, de l’aménagement et du numérique (loi ELAN), promulguée le 24 novembre 2018, impose à tous les organismes de logement social gérant moins de 12 000 logements de s’engager dans un processus de rapprochement ; que ce soit via un
-transfert de patrimoine, une fusion d’organismes ou la création d’une société de coordination (SC).
+La loi portant évolution du logement, de l’aménagement et du numérique (loi ELAN), promulguée le 24 novembre 2018, impose à tous les organismes de logement social gérant moins de 12 000 logements de s’engager dans un processus de rapprochement ; que ce soit via un transfert de patrimoine, une fusion d’organismes ou la création d’une société de coordination (SC).
 
 La Société de coordination "Amplitudes" créée au 1er janvier 2020 fédère quatre Offices Publics de l’Habitat : Ardèche Habitat, Bourg Habitat, Mâcon Habitat et Ophéor (Roanne). Ils partagent une forme juridique identique, des patrimoines structurellement proches et ensemble, ils ont l’envie de répondre à des besoins communs tout en gardant une gouvernance de proximité.
 
-Suite à la décision du Conseil d’administration de Grand Dijon Habitat du mois de juillet 2021, l’intégration à la SC Amplitudes est voté à l’unanimité et les membres de la SC Amplitudes et leurs collectivités de rattachement ont à leur tour délibéré favorablement.
+Suite à la décision du Conseil d’administration de Grand Dijon Habitat du mois de juillet 2021, l’intégration à la SC Amplitudes est votée à l’unanimité et les membres de la SC Amplitudes et leurs collectivités de rattachement ont à leur tour délibéré favorablement.
 
 Au 1er janvier 2022, la SC Amplitudes compte désormais 5 bailleurs sociaux de premier plan sur leurs territoires respectifs et représentera un ensemble près de 34 000 logements, 67 000 locataires et 650 collaborateurs.
 
@@ -81,7 +80,7 @@ Les constructions actuelles répondent toutes aux critères des bâtiments basse
 
 Grand Dijon Habitat acquiert des logements auprès de propriétaires privés et les rénove avant de les louer. Il contribue ainsi à offrir des logements à loyer modéré dans des quartiers ou des communes où l’offre était faible jusqu’alors. L’office public de l’habitat veille, dans chacune de ses rénovations, à respecter les normes environnementales actuelles : il garantit un faible niveau de charges à ses locataires tout en jouant la carte du développement durable.
 
-Premier bailleur de l’agglomération dijonnaise, Grand Dijon Habitat dispose d’un parc diversifié dont les années de construction s’échelonnent des années 30 à nos jours. Son patrimoine est sa richesse, il se doit de l’entretenir et de le maintenir à un bon niveau de confort et de qualité.Gérer son patrimoine est donc naturellement l’une de ses missions premières : entretenir les parties communes et les espaces extérieurs, remettre en état les logements avant de les relouer, améliorer les perfomances énergétiques des logements, traiter les réclamations… sont autant de missions gages de qualité de service pour l’amélioration de la vie quotidienne de ses clients.
+Premier bailleur de l’agglomération dijonnaise, Grand Dijon Habitat dispose d’un parc diversifié dont les années de construction s’échelonnent des années 30 à nos jours. Son patrimoine est sa richesse, il se doit de l’entretenir et de le maintenir à un bon niveau de confort et de qualité. Gérer son patrimoine est donc naturellement l’une de ses missions premières : entretenir les parties communes et les espaces extérieurs, remettre en état les logements avant de les relouer, améliorer les performances énergétiques des logements, traiter les réclamations… sont autant de missions gages de qualité de service pour l’amélioration de la vie quotidienne de ses clients.
 
 ### Vendre
 
@@ -95,7 +94,7 @@ Joignable en journée au 03 80 71 84 00, ce numéro unique permet de contacter G
 
 En soirée et la nuit, ce numéro unique est toujours accessible et permet de contacter Grand Dijon Habitat en cas d’incidents urgents et graves nécessitant l’intervention rapide de nos équipes d’astreinte (fuite d’eau, incendie, panne de chauffage…)
 
-2. Via le site internet, unevéritable agence virtuelle
+2. Via le site internet, une véritable agence virtuelle
 
 Ce site a été conçu pour répondre à la plupart des questions et permet au locataire d’être en contact 24/7/365 en accédant à votre espace locataire :
 
@@ -108,7 +107,7 @@ Ce site a été conçu pour répondre à la plupart des questions et permet au l
 - L’accueil est ouvert du lundi au vendredi de 9h à 12h30 et de 13h30 à 17h30, et le mercredi et vendredi jusqu’à 16h30.
 - Pour une rencontre de qualité, il est recommandé de prendre rendez-vous au 03 80 71 84 00.
 
-4. Dans les agence de proximité
+4. Dans les agences de proximité
 
 Grand Dijon Habitat est toujours à proximité de ses locataires avec 6 agences réparties sur l’agglomération dijonnaise. Elles accueillent sur rendez-vous uniquement (03 80 71 84 00) pour permettre de signaler un incident ou venir à la rencontre des équipes présentes sur le terrain, notamment pour récupérer clés ou badges.
 
