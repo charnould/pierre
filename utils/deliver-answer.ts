@@ -3,7 +3,7 @@ import { createCohere } from '@ai-sdk/cohere'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createMistral } from '@ai-sdk/mistral'
 import { createOpenAI } from '@ai-sdk/openai'
-import { generateText, streamText } from 'ai'
+import { generateText, smoothStream, streamText } from 'ai'
 import remove_markdown from 'remove-markdown'
 import type { AIContext } from './_schema'
 import { save_reply } from './handle-conversation'
@@ -30,6 +30,7 @@ export const stream_answer = async (context: AIContext) =>
   streamText({
     // biome-ignore lint: server-side eval to keep `config.ts` simple
     model: eval((context.config as { model: string }).model),
+    experimental_transform: smoothStream({ delayInMs: 20 }),
     messages: context.conversation,
     async onFinish({ text, usage }) {
       context.metadata.tokens.completion = usage.completionTokens
