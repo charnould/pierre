@@ -100,7 +100,7 @@ export const transform_office_file = async (args: Args) => {
                   // Format the date in the 'Europe/Paris' timezone
                   return [
                     lowercaseKey,
-                    formatInTimeZone(value, 'Europe/Paris', 'PPPP à HH:mm', { locale: fr })
+                    formatInTimeZone(value, 'Europe/Paris', 'PPPP', { locale: fr })
                   ]
                 }
 
