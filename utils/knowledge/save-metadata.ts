@@ -22,15 +22,15 @@ export const get_and_save_metadata = async (args: Args) => {
     const files = XLSX.utils
       .sheet_to_json<{
         "Chemin d'accès": string
+        Accès: string
         Onglet: number
         "Ligne d'en-tête": number
-        Accès: string
+        Segmentation: string
         Description: string
-        last_modified: null
+        "Type d'entité": string
         "Colonne de l'entité": number
-        "Type de l'entité": string
-        Découpage: string
-      }>(sheet, { range: 1 })
+        last_modified: null
+      }>(sheet, { range: 2 })
       .map((item) => ({
         id: randomUUIDv7(),
         filepath: `knowledge/proprietary/${item["Chemin d'accès"]}`,
@@ -40,8 +40,8 @@ export const get_and_save_metadata = async (args: Args) => {
         description: item.Description,
         last_modified: null,
         entity_column: item["Colonne de l'entité"],
-        entity_type: item["Type de l'entité"],
-        chunk: item.Découpage === 'true'
+        entity_type: item["Type d'entité"],
+        chunk: item.Segmentation === 'true'
       }))
 
     Bun.write(
