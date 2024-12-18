@@ -6,7 +6,7 @@ import { get_user, save_user } from '../utils/handle-user'
 
 export const controller = async (c: Context) => {
   // Parse request body and initialize variables
-  const redirection = encodeURIComponent(c.req.query('redirection') ?? '/a')
+  let redirection = encodeURIComponent(c.req.query('redirection') ?? '/a')
 
   const { email, password, action }: { email: string; password: string; action: string } =
     await c.req.parseBody()
@@ -49,7 +49,11 @@ export const controller = async (c: Context) => {
       return c.redirect(`/a/login?message=wrong_password&redirection=${redirection}`)
     }
 
-    // If both `email` and `password` are correct,
+    // If both `email` and `password` are correct
+    if (user.role === 'collaborator')
+      redirection =
+        redirection === encodeURIComponent('/a') ? encodeURIComponent('/c') : redirection
+
     // set a signed authentication cookie for user session
     await setSignedCookie(
       c,
