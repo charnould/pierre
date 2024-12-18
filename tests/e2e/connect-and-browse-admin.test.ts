@@ -190,7 +190,9 @@ it('`admin` should pass e2e test', async () => {
   await page.type('input[type="password"]', 'oXVOtYqxODmD')
   await page.click('input[type="submit"]')
   await Bun.sleep(250) // Wait for redirection
-  expect(page.url()).toBe('http://localhost:3000/a/login')
+  expect(page.url()).toMatch(
+    /http:\/\/localhost:3000\/c\/.{36}\?config=pierre-ia.org&context=default/
+  )
 
   // Cookie must be set
   cookie = (await page.cookies()).find((cookie) => cookie.name === 'pierre-ia')
