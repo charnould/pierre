@@ -1,4 +1,4 @@
-import * as prettier from 'prettier'
+import { format, getISOWeek, isSameDay, parseISO } from 'date-fns'
 import type { AIContext } from './_schema'
 import { generate_answer, stream_answer } from './deliver-answer'
 
@@ -277,16 +277,42 @@ Your answer in "${context.query?.lang}" (ISO 639-1 format):
 }
 
 export const today_is = () => {
-  const date = new Date()
+  // Define public holidays
+  // Source: https://www.service-public.fr/particuliers/actualites/A15406
+  // TODO: Update the list of public holidays for 2027, 2028, etc.
+  const public_french_holidays = [
+    '2025-01-01', // Jour de l'an
+    '2025-04-21', // Lundi de Pâques
+    '2025-05-01', // Fête du travail
+    '2025-05-08', // Victoire 1945
+    '2025-05-29', // Ascension
+    '2025-06-09', //  Lundi de Pentecôte
+    '2025-07-14', // Fête nationale
+    '2025-08-15', // Assomption
+    '2025-11-01', // Toussaint
+    '2025-11-11', // Armistice 1918
+    '2025-12-25', // Noël
+    '2026-01-01', // Jour de l'an
+    '2026-04-06', // Lundi de Pâques
+    '2026-05-01', // Fête du travail
+    '2026-05-08', // Victoire 1945
+    '2026-05-14', // Ascension
+    '2026-05-25', //  Lundi de Pentecôte???????
+    '2026-07-14', // Fête nationale
+    '2026-08-15', // Assomption
+    '2026-11-01', // Toussaint
+    '2026-11-11', // Armistice 1918
+    '2026-12-25', // Noël
+    '2027-01-01' // Jour de l'an
+  ]
 
-  return date.toLocaleString('en-US', {
-    weekday: 'long', // Full day name
-    year: 'numeric',
-    month: 'long', // Full month name
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-    second: 'numeric',
-    hour12: true // Use 12-hour clock
-  })
+  // Check if today is a public holiday
+  const is_public_holiday = () =>
+    public_french_holidays.some((holiday) => isSameDay(new Date(), parseISO(holiday)))
+
+  const date = format(new Date(), 'EEEE, MMMM dd, yyyy')
+  const time = format(new Date(), 'HH:mm a')
+  const week = getISOWeek(new Date())
+
+  return `${date} (Week ${week}) at ${time}${is_public_holiday() ? ' – today is a French public holiday' : ''}.`.trim()
 }
