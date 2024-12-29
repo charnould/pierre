@@ -106,6 +106,7 @@ export const controller = async (c: Context) => {
 
       const v_results = await Promise.all(
         [
+          ...context.content,
           ...context.query.standalone_questions,
           ...context.query.stepback_questions,
           ...context.query.search_queries,
