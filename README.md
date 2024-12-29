@@ -110,11 +110,11 @@ Au fur et à mesure de l'amélioration de la base de connaissances, la pertinenc
 
 PIERRE utilise — à ce jour — plusieurs (passes de) LLM dans cet ordre successif :
 
-1. Un **modèle de génération d'`objets`** qui transforme la requête de l'utilisateur en une « requête augmentée » (en utilisant des techniques de type HyDE ou Stepback). Tous les LLM ne peuvent générer de tels `objets`. De fait, **le modèle utilisé à ce jour ne peut pas être modifié** (`gpt-4o-mini-2024-07-18`). En conséquence, il est indispensable — lorsque l'on auto-héberge PIERRE — de disposer d'une clef d'API OpenAI.
+1. Un **modèle de génération d'`objets`** qui transforme la requête de l'utilisateur en une « requête augmentée » au format `json` (en utilisant des techniques de type HyDE ou Stepback). Tous les LLM ne peuvent générer de tels `objets`. En conséquence, il est indispensable — lorsque l'on auto-héberge PIERRE — de disposer d'une clef d'API OpenAI. Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
 
 2. Un **modèle de génération d'`embeddings`** qui transforme la « requête augmentée » en vecteurs de valeurs numériques qui sont ensuite utilisés pour rechercher les éléments de réponse les plus pertinents dans la base de connaissances de PIERRE. **À ce jour, ce modèle ne peut pas être modifié** (`text-embedding-3-large`). En conséquence, il est indispensable — lorsque l'on auto-héberge PIERRE — de disposer d'une clef d'API OpenAI.
 
-3. À nouveau, un **modèle de génération d'`objets`** programmé en **`reranker`** qui classifie les résulats retournés par les bases de connaissances pour ne conserver que les élémennts les plus pertinents en regard de la question posée par l'utilisateur. Tous les LLM ne peuvent générer de tels `objets`. De fait, **le modèle utilisé à ce jour ne peut pas être modifié** (`gpt-4o-mini-2024-07-18`). En conséquence, il est indispensable — lorsque l'on auto-héberge PIERRE — de disposer d'une clef d'API OpenAI.
+3. À nouveau, un **modèle de génération d'`objets`** programmé en **`reranker`** qui classifie les résulats retournés par les bases de connaissances pour ne conserver que les élémennts les plus pertinents en regard de la question posée par l'utilisateur. Tous les LLM ne peuvent générer de tels `objets`. En conséquence, il est indispensable — lorsque l'on auto-héberge PIERRE — de disposer d'une clef d'API OpenAI. Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
 
 4. Un **modèle de génération de `textes`** qui génére les réponses textuelles aux utilisateurs. Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Bring Your Own LLM Key/Model »** (BYOK) — **il est possible de choisir le modèle utilisé** (Mistral, Anthropic, Cohere...) et ce, en modifiant le fichier de configuation (_cf._ infra). Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
 
@@ -264,9 +264,9 @@ Pour modifier cela, modifier dans le fichier `config.ts` :
 
 ### Comment modifier le modèle de langage ?
 
-Pour modifier le **modèle de génération de `textes`**, il suffit de :
+Pour modifier les modèles, il suffit de :
 
-- Modifier `model` dans votre fichier `config.ts` par la valeur souhaitée
+- Modifier `models` pour chaque `context` dans votre fichier `config.ts` par la valeur souhaitée.
 - Renseigner la clef d'API correspondante dans les variables d'environnement (`.env.production`). **Attention**, il faut a minima et impérativement disposer d'une clef `OpenAI` pour la génération d'`objets ` et d'`embeddings`.
 
 ### Quels modèles est-il possible d'utiliser ?
