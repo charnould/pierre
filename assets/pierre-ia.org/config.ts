@@ -11,34 +11,63 @@ export default {
   // (ex. icfhabitat.fr) et le nom du dossier dans `assets/`
   id: 'pierre-ia.org',
 
-  // Le modèle de langage qu'utilise PIERRE pour générer les réponses.
-  // Ci-dessous, des exemples non-exhaustifs de modèles utilisables
-  // (il est impératif que la clef d'API correspondante soit renseignée
-  // dans les variables d'environnement).
-  // model: "cohere('command-r-plus')",
-  // model: "mistral('mistral-large-latest')",
-  // model: "mistral('mistral-small-latest')",
-  // model: "google('gemini-1.5-pro-latest')",
-  // model: "google('gemini-1.5-flash-latest')",
-  // model: "anthropic('claude-3-5-sonnet-20241022')",
-  // model: "anthropic('claude-3-5-haiku-20241022')",
-  // model: "openai('gpt-4o-2024-11-20')",
-  model: "openai('gpt-4o-mini-2024-07-18')",
-
-  // Le numéro de téléphone qui permet d'utiliser PIERRE via SMS.
-  // Assurez-vous de bien respecter le format (`00` au début).
-  // Renseigner `null` si vous n'avez pas paramétré de numéro.
-  phone: '0033939070074',
-
-  // Les personnalités et habillages que PIERRE peut adopter.
-  // Exemples :
-  // - Lorsque l'on consulte PIERRE depuis le site internet du bailleur
-  // - Lorsque l'on consulte PIERRE en agence depuis une borne d'accueil interactive
-  // - Lorsque l'on consulte PIERRE et que l'on est un collaborateur (CGL, RS, RT, gardiens...)
+  // Les différentes versions (ou `context`) de PIERRE
+  // que vous souhaitez rendre disponible. Exemples :
+  // - `default`  : une version de PIERRE accessible depuis aux candidats ou locataires
+  // - `team`     : une versiond de PIERRE à destination exclusive des collaborateurs
+  // - `en_agence`: une version de PIERRE à laquelle on accède en agence depuis une borne d'accueil interactive
   context: {
-    // La personnalité par défaut
+    // La version par défaut
     // Il faut impérativement et a minima renseigner `default`.
     default: {
+      // Les différents modèles de langage utilisés par PIERRE.
+      // Il est impératif que la ou les clefs d'API correspondantes
+      // soient renseignées dans les variables d'environnement.
+      //
+      // Voir https://github.com/charnould/pierre?tab=readme-ov-file#modèles-de-langage-ou-llm
+      // pour plus d'informations sur les modèles de langage utilisés par PIERRE et leur fonction.
+      //
+      // Ci-après, une liste non-exhaustives de modèles utilisables (hors embeddings):
+      // - "cohere('command-r-plus')",
+      // - "mistral('mistral-large-latest')",
+      // - "mistral('mistral-small-latest')",
+      // - "google('gemini-1.5-pro-latest')",
+      // - "google('gemini-1.5-flash-latest')",
+      // - "anthropic('claude-3-5-sonnet-20241022')",
+      // - "anthropic('claude-3-5-haiku-20241022')",
+      // - "openai('gpt-4o-2024-11-20')",
+      models: {
+        // Les embeddings sont des représentations vectorielles
+        // de textes qui en capturent le sens sémantique.
+        // IMPORTANT : NE PAS MODIFIER CE MODÈLE.
+        embed_with: 'text-embedding-3-large',
+
+        // Le modèle utilisé pour augmenter/enrichir les requêtes de l'utilisateur.
+        // Pour minimiser les coûts : openai('gpt-4o-mini-2024-07-18') ou équivalent.
+        // Pour maximiser l'intelligence : openai('gpt-4o-2024-11-20') ou équivalent.
+        // IMPORTANT : NE PAS MODIFIER CE MODÈLE SAUF SI L'ON SAIT CE QUE L'ON FAIT.
+        augment_with: "openai('gpt-4o-mini-2024-07-18')",
+
+        // Le modèle utlisé par le reranker qui s'assure que les éléments de
+        // réponses retournés par les bases de connaissances sont pertinents.
+        // Il est fortement recommandé d'utiliser `openai('gpt-4o-mini-2024-07-18')`
+        // ou un modèle équivalent afin de maîtriser les coûts. Le reranker est
+        // en effet consommateur de tokens.
+        // IMPORTANT : NE PAS MODIFIER CE MODÈLE SAUF SI L'ON SAIT CE QUE L'ON FAIT.
+        rerank_with: "openai('gpt-4o-mini-2024-07-18')",
+
+        // Le modèle qui génère les réponses en s'appuyant sur les éléments
+        // les plus pertinents retournés par le reranker.
+        // Pour minimiser les coûts : openai('gpt-4o-mini-2024-07-18') ou équivalent.
+        // Pour maximiser l'intelligence : openai('gpt-4o-2024-11-20') ou équivalent.
+        answer_with: "openai('gpt-4o-mini-2024-07-18')"
+      },
+
+      // Le numéro de téléphone qui permet d'utiliser PIERRE via SMS.
+      // Assurez-vous de bien respecter le format (`00` au début).
+      // Renseigner `null` si vous n'avez pas paramétré de numéro.
+      phone: '0033939070074',
+
       // Est-ce que le contexte `default` est accessible à tous les utilisateurs ?
       //
       // Si `false` :
@@ -53,8 +82,8 @@ export default {
       // la variable d'environnement `AUTH_PASSWORD`, puis créer des utilisateurs.
       protected: false,
 
-      // Quelles connaissances peut utiliser le contexte
-      // `default` lorsqu'il génère ses réponses ?
+      // Quelles connaissances peut utiliser le contexte `default`
+      // lorsqu'il génère ses réponses ?
       knowledge: {
         // `community` correspond aux connaissances en open data de PIERRE.
         // Il s'agit de connaissances générales sur les HLM. En principe, `community`
@@ -116,6 +145,13 @@ export default {
     // supprimer `team` et plus bas `en_agence` si vous n'avez pas usage
     // de personnalités complémentaires.
     team: {
+      models: {
+        embed_with: 'text-embedding-3-large',
+        augment_with: "openai('gpt-4o-mini-2024-07-18')",
+        rerank_with: "openai('gpt-4o-mini-2024-07-18')",
+        answer_with: "openai('gpt-4o-mini-2024-07-18')"
+      },
+      phone: null,
       protected: false,
       knowledge: {
         community: true,
@@ -142,9 +178,17 @@ export default {
       ],
       disclaimer: "Les données retournées par l'IA sont ici strictement fictives."
     },
+
     //
     // Une troisième personnalité.
     en_agence: {
+      models: {
+        embed_with: 'text-embedding-3-large',
+        augment_with: "openai('gpt-4o-mini-2024-07-18')",
+        rerank_with: "openai('gpt-4o-mini-2024-07-18')",
+        answer_with: "openai('gpt-4o-mini-2024-07-18')"
+      },
+      phone: null,
       protected: true,
       knowledge: {
         community: true,
