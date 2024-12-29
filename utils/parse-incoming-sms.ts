@@ -16,16 +16,18 @@ export const parse_incoming_sms = async (data) => {
   // For each `config.ts`, find the right one (= contains the correct phone number)
   // and build a simple and useful object
   for (const config of configs) {
-    if (config && config.phone === data.to.number) {
-      return SMS.parse({
-        role: 'user',
-        config: config.id,
-        // `+` breaks conv_id when used in an URL
-        conv_id: `sms-with-${data.from.number.replace('+', '')}`,
-        phone: data.to.number,
-        to: data.from.number,
-        content: data.message.text.trim()
-      })
+    for (const key in config.context) {
+      if (key && config.context[key].phone === data.to.number) {
+        return SMS.parse({
+          role: 'user',
+          config: config.id,
+          context: config[key],
+          conv_id: `sms-with-${data.from.number.replace('+', '')}`, // `+` breaks conv_id when used in an URL
+          phone: data.to.number,
+          to: data.from.number,
+          content: data.message.text.trim()
+        })
+      }
     }
   }
 
