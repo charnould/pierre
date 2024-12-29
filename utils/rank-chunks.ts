@@ -1,3 +1,7 @@
+import { createAnthropic } from '@ai-sdk/anthropic'
+import { createCohere } from '@ai-sdk/cohere'
+import { createGoogleGenerativeAI } from '@ai-sdk/google'
+import { createMistral } from '@ai-sdk/mistral'
 import { createOpenAI } from '@ai-sdk/openai'
 import { generateObject } from 'ai'
 import _ from 'lodash'
@@ -178,7 +182,7 @@ export const pick_relevant_chunks = (
     .mapValues((array) =>
       _.chain(array)
         .orderBy('global_score', 'desc')
-        .filter((o) => o.global_score > 500)
+        .filter((o) => o.global_score >= 500)
         .take(5)
         .map('chunk_text')
         .value()
@@ -193,6 +197,11 @@ export const pick_relevant_chunks = (
 // to the user query, with a focus on standalone questions.
 export const score_chunk = async (context: AIContext, chunk: Flatten_Chunk): Promise<Score> => {
   const openai = createOpenAI({ compatibility: 'strict' })
+  const google = createGoogleGenerativeAI()
+  const anthropic = createAnthropic()
+  const mistral = createMistral()
+  const cohere = createCohere()
+
   const { object } = await generateObject({
     schema: z.object({
       reasoning: z.string().describe('Justification for the scores'),
@@ -200,7 +209,8 @@ export const score_chunk = async (context: AIContext, chunk: Flatten_Chunk): Pro
       process_score: z.number().describe('Process score'),
       relevancy_score: z.number().describe('Global relevancy score')
     }),
-    model: openai('gpt-4o-mini-2024-07-18', { structuredOutputs: true }),
+    // biome-ignore lint: server-side eval to keep `config.ts` simple
+    model: eval(context.config.context[context.current_context].models.rerank_with),
     temperature: 0,
     prompt: `
 
@@ -256,9 +266,9 @@ Evaluate whether the chunk pertains to the process “${context.query?.named_ent
 
 ## Task: Evaluate Overall Relevance
 
-Assess the chunk’s alignment with the user query, considering that relevant answers might be explicit, implicit, or require interpretation from the context. Use the following criteria:
-1. Direct Answer Precision
-  - Determines if the chunk directly addresses the query intent.
+Assess the chunk’s alignment with the user query, considering that relevant answers might be explicit, implicit, or require interpretation from the context. Keep in mind partial relevance is still highly valuable. Use the following criteria:
+1. Answer Precision
+  - Determines if the chunk addresses the query intent, even partially.
 	- Evaluates how clear, comprehensive, and unambiguous the response is.
 2. Semantic Matching
   - Examines the degree of alignment between the query’s intent and the chunk’s content.
@@ -268,10 +278,9 @@ Assess the chunk’s alignment with the user query, considering that relevant an
 	- Assesses how actionable, precise, and unambiguous the information is, even if the answer is partially hidden within broader context.
 
 Scoring Scale:
-- 1000 (Perfect Match): Fully answers the query, provides multiple confirmatory points, comprehensive explanation, and actionable information.
-- 1-999 (Partial Match): Varies based on the degree of alignment, detail, and clarity.
-- 0 (No Match): No relevant connection to the query.
-**For low scores (<500), re-check the chunk for **overlooked** relevance.**
+- **1000 (Perfect Match)**: The chunk fully addresses the query, offers clear and comprehensive information, provides multiple confirmatory points, and includes actionable insights.
+- **500-999 (Partial Match)**: The chunk contains at least part of the answer to the query. The score should reflect the degree of alignment, detail, and clarity. **If the chunk contains any relevant part of the answer, it must score at least 500**.
+- **0-499 (Low or No Match)**: The chunk shows limited or no connection to the query. Scores in this range should be reserved for cases where relevance is unclear or missing entirely. Before assigning a score below 500, carefully re-check the chunk for overlooked relevance or implicit connections.
 
 Please proceed with your analysis and evaluation of the given query and chunk
 
