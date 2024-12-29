@@ -1,6 +1,6 @@
 # Fondation Abbé-Pierre pour le logement des défavorisés
 
-La fondation Abbé-Pierre pour le logement des défavorisés (FAP) a été créée en 1987 et reconnue d'utilité publique le 11 février 1992, a pour mission de permettre à toute personne démunie d'accéder à un logement décent et à une vie digne, quels que soient le montant de ses ressources et sa situation sociale.
+La fondation Abbé-Pierre pour le logement des défavorisés (FAP), usuellement appelée fondation Abbé-Pierre, est une organisation créée en 1987 et reconnue d'utilité publique le 11 février 1992, qui a pour mission de permettre à toute personne démunie d'accéder à un logement décent et à une vie digne, quels que soient le montant de ses ressources et sa situation sociale.
 
 L’abbé Pierre, son fondateur, en a été le président d’honneur jusqu'à sa mort le 22 janvier 2007.
 
