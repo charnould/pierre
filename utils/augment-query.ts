@@ -1,9 +1,11 @@
+import { createAnthropic } from '@ai-sdk/anthropic'
+import { createCohere } from '@ai-sdk/cohere'
+import { createGoogleGenerativeAI } from '@ai-sdk/google'
+import { createMistral } from '@ai-sdk/mistral'
 import { createOpenAI } from '@ai-sdk/openai'
 import { generateObject } from 'ai'
 import { type AIContext, Augmented_Query } from './_schema'
 import { today_is } from './generate-answer'
-
-const openai = createOpenAI({ compatibility: 'strict' })
 
 //
 //
@@ -167,9 +169,16 @@ For each standalone question derived from the conversation history in Task 4, pe
 `.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
   })
 
+  const openai = createOpenAI({ compatibility: 'strict' })
+  const google = createGoogleGenerativeAI()
+  const anthropic = createAnthropic()
+  const mistral = createMistral()
+  const cohere = createCohere()
+
   // Generate a JSON object and return it
   const { object } = await generateObject({
-    model: openai('gpt-4o-mini-2024-07-18', { structuredOutputs: true }),
+    // biome-ignore lint: server-side eval to keep `config.ts` simple
+    model: eval(context.config.context[context.current_context].models.augment_with),
     messages: context.conversation,
     schema: Augmented_Query, // See `_schema.ts`
     temperature: 0.5
