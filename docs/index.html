@@ -72,9 +72,10 @@
     <p class="smartphone">
       Pour une meilleure expérience, affichez PIERRE en plein écran. Choisissez l'habillage :
       <a href="https://assistant.pierre-ia.org/c/?config=pierre-ia.org">Générique</a>,
-      <a href="https://assistant.pierre-ia.org/c/?config=arpej.fr">ARPEJ</a>,
       <a href="https://assistant.pierre-ia.org/c/?config=actionlogement.fr">Action Logement</a> ou
-      <a href="https://assistant.pierre-ia.org/c/?config=domofrance.fr">Domofrance</a>.
+      <a href="https://assistant.pierre-ia.org/c/?config=granddijonhabitat.fr"
+        >Grand Dijon Habitat</a
+      >.
     </p>
 
     <main>
@@ -240,18 +241,9 @@
 
         <ul>
           <li>
-            <b>Logement étudiant</b> —
-            <a href="?config=arpej&context=default"
-              >Cliquez pour accéder à PIERRE en mode 'ARPEJ'</a
-            >
-            , puis demandez-lui s'il vous est possible d'accueillir un animal de compagnie chez
-            vous. Vous pouvez le demander en français, anglais, allemand, italien...
-          </li>
-
-          <li>
             <b>Locataire HLM</b> —
-            <a href="?config=domofrance&context=default"
-              >Cliquez pour accéder à PIERRE en mode 'Domofrance'</a
+            <a href="?config=granddijonhabitat&context=default"
+              >Cliquez pour accéder à PIERRE en mode 'Grand Dijon Habitat'</a
             >
             , puis posez-lui des questions sur votre état des lieux, les travaux que vous pouvez
             réaliser dans votre logement, les coordonnées du service-client, ou les charges
@@ -332,7 +324,7 @@
       const config = getQueryParam('config')
       const context = getQueryParam('context')
 
-      const configs = ['arpej', 'domofrance', 'actionlogement']
+      const configs = ['granddijonhabitat', 'actionlogement']
       const pierreElement = document.querySelector('#pierre')
 
       if (pierreElement) {
