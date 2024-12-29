@@ -2,10 +2,15 @@ import type { Config } from '../../utils/_schema'
 
 export default {
   id: 'arpej.fr',
-  model: "openai('gpt-4o-mini-2024-07-18')",
-  phone: '+3393xxxxxxx',
   context: {
     default: {
+      models: {
+        embed_with: 'text-embedding-3-large',
+        augment_with: "openai('gpt-4o-mini-2024-07-18')",
+        rerank_with: "openai('gpt-4o-mini-2024-07-18')",
+        answer_with: "openai('gpt-4o-mini-2024-07-18')"
+      },
+      phone: null,
       protected: false,
       knowledge: {
         community: true,
