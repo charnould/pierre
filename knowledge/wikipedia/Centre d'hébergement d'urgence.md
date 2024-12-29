@@ -1,6 +1,6 @@
 # Centre d'hébergement d'urgence
 
-Un centre d'hébergement d'urgence (CHU) est une catégorie d'établissements sociaux intervenant dans le domaine de l'accueil, de l'hébergement et de la réinsertion sociale et professionnelle de toute personne sans domicile fixe. Il permet de mettre immédiatement à l’abri des personnes sans abri en situation de détresse médicale, psychique ou sociale. Il offre des prestations assurant le gîte, le couvert et l'hygiène, une première évaluation médicale, psychique et sociale et une orientation vers un professionnel ou une structure susceptible d'apporter à la personne l'aide justifiée par son état.
+Un Centre d'Hébergement d'Urgence (CHU) est une catégorie d'établissements sociaux intervenant dans le domaine de l'accueil, de l'hébergement et de la réinsertion sociale et professionnelle de toute personne sans domicile fixe. Il permet de mettre immédiatement à l’abri des personnes sans abri en situation de détresse médicale, psychique ou sociale. Il offre des prestations assurant le gîte, le couvert et l'hygiène, une première évaluation médicale, psychique et sociale et une orientation vers un professionnel ou une structure susceptible d'apporter à la personne l'aide justifiée par son état.
 
 ## Public accueilli
 
