@@ -212,6 +212,7 @@ export const score_chunk = async (context: AIContext, chunk: Flatten_Chunk): Pro
     // biome-ignore lint: server-side eval to keep `config.ts` simple
     model: eval(context.config.context[context.current_context].models.rerank_with),
     temperature: 0,
+    maxTokens: 125,
     prompt: `
 
 You are an advanced semantic relevance evaluator with expertise in nuanced text analysis and contextual comprehension. Your task is to evaluate how effectively a given text answers a user query, assigning relevance scores based on a deep understanding of semantic alignment, precision, and context.
