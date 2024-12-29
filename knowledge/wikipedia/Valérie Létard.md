@@ -4,13 +4,13 @@ Valérie Létard, née le 13 octobre 1962 à Orchies (Nord), est une femme polit
 
 Proche de Jean-Louis Borloo, elle adhère à plusieurs partis centristes au cours de son parcours politique (UDF, PSD, FD, NC, UDI).
 
-Au niveau local, elle est présidente de la communauté d'agglomération de Valenciennes, vice-présidente du conseil régional des Hauts-de-France et conseillère départementale du Nord.
+Au niveau local, elle est présidente de la communauté d'agglomération de Valenciennes (2008-2016), vice-présidente du conseil régional des Hauts-de-France (2016-2017) et conseillère départementale du Nord (depuis 2021).
 
-Elue plusieurs fois sénatrice et députée du Nord depuis 2001, elle exerce la fonction de vice-présidente du Sénat de 2017 à 2023.
+Élue plusieurs fois sénatrice et députée depuis 2001, elle exerce la fonction de vice-présidente du Sénat de 2017 à 2023.
 
-Entre 2007 et 2010, sous la présidence de Nicolas Sarkozy, elle est secrétaire d'État, chargée de la Solidarité puis des Technologies vertes et des Négociations sur le climat.
+Entre 2007 et 2010, sous la présidence de Nicolas Sarkozy, elle est secrétaire d'État, successivement chargée de la Solidarité puis des Technologies vertes et des Négociations sur le climat.
 
-Dans le gouvernement Michel Barnier, formé en 2024, elle occupe la fonction de ministre du Logement et de la Rénovation urbaine.
+Dans le gouvernement Michel Barnier, formé en 2024, elle occupe la fonction de ministre du Logement et de la Rénovation urbaine. Elle ne conserve que le portefeuille du Logement dans le gouvernement François Bayrou qui succède au précédent.
 
 ## Biographie
 
@@ -82,7 +82,7 @@ Elle annonce en octobre 2022 qu'après trois mandats de sénatrice, elle ne se r
 
 Au Sénat, elle a été l'auteure du rapport sur l'affaire Benalla.
 
-#### Députée du Nord
+#### Députée de la 21e circonscription du Nord
 
 Le 7 juillet 2024, elle est élue députée de la 21e circonscription du Nord avec 51,6 % des voix au second tour face à la candidate du Rassemblement national. Elle intègre le groupe Libertés, indépendants, outre-mer et territoires (LIOT).
 
@@ -138,6 +138,7 @@ En tant que ministre, elle souhaite développer le prêt à taux zéro, construi
 - Femmes ministres en France
 - Gouvernement François Fillon (2)
 - Gouvernement Michel Barnier
+- Gouvernement François Bayrou
 
 ### Liens externes
 
@@ -149,6 +150,10 @@ En tant que ministre, elle souhaite développer le prêt à taux zéro, construi
   - Base Sycomore
 
 ## Notes et références
+
+### Notes
+
+### Références
 
 - Portail de la politique française
 - Portail du Nord-Pas-de-Calais
