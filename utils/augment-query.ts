@@ -39,9 +39,9 @@ Check if there is any offensive language in this sentence: ${context.conversatio
 Determine if the user’s question relates to housing topics and/or domestic violence.
 
 
-# Task 4: Rephrase as Standalone French Questions
+# Task 4: Rephrase as Standalone Questions **in French Language**
 
-Analyze the complete conversation history to generate clear and independent questions in French that reflect the user’s final inquiries. Follow these guidelines to ensure precision and relevance:
+Analyze the complete conversation history to generate clear and independent questions in **French language** that reflect the user’s final inquiries. Follow these guidelines to ensure precision and relevance:
 
 1. **Summarize the Context**: Understand the dialogue’s purpose and context to craft questions that align with the user’s needs.
 2. **Clarity and Structure**: Each question must stand alone and provide enough detail to be understood independently.
@@ -73,7 +73,7 @@ Examples:
 - "Combien y a-t-il de logemnents sociaux à Orange" → ["nombre de logements sociaux à Orange (Vaucluse)"]
 
 
-Task 6: Optimized BM25 Keywords Query Generation
+Task 6: Optimized french BM25 Keywords Query Generation
 
 Using the outcomes of Task 4, generate an array of keywords designed to optimize relevance and precision in a BM25-based search engine. Prioritize crafting keywords that are essential for ensuring the returned records effectively address user queries. Ensure all keywords and phrases are orthographically and grammatically correct to maximize precision and coherence. Use the following strategies:
 
@@ -91,12 +91,12 @@ Exclude ALL terms that may introduce noise into the search:
 Identify and include critical multi-word phrases, idiomatic expressions, and collocations directly relevant to the query (max. 2 words). Since BM25 excels with exact matches, focus on selecting phrases that encapsulate essential concepts concisely, accurately and orthographically/grammatically correct.
 
 
-# Task 6: Step-Back Questions
+# Task 6: French Step-Back Questions
 
 **For each** standalone question derived from the conversation history in Task 4, create a step-back question in french language that encourages deeper reflection or broader thinking about the topic.
 
 
-# Task 7: Generate HyDE Answers
+# Task 7: Generate French HyDE Answers
 
 **For each** standalone question generated in Task 4, each query generated in Task 5 and each step back question generated in Task 6, create five concice and comprehensive responses in french language that include all key points that would be found in the top search result. If a location is mentioned, add the relevant department to the response while maintaining the original meaning.
 
