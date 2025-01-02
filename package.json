@@ -41,7 +41,7 @@
     "date-fns-tz": "^3.2.0",
     "hono": "^4.6.15",
     "lodash": "^4.17.21",
-    "mammoth": "^1.8.0",
+    "mammoth": "^1.9.0",
     "marked": "^15.0.4",
     "natural": "^8.0.1",
     "prettier": "^3.4.2",
