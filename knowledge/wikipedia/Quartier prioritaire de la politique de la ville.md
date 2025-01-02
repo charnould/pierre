@@ -16,7 +16,7 @@ Ces quartiers comptent environ 5,5 millions d’habitants en 2022. L'abstention 
 
 ## Le périmètre de ces quartiers
 
-Il est fixé par deux décrets, les décrets nos  2014-1750 (pour la métropole) et 2014-1751 (pour l’outre-mer) du 30 décembre 2014, rectifiés par un troisième décret, le décret no  2015-1138 du 14 septembre 2015 qui entre en application le 17 septembre 2015.
+Il est fixé par deux décrets, les décrets nos  2014-1750 (pour la métropole) et 2014-1751 (pour l’outre-mer) du 30 décembre 2014, rectifiés par un troisième décret, le décret no 2015-1138 du 14 septembre 2015 qui entre en application le 17 septembre 2015.
 
 Le principal critère pour le découpage des quartiers a été la concentration en pauvreté définie par l’Insee en comparant, depuis des données issues d’études effectuées sur un carroyage de 200 mètres ou par IRIS, le revenu des habitants au revenu médian de référence.
 
@@ -52,7 +52,7 @@ Plusieurs de ces quartiers prioritaires, parmi les plus peuplés, regroupent en 
 
 ### Bibliographie
 
-- Géraldine Caron, Insee Hauts-de-France, Insee Analyses Hauts-de-France, no 178 « Les « nouveaux » quartiers prioritaires de la ville : davantage de difficultés qu'ailleurs », novembre 2024 (ISSN 2493-1292, e-ISSN 2492-4253, lire en ligne).
+- Géraldine Caron, Insee Hauts-de-France, Insee Analyses Hauts-de-France, no 178 « Les « nouveaux » quartiers prioritaires de la ville : davantage de difficultés qu'ailleurs », novembre 2024 (ISSN 2493-1292 et 2492-4253), (lire en ligne).
 
 ### Liens externes
 
