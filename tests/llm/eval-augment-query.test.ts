@@ -5,22 +5,57 @@ import { augment_query } from '../../utils/augment-query'
 // because a missing OPENAI_API_KEY. Remove `.skip` for testing
 // using `bun eval:query`
 
-test.skip('evaluate query augmentation perf.', async () => {
+test('evaluate query augmentation perf.', async () => {
   const context = {
-    conv_id: '9efbd713-8e57-444a-94b7-47d76e1755f5',
+    conv_id: '019459ad-b40e-7000-9e5b-b72022dc4a9a',
     config: {
       id: 'pierre-ia.org',
-      model: "openai('gpt-4o-mini-2024-07-18')"
+      context: {
+        default: {
+          models: {
+            embed_with: 'text-embedding-3-large',
+            augment_with: "openai('gpt-4o-mini-2024-07-18')",
+            rerank_with: "openai('gpt-4o-mini-2024-07-18')",
+            answer_with: "openai('gpt-4o-mini-2024-07-18')"
+          },
+          phone: '0033939070074',
+          protected: false,
+          knowledge: { community: true, proprietary: { public: false, private: false } },
+          audience:
+            'The user’s primary focus is on housing, with a particular interest in social housing in France.',
+          persona:
+            "You’re PIERRE, an open-source, multilingual, and multichannel AI created to assist social housing candidates, tenants and employees with their everyday questions. Your source code is accessible to all at https://www.pierre-ia.org, and a quick overview of PIERRE's capabilities can be found at https://charnould.github.io/pierre/assets/PIERRE-Présentation.pdf.",
+          greeting: ['Bonjour 🖐️,'],
+          examples: [],
+          disclaimer: 'Une IA peut se tromper. Vérifiez les informations importantes.'
+        }
+      }
     },
     role: 'user',
     timestamp: null,
-
-    // prettier-ignore
-    // biome-ignore format: readability
+    content: 'كيفية الاتصال بالمكتب الرئيسي لبلدية Grand Dijon Habitat؟',
+    metadata: {
+      topics: null,
+      origin: null,
+      evaluation: {
+        customer: { score: null, comment: null },
+        organization: { score: null, comment: null },
+        ai: { score: null, comment: null },
+        pierre: { score: null, comment: null }
+      },
+      tokens: { prompt: null, completion: null, total: null }
+    },
+    query: null,
+    chunks: { community: [], private: [], public: [] },
+    current_context: 'default',
     conversation: [
-      { role: 'user', content: 'Quelle est la procédure si un locataire est bloqué dans un ascenseur ?' }
+      //  { role: 'user', content: 'Comment déposer mon préavis de congé pour mon logement ? Et avez-vous un modèle de courrier ?' },
+      //  { role: 'user', content: 'Comment déposer mon préavis de congé pour mon logement ? Et avez-vous un modèle de courrier ?' },
+      { role: 'user', content: 'كيفية الاتصال بالمكتب الرئيسي لبلدية Grand Dijon Habitat؟' }
+      // { role: 'user', content: 'Quelle est la procédure si un locataire est bloqué dans un ascenseur ?' }
       // { role: 'user', content: "qui est Obama ?" },
       // { role: 'user', content: "bonjour" },
+      // { role: 'user', content: " كيفية الاتصال بالمكتب الرئيسي لبلدية Grand Dijon Habitat؟" },
       // { role: 'user', content: 'qui est xavier nicolas ?' }
       // { role: 'user', content: 'Comment joindre Proxiserve ?' }
       // { role: 'user', content: 'quell est el chauffage de la résidence Les Pleiades ?' },
