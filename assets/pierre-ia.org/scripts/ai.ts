@@ -1,4 +1,5 @@
-// Import Marked to make a single full JS bundle
+// Import libs to make a single full JS bundle
+import DOMPurify from 'dompurify'
 import { marked } from 'marked'
 
 //
@@ -9,20 +10,39 @@ import { marked } from 'marked'
 //
 //
 
-//
-// Select all <button> elements and add event listener
-const buttons = document.querySelectorAll('button')
-
-for (const button of buttons) {
-  button.addEventListener('click', (event) => {
-    const b = event.target as HTMLElement
-    const prompt = b.innerText
-    process_prompt(prompt)
+document.addEventListener('DOMContentLoaded', () => {
+  //
+  //
+  //
+  // Add event listener to click events
+  //
+  document.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement
+    if (target && target.id === 'regenerate_answer') {
+      event.preventDefault()
+      const user_questions = document.querySelectorAll('div[data-role="user"]')
+      const prompt = user_questions[user_questions.length - 1]?.textContent?.trim() || ''
+      update_ui(prompt)
+      get_ai_answer(prompt)
+    }
+    if (target && target.id === 'prompt__submit') {
+      event.preventDefault()
+      const prompt = capture_prompt()
+      process_prompt(prompt)
+    }
+    if (target && target.tagName === 'BUTTON') {
+      event.preventDefault()
+      const prompt = target.textContent?.trim() || ''
+      process_prompt(prompt)
+    }
   })
-}
+})
 
 //
-// Add event listener to <input> field for 'Enter' key submission
+//
+//
+// Add event listener to keydown events
+//
 const inputField = document.getElementById('prompt__input')
 if (inputField) {
   inputField.addEventListener('keydown', (event) => {
@@ -31,17 +51,6 @@ if (inputField) {
       const prompt = capture_prompt()
       process_prompt(prompt)
     }
-  })
-}
-
-//
-// Add event listener to submit button
-const submitButton = document.getElementById('prompt__submit')
-if (submitButton) {
-  submitButton.addEventListener('click', (event) => {
-    event.preventDefault()
-    const prompt = capture_prompt()
-    process_prompt(prompt)
   })
 }
 
@@ -94,14 +103,14 @@ function capture_prompt() {
   if (el) {
     const { value: prompt } = el
     el.value = ''
-    return prompt
+    return prompt.trim()
   }
   return 'Bonjour !'
 }
 
 //
 // Write in UI PIERRE answser
-function update_ui_with_ai(message: string) {
+async function update_ui_with_ai(message: string) {
   // Remove the loading element if it exists
   const loadingElement = document.querySelector('[data-role="system__loading"]')
   loadingElement?.remove()
@@ -115,7 +124,8 @@ function update_ui_with_ai(message: string) {
   // Clean and format the message for safe rendering
   // Safely parse the cleanMessage as Markdown
   const cleanMessage = message.replace(/<br\/>/g, '\n\n').replace(/\n{3,}/g, '\n\n')
-  parentElement.innerHTML = marked.parse(cleanMessage)
+  const sanitizedMessage = DOMPurify.sanitize(cleanMessage)
+  parentElement.innerHTML = await marked.parse(sanitizedMessage)
 
   add_blank_target_to_links()
   scroll_to_bottom()
@@ -186,6 +196,7 @@ async function get_ai_answer(prompt: string) {
     const url = `/ai/${pathSegment}?message=${encodeURIComponent(prompt)}&config=${encodeURIComponent(config)}&context=${encodeURIComponent(context)}`
 
     const response = await fetch(url, { method: 'GET' })
+    if (!response.body) throw new Error('Response body is null')
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
 
@@ -215,7 +226,7 @@ async function get_ai_answer(prompt: string) {
 
     console.log(fullText)
   } catch (error) {
-    console.error('Error fetching AI response:', error)
+    console.error(error)
   } finally {
     //
     // Re-enable all buttons
