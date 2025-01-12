@@ -161,7 +161,6 @@ export const Reply = z.object({
 export const Augmented_Query = z.object({
   lang                      : z.string().describe('User language (ISO 639-1)'),
   about_user                : z.string().describe('Key user details'),
-  is_relevant               : z.boolean().describe('Whether the input relates to housing or domestic violence'),
   contains_profanity        : z.boolean().describe('Whether the input contains profanity'),
   standalone_questions      : z.array(z.string()).describe('Standalone user questions'),
   bm25_keywords             : z.array(z.string()).describe('Optimized BM25 keywords'),
