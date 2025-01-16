@@ -7,6 +7,7 @@
   "scripts": {
     "-------- GENERATE KNOWLEDGE --------": "",
     "generate": "dotenvx run -f .env.production -- bun run ./utils/knowledge/_run.ts",
+    "version": "bun run utils/update-pierre.ts",
     "-------- BUILD CODEBASE --------": "",
     "build:cb": "bun run config/build.ts",
     "transpile": "bun build --entrypoints assets/pierre-ia.org/scripts/*.ts --outdir assets/pierre-ia.org/dist/js --minify --target browser --watch",
@@ -39,6 +40,7 @@
     "ai": "^4.0.39",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
+    "dedent": "^1.5.3",
     "dompurify": "^3.2.3",
     "hono": "^4.6.16",
     "lodash": "^4.17.21",
