@@ -1,5 +1,6 @@
 import { openai } from '@ai-sdk/openai'
-import { embed } from 'ai'
+import type { EmbeddingModelV1Embedding } from '@ai-sdk/provider'
+import { embed, embedMany } from 'ai'
 import _ from 'lodash'
 import { z } from 'zod'
 import { db } from '../utils/database'
@@ -15,7 +16,7 @@ import type { AIContext } from './_schema'
 //
 //
 //
-export const vector_search = async (query: string, context: AIContext) => {
+export const vector_search = async (embedding: EmbeddingModelV1Embedding, context: AIContext) => {
   try {
     // Retrieve knowledge access permissions for the current context
     // (e.g., default, team, etc.) + Set a default for TS happiness
@@ -30,9 +31,10 @@ export const vector_search = async (query: string, context: AIContext) => {
 
     // Perform searches based on knowledge access
     const entities = context.query?.named_entities
-    if (k.community) r.community = await query_db('community', query)
-    if (k.proprietary.public) r.public = await query_db('proprietary.public', query, entities)
-    if (k.proprietary.private) r.private = await query_db('proprietary.private', query, entities)
+    if (k.community) r.community = await query_db('community', embedding)
+    if (k.proprietary.public) r.public = await query_db('proprietary.public', embedding, entities)
+    if (k.proprietary.private)
+      r.private = await query_db('proprietary.private', embedding, entities)
 
     // Parse results and return them to ensure
     // TypeScript types align with the schema
@@ -55,7 +57,11 @@ export const vector_search = async (query: string, context: AIContext) => {
 
 //
 // Query the database with the embedding to retrieve the matching chunks
-export const query_db = async (db_name: Db_Name, query: string, entities?) => {
+export const query_db = async (
+  db_name: Db_Name,
+  embedding: EmbeddingModelV1Embedding,
+  entities?: { building: string | null; process: string | null } | undefined
+) => {
   // Initialize variables
   const db_instance = db(db_name)
   const entity_promises: Promise<string[]>[] = []
@@ -69,25 +75,25 @@ export const query_db = async (db_name: Db_Name, query: string, entities?) => {
   // No need to apply entity-specific filters to `community` knowledge.
   // Semantic analysis alone is robust and sufficient for handling the content effectively.
   if (db_name !== 'community') {
-    if (entities.building !== null) {
+    if (entities?.building !== null) {
       entity_promises.push(
         get_relevant_entities({
           // Apply stricter validation and rules when processing data related to a building.
           // Ensure higher standards and fewer allowances for inconsistencies.
           threshold: 0.5,
-          entity: `Building: ${entities.building}`,
+          entity: `Building: ${entities?.building}`,
           db: db_instance
         })
       )
     }
 
-    if (entities.process !== null) {
+    if (entities?.process !== null) {
       entity_promises.push(
         get_relevant_entities({
           // Allow for flexibility and leniency when processing data related to a process.
           // Prioritize adaptability to accommodate variations and exceptions.
           threshold: 0.8,
-          entity: `Process: ${entities.process}`,
+          entity: `Process: ${entities?.process}`,
           db: db_instance
         })
       )
@@ -97,22 +103,18 @@ export const query_db = async (db_name: Db_Name, query: string, entities?) => {
   // Get maybe relevant entities
   const results = (await Promise.all(entity_promises)) ?? []
 
-  // Transfom string query into vector query
-  const query_vectors = await generate_embeddings(query)
-
   // If no relevant `entities` are identified, bypass entity-specific prefilters
   // and directly search for relevant chunks to ensure comprehensive results.
   if (results.length === 0) {
-    user_query = search_without_prefiltering(query_vectors, db_instance)
+    user_query = search_without_prefiltering(embedding, db_instance)
   } else {
     // If relevant `entities` are identified, apply pre-filters during the search
     // to narrow down the results and focus on entity-specific chunks for precision.
-    user_query = search_with_prefiltering(query_vectors, db_instance, results)
+    user_query = search_with_prefiltering(embedding, db_instance, results)
 
     // If no results are found after pre-filtering,
     // perform a full database search.
-    if (user_query.length === 0)
-      user_query = search_without_prefiltering(query_vectors, db_instance)
+    if (user_query.length === 0) user_query = search_without_prefiltering(embedding, db_instance)
   }
 
   return user_query
@@ -122,7 +124,7 @@ export const query_db = async (db_name: Db_Name, query: string, entities?) => {
 // Get relevant entities
 export const get_relevant_entities = async ({ threshold, entity, db }) => {
   // Step 1. Generate guessed entity embedding
-  const entity_vectors = await generate_embeddings(entity)
+  const entity_vectors = await generate_embedding(entity)
 
   // Step 2. Search in DB for near-looking entities
   const entity_query = db
@@ -177,19 +179,15 @@ export const Vector_Search_Result = z.object({
 export type Vector_Search_Result = z.infer<typeof Vector_Search_Result>
 
 /**
- * Generate Embeddings
+ * Generate Embedding
  *
- * This function generates a vector embedding for a given string using OpenAI's `text-embedding-3-large` model.
- *
- * Key Features:
- * - Takes a text input and produces a high-dimensional embedding vector for semantic similarity tasks.
- * - Uses the OpenAI API to generate embeddings, leveraging a state-of-the-art model.
- * - Embeddings can be used in downstream tasks such as similarity search, classification, or clustering.
+ * This function generates a vector embedding for a given
+ * string using OpenAI's `text-embedding-3-large` model.
  *
  * Returns:
- * - `embedding` (Array<number>): A high-dimensional vector representing the semantic meaning of the input text.
+ * - `embedding` (Array<number>)
  */
-export const generate_embeddings = async (string: string) => {
+export const generate_embedding = async (string: string) => {
   try {
     const { embedding } = await embed({
       model: openai.embedding('text-embedding-3-large'),
@@ -200,6 +198,29 @@ export const generate_embeddings = async (string: string) => {
   } catch (e) {
     console.error('Failed to generate embedding:', e)
     throw new Error('Embedding generation failed.')
+  }
+}
+
+/**
+ * Generate EmbeddingS
+ *
+ * This function generates an array of vector embeddings for a given
+ * array of strings using OpenAI's `text-embedding-3-large` model.
+ *
+ * Returns:
+ * - `embeddings` (Array<Array<number>>)
+ */
+export const generate_embeddings = async (queries: string[]) => {
+  try {
+    const { embeddings } = await embedMany({
+      model: openai.embedding('text-embedding-3-large'),
+      values: queries
+    })
+
+    return embeddings
+  } catch (e) {
+    console.error('Failed to generate embeddings:', e)
+    throw new Error('Embeddings generation failed.')
   }
 }
 
