@@ -4,6 +4,7 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createMistral } from '@ai-sdk/mistral'
 import { createOpenAI } from '@ai-sdk/openai'
 import { generateObject } from 'ai'
+import dedent from 'dedent'
 import _ from 'lodash'
 import { z } from 'zod'
 import { type AIContext, Augmented_Query } from './_schema'
@@ -44,7 +45,8 @@ export const augment_query = async (context: AIContext) => {
       ...context.conversation,
       {
         role: 'system',
-        content: `Analyze the full conversation history and generate precise, standalone questions in French based on the user’s final inquiries. Adhere to these principles:
+        content: dedent`    
+        Analyze the full conversation history and generate precise, standalone questions in French based on the user’s final inquiries. Adhere to these principles:   
         1. Context Summary: Derive the purpose of the conversation to align questions with the user’s needs.
         2. Clarity: Ensure each question is self-explanatory and independent.
         3. Multi-Part Queries: Split complex questions into separate, concise elements in an array.
@@ -56,7 +58,8 @@ export const augment_query = async (context: AIContext) => {
         - "Bonjour, je cherche un logement social à Nantes comment faire ?" → ["Comment obtenir un logement social à Nantes (Loire-Atlantique)"]
         - "Bonjour ! Qui es tu ? Et connais-tu des solution d'hébergement d'urgence à Piolenc pour violence conjugale ?" → ["Qui es-tu ?", "Quelles sont les solutions d'hébergement d'urgence pour les cas de violence conjugale à Piolenc (Vaucluse) ?"]
         - "Bonjour ! C'est quoi un logement social, c'est quoi son histoire et combien y en a-t-il à Angers ?" → ["Qu'est-ce qu'un logement social ?", "Quelle est l'histoire du logement social ?, "Combien y a-t-il de logements sociaux à Angers (Maine-et-Loire) ?"]
-        - "Qui a les clés des portes anti squat ?" → ["Qui est en possession des clefs des portes anti-squat ?"]`
+        - "Qui a les clés des portes anti squat ?" → ["Qui est en possession des clefs des portes anti-squat ?"]
+        `
       }
     ]
   }
@@ -102,7 +105,7 @@ export const augment_query = async (context: AIContext) => {
       {
         role: 'system',
         content:
-          'Summarize **in French** the user’s profile based on the conversation, including their name, marital status, children, residence type (e.g., T1, T2, T3), location (zipcode, department, region), housing status (owned/rented), and income details if available. Also, highlight key housing-related information, preferences, concerns, or insights mentioned.'
+          'Briefly summarize the user’s profile based on the conversation, including their name, marital status, children, residence type (e.g., T1, T2, T3), location (zipcode, department, region), housing status (owned or rented), and income details if available. Focus on any housing-related information, preferences, concerns, or insights mentioned. If no relevant information is provided, return an empty string.'
       }
     ]
   }
@@ -118,39 +121,41 @@ export const augment_query = async (context: AIContext) => {
       ...context.conversation,
       {
         role: 'system',
-        content: `Infer the geographical location from user input. For regions, identify their departments; for departments, determine their region; for cities, provide the region, department, and zip code.
+        content: dedent`
+          Infer the geographical location from user input. For regions, identify their departments; for departments, determine their region; for cities, provide the region, department, and zip code.
         
-        Examples:
-      
-        * If the user mentions "Bretagne" region, output:
-        - region: "Bretagne"
-        - departments: "Côtes-d’Armor, Finistère, Ille-et-Vilaine, Morbihan"
-        - city: null
-        - zipcode: null
+          Examples:
         
-        * If the user mentions "Occitanie" region, output:
-        - region: "Occitanie"
-        - departments: "Ariège, Aude, Aveyron, Gard, Haute-Garonne, Gers, Hérault, Lot, Lozère, Hautes-Pyrénées, Pyrénées-Orientales, Tarn, Tarn-et-Garonne"
-        - city: null
-        - zipcode: null
-        
-        * If the user mentions "Vaucluse" department, output:
-        - region: "Provence-Alpes-Côte d'Azur"
-        - departement: "Vaucluse"
-        - city: null
-        - zipcode: null
-        
-        * If the user mentions "Orange" city, output:
-        - region: "Provence-Alpes-Côte d'Azur"
-        - departement: "Vaucluse"
-        - city: "Orange"
-        - zipcode: "84100"
-        
-        * If the user mentions no location, output:
-        - region: null
-        - departement: null
-        - city: null
-        - zipcode: null`
+          * If the user mentions "Bretagne" region, output:
+          - region: "Bretagne"
+          - departments: "Côtes-d’Armor, Finistère, Ille-et-Vilaine, Morbihan"
+          - city: null
+          - zipcode: null
+          
+          * If the user mentions "Occitanie" region, output:
+          - region: "Occitanie"
+          - departments: "Ariège, Aude, Aveyron, Gard, Haute-Garonne, Gers, Hérault, Lot, Lozère, Hautes-Pyrénées, Pyrénées-Orientales, Tarn, Tarn-et-Garonne"
+          - city: null
+          - zipcode: null
+          
+          * If the user mentions "Vaucluse" department, output:
+          - region: "Provence-Alpes-Côte d'Azur"
+          - departement: "Vaucluse"
+          - city: null
+          - zipcode: null
+          
+          * If the user mentions "Orange" city, output:
+          - region: "Provence-Alpes-Côte d'Azur"
+          - departement: "Vaucluse"
+          - city: "Orange"
+          - zipcode: "84100"
+          
+          * If the user mentions no location, output:
+          - region: null
+          - departement: null
+          - city: null
+          - zipcode: null
+          `
       }
     ]
   }
@@ -164,22 +169,24 @@ export const augment_query = async (context: AIContext) => {
       ...context.conversation,
       {
         role: 'system',
-        content: `# Task 1: Extract Building/Entity Names
+        content: dedent`
+          # Task 1: Extract Building/Entity Names
+          
+          Identify any specific building or named entity (e.g., residence, house, school, or building) mentioned in the text. Extract and present its name in a simplified and concise form. Examples:
         
-        Identify any specific building or named entity (e.g., residence, house, school, or building) mentioned in the text. Extract and present its name in a simplified and concise form. Examples:
-        
-        - "Résidence Les Pléiades" → "Les Pléiades"
-        - "Immeuble York" → "York"
-        - "Villa Medicis" → "Medicis
-        - "Ecole Gambetta" → "Gambetta"
-        - "Foyer Zola" → "Zola"
-        - "Ilot Corse" → "Ilot Corse"
-        - "Batîment Jules Renard" → "Jules Renard"
-        - "Programme Voltaire" → "Voltaire"
-        
-        # Task 2: Extract Events/Issues
-        
-        Identify and summarize in French any described events, issues, or processes, such as problems, maintenance requests, or other notable occurrences (e.g., “lack of electricity,” “maintenance needed,” or “specific problem identified”).`
+          - "Résidence Les Pléiades" → "Les Pléiades"
+          - "Immeuble York" → "York"
+          - "Villa Medicis" → "Medicis
+          - "Ecole Gambetta" → "Gambetta"
+          - "Foyer Zola" → "Zola"
+          - "Ilot Corse" → "Ilot Corse"
+          - "Batîment Jules Renard" → "Jules Renard"
+          - "Programme Voltaire" → "Voltaire"
+          
+          # Task 2: Extract Events/Issues
+          
+          Identify and summarize in 4-7 French words the process or issue described by the user, focusing on internal company procedures. For example, if the situation involves someone stuck in an elevator, return: “incarcération dans un ascenseur.”.
+          `
       }
     ]
   }
@@ -190,10 +197,13 @@ export const augment_query = async (context: AIContext) => {
       messages: [
         {
           role: 'user',
-          content: `Considering this question: "${q}". Create four relevant web queries in french language. Aim for diverse variations that capture different aspects of the question to maximize search effectiveness. Each query should be clear, concise, and designed to yield useful information related to the user’s inquiry. If a location is mentioned, add the relevant department to the query while maintaining the original meaning.
-            Examples:
-            - "Quelle est l'histoire des HLM à Saint-Nazaire" → ["histoire des HLM à Saint-Nazaire (Loire-Atlantique)"]
-            - "Combien y a-t-il de logemnents sociaux à Orange" → ["nombre de logements sociaux à Orange (Vaucluse)"]`
+          content: dedent`
+              Considering this question: "${q}". Create four relevant web queries in french language. Aim for diverse variations that capture different aspects of the question to maximize search effectiveness. Each query should be clear, concise, and designed to yield useful information related to the user’s inquiry. If a location is mentioned, add the relevant department to the query while maintaining the original meaning.
+              
+              Examples:
+              - "Quelle est l'histoire des HLM à Saint-Nazaire" → ["histoire des HLM à Saint-Nazaire (Loire-Atlantique)"]
+              - "Combien y a-t-il de logemnents sociaux à Orange" → ["nombre de logements sociaux à Orange (Vaucluse)"]
+              `
         }
       ]
     }
@@ -203,17 +213,21 @@ export const augment_query = async (context: AIContext) => {
       messages: [
         {
           role: 'user',
-          content: `Considering this question: "${q}". Generate an array of keywords designed to optimize relevance and precision in a BM25-based search engine. Prioritize crafting keywords that are essential for ensuring the returned records effectively address user queries. Ensure all keywords and phrases are orthographically and grammatically correct to maximize precision and coherence. Use the following strategies:
-            1. **Keyword Extraction and Prioritization**
-            Extract the most relevant keywords emphasizing:
-            - High-impact terms directly related to the search intent.
-            - Rare or domain-specific terms that can enhance retrieval precision.
-            2. **Noise Filtering**
-            Exclude ALL terms that may introduce noise into the search:
-            - Verbs, adjectives, adverbs, connectives.
-            - Irrelevant or overly generic terms.
-            3. **Multi-Word Phrases and Collocations**
-            Identify and include critical multi-word phrases, idiomatic expressions, and collocations directly relevant to the query (max. 2 words). Since BM25 excels with exact matches, focus on selecting phrases that encapsulate essential concepts concisely, accurately and orthographically/grammatically correct.`
+          content: dedent`
+              Considering this question: "${q}". Generate an array of keywords designed to optimize relevance and precision in a BM25-based search engine. Prioritize crafting keywords that are essential for ensuring the returned records effectively address user queries. Ensure all keywords and phrases are orthographically and grammatically correct to maximize precision and coherence. Use the following strategies:
+              
+              1. **Keyword Extraction and Prioritization**
+              Extract the most relevant keywords emphasizing:
+              - High-impact terms directly related to the search intent.
+              - Rare or domain-specific terms that can enhance retrieval precision.
+              
+              2. **Noise Filtering**
+              Exclude ALL terms that may introduce noise into the search:
+              - Verbs, adjectives, adverbs, connectives.
+              - Irrelevant or overly generic terms.
+              
+              3. **Multi-Word Phrases and Collocations**
+              Identify and include critical multi-word phrases, idiomatic expressions, and collocations directly relevant to the query (max. 2 words). Since BM25 excels with exact matches, focus on selecting phrases that encapsulate essential concepts concisely, accurately and orthographically/grammatically correct.`
         }
       ]
     }
@@ -223,7 +237,8 @@ export const augment_query = async (context: AIContext) => {
       messages: [
         {
           role: 'user',
-          content: `Considering this question: "${q}". Create a step-back question in french language that encourages deeper reflection or broader thinking about the topic.`
+          content:
+            'Considering this question: "${q}". Create a step-back question in french language that encourages deeper reflection or broader thinking about the topic.'
         }
       ]
     }
@@ -233,7 +248,7 @@ export const augment_query = async (context: AIContext) => {
       messages: [
         {
           role: 'user',
-          content: `Considering this question: "${q}".  Create four concice and comprehensive responses in french language that include all key points that would be found in the top search result. If a location is mentioned, add the relevant department to the response while maintaining the original meaning.
+          content: dedent`Considering this question: "${q}".  Create 3 concice and comprehensive responses in french language that include all key points that would be found in the top search result. If a location is mentioned, add the relevant department to the response while maintaining the original meaning.
             Examples:
             - For input: "Comment obtenir un logement social à Carpentras", output: ["Pour obtenir un logement social à Carpentras Vaucluse, vous devez faire une demande auprès de la mairie ou d'un organisme de logement social. Vous aurez besoin de fournir des documents comme vos revenus et votre situation familiale."]`
         }
