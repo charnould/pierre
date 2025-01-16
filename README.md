@@ -200,10 +200,11 @@ Pour déployer PIERRE sur un serveur, il est indispensable d'être parvenu à le
 
 PIERRE — et notamment sa base de connaissances — évolue régulièrement et suit la convention `semver`. Pour le mettre à jour :
 
-1. Consulter les [releases](https://github.com/charnould/pierre/releases) pour connaitre les modifications et les éventuels _breaking changes_.
-2. Mettez à jour votre fork/clone.
-3. Saississez `bun test:config` pour vous assurer que `config.ts` est correctement paramétré.
-4. Saississez `dotenvx run -f .env.production -- kamal deploy` dans votre terminal (ou le raccourci `bun production:deploy`).
+1. Saisir `bun version` pour connaitre la dernière version disponible.
+2. Consulter les [releases](https://github.com/charnould/pierre/releases) pour connaitre les modifications et les éventuels _breaking changes_.
+3. Mettre à jour votre fork/clone.
+4. Saisir `bun test:config` pour vous assurer que `config.ts` est correctement paramétré.
+5. Saisir `dotenvx run -f .env.production -- kamal deploy` dans votre terminal (ou le raccourci `bun production:deploy`).
 
 ### Déployer et redéployer PIERRE sur un serveur de tests
 
