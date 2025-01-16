@@ -203,8 +203,7 @@ export const controller = async (c: Context) => {
     // If incoming request comes from www: return a stream
 
     c.header('X-Vercel-AI-Data-Stream', 'v1')
-    c.header('Content-Type', 'text/plain; charset=utf-8')
-    // c.header('Content-Type', 'text/event-stream')
+    c.header('Content-Type', 'text/event-stream; charset=utf-8')
 
     return stream(c, (stream) =>
       stream
