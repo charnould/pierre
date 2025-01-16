@@ -13,7 +13,7 @@ import { get_conversation, save_reply } from '../utils/handle-conversation'
 import { parse_incoming_sms } from '../utils/parse-incoming-sms'
 import { rank_chunks } from '../utils/rank-chunks'
 import { bm25_search } from '../utils/search-by-bm25'
-import { vector_search } from '../utils/search-by-vectors'
+import { generate_embeddings, vector_search } from '../utils/search-by-vectors'
 import { send_sms } from '../utils/send-sms'
 import { view } from '../views/llm-error'
 
@@ -70,69 +70,80 @@ export const controller = async (c: Context) => {
     // reply to PIERRE (= telemetry) if `telemetry` env. variable is also `true`
     save_reply(context, true)
 
-    // Mark the start of the "augment_query" operation for performance measurement
-    performance.mark('s_aq')
+    //
+    //
+    // QUERY AUGMENTATION
+    //
+    //
 
-    // Add the full conversation to the context
+    performance.mark('s_aq')
     context = await AIContext.parseAsync({
       ...context,
       conversation: get_conversation(context.conv_id)
     })
-
-    // Use the updated context to augment the query
     context.query = await augment_query(context)
-
-    // Mark the end of the "augment_query" operation for performance measurement
     performance.mark('e_aq')
+    // end: QUERY AUGMENTATION
 
-    // If query is relevant and does not contain profanity,
-    // answer with intelligence
+    // If query is relevant and does not contain profanity, answer with intelligence
+    // This is here that "intelligence" must occur: if `context.chunks` contains bullshit,
+    // PIERRE answer will probably be bullshit!
     if (context.query && !context.query.contains_profanity) {
       // Get knowledge access for user query considering current context
-      let knowledge_access = { community: true, proprietary: { public: false, private: false } }
+      let knowledge_access = {
+        community: true,
+        proprietary: { public: false, private: false }
+      }
+
       if (typeof context.config !== 'string') {
         knowledge_access = context.config.context[context.current_context].knowledge
       }
 
-      // Get relevant chunks and rerank them.
-      // This is here that "intelligence" must occur.
-      // If `context.chunks` contains bullshit, PIERRE
-      // answer will probably be bullshit!
+      //
+      //
+      // VECTOR SEARCH
+      //
+      //
 
-      // Mark the start of vector search operation for performance measurement
       performance.mark('s_vs')
-
-      const v_results = await Promise.all(
-        [
-          ...context.content,
-          ...context.query.standalone_questions,
-          ...context.query.stepback_questions,
-          ...context.query.search_queries,
-          ...context.query.hyde_answers
-        ].map((q) => vector_search(q, context))
-      )
-
-      // Mark the end of vector search operation for performance measurement
+      const embeddings = await generate_embeddings([
+        ...context.content,
+        ...context.query.standalone_questions,
+        ...context.query.stepback_questions,
+        ...context.query.search_queries,
+        ...context.query.hyde_answers
+      ])
+      const v_results = await Promise.all(embeddings.map((e) => vector_search(e, context)))
       performance.mark('e_vs')
+      // end: VECTOR SERCH
 
-      // Mark the start of BM25 search operation for performance measurement
+      //
+      //
+      // BM25 SEARCH
+      //
+      //
+
       performance.mark('s_bs')
-
-      const k_results = context.query.bm25_keywords.map((k) => bm25_search(k, context))
-
-      // Mark the end of BM25 search operation for performance measurement
+      const k_results = await Promise.all(
+        context.query.bm25_keywords.map((k) => bm25_search(k, context))
+      )
       performance.mark('e_bs')
+      // end: BM25 SEARCH
 
-      // Mark the start of reranker operation for performance measurement
+      //
+      //
+      // RERANKER
+      //
+      //
+
       performance.mark('s_rr')
       context.chunks = await rank_chunks(
         v_results.filter((chunk) => chunk !== undefined), // TODO: vector_search must not return undefined
         k_results.filter((chunk) => chunk !== undefined), // TODO: vector_search must not return undefined
         context
       )
-
-      // Mark the end of reranker operation for performance measurement
       performance.mark('e_rr')
+      // end:RERANKER
 
       // If the reranker returns no relevant results, it indicates that
       // either the question is unrelated to housing  or PIERRE lacks
@@ -182,15 +193,18 @@ export const controller = async (c: Context) => {
     // and log a performance measurement table
     performance.mark('e_rq')
     console.table([
-      ['Augment_q', `${performance.measure('r', 's_aq', 'e_aq').duration}ms`],
-      ['Vector_s ', `${performance.measure('r', 's_vs', 'e_vs').duration}ms`],
-      ['bm25_s   ', `${performance.measure('r', 's_bs', 'e_bs').duration}ms`],
-      ['reranker ', `${performance.measure('r', 's_rr', 'e_rr').duration}ms`],
+      ['augment  ', `${performance.measure('r', 's_aq', 'e_aq').duration}ms`],
+      ['v_search ', `${performance.measure('r', 's_vs', 'e_vs').duration}ms`],
+      ['b_search ', `${performance.measure('r', 's_bs', 'e_bs').duration}ms`],
+      ['rerank   ', `${performance.measure('r', 's_rr', 'e_rr').duration}ms`],
       ['TOTAL    ', `${performance.measure('r', 's_rq', 'e_rq').duration}ms`]
     ])
 
     // If incoming request comes from www: return a stream
     c.header('Content-Type', 'text/event-stream')
+
+    // TODO: handle 504 error
+    // c.header('Content-Type', 'text/html');
 
     return stream(c, (stream) =>
       stream.pipe((answer as StreamTextResult<Record<string, CoreTool>, unknown>).textStream)
