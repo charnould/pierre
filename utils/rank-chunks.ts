@@ -4,6 +4,7 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createMistral } from '@ai-sdk/mistral'
 import { createOpenAI } from '@ai-sdk/openai'
 import { generateObject } from 'ai'
+import dedent from 'dedent'
 import _ from 'lodash'
 import * as prettier from 'prettier'
 import { z } from 'zod'
@@ -204,87 +205,92 @@ export const score_chunk = async (context: AIContext, chunk: Flatten_Chunk): Pro
 
   const { object } = await generateObject({
     schema: z.object({
-      reasoning: z.string().describe('Justification for the scores'),
-      building_score: z.number().describe('Building score'),
-      process_score: z.number().describe('Process score'),
-      relevancy_score: z.number().describe('Global relevancy score')
+      j: z.string().describe('Justification for the scores in maximum 10 words'),
+      b: z.number().describe('Building score'),
+      p: z.number().describe('Process score'),
+      r: z.number().describe('Global relevancy score')
     }),
     // biome-ignore lint: server-side eval to keep `config.ts` simple
     model: eval(context.config.context[context.current_context].models.rerank_with),
     temperature: 0,
-    prompt: `
+    prompt: dedent`
+    
+    You are an advanced semantic relevance evaluator with expertise in nuanced text analysis and contextual comprehension. Your task is to evaluate how effectively a given text answers a user query, assigning relevance scores based on a deep understanding of semantic alignment, precision, and context.
+    
+    # Inputs
+    
+    ## Chunk
+    
+    <chunk>
+    ${chunk.chunk_text}
+    </chunk>
 
-You are an advanced semantic relevance evaluator with expertise in nuanced text analysis and contextual comprehension. Your task is to evaluate how effectively a given text answers a user query, assigning relevance scores based on a deep understanding of semantic alignment, precision, and context.
+    ## User Query
 
-# Inputs
+    <user_query>
+    ${context.query?.standalone_questions.length !== 0 ? context.query?.standalone_questions.map((q: string) => `- ${q}\n`) : context.content}
+    </user_query>
 
-## Chunk
+    # Evaluation Steps
 
-<chunk>
-${chunk.chunk_text}
-</chunk>
+    - Think step by step and describe in 10 words your reasoning for choosing these scores. 
+    - Tasks are totally independant.
+    - Today is ${today_is()}.
 
-## User Query
+    ## Task: Identify the Building of the Chunk
 
-<user_query>
-${context.query?.standalone_questions.length !== 0 ? context.query?.standalone_questions.map((q: string) => `- ${q}\n`) : context.content}
-</user_query>
+    ${
+      context.query?.named_entities.building !== null
+        ? dedent`Assess whether the chunk explicitly or implicitly refers to a building (e.g., building, house, residence, housing program, etc.) with a name resembling “${context.query?.named_entities.building}”. Be cautious of cases where the name might also belong to a person, such as distinguishing between a person named “Jean Racine” and a house called “Racine”:
+      - Score 0: The chunk mention another building.
+      - Score 1000: The chunk explicitly and unambiguously discusses the building in question.
+      - Score 1-999: The reference to a building is unclear, ambiguous, or only loosely connected, requiring further clarification.
+    `
+        : 'Assign a building score of 0.'
+    }
 
-# Evaluation Steps
+    ## Task: Determine if the Chunk Discusses a Specific Company Process or Guideline
 
-- Think step by step and describe in 10-20 words your reasoning for choosing these scores. 
-- Tasks are totally independant.
-- Today is ${today_is()}.
+    ${
+      context.query?.named_entities.process !== null
+        ? dedent`Evaluate whether the chunk pertains to the process “${context.query?.named_entities.process}”, specifically focusing on the company’s procedures, workflows, or standard ways of working. This includes assessing if the chunk describes, references, or aligns with the operational or organizational methods associated with the specified process:
+    - Score 0: The chunk mention another process or no process is evocated
+    - Score 1000: The chunk explicitly addresses the process with high accuracy.
+    - Score 1-999: Partial or nuanced relevance (e.g., related processes but not an exact match). Example: “Une panne d’ascenseur” is distinct from “Un locataire bloqué dans l’ascenseur”.
+    `
+        : 'Assign a process/guideline score of 0.'
+    }
 
-## Task: Identify the Building of the Chunk
+    ## Task: Evaluate Overall Relevance
 
-${
-  context.query?.named_entities.building !== null
-    ? `Assess whether the chunk explicitly or implicitly refers to a building (e.g., building, house, residence, housing program, etc.) with a name resembling “${context.query?.named_entities.building}”. Be cautious of cases where the name might also belong to a person, such as distinguishing between a person named “Jean Racine” and a house called “Racine”:
-  - Score 0: The chunk mention another building.
-	- Score 1000: The chunk explicitly and unambiguously discusses the building in question.
-	- Score 1-999: The reference to a building is unclear, ambiguous, or only loosely connected, requiring further clarification.
-`
-    : 'Assign a building score of 0.'
-}
+    Assess the chunk’s alignment with the user query, considering that relevant answers might be explicit, implicit, or require interpretation from the context. Use the following criteria:
 
-## Task: Determine if the Chunk Discusses a Specific Company Process or Guideline
+    1. Direct Answer Precision
+      - Determines if the chunk directly addresses the query intent.
+      - Evaluates how clear, comprehensive, and unambiguous the response is.
+    
+    2. Semantic Matching
+      - Examines the degree of alignment between the query’s intent and the chunk’s content.
+      - Accounts for both explicit information and implicit clues that may require deeper understanding to uncover relevance.
+    
+    3. Information Quality
+      - Evaluates the specificity and richness of the details provided in the chunk.
+      - Assesses how actionable, precise, and unambiguous the information is, even if the answer is partially hidden within broader context.
 
-${
-  context.query?.named_entities.process !== null
-    ? `Evaluate whether the chunk pertains to the process “${context.query?.named_entities.process}”, specifically focusing on the company’s procedures, workflows, or standard ways of working. This includes assessing if the chunk describes, references, or aligns with the operational or organizational methods associated with the specified process:
-- Score 0: The chunk mention another process or no process is evocated
-- Score 1000: The chunk explicitly addresses the process with high accuracy.
-- Score 1-999: Partial or nuanced relevance (e.g., related processes but not an exact match). Example: “Une panne d’ascenseur” is distinct from “Un locataire bloqué dans l’ascenseur”.
-`
-    : 'Assign a process/guideline score of 0.'
-}
+    Scoring Scale:
+    - 1000 (Perfect Match): Fully answers the query, provides multiple confirmatory points, comprehensive explanation, and actionable information.
+    - 1-999 (Partial Match): Varies based on the degree of alignment, detail, and clarity.
+    - 0 (No Match): No relevant connection to the query.
 
-## Task: Evaluate Overall Relevance
+    **For low scores (<500), re-check the chunk for **overlooked** relevance.**
 
-Assess the chunk’s alignment with the user query, considering that relevant answers might be explicit, implicit, or require interpretation from the context. Use the following criteria:
-
-1. Direct Answer Precision
-  - Determines if the chunk directly addresses the query intent.
-	- Evaluates how clear, comprehensive, and unambiguous the response is.
-2. Semantic Matching
-  - Examines the degree of alignment between the query’s intent and the chunk’s content.
-  - Accounts for both explicit information and implicit clues that may require deeper understanding to uncover relevance.
-3. Information Quality
-  - Evaluates the specificity and richness of the details provided in the chunk.
-	- Assesses how actionable, precise, and unambiguous the information is, even if the answer is partially hidden within broader context.
-
-Scoring Scale:
-- 1000 (Perfect Match): Fully answers the query, provides multiple confirmatory points, comprehensive explanation, and actionable information.
-- 1-999 (Partial Match): Varies based on the degree of alignment, detail, and clarity.
-- 0 (No Match): No relevant connection to the query.
-
-**For low scores (<500), re-check the chunk for **overlooked** relevance.**
-
-Please proceed with your analysis and evaluation of the given query and chunk.
-
-`.trim()
+    Please proceed with your analysis and evaluation of the given query and chunk.
+    `
   })
 
-  return object
+  return {
+    relevancy_score: object.r,
+    building_score: object.b,
+    process_score: object.p
+  }
 }
