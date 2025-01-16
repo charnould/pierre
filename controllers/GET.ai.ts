@@ -201,13 +201,17 @@ export const controller = async (c: Context) => {
     ])
 
     // If incoming request comes from www: return a stream
-    c.header('Content-Type', 'text/event-stream')
 
-    // TODO: handle 504 error
-    // c.header('Content-Type', 'text/html');
+    c.header('X-Vercel-AI-Data-Stream', 'v1')
+    c.header('Content-Type', 'text/plain; charset=utf-8')
+    // c.header('Content-Type', 'text/event-stream')
 
     return stream(c, (stream) =>
-      stream.pipe((answer as StreamTextResult<Record<string, CoreTool>, unknown>).textStream)
+      stream
+        .pipe((answer as StreamTextResult<Record<string, CoreTool>, unknown>).textStream)
+        .catch(() => {
+          throw new Error('Streaming or Cloudflare error')
+        })
     )
   } catch (e) {
     console.error(e)
