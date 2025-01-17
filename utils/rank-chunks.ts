@@ -1,8 +1,11 @@
 import { createAnthropic } from '@ai-sdk/anthropic'
+import { createCerebras } from '@ai-sdk/cerebras'
 import { createCohere } from '@ai-sdk/cohere'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
+import { createGroq } from '@ai-sdk/groq'
 import { createMistral } from '@ai-sdk/mistral'
 import { createOpenAI } from '@ai-sdk/openai'
+import { createTogetherAI } from '@ai-sdk/togetherai'
 import { generateObject } from 'ai'
 import dedent from 'dedent'
 import _ from 'lodash'
@@ -202,6 +205,9 @@ export const score_chunk = async (context: AIContext, chunk: Flatten_Chunk): Pro
   const anthropic = createAnthropic()
   const mistral = createMistral()
   const cohere = createCohere()
+  const togetherai = createTogetherAI()
+  const groq = createGroq()
+  const cerebras = createCerebras()
 
   const { object } = await generateObject({
     schema: z.object({
