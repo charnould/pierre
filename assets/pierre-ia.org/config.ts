@@ -138,11 +138,11 @@ export default {
       disclaimer: 'Une IA peut se tromper. Vérifiez les informations importantes.'
     },
 
-    // Une seconde personnalité.
+    // Une 2ème personnalité.
     // Vous pouvez dupliquer cette objet pour créer autant de personnalités
     // que nécessaire. Vous pouvez nommer cette personnalité par n'importe
     // quelle chaine de caractères (ici `team`). A l'inverse, vous pouvez
-    // supprimer `team` et plus bas `en_agence` si vous n'avez pas usage
+    // supprimer `team` et plus bas `no_rag` si vous n'avez pas usage
     // de personnalités complémentaires.
     team: {
       models: {
@@ -180,41 +180,37 @@ export default {
     },
 
     //
-    // Une troisième personnalité.
-    en_agence: {
+    // Une 3ème personnalité pour faire la démonstration que PIERRE
+    // peut aussi être un simple wrapper autour d'un LLM. Dans ce
+    // cas, les réponses sont quasi instantanées, mais le risque
+    // d'hallucinations important.
+    no_rag: {
       models: {
         embed_with: 'text-embedding-3-large',
         augment_with: "openai('gpt-4o-mini-2024-07-18')",
         rerank_with: "openai('gpt-4o-mini-2024-07-18')",
-        answer_with: "openai('gpt-4o-mini-2024-07-18')"
+        answer_with: "openai('gpt-4o-2024-11-20')"
       },
       phone: null,
       protected: true,
       knowledge: {
-        community: true,
+        community: false,
         proprietary: { public: false, private: false }
       },
-      audience:
-        'The user’s primary focus is on housing, with a particular interest in social housing in France.',
-      persona:
-        "You’re PIERRE, an open-source, multilingual, and multichannel AI created to assist social housing candidates, tenants and employees with their everyday questions. Your source code is accessible to all at https://www.pierre-ia.org, and a quick overview of PIERRE's capabilities can be found at https://charnould.github.io/pierre/assets/PIERRE-Présentation.pdf.",
+      audience: '',
+      persona: '',
       greeting: [
         'Bonjour 🖐️,',
-        'Je suis PIERRE, une IA open source, personnalisable, multicanale et plurilingue au service du mouvement HLM, de ses candidats et locataires.',
-        "Ma mission : répondre 24/7/365, sur le Web ou par SMS, à toutes les questions de « premier niveau » pour transfigurer l'expérience-client.",
-        'Comment puis-je vous aider ?',
+        'Je suis PIERRE, une IA open source, personnalisable, multicanale et plurilingue au service du mouvement HLM, de ses candidats, locataires et collaborateurs.',
+        "Comment puis-je vous aider aujourd'hui ?",
         '――――',
-        'Pour information, nous sommes là sur une version spéciale disponible sur les bornes interactive des agences.'
+        'Pour information, je ne puise ici dans aucune base de connaissances, je suis donc un quasi-clone de ChatGPT, Claude ou autres. Ceci explique ma vitesse de réponse.'
       ],
       examples: [
-        'Comment déposer mon préavis de congé pour mon logement ? Et avez-vous un modèle de courrier ?',
-        "Y-a-t-il des associations proposant des logements d'urgence dans le cadre de violences conjugales dans le Vaucluse ?",
-        'Enquête SLS, kézako + suis-je concerné ?',
-        "Qu'est-ce que l'avance Loca-Pass et comment savoir si j'y suis éligible ?",
-        'Je cherche un logement social dans le Cantal. Comment déposer un dossier et quel est le processus ?',
-        'كيفية الاتصال بالمكتب الرئيسي لبلدية Grand Dijon Habitat؟'
+        "Établis un plan de communication interne pour le projet GUSTAVE : une IA au service des agents et cadres d'astreinte de Pierre Habitat",
+        'Rédige un résumé en 4-5 bullets points sur les enjeux-logements de la ville de Paris'
       ],
-      disclaimer: null
+      disclaimer: 'Une IA peut halluciner. Vérifier les informations importantes.'
     }
   }
 } as Config
