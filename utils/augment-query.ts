@@ -1,12 +1,16 @@
 import { createAnthropic } from '@ai-sdk/anthropic'
+import { createCerebras } from '@ai-sdk/cerebras'
 import { createCohere } from '@ai-sdk/cohere'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
+import { createGroq } from '@ai-sdk/groq'
 import { createMistral } from '@ai-sdk/mistral'
 import { createOpenAI } from '@ai-sdk/openai'
+import { createTogetherAI } from '@ai-sdk/togetherai'
 import { generateObject } from 'ai'
 import dedent from 'dedent'
 import _ from 'lodash'
 import { z } from 'zod'
+import { zodToJsonSchema } from 'zod-to-json-schema'
 import { type AIContext, Augmented_Query } from './_schema'
 import { today_is } from './generate-answer'
 
@@ -52,13 +56,15 @@ export const augment_query = async (context: AIContext) => {
         3. Multi-Part Queries: Split complex questions into separate, concise elements in an array.
         4. Details: Include relevant locations, roles, departments, or dates (use today’s date: ${today_is()} if applicable).
         5. Fallback: If unclear or incomplete, echo the user’s latest input verbatim
-        
+
         Examples:
         - "Qui est d'astreinte en ce moment ?" → ["Qui est d'astreinte le ${today_is()} ?"]
         - "Bonjour, je cherche un logement social à Nantes comment faire ?" → ["Comment obtenir un logement social à Nantes (Loire-Atlantique)"]
         - "Bonjour ! Qui es tu ? Et connais-tu des solution d'hébergement d'urgence à Piolenc pour violence conjugale ?" → ["Qui es-tu ?", "Quelles sont les solutions d'hébergement d'urgence pour les cas de violence conjugale à Piolenc (Vaucluse) ?"]
         - "Bonjour ! C'est quoi un logement social, c'est quoi son histoire et combien y en a-t-il à Angers ?" → ["Qu'est-ce qu'un logement social ?", "Quelle est l'histoire du logement social ?, "Combien y a-t-il de logements sociaux à Angers (Maine-et-Loire) ?"]
         - "Qui a les clés des portes anti squat ?" → ["Qui est en possession des clefs des portes anti-squat ?"]
+        
+        Only answer in JSON.
         `
       }
     ]
@@ -81,7 +87,8 @@ export const augment_query = async (context: AIContext) => {
       context.conversation.slice(-1)[0],
       {
         role: 'system',
-        content: 'Return the language code in ISO 639-1 format of user message.'
+        content:
+          'Return the language code in ISO 639-1 format of user message. Only answer in JSON.'
       }
     ]
   }
@@ -93,7 +100,7 @@ export const augment_query = async (context: AIContext) => {
       {
         role: 'system',
         content:
-          'Return true if there is any offensive language in user message. Otherwise return false'
+          'Return true if there is any offensive language in user message. Otherwise return false. Only answer in JSON.'
       }
     ]
   }
@@ -105,7 +112,7 @@ export const augment_query = async (context: AIContext) => {
       {
         role: 'system',
         content:
-          'Briefly summarize the user’s profile based on the conversation, including their name, marital status, children, residence type (e.g., T1, T2, T3), location (zipcode, department, region), housing status (owned or rented), and income details if available. Focus on any housing-related information, preferences, concerns, or insights mentioned. If no relevant information is provided, return an empty string.'
+          'Briefly summarize the user’s profile based on the conversation, including their name, marital status, children, residence type (e.g., T1, T2, T3), location (zipcode, department, region), housing status (owned or rented), and income details if available. Focus on any housing-related information, preferences, concerns, or insights mentioned. If no relevant information is provided, return an empty string. Only answer in JSON.'
       }
     ]
   }
@@ -155,6 +162,8 @@ export const augment_query = async (context: AIContext) => {
           - departement: null
           - city: null
           - zipcode: null
+
+          Only answer in JSON.
           `
       }
     ]
@@ -186,6 +195,8 @@ export const augment_query = async (context: AIContext) => {
           # Task 2: Extract Events/Issues
           
           Identify and summarize in 4-7 French words the process or issue described by the user, focusing on internal company procedures. For example, if the situation involves someone stuck in an elevator, return: “incarcération dans un ascenseur.”.
+
+          Only answer in JSON.
           `
       }
     ]
@@ -203,6 +214,8 @@ export const augment_query = async (context: AIContext) => {
               Examples:
               - "Quelle est l'histoire des HLM à Saint-Nazaire" → ["histoire des HLM à Saint-Nazaire (Loire-Atlantique)"]
               - "Combien y a-t-il de logemnents sociaux à Orange" → ["nombre de logements sociaux à Orange (Vaucluse)"]
+
+              Only answer in JSON.
               `
         }
       ]
@@ -227,7 +240,10 @@ export const augment_query = async (context: AIContext) => {
               - Irrelevant or overly generic terms.
               
               3. **Multi-Word Phrases and Collocations**
-              Identify and include critical multi-word phrases, idiomatic expressions, and collocations directly relevant to the query (max. 2 words). Since BM25 excels with exact matches, focus on selecting phrases that encapsulate essential concepts concisely, accurately and orthographically/grammatically correct.`
+              Identify and include critical multi-word phrases, idiomatic expressions, and collocations directly relevant to the query (max. 2 words). Since BM25 excels with exact matches, focus on selecting phrases that encapsulate essential concepts concisely, accurately and orthographically/grammatically correct.
+              
+              Only answer in JSON.
+              `
         }
       ]
     }
@@ -238,7 +254,7 @@ export const augment_query = async (context: AIContext) => {
         {
           role: 'user',
           content:
-            'Considering this question: "${q}". Create a step-back question in french language that encourages deeper reflection or broader thinking about the topic.'
+            'Considering this question: "${q}". Create a step-back question in french language that encourages deeper reflection or broader thinking about the topic. Only answer in JSON.'
         }
       ]
     }
@@ -248,9 +264,16 @@ export const augment_query = async (context: AIContext) => {
       messages: [
         {
           role: 'user',
-          content: dedent`Considering this question: "${q}".  Create 3 concice and comprehensive responses in french language that include all key points that would be found in the top search result. If a location is mentioned, add the relevant department to the response while maintaining the original meaning.
-            Examples:
-            - For input: "Comment obtenir un logement social à Carpentras", output: ["Pour obtenir un logement social à Carpentras Vaucluse, vous devez faire une demande auprès de la mairie ou d'un organisme de logement social. Vous aurez besoin de fournir des documents comme vos revenus et votre situation familiale."]`
+          content: dedent`
+          
+          Considering this question: "${q}". Create 3 concice and comprehensive responses in french language that include all key points that would be found in the top search result. If a location is mentioned, add the relevant department to the response while maintaining the original meaning.
+          
+          Examples:
+          
+          - For input: "Comment obtenir un logement social à Carpentras", output: ["Pour obtenir un logement social à Carpentras Vaucluse, vous devez faire une demande auprès de la mairie ou d'un organisme de logement social. Vous aurez besoin de fournir des documents comme vos revenus et votre situation familiale."]
+            
+          Only answer in JSON.
+            `
         }
       ]
     }
@@ -334,6 +357,9 @@ const generate_obj = async (prompt, context: AIContext) => {
   const anthropic = createAnthropic()
   const mistral = createMistral()
   const cohere = createCohere()
+  const togetherai = createTogetherAI()
+  const groq = createGroq()
+  const cerebras = createCerebras()
 
   try {
     // Generate a JSON object and return it
