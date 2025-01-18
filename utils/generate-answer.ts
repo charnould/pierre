@@ -1,3 +1,4 @@
+import { TZDate } from '@date-fns/tz'
 import { format, getISOWeek, isSameDay, parseISO } from 'date-fns'
 import type { AIContext } from './_schema'
 import { generate_answer, stream_answer } from './deliver-answer'
@@ -310,9 +311,10 @@ export const today_is = () => {
   const is_public_holiday = () =>
     public_french_holidays.some((holiday) => isSameDay(new Date(), parseISO(holiday)))
 
-  const date = format(new Date(), 'EEEE, MMMM dd, yyyy')
-  const time = format(new Date(), 'HH:mm a')
-  const week = getISOWeek(new Date())
+  const now = new TZDate(Date.now(), 'Europe/Paris')
+  const date = format(now, 'EEEE, MMMM dd, yyyy')
+  const time = format(now, 'HH:mm a')
+  const week = getISOWeek(now)
 
   return `${date} (Week ${week}) at ${time}${is_public_holiday() ? ' – today is a French public holiday' : ''}.`.trim()
 }
