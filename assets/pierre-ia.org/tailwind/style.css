@@ -29,7 +29,7 @@
   --font-sans: 'Inter', 'sans-serif';
   /* TODO: make it works only for fontFamily Sans */
   /* https://rsms.me/inter/#features */
-  --default-font-feature-settings: 'ss03', 'liga', 'calt', 'ss01', 'cv10', 'cv08';
+  /* --default-font-feature-settings: 'ss03', 'liga', 'calt', 'ss01', 'cv10', 'cv08'; */
 }
 
 /* Hide scrollbars */
