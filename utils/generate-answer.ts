@@ -76,11 +76,8 @@ Maintain clarity and simplicity in language, ensuring accessibility for all audi
 # YOUR AUDIENCE
 
 - ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].audience : ''}.
-- ${context.query?.about_user}.
-- user's location: 
-  ${context.query?.location.city !== null ? `- ${context.query?.location.city} (${context.query?.location.zipcode}),` : ''}
-  ${context.query?.location.department !== null ? `- ${context.query?.location.department}, ` : ''}
-  ${context.query?.location.region !== null ? `- ${context.query?.location.region}.` : ''}
+${context.query?.about_user !== null ? `- About user: ${context.query?.about_user}` : null}
+${context.query?.location !== null ? `- User's location: ${context.query?.location}` : null}
 
 # CONTEXT
 
