@@ -78,11 +78,11 @@ export const rank_chunks = async (
           }[]
         | { community: string[]; private: string[]; public: string[] }
     ) => await prettier.format(JSON.stringify(data), { parser: 'json' })
-    Bun.write('__temp__/1.chunks_from_vect_search.json', await print(vect_chunks))
-    Bun.write('__temp__/2.chunks_from_bm25_search.json', await print(bm25_chunks))
-    Bun.write('__temp__/3.chunks_combined.json', await print(chunks))
-    Bun.write('__temp__/4.chunks_scores.json', await print(scored_chunks))
-    Bun.write('__temp__/5.relevant_chunks.json', await print(relevant_chunks))
+    Bun.write('__temp__/1.vect_search.json', await print(vect_chunks))
+    Bun.write('__temp__/2.bm25_search.json', await print(bm25_chunks))
+    Bun.write('__temp__/3.combined.json', await print(chunks))
+    Bun.write('__temp__/4.scores.json', await print(scored_chunks))
+    Bun.write('__temp__/5.relevant.json', await print(relevant_chunks))
   }
 
   return Relevant_Chunks.parse(relevant_chunks)
@@ -290,7 +290,7 @@ export const score_chunk = async (context: AIContext, chunk: Flatten_Chunk): Pro
 
     **For low scores (<500), re-check the chunk for **overlooked** relevance.**
 
-    Please proceed with your analysis and evaluation of the given query and chunk.
+    Please proceed with your analysis and evaluation of the given query and chunk and **respond in JSON format**.
     `
   })
 
