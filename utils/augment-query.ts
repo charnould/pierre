@@ -67,7 +67,7 @@ export const augment_query = async (context: AIContext) => {
     {
       role: 'system',
       content: dedent`
-        Analyze the full conversation and infer user’s geographical location. If a region, department, or city is mentioned, output the corresponding geographical details. Follow the examples below. If no location is mentioned, output 'null'. Only output the location details or 'null', with no introductory or explanatory text.
+        Analyze the full conversation and always only infer user’s geographical location. If a region, department, or city is mentioned, output the corresponding geographical details. Follow the examples below. If no location is mentioned, output 'null'. Only output the location details or 'null', with no introductory or explanatory text.
 
         Examples:    
         * If user mentions "Bretagne" region, output: "region: Bretagne, departments: Côtes-d’Armor, Finistère, Ille-et-Vilaine, Morbihan"
@@ -184,8 +184,7 @@ export const augment_query = async (context: AIContext) => {
             'gd','sn','si','sk','sl','so','st','es','su','sw','ss','sv','ta','te',
             'tg','th','ti','bo','tk','tl','tn','to','tr','ts','tt','tw','ty','ug',
             'uk','ur','uz','ve','vi','vo','wa','cy','wo','fy','xh','yi','yo','za','zu']
-            .includes(results[0].trim().toLowerCase()) ? results[0].trim().toLowerCase() : 'fr',
-    named_entities: { building: null, process: null }
+            .includes(results[0].trim().toLowerCase()) ? results[0].trim().toLowerCase() : 'fr'
   })
 
   // End performance measurement
