@@ -164,10 +164,6 @@ export const Augmented_Query = z.object({
   contains_profanity        : z.boolean(),
   standalone_questions      : z.array(z.string()),
   bm25_keywords             : z.array(z.string()),
-  named_entities            : z.object({
-    building                  : z.string().nullable().default(null),
-    process                   : z.string().nullable().default(null),
-  }).describe('Named entities'),
   stepback_questions        : z.array(z.string()),
   search_queries            : z.array(z.string()),
   hyde_answers              : z.array(z.string()),
