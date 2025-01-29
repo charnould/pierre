@@ -6,31 +6,38 @@ import { createGroq } from '@ai-sdk/groq'
 import { createMistral } from '@ai-sdk/mistral'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createTogetherAI } from '@ai-sdk/togetherai'
-import { generateObject } from 'ai'
 import dedent from 'dedent'
 import _ from 'lodash'
 import * as prettier from 'prettier'
 import { z } from 'zod'
 import type { AIContext } from './_schema'
 import { today_is } from './generate-answer'
+import { generate_text } from './generate-output'
 import type { Vector_Search_Result } from './search-by-vectors'
 
-//
-//
-//
-//
-// (Re-)Ranker
-//
-//
-//
-//
+/**
+ * Ranks and filters chunks based on their relevance scores.
+ *
+ * @param vect_data - Array of vector search results.
+ * @param bm25_data - Array of BM25 search results.
+ * @param context - AI context used for scoring chunks.
+ * @returns A promise that resolves to the most relevant chunks.
+ *
+ * The function performs the following steps:
+ * 1. Flattens and combines vector and BM25 search results.
+ * 2. Scores each chunk using the provided context.
+ * 3. Orders the chunks by their scores in descending order.
+ * 4. Filters and returns the most relevant chunks.
+ *
+ * If the `DEBUG` environment variable is set, the function will also write
+ * intermediate data to JSON files for debugging purposes.
+ */
 export const rank_chunks = async (
   vect_data: Vector_Search_Result[],
   bm25_data: Vector_Search_Result[],
   context: AIContext
 ) => {
   // Flatten chunks and combine them
-  // TODO: Think again if it's clever to do this way (adding chunks)
   const vect_chunks = flatten_vector_searches(vect_data)
   const bm25_chunks = _.differenceBy(flatten_vector_searches(bm25_data), vect_chunks, 'chunk_hash')
   const chunks = [...vect_chunks, ...bm25_chunks]
@@ -41,24 +48,18 @@ export const rank_chunks = async (
   // Retrive chunk content and its source (community, private, public)...
   const scored_chunks = _.orderBy(
     chunks.map((chunk, index) => ({
-      score: chunk_scores[index],
-      global_score:
-        chunk_scores[index].building_score +
-        chunk_scores[index].process_score +
-        chunk_scores[index].relevancy_score,
+      score: chunk_scores[index].score,
+      reasoning: chunk_scores[index].reasoning,
       chunk_text: chunk.chunk_text,
       source: chunk.source
     })),
-    ['global_score'],
+    ['score'],
     ['desc']
   )
 
   // Finally keep only the most relevant ones...
-  // TODO: when possible, upgrade model (gpt4-o-mini has flaws)
   const relevant_chunks = pick_relevant_chunks(scored_chunks)
 
-  //
-  //
   // For debugging purpose only
   if (Bun.env.DEBUG) {
     const print = async (
@@ -71,8 +72,8 @@ export const rank_chunks = async (
             source: string
           }[]
         | {
-            score: { building_score: number; process_score: number; relevancy_score: number }
-            global_score: number
+            score: number
+            reasoning: string | null
             chunk_text: string
             source: string
           }[]
@@ -110,23 +111,16 @@ const Flatten_Chunk = z.object({
 
 // prettier-ignore
 // biome-ignore format: readability
-const Score = z.object({ building_score : z.number(),
-  process_score : z.number(),
-  relevancy_score : z.number()
- })
-
-// prettier-ignore
-// biome-ignore format: readability
 const Relevant_Chunks = z.object({
   community     : z.array(z.string()).default([]),
   private       : z.array(z.string()).default([]),
   public        : z.array(z.string()).default([])
 })
 
-export type Score = z.infer<typeof Score>
 export type Flatten_Chunk = z.infer<typeof Flatten_Chunk>
 export type Relevant_Chunks = z.infer<typeof Relevant_Chunks>
 
+//
 //
 //
 //
@@ -136,11 +130,19 @@ export type Relevant_Chunks = z.infer<typeof Relevant_Chunks>
 //
 //
 //
+//
 
-//
-//
-//
-// Simplify vector search results into a flat array,
+/**
+ * Flattens and ranks vector search results.
+ *
+ * This function takes an array of search results, flattens the nested
+ * structure, groups the results by their source, and then ranks the chunks
+ * within each group by their distance. It returns the top 50 closest chunks for
+ * each source.
+ *
+ * @param {Vector_Search_Result[]} data - The array of search results to be processed.
+ * @returns {Flatten_Chunk[]} - The flattened and ranked array of chunks.
+ */
 export const flatten_vector_searches = (data: Vector_Search_Result[]): Flatten_Chunk[] =>
   _.chain(data)
     .flatMap((o) =>
@@ -161,22 +163,24 @@ export const flatten_vector_searches = (data: Vector_Search_Result[]): Flatten_C
         .map((group) => _.minBy(group, 'distance'))
         .compact()
         .orderBy('distance')
-        .take(50)
+        .take(40)
         .value()
     )
     .values()
     .flatMap()
     .value()
 
-//
-//
-//
-// Build final chunks object keeping only relevant ones.
-// This function returns the final result of the reranking process
+/**
+ * Picks the most relevant chunks from the provided scores.
+ *
+ * @param scores - An array of objects containing score, chunk_text, and source.
+ * @returns An object with keys as sources and values as arrays of the top 5 chunk_texts
+ *          with scores greater than or equal to 500, ordered by score in descending order.
+ *          Defaults to empty arrays for sources 'public', 'private', and 'community'.
+ */
 export const pick_relevant_chunks = (
   scores: {
-    score: { building_score: number; process_score: number; relevancy_score: number }
-    global_score: number
+    score: number
     chunk_text: string
     source: string
   }[]
@@ -185,8 +189,8 @@ export const pick_relevant_chunks = (
     .groupBy('source')
     .mapValues((array) =>
       _.chain(array)
-        .orderBy('global_score', 'desc')
-        .filter((o) => o.global_score >= 500)
+        .orderBy('score', 'desc')
+        .filter((o) => o.score >= 500)
         .take(5)
         .map('chunk_text')
         .value()
@@ -194,12 +198,19 @@ export const pick_relevant_chunks = (
     .defaults({ public: [], private: [], community: [] })
     .value()
 
-//
-//
-//
-// Evaluate if a chunk from the vector search is relevant
-// to the user query, with a focus on standalone questions.
-export const score_chunk = async (context: AIContext, chunk: Flatten_Chunk): Promise<Score> => {
+/**
+ * Scores a given chunk of text based on its relevance and clarity in answering the user's final intent.
+ *
+ * @note This function is manually tested using `bun eva:reranker` command.
+ * @param context - The AI context containing the conversation history and configuration.
+ * @param chunk - The chunk of text to be evaluated.
+ * @returns A promise that resolves to the score of the chunk.
+ *
+ * The function uses an LLM to generate a score based on multiple following criteria.
+ * The score is enclosed within <score> tags in the response for an easy retrieval.
+ * CAUTION: if prompt ask only for a score, reasoning quality will be low!
+ */
+export const score_chunk = async (context: AIContext, chunk: Flatten_Chunk) => {
   const openai = createOpenAI({ compatibility: 'strict' })
   const google = createGoogleGenerativeAI()
   const anthropic = createAnthropic()
@@ -209,94 +220,64 @@ export const score_chunk = async (context: AIContext, chunk: Flatten_Chunk): Pro
   const groq = createGroq()
   const cerebras = createCerebras()
 
-  const { object } = await generateObject({
-    schema: z.object({
-      j: z.string().describe('Justification for the scores in maximum 10 words'),
-      b: z.number().describe('Building score'),
-      p: z.number().describe('Process score'),
-      r: z.number().describe('Global relevancy score')
-    }),
-    // biome-ignore lint: server-side eval to keep `config.ts` simple
-    model: eval(context.config.context[context.current_context].models.rerank_with),
-    temperature: 0,
-    prompt: dedent`
-    
-    You are an advanced semantic relevance evaluator with expertise in nuanced text analysis and contextual comprehension. Your task is to evaluate how effectively a given text answers a user query, assigning relevance scores based on a deep understanding of semantic alignment, precision, and context.
-    
-    # Inputs
-    
-    ## Chunk
-    
-    <chunk>
-    ${chunk.chunk_text}
-    </chunk>
+  const score = await generate_text({
+    messages: [
+      ...context.conversation,
+      {
+        role: 'system',
+        content: dedent`
+        
+        You are an expert in semantic relevance evaluation and contextual understanding. Your task is to analyze the entire conversation between the user and the agent to determine whether the provided chunk effectively answers the user’s final intent or standalone question.
 
-    ## User Query
+        Today is ${today_is()}.
+        
+        You are evaluating the following chunk:
 
-    <user_query>
-    ${context.query?.standalone_questions.length !== 0 ? context.query?.standalone_questions.map((q: string) => `- ${q}\n`) : context.content}
-    </user_query>
+        <chunk>
+        ${chunk.chunk_text}
+        </chunk>
+        
+        **Evaluation Criteria**
+        
+        1. Answer Presence – Does the chunk contain the answer to the user’s final intent?
+        2. Relevance – Is the answer directly related to the user’s question, including implicit meaning?
+        3. Clarity & Utility – Is the answer clear, specific, and useful?
+        
+        **Validation Check**
+        
+        - Correct Reference – If the user refers to a specific building but the chunk discusses a different one, score 0, unless the response is still broadly relevant.
+        - Hidden Answer – If only a small part of the chunk answers the question, score based on that portion.
+        
+        **Scoring Scale**
 
-    # Evaluation Steps
-
-    - Think step by step and describe in 10 words your reasoning for choosing these scores. 
-    - Tasks are totally independant.
-    - Today is ${today_is()}.
-
-    ## Task: Identify the Building of the Chunk
-
-    ${
-      context.query?.named_entities.building !== null
-        ? dedent`Assess whether the chunk explicitly or implicitly refers to a building (e.g., building, house, residence, housing program, etc.) with a name resembling “${context.query?.named_entities.building}”. Be cautious of cases where the name might also belong to a person, such as distinguishing between a person named “Jean Racine” and a house called “Racine”:
-      - Score 0: The chunk mention another building.
-      - Score 1000: The chunk explicitly and unambiguously discusses the building in question.
-      - Score 1-999: The reference to a building is unclear, ambiguous, or only loosely connected, requiring further clarification.
-    `
-        : 'Assign a building score of 0.'
-    }
-
-    ## Task: Determine if the Chunk Discusses a Specific Company Process or Guideline
-
-    ${
-      context.query?.named_entities.process !== null
-        ? dedent`Evaluate whether the chunk pertains to the process “${context.query?.named_entities.process}”, specifically focusing on the company’s procedures, workflows, or standard ways of working. This includes assessing if the chunk describes, references, or aligns with the operational or organizational methods associated with the specified process:
-    - Score 0: The chunk mention another process or no process is evocated
-    - Score 1000: The chunk explicitly addresses the process with high accuracy.
-    - Score 1-999: Partial or nuanced relevance (e.g., related processes but not an exact match). Example: “Une panne d’ascenseur” is distinct from “Un locataire bloqué dans l’ascenseur”.
-    `
-        : 'Assign a process/guideline score of 0.'
-    }
-
-    ## Task: Evaluate Overall Relevance
-
-    Assess the chunk’s alignment with the user query, considering that relevant answers might be explicit, implicit, or require interpretation from the context. Use the following criteria:
-
-    1. Direct Answer Precision
-      - Determines if the chunk directly addresses the query intent.
-      - Evaluates how clear, comprehensive, and unambiguous the response is.
-    
-    2. Semantic Matching
-      - Examines the degree of alignment between the query’s intent and the chunk’s content.
-      - Accounts for both explicit information and implicit clues that may require deeper understanding to uncover relevance.
-    
-    3. Information Quality
-      - Evaluates the specificity and richness of the details provided in the chunk.
-      - Assesses how actionable, precise, and unambiguous the information is, even if the answer is partially hidden within broader context.
-
-    Scoring Scale:
-    - 1000 (Perfect Match): Fully answers the query, provides multiple confirmatory points, comprehensive explanation, and actionable information.
-    - 1-999 (Partial Match): Varies based on the degree of alignment, detail, and clarity.
-    - 0 (No Match): No relevant connection to the query.
-
-    **For low scores (<500), re-check the chunk for **overlooked** relevance.**
-
-    Please proceed with your analysis and evaluation of the given query and chunk and **respond in JSON format**.
-    `
+        - 1000 (Perfect Match) – Accurately answers the final user intent.
+        - 1-999 (Partial Match) – The response is relevant but lacks precision, completeness, or clarity.
+        - 0 (No Match) – No meaningful connection to the user’s intent.
+        
+        **Think carefully and enclose the score within <score> tags.**
+        
+        `
+      }
+    ],
+    model: context.config.context[context.current_context].models.rerank_with
   })
 
-  return {
-    relevancy_score: object.r,
-    building_score: object.b,
-    process_score: object.p
+  return extract_score_and_reasoning(score)
+}
+
+/**
+ * Extracts a numerical score from a given text string.
+ *
+ * @note This function is tested in tests/unit/utils/extract-score.test.ts
+ * @param text - The text string from which to extract the score. It can be a string, null, or undefined.
+ * @returns The extracted score as a number. If the text is not a string or if no score is found, returns 0.
+ */
+export const extract_score_and_reasoning = (text: string | null | undefined) => {
+  if (typeof text !== 'string' || text === '') {
+    return { score: 0, reasoning: null }
   }
+
+  const match = text.match(/<score>\s*(\d+)\s*<\/score>/)
+  const score = match ? Number.parseFloat(match[1]) : 0
+  return { score: score, reasoning: text }
 }

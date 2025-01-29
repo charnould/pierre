@@ -47,82 +47,42 @@ const input = [
 //
 const chunks = [
   {
-    score: {
-      building_score: 100,
-      process_score: 10,
-      relevancy_score: 0
-    },
-    global_score: 100,
+    score: 100,
     chunk_text: 'chunk_75',
     source: 'public'
   },
   {
-    score: {
-      building_score: 990,
-      process_score: 0,
-      relevancy_score: 10
-    },
-    global_score: 1000,
+    score: 1000,
     chunk_text: 'chunk_76',
     source: 'public'
   },
   {
-    score: {
-      building_score: 0,
-      process_score: 0,
-      relevancy_score: 0
-    },
-    global_score: 0,
+    score: 0,
     chunk_text: 'chunk_78',
     source: 'public'
   },
   {
-    score: {
-      building_score: 600,
-      process_score: 10,
-      relevancy_score: 20
-    },
-    global_score: 630,
+    score: 630,
     chunk_text: 'chunk_77',
     source: 'private'
   },
   {
-    score: {
-      building_score: 0,
-      process_score: 0,
-      relevancy_score: 0
-    },
-    global_score: 0,
+    score: 0,
     chunk_text: 'chunk_1100',
     source: 'private'
   },
   {
-    score: {
-      building_score: 400,
-      process_score: 100,
-      relevancy_score: 100
-    },
-    global_score: 600,
+    score: 600,
     chunk_text: 'chunk_1200',
     source: 'private'
   },
   {
-    score: {
-      building_score: 0,
-      process_score: 0,
-      relevancy_score: 0
-    },
-    global_score: 0,
+    score: 0,
     chunk_text: 'chunk_1200',
     source: 'public'
   },
   {
-    score: {
-      building_score: 0,
-      process_score: 0,
-      relevancy_score: 800
-    },
-    global_score: 800,
+    score: 800,
     chunk_text: 'chunk_1300',
     source: 'community'
   }
