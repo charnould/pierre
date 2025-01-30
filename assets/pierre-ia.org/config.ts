@@ -15,7 +15,7 @@ export default {
   // que vous souhaitez rendre disponible. Exemples :
   // - `default`  : une version de PIERRE accessible depuis aux candidats ou locataires
   // - `team`     : une versiond de PIERRE à destination exclusive des collaborateurs
-  // - `en_agence`: une version de PIERRE à laquelle on accède en agence depuis une borne d'accueil interactive
+  // - `no_rag`   : une version de PIERRE qui n'utilise pas de bases de connaissances (ChatGPT clone)
   context: {
     // La version par défaut
     // Il faut impérativement et a minima renseigner `default`.
@@ -36,6 +36,7 @@ export default {
       // - "anthropic('claude-3-5-sonnet-20241022')",
       // - "anthropic('claude-3-5-haiku-20241022')",
       // - "openai('gpt-4o-2024-11-20')",
+      // - "togetherai('meta-llama/Llama-3.3-70B-Instruct-Turbo')"
       models: {
         // Les embeddings sont des représentations vectorielles
         // de textes qui en capturent le sens sémantique.
@@ -45,7 +46,6 @@ export default {
         // Le modèle utilisé pour augmenter/enrichir les requêtes de l'utilisateur.
         // Pour minimiser les coûts : openai('gpt-4o-mini-2024-07-18') ou équivalent.
         // Pour maximiser l'intelligence : openai('gpt-4o-2024-11-20') ou équivalent.
-        // IMPORTANT : NE PAS MODIFIER CE MODÈLE SAUF SI L'ON SAIT CE QUE L'ON FAIT.
         augment_with: "openai('gpt-4o-mini-2024-07-18')",
 
         // Le modèle utlisé par le reranker qui s'assure que les éléments de
@@ -53,7 +53,6 @@ export default {
         // Il est fortement recommandé d'utiliser `openai('gpt-4o-mini-2024-07-18')`
         // ou un modèle équivalent afin de maîtriser les coûts. Le reranker est
         // en effet consommateur de tokens.
-        // IMPORTANT : NE PAS MODIFIER CE MODÈLE SAUF SI L'ON SAIT CE QUE L'ON FAIT.
         rerank_with: "openai('gpt-4o-mini-2024-07-18')",
 
         // Le modèle qui génère les réponses en s'appuyant sur les éléments
