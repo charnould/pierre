@@ -99,6 +99,11 @@ export default {
         //      En toute logique, si `proprietary.private` est `true`, `protected`
         //      doit aussi être `true`.
         proprietary: { public: false, private: false }
+
+        // Astuce : Si vous renseignez `false` pour l'ensemble des connaissances
+        // ci-dessus, PIERRE se comportera comme un simple wrapper autour d'un
+        // LLM, sans base de connaissances. Les réponses seront quasi
+        // instantanées, mais le risque d'hallucinations important.
       },
 
       // Une information qui n'est pas visible par l'utilisateur,
