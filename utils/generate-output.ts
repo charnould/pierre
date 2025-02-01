@@ -29,16 +29,19 @@ const cerebras = createCerebras()
  */
 export const generate_text = async ({
   messages,
-  model
+  model,
+  max_tokens
 }: {
   messages: CoreMessage[]
   model: string
+  max_tokens: number | undefined
 }): Promise<string> => {
   try {
     const { text } = await generateText({
       // biome-ignore lint: server-side
       model: eval(model),
-      messages: messages
+      messages: messages,
+      maxTokens: max_tokens
     })
     return text
   } catch (err) {
