@@ -19,6 +19,17 @@ import { send_sms } from '../utils/send-sms'
 
 export const controller = async (c: Context) => {
   try {
+    // Set performance measurement variables
+    let t0 = 0
+    let t1 = 0
+    let t2 = 0
+    let t3 = 0
+    let t4 = 0
+    let t5 = 0
+    let t6 = 0
+    let t7 = 0
+    let t8 = 0
+
     //
     // Set variables and types
     //
@@ -86,9 +97,9 @@ export const controller = async (c: Context) => {
       //
       //
 
-      performance.mark('s_aq')
+      t0 = performance.now()
       context.query = await augment_query(context)
-      performance.mark('e_aq')
+      t1 = performance.now()
       // end: QUERY AUGMENTATION
 
       // If query is relevant and does not contain profanity, answer with intelligence
@@ -102,16 +113,14 @@ export const controller = async (c: Context) => {
         //
         //
 
-        performance.mark('s_vs')
+        t2 = performance.now()
         const embeddings = await generate_embeddings([
           ...context.content,
           ...context.query.standalone_questions,
-          ...context.query.stepback_questions,
-          ...context.query.search_queries,
-          ...context.query.hyde_answers
+          ...context.query.search_queries
         ])
         const v_results = await Promise.all(embeddings.map((e) => vector_search(e, context)))
-        performance.mark('e_vs')
+        t3 = performance.now()
         // end: VECTOR SERCH
 
         //
@@ -120,11 +129,11 @@ export const controller = async (c: Context) => {
         //
         //
 
-        performance.mark('s_bs')
+        t4 = performance.now()
         const k_results = await Promise.all(
           context.query.bm25_keywords.map((k) => bm25_search(k, context))
         )
-        performance.mark('e_bs')
+        t5 = performance.now()
         // end: BM25 SEARCH
 
         //
@@ -133,13 +142,13 @@ export const controller = async (c: Context) => {
         //
         //
 
-        performance.mark('s_rr')
+        t6 = performance.now()
         context.chunks = await rank_chunks(
           v_results.filter((chunk) => chunk !== undefined), // TODO: vector_search must not return undefined
           k_results.filter((chunk) => chunk !== undefined), // TODO: vector_search must not return undefined
           context
         )
-        performance.mark('e_rr')
+        t7 = performance.now()
         // end:RERANKER
 
         // If the reranker returns no relevant results, it indicates that
@@ -172,13 +181,13 @@ export const controller = async (c: Context) => {
 
       // Mark the end of the request for performance measurement
       // and log a performance measurement table
-      performance.mark('e_rq')
+      t8 = performance.now()
       console.table([
-        ['augment  ', `${performance.measure('r', 's_aq', 'e_aq').duration}ms`],
-        ['v_search ', `${performance.measure('r', 's_vs', 'e_vs').duration}ms`],
-        ['b_search ', `${performance.measure('r', 's_bs', 'e_bs').duration}ms`],
-        ['rerank   ', `${performance.measure('r', 's_rr', 'e_rr').duration}ms`],
-        ['TOTAL    ', `${performance.measure('r', 's_aq', 'e_rr').duration}ms`]
+        ['augment  ', `${t1 - t0}ms`],
+        ['v_search ', `${t3 - t2}ms`],
+        ['b_search ', `${t5 - t4}ms`],
+        ['rerank   ', `${t7 - t6}ms`],
+        ['TOTAL    ', `${t8 - t0}ms`]
       ])
     }
     //
