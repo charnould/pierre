@@ -31,107 +31,88 @@ export const augment_query = async (context: AIContext) => {
   // Multiple prompts used to generate augmented queries. The goal is to enhance
   // query variety and capture different aspects of the user's intent.
 
-  // Prompt checked on january 24 2025
-  const lang: CoreMessage[] = [
-    context.conversation.slice(-1)[0],
+  // Prompt checked on february 2 2025
+  const lang_and_profanity: CoreMessage[] = [
     {
-      role: 'system',
+      role: 'user',
       content: dedent`
-        Return the ISO 639-1 language code of the user’s message, with no introductory or explanatory text`
+        Analyze the given sentence and return two results:  
+        1. **Profanity Check** – Determine whether it contains **any** form of profanity, including light or strong insults, offensive, inappropriate, or harmful language. Return 'true' or 'false'.  
+        2. **Language Detection** – Identify the primary language of the sentence and return its ISO 639-1 two-letter code. If multiple languages are present, return the code of the dominant language.  
+                
+        **Think carefully and output profanity check first, within <profanity> tags, then language detection, within <lang> tags, followed by your reasoning.**
+        
+        Sentence: “${context.conversation.slice(-1)[0].content}”`
     }
   ]
 
-  // Prompt checked on january 24 2025
-  const profanity: CoreMessage[] = [
-    context.conversation.slice(-1)[0],
-    {
-      role: 'system',
-      content: dedent`
-        Determine whether user’s message contains offensive, inappropriate, or harmful language. Only return true or false, with no introductory or explanatory text.`
-    }
-  ]
-
-  // Prompt checked on january 24 2025
+  // Prompt checked on february 2 2025
   const user: CoreMessage[] = [
     ...context.conversation,
     {
-      role: 'system',
+      role: 'assistant',
       content: dedent`
-        Summarize the user’s profile in French based on the conversation, including their name, marital status, children, residence type (e.g., T1, T2, T3), location (zipcode, department, region), housing status (owned/rented), and income if mentioned. Focus on housing-related details, preferences, or concerns. Output only the summary, with no introductory or explanatory text. If no relevant information is available, output 'null' with no introductory or explanatory text.`
+        Summarize solely who the user is in French, focusing on housing-related details extracted from the conversation. The summary should include:
+      
+        -	Name (if mentioned)
+        -	Marital status (e.g., single, married, divorced)
+        -	Children (number and presence if mentioned)
+        -	Residence type (e.g., T1, T2, T3)
+        -	Geographical location (zipcode, department, region)
+        -	Housing status (owned or rented)
+        -	Income (if mentioned)
+        -	Housing preferences or concerns
+        
+        Geographical Details Extraction:
+        -	If a region is mentioned, return its name along with all associated departments.
+        -	If a department is mentioned, return its region and department name.
+        -	If a city is mentioned, return its region, department, city name, and zipcode if known.
+        
+        Output Rules:
+        - Provide no explanations, additional text, or formatting, only output who the user is in French.
+        -	If no relevant information is available, return only 'null' without quotes or extra text.`
     }
   ]
 
-  // Prompt checked on january 24 2025
-  const location: CoreMessage[] = [
-    ...context.conversation,
-    {
-      role: 'system',
-      content: dedent`
-        Analyze the full conversation and always only infer user’s geographical location. If a region, department, or city is mentioned, output the corresponding geographical details. Follow the examples below. If no location is mentioned, output 'null'. Only output the location details or 'null', with no introductory or explanatory text.
-
-        Examples:    
-        * If user mentions "Bretagne" region, output: "region: Bretagne, departments: Côtes-d’Armor, Finistère, Ille-et-Vilaine, Morbihan"
-        * If user mentions "Occitanie" region, output: "region: Occitanie, departments: Ariège, Aude, Aveyron, Gard, Haute-Garonne, Gers, Hérault, Lot, Lozère, Hautes-Pyrénées, Pyrénées-Orientales, Tarn, Tarn-et-Garonne"
-        * If user mentions "Vaucluse" department, output: "region: Provence-Alpes-Côte d'Azur, departement: Vaucluse
-        * If user mentions "Orange" city, output: "region: Provence-Alpes-Côte d'Azur, departement: Vaucluse, city: Orange, zipcode: 84100"
-        * If user mentions no location, output : "null"`
-    }
-  ]
-
-  // Prompt checked on january 24 2025
+  // Prompt checked on february 2 2025
   const standalone_questions: CoreMessage[] = [
     ...context.conversation,
     {
-      role: 'system',
+      role: 'assistant',
       content: dedent`
-        Analyze the conversation history and generate precise, standalone questions in French, separated by a pipe (|), aligned with the user’s final inquiries. Ensure each question is clear, self-contained, and detailed, incorporating locations, roles, departments, or dates (today is ${today_is()}) if relevant. If the intent is unclear, echo the user’s latest input verbatim. Output only the questions, formatted exactly as instructed, with no introductory or explanatory text.
-        
-        Examples:
-        * "Qui est d'astreinte en ce moment ?" → "Qui est d'astreinte le ${today_is()} ?"
-        * "Bonjour, je cherche un logement social à Nantes comment faire ?" → "Comment obtenir un logement social à Nantes (Loire-Atlantique)"
-        * "Bonjour ! Qui es tu ? Et connais-tu des solution d'hébergement d'urgence à Piolenc pour violence conjugale ?" → "Qui es-tu ?" | "Quelles sont les solutions d'hébergement d'urgence pour les cas de violence conjugale à Piolenc (Vaucluse) ?"
-        * "Bonjour ! C'est quoi un logement social, c'est quoi son histoire et combien y en a-t-il à Angers ?" → "Qu'est-ce qu'un logement social ?" | "Quelle est l'histoire du logement social ? | "Combien y a-t-il de logements sociaux à Angers (Maine-et-Loire) ?"
-        * "Qui a les clés des portes anti squat ?" → "Qui est en possession des clefs des portes anti-squat ?"`
+        Analyze the conversation history and generate a set of standalone questions in French, each rephrasing **last** user inquiry. Question should be clear, self-contained, and directly reflect the user’s intent without introducing any new details or expanding the scope. If there are multiple questions, separate them with a pipe (|). Do not add any introduction, extra text, or formatting. Keep the questions concise and focused solely on the user’s last inquiries. If a question mentions a specific date or time (e.g., 'qui est d’astreinte aujourd’hui'), use today’s date, which is ${today_is()}.`
     }
   ]
 
-  // Prompt checked on january 24 2025
+  // Prompt checked on february 2 2025
   const search_queries: CoreMessage[] = [
     ...context.conversation,
     {
       role: 'system',
-      content: dedent` 
-        Carefully analyze the entire conversation and produce four well-crafted, contextually relevant web search queries in French, separated by a pipe (|), that effectively address the user’s final intent. Each query should be distinct in phrasing, capturing different dimensions of the inquiry to optimize search results. If a location is referenced, include the appropriate department in the query. Output only the queries, formatted exactly as instructed, with no introductory or explanatory text.`
+      content: dedent`
+        Analyze the entire conversation thoroughly and generate the following:
+        
+        1. **Hypothetical Document Embeddings** - Three brief and contextually relevant responses in French capturing all essential information likely to be present in the most authoritative search results addressing the user’s final query. Ensure they are comprehensive yet concise, preserving the original intent and meaning, and include relevant geographic details if a location is mentioned. Provide only the reponses, without any introductory phrases, additional explanations or quotes but separated by a pipe (|).
+        
+        2. **Stepback Questions** - Two thought-provoking step-back questions in French designed to inspire deeper reflection or a broader perspective on the user’s final intent. Ensure the questions are meaningful, directly tied to the context, and relevant to the discussion. Provide only the questions, without any introductory phrases, additional explanations or quotes but separated by a pipe (|).
+        
+        3. **Web Search Queries** - three distinct web search queries in French that directly address the user’s final intent. Each query should cover a different aspect of the inquiry to maximize the variety of relevant search results. Provide only the queries, without any introductory phrases, additional explanations or quotes but separated by a pipe (|).
+        
+        Output Rules:
+        
+        - Output only the responses, questions, and queries, all separated by a pipe (|), with no introductory or explanatory text.
+        - If a question mentions a specific date or time (e.g., 'qui est d’astreinte aujourd’hui'), use today’s date, which is ${today_is()}.
+        - If a location is referenced, include the appropriate region, department, city or zipcode.`
     }
   ]
 
-  // Prompt checked on january 24 2025
+  // Prompt checked on february 2 2025
   const bm25_keywords: CoreMessage[] = [
     ...context.conversation,
     {
-      role: 'system',
+      role: 'assistant',
       content: dedent`
         Analyze the user’s final intent and generate a list of ten precise, high-impact keywords in French, separated by a pipe (|), optimized for a BM25-based search engine. Focus on essential terms and critical multi-word phrases while filtering out noise such as verbs, adjectives, adverbs, and generic words. Ensure all keywords are orthographically and grammatically correct, prioritizing exact matches for maximum retrieval relevance. Output only the keywords, formatted as instructed, with no additional text or explanation.`
-    }
-  ]
-
-  // Prompt checked on january 24 2025
-  const stepback_questions: CoreMessage[] = [
-    ...context.conversation,
-    {
-      role: 'system',
-      content: dedent`
-        Review the entire conversation carefully and generate one to three thought-provoking, contextually appropriate step-back questions in French, separated by a pipe (|), designed to inspire deeper reflection or a broader perspective on the user’s final intent or standalone query. Ensure the questions are clear, meaningful, and directly tied to the context, without deviating from the original discussion. Output only the questions, formatted exactly as specified, with no introductory or explanatory text.`
-    }
-  ]
-
-  // Prompt checked on january 24 2025
-  const hyde_answers: CoreMessage[] = [
-    ...context.conversation,
-    {
-      role: 'system',
-      content: dedent`
-        Analyze the entire conversation thoroughly and generate three precise, detailed, and contextually relevant responses in French, separated by a pipe (|), capturing all essential information likely to be present in the most authoritative search results addressing the user’s final query. Ensure the responses are comprehensive yet concise, preserving the original intent and meaning, and include any relevant geographic details (department and region) if a location is referenced. Present only the responses, formatted exactly as instructed, with no introductory or explanatory text.`
     }
   ]
 
@@ -140,34 +121,32 @@ export const augment_query = async (context: AIContext) => {
 
   // Generate augmented queries using the specified model
   const results = await Promise.all([
-    generate_text({ model: model, messages: lang }),
-    generate_text({ model: model, messages: profanity }),
-    generate_text({ model: model, messages: location }),
-    generate_text({ model: model, messages: user }),
-    generate_text({ model: model, messages: hyde_answers }),
-    generate_text({ model: model, messages: stepback_questions }),
-    generate_text({ model: model, messages: search_queries }),
-    generate_text({ model: model, messages: bm25_keywords }),
-    generate_text({ model: model, messages: standalone_questions })
+    generate_text({ model: model, messages: lang_and_profanity, max_tokens: 100 }),
+    generate_text({ model: model, messages: user, max_tokens: 150 }),
+    generate_text({ model: model, messages: search_queries, max_tokens: 350 }),
+    generate_text({ model: model, messages: bm25_keywords, max_tokens: 200 }),
+    generate_text({ model: model, messages: standalone_questions, max_tokens: 100 })
   ])
 
   // Parse/validate the generated responses into an Augmented_Query object. Some
   // transformations are applied to the responses to ensure they are in the
   // correct format
+
+  const profanity = extract_tag_value(results[0], 'profanity', false)
+  const language = extract_tag_value(results[0], 'lang', 'fr')
+
   const augmented_query = Augmented_Query.parse({
     // Make sur `null` is parsed as `null` and not as a string
-    about_user: results[3].toLowerCase().includes('null') ? null : results[3],
-    location: results[2].toLowerCase().includes('null') ? null : results[2],
-
-    // Convert the profanity check to a boolean
-    contains_profanity: !!results[1]?.toLowerCase().includes('true'),
+    about_user:
+      results[1].toLowerCase().includes('null') || results[1].trim() === '' ? null : results[1],
 
     // Convert a string with '|' delimiter to an array
-    standalone_questions: convert_to_array(results[8]),
-    stepback_questions: convert_to_array(results[5]),
-    search_queries: convert_to_array(results[6]),
-    bm25_keywords: convert_to_array(results[7]),
-    hyde_answers: convert_to_array(results[4]),
+    standalone_questions: convert_to_array(results[4]),
+    search_queries: convert_to_array(results[2]),
+    bm25_keywords: convert_to_array(results[3]),
+
+    // Convert the profanity check to a boolean
+    contains_profanity: typeof profanity === 'string' ? !!profanity.includes('true') : false,
 
     // prettier-ignore
     // Check if the language code is valid, otherwise default to 'fr'
@@ -184,18 +163,33 @@ export const augment_query = async (context: AIContext) => {
             'gd','sn','si','sk','sl','so','st','es','su','sw','ss','sv','ta','te',
             'tg','th','ti','bo','tk','tl','tn','to','tr','ts','tt','tw','ty','ug',
             'uk','ur','uz','ve','vi','vo','wa','cy','wo','fy','xh','yi','yo','za','zu']
-            .includes(results[0].trim().toLowerCase()) ? results[0].trim().toLowerCase() : 'fr'
+            .includes(typeof language === 'string' ? language : '') ? language : 'fr'
   })
 
   // End performance measurement
   performance.mark('end')
+
+  console.log(augmented_query)
   console.debug(`
     -----------------------------------
     augment_query: ${performance.measure('d', 'start', 'end').duration}ms
     -----------------------------------
     `)
 
-  console.log(augmented_query)
-
   return augmented_query
+}
+
+/**
+ * Extracts the value of a specified tag from a given response string.
+ *
+ * @note This function is tested in tests/unit/utils/extract-tag-value.test.ts
+ * @param response - The string containing the HTML/XML response.
+ * @param tag - The tag whose value needs to be extracted.
+ * @param fallback - The fallback value to return if the tag is not found.
+ * @returns The extracted tag value in lowercase and trimmed, or the fallback value if the tag is not found.
+ */
+export const extract_tag_value = (response: string, tag: string, fallback: string | boolean) => {
+  const regex = new RegExp(`<${tag}>(.*?)</${tag}>`)
+  const match = response.match(regex)
+  return match ? match[1].trim().toLowerCase() : fallback
 }
