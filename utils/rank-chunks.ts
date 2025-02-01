@@ -163,7 +163,7 @@ export const flatten_vector_searches = (data: Vector_Search_Result[]): Flatten_C
         .map((group) => _.minBy(group, 'distance'))
         .compact()
         .orderBy('distance')
-        .take(40)
+        .take(25)
         .value()
     )
     .values()
@@ -241,7 +241,6 @@ export const score_chunk = async (context: AIContext, chunk: Flatten_Chunk) => {
         
         1. Answer Presence – Does the chunk contain the answer to the user’s final intent?
         2. Relevance – Is the answer directly related to the user’s question, including implicit meaning?
-        3. Clarity & Utility – Is the answer clear, specific, and useful?
         
         **Validation Check**
         
@@ -254,12 +253,11 @@ export const score_chunk = async (context: AIContext, chunk: Flatten_Chunk) => {
         - 1-999 (Partial Match) – The response is relevant but lacks precision, completeness, or clarity.
         - 0 (No Match) – No meaningful connection to the user’s intent.
         
-        **Think carefully and enclose the score within <score> tags.**
-        
-        `
+        **Think carefully and output the score first, within <score> tags, followed by your reasoning.**`
       }
     ],
-    model: context.config.context[context.current_context].models.rerank_with
+    model: context.config.context[context.current_context].models.rerank_with,
+    max_tokens: 300
   })
 
   return extract_score_and_reasoning(score)
