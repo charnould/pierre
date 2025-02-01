@@ -20,7 +20,7 @@ test('evaluate query augmentation perf.', async () => {
     },
     current_context: 'default',
     conversation: [
-      // { role: 'user', content: 'Tu es trop con !' },
+      // { role: 'user', content: 'Tu es un abruti !' }
       // { role: 'user', content: 'Comment déposer mon préavis de congé pour mon logement ? Et avez-vous un modèle de courrier ?' },
       // { role: 'user', content: 'كيفية الاتصال بالمكتب الرئيسي لبلدية Grand Dijon Habitat؟' }
       // { role: 'user', content: 'Quelle est la procédure si un locataire est bloqué dans un ascenseur ?' }
