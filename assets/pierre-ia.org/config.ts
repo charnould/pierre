@@ -37,6 +37,8 @@ export default {
       // - "anthropic('claude-3-5-haiku-20241022')",
       // - "openai('gpt-4o-2024-11-20')",
       // - "togetherai('meta-llama/Llama-3.3-70B-Instruct-Turbo')"
+      // - "groq('llama-3.3-70b-versatile')"
+      // - "cerebras('llama3.1-8b')"
       models: {
         // Les embeddings sont des représentations vectorielles
         // de textes qui en capturent le sens sémantique.
