@@ -4,7 +4,7 @@ Le quartier prioritaire de la politique de la ville (QPPV), quartier de la polit
 
 Le dispositif est entré en vigueur le 1er janvier 2015 en remplacement de la zone urbaine sensible (ZUS) et du quartier en contrat urbain de cohésion sociale (CUCS) conformément à une promesse de campagne du président François Hollande. La liste et les contours des QPV, établis en 2015 ont été mis à jour le 1er janvier 2024.
 
-On compte environ 1 500 quartiers prioritaires réunissant près de 5,5 millions d'habitants\[Quand ?\]\[réf. souhaitée\]. S'il s'agit essentiellement de cités de grands ensembles, on trouve aussi d'anciennes cités minières et industrielles ou des centres anciens dégradés. La vétusté de l'habitat, l'éloignement des bassins d'emplois et des services publics représentent des enjeux récurrents.
+On compte environ 1 500 quartiers prioritaires réunissant près de 5,5 millions d'habitants en 2022. S'il s'agit essentiellement de cités de grands ensembles, on trouve aussi d'anciennes cités minières et industrielles ou des centres anciens dégradés. La vétusté de l'habitat, l'éloignement des bassins d'emplois et des services publics représentent des enjeux récurrents.
 
 ## Caractéristiques
 
