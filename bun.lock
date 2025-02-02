@@ -1569,7 +1569,7 @@
 
     "through2": ["through2@4.0.2", "", { "dependencies": { "readable-stream": "3" } }, "sha512-iOqSav00cVxEEICeD7TjLB1sueEL+81Wpzp2bY17uZjZN0pWZPuo4suZ/61VujxmqSGFfgOcNuTZ85QJwNZQpw=="],
 
-    "tiktoken": ["tiktoken@1.0.18", "", {}, "sha512-DXJesdYwmBHtkmz1sji+UMZ4AOEE8F7Uw/PS/uy0XfkKOzZC4vXkYXHMYyDT+grdflvF4bggtPt9cYaqOMslBw=="],
+    "tiktoken": ["tiktoken@1.0.19", "", {}, "sha512-vgFTegKSjNIQ9oTMpNTForC6zvOfulgQFAj3h+FMI+wTVXEszhud3W1jllVbvfWcWN6rGPRryCnEfqUIOMpzGw=="],
 
     "to-arraybuffer": ["to-arraybuffer@1.0.1", "", {}, "sha512-okFlQcoGTi4LQBG/PgSYblw9VOyptsz2KJZqc6qtgGdes8VktzUQkj4BI2blit072iS8VODNcMA+tvnS9dnuMA=="],
 
