@@ -10,7 +10,7 @@ Le 13 février 2014, après examen préalable par le Sénat, l’Assemblée nati
 
 L'ANRU est également opérateur avec la Caisse des dépôts de 9 programmes d’investissement d’avenir (PIA), des programmes d’investissement de l’État français en faveur de la jeunesse et des sports, de la ville, de la cohésion des territoires et du développement durable. Les fonds alloués à ces programmes s’élèvent à plus de 830 millions d’euros.
 
-En cohérence avec ses missions relevant de la politique de la ville, l'ANRU quitte ses locaux historiques, situés rue de Vaugirard dans le 6e arrondissement de Paris. L'agence s'installe dans son nouveau siège, conçu par l'architecte Rudy Ricciotti à Pantin, en Seine-Saint-Denis, face à l'arrêt de métro d'Église de Pantin (ligne 5), le 4 juillet 2022. Ses locaux sont officiellement inaugurés le 7 juillet 2022 en présence d'Emmanuelle Cosse, Christophe Béchu et Olivier Klein.
+En cohérence avec ses missions relevant de la politique de la ville et des quartiers populaires et quartiers prioritaires de la politique de la ville (QPV), l'ANRU quitte ses locaux historiques, situés rue de Vaugirard dans le 6e arrondissement de Paris. L'agence s'installe dans son nouveau siège, conçu par l'architecte Rudy Ricciotti à Pantin, en Seine-Saint-Denis, face à l'arrêt de métro d'Église de Pantin (ligne 5), le 4 juillet 2022. Ses locaux sont officiellement inaugurés le 7 juillet 2022 en présence d'Emmanuelle Cosse, Christophe Béchu et Olivier Klein.
 
 ## Objectif
 
@@ -53,6 +53,7 @@ Au total, les moyens financiers consacrés à la mise en œuvre du PNRU entre 20
 - novembre 2014 - juillet 2017 : François Pupponi
 - 30 novembre 2017- juillet 2022 : Olivier Klein
 - Septembre 2022 - janvier 2024 : Catherine Vautrin
+- Janvier 2025- : Patrice Vergriete
 
 ### Directeurs généraux
 
@@ -78,7 +79,7 @@ Toutes les pièces exigées par le règlement général de l'ANRU doivent être 
 
 ### Instruction
 
-Le dossier bouclé est déposé par le maire ou le président de la communauté au délégué territorial du département, qu'il s'agisse du préfet en région ou d'un représentant des services déconcentrés de l'État (DRIHL ou DDT) en Île-de-France. Après l'instruction du dossier qui intègre la consultation des partenaires locaux de l’agence par le délégué territorial, le dossier est transmis à l'ANRU. Une réunion entre partenaires peut alors aboutir à une demande de compléments aux acteurs.
+Le dossier bouclé est déposé par le maire ou le président de la communauté au délégué territorial du département, qu'il s'agisse du préfet en région ou d'un représentant des services déconcentrés de l'État (DRIHL ou DDT) en région Île-de-France. Après l'instruction du dossier qui intègre la consultation des partenaires locaux de l’agence par le délégué territorial, le dossier est transmis à l'ANRU. Une réunion entre partenaires peut alors aboutir à une demande de compléments aux acteurs.
 
 Ensuite, le dossier est examiné par le comité d’engagement, présidé par le directeur général de l'ANRU, avec présentation par le maire, le président de la communauté et le préfet. Les représentants des bailleurs sociaux participent en principe à cette présentation, de même que le représentant de la Caisse des dépôts.
 
