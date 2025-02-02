@@ -55,7 +55,7 @@
     "sqlite-vec-linux-x64": "^0.1.6",
     "stopwords-fr": "^0.3.0",
     "talisman": "^1.1.4",
-    "tiktoken": "^1.0.18",
+    "tiktoken": "^1.0.19",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "^3.24.1",
     "zod-to-json-schema": "^3.24.1"
