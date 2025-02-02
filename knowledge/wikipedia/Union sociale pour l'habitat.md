@@ -9,10 +9,10 @@ L’Union sociale pour l'habitat, créée en 1929, rassemble quatre fédération
 - la fédération nationale des Offices publics de l’habitat (OPH) ;
 - la fédération nationale des Entreprises sociales pour l’habitat (ESH) ;
 - la fédération nationale des Sociétés coopératives d'Hlm ;
-- Procivis-UES-AP, qui représente les intérêts des 52 Sociétés anonymes coopératives d'intérêt collectif pour l'accession à la propriété (SACICAP) ;
+- Procivis-UES-AP, qui représente les intérêts des 52 sociétés anonymes coopératives d'intérêt collectif pour l'accession à la propriété (SACICAP) ;
 - la fédération nationale des Associations régionales d'organismes d'habitat social (FNAR).
 
-Depuis le 4 novembre 2020, elle est présidée par Emmanuelle Cosse, ancienne ministre du Logement et de l'Habitat durable. Marianne Louis en est la directrice générale.
+Depuis le 4 novembre 2020, elle est présidée par Emmanuelle Cosse, ancienne ministre du Logement et de l'Habitat durable. Marianne Louis, une « ancienne élue de l’aile gauche du Parti socialiste, un temps proche de Jean-Luc Mélenchon », en est la directrice générale.
 
 Les fédérations correspondent à des familles d’organismes Hlm différentes, chacune étant le résultat d’une histoire et d’une culture spécifiques.
 
