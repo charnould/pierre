@@ -87,6 +87,8 @@ Sa nomination au gouvernement en février 2016 est alors relatée comme perçue 
 
 - Ressource relative à plusieurs domaines :
   - Radio France
+- Ressource relative à l'audiovisuel :
+  - France 24
 
 ## Notes et références
 
