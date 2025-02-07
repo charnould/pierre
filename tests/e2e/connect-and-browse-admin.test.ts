@@ -59,16 +59,6 @@ it('`admin` should pass e2e test', async () => {
   expect(cookie).toBeDefined()
   expect(page.url()).toBe('http://localhost:3000/a')
 
-  // Navigate to `encyclopedia`
-  await page.click('a[href="a/encyclopedia"]')
-  await Bun.sleep(250)
-  expect(page.url()).toBe('http://localhost:3000/a/encyclopedia')
-
-  // Return to hompage
-  await page.click('a[href="/a"]')
-  await Bun.sleep(250)
-  expect(page.url()).toBe('http://localhost:3000/a')
-
   // Navigate to `conversations`
   await page.click('a[href="a/conversations"]')
   await Bun.sleep(250)
@@ -79,10 +69,10 @@ it('`admin` should pass e2e test', async () => {
   await Bun.sleep(250)
   expect(page.url()).toBe('http://localhost:3000/a')
 
-  // Navigate to `statistics`
-  await page.click('a[href="a/statistics"]')
+  // Navigate to `performance`
+  await page.click('a[href="a/performance"]')
   await Bun.sleep(250)
-  expect(page.url()).toBe('http://localhost:3000/a/statistics')
+  expect(page.url()).toBe('http://localhost:3000/a/performance')
 
   // Return to hompage
   await page.click('a[href="/a"]')
@@ -199,15 +189,11 @@ it('`admin` should pass e2e test', async () => {
   expect(cookie).toBeDefined()
 
   // Navigate to forbidden links
-  await page.goto('http://localhost:3000/a/encyclopedia')
-  await Bun.sleep(250)
-  expect(page.url()).toBe('http://localhost:3000/a/login')
-
   await page.goto('http://localhost:3000/a/conversations')
   await Bun.sleep(250) // Wait for redirection
   expect(page.url()).toBe('http://localhost:3000/a/login')
 
-  await page.goto('http://localhost:3000/a/statistics')
+  await page.goto('http://localhost:3000/a/performance')
   await Bun.sleep(250) // Wait for redirection
   expect(page.url()).toBe('http://localhost:3000/a/login')
 
@@ -241,22 +227,12 @@ it('`admin` should pass e2e test', async () => {
   cookie = (await page.cookies()).find((cookie) => cookie.name === 'pierre-ia')
   expect(cookie).toBeDefined()
 
-  // Navigate to an authorized page
-  await page.click('a[href="a/encyclopedia"]')
-  await Bun.sleep(250)
-  expect(page.url()).toBe('http://localhost:3000/a/encyclopedia')
-
-  // Return to homepage
-  await page.click('a[href="/a"]')
-  await Bun.sleep(250)
-  expect(page.url()).toBe('http://localhost:3000/a')
-
   // Navigate to multiple forbidden links
   await page.click('a[href="a/conversations"]')
   await Bun.sleep(250) // Wait for redirection
   expect(page.url()).toBe('http://localhost:3000/a')
 
-  await page.click('a[href="a/statistics"]')
+  await page.click('a[href="a/performance"]')
   await Bun.sleep(250) // Wait for redirection
   expect(page.url()).toBe('http://localhost:3000/a')
 
