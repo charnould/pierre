@@ -5,22 +5,13 @@ export const view = (user) => {
     <html lang="fr">
       <head>
         <meta charset="UTF-8" />
-        <script src="https://unpkg.com/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
         <link rel="icon" href="../assets/pierre-ia.org/system.svg" type="image/svg+xml" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1738501854356.css" />
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1738923107833.css" />
         <title>PIERRE — Administration</title>
       </head>
 
       <body class="w-[900px] p-20">
-        <h2 class="mb-10 text-4xl font-medium">Bonjour 🖐️</h2>
-
-        <a
-          href="a/encyclopedia"
-          class="block cursor-pointer text-7xl font-bold hover:underline hover:underline-offset-4"
-          >Encyclopédie</a
-        >
-
         <a
           href="a/conversations"
           ${user.role === 'administrator'
@@ -31,12 +22,12 @@ export const view = (user) => {
         >
 
         <a
-          href="a/statistics"
+          href="a/performance"
           ${user.role === 'administrator'
             ? html`class="block cursor-pointer text-7xl font-bold hover:underline
               hover:underline-offset-4"`
             : html`class="block cursor-not-allowed text-7xl font-bold text-neutral-400"`}
-          >Statistiques</a
+          >Performance</a
         >
         <a
           href="a/users"
