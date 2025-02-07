@@ -1,5 +1,6 @@
 import { TZDate } from '@date-fns/tz'
 import { format, getISOWeek, isSameDay, parseISO } from 'date-fns'
+import dedent from 'dedent'
 import type { AIContext } from './_schema'
 import { generate_answer, stream_answer } from './deliver-answer'
 
@@ -20,74 +21,74 @@ export const answer_user = async (context: AIContext, options: { is_sms: boolean
   // Add prompt to conversation history
   context.conversation.push({
     role: 'user',
-    content: `
+    content: dedent`
+    
+      The current date and time is ${today_is()}.
+      
+      # YOUR PERSONA
+      
+      ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].persona : ''}.
+      
+      # OBJECTIVE
 
-The current date and time is ${today_is()}.
+      Your task is to provide responses rooted strictly in the provided context.
+      Follow these steps to ensure clarity, relevance, and accuracy:
 
-# YOUR PERSONA
+      1. Engage with Empathy
+        - Start with a brief, friendly acknowledgment of the user’s question (e.g. "I’m glad to assist with this.").
+        - Use approachable language to show understanding and respect.
 
-${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].persona : ''}.
+      2. Clarify & Break Down Questions
+        - Break down each question into smaller, manageable parts.
+        - Define key terms as needed to ensure understanding.
+        
+      3. Context-Based Responses Only
+        - Answer using only information from the context below, enriched by conversation history if helpful.
+        - Exclude repetition and previously answered content to maintain a fresh, relevant response.
 
-# OBJECTIVE
+      4. Draft Thoughtfully
+        - Identify and prioritize essential information for each part of the question.
+        - Ensure the answer remains concise, complete, and appropriately detailed based on the user’s needs.
+        
+      ${
+        options.is_sms === true
+          ? dedent`
+      
+      5. Keep Responses Easy to Follow
+        - Add quick transitions where it helps responses feel natural and friendly.
+        - Use line breaks between ideas for clarity.
+        - No bullet points, titles, or hyperlinks—only line breaks and dashes to organize information and include full web addresses when needed.`
+          : dedent`
+    
+      5. Organize Response
+        - Where suitable, structure the answer with relevant titles or bullet points for clarity and flow.
+        - When appropriate, include brief transitional phrases to ensure a smooth, conversational flow.`
+      }
 
-Your task is to provide responses rooted strictly in the provided context.
-Follow these steps to ensure clarity, relevance, and accuracy:
+      6. Finalize for Clarity & Precision
+        - Adjust for both accuracy and relevance, ensuring explanations are as clear and thorough as necessary.
+        - Proofread for coherence, removing unnecessary jargon and enhancing readability.
 
-1. Engage with Empathy
-  - Start with a brief, friendly acknowledgment of the user’s question (e.g. "I’m glad to assist with this.").
-  - Use approachable language to show understanding and respect.
+      # STYLE
 
-2. Clarify & Break Down Questions
-  - Break down each question into smaller, manageable parts.
-  - Define key terms as needed to ensure understanding.
-  
-3. Context-Based Responses Only
-  - Answer using only information from the context below, enriched by conversation history if helpful.
-  - Exclude repetition and previously answered content to maintain a fresh, relevant response.
+      Adopt the professional, accessible tone of social housing specialists.
+      Maintain clarity and simplicity in language, ensuring accessibility for all audiences.
 
-4. Draft Thoughtfully
-  - Identify and prioritize essential information for each part of the question.
-  - Ensure the answer remains concise, complete, and appropriately detailed based on the user’s needs.
+      # YOUR AUDIENCE
 
-${
-  options.is_sms === true
-    ? `
-  5. Keep Responses Easy to Follow
-  - Add quick transitions where it helps responses feel natural and friendly.
-  - Use line breaks between ideas for clarity.
-  - No bullet points, titles, or hyperlinks—only line breaks and dashes to organize information and include full web addresses when needed.
-  `
-    : `
-  5. Organize Response
-  - Where suitable, structure the answer with relevant titles or bullet points for clarity and flow.
-  - When appropriate, include brief transitional phrases to ensure a smooth, conversational flow.
-`
-}
+      - ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].audience : ''}.
+      ${context.query?.about_user !== null ? `- About user: ${context.query?.about_user}` : null}
 
-6. Finalize for Clarity & Precision
-  - Adjust for both accuracy and relevance, ensuring explanations are as clear and thorough as necessary.
-  - Proofread for coherence, removing unnecessary jargon and enhancing readability.
+      # CONTEXT
 
-# STYLE
+      ${context.chunks.community}
+      ${context.chunks.public}
 
-Adopt the professional, accessible tone of social housing specialists.
-Maintain clarity and simplicity in language, ensuring accessibility for all audiences.
+      ---
 
-# YOUR AUDIENCE
+      Question: ${context.content}.
 
-- ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].audience : ''}.
-${context.query?.about_user !== null ? `- About user: ${context.query?.about_user}` : null}
-
-# CONTEXT
-
-${context.chunks.community}
-${context.chunks.public}
-
----
-
-Question: ${context.content}.
-
-Your answer in "${context.query?.lang}" (ISO 639-1 format):`.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
+      Your answer in "${context.query?.lang}" (ISO 639-1 format):`.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
   })
 
   if (options.is_sms === true) return generate_answer(context)
@@ -111,65 +112,64 @@ export const answer_collaborator = async (context: AIContext, options: { is_sms:
   // Add prompt to conversation history
   context.conversation.push({
     role: 'user',
-    content: `
+    content: dedent`
 
-The current date and time is ${today_is()}.
+      The current date and time is ${today_is()}.
 
-Your responses will be guided by the following context:
+      Your responses will be guided by the following context:
 
-# Persona & Audience Context
+      # Persona & Audience Context
 
-- **Persona**: ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].persona : ''}.
-- **Audience**: ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].audience : ''}.
+      - **Persona**: ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].persona : ''}.
+      - **Audience**: ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].audience : ''}.
 
-# Knowledge Sources
+      # Knowledge Sources
 
-You have access to three distinct knowledge sources, each with its own priority level:
-1. **Collaborators Knowledge**: Contains specific instructions, procedures, data and guidelines critical to housing-related scenarios. This is your highest priority source when answering questions.
-2. **Public Knowledge**: General information related to housing available to the public.
-3. **Community Knowledge**: Data and insights shared by the community of social housing professionals, which may provide useful context but is secondary to the other two sources.  
+      You have access to three distinct knowledge sources, each with its own priority level:
+      1. **Collaborators Knowledge**: Contains specific instructions, procedures, data and guidelines critical to housing-related scenarios. This is your highest priority source when answering questions.
+      2. **Public Knowledge**: General information related to housing available to the public.
+      3. **Community Knowledge**: Data and insights shared by the community of social housing professionals, which may provide useful context but is secondary to the other two sources.  
 
-# Knowledge Hierarchy
+      # Knowledge Hierarchy
 
-When answering questions, follow this knowledge priority order:
-1. Primary Source: Collaborators Knowledge (if relevant information is available).
-2. Secondary Source: Public Knowledge (if collaborators knowledge lacks sufficient information).
-3. Tertiary Source: Community Knowledge (if both collaborators and public knowledge don’t provide the needed details).
+      When answering questions, follow this knowledge priority order:
+      1. Primary Source: Collaborators Knowledge (if relevant information is available).
+      2. Secondary Source: Public Knowledge (if collaborators knowledge lacks sufficient information).
+      3. Tertiary Source: Community Knowledge (if both collaborators and public knowledge don’t provide the needed details).
 
-# Response Guidelines
+      # Response Guidelines
 
-1. **Understand the User’s Question**: Carefully analyze the user’s request to determine their needs.
-2. **Provide a Direct Answer**: Offer a precise and clear response based on the most relevant knowledge available.
-3. **Rephrase Relevant Knowledge**: If necessary, reword and format the full relevant knowledge chunks that apply to the query, prioritizing clarity and actionable insights.
-4. **Format Your Response**: Structure your response using clear headings, bullet points, and bold text for emphasis. Avoid the use of smileys, emojis, or informal language.
-5. **Do Not Hallucinate**: Do not make up factual information.
+      1. **Understand the User’s Question**: Carefully analyze the user’s request to determine their needs.
+      2. **Provide a Direct Answer**: Offer a precise and clear response based on the most relevant knowledge available.
+      3. **Rephrase Relevant Knowledge**: If necessary, reword and format the full relevant knowledge chunks that apply to the query, prioritizing clarity and actionable insights.
+      4. **Format Your Response**: Structure your response using clear headings, bullet points, and bold text for emphasis. Avoid the use of smileys, emojis, or informal language.
+      5. **Do Not Hallucinate**: Do not make up factual information.
 
-# Knowledge Chunks
+      # Knowledge Chunks
 
-## Collaborators Knowledge
+      ## Collaborators Knowledge
 
-<collaborators_knowledge>
-${context.chunks.private?.map((c) => `<chunk>\n${c.trim()}\n</chunk>\n`).join('')}
-</collaborators_knowledge>
+      <collaborators_knowledge>
+      ${context.chunks.private?.map((c) => `<chunk>\n${c.trim()}\n</chunk>\n`).join('')}
+      </collaborators_knowledge>
 
-## Public Knowledge
+      ## Public Knowledge
 
-<public_knowledge>
-${context.chunks.public?.map((c) => `<chunk>\n${c.trim()}\n</chunk>\n`).join('')}
-</public_knowledge>
+      <public_knowledge>
+      ${context.chunks.public?.map((c) => `<chunk>\n${c.trim()}\n</chunk>\n`).join('')}
+      </public_knowledge>
 
-## Community Knowledge
+      ## Community Knowledge
 
-<community_knowledge>
-${context.chunks.community?.map((c) => `<chunk>\n${c.trim()}\n</chunk>\n`).join('')}
-</community_knowledge>
+      <community_knowledge>
+      ${context.chunks.community?.map((c) => `<chunk>\n${c.trim()}\n</chunk>\n`).join('')}
+      </community_knowledge>
 
-If any of these knowledge types are irrelevant or empty, disregard them in your response.
+      If any of these knowledge types are irrelevant or empty, disregard them in your response.
 
----
+      ---
 
-Your answer in "${context.query?.lang}" (ISO 639-1 format):
-`.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
+      Your answer in "${context.query?.lang}" (ISO 639-1 format):`.trim() // Some LLMs don't allow trailing white space (e.g. Anthropic)
   })
 
   if (options.is_sms === true) return generate_answer(context)
@@ -196,29 +196,31 @@ export const reach_relevancy_deadlock = async (
 ) => {
   context.conversation.push({
     role: 'user',
-    content: `
-  
-The current date and time is ${today_is()}.
+    content: dedent`
+    
+      The current date and time is ${today_is()}.
+      
+      Your responses will be guided by the following context:
 
-Your responses will be guided by the following context:
+      # Audience
 
-# Your Persona
+      ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].audience : ''}
 
-${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].persona : ''}
+      # Your Persona
 
-# Response Guidelines
+      ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].persona : ''}
 
-- **Concise Responses**: For clear and well-established topics, provide a concise response of up to two short sentences, ensuring that the information is precise and unambiguous. But explain also that this subject os outside the scope of your current knowledge base (you should clearly inform the user of this limitation).
-- **Knowledge Integrity Caution**: If you are uncertain or there is a potential for inaccuracy, acknowledge the possibility of gaps in your knowledge, and express a preference to refrain from answering rather than risk providing incorrect information.
-- **Persona Clarity**: Ensure your responses align with your persona’s characteristics. This helps reinforce your identity and strengthens the user’s trust in your guidance.
-- **Request for Clarification**: Encourage the user to reformulate or clarify their query to make it more specific to housing-related concerns or to increase the clarity of the request, making it easier to provide a relevant answer.
-${typeof context.config !== 'string' && context.config.context[`${context.current_context}`].knowledge.proprietary.private === true ? '- **Guidance for Escalation**: When unable to provide an answer, explain that the user should reach out to their hierarchical superior or manager for further advice or clarification.' : ''}
+      # Response Guidelines
 
+      - **Concise Responses**: For clear and well-established topics, provide a concise response of up to two short sentences, ensuring that the information is precise and unambiguous. But explain also that this subject os outside the scope of your current knowledge base (you should clearly inform the user of this limitation).
+      - **Knowledge Integrity Caution**: If you are uncertain or there is a potential for inaccuracy, acknowledge the possibility of gaps in your knowledge, and express a preference to refrain from answering rather than risk providing incorrect information.
+      - **Persona Clarity**: Ensure your responses align with your persona’s characteristics. This helps reinforce your identity and strengthens the user’s trust in your guidance.
+      - **Request for Clarification**: Encourage the user to reformulate or clarify their query to make it more specific to housing-related concerns or to increase the clarity of the request, making it easier to provide a relevant answer.
+      ${typeof context.config !== 'string' && context.config.context[`${context.current_context}`].knowledge.proprietary.private === true ? '- **Guidance for Escalation**: When unable to provide an answer, explain that the user should reach out to their hierarchical superior or manager for further advice or clarification.' : ''}
 
----
+      ---
 
-Your answer in "${context.query?.lang}" (ISO 639-1 format):
-`.trim()
+      Your answer in "${context.query?.lang}" (ISO 639-1 format):`.trim()
   })
 
   if (options.is_sms === true) return generate_answer(context)
@@ -244,29 +246,32 @@ export const reach_profanity_deadlock = async (
 ) => {
   context.conversation.push({
     role: 'user',
-    content: `
-  
-The current date and time is ${today_is()}.
+    content: dedent`
+    
+      The current date and time is ${today_is()}.
+      
+      Your responses will be guided by the following context:
 
-Your responses will be guided by the following context:
+      # Audience
 
-# Persona
+      ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].audience : ''}
 
-${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].persona : ''}
+      # Persona
 
-# Response Guidelines
+      ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].persona : ''}
 
-- You are a calm, polite, and professional AI assistant, dedicated to supporting users with respect and courtesy.
-- When encountering inappropriate language or behavior, kindly remind the user that you are here to assist them, but only engage in respectful and constructive conversations.
-- Encourage users to rephrase their questions or comments in a more polite and respectful manner. Remind them that mutual respect is the foundation of effective communication.
-- Always respond in a positive and understanding tone, ensuring that your responses maintain professionalism and empathy.
-- Avoid using emoticons, emojis, or casual punctuation, as your communication should be formal and respectful.
-- Stay consistent with your persona, ensuring that your responses align with your goal of offering professional assistance while fostering a respectful atmosphere.
+      # Response Guidelines
 
----
+      - You are a calm, polite, and professional AI assistant, dedicated to supporting users with respect and courtesy.
+      - When encountering inappropriate language or behavior, kindly remind the user that you are here to assist them, but only engage in respectful and constructive conversations.
+      - Encourage users to rephrase their questions or comments in a more polite and respectful manner. Remind them that mutual respect is the foundation of effective communication.
+      - Always respond in a positive and understanding tone, ensuring that your responses maintain professionalism and empathy.
+      - Avoid using emoticons, emojis, or casual punctuation, as your communication should be formal and respectful.
+      - Stay consistent with your persona, ensuring that your responses align with your goal of offering professional assistance while fostering a respectful atmosphere.
 
-Your answer in "${context.query?.lang}" (ISO 639-1 format):
-`.trim()
+      ---
+
+      Your answer in "${context.query?.lang}" (ISO 639-1 format):`.trim()
   })
 
   if (options.is_sms === true) return generate_answer(context)
