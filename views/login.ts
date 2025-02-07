@@ -5,10 +5,9 @@ export const view = (message) => {
     <html lang="fr">
       <head>
         <meta charset="UTF-8" />
-        <script src="https://unpkg.com/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
         <link rel="icon" href="../assets/pierre-ia.org/system.svg" type="image/svg+xml" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1738501854356.css" />
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1738923107833.css" />
         <title>PIERRE — Administration > Connexion</title>
       </head>
 
