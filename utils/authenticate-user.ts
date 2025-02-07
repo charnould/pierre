@@ -117,8 +117,7 @@ export const authenticate = async (c: Context, next: Next) => {
     if (user.role === 'collaborator') {
       if (
         c.req.path.startsWith('/a/conversations') ||
-        c.req.path.startsWith('/a/encyclopedia') ||
-        c.req.path.startsWith('/a/statistics') ||
+        c.req.path.startsWith('/a/performance') ||
         c.req.path.startsWith('/a/users') ||
         c.req.path.startsWith('/a')
       ) {
@@ -131,7 +130,7 @@ export const authenticate = async (c: Context, next: Next) => {
     if (user.role === 'contributor') {
       if (
         c.req.path.startsWith('/a/conversations') ||
-        c.req.path.startsWith('/a/statistics') ||
+        c.req.path.startsWith('/a/performance') ||
         c.req.path.startsWith('/a/users')
       ) {
         return c.redirect('/a')

@@ -7,10 +7,9 @@ import { secureHeaders } from 'hono/secure-headers'
 import { controller as get_admin } from './controllers/GET.admin'
 import { controller as get_ai } from './controllers/GET.ai'
 import { controller as get_conversations } from './controllers/GET.conversations'
-import { controller as get_encyplopedia } from './controllers/GET.encyclopedia'
 import { controller as get_index } from './controllers/GET.index'
 import { controller as get_login } from './controllers/GET.login'
-import { controller as get_statistics } from './controllers/GET.statistics'
+import { controller as get_performance } from './controllers/GET.performance'
 import { controller as get_users } from './controllers/GET.users'
 import { controller as post_conversation } from './controllers/POST.conversations'
 import { controller as post_login } from './controllers/POST.login'
@@ -48,8 +47,7 @@ app.use('/assets/*', serveStatic({ root: './' }))
   // Admin routes
   app.get('/a'                , authenticate, get_admin)
   app.get('/a/users'          , authenticate, get_users)
-  app.get('/a/statistics'     , authenticate, get_statistics)
-  app.get('/a/encyclopedia'   , authenticate, get_encyplopedia)
+  app.get('/a/performance'    , authenticate, get_performance)
   app.get('/a/conversations'  , authenticate, get_conversations)
   app.post('/a/conversations' , authenticate, post_conversation)
   app.post('/a/users'         , authenticate, post_users)
