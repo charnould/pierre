@@ -17,21 +17,24 @@ const r_1_1 = await AIContext.parseAsync({
   conv_id: 'id_1',
   config: 'pierre-ia.org',
   role: 'user',
-  content: 'Qui es-tu ?'
+  content: 'Qui es-tu ?',
+  custom_data: { raw: ['julie', '456.56'] }
 })
 
 const r_1_2 = await AIContext.parseAsync({
   conv_id: 'id_1',
   config: 'pierre-ia.org',
   role: 'assistant',
-  content: 'Je suis Pierre !'
+  content: 'Je suis Pierre !',
+  custom_data: { raw: ['julie', '456.56'] }
 })
 
 const r_2_1 = await AIContext.parseAsync({
   conv_id: 'id_2',
   config: 'pierre-ia.org',
   role: 'user',
-  content: 'Bonjour'
+  content: 'Bonjour',
+  custom_data: { raw: ['julie', '456.56'] }
 })
 
 //
@@ -57,11 +60,11 @@ afterAll(() => {
 //
 it('should insert 3 replies', async () => {
   setSystemTime(new Date('2012-12-12T12:05:00'))
-  save_reply(r_1_1, false)
+  save_reply(r_1_1)
   setSystemTime(new Date('2012-12-12T12:10:00'))
-  save_reply(r_1_2, false)
+  save_reply(r_1_2)
   setSystemTime(new Date('2012-12-12T12:15:00'))
-  save_reply(r_2_1, false)
+  save_reply(r_2_1)
 
   const database = db('datastore')
   if (database instanceof Database)
@@ -87,57 +90,42 @@ it('should retrieve 2 conversations', async () => {
 //
 //
 it('should score conversations', () => {
-  score_conversation(
-    {
-      conv_id: 'id_1',
-      scorer: 'customer',
-      score: 1,
-      comment: 'customer comment'
-    },
-    false
-  )
+  score_conversation({
+    conv_id: 'id_1',
+    scorer: 'customer',
+    score: 1,
+    comment: 'customer comment'
+  })
 
-  score_conversation(
-    {
-      conv_id: 'id_1',
-      scorer: 'organization',
-      score: 2,
-      comment: 'organization comment'
-    },
-    false
-  )
+  score_conversation({
+    conv_id: 'id_1',
+    scorer: 'organization',
+    score: 2,
+    comment: 'organization comment'
+  })
 
-  score_conversation(
-    {
-      conv_id: 'id_1',
-      scorer: 'pierre',
-      score: 3,
-      comment: 'pierre comment'
-    },
-    false
-  )
+  score_conversation({
+    conv_id: 'id_1',
+    scorer: 'pierre',
+    score: 3,
+    comment: 'pierre comment'
+  })
 
-  score_conversation(
-    {
-      conv_id: 'id_1',
-      scorer: 'ai',
-      score: 4,
-      comment: 'ai comment'
-    },
-    false
-  )
+  score_conversation({
+    conv_id: 'id_1',
+    scorer: 'ai',
+    score: 4,
+    comment: 'ai comment'
+  })
 
   expect(get_conversation('id_1')).toMatchSnapshot()
 
-  score_conversation(
-    {
-      conv_id: 'id_2',
-      scorer: 'ai',
-      score: 5,
-      comment: 'outstanding answer!'
-    },
-    false
-  )
+  score_conversation({
+    conv_id: 'id_2',
+    scorer: 'ai',
+    score: 5,
+    comment: 'outstanding answer!'
+  })
 
   expect(get_conversation('id_2')).toMatchSnapshot()
 })
