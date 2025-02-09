@@ -1,4 +1,4 @@
-import type { CoreTool, StreamTextResult } from 'ai'
+import type { StreamTextResult, Tool } from 'ai'
 import type { Context } from 'hono'
 import { stream } from 'hono/streaming'
 import { AIContext, type Config, type SMS } from '../utils/_schema'
@@ -17,7 +17,65 @@ import { bm25_search } from '../utils/search-by-bm25'
 import { generate_embeddings, vector_search } from '../utils/search-by-vectors'
 import { send_sms } from '../utils/send-sms'
 
+/**
+ * Controller function to handle server-sent events streaming.
+ *
+ * This function sets the necessary headers for enabling server-sent events streaming.
+ * It runs the request logic with a 50-second timeout constraint. If the execution exceeds
+ * the limit, it throws a timeout error. Otherwise, it returns the successful result.
+ */
 export const controller = async (c: Context) => {
+  try {
+    // Set the necessary headers for enabling server-sent events streaming
+    c.header('X-Vercel-AI-Data-Stream', 'v1')
+    c.header('Content-Type', 'text/event-stream; charset=utf-8')
+
+    // Run the request logic with a 50-second timeout constraint (Cloudflare has
+    // a 60-second timeout). If execution exceeds the limit, it throws a timeout
+    // error. Otherwise, return the successful result.
+    const answer = await Promise.race([
+      search_and_answer(c),
+      new Promise((_, reject) => setTimeout(reject, 50000, new Error('Timeout')))
+    ])
+
+    return answer
+  } catch (e) {
+    // Log the error and send the error message through
+    // the stream to display a user-friendly errors
+    console.error(e)
+    return stream(c, async (stream) => {
+      stream.writeln('pierre_error')
+    })
+  }
+}
+
+/**
+ * Handles AI logic for incoming requests, either from SMS or web.
+ *
+ * The function performs the following steps:
+ * 1. Initializes performance measurement variables.
+ * 2. Sets variables and types.
+ * 3. Checks if the incoming request is a valid SMS.
+ * 4. Parses the context based on the request type (SMS or web).
+ * 5. Applies AI logic to generate an appropriate response.
+ * 6. Sends the response back to the user.
+ *
+ * The AI logic includes:
+ * - Saving the user's reply.
+ * - Augmenting the query.
+ * - Performing vector and BM25 searches.
+ * - Reranking the search results.
+ * - Handling different knowledge access levels.
+ * - Generating responses based on the context and knowledge access.
+ *
+ * Performance measurements are logged for various stages of the AI logic.
+ *
+ * If the request is an SMS, a full-text answer is sent back via SMS.
+ * If the request comes from the web, a stream response is returned.
+ *
+ * In case of errors, an error message is logged and an error response is streamed back.
+ */
+const search_and_answer = async (c: Context) => {
   try {
     // Set performance measurement variables
     let t0 = 0
@@ -30,14 +88,11 @@ export const controller = async (c: Context) => {
     let t7 = 0
     let t8 = 0
 
-    //
     // Set variables and types
-    //
-
     let is_sms = false
     let context: AIContext
     let parsed_sms: SMS = null
-    let answer: string | StreamTextResult<Record<string, CoreTool>, unknown>
+    let answer: string | StreamTextResult<Record<string, Tool>, unknown>
 
     //
     // Check if incoming request is a valid SMS
@@ -57,7 +112,8 @@ export const controller = async (c: Context) => {
         conv_id: c.req.param('id'),
         config: c.req.query('config'),
         content: c.req.query('message'),
-        current_context: c.req.query('context')
+        current_context: c.req.query('context'),
+        custom_data: { raw: c.req.query('data')?.split('|') }
       })
     }
 
@@ -65,9 +121,8 @@ export const controller = async (c: Context) => {
     // The Main Part: "Apply AI Logic"
     //
 
-    // Save reply (= what the user just said) and because of `true` save also this
-    // reply to PIERRE (= telemetry) if `telemetry` env. variable is also `true`
-    save_reply(context, true)
+    // Save reply (= what the user just said)
+    save_reply(context)
 
     context = await AIContext.parseAsync({
       ...context,
@@ -195,7 +250,8 @@ export const controller = async (c: Context) => {
     // Send answer to the user
     //
 
-    // If incoming request is a SMS: return a full-text answer
+    // If incoming request is a SMS:
+    // return a full-text answer
     if (is_sms && parsed_sms !== null) {
       await send_sms({
         from: (context.config as Config).phone,
@@ -206,11 +262,8 @@ export const controller = async (c: Context) => {
       return c.body('ok', 200)
     }
 
-    // If incoming request comes from www: return a stream
-
-    c.header('X-Vercel-AI-Data-Stream', 'v1')
-    c.header('Content-Type', 'text/event-stream; charset=utf-8')
-
+    // If incoming request comes from www:
+    // return a stream
     return stream(
       c,
       async (stream) => {
@@ -218,9 +271,7 @@ export const controller = async (c: Context) => {
           stream.writeln('pierre_error')
         })
 
-        await stream.pipe(
-          (answer as StreamTextResult<Record<string, CoreTool>, unknown>).textStream
-        )
+        await stream.pipe((answer as StreamTextResult<Record<string, Tool>, unknown>).textStream)
       },
       (e, stream) => {
         stream.writeln('pierre_error')
