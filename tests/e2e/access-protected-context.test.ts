@@ -11,7 +11,7 @@ it('admin@pierre-ia.org should access `no_rag` context', async () => {
   await page.setViewport({ width: 1080, height: 1024 })
 
   expect(page.url()).toBe(
-    'http://localhost:3000/a/login?redirection=c%2F%3Fconfig%3Dpierre-ia.org%26context%3Dno_rag'
+    'http://localhost:3000/a/login?redirection=c%2F%3Fconfig%3Dpierre-ia.org%26context%3Dno_rag%26data%3D'
   )
 
   // Log in
@@ -26,7 +26,7 @@ it('admin@pierre-ia.org should access `no_rag` context', async () => {
 
   // ...and URL must be the one to the protected context
   expect(page.url()).toMatch(
-    /http:\/\/localhost:3000\/c\/.{36}\?config=pierre-ia.org&context=no_rag/
+    /http:\/\/localhost:3000\/c\/.{36}\?config=pierre-ia.org&context=no_rag&data=/
   )
 
   // e2e test is done!
