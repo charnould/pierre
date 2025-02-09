@@ -2,6 +2,7 @@ import { Database } from 'bun:sqlite'
 import { format } from 'date-fns'
 import { db } from '../utils/database'
 import type { AIContext, Reply } from './_schema'
+import { send_webhook } from './webhook'
 
 //
 //
@@ -40,7 +41,7 @@ export const delete_conversation = (conv_id: string) => {
 //
 //
 // Save a reply (to a conversation)
-export const save_reply = async (context: AIContext, telemetry: boolean) => {
+export const save_reply = async (context: AIContext) => {
   try {
     const database = db('datastore')
 
@@ -57,15 +58,22 @@ export const save_reply = async (context: AIContext, telemetry: boolean) => {
           format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX"),
           JSON.stringify(context.metadata)
         )
-    }
 
-    // Telemetry
-    if (Bun.env.TELEMETRY === 'true' && telemetry === true) {
-      await fetch('https://assistant.pierre-ia.org/telemetry', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(context)
-      })
+      for (const element of context.config.api) {
+        const data = element.format({
+          role: context.role,
+          content: context.content,
+          custom_data: context.custom_data.raw
+        }) as object
+
+        send_webhook({
+          webhook: element.url,
+          key: Bun.env[element.key] as string,
+          data: data,
+          delay: 1000,
+          max_retries: 3
+        })
+      }
     }
   } catch {}
 
@@ -75,10 +83,7 @@ export const save_reply = async (context: AIContext, telemetry: boolean) => {
 //
 //
 // Score a full conversation
-export const score_conversation = async (
-  { conv_id, scorer, score, comment },
-  telemetry: boolean
-) => {
+export const score_conversation = async ({ conv_id, scorer, score, comment }) => {
   try {
     const database = db('datastore')
 
@@ -95,20 +100,6 @@ export const score_conversation = async (
           WHERE conv_id = $conv_id`
         )
         .run({ $conv_id: conv_id, $score: score, $comment: comment })
-    }
-
-    // Telemetry
-    if (Bun.env.TELEMETRY === 'true' && telemetry === true) {
-      await fetch('https://assistant.pierre-ia.org/telemetry', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conv_id: conv_id,
-          scorer: scorer,
-          score: score,
-          comment: comment
-        })
-      })
     }
   } catch {}
 
