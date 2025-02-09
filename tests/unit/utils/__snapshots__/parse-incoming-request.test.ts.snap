@@ -8,6 +8,13 @@ exports[`should AIContext parse correctly 1`] = `
     "public": [],
   },
   "config": {
+    "api": [
+      {
+        "format": [Function],
+        "key": "WEBHOOK_KEY_1",
+        "url": "ex : https://api.ikos.com",
+      },
+    ],
     "context": {
       "default": {
         "audience": "The user’s primary focus is on housing, with a particular interest in social housing in France.",
@@ -112,12 +119,22 @@ exports[`should AIContext parse correctly 1`] = `
         "protected": false,
       },
     },
+    "custom_data": {
+      "format": [Function],
+    },
     "id": "pierre-ia.org",
   },
   "content": "bonjour",
   "conv_id": "22222",
   "conversation": [],
   "current_context": "en_agence",
+  "custom_data": {
+    "raw": [
+      "Julie",
+      "456.56",
+    ],
+    "transformed": "Julie a une solde locataire de 456.56 euros",
+  },
   "metadata": {
     "evaluation": {
       "ai": {
