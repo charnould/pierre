@@ -191,9 +191,10 @@ async function get_ai_answer(prompt: string) {
     const searchParams = new URLSearchParams(window.location.search)
     const config = searchParams.get('config') || ''
     const context = searchParams.get('context') || ''
+    const data = searchParams.get('data') || ''
 
     // Build the API request URL
-    const url = `/ai/${pathSegment}?message=${encodeURIComponent(prompt)}&config=${encodeURIComponent(config)}&context=${encodeURIComponent(context)}`
+    const url = `/ai/${pathSegment}?message=${encodeURIComponent(prompt)}&config=${encodeURIComponent(config)}&context=${encodeURIComponent(context)}&data=${encodeURIComponent(data)}`
 
     const response = await fetch(url, { method: 'GET' })
     if (!response.body) throw new Error('Response body is null')
