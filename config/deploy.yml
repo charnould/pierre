@@ -35,5 +35,7 @@ env:
     - REGISTRY_TOKEN
     - AUTH_SECRET
     - AUTH_PASSWORD
-    - TELEMETRY
     - SMS_API_KEY
+    - WEBHOOK_KEY_1
+    - WEBHOOK_KEY_2
+    - WEBHOOK_KEY_3
