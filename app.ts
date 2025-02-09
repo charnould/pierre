@@ -13,7 +13,6 @@ import { controller as get_performance } from './controllers/GET.performance'
 import { controller as get_users } from './controllers/GET.users'
 import { controller as post_conversation } from './controllers/POST.conversations'
 import { controller as post_login } from './controllers/POST.login'
-import { controller as post_telemetry } from './controllers/POST.telemetry'
 import { controller as post_users } from './controllers/POST.users'
 import { authenticate } from './utils/authenticate-user'
 
@@ -41,7 +40,6 @@ app.use('/assets/*', serveStatic({ root: './' }))
   // AI generation routes
   app.get('/c/:id'            , authenticate, get_index)
   app.get('/ai/:id'                         , get_ai) // TODO: need to check for auth?
-  app.post('/telemetry'                     , post_telemetry)
   app.post('/sms'                           , get_ai)
   
   // Admin routes
