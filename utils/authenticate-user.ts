@@ -12,9 +12,9 @@ import type { Config, User } from './_schema'
 // Authenticate middleware
 //
 export const authenticate = async (c: Context, next: Next) => {
-  // Check if a valid `config` query is provided in the request
-  // If provided, attempt to load the corresponding config from the `assets` folder
-  // If the query is invalid or missing, fall back to the `default` config
+  // Check if a valid `config` query is provided in the request. If provided,
+  // attempt to load the corresponding config from the `assets` folder. If the
+  // query is invalid or missing, fall back to the `default` config
   let has_valid_config_query = false
   const config: Config = await (async () => {
     if (c.req.query('config') === undefined) {
@@ -30,22 +30,24 @@ export const authenticate = async (c: Context, next: Next) => {
     }
   })()
 
-  // Validate if the `id` parameter in the request is a valid UUID
+  // Validate if the `id` parameter in the request is a valid UUID.
   // The `uuid()` method checks the format of the `id` parameter
   const has_valid_uuid = z.string().uuid().safeParse(c.req.param('id')).success
 
-  // Retrieve the `context` query parameter from the request, defaulting to 'default' if not specified
-  // Validate if the `context_query` exists in the config; if not, fall back to 'default'
+  // Retrieve the `context` query parameter from the request, defaulting to
+  // 'default' if not specified. Validate if the `context_query` exists in the
+  // config; if not, fall back to 'default'
   let context_query = c.req.query('context') ?? 'default'
   const has_valid_context_query = Boolean(config.context[context_query])
   if (!has_valid_context_query) context_query = 'default'
 
-  // Determine if the requested `context` is protected (i.e., accessible only by authenticated users)
-  // The `auth` property in the config determines if authentication is required for the context
+  // Determine if the requested `context` is protected (i.e., accessible only by
+  // authenticated users). The `auth` property in the config determines if
+  // authentication is required for the context
   const is_protected_context = config.context[context_query as string].protected ?? false
 
-  // Validate if a signed cookie is present and decrypt it to retrieve user data
-  // Check if user (still) exists in `users` table
+  // Validate if a signed cookie is present and decrypt it to retrieve user date
+  // and check if user (still) exists in `users` table
   let can_access_protected_context = false
   let user: User | undefined = undefined
   const cookie = await getSignedCookie(c, Bun.env.AUTH_SECRET as string, 'pierre-ia')
@@ -55,6 +57,11 @@ export const authenticate = async (c: Context, next: Next) => {
     if (user_exists) can_access_protected_context = true
     else user = undefined
   }
+
+  // Retrieve the `data` query parameter from the request,
+  // defaulting to '' if not specified.
+  //  http://localhost:3000/c?config=pierre-ia.org&context=no_rag
+  const data_query = c.req.query('data') === 'undefined' ? '' : c.req.query('data')
 
   //
   //
@@ -66,19 +73,25 @@ export const authenticate = async (c: Context, next: Next) => {
     // Case 1: Invalid UUID
     // If the UUID is invalid, generate a new UUID and redirect
     if (has_valid_uuid === false) {
-      return c.redirect(`/c/${randomUUIDv7()}?config=${config.id}&context=${context_query}`)
+      return c.redirect(
+        `/c/${randomUUIDv7()}?config=${config.id}&context=${context_query}&data=${data_query}`
+      )
     }
 
     // Case 2: Invalid config query
     // If the config query is invalid, redirect with a valid UUID
     if (has_valid_config_query === false) {
-      return c.redirect(`/c/${randomUUIDv7()}?config=${config.id}&context=${context_query}`)
+      return c.redirect(
+        `/c/${randomUUIDv7()}?config=${config.id}&context=${context_query}&data=${data_query}`
+      )
     }
 
     // Case 3: Invalid context query
     // If the context query is invalid, redirect with a valid UUID
     if (has_valid_context_query === false) {
-      return c.redirect(`/c/${randomUUIDv7()}?config=${config.id}&context=${context_query}`)
+      return c.redirect(
+        `/c/${randomUUIDv7()}?config=${config.id}&context=${context_query}&data=${data_query}`
+      )
     }
 
     // Case 4: Context not protected
@@ -89,14 +102,16 @@ export const authenticate = async (c: Context, next: Next) => {
   }
 
   // Case 5: No access to protected context
-  // If the context is protected but the user does not have access, redirect to the login page
+  // If the context is protected but the user does
+  // not have access, redirect to the login page
   if (is_protected_context === true && can_access_protected_context === false) {
-    const redirection = `c/?config=${config.id}&context=${context_query}`
+    const redirection = `c/?config=${config.id}&context=${context_query}&data=${data_query}`
     return c.redirect(`/a/login?redirection=${encodeURIComponent(redirection)}`)
   }
 
   // Case 6: Access to protected context granted
-  // If the context is protected and the user has access, proceed to the next middleware
+  // If the context is protected and the user has
+  // access, proceed to the next middleware
   if (is_protected_context === true && can_access_protected_context === true) {
     return await next()
   }
@@ -126,7 +141,8 @@ export const authenticate = async (c: Context, next: Next) => {
     }
 
     // Check if the user is a 'contributor'
-    // Redirect to the home page if the user tries to access restricted admin pages
+    // Redirect to the home page if the user tries
+    // to access restricted admin pages
     if (user.role === 'contributor') {
       if (
         c.req.path.startsWith('/a/conversations') ||
@@ -167,9 +183,9 @@ export const encrypt = (text: string, secret_key: string) => {
 //
 // Decrypt a string encrypted with AES-256-CBC.
 //
-// This function takes an encrypted string in the format "IV:encryptedText"
-// and uses the provided secret key to decrypt it. The initialization vector (IV)
-// is extracted from the encrypted string, and both the IV and key are used to
+// This function takes an encrypted string in the format "IV:encryptedText" and
+// uses the provided secret key to decrypt it. The initialization vector (IV) is
+// extracted from the encrypted string, and both the IV and key are used to
 // restore the original plaintext.
 //
 export const decrypt = (encrypted_text: string, secret_key: string) => {

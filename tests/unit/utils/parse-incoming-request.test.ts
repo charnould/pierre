@@ -8,7 +8,8 @@ test('should AIContext parse correctly', async () => {
       conv_id: '22222',
       config: 'pierre-ia.org',
       content: 'bonjour',
-      current_context: 'en_agence'
+      current_context: 'en_agence',
+      custom_data: { raw: ['Julie', '456.56'] }
     })
   ).toMatchSnapshot()
 })

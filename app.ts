@@ -57,7 +57,7 @@ app.use('/assets/*', serveStatic({ root: './' }))
 // a randomly generated ID and optional query parameters
 app.notFound(async (c) =>
   c.redirect(
-    `/c/${randomUUIDv7()}?config=${c.req.query('config')}&context=${c.req.query('context')}`
+    `/c/${randomUUIDv7()}?config=${c.req.query('config')}&context=${c.req.query('context')}&data=${c.req.query('data')}`
   )
 )
 
