@@ -2,6 +2,8 @@ import type { Config } from '../../utils/_schema'
 
 export default {
   id: 'granddijonhabitat.fr',
+  custom_data: {},
+  api: [],
   context: {
     default: {
       models: {
