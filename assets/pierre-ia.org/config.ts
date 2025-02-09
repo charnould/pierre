@@ -11,6 +11,57 @@ export default {
   // (ex. icfhabitat.fr) et le nom du dossier dans `assets/`
   id: 'pierre-ia.org',
 
+  // Vous pouvez communiquer des données externes à PIERRE via son URL avec le paramétre
+  // de requête `data`. S'il y a plusieurs données, séparez les par
+  // un pipe (|). Ces données peuvent, après avoir été tranformées, être
+  // utilisées dans un prompt. Par exemple, pour que PIERRE connaisse
+  // toujours le prénom du locataire et son solde locataire.
+  //
+  // Ex : http://localhost:3000/?data=Luc|-7.12
+  //
+  // Si vous ne souhaitez pas utiliser cette fonctionnalité : custom_data: {}
+  //
+  // La fonction ci-après transforme les données communiquées via `data`
+  // en une `string` customisable et compréhensible par un LLM.
+  custom_data: {
+    format: (data: string[]) => {
+      return `${data[0]} a une solde locataire de ${data[1]} euros` // "Luc a un solde locataire de -7.12 euros"
+    }
+  },
+
+  // Pour intégrer les conversations de PIERRE dans votre SI, vous pouvez le
+  // connectez à vos API. Un webhook sera émis vers vos API à chaque message
+  // adressé à PIERRE ou répondu par PIERRE. L'URL, la clef API et le format du
+  // webhook sont définis ci-dessous.
+  api: [
+    // Si le webhook doit être adressé à plusieurs
+    // de vos API, dupliquer l'objet ci-dessous.
+    {
+      // La clef API correspondante doit être renseignée dans vos variables
+      // d'environnement. A ce jour, PIERRE autorise maximum 3 webhooks :
+      // WEBHOOK_KEY_1, WEBHOOK_KEY_2 et WEBHOOK_KEY_3
+      key: 'WEBHOOK_KEY_1',
+
+      // L'URL à laquelle PIERRE envoie le webhook (ici un exemple)
+      url: 'ex : https://api.ikos.com',
+
+      // Le format des données envoyées par le webhook. Il peut notamment
+      // inclure des `custom_data` permettant d'identifier le locataire
+      // (cf. custom_data plus haut). Ne manipuler que l'objet retourné.
+      // - custom_data: celles passée via le paramètre de requête `data`
+      // - content : la question de l'utilisateur ou la réponse de PIERRE
+      // - role : user (= utilisateur), assitant ou system (= PIERRE)
+      format: ({ custom_data, content, role }) => {
+        return {
+          client_id: custom_data[0],
+          date: Date.now(),
+          content: content,
+          role: role
+        }
+      }
+    }
+  ],
+
   // Les différentes versions (ou `context`) de PIERRE
   // que vous souhaitez rendre disponible. Exemples :
   // - `default`  : une version de PIERRE accessible depuis aux candidats ou locataires

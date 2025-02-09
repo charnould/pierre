@@ -35,6 +35,16 @@ export const SMS = z.object({
 // `./assets/Config` schema
 export const Config = z.object({
   id: z.string(),
+  custom_data:  z.object({ format: z.function()}).or(z.object({})),
+  
+  api: z.array(z.object({ key: z.enum(['WEBHOOK_KEY_1', 'WEBHOOK_KEY_2', 'WEBHOOK_KEY_3']),
+                          url: z.string(), // URL check is made elsewhere
+                          format: z.function().args(
+                            z.object({ 
+                              custom_data:z.array(z.string()),
+                              content: z.string(),
+                              role: z.string() })),
+      })).default([]),
   context: z
     .object({
       default: z.object({
@@ -159,7 +169,7 @@ export const Reply = z.object({
 // biome-ignore format: readability
 // Structured JSON LLM must output for each request
 export const Augmented_Query = z.object({
-  lang                      : z.string().describe('User language (ISO 639-1)'),
+  lang                      : z.string(),
   about_user                : z.string().nullable(),
   contains_profanity        : z.boolean(),
   standalone_questions      : z.array(z.string()),
@@ -185,6 +195,9 @@ export const AIContext = Reply
         private   : [],
         public    : [],
       }),
+      custom_data:  z.object({    raw: z.array(z.string()), 
+                                  transformed: z.string().default('')
+                                }),
       current_context : z.string().default('default'),
       conversation    : z.array(
                           z.object({ 
@@ -194,9 +207,21 @@ export const AIContext = Reply
     })
   )
   .refine(async (c) => {
+    
     // Change config name for config content
-    if (typeof c.config === 'string')
+    if (typeof c.config === 'string') {
       c.config = (await import(`../assets/${c.config}/config`)).default
+    }
+
+    // Format data to be the one wanted by API
+    if (typeof c.config !== 'string' && 'format' in c.config.custom_data) {
+      if (Array.isArray(c.custom_data.raw) && c.custom_data.raw.length === 1 && c.custom_data.raw[0] === "") {
+        c.custom_data.transformed = ""
+      } else {
+        c.custom_data.transformed = c.config.custom_data.format(c.custom_data.raw) as string
+      }
+    }
+    
     return true
   })
 
