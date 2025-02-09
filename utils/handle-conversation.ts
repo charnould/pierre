@@ -1,5 +1,6 @@
 import { Database } from 'bun:sqlite'
 import { format } from 'date-fns'
+import { z } from 'zod'
 import { db } from '../utils/database'
 import type { AIContext, Reply } from './_schema'
 import { send_webhook } from './webhook'
@@ -60,19 +61,22 @@ export const save_reply = async (context: AIContext) => {
         )
 
       for (const element of context.config.api) {
-        const data = element.format({
-          role: context.role,
-          content: context.content,
-          custom_data: context.custom_data.raw
-        }) as object
+        // Check if URL is a fully qualified URL
+        if (z.string().url().safeParse(element.url).success) {
+          const data = element.format({
+            role: context.role,
+            content: context.content,
+            custom_data: context.custom_data.raw
+          }) as object
 
-        send_webhook({
-          webhook: element.url,
-          key: Bun.env[element.key] as string,
-          data: data,
-          delay: 1000,
-          max_retries: 3
-        })
+          send_webhook({
+            webhook: element.url,
+            key: Bun.env[element.key] as string,
+            data: data,
+            delay: 1000,
+            max_retries: 3
+          })
+        }
       }
     }
   } catch {}

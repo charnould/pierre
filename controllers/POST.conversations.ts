@@ -8,15 +8,12 @@ export const controller = async (c: Context) => {
   if (body.deletion === 'true') {
     delete_conversation(id)
   } else {
-    score_conversation(
-      {
-        conv_id: id,
-        scorer: body.scorer,
-        score: Number(body.score),
-        comment: body.comment
-      },
-      true
-    )
+    score_conversation({
+      conv_id: id,
+      scorer: body.scorer,
+      score: Number(body.score),
+      comment: body.comment
+    })
   }
 
   return c.redirect('/a/conversations')
