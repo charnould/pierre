@@ -64,8 +64,8 @@ export const controller = async (c: Context) => {
  */
 const StatisticOptions = z.object({
   window: z.enum(['last_1h', 'last_24h', 'last_30d', 'last_365d']).catch('last_30d'),
-  color: z.enum(['user_score', 'org_score', 'profile', 'topic']).catch('user_score'),
-  facet: z.enum(['user_score', 'org_score', 'profile', 'topic']).nullable().catch(null),
+  color: z.enum(['user_score', 'org_score', 'config', 'topic']).catch('org_score'),
+  facet: z.enum(['user_score', 'org_score', 'config', 'topic']).nullable().catch(null),
   action: z.enum(['visualize', 'download']).catch('visualize')
 })
 
@@ -124,6 +124,7 @@ export const get_data = (options: StatisticOptions): string => {
         metadata.evaluation.customer?.score === null
           ? 'Non noté'
           : String(metadata.evaluation.customer?.score)
+
       const org_score =
         metadata.evaluation.organization?.score === null
           ? 'Non noté'
@@ -139,7 +140,7 @@ export const get_data = (options: StatisticOptions): string => {
           user_score,
           org_score
         },
-        ['metadata', 'content', 'role', 'config', 'timestamp']
+        ['metadata', 'content', 'role', 'timestamp']
       )
     })
     .toArray()
@@ -178,7 +179,7 @@ export const generate_csv = () => {
       conversation    : _.map(data, 'conv_id'),
       horodatage      : _.map(data, 'timestamp'),
       role            : _.map(data, 'role'),
-      profile         : _.map(data, 'topics'), // TODO: A corriger quand la sélection des profils est disponible
+      cnofiguration   : _.map(data, 'config'),
       thematique      : _.map(data, 'topics'),
       user_score      : _.map(data, 'customer_score'),
       organisme_score : _.map(data, 'organization_score'),
