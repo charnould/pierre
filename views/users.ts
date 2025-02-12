@@ -9,15 +9,16 @@ export const view = (users: User[]) => {
         <script src="https://unpkg.com/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
         <link rel="icon" href="../assets/pierre-ia.org/system.svg" type="image/svg+xml" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1739174979163.css" />
-        <title>PIERRE — Administration > Utilisateurs</title>
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1739741252036.css" />
+        <title>PIERRE — Console</title>
       </head>
 
-      <body class="mx-20 my-10 w-[690px]">
-        <a href="/a" class="font-medium text-blue-700">← Retour</a>
+      <body class="mt-20 ml-20 w-5xl min-w-5xl bg-stone-50">
+        <a href="/a" class="mb-6 block w-fit rounded-full bg-teal-200 px-3 py-1 pr-4 font-medium"
+          >← Retour</a
+        >
 
-        <h1 class="mt-5 text-6xl font-bold">Utilisateurs</h1>
-        <h2 class="mb-10 text-3xl font-medium">Ajouter ou supprimer des utilisateurs</h2>
+        <h1 class="mb-10 font-mono text-6xl font-extrabold">Utilisateurs</h1>
 
         <p class="mb-2 max-w-2xl text-sm">
           Un <span class="font-semibold">administrateur</span> peut (a) modifier les utilisateurs,
@@ -83,24 +84,6 @@ export const view = (users: User[]) => {
           />
         </form>
 
-        <ul class="mt-2 mb-10 text-xs">
-          <li class="mb-1">
-            Un <span class="font-semibold">administrateur</span> peut (a) modifier les utilisateurs,
-            (b) modifier la base de connaissance, (c) consulter les conversations, (d) consulter les
-            statistiques et (e) utiliser « l'aide de camp ». Un
-            <span class="font-semibold">contributeur</span> peut uniquement réaliser (b) et (e). Un
-            <span class="font-semibold">collaborateur</span> peut uniquement utiliser (e).
-          </li>
-
-          <li class="mb-1">
-            Si un collaborateur a oublié son mot de passe : supprimez l'utilisateur et recréez-le.
-          </li>
-
-          <li>
-            Après avoir créé un utilisateur, n'oubliez pas de lui communiquer son mot de passe.
-          </li>
-        </ul>
-
         <form method="post">
           <input type="hidden" name="action" value="delete_user" />
 
@@ -109,13 +92,21 @@ export const view = (users: User[]) => {
               (user) =>
                 html`<tr>
                   <td class="pr-4 align-middle">
-                    <button
-                      type="submit"
-                      name="email"
-                      value="${user.email}"
-                      class="cursor-pointer rounded bg-red-50 px-3 text-sm font-normal text-red-600"
-                    >
-                      Supprimer
+                    <button type="submit" name="email" value="${user.email}">
+                      <svg
+                        class="size-6 cursor-pointer stroke-2 hover:stroke-red-700"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        fill="none"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                        />
+                      </svg>
                     </button>
                   </td>
                   <td class="pr-4 text-left text-xl font-normal text-blue-600">${user.role}</td>
