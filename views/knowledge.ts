@@ -9,7 +9,7 @@ export const view = (metadata: Metadata[]) => {
         <script src="https://unpkg.com/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
         <link rel="icon" href="../assets/pierre-ia.org/system.svg" type="image/svg+xml" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.css" />
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1739741252036.css" />
         <title>PIERRE — Console</title>
       </head>
 
@@ -78,15 +78,24 @@ export const view = (metadata: Metadata[]) => {
           (<span class="rounded bg-neutral-200 px-1 font-mono">.md</span>) sont acceptés.
         </p>
         <p class="mb-2 max-w-2xl text-sm">
-          La présence du fichier
+          La présence d'un fichier
           <span class="rounded bg-neutral-200 px-1 font-mono">_metadata.xlsx</span> est
-          indispensable et obligatoire. Seuls les fichiers référencés dans
-          <span class="rounded bg-neutral-200 px-1 font-mono">_metadata.xlsx</span> et disponibles
-          ici seront pris en compte.
+          indispensable et obligatoire. Seuls les fichiers référencés dans celui-ci et disponibles
+          ici sont pris en compte.
+          <a
+            href="../assets/pierre-ia.org/files/_metadata.xlsx"
+            class="cursor-pointer text-blue-600 underline decoration-2 underline-offset-3"
+            >Le télécharger</a
+          >, le compléter, puis le ré-uploader.
         </p>
         <p class="mb-2 max-w-2xl text-sm">
-          La reconstruction de l'encyclopédie se réalise automatiquement aux alentours de 4h du
-          matin et dure 1 à 15 minutes selon la quantité de données à intégrer.
+          La reconstruction de l'encyclopédie se réalise automatiquement à 4h du matin et dure 1 à
+          10 minutes selon la quantité de données à intégrer. Vous pouvez
+          <button
+            class="inline w-fit cursor-pointer whitespace-normal text-blue-600 underline decoration-2 underline-offset-3"
+          >
+            forcer la reconstruction immédiate</button
+          >, attention cependant, cela générera une interruption de service.
         </p>
 
         <p class="mb-9 max-w-2xl text-sm">
