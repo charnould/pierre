@@ -1,6 +1,10 @@
 /node_modules
 /__temp__
 /datastores/datastore.sqlite
+/datastores/proprietary.private.sqlite
+/datastores/proprietary.public.sqlite
+/datastores/__temp__
+/datastores/files
 .DS_Store
 .env
 .env.production

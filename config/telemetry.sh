@@ -3,8 +3,10 @@
 init_db () {
     
     # Ensure that `datastores` folder exists.
-    # If `datastores` directory already exists, it won’t raise any errors.
+    # If it already exists, it won’t raise any errors.
     mkdir -p datastores
+    mkdir -p datastores/files
+    mkdir -p datastores/__temp__
 
     # Create `datastore.sqlite` if it does not exist.
     sqlite3 datastores/datastore.sqlite <<EOF
