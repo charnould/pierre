@@ -149,12 +149,7 @@ exports[`should AIContext parse correctly 1`] = `
         "comment": null,
         "score": null,
       },
-      "pierre": {
-        "comment": null,
-        "score": null,
-      },
     },
-    "origin": null,
     "tokens": {
       "completion": null,
       "prompt": null,
