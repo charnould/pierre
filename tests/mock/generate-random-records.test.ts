@@ -27,7 +27,7 @@ it('should load random records in datastore to test performance page', () => {
       )
       .run(
         Bun.randomUUIDv7(),
-        'dummy',
+        getRandomValue(['locataire', 'demandeur_hlm', 'demandeur_emploi', 'collaborateur']),
         'dummy',
         'dummy',
         format(random_date, "yyyy-MM-dd'T'HH:mm:ssXXX"),
@@ -35,8 +35,14 @@ it('should load random records in datastore to test performance page', () => {
           topics: null,
           origin: null,
           evaluation: {
-            customer: { score: getRandomValue([null, 0, 1, 2, 3]), comment: null },
-            organization: { score: getRandomValue([0, 1, 2]), comment: null },
+            customer: {
+              score: getRandomValue([null, 0, 1, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]),
+              comment: null
+            },
+            organization: {
+              score: getRandomValue([null, 0, 1, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]),
+              comment: null
+            },
             ai: { score: null, comment: null },
             pierre: { score: null, comment: null }
           },
