@@ -99,7 +99,11 @@ await $`cp assets/pierre-ia.org/dist/js/widget.js docs/assets`
 await $`bun lint`
 await $`bun format`
 await $`bun test:unit`
-await $`bun test:e2e`
+await $`bun test access-protected-context.test --timeout 60000`
+await $`bun test connect-and-browse-admin.test --timeout 60000`
+await $`bun test file-upload.test --timeout 60000`
+await $`bun test redirect-wrong-url.test --timeout 60000`
+
 await $`clear`
 
 //
