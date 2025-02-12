@@ -10,17 +10,21 @@ export const view = (data, conversation: Reply[] | []) => {
         <script src="https://unpkg.com/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
         <link rel="icon" href="../assets/pierre-ia.org/system.svg" type="image/svg+xml" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1739174979163.css" />
-        <title>PIERRE — Administration > Conversations</title>
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1739741252036.css" />
+        <meta name="turbo-refresh-method" content="morph" />
+        <meta name="turbo-refresh-scroll" content="preserve" />
+        <title>PIERRE — Console</title>
       </head>
 
-      <body class="mx-20 my-10 flex gap-x-20">
+      <body class="mt-20 ml-10 flex gap-x-20 bg-stone-50">
         <div class="sticky top-20 left-20 h-screen w-[400px]">
-          <a href="/a" class="font-medium text-blue-700">← Retour</a>
-          <h1 class="mt-5 mb-5 text-6xl font-bold">Conversations</h1>
+          <a href="/a" class="mb-6 block w-fit rounded-full bg-teal-200 px-3 py-1 pr-4 font-medium"
+            >← Retour</a
+          >
+          <h1 class="font-mono text-4xl font-extrabold">Conversations</h1>
 
           <!-- START: conversations list -->
-          <div class="h-[550px] overflow-y-auto rounded-lg border-3 bg-white">
+          <div class="mt-6 h-[550px] overflow-y-auto rounded-lg border border-stone-200 shadow-lg">
             ${data.map(
               (conv) =>
                 html` <a href="/a/conversations?id=${conv[0].conv_id}">
@@ -59,9 +63,9 @@ export const view = (data, conversation: Reply[] | []) => {
                     </div>`
                 )}
                 <!-- START: Score conversation -->
-                <form method="post" class="mt-12 flex flex-col">
+                <form method="post" class="clear-both mt-12 flex flex-col">
                   <div
-                    class="flex flex-row items-center gap-x-4 rounded-lg p-2 pr-3 pl-3 shadow-[0_0_14px_14px_rgba(0,0,0,0.05)]"
+                    class="flex flex-row items-center gap-x-4 rounded-lg border border-stone-100 p-2 pr-3 pl-3 shadow-lg"
                   >
                     <input
                       name="comment"
