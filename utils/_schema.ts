@@ -122,7 +122,6 @@ export const Reply = z.object({
   // Metadata
   metadata: z.object({
       topics: z.string().trim().toLowerCase().nullish().default(null),
-      origin: z.string().url().nullish().default(null),
       // Evaluation + satisfaction
       evaluation: z.object({
           // CSAT
@@ -139,12 +138,6 @@ export const Reply = z.object({
             .default({}),
           // AI generated customer satisfaction (CSAT)
           ai: z.object({
-              score   : z.number().nullish().default(null),
-              comment : z.string().nullish().default(null)
-            })
-            .default({}),
-          // PIERRE own evaluation
-          pierre: z.object({
               score   : z.number().nullish().default(null),
               comment : z.string().nullish().default(null)
             })
