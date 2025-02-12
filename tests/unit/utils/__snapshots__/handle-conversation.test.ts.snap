@@ -6,7 +6,7 @@ exports[`should insert 3 replies 1`] = `
     "config": "pierre-ia.org",
     "content": "Qui es-tu ?",
     "conv_id": "id_1",
-    "metadata": "{"topics":null,"origin":null,"evaluation":{"customer":{"score":null,"comment":null},"organization":{"score":null,"comment":null},"ai":{"score":null,"comment":null},"pierre":{"score":null,"comment":null}},"tokens":{"prompt":null,"completion":null,"total":null}}",
+    "metadata": "{"topics":null,"evaluation":{"customer":{"score":null,"comment":null},"organization":{"score":null,"comment":null},"ai":{"score":null,"comment":null}},"tokens":{"prompt":null,"completion":null,"total":null}}",
     "role": "user",
     "timestamp": "2012-12-12T12:05:00Z",
   },
@@ -14,7 +14,7 @@ exports[`should insert 3 replies 1`] = `
     "config": "pierre-ia.org",
     "content": "Je suis Pierre !",
     "conv_id": "id_1",
-    "metadata": "{"topics":null,"origin":null,"evaluation":{"customer":{"score":null,"comment":null},"organization":{"score":null,"comment":null},"ai":{"score":null,"comment":null},"pierre":{"score":null,"comment":null}},"tokens":{"prompt":null,"completion":null,"total":null}}",
+    "metadata": "{"topics":null,"evaluation":{"customer":{"score":null,"comment":null},"organization":{"score":null,"comment":null},"ai":{"score":null,"comment":null}},"tokens":{"prompt":null,"completion":null,"total":null}}",
     "role": "assistant",
     "timestamp": "2012-12-12T12:10:00Z",
   },
@@ -22,7 +22,7 @@ exports[`should insert 3 replies 1`] = `
     "config": "pierre-ia.org",
     "content": "Bonjour",
     "conv_id": "id_2",
-    "metadata": "{"topics":null,"origin":null,"evaluation":{"customer":{"score":null,"comment":null},"organization":{"score":null,"comment":null},"ai":{"score":null,"comment":null},"pierre":{"score":null,"comment":null}},"tokens":{"prompt":null,"completion":null,"total":null}}",
+    "metadata": "{"topics":null,"evaluation":{"customer":{"score":null,"comment":null},"organization":{"score":null,"comment":null},"ai":{"score":null,"comment":null}},"tokens":{"prompt":null,"completion":null,"total":null}}",
     "role": "user",
     "timestamp": "2012-12-12T12:15:00Z",
   },
@@ -49,12 +49,7 @@ exports[`should retrieve 2 conversations 1`] = `
           "comment": null,
           "score": null,
         },
-        "pierre": {
-          "comment": null,
-          "score": null,
-        },
       },
-      "origin": null,
       "tokens": {
         "completion": null,
         "prompt": null,
@@ -83,12 +78,7 @@ exports[`should retrieve 2 conversations 1`] = `
           "comment": null,
           "score": null,
         },
-        "pierre": {
-          "comment": null,
-          "score": null,
-        },
       },
-      "origin": null,
       "tokens": {
         "completion": null,
         "prompt": null,
@@ -122,12 +112,7 @@ exports[`should retrieve 2 conversations 2`] = `
           "comment": null,
           "score": null,
         },
-        "pierre": {
-          "comment": null,
-          "score": null,
-        },
       },
-      "origin": null,
       "tokens": {
         "completion": null,
         "prompt": null,
@@ -166,7 +151,6 @@ exports[`should score conversations 1`] = `
           "score": 3,
         },
       },
-      "origin": null,
       "tokens": {
         "completion": null,
         "prompt": null,
@@ -200,7 +184,6 @@ exports[`should score conversations 1`] = `
           "score": 3,
         },
       },
-      "origin": null,
       "tokens": {
         "completion": null,
         "prompt": null,
@@ -234,12 +217,7 @@ exports[`should score conversations 2`] = `
           "comment": null,
           "score": null,
         },
-        "pierre": {
-          "comment": null,
-          "score": null,
-        },
       },
-      "origin": null,
       "tokens": {
         "completion": null,
         "prompt": null,
@@ -273,12 +251,7 @@ exports[`should retrieve all conversations 1`] = `
           "comment": null,
           "score": null,
         },
-        "pierre": {
-          "comment": null,
-          "score": null,
-        },
       },
-      "origin": null,
       "tokens": {
         "completion": null,
         "prompt": null,
