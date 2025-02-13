@@ -1,11 +1,9 @@
 import * as fs from 'node:fs'
 import { Readable } from 'node:stream'
-import chalk from 'chalk'
 import { formatInTimeZone } from 'date-fns-tz'
 import { fr } from 'date-fns/locale'
 import _ from 'lodash'
 import mammoth from 'mammoth'
-import ora from 'ora'
 import * as prettier from 'prettier'
 import TurndownService from 'turndown'
 import * as XLSX from 'xlsx'
@@ -16,9 +14,6 @@ import type { Metadata } from './save-metadata'
 export const transform_office_file = async (args: Args) => {
   // Tthis function applies only to `proprietary` knowledge
   if (args['--proprietary'] === true) {
-    // Start spinner
-    const spinner = ora('Extraction des données des fichiers Office').start()
-
     const metadata = await Bun.file('datastores/__temp__/.metadata.json').json()
 
     // For each file...
@@ -82,7 +77,7 @@ export const transform_office_file = async (args: Args) => {
         sheet['!merges'] = []
 
         // Convert data to a JSON representation while defining headline row.
-        let arr = XLSX.utils.sheet_to_json(sheet, { range: file.heading_row })
+        let arr = XLSX.utils.sheet_to_json(sheet, { range: file.headers })
 
         // Iterate over the array to:
         // - Transform each value to lowercase
@@ -147,8 +142,7 @@ export const transform_office_file = async (args: Args) => {
       }
     }
 
-    // End spinner
-    spinner.succeed(chalk.green('Données extraites des fichiers Office'))
+    console.log('Données extraites des fichiers Office')
   }
 
   return
