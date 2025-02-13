@@ -1,6 +1,4 @@
 import { Database } from 'bun:sqlite'
-import chalk from 'chalk'
-import ora from 'ora'
 import * as sqliteVec from 'sqlite-vec'
 import type { Args } from './_run'
 
@@ -9,9 +7,6 @@ import type { Args } from './_run'
 
 export const create_database = async (args: Args) => {
   // No need for try/catch because this function should never throw
-
-  // Start spinner
-  const spinner = ora('Initialisation des bases de connaissances').start()
 
   // Helper function to initialize a database
   const initialize_db = (path: string) => {
@@ -49,7 +44,6 @@ export const create_database = async (args: Args) => {
     initialize_db('./datastores/proprietary.public.sqlite')
   }
 
-  // End spinner
-  spinner.succeed(chalk.green('Bases de connaissances initialisées'))
+  console.log('Bases de connaissances initialisées')
   return
 }
