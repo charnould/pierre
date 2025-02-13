@@ -1,4 +1,4 @@
-import { randomUUIDv7 } from 'bun'
+import { $, randomUUIDv7 } from 'bun'
 import type { Serve } from 'bun'
 import { CronJob } from 'cron'
 import { Hono } from 'hono'
@@ -18,6 +18,7 @@ import { controller as post_knowledge } from './controllers/POST.knowledge'
 import { controller as post_login } from './controllers/POST.login'
 import { controller as post_users } from './controllers/POST.users'
 import { authenticate } from './utils/authenticate-user'
+import { run } from './utils/knowledge/_run'
 
 const app = new Hono()
 
@@ -31,11 +32,15 @@ app.use(
   })
 )
 
-// Initiate a cron job to update the knowledge database with custom content
+console.log(new Date())
+// Initiate a cron job to update the knowledge
+// database with custom content
 CronJob.from({
-  cronTime: '0 05 14 * * *', // Run every day at 4:00 AM: 0 0 4 * * *
+  cronTime: '0 30 16 * * *', // Run every day at 4:00 AM: 0 0 4 * * *
   onTick: async () => {
-    await $`bun generate --proprietary`
+    console.log('--- Start embeddings build ---')
+    await run('proprietary')
+    console.log('--- End embeddings build ---')
   },
   start: true,
   timeZone: 'Europe/Paris'
