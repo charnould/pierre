@@ -33,9 +33,9 @@ app.use(
 
 // Initiate a cron job to update the knowledge database with custom content
 CronJob.from({
-  cronTime: '0 0 4 * * *', // Run every day at 4:00 AM
-  onTick: () => {
-    console.log('You will see this message at 4am')
+  cronTime: '0 05 14 * * *', // Run every day at 4:00 AM: 0 0 4 * * *
+  onTick: async () => {
+    await $`bun generate --proprietary`
   },
   start: true,
   timeZone: 'Europe/Paris'
