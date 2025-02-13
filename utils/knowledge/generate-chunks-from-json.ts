@@ -1,6 +1,4 @@
 import type Database from 'bun:sqlite'
-import chalk from 'chalk'
-import ora from 'ora'
 import * as prettier from 'prettier'
 import tiktoken from 'tiktoken'
 import { generate_hash } from '../../utils/knowledge/generate-hash'
@@ -17,11 +15,15 @@ export const count_tokens = (string: string) => {
   return encoder.encode(string).length
 }
 
+//
+//
+//
+//
+//
 export const generate_chunks_from_json = async (args: Args) => {
   // This function applies only to `proprietary` knowledge
   if (args['--proprietary'] === true) {
-    // Start spinner and get _metadata.json
-    const spinner = ora('Génération des chunks tabulaires').start()
+    // Get _metadata.json
     const metadata = await Bun.file('datastores/__temp__/.metadata.json').json()
 
     // For each file described in _metadata.json
@@ -52,8 +54,6 @@ export const generate_chunks_from_json = async (args: Args) => {
 
         //
         // Initialize variables
-        let entity_text = 'none'
-        let entity_hash = 'none'
         let tokens_count = 0
         let chunk_text = ''
 
@@ -88,20 +88,10 @@ export const generate_chunks_from_json = async (args: Args) => {
             // TODO:  Why my token count is the one by openAI differs?
             //        If I put 8191 below, API throws.
             if (potentiel_token_count > 7_100) {
-              //
-              // Generate entity
-              if (file.entity_column && file.entity_type) {
-                const key = Object.keys(value[0])[file.entity_column - 1]
-                entity_text = `${file.entity_type}: ${value[0][key]}`
-                entity_hash = generate_hash(entity_text)
-              }
-
               // Save chunk
               save_chunk(
                 {
-                  chunk_text: chunk_text,
-                  entity_hash: entity_hash,
-                  entity_text: entity_text
+                  chunk_text: chunk_text
                 },
                 database
               )
@@ -117,21 +107,9 @@ export const generate_chunks_from_json = async (args: Args) => {
             tokens_count = count_tokens(chunk_text)
           }
 
-          // At end of each `entity`,
-          // save it if _metadata says so.
-
-          // Generate entity
-          if (file.entity_column && file.entity_type) {
-            const key = Object.keys(value[0])[file.entity_column - 1]
-            entity_text = `${file.entity_type}: ${value[0][key]}`
-            entity_hash = generate_hash(entity_text)
-          }
-
           save_chunk(
             {
-              chunk_text: chunk_text,
-              entity_hash: entity_hash,
-              entity_text: entity_text
+              chunk_text: chunk_text
             },
             database
           )
@@ -143,7 +121,7 @@ export const generate_chunks_from_json = async (args: Args) => {
     }
 
     // End spinner
-    spinner.succeed(chalk.green('Chunks tabulaires générés'))
+    console.log('Chunks tabulaires générés')
     return
   }
 }
@@ -156,10 +134,7 @@ export const generate_chunks_from_json = async (args: Args) => {
 //
 // This function handles storing a chunk in the database along with its metadata,
 // including hash values, text, stemming, and associated entity details.
-const save_chunk = async (
-  chunk: { chunk_text: string; entity_hash: string; entity_text: string },
-  database: Database
-) => {
+const save_chunk = async (chunk: { chunk_text: string }, database: Database) => {
   // Prepare and process the chunk:
   // 1. Format the chunk using Prettier for clean and consistent Markdown formatting.
   // 2. Generate a unique hash for the chunk to serve as its identifier in the database.
@@ -178,21 +153,12 @@ const save_chunk = async (
         chunk_hash,
         chunk_tokens,
         chunk_text,
-        chunk_stem,
-        entity_hash,
-        entity_text
+        chunk_stem
       )
-      VALUES (?, ?, ?, ?, ?, ?);
+      VALUES (?, ?, ?, ?);
      `
     )
-    .run(
-      chunk_hash,
-      count_tokens(chunk.chunk_text),
-      chunk.chunk_text,
-      chunk_stem,
-      chunk.entity_hash,
-      chunk.entity_text
-    )
+    .run(chunk_hash, count_tokens(chunk.chunk_text), chunk.chunk_text, chunk_stem)
 
   database.prepare('INSERT INTO stems (chunk_stem) VALUES (?);').run(chunk_stem)
 
