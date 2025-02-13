@@ -1,5 +1,4 @@
 import { $ } from 'bun'
-import chalk from 'chalk'
 
 const url = 'https://api.github.com/repos/charnould/pierre/releases'
 let latest_version: string | undefined
@@ -33,19 +32,16 @@ console.log('')
 // await $`bun version`
 
 if (latest_version === current_version) {
-  console.log(chalk.green.bold('PIERRE est à jour.'))
-  console.log('')
+  console.log('PIERRE est à jour.')
 
   try {
     await $`bun test:config`.quiet()
   } catch (e) {
-    // console.log(chalk.red('`config.ts` contient des erreurs.'))
+    // console.log(('`config.ts` contient des erreurs.')
   }
 } else if (latest_version === undefined || current_version === undefined) {
-  console.log(chalk.red('Une anomalie est intervenue'))
-  console.log('')
+  console.error('Une anomalie est intervenue')
 } else {
-  console.log(chalk.red.bold("PIERRE n'est pas à jour."))
-  console.log(chalk.red.underline('https://github.com/charnould/pierre/releases'))
-  console.log('')
+  console.warn("PIERRE n'est pas à jour.")
+  console.warn('https://github.com/charnould/pierre/releases')
 }
