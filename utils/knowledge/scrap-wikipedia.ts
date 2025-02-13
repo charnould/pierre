@@ -1,14 +1,9 @@
-import chalk from 'chalk'
-import ora from 'ora'
 import * as prettier from 'prettier'
 import TurndownService from 'turndown'
 import type { Args } from './_run'
 
 export const scrap_wikipedia = async (args: Args) => {
   if (args['--community'] === true) {
-    // Start spinner
-    const spinner = ora(`Récupération des articles Wikipédia ${chalk.dim('(2 min.)')}`).start()
-
     // Wikipédia pages currently scrapped.
     // Add/remove any relevant pages.
     const pages = [
@@ -98,10 +93,10 @@ export const scrap_wikipedia = async (args: Args) => {
         }
       }
       // End spinner
-      spinner.succeed(chalk.green('Articles Wikipédia récupérés'))
+      console.log('Articles Wikipédia récupérés')
     } catch (e) {
       // Show failed spinner
-      spinner.fail(chalk.red.bold('An error occurs while scrapping'))
+      console.error('An error occurs while scrapping')
       console.log(e)
       return
     }
