@@ -1,6 +1,5 @@
 import { readdir } from 'node:fs/promises'
 import { $ } from 'bun'
-import chalk from 'chalk'
 import toc from 'markdown-toc'
 
 //
@@ -111,7 +110,5 @@ await $`clear`
 //
 // Output something when done
 console.log('\n')
-console.log(chalk.bgGreen.bold('                '))
-console.log(chalk.bgGreen.bold('   BUILD DONE   '))
-console.log(chalk.bgGreen.bold('                '))
+console.log('BUILD DONE')
 console.log('\n')
