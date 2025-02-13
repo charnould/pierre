@@ -18,8 +18,6 @@ export const generate_chunks_from_md = async (args: Args) => {
   if (args['--community'] === true) {
     const files = (await readdir('knowledge', { recursive: true }))
       .map((f) => `knowledge/${f}`)
-      .filter((f) => !f.startsWith('knowledge/proprietary'))
-      .filter((f) => !f.startsWith('.data'))
       .filter((f) => f.endsWith('.md'))
       .map((id) => ({ id, access: 'community' }))
 
@@ -74,11 +72,11 @@ const go = async (files) => {
         database
           .prepare(
             `
-            INSERT INTO chunks (chunk_hash, chunk_text, chunk_stem, entity_hash, entity_text)
-            VALUES (?, ?, ?, ?, ?);
+            INSERT INTO chunks (chunk_hash, chunk_text, chunk_stem)
+            VALUES (?, ?, ?);
             `
           )
-          .run(generate_hash(chunk), chunk, stem(chunk), generate_hash('none'), 'none')
+          .run(generate_hash(chunk), chunk, stem(chunk))
 
         database.prepare('INSERT INTO stems(chunk_stem) VALUES(?);').run(stem(chunk))
       }
