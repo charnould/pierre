@@ -1,6 +1,6 @@
 # Code de la construction et de l'habitation
 
-En droit français, le code de la construction et de l'habitation (CCH) est le code qui regroupe les dispositions législatives et réglementaires relatives à la construction (réglementations techniques, dont sur la sécurité incendie, l'accessibilité, l'acoustique...), à la promotion immobilière, aux logements sociaux et à d'autres questions relatives à l'immobilier.
+En droit français, le code de la construction et de l'habitation (CCH) est le code qui regroupe les dispositions législatives et réglementaires relatives à la construction (réglementations techniques, dont sur la sécurité incendie, l'accessibilité, l'acoustique, etc.), à la promotion immobilière, aux logements sociaux et à d'autres questions relatives à l'immobilier.
 
 ## Histoire
 
