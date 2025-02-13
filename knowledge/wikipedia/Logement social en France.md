@@ -40,7 +40,7 @@ Le logement social est aussi un outil visant à répondre au droit au logement, 
 
 Selon les pays, l'importance du logement social est très variable, mais on peut noter que la France en comporte moins que la majorité des pays d'Europe occidentale.
 
-Le parc locatif social français se compose de 4,5 millions de logements locatifs et 0,3 million de logement-foyer La moitié du parc locatif social se situe dans les Hauts-de-France, en région Auvergne-Rhône-Alpes et en Île-de-France. Ces logements représentent 19 % du parc de logements et 15,7 % des ménages ont une HLM pour résidence principale. 57 % de ménages étant propriétaires de leur résidence principale en France. et 43 % en étant locataires, 36,5 % des locataires en France ont une HLM pour résidence principale.
+Le parc locatif social français se compose de 4,5 millions de logements locatifs et 0,3 million de logement-foyer. La moitié du parc locatif social se situe dans les Hauts-de-France, en région Auvergne-Rhône-Alpes et en Île-de-France. Ces logements représentent 19 % du parc de logements et 15,7 % des ménages ont une HLM pour résidence principale. 57 % de ménages étant propriétaires de leur résidence principale en France et 43 % en étant locataires, 36,5 % des locataires en France ont une HLM pour résidence principale.
 
 En 2016, 10,7 millions de personnes sont locataires d’un logement social. L’âge moyen des locataires du parc social est de 50 ans. Il se situe entre celui des locataires du secteur libre et celui des propriétaires occupants. Le niveau de vie médian des occupants du parc social s’élève à 15 100 euros, soit un montant inférieur au niveau de vie médian du reste de la population.
 

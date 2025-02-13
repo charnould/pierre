@@ -58,7 +58,7 @@ Toute personne admise en HLM bénéficie actuellement d'un droit au maintien, m�
 
 650 000 à 800 000 logements sociaux se trouvaient en sous-peuplement prononcé en 2002.
 
-A cause de la hausse importante du prix des loyers du parc immobilier privé en région parisienne, le nombre de demandeurs de HLM en Ile-de-France a presque doublé entre 2010 et 2022 passant de 406 000 à 783 000.
+À cause de la hausse importante du prix des loyers du parc immobilier privé en région parisienne, le nombre de demandeurs de HLM en Ile-de-France a presque doublé entre 2010 et 2022 passant de 406 000 à 783 000.
 
 ## Organismes d'habitations à loyer modéré
 
