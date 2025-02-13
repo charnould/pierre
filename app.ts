@@ -29,13 +29,11 @@ app.use(
   })
 )
 
-// Initiate a cron job to update the knowledge database with custom content
+// Initiate a cron job to update the knowledge
+// database with custom content
 CronJob.from({
-  cronTime: '0 30 9 * * *', // Run every day at 4:00 AM: 0 0 4 * * *
-  onTick: async () => {
-    console.log('Start embeddings build')
-    await execute_pipeline({ proprietary: true, community: false })
-  },
+  cronTime: '0 0 4 * * *', // Runs every day at 4:00 AM
+  onTick: async () => await execute_pipeline({ proprietary: true, community: false }),
   start: true,
   timeZone: 'Europe/Paris'
 })
