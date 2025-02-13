@@ -1,6 +1,5 @@
 import { expect, test } from 'bun:test'
 import { readdir } from 'node:fs/promises'
-import chalk from 'chalk'
 import { Config } from '../../utils/_schema'
 
 test('check if configs parse successfully', async () => {
@@ -14,15 +13,8 @@ test('check if configs parse successfully', async () => {
     if (check.error) {
       console.log(config)
       console.log(check.error)
-
-      console.log('\n')
-      console.log(chalk.bgRed.bold('                                            '))
-      console.log(chalk.bgRed.bold('                                            '))
-      console.log(chalk.bgRed.bold('   config.ts contient une ou des erreurs.   '))
-      console.log(chalk.bgRed.bold("   Lire le message d'erreur ci-dessus.      "))
-      console.log(chalk.bgRed.bold('                                            '))
-      console.log(chalk.bgRed.bold('                                            '))
-      console.log('\n')
+      console.error('config.ts contient une ou des erreurs.')
+      console.error("Lire le message d'erreur ci-dessus.")
     }
 
     expect(check.success).toBe(true)
