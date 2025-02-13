@@ -23,9 +23,7 @@ export const create_database = async (args: Args) => {
         chunk_hash TEXT,
         chunk_tokens NUMBER DEFAULT NULL,
         chunk_text TEXT NOT NULL,
-        chunk_stem TEXT NOT NULL,
-        entity_hash TEXT DEFAULT NULL,
-        entity_text TEXT DEFAULT NULL
+        chunk_stem TEXT NOT NULL
       );`)
 
     db.exec(`
@@ -36,22 +34,19 @@ export const create_database = async (args: Args) => {
       CREATE VIRTUAL TABLE vectors USING vec0(
         chunk_hash TEXT,
         chunk_text TEXT,
-        chunk_vector FLOAT[3072],
-        entity_hash TEXT DEFAULT NULL,
-        entity_text TEXT,
-        entity_vector FLOAT[3072],
+        chunk_vector FLOAT[3072]
       );`)
 
     return db
   }
 
   if (args['--community'] === true) {
-    initialize_db('./knowledge/.data/community.sqlite')
+    initialize_db('./knowledge/community.sqlite')
   }
 
   if (args['--proprietary'] === true) {
-    initialize_db('./knowledge/.data/proprietary.private.sqlite')
-    initialize_db('./knowledge/.data/proprietary.public.sqlite')
+    initialize_db('./datastores/proprietary.private.sqlite')
+    initialize_db('./datastores/proprietary.public.sqlite')
   }
 
   // End spinner

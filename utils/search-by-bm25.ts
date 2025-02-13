@@ -58,7 +58,6 @@ export const query_db = (db_name: Db_Name, keyword: string) => {
       .prepare(
         `
         SELECT
-          c.entity_hash,
           c.chunk_hash,
           c.chunk_text,
           s.rank AS distance
@@ -70,7 +69,6 @@ export const query_db = (db_name: Db_Name, keyword: string) => {
       `
       )
       .all(stemmed_keywords) as {
-      entity_hash: string
       chunk_hash: string
       chunk_text: string
       distance: number

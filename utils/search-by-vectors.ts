@@ -71,19 +71,16 @@ export const Vector_Search_Result = z.object({
   community : z.array(z.object({
     chunk_hash  : z.string(),
     chunk_text  : z.string(),
-    entity_hash : z.string(),
     distance    : z.number()    })).default([]),
 
   private   : z.array(z.object({
     chunk_hash  : z.string(),
     chunk_text  : z.string(),
-    entity_hash : z.string(),
     distance    : z.number()    })).default([]),
 
   public    : z.array(z.object({
     chunk_hash  : z.string(),
     chunk_text  : z.string(),
-    entity_hash : z.string(),
     distance    : z.number()    })).default([]),
 })
 
@@ -127,21 +124,19 @@ export const generate_embeddings = async (queries: string[]) => {
  * - An array of matching chunks, including:
  *   - `chunk_text` (string): The text content of the matching chunk.
  *   - `chunk_hash` (string): The unique hash identifier for the chunk.
- *   - `entity_hash` (string): The entity hash associated with the chunk.
  *   - `distance` (number): The vector similarity distance of the match.
  */
 export const search = (query_vectors, database) =>
   database
     .prepare(
       `
-      SELECT chunk_text, chunk_hash, entity_hash, distance 
+      SELECT chunk_text, chunk_hash, distance 
       FROM vectors
       WHERE chunk_vector MATCH ?
       AND k = 10
       `
     )
     .all(new Float32Array(query_vectors)) as unknown as {
-    entity_hash: string
     chunk_hash: string
     chunk_text: string
     distance: number

@@ -59,13 +59,8 @@ const go = async (query: Chunk[], database: Database) => {
   for await (const group of _.chunk(query, 100)) {
     const chunk_texts = group.map((item) => item.chunk_text)
     const chunk_text_vectors = await get_embeddings(chunk_texts)
-    const entity_texts = group.map((item) => item.entity_text)
-    const entity_text_vectors = await get_embeddings(entity_texts)
 
     const vectors = group.map((item, index) => ({
-      entity_hash: item.entity_hash,
-      entity_vector: entity_text_vectors[index],
-      entity_text: item.entity_text,
       chunk_vector: chunk_text_vectors[index],
       chunk_stem: item.chunk_stem,
       chunk_text: item.chunk_text
@@ -75,18 +70,11 @@ const go = async (query: Chunk[], database: Database) => {
       database
         .prepare(
           `
-          INSERT INTO vectors (chunk_hash, chunk_text, chunk_vector, entity_hash, entity_text, entity_vector)
-          VALUES (?, ?, vec_f32(?), ?, ?, vec_f32(?))
+          INSERT INTO vectors (chunk_hash, chunk_text, chunk_vector)
+          VALUES (?, ?, vec_f32(?))
           `
         )
-        .run(
-          generate_hash(v.chunk_text),
-          v.chunk_text,
-          new Float32Array(v.chunk_vector),
-          v.entity_hash,
-          v.entity_text,
-          new Float32Array(v.entity_vector)
-        )
+        .run(generate_hash(v.chunk_text), v.chunk_text, new Float32Array(v.chunk_vector))
     }
   }
   return
@@ -114,9 +102,7 @@ async function get_embeddings(data: string[]) {
 export const Chunk = z.object({
   chunk_hash: z.string(),
   chunk_text: z.string(),
-  chunk_stem: z.string(),
-  entity_text: z.string(),
-  entity_hash: z.string()
+  chunk_stem: z.string()
 })
 
 export type Chunk = z.infer<typeof Chunk>
