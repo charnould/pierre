@@ -3,23 +3,25 @@
 exports[`should bm25 search works 1`] = `
 [
   {
-    "chunk_hash": "J1GB8pSSTsK98FEURDyYKQ7uJrNz8ipSZxcF6mPyoz0",
+    "chunk_hash": "Uwd1sXdp9I80H0omdkJp",
     "chunk_text": 
-"# skydome
+"# Valérie Létard
+Valérie Létard
 
-Ci-après la procédure et la répartition des responsabilités entre la société de télésurveillance et l'agent/cadre d'astreinte chez Pierre Habitat :
+Valérie Létard, née le 13 octobre 1962 à Orchies (Nord), est une femme politique française.
 
-- thématique : equipements et accès
-- zone : skydome
-- motif : skydom ouvert
-- symptôme : l'appel concerne un skydom ouvert
-- degré d’urgence : 1- pas d'urgence
-- la société de télésurveillance appelle agent astreinte ? : non
-- consigne/commentaire pour la société de télésurveillance : faire une main courante avec toutes les coordonnées (adresse cage d'escalier, étage...) + le week-end ou jour férié en journée uniquement, la société de télésurveillance appelle l'entreprise skydome 01 80 87 45 97 (intervention en 4h). code à transmettre au télésurveilleur : 0210.
+Proche de Jean-Louis Borloo, elle adhère à plusieurs partis centristes au cours de son parcours politique (UDF, PSD, FD, NC, UDI).
+
+Au niveau local, elle est présidente de la communauté d'agglomération de Valenciennes (2008-2016), vice-présidente du conseil régional des Hauts-de-France (2016-2017) et conseillère départementale du Nord (depuis 2021).
+
+Élue plusieurs fois sénatrice et députée depuis 2001, elle exerce la fonction de vice-présidente du Sénat de 2017 à 2023.
+
+Entre 2007 et 2010, sous la présidence de Nicolas Sarkozy, elle est secrétaire d'État, successivement chargée de la Solidarité puis des Technologies vertes et des Négociations sur le climat.
+
+Dans le gouvernement Michel Barnier, formé en 2024, elle occupe la fonction de ministre du Logement et de la Rénovation urbaine. Elle ne conserve que le portefeuille du Logement dans le gouvernement François Bayrou qui succède au précédent.
 "
 ,
-    "distance": -5.360347442825854,
-    "entity_hash": "Pm6N6W7pP2_rQITOr3gnulkBT4CxevdN7ViixJlGYg",
+    "distance": -22.533835934036077,
   },
 ]
 `;

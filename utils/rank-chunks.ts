@@ -67,7 +67,6 @@ export const rank_chunks = async (
         | {
             chunk_hash: string
             chunk_text: string
-            entity_hash: string
             distance: number
             source: string
           }[]
@@ -103,7 +102,6 @@ export const rank_chunks = async (
 // biome-ignore format: readability
 const Flatten_Chunk = z.object({
   chunk_hash  : z.string(),
-  entity_hash : z.string(),
   distance    : z.number(),
   chunk_text  : z.string(),
   source      : z.string()
