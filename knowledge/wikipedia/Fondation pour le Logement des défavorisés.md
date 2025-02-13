@@ -20,7 +20,7 @@ Entre 1947 et 1949, l’abbé Pierre habite dans une maison délabrée qu’il r
 
 ### Fondation d'Emmaüs
 
-Le 1er septembre 1949, un homme, qui vient de tenter de se suicider, se présente chez l’abbé Pierre. Georges Legay est désespéré : il cherche une aide financière que l’abbé Pierre ne peut lui offrir. Celui-ci lui répond alors de venir l'aider à aider » les autres.
+Le 1er septembre 1949, un homme, qui vient de tenter de se suicider, se présente chez l’abbé Pierre. Georges Legay est désespéré : il cherche une aide financière que l’abbé Pierre ne peut lui offrir. Celui-ci lui répond alors de venir l'« aider à aider » les autres.
 
 Georges Legay devient le premier compagnon d’Emmaüs. Ensemble, ils organisent le Mouvement. L’abbé Pierre finance tout à l’aide de son indemnité parlementaire. Mais à l’issue de son mandat, l’argent vient à manquer et il connaît une période difficile. Pour subsister, il mendie sur les grands boulevards. Pour l’aider, ses compagnons deviennent chiffonniers et récupèrent des objets, des vêtements et des meubles usagés qu’ils réparent et revendent. Les fonds récoltés servent à construire des abris provisoires pour les personnes sans domicile.
 
