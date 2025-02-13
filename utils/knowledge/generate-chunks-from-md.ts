@@ -1,8 +1,6 @@
 import type Database from 'bun:sqlite'
 import { readdir } from 'node:fs/promises'
-import chalk from 'chalk'
 import { Document, MarkdownNodeParser } from 'llamaindex'
-import ora from 'ora'
 import { generate_hash } from '../../utils/knowledge/generate-hash'
 import { db } from '../database'
 import { stem } from '../stem-text'
@@ -11,9 +9,6 @@ import type { Metadata } from './save-metadata'
 
 export const generate_chunks_from_md = async (args: Args) => {
   // No need for try/catch because this function should never throw
-
-  // Start spinner
-  const spinner = ora('Génération des chunks textuels').start()
 
   if (args['--community'] === true) {
     const files = (await readdir('knowledge', { recursive: true }))
@@ -36,7 +31,7 @@ export const generate_chunks_from_md = async (args: Args) => {
   }
 
   // End spinner
-  spinner.succeed(chalk.green('Chunks textuels générés'))
+  console.log('Chunks textuels générés')
   return
 }
 

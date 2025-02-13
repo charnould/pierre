@@ -1,18 +1,13 @@
 import type Database from 'bun:sqlite'
 import { openai } from '@ai-sdk/openai'
 import { embedMany } from 'ai'
-import chalk from 'chalk'
 import _ from 'lodash'
-import ora from 'ora'
 import { z } from 'zod'
 import { generate_hash } from '../../utils/knowledge/generate-hash'
 import { db } from '../database'
 import type { Args } from './_run'
 
 export const generate_embeddings = async (args: Args) => {
-  // Start spinner
-  const spinner = ora(`Génération des embeddings ${chalk.dim('(5 min.)')}`).start()
-
   try {
     // Generate and save `community` embeddings
     if (args['--community'] === true) {
@@ -38,13 +33,13 @@ export const generate_embeddings = async (args: Args) => {
     }
   } catch (e) {
     // Show failed spinner
-    spinner.fail(chalk.red.bold('Embeddings generation failed'))
+    console.error('Embeddings generation failed')
     console.log(e)
     return
   }
 
   // End spinner and return
-  spinner.succeed(chalk.green('Embeddings générés'))
+  console.log('Embeddings générés')
   return
 }
 
