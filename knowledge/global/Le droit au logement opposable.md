@@ -1,5 +1,3 @@
-Source : https://www.actionlogement.fr/guides/trouver-un-logement/le-droit-au-logement-opposable
-
 # Le Droit Au Logement Opposable (DALO)
 
 Les personnes n’ayant reçu aucune proposition de logement social après un délai d'attente anormalement long ou, qui sont sans logement, menacées d’expulsion, occupant un logement impropre à l’habitation peuvent saisir la commission de médiation pour que leur demande soit reconnue prioritaire.
