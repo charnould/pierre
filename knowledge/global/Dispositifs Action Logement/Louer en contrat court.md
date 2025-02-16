@@ -1,5 +1,3 @@
-Source : https://www.actionlogement.fr/guides/trouver-un-logement/louer-un-logement-en-etant-en-contrat-court
-
 # Louer un logement en contrat court (CDD, saisonnier ou intérim)
 
 Dans un contexte immobilier dans lequel les bailleurs ont l’embarras du choix et les agences peuvent se montrer strictes sur leurs critères de sélection des candidats, il existe des solutions pour que les salariés en CDD, les intérimaires ou les saisonniers puissent louer sereinement leur résidence principale.

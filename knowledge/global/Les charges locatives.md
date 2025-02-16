@@ -1,5 +1,3 @@
-Source : https://www.actionlogement.fr/guides/trouver-un-logement/charges-locatives
-
 # Charges locatives : que devez-vous payer ?
 
 Les charges locatives également appelées charges récupérables sont des dépenses initialement payées par le propriétaire mais remboursées par le locataire. Si vous louez un logement, vous paierez donc chaque mois à votre propriétaire une provision sur charges qui correspond à une estimation des dépenses pouvant comprendre la consommation d’eau ou de chauffage et des charges de copropriété.
