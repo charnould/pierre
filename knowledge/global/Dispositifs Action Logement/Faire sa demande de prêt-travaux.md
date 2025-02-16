@@ -1,5 +1,3 @@
-Source : https://www.actionlogement.fr/guides/financer-vos-travaux/obtenir-pret-travaux
-
 # Faire sa demande de prêt travaux
 
 Vous envisagez des travaux dans votre logement. Se pose dès lors la problématique du budget et du financement de ces travaux. Comment choisir un prêt travaux ? Quels travaux peut-on financer ? Sur quelle durée et à quel taux ? On vous explique l’essentiel.

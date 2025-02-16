@@ -1,5 +1,3 @@
-Source : https://www.actionlogement.fr/guides/financer-vos-travaux/financement-travaux
-
 # Financement des travaux : nos différents prêts
 
 Des travaux sont nécessaires pour améliorer votre habitat ? Surélévation, décoration, amélioration de la performance énergétique, adaptation du logement aux personnes handicapées, Action Logement propose des prêts pour financer vos travaux.
