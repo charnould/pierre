@@ -1,11 +1,11 @@
 import type Database from 'bun:sqlite'
 import * as prettier from 'prettier'
 import tiktoken from 'tiktoken'
-import { generate_hash } from '../../utils/knowledge/generate-hash'
 import { db } from '../database'
 import { stem } from '../stem-text'
-import type { Args } from './_run'
-import type { Metadata } from './save-metadata'
+import type { Knowledge } from './_run'
+import { generate_hash } from './generate-hash'
+import type { Metadata } from './store-metadata'
 
 // https://platform.openai.com/tokenizer
 // https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
@@ -20,9 +20,9 @@ export const count_tokens = (string: string) => {
 //
 //
 //
-export const generate_chunks_from_json = async (args: Args) => {
+export const chunk_json = async (knowledge: Knowledge) => {
   // This function applies only to `proprietary` knowledge
-  if (args['--proprietary'] === true) {
+  if (knowledge.proprietary === true) {
     // Get _metadata.json
     const metadata = await Bun.file('datastores/__temp__/.metadata.json').json()
 
@@ -120,8 +120,7 @@ export const generate_chunks_from_json = async (args: Args) => {
       }
     }
 
-    // End spinner
-    console.log('Chunks tabulaires générés')
+    console.log('✅ Tabular chunks generated')
     return
   }
 }

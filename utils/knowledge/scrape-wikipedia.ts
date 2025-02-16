@@ -1,9 +1,9 @@
 import * as prettier from 'prettier'
 import TurndownService from 'turndown'
-import type { Args } from './_run'
+import type { Knowledge } from './_run'
 
-export const scrap_wikipedia = async (args: Args) => {
-  if (args['--community'] === true) {
+export const scrape_wikipedia = async (knowledge: Knowledge) => {
+  if (knowledge.community === true) {
     // Wikipédia pages currently scrapped.
     // Add/remove any relevant pages.
     const pages = [
@@ -93,10 +93,9 @@ export const scrap_wikipedia = async (args: Args) => {
         }
       }
       // End spinner
-      console.log('Articles Wikipédia récupérés')
+      console.log('✅ Wikipedia scrapped')
     } catch (e) {
-      // Show failed spinner
-      console.error('An error occurs while scrapping')
+      console.log('🆘 Wikipedia scrapping failed')
       console.log(e)
       return
     }
