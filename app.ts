@@ -15,6 +15,7 @@ import { controller as post_conversation } from './controllers/POST.conversation
 import { controller as post_login } from './controllers/POST.login'
 import { controller as post_users } from './controllers/POST.users'
 import { authenticate } from './utils/authenticate-user'
+import { execute_pipeline } from './utils/knowledge/_run'
 
 const app = new Hono()
 
@@ -27,6 +28,17 @@ app.use(
     crossOriginResourcePolicy: false
   })
 )
+
+// Initiate a cron job to update the knowledge database with custom content
+CronJob.from({
+  cronTime: '0 30 9 * * *', // Run every day at 4:00 AM: 0 0 4 * * *
+  onTick: async () => {
+    console.log('Start embeddings build')
+    await execute_pipeline({ proprietary: true, community: false })
+  },
+  start: true,
+  timeZone: 'Europe/Paris'
+})
 
 // Serve static files from the assets directory
 // Except for the config.ts file, which should return a 404 or redirect
