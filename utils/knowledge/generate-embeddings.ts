@@ -5,19 +5,19 @@ import _ from 'lodash'
 import { z } from 'zod'
 import { generate_hash } from '../../utils/knowledge/generate-hash'
 import { db } from '../database'
-import type { Args } from './_run'
+import type { Knowledge } from './_run'
 
-export const generate_embeddings = async (args: Args) => {
+export const generate_embeddings = async (knowledge: Knowledge) => {
   try {
     // Generate and save `community` embeddings
-    if (args['--community'] === true) {
+    if (knowledge.community === true) {
       const database = db('community')
       const query = database.query('SELECT * FROM chunks;').all() as Chunk[]
       await go(query, database)
     }
 
     // Generate and save `proprietary.private/public` embeddings
-    if (args['--proprietary'] === true) {
+    if (knowledge.proprietary === true) {
       let database: Database
       let query: Chunk[]
 
@@ -31,16 +31,15 @@ export const generate_embeddings = async (args: Args) => {
       query = database.query('SELECT * FROM chunks;').all() as Chunk[]
       await go(query, database)
     }
+
+    console.log('✅ Embeddings generated')
+    console.log('✅ Knowledge rebuild!')
+    return
   } catch (e) {
     // Show failed spinner
-    console.error('Embeddings generation failed')
+    console.error('🆘 Embeddings generation failed')
     console.log(e)
-    return
   }
-
-  // End spinner and return
-  console.log('Embeddings générés')
-  return
 }
 
 //
