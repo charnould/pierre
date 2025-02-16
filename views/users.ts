@@ -19,7 +19,20 @@ export const view = (users: User[]) => {
         <h1 class="mt-5 text-6xl font-bold">Utilisateurs</h1>
         <h2 class="mb-10 text-3xl font-medium">Ajouter ou supprimer des utilisateurs</h2>
 
-        <form method="post" class="flex w-fit justify-around gap-x-6">
+        <p class="mb-2 max-w-2xl text-sm">
+          Un <span class="font-semibold">administrateur</span> peut (a) modifier les utilisateurs,
+          (b) modifier l'encyclopédie, (c) consulter les conversations, (d) consulter les
+          statistiques et (e) utiliser l'IA. Un <span class="font-semibold">contributeur</span> peut
+          uniquement réaliser (b) et (e). Un <span class="font-semibold">collaborateur</span> peut
+          uniquement utiliser (e).
+        </p>
+        <p class="mb-8 max-w-2xl text-sm">
+          Si un utilisateur a oublié son mot de passe : supprimez-le et recréez-le.
+
+          <br />Après avoir créé un utilisateur, n'oubliez pas de lui communiquer son mot de passe.
+        </p>
+
+        <form method="post" class="mb-8 flex w-fit justify-around gap-x-6">
           <input type="hidden" name="action" value="create_user" />
 
           <div>
