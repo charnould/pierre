@@ -1,39 +1,54 @@
-import arg from 'arg'
 import { $ } from 'bun'
-
-import { clean_outdated_data } from './clean-outdated-data'
-import { create_database } from './create-database'
-import { generate_chunks_from_json } from './generate-chunks-from-json'
-import { generate_chunks_from_md } from './generate-chunks-from-md'
+import { z } from 'zod'
+import { chunk_json } from './chunk-json'
+import { chunk_markdown } from './chunk-markdown'
 import { generate_embeddings } from './generate-embeddings'
-import { get_and_save_metadata } from './save-metadata'
-import { scrap_wikipedia } from './scrap-wikipedia'
-import { transform_office_file } from './transform-office-file'
+import { initialize_databases } from './initialize-databases'
+import { process_office_files } from './process-office-files'
+import { remove_outdated_data } from './remove-outdated-data'
+import { scrape_wikipedia } from './scrape-wikipedia'
+import { store_metadata } from './store-metadata'
 
-export const run = async (x: string) => {
-  let args: arg.Result<{ '--community': BooleanConstructor; '--proprietary': BooleanConstructor }>
+// knowledge type
+export const Knowledge = z
+  .object({
+    community: z.boolean().default(false),
+    proprietary: z.boolean().default(false)
+  })
+  .strict()
 
-  try {
-    args = arg({ '--community': Boolean, '--proprietary': Boolean })
+export type Knowledge = z.infer<typeof Knowledge>
 
-    if (args['--proprietary'] === true || args['--community'] === true || x === 'proprietary') {
-      await clean_outdated_data(args)
-      await scrap_wikipedia(args)
-      await create_database(args)
-      await get_and_save_metadata(args)
-      await transform_office_file(args)
-      await generate_chunks_from_json(args)
-      await generate_chunks_from_md(args)
-      await $`rm -rf ./datastores/__temp__`
-      await generate_embeddings(args)
-
-      console.log('\nReconstruction terminée !')
-      return
-    }
-    throw new Error()
-  } catch (e) {
-    console.log(e)
+/**
+ * Executes a series of asynchronous operations on the provided knowledge
+ * object. The operations include removing outdated data, scraping Wikipedia,
+ * initializing databases, getting and saving metadata, processing office files,
+ * chunking JSON and Markdown files, generating embeddings, and cleaning up
+ * temporary data.
+ *
+ * @param knowledge - The knowledge object to be processed. The operations will
+ *                    only be executed if the `community` or `proprietary`
+ *                    property of the knowledge object is true.
+ *
+ * @returns A promise that resolves when all operations have been completed.
+ */
+export const execute_pipeline = async (knowledge: Knowledge) => {
+  if (knowledge.community === true || knowledge.proprietary === true) {
+    await remove_outdated_data(knowledge)
+    await scrape_wikipedia(knowledge)
+    await initialize_databases(knowledge)
+    await store_metadata(knowledge)
+    await process_office_files(knowledge)
+    await chunk_json(knowledge)
+    await chunk_markdown(knowledge)
+    await generate_embeddings(knowledge)
+    await $`rm -rf ./datastores/__temp__`
   }
+  return
 }
 
-//export type Args = typeof args
+// If the "--community" flag is present in the command-line arguments, trigger
+// the `execute_pipeline` function to rebuild `community` knowledge.
+if (Bun.argv.includes('--community')) {
+  await execute_pipeline({ community: true, proprietary: false })
+}
