@@ -1,5 +1,3 @@
-Source : https://www.actionlogement.fr/guides/trouver-un-logement/depot-de-garantie
-
 # Dépôt de garantie : on vous éclaire sur le sujet
 
 Le dépôt de garantie est une somme d’argent que le locataire doit verser au bailleur dès la signature du bail (contrat de location). Cette somme sera encaissée immédiatement et conservée par le propriétaire pendant toute la durée de la location. Vous souhaitez connaître vos droits en tant que locataire ? Découvrir ce qu’un bailleur peut exiger ou non ? Suivez-nous, on vous guide !

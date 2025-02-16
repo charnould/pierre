@@ -1,5 +1,3 @@
-Source : https://www.actionlogement.fr/guides/financer-vos-travaux/renovation-energetique-nos-aides-et-prets-accordes
-
 # Rénovation énergétique : découvrez notre prêt
 
 Vous souhaitez engager des travaux d’économie d’énergie dans votre logement ? Vous pouvez avoir recours à des aides financières et à des prêts lorsque vos travaux sont réalisés par des professionnels qualifiés. Quelles sont ces aides et comment en bénéficier ?
