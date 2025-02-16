@@ -8,12 +8,12 @@ import * as prettier from 'prettier'
 import TurndownService from 'turndown'
 import * as XLSX from 'xlsx'
 import * as cpexcel from 'xlsx/dist/cpexcel.full.mjs'
-import type { Args } from './_run'
-import type { Metadata } from './save-metadata'
+import type { Knowledge } from './_run'
+import type { Metadata } from './store-metadata'
 
-export const transform_office_file = async (args: Args) => {
+export const process_office_files = async (knowledge: Knowledge) => {
   // Tthis function applies only to `proprietary` knowledge
-  if (args['--proprietary'] === true) {
+  if (knowledge.proprietary === true) {
     const metadata = await Bun.file('datastores/__temp__/.metadata.json').json()
 
     // For each file...
@@ -142,7 +142,7 @@ export const transform_office_file = async (args: Args) => {
       }
     }
 
-    console.log('Données extraites des fichiers Office')
+    console.log('✅ Data extracted from Office files')
   }
 
   return

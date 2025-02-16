@@ -3,11 +3,11 @@ import { format } from 'date-fns'
 import * as prettier from 'prettier'
 import * as XLSX from 'xlsx'
 import { z } from 'zod'
-import type { Args } from './_run'
+import type { Knowledge } from './_run'
 
-export const get_and_save_metadata = async (args: Args) => {
+export const store_metadata = async (knowledge: Knowledge) => {
   // This function applies only to `proprietary` knowledge
-  if (args['--proprietary'] === true) {
+  if (knowledge.proprietary === true) {
     // Load "_metadata.xlsx" spreadsheet and
     // convert it to a JSON representation
     const metadata = await Bun.file('datastores/files/_metadata.xlsx').arrayBuffer()
@@ -42,8 +42,7 @@ export const get_and_save_metadata = async (args: Args) => {
       await prettier.format(JSON.stringify(Metadata.parse(files)), { parser: 'json' })
     )
 
-    // End spinner
-    console.log('Métadonnées obtenues')
+    console.log('✅ Metadata saved')
     return
   }
 }
