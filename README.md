@@ -48,10 +48,8 @@ Plus concrètement, PIERRE c'est à la fois :
     - [Via une fenêtre modale](#via-une-fen%C3%AAtre-modale)
     - [Via une iframe](#via-une-iframe)
   - [Paramétrer PIERRE pour l'utiliser par SMS](#param%C3%A9trer-pierre-pour-lutiliser-par-sms)
-  - [Administrer PIERRE avec une interface graphique](#administrer-pierre-avec-une-interface-graphique)
-- [Apprendre à PIERRE des connaissances (self-hosting)](#apprendre-%C3%A0-pierre-des-connaissances-self-hosting)
-  - [Connaissances « communautaires » vs. « propriétaires »](#connaissances-%C2%AB-communautaires-%C2%BB-vs-%C2%AB-propri%C3%A9taires-%C2%BB)
-  - [Comment faire apprendre des connaissances à PIERRE ?](#comment-faire-apprendre-des-connaissances-%C3%A0-pierre)
+- [Administrer PIERRE avec une interface graphique](#administrer-pierre-avec-une-interface-graphique)
+  - [Apprendre à PIERRE des connaissances (self-hosting)](#apprendre-%C3%A0-pierre-des-connaissances-self-hosting)
 - [License](#license)
 
 <!-- tocstop -->
@@ -110,13 +108,15 @@ Au fur et à mesure de l'amélioration de la base de connaissances, la pertinenc
 
 PIERRE utilise — à ce jour — plusieurs (passes de) LLM dans cet ordre successif :
 
-1. Un **modèle de génération d'`objets`** qui transforme la requête de l'utilisateur en une « requête augmentée » au format `json` (en utilisant des techniques de type HyDE ou Stepback). Tous les LLM ne peuvent générer de tels `objets`. En conséquence, il est indispensable — lorsque l'on auto-héberge PIERRE — de disposer d'une clef d'API OpenAI. Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
+1. Un **modèle de génération de `textes`** qui transforme la requête de l'utilisateur en une « requête augmentée » (en utilisant des techniques de type HyDE ou Stepback). Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
 
 2. Un **modèle de génération d'`embeddings`** qui transforme la « requête augmentée » en vecteurs de valeurs numériques qui sont ensuite utilisés pour rechercher les éléments de réponse les plus pertinents dans la base de connaissances de PIERRE. **À ce jour, ce modèle ne peut pas être modifié** (`text-embedding-3-large`). En conséquence, il est indispensable — lorsque l'on auto-héberge PIERRE — de disposer d'une clef d'API OpenAI.
 
-3. À nouveau, un **modèle de génération d'`objets`** programmé en **`reranker`** qui classifie les résulats retournés par les bases de connaissances pour ne conserver que les élémennts les plus pertinents en regard de la question posée par l'utilisateur. Tous les LLM ne peuvent générer de tels `objets`. En conséquence, il est indispensable — lorsque l'on auto-héberge PIERRE — de disposer d'une clef d'API OpenAI. Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
+3. À nouveau, un **modèle de génération de `textes`** programmé en **`reranker`** qui classifie les résulats retournés par les bases de connaissances pour ne conserver que les éléments les plus pertinents en regard de la question posée par l'utilisateur. Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
 
-4. Un **modèle de génération de `textes`** qui génére les réponses textuelles aux utilisateurs. Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Bring Your Own LLM Key/Model »** (BYOK) — **il est possible de choisir le modèle utilisé** (Mistral, Anthropic, Cohere...) et ce, en modifiant le fichier de configuation (_cf._ infra). Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
+4. Un **modèle de génération de `textes`** qui génére les réponses textuelles aux utilisateurs en utilisant les éléments issus de (3). Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
+
+Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Bring Your Own LLM Key/Model »** (BYOK) — **il est possible de choisir le modèle utilisé** (Mistral, Anthropic, Cohere...) pour (1), (3) et (4) et ce, en modifiant le fichier de configuation (_cf._ infra).
 
 ## L'universel SMS pour les échanges de « premier niveau »
 
@@ -268,12 +268,14 @@ Pour modifier cela, modifier dans le fichier `config.ts` :
 
 Pour modifier les modèles, il suffit de :
 
-- Modifier `models` pour chaque `context` dans votre fichier `config.ts` par la valeur souhaitée.
-- Renseigner la clef d'API correspondante dans les variables d'environnement (`.env.production`). **Attention**, il faut a minima et impérativement disposer d'une clef `OpenAI` pour la génération d'`objets ` et d'`embeddings`.
+- Modifier `models` pour chaque `context` dans votre fichier `config.ts` par la valeur souhaitée. Il est fortement recommandé d'utiliser un modèle peu cher pour le `reranker` qui est consommateur de tokens (ex : `gpt-4o-mini-2024-07-18` d'OpenAI ou équivalent).
+- Renseigner la clef d'API correspondante dans les variables d'environnement (`.env.production`). **Attention**, il faut a minima et impérativement disposer d'une clef `OpenAI` pour la génération d'`embeddings`.
 
 ### Quels modèles est-il possible d'utiliser ?
 
-PIERRE permet – à ce stade – l'usage des principaux modèles de langage, à savoir : `Anthropic`, `Cohere`, `Google`, `Mistral` et `OpenAI`.
+PIERRE permet – à ce stade – l'usage des principaux modèles de langage, à savoir : `Anthropic`, `Cohere`, `Google`, `Meta`, `Mistral`, et `OpenAI`.
+
+Pour accélérer l'inférence, c'est-à-dire la vitesse des réponses, il est possible de faire appel à des fournisseurs tels que `Cerebras`, `Groq` ou encore `TogetherAI`.
 
 ## Installer PIERRE sur votre site web
 
@@ -344,44 +346,28 @@ avec :
 
 TODO/À FINALISER
 
-## Administrer PIERRE avec une interface graphique
+# Administrer PIERRE avec une interface graphique
 
 Si vous hébergez PIERRE :
 
 1. Rendez-vous à l'adresse https://180.81.82.83/a (à remplacer par votre domaine/IP).
 2. Saisissez (la première fois) `admin@pierre-ia.org` et le mot de passe contenu dans la variable d'environnement `AUTH_PASSWORD`.
-3. Vous pouvez désormais créer autant d'utilisateurs que nécessaire (n'oubliez pas de transmettre les mots de passe !) qui pourront modifier les utilisateurs ou l'encyclopédie, consulter les conversations ou les statistiques, et utiliser « l'aide de camp ».
+3. Vous pouvez désormais créer autant d'utilisateurs que nécessaire (n'oubliez pas de transmettre les mots de passe !) qui pourront modifier les utilisateurs ou l'encyclopédie, consulter les conversations ou les statistiques...
 
-# Apprendre à PIERRE des connaissances (self-hosting)
-
-## Connaissances « communautaires » vs. « propriétaires »
+## Apprendre à PIERRE des connaissances (self-hosting)
 
 PIERRE dispose — en fait — de deux bases de connaissances :
 
-- Une [base](https://github.com/charnould/pierre/tree/master/knowledge/) (dite `community`) qui correspond aux connaissances partagées universellement au sein du mouvemement HLM (ex : comment déposer une demande de logement social, qu'est ce que le SLS, les associations d'hébergement d'urgence dans le Vaucluse, etc.). Cette base `community` correspond aux répertoires `global`, `local`, `org` et `wikipedia` du dossier `knowledge`. NE PAS MODIFIER CES FICHIERS.
+- Une [base](https://github.com/charnould/pierre/tree/master/knowledge/) (dite `community`) qui correspond aux connaissances partagées universellement au sein du mouvemement HLM (ex : comment déposer une demande de logement social, qu'est ce que le SLS, les associations d'hébergement d'urgence dans le Vaucluse, etc.).
 
-- Une [base](https://github.com/charnould/pierre/tree/master/knowledge/proprietary) (dite `proprietary`) qui correspond aux connaissances créées par un organisme HLM hébergeant sa propre version de PIERRE et qu'il ne souhaite pas partager avec `community` (ex : des procédures internes).
+- Une base (dite `propriétaire`) qui correspond aux connaissances créées par un organisme HLM hébergeant sa propre version de PIERRE et qu'il ne souhaite pas partager avec `community` ou qu'il souhaite faire apprendre en pleine autonomie à PIERRE (ex : des procédures internes).
 
-Plus précisément, cette base `proprietary` contient deux types de données :
+**Comment faire apprendre des connaissances à PIERRE ?**
 
-- Des données `privées` accessibles uniquement aux collaborateurs de l'organisme (ex : les processus et procédures internes).
-- Des données `publiques` accessibles aux candidats et locataires HLM, ainsi qu'aux collaborateurs (ex : l'histoire de l'organisme).
-
-> [!IMPORTANT]
-> Il est généralement plus pertinent de contribuer à la base `community` que d'utiliser les données `publiques` de `proprietary`.
-
-## Comment faire apprendre des connaissances à PIERRE ?
-
-1. Supprimer du dossier `knowledge/proprietary` tous les fichiers et répertoires **à l'exception** de `_metadata.example.xlsx`.
-2. Dupliquer `_metadata.example.xlsx` et le renommer `_metadata.xlsx`.
-3. Déposer vos fichiers `.docx` (Word), `.xlsx` (Excel) ou `.md` (Markdown) dans ce même répertoire. Vous êtes libre de créer une arborescence selon vos besoins. Les fichiers avec d'autres extensions que celles précédemment citées ne seront pas pris en compte.
-4. Compléter le fichier `_metadata.xlsx`. C'est notamment dans ce fichier que vous pourrez arbitrer si les connaissances doivent être `privées` ou `publiques`. Uniquement les fichiers référencés dans `_metadata.xlsx` seront pris en compte. Attention, un fichier référencé dans `_metadata.xlsx` et qui n'existe pas à l'emplacement indiqué générera une erreur.
-5. Lancer `bun generate --proprietary` pour lancer la (re)construction automatique de votre base de connaissances `proprietary` et patienter quelques minutes (il est impératif que vos variables d'environnement contiennent une clef d'API `OpenAI`).
-6. **Indispensable** : [Configurer](https://github.com/charnould/pierre/blob/master/assets/pierre-ia.org/config.ts#L73) vos `context` dans `config.ts` de manière à permettre l'utilisation des connaissances `proprietary` et protéger votre `context` s'il utilise des données `privées`/`private`.
-7. Effectuer un commit des modifications, tester en local et redéployer.
-
-> [!TIP]
-> Dans un futur proche (objectif : février 2025), vous pourrez enseigner à PIERRE des connaissances `proprietary` sans nécessiter de redéploiement et ce, simplement en associant un SharePoint à PIERRE (en cours de réflexion).<br><br>En cas de difficultés pour « enseigner » à PIERRE vos propres données, créer une `issue` sur GitHub ou adresser un email à charnould@pierre-ia.org.
+1. Se connecter à https://180.81.82.83/a, puis cliquer sur `Encyclopédie`.
+2. Télécharger `_metadata.xlsx`, le compléter **scrupuleusement** et le ré-uploader avec les fichiers associés. Seuls les `.docx` (Word), `.xlsx` (Excel) et `.md` (Markdown) sont acceptés.
+3. **Indispensable** : [Configurer](https://github.com/charnould/pierre/blob/master/assets/pierre-ia.org/config.ts#L73) vos `context` dans `config.ts` de manière à permettre l'utilisation des connaissances `proprietary` et protéger votre `context` s'il utilise des données `privées`/`private`.
+4. C'est tout. Toutes les nuits aux alentours de 4h du matin, la base de connaissances sera automatiquement reconstruite (il est impératif que vos variables d'environnement contiennent une clef d'API `OpenAI`).
 
 # License
 
