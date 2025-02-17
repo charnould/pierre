@@ -9,7 +9,7 @@ export const view = (metadata: Metadata[]) => {
         <script src="https://unpkg.com/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
         <link rel="icon" href="../assets/pierre-ia.org/system.svg" type="image/svg+xml" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1739741252036.css" />
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1740137250648.css" />
         <title>PIERRE — Console</title>
       </head>
 
@@ -84,25 +84,32 @@ export const view = (metadata: Metadata[]) => {
           ici sont pris en compte.
           <a
             href="../assets/pierre-ia.org/files/_metadata.xlsx"
-            class="cursor-pointer text-blue-600 underline decoration-2 underline-offset-3"
-            >Le télécharger</a
-          >, le compléter, puis le ré-uploader.
+            class="cursor-pointer text-blue-600 underline decoration-1 underline-offset-3"
+            >Télécharger un gabarit vide</a
+          >, le compléter, puis l'uploader.
         </p>
-        <p class="mb-2 max-w-2xl text-sm">
+        <form method="post" enctype="multipart/form-data" class="mb-2 max-w-2xl text-sm">
           La reconstruction de l'encyclopédie se réalise automatiquement à 4h du matin et dure 1 à
-          10 minutes selon la quantité de données à intégrer. Vous pouvez
+          10 minutes selon le volume de données à intégrer. Vous pouvez
           <button
-            class="inline w-fit cursor-pointer whitespace-normal text-blue-600 underline decoration-2 underline-offset-3"
+            formaction="/a/knowledge?action=rebuild"
+            class="inline w-fit cursor-pointer whitespace-normal text-blue-600 underline decoration-1 underline-offset-3"
           >
-            forcer la reconstruction immédiate</button
-          >, attention cependant, cela générera une interruption de service.
-        </p>
+            forcer une reconstruction immédiate</button
+          >, attention cependant, cela générera une interruption de service le temps de la
+          reconstruction.
+        </form>
 
         <p class="mb-9 max-w-2xl text-sm">
           <span class="font-mono font-extrabold">Important/</span> S'il manque des connaissances
           génériques à PIERRE, qu'elles soient nationales (les impacts du SLS) ou locales
           (l'assurance-habitation de la ville de Paris) : ne pas les uploader et envoyer un email à
-          charnould@pierre-ia.org.
+          <a
+            href="mailto:charnould@pierre-ia.org"
+            class="cursor-pointer text-blue-600 underline decoration-1 underline-offset-3"
+            >charnould@pierre-ia.org</a
+          >
+          .
         </p>
 
         <div>
