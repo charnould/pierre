@@ -1,20 +1,21 @@
 import type { Context } from 'hono'
+import { execute_pipeline } from '../utils/knowledge/_run'
 
 /**
- * Handles various actions related to file management such as upload, download, and destroy.
+ * Handles various actions related to file management and knowledge rebuilding.
  *
  * @param {Context} c - The context object containing request and response information.
  *
- * The function performs the following actions based on the 'action' query parameter:
+ * @throws Will log an error if any operation fails.
  *
- * - `upload`: Uploads files to the 'datastores/files' directory.
- *    The filenames are normalized to remove diacritics and replace special characters.
- * - `download`: Streams the requested file to the client with appropriate headers for download.
- * - `destroy`: Deletes the specified file from the 'datastores/files' directory.
+ * The function supports the following actions:
  *
- * After performing the action, the function redirects to the '/a/knowledge' route.
+ * - `upload`: Uploads files to the `datastores/files` directory..
+ * - `download`: Downloads a specified file from the `datastores/files` directory.
+ * - `destroy`: Deletes a specified file from the `datastores/files` directory.
+ * - `rebuild`: Forces a knowledge rebuilds.
  *
- * @returns {Promise} - A promise that resolves when the action is complete.
+ * After completing the action, the function redirects to the `/a/knowledge` route.
  */
 export const controller = async (c: Context) => {
   try {
@@ -48,6 +49,11 @@ export const controller = async (c: Context) => {
     // CASE 3: User wants to delete a file
     if (action === 'destroy') {
       await Bun.file(`datastores/files/${filename}`).delete()
+    }
+
+    // CASE 4: Force knwoledge rebuild
+    if (action === 'rebuild') {
+      await execute_pipeline({ proprietary: true, community: false })
     }
 
     return c.redirect('/a/knowledge')
