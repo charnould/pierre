@@ -188,7 +188,11 @@ export const augment_query = async (context: AIContext) => {
  * @param fallback - The fallback value to return if the tag is not found.
  * @returns The extracted tag value in lowercase and trimmed, or the fallback value if the tag is not found.
  */
-export const extract_tag_value = (response: string, tag: string, fallback: string | boolean) => {
+export const extract_tag_value = (
+  response: string,
+  tag: string,
+  fallback: number | string | boolean | null
+) => {
   const regex = new RegExp(`<${tag}>(.*?)</${tag}>`)
   const match = response.match(regex)
   return match ? match[1].trim().toLowerCase() : fallback
