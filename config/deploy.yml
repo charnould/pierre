@@ -1,11 +1,12 @@
-minimum_version: 2.3.0
+minimum_version: 2.5.2
 
-service: pierre
+service: <%= ENV['SERVICE'] %>
 
 image: <%= ENV['REPO_PATH'] %>
 
 servers:
-  - <%= ENV['IP'] %>
+  web:
+    - <%= ENV['IP'] %>
 
 registry:
   username: <%= ENV['USERNAME'] %>
@@ -17,7 +18,10 @@ volumes:
   - 'datastores:/app/datastores/'
 
 proxy:
+  ssl: true
   app_port: 3000
+  response_timeout: 300
+  host: <%= ENV['HOST'] %>
 
 builder:
   arch: amd64
