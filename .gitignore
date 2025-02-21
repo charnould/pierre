@@ -9,3 +9,6 @@
 .env
 .env.production
 .env.staging
+.env.development
+.env.test
+.env.local
