@@ -30,7 +30,10 @@
     "dev:console": "bun --env-file=.env.development run kamal app exec -i bash",
     "――――――― PRODUCTION DEPLOYMENT COMMANDS ―――――――": "―――――――",
     "prod:logs": "bun --env-file=.env.production run kamal app logs",
+    "prod:setup": "bun --env-file=.env.production run kamal setup",
     "prod:deploy": "bun --env-file=.env.production run kamal deploy",
+    "prod:remove": "bun --env-file=.env.production run kamal remove",
+    "prod:removeproxy": "bun --env-file=.env.production run kamal proxy remove --force",
     "prod:console": "bun --env-file=.env.production run kamal app exec -i bash"
   },
   "dependencies": {
@@ -46,8 +49,7 @@
     "@observablehq/plot": "^0.6.17",
     "ai": "^4.1.45",
     "arquero": "^8.0.1",
-    "cron": "^3.5.0",
-    "@dotenvx/dotenvx": "^1.37.0",
+    "cron": "^4.0.0",
     "d3": "^7.9.0",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
@@ -59,7 +61,7 @@
     "mammoth": "^1.9.0",
     "marked": "^15.0.7",
     "natural": "^8.0.1",
-    "prettier": "^3.5.1",
+    "prettier": "^3.5.2",
     "remove-markdown": "^0.6.0",
     "sqlite-vec": "^0.1.6",
     "sqlite-vec-darwin-arm64": "^0.1.6",
@@ -74,14 +76,14 @@
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.16",
     "@biomejs/biome": "^1.9.4",
-    "@types/bun": "^1.2.2",
+    "@types/bun": "^1.2.3",
     "@types/lodash": "^4.17.15",
     "@types/turndown": "^5.0.5",
     "markdown-toc": "^1.2.0",
     "puppeteer": "^24.2.1",
     "prettier-plugin-tailwindcss": "^0.6.11",
-    "@tailwindcss/cli": "^4.0.7",
-    "tailwindcss": "^4.0.7",
+    "@tailwindcss/cli": "^4.0.8",
+    "tailwindcss": "^4.0.8",
     "typescript": "^5.7.3"
   },
   "prettier": {
