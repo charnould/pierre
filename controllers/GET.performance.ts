@@ -64,8 +64,8 @@ export const controller = async (c: Context) => {
  */
 const StatisticOptions = z.object({
   window: z.enum(['last_1h', 'last_24h', 'last_30d', 'last_365d']).catch('last_30d'),
-  color: z.enum(['user_score', 'org_score', 'config', 'topic']).catch('org_score'),
-  facet: z.enum(['user_score', 'org_score', 'config', 'topic']).nullable().catch(null),
+  color: z.enum(['user_score', 'org_score', 'ai_score', 'config', 'topic']).catch('org_score'),
+  facet: z.enum(['user_score', 'org_score', 'ai_score', 'config', 'topic']).nullable().catch(null),
   action: z.enum(['visualize', 'download']).catch('visualize')
 })
 
@@ -88,6 +88,8 @@ export type StatisticOptions = z.infer<typeof StatisticOptions>
  *    - `last_365d`: Year and month in YYYY-MM format.
  *    - `user_score`: Customer evaluation score or 'Non noté' if null.
  *    - `org_score`: Organization evaluation score or 'Non noté' if null.
+ *    - `ia_score`: PIERRE own evaluation score or 'Non noté' if null.
+ *    - `topic`: PIERRE own topic evaluation.
  * 5. Omits certain fields from the final result.
  * 6. Returns the processed result as a JSON string.
  */
@@ -120,6 +122,8 @@ export const get_data = (options: StatisticOptions): string => {
 
       const metadata = JSON.parse(item.metadata)
 
+      const topic = metadata.topics
+
       const user_score =
         metadata.evaluation.customer?.score === null
           ? 'Non noté'
@@ -130,6 +134,8 @@ export const get_data = (options: StatisticOptions): string => {
           ? 'Non noté'
           : String(metadata.evaluation.organization?.score)
 
+      const ai_score =
+        metadata.evaluation.ai?.score === null ? 'Non noté' : String(metadata.evaluation.ai?.score)
       return _.omit(
         {
           ...item,
@@ -138,7 +144,9 @@ export const get_data = (options: StatisticOptions): string => {
           last_30d,
           last_365d,
           user_score,
-          org_score
+          org_score,
+          ai_score,
+          topic
         },
         ['metadata', 'content', 'role', 'timestamp']
       )
@@ -168,7 +176,8 @@ export const generate_csv = () => {
         *,
         json_extract(metadata, '$.evaluation.cus.score') AS cus_score,
         json_extract(metadata, '$.evaluation.org.score') AS org_score,
-        json_extract(metadata, '$.topics') AS topics
+        json_extract(metadata, '$.evaluation.ai.score') AS ai_score,
+        json_extract(metadata, '$.topics') AS topic
       FROM telemetry;
       `
     )
@@ -176,14 +185,15 @@ export const generate_csv = () => {
 
   // prettier-ignore
   const result = {
-      conversation    : _.map(data, 'conv_id'),
-      horodatage      : _.map(data, 'timestamp'),
-      role            : _.map(data, 'role'),
-      cnofiguration   : _.map(data, 'config'),
-      thematique      : _.map(data, 'topics'),
-      user_score      : _.map(data, 'customer_score'),
-      organisme_score : _.map(data, 'organization_score'),
-      message         : _.map(data, 'content')
+      conversation      : _.map(data, 'conv_id'),
+      horodatage        : _.map(data, 'timestamp'),
+      role              : _.map(data, 'role'),
+      configuration     : _.map(data, 'config'),
+      thematique        : _.map(data, 'topic'),
+      score_utilisateur : _.map(data, 'customer_score'),
+      score_organisme   : _.map(data, 'organization_score'),
+      score_ia          : _.map(data, 'ai_score'),
+      message           : _.map(data, 'content')
     }
 
   return table(result).toCSV()

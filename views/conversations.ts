@@ -10,7 +10,7 @@ export const view = (data, conversation: Reply[] | []) => {
         <script src="https://unpkg.com/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
         <link rel="icon" href="../assets/pierre-ia.org/system.svg" type="image/svg+xml" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1739741252036.css" />
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1740137250648.css" />
         <meta name="turbo-refresh-method" content="morph" />
         <meta name="turbo-refresh-scroll" content="preserve" />
         <title>PIERRE — Console</title>
