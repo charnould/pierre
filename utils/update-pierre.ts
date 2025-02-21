@@ -29,13 +29,13 @@ console.log('')
 // - vérifier que config.ts est correctement formaté
 // await $`git fetch origin master`
 // await $`git rebase origin/master`
-// await $`bun version`
+// await $`bun pierre:version`
 
 if (latest_version === current_version) {
   console.log('PIERRE est à jour.')
 
   try {
-    await $`bun test:config`.quiet()
+    await $`bun pierre:config`.quiet()
   } catch (e) {
     // console.log(('`config.ts` contient des erreurs.')
   }
