@@ -183,14 +183,14 @@ Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour
 Pour déployer PIERRE sur un serveur, il est indispensable d'être parvenu à le faire fonctionner en local.
 
 1. Installer `Docker Desktop` et le lancer ([instructions](https://www.docker.com/products/docker-desktop/)). `Docker` gérera la conteneurisation.
-2. Lancer `gem install kamal` pour installer `Kamal` (≥`2.4.0`) qui gérera le déploiement ([instructions](https://kamal-deploy.org/docs/installation/)).
+2. Lancer `gem install kamal` pour installer `Kamal` (≥`2.5.0`) qui gérera le déploiement ([instructions](https://kamal-deploy.org/docs/installation/)).
 3. Disposer d'un compte `GitHub` et [générer une clef](https://github.com/settings/tokens). `GitHub` sera le registre de conteneurs lors du déploiement.
 4. Disposer d'un VPS (par exemple `CX22` d'[Hetzner](https://www.hetzner.com/cloud/)) et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
 5. Finaliser les modifications du fichier `.env.production` que vous avez créé précédemment.
 6. Saississez dans votre terminal `bun --env-file=.env.production kamal setup` et patientez quelques minutes.
 7. Et voilà, PIERRE est accessible à l'adresse IP de votre serveur.
 8. Étapes suivantes (optionnelles et décrites ci-dessous) :  
-   – Placer votre IP derrière un proxy pour le servir via un domaine  
+   – Modifier vos DNS pour servir PIERRRE via un domaine  
    – Déployer PIERRE sur un second serveur de tests  
    – Personnaliser PIERRE  
    – Faire fonctionner PIERRE par SMS  
