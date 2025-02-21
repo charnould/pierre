@@ -1,11 +1,11 @@
 // Bun Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`should insert 3 replies 1`] = `
+exports[`test SQLite3 conversation CRUD operations should insert 3 replies 1`] = `
 [
   {
     "config": "pierre-ia.org",
     "content": "Qui es-tu ?",
-    "conv_id": "id_1",
+    "conv_id": "c1",
     "metadata": "{"topics":null,"evaluation":{"customer":{"score":null,"comment":null},"organization":{"score":null,"comment":null},"ai":{"score":null,"comment":null}},"tokens":{"prompt":null,"completion":null,"total":null}}",
     "role": "user",
     "timestamp": "2012-12-12T12:05:00Z",
@@ -13,7 +13,7 @@ exports[`should insert 3 replies 1`] = `
   {
     "config": "pierre-ia.org",
     "content": "Je suis Pierre !",
-    "conv_id": "id_1",
+    "conv_id": "c1",
     "metadata": "{"topics":null,"evaluation":{"customer":{"score":null,"comment":null},"organization":{"score":null,"comment":null},"ai":{"score":null,"comment":null}},"tokens":{"prompt":null,"completion":null,"total":null}}",
     "role": "assistant",
     "timestamp": "2012-12-12T12:10:00Z",
@@ -21,20 +21,19 @@ exports[`should insert 3 replies 1`] = `
   {
     "config": "pierre-ia.org",
     "content": "Bonjour",
-    "conv_id": "id_2",
+    "conv_id": "c2",
     "metadata": "{"topics":null,"evaluation":{"customer":{"score":null,"comment":null},"organization":{"score":null,"comment":null},"ai":{"score":null,"comment":null}},"tokens":{"prompt":null,"completion":null,"total":null}}",
     "role": "user",
     "timestamp": "2012-12-12T12:15:00Z",
   },
 ]
 `;
-
-exports[`should retrieve 2 conversations 1`] = `
+exports[`test SQLite3 conversation CRUD operations should get 2 conversations 1`] = `
 [
   {
     "config": "pierre-ia.org",
     "content": "Qui es-tu ?",
-    "conv_id": "id_1",
+    "conv_id": "c1",
     "metadata": {
       "evaluation": {
         "ai": {
@@ -63,7 +62,7 @@ exports[`should retrieve 2 conversations 1`] = `
   {
     "config": "pierre-ia.org",
     "content": "Je suis Pierre !",
-    "conv_id": "id_1",
+    "conv_id": "c1",
     "metadata": {
       "evaluation": {
         "ai": {
@@ -92,12 +91,12 @@ exports[`should retrieve 2 conversations 1`] = `
 ]
 `;
 
-exports[`should retrieve 2 conversations 2`] = `
+exports[`test SQLite3 conversation CRUD operations should get 2 conversations 2`] = `
 [
   {
     "config": "pierre-ia.org",
     "content": "Bonjour",
-    "conv_id": "id_2",
+    "conv_id": "c2",
     "metadata": {
       "evaluation": {
         "ai": {
@@ -126,29 +125,25 @@ exports[`should retrieve 2 conversations 2`] = `
 ]
 `;
 
-exports[`should score conversations 1`] = `
+exports[`test SQLite3 conversation CRUD operations should save score 1`] = `
 [
   {
     "config": "pierre-ia.org",
     "content": "Qui es-tu ?",
-    "conv_id": "id_1",
+    "conv_id": "c1",
     "metadata": {
       "evaluation": {
         "ai": {
-          "comment": "ai comment",
-          "score": 4,
+          "comment": "ai_comment",
+          "score": 3,
         },
         "customer": {
-          "comment": "customer comment",
+          "comment": "customer_comment",
           "score": 1,
         },
         "organization": {
-          "comment": "organization comment",
+          "comment": "organization_comment",
           "score": 2,
-        },
-        "pierre": {
-          "comment": "pierre comment",
-          "score": 3,
         },
       },
       "tokens": {
@@ -164,24 +159,20 @@ exports[`should score conversations 1`] = `
   {
     "config": "pierre-ia.org",
     "content": "Je suis Pierre !",
-    "conv_id": "id_1",
+    "conv_id": "c1",
     "metadata": {
       "evaluation": {
         "ai": {
-          "comment": "ai comment",
-          "score": 4,
+          "comment": "ai_comment",
+          "score": 3,
         },
         "customer": {
-          "comment": "customer comment",
+          "comment": "customer_comment",
           "score": 1,
         },
         "organization": {
-          "comment": "organization comment",
+          "comment": "organization_comment",
           "score": 2,
-        },
-        "pierre": {
-          "comment": "pierre comment",
-          "score": 3,
         },
       },
       "tokens": {
@@ -197,17 +188,17 @@ exports[`should score conversations 1`] = `
 ]
 `;
 
-exports[`should score conversations 2`] = `
+exports[`test SQLite3 conversation CRUD operations should save score 2`] = `
 [
   {
     "config": "pierre-ia.org",
     "content": "Bonjour",
-    "conv_id": "id_2",
+    "conv_id": "c2",
     "metadata": {
       "evaluation": {
         "ai": {
-          "comment": "outstanding answer!",
-          "score": 5,
+          "comment": "ai_comment",
+          "score": 3,
         },
         "customer": {
           "comment": null,
@@ -231,17 +222,80 @@ exports[`should score conversations 2`] = `
 ]
 `;
 
-exports[`should retrieve all conversations 1`] = `
+exports[`test SQLite3 conversation CRUD operations should save topic 1`] = `
+[
+  {
+    "config": "pierre-ia.org",
+    "content": "Qui es-tu ?",
+    "conv_id": "c1",
+    "metadata": {
+      "evaluation": {
+        "ai": {
+          "comment": "ai_comment",
+          "score": 3,
+        },
+        "customer": {
+          "comment": "customer_comment",
+          "score": 1,
+        },
+        "organization": {
+          "comment": "organization_comment",
+          "score": 2,
+        },
+      },
+      "tokens": {
+        "completion": null,
+        "prompt": null,
+        "total": null,
+      },
+      "topics": "multiple",
+    },
+    "role": "user",
+    "timestamp": "2012-12-12T12:05:00Z",
+  },
+  {
+    "config": "pierre-ia.org",
+    "content": "Je suis Pierre !",
+    "conv_id": "c1",
+    "metadata": {
+      "evaluation": {
+        "ai": {
+          "comment": "ai_comment",
+          "score": 3,
+        },
+        "customer": {
+          "comment": "customer_comment",
+          "score": 1,
+        },
+        "organization": {
+          "comment": "organization_comment",
+          "score": 2,
+        },
+      },
+      "tokens": {
+        "completion": null,
+        "prompt": null,
+        "total": null,
+      },
+      "topics": "multiple",
+    },
+    "role": "assistant",
+    "timestamp": "2012-12-12T12:10:00Z",
+  },
+]
+`;
+
+exports[`test SQLite3 conversation CRUD operations should retrieve all conversations 1`] = `
 [
   {
     "config": "pierre-ia.org",
     "content": "Bonjour",
-    "conv_id": "id_2",
+    "conv_id": "c2",
     "metadata": {
       "evaluation": {
         "ai": {
-          "comment": "outstanding answer!",
-          "score": 5,
+          "comment": "ai_comment",
+          "score": 3,
         },
         "customer": {
           "comment": null,
