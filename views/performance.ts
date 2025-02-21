@@ -65,7 +65,7 @@ export const view = (data, options: StatisticOptions) => {
         <script src="https://unpkg.com/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
         <link rel="icon" href="../assets/pierre-ia.org/system.svg" type="image/svg+xml" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1739741252036.css" />
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1740137250648.css" />
         <title>PIERRE — Console</title>
       </head>
 
@@ -122,10 +122,15 @@ export const view = (data, options: StatisticOptions) => {
             <option value="org_score" ${options.color === 'org_score' ? 'selected' : null}>
               score-organisme
             </option>
+            <option value="ai_score" ${options.color === 'ai_score' ? 'selected' : null}>
+              score-ia
+            </option>
             <option value="config" ${options.color === 'config' ? 'selected' : null}>
               configuration
             </option>
-            <option disabled value="topics">thématique</option>
+            <option value="topic" ${options.color === 'topic' ? 'selected' : null}>
+              thématique
+            </option>
           </select>
           et
 
@@ -143,10 +148,15 @@ export const view = (data, options: StatisticOptions) => {
             <option value="org_score" ${options.facet === 'org_score' ? 'selected' : null}>
               segmentées par score-organisme
             </option>
+            <option value="ai_score" ${options.facet === 'ai_score' ? 'selected' : null}>
+              segmentées par score-ia
+            </option>
             <option value="config" ${options.facet === 'config' ? 'selected' : null}>
               segmentées par configuration
             </option>
-            <option disabled value="topics">segmentées par thématique</option>
+            <option value="topic" ${options.facet === 'topic' ? 'selected' : null}>
+              segmentées par thématique
+            </option>
           </select>
 
           <input
