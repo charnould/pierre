@@ -187,7 +187,7 @@ Pour déployer PIERRE sur un serveur, il est indispensable d'être parvenu à le
 3. Disposer d'un compte `GitHub` et [générer une clef](https://github.com/settings/tokens). `GitHub` sera le registre de conteneurs lors du déploiement.
 4. Disposer d'un VPS (par exemple `CX22` d'[Hetzner](https://www.hetzner.com/cloud/)) et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
 5. Finaliser les modifications du fichier `.env.production` que vous avez créé précédemment.
-6. Saississez dans votre terminal `dotenvx run -f .env.production -- kamal setup` et patientez quelques minutes (`dotenvx run -f .env.production --` est indispensable pour interpoler les variables d'environnement).
+6. Saississez dans votre terminal `bun --env-file=.env.production kamal setup` et patientez quelques minutes.
 7. Et voilà, PIERRE est accessible à l'adresse IP de votre serveur.
 8. Étapes suivantes (optionnelles et décrites ci-dessous) :  
    – Placer votre IP derrière un proxy pour le servir via un domaine  
@@ -200,23 +200,23 @@ Pour déployer PIERRE sur un serveur, il est indispensable d'être parvenu à le
 
 PIERRE — et notamment sa base de connaissances — évolue régulièrement et suit la convention `semver`. Pour le mettre à jour :
 
-1. Saisir `bun version` pour connaitre la dernière version disponible.
+1. Saisir `bun pierre:version` pour connaitre la dernière version disponible.
 2. Consulter les [releases](https://github.com/charnould/pierre/releases) pour connaitre les modifications et les éventuels _breaking changes_.
 3. Mettre à jour votre fork/clone.
-4. Saisir `bun test:config` pour vous assurer que `config.ts` est correctement paramétré.
-5. Saisir `dotenvx run -f .env.production -- kamal deploy` dans votre terminal (ou le raccourci `bun production:deploy`).
+4. Saisir `bun pierre:config` pour vous assurer que `config.ts` est correctement paramétré.
+5. Saisir `bun --env-file=.env.production kamal deploy` dans votre terminal (ou le raccourci `bun prod:deploy`).
 
 ### Déployer et redéployer PIERRE sur un serveur de tests
 
 Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE :
 
 1. Disposer d'un **second** VPS et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
-2. Dupliquer `.env.production` en `.env.staging` et modifier le (a priori uniquement l'IP).
-3. Lancer `dotenvx run -f .env.staging -- kamal setup` pour déployer la première fois.
-4. Lancer `dotenvx run -f .env.staging -- kamal deploy` pour redéployer (ou le raccourci `bun staging:deploy`).
+2. Dupliquer `.env.production` en `.env.development` et modifier le (a priori uniquement l'IP).
+3. Lancer `bun --env-file=.env.development kamal setup` pour déployer la première fois.
+4. Lancer `bun --env-file=.env.development kamal deploy` pour redéployer (ou le raccourci `bun dev:deploy`).
 
 > [!NOTE]
-> Il est très fortement recommandé que les environnements de `production` et `staging` aient le même système d'exploitation (Ubuntu, Debian, etc.) et la même architecture de processeur (x86).
+> Il est très fortement recommandé que les environnements de `production` et `development` aient le même système d'exploitation (Ubuntu, Debian, etc.) et la même architecture de processeur (x86).
 
 # Modifier et paramétrer PIERRE (self-hosting)
 
@@ -245,7 +245,7 @@ Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE :
    – http://localhost:3000/?config=pierre-habitat.fr&context=en_agence
 
 > [!TIP]
-> Pour vous assurer que `config.ts` est correctement paramétré, notamment lors des montées de version qui peuvent en modifier la structure, lancer `bun test:config`.
+> Pour vous assurer que `config.ts` est correctement paramétré, notamment lors des montées de version qui peuvent en modifier la structure, lancer `bun pierre:config`.
 
 ## Modifier la personnalité du chatbot
 
