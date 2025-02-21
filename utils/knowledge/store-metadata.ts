@@ -6,44 +6,48 @@ import { z } from 'zod'
 import type { Knowledge } from './_run'
 
 export const store_metadata = async (knowledge: Knowledge) => {
-  // This function applies only to `proprietary` knowledge
-  if (knowledge.proprietary === true) {
-    // Load "_metadata.xlsx" spreadsheet and
-    // convert it to a JSON representation
-    const metadata = await Bun.file('datastores/files/_metadata.xlsx').arrayBuffer()
-    const xlsx = XLSX.read(metadata)
-    const sheet = xlsx.Sheets[xlsx.SheetNames[0]]
+  try {
+    // This function applies only to `proprietary` knowledge
+    if (knowledge.proprietary === true) {
+      // Load "_metadata.xlsx" spreadsheet and
+      // convert it to a JSON representation
+      const metadata = await Bun.file('datastores/files/_metadata.xlsx').arrayBuffer()
+      const xlsx = XLSX.read(metadata)
+      const sheet = xlsx.Sheets[xlsx.SheetNames[0]]
 
-    const files = XLSX.utils
-      .sheet_to_json<{
-        filename: string
-        access: string
-        sheet: number
-        headers: number
-        chunk: string
-        description: string
-        group_by: number
-        last_modified: null
-      }>(sheet, { range: 2 })
-      .map((item) => ({
-        id: randomUUIDv7(),
-        filepath: `datastores/files/${item.filename}`,
-        sheet: (item.sheet || 1) - 1,
-        headers: (item.headers || 1) - 1,
-        access: item.access || 'private',
-        description: item.description,
-        last_modified: null,
-        entity_column: item.group_by,
-        chunk: item.chunk === 'true'
-      }))
+      const files = XLSX.utils
+        .sheet_to_json<{
+          filename: string
+          access: string
+          sheet: number
+          headers: number
+          chunk: string
+          description: string
+          group_by: number
+          last_modified: null
+        }>(sheet, { range: 2 })
+        .map((item) => ({
+          id: randomUUIDv7(),
+          filepath: `datastores/files/${item.filename}`,
+          sheet: (item.sheet || 1) - 1,
+          headers: (item.headers || 1) - 1,
+          access: item.access || 'private',
+          description: item.description,
+          last_modified: null,
+          entity_column: item.group_by,
+          chunk: item.chunk === 'true'
+        }))
 
-    Bun.write(
-      './datastores/__temp__/.metadata.json',
-      await prettier.format(JSON.stringify(Metadata.parse(files)), { parser: 'json' })
-    )
+      Bun.write(
+        './datastores/__temp__/.metadata.json',
+        await prettier.format(JSON.stringify(Metadata.parse(files)), { parser: 'json' })
+      )
 
-    console.log('✅ Metadata saved')
-    return
+      console.log('✅ Metadata saved')
+      return
+    }
+  } catch (error) {
+    console.error(error)
   }
 }
 

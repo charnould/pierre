@@ -33,18 +33,23 @@ export type Knowledge = z.infer<typeof Knowledge>
  * @returns A promise that resolves when all operations have been completed.
  */
 export const execute_pipeline = async (knowledge: Knowledge) => {
-  if (knowledge.community === true || knowledge.proprietary === true) {
-    await remove_outdated_data(knowledge)
-    await scrape_wikipedia(knowledge)
-    await initialize_databases(knowledge)
-    await store_metadata(knowledge)
-    await process_office_files(knowledge)
-    await chunk_json(knowledge)
-    await chunk_markdown(knowledge)
-    await generate_embeddings(knowledge)
-    await $`rm -rf ./datastores/__temp__`
+  try {
+    if (knowledge.community === true || knowledge.proprietary === true) {
+      await remove_outdated_data(knowledge)
+      await scrape_wikipedia(knowledge)
+      await initialize_databases(knowledge)
+      await store_metadata(knowledge)
+      await Bun.sleep(1000) // Pause for a 1 second to allow filesystem to complete its operations
+      await process_office_files(knowledge)
+      await chunk_json(knowledge)
+      await chunk_markdown(knowledge)
+      await generate_embeddings(knowledge)
+      await $`rm -rf ./datastores/__temp__`
+    }
+    return
+  } catch (error) {
+    console.error(error)
   }
-  return
 }
 
 // If the "--community" flag is present in the command-line arguments, trigger
