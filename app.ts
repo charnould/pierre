@@ -18,6 +18,10 @@ import { controller as post_knowledge } from './controllers/POST.knowledge'
 import { controller as post_login } from './controllers/POST.login'
 import { controller as post_users } from './controllers/POST.users'
 import { authenticate } from './utils/authenticate-user'
+import {
+  assign_topic_with_ai,
+  score_conversation_with_ai
+} from './utils/categorize-and-score-conversation'
 import { execute_pipeline } from './utils/knowledge/_run'
 
 const app = new Hono()
@@ -32,11 +36,23 @@ app.use(
   })
 )
 
-// Initiate a cron job to update the knowledge
-// database with custom content
+// Initiate cronjobs
+
+// 1/ Update knowledge database with custom content
 CronJob.from({
   cronTime: '0 0 4 * * *', // Runs every day at 4:00 AM
   onTick: async () => await execute_pipeline({ proprietary: true, community: false }),
+  start: true,
+  timeZone: 'Europe/Paris'
+})
+
+// 2/ Score conversation and assign topic with AI
+CronJob.from({
+  cronTime: '0 0 5 * * *', // Runs every day at 5:00 AM
+  onTick: async () => {
+    await assign_topic_with_ai()
+    await score_conversation_with_ai()
+  },
   start: true,
   timeZone: 'Europe/Paris'
 })
