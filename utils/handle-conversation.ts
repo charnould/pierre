@@ -1,52 +1,68 @@
-import { Database } from 'bun:sqlite'
+import type { Database } from 'bun:sqlite'
 import { format } from 'date-fns'
 import { z } from 'zod'
 import { db } from '../utils/database'
 import type { AIContext, Reply } from './_schema'
 import { send_webhook } from './webhook'
 
-//
-//
-// Get ONE conversation
-export const get_conversation = (conv_id: string) => {
-  const database = db('datastore')
+const database = db('datastore') as Database
 
-  if (database instanceof Database) {
-    const records = database
+/**
+ * Retrieves a conversation from the database
+ * based on the provided conversation ID.
+ *
+ * @param conv_id - The unique identifier of the conversation to retrieve.
+ * @returns An array of conversation records, each with parsed metadata.
+ *
+ * This function is tested.
+ */
+export const get_conversation = (conv_id: string) => {
+  try {
+    return database
       .prepare('SELECT * FROM telemetry WHERE conv_id = $conv_id ORDER BY timestamp ')
       .all({ $conv_id: conv_id })
-
-    for (const record of records) record.metadata = JSON.parse(record.metadata)
-
-    return records
+      .map((record) => ({ ...record, metadata: JSON.parse(record.metadata) }))
+  } catch (e) {
+    console.error(e)
   }
-
-  throw new Error('Invalid database type for datastore_db')
 }
 
-//
-//
-// Delete a full conversation
+/**
+ * Deletes a conversation from the telemetry database.
+ *
+ * @param conv_id - The unique identifier of the conversation to be deleted.
+ * @returns The result of the database operation.
+ *
+ *  This function is tested.
+ */
 export const delete_conversation = (conv_id: string) => {
-  const database = db('datastore')
-
-  if (database instanceof Database) {
+  try {
     return database
       .prepare('DELETE FROM telemetry WHERE conv_id = $conv_id')
       .run({ $conv_id: conv_id })
+  } catch (e) {
+    console.error(e)
   }
-
-  throw new Error('Invalid database type for datastore_db')
 }
 
-//
-//
-// Save a reply (to a conversation)
-export const save_reply = async (context: AIContext) => {
+/**
+ * Saves a reply to the database and sends webhooks if applicable.
+ *
+ * @param {AIContext} context - The context object containing conversation details and configuration.
+ * @returns {void} - A promise that resolves when the operation is complete.
+ *
+ *  This function is tested.
+ *
+ * The function performs the following steps:
+ * 1. Checks if the `context.config` is not a string.
+ * 2. Inserts the conversation details into the `telemetry` table in the database.
+ * 3. Iterates over the `api` array in the `context.config` object.
+ * 4. For each element in the `api` array, checks if the URL is valid.
+ * 5. Formats the data and sends a webhook to the specified URL with retries.
+ */
+export const save_reply = (context: AIContext): void => {
   try {
-    const database = db('datastore')
-
-    if (database instanceof Database && typeof context.config !== 'string') {
+    if (typeof context.config !== 'string') {
       database
         .prepare(
           'INSERT OR IGNORE INTO telemetry (conv_id, config, role, content, timestamp, metadata) VALUES (?, ?, ?, ?, ?, ?)'
@@ -79,52 +95,98 @@ export const save_reply = async (context: AIContext) => {
         }
       }
     }
-  } catch {}
+  } catch (e) {
+    console.error(e)
+  }
 
   return
 }
 
-//
-//
-// Score a full conversation
-export const score_conversation = async ({ conv_id, scorer, score, comment }) => {
+/**
+ * Updates the score and comment for a conversation in the telemetry database.
+ *
+ * @param {Object} params - The parameters for scoring the conversation.
+ * @param {string} params.conv_id - The ID of the conversation to be scored.
+ * @param {string} params.scorer - The entity providing the score (customer, organization, or ai).
+ * @param {number} params.score - The score to be assigned to the conversation.
+ * @param {string} params.comment - The comment to be associated with the score.
+ * @returns {void} A promise that resolves when the operation is complete.
+ *
+ *  This function is tested.
+ */
+export const score_conversation = ({
+  conv_id,
+  scorer,
+  score,
+  comment
+}: {
+  conv_id: string
+  scorer: string
+  score: number
+  comment: string
+}): void => {
   try {
-    const database = db('datastore')
-
-    if (database instanceof Database) {
-      database
-        .prepare(
-          `UPDATE telemetry SET metadata = json_set(
+    database
+      .prepare(
+        `UPDATE telemetry SET metadata = json_set(
             metadata,
             ${scorer === 'customer' ? "'$.evaluation.customer.score', $score, '$.evaluation.customer.comment', $comment" : ''}
             ${scorer === 'organization' ? "'$.evaluation.organization.score', $score, '$.evaluation.organization.comment', $comment" : ''}
-            ${scorer === 'pierre' ? "'$.evaluation.pierre.score', $score, '$.evaluation.pierre.comment', $comment" : ''}
             ${scorer === 'ai' ? "'$.evaluation.ai.score', $score, '$.evaluation.ai.comment', $comment" : ''}
           )
           WHERE conv_id = $conv_id`
-        )
-        .run({ $conv_id: conv_id, $score: score, $comment: comment })
-    }
-  } catch {}
+      )
+      .run({ $conv_id: conv_id, $score: score, $comment: comment })
+  } catch (e) {
+    console.error(e)
+  }
 
   return
 }
 
-//
-//
-// Get all conversations for review (./a)
-export const get_conversations = (): Reply[] => {
-  const database = db('datastore')
-
-  if (database instanceof Database) {
-    const stringified_results = database
-      .prepare('SELECT * FROM telemetry ORDER BY timestamp DESC')
-      .all() as Reply[]
-
-    for (const record of stringified_results) record.metadata = JSON.parse(record.metadata)
-
-    return stringified_results
+/**
+ * Updates the topic of a conversation in the telemetry database.
+ *
+ * @param {Object} params - The parameters for updating the topic.
+ * @param {string} params.conv_id - The ID of the conversation to update.
+ * @param {string} params.topic - The new topic to set for the conversation.
+ * @returns {void}
+ *
+ *  This function is tested.
+ */
+export const save_topic = ({ conv_id, topic }: { conv_id: string; topic: string }): void => {
+  try {
+    database
+      .prepare(
+        `
+          UPDATE telemetry SET metadata = json_set(metadata, '$.topics', $topic)
+          WHERE conv_id = $conv_id
+          `
+      )
+      .run({ $conv_id: conv_id, $topic: topic })
+  } catch (e) {
+    console.error(e)
   }
 
-  throw new Error('Invalid database type for datastore_db')
+  return
+}
+
+/**
+ * Retrieves a list of conversations from the database.
+ *
+ * This function queries the `telemetry` table, ordering the results by
+ * the `timestamp` field in descending order. Each record's `metadata`
+ * field is parsed from JSON format.
+ *
+ * @returns {Reply[]} An array of conversation records with parsed metadata.
+ */
+export const get_conversations = (): Reply[] => {
+  try {
+    return database
+      .prepare('SELECT * FROM telemetry ORDER BY timestamp DESC')
+      .all()
+      .map((record) => ({ ...record, metadata: JSON.parse(record.metadata) })) as Reply[]
+  } catch (e) {
+    console.error(e)
+  }
 }
