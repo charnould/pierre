@@ -55,7 +55,7 @@ export const view = (config: Config, context: string) => {
             id="prompt__input"
             type="text"
             name="message"
-            placeholder="Poser une question..."
+            placeholder="Poser une question"
           />
           <input
             class="h-8 w-8 cursor-pointer rounded-lg border border-stone-300 text-xl font-black disabled:cursor-progress disabled:border-stone-200 disabled:text-stone-400"
