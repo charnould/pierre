@@ -170,7 +170,7 @@ Adresser un email à charnould@pierre-ia.org.
 Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour Linux).
 
 1. Installer `WSL` et vérifier sa bonne installation ([instructions](https://learn.microsoft.com/fr-fr/windows/wsl/install)).
-2. Installer `Bun` (≥ `1.2.0`) et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
+2. Installer `Bun` (≥ `1.2.3`) et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
 3. Installer `SQlite3`([instructions](https://www.sqlite.org/download.html)).
 4. Forker/cloner le présent dépôt.
 5. Lancer `bun install` dans votre terminal pour installer les dépendances.
