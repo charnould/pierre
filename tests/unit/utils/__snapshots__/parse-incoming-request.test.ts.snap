@@ -118,6 +118,28 @@ exports[`should AIContext parse correctly 1`] = `
         "phone": null,
         "protected": false,
       },
+      "test": {
+        "audience": "",
+        "disclaimer": "",
+        "examples": [],
+        "greeting": [],
+        "knowledge": {
+          "community": true,
+          "proprietary": {
+            "private": true,
+            "public": true,
+          },
+        },
+        "models": {
+          "answer_with": "openai('gpt-4o-mini-2024-07-18')",
+          "augment_with": "openai('gpt-4o-mini-2024-07-18')",
+          "embed_with": "text-embedding-3-large",
+          "rerank_with": "openai('gpt-4o-mini-2024-07-18')",
+        },
+        "persona": "",
+        "phone": null,
+        "protected": true,
+      },
     },
     "custom_data": {
       "format": [Function],

@@ -268,6 +268,27 @@ export default {
         'Rédige un résumé en 4-5 bullets points sur les enjeux-logements de la ville de Paris'
       ],
       disclaimer: 'Une IA peut halluciner. Vérifier les informations importantes.'
+    },
+    //
+    // For testing purpose only
+    test: {
+      models: {
+        embed_with: 'text-embedding-3-large',
+        augment_with: "openai('gpt-4o-mini-2024-07-18')",
+        rerank_with: "openai('gpt-4o-mini-2024-07-18')",
+        answer_with: "openai('gpt-4o-mini-2024-07-18')"
+      },
+      phone: null,
+      protected: true,
+      knowledge: {
+        community: true,
+        proprietary: { public: true, private: true }
+      },
+      audience: '',
+      persona: '',
+      greeting: [],
+      examples: [],
+      disclaimer: ''
     }
   }
 } as Config
