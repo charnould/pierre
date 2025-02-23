@@ -60,7 +60,7 @@ export const authenticate = async (c: Context, next: Next) => {
 
   // Retrieve the `data` query parameter from the request,
   // defaulting to '' if not specified.
-  //  http://localhost:3000/c?config=pierre-ia.org&context=no_rag
+  // http://localhost:3000/c?config=pierre-ia.org&context=no_rag
   const data_query = c.req.query('data') === 'undefined' ? '' : c.req.query('data')
 
   //
@@ -99,21 +99,22 @@ export const authenticate = async (c: Context, next: Next) => {
     if (is_protected_context === false) {
       return await next()
     }
-  }
 
-  // Case 5: No access to protected context
-  // If the context is protected but the user does
-  // not have access, redirect to the login page
-  if (is_protected_context === true && can_access_protected_context === false) {
-    const redirection = `c/?config=${config.id}&context=${context_query}&data=${data_query}`
-    return c.redirect(`/a/login?redirection=${encodeURIComponent(redirection)}`)
-  }
+    // Case 5: No access to protected context
+    // If the context is protected but the user does
+    // not have access, redirect to the login page
+    if (is_protected_context === true && can_access_protected_context === false) {
+      const redirection = `c/?config=${config.id}&context=${context_query}&data=${data_query}`
+      return c.redirect(`/a/login?redirection=${encodeURIComponent(redirection)}`)
+    }
 
-  // Case 6: Access to protected context granted
-  // If the context is protected and the user has
-  // access, proceed to the next middleware
-  if (is_protected_context === true && can_access_protected_context === true) {
-    return await next()
+    // Case 6: Access to protected context granted
+    // If the context is protected and the user has
+    // access, proceed to the next middleware
+    if (is_protected_context === true && can_access_protected_context === true) {
+      c.set('user', user)
+      return await next()
+    }
   }
 
   //
