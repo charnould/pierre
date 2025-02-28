@@ -3,6 +3,7 @@ import { format } from 'date-fns'
 import * as prettier from 'prettier'
 import * as XLSX from 'xlsx'
 import { z } from 'zod'
+import { encode_filename } from '../../utils/knowledge/generate-hash'
 import type { Knowledge } from './_run'
 
 export const store_metadata = async (knowledge: Knowledge) => {
@@ -11,7 +12,9 @@ export const store_metadata = async (knowledge: Knowledge) => {
     if (knowledge.proprietary === true) {
       // Load "_metadata.xlsx" spreadsheet and
       // convert it to a JSON representation
-      const metadata = await Bun.file('datastores/files/_metadata.xlsx').arrayBuffer()
+      const metadata = await Bun.file(
+        `datastores/files/${encode_filename('_metadata.xlsx')}`
+      ).arrayBuffer()
       const xlsx = XLSX.read(metadata)
       const sheet = xlsx.Sheets[xlsx.SheetNames[0]]
 
@@ -28,7 +31,8 @@ export const store_metadata = async (knowledge: Knowledge) => {
         }>(sheet, { range: 2 })
         .map((item) => ({
           id: randomUUIDv7(),
-          filepath: `datastores/files/${item.filename}`,
+          filename: item.filename,
+          filepath: `datastores/files/${encode_filename(item.filename)}`,
           sheet: (item.sheet || 1) - 1,
           headers: (item.headers || 1) - 1,
           access: item.access || 'private',
@@ -60,6 +64,7 @@ export const Metadata = z.array(
   z
     .object({
       id: z.string(),
+      filename: z.string().trim(),
       filepath: z.string().trim(),
       type: z.enum(['docx', 'xlsx', 'md']).nullable().default(null),
       headers: z.number(),
