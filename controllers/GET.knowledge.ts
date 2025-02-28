@@ -1,5 +1,6 @@
 import { readdir } from 'node:fs/promises'
 import type { Context } from 'hono'
+import { decode_filename } from '../utils/knowledge/generate-hash'
 import { view } from '../views/knowledge'
 
 export const controller = async (c: Context) => {
@@ -13,7 +14,7 @@ export const controller = async (c: Context) => {
       const stats = await file.stat()
 
       metadata.push({
-        filename: f,
+        filename: decode_filename(f),
         size: stats.size,
         filepath: `datastores/files/${f}`,
         last_access_time: new Date(stats.atimeMs).toISOString().slice(0, -5),
