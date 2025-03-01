@@ -31,7 +31,7 @@ const app = new Hono()
 // TODO: This should be modified to allow only a few trusted domains
 app.use(
   secureHeaders({
-    contentSecurityPolicy: { frameAncestors: ['*'] },
+    contentSecurityPolicy: { frameAncestors: ["'self'", 'http://localhost:*', '*'] },
     crossOriginResourcePolicy: false
   })
 )

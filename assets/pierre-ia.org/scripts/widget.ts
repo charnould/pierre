@@ -1,88 +1,127 @@
-//
-//
-// Initial state
+/** Initial state */
 let pierre_is_open = false
 let configuration: string
 let context: string
 let url: string
+let pierre_button: HTMLElement & {
+  dataset: { configuration: string; context: string; url: string }
+}
 
-//
-//
-//
-// After DOM is loaded, add/show PIERRE button
+/**
+ * Handles the DOMContentLoaded event to:
+ * - Inject PIERRE CSS into the webpage.
+ * - Set up necessary configuration values.
+ * - Preload PIERRE iframe for instant opening.
+ */
 document.addEventListener('DOMContentLoaded', () => {
   const css = document.createElement('style')
   css.innerText =
-    '#pierre-ia{margin:0;z-index:9997;cursor:pointer;font-family:system-ui,Segoe UI,Roboto,Ubuntu,Helvetica Neue,sans-serif;transition:transform .35s;position:fixed;will-change:transform}#pierre-ia:hover{transform:scale(1.15)}#pierre-wrapper{backdrop-filter:blur(10px);background-color:rgba(25,29,68,.1);z-index:9998;justify-content:center;align-items:center;width:100%;height:100%;display:flex;position:fixed;top:0;left:0;animation:.5s forwards blur;will-change:backdrop-filter}#pierre-modal{position:relative}#pierre-iframe{z-index:9999;opacity:0;border:none;border-radius:10px;width:600px;height:700px;animation:1s forwards fadeIn;box-shadow:0 0 0 1px rgba(15,33,50,.05),0 .1em 2.8em -.8em rgba(15,33,50,.1),0 .2em 3.2em -1.2em rgba(15,33,50,.2)}#pierre-close{font-size:24px;padding:0;margin:0;cursor:pointer;z-index:101;display:none;position:absolute;top:24px;right:24px}@media (max-width:600px){#pierre-iframe{box-shadow:none;border-radius:0;width:100vw;height:100vh}#pierre-close{display:block}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes blur{from{backdrop-filter:blur(0px)}to{backdrop-filter:blur(10px)}}'
+    '#pierre-ia{margin:0;z-index:9997;cursor:pointer;font-family:system-ui,Segoe UI,Roboto,Ubuntu,Helvetica Neue,sans-serif;transition:transform .5s cubic-bezier(.215, .61, .355, 1);position:fixed}#pierre-ia:hover{transform:scale(1.15)}#pierre-wrapper{z-index:9998;justify-content:center;align-items:center;width:100%;height:100%;display:flex;position:fixed;top:0;left:0}#pierre-iframe-container{position:relative}#pierre-iframe{z-index:9999;border-radius:10px;width:600px;border:none;height:700px;box-shadow:#32325d 0 0 9999px 0}#pierre-close{display:none;font-size:24px;padding:0;margin:0;cursor:pointer;z-index:9999;position:absolute;top:24px;right:24px}.blur_in{animation:.4s forwards blur_in}.blur_out{animation:.35s forwards blur_out}.open_modal{animation:.4s forwards open_modal}.close_modal{animation:.35s forwards close_modal}@keyframes blur_in{from{backdrop-filter:blur(0px)}to{background-color:rgba(215,215,215,.777);backdrop-filter:blur(8px)}}@keyframes blur_out{from{backdrop-filter:blur(8px)}to{backdrop-filter:none}}@keyframes open_modal{0%,20%,40%,60%,80%,to{animation-timing-function:cubic-bezier(0.215,0.61,0.355,1)}0%{opacity:0;transform:scale3d(.3,.3,.3)}20%{transform:scale3d(1.05,1.05,1.05)}40%{transform:scale3d(.95,.95,.95)}60%{opacity:1;transform:scale3d(1.025,1.025,1.025)}80%{transform:scale3d(.975,.975,.975)}to{opacity:1;transform:scaleX(1)}}@keyframes close_modal{from{opacity:1}to{opacity:0}}@media (max-width:600px){#pierre-iframe{box-shadow:none;border-radius:0;width:100vw;height:100vh}#pierre-close{display:block}}'
   document.head.appendChild(css)
+
+  const pierre_button = document.getElementById('pierre-ia')
+  configuration = pierre_button?.dataset.configuration ?? 'pierre-ia.org'
+  context = pierre_button?.dataset.context ?? 'default'
+  url = pierre_button?.dataset.url ?? 'https://assistant.pierre-ia.org'
+
+  const preloaded_iframe = document.createElement('iframe')
+  preloaded_iframe.src = `${url}/?config=${configuration}&context=${context}`
+  preloaded_iframe.style.display = 'none'
+  preloaded_iframe.id = 'pierre-iframe'
+  document.body.appendChild(preloaded_iframe)
 })
 
-//
-//
-//
-// Listen to clicks to open or close PIERRE modal
+/**
+ * Listens for click events and opens the modal when the 'pierre-ia' button is clicked.
+ * - Creates a wrapper (`pierre-wrapper`) with the 'blur_in' class.
+ * - Creates a modal container (`pierre-iframe-container`).
+ * - Retrieves the 'pierre-iframe' element and ensures it is visible.
+ * - Creates a close button (`cross`) with a '✕' symbol.
+ * - Appends the close button and iframe inside the modal.
+ * - Appends the modal inside the wrapper, and the wrapper to the body.
+ * - Sets `pierre_is_open` to `true`.
+ */
 document.addEventListener('click', (event) => {
-  //
-  const pierre_button = document.getElementById('pierre-ia')
+  console.log('feziojfzpejkfpeoz')
+  const button = document.getElementById('pierre-ia')
+  if (!button) return
 
-  if (pierre_button === null) return
-
-  //
-  //
-  //
-  // Listen to clicks on a specific DOM elements to open PIERRE modal
   if ((event.target as HTMLInputElement)?.id === 'pierre-ia') {
-    //
-    configuration = pierre_button.dataset.configuration ?? 'pierre-ia.org' // default value
-    context = pierre_button.dataset.context ?? 'default' // default value
-    url = pierre_button.dataset.url ?? 'https://assistant.pierre-ia.org' // default value
-
     const wrapper = document.createElement('div')
-    const modal = document.createElement('div')
-    const iframe = document.createElement('iframe')
-    const close = document.createElement('p')
-
     wrapper.id = 'pierre-wrapper'
-    modal.id = 'pierre-modal'
-    iframe.id = 'pierre-iframe'
-    iframe.src = `${url}/?config=${configuration}&context=${context}`
+    wrapper.className = 'blur_in'
+
+    const modal = document.createElement('div')
+    modal.id = 'pierre-iframe-container'
+
+    const iframe = document.getElementById('pierre-iframe')
+    if (!iframe) return
+    iframe.style.display = 'unset'
+    iframe.className = 'open_modal'
+
+    const close = document.createElement('p')
     close.id = 'pierre-close'
     close.textContent = '✕'
 
+    modal.append(close, iframe)
     wrapper.appendChild(modal)
-    modal.appendChild(close)
-    modal.appendChild(iframe)
     document.body.appendChild(wrapper)
-
     pierre_is_open = true
   }
 
-  //
-  //
-  //
-  // Listen to clicks on specific DOM elements to close PIERRE modal
+  /**
+   * Closes the PIERRE modal if the user clicks outside the modal
+   * content (on the wrapper) or directly on the close button.
+   */
   if (
-    (event.target as HTMLInputElement)?.id === 'pierre-wrapper' ||
-    (event.target as HTMLInputElement)?.id === 'pierre-close'
+    (event.target as HTMLElement)?.id === 'pierre-wrapper' ||
+    (event.target as HTMLElement)?.id === 'pierre-close'
   ) {
+    console.log('ciiciciic')
     close_modal()
   }
 })
 
-//
-//
-//
-// Listen to Escape click to close PIERRE modal
-document.addEventListener('keydown', (event) => {
-  if (pierre_is_open === true && event.key === 'Escape') close_modal()
+/**
+ * Closes the PIERRE modal when the Escape key is pressed.
+ * Listens for 'keydown' events and checks if the modal is open.
+ */
+document.addEventListener('keydown', (event: KeyboardEvent) => {
+  if (pierre_is_open && event.key === 'Escape') {
+    console.log('??????????')
+    close_modal()
+  }
 })
 
-//
-//
-//
-// Close modal function
-function close_modal() {
-  const el = document.getElementById('pierre-wrapper')
-  if (el !== null) el.remove()
-  pierre_is_open = false
+/**
+ * Closes the modal by performing the following steps:
+ * - Removes the 'pierre-close' element if it exists.
+ * - Adds the 'blur_out' class to the 'pierre-wrapper' and removes any other class.
+ * - Adds the 'close_modal' class to the 'pierre-iframe' and removes any other class.
+ * - After a 350ms delay:
+ *   - Hides the 'pierre-iframe'.
+ *   - Removes all classes from 'pierre-iframe'.
+ *   - Moves 'pierre-iframe' back to the body.
+ *   - Removes 'pierre-wrapper' from the DOM.
+ *   - Sets `pierre_is_open` to false.
+ */
+const close_modal = () => {
+  console.log('dans close')
+  document.getElementById('pierre-close')?.remove()
+
+  const wrapper = document.getElementById('pierre-wrapper')
+  const iframe = document.getElementById('pierre-iframe')
+
+  if (!wrapper || !iframe) return
+
+  wrapper.className = 'blur_out'
+  iframe.className = 'close_modal'
+
+  setTimeout(() => {
+    iframe.style.display = 'none'
+    iframe.className = ''
+    document.body.appendChild(iframe)
+    wrapper.remove()
+    pierre_is_open = false
+  }, 350)
 }
