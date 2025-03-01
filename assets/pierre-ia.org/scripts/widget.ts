@@ -42,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
  * - Sets `pierre_is_open` to `true`.
  */
 document.addEventListener('click', (event) => {
-  console.log('feziojfzpejkfpeoz')
   const button = document.getElementById('pierre-ia')
   if (!button) return
 
@@ -77,7 +76,6 @@ document.addEventListener('click', (event) => {
     (event.target as HTMLElement)?.id === 'pierre-wrapper' ||
     (event.target as HTMLElement)?.id === 'pierre-close'
   ) {
-    console.log('ciiciciic')
     close_modal()
   }
 })
@@ -88,7 +86,6 @@ document.addEventListener('click', (event) => {
  */
 document.addEventListener('keydown', (event: KeyboardEvent) => {
   if (pierre_is_open && event.key === 'Escape') {
-    console.log('??????????')
     close_modal()
   }
 })
@@ -106,7 +103,6 @@ document.addEventListener('keydown', (event: KeyboardEvent) => {
  *   - Sets `pierre_is_open` to false.
  */
 const close_modal = () => {
-  console.log('dans close')
   document.getElementById('pierre-close')?.remove()
 
   const wrapper = document.getElementById('pierre-wrapper')
