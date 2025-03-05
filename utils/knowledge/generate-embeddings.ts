@@ -32,12 +32,11 @@ export const generate_embeddings = async (knowledge: Knowledge) => {
       await go(query, database)
     }
 
-    console.log('✅ Embeddings generated')
-    console.log('✅ Knowledge rebuild!')
+    console.log('✅ embeddings computed')
+    console.log('✅ knowledge rebuilt')
     return
   } catch (e) {
-    // Show failed spinner
-    console.error('🆘 Embeddings generation failed')
+    console.log('🆘 embeddings computing failed')
     console.log(e)
   }
 }
