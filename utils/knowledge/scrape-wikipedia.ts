@@ -92,10 +92,10 @@ export const scrape_wikipedia = async (knowledge: Knowledge) => {
           await Bun.write(`knowledge/wikipedia/${page.title}.md`, markdown)
         }
       }
-      // End spinner
-      console.log('✅ Wikipedia scrapped')
+
+      console.log('✅ wikipedia scrapped')
     } catch (e) {
-      console.log('🆘 Wikipedia scrapping failed')
+      console.log('🆘 wikipedia scrapping failed')
       console.log(e)
       return
     }
