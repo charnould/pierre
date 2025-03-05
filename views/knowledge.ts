@@ -112,7 +112,7 @@ export const view = (metadata: Metadata[]) => {
           .
         </p>
 
-        <div>
+        <div class="mb-10">
           ${metadata.map(
             (m) =>
               html` <div class="mb-1 flex flex-row items-center">
