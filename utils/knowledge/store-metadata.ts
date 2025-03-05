@@ -47,10 +47,11 @@ export const store_metadata = async (knowledge: Knowledge) => {
         await prettier.format(JSON.stringify(Metadata.parse(files)), { parser: 'json' })
       )
 
-      console.log('✅ Metadata saved')
+      console.log('✅ metadata saved')
       return
     }
   } catch (error) {
+    console.log('🆘 metadata reading failed')
     console.error(error)
   }
 }
