@@ -3,7 +3,6 @@ import { z } from 'zod'
 import { chunk_json } from './chunk-json'
 import { chunk_markdown } from './chunk-markdown'
 import { generate_embeddings } from './generate-embeddings'
-import { initialize_databases } from './initialize-databases'
 import { process_office_files } from './process-office-files'
 import { remove_outdated_data } from './remove-outdated-data'
 import { scrape_wikipedia } from './scrape-wikipedia'
@@ -37,7 +36,6 @@ export const execute_pipeline = async (knowledge: Knowledge) => {
     if (knowledge.community === true || knowledge.proprietary === true) {
       await remove_outdated_data(knowledge)
       await scrape_wikipedia(knowledge)
-      await initialize_databases(knowledge)
       await store_metadata(knowledge)
       await Bun.sleep(1000) // Pause for a 1 second to allow filesystem to complete its operations
       await process_office_files(knowledge)

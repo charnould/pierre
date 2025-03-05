@@ -142,7 +142,7 @@ export const process_office_files = async (knowledge: Knowledge) => {
       }
     }
 
-    console.log('✅ Data extracted from Office files')
+    console.log('✅ files processed')
   }
 
   return

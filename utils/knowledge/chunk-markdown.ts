@@ -47,10 +47,10 @@ export const chunk_markdown = async (knowledge: Knowledge) => {
       await save_chunks(files)
     }
 
-    console.log('✅ Text chunks generated successfully')
+    console.log('✅ text chunks generated')
     return
   } catch (e) {
-    console.log('🆘 Text chunks generation failed')
+    console.log('🆘 text chunks generation failed')
     console.log(e)
   }
 }
