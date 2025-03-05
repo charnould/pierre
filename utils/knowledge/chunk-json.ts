@@ -120,7 +120,7 @@ export const chunk_json = async (knowledge: Knowledge) => {
       }
     }
 
-    console.log('✅ Tabular chunks generated')
+    console.log('✅ tabular chunks created')
     return
   }
 }
