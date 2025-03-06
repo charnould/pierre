@@ -204,7 +204,7 @@ PIERRE — et notamment sa base de connaissances — évolue régulièrement et 
 2. Consulter les [releases](https://github.com/charnould/pierre/releases) pour connaitre les modifications et les éventuels _breaking changes_.
 3. Mettre à jour votre fork/clone.
 4. Saisir `bun pierre:config` pour vous assurer que `config.ts` est correctement paramétré.
-5. Saisir `bun --env-file=.env.production kamal deploy` dans votre terminal (ou le raccourci `bun prod:deploy`).
+5. Saisir `bun --env-file=.env.production run kamal deploy` dans votre terminal (ou le raccourci `bun prod:deploy`).
 
 ### Déployer et redéployer PIERRE sur un serveur de tests
 
@@ -212,8 +212,8 @@ Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE :
 
 1. Disposer d'un **second** VPS et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
 2. Dupliquer `.env.production` en `.env.staging` et modifier le (a priori uniquement l'IP).
-3. Lancer `bun --env-file=.env.staging kamal setup` pour déployer la première fois.
-4. Lancer `bun --env-file=.env.staging kamal deploy` pour redéployer (ou le raccourci `bun dev:deploy`).
+3. Lancer `bun --env-file=.env.staging run kamal setup` pour déployer la première fois.
+4. Lancer `bun --env-file=.env.staging run kamal deploy` pour redéployer (ou le raccourci `bun staging:deploy`).
 
 > [!NOTE]
 > Il est très fortement recommandé que les environnements de `production` et `development` aient le même système d'exploitation (Ubuntu, Debian, etc.) et la même architecture de processeur (x86).
