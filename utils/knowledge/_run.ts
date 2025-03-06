@@ -42,7 +42,7 @@ export const execute_pipeline = async (knowledge: Knowledge) => {
       await chunk_json(knowledge)
       await chunk_markdown(knowledge)
       await generate_embeddings(knowledge)
-      await $`rm -rf ./datastores/__temp__`
+      await $`rm -rf ./datastores/${Bun.env.SERVICE}/__temp__`
     }
     return
   } catch (error) {

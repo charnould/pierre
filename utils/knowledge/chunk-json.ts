@@ -24,7 +24,7 @@ export const chunk_json = async (knowledge: Knowledge) => {
   // This function applies only to `proprietary` knowledge
   if (knowledge.proprietary === true) {
     // Get _metadata.json
-    const metadata = await Bun.file('datastores/__temp__/.metadata.json').json()
+    const metadata = await Bun.file(`datastores/${Bun.env.SERVICE}/__temp__/.metadata.json`).json()
 
     // For each file described in _metadata.json
     // and it it's an XLSX file, apply the following logic
@@ -37,7 +37,7 @@ export const chunk_json = async (knowledge: Knowledge) => {
         else database = db('proprietary.public')
 
         // Load file as a JSON
-        const json = await Bun.file(`datastores/__temp__/${file.id}.json`).json()
+        const json = await Bun.file(`datastores/${Bun.env.SERVICE}/__temp__/${file.id}.json`).json()
 
         // Iterate over `entity` because file content looks like:
         //

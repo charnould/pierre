@@ -5,8 +5,8 @@ import puppeteer, { type ElementHandle } from 'puppeteer'
 //
 it('file upload should pass e2e test', async () => {
   // Remove mock files from datastore
-  await $`rm -rf ./datastores/files`
-  await $`mkdir -p ./datastores/files/`
+  await $`rm -rf ./datastores/${Bun.env.SERVICE}/files`
+  await $`mkdir -p ./datastores/${Bun.env.SERVICE}/files/`
 
   //Go to `/a`
   const browser = await puppeteer.launch({ slowMo: 10 }) // headless: false

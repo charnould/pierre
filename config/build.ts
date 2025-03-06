@@ -110,5 +110,5 @@ await $`clear`
 //
 // Output something when done
 console.log('\n')
-console.log('BUILD DONE')
+console.log(`${Bun.color('green', 'ansi')}BUILD DONE!`)
 console.log('\n')

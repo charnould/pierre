@@ -33,7 +33,7 @@ export const generate_embeddings = async (knowledge: Knowledge) => {
     }
 
     console.log('✅ embeddings computed')
-    console.log('✅ knowledge rebuilt')
+    console.log('✅ knowledge rebuilt!')
     return
   } catch (e) {
     console.log('🆘 embeddings computing failed')

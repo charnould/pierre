@@ -14,7 +14,7 @@ import type { Metadata } from './store-metadata'
 export const process_office_files = async (knowledge: Knowledge) => {
   // Tthis function applies only to `proprietary` knowledge
   if (knowledge.proprietary === true) {
-    const metadata = await Bun.file('datastores/__temp__/.metadata.json').json()
+    const metadata = await Bun.file(`datastores/${Bun.env.SERVICE}/__temp__/.metadata.json`).json()
 
     // For each file...
     for await (const file of metadata as Metadata) {
@@ -40,7 +40,7 @@ export const process_office_files = async (knowledge: Knowledge) => {
         )
 
         // Save the resulting Markdown file to the desired location
-        await Bun.write(`./datastores/__temp__/${file.id}.md`, markdown)
+        await Bun.write(`./datastores/${Bun.env.SERVICE}/__temp__/${file.id}.md`, markdown)
       }
 
       //
@@ -122,7 +122,7 @@ export const process_office_files = async (knowledge: Knowledge) => {
         // Format the content as a clean, well-structured JSON file (.json).
         // Save the resulting file to the desired location.
         const json = await prettier.format(JSON.stringify(arr), { parser: 'json' })
-        await Bun.write(`./datastores/__temp__/${file.id}.json`, json)
+        await Bun.write(`./datastores/${Bun.env.SERVICE}/__temp__/${file.id}.json`, json)
       }
 
       //
@@ -138,7 +138,7 @@ export const process_office_files = async (knowledge: Knowledge) => {
         const data = await prettier.format(await Bun.file(file.filepath).text(), {
           parser: 'markdown'
         })
-        await Bun.write(`./datastores/__temp__/${file.id}.md`, data)
+        await Bun.write(`./datastores/${Bun.env.SERVICE}/__temp__/${file.id}.md`, data)
       }
     }
 

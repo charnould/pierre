@@ -37,11 +37,11 @@ export const chunk_markdown = async (knowledge: Knowledge) => {
     //
     // Case 2 - Proprietary knowledge
     if (knowledge.proprietary === true) {
-      const files = (await Bun.file('datastores/__temp__/.metadata.json').json())
+      const files = (await Bun.file(`datastores/${Bun.env.SERVICE}/__temp__/.metadata.json`).json())
         .filter((item) => item.type !== 'xlsx')
         .map((item) => ({
           access: item.access,
-          id: `datastores/__temp__/${item.id}.md`
+          id: `datastores/${Bun.env.SERVICE}/__temp__/${item.id}.md`
         }))
 
       await save_chunks(files)
