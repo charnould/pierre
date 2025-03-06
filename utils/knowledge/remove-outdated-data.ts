@@ -17,7 +17,7 @@ import type { Knowledge } from './_run'
  */
 export const remove_outdated_data = async (knowledge: Knowledge) => {
   try {
-    await $`rm -rf ./datastores/__temp__`
+    await $`rm -rf ./datastores/${Bun.env.SERVICE}/__temp__`
 
     if (knowledge.community === true) {
       await $`rm -rf ./knowledge/wikipedia`
@@ -106,10 +106,10 @@ export const initialize_databases = (knowledge: Knowledge) => {
   }
 
   if (knowledge.proprietary === true) {
-    initialize_db('./datastores/proprietary.private.sqlite')
-    initialize_db('./datastores/proprietary.public.sqlite')
+    initialize_db(`./datastores/${Bun.env.SERVICE}/proprietary.private.sqlite`)
+    initialize_db(`./datastores/${Bun.env.SERVICE}/proprietary.public.sqlite`)
   }
 
-  console.log(`${Bun.color('green', 'ansi')}✔ database ready`)
+  console.log(`${Bun.color('green', 'ansi')}✅ database ready`)
   return
 }
