@@ -27,6 +27,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: bash config/telemetry.sh init_db
       - run: bun install
-      - run: bun test:unit
+      - run: bun run config/setup.ts
+      - run: SERVICE=default bun test:unit

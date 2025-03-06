@@ -1,14 +1,9 @@
-/node_modules
-/__temp__
-/datastores/datastore.sqlite
-/datastores/proprietary.private.sqlite
-/datastores/proprietary.public.sqlite
-/datastores/__temp__
-/datastores/files
+node_modules/
+datastores/
+__temp__/
 .DS_Store
 .env
 .env.production
 .env.staging
-.env.development
 .env.test
 .env.local

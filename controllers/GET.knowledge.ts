@@ -5,12 +5,12 @@ import { view } from '../views/knowledge'
 
 export const controller = async (c: Context) => {
   try {
-    const files = await readdir('datastores/files')
+    const files = await readdir(`datastores/${Bun.env.SERVICE}/files`)
 
     let metadata: Metadata[] = []
 
     for (const f of files) {
-      const file = Bun.file(`datastores/files/${f}`)
+      const file = Bun.file(`datastores/${Bun.env.SERVICE}/files/${f}`)
       const stats = await file.stat()
 
       metadata.push({
