@@ -358,9 +358,9 @@ Si vous hébergez PIERRE :
 
 PIERRE dispose — en fait — de deux bases de connaissances :
 
-- Une [base](https://github.com/charnould/pierre/tree/master/knowledge/) (dite `community`) qui correspond aux connaissances partagées universellement au sein du mouvemement HLM (ex : comment déposer une demande de logement social, qu'est ce que le SLS, les associations d'hébergement d'urgence dans le Vaucluse, etc.).
+- Une [base](https://github.com/charnould/pierre/tree/master/knowledge/) (dite `communautaire`) qui correspond aux connaissances partagées universellement au sein du mouvemement HLM (ex : comment déposer une demande de logement social, qu'est ce que le SLS, les associations d'hébergement d'urgence dans le Vaucluse, etc.).
 
-- Une base (dite `propriétaire`) qui correspond aux connaissances créées par un organisme HLM hébergeant sa propre version de PIERRE et qu'il ne souhaite pas partager avec `community` ou qu'il souhaite faire apprendre en pleine autonomie à PIERRE (ex : des procédures internes).
+- Une base (dite `propriétaire`) qui correspond aux connaissances créées par un organisme HLM hébergeant sa propre version de PIERRE et qu'il ne souhaite pas partager avec `communautaire` ou qu'il souhaite faire apprendre en pleine autonomie à PIERRE (ex : des procédures internes).
 
 **Comment faire apprendre des connaissances à PIERRE ?**
 
