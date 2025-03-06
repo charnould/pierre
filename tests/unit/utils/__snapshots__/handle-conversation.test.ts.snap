@@ -28,6 +28,7 @@ exports[`test SQLite3 conversation CRUD operations should insert 3 replies 1`] =
   },
 ]
 `;
+
 exports[`test SQLite3 conversation CRUD operations should get 2 conversations 1`] = `
 [
   {
