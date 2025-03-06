@@ -38,7 +38,7 @@ app.use(
 
 // Initiate cronjobs
 
-// 1/ Update knowledge database with custom content
+// Update knowledge database with custom content
 CronJob.from({
   cronTime: '0 0 4 * * *', // Runs every day at 4:00 AM
   onTick: async () => await execute_pipeline({ proprietary: true, community: false }),
@@ -46,7 +46,7 @@ CronJob.from({
   timeZone: 'Europe/Paris'
 })
 
-// 2/ Score conversation and assign topic with AI
+// Score conversation and assign topic with AI
 CronJob.from({
   cronTime: '0 0 5 * * *', // Runs every day at 5:00 AM
   onTick: async () => {
@@ -92,6 +92,8 @@ app.notFound(async (c) =>
   )
 )
 
+// Handle errors by returning a 404 response
 app.onError((_err, c) => c.notFound())
 
+// Export the app configuration
 export default { idleTimeout: 240, fetch: app.fetch } satisfies Serve
