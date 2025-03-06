@@ -13,7 +13,7 @@ export const store_metadata = async (knowledge: Knowledge) => {
       // Load "_metadata.xlsx" spreadsheet and
       // convert it to a JSON representation
       const metadata = await Bun.file(
-        `datastores/files/${encode_filename('_metadata.xlsx')}`
+        `datastores/${Bun.env.SERVICE}/files/${encode_filename('_metadata.xlsx')}`
       ).arrayBuffer()
       const xlsx = XLSX.read(metadata)
       const sheet = xlsx.Sheets[xlsx.SheetNames[0]]
@@ -32,7 +32,7 @@ export const store_metadata = async (knowledge: Knowledge) => {
         .map((item) => ({
           id: randomUUIDv7(),
           filename: item.filename,
-          filepath: `datastores/files/${encode_filename(item.filename)}`,
+          filepath: `datastores/${Bun.env.SERVICE}/files/${encode_filename(item.filename)}`,
           sheet: (item.sheet || 1) - 1,
           headers: (item.headers || 1) - 1,
           access: item.access || 'private',
@@ -43,7 +43,7 @@ export const store_metadata = async (knowledge: Knowledge) => {
         }))
 
       Bun.write(
-        './datastores/__temp__/.metadata.json',
+        `./datastores/${Bun.env.SERVICE}/__temp__/.metadata.json`,
         await prettier.format(JSON.stringify(Metadata.parse(files)), { parser: 'json' })
       )
 
