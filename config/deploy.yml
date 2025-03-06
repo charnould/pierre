@@ -27,6 +27,8 @@ builder:
   arch: amd64
 
 env:
+  clear:
+    SERVICE: <%= ENV['SERVICE'] %>
   secret:
     - ANTHROPIC_API_KEY
     - COHERE_API_KEY
