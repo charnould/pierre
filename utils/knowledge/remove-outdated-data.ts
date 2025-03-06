@@ -21,7 +21,8 @@ export const remove_outdated_data = async (knowledge: Knowledge) => {
 
     if (knowledge.community === true) {
       await $`rm -rf ./knowledge/wikipedia`
-      await $`rm -rf ./knowledge/community.sqlite`
+      await $`rm -rf ./knowledge/data.sqlite`
+      initialize_databases({ proprietary: false, community: true })
     }
 
     if (knowledge.proprietary === true) {
