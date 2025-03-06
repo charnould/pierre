@@ -211,9 +211,9 @@ PIERRE — et notamment sa base de connaissances — évolue régulièrement et 
 Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE :
 
 1. Disposer d'un **second** VPS et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
-2. Dupliquer `.env.production` en `.env.development` et modifier le (a priori uniquement l'IP).
-3. Lancer `bun --env-file=.env.development kamal setup` pour déployer la première fois.
-4. Lancer `bun --env-file=.env.development kamal deploy` pour redéployer (ou le raccourci `bun dev:deploy`).
+2. Dupliquer `.env.production` en `.env.staging` et modifier le (a priori uniquement l'IP).
+3. Lancer `bun --env-file=.env.staging kamal setup` pour déployer la première fois.
+4. Lancer `bun --env-file=.env.staging kamal deploy` pour redéployer (ou le raccourci `bun dev:deploy`).
 
 > [!NOTE]
 > Il est très fortement recommandé que les environnements de `production` et `development` aient le même système d'exploitation (Ubuntu, Debian, etc.) et la même architecture de processeur (x86).
