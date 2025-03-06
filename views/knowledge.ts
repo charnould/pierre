@@ -96,8 +96,7 @@ export const view = (metadata: Metadata[]) => {
             class="inline w-fit cursor-pointer whitespace-normal text-blue-600 underline decoration-1 underline-offset-3"
           >
             forcer une reconstruction immédiate</button
-          >, attention cependant, cela générera une interruption de service le temps de la
-          reconstruction.
+          >, mais attention : PIERRE ne saura plus rien le temps de la reconstruction.
         </form>
 
         <p class="mb-9 max-w-2xl text-sm">
