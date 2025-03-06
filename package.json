@@ -40,7 +40,7 @@
     "@ai-sdk/cohere": "^1.1.13",
     "@ai-sdk/google": "^1.1.20",
     "@ai-sdk/groq": "^1.1.12",
-    "@ai-sdk/mistral": "^1.1.14",
+    "@ai-sdk/mistral": "^1.1.15",
     "@ai-sdk/openai": "^1.2.1",
     "@ai-sdk/togetherai": "^0.1.14",
     "@date-fns/tz": "^1.2.0",
@@ -80,8 +80,8 @@
     "markdown-toc": "^1.2.0",
     "puppeteer": "^24.4.0",
     "prettier-plugin-tailwindcss": "^0.6.11",
-    "@tailwindcss/cli": "^4.0.10",
-    "tailwindcss": "^4.0.10",
+    "@tailwindcss/cli": "^4.0.12",
+    "tailwindcss": "^4.0.12",
     "typescript": "^5.8.2"
   },
   "prettier": {
