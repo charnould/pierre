@@ -58,17 +58,29 @@ Néologisme francophone, le terme de « mal-logement », désormais courant da
 
 Chaque année, la fondation pour le Logement des défavorisés publie son rapport annuel sur « l’état du mal-logement en France ». L’occasion de faire un recensement, de dresser un état des lieux et d’attirer l’attention du public et des politiques sur des situations dramatiques, comme en 2014, où la Fondation dénombre plus de 600 000 enfants souffrant de mal-logement en France.
 
-En 2019, elle appelle à l’ouverture de places en centre d’hébergement alors que 700 enfants dorment dans la rue à Paris et 20 000 mineurs vivent à l'hôtel en Île-de-France avec leur famille.
+En 2019, elle appelle à l’ouverture de places en centre d’hébergement alors que 700 enfants dorment dans la rue à Paris et 20 000 mineurs vivent à l'hôtel en Île-de-France avec leur famille.
 
-En 2022, selon la Fondation, 4,1 millions de personnes sont mal ou non logées en France. Parmi elles, l’Hexagone compte au moins 330 000 personnes sans domicile fixe. Ce chiffre a doublé en dix ans. Plus de 22 000 personnes vivent dans des squats ou des bidonvilles, dont près de 6 000 mineurs. Il y a 1,2 million de locataires présentant une situation d’impayés.
+En 2022, selon la Fondation, 4,1 millions de personnes sont mal ou non logées en France. Parmi elles, l’Hexagone compte au moins 330 000 personnes sans domicile fixe. Ce chiffre a doublé en dix ans. Plus de 22 000 personnes vivent dans des squats ou des bidonvilles, dont près de 6 000 mineurs. Il y a 1,2 million de locataires présentant une situation d’impayés.
 
-Au total, toujours selon la fondation, 12,1 millions de personnes sont fragilisées par leur logement (impayés, surpeuplement, précarité énergétique, copropriété en difficulté, loyers excessifs). Le mal-logement toucherait ainsi 8 % de la population.
+Au total, toujours selon la Fondation, 12,1 millions de personnes sont fragilisées par leur logement (impayés, surpeuplement, précarité énergétique, copropriété en difficulté, loyers excessifs). Le mal-logement toucherait ainsi 8 % de la population.
+
+Le 4 février 2025, la fondation pour le Logement des défavorisés publie son trentième rapport sur l’état du mal-logement. Le rapport alerte sur les discriminations, en particulier celles subies par les personnes en situation de handicap, qui ont moins de chances d'obtenir un logement social alors qu’elles sont censées être prioritaires. Les discriminations concernent les personnes atteintes de handicaps moteurs vis-à-vis de l’adaptation des logements mais aussi envers les personnes malentendantes, non-voyantes ou atteintes de troubles psychiques ou intellectuels. Les personnes âgées, ayant des difficultés à accomplir les gestes du quotidien sont également concernées. L’offre de logements adaptés est « incomplète, pour ne pas dire marginale », s’inquiète la Fondation.
+
+Selon le rapport, 735 personnes sont mortes dans la rue, un record en douze ans. La France compte 350 000 de personnes sans domicile, ce qui correspond à une hausse de 6 % sur un an et de 145 % depuis 2012.
+
+Quatre millions deux cent mille personnes souffrent de mal-logement (privées de logement ou vivant dans des conditions difficiles). De cinq mille à huit mille personnes, dont mille à trois mille enfants, sont chaque soir refusées par le 115, faute de place en hébergement d’urgence. « La France s’enfonce dans la crise du logement », alerte la fondation pour le Logement des défavorisés. « Tous les signaux sont au rouge », « l'urgence s'aggrave ».
+
+Par ailleurs, le parc locatif connaît toujours plus de demandeurs (deux millions sept cent mille ménages en attente) et des attributions toujours plus rares (moins de quatre cent mille foyers en 2023). « Il n'y a pas de solution au mal-logement quand les bailleurs sociaux sont empêchés de construire, de réhabiliter ou même d'entretenir de nouveaux logements, en raison du prélèvement sur leurs ressources de 1,3 milliard d'euros par an instauré en 2017 », précise-t-elle. Quant au parc social, moins de moins d’un demandeur sur cinq reçoit une réponse favorable dans l’année.
+
+Le rapport épingle aussi l’instabilité politique. « On a eu sept mois sans ministre du Logement et huit ministres successifs depuis l’élection du président Emmanuel Macron », explique Christophe Robert, délégué général de la Fondation. Dans le même temps, le trentième rapport sur l’état du mal-logement établit plusieurs recommandations.
 
 ### Logement social
 
-L’association s’engage aussi pour la construction de logements sociaux. Ainsi, en 2008, la fondation Abbé-Pierre lance un programme de construction de 2 000 logements « très sociaux » destinés aux ménages touchant des revenus inférieurs au Smic.
+L’association s’engage pour la construction de logements sociaux et lance des programmes de construction de logements dits « très sociaux », à faible loyer, confortables, et performants énergétiquement, destinés aux ménages touchant des revenus inférieurs au Smic. De 2005 à 2020, elle participe à la production de près de 9 000 logements accessibles aux personnes en difficulté.
 
-Elle dénonce aussi la baisse du nombre de logements sociaux autorisés chaque année et alerte sur la baisse de leur construction (95 000 HLM agréés en 2021 contre 125 000 en 2017). La Fondation lance d’ailleurs un appel à l'État pour qu'il investisse davantage dans la politique du logement et demande la construction de 150 000 logements sociaux chaque année en France.
+Elle soutient la construction de logements à travers différents programmes. De 2005 à 2008, elle s’engage dans la production de mille cinq cents logements très sociaux. Puis, entre 2008 et 2011, elle lance « deux mille toits pour deux mille familles ».
+
+Elle dénonce aussi la baisse du nombre de logements sociaux autorisés chaque année et alerte sur la baisse de leur construction (95 000 habitations à loyer modéré agréées en 2021 contre 125 000 en 2017). La Fondation lance d’ailleurs un appel à l'État pour qu'il investisse davantage dans la politique du logement et demande la construction de 150 000 logements sociaux chaque année en France.
 
 En 2022, 2,2 millions de ménages sont en attente d'un logement social.
 

@@ -13,7 +13,7 @@ Database.setCustomSQLite('/opt/homebrew/opt/sqlite/lib/libsqlite3.dylib')
 // module is loaded to provide vector search.
 export const db = (db_name: Db_Name): Database | (Database & sqlite_vec.Db) => {
   if (db_name === 'community') {
-    const db = new Database('./knowledge/community.sqlite')
+    const db = new Database('./knowledge/data.sqlite')
     sqlite_vec.load(db)
     return db
   }
