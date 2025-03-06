@@ -32,7 +32,8 @@ console.log('')
 // await $`bun pierre:version`
 
 if (latest_version === current_version) {
-  console.log('PIERRE est à jour.')
+  console.log(`${Bun.color('green', 'ansi')}PIERRE est à jour !`)
+  console.log('')
 
   try {
     await $`bun pierre:config`.quiet()
@@ -40,8 +41,8 @@ if (latest_version === current_version) {
     // console.log(('`config.ts` contient des erreurs.')
   }
 } else if (latest_version === undefined || current_version === undefined) {
-  console.error('Une anomalie est intervenue')
+  console.log(`${Bun.color('red', 'ansi')}Une anomalie est intervenue`)
 } else {
-  console.warn("PIERRE n'est pas à jour.")
-  console.warn('https://github.com/charnould/pierre/releases')
+  console.warn(`${Bun.color('orange', 'ansi')}PIERRE n'est pas à jour.`)
+  console.warn(`${Bun.color('orange', 'ansi')}https://github.com/charnould/pierre/releases`)
 }
