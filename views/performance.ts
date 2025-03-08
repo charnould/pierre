@@ -65,7 +65,7 @@ export const view = (data, options: StatisticOptions) => {
         <script src="https://unpkg.com/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
         <link rel="icon" href="../assets/pierre-ia.org/system.svg" type="image/svg+xml" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1741441117471.css" />
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1741442484617.css" />
         <title>PIERRE — Console</title>
       </head>
 
