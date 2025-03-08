@@ -173,11 +173,9 @@ export default {
       // Le message qui s'affiche par défaut dans l'interface www de PIERRE.
       greeting: [
         'Bonjour 🖐️,',
-        'Je suis PIERRE, une IA open source, personnalisable, multicanale et plurilingue au service du mouvement HLM, de ses candidats, locataires et collaborateurs.',
-        "Ma mission : répondre 24/7/365, sur le Web ou par SMS, à toutes les questions de « premier niveau » pour transfigurer l'expérience-client, ou des questions plus complexe pour améliorer l'expérience-collaborateur.",
-        'Comment puis-je vous aider ?',
-        '――――',
-        "Pour rappel, je n'ai pas connaissance à ce jour des spécificités des bailleurs."
+        'Je suis PIERRE, une intelligence artificielle open source, personnalisable, multicanale et plurilingue au service du mouvement HLM, de ses candidats, locataires et collaborateurs.',
+        'Ma mission : répondre 24/7/365 à toutes les questions de « premier niveau » des candidats et locataires ou celles (plus complexes) des équipes.',
+        "PS. Je n'ai pas connaissance à ce jour des spécificités des bailleurs."
       ],
 
       // Les exemples qui s'affichent par défaut dans l'interface www de PIERRE.
