@@ -6,7 +6,7 @@
   "module": "app.ts",
   "scripts": {
     "――――――― BUILD COMMANDS ―――――――": "―――――――",
-    "build:cb": "bun run config/build.ts",
+    "build:cb": "bun --env-file=.env.production run config/build.ts",
     "transpile": "bun build --entrypoints assets/pierre-ia.org/scripts/*.ts --outdir assets/pierre-ia.org/dist/js --minify --target browser --watch",
     "format": "bunx prettier '!**/*.js' '!assets/pierre-ia.org/dist' --write . --plugin=prettier-plugin-tailwindcss",
     "lint": "bunx @biomejs/biome check --write --unsafe . --config-path=config/biome.jsonc",
