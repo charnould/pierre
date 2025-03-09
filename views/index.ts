@@ -11,14 +11,14 @@ export const view = (config: Config, context: string) => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1741442484617.css" />
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1741514412046.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap"
           rel="stylesheet"
         />
         <link rel="icon" href="../assets/${config.id}/system.svg" type="image/svg+xml" />
         <link rel="manifest" href="../assets/${config.id}/manifest.json" />
-        <script type="module" src="../assets/pierre-ia.org/dist/js/ai.1741442484617.js"></script>
+        <script type="module" src="../assets/pierre-ia.org/dist/js/ai.1741514412046.js"></script>
         <title>Comment puis-je vous aider ? 🖐️</title>
       </head>
 
@@ -48,7 +48,7 @@ export const view = (config: Config, context: string) => {
             ${config.context[context].examples.map(
               (eg: string) =>
                 html`<button
-                  class="mb-2 block w-fit max-w-95/100 cursor-pointer rounded border border-gray-300 px-3 py-2 text-left font-serif text-sm text-gray-800 hover:bg-gray-50 disabled:cursor-progress"
+                  class="mb-2 block w-fit cursor-pointer rounded border border-gray-300 px-3 py-2 text-left font-serif text-sm text-gray-800 hover:bg-gray-50 disabled:cursor-progress"
                 >
                   ${eg}
                 </button>`
@@ -66,6 +66,7 @@ export const view = (config: Config, context: string) => {
               class="field-sizing-content flex-1 resize-none border-none text-base outline-0 placeholder:text-gray-400"
               id="prompt__input"
               type="text"
+              rows="1"
               name="message"
               placeholder="Comment puis-je vous aider ?"
             ></textarea>

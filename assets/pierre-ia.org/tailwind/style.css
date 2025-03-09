@@ -16,7 +16,7 @@
 }
 
 .user {
-  @apply mt-4 mb-8 max-w-[80%] self-end rounded-xl bg-gray-100 px-4 py-3 font-serif text-base text-gray-900;
+  @apply mt-4 mb-8 max-w-[80%] self-end rounded-xl bg-gray-100 px-4 py-3 font-serif text-base/snug text-gray-900;
 }
 
 /* Bot styles */
@@ -27,6 +27,7 @@
 
 .thinking {
   display: inline-block;
+  border-radius: 2px;
   width: 10px;
   height: 20px;
   background-color: black;
@@ -48,6 +49,10 @@
 }
 
 @utility prose {
+  * {
+    @apply my-2 text-base/snug text-gray-900;
+  }
+
   pre {
     @apply mt-6 mb-10 -rotate-1 rounded-lg border border-gray-200 p-8 shadow-lg;
   }
@@ -59,7 +64,7 @@
   /* Typography */
 
   p {
-    @apply my-2 text-[15px] leading-[20px] text-gray-900 empty:hidden;
+    @apply my-2 text-base/snug text-gray-900 empty:hidden;
   }
 
   b,
