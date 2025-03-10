@@ -28,32 +28,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (target && target.id === 'prompt__submit') {
       event.preventDefault()
       const prompt = capture_prompt()
+      const textarea = document.querySelector('textarea')
+      if (textarea) auto_resize_textarea(textarea)
       process_prompt(prompt)
     }
-    if (target && target.tagName === 'BUTTON') {
+
+    if (target && target.dataset.role === 'example') {
       event.preventDefault()
       const prompt = target.textContent?.trim() || ''
       process_prompt(prompt)
     }
   })
+
+  /**
+   * Select the ONLY <textarea> element on the page.
+   * Attach an event listener to adjust the height dynamically as the user types
+   * Initialize the height based on the current content
+   */
+  const textarea = document.querySelector('textarea')
+  if (textarea) {
+    textarea.addEventListener('input', () => auto_resize_textarea(textarea))
+    auto_resize_textarea(textarea)
+  }
+
+  //
+  //
+  // Add event listener to keydown events
+  //
+  enableEnterKey()
 })
 
 //
 //
-//
-// Add event listener to keydown events
-//
-const inputField = document.getElementById('prompt__input')
-if (inputField) {
-  inputField.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-      event.preventDefault()
-      const prompt = capture_prompt()
-      process_prompt(prompt)
-    }
-  })
-}
-
 //
 //
 //
@@ -61,6 +67,51 @@ if (inputField) {
 //
 //
 //
+//
+//
+
+/**
+ * Handles the "Enter" key press event.
+ *
+ * This function is triggered when the "Enter" key is pressed. It prevents the
+ * default action of the event, captures the prompt, resizes the textarea if it
+ * exists, and processes the captured prompt.
+ *
+ * @param event - The keyboard event triggered by pressing a key.
+ */
+const enterKeyHandler = (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    const prompt = capture_prompt()
+    const textarea = document.querySelector('textarea')
+    if (textarea) auto_resize_textarea(textarea)
+    process_prompt(prompt)
+  }
+}
+
+/**
+ * Disables the Enter key event listener on the input field with the ID
+ * 'prompt__input'. This function removes the previously attached 'keydown'
+ * event listener that triggers the enterKeyHandler function.
+ */
+function disableEnterKey() {
+  const inputField = document.getElementById('prompt__input')
+  if (inputField) {
+    inputField.removeEventListener('keydown', enterKeyHandler)
+  }
+}
+
+/**
+ * Enables the Enter key event listener on the input field with the ID
+ * 'prompt__input'. This function attaches a 'keydown' event listener that
+ * triggers the enterKeyHandler function.
+ */
+function enableEnterKey() {
+  const inputField = document.getElementById('prompt__input')
+  if (inputField) {
+    inputField.addEventListener('keydown', enterKeyHandler)
+  }
+}
 
 //
 // Handle AI prompt processing
@@ -71,29 +122,44 @@ function process_prompt(prompt: string) {
   }
 }
 
-//
-// Add < target = "_blank" > to all links
-function clone_system_logo() {
-  const systemLogo = document.querySelector('[data-role="system__logo"]')
-  if (!systemLogo) return null
-  const clonedLogo = systemLogo.cloneNode(true)
-  return clonedLogo
-}
-
-//
-// Add target="_blank" to all links except those with the ID 'footprint__link'
+/**
+ * Adds a `target="_blank"` attribute to all anchor (`<a>`) elements on the
+ * page. This ensures that all links open in a new tab or window.
+ */
 function add_blank_target_to_links() {
-  const links = document.querySelectorAll('a:not(#footprint__link)')
+  const links = document.querySelectorAll('a')
   for (const link of links) {
     ;(link as HTMLAnchorElement).target = '_blank'
   }
 }
 
-//
-// Auto-scroll to the bottom of <div id="conversation">
+/**
+ * Scrolls the window to the bottom of the page smoothly.
+ *
+ * This function uses `window.scrollTo` with the `behavior` set to 'smooth' to
+ * scroll to the bottom of the document. The scrolling is delayed by a timeout
+ * of 5 milliseconds to ensure it runs after the current call stack is cleared.
+ */
 function scroll_to_bottom() {
-  const container = document.querySelector('main')
-  if (container) container.scrollTop = container.scrollHeight
+  setTimeout(() => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth'
+    })
+  }, 5)
+}
+
+/**
+ * Automatically resizes a textarea element based on its content.
+ *
+ * This function sets the height of the textarea to 'auto' to reset any previous height,
+ * then adjusts the height to fit the content up to a maximum of 300 pixels.
+ *
+ * @param textarea - The HTMLTextAreaElement to be resized.
+ */
+function auto_resize_textarea(textarea: HTMLTextAreaElement) {
+  textarea.style.height = 'auto'
+  textarea.style.height = `${Math.min(textarea.scrollHeight, 250)}px`
 }
 
 //
@@ -151,13 +217,9 @@ function update_ui(message: string) {
   thinkingDiv.classList.add('thinking')
   botDiv.appendChild(thinkingDiv)
 
-  // Clone system logo
-  const systemLogo = clone_system_logo() as Node
-
   // Use DocumentFragment to improve performance by reducing reflows
   const fragment = document.createDocumentFragment()
   fragment.appendChild(userDiv)
-  fragment.appendChild(systemLogo)
   fragment.appendChild(botDiv)
 
   // Append everything to the main element
@@ -179,10 +241,11 @@ function update_ui(message: string) {
 async function get_ai_answer(prompt: string) {
   //
   // Disable all buttons
-  ;(document.getElementById('prompt__submit') as HTMLButtonElement).disabled = true
   for (const button of document.querySelectorAll<HTMLButtonElement>('button')) {
     button.disabled = true
   }
+
+  disableEnterKey()
 
   try {
     //
@@ -225,7 +288,7 @@ async function get_ai_answer(prompt: string) {
 
       if (decodedValue.includes('pierre_error')) {
         fullText =
-          "<p class='max-w-[490px] rounded border border-red-300 bg-red-50 !p-2 !text-xs !leading-4 text-red-600'>Une erreur s'est produite chez le fournisseur de modèle de langage. <span id='regenerate_answer' class='cursor-pointer font-semibold underline decoration-solid decoration-1 underline-offset-2'>Cliquer pour regénérer une réponse</span>. Si le problème persiste, patienter quelques minutes.</p>"
+          "<p class='pierre_error'>Une erreur s'est produite chez le fournisseur de modèle de langage. <span id='regenerate_answer'>Cliquer pour regénérer une réponse</span>. Si le problème persiste, patienter quelques minutes.</p>"
       } else {
         fullText += `${decoder.decode(value)}`
       }
@@ -237,9 +300,10 @@ async function get_ai_answer(prompt: string) {
   } finally {
     //
     // Re-enable all buttons
-    ;(document.getElementById('prompt__submit') as HTMLButtonElement).disabled = false
     for (const button of document.querySelectorAll<HTMLButtonElement>('button')) {
       button.disabled = false
     }
+
+    enableEnterKey()
   }
 }

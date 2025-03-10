@@ -10,7 +10,15 @@ export const view = (data, conversation: Reply[] | []) => {
         <script src="https://unpkg.com/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
         <link rel="icon" href="../assets/pierre-ia.org/system.svg" type="image/svg+xml" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1740859292637.css" />
+        <link rel="preconnect" href="https://rsms.me" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+        <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1742634034234.css" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inclusive+Sans:wght@350&display=swap"
+          rel="stylesheet"
+        />
         <meta name="turbo-refresh-method" content="morph" />
         <meta name="turbo-refresh-scroll" content="preserve" />
         <title>PIERRE — Console</title>
@@ -57,7 +65,7 @@ export const view = (data, conversation: Reply[] | []) => {
                 ${conversation.map(
                   (c) =>
                     html`<div
-                      class="prose odd:float-right odd:my-8 odd:max-w-lg odd:rounded-xl odd:bg-stone-100 odd:px-5 odd:py-2 odd:font-['Work_Sans'] odd:text-base even:clear-both"
+                      class="prose odd:float-right odd:my-8 odd:max-w-lg odd:rounded-xl odd:bg-gray-100 odd:px-5 odd:py-2 odd:font-serif odd:text-base even:clear-both"
                     >
                       ${raw(marked.parse(c.content))}
                     </div>`
