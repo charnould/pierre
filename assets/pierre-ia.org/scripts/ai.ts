@@ -71,29 +71,31 @@ function process_prompt(prompt: string) {
   }
 }
 
-//
-// Add < target = "_blank" > to all links
-function clone_system_logo() {
-  const systemLogo = document.querySelector('[data-role="system__logo"]')
-  if (!systemLogo) return null
-  const clonedLogo = systemLogo.cloneNode(true)
-  return clonedLogo
-}
-
-//
-// Add target="_blank" to all links except those with the ID 'footprint__link'
+/**
+ * Adds a `target="_blank"` attribute to all anchor (`<a>`) elements on the
+ * page. This ensures that all links open in a new tab or window.
+ */
 function add_blank_target_to_links() {
-  const links = document.querySelectorAll('a:not(#footprint__link)')
+  const links = document.querySelectorAll('a')
   for (const link of links) {
     ;(link as HTMLAnchorElement).target = '_blank'
   }
 }
 
-//
-// Auto-scroll to the bottom of <div id="conversation">
+/**
+ * Scrolls the window to the bottom of the page smoothly.
+ *
+ * This function uses `window.scrollTo` with the `behavior` set to 'smooth' to
+ * scroll to the bottom of the document. The scrolling is delayed by a timeout
+ * of 5 milliseconds to ensure it runs after the current call stack is cleared.
+ */
 function scroll_to_bottom() {
-  const container = document.querySelector('main')
-  if (container) container.scrollTop = container.scrollHeight
+  setTimeout(() => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth'
+    })
+  }, 5)
 }
 
 //
@@ -151,13 +153,9 @@ function update_ui(message: string) {
   thinkingDiv.classList.add('thinking')
   botDiv.appendChild(thinkingDiv)
 
-  // Clone system logo
-  const systemLogo = clone_system_logo() as Node
-
   // Use DocumentFragment to improve performance by reducing reflows
   const fragment = document.createDocumentFragment()
   fragment.appendChild(userDiv)
-  fragment.appendChild(systemLogo)
   fragment.appendChild(botDiv)
 
   // Append everything to the main element
