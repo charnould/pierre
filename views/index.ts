@@ -3,7 +3,7 @@ import type { Config } from '../utils/_schema'
 
 export const view = (config: Config, context: string) => {
   return html`<!doctype html>
-    <html lang="fr" class="no-scrollbar">
+    <html lang="fr" class="no-scrollbar scroll-smooth bg-white antialiased">
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,14 +11,14 @@ export const view = (config: Config, context: string) => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1741514412046.css" />
+        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1741601143770.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap"
           rel="stylesheet"
         />
         <link rel="icon" href="../assets/${config.id}/system.svg" type="image/svg+xml" />
         <link rel="manifest" href="../assets/${config.id}/manifest.json" />
-        <script type="module" src="../assets/pierre-ia.org/dist/js/ai.1741514412046.js"></script>
+        <script type="module" src="../assets/pierre-ia.org/dist/js/ai.1741601143770.js"></script>
         <title>Comment puis-je vous aider ? 🖐️</title>
       </head>
 

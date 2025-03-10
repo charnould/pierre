@@ -71,25 +71,31 @@ function process_prompt(prompt: string) {
   }
 }
 
-//
-// Add target="_blank" to all links except those with the ID 'footprint__link'
+/**
+ * Adds a `target="_blank"` attribute to all anchor (`<a>`) elements on the
+ * page. This ensures that all links open in a new tab or window.
+ */
 function add_blank_target_to_links() {
-  const links = document.querySelectorAll('a:not(#footprint__link)')
+  const links = document.querySelectorAll('a')
   for (const link of links) {
     ;(link as HTMLAnchorElement).target = '_blank'
   }
 }
 
-//
-// Auto-scroll to the bottom of <div id="conversation">
+/**
+ * Scrolls the window to the bottom of the page smoothly.
+ *
+ * This function uses `window.scrollTo` with the `behavior` set to 'smooth' to
+ * scroll to the bottom of the document. The scrolling is delayed by a timeout
+ * of 5 milliseconds to ensure it runs after the current call stack is cleared.
+ */
 function scroll_to_bottom() {
-  console.log('Scrolling to bottom...')
-
-  // Scroll the whole page
-  window.scrollTo({
-    top: document.documentElement.scrollHeight,
-    behavior: 'smooth'
-  })
+  setTimeout(() => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth'
+    })
+  }, 5)
 }
 
 //
