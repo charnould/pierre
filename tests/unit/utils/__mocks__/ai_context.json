@@ -1,7 +1,7 @@
 {
   "conv_id": "019398b4-7de0-7000-b01d-7ec7fd1bf418",
   "config": {
-    "id": "pierre-ia.org",
+    "id": "default",
     "phone": "0033939070074",
     "model": "openai('gpt-4o-mini-2024-07-18')",
     "context": {
@@ -94,6 +94,5 @@
     "private": [],
     "public": []
   },
-  "current_context": "default",
   "conversation": [{ "role": "user", "content": "Enquête SLS, kézako + suis-je concerné ?" }]
 }

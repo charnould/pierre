@@ -109,10 +109,9 @@ const search_and_answer = async (c: Context) => {
     } else {
       context = await AIContext.parseAsync({
         role: 'user',
-        conv_id: c.req.param('id'),
+        conv_id: c.req.query('conv_id'),
         config: c.req.query('config'),
         content: c.req.query('message'),
-        current_context: c.req.query('context'),
         custom_data: { raw: c.req.query('data')?.split('|') }
       })
     }
@@ -136,7 +135,7 @@ const search_and_answer = async (c: Context) => {
     }
 
     if (typeof context.config !== 'string') {
-      knowledge_access = context.config.context[context.current_context].knowledge
+      knowledge_access = context.config.knowledge
     }
 
     if (

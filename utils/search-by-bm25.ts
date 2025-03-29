@@ -14,7 +14,7 @@ export const bm25_search = (keyword: string, context: AIContext) => {
     // (e.g., default, team, etc.) + Set a default for TS happiness
     let k = { community: true, proprietary: { public: false, private: false } }
     if (typeof context.config !== 'string' && 'context' in context.config) {
-      k = context.config.context[context.current_context].knowledge
+      k = context.config.knowledge
     }
 
     // Initialize the bm25 search results (format

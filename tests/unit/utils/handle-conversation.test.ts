@@ -14,7 +14,7 @@ import {
 // Simulated responses for test cases
 const c1_r1 = await AIContext.parseAsync({
   conv_id: 'c1',
-  config: 'pierre-ia.org',
+  config: 'default',
   role: 'user',
   content: 'Qui es-tu ?',
   custom_data: { raw: ['julie', '456.56'] }
@@ -22,7 +22,7 @@ const c1_r1 = await AIContext.parseAsync({
 
 const c1_r2 = await AIContext.parseAsync({
   conv_id: 'c1',
-  config: 'pierre-ia.org',
+  config: 'default',
   role: 'assistant',
   content: 'Je suis Pierre !',
   custom_data: { raw: ['julie', '456.56'] }
@@ -30,7 +30,7 @@ const c1_r2 = await AIContext.parseAsync({
 
 const c2_r1 = await AIContext.parseAsync({
   conv_id: 'c2',
-  config: 'pierre-ia.org',
+  config: 'default',
   role: 'user',
   content: 'Bonjour',
   custom_data: { raw: ['julie', '456.56'] }

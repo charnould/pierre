@@ -23,7 +23,7 @@ export const vector_search = async (embedding: EmbeddingModelV1Embedding, contex
     let k = { community: true, proprietary: { public: false, private: false } }
 
     if (typeof context.config !== 'string' && 'context' in context.config) {
-      k = context.config.context[context.current_context].knowledge
+      k = context.config.knowledge
     }
 
     // Initialize the vector search results

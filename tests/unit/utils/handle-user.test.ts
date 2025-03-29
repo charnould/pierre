@@ -25,7 +25,7 @@ it('should insert 2 users', async () => {
   const user_1 = User.parse({
     email: 'charnould@pierre-ia.org',
     role: 'administrator',
-    config: 'pierre-ia.org',
+    config: 'default',
     password_hash: 'password_1'
   })
 
@@ -44,7 +44,7 @@ it('should insert 2 users', async () => {
   if (database instanceof Database)
     expect(database.query('SELECT * FROM users').all()).toStrictEqual([
       {
-        config: 'pierre-ia.org',
+        config: 'default',
         email: 'charnould@pierre-ia.org',
         role: 'administrator',
         password_hash: 'password_1'
@@ -66,7 +66,7 @@ it('should insert 2 users', async () => {
 //
 it('should retrieve 1 user ', async () => {
   expect(get_user('charnould@pierre-ia.org')).toStrictEqual({
-    config: 'pierre-ia.org',
+    config: 'default',
     email: 'charnould@pierre-ia.org',
     role: 'administrator',
     password_hash: 'password_1'
@@ -98,7 +98,7 @@ it('should retrieve all users', () => {
       role: 'administrator'
     },
     {
-      config: 'pierre-ia.org',
+      config: 'default',
       email: 'charnould@pierre-ia.org',
       password_hash: 'password_1',
       role: 'administrator'
@@ -116,7 +116,7 @@ it('should delete a user', async () => {
   delete_user('charnould@icfhabitat.fr')
   expect(get_users()).toStrictEqual([
     {
-      config: 'pierre-ia.org',
+      config: 'default',
       email: 'charnould@pierre-ia.org',
       password_hash: 'password_1',
       role: 'administrator'

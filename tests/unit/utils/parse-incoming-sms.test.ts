@@ -16,8 +16,7 @@ test('should get config from phone number', async () => {
 
     expect(config_1).toStrictEqual({
       role: 'user',
-      config: 'pierre-ia.org',
-      current_context: 'default',
+      config: 'default',
       conv_id: 'sms-with-33621804969',
       phone: '0033939070074',
       to: '+33621804969',

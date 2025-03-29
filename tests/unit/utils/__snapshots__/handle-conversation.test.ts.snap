@@ -3,7 +3,7 @@
 exports[`test SQLite3 conversation CRUD operations should insert 3 replies 1`] = `
 [
   {
-    "config": "pierre-ia.org",
+    "config": "default",
     "content": "Qui es-tu ?",
     "conv_id": "c1",
     "metadata": "{"topics":null,"evaluation":{"customer":{"score":null,"comment":null},"organization":{"score":null,"comment":null},"ai":{"score":null,"comment":null}},"tokens":{"prompt":null,"completion":null,"total":null}}",
@@ -11,7 +11,7 @@ exports[`test SQLite3 conversation CRUD operations should insert 3 replies 1`] =
     "timestamp": "2012-12-12T12:05:00Z",
   },
   {
-    "config": "pierre-ia.org",
+    "config": "default",
     "content": "Je suis Pierre !",
     "conv_id": "c1",
     "metadata": "{"topics":null,"evaluation":{"customer":{"score":null,"comment":null},"organization":{"score":null,"comment":null},"ai":{"score":null,"comment":null}},"tokens":{"prompt":null,"completion":null,"total":null}}",
@@ -19,7 +19,7 @@ exports[`test SQLite3 conversation CRUD operations should insert 3 replies 1`] =
     "timestamp": "2012-12-12T12:10:00Z",
   },
   {
-    "config": "pierre-ia.org",
+    "config": "default",
     "content": "Bonjour",
     "conv_id": "c2",
     "metadata": "{"topics":null,"evaluation":{"customer":{"score":null,"comment":null},"organization":{"score":null,"comment":null},"ai":{"score":null,"comment":null}},"tokens":{"prompt":null,"completion":null,"total":null}}",
@@ -32,7 +32,7 @@ exports[`test SQLite3 conversation CRUD operations should insert 3 replies 1`] =
 exports[`test SQLite3 conversation CRUD operations should get 2 conversations 1`] = `
 [
   {
-    "config": "pierre-ia.org",
+    "config": "default",
     "content": "Qui es-tu ?",
     "conv_id": "c1",
     "metadata": {
@@ -61,7 +61,7 @@ exports[`test SQLite3 conversation CRUD operations should get 2 conversations 1`
     "timestamp": "2012-12-12T12:05:00Z",
   },
   {
-    "config": "pierre-ia.org",
+    "config": "default",
     "content": "Je suis Pierre !",
     "conv_id": "c1",
     "metadata": {
@@ -95,7 +95,7 @@ exports[`test SQLite3 conversation CRUD operations should get 2 conversations 1`
 exports[`test SQLite3 conversation CRUD operations should get 2 conversations 2`] = `
 [
   {
-    "config": "pierre-ia.org",
+    "config": "default",
     "content": "Bonjour",
     "conv_id": "c2",
     "metadata": {
@@ -129,7 +129,7 @@ exports[`test SQLite3 conversation CRUD operations should get 2 conversations 2`
 exports[`test SQLite3 conversation CRUD operations should save score 1`] = `
 [
   {
-    "config": "pierre-ia.org",
+    "config": "default",
     "content": "Qui es-tu ?",
     "conv_id": "c1",
     "metadata": {
@@ -158,7 +158,7 @@ exports[`test SQLite3 conversation CRUD operations should save score 1`] = `
     "timestamp": "2012-12-12T12:05:00Z",
   },
   {
-    "config": "pierre-ia.org",
+    "config": "default",
     "content": "Je suis Pierre !",
     "conv_id": "c1",
     "metadata": {
@@ -192,7 +192,7 @@ exports[`test SQLite3 conversation CRUD operations should save score 1`] = `
 exports[`test SQLite3 conversation CRUD operations should save score 2`] = `
 [
   {
-    "config": "pierre-ia.org",
+    "config": "default",
     "content": "Bonjour",
     "conv_id": "c2",
     "metadata": {
@@ -226,7 +226,7 @@ exports[`test SQLite3 conversation CRUD operations should save score 2`] = `
 exports[`test SQLite3 conversation CRUD operations should save topic 1`] = `
 [
   {
-    "config": "pierre-ia.org",
+    "config": "default",
     "content": "Qui es-tu ?",
     "conv_id": "c1",
     "metadata": {
@@ -255,7 +255,7 @@ exports[`test SQLite3 conversation CRUD operations should save topic 1`] = `
     "timestamp": "2012-12-12T12:05:00Z",
   },
   {
-    "config": "pierre-ia.org",
+    "config": "default",
     "content": "Je suis Pierre !",
     "conv_id": "c1",
     "metadata": {
@@ -289,7 +289,7 @@ exports[`test SQLite3 conversation CRUD operations should save topic 1`] = `
 exports[`test SQLite3 conversation CRUD operations should retrieve all conversations 1`] = `
 [
   {
-    "config": "pierre-ia.org",
+    "config": "default",
     "content": "Bonjour",
     "conv_id": "c2",
     "metadata": {

@@ -3,14 +3,9 @@ import { score_chunk } from '../../utils/rank-chunks'
 
 // This is the context that is passed to the rank_chunks function
 const context = {
-  current_context: 'default',
   config: {
-    context: {
-      default: {
-        models: {
-          rerank_with: "togetherai('meta-llama/Llama-3.3-70B-Instruct-Turbo')"
-        }
-      }
+    models: {
+      rerank_with: "togetherai('meta-llama/Llama-3.3-70B-Instruct-Turbo')"
     }
   },
   conversation: [{ role: 'user', content: 'Qui a inventé Pierre IA ?' }]

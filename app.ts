@@ -1,4 +1,3 @@
-import { randomUUIDv7 } from 'bun'
 import type { Serve } from 'bun'
 import { CronJob } from 'cron'
 import { Hono } from 'hono'
@@ -67,8 +66,8 @@ app.use('/assets/*', serveStatic({ root: './' }))
 // biome-ignore lint: readability
 {
   // AI generation routes
-  app.get('/c/:id'            , authenticate, get_index)
-  app.get('/ai/:id'                         , get_ai) // TODO: need to check for auth?
+  app.get('/c'                , authenticate, get_index)
+  app.get('/ai'                             , get_ai) // TODO: need to check for auth?
   app.post('/sms'                           , get_ai)
   
   // Admin routes
@@ -87,9 +86,7 @@ app.use('/assets/*', serveStatic({ root: './' }))
 // Catch-all route that redirects to a new conversation with
 // a randomly generated ID and optional query parameters
 app.notFound(async (c) =>
-  c.redirect(
-    `/c/${randomUUIDv7()}?config=${c.req.query('config')}&context=${c.req.query('context')}&data=${c.req.query('data')}`
-  )
+  c.redirect(`/c?config=${c.req.query('config')}&data=${c.req.query('data')}`)
 )
 
 // Handle errors by returning a 404 response

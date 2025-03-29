@@ -27,7 +27,7 @@ export const answer_user = async (context: AIContext, options: { is_sms: boolean
       
       # YOUR PERSONA
       
-      ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].persona : ''}.
+      ${typeof context.config !== 'string' ? context.config.persona : ''}.
       
       # OBJECTIVE
 
@@ -76,7 +76,7 @@ export const answer_user = async (context: AIContext, options: { is_sms: boolean
 
       # YOUR AUDIENCE
 
-      - ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].audience : ''}.
+      - ${typeof context.config !== 'string' ? context.config.audience : ''}.
       ${context.query?.about_user !== null ? `- About user: ${context.query?.about_user}` : null}
 
       # CONTEXT
@@ -120,8 +120,8 @@ export const answer_collaborator = async (context: AIContext, options: { is_sms:
 
       # Persona & Audience Context
 
-      - **Persona**: ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].persona : ''}.
-      - **Audience**: ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].audience : ''}.
+      - **Persona**: ${typeof context.config !== 'string' ? context.config.persona : ''}.
+      - **Audience**: ${typeof context.config !== 'string' ? context.config.audience : ''}.
 
       # Knowledge Sources
 
@@ -204,11 +204,11 @@ export const reach_relevancy_deadlock = async (
 
       # Audience
 
-      ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].audience : ''}
+      ${typeof context.config !== 'string' ? context.config.audience : ''}
 
       # Your Persona
 
-      ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].persona : ''}
+      ${typeof context.config !== 'string' ? context.config.persona : ''}
 
       # Response Guidelines
 
@@ -216,7 +216,7 @@ export const reach_relevancy_deadlock = async (
       - **Knowledge Integrity Caution**: If you are uncertain or there is a potential for inaccuracy, acknowledge the possibility of gaps in your knowledge, and express a preference to refrain from answering rather than risk providing incorrect information.
       - **Persona Clarity**: Ensure your responses align with your persona’s characteristics. This helps reinforce your identity and strengthens the user’s trust in your guidance.
       - **Request for Clarification**: Encourage the user to reformulate or clarify their query to make it more specific to housing-related concerns or to increase the clarity of the request, making it easier to provide a relevant answer.
-      ${typeof context.config !== 'string' && context.config.context[`${context.current_context}`].knowledge.proprietary.private === true ? '- **Guidance for Escalation**: When unable to provide an answer, explain that the user should reach out to their hierarchical superior or manager for further advice or clarification.' : ''}
+      ${typeof context.config !== 'string' && context.config.knowledge.proprietary.private === true ? '- **Guidance for Escalation**: When unable to provide an answer, explain that the user should reach out to their hierarchical superior or manager for further advice or clarification.' : ''}
 
       ---
 
@@ -254,11 +254,11 @@ export const reach_profanity_deadlock = async (
 
       # Audience
 
-      ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].audience : ''}
+      ${typeof context.config !== 'string' ? context.config.audience : ''}
 
       # Persona
 
-      ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].persona : ''}
+      ${typeof context.config !== 'string' ? context.config.persona : ''}
 
       # Response Guidelines
 

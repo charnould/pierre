@@ -1,7 +1,8 @@
+import { randomUUIDv7 } from 'bun'
 import { html } from 'hono/html'
 import type { Config } from '../utils/_schema'
 
-export const view = (config: Config, context: string) => {
+export const view = (config: Config) => {
   return html`<!doctype html>
     <html lang="fr" class="scroll-smooth bg-white tracking-[-0.1px] antialiased">
       <head>
@@ -14,15 +15,16 @@ export const view = (config: Config, context: string) => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1742634034234.css" />
+        <link rel="stylesheet" href="../assets/default/dist/css/style.1743266353274.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Inclusive+Sans:wght@350&display=swap"
           rel="stylesheet"
         />
         <link rel="icon" href="../assets/${config.id}/system.svg" type="image/svg+xml" />
         <link rel="manifest" href="../assets/${config.id}/manifest.json" />
-        <script type="module" src="../assets/pierre-ia.org/dist/js/ai.1742634034234.js"></script>
+        <script type="module" src="../assets/default/dist/js/ai.1743266353274.js"></script>
         <title>Comment puis-je vous aider ? 🖐️</title>
+        <meta name="conv_id" content="${randomUUIDv7()}" />
       </head>
 
       <body class="mx-auto h-svh max-w-4xl">
@@ -30,13 +32,9 @@ export const view = (config: Config, context: string) => {
           class="fixed top-0 left-0 w-full shadow-[0_0_15px_15px_rgba(255,255,255,1)]"
         ></header>
 
-        ${config.context[context].disclaimer === null
+        ${config.disclaimer === null
           ? null
-          : html` <input
-              type="hidden"
-              id="disclaimer"
-              value="${config.context[context].disclaimer}"
-            />`}
+          : html` <input type="hidden" id="disclaimer" value="${config.disclaimer}" />`}
 
         <main class="flex flex-col px-6 pb-32">
           <img
@@ -47,12 +45,12 @@ export const view = (config: Config, context: string) => {
             alt="IA"
           />
           <div class="prose" data-role="system">
-            ${config.context[context].greeting.map((g: string) => html`<p>${g}</p>`)}
+            ${config.greeting.map((g: string) => html`<p>${g}</p>`)}
           </div>
 
           <div>
             <p class="mt-4 mb-2 text-xs font-medium tracking-wide text-gray-500">EXEMPLES</p>
-            ${config.context[context].examples.map(
+            ${config.examples.map(
               (eg: string) =>
                 html`<button
                   data-role="example"

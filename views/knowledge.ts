@@ -7,13 +7,13 @@ export const view = (metadata: Metadata[]) => {
       <head>
         <meta charset="UTF-8" />
         <script src="https://unpkg.com/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
-        <link rel="icon" href="../assets/pierre-ia.org/system.svg" type="image/svg+xml" />
+        <link rel="icon" href="../assets/default/system.svg" type="image/svg+xml" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="preconnect" href="https://rsms.me" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1742634034234.css" />
+        <link rel="stylesheet" href="../assets/default/dist/css/style.1743266353274.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap"
           rel="stylesheet"
@@ -91,7 +91,7 @@ export const view = (metadata: Metadata[]) => {
           indispensable et obligatoire. Seuls les fichiers référencés dans celui-ci et disponibles
           ici sont pris en compte.
           <a
-            href="../assets/pierre-ia.org/files/_metadata.xlsx"
+            href="../assets/default/files/_metadata.xlsx"
             class="cursor-pointer text-blue-600 underline decoration-1 underline-offset-3"
             >Télécharger un gabarit vide</a
           >, le compléter, puis l'uploader.
