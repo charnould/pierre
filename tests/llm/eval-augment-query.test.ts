@@ -5,20 +5,16 @@ test('evaluate query augmentation perf.', async () => {
   // A dummy context to test the augmentation of a query
   const context = {
     config: {
-      id: 'pierre-ia.org',
-      context: {
-        default: {
-          models: {
-            embed_with: 'text-embedding-3-large',
-            // Change `augment_with` to test different models
-            augment_with: "togetherai('meta-llama/Llama-3.3-70B-Instruct-Turbo')", // "openai('gpt-4o-mini-2024-07-18')",
-            rerank_with: "openai('gpt-4o-mini-2024-07-18')",
-            answer_with: "openai('gpt-4o-mini-2024-07-18')"
-          }
-        }
+      id: 'default',
+
+      models: {
+        embed_with: 'text-embedding-3-large',
+        // Change `augment_with` to test different models
+        augment_with: "togetherai('meta-llama/Llama-3.3-70B-Instruct-Turbo')", // "openai('gpt-4o-mini-2024-07-18')",
+        rerank_with: "openai('gpt-4o-mini-2024-07-18')",
+        answer_with: "openai('gpt-4o-mini-2024-07-18')"
       }
     },
-    current_context: 'default',
     conversation: [
       // { role: 'user', content: 'Tu es un abruti !' }
       // { role: 'user', content: 'Comment déposer mon préavis de congé pour mon logement ? Et avez-vous un modèle de courrier ?' },
