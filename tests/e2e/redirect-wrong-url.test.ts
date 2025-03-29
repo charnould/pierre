@@ -9,52 +9,30 @@ it('should redirect `http://localhost:3000/c` correctly', async () => {
   const cookie = (await page.cookies()).find((cookie) => cookie.name === 'pierre-ia')
   expect(cookie).toBeUndefined()
 
-  const path = 'http://localhost:3000/c/'
+  const path = 'http://localhost:3000/c'
 
   await page.goto(path)
-  expect(page.url()).toMatch(
-    /http:\/\/localhost:3000\/c\/.{36}\?config=pierre-ia.org&context=default/
-  )
+  expect(page.url()).toMatch(/http:\/\/localhost:3000\/c\?config=default/)
 
-  await page.goto(`${path}/wrong_uuid`)
-  expect(page.url()).toMatch(
-    /http:\/\/localhost:3000\/c\/.{36}\?config=pierre-ia.org&context=default/
-  )
+  await page.goto(`${path}/wrong_path`)
+  expect(page.url()).toMatch(/http:\/\/localhost:3000\/c\?config=default/)
 
   await page.goto(`${path}/?config=wrong_config`)
-  expect(page.url()).toMatch(
-    /http:\/\/localhost:3000\/c\/.{36}\?config=pierre-ia.org&context=default/
-  )
+  expect(page.url()).toMatch(/http:\/\/localhost:3000\/c\?config=default/)
 
   await page.goto(`${path}/?config=wrong_config&context=wrong_context`)
-  expect(page.url()).toMatch(
-    /http:\/\/localhost:3000\/c\/.{36}\?config=pierre-ia.org&context=default/
-  )
+  expect(page.url()).toMatch(/http:\/\/localhost:3000\/c\?config=default/)
 
-  await page.goto(`${path}/?config=pierre-ia.org&context=default`)
-  expect(page.url()).toMatch(
-    /http:\/\/localhost:3000\/c\/.{36}\?config=pierre-ia.org&context=default/
-  )
+  await page.goto(`${path}/?config=default&context=default`)
+  expect(page.url()).toMatch(/http:\/\/localhost:3000\/c\?config=default/)
 
-  await page.goto(`${path}/?config=pierre-ia.org&context=no_rag&data=test`)
+  await page.goto(`${path}/?config=testing_purpose&data=test`)
   expect(page.url()).toMatch(
-    /http:\/\/localhost:3000\/a\/login\?redirection=c%2F%3Fconfig%3Dpierre-ia.org%26context%3Dno_rag%26data%3Dtest/
+    /http:\/\/localhost:3000\/a\/login\?redirection=c%2F%3Fconfig%3Dtesting_purpose%26data%3Dtest/
   )
 
   await page.goto(`${path}/?data=test`)
-  expect(page.url()).toMatch(
-    /http:\/\/localhost:3000\/c\/.{36}\?config=pierre-ia.org&context=default&data=test/
-  )
-
-  await page.goto(`${path}/?context=test`)
-  expect(page.url()).toMatch(
-    /http:\/\/localhost:3000\/a\/login\?redirection=c%2F%3Fconfig%3Dpierre-ia.org%26context%3Dtest%26data%3/
-  )
-
-  await page.goto(`${path}/?context=test`)
-  expect(page.url()).toMatch(
-    /http:\/\/localhost:3000\/a\/login\?redirection=c%2F%3Fconfig%3Dpierre-ia.org%26context%3Dtest%26data%3/
-  )
+  expect(page.url()).toMatch(/http:\/\/localhost:3000\/c\?config=default&data=test/)
 
   // e2e test is done!
   await browser.close()

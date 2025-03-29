@@ -1,17 +1,17 @@
 import { expect, it } from 'bun:test'
 import puppeteer from 'puppeteer'
 
-it('admin@pierre-ia.org should access `no_rag` context', async () => {
+it('admin@pierre-ia.org should access `testing_purpose` context', async () => {
   //
   const browser = await puppeteer.launch({ slowMo: 10 })
   const page = await browser.newPage()
 
   // Try to accesss a protected context without being logged
-  await page.goto('http://localhost:3000/?config=pierre-ia.org&context=no_rag')
+  await page.goto('http://localhost:3000/?config=testing_purpose')
   await page.setViewport({ width: 1080, height: 1024 })
 
   expect(page.url()).toBe(
-    'http://localhost:3000/a/login?redirection=c%2F%3Fconfig%3Dpierre-ia.org%26context%3Dno_rag%26data%3D'
+    'http://localhost:3000/a/login?redirection=c%2F%3Fconfig%3Dtesting_purpose%26data%3D'
   )
 
   // Log in
@@ -25,9 +25,7 @@ it('admin@pierre-ia.org should access `no_rag` context', async () => {
   expect(cookie).toBeDefined()
 
   // ...and URL must be the one to the protected context
-  expect(page.url()).toMatch(
-    /http:\/\/localhost:3000\/c\/.{36}\?config=pierre-ia.org&context=no_rag&data=/
-  )
+  expect(page.url()).toMatch(/http:\/\/localhost:3000\/c\?config=testing_purpose&data=/)
 
   // e2e test is done!
   await browser.close()

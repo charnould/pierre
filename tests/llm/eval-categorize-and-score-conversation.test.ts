@@ -17,7 +17,7 @@ beforeAll(async () => {
   save_reply(
     await AIContext.parseAsync({
       conv_id: 'c1',
-      config: 'pierre-ia.org',
+      config: 'default',
       role: 'user',
       content: 'Qui es-tu ?',
       custom_data: { raw: [] }
@@ -28,7 +28,7 @@ beforeAll(async () => {
   save_reply(
     await AIContext.parseAsync({
       conv_id: 'c1',
-      config: 'pierre-ia.org',
+      config: 'default',
       role: 'assistant',
       content: 'Je suis Pierre !',
       custom_data: { raw: [] }

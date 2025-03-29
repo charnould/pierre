@@ -8,13 +8,13 @@ export const view = (data, conversation: Reply[] | []) => {
       <head>
         <meta charset="UTF-8" />
         <script src="https://unpkg.com/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
-        <link rel="icon" href="../assets/pierre-ia.org/system.svg" type="image/svg+xml" />
+        <link rel="icon" href="../assets/default/system.svg" type="image/svg+xml" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="preconnect" href="https://rsms.me" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/pierre-ia.org/dist/css/style.1742634034234.css" />
+        <link rel="stylesheet" href="../assets/default/dist/css/style.1743266353274.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Inclusive+Sans:wght@350&display=swap"
           rel="stylesheet"
@@ -46,7 +46,17 @@ export const view = (data, conversation: Reply[] | []) => {
                           : conv[0].metadata.evaluation.organization.score === 3
                             ? html`<span class="h-3 w-6 rounded-full bg-green-500">&nbsp;</span>`
                             : html`<span class="h-3 w-6 rounded-full bg-neutral-400">&nbsp;</span>`}
-                    <span>&nbsp;• ${conv[0].timestamp.substring(0, 16)} • ${conv[0].config}</span>
+                    <span
+                      >&nbsp;•
+                      ${new Intl.DateTimeFormat('fr-FR', {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                        hourCycle: 'h23'
+                      })
+                        .format(new Date(conv[0].timestamp))
+                        .replace(' ', '∙')}
+                      • ${conv[0].config}</span
+                    >
                   </div>
                   <div class="border-b-1 border-neutral-200 px-6 pb-2 text-sm">
                     ${conv[0].content}

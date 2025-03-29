@@ -117,7 +117,7 @@ export const augment_query = async (context: AIContext) => {
   ]
 
   // Get LLM model to generate augmented queries
-  const model = context.config.context[context.current_context].models.augment_with
+  const model = context.config.models.augment_with
 
   // Generate augmented queries using the specified model
   const results = await Promise.all([

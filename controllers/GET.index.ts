@@ -4,6 +4,5 @@ import { view } from '../views/index'
 
 export const controller = async (c: Context) => {
   const config: Config = (await import(`../assets/${c.req.query('config')}/config`)).default
-  const context_query = c.req.query('context') as string
-  return c.html(view(config, context_query))
+  return c.html(view(config))
 }
