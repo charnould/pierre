@@ -35,7 +35,7 @@ const cerebras = createCerebras()
 export const stream_answer = async (context: AIContext) =>
   streamText({
     // biome-ignore lint: server-side eval to keep `config.ts` simple
-    model: eval(context.config.context[context.current_context].models.answer_with),
+    model: eval(context.config.models.answer_with),
     experimental_transform: smoothStream({ delayInMs: 20 }),
     messages: context.conversation,
     async onFinish({ text, usage }) {
@@ -64,7 +64,7 @@ export const stream_answer = async (context: AIContext) =>
 export const generate_answer = async (context: AIContext) => {
   const { text, usage } = await generateText({
     // biome-ignore lint: server-side eval to keep `config.ts` simple
-    model: eval(context.config.context[context.current_context].models.answer_with),
+    model: eval(context.config.models.answer_with),
     messages: context.conversation
   })
 

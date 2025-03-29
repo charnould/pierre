@@ -254,7 +254,7 @@ export const score_chunk = async (context: AIContext, chunk: Flatten_Chunk) => {
         **Think carefully and output the score first, within <score> tags, followed by your reasoning.**`
       }
     ],
-    model: context.config.context[context.current_context].models.rerank_with,
+    model: context.config.models.rerank_with,
     max_tokens: 300
   })
 

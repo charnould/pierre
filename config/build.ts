@@ -6,8 +6,8 @@ import toc from 'markdown-toc'
 const timestamp = Date.now()
 
 // Remove old files
-await $`rm -rf assets/pierre-ia.org/dist/css`
-await $`rm -rf assets/pierre-ia.org/dist/js`
+await $`rm -rf assets/default/dist/css`
+await $`rm -rf assets/default/dist/js`
 await $`rm -f docs/assets/widget.js`
 await $`find . -name ".DS_Store" -type f -delete`
 
@@ -33,12 +33,12 @@ const updated_content = toc.insert(content, {
 await Bun.write('README.md', updated_content)
 
 // Compile production CSS file
-await $`bunx @tailwindcss/cli@next -i assets/pierre-ia.org/tailwind/style.css -o assets/pierre-ia.org/dist/css/style.${timestamp}.css --minify`
+await $`bunx @tailwindcss/cli@next -i assets/default/tailwind/style.css -o assets/default/dist/css/style.${timestamp}.css --minify`
 
 // Transpile and minify .ts scripts into .js to work in browser.
 // Rename one of these files (ai.js) to include a hash/timestamp (to avoid caching issue).
-await $`bun build --entrypoints assets/pierre-ia.org/scripts/*.ts --outdir assets/pierre-ia.org/dist/js --minify --target browser`
-await $`mv ./assets/pierre-ia.org/dist/js/ai.js ./assets/pierre-ia.org/dist/js/ai.${timestamp}.js`
+await $`bun build --entrypoints assets/default/scripts/*.ts --outdir assets/default/dist/js --minify --target browser`
+await $`mv ./assets/default/dist/js/ai.js ./assets/default/dist/js/ai.${timestamp}.js`
 
 // Update "timestamped filepath" in all Views
 const views = await readdir('views')
@@ -50,18 +50,18 @@ for (const view of views) {
     `./views/${view}`,
     content
       .replace(
-        /..\/assets\/pierre-ia\.org\/dist\/js\/ai\.\d+\.js/,
-        `../assets/pierre-ia.org/dist/js/ai.${timestamp}.js`
+        /..\/assets\/default\/dist\/js\/ai\.\d+\.js/,
+        `../assets/default/dist/js/ai.${timestamp}.js`
       )
       .replace(
-        /..\/assets\/pierre-ia\.org\/dist\/css\/style\.\d+\.css/,
-        `../assets/pierre-ia.org/dist/css/style.${timestamp}.css`
+        /..\/assets\/default\/dist\/css\/style\.\d+\.css/,
+        `../assets/default/dist/css/style.${timestamp}.css`
       )
   )
 }
 
 // Copy transpiled/minified widget.js in `docs` folder, aka PIERRE website
-await $`cp assets/pierre-ia.org/dist/js/widget.js docs/assets`
+await $`cp assets/default/dist/js/widget.js docs/assets`
 
 // Lint, format, test code
 await $`bun lint`
