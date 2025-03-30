@@ -50,8 +50,7 @@
     <script crossorigin="anonymous" src="assets/widget.js"></script>
     <p
       id="pierre-ia"
-      data-configuration="pierre-ia.org"
-      data-context="default"
+      data-configuration="default"
       data-url="https://assistant.pierre-ia.org"
       style="
         right: 20px;
@@ -71,11 +70,9 @@
 
     <p class="smartphone">
       Pour une meilleure expérience, affichez PIERRE en plein écran. Choisissez l'habillage :
-      <a href="https://assistant.pierre-ia.org/c/?config=pierre-ia.org">Générique</a>,
-      <a href="https://assistant.pierre-ia.org/c/?config=actionlogement.fr">Action Logement</a> ou
-      <a href="https://assistant.pierre-ia.org/c/?config=granddijonhabitat.fr"
-        >Grand Dijon Habitat</a
-      >.
+      <a href="https://assistant.pierre-ia.org/c?config=default">Générique</a>,
+      <a href="https://assistant.pierre-ia.org/c?config=demo_client">Grand Dijon Habitat</a> ou
+      <a href="https://assistant.pierre-ia.org/c?config=demo_team">Assitant des collaborateurs</a>.
     </p>
 
     <main>
@@ -242,33 +239,23 @@
         <ul>
           <li>
             <b>Locataire HLM</b> —
-            <a href="?config=granddijonhabitat&context=default"
+            <a href="?config=demo_client"
               >Cliquez pour accéder à PIERRE en mode 'Grand Dijon Habitat'</a
             >
             , puis posez-lui des questions sur votre état des lieux, les travaux que vous pouvez
-            réaliser dans votre logement, les coordonnées du service-client, ou les charges
-            locatives.
+            réaliser dans votre logement, les coordonnées du service-client, les charges locatives,
+            la Garantie Visale ou les prêts et aides Action Logement disponibles.
           </li>
 
           <li>
             <b>Collaborateur HLM</b> —
-            <a href="?config=pierre-ia&context=team"
-              >Cliquez pour accéder à PIERRE en mode 'Pierre Habitat'</a
-            >
+            <a href="?config=demo_team">Cliquez pour accéder à PIERRE en mode 'Pierre Habitat'</a>
             (un bailleur social fictif), puis interrogez-le sur ses procédures internes (toutes
             aussi fictives) pour un aperçu de comment une IA peut aider vos équipes au quotidien.
           </li>
-
-          <li>
-            <b>Salarié</b> —
-            <a href="?config=actionlogement&context=default"
-              >Cliquez pour accéder à PIERRE en mode 'Action Logement'</a
-            >
-            , puis interrogez-le sur la Garantie Visale, ou les prêts et aides disponibles.
-          </li>
           <li>
             <b>Demandeur de logement social</b> ou <b>simple curieux</b> —
-            <a href="?config=pierre-ia&context=default">Demandez-lui en mode 'Généraliste'</a>
+            <a href="?config=default">Demandez-lui en mode 'Généraliste'</a>
             comment obtenir un logement social, interrogez-le sur l'histoire du logement social, le
             Ministre, la loi SRU, sur les APL...
           </li>
@@ -322,16 +309,16 @@
       }
 
       const config = getQueryParam('config')
-      const context = getQueryParam('context')
 
-      const configs = ['granddijonhabitat', 'actionlogement']
+      const configs = ['default', 'demo_client', 'demo_team']
       const pierreElement = document.querySelector('#pierre')
 
       if (pierreElement) {
-        const configClass = configs.includes(config) ? config : 'pierre-ia'
+        const configClass = configs.includes(config) ? config : 'default'
         pierreElement.classList.add(configClass)
-        const realConfig = configs.includes(config) ? config + '.fr' : 'pierre-ia.org'
-        const srcURL = `https://assistant.pierre-ia.org/c/${self.crypto.randomUUID()}?config=${realConfig}&context=${context}`
+        const realConfig = configs.includes(config) ? config : 'default'
+        const srcURL = `https://assistant.pierre-ia.org/c?config=${realConfig}`
+        console.log(srcURL)
         pierreElement.src = srcURL
       } else {
         console.error("Element with id 'pierre' not found.")
