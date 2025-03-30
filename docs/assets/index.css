@@ -213,7 +213,7 @@ main {
   }
 }
 
-.pierre-ia {
+.default {
   border: 2px solid #00f;
   border-radius: 8px;
   box-shadow:
@@ -230,7 +230,7 @@ main {
     0 0.8em 2.8em -2em rgba(15, 33, 50, 0.5);
 }
 
-.granddijonhabitat {
+.demo_client {
   border: 3px solid #ffa937;
   border-radius: 7px;
   box-shadow:
@@ -247,7 +247,7 @@ main {
     0 0.8em 2.8em -2em rgba(15, 33, 50, 0.5);
 }
 
-.domofrance {
+.demo_team {
   border: 2px solid #003e7a;
   border-radius: 6px;
   box-shadow:
@@ -256,24 +256,6 @@ main {
     15px 15px rgba(0, 62, 122, 0.2),
     20px 20px rgba(0, 62, 122, 0.1),
     25px 25px rgba(0, 62, 122, 0.05),
-    0 0 0 1px rgba(15, 33, 50, 0.05),
-    0 0.1em 2.8em -0.8em rgba(15, 33, 50, 0.1),
-    0 0.2em 3.2em -1.2em rgba(15, 33, 50, 0.2),
-    0 0.4em 2em -1.2em rgba(15, 33, 50, 0.3),
-    0 0.6em 2.4em -1.6em rgba(15, 33, 50, 0.4),
-    0 0.8em 2.8em -2em rgba(15, 33, 50, 0.5);
-}
-
-.actionlogement {
-  border: 3px solid #003e7a;
-  border-radius: 6px;
-  box-shadow:
-    0 0 0 1px rgba(32, 28, 51, 0.02),
-    0 0.2em 1.6em -0.8em rgba(32, 28, 51, 0.2),
-    0 0.4em 2.4em -1.2em rgba(32, 28, 51, 0.3),
-    0 0.4em 0.8em -1.2em rgba(32, 28, 51, 0.4),
-    0 0.8em 1.2em -1.6em rgba(32, 28, 51, 0.5),
-    0 1.2em 1.6em -2em rgba(32, 28, 51, 0.6),
     0 0 0 1px rgba(15, 33, 50, 0.05),
     0 0.1em 2.8em -0.8em rgba(15, 33, 50, 0.1),
     0 0.2em 3.2em -1.2em rgba(15, 33, 50, 0.2),
