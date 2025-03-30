@@ -170,7 +170,7 @@ Adresser un email à charnould@pierre-ia.org.
 Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour Linux).
 
 1. Installer `WSL` et vérifier sa bonne installation ([instructions](https://learn.microsoft.com/fr-fr/windows/wsl/install)).
-2. Installer `Bun` (≥ `1.2.3`) et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
+2. Installer `Bun` (≥ `1.2.9`) et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
 3. Installer `SQlite3`([instructions](https://www.sqlite.org/download.html)).
 4. Forker/cloner le présent dépôt.
 5. Lancer `bun install` dans votre terminal pour installer les dépendances.
@@ -183,7 +183,7 @@ Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour
 Pour déployer PIERRE sur un serveur, il est indispensable d'être parvenu à le faire fonctionner en local.
 
 1. Installer `Docker Desktop` et le lancer ([instructions](https://www.docker.com/products/docker-desktop/)). `Docker` gérera la conteneurisation.
-2. Lancer `gem install kamal` pour installer `Kamal` (≥`2.5.0`) qui gérera le déploiement ([instructions](https://kamal-deploy.org/docs/installation/)).
+2. Lancer `gem install kamal` pour installer `Kamal` (≥`2.5.2`) qui gérera le déploiement ([instructions](https://kamal-deploy.org/docs/installation/)).
 3. Disposer d'un compte `GitHub` et [générer une clef](https://github.com/settings/tokens). `GitHub` sera le registre de conteneurs lors du déploiement.
 4. Disposer d'un VPS (par exemple `CX22` d'[Hetzner](https://www.hetzner.com/cloud/)) et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
 5. Finaliser les modifications du fichier `.env.production` que vous avez créé précédemment.
@@ -221,28 +221,25 @@ Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE :
 # Modifier et paramétrer PIERRE (self-hosting)
 
 > [!NOTE]
-> Dans les instructions ci-dessous, nous considérons un bailleur social fictif nommé `Pierre Habitat` dont le site institutionnel est accessible à `pierre-habitat.fr` et qui a déployé sa propre version de PIERRE à l'adresse/IP `180.81.82.83`, et le scénario `en_agence`.
+> Dans les instructions ci-dessous, nous considérons un bailleur social fictif nommé `Pierre Habitat` dont le site institutionnel est accessible à `pierre-habitat.fr` et qui a déployé sa propre version de PIERRE à l'adresse/IP `180.81.82.83`.
 
 ## Modifier l'interface du chatbot
 
 <img src="docs/assets/images/personnalisation-de-pierre.webp" height="400">
 
-1. Dans le répertoire `./assets`, dupliquer le dossier `pierre-ia.org` et le nommer `pierre-habitat.fr`. Les consignes suivantes s'appliquent à ce nouveau répertoire.
-2. Supprimer les sous-répertoires `/dist`, `/fonts`, `/scripts`, `/tailwind`.
+1. Dans le répertoire `./assets`, supprimer les répertoires `demo_client`, `demo_team` et `testing_purpose`, puis dupliquer le dossier `default` et le nommer `pierre-habitat`. Les consignes suivantes s'appliquent à ce nouveau répertoire.
+2. Supprimer les sous-répertoires `/dist`, `/files`, `/scripts`, `/tailwind`.
 3. Créer une icône `system.svg` et remplacer la précédente. Cette icône est celle qui apparait dans l'interface du chatbot (au dessus de « Bonjour 👋 »).
-4. [Générer les icônes](https://www.pwabuilder.com/imageGenerator) qui permettront d'ajouter votre chatbot sur l'écran d'accueil des smartphones de vos utilisateurs et remplacer celles dans le dossier `icons`. Conservez la structure du répertoire et le nommage des fichiers (automatique).
+4. [Générer les icônes](https://www.pwabuilder.com/imageGenerator) qui permettront d'ajouter votre chatbot sur l'écran d'accueil des smartphones de vos utilisateurs et remplacer celles dans le dossier `icons` (les icônes Windows ne sont pas nécessaires). Conservez la structure du répertoire et le nommage des fichiers (automatique).
 5. Modifier `config.ts` :  
-   – `id` avec `pierre-habitat.fr`  
-   – `context.default.greeting` qui est le message d'accueil de votre chatbot  
-   – `context.default.examples` qui sont les exemples proposés après votre message d'accueil  
-   – `context.default.disclaimer` qui est le message s'affichant après chaque réponse générée (ex : _Une IA peut se tromper, vérifier les informations._)  
-   – `context.en_agence` pour créer des scénarios/personnalités supplémentaires.
+   – `id` avec `pierre-habitat`  
+   – `greeting` qui est le message d'accueil de votre chatbot  
+   – `examples` qui sont les exemples proposés après votre message d'accueil  
+   – `disclaimer` qui est le message s'affichant après chaque réponse générée (ex : _Une IA peut se tromper, vérifier les informations._).
 6. Modifier dans `manifest.json` :  
    – `short_name` par le nom souhaité de votre chatbot  
-   – `start_url` par `https://180.81.82.83/?config=pierre-habitat.fr&context=en_agence`
-7. Et voilà, votre chabot personnalisé est disponible à :  
-   – http://localhost:3000/?config=pierre-habitat.fr  
-   – http://localhost:3000/?config=pierre-habitat.fr&context=en_agence
+   – `start_url` par `https://180.81.82.83/?config=pierre-habitat`
+7. Et voilà, votre chabot personnalisé est disponible à http://localhost:3000/?config=pierre-habitat
 
 > [!TIP]
 > Pour vous assurer que `config.ts` est correctement paramétré, notamment lors des montées de version qui peuvent en modifier la structure, lancer `bun pierre:config`.
@@ -253,8 +250,8 @@ Si vous avez à ce stade personnalisé visuellement votre chatbot (_cf_. supra),
 
 Pour modifier cela, modifier dans le fichier `config.ts` :
 
-- `context.default.persona` qui définit l'identité et la personnalité du chatbot
-- `context.default.audience` qui définit le contexte dans lequel le chabot doit considérer son interlocuteur
+- `persona` qui définit l'identité et la personnalité du chatbot
+- `audience` qui définit le contexte dans lequel le chabot doit considérer son interlocuteur
 
 > [!NOTE]
 > Pour faciliter la lecture et manipulation du fichier `config.ts` dans VSCode, ou plus généralement activer le _word wrap_ : utilisez le raccourci `Alt` + `z` (Windows) ou `⌥` + `z` (Mac).
@@ -268,7 +265,7 @@ Pour modifier cela, modifier dans le fichier `config.ts` :
 
 Pour modifier les modèles, il suffit de :
 
-- Modifier `models` pour chaque `context` dans votre fichier `config.ts` par la valeur souhaitée. Il est fortement recommandé d'utiliser un modèle peu cher pour le `reranker` qui est consommateur de tokens (ex : `gpt-4o-mini-2024-07-18` d'OpenAI ou équivalent).
+- Modifier `models` dans votre fichier `config.ts` par la valeur souhaitée. Il est fortement recommandé d'utiliser un modèle peu cher pour le `reranker` qui est consommateur de tokens (ex : `gpt-4o-mini-2024-07-18` d'OpenAI ou équivalent).
 - Renseigner la clef d'API correspondante dans les variables d'environnement (`.env.production`). **Attention**, il faut a minima et impérativement disposer d'une clef `OpenAI` pour la génération d'`embeddings`.
 
 ### Quels modèles est-il possible d'utiliser ?
@@ -285,15 +282,11 @@ Pour accélérer l'inférence, c'est-à-dire la vitesse des réponses, il est po
 ### Via une fenêtre modale
 
 ```html
-<script
-  crossorigin="anonymous"
-  src="http://180.81.82.83/assets/pierre-ia.org/dist/js/widget.js"
-></script>
+<script crossorigin="anonymous" src="http://180.81.82.83/assets/default/dist/js/widget.js"></script>
 <p
   id="pierre-ia"
   data-url="http://180.81.82.83"
-  data-configuration="pierre-habitat.fr"
-  data-context="default"
+  data-configuration="pierre-habitat"
   style="
         right: 20px;
         bottom: 20px;
@@ -316,8 +309,7 @@ avec :
 - `style` : le style CSS du bouton (libre à vous de le modifier)
 - `180.81.82.83` dans l'URL du script le domaine/IP du serveur où le script est accessible
 - `data-url` : le domaine/IP (sans slash de fin) du serveur où PIERRE est accessible
-- `data-context` : le scénario (ou la personnalité) qu'utilise PIERRE
-- `data-configuration` : le nom de domaine de votre organisme qui est également le nom du répertoire que vous avez créé plus tôt dans `./assets` (_cf._ supra) ou `pierre-ia.org` pour la version par défaut.
+- `data-configuration` : le nom de domaine de votre organisme qui est également le nom du répertoire que vous avez créé plus tôt dans `./assets` (_cf._ supra) ou `default` pour la version par défaut.
 
 ### Via une iframe
 
@@ -328,7 +320,7 @@ avec :
   style="..."
   width="450"
   height="620"
-  src="http://180.81.82.83/?config=pierre-ia.org&context=default"
+  src="http://180.81.82.83/?config=pierre-habitat"
 >
 </iframe>
 ```
@@ -336,7 +328,7 @@ avec :
 avec :
 
 - `style` : le style CSS de l'iframe (libre à vous de le modifier)
-- `src` : l'URL d'accès à PIERRE (libre à vous de modifier `config` et `context`)
+- `src` : l'URL d'accès à PIERRE (libre à vous de modifier `config`)
 
 ## Paramétrer PIERRE pour l'utiliser par SMS
 
@@ -366,7 +358,7 @@ PIERRE dispose — en fait — de deux bases de connaissances :
 
 1. Se connecter à https://180.81.82.83/a, puis cliquer sur `Encyclopédie`.
 2. Télécharger `_metadata.xlsx`, le compléter **scrupuleusement** et le ré-uploader avec les fichiers associés. Seuls les `.docx` (Word), `.xlsx` (Excel) et `.md` (Markdown) sont acceptés.
-3. **Indispensable** : [Configurer](https://github.com/charnould/pierre/blob/master/assets/pierre-ia.org/config.ts#L73) vos `context` dans `config.ts` de manière à permettre l'utilisation des connaissances `proprietary` et protéger votre `context` s'il utilise des données `privées`/`private`.
+3. **Indispensable** : [Configurer](https://github.com/charnould/pierre/blob/master/assets/pierre-ia.org/config.ts#L73) `config.ts` de manière à permettre l'utilisation des connaissances `proprietary` et le protéger s'il utilise des données `privées`/`private`.
 4. C'est tout. Toutes les nuits aux alentours de 4h du matin, la base de connaissances sera automatiquement reconstruite (il est impératif que vos variables d'environnement contiennent une clef d'API `OpenAI`).
 
 # License
