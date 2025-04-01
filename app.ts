@@ -61,30 +61,25 @@ CronJob.from({
 app.get('/assets/:domain/config.ts', (c) => c.notFound())
 app.use('/assets/*', serveStatic({ root: './' }))
 
-// prettier-ignore
-// biome-ignore format: readability
-// biome-ignore lint: readability
-{
-  // AI generation routes
-  app.get('/c'                , authenticate, get_index)
-  app.get('/ai'                             , get_ai) // TODO: need to check for auth?
-  app.post('/sms'                           , get_ai)
-  
-  // Admin routes
-  app.get('/a'                , authenticate, get_admin)
-  app.get('/a/users'          , authenticate, get_users)
-  app.get('/a/knowledge'      , authenticate, get_knowledge)
-  app.post('/a/knowledge'     , authenticate, post_knowledge)
-  app.get('/a/performance'    , authenticate, get_performance)
-  app.get('/a/conversations'  , authenticate, get_conversations)
-  app.post('/a/conversations' , authenticate, post_conversation)
-  app.post('/a/users'         , authenticate, post_users)
-  app.get('/a/login'                        , get_login)
-  app.post('/a/login'                       , post_login)
-}
+// AI generation routes
+app.get('/c', authenticate, get_index)
+app.get('/ai', get_ai) // TODO: need to check for auth?
+app.post('/sms', get_ai)
 
-// Catch-all route that redirects to a new conversation with
-// a randomly generated ID and optional query parameters
+// Admin routes
+app.get('/a/login', get_login)
+app.get('/a', authenticate, get_admin)
+app.get('/a/users', authenticate, get_users)
+app.get('/a/knowledge', authenticate, get_knowledge)
+app.get('/a/performance', authenticate, get_performance)
+app.get('/a/conversations', authenticate, get_conversations)
+
+app.post('/a/login', post_login)
+app.post('/a/users', authenticate, post_users)
+app.post('/a/knowledge', authenticate, post_knowledge)
+app.post('/a/conversations', authenticate, post_conversation)
+
+// Catch-all route that redirects to a new conversation
 app.notFound(async (c) =>
   c.redirect(`/c?config=${c.req.query('config')}&data=${c.req.query('data')}`)
 )
