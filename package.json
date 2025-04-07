@@ -10,7 +10,7 @@
     "transpile": "bun build --entrypoints assets/default/scripts/*.ts --outdir assets/default/dist/js --minify --target browser --watch",
     "format": "bunx prettier '!**/*.js' '!assets/default/dist' --write . --plugin=prettier-plugin-tailwindcss",
     "lint": "bunx @biomejs/biome check --write --unsafe . --config-path=config/biome.jsonc",
-    "css": "bunx @tailwindcss/cli@next -i assets/default/tailwind/style.css -o assets/default/dist/css/style.css --minify --watch",
+    "css": "bunx @tailwindcss/cli@latest -i assets/default/tailwind/style.css -o assets/default/dist/css/style.css --minify --watch",
     "generate": "NODE_ENV=production bun run ./utils/knowledge/_run.ts --community ",
     "――――――― LLM EVAL + TEST COMMANDS ―――――――": "―――――――",
     "eval:reranker": "NODE_ENV=production bun test eval-reranker --watch --timeout 30000",
