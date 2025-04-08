@@ -47,34 +47,6 @@ export const augment_query = async (context: AIContext) => {
   ]
 
   // Prompt checked on february 2 2025
-  const user: CoreMessage[] = [
-    ...context.conversation,
-    {
-      role: 'assistant',
-      content: dedent`
-        Summarize solely who the user is in French, focusing on housing-related details extracted from the conversation. The summary should include:
-      
-        -	Name (if mentioned)
-        -	Marital status (e.g., single, married, divorced)
-        -	Children (number and presence if mentioned)
-        -	Residence type (e.g., T1, T2, T3)
-        -	Geographical location (zipcode, department, region)
-        -	Housing status (owned or rented)
-        -	Income (if mentioned)
-        -	Housing preferences or concerns
-        
-        Geographical Details Extraction:
-        -	If a region is mentioned, return its name along with all associated departments.
-        -	If a department is mentioned, return its region and department name.
-        -	If a city is mentioned, return its region, department, city name, and zipcode if known.
-        
-        Output Rules:
-        - Provide no explanations, additional text, or formatting, only output who the user is in French.
-        -	If no relevant information is available, return only 'null' without quotes or extra text.`
-    }
-  ]
-
-  // Prompt checked on february 2 2025
   const standalone_questions: CoreMessage[] = [
     ...context.conversation,
     {
@@ -122,7 +94,6 @@ export const augment_query = async (context: AIContext) => {
   // Generate augmented queries using the specified model
   const results = await Promise.all([
     generate_text({ model: model, messages: lang_and_profanity, max_tokens: 100 }),
-    generate_text({ model: model, messages: user, max_tokens: 150 }),
     generate_text({ model: model, messages: search_queries, max_tokens: 350 }),
     generate_text({ model: model, messages: bm25_keywords, max_tokens: 200 }),
     generate_text({ model: model, messages: standalone_questions, max_tokens: 100 })
@@ -136,14 +107,10 @@ export const augment_query = async (context: AIContext) => {
   const language = extract_tag_value(results[0], 'lang', 'fr')
 
   const augmented_query = Augmented_Query.parse({
-    // Make sur `null` is parsed as `null` and not as a string
-    about_user:
-      results[1].toLowerCase().includes('null') || results[1].trim() === '' ? null : results[1],
-
     // Convert a string with '|' delimiter to an array
-    standalone_questions: convert_to_array(results[4]),
-    search_queries: convert_to_array(results[2]),
-    bm25_keywords: convert_to_array(results[3]),
+    standalone_questions: convert_to_array(results[3]),
+    search_queries: convert_to_array(results[1]),
+    bm25_keywords: convert_to_array(results[2]),
 
     // Convert the profanity check to a boolean
     contains_profanity: typeof profanity === 'string' ? !!profanity.includes('true') : false,

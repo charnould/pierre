@@ -48,7 +48,6 @@
   },
   "query": {
     "lang": "fr",
-    "about_user": "",
     "contains_profanity": false,
     "standalone_questions": [
       "Qu'est-ce que l'enquête SLS ?",
