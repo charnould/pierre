@@ -76,8 +76,7 @@ export const answer_user = async (context: AIContext, options: { is_sms: boolean
 
       # YOUR AUDIENCE
 
-      - ${typeof context.config !== 'string' ? context.config.audience : ''}.
-      ${context.query?.about_user !== null ? `- About user: ${context.query?.about_user}` : null}
+      - ${typeof context.config !== 'string' ? context.config.context[`${context.current_context}`].audience : ''}.
 
       # CONTEXT
 
