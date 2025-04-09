@@ -34,6 +34,7 @@ export type Knowledge = z.infer<typeof Knowledge>
 export const execute_pipeline = async (knowledge: Knowledge) => {
   try {
     if (knowledge.community === true || knowledge.proprietary === true) {
+      const to = performance.now()
       await remove_outdated_data(knowledge)
       await scrape_wikipedia(knowledge)
       await store_metadata(knowledge)
@@ -43,6 +44,8 @@ export const execute_pipeline = async (knowledge: Knowledge) => {
       await chunk_markdown(knowledge)
       await generate_embeddings(knowledge)
       await $`rm -rf ./datastores/${Bun.env.SERVICE}/__temp__`
+      const t1 = performance.now()
+      console.log(`Pipeline completed in ${((t1 - to) / 1000).toFixed(2)}s`)
     }
     return
   } catch (error) {
