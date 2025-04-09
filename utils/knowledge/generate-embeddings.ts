@@ -1,13 +1,23 @@
 import type Database from 'bun:sqlite'
-import { openai } from '@ai-sdk/openai'
-import { embedMany } from 'ai'
 import _ from 'lodash'
 import { z } from 'zod'
 import { generate_hash } from '../../utils/knowledge/generate-hash'
 import { db } from '../database'
+import { generate_embeddings_with_ollama } from '../search-by-vectors'
 import type { Knowledge } from './_run'
 
-export const generate_embeddings = async (knowledge: Knowledge) => {
+/**
+ * Generates embeddings for the provided knowledge object.
+ *
+ * This function generates and saves embeddings for both `community` and `proprietary` knowledge types.
+ * It queries the database for chunks and processes them accordingly.
+ *
+ * @param {Knowledge} knowledge - The knowledge object containing information about the type of knowledge.
+ * @returns {Promise<void>} A promise that resolves when the embeddings have been successfully generated.
+ *
+ * @throws Will log an error message if the embeddings generation fails.
+ */
+export const generate_embeddings = async (knowledge: Knowledge): Promise<void> => {
   try {
     // Generate and save `community` embeddings
     if (knowledge.community === true) {
@@ -41,25 +51,23 @@ export const generate_embeddings = async (knowledge: Knowledge) => {
   }
 }
 
-//
-//
-//
-//
-// This function does the main job:
-// (1) generate embeddings
-// (2) save them in DB
+/**
+ * Processes an array of text chunks, generates embeddings for each chunk, and inserts them into the database.
+ *
+ * @param query - An array of `Chunk` objects, each containing text to be processed.
+ * @param database - The `Database` instance where the embeddings will be stored.
+ * @returns A promise that resolves when all chunks have been processed and inserted into the database.
+ */
 const go = async (query: Chunk[], database: Database) => {
-  for await (const group of _.chunk(query, 100)) {
-    const chunk_texts = group.map((item) => item.chunk_text)
-    const chunk_text_vectors = await get_embeddings(chunk_texts)
+  for await (const c of query) {
+    const to = performance.now()
+    const chunk_vector = await generate_embeddings_with_ollama([c.chunk_text], false)
+    const t1 = performance.now()
+    console.log(t1 - to, 'ms')
 
-    const vectors = group.map((item, index) => ({
-      chunk_vector: chunk_text_vectors[index],
-      chunk_stem: item.chunk_stem,
-      chunk_text: item.chunk_text
-    }))
-
-    for (const v of vectors) {
+    if (chunk_vector.error) {
+      console.error(chunk_vector.error)
+    } else {
       database
         .prepare(
           `
@@ -67,31 +75,19 @@ const go = async (query: Chunk[], database: Database) => {
           VALUES (?, ?, vec_f32(?))
           `
         )
-        .run(generate_hash(v.chunk_text), v.chunk_text, new Float32Array(v.chunk_vector))
+        .run(generate_hash(c.chunk_text), c.chunk_text, new Float32Array(chunk_vector))
     }
   }
   return
 }
 
-//
-//
-//
-//
-// Helper to generate embeddings
-async function get_embeddings(data: string[]) {
-  const { embeddings } = await embedMany({
-    model: openai.embedding('text-embedding-3-large'),
-    values: data
-  })
-
-  return embeddings
-}
-
-//
-//
-//
-//
-// Zod schema/TS type
+/**
+ * Represents a chunk of text with associated metadata.
+ *
+ * @property {string} chunk_hash - A unique hash identifying the chunk.
+ * @property {string} chunk_text - The actual text content of the chunk.
+ * @property {string} chunk_stem - The stemmed version of the chunk text.
+ */
 export const Chunk = z.object({
   chunk_hash: z.string(),
   chunk_text: z.string(),
