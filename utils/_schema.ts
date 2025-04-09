@@ -130,11 +130,11 @@ export const Reply = z.object({
 //
 // Structured JSON LLM must output for each request
 export const Augmented_Query = z.object({
-  lang                      : z.string(),
-  contains_profanity        : z.boolean(),
-  standalone_questions      : z.array(z.string()),
-  bm25_keywords             : z.array(z.string()),
-  search_queries            : z.array(z.string()),
+  lang: z.string(),
+  contains_profanity: z.boolean(),
+  standalone_questions: z.array(z.string()),
+  bm25_keywords: z.array(z.string()),
+  search_queries: z.array(z.string())
 })
 
 //
