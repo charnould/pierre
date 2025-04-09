@@ -318,7 +318,6 @@
         pierreElement.classList.add(configClass)
         const realConfig = configs.includes(config) ? config : 'default'
         const srcURL = `https://assistant.pierre-ia.org/c?config=${realConfig}`
-        console.log(srcURL)
         pierreElement.src = srcURL
       } else {
         console.error("Element with id 'pierre' not found.")
