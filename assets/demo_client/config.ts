@@ -5,7 +5,6 @@ export default {
   custom_data: {},
   api: [],
   models: {
-    embed_with: 'text-embedding-3-large',
     augment_with: "openai('gpt-4o-mini-2024-07-18')",
     rerank_with: "openai('gpt-4o-mini-2024-07-18')",
     answer_with: "openai('gpt-4o-mini-2024-07-18')"

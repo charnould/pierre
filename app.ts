@@ -22,6 +22,7 @@ import {
   score_conversation_with_ai
 } from './utils/categorize-and-score-conversation'
 import { execute_pipeline } from './utils/knowledge/_run'
+import { ollama_check } from './utils/ollama-check'
 
 const app = new Hono()
 
@@ -34,6 +35,9 @@ app.use(
     crossOriginResourcePolicy: false
   })
 )
+
+// Check Ollama status + preload models
+ollama_check()
 
 // Initiate cronjobs
 
