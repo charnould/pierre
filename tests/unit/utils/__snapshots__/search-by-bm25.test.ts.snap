@@ -3,7 +3,7 @@
 exports[`should search using bm25 1`] = `
 [
   {
-    "chunk_hash": "d719FLetDPkaXmOEnTjE",
+    "chunk_hash": "kfnJSOsTPYdnqrIrVq9v",
     "chunk_text": 
 "# Valérie Létard
 
@@ -101,6 +101,8 @@ Dans le gouvernement Michel Barnier, constitué le 21 septembre 2024, elle est n
 
 En tant que ministre, elle souhaite développer le prêt à taux zéro, construire davantage de logements sociaux (16 000 logements sociaux supplémentaires pour 2027) et simplifier le droit de l’urbanisme. Elle déclare vouloir une baisse du taux du Livret A pour « donner une respiration aux bailleurs sociaux ». Elle veut aussi défiscaliser les donations aux enfants et petits-enfants afin de mobiliser davantage « les capitaux dormants ».
 
+En avril 2025, elle effectue une tournée de deux jours en Martinique afin de « renforcer la collaboration entre l'État et les acteurs locaux, de simplifier les procédures et de mobiliser davantage de ressources, notamment en matière de foncier et d’ingénierie, pour accélérer la production de logements et garantir un accès équitable à tous ».
+
 ## Détail des mandats et fonctions
 
 ### Mandats et nominations actuels
@@ -166,7 +168,7 @@ En tant que ministre, elle souhaite développer le prêt à taux zéro, construi
 - Portail du Nord-Pas-de-Calais
 "
 ,
-    "distance": -14.152911006515694,
+    "distance": -14.041330894458962,
   },
 ]
 `;
