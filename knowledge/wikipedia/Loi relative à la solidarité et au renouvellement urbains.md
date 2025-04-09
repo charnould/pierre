@@ -1,6 +1,6 @@
 # Loi relative à la solidarité et au renouvellement urbains
 
-La loi no 2000-1208 du 13 décembre 2000 relative à la solidarité et au renouvellement urbain, couramment appelée loi SRU, est une loi française qui a modifié en profondeur le droit de l'urbanisme et du logement en France. Adoptée sous le gouvernement Lionel Jospin et portée par le ministre de l'Équipement et du Logement, le communiste Jean-Claude Gayssot, elle est publiée au Journal officiel du 14 décembre 2000.
+La loi no 2000-1208 du 13 décembre 2000 relative à la solidarité et au renouvellement urbains, couramment appelée loi SRU, est une loi française qui a modifié en profondeur le droit de l'urbanisme et du logement en France. Adoptée sous le gouvernement Lionel Jospin et portée par le ministre de l'Équipement et du Logement, le communiste Jean-Claude Gayssot, elle est publiée au Journal officiel du 14 décembre 2000.
 
 Son article le plus notoire est l'article 55, codifié aux articles L. 302-5 et suivants du code de la construction et de l'habitation, qui impose aux communes importantes (plus de 1 500 habitants en Île-de-France, et plus de 3 500 habitants pour les autres régions), qui sont comprises dans une agglomération de plus de 50 000 habitants comprenant au moins une commune de plus de 15 000 habitants, de disposer d'au moins 20 % de logements sociaux. Ce taux est porté à 25 % par la loi du 18 janvier 2013 relative à la mobilisation du foncier public en faveur du logement et au renforcement des obligations de production de logement social, dite loi Duflot I.
 
