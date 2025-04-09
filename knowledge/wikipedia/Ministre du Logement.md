@@ -2,7 +2,7 @@
 
 Le ministre du Logement et de la Rénovation urbaine est membre du gouvernement français.
 
-L'actuel ministre du Logement et de la Rénovation urbaine est Valérie Létard en fonction depuis le 21 septembre 2024.
+L'actuelle ministre du Logement et de la Rénovation urbaine est Valérie Létard en fonction depuis le 21 septembre 2024.
 
 ## Historique
 

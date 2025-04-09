@@ -173,7 +173,7 @@ Promulguée le 24 mars 2014, la Loi pour l'accès au logement et un urbanisme r�
 ### Liens externes
 
 - Chronologie de la politique du logement social en France
-- Quelques dates de l’histoire du logement social...
+- Quelques dates de l’histoire du logement social…
 - Liste des cités ouvrières en France répertoriées dans la base Mérimée du Ministère de la Culture
 - Collection de photographies relatives aux cités ouvrières en France
 
