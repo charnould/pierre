@@ -87,7 +87,7 @@ export const chunk_json = async (knowledge: Knowledge) => {
             // If chunk gonna be too big for embeddigs model (8191)
             // TODO:  Why my token count is the one by openAI differs?
             //        If I put 8191 below, API throws.
-            if (potentiel_token_count > 7_100) {
+            if (potentiel_token_count > 6_500) {
               // Save chunk
               save_chunk(
                 {
