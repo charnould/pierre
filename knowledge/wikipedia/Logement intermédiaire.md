@@ -20,9 +20,9 @@ La relance du logement locatif intermédiaire est désormais clairement affirmé
 
 Les objectifs autour du logement intermédiaire sont divers :
 
-- Soutenir les politiques publiques de l’habitat, de l’urbanisme.
-- Relancer la construction en développant la production de logements dans un contexte difficile.
-- Accompagner les collectivités locales et les entreprises pour loger les salariés de la classe moyenne.
+- Soutenir les politiques publiques de l’habitat, de l’urbanisme ;
+- Relancer la construction en développant la production de logements dans un contexte difficile ;
+- Accompagner les collectivités locales et les entreprises pour loger les salariés de la classe moyenne ;
 - Veiller au bien-être des résidents avec des résidences de qualité répondant aux dernières normes environnementales et construites au plus près des bassins d’emplois.
 
 ## Les bailleurs historiques
