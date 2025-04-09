@@ -65,7 +65,7 @@ Il existe 12 associations régionales en métropole\[Quand ?\] et une associati
 ### Articles connexes
 
 - Logement social
-- Habitation à loyer modéré
+- Habitation à loyer modéré (France)
 - Organisme d'habitations à loyer modéré
 
 ### Liens externes

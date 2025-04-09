@@ -89,9 +89,9 @@ Depuis le 1er janvier 2009, les sociétés anonymes de crédit immobilier (SACI)
 
 ### Articles connexes
 
-- Logement social
+- Logement social en France
 - Agence nationale de contrôle du logement social (ANCOLS)
-- Habitation à loyer modéré
+- habitation à loyer modéré (France)
 - Coopérative d'habitation
 - Glossaire de l'immobilier
 
