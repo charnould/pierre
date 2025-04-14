@@ -1,10 +1,9 @@
 /** Initial state */
 let pierre_is_open = false
 let configuration: string
-let context: string
 let url: string
 let pierre_button: HTMLElement & {
-  dataset: { configuration: string; context: string; url: string }
+  dataset: { configuration: string; url: string }
 }
 
 /**
@@ -21,11 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const pierre_button = document.getElementById('pierre-ia')
   configuration = pierre_button?.dataset.configuration ?? 'default'
-  context = pierre_button?.dataset.context ?? 'default'
   url = pierre_button?.dataset.url ?? 'https://assistant.pierre-ia.org'
 
   const preloaded_iframe = document.createElement('iframe')
-  preloaded_iframe.src = `${url}/?config=${configuration}&context=${context}`
+  preloaded_iframe.src = `${url}/?config=${configuration}`
   preloaded_iframe.style.display = 'none'
   preloaded_iframe.id = 'pierre-iframe'
   document.body.appendChild(preloaded_iframe)

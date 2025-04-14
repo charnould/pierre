@@ -13,9 +13,7 @@ export const bm25_search = (keyword: string, context: AIContext) => {
     // Retrieve knowledge access permissions for the current context
     // (e.g., default, team, etc.) + Set a default for TS happiness
     let k = { community: true, proprietary: { public: false, private: false } }
-    if (typeof context.config !== 'string' && 'context' in context.config) {
-      k = context.config.knowledge
-    }
+    if (typeof context.config !== 'string') k = context.config.knowledge
 
     // Initialize the bm25 search results (format
     // must be the same as Vector_Search_Result)

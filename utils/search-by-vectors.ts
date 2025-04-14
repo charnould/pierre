@@ -22,9 +22,7 @@ export const vector_search = async (embedding: EmbeddingModelV1Embedding, contex
     // (e.g., default, team, etc.) + Set a default for TS happiness
     let k = { community: true, proprietary: { public: false, private: false } }
 
-    if (typeof context.config !== 'string' && 'context' in context.config) {
-      k = context.config.knowledge
-    }
+    if (typeof context.config !== 'string') k = context.config.knowledge
 
     // Initialize the vector search results
     const r: Vector_Search_Result = { community: [], private: [], public: [] }
