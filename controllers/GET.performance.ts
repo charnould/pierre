@@ -64,8 +64,8 @@ export const controller = async (c: Context) => {
  */
 const StatisticOptions = z.object({
   window: z.enum(['last_1h', 'last_24h', 'last_30d', 'last_365d']).catch('last_30d'),
-  color: z.enum(['user_score', 'org_score', 'ai_score', 'config', 'topic']).catch('org_score'),
-  facet: z.enum(['user_score', 'org_score', 'ai_score', 'config', 'topic']).nullable().catch(null),
+  color: z.enum(['user', 'user_score', 'org_score', 'ai_score', 'config', 'topic']).catch('org_score'),
+  facet: z.enum(['user', 'user_score', 'org_score', 'ai_score', 'config', 'topic']).nullable().catch(null),
   action: z.enum(['visualize', 'download']).catch('visualize')
 })
 
@@ -124,6 +124,8 @@ export const get_data = (options: StatisticOptions): string => {
 
       const topic = metadata.topics
 
+      const user = metadata.user
+
       const user_score =
         metadata.evaluation.customer?.score === null
           ? 'Non noté'
@@ -143,6 +145,7 @@ export const get_data = (options: StatisticOptions): string => {
           last_24h,
           last_30d,
           last_365d,
+          user,
           user_score,
           org_score,
           ai_score,

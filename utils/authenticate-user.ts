@@ -69,6 +69,7 @@ export const authenticate = async (c: Context, next: Next) => {
     // Case 2: Context not protected
     // If the context is not protected, proceed to the next middleware
     if (is_protected === false) {
+      c.set('user', user)
       return await next()
     }
 
@@ -132,6 +133,10 @@ export const authenticate = async (c: Context, next: Next) => {
     c.set('user', user)
     return await next()
   }
+
+  c.set('user', user)
+  return await next()
+
 }
 
 //

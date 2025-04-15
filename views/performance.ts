@@ -127,6 +127,9 @@ export const view = (data, options: StatisticOptions) => {
             <option value="user_score" ${options.color === 'user_score' ? 'selected' : null}>
               score-utilisateur
             </option>
+                        <option value="user" ${options.color === 'user' ? 'selected' : null}>
+              utilisateur
+            </option>
             <option value="org_score" ${options.color === 'org_score' ? 'selected' : null}>
               score-organisme
             </option>
@@ -152,6 +155,9 @@ export const view = (data, options: StatisticOptions) => {
 
             <option value="user_score" ${options.facet === 'user_score' ? 'selected' : null}>
               segmentées par score-utilisateur
+            </option>
+                        <option value="user" ${options.facet === 'user' ? 'selected' : null}>
+              segmentées par utilisateur
             </option>
             <option value="org_score" ${options.facet === 'org_score' ? 'selected' : null}>
               segmentées par score-organisme
