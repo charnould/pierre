@@ -103,7 +103,7 @@ export default {
     // les plus pertinents retournés par le reranker.
     // Pour minimiser les coûts : openai('gpt-4o-mini-2024-07-18') ou équivalent.
     // Pour maximiser l'intelligence : openai('gpt-4o-2024-11-20') ou équivalent.
-    answer_with: "openai('gpt-4o-mini-2024-07-18')"
+    answer_with: "openai('gpt-4.1-mini')"
   },
 
   // Le numéro de téléphone qui permet d'utiliser PIERRE via SMS.
