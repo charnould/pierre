@@ -5,10 +5,9 @@ export default {
   custom_data: {},
   api: [],
   models: {
-    embed_with: 'text-embedding-3-large',
-    augment_with: "openai('gpt-4o-mini-2024-07-18')",
+    augment_with: "groq('llama-3.3-70b-versatile')",
     rerank_with: "openai('gpt-4o-mini-2024-07-18')",
-    answer_with: "openai('gpt-4o-mini-2024-07-18')"
+    answer_with: "openai('gpt-4.1-mini')"
   },
   phone: null,
   protected: false,
