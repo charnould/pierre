@@ -69,7 +69,7 @@ export default {
   // Voir https://github.com/charnould/pierre?tab=readme-ov-file#modèles-de-langage-ou-llm
   // pour plus d'informations sur les modèles de langage utilisés par PIERRE et leur fonction.
   //
-  // Ci-après, une liste non-exhaustives de modèles utilisables (hors embeddings):
+  // Ci-après, une liste non-exhaustives de modèles utilisables :
   // - "cohere('command-r-plus')",
   // - "mistral('mistral-large-latest')",
   // - "mistral('mistral-small-latest')",
@@ -80,17 +80,13 @@ export default {
   // - "openai('gpt-4o-2024-11-20')",
   // - "togetherai('meta-llama/Llama-3.3-70B-Instruct-Turbo')"
   // - "groq('llama-3.3-70b-versatile')"
+  // - "groq('meta-llama/llama-4-maverick-17b-128e-instruct')"
   // - "cerebras('llama3.1-8b')"
   models: {
-    // Les embeddings sont des représentations vectorielles
-    // de textes qui en capturent le sens sémantique.
-    // IMPORTANT : NE PAS MODIFIER CE MODÈLE.
-    embed_with: 'text-embedding-3-large',
-
     // Le modèle utilisé pour augmenter/enrichir les requêtes de l'utilisateur.
     // Pour minimiser les coûts : openai('gpt-4o-mini-2024-07-18') ou équivalent.
     // Pour maximiser l'intelligence : openai('gpt-4o-2024-11-20') ou équivalent.
-    augment_with: "openai('gpt-4o-mini-2024-07-18')",
+    augment_with: "groq('llama-3.3-70b-versatile')",
 
     // Le modèle utlisé par le reranker qui s'assure que les éléments de
     // réponses retournés par les bases de connaissances sont pertinents.
