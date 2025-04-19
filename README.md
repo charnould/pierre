@@ -95,7 +95,7 @@ Au fur et à mesure de l'amélioration de la base de connaissances, la pertinenc
 1. Un utilisateur pose une question à PIERRE via le web ou par SMS.
 2. Une première passe de LLM/IA augmente la requête initiale.
 3. Une deuxième passe de LLM/IA s'assure de la validité et sécurité de la requête initiale (ex : impossible d'insulter PIERRE ou d'adresser une question sans lien avec le logement).
-4. La requête validée et augmentée est vectorisée, puis est utilisée pour interroger les bases de connaissances de PIERRE.
+4. La requête validée et augmentée est transformée par un LLM/IA en vecteurs de valeurs numériques qui sont utilisés pour interroger les bases de connaissances de PIERRE.
 5. Les résultats retournés sont _rerankés_ par un LLM/IA pour ne conserver que les plus pertinents.
 6. Une dernière passe de LLM/IA génère une réponse sur la base des résultats retournés, réordonnancés puis _rerankés_ des bases de connaissances.
 7. La réponse est retournée quelques secondes plus tard à l'utilisateur via le web ou par SMS.
@@ -108,15 +108,15 @@ Au fur et à mesure de l'amélioration de la base de connaissances, la pertinenc
 
 PIERRE utilise — à ce jour — plusieurs (passes de) LLM dans cet ordre successif :
 
-1. Un **modèle de génération de `textes`** qui transforme la requête de l'utilisateur en une « requête augmentée » (en utilisant des techniques de type HyDE ou Stepback). Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
+1. Un **modèle de génération de `textes`** qui transforme la requête de l'utilisateur en une « requête augmentée » (en utilisant des techniques de type HyDE ou Stepback).
 
-2. Un **modèle de génération d'`embeddings`** qui transforme la « requête augmentée » en vecteurs de valeurs numériques qui sont ensuite utilisés pour rechercher les éléments de réponse les plus pertinents dans la base de connaissances de PIERRE. **À ce jour, ce modèle ne peut pas être modifié** (`text-embedding-3-large`). En conséquence, il est indispensable — lorsque l'on auto-héberge PIERRE — de disposer d'une clef d'API OpenAI.
+2. Un **modèle de génération d'`embeddings`** qui transforme la « requête augmentée » en vecteurs de valeurs numériques qui sont ensuite utilisés pour rechercher les éléments de réponse les plus pertinents dans les bases de connaissances. PIERRE utilise [`bge-m3`](https://huggingface.co/BAAI/bge-m3), un modèle open source de la Beijing Academy of Artificial Intelligence (BAAI).
 
-3. À nouveau, un **modèle de génération de `textes`** programmé en **`reranker`** qui classifie les résulats retournés par les bases de connaissances pour ne conserver que les éléments les plus pertinents en regard de la question posée par l'utilisateur. Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
+3. À nouveau, un **modèle de génération de `textes`** configuré en **`reranker`** qui classifie les résulats retournés par les bases de connaissances pour ne conserver que les éléments les plus pertinents en regard de la question posée par l'utilisateur.
 
-4. Un **modèle de génération de `textes`** qui génére les réponses textuelles aux utilisateurs en utilisant les éléments issus de (3). Par défaut, PIERRE utilise `gpt-4o-mini-2024-07-18` d'OpenAI.
+4. Un **modèle de génération de `textes`** qui génére les réponses textuelles aux utilisateurs en utilisant les éléments issus de (3).
 
-Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Bring Your Own LLM Key/Model »** (BYOK) — **il est possible de choisir le modèle utilisé** (Mistral, Anthropic, Cohere...) pour (1), (3) et (4) et ce, en modifiant le fichier de configuation (_cf._ infra).
+Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Bring Your Own LLM Key/Model »** (BYOK) — **il est possible de choisir le modèle utilisé** (Mistral, Anthropic, Cohere, OpenAI...) pour (1), (3) et (4) et ce, en modifiant le fichier de configuation (_cf._ infra).
 
 ## L'universel SMS pour les échanges de « premier niveau »
 
@@ -135,19 +135,20 @@ Principales caratéristiques de `Time2chat` (en savoir plus via l'[ARCEP](https:
 
 - Language: `Typescript`/`Javascript`
 - Framework: [`Hono`](https://github.com/honojs/hono) (with [`Bun`](https://github.com/oven-sh/bun) runtime)
+- Local inference: [`Ollama`](https://github.com/ollama/ollama)
 - Database + Vectorstore: [`SQLite3`](https://sqlite.org) (extended with [`sqlite-vec`](https://github.com/asg017/sqlite-vec))
 - Deployment: [`Kamal`](https://kamal-deploy.org) (with [`Docker`](https://www.docker.com))
 - LLM: « Bring Your Own LLM Key/Model » (BYOK)
-- SMS: `Time2Chat` via [`CM`](https://www.cm.com/fr-fr/)
+- GPU (optionnel): [`Hugging Face`](https://endpoints.huggingface.co) (via Inference Endpoints)
+- SMS: [`CM`](https://www.cm.com/fr-fr/) (via Time2Chat)
 
 ## Les coûts associés à l'usage de PIERRE
 
 Déployer PIERRE sur un serveur génére des coûts (minimes) :
 
-- La location d'un serveur (par exemple `CX22` d'[Hetzner](https://www.hetzner.com/cloud/)) : env. €10 par mois.
-- L'usage d'un LLM via une API, soit (sur la base d'OpenAI utilisée par défaut) :  
-  – Génération de vecteurs : $0.13 / MTokens avec `text-embedding-3-large`  
-  – Génération de textes : $0,15 (input) et $0,60 (output) / MTokens avec `gpt-4o-mini`
+- La location d'un serveur `CPU` (par exemple `CCX33` d'[Hetzner](https://www.hetzner.com/cloud/)) : €45 par mois
+- L'usage d'un LLM pour générer du texte : $0,40 (_in_) et $1,60 (_out_) / MTokens (`gpt-4.1-mini`)
+- (Optionnellement) La location d'un `GPU` pour vectoriser vos connaissances : €10 par mois
 - (Optionnellement) Les conversations SMS :  
   – Location d'un numéro de téléphone : €10 par mois  
   – Envoi de SMS : €0.09 par conversation (= SMS illimités par fenêtre de 24h)
@@ -170,13 +171,14 @@ Adresser un email à charnould@pierre-ia.org.
 Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour Linux).
 
 1. Installer `WSL` et vérifier sa bonne installation ([instructions](https://learn.microsoft.com/fr-fr/windows/wsl/install)).
-2. Installer `Bun` (≥ `1.2.9`) et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
-3. Installer `SQlite3`([instructions](https://www.sqlite.org/download.html)).
-4. Forker/cloner le présent dépôt.
-5. Lancer `bun install` dans votre terminal pour installer les dépendances.
-6. Renommer le fichier `.env.example` en `.env.production` et compléter le.
-7. Lancer PIERRE avec `bun dev`.
-8. Et voilà : PIERRE est accessible à http://localhost:3000 et répond à vos questions !
+2. Installer `Ollama` (≥ `0.6.5`) et vérifier sa bonne installation ([instructions](http://ollama.com)), puis saisir dans votre terminal `ollama pull bge-m3` pour télécharger le modèle `bge-m3`.
+3. Installer `Bun` (≥ `1.2.10`) et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
+4. Installer `SQlite3` et vérifier sa bonne installation ([instructions](https://www.sqlite.org/download.html)).
+5. Forker/cloner le présent dépôt.
+6. Lancer `bun install` dans votre terminal pour installer les dépendances.
+7. Renommer le fichier `.env.example` en `.env.production` et compléter le.
+8. Ouvrir deux shell et exécuter dans le premier `ollama serve` et `bun dev` dans le second.
+9. Et voilà : PIERRE est accessible à http://localhost:3000 et répond à vos questions !
 
 ### Déployer pour la première fois PIERRE sur un serveur de production
 
@@ -185,7 +187,7 @@ Pour déployer PIERRE sur un serveur, il est indispensable d'être parvenu à le
 1. Installer `Docker Desktop` et le lancer ([instructions](https://www.docker.com/products/docker-desktop/)). `Docker` gérera la conteneurisation.
 2. Lancer `gem install kamal` pour installer `Kamal` (≥`2.5.2`) qui gérera le déploiement ([instructions](https://kamal-deploy.org/docs/installation/)).
 3. Disposer d'un compte `GitHub` et [générer une clef](https://github.com/settings/tokens). `GitHub` sera le registre de conteneurs lors du déploiement.
-4. Disposer d'un VPS (par exemple `CX22` d'[Hetzner](https://www.hetzner.com/cloud/)) et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
+4. Disposer d'un VPS (par exemple `CCX33` d'[Hetzner](https://www.hetzner.com/cloud/)) et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
 5. Finaliser les modifications du fichier `.env.production` que vous avez créé précédemment.
 6. Saississez dans votre terminal `bun --env-file=.env.production kamal setup` et patientez quelques minutes.
 7. Et voilà, PIERRE est accessible à l'adresse IP de votre serveur.
@@ -208,15 +210,11 @@ PIERRE — et notamment sa base de connaissances — évolue régulièrement et 
 
 ### Déployer et redéployer PIERRE sur un serveur de tests
 
-Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE :
+Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE, le plus simple est de **déployer une seconde instance** de PIERRE sur votre VPS de production.
 
-1. Disposer d'un **second** VPS et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
-2. Dupliquer `.env.production` en `.env.staging` et modifier le (a priori uniquement l'IP).
+2. Dupliquer `.env.production` en `.env.staging` et modifier le (a priori uniquement le `SERVICE` et `HOST`).
 3. Lancer `bun --env-file=.env.staging run kamal setup` pour déployer la première fois.
 4. Lancer `bun --env-file=.env.staging run kamal deploy` pour redéployer (ou le raccourci `bun staging:deploy`).
-
-> [!NOTE]
-> Il est très fortement recommandé que les environnements de `production` et `development` aient le même système d'exploitation (Ubuntu, Debian, etc.) et la même architecture de processeur (x86).
 
 # Modifier et paramétrer PIERRE (self-hosting)
 
@@ -265,8 +263,8 @@ Pour modifier cela, modifier dans le fichier `config.ts` :
 
 Pour modifier les modèles, il suffit de :
 
-- Modifier `models` dans votre fichier `config.ts` par la valeur souhaitée. Il est fortement recommandé d'utiliser un modèle peu cher pour le `reranker` qui est consommateur de tokens (ex : `gpt-4o-mini-2024-07-18` d'OpenAI ou équivalent).
-- Renseigner la clef d'API correspondante dans les variables d'environnement (`.env.production`). **Attention**, il faut a minima et impérativement disposer d'une clef `OpenAI` pour la génération d'`embeddings`.
+- Modifier `models` dans votre fichier `config.ts` par la valeur souhaitée. Il est **fortement recommandé** d'utiliser un modèle peu cher pour le `reranker` qui est consommateur de tokens (ex : `gpt-4o-mini-2024-07-18` d'OpenAI ou équivalent).
+- Renseigner la clef d'API correspondante dans les variables d'environnement (`.env.production`).
 
 ### Quels modèles est-il possible d'utiliser ?
 
@@ -350,7 +348,7 @@ Si vous hébergez PIERRE :
 
 PIERRE dispose — en fait — de deux bases de connaissances :
 
-- Une [base](https://github.com/charnould/pierre/tree/master/knowledge/) (dite `communautaire`) qui correspond aux connaissances partagées universellement au sein du mouvemement HLM (ex : comment déposer une demande de logement social, qu'est ce que le SLS, les associations d'hébergement d'urgence dans le Vaucluse, etc.).
+- Une [base](https://github.com/charnould/pierre/tree/master/knowledge/) (dite `communautaire`) qui correspond aux connaissances partagées universellement au sein du mouvemement HLM (ex : comment déposer une demande de logement social, qu'est-ce que le SLS, les associations d'hébergement d'urgence dans le Vaucluse, etc.).
 
 - Une base (dite `propriétaire`) qui correspond aux connaissances créées par un organisme HLM hébergeant sa propre version de PIERRE et qu'il ne souhaite pas partager avec `communautaire` ou qu'il souhaite faire apprendre en pleine autonomie à PIERRE (ex : des procédures internes).
 
@@ -359,7 +357,32 @@ PIERRE dispose — en fait — de deux bases de connaissances :
 1. Se connecter à https://180.81.82.83/a, puis cliquer sur `Encyclopédie`.
 2. Télécharger `_metadata.xlsx`, le compléter **scrupuleusement** et le ré-uploader avec les fichiers associés. Seuls les `.docx` (Word), `.xlsx` (Excel) et `.md` (Markdown) sont acceptés.
 3. **Indispensable** : [Configurer](https://github.com/charnould/pierre/blob/master/assets/pierre-ia.org/config.ts#L73) `config.ts` de manière à permettre l'utilisation des connaissances `proprietary` et le protéger s'il utilise des données `privées`/`private`.
-4. C'est tout. Toutes les nuits aux alentours de 4h du matin, la base de connaissances sera automatiquement reconstruite (il est impératif que vos variables d'environnement contiennent une clef d'API `OpenAI`).
+4. C'est tout. Toutes les nuits aux alentours de 4h du matin, la base de connaissances sera automatiquement reconstruite.
+
+**[IMPORTANT] Comment réduire la durée de reconstruction de votre base de connaissances ?**
+
+La reconstruction de votre base de connaissances **peut être très longue** (plusieurs heures) selon la quantité de données à traiter (= transformer vos données en vecteurs de valeurs numériques).
+
+Pour savoir si cette durée est acceptable (PIERRE n'a en effet plus connaissance de vos données durant le processus), il convient à ce stade d'essayer de générer votre base de connaissances en local tout en consultant les logs. Si la durée de reconstruction n'est pas acceptable, il est nécessaire de disposer d'un `GPU` d'appoint pour cette opération.
+
+> [!NOTE]
+> PIERRE mettra prochainement en place un moyen simple de savoir si votre base de connaissances nécessite l'usage d'un `GPU`.
+
+- **Option 1** : Adresser un email à charnould@pierre-ia.org pour obtenir directement et simplement un `endpoint` et `token` à renseigner dans `env.production`
+- **Option 2** : Louer pendant 5-15 minutes chaque jour un `GPU` (env. €10/mois). Pour se faire :
+  - [Créer un compte](http://huggingface.co) `Hugging Face` (🇫🇷) et ajouter un moyen de paiement
+  - Créer un `endpoint` d'inférence `bge-m3` en [suivant ce lien](https://endpoints.huggingface.co/new?repository=BAAI/bge-m3) :
+    - Endpoint name: à votre convenance et sans importance
+    - Hardware configuration: `Nvidia A10G` (ou équivalent) localisé au plus proche (Irlande)
+    - Security Level: `Protected` (il vous faudra créer un token)
+    - Autoscaling: vous assurer qu'il affiche `scale-to-zero after 15 min`
+    - Cliquer sur `Create endpoint`.
+  - Créer un `token` pour pouvoir utiliser le `endpoint` :
+    - Se rendre sur https://huggingface.co/settings/tokens et `Create new token`
+    - Token name: à votre convenance
+    - Cocher `Make calls to your Inference Endpoints`
+    - Cliquer sur `Create token`
+  - Renseigner `HUGGINGFACE_ENDPOINT`et `HUGGINGFACE_TOKEN` dans `.env.production` ou `.env.staging` avec les valeurs correspondantes.
 
 # License
 
