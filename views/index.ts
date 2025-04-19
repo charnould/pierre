@@ -15,14 +15,14 @@ export const view = (config: Config) => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/default/dist/css/style.1744706133754.css" />
+        <link rel="stylesheet" href="../assets/default/dist/css/style.1745562419398.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Inclusive+Sans:wght@350&display=swap"
           rel="stylesheet"
         />
         <link rel="icon" href="../assets/${config.id}/system.svg" type="image/svg+xml" />
         <link rel="manifest" href="../assets/${config.id}/manifest.json" />
-        <script type="module" src="../assets/default/dist/js/ai.1744706133754.js"></script>
+        <script type="module" src="../assets/default/dist/js/ai.1745562419398.js"></script>
         <title>Comment puis-je vous aider ? 🖐️</title>
         <meta name="conv_id" content="${randomUUIDv7()}" />
       </head>
