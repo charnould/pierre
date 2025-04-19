@@ -47,13 +47,11 @@ export const Config = z
 
     models: z
       .object({
-        embed_with: z.literal('text-embedding-3-large'),
         augment_with: z.string(),
         rerank_with: z.string(),
         answer_with: z.string()
       })
       .default({
-        embed_with: 'text-embedding-3-large',
         augment_with: "openai('gpt-4o-mini-2024-07-18')",
         rerank_with: "openai('gpt-4o-mini-2024-07-18')",
         answer_with: "openai('gpt-4o-mini-2024-07-18')"
