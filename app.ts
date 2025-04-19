@@ -22,8 +22,12 @@ import {
   score_conversation_with_ai
 } from './utils/categorize-and-score-conversation'
 import { execute_pipeline } from './utils/knowledge/_run'
+import { ensure_ollama_is_running_and_models_preloaded } from './utils/search-by-vectors'
 
 const app = new Hono()
+
+// Check if Ollama is running + preload model(s)
+ensure_ollama_is_running_and_models_preloaded()
 
 // Configure the secure headers for the app.
 // This allows other websites to iframe PIERRE

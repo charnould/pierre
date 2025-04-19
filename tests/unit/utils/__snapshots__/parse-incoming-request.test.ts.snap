@@ -43,9 +43,8 @@ exports[`should AIContext parse correctly 1`] = `
       },
     },
     "models": {
-      "answer_with": "openai('gpt-4o-mini-2024-07-18')",
-      "augment_with": "openai('gpt-4o-mini-2024-07-18')",
-      "embed_with": "text-embedding-3-large",
+      "answer_with": "openai('gpt-4.1-mini')",
+      "augment_with": "groq('llama-3.3-70b-versatile')",
       "rerank_with": "openai('gpt-4o-mini-2024-07-18')",
     },
     "persona": "You’re PIERRE, an open-source, multilingual, and multichannel AI created to assist social housing candidates, tenants and employees with their everyday questions. Your source code is accessible to all at https://www.pierre-ia.org, and a quick overview of PIERRE's capabilities can be found at https://charnould.github.io/pierre/assets/PIERRE-Présentation.pdf.",
