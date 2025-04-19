@@ -96,14 +96,14 @@ export const initialize_databases = (knowledge: Knowledge) => {
       CREATE VIRTUAL TABLE vectors USING vec0(
         chunk_hash TEXT,
         chunk_text TEXT,
-        chunk_vector FLOAT[3072]
+        chunk_vector FLOAT[1024]
       );`)
 
     return db
   }
 
   if (knowledge.community === true) {
-    initialize_db('./knowledge/community.sqlite')
+    initialize_db('./knowledge/data.sqlite')
   }
 
   if (knowledge.proprietary === true) {

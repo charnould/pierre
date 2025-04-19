@@ -85,8 +85,6 @@ const search_and_answer = async (c: Context) => {
     let t4 = 0
     let t5 = 0
     let t6 = 0
-    let t7 = 0
-    let t8 = 0
 
     // Set variables and types
     let is_sms = false
@@ -145,64 +143,72 @@ const search_and_answer = async (c: Context) => {
     ) {
       answer = await stream_answer(context)
     } else {
+      t0 = performance.now()
+
+      //
       //
       //
       // QUERY AUGMENTATION
       //
-      //
 
-      t0 = performance.now()
       context.query = await augment_query(context)
-      t1 = performance.now()
+
       // end: QUERY AUGMENTATION
+      t1 = performance.now()
 
       // If query is relevant and does not contain profanity, answer with intelligence
       // This is here that "intelligence" must occur: if `context.chunks` contains bullshit,
       // PIERRE answer will probably be bullshit!
-
       if (context.query && !context.query.contains_profanity) {
+        t2 = performance.now()
+
+        //
+        //
+        //
+        // EMBEDDINGS GENERATION
+        const embeddings = await generate_embeddings(
+          [
+            ...[context.content], // IMPORTANT: keep `context.content` in an array
+            ...context.query.standalone_questions,
+            ...context.query.search_queries
+          ],
+          { provider: 'ollama', batch: true }
+        )
+
+        t3 = performance.now()
+        // end: EMBEDDINGS GENERATION
+
+        //
         //
         //
         // VECTOR SEARCH
-        //
-        //
-
-        t2 = performance.now()
-        const embeddings = await generate_embeddings([
-          ...context.content,
-          ...context.query.standalone_questions,
-          ...context.query.search_queries
-        ])
         const v_results = await Promise.all(embeddings.map((e) => vector_search(e, context)))
-        t3 = performance.now()
+
+        t4 = performance.now()
         // end: VECTOR SERCH
 
         //
         //
+        //
         // BM25 SEARCH
-        //
-        //
-
-        t4 = performance.now()
         const k_results = await Promise.all(
           context.query.bm25_keywords.map((k) => bm25_search(k, context))
         )
+
         t5 = performance.now()
         // end: BM25 SEARCH
 
         //
         //
+        //
         // RERANKER
-        //
-        //
-
-        t6 = performance.now()
         context.chunks = await rank_chunks(
           v_results.filter((chunk) => chunk !== undefined), // TODO: vector_search must not return undefined
           k_results.filter((chunk) => chunk !== undefined), // TODO: vector_search must not return undefined
           context
         )
-        t7 = performance.now()
+
+        t6 = performance.now()
         // end:RERANKER
 
         // If the reranker returns no relevant results, it indicates that
@@ -235,13 +241,14 @@ const search_and_answer = async (c: Context) => {
 
       // Mark the end of the request for performance measurement
       // and log a performance measurement table
-      t8 = performance.now()
       console.table([
-        ['augment  ', `${t1 - t0}ms`],
-        ['v_search ', `${t3 - t2}ms`],
-        ['b_search ', `${t5 - t4}ms`],
-        ['rerank   ', `${t7 - t6}ms`],
-        ['TOTAL    ', `${t8 - t0}ms`]
+        ['augment   ', `${t1 - t0}ms`],
+        ['embed     ', `${t3 - t2}ms`],
+        ['v_search  ', `${t4 - t3}ms`],
+        ['b_search  ', `${t5 - t4}ms`],
+        ['rerank    ', `${t6 - t5}ms`],
+        ['----------', '------------'],
+        ['TOTAL     ', `${t6 - t0}ms`]
       ])
     }
     //

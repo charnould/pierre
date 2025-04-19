@@ -1,22 +1,27 @@
-import { openai } from '@ai-sdk/openai'
-import type { EmbeddingModelV1Embedding } from '@ai-sdk/provider'
-import { embedMany } from 'ai'
 import _ from 'lodash'
 import { z } from 'zod'
 import { db } from '../utils/database'
 import type { Db_Name } from '../utils/database'
 import type { AIContext } from './_schema'
 
-//
-//
-//
-//
-// Vector search
-//
-//
-//
-//
-export const vector_search = async (embedding: EmbeddingModelV1Embedding, context: AIContext) => {
+/**
+ * Performs a vector search based on the provided embedding and context.
+ *
+ * This function retrieves knowledge access permissions from the given context
+ * and performs searches across different knowledge bases (community, public, private)
+ * depending on the access permissions. The results are parsed and returned
+ * in a structured format.
+ *
+ * @param embedding - An array of numbers representing the vector embedding to search with.
+ * @param context - The AIContext object containing configuration and permissions for the search.
+ *
+ * @returns A promise that resolves to a `Vector_Search_Result` object containing
+ *          the search results for community, public, and private knowledge bases.
+ *          Returns `undefined` if an error occurs during the search process.
+ *
+ * @throws Will log an error to the console if an exception is encountered.
+ */
+export const vector_search = async (embedding: number[], context: AIContext) => {
   try {
     // Retrieve knowledge access permissions for the current context
     // (e.g., default, team, etc.) + Set a default for TS happiness
@@ -41,19 +46,14 @@ export const vector_search = async (embedding: EmbeddingModelV1Embedding, contex
   }
 }
 
-//
-//
-//
-//
-// Helpers + Typescrit type
-//
-//
-//
-//
-
-//
-// Query the database with the embedding to retrieve the matching chunks
-export const query_db = async (db_name: Db_Name, embedding: EmbeddingModelV1Embedding) => {
+/**
+ * Queries a database using a provided embedding vector and returns the search results.
+ *
+ * @param db_name - The name of the database to query.
+ * @param embedding - An array of numbers representing the embedding vector for the query.
+ * @returns A promise that resolves to the search results from the database.
+ */
+export const query_db = async (db_name: Db_Name, embedding: number[]) => {
   const db_instance = db(db_name)
   const user_query = search(embedding, db_instance)
   return user_query
@@ -61,68 +61,77 @@ export const query_db = async (db_name: Db_Name, embedding: EmbeddingModelV1Embe
 
 // TODO: remove from schema and DB entites hash & cie
 
-//
-// prettier-ignore
-// biome-ignore format: readability
-// Typescript Type via Zod
-export const Vector_Search_Result = z.object({
-  community : z.array(z.object({
-    chunk_hash  : z.string(),
-    chunk_text  : z.string(),
-    distance    : z.number()    })).default([]),
-
-  private   : z.array(z.object({
-    chunk_hash  : z.string(),
-    chunk_text  : z.string(),
-    distance    : z.number()    })).default([]),
-
-  public    : z.array(z.object({
-    chunk_hash  : z.string(),
-    chunk_text  : z.string(),
-    distance    : z.number()    })).default([]),
-})
-
-export type Vector_Search_Result = z.infer<typeof Vector_Search_Result>
-
 /**
- * Generate Embeddings
+ * Generates embeddings for a given array of strings using the specified provider.
  *
- * This function generates an array of vector embeddings for a given
- * array of strings using OpenAI's `text-embedding-3-large` model.
- *
- * Returns:
- * - `embeddings` (Array<Array<number>>)
+ * @param strings - An array of strings for which embeddings need to be generated.
+ * @param options - Configuration options for the embedding generation.
+ * @param options.provider - The provider to use for generating embeddings.
+ *                            Can be either 'ollama' (local) or 'huggingface'.
+ * @param options.batch - A boolean indicating whether to process the strings in batch mode.
+ *                        Applicable only when the provider is 'ollama'.
+ * @returns A promise that resolves to the generated embeddings or an error object.
+ *          - For 'ollama' with `batch: true`, returns an array of embeddings.
+ *          - For 'ollama' with `batch: false`, returns a single embedding.
+ *          - For 'huggingface', returns the first embedding from the result.
+ * @throws An error if the response from the provider contains an error or if the fetch fails.
  */
-export const generate_embeddings = async (queries: string[]) => {
+export const generate_embeddings = async (
+  strings: string[],
+  options: { provider: 'ollama' | 'huggingface'; batch: boolean }
+) => {
   try {
-    const { embeddings } = await embedMany({
-      model: openai.embedding('text-embedding-3-large'),
-      values: queries
-    })
+    let response: Response | undefined
 
-    return embeddings
-  } catch (e) {
-    console.error('Failed to generate embeddings:', e)
-    throw new Error('Embeddings generation failed.')
+    // Option 1: Ollama (= local)
+    if (options.provider === 'ollama') {
+      response = await fetch('http://localhost:11434/api/embed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'bge-m3', input: strings })
+      })
+    }
+
+    // Option 2: Hugging Face
+    if (options.provider === 'huggingface') {
+      response = await fetch(Bun.env.HUGGINGFACE_ENDPOINT as string, {
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${Bun.env.HUGGINGFACE_TOKEN}`
+        },
+        method: 'POST',
+        body: JSON.stringify({ inputs: strings[0] })
+      })
+    }
+
+    if (!response) throw new Error('Failed to fetch response from the provider.')
+
+    const result = await response.json()
+
+    if (result.error) throw new Error(result.error)
+    if (options.provider === 'ollama' && options.batch === true) return result.embeddings
+    if (options.provider === 'ollama' && options.batch === false) return result.embeddings[0]
+    if (options.provider === 'huggingface') return result[0]
+  } catch (error) {
+    return { error }
   }
 }
 
 /**
- * Search
+ * Searches for the top 10 closest matches in the database based on the provided query vectors.
  *
- * This function executes a vector similarity search on a database of chunked text data
- * without applying any prefiltering, ensuring that all relevant results are considered.
+ * @param query_vectors - An array of query vectors represented as numbers, used to find similar entries in the database.
+ * @param database - The database instance used to execute the search query.
+ * @returns An array of objects containing the following properties:
+ * - `chunk_hash`: A string representing the unique hash of the matched chunk.
+ * - `chunk_text`: A string containing the text of the matched chunk.
+ * - `distance`: A number representing the distance between the query vector and the matched chunk vector.
  *
- * Key Features:
- * - Accepts query vectors for semantic search using vector similarity techniques.
- * - Searches across the entire dataset without narrowing results to specific entities.
- * - Queries the database to fetch the top 10 matching chunks based on vector similarity.
- *
- * Returns:
- * - An array of matching chunks, including:
- *   - `chunk_text` (string): The text content of the matching chunk.
- *   - `chunk_hash` (string): The unique hash identifier for the chunk.
- *   - `distance` (number): The vector similarity distance of the match.
+ * @remarks
+ * This function uses a prepared SQL query to search for matches in a table named `vectors`.
+ * The `MATCH` clause is used to compare the `chunk_vector` column with the provided query vectors.
+ * The `k = 10` condition ensures that only the top 10 closest matches are returned.
  */
 export const search = (query_vectors, database) =>
   database
@@ -139,3 +148,76 @@ export const search = (query_vectors, database) =>
     chunk_text: string
     distance: number
   }[]
+
+/**
+ * Represents the result of a vector search operation.
+ *
+ * This object contains three categories of search results: `community`, `private`, and `public`.
+ * Each category is an array of objects, where each object represents a search result with the following properties:
+ *
+ * - `chunk_hash` (string): A unique identifier for the chunk.
+ * - `chunk_text` (string): The text content of the chunk.
+ * - `distance` (number): The distance metric indicating the similarity of the chunk to the search query.
+ *
+ * All categories default to an empty array if no results are found.
+ */
+export const Vector_Search_Result = z.object({
+  community: z
+    .array(
+      z.object({
+        chunk_hash: z.string(),
+        chunk_text: z.string(),
+        distance: z.number()
+      })
+    )
+    .default([]),
+
+  private: z
+    .array(
+      z.object({
+        chunk_hash: z.string(),
+        chunk_text: z.string(),
+        distance: z.number()
+      })
+    )
+    .default([]),
+
+  public: z
+    .array(
+      z.object({
+        chunk_hash: z.string(),
+        chunk_text: z.string(),
+        distance: z.number()
+      })
+    )
+    .default([])
+})
+
+export type Vector_Search_Result = z.infer<typeof Vector_Search_Result>
+
+/**
+ * Ensures that the Ollama service is running and the specified models are preloaded.
+ *
+ * This function sends a POST request to the Ollama embedding API to check if the service
+ * is active and preloads the `bge-m3` model with a keep-alive setting (-1 to keep model
+ * loaded in memory). If the service is not running, it logs an error message and
+ * terminates the process.
+ *
+ * Usage:
+ * - Ensure that Ollama is running by executing `ollama serve` in one terminal.
+ * - Run your development server (e.g., `bun dev`) in another terminal.
+ *
+ * @throws Will terminate the process with an exit code of 1 if the Ollama service is not running.
+ */
+export const ensure_ollama_is_running_and_models_preloaded = async () => {
+  await fetch('http://localhost:11434/api/embed', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'bge-m3', keep_alive: -1 })
+  }).catch(() => {
+    console.error('Ollama is not running.')
+    console.error('→ Run `ollama serve` in one terminal.')
+    console.error('→ Run `bun dev` in another.')
+    process.exit(1)
+  })
+}
