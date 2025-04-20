@@ -7,10 +7,21 @@ import type { Knowledge } from './_run'
 import { generate_hash } from './generate-hash'
 import type { Metadata } from './store-metadata'
 
-// https://platform.openai.com/tokenizer
-// https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
+/**
+ * Counts the number of tokens in a given string using the `o200k_base` tokenizer.
+ *
+ * @remarks
+ * This function uses the `o200k_base` tokenizer to calculate the token count.
+ * Note that the token count may not accurately reflect the tokens seen by the
+ * `bge-m3` model (based on XLM-RoBERTa), which is used for embeddings.
+ * The discrepancy arises because the tokenization methods differ between the
+ * two models. This implementation avoids using `@huggingface/transformers`
+ * for performance reasons.
+ *
+ * @param string - The input string to tokenize and count.
+ * @returns The number of tokens in the input string.
+ */
 const encoder = tiktoken.get_encoding('o200k_base')
-
 export const count_tokens = (string: string) => {
   return encoder.encode(string).length
 }
@@ -82,12 +93,12 @@ export const chunk_json = async (knowledge: Knowledge) => {
             new_chunk_text += '\n\n'
 
             //
-            const potentiel_token_count = tokens_count + count_tokens(new_chunk_text)
+            const potential_token_count = tokens_count + count_tokens(new_chunk_text)
 
             // If chunk gonna be too big for embeddigs model (8191)
             // TODO:  Why my token count is the one by openAI differs?
             //        If I put 8191 below, API throws.
-            if (potentiel_token_count > 7_100) {
+            if (potential_token_count > 7_200) {
               // Save chunk
               save_chunk(
                 {

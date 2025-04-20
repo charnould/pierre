@@ -72,7 +72,7 @@ const save_chunks = async (files) => {
     // Iterate over each file
     for await (const file of files) {
       const markdown = await Bun.file(file.id).text()
-      const chunks = await split_markdown_into_chunks({ markdown: markdown, max_tokens: 6800 })
+      const chunks = await split_markdown_into_chunks({ markdown: markdown, max_tokens: 7200 })
 
       const a = 0
       // Process each chunk individually
