@@ -97,8 +97,8 @@ export const view = (metadata: Metadata[]) => {
           >, le compléter, puis l'uploader.
         </p>
         <form method="post" enctype="multipart/form-data" class="mb-2 max-w-2xl text-sm">
-          La reconstruction de l'encyclopédie se réalise automatiquement à 4h du matin et dure 1 à
-          10 minutes selon le volume de données à intégrer. Vous pouvez
+          La reconstruction de l'encyclopédie se réalise automatiquement à 4h du matin et dure
+          environ 10 minutes (variable selon le volume de données). Vous pouvez
           <button
             formaction="/a/knowledge?action=rebuild"
             class="inline w-fit cursor-pointer whitespace-normal text-blue-600 underline decoration-1 underline-offset-3"
