@@ -87,15 +87,26 @@ export const view = (metadata: Metadata[]) => {
         </p>
         <p class="mb-2 max-w-2xl text-sm">
           La présence d'un fichier
-          <span class="rounded bg-neutral-200 px-1 font-mono">_metadata.xlsx</span> est
-          indispensable et obligatoire. Seuls les fichiers référencés dans celui-ci et disponibles
-          ici sont pris en compte.
+          <span class="rounded bg-neutral-200 px-1 font-mono">_metadata.xlsx</span> est obligatoire.
+          Seuls les fichiers référencés dans celui-ci et disponibles ici sont pris en compte.
           <a
             href="../assets/default/files/_metadata.xlsx"
             class="cursor-pointer text-blue-600 underline decoration-1 underline-offset-3"
             >Télécharger un gabarit vide</a
           >, le compléter, puis l'uploader.
         </p>
+
+        <p class="mb-2 max-w-2xl text-sm">
+          Afin d'optimiser la compréhension par PIERRE de vos données, il est fortement recommandé
+          de respecter quelques consignes de formatage.
+          <a
+            href="../assets/default/files/how-to.pdf"
+            class="cursor-pointer text-blue-600 underline decoration-1 underline-offset-3"
+            >Télécharger les consignes</a
+          >
+          pour comprendre comment PIERRE interprète vos fichiers/données.
+        </p>
+
         <form method="post" enctype="multipart/form-data" class="mb-2 max-w-2xl text-sm">
           La reconstruction de l'encyclopédie se réalise automatiquement à 4h du matin et dure
           environ 10 minutes (variable selon le volume de données). Vous pouvez
