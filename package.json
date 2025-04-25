@@ -21,7 +21,7 @@
     "test:e2e": "bun --env-file=.env.production run config/setup.ts && NODE_ENV=production bun --env-file=.env.production test e2e --timeout 60000",
     "――――――― VERSION + START COMMANDS ―――――――": "―――――――",
     "dev": "bun --env-file=.env.production run config/setup.ts && DEBUG=true bun --env-file=.env.production --watch run app.ts",
-    "start": "bun --env-file=.env.production run config/setup.ts && bun run app.ts",
+    "start": "bun --env-file=.env.production run config/setup.ts && NODE_ENV=production bun run app.ts",
     "pierre:version": "bun run utils/update-pierre.ts",
     "pierre:config": "bun test check-config",
     "――――――― STAGING DEPLOYMENT COMMANDS ―――――――": "―――――――",
