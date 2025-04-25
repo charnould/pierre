@@ -85,7 +85,12 @@ export const generate_embeddings = async (
 
     // Option 1: Ollama (= local)
     if (options.provider === 'ollama') {
-      response = await fetch('http://localhost:11434/api/embed', {
+      const url =
+        Bun.env.NODE_ENV === 'production'
+          ? 'http://ollama:11434/api/embed'
+          : 'http://localhost:11434/api/embed'
+
+      response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: 'bge-m3', input: strings })
@@ -198,26 +203,30 @@ export type Vector_Search_Result = z.infer<typeof Vector_Search_Result>
 /**
  * Ensures that the Ollama service is running and the specified models are preloaded.
  *
- * This function sends a POST request to the Ollama embedding API to check if the service
- * is active and preloads the `bge-m3` model with a keep-alive setting (-1 to keep model
- * loaded in memory). If the service is not running, it logs an error message and
- * terminates the process.
+ * This function sends a POST request to the Ollama API to verify its availability
+ * and preload the `bge-m3` model. If the service is not running, it logs an error
+ * message and terminates the process with an exit code of 1.
  *
- * Usage:
- * - Ensure that Ollama is running by executing `ollama serve` in one terminal.
- * - Run your development server (e.g., `bun dev`) in another terminal.
+ * The API endpoint used depends on the environment:
+ * - In production: `http://ollama:11434/api/embed`
+ * - In development: `http://localhost:11434/api/embed`
  *
- * @throws Will terminate the process with an exit code of 1 if the Ollama service is not running.
+ * @throws Will terminate the process if the Ollama service is not running.
  */
 export const ensure_ollama_is_running_and_models_preloaded = async () => {
-  await fetch('http://localhost:11434/api/embed', {
+  const request = JSON.stringify({ model: 'bge-m3', keep_alive: -1 })
+  const ERROR = 'Ollama is not running.'
+  const url =
+    Bun.env.NODE_ENV === 'production'
+      ? 'http://ollama:11434/api/embed'
+      : 'http://localhost:11434/api/embed'
+
+  await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'bge-m3', keep_alive: -1 })
+    body: request
   }).catch(() => {
-    console.error('Ollama is not running.')
-    console.error('→ Run `ollama serve` in one terminal.')
-    console.error('→ Run `bun dev` in another.')
+    console.error(ERROR)
     process.exit(1)
   })
 }
