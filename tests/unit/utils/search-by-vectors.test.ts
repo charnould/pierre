@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'bun:test'
 import { generate_embeddings } from '../../../utils/search-by-vectors'
 
-describe('generate_embeddings', () => {
+// If enabled, this test will not pass in CI,
+// because it requires a local instance of the Ollama server to be running.
+describe.skip('generate_embeddings', () => {
   it('should generate embeddings for 1 string/batch:false', async () => {
     const a = await generate_embeddings(['hello world'], { provider: 'ollama', batch: false })
     expect(a).toBeArray()
