@@ -17,6 +17,12 @@ registry:
 volumes:
   - 'datastores:/app/datastores/'
 
+accessories:
+  ollama:
+    service: ollama
+    image: ollama/ollama
+    host: <%= ENV['IP'] %>
+
 proxy:
   ssl: true
   app_port: 3000
