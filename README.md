@@ -189,11 +189,11 @@ Pour déployer PIERRE sur un serveur, il est indispensable d'être parvenu à le
 3. Disposer d'un compte `GitHub` et [générer une clef](https://github.com/settings/tokens). `GitHub` sera le registre de conteneurs lors du déploiement.
 4. Disposer d'un VPS (par exemple `CCX33` d'[Hetzner](https://www.hetzner.com/cloud/)) et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
 5. Finaliser les modifications du fichier `.env.production` que vous avez créé précédemment.
-6. Saississez dans votre terminal `bun --env-file=.env.production kamal setup` et patientez quelques minutes.
-7. Et voilà, PIERRE est accessible à l'adresse IP de votre serveur.
-8. Étapes suivantes (optionnelles et décrites ci-dessous) :  
-   – Modifier vos DNS pour servir PIERRRE via un domaine  
-   – Déployer PIERRE sur un second serveur de tests  
+6. Saississez dans votre terminal `bun --env-file=.env.production run kamal setup`.
+7. Saississez dans votre terminal `bun --env-file=.env.production run kamal server exec "docker exec ollama ollama pull bge-m3"`.
+8. Et voilà, PIERRE est accessible à l'adresse URL de votre serveur (il faut parfois attendre une dizaine de minutes afin que les certificats SSL soient générés).
+9. Étapes suivantes (optionnelles et décrites ci-dessous) :  
+   – Créer une seconde instance (de tests) de PIERRE sur le même serveur  
    – Personnaliser PIERRE  
    – Faire fonctionner PIERRE par SMS  
    – Afficher PIERRE sur votre site internet ou extranet-locataire
@@ -203,18 +203,18 @@ Pour déployer PIERRE sur un serveur, il est indispensable d'être parvenu à le
 PIERRE — et notamment sa base de connaissances — évolue régulièrement et suit la convention `semver`. Pour le mettre à jour :
 
 1. Saisir `bun pierre:version` pour connaitre la dernière version disponible.
-2. Consulter les [releases](https://github.com/charnould/pierre/releases) pour connaitre les modifications et les éventuels _breaking changes_.
+2. Consulter les [releases](https://github.com/charnould/pierre/releases) pour connaitre les modifications et éventuels _breaking changes_.
 3. Mettre à jour votre fork/clone.
 4. Saisir `bun pierre:config` pour vous assurer que `config.ts` est correctement paramétré.
 5. Saisir `bun --env-file=.env.production run kamal deploy` dans votre terminal (ou le raccourci `bun prod:deploy`).
 
 ### Déployer et redéployer PIERRE sur un serveur de tests
 
-Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE, le plus simple est de **déployer une seconde instance** de PIERRE sur votre VPS de production.
+Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE, le plus simple est de **déployer une seconde instance** de PIERRE sur votre serveur de production.
 
-2. Dupliquer `.env.production` en `.env.staging` et modifier le (a priori uniquement le `SERVICE` et `HOST`).
-3. Lancer `bun --env-file=.env.staging run kamal setup` pour déployer la première fois.
-4. Lancer `bun --env-file=.env.staging run kamal deploy` pour redéployer (ou le raccourci `bun staging:deploy`).
+1. Dupliquer `.env.production` en `.env.staging` et modifier le (a priori uniquement le `SERVICE` et `HOST`).
+2. Lancer `bun --env-file=.env.staging run kamal setup` pour déployer la première fois.
+3. Lancer `bun --env-file=.env.staging run kamal deploy` pour redéployer (ou le raccourci `bun staging:deploy`).
 
 # Modifier et paramétrer PIERRE (self-hosting)
 
