@@ -82,6 +82,7 @@ exports[`should AIContext parse correctly 1`] = `
       "total": null,
     },
     "topics": null,
+    "user": null,
   },
   "query": null,
   "role": "user",

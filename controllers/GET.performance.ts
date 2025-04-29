@@ -51,11 +51,11 @@ export const controller = async (c: Context) => {
  *                             Defaults to 'last_30d' if not provided.
  *
  * @property {string} color - The color scheme for the statistics.
- *                            Must be one of 'user_score', 'org_score', 'profile', 'topic'.
- *                            Defaults to 'user_score' if not provided.
+ *                            Must be one of 'user_score', 'org_score', 'profile', 'topic', 'user'.
+ *                            Defaults to 'ai_score' if not provided.
  *
  * @property {string | null} facet - The facet for the statistics.
- *                                   Must be one of 'user_score', 'org_score', 'profile', 'topic'.
+ *                                   Must be one of 'user_score', 'org_score', 'profile', 'topic', 'user'.
  *                                   Can be null. Defaults to null if not provided.
  *
  * @property {string} action - The action to be performed with the statistics.
@@ -64,8 +64,13 @@ export const controller = async (c: Context) => {
  */
 const StatisticOptions = z.object({
   window: z.enum(['last_1h', 'last_24h', 'last_30d', 'last_365d']).catch('last_30d'),
-  color: z.enum(['user_score', 'org_score', 'ai_score', 'config', 'topic']).catch('org_score'),
-  facet: z.enum(['user_score', 'org_score', 'ai_score', 'config', 'topic']).nullable().catch(null),
+  color: z
+    .enum(['user', 'user_score', 'org_score', 'ai_score', 'config', 'topic'])
+    .catch('ai_score'),
+  facet: z
+    .enum(['user', 'user_score', 'org_score', 'ai_score', 'config', 'topic'])
+    .nullable()
+    .catch(null),
   action: z.enum(['visualize', 'download']).catch('visualize')
 })
 
@@ -90,6 +95,7 @@ export type StatisticOptions = z.infer<typeof StatisticOptions>
  *    - `org_score`: Organization evaluation score or 'Non noté' if null.
  *    - `ia_score`: PIERRE own evaluation score or 'Non noté' if null.
  *    - `topic`: PIERRE own topic evaluation.
+ *    - `user`: who the user is.
  * 5. Omits certain fields from the final result.
  * 6. Returns the processed result as a JSON string.
  */
@@ -124,6 +130,8 @@ export const get_data = (options: StatisticOptions): string => {
 
       const topic = metadata.topics
 
+      const user = metadata.user
+
       const user_score =
         metadata.evaluation.customer?.score === null
           ? 'Non noté'
@@ -143,6 +151,7 @@ export const get_data = (options: StatisticOptions): string => {
           last_24h,
           last_30d,
           last_365d,
+          user,
           user_score,
           org_score,
           ai_score,
@@ -190,8 +199,8 @@ export const generate_csv = () => {
       role              : _.map(data, 'role'),
       configuration     : _.map(data, 'config'),
       thematique        : _.map(data, 'topic'),
-      score_utilisateur : _.map(data, 'customer_score'),
-      score_organisme   : _.map(data, 'organization_score'),
+      score_utilisateur : _.map(data, 'cus_score'),
+      score_organisme   : _.map(data, 'org_score'),
       score_ia          : _.map(data, 'ai_score'),
       message           : _.map(data, 'content')
     }

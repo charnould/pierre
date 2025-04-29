@@ -14,7 +14,7 @@ export const view = (data, conversation: Reply[] | []) => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/default/dist/css/style.1745562419398.css" />
+        <link rel="stylesheet" href="../assets/default/dist/css/style.1746348573371.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Inclusive+Sans:wght@350&display=swap"
           rel="stylesheet"
@@ -36,17 +36,27 @@ export const view = (data, conversation: Reply[] | []) => {
             ${data.map(
               (conv) =>
                 html` <a href="/a/conversations?id=${conv[0].conv_id}">
-                  <div class="mx-6 mt-3 flex items-center text-[13px] text-neutral-400">
-                    ${conv[0].metadata.evaluation.organization.score === 0
-                      ? html`<span class="h-3 w-6 rounded-full bg-red-500">&nbsp;</span>`
-                      : conv[0].metadata.evaluation.organization.score === 1
-                        ? html`<span class="h-3 w-6 rounded-full bg-orange-400">&nbsp;</span>`
-                        : conv[0].metadata.evaluation.organization.score === 2
-                          ? html`<span class="h-3 w-6 rounded-full bg-lime-300">&nbsp;</span>`
-                          : conv[0].metadata.evaluation.organization.score === 3
-                            ? html`<span class="h-3 w-6 rounded-full bg-green-500">&nbsp;</span>`
-                            : html`<span class="h-3 w-6 rounded-full bg-neutral-400">&nbsp;</span>`}
+                  ${conv[0].metadata.topics === 'TODO'
+                    ? html`<div
+                        class="mx-6 mt-3 mb-px flex w-fit items-center rounded-sm bg-amber-200 px-1 py-px text-[9px] font-medium text-red-500"
+                      >
+                        L'IA NE SAIT PAS
+                      </div>`
+                    : null}
+
+                  <div class="mx-6 mt-3 flex w-auto items-center text-[12px] text-neutral-400">
                     <span
+                      data-score="${conv[0].metadata.evaluation.ai.score}"
+                      class="mr-px h-3 w-2 shrink-0 rounded-xs bg-neutral-400 data-[score='-1']:bg-red-500 data-[score='0']:bg-red-500 data-[score='1']:bg-orange-400 data-[score='2']:bg-lime-300 data-[score='3']:bg-green-500"
+                      >&nbsp;</span
+                    >
+                    <span
+                      data-score="${conv[0].metadata.evaluation.organization.score}"
+                      class="mr-px h-3 w-2 shrink-0 rounded-xs bg-neutral-400 data-[score='0']:bg-red-500 data-[score='1']:bg-orange-400 data-[score='2']:bg-lime-300 data-[score='3']:bg-green-500"
+                      >&nbsp;</span
+                    >
+
+                    <span class="w-full truncate"
                       >&nbsp;•
                       ${new Intl.DateTimeFormat('fr-FR', {
                         dateStyle: 'short',
@@ -55,9 +65,13 @@ export const view = (data, conversation: Reply[] | []) => {
                       })
                         .format(new Date(conv[0].timestamp))
                         .replace(' ', '∙')}
-                      • ${conv[0].config}</span
-                    >
+                      • ${conv[0].config} •
+                      ${conv[0].metadata.user !== null
+                        ? conv[0].metadata.user
+                        : 'Utilisateur inconnu'}
+                    </span>
                   </div>
+
                   <div class="border-b-1 border-neutral-200 px-6 pb-2 text-sm">
                     ${conv[0].content}
                   </div>

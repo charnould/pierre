@@ -58,15 +58,35 @@ export const score_conversation_with_ai = async (): Promise<void> => {
     let comment: number | string | null | boolean
 
     if (core_messages.length === 1) {
-      score = 'one_message_only'
-      comment = "PIERRE n'a pas répondu ou l'utilisateur a quitté la conversation"
+      score = -1
+      comment = "PIERRE n'a pas répondu à l'utilisateur."
     } else {
       const messages: CoreMessage[] = [
         ...core_messages,
         {
           role: 'assistant',
-          content:
-            'Read the full preceding conversation between a user and an AI assistant, evaluating how well the AI understood and addressed the user’s intent. Assign a score from 0 to 3: 0 (completely failed), 1 (somewhat relevant but major issues), 2 (mostly good but minor flaws), 3 (perfectly understood and responded). Output only the score in the format <score>S</score>, where S is the score, followed by your 20-75 word-reasoning in the format <reasoning>R</reasoning>, where R is the reasoning in french language. Think carefully before answering to ensure an accurate evaluation based on clarity, relevance, and correctness.'
+          content: dedent`
+              Evaluate the preceding AI-user conversation and assign a quality score based on how well the AI understood and addressed the user's intent. Follow these precise steps:
+              
+              1. Carefully read the entire conversation, noting key requests, questions, and AI responses.
+              
+              2. Analyze whether the AI:
+              - Correctly interpreted the user's primary intent and any implicit needs
+              - Provided accurate, relevant, and complete information
+              - Structured the response appropriately for the context
+              - Avoided unnecessary tangents or omissions
+              
+              3. Assign ONE score from this scale:
+              0: Failed completely (misunderstood the request or provided incorrect/harmful information)
+              1: Partially addressed the request (major gaps, inaccuracies, or misalignments with intent)
+              2: Generally good response (minor improvements possible in accuracy, completeness, or relevance)
+              3: Excellent response (perfectly understood intent and provided optimal assistance)
+              
+              4. Format your response EXACTLY as follows:
+              <score>X</score>
+              <reasoning>Your 20-75 word justification in French, explaining specifically why you assigned this score, with concrete examples from the conversation.</reasoning>
+              
+              Ensure proper XML syntax with matching opening and closing tags. The score must be a single digit (0, 1, 2, or 3) between the score tags.`
         }
       ]
 
@@ -81,6 +101,7 @@ export const score_conversation_with_ai = async (): Promise<void> => {
     score_conversation({ conv_id: conv_id, scorer: 'ai', score: score, comment: comment })
   }
 
+  console.info('✅ AI score assignment completed')
   return
 }
 
@@ -153,7 +174,7 @@ export const assign_topic_with_ai = async (): Promise<void> => {
         - Do not include explanations, extra words, formatting, or any additional output.
         - Ensure the classification is 100% consistent and deterministic based on the given definitions.
         
-        Your classification:`.trim()
+        Your classification:`
       }
     ]
 
@@ -179,5 +200,6 @@ export const assign_topic_with_ai = async (): Promise<void> => {
     if (topics.includes(topic)) save_topic({ conv_id: conv_id, topic: topic })
   }
 
+  console.info('✅ AI topic assignment completed')
   return
 }

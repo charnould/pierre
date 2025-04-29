@@ -85,6 +85,9 @@ export const Reply = z.object({
   // Metadata
   metadata: z
     .object({
+      // User
+      user: z.string().trim().toLowerCase().nullish().default(null),
+      // Topics
       topics: z.string().trim().toLowerCase().nullish().default(null),
       // Evaluation + satisfaction
       evaluation: z

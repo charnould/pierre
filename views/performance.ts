@@ -69,7 +69,7 @@ export const view = (data, options: StatisticOptions) => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/default/dist/css/style.1745562419398.css" />
+        <link rel="stylesheet" href="../assets/default/dist/css/style.1746348573371.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap"
           rel="stylesheet"
@@ -139,6 +139,9 @@ export const view = (data, options: StatisticOptions) => {
             <option value="topic" ${options.color === 'topic' ? 'selected' : null}>
               thématique
             </option>
+            <option value="user" ${options.color === 'user' ? 'selected' : null}>
+              utilisateur
+            </option>
           </select>
           et
 
@@ -164,6 +167,9 @@ export const view = (data, options: StatisticOptions) => {
             </option>
             <option value="topic" ${options.facet === 'topic' ? 'selected' : null}>
               segmentées par thématique
+            </option>
+            <option value="user" ${options.facet === 'user' ? 'selected' : null}>
+              segmentées par utilisateur
             </option>
           </select>
 
