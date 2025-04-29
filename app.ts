@@ -67,7 +67,7 @@ app.use('/assets/*', serveStatic({ root: './' }))
 
 // AI generation routes
 app.get('/c', authenticate, get_index)
-app.get('/ai', get_ai) // TODO: need to check for auth?
+app.get('/ai', authenticate, get_ai)
 app.post('/sms', get_ai)
 
 // Admin routes
