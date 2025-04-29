@@ -36,13 +36,13 @@ export const authenticate = async (c: Context, next: Next) => {
   // Validate if a signed cookie is present and decrypt it to retrieve user date
   // and check if user (still) exists in `users` table
   let can_access_protected_context = false
-  let user: User | undefined = undefined
+  let user: User | null = null
   const cookie = await getSignedCookie(c, Bun.env.AUTH_SECRET as string, 'pierre-ia')
   if (cookie) {
     user = JSON.parse(decrypt(cookie, Bun.env.AUTH_SECRET as string)) as User
     const user_exists = get_user(user.email) !== undefined
     if (user_exists) can_access_protected_context = true
-    else user = undefined
+    else user = null
   }
 
   // Retrieve the `data` query parameter from the request,
@@ -60,6 +60,8 @@ export const authenticate = async (c: Context, next: Next) => {
   // indicating that the request is intended for the chatbot.
   //
   if (c.req.path.startsWith('/c')) {
+    c.set('user', user)
+
     // Case 1: Invalid config query
     // If the config query is invalid, redirect
     if (has_valid_config_query === false) {
@@ -84,21 +86,32 @@ export const authenticate = async (c: Context, next: Next) => {
     // If the context is protected and the user has
     // access, proceed to the next middleware
     if (is_protected === true && can_access_protected_context === true) {
-      c.set('user', user)
       return await next()
     }
   }
 
   //
   //
-  // Case B: Admin request
+  // Case B: AI streaming request
+  // This block handles requests where the path starts with '/ai',
+  // indicating that the request is intended to be answered by AI.
+  // IMPORTANT: Must be above Case `C` to work effectively!
+  //
+  if (c.req.path.startsWith('/ai')) {
+    c.set('user', user)
+    return await next()
+  }
+
+  //
+  //
+  // Case C: Admin request
   // This block handles requests where the path starts with '/a/',
   // indicating that the request is intended for admin routes.
   //
   if (c.req.path.startsWith('/a')) {
     // If the `user` variable is `undefined`,
     // redirect the client to the login page.
-    if (user === undefined) return c.redirect('/a/login')
+    if (user === null) return c.redirect('/a/login')
 
     // Check if the user is a 'collaborator'
     // Redirect to login if the user tries to access restricted admin pages

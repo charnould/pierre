@@ -107,6 +107,7 @@ const search_and_answer = async (c: Context) => {
     } else {
       context = await AIContext.parseAsync({
         role: 'user',
+        metadata: { user: c.get('user')?.email ?? null },
         conv_id: c.req.query('conv_id'),
         config: c.req.query('config'),
         content: c.req.query('message'),
