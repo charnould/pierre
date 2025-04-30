@@ -22,6 +22,8 @@ accessories:
     service: ollama
     image: ollama/ollama
     host: <%= ENV['IP'] %>
+    options:
+      gpus: all
 
 proxy:
   ssl: true
