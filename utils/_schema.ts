@@ -92,21 +92,21 @@ export const Reply = z.object({
           // CSAT
           customer: z
             .object({
-              score: z.number().nullish().default(null),
+              score: z.coerce.number().nullish().default(null).catch(null),
               comment: z.string().nullish().default(null)
             })
             .default({}),
           // Social housing organization satisfaction
           organization: z
             .object({
-              score: z.number().nullish().default(null),
+              score: z.coerce.number().nullish().default(null).catch(null),
               comment: z.string().nullish().default(null)
             })
             .default({}),
           // AI generated customer satisfaction (CSAT)
           ai: z
             .object({
-              score: z.number().nullish().default(null),
+              score: z.coerce.number().nullish().default(null).catch(null),
               comment: z.string().nullish().default(null)
             })
             .default({})
