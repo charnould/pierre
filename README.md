@@ -144,11 +144,11 @@ Principales caratéristiques de `Time2chat` (en savoir plus via l'[ARCEP](https:
 
 ## Les coûts associés à l'usage de PIERRE
 
-Déployer PIERRE sur un serveur génére des coûts (minimes) :
+Déployer PIERRE sur un serveur génére des coûts :
 
-- La location d'un serveur `CPU` (par exemple `CCX33` d'[Hetzner](https://www.hetzner.com/cloud/)) : €45 par mois
+- La location d'un serveur doté d'un `GPU` (meilleur rapport qualité/prix: `GEX44` d'[Hetzner](https://www.hetzner.com/dedicated-rootserver/gex44/)) : €200 par mois
 - L'usage d'un LLM pour générer du texte : $0,40 (_in_) et $1,60 (_out_) / MTokens (`gpt-4.1-mini`)
-- (Optionnellement) La location d'un `GPU` pour vectoriser vos connaissances : €10 par mois
+- (Optionnellement) La location d'un `GPU` musclé pour vectoriser vos connaissances : €10 par mois
 - (Optionnellement) Les conversations SMS :  
   – Location d'un numéro de téléphone : €10 par mois  
   – Envoi de SMS : €0.09 par conversation (= SMS illimités par fenêtre de 24h)
@@ -180,6 +180,9 @@ Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour
 8. Ouvrir deux shell et exécuter dans le premier `ollama serve` et `bun dev` dans le second.
 9. Et voilà : PIERRE est accessible à http://localhost:3000 et répond à vos questions !
 
+> [!NOTE]
+> La vitesse d'inférence peut être faible si votre processeur est peu puissant.
+
 ### Déployer pour la première fois PIERRE sur un serveur de production
 
 Pour déployer PIERRE sur un serveur, il est indispensable d'être parvenu à le faire fonctionner en local.
@@ -187,7 +190,7 @@ Pour déployer PIERRE sur un serveur, il est indispensable d'être parvenu à le
 1. Installer `Docker Desktop` et le lancer ([instructions](https://www.docker.com/products/docker-desktop/)). `Docker` gérera la conteneurisation.
 2. Lancer `gem install kamal` pour installer `Kamal` (≥`2.5.2`) qui gérera le déploiement ([instructions](https://kamal-deploy.org/docs/installation/)).
 3. Disposer d'un compte `GitHub` et [générer une clef](https://github.com/settings/tokens). `GitHub` sera le registre de conteneurs lors du déploiement.
-4. Disposer d'un VPS (par exemple `CCX33` d'[Hetzner](https://www.hetzner.com/cloud/)) et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
+4. Disposer d'un VPS avec `GPU` (par exemple `GEX44` d'[Hetzner](https://www.hetzner.com/dedicated-rootserver/gex44/)) et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
 5. Finaliser les modifications du fichier `.env.production` que vous avez créé précédemment.
 6. Saississez dans votre terminal `bun --env-file=.env.production run kamal setup`.
 7. Saississez dans votre terminal `bun --env-file=.env.production run kamal server exec "docker exec ollama ollama pull bge-m3"`.
@@ -197,6 +200,8 @@ Pour déployer PIERRE sur un serveur, il est indispensable d'être parvenu à le
    – Personnaliser PIERRE  
    – Faire fonctionner PIERRE par SMS  
    – Afficher PIERRE sur votre site internet ou extranet-locataire
+
+> [!NOTE] > **TODO:** Détailler la procédure permettant l'usage du `GPU` par `Docker/Ollama` : se connecter via `ssh` au serveur, `curl -fsSL https://ollama.com/install.sh | sh`, puis suivre les recommandations disponibles [ici](https://github.com/ollama/ollama/blob/main/docs/docker.md#nvidia-gpu).
 
 ### Redéployer PIERRE sur un serveur de production
 
