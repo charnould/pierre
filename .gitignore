@@ -7,3 +7,4 @@ __temp__/
 .env.staging
 .env.test
 .env.local
+.private.md
