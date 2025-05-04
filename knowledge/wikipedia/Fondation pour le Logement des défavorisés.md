@@ -64,7 +64,11 @@ En 2022, selon la Fondation, 4,1 millions de personnes sont mal ou non logées e
 
 Au total, toujours selon la Fondation, 12,1 millions de personnes sont fragilisées par leur logement (impayés, surpeuplement, précarité énergétique, copropriété en difficulté, loyers excessifs). Le mal-logement toucherait ainsi 8 % de la population.
 
-Selon le rapport sur l’état du mal-logement en France, fin 2024, la France compte 4,1 millions de personnes mal logées, ce qui représente un chiffre stable sur un an. 1,1 million de personnes n’ont pas de logement personnel. La majorité est hébergée en centre d’urgence ou à l’hôtel. Plus d’un million de personnes vivent dans des logements exigus.
+En 2024 s’ouvre le procès de la rue d’Aubagne, dont la Fondation s’est constituée partie civile.
+
+Selon le rapport sur l’état du mal-logement en France, fin 2024, la France compte 4,1 millions de personnes mal logées, ce qui représente un chiffre stable sur un an. 1,1 million de personnes n’ont pas de logement personnel. La majorité est hébergée en centre d’urgence ou à l’hôtel. Plus d’un million de personnes vivent dans des logements exigus. Près de 2,9 millions de personnes vivent dans des conditions de logement « très difficiles ». 100 000 personnes vivent dans des habitats de fortune, des cabanes, des campings, etc. 208 000 gens du voyage ne disposent pas d’aire aménagée et vivent dans des conditions difficiles. 1,9 million d’individus habitent des logements considérés comme « inconfortables » (absence d’eau courante, de douche, de WC intérieurs ou de coin cuisine, moyen de chauffage défaillant, façade très dégradée).
+
+La Fondation s’inquiète aussi face à la stagnation de production de logements sociaux et l’augmentation des expulsions locatives.
 
 Le 4 février 2025, la fondation pour le Logement des défavorisés publie son trentième rapport sur l’état du mal-logement. Le rapport alerte sur les discriminations, en particulier celles subies par les personnes en situation de handicap, qui ont moins de chances d'obtenir un logement social alors qu’elles sont censées être prioritaires. Les discriminations concernent les personnes atteintes de handicaps moteurs vis-à-vis de l’adaptation des logements mais aussi envers les personnes malentendantes, non-voyantes ou atteintes de troubles psychiques ou intellectuels. Les personnes âgées, ayant des difficultés à accomplir les gestes du quotidien sont également concernées. L’offre de logements adaptés est « incomplète, pour ne pas dire marginale », s’inquiète la Fondation.
 
@@ -153,15 +157,13 @@ L’année suivante, la Fondation propose l’augmentation des APL de 10 % pour
 
 La fondation pour le Logement des défavorisés est répartie sur l'ensemble du territoire français. Elle est constituée d'une délégation générale située à Paris et de neuf agences régionales (Île-de-France, Hauts-de-France, Bretagne, Auvergne-Rhône-Alpes, Provence-Alpes-Côte d’Azur, La Réunion-Océan Indien, Occitanie, Grand-Est, Nouvelle-Aquitaine).
 
-En 2022, les équipes sont constituées de 150 salariés et de 200 bénévoles.
+En 2025, les équipes sont constituées de 150 salariés et de 200 bénévoles.
 
 ## Direction
 
 ### Conseil d'administration
 
-En 2024, Marie-Hélène Le Nédic devient la présidente de la Fondation. Christophe Robert en est le délégué général et Sonia Hurcet, la déléguée générale adjointe. Les orientations de la fondation sont arrêtées par un conseil d'administration constitué par douze membres bénévoles de la société civile.
-
-Des représentants des ministères chargés du logement et de l'Intérieur siègent également au conseil d'administration de la fondation.
+La Fondation est dirigée par un président, un délégué général et une déléguée générale adjointe. Ses orientations sont arrêtées par un conseil d'administration constitué par douze membres bénévoles de la société civile. Des représentants des ministères chargés du logement et de l'Intérieur siègent également au conseil d'administration de la fondation.
 
 En 2025, la direction de la Fondation est composée de :
 
@@ -172,7 +174,9 @@ En 2025, la direction de la Fondation est composée de :
 
 La fondation pour le Logement des défavorisés fait également partie de la branche « Action sociale et logement » du mouvement Emmaüs.
 
-Un comité d’amis et de parrains est constitué en 2006. Il compte en 2025 : Agnès b., Marie-Christine Barrault, Black M, Abdelatif Benazzi, Louis Besson, Patrick Bosso, Rachida Brakni, Cali, Éric Cantona, Jean-Marie Cantona, Jo di Bona, Jamel Debbouze, Jean-Pierre Duport, Sofiane Zermani dit Fianso, Blanche Gardin, Redouanne Harjane, Hom N’Guyen, JonOne, Benjamin Lavernhe, Marek Halter, Henri Lauret, Nolwenn Leroy, Aymeric Lompret, Guillaume Meurice, Pablo Mira, Fred Musa, Jordane Saget, Jean Reno, Nicolas de Tavernost, Philippe Torreton, Mélissa Theuriau, etc.
+Un comité de parrains est constitué en 2006. En 2025, le comité de parrains, amis et ambassadeurs comprend : Agnès b., Marie-Christine Barrault, Black M, Abdelatif Benazzi, Louis Besson, Patrick Bosso, Rachida Brakni, Cali, Éric Cantona, Jean-Marie Cantona, Jo di Bona, Jamel Debbouze, Jean-Pierre Duport, Sofiane Zermani dit Fianso, Blanche Gardin, Redouanne Harjane, Hom N’Guyen, JonOne, Benjamin Lavernhe, Marek Halter, Henri Lauret, Nolwenn Leroy, Aymeric Lompret, Guillaume Meurice, Pablo Mira, Fred Musa, Jordane Saget, Jean Reno, Nicolas de Tavernost, Philippe Torreton, Mélissa Theuriau, etc.
+
+Ces personnalités mettent leur engagement bénévole et leur nom au service de la cause du mal-logement permettant de faire connaître la cause auprès du public.
 
 ### Délégué général
 
