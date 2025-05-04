@@ -54,8 +54,9 @@ export const execute_pipeline = async (knowledge: Knowledge) => {
       console.info(`Pipeline completed in ${((t1 - to) / 1000).toFixed(2)}s`)
     }
     return
-  } catch (error) {
-    console.error(error)
+  } catch {
+    console.error('An error occurred during pipeline execution')
+    return
   }
 }
 
