@@ -27,6 +27,9 @@ export const SMS = z
 export const Config = z
   .object({
     id: z.string(),
+    display: z.string(),
+    show: z.array(z.string()),
+
     custom_data: z.object({ format: z.function() }).or(z.object({})),
 
     api: z

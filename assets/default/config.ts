@@ -7,15 +7,30 @@ import type { Config } from '../../utils/_schema'
 //
 
 export default {
-  // Doit être à la fois le nom de domaine avec extension du bailleur
-  // (ex. icfhabitat.fr) et le nom du dossier dans `assets/`
+  // Doit être à identique au nom du dossier dans `assets/`
   id: 'default',
 
+  // Le nom de la configuration telle que vous souhaitez qu'elle
+  // soit affichée dans l'interface-utilisateur de PIERRE.
+  display: 'PIERRE (défaut)',
+
+  // Si vous paramétrez PIERRE de manière à ce qu'il dispose de plusieurs configurations,
+  // vous pouvez choisir de n'afficher que certaines d'entre elles dans l'interface.
+  // Par exemple, si vous avez une configuration pour les candidats et une autre
+  // pour les équipes, vous pouvez choisir de n'afficher que la configuration
+  // pour les candidats dans l'interface de PIERRE.
+  //
+  // Si vous ne souhaitez pas utiliser cette fonctionnalité : show: []
+  //
+  // Ici, lorsque vous accédez à l'interface de PIERRE, vous pourrez accéder
+  // aux configurations `default`, `demo_client` et `demo_team`.
+  show: ['default', 'demo_client', 'demo_team'],
+
   // Vous pouvez communiquer des données externes à PIERRE via son URL avec le paramétre
-  // de requête `data`. S'il y a plusieurs données, séparez les par
-  // un pipe (|). Ces données peuvent, après avoir été tranformées, être
-  // utilisées dans un prompt. Par exemple, pour que PIERRE connaisse
-  // toujours le prénom du locataire et son solde locataire.
+  // de requête `data`. S'il y a plusieurs données, séparez-les par un pipe (|).
+  // Ces données peuvent, après avoir été tranformées, être utilisées dans un prompt.
+  // Par exemple, pour que PIERRE connaisse toujours le prénom du locataire et son
+  // solde locataire.
   //
   // Ex : http://localhost:3000/?data=Luc|-7.12
   //
