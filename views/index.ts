@@ -1,8 +1,9 @@
 import { randomUUIDv7 } from 'bun'
 import { html } from 'hono/html'
+import type { Available_configs } from '../controllers/GET.index'
 import type { Config } from '../utils/_schema'
 
-export const view = (config: Config) => {
+export const view = (params: { active_config: Config; available_configs: Available_configs }) => {
   return html`<!doctype html>
     <html lang="fr" class="scroll-smooth bg-white tracking-[-0.1px] antialiased">
       <head>
@@ -36,25 +37,49 @@ export const view = (config: Config) => {
           class="fixed top-0 left-0 w-full shadow-[0_0_15px_15px_rgba(255,255,255,1)]"
         ></header>
 
-        ${config.disclaimer === null
+        ${params.active_config.disclaimer === null
           ? null
-          : html` <input type="hidden" id="disclaimer" value="${config.disclaimer}" />`}
+          : html` <input
+              type="hidden"
+              id="disclaimer"
+              value="${params.active_config.disclaimer}"
+            />`}
 
         <main class="flex flex-col px-6 pb-32">
           <img
             class="mt-6 mb-3"
-            src="../assets/${config.id}/system.svg"
+            src="../assets/${params.active_config.id}/system.svg"
             height="33"
             width="33"
             alt="IA"
           />
           <div class="prose" data-role="system">
-            ${config.greeting.map((g: string) => html`<p>${g}</p>`)}
+            ${params.active_config.greeting.map((g: string) => html`<p>${g}</p>`)}
           </div>
+
+          ${params.available_configs.length !== 1
+            ? html`
+                <div>
+                  <p class="mt-4 mb-2 text-xs font-medium tracking-wide text-gray-500">
+                    VOTRE PROFIL
+                  </p>
+                  ${params.available_configs.map(
+                    (c) =>
+                      html`<a
+                        href="/?config=${c.id}"
+                        ${c.is_active === true ? 'data-active' : ''}
+                        class="mr-2 mb-2 inline-block w-fit cursor-pointer rounded border border-gray-300 px-3 py-2 text-left font-serif text-sm/snug text-gray-700 hover:bg-gray-50 disabled:cursor-progress disabled:text-gray-500 disabled:hover:bg-white data-[active]:border-gray-400 data-[active]:bg-gray-100"
+                      >
+                        ${c.display}
+                      </a>`
+                  )}
+                </div>
+              `
+            : null}
 
           <div>
             <p class="mt-4 mb-2 text-xs font-medium tracking-wide text-gray-500">EXEMPLES</p>
-            ${config.examples.map(
+            ${params.active_config.examples.map(
               (eg: string) =>
                 html`<button
                   data-role="example"
