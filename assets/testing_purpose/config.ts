@@ -2,6 +2,8 @@ import type { Config } from '../../utils/_schema'
 
 export default {
   id: 'testing_purpose',
+  display: 'Test',
+  show: ['default', 'demo_client', 'demo_team'],
   custom_data: {},
   api: [],
   models: {
