@@ -20,6 +20,7 @@ exports[`should AIContext parse correctly 1`] = `
       "format": [Function],
     },
     "disclaimer": "Une IA peut se tromper. Vérifiez les informations importantes.",
+    "display": "PIERRE (défaut)",
     "examples": [
       "Comment déposer mon préavis de congé pour mon logement ? Et avez-vous un modèle de courrier ?",
       "Y-a-t-il des associations d'entraide dans le cadre de violences conjugales dans le Vaucluse ?",
@@ -50,6 +51,11 @@ exports[`should AIContext parse correctly 1`] = `
     "persona": "You’re PIERRE, an open-source, multilingual, and multichannel AI created to assist social housing candidates, tenants and employees with their everyday questions. Your source code is accessible to all at https://www.pierre-ia.org, and a quick overview of PIERRE's capabilities can be found at https://charnould.github.io/pierre/assets/PIERRE-Présentation.pdf.",
     "phone": "0033939070074",
     "protected": false,
+    "show": [
+      "default",
+      "demo_client",
+      "demo_team",
+    ],
   },
   "content": "bonjour",
   "conv_id": "22222",

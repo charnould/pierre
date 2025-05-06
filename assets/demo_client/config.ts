@@ -2,6 +2,8 @@ import type { Config } from '../../utils/_schema'
 
 export default {
   id: 'demo_client',
+  display: 'Locataire',
+  show: ['default', 'demo_client', 'demo_team'],
   custom_data: {},
   api: [],
   models: {
