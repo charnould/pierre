@@ -65,7 +65,7 @@ export default {
       // (cf. custom_data plus haut). Ne manipuler que l'objet retourné.
       // - custom_data: celles passée via le paramètre de requête `data`
       // - content : la question de l'utilisateur ou la réponse de PIERRE
-      // - role : user (= utilisateur), assitant ou system (= PIERRE)
+      // - role : user (= utilisateur), assistant ou system (= PIERRE)
       format: ({ custom_data, content, role }) => {
         return {
           client_id: custom_data[0],
