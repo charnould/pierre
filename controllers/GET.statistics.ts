@@ -3,7 +3,7 @@ import type { Context } from 'hono'
 import _ from 'lodash'
 import { z } from 'zod'
 import { db } from '../utils/database'
-import { view } from '../views/performance'
+import { view } from '../views/statistics'
 
 /**
  * Controller function to handle GET requests for statistics.
@@ -39,7 +39,7 @@ export const controller = async (c: Context) => {
     }
   } catch (e) {
     console.log(e)
-    throw new Error('Error on performance webpage', e)
+    throw new Error('Error on statistics webpage', e)
   }
 }
 

@@ -69,10 +69,10 @@ it('`admin` should pass e2e test', async () => {
   await Bun.sleep(250)
   expect(page.url()).toBe('http://localhost:3000/a')
 
-  // Navigate to `performance`
-  await page.click('a[href="a/performance"]')
+  // Navigate to `statistics`
+  await page.click('a[href="a/statistics"]')
   await Bun.sleep(250)
-  expect(page.url()).toBe('http://localhost:3000/a/performance')
+  expect(page.url()).toBe('http://localhost:3000/a/statistics')
 
   // Return to hompage
   await page.click('a[href="/a"]')
@@ -191,7 +191,7 @@ it('`admin` should pass e2e test', async () => {
   await Bun.sleep(250) // Wait for redirection
   expect(page.url()).toBe('http://localhost:3000/a/login')
 
-  await page.goto('http://localhost:3000/a/performance')
+  await page.goto('http://localhost:3000/a/statistics')
   await Bun.sleep(250) // Wait for redirection
   expect(page.url()).toBe('http://localhost:3000/a/login')
 
@@ -230,7 +230,7 @@ it('`admin` should pass e2e test', async () => {
   await Bun.sleep(250) // Wait for redirection
   expect(page.url()).toBe('http://localhost:3000/a')
 
-  await page.click('a[href="a/performance"]')
+  await page.click('a[href="a/statistics"]')
   await Bun.sleep(250) // Wait for redirection
   expect(page.url()).toBe('http://localhost:3000/a')
 

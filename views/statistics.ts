@@ -1,7 +1,7 @@
 import * as Plot from '@observablehq/plot'
 import { html, raw } from 'hono/html'
 import { JSDOM } from 'jsdom'
-import type { StatisticOptions } from '../controllers/GET.performance'
+import type { StatisticOptions } from '../controllers/GET.statistics'
 
 /**
  * Generates a graphic plot based on the provided data and options.
@@ -84,10 +84,10 @@ export const view = (data, options: StatisticOptions) => {
 
         <form
           class="mb-10 flex flex-row items-center justify-between"
-          action="/a/performance"
+          action="/a/statistics"
           method="get"
         >
-          <h1 class="font-mono text-6xl font-extrabold">Performance</h1>
+          <h1 class="font-mono text-6xl font-extrabold">Statistiques</h1>
           <button
             data-turbo="false"
             type="submit"
@@ -99,7 +99,7 @@ export const view = (data, options: StatisticOptions) => {
           </button>
         </form>
 
-        <form class="font-base mb-10 text-sm" action="/a/performance" method="get">
+        <form class="font-base mb-10 text-sm" action="/a/statistics" method="get">
           <input type="hidden" name="action" value="visualize" />
           Visualiser les conversations des
           <select
