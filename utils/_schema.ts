@@ -80,7 +80,7 @@ export const Reply = z.object({
   conv_id: z.string(),
   config: z.string().or(Config),
   role: z.enum(['assistant', 'user', 'system']).default('user'),
-  timestamp: z.string().datetime().nullish().default(null),
+  timestamp: z.string().datetime({ offset: true }).nullish().default(null),
   content: z.string(),
   // Metadata
   metadata: z
