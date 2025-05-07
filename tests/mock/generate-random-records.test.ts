@@ -4,13 +4,13 @@ import { db } from '../../utils/database'
 
 /**
  * Test case that loads dummy/random records into the `datastore` to test the
- * `performance` page.
+ * `statistics` page.
  *
  * This test generates 2500 dummy/random records with random data and inserts
  * them into the `telemetry` table in the `datastore` database.
  *
  */
-it('should load random records in datastore to test performance page', () => {
+it('should load random records in datastore to test statistics page', () => {
   const getRandomValue = (val) => val[Math.floor(Math.random() * val.length)]
 
   for (let index = 0; index < 2500; index++) {
