@@ -5,19 +5,23 @@ import { get_conversation, get_conversations } from '../utils/handle-conversatio
 import { view } from '../views/conversations'
 
 export const controller = async (c: Context) => {
-  let displayed_conversation: Reply[]
-  const id = c.req.query('id') as string
+  try {
+    // Retrieve and display the conversation matching the `id` from the query string.
+    // `String(id)` ensures the value is treated as a string, even if it's undefined.
+    const id = c.req.query('id')
+    const displayed_conversation = get_conversation(String(id))
 
-  if (id !== null) displayed_conversation = get_conversation(id)
+    const conversations: Reply[] = get_conversations()
+    const conversations_grouped_by_id = _.map(
+      _.groupBy(
+        conversations.map((c) => Reply.parse(c)),
+        'conv_id'
+      ),
+      (group) => _.reverse(group)
+    )
 
-  const conversations: Reply[] = get_conversations()
-  const conversations_grouped_by_id = _.map(
-    _.groupBy(
-      conversations.map((c) => Reply.parse(c)),
-      'conv_id'
-    ),
-    (group) => _.reverse(group)
-  )
-
-  return c.html(view(conversations_grouped_by_id, displayed_conversation))
+    return c.html(view(conversations_grouped_by_id, displayed_conversation))
+  } catch (e) {
+    console.error(e)
+  }
 }
