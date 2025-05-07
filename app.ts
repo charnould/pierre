@@ -10,7 +10,7 @@ import { controller as get_conversations } from './controllers/GET.conversations
 import { controller as get_index } from './controllers/GET.index'
 import { controller as get_knowledge } from './controllers/GET.knowledge'
 import { controller as get_login } from './controllers/GET.login'
-import { controller as get_performance } from './controllers/GET.performance'
+import { controller as get_statistics } from './controllers/GET.statistics'
 import { controller as get_users } from './controllers/GET.users'
 import { controller as post_conversation } from './controllers/POST.conversations'
 import { controller as post_knowledge } from './controllers/POST.knowledge'
@@ -75,7 +75,7 @@ app.get('/a/login', get_login)
 app.get('/a', authenticate, get_admin)
 app.get('/a/users', authenticate, get_users)
 app.get('/a/knowledge', authenticate, get_knowledge)
-app.get('/a/performance', authenticate, get_performance)
+app.get('/a/statistics', authenticate, get_statistics)
 app.get('/a/conversations', authenticate, get_conversations)
 
 app.post('/a/login', post_login)
