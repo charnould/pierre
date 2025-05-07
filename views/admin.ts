@@ -46,13 +46,13 @@ export const view = (user) => {
         >
 
         <a
-          href="a/performance"
+          href="a/statistics"
           ${user.role === 'administrator'
             ? html`class="block cursor-pointer text-7xl font-extrabold mb-1 hover:underline
               hover:underline-offset-4"`
             : html`class="block cursor-pointer text-7xl font-extrabold mb-1 cursor-not-allowed
               text-neutral-400"`}
-          >Performance</a
+          >Statistiques</a
         >
         <a
           href="a/users"
