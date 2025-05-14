@@ -1,124 +1,72 @@
-import { Database } from 'bun:sqlite'
 import { beforeAll, expect, it } from 'bun:test'
 import { User } from '../../../utils/_schema'
 import { db } from '../../../utils/database'
-import { delete_user, get_user, get_users, save_user } from '../../../utils/handle-user'
+import { get_user, get_users, save_user } from '../../../utils/handle-user'
 
-//
-//
-//
-//
-//
-//
 beforeAll(() => {
-  const database = db('datastore')
-  if (database instanceof Database) database.query('DELETE FROM users').run()
+  Bun.env.SERVICE = 'pierre-production'
+  db('datastore').query('DELETE FROM users').run()
 })
 
-//
-//
-//
-//
-//
-//
 it('should insert 2 users', async () => {
   const user_1 = User.parse({
-    email: 'charnould@pierre-ia.org',
+    email: 'test1@pierre-ia.org',
     role: 'administrator',
-    config: 'default',
+    config: JSON.stringify(['default', 'demo_team']),
     password_hash: 'password_1'
   })
 
-  save_user(user_1)
-
   const user_2 = User.parse({
-    email: 'charnould@icfhabitat.fr',
+    email: 'test2@pierre-ia.org',
     role: 'administrator',
-    config: 'icfhabitat.fr',
+    config: JSON.stringify(['demo_client', 'default']),
     password_hash: 'password_2'
   })
 
+  save_user(user_1)
   save_user(user_2)
 
-  const database = db('datastore')
-  if (database instanceof Database)
-    expect(database.query('SELECT * FROM users').all()).toStrictEqual([
-      {
-        config: 'default',
-        email: 'charnould@pierre-ia.org',
-        role: 'administrator',
-        password_hash: 'password_1'
-      },
-      {
-        config: 'icfhabitat.fr',
-        email: 'charnould@icfhabitat.fr',
-        password_hash: 'password_2',
-        role: 'administrator'
-      }
-    ])
-})
-
-//
-//
-//
-//
-//
-//
-it('should retrieve 1 user ', async () => {
-  expect(get_user('charnould@pierre-ia.org')).toStrictEqual({
-    config: 'default',
-    email: 'charnould@pierre-ia.org',
-    role: 'administrator',
-    password_hash: 'password_1'
-  })
-})
-
-//
-//
-//
-//
-//
-//
-it('should retrieve no user ', async () => {
-  expect(get_user('charnould@unknown.org')).toBe(undefined)
-})
-
-//
-//
-//
-//
-//
-//
-it('should retrieve all users', () => {
-  expect(get_users()).toStrictEqual([
+  expect(db('datastore').query('SELECT * FROM users').all()).toStrictEqual([
     {
-      config: 'icfhabitat.fr',
-      email: 'charnould@icfhabitat.fr',
-      password_hash: 'password_2',
-      role: 'administrator'
+      config: '["default","demo_team"]',
+      email: 'test1@pierre-ia.org',
+      role: 'administrator',
+      password_hash: 'password_1'
     },
     {
-      config: 'default',
-      email: 'charnould@pierre-ia.org',
-      password_hash: 'password_1',
+      config: '["demo_client","default"]',
+      email: 'test2@pierre-ia.org',
+      password_hash: 'password_2',
       role: 'administrator'
     }
   ])
 })
 
-//
-//
-//
-//
-//
-//
-it('should delete a user', async () => {
-  delete_user('charnould@icfhabitat.fr')
+it('should retrieve 1 user ', async () => {
+  expect(get_user('test1@pierre-ia.org')).toStrictEqual({
+    config: ['default', 'demo_team'],
+    email: 'test1@pierre-ia.org',
+    role: 'administrator',
+    password_hash: 'password_1'
+  })
+})
+
+it('should return undefined when no user is found', async () => {
+  expect(get_user('charnould@unknown.org')).toBeUndefined()
+})
+
+it('should retrieve all users', () => {
   expect(get_users()).toStrictEqual([
     {
-      config: 'default',
-      email: 'charnould@pierre-ia.org',
+      config: ['default', 'demo_team'],
+      email: 'test1@pierre-ia.org',
       password_hash: 'password_1',
+      role: 'administrator'
+    },
+    {
+      config: ['demo_client', 'default'],
+      email: 'test2@pierre-ia.org',
+      password_hash: 'password_2',
       role: 'administrator'
     }
   ])

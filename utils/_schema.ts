@@ -1,13 +1,31 @@
 import { z } from 'zod'
 
-//
-// User
+/**
+ * Represents a User schema definition using Zod.
+ *
+ * This schema validates the structure of a user object with the following properties:
+ *
+ * - `email`: A string that is trimmed and converted to lowercase.
+ * - `role`: An enumerated string that can be one of 'administrator', 'contributor', or 'collaborator'.
+ * - `config`: A string that is trimmed.
+ * - `password_hash`: A string representing the hashed password of the user.
+ */
 export const User = z.object({
-  config: z.string(),
-  email: z.string(),
-  role: z.enum(['administrator', 'contributor', 'collaborator']).default('collaborator'),
+  email: z.string().trim().toLowerCase(),
+  role: z.enum(['administrator', 'contributor', 'collaborator']).catch('collaborator'),
+  config: z.string().trim(),
   password_hash: z.string()
 })
+
+/**
+ * Represents a parsed user schema that extends the base `User` schema
+ * by adding a `config` property. The `config` property is an array
+ * of strings, allowing for additional configuration options.
+ *
+ * This schema can be used to validate and type-check user data
+ * with additional configuration details.
+ */
+export const Parsed_User = User.extend({ config: z.array(z.string()) })
 
 //
 // Incoming SMS parsing schema
@@ -194,6 +212,7 @@ export const AIContext = Reply.extend({ query: Augmented_Query.nullable().defaul
 //
 export type SMS = z.infer<typeof SMS>
 export type User = z.infer<typeof User>
+export type Parsed_User = z.infer<typeof Parsed_User>
 export type Reply = z.infer<typeof Reply>
 export type Config = z.infer<typeof Config>
 export type AIContext = z.infer<typeof AIContext>
