@@ -1,63 +1,94 @@
-import { Database } from 'bun:sqlite'
 import { db } from '../utils/database'
-import type { User } from './_schema'
+import type { Parsed_User, User } from './_schema'
 
-//
-//
-// Save user
-export const save_user = async (user: User) => {
-  const database = db('datastore')
-
-  if (database instanceof Database) {
-    database
+/**
+ * Saves a user to the database. If a user with the same email already exists,
+ * it will be replaced with the new data.
+ *
+ * @param user - The user object containing the following properties:
+ *   - `email` (string): The email address of the user.
+ *   - `role` (string): The role assigned to the user.
+ *   - `config` (any): The configuration data associated with the user.
+ *   - `password_hash` (string): The hashed password of the user.
+ *
+ * @returns The result of the database operation.
+ * @throws Will throw an error if the database operation fails.
+ *
+ */
+export const save_user = (user: User) => {
+  try {
+    return db('datastore')
       .prepare(
-        'INSERT OR IGNORE INTO users (config, email, role, password_hash) VALUES (?, ?, ?, ?)'
+        'INSERT OR REPLACE INTO users (email, role, config, password_hash) VALUES (?, ?, ?, ?)'
       )
-      .run(user.config, user.email, user.role, user.password_hash)
+      .run(user.email, user.role, user.config, user.password_hash)
+  } catch (error) {
+    console.error('Failed to save user:', error)
+    throw error
   }
-
-  return
 }
 
-//
-//
-// Get user
+/**
+ * Retrieves a user from the database by their email address.
+ *
+ * @param email - The email address of the user to retrieve.
+ * @returns The user object with parsed configuration if found, or `undefined` if no user exists with the given email.
+ * @throws Will throw an error if the database query fails.
+ *
+ */
 export const get_user = (email: string) => {
-  const database = db('datastore')
+  try {
+    const users = db('datastore')
+      .prepare('SELECT * FROM users WHERE email = $email')
+      .all({ $email: email.toLowerCase() })
 
-  if (database instanceof Database) {
-    const user = database.prepare('SELECT * FROM users WHERE email = $email').all({ $email: email })
+    if (users.length === 0) return undefined
 
-    return user[0]
+    const db_user = users[0] as User
+    return { ...db_user, config: JSON.parse(db_user.config) } as Parsed_User
+  } catch (error) {
+    console.error('Failed to retrieve user:', error)
+    throw error
   }
-
-  throw new Error('Invalid database type for datastore_db')
 }
 
-//
-//
-// Get all users
-export const get_users = () => {
-  const database = db('datastore')
-
-  if (database instanceof Database) {
-    const users = database.prepare('SELECT * FROM users ORDER BY email').all()
-
-    return users
+/**
+ * Retrieves and parses a list of users from the database.
+ *
+ * @returns {Parsed_User[]} An array of parsed user objects, where each user's `config` field
+ * is converted from a JSON string to an object.
+ *
+ * @throws Will throw an error if the database query fails or if there is an issue
+ * parsing the `config` field of any user.
+ *
+ */
+export const get_users = (): Parsed_User[] => {
+  try {
+    const db_users = db('datastore').prepare('SELECT * FROM users ORDER BY email').all() as User[]
+    const parsed_users = db_users.map((user) => {
+      return { ...user, config: JSON.parse(user.config) }
+    })
+    return parsed_users
+  } catch (error) {
+    console.error('Failed to retrieve users:', error)
+    throw error
   }
-
-  throw new Error('Invalid database type for datastore_db')
 }
 
-//
-//
-// Delete user
-export const delete_user = (email: string) => {
-  const database = db('datastore')
-
-  if (database instanceof Database) {
-    return database.prepare('DELETE FROM users WHERE email = $email').run({ $email: email })
+/**
+ * Deletes all users from the database and performs a database vacuum operation
+ * to reclaim unused space.
+ *
+ * @throws {Error} Throws an error if the operation fails.
+ *
+ */
+export const delete_all_users = () => {
+  try {
+    db('datastore').prepare('DELETE FROM users').run()
+    db('datastore').prepare('VACUUM').run()
+    return
+  } catch (error) {
+    console.error('Failed to delete all users:', error)
+    throw error
   }
-
-  throw new Error('Invalid database type for datastore_db')
 }
