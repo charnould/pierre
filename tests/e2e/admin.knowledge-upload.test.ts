@@ -2,14 +2,14 @@ import { expect, it } from 'bun:test'
 import { $ } from 'bun'
 import puppeteer, { type ElementHandle } from 'puppeteer'
 
-//
-it('file upload should pass e2e test', async () => {
+it('should upload knowledge files successfully', async () => {
   // Remove mock files from datastore
+  Bun.env.SERVICE = 'pierre-production'
   await $`rm -rf ./datastores/${Bun.env.SERVICE}/files`
   await $`mkdir -p ./datastores/${Bun.env.SERVICE}/files/`
 
   //Go to `/a`
-  const browser = await puppeteer.launch({ slowMo: 10 }) // headless: false
+  const browser = await puppeteer.launch()
   const page = await browser.newPage()
 
   await page.goto('http://localhost:3000/a')
@@ -19,20 +19,17 @@ it('file upload should pass e2e test', async () => {
   // Login
   await page.type('input[type="email"]', 'admin@pierre-ia.org')
   await page.type('input[type="password"]', 'harry84')
-  await page.click('input[type="submit"]')
-  await Bun.sleep(250)
+  await Promise.all([page.click('input[type="submit"]'), page.waitForNavigation()])
   expect(page.url()).toBe('http://localhost:3000/a')
 
   // Navigate to `knowledge`
-  await page.click('a[href="a/knowledge"]')
-  await Bun.sleep(250)
+  await Promise.all([page.click('a[href="a/knowledge"]'), page.waitForNavigation()])
   expect(page.url()).toBe('http://localhost:3000/a/knowledge')
 
   // Upload one file and check it is shown in UI
   let input = (await page.$('input[type="file"]')) as ElementHandle<HTMLInputElement>
   await input.uploadFile('tests/e2e/mock-files/markdown.md')
-  await page.click('button[type="submit"]')
-  await Bun.sleep(250)
+  await Promise.all([page.click('button[type="submit"]'), page.waitForNavigation()])
 
   let buttons = await page.$$eval('button[name="filename"]', (b) => b.length)
   expect(buttons).toBe(2)
@@ -40,8 +37,7 @@ it('file upload should pass e2e test', async () => {
   // Upload two other files and check there are shown in UI
   input = (await page.$('input[type="file"]')) as ElementHandle<HTMLInputElement>
   await input.uploadFile(...['tests/e2e/mock-files/word.docx', 'tests/e2e/mock-files/excel.xlsx'])
-  await page.click('button[type="submit"]')
-  await Bun.sleep(250)
+  await Promise.all([page.click('button[type="submit"]'), page.waitForNavigation()])
 
   buttons = await page.$$eval('button[name="filename"]', (b) => b.length)
   expect(buttons).toBe(6)
@@ -55,21 +51,17 @@ it('file upload should pass e2e test', async () => {
   expect(m).toBe(true)
 
   // Delete a file and check it has been deleted from UI
-  await page.click('button[value="excel.xlsx"][formaction="/a/knowledge?action=destroy"]')
-  await Bun.sleep(250)
+  await Promise.all([
+    page.click('button[value="excel.xlsx"][formaction="/a/knowledge?action=destroy"]'),
+    page.waitForNavigation()
+  ])
 
   buttons = await page.$$eval('button[name="filename"]', (b) => b.length)
   expect(buttons).toBe(4)
 
-  // Code below fails due to `race` condition
-  // const x = await Bun.file('tests/e2e/mock-files/excel.xlsx').exists()
-  // expect(x).toBe(false)
-
   // Return to hompage
-  await page.click('a[href="/a"]')
-  await Bun.sleep(250)
+  await Promise.all([page.click('a[href="/a"]'), page.waitForNavigation()])
   expect(page.url()).toBe('http://localhost:3000/a')
 
-  // e2e test is done!
   await browser.close()
 })
