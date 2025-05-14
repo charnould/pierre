@@ -127,7 +127,7 @@ function process_prompt(prompt: string) {
  * page. This ensures that all links open in a new tab or window.
  */
 function add_blank_target_to_links() {
-  const links = document.querySelectorAll('a')
+  const links = document.querySelectorAll('a:not([data-config])')
   for (const link of links) {
     ;(link as HTMLAnchorElement).target = '_blank'
   }
