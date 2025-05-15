@@ -29,4 +29,4 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install
       - run: bun run config/setup.ts
-      - run: SERVICE=default bun test:unit
+      - run: SERVICE=pierre-production bun test:unit

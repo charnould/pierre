@@ -17,7 +17,7 @@
     "eval:output": "NODE_ENV=production bun test generate-output --watch --timeout 30000",
     "eval:speed": "NODE_ENV=production bun test eval-speed --watch --timeout 30000",
     "eval:query": "NODE_ENV=production bun test eval-augment --watch --timeout 30000",
-    "test:unit": "bun --env-file=.env.production run config/setup.ts && bun --env-file=.env.production test unit",
+    "test:unit": "bun --env-file=.env.production run config/setup.ts && NODE_ENV=production bun --env-file=.env.production test unit",
     "test:e2e": "bun --env-file=.env.production run config/setup.ts && NODE_ENV=production bun --env-file=.env.production test e2e --timeout 60000",
     "――――――― VERSION + START COMMANDS ―――――――": "―――――――",
     "dev": "bun --env-file=.env.production run config/setup.ts && DEBUG=true bun --env-file=.env.production --watch run app.ts",
