@@ -230,7 +230,7 @@ Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE, l
 
 <img src="docs/assets/images/personnalisation-de-pierre.webp" height="400">
 
-1. Dans le répertoire `./assets`, supprimer les répertoires `demo_client`, `demo_team` et `testing_purpose`, puis dupliquer le dossier `default` et le nommer `pierre-habitat`. Les consignes suivantes s'appliquent à ce nouveau répertoire.
+1. Dans le répertoire `./assets`, supprimer les répertoires `demo_client`, `demo_team` et `testing_purpose_1`, `testing_purpose_2`, puis dupliquer le dossier `default` et le nommer `pierre-habitat`. Les consignes suivantes s'appliquent à ce nouveau répertoire.
 2. Supprimer les sous-répertoires `/dist`, `/files`, `/scripts`, `/tailwind`.
 3. Créer une icône `system.svg` et remplacer la précédente. Cette icône est celle qui apparait dans l'interface du chatbot (au dessus de « Bonjour 👋 »).
 4. [Générer les icônes](https://www.pwabuilder.com/imageGenerator) qui permettront d'ajouter votre chatbot sur l'écran d'accueil des smartphones de vos utilisateurs et remplacer celles dans le dossier `icons` (les icônes Windows ne sont pas nécessaires). Conservez la structure du répertoire et le nommage des fichiers (automatique).
