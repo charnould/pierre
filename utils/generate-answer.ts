@@ -287,7 +287,7 @@ export const today_is = () => {
     '2025-05-01', // Fête du travail
     '2025-05-08', // Victoire 1945
     '2025-05-29', // Ascension
-    '2025-06-09', //  Lundi de Pentecôte
+    '2025-06-09', // Lundi de Pentecôte
     '2025-07-14', // Fête nationale
     '2025-08-15', // Assomption
     '2025-11-01', // Toussaint
@@ -298,7 +298,7 @@ export const today_is = () => {
     '2026-05-01', // Fête du travail
     '2026-05-08', // Victoire 1945
     '2026-05-14', // Ascension
-    '2026-05-25', //  Lundi de Pentecôte???????
+    '2026-05-25', // Lundi de Pentecôte
     '2026-07-14', // Fête nationale
     '2026-08-15', // Assomption
     '2026-11-01', // Toussaint
