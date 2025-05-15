@@ -2,7 +2,7 @@ import crypto from 'node:crypto'
 import type { Context, Next } from 'hono'
 import { getSignedCookie } from 'hono/cookie'
 import { get_user } from '../utils/handle-user'
-import type { Config, User } from './_schema'
+import type { Config, Parsed_User, User } from './_schema'
 
 //
 //
@@ -10,16 +10,39 @@ import type { Config, User } from './_schema'
 // Authenticate middleware
 //
 export const authenticate = async (c: Context, next: Next) => {
+  // Validate if a signed cookie is present and decrypt it to retrieve user date
+  // and check if user (still) exists in `users` table
+  let can_access_protected_context = false
+
+  let user: Parsed_User | null = null // TODO modifiy to undefined
+
+  const cookie = await getSignedCookie(c, Bun.env.AUTH_SECRET as string, 'pierre-ia')
+
+  if (cookie) {
+    user = JSON.parse(decrypt(cookie, Bun.env.AUTH_SECRET as string)) as Parsed_User
+    const user_exists = get_user(user.email) !== undefined
+    if (user_exists) can_access_protected_context = true
+    else user = null
+  }
+
   // Check if a valid `config` query is provided in the request. If provided,
   // attempt to load the corresponding config from the `assets` folder. If the
   // query is invalid or missing, fall back to the `default` config
   let has_valid_config_query = false
+
   const config: Config = await (async () => {
     if (c.req.query('config') === undefined) {
       has_valid_config_query = false
       return (await import('../assets/default/config')).default
     }
     try {
+      if (user !== null) {
+        has_valid_config_query = user.config.includes(c.req.query('config') as string)
+        if (has_valid_config_query) {
+          return (await import(`../assets/${c.req.query('config')}/config`)).default
+        }
+        return (await import(`../assets/${user.config[0]}/config`)).default
+      }
       has_valid_config_query = true
       return (await import(`../assets/${c.req.query('config')}/config`)).default
     } catch {
@@ -32,18 +55,6 @@ export const authenticate = async (c: Context, next: Next) => {
   // authenticated users). The `auth` property in the config determines if
   // authentication is required for the context
   const is_protected = config.protected ?? false
-
-  // Validate if a signed cookie is present and decrypt it to retrieve user date
-  // and check if user (still) exists in `users` table
-  let can_access_protected_context = false
-  let user: User | null = null
-  const cookie = await getSignedCookie(c, Bun.env.AUTH_SECRET as string, 'pierre-ia')
-  if (cookie) {
-    user = JSON.parse(decrypt(cookie, Bun.env.AUTH_SECRET as string)) as User
-    const user_exists = get_user(user.email) !== undefined
-    if (user_exists) can_access_protected_context = true
-    else user = null
-  }
 
   // Retrieve the `data` query parameter from the request,
   // defaulting to '' if not specified.
@@ -61,6 +72,12 @@ export const authenticate = async (c: Context, next: Next) => {
   //
   if (c.req.path.startsWith('/c')) {
     c.set('user', user)
+
+    // Case 0: Invalid config query
+    // If the config query is invalid, redirect
+    if (c.req.query('data') === undefined || c.req.query('data') === 'undefined') {
+      return c.redirect(`/c?config=${config.id}&data=${data_query}`)
+    }
 
     // Case 1: Invalid config query
     // If the config query is invalid, redirect

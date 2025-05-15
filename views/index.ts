@@ -1,9 +1,12 @@
 import { randomUUIDv7 } from 'bun'
 import { html } from 'hono/html'
-import type { Available_configs } from '../controllers/GET.index'
+import type { Displayable_configs } from '../controllers/GET.index'
 import type { Config } from '../utils/_schema'
 
-export const view = (params: { active_config: Config; available_configs: Available_configs }) => {
+export const view = (params: {
+  active_config: Config
+  displayable_configs: Displayable_configs
+}) => {
   return html`<!doctype html>
     <html lang="fr" class="scroll-smooth bg-white tracking-[-0.1px] antialiased">
       <head>
@@ -57,15 +60,16 @@ export const view = (params: { active_config: Config; available_configs: Availab
             ${params.active_config.greeting.map((g: string) => html`<p>${g}</p>`)}
           </div>
 
-          ${params.available_configs.length !== 1
+          ${params.displayable_configs.length !== 1
             ? html`
                 <div>
                   <p class="mt-4 mb-2 text-xs font-medium tracking-wide text-gray-500">
-                    VOTRE PROFIL
+                    VOUS ÊTES...
                   </p>
-                  ${params.available_configs.map(
+                  ${params.displayable_configs.map(
                     (c) =>
                       html`<a
+                        data-config
                         href="/?config=${c.id}"
                         ${c.is_active === true ? 'data-active' : ''}
                         class="mr-2 mb-2 inline-block w-fit cursor-pointer rounded border border-gray-300 px-3 py-2 text-left font-serif text-sm/snug text-gray-700 hover:bg-gray-50 disabled:cursor-progress disabled:text-gray-500 disabled:hover:bg-white data-[active]:border-gray-400 data-[active]:bg-gray-100"
