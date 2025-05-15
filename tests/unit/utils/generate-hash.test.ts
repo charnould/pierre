@@ -5,7 +5,7 @@ import {
   generate_hash
 } from '../../../utils/knowledge/generate-hash'
 
-describe('generate_hash', () => {
+describe('should generate a hash', () => {
   it('should hash a string', async () => {
     const to_hash = 'Bonjour'
     const hashed = 'kXLo7smfFE9y7KmlaHWV'
@@ -22,8 +22,6 @@ describe('encode/decode_filename', () => {
     expect(decoded).toBe(original_filename)
   })
 
-  it('should return error message', () => {
-    const encoded = encode_filename("Carnet d'identité des immeubles.pptx")
-    expect(encoded).toBe('extension_error')
-  })
+  it('should throw', () =>
+    expect(() => encode_filename("Carnet d'identité des immeubles.pptx")).toThrow())
 })
