@@ -51,8 +51,7 @@ export const encode_filename = (filename: string): string => {
     // Remove trailing "=" padding characters
     return base64 + extension
   } catch (error) {
-    console.error(error)
-    return 'extension_error'
+    throw new Error('Filename encoding failed')
   }
 }
 
