@@ -19,7 +19,7 @@ export const view = (params: {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/default/dist/css/style.1747471633665.css" />
+        <link rel="stylesheet" href="../assets/default/dist/css/style.1749276580021.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Inclusive+Sans:wght@350&display=swap"
           rel="stylesheet"
@@ -30,7 +30,7 @@ export const view = (params: {
           type="image/svg+xml"
         />
         <link rel="manifest" href="../assets/${params.active_config.id}/manifest.json" />
-        <script type="module" src="../assets/default/dist/js/ai.1747471633665.js"></script>
+        <script type="module" src="../assets/default/dist/js/ai.1749276580021.js"></script>
         <title>Comment puis-je vous aider ? 🖐️</title>
         <meta name="conv_id" content="${randomUUIDv7()}" />
       </head>
