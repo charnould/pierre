@@ -31,7 +31,7 @@ beforeAll(async () => {
 //
 // Test `admin@pierre-ia`
 it('should validate administrator access flow', async () => {
-  const browser = await puppeteer.launch()
+  const browser = await puppeteer.launch({ slowMo: 10 })
   await browser.deleteCookie()
   const page = await browser.newPage()
   await page.setViewport({ width: 1080, height: 1024 })
