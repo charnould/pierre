@@ -31,7 +31,7 @@ export const save_user = (user: User) => {
 /**
  * Retrieves a user from the database by their email address.
  *
- * @param email - The email address of the user to retrieve.
+ * @param email - The email address of the user to retrieve. The function will lowercase and trim it.
  * @returns The user object with parsed configuration if found, or `undefined` if no user exists with the given email.
  * @throws Will throw an error if the database query fails.
  *
@@ -40,7 +40,7 @@ export const get_user = (email: string) => {
   try {
     const users = db('datastore')
       .prepare('SELECT * FROM users WHERE email = $email')
-      .all({ $email: email.toLowerCase() })
+      .all({ $email: email.toLowerCase().trim() })
 
     if (users.length === 0) return undefined
 
