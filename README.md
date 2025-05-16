@@ -253,8 +253,9 @@ Si vous avez à ce stade personnalisé visuellement votre chatbot (_cf_. supra),
 
 Pour modifier cela, modifier dans le fichier `config.ts` :
 
-- `persona` qui définit l'identité et la personnalité du chatbot
+- `persona` qui définit l'identité et le rôle du chatbot
 - `audience` qui définit le contexte dans lequel le chabot doit considérer son interlocuteur
+- `guidelines` qui définit la façon dont le chatbot répond aux questions
 
 > [!NOTE]
 > Pour faciliter la lecture et manipulation du fichier `config.ts` dans VSCode, ou plus généralement activer le _word wrap_ : utilisez le raccourci `Alt` + `z` (Windows) ou `⌥` + `z` (Mac).

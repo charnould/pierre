@@ -5,7 +5,6 @@ import { AIContext, type Config, type SMS } from '../utils/_schema'
 import { augment_query } from '../utils/augment-query'
 import { stream_answer } from '../utils/deliver-answer'
 import {
-  answer_collaborator,
   answer_user,
   reach_profanity_deadlock,
   reach_relevancy_deadlock
@@ -223,15 +222,7 @@ const search_and_answer = async (c: Context) => {
         ) {
           console.debug('No knowledge chunk: respond with a no-knowledge deadlock.')
           answer = await reach_relevancy_deadlock(context, { is_sms: is_sms })
-        }
-        // If private knowledge access is `true` (e.g. internal process),
-        // it means that user MUST be a collaborator. Hence, answer must
-        // be specific to this use case.
-        else if (knowledge_access.proprietary.private === true) {
-          answer = await answer_collaborator(context, { is_sms: is_sms })
         } else {
-          // If private knowledge access is `false`,
-          // answer user like a normal user
           answer = await answer_user(context, { is_sms: is_sms })
         }
       } else {
