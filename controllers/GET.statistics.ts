@@ -3,7 +3,7 @@ import type { Context } from 'hono'
 import _ from 'lodash'
 import { z } from 'zod'
 import { db } from '../utils/database'
-import { view } from '../views/statistics'
+import { view } from '../views/admin.statistics'
 
 /**
  * Controller function to handle GET requests for statistics.
