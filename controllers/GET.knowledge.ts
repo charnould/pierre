@@ -1,7 +1,7 @@
 import { readdir } from 'node:fs/promises'
 import type { Context } from 'hono'
 import { decode_filename } from '../utils/knowledge/generate-hash'
-import { view } from '../views/knowledge'
+import { view } from '../views/admin.knowledge'
 
 export const controller = async (c: Context) => {
   try {
