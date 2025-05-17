@@ -34,7 +34,7 @@ it('should validate administrator access flow', async () => {
   const browser = await puppeteer.launch()
   await browser.deleteCookie()
   const page = await browser.newPage()
-  page.setViewport({ width: 1080, height: 1024 })
+  await page.setViewport({ width: 1080, height: 1024 })
 
   await page.goto('http://localhost:3000/a')
   expect(page.url()).toBe('http://localhost:3000/a/login')
@@ -97,7 +97,7 @@ it('should validate contributor access flow', async () => {
   const browser = await puppeteer.launch({ slowMo: 10 }) // TODO: this test fails if there is no slowMo: why?
   await browser.deleteCookie()
   const page = await browser.newPage()
-  page.setViewport({ width: 1080, height: 1024 })
+  await page.setViewport({ width: 1080, height: 1024 })
 
   await page.goto('http://localhost:3000/a')
   expect(page.url()).toBe('http://localhost:3000/a/login')
@@ -110,15 +110,19 @@ it('should validate contributor access flow', async () => {
   expect(cookie).toBeDefined()
 
   await Promise.all([page.click('a[href="a/conversations"]'), page.waitForNavigation()])
+  await Bun.sleep(1000)
   expect(page.url()).toBe('http://localhost:3000/a')
 
   await Promise.all([page.click('a[href="a/statistics"]'), page.waitForNavigation()])
+  await Bun.sleep(1000)
   expect(page.url()).toBe('http://localhost:3000/a')
 
   await Promise.all([page.click('a[href="a/users"]'), page.waitForNavigation()])
+  await Bun.sleep(1000)
   expect(page.url()).toBe('http://localhost:3000/a')
 
   await Promise.all([page.click('a[href="a/knowledge"]'), page.waitForNavigation()])
+  await Bun.sleep(1000)
   expect(page.url()).toBe('http://localhost:3000/a/knowledge')
 
   await browser.close()
@@ -135,7 +139,7 @@ it('should validate collaborator access flow', async () => {
   const browser = await puppeteer.launch()
   await browser.deleteCookie()
   const page = await browser.newPage()
-  page.setViewport({ width: 1080, height: 1024 })
+  await page.setViewport({ width: 1080, height: 1024 })
 
   await page.goto('http://localhost:3000/a')
   expect(page.url()).toBe('http://localhost:3000/a/login')
@@ -178,7 +182,7 @@ it('should validate unknown user access flow', async () => {
   const browser = await puppeteer.launch()
   await browser.deleteCookie()
   const page = await browser.newPage()
-  page.setViewport({ width: 1080, height: 1024 })
+  await page.setViewport({ width: 1080, height: 1024 })
 
   await page.goto('http://localhost:3000/a')
   expect(page.url()).toBe('http://localhost:3000/a/login')
