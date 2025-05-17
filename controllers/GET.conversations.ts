@@ -2,7 +2,7 @@ import type { Context } from 'hono'
 import _ from 'lodash'
 import { Reply } from '../utils/_schema'
 import { get_conversation, get_conversations } from '../utils/handle-conversation'
-import { view } from '../views/conversations'
+import { view } from '../views/admin.conversations'
 
 export const controller = async (c: Context) => {
   try {
