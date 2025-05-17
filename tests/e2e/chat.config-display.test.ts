@@ -3,7 +3,7 @@ import puppeteer from 'puppeteer'
 import { db } from '../../utils/database'
 import { save_user } from '../../utils/handle-user'
 
-it('should ', async () => {
+it('should display the correct config options for anonymous and authenticated users', async () => {
   // Initial setup
   Bun.env.SERVICE = 'pierre-production'
   db('datastore').query('DELETE FROM users').run()
