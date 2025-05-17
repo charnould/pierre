@@ -52,7 +52,6 @@ exports[`should AIContext parse correctly 1`] = `
   - Rely strictly on the **reference material below** and conversation history.
   - Do **not** make up information. If something is missing, acknowledge it honestly.
   - Avoid repeating points already addressed earlier.
-  - Indicate your confidence level in responses (High, Medium, Low) when appropriate.
 
 4. **Keep It Clear and Useful**
   - Focus on essential information and user needs.
