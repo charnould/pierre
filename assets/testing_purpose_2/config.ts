@@ -24,9 +24,10 @@ export default {
     community: false,
     proprietary: { public: false, private: false }
   },
-  audience: "Cette configuration n'existe qu'à des fins de tests",
+  audience: '',
   persona: '',
-  greeting: [],
+  guidelines: '',
+  greeting: ["Cette configuration n'existe qu'à des fins de tests"],
   examples: [],
   disclaimer: null
 } as Config

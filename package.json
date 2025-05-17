@@ -46,7 +46,7 @@
     "@date-fns/tz": "^1.2.0",
     "@observablehq/plot": "^0.6.17",
     "ai": "^4.3.15",
-    "arquero": "^8.0.1",
+    "arquero": "^8.0.2",
     "cron": "^4.3.0",
     "d3": "^7.9.0",
     "date-fns": "^4.1.0",
@@ -79,8 +79,8 @@
     "markdown-toc": "^1.2.0",
     "puppeteer": "^24.8.2",
     "prettier-plugin-tailwindcss": "^0.6.11",
-    "@tailwindcss/cli": "^4.1.6",
-    "tailwindcss": "^4.1.6",
+    "@tailwindcss/cli": "^4.1.7",
+    "tailwindcss": "^4.1.7",
     "typescript": "^5.8.3"
   },
   "prettier": {
