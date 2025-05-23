@@ -64,7 +64,7 @@ html::-webkit-scrollbar,
 
 @utility prose {
   * {
-    @apply my-2 text-base/snug text-gray-900;
+    @apply my-2 text-[15px] text-gray-900;
   }
 
   pre {
@@ -78,7 +78,7 @@ html::-webkit-scrollbar,
   /* Typography */
 
   p {
-    @apply my-2 text-base/snug text-gray-900 empty:hidden;
+    @apply my-2 text-[15px] text-gray-900 empty:hidden;
   }
 
   b,
@@ -143,5 +143,25 @@ html::-webkit-scrollbar,
 
   ul {
     @apply list-disc;
+  }
+
+  /* Table */
+
+  th {
+    @apply bg-gray-50 font-semibold;
+  }
+
+  th,
+  td {
+    @apply px-2 py-1 text-left text-sm;
+  }
+
+  table {
+    @apply mb-6;
+  }
+
+  th,
+  td {
+    @apply border border-gray-300;
   }
 }

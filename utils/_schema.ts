@@ -88,6 +88,7 @@ export const Config = z
     }),
     audience: z.string(),
     persona: z.string(),
+    guidelines: z.string(),
     greeting: z.array(z.string()),
     examples: z.array(z.string()),
     disclaimer: z.string().nullable()

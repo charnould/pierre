@@ -1,7 +1,7 @@
 # PIERRE – L'IA open source du mouvement HLM
 
 > [!IMPORTANT]
-> PIERRE est actuellement en version `0.26.x` (consulter les [releases](https://github.com/charnould/pierre/releases)) avec une **qualité de base de connaissances estimée à `10 %`**. Par ailleurs, la documentation ci-dessous est en cours de rédaction. En cas de difficultés, créer une `issue` ou envoyer un email à charnould@pierre-ia.org.<br><br>PIERRE ne connait pas les spécificités des bailleurs (ex : taille des parcs, coordonnées des agences, procédures internes, etc.). **Ces éléments peuvent néanmoins lui être « enseignés en deux clics ».**
+> PIERRE est actuellement en version `0.27.x` (consulter les [releases](https://github.com/charnould/pierre/releases)) avec une **qualité de base de connaissances estimée à `10 %`**. Par ailleurs, la documentation ci-dessous est en cours de rédaction. En cas de difficultés, créer une `issue` ou envoyer un email à charnould@pierre-ia.org.<br><br>PIERRE ne connait pas les spécificités des bailleurs (ex : taille des parcs, coordonnées des agences, procédures internes, etc.). **Ces éléments peuvent néanmoins lui être « enseignés en deux clics ».**
 
 ## PIERRE : kézako ?
 
@@ -253,8 +253,9 @@ Si vous avez à ce stade personnalisé visuellement votre chatbot (_cf_. supra),
 
 Pour modifier cela, modifier dans le fichier `config.ts` :
 
-- `persona` qui définit l'identité et la personnalité du chatbot
+- `persona` qui définit l'identité et le rôle du chatbot
 - `audience` qui définit le contexte dans lequel le chabot doit considérer son interlocuteur
+- `guidelines` qui définit la façon dont le chatbot répond aux questions
 
 > [!NOTE]
 > Pour faciliter la lecture et manipulation du fichier `config.ts` dans VSCode, ou plus généralement activer le _word wrap_ : utilisez le raccourci `Alt` + `z` (Windows) ou `⌥` + `z` (Mac).
