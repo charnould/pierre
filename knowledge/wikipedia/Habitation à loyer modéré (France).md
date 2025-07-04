@@ -107,6 +107,7 @@ Les HLM sont cités dans des chansons :
 - Affaire des HLM de Paris, Affaire des HLM des Hauts-de-Seine
 - Grand ensemble • Grand ensemble en France
 - Logement social en France
+- Khrouchtchevka
 
 ### Bibliographie
 
@@ -116,3 +117,6 @@ Les HLM sont cités dans des chansons :
 - Jean-Marc Stébé, Le Logement social en France, Paris, PUF, coll. « Que sais-je ? », 2007, 128 p. (ISBN 978-2-13-055594-0, présentation en ligne)
 
 - Portail de la France
+- Portail de l’architecture et de l’urbanisme
+- Portail de la société
+- Portail de la politique française
