@@ -39,20 +39,17 @@ Vous êtes victime de violence conjugale si vous subissez un ou plusieurs des fa
 - 17 : Police et Gendarmerie
 
 - 15 : Samu
-
   - Urgences médicales uniquement
   - Appel gratuit
   - Fonctionne 24h/24 et 7j/7
 
 - 18 : Pompiers
-
   - Urgences médicales uniquement
   - Appel gratuit
 
 - 114 (par SMS) : en cas de difficultés à parler ou entendre
 
 - 39 19 : service spécialisé dans les violences faites aux femmes
-
   - Appel gratuit
   - Fonctionne 24h/24 et 7j/7
   - Appel anonyme ne figurant pas sur les factures de téléphone
