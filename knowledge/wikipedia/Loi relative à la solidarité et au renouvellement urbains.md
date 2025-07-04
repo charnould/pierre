@@ -21,7 +21,6 @@ On peut noter par exemple la présence des notions de protection de l'environnem
 La loi SRU a eu un impact dans cinq domaines : le droit de l'urbanisme, la mixité sociale, les transports, les bailleurs sociaux et le droit civil.
 
 - Le droit de l’urbanisme a évolué :
-
   - les schémas directeurs (SD) ont été remplacés par les schémas de cohérence territoriale (SCOT) ;
   - les plans d’occupation des sols (POS) ont été remplacés par les plans locaux d’urbanisme (PLU) avec la volonté de les inscrire dans une dimension plus politique de la façon d'amenager les villes via l'instauration du Projet d'Amenagement et de Developpement Durable (PADD) ;
   - les plans d’aménagement de zone (PAZ) ont été supprimés de manière à éliminer définitivement l'idée que les ZAC pourraient s'urbaniser de manière dérogatoire aux documents d'urbanisme locaux ;

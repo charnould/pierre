@@ -24,7 +24,6 @@ Les ESH sont représentées par une fédération dirigée par Didier Poussou. Va
 ### Liens externes
 
 - Ressources relatives aux organisations :
-
   - SIREN
   - Répertoire national des associations
 

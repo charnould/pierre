@@ -220,7 +220,6 @@ Ces mesures sont prises dans le cadre plus large d'une relance du logement.
 - Étude d'impact (socioéconomique et juridique) du projet de loi ALUR (sur le site de l'Assemblée nationale)
 - Dossier législatif Alur (sur le site du Sénat)
 - Sur territoires.gouv.fr
-
   - Dossier Alur (en intégralité)
   - Dossier de presse : loi pour l’accès au logement et un urbanisme rénové (Alur) (PDF- 1 Mo)
   - « Ce que la loi ALUR pourrait changer »

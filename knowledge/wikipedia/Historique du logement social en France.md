@@ -117,7 +117,7 @@ Dès lors, le nombre de constructions de logements sociaux ne cesse de décroît
 
 Après le rapport de la commission Barre, la loi du 3 janvier 1977 pose le principe d'une aide personnalisée (APL) permettant l'accès de tous à un bon logement. C'est la fin de la construction des grands ensembles, le retour du pavillonnaire et du logement individuel. En 1977, ce dernier représente plus de la moitié des constructions de logements.
 
-En octobre 1981est créée la « Commission pour le développement social des quartiers » lors des Assises de l'habitat social, organisées par la Caisse des dépôts et consignations, le Commissariat du plan et l'UNFOHLM.
+En octobre 1981 est créée la « Commission pour le développement social des quartiers » lors des Assises de l'habitat social, organisées par la Caisse des dépôts et consignations, le Commissariat du plan et l'UNFOHLM.
 
 Le 22 juin 1982, le ministre Roger Quilliot donne son nom à la loi qui reconnaît pour la première fois le droit à l'habitat, reconnu comme droit fondamental. En instaurant le droit à l’habitat comme cofondement du rapport locatif avec le droit de propriété, la loi Quilliot introduit une rupture importante : elle régule les rapports entre les propriétaires bailleurs et les locataires.
 

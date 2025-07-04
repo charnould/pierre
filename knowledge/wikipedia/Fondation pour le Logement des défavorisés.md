@@ -108,9 +108,9 @@ Si le rapport alerte sur la précarité énergétique en hiver, il met aussi en 
 
 La fondation pour le Logement des défavorisés interpelle régulièrement les pouvoirs publics au sujet des expulsions locatives afin qu’une véritable politique publique de prévention des expulsions soit mise en place : renforcement des aides, indemnisation des bailleurs...
 
-En 2009, elle met en place « Allô Prévention Expulsion », une plate-forme d’écoute pour les ménages menacés d’expulsion locative. Elle informe sur les étapes à venir, les procédures, les personnes impliquées. Elle conseille sur les démarches administratives, juridiques et sociales à engager, concernant tant la procédure d’expulsion que la recherche de logement, et oriente vers les travailleurs sociaux, des avocats, et d’autres professionnels ou associations. En quinze ans, une centaine de bénévoles et des dizaines de juristes associatifs ont accompagné plus de vingt mille ménages, les trois quarts d’entre eux appelant pour un impayé. Dans 77 % des cas, les menaces d'expulsion sont dues à des impayés de loyer.
+En 2009, elle met en place « Allô Prévention Expulsion », une plate-forme d’écoute pour les ménages menacés d’expulsion locative. Elle informe sur les étapes à venir, les procédures, les personnes impliquées. Elle conseille sur les démarches administratives, juridiques et sociales à engager, concernant tant la procédure d’expulsion que la recherche de logement, et oriente vers les travailleurs sociaux, des avocats, et d’autres professionnels ou associations. En quinze ans, une centaine de bénévoles et des dizaines de juristes associatifs ont accompagné plus de vingt mille ménages, les trois quarts d’entre eux appelant pour un impayé. Dans 77 % des cas, les menaces d'expulsion sont dues à des impayés de loyer. Le 5 juin 2024, la plate-forme de prévention des expulsions locatives change de numéro et passe en numéro vert gratuit.
 
-Le 5 juin 2024, la plate-forme de prévention des expulsions locatives change de numéro et passe en numéro vert gratuit.
+En mars 2025, la Chambre nationale des commissaires de justice publie les chiffres des expulsions de locataires de 2024, à dix jours de la fin de la trêve hivernale,. Ainsi, en 2024, les expulsions de locataires augmentent de 87 % sur un an,. En effet, 24 039 procès-verbaux d’expulsion sont délivrés en 2024, contre 12 825 en 2023,. Cette augmentation s’explique par une purge des dossiers bloqués par le Covid, la baisse du pouvoir d’achat et la crise du logement,. De plus, 1,2 million de ménages ont subi des coupures d'électricité ou des baisses de capacité énergétique en raison d'impayés et du coût de l’électricité. De nouveaux publics sont fragilisés, parmi lesquels les artisans et les commerçants. Selon Manuel Domergue, directeur des études au sein de la Fondation pour le Logement des Défavorisés, ces chiffres montrent « une tendance très inquiétante et de long terme »,. Christophe Robert quant à lui dénonce une situation « extrêmement tendue », qui se dégrade « de manière vertigineuse ». Pour faire face à cette situation, il réclame des politiques de prévention plus puissantes, des mesures d'aide et une augmentation du fonds d'indemnisation des propriétaires pour éviter la grande précarité.
 
 ### Solidarité internationale
 
@@ -222,6 +222,8 @@ En 2021, la Fondation dévoile sa campagne de sensibilisation intitulée : « 
 
 L’année suivante, l’association dévoile sa nouvelle campagne d’hiver : « Quitter la rue, c’est retrouver la vie,,. » Le film, réalisé par Arnaud Desplechin, raconte la descente aux enfers d'un jeune qui se retrouve à la rue à la suite d'une dispute familiale. La rencontre avec un bénévole de la Fondation l'aide à retrouver un travail, un logement et à reconstruire sa vie,.
 
+Le 16 avril 2025, la Fondation lance une campagne de communication, "L'Attente", réalisée par Rosa Paris (avec les visuels de la photographe Bettina Pittaluga),. La campagne souligne combien l’urgence sociale est forte aujourd’hui, alors que 15 millions de personnes sont touchées par des difficultés de logement en France.
+
 ### Colloques
 
 La fondation pour le Logement des défavorisés organise également des colloques, comme en 2019, sur le thème « Inégalité territoriales et mal-logement ».
@@ -332,7 +334,6 @@ Elle suggère enfin aux candidats à la présidentielle la création d’une age
 - Ressource relative à la santé :
   - Fichier national des établissements sanitaires et sociaux
 - Ressource relative à plusieurs domaines :
-
   - Radio France
 
 - Portail de l’humanitaire
