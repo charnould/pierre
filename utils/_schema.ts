@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod/v4'
 
 /**
  * Represents a User schema definition using Zod.
@@ -55,13 +55,16 @@ export const Config = z
         z.object({
           key: z.enum(['WEBHOOK_KEY_1', 'WEBHOOK_KEY_2', 'WEBHOOK_KEY_3']),
           url: z.string(), // URL check is made elsewhere
-          format: z.function().args(
-            z.object({
-              custom_data: z.array(z.string()),
-              content: z.string(),
-              role: z.string()
-            })
-          )
+          format: z.function({
+            input: [
+              z.object({
+                custom_data: z.array(z.string()),
+                content: z.string(),
+                role: z.string()
+              })
+            ],
+            output: z.any()
+          })
         })
       )
       .default([]),
@@ -120,23 +123,23 @@ export const Reply = z.object({
               score: z.coerce.number().nullish().default(null).catch(null),
               comment: z.string().nullish().default(null)
             })
-            .default({}),
+            .prefault({}),
           // Social housing organization satisfaction
           organization: z
             .object({
               score: z.coerce.number().nullish().default(null).catch(null),
               comment: z.string().nullish().default(null)
             })
-            .default({}),
+            .prefault({}),
           // AI generated customer satisfaction (CSAT)
           ai: z
             .object({
               score: z.coerce.number().nullish().default(null).catch(null),
               comment: z.string().nullish().default(null)
             })
-            .default({})
+            .prefault({})
         })
-        .default({}),
+        .prefault({}),
       // LLM usage
       tokens: z
         .object({
@@ -145,9 +148,9 @@ export const Reply = z.object({
           completion: z.number().nullish().default(null),
           total: z.number().nullish().default(null)
         })
-        .default({})
+        .prefault({})
     })
-    .default({})
+    .prefault({})
 })
 
 //
@@ -162,9 +165,10 @@ export const Augmented_Query = z.object({
 
 //
 // AI Context
-export const AIContext = Reply.extend({ query: Augmented_Query.nullable().default(null) })
-  .merge(
-    z.object({
+export const AIContext = z
+  .object({
+    ...Reply.extend({ query: Augmented_Query.nullable().default(null) }).shape,
+    ...z.object({
       chunks: z
         .object({
           community: z.array(z.string()).nullish().default([]),
@@ -185,8 +189,8 @@ export const AIContext = Reply.extend({ query: Augmented_Query.nullable().defaul
           })
         )
         .default([])
-    })
-  )
+    }).shape
+  })
   .refine(async (c) => {
     // Change config name for config content
     if (typeof c.config === 'string') {
