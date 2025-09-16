@@ -121,10 +121,7 @@ const search_and_answer = async (c: Context) => {
     // Save reply (= what the user just said)
     save_reply(context)
 
-    context = await AIContext.parseAsync({
-      ...context,
-      conversation: get_conversation(context.conv_id)
-    })
+    context.conversation = get_conversation(context.conv_id) as AIContext['conversation']
 
     // Get knowledge access for user query considering current context
     let knowledge_access = {
