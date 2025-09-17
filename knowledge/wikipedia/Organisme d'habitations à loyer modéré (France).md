@@ -4,7 +4,7 @@ Un organisme d'habitations à loyer modéré (OHLM) est, en France, un organisme
 
 Les organismes d'habitations à loyer modéré, définis dans le code de la construction et de l'habitation aux articles L. 411 et suivants, peuvent être des établissements publics tels que les OPH ou des organismes de droit privé.
 
-En 2017, on comptait environ 800 organismes HLM, :
+En 2017, on comptait environ 800 organismes HLM :
 
 - 264 offices publics de l'habitat (OPH) ;
 - 230 entreprises sociales pour l'habitat (ESH, nouvelle désignation des SA HLM) ;
@@ -78,7 +78,7 @@ Ce nouveau cadre institutionnel, en grande partie inspiré du statut des OPAC, p
 D'après le code de la construction et de l'habitation, trois types d'organismes privés sont qualifiés d'organismes HLM :
 
 - les entreprises sociales pour l'habitat (ESH), nouvelle dénomination créée en 2002 pour qualifier les sociétés anonymes d'habitations à loyer modéré. Au nombre de 230, les ESH regroupées au sein de la Fédération des entreprises sociales pour l'habitat gèrent plus de deux millions de logements où habitent 4,5 millions de personnes.
-- les sociétés anonymes coopératives de production, créées par la loi du 16 juillet 1971 et soumises au statut de la coopération et les sociétés anonymes coopératives d'intérêt collectif d'habitations à loyer modéré,. Au nombre de 173, les sociétés coopératives d'HLM produisent chaque année environ 5 000 logements dont 4 000 sont réservées à l'accession à la propriété. Elles sont regroupées au sein de la Fédération nationale des sociétés coopératives d'HLM ;
+- les sociétés anonymes coopératives de production, créées par la loi du 16 juillet 1971 et soumises au statut de la coopération et les sociétés anonymes coopératives d'intérêt collectif d'habitations à loyer modéré. Au nombre de 173, les sociétés coopératives d'HLM produisent chaque année environ 5 000 logements dont 4 000 sont réservées à l'accession à la propriété. Elles sont regroupées au sein de la Fédération nationale des sociétés coopératives d'HLM ;
 - les fondations d'habitations à loyer modéré.
 
 Depuis le 1er janvier 2009, les sociétés anonymes de crédit immobilier (SACI) ne sont plus des organismes de HLM, conformément aux dispositions de l'ordonnance du 25 août 2006.

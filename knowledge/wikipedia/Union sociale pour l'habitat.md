@@ -1,6 +1,6 @@
 # Union sociale pour l'habitat
 
-L’Union sociale pour l’habitat (USH) est depuis octobre 2002 le nom de l’Union nationale des fédérations d’organismes Hlm.
+L’Union sociale pour l’habitat (USH) est depuis octobre 2002 le nom de l’Union nationale des fédérations d’organismes HLM.
 
 ## Histoire
 
@@ -64,7 +64,7 @@ Il existe 12 associations régionales en métropole\[Quand ?\] et une associati
 
 ### Articles connexes
 
-- Logement social
+- Logement social en France
 - Habitation à loyer modéré (France)
 - Organisme d'habitations à loyer modéré
 
