@@ -18,9 +18,9 @@ Une étude d'impact du projet de loi, du 25 juin 2013, fournit une grande quanti
 
 Entre le dépôt du projet de loi déposé le 26 juin 2013, jusqu'à son adoption en seconde lecture au Sénat le 31 janvier 2014, l'article 8 a été largement débattu, revu et précisé par les deux assemblées.
 
-Ce projet de loi a fait l'objet de multiples polémiques sur le terrain médiatique, notamment sur le financement de cette mesure (qui devait faire l'objet d'une taxe sur les loyers ,,,), son caractère obligatoire,,, (la dernière version de la loi a finalement introduit le fait que la garantie sera systématique, sauf si le bailleur indique le contraire), l'existence d'une franchise, son coût (évalué selon les sources entre 400 et 800 millions d'euros annuels, voire 3 milliards,), la déresponsabilisation des bailleurs et locataires, un manque de visibilité et d'efficacité par rapport à d'autres dispositifs (assurances privées).
+Ce projet de loi a fait l'objet de multiples polémiques sur le terrain médiatique, notamment sur le financement de cette mesure (qui devait faire l'objet d'une taxe sur les loyers ), son caractère obligatoire (la dernière version de la loi a finalement introduit le fait que la garantie sera systématique, sauf si le bailleur indique le contraire), l'existence d'une franchise, son coût (évalué selon les sources entre 400 et 800 millions d'euros annuels, voire 3 milliards), la déresponsabilisation des bailleurs et locataires, un manque de visibilité et d'efficacité par rapport à d'autres dispositifs (assurances privées).
 
-Pendant la période d'examen de la loi, des précisions ont été apportées et incorporées au texte de loi pour y répondre, comme la possibilité de souscrire une assurance complémentaire, le montant du plafond de remboursement fixé au loyer de référence, de la loi, le financement apporté par Action Logement, la durée maximale d'indemnisation, les effectifs de l'agence qui devraient être limités à quelques dizaines,les jeunes, ciblés par le dispositif.
+Pendant la période d'examen de la loi, des précisions ont été apportées et incorporées au texte de loi pour y répondre, comme la possibilité de souscrire une assurance complémentaire, le montant du plafond de remboursement fixé au loyer de référence de la loi, le financement apporté par Action Logement, la durée maximale d'indemnisation, les effectifs de l'agence qui devraient être limités à quelques dizaines,les jeunes, ciblés par le dispositif.
 
 Ses conditions de mise en œuvre n'étant pas encore toutes définies, elle continue de faire débat, auprès des assureurs et agents immobiliers: Le syndicat des courtiers en assurance a saisi le conseil de la concurrence, estimant que cela pourrait nuire au marché concurrent de la garantie non publique (GLI, aujourd'hui 900 000 contrats).
 
@@ -30,7 +30,7 @@ Un sondage en ligne évoque pour sa part le scepticisme des bailleurs.
 
 Didier Ridoret, président de la Fédération française du bâtiment, considère que la garantie universelle des loyers est une « usine à gaz » inapplicable.
 
-D'autres articles vantent ses avantages ainsi que ceux de la loi ALUR dans son ensemble ,.
+D'autres articles vantent ses avantages ainsi que ceux de la loi ALUR dans son ensemble .
 
 ## Remise en cause
 

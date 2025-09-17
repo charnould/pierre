@@ -20,7 +20,7 @@ Les 18 602 personnes qui meurent à Paris en 1832 de la deuxième pandémie de
 
 En 1849, à la demande de Louis-Napoléon Bonaparte, l’architecte Marie-Gabriel Veugny dessine les plans de la cité Napoléon, construite entre 1849 et 1851 au 58, rue de Rochechouart dans le 9e arrondissement de Paris. C'est la première cité ouvrière de Paris, inspirée du phalanstère de Charles Fourier dont la vogue commençait tout juste. Autour d'un grand jardin arboré avec une fontaine, les quatre bâtiments qui la composent permettaient de loger 400 familles, dans 86 logements.
 
-La Cité Napoléon rebaptisée Cité philanthropique en 1884 est édifiée à Lille de 1859 à 1862 par le Bureau de bienfaisance pour loger 1 000 indigents. La conception très novatrice de l'architecte émile Vandenbergh, de six corps de bâtiments séparés par des cours de 16 mètres de large, reliés par des ponts abritant les services communs privilégie la commodité de la disposition, l'air et la lumière.
+La Cité Napoléon rebaptisée Cité philanthropique en 1884 est édifiée à Lille de 1859 à 1862 par le Bureau de bienfaisance pour loger 1 000 indigents. La conception très novatrice de l'architecte Émile Vandenbergh, de six corps de bâtiments séparés par des cours de 16 mètres de large, reliés par des ponts abritant les services communs privilégie la commodité de la disposition, l'air et la lumière.
 
 ### La première loi concernant le logement ouvrier
 
@@ -79,7 +79,7 @@ Le modèle de l'habitation ouvrière y est présenté : la maison monofamiliale
 
 Concernant l’intérieur de l’habitation, c’est la « chambre » unique, ouverte à tous les usages, qui fait office de repoussoir. Ces réalisations ajoutent donc à la chambre une salle commune, appelée également cuisine ou salle à manger. L’existence de deux pièces constituait un degré relatif d’aisance et le maximum de confort auquel pouvait prétendre un ménage ouvrier. Elle est progressivement généralisée dans les plans de logements ouvriers.
 
-Parmi les premières réalisations de ce type en France, la cité-jardin « La Ruche », dans le quartier de La Plaine Saint-Denis (62-64 rue du Landy), est l’œuvre de Georges Guyon, l’un des premiers architectes à penser le logement social. En 1890, un concours pour un groupe de logements sociaux à réaliser dans la Plaine Saint-Denis est lancé par la Société des Habitations Économiques de Saint-Denis. La Ruche, opération de 67 logements où les maisons sont posées entre cour et jardin, construite pour sa première phase de 1891 à 1893, est la première réalisation d’HBM encadrée par la loi Siegfried créant le financement public du logement social,,.
+Parmi les premières réalisations de ce type en France, la cité-jardin « La Ruche », dans le quartier de La Plaine Saint-Denis (62-64 rue du Landy), est l’œuvre de Georges Guyon, l’un des premiers architectes à penser le logement social. En 1890, un concours pour un groupe de logements sociaux à réaliser dans la Plaine Saint-Denis est lancé par la Société des Habitations Économiques de Saint-Denis. La Ruche, opération de 67 logements où les maisons sont posées entre cour et jardin, construite pour sa première phase de 1891 à 1893, est la première réalisation d’HBM encadrée par la loi Siegfried créant le financement public du logement social.
 
 ### Les premières lois
 
@@ -111,7 +111,7 @@ En 1950, les HBM deviennent les habitations à loyer modéré (HLM).
 
 À la suite de l'appel de l'Abbé Pierre le 1er février 1954, l'État — s'appuyant sur les organismes d'HLM publics (OP) ou privés (SA) — s'engage massivement dans l'effort de construction de logements, notamment sous la forme de grands ensembles. Ce sont plusieurs millions de logements qui sont très rapidement construits. Le confort de ces constructions est très supérieur à nombre de logements existants à cette époque, notamment sur le plan des installations sanitaires. Ces logements apportent un confort quasi inexistant pour une bonne partie de la population à l'époque. Toutefois, les isolations thermique et phonique sont souvent négligées, de même que parfois des erreurs d'urbanisme : grands ensembles à la périphérie des villes, sans transports ni commerces. L'arrêt de mort de la politique des grands ensembles est signifié en 1973 par la circulaire « relative aux formes d'urbanisation dites « grands ensembles » et à la lutte contre la ségrégation sociale par l'habitat » d'Olivier Guichard, ministre de l'Aménagement du territoire, de l'Équipement, du Logement et du Tourisme.
 
-Dès lors, le nombre de constructions de logements sociaux ne cesse de décroître,. En 1975, le livre blanc intitulé « Propositions pour l’habitat », édité par l'union nationale des fédérations d'organismes HLM (UNFOHLM), fait un constat très inquiétant du manque de logements et revendique la qualité de l'habitat pour tous.
+Dès lors, le nombre de constructions de logements sociaux ne cesse de décroître. En 1975, le livre blanc intitulé « Propositions pour l’habitat », édité par l'union nationale des fédérations d'organismes HLM (UNFOHLM), fait un constat très inquiétant du manque de logements et revendique la qualité de l'habitat pour tous.
 
 ## Les dernières lois
 
