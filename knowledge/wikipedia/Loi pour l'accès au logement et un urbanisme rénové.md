@@ -4,7 +4,7 @@ La loi no 2014-366 du 24 mars 2014 pour l'accès au logement et un urbanisme r�
 
 Traduction législative de la proposition 22 du programme présidentiel de François Hollande et portée au Parlement par Cécile Duflot, la loi vise notamment à instaurer un encadrement des loyers et une garantie universelle des loyers, elle modifie de nombreuses dispositions législatives sur la vente et la location de logements, l'attribution des logements sociaux, les normes de construction, change des principes importants en urbanisme, en particulier la suppression du coefficient d'occupation des sols, le dessaisissement des communes au profit des intercommunalités en matière de conception et d'application du plan local d'urbanisme (PLU) qui devient un plan local d'urbanisme intercommunal (PLUI).
 
-La loi, qui compte 177 articles et s'étend sur 150 pages de textes législatifs et réglementaires, fait l'objet de vives critiques de la part des professionnels du logement et d'économistes libéraux qui l'accusent d'avoir freiné la construction et de décourager les investisseurs. Estimant que la loi coûte au pays entre 0,4 et 0,5 point de croissance économique, le premier ministre Manuel Valls décide le 29 août 2014 de réformer la partie de la loi qu'il estime gêner le plus la construction et la croissance,.
+La loi, qui compte 177 articles et s'étend sur 150 pages de textes législatifs et réglementaires, fait l'objet de vives critiques de la part des professionnels du logement et d'économistes libéraux qui l'accusent d'avoir freiné la construction et de décourager les investisseurs. Estimant que la loi coûte au pays entre 0,4 et 0,5 point de croissance économique, le premier ministre Manuel Valls décide le 29 août 2014 de réformer la partie de la loi qu'il estime gêner le plus la construction et la croissance.
 
 ## Genèse du texte
 
@@ -32,12 +32,12 @@ Bien que le CAE soit chargé de conseiller le premier ministre, si l'on en croit
 
 ### Parcours législatif
 
-- Le projet de loi est présenté le 26 juin 2013 en première lecture à l'assemblée nationale.
-- Le projet de loi est adopté en première lecture à l'assemblée le 17 septembre 2013.
-- Adopté par le sénat en octobre 2013, après quelques retouches dont le prolongement de la trêve hivernale jusqu'au 31 mars.
+- Le projet de loi est présenté le 26 juin 2013 en première lecture à l'Assemblée nationale.
+- Le projet de loi est adopté en première lecture à l'Assemblée le 17 septembre 2013.
+- Adopté par le Sénat en octobre 2013, après quelques retouches dont le prolongement de la trêve hivernale jusqu'au 31 mars.
 - Adopté par l'Assemblée en seconde lecture le 16 janvier 2014.
-- Adopté en seconde lecture par le Sénat le 31 janvier. Le Sénat modifie la garantie universelle des loyers (GUL) financée non plus par une taxe mais par des fonds publics.
-- Vote définitif à l'assemblée le 19 février 2014.
+- Adopté en seconde lecture par le Sénat le 31 janvier 2014. Le Sénat modifie la garantie universelle des loyers (GUL) financée non plus par une taxe mais par des fonds publics.
+- Vote définitif à l'Assemblée le 19 février 2014.
 - Le 20 mars 2014, l'essentiel de la loi Alur est jugé conforme à la constitution par le Conseil constitutionnel. Quatre points ont été retoqués, dans le cas où des personnes à charge vivent avec des personnes à faibles ressources, ce sont les ressources de l'ensemble qui doivent être prises en compte, et non celles du seul locataire ; les mesures dérogatoires à l'encadrement des loyers sont assouplies ; la cession des parts sociales d'une société civile immobilière, la possibilité pour l'assemblée générale des copropriétaires de permettre des locations de courtes durée à une clientèle de passage.
 
 ## Les grands traits de la loi Alur
@@ -133,7 +133,8 @@ La gestion des copropriétés est modifiée par une réforme de la gouvernance e
 
 - La copropriété peut maintenant décider de travaux dans les parties communes à la place du copropriétaire défaillant non plus à l'unanimité, mais via un vote à la majorité des voix.
 - la loi rend obligatoire la mise en place d'un fonds de travaux, alimenté par un pourcentage des charges courantes et mobilisable en cas de travaux significatifs.
-- La surélévation (source de valeur) est une solution possible, qui peut être combinée à une réhabilitation énergétique ; les propriétaires du dernier étage ne peuvent plus s'opposer à la création d'un ou de plusieurs étages supérieurs (mais ils doivent être prioritaires dans le droit d'acheter le logement situé au-dessus du leur ).Selon Philippe Pelletier, « tous les calculs montrent qu'avec le prix de vente d'appartements créés lors d'une surélévation, on peut financer la rénovation d'une copropriété. »
+- La surélévation (source de valeur) est une solution possible, qui peut être combinée à une réhabilitation énergétique ; les propriétaires du dernier étage ne peuvent plus s'opposer à la création d'un ou de plusieurs étages supérieurs (mais ils doivent être prioritaires dans le droit d'acheter le logement situé au-dessus du leur ).  
+  Selon Philippe Pelletier, « tous les calculs montrent qu'avec le prix de vente d'appartements créés lors d'une surélévation, on peut financer la rénovation d'une copropriété. »
 
 Des dispositions visent à détecter plus vite les copropriétés en difficulté, et renforcent les outils utilisables par les pouvoirs publics. Et pour pallier le manque d’informations disponibles sur les copropriétés, un « registre d'immatriculation » est créé au niveau national.
 
@@ -160,7 +161,7 @@ La loi cherche aussi à mieux protéger le foncier agricole et les zones naturel
 
 #### Promotion de l'habitat participatif, mobile et nomade
 
-La loi encourage l'habitat participatif par deux nouveaux statuts juridiques possibles et reconnaît plusieurs formes d’habitat léger, mobile et démontable. Les documents d'urbanisme peuvent réserver des terrains où les résidences mobiles ou démontables (yourte, tipi, mobile home, caravane…) pourront s'installer,.
+La loi encourage l'habitat participatif par deux nouveaux statuts juridiques possibles et reconnaît plusieurs formes d’habitat léger, mobile et démontable. Les documents d'urbanisme peuvent réserver des terrains où les résidences mobiles ou démontables (yourte, tipi, mobile home, caravane…) pourront s'installer.
 
 ### Attribution des logements sociaux et des marchés fonciers
 
@@ -184,7 +185,7 @@ De façon plus concrète, la suppression du coefficient d'occupation des sols (C
 
 ### La réception de la presse internationale
 
-La presse britannique, notamment The Economist et The Financial Times, critique durement la loi\[pourquoi ?\],.
+La presse britannique, notamment The Economist et The Financial Times, critique durement la loi\[pourquoi ?\].
 
 ### Remise en question par le gouvernement Valls 2
 

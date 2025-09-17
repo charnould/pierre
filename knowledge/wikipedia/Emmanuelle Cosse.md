@@ -16,7 +16,7 @@ Le 20 juin 2015, elle épouse Denis Baupin, ancien député de Paris et ancien v
 
 ### Carrière de journaliste
 
-Elle commence une carrière journalistique en collaborant en 2002 au magazine Têtu, pour lequel elle suit la campagne présidentielle de la même année. Elle tient en 2004 une chronique dans le mensuel de la gauche radicale Regards dont elle devient plus tard la rédactrice en chef,.
+Elle commence une carrière journalistique en collaborant en 2002 au magazine Têtu, pour lequel elle suit la campagne présidentielle de la même année. Elle tient en 2004 une chronique dans le mensuel de la gauche radicale Regards dont elle devient plus tard la rédactrice en chef.
 
 ### Carrière politique
 
@@ -28,7 +28,7 @@ Elle rejoint Europe Écologie en 2009. Elle figure sur la liste Europe Écologie
 
 #### Secrétaire nationale d'Europe Écologie Les Verts
 
-Le 30 novembre 2013, Emmanuelle Cosse est élue secrétaire nationale d'Europe Écologie Les Verts avec 55 % des voix lors du congrès du parti à Caen,. Le 1er mars 2015 , elle annonce sa candidature aux régionales en Île-de-France pour les élections régionales de décembre 2015. Sa liste obtient 8,03 % des voix à l'issue du premier tour, et fusionne avec celles de Claude Bartolone (PS) et Pierre Laurent (FG) au second : ils sont cependant battus par la liste Les Républicains-UDI-MoDem de Valérie Pécresse. Elle est par la suite élue présidente du groupe EELV au conseil régional d'Île-de-France ; elle quitte cette fonction en février 2016 après sa nomination ministérielle.
+Le 30 novembre 2013, Emmanuelle Cosse est élue secrétaire nationale d'Europe Écologie Les Verts avec 55 % des voix lors du congrès du parti à Caen. Le 1er mars 2015 , elle annonce sa candidature aux régionales en Île-de-France pour les élections régionales de décembre 2015. Sa liste obtient 8,03 % des voix à l'issue du premier tour, et fusionne avec celles de Claude Bartolone (PS) et Pierre Laurent (FG) au second : ils sont cependant battus par la liste Les Républicains-UDI-MoDem de Valérie Pécresse. Elle est par la suite élue présidente du groupe EELV au conseil régional d'Île-de-France ; elle quitte cette fonction en février 2016 après sa nomination ministérielle.
 
 #### Ministre du Logement et de l'Habitat durable
 
@@ -42,7 +42,7 @@ En 2016, elle est l'un des auteurs du projet de loi « Egalité et Citoyenneté
 
 Pendant la primaire citoyenne de 2017, elle soutient François de Rugy. Désapprouvant son choix de rejoindre Emmanuel Macron en vue de l'élection présidentielle de 2017, elle soutient finalement Benoît Hamon.
 
-En avril 2017, elle annonce qu'elle se présente aux élections législatives de 2017 dans la 3e circonscription de Seine-Saint-Denis. Elle est éliminée dès le premier tour se classant en cinquième position avec 9,47 % des voix,.
+En avril 2017, elle annonce qu'elle se présente aux élections législatives de 2017 dans la 3e circonscription de Seine-Saint-Denis. Elle est éliminée dès le premier tour se classant en cinquième position avec 9,47 % des voix.
 
 #### Élections régionales de 2021
 
@@ -52,7 +52,7 @@ Pour les élections régionales de 2021, Emmanuelle Cosse soutient en Île-de-Fr
 
 Après sa sortie du gouvernement, Emmanuelle Cosse déclare envisager de travailler dans le privé mais confie fin août 2017 ses difficultés à trouver un emploi. Elle crée en novembre 2017 une société de conseil du nom de MTEV Consulting. Elle reste toutefois conseillère régionale d'Île-de-France.
 
-En février 2019, Emmanuelle Cosse devient Présidente de l’ESH Coallia. Le 4 novembre 2020, elle est élue présidente de l'Union sociale pour l'habitat.
+En février 2019, Emmanuelle Cosse devient présidente de l’ESH Coallia. Le 4 novembre 2020, elle est élue présidente de l'Union sociale pour l'habitat.
 
 ## Prises de position
 
@@ -74,6 +74,8 @@ Sa nomination au gouvernement en février 2016 est alors relatée comme perçue 
 
 - Sandrine Rousseau (préf. Claire Serre-Combe, avant-propos d'Emmanuelle Cosse, Clémentine Autain, Cécile Duflot, Marie-Pierre de La Gontrie et Laurence Rossignol), Manuel de survie à destination des femmes en politique, Paris, Les Petits matins, 2015, 107 p. (ISBN 978-2-36383-161-3, BNF 44288808).
 
+## Notes et références
+
 ## Voir aussi
 
 ### Articles connexes
@@ -89,8 +91,6 @@ Sa nomination au gouvernement en février 2016 est alors relatée comme perçue 
   - Radio France
 - Ressource relative à l'audiovisuel :
   - France 24
-
-## Notes et références
 
 - Portail du journalisme
 - Portail des femmes et du féminisme

@@ -2,7 +2,7 @@
 
 Le quartier prioritaire de la politique de la ville (QPPV), quartier de la politique de la ville (QPV) ou quartier prioritaire (QP) est un dispositif de la politique de la ville du gouvernement français, rassemblant les zones urbaines les plus pauvres, nécessitant une intervention des pouvoirs publics, notamment en matière de rénovation urbaine.
 
-On compte environ 1 500 quartiers prioritaires réunissant près de 5,5 millions d'habitants en 2022. S'il s'agit essentiellement de cités de grands ensembles, on trouve aussi d'anciennes cités minières et industrielles ou des centres anciens dégradés. La vétusté de l'habitat, l'éloignement des bassins d'emplois et des services publics représentent des enjeux récurrents.
+Environ 1 500 quartiers prioritaires réunissant près de 5,5 millions d'habitants sont dénombrés en France en 2022. S'il s'agit essentiellement de cités de grands ensembles, on trouve aussi d'anciennes cités minières et industrielles ou des centres anciens dégradés. La vétusté de l'habitat, l'éloignement des bassins d'emplois et des services publics représentent des enjeux récurrents.
 
 Cette entité vise à réduire la complexité du maillage des zones socialement défavorisées, en remplaçant deux dispositifs par un seul et en simplifiant les critères de découpage. Le dispositif est entré en vigueur le 1er janvier 2015 en remplacement de la zone urbaine sensible (ZUS) et du quartier en contrat urbain de cohésion sociale (CUCS).
 
