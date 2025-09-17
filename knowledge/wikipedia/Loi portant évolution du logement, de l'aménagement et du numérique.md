@@ -2,7 +2,7 @@
 
 La loi du 23 novembre 2018 portant évolution du logement, de l'aménagement et du numérique, ou loi ÉLAN (portant évolution du logement, de l'aménagement et du numérique), vise à réformer le droit immobilier. Le texte est présenté au Conseil des ministres en avril 2018 par le ministre de la cohésion des territoires, Jacques Mézard et le secrétaire d'État Julien Denormandie, et vise un « choc de l'offre ».
 
-Après de longs débats et de nombreux amendements, le Sénat adopte le texte le 16 octobre 2018 (avec 201 voix pour et 127 contre), permettant la promulgation du texte par le président de la République (loi validée le 15 novembre 2018 par le Conseil constitutionnel), et la future publication des décrets d'application.
+Après de longs débats et de nombreux amendements, le Sénat adopte le texte le 16 octobre 2018 (avec 201 voix pour et 127 contre), le Conseil constitutionnel saisi par 60 députés prononce une non-conformité partielle, permettant la promulgation du texte par le président de la République le 23 novembre 2018. Au 23 septembre 2019, le Ministère de la Cohésion des territoires annonce qu’un total d’environ 70 décrets d’application sont attendus et que 52 sont publiés à cette date, ainsi que 5 ordonnances et 2 circulaires.
 
 ## Principaux sujets
 
@@ -29,7 +29,7 @@ La loi précise, selon le ministère, les sujets suivants :
 
 ## Résultats et critiques
 
-La loi prévoit de supprimer l'avis potentiellement opposable des architectes des bâtiments de France pour les bâtiments protégés et de ne le rendre que consultatif. Cette mesure suscite des critiques des défenseurs du patrimoine, les élus locaux pouvant désormais ne pas tenir compte de ces avis dans leurs projets urbains. Cette loi présente en effet le danger de permettre la destruction de bâtiments protégés,,.
+La loi prévoit de supprimer l'avis potentiellement opposable des architectes des bâtiments de France pour les bâtiments protégés et de ne le rendre que consultatif. Cette mesure suscite des critiques des défenseurs du patrimoine, les élus locaux pouvant désormais ne pas tenir compte de ces avis dans leurs projets urbains. Cette loi présente en effet le danger de permettre la destruction de bâtiments protégés.
 
 Avant le vote de la loi au Sénat, Pierre Madec, économiste à l'OFCE, estime que le gouvernement avec la loi Elan a posé « un bon diagnostic sur la crise du logement, mais n'apporte pas les réponses appropriées. »
 
