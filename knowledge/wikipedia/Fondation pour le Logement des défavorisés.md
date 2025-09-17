@@ -14,7 +14,7 @@ En 2024, après les accusations d'agressions sexuelles et de viols à l'encontre
 
 ### Origine d'un combat
 
-Marie-Joseph Henri Grouès,, né le 5 août 1912 à Lyon, est le cinquième d'une famille catholique de huit enfants, issu d’un milieu assez aisé. Très tôt, il souhaite mener une vie monastique au service des démunis. Il a pour modèle son père, qui sert les repas aux mendiants et leur coupe les cheveux.
+Marie-Joseph Henri Grouès, né le 5 août 1912 à Lyon, est le cinquième d'une famille catholique de huit enfants, issu d’un milieu assez aisé. Très tôt, il souhaite mener une vie monastique au service des démunis. Il a pour modèle son père, qui sert les repas aux mendiants et leur coupe les cheveux.
 
 Entre 1947 et 1949, l’abbé Pierre habite dans une maison délabrée qu’il rénove à Neuilly-Plaisance. Il y accueille les personnes défavorisées et favorise la réconciliation entre Français et Allemands.
 
@@ -34,7 +34,7 @@ Après la Seconde Guerre mondiale, beaucoup de maisons sont détruites. Des pers
 
 Début 1954, la France connaît une série de drames liés à la rigueur de l’hiver (il fait jusqu’à −20 °C à Paris). Dans la nuit du 30 janvier, une femme est retrouvée morte dans la rue, tenant dans la main son avis d’expulsion. Cette tragédie pousse l’abbé Pierre à attirer l'attention des politiques.
 
-Si les parlementaires refusent d’abord de l’entendre, les médias relaient son appel. RTF (Radiodiffusion Télévision Française) lui offre une tribune. Le 1er février, l’abbé Pierre rédige avec le journaliste de La Croix, Georges Verpraet, un texte qu’ils lisent à l’antenne de Radio-Luxembourg,. Il commence son discours ainsi : « Mes amis, au secours... Une femme vient de mourir gelée, cette nuit à trois heures, sur le trottoir du boulevard Sébastopol, serrant sur elle le papier par lequel, avant-hier, on l'avait expulsée. Chaque nuit, ils sont plus de deux mille recroquevillés sous le gel, sans toit, sans pain. » Il incite tous les Français à donner des couvertures, de la nourriture et du temps afin de sauver la vie de dizaine de milliers de personnes. L’appel médiatique est entendu et suscite un vaste élan de générosité, surnommé « l’insurrection de la bonté ». Il marque le début d’une lutte contre la misère sans précédent en France, et constitue l’un des plus grands élans de générosité de son histoire. Couvertures, vêtements, chèques… Les dons arrivent en masse\[source insuffisante\]. L’acteur Charlie Chaplin lui remet même 2 millions de francs pour la cause\[source insuffisante\].
+Si les parlementaires refusent d’abord de l’entendre, les médias relaient son appel. RTF (Radiodiffusion Télévision Française) lui offre une tribune. Le 1er février, l’abbé Pierre rédige avec le journaliste de La Croix, Georges Verpraet, un texte qu’ils lisent à l’antenne de Radio-Luxembourg. Il commence son discours ainsi : « Mes amis, au secours... Une femme vient de mourir gelée, cette nuit à trois heures, sur le trottoir du boulevard Sébastopol, serrant sur elle le papier par lequel, avant-hier, on l'avait expulsée. Chaque nuit, ils sont plus de deux mille recroquevillés sous le gel, sans toit, sans pain. » Il incite tous les Français à donner des couvertures, de la nourriture et du temps afin de sauver la vie de dizaine de milliers de personnes. L’appel médiatique est entendu et suscite un vaste élan de générosité, surnommé « l’insurrection de bonté ». Il marque le début d’une lutte contre la misère sans précédent en France, et constitue l’un des plus grands élans de générosité de son histoire. Couvertures, vêtements, chèques… Les dons arrivent en masse\[source insuffisante\]. L’acteur Charlie Chaplin lui remet même 2 millions de francs pour la cause\[source insuffisante\].
 
 Après cet événement, l’abbé Pierre parcourt le monde et s’engage dans une lutte mondiale contre la misère. Il rencontre notamment Jawaharlal Nehru, Albert Einstein et Dwight D. Eisenhower.
 
@@ -82,7 +82,7 @@ Le rapport épingle aussi l’instabilité politique. « On a eu sept mois sans
 
 ### Logement social
 
-L’association s’engage pour la construction de logements sociaux et lance des programmes de construction de logements dits « très sociaux », à faible loyer, confortables, et performants énergétiquement, destinés aux ménages touchant des revenus inférieurs au Smic. De 2005 à 2020, elle participe à la production de près de 9 000 logements accessibles aux personnes en difficulté.
+L’association s’engage pour la construction de logements sociaux et lance des programmes de construction de logements dits « très sociaux », à faible loyer, confortables, et performants énergétiquement, destinés aux ménages touchant des revenus inférieurs au Smic. De 2005 à 2020, elle participe à la production de près de 9 000 logements accessibles aux personnes en difficulté.
 
 Elle soutient la construction de logements à travers différents programmes. De 2005 à 2008, elle s’engage dans la production de mille cinq cents logements très sociaux. Puis, entre 2008 et 2011, elle lance « deux mille toits pour deux mille familles ». Depuis 2012, elle s’appuie sur son programme « Toits d’Abord » portant sur la construction et la rénovation de 500 à 700 logements par an.
 
@@ -110,7 +110,7 @@ La fondation pour le Logement des défavorisés interpelle régulièrement les p
 
 En 2009, elle met en place « Allô Prévention Expulsion », une plate-forme d’écoute pour les ménages menacés d’expulsion locative. Elle informe sur les étapes à venir, les procédures, les personnes impliquées. Elle conseille sur les démarches administratives, juridiques et sociales à engager, concernant tant la procédure d’expulsion que la recherche de logement, et oriente vers les travailleurs sociaux, des avocats, et d’autres professionnels ou associations. En quinze ans, une centaine de bénévoles et des dizaines de juristes associatifs ont accompagné plus de vingt mille ménages, les trois quarts d’entre eux appelant pour un impayé. Dans 77 % des cas, les menaces d'expulsion sont dues à des impayés de loyer. Le 5 juin 2024, la plate-forme de prévention des expulsions locatives change de numéro et passe en numéro vert gratuit.
 
-En mars 2025, la Chambre nationale des commissaires de justice publie les chiffres des expulsions de locataires de 2024, à dix jours de la fin de la trêve hivernale,. Ainsi, en 2024, les expulsions de locataires augmentent de 87 % sur un an,. En effet, 24 039 procès-verbaux d’expulsion sont délivrés en 2024, contre 12 825 en 2023,. Cette augmentation s’explique par une purge des dossiers bloqués par le Covid, la baisse du pouvoir d’achat et la crise du logement,. De plus, 1,2 million de ménages ont subi des coupures d'électricité ou des baisses de capacité énergétique en raison d'impayés et du coût de l’électricité. De nouveaux publics sont fragilisés, parmi lesquels les artisans et les commerçants. Selon Manuel Domergue, directeur des études au sein de la Fondation pour le Logement des Défavorisés, ces chiffres montrent « une tendance très inquiétante et de long terme »,. Christophe Robert quant à lui dénonce une situation « extrêmement tendue », qui se dégrade « de manière vertigineuse ». Pour faire face à cette situation, il réclame des politiques de prévention plus puissantes, des mesures d'aide et une augmentation du fonds d'indemnisation des propriétaires pour éviter la grande précarité.
+En mars 2025, la Chambre nationale des commissaires de justice publie les chiffres des expulsions de locataires de 2024, à dix jours de la fin de la trêve hivernale. Ainsi, en 2024, les expulsions de locataires augmentent de 87 % sur un an. En effet, 24 039 procès-verbaux d’expulsion sont délivrés en 2024, contre 12 825 en 2023. Cette augmentation s’explique par une purge des dossiers bloqués par le Covid, la baisse du pouvoir d’achat et la crise du logement. De plus, 1,2 million de ménages ont subi des coupures d'électricité ou des baisses de capacité énergétique en raison d'impayés et du coût de l’électricité. De nouveaux publics sont fragilisés, parmi lesquels les artisans et les commerçants. Selon Manuel Domergue, directeur des études au sein de la Fondation pour le Logement des Défavorisés, ces chiffres montrent « une tendance très inquiétante et de long terme ». Christophe Robert quant à lui dénonce une situation « extrêmement tendue », qui se dégrade « de manière vertigineuse ». Pour faire face à cette situation, il réclame des politiques de prévention plus puissantes, des mesures d'aide et une augmentation du fonds d'indemnisation des propriétaires pour éviter la grande précarité.
 
 ### Solidarité internationale
 
@@ -141,9 +141,9 @@ Lors de la présentation de son vingt-deuxième rapport annuel sur l'état du ma
 
 En 2017, des bénévoles de la Fondation placardent des affiches dans plusieurs villes de France pour dénoncer les mobiliers anti-SDF. Le 4 avril 2017, la Fondation interpelle les candidats à l’élection présidentielle en leur soumettant un plan intitulé Sans-domicile : objectif zéro !. Ce document propose un ensemble de solutions pour loger durablement d'ici à cinq à dix ans les 143 000 personnes actuellement sans domicile en France. Un chiffre qui a augmenté de 50 % en dix ans (de 2001 à 2012).
 
-Entre les deux tours de l'élection présidentielle de 2017 qui oppose Marine Le Pen et Emmanuel Macron, la Fondation appelle implicitement dans une tribune avec soixante autres associations à faire barrage à la candidate du Front national,.
+Entre les deux tours de l'élection présidentielle de 2017 qui oppose Marine Le Pen et Emmanuel Macron, la Fondation appelle implicitement dans une tribune avec soixante autres associations à faire barrage à la candidate du Front national.
 
-En 2019, 2020 et 2024, la Fondation organise les cérémonies « Les Pics d'Or » récompensant, de façon satirique, le mobilier urbain anti-SDF,. Les catégories sont : « Fallait oser » (dispositif le plus décomplexé) ; « Faites ce que je dis, pas ce que je fais » (dispositif le plus contradictoire) ; « Ni vu ni connu » (installation déguisée) ; Pic de l’arrêté anti-mendicité « Bouge de là » ; « Le Clou » (dispositif le plus agressif) et, pour l'étranger, le prix « C’est pas mieux ailleurs ».
+En 2019, 2020 et 2024, la Fondation organise les cérémonies « Les Pics d'Or » récompensant, de façon satirique, le mobilier urbain anti-SDF. Les catégories sont : « Fallait oser » (dispositif le plus décomplexé) ; « Faites ce que je dis, pas ce que je fais » (dispositif le plus contradictoire) ; « Ni vu ni connu » (installation déguisée) ; Pic de l’arrêté anti-mendicité « Bouge de là » ; « Le Clou » (dispositif le plus agressif) et, pour l'étranger, le prix « C’est pas mieux ailleurs ».
 
 La Fondation dépose un paillasson aussi devant le ministère du Logement en guise de symbole des familles mises à la rue. La Fondation souhaite alors alerter sur l'absence de politique de prévention et attirer l’attention des politiques sur les trente mille personnes menacées de perdre leur toit. Elle réclame également un plan de cent millions d’euros pour aider les locataires en difficulté.
 
@@ -192,7 +192,7 @@ Il est également auteur de plusieurs ouvrages comme Pour les sans-voix (éditio
 
 De 1994 à 2004, il est responsable d’études et du développement au sein du bureau d’études FORS Recherche Sociale, spécialisé dans l’habitat, la politique de la ville, l’exclusion et le développement culturel.
 
-Par ses responsabilités, il est souvent interviewé dans les médias,.
+Par ses responsabilités, il est souvent interviewé dans les médias.
 
 ## Financement
 
@@ -200,9 +200,9 @@ La fondation pour le Logement des défavorisés est financée à plus de 95 % p
 
 ## Abus sexuels de l'abbé Pierre et changement de nom
 
-Le 17 juillet 2024, Emmaüs International publie un rapport de huit pages commandé au cabinet Egaé, qui présente les témoignages de sept femmes rapportant des « comportements pouvant s'apparenter à des agressions sexuelles ou des faits de harcèlement sexuel » de la part de l'abbé Pierre entre la fin des années 1970 et 2005, l'une d'entre elles étant mineure au moment des premiers faits. Les témoignages recueillis rapportent notamment des attouchements répétés sur la poitrine généralement commis lorsque l’abbé Pierre est seul avec ses victimes sur lesquelles il semble exercer une emprise psychologique,.
+Le 17 juillet 2024, Emmaüs International publie un rapport de huit pages commandé au cabinet Egaé, qui présente les témoignages de sept femmes rapportant des « comportements pouvant s'apparenter à des agressions sexuelles ou des faits de harcèlement sexuel » de la part de l'abbé Pierre entre la fin des années 1970 et 2005, l'une d'entre elles étant mineure au moment des premiers faits. Les témoignages recueillis rapportent notamment des attouchements répétés sur la poitrine généralement commis lorsque l’abbé Pierre est seul avec ses victimes sur lesquelles il semble exercer une emprise psychologique.
 
-Le 6 septembre 2024, le cabinet Egaé publie un rapport faisant état de dix-sept nouveaux témoignages qui évoquent des propos à caractère sexuel, des baisers imposés, des agressions sexuelles sur une personne vulnérable et sur une mineure, ainsi que des fellations imposées, qui constituent des faits de viols. Les accusations concernent la période comprise entre les années 1950 et 2000 et émanent de différents pays, qui comprennent, outre la France, les États-Unis, le Maroc et la Suisse. Dans un communiqué publié avec Emmaüs France et Emmaüs International, la Fondation pour le logement des Défavorisés (ex Fondation Abbé-Pierre) annonce le changement de son nom et de son logo, la fermeture du lieu de mémoire d'Esteville dédié à son ancien président d'honneur et la mise en place d'une commission indépendante chargée d'enquêter sur les dysfonctionnements qui ont permis à l'abbé Pierre de commettre des abus pendant plus de 50 ans,.
+Le 6 septembre 2024, le cabinet Egaé publie un rapport faisant état de dix-sept nouveaux témoignages qui évoquent des propos à caractère sexuel, des baisers imposés, des agressions sexuelles sur une personne vulnérable et sur une mineure, ainsi que des fellations imposées, qui constituent des faits de viols. Les accusations concernent la période comprise entre les années 1950 et 2000 et émanent de différents pays, qui comprennent, outre la France, les États-Unis, le Maroc et la Suisse. Dans un communiqué publié avec Emmaüs France et Emmaüs International, la Fondation pour le logement des Défavorisés (ex Fondation Abbé-Pierre) annonce le changement de son nom et de son logo, la fermeture du lieu de mémoire d'Esteville dédié à son ancien président d'honneur et la mise en place d'une commission indépendante chargée d'enquêter sur les dysfonctionnements qui ont permis à l'abbé Pierre de commettre des abus pendant plus de 50 ans.
 
 Le délégué général de la Fondation déclare le 19 décembre 2024 que les dons ont baissé de 30 % depuis le mois de juillet, au début des révélations sur l'abbé Pierre, et appelle à la générosité du public.
 
@@ -218,11 +218,11 @@ La fondation reçoit en 2006 les félicitations de la Cour des comptes pour sa g
 
 ### Campagnes de communication
 
-En 2021, la Fondation dévoile sa campagne de sensibilisation intitulée : « Il y a une vie après la rue », déclinée en version print et en format vidéo,.
+En 2021, la Fondation dévoile sa campagne de sensibilisation intitulée : « Il y a une vie après la rue », déclinée en version print et en format vidéo.
 
-L’année suivante, l’association dévoile sa nouvelle campagne d’hiver : « Quitter la rue, c’est retrouver la vie,,. » Le film, réalisé par Arnaud Desplechin, raconte la descente aux enfers d'un jeune qui se retrouve à la rue à la suite d'une dispute familiale. La rencontre avec un bénévole de la Fondation l'aide à retrouver un travail, un logement et à reconstruire sa vie,.
+L’année suivante, l’association dévoile sa nouvelle campagne d’hiver : « Quitter la rue, c’est retrouver la vie. » Le film, réalisé par Arnaud Desplechin, raconte la descente aux enfers d'un jeune qui se retrouve à la rue à la suite d'une dispute familiale. La rencontre avec un bénévole de la Fondation l'aide à retrouver un travail, un logement et à reconstruire sa vie.
 
-Le 16 avril 2025, la Fondation lance une campagne de communication, "L'Attente", réalisée par Rosa Paris (avec les visuels de la photographe Bettina Pittaluga),. La campagne souligne combien l’urgence sociale est forte aujourd’hui, alors que 15 millions de personnes sont touchées par des difficultés de logement en France.
+Le 16 avril 2025, la Fondation lance une campagne de communication, "L'Attente", réalisée par Rosa Paris (avec les visuels de la photographe Bettina Pittaluga). La campagne souligne combien l’urgence sociale est forte aujourd’hui, alors que 15 millions de personnes sont touchées par des difficultés de logement en France.
 
 ### Colloques
 
@@ -264,15 +264,15 @@ Elle épingle également le bilan du quinquennat d'Emmanuel Macron, « pas à l
 
 En 2023, le nombre de Français en situation de précarité s’accroît. Alors que l’habitation reste le premier poste de dépense des ménages, il reste un sujet marginal de l’action publique. Environ 15 % de la population française est touchée par la pauvreté, soit environ dix millions de personnes. Ce chiffre pourrait atteindre les 21 % de Français concernés par la privation et la pauvreté, soit une personne sur cinq. La Fondation note également la progression du nombre de personnes sans domicile fixe qui atteint 330 000, soit une augmentation de 10 % depuis 2012. Le rapport note enfin les inégalités entre les femmes et les hommes en matière de mal-logement. Les femmes sont souvent les premières touchées.
 
-Parallèlement au rapport annuel national, la fondation pour le Logement des défavorisés publie un éclairage par région,. Ainsi, dans l’île de La Réunion, le rapport encourage à renforcer le « logement d'abord », fixe l'objectif de « zéro personne à la rue » et présente ses recommandations.
+Parallèlement au rapport annuel national, la fondation pour le Logement des défavorisés publie un éclairage par région. Ainsi, dans l’île de La Réunion, le rapport encourage à renforcer le « logement d'abord », fixe l'objectif de « zéro personne à la rue » et présente ses recommandations.
 
 En Auvergne-Rhône-Alpes, en 2023, la situation du parc HLM est jugée préoccupante. Le rapport fait état de files d’attente ne cessant de s’allonger et de logements mal entretenus. Le rapport régional pointe du doigt la baisse de 29 % de la production de logements sociaux sur les sept dernières années et épingle les municipalités ne respectant pas la SRU.
 
-La Fondation dénonce aussi les passoires thermiques. Ainsi, en Savoie, une HLM sur dix est une passoire thermique. L’association accuse d’ailleurs le département de ne financer aucun programme de logement social très abordable, ce qu’elle qualifie « d’inacceptable ».
+La Fondation dénonce aussi les passoires thermiques. Ainsi, en Savoie, une HLM sur dix est une passoire thermique. L’association accuse d’ailleurs le département de ne financer aucun programme de logement social très abordable, ce qu’elle qualifie « d’inacceptable ». La ministre Valérie Létard, au Congrès national du bâtiment durable (le 4 septembre 2025, à Lille, après la canicule de l'été 2025) rappelle le besoin urgent de lutter contre les « bouilloires thermiques » par la rénovation énergétique.
 
-La même année, d'après la Fondation, près de cinq départements sur six de la région Provence-Alpes-Côte d'Azur ont un taux de pauvreté supérieur à la moyenne nationale. Il est devenu quasiment impossible de se loger dans le parc privé pour les plus modestes. Entre 2018 et 2022, la région compte plus de 200 000 demandeurs de logements sociaux. Un demandeur sur cinq est hébergé chez un tiers. En 2024, à Nice, 1 personne sur 15 obtient un logement social. Le territoire niçois a vu les prix de l'immobilier augmenter de 24,7 % ces cinq dernières années.
+La même année, d'après la Fondation, près de cinq départements sur six de la région Provence-Alpes-Côte d'Azur ont un taux de pauvreté supérieur à la moyenne nationale. Il est devenu quasiment impossible de se loger dans le parc privé pour les plus modestes. Entre 2018 et 2022, la région compte plus de 200 000 demandeurs de logements sociaux. Un demandeur sur cinq est hébergé chez un tiers. En 2024, à Nice, 1 personne sur 15 obtient un logement social. Le territoire niçois a vu les prix de l'immobilier augmenter de 24,7 % ces cinq dernières années.
 
-En 2024, la Fondation publie aussi le 4ème baromètre de l’encadrement des loyers,.
+En 2024, la Fondation publie aussi le 4ème baromètre de l’encadrement des loyers.
 
 ### Sondages
 
@@ -336,6 +336,6 @@ Elle suggère enfin aux candidats à la présidentielle la création d’une age
 - Ressource relative à plusieurs domaines :
   - Radio France
 
-- Portail de l’humanitaire
+- Portail de l'aide humanitaire
 - Portail des droits de l’homme
 - Portail des associations

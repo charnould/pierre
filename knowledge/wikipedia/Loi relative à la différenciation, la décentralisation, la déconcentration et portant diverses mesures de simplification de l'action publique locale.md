@@ -14,13 +14,13 @@ Durant le mouvement des Gilets jaunes, Emmanuel Macron annonce le 18 décembre 2
 
 ### Concertation et Covid-19 (2020)
 
-La concertation avec les élus locaux sur le projet de loi dit alors « 3D » (décentralisation, différenciation, déconcentration) est engagée en janvier 2020 en vue d'une présentation au deuxième trimestre 2020 devant le Parlement. Mais la crise du Covid-19 va non seulement perturber ce calendrier mais donner une autre dimension au projet. La crise sanitaire engendrée par le COVID fait ressortir la nécessité pour l'Etat de se recentrer sur ses priorités et d’ajuster son architecture à la réalité des territoires, en laissant aux élus locaux une plus grande part d’initiative. En révélant les limites et capacités d'action de l’État dans les territoires, elle pèse lourdement sur le projet de loi,. « On l’a vu pendant la crise, si les territoires n’avaient pas été là, je ne suis pas totalement certain qu’on s’en serait sorti aussi bien », juge le président du Sénat, Gérard Larcher.
+La concertation avec les élus locaux sur le projet de loi dit alors « 3D » (décentralisation, différenciation, déconcentration) est engagée en janvier 2020 en vue d'une présentation au deuxième trimestre 2020 devant le Parlement. Mais la crise du Covid-19 va non seulement perturber ce calendrier mais donner une autre dimension au projet. La crise sanitaire engendrée par le COVID fait ressortir la nécessité pour l'Etat de se recentrer sur ses priorités et d’ajuster son architecture à la réalité des territoires, en laissant aux élus locaux une plus grande part d’initiative. En révélant les limites et capacités d'action de l’État dans les territoires, elle pèse lourdement sur le projet de loi. « On l’a vu pendant la crise, si les territoires n’avaient pas été là, je ne suis pas totalement certain qu’on s’en serait sorti aussi bien », juge le président du Sénat, Gérard Larcher.
 
 Aux 3 Ds de décentralisation, déconcentration et différenciation, Jean Castex ajoute un volet « décomplexification ».
 
 ### Parcours parlementaire (2021)
 
-Le projet de loi initialement baptisé « 4D » (pour « différenciation, décentralisation, déconcentration, dé-complexification »), est présenté le mercredi 12 mai en conseil des ministres. C'est un patchwork de 83 articles, qui couvrent de nombreux sujets y compris le logement et les compétences des collectivités transfrontalières. La loi rebaptisée 3DS est examinée et largement réécrite par le Sénat en juillet 2021,. L’Assemblée nationale s'empare du texte composé de 200 articles à partir du 6 décembre.
+Le projet de loi initialement baptisé « 4D » (pour « différenciation, décentralisation, déconcentration, dé-complexification »), est présenté le mercredi 12 mai en conseil des ministres. C'est un patchwork de 83 articles, qui couvrent de nombreux sujets y compris le logement et les compétences des collectivités transfrontalières. La loi rebaptisée 3DS est examinée et largement réécrite par le Sénat en juillet 2021. L’Assemblée nationale s'empare du texte composé de 200 articles à partir du 6 décembre.
 
 ## Principales dispositions
 
@@ -101,4 +101,4 @@ L'article 97 prévoit une simplification de la délivrance des autorisations d�
 - Portail du droit français
 - Portail de la politique française
 - Portail des années 2020
-- Portail de la Ve République
+- Portail de la Cinquième République
