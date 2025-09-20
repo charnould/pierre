@@ -1,120 +1,122 @@
-import type { Database } from 'bun:sqlite'
+import { SQL } from 'bun'
 import { format } from 'date-fns'
 import { z } from 'zod'
-import { db } from '../utils/database'
 import type { AIContext, Reply } from './_schema'
 import { send_webhook } from './webhook'
 
-const database = db('datastore') as Database
+const sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
 
 /**
- * Retrieves a conversation from the database
- * based on the provided conversation ID.
+ * Retrieves all conversation replies associated with the specified conversation ID.
+ *
+ * Queries the `telemetry` table for records matching the given `conv_id`, ordered by timestamp.
+ * The `metadata` field of each record is parsed from a JSON string into an object.
  *
  * @param conv_id - The unique identifier of the conversation to retrieve.
- * @returns An array of conversation records, each with parsed metadata.
+ * @returns A promise that resolves to an array of `Reply` objects representing the conversation history.
  *
  * This function is tested.
+ *
  */
-export const get_conversation = (conv_id: string) => {
-  try {
-    return database
-      .prepare('SELECT * FROM telemetry WHERE conv_id = $conv_id ORDER BY timestamp ')
-      .all({ $conv_id: conv_id })
-      .map((record) => ({ ...record, metadata: JSON.parse(record.metadata) }))
-  } catch (e) {
-    console.error(e)
-  }
+export const get_conversation = async (conv_id: string): Promise<Reply[]> => {
+  const records = await sql`
+    SELECT
+      *
+    FROM
+      telemetry
+    WHERE
+      conv_id = ${conv_id}
+    ORDER BY
+      timestamp
+  `
+  return records.map((record: { metadata: string }) => ({
+    ...record,
+    metadata: JSON.parse(record.metadata)
+  }))
 }
 
 /**
- * Deletes a conversation from the telemetry database.
+ * Deletes a conversation from the telemetry database by its conversation ID.
  *
- * @param conv_id - The unique identifier of the conversation to be deleted.
- * @returns The result of the database operation.
+ * @param conv_id - The unique identifier of the conversation to delete.
+ * @returns A promise that resolves when the deletion is complete.
  *
- *  This function is tested.
+ * This function is tested.
+ *
  */
-export const delete_conversation = (conv_id: string) => {
-  try {
-    return database
-      .prepare('DELETE FROM telemetry WHERE conv_id = $conv_id')
-      .run({ $conv_id: conv_id })
-  } catch (e) {
-    console.error(e)
-  }
-}
+export const delete_conversation = async (conv_id: string) =>
+  await sql`
+    DELETE FROM telemetry
+    WHERE
+      conv_id = ${conv_id}
+  `
 
 /**
- * Saves a reply to the database and sends webhooks if applicable.
+ * Saves a reply to the telemetry database and sends webhooks for each configured API endpoint.
  *
- * @param {AIContext} context - The context object containing conversation details and configuration.
- * @returns {void} - A promise that resolves when the operation is complete.
+ * If the `context.config` is not a string, the function inserts a telemetry record into the database,
+ * including metadata, configuration ID, conversation ID, content, and role. For each API endpoint in
+ * `context.config.api`, if the endpoint URL is valid, it formats the data and sends a webhook with
+ * the specified configuration.
  *
- *  This function is tested.
+ * @param context - The AIContext object containing configuration, metadata, conversation details, and content.
+ * @returns A Promise that resolves when the operation is complete.
  *
- * The function performs the following steps:
- * 1. Checks if the `context.config` is not a string.
- * 2. Inserts the conversation details into the `telemetry` table in the database.
- * 3. Iterates over the `api` array in the `context.config` object.
- * 4. For each element in the `api` array, checks if the URL is valid.
- * 5. Formats the data and sends a webhook to the specified URL with retries.
+ * This function is tested.
+ *
  */
-export const save_reply = (context: AIContext): void => {
-  try {
-    if (typeof context.config !== 'string') {
-      database
-        .prepare(
-          'INSERT OR IGNORE INTO telemetry (conv_id, config, role, content, timestamp, metadata) VALUES (?, ?, ?, ?, ?, ?)'
-        )
-        .run(
-          context.conv_id,
-          context.config.id,
-          context.role,
-          context.content,
-          format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX"),
-          JSON.stringify(context.metadata)
-        )
+export const save_reply = async (context: AIContext): Promise<void> => {
+  if (typeof context.config !== 'string') {
+    await sql`
+      INSERT
+      OR IGNORE INTO telemetry ${sql({
+        timestamp: format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX"),
+        metadata: JSON.stringify(context.metadata),
+        config: context.config.id,
+        conv_id: context.conv_id,
+        content: context.content,
+        role: context.role
+      })}
+    `
 
-      for (const element of context.config.api) {
-        // Check if URL is a fully qualified URL
-        if (z.string().url().safeParse(element.url).success) {
-          const data = element.format({
-            role: context.role,
-            content: context.content,
-            custom_data: context.custom_data.raw
-          }) as object
+    for (const element of context.config.api) {
+      if (z.url().safeParse(element.url).success) {
+        const data = element.format({
+          custom_data: context.custom_data.raw,
+          content: context.content,
+          role: context.role
+        }) as object
 
-          send_webhook({
-            webhook: element.url,
-            key: Bun.env[element.key] as string,
-            data: data,
-            delay: 1000,
-            max_retries: 3
-          })
-        }
+        send_webhook({
+          webhook: element.url,
+          key: Bun.env[element.key] as string,
+          max_retries: 3,
+          delay: 1000,
+          data: data
+        })
       }
     }
-  } catch (e) {
-    console.error(e)
   }
 
   return
 }
 
 /**
- * Updates the score and comment for a conversation in the telemetry database.
+ * Updates the evaluation score and comment for a conversation in the telemetry database.
  *
- * @param {Object} params - The parameters for scoring the conversation.
- * @param {string} params.conv_id - The ID of the conversation to be scored.
- * @param {string} params.scorer - The entity providing the score (customer, organization, or ai).
- * @param {number} params.score - The score to be assigned to the conversation.
- * @param {string} params.comment - The comment to be associated with the score.
- * @returns {void} A promise that resolves when the operation is complete.
+ * Depending on the `scorer` value ('organization', 'customer', or 'ai'), this function sets the corresponding
+ * score and comment fields in the conversation's metadata JSON object.
  *
- *  This function is tested.
+ * @param conv_id - The unique identifier of the conversation to update.
+ * @param scorer - The entity providing the score ('organization', 'customer', or 'ai').
+ * @param score - The numerical score to assign.
+ * @param comment - The comment associated with the score.
+ * @returns A Promise that resolves when the update is complete.
+ *
+ * This function is tested.
+ *
  */
-export const score_conversation = ({
+export const score_conversation = async ({
   conv_id,
   scorer,
   score,
@@ -124,69 +126,81 @@ export const score_conversation = ({
   scorer: string
   score: number
   comment: string
-}): void => {
-  try {
-    database
-      .prepare(
-        `UPDATE telemetry SET metadata = json_set(
-            metadata,
-            ${scorer === 'customer' ? "'$.evaluation.customer.score', $score, '$.evaluation.customer.comment', $comment" : ''}
-            ${scorer === 'organization' ? "'$.evaluation.organization.score', $score, '$.evaluation.organization.comment', $comment" : ''}
-            ${scorer === 'ai' ? "'$.evaluation.ai.score', $score, '$.evaluation.ai.comment', $comment" : ''}
-          )
-          WHERE conv_id = $conv_id`
-      )
-      .run({ $conv_id: conv_id, $score: score, $comment: comment })
-  } catch (e) {
-    console.error(e)
-  }
-
-  return
-}
-
-/**
- * Updates the topic of a conversation in the telemetry database.
- *
- * @param {Object} params - The parameters for updating the topic.
- * @param {string} params.conv_id - The ID of the conversation to update.
- * @param {string} params.topic - The new topic to set for the conversation.
- * @returns {void}
- *
- *  This function is tested.
- */
-export const save_topic = ({ conv_id, topic }: { conv_id: string; topic: string }): void => {
-  try {
-    database
-      .prepare(
+}): Promise<void> =>
+  await sql`
+    UPDATE telemetry
+    SET
+      metadata = json_set (
+        metadata,
+        ${scorer === 'organization'
+      ? sql`
+          '$.evaluation.organization.score',
+          ${score},
+          '$.evaluation.organization.comment',
+          ${comment}
         `
-          UPDATE telemetry SET metadata = json_set(metadata, '$.topics', $topic)
-          WHERE conv_id = $conv_id
-          `
+      : sql``} ${scorer === 'customer'
+      ? sql`
+          '$.evaluation.customer.score',
+          ${score},
+          '$.evaluation.customer.comment',
+          ${comment}
+        `
+      : sql``} ${scorer === 'ai'
+      ? sql`
+          '$.evaluation.ai.score',
+          ${score},
+          '$.evaluation.ai.comment',
+          ${comment}
+        `
+      : sql``}
       )
-      .run({ $conv_id: conv_id, $topic: topic })
-  } catch (e) {
-    console.error(e)
-  }
-
-  return
-}
+    WHERE
+      conv_id = ${conv_id}
+  `
 
 /**
- * Retrieves a list of conversations from the database.
+ * Updates the `topics` field in the `metadata` JSON column for a specific conversation in the `telemetry` table.
  *
- * This function queries the `telemetry` table, ordering the results by
- * the `timestamp` field in descending order. Each record's `metadata`
- * field is parsed from JSON format.
+ * @param conv_id - The unique identifier of the conversation to update.
+ * @param topic - The topic to set in the conversation's metadata.
+ * @returns A promise that resolves when the update operation is complete.
  *
- * @returns {Reply[]} An array of conversation records with parsed metadata.
+ * This function is tested.
+ *
  */
-export const get_conversations = (): Reply[] => {
-  try {
-    return database
-      .prepare('SELECT * FROM telemetry ORDER BY timestamp DESC')
-      .all()
-      .map((record) => ({ ...record, metadata: JSON.parse(record.metadata) })) as Reply[]
-  } catch (e) {
-    console.error(e)
-  }
+export const save_topic = async ({ conv_id, topic }: { conv_id: string; topic: string }) =>
+  await sql`
+    UPDATE telemetry
+    SET
+      metadata = json_set (
+        metadata,
+        '$.topics',
+        ${topic}
+      )
+    WHERE
+      conv_id = ${conv_id}
+  `
+
+/**
+ * Retrieves all conversation records from the `telemetry` table, ordered by descending timestamp.
+ * Parses the `metadata` field from a JSON string to an object for each record.
+ *
+ * @returns {Promise<Reply[]>} A promise that resolves to an array of conversation records with parsed metadata.
+ *
+ * This function is tested.
+ */
+export const get_conversations = async (): Promise<Reply[]> => {
+  const records = await sql`
+    SELECT
+      *
+    FROM
+      telemetry
+    ORDER BY
+      timestamp DESC
+  `
+  return records.map((record: { metadata: string }) => ({
+    ...record,
+    metadata: JSON.parse(record.metadata)
+  }))
 }

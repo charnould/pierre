@@ -1,10 +1,10 @@
 import { expect, it } from 'bun:test'
 import puppeteer, { type ElementHandle } from 'puppeteer'
-import { db } from '../../utils/database'
+import { delete_all_users } from '../../utils/handle-user'
 
 it('should upload user file successfully', async () => {
   Bun.env.SERVICE = 'pierre-production'
-  db('datastore').query('DELETE FROM users').run()
+  await delete_all_users()
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
   await page.setViewport({ width: 1080, height: 1024 })

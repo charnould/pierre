@@ -2,7 +2,7 @@ import crypto from 'node:crypto'
 import type { Context, Next } from 'hono'
 import { getSignedCookie } from 'hono/cookie'
 import { get_user } from '../utils/handle-user'
-import type { Config, Parsed_User, User } from './_schema'
+import type { Config, Parsed_User } from './_schema'
 
 //
 //
@@ -20,7 +20,7 @@ export const authenticate = async (c: Context, next: Next) => {
 
   if (cookie) {
     user = JSON.parse(decrypt(cookie, Bun.env.AUTH_SECRET as string)) as Parsed_User
-    const user_exists = get_user(user.email) !== undefined
+    const user_exists = (await get_user(user.email)) !== undefined
     if (user_exists) can_access_protected_context = true
     else user = null
   }

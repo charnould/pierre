@@ -69,9 +69,9 @@ export const controller = async (c: Context) => {
         })
       )
 
-    delete_all_users()
+    await delete_all_users()
 
-    for await (const user of users) save_user(user)
+    for await (const user of users) await save_user(user)
 
     return c.redirect('/a/users')
   } catch (error) {

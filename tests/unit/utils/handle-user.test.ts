@@ -1,11 +1,10 @@
 import { beforeAll, expect, it } from 'bun:test'
 import { User } from '../../../utils/_schema'
-import { db } from '../../../utils/database'
-import { get_user, get_users, save_user } from '../../../utils/handle-user'
+import { delete_all_users, get_user, get_users, save_user } from '../../../utils/handle-user'
 
-beforeAll(() => {
+beforeAll(async () => {
   Bun.env.SERVICE = 'pierre-production'
-  db('datastore').query('DELETE FROM users').run()
+  await delete_all_users()
 })
 
 it('should insert 2 users', async () => {
@@ -23,18 +22,18 @@ it('should insert 2 users', async () => {
     password_hash: 'password_2'
   })
 
-  save_user(user_1)
-  save_user(user_2)
+  await save_user(user_1)
+  await save_user(user_2)
 
-  expect(db('datastore').query('SELECT * FROM users').all()).toStrictEqual([
+  expect(await get_users()).toStrictEqual([
     {
-      config: '["default","demo_team"]',
+      config: ['default', 'demo_team'],
       email: 'test1@pierre-ia.org',
       role: 'administrator',
       password_hash: 'password_1'
     },
     {
-      config: '["demo_client","default"]',
+      config: ['demo_client', 'default'],
       email: 'test2@pierre-ia.org',
       password_hash: 'password_2',
       role: 'administrator'
@@ -43,7 +42,7 @@ it('should insert 2 users', async () => {
 })
 
 it('should retrieve 1 user ', async () => {
-  expect(get_user('test1@pierre-ia.org')).toStrictEqual({
+  expect(await get_user('test1@pierre-ia.org')).toStrictEqual({
     config: ['default', 'demo_team'],
     email: 'test1@pierre-ia.org',
     role: 'administrator',
@@ -52,11 +51,11 @@ it('should retrieve 1 user ', async () => {
 })
 
 it('should return undefined when no user is found', async () => {
-  expect(get_user('charnould@unknown.org')).toBeUndefined()
+  expect(await get_user('charnould@unknown.org')).toBeUndefined()
 })
 
-it('should retrieve all users', () => {
-  expect(get_users()).toStrictEqual([
+it('should retrieve all users', async () => {
+  expect(await get_users()).toStrictEqual([
     {
       config: ['default', 'demo_team'],
       email: 'test1@pierre-ia.org',
@@ -70,4 +69,8 @@ it('should retrieve all users', () => {
       role: 'administrator'
     }
   ])
+})
+
+it('should delete all users', async () => {
+  expect(await delete_all_users()).toStrictEqual([])
 })

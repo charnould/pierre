@@ -70,11 +70,11 @@ export const rank_chunks = async (
           }[]
         | { community: string[]; private: string[]; public: string[] }
     ) => await prettier.format(JSON.stringify(data), { parser: 'json' })
-    Bun.write('__temp__/1. search-vector.json', await print(vect_chunks))
-    Bun.write('__temp__/2. search-bm25.json', await print(bm25_chunks))
-    Bun.write('__temp__/3. chunks-combined.json', await print(chunks))
-    Bun.write('__temp__/4. chunks-scored.json', await print(scored_chunks))
-    Bun.write('__temp__/5. chunks-relevant.json', await print(relevant_chunks))
+    Bun.write('temp/1. search-vector.json', await print(vect_chunks))
+    Bun.write('temp/2. search-bm25.json', await print(bm25_chunks))
+    Bun.write('temp/3. chunks-combined.json', await print(chunks))
+    Bun.write('temp/4. chunks-scored.json', await print(scored_chunks))
+    Bun.write('temp/5. chunks-relevant.json', await print(relevant_chunks))
   }
 
   return Relevant_Chunks.parse(relevant_chunks)
