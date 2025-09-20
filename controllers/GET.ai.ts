@@ -222,6 +222,7 @@ const search_and_answer = async (c: Context) => {
           console.debug('No knowledge chunk: respond with a no-knowledge deadlock.')
           answer = await reach_relevancy_deadlock(context, { is_sms: is_sms })
         } else {
+          console.log(context.config)
           answer = await answer_user(context, { is_sms: is_sms })
         }
       } else {

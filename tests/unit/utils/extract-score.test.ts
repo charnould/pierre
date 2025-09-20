@@ -25,7 +25,7 @@ describe('extract_score', () => {
     const result = extract_score_and_reasoning(input)
     expect(result).toEqual({
       score: 0,
-      reasoning: 'An input with <score> wrong 100</score>'
+      reasoning: null
     })
   })
 
@@ -34,25 +34,25 @@ describe('extract_score', () => {
     const result = extract_score_and_reasoning(input)
     expect(result).toEqual({
       score: 100,
-      reasoning: 'An input with <score>100</score>'
+      reasoning: null
     })
   })
 
   it('should return the correct score for a score at the start of input', () => {
-    const input = '<score>100</score> An input with'
+    const input = '<think> Reasoning </think>  <score>100</score> An input with'
     const result = extract_score_and_reasoning(input)
     expect(result).toEqual({
       score: 100,
-      reasoning: '<score>100</score> An input with'
+      reasoning: 'Reasoning'
     })
   })
 
   it('should return the correct score for a score in the middle of input', () => {
-    const input = 'An input <score>100</score> with '
+    const input = 'An input <score>100</score> with <think> Reasoning </think> '
     const result = extract_score_and_reasoning(input)
     expect(result).toEqual({
       score: 100,
-      reasoning: 'An input <score>100</score> with '
+      reasoning: 'Reasoning'
     })
   })
 
@@ -61,7 +61,7 @@ describe('extract_score', () => {
     const result = extract_score_and_reasoning(input)
     expect(result).toEqual({
       score: 100,
-      reasoning: 'An input <score>   100  </score> with '
+      reasoning: null
     })
   })
 })
