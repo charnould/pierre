@@ -43,10 +43,10 @@ export const view = (params: {
         ${params.active_config.disclaimer === null
           ? null
           : html` <input
-              type="hidden"
-              id="disclaimer"
-              value="${params.active_config.disclaimer}"
-            />`}
+                type="hidden"
+                id="disclaimer"
+                value="${params.active_config.disclaimer}"
+              />`}
 
         <main class="flex flex-col px-6 pb-32">
           <img
@@ -67,8 +67,7 @@ export const view = (params: {
                     VOUS ÊTES...
                   </p>
                   ${params.displayable_configs.map(
-                    (c) =>
-                      html`<a
+                    (c) => html`<a
                         data-config
                         href="/?config=${c.id}"
                         ${c.is_active === true ? 'data-active' : ''}
@@ -84,8 +83,7 @@ export const view = (params: {
           <div>
             <p class="mt-4 mb-2 text-xs font-medium tracking-wide text-gray-500">EXEMPLES</p>
             ${params.active_config.examples.map(
-              (eg: string) =>
-                html`<button
+              (eg: string) => html`<button
                   data-role="example"
                   class="mb-2 block w-fit cursor-pointer rounded border border-gray-300 px-3 py-2 text-left font-serif text-sm/snug text-gray-700 hover:bg-gray-50 disabled:cursor-progress disabled:text-gray-500 disabled:hover:bg-white"
                 >

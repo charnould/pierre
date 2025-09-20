@@ -37,7 +37,7 @@ if (latest_version === current_version) {
 
   try {
     await $`bun pierre:config`.quiet()
-  } catch (e) {
+  } catch (_e) {
     // console.log(('`config.ts` contient des erreurs.')
   }
 } else if (latest_version === undefined || current_version === undefined) {

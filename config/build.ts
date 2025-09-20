@@ -1,5 +1,6 @@
 import { readdir } from 'node:fs/promises'
 import { $ } from 'bun'
+// @ts-expect-error
 import toc from 'markdown-toc'
 
 // A timestamp used in filename to avoid caching issue (CSS + JS)

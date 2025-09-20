@@ -31,7 +31,11 @@ const generate_graphic = (data, options: StatisticOptions) => {
     document: new JSDOM('').window.document,
     marks: [
       Plot.ruleY([0]),
-      Plot.axisY({ anchor: 'left', label: 'Nombre de conversations', labelAnchor: 'top' }),
+      Plot.axisY({
+        anchor: 'left',
+        label: 'Nombre de conversations',
+        labelAnchor: 'top'
+      }),
       Plot.axisX({ tickRotate: -35 })
     ],
     width: 1024,

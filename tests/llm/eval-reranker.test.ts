@@ -49,7 +49,10 @@ describe('eval reranker', () => {
 
   it('should find who were on-call on february 20th, 2024', async () => {
     context.conversation = [
-      { role: 'user', content: "Qui étaient d'astreinte le mardi 20 février 2024 ?" }
+      {
+        role: 'user',
+        content: "Qui étaient d'astreinte le mardi 20 février 2024 ?"
+      }
     ]
 
     const chunk = {
