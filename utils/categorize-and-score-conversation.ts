@@ -91,7 +91,7 @@ export const score_conversation_with_ai = async (): Promise<void> => {
       ]
 
       const config = (await import('../assets/default/config')).default
-      const model = config.models.answer_with
+      const model = config.models
       const answer = await generate_text({ model: model, messages: messages, max_tokens: 200 })
 
       score = extract_tag_value(answer, 'score', null)
@@ -178,11 +178,7 @@ export const assign_topic_with_ai = async (): Promise<void> => {
       }
     ]
 
-    const config = (await import('../assets/default/config')).default
-    const model = config.models.answer_with
-    const topic = (await generate_text({ model: model, messages: messages, max_tokens: 50 }))
-      .toLowerCase()
-      .trim()
+    const topic = (await generate_text({ messages: messages, max_tokens: 50 })).toLowerCase().trim()
 
     const topics = [
       'rent',

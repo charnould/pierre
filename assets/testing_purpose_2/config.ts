@@ -1,4 +1,21 @@
 import type { Config } from '../../utils/_schema'
+import { createAnthropic } from '@ai-sdk/anthropic'
+import { createCerebras } from '@ai-sdk/cerebras'
+import { createCohere } from '@ai-sdk/cohere'
+import { createGoogleGenerativeAI } from '@ai-sdk/google'
+import { createGroq } from '@ai-sdk/groq'
+import { createMistral } from '@ai-sdk/mistral'
+import { createOpenAI } from '@ai-sdk/openai'
+import { createTogetherAI } from '@ai-sdk/togetherai'
+
+const openai = createOpenAI()
+const google = createGoogleGenerativeAI()
+const anthropic = createAnthropic()
+const mistral = createMistral()
+const cohere = createCohere()
+const togetherai = createTogetherAI()
+const groq = createGroq()
+const cerebras = createCerebras()
 
 export default {
   id: 'testing_purpose_2',
@@ -13,10 +30,14 @@ export default {
   ],
   custom_data: {},
   api: [],
-  models: {
-    augment_with: "groq('llama-3.3-70b-versatile')",
-    rerank_with: "openai('gpt-4o-mini-2024-07-18')",
-    answer_with: "openai('gpt-4.1-mini')"
+  answer_with: {
+    model: openai('gpt-4.1-mini'),
+    providerOptions: {
+      openai: {
+        reasoningEffort: 'minimal',
+        reasoningSummary: undefined
+      }
+    }
   },
   phone: null,
   protected: false,

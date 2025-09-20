@@ -1,5 +1,24 @@
+// DÉBUT : NE PAS MODIFIER
 import dedent from 'dedent'
 import type { Config } from '../../utils/_schema'
+import { createAnthropic } from '@ai-sdk/anthropic'
+import { createCerebras } from '@ai-sdk/cerebras'
+import { createCohere } from '@ai-sdk/cohere'
+import { createGoogleGenerativeAI } from '@ai-sdk/google'
+import { createGroq } from '@ai-sdk/groq'
+import { createMistral } from '@ai-sdk/mistral'
+import { createOpenAI } from '@ai-sdk/openai'
+import { createTogetherAI } from '@ai-sdk/togetherai'
+
+const openai = createOpenAI()
+const google = createGoogleGenerativeAI()
+const anthropic = createAnthropic()
+const mistral = createMistral()
+const cohere = createCohere()
+const togetherai = createTogetherAI()
+const groq = createGroq()
+const cerebras = createCerebras()
+// FIN : NE PAS MODIFIER
 
 //
 // ASTUCE : Pour vous assurer que le fichier de configuration est correctement
@@ -67,60 +86,37 @@ export default {
       // - custom_data: celles passée via le paramètre de requête `data`
       // - content : la question de l'utilisateur ou la réponse de PIERRE
       // - role : user (= utilisateur), assistant ou system (= PIERRE)
-      format: ({ custom_data, content, role }) => {
-        return {
-          client_id: custom_data[0],
-          date: Date.now(),
-          content: content,
-          role: role
-        }
-      }
+      format: ({ custom_data, content, role }) => ({
+        client_id: custom_data[0],
+        date: Date.now(),
+        content,
+        role
+      })
     }
   ],
 
-  // Les différents modèles de langage utilisés par PIERRE. Il est impératif que
-  // la ou les clefs d'API correspondantes soient renseignées dans les variables
-  // d'environnement.
+  // Le modèle de langage utilisé par PIERRE pour générer la réponse finale.
+  // Il est impératif que la clef d'API correspondantes soit renseignée dans
+  // les variables d'environnement.
   //
-  // Voir
-  // https://github.com/charnould/pierre?tab=readme-ov-file#modèles-de-langage-ou-llm
+  // Voir https://github.com/charnould/pierre?tab=readme-ov-file#modèles-de-langage-ou-llm
   // pour plus d'informations sur les modèles de langage utilisés par PIERRE et
-  // leur fonction.
+  // leur fonction, et leurs disponibilités.
   //
-  // Ci-après, une liste non-exhaustives de modèles utilisables :
-  // - "cohere('command-r-plus')",
-  // - "mistral('mistral-large-latest')",
-  // - "mistral('mistral-small-latest')",
-  // - "google('gemini-1.5-pro-latest')",
-  // - "google('gemini-1.5-flash-latest')",
-  // - "anthropic('claude-3-5-sonnet-20241022')",
-  // - "anthropic('claude-3-5-haiku-20241022')",
-  // - "openai('gpt-4o-2024-11-20')",
-  // - "togetherai('meta-llama/Llama-3.3-70B-Instruct-Turbo')"
-  // - "groq('llama-3.3-70b-versatile')"
-  // - "groq('meta-llama/llama-4-maverick-17b-128e-instruct')"
-  // - "cerebras('llama3.1-8b')"
-  models: {
-    // Le modèle utilisé pour augmenter/enrichir les requêtes de l'utilisateur.
-    // Pour minimiser les coûts : openai('gpt-4o-mini-2024-07-18') ou
-    // équivalent. Pour maximiser l'intelligence : openai('gpt-4o-2024-11-20')
-    // ou équivalent.
-    augment_with: "groq('llama-3.3-70b-versatile')",
-
-    // Le modèle utlisé par le reranker qui s'assure que les éléments de
-    // réponses retournés par les bases de connaissances sont pertinents. Il est
-    // fortement recommandé d'utiliser `openai('gpt-4o-mini-2024-07-18')` ou un
-    // modèle équivalent afin de maîtriser les coûts. Le reranker est en effet
-    // consommateur de tokens.
-    rerank_with: "openai('gpt-4o-mini-2024-07-18')",
-
-    // Le modèle qui génère les réponses en s'appuyant sur les éléments les plus
-    // pertinents retournés par le reranker. Pour minimiser les coûts :
-    // openai('gpt-4o-mini-2024-07-18') ou équivalent. Pour maximiser
-    // l'intelligence : openai('gpt-4o-2024-11-20') ou équivalent.
-    answer_with: "openai('gpt-4.1-mini')"
+  // Consulter https://ai-sdk.dev/docs/foundations/providers-and-models pour choisir
+  // le modèle de langage le plus pertinent.
+  //
+  // Il est fortement recommandé de désactiver le "reasoning" pour réduire la latence.
+  //
+  answer_with: {
+    model: openai('gpt-4.1-mini'),
+    providerOptions: {
+      openai: {
+        reasoningEffort: 'minimal',
+        reasoningSummary: undefined
+      }
+    }
   },
-
   // Le numéro de téléphone qui permet d'utiliser PIERRE via SMS. Assurez-vous
   // de bien respecter le format (`00` au début). Renseigner `null` si vous
   // n'avez pas paramétré de numéro.
@@ -202,10 +198,10 @@ export default {
       - Do **not** make up information. If something is missing, acknowledge it honestly.
       - Avoid repeating points already addressed earlier.
     
-    4. **Keep It Clear and Useful**
+    4. **Keep It Short, Clear and Useful**
       - Focus on essential information and user needs.
       - Keep responses concise, well-organized, and practical.
-      - Use headings, bullet points, or lists when it improves readability.
+      - Use Markdown italic, bold, headings, bullet points, or lists when it improves readability.
     
     5. **Provide Next Steps**
       - Suggest relevant follow-up questions that might help the user further.
