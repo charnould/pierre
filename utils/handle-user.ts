@@ -1,94 +1,87 @@
-import { db } from '../utils/database'
+import { SQL } from 'bun'
 import type { Parsed_User, User } from './_schema'
 
+const sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
+
 /**
- * Saves a user to the database. If a user with the same email already exists,
- * it will be replaced with the new data.
+ * Saves a user to the database by inserting or replacing the user record.
  *
- * @param user - The user object containing the following properties:
- *   - `email` (string): The email address of the user.
- *   - `role` (string): The role assigned to the user.
- *   - `config` (any): The configuration data associated with the user.
- *   - `password_hash` (string): The hashed password of the user.
- *
- * @returns The result of the database operation.
- * @throws Will throw an error if the database operation fails.
- *
+ * @param user - An object containing the user's email, role, config, and password hash.
+ * @returns A promise that resolves when the user has been saved.
  */
-export const save_user = (user: User) => {
-  try {
-    return db('datastore')
-      .prepare(
-        'INSERT OR REPLACE INTO users (email, role, config, password_hash) VALUES (?, ?, ?, ?)'
-      )
-      .run(user.email, user.role, user.config, user.password_hash)
-  } catch (error) {
-    console.error('Failed to save user:', error)
-    throw error
-  }
-}
+export const save_user = async ({ email, role, config, password_hash }: User) =>
+  await sql`
+    INSERT
+    OR REPLACE INTO users ${sql({
+      email,
+      role,
+      config,
+      password_hash
+    })}
+  `
 
 /**
  * Retrieves a user from the database by their email address.
  *
- * @param email - The email address of the user to retrieve. The function will lowercase and trim it.
- * @returns The user object with parsed configuration if found, or `undefined` if no user exists with the given email.
- * @throws Will throw an error if the database query fails.
+ * The function performs a case-insensitive and trimmed search for the user.
+ * If a user is found, it parses the user's `config` property from a JSON string
+ * and returns the user object with the parsed configuration.
+ * If no user is found, it returns `undefined`.
  *
+ * @param email - The email address of the user to retrieve.
+ * @returns A `Parsed_User` object if the user exists, otherwise `undefined`.
  */
-export const get_user = (email: string) => {
-  try {
-    const users = db('datastore')
-      .prepare('SELECT * FROM users WHERE email = $email')
-      .all({ $email: email.toLowerCase().trim() })
+export const get_user = async (email: string) => {
+  const users = await sql`
+    SELECT
+      *
+    FROM
+      users
+    WHERE
+      email = ${email.toLowerCase().trim()}
+  `
 
-    if (users.length === 0) return undefined
+  if (users.length === 0) return undefined
 
-    const db_user = users[0] as User
-    return { ...db_user, config: JSON.parse(db_user.config) } as Parsed_User
-  } catch (error) {
-    console.error('Failed to retrieve user:', error)
-    throw error
-  }
+  const db_user = users[0] as User
+  return { ...db_user, config: JSON.parse(db_user.config) } as Parsed_User
 }
 
 /**
- * Retrieves and parses a list of users from the database.
+ * Retrieves all users from the database, ordered by email, and parses their configuration.
  *
- * @returns {Parsed_User[]} An array of parsed user objects, where each user's `config` field
- * is converted from a JSON string to an object.
+ * @returns {Promise<Parsed_User[]>} A promise that resolves to an array of parsed user objects,
+ * where each user's `config` property is parsed from a JSON string.
  *
- * @throws Will throw an error if the database query fails or if there is an issue
- * parsing the `config` field of any user.
- *
+ * @throws {Error} If the database query fails or if parsing the user configuration fails.
  */
-export const get_users = (): Parsed_User[] => {
-  try {
-    const db_users = db('datastore').prepare('SELECT * FROM users ORDER BY email').all() as User[]
-    const parsed_users = db_users.map((user) => {
-      return { ...user, config: JSON.parse(user.config) }
-    })
-    return parsed_users
-  } catch (error) {
-    console.error('Failed to retrieve users:', error)
-    throw error
-  }
+export const get_users = async (): Promise<Parsed_User[]> => {
+  const db_users = (await sql`
+    SELECT
+      *
+    FROM
+      users
+    ORDER BY
+      email
+  `) as User[]
+  const parsed_users = db_users.map((user) => {
+    return { ...user, config: JSON.parse(user.config) }
+  }) as Parsed_User[]
+  return parsed_users
 }
 
 /**
- * Deletes all users from the database and performs a database vacuum operation
- * to reclaim unused space.
+ * Deletes all records from the `users` table and performs
+ * a VACUUM operation to reclaim database space.
  *
- * @throws {Error} Throws an error if the operation fails.
+ * This function will remove all user data from the database irreversibly.
+ * Use with caution, especially in production environments.
  *
+ * @returns A promise that resolves when the operation is complete.
  */
-export const delete_all_users = () => {
-  try {
-    db('datastore').prepare('DELETE FROM users').run()
-    db('datastore').prepare('VACUUM').run()
-    return
-  } catch (error) {
-    console.error('Failed to delete all users:', error)
-    throw error
-  }
-}
+export const delete_all_users = async () =>
+  await sql`
+    DELETE FROM users;
+
+    VACUUM;
+  `
