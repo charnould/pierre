@@ -177,7 +177,9 @@ const search_and_answer = async (c: Context) => {
 
         //
         //
-        //
+        // Todo: Regroup in another promise.all ?
+        // (to avoid waiting v_results before doing k_results)
+
         // VECTOR SEARCH
         const v_results = await Promise.all(embeddings.map((e) => vector_search(e, context)))
 
