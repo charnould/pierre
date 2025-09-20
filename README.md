@@ -188,7 +188,7 @@ Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour
 Pour déployer PIERRE sur un serveur, il est indispensable d'être parvenu à le faire fonctionner en local.
 
 1. Installer `Docker Desktop` et le lancer ([instructions](https://www.docker.com/products/docker-desktop/)). `Docker` gérera la conteneurisation.
-2. Lancer `gem install kamal` pour installer `Kamal` (≥`2.6.0`) qui gérera le déploiement ([instructions](https://kamal-deploy.org/docs/installation/)).
+2. Lancer `gem install kamal` pour installer `Kamal` (≥`2.7.0`) qui gérera le déploiement ([instructions](https://kamal-deploy.org/docs/installation/)).
 3. Disposer d'un compte `GitHub` et [générer une clef](https://github.com/settings/tokens). `GitHub` sera le registre de conteneurs lors du déploiement.
 4. Disposer d'un VPS avec `GPU` (par exemple `GEX44` d'[Hetzner](https://www.hetzner.com/dedicated-rootserver/gex44/)) et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
 5. Finaliser les modifications du fichier `.env.production` que vous avez créé précédemment.
