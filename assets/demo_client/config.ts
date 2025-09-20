@@ -1,5 +1,3 @@
-import dedent from 'dedent'
-import type { Config } from '../../utils/_schema'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createCerebras } from '@ai-sdk/cerebras'
 import { createCohere } from '@ai-sdk/cohere'
@@ -8,6 +6,8 @@ import { createGroq } from '@ai-sdk/groq'
 import { createMistral } from '@ai-sdk/mistral'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createTogetherAI } from '@ai-sdk/togetherai'
+import dedent from 'dedent'
+import type { Config } from '../../utils/_schema'
 
 const openai = createOpenAI()
 const google = createGoogleGenerativeAI()

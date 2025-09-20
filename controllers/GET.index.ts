@@ -21,7 +21,10 @@ export const controller = async (c: Context) => {
     const user = c.get('user') as Parsed_User | null
     const config = c.req.query('config') as string
     const active_config = (await import(`../assets/${config}/config`)).default as Config
-    const displayable_configs = await get_displayable_configs({ user, active_config })
+    const displayable_configs = await get_displayable_configs({
+      user,
+      active_config
+    })
 
     return c.html(view({ active_config, displayable_configs }))
   } catch (error) {
