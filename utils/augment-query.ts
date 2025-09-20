@@ -32,7 +32,7 @@ export const augment_query = async (context: AIContext) => {
   // query variety and capture different aspects of the user's intent.
 
   // Prompt checked on february 2 2025
-  const lang_and_profanity: CoreMessage[] = [
+  const lang_and_profanity = [
     {
       role: 'user',
       content: dedent`/no_think 
@@ -47,7 +47,7 @@ export const augment_query = async (context: AIContext) => {
   ]
 
   // Prompt checked on february 2 2025
-  const standalone_questions: CoreMessage[] = [
+  const standalone_questions = [
     ...context.conversation,
     {
       role: 'assistant',
@@ -57,7 +57,7 @@ export const augment_query = async (context: AIContext) => {
   ]
 
   // Prompt checked on february 2 2025
-  const search_queries: CoreMessage[] = [
+  const search_queries = [
     ...context.conversation,
     {
       role: 'system',
@@ -87,7 +87,7 @@ export const augment_query = async (context: AIContext) => {
   ]
 
   // Prompt checked on february 2 2025
-  const bm25_keywords: CoreMessage[] = [
+  const bm25_keywords = [
     ...context.conversation,
     {
       role: 'assistant',
@@ -96,29 +96,26 @@ export const augment_query = async (context: AIContext) => {
     }
   ]
 
-  // Get LLM model to generate augmented queries
-  const model = context.config.models.augment_with
-
   // Generate augmented queries using the specified model
   const results = await Promise.all([
-    generate_text({ model: model, messages: lang_and_profanity, max_tokens: 100 }),
-    generate_text({ model: model, messages: search_queries, max_tokens: 350 }),
-    generate_text({ model: model, messages: bm25_keywords, max_tokens: 200 }),
-    generate_text({ model: model, messages: standalone_questions, max_tokens: 100 })
+    generate_text({ messages: standalone_questions, max_tokens: 100 }),
+    generate_text({ messages: lang_and_profanity, max_tokens: 100 }),
+    generate_text({ messages: search_queries, max_tokens: 350 }),
+    generate_text({ messages: bm25_keywords, max_tokens: 200 })
   ])
 
   // Parse/validate the generated responses into an Augmented_Query object. Some
   // transformations are applied to the responses to ensure they are in the
   // correct format
 
-  const profanity = extract_tag_value(results[0], 'profanity', false)
-  const language = extract_tag_value(results[0], 'lang', 'fr')
+  const profanity = extract_tag_value(results[1], 'profanity', false)
+  const language = extract_tag_value(results[1], 'lang', 'fr')
 
   const augmented_query = Augmented_Query.parse({
     // Convert a string with '|' delimiter to an array
-    standalone_questions: convert_to_array(results[3]),
-    search_queries: convert_to_array(results[1]),
-    bm25_keywords: convert_to_array(results[2]),
+    standalone_questions: convert_to_array(results[0]),
+    search_queries: convert_to_array(results[2]),
+    bm25_keywords: convert_to_array(results[3]),
 
     // Convert the profanity check to a boolean
     contains_profanity: typeof profanity === 'string' ? !!profanity.includes('true') : false,
@@ -143,13 +140,7 @@ export const augment_query = async (context: AIContext) => {
 
   // End performance measurement
   performance.mark('end')
-
   console.log(augmented_query)
-  console.debug(`
-    -----------------------------------
-    augment_query: ${performance.measure('d', 'start', 'end').duration}ms
-    -----------------------------------
-    `)
 
   return augmented_query
 }
