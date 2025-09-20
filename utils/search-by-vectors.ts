@@ -145,7 +145,7 @@ export const search = (query_vectors, database) =>
       SELECT chunk_text, chunk_hash, distance 
       FROM vectors
       WHERE chunk_vector MATCH ?
-      AND k = 10
+      AND k = 5
       `
     )
     .all(new Float32Array(query_vectors)) as unknown as {

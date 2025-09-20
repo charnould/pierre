@@ -63,7 +63,7 @@ export const query_db = (db_name: Db_Name, keyword: string) => {
         JOIN chunks c ON s.rowid = c.rowid
         WHERE s.chunk_stem MATCH ?
         ORDER BY distance
-        LIMIT 15;
+        LIMIT 4;
       `
       )
       .all(stemmed_keywords) as {
