@@ -171,8 +171,8 @@ Adresser un email à charnould@pierre-ia.org.
 Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour Linux).
 
 1. Installer `WSL` et vérifier sa bonne installation ([instructions](https://learn.microsoft.com/fr-fr/windows/wsl/install)).
-2. Installer `Ollama` (≥ `0.6.5`) et vérifier sa bonne installation ([instructions](http://ollama.com)), puis saisir dans votre terminal `ollama pull bge-m3` pour télécharger le modèle `bge-m3`.
-3. Installer `Bun` (≥ `1.2.10`) et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
+2. Installer `Ollama` (≥ `0.12.0`) et vérifier sa bonne installation ([instructions](http://ollama.com)), puis saisir dans votre terminal `ollama pull bge-m3` pour télécharger le modèle `bge-m3`.
+3. Installer `Bun` (≥ `1.2.22`) et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
 4. Installer `SQlite3` et vérifier sa bonne installation ([instructions](https://www.sqlite.org/download.html)).
 5. Forker/cloner le présent dépôt.
 6. Lancer `bun install` dans votre terminal pour installer les dépendances.
