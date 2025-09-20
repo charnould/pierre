@@ -17,7 +17,7 @@ import type { Knowledge } from './_run'
  */
 export const remove_outdated_data = async (knowledge: Knowledge) => {
   try {
-    await $`rm -rf ./datastores/${Bun.env.SERVICE}/__temp__`
+    await $`rm -rf ./datastores/${Bun.env.SERVICE}/temp`
 
     if (knowledge.community === true) {
       await $`rm -rf ./knowledge/wikipedia`
@@ -28,25 +28,25 @@ export const remove_outdated_data = async (knowledge: Knowledge) => {
     if (knowledge.proprietary === true) {
       let database = db('proprietary.private') as Database
 
-      database.exec('PRAGMA foreign_keys = OFF;')
-      database.exec(`
+      database.run(`
+        PRAGMA foreign_keys = OFF;
         DROP TABLE IF EXISTS chunks;
         DROP TABLE IF EXISTS stems;
         DROP TABLE IF EXISTS vectors;
         VACUUM;
+        PRAGMA foreign_keys = ON;
         `)
-      database.exec('PRAGMA foreign_keys = ON;')
 
       database = db('proprietary.public') as Database
 
-      database.exec('PRAGMA foreign_keys = OFF;')
-      database.exec(`
+      database.run(`
+        PRAGMA foreign_keys = OFF;
         DROP TABLE IF EXISTS chunks;
         DROP TABLE IF EXISTS stems;
         DROP TABLE IF EXISTS vectors;
         VACUUM;
+        PRAGMA foreign_keys = ON;
         `)
-      database.exec('PRAGMA foreign_keys = ON;')
 
       initialize_databases({ proprietary: true, community: false })
     }
@@ -72,27 +72,30 @@ export const remove_outdated_data = async (knowledge: Knowledge) => {
  *
  */
 export const initialize_databases = (knowledge: Knowledge) => {
-  // Builtin SQLite library on MacOS doesn't allow extensions
-  // Database.setCustomSQLite('/opt/homebrew/opt/sqlite/lib/libsqlite3.dylib')
-
-  // Helper function to initialize a database
+  /**
+   * Initializes a SQLite database at the specified file path, creates required tables,
+   * and loads the sqliteVec extension. The database schema includes:
+   * - `chunks`: Stores chunk metadata and text.
+   * - `stems`: Full-text search virtual table for chunk stems.
+   * - `vectors`: Vector search virtual table for chunk vectors.
+   *
+   * @param path - The file path to the SQLite database.
+   * @returns The initialized Database instance.
+   */
   const initialize_db = (path: string) => {
     const db = new Database(path)
     sqliteVec.load(db)
 
-    db.exec(`
+    db.run(`
       CREATE TABLE chunks (
         chunk_hash TEXT,
         chunk_tokens NUMBER DEFAULT NULL,
         chunk_text TEXT NOT NULL,
         chunk_stem TEXT NOT NULL
-      );`)
-
-    db.exec(`
+      );
+      
       CREATE VIRTUAL TABLE stems USING FTS5(chunk_stem);
-      `)
 
-    db.exec(`
       CREATE VIRTUAL TABLE vectors USING vec0(
         chunk_hash TEXT,
         chunk_text TEXT,

@@ -1,14 +1,13 @@
 import { expect, it } from 'bun:test'
 import puppeteer from 'puppeteer'
-import { db } from '../../utils/database'
-import { save_user } from '../../utils/handle-user'
+import { delete_all_users, save_user } from '../../utils/handle-user'
 
 it('should display the correct config options for anonymous and authenticated users', async () => {
   // Initial setup
   Bun.env.SERVICE = 'pierre-production'
-  db('datastore').query('DELETE FROM users').run()
+  await delete_all_users()
 
-  save_user({
+  await save_user({
     email: 'test@test.org',
     role: 'collaborator',
     password_hash: await Bun.password.hash('a-complicated-password'),

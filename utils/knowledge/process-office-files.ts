@@ -1,7 +1,7 @@
 import * as fs from 'node:fs'
 import { Readable } from 'node:stream'
-import { formatInTimeZone } from 'date-fns-tz'
 import { fr } from 'date-fns/locale'
+import { formatInTimeZone } from 'date-fns-tz'
 import _ from 'lodash'
 import mammoth from 'mammoth'
 import * as prettier from 'prettier'
@@ -14,7 +14,7 @@ import type { Metadata } from './store-metadata'
 export const process_office_files = async (knowledge: Knowledge) => {
   // Tthis function applies only to `proprietary` knowledge
   if (knowledge.proprietary === true) {
-    const metadata = await Bun.file(`datastores/${Bun.env.SERVICE}/__temp__/.metadata.json`).json()
+    const metadata = await Bun.file(`datastores/${Bun.env.SERVICE}/temp/.metadata.json`).json()
 
     // For each file...
     for await (const file of metadata as Metadata) {
@@ -40,7 +40,7 @@ export const process_office_files = async (knowledge: Knowledge) => {
         )
 
         // Save the resulting Markdown file to the desired location
-        await Bun.write(`./datastores/${Bun.env.SERVICE}/__temp__/${file.id}.md`, markdown)
+        await Bun.write(`./datastores/${Bun.env.SERVICE}/temp/${file.id}.md`, markdown)
       }
 
       //
@@ -55,7 +55,9 @@ export const process_office_files = async (knowledge: Knowledge) => {
         XLSX.set_fs(fs)
         XLSX.set_cptable(cpexcel)
         XLSX.stream.set_readable(Readable)
-        const xlsx = XLSX.read(await Bun.file(file.filepath).arrayBuffer(), { cellDates: true })
+        const xlsx = XLSX.read(await Bun.file(file.filepath).arrayBuffer(), {
+          cellDates: true
+        })
 
         // TODO: Determine how to handle cells with strikethrough formatting.
         //       Consider both fully strikethrough and partially strikethrough text.
@@ -95,7 +97,9 @@ export const process_office_files = async (knowledge: Knowledge) => {
                   // Format the date in the 'Europe/Paris' timezone
                   return [
                     lowercaseKey,
-                    formatInTimeZone(value, 'Europe/Paris', 'PPPP', { locale: fr })
+                    formatInTimeZone(value, 'Europe/Paris', 'PPPP', {
+                      locale: fr
+                    })
                   ]
                 }
 
@@ -121,8 +125,10 @@ export const process_office_files = async (knowledge: Knowledge) => {
 
         // Format the content as a clean, well-structured JSON file (.json).
         // Save the resulting file to the desired location.
-        const json = await prettier.format(JSON.stringify(arr), { parser: 'json' })
-        await Bun.write(`./datastores/${Bun.env.SERVICE}/__temp__/${file.id}.json`, json)
+        const json = await prettier.format(JSON.stringify(arr), {
+          parser: 'json'
+        })
+        await Bun.write(`./datastores/${Bun.env.SERVICE}/temp/${file.id}.json`, json)
       }
 
       //
@@ -138,7 +144,7 @@ export const process_office_files = async (knowledge: Knowledge) => {
         const data = await prettier.format(await Bun.file(file.filepath).text(), {
           parser: 'markdown'
         })
-        await Bun.write(`./datastores/${Bun.env.SERVICE}/__temp__/${file.id}.md`, data)
+        await Bun.write(`./datastores/${Bun.env.SERVICE}/temp/${file.id}.md`, data)
       }
     }
 

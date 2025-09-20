@@ -27,7 +27,7 @@ export const stream_answer = async (context: AIContext) =>
       context.role = 'assistant'
       context.content = text
 
-      save_reply(context)
+      await save_reply(context)
     }
   })
 
@@ -58,7 +58,7 @@ export const generate_answer = async (context: AIContext) => {
   context.role = 'assistant'
   context.content = plain_text
 
-  save_reply(context)
+  await save_reply(context)
 
   return plain_text
 }

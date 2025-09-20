@@ -6,9 +6,9 @@ export const controller = async (c: Context) => {
   const id = c.req.query('id') as string
 
   if (body.deletion === 'true') {
-    delete_conversation(id)
+    await delete_conversation(id)
   } else {
-    score_conversation({
+    await score_conversation({
       conv_id: id,
       scorer: body.scorer,
       score: Number(body.score),

@@ -35,7 +35,7 @@ export const chunk_json = async (knowledge: Knowledge) => {
   // This function applies only to `proprietary` knowledge
   if (knowledge.proprietary === true) {
     // Get _metadata.json
-    const metadata = await Bun.file(`datastores/${Bun.env.SERVICE}/__temp__/.metadata.json`).json()
+    const metadata = await Bun.file(`datastores/${Bun.env.SERVICE}/temp/.metadata.json`).json()
 
     // For each file described in _metadata.json
     // and it it's an XLSX file, apply the following logic
@@ -48,7 +48,7 @@ export const chunk_json = async (knowledge: Knowledge) => {
         else database = db('proprietary.public')
 
         // Load file as a JSON
-        const json = await Bun.file(`datastores/${Bun.env.SERVICE}/__temp__/${file.id}.json`).json()
+        const json = await Bun.file(`datastores/${Bun.env.SERVICE}/temp/${file.id}.json`).json()
 
         // Iterate over `entity` because file content looks like:
         //
@@ -149,7 +149,9 @@ const save_chunk = async (chunk: { chunk_text: string }, database: Database) => 
   // 1. Format the chunk using Prettier for clean and consistent Markdown formatting.
   // 2. Generate a unique hash for the chunk to serve as its identifier in the database.
   // 3. Create a stemmed version of the chunk for optimized FTS5/BM25 search indexing.
-  chunk.chunk_text = await prettier.format(chunk.chunk_text, { parser: 'markdown' })
+  chunk.chunk_text = await prettier.format(chunk.chunk_text, {
+    parser: 'markdown'
+  })
   const chunk_hash = generate_hash(chunk.chunk_text)
   const chunk_stem = stem(chunk.chunk_text)
 

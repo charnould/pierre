@@ -37,11 +37,11 @@ export const chunk_markdown = async (knowledge: Knowledge) => {
     //
     // Case 2 - Proprietary knowledge
     if (knowledge.proprietary === true) {
-      const files = (await Bun.file(`datastores/${Bun.env.SERVICE}/__temp__/.metadata.json`).json())
+      const files = (await Bun.file(`datastores/${Bun.env.SERVICE}/temp/.metadata.json`).json())
         .filter((item) => item.type !== 'xlsx')
         .map((item) => ({
           access: item.access,
-          id: `datastores/${Bun.env.SERVICE}/__temp__/${item.id}.md`
+          id: `datastores/${Bun.env.SERVICE}/temp/${item.id}.md`
         }))
 
       await save_chunks(files)
@@ -72,9 +72,12 @@ const save_chunks = async (files) => {
     // Iterate over each file
     for await (const file of files) {
       const markdown = await Bun.file(file.id).text()
-      const chunks = await split_markdown_into_chunks({ markdown: markdown, max_tokens: 7200 })
+      const chunks = await split_markdown_into_chunks({
+        markdown: markdown,
+        max_tokens: 7200
+      })
 
-      const a = 0
+      const _a = 0
       // Process each chunk individually
       for (const chunk of chunks) {
         // Determine the appropriate database based on file access level
@@ -197,7 +200,9 @@ export const split_markdown_into_chunks = async ({
       // Rebuild a Prettier markdown file
       // and push into chunks array
       let rebuilt_chunk = c.reduce((s, t) => s + t.raw, '')
-      rebuilt_chunk = await prettier.format(rebuilt_chunk, { parser: 'markdown' })
+      rebuilt_chunk = await prettier.format(rebuilt_chunk, {
+        parser: 'markdown'
+      })
       markdown_chunks.push(rebuilt_chunk)
     }
 

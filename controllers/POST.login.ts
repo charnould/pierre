@@ -60,7 +60,7 @@ export const controller = async (c: Context) => {
           password_hash: await Bun.password.hash(password)
         })
 
-        save_user(default_user)
+        await save_user(default_user)
       } else {
         return c.redirect(`/a/login?message=wrong_root_password&redirection=${redirection}`)
       }
@@ -68,7 +68,7 @@ export const controller = async (c: Context) => {
 
     // For other emails,
     // attempt to retrieve the user by email
-    const user = get_user(email)
+    const user = await get_user(email)
 
     // If the user does not exist,
     // redirect to login page with an 'unknown_user' error message
@@ -97,7 +97,11 @@ export const controller = async (c: Context) => {
       c,
       'pierre-ia',
       encrypt(
-        JSON.stringify({ email: user.email, config: user.config, role: user.role }),
+        JSON.stringify({
+          email: user.email,
+          config: user.config,
+          role: user.role
+        }),
         Bun.env.AUTH_SECRET as string
       ),
       Bun.env.AUTH_SECRET as string,
