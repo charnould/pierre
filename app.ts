@@ -3,6 +3,7 @@ import { CronJob } from 'cron'
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
 import { secureHeaders } from 'hono/secure-headers'
+import { setup } from './config/setup'
 
 import { controller as get_admin } from './controllers/GET.admin'
 import { controller as get_ai } from './controllers/GET.ai'
@@ -22,19 +23,25 @@ import {
   score_conversation_with_ai
 } from './utils/categorize-and-score-conversation'
 import { execute_pipeline } from './utils/knowledge/_run'
-import { ensure_ollama_is_running_and_models_preloaded } from './utils/search-by-vectors'
+import { is_ollama_ready } from './utils/search-by-vectors'
+
+// Prepare the environment and database before starting the app:
+// 1. Ensure Ollama is running and models are preloaded
+// 2. Create necessary directories for the current service
+// 3. Initialize SQLite databases
+await setup()
+await is_ollama_ready()
 
 const app = new Hono()
 
-// Check if Ollama is running + preload model(s)
-ensure_ollama_is_running_and_models_preloaded()
-
 // Configure the secure headers for the app.
 // This allows other websites to iframe PIERRE
-// TODO: This should be modified to allow only a few trusted domains
 app.use(
   secureHeaders({
-    contentSecurityPolicy: { frameAncestors: ["'self'", 'http://localhost:*', '*'] },
+    // TODO: This should be modified to allow only a few trusted domains
+    contentSecurityPolicy: {
+      frameAncestors: ["'self'", 'http://localhost:*', '*']
+    },
     crossOriginResourcePolicy: false
   })
 )

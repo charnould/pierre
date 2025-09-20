@@ -20,6 +20,9 @@ export const remove_outdated_data = async (knowledge: Knowledge) => {
     await $`rm -rf ./datastores/${Bun.env.SERVICE}/temp`
 
     if (knowledge.community === true) {
+      // Builtin SQLite library on MacOS doesn't allow extensions
+      Database.setCustomSQLite('/opt/homebrew/opt/sqlite/lib/libsqlite3.dylib')
+
       await $`rm -rf ./knowledge/wikipedia`
       await $`rm -rf ./knowledge/data.sqlite`
       initialize_databases({ proprietary: false, community: true })
