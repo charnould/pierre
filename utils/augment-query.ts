@@ -35,9 +35,9 @@ export const augment_query = async (context: AIContext) => {
   const lang_and_profanity: CoreMessage[] = [
     {
       role: 'user',
-      content: dedent`
+      content: dedent`/no_think 
         Analyze the given sentence and return two results:  
-        1. **Profanity Check** – Determine whether it contains **any** form of profanity, including light or strong insults, offensive, inappropriate, or harmful language. Return 'true' or 'false'.  
+        1. **Profanity Check** – Determine whether the text contains any actual profanity, swear words, slurs, vulgar expressions, or intentionally offensive/inappropriate language. Do not flag neutral, descriptive, or colloquial phrases unless they are widely recognized as offensive in the given language/culture. Return 'true' only if clear profanity is present; otherwise, return 'false'.  
         2. **Language Detection** – Identify the primary language of the sentence and return its ISO 639-1 two-letter code. If multiple languages are present, return the code of the dominant language.  
                 
         **Think carefully and output profanity check first, within <profanity> tags, then language detection, within <lang> tags, followed by your reasoning.**
@@ -51,7 +51,7 @@ export const augment_query = async (context: AIContext) => {
     ...context.conversation,
     {
       role: 'assistant',
-      content: dedent`
+      content: dedent`/no_think 
         Analyze the conversation history and generate a set of standalone questions in French, each rephrasing **last** user inquiry. Question should be clear, self-contained, and directly reflect the user’s intent without introducing any new details or expanding the scope. If there are multiple questions, separate them with a pipe (|). Do not add any introduction, extra text, or formatting. Keep the questions concise and focused solely on the user’s last inquiries. If a question mentions a specific date or time (e.g., 'qui est d’astreinte aujourd’hui'), use today’s date, which is ${today_is()}.`
     }
   ]
@@ -62,19 +62,27 @@ export const augment_query = async (context: AIContext) => {
     {
       role: 'system',
       content: dedent`
+      /no_think
         Analyze the entire conversation thoroughly and generate the following:
         
-        1. **Hypothetical Document Embeddings** - Three brief and contextually relevant responses in French capturing all essential information likely to be present in the most authoritative search results addressing the user’s final query. Ensure they are comprehensive yet concise, preserving the original intent and meaning, and include relevant geographic details if a location is mentioned. Provide only the reponses, without any introductory phrases, additional explanations or quotes but separated by a pipe (|).
+        1. **Hypothetical Document Embeddings** - Two brief and contextually relevant responses in French capturing all essential information likely to be present in the most authoritative search results addressing the user’s final query. Ensure they are comprehensive yet concise, preserving the original intent and meaning, and include relevant geographic details if a location is mentioned. Provide only the reponses, without any introductory phrases, additional explanations or quotes but separated by a pipe (|).
         
         2. **Stepback Questions** - Two thought-provoking step-back questions in French designed to inspire deeper reflection or a broader perspective on the user’s final intent. Ensure the questions are meaningful, directly tied to the context, and relevant to the discussion. Provide only the questions, without any introductory phrases, additional explanations or quotes but separated by a pipe (|).
         
-        3. **Web Search Queries** - three distinct web search queries in French that directly address the user’s final intent. Each query should cover a different aspect of the inquiry to maximize the variety of relevant search results. Provide only the queries, without any introductory phrases, additional explanations or quotes but separated by a pipe (|).
+        3. **Web Search Queries** - Two distinct web search queries in French that directly address the user’s final intent. Each query should cover a different aspect of the inquiry to maximize the variety of relevant search results. Provide only the queries, without any introductory phrases, additional explanations or quotes but separated by a pipe (|).
         
         Output Rules:
+        - Output MUST be a **single line**.  
+        - Output MUST contain **exactly six segments** (two responses + two questions + two queries).  
+        - Each segment MUST be separated by '|'.  
+        - Do NOT include titles, explanations, quotes, lists, bullet points, markdown, or any formatting.  
+        - Do NOT include introductory text.
+        - If a question mentions a specific date or time (e.g., 'qui est d’astreinte aujourd’hui'), use today’s date, which is ${today_is}.
+        - If a location is referenced, include the appropriate region, department, city or zipcode.  
         
-        - Output only the responses, questions, and queries, all separated by a pipe (|), with no introductory or explanatory text.
-        - If a question mentions a specific date or time (e.g., 'qui est d’astreinte aujourd’hui'), use today’s date, which is ${today_is()}.
-        - If a location is referenced, include the appropriate region, department, city or zipcode.`
+        Final output format example (illustrative only):
+        Lorem ipsum | lorem ipsum | lorem ipsum | lorem ipsum | lorem ipsum | lorem ipsum
+        `
     }
   ]
 
@@ -83,8 +91,8 @@ export const augment_query = async (context: AIContext) => {
     ...context.conversation,
     {
       role: 'assistant',
-      content: dedent`
-        Analyze the user’s final intent and generate a list of ten precise, high-impact keywords in French, separated by a pipe (|), optimized for a BM25-based search engine. Focus on essential terms and critical multi-word phrases while filtering out noise such as verbs, adjectives, adverbs, and generic words. Ensure all keywords are orthographically and grammatically correct, prioritizing exact matches for maximum retrieval relevance. Output only the keywords, formatted as instructed, with no additional text or explanation.`
+      content: dedent` /no_think
+        Analyze the user’s final intent and generate a list of five precise, high-impact keywords in French, separated by a pipe (|), optimized for a BM25-based search engine. Focus on essential terms and critical multi-word phrases while filtering out noise such as verbs, adjectives, adverbs, and generic words. Ensure all keywords are orthographically and grammatically correct, prioritizing exact matches for maximum retrieval relevance. Output only the keywords, formatted as instructed, with no additional text or explanation.`
     }
   ]
 
