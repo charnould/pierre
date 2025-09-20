@@ -9,7 +9,7 @@ PIERRE est une intelligence artificielle (IA) **open source** et **plurilingue**
 
 Plus concrètement, PIERRE c'est à la fois :
 
-1. Un **chatbot** (ou mieux : un **resolution bot**) **open source** — disponible sur le **Web** ([démonstration](https://pierre-ia.org)) et par **SMS** — qui répond 24/7/365 à 100 % des questions de « premier niveau » des locataires et demandeurs HLM, et épaule au quotidien les collaborateurs des bailleurs sociaux (processus, données patrimoniales, aide à la rédaction, etc.).
+1. Un **chatbot** (ou mieux : un **resolution bot**) **open source** qui répond 24/7/365 à 100 % des questions de « premier niveau » des locataires et demandeurs HLM, et épaule au quotidien les collaborateurs des bailleurs sociaux (processus, données patrimoniales, aide à la rédaction, etc.).
 
 2. Une **base de connaissances** en **open data** ([consultation](./knowledge/community)), utilisable indépendamment du chatbot et indispensable à la mise en oeuvre de toutes approches « Retrieval Augmented Generation » ([RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation)) via un LLM.
 
@@ -46,7 +46,6 @@ Plus concrètement, PIERRE c'est à la fois :
   - [Installer PIERRE sur votre site web](#installer-pierre-sur-votre-site-web)
     - [Via une fenêtre modale](#via-une-fen%C3%AAtre-modale)
     - [Via une iframe](#via-une-iframe)
-  - [Paramétrer PIERRE pour l'utiliser par SMS](#param%C3%A9trer-pierre-pour-lutiliser-par-sms)
 - [Administrer PIERRE avec une interface graphique](#administrer-pierre-avec-une-interface-graphique)
   - [Apprendre à PIERRE des connaissances (self-hosting)](#apprendre-%C3%A0-pierre-des-connaissances-self-hosting)
 - [License](#license)
@@ -91,13 +90,13 @@ Au fur et à mesure de l'amélioration de la base de connaissances, la pertinenc
 
 ## Comment fonctionne PIERRE ?
 
-1. Un utilisateur pose une question à PIERRE via le web ou par SMS.
+1. Un utilisateur pose une question à PIERRE.
 2. Une première passe de LLM/IA augmente la requête initiale.
 3. Une deuxième passe de LLM/IA s'assure de la validité et sécurité de la requête initiale (ex : impossible d'insulter PIERRE ou d'adresser une question sans lien avec le logement).
 4. La requête validée et augmentée est transformée par un LLM/IA en vecteurs de valeurs numériques qui sont utilisés pour interroger les bases de connaissances de PIERRE.
 5. Les résultats retournés sont _rerankés_ par un LLM/IA pour ne conserver que les plus pertinents.
 6. Une dernière passe de LLM/IA génère une réponse sur la base des résultats retournés, réordonnancés puis _rerankés_ des bases de connaissances.
-7. La réponse est retournée quelques secondes plus tard à l'utilisateur via le web ou par SMS.
+7. La réponse est retournée quelques secondes plus tard à l'utilisateur.
 8. La conversation se poursuit jusqu'à satisfaction de l'utilisateur (goto 1).
 
 > [!NOTE]
@@ -107,15 +106,18 @@ Au fur et à mesure de l'amélioration de la base de connaissances, la pertinenc
 
 PIERRE utilise — à ce jour — plusieurs (passes de) LLM dans cet ordre successif :
 
-1. Un **modèle de génération de `textes`** qui transforme la requête de l'utilisateur en une « requête augmentée » (en utilisant des techniques de type HyDE ou Stepback). PIERRE utilise [`Qwen/Qwen3-32B`](https://huggingface.co/Qwen/Qwen3-32B), un modèle open source d'Alibaba Cloud (ou équivalent).
+1. Un **modèle de génération de `textes`** qui transforme la requête de l'utilisateur en une « requête augmentée » (en utilisant des techniques de type HyDE ou Stepback). PIERRE utilise par défaut [`Qwen/Qwen3-32B`](https://huggingface.co/Qwen/Qwen3-32B), un modèle **open source** d'Alibaba Cloud.
 
-2. Un **modèle de génération d'`embeddings`** qui transforme la « requête augmentée » en vecteurs de valeurs numériques qui sont ensuite utilisés pour rechercher les éléments de réponse les plus pertinents dans les bases de connaissances. PIERRE utilise [`bge-m3`](https://huggingface.co/BAAI/bge-m3), un modèle open source de la Beijing Academy of Artificial Intelligence (BAAI).
+2. Un **modèle de génération d'`embeddings`** qui transforme la « requête augmentée » en vecteurs de valeurs numériques qui sont ensuite utilisés pour rechercher les éléments de réponse les plus pertinents dans les bases de connaissances. PIERRE utilise [`bge-m3`](https://huggingface.co/BAAI/bge-m3), un modèle **open source** de la Beijing Academy of Artificial Intelligence (BAAI).
 
-3. À nouveau, un **modèle de génération de `textes`** configuré en **`reranker`** qui classifie les résulats retournés par les bases de connaissances pour ne conserver que les éléments les plus pertinents en regard de la question posée par l'utilisateur. PIERRE utilise [`Qwen/Qwen3-32B`](https://huggingface.co/Qwen/Qwen3-32B), un modèle open source d'Alibaba Cloud (ou équivalent).
+3. À nouveau, un **modèle de génération de `textes`** configuré en **`reranker`** qui classifie les résulats retournés par les bases de connaissances pour ne conserver que les éléments les plus pertinents en regard de la question posée par l'utilisateur. PIERRE utilise par défaut [`Qwen/Qwen3-32B`](https://huggingface.co/Qwen/Qwen3-32B), un modèle **open source** d'Alibaba Cloud.
 
 4. Un **modèle de génération de `textes`** qui génére les réponses textuelles aux utilisateurs en utilisant les éléments issus de (3).
 
-Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Bring Your Own LLM Key/Model »** (BYOK) — **il est possible de choisir le modèle utilisé** (Mistral, Anthropic, Cohere, OpenAI...) pour l'étape 4 et ce, en modifiant le fichier de configuation (_cf._ infra).
+Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Bring Your Own LLM Key/Model »** (BYOK) — **il est possible de choisir le modèle utilisé** (Mistral, Anthropic, Cohere, OpenAI, Meta, Alibaba...) pour les étapes 1, 2 et 4 et ce, en modifiant le fichier de configuation (_cf._ infra).
+
+> [!NOTE]
+> DPO: Consulter [cette note](/docs//documentation/data-protection-officer.md) pour comprendre plus précisément comment fonctionne PIERRE et les enjeux RGPD associés.
 
 ## Technologies + Services
 
@@ -132,7 +134,7 @@ Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Bring Your Own 
 Déployer PIERRE sur un serveur génére des coûts :
 
 - La location d'un serveur doté d'un `GPU` (meilleur rapport qualité/prix: `GEX44` d'[Hetzner](https://www.hetzner.com/dedicated-rootserver/gex44/)) : €200 par mois
-- L'usage d'un LLM pour générer du texte : $0,40 (_in_) et $1,60 (_out_) / MTokens (`gpt-4.1-mini`)
+- L'usage de LLM pour générer du texte : environ $0,40 (_in_) et $1,60 (_out_) / MTokens
 - (Optionnellement) La location d'un `GPU` musclé pour vectoriser vos connaissances : €10 par mois
 
 # Comment déployer PIERRE ?
@@ -180,7 +182,6 @@ Pour déployer PIERRE sur un serveur, il est indispensable d'être parvenu à le
 9. Étapes suivantes (optionnelles et décrites ci-dessous) :  
    – Créer une seconde instance (de tests) de PIERRE sur le même serveur  
    – Personnaliser PIERRE  
-   – Faire fonctionner PIERRE par SMS  
    – Afficher PIERRE sur votre site internet ou extranet-locataire
 
 > [!NOTE] > **TODO:** Détailler la procédure permettant l'usage du `GPU` par `Docker/Ollama` : se connecter via `ssh` au serveur, `curl -fsSL https://ollama.com/install.sh | sh`, puis suivre les recommandations disponibles [ici](https://github.com/ollama/ollama/blob/main/docs/docker.md#nvidia-gpu).
@@ -251,7 +252,7 @@ Pour modifier cela, modifier dans le fichier `config.ts` :
 
 Pour modifier les modèles, il suffit de :
 
-- Modifier `models` dans votre fichier `config.ts` par la valeur souhaitée. Il est **fortement recommandé** d'utiliser un modèle peu cher pour le `reranker` qui est consommateur de tokens. Exemple : `gpt-5-nano` d'OpenAI ou équivalent (`qwen3-32b`, `deepseek-r1-distill-llama-70b`, etc.).
+- Modifier `models` dans votre fichier `config.ts` par la valeur souhaitée. Il est **fortement recommandé** d'utiliser un modèle peu cher pour le `reranker` qui est consommateur de tokens. Par exemples : `qwen3-32b` ou `deepseek-r1-distill-llama-70b`, etc.
 - Renseigner la clef d'API correspondante dans les variables d'environnement (`.env.production`).
 
 > [!IMPORTANT]
@@ -259,9 +260,9 @@ Pour modifier les modèles, il suffit de :
 
 ### Quels modèles est-il possible d'utiliser ?
 
-PIERRE permet – à ce stade – l'usage des principaux modèles de langage, à savoir : `Anthropic`, `Cohere`, `Google`, `Meta`, `Mistral`, et `OpenAI`.
+PIERRE permet l'usage des principaux modèles de langage, qu'ils soient propriétaire ou **open source**, à savoir : `Alibaba`, `Deepseek`, `Anthropic`, `Cohere`, `Google`, `Meta`, `Mistral`, et `OpenAI`, etc.
 
-Pour accélérer l'inférence, c'est-à-dire la vitesse des réponses, il est possible de faire appel à des fournisseurs tels que `Cerebras`, `Groq` ou encore `TogetherAI` avec des **modèles open source** (`qwen3-32b`, `deepseek-r1-distill-llama-70b`, etc.).
+Pour accélérer l'inférence, c'est-à-dire la vitesse des réponses, il est fortement recommandé de faire appel à des fournisseurs tels que `Cerebras`, `Groq` ou encore `TogetherAI` avec des **modèles open source** (`qwen3-32b`, `deepseek-r1-distill-llama-70b`, etc.).
 
 ## Installer PIERRE sur votre site web
 
@@ -318,14 +319,6 @@ avec :
 
 - `style` : le style CSS de l'iframe (libre à vous de le modifier)
 - `src` : l'URL d'accès à PIERRE (libre à vous de modifier `config`)
-
-## Paramétrer PIERRE pour l'utiliser par SMS
-
-1. Obtenir un numéro de téléphone compatible
-2. Paramétrer votre webhook
-3. Modifier `phone` dans votre fichier `config.ts` avec votre numéro de téléphone
-
-TODO/À FINALISER
 
 # Administrer PIERRE avec une interface graphique
 
