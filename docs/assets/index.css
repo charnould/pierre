@@ -110,7 +110,7 @@ main {
   border-bottom: 1px solid rgba(0, 0, 255, 0.5);
   font-family: Inter, sans-serif;
   text-decoration: none;
-  color: #00f !important;
+  color: #00f;
 }
 
 .explanation > ul {
@@ -156,7 +156,7 @@ main {
   font-family: Inter, sans-serif;
   font-weight: 400;
   text-decoration: none;
-  color: #fff !important;
+  color: #fff;
 }
 
 .robot {
@@ -205,7 +205,7 @@ main {
   }
 
   #pierre {
-    max-width: 94% !important;
+    max-width: 94%;
   }
 
   .robot {

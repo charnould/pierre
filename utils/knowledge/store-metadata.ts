@@ -43,8 +43,10 @@ export const store_metadata = async (knowledge: Knowledge) => {
         }))
 
       Bun.write(
-        `./datastores/${Bun.env.SERVICE}/__temp__/.metadata.json`,
-        await prettier.format(JSON.stringify(Metadata.parse(files)), { parser: 'json' })
+        `./datastores/${Bun.env.SERVICE}/temp/.metadata.json`,
+        await prettier.format(JSON.stringify(Metadata.parse(files)), {
+          parser: 'json'
+        })
       )
 
       console.log('✅ metadata saved')

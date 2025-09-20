@@ -1,4 +1,3 @@
-import type { CoreMessage } from 'ai'
 import dedent from 'dedent'
 import { type AIContext, Augmented_Query } from './_schema'
 import { convert_to_array } from './convert-to-array'
@@ -134,8 +133,9 @@ export const augment_query = async (context: AIContext) => {
             'ps','pt','qu','rm','rn','ro','ru','sa','sc','sd','se','sm','sg','sr',
             'gd','sn','si','sk','sl','so','st','es','su','sw','ss','sv','ta','te',
             'tg','th','ti','bo','tk','tl','tn','to','tr','ts','tt','tw','ty','ug',
-            'uk','ur','uz','ve','vi','vo','wa','cy','wo','fy','xh','yi','yo','za','zu']
-            .includes(typeof language === 'string' ? language : '') ? language : 'fr'
+            'uk','ur','uz','ve','vi','vo','wa','cy','wo','fy','xh','yi','yo','za','zu'].includes(typeof language === "string" ? language : "")
+			? language
+			: "fr"
   })
 
   // End performance measurement

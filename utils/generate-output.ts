@@ -1,4 +1,5 @@
 import { InferenceClient } from '@huggingface/inference'
+
 const client = new InferenceClient(process.env.HUGGINGFACE_TOKEN)
 
 /**

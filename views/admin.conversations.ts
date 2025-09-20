@@ -34,14 +34,13 @@ export const view = (data, conversation: Reply[] | []) => {
           <!-- START: conversations list -->
           <div class="mt-6 h-[550px] overflow-y-auto rounded-lg border border-stone-200 shadow-lg">
             ${data.map(
-              (conv) =>
-                html` <a href="/a/conversations?id=${conv[0].conv_id}">
+              (conv) => html` <a href="/a/conversations?id=${conv[0].conv_id}">
                   ${conv[0].metadata.topics === 'TODO'
                     ? html`<div
-                        class="mx-6 mt-3 mb-px flex w-fit items-center rounded-sm bg-amber-200 px-1 py-px text-[9px] font-medium text-red-500"
-                      >
-                        L'IA NE SAIT PAS
-                      </div>`
+                          class="mx-6 mt-3 mb-px flex w-fit items-center rounded-sm bg-amber-200 px-1 py-px text-[9px] font-medium text-red-500"
+                        >
+                          L'IA NE SAIT PAS
+                        </div>`
                     : null}
 
                   <div class="mx-6 mt-3 flex w-auto items-center text-[12px] text-neutral-400">
@@ -87,8 +86,7 @@ export const view = (data, conversation: Reply[] | []) => {
             ? null
             : html`
                 ${conversation.map(
-                  (c) =>
-                    html`<div
+                  (c) => html`<div
                       class="prose odd:float-right odd:my-8 odd:max-w-lg odd:rounded-xl odd:bg-gray-100 odd:px-5 odd:py-2 odd:font-serif odd:text-base even:clear-both"
                     >
                       ${raw(marked.parse(c.content))}
