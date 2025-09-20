@@ -100,9 +100,10 @@ export const view = (metadata: Metadata[]) => {
           Afin d'optimiser la compréhension par PIERRE de vos données, il est fortement recommandé
           de respecter quelques consignes de formatage.
           <a
-            href="../assets/default/files/how-to.pdf"
+            target="_blank"
             class="cursor-pointer text-blue-600 underline decoration-1 underline-offset-3"
-            >Télécharger les consignes</a
+            href="https://github.com/charnould/pierre/blob/master/docs/documentation/prepare-your-docs.md#guide--pr%C3%A9parer-vos-documents-pour-pierre"
+            >Consultez les consignes</a
           >
           pour comprendre comment PIERRE interprète vos fichiers/données.
         </p>

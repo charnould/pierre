@@ -15,22 +15,27 @@ await $`find . -name ".DS_Store" -type f -delete`
 await $`clear`
 await $`bun upgrade --stable && bun update && bun install`
 
-// Generate README table of contents
-// TODO: Some links still do not work
-const content = await Bun.file('README.md').text()
-const updated_content = toc.insert(content, {
-  maxdepth: 3,
-  // makes titles with accents work
-  slugify: function slugify(value: string) {
-    return value
-      .toLowerCase()
-      .trim()
-      .replace(/[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,./:;<=>?@[\]^`{|}~]/g, '')
-      .replace(/\s/g, '-')
-      .replace(/-$/, '') // fixes titles ending with '?'
+// Read all the files in the current directory recursively and for .md files,
+// generate a table of contents if <!-- toc --> tag is available
+const files = await readdir('./', { recursive: true })
+for (const file of files) {
+  if (!file.startsWith('node_modules') && file.endsWith('.md')) {
+    const content = await Bun.file(file).text()
+    const updated_content = toc.insert(content, {
+      maxdepth: 3,
+      // makes titles with accents work
+      slugify: function slugify(value: string) {
+        return value
+          .toLowerCase()
+          .trim()
+          .replace(/[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,./:;<=>?@[\]^`{|}~]/g, '')
+          .replace(/\s/g, '-')
+          .replace(/-$/, '') // fixes titles ending with '?'
+      }
+    })
+    await Bun.write(file, updated_content)
   }
-})
-await Bun.write('README.md', updated_content)
+}
 
 // Compile production CSS file
 await $`bunx @tailwindcss/cli@latest -i assets/default/tailwind/style.css -o assets/default/dist/css/style.${timestamp}.css --minify`

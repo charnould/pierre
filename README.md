@@ -108,15 +108,15 @@ Au fur et à mesure de l'amélioration de la base de connaissances, la pertinenc
 
 PIERRE utilise — à ce jour — plusieurs (passes de) LLM dans cet ordre successif :
 
-1. Un **modèle de génération de `textes`** qui transforme la requête de l'utilisateur en une « requête augmentée » (en utilisant des techniques de type HyDE ou Stepback).
+1. Un **modèle de génération de `textes`** qui transforme la requête de l'utilisateur en une « requête augmentée » (en utilisant des techniques de type HyDE ou Stepback). PIERRE utilise [`Qwen/Qwen3-32B`](https://huggingface.co/Qwen/Qwen3-32B), un modèle open source d'Alibaba Cloud (ou équivalent).
 
 2. Un **modèle de génération d'`embeddings`** qui transforme la « requête augmentée » en vecteurs de valeurs numériques qui sont ensuite utilisés pour rechercher les éléments de réponse les plus pertinents dans les bases de connaissances. PIERRE utilise [`bge-m3`](https://huggingface.co/BAAI/bge-m3), un modèle open source de la Beijing Academy of Artificial Intelligence (BAAI).
 
-3. À nouveau, un **modèle de génération de `textes`** configuré en **`reranker`** qui classifie les résulats retournés par les bases de connaissances pour ne conserver que les éléments les plus pertinents en regard de la question posée par l'utilisateur.
+3. À nouveau, un **modèle de génération de `textes`** configuré en **`reranker`** qui classifie les résulats retournés par les bases de connaissances pour ne conserver que les éléments les plus pertinents en regard de la question posée par l'utilisateur. PIERRE utilise [`Qwen/Qwen3-32B`](https://huggingface.co/Qwen/Qwen3-32B), un modèle open source d'Alibaba Cloud (ou équivalent).
 
 4. Un **modèle de génération de `textes`** qui génére les réponses textuelles aux utilisateurs en utilisant les éléments issus de (3).
 
-Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Bring Your Own LLM Key/Model »** (BYOK) — **il est possible de choisir le modèle utilisé** (Mistral, Anthropic, Cohere, OpenAI...) pour (1), (3) et (4) et ce, en modifiant le fichier de configuation (_cf._ infra).
+Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Bring Your Own LLM Key/Model »** (BYOK) — **il est possible de choisir le modèle utilisé** (Mistral, Anthropic, Cohere, OpenAI...) pour l'étape 4 et ce, en modifiant le fichier de configuation (_cf._ infra).
 
 ## L'universel SMS pour les échanges de « premier niveau »
 
@@ -269,14 +269,17 @@ Pour modifier cela, modifier dans le fichier `config.ts` :
 
 Pour modifier les modèles, il suffit de :
 
-- Modifier `models` dans votre fichier `config.ts` par la valeur souhaitée. Il est **fortement recommandé** d'utiliser un modèle peu cher pour le `reranker` qui est consommateur de tokens (ex : `gpt-4o-mini-2024-07-18` d'OpenAI ou équivalent).
+- Modifier `models` dans votre fichier `config.ts` par la valeur souhaitée. Il est **fortement recommandé** d'utiliser un modèle peu cher pour le `reranker` qui est consommateur de tokens. Exemple : `gpt-5-nano` d'OpenAI ou équivalent (`qwen3-32b`, `deepseek-r1-distill-llama-70b`, etc.).
 - Renseigner la clef d'API correspondante dans les variables d'environnement (`.env.production`).
+
+> [!IMPORTANT]
+> Lors du paramétrage du modèle dans `config.ts`, le format doit respecter strictement l'[AI SDK](https://ai-sdk.dev). A titre d'exemples : pour [OpenAI](https://ai-sdk.dev/providers/ai-sdk-providers/openai#responses-models) et pour [Groq](https://ai-sdk.dev/providers/ai-sdk-providers/groq#reasoning-models).
 
 ### Quels modèles est-il possible d'utiliser ?
 
 PIERRE permet – à ce stade – l'usage des principaux modèles de langage, à savoir : `Anthropic`, `Cohere`, `Google`, `Meta`, `Mistral`, et `OpenAI`.
 
-Pour accélérer l'inférence, c'est-à-dire la vitesse des réponses, il est possible de faire appel à des fournisseurs tels que `Cerebras`, `Groq` ou encore `TogetherAI`.
+Pour accélérer l'inférence, c'est-à-dire la vitesse des réponses, il est possible de faire appel à des fournisseurs tels que `Cerebras`, `Groq` ou encore `TogetherAI` avec des **modèles open source** (`qwen3-32b`, `deepseek-r1-distill-llama-70b`, etc.).
 
 ## Installer PIERRE sur votre site web
 
@@ -361,7 +364,7 @@ PIERRE dispose — en fait — de deux bases de connaissances :
 **Comment faire apprendre des connaissances à PIERRE ?**
 
 1. Se connecter à https://180.81.82.83/a, puis cliquer sur `Encyclopédie`.
-2. Télécharger `_metadata.xlsx`, le compléter **scrupuleusement** et le ré-uploader avec les fichiers associés. Seuls les `.docx` (Word), `.xlsx` (Excel) et `.md` (Markdown) sont acceptés.
+2. Télécharger `_metadata.xlsx`, le compléter **scrupuleusement** et le ré-uploader avec les fichiers associés. Seuls les `.docx` (Word), `.xlsx` (Excel) et `.md` (Markdown) sont acceptés. Voir [Guide : préparer vos documents pour `PIERRE`](./docs//documentation/prepare-your-docs.md) pour plus de précisions.
 3. **Indispensable** : [Configurer](https://github.com/charnould/pierre/blob/master/assets/pierre-ia.org/config.ts#L73) `config.ts` de manière à permettre l'utilisation des connaissances `proprietary` et le protéger s'il utilise des données `privées`/`private`.
 4. C'est tout. Toutes les nuits aux alentours de 4h du matin, la base de connaissances sera automatiquement reconstruite.
 
