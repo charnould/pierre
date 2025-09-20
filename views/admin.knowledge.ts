@@ -133,8 +133,7 @@ export const view = (metadata: Metadata[]) => {
 
         <div class="mb-10">
           ${metadata.map(
-            (m) =>
-              html` <div class="mb-1 flex flex-row items-center">
+            (m) => html` <div class="mb-1 flex flex-row items-center">
                 <form class="mr-8 flex flex-row gap-x-3" method="post">
                   <button
                     data-turbo="false"

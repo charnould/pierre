@@ -28,7 +28,7 @@ export const view = (user) => {
           href="a/conversations"
           ${user.role === 'administrator'
             ? html`class="block cursor-pointer text-7xl font-extrabold mb-1 hover:underline
-              hover:underline-offset-4"`
+                hover:underline-offset-4"`
             : html`class="block text-7xl font-extrabold mb-1 cursor-not-allowed text-neutral-400"`}
           >Conversations</a
         >
@@ -37,7 +37,7 @@ export const view = (user) => {
           href="a/knowledge"
           ${user.role === 'administrator' || user.role === 'contributor'
             ? html`class="block cursor-pointer text-7xl font-extrabold mb-1 hover:underline
-              hover:underline-offset-4"`
+                hover:underline-offset-4"`
             : html`class="block text-7xl font-extrabold mb-1 cursor-not-allowed text-neutral-400"`}
           >Encyclopédie</a
         >
@@ -46,7 +46,7 @@ export const view = (user) => {
           href="a/statistics"
           ${user.role === 'administrator'
             ? html`class="block cursor-pointer text-7xl font-extrabold mb-1 hover:underline
-              hover:underline-offset-4"`
+                hover:underline-offset-4"`
             : html`class="block text-7xl font-extrabold mb-1 cursor-not-allowed text-neutral-400"`}
           >Statistiques</a
         >
@@ -54,7 +54,7 @@ export const view = (user) => {
           href="a/users"
           ${user.role === 'administrator'
             ? html`class="block cursor-pointer text-7xl font-extrabold mb-1 hover:underline
-              hover:underline-offset-4"`
+                hover:underline-offset-4"`
             : html`class="block text-7xl font-extrabold mb-1 cursor-not-allowed text-neutral-400"`}
           >Utilisateurs</a
         >
