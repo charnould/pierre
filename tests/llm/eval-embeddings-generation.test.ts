@@ -49,7 +49,10 @@ it('should generate embeddings with Hugging Face', async () => {
   for (let t = 0; t < tests; t++) {
     const to = performance.now()
     for await (const string of strings) {
-      const r = await generate_embeddings([string], { provider: 'huggingface', batch: false })
+      const r = await generate_embeddings([string], {
+        provider: 'huggingface',
+        batch: false
+      })
       console.log(r)
     }
     const t1 = performance.now()

@@ -1,5 +1,5 @@
+import type { LanguageModel } from 'ai'
 import { z } from 'zod/v4'
-import { type LanguageModel } from 'ai'
 
 /**
  * Represents a User schema definition using Zod.
@@ -173,7 +173,10 @@ export const AIContext = z
           private: [],
           public: []
         }),
-      custom_data: z.object({ raw: z.array(z.string()), transformed: z.string().default('') }),
+      custom_data: z.object({
+        raw: z.array(z.string()),
+        transformed: z.string().default('')
+      }),
       conversation: z
         .array(
           z.object({

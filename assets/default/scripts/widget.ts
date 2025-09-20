@@ -2,7 +2,7 @@
 let pierre_is_open = false
 let configuration: string
 let url: string
-let pierre_button: HTMLElement & {
+let _pierre_button: HTMLElement & {
   dataset: { configuration: string; url: string }
 }
 

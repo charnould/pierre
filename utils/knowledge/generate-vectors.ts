@@ -1,5 +1,4 @@
 import type Database from 'bun:sqlite'
-import _ from 'lodash'
 import { z } from 'zod'
 import { db } from '../database'
 import { generate_embeddings } from '../search-by-vectors'
@@ -72,7 +71,10 @@ const go = async (query: Chunk[], database: Database, knowledge: Knowledge) => {
         batch: false
       })
     } else {
-      chunk_vector = await generate_embeddings([c.chunk_text], { provider: 'ollama', batch: false })
+      chunk_vector = await generate_embeddings([c.chunk_text], {
+        provider: 'ollama',
+        batch: false
+      })
     }
     const t1 = performance.now()
     console.log(t1 - to, 'ms')
@@ -113,7 +115,10 @@ export const wake_up_gpu = async () => {
     let is_awake = false
 
     while (is_awake === false) {
-      const response = await generate_embeddings(['hi'], { provider: 'huggingface', batch: false })
+      const response = await generate_embeddings(['hi'], {
+        provider: 'huggingface',
+        batch: false
+      })
       if (response.error) {
         console.log('💤 GPU is waking up. Retrying in 10 seconds.')
         await Bun.sleep(10000)
