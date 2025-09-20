@@ -1,10 +1,12 @@
-import type { CoreMessage } from 'ai'
+import type { ModelMessage } from 'ai'
+import { SQL } from 'bun'
 import dedent from 'dedent'
 import type { Reply } from './_schema'
 import { extract_tag_value } from './augment-query'
-import { db } from './database'
 import { generate_text } from './generate-output'
 import { get_conversation, save_topic, score_conversation } from './handle-conversation'
+
+const sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
 
 /**
  * Scores conversations using an AI model.
@@ -29,30 +31,31 @@ import { get_conversation, save_topic, score_conversation } from './handle-conve
  * If the conversation contains only one message, a specific score and comment
  * are assigned.
  *
- * @returns {Promise<void>} A promise that resolves when the scoring process is
- * complete.
+ * @returns {Promise<void>} A promise that resolves when the scoring process is complete.
  */
 export const score_conversation_with_ai = async (): Promise<void> => {
   // Get the `conv_id` of conversations that have no score
-  const conv_ids_missing_score = db('datastore')
-    .prepare(
-      `
-      SELECT DISTINCT conv_id FROM telemetry
-      WHERE json_extract(metadata, '$.evaluation.ai.score') IS NULL;`
-    )
-    .all()
-    .map((row) => row.conv_id)
+  const sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
+  let conv_ids_missing_score = await sql`
+    SELECT DISTINCT
+      conv_id
+    FROM
+      telemetry
+    WHERE
+      json_extract (metadata, '$.evaluation.ai.score') IS NULL;
+  `
+  conv_ids_missing_score = conv_ids_missing_score.map((row) => row.conv_id)
 
   // For each conversation:
   // 1. Retrieve all conversation content.
   // 2. Use an LLM to determine the topic.
   // 3. Save the topic back into the database.
   for await (const conv_id of conv_ids_missing_score) {
-    const conversation = get_conversation(conv_id) as Reply[]
+    const conversation = (await get_conversation(conv_id)) as Reply[]
     const core_messages = conversation.map(({ role, content }) => ({
       role,
       content
-    })) as CoreMessage[]
+    })) as ModelMessage[]
 
     let score: number | string | null | boolean
     let comment: number | string | null | boolean
@@ -61,7 +64,7 @@ export const score_conversation_with_ai = async (): Promise<void> => {
       score = -1
       comment = "PIERRE n'a pas répondu à l'utilisateur."
     } else {
-      const messages: CoreMessage[] = [
+      const messages: ModelMessage[] = [
         ...core_messages,
         {
           role: 'assistant',
@@ -92,13 +95,22 @@ export const score_conversation_with_ai = async (): Promise<void> => {
 
       const config = (await import('../assets/default/config')).default
       const model = config.models
-      const answer = await generate_text({ model: model, messages: messages, max_tokens: 200 })
+      const answer = await generate_text({
+        model: model,
+        messages: messages,
+        max_tokens: 200
+      })
 
       score = extract_tag_value(answer, 'score', null)
       comment = extract_tag_value(answer, 'reasoning', null)
     }
 
-    score_conversation({ conv_id: conv_id, scorer: 'ai', score: score, comment: comment })
+    await score_conversation({
+      conv_id: conv_id,
+      scorer: 'ai',
+      score: score,
+      comment: comment
+    })
   }
 
   console.info('✅ AI score assignment completed')
@@ -129,28 +141,28 @@ export const score_conversation_with_ai = async (): Promise<void> => {
  */
 export const assign_topic_with_ai = async (): Promise<void> => {
   // Get the `conv_id` of conversations that have no assigned topic
-  const conv_ids_missing_topic = db('datastore')
-    .prepare(
-      `
-      SELECT DISTINCT conv_id FROM telemetry
-      WHERE json_extract(metadata, '$.topics') IS NULL;
-      `
-    )
-    .all()
-    .map((row) => row.conv_id)
+  let conv_ids_missing_topic = await sql`
+    SELECT DISTINCT
+      conv_id
+    FROM
+      telemetry
+    WHERE
+      json_extract (metadata, '$.topics') IS NULL;
+  `
+  conv_ids_missing_topic = conv_ids_missing_topic.map((row) => row.conv_id)
 
   // For each conversation:
   // 1. Retrieve all conversation content.
   // 2. Use an LLM to determine the topic.
   // 3. Save the topic back into the database.
   for await (const conv_id of conv_ids_missing_topic) {
-    const conversation = get_conversation(conv_id) as Reply[]
+    const conversation = (await get_conversation(conv_id)) as Reply[]
     const core_messages = conversation.map(({ role, content }) => ({
       role,
       content
-    })) as CoreMessage[]
+    })) as ModelMessage[]
 
-    const messages: CoreMessage[] = [
+    const messages: ModelMessage[] = [
       ...core_messages,
       {
         role: 'assistant',
@@ -193,7 +205,7 @@ export const assign_topic_with_ai = async (): Promise<void> => {
       'unknown'
     ]
 
-    if (topics.includes(topic)) save_topic({ conv_id: conv_id, topic: topic })
+    if (topics.includes(topic)) await save_topic({ conv_id: conv_id, topic: topic })
   }
 
   console.info('✅ AI topic assignment completed')

@@ -1,21 +1,20 @@
 import { beforeAll, expect, it } from 'bun:test'
 import puppeteer from 'puppeteer'
-import { db } from '../../utils/database'
-import { save_user } from '../../utils/handle-user'
+import { delete_all_users, save_user } from '../../utils/handle-user'
 
 // Initial setup
 beforeAll(async () => {
   Bun.env.SERVICE = 'pierre-production'
-  db('datastore').query('DELETE FROM users').run()
+  await delete_all_users()
 
-  save_user({
+  await save_user({
     email: 'collaborator@pierre-ia.org',
     role: 'collaborator',
     password_hash: await Bun.password.hash('de17a9bb-1cd0-440b-98cb-5be2fda3e5e2'),
     config: JSON.stringify(['default', 'demo_team'])
   })
 
-  save_user({
+  await save_user({
     email: 'contributor@pierre-ia.org',
     role: 'contributor',
     password_hash: await Bun.password.hash('de17a9bb-1cd0-440b-98cb-5be2fda3e5e2'),

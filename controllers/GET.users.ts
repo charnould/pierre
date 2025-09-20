@@ -8,9 +8,9 @@ import { view } from '../views/admin.users'
  * @param c - The context object containing request and response details.
  * @returns A response in HTML format displaying the list of users.
  */
-export const controller = (c: Context) => {
+export const controller = async (c: Context) => {
   try {
-    const users = get_users()
+    const users = await get_users()
     return c.html(view(users))
   } catch (error) {
     console.error('Error retrieving users:', error)

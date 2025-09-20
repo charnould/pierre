@@ -5,14 +5,20 @@ import { generate_embeddings } from '../../../utils/search-by-vectors'
 // because it requires a local instance of the Ollama server to be running.
 describe.skip('generate_embeddings', () => {
   it('should generate embeddings for 1 string/batch:false', async () => {
-    const a = await generate_embeddings(['hello world'], { provider: 'ollama', batch: false })
+    const a = await generate_embeddings(['hello world'], {
+      provider: 'ollama',
+      batch: false
+    })
     expect(a).toBeArray()
     expect(a.length).toBe(1024)
     expect(a).toMatchSnapshot()
   })
 
   it('should generate embeddings for 1 string/batch:true', async () => {
-    const a = await generate_embeddings(['hello world'], { provider: 'ollama', batch: true })
+    const a = await generate_embeddings(['hello world'], {
+      provider: 'ollama',
+      batch: true
+    })
     expect(a).toBeArray()
     expect(a.length).toBe(1)
     expect(a).toMatchSnapshot()

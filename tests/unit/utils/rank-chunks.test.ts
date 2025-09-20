@@ -4,36 +4,126 @@ import { flatten_vector_searches, pick_relevant_chunks } from '../../../utils/ra
 const input = [
   {
     community: [
-      { chunk_hash: 'hash_a', entity_hash: 'none', distance: 0.01, chunk_text: 'text_a' },
-      { chunk_hash: 'hash_b', entity_hash: 'none', distance: 0.02, chunk_text: 'text_b' },
-      { chunk_hash: 'hash_c', entity_hash: 'none', distance: 0.03, chunk_text: 'text_c' }
+      {
+        chunk_hash: 'hash_a',
+        entity_hash: 'none',
+        distance: 0.01,
+        chunk_text: 'text_a'
+      },
+      {
+        chunk_hash: 'hash_b',
+        entity_hash: 'none',
+        distance: 0.02,
+        chunk_text: 'text_b'
+      },
+      {
+        chunk_hash: 'hash_c',
+        entity_hash: 'none',
+        distance: 0.03,
+        chunk_text: 'text_c'
+      }
     ],
     private: [
-      { chunk_hash: 'hash_1', entity_hash: 'entity_1', distance: 0.01, chunk_text: 'text_1' },
-      { chunk_hash: 'hash_2', entity_hash: 'entity_1', distance: 0.02, chunk_text: 'text_2' },
-      { chunk_hash: 'hash_3', entity_hash: 'entity_2', distance: 0.03, chunk_text: 'text_3' }
+      {
+        chunk_hash: 'hash_1',
+        entity_hash: 'entity_1',
+        distance: 0.01,
+        chunk_text: 'text_1'
+      },
+      {
+        chunk_hash: 'hash_2',
+        entity_hash: 'entity_1',
+        distance: 0.02,
+        chunk_text: 'text_2'
+      },
+      {
+        chunk_hash: 'hash_3',
+        entity_hash: 'entity_2',
+        distance: 0.03,
+        chunk_text: 'text_3'
+      }
     ],
     public: [
-      { chunk_hash: 'hash_4', entity_hash: 'entity_3', distance: 0.02, chunk_text: 'text_4' },
-      { chunk_hash: 'hash_5', entity_hash: 'entity_4', distance: 0.03, chunk_text: 'text_5' },
-      { chunk_hash: 'hash_6', entity_hash: 'entity_5', distance: 0.04, chunk_text: 'text_6' }
+      {
+        chunk_hash: 'hash_4',
+        entity_hash: 'entity_3',
+        distance: 0.02,
+        chunk_text: 'text_4'
+      },
+      {
+        chunk_hash: 'hash_5',
+        entity_hash: 'entity_4',
+        distance: 0.03,
+        chunk_text: 'text_5'
+      },
+      {
+        chunk_hash: 'hash_6',
+        entity_hash: 'entity_5',
+        distance: 0.04,
+        chunk_text: 'text_6'
+      }
     ]
   },
   {
     community: [
-      { chunk_hash: 'hash_d', entity_hash: 'none', distance: 0.03, chunk_text: 'text_d' },
-      { chunk_hash: 'hash_e', entity_hash: 'none', distance: 0.02, chunk_text: 'text_e' },
-      { chunk_hash: 'hash_f', entity_hash: 'none', distance: 0.01, chunk_text: 'text_f' }
+      {
+        chunk_hash: 'hash_d',
+        entity_hash: 'none',
+        distance: 0.03,
+        chunk_text: 'text_d'
+      },
+      {
+        chunk_hash: 'hash_e',
+        entity_hash: 'none',
+        distance: 0.02,
+        chunk_text: 'text_e'
+      },
+      {
+        chunk_hash: 'hash_f',
+        entity_hash: 'none',
+        distance: 0.01,
+        chunk_text: 'text_f'
+      }
     ],
     private: [
-      { chunk_hash: 'hash_7', entity_hash: 'entity_6', distance: 0.01, chunk_text: 'text_7' },
-      { chunk_hash: 'hash_8', entity_hash: 'entity_6', distance: 0.02, chunk_text: 'text_8' },
-      { chunk_hash: 'hash_9', entity_hash: 'entity_6', distance: 0.03, chunk_text: 'text_9' }
+      {
+        chunk_hash: 'hash_7',
+        entity_hash: 'entity_6',
+        distance: 0.01,
+        chunk_text: 'text_7'
+      },
+      {
+        chunk_hash: 'hash_8',
+        entity_hash: 'entity_6',
+        distance: 0.02,
+        chunk_text: 'text_8'
+      },
+      {
+        chunk_hash: 'hash_9',
+        entity_hash: 'entity_6',
+        distance: 0.03,
+        chunk_text: 'text_9'
+      }
     ],
     public: [
-      { chunk_hash: 'hash_4', entity_hash: 'entity_1', distance: 0.001, chunk_text: 'text_1' },
-      { chunk_hash: 'hash_5', entity_hash: 'entity_1', distance: 0.2, chunk_text: 'text_2' },
-      { chunk_hash: 'hash_6', entity_hash: 'entity_2', distance: 0.003, chunk_text: 'text_3' }
+      {
+        chunk_hash: 'hash_4',
+        entity_hash: 'entity_1',
+        distance: 0.001,
+        chunk_text: 'text_1'
+      },
+      {
+        chunk_hash: 'hash_5',
+        entity_hash: 'entity_1',
+        distance: 0.2,
+        chunk_text: 'text_2'
+      },
+      {
+        chunk_hash: 'hash_6',
+        entity_hash: 'entity_2',
+        distance: 0.003,
+        chunk_text: 'text_3'
+      }
     ]
   }
 ]
