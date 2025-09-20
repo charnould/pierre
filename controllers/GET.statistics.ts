@@ -1,9 +1,11 @@
 import { table } from 'arquero'
+import { SQL } from 'bun'
 import type { Context } from 'hono'
 import _ from 'lodash'
 import { z } from 'zod'
-import { db } from '../utils/database'
 import { view } from '../views/admin.statistics'
+
+const sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
 
 /**
  * Controller function to handle GET requests for statistics.
@@ -26,7 +28,7 @@ export const controller = async (c: Context) => {
 
     // Case 1: User wants to visualize data in Pierre
     if (options.action === 'visualize') {
-      const data = get_data(options)
+      const data = await get_data(options)
       return c.html(view(data, options))
     }
 
@@ -34,7 +36,7 @@ export const controller = async (c: Context) => {
     if (options.action === 'download') {
       c.header('Content-Disposition', 'attachment; filename=pierre-ia.org.csv')
       c.header('Content-Type', 'text/csv')
-      const csv = generate_csv()
+      const csv = await generate_csv()
       return c.text(csv)
     }
   } catch (e) {
@@ -77,29 +79,18 @@ const StatisticOptions = z.object({
 export type StatisticOptions = z.infer<typeof StatisticOptions>
 
 /**
- * Retrieves statistical data based on the provided options.
+ * Retrieves and processes telemetry statistics based on the specified time window.
  *
- * @param {StatisticOptions} options - The options to configure the data retrieval.
- * @returns {string} - A JSON string representing the processed statistical data.
+ * Queries the telemetry database for records newer than the calculated limit date,
+ * groups them by conversation ID, and extracts the earliest record per group.
+ * For each record, formats timestamps for different time windows, parses metadata,
+ * and extracts evaluation scores and topics. Returns a JSON string of the processed results,
+ * omitting sensitive fields.
  *
- * The function performs the following steps:
- * 1. Defines the minimum date to query based on the provided time window.
- * 2. Queries the database for telemetry data with timestamps greater than the defined limit date.
- * 3. Groups the data by `conv_id` and selects the earliest timestamp for each group.
- * 4. Processes each item to extract and format relevant information, including:
- *    - `last_1h`: Time in HH:MM format.
- *    - `last_24h`: Hour in HH format.
- *    - `last_30d`: Date in YYYY-MM-DD format.
- *    - `last_365d`: Year and month in YYYY-MM format.
- *    - `user_score`: Customer evaluation score or 'Non noté' if null.
- *    - `org_score`: Organization evaluation score or 'Non noté' if null.
- *    - `ia_score`: PIERRE own evaluation score or 'Non noté' if null.
- *    - `topic`: PIERRE own topic evaluation.
- *    - `user`: who the user is.
- * 5. Omits certain fields from the final result.
- * 6. Returns the processed result as a JSON string.
+ * @param options - The options specifying the statistics window (e.g., 'last_1h', 'last_24h', 'last_30d', 'last_365d').
+ * @returns A promise that resolves to a JSON string containing the processed statistics.
  */
-export const get_data = (options: StatisticOptions): string => {
+export const get_data = async (options: StatisticOptions): Promise<string> => {
   // Define min date to query
   const now = new Date()
   const limit_date = (
@@ -112,9 +103,16 @@ export const get_data = (options: StatisticOptions): string => {
           : new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
   ).toISOString()
 
-  const data = db('datastore')
-    .prepare('SELECT * FROM telemetry WHERE timestamp > $limit ORDER BY timestamp ;')
-    .all({ $limit: limit_date })
+  const data = await sql`
+    SELECT
+      *
+    FROM
+      telemetry
+    WHERE
+      timestamp > ${limit_date}
+    ORDER BY
+      timestamp;
+  `
 
   const result = _.chain(data)
     .groupBy('conv_id')
@@ -167,43 +165,39 @@ export const get_data = (options: StatisticOptions): string => {
 }
 
 /**
- * Generates a CSV file from the data retrieved from the 'datastore' database.
+ * Generates a CSV string containing telemetry statistics.
  *
- * The function performs the following steps:
- * 1. Executes a SQL query to select all columns from the 'telemetry' table,
- *    along with extracting 'cus_score' and 'org_score' from the 'metadata' JSON field.
- * 2. Maps the retrieved data to a result object containing arrays of specific fields.
- * 3. Converts the result object to a CSV format and returns it.
+ * This function queries the telemetry database for conversation data,
+ * extracts relevant fields including scores and topics from the metadata,
+ * and formats the results into a CSV string.
  *
- * @returns {string} The generated CSV content as a string.
+ * @returns {Promise<string>} A promise that resolves to the generated CSV string.
+ *
  */
-export const generate_csv = () => {
-  const data = db('datastore')
-    .prepare(
-      `
-      SELECT
-        *,
-        json_extract(metadata, '$.evaluation.cus.score') AS cus_score,
-        json_extract(metadata, '$.evaluation.org.score') AS org_score,
-        json_extract(metadata, '$.evaluation.ai.score') AS ai_score,
-        json_extract(metadata, '$.topics') AS topic
-      FROM telemetry;
-      `
-    )
-    .all()
+export const generate_csv = async (): Promise<string> => {
+  const data = await sql`
+    SELECT
+      *,
+      json_extract (metadata, '$.evaluation.cus.score') AS cus_score,
+      json_extract (metadata, '$.evaluation.org.score') AS org_score,
+      json_extract (metadata, '$.evaluation.ai.score') AS ai_score,
+      json_extract (metadata, '$.topics') AS topic
+    FROM
+      telemetry;
+  `
 
   // prettier-ignore
   const result = {
-      conversation      : _.map(data, 'conv_id'),
-      horodatage        : _.map(data, 'timestamp'),
-      role              : _.map(data, 'role'),
-      configuration     : _.map(data, 'config'),
-      thematique        : _.map(data, 'topic'),
-      score_utilisateur : _.map(data, 'cus_score'),
-      score_organisme   : _.map(data, 'org_score'),
-      score_ia          : _.map(data, 'ai_score'),
-      message           : _.map(data, 'content')
-    }
+		conversation: _.map(data, "conv_id"),
+		horodatage: _.map(data, "timestamp"),
+		role: _.map(data, "role"),
+		configuration: _.map(data, "config"),
+		thematique: _.map(data, "topic"),
+		score_utilisateur: _.map(data, "cus_score"),
+		score_organisme: _.map(data, "org_score"),
+		score_ia: _.map(data, "ai_score"),
+		message: _.map(data, "content"),
+	};
 
   return table(result).toCSV()
 }

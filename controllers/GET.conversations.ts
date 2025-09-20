@@ -9,9 +9,9 @@ export const controller = async (c: Context) => {
     // Retrieve and display the conversation matching the `id` from the query string.
     // `String(id)` ensures the value is treated as a string, even if it's undefined.
     const id = c.req.query('id')
-    const displayed_conversation = get_conversation(String(id))
+    const displayed_conversation = await get_conversation(String(id))
 
-    const conversations: Reply[] = get_conversations()
+    const conversations: Reply[] = await get_conversations()
     const conversations_grouped_by_id = _.map(
       _.groupBy(
         conversations.map((c) => Reply.parse(c)),

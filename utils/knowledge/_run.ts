@@ -49,7 +49,7 @@ export const execute_pipeline = async (knowledge: Knowledge) => {
       await chunk_json(knowledge)
       await chunk_markdown(knowledge)
       await generate_vectors(knowledge)
-      await $`rm -rf ./datastores/${Bun.env.SERVICE}/__temp__`
+      await $`rm -rf ./datastores/${Bun.env.SERVICE}/temp`
       const t1 = performance.now()
       console.info(`Pipeline completed in ${((t1 - to) / 1000).toFixed(2)}s`)
     }

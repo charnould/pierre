@@ -1,7 +1,6 @@
-import _ from 'lodash'
 import { z } from 'zod'
-import { db } from '../utils/database'
 import type { Db_Name } from '../utils/database'
+import { db } from '../utils/database'
 import type { AIContext } from './_schema'
 
 /**
@@ -213,7 +212,7 @@ export type Vector_Search_Result = z.infer<typeof Vector_Search_Result>
  *
  * @throws Will terminate the process if the Ollama service is not running.
  */
-export const ensure_ollama_is_running_and_models_preloaded = async () => {
+export const is_ollama_ready = async () => {
   const request = JSON.stringify({ model: 'bge-m3', keep_alive: -1 })
   const ERROR = 'Ollama is not running.'
   const url =
