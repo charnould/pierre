@@ -1,5 +1,6 @@
 node_modules/
 datastores/
+temp/
 __temp__/
 .DS_Store
 .env
