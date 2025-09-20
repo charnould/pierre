@@ -1,4 +1,5 @@
 import { z } from 'zod/v4'
+import { type LanguageModel } from 'ai'
 
 /**
  * Represents a User schema definition using Zod.
@@ -68,18 +69,10 @@ export const Config = z
         })
       )
       .default([]),
-
-    models: z
-      .object({
-        augment_with: z.string(),
-        rerank_with: z.string(),
-        answer_with: z.string()
-      })
-      .default({
-        augment_with: "openai('gpt-4o-mini-2024-07-18')",
-        rerank_with: "openai('gpt-4o-mini-2024-07-18')",
-        answer_with: "openai('gpt-4o-mini-2024-07-18')"
-      }),
+    answer_with: z.object({
+      model: z.custom<LanguageModel>(),
+      providerOptions: z.looseObject({})
+    }),
     phone: z.string().nullable(),
     protected: z.boolean(),
     knowledge: z.object({

@@ -9,7 +9,6 @@ import { stem } from './stem-text'
 // TODO: waht about `Fine-Tune BM25 Hyperparameters` (chunk length is irrelevant)
 export const bm25_search = (keyword: string, context: AIContext) => {
   try {
-    console.log(keyword)
     // Retrieve knowledge access permissions for the current context
     // (e.g., default, team, etc.) + Set a default for TS happiness
     let k = { community: true, proprietary: { public: false, private: false } }
