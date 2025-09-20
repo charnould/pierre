@@ -1,11 +1,3 @@
-import { createAnthropic } from '@ai-sdk/anthropic'
-import { createCerebras } from '@ai-sdk/cerebras'
-import { createCohere } from '@ai-sdk/cohere'
-import { createGoogleGenerativeAI } from '@ai-sdk/google'
-import { createGroq } from '@ai-sdk/groq'
-import { createMistral } from '@ai-sdk/mistral'
-import { createOpenAI } from '@ai-sdk/openai'
-import { createTogetherAI } from '@ai-sdk/togetherai'
 import dedent from 'dedent'
 import _ from 'lodash'
 import * as prettier from 'prettier'
@@ -161,7 +153,7 @@ export const flatten_vector_searches = (data: Vector_Search_Result[]): Flatten_C
         .map((group) => _.minBy(group, 'distance'))
         .compact()
         .orderBy('distance')
-        .take(25)
+        .take(15)
         .value()
     )
     .values()
@@ -209,15 +201,6 @@ export const pick_relevant_chunks = (
  * CAUTION: if prompt ask only for a score, reasoning quality will be low!
  */
 export const score_chunk = async (context: AIContext, chunk: Flatten_Chunk) => {
-  const openai = createOpenAI({ compatibility: 'strict' })
-  const google = createGoogleGenerativeAI()
-  const anthropic = createAnthropic()
-  const mistral = createMistral()
-  const cohere = createCohere()
-  const togetherai = createTogetherAI()
-  const groq = createGroq()
-  const cerebras = createCerebras()
-
   const score = await generate_text({
     messages: [
       ...context.conversation,
@@ -251,11 +234,10 @@ export const score_chunk = async (context: AIContext, chunk: Flatten_Chunk) => {
         - 1-999 (Partial Match) – The response is relevant but lacks precision, completeness, or clarity.
         - 0 (No Match) – No meaningful connection to the user’s intent.
         
-        **Think carefully and output the score first, within <score> tags, followed by your reasoning.**`
+        **Think carefully but quickly and output ONLY the score within <score> tags.**`
       }
     ],
-    model: context.config.models.rerank_with,
-    max_tokens: 300
+    max_tokens: 500
   })
 
   return extract_score_and_reasoning(score)
@@ -273,7 +255,11 @@ export const extract_score_and_reasoning = (text: string | null | undefined) => 
     return { score: 0, reasoning: null }
   }
 
-  const match = text.match(/<score>\s*(\d+)\s*<\/score>/)
-  const score = match ? Number.parseFloat(match[1]) : 0
-  return { score: score, reasoning: text }
+  const score_match = text.match(/<score>\s*(\d+)\s*<\/score>/)
+  const score = score_match ? Number.parseFloat(score_match[1]) : 0
+
+  const think_match = text.match(/<think>\s*(.*?)\s*<\/think>/)
+  const think = think_match ? think_match[1].trim() : null
+
+  return { score: score, reasoning: think }
 }

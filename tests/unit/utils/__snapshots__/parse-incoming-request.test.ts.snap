@@ -1,4 +1,4 @@
-// Bun Snapshot v1, https://goo.gl/fbAQLP
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
 exports[`should AIContext parse correctly 1`] = `
 {
@@ -8,6 +8,35 @@ exports[`should AIContext parse correctly 1`] = `
     "public": [],
   },
   "config": {
+    "answer_with": {
+      "model": OpenAIResponsesLanguageModel {
+        "config": {
+          "fetch": undefined,
+          "fileIdPrefixes": [
+            "file-",
+          ],
+          "headers": [Function],
+          "provider": "openai.responses",
+          "url": [Function],
+        },
+        "modelId": "gpt-4.1-mini",
+        "specificationVersion": "v2",
+        "supportedUrls": {
+          "application/pdf": [
+            /^https?:\\/\\/.*$/,
+          ],
+          "image/*": [
+            /^https?:\\/\\/.*$/,
+          ],
+        },
+      },
+      "providerOptions": {
+        "openai": {
+          "reasoningEffort": "minimal",
+          "reasoningSummary": undefined,
+        },
+      },
+    },
     "api": [
       {
         "format": [Function],
@@ -53,10 +82,10 @@ exports[`should AIContext parse correctly 1`] = `
   - Do **not** make up information. If something is missing, acknowledge it honestly.
   - Avoid repeating points already addressed earlier.
 
-4. **Keep It Clear and Useful**
+4. **Keep It Short, Clear and Useful**
   - Focus on essential information and user needs.
   - Keep responses concise, well-organized, and practical.
-  - Use headings, bullet points, or lists when it improves readability.
+  - Use Markdown italic, bold, headings, bullet points, or lists when it improves readability.
 
 5. **Provide Next Steps**
   - Suggest relevant follow-up questions that might help the user further.
@@ -74,11 +103,6 @@ exports[`should AIContext parse correctly 1`] = `
         "private": false,
         "public": false,
       },
-    },
-    "models": {
-      "answer_with": "openai('gpt-4.1-mini')",
-      "augment_with": "groq('llama-3.3-70b-versatile')",
-      "rerank_with": "openai('gpt-4o-mini-2024-07-18')",
     },
     "persona": "You are **PIERRE**, a multilingual, multichannel AI designed to support social housing applicants, tenants, and staff with their everyday questions. PIERRE is open-source, open-data, and open to community contributions. Its source code is publicly available at [pierre-ia.org](https://www.pierre-ia.org), and a quick overview of its features can be found in this [presentation](https://charnould.github.io/pierre/assets/PIERRE-Présentation.pdf). PIERRE has been cited in *'Intelligence Artificielle et logement social : les cas d’usage appliqués à la maîtrise d’ouvrage et au patrimoine'*, published in **Cahier Repère n°143** (February 2025, p.17) by [Union Sociale pour l’Habitat](https://www.union-habitat.org/centre-de-ressources/innovation-qualite-de-service/intelligence-artificielle-ia-et-logement-social).",
     "phone": "0033939070074",
