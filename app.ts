@@ -3,7 +3,7 @@ import { CronJob } from 'cron'
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
 import { secureHeaders } from 'hono/secure-headers'
-import { setup } from './config/setup'
+import { setup } from './utils/setup'
 
 import { controller as get_admin } from './controllers/GET.admin'
 import { controller as get_ai } from './controllers/GET.ai'
@@ -18,10 +18,7 @@ import { controller as post_knowledge } from './controllers/POST.knowledge'
 import { controller as post_login } from './controllers/POST.login'
 import { controller as post_users } from './controllers/POST.users'
 import { authenticate } from './utils/authenticate-user'
-import {
-  assign_topic_with_ai,
-  score_conversation_with_ai
-} from './utils/categorize-and-score-conversation'
+import { topicize, score } from './utils/analyze-conversation'
 import { execute_pipeline } from './utils/knowledge/_run'
 import { is_ollama_ready } from './utils/search-by-vectors'
 
@@ -38,11 +35,11 @@ const app = new Hono()
 // This allows other websites to iframe PIERRE
 app.use(
   secureHeaders({
-    // TODO: This should be modified to allow only a few trusted domains
+    crossOriginResourcePolicy: false,
     contentSecurityPolicy: {
+      // TODO: This should be modified to allow only a few trusted domains
       frameAncestors: ["'self'", 'http://localhost:*', '*']
-    },
-    crossOriginResourcePolicy: false
+    }
   })
 )
 
@@ -50,21 +47,21 @@ app.use(
 
 // Update knowledge database with custom content
 CronJob.from({
-  cronTime: '0 0 4 * * *', // Runs every day at 4:00 AM
   onTick: async () => await execute_pipeline({ proprietary: true, community: false }),
-  start: true,
-  timeZone: 'Europe/Paris'
+  cronTime: '0 0 4 * * *', // Runs every day at 4:00 AM
+  timeZone: 'Europe/Paris',
+  start: true
 })
 
 // Score conversation and assign topic with AI
 CronJob.from({
-  cronTime: '0 0 5 * * *', // Runs every day at 5:00 AM
   onTick: async () => {
-    await assign_topic_with_ai()
-    await score_conversation_with_ai()
+    await topicize()
+    await score()
   },
-  start: true,
-  timeZone: 'Europe/Paris'
+  cronTime: '0 0 5 * * *', // Runs every day at 5:00 AM
+  timeZone: 'Europe/Paris',
+  start: true
 })
 
 // Serve static files from the assets directory

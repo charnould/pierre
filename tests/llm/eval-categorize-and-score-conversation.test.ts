@@ -1,10 +1,7 @@
 import { afterAll, beforeAll, expect, it, setSystemTime } from 'bun:test'
 import { SQL } from 'bun'
 import { AIContext } from '../../utils/_schema'
-import {
-  assign_topic_with_ai,
-  score_conversation_with_ai
-} from '../../utils/categorize-and-score-conversation'
+import { topicize, score } from '../../utils/analyze-conversation'
 import { save_reply } from '../../utils/handle-conversation'
 
 const sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
@@ -38,8 +35,8 @@ beforeAll(async () => {
 afterAll(() => setSystemTime())
 
 it('should score conversation and assign topic with AI', async () => {
-  await score_conversation_with_ai()
-  await assign_topic_with_ai()
+  await score()
+  await topicize()
 
   const record = await sql`
     SELECT

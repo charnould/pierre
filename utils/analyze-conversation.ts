@@ -4,7 +4,7 @@ import dedent from 'dedent'
 import type { Reply } from './_schema'
 import { extract_tag_value } from './augment-query'
 import { generate_text } from './generate-output'
-import { get_conversation, save_topic, score_conversation } from './handle-conversation'
+import { get_conversation, save_topic, score } from './handle-conversation'
 
 const sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
 
@@ -33,7 +33,7 @@ const sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
  *
  * @returns {Promise<void>} A promise that resolves when the scoring process is complete.
  */
-export const score_conversation_with_ai = async (): Promise<void> => {
+export const score = async (): Promise<void> => {
   // Get the `conv_id` of conversations that have no score
   const sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
   let conv_ids_missing_score = await sql`
@@ -105,7 +105,7 @@ export const score_conversation_with_ai = async (): Promise<void> => {
       comment = extract_tag_value(answer, 'reasoning', null)
     }
 
-    await score_conversation({
+    await score({
       conv_id: conv_id,
       scorer: 'ai',
       score: score,
@@ -139,7 +139,7 @@ export const score_conversation_with_ai = async (): Promise<void> => {
  *
  * @returns {Promise<void>} A promise that resolves when the operation is complete.
  */
-export const assign_topic_with_ai = async (): Promise<void> => {
+export const topicize = async (): Promise<void> => {
   // Get the `conv_id` of conversations that have no assigned topic
   let conv_ids_missing_topic = await sql`
     SELECT DISTINCT
