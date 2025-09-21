@@ -1,8 +1,10 @@
-/node_modules
+node_modules/
+datastores/
+temp/
+__temp__/
 .DS_Store
 .env
 .env.production
-.env.staging
 .env.staging
 .env.test
 .env.local
