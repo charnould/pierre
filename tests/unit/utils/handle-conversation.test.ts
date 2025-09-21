@@ -7,7 +7,7 @@ import {
   get_conversations,
   save_reply,
   save_topic,
-  score_conversation
+  score
 } from '../../../utils/handle-conversation'
 
 const sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
@@ -62,21 +62,21 @@ describe('test SQLite3 conversation CRUD operations', async () => {
   })
 
   it('should have score', async () => {
-    await score_conversation({
+    await score({
       conv_id: 'c1',
       scorer: 'customer',
       score: 1,
       comment: 'customer_comment'
     })
 
-    await score_conversation({
+    await score({
       conv_id: 'c1',
       scorer: 'organization',
       score: 2,
       comment: 'organization_comment'
     })
 
-    await score_conversation({
+    await score({
       conv_id: 'c1',
       scorer: 'ai',
       score: 3,
@@ -85,7 +85,7 @@ describe('test SQLite3 conversation CRUD operations', async () => {
 
     expect(await get_conversation('c1')).toMatchSnapshot()
 
-    await score_conversation({
+    await score({
       conv_id: 'c2',
       scorer: 'ai',
       score: 3,
