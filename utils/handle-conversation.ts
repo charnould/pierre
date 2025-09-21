@@ -116,7 +116,7 @@ export const save_reply = async (context: AIContext): Promise<void> => {
  * This function is tested.
  *
  */
-export const score_conversation = async ({
+export const score = async ({
   conv_id,
   scorer,
   score,
