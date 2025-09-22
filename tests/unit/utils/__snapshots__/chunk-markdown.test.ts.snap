@@ -1,4 +1,4 @@
-// Bun Snapshot v1, https://goo.gl/fbAQLP
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
 exports[`should split markdown into chunks 1`] = `
 "# Garantie Visale
@@ -379,6 +379,13 @@ Exemple avec un montant de loyer de 250€ et un impayé partiel de 100€ à M,
 ### Que doit faire le bailleur si le locataire perçoit des allocations logements ?
 
 En cas d’impayé, le Bailleur est tenu de demander le règlement en tiers payant si le Locataire bénéficie d’une aide au logement, dès la réception de l’information par la CAF.
+"
+`;
+
+exports[`should split markdown into chunks 2`] = `
+"# Garantie Visale
+
+## La gestion des impayés de loyer par le bailleur
 
 ### Quelles sont les obligations du bailleur une fois la déclaration d’impayé validée par la caution ?
 
@@ -393,13 +400,6 @@ Si le cas se présente, le bailleur doit reverser le montant indemnisé par Acti
 ### La procédure de recouvrement sera-t-elle menée par la caution ?
 
 Action Logement prend en charge la procédure de recouvrement qui peut aller jusqu’à l’expulsion du locataire si nécessaire. Avant d’engager la procédure contentieuse, Action Logement propose à votre locataire un traitement amiable. Il peut définir son plan de remboursement directement depuis son espace locataire et régler en ligne. le locataire dispose de 2 mois pour solliciter une procédure amiable. À défaut, la procédure contentieuse se poursuit. Vous êtes informés des étapes principales de la procédure dans votre espace.
-"
-`;
-
-exports[`should split markdown into chunks 2`] = `
-"# Garantie Visale
-
-## La gestion des impayés de loyer par le bailleur
 
 ### Que faire en cas de nouvel impayé ?
 

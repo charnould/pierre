@@ -1,7 +1,6 @@
-import type Database from 'bun:sqlite'
 import * as prettier from 'prettier'
 import tiktoken from 'tiktoken'
-import { db } from '../database'
+import { db, Db_Name } from '../database'
 import { stem } from '../stem-text'
 import type { Knowledge } from './_run'
 import { generate_hash } from './generate-hash'
@@ -40,13 +39,14 @@ export const chunk_json = async (knowledge: Knowledge) => {
     // For each file described in _metadata.json
     // and it it's an XLSX file, apply the following logic
     // TODO: must be more robust
-    for await (const file of metadata as Metadata) {
-      if (file.type === 'xlsx') {
-        // Use the right database
-        let database: Database
-        if (file.access === 'private') database = db('proprietary.private')
-        else database = db('proprietary.public')
+    for await (const file of metadata as Metadata[]) {
+      //  if file does not exist in filesystem
+      // skips the rest of the current loop iteration and moves to the next item.
+      const f = Bun.file(file.filepath)
+      const exists = await f.exists()
+      if (!exists) continue
 
+      if (file.type === 'xlsx') {
         // Load file as a JSON
         const json = await Bun.file(`datastores/${Bun.env.SERVICE}/temp/${file.id}.json`).json()
 
@@ -100,12 +100,12 @@ export const chunk_json = async (knowledge: Knowledge) => {
             //        If I put 8191 below, API throws.
             if (potential_token_count > 7_200) {
               // Save chunk
-              save_chunk(
-                {
-                  chunk_text: chunk_text
-                },
-                database
-              )
+              save_chunk({
+                chunk_text: chunk_text,
+                chunk_access: file.access as string,
+                chunk_file: file.filename,
+                db_name: 'proprietary'
+              })
 
               // Reboot counter and chunk Markdown structure
               chunk_text = ''
@@ -118,12 +118,12 @@ export const chunk_json = async (knowledge: Knowledge) => {
             tokens_count = count_tokens(chunk_text)
           }
 
-          save_chunk(
-            {
-              chunk_text: chunk_text
-            },
-            database
-          )
+          save_chunk({
+            chunk_text: chunk_text,
+            chunk_access: file.access as string,
+            chunk_file: file.filename,
+            db_name: 'proprietary'
+          })
 
           chunk_text = ''
           tokens_count = 0
@@ -131,7 +131,7 @@ export const chunk_json = async (knowledge: Knowledge) => {
       }
     }
 
-    console.log('✅ tabular chunks created')
+    console.log('✅ Tabular chunks created')
     return
   }
 }
@@ -144,35 +144,45 @@ export const chunk_json = async (knowledge: Knowledge) => {
 //
 // This function handles storing a chunk in the database along with its metadata,
 // including hash values, text, stemming, and associated entity details.
-const save_chunk = async (chunk: { chunk_text: string }, database: Database) => {
+const save_chunk = async ({
+  chunk_text: chunk_text,
+  chunk_access: chunk_access,
+  chunk_file: chunk_file,
+  db_name: db_name
+}: {
+  db_name: Db_Name
+  chunk_text: string
+  chunk_file: string
+  chunk_access: string
+}) => {
   // Prepare and process the chunk:
   // 1. Format the chunk using Prettier for clean and consistent Markdown formatting.
   // 2. Generate a unique hash for the chunk to serve as its identifier in the database.
   // 3. Create a stemmed version of the chunk for optimized FTS5/BM25 search indexing.
-  chunk.chunk_text = await prettier.format(chunk.chunk_text, {
-    parser: 'markdown'
-  })
-  const chunk_hash = generate_hash(chunk.chunk_text)
-  const chunk_stem = stem(chunk.chunk_text)
+  chunk_text = await prettier.format(chunk_text, { parser: 'markdown' })
+  const chunk_hash = generate_hash(chunk_text)
+  const chunk_stem = stem(chunk_text)
+  const chunk_tokens = count_tokens(chunk_text)
 
   // Save the chunk data to the database:
   // 1. Insert the chunk into the `chunks` table.
   // 2. Add the chunk's stemmed version into the `stems` table to allow BM25 search.
-  database
+  db(db_name)
     .prepare(
       `
       INSERT INTO chunks (
         chunk_hash,
+        chunk_file,
+        chunk_access,
         chunk_tokens,
-        chunk_text,
-        chunk_stem
+        chunk_text
       )
-      VALUES (?, ?, ?, ?);
+      VALUES (?, ?, ?, ?, ?);
      `
     )
-    .run(chunk_hash, count_tokens(chunk.chunk_text), chunk.chunk_text, chunk_stem)
+    .run(chunk_hash, chunk_file, chunk_access, chunk_tokens, chunk_text)
 
-  database.prepare('INSERT INTO stems (chunk_stem) VALUES (?);').run(chunk_stem)
+  db(db_name).prepare('INSERT INTO stems (chunk_stem) VALUES (?);').run(chunk_stem)
 
   return
 }

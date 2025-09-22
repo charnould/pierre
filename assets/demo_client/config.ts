@@ -24,20 +24,41 @@ export default {
   show: ['default', 'demo_client', 'demo_team'],
   custom_data: {},
   api: [],
-  answer_with: {
-    model: openai('gpt-4.1-mini'), //gpt-4.1-mini | gpt-5-mini-2025-08-07
-    providerOptions: {
-      openai: {
-        reasoningEffort: 'minimal',
-        reasoningSummary: undefined
+  models: {
+    augment_with: {
+      model: groq('qwen/qwen3-32b'),
+      providerOptions: {
+        groq: {
+          reasoningFormat: 'raw',
+          reasoningEffort: 'default',
+          serviceTier: 'auto'
+        }
+      }
+    },
+    rerank_with: {
+      model: groq('qwen/qwen3-32b'),
+      providerOptions: {
+        groq: {
+          reasoningFormat: 'raw',
+          reasoningEffort: 'default',
+          serviceTier: 'auto'
+        }
+      }
+    },
+    answer_with: {
+      model: openai('gpt-4.1-mini'),
+      providerOptions: {
+        openai: {
+          reasoningEffort: 'none',
+          reasoningSummary: null
+        }
       }
     }
   },
-  phone: null,
   protected: false,
   knowledge: {
     community: true,
-    proprietary: { public: false, private: false }
+    proprietary: false
   },
   audience:
     'The user is interested in Grand Dijon Habitat, a social housing company operating around Dijon, France.',

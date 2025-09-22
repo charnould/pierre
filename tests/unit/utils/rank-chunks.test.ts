@@ -23,7 +23,7 @@ const input = [
         chunk_text: 'text_c'
       }
     ],
-    private: [
+    proprietary: [
       {
         chunk_hash: 'hash_1',
         entity_hash: 'entity_1',
@@ -41,26 +41,6 @@ const input = [
         entity_hash: 'entity_2',
         distance: 0.03,
         chunk_text: 'text_3'
-      }
-    ],
-    public: [
-      {
-        chunk_hash: 'hash_4',
-        entity_hash: 'entity_3',
-        distance: 0.02,
-        chunk_text: 'text_4'
-      },
-      {
-        chunk_hash: 'hash_5',
-        entity_hash: 'entity_4',
-        distance: 0.03,
-        chunk_text: 'text_5'
-      },
-      {
-        chunk_hash: 'hash_6',
-        entity_hash: 'entity_5',
-        distance: 0.04,
-        chunk_text: 'text_6'
       }
     ]
   },
@@ -85,7 +65,7 @@ const input = [
         chunk_text: 'text_f'
       }
     ],
-    private: [
+    proprietary: [
       {
         chunk_hash: 'hash_7',
         entity_hash: 'entity_6',
@@ -104,26 +84,6 @@ const input = [
         distance: 0.03,
         chunk_text: 'text_9'
       }
-    ],
-    public: [
-      {
-        chunk_hash: 'hash_4',
-        entity_hash: 'entity_1',
-        distance: 0.001,
-        chunk_text: 'text_1'
-      },
-      {
-        chunk_hash: 'hash_5',
-        entity_hash: 'entity_1',
-        distance: 0.2,
-        chunk_text: 'text_2'
-      },
-      {
-        chunk_hash: 'hash_6',
-        entity_hash: 'entity_2',
-        distance: 0.003,
-        chunk_text: 'text_3'
-      }
     ]
   }
 ]
@@ -139,37 +99,37 @@ const chunks = [
   {
     score: 100,
     chunk_text: 'chunk_75',
-    source: 'public'
+    source: 'proprietary'
   },
   {
     score: 1000,
     chunk_text: 'chunk_76',
-    source: 'public'
+    source: 'proprietary'
   },
   {
     score: 0,
     chunk_text: 'chunk_78',
-    source: 'public'
+    source: 'proprietary'
   },
   {
     score: 630,
     chunk_text: 'chunk_77',
-    source: 'private'
+    source: 'proprietary'
   },
   {
     score: 0,
     chunk_text: 'chunk_1100',
-    source: 'private'
+    source: 'proprietary'
   },
   {
     score: 600,
     chunk_text: 'chunk_1200',
-    source: 'private'
+    source: 'proprietary'
   },
   {
     score: 0,
     chunk_text: 'chunk_1200',
-    source: 'public'
+    source: 'proprietary'
   },
   {
     score: 800,
@@ -188,9 +148,8 @@ const chunks = [
 
 it('should flatten chunks 1', () => expect(flatten_vector_searches(input)).toMatchSnapshot())
 
-it('should keep only relevant', () =>
+it('should keep only relevant chunks', () =>
   expect(pick_relevant_chunks(chunks)).toStrictEqual({
-    private: ['chunk_77', 'chunk_1200'],
-    public: ['chunk_76'],
+    proprietary: ['chunk_76', 'chunk_77', 'chunk_1200'],
     community: ['chunk_1300']
   }))

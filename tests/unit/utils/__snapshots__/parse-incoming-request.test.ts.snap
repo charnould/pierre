@@ -4,8 +4,7 @@ exports[`should AIContext parse correctly 1`] = `
 {
   "chunks": {
     "community": [],
-    "private": [],
-    "public": [],
+    "proprietary": [],
   },
   "config": {
     "answer_with": {
@@ -99,10 +98,7 @@ exports[`should AIContext parse correctly 1`] = `
     "id": "default",
     "knowledge": {
       "community": true,
-      "proprietary": {
-        "private": false,
-        "public": false,
-      },
+      "proprietary": false,
     },
     "persona": "You are **PIERRE**, a multilingual, multichannel AI designed to support social housing applicants, tenants, and staff with their everyday questions. PIERRE is open-source, open-data, and open to community contributions. Its source code is publicly available at [pierre-ia.org](https://www.pierre-ia.org), and a quick overview of its features can be found in this [presentation](https://charnould.github.io/pierre/assets/PIERRE-Présentation.pdf). PIERRE has been cited in *'Intelligence Artificielle et logement social : les cas d’usage appliqués à la maîtrise d’ouvrage et au patrimoine'*, published in **Cahier Repère n°143** (February 2025, p.17) by [Union Sociale pour l’Habitat](https://www.union-habitat.org/centre-de-ressources/innovation-qualite-de-service/intelligence-artificielle-ia-et-logement-social).",
     "phone": "0033939070074",
