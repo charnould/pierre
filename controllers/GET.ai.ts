@@ -84,7 +84,6 @@ const search_and_answer = async (c: Context) => {
 
     //
     // Check if incoming request is a valid SMS
-    // TODO: handle wrong `/sms` request
     //
 
     const context = await AIContext.parseAsync({
@@ -108,18 +107,12 @@ const search_and_answer = async (c: Context) => {
     // Get knowledge access for user query considering current context
     let knowledge_access = {
       community: true,
-      proprietary: { public: false, private: false }
+      proprietary: false
     }
 
-    if (typeof context.config !== 'string') {
-      knowledge_access = context.config.knowledge
-    }
+    if (typeof context.config !== 'string') knowledge_access = context.config.knowledge
 
-    if (
-      knowledge_access.proprietary.private === false &&
-      knowledge_access.proprietary.public === false &&
-      knowledge_access.community === false
-    ) {
+    if (knowledge_access.proprietary === false && knowledge_access.community === false) {
       answer = await stream_answer(context)
     } else {
       t0 = performance.now()
@@ -198,8 +191,7 @@ const search_and_answer = async (c: Context) => {
         // with a deadlock.
         if (
           (context.chunks.community?.length ?? 0) === 0 &&
-          (context.chunks.private?.length ?? 0) === 0 &&
-          (context.chunks.public?.length ?? 0) === 0
+          (context.chunks.proprietary?.length ?? 0) === 0
         ) {
           console.debug('No knowledge chunk: respond with a no-knowledge deadlock.')
           answer = await reach_relevancy_deadlock(context)
@@ -216,13 +208,13 @@ const search_and_answer = async (c: Context) => {
       // Mark the end of the request for performance measurement
       // and log a performance measurement table
       console.table([
-        ['augment   ', `${t1 - t0}ms`],
-        ['embed     ', `${t3 - t2}ms`],
-        ['v_search  ', `${t4 - t3}ms`],
-        ['b_search  ', `${t5 - t4}ms`],
-        ['rerank    ', `${t6 - t5}ms`],
+        ['augment   ', `${(t1 - t0).toFixed(3)}ms`],
+        ['embed     ', `${(t3 - t2).toFixed(3)}ms`],
+        ['v_search  ', `${(t4 - t3).toFixed(3)}ms`],
+        ['b_search  ', `${(t5 - t4).toFixed(3)}ms`],
+        ['rerank    ', `${(t6 - t5).toFixed(3)}ms`],
         ['----------', '------------'],
-        ['TOTAL     ', `${t6 - t0}ms`]
+        ['TOTAL     ', `${(t6 - t0).toFixed(3)}ms`]
       ])
     }
     //

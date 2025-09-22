@@ -17,7 +17,13 @@ export const process_office_files = async (knowledge: Knowledge) => {
     const metadata = await Bun.file(`datastores/${Bun.env.SERVICE}/temp/.metadata.json`).json()
 
     // For each file...
-    for await (const file of metadata as Metadata) {
+    for await (const file of metadata as Metadata[]) {
+      //  if file does not exist in filesystem
+      // skips the rest of the current loop iteration and moves to the next item.
+      const f = Bun.file(file.filepath)
+      const exists = await f.exists()
+      if (!exists) continue
+
       //
       //
       //
@@ -148,7 +154,7 @@ export const process_office_files = async (knowledge: Knowledge) => {
       }
     }
 
-    console.log('✅ files processed')
+    console.log('✅ Files processed')
   }
 
   return

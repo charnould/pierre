@@ -5,7 +5,7 @@ import { z } from 'zod'
 import type { AIContext } from './_schema'
 import { today_is } from './generate-answer'
 import { generate_text } from './generate-output'
-import type { Vector_Search_Result } from './search-by-vectors'
+import type { SResults } from './search-by-vectors'
 
 /**
  * Ranks and filters chunks based on their relevance scores.
@@ -25,19 +25,19 @@ import type { Vector_Search_Result } from './search-by-vectors'
  * intermediate data to JSON files for debugging purposes.
  */
 export const rank_chunks = async (
-  vect_data: Vector_Search_Result[],
-  bm25_data: Vector_Search_Result[],
+  vect_data: SResults[],
+  bm25_data: SResults[],
   context: AIContext
 ) => {
   // Flatten chunks and combine them
-  const vect_chunks = flatten_vector_searches(vect_data)
-  const bm25_chunks = _.differenceBy(flatten_vector_searches(bm25_data), vect_chunks, 'chunk_hash')
-  const chunks = [...vect_chunks, ...bm25_chunks]
+  const v_chunks = flatten_searches(vect_data)
+  const t_chunks = _.differenceBy(flatten_searches(bm25_data), v_chunks, 'chunk_hash')
+  const chunks = [...v_chunks, ...t_chunks]
 
   // Score chunks...
   const chunk_scores = await Promise.all(chunks.map((chunk) => score_chunk(context, chunk)))
 
-  // Retrive chunk content and its source (community, private, public)...
+  // Retrive chunk content and its source (community, proprietary)...
   const scored_chunks = _.orderBy(
     chunks.map((chunk, index) => ({
       score: chunk_scores[index].score,
@@ -68,13 +68,14 @@ export const rank_chunks = async (
             chunk_text: string
             source: string
           }[]
-        | { community: string[]; private: string[]; public: string[] }
+        | { community: string[]; proprietary: string[] }
     ) => await prettier.format(JSON.stringify(data), { parser: 'json' })
-    Bun.write('temp/1. search-vector.json', await print(vect_chunks))
-    Bun.write('temp/2. search-bm25.json', await print(bm25_chunks))
-    Bun.write('temp/3. chunks-combined.json', await print(chunks))
-    Bun.write('temp/4. chunks-scored.json', await print(scored_chunks))
-    Bun.write('temp/5. chunks-relevant.json', await print(relevant_chunks))
+
+    Bun.write('temp/1. search-v.json', await print(v_chunks))
+    Bun.write('temp/2. search-t.json', await print(t_chunks))
+    Bun.write('temp/3. chunks-c.json', await print(chunks))
+    Bun.write('temp/4. chunks-s.json', await print(scored_chunks))
+    Bun.write('temp/5. chunks-r.json', await print(relevant_chunks))
   }
 
   return Relevant_Chunks.parse(relevant_chunks)
@@ -90,21 +91,16 @@ export const rank_chunks = async (
 //
 //
 
-// prettier-ignore
-// biome-ignore format: readability
 const Flatten_Chunk = z.object({
-  chunk_hash  : z.string(),
-  distance    : z.number(),
-  chunk_text  : z.string(),
-  source      : z.string()
+  chunk_hash: z.string(),
+  distance: z.number(),
+  chunk_text: z.string(),
+  source: z.string()
 })
 
-// prettier-ignore
-// biome-ignore format: readability
 const Relevant_Chunks = z.object({
-  community     : z.array(z.string()).default([]),
-  private       : z.array(z.string()).default([]),
-  public        : z.array(z.string()).default([])
+  community: z.array(z.string()).default([]),
+  proprietary: z.array(z.string()).default([])
 })
 
 export type Flatten_Chunk = z.infer<typeof Flatten_Chunk>
@@ -130,10 +126,10 @@ export type Relevant_Chunks = z.infer<typeof Relevant_Chunks>
  * within each group by their distance. It returns the top 50 closest chunks for
  * each source.
  *
- * @param {Vector_Search_Result[]} data - The array of search results to be processed.
+ * @param {SResults[]} data - The array of search results to be processed.
  * @returns {Flatten_Chunk[]} - The flattened and ranked array of chunks.
  */
-export const flatten_vector_searches = (data: Vector_Search_Result[]): Flatten_Chunk[] =>
+export const flatten_searches = (data: SResults[]): Flatten_Chunk[] =>
   _.chain(data)
     .flatMap((o) =>
       Object.entries(o).flatMap(([source, items]) => {
@@ -166,7 +162,7 @@ export const flatten_vector_searches = (data: Vector_Search_Result[]): Flatten_C
  * @param scores - An array of objects containing score, chunk_text, and source.
  * @returns An object with keys as sources and values as arrays of the top 5 chunk_texts
  *          with scores greater than or equal to 500, ordered by score in descending order.
- *          Defaults to empty arrays for sources 'public', 'private', and 'community'.
+ *          Defaults to empty arrays for sources 'proprietary' and 'community'.
  */
 export const pick_relevant_chunks = (
   scores: {
@@ -185,7 +181,7 @@ export const pick_relevant_chunks = (
         .map('chunk_text')
         .value()
     )
-    .defaults({ public: [], private: [], community: [] })
+    .defaults({ proprietary: [], community: [] })
     .value()
 
 /**
@@ -202,6 +198,7 @@ export const pick_relevant_chunks = (
  */
 export const score_chunk = async (context: AIContext, chunk: Flatten_Chunk) => {
   const score = await generate_text({
+    model: context.config.models.augment_with,
     messages: [
       ...context.conversation,
       {

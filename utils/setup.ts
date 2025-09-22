@@ -13,8 +13,7 @@ export const setup = async () => {
   await $`mkdir -p datastores/${Bun.env.SERVICE}/temp`
 
   sqlite_vec.load(new Database('./knowledge/data.sqlite'))
-  sqlite_vec.load(new Database(`./datastores/${Bun.env.SERVICE}/proprietary.public.sqlite`))
-  sqlite_vec.load(new Database(`./datastores/${Bun.env.SERVICE}/proprietary.private.sqlite`))
+  sqlite_vec.load(new Database(`./datastores/${Bun.env.SERVICE}/proprietary.sqlite`))
 
   new Database(`datastores/${Bun.env.SERVICE}/datastore.sqlite`).run(`
     CREATE TABLE IF NOT EXISTS telemetry

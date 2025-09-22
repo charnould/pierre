@@ -40,8 +40,7 @@ export const answer_user = async (context: AIContext) => {
       
       ## Internal Materials (Priority 1)
       
-      ${context.chunks.private?.map((c) => `<chunk>\n${c.trim()}\n</chunk>\n`).join('')}
-      ${context.chunks.public?.map((c) => `<chunk>\n${c.trim()}\n</chunk>\n`).join('')}
+      ${context.chunks.proprietary?.map((c) => `<chunk>\n${c.trim()}\n</chunk>\n`).join('')}
       
       ## Community Materials (Priority 2)
       ${context.chunks.community?.map((c) => `<chunk>\n${c.trim()}\n</chunk>\n`).join('')}

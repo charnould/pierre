@@ -1,5 +1,8 @@
-// DÉBUT : NE PAS MODIFIER
-
+/**
+ *
+ * DÉBUT : NE PAS MODIFIER
+ *
+ */
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createCerebras } from '@ai-sdk/cerebras'
 import { createCohere } from '@ai-sdk/cohere'
@@ -8,8 +11,8 @@ import { createGroq } from '@ai-sdk/groq'
 import { createMistral } from '@ai-sdk/mistral'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createTogetherAI } from '@ai-sdk/togetherai'
-import dedent from 'dedent'
 import type { Config } from '../../utils/_schema'
+import dedent from 'dedent'
 
 const openai = createOpenAI()
 const google = createGoogleGenerativeAI()
@@ -19,7 +22,11 @@ const cohere = createCohere()
 const togetherai = createTogetherAI()
 const groq = createGroq()
 const cerebras = createCerebras()
-// FIN : NE PAS MODIFIER
+/**
+ *
+ * DÉBUT : NE PAS MODIFIER
+ *
+ */
 
 //
 // ASTUCE : Pour vous assurer que le fichier de configuration est correctement
@@ -107,33 +114,60 @@ export default {
   // Consulter https://ai-sdk.dev/docs/foundations/providers-and-models pour choisir
   // le modèle de langage le plus pertinent.
   //
-  // Il est fortement recommandé de désactiver le "reasoning" pour réduire la latence.
   //
-  answer_with: {
-    model: openai('gpt-4.1-mini'),
-    providerOptions: {
-      openai: {
-        reasoningEffort: 'minimal',
-        reasoningSummary: undefined
+  models: {
+    // Le modèle utilisé pour augmenter/enrichir les requêtes de l'utilisateur.
+    // Nous recommandons `qwen/qwen3-32b` via le moteur d'inférence Groq (https://groq.com/).
+    // avec les paramétrages suivants. L'objectif ici est de disposer d'un modèle
+    // efficient et rapide.
+    augment_with: {
+      model: groq('qwen/qwen3-32b'),
+      providerOptions: {
+        groq: {
+          reasoningFormat: 'raw',
+          reasoningEffort: 'none',
+          serviceTier: 'auto'
+        }
+      }
+    },
+    // Le modèle utlisé par le reranker qui s'assure que les éléments de
+    // réponses retournés par les bases de connaissances sont pertinents.
+    // Nous recommandons `qwen/qwen3-32b` via le moteur d'inférence Groq (https://groq.com/).
+    // avec les paramétrages suivants. L'objectif ici est de disposer d'un modèle
+    // efficient et rapide.
+    rerank_with: {
+      model: groq('qwen/qwen3-32b'),
+      providerOptions: {
+        groq: {
+          reasoningFormat: 'raw',
+          reasoningEffort: 'default',
+          serviceTier: 'auto'
+        }
+      }
+    },
+
+    // Le modèle qui génère les réponses en s'appuyant sur les éléments les plus
+    // pertinents retournés par le reranker. Il est fortement recommandé de désactiver
+    // le "reasoning" lors de la génération de la réponse finale pour réduire la latence.
+    answer_with: {
+      model: openai('gpt-4.1-mini'),
+      providerOptions: {
+        openai: {
+          reasoningEffort: 'none',
+          reasoningSummary: null
+        }
       }
     }
   },
-  // Le numéro de téléphone qui permet d'utiliser PIERRE via SMS. Assurez-vous
-  // de bien respecter le format (`00` au début). Renseigner `null` si vous
-  // n'avez pas paramétré de numéro.
-  phone: '0033939070074',
 
   //
   // Si `false` :
   //  - PIERRE sera accessible à 100 % des visiteurs sur internet.
-  //  - Il s'agit du paramétrage à renseigner pour un chatbot accessible aux
-  //    candidats ou locataires.
+  //  - Il s'agit du paramétrage à renseigner pour un chatbot accessible aux locataires.
   //
   // Si `true` :
-  //  - PIERRE ne sera accessible qu'aux utilisateurs dûment habilités et
-  //    connectés.
-  //  - C'est le paramétrage à choisir pour restreindre l'usage - par exemple -
-  //    aux collaborateurs.
+  //  - PIERRE ne sera accessible qu'aux utilisateurs dûment habilités et connectés.
+  //  - C'est le paramétrage à choisir pour restreindre l'usage, par exemple, aux collaborateurs.
   //
   // Pour vous connecter la première fois, saississez `admin@pierre-ia.org` et
   // la valeur de la variable d'environnement `AUTH_PASSWORD`, puis créer des
@@ -148,15 +182,9 @@ export default {
     community: true,
 
     // `proprietary` correspond aux connaissances propres à un organisme HLM,
-    // qu'il ne souhaite pas partager avec `community` et qu'il gère en son nom
-    // propre. Ces connaissances peuvent être :
-    //   - `public`, c'est-à-dire des données que l'organisme souhaite néanmoins
-    //      rendre publiques aux candidats ou locataires accédant à PIERRE (ex :
-    //      les coordonnées des gardiens, agences de proximité, etc.)
-    //   - `private` (ex : une procédure d'astreinte au seul usage des équipes).
-    //      En toute logique, si `proprietary.private` est `true`, `protected`
-    //      doit aussi être `true`.
-    proprietary: { public: false, private: false }
+    // qu'il ne souhaite pas partager avec `community` et qu'il gère en son
+    // nom propre.
+    proprietary: false
 
     // Astuce : Si vous renseignez `false` pour l'ensemble des connaissances
     // ci-dessus, PIERRE se comportera comme un simple wrapper autour d'un LLM,

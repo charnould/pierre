@@ -1,4 +1,4 @@
-// Bun Snapshot v1, https://goo.gl/fbAQLP
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
 exports[`generate_embeddings should generate embeddings for 1 string/batch:false 1`] = `
 [
@@ -5143,5 +5143,197 @@ exports[`generate_embeddings should generate embeddings for 2 strings/batch:fals
   0.02644182,
   -0.032997318,
   0.016327105,
+]
+`;
+
+exports[`generate_embeddings should generate find relevant chunks with access 1`] = `
+[
+  {
+    "chunk_hash": "FKYYbXlhPW1otr6vUz38",
+    "chunk_text": 
+"# Crises du logement en France
+
+## Voir aussi
+
+### Bibliographie
+
+- Pierrette Briant, division Logement, Insee, no 1291 - mai 2010 - L’accession à la propriété dans les années 2000
+- Vincent Bénard, Le Logement : crise publique, remèdes privés, Romillat, 2007. (ISBN 2878941365), \\[présentation en ligne\\]
+- Patrick Grépinet, La crise du logement. Des chiffres pour comprendre, des pistes pour agir, édition L'Harmattan, coll. Questions contemporaines, 2006, 200 p., (ISBN 2296005888)
+- Christian Julienne, Logement, solutions pour une crise fabriquée, 2006, Paris, Les Belles Lettres, 332 p., (ISBN 2251443088), \\[présentation en ligne\\]
+- Georges Mesmin, Urbanisme et logement : Analyse d'une crise, 1992, Paris, PUF, 173 p., (ISBN 2130448488)
+- Fondation Abbé Pierre, L'état du mal logement en France
+- Henry Hazlitt, L'économie politique en une leçon, édition de 1979, chap. 18 : Les résultats du contrôle des loyers, \\[lire en ligne\\]
+- Jean-Claude Driant, Pierre Madec, Les crises du logement, PUF, 2018, 367 p.
+- Fanny Bugeja-Bloch, Anne Lambert, Camille Noûs, « Les conditions de logement en France : une approche multidimensionnelle des inégalités de logement selon les classes sociales », Revue des politiques sociales et familiales, no 141,‎ 2021, p. 91-105 (DOI 10.3917/rpsf.141.0091)
+
+### Liens externes
+
+- "Crises et politiques du logement en France et au Royaume-Uni", colloque franco-britannique, décembre 2006, Paris
+- Numéro de la revue Regards croisés sur l'économie consacré à la crise du logement en France
+
+### Sources
+
+- « Les facteurs fonciers et immobiliers de la crise du logement », rapport du Sénat, 2004
+
+- Portail de l’économie
+- Portail de la société
+- Portail de l’architecture et de l’urbanisme
+"
+,
+    "distance": 1.1476165056228638,
+  },
+  {
+    "chunk_hash": "vlXdHn6MvJGxsJKEEukk",
+    "chunk_text": 
+"# Loi d'orientation et de programmation pour la ville et la rénovation urbaine
+
+La loi no 2003-710 du 1er août 2003 d’orientation et de programmation pour la ville et la rénovation urbaine, parue au Journal officiel du 2 août 2003, dite loi Borloo, est une loi française.
+
+Il ne faut pas la confondre avec le « plan Borloo », ou plan de cohésion sociale, voté en 2004.
+
+## Contenu
+
+La Loi Borloo s’articule autour de quatre axes :
+
+### Politique de la ville et rénovation urbaine
+
+- Réduction des inégalités sociales et des écarts de développement entre les territoires dans les zones urbaines sensibles (ZUS). Un observatoire national des ZUS est créé ;
+- Création d’un programme national de rénovation urbaine (PNRU) dit « Plan Borloo ». Objectif : pour la période 2004-2008, 200 000 constructions de logements locatifs sociaux, 200 000 réhabilitations ou restructurations lourdes (dont résidentialisations) et 200 000 démolitions de logements vétustes ;
+- Création de l’Agence nationale pour la rénovation urbaine (ANRU) ;
+- Sécurité dans les immeubles collectifs et copropriétés en difficulté.
+
+### Développement économique des quartiers prioritaires
+
+Création de 41 nouvelles zones franches urbaines (ZFU) qui s'ajouteront aux 44 ZFU créées en 1999, elles-mêmes prolongées de cinq ans.
+
+### Procédure de rétablissement personnel
+
+Elle donnerait une seconde chance aux personnes surendettées du fait d’un « accident de la vie » (chômage, veuvage, divorce, maladie).
+
+### Dispositions diverses
+
+- HLM avec extension du rôle de la Caisse de garantie du logement locatif social (CGLLS) à la réorganisation des organismes HLM, création d’une nouvelle ressource pour cette dernière et modification de la gouvernance des SA d’HLM ;
+- Autres dispositions dont le « surclassement » des communes comprenant une ou plusieurs ZUS.
+
+## Annexes
+
+### Articles connexes
+
+- Loi Besson (logement)
+- Défiscalisation en France
+
+### Lien externe
+
+- Texte de la loi
+
+- Portail du droit français
+- Portail des politiques sociales
+- Portail de la politique française
+- Portail des années 2000
+"
+,
+    "distance": 1.1500266790390015,
+  },
+  {
+    "chunk_hash": "hDgmJalXaKhR4JUljlOB",
+    "chunk_text": 
+"# Logement social en France
+
+## Voir aussi
+
+### Liens externes
+
+- « L'Union sociale pour l'habitat » – Union des organismes HLM (France)
+- « La Confédération Nationale du Logement » – CNL (France)
+- « UNLI : Union Nationale des Locataires Indépendants » (France)
+- « Agence Nationale pour l'Information sur le Logement » – ANIL (France)
+- « Réseau des acteurs de l'habitat », fondé en 2007 par quatre associations d'élus, ACUF, ADCF, AMGVF, ADF et l'Union sociale pour l'habitat
+- « Fédération Logement Consommation » (FLC)
+
+- Portail de l’économie
+- Portail du bâtiment et des travaux publics
+- Portail de l’architecture et de l’urbanisme
+- Portail de la France
+"
+,
+    "distance": 1.154962182044983,
+  },
+  {
+    "chunk_hash": "hKdLgB6o0Ub0vZdhzbbU",
+    "chunk_text": 
+"# Associations du département du Vaucluse (84 ou 84000) de protection contre les violence conjugales
+
+**CIDFF du Vaucluse**
+
+- Téléphone : 04 90 86 41 00
+- Email : [https://vaucluse.cidff.info/contact/](https://vaucluse.cidff.info/contact/)
+- Adresse : 2, place Alexandre Farnèse - Immeuble le Vinci - 84000 Avignon
+- Site web : [https://vaucluse.cidff.info](https://vaucluse.cidff.info/)
+- Permanences : Apt, Avignon, Carpentras, Cavaillon, Isle-sur-Sorgue, Le Pontet, Le Thor, Montfavet, Monteux, Orange, Pertuis, Pertuis, Sorgues, Valreas, Vedene.
+"
+,
+    "distance": 1.167930006980896,
+  },
+  {
+    "chunk_hash": "U6XXqYW1lIeXXBnq4HCx",
+    "chunk_text": 
+"# Ministre du Logement
+
+Le ministre du Logement et de la Rénovation urbaine est membre du gouvernement français.
+
+L'actuelle ministre du Logement et de la Rénovation urbaine est Valérie Létard en fonction depuis le 21 septembre 2024.
+
+## Historique
+
+Après la Seconde Guerre mondiale, le logement est associé au portefeuille de la Reconstruction. En 1967, le ministère de l’Équipement, dirigé par Edgard Pisani dans le quatrième gouvernement de Georges Pompidou, est créé par fusion de l’ancien ministère des Travaux Publics et des Transports, et de celui de la Construction.
+
+En 2007, l'Équipement est absorbé par le ministère de l'Écologie. Plus récemment, le portefeuille du Logement est associé à celui de l'Aménagement du territoire ou celui de la Ville.
+
+## Liste des ministres
+
+Les dates indiquées sont les dates de prise ou de cessation des fonctions, qui sont en général la veille de la date du Journal officiel dans lequel est paru le décret de nomination.
+
+### Troisième République
+
+### Quatrième République
+
+#### Ministre ou secrétaire d'État
+
+#### Sous-secrétaire d'État (1956–1957)
+
+Le poste de sous-secrétaire d'État au Logement est créé le 1er février 1956 lors de la formation du Gouvernement Guy Mollet. Il est supprimé le 6 novembre 1957 lors de la formation du Gouvernement Félix Gaillard.
+
+### Cinquième République
+
+## Galerie
+
+## Notes et références
+
+## Voir aussi
+
+### Articles connexes
+
+- Ministre chargé de la Ville
+- Liste des ministres français de l'Équipement
+- Liste des ministres français de la Construction
+- Liste des ministres français de la Reconstruction et de l'Urbanisme
+- Catégorie:Ministre français du Logement
+
+### Liens externes
+
+- Les gouvernements et les assemblées parlementaires sous la Ve République : 1958-2009, vol. 2, Secrétariat général de la Présidence et service de la Communication de l'Assemblée nationale, coll. « Connaissance de l'Assemblée », décembre 2008 (lire en ligne)
+- « Les Gouvernements de la Ve République », Assemblée nationale (consulté le 24 mars 2010)
+- « Les Gouvernements de la IVe République » (version du 15 février 2014 sur Internet Archive), Assemblée nationale
+- « Les Gouvernements de la IIIe République » (version du 25 février 2014 sur Internet Archive), Assemblée nationale
+- « Toutes les personnalités ayant occupé le poste de la Catégorie Logement », Base de données historiques des gouvernements et Présidents des assemblées parlementaires (Régimes politiques français depuis 1789), Assemblée nationale (consulté le 21 juin 2017)
+- « Chronologie des ministres de la Ve République attributaires des domaines suivants : aménagement du territoire, construction, développement durable, énergie, environnement, équipement, logement, mer, tourisme, transports, travaux publics, urbanisme. » (version du 4 mars 2016 sur Internet Archive), Ministère de l'Écologie, de l'Énergie, du Développement durable et de la Mer
+
+- Portail des politiques sociales
+- Portail de la politique française
+"
+,
+    "distance": 1.1707136631011963,
+  },
 ]
 `;
