@@ -93,9 +93,9 @@ export const scrape_wikipedia = async (knowledge: Knowledge) => {
         }
       }
 
-      console.log('✅ wikipedia scrapped')
+      console.log('✅ Wikipedia scrapped')
     } catch (e) {
-      console.log('🆘 wikipedia scrapping failed')
+      console.log('❌ Wikipedia scrapping failed')
       console.log(e)
       return
     }

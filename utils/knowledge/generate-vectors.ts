@@ -19,33 +19,24 @@ import { generate_hash } from './generate-hash'
 export const generate_vectors = async (knowledge: Knowledge): Promise<void> => {
   try {
     // Generate and save `community` embeddings
-    if (knowledge.community === true) {
+    if (knowledge.community) {
       const database = db('community')
-      const query = database.query('SELECT * FROM chunks;').all() as Chunk[]
-      await go(query, database, knowledge)
+      const chunks = database.query('SELECT * FROM chunks;').all() as Chunk[]
+      await go(chunks, database, knowledge)
     }
 
-    // Generate and save `proprietary.private/public` embeddings
-    if (knowledge.proprietary === true) {
-      let database: Database
-      let query: Chunk[]
-
-      // Handle `proprietary.private`
-      database = db('proprietary.private')
-      query = database.query('SELECT * FROM chunks;').all() as Chunk[]
-      await go(query, database, knowledge)
-
-      // Handle `proprietary.public`
-      database = db('proprietary.public')
-      query = database.query('SELECT * FROM chunks;').all() as Chunk[]
-      await go(query, database, knowledge)
+    // Generate and save `proprietary` embeddings
+    if (knowledge.proprietary) {
+      const database = db('proprietary')
+      const chunks = database.query('SELECT * FROM chunks;').all() as Chunk[]
+      await go(chunks, database, knowledge)
     }
 
-    console.log('✅ embeddings computed')
-    console.log('✅ knowledge rebuilt!')
+    console.log('✅ Embeddings computed')
+    console.log('✅ Knowledge rebuilt!')
     return
   } catch (e) {
-    console.log('🆘 embeddings computing failed', e)
+    console.error('❌ Embeddings computing failed', e)
   }
 }
 
@@ -57,10 +48,10 @@ export const generate_vectors = async (knowledge: Knowledge): Promise<void> => {
  * @param database - The `Database` instance where the embeddings will be stored.
  * @returns A promise that resolves when all chunks have been processed and inserted into the database.
  */
-const go = async (query: Chunk[], database: Database, knowledge: Knowledge) => {
-  for await (const c of query) {
+const go = async (chunks: Chunk[], database: Database, knowledge: Knowledge) => {
+  for await (const c of chunks) {
     const to = performance.now()
-    let chunk_vector: Promise<number[]>
+    let chunk_vector
     if (
       knowledge.proprietary === true &&
       Bun.env.HUGGINGFACE_ENDPOINT &&
@@ -77,7 +68,7 @@ const go = async (query: Chunk[], database: Database, knowledge: Knowledge) => {
       })
     }
     const t1 = performance.now()
-    console.log(t1 - to, 'ms')
+    console.log(`Vector generated in ${(t1 - to).toFixed(3)}ms`)
 
     if (chunk_vector.error) {
       console.error(chunk_vector.error)
@@ -85,11 +76,17 @@ const go = async (query: Chunk[], database: Database, knowledge: Knowledge) => {
       database
         .prepare(
           `
-          INSERT INTO vectors (chunk_hash, chunk_text, chunk_vector)
-          VALUES (?, ?, vec_f32(?))
+          INSERT INTO vectors (chunk_hash, chunk_file, chunk_access, chunk_text, chunk_vector)
+          VALUES (?, ?, ?, ?, vec_f32(?))
           `
         )
-        .run(generate_hash(c.chunk_text), c.chunk_text, new Float32Array(chunk_vector))
+        .run(
+          generate_hash(c.chunk_text),
+          c.chunk_file,
+          c.chunk_access,
+          c.chunk_text,
+          new Float32Array(chunk_vector)
+        )
     }
   }
   return
@@ -108,8 +105,8 @@ export const wake_up_gpu = async () => {
     const endpoint = z.string().url().safeParse(Bun.env.HUGGINGFACE_ENDPOINT)
     const token = z.string().nonempty().safeParse(Bun.env.HUGGINGFACE_TOKEN)
 
-    if (!endpoint.success) throw new Error('❌ Invalid/missing HF_ENDPOINT.')
-    if (!token.success || token.data === 'null') throw new Error('❌ Invalid/missing HF_TOKEN.')
+    if (!endpoint.success) throw new Error('❌ Invalid or missing HF_ENDPOINT.')
+    if (!token.success || token.data === 'null') throw new Error('❌ Invalid or missing HF_TOKEN.')
 
     // Check if the Hugging Face endpoint is reachable
     let is_awake = false
@@ -124,12 +121,12 @@ export const wake_up_gpu = async () => {
         await Bun.sleep(10000)
       } else {
         is_awake = true
-        console.log('✅ GPU is awake and ready!')
+        console.log('✅ GPU is awake and ready')
         return
       }
     }
   } catch (e) {
-    console.error('🆘 GPU initialization failed or configuration is incorrect.', e)
+    console.error('❌ GPU initialization failed', e)
   }
 }
 
@@ -142,6 +139,8 @@ export const wake_up_gpu = async () => {
  */
 export const Chunk = z.object({
   chunk_hash: z.string(),
+  chunk_access: z.string(),
+  chunk_file: z.string(),
   chunk_text: z.string(),
   chunk_stem: z.string()
 })

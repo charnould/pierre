@@ -2,12 +2,17 @@ import { Database } from 'bun:sqlite'
 import * as sqlite_vec from 'sqlite-vec'
 import { z } from 'zod'
 
-// Database Factory Function
-//
-// This function initializes and returns a database connection based on the
-// specified database name. It supports multiple predefined database names, each
-// pointing to a specific SQLite file. For vector databases, the `sqlite_vec`
-// module is loaded to provide vector search.
+/**
+ * Initializes and returns a SQLite database instance based on the provided database name.
+ *
+ * - If `db_name` is `community`, loads the database from `./knowledge/data.sqlite` and applies `sqlite_vec` extensions.
+ * - If `db_name` is `proprietary`, loads the database from a path based on the current service environment and applies `sqlite_vec` extensions.
+ * - Throws an error if an invalid `db_name` is provided.
+ *
+ * @param db_name - The name of the database to initialize. Must be either `community` or `proprietary`.
+ * @returns The initialized `Database` instance, possibly extended with `sqlite_vec.Db` methods.
+ * @throws {Error} If an invalid `db_name` is provided.
+ */
 export const db = (db_name: Db_Name): Database | (Database & sqlite_vec.Db) => {
   if (db_name === 'community') {
     const db = new Database('./knowledge/data.sqlite')
@@ -15,14 +20,8 @@ export const db = (db_name: Db_Name): Database | (Database & sqlite_vec.Db) => {
     return db
   }
 
-  if (db_name === 'proprietary.private') {
-    const db = new Database(`./datastores/${Bun.env.SERVICE}/proprietary.private.sqlite`)
-    sqlite_vec.load(db)
-    return db
-  }
-
-  if (db_name === 'proprietary.public') {
-    const db = new Database(`./datastores/${Bun.env.SERVICE}/proprietary.public.sqlite`)
+  if (db_name === 'proprietary') {
+    const db = new Database(`./datastores/${Bun.env.SERVICE}/proprietary.sqlite`)
     sqlite_vec.load(db)
     return db
   }
@@ -31,5 +30,5 @@ export const db = (db_name: Db_Name): Database | (Database & sqlite_vec.Db) => {
 }
 
 // Zod schema/TS type
-const Db_Name = z.enum(['community', 'proprietary.private', 'proprietary.public'])
+const Db_Name = z.enum(['community', 'proprietary'])
 export type Db_Name = z.infer<typeof Db_Name>

@@ -25,11 +25,11 @@ export const remove_outdated_data = async (knowledge: Knowledge) => {
 
       await $`rm -rf ./knowledge/wikipedia`
       await $`rm -rf ./knowledge/data.sqlite`
-      initialize_databases({ proprietary: false, community: true })
+      initialize_database({ proprietary: false, community: true })
     }
 
     if (knowledge.proprietary === true) {
-      let database = db('proprietary.private') as Database
+      let database = db('proprietary') as Database
 
       database.run(`
         PRAGMA foreign_keys = OFF;
@@ -40,30 +40,19 @@ export const remove_outdated_data = async (knowledge: Knowledge) => {
         PRAGMA foreign_keys = ON;
         `)
 
-      database = db('proprietary.public') as Database
-
-      database.run(`
-        PRAGMA foreign_keys = OFF;
-        DROP TABLE IF EXISTS chunks;
-        DROP TABLE IF EXISTS stems;
-        DROP TABLE IF EXISTS vectors;
-        VACUUM;
-        PRAGMA foreign_keys = ON;
-        `)
-
-      initialize_databases({ proprietary: true, community: false })
+      initialize_database({ proprietary: true, community: false })
     }
 
-    console.log('✅ data cleaned')
+    console.log('✅ Outdated data removed')
     return
   } catch (e) {
-    console.log('🆘 cleaning or database error')
+    console.log('❌ Outadate data removal or database failed')
     console.log(e)
   }
 }
 
 /**
- * Initializes the databases based on the provided knowledge configuration.
+ * Initializes the database based on the provided knowledge configuration.
  *
  * This function sets up SQLite databases with specific schemas for storing chunks,
  * stems, and vectors. It uses the `sqliteVec` extension to load vector support.
@@ -74,7 +63,7 @@ export const remove_outdated_data = async (knowledge: Knowledge) => {
  * @throws Will log an error message if there is an issue during database creation.
  *
  */
-export const initialize_databases = (knowledge: Knowledge) => {
+export const initialize_database = (knowledge: Knowledge) => {
   /**
    * Initializes a SQLite database at the specified file path, creates required tables,
    * and loads the sqliteVec extension. The database schema includes:
@@ -92,15 +81,18 @@ export const initialize_databases = (knowledge: Knowledge) => {
     db.run(`
       CREATE TABLE chunks (
         chunk_hash TEXT,
+        chunk_file TEXT,
+        chunk_access TEXT,
         chunk_tokens NUMBER DEFAULT NULL,
-        chunk_text TEXT NOT NULL,
-        chunk_stem TEXT NOT NULL
+        chunk_text TEXT NOT NULL
       );
       
       CREATE VIRTUAL TABLE stems USING FTS5(chunk_stem);
 
       CREATE VIRTUAL TABLE vectors USING vec0(
         chunk_hash TEXT,
+        chunk_file TEXT,
+        chunk_access TEXT PARTITION KEY,
         chunk_text TEXT,
         chunk_vector FLOAT[1024]
       );`)
@@ -108,15 +100,9 @@ export const initialize_databases = (knowledge: Knowledge) => {
     return db
   }
 
-  if (knowledge.community === true) {
-    initialize_db('./knowledge/data.sqlite')
-  }
+  if (knowledge.community) initialize_db('./knowledge/data.sqlite')
+  if (knowledge.proprietary) initialize_db(`./datastores/${Bun.env.SERVICE}/proprietary.sqlite`)
 
-  if (knowledge.proprietary === true) {
-    initialize_db(`./datastores/${Bun.env.SERVICE}/proprietary.private.sqlite`)
-    initialize_db(`./datastores/${Bun.env.SERVICE}/proprietary.public.sqlite`)
-  }
-
-  console.log(`${Bun.color('green', 'ansi')}✅ database ready`)
+  console.log('✅ Databases hot and ready')
   return
 }

@@ -1,6 +1,6 @@
 // Bun Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`should search using bm25 1`] = `
+exports[`should search using bm25 and find a result 1`] = `
 [
   {
     "chunk_hash": "kfnJSOsTPYdnqrIrVq9v",
