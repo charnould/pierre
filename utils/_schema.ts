@@ -77,10 +77,7 @@ export const Config = z
     protected: z.boolean(),
     knowledge: z.object({
       community: z.boolean(),
-      proprietary: z.object({
-        public: z.boolean(),
-        private: z.boolean()
-      })
+      proprietary: z.boolean()
     }),
     audience: z.string(),
     persona: z.string(),
@@ -165,13 +162,11 @@ export const AIContext = z
       chunks: z
         .object({
           community: z.array(z.string()).nullish().default([]),
-          private: z.array(z.string()).nullish().default([]),
-          public: z.array(z.string()).nullish().default([])
+          proprietary: z.array(z.string()).nullish().default([])
         })
         .default({
           community: [],
-          private: [],
-          public: []
+          proprietary: []
         }),
       custom_data: z.object({
         raw: z.array(z.string()),

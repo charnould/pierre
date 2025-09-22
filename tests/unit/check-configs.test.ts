@@ -13,11 +13,11 @@ test('check if configs parse successfully', async () => {
     if (check.error) {
       console.log(config)
       console.log(check.error)
-      console.error(`${Bun.color('red', 'ansi')}config.ts contient une ou des erreurs.`)
-      console.error(`${Bun.color('red', 'ansi')}Lire le message d'erreur ci-dessus.`)
+      console.log(`❌ config.ts contient une ou des erreurs.`)
+      console.log(`❌ Lire le message d'erreur ci-dessus.`)
     }
 
     expect(check.success).toBe(true)
   }
-  console.error(`${Bun.color('green', 'ansi')}config.ts est OK!`)
+  console.log(`✅ config.ts est OK!`)
 })

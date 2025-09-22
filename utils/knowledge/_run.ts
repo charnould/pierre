@@ -9,21 +9,6 @@ import { scrape_wikipedia } from './scrape-wikipedia'
 import { store_metadata } from './store-metadata'
 
 /**
- * Represents the structure of knowledge-related settings.
- *
- * @property community - Whether community knowledge should be rebuilt. Defaults to false.
- * @property proprietary - Whether proprietary knowledge should be rebuilt. Defaults to false.
- */
-export const Knowledge = z
-  .object({
-    community: z.boolean().default(false),
-    proprietary: z.boolean().default(false)
-  })
-  .strict()
-
-export type Knowledge = z.infer<typeof Knowledge>
-
-/**
  * Executes a series of asynchronous operations on the provided knowledge
  * object. The operations include removing outdated data, scraping Wikipedia,
  * initializing databases, getting and saving metadata, processing office files,
@@ -43,19 +28,18 @@ export const execute_pipeline = async (knowledge: Knowledge) => {
       const to = performance.now()
       await remove_outdated_data(knowledge)
       await scrape_wikipedia(knowledge)
-      await store_metadata(knowledge)
-      await Bun.sleep(1000) // Wait 1s for file operations
+      if (knowledge.proprietary === true) await store_metadata()
       await process_office_files(knowledge)
       await chunk_json(knowledge)
       await chunk_markdown(knowledge)
       await generate_vectors(knowledge)
-      await $`rm -rf ./datastores/${Bun.env.SERVICE}/temp`
+      await $`rm -rf ./datastores/${Bun.env.SERVICE}/temp` // cleanup
       const t1 = performance.now()
-      console.info(`Pipeline completed in ${((t1 - to) / 1000).toFixed(2)}s`)
+      console.info(`✅ Pipeline completed in ${((t1 - to) / 1000).toFixed(3)}s`)
     }
     return
-  } catch {
-    console.error('An error occurred during pipeline execution')
+  } catch (e) {
+    console.error('❌ Pipeline execution failed', e)
     return
   }
 }
@@ -65,3 +49,18 @@ export const execute_pipeline = async (knowledge: Knowledge) => {
 if (Bun.argv.includes('--community')) {
   await execute_pipeline({ community: true, proprietary: false })
 }
+
+/**
+ * Represents the structure of knowledge-related settings.
+ *
+ * @property community - Whether community knowledge should be rebuilt. Defaults to false.
+ * @property proprietary - Whether proprietary knowledge should be rebuilt. Defaults to false.
+ */
+export const Knowledge = z
+  .object({
+    community: z.boolean().default(false),
+    proprietary: z.boolean().default(false)
+  })
+  .strict()
+
+export type Knowledge = z.infer<typeof Knowledge>
