@@ -1,4 +1,4 @@
-// Bun Snapshot v1, https://goo.gl/fbAQLP
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
 exports[`should flatten chunks 1 1`] = `
 [
@@ -49,63 +49,42 @@ exports[`should flatten chunks 1 1`] = `
     "chunk_text": "text_1",
     "distance": 0.01,
     "entity_hash": "entity_1",
-    "source": "private",
+    "source": "proprietary",
   },
   {
     "chunk_hash": "hash_7",
     "chunk_text": "text_7",
     "distance": 0.01,
     "entity_hash": "entity_6",
-    "source": "private",
+    "source": "proprietary",
   },
   {
     "chunk_hash": "hash_2",
     "chunk_text": "text_2",
     "distance": 0.02,
     "entity_hash": "entity_1",
-    "source": "private",
+    "source": "proprietary",
   },
   {
     "chunk_hash": "hash_8",
     "chunk_text": "text_8",
     "distance": 0.02,
     "entity_hash": "entity_6",
-    "source": "private",
+    "source": "proprietary",
   },
   {
     "chunk_hash": "hash_3",
     "chunk_text": "text_3",
     "distance": 0.03,
     "entity_hash": "entity_2",
-    "source": "private",
+    "source": "proprietary",
   },
   {
     "chunk_hash": "hash_9",
     "chunk_text": "text_9",
     "distance": 0.03,
     "entity_hash": "entity_6",
-    "source": "private",
-  },
-  {
-    "chunk_hash": "hash_4",
-    "chunk_text": "text_1",
-    "distance": 0.001,
-    "entity_hash": "entity_1",
-    "source": "public",
-  },
-  {
-    "chunk_hash": "hash_6",
-    "chunk_text": "text_3",
-    "distance": 0.003,
-    "entity_hash": "entity_2",
-    "source": "public",
-  },
-  {
-    "chunk_hash": "hash_5",
-    "chunk_text": "text_5",
-    "distance": 0.03,
-    "entity_hash": "entity_4",
-    "source": "public",
+    "source": "proprietary",
   },
 ]
 `;

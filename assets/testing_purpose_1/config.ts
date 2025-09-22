@@ -30,20 +30,41 @@ export default {
   ],
   custom_data: {},
   api: [],
-  answer_with: {
-    model: openai('gpt-4.1-mini'),
-    providerOptions: {
-      openai: {
-        reasoningEffort: 'minimal',
-        reasoningSummary: undefined
+  models: {
+    augment_with: {
+      model: groq('qwen/qwen3-32b'),
+      providerOptions: {
+        groq: {
+          reasoningFormat: 'raw',
+          reasoningEffort: 'default',
+          serviceTier: 'auto'
+        }
+      }
+    },
+    rerank_with: {
+      model: groq('qwen/qwen3-32b'),
+      providerOptions: {
+        groq: {
+          reasoningFormat: 'raw',
+          reasoningEffort: 'default',
+          serviceTier: 'auto'
+        }
+      }
+    },
+    answer_with: {
+      model: openai('gpt-4.1-mini'),
+      providerOptions: {
+        openai: {
+          reasoningEffort: 'none',
+          reasoningSummary: null
+        }
       }
     }
   },
-  phone: null,
   protected: true,
   knowledge: {
     community: false,
-    proprietary: { public: false, private: false }
+    proprietary: false
   },
   audience: '',
   persona: '',

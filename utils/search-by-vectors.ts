@@ -7,58 +7,51 @@ import type { AIContext } from './_schema'
  * Performs a vector search based on the provided embedding and context.
  *
  * This function retrieves knowledge access permissions from the given context
- * and performs searches across different knowledge bases (community, public, private)
+ * and performs searches across different knowledge bases (community, proprietary)
  * depending on the access permissions. The results are parsed and returned
  * in a structured format.
  *
  * @param embedding - An array of numbers representing the vector embedding to search with.
  * @param context - The AIContext object containing configuration and permissions for the search.
  *
- * @returns A promise that resolves to a `Vector_Search_Result` object containing
- *          the search results for community, public, and private knowledge bases.
+ * @returns A promise that resolves to a `SResults` object containing
+ *          the search results for community and proprietary knowledge bases.
  *          Returns `undefined` if an error occurs during the search process.
  *
  * @throws Will log an error to the console if an exception is encountered.
  */
-export const vector_search = async (embedding: number[], context: AIContext) => {
+export const vector_search = async (embedding: Float32Array, context: AIContext) => {
   try {
     // Retrieve knowledge access permissions for the current context
     // (e.g., default, team, etc.) + Set a default for TS happiness
-    let k = { community: true, proprietary: { public: false, private: false } }
-
+    let k = { community: true, proprietary: false }
     if (typeof context.config !== 'string') k = context.config.knowledge
 
     // Initialize the vector search results
-    const r: Vector_Search_Result = { community: [], private: [], public: [] }
+    const r: SResults = { community: [], proprietary: [] }
 
     // Perform searches based on knowledge access
-    if (k.community) r.community = await query_db('community', embedding)
-    if (k.proprietary.public) r.public = await query_db('proprietary.public', embedding)
-    if (k.proprietary.private) r.private = await query_db('proprietary.private', embedding)
+    if (k.community)
+      r.community = search({
+        db_name: 'community',
+        vector: embedding,
+        chunk_access: 'community'
+      })
+    if (k.proprietary)
+      r.proprietary = search({
+        db_name: 'proprietary',
+        vector: embedding,
+        chunk_access: context.config.id
+      })
 
     // Parse results and return them to ensure
     // TypeScript types align with the schema
-    return Vector_Search_Result.parse(r)
+    return SResults.parse(r)
   } catch (e) {
     console.error(e)
     return
   }
 }
-
-/**
- * Queries a database using a provided embedding vector and returns the search results.
- *
- * @param db_name - The name of the database to query.
- * @param embedding - An array of numbers representing the embedding vector for the query.
- * @returns A promise that resolves to the search results from the database.
- */
-export const query_db = async (db_name: Db_Name, embedding: number[]) => {
-  const db_instance = db(db_name)
-  const user_query = search(embedding, db_instance)
-  return user_query
-}
-
-// TODO: remove from schema and DB entites hash & cie
 
 /**
  * Generates embeddings for a given array of strings using the specified provider.
@@ -137,17 +130,26 @@ export const generate_embeddings = async (
  * The `MATCH` clause is used to compare the `chunk_vector` column with the provided query vectors.
  * The `k = 10` condition ensures that only the top 10 closest matches are returned.
  */
-export const search = (query_vectors, database) =>
-  database
+export const search = ({
+  db_name: db_name,
+  vector: vector,
+  chunk_access: chunk_access
+}: {
+  db_name: Db_Name
+  vector: Float32Array
+  chunk_access: string
+}) =>
+  db(db_name)
     .prepare(
       `
-      SELECT chunk_text, chunk_hash, distance 
+      SELECT chunk_hash, chunk_text, distance 
       FROM vectors
       WHERE chunk_vector MATCH ?
       AND k = 5
+      AND chunk_access = ?
       `
     )
-    .all(new Float32Array(query_vectors)) as unknown as {
+    .all(new Float32Array(vector), chunk_access) as unknown as {
     chunk_hash: string
     chunk_text: string
     distance: number
@@ -156,7 +158,7 @@ export const search = (query_vectors, database) =>
 /**
  * Represents the result of a vector search operation.
  *
- * This object contains three categories of search results: `community`, `private`, and `public`.
+ * This object contains three categories of search results: `community`, `proprietary`.
  * Each category is an array of objects, where each object represents a search result with the following properties:
  *
  * - `chunk_hash` (string): A unique identifier for the chunk.
@@ -165,7 +167,7 @@ export const search = (query_vectors, database) =>
  *
  * All categories default to an empty array if no results are found.
  */
-export const Vector_Search_Result = z.object({
+export const SResults = z.object({
   community: z
     .array(
       z.object({
@@ -175,18 +177,7 @@ export const Vector_Search_Result = z.object({
       })
     )
     .default([]),
-
-  private: z
-    .array(
-      z.object({
-        chunk_hash: z.string(),
-        chunk_text: z.string(),
-        distance: z.number()
-      })
-    )
-    .default([]),
-
-  public: z
+  proprietary: z
     .array(
       z.object({
         chunk_hash: z.string(),
@@ -197,7 +188,7 @@ export const Vector_Search_Result = z.object({
     .default([])
 })
 
-export type Vector_Search_Result = z.infer<typeof Vector_Search_Result>
+export type SResults = z.infer<typeof SResults>
 
 /**
  * Ensures that the Ollama service is running and the specified models are preloaded.

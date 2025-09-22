@@ -1,57 +1,59 @@
-import type Database from 'bun:sqlite'
 import { readdir } from 'node:fs/promises'
 import _ from 'lodash'
 import { marked } from 'marked'
 import * as prettier from 'prettier'
-import { db } from '../database'
 import { stem } from '../stem-text'
 import type { Knowledge } from './_run'
 import { count_tokens } from './chunk-json'
 import { generate_hash } from './generate-hash'
+import { SQL } from 'bun'
+import { Metadata } from './store-metadata'
 
 /**
  * Generates text chunks from markdown files
  * based on the provided knowledge object.
- *
- * @param knowledge - An object containing properties that determine which files to process.
- * @param knowledge.community - A boolean indicating whether to process community knowledge.
- * @param knowledge.proprietary - A boolean indicating whether to process proprietary knowledge.
- *
- * @returns A promise that resolves when the text chunks have been successfully generated.
- *
- * @throws Will log an error message if the text chunk generation fails.
  */
 export const chunk_markdown = async (knowledge: Knowledge) => {
-  try {
-    //
-    // Case 1 - Community knowledge
-    if (knowledge.community === true) {
-      const files = (await readdir('knowledge', { recursive: true }))
-        .map((f) => `knowledge/${f}`)
-        .filter((f) => f.endsWith('.md'))
-        .map((id) => ({ id, access: 'community' }))
+  let files: { id: string; filename: string; access: string }[] = []
 
-      await save_chunks(files)
-    }
+  // Community knowledge
+  if (knowledge.community) {
+    const all_files = await readdir('knowledge', { recursive: true })
+    const md_files = all_files.filter((file) => file.endsWith('.md'))
+    files.push(
+      ...md_files.map((file) => ({
+        id: `knowledge/${file}`,
+        access: 'community',
+        filename: file
+      }))
+    )
+  }
 
-    //
-    // Case 2 - Proprietary knowledge
-    if (knowledge.proprietary === true) {
-      const files = (await Bun.file(`datastores/${Bun.env.SERVICE}/temp/.metadata.json`).json())
-        .filter((item) => item.type !== 'xlsx')
-        .map((item) => ({
-          access: item.access,
-          id: `datastores/${Bun.env.SERVICE}/temp/${item.id}.md`
-        }))
+  // Proprietary knowledge
+  if (knowledge.proprietary) {
+    const metadata_path = `datastores/${Bun.env.SERVICE}/temp/.metadata.json`
+    const metadata: Metadata[] = await Bun.file(metadata_path).json()
+    const valid_metadata = metadata.filter((item) => item.type !== 'xlsx')
+    files.push(
+      ...valid_metadata.map((file) => ({
+        id: `datastores/${Bun.env.SERVICE}/temp/${file.id}.md`,
+        filename: file.filename,
+        access: file.access as string
+      }))
+    )
+  }
 
-      await save_chunks(files)
-    }
-
-    console.log('✅ text chunks generated')
+  if (files.length === 0) {
+    console.log('❌ No file to chunk')
     return
+  }
+
+  try {
+    for (const file of files) await chunk_and_save(file)
+    console.log('✅ Text chunks generated')
   } catch (e) {
-    console.log('🆘 text chunks generation failed')
-    console.log(e)
+    console.error('❌ Text chunks generation failed')
+    throw e
   }
 }
 
@@ -59,69 +61,57 @@ export const chunk_markdown = async (knowledge: Knowledge) => {
  * Processes a list of files, reads their content, splits the content into
  * chunks, and saves each chunk into the appropriate database based on the
  * file's access level.
- *
- * @param files - An array of file objects to be processed. Each file object
- *                should have an `id` and `access` property. The `id` is used to
- *                read the file content, and the `access` determines which
- *                database to use.
- *
- * @returns A promise that resolves when all files have been processed.
  */
-const save_chunks = async (files) => {
-  try {
-    // Iterate over each file
-    for await (const file of files) {
-      const markdown = await Bun.file(file.id).text()
-      const chunks = await split_markdown_into_chunks({
-        markdown: markdown,
-        max_tokens: 7200
-      })
-
-      const _a = 0
-      // Process each chunk individually
-      for (const chunk of chunks) {
-        // Determine the appropriate database based on file access level
-        let database: Database
-        if (file.access === 'private') database = db('proprietary.private')
-        else if (file.access === 'public') database = db('proprietary.public')
-        else database = db('community')
-
-        const chunk_length = count_tokens(chunk)
-
-        // Insert the chunk into the appropriate database
-        // TODO: Do I need to save chunk_stem here?
-        database
-          .prepare(
-            'INSERT INTO chunks (chunk_hash, chunk_tokens, chunk_text, chunk_stem) VALUES (?, ?, ?, ?);'
-          )
-          .run(generate_hash(chunk), chunk_length, chunk, stem(chunk))
-
-        // Store the chunk's stemmed version separately for search/indexing purposes
-        database.prepare('INSERT INTO stems(chunk_stem) VALUES(?);').run(stem(chunk))
-      }
-    }
+const chunk_and_save = async (file: { id: string; filename: string; access: string }) => {
+  // Attempt to load the file from the filesystem.
+  // If the file doesn't exist, log an error and stop processing this file.
+  const file_handle = Bun.file(file.id)
+  const file_exists = await file_handle.exists()
+  if (!file_exists) {
+    console.error(`❌ File not found: ${file.id}`)
     return
-  } catch {
-    throw new Error()
+  }
+
+  try {
+    // Read the file content and split it into chunks for processing.
+    const markdown_content = await file_handle.text()
+    const markdown_chunks = await split_markdown_into_chunks(markdown_content)
+
+    // Select the target database according
+    // to its access level
+    let sql
+    if (file.access === 'community') sql = new SQL(`file:knowledge/data.sqlite`)
+    else sql = new SQL(`file:datastores/${Bun.env.SERVICE}/proprietary.sqlite`)
+
+    // Process each chunk by storing the chunk together
+    // with its hash, tokens, text, and access metadata
+    for (const chunk of markdown_chunks) {
+      await sql`
+        INSERT INTO
+          chunks ${sql({
+          chunk_tokens: count_tokens(chunk),
+          chunk_hash: generate_hash(chunk),
+          chunk_access: file.access,
+          chunk_file: file.filename,
+          chunk_text: chunk
+        })};
+      `
+      await sql`
+        INSERT INTO
+          stems (chunk_stem)
+        VALUES
+          (${stem(chunk)});
+      `
+    }
+  } catch (e) {
+    console.error(e)
   }
 }
 
 /**
  * Splits a markdown string into chunks based on headings and token limits.
- *
- * @param {Object} params - The parameters for the function.
- * @param {string} params.markdown - The markdown content to be chunked.
- * @param {number} params.max_tokens - The maximum number of tokens allowed per chunk.
- * @returns {Promise<string[]>} - A promise that resolves to an array of markdown chunks.
- *
  */
-export const split_markdown_into_chunks = async ({
-  markdown,
-  max_tokens
-}: {
-  markdown: string
-  max_tokens: number
-}): Promise<string[]> => {
+export const split_markdown_into_chunks = async (markdown: string): Promise<string[]> => {
   try {
     const chunks: string[] = []
     let heading_1 = ''
@@ -175,7 +165,7 @@ export const split_markdown_into_chunks = async ({
       const is_last = l === lexer.at(-1) // Check if this is the last item
       const next_token_count = tokens + count_tokens(l.raw)
 
-      if (next_token_count <= max_tokens) {
+      if (next_token_count <= 7200) {
         tokens = tokens + count_tokens(l.raw)
         chunk += `\n${l.raw}`
       } else {
