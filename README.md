@@ -5,7 +5,7 @@
 
 ## PIERRE : kézako ?
 
-PIERRE est une intelligence artificielle (IA) **open source**, **plurilingue** et **multicanale** au service du mouvement HLM, de ses candidats, locataires et collaborateurs.
+PIERRE est une intelligence artificielle (IA) **open source** et **plurilingue** au service du mouvement HLM, de ses candidats, locataires et collaborateurs.
 
 Plus concrètement, PIERRE c'est à la fois :
 
@@ -28,7 +28,6 @@ Plus concrètement, PIERRE c'est à la fois :
 - [Fonctionnement + architecture de PIERRE](#fonctionnement--architecture-de-pierre)
   - [Comment fonctionne PIERRE ?](#comment-fonctionne-pierre)
   - [Modèles de langage (ou LLM)](#mod%C3%A8les-de-langage-ou-llm)
-  - [L'universel SMS pour les échanges de « premier niveau »](#luniversel-sms-pour-les-%C3%A9changes-de-%C2%AB-premier-niveau-%C2%BB)
   - [Technologies + Services](#technologies--services)
   - [Les coûts associés à l'usage de PIERRE](#les-co%C3%BBts-associ%C3%A9s-%C3%A0-lusage-de-pierre)
 - [Comment déployer PIERRE ?](#comment-d%C3%A9ployer-pierre)
@@ -118,19 +117,6 @@ PIERRE utilise — à ce jour — plusieurs (passes de) LLM dans cet ordre succe
 
 Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Bring Your Own LLM Key/Model »** (BYOK) — **il est possible de choisir le modèle utilisé** (Mistral, Anthropic, Cohere, OpenAI...) pour l'étape 4 et ce, en modifiant le fichier de configuation (_cf._ infra).
 
-## L'universel SMS pour les échanges de « premier niveau »
-
-> [!NOTE]
-> PIERRE propose à ce jour deux modalités d'interaction : `Text-to-Text` via le Web ([démonstration](https://pierre-ia.org)) ou par SMS, et `Voice-to-Text` sur smartphone. À court terme, PIERRE va également investiguer une interaction `Voice-to-Voice`.
-
-En réponse au nouveau plan de numérotation mis en place par l'ARCEP en 2023 (avec l'introduction des numéros commerciaux 09 3x xx xx xx) et pour proposer aux entreprises une **solution universelle** pour converser avec leurs clients, les opérateurs téléphoniques français ont lançé en 2023 (déploiement opérationnel en octobre 2024) une nouvelle offre de SMS conversationnel à destination des entreprises (dite `Time2chat`) qui (i) permet de s'affranchir des plateformes propriétaires (WhatsApp, Telegram, Messenger, etc.) utilisées au maximum par 50 % de la population française et (ii) une instantanéité et délivrabilité exceptionnelles (100 % des téléphones disposent nativement du SMS).
-
-Principales caratéristiques de `Time2chat` (en savoir plus via l'[ARCEP](https://af2m.org/sms-conversationnel-time2chat/) ou via [Orange](https://payservices.orange.com/fr/business-messaging/time2chat)) :
-
-- Une **conversation** est une série de SMS entre une entreprise et un utilisateur.
-- Elle dure maximum 24h et le nombre de SMS échangés durant cette période est illimité.
-- Elle peut être initiée par l'entreprise ou l’utilisateur.
-
 ## Technologies + Services
 
 - Language: `Typescript`/`Javascript`
@@ -140,7 +126,6 @@ Principales caratéristiques de `Time2chat` (en savoir plus via l'[ARCEP](https:
 - Deployment: [`Kamal`](https://kamal-deploy.org) (with [`Docker`](https://www.docker.com))
 - LLM: « Bring Your Own LLM Key/Model » (BYOK)
 - GPU (optionnel): [`Hugging Face`](https://endpoints.huggingface.co) (via Inference Endpoints)
-- SMS: [`CM`](https://www.cm.com/fr-fr/) (via Time2Chat)
 
 ## Les coûts associés à l'usage de PIERRE
 
@@ -149,9 +134,6 @@ Déployer PIERRE sur un serveur génére des coûts :
 - La location d'un serveur doté d'un `GPU` (meilleur rapport qualité/prix: `GEX44` d'[Hetzner](https://www.hetzner.com/dedicated-rootserver/gex44/)) : €200 par mois
 - L'usage d'un LLM pour générer du texte : $0,40 (_in_) et $1,60 (_out_) / MTokens (`gpt-4.1-mini`)
 - (Optionnellement) La location d'un `GPU` musclé pour vectoriser vos connaissances : €10 par mois
-- (Optionnellement) Les conversations SMS :  
-  – Location d'un numéro de téléphone : €10 par mois  
-  – Envoi de SMS : €0.09 par conversation (= SMS illimités par fenêtre de 24h)
 
 # Comment déployer PIERRE ?
 

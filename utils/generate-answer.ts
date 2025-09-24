@@ -2,19 +2,17 @@ import { TZDate } from '@date-fns/tz'
 import { format, getISOWeek, isSameDay, parseISO } from 'date-fns'
 import dedent from 'dedent'
 import type { AIContext } from './_schema'
-import { generate_answer, stream_answer } from './deliver-answer'
+import { stream_answer } from './deliver-answer'
 
 /**
  * Generates an AI answer for the user by updating the conversation context with a formatted prompt,
  * including persona, audience, guidelines, reference material, and the user's question.
- * Depending on the `is_sms` option, it either returns a complete answer or streams the answer.
  *
  * @param context - The AIContext object containing conversation history, configuration, and user input.
  * @param options - Options for answer generation.
- * @param options.is_sms - If true, generates a single answer suitable for SMS; otherwise, streams the answer.
  * @returns A promise resolving to the generated answer or a stream of the answer, depending on the options.
  */
-export const answer_user = async (context: AIContext, options: { is_sms: boolean }) => {
+export const answer_user = async (context: AIContext) => {
   // Add prompt to conversation history
   context.conversation.push({
     role: 'user',
@@ -55,7 +53,6 @@ export const answer_user = async (context: AIContext, options: { is_sms: boolean
       **Your answer in "${context.query?.lang}" (ISO 639-1 format):**`
   })
 
-  if (options.is_sms === true) return generate_answer(context)
   return stream_answer(context)
 }
 
@@ -63,17 +60,12 @@ export const answer_user = async (context: AIContext, options: { is_sms: boolean
  * Handles situations where the AI lacks specific information about a user's query,
  * guiding the response to acknowledge the limitation and suggest next steps.
  *
- * Depending on the `is_sms` option, it either generates a complete answer or streams the answer.
  *
  * @param context - The AI conversation context, including configuration, persona, audience, and query details.
  * @param options - Options for response generation.
- * @param options.is_sms - If true, generates a full answer suitable for SMS; otherwise, streams the answer.
  * @returns A promise resolving to the generated or streamed answer.
  */
-export const reach_relevancy_deadlock = async (
-  context: AIContext,
-  options: { is_sms: boolean }
-) => {
+export const reach_relevancy_deadlock = async (context: AIContext) => {
   context.conversation.push({
     role: 'user',
     content: dedent`
@@ -109,7 +101,6 @@ export const reach_relevancy_deadlock = async (
       **Your answer in "${context.query?.lang}" (ISO 639-1 format):**`
   })
 
-  if (options.is_sms === true) return generate_answer(context)
   return stream_answer(context)
 }
 
@@ -118,13 +109,9 @@ export const reach_relevancy_deadlock = async (
  *
  * @param context - The AIContext object containing conversation state, configuration, and user query.
  * @param options - Options for response generation.
- * @param options.is_sms - If true, generates a single answer suitable for SMS; otherwise, streams the answer.
  * @returns A Promise resolving to either a generated answer or a streamed answer, depending on the options.
  */
-export const reach_profanity_deadlock = async (
-  context: AIContext,
-  options: { is_sms: boolean }
-) => {
+export const reach_profanity_deadlock = async (context: AIContext) => {
   context.conversation.push({
     role: 'user',
     content: dedent`
@@ -165,7 +152,6 @@ export const reach_profanity_deadlock = async (
       **Your answer in "${context.query?.lang}" (ISO 639-1 format):**`
   })
 
-  if (options.is_sms === true) return generate_answer(context)
   return stream_answer(context)
 }
 
