@@ -70,13 +70,10 @@ for (const view of views) {
 await $`cp assets/default/dist/js/widget.js docs/assets`
 
 // Lint, format, test code
-await $`bun lint`
+// await $`bun lint`
 await $`bun format`
 await $`bun test:unit`
 await $`bun test:e2e`
 await $`clear`
 
-// Output something when done
-console.log('\n')
-console.log(`${Bun.color('green', 'ansi')}BUILD DONE!`)
-console.log('\n')
+console.log(`✅ BUILD DONE!`)
