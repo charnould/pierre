@@ -10,11 +10,9 @@ import {
   reach_relevancy_deadlock
 } from '../utils/generate-answer'
 import { get_conversation, save_reply } from '../utils/handle-conversation'
-import { parse_incoming_sms } from '../utils/parse-incoming-sms'
 import { rank_chunks } from '../utils/rank-chunks'
 import { bm25_search } from '../utils/search-by-bm25'
 import { generate_embeddings, vector_search } from '../utils/search-by-vectors'
-import { send_sms } from '../utils/send-sms'
 
 /**
  * Controller function to handle server-sent events streaming.
@@ -49,15 +47,14 @@ export const controller = async (c: Context) => {
 }
 
 /**
- * Handles AI logic for incoming requests, either from SMS or web.
+ * Handles AI logic for incoming requests.
  *
  * The function performs the following steps:
  * 1. Initializes performance measurement variables.
  * 2. Sets variables and types.
- * 3. Checks if the incoming request is a valid SMS.
- * 4. Parses the context based on the request type (SMS or web).
- * 5. Applies AI logic to generate an appropriate response.
- * 6. Sends the response back to the user.
+ * 3. Parses the context based on the request type.
+ * 4. Applies AI logic to generate an appropriate response.
+ * 5. Sends the response back to the user.
  *
  * The AI logic includes:
  * - Saving the user's reply.
@@ -68,9 +65,6 @@ export const controller = async (c: Context) => {
  * - Generating responses based on the context and knowledge access.
  *
  * Performance measurements are logged for various stages of the AI logic.
- *
- * If the request is an SMS, a full-text answer is sent back via SMS.
- * If the request comes from the web, a stream response is returned.
  *
  * In case of errors, an error message is logged and an error response is streamed back.
  */
@@ -86,9 +80,6 @@ const search_and_answer = async (c: Context) => {
     let t6 = 0
 
     // Set variables and types
-    let is_sms = false
-    let context: AIContext
-    let parsed_sms: SMS = null
     let answer: string | StreamTextResult<Record<string, Tool>, unknown>
 
     //
@@ -96,23 +87,14 @@ const search_and_answer = async (c: Context) => {
     // TODO: handle wrong `/sms` request
     //
 
-    if (c.req.path === '/sms') {
-      parsed_sms = await parse_incoming_sms(await c.req.json())
-      if (parsed_sms !== null) is_sms = true
-    }
-
-    if (is_sms) {
-      context = await AIContext.parseAsync(parsed_sms)
-    } else {
-      context = await AIContext.parseAsync({
-        role: 'user',
-        metadata: { user: c.get('user')?.email ?? null },
-        conv_id: c.req.query('conv_id'),
-        config: c.req.query('config'),
-        content: c.req.query('message'),
-        custom_data: { raw: c.req.query('data')?.split('|') }
-      })
-    }
+    const context = await AIContext.parseAsync({
+      role: 'user',
+      metadata: { user: c.get('user')?.email ?? null },
+      conv_id: c.req.query('conv_id'),
+      config: c.req.query('config'),
+      content: c.req.query('message'),
+      custom_data: { raw: c.req.query('data')?.split('|') }
+    })
 
     //
     // The Main Part: "Apply AI Logic"
@@ -220,15 +202,15 @@ const search_and_answer = async (c: Context) => {
           (context.chunks.public?.length ?? 0) === 0
         ) {
           console.debug('No knowledge chunk: respond with a no-knowledge deadlock.')
-          answer = await reach_relevancy_deadlock(context, { is_sms: is_sms })
+          answer = await reach_relevancy_deadlock(context)
         } else {
           console.log(context.config)
-          answer = await answer_user(context, { is_sms: is_sms })
+          answer = await answer_user(context)
         }
       } else {
         // If query is irrelevant and/or contains profanity,
         // make a deadlock answer
-        answer = await reach_profanity_deadlock(context, { is_sms: is_sms })
+        answer = await reach_profanity_deadlock(context)
       }
 
       // Mark the end of the request for performance measurement
@@ -247,18 +229,6 @@ const search_and_answer = async (c: Context) => {
     // Step 5.
     // Send answer to the user
     //
-
-    // If incoming request is a SMS:
-    // return a full-text answer
-    if (is_sms && parsed_sms !== null) {
-      await send_sms({
-        from: (context.config as Config).phone,
-        to: parsed_sms.to,
-        message: answer
-      })
-
-      return c.body('ok', 200)
-    }
 
     // If incoming request comes from www:
     // return a stream
