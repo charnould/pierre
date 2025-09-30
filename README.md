@@ -48,7 +48,7 @@ Plus concrètement, `PIERRE` c'est à la fois :
     - [Via une iframe](#via-une-iframe)
 - [Administrer `PIERRE` avec une interface graphique](#administrer-`PIERRE`-avec-une-interface-graphique)
   - [Apprendre à `PIERRE` des connaissances (self-hosting)](#apprendre-%C3%A0-`PIERRE`-des-connaissances-self-hosting)
-- [License](#license)
+- [Licence](#licence)
 
 <!-- tocstop -->
 
@@ -184,7 +184,8 @@ Pour déployer `PIERRE` sur un serveur, il est indispensable d'être parvenu à 
    – Personnaliser `PIERRE`  
    – Afficher `PIERRE` sur votre site internet ou extranet-locataire
 
-> [!NOTE] > **TODO:** Détailler la procédure permettant l'usage du `GPU` par `Docker/Ollama` : se connecter via `ssh` au serveur, `curl -fsSL https://ollama.com/install.sh | sh`, puis suivre les recommandations disponibles [ici](https://github.com/ollama/ollama/blob/main/docs/docker.md#nvidia-gpu).
+> [!NOTE]
+> **TODO:** Détailler la procédure permettant l'usage du `GPU` par `Docker/Ollama` : se connecter via `ssh` au serveur, `curl -fsSL https://ollama.com/install.sh | sh`, puis suivre les recommandations disponibles [ici](https://github.com/ollama/ollama/blob/main/docs/docker.md#nvidia-gpu).
 
 ### Redéployer `PIERRE` sur un serveur de production
 
@@ -218,7 +219,7 @@ Pour tester en conditions réelles les mises à jour et nouveautés de `PIERRE`,
 3. Créer une icône `system.svg` et remplacer la précédente. Cette icône est celle qui apparait dans l'interface du chatbot (au dessus de « Bonjour 👋 »).
 4. [Générer les icônes](https://www.pwabuilder.com/imageGenerator) qui permettront d'ajouter votre chatbot sur l'écran d'accueil des smartphones de vos utilisateurs et remplacer celles dans le dossier `icons` (les icônes Windows ne sont pas nécessaires). Conservez la structure du répertoire et le nommage des fichiers (automatique).
 5. Modifier `config.ts` :  
-   – `id` avec ``PIERRE`-habitat` 
+    – `id` avec ``PIERRE`-habitat` 
 –`greeting`qui est le message d'accueil de votre chatbot  
 –`examples`qui sont les exemples proposés après votre message d'accueil  
 –`disclaimer` qui est le message s'affichant après chaque réponse générée (ex : _Une IA peut se tromper, vérifier les informations._).
@@ -368,8 +369,8 @@ Pour savoir si cette durée est acceptable (`PIERRE` n'a en effet plus connaissa
     - Cliquer sur `Create token`
   - Renseigner `HUGGINGFACE_ENDPOINT`et `HUGGINGFACE_TOKEN` dans `.env.production` ou `.env.staging` avec les valeurs correspondantes.
 
-# License
+# Licence
 
-Le code-source du présent dépôt est sous license [GNU Affero General Public License Version 3](https://github.com/charnould/pierre/blob/master/LICENSE.md). La base de connaissances (dossier `/knowledge`) est sous license [Creative Commons BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+Le code-source du présent dépôt est sous licence [GNU Affero General Public License Version 3](https://github.com/charnould/pierre/blob/master/LICENSE.md). La base de connaissances (dossier `/knowledge`) est sous licence [Creative Commons BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 
 Copyright (c) 2024-aujourd'hui, Charles-Henri Arnould/BECKREL (charnould@pierre-ia.org) et les contributeurs.
