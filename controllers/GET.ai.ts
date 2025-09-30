@@ -1,9 +1,9 @@
 import type { StreamTextResult, Tool } from 'ai'
 import type { Context } from 'hono'
 import { stream } from 'hono/streaming'
-import { AIContext, type Config, type SMS } from '../utils/_schema'
+import { AIContext } from '../utils/_schema'
 import { augment_query } from '../utils/augment-query'
-import { stream_answer } from '../utils/deliver-answer'
+import { stream_text } from '../utils/generate-output'
 import {
   answer_user,
   reach_profanity_deadlock,
@@ -82,17 +82,13 @@ const search_and_answer = async (c: Context) => {
     // Set variables and types
     let answer: string | StreamTextResult<Record<string, Tool>, unknown>
 
-    //
-    // Check if incoming request is a valid SMS
-    //
-
     const context = await AIContext.parseAsync({
-      role: 'user',
+      config: (await import(`../assets/${c.req.query('config')}/config`)).default,
+      custom_data: { raw: c.req.query('data')?.split('|') },
       metadata: { user: c.get('user')?.email ?? null },
-      conv_id: c.req.query('conv_id'),
-      config: c.req.query('config'),
       content: c.req.query('message'),
-      custom_data: { raw: c.req.query('data')?.split('|') }
+      conv_id: c.req.query('conv_id'),
+      role: 'user'
     })
 
     //
@@ -109,11 +105,10 @@ const search_and_answer = async (c: Context) => {
       community: true,
       proprietary: false
     }
-
-    if (typeof context.config !== 'string') knowledge_access = context.config.knowledge
+    knowledge_access = context.config.knowledge
 
     if (knowledge_access.proprietary === false && knowledge_access.community === false) {
-      answer = await stream_answer(context)
+      answer = await stream_text({ context: context, model: context.config.models.answer_with })
     } else {
       t0 = performance.now()
 
@@ -156,7 +151,7 @@ const search_and_answer = async (c: Context) => {
         // (to avoid waiting v_results before doing k_results)
 
         // VECTOR SEARCH
-        const v_results = await Promise.all(embeddings.map((e) => vector_search(e, context)))
+        const v_results = await Promise.all(embeddings.map((v) => vector_search(v, context)))
 
         t4 = performance.now()
         // end: VECTOR SERCH
@@ -231,7 +226,7 @@ const search_and_answer = async (c: Context) => {
           stream.writeln('pierre_error')
         })
 
-        await stream.pipe((answer as StreamTextResult<Record<string, Tool>, unknown>).textStream)
+        await stream.pipe(answer.textStream)
       },
       (e, stream) => {
         stream.writeln('pierre_error')

@@ -1,5 +1,5 @@
 import { expect, it } from 'bun:test'
-import { flatten_vector_searches, pick_relevant_chunks } from '../../../utils/rank-chunks'
+import { flatten_searches, pick_relevant_chunks } from '../../../utils/rank-chunks'
 
 const input = [
   {
@@ -146,7 +146,7 @@ const chunks = [
 //
 //
 
-it('should flatten chunks 1', () => expect(flatten_vector_searches(input)).toMatchSnapshot())
+it('should flatten chunks 1', () => expect(flatten_searches(input)).toMatchSnapshot())
 
 it('should keep only relevant chunks', () =>
   expect(pick_relevant_chunks(chunks)).toStrictEqual({
