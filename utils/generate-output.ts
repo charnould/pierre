@@ -31,9 +31,9 @@ export const generate_text = async ({
   try {
     const { text } = await generateText({
       model: model.model,
-      providerOptions: model.providerOptions,
       messages: messages,
-      maxOutputTokens: max_tokens
+      maxOutputTokens: max_tokens,
+      providerOptions: model.providerOptions
     })
     return text
   } catch (e) {
@@ -56,11 +56,11 @@ export const generate_text = async ({
  * The onFinish callback saves the generated reply using the provided save_reply function.
  */
 export const stream_text = async ({
-  context,
-  model
+  model,
+  context
 }: {
-  context: AIContext
   model: Model
+  context: AIContext
 }): Promise<StreamTextResult<Record<string, Tool>, unknown>> => {
   try {
     return streamText({
