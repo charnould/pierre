@@ -3,6 +3,7 @@ import { type AIContext, Augmented_Query } from './_schema'
 import { convert_to_array } from './convert-to-array'
 import { today_is } from './generate-answer'
 import { generate_text } from './generate-output'
+import { ModelMessage } from 'ai'
 
 /**
  * Augments the user's query by analyzing the conversation context and
@@ -23,7 +24,7 @@ import { generate_text } from './generate-output'
  * 5. Ends performance measurement and logs the duration.
  * 6. Logs and returns the augmented query object.
  */
-export const augment_query = async (context: AIContext) => {
+export const augment_query = async (context: AIContext): Promise<Augmented_Query> => {
   // Start performance measurement
   performance.mark('start')
 
@@ -31,11 +32,11 @@ export const augment_query = async (context: AIContext) => {
   // query variety and capture different aspects of the user's intent.
 
   // Prompt checked on february 2 2025
-  const lang_and_profanity = [
+  const lang_and_profanity: ModelMessage[] = [
     {
       role: 'user',
-      content: dedent`/no_think 
-        Analyze the given sentence and return two results:  
+      content: dedent`
+      Analyze the given sentence and return two results:  
         1. **Profanity Check** – Determine whether the text contains any actual profanity, swear words, slurs, vulgar expressions, or intentionally offensive/inappropriate language. Do not flag neutral, descriptive, or colloquial phrases unless they are widely recognized as offensive in the given language/culture. Return 'true' only if clear profanity is present; otherwise, return 'false'.  
         2. **Language Detection** – Identify the primary language of the sentence and return its ISO 639-1 two-letter code. If multiple languages are present, return the code of the dominant language.  
                 
@@ -46,23 +47,22 @@ export const augment_query = async (context: AIContext) => {
   ]
 
   // Prompt checked on february 2 2025
-  const standalone_questions = [
+  const standalone_questions: ModelMessage[] = [
     ...context.conversation,
     {
       role: 'assistant',
-      content: dedent`/no_think 
-        Analyze the conversation history and generate a set of standalone questions in French, each rephrasing **last** user inquiry. Question should be clear, self-contained, and directly reflect the user’s intent without introducing any new details or expanding the scope. If there are multiple questions, separate them with a pipe (|). Do not add any introduction, extra text, or formatting. Keep the questions concise and focused solely on the user’s last inquiries. If a question mentions a specific date or time (e.g., 'qui est d’astreinte aujourd’hui'), use today’s date, which is ${today_is()}.`
+      content: dedent`
+      Analyze the conversation history and generate a set of standalone questions in French, each rephrasing **last** user inquiry. Question should be clear, self-contained, and directly reflect the user’s intent without introducing any new details or expanding the scope. If there are multiple questions, separate them with a pipe (|). Do not add any introduction, extra text, or formatting. Keep the questions concise and focused solely on the user’s last inquiries. If a question mentions a specific date or time (e.g., 'qui est d’astreinte aujourd’hui'), use today’s date, which is ${today_is()}.`
     }
   ]
 
   // Prompt checked on february 2 2025
-  const search_queries = [
+  const search_queries: ModelMessage[] = [
     ...context.conversation,
     {
       role: 'system',
       content: dedent`
-      /no_think
-        Analyze the entire conversation thoroughly and generate the following:
+      Analyze the entire conversation thoroughly and generate the following:
         
         1. **Hypothetical Document Embeddings** - Two brief and contextually relevant responses in French capturing all essential information likely to be present in the most authoritative search results addressing the user’s final query. Ensure they are comprehensive yet concise, preserving the original intent and meaning, and include relevant geographic details if a location is mentioned. Provide only the reponses, without any introductory phrases, additional explanations or quotes but separated by a pipe (|).
         
@@ -86,27 +86,42 @@ export const augment_query = async (context: AIContext) => {
   ]
 
   // Prompt checked on february 2 2025
-  const bm25_keywords = [
+  const bm25_keywords: ModelMessage[] = [
     ...context.conversation,
     {
       role: 'assistant',
-      content: dedent` /no_think
-        Analyze the user’s final intent and generate a list of five precise, high-impact keywords in French, separated by a pipe (|), optimized for a BM25-based search engine. Focus on essential terms and critical multi-word phrases while filtering out noise such as verbs, adjectives, adverbs, and generic words. Ensure all keywords are orthographically and grammatically correct, prioritizing exact matches for maximum retrieval relevance. Output only the keywords, formatted as instructed, with no additional text or explanation.`
+      content: dedent`
+      Analyze the user’s final intent and generate a list of five precise, high-impact keywords in French, separated by a pipe (|), optimized for a BM25-based search engine. Focus on essential terms and critical multi-word phrases while filtering out noise such as verbs, adjectives, adverbs, and generic words. Ensure all keywords are orthographically and grammatically correct, prioritizing exact matches for maximum retrieval relevance. Output only the keywords, formatted as instructed, with no additional text or explanation.`
     }
   ]
 
   // Generate augmented queries using the specified model
   const results = await Promise.all([
-    generate_text({ messages: standalone_questions, max_tokens: 100 }),
-    generate_text({ messages: lang_and_profanity, max_tokens: 100 }),
-    generate_text({ messages: search_queries, max_tokens: 350 }),
-    generate_text({ messages: bm25_keywords, max_tokens: 200 })
+    generate_text({
+      model: context.config.models.augment_with,
+      messages: standalone_questions,
+      max_tokens: 100
+    }),
+    generate_text({
+      model: context.config.models.augment_with,
+      messages: lang_and_profanity,
+      max_tokens: 100
+    }),
+    generate_text({
+      model: context.config.models.augment_with,
+      messages: search_queries,
+      max_tokens: 350
+    }),
+    generate_text({
+      model: context.config.models.augment_with,
+      messages: bm25_keywords,
+      max_tokens: 200
+    })
   ])
 
   // Parse/validate the generated responses into an Augmented_Query object. Some
   // transformations are applied to the responses to ensure they are in the
   // correct format
-
   const profanity = extract_tag_value(results[1], 'profanity', false)
   const language = extract_tag_value(results[1], 'lang', 'fr')
 

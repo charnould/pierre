@@ -1,5 +1,5 @@
 import type { Context } from 'hono'
-import { delete_conversation, score } from '../utils/handle-conversation'
+import { delete_conversation, score_conversation } from '../utils/handle-conversation'
 
 export const controller = async (c: Context) => {
   const body = await c.req.parseBody()
@@ -8,7 +8,7 @@ export const controller = async (c: Context) => {
   if (body.deletion === 'true') {
     await delete_conversation(id)
   } else {
-    await score({
+    await score_conversation({
       conv_id: id,
       scorer: body.scorer,
       score: Number(body.score),

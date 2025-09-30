@@ -7,35 +7,6 @@ exports[`should AIContext parse correctly 1`] = `
     "proprietary": [],
   },
   "config": {
-    "answer_with": {
-      "model": OpenAIResponsesLanguageModel {
-        "config": {
-          "fetch": undefined,
-          "fileIdPrefixes": [
-            "file-",
-          ],
-          "headers": [Function],
-          "provider": "openai.responses",
-          "url": [Function],
-        },
-        "modelId": "gpt-4.1-mini",
-        "specificationVersion": "v2",
-        "supportedUrls": {
-          "application/pdf": [
-            /^https?:\\/\\/.*$/,
-          ],
-          "image/*": [
-            /^https?:\\/\\/.*$/,
-          ],
-        },
-      },
-      "providerOptions": {
-        "openai": {
-          "reasoningEffort": "minimal",
-          "reasoningSummary": undefined,
-        },
-      },
-    },
     "api": [
       {
         "format": [Function],
@@ -100,8 +71,86 @@ exports[`should AIContext parse correctly 1`] = `
       "community": true,
       "proprietary": false,
     },
+    "models": {
+      "answer_with": {
+        "model": OpenAIResponsesLanguageModel {
+          "config": {
+            "fetch": undefined,
+            "fileIdPrefixes": [
+              "file-",
+            ],
+            "headers": [Function],
+            "provider": "openai.responses",
+            "url": [Function],
+          },
+          "modelId": "gpt-4.1-mini",
+          "specificationVersion": "v2",
+          "supportedUrls": {
+            "application/pdf": [
+              /^https?:\\/\\/.*$/,
+            ],
+            "image/*": [
+              /^https?:\\/\\/.*$/,
+            ],
+          },
+        },
+        "providerOptions": {
+          "openai": {
+            "reasoningEffort": "none",
+            "reasoningSummary": null,
+          },
+        },
+      },
+      "augment_with": {
+        "model": GroqChatLanguageModel {
+          "config": {
+            "fetch": undefined,
+            "headers": [Function],
+            "provider": "groq.chat",
+            "url": [Function],
+          },
+          "modelId": "qwen/qwen3-32b",
+          "specificationVersion": "v2",
+          "supportedUrls": {
+            "image/*": [
+              /^https?:\\/\\/.*$/,
+            ],
+          },
+        },
+        "providerOptions": {
+          "groq": {
+            "reasoningEffort": "none",
+            "reasoningFormat": "raw",
+            "serviceTier": "auto",
+          },
+        },
+      },
+      "rerank_with": {
+        "model": GroqChatLanguageModel {
+          "config": {
+            "fetch": undefined,
+            "headers": [Function],
+            "provider": "groq.chat",
+            "url": [Function],
+          },
+          "modelId": "qwen/qwen3-32b",
+          "specificationVersion": "v2",
+          "supportedUrls": {
+            "image/*": [
+              /^https?:\\/\\/.*$/,
+            ],
+          },
+        },
+        "providerOptions": {
+          "groq": {
+            "reasoningEffort": "default",
+            "reasoningFormat": "raw",
+            "serviceTier": "auto",
+          },
+        },
+      },
+    },
     "persona": "You are **PIERRE**, a multilingual, multichannel AI designed to support social housing applicants, tenants, and staff with their everyday questions. PIERRE is open-source, open-data, and open to community contributions. Its source code is publicly available at [pierre-ia.org](https://www.pierre-ia.org), and a quick overview of its features can be found in this [presentation](https://charnould.github.io/pierre/assets/PIERRE-Présentation.pdf). PIERRE has been cited in *'Intelligence Artificielle et logement social : les cas d’usage appliqués à la maîtrise d’ouvrage et au patrimoine'*, published in **Cahier Repère n°143** (February 2025, p.17) by [Union Sociale pour l’Habitat](https://www.union-habitat.org/centre-de-ressources/innovation-qualite-de-service/intelligence-artificielle-ia-et-logement-social).",
-    "phone": "0033939070074",
     "protected": false,
     "show": [
       "default",

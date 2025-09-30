@@ -12,12 +12,8 @@ export const controller = async (c: Context) => {
     const displayed_conversation = await get_conversation(String(id))
 
     const conversations: Reply[] = await get_conversations()
-    const conversations_grouped_by_id = _.map(
-      _.groupBy(
-        conversations.map((c) => Reply.parse(c)),
-        'conv_id'
-      ),
-      (group) => _.reverse(group)
+    const conversations_grouped_by_id = _.map(_.groupBy(conversations, 'conv_id'), (group) =>
+      _.reverse(group)
     )
 
     return c.html(view(conversations_grouped_by_id, displayed_conversation))
