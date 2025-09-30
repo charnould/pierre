@@ -131,9 +131,9 @@ export const generate_embeddings = async (
  * The `k = 10` condition ensures that only the top 10 closest matches are returned.
  */
 export const search = ({
-  db_name: db_name,
-  vector: vector,
-  chunk_access: chunk_access
+  db_name,
+  vector,
+  chunk_access
 }: {
   db_name: Db_Name
   vector: Float32Array
