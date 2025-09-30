@@ -7,15 +7,16 @@ import {
   get_conversations,
   save_reply,
   save_topic,
-  score
+  score_conversation
 } from '../../../utils/handle-conversation'
 
 const sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
+const config = (await import(`../../../assets/default/config`)).default
 
 // Simulated responses for test cases
 const c1_r1 = await AIContext.parseAsync({
   conv_id: 'c1',
-  config: 'default',
+  config: config,
   role: 'user',
   content: 'Qui es-tu ?',
   custom_data: { raw: ['julie', '456.56'] }
@@ -23,7 +24,7 @@ const c1_r1 = await AIContext.parseAsync({
 
 const c1_r2 = await AIContext.parseAsync({
   conv_id: 'c1',
-  config: 'default',
+  config: config,
   role: 'assistant',
   content: 'Je suis Pierre !',
   custom_data: { raw: ['julie', '456.56'] }
@@ -31,7 +32,7 @@ const c1_r2 = await AIContext.parseAsync({
 
 const c2_r1 = await AIContext.parseAsync({
   conv_id: 'c2',
-  config: 'default',
+  config: config,
   role: 'user',
   content: 'Bonjour',
   custom_data: { raw: ['julie', '456.56'] }
@@ -62,21 +63,21 @@ describe('test SQLite3 conversation CRUD operations', async () => {
   })
 
   it('should have score', async () => {
-    await score({
+    await score_conversation({
       conv_id: 'c1',
       scorer: 'customer',
       score: 1,
       comment: 'customer_comment'
     })
 
-    await score({
+    await score_conversation({
       conv_id: 'c1',
       scorer: 'organization',
       score: 2,
       comment: 'organization_comment'
     })
 
-    await score({
+    await score_conversation({
       conv_id: 'c1',
       scorer: 'ai',
       score: 3,
@@ -85,7 +86,7 @@ describe('test SQLite3 conversation CRUD operations', async () => {
 
     expect(await get_conversation('c1')).toMatchSnapshot()
 
-    await score({
+    await score_conversation({
       conv_id: 'c2',
       scorer: 'ai',
       score: 3,

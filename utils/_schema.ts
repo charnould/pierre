@@ -1,4 +1,4 @@
-import type { LanguageModel } from 'ai'
+import type { LanguageModel, ProviderMetadata } from 'ai'
 import { z } from 'zod/v4'
 
 /**
@@ -18,6 +18,12 @@ export const User = z.object({
   password_hash: z.string()
 })
 
+// Model
+export const Model = z.object({
+  model: z.custom<LanguageModel>(),
+  providerOptions: z.custom<ProviderMetadata>()
+})
+
 /**
  * Represents a parsed user schema that extends the base `User` schema
  * by adding a `config` property. The `config` property is an array
@@ -29,28 +35,13 @@ export const User = z.object({
 export const Parsed_User = User.extend({ config: z.array(z.string()) })
 
 //
-// Incoming SMS parsing schema
-export const SMS = z
-  .object({
-    role: z.string(),
-    config: z.string(),
-    conv_id: z.string(),
-    phone: z.string().nullable(),
-    to: z.string(),
-    content: z.string().trim()
-  })
-  .or(z.null())
-
-//
 // `./assets/Config` schema
 export const Config = z
   .object({
     id: z.string(),
     display: z.string(),
     show: z.array(z.string()),
-
     custom_data: z.object({ format: z.function() }).or(z.object({})),
-
     api: z
       .array(
         z.object({
@@ -69,11 +60,11 @@ export const Config = z
         })
       )
       .default([]),
-    answer_with: z.object({
-      model: z.custom<LanguageModel>(),
-      providerOptions: z.looseObject({})
+    models: z.object({
+      augment_with: Model,
+      rerank_with: Model,
+      answer_with: Model
     }),
-    phone: z.string().nullable(),
     protected: z.boolean(),
     knowledge: z.object({
       community: z.boolean(),
@@ -93,35 +84,28 @@ export const Config = z
 export const Reply = z.object({
   // Globals
   conv_id: z.string(),
-  config: z.string().or(Config),
+  config: Config,
   role: z.enum(['assistant', 'user', 'system']).default('user'),
-  timestamp: z.string().datetime({ offset: true }).nullish().default(null),
+  timestamp: z.iso.datetime({ offset: true }).nullish().default(null),
   content: z.string(),
-  // Metadata
   metadata: z
     .object({
-      // User
       user: z.string().trim().toLowerCase().nullish().default(null),
-      // Topics
       topics: z.string().trim().toLowerCase().nullish().default(null),
-      // Evaluation + satisfaction
       evaluation: z
         .object({
-          // CSAT
           customer: z
             .object({
               score: z.coerce.number().nullish().default(null).catch(null),
               comment: z.string().nullish().default(null)
             })
             .prefault({}),
-          // Social housing organization satisfaction
           organization: z
             .object({
               score: z.coerce.number().nullish().default(null).catch(null),
               comment: z.string().nullish().default(null)
             })
             .prefault({}),
-          // AI generated customer satisfaction (CSAT)
           ai: z
             .object({
               score: z.coerce.number().nullish().default(null).catch(null),
@@ -130,7 +114,6 @@ export const Reply = z.object({
             .prefault({})
         })
         .prefault({}),
-      // LLM usage
       tokens: z
         .object({
           // cache : z.number().nullish().default(null),
@@ -183,13 +166,8 @@ export const AIContext = z
     }).shape
   })
   .refine(async (c) => {
-    // Change config name for config content
-    if (typeof c.config === 'string') {
-      c.config = (await import(`../assets/${c.config}/config`)).default
-    }
-
     // Format data to be the one wanted by API
-    if (typeof c.config !== 'string' && 'format' in c.config.custom_data) {
+    if ('format' in c.config.custom_data) {
       if (
         Array.isArray(c.custom_data.raw) &&
         c.custom_data.raw.length === 1 &&
@@ -206,7 +184,7 @@ export const AIContext = z
 
 //
 //
-export type SMS = z.infer<typeof SMS>
+export type Model = z.infer<typeof Model>
 export type User = z.infer<typeof User>
 export type Parsed_User = z.infer<typeof Parsed_User>
 export type Reply = z.infer<typeof Reply>

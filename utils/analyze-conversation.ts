@@ -4,7 +4,7 @@ import dedent from 'dedent'
 import type { Reply } from './_schema'
 import { extract_tag_value } from './augment-query'
 import { generate_text } from './generate-output'
-import { get_conversation, save_topic, score } from './handle-conversation'
+import { get_conversation, save_topic, score_conversation } from './handle-conversation'
 
 const sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
 
@@ -35,7 +35,6 @@ const sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
  */
 export const score = async (): Promise<void> => {
   // Get the `conv_id` of conversations that have no score
-  const sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
   let conv_ids_missing_score = await sql`
     SELECT DISTINCT
       conv_id
@@ -52,13 +51,10 @@ export const score = async (): Promise<void> => {
   // 3. Save the topic back into the database.
   for await (const conv_id of conv_ids_missing_score) {
     const conversation = (await get_conversation(conv_id)) as Reply[]
-    const core_messages = conversation.map(({ role, content }) => ({
-      role,
-      content
-    })) as ModelMessage[]
+    const core_messages = conversation.map(({ role, content }) => ({ role, content }))
 
-    let score: number | string | null | boolean
-    let comment: number | string | null | boolean
+    let score: number | null
+    let comment: string | null
 
     if (core_messages.length === 1) {
       score = -1
@@ -93,19 +89,19 @@ export const score = async (): Promise<void> => {
         }
       ]
 
-      const config = (await import('../assets/default/config')).default
-      const model = config.models
+      const config = (await import(`../assets/${conversation[0].config}/config`)).default
+      const model = config.models.answer_with
       const answer = await generate_text({
         model: model,
         messages: messages,
-        max_tokens: 200
+        max_tokens: undefined
       })
 
       score = extract_tag_value(answer, 'score', null)
       comment = extract_tag_value(answer, 'reasoning', null)
     }
 
-    await score({
+    await score_conversation({
       conv_id: conv_id,
       scorer: 'ai',
       score: score,
