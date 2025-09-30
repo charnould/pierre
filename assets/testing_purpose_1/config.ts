@@ -1,3 +1,5 @@
+// DÉBUT : ** NE PAS MODIFIER **
+import { createHuggingFace } from '@ai-sdk/huggingface'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createCerebras } from '@ai-sdk/cerebras'
 import { createCohere } from '@ai-sdk/cohere'
@@ -7,15 +9,18 @@ import { createMistral } from '@ai-sdk/mistral'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createTogetherAI } from '@ai-sdk/togetherai'
 import type { Config } from '../../utils/_schema'
+import dedent from 'dedent'
 
-const openai = createOpenAI()
-const google = createGoogleGenerativeAI()
-const anthropic = createAnthropic()
-const mistral = createMistral()
-const cohere = createCohere()
-const togetherai = createTogetherAI()
 const groq = createGroq()
+const cohere = createCohere()
+const openai = createOpenAI()
+const mistral = createMistral()
 const cerebras = createCerebras()
+const anthropic = createAnthropic()
+const togetherai = createTogetherAI()
+const huggingface = createHuggingFace()
+const google = createGoogleGenerativeAI()
+// FIN : ** NE PAS MODIFIER **
 
 export default {
   id: 'testing_purpose_1',
