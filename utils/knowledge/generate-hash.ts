@@ -50,7 +50,7 @@ export const encode_filename = (filename: string): string => {
     // Replace "/" with "_" and "+" with "-" to make it safe for filesystems
     // Remove trailing "=" padding characters
     return base64 + extension
-  } catch (_error) {
+  } catch {
     throw new Error('Filename encoding failed')
   }
 }

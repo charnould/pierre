@@ -36,7 +36,7 @@ it('should upload knowledge files successfully', async () => {
 
   // Upload two other files and check there are shown in UI
   input = (await page.$('input[type="file"]')) as ElementHandle<HTMLInputElement>
-  await input.uploadFile(...['tests/e2e/mock-files/word.docx', 'tests/e2e/mock-files/excel.xlsx'])
+  await input.uploadFile('tests/e2e/mock-files/word.docx', 'tests/e2e/mock-files/excel.xlsx')
   await Promise.all([page.click('button[type="submit"]'), page.waitForNavigation()])
 
   buttons = await page.$$eval('button[name="filename"]', (b) => b.length)

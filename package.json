@@ -8,8 +8,8 @@
     "――――――― BUILD COMMANDS ―――――――": "―――――――",
     "build:cb": "bun --env-file=.env.production run config/build.ts",
     "transpile": "bun build --entrypoints assets/default/scripts/*.ts --outdir assets/default/dist/js --minify --target browser --watch",
-    "format": "bunx prettier '!**/*.js' '!assets/default/dist' --write . --plugin=prettier-plugin-tailwindcss",
-    "lint": "bunx @biomejs/biome check --write --unsafe . --config-path=config/biome.jsonc",
+    "format": "bunx prettier '!**/*.js' '!assets/default/dist' --write . --plugin=prettier-plugin-embed --plugin=prettier-plugin-tailwindcss --plugin=prettier-plugin-sql",
+    "lint": "bun run oxlint . --ignore-pattern='**/*.js' --fix --fix-suggestions",
     "css": "bunx @tailwindcss/cli@latest -i assets/default/tailwind/style.css -o assets/default/dist/css/style.css --minify --watch",
     "generate": "bun run ./utils/knowledge/_run.ts --community ",
     "――――――― LLM EVAL + TEST COMMANDS ―――――――": "―――――――",
@@ -73,16 +73,18 @@
     "zod": "^3.25.75"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
-    "@types/bun": "^1.2.18",
+    "@tailwindcss/cli": "^4.1.13",
+    "@types/bun": "^1.2.23",
     "@types/lodash": "^4.17.20",
     "@types/turndown": "^5.0.5",
     "markdown-toc": "^1.2.0",
-    "puppeteer": "^24.12.0",
-    "prettier-plugin-tailwindcss": "^0.6.13",
-    "@tailwindcss/cli": "^4.1.11",
-    "tailwindcss": "^4.1.11",
-    "typescript": "^5.8.3"
+    "oxlint": "^1.19.0",
+    "prettier-plugin-embed": "^0.5.0",
+    "prettier-plugin-sql": "^0.19.2",
+    "prettier-plugin-tailwindcss": "^0.6.14",
+    "puppeteer": "^24.22.3",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.3"
   },
   "prettier": {
     "singleQuote": true,
