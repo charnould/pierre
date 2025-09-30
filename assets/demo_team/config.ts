@@ -1,4 +1,5 @@
-// DÉBUT : ** NE PAS MODIFIER **
+/* DÉBUT : ** NE PAS MODIFIER */
+/* oxlint-disable */
 import { createHuggingFace } from '@ai-sdk/huggingface'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createCerebras } from '@ai-sdk/cerebras'
@@ -20,7 +21,8 @@ const anthropic = createAnthropic()
 const togetherai = createTogetherAI()
 const huggingface = createHuggingFace()
 const google = createGoogleGenerativeAI()
-// FIN : ** NE PAS MODIFIER **
+/* oxlint-enable */
+/* FIN : ** NE PAS MODIFIER */
 
 export default {
   id: 'demo_team',
