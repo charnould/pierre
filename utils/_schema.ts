@@ -12,16 +12,16 @@ import { z } from 'zod/v4'
  * - `password_hash`: A string representing the hashed password of the user.
  */
 export const User = z.object({
-  email: z.string().trim().toLowerCase(),
   role: z.enum(['administrator', 'contributor', 'collaborator']).catch('collaborator'),
-  config: z.string().trim(),
+  config: z.string().trim().toLowerCase(),
+  email: z.email().trim().toLowerCase(),
   password_hash: z.string()
 })
 
 // Model
 export const Model = z.object({
-  model: z.custom<LanguageModel>(),
-  providerOptions: z.custom<ProviderMetadata>()
+  providerOptions: z.custom<ProviderMetadata>(),
+  model: z.custom<LanguageModel>()
 })
 
 /**
@@ -49,33 +49,22 @@ export const Config = z
           url: z.string(), // URL check is made elsewhere
           format: z.function({
             input: [
-              z.object({
-                custom_data: z.array(z.string()),
-                content: z.string(),
-                role: z.string()
-              })
+              z.object({ custom_data: z.array(z.string()), content: z.string(), role: z.string() })
             ],
             output: z.any()
           })
         })
       )
       .default([]),
-    models: z.object({
-      augment_with: Model,
-      rerank_with: Model,
-      answer_with: Model
-    }),
-    protected: z.boolean(),
-    knowledge: z.object({
-      community: z.boolean(),
-      proprietary: z.boolean()
-    }),
-    audience: z.string(),
-    persona: z.string(),
-    guidelines: z.string(),
+    models: z.object({ augment_with: Model, rerank_with: Model, answer_with: Model }),
+    knowledge: z.object({ community: z.boolean(), proprietary: z.boolean() }),
+    disclaimer: z.string().nullable(),
     greeting: z.array(z.string()),
     examples: z.array(z.string()),
-    disclaimer: z.string().nullable()
+    protected: z.boolean(),
+    guidelines: z.string(),
+    audience: z.string(),
+    persona: z.string()
   })
   .strict()
 
@@ -131,9 +120,9 @@ export const Reply = z.object({
 export const Augmented_Query = z.object({
   lang: z.string(),
   contains_profanity: z.boolean(),
-  standalone_questions: z.array(z.string()),
   bm25_keywords: z.array(z.string()),
-  search_queries: z.array(z.string())
+  search_queries: z.array(z.string()),
+  standalone_questions: z.array(z.string())
 })
 
 //
@@ -144,24 +133,13 @@ export const AIContext = z
     ...z.object({
       chunks: z
         .object({
-          community: z.array(z.string()).nullish().default([]),
-          proprietary: z.array(z.string()).nullish().default([])
+          community: z.array(z.string()).default([]),
+          proprietary: z.array(z.string()).default([])
         })
-        .default({
-          community: [],
-          proprietary: []
-        }),
-      custom_data: z.object({
-        raw: z.array(z.string()),
-        transformed: z.string().default('')
-      }),
+        .default({ community: [], proprietary: [] }),
+      custom_data: z.object({ raw: z.array(z.string()), transformed: z.string().default('') }),
       conversation: z
-        .array(
-          z.object({
-            role: z.enum(['assistant', 'user', 'system']),
-            content: z.string()
-          })
-        )
+        .array(z.object({ role: z.enum(['assistant', 'user', 'system']), content: z.string() }))
         .default([])
     }).shape
   })
@@ -184,10 +162,10 @@ export const AIContext = z
 
 //
 //
-export type Model = z.infer<typeof Model>
 export type User = z.infer<typeof User>
-export type Parsed_User = z.infer<typeof Parsed_User>
 export type Reply = z.infer<typeof Reply>
+export type Model = z.infer<typeof Model>
 export type Config = z.infer<typeof Config>
 export type AIContext = z.infer<typeof AIContext>
+export type Parsed_User = z.infer<typeof Parsed_User>
 export type Augmented_Query = z.infer<typeof Augmented_Query>
