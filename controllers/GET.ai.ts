@@ -134,11 +134,7 @@ const search_and_answer = async (c: Context) => {
         //
         // EMBEDDINGS GENERATION
         const embeddings = await generate_embeddings(
-          [
-            ...[context.content], // IMPORTANT: keep `context.content` in an array
-            ...context.query.standalone_questions,
-            ...context.query.search_queries
-          ],
+          [context.content, ...context.query.standalone_questions, ...context.query.search_queries],
           { provider: 'ollama', batch: true }
         )
 

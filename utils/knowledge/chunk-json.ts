@@ -145,10 +145,10 @@ export const chunk_json = async (knowledge: Knowledge) => {
 // This function handles storing a chunk in the database along with its metadata,
 // including hash values, text, stemming, and associated entity details.
 const save_chunk = async ({
-  chunk_text: chunk_text,
-  chunk_access: chunk_access,
-  chunk_file: chunk_file,
-  db_name: db_name
+  chunk_text,
+  chunk_access,
+  chunk_file,
+  db_name
 }: {
   db_name: Db_Name
   chunk_text: string
