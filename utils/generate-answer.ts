@@ -2,7 +2,7 @@ import { TZDate } from '@date-fns/tz'
 import { format, getISOWeek, isSameDay, parseISO } from 'date-fns'
 import dedent from 'dedent'
 import type { AIContext } from './_schema'
-import { stream_answer } from './deliver-answer'
+import { stream_text } from './generate-output'
 
 /**
  * Generates an AI answer for the user by updating the conversation context with a formatted prompt,
@@ -52,7 +52,7 @@ export const answer_user = async (context: AIContext) => {
       **Your answer in "${context.query?.lang}" (ISO 639-1 format):**`
   })
 
-  return stream_answer(context)
+  return stream_text({ context: context, model: context.config.models.answer_with })
 }
 
 /**
@@ -100,7 +100,7 @@ export const reach_relevancy_deadlock = async (context: AIContext) => {
       **Your answer in "${context.query?.lang}" (ISO 639-1 format):**`
   })
 
-  return stream_answer(context)
+  return stream_text({ context: context, model: context.config.models.answer_with })
 }
 
 /**
@@ -151,7 +151,7 @@ export const reach_profanity_deadlock = async (context: AIContext) => {
       **Your answer in "${context.query?.lang}" (ISO 639-1 format):**`
   })
 
-  return stream_answer(context)
+  return stream_text({ context: context, model: context.config.models.answer_with })
 }
 
 export const today_is = () => {
