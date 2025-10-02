@@ -106,11 +106,11 @@ Au fur et à mesure de l'amélioration de la base de connaissances, la pertinenc
 
 `PIERRE` utilise — à ce jour — plusieurs (passes de) LLM dans cet ordre successif :
 
-1. Un **modèle de génération de `textes`** qui transforme la requête de l'utilisateur en une « requête augmentée » (en utilisant des techniques de type HyDE ou Stepback). `PIERRE` utilise par défaut [`Qwen/Qwen3-32B`](https://huggingface.co/Qwen/Qwen3-32B), un modèle **open source** d'Alibaba Cloud.
+1. Un **modèle de génération de `textes`** qui transforme la requête de l'utilisateur en une « requête augmentée » (en utilisant des techniques de type HyDE ou Stepback). `PIERRE` utilise par défaut et recommande le modèle **open source** [`Qwen/Qwen3-32B`](https://huggingface.co/Qwen/Qwen3-32B).
 
-2. Un **modèle de génération d'`embeddings`** qui transforme la « requête augmentée » en vecteurs de valeurs numériques qui sont ensuite utilisés pour rechercher les éléments de réponse les plus pertinents dans les bases de connaissances. `PIERRE` utilise [`bge-m3`](https://huggingface.co/BAAI/bge-m3), un modèle **open source** de la Beijing Academy of Artificial Intelligence (BAAI).
+2. Un **modèle de génération d'`embeddings`** qui transforme la « requête augmentée » en vecteurs de valeurs numériques qui sont ensuite utilisés pour rechercher les éléments de réponse les plus pertinents dans les bases de connaissances. `PIERRE` utilise le modèle **open source** [`bge-m3`](https://huggingface.co/BAAI/bge-m3).
 
-3. À nouveau, un **modèle de génération de `textes`** configuré en **`reranker`** qui classifie les résulats retournés par les bases de connaissances pour ne conserver que les éléments les plus pertinents en regard de la question posée par l'utilisateur. `PIERRE` utilise par défaut [`Qwen/Qwen3-32B`](https://huggingface.co/Qwen/Qwen3-32B), un modèle **open source** d'Alibaba Cloud.
+3. À nouveau, un **modèle de génération de `textes`** configuré en **`reranker`** qui classifie les résulats retournés par les bases de connaissances pour ne conserver que les éléments les plus pertinents en regard de la question posée par l'utilisateur. `PIERRE` utilise par défaut et recommande le modèle **open source** [`Qwen/Qwen3-32B`](https://huggingface.co/Qwen/Qwen3-32B).
 
 4. Un **modèle de génération de `textes`** qui génére les réponses textuelles aux utilisateurs en utilisant les éléments issus de (3).
 
