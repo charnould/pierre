@@ -1,6 +1,7 @@
 import { html, raw } from 'hono/html'
 import { marked } from 'marked'
 import type { Reply } from '../utils/_schema'
+import { format, parseISO } from 'date-fns'
 
 export const view = (data, conversation: Reply[] | []) => {
   return html`<!doctype html>
@@ -56,15 +57,8 @@ export const view = (data, conversation: Reply[] | []) => {
                     >
 
                     <span class="w-full truncate"
-                      >&nbsp;•
-                      ${new Intl.DateTimeFormat('fr-FR', {
-                        dateStyle: 'short',
-                        timeStyle: 'short',
-                        hourCycle: 'h23'
-                      })
-                        .format(new Date(conv[0].timestamp))
-                        .replace(' ', '∙')}
-                      • ${conv[0].config} •
+                      >&nbsp;• ${format(parseISO(conv[0].timestamp), "dd/MM/yyyy '·' H:mm")} •
+                      ${conv[0].config} •
                       ${conv[0].metadata.user !== null
                         ? conv[0].metadata.user
                         : 'Utilisateur inconnu'}
