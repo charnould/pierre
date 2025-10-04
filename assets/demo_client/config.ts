@@ -59,6 +59,16 @@ export default {
           reasoningSummary: null
         }
       }
+    },
+    extend_with: {
+      model: groq('qwen/qwen3-32b'),
+      providerOptions: {
+        groq: {
+          reasoningFormat: 'raw',
+          reasoningEffort: 'default',
+          serviceTier: 'auto'
+        }
+      }
     }
   },
   protected: false,
