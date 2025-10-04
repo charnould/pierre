@@ -153,6 +153,20 @@ export default {
           reasoningSummary: null
         }
       }
+    },
+
+    // Le modèle qui est utilisé dans l'extension-navigateur.
+    // Ce modèle permet d’ajouter des capacités d’analyse et de raisonnement avancées
+    // directement dans l’interface des applicatifs (pré-)historiques (ex : ACG, IKOS, etc.)
+    extend_with: {
+      model: groq('qwen/qwen3-32b'),
+      providerOptions: {
+        groq: {
+          reasoningFormat: 'raw',
+          reasoningEffort: 'default',
+          serviceTier: 'auto'
+        }
+      }
     }
   },
 

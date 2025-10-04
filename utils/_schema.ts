@@ -56,7 +56,12 @@ export const Config = z
         })
       )
       .default([]),
-    models: z.object({ augment_with: Model, rerank_with: Model, answer_with: Model }),
+    models: z.object({
+      augment_with: Model,
+      rerank_with: Model,
+      answer_with: Model,
+      extend_with: Model
+    }),
     knowledge: z.object({ community: z.boolean(), proprietary: z.boolean() }),
     disclaimer: z.string().nullable(),
     greeting: z.array(z.string()),
