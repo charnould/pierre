@@ -6,7 +6,8 @@
   "module": "app.ts",
   "scripts": {
     "――――――― BUILD COMMANDS ―――――――": "―――――――",
-    "build:cb": "bun --env-file=.env.production run config/build.ts",
+    "build:extension": "bun run config/build-extension.ts",
+    "build:application": "bun --env-file=.env.production run config/build-application.ts",
     "transpile": "bun build --entrypoints assets/default/scripts/*.ts --outdir assets/default/dist/js --minify --target browser --watch",
     "format": "bunx prettier '!**/*.js' '!assets/default/dist' --write . --plugin=prettier-plugin-embed --plugin=prettier-plugin-tailwindcss --plugin=prettier-plugin-sql",
     "lint": "bun run oxlint . --ignore-pattern='**/*.js' --fix --fix-suggestions",
@@ -73,7 +74,9 @@
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.14",
-    "@types/bun": "^1.3.0",
+    "@types/adm-zip": "^0.5.7",
+    "@types/bun": "^1.2.23",
+    "@types/chrome": "^0.1.22",
     "@types/lodash": "^4.17.20",
     "@types/turndown": "^5.0.5",
     "markdown-toc": "^1.2.0",
