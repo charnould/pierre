@@ -212,7 +212,7 @@ Pour tester en conditions réelles les mises à jour et nouveautés de `PIERRE`,
 
 ## Modifier l'interface du chatbot
 
-<img src="docs/assets/images/personnalisation-de-`PIERRE`.webp" height="400">
+<img src="docs/assets/images/personnalisation-de-PIERRE.webp" height="400">
 
 1. Dans le répertoire `./assets`, supprimer les répertoires `demo_client`, `demo_team` et `testing_purpose_1`, `testing_purpose_2`, puis dupliquer le dossier `default` et le nommer ``PIERRE`-habitat`. Les consignes suivantes s'appliquent à ce nouveau répertoire.
 2. Supprimer les sous-répertoires `/dist`, `/files`, `/scripts`, `/tailwind`.
