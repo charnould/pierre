@@ -76,15 +76,13 @@ Le dispositif de solidarité et renouvellement urbains, instaurés par la loi du
 
 ### Adressage
 
-L'attribution de noms à l'ensemble des voies des communes rurales devient nécessaire.
-
-Ceci concerne deux millions de Français.
-
-Cela oblige des milliers de Français à changer d'adresse.
+L'attribution de noms à l'ensemble des voies des communes rurales devient nécessaire. L'adresse permettra la géolocalisation.
 
 Cela peut induire des changements de carte grise.
 
-L'adresse permettra la géolocalisation.
+Cela oblige des milliers de personnes à changer d'adresse. Cette mesure concerne en tout deux millions de Français.
+
+Pour Frédéric Giraut, géographe spécialiste de la toponymie, cette mesure acte l'amoindrissement de l'interconnaissance en milieu rural, et consacre l'homogénéisation des façons d'habiter, alignées sur la métropolisation.
 
 ### Gestion des routes
 
