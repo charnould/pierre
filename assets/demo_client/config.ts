@@ -36,7 +36,7 @@ export default {
       providerOptions: {
         groq: {
           reasoningFormat: 'raw',
-          reasoningEffort: 'default',
+          reasoningEffort: 'none',
           serviceTier: 'auto'
         }
       }
