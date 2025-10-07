@@ -1,0 +1,337 @@
+<!-- oxlint-disable -->
+<!DOCTYPE html>
+<html xmlns=http://www.w3.org/1999/xhtml>
+<head>
+    <meta charset=utf-8>
+<meta name=viewport content="width=device-width, initial-scale=1">
+<title>Aravis</title>
+<style>.ui-helper-hidden-accessible{position:absolute!important;clip:rect(1px,1px,1px,1px)}.ui-helper-reset{margin:0;padding:0;outline:0;text-decoration:none;list-style:none}.ui-state-disabled{cursor:default!important}.ui-icon{display:block;text-indent:-99999px;overflow:hidden;background-repeat:no-repeat}.ui-widget-content{background:#ffffff url(data:,)50% 50%repeat-x}.ui-widget-content .ui-state-highlight{color:#803689;font-weight:bold}.ui-state-disabled{cursor:no-drop!important;background-image:none;background-color:#E2E2E2!important;color:#787878!important;-webkit-box-shadow:none!important;-moz-box-shadow:none!important;box-shadow:none!important}.ui-icon{width:16px;height:16px}.ui-state-default .ui-icon{background-image:var(--sf-img-1)}.ui-icon-triangle-1-s{background-position:-65px 5px}button.ui-button-icon-only{width:2.4em}.ui-button .ui-button-text{display:block;line-height:1.4}.ui-button-icon-only .ui-button-text{background-color:#B2C801;-webkit-border-top-right-radius:3px;-webkit-border-bottom-right-radius:3px;-moz-border-radius-topright:3px;-moz-border-radius-bottomright:3px;border-top-right-radius:3px;border-bottom-right-radius:3px}.ui-button-icon-only .ui-icon{position:absolute;top:50%;margin-top:-8px}.ui-button-icon-only .ui-icon{left:50%;margin-left:-9px}.ui-widget,.ui-helper-reset{font-size:1em}.ui-button{text-shadow:none!important;border:0!important}.ui-datepicker-trigger{cursor:pointer;background-image:url(data:,);background-repeat:no-repeat;background-position:50%;border-radius:0 3px 4px 0}</style>
+<style>@media screen and (max-width:800px) and (orientation:landscape),screen and (max-height:300px){}@media all and (max-width:800px){}</style>
+<style>.clear{clear:both;height:0px;font-size:0;line-height:0}html,body,div,span,h1,a,img,ul,li,form,label,table,tbody,tr,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline}ul{list-style:none}td{vertical-align:middle}html,body{width:100%}div.wrapper{height:100%;min-width:1000px}div.header{z-index:2004}.ariane:empty{display:none}</style>
+<style>.menu{float:left;position:fixed;z-index:2005;height:100%}.ui-menu{padding:0px;background-image:none;width:226px}#menu>li>ul.positionMenu{display:block}#menu>li>a span:last-child:after{}#menu li{position:relative}#menu>li{float:none;border-bottom:solid 1px #803689!important}#menu>#menuPortail{border:none!important;cursor:pointer}#menu>li a{display:block;line-height:14px;padding-left:6px;background-size:22px;background-repeat:no-repeat;background-position:2px center;font-weight:bold;font-size:12px;padding-top:10px;padding-bottom:10px;text-decoration:none}#menu>li li a{padding-left:31px}#menu>li>ul>li>a:hover{color:#FFFFFF;background-color:#540C65;text-decoration:none}#menu li.positionMenu li.positionMenu>a{color:#FFFFFF}#menu li.positionMenu>a,#menu>li a:hover{color:#FFFFFF}li#titreApplicationMenu a:hover{color:#D3B9D6}#menu>#menuPortail a{padding:0px}span.acg-ui-icon{display:block;width:16px;height:16px;background-image:var(--sf-img-1);background-position:-67px 0px;margin-top:0px;position:absolute;right:0px}#menu>li.positionMenu>a>span.acg-ui-icon{background-position:-2px 0px}.ui-widget-content{border:none}li#titreApplicationMenu{padding-left:2px;border:none!important;padding:10px 14px 12px 0px;margin-top:10px}li#titreApplicationMenu a:before{font-family:"acg-set"!important;font-size:12px;speak:none;font-style:normal;font-weight:normal;font-variant:normal;text-transform:none;line-height:14px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;display:inline-block;text-align:center;padding-right:5px;float:left;min-height:16px}li#titreApplicationMenu a{font-size:15px;min-height:20px;padding-left:37px;line-height:20px;position:relative}.SUIVI_AFFAIRES:before{content:""!important}#menu>li#titreApplicationMenu a:before{content:"t";font-size:20px;line-height:22px;height:100%;position:absolute;left:7px}#menu>.ui-menu-search .icon-sear{font-family:"acg-set";color:#d3b9d6;font-size:18px;vertical-align:middle}#menu li input{font-family:"Open Sans";color:#d3b9d6!important;border:0;outline:0;width:190px;margin-bottom:0px;box-shadow:none;padding:0px 4px 0px 0px}#menu li input:focus::-webkit-input-placeholder{color:transparent!important}#menu li input::-webkit-input-placeholder{font-style:normal}#menu>.ui-menu-search{color:white;height:23px;padding:5px}#menu li input::-webkit-input-placeholder{color:#D3B9D6!important}</style>
+<style>#mainForm>.inner-content>.group:first-child{padding-top:0px}.group .form_container>.form_title{cursor:default}.form_container,.group .form_container>.group{border-top:0}.form_container .group:last-child{}button,input[type="submit"]{display:inline;cursor:pointer;zoom:1}.col-value a:last-child{margin-left:2px}.col-value a:only-child{margin-left:0}input.hasDatepicker{border-right:none!important;width:100px!important}input.btn_medium{height:30px}.group,.group .col{border-collapse:collapse}.group>.col{vertical-align:top}.group .col-1,.group .col-2{display:inline-block}.group{line-height:0}.form_title,.col-value{line-height:normal}.group .col-1{width:100%}.col-label,.col-value{height:auto;vertical-align:middle;display:inline-block}.col-label{width:156px}.col-value{width:666px}.col-2 .col-value{width:calc(60% - 12px);line-height:15px}@media (min-width:1124px){}.col-value>textarea{width:calc(100% - 13px)}.td_radio{display:inline-block}.col-value .td_radio>input[type="radio"]{margin-left:0;margin-right:0;position:relative;top:1px}.col-value .td_radio>input[type="radio"]~label{margin-right:20px}.col-value>table{width:auto}.mandatory_label{padding-left:2px;color:#D45B47}input::-webkit-input-placeholder,textarea::-webkit-input-placeholder{color:#C7C7CD!important;font-style:italic;font-weight:bold}input:disabled::-webkit-input-placeholder,textarea:disabled::-webkit-input-placeholder{opacity:0}</style>
+<style>.btn_medium{background-repeat:no-repeat}</style>
+<style>@font-face{font-family:"Open Sans";font-style:normal;font-weight:400;src:}@font-face{font-family:"Open Sans";font-style:normal;font-weight:600;src:}*{border-color:#E8E8E8!important;-moz-border-radius:3px}@font-face{font-family:"acg-set";src:;font-weight:normal;font-style:normal}[class^="icon-"]{font-family:"acg-set"!important;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.icon-menu:before{content:""}html,body{background-color:#f5f4fa;color:#525252;font-family:"Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif;font-size:12px;line-height:1.3}noscript{font-size:20px}a{color:inherit;cursor:pointer}a:hover,th a,a label{text-decoration:none;cursor:pointer}a img{border:none}.content{padding:0px 25px 10px 25px}.inner-content{display:table-row-group}#mainForm{display:table;width:100%}button,input[type="submit"]{margin:0px;padding:4px 12px;font-size:14px;line-height:20px;text-align:center;vertical-align:middle;border:1px solid #803689;border-radius:3px;margin-left:6px;font-family:"Open Sans"}input.btn_medium{padding-right:20px;margin-bottom:5px}input.btn_validate,input.btn_cancel{padding-left:36px;background-position:10px;background-size:20px}input.aw-creation.btn_validate{background-image:url(data:,)}input.btn_cancel{background-image:url(data:,)}input[type="submit"],button.ui-button{background-color:#D2B9D6;color:#fff}button:hover,input[type="button"]:hover,input[type="submit"]:hover{background-color:#803689;color:#fff}button:focus,input[type="button"]:focus,input[type="submit"]:focus{border-color:#803689!important;color:#fff}input.aw-creation.btn_validate{background-color:#B2C801}input.btn_validate:hover,input.aw-creation.btn_validate:hover{background-color:#8F9907}input.btn_cancel{background-color:#BBBBBB}input.btn_cancel:hover{background-color:#525252}button[disabled]{cursor:not-allowed;background-color:#FFFFFF;border-color:#7b7b7b;color:#BBBBBB}.col-label:after{content:":"}textarea,select,input[type="text"]{display:inline-block;font-size:12px;line-height:20px;vertical-align:middle;background-color:#ffffff;-webkit-transition:border linear 0.2s,box-shadow linear 0.2s;-moz-transition:border linear 0.2s,box-shadow linear 0.2s;-o-transition:border linear 0.2s,box-shadow linear 0.2s;transition:border linear 0.2s,box-shadow linear 0.2s;padding:2px 10px;color:#803689;border:1px solid #E8E8E8;font-family:"Open Sans"}textarea.ui-state-disabled{pointer-events:all}select,input[type="text"]{width:calc(100% - 24px)}select{line-height:30px}span[id$=-path]{padding-left:5px}.ui-accordion{background-image:none;background-color:#FFFFFF;border:1px solid #803689;padding-bottom:0px;-webkit-box-shadow:0px 0px 2px 2px rgba(0,0,0,0.15);-moz-box-shadow:2px 2px 8px 0px rgba(0,0,0,0.15);box-shadow:2px 2px 8px 0px rgba(0,0,0,0.15)}.topActions{z-index:2003;position:fixed;width:calc(100% - 250px);background-color:#f5f4fa;border:none;right:5px}#mainForm>.inner-content>.group>.col{-webkit-box-shadow:0px 0px 2px 2px rgba(0,0,0,0.15);-moz-box-shadow:2px 2px 8px 0px rgba(0,0,0,0.15);box-shadow:2px 2px 8px 0px rgba(0,0,0,0.15);margin-top:20px;border-radius:2px;background-color:#FFFFFF}#mainForm>.inner-content>.group>.col:first-child,#mainForm>.inner-content.aw_with-topAction>.content_title{margin-top:50px}.group .form_container{padding:0px;padding-bottom:5px;border-radius:3px;-moz-box-shadow:2px 2px 8px 0px rgba(0,0,0,0.15)}.group .form_container>.form_title{border:1px solid rgb(0,116,202);margin-left:-1px;padding:6px 15px;font-size:16px;display:block;width:auto;text-align:left;font-weight:bold;border-left:none;border-right:none}.group .form_container>.form_title{border-top:0}.ui-datepicker-trigger.ui-button-icon-only .ui-button-text{padding:0px;height:100%}.topActions td{text-align:left!important}.topActions td input:FIRST-CHILD{margin-left:6px}</style>
+<style>div.header{position:fixed}div.header #tetiere{display:block;height:61px;background:#FFFFFF;border-bottom:solid 2px grey}.aw_header_item{float:right;height:52px;margin-right:10px}.aw_header_item .aw_header_ico:before{content:"";font-family:"acg-set";position:absolute;top:10px;font-size:23px;background-color:#525252;color:#fff;height:46px;width:49px;text-align:center;line-height:43px;border-radius:25px;margin-top:-4px;float:left;padding-right:0px}.aw_header_item .ui-accordion{position:absolute;color:#999;font-family:"Open Sans",Candara,"Bitstream Vera Sans","DejaVu Sans","Bitstream Vera Sans","Trebuchet MS",Verdana,"Verdana Ref",sans-serif;border-radius:3px;background:white;top:64px;font-weight:normal;font-size:13px;z-index:105}.aw_header_item .ui-accordion:after,.aw_header_item .ui-accordion:before{content:"";display:block;position:absolute;left:100%;width:0;height:0;border-style:solid}.aw_header_item .ui-accordion:before{top:-11px;left:174px;border-left:15px solid transparent;border-right:15px solid transparent;border-top:transparent;border-bottom:20px solid #e8e8e8;border-width:10px}.aw_header_item .ui-accordion::after{top:-10px;left:174px;border-left:15px solid transparent;border-right:15px solid transparent;border-top:transparent;border-bottom:20px solid #fff;border-width:10px}#login_user:hover{cursor:pointer}#login_user #icoUser:before{content:""}#login_user #infoUser{margin-left:60px;font-size:14px;margin-right:60px}#login_user #infoUser.trois-elements{margin-top:2px}#login_user #infoUser:after{content:"";padding:0;position:absolute;right:35px;top:20px;font-family:acg-set}#infoUser .nomPrenom,#infoUser .societe{height:20px}#infoUser .nomPrenom{font-weight:bold}.aw_header_ico{cursor:pointer;width:52px}#aw_notification .aw_header_ico:before{content:"v"}#aw_notification .ui-accordion{margin-left:-100px;padding:0;width:350px}#aw_notification .ui-accordion:before,#aw_notification .ui-accordion:after{left:114px}#aw_notification .notificationCounter{margin:5px 0px 0px 32px;color:#ffffff;font-weight:bold;font-size:12px;text-align:center;background-color:#964ca6;position:absolute}.notificationCounter{height:16px;min-width:12px;margin:-2px 2px 0 5px;padding:2px 3px 0px 3px;color:#ffffff;font-weight:bold;text-align:center;box-shadow:inset 0 0 2px #ffffff;background-color:#964ca6;-webkit-border-radius:10px;-moz-border-radius:10px;border-radius:3px;float:right}a:hover .notificationCounter{text-decoration:none}#filArianeAravis{border:none;margin:0px;text-indent:0.5em;color:#803689;padding:0px 25px;line-height:41px;background-color:#f5f4fa;float:left;width:100%}#filArianeAravis.filArianeAravis_init{position:absolute;top:63px}#filArianeAravis form{display:inline}#filArianeAravis span:not(#baseAriane):before{content:">";margin-right:5px}#breadCrumb{display:inline}#filArianeAravis span{display:inline-block;float:left}.ariane>span:first-child{}.ariane>span:last-child{font-weight:bold}</style>
+<style>@media screen and (max-width:1260px){.content{width:980px}}@media screen and (max-width:980px){.wrapper{width:100%;height:auto;margin:0 0}.header{position:relative;width:100%}html>body .header{margin-bottom:10px}.content{padding-bottom:0px;width:100%}#mainForm{display:block;width:100%}.inner-content{width:100%}.ariane{display:none}.col-1,.col-2{display:block;width:100%}input.btn_medium~input.btn_medium{margin-left:2px}}@media screen and (max-width:490px){.col-label,.col-value{display:inline-block;width:auto;text-align:left;padding:5px 2px 0px 2px}}</style>
+<style>@font-face{font-family:"acg-set";src:;font-weight:normal;font-style:normal}[class^="icon-"]{font-family:"acg-set"!important;speak:none;font-style:normal;font-weight:normal;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.icon-menu:before{content:"t"}</style>
+<style>.inner-content>.group{background-color:transparent}.group{width:100%}.col-label,.col-value{margin:5px 0px}.col-label{padding-right:5px;text-align:right;line-height:12px}.col-label:after{content:none}.col-value{text-align:left;padding-left:5px}.ui-datepicker-trigger{height:26px;margin:0px;-webkit-border-top-right-radius:3px;-moz-border-radius-topright:3px;-moz-border-radius-bottomright:3px;border-color:#B2C802!important}#menuPortail{display:list-item!important}#menuPortail span{margin:auto;display:block;text-align:center}#menuPortail img{height:60px;vertical-align:middle;margin-top:20px;margin-bottom:20px}div.wrapper>div{margin-left:226px;width:calc(100% - 226px)}div.wrapper div.content{width:calc(100% - 276px);margin-bottom:24px}select,input[type="text"]{height:initial!important;-webkit-box-shadow:1px 1px 2px 0px rgba(0,0,0,0.05);-moz-box-shadow:1px 1px 2px 0px rgba(0,0,0,0.05);-webkit-box-shadow:inset 0 1px 1px rgba(0,0,0,.05);box-shadow:inset 0 1px 1px rgba(0,0,0,0.05);transition:border-color 500ms ease-in-out 0ms,box-shadow ease-in-out}.ui-state-default span.ui-icon-calendar{background-image:url(data:,);background-size:16px}.ui-selectonemenu{width:80%!important;background-color:#FFFFFF;padding-right:0px}.ui-selectonemenu .ui-selectonemenu-label{border:solid 1px black;padding-top:2px;padding-bottom:2px;padding:2px 10px;height:20px;line-height:20px}.ui-selectonemenu-items li:hover{background-color:#CCCCCC;color:#333333}.ui-corner-right{background-color:#B2C801}[type="checkbox"]:not(:checked),[type="checkbox"]:checked,[type="radio"]:not(:checked),[type="radio"]:checked{position:absolute;left:-9999px}[type="checkbox"]:not(:checked)+label,[type="checkbox"]:checked+label,[type="radio"]:not(:checked)+label,[type="radio"]:checked+label{position:relative;padding-left:17px;cursor:pointer}[type="checkbox"]:not(:checked)+label:before,[type="checkbox"]:checked+label:before,[type="radio"]:not(:checked)+label:before,[type="radio"]:checked+label:before,.aw_radio_colonne_values td.td_radio>.ui-radiobutton .ui-radiobutton-box:before{content:"";position:absolute;left:0;top:2px;width:15px;height:15px;border-radius:3px;border:1px solid #9C9C9C}[type="radio"]:not(:checked)+label:before,[type="radio"]:checked+label:before,.aw_radio_colonne_values td.td_radio>.ui-radiobutton .ui-radiobutton-box:before{border-radius:10px}[type="radio"]:not(:checked)+label:after,[type="radio"]:checked+label:after,.aw_radio_colonne_values td.td_radio>.ui-radiobutton .ui-radiobutton-box:after{content:"";position:absolute;top:7px;left:5px;transition:all .2s;height:7px;width:7px;background-color:#717171;border-radius:10px}[type="checkbox"]:not(:checked)+label:after,[type="radio"]:not(:checked)+label:after,.aw_radio_colonne_values td.td_radio>.ui-radiobutton .ui-radiobutton-box:after{opacity:0;transform:scale(0)}[type="checkbox"]:checked+label:after,[type="radio"]:checked+label:after,.aw_radio_colonne_values td.td_radio>.ui-radiobutton .ui-radiobutton-box.ui-state-active:after{opacity:1;transform:scale(1)}[type="checkbox"]:disabled:not(:checked)+label:before,[type="checkbox"]:disabled:checked+label:before,[type="radio"]:disabled:not(:checked)+label:before,[type="radio"]:disabled:checked+label:before{box-shadow:none;border-color:#bbb;background-color:#ddd}[type="checkbox"]:disabled:checked+label:after,[type="radio"]:disabled:checked+label:after{color:#999}[type="checkbox"]:disabled+label,[type="radio"]:disabled+label{color:#aaa;cursor:not-allowed}h1.titre{line-height:63px;margin-left:80px;font-size:18px;text-transform:uppercase;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.group .col-2{width:422px}.form_container .group .col-1 .col-1{display:block}.col-1 .ui-selectonemenu-label{width:calc(100% - 26px)!important}@media screen and (max-width:1155px){.col-value{width:242px}}#filArianeAravis a{text-decoration:underline}#filArianeAravis a:hover{color:#717171;text-decoration:none}.link .aw_file{text-decoration:none;color:#803689;font-weight:bold;border:solid 1px;overflow:hidden;text-overflow:ellipsis;height:20px;white-space:nowrap;padding:2px 10px;width:calc(100% - 47px);float:left;line-height:20px}.link-actions-container{line-height:15px}a.link-attach:before{content:"";font-family:"acg-set";border:solid 1px #E8E8E8;padding:5px 5px 4px 5px;display:inline-block}span:not(.link-actions-container) a:hover.link-attach:before{background-color:#803689;color:#FFFFFF}div.aw-menu-helper{position:fixed;top:8px;left:235PX;z-index:2006;border-radius:50%;box-shadow:0 0 15px rgba(0,0,0,0.3);height:45px;display:flex;justify-content:center;align-items:center}div.aw-menu-helper>a{text-decoration:none;color:white;padding:5px;min-width:35px;height:20px;background-image:url(data:,);background-repeat:no-repeat;background-position:center}div.wrapper .aw-menu-helper>.icon-menu:before{content:" "}div.aw_ajax_loader{position:fixed;top:16px;z-index:6666;left:calc(50% - 110px)}</style><style>.menu,#menu,#menu>#menuPortail{background-color:#D45B46}#menu ul{background-color:#943b2b}#menu>li{background-color:#f56a52;border-bottom:solid 1px #f56a52!important}#menu>li#titreApplicationMenu{background-color:#D45B46}#menu>li a{color:#FFFFFF}#menu>li>ul>li>a:hover,#menu li.positionMenu li.positionMenu>a{background-color:#a55e51}#menu>.ui-menu-search,#menu li input{background-color:#943b2b}img#Logo_titre_ZZ{display:initial;float:left;margin-top:10px}</style>
+</head>
+
+<body>
+ 
+
+ 
+ <div class=wrapper style=min-height:915px>
+<form id=menuForm name=menuForm method=post action=https://aravis.zz.gdh.local/aravisweb/evevEvenement/EVEVD0_COMMENTAIRE_AGENCE_VIRT_REPONDRE.jsf enctype=application/x-www-form-urlencoded>
+<input id=menuForm:home-button type=submit name=menuForm:home-button value style=display:none>
+ <div class=menu>
+ 
+ <ul id=menu class="ui-menu ui-widget ui-widget-content ui-corner-all">
+ <li id=menuPortail>
+ <span><a href="https://portail.zz.gdh.local/?p_p_state=normal&amp;p=bm9tX2ZpbGVfam1zPU1PUlNZTF8xNzIuMjIuMTguMTFfMV8xMDAwMCZhcmF2aXNfdXNlcl9pZD01NzgmYXJhdmlzX3NvY2lldGVfaWQ9MSZhcmF2aXNfdXNlcl9wb3N0ZT0yNzImYXJhdmlzd2ViX2dlc3Rpb25faGFiaWxpdGF0aW9uPXRydWU"><img id=menuForm:Logo_Aravis src="data:image/png;base64,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"></a>
+ </span>
+ </li>
+ </li>
+ 
+
+ <li class="ui-menu-item positionMenu" id=menu-Affaires>
+ <a id=253 href="https://aravis.zz.gdh.local/aravisweb/evevEvenement/EVEVD0_COMMENTAIRE_AGENCE_VIRT_REPONDRE.jsf?vID=c3e21fe8-7097-456f-96f4-c58271115473#" class=ui-corner-all data-title="Mon quotidien"><span class=acg-ui-icon></span><span class=acg-ui-icon></span><span>Mon quotidien</span></a>
+ <ul class=positionMenu>
+ <li id=MES_AFF_A_TRAITER class=positionMenu><a href="https://aravis.zz.gdh.local/aravisweb/index/viewAccess.jsf?baseMenu=menu.Affaires&amp;entityName=evafAffaire&amp;queryName=MENU_EVAFD0_MES_AFFAIRES_EN_COURS&amp;pageName=MENU_EVAFD0_MES_AFFAIRES_EN_COURS_LIST&amp;currentApp=SUIVI_AFFAIRES&amp;idPosMenu=MES_AFF_A_TRAITER&amp;idModule=menu.Affaires&amp;idPosMenu=MES_AFF_A_TRAITER&amp;idModule=menu.Affaires" class=positionMenu>Mes affaires en cours</a>
+ </li>
+ <li id=MES_AFF_NON_VUES><a href="https://aravis.zz.gdh.local/aravisweb/index/viewAccess.jsf?baseMenu=menu.Affaires&amp;entityName=evafAffaire&amp;queryName=MENU_EVAFD0_MES_AFFAIRES_EN_COURS_NON_VUES&amp;pageName=MENU_EVAFD0_MES_AFFAIRES_EN_COURS_NON_VUES_LIST&amp;currentApp=SUIVI_AFFAIRES&amp;idPosMenu=MES_AFF_NON_VUES&amp;idModule=menu.Affaires&amp;idPosMenu=MES_AFF_NON_VUES&amp;idModule=menu.Affaires">Mes affaires non vues ou à requalifier<span id=menuForm:ncMES_AFF_NON_VUES class=ncHolder></span></a>
+ </li>
+ <li id=AFF_ALERTE><a href="https://aravis.zz.gdh.local/aravisweb/index/viewAccess.jsf?baseMenu=menu.Affaires&amp;entityName=evafAffaire&amp;queryName=MENU_EVAFD0_AFFAIRES_ALERTE&amp;pageName=MENU_EVAFD0_AFFAIRES_ALERTE_LIST&amp;currentApp=SUIVI_AFFAIRES&amp;idPosMenu=AFF_ALERTE&amp;idModule=menu.Affaires&amp;idPosMenu=AFF_ALERTE&amp;idModule=menu.Affaires">Mes alertes<span id=menuForm:ncAFF_ALERTE class=ncHolder></span></a>
+ </li>
+ <li id=AFF_MES_TACHES><a href="https://aravis.zz.gdh.local/aravisweb/index/viewAccess.jsf?baseMenu=menu.Affaires&amp;entityName=evevEvenement&amp;queryName=MENU_EVEVD0_MES_TACHES&amp;pageName=MENU_EVEVD0_MES_TACHES_LIST&amp;currentApp=SUIVI_AFFAIRES&amp;idPosMenu=AFF_MES_TACHES&amp;idModule=menu.Affaires&amp;idPosMenu=AFF_MES_TACHES&amp;idModule=menu.Affaires">Mes tâches</a>
+ </li>
+ <li id=AFF_RENDEZ_VOUS><a href="https://aravis.zz.gdh.local/aravisweb/index/viewAccess.jsf?baseMenu=menu.Affaires&amp;entityName=evevEvenement&amp;queryName=MENU_EVEVD0_MES_RENDEZ_VOUS&amp;pageName=MENU_EVEVD0_MES_RENDEZ_VOUS_LIST&amp;currentApp=SUIVI_AFFAIRES&amp;idPosMenu=AFF_RENDEZ_VOUS&amp;idModule=menu.Affaires&amp;idPosMenu=AFF_RENDEZ_VOUS&amp;idModule=menu.Affaires">Mes rendez-vous</a>
+ </li>
+ <li id=AFF_IMPLIQUEES><a href="https://aravis.zz.gdh.local/aravisweb/index/viewAccess.jsf?baseMenu=menu.Affaires&amp;entityName=evafAffaire&amp;queryName=MENU_EVAFD0_AFFAIRES_INTERVENU&amp;pageName=MENU_EVAFD0_AFFAIRES_INTERVENU_LIST&amp;currentApp=SUIVI_AFFAIRES&amp;idPosMenu=AFF_IMPLIQUEES&amp;idModule=menu.Affaires&amp;idPosMenu=AFF_IMPLIQUEES&amp;idModule=menu.Affaires">Affaires où je suis intervenu</a>
+ </li>
+ <li id=TOUTES_AFFAIRES><a href="https://aravis.zz.gdh.local/aravisweb/index/viewAccess.jsf?baseMenu=menu.Affaires&amp;entityName=evafAffaire&amp;queryName=MENU_EVAFD0_CONSULTATION_DE_TOUTES_LES_AFFAIRES&amp;pageName=MENU_EVAFD0_CONSULTATION_DE_TOUTES_LES_AFFAIRES_LIST&amp;currentApp=SUIVI_AFFAIRES&amp;idPosMenu=TOUTES_AFFAIRES&amp;idModule=menu.Affaires&amp;idPosMenu=TOUTES_AFFAIRES&amp;idModule=menu.Affaires">Consultation de toutes les affaires</a>
+ </li>
+ </ul>
+ </li>
+ <li class=ui-menu-item id=menu-AFF_TACHES_DELEG>
+ <a id=379 href="https://aravis.zz.gdh.local/aravisweb/evevEvenement/EVEVD0_COMMENTAIRE_AGENCE_VIRT_REPONDRE.jsf?vID=c3e21fe8-7097-456f-96f4-c58271115473#" class=ui-corner-all data-title=Délégation><span class=acg-ui-icon></span><span class=acg-ui-icon></span><span>Délégation</span></a>
+ <ul class=sf-hidden>
+ 
+ 
+ 
+ </ul>
+ </li>
+ <li class=ui-menu-item id=menu-AFF_SERVICE>
+ <a id=336 href="https://aravis.zz.gdh.local/aravisweb/evevEvenement/EVEVD0_COMMENTAIRE_AGENCE_VIRT_REPONDRE.jsf?vID=c3e21fe8-7097-456f-96f4-c58271115473#" class=ui-corner-all data-title="Mon service"><span class=acg-ui-icon></span><span class=acg-ui-icon></span><span>Mon service</span></a>
+ <ul class=sf-hidden>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ </ul>
+ </li>
+ <li class=ui-menu-item id=menu-AFF_CHAP_MON_PAT>
+ <a id=570 href="https://aravis.zz.gdh.local/aravisweb/evevEvenement/EVEVD0_COMMENTAIRE_AGENCE_VIRT_REPONDRE.jsf?vID=c3e21fe8-7097-456f-96f4-c58271115473#" class=ui-corner-all data-title="Mon patrimoine"><span class=acg-ui-icon></span><span class=acg-ui-icon></span><span>Mon patrimoine</span></a>
+ <ul class=sf-hidden>
+ 
+ 
+ </ul>
+ </li>
+ <li class=ui-menu-item id=menu-AUTRE_TRT>
+ <a id=321 href="https://aravis.zz.gdh.local/aravisweb/evevEvenement/EVEVD0_COMMENTAIRE_AGENCE_VIRT_REPONDRE.jsf?vID=c3e21fe8-7097-456f-96f4-c58271115473#" class=ui-corner-all data-title="Gestion élargie"><span class=acg-ui-icon></span><span class=acg-ui-icon></span><span>Gestion élargie</span></a>
+ <ul class=sf-hidden>
+ 
+ 
+ 
+ 
+ </ul>
+ </li>
+ <li class=ui-menu-item id=menu-SUIVI_AFFAIRES_ADMIN>
+ <a id=247 href="https://aravis.zz.gdh.local/aravisweb/evevEvenement/EVEVD0_COMMENTAIRE_AGENCE_VIRT_REPONDRE.jsf?vID=c3e21fe8-7097-456f-96f4-c58271115473#" class=ui-corner-all data-title=Administration><span class=acg-ui-icon></span><span class=acg-ui-icon></span><span>Administration</span></a>
+ <ul class=sf-hidden>
+ 
+ 
+ 
+ </ul>
+ </li>
+ 
+ </ul>
+ </div>
+
+ <div class="aw-menu-helper-ariane sf-hidden"></div>
+ 
+ <div id=modalNotAuthorized style=display:none>
+ 
+ 
+ </div>
+ 
+ <div id=modalGraph style=display:none>
+ 
+ 
+ </div>
+ 
+ <div id=modalCS style=display:none>
+ 
+ 
+ </div>
+</form>
+ 
+ <div class=clear></div>
+ 
+ <div id=modalErreurMenu class="modal-prototype sf-hidden"></div>
+ 
+ <div id=modalConfirm class="modal-prototype sf-hidden"></div>
+ 
+
+ 
+ 
+ <span id=modalYesButton class="modal-prototype sf-hidden" title=Oui></span>
+ <span id=modalNoButton class="modal-prototype sf-hidden" title=Non></span>
+ 
+ 
+ <span id=modalDirtyQuitButton class="modal-prototype sf-hidden" title=Quitter></span>
+ <span id=modalDirtyStayButton class="modal-prototype sf-hidden" title="Rester sur la page"></span>
+ <div id=modalConfirmDirty class="modal-prototype sf-hidden" title="Quitter sans enregistrer ?">
+ 
+ </div>
+ 
+ 
+ <div id=modalWorkInProgress class="modal-prototype sf-hidden" title="Veuillez patienter.">
+ 
+ </div>
+ 
+ <div class=content>
+<form id=mainForm name=mainForm method=post action=https://aravis.zz.gdh.local/aravisweb/evevEvenement/EVEVD0_COMMENTAIRE_AGENCE_VIRT_REPONDRE.jsf class=clear_fix enctype=application/x-www-form-urlencoded>
+ 
+ <div class=inner-content>
+ 
+ <div class=group id=i0_evevd0CommentaireAgenceVirtRepondre>
+ <div class="col col-1">
+ <div class=group id=i0_evevd0CommentaireCrudN0>
+ <div class="col col-1">
+ <div class=form_container id=i0_evafd0EnteteBandeau>
+ <div class=form_title>Affaire : 648939 - HENRI BECQUEREL 
+ </div>
+ <div class=group>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ <div class="col col-1">
+ <div class=group id=i0_evevd0CommentaireAgenceVirtRepondreN4>
+ <div class="col col-1">
+ <div class=form_container id=i0_evevd0CommentaireAgenceVirtRepondreN1>
+ <div class=form_title>Réponse bailleur visible sur l'agence virtuelle par le seul client
+ </div>
+ <div class=group>
+ <div class="col col-1">
+ <div class=col-label><label id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN1_evevEvenement_wEvevRappelCommentairePourReponse_lbl>Rappel du commentaire d'origine</label>
+ </div>
+ <div class=col-value><textarea id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN1_evevEvenement_wEvevRappelCommentairePourReponse name=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN1_evevEvenement_wEvevRappelCommentairePourReponse class="ui-inputfield ui-inputtextarea ui-widget ui-state-default ui-corner-all ui-state-disabled aw-grand" disabled aria-disabled=true cols=20 rows=3 placeholder maxlength=0 data-errorfield=evevEvenement.wEvevRappelCommentairePourReponse role=textbox aria-readonly=false aria-multiline=true style=height:110px>Bonjour,
+J'ai reçu la quittance de loyer du mois d'août dernier hier.
+Je ne comprend pas, mon loyer a augmenté et il y a une nouvelle ligne ("SLS").
+Je ne sais pas à quoi cela correspond et pourquoi elle est apparue.
+Merci à vous pour vos lumières et explications.
+ </textarea>
+ </div>
+ </div>
+ <div class="col col-1">
+ <div class=col-label><label id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN1_evevEvenement_wAvDestinataireComBailleur_lbl>Destinataire exclusif</label>
+ </div>
+ <div class=col-value><input id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN1_evevEvenement_wAvDestinataireComBailleur name=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN1_evevEvenement_wAvDestinataireComBailleur type=text value="Tiers: 121284 - ORANGE" class="ui-inputfield ui-inputtext ui-widget ui-state-default ui-corner-all ui-state-disabled" disabled aria-disabled=true data-errorfield=evevEvenement.wAvDestinataireComBailleur placeholder role=textbox aria-readonly=false>
+ </div>
+ </div>
+ <div class="col col-1">
+
+ </div>
+ <div class="col col-1">
+ <div class=group id=i0_evevd0CommentaireAgenceVirtRepondreN1N1>
+ <div class="col col-2">
+ <div class=col-label><label id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN1N1_evevEvenement_evevDate_lbl>Date</label>
+ </div>
+ <div class=col-value><span id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN1N1_evevEvenement_evevDate class="ui-calendar ui-trigger-calendar" data-errorfield=evevEvenement.evevDate placeholder><input id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN1N1_evevEvenement_evevDate_input name=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN1N1_evevEvenement_evevDate_input type=text value=08/09/2025 class="ui-inputfield ui-widget ui-state-default ui-corner-all ui-state-disabled hasDatepicker" maxlength=10 placeholder data-errorfield=evevEvenement.evevDate disabled aria-disabled=true role=textbox aria-readonly=false>
+    </span>
+ </div>
+ </div>
+ <div class="col col-2">
+ </div>
+ </div>
+ </div>
+ <div class="col col-1">
+ <div class=group id=i0_evevd0CommentaireCrudN1N2>
+ <div class="col col-1">
+ </div>
+ <div class="col col-1">
+ <div class=col-label><label id=mainForm:i0_evevd0CommentaireCrudN1N2_evevEvenement_wEvevDescriptionTotalSu_lbl>Commentaire</label><label class=mandatory_label>*</label>
+ </div>
+ <div class=col-value><textarea id=mainForm:i0_evevd0CommentaireCrudN1N2_evevEvenement_wEvevDescriptionTotalSu name=mainForm:i0_evevd0CommentaireCrudN1N2_evevEvenement_wEvevDescriptionTotalSu class="ui-inputfield ui-inputtextarea ui-widget ui-state-default ui-corner-all aw-grand" cols=20 rows=3 placeholder maxlength=8000 data-errorfield=evevEvenement.wEvevDescriptionTotalSu role=textbox aria-disabled=false aria-readonly=false aria-multiline=true style=height:300px></textarea>
+ </div>
+ </div>
+ </div>
+ </div>
+ <div class="col col-1">
+ <div class=group id=i0_evevd0CommentaireAvCrudN1N2N1>
+ <div class="col col-1">
+ <div class=col-label><label id=mainForm:i0_evevd0CommentaireAvCrudN1N2N1_evevEvenement_wEvevEnvoiMailAv_lbl>Prévenir</label>
+ </div>
+ <div class=col-value><table id=mainForm:i0_evevd0CommentaireAvCrudN1N2N1_evevEvenement_wEvevEnvoiMailAv data-errorfield=evevEvenement.wEvevEnvoiMailAv>
+ <tbody><tr data-errorfield=evevEvenement.wEvevEnvoiMailAv>
+<td data-errorfield=evevEvenement.wEvevEnvoiMailAv class=td_radio>
+<input type=radio checked name=mainForm:i0_evevd0CommentaireAvCrudN1N2N1_evevEvenement_wEvevEnvoiMailAv id=mainForm:i0_evevd0CommentaireAvCrudN1N2N1_evevEvenement_wEvevEnvoiMailAv:0 value=A data-errorfield=evevEvenement.wEvevEnvoiMailAv><label for=mainForm:i0_evevd0CommentaireAvCrudN1N2N1_evevEvenement_wEvevEnvoiMailAv:0 data-errorfield=evevEvenement.wEvevEnvoiMailAv> Accusé réception</label></td>
+<td data-errorfield=evevEvenement.wEvevEnvoiMailAv class=td_radio>
+<input type=radio name=mainForm:i0_evevd0CommentaireAvCrudN1N2N1_evevEvenement_wEvevEnvoiMailAv id=mainForm:i0_evevd0CommentaireAvCrudN1N2N1_evevEvenement_wEvevEnvoiMailAv:1 value=M data-errorfield=evevEvenement.wEvevEnvoiMailAv><label for=mainForm:i0_evevd0CommentaireAvCrudN1N2N1_evevEvenement_wEvevEnvoiMailAv:1 data-errorfield=evevEvenement.wEvevEnvoiMailAv> Mail</label></td>
+ </tr>
+</table>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ <div class="col col-1">
+ <div class=group id=i0_evevd0CommentaireAgenceVirtRepondreN3>
+ <div class="col col-1">
+ <div class=form_container id=i0_evevd0CommentaireAgenceVirtRepondreN2>
+ <div class=form_title>Document
+ </div>
+ <div class=group>
+ <div class="col col-1">
+ <div class=group id=i0_evevd0CommentaireAgenceVirtRepondreN2N1>
+ <div class="col col-2">
+ <div class=col-label><label id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2N1_evevEvenement_wGvdcStockageSu_lbl>Stockage</label>
+ </div>
+ <div class=col-value><input id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2N1_evevEvenement_wGvdcStockageSu name=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2N1_evevEvenement_wGvdcStockageSu type=text value="Base documentaire" class="ui-inputfield ui-inputtext ui-widget ui-state-default ui-corner-all ui-state-disabled" disabled aria-disabled=true data-errorfield=evevEvenement.wGvdcStockageSu placeholder role=textbox aria-readonly=false>
+ </div>
+ </div>
+ <div class="col col-2">
+ <div class=col-label><label id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2N1_evevEvenement_wGvdcFichierSu_lbl>Fichier</label>
+ </div>
+ <div class=col-value><span class=uploadFile><span id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2N1_evevEvenement_wGvdcFichierSu-wrapper class=link>
+ <span style=display:none class=aw_file id=i0_evevd0CommentaireAgenceVirtRepondreN2N1_evevEvenement_wGvdcFichierSu-path>
+ </span></span>
+ <a href="https://aravis.zz.gdh.local/aravisweb/evevEvenement/EVEVD0_COMMENTAIRE_AGENCE_VIRT_REPONDRE.jsf?vID=c3e21fe8-7097-456f-96f4-c58271115473#" class=link-attach id=i0_evevd0CommentaireAgenceVirtRepondreN2N1_evevEvenement_wGvdcFichierSu-ajoutFichierBtn></a>
+ <span style=display:none id=i0_evevd0CommentaireAgenceVirtRepondreN2N1_evevEvenement_wGvdcFichierSu-aw_link-actions-container2 class=link-actions-container>
+ 
+ 
+ </span>
+ 
+ </span>
+ </div>
+ </div>
+ </div>
+ </div>
+ <div class="col col-1">
+ <div class=col-label><label id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_evevEvenement_wGvdcLibelle_lbl>Libellé</label>
+ </div>
+ <div class=col-value><input id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_evevEvenement_wGvdcLibelle name=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_evevEvenement_wGvdcLibelle type=text class="ui-inputfield ui-inputtext ui-widget ui-state-default ui-corner-all" maxlength=60 data-errorfield=evevEvenement.wGvdcLibelle placeholder role=textbox aria-disabled=false aria-readonly=false value>
+ </div>
+ </div>
+ <div class="col col-1">
+ <div class=col-label><label id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_evevEvenement_wGvdcDateFinDeValidite_lbl>Fin de validité</label>
+ </div>
+ <div class=col-value><span id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_evevEvenement_wGvdcDateFinDeValidite class="ui-calendar ui-trigger-calendar" data-errorfield=evevEvenement.wGvdcDateFinDeValidite placeholder><input id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_evevEvenement_wGvdcDateFinDeValidite_input name=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_evevEvenement_wGvdcDateFinDeValidite_input type=text class="ui-inputfield ui-widget ui-state-default ui-corner-all hasDatepicker" maxlength=10 placeholder data-errorfield=evevEvenement.wGvdcDateFinDeValidite role=textbox aria-disabled=false aria-readonly=false value>
+</span>
+ 
+ </div>
+ </div>
+ <div class="col col-1">
+ <div class=col-label><label id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_0_evevd0RGvfmd0_lbl>Famille</label>
+ </div>
+ <div class=col-value><div id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_0_evevd0RGvfmd0 class="ui-selectonemenu ui-widget ui-state-default ui-corner-all" role=combobox aria-haspopup=true aria-expanded=false aria-owns=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_0_evevd0RGvfmd0_items style=min-width:22px><div class=ui-helper-hidden-accessible><input id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_0_evevd0RGvfmd0_focus name=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_0_evevd0RGvfmd0_focus type=text autocomplete=off aria-expanded=false aria-autocomplete=list aria-activedescendant=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_0_evevd0RGvfmd0_0 aria-describedby=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_0_evevd0RGvfmd0_0 aria-disabled=false value></div><div class=ui-helper-hidden-accessible><select id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_0_evevd0RGvfmd0_input name=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_0_evevd0RGvfmd0_input tabindex=-1 aria-hidden=true><option value selected data-escape=true><option value=gvmeMetier:::SAFFAIRE;;;gvfmFamille:::SDSU;;;gvstCleSociete:::L1 data-escape=true>DSU -Courriers SAW<option value=gvmeMetier:::SAFFAIRE;;;gvfmFamille:::STESTSMO;;;gvstCleSociete:::L1 data-escape=true>TESTSMO -pour pb visu PJ</select></div><label id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_0_evevd0RGvfmd0_label class="ui-selectonemenu-label ui-inputfield ui-corner-all">&nbsp;</label>
+    </div>
+ </div>
+ </div>
+ <div class="col col-1">
+ <div class=col-label><label id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_1_evevd0RGvndd0_lbl>Type de document</label>
+ </div>
+ <div class=col-value><div id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_1_evevd0RGvndd0 class="ui-selectonemenu ui-widget ui-state-default ui-corner-all" role=combobox aria-haspopup=true aria-expanded=false aria-owns=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_1_evevd0RGvndd0_items style=min-width:22px><div class=ui-helper-hidden-accessible><input id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_1_evevd0RGvndd0_focus name=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_1_evevd0RGvndd0_focus type=text autocomplete=off aria-expanded=false aria-autocomplete=list aria-activedescendant=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_1_evevd0RGvndd0_0 aria-describedby=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_1_evevd0RGvndd0_0 aria-disabled=false value></div><div class=ui-helper-hidden-accessible><select id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_1_evevd0RGvndd0_input name=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_1_evevd0RGvndd0_input tabindex=-1 aria-hidden=true><option value selected data-escape=true><option value=gvndTypeDocument:::SNV1-COU1;;;gvmeMetier:::SAFFAIRE;;;gvstCleSociete:::L1 data-escape=true>Base documentaire-NV1-COU1 -Courrier AR PLAIGNANT RAPPEL AU BAIL Suite constat Troubl<option value=gvndTypeDocument:::SNV1-COU2;;;gvmeMetier:::SAFFAIRE;;;gvstCleSociete:::L1 data-escape=true>Base documentaire-NV1-COU2 -Courrier RAPPEL AU BAIL Suite constat Troubles</select></div><label id=mainForm:i0_evevd0CommentaireAgenceVirtRepondreN2_1_evevd0RGvndd0_label class="ui-selectonemenu-label ui-inputfield ui-corner-all">&nbsp;</label>
+    </div>
+ </div>
+ </div>
+ <div class="col col-1"><input id=mainForm:submitComboEvevd0RGvfmd0 type=submit name=mainForm:submitComboEvevd0RGvfmd0 value=Submit1 style=display:none>
+ 
+ </div>
+ </div>
+ </div>
+ </div>
+ <div class="col col-1">
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ <input id=mainForm:refreshEntity type=submit name=mainForm:refreshEntity value=Refresh style=display:none>
+ <div class="actions bottomActions sf-hidden">
+ 
+ </div>
+ <span id=mainForm:customDataGroup>
+ <div id=customDataContainer style=display:none>
+ </div></span><span id=mainForm:downloader></span></div><div id=mainForm:messages></div>
+ <div id=mainForm:ajax_loader class=aw_ajax_loader><div id=mainForm:ajax_loader_start style=display:none></div></div><input id=mainForm:launcherButton type=submit name=mainForm:launcherButton value="Launch Action" style=display:none><span id=mainForm:newConversationWrapper></span>
+ 
+</form>
+ </div>
+ <div class="footer png_fix sf-hidden">
+<form id=j_idt837 name=j_idt837 method=post action=https://aravis.zz.gdh.local/aravisweb/evevEvenement/EVEVD0_COMMENTAIRE_AGENCE_VIRT_REPONDRE.jsf enctype=application/x-www-form-urlencoded class=sf-hidden>
+ 
+ <ul class=sf-hidden>
+ 
+ <li class=sf-hidden>
+ 
+ </li>
+ 
+ 
+ </ul>
+</form>
+ </div>
+ </div>
+
+ </body>
+ </html>
