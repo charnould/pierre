@@ -8,3 +8,5 @@ temp/
 .env.test
 .env.local
 .private.md
+*.sqlite
+assets/default/files/extension/

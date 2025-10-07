@@ -8,3 +8,4 @@ temp/
 .env.test
 .env.local
 .private.md
+assets/default/files/extension/
