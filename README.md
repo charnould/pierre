@@ -13,7 +13,9 @@ Plus concrètement, `PIERRE` c'est à la fois :
 
 2. Une **base de connaissances** en **open data** ([consultation](./knowledge/community)), utilisable indépendamment du chatbot et indispensable à la mise en oeuvre de toutes approches « Retrieval Augmented Generation » ([RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation)) via un LLM.
 
-→ [Télécharger une présentation de `PIERRE`](./docs/assets/`PIERRE`-Présentation.pdf) (PDF · 2,7 Mo)
+3. Une **extension pour navigateur** (_pré-alpha_) qui permet d'injecter de l'intelligence artificielle dans des applicatifs historiques (Aravis™, Ikos™...) et permet — par exemple — de répondre directement aux locataires depuis une agence virtuelle ou encore de générer un courrier postal.
+
+<!-- → [Télécharger une présentation de `PIERRE`](./docs/assets/`PIERRE`-Présentation.pdf) (PDF · 2,7 Mo) -->
 
 ## Sommaire
 
@@ -48,6 +50,9 @@ Plus concrètement, `PIERRE` c'est à la fois :
     - [Via une iframe](#via-une-iframe)
 - [Administrer `PIERRE` avec une interface graphique](#administrer-pierre-avec-une-interface-graphique)
   - [Apprendre à `PIERRE` des connaissances (self-hosting)](#apprendre-%C3%A0-pierre-des-connaissances-self-hosting)
+- [Utiliser l'extension pour navigateur de `PIERRE`](#utiliser-lextension-pour-navigateur-de-pierre)
+  - [Que permet cette extension pour navigateur (Chrome)](#que-permet-cette-extension-pour-navigateur-chrome)
+  - [Télécharger, installer et paramétrer l'extension](#t%C3%A9l%C3%A9charger-installer-et-param%C3%A9trer-lextension)
 - [Licence](#licence)
 
 <!-- tocstop -->
@@ -368,6 +373,19 @@ Pour savoir si cette durée est acceptable (`PIERRE` n'a en effet plus connaissa
     - Cocher `Make calls to your Inference Endpoints`
     - Cliquer sur `Create token`
   - Renseigner `HUGGINGFACE_ENDPOINT`et `HUGGINGFACE_TOKEN` dans `.env.production` ou `.env.staging` avec les valeurs correspondantes.
+
+# Utiliser l'extension pour navigateur de `PIERRE`
+
+> [!IMPORTANT]
+> Il s'agit d'une fonctionnalité en alpha. Pour l'utiliser, il convient d'être parvenu à faire fonctionner `PIERRE` en local (pour tester) ou sur un serveur de production (pour déployer).
+
+## Que permet cette extension pour navigateur (Chrome)
+
+Les collaborateurs des bailleurs sociaux passent une majorité de leur temps à manipuler des applicatifs historiques (ou _legacy_) tels ACG/Aravis™ ou encore SOPRA/Ikos™. L'extension `PIERRE` permet d'injecter de l'IA directement dans ses applicatifs historiques pour — par exemple — générer une réponse à un locataire depuis une agence virtuelle ou encore générer un courrier postal au format `.docx`.
+
+## Télécharger, installer et paramétrer l'extension
+
+DOCUMENTATION À FINALISER.
 
 # Licence
 
