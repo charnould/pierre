@@ -4,6 +4,7 @@ import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
 import { secureHeaders } from 'hono/secure-headers'
 import { setup } from './utils/setup'
+import { cors } from 'hono/cors'
 
 import { controller as get_admin } from './controllers/GET.admin'
 import { controller as get_ai } from './controllers/GET.ai'
@@ -30,6 +31,8 @@ await setup()
 await is_ollama_ready()
 
 const app = new Hono()
+
+app.use('*', cors())
 
 // Configure the secure headers for the app.
 // This allows other websites to iframe PIERRE
