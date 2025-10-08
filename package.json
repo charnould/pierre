@@ -83,9 +83,11 @@
     "oxlint": "^1.28.0",
     "prettier-plugin-embed": "^0.5.0",
     "prettier-plugin-sql": "^0.19.2",
-    "prettier-plugin-tailwindcss": "^0.7.1",
-    "puppeteer": "^24.30.0",
-    "tailwindcss": "^4.1.17",
+    "prettier-plugin-tailwindcss": "^0.6.14",
+    "puppeteer": "^24.24.0",
+    "react-dom": "^19.2.0",
+    "react-draggable": "^4.5.0",
+    "tailwindcss": "^4.1.14",
     "typescript": "^5.9.3"
   },
   "prettier": {
