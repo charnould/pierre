@@ -156,7 +156,7 @@ Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour
 
 1. Installer `WSL` et vérifier sa bonne installation ([instructions](https://learn.microsoft.com/fr-fr/windows/wsl/install)).
 2. Installer `Ollama` (≥ `0.12.3`) et vérifier sa bonne installation ([instructions](http://ollama.com)), puis saisir dans votre terminal `ollama pull bge-m3` pour télécharger le modèle `bge-m3`.
-3. Installer `Bun` (≥ `1.2.23`) et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
+3. Installer `Bun` (≥ `1.3.0`) et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
 4. Installer `SQlite3` et vérifier sa bonne installation ([instructions](https://www.sqlite.org/download.html)).
 5. Forker/cloner le présent dépôt.
 6. Lancer `bun install` dans votre terminal pour installer les dépendances.
@@ -174,7 +174,7 @@ Pour déployer `PIERRE` sur un serveur, il est indispensable d'être parvenu à 
 1. Installer `Docker Desktop` et le lancer ([instructions](https://www.docker.com/products/docker-desktop/)). `Docker` gérera la conteneurisation.
 2. Lancer `gem install kamal` pour installer `Kamal` (≥`2.7.0`) qui gérera le déploiement ([instructions](https://kamal-deploy.org/docs/installation/)).
 3. Disposer d'un compte `GitHub` et [générer une clef](https://github.com/settings/tokens). `GitHub` sera le registre de conteneurs lors du déploiement.
-4. Disposer d'un VPS avec `GPU` (par exemple `GEX44` d'[Hetzner](https://www.hetzner.com/dedicated-rootserver/gex44/)) et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe).
+4. Disposer d'un VPS avec `GPU` (par exemple `GEX44` d'[Hetzner](https://www.hetzner.com/dedicated-rootserver/gex44/)) et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe). Les ports `80` (`http`) et `443` (`https`) doivent impérativement être ouverts.
 5. Finaliser les modifications du fichier `.env.production` que vous avez créé précédemment.
 6. Saississez dans votre terminal `bun --env-file=.env.production run kamal setup`.
 7. Saississez dans votre terminal `bun --env-file=.env.production run kamal server exec "docker exec ollama ollama pull bge-m3"`.
