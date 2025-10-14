@@ -15,7 +15,7 @@ registry:
     - REGISTRY_TOKEN
 
 ssh:
-  port: <%= ENV['PORT'] %>
+  port: <%= ENV['SSH_PORT'] %>
 
 volumes:
   - 'datastores:/app/datastores/'
