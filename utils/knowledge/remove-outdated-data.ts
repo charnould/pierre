@@ -1,108 +1,124 @@
-import { Database } from 'bun:sqlite'
 import { $ } from 'bun'
-import * as sqliteVec from 'sqlite-vec'
-import { db } from '../database'
+import { Database } from 'bun:sqlite'
 import type { Knowledge } from './_run'
+import { Metadata } from './store-metadata'
+import * as sqlite_vec from 'sqlite-vec'
+import { stem } from '../stem-text'
 
 /**
- * Removes outdated data from the knowledge base and reinitializes databases if necessary.
+ * Removes outdated or irrelevant knowledge data from disk and proprietary SQLite datastore.
  *
- * @param knowledge - An object containing information about the knowledge base.
- * @param knowledge.community - A boolean indicating if community data should be removed.
- * @param knowledge.proprietary - A boolean indicating if proprietary data should be removed.
+ * This function performs cleanup for two categories of knowledge:
+ * 1. Community knowledge:
+ *    - Removes temporary datastore directory for the current service.
+ *    - Removes the `./knowledge/wikipedia` folder and `./knowledge/data.sqlite`.
+ *    - Calls `bun run utils/setup.ts` to rebuild community knowledge artifacts.
+ *    - Ensures a custom SQLite library is used on macOS via `Database.setCustomSQLite(...)`.
  *
- * @returns A promise that resolves when the cleaning and reinitialization process is complete.
+ * 2. Proprietary knowledge:
+ *    - Opens an SQLite connection at `datastores/${Bun.env.SERVICE}/proprietary.sqlite`.
+ *    - Loads `./datastores/${Bun.env.SERVICE}/metadata.json` (an array of Metadata entries).
+ *    - Step 1: Removes any chunks and their vectors from the database whose `chunk_file`
+ *      is no longer present in the metadata file.
+ *    - Step 2: Removes chunks and vectors for files listed in metadata with `need_rebuild === true`.
+ *    - Uses batched SQL deletes and concurrency (Promise.all) for per-file deletions.
  *
- * @throws Will log an error message if there is an issue during the cleaning or database operations.
+ * @param knowledge - An object indicating which knowledge sets to process:
+ *   - `knowledge.community`: when true, refresh community knowledge artifacts.
+ *   - `knowledge.proprietary`: when true, sync the proprietary SQLite datastore with metadata.
+ *
+ * @returns A Promise that resolves to void when cleanup completes. Errors are logged and suppressed;
+ *          the promise will resolve even if some cleanup operations failed (the function catches exceptions).
+ *
+ * @remarks
+ * - This operation is destructive.
+ *   Ensure you have backups or are confident in the metadata before running.
+ *
  */
 export const remove_outdated_data = async (knowledge: Knowledge) => {
   try {
     await $`rm -rf ./datastores/${Bun.env.SERVICE}/temp`
 
-    if (knowledge.community === true) {
-      // Builtin SQLite library on MacOS doesn't allow extensions
-      Database.setCustomSQLite('/opt/homebrew/opt/sqlite/lib/libsqlite3.dylib')
-
+    // COMMUNITY KNOWLEDGE
+    if (knowledge.community) {
+      Database.setCustomSQLite('/opt/homebrew/opt/sqlite/lib/libsqlite3.dylib') // IMPORTANT: Builtin SQLite on MacOS doesn't allow extensions
       await $`rm -rf ./knowledge/wiki`
       await $`rm -rf ./knowledge/data.sqlite`
-      initialize_database({ proprietary: false, community: true })
+      await $`bun run utils/setup.ts`
     }
 
-    if (knowledge.proprietary === true) {
-      let database = db('proprietary') as Database
+    // PROPRIETARY KNOWLEDGE
+    if (knowledge.proprietary) {
+      const db = new Database(`datastores/${Bun.env.SERVICE}/proprietary.sqlite`)
+      sqlite_vec.load(db)
 
-      database.run(`
-        PRAGMA foreign_keys = OFF;
-        DROP TABLE IF EXISTS chunks;
-        DROP TABLE IF EXISTS stems;
-        DROP TABLE IF EXISTS vectors;
-        VACUUM;
-        PRAGMA foreign_keys = ON;
-        `)
+      const metadata: Metadata[] = await Bun.file(
+        `./datastores/${Bun.env.SERVICE}/metadata.json`
+      ).json()
 
-      initialize_database({ proprietary: true, community: false })
+      // STEP 1.
+      // Remove proprietary chunks that are no longer present in the metadata
+      //
+      // Objective:
+      // Go through all files stored in proprietary.sqlite and delete any chunk (both
+      // in `chunks` and its associated vector in `vectors`) if it is no longer listed
+      // in the latest metadata file. This ensures that the database stays in sync
+      // with the current set of valid files
+
+      // Fetch all unique files currently stored in the database
+      const chunk_files = db.query(`SELECT DISTINCT chunk_file FROM chunks`).all().flat()
+
+      for (const chunk_file of chunk_files) {
+        // Check if this file still exists in the metadata
+        const exists = metadata.some((m) => m.filename === chunk_file.chunk_file)
+        if (exists) continue
+
+        // If the file is no longer listed, remove it
+        db.query(`DELETE FROM chunks WHERE chunk_file = ?;`).run(chunk_file.chunk_file)
+        db.query(`DELETE FROM vectors WHERE chunk_file = ?;`).run(chunk_file.chunk_file)
+      }
+
+      // STEP 2.
+      // Remove outdated chunks
+      //
+      // Objective:
+      // Get unique filenames that need rebuild from `metadata.json
+      // and delete related entries from knowledge database
+
+      // prettier-ignore
+      const files_to_rebuild = [ ...new Set(metadata.filter((m) => m.need_rebuild).map((m) => m.filename)) ]
+      for (const filename of files_to_rebuild) {
+        db.query(`DELETE FROM chunks WHERE chunk_file = ?`).run(filename)
+        db.query(`DELETE FROM vectors WHERE chunk_file = ?;`).run(filename)
+      }
+
+      // STEP 3.
+      // Rebuild FTS5/BM25 Table + Vaccum DB
+      //
+      // Objective:
+      // Delete `stem` table
+      // For each chunk, insert its stem into `stems` table
+      // Finally, vacuum database
+
+      db.query('DELETE FROM stems').run()
+
+      const chunks = db.prepare('SELECT rowid, chunk_text FROM chunks').all() as Array<{
+        rowid: number
+        chunk_text: string
+      }>
+
+      db.transaction(() => {
+        const insert = db.prepare('INSERT INTO stems(rowid, chunk_stem) VALUES (?, ?)')
+        for (const { rowid, chunk_text } of chunks) insert.run(rowid, stem(chunk_text))
+      })
+
+      db.query(`PRAGMA foreign_keys = OFF; VACUUM; PRAGMA foreign_keys = ON;`).run()
     }
 
     console.log('✅ Outdated data removed')
     return
   } catch (e) {
-    console.log('❌ Outadate data removal or database failed')
+    console.log('❌ Outdated data removal or database failed')
     console.log(e)
   }
-}
-
-/**
- * Initializes the database based on the provided knowledge configuration.
- *
- * This function sets up SQLite databases with specific schemas for storing chunks,
- * stems, and vectors. It uses the `sqliteVec` extension to load vector support.
- *
- * @param knowledge - An object containing configuration flags for community and proprietary databases.
- * @returns Returns when the databases are successfully created.
- *
- * @throws Will log an error message if there is an issue during database creation.
- *
- */
-export const initialize_database = (knowledge: Knowledge) => {
-  /**
-   * Initializes a SQLite database at the specified file path, creates required tables,
-   * and loads the sqliteVec extension. The database schema includes:
-   * - `chunks`: Stores chunk metadata and text.
-   * - `stems`: Full-text search virtual table for chunk stems.
-   * - `vectors`: Vector search virtual table for chunk vectors.
-   *
-   * @param path - The file path to the SQLite database.
-   * @returns The initialized Database instance.
-   */
-  const initialize_db = (path: string) => {
-    const db = new Database(path)
-    sqliteVec.load(db)
-
-    db.run(`
-      CREATE TABLE chunks (
-        chunk_hash TEXT,
-        chunk_file TEXT,
-        chunk_access TEXT,
-        chunk_tokens NUMBER DEFAULT NULL,
-        chunk_text TEXT NOT NULL
-      );
-      
-      CREATE VIRTUAL TABLE stems USING FTS5(chunk_stem);
-
-      CREATE VIRTUAL TABLE vectors USING vec0(
-        chunk_hash TEXT,
-        chunk_file TEXT,
-        chunk_access TEXT PARTITION KEY,
-        chunk_text TEXT,
-        chunk_vector FLOAT[1024]
-      );`)
-
-    return db
-  }
-
-  if (knowledge.community) initialize_db('./knowledge/data.sqlite')
-  if (knowledge.proprietary) initialize_db(`./datastores/${Bun.env.SERVICE}/proprietary.sqlite`)
-
-  console.log('✅ Databases hot and ready')
-  return
 }

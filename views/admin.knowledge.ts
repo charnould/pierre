@@ -44,7 +44,7 @@ export const view = (metadata: Metadata[]) => {
                   >Uploader des fichiers</span
                 >
                 <span class="block text-center font-mono text-[11px] text-white"
-                  >Uniquement .xlsx/docx/md</span
+                  >Uniquement .docx/xlsx/pdf/md</span
                 >
               </p>
 
@@ -52,7 +52,7 @@ export const view = (metadata: Metadata[]) => {
                 type="file"
                 id="files"
                 name="files"
-                accept=".docx, .xlsx, .md"
+                accept=".docx, .xlsx, .md, .pdf"
                 hidden
                 multiple
                 required
@@ -80,10 +80,10 @@ export const view = (metadata: Metadata[]) => {
         </div>
 
         <p class="mb-2 max-w-2xl text-sm">
-          Uniquement les fichiers Word (<span class="rounded bg-neutral-200 px-1 font-mono"
-            >.docx</span
-          >), Excel (<span class="rounded bg-neutral-200 px-1 font-mono">.xlsx</span>) et Markdown
-          (<span class="rounded bg-neutral-200 px-1 font-mono">.md</span>) sont acceptés.
+          Uniquement les fichiers <span class="rounded bg-neutral-200 px-1 font-mono">.docx</span>,
+          <span class="rounded bg-neutral-200 px-1 font-mono">.xlsx</span>,
+          <span class="rounded bg-neutral-200 px-1 font-mono">.pdf</span> et
+          <span class="rounded bg-neutral-200 px-1 font-mono">.md</span> sont acceptés.
         </p>
         <p class="mb-2 max-w-2xl text-sm">
           La présence d'un fichier

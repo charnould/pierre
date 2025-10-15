@@ -1,6 +1,5 @@
 import type { Context } from 'hono'
 import { execute_pipeline } from '../utils/knowledge/_run'
-import { encode_filename } from '../utils/knowledge/generate-hash'
 
 /**
  * Handles various actions related to file management and knowledge rebuilding.
@@ -28,15 +27,13 @@ export const controller = async (c: Context) => {
     // CASE 1: User wants to upload files
     if (action === 'upload') {
       for (const file of files) {
-        await Bun.write(`datastores/${Bun.env.SERVICE}/files/${encode_filename(file.name)}`, file)
+        await Bun.write(`datastores/${Bun.env.SERVICE}/files/${file.name}`, file)
       }
     }
 
     // CASE 2: User wants to download a file
     if (action === 'download') {
-      const file = Bun.file(
-        `datastores/${Bun.env.SERVICE}/files/${encode_filename(filename as string)}`
-      )
+      const file = Bun.file(`datastores/${Bun.env.SERVICE}/files/${filename as string}`)
       const stream = file.stream()
 
       c.header('Content-Disposition', `attachment; filename="${filename}"`)
@@ -46,9 +43,7 @@ export const controller = async (c: Context) => {
 
     // CASE 3: User wants to delete a file
     if (action === 'destroy') {
-      await Bun.file(
-        `datastores/${Bun.env.SERVICE}/files/${encode_filename(filename as string)}`
-      ).delete()
+      await Bun.file(`datastores/${Bun.env.SERVICE}/files/${filename as string}`).delete()
     }
 
     // CASE 4: Force knwoledge rebuild
@@ -57,7 +52,7 @@ export const controller = async (c: Context) => {
     }
 
     return c.redirect('/a/knowledge')
-  } catch (error) {
-    console.log(error)
+  } catch (e) {
+    console.error(e)
   }
 }

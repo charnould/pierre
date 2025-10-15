@@ -12,9 +12,6 @@ export const setup = async () => {
   await $`mkdir -p datastores/${Bun.env.SERVICE}/files`
   await $`mkdir -p datastores/${Bun.env.SERVICE}/temp`
 
-  sqlite_vec.load(new Database('./knowledge/data.sqlite'))
-  sqlite_vec.load(new Database(`./datastores/${Bun.env.SERVICE}/proprietary.sqlite`))
-
   new Database(`datastores/${Bun.env.SERVICE}/datastore.sqlite`).run(`
     CREATE TABLE IF NOT EXISTS telemetry
       (
@@ -33,6 +30,56 @@ export const setup = async () => {
         email           TEXT PRIMARY KEY UNIQUE NOT NULL,
         role            TEXT NOT NULL,
         password_hash   TEXT NOT NULL
+      );
+    `)
+
+  const community = new Database('./knowledge/data.sqlite')
+  sqlite_vec.load(community)
+  community.run(`
+      CREATE TABLE IF NOT EXISTS chunks
+        (
+          chunk_hash TEXT,
+          chunk_file TEXT,
+          chunk_access TEXT,
+          chunk_build TEXT DEFAULT NULL,
+          chunk_tokens NUMBER DEFAULT NULL,
+          chunk_text TEXT NOT NULL
+        );
+      
+      CREATE VIRTUAL TABLE IF NOT EXISTS stems USING FTS5(chunk_stem);
+
+      CREATE VIRTUAL TABLE IF NOT EXISTS vectors USING vec0
+        (
+          chunk_hash TEXT,
+          chunk_file TEXT,
+          chunk_access TEXT PARTITION KEY,
+          chunk_text TEXT,
+          chunk_vector FLOAT[1024]
+        );
+    `)
+
+  const proprietary = new Database(`datastores/${Bun.env.SERVICE}/proprietary.sqlite`)
+  sqlite_vec.load(proprietary)
+  proprietary.run(`
+    CREATE TABLE IF NOT EXISTS chunks
+      (
+        chunk_hash TEXT,
+        chunk_file TEXT,
+        chunk_access TEXT,
+        chunk_build TEXT DEFAULT NULL,
+        chunk_tokens NUMBER DEFAULT NULL,
+        chunk_text TEXT NOT NULL
+      );
+      
+      CREATE VIRTUAL TABLE IF NOT EXISTS stems USING FTS5(chunk_stem);
+
+      CREATE VIRTUAL TABLE IF NOT EXISTS vectors USING vec0
+        (
+          chunk_hash TEXT,
+          chunk_file TEXT,
+          chunk_access TEXT PARTITION KEY,
+          chunk_text TEXT,
+          chunk_vector FLOAT[1024]
       );
     `)
 }

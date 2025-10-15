@@ -3,37 +3,29 @@ import { z } from 'zod'
 import { db } from '../database'
 import { generate_embeddings } from '../search-by-vectors'
 import type { Knowledge } from './_run'
-import { generate_hash } from './generate-hash'
+import { hash_filename } from './generate-hash'
 
-/**
- * Generates embeddings for the provided knowledge object.
- *
- * This function generates and saves embeddings for both `community` and `proprietary` knowledge types.
- * It queries the database for chunks and processes them accordingly.
- *
- * @param {Knowledge} knowledge - The knowledge object containing information about the type of knowledge.
- * @returns {Promise<void>} A promise that resolves when the embeddings have been successfully generated.
- *
- * @throws Will log an error message if the embeddings generation fails.
- */
-export const generate_vectors = async (knowledge: Knowledge): Promise<void> => {
+export const generate_vectors = async (knowledge: Knowledge, rebuild_at: string): Promise<void> => {
   try {
     // Generate and save `community` embeddings
     if (knowledge.community) {
       const database = db('community')
-      const chunks = database.query('SELECT * FROM chunks;').all() as Chunk[]
-      await go(chunks, database)
+      const chunks = database
+        .query(`SELECT * FROM chunks WHERE chunk_build = "${rebuild_at}";`)
+        .all() as Chunk[]
+      await go(chunks, database, knowledge)
     }
 
     // Generate and save `proprietary` embeddings
     if (knowledge.proprietary) {
       const database = db('proprietary')
-      const chunks = database.query('SELECT * FROM chunks;').all() as Chunk[]
-      await go(chunks, database)
+      const chunks = database
+        .query(`SELECT * FROM chunks WHERE chunk_build = "${rebuild_at}";`)
+        .all() as Chunk[]
+      await go(chunks, database, knowledge)
     }
 
-    console.log('✅ Embeddings computed')
-    console.log('✅ Knowledge rebuilt!')
+    console.info('✅ Embeddings computed')
     return
   } catch (e) {
     console.error('❌ Embeddings computing failed', e)
@@ -77,7 +69,7 @@ const go = async (chunks: Chunk[], database: Database) => {
           `
         )
         .run(
-          generate_hash(c.chunk_text),
+          hash_filename(c.chunk_text),
           c.chunk_file,
           c.chunk_access,
           c.chunk_text,
@@ -94,8 +86,11 @@ const go = async (chunks: Chunk[], database: Database) => {
  *
  * @throws {Error} Throws an error if the Hugging Face endpoint or token is invalid or missing.
  */
-export const wake_up_gpu = async () => {
+export const wake_up_gpu = async (knowledge: Knowledge) => {
   try {
+    // `store_metadata` applies only to proprietary knowledge
+    if (!knowledge.proprietary) return
+
     // Check if the Hugging Face endpoint and token are provided
     // and valid. If not, throw an error.
     const endpoint = z.url().safeParse(Bun.env.HUGGINGFACE_ENDPOINT)
@@ -113,7 +108,7 @@ export const wake_up_gpu = async () => {
         batch: false
       })
       if (response.error) {
-        console.log('💤 GPU is waking up. Retrying in 10 seconds.')
+        console.log('💤 GPU is waking up; retrying in 10 seconds')
         await Bun.sleep(10000)
       } else {
         is_awake = true
