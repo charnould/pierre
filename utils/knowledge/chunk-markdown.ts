@@ -5,7 +5,7 @@ import * as prettier from 'prettier'
 import { stem } from '../stem-text'
 import type { Knowledge } from './_run'
 import { count_tokens } from './chunk-json'
-import { generate_hash } from './generate-hash'
+import { hash_filename } from './generate-hash'
 import { SQL } from 'bun'
 import { Metadata } from './store-metadata'
 
@@ -13,7 +13,7 @@ import { Metadata } from './store-metadata'
  * Generates text chunks from markdown files
  * based on the provided knowledge object.
  */
-export const chunk_markdown = async (knowledge: Knowledge) => {
+export const chunk_markdown = async (knowledge: Knowledge, rebuild_at: string) => {
   let files: { id: string; filename: string; access: string }[] = []
 
   // Community knowledge
@@ -31,9 +31,11 @@ export const chunk_markdown = async (knowledge: Knowledge) => {
 
   // Proprietary knowledge
   if (knowledge.proprietary) {
-    const metadata_path = `datastores/${Bun.env.SERVICE}/temp/.metadata.json`
+    const metadata_path = `datastores/${Bun.env.SERVICE}/metadata.json`
     const metadata: Metadata[] = await Bun.file(metadata_path).json()
-    const valid_metadata = metadata.filter((item) => item.type !== 'xlsx')
+    const valid_metadata = metadata.filter(
+      (item) => item.type !== 'xlsx' && item.need_rebuild === true
+    )
     files.push(
       ...valid_metadata.map((file) => ({
         id: `datastores/${Bun.env.SERVICE}/temp/${file.id}.md`,
@@ -49,7 +51,7 @@ export const chunk_markdown = async (knowledge: Knowledge) => {
   }
 
   try {
-    for (const file of files) await chunk_and_save(file)
+    for (const file of files) await chunk_and_save(file, rebuild_at)
     console.log('✅ Text chunks generated')
   } catch (e) {
     console.error('❌ Text chunks generation failed')
@@ -62,7 +64,10 @@ export const chunk_markdown = async (knowledge: Knowledge) => {
  * chunks, and saves each chunk into the appropriate database based on the
  * file's access level.
  */
-const chunk_and_save = async (file: { id: string; filename: string; access: string }) => {
+const chunk_and_save = async (
+  file: { id: string; filename: string; access: string },
+  rebuild_at: string
+) => {
   // Attempt to load the file from the filesystem.
   // If the file doesn't exist, log an error and stop processing this file.
   const file_handle = Bun.file(file.id)
@@ -90,8 +95,9 @@ const chunk_and_save = async (file: { id: string; filename: string; access: stri
         INSERT INTO
           chunks ${sql({
           chunk_tokens: count_tokens(chunk),
-          chunk_hash: generate_hash(chunk),
+          chunk_hash: hash_filename(chunk),
           chunk_access: file.access,
+          chunk_build: rebuild_at,
           chunk_file: file.filename,
           chunk_text: chunk
         })};
