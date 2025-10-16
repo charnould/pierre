@@ -20,10 +20,11 @@ Les organismes de logement social (OLS ci-après) peuvent enrichir `PIERRE` de l
 
 - `.xlsx` (Microsoft Excel)
 - `.docx` (Microsoft Word)
+- `.pdf` (Adobe)
 - `.md` (Markdown)
 
 > [!CAUTION]
-> Les fichiers d’autres formats (`.pdf`, `.jpeg`, `.png`, etc.) ne sont pas compris par `PIERRE`. Par exemple : un fichier Excel enregistré en `.xls` ou `.xlsb` ne fonctionnera pas ; il faut absolument l’enregistrer en `.xlsx`.
+> Les fichiers d’autres formats (`.jpeg`, `.png`, etc.) ne sont pas compris par `PIERRE`. Par exemple : un fichier Excel enregistré en `.xls` ou `.xlsb` ne fonctionnera pas ; il faut absolument l’enregistrer en `.xlsx`.
 
 **Qu'est-ce que le Markdown ?**
 
@@ -36,11 +37,11 @@ Voici quelques exemples courants :
 - Pour du texte en gras : \*\*texte en gras\*\*
 - Pour du texte en italique : \_italique\_
 
-### Comment bien préparer vos documents ?
+## Comment bien préparer vos documents ?
 
-#### Préparer vos documents `.docx` et `.md`
+### Préparer vos documents `.docx`, `.pdf` et `.md`
 
-Les fichiers `.docx` ou `.md` sont – _in fine_ et peu importe les modalités de traitement des données par `PIERRE` – des « fichiers-textes », qu’il s’agisse d’un modèle de courrier pour déposer son congé, d’une note de service sur le déroulé d’une CALEOL ou encore de la description du processus d’attribution au sein d'un OLS, etc.
+Les fichiers `.docx`, `.pdf` ou `.md` sont – _in fine_ et peu importe les modalités de traitement des données par `PIERRE` – des « fichiers-textes », qu’il s’agisse d’un modèle de courrier pour déposer son congé, d’une note de service sur le déroulé d’une CALEOL ou encore de la description du processus d’attribution au sein d'un OLS, etc.
 
 Pour que `PIERRE` les comprenne le mieux possible, pensez à les écrire/formater comme si vous vouliez en expliquer clairement le contenu à un nouveau collègue :
 
@@ -52,9 +53,11 @@ Pour que `PIERRE` les comprenne le mieux possible, pensez à les écrire/formate
 - Si vous écrivez en Markdown, respectez le balisage (titres, listes, gras, italique, etc.)
 
 > [!CAUTION]
-> Les images contenues dans vos fichiers `.docx` et `.md` **NE SONT PAS interprétées**.
+>
+> - Les images contenues dans vos fichiers `.docx`, `.pdf` et `.md` **NE SONT PAS interprétées**.
+> - Pour que vos fichiers `.pdf` soient pris en compte, il est **indispensable** de renseigner `MISTRAL_API_KEY` dans `.env.production`. En effet, `PIERRE` fait appel à [Mistral OCR](https://mistral.ai/fr/solutions/document-ai) pour intépréter les documents `.pdf`.
 
-#### Préparer vos fichiers `.xlsx`
+### Préparer vos fichiers `.xlsx`
 
 Pour que `PIERRE` comprenne vos fichiers Excel :
 
