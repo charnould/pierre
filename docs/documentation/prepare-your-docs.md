@@ -7,7 +7,9 @@ Ce guide présente quels types de fichiers peuvent être transmis à `PIERRE` et
 <!-- toc -->
 
 - [Quels fichiers sont acceptés par `PIERRE` pour enrichir sa base de connaissances](#quels-fichiers-sont-accept%C3%A9s-par-pierre-pour-enrichir-sa-base-de-connaissances)
-  - [Comment bien préparer vos documents ?](#comment-bien-pr%C3%A9parer-vos-documents)
+- [Comment bien préparer vos documents ?](#comment-bien-pr%C3%A9parer-vos-documents)
+  - [Préparer vos documents `.docx`, `.pdf` et `.md`](#pr%C3%A9parer-vos-documents-docx-pdf-et-md)
+  - [Préparer vos fichiers `.xlsx`](#pr%C3%A9parer-vos-fichiers-xlsx)
 - [`_metadata.xlsx` : un fichier pour les gouverner tous (obligatoire)](#_metadataxlsx--un-fichier-pour-les-gouverner-tous-obligatoire)
 
 <!-- tocstop -->

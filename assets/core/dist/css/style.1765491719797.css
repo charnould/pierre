@@ -1,4 +1,4 @@
-/*! tailwindcss v4.1.17 | MIT License | https://tailwindcss.com */
+/*! tailwindcss v4.1.18 | MIT License | https://tailwindcss.com */
 @layer properties {
   @supports (((-webkit-hyphens: none)) and (not (margin-trim: inline))) or
     ((-moz-orient: inline) and (not (color: rgb(from red r g b)))) {
@@ -1136,8 +1136,8 @@
   .pb-2 {
     padding-bottom: calc(var(--spacing) * 2);
   }
-  .pb-40 {
-    padding-bottom: calc(var(--spacing) * 40);
+  .pb-32 {
+    padding-bottom: calc(var(--spacing) * 32);
   }
   .pl-3 {
     padding-left: calc(var(--spacing) * 3);

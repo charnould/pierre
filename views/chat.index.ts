@@ -19,7 +19,7 @@ export const view = (params: {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/core/dist/css/style.1765113082192.css" />
+        <link rel="stylesheet" href="../assets/core/dist/css/style.1765491719797.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Inclusive+Sans:wght@350&display=swap"
           rel="stylesheet"
@@ -30,7 +30,7 @@ export const view = (params: {
           type="image/svg+xml"
         />
         <link rel="manifest" href="../assets/${params.active_config.id}/manifest.json" />
-        <script type="module" src="../assets/core/dist/js/ai.1765113082192.js"></script>
+        <script type="module" src="../assets/core/dist/js/ai.1765491719797.js"></script>
         <title>Comment puis-je vous aider ? 🖐️</title>
         <meta name="conv_id" content="${randomUUIDv7()}" />
       </head>
@@ -48,7 +48,7 @@ export const view = (params: {
                 value="${params.active_config.disclaimer}"
               />`}
 
-        <main class="flex flex-col px-6 pb-40">
+        <main class="flex flex-col px-6 pb-32">
           <img
             class="mt-6 mb-3"
             src="../assets/${params.active_config.id}/system.svg"
