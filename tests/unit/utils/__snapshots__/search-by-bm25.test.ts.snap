@@ -3,8 +3,7 @@
 exports[`should search using bm25 and find a result 1`] = `
 [
   {
-    "chunk_file": "wiki/Valérie Létard.md",
-    "chunk_hash": "ki3x1HPQ8Nzg4NtCpRJF",
+    "chunk_hash": "HD1jX47dxGCQmCc6rJI6",
     "chunk_text": 
 "# Valérie Létard
 
@@ -169,7 +168,7 @@ En avril 2025, elle effectue une tournée de deux jours en Martinique afin de «
 - Portail du Nord-Pas-de-Calais
 "
 ,
-    "distance": -15.597216769088632,
+    "distance": -13.757928636487835,
   },
 ]
 `;
