@@ -2,7 +2,7 @@
 
 Le ministre du Logement est un membre du gouvernement français.
 
-L'actuelle ministre du Logement est Éric Woerth en fonction depuis le 5 octobre 2025.
+L'actuel titulaire est Vincent Jeanbrun, en fonction depuis le 12 octobre 2025.
 
 ## Historique
 

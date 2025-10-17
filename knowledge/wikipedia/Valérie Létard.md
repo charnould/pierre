@@ -20,7 +20,7 @@ Fille de l'ancien député européen, président du Valenciennes Football Club, 
 
 ### Parcours politique
 
-Adhérente du Parti social-démocrate, Valérie Létard participe, au début de son activité professionnelle\[Quand ?\], à la mise en application concrète de nouveaux dispositifs d'action sociale à la mairie de Saint-Amand-les-Eaux, dans le Nord. De ses débuts, elle acquiert la mise en œuvre de projets et du travail en équipe. Du travail social, elle évolue vers le développement social des quartiers et la politique de la ville. Directrice du contrat de ville à Valenciennes, Jean-Louis Borloo lui propose de rejoindre l'équipe municipale comme adjointe au maire responsable de la politique de la ville.
+Adhérente du Parti social-démocrate, Valérie Létard participe, au début de son activité professionnelle\[Quand ?\], à la mise en application concrète de nouveaux dispositifs d'action sociale à la mairie de Saint-Amand-les-Eaux, dans le Nord. De ses débuts, elle acquiert la mise en œuvre de projets et du travail en équipe. Du travail social, elle évolue vers le développement social des quartiers prioritaires de la politique de la ville. Directrice du contrat de ville à Valenciennes, Jean-Louis Borloo lui propose de rejoindre l'équipe municipale comme adjointe au maire responsable de la politique de la ville.
 
 #### Conseillère régionale et sénatrice du Nord
 

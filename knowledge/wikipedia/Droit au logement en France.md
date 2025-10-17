@@ -4,21 +4,13 @@ En droit français, plusieurs législations fondamentales mentionnent ou garanti
 
 ## Un droit constitutionnel
 
-Le droit au logement est considéré comme découlant, en France, de la rédaction des 10e et 11e alinéas du préambule de la Constitution du 27 octobre 1946, qui fait partie de textes à valeur constitutionnelle :
-
-10\. La Nation assure à l'individu et à la famille les conditions nécessaires à leur développement. 11. Elle garantit à tous, notamment à l'enfant, à la mère et aux vieux travailleurs, la protection de la santé, la sécurité matérielle, le repos et les loisirs. Tout être humain qui, en raison de son âge, de son état physique ou mental, de la situation économique, se trouve dans l'incapacité de travailler a le droit d'obtenir de la collectivité des moyens convenables d'existence.
+En France, la possibilité pour toute personne de disposer d'un logement décent est considéré comme un objectif de valeur constitutionnelle découlant de la rédaction des 10e et 11e alinéas du préambule de la Constitution du 27 octobre 1946.
 
 ## Un droit fondamental, mais non sanctionné juridiquement jusqu'à la loi DALO
 
 Cité par la loi Quilliot du 22 juin 1982 (« Le droit à l'habitat est un droit fondamental »), puis par la loi Mermaz du 6 juillet 1989, le droit au logement est l'objet principal de la loi du 31 mai 1990 visant à la mise en œuvre du droit au logement, dite loi Besson. Cette loi affirme que « garantir le droit au logement constitue un devoir de solidarité pour l'ensemble de la nation ». Ce droit ne signifie pas que la nation a l'obligation de fournir un logement à toute personne qui en fait la demande, mais qu'elle doit apporter une aide, dans les conditions prévues par ladite loi, aux personnes qui remplissent les conditions pour en bénéficier. Le paradigme en vigueur était alors bien celui de l'obligation de moyens. Les articles de la loi besson instaurèrent les plans départementaux d'action pour le logement des personnes défavorisées (PDALPD), intitulés depuis la loi pour l'accès au logement et un urbanisme rénové de 2014 Plans départements départementaux d'action pour le logement et l'hébergement des personnes défavorisées (PDALHPD). L'objectif de ces plans est de mobiliser et de développer l'offre de logements destinée aux publics en situation précaire. La loi Besson institua également le fonds de solidarité pour le logement, pouvant apporter des aides financières aux ménages présentant des difficultés à régler les frais liés à leur logement. Celles-ci peuvent prendre la forme de prêts ou de subventions.
 
-Dans sa décision du 19 janvier 1995, le Conseil constitutionnel a considéré que « la possibilité de disposer d’un logement décent est un objectif à valeur constitutionnelle ». Enfin, la jurisprudence l'a rendu invocable dans certains cas précis, notamment lors d'une demande d'expulsion de Gens du voyage dans une commune de plus de 5 000 habitants n'ayant aucun terrain d'accueil.
-
-Le droit au logement est réaffirmé dans la loi du 31 mai 1990 par son article 1 : « garantir le droit au logement constitue un devoir de solidarité pour l’ensemble de la nation ». La loi SRU du 13 décembre 2000 précise lui la notion de « logement décent ».
-
 Le Haut comité pour le logement des personnes défavorisées a proposé dans plusieurs de ses rapports annuels de rendre le droit au logement opposable devant les tribunaux. Au-delà de l'obligation de moyens imposée par la loi Besson, il était proposé de créer une obligation de résultat : les groupements intercommunaux seraient responsables, par délégation de l'État, de la garantie du droit au logement. Cette idée a été reprise par le gouvernement Raffarin et par plusieurs candidats à l'élection présidentielle de 2007 dont Ségolène Royal (inscrit dans le projet socialiste) et Nicolas Sarkozy (en son seul nom).
-
-Le droit international propose cependant la possibilité de plaider l'inconventionnalité du droit interne au regard des engagements internationaux de la France.
 
 ## Genèse du droit au logement opposable (DALO)
 

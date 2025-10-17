@@ -71,7 +71,7 @@ En 2008, sur les 730 communes qui comptaient moins de 20 % de logements sociaux
 
 Le bilan 2014-2016 montre que les objectifs cumulés de rattrapage assignés aux communes soumises au dispositif SRU ont été dépassés pour atteindre 188 587 logements (soit 106 % des objectifs cumulés) ; il n'en demeure pas moins que sur les 1 152 communes soumises au dispositif, 649 n’ont pas atteint le niveau de production fixé par la loi, et que plus de 200 communes ont été proposées à la carence.
 
-En janvier 2025, Frédéric Vassy, maire de Châteauneuf-sur-Isère, annonce sa démission assurant être dans l’impossibilité d’atteindre 25% de logements sociaux. Il explique que la commune possède une zone agricole protégée (ZAP), qui permet de protéger les terres agricoles et de les soustraire à la spéculation foncière, où la construction de logements sociaux est impossible. La commune paie des amendes (80.000 euros de pénalités par an) pour non-respect des quotas.
+En janvier 2025, Frédéric Vassy, maire de Châteauneuf-sur-Isère, annonce sa démission assurant être dans l’impossibilité d’atteindre 25% de logements sociaux. Il explique que la commune possède une zone agricole protégée (ZAP), qui permet de protéger les terres agricoles et de les soustraire à la spéculation foncière, où la construction de logements sociaux est impossible. La commune paie des amendes (80 000 euros de pénalités par an) pour non-respect des quotas.
 
 ### Île-de-France
 
