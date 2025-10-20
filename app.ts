@@ -1,4 +1,3 @@
-import type { Serve } from 'bun'
 import { CronJob } from 'cron'
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
@@ -95,4 +94,4 @@ app.notFound(async (c) =>
 app.onError((_err, c) => c.notFound())
 
 // Export the app configuration
-export default { idleTimeout: 240, fetch: app.fetch } satisfies Serve
+export default { idleTimeout: 240, fetch: app.fetch }
