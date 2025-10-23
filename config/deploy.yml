@@ -1,18 +1,13 @@
-minimum_version: 2.6.0
+minimum_version: 2.8.0
 
 service: <%= ENV['SERVICE'] %>
-
-image: <%= ENV['REPO_PATH'] %>
 
 servers:
   web:
     - <%= ENV['IP'] %>
 
 registry:
-  username: <%= ENV['USERNAME'] %>
-  server: ghcr.io
-  password:
-    - REGISTRY_TOKEN
+  server: 'localhost:5555'
 
 ssh:
   port: <%= ENV['SSH_PORT'] %>
@@ -51,7 +46,6 @@ env:
     - CEREBRAS_API_KEY
     - GROQ_API_KEY
     - TOGETHER_AI_API_KEY
-    - REGISTRY_TOKEN
     - AUTH_SECRET
     - AUTH_PASSWORD
     - WEBHOOK_KEY_1
