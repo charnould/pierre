@@ -6,6 +6,8 @@ servers:
   web:
     - 46.224.2.167 #<%= ENV['IP'] %>
 
+image: pierre
+
 registry:
   server: localhost:5555
 
