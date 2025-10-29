@@ -33,7 +33,6 @@ proxy:
 
 builder:
   arch: amd64
-  local: false
   remote: ssh://root@46.224.2.167
 
 env:
