@@ -33,6 +33,7 @@ proxy:
 
 builder:
   arch: amd64
+  local: false
 
 env:
   clear:
