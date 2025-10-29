@@ -7,7 +7,7 @@ servers:
     - <%= ENV['IP'] %>
 
 registry:
-  server: 'localhost:5555'
+  server: 'localhost:5000'
 
 ssh:
   port: <%= ENV['SSH_PORT'] %>
