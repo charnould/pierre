@@ -29,6 +29,7 @@
     "pierre:config": "bun test check-config",
     "――――――― STAGING DEPLOYMENT COMMANDS ―――――――": "―――――――",
     "staging:logs": "bun --env-file=.env.staging run kamal app logs ",
+    "staging:setup": "bun --env-file=.env.staging run kamal setup",
     "staging:deploy": "bun --env-file=.env.staging run kamal deploy",
     "staging:console": "bun --env-file=.env.staging run kamal app exec -i bash",
     "――――――― PRODUCTION DEPLOYMENT COMMANDS ―――――――": "―――――――",

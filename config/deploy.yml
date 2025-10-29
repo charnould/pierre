@@ -1,16 +1,18 @@
-minimum_version: 2.8.0
+minimum_version: 2.9.0
 
-service: <%= ENV['SERVICE'] %>
+service: pierre #<%= ENV['SERVICE'] %>
 
 servers:
   web:
-    - <%= ENV['IP'] %>
+    - 46.224.2.167 #<%= ENV['IP'] %>
+
+# image: pierre # new
 
 registry:
-  server: 'localhost:5555'
+  server: localhost:5555
 
 ssh:
-  port: <%= ENV['SSH_PORT'] %>
+  port: 22 #<%= ENV['SSH_PORT'] %>
 
 volumes:
   - 'datastores:/app/datastores/'
@@ -19,7 +21,7 @@ accessories:
   ollama:
     service: ollama
     image: ollama/ollama
-    host: <%= ENV['IP'] %>
+    host: 46.224.2.167 #<%= ENV['IP'] %>
     options:
       gpus: all
 
@@ -29,14 +31,15 @@ proxy:
   # TODO: Make knowledge build a background job.
   # Otherwise request timeout if it takes too long.
   response_timeout: 600
-  host: <%= ENV['HOST'] %>
+  host: kamal.pierre-ia.org # <%= ENV['HOST'] %>
 
 builder:
   arch: amd64
+  remote: ssh://root@46.224.2.167
 
 env:
   clear:
-    SERVICE: <%= ENV['SERVICE'] %>
+    SERVICE: pierre # <%= ENV['SERVICE'] %>
   secret:
     - ANTHROPIC_API_KEY
     - COHERE_API_KEY

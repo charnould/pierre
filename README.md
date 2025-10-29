@@ -173,10 +173,10 @@ Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour
 Pour déployer `PIERRE` sur un serveur, il est indispensable d'être parvenu à le faire fonctionner en local.
 
 1. Installer `Docker Desktop` et le lancer ([instructions](https://www.docker.com/products/docker-desktop/)). `Docker` gérera la conteneurisation.
-2. Lancer `gem install kamal` pour installer `Kamal` (≥`2.8.x`) qui gérera le déploiement ([instructions](https://kamal-deploy.org/docs/installation/)).
+2. Lancer `gem install kamal` pour installer `Kamal` (≥`2.9.0`) qui gérera le déploiement ([instructions](https://kamal-deploy.org/docs/installation/)).
 3. Disposer d'un VPS avec `GPU` (par exemple `GEX44` d'[Hetzner](https://www.hetzner.com/dedicated-rootserver/gex44/)) et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe). Les ports `80` (`http`) et `443` (`https`) doivent impérativement être ouverts.
 4. Finaliser les modifications du fichier `.env.production` que vous avez créé précédemment.
-5. Saississez dans votre terminal `bun --env-file=.env.production run kamal setup`.
+5. Saississez dans votre terminal `bun prod:setup`.
 6. Saississez dans votre terminal `bun --env-file=.env.production run kamal server exec "docker exec ollama ollama pull bge-m3"`.
 7. Et voilà, `PIERRE` est accessible à l'adresse URL de votre serveur (il faut parfois attendre une dizaine de minutes afin que les certificats SSL soient générés).
 8. Étapes suivantes (optionnelles et décrites ci-dessous) :  
@@ -202,8 +202,8 @@ Pour déployer `PIERRE` sur un serveur, il est indispensable d'être parvenu à 
 Pour tester en conditions réelles les mises à jour et nouveautés de `PIERRE`, le plus simple est de **déployer une seconde instance** de `PIERRE` sur votre serveur de production.
 
 1. Dupliquer `.env.production` en `.env.staging` et modifier le (a priori uniquement le `SERVICE` et `HOST`).
-2. Lancer `bun --env-file=.env.staging run kamal setup` pour déployer la première fois.
-3. Lancer `bun --env-file=.env.staging run kamal deploy` pour redéployer (ou le raccourci `bun staging:deploy`).
+2. Lancer `bun staging:setup` pour déployer la première fois.
+3. Lancer `bun staging:deploy` pour redéployer.
 
 # Modifier et paramétrer `PIERRE` (self-hosting)
 
