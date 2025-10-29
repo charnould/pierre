@@ -6,7 +6,7 @@ servers:
   web:
     - 46.224.2.167 #<%= ENV['IP'] %>
 
-image: pierre # new
+#image: pierre # new
 
 registry:
   server: localhost:5555
@@ -35,7 +35,7 @@ proxy:
 
 builder:
   arch: amd64
-  remote: ssh://root@46.224.2.167
+  # remote: ssh://root@46.224.2.167
 
 env:
   clear:
