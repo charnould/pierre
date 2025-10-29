@@ -34,6 +34,7 @@ proxy:
 builder:
   arch: amd64
   local: false
+  remote: ssh://root@<%= ENV['IP'] %>
 
 env:
   clear:
