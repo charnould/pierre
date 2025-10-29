@@ -1,4 +1,4 @@
-minimum_version: 2.8.0
+minimum_version: 2.8.2
 
 service: <%= ENV['SERVICE'] %>
 
