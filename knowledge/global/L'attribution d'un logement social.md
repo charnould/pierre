@@ -19,6 +19,20 @@ Certains ménages sont prioritaires, tels que :
 
 Toutefois, seule la commission d’attribution locative du bailleur est décisionnaire concernant l’attribution définitive d’un logement en faveur d’un demandeur.
 
+#### Les critères d'attribution des logements
+
+Pour l’attribution des logements, la CALEOL devra tenir compte, conformément à l’Article R441-1 du CCH (code de la construction de l'habitat), et ce sans caractère hiérarchique :
+
+- Du caractère prioritaire de la demande de logement (demandeur de logement reconnu prioritaire et urgent au titre du DALO, demandeur reconnu prioritaire au titre des accords collectifs départementaux ou relevant d’une des priorités énumérées dans l’Article L441-1 du CCH), en respectant les objectifs des accords collectifs.
+- De la composition du ménage.
+- Des conditions de logement actuelles du ménage.
+- De l’activité professionnelle du demandeur (lorsqu’il s’agit d’assistant(e) maternel(le) ou familial(e) agrée(e)).
+- Du niveau de ressources des ménages (adéquation montant du loyer/ niveau de ressources).
+- Logement adapté au handicap : les logements construits au aménagés en vue de leur occupation par des personnes handicapées sont attribués à celles-ci ou à défaut, en priorité à des personnes âgées dont l’état de santé le justifie, ou à des ménages hébergeant de telles personnes (Article R551-4 du CCH).
+- Des demandes de mutations : une attention toute particulière sera portée à ces demandes afin de favoriser le parcours résidentiel (notamment pour motifs familiaux, de santé, d’âge, économiques, professionnels) après visite de contrôle du logement (pré-état des lieux).
+
+La CALEOL tiendra compte de l’ancienneté de la demande à priorité égale et de certaines situations sociales : conflits ou violences intra-familiales ou de voisinage nécessitant un changement de logement.
+
 #### Comment sont attribués les logements ?
 
 Les logements sociaux sont attribués sous conditions de ressources. Cela signifie que le demandeur doit vérifier le plafond de ressources correspondant au logement souhaité qui dépend donc de ses revenus annuels, du type de logement et de sa localisation.

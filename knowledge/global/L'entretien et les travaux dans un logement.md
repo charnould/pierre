@@ -19,6 +19,74 @@ Quelques conseils :
 - afin d'éviter tout risque électrique, ne surchargez jamais vos prises multiples et remplacez les cordons électriques quand ils sont usés ;
 - entretenez vos équipements sanitaires (évier, lavabo, douche, baignoire, WC) en les débouchant et en les détartrant régulièrement.
 
+#### Entretien courant et réparations locatives à la charge du locataire
+
+Pour un locataire, il n’est pas toujours évident de savoir quelles sont les réparations locatives à sa charge. Le décret n°87-712 du 26 août 1987 fait partie des lois régissant la location d'appartement. Il définit une liste complète des travaux qui sont à la charge du locataire pendant toute la durée du bail. Le locataire doit les faire lui-même ou les faire réaliser par un professionnel. Nous présentons ci-dessous la liste des réparations locatives les plus fréquentes :
+
+- Parties extérieures dont le locataire à l'usage exclusif
+  - Jardins privatifs
+    - Entretien courant notamment des allées, pelouses, massifs, bassins et piscines ;
+    - Taille, élagage, échenillage des arbres et arbustes ;
+    - Remplacement des arbustes ;
+    - Réparation et remplacement des installations mobiles d'arrosage.
+  - Auvents, terrasses et marquises
+    - Enlèvement de la mousse et des autres végétaux.
+  - Descentes d'eaux pluviales, chéneaux et gouttières
+    - Dégorgement des conduits.
+
+- Ouvertures intérieures et extérieures
+  - Sections ouvrantes telles que portes et fenêtres
+    - Graissage des gonds, paumelles et charnières ;
+    - Menues réparations des boutons et poignées de portes, des gonds, crémones et espagnolettes ;
+    - Remplacement notamment de boulons, clavettes et targettes.
+  - Vitrages
+    - Réfection des mastics
+    - Remplacement des vitres détériorées.
+  - Dispositifs d'occultation de la lumière tels que stores et jalousies
+    Graissage ;
+    Remplacement notamment de cordes, poulies, ou de quelques lames.
+  - Serrures et verrous de sécurité
+    - Graissage ;
+    - Remplacement de petites pièces ainsi que des clés égarées ou détériorées.
+  - Grilles
+    - Nettoyage et graissage ;
+    - Remplacement notamment de boulons, clavettes, targettes.
+- Parties intérieures
+  - Plafonds, murs intérieurs et cloisons
+    - Maintien en état de propreté ;
+    - Menus raccords de peintures et tapisseries ;
+    - Remise en place ou remplacement de quelques éléments des matériaux de revêtement tels que faïence, mosaïque, matière plastique ;
+    - Rebouchage des trous rendu assimilable à une réparation par le nombre, la dimension et l'emplacement de ceux-ci.
+  - Parquets, moquettes et autres revêtements de sols
+    - Encaustiquage et entretien courant de la vitrification ;
+    - Remplacement de quelques lames de parquets et remise en état, pose de raccords de moquettes et autres revêtements de sols notamment en cas de tâches et de trous
+  - Placards et menuiseries telles que plinthes, baguettes et moulures
+    - Remplacement des tablettes et tasseaux de placard et réparation de leur dispositif de fermeture ;
+    - Fixation de raccords et remplacement de pointes de menuiseries.
+- Installations de plomberie
+  - Canalisations d'eau
+    - Dégorgement ;
+    - Remplacement notamment de joints et de colliers.
+  - Canalisations de gaz
+    - Entretien courant des robinets, siphons et ouvertures d'aération ;
+    - Remplacement périodique des tuyaux souples de raccordement.
+  - Fosses septiques, puisards et fosses d'aisance
+    - Vidange.
+  - Chauffage, production d’eau chaude et robinetterie
+    - Remplacement des bilames, pistons, membranes, boîtes à eau, allumage piezo-électrique, clapets et joints des appareils à gaz ;
+    - Rinçage et nettoyage des corps de chauffe et tuyauteries ;
+    - Remplacement des joints, clapets et presse-étoupes des robinets ;
+    - Remplacement des joints, flotteurs et joints cloches des chasses d'eau.
+  - Eviers et appareils sanitaires
+    - Nettoyage des dépôts de calcaire, remplacement des tuyaux flexibles de douches.
+- Equipements d'installations d'électricité
+  - Remplacement des interrupteurs, prises de courant, coupe-circuits et fusibles, des ampoules, tubes lumineux ; réparation ou remplacement des baguettes ou gaines de protection.
+- Autres équipements possiblement mentionnés au contrat de location
+  - Entretien courant et menues réparations des appareils tels que réfrigérateurs, machines à laver le linge et la vaisselle, sèche-linge, hottes aspirantes, adoucisseurs, capteurs solaires, pompes à chaleur, appareils de conditionnement d'air, antennes individuelles de radiodiffusion et de télévision, meubles scellés, cheminées, glaces et miroirs.
+  - Menues réparations nécessitées par la dépose des bourrelets.
+  - Graissage et remplacement des joints des vidoirs.
+  - Ramonage des conduits d'évacuation des fumées et des gaz et des conduits de ventilation.
+
 ### Quels travaux dans mon logement nécessitent l'autorisation du bailleur ?
 
 Le locataire a le droit d'aménager librement le logement qu'il occupe (changement de moquette, rafraîchissement des peintures murales...) et sans accord préalable du bailleur. Attention, la pose de crépi, de dalles au plafond et le talochage ne sont pas autorisés. Il est par ailleurs formellement interdit d'abattre ou de monter un mur.

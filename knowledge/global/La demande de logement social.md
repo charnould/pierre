@@ -46,12 +46,14 @@ Ci-après la liste de ces départements ainsi que l'adresse internet du site de 
   - Manche : https://www.demandelogement50.fr/imhowebgp-prod
   - Orne : https://www.demandelogement61.fr/imhowebGP61
 - Nouvelle Aquitaine
+  - Landes : https://www.demande-logement-social.gouv.fr
   - Vienne : https://www.demandedelogement86.fr/imhowebGP86
   - Charente : https://www.demandedelogement16.fr/imhowebGP16
   - Charente-Maritime : https://www.demandedelogement17.fr/imhowebGP17
   - Deux-Sèvres : https://www.demandedelogement79.fr/imhowebGP79
   - Haute-Vienne : https://www.demandedelogement87.fr/imhowebGP87
 - Occitanie
+  - Gers : https://www.demande-logement-social.gouv.fr
   - Haute-Garonne : https://www.demandelogement31.fr/imhowebGP31
 - Pays de la Loire
   - Loire-Atlantique : https://www.demandelogement44.fr/imhowebGP44
