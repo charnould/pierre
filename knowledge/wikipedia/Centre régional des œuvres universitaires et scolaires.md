@@ -1,8 +1,8 @@
 # Centre régional des œuvres universitaires et scolaires
 
-En France, les centres régionaux des œuvres universitaires et scolaires (Crous) sont des établissements publics à caractère administratif.
+Les centres régionaux des œuvres universitaires et scolaires (CROUS) sont, en France, des établissements publics à caractère administratif.
 
-Le centre national des œuvres universitaires et scolaires et les centres régionaux des œuvres universitaires et scolaires forment le réseau des œuvres universitaires, qui contribue à assurer aux étudiants une qualité d'accueil et de vie propice à la réussite de leur parcours de formation. Il assure une mission d'aide sociale et concourt à l'information et à l'éducation des étudiants en matière de santé. Il favorise leur mobilité.
+Le centre national des œuvres universitaires et scolaires (CNOUS) et les centres régionaux des œuvres universitaires et scolaires forment le réseau des œuvres universitaires, qui contribue à assurer aux étudiants une qualité d'accueil et de vie propice à la réussite de leur parcours de formation. Il assure une mission d'aide sociale et concourt à l'information et à l'éducation des étudiants en matière de santé. Il favorise leur mobilité.
 
 Les CROUS instruisent les dossiers sociaux des étudiants (DSE : demande de bourse et de logement), gèrent le logement pour étudiants, la restauration universitaire, les bourses des étudiants étrangers et interviennent dans des domaines différents suivant les académies concernées (culture, transport, crèche, etc.).
 
@@ -12,7 +12,7 @@ Les CROUS sont répartis par académie plus que par région (l'Île-de-France es
 
 La gestion des infrastructures de la vie étudiante est issue de l'initiative des étudiants ou plutôt des associations étudiantes d'alors, réunies au sein de l'UNAGEF, qui fondent après la Première Guerre mondiale les premières résidences universitaires.
 
-En 1936, le Comité supérieur en faveur des étudiants est créé par le ministre du Front populaire Jean Zay. Après la Seconde Guerre mondiale, on débat beaucoup du futur statut de l'organisme qui doit gérer les résidences universitaires, encore peu nombreuses, les restaurants universitaires et les bourses d'études : association loi de 1901, fondation, établissement public à caractère administratif ?
+En 1936, le Comité supérieur en faveur des étudiants est créé par le ministre de l'Éducation nationale du Front populaire, Jean Zay. Après la Seconde Guerre mondiale, on débat beaucoup du futur statut de l'organisme qui doit gérer les résidences universitaires, encore peu nombreuses, les restaurants universitaires et les bourses d'études : association loi de 1901, fondation, établissement public à caractère administratif ?
 
 Après la Seconde Guerre mondiale, le Comité supérieur en faveur des étudiants devient le Comité supérieur des Œuvres en faveur de la jeunesse scolaire et universitaire par arrêté du 8 août 1947 ; des centres régionaux sont créés dans chaque académie sous le statut de la loi de 1901.
 
@@ -20,13 +20,11 @@ En 1955, le centre national des œuvres en faveur de la jeunesse scolaire et uni
 
 Dans les années 1990, le CROUS connaît des innovations : la création de la contractualisation entre CNOUS et CROUS, le développement de nouvelles compétences telles que la culture, ou encore la création d'un vice-président étudiant du CA du CROUS, visant à réimpliquer les étudiants dans les instances des œuvres universitaires. Mais surtout depuis la rentrée 1995, les CROUS gèrent les bourses d'études via la gestion du dossier social de l'étudiant.
 
-En 2016, le CROUS compte 170 000 logements, un développement lié à la démocratisation des études post bac. Dans le but d'améliorer ses services, le CROUS organise des enquêtes de satisfaction sur les logements et les restaurants universitaires. Les résultats ont révélé qu’une moyenne de 7,7/10 est attribuée pour les résidences. Les avantages de ces résidences sont la proximité du lieu d’étude et l’offre de restauration. Cependant, les étudiants soulignent un manque d’insonorisation et d’équipement ménager.
+En 2016, le CROUS compte 170 000 logements, un développement lié à la démocratisation des études post bac. Dans le but d'améliorer ses services, le CROUS organise des enquêtes de satisfaction sur les logements et les restaurants universitaires. Les résultats ont révélé qu'une moyenne de 7,7/10 est attribuée pour les résidences. Les avantages de ces résidences sont la proximité du lieu d'étude et l'offre de restauration. Cependant, les étudiants soulignent un manque d'insonorisation et d'équipement ménager.
 
-Depuis 2019, le paiement en espèces n'est plus disponible dans les restaurants universitaires et cafétérias du Crous en infraction avec l'article L112-5 du Code Monétaire et Financier. Le paiement se fait avec l'application Izly ("via QR code sur l'application smartphone ou via la carte étudiante, professionnelle ou Pass Crous"), ou par carte bancaire ("sur présentation d'un justificatif permettant d'appliquer le tarif adapté"). L'application Izly, "détenue par le groupe Banque Populaire-Caisses d’Épargne", a mis de nombreux étudiants en difficulté notamment pendant la crise de la Covid-19. Après un jugement du tribunal administratif de Bordeaux, le syndicat FSE a dénoncé l’illégalité du procédé. En septembre 2021, le doyen de la faculté de droit à Nantes confronté au problème s'insurge contre cette disposition et interpelle la directrice du Crous local.
+Depuis 2019, le paiement en espèces n'est plus disponible dans les restaurants universitaires et cafétérias du Crous en infraction avec l'article L. 112-5 du Code monétaire et financier. Le paiement se fait avec l'application Izly (via QR code sur l'application smartphone ou via la carte étudiante, professionnelle ou Pass Crous), ou par carte bancaire (sur présentation d'un justificatif permettant d'appliquer le tarif adapté). L'application Izly, détenue par le groupe Banque populaire-Caisses d'épargne, a mis de nombreux étudiants en difficulté notamment pendant la crise de la Covid-19. Après un jugement du tribunal administratif de Bordeaux, le syndicat FSE a dénoncé l'illégalité du procédé. En septembre 2021, le doyen de la faculté de droit à Nantes confronté au problème s'insurge contre cette disposition et interpelle la directrice du Crous local.
 
 ## Organisation
-
-Outre son président, qui est le recteur de région académique, chancelier des universités, le conseil d'administration comprend vingt-quatre à vingt-sept membres dont six représentants de l'État et sept représentants des étudiants.
 
 À la tête de l'administration du CROUS, on trouve un directeur, qui représente le CROUS, signe les conventions, supervise les services centraux, prépare le travail du conseil d'administration et exécute ses décisions, un gestionnaire principal (aussi appelé secrétaire général ou directeur adjoint qui assiste le directeur et supervise les gestionnaires d'unités de gestion (restaurants universitaires et cités universitaires) et coordonne les services administratifs centraux, un agent comptable, comme dans tous les établissements publics, et des chefs de service : service social, communication et culture, vie de l'étudiant (dossier social étudiant), ressources humaines, marchés publics, contrôle de gestion.
 
@@ -46,7 +44,13 @@ Ces élections étudiantes font l'objet d'une intense préparation au CNOUS et d
 
 Le taux de participation varie suivant les académies, au plus bas à Paris (guère plus de 5 %), au plus haut dans le Limousin et en Corse (plus de 30 %).
 
+## Sécurité interne
+
+En 2023, une directrice du Crous de Tours est suspendue, après enquête administrative, pour être intervenue auprès d'un agent subalterne pour loger ses enfants.
+
 ## Notes et références
+
+Dans le Journal officiel de la République française (JORF), sur Légifrance :
 
 ## Annexes
 

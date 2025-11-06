@@ -21,13 +21,11 @@ Le directeur général est nommé par arrêté du ministre de la cohésion des t
 
 ## Rapports d'étude
 
-Étude de l'offre locative du secteur des organismes d'HLM et SEM au regard de la demande de logement social en France métropolitaine (décembre 2016).
+L'Agence publie un rapport annuel de contrôle. Elle publie également des études thématiques.
 
-Étude des coûts locatifs des logements des organismes HLM et SEM au regard des ressources des locataires en France métropolitaine (décembre 2016)
-
-Étude soutenabilité financière d'une baisse de loyers pour un nombre significatif de logements sociaux situés hors QPV (quartier prioritaire de la politique de la ville) - Simulations globales et études de cas (2016)
-
-Par ailleurs, l'Agence publie un rapport annuel de contrôle.
+- Étude de l'offre locative du secteur des organismes d'HLM et SEM au regard de la demande de logement social en France métropolitaine (décembre 2016).
+- Étude des coûts locatifs des logements des organismes HLM et SEM au regard des ressources des locataires en France métropolitaine (décembre 2016)
+- Étude soutenabilité financière d'une baisse de loyers pour un nombre significatif de logements sociaux situés hors QPV (quartier prioritaire de la politique de la ville) - Simulations globales et études de cas (2016)
 
 ## Notes et références
 
