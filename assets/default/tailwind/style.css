@@ -36,7 +36,7 @@ html::-webkit-scrollbar,
 }
 
 [data-role='disclaimer'] {
-  @apply max-w-sm text-[11px] leading-tight font-light text-gray-500;
+  @apply max-w-sm text-[12px] leading-tight font-light text-gray-600;
 }
 
 .thinking {
