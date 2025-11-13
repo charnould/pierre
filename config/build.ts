@@ -12,10 +12,6 @@ await $`rm -rf assets/default/dist/js`
 await $`rm -f docs/assets/widget.js`
 await $`find . -name ".DS_Store" -type f -delete`
 
-// Upgrade Bun and dependencies
-await $`clear`
-await $`bun upgrade --stable && bun update && bun install`
-
 // Read all the files in the current directory recursively and for .md files,
 // generate a table of contents if <!-- toc --> tag is available
 const files = await readdir('./', { recursive: true })
@@ -70,7 +66,7 @@ for (const view of views) {
 await $`cp assets/default/dist/js/widget.js docs/assets`
 
 // Lint, format, test code
-// await $`bun lint`
+await $`bun lint`
 await $`bun format`
 await $`bun test:unit`
 await $`bun test:e2e`
