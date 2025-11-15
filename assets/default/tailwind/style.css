@@ -164,4 +164,12 @@ html::-webkit-scrollbar,
   td {
     @apply border border-gray-300;
   }
+
+  small {
+    @apply mt-4 block text-xs text-gray-700;
+  }
+
+  small > a {
+    @apply text-xs text-gray-700;
+  }
 }
