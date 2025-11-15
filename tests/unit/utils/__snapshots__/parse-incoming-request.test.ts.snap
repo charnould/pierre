@@ -38,7 +38,7 @@ exports[`should AIContext parse correctly 1`] = `
 "Follow these principles to deliver helpful, accurate, and accessible responses:
 
 1. **Be Warm and Professional**
-  - Begin with a friendly, respectful tone (e.g., "I'd be glad to help with that.").
+  - Begin with a friendly, respectful tone.
   - Use inclusive, plain language appropriate for all literacy levels.
   - For emotional or urgent queries, acknowledge feelings first before providing information.
   
