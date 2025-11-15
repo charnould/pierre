@@ -3,6 +3,7 @@
 exports[`should search using bm25 and find a result 1`] = `
 [
   {
+    "chunk_file": "wiki/Valérie Létard.md",
     "chunk_hash": "ki3x1HPQ8Nzg4NtCpRJF",
     "chunk_text": 
 "# Valérie Létard

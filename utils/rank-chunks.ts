@@ -37,12 +37,13 @@ export const rank_chunks = async (
   // Score chunks...
   const chunk_scores = await Promise.all(chunks.map((chunk) => score_chunk(context, chunk)))
 
-  // Retrive chunk content and its source (community, proprietary)...
+  // Retrieve chunk content and its source (community, proprietary)...
   const scored_chunks = _.orderBy(
     chunks.map((chunk, index) => ({
       score: chunk_scores[index].score,
       reasoning: chunk_scores[index].reasoning,
       chunk_text: chunk.chunk_text,
+      chunk_file: chunk.chunk_file,
       source: chunk.source
     })),
     ['score'],
@@ -58,6 +59,7 @@ export const rank_chunks = async (
       data:
         | {
             chunk_hash: string
+            chunk_file: string
             chunk_text: string
             distance: number
             source: string
@@ -68,7 +70,10 @@ export const rank_chunks = async (
             chunk_text: string
             source: string
           }[]
-        | { community: string[]; proprietary: string[] }
+        | {
+            community: { chunk_text: string; chunk_file: string }[]
+            proprietary: { chunk_text: string; chunk_file: string }[]
+          }
     ) => await prettier.format(JSON.stringify(data), { parser: 'json' })
 
     Bun.write('temp/1. search-v.json', await print(v_chunks))
@@ -93,14 +98,15 @@ export const rank_chunks = async (
 
 const Flatten_Chunk = z.object({
   chunk_hash: z.string(),
+  chunk_file: z.string(),
   distance: z.number(),
   chunk_text: z.string(),
   source: z.string()
 })
 
 const Relevant_Chunks = z.object({
-  community: z.array(z.string()).default([]),
-  proprietary: z.array(z.string()).default([])
+  community: z.array(z.object({ chunk_text: z.string(), chunk_file: z.string() })).default([]),
+  proprietary: z.array(z.object({ chunk_text: z.string(), chunk_file: z.string() })).default([])
 })
 
 export type Flatten_Chunk = z.infer<typeof Flatten_Chunk>
@@ -167,6 +173,7 @@ export const flatten_searches = (data: SResults[]): Flatten_Chunk[] =>
 export const pick_relevant_chunks = (
   scores: {
     score: number
+    chunk_file: string
     chunk_text: string
     source: string
   }[]
@@ -178,7 +185,7 @@ export const pick_relevant_chunks = (
         .orderBy('score', 'desc')
         .filter((o) => o.score >= 500)
         .take(5)
-        .map('chunk_text')
+        .map(({ chunk_text, chunk_file }) => ({ chunk_text, chunk_file }))
         .value()
     )
     .defaults({ proprietary: [], community: [] })

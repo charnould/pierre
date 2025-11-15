@@ -142,7 +142,7 @@ export const search = ({
   db(db_name)
     .prepare(
       `
-      SELECT chunk_hash, chunk_text, distance 
+      SELECT chunk_hash, chunk_file, chunk_text, distance 
       FROM vectors
       WHERE chunk_vector MATCH ?
       AND k = 5
@@ -151,6 +151,7 @@ export const search = ({
     )
     .all(new Float32Array(vector), chunk_access) as unknown as {
     chunk_hash: string
+    chunk_file: string
     chunk_text: string
     distance: number
   }[]
@@ -172,6 +173,7 @@ export const SResults = z.object({
     .array(
       z.object({
         chunk_hash: z.string(),
+        chunk_file: z.string(),
         chunk_text: z.string(),
         distance: z.number()
       })
@@ -181,6 +183,7 @@ export const SResults = z.object({
     .array(
       z.object({
         chunk_hash: z.string(),
+        chunk_file: z.string(),
         chunk_text: z.string(),
         distance: z.number()
       })

@@ -68,6 +68,7 @@ export const query_db = ({
       `
         SELECT
           c.chunk_hash,
+          c.chunk_file,
           c.chunk_text,
           s.rank AS distance
         FROM stems s 
@@ -80,6 +81,7 @@ export const query_db = ({
     )
     .all(stemmed_keywords, chunk_access) as {
     chunk_hash: string
+    chunk_file: string
     chunk_access: string
     chunk_text: string
     distance: number
