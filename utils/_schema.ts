@@ -57,7 +57,11 @@ export const Config = z
       )
       .default([]),
     models: z.object({ augment_with: Model, rerank_with: Model, answer_with: Model }),
-    knowledge: z.object({ community: z.boolean(), proprietary: z.boolean() }),
+    knowledge: z.object({
+      community: z.boolean(),
+      proprietary: z.boolean(),
+      show_sources: z.boolean()
+    }),
     disclaimer: z.string().nullable(),
     greeting: z.array(z.string()),
     examples: z.array(z.string()),
@@ -133,8 +137,12 @@ export const AIContext = z
     ...z.object({
       chunks: z
         .object({
-          community: z.array(z.string()).default([]),
-          proprietary: z.array(z.string()).default([])
+          community: z
+            .array(z.object({ chunk_text: z.string(), chunk_file: z.string() }))
+            .default([]),
+          proprietary: z
+            .array(z.object({ chunk_text: z.string(), chunk_file: z.string() }))
+            .default([])
         })
         .default({ community: [], proprietary: [] }),
       custom_data: z.object({ raw: z.array(z.string()), transformed: z.string().default('') }),

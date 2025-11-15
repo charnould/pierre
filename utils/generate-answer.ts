@@ -34,16 +34,39 @@ export const answer_user = async (context: AIContext) => {
       
       ${typeof context.config !== 'string' ? context.config.guidelines : ''}.
       
+      ${
+        context.config.knowledge.show_sources &&
+        `
+        When generating the final answer, you must ALWAYS include a "Bibliographie" section at the very end of your response.
+        
+        A source is identified by the tag pattern: <chunk source="FILENAME.pdf">...text...</chunk>
+        
+        Rules:
+        1. Detect all chunk sources you used to produce the answer.
+        2. Add a section titled "Bibliographie" at the end of your final answer.
+        3. Wrap the entire Bibliographie section in <small> tags.
+        4. List each source as an HTML link, e.g.: <a href="/">FILENAME.pdf</a>
+        5. Separate multiple sources with a comma and a space.
+        6. List each source at most once, even if multiple chunks come from the same file.
+        7. Do not alter filenames, do not summarize them, and do not add extra commentary.
+        8. The main answer must not contain chunk tags; only the "Bibliographie" section should list sources.
+        
+        Example format (in HTML format):
+        
+        <small>Bibliographie : <a href="/">2025-12 - L'attribution des logements sociaux.pdf</a>, <a href="/">2023-05 - Guide interne maintenance.pdf</a></small>`
+      }
+
       # Reference Material
       
       The current date and time is: ${today_is()}.
       
       ## Internal Materials (Priority 1)
       
-      ${context.chunks.proprietary?.map((c) => `<chunk>\n${c.trim()}\n</chunk>\n`).join('')}
+      ${context.chunks.proprietary?.map((c) => `<chunk source="${c.chunk_file}">\n${c.chunk_text}\n</chunk>\n`).join('')}
       
       ## Community Materials (Priority 2)
-      ${context.chunks.community?.map((c) => `<chunk>\n${c.trim()}\n</chunk>\n`).join('')}
+      
+      ${context.chunks.community?.map((c) => `<chunk source="${c.chunk_file}">\n${c.chunk_text}\n</chunk>\n`).join('')}
       
       ---
       

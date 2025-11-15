@@ -172,6 +172,11 @@ export default {
 
   // Quelles connaissances peut utiliser PIERRE lorsqu'il génère ses réponses ?
   knowledge: {
+    // Astuce : Si vous renseignez `false` pour l'ensemble des connaissances
+    // ci-dessus, PIERRE se comportera comme un simple wrapper autour d'un LLM,
+    // sans base de connaissances. Les réponses seront quasi instantanées, mais
+    // le risque d'hallucinations important.
+
     // `community` correspond aux connaissances en open data de PIERRE. Il
     // s'agit de connaissances générales sur les HLM. En principe, `community`
     // doit toujours être `true` pour répondre en qualité aux questions.
@@ -180,12 +185,11 @@ export default {
     // `proprietary` correspond aux connaissances propres à un organisme HLM,
     // qu'il ne souhaite pas partager avec `community` et qu'il gère en son
     // nom propre.
-    proprietary: false
+    proprietary: false,
 
-    // Astuce : Si vous renseignez `false` pour l'ensemble des connaissances
-    // ci-dessus, PIERRE se comportera comme un simple wrapper autour d'un LLM,
-    // sans base de connaissances. Les réponses seront quasi instantanées, mais
-    // le risque d'hallucinations important.
+    // `show_sources` : si `true`, la réponse générée contient une section "Sources"
+    // à la fin de la réponse finale listant les fichiers/sources utilisées.
+    show_sources: false
   },
 
   // Une information qui n'est pas visible par l'utilisateur, mais qui permet à

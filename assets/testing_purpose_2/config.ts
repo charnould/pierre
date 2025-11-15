@@ -71,7 +71,8 @@ export default {
   protected: false,
   knowledge: {
     community: false,
-    proprietary: false
+    proprietary: false,
+    show_sources: false
   },
   audience: '',
   persona: '',
