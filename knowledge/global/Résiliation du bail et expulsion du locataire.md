@@ -115,6 +115,8 @@ Les conséquences d'un logement sous-occupé sont différentes selon la zone de 
 
 Pour connaître la zone de votre commune, vous pouvez utiliser ce simulateur : https://www.service-public.gouv.fr/simulateur/calcul/zonage-abc
 
+Précision : L'article 89 de la loi du 27 janvier 2017, relative à l’Egalité et à la Citoyenneté a introduit dans l'article L. 621-2 du CCH une nouvelle définition de la sous occupation. Celle-ci a désormais valeur législative. La définition retenue comporte une restriction importante en termes de typologie : les locaux sont désormais considérés comme sous occupés lorsqu'ils comportent un nombre de pièces habitables supérieur de plus d’un au nombre de personnes y ayant leur résidence principale. Ce nombre était auparavant de deux. Ainsi, une personne seule dans un trois pièces est désormais en situation de sous occupation. L’article L. 442-3-1 du CCH renvoie à cet article pour apprécier la sous occupation des logements Hlm pouvant entraîner, dans certaines conditions, la perte du droit au maintien dans les lieux.
+
 ## Logement adapté au handicap, mais la personne handicapée ne l’habite plus
 
 ### Vous avez moins de 65 ans
@@ -191,3 +193,15 @@ La 3e proposition de logement est accompagnée du préavis (congé) de votre bai
 Si vous refusez cette dernière proposition, votre bail sera résilié.
 
 Vous devrez quitter le logement dans les 6 mois, à compter de la notification de cette 3e proposition de logement.
+
+## Peut-on considérer, lors d'une expulsion, que celle-ci constitue la fin du bail du locataire, en termes contractuel et financier, même sans état des lieux sortant dument réalisé ?
+
+En droit français au 5 novembre 2025, l'expulsion ne constitue pas la fin contractuelle du bail, car elle est la conséquence d'une résiliation déjà intervenue (par clause résolutoire ou décision de justice).
+
+Cependant, sur le plan financier, l'expulsion marque bien la fin de l'obligation principale du locataire de verser une indemnité d'occupation, car le procès-verbal d'expulsion établit la date de libération effective des lieux.
+
+L'absence d'un état des lieux de sortie n'empêche pas cette césure financière mais complique très significativement la preuve des dégradations imputables au locataire, et donc la capacité du bailleur à obtenir réparation ou à retenir le dépôt de garantie à ce titre.
+
+## Lorsqu’un locataire a été expulsé en présence d'un huissier, y-a-t'il obligation à produire un constat d'état des lieux suite à l'expulsion ?
+
+Il n’existe pas d’obligation légale stricte de produire un « constat d’état des lieux » distinct après une expulsion menée par un huissier de justice. Cependant, cet acte est en pratique indispensable pour le bailleur souhaitant prouver les dégradations locatives. Le procès-verbal (PV) d’expulsion, bien qu'obligatoire, a une finalité différente et ne peut s’y substituer. Pour être opposable au locataire expulsé, un constat des lieux doit être établi par commissaire de justice en respectant des conditions de forme strictes, notamment la convocation du locataire.
