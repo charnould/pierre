@@ -22,7 +22,7 @@ Les dates indiquées sont les dates de prise ou de cessation des fonctions, qui 
 
 #### Sous-secrétaire d'État (1956–1957)
 
-Le poste de sous-secrétaire d'État au Logement est créé le 1er février 1956 lors de la formation du Gouvernement Guy Mollet. Il est supprimé le 6 novembre 1957 lors de la formation du Gouvernement Félix Gaillard.
+Le poste de sous-secrétaire d'État au Logement est créé le 1er février 1956 lors de la formation du Gouvernement Mollet. Il est supprimé le 6 novembre 1957 lors de la formation du Gouvernement Gaillard.
 
 ### Cinquième République
 

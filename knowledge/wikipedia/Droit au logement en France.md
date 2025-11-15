@@ -1,6 +1,6 @@
 # Droit au logement en France
 
-En droit français, plusieurs législations fondamentales mentionnent ou garantissent un droit au logement.
+Le droit au logement en France est mentionné et garanti par plusieurs législations fondamentales.
 
 ## Un droit constitutionnel
 
@@ -58,7 +58,7 @@ Les personnes susceptibles d'être reconnues au titre du droit au logement oppos
 - être dans un logement inadapté au handicap du requérant ou d'une personne à sa charge.
 - demander un hébergement, un logement de transition ou logement foyer (DAHO).
 
-## Les étapes de la procédure
+## Étapes de la procédure
 
 La démarche s’articule en trois étapes :
 
@@ -66,18 +66,18 @@ La démarche s’articule en trois étapes :
 - examen de la situation du demandeur par la commission de médiation ;
 - si la commission juge la demande recevable, le préfet a l'obligation de trouver un logement. S’il n’y parvient pas, un recours devant le tribunal administratif est possible.
 
-Dépôt de la demande
+### Dépôt de la demande
 
 La demande doit être adressée au Secrétariat de la commission de médiation du droit au logement du département. Si le dossier est reconnu complet, un accusé de réception sera délivré par le secrétariat de la commission.
 
-Délais de réponse
+### Délais de réponse
 
 - Pour un logement :  
   Lorsqu’elle est saisie d’une demande de logement, la commission de médiation rend sa décision dans un délai de trois mois au plus à compter de l’accusé de réception du dossier (six mois pour les départements d'outre-mer).
 - Pour un hébergement :  
   Lorsqu’elle est saisie d’une demande d’accueil dans une structure d’hébergement, un établissement ou logement de transition, un logement-foyer ou une résidence hôtelière à vocation sociale, la commission rend sa décision dans un délai de 6 semaines à compter de l’accusé de réception de cette demande.
 
-Notification de la décision
+### Notification de la décision
 
 La décision de la commission de médiation est notifiée à l’intéressé(e) par écrit. Si la commission considère que le demandeur n’est pas prioritaire, elle en indique les motifs.
 
@@ -151,7 +151,7 @@ Seuls « 123 000 demandeurs ont été relogés » de 2008 à 2016 dans le cadr
 
 Cependant, malgré un contexte récent d’aggravation de la crise du logement, le nombre de ménages reconnus au titre du droit au logement opposable est en baisse depuis 2014. Selon le comité de suivi, cette situation est due à des pratiques de plus en plus restrictives des commissions de médiation chargées d’instruire les recours. Ceci entraîne une baisse du dépôt du nombre de recours, ce qui met en péril l’existence même du droit au logement opposable dans certains territoires. Cette dynamique ne s'est toutefois pas confirmée dans le temps. En effet, le nombre de recours a de nouveau augmenté de 2016 à la crise du Covid 19, et a de nouveau légèrement augmenté depuis 2020. En 2023, il y en avait 36 532.
 
-À cause de la pression du risque de recours (ainsi que de l'obligation de moyens et de résultats de la part de l’État), inscrire l’opposabilité dans la loi a permis une profonde évolution des politiques publiques, en particulier concernant l’offre de logement disponible à l’attention des publics défavorisés. Notamment, depuis 2007, l’État a lancé une « reconquête de ses logements », c'est-à-dire une reconquête des contingents préfectoraux qui n’étaient que partiellement gérés. Le contingent préfectoral est un droit de réservation de l’État sur 30% de l'ensemble des logements du parc social - 30% répartis en 25% pour les ménages reconnus DALO et prioritaires et 5% pour les fonctionnaires. Le droit de réservation de l’État est le droit pour celui-ci de choisir le locataire destiné à occuper un logement vacant du parc social. La bonne gestion de son contingent est cruciale pour l’État : la non attribution de logements à des ménages reconnus DALO empêche l’État de répondre à son obligation de résultat, ce qui entraîne sa condamnation à des astreintes financières, qui atteignaient 130 millions d’euros en 2022 selon la Cour des comptes. C’est dans ce cadre que le décret numéro 2011-176, relatif à l’obligation de mise en conformité des conventions de réservation entre l’État et le bailleur concerné, fut adopté le 15 février 2011. Les bailleurs et l’État devaient donc se mettre d’accord pour déterminer à nouveau – si cela n’était pas correctement fait – la part des logements sociaux sur laquelle l’État a un droit de réservation. Fin 2012, l’inspection ministérielle, le Conseil général de l'environnement et du développement durable, estimait que le contingent préfectoral représentait 21,4% des logements sociaux – cette proportion comprenant les ménages reconnus DALO et prioritaires, ainsi que les fonctionnaires ; alors qu’il aurait dû en représenter 30%.
+À cause de la pression du risque de recours (ainsi que de l'obligation de moyens et de résultats de la part de l’État), inscrire l’opposabilité dans la loi a permis une profonde évolution des politiques publiques, en particulier concernant l’offre de logement disponible à l’attention des publics défavorisés. Notamment, depuis 2007, l’État a lancé une « reconquête de ses logements », c'est-à-dire une reconquête des contingents préfectoraux qui n’étaient que partiellement gérés. Le contingent préfectoral est un droit de réservation de l’État sur 30% de l'ensemble des logements du parc social - 30 % répartis en 25 % pour les ménages reconnus DALO et prioritaires et 5 % pour les fonctionnaires. Le droit de réservation de l’État est le droit pour celui-ci de choisir le locataire destiné à occuper un logement vacant du parc social. La bonne gestion de son contingent est cruciale pour l’État : la non attribution de logements à des ménages reconnus DALO empêche l’État de répondre à son obligation de résultat, ce qui entraîne sa condamnation à des astreintes financières, qui atteignaient 130 millions d’euros en 2022 selon la Cour des comptes. C’est dans ce cadre que le décret numéro 2011-176, relatif à l’obligation de mise en conformité des conventions de réservation entre l’État et le bailleur concerné, fut adopté le 15 février 2011. Les bailleurs et l’État devaient donc se mettre d’accord pour déterminer à nouveau – si cela n’était pas correctement fait – la part des logements sociaux sur laquelle l’État a un droit de réservation. Fin 2012, l’inspection ministérielle, le Conseil général de l'environnement et du développement durable, estimait que le contingent préfectoral représentait 21,4 % des logements sociaux – cette proportion comprenant les ménages reconnus DALO et prioritaires, ainsi que les fonctionnaires ; alors qu’il aurait dû en représenter 30 %.
 
 Plusieurs rapports du Haut Comité pour le Droit au Logement à partir de 2015 furent consacrés à l’évaluation de la mobilisation du contingent préfectoral. Ils pointaient alors une insuffisance de l’État en la matière. De fait, celui-ci n’avait qu’une vision parcellaire de l’état de son contingent, malgré les différentes dispositions juridiques censées résoudre ce problème. De plus, il n’usait pas de toutes ses prérogatives, qui lui permettraient pourtant de faire appliquer la loi. C’est dans ce contexte que fut opéré, à partir de 2018 avec la Loi ELAN, le passage à la gestion en flux des réservations de logements sociaux. Lorsque le mode de gestion en stock était majoritaire, il existait auparavant un nombre déterminé de logements sociaux vis-à-vis desquels l’État disposait d’un droit d’attribution. Désormais, la part de 25% de logements devant être attribuée par l’État n’est pas déterminée par un stock de logement identifié lui étant réservé, mais par le nombre de logements disponibles (laissés vacants par des locataires quittant leur logement et/ou mis en service après construction ou réhabilitation). Autrement dit, c’est le taux de rotation dans le parc social qui détermine désormais le nombre et la nature des logements devant être attribués par l’État aux ménages reconnus DALO et aux publics prioritaires. Le mode de gestion en flux est donc supposé permettre à l’État de mieux répondre à ses obligations d’attribution aux ménages DALO ou prioritaires.
 
