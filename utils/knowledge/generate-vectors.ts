@@ -102,7 +102,7 @@ export const wake_up_gpu = async () => {
   try {
     // Check if the Hugging Face endpoint and token are provided
     // and valid. If not, throw an error.
-    const endpoint = z.string().url().safeParse(Bun.env.HUGGINGFACE_ENDPOINT)
+    const endpoint = z.url().safeParse(Bun.env.HUGGINGFACE_ENDPOINT)
     const token = z.string().nonempty().safeParse(Bun.env.HUGGINGFACE_TOKEN)
 
     if (!endpoint.success) throw new Error('❌ Invalid or missing HF_ENDPOINT.')
