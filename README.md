@@ -62,7 +62,7 @@ Pour contribuer au code-source, créer une `issue` dans GitHub et suivre les us 
 
 ### Contribuer à « améliorer la base de connaissances » : kézako ?
 
-Lorsque l'on comprend [comment fonctionne](#fonctionnement--architecture-de-`PIERRE`) `PIERRE`, on comprend le rôle de la base de connaissances : elle est le **coeur de l'intelligence de `PIERRE`** et n'est — ni plus ni moins — que des fichiers-textes transformés. Par exemple, [ce fichier](./knowledge/global/Les%20enquêtes-locataires.md) contient tout ce que sait `PIERRE` sur les enquêtes-locataires.
+Lorsque l'on comprend [comment fonctionne](#fonctionnement--architecture-de-`PIERRE`) `PIERRE`, on comprend le rôle de la base de connaissances : elle est le **coeur de l'intelligence de `PIERRE`** et n'est — ni plus ni moins — que des fichiers-textes transformés. Par exemple, [ce fichier](./knowledge/global/Vie%20du%20bail/Les%20enquêtes-locataires.md) contient tout ce que sait `PIERRE` sur les enquêtes-locataires.
 
 Ce document peut être incomplet ou imprécis, et **c'est tout l'enjeu que de l'améliorer**, car c'est ce document qu'utilise `PIERRE` pour répondre aux questions sur ces sujets.
 
@@ -75,7 +75,7 @@ La base de connaissances — en co-construction avec les bailleurs — couvre pl
 - `global` : les connaissances génériques qui s'appliquent uniformément sur tout le territoire (ex : comment gérer un trouble du voisinage ? qu'est-ce que les charges locatives ?).
 - `local` : les connaissances spécifiques à un territoire donné (ex : les associations d'hébergement d'urgence dans l'Ain, les structures d'aide dans le cadre de violences conjugales dans l'Eure).
 - `org` : les connaissances relatives à un organisme HLM en particulier (ex : qu'est-ce que Grand Dijon Habitat et quelles sont les coordonnées du service-client et des agences ?).
-- `wikipedia` : des connaissances importées de Wikipédia (ex : l'histoire du logement social).
+- `wiki` : des connaissances importées de Wikipédia (ex : l'histoire du logement social).
 
 ### Concrétement comment contribuer ?
 
