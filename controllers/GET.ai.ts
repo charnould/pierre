@@ -174,7 +174,7 @@ const search_and_answer = async (c: Context) => {
         )
 
         t6 = performance.now()
-        // end:RERANKER
+        // end: RERANKER
 
         // If the reranker returns no relevant results, it indicates that
         // either the question is unrelated to housing  or PIERRE lacks
@@ -187,7 +187,6 @@ const search_and_answer = async (c: Context) => {
           console.debug('No knowledge chunk: respond with a no-knowledge deadlock.')
           answer = await reach_relevancy_deadlock(context)
         } else {
-          console.log(context.config)
           answer = await answer_user(context)
         }
       } else {
