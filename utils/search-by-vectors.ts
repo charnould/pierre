@@ -85,7 +85,7 @@ export const generate_embeddings = async (
       response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: 'bge-m3', input: strings })
+        body: JSON.stringify({ model: 'bge-m3', input: strings }) // options: { num_ctx: 8192 }
       })
     }
 
@@ -98,7 +98,7 @@ export const generate_embeddings = async (
           Authorization: `Bearer ${Bun.env.HUGGINGFACE_TOKEN}`
         },
         method: 'POST',
-        body: JSON.stringify({ inputs: strings[0] })
+        body: JSON.stringify({ inputs: strings[0], parameters: { max_length: 8192 } })
       })
     }
 
