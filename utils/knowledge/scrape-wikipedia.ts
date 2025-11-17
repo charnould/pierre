@@ -89,7 +89,7 @@ export const scrape_wikipedia = async (knowledge: Knowledge) => {
           let markdown = new TurndownService({ headingStyle: 'atx' }).turndown(html[0])
           markdown = await prettier.format(markdown, { parser: 'markdown' })
 
-          await Bun.write(`knowledge/wikipedia/${page.title}.md`, markdown)
+          await Bun.write(`knowledge/wiki/${page.title}.md`, markdown)
         }
       }
 

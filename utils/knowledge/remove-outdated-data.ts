@@ -23,7 +23,7 @@ export const remove_outdated_data = async (knowledge: Knowledge) => {
       // Builtin SQLite library on MacOS doesn't allow extensions
       Database.setCustomSQLite('/opt/homebrew/opt/sqlite/lib/libsqlite3.dylib')
 
-      await $`rm -rf ./knowledge/wikipedia`
+      await $`rm -rf ./knowledge/wiki`
       await $`rm -rf ./knowledge/data.sqlite`
       initialize_database({ proprietary: false, community: true })
     }
