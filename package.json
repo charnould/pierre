@@ -6,6 +6,7 @@
   "module": "app.ts",
   "scripts": {
     "――――――― BUILD COMMANDS ―――――――": "―――――――",
+    "build:ext": "bun build --entrypoints extension/extension.tsx --outdir assets/default/dist/js --minify --target browser --watch",
     "build:cb": "bun --env-file=.env.production run config/build.ts",
     "transpile": "bun build --entrypoints assets/default/scripts/*.ts --outdir assets/default/dist/js --minify --target browser --watch",
     "format": "bunx prettier '!**/*.js' '!assets/default/dist' --write . --plugin=prettier-plugin-embed --plugin=prettier-plugin-tailwindcss --plugin=prettier-plugin-sql",
