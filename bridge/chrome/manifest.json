@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "author": "Charles-Henri ARNOULD",
+  "homepage_url": "https://pierre-ia.org",
+  "description": "PIERRE – L'agent IA du mouvement HLM qui augmente les applicatifs historiques",
+  "name": "PIERRE Bridge",
+  "version": "1.0",
+  "permissions": ["storage", "scripting", "activeTab"],
+  "host_permissions": ["*://*/*"],
+  "action": {
+    "default_title": "IA HLM"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["logic.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
