@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      property="description"
+      content="PIERRE — Une intelligence artificielle open source et plurilingue au service du mouvement HLM, de ses candidats, locataires et collaborateurs"
+    />
+    <meta
+      property="og:description"
+      content="PIERRE — Une intelligence artificielle open source et plurilingue au service du mouvement HLM, de ses candidats, locataires et collaborateurs"
+    />
+    <meta
+      name="description"
+      content="PIERRE — Une intelligence artificielle open source et plurilingue au service du mouvement HLM, de ses candidats, locataires et collaborateurs"
+    />
+
+    <meta
+      property="og:title"
+      content="PIERRE — Essayez l'IA open source et plurilingue du mouvement HLM !"
+    />
+    <meta
+      property="title"
+      content="PIERRE — Essayez l'IA open source et plurilingue du mouvement HLM !"
+    />
+    <meta name="image" property="og:image" content="assets/images/pierre.png" />
+    <meta property="og:image" content="assets/images/pierre.png" />
+    <meta property="og:url" content="https://pierre-ia.org" />
+    <meta name="author" content="Charles-Henri Arnould" />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#f4f6f7" />
+    <link rel="canonical" href="https://pierre-ia.org" />
+    <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml" />
+    <link rel="”mask-icon”" href="assets/images/favicon.svg" color="#f4f6f7" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="assets/dist.css" />
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script
+      defer
+      data-domain="charnould.github.io/pierre"
+      src="https://plausible.io/js/script.js"
+    ></script>
+    <title>
+      PIERRE — Une intelligence artificielle open source, plurilingue et <i>agentic</i> au service
+      du mouvement HLM, de ses candidats, locataires et collaborateurs.
+    </title>
+  </head>
+
+  <body class="mx-20 mt-10 bg-stone-100">
+    <div id="particles" class="fixed inset-0 -z-10"></div>
+
+    <a
+      class="mb-6 inline-block rounded-full bg-gray-300 px-3 py-1 text-xs"
+      href="https://www.pierre-ia.org"
+      >← PIERRE-IA.org</a
+    >
+
+    <h1 class="mb-10 font-serif text-7xl">
+      Bailleurs sociaux,<br />
+      Injecter de l'intelligence artificielle dans vos applicatifs historiques
+      <span class="text-5xl">(ARAVIS™, IKOS™, HOMERE™...)</span>
+    </h1>
+
+    <ol class="pl-6 text-2xl font-light">
+      <li class="list-decimal">Disposer d'une instance opérationnelle de PIERRE</li>
+
+      <li class="mt-2 list-decimal">
+        <a
+          class="text-blue-600 underline underline-offset-2"
+          href="https://raw.githubusercontent.com/charnould/pierre/refs/heads/master/assets/core/bridge/chrome.zip"
+          >Télécharger</a
+        >
+        l'extension pour Chrome PIERRE (.zip - 430 KO) et la dézipper
+      </li>
+
+      <li class="mt-2 list-decimal">
+        Saississez
+        <span
+          class="rounded-xl border border-gray-300 bg-gray-200 px-3 py-px font-extralight text-gray-700"
+          >chrome://extensions/</span
+        >
+        dans la barre d'adresse de Chrome
+      </li>
+
+      <li class="mt-2 list-decimal">
+        Activer le
+        <span
+          class="rounded-xl border border-gray-300 bg-gray-200 px-3 py-px font-extralight text-gray-700"
+          >mode 'Développeur'</span
+        >
+        (un clic en haut à droite)
+      </li>
+
+      <li class="mt-2 list-decimal">
+        Cliquer sur
+        <span
+          class="rounded-xl border border-gray-300 bg-gray-200 px-3 py-px font-extralight text-gray-700"
+          >Charger l'extension non empaquetée</span
+        >
+        et sélectionner le répertoire précédemment dézippé
+      </li>
+
+      <li class="mt-2 list-decimal">
+        Épingler l'extension pour l'avoir toujours à portée de main.
+      </li>
+
+      <li class="mt-2 list-decimal">
+        C'est tout ! Vous pouvez injecter de l'IA dans vos applicatifs compatibles →
+        <a class="text-blue-600 underline underline-offset-2" href="assets//videos/aravis.mp4"
+          >Démo</a
+        >
+      </li>
+    </ol>
+
+    <p class="mt-10 mb-1 text-sm">Fonctionnalités disponibles à ce jour</p>
+
+    <ul class="text-sm font-light">
+      <li class="relative pl-4 before:absolute before:left-0 before:content-['–']">
+        ACG/Aravis · <span class="text-xs">ALPHA</span> · Génération et injection de réponse à un
+        locataire
+      </li>
+    </ul>
+
+    <p class="mt-2 text-sm">
+      Pour préfigurer et inventer de nouveaux cas d'usage ou une démonstration :
+      <a class="text-blue-600 underline underline-offset-2" href="">charnould@pierre-ia.org</a>
+    </p>
+
+    <h1 class="mt-10 mb-2 text-lg text-gray-400">Test + Démonstration</h1>
+
+    <div class="mb-20 flex w-3xl gap-6 text-gray-500">
+      <textarea
+        id="pierre-bridge-demo-question"
+        class="h-64 w-1/3 rounded border border-gray-300 p-3 text-sm font-light outline-none"
+      >
+Bonjour,
+
+J'ai reçu hier ma quittance de loyer et je constate que mon loyer a augmenté significativement !
+
+Il doit s'agir d'une erreur, et qu'est-ce que c'est que cette nouvelle ligne nommée « SLS » ?
+
+Merci pour vos explications.
+      </textarea>
+      <textarea
+        id="pierre-bridge-demo-answer"
+        class="h-64 w-2/3 rounded border border-gray-300 p-3 text-sm outline-none"
+        placeholder="Réponse"
+      ></textarea>
+    </div>
+
+    <script>
+      particlesJS.load('particles', 'assets/particles.json')
+    </script>
+  </body>
+</html>
