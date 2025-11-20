@@ -13,7 +13,7 @@ export const view = (metadata: Metadata[]) => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/default/dist/css/style.1763220692407.css" />
+        <link rel="stylesheet" href="../assets/core/dist/css/style.1763220692407.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap"
           rel="stylesheet"
@@ -90,7 +90,7 @@ export const view = (metadata: Metadata[]) => {
           <span class="rounded bg-neutral-200 px-1 font-mono">_metadata.xlsx</span> est obligatoire.
           Seuls les fichiers référencés dans celui-ci et disponibles ici sont pris en compte.
           <a
-            href="../assets/default/files/_metadata.xlsx"
+            href="../assets/core/files/_metadata.xlsx"
             class="cursor-pointer text-blue-600 underline decoration-1 underline-offset-3"
             >Télécharger un gabarit vide</a
           >, le compléter, puis l'uploader.

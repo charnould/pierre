@@ -7,8 +7,8 @@ import toc from 'markdown-toc'
 const timestamp = Date.now()
 
 // Remove old files
-await $`rm -rf assets/default/dist/css`
-await $`rm -rf assets/default/dist/js`
+await $`rm -rf assets/core/dist/css`
+await $`rm -rf assets/core/dist/js`
 await $`rm -f docs/assets/widget.js`
 await $`find . -name ".DS_Store" -type f -delete`
 
@@ -35,12 +35,12 @@ for (const file of files) {
 }
 
 // Compile production CSS file
-await $`bunx @tailwindcss/cli@latest -i assets/default/tailwind/style.css -o assets/default/dist/css/style.${timestamp}.css --minify`
+await $`bunx @tailwindcss/cli@latest -i assets/core/tailwind/style.css -o assets/core/dist/css/style.${timestamp}.css --minify`
 
 // Transpile and minify .ts scripts into .js to work in browser.
 // Rename one of these files (ai.js) to include a hash/timestamp (to avoid caching issue).
-await $`bun build --entrypoints assets/default/scripts/*.ts --outdir assets/default/dist/js --minify --target browser`
-await $`mv ./assets/default/dist/js/ai.js ./assets/default/dist/js/ai.${timestamp}.js`
+await $`bun build --entrypoints assets/core/scripts/*.ts --outdir assets/core/dist/js --minify --target browser`
+await $`mv ./assets/core/dist/js/ai.js ./assets/core/dist/js/ai.${timestamp}.js`
 
 // Update "timestamped filepath" in all Views
 const views = await readdir('views')
@@ -53,17 +53,17 @@ for (const view of views) {
     content
       .replace(
         /..\/assets\/default\/dist\/js\/ai\.\d+\.js/,
-        `../assets/default/dist/js/ai.${timestamp}.js`
+        `../assets/core/dist/js/ai.${timestamp}.js`
       )
       .replace(
         /..\/assets\/default\/dist\/css\/style\.\d+\.css/,
-        `../assets/default/dist/css/style.${timestamp}.css`
+        `../assets/core/dist/css/style.${timestamp}.css`
       )
   )
 }
 
 // Copy transpiled/minified widget.js in `docs` folder, aka PIERRE website
-await $`cp assets/default/dist/js/widget.js docs/assets`
+await $`cp assets/core/dist/js/widget.js docs/assets`
 
 // Lint, format, test code
 await $`bun lint`
