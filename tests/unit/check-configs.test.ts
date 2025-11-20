@@ -3,7 +3,7 @@ import { readdir } from 'node:fs/promises'
 import { Config } from '../../utils/_schema'
 
 test('check if configs parse successfully', async () => {
-  const directories = await readdir('./assets')
+  const directories = (await readdir('assets')).filter((name) => name !== 'core')
 
   // Check official `config.ts` for each organization
   for await (const directory of directories) {

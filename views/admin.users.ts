@@ -13,7 +13,7 @@ export const view = (users: Parsed_User[]) => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/default/dist/css/style.1763220692407.css" />
+        <link rel="stylesheet" href="../assets/core/dist/css/style.1763220692407.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap"
           rel="stylesheet"
@@ -71,7 +71,7 @@ export const view = (users: Parsed_User[]) => {
           <span class="rounded bg-neutral-200 px-1 font-mono">xlsx</span> dont vous pouvez choisir
           le nom librement.
           <a
-            href="../assets/default/files/_users.xlsx"
+            href="../assets/core/files/_users.xlsx"
             class="cursor-pointer text-blue-600 underline decoration-1 underline-offset-3"
             >Téléchargez le gabarit</a
           >, complétez-le, puis importez-le. Pour des raisons de sécurité, vous serez

@@ -60,7 +60,7 @@ export const get_displayable_configs = async (params: {
   active_config: Config
 }): Promise<Displayable_configs> => {
   try {
-    const assets = await readdir('assets')
+    const assets = (await readdir('assets')).filter((name) => name !== 'core')
     const configs = await Promise.all(
       assets.map(async (file) => {
         const config: Config = (await import(`../assets/${file}/config`)).default
