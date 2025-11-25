@@ -185,11 +185,7 @@ export default {
     // `proprietary` correspond aux connaissances propres à un organisme HLM,
     // qu'il ne souhaite pas partager avec `community` et qu'il gère en son
     // nom propre.
-    proprietary: false,
-
-    // `show_sources` : si `true`, la réponse générée contient une section "Sources"
-    // à la fin de la réponse finale listant les fichiers/sources utilisées.
-    show_sources: false
+    proprietary: false
   },
 
   // Une information qui n'est pas visible par l'utilisateur, mais qui permet à

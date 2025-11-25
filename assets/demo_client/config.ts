@@ -64,8 +64,7 @@ export default {
   protected: false,
   knowledge: {
     community: true,
-    proprietary: false,
-    show_sources: false
+    proprietary: false
   },
   audience:
     'The user is interested in Grand Dijon Habitat, a social housing company operating around Dijon, France.',

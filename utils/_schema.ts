@@ -59,8 +59,7 @@ export const Config = z
     models: z.object({ augment_with: Model, rerank_with: Model, answer_with: Model }),
     knowledge: z.object({
       community: z.boolean(),
-      proprietary: z.boolean(),
-      show_sources: z.boolean()
+      proprietary: z.boolean()
     }),
     disclaimer: z.string().nullable(),
     greeting: z.array(z.string()),
