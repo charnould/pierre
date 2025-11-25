@@ -1,183 +1,104 @@
 import { TZDate } from '@date-fns/tz'
 import { format, getISOWeek, isSameDay, parseISO } from 'date-fns'
-import dedent from 'dedent'
 import type { AIContext } from './_schema'
 import { stream_text } from './generate-output'
+import { compile_prompt } from './compile_prompt'
 
 /**
- * Generates an AI answer for the user by updating the conversation context with a formatted prompt,
- * including persona, audience, guidelines, reference material, and the user's question.
+ * Generate an AI answer by compiling a prompt from the provided context and streaming the model response.
  *
- * @param context - The AIContext object containing conversation history, configuration, and user input.
- * @param options - Options for answer generation.
- * @returns A promise resolving to the generated answer or a stream of the answer, depending on the options.
+ * The function performs the following steps:
+ * 1. Compiles a prompt with injected variables:
+ * 2. Appends the compiled prompt to `context.conversation`.
+ * 3. Calls and returns the result of `stream_text({})`.
+ *
+ * Side effects:
+ * - Mutates `context.conversation` by pushing the compiled prompt.
+ *
+ * @param context - The AI runtime context. Expected properties used by this function include:
+ *
+ * @returns The value returned by `stream_text` (typically an asynchronous stream or a Promise resolving to streamed text; exact type depends on `stream_text` implementation).
+ *
+ * @throws If `compile_prompt` or `stream_text` throw/reject, the error will propagate to the caller.
+ *
+ * @remarks
+ * - If `context.chunks.proprietary` or `context.chunks.community` are undefined or empty, the corresponding prompt sections will be empty strings.
+ * - The function relies on helper functions `compile_prompt` and `today_is()` and on the shape of chunk objects to build the prompt.
  */
 export const answer_user = async (context: AIContext) => {
-  // Add prompt to conversation history
-  context.conversation.push({
-    role: 'user',
-    content: dedent`
-
-      <!-- ⚠️ Do not include any signature, name, or reference to yourself -->
-    
-      Generate your response using the role, audience, and behavioral guidelines defined below:
-      
-      # Your Role and Voice
-      
-      ${typeof context.config !== 'string' ? context.config.persona : ''}.
-      
-      # Your Audience
-      
-      ${typeof context.config !== 'string' ? context.config.audience : ''}.
-      
-      # How To Respond
-      
-      ${typeof context.config !== 'string' ? context.config.guidelines : ''}.
-      
-      ${
-        context.config.knowledge.show_sources &&
-        `
-        When generating the final answer, you must ALWAYS include a "Bibliographie" section at the very end of your response.
-        
-        A source is identified by the tag pattern: <chunk source="FILENAME.pdf">...text...</chunk>
-        
-        Rules:
-        1. Detect all chunk sources you used to produce the answer.
-        2. Add a section titled "Bibliographie" at the end of your final answer.
-        3. Wrap the entire Bibliographie section in <small> tags.
-        4. List each source as an HTML link, e.g.: <a href="/">FILENAME.pdf</a>
-        5. Separate multiple sources with a comma and a space.
-        6. List each source at most once, even if multiple chunks come from the same file.
-        7. Do not alter filenames, do not summarize them, and do not add extra commentary.
-        8. The main answer must not contain chunk tags; only the "Bibliographie" section should list sources.
-        
-        Example format (in HTML format):
-        
-        <small>Bibliographie : <a href="/">2025-12 - L'attribution des logements sociaux.pdf</a>, <a href="/">2023-05 - Guide interne maintenance.pdf</a></small>`
-      }
-
-      # Reference Material
-      
-      The current date and time is: ${today_is()}.
-      
-      ## Internal Materials (Priority 1)
-      
-      ${context.chunks.proprietary?.map((c) => `<chunk source="${c.chunk_file}">\n${c.chunk_text}\n</chunk>\n`).join('')}
-      
-      ## Community Materials (Priority 2)
-      
-      ${context.chunks.community?.map((c) => `<chunk source="${c.chunk_file}">\n${c.chunk_text}\n</chunk>\n`).join('')}
-      
-      ---
-      
-      **User Question**: ${context.content}
-      
-      **Your answer in "${context.query?.lang}" (ISO 639-1 format):**`
+  // Compile prompt
+  const prompt = await compile_prompt(context.config.id, 'answer', {
+    today: today_is(),
+    lang: context.query?.lang,
+    user_query: context.content,
+    internal_materials: context.chunks.proprietary
+      ?.map((c) => `<chunk source="${c.chunk_file}">\n${c.chunk_text}\n</chunk>\n`)
+      .join(''),
+    community_materials: context.chunks.community
+      ?.map((c) => `<chunk source="${c.chunk_file}">\n${c.chunk_text}\n</chunk>\n`)
+      .join('')
   })
+
+  // Add prompt to conversation history
+  context.conversation.push({ role: 'user', content: prompt })
 
   return stream_text({ context: context, model: context.config.models.answer_with })
 }
 
 /**
- * Handles situations where the AI lacks specific information about a user's query,
- * guiding the response to acknowledge the limitation and suggest next steps.
+ * Generates a "deadlock" relevancy prompt based on the provided AI context,
+ * appends it to the conversation history, and streams the model's response.
  *
- *
- * @param context - The AI conversation context, including configuration, persona, audience, and query details.
- * @param options - Options for response generation.
- * @returns A promise resolving to the generated or streamed answer.
+ * @param context - The AIContext containing configuration, conversation history, and query parameters.
+ * @returns A Promise that resolves to the streamed text response from the specified model.
  */
 export const reach_relevancy_deadlock = async (context: AIContext) => {
-  context.conversation.push({
-    role: 'user',
-    content: dedent`
-    
-      <!-- This prompt is activated when the Retrieval Augmented Generation system fails to retrieve relevant information about the user's query, indicating the topic is outside knowledge base or the retrieval process couldn't find matching content -->
-
-      Generate your response using the role, audience, and behavioral guidelines defined below:
-
-      # Your Role and Voice
-
-      ${typeof context.config !== 'string' ? context.config.persona : ''}
-
-      # Your Audience
-
-      ${typeof context.config !== 'string' ? context.config.audience : ''}
-
-      # How To Respond
-            
-      First, acknowledge the limitation clearly: "I don't have specific information about [topic] in my knowledge base. This query falls outside the scope of my current dataset."
-      
-      Then, choose the appropriate response strategy:
-      - For well-defined topics: Provide a brief, factual response (1-2 sentences) based on general knowledge, clearly stating: "While I can't access specific details from our database, generally speaking..."
-      - For uncertain or complex topics: "I don't have enough reliable information to answer this question accurately. I prefer not to provide potentially misleading information on important matters like this."
-      - Maintain consistent voice: Respond in alignment with your role and voice, using a supportive and professional tone.
-      - Guide the user effectively: 
-        - "To better assist you, could you rephrase your question to focus more specifically on [relevant housing aspect]?"
-        - "Would you like me to help with a related housing question instead?"
-
-      The current date and time is ${today_is()}.
-      
-      ---
-      
-      **Your answer in "${context.query?.lang}" (ISO 639-1 format):**`
+  // Compile prompt
+  const prompt = await compile_prompt(context.config.id, 'deadlock', {
+    today: today_is(),
+    lang: context.query?.lang
   })
+
+  // Add prompt to conversation history
+  context.conversation.push({ role: 'user', content: prompt })
 
   return stream_text({ context: context, model: context.config.models.answer_with })
 }
 
 /**
- * Handles situations where user input contains profanity, toxicity, or inappropriate content by injecting a professional, boundary-setting prompt into the conversation context.
+ * Generates a response to a profanity-related prompt and streams the answer.
  *
- * @param context - The AIContext object containing conversation state, configuration, and user query.
- * @param options - Options for response generation.
- * @returns A Promise resolving to either a generated answer or a streamed answer, depending on the options.
+ * This function compiles a prompt based on the provided AI context, specifically
+ * targeting the 'profanity' scenario. It adds the generated prompt to the conversation
+ * history as a user message, then streams a response using the configured answer model.
+ *
+ * @param context - The AIContext containing configuration, conversation history, and query parameters.
+ * @returns A promise that resolves to the streamed text response.
  */
 export const reach_profanity_deadlock = async (context: AIContext) => {
-  context.conversation.push({
-    role: 'user',
-    content: dedent`
-    
-      <!-- This prompt is triggered when the system detects profanity, toxicity, or other inappropriate content in the user's message -->
-    
-      Generate your response using the role, audience, and behavioral guidelines defined below:
+  // Compile prompt
+  const prompt = await compile_prompt(context.config.id, 'profanity', { lang: context.query?.lang })
 
-      # Your Role and Voice
-
-      ${typeof context.config !== 'string' ? context.config.persona : ''}
-
-      # Your Audience
-
-      ${typeof context.config !== 'string' ? context.config.audience : ''}
-
-      # How to Respond
-
-      **Maintain a professional boundary if a topic is being discussed:** "I understand you may feel strongly about this topic. As your housing assistant, I'm here to provide helpful information, but I can only do so in a respectful environment."
-      
-      **Redirect with purpose:** "Let's refocus our conversation on how I can assist with your housing needs. What specific housing information or assistance are you looking for today?"
-      
-      **When necessary, provide clear guidance:** "To help you effectively, I need to ask that we maintain professional communication. Could you please rephrase your question without the strong language?"
-      
-      **Key principles to follow:**
-      - Respond with calm professionalism, never matching inappropriate tone
-      - Acknowledge the user's underlying need or question when possible
-      - Offer a constructive path forward rather than simply refusing service
-      - Use natural, conversational language while maintaining appropriate boundaries
-      - Focus on the housing-related assistance you can provide
-      
-      **If inappropriate content persists:** "I'm here specifically to assist with housing matters in a professional capacity. Please let me know when you're ready to discuss your housing questions or concerns."
-      
-      The current date and time is ${today_is()}.
-      
-      ---
-      
-      **Your answer in "${context.query?.lang}" (ISO 639-1 format):**`
-  })
+  // Add prompt to conversation history
+  context.conversation.push({ role: 'user', content: prompt })
 
   return stream_text({ context: context, model: context.config.models.answer_with })
 }
 
-export const today_is = () => {
+/**
+ * Returns a human-readable string describing the current date, ISO week number and time,
+ * and indicates if today is one of the predefined French public holidays.
+ *
+ * Returns:
+ * - A single string with the formatted date, ISO week and time. If today matches one of the predefined
+ *   French public holidays, the string ends with " – today is a French public holiday".
+ *
+ * Example:
+ * - "Monday, July 14, 2025 (Week 29) at 09:30 AM – today is a French public holiday"
+ *
+ * @returns {string} Formatted date, ISO week and time, with an optional French public holiday indicator.
+ */
+export const today_is = (): string => {
   // Define public holidays
   // Source: https://www.service-public.fr/particuliers/actualites/A15406
   // TODO: Update the list of public holidays for 2027, 2028, etc.

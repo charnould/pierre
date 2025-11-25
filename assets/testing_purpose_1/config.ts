@@ -10,7 +10,6 @@ import { createMistral } from '@ai-sdk/mistral'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createTogetherAI } from '@ai-sdk/togetherai'
 import type { Config } from '../../utils/_schema'
-import dedent from 'dedent'
 
 const groq = createGroq()
 const cohere = createCohere()
@@ -73,9 +72,6 @@ export default {
     community: false,
     proprietary: false
   },
-  audience: '',
-  persona: '',
-  guidelines: '',
   greeting: ["Cette configuration n'existe qu'à des fins de tests"],
   examples: [],
   disclaimer: null
