@@ -64,10 +64,7 @@ export const Config = z
     disclaimer: z.string().nullable(),
     greeting: z.array(z.string()),
     examples: z.array(z.string()),
-    protected: z.boolean(),
-    guidelines: z.string(),
-    audience: z.string(),
-    persona: z.string()
+    protected: z.boolean()
   })
   .strict()
 
