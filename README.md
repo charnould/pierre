@@ -208,28 +208,27 @@ Pour tester en conditions réelles les mises à jour et nouveautés de `PIERRE`,
 # Modifier et paramétrer `PIERRE` (self-hosting)
 
 > [!NOTE]
-> Dans les instructions ci-dessous, nous considérons un bailleur social fictif nommé ``PIERRE` Habitat` dont le site institutionnel est accessible à ``PIERRE`-habitat.fr` et qui a déployé sa propre version de `PIERRE` à l'adresse/IP `180.81.82.83`.
+> Dans les instructions ci-dessous, nous considérons un bailleur social fictif nommé `PIERRE Habitat` dont le site institutionnel est accessible à `PIERRE-habitat.fr` et qui a déployé sa propre version de `PIERRE` à l'adresse/IP `180.81.82.83`.
 
 ## Modifier l'interface du chatbot
 
-<img src="docs/assets/images/personnalisation-de-`PIERRE`.webp" height="400">
+<img src="docs/assets/images/personnalisation-de-PIERRE.webp" height="400">
 
-1. Dans le répertoire `./assets`, supprimer les répertoires `demo_client`, `demo_team` et `testing_purpose_1`, `testing_purpose_2`, puis dupliquer le dossier `default` et le nommer ``PIERRE`-habitat`. Les consignes suivantes s'appliquent à ce nouveau répertoire.
-2. Supprimer les sous-répertoires `/dist`, `/files`, `/scripts`, `/tailwind`.
-3. Créer une icône `system.svg` et remplacer la précédente. Cette icône est celle qui apparait dans l'interface du chatbot (au dessus de « Bonjour 👋 »).
-4. [Générer les icônes](https://www.pwabuilder.com/imageGenerator) qui permettront d'ajouter votre chatbot sur l'écran d'accueil des smartphones de vos utilisateurs et remplacer celles dans le dossier `icons` (les icônes Windows ne sont pas nécessaires). Conservez la structure du répertoire et le nommage des fichiers (automatique).
-5. Modifier `config.ts` :  
-    – `id` avec ``PIERRE`-habitat` 
-–`greeting`qui est le message d'accueil de votre chatbot  
-–`examples`qui sont les exemples proposés après votre message d'accueil  
-–`disclaimer` qui est le message s'affichant après chaque réponse générée (ex : _Une IA peut se tromper, vérifier les informations._).
-6. Modifier dans `manifest.json` :  
+1. Dans le répertoire `./assets`, supprimer les répertoires `demo_client`, `demo_team` et `testing_purpose_1`, `testing_purpose_2` (ne pas supprimer `core`), puis modifier et/ou dupliquer le dossier `default`.
+   2.. Créer une icône `system.svg` et remplacer la précédente. Cette icône est celle qui apparait dans l'interface du chatbot (au dessus de « Bonjour 👋 »).
+2. [Générer les icônes](https://www.pwabuilder.com/imageGenerator) qui permettront d'ajouter votre chatbot sur l'écran d'accueil des smartphones de vos utilisateurs et remplacer celles dans le dossier `icons` (les icônes Windows ne sont pas nécessaires). Conservez la structure du répertoire et le nommage des fichiers (automatique).
+3. Modifier `config.ts` :  
+   – `id` avec le nom exact du répertoire
+   –`greeting`qui est le message d'accueil de votre chatbot  
+   –`examples`qui sont les exemples proposés après votre message d'accueil  
+   –`disclaimer` qui est le message s'affichant après chaque réponse générée (ex : _Une IA peut se tromper, vérifier les informations._).
+4. Modifier dans `manifest.json` :  
    – `short_name` par le nom souhaité de votre chatbot  
-   – `start_url` par `https://180.81.82.83/?config=`PIERRE`-habitat`
-7. Et voilà, votre chabot personnalisé est disponible à http://localhost:3000/?config=`PIERRE`-habitat
+   – `start_url` par `https://180.81.82.83/?config=default` (ou par le nom du répertoire que vous avez créé)
+5. Et voilà, votre chabot personnalisé est disponible à http://localhost:3000/?config=PIERRE-habitat
 
 > [!TIP]
-> Pour vous assurer que `config.ts` est correctement paramétré, notamment lors des montées de version qui peuvent en modifier la structure, lancer `bun `PIERRE`:config`.
+> Pour vous assurer que `config.ts` est correctement paramétré, notamment lors des montées de version qui peuvent en modifier la structure, lancer `bun PIERRE:config`.
 
 ## Modifier la personnalité du chatbot
 
@@ -273,11 +272,11 @@ Pour accélérer l'inférence, c'est-à-dire la vitesse des réponses, il est fo
 ### Via une fenêtre modale
 
 ```html
-<script crossorigin="anonymous" src="http://180.81.82.83/assets/default/dist/js/widget.js"></script>
+<script crossorigin="anonymous" src="http://180.81.82.83/assets/core/dist/js/widget.js"></script>
 <p
   id="`PIERRE`-ia"
   data-url="http://180.81.82.83"
-  data-configuration="`PIERRE`-habitat"
+  data-configuration="default"
   style="
         right: 20px;
         bottom: 20px;
@@ -300,7 +299,7 @@ avec :
 - `style` : le style CSS du bouton (libre à vous de le modifier)
 - `180.81.82.83` dans l'URL du script le domaine/IP du serveur où le script est accessible
 - `data-url` : le domaine/IP (sans slash de fin) du serveur où `PIERRE` est accessible
-- `data-configuration` : le nom de domaine de votre organisme qui est également le nom du répertoire que vous avez créé plus tôt dans `./assets` (_cf._ supra) ou `default` pour la version par défaut.
+- `data-configuration` : `default` ou le nom du répertoire que vous avez créé plus tôt dans `./assets` (_cf._ supra).
 
 ### Via une iframe
 
@@ -311,7 +310,7 @@ avec :
   style="..."
   width="450"
   height="620"
-  src="http://180.81.82.83/?config=`PIERRE`-habitat"
+  src="http://180.81.82.83/?config=default"
 >
 </iframe>
 ```
@@ -319,14 +318,14 @@ avec :
 avec :
 
 - `style` : le style CSS de l'iframe (libre à vous de le modifier)
-- `src` : l'URL d'accès à `PIERRE` (libre à vous de modifier `config`)
+- `src` : l'URL d'accès à `PIERRE`
 
 # Administrer `PIERRE` avec une interface graphique
 
 Si vous hébergez `PIERRE` :
 
 1. Rendez-vous à l'adresse https://180.81.82.83/a (à remplacer par votre domaine/IP).
-2. Saisissez (la première fois) `admin@`PIERRE`-ia.org` et le mot de passe contenu dans la variable d'environnement `AUTH_PASSWORD`.
+2. Saisissez (la première fois) `admin@pierre-ia.org` et le mot de passe contenu dans la variable d'environnement `AUTH_PASSWORD`.
 3. Vous pouvez désormais créer autant d'utilisateurs que nécessaire (n'oubliez pas de transmettre les mots de passe !) qui pourront modifier les utilisateurs ou l'encyclopédie, consulter les conversations ou les statistiques...
 
 ## Apprendre à `PIERRE` des connaissances (self-hosting)
@@ -341,7 +340,7 @@ Si vous hébergez `PIERRE` :
 
 1. Se connecter à https://180.81.82.83/a, puis cliquer sur `Encyclopédie`.
 2. Télécharger `_metadata.xlsx`, le compléter **scrupuleusement** et le ré-uploader avec les fichiers associés. Seuls les `.docx` (Word), `.xlsx` (Excel) et `.md` (Markdown) sont acceptés. Voir [Guide : préparer vos documents pour `PIERRE`](./docs//documentation/prepare-your-docs.md) pour plus de précisions.
-3. **Indispensable** : [Configurer](https://github.com/charnould/pierre/blob/master/assets/`PIERRE`-ia.org/config.ts#L73) `config.ts` de manière à permettre l'utilisation des connaissances `proprietary` et le protéger s'il utilise des données `privées`/`private`.
+3. **Indispensable** : [Configurer](https://github.com/charnould/pierre/blob/master/assets/default/config.ts#L188) `config.ts` de manière à permettre l'utilisation des connaissances `proprietary` et le protéger s'il utilise des données privées.
 4. C'est tout. Toutes les nuits aux alentours de 4h du matin, la base de connaissances sera automatiquement reconstruite.
 
 **[IMPORTANT] Comment réduire la durée de reconstruction de votre base de connaissances ?**
