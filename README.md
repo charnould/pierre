@@ -234,14 +234,44 @@ Pour tester en conditions réelles les mises à jour et nouveautés de `PIERRE`,
 
 Si vous avez à ce stade personnalisé visuellement votre chatbot (_cf_. supra), et bien qu'il affiche des icônes et les salutations de votre organisme, **il ne se présente PAS encore comme le chatbot de votre organisme** (essayez en lui demandant qui il est !).
 
-Pour modifier cela, modifier dans le fichier `config.ts` :
+Pour modifier cela, modifier dans le répertoire `prompts/` :
 
-- `persona` qui définit l'identité et le rôle du chatbot
-- `audience` qui définit le contexte dans lequel le chabot doit considérer son interlocuteur
-- `guidelines` qui définit la façon dont le chatbot répond aux questions
+- `answer.md` qui définit le comportement du chatbot lorsqu'il répond à une question pour laquelle il dispose de connaissances
+- `deadlock.md` qui définit le comportement du chatbot lorsqu'il répond à une question pour laquelle il NE dispose PAS de connaissances
+- `profanity.md` qui définit le comportement du chatbot lorsque l'utilisateur se montre insultant
 
 > [!NOTE]
-> Pour faciliter la lecture et manipulation du fichier `config.ts` dans VSCode, ou plus généralement activer le _word wrap_ : utilisez le raccourci `Alt` + `z` (Windows) ou `⌥` + `z` (Mac).
+> Pour faciliter la lecture et manipulation du fichier `config.ts` ou des `prompts` dans VSCode, ou plus généralement activer le _word wrap_ : utilisez le raccourci `Alt` + `z` (Windows) ou `⌥` + `z` (Mac).
+
+### Demander au chatbot de citer ses sources
+
+Il est possible d'afficher les sources utilisés lors de la génération d'un message pour ce faire, il convient de copoier/coller dans `prompts/answer.md`, juste avant `# What You Cannot Do`:
+
+```
+---
+
+# Citation Format (Mandatory)
+
+**If you used reference chunks, add this at the end:**
+
+<small>Bibliographie : <a href="FILENAME.pdf">FILENAME.pdf</a>, <a href="OTHER_FILE.pdf">OTHER_FILE.pdf</a></small>
+
+A source is identified by the tag pattern: <chunk source="FILENAME.pdf">...text...</chunk>
+
+**Rules:**
+
+- Only list files you actually used
+- Use exact filenames from chunk tags
+- List each file once separate with ", " (comma-space)
+- Do not cite conversation history or user messages
+- If no reference chunks were used: no sources section
+
+**Example:**
+
+<small> Bibliographie : <a href="2025-12 On-Call Policy.pdf">2025-12 On-Call Policy.pdf</a>, <a href="Safety Guidelines.pdf">Safety Guidelines.pdf</a></small>
+
+---
+```
 
 ## Modifier le modèle de langage utilisé
 
