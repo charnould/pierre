@@ -8,7 +8,7 @@ La fondation pour le Logement des défavorisés finance et accompagne des associ
 
 Elle est présente sur l'ensemble du territoire français au travers de neuf agences régionales, vingt-huit boutiques solidarité (accueils de jour) et quarante et une pension de famille (lieux de vie).
 
-En 2024, après les accusations d'agressions sexuelles et de viols à l'encontre de l'abbé Pierre, la fondation a annoncé qu'elle allait changer de nom.
+En 2025, après les accusations d'agressions sexuelles et de viols à l'encontre de l'abbé Pierre, la fondation change de nom : la « fondation Abbé-Pierre pour le logement des défavorisés » devient la « fondation pour le Logement des défavorisés ».
 
 ## Origine et création
 

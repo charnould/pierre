@@ -40,7 +40,8 @@ export const scrape_wikipedia = async (knowledge: Knowledge) => {
       'Prêt_locatif_social',
       'Quartier_prioritaire_de_la_politique_de_la_ville',
       'Union_sociale_pour_l%27habitat',
-      'Valérie_Létard'
+      'Valérie_Létard',
+      'Vincent_Jeanbrun'
     ]
 
     try {
