@@ -114,7 +114,7 @@ Au fur et à mesure de l'amélioration de la base de connaissances, la pertinenc
 
 4. Un **modèle de génération de `textes`** qui génére les réponses textuelles aux utilisateurs en utilisant les éléments issus de (3).
 
-Lorsque l'on auto-héberge `PIERRE` — et sur le principe du **« Bring Your Own LLM Key/Model »** (BYOK) — **il est possible de choisir le modèle utilisé** (Mistral, Anthropic, Cohere, OpenAI, Meta, Alibaba...) pour les étapes 1, 2 et 4 et ce, en modifiant le fichier de configuation (_cf._ infra).
+Lorsque l'on auto-héberge `PIERRE` — et sur le principe du **« Bring Your Own LLM Key/Model »** (BYOK) — **il est possible de choisir le modèle utilisé** (Mistral, Anthropic, Cohere, OpenAI, Meta, Alibaba...) pour les étapes 1, 3 et 4 et ce, en modifiant le fichier de configuation (_cf._ infra).
 
 > [!NOTE]
 > DPO: Consulter [cette note](/docs//documentation/data-protection-officer.md) pour comprendre plus précisément comment fonctionne `PIERRE` et les enjeux RGPD associés.
