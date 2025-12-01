@@ -24,7 +24,7 @@ import { store_metadata } from './store-metadata'
 export const execute_pipeline = async (knowledge: Knowledge) => {
   try {
     if (knowledge.community === true || knowledge.proprietary === true) {
-      if (knowledge.proprietary === true) await wake_up_gpu()
+      await wake_up_gpu()
       const to = performance.now()
       await remove_outdated_data(knowledge)
       await scrape_wikipedia(knowledge)
