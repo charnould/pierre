@@ -4,7 +4,7 @@ exports[`should search using bm25 and find a result 1`] = `
 [
   {
     "chunk_file": "wiki/Valérie Létard.md",
-    "chunk_hash": "ki3x1HPQ8Nzg4NtCpRJF",
+    "chunk_hash": "g3qilYY8QWro0fTYkIPR",
     "chunk_text": 
 "# Valérie Létard
 
@@ -108,6 +108,7 @@ En avril 2025, elle effectue une tournée de deux jours en Martinique afin de «
 
 ### Mandats et nominations actuels
 
+- Depuis le 6 novembre 2025 : députée de la 21e circonscription du Nord
 - Depuis le 21 septembre 2024 : ministre du Logement et de la Rénovation urbaine
 - Depuis le 8 juillet 2024 : députée de la 21e circonscription du Nord
 - Depuis le 27 juin 2021 : conseillère départementale du Nord
@@ -169,7 +170,7 @@ En avril 2025, elle effectue une tournée de deux jours en Martinique afin de «
 - Portail du Nord-Pas-de-Calais
 "
 ,
-    "distance": -15.597216769088632,
+    "distance": -15.52054822336689,
   },
 ]
 `;

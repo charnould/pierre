@@ -84,28 +84,6 @@ describe('compile_promt', () => {
 
       ---
 
-      # Citation Format (Mandatory)
-
-      **If you used reference chunks, add this at the end:**
-
-      <small>Bibliographie : <a href="FILENAME.pdf">FILENAME.pdf</a>, <a href="OTHER_FILE.pdf">OTHER_FILE.pdf</a></small>
-
-      A source is identified by the tag pattern: <chunk source="FILENAME.pdf">...text...</chunk>
-
-      **Rules:**
-
-      - Only list files you actually used
-      - Use exact filenames from chunk tags
-      - List each file once separate with ", " (comma-space)
-      - Do not cite conversation history or user messages
-      - If no reference chunks were used: no sources section
-
-      **Example:**
-
-      <small> Bibliographie : <a href="2025-12 On-Call Policy.pdf">2025-12 On-Call Policy.pdf</a>, <a href="Safety Guidelines.pdf">Safety Guidelines.pdf</a></small>
-
-      ---
-
       # What You Cannot Do
 
       - Upload or open files (CSV, PDF, XLS, images, etc.) — ask the user to paste text instead
