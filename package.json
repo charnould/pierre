@@ -12,7 +12,7 @@
     "format": "bunx prettier '!**/*.js' '!assets/default/dist' --write . --plugin=prettier-plugin-embed --plugin=prettier-plugin-tailwindcss --plugin=prettier-plugin-sql",
     "lint": "bun run oxlint . --ignore-pattern='**/*.js' --fix --fix-suggestions",
     "css": "bunx @tailwindcss/cli@latest -i assets/default/tailwind/style.css -o assets/default/dist/css/style.css --minify --watch",
-    "generate": "bun run ./utils/knowledge/_run.ts --community ",
+    "generate": "bun --env-file=.env.production run ./utils/knowledge/_run.ts --community ",
     "――――――― LLM EVAL + TEST COMMANDS ―――――――": "―――――――",
     "eval:reranker": "NODE_ENV=production bun test eval-reranker --watch --timeout 30000",
     "eval:output": "NODE_ENV=production bun test generate-output --watch --timeout 30000",
