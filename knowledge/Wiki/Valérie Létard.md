@@ -100,6 +100,7 @@ En avril 2025, elle effectue une tournée de deux jours en Martinique afin de «
 
 ### Mandats et nominations actuels
 
+- Depuis le 6 novembre 2025 : députée de la 21e circonscription du Nord
 - Depuis le 21 septembre 2024 : ministre du Logement et de la Rénovation urbaine
 - Depuis le 8 juillet 2024 : députée de la 21e circonscription du Nord
 - Depuis le 27 juin 2021 : conseillère départementale du Nord
