@@ -44,7 +44,7 @@ export const controller = async (c: Context) => {
       .map(async (item) =>
         User.parse({
           role: item.role,
-          email: item.email,
+          email: item.email.trim(),
           password_hash: await Bun.password.hash(item.password.trim()),
           config: JSON.stringify(
             [
