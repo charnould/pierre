@@ -22,14 +22,14 @@ export const generate_vectors = async (knowledge: Knowledge): Promise<void> => {
     if (knowledge.community) {
       const database = db('community')
       const chunks = database.query('SELECT * FROM chunks;').all() as Chunk[]
-      await go(chunks, database, knowledge)
+      await go(chunks, database)
     }
 
     // Generate and save `proprietary` embeddings
     if (knowledge.proprietary) {
       const database = db('proprietary')
       const chunks = database.query('SELECT * FROM chunks;').all() as Chunk[]
-      await go(chunks, database, knowledge)
+      await go(chunks, database)
     }
 
     console.log('✅ Embeddings computed')
@@ -48,15 +48,11 @@ export const generate_vectors = async (knowledge: Knowledge): Promise<void> => {
  * @param database - The `Database` instance where the embeddings will be stored.
  * @returns A promise that resolves when all chunks have been processed and inserted into the database.
  */
-const go = async (chunks: Chunk[], database: Database, knowledge: Knowledge) => {
+const go = async (chunks: Chunk[], database: Database) => {
   for await (const c of chunks) {
     const to = performance.now()
     let chunk_vector
-    if (
-      knowledge.proprietary === true &&
-      Bun.env.HUGGINGFACE_ENDPOINT &&
-      Bun.env.HUGGINGFACE_TOKEN
-    ) {
+    if (Bun.env.HUGGINGFACE_ENDPOINT && Bun.env.HUGGINGFACE_TOKEN) {
       chunk_vector = await generate_embeddings([c.chunk_text], {
         provider: 'huggingface',
         batch: false
