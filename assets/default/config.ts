@@ -164,7 +164,7 @@ export default {
   //  - PIERRE ne sera accessible qu'aux utilisateurs dûment habilités et connectés.
   //  - C'est le paramétrage à choisir pour restreindre l'usage, par exemple, aux collaborateurs.
   //
-  // Pour vous connecter la première fois, saississez `admin@pierre-ia.org` et
+  // Pour vous connecter la première fois, saisissez `admin@pierre-ia.org` et
   // la valeur de la variable d'environnement `AUTH_PASSWORD`, puis créer des
   // utilisateurs.
   protected: false,
