@@ -304,7 +304,7 @@ Pour accélérer l'inférence, c'est-à-dire la vitesse des réponses, il est fo
 ```html
 <script crossorigin="anonymous" src="http://180.81.82.83/assets/core/dist/js/widget.js"></script>
 <p
-  id="`PIERRE`-ia"
+  id="PIERRE-ia"
   data-url="http://180.81.82.83"
   data-configuration="default"
   style="
