@@ -7,11 +7,11 @@ export function Settings(
   props: JSX.IntrinsicAttributes & {
     settings: any
     setSettings: any
-    detectedView: any
-    setDetectedView: any
+    view: any
+    setView: any
   }
 ) {
-  const { settings, setSettings, detectedView, setDetectedView } = props
+  const { settings, setSettings, setView } = props
 
   // Temporary state for input fields
   const [draftApiUrl, setDraftApiUrl] = useState(settings.apiUrl ?? '')
@@ -20,8 +20,8 @@ export function Settings(
   // Handle submit
   const handleSubmit = async () => {
     // Manipulate or validate inputs
-    const manipulatedUrl = draftApiUrl.trim().toUpperCase()
-    const manipulatedToken = draftApiToken.trim().toUpperCase()
+    const manipulatedUrl = draftApiUrl.trim()
+    const manipulatedToken = draftApiToken.trim()
 
     const isValid = manipulatedUrl && manipulatedToken // replace with real validation
 
@@ -38,7 +38,7 @@ export function Settings(
         apiToken: manipulatedToken,
         isSet: true
       })
-      setDetectedView('task')
+      setView('task')
     }
   }
 
@@ -46,37 +46,37 @@ export function Settings(
     <>
       <Navigation {...props} />
 
-      <div className="mx-6 pb-6">
-        <p className="text-3xl/tight font-semibold">Paramètres</p>
-        <p className="mb-4 text-2xl/tight font-medium">
-          Paramétrons l'extension. C'est à faire une seule fois.
+      <div className="container">
+        <p className="view__title">Paramétres</p>
+
+        <p className="view__description">
+          Si vous ne savez pas quoi renseigner, rapprochez-vous de votre manager.
         </p>
 
+        <p className="view__description">Ce n'est à faire qu'une seule fois !</p>
+
         <input
-          autoFocus
-          className="mt-2 block w-full rounded border border-gray-500 p-3 text-base font-medium text-white caret-blue-600 placeholder:text-gray-400 focus:outline-none"
-          type="text"
+          className="view__input"
+          type="url"
           id="apiUrl"
-          placeholder="https://gdh.pierre-ia.org/api"
+          placeholder="URL : https://assistant.pierre-ia.org/api"
           value={draftApiUrl}
           onChange={(e) => setDraftApiUrl(e.target.value)}
+          required
         />
 
         <input
-          className="mt-2 block w-full rounded border border-gray-500 p-3 text-base font-medium text-white caret-blue-600 placeholder:text-gray-400 focus:outline-none"
-          type="text"
+          className="view__input"
+          type="password"
           id="apiToken"
-          placeholder="f390kSKZO0Z?d35dkz"
+          placeholder="PASSWORD : f390kSKZO0Zd35dkz"
           value={draftApiToken}
           onChange={(e) => setDraftApiToken(e.target.value)}
+          required
         />
 
-        <button
-          className="pointer-cursor mt-2 mb-4 block w-full rounded bg-neutral-50 p-3 text-center text-lg font-bold text-neutral-900"
-          id="saveButton"
-          onClick={handleSubmit}
-        >
-          Paramétrer l'extension
+        <button className="view__button" id="saveButton" onClick={handleSubmit}>
+          Enregistrer
         </button>
       </div>
     </>
