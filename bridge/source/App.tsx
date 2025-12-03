@@ -1,11 +1,11 @@
 // @ts-ignore
-import css from './dist.css' with { type: 'text' }
-import { useRef, useState, useEffect } from 'react'
+import css from './style.css' with { type: 'text' }
+import { useRef, useState, useEffect, JSX } from 'react'
 import ReactDOM from 'react-dom/client'
 import Draggable from 'react-draggable'
 import { Respond } from './components/Respond'
 import { Update } from './components/Update'
-import { CantDoAnything } from './components/Error'
+import { UnsupportedPage } from './components/UnsupportedPage'
 import { Settings } from './components/Settings'
 const chrome: any = (window as any).chrome
 declare const VERSION: string
@@ -23,25 +23,54 @@ async function run() {
 
     // Attach Shadow DOM and add styles
     const shadow = bookmarklet.attachShadow({ mode: 'open' })
-    shadow.innerHTML = `<style>${css}</style><div></div>`
+    shadow.innerHTML = `
+      <link rel="preconnect" href="https://rsms.me/">
+      <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+      <style>${css}</style>
+      <div></div>
+      `
 
     // `div` will serve as React root
     const reactRoot = shadow.querySelector('div')!
 
-    function Bridge() {
+    /**
+     * Bridge component - Main container for the Pierre browser extension UI.
+     *
+     * Manages the application state and lifecycle, including:
+     * - Loading and persisting user settings from Chrome storage
+     * - Checking for extension updates from the remote repository
+     * - Detecting demo elements on the page to determine the current view
+     * - Rendering the appropriate view based on the application state
+     *
+     * @component
+     * @returns {JSX.Element} A draggable container with the Bridge UI, displaying one of three views:
+     *   - `settings`: Configuration view for API credentials
+     *   - `unsupported`: Fallback view when no compatible elements are found
+     *   - `task`: Main task response view when demo elements are detected
+     *
+     * @remarks
+     * - Settings are loaded from Chrome's local storage on mount
+     * - If no settings are found, the settings view is displayed
+     * - The component automatically detects demo elements and switches to task mode
+     * - Update availability is checked on component mount
+     */
+    function Bridge(): JSX.Element {
       const nodeRef = useRef<HTMLDivElement>(null)
 
       /** State management (single source of truth!) */
-      const [isUpdateNeeded, setIsUpdateNeeded] = useState<undefined | boolean>(undefined)
-      const [settings, setSettings] = useState({ apiUrl: '', apiToken: '', isSet: false })
-      const [detectedView, setDetectedView] = useState<'settings' | 'aie' | 'task'>('aie')
+      const [view, setView] = useState<undefined | 'settings' | 'unsupported' | 'task'>(undefined)
+      const [needUpdate, setneedUpdate] = useState<boolean>(false)
+      const [settings, setSettings] = useState({
+        apiUrl: '',
+        apiToken: '',
+        isSet: false,
+        source: '',
+        target: ''
+      })
 
-      /**
-       * useEffect is a React hook that runs side effects in functional components.
-       *
-       * - The first argument is a function containing the effect (here: load settings and check version).
-       * - The second argument is a dependency array. Because it's empty ([]), effects run only once when the component is first rendered.
-       */
+      // On first render:
+      // 1) Restore settings from Chrome storage.
+      // 2) Check if a newer extension version is available.
       useEffect(() => {
         /**
          * Load stored settings from Chrome's local storage and merge them
@@ -62,8 +91,7 @@ async function run() {
               isSet: stored.isSet ?? prev.isSet
             }))
 
-            // Log the updated settings for debugging purposes
-            console.log('SETTINGS:', stored)
+            if (!stored.isSet) setView('settings')
           })
           .catch(() => console.error('Failed to fetch settings from Chrome storage.'))
 
@@ -71,115 +99,80 @@ async function run() {
          * Check if a new version of the extension is available.
          *
          * Fetches the remote version file from GitHub and compares it to the
-         * current VERSION. Updates the `isUpdateNeeded` state accordingly:
+         * current VERSION. Updates the `needUpdate` state accordingly:
          * - `true` if remote version is greater (update available)
          * - `false` if remote version is equal or lower (up to date)
          * - `undefined` if fetch fails or response is invalid
          */
         fetch(
-          'https://raw.githubusercontent.com/charnould/pierre/master/assets/core/bridge/version'
+          'https://raw.githubusercontent.com/charnould/pierre/refs/heads/master/assets/core/bridge/version'
         )
           // If response is not OK (404, network issue, etc.), reject to trigger catch
           .then((res) => (res.ok ? res.text() : Promise.reject()))
           .then((text) => {
             const gh_version = JSON.parse(text)
             // Set state: true if update needed, false if up to date
-            setIsUpdateNeeded(gh_version > VERSION)
+            setneedUpdate(gh_version > VERSION)
           })
-          .catch(() => {
-            // Fetch failed or invalid response → cannot determine update status
-            setIsUpdateNeeded(undefined)
-          })
+          .catch(() => setneedUpdate(false))
       }, [])
 
-      /**
-       * Gracefully closes the pierre-extension popup by:
-       * - applying the exit animation
-       * - waiting for the animation to finish
-       * - removing the host element from the DOM
-       *
-       * Safe to call multiple times: the listener auto-cleans (once: true)
-       * and the function exits early if the element does not exist.
-       */
-      const onClose = () => {
-        const host = document.querySelector<HTMLElement>('pierre-extension')
-        if (!host) return
+      // Run once on first render, then again only when `view` changes.
+      // If `view` is already set, skip the init routine.
+      //
+      // Otherwise:
+      // - Look for the demo source/target elements in the DOM.
+      // - If both exist, preload their IDs into settings and switch to "task" view.
+      // - If not found, fall back to the "unsupported" view.
+      useEffect(() => {
+        if (view !== undefined) return
 
-        host.style.animation = 'exit 1s ease-out forwards'
-        host.addEventListener('animationend', () => host.remove(), { once: true })
-      }
+        const source_id = 'pierre-bridge-demo-question'
+        const target_id = 'pierre-bridge-demo-answer'
+        const source = document.getElementById(source_id)
+        const target = document.getElementById(target_id)
 
-      const check = () => {
-        const hasX = document.querySelector('#bridgepierre')
-        if (hasX) {
-          console.log('je pexu lancer la task') //setDetectedView('task')
-          return true
+        if (source && target) {
+          setSettings((prev) => ({ ...prev, source: source_id, target: target_id }))
+          setView('task')
         } else {
-          console.log('je peux pas lancer la task') // setDetectedView('aie')
-          return false
+          setView('unsupported')
         }
-      }
+      }, [view])
 
-      //
-      // Main component
-      //
+      // Draggable wrapper for the whole UI panel.
       return (
         <Draggable nodeRef={nodeRef}>
           <div ref={nodeRef}>
-            <div
-              className="w-[333px] rounded-2xl font-sans text-white tabular-nums shadow-[0_0_60px_rgba(0,0,0,0.6)]"
-              style={{
-                animation: 'entrance 1s ease-out forwards',
-                backgroundImage:
-                  'linear-gradient(133.84deg, #4E4E4E -16.04%, #333333 9.33%, #1A1A1A 32.02%, #1A1A1A 62.06%, #262626 87.42%, #4E4E4E 112.12%)'
-              }}
-            >
-              <div className="flex cursor-pointer items-center justify-between px-3 pt-3 pb-0">
-                {settings.isSet && detectedView === 'aie' && (
-                  <>
-                    <div
-                      onClick={() => setDetectedView('settings')}
-                      className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-400 text-xs text-black"
-                    >
-                      ⁞
-                    </div>
-
-                    <div
-                      onClick={onClose}
-                      className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-400 text-xs text-black"
-                    >
-                      ✕
-                    </div>
-                  </>
-                )}
+            <div className="bridge">
+              {/* Render the active view (settings / error / main task). */}
+              <div className="view">
+                {view === 'settings' ? (
+                  <Settings
+                    settings={settings}
+                    setSettings={setSettings}
+                    view={view}
+                    setView={setView}
+                  />
+                ) : view === 'unsupported' ? (
+                  <UnsupportedPage
+                    settings={settings}
+                    setSettings={setSettings}
+                    view={view}
+                    setView={setView}
+                  />
+                ) : view === 'task' ? (
+                  <Respond
+                    settings={settings}
+                    setSettings={setSettings}
+                    view={view}
+                    setView={setView}
+                  />
+                ) : null}
               </div>
 
-              {detectedView !== 'settings' && settings.isSet && check() ? (
-                <Respond
-                  settings={settings}
-                  setSettings={setSettings}
-                  detectedView={detectedView}
-                  setDetectedView={setDetectedView}
-                />
-              ) : (
-                <CantDoAnything
-                  settings={settings}
-                  setSettings={setSettings}
-                  detectedView={detectedView}
-                  setDetectedView={setDetectedView}
-                />
-              )}
-
-              {(!settings.isSet || (settings.isSet && detectedView === 'settings')) && (
-                <Settings
-                  settings={settings}
-                  setSettings={setSettings}
-                  detectedView={detectedView}
-                  setDetectedView={setDetectedView}
-                />
-              )}
-
-              <Update isUpdateNeeded={isUpdateNeeded} />
+              {/* Update banner shown only if a new version is available. */}
+              <Update needUpdate={needUpdate} />
             </div>
           </div>
         </Draggable>
