@@ -1,6 +1,7 @@
 import type { Serve } from 'bun'
 import { CronJob } from 'cron'
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 import { serveStatic } from 'hono/bun'
 import { secureHeaders } from 'hono/secure-headers'
 import { setup } from './utils/setup'
@@ -13,6 +14,7 @@ import { controller as get_knowledge } from './controllers/GET.knowledge'
 import { controller as get_login } from './controllers/GET.login'
 import { controller as get_statistics } from './controllers/GET.statistics'
 import { controller as get_users } from './controllers/GET.users'
+import { controller as post_bridge } from './controllers/POST.bridge.answer'
 import { controller as post_conversation } from './controllers/POST.conversations'
 import { controller as post_knowledge } from './controllers/POST.knowledge'
 import { controller as post_login } from './controllers/POST.login'
@@ -30,6 +32,10 @@ await setup()
 await is_ollama_ready()
 
 const app = new Hono()
+
+// Enable CORS for the Bridge browser extension to access PIERRE from the legacy system
+// TODO: restrict CORS to specific origins
+app.use(cors())
 
 // Configure the secure headers for the app.
 // This allows other websites to iframe PIERRE
@@ -81,6 +87,7 @@ app.get('/a/knowledge', authenticate, get_knowledge)
 app.get('/a/statistics', authenticate, get_statistics)
 app.get('/a/conversations', authenticate, get_conversations)
 
+app.post('/bridge/answer', post_bridge)
 app.post('/a/login', post_login)
 app.post('/a/users', authenticate, post_users)
 app.post('/a/knowledge', authenticate, post_knowledge)
