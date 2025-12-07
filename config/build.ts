@@ -52,11 +52,11 @@ for (const view of views) {
     `./views/${view}`,
     content
       .replace(
-        /..\/assets\/default\/dist\/js\/ai\.\d+\.js/,
+        /..\/assets\/core\/dist\/js\/ai\.\d+\.js/,
         `../assets/core/dist/js/ai.${timestamp}.js`
       )
       .replace(
-        /..\/assets\/default\/dist\/css\/style\.\d+\.css/,
+        /..\/assets\/core\/dist\/css\/style\.\d+\.css/,
         `../assets/core/dist/css/style.${timestamp}.css`
       )
   )
