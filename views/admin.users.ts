@@ -13,7 +13,7 @@ export const view = (users: Parsed_User[]) => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/core/dist/css/style.1765109308858.css" />
+        <link rel="stylesheet" href="../assets/core/dist/css/style.1765113082192.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap"
           rel="stylesheet"
