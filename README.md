@@ -40,6 +40,7 @@ Plus concrètement, `PIERRE` c'est à la fois :
 - [Modifier et paramétrer `PIERRE` (self-hosting)](#modifier-et-param%C3%A9trer-pierre-self-hosting)
   - [Modifier l'interface du chatbot](#modifier-linterface-du-chatbot)
   - [Modifier la personnalité du chatbot](#modifier-la-personnalit%C3%A9-du-chatbot)
+    - [Demander au chatbot de citer ses sources](#demander-au-chatbot-de-citer-ses-sources)
   - [Modifier le modèle de langage utilisé](#modifier-le-mod%C3%A8le-de-langage-utilis%C3%A9)
     - [Comment modifier le modèle de langage ?](#comment-modifier-le-mod%C3%A8le-de-langage)
     - [Quels modèles est-il possible d'utiliser ?](#quels-mod%C3%A8les-est-il-possible-dutiliser)
