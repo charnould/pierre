@@ -10,7 +10,7 @@ Le 12 octobre 2025, il est nommé ministre de la Ville et du Logement dans le go
 
 ### Jeunesse et études
 
-Fils d'un chauffeur-livreur devenu directeur des achats et d'une mère au foyer d'origine italienne, Vincent Jeanbrun grandit à L'Haÿ-les-Roses, dans le quartier Paul-Hochart, au sein de l'une des « tours marron », avant que sa famille ne s'installe dans un appartement du voisinage.
+Fils d'un chauffeur-livreur devenu directeur des achats et d'une mère au foyer d'origine italienne (Frioul), Vincent Jeanbrun grandit à L'Haÿ-les-Roses, dans le quartier Paul-Hochart, au sein de l'une des « tours marron », avant que sa famille ne s'installe dans un appartement du voisinage.
 
 Lui-même aime à rappeler être né « du mauvais côté de l'autoroute », en référence à l'A6 qui coupe la ville en deux, se présentant comme un « enfant du logement social » revendiqué. Ces origines modestes nourrissent souvent le récit personnel qu'il met en avant dans sa politique.
 

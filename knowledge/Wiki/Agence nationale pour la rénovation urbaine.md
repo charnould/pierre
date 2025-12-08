@@ -35,7 +35,7 @@ L'ANRU représente le guichet unique destiné à simplifier et harmoniser les pr
 
 L'ANRU est cofinancée par l'État, la Caisse des dépôts, les bailleurs sociaux représentés par l'Union sociale pour l'habitat (USH) et les partenaires sociaux représentés paritairement par Action Logement.
 
-Compte tenu des dispositions de la loi Droit au logement opposable (dite loi DALO) du 5 mars 2007 qui avait porté de 5 à 6 milliards d'euros les engagements de l'État, un avenant a été signé avec les partenaires sociaux d'Action logement, depuis réunis au sein de l'Union d'économie sociale pour le logement (UESL), le 27 juin 2007, pour un montant d'un milliard d'euros supplémentaire à la convention de financement de l'ANRU.
+Compte tenu des dispositions de la loi Droit au logement opposable (dite loi DALO) du 5 mars 2007 qui avait porté de 5 à 6 milliards d'euros les engagements de l'État, un avenant a été signé avec les partenaires sociaux d'Action logement, depuis réunis au sein de l'Union d'économie sociale pour le logement (UESL), le 27 juin 2007, pour un montant d'un milliard d'euros supplémentaire à la convention de financement de l'ANRU.
 
 Les moyens d'intervention de l'ANRU dans le cadre du PNRU sont portés de 11 à 12 milliards d'euros en juin 2007.
 
@@ -125,7 +125,7 @@ La nouvelle procédure du NPNRU se décompose en deux phases. Dans un premier te
 
 La phase de préfiguration a pour objet d'établir de préciser les projets et de les chiffrer avant leur passage devant le comité d'engagement de l'ANRU. Un rapport de la commission des affaires économiques du Sénat paru en 2017 indique cependant que la multiplication des études peut ralentir la procédure. Les sénatrices rapporteuses s'inquiètent notamment des sommes engagées pour la production d'études, et souhaitent qu'elles soient rationalisées.
 
-Ce programme concerne 480 quartiers, sur un total de près de 1 500 quartiers prioritaires, dont 216 sont classés d’intérêt national et 264 d'intérêt régional. Au 15 décembre 2016, 95 % des quartiers d'intérêt national avaient un protocole de préfiguration en cours d'instruction ou déjà signé.
+Ce programme concerne 480 quartiers, sur un total de près de 1 500 quartiers prioritaires, dont 216 sont classés d’intérêt national et 264 d'intérêt régional. Au 15 décembre 2016, 95 % des quartiers d'intérêt national avaient un protocole de préfiguration en cours d'instruction ou déjà signé.
 
 ### Programme national de revitalisation des quartiers anciens dégradés (PNRQAD)
 

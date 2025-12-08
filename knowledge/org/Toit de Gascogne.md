@@ -167,3 +167,42 @@ Email : syndic@toitdegascogne.fr
   - Accueil physique : du lundi au jeudi, de 9 h à 12 h
   - Accueil téléphonique : du lundi au vendredi, de 9 h à 12 h
 - Site web : https://toitdegascogne.fr
+
+## Les modalités de réglement du loyer autorisées chez Toit de Gascogne
+
+Le Toit de Gascogne propose plusieurs modes de paiement sécurisés et adaptés à chaque besoin.
+Le paiment en espèce n'est pas autorisé au Toit de Gascogne.
+
+### Le prélèvement automatique
+
+Les locataires peuvent opter pour le prélèvement automatique en complétant un mandat et en fournissant leur RIB au Toit de Gascogne.
+
+Une fois l’autorisation validée, le montant du loyer est prélevé automatiquement chaque mois à une date fixe.
+
+Avantages :
+
+- aucune démarche mensuelle à effectuer
+- aucun risque d’oubli ou de retard
+- un traitement des paiements sécurisé
+
+### Le paiement en ligne
+
+Il est possible de régler son loyer directement sur le site www.toitdegascogne.fr via l’icône « Je paye en ligne ». Le locataire saisit son numéro de compte locataire, ses informations personnelles, puis les données de sa carte bancaire.
+
+Atouts de ce service :
+
+- accès au paiement 24h/24 et 7j/7
+- règlement par carte bancaire dans un espace sécurisé
+- liberté de choisir le montant à payer
+
+### Le paiement par chèque
+
+Le règlement par chèque reste également disponible.
+
+Les locataires doivent envoyer leur chèque, libellé à l’ordre SAG d’Hlm du Gers, par courrier ou le déposer à l’accueil. Pour un traitement plus rapide, il est conseillé d’indiquer le numéro de compte locataire au dos du chèque.
+
+### Le virement bancaire
+
+Le virement bancaire constitue une autre option pour ceux qui souhaitent effectuer leur paiement directement depuis leur établissement bancaire.
+
+Pour garantir la bonne réception du paiement, il est nécessaire d’utiliser les coordonnées bancaires exactes du Toit de Gascogne et d’indiquer dans le libellé du virement le numéro de compte locataire . Le RIB peut être demandé auprès de ses services.
