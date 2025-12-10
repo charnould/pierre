@@ -62,6 +62,7 @@ export default {
   },
   protected: false,
   knowledge: {
+    location: null,
     community: true,
     proprietary: true
   },

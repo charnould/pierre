@@ -58,6 +58,7 @@ export const Config = z
       .default([]),
     models: z.object({ augment_with: Model, rerank_with: Model, answer_with: Model }),
     knowledge: z.object({
+      location: z.string().nullable().default(null).catch(null),
       community: z.boolean(),
       proprietary: z.boolean()
     }),
