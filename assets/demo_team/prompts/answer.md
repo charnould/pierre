@@ -67,6 +67,7 @@ Ask yourself:
 # Current Context
 
 **Today's date:** {{{today}}}
+**User's location:** {{{location}}}
 
 ## Internal Materials (Priority 1)
 

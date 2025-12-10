@@ -51,8 +51,7 @@ export const augment_query = async (context: AIContext): Promise<Augmented_Query
     ...context.conversation,
     {
       role: 'assistant',
-      content: dedent`
-      Analyze the conversation history and generate a set of standalone questions in French, each rephrasing **last** user inquiry. Question should be clear, self-contained, and directly reflect the user’s intent without introducing any new details or expanding the scope. If there are multiple questions, separate them with a pipe (|). Do not add any introduction, extra text, or formatting. Keep the questions concise and focused solely on the user’s last inquiries. If a question mentions a specific date or time (e.g., 'qui est d’astreinte aujourd’hui'), use today’s date, which is ${today_is()}.`
+      content: dedent`Analyze the conversation history and generate a set of standalone questions in French, each rephrasing the user's last inquiry. Each question must be clear, self-contained, faithful to the user’s intent, concise, and must not introduce new information.${context.config.knowledge.location && ` Whenever the inquiry relates to a place, region, or geographic context, explicitly include the user’s location ("${context.config.knowledge.location}").`} If multiple questions are required, separate them with a pipe (|). If a question refers to “aujourd’hui” or another relative time expression (e.g., « qui est d’astreinte aujourd’hui »), replace it with today’s actual date: ${today_is()}. Output only the final standalone question(s), without introductions, explanations, comments, or formatting.`
     }
   ]
 
@@ -76,8 +75,8 @@ export const augment_query = async (context: AIContext): Promise<Augmented_Query
         - Each segment MUST be separated by '|'.  
         - Do NOT include titles, explanations, quotes, lists, bullet points, markdown, or any formatting.  
         - Do NOT include introductory text.
-        - If a question mentions a specific date or time (e.g., 'qui est d’astreinte aujourd’hui'), use today’s date, which is ${today_is}.
-        - If a location is referenced, include the appropriate region, department, city or zipcode.  
+        - If a question mentions a specific date or time (e.g., 'qui est d’astreinte aujourd’hui'), use today’s date: ${today_is}.
+        - If the inquiry references a location, include the appropriate region, department, city, or zipcode.${context.config.knowledge.location && ` If it does not reference any location but involves a geographic context, explicitly add the user’s location ("${context.config.knowledge.location}").`}
         
         Final output format example (illustrative only):
         Lorem ipsum | lorem ipsum | lorem ipsum | lorem ipsum | lorem ipsum | lorem ipsum
@@ -90,8 +89,7 @@ export const augment_query = async (context: AIContext): Promise<Augmented_Query
     ...context.conversation,
     {
       role: 'assistant',
-      content: dedent`
-      Analyze the user’s final intent and generate a list of five precise, high-impact keywords in French, separated by a pipe (|), optimized for a BM25-based search engine. Focus on essential terms and critical multi-word phrases while filtering out noise such as verbs, adjectives, adverbs, and generic words. Ensure all keywords are orthographically and grammatically correct, prioritizing exact matches for maximum retrieval relevance. Output only the keywords, formatted as instructed, with no additional text or explanation.`
+      content: dedent`Analyze the user’s final intent and generate a list of five precise, high-impact keywords in French, separated by a pipe (|), optimized for a BM25-based search engine. Focus on essential terms and critical multi-word phrases while filtering out noise such as verbs, adjectives, adverbs, and generic words. Ensure all keywords are orthographically and grammatically correct, prioritizing exact matches for maximum retrieval relevance. If the user’s inquiry involves a place or geographic context, include relevant location terms.${context.config.knowledge.location && ` If no location is mentioned but the inquiry is geographic, explicitly add the user’s location ("${context.config.knowledge.location}").`} Output only the keywords, formatted as instructed, with no additional text or explanation.`
     }
   ]
 

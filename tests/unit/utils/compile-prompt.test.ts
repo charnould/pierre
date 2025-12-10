@@ -22,6 +22,7 @@ describe('compile_promt', () => {
   it('should compile prompt', async () => {
     const prompt = await compile_prompt('default', 'answer', {
       lang: 'fr',
+      location: 'a location',
       today: 'current_time_and_date',
       user_query: 'user_query_value',
       internal_materials: 'internal_materials_value',
@@ -98,6 +99,7 @@ describe('compile_promt', () => {
       # Current Context
 
       **Today's date:** current_time_and_date
+      **User's location:** a location
 
       ## Internal Materials (Priority 1)
 

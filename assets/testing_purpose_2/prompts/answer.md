@@ -89,6 +89,7 @@ A source is identified by the tag pattern: <chunk source="FILENAME.pdf">...text.
 # Current Context
 
 **Today's date:** {{{today}}}
+**User's location:** {{{location}}}
 
 ## Internal Materials (Priority 1)
 

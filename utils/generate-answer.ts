@@ -31,6 +31,7 @@ export const answer_user = async (context: AIContext) => {
     today: today_is(),
     lang: context.query?.lang,
     user_query: context.content,
+    location: context.config.knowledge.location,
     internal_materials: context.chunks.proprietary
       ?.map((c) => `<chunk source="${c.chunk_file}">\n${c.chunk_text}\n</chunk>\n`)
       .join(''),

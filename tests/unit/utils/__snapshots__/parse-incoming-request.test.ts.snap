@@ -36,6 +36,7 @@ exports[`should AIContext parse correctly 1`] = `
     "id": "default",
     "knowledge": {
       "community": true,
+      "location": null,
       "proprietary": false,
     },
     "models": {
