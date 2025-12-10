@@ -9,7 +9,7 @@
     "bridge:build": "bun run config/build:bridge.ts",
     "bridge:dev": "bun build --entrypoints bridge/source/App.tsx --outdir bridge/chrome --minify --target browser --watch",
     "――――――― BUILD COMMANDS ―――――――": "―――――――",
-    "build:cb": "bun --env-file=.env.production run config/build.ts",
+    "build:cb": "bun --env-file=.env.production run config/build:app.ts",
     "transpile": "bun build --entrypoints assets/default/scripts/*.ts --outdir assets/default/dist/js --minify --target browser --watch",
     "format": "bunx prettier '!**/*.js' '!assets/default/dist' --write . --plugin=prettier-plugin-embed --plugin=prettier-plugin-tailwindcss --plugin=prettier-plugin-sql",
     "lint": "bun run oxlint . --ignore-pattern='**/*.js' --fix --fix-suggestions",
