@@ -90,13 +90,12 @@ export const scrape_wikipedia = async (knowledge: Knowledge) => {
           /<h2>(Annexes|Notes et références|Références|Voir aussi|Liens externes|Articles connexes|Pour approfondir|Notes|Galerie)<\/h2>/gm
         )
 
-         let markdown = new TurndownService({ headingStyle: 'atx' }).turndown(html[0])
+        let markdown = new TurndownService({ headingStyle: 'atx' }).turndown(html[0])
         markdown = await prettier.format(markdown, { parser: 'markdown' })
 
-          await Bun.write(`knowledge/wiki/${page.title}.md`, markdown)
-        }
+        await Bun.write(`knowledge/wiki/${page.title}.md`, markdown)
       }
-    
+    }
 
     console.log('✅ Wikipedia scrapped')
   } catch (e) {

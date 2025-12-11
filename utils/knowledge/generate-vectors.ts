@@ -86,11 +86,8 @@ const go = async (chunks: Chunk[], database: Database) => {
  *
  * @throws {Error} Throws an error if the Hugging Face endpoint or token is invalid or missing.
  */
-export const wake_up_gpu = async (knowledge: Knowledge) => {
+export const wake_up_gpu = async () => {
   try {
-    // `store_metadata` applies only to proprietary knowledge
-    if (!knowledge.proprietary) return
-
     // Check if the Hugging Face endpoint and token are provided
     // and valid. If not, throw an error.
     const endpoint = z.url().safeParse(Bun.env.HUGGINGFACE_ENDPOINT)

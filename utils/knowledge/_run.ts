@@ -30,7 +30,7 @@ export const execute_pipeline = async (knowledge: Knowledge) => {
     // Knowledge rebuild pipeline
     console.info(`Starting knowledge rebuild pipeline...`)
 
-    await wake_up_gpu(knowledge) // Applies only to proprietary knowledge
+    await wake_up_gpu()
     const t0 = performance.now()
     await store_metadata(knowledge)
     await remove_outdated_data(knowledge)
