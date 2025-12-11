@@ -5150,7 +5150,7 @@ exports[`generate_embeddings should generate find relevant chunks with access 1`
 [
   {
     "chunk_file": "wiki/Valérie Létard.md",
-    "chunk_hash": "g3qilYY8QWro0fTYkIPR",
+    "chunk_hash": "xA51jfRaoUekVGcc81N4",
     "chunk_text": 
 "# Valérie Létard
 
@@ -5319,9 +5319,167 @@ En avril 2025, elle effectue une tournée de deux jours en Martinique afin de «
     "distance": 0.8946256637573242,
   },
   {
-    "chunk_hash": "luaJkDsU9aRaVBRzW11Y",
+    "chunk_file": "wiki/Louis Loucheur.md",
+    "chunk_hash": "Shihn90uSuP9hriQhjOB",
     "chunk_text": 
-"# Crises du logement en France
+"# Louis Loucheur
+
+Louis Loucheur, né le 12 août 1872 à Roubaix (Nord) et mort le 22 novembre 1931 dans le 16e arrondissement de Paris (Seine), est un industriel et homme politique français.
+
+## Biographie
+
+Il est issu d'une famille protestante sans grande fortune (son père, Louis-Joseph Loucheur, est architecte).
+
+Après une scolarité au lycée Faidherbe de Lille, il intègre l'École polytechnique (promotion X1890) et entre comme ingénieur de la construction aux Chemins de fer du Nord. Le 18 novembre 1896, il épouse Suzanne Lenicque, fille d’un centralien, et a deux filles : Marthe, qui épousera l’industriel Francis Sarrade, et Simone. En 1899, il s'associe avec un camarade de Polytechnique, Alexandre Giros, dans la Société Giros et Loucheur (bientôt connue par son nom télégraphique Girolou), qui se spécialise dans les constructions en béton armé et donnera naissance en 1908 à la Société générale d'entreprises (SGE).
+
+## Carrière politique
+
+Ses activités industrielles le rapprochent des milieux politiques, qui le consultent régulièrement en matière notamment d'armement. En décembre 1916, face à la crise de l'artillerie lourde, Loucheur devient sous-secrétaire d’État à l’Artillerie et aux Munitions, aux côtés du ministre de l'Armement et des Fabrications de guerre, Albert Thomas, dans le gouvernement d'Aristide Briand. Dès sa nomination, Loucheur se distingua par la stratégie de la « production totale » ; il est aidé par trois hommes, Xavier Loisy, Edmond Philippar et Paul Munich, tous ingénieurs de formation.
+
+À partir de septembre 1917, dans le gouvernement de Paul Painlevé (12 septembre au 16 novembre 1917) et dans celui de Georges Clemenceau (du 16 novembre 1917 au 26 novembre 1918), Loucheur remplace Thomas au ministère de l'Armement. Proche de Clemenceau, il participe à l'organisation du Haut commandement unique. Ce dernier le nomme dans son deuxième gouvernement, le 26 novembre 1918, comme ministre de la Reconstitution industrielle, poste qu'il occupera jusqu'au 20 janvier 1920, et le ministère de l'Armement est supprimé. À la conférence de Paris en janvier 1919, il est le principal conseiller économique de Clemenceau pour la négociation du traité de Versailles, et il intervient directement dans les discussions avec David Lloyd George. Il reçut la Army Distinguished Service Medal pour ce rôle.
+
+Il est élu député de la circonscription d’Avesnes-sur-Helpe (Nord) pour la Fédération républicaine en novembre 1919, malgré une campagne de presse, qui l'accuse d'être un « profiteur de guerre ». Il déploie une intense activité parlementaire, s'intéressant aux chemins de fer et aux habitations à bon marché, et il s'impose comme l'un des ténors des Républicains de gauche, groupe indispensable à la formation de la plupart des majorités, s'appuyant notamment sur Le Petit Journal, puissant quotidien de l'époque. Il est réélu en 1924 et en 1928.
+
+Il est nommé Ministre des Régions libérées dans le sixième gouvernement de Briand (16 janvier 1921 au 15 janvier 1922). À ce titre, à l'été et à l'automne 1921, il négocie à Wiesbaden avec Walter Rathenau la question des réparations allemandes.
+
+Durant son bref passage au ministère du Commerce, de l'Industrie, des Postes et Télégraphes au printemps 1924 (troisième gouvernement de Poincaré, du 29 mars au 9 juin 1924), il participe à la rénovation du Conseil du Commerce et à la redéfinition des rapports de l'État et de la Compagnie française des pétroles.
+
+Il devient ministre des Finances dans le huitième gouvernement Briand (du 28 novembre 1925 à sa démission le 16 décembre suivant) mais ne parvient pas à sortir de la crise du franc. Du 19 juillet au 23 juillet 1926 il retrouve le ministère du Commerce et de l'Industrie dans le gouvernement Édouard Herriot (du 19 juillet au 23 juillet 1926). Il est délégué à la conférence économique internationale à Genève en mai 1927.
+
+Du 1er juin 1928 à février 1930, Loucheur est ministre du Travail et de la Prévoyance sociale (quatrième et cinquième gouvernements Poincaré du 1er juin 1928 au 29 juillet 1929, dixième gouvernement Briand du 29 juillet 1929 au 3 novembre 1929, premier gouvernement André Tardieu du 3 novembre 1929 au 21 février 1930). Les mouvements sociaux, et la crise du logement qui s'accentue du fait de la construction très réduite de logements dans la période d'après-guerre conduisent au vote de la loi Loucheur, en juillet 1928, qui prévoit la construction sur cinq ans de 200 000 logements HBM et 60 000 logements à loyer moyen.
+
+Il participe à la mise en place de la loi sur les assurances sociales, votée en avril 1928, dans un climat très polémique. Il tente enfin, sans succès, de faire passer une loi sur le règlement des conflits collectifs du travail. Il est également à l'origine de la construction du bâtiment du ministère des Affaires sociales et de la Santé, situé avenue Duquesne (7e arrondissement de Paris).
+
+Il est ministre de l'Économie nationale, premier à porter ce titre dans l'histoire de la République française, dans le gouvernement Steeg, du 13 décembre 1930 au 27 janvier 1931.
+
+En 1923, Loucheur vend le pavillon de musique de la comtesse du Barry à Louveciennes au parfumeur François Coty (1874-1934).
+
+Il meurt d'une affection cardiaque grave le 22 novembre 1931 au 9 rue de l'Amiral-Hamelin (16e arrondissement de Paris) et repose au cimetière du Montparnasse (div. 10). Une plaque commémorative lui rend hommage sur la façade de l'immeuble où il est décédé.
+
+Le boulevard Louis-Loucheur, situé sur les communes de Saint-Cloud et Suresnes (Hauts-de-Seine), porte son nom, ainsi qu'un boulevard à Clermont-Ferrand (Puy-de-Dôme) et la rue Louis Loucheur dans le 17e arrondissement de Paris.
+
+## Amateur d'art et collectionneur
+
+Loucheur fut proche de Thadée Natanson, le cofondateur de La Revue Blanche, qui devint le centre de ralliement des peintres nabis, et de Vuillard, qu'il aida en 1914, en le recommandant pour accéder à la tête d'une usine de guerre à Lyon.
+
+Vers 1928-1929, le peintre fit son portrait (musée des Beaux-Arts de Lille), dont l'étude préparatoire figura, avec sa Vue des Pavillons vers la mer peint à Criquebeuf-sur-Seine en 1910 lors d'un séjour dans la villa de ce nom louée par ses amis Jos et Lucy Hessel (tableau acquis par Loucheur à Drouot le 2 avril 1928).
+
+## Engagement européen
+
+Fidèle lieutenant des options européistes d'Aristide Briand, représentant de la branche modernisatrice et cartelliste du patronat français, partisan du rapprochement industriel entre la France et l'Allemagne, Loucheur est un des plus actifs promoteurs des idées et projets de construction économique européenne des années 1920. À ce titre, il peut être considéré comme un des inspirateurs intellectuels de l'Union européenne\\[réf. nécessaire\\].
+
+Il formule notamment le projet Loucheur, qui préconise le développement des ententes de production et l'abaissement des barrières douanières en Europe. Ces idées constituent le socle des travaux de la Conférence économique internationale, dont il est l'initiateur en 1925, qui se réunit à Genève en 1927. Vice-président de cette conférence, Loucheur exerce un rôle majeur dans son organisation et ses débats et influence notablement ses conclusions, véritable laboratoire à idées de l'Europe économique du futur.
+
+Il préside la section française de l'Union paneuropéenne et œuvre à la constitution d'un Comité économique associant les industriels européens.
+
+Enfin, il est l'inspirateur du volet économique du Projet d'Union européenne, présenté par Briand à la tribune de la SDN le 5 septembre 1929.
+
+## Notes et références
+
+## Voir aussi
+
+### Bibliographie
+
+- Stephen Douglas Carls (trad. de l'anglais par Alice-Catherine Carls-Maire, préf. Emmanuel Chadeau), Louis Loucheur, 1872-1931. ingénieur, homme d'Etat, modernisateur de la France, Villeneuve d'Ascq, Presses universitaires du Septentrion, coll. « Histoire », 2000, 333 p. (ISBN 978-2-859-39607-7, OCLC 44551430, lire en ligne)
+- Louis Loucheur et Jacques de Launay, Carnets secrets, 1908-1932, Bruxelles, Brepols, coll. « Dossiers secrets de l'histoire », 1962, 189 p. (OCLC 490940181).
+- Véronique Pradier, « L’Europe de Louis Loucheur : le projet d’un homme d’affaires en politique », Études et documents, Paris, Comité pour l’histoire économique et financière de la France, tome V, 1993, p. 293-306.
+- « Louis Loucheur », dans le Dictionnaire des parlementaires français (1889-1940), sous la direction de Jean Jolly, PUF, 1960
+
+### Liens externes
+
+- Ressources relatives à la vie publique :
+  - base Léonore
+  - Documents diplomatiques suisses 1848-1975
+  - Base Sycomore
+
+- Portail du Nord-Pas-de-Calais
+- Portail de l'industrie
+- Portail de la politique française
+"
+,
+    "distance": 1.0758087635040283,
+  },
+  {
+    "chunk_file": "wiki/Emmanuelle Cosse.md",
+    "chunk_hash": "btT6pSMbSUQ31SOint2G",
+    "chunk_text": 
+"# Emmanuelle Cosse
+
+Emmanuelle Cosse, née le 15 novembre 1974 dans le 14e arrondissement de Paris, est une militante associative, journaliste et femme politique française.
+
+Elle est secrétaire nationale d'Europe Écologie Les Verts (EELV) du 30 novembre 2013 au 11 février 2016, date à laquelle elle est nommée ministre du Logement. Elle n'est plus membre d'EELV après cette nomination, devient peu après membre du Parti écologiste (PE) et s'en éloigne dès 2017 après que François de Rugy a rejoint Emmanuel Macron.
+
+## Biographie
+
+### Famille et formation
+
+Emmanuelle Cosse grandit dans le 12e arrondissement de Paris, elle est issue d'une famille engagée à gauche et ses parents sont kinésithérapeutes. Elle suit une terminale B au lycée Maurice-Ravel et commence à militer à la Fédération indépendante et démocratique lycéenne (FIDL) en 1990.
+
+Titulaire d'un diplôme d'études approfondies de droit public économique en 1997, elle enseigne quelques années à la faculté de droit de Paris XII-Val-de-Marne.
+
+Le 20 juin 2015, elle épouse Denis Baupin, ancien député de Paris et ancien vice-président de l'Assemblée nationale, avec qui elle a eu des jumeaux nés en 2013. Elle soutient son mari face aux accusations de harcèlement sexuel portées contre celui-ci en 2016 par huit femmes dont Sandrine Rousseau, dans une enquête publiée conjointement par Mediapart et Libération.
+
+### Carrière de journaliste
+
+Elle commence une carrière journalistique en collaborant en 2002 au magazine Têtu, pour lequel elle suit la campagne présidentielle de la même année. Elle tient en 2004 une chronique dans le mensuel de la gauche radicale Regards dont elle devient plus tard la rédactrice en chef.
+
+### Carrière politique
+
+#### Activité militante
+
+En 1992, elle rejoint Act Up-Paris où elle occupe les fonctions de trésorière, vice-présidente, puis succède à Philippe Mangeot à la présidence de 1999 à 2001. À 25 ans, elle est la première femme, la première personne hétérosexuelle et la première personne séronégative à diriger l'association de lutte contre le sida.
+
+Elle rejoint Europe Écologie en 2009. Elle figure sur la liste Europe Écologie lors des régionales de 2010 en Île-de-France. Avec l'appui de Cécile Duflot, elle est élue et devient la 8e vice-présidente du conseil régional d'Île-de-France, chargée du logement, de l'habitat, du renouvellement urbain et de l'action foncière à partir du 26 mars 2010.
+
+#### Secrétaire nationale d'Europe Écologie Les Verts
+
+Le 30 novembre 2013, Emmanuelle Cosse est élue secrétaire nationale d'Europe Écologie Les Verts avec 55 % des voix lors du congrès du parti à Caen. Le 1er mars 2015 , elle annonce sa candidature aux régionales en Île-de-France pour les élections régionales de décembre 2015. Sa liste obtient 8,03 % des voix à l'issue du premier tour, et fusionne avec celles de Claude Bartolone (PS) et Pierre Laurent (FG) au second : ils sont cependant battus par la liste Les Républicains-UDI-MoDem de Valérie Pécresse. Elle est par la suite élue présidente du groupe EELV au conseil régional d'Île-de-France ; elle quitte cette fonction en février 2016 après sa nomination ministérielle.
+
+#### Ministre du Logement et de l'Habitat durable
+
+Le 11 février 2016, elle est nommée ministre du Logement, en remplacement de Sylvia Pinel, dans le gouvernement Valls II. À la suite de cette nomination, désapprouvée par EELV, elle démissionne de son poste de secrétaire nationale d'EELV et est remplacée de façon intérimaire par David Cormand.
+
+Bien qu'Emmanuelle Cosse n'ait souhaité que se « mettre en retrait » du parti (elle précise dans un mail aux adhérents EELV le jour de son entrée au gouvernement qu'elle ne choisit pas « entre le parti et le ministère »), EELV prend acte de sa démission dès son entrée au gouvernement puis la retire de la liste des adhérents le 21 février 2016. Elle annonce le 10 juillet 2016, qu'elle rejoint le Parti écologiste — dont elle intègre le comité d'orientation politique — et soutient son président, François de Rugy, pour la primaire de la « Belle Alliance populaire ».
+
+En 2016, elle est l'un des auteurs du projet de loi « Egalité et Citoyenneté », portant notamment sur la mixité sociale et les discriminations sociales. Le projet de loi est adopté en lecture définitive le 22 décembre 2016, et publié au Journal officiel sous la référence « loi n° 2017-86 du 27 janvier 2017 relative à l'égalité et à la citoyenneté ».
+
+#### Élections législatives de 2017
+
+Pendant la primaire citoyenne de 2017, elle soutient François de Rugy. Désapprouvant son choix de rejoindre Emmanuel Macron en vue de l'élection présidentielle de 2017, elle soutient finalement Benoît Hamon.
+
+En avril 2017, elle annonce qu'elle se présente aux élections législatives de 2017 dans la 3e circonscription de Seine-Saint-Denis. Elle est éliminée dès le premier tour se classant en cinquième position avec 9,47 % des voix.
+
+#### Élections régionales de 2021
+
+Pour les élections régionales de 2021, Emmanuelle Cosse soutient en Île-de-France la liste menée par Audrey Pulvar avec le collectif Les écolos solidaires, le Parti écologiste, quant à lui, soutenant la liste Majorité présidentielle menée par Laurent Saint-Martin.
+
+### Après la politique
+
+Après sa sortie du gouvernement, Emmanuelle Cosse déclare envisager de travailler dans le privé mais confie fin août 2017 ses difficultés à trouver un emploi. Elle crée en novembre 2017 une société de conseil du nom de MTEV Consulting. Elle reste toutefois conseillère régionale d'Île-de-France.
+
+En février 2019, Emmanuelle Cosse devient présidente de l’ESH Coallia. Le 4 novembre 2020, elle est élue présidente de l'Union sociale pour l'habitat.
+
+## Prises de position
+
+### Immigration
+
+En août 2015, dans le contexte de la Crise migratoire en Europe, Emmanuelle Cosse déclare : « Aujourd'hui, combien le Liban accueille-t-il de réfugiés ? Plus d'un quart de sa population » et « Je crois qu'en France on a les moyens de ne pas se poser cette question-là. Nous sommes un pays extrêmement riche qui a des capacités d'accueil extrêmement fortes ». En septembre 2015, elle affirme que l'« on peut accueillir des réfugiés sans limite en France comme dans toute l'Europe ».
+
+### Cumul des mandats
+
+Suivant la ligne du parti EELV dont elle fait alors partie, Emmanuelle Cosse déclare être « opposée au cumul des mandats, dans le temps et en nombre ».
+
+Sa nomination au gouvernement en février 2016 est alors relatée comme perçue par certains membres de EELV comme une « trahison ». Le parti diffuse un communiqué de presse où cette décision est désapprouvée, puisque « la politique gouvernementale est malheureusement incompatible avec des orientations écologistes ». Interrogée par le Petit Journal au sujet d'avoir conservé son mandat existant de conseillère régionale, Emmanuelle Cosse avance l'argument selon lequel la fonction de ministre est une fonction exécutive et non un mandat électif, et que le cumul des mandats n'est donc juridiquement pas caractérisé.
+
+## Décoration
+
+- Chevalière de la Légion d'honneur (13 juillet 2019). Décorée au titre de « conseillère régionale d'Île-de-France, ancienne ministre ; 21 ans de services ».
+
+## Publication
+
+- Sandrine Rousseau (préf. Claire Serre-Combe, avant-propos d'Emmanuelle Cosse, Clémentine Autain, Cécile Duflot, Marie-Pierre de La Gontrie et Laurence Rossignol), Manuel de survie à destination des femmes en politique, Paris, Les Petits matins, 2015, 107 p. (ISBN 978-2-36383-161-3, BNF 44288808).
+
+## Notes et références
 
 ## Voir aussi
 
@@ -5350,7 +5508,7 @@ En avril 2025, elle effectue une tournée de deux jours en Martinique afin de «
   },
   {
     "chunk_file": "wiki/Vincent Jeanbrun.md",
-    "chunk_hash": "ds3ygVjQb8bW97MrII55",
+    "chunk_hash": "nmxnen1Urg5Til0jnqnS",
     "chunk_text": 
 "# Vincent Jeanbrun
 
@@ -5467,7 +5625,7 @@ Vincent Jeanbrun conteste ces accusations et déclare « pouvoir démontrer la 
   },
   {
     "chunk_file": "global/Zonage ABC.md",
-    "chunk_hash": "LFIqhAPOMSXiVros5mYg",
+    "chunk_hash": "r8uYz7BKmF1bgwkBWGU5",
     "chunk_text": 
 "# Zonage ABC (au 5 septembre 2025) des communes françaises
 
@@ -6073,634 +6231,6 @@ Vincent Jeanbrun conteste ces accusations et déclare « pouvoir démontrer la 
 "
 ,
     "distance": 1.101603388786316,
-  },
-  {
-    "chunk_file": "global/Zonage ABC.md",
-    "chunk_hash": "GMNQlAC3UWNq8LkRme4h",
-    "chunk_text": 
-"# Zonage ABC (au 5 septembre 2025) des communes françaises
-
-## Île-de-France
-
-### Val-d'Oise
-
-#### Communauté de communes (comcom ou coco ou cc) Vexin Centre
-
-- Commeny (95450) : zone B1
-- Condécourt (95450) : zone B1
-- Courcelles-sur-Viosne (95650) : zone B1
-- Frémécourt (95830) : zone B1
-- Haravilliers (95640) : zone B2
-- Theuville (95810) : zone B1
-- Ableiges (95450) : zone B1
-- Avernes (95450) : zone B1
-- Le Bellay-en-Vexin (95750) : zone B2
-- Berville (95810) : zone B2
-- Boissy-l'Aillerie (95650) : zone B1
-- Bréançon (95640) : zone B2
-- Chars (95750) : zone B2
-- Cléry-en-Vexin (95420) : zone B2
-- Cormeilles-en-Vexin (95830) : zone B1
-- Frémainville (95450) : zone B1
-- Grisy-les-Plâtres (95810) : zone B2
-- Guiry-en-Vexin (95450) : zone B2
-- Le Heaulme (95640) : zone B2
-- Longuesse (95450) : zone B1
-- Marines (95640) : zone B1
-- Montgeroult (95650) : zone B1
-- Moussy (95640) : zone B2
-- Neuilly-en-Vexin (95640) : zone B2
-- Nucourt (95420) : zone B2
-- Le Perchay (95450) : zone B1
-- Sagy (95450) : zone B1
-- Santeuil (95640) : zone B1
-- Seraincourt (95450) : zone B1
-- Théméricourt (95450) : zone B1
-- Us (95450) : zone B1
-- Vigny (95450) : zone B1
-- Argenteuil (95100) : zone A
-
-#### Métropole du Grand Paris
-
-- Alfortville (94140) : zone A
-
-### Val-de-Marne
-
-- Arcueil (94110) : zone Abis
-- Boissy-Saint-Léger (94470) : zone A
-- Bonneuil-sur-Marne (94380) : zone A
-- Bry-sur-Marne (94360) : zone Abis
-- Cachan (94230) : zone Abis
-- Champigny-sur-Marne (94500) : zone A
-- Charenton-le-Pont (94220) : zone Abis
-- Chennevières-sur-Marne (94430) : zone A
-- Chevilly-Larue (94550) : zone A
-- Choisy-le-Roi (94600) : zone A
-- Créteil (94000) : zone A
-- Fontenay-sous-Bois (94120) : zone Abis
-- Fresnes (94260) : zone A
-- Gentilly (94250) : zone Abis
-- L'Haÿ-les-Roses (94240) : zone Abis
-- Ivry-sur-Seine (94200) : zone Abis
-- Joinville-le-Pont (94340) : zone Abis
-- Le Kremlin-Bicêtre (94270) : zone Abis
-- Limeil-Brévannes (94450) : zone A
-- Maisons-Alfort (94700) : zone Abis
-- Mandres-les-Roses (94520) : zone A
-- Marolles-en-Brie (94440) : zone A
-- Nogent-sur-Marne (94130) : zone Abis
-- Noiseau (94880) : zone A
-- Orly (94310) : zone A
-- Ormesson-sur-Marne (94490) : zone A
-- Périgny (94520) : zone A
-- Le Perreux-sur-Marne (94170) : zone Abis
-- Le Plessis-Trévise (94420) : zone A
-- La Queue-en-Brie (94510) : zone A
-- Rungis (94150) : zone A
-- Saint-Mandé (94160) : zone Abis
-- Saint-Maur-des-Fossés (94210) : zone Abis
-- Saint-Maurice (94410) : zone Abis
-- Santeny (94440) : zone A
-- Sucy-en-Brie (94370) : zone A
-- Thiais (94320) : zone A
-- Valenton (94460) : zone A
-- Villecresnes (94440) : zone A
-- Villejuif (94800) : zone Abis
-- Villeneuve-le-Roi (94290) : zone A
-- Villeneuve-Saint-Georges (94190) : zone A
-- Villiers-sur-Marne (94350) : zone A
-- Vincennes (94300) : zone Abis
-- Vitry-sur-Seine (94400) : zone A
-- Ablon-sur-Seine (94480) : zone A
-- Maurecourt (78780) : zone A
-
-### Yvelines
-
-#### Communauté d'agglomérations (ou ca) de Cergy-Pontoise
-
-- Coignières (78310) : zone A
-
-#### Communauté d'agglomérations (ou ca) de Saint-Quentin-en-Yvelines
-
-- Les Clayes-sous-Bois (78340) : zone A
-- Élancourt (78990) : zone A
-- Guyancourt (78280) : zone A
-- Magny-les-Hameaux (78114) : zone A
-- Maurepas (78310) : zone A
-- Montigny-le-Bretonneux (78180) : zone A
-- Plaisir (78370) : zone A
-- Trappes (78190) : zone A
-- La Verrière (78320) : zone A
-- Villepreux (78450) : zone A
-- Voisins-le-Bretonneux (78960) : zone A
-- Orsonville (78660) : zone B2
-
-#### Communauté d'agglomérations (ou ca) Rambouillet Territoires
-
-- Rambouillet (78120) : zone A
-- Saint-Martin-de-Bréthencourt (78660) : zone B2
-- Ablis (78660) : zone B1
-- Allainville (78660) : zone B2
-- Auffargis (78610) : zone B1
-- Boinville-le-Gaillard (78660) : zone B2
-- La Boissière-École (78125) : zone B2
-- Bonnelles (78830) : zone B1
-- Les Bréviaires (78610) : zone B1
-- Bullion (78830) : zone B1
-- La Celle-les-Bordes (78720) : zone B1
-- Cernay-la-Ville (78720) : zone B1
-- Clairefontaine-en-Yvelines (78120) : zone B1
-- Émancé (78125) : zone B1
-- Les Essarts-le-Roi (78690) : zone A
-- Gambaiseuil (78490) : zone B1
-- Gazeran (78125) : zone B1
-- Hermeray (78125) : zone B2
-- Longvilliers (78730) : zone B1
-- Mittainville (78125) : zone B2
-- Orcemont (78125) : zone B2
-- Orphin (78125) : zone B2
-- Paray-Douaville (78660) : zone B2
-- Le Perray-en-Yvelines (78610) : zone A
-- Poigny-la-Forêt (78125) : zone B2
-- Ponthévrard (78730) : zone B2
-- Prunay-en-Yvelines (78660) : zone B2
-- Raizeux (78125) : zone B1
-- Rochefort-en-Yvelines (78730) : zone B1
-- Saint-Arnoult-en-Yvelines (78730) : zone B1
-- Saint-Hilarion (78125) : zone B1
-- Saint-Léger-en-Yvelines (78610) : zone B2
-- Sainte-Mesme (78730) : zone B2
-- Sonchamp (78120) : zone B2
-- Vieille-Église-en-Yvelines (78125) : zone A
-- Aigremont (78240) : zone Abis
-
-#### Communauté d'agglomérations (ou ca) Saint Germain Boucles de Seine
-
-- Carrières-sur-Seine (78420) : zone Abis
-- Chambourcy (78240) : zone Abis
-- Chatou (78400) : zone Abis
-- Croissy-sur-Seine (78290) : zone Abis
-- L'Étang-la-Ville (78620) : zone Abis
-- Houilles (78800) : zone Abis
-- Louveciennes (78430) : zone Abis
-- Maisons-Laffitte (78600) : zone Abis
-- Mareil-Marly (78750) : zone Abis
-- Marly-le-Roi (78160) : zone Abis
-- Le Mesnil-le-Roi (78600) : zone Abis
-- Montesson (78360) : zone A
-- Le Pecq (78230) : zone Abis
-- Le Port-Marly (78560) : zone A
-- Saint-Germain-en-Laye (78112) : zone Abis
-- Sartrouville (78500) : zone A
-- Le Vésinet (78110) : zone Abis
-- Bailly (78870) : zone Abis
-
-#### Communauté d'agglomérations (ou ca) Versailles Grand Parc (CAVGP)
-
-- Bois-d'Arcy (78390) : zone A
-- Bougival (78380) : zone Abis
-- Buc (78530) : zone Abis
-- La Celle-Saint-Cloud (78170) : zone Abis
-- Châteaufort (78117) : zone A
-- Le Chesnay-Rocquencourt (78150) : zone Abis
-- Fontenay-le-Fleury (78330) : zone A
-- Jouy-en-Josas (78350) : zone Abis
-- Les Loges-en-Josas (78350) : zone A
-- Noisy-le-Roi (78590) : zone Abis
-- Rennemoulin (78590) : zone Abis
-- Saint-Cyr-l'École (78210) : zone A
-- Toussus-le-Noble (78117) : zone A
-- Vélizy-Villacoublay (78140) : zone Abis
-- Versailles (78000) : zone Abis
-- Viroflay (78220) : zone Abis
-- Autouillet (78770) : zone B1
-
-#### Communauté de communes (comcom ou coco ou cc) Cœur d'Yvelines
-
-- Béhoust (78910) : zone B1
-- Gambais (78950) : zone B1
-- Mareil-le-Guyon (78490) : zone B1
-- Neauphle-le-Vieux (78640) : zone A
-- Thoiry (78770) : zone B1
-- Villiers-Saint-Frédéric (78640) : zone A
-- Auteuil (78770) : zone B1
-- Bazoches-sur-Guyonne (78490) : zone A
-- Beynes (78650) : zone A
-- Boissy-sans-Avoir (78490) : zone B1
-- Flexanville (78910) : zone B1
-- Galluis (78490) : zone B1
-- Garancières (78890) : zone B1
-- Goupillières (78770) : zone B1
-- Grosrouvre (78490) : zone B1
-- Jouars-Pontchartrain (78760) : zone A
-- Marcq (78770) : zone B1
-- Méré (78490) : zone B1
-- Les Mesnuls (78490) : zone A
-- Millemont (78940) : zone B1
-- Montfort-l'Amaury (78490) : zone A
-- Neauphle-le-Château (78640) : zone A
-- La Queue-les-Yvelines (78940) : zone B1
-- Saint-Germain-de-la-Grange (78640) : zone B1
-- Saint-Rémy-l'Honoré (78690) : zone A
-- Saulx-Marchais (78650) : zone B1
-- Thiverval-Grignon (78850) : zone B1
-- Le Tremblay-sur-Mauldre (78490) : zone A
-- Vicq (78490) : zone B1
-- Villiers-le-Mahieu (78770) : zone B1
-- Choisel (78460) : zone B1
-
-#### Communauté de communes (comcom ou coco ou cc) de la Haute Vallée de Chevreuse
-
-- Chevreuse (78460) : zone A
-- Dampierre-en-Yvelines (78720) : zone B1
-- Lévis-Saint-Nom (78320) : zone B1
-- Le Mesnil-Saint-Denis (78320) : zone A
-- Milon-la-Chapelle (78470) : zone A
-- Saint-Forget (78720) : zone B1
-- Saint-Lambert (78470) : zone A
-- Saint-Rémy-lès-Chevreuse (78470) : zone A
-- Senlisse (78720) : zone B1
-- Gressey (78550) : zone B1
-
-#### Communauté de communes (comcom ou coco ou cc) du Pays Houdanais (CCPH)
-
-- Osmoy (78910) : zone B1
-- Le Tartre-Gaudran (78113) : zone B2
-- Adainville (78113) : zone B1
-- Bazainville (78550) : zone B1
-- Boinvilliers (78200) : zone B2
-- Boissets (78910) : zone B2
-- Bourdonné (78113) : zone B1
-- Civry-la-Forêt (78910) : zone B2
-- Condé-sur-Vesgre (78113) : zone B1
-- Courgent (78790) : zone B2
-- Dammartin-en-Serve (78111) : zone B2
-- Dannemarie (78550) : zone B1
-- Flins-Neuve-Église (78790) : zone B2
-- Grandchamp (78113) : zone B1
-- La Hauteville (78113) : zone B2
-- Houdan (78550) : zone A
-- Longnes (78980) : zone B2
-- Maulette (78550) : zone B1
-- Mondreville (78980) : zone B2
-- Montchauvet (78790) : zone B2
-- Mulcent (78790) : zone B2
-- Orgerus (78910) : zone B1
-- Orvilliers (78910) : zone B2
-- Prunay-le-Temple (78910) : zone B1
-- Richebourg (78550) : zone B1
-- Rosay (78790) : zone B1
-- Saint-Martin-des-Champs (78790) : zone B1
-- Septeuil (78790) : zone B1
-- Tacoignières (78910) : zone B1
-- Tilly (78790) : zone B2
-- Villette (78930) : zone B1
-- Andelu (78770) : zone B1
-
-#### Communauté de communes (comcom ou coco ou cc) Gally Mauldre
-
-- Bazemont (78580) : zone B1
-- Chavenay (78450) : zone A
-- Crespières (78121) : zone B1
-- Davron (78810) : zone B1
-- Feucherolles (78810) : zone A
-- Herbeville (78580) : zone B1
-- Mareil-sur-Mauldre (78124) : zone B1
-- Maule (78580) : zone A
-- Montainville (78124) : zone B1
-- Saint-Nom-la-Bretèche (78860) : zone A
-- Saint-Illiers-le-Bois (78980) : zone B2
-
-#### Communauté de communes (comcom ou coco ou cc) Les Portes de l'Ile de France
-
-- Bennecourt (78270) : zone B1
-- Blaru (78270) : zone B2
-- Boissy-Mauvoisin (78200) : zone B1
-- Bonnières-sur-Seine (78270) : zone B1
-- Bréval (78980) : zone B2
-- Chaufour-lès-Bonnières (78270) : zone B2
-- Cravent (78270) : zone B2
-- Freneuse (78840) : zone B1
-- Gommecourt (78270) : zone B2
-- Notre-Dame-de-la-Mer (78270) : zone B2
-- Limetz-Villez (78270) : zone B1
-- Lommoye (78270) : zone B2
-- Ménerville (78200) : zone B1
-- Moisson (78840) : zone B2
-- Neauphlette (78980) : zone B2
-- Saint-Illiers-la-Ville (78980) : zone B2
-- La Villeneuve-en-Chevrie (78270) : zone B2
-- Arnouville-lès-Mantes (78790) : zone B1
-
-#### CU Grand Paris Seine et Oise
-
-- Aubergenville (78410) : zone A
-- Aulnay-sur-Mauldre (78126) : zone A
-- Chapet (78130) : zone A
-- Ecquevilly (78920) : zone B1
-- La Falaise (78410) : zone A
-- Favrieux (78200) : zone B1
-- Follainville-Dennemont (78520) : zone A
-- Fontenay-Saint-Père (78440) : zone B1
-- Guerville (78930) : zone B1
-- Guitrancourt (78440) : zone B1
-- Hargeville (78790) : zone B1
-- Jambville (78440) : zone B1
-- Jumeauville (78580) : zone B1
-- Juziers (78820) : zone A
-- Lainville-en-Vexin (78440) : zone B2
-- Mantes-la-Ville (78711) : zone A
-- Mézières-sur-Seine (78970) : zone A
-- Mézy-sur-Seine (78250) : zone A
-- Mousseaux-sur-Seine (78270) : zone B1
-- Sailly (78440) : zone B2
-- Tessancourt-sur-Aubette (78250) : zone A
-- Vaux-sur-Seine (78740) : zone A
-- Vernouillet (78540) : zone A
-- Achères (78260) : zone A
-- Les Alluets-le-Roi (78580) : zone B1
-- Andrésy (78570) : zone A
-- Auffreville-Brasseuil (78930) : zone A
-- Boinville-en-Mantois (78930) : zone B1
-- Bouafle (78410) : zone B1
-- Breuil-Bois-Robert (78930) : zone B1
-- Brueil-en-Vexin (78440) : zone B1
-- Buchelay (78200) : zone A
-- Carrières-sous-Poissy (78955) : zone A
-- Chanteloup-les-Vignes (78570) : zone A
-- Conflans-Sainte-Honorine (78700) : zone A
-- Drocourt (78440) : zone B1
-- Épône (78680) : zone A
-- Évecquemont (78740) : zone A
-- Flacourt (78200) : zone B2
-- Flins-sur-Seine (78410) : zone A
-- Fontenay-Mauvoisin (78200) : zone B1
-- Gaillon-sur-Montcient (78250) : zone A
-- Gargenville (78440) : zone A
-- Goussonville (78930) : zone B1
-- Guernes (78520) : zone B1
-- Hardricourt (78250) : zone A
-- Issou (78440) : zone A
-- Jouy-Mauvoisin (78200) : zone B1
-- Limay (78520) : zone A
-- Magnanville (78200) : zone A
-- Mantes-la-Jolie (78200) : zone A
-- Médan (78670) : zone A
-- Méricourt (78270) : zone B1
-- Meulan-en-Yvelines (78250) : zone A
-- Montalet-le-Bois (78440) : zone B2
-- Morainvilliers (78630) : zone B1
-- Les Mureaux (78130) : zone A
-- Nézel (78410) : zone A
-- Oinville-sur-Montcient (78250) : zone B1
-- Orgeval (78630) : zone A
-- Perdreauville (78200) : zone B1
-- Poissy (78300) : zone A
-- Porcheville (78440) : zone A
-- Rolleboise (78270) : zone B1
-- Rosny-sur-Seine (78710) : zone B1
-- Saint-Martin-la-Garenne (78520) : zone B1
-- Soindres (78200) : zone B1
-- Le Tertre-Saint-Denis (78980) : zone B2
-- Triel-sur-Seine (78510) : zone A
-- Verneuil-sur-Seine (78480) : zone A
-- Vert (78930) : zone A
-- Villennes-sur-Seine (78670) : zone A
-- Petite-Île (97429) : zone B1
-
-## La Réunion
-
-### La Réunion
-
-#### Communauté d'agglomérations (ou ca) CIVIS (Communauté Intercommunale des Villes Solidaires)
-
-- Les Avirons (97425) : zone A
-- L'Étang-Salé (97427) : zone A
-- Saint-Louis (97421) : zone B1
-- Saint-Pierre (97410) : zone B1
-- Cilaos (97413) : zone B1
-- Entre-Deux (97414) : zone B1
-
-#### Communauté d'agglomérations (ou ca) du Sud
-
-- Saint-Joseph (97480) : zone B1
-- Saint-Philippe (97442) : zone B1
-- Le Tampon (97418) : zone B1
-- Saint-Benoît (97437) : zone B1
-
-#### Communauté d'agglomérations (ou ca) Intercommunale de la Réunion Est (CIREST)
-
-- Bras-Panon (97412) : zone B1
-- La Plaine-des-Palmistes (97431) : zone B1
-- Saint-André (97440) : zone B1
-- Sainte-Rose (97439) : zone B1
-- Salazie (97433) : zone B1
-- Saint-Denis (97400) : zone B1
-
-#### Communauté d'agglomérations (ou ca) Intercommunale du Nord de la Réunion (CINOR)
-
-- Sainte-Marie (97438) : zone B1
-- Sainte-Suzanne (97441) : zone B1
-- La Possession (97419) : zone B1
-
-#### Communauté d'agglomérations (ou ca) Territoire de la Côte Ouest (TCO)
-
-- Le Port (97420) : zone B1
-- Saint-Leu (97416) : zone A
-- Saint-Paul (97411) : zone A
-- Les Trois-Bassins (97426) : zone B1
-- Ducos (97224) : zone B1
-
-## Martinique
-
-### Martinique
-
-#### Communauté d'agglomérations (ou ca) de l'Espace Sud de la Martinique
-
-- Rivière-Salée (97215) : zone B1
-- Sainte-Luce (97228) : zone B1
-- Le Vauclin (97280) : zone B1
-- Les Anses-d'Arlet (97217) : zone A
-- Le Diamant (97223) : zone A
-- Le François (97240) : zone B1
-- Le Marin (97290) : zone A
-- Rivière-Pilote (97211) : zone B1
-- Saint-Esprit (97270) : zone B1
-- Sainte-Anne (97227) : zone B1
-- Les Trois-Îlets (97229) : zone A
-- Fort-de-France (97200) : zone B1
-
-#### Communauté d'agglomérations (ou ca) du Centre de la Martinique
-
-- Le Lamentin (97232) : zone B1
-- Saint-Joseph (97212) : zone B1
-- Schœlcher (97233) : zone B1
-- Le Carbet (97221) : zone B1
-
-#### Communauté d'agglomérations (ou ca) du Pays Nord Martinique
-
-- Case-Pilote (97222) : zone B1
-- Gros-Morne (97213) : zone B1
-- Macouba (97218) : zone B1
-- Le Marigot (97225) : zone B1
-- Le Prêcheur (97250) : zone B1
-- Bellefontaine (97222) : zone B1
-- L'Ajoupa-Bouillon (97216) : zone B1
-- Basse-Pointe (97218) : zone B1
-- Fonds-Saint-Denis (97250) : zone B1
-- Grand'Rivière (97218) : zone B1
-- Le Lorrain (97214) : zone B1
-- Le Morne-Rouge (97260) : zone B1
-- Le Robert (97231) : zone B1
-- Saint-Pierre (97250) : zone B1
-- Sainte-Marie (97230) : zone B1
-- La Trinité (97220) : zone B1
-- Le Morne-Vert (97226) : zone B1
-- Dembeni (97660) : zone B1
-
-## Mayotte
-
-### Mayotte
-
-#### Communauté d'agglomérations (ou ca) de Dembeni / Mamoudzou
-
-- Mamoudzou (97600) : zone B1
-- Bandraboua (97650) : zone B1
-
-#### Communauté d'agglomérations (ou ca) du Grand Nord de Mayotte
-
-- Acoua (97630) : zone B1
-- Koungou (97600) : zone B1
-- Mtsamboro (97630) : zone B1
-- Dzaoudzi (97615) : zone B1
-
-#### Communauté de communes (comcom ou coco ou cc) de Petite-Terre
-
-- Pamandzi (97615) : zone B1
-- Ouangani (97670) : zone B1
-
-#### Communauté de communes (comcom ou coco ou cc) du Centre-Ouest
-
-- Tsingoni (97680) : zone B1
-- Chiconi (97670) : zone B1
-- M'Tsangamouji (97650) : zone B1
-- Sada (97640) : zone B1
-- Bouéni (97620) : zone B1
-
-#### Communauté de communes (comcom ou coco ou cc) du Sud
-
-- Bandrele (97660) : zone B1
-- Chirongui (97620) : zone B1
-- Kani-Kéli (97625) : zone B1
-- Cordebugle (14100) : zone C
-
-## Normandie
-
-### Calvados
-
-#### Communauté d'agglomérations (ou ca) Lisieux Normandie
-
-- Courtonne-les-Deux-Églises (14290) : zone C
-- Le Mesnil-Guillaume (14100) : zone C
-- Les Monceaux (14100) : zone C
-- Notre-Dame-d'Estrées-Corbon (14340) : zone C
-- Prêtreville (14140) : zone C
-- Saint-Denis-de-Mailloc (14100) : zone C
-- Saint-Martin-de-Mailloc (14100) : zone C
-- Beuvillers (14100) : zone C
-- La Boissière (14340) : zone C
-- Cambremer (14340) : zone C
-- Castillon-en-Auge (14140) : zone C
-- Cernay (14290) : zone C
-- Coquainvilliers (14130) : zone C
-- Courtonne-la-Meurdrac (14100) : zone C
-- Fauguernon (14100) : zone C
-- Firfol (14100) : zone C
-- La Folletière-Abenon (14290) : zone C
-- Fumichon (14590) : zone C
-- Glos (14100) : zone C
-- Hermival-les-Vaux (14100) : zone C
-- L'Hôtellerie (14100) : zone C
-- La Houblonnière (14340) : zone C
-- Lessard-et-le-Chêne (14140) : zone C
-- Lisieux (14100) : zone C
-- Lisores (14140) : zone C
-- Livarot-Pays-d'Auge (14140) : zone C
-- Marolles (14100) : zone C
-- Méry-Bissières-en-Auge (14370) : zone C
-- Le Mesnil-Eudes (14100) : zone C
-- Le Mesnil-Simon (14140) : zone C
-- Mézidon Vallée d'Auge (14140) : zone C
-- Montreuil-en-Auge (14340) : zone C
-- Moyaux (14590) : zone C
-- Notre-Dame-de-Livaye (14340) : zone C
-- Orbec (14290) : zone C
-- Ouilly-du-Houley (14590) : zone C
-- Ouilly-le-Vicomte (14100) : zone C
-- Le Pin (14590) : zone C
-- Le Pré-d'Auge (14340) : zone C
-- Belle Vie en Auge (14270) : zone C
-- Rocques (14100) : zone C
-- Valorbiquet (14290) : zone C
-- Saint-Désir (14100) : zone C
-- Val-de-Vie (14140) : zone C
-- Saint-Jean-de-Livet (14100) : zone C
-- Saint-Martin-de-Bienfaite-la-Cressonnière (14290) : zone C
-- Saint-Martin-de-la-Lieue (14100) : zone C
-- Saint-Ouen-le-Pin (14340) : zone C
-- Saint-Pierre-des-Ifs (14100) : zone C
-- Saint-Pierre-en-Auge (14140) : zone C
-- La Vespière-Friardel (14290) : zone C
-- Saint-Germain-de-Livet (14100) : zone C
-- Cauville (14770) : zone C
-
-#### Communauté de communes (comcom ou coco ou cc) Cingal-Suisse Normande
-
-- Estrées-la-Campagne (14190) : zone C
-- Fresney-le-Vieux (14220) : zone C
-- Grainville-Langannerie (14190) : zone C
-- Saint-Laurent-de-Condel (14220) : zone C
-- Barbery (14220) : zone C
-- Le Bô (14690) : zone C
-- Boulon (14220) : zone C
-- Bretteville-le-Rabet (14190) : zone C
-- Bretteville-sur-Laize (14680) : zone C
-- Le Bû-sur-Rouvres (14190) : zone C
-- Cauvicourt (14190) : zone C
-- Cesny-les-Sources (14220) : zone C
-- Cintheaux (14680) : zone C
-- Clécy (14570) : zone C
-- Combray (14220) : zone C
-- Cossesseville (14690) : zone C
-- Croisilles (14220) : zone C
-- Culey-le-Patry (14220) : zone C
-- Donnay (14220) : zone C
-- Espins (14220) : zone C
-- Esson (14220) : zone C
-- Fresney-le-Puceux (14680) : zone C
-- Gouvix (14680) : zone C
-- Grimbosq (14220) : zone C
-- Martainville (14220) : zone C
-- Meslay (14220) : zone C
-- Moulines (14220) : zone C
-- Les Moutiers-en-Cinglais (14220) : zone C
-- Mutrécy (14220) : zone C
-- Ouffières (14220) : zone C
-- La Pommeraye (14690) : zone C
-- Saint-Germain-le-Vasson (14190) : zone C
-- Saint-Lambert (14570) : zone C
-- Saint-Omer (14220) : zone C
-- Saint-Rémy (14570) : zone C
-- Saint-Sylvain (14190) : zone C
-- Soignolles (14190) : zone C
-- Thury-Harcourt-le-Hom (14220) : zone C
-- Montillières-sur-Orne (14210) : zone C
-- Urville (14190) : zone C
-- Le Vey (14570) : zone C
-- Villerville (14113) : zone B1
-"
-,
-    "distance": 1.104889988899231,
   },
 ]
 `;
