@@ -49,7 +49,7 @@
     "@ai-sdk/togetherai": "^1.0.29",
     "@date-fns/tz": "^1.4.1",
     "@observablehq/plot": "^0.6.17",
-    "ai": "^5.0.108",
+    "ai": "^5.0.110",
     "arquero": "^8.0.3",
     "cron": "^4.4.0",
     "d3": "^7.9.0",
