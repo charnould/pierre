@@ -133,27 +133,27 @@ export const score_conversation = async ({
       metadata = json_set (
         metadata,
         ${scorer === 'organization'
-      ? sql`
-          '$.evaluation.organization.score',
-          ${score},
-          '$.evaluation.organization.comment',
-          ${comment}
-        `
-      : sql``} ${scorer === 'customer'
-      ? sql`
-          '$.evaluation.customer.score',
-          ${score},
-          '$.evaluation.customer.comment',
-          ${comment}
-        `
-      : sql``} ${scorer === 'ai'
-      ? sql`
-          '$.evaluation.ai.score',
-          ${score},
-          '$.evaluation.ai.comment',
-          ${comment}
-        `
-      : sql``}
+          ? sql`
+              '$.evaluation.organization.score',
+              ${score},
+              '$.evaluation.organization.comment',
+              ${comment}
+            `
+          : sql``} ${scorer === 'customer'
+          ? sql`
+              '$.evaluation.customer.score',
+              ${score},
+              '$.evaluation.customer.comment',
+              ${comment}
+            `
+          : sql``} ${scorer === 'ai'
+          ? sql`
+              '$.evaluation.ai.score',
+              ${score},
+              '$.evaluation.ai.comment',
+              ${comment}
+            `
+          : sql``}
       )
     WHERE
       conv_id = ${conv_id}
