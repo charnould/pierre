@@ -89,12 +89,12 @@ const chunk_and_save = async (file: { id: string; filename: string; access: stri
       await sql`
         INSERT INTO
           chunks ${sql({
-          chunk_tokens: count_tokens(chunk),
-          chunk_hash: generate_hash(chunk),
-          chunk_access: file.access,
-          chunk_file: file.filename,
-          chunk_text: chunk
-        })};
+            chunk_tokens: count_tokens(chunk),
+            chunk_hash: generate_hash(chunk),
+            chunk_access: file.access,
+            chunk_file: file.filename,
+            chunk_text: chunk
+          })};
       `
       await sql`
         INSERT INTO

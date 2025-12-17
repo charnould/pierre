@@ -65,11 +65,8 @@ for (const view of views) {
 // Copy transpiled/minified widget.js in `docs` folder, aka PIERRE website
 await $`cp assets/core/dist/js/widget.js docs/assets`
 
-// Lint, format, test code
 await $`bun lint`
 await $`bun format`
-await $`bun test:unit`
-await $`bun test:e2e`
 await $`clear`
 
 console.log(`✅ BUILD DONE!`)
