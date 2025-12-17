@@ -52,7 +52,7 @@ exports[`should AIContext parse correctly 1`] = `
             "url": [Function],
           },
           "modelId": "gpt-4.1-mini",
-          "specificationVersion": "v2",
+          "specificationVersion": "v3",
           "supportedUrls": {
             "application/pdf": [
               /^https?:\\/\\/.*$/,
@@ -78,7 +78,7 @@ exports[`should AIContext parse correctly 1`] = `
             "url": [Function],
           },
           "modelId": "qwen/qwen3-32b",
-          "specificationVersion": "v2",
+          "specificationVersion": "v3",
           "supportedUrls": {
             "image/*": [
               /^https?:\\/\\/.*$/,
@@ -102,7 +102,7 @@ exports[`should AIContext parse correctly 1`] = `
             "url": [Function],
           },
           "modelId": "qwen/qwen3-32b",
-          "specificationVersion": "v2",
+          "specificationVersion": "v3",
           "supportedUrls": {
             "image/*": [
               /^https?:\\/\\/.*$/,
