@@ -12,7 +12,7 @@ Le 13 février 2014, après examen préalable par le Sénat, l’Assemblée nati
 
 L'ANRU est également opérateur avec la Caisse des dépôts de 9 programmes d’investissement d’avenir (PIA), des programmes d’investissement de l’État français en faveur de la jeunesse et des sports, de la ville, de la cohésion des territoires et du développement durable. Les fonds alloués à ces programmes s’élèvent à plus de 830 millions d’euros.
 
-En cohérence avec ses missions relevant de la politique de la ville et des quartiers populaires et quartiers prioritaires de la politique de la ville (QPV), l'ANRU quitte ses locaux historiques, situés rue de Vaugirard dans le 6e arrondissement de Paris. L'agence s'installe dans son nouveau siège, conçu par l'architecte Rudy Ricciotti à Pantin, en Seine-Saint-Denis, face à l'arrêt de métro d'Église de Pantin (ligne 5), le 4 juillet 2022. Ses locaux sont officiellement inaugurés le 7 juillet 2022 en présence d'Emmanuelle Cosse, Christophe Béchu et Olivier Klein.
+En cohérence avec ses missions relevant de la politique de la ville et des quartiers populaires et quartiers prioritaires de la politique de la ville (QPV), l'ANRU quitte ses locaux historiques, situés rue de Vaugirard dans le 6e arrondissement de Paris en 2022. L'agence s'installe dans son nouveau siège, conçu par l'architecte Rudy Ricciotti à Pantin, en Seine-Saint-Denis, face à l'arrêt de métro d'Église de Pantin (ligne 5), le 4 juillet 2022. Ses locaux sont officiellement inaugurés le 7 juillet 2022 en présence d'Emmanuelle Cosse, Christophe Béchu et Olivier Klein.
 
 ## Objectif
 
@@ -142,6 +142,10 @@ Le 12 juin 2023, quatre députés du parti politique La France Insoumise, Franç
 Le 7 février 2024, France Stratégie fait paraître un rapport rédigé par Pierre-Yves Cusset, Clément Dherbécourt et Gabrielle Jacob dédié à l'évaluation du PNRU. Le rapport estime que le PNRU a certes eu un « impact causal significatif sur l’offre de logements et le peuplement des quartiers ciblés » mais que cet impact « s’observe essentiellement dans les quartiers où les opérations de démolition ont été les plus intenses, des quartiers en moyenne moins peuplés que les autres quartiers ciblés ». Toujours selon France Stratégie, la mise en œuvre du PNRU s'est néanmoins traduite par une « diminution notable de la part de logements sociaux et par une réduction de la part des ménages les plus pauvres ». Ainsi, « dans le quart des quartiers où les démolitions ont été les plus intenses, le PNRU a causé une diminution de plus de 9 % de la part de logements sociaux, ainsi qu'une baisse de 17% de la part des ménages les plus pauvres ». Le PNRU a donc « en partie atteint son objectif de renforcer la mixité sociale dans les quartiers concernés, en agissant sur l'offre de logements et le peuplement ».
 
 Le 7 février 2024 également, l'entreprise de sondages d'opinion Harris Interactive et la société mère Toluna dont elle est filiale font paraître le troisième volet de l'enquête « Les Français dans leur quartier » commandée par l'ANRU. Elle observe que l'image des quartiers s'améliore particulièrement parmi les habitants d'un QPV ayant fait l'objet d'opérations de renouvellement urbain.
+
+### Affaire interne
+
+En novembre 2012, l'ANRU est l'objet d'un rappel à la loi de la part de la CNIL pour avoir instauré, à l'initiative de son directeur général Pierre Sallenave, un système de surveillance généralisée de son personnel six mois durant.
 
 ## Notes et références
 

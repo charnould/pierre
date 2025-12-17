@@ -4,7 +4,7 @@ L'Agence nationale de l'habitat (ANAH) est un établissement public administrati
 
 Cet établissement met en œuvre la politique nationale d'amélioration du parc de logements privés existants. Sa vocation sociale l'amène à se concentrer sur les publics les plus modestes.
 
-L'ANAH accorde des aides financières aux propriétaires et aux syndicats de copropriétaires pour la réalisation de travaux lourds ou d'amélioration de leur habitat. Elle encourage par ailleurs le développement d'une offre de logements à loyers et charges maîtrisés par le biais de conventions avec les propriétaires bailleurs. L'ANAH procure également aux décideurs locaux des moyens financiers et un appui méthodologique, notamment dans le cadre d'opérations programmées pour l'amélioration de l'habitat (OPAH) et de Programmes d'intérêt général (PIG).
+L'ANAH accorde des aides financières aux propriétaires et aux syndicats de copropriétaires pour la réalisation de travaux lourds ou d'amélioration de leur habitat. Elle encourage par ailleurs le développement d'une offre de logements à loyers et charges maîtrisés par le biais de conventions avec les propriétaires bailleurs. L'ANAH procure également aux décideurs locaux des moyens financiers et un appui méthodologique, notamment dans le cadre d'opérations programmées pour l'amélioration de l'habitat (OPAH) et de projets d'intérêt général (PIG).
 
 ## Histoire
 
