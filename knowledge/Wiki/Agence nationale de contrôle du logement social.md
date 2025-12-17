@@ -15,15 +15,15 @@ L'Agence a 4 missions principales
 
 ## Fonctionnement
 
-L'Agence est placée sous la tutelle des ministres chargés du logement, des finances et de l’économie. Elle est administrée par un conseil d’administration composé de quatre représentants de l’État et de trois personnalités qualifiées. La présidente du conseil d'administration, nommée par décret du 6 juillet 2021 est Martine Latare, conseillère maître à la Cour des comptes, pour un mandat de trois ans. Elle succède à M. Jean Gaeremynck, qui a quitté la présidence de l’agence en avril 2021 après deux mandats successifs.
+L'Agence est placée sous la tutelle des ministres chargés du Logement, des Finances et de l’Économie. Elle est administrée par un conseil d’administration composé de quatre représentants de l’État et de trois personnalités qualifiées. La présidente du conseil d'administration, nommée par décret du 6 juillet 2021 est Martine Latare, conseillère maître à la Cour des comptes, pour un mandat de trois ans. Elle succède à Jean Gaeremynck, qui a quitté la présidence de l’agence en avril 2021 après deux mandats successifs.
 
-Le directeur général est nommé par arrêté du ministre de la cohésion des territoires. Pascal Martin-Gousset, ingénieur général des ponts, des eaux et des forêts, est reconduit dans ses fonctions le 12 janvier 2018 (avec effet au 26 décembre 2017) — son départ à la retraite devant survenir à compter du 1er mars 2020. Rachel Chane-See-Chu lui succède jusqu’en octobre 2022. Serge Bossini, inspecteur général de l’environnement et du développement durable, est nommé directeur général de l’Ancols par un arrêté du 30 juin 2023, paru au Journal officiel du 12 juillet.
+Le directeur général est nommé par arrêté du ministre de la Cohésion des territoires. Pascal Martin-Gousset, ingénieur général des ponts, des eaux et des forêts, est reconduit dans ses fonctions le 12 janvier 2018 (avec effet au 26 décembre 2017) — son départ à la retraite devant survenir à compter du 1er mars 2020. Rachel Chane-See-Chu lui succède jusqu’en octobre 2022. Serge Bossini, inspecteur général de l’environnement et du développement durable, est nommé directeur général de l’Ancols par un arrêté du 30 juin 2023, paru au Journal officiel du 12 juillet.
 
 ## Rapports d'étude
 
 L'Agence publie un rapport annuel de contrôle. Elle publie également des études thématiques.
 
-- Étude de l'offre locative du secteur des organismes d'HLM et SEM au regard de la demande de logement social en France métropolitaine (décembre 2016).
+- Étude de l'offre locative du secteur des organismes d'HLM et SEM au regard de la demande de logement social en France métropolitaine (décembre 2016)
 - Étude des coûts locatifs des logements des organismes HLM et SEM au regard des ressources des locataires en France métropolitaine (décembre 2016)
 - Étude soutenabilité financière d'une baisse de loyers pour un nombre significatif de logements sociaux situés hors QPV (quartier prioritaire de la politique de la ville) - Simulations globales et études de cas (2016)
 

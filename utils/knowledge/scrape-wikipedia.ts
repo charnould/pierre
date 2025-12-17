@@ -41,7 +41,8 @@ export const scrape_wikipedia = async (knowledge: Knowledge) => {
       'Quartier_prioritaire_de_la_politique_de_la_ville',
       'Union_sociale_pour_l%27habitat',
       'Valérie_Létard',
-      'Vincent_Jeanbrun'
+      'Vincent_Jeanbrun',
+      'Louis_Loucheur'
     ]
 
     try {

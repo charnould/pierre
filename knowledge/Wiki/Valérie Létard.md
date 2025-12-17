@@ -10,7 +10,7 @@ Au niveau local, elle est présidente de la communauté d'agglomération de Vale
 
 Entre 2007 et 2010, sous la présidence de Nicolas Sarkozy, elle est secrétaire d'État, successivement chargée de la Solidarité puis des Technologies vertes et des Négociations sur le climat.
 
-Dans le gouvernement Michel Barnier, formé en 2024, elle occupe la fonction de ministre du Logement et de la Rénovation urbaine. Elle ne conserve que le portefeuille du Logement dans le gouvernement François Bayrou qui succède au précédent.
+Dans le gouvernement Barnier, formé en 2024, elle occupe la fonction de ministre du Logement et de la Rénovation urbaine. Elle ne conserve que le portefeuille du Logement dans le gouvernement Bayrou qui succède au précédent.
 
 ## Biographie
 
@@ -90,7 +90,7 @@ Son nom est un temps évoqué pour la présidence de l'Assemblée nationale. Ell
 
 #### Ministre du Logement et de la Rénovation urbaine
 
-Dans le gouvernement Michel Barnier, constitué le 21 septembre 2024, elle est nommée ministre du Logement et de la Rénovation urbaine.
+Dans le gouvernement Barnier, constitué le 21 septembre 2024, elle est nommée ministre du Logement et de la Rénovation urbaine.
 
 En tant que ministre, elle souhaite développer le prêt à taux zéro, construire davantage de logements sociaux (16 000 logements sociaux supplémentaires pour 2027) et simplifier le droit de l’urbanisme. Elle déclare vouloir une baisse du taux du Livret A pour « donner une respiration aux bailleurs sociaux ». Elle veut aussi défiscaliser les donations aux enfants et petits-enfants afin de mobiliser davantage « les capitaux dormants ».
 
@@ -139,9 +139,9 @@ En avril 2025, elle effectue une tournée de deux jours en Martinique afin de «
 ### Articles connexes
 
 - Femmes ministres en France
-- Gouvernement François Fillon (2)
-- Gouvernement Michel Barnier
-- Gouvernement François Bayrou
+- Gouvernement Fillon II
+- Gouvernement Barnier
+- Gouvernement Bayrou
 
 ### Liens externes
 
