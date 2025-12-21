@@ -1,21 +1,53 @@
 import type { Context } from 'hono'
+import { augment_query } from '../utils/augment-query'
+import { AIContext } from '../utils/_schema'
+import { save_reply } from '../utils/handle-conversation'
+import { generate_embeddings, vector_search } from '../utils/search-by-vectors'
+import { bm25_search } from '../utils/search-by-bm25'
+import { rank_chunks } from '../utils/rank-chunks'
+import { convert_pdf_to_webp } from '../utils/convert-pdf-to-webp'
 
 // WIP
 export const controller = async (c: Context) => {
   const form = await c.req.formData()
   const source = form.get('source') as string
-  const context = form.get('context') as string
+  const contexty = form.get('context') as string
   const files: File[] = form.getAll('files') as File[]
 
-  // const config = (await import(`../assets/bridge/config`)).default
-  // const model = config.models.answer_with
+  for await (const file of files) convert_pdf_to_webp(file)
 
-  console.log('context:', context)
+  console.log('context:', contexty)
   console.log('source:', source)
   console.log('files:', files)
 
-  await Bun.sleep(3000)
+  const context = await AIContext.parseAsync({
+    config: (await import(`../assets/default/config`)).default,
+    content: c.req.query('message'),
+    conv_id: Bun.randomUUIDv7(),
+    role: 'user'
+  })
 
+  await save_reply(context)
+
+  context.query = await augment_query(context)
+
+  const embeddings = await generate_embeddings(
+    [context.content, ...context.query.standalone_questions, ...context.query.search_queries],
+    { provider: 'ollama', batch: true }
+  )
+
+  const v = await Promise.all(embeddings.map((v) => vector_search(v, context)))
+  const k = await Promise.all(context.query.bm25_keywords.map((k) => bm25_search(k, context)))
+
+  // TODO: v and k must not return undefined must not return undefined
+  context.chunks = await rank_chunks(
+    v.filter((chunk) => chunk !== undefined),
+    k.filter((chunk) => chunk !== undefined),
+    context
+  )
+
+  // TODO: generate answer = mess
+  await Bun.sleep(3000)
   const mess = `Monsieur Becquerel bonjour,
 
 Nous souhaitons tout d’abord vous présenter nos excuses pour le délai de traitement de votre demande et pour le fait que vous ayez dû vous déplacer à quatre reprises en agence sans obtenir de réponse rapide. Nous comprenons parfaitement votre frustration et regrettons les désagréments occasionnés.
