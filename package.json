@@ -12,7 +12,7 @@
     "------------------ GLOBAL ------------------": "------------------",
     "dev": "DEBUG=true bun --env-file=.env.production --watch run app.ts",
     "css": "bunx @tailwindcss/cli@latest -i assets/default/tailwind/style.css -o assets/default/dist/css/style.css --minify --watch",
-    "start": "bun --env-file=.env.production run app.ts",
+    "start": "NODE_ENV=production bun --env-file=.env.production run app.ts",
     "lint": "bun run oxlint . --ignore-pattern='**/*.js' --fix --fix-suggestions",
     "format": "bunx prettier '!**/*.js' '!assets/default/dist' --write . --plugin=prettier-plugin-embed --plugin=prettier-plugin-tailwindcss --plugin=prettier-plugin-sql",
     "generate": "bun --env-file=.env.production run ./utils/knowledge/_run.ts --community ",
