@@ -9,8 +9,8 @@ RUN <<EOF
     apt-get -y install curl
     apt-get -y install sqlite3
     apt-get -y install openssh-client
+    apt-get -y install imagemagick ghostscript
     apt-get -y install libgomp1 libatlas-base-dev liblapack-dev libsqlite3-dev
-    apt-get -y install -y imagemagick ghostscript
     bun install --production
 EOF
 

@@ -209,6 +209,7 @@ export type SResults = z.infer<typeof SResults>
 export const is_ollama_ready = async () => {
   const request = JSON.stringify({ model: 'bge-m3', keep_alive: -1 })
   const ERROR = 'Ollama is not running.'
+  console.info('Bun.env.NODE_ENV: ', Bun.env.NODE_ENV)
   const url =
     Bun.env.NODE_ENV === 'production'
       ? 'http://ollama:11434/api/embed'

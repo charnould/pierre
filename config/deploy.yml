@@ -1,18 +1,13 @@
-minimum_version: 2.6.0
+minimum_version: 2.10.1
 
 service: <%= ENV['SERVICE'] %>
-
-image: <%= ENV['REPO_PATH'] %>
 
 servers:
   web:
     - <%= ENV['IP'] %>
 
 registry:
-  username: <%= ENV['USERNAME'] %>
-  server: ghcr.io
-  password:
-    - REGISTRY_TOKEN
+  server: localhost:5555
 
 ssh:
   port: <%= ENV['SSH_PORT'] %>
@@ -27,12 +22,15 @@ accessories:
     host: <%= ENV['IP'] %>
     options:
       gpus: all
+    # env:
+    #   clear:
+    #     NVIDIA_VISIBLE_DEVICES: <%= ENV['NVIDIA_VISIBLE_DEVICES'] %>
 
 proxy:
   ssl: true
   app_port: 3000
-  # TODO: Make knowledge build a background job.
-  # Otherwise request timeout if it takes too long.
+  # TODO: Make knowledge build a background job,
+  # otherwise request timeout if it takes too long.
   response_timeout: 600
   host: <%= ENV['HOST'] %>
 
@@ -43,20 +41,20 @@ env:
   clear:
     SERVICE: <%= ENV['SERVICE'] %>
   secret:
-    - ANTHROPIC_API_KEY
-    - COHERE_API_KEY
     - GOOGLE_GENERATIVE_AI_API_KEY
-    - MISTRAL_API_KEY
-    - OPENAI_API_KEY
-    - CEREBRAS_API_KEY
-    - GROQ_API_KEY
     - TOGETHER_AI_API_KEY
-    - REGISTRY_TOKEN
+    - ANTHROPIC_API_KEY
+    - CEREBRAS_API_KEY
+    - MISTRAL_API_KEY
+    - COHERE_API_KEY
+    - OPENAI_API_KEY
+    - GROQ_API_KEY
     - AUTH_SECRET
     - AUTH_PASSWORD
     - WEBHOOK_KEY_1
     - WEBHOOK_KEY_2
     - WEBHOOK_KEY_3
+    - NVIDIA_VISIBLE_DEVICES
     - HUGGINGFACE_ENDPOINT
     - HUGGINGFACE_TOKEN
     - IP
