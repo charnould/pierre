@@ -29,14 +29,14 @@ export const generate_hash = (string: string) => {
 export const encode_filename = (filename: string): string => {
   try {
     // Get filename extension
-    const match = filename.match(/\.(docx|xlsx|md)$/i)
+    const match = filename.match(/\.(doc|docx|xls|xlsx|xlsm|xlsb|md)$/i)
     if (match === null) throw new Error('invalid_uploaded_file_extension')
     const extension = match[0]
 
     // Remove the file extension
     const filename_without_extension = filename
       .normalize('NFKC')
-      .replace(/\.(docx|xlsx|md)$/i, '')
+      .replace(/\.(doc|docx|xls|xlsx|xlsm|xlsb|md)$/i, '')
       .trim()
 
     // Convert the filename to Base64
@@ -72,12 +72,12 @@ export const encode_filename = (filename: string): string => {
 export const decode_filename = (filename: string): string => {
   try {
     // Get filename extension
-    const match = filename.match(/\.(docx|xlsx|md)$/i)
+    const match = filename.match(/\.(doc|docx|xls|xlsx|xlsm|xlsb|md)$/i)
     if (!match) throw new Error('invalid_uploaded_file_extension')
     const extension = match[0]
 
     // Remove the file extension
-    const filename_without_extension = filename.replace(/\.(docx|xlsx|md)$/i, '')
+    const filename_without_extension = filename.replace(/\.(doc|docx|xls|xlsx|xlsm|xlsb|md)$/i, '')
 
     // Restore Base64 standard characters
     let base64 = filename_without_extension.replace(/_/g, '/').replace(/-/g, '+')

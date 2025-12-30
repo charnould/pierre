@@ -18,8 +18,8 @@ Les organismes de logement social (OLS ci-après) peuvent enrichir `PIERRE` de l
 
 À ce jour, `PIERRE` reconnaît uniquement les fichiers aux formats suivants :
 
-- `.xlsx` (Microsoft Excel)
-- `.docx` (Microsoft Word)
+- `.xls`/`.xlsx`/`.xlsm`/`.xlsb` (Microsoft Excel)
+- `.doc`/`.docx` (Microsoft Word)
 - `.md` (Markdown)
 
 > [!CAUTION]
@@ -38,9 +38,9 @@ Voici quelques exemples courants :
 
 ### Comment bien préparer vos documents ?
 
-#### Préparer vos documents `.docx` et `.md`
+#### Préparer vos documents `.doc`/`.docx` et `.md`
 
-Les fichiers `.docx` ou `.md` sont – _in fine_ et peu importe les modalités de traitement des données par `PIERRE` – des « fichiers-textes », qu’il s’agisse d’un modèle de courrier pour déposer son congé, d’une note de service sur le déroulé d’une CALEOL ou encore de la description du processus d’attribution au sein d'un OLS, etc.
+Les fichiers `.doc`/`.docx` ou `.md` sont – _in fine_ et peu importe les modalités de traitement des données par `PIERRE` – des « fichiers-textes », qu’il s’agisse d’un modèle de courrier pour déposer son congé, d’une note de service sur le déroulé d’une CALEOL ou encore de la description du processus d’attribution au sein d'un OLS, etc.
 
 Pour que `PIERRE` les comprenne le mieux possible, pensez à les écrire/formater comme si vous vouliez en expliquer clairement le contenu à un nouveau collègue :
 
@@ -52,9 +52,9 @@ Pour que `PIERRE` les comprenne le mieux possible, pensez à les écrire/formate
 - Si vous écrivez en Markdown, respectez le balisage (titres, listes, gras, italique, etc.)
 
 > [!CAUTION]
-> Les images contenues dans vos fichiers `.docx` et `.md` **NE SONT PAS interprétées**.
+> Les images contenues dans vos fichiers `.doc`/`.docx` et `.md` **NE SONT PAS interprétées**.
 
-#### Préparer vos fichiers `.xlsx`
+#### Préparer vos fichiers `.xls`/`.xlsx`/`.xlsm`/`.xlsb`
 
 Pour que `PIERRE` comprenne vos fichiers Excel :
 
@@ -91,8 +91,8 @@ Il se présente comme ci-dessous et est téléchargeable depuis la page `Encyclo
 
 ![_metadata.xlsx](../assets//images/documentation/_metadata.png)
 
-- Pour les fichiers `.docx` et `.md`, seules les colonnes `A` et `B` sont à compléter.  
-  Pour les fichiers `.xlsx`, les colonnes `A`, `B` , `C`, `D`, `F` sont obligatoires, `E` et `G` sont optionnelles mais recommandées.
+- Pour les fichiers `.doc`/`.docx` et `.md`, seules les colonnes `A` et `B` sont à compléter.  
+  Pour les fichiers `.xls`/`.xlsx`/`.xlsm`/`.xlsb`, les colonnes `A`, `B` , `C`, `D`, `F` sont obligatoires, `E` et `G` sont optionnelles mais recommandées.
 
 - **Colonne A** : nom exact du fichier (la correspondance doit être parfait avec le nom réel du fichier)  
   👉 Si le nom ne correspond pas, `PIERRE` ignorera le fichier.

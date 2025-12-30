@@ -47,8 +47,8 @@ Deux catégories de données sont distinguées :
 
 Formats actuellement supportés :
 
-- `.xlsx` (Microsoft Excel)
-- `.docx` (Microsoft Word)
+- `.xls`/`.xlsx`/`.xlsm``.xlsb` (Microsoft Excel)
+- `.doc`/`.docx` (Microsoft Word)
 - `.md` (Markdown)
 
 ### Processus d'upload via l'interface d'administration et conséquences RGPD
