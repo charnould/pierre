@@ -76,7 +76,7 @@ export const Metadata = z
     id: z.string(),
     filename: z.string().trim(),
     filepath: z.string().trim(),
-    type: z.enum(['docx', 'xlsx', 'md']).nullable().default(null),
+    type: z.enum(['doc', 'docx', 'xlsx', 'xls', 'xlsm', 'xlsb', 'md']).nullable().default(null),
     headers: z.number(),
     sheet: z.number(),
     access: z.string().toLowerCase().trim().nullable().default(null),
@@ -88,7 +88,11 @@ export const Metadata = z
   .strict()
   .transform((m) => {
     if (m.filepath.endsWith('.md')) m.type = 'md'
+    if (m.filepath.endsWith('.doc')) m.type = 'docx'
     if (m.filepath.endsWith('.docx')) m.type = 'docx'
+    if (m.filepath.endsWith('.xls')) m.type = 'xlsx'
+    if (m.filepath.endsWith('.xlsm')) m.type = 'xlsx'
+    if (m.filepath.endsWith('.xlsb')) m.type = 'xlsx'
     if (m.filepath.endsWith('.xlsx')) m.type = 'xlsx'
     if (m.last_modified === null) m.last_modified = format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX")
     return m

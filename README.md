@@ -370,7 +370,7 @@ Si vous hébergez `PIERRE` :
 **Comment faire apprendre des connaissances à `PIERRE` ?**
 
 1. Se connecter à https://180.81.82.83/a, puis cliquer sur `Encyclopédie`.
-2. Télécharger `_metadata.xlsx`, le compléter **scrupuleusement** et le ré-uploader avec les fichiers associés. Seuls les `.docx` (Word), `.xlsx` (Excel) et `.md` (Markdown) sont acceptés. Voir [Guide : préparer vos documents pour `PIERRE`](./docs//documentation/prepare-your-docs.md) pour plus de précisions.
+2. Télécharger `_metadata.xlsx`, le compléter **scrupuleusement** et le ré-uploader avec les fichiers associés. Seuls les `.doc`/`.docx` (Word), `.xls`/`.xlsx`/`.xlsm`/`.xlsb` (Excel) et `.md` (Markdown) sont acceptés. Voir [Guide : préparer vos documents pour PIERRE](./docs//documentation/prepare-your-docs.md) pour plus de précisions.
 3. **Indispensable** : [Configurer](https://github.com/charnould/pierre/blob/master/assets/default/config.ts#L188) `config.ts` de manière à permettre l'utilisation des connaissances `proprietary` et le protéger s'il utilise des données privées.
 4. C'est tout. Toutes les nuits aux alentours de 4h du matin, la base de connaissances sera automatiquement reconstruite.
 
