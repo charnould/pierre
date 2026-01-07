@@ -48,7 +48,7 @@ export const get_skills = async (option: { pad_to_length: boolean }): Promise<Sk
       name ASC
   `
 
-  const result = [...records]
+  let result = [...records]
 
   if (option.pad_to_length) {
     while (result.length < 10) {
@@ -58,6 +58,8 @@ export const get_skills = async (option: { pad_to_length: boolean }): Promise<Sk
         skill: null
       })
     }
+  } else {
+    result = result.filter((r) => r.name !== null && r.skill !== null)
   }
 
   return result as Skill[]

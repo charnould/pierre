@@ -15,7 +15,7 @@ async function run() {
     // Create custom element and position it
     const bookmarklet = document.createElement('pierre-extension')
     Object.assign(bookmarklet.style, {
-      position: 'absolute',
+      position: 'fixed',
       zIndex: '9999',
       left: '50px',
       top: '50px'
@@ -41,6 +41,7 @@ async function run() {
      * - Checking for extension updates from the remote repository
      * - Detecting demo elements on the page to determine the current view
      * - Rendering the appropriate view based on the application state
+     * - Retrieving LLM skills from deployed PIERRE instance
      *
      * @component
      * @returns {JSX.Element} A draggable container with the Bridge UI, displaying one of three views:
@@ -59,6 +60,7 @@ async function run() {
 
       /** State management (single source of truth!) */
       const [view, setView] = useState<undefined | 'settings' | 'unsupported' | 'task'>(undefined)
+      const [skills, setSkills] = useState<any[]>([])
       const [needUpdate, setneedUpdate] = useState<boolean>(false)
       const [settings, setSettings] = useState({
         apiUrl: '',
@@ -117,6 +119,21 @@ async function run() {
           .catch(() => setneedUpdate(false))
       }, [])
 
+      // Run once on first render, then again only when `settings.apiUrl` changes.
+      useEffect(() => {
+        /**
+         * Get the list of all available skills
+         *
+         * Fetches from deployed PIERRE instance the setup skills.
+         * Updates the `skills` state accordingly:
+         */
+        fetch(settings.apiUrl + '/skills')
+          // If response is not OK (404, network issue, etc.), reject to trigger catch
+          .then((res) => (res.ok ? res.text() : Promise.reject()))
+          .then((text) => setSkills(JSON.parse(text)))
+          .catch(() => setSkills([]))
+      }, [settings.apiUrl])
+
       // Run once on first render, then again only when `view` changes.
       // If `view` is already set, skip the init routine.
       //
@@ -167,6 +184,7 @@ async function run() {
                     setSettings={setSettings}
                     view={view}
                     setView={setView}
+                    skills={skills}
                   />
                 ) : null}
               </div>

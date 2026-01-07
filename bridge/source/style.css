@@ -46,7 +46,7 @@ html {
   margin: 0px 25px 0px 25px;
   flex-direction: column;
   justify-content: space-between;
-  cursor: pointer;
+  cursor: grab;
 }
 
 /* NAVIGATION */
@@ -54,12 +54,13 @@ html {
 .navigation {
   margin: 10px -14px 0px -14px;
   display: flex;
-  cursor: pointer;
+  cursor: grab;
   align-items: center;
   justify-content: space-between;
 }
 
 .navigation__icon {
+  cursor: pointer;
   display: flex;
   height: 20px;
   width: 20px;
@@ -123,12 +124,14 @@ html {
 }
 
 .view__input,
+.view__select,
 .view__textarea {
+  appearance: none;
   font-weight: 100;
   font-family: sans-serif;
   line-height: 1.5;
   margin: 0 0 10px 0;
-  border-radius: 3px;
+  border-radius: 6px;
   border-width: 1px;
   border-style: solid;
   border-color: rgba(var(--color), 0.2);
@@ -143,6 +146,10 @@ html {
   resize: none;
 }
 
+.view__select {
+  cursor: pointer;
+}
+
 /* Placeholder color */
 .view__input::placeholder,
 .view__textarea::placeholder {
@@ -151,19 +158,19 @@ html {
 
 /* Optional: keep focus outline removed */
 .view__input:focus,
-.view__textarea:focus {
+.view__select:focus .view__textarea:focus {
   outline: none;
 }
 
 .view__button {
   border: none;
-  margin-bottom: 25px;
   cursor: pointer;
+  margin-bottom: 8px;
   display: block;
   width: 100%;
-  border-radius: 3px;
+  border-radius: 6px;
   background-color: rgba(var(--color), 0.9);
-  padding: 12px;
+  padding: 11px;
   text-align: center;
   font-size: 18px;
   font-weight: 900;
@@ -175,12 +182,21 @@ html {
   background-color: rgba(var(--color), 1);
 }
 
+.view__button:last-of-type {
+  margin-bottom: 25px;
+}
+
+.view__button:disabled {
+  background-color: rgb(175, 175, 175);
+  cursor: not-allowed;
+}
+
 /* DROPZONE */
 
 .dropzone {
   margin-bottom: 15px;
   cursor: pointer;
-  border-radius: 3px;
+  border-radius: 6px;
   border-width: 1px;
   border-style: solid;
   border-color: rgba(var(--color), 0.2);
