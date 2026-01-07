@@ -15,15 +15,18 @@ import { controller as get_login } from './controllers/GET.login'
 import { controller as get_index } from './controllers/GET.index'
 import { controller as get_admin } from './controllers/GET.admin'
 import { controller as get_users } from './controllers/GET.users'
+import { controller as get_bridge } from './controllers/GET.bridge'
 import { controller as get_knowledge } from './controllers/GET.knowledge'
+import { controller as get_skills } from './controllers/GET.bridge.skills'
 import { controller as get_statistics } from './controllers/GET.statistics'
 import { controller as get_conversations } from './controllers/GET.conversations'
 
 import { controller as post_login } from './controllers/POST.login'
 import { controller as post_users } from './controllers/POST.users'
-import { controller as post_bridge } from './controllers/POST.bridge.answer'
+import { controller as post_bridge } from './controllers/POST.bridge'
 import { controller as post_knowledge } from './controllers/POST.knowledge'
 import { controller as post_conversation } from './controllers/POST.conversations'
+import { controller as post_bridge_answer } from './controllers/POST.bridge.answer'
 
 // Prepare the environment and database before starting the app:
 // 1. Ensure Ollama is running and models are preloaded
@@ -84,12 +87,15 @@ app.get('/ai', authenticate, get_ai)
 app.get('/a/login', get_login)
 app.get('/a', authenticate, get_admin)
 app.get('/a/users', authenticate, get_users)
+app.get('/a/bridge', authenticate, get_bridge)
 app.get('/a/knowledge', authenticate, get_knowledge)
 app.get('/a/statistics', authenticate, get_statistics)
 app.get('/a/conversations', authenticate, get_conversations)
+app.get('/bridge/skills', get_skills)
 
-app.post('/bridge/answer', post_bridge)
+app.post('/bridge/answer', post_bridge_answer)
 app.post('/a/login', post_login)
+app.post('/a/bridge', authenticate, post_bridge)
 app.post('/a/users', authenticate, post_users)
 app.post('/a/knowledge', authenticate, post_knowledge)
 app.post('/a/conversations', authenticate, post_conversation)

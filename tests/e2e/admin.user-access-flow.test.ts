@@ -77,6 +77,12 @@ it('should validate administrator access flow', async () => {
   await Promise.all([page.click('a[href="/a"]'), page.waitForNavigation()])
   expect(page.url()).toBe('http://localhost:3000/a')
 
+  await Promise.all([page.click('a[href="a/bridge"]'), page.waitForNavigation()])
+  expect(page.url()).toBe('http://localhost:3000/a/bridge')
+
+  await Promise.all([page.click('a[href="/a"]'), page.waitForNavigation()])
+  expect(page.url()).toBe('http://localhost:3000/a')
+
   await Promise.all([page.click('button[value="logout"]'), page.waitForNavigation()])
   expect(page.url()).toBe('http://localhost:3000/a/login')
   cookie = (await browser.cookies()).find((cookie) => cookie.name === 'pierre-ia')
@@ -117,6 +123,10 @@ it('should validate contributor access flow', async () => {
   expect(page.url()).toBe('http://localhost:3000/a')
 
   await Promise.all([page.click('a[href="a/users"]'), page.waitForNavigation()])
+  await Bun.sleep(1000)
+  expect(page.url()).toBe('http://localhost:3000/a')
+
+  await Promise.all([page.click('a[href="a/bridge"]'), page.waitForNavigation()])
   await Bun.sleep(1000)
   expect(page.url()).toBe('http://localhost:3000/a')
 
@@ -162,6 +172,9 @@ it('should validate collaborator access flow', async () => {
   expect(page.url()).toBe('http://localhost:3000/a/login')
 
   await Promise.all([page.goto('http://localhost:3000/a/users'), page.waitForNavigation()])
+  expect(page.url()).toBe('http://localhost:3000/a/login')
+
+  await Promise.all([page.goto('http://localhost:3000/a/bridge'), page.waitForNavigation()])
   expect(page.url()).toBe('http://localhost:3000/a/login')
 
   await Promise.all([page.goto('http://localhost:3000/a/knowledge'), page.waitForNavigation()])

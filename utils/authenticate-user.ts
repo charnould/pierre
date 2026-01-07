@@ -136,6 +136,7 @@ export const authenticate = async (c: Context, next: Next) => {
       if (
         c.req.path.startsWith('/a/conversations') ||
         c.req.path.startsWith('/a/statistics') ||
+        c.req.path.startsWith('/a/bridge') ||
         c.req.path.startsWith('/a/users') ||
         c.req.path.startsWith('/a')
       ) {
@@ -150,6 +151,7 @@ export const authenticate = async (c: Context, next: Next) => {
       if (
         c.req.path.startsWith('/a/conversations') ||
         c.req.path.startsWith('/a/statistics') ||
+        c.req.path.startsWith('/a/bridge') ||
         c.req.path.startsWith('/a/users')
       ) {
         return c.redirect('/a')

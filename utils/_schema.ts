@@ -18,6 +18,21 @@ export const User = z.object({
   password_hash: z.string()
 })
 
+/**
+ * Represents a Skill schema definition using Zod.
+ *
+ *  This schema validates the structure of a skill object with the following properties:
+ *
+ * - `id`: Unique identifier (UUIDv7 format)
+ * - `name`: Name of the skill
+ * - `skill`: Skill prompt
+ */
+export const Skill = z.object({
+  id: z.uuidv7(),
+  name: z.string().trim().nullable().default(null),
+  skill: z.string().trim().nullable().default(null)
+})
+
 // Model
 export const Model = z.object({
   providerOptions: z.custom<ProviderMetadata>(),
@@ -168,6 +183,7 @@ export const AIContext = z
 //
 //
 export type User = z.infer<typeof User>
+export type Skill = z.infer<typeof Skill>
 export type Reply = z.infer<typeof Reply>
 export type Model = z.infer<typeof Model>
 export type Config = z.infer<typeof Config>
