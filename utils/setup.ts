@@ -34,6 +34,13 @@ export const setup = async () => {
         role            TEXT NOT NULL,
         password_hash   TEXT NOT NULL
       );
+
+    CREATE TABLE IF NOT EXISTS skills
+      (
+        id          TEXT PRIMARY KEY UNIQUE NOT NULL,
+        name        TEXT,
+        skill       TEXT
+      );
     `)
 }
 
