@@ -11,7 +11,7 @@ Plus concrètement, PIERRE c'est à la fois :
 
 1. Un **chatbot** (ou mieux : un **resolution bot**) **open source** qui répond 24/7/365 à 100 % des questions de « premier niveau » des locataires et demandeurs HLM, et épaule au quotidien les collaborateurs des bailleurs sociaux (processus, données patrimoniales, aide à la rédaction, etc.).
 
-2. Une **extension Web/Chrome** (alpha) qui permet d'injecter de l'IA dans vos applicatifs historiques (ARAVIS™, IKOS™, HOMERE™...) et d'accélerer - par exemple - les [délais de réponse aux locataires](https://www.youtube.com/watch?v=U3r_BBxpsro).
+2. Une **extension Web/Chrome™** (alpha) qui permet d'injecter de l'IA dans vos applicatifs historiques (ARAVIS™, IKOS™, HOMERE™...) et d'accélerer - par exemple - les [délais de réponse aux locataires](https://www.youtube.com/watch?v=U3r_BBxpsro).
 
 3. Une **base de connaissances** en **open data** ([consultation](./knowledge/community)), utilisable indépendamment du chatbot et indispensable à la mise en oeuvre de toutes approches « Retrieval Augmented Generation » ([RAG](https://en.wikipedia.org/wiki/Retrieval-augmented_generation)) via un LLM.
 
