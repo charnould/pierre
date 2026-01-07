@@ -5,12 +5,16 @@ describe('compile_promt', () => {
   it('should throw if a variable is missing', async () => {
     let error
     try {
-      await compile_prompt('default', 'answer', {
-        lang: 'fr',
-        // today: 'current_time_and_date',
-        user_query: 'user_query_value',
-        internal_materials: 'internal_materials_value',
-        community_materials: 'community_materials_value'
+      await compile_prompt({
+        config: 'default',
+        prompt: 'answer',
+        variables: {
+          lang: 'fr',
+          today: 'current_time_and_date',
+          user_query: 'user_query_value',
+          internal_materials: 'internal_materials_value',
+          community_materials: 'community_materials_value'
+        }
       })
     } catch (e) {
       error = e
@@ -20,13 +24,17 @@ describe('compile_promt', () => {
   })
 
   it('should compile prompt', async () => {
-    const prompt = await compile_prompt('default', 'answer', {
-      lang: 'fr',
-      location: 'a location',
-      today: 'current_time_and_date',
-      user_query: 'user_query_value',
-      internal_materials: 'internal_materials_value',
-      community_materials: 'community_materials_value'
+    const prompt = await compile_prompt({
+      config: 'default',
+      prompt: 'answer',
+      variables: {
+        lang: 'fr',
+        location: 'a location',
+        today: 'current_time_and_date',
+        user_query: 'user_query_value',
+        internal_materials: 'internal_materials_value',
+        community_materials: 'community_materials_value'
+      }
     })
 
     expect(prompt).toMatchInlineSnapshot(`
@@ -119,6 +127,46 @@ describe('compile_promt', () => {
 
       # Your Answer in "fr" (ISO 639-1 format)
       "
+    `)
+  })
+
+  it('should compile a skill', async () => {
+    const prompt = await compile_prompt({
+      template: `
+        **Today's date:** {{{today}}}
+        **User's location:** {{{location}}}
+        ## Internal Materials (Priority 1)
+        {{{internal_materials}}}
+        ## Community Materials (Priority 2)
+        {{{community_materials}}}
+        ---
+        # User Query
+        {{{user_query}}}
+        ---
+        # Your Answer in "{{{lang}}}" (ISO 639-1 format)`,
+      variables: {
+        lang: 'fr',
+        location: 'orange',
+        today: 'mercredi 7 janvier',
+        user_query: 'une super question',
+        internal_materials: 'internal_materials_value',
+        community_materials: 'community_materials_value'
+      }
+    })
+
+    expect(prompt).toMatchInlineSnapshot(`
+      "
+              **Today's date:** mercredi 7 janvier
+              **User's location:** orange
+              ## Internal Materials (Priority 1)
+              internal_materials_value
+              ## Community Materials (Priority 2)
+              community_materials_value
+              ---
+              # User Query
+              une super question
+              ---
+              # Your Answer in "fr" (ISO 639-1 format)"
     `)
   })
 })
