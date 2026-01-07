@@ -1,42 +1,75 @@
 /**
- * Asynchronously loads and compiles a Markdown prompt template by replacing triple-brace placeholders
- * with values from a provided variables map.
+ * Compiles a prompt template by replacing placeholders with provided variables.
  *
- * The template file is resolved relative to the current module at:
- *   ../assets/{config}/prompts/{prompt}.md
+ * Supports two compilation modes:
+ * - **Template mode**: Directly compile a template string
+ * - **File mode**: Load a template from a markdown file and compile it
  *
- * Placeholders use the syntax {{{ name }}} (triple braces). Whitespace inside the braces is allowed
- * and trimmed when matching keys. Each placeholder is replaced by the corresponding value from
- * `variables`. If a variable value is `null` or `undefined`, it is rendered as an empty string.
+ * @param options - Configuration object for prompt compilation
+ * @param options.template - Optional template string to compile directly
+ * @param options.config - Optional configuration name for file-based compilation
+ * @param options.prompt - Optional prompt file name (without .md extension) for file-based compilation
+ * @param options.variables - Optional record of variables to substitute into placeholders
  *
- * @param config - The configuration folder name under `assets` containing the prompt templates.
- * @param prompt - The prompt file name (without the `.md` extension) to load and compile.
- * @param variables - An optional record mapping placeholder names to replacement values. Defaults to `{}`.
+ * @returns Promise resolving to the compiled template string with all placeholders replaced
  *
- * @returns A Promise that resolves to the compiled template string.
+ * @throws {Error} If neither `template` nor both `config` and `prompt` are provided
+ * @throws {Error} If both `template` and `config`/`prompt` options are provided
+ * @throws {Error} If a placeholder references a variable that is not provided
  *
- * @throws {Error} If the template contains a placeholder for which no variable is provided
- *                 (e.g. a key used in `{{{ key }}}` is missing from `variables`).
- * @throws {Error} If reading the template file fails (e.g. file not found or I/O error). Such errors
- *                 are propagated from the underlying file read operation.
+ * @example
+ * // Using template mode
+ * const result = await compile_prompt({
+ *   template: 'Hello {{{ name }}}!',
+ *   variables: { name: 'World' }
+ * })
+ * // Returns: 'Hello World!'
  *
- * @remarks
- * - Matching is done using a regular expression that finds `{{{ ... }}}` sequences and trims the key.
- * - This function intentionally fails fast on missing placeholders to help detect template/variable mismatches.
+ * @example
+ * // Using file mode
+ * const result = await compile_prompt({
+ *   config: 'my-config',
+ *   prompt: 'greeting',
+ *   variables: { name: 'Alice' }
+ * })
+ * // Loads and compiles: ../assets/my-config/prompts/greeting.md
+ *
+ * This function is tested.
+ *
  */
-export const compile_prompt = async (
-  config: string,
-  prompt: string,
-  variables: Record<string, unknown> = {}
-): Promise<string> => {
-  // Build the full URL to the Markdown prompt file based on the config and prompt name
-  const file_url = new URL(`../assets/${config}/prompts/${prompt}.md`, import.meta.url)
+export const compile_prompt = async (options: {
+  template?: string
+  config?: string
+  prompt?: string
+  variables?: Record<string, unknown>
+}): Promise<string> => {
+  const { template, config, prompt, variables = {} } = options
 
-  // Read the template file as text
-  const template = await Bun.file(file_url).text()
+  // Validate that exactly one compilation mode is provided
+  const hasTemplate = template != null
+  const hasFileConfig = config != null && prompt != null
+
+  if (!hasTemplate && !hasFileConfig) {
+    throw new Error('Either `template` or both `config` and `prompt` must be provided')
+  }
+
+  if (hasTemplate && hasFileConfig) {
+    throw new Error('Cannot provide both `template` and `config`/`prompt` options')
+  }
+
+  let templateString: string
+
+  if (hasTemplate) {
+    // String compilation
+    templateString = template
+  } else {
+    // File compilation
+    const file_url = new URL(`../assets/${config}/prompts/${prompt}.md`, import.meta.url)
+    templateString = await Bun.file(file_url).text()
+  }
 
   // Replace all triple-brace placeholders ({{{ key }}}) with values from `variables`
-  const compiled = template.replace(/\{\{\{\s*([^}]+?)\s*\}\}\}/g, (_match, key) => {
+  const compiled = templateString.replace(/\{\{\{\s*([^}]+?)\s*\}\}\}/g, (_match, key) => {
     const name = key.trim() // Trim whitespace around the key
 
     // Throw an error if the key is missing in the provided variables

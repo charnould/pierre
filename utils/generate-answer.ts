@@ -27,17 +27,21 @@ import { compile_prompt } from './compile_prompt'
  */
 export const answer_user = async (context: AIContext) => {
   // Compile prompt
-  const prompt = await compile_prompt(context.config.id, 'answer', {
-    today: today_is(),
-    lang: context.query?.lang,
-    user_query: context.content,
-    location: context.config.knowledge.location,
-    internal_materials: context.chunks.proprietary
-      ?.map((c) => `<chunk source="${c.chunk_file}">\n${c.chunk_text}\n</chunk>\n`)
-      .join(''),
-    community_materials: context.chunks.community
-      ?.map((c) => `<chunk source="${c.chunk_file}">\n${c.chunk_text}\n</chunk>\n`)
-      .join('')
+  const prompt = await compile_prompt({
+    config: context.config.id,
+    prompt: 'answer',
+    variables: {
+      today: today_is(),
+      lang: context.query?.lang,
+      user_query: context.content,
+      location: context.config.knowledge.location,
+      internal_materials: context.chunks.proprietary
+        ?.map((c) => `<chunk source="${c.chunk_file}">\n${c.chunk_text}\n</chunk>\n`)
+        .join(''),
+      community_materials: context.chunks.community
+        ?.map((c) => `<chunk source="${c.chunk_file}">\n${c.chunk_text}\n</chunk>\n`)
+        .join('')
+    }
   })
 
   // Add prompt to conversation history
@@ -55,9 +59,13 @@ export const answer_user = async (context: AIContext) => {
  */
 export const reach_relevancy_deadlock = async (context: AIContext) => {
   // Compile prompt
-  const prompt = await compile_prompt(context.config.id, 'deadlock', {
-    today: today_is(),
-    lang: context.query?.lang
+  const prompt = await compile_prompt({
+    config: context.config.id,
+    prompt: 'deadlock',
+    variables: {
+      today: today_is(),
+      lang: context.query?.lang
+    }
   })
 
   // Add prompt to conversation history
@@ -78,7 +86,11 @@ export const reach_relevancy_deadlock = async (context: AIContext) => {
  */
 export const reach_profanity_deadlock = async (context: AIContext) => {
   // Compile prompt
-  const prompt = await compile_prompt(context.config.id, 'profanity', { lang: context.query?.lang })
+  const prompt = await compile_prompt({
+    config: context.config.id,
+    prompt: 'profanity',
+    variables: { lang: context.query?.lang }
+  })
 
   // Add prompt to conversation history
   context.conversation.push({ role: 'user', content: prompt })
