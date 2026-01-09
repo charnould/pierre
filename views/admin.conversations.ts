@@ -15,7 +15,7 @@ export const view = (data, conversation: Reply[] | []) => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/core/dist/css/style.1767033801850.css" />
+        <link rel="stylesheet" href="../assets/core/dist/css/style.1768470180179.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Inclusive+Sans:wght@350&display=swap"
           rel="stylesheet"
@@ -26,14 +26,14 @@ export const view = (data, conversation: Reply[] | []) => {
       </head>
 
       <body class="mt-20 ml-10 flex gap-x-20 bg-stone-50">
-        <div class="sticky top-20 left-20 h-screen w-[400px]">
+        <div class="sticky top-20 left-20 h-screen w-100">
           <a href="/a" class="mb-6 block w-fit rounded-full bg-teal-200 px-3 py-1 pr-4 font-medium"
             >← Retour</a
           >
           <h1 class="font-mono text-4xl font-extrabold">Conversations</h1>
 
           <!-- START: conversations list -->
-          <div class="mt-6 h-[550px] overflow-y-auto rounded-lg border border-stone-200 shadow-lg">
+          <div class="mt-6 h-137.5 overflow-y-auto rounded-lg border border-stone-200 shadow-lg">
             ${data.map(
               (conv) => html` <a href="/a/conversations?id=${conv[0].conv_id}">
                   ${conv[0].metadata.topics === 'TODO'
@@ -65,7 +65,7 @@ export const view = (data, conversation: Reply[] | []) => {
                     </span>
                   </div>
 
-                  <div class="border-b-1 border-neutral-200 px-6 pb-2 text-sm">
+                  <div class="border-b border-neutral-200 px-6 pb-2 text-sm">
                     ${conv[0].content}
                   </div>
                 </a>`
@@ -75,7 +75,7 @@ export const view = (data, conversation: Reply[] | []) => {
         </div>
 
         <!-- START: Displayed conversation -->
-        <div class="w-[700px]">
+        <div class="w-175">
           ${conversation.length === 0
             ? null
             : html`
@@ -111,7 +111,7 @@ export const view = (data, conversation: Reply[] | []) => {
                       />
                       <label
                         for="s0"
-                        class="cursor-pointer rounded-full bg-red-500 px-[2px] text-2xl peer-checked/s0:rounded-full peer-checked/s0:ring-3"
+                        class="cursor-pointer rounded-full bg-red-500 px-0.5 text-2xl peer-checked/s0:rounded-full peer-checked/s0:ring-3"
                         >&nbsp;&nbsp;&nbsp;&nbsp;</label
                       >
 
@@ -127,7 +127,7 @@ export const view = (data, conversation: Reply[] | []) => {
                       />
                       <label
                         for="s1"
-                        class="cursor-pointer rounded-full bg-orange-400 px-[2px] text-2xl peer-checked/s1:rounded-full peer-checked/s1:ring-3"
+                        class="cursor-pointer rounded-full bg-orange-400 px-0.5 text-2xl peer-checked/s1:rounded-full peer-checked/s1:ring-3"
                         >&nbsp;&nbsp;&nbsp;&nbsp;</label
                       >
 
@@ -143,7 +143,7 @@ export const view = (data, conversation: Reply[] | []) => {
                       />
                       <label
                         for="s2"
-                        class="cursor-pointer rounded-full bg-lime-300 px-[2px] text-2xl peer-checked/s2:rounded-full peer-checked/s2:ring-3"
+                        class="cursor-pointer rounded-full bg-lime-300 px-0.5 text-2xl peer-checked/s2:rounded-full peer-checked/s2:ring-3"
                         >&nbsp;&nbsp;&nbsp;&nbsp;</label
                       >
 
@@ -159,7 +159,7 @@ export const view = (data, conversation: Reply[] | []) => {
                       />
                       <label
                         for="s3"
-                        class="cursor-pointer rounded-full bg-green-500 px-[2px] text-2xl peer-checked/s3:rounded-full peer-checked/s3:ring-3"
+                        class="cursor-pointer rounded-full bg-green-500 px-0.5 text-2xl peer-checked/s3:rounded-full peer-checked/s3:ring-3"
                         >&nbsp;&nbsp;&nbsp;&nbsp;</label
                       >
                     </fieldset>

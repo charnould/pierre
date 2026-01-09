@@ -12,7 +12,7 @@ export const view = (message) => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/core/dist/css/style.1767033801850.css" />
+        <link rel="stylesheet" href="../assets/core/dist/css/style.1768470180179.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap"
           rel="stylesheet"
@@ -25,7 +25,7 @@ export const view = (message) => {
           ? html`<p class="mb-4 w-fit rounded-lg bg-red-100 px-4 py-1 text-red-500">${message}</p>`
           : null}
 
-        <form method="post" class="flex w-[500px] flex-col gap-y-4">
+        <form method="post" class="flex w-125 flex-col gap-y-4">
           <input type="hidden" name="action" value="login" />
 
           <input
@@ -34,7 +34,7 @@ export const view = (message) => {
             name="email"
             autocomplete="current-email"
             placeholder="charnould@pierre-ia.org"
-            class="rounded-lg border-1 border-neutral-300 p-4 text-4xl"
+            class="rounded-lg border border-neutral-300 p-4 text-4xl"
           />
 
           <input
@@ -43,7 +43,7 @@ export const view = (message) => {
             name="password"
             autocomplete="current-password"
             placeholder="Mot de passe (vN}3bQ3_iG)"
-            class="rounded-lg border-1 border-neutral-300 p-4 text-4xl"
+            class="rounded-lg border border-neutral-300 p-4 text-4xl"
           />
 
           <input
