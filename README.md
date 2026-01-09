@@ -51,6 +51,9 @@ Plus concrètement, PIERRE c'est à la fois :
     - [Via une iframe](#via-une-iframe)
 - [Administrer PIERRE avec une interface graphique](#administrer-pierre-avec-une-interface-graphique)
   - [Apprendre à PIERRE des connaissances (self-hosting)](#apprendre-%C3%A0-pierre-des-connaissances-self-hosting)
+    - [Apprendre des connaissances propriétaires à PIERRE via l'interface web](#apprendre-des-connaissances-propri%C3%A9taires-%C3%A0-pierre-via-linterface-web)
+    - [Apprendre des connaissances propriétaires à PIERRE via `cURL`](#apprendre-des-connaissances-propri%C3%A9taires-%C3%A0-pierre-via-curl)
+    - [Comment réduire la durée de reconstruction de votre base de connaissances ?](#comment-r%C3%A9duire-la-dur%C3%A9e-de-reconstruction-de-votre-base-de-connaissances)
 - [Licence](#licence)
 
 <!-- tocstop -->
@@ -368,14 +371,38 @@ PIERRE dispose — en fait — de deux bases de connaissances :
 
 - Une base (dite `propriétaire`) qui correspond aux connaissances créées par un organisme HLM hébergeant sa propre version de PIERRE et qu'il ne souhaite pas partager avec `communautaire` ou qu'il souhaite faire apprendre en pleine autonomie à PIERRE (ex : des procédures internes).
 
-**Comment faire apprendre des connaissances à PIERRE ?**
+### Apprendre des connaissances propriétaires à PIERRE via l'interface web
 
 1. Se connecter à https://180.81.82.83/a, puis cliquer sur `Encyclopédie`.
 2. Télécharger `_metadata.xlsx`, le compléter **scrupuleusement** et le ré-uploader avec les fichiers associés. Seuls les `.doc`/`.docx` (Word), `.xls`/`.xlsx`/`.xlsm`/`.xlsb` (Excel) et `.md` (Markdown) sont acceptés. Voir [Guide : préparer vos documents pour PIERRE](./docs//documentation/prepare-your-docs.md) pour plus de précisions.
 3. **Indispensable** : [Configurer](https://github.com/charnould/pierre/blob/master/assets/default/config.ts#L188) `config.ts` de manière à permettre l'utilisation des connaissances `proprietary` et le protéger s'il utilise des données privées.
 4. C'est tout. Toutes les nuits aux alentours de 4h du matin, la base de connaissances sera automatiquement reconstruite.
 
-**[IMPORTANT] Comment réduire la durée de reconstruction de votre base de connaissances ?**
+### Apprendre des connaissances propriétaires à PIERRE via `cURL`
+
+Cette option permet d'automatiser/programmer le processus d'upload documentaire ; c'est particulièrement utile si vos données changent souvent/quotidiennement (ex : présence des collaborateurs).
+
+Utiliser la commande suivante avec :
+
+- `URL`: l'URL de votre instance de PIERRE
+- `AUTH_BEARER`: la variable d'environnement `AUTH_BEARER`
+- `service`: la variable d'environnement `SERVICE`
+- `file[]`: le/les fichier(s) à uploader
+
+```bash
+curl -X POST https://URL/a/knowledge \
+  -H "Authorization: Bearer AUTH_BEARER" \
+  -H "Authorization-Context: cli" \
+  -H "Accept: application/json" \
+  -F "service=pierre" \
+  -F "files[]=@Carnet du patrimoine.pdf" \
+  -F "files[]=@Cahier de consignes.xlsx"
+```
+
+> [!NOTE]
+> La présence sur le serveur de `_metadata.xlsx` est toujours **indispensable** (cf. Apprendre des connaissances propriétaires à PIERRE via l'interface web).
+
+### Comment réduire la durée de reconstruction de votre base de connaissances ?
 
 La reconstruction de votre base de connaissances **peut être très longue** (plusieurs heures) selon la quantité de données à traiter (= transformer vos données en vecteurs de valeurs numériques).
 
