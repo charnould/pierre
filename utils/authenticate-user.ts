@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import type { Context, Next } from 'hono'
+import { bearerAuth } from 'hono/bearer-auth'
 import { getSignedCookie } from 'hono/cookie'
 import { get_user } from '../utils/handle-user'
 import type { Config, Parsed_User } from './_schema'
@@ -10,6 +11,15 @@ import type { Config, Parsed_User } from './_schema'
 // Authenticate middleware
 //
 export const authenticate = async (c: Context, next: Next) => {
+  // If the request comes from a cURL/CLI client (authorization-context = 'cli')
+  // targeting the /a/knowledge endpoint, enforce Bearer auth.
+  // This allows programmatic uploads without using the web interface.
+  if (c.req.header('authorization-context') === 'cli' && c.req.path === '/a/knowledge') {
+    return await bearerAuth({
+      token: Bun.env.AUTH_BEARER!
+    })(c, next)
+  }
+
   // Validate if a signed cookie is present and decrypt it to retrieve user date
   // and check if user (still) exists in `users` table
   let can_access_protected_context = false

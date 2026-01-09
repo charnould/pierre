@@ -3,32 +3,52 @@ import { execute_pipeline } from '../utils/knowledge/_run'
 import { encode_filename } from '../utils/knowledge/generate-hash'
 
 /**
- * Handles various actions related to file management and knowledge rebuilding.
+ * Handles POST requests for knowledge management operations.
  *
- * @param {Context} c - The context object containing request and response information.
+ * Supports multiple actions through the 'action' query parameter:
+ * - 'upload': Uploads files to the datastore (via web UI or CLI)
+ * - 'download': Downloads a file from the datastore
+ * - 'destroy': Deletes a file from the datastore
+ * - 'rebuild': Forces a knowledge pipeline rebuild
  *
- * @throws Will log an error if any operation fails.
+ * @param {Context} c - The Hono context object containing request/response details
+ * @returns {Promise<Response>} JSON response for uploads/CLI requests, file stream for downloads, or redirect to knowledge page
  *
- * The function supports the following actions:
+ * @example
+ * // Upload files via CLI
+ * // POST /api/knowledge?action=upload
+ * // Headers: authorization-context: cli
  *
- * - `upload`: Uploads files to the `datastores/files` directory..
- * - `download`: Downloads a specified file from the `datastores/files` directory.
- * - `destroy`: Deletes a specified file from the `datastores/files` directory.
- * - `rebuild`: Forces a knowledge rebuilds.
+ * @example
+ * // Download a file
+ * // POST /api/knowledge?action=download
+ * // Body: { filename: 'document.pdf' }
  *
- * After completing the action, the function redirects to the `/a/knowledge` route.
+ * @throws {Error} Logs errors to console without explicit error response
  */
 export const controller = async (c: Context) => {
   try {
     const body = await c.req.parseBody({ all: true })
-    const files = (Array.isArray(body.files) ? body.files : [body.files]) as File[]
+    const files = ([] as File[]).concat(body.files ?? body['files[]'] ?? [])
     const filename = body.filename ?? undefined
     const action = c.req.query('action')
 
-    // CASE 1: User wants to upload files
-    if (action === 'upload') {
+    // CASE 1: User wants to upload files (either via web UI or cURL)
+    if (action === 'upload' || c.req.header('authorization-context') === 'cli') {
+      // Determine target service
+      const service =
+        c.req.header('authorization-context') === 'cli' ? (body.service as string) : Bun.env.SERVICE
+
+      // Save each uploaded file
       for (const file of files) {
-        await Bun.write(`datastores/${Bun.env.SERVICE}/files/${encode_filename(file.name)}`, file)
+        const filename = encode_filename(file.name)
+        const path = `datastores/${service}/files/${filename}`
+        await Bun.write(path, file)
+      }
+
+      // Respond for CLI uploads with JSON
+      if (c.req.header('authorization-context') === 'cli') {
+        return c.json({ status: 'ok', uploaded: files.map((f) => f.name) }, 200)
       }
     }
 
