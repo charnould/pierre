@@ -19,7 +19,7 @@ export const view = (params: {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/core/dist/css/style.1767033801850.css" />
+        <link rel="stylesheet" href="../assets/core/dist/css/style.1768470180179.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Inclusive+Sans:wght@350&display=swap"
           rel="stylesheet"
@@ -30,7 +30,7 @@ export const view = (params: {
           type="image/svg+xml"
         />
         <link rel="manifest" href="../assets/${params.active_config.id}/manifest.json" />
-        <script type="module" src="../assets/core/dist/js/ai.1767033801850.js"></script>
+        <script type="module" src="../assets/core/dist/js/ai.1768470180179.js"></script>
         <title>Comment puis-je vous aider ? 🖐️</title>
         <meta name="conv_id" content="${randomUUIDv7()}" />
       </head>
@@ -71,7 +71,7 @@ export const view = (params: {
                         data-config
                         href="/?config=${c.id}"
                         ${c.is_active === true ? 'data-active' : ''}
-                        class="mr-2 mb-2 inline-block w-fit cursor-pointer rounded border border-gray-300 px-3 py-2 text-left font-serif text-sm/snug text-gray-700 hover:bg-gray-50 disabled:cursor-progress disabled:text-gray-500 disabled:hover:bg-white data-[active]:border-gray-400 data-[active]:bg-gray-100"
+                        class="mr-2 mb-2 inline-block w-fit cursor-pointer rounded border border-gray-300 px-3 py-2 text-left font-serif text-sm/snug text-gray-700 hover:bg-gray-50 disabled:cursor-progress disabled:text-gray-500 disabled:hover:bg-white data-active:border-gray-400 data-active:bg-gray-100"
                       >
                         ${c.display}
                       </a>`
@@ -100,7 +100,7 @@ export const view = (params: {
             class="mx-6 mb-6 flex h-fit flex-none items-center justify-between gap-x-2 rounded-lg border border-gray-200 bg-white py-3 pr-2 pl-4 shadow-sm"
           >
             <textarea
-              class="row-span-2 min-h-[44px] flex-1 resize-none border-none font-serif text-base/snug outline-0 placeholder:font-sans placeholder:text-gray-400"
+              class="row-span-2 min-h-11 flex-1 resize-none border-none font-serif text-base/snug outline-0 placeholder:font-sans placeholder:text-gray-400"
               id="prompt__input"
               type="text"
               name="message"
