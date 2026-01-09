@@ -7,7 +7,9 @@ Ce guide présente quels types de fichiers peuvent être transmis à `PIERRE` et
 <!-- toc -->
 
 - [Quels fichiers sont acceptés par `PIERRE` pour enrichir sa base de connaissances](#quels-fichiers-sont-accept%C3%A9s-par-pierre-pour-enrichir-sa-base-de-connaissances)
-  - [Comment bien préparer vos documents ?](#comment-bien-pr%C3%A9parer-vos-documents)
+- [Comment bien préparer vos documents ?](#comment-bien-pr%C3%A9parer-vos-documents)
+  - [Préparer vos documents `.doc`/`.docx` et `.md`](#pr%C3%A9parer-vos-documents-docdocx-et-md)
+  - [Préparer vos fichiers `.xls`/`.xlsx`/`.xlsm`/`.xlsb`](#pr%C3%A9parer-vos-fichiers-xlsxlsxxlsmxlsb)
 - [`_metadata.xlsx` : un fichier pour les gouverner tous (obligatoire)](#_metadataxlsx--un-fichier-pour-les-gouverner-tous-obligatoire)
 
 <!-- tocstop -->
@@ -36,9 +38,9 @@ Voici quelques exemples courants :
 - Pour du texte en gras : \*\*texte en gras\*\*
 - Pour du texte en italique : \_italique\_
 
-### Comment bien préparer vos documents ?
+## Comment bien préparer vos documents ?
 
-#### Préparer vos documents `.doc`/`.docx` et `.md`
+### Préparer vos documents `.doc`/`.docx` et `.md`
 
 Les fichiers `.doc`/`.docx` ou `.md` sont – _in fine_ et peu importe les modalités de traitement des données par `PIERRE` – des « fichiers-textes », qu’il s’agisse d’un modèle de courrier pour déposer son congé, d’une note de service sur le déroulé d’une CALEOL ou encore de la description du processus d’attribution au sein d'un OLS, etc.
 
@@ -54,7 +56,7 @@ Pour que `PIERRE` les comprenne le mieux possible, pensez à les écrire/formate
 > [!CAUTION]
 > Les images contenues dans vos fichiers `.doc`/`.docx` et `.md` **NE SONT PAS interprétées**.
 
-#### Préparer vos fichiers `.xls`/`.xlsx`/`.xlsm`/`.xlsb`
+### Préparer vos fichiers `.xls`/`.xlsx`/`.xlsm`/`.xlsb`
 
 Pour que `PIERRE` comprenne vos fichiers Excel :
 
