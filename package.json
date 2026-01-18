@@ -7,7 +7,7 @@
   "scripts": {
     "------------------ BUILD ------------------": "------------------",
     "app:build": "bun --env-file=.env.production run config/build:app.ts",
-    "bridge:dev": "bun build --entrypoints bridge/source/App.tsx --outdir bridge/chrome --minify --target browser --watch",
+    "bridge:dev": "bun build --entrypoints bridge/source/App.tsx --outdir bridge/chromium --minify --target browser --watch",
     "bridge:build": "bun run config/build:bridge.ts",
     "------------------ GLOBAL ------------------": "------------------",
     "dev": "DEBUG=true bun --env-file=.env.production --watch run app.ts",

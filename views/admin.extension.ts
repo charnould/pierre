@@ -51,7 +51,7 @@ export const view = (skills: Skill[]) => {
               href="https://charnould.github.io/pierre/bridge.html"
               target="_blank"
               class="cursor-pointer text-blue-600 underline decoration-1 underline-offset-3"
-              >l’extension Chrome™ de PIERRE</a
+              >l’extension Chrome™/Edge™ de PIERRE</a
             >
             sont définies ici.
           </p>
