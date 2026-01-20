@@ -50,6 +50,7 @@ env:
     - OPENAI_API_KEY
     - GROQ_API_KEY
     - AUTH_SECRET
+    - AUTH_BEARER
     - AUTH_PASSWORD
     - WEBHOOK_KEY_1
     - WEBHOOK_KEY_2
