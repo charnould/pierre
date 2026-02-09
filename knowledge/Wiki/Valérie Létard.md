@@ -146,6 +146,7 @@ En avril 2025, elle effectue une tournée de deux jours en Martinique afin de «
 ### Liens externes
 
 - Site officiel
+
 - Ressources relatives à la vie publique :
   - Assemblée nationale
   - Haute Autorité pour la transparence de la vie publique

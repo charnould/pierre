@@ -1,6 +1,6 @@
 # Centre régional des œuvres universitaires et scolaires
 
-Les centres régionaux des œuvres universitaires et scolaires (CROUS) sont, en France, des établissements publics à caractère administratif.
+Les centres régionaux des œuvres universitaires et scolaires (dont l'acronyme courant, CROUS, se prononce \[kʁus\] ) sont, en France, des établissements publics à caractère administratif.
 
 Le centre national des œuvres universitaires et scolaires (CNOUS) et les centres régionaux des œuvres universitaires et scolaires forment le réseau des œuvres universitaires, qui contribue à assurer aux étudiants une qualité d'accueil et de vie propice à la réussite de leur parcours de formation. Il assure une mission d'aide sociale et concourt à l'information et à l'éducation des étudiants en matière de santé. Il favorise leur mobilité.
 

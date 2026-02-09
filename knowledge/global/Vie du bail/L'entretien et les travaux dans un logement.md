@@ -24,54 +24,56 @@ Quelques conseils :
 Pour un locataire, il n’est pas toujours évident de savoir quelles sont les réparations locatives à sa charge. Le décret n°87-712 du 26 août 1987 fait partie des lois régissant la location d'appartement. Il définit une liste complète des travaux qui sont à la charge du locataire pendant toute la durée du bail. Le locataire doit les faire lui-même ou les faire réaliser par un professionnel. Nous présentons ci-dessous la liste des réparations locatives les plus fréquentes :
 
 - Parties extérieures dont le locataire à l'usage exclusif
-  - Jardins privatifs
+  - Jardins privatifs :
     - Entretien courant notamment des allées, pelouses, massifs, bassins et piscines ;
     - Taille, élagage, échenillage des arbres et arbustes ;
     - Remplacement des arbustes ;
     - Réparation et remplacement des installations mobiles d'arrosage.
-  - Auvents, terrasses et marquises
+  - Auvents, terrasses et marquises :
     - Enlèvement de la mousse et des autres végétaux.
-  - Descentes d'eaux pluviales, chéneaux et gouttières
+    - Descentes d'eaux pluviales, chéneaux et gouttières
     - Dégorgement des conduits.
 
 - Ouvertures intérieures et extérieures
-  - Sections ouvrantes telles que portes et fenêtres
+  - Sections ouvrantes telles que portes et fenêtres :
     - Graissage des gonds, paumelles et charnières ;
     - Menues réparations des boutons et poignées de portes, des gonds, crémones et espagnolettes ;
     - Remplacement notamment de boulons, clavettes et targettes.
-  - Vitrages
+  - Vitrages :
     - Réfection des mastics
     - Remplacement des vitres détériorées.
-  - Dispositifs d'occultation de la lumière tels que stores et jalousies
-    Graissage ;
-    Remplacement notamment de cordes, poulies, ou de quelques lames.
-  - Serrures et verrous de sécurité
+  - Dispositifs d'occultation de la lumière tels que stores et jalousies :
+    - Graissage ;
+    - Remplacement notamment de cordes, poulies, ou de quelques lames
+  - Serrures et verrous de sécurité :
     - Graissage ;
     - Remplacement de petites pièces ainsi que des clés égarées ou détériorées.
-  - Grilles
+  - Grilles :
     - Nettoyage et graissage ;
     - Remplacement notamment de boulons, clavettes, targettes.
+
 - Parties intérieures
-  - Plafonds, murs intérieurs et cloisons
+  - Plafonds, murs intérieurs et cloisons :
     - Maintien en état de propreté ;
     - Menus raccords de peintures et tapisseries ;
     - Remise en place ou remplacement de quelques éléments des matériaux de revêtement tels que faïence, mosaïque, matière plastique ;
     - Rebouchage des trous rendu assimilable à une réparation par le nombre, la dimension et l'emplacement de ceux-ci.
-  - Parquets, moquettes et autres revêtements de sols
+  - Parquets, moquettes et autres revêtements de sols :
     - Encaustiquage et entretien courant de la vitrification ;
     - Remplacement de quelques lames de parquets et remise en état, pose de raccords de moquettes et autres revêtements de sols notamment en cas de tâches et de trous
-  - Placards et menuiseries telles que plinthes, baguettes et moulures
+    - Placards et menuiseries telles que plinthes, baguettes et moulures
     - Remplacement des tablettes et tasseaux de placard et réparation de leur dispositif de fermeture ;
     - Fixation de raccords et remplacement de pointes de menuiseries.
+
 - Installations de plomberie
   - Canalisations d'eau
     - Dégorgement ;
     - Remplacement notamment de joints et de colliers.
   - Canalisations de gaz
     - Entretien courant des robinets, siphons et ouvertures d'aération ;
-    - Remplacement périodique des tuyaux souples de raccordement.
+    - Remplacement périodique des tuyaux souples de raccordement
   - Fosses septiques, puisards et fosses d'aisance
-    - Vidange.
+    - Vidange
   - Chauffage, production d’eau chaude et robinetterie
     - Remplacement des bilames, pistons, membranes, boîtes à eau, allumage piezo-électrique, clapets et joints des appareils à gaz ;
     - Rinçage et nettoyage des corps de chauffe et tuyauteries ;
@@ -79,8 +81,10 @@ Pour un locataire, il n’est pas toujours évident de savoir quelles sont les r
     - Remplacement des joints, flotteurs et joints cloches des chasses d'eau.
   - Eviers et appareils sanitaires
     - Nettoyage des dépôts de calcaire, remplacement des tuyaux flexibles de douches.
+
 - Equipements d'installations d'électricité
   - Remplacement des interrupteurs, prises de courant, coupe-circuits et fusibles, des ampoules, tubes lumineux ; réparation ou remplacement des baguettes ou gaines de protection.
+
 - Autres équipements possiblement mentionnés au contrat de location
   - Entretien courant et menues réparations des appareils tels que réfrigérateurs, machines à laver le linge et la vaisselle, sèche-linge, hottes aspirantes, adoucisseurs, capteurs solaires, pompes à chaleur, appareils de conditionnement d'air, antennes individuelles de radiodiffusion et de télévision, meubles scellés, cheminées, glaces et miroirs.
   - Menues réparations nécessitées par la dépose des bourrelets.
@@ -89,7 +93,7 @@ Pour un locataire, il n’est pas toujours évident de savoir quelles sont les r
 
 ### Quels travaux dans mon logement nécessitent l'autorisation du bailleur ?
 
-Le locataire a le droit d'aménager librement le logement qu'il occupe (changement de moquette, rafraîchissement des peintures murales...) et sans accord préalable du bailleur. Attention, la pose de crépi, de dalles au plafond et le talochage ne sont pas autorisés. Il est par ailleurs formellement interdit d'abattre ou de monter un mur.
+Le locataire a le droit d'aménager librement le logement qu'il occupe (rafraîchissement des peintures murales...) et sans accord préalable du bailleur. Attention, la pose de crépi, de dalles au plafond et le talochage ne sont pas autorisés. Il est par ailleurs formellement interdit d'abattre ou de monter un mur.
 
 Généralement l'ensemble des autres travaux effectués dans votre logement nécessitent l'accord préalable du bailleur. Ainsi, tous les travaux de changement de revêtement de sol et de transformation dans votre logement (remplacement de la baignoire par une douche, pose de carrelage, installation d'une cuisine équipée…) doivent faire l'objet d'une demande par courrier auprès du bailleur. Les travaux ne pourront être réalisés qu'après accord écrit du bailleur. Toutes les transformations effectuées sans l'autorisation du bailleur pourront être facturées au moment du départ du locataire.
 
@@ -139,15 +143,14 @@ Généralement cependant, **vous pouvez bénéficier d'aménagements réalisés 
 Si vous constatez un problème électrique chez vous, dans un premier temps, demandez à vos voisins s'ils rencontrent le même problème.
 
 - Si l'incident est collectif, il s'agit d'une coupure réseau, et le fournisseur d'électricité fait le nécessaire pour un retour à la normale dans les meilleurs délais. Informez votre gardien.
-- Si l'incident est individuel, vérifiez que votre disjoncteur n'a pas sauté, auquel cas, mettez-le sur la position "I". Sinon, contactez un électricien de votre choix. Le coût de la réparation est à votre charge.
+- Si l'incident est individuel, vérifiez que votre disjoncteur n'a pas sauté, auquel cas, mettez-le sur la position "I". Contrôler que le compteur Linky n’est pas désarmé. Sinon, contactez un électricien de votre choix. Le coût de la réparation est à votre charge.
 
 ### Que faire en cas de problème de plomberie dans mon logement (robinet, évier, lavabo, toilettes, etc.) ?
 
-Si vous constatez un problème de plomberie, consultez la liste des prestataires sous contrat avec votre bailleur pour savoir s'il existe un contrat d'entretien pour la robinetterie. Dans ce cas, adressez-vous à votre gardien ou contactez la société directement. Celle-ci pourra alors intervenir.
+Si vous constatez un problème de plomberie, adressez-vous à votre bailleur.
+S’il y a une grosse fuite d’eau dans le logement, couper l’eau au compteur général et contacter votre bailleur.
 
 Dans certains cas, il n'est pas possible pour votre bailleur de s'engager sur des délais d'intervention. C'est notamment le cas pour certaines demandes d'intervention technique dans les résidences ou les logements neufs de moins d'un an, où c'est l'assurance du constructeur qui doit prendre en charge la réparation.
-
-S'il n'existe pas de contrat d'entretien pour la robinetterie, sollicitez un plombier de votre choix. Le coût de la réparation est à votre charge.
 
 ### Que faire en cas de problème avec l’un des équipements collectifs de ma résidence ?
 
@@ -156,7 +159,7 @@ Ascenseurs, conteneurs pour la collecte des déchets, espaces verts, parkings, v
 Si malgré les efforts du bailleur un problème survient dans votre immeuble, vous avez deux solutions :
 
 - contacter l’entreprise chargée de la maintenance de l’équipement concerné (le nom et les coordonnées de nos sociétés prestataires figurent sur le panneau d'affichage situé dans le hall d’entrée de votre résidence) ;
-- vous adresser à votre gardien ou gardienne, qui est là pour vous aider !
+- informez votre bailleur de l’incident technique
 
 ### Que faire en cas de panne d’ascenseur dans ma résidence ?
 
@@ -165,8 +168,8 @@ Pour satisfaire ses locataires, votre bailleur veille au bon entretien des espac
 Si malgré nos efforts un problème survient, suivez nos consignes de sécurité :
 
 - si vous êtes à l'intérieur de la cabine, ne paniquez pas et suivez les instructions qui y sont affichées ;
-- si vous êtes à l'extérieur de la cabine, prévenez immédiatement votre gardien·ne ou la société d'ascenseur (ses coordonnées figurent sur le panneau d'information situé dans le hall d'entrée de votre immeuble).
-- si vous êtes à l'extérieur de la cabine et qu’une personne est enfermée à l'intérieur rassurez-la, dites-lui d'actionner le signal d'appel et prévenez votre gardien·ne.
+- si vous êtes à l'extérieur de la cabine, prévenez immédiatement votre bailleur ou la société d'ascenseur (ses coordonnées figurent sur le panneau d'information situé dans le hall d'entrée de votre immeuble ou sur l’équipement).
+- si vous êtes à l'extérieur de la cabine et qu’une personne est enfermée à l'intérieur rassurez-la, dites-lui d'actionner le signal d'appel et prévenez votre bailleur. Si cela ne fonctionne pas, prévenez les secours.
 
 ## Comment connaître mon type de chauffage ?
 
@@ -174,7 +177,7 @@ Votre logement est équipé de l'un des systèmes de chauffage suivants :
 
 - des convecteurs électriques individuels avec thermostat vous permettant de régler l'intensité de chauffe de votre appareil. Le coût des consommations est répercuté sur votre facture d'électricité individuelle ;
 - des radiateurs chauffés par une chaudière individuelle ou collective au gaz. Ce système de chauffage relève d'un contrat d'entretien passé entre le bailleur et un prestataire, la maintenance de vos appareils est donc assurée régulièrement. Le coût des consommations est répercuté sur les charges générales de la résidence et fait l'objet d'une régularisation annuelle ;
-- du chauffage au sol (électrique ou au gaz).
+- du chauffage au sol (électrique).
 
 **Quand le chauffage est-il mis en marche ?**
 

@@ -328,6 +328,7 @@ Elle suggère enfin aux candidats à la présidentielle la création d’une age
 ### Liens externes
 
 - Site officiel
+
 - Ressources relatives aux organisations :
   - SIREN
   - Registre de transparence de l'UE

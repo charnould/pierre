@@ -12,7 +12,7 @@ Entre 2001 et 2012, le nombre de personnes sans domicile fixe a augmenté de 50�
 
 Un blocage des loyers stricts décidé en 1914 et jamais remis en cause après la première guerre mondiale va entraîner une paralysie quasi totale de l'investissement locatif privé : le blocage des loyers obérant toute rentabilité de ce type d'investissement, les propriétaires de logements existants cessent de les entretenir, faute de revenus suffisants. Pareillement, la perspective de rendements faibles réduit la construction de nouveaux logements. Ainsi, entre les deux guerres, la France a construit 2,5 fois moins de logements que la Grande-Bretagne et deux fois moins de logements que l'Allemagne, pourtant affligée par une crise monétaire grave (1923). Entre les logements manquants et les unités insalubres, la pénurie est estimée à 2 millions d'unités.
 
-### Crise du logement après la seconde guerre mondiale en France
+### Crise du logement après la Seconde Guerre mondiale en France
 
 Les destructions massives de la Seconde Guerre mondiale en France ont accentué considérablement la crise du logement dans l’immédiat après-guerre. Le quart du parc immobilier du pays a été endommagé et certaines localités comme Royan ou Le Havre ont été particulièrement touchées par les bombardements. Des familles doivent vivre dans des logements exigus ou provisoires. « Améliorer les conditions de l'habitat » est un des principaux objectif du 1er plan.
 

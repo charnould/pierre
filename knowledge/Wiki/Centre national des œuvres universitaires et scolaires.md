@@ -44,11 +44,25 @@ Pour les associations ou syndicats étudiants, les élections pour le conseil d�
 
 ### Notes et références
 
+## Voir aussi
+
 ### Articles connexes
 
 - Centre régional des œuvres universitaires et scolaires
 - Logement étudiant en France
 - Restaurant universitaire
+
+### Liens externes
+
+- Site officiel
+
+- Ressources relatives aux organisations :
+  - SIREN
+  - data.gouv.fr
+- Ressource relative à la vie publique :
+  - Nominations au Journal officiel
+- Ressource relative à la recherche :
+  - HCERES
 
 - Portail des universités françaises
 - Portail des politiques sociales

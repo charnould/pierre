@@ -4,7 +4,7 @@ La loi no 2014-366 du 24 mars 2014 pour l'accès au logement et un urbanisme r�
 
 Traduction législative de la proposition 22 du programme présidentiel de François Hollande et portée au Parlement par Cécile Duflot, la loi vise notamment à instaurer un encadrement des loyers et une garantie universelle des loyers, elle modifie de nombreuses dispositions législatives sur la vente et la location de logements, l'attribution des logements sociaux, les normes de construction, change des principes importants en urbanisme, en particulier la suppression du coefficient d'occupation des sols, le dessaisissement des communes au profit des intercommunalités en matière de conception et d'application du plan local d'urbanisme (PLU) qui devient un plan local d'urbanisme intercommunal (PLUI).
 
-La loi, qui compte 177 articles et s'étend sur 150 pages de textes législatifs et réglementaires, fait l'objet de vives critiques de la part des professionnels du logement et d'économistes libéraux qui l'accusent d'avoir freiné la construction et de décourager les investisseurs. Estimant que la loi coûte au pays entre 0,4 et 0,5 point de croissance économique, le premier ministre Manuel Valls décide le 29 août 2014 de réformer la partie de la loi qu'il estime gêner le plus la construction et la croissance.
+La loi, qui compte 177 articles et s'étend sur 150 pages de textes législatifs et réglementaires, fait l'objet de vives critiques de la part des professionnels du logement et d'économistes libéraux qui l'accusent d'avoir freiné la construction et de décourager les investisseurs. Estimant que la loi coûte au pays entre 0,4 et 0,5 point de croissance économique, le premier ministre Manuel Valls décide le 29 août 2014 de réformer la partie de la loi qu'il estime gêner le plus la construction et la croissance.
 
 ## Genèse du texte
 
@@ -39,6 +39,7 @@ Bien que le CAE soit chargé de conseiller le premier ministre, si l'on en croit
 - Adopté en seconde lecture par le Sénat le 31 janvier 2014. Le Sénat modifie la garantie universelle des loyers (GUL) financée non plus par une taxe mais par des fonds publics.
 - Vote définitif à l'Assemblée le 19 février 2014.
 - Le 20 mars 2014, l'essentiel de la loi Alur est jugé conforme à la constitution par le Conseil constitutionnel. Quatre points ont été retoqués, dans le cas où des personnes à charge vivent avec des personnes à faibles ressources, ce sont les ressources de l'ensemble qui doivent être prises en compte, et non celles du seul locataire ; les mesures dérogatoires à l'encadrement des loyers sont assouplies ; la cession des parts sociales d'une société civile immobilière, la possibilité pour l'assemblée générale des copropriétaires de permettre des locations de courtes durée à une clientèle de passage.
+- En complément des dispositions historiques de la loi ALUR, une loi de simplification du droit de l’urbanisme et du logement a été adoptée le 26 novembre 2025 afin de rendre les démarches plus efficaces, réduire les délais d’instruction des autorisations d’urbanisme et faciliter la construction de logements, tout en garantissant la prise en compte des enjeux environnementaux et territoriaux. Cette loi s’inscrit dans la continuité des objectifs de la loi ALUR en matière d’accélération de la production de logements et de meilleure régulation des documents d’urbanisme.
 
 ## Les grands traits de la loi Alur
 
@@ -58,7 +59,7 @@ La loi désigne certaines zones comme « tendues » (28 agglomérations de plu
 
 Un « complément de loyer exceptionnel » pourra être ajouté au loyer de base pour des logements jugés particulièrement « bien situés » ou plus confortables, mais le locataire pourra le contester auprès de la commission départementale de conciliation (CDC).
 
-À titre historique, il est à noter que dans le passé - entre 1622 et 1649, sept arrêtés ont été pris pour imposer la réduction des loyers à Paris. L'économiste Henri Baudrillart note : « Les propriétaires n'en tinrent nul compte, et l'on assiste alors à une de ces luttes instructives entre la loi naturelle qui régit les intérêts selon les fluctuations de l'offre et de la demande, et la loi positive qui prétend la faire céder à des considérations d'humanité ou de politique ».
+À titre historique, entre 1622 et 1649, sept arrêtés ont été pris pour imposer la réduction des loyers à Paris. L'économiste Henri Baudrillart note : « Les propriétaires n'en tinrent nul compte, et l'on assiste alors à une de ces luttes instructives entre la loi naturelle qui régit les intérêts selon les fluctuations de l'offre et de la demande, et la loi positive qui prétend la faire céder à des considérations d'humanité ou de politique ».
 
 Après l'annulation de la mesure par la Justice fin 2017, il est constaté dans les mois suivants une fois hausse des loyers à la relocation à Paris, le taux de loyers conformes chutant de 40 % à 13 % L'encadrement des loyers est de nouveau permis pour les zones tendues, à titre expérimental pour les 5 prochains ans, par la loi Élan de 2018.
 
@@ -191,7 +192,7 @@ La presse britannique, notamment The Economist et The Financial Times, critique 
 
 #### Raisons de la remise en question
 
-Le gouvernement Valls 2 estime que la loi Alur « coûte à la France de 0,4 à 0,5 % de croissance en moins aujourd'hui ». Selon lui, la loi s'est occupée surtout des rapports entre propriétaires et locataires en négligeant de soutenir la construction. Alors que le président avait promis la construction de 500 000 nouveaux logements chaque année, de mai 2013 à mai 2014, seuls 312 000 logements ont été construits.
+Le gouvernement Valls 2 estime que la loi Alur « coûte à la France de 0,4 à 0,5 % de croissance en moins aujourd'hui ». Selon lui, la loi s'est occupée surtout des rapports entre propriétaires et locataires en négligeant de soutenir la construction. Alors que le président avait promis la construction de 500 000 nouveaux logements chaque année, de mai 2013 à mai 2014, seuls 312 000 logements ont été construits.
 
 #### Parties de la loi revue
 

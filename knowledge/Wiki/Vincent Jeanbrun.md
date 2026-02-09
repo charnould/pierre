@@ -4,7 +4,7 @@ Vincent Jeanbrun, né le 5 mai 1984 à Paris (France), est un homme politique fr
 
 Il est également maire de L'Haÿ-les-Roses de 2014 à 2024, conseiller départemental du Val-de-Marne en 2015 et conseiller régional d'Île-de-France depuis 2015.
 
-Le 12 octobre 2025, il est nommé ministre de la Ville et du Logement dans le gouvernement Lecornu II.
+Le 12 octobre 2025, il est nommé ministre de la Ville et du Logement dans le gouvernement Lecornu II et succède à Éric Woerth à ce poste.
 
 ## Biographie
 
@@ -14,7 +14,7 @@ Fils d'un chauffeur-livreur devenu directeur des achats et d'une mère au foyer 
 
 Lui-même aime à rappeler être né « du mauvais côté de l'autoroute », en référence à l'A6 qui coupe la ville en deux, se présentant comme un « enfant du logement social » revendiqué. Ces origines modestes nourrissent souvent le récit personnel qu'il met en avant dans sa politique.
 
-Élève de l'école Lallier, du collège Chevreul puis du lycée Mistral à Fresnes, il effectue ensuite des études dans une école de commerce à Évry.
+Élève de l'école Lallier, du collège Chevreul puis du lycée Mistral à Fresnes, il effectue ensuite des études dans l'école de commerce Institut Mines-Télécom Business School à Évry.
 
 ### Parcours politique
 
