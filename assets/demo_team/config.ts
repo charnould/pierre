@@ -51,7 +51,7 @@ export default {
       }
     },
     answer_with: {
-      model: openai('gpt-4.1-mini'),
+      model: openai('gpt-5.4-mini-2026-03-17'),
       providerOptions: {
         openai: {
           reasoningEffort: 'none',

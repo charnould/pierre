@@ -145,7 +145,7 @@ export default {
     // pertinents retournés par le reranker. Il est fortement recommandé de désactiver
     // le "reasoning" lors de la génération de la réponse finale pour réduire la latence.
     answer_with: {
-      model: openai('gpt-4.1-mini'),
+      model: openai('gpt-5.4-mini-2026-03-17'),
       providerOptions: {
         openai: {
           reasoningEffort: 'none',
