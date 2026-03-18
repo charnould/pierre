@@ -2,7 +2,7 @@
 
 La Garantie universelle des loyers (GUL) est un dispositif français issu de la loi pour l'Accès au logement et un urbanisme rénové (ALUR) dans son article 23, qui fournit une garantie contre les loyers impayés, gérée et financée par l'État français. L'objectif de cette garantie est également de favoriser l'accès au logement et de lutter contre les expulsions.
 
-La loi a été présentée par Cécile Duflot, alors Ministre de l'Égalité des Territoires et du Logement, le 26 juin 2013. Le 31 janvier 2014, la loi est votée en seconde lecture au Sénat. Après un passage en commission mixte paritaire, la loi a été en discussion en séance publique les 17 et 19 février 2014 à l'Assemblée nationale, puis le 20 février 2014 au Sénat, où elle a été définitivement adoptée, sous sa forme finale. La loi a été promulguée le 24 mars 2014.
+La loi a été présentée par Cécile Duflot, alors ministre de l'Égalité des Territoires et du Logement, le 26 juin 2013. Le 31 janvier 2014, la loi est votée en seconde lecture au Sénat. Après un passage en commission mixte paritaire, la loi a été en discussion en séance publique les 17 et 19 février 2014 à l'Assemblée nationale, puis le 20 février 2014 au Sénat, où elle a été définitivement adoptée, sous sa forme finale. La loi a été promulguée le 24 mars 2014.
 
 L'article initial instituant la GUL était l'article 8, qui est devenu l'article 23 dans la loi définitive.
 
@@ -48,13 +48,13 @@ Il concerne tous les publics, quels que soient leurs revenus.
 
 La garantie aura plusieurs limitations, dont voici les principales :
 
-- une carence, période minimale pendant laquelle la garantie ne s'appliquera pas (paragraphe I, D, 3);
+- une carence, période minimale pendant laquelle la garantie ne s'appliquera pas (paragraphe I, D, 3) ;
 - une franchise, période minimale d'impayé, qui ne sera pas remboursée (paragraphe I,D,5 ) ;
-- une durée limite d'indemnisation (paragraphe I,D 3);
-- un montant maximal de remboursement, égal au loyer de référence (paragraphe I, D, 2) , défini dans l'article 6 de la loi, ou au loyer de référence majoré, pour les étudiants ou les personnes à revenu précaire;
+- une durée limite d'indemnisation (paragraphe I,D 3) ;
+- un montant maximal de remboursement, égal au loyer de référence (paragraphe I, D, 2) , défini dans l'article 6 de la loi, ou au loyer de référence majoré, pour les étudiants ou les personnes à revenu précaire ;
 - une limitation dans le montant remboursé, si le bailleur a été négligent, ou si le loyer était supérieur à 50 % des ressources du locataire (hors cas de locataire étudiant): paragraphe I, D, 4.
 
-La garantie est exclusive d'un cautionnement (hormis les cas des étudiants): paragraphe I, B, 1.
+La garantie est exclusive d'un cautionnement (hormis les cas des étudiants) : paragraphe I, B, 1.
 
 Dans le cas des étudiants et locataires précaires (CDD, intérim, ...), les limitations sont moins fortes (franchise notamment), les remboursements sont supérieurs (loyer majoré).
 
@@ -62,10 +62,10 @@ La garantie sera gratuite, et s'appliquera pour tous les baux, sauf si le bail p
 
 ## Mise en œuvre
 
-La mise en œuvre de la garantie sera la suivante:
+La mise en œuvre de la garantie sera la suivante :
 
-- le contrat de bail devra être enregistré (chapitre I, B, 5);
-- dès la survenue des impayés, le bailleur devra se manifester pour obtenir ses remboursements par l'Etat;
+- le contrat de bail devra être enregistré (chapitre I, B, 5) ;
+- dès la survenue des impayés, le bailleur devra se manifester pour obtenir ses remboursements par l'Etat ;
 - l'Etat se retournera alors vers le locataire, pour obtenir le remboursement, par le Trésor public.
 
 La gestion de cette garantie sera assurée par un établissement public, créé au plus tard le 1er janvier 2015, et par le biais de centres de gestion agréés.

@@ -36,7 +36,7 @@ Le 11 février 2016, elle est nommée ministre du Logement, en remplacement de S
 
 Bien qu'Emmanuelle Cosse n'ait souhaité que se « mettre en retrait » du parti (elle précise dans un mail aux adhérents EELV le jour de son entrée au gouvernement qu'elle ne choisit pas « entre le parti et le ministère »), EELV prend acte de sa démission dès son entrée au gouvernement puis la retire de la liste des adhérents le 21 février 2016. Elle annonce le 10 juillet 2016, qu'elle rejoint le Parti écologiste — dont elle intègre le comité d'orientation politique — et soutient son président, François de Rugy, pour la primaire de la « Belle Alliance populaire ».
 
-En 2016, elle est l'un des auteurs du projet de loi « Egalité et Citoyenneté », portant notamment sur la mixité sociale et les discriminations sociales. Le projet de loi est adopté en lecture définitive le 22 décembre 2016, et publié au Journal officiel sous la référence « loi n° 2017-86 du 27 janvier 2017 relative à l'égalité et à la citoyenneté ».
+En 2016, elle est l'un des auteurs du projet de loi « Égalité et Citoyenneté », portant notamment sur la mixité sociale et les discriminations sociales. Le projet de loi est adopté en lecture définitive le 22 décembre 2016, et publié au Journal officiel sous la référence « loi n° 2017-86 du 27 janvier 2017 relative à l'égalité et à la citoyenneté ».
 
 #### Élections législatives de 2017
 

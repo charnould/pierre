@@ -65,4 +65,7 @@ Dans le Journal officiel de la République française (JORF), sur Légifrance :
 
 ### Liens externes
 
+- Ressource relative à la vie publique :
+  - Nominations au Journal officiel
+
 - Portail des universités françaises

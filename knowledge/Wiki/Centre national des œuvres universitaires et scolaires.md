@@ -14,7 +14,7 @@ Le CNOUS collabore avec les Studentenwerk, les organismes de service public à d
 
 Le centre national des œuvres universitaires et scolaires est l’établissement public administratif qui, dans le cadre de la mise en œuvre de la politique nationale de vie étudiante, conduit, anime et coordonne le réseau des œuvres universitaires en vue d’assurer la cohésion de celui-ci. Il assure la meilleure répartition des moyens matériels, budgétaires et humains en veillant à l'efficience de leur emploi. Il est placé sous la tutelle du ministre chargé de l'enseignement supérieur.
 
-Le conseil d'administration vote le tarif de la restauration universitaire même si comme en 2003-2004 le ministère de l'Économie et des Finances peut passer outre un vote défavorable\[réf. nécessaire\].
+Le conseil d'administration vote le tarif de la restauration universitaire même si comme en 2003-2004 le ministère de l'Économie et des Finances peut passer outre à un vote défavorable\[réf. nécessaire\].
 
 ## Présidence et direction
 

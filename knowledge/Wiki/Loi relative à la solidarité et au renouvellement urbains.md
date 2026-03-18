@@ -2,6 +2,8 @@
 
 La loi no 2000-1208 du 13 décembre 2000 relative à la solidarité et au renouvellement urbains, couramment appelée loi SRU, est une loi française qui a modifié en profondeur le droit de l'urbanisme et du logement en France. Adoptée sous le gouvernement Jospin et portée par le ministre de l'Équipement et du Logement, le communiste Jean-Claude Gayssot, elle est publiée au Journal officiel du 14 décembre 2000.
 
+La loi SRU vise à favoriser la mixité sociale en imposant un quota minimal de logements sociaux dans certaines communes.
+
 Son article le plus notoire est l'article 55, codifié aux articles L. 302-5 et suivants du code de la construction et de l'habitation, qui impose aux communes importantes (plus de 1 500 habitants en Île-de-France, et plus de 3 500 habitants pour les autres régions), qui sont comprises dans une agglomération de plus de 50 000 habitants comprenant au moins une commune de plus de 15 000 habitants, de disposer d'au moins 20 % de logements sociaux. Ce taux est porté à 25 % par la loi du 18 janvier 2013 relative à la mobilisation du foncier public en faveur du logement et au renforcement des obligations de production de logement social, dite loi Duflot I.
 
 ## Orientation
@@ -46,7 +48,7 @@ On désigne couramment sous le nom d'« article 55 de la loi SRU » les dispos
 
 Fin janvier 2006, ce dispositif a été modifié par l'Assemblée nationale par l'adoption d'un amendement de Patrick Ollier et Gérard Hamel (député UMP, Eure-et-Loir), en première lecture sur le projet de loi portant engagement national pour le logement (loi ENL). L'amendement Ollier-Hamel permettait d'assimiler certaines opérations d'accession sociale à la propriété à du logement social. Le Sénat a supprimé ces mesures début avril 2006.
 
-Le 30 mai 2006, à l'Assemblée nationale, lors de l'examen en deuxième lecture du projet de loi portant engagement national pour le logement (ENL), Patrick Ollier a déposé à nouveau un amendement contre le quota de 20 % logements sociaux imposé à 740 communes. Selon lui, cet aménagement facilitera l'accès de nombreux ménages à la propriété.
+Le 30 mai 2006, à l'Assemblée nationale, lors de l'examen en deuxième lecture du projet de loi portant engagement national pour le logement (ENL), Patrick Ollier a déposé à nouveau un amendement contre le quota de 20 % logements sociaux imposé à 740 communes. Selon lui cet aménagement facilitera l'accès de nombreux ménages à la propriété.
 
 La rédaction de l'article 55 de la loi SRU a été modifiée par l'article 65 de la loi portant engagement national pour le logement du 13 juillet 2006.
 

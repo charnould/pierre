@@ -72,7 +72,7 @@ Une expérimentation de « territoires zéro non-recours » (TZNR) aux droits 
 
 ### Solidarité et renouvellement urbains
 
-Le dispositif de solidarité et renouvellement urbains, instaurés par la loi du 13 décembre 2000, est prolongé au-delà de son échéance prévue (2025). Les grandes agglomérations doivent toujours disposer d'au moins 20% ou 25% de logements sociaux. Toutefois, les communes retardataires auront plus de temps pour s'adapter à l'objectif. Les objectifs de logements sociaux peuvent désormais être définis localement, à travers un contrat de mixité social signé par le maire et le préfet.
+Le dispositif de solidarité et renouvellement urbains, instaurés par la loi du 13 décembre 2000, est prolongé au-delà de son échéance prévue (2025). Les grandes agglomérations doivent toujours disposer d'au moins 20 % ou 25 % de logements sociaux. Toutefois, les communes retardataires auront plus de temps pour s'adapter à l'objectif. Les objectifs de logements sociaux peuvent désormais être définis localement, à travers un contrat de mixité sociale signé par le maire et le préfet.
 
 ### Adressage
 

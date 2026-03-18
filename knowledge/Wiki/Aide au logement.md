@@ -50,6 +50,8 @@ En 2017, les APL sont réduites de cinq euros par mois et par personne. Le proje
 
 Il était prévu qu'à compter d'avril 2019, trois mois après l'instauration du paiement à la source de l'impôt, le montant des allocations soit révisé trimestriellement en fonction des revenus des 12 derniers mois et non plus sur les revenus d'il y a deux ans. Cette réforme, en accroissant globalement les ressources prises en compte pour le calcul des aides, aurait réduit leur montant d'un milliard d'euros. La réactivité accrue des allocations aurait également pu compliquer la visibilité financière des ménages les plus modestes. À la suite de la crise du coronavirus, cette réforme a été reportée au 1er janvier 2021. D'après une étude de l’Union professionnelle du logement accompagné (Unafo) consacrée aux effets de cette réforme, la part des allocataires de l’APL est passée, entre avril 2020 et avril 2021, de 53 % à 48 %, et le montant moyen de l’aide a diminué de 7 %. La réforme aurait permis à l’État d'économiser plus d'un milliard d'euros, notamment en faisant sortir du dispositif 400 000 personnes.
 
+Le rapport Savary-Poncet Monge confirme cette trajectoire en précisant que la réforme a généré des économies importantes estimées par la Direction de l'habitat, de l'urbanisme et des paysages (DHUP) à 1,1 milliard d'euros en 2021 et à 1,3 milliard d'euros en 2022. Cette évolution s'accompagne d'une forte baisse du nombre d'allocataires de -8,9% en 2021. En outre, les rapporteurs soulignent que l'automatisation des flux de données a permis une amélioration de la détection des erreurs déclaratives.
+
 ## Montant et règles d'attribution
 
 En 2017, les 6,6 millions de bénéficiaires d'une aide personnelle au logement percevaient mensuellement une aide de 225 euros en moyenne. Parmi eux, 87 % étaient locataire, 6 % accédants à la propriété et 7 % résidents en logement foyer. 54 % étaient des personnes seules sans personne à charge. 14 % étaient étudiants. En 2015, 83 % des membres des ménages bénéficiaires d’aides au logement ont un niveau de vie inférieur au quatrième décile de niveau de vie de l’ensemble de la population de France métropolitaine, 54 % un niveau de vie inférieur au deuxième décile. Leur taux de pauvreté est bien supérieur à celui de l’ensemble de la population (40 % contre 14 %).
@@ -64,9 +66,17 @@ On trouve sur les sites des caisses d'allocations familiales (CAF) et de la mutu
 
 ### Calcul de l'aide personnalisée au logement (APL)
 
+Le montant de l’APL est déterminé par une formule réglementaire qui prend en compte les ressources, le loyer et la composition du foyer, telle qu’elle est définie dans le Code de la construction et de l’habitation depuis les années 1990.
+
 L'article L. 351-3 du code de la construction et de l'habitation détermine les éléments entrant dans le barème de l'APL, qui est fixé par voie réglementaire.
 
 À partir du 11 octobre 2016, le patrimoine mobilier et immobilier (à partir de 30 000 euros) est pris en compte dans le calcul et l'attribution de l'APL.
+
+Une réforme structurelle intervient en janvier 2021, marquant la première étape technique de la solidarité à la source. Auparavant fondé sur les revenus fiscaux de l'année N-2, le calcul des APL s'effectue désormais sur les douze derniers mois glissants, permettant une meilleure adéquation entre le montant de l'aide et la situation réelle du ménage.
+
+Conformément à l'article R.823-6 du Code de la construction et de l'habitation, les droits de l'allocataire sont réexaminés tous les trois mois.
+
+Selon le rapport d'information sénatorial n°836, les sénateurs René-Paul Savary et Raymonde Poncet Monge précisent que cette automatisation repose sur le Dispositif de ressources mensuelles (DRM), qui permet le pré-remplissage de la majorité des revenus concernés.
 
 ### Calcul de l'aide au logement familiale (ALF)
 
@@ -115,6 +125,8 @@ En pratique, au cours des quarante dernières années, les pouvoirs publics ont 
 Dans son rapport de juillet 2015 à la commission des finances du Sénat, la Cour des comptes résume les principales limites des politiques d'Aide personnelle au logement en France :
 
 > « Du point de vue de leur gestion, les aides se présentent par ailleurs comme une prestation coûteuse. Fondées sur un barème excessivement complexe, elles mettent en œuvre des règles d’abattement et de neutralisation visant à tenir compte des variations de revenus et d’activité des bénéficiaires, qui sont à l’origine d’un montant significatif d’indus : 43 % du total des indus identifiés en 2013 par les caisses prestataires, soit 1,57 Mrd€. Pour la Caisse nationale des allocations familiales (CNAF), qui en verse la quasi-totalité, elles représentent un coût de gestion que l’on peut estimer à environ 600 M€, soit 3,5 % de leur coût total. Ces prestations engendrent par ailleurs une fraude qui peut être estimée à environ 280 M€, soit 28 % du total des fraudes détectées par la CNAF... »
+
+Au-delà de ces aspects financiers, le rapport sénatorial (2022-2023) remis par les sénateurs René-Paul Savary et Raymonde Poncet Monge identifie les limites de la réforme structurelle des aides au logement de 2021, marquant la première étape de la solidarité à la source. En effet, certains revenus ne sont pas couverts par le Dispositif de ressources mensuelles (DRM) tel que les revenus de micro-entrepreneurs, les pensions alimentaires ou les salaires perçus à l'étranger. La réforme a également accru l'instabilité des revenus des bénéficiaires des aides, une conséquence directe du nouveau mode de calcul des APL.
 
 ## Non-recours
 
