@@ -51,7 +51,7 @@ exports[`should AIContext parse correctly 1`] = `
             "provider": "openai.responses",
             "url": [Function],
           },
-          "modelId": "gpt-4.1-mini",
+          "modelId": "gpt-5.4-mini-2026-03-17",
           "specificationVersion": "v3",
           "supportedUrls": {
             "application/pdf": [

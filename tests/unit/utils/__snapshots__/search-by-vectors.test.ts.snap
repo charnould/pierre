@@ -5150,7 +5150,7 @@ exports[`generate_embeddings should generate find relevant chunks with access 1`
 [
   {
     "chunk_file": "wiki/Valérie Létard.md",
-    "chunk_hash": "HWiF2OjFUepBBdguF7gF",
+    "chunk_hash": "tBUrkISM8lAGvjQWXFCT",
     "chunk_text": 
 "# Valérie Létard
 
@@ -5300,6 +5300,7 @@ En avril 2025, elle effectue une tournée de deux jours en Martinique afin de «
 ### Liens externes
 
 - Site officiel
+
 - Ressources relatives à la vie publique :
   - Assemblée nationale
   - Haute Autorité pour la transparence de la vie publique
@@ -5401,7 +5402,7 @@ Enfin, il est l'inspirateur du volet économique du Projet d'Union européenne, 
   },
   {
     "chunk_file": "wiki/Emmanuelle Cosse.md",
-    "chunk_hash": "f7yKleXB9Vgm6m8iXGjM",
+    "chunk_hash": "Nk6K92Fnka4EPc5l9swc",
     "chunk_text": 
 "# Emmanuelle Cosse
 
@@ -5441,7 +5442,7 @@ Le 11 février 2016, elle est nommée ministre du Logement, en remplacement de S
 
 Bien qu'Emmanuelle Cosse n'ait souhaité que se « mettre en retrait » du parti (elle précise dans un mail aux adhérents EELV le jour de son entrée au gouvernement qu'elle ne choisit pas « entre le parti et le ministère »), EELV prend acte de sa démission dès son entrée au gouvernement puis la retire de la liste des adhérents le 21 février 2016. Elle annonce le 10 juillet 2016, qu'elle rejoint le Parti écologiste — dont elle intègre le comité d'orientation politique — et soutient son président, François de Rugy, pour la primaire de la « Belle Alliance populaire ».
 
-En 2016, elle est l'un des auteurs du projet de loi « Egalité et Citoyenneté », portant notamment sur la mixité sociale et les discriminations sociales. Le projet de loi est adopté en lecture définitive le 22 décembre 2016, et publié au Journal officiel sous la référence « loi n° 2017-86 du 27 janvier 2017 relative à l'égalité et à la citoyenneté ».
+En 2016, elle est l'un des auteurs du projet de loi « Égalité et Citoyenneté », portant notamment sur la mixité sociale et les discriminations sociales. Le projet de loi est adopté en lecture définitive le 22 décembre 2016, et publié au Journal officiel sous la référence « loi n° 2017-86 du 27 janvier 2017 relative à l'égalité et à la citoyenneté ».
 
 #### Élections législatives de 2017
 
@@ -5504,11 +5505,11 @@ Sa nomination au gouvernement en février 2016 est alors relatée comme perçue 
 - Portail de l’écologie politique
 "
 ,
-    "distance": 1.0781348943710327,
+    "distance": 1.0786722898483276,
   },
   {
     "chunk_file": "wiki/Vincent Jeanbrun.md",
-    "chunk_hash": "ds3ygVjQb8bW97MrII55",
+    "chunk_hash": "wHYBqyXOiG6PJGWI22SH",
     "chunk_text": 
 "# Vincent Jeanbrun
 
@@ -5516,7 +5517,7 @@ Vincent Jeanbrun, né le 5 mai 1984 à Paris (France), est un homme politique fr
 
 Il est également maire de L'Haÿ-les-Roses de 2014 à 2024, conseiller départemental du Val-de-Marne en 2015 et conseiller régional d'Île-de-France depuis 2015.
 
-Le 12 octobre 2025, il est nommé ministre de la Ville et du Logement dans le gouvernement Lecornu II.
+Le 12 octobre 2025, il est nommé ministre de la Ville et du Logement dans le gouvernement Lecornu II et succède à Éric Woerth à ce poste.
 
 ## Biographie
 
@@ -5526,7 +5527,7 @@ Fils d'un chauffeur-livreur devenu directeur des achats et d'une mère au foyer 
 
 Lui-même aime à rappeler être né « du mauvais côté de l'autoroute », en référence à l'A6 qui coupe la ville en deux, se présentant comme un « enfant du logement social » revendiqué. Ces origines modestes nourrissent souvent le récit personnel qu'il met en avant dans sa politique.
 
-Élève de l'école Lallier, du collège Chevreul puis du lycée Mistral à Fresnes, il effectue ensuite des études dans une école de commerce à Évry.
+Élève de l'école Lallier, du collège Chevreul puis du lycée Mistral à Fresnes, il effectue ensuite des études dans l'école de commerce Institut Mines-Télécom Business School à Évry.
 
 ### Parcours politique
 
@@ -5621,7 +5622,7 @@ Vincent Jeanbrun conteste ces accusations et déclare « pouvoir démontrer la 
 - Portail du Val-de-Marne
 "
 ,
-    "distance": 1.0996789932250977,
+    "distance": 1.0945807695388794,
   },
   {
     "chunk_file": "global/Zonage ABC.md",
