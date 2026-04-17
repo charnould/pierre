@@ -1,5 +1,5 @@
-import type { LanguageModel, ProviderMetadata } from 'ai'
-import { z } from 'zod/v4'
+import type { LanguageModel, ProviderMetadata } from "ai";
+import { z } from "zod/v4";
 
 /**
  * Represents a User schema definition using Zod.
@@ -12,11 +12,11 @@ import { z } from 'zod/v4'
  * - `password_hash`: A string representing the hashed password of the user.
  */
 export const User = z.object({
-  role: z.enum(['administrator', 'contributor', 'collaborator']).catch('collaborator'),
+  role: z.enum(["administrator", "contributor", "collaborator"]).catch("collaborator"),
   config: z.string().trim().toLowerCase(),
   email: z.email().trim().toLowerCase(),
-  password_hash: z.string()
-})
+  password_hash: z.string(),
+});
 
 /**
  * Represents a Skill schema definition using Zod.
@@ -30,14 +30,14 @@ export const User = z.object({
 export const Skill = z.object({
   id: z.uuidv7(),
   name: z.string().trim().nullable().default(null),
-  skill: z.string().trim().nullable().default(null)
-})
+  skill: z.string().trim().nullable().default(null),
+});
 
 // Model
 export const Model = z.object({
   providerOptions: z.custom<ProviderMetadata>(),
-  model: z.custom<LanguageModel>()
-})
+  model: z.custom<LanguageModel>(),
+});
 
 /**
  * Represents a parsed user schema that extends the base `User` schema
@@ -47,7 +47,7 @@ export const Model = z.object({
  * This schema can be used to validate and type-check user data
  * with additional configuration details.
  */
-export const Parsed_User = User.extend({ config: z.array(z.string()) })
+export const Parsed_User = User.extend({ config: z.array(z.string()) });
 
 //
 // `./assets/Config` schema
@@ -60,29 +60,29 @@ export const Config = z
     api: z
       .array(
         z.object({
-          key: z.enum(['WEBHOOK_KEY_1', 'WEBHOOK_KEY_2', 'WEBHOOK_KEY_3']),
+          key: z.enum(["WEBHOOK_KEY_1", "WEBHOOK_KEY_2", "WEBHOOK_KEY_3"]),
           url: z.string(), // URL check is made elsewhere
           format: z.function({
             input: [
-              z.object({ custom_data: z.array(z.string()), content: z.string(), role: z.string() })
+              z.object({ custom_data: z.array(z.string()), content: z.string(), role: z.string() }),
             ],
-            output: z.any()
-          })
-        })
+            output: z.any(),
+          }),
+        }),
       )
       .default([]),
-    models: z.object({ augment_with: Model, rerank_with: Model, answer_with: Model }),
+    model: Model,
     knowledge: z.object({
       location: z.string().nullable().default(null).catch(null),
       community: z.boolean(),
-      proprietary: z.boolean()
+      proprietary: z.boolean(),
     }),
     disclaimer: z.string().nullable(),
     greeting: z.array(z.string()),
     examples: z.array(z.string()),
-    protected: z.boolean()
+    protected: z.boolean(),
   })
-  .strict()
+  .strict();
 
 //
 // Reflects datastore database schema
@@ -90,7 +90,7 @@ export const Reply = z.object({
   // Globals
   conv_id: z.string(),
   config: Config,
-  role: z.enum(['assistant', 'user', 'system']).default('user'),
+  role: z.enum(["assistant", "user", "system"]).default("user"),
   timestamp: z.iso.datetime({ offset: true }).nullish().default(null),
   content: z.string(),
   metadata: z
@@ -102,21 +102,21 @@ export const Reply = z.object({
           customer: z
             .object({
               score: z.coerce.number().nullish().default(null).catch(null),
-              comment: z.string().nullish().default(null)
+              comment: z.string().nullish().default(null),
             })
             .prefault({}),
           organization: z
             .object({
               score: z.coerce.number().nullish().default(null).catch(null),
-              comment: z.string().nullish().default(null)
+              comment: z.string().nullish().default(null),
             })
             .prefault({}),
           ai: z
             .object({
               score: z.coerce.number().nullish().default(null).catch(null),
-              comment: z.string().nullish().default(null)
+              comment: z.string().nullish().default(null),
             })
-            .prefault({})
+            .prefault({}),
         })
         .prefault({}),
       tokens: z
@@ -124,7 +124,7 @@ export const Reply = z.object({
           // cache : z.number().nullish().default(null),
           prompt: z.number().nullish().default(null),
           completion: z.number().nullish().default(null),
-          total: z.number().nullish().default(null)
+          total: z.number().nullish().default(null),
         })
         .prefault({})
     })
