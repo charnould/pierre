@@ -182,7 +182,7 @@ Olivier Babeau, en septembre 2013, reprenant l'analyse économique standard, est
 
 La Fédération des professionnels de l'immobilier a demandé « la suppression des rigidités et des entraves diverses à la construction, y compris celles instaurées par la loi ALUR » ; un autre acteur du secteur, Guy Nafilyan, président du conseil d'administration de Kaufman & Broad, prend publiquement position contre cette loi en l'estimant « absurde » et « mauvaise »\[pourquoi ?\].
 
-De façon plus concrète, la suppression du coefficient d'occupation des sols (COS), inventé en 1958, puis étendu à toutes les communes dotées d'un plan d'urbanisme, pose problème car il renvoie à des mesures qui risquent de mettre fin à des dérogations déjà accordées. Par ailleurs, la loi accroit considérablement la complexité administrative, ralentit le traitement des dossiers, sans empêcher la fuite des investisseurs.
+De façon plus concrète, la suppression du coefficient d'occupation des sols (COS), inventé en 1958, puis étendu à toutes les communes dotées d'un plan d'urbanisme, pose un problème car il renvoie à des mesures qui risquent de mettre fin à des dérogations déjà accordées. Par ailleurs, la loi accroit considérablement la complexité administrative, ralentit le traitement des dossiers, sans empêcher la fuite des investisseurs.
 
 ### La réception de la presse internationale
 

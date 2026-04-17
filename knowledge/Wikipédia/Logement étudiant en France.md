@@ -44,6 +44,8 @@ Ils se heurtent cependant à de nombreux obstacles : parc social trop modeste d
 
 Ces difficultés d'accès au logement privé ont fait émerger de nouveaux acteurs qui se distinguent dans le monde de l'immobilier par une offre de services globale et exclusivement destinée au marché du logement étudiant (logements adaptés, avance dépôt garantie, formalités administratives, aide à l'aménagement, carte club, etc.).
 
+Parmi ces opérateurs privés, on compte notamment la marque Les Belles Années, filiale du groupe Valority, qui exploite plus de 8 800 logements étudiants dans 49 villes françaises en 2026. Ces résidences meublées sont conventionnées APL, permettant aux étudiants de réduire significativement leur loyer effectif.
+
 Le marché du logement privé est en constante évolution, influencé par des facteurs économiques, démographiques et réglementaires. Dans ce contexte dynamique, trouver un locataire fiable et gérer efficacement son bien immobilier peut représenter un véritable défi.
 
 L’Association interprofessionnelle des résidences étudiants et services (AIRES) est née en 1994 et regroupe les principaux acteurs de la profession. Elle réunit les promoteurs, constructeurs, gestionnaires et exploitants de résidences étudiants avec services, informe les pouvoirs publics nationaux et locaux ainsi que tous les milieux socio-économiques sur l’ensemble des aspects professionnels, sociaux et économiques de cette activité. L’originalité de ce secteur repose sur des offres d’habitat en secteur conventionné et/ou d’un habitat en secteur libre, gérées par des associations à but non lucratif ou des sociétés commerciales.

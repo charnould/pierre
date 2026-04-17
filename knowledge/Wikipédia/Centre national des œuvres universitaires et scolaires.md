@@ -10,6 +10,8 @@ Le CNOUS collabore avec les Studentenwerk, les organismes de service public à d
 
 ## Historique
 
+En mars 2026, la plateforme internet qui gère les services sociaux du CNOUS est victime d'une cyberattaque qui impacte 740 000 étudiants ou anciens étudiants.
+
 ## Rôle
 
 Le centre national des œuvres universitaires et scolaires est l’établissement public administratif qui, dans le cadre de la mise en œuvre de la politique nationale de vie étudiante, conduit, anime et coordonne le réseau des œuvres universitaires en vue d’assurer la cohésion de celui-ci. Il assure la meilleure répartition des moyens matériels, budgétaires et humains en veillant à l'efficience de leur emploi. Il est placé sous la tutelle du ministre chargé de l'enseignement supérieur.

@@ -22,7 +22,7 @@ Ce projet de loi a fait l'objet de multiples polémiques sur le terrain médiati
 
 Pendant la période d'examen de la loi, des précisions ont été apportées et incorporées au texte de loi pour y répondre, comme la possibilité de souscrire une assurance complémentaire, le montant du plafond de remboursement fixé au loyer de référence de la loi, le financement apporté par Action Logement, la durée maximale d'indemnisation, les effectifs de l'agence qui devraient être limités à quelques dizaines,les jeunes, ciblés par le dispositif.
 
-Ses conditions de mise en œuvre n'étant pas encore toutes définies, elle continue de faire débat, auprès des assureurs et agents immobiliers: Le syndicat des courtiers en assurance a saisi le conseil de la concurrence, estimant que cela pourrait nuire au marché concurrent de la garantie non publique (GLI, aujourd'hui 900 000 contrats).
+Ses conditions de mise en œuvre n'étant pas encore toutes définies, elle continue d'alimenter les débats, auprès des assureurs et agents immobiliers: Le syndicat des courtiers en assurance a saisi le conseil de la concurrence, estimant que cela pourrait nuire au marché concurrent de la garantie non publique (GLI, aujourd'hui 900 000 contrats).
 
 Parmi les avantages évoqués après le vote, on trouve la promotion offerte par le système pour les assureurs (le marché de l'assurance des impayés de loyer ne dépassant pas 15 à 20%).
 

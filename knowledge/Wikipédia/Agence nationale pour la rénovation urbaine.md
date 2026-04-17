@@ -1,6 +1,6 @@
 # Agence nationale pour la rénovation urbaine
 
-L'Agence nationale pour la rénovation urbaine (Anru) est un établissement public à caractère industriel et commercial (EPIC) créé par l'article 10 de la loi d'orientation et de programmation pour la ville et la rénovation urbaine du 1er août 2003, sous la mandature de Jean-Louis Borloo, alors ministre délégué à la Ville, afin d'assurer le financement et la mise en œuvre du programme national de rénovation urbaine (PNRU). Ses modalités de fonctionnement (organisation juridico-administrative, régime financier, exercices comptables et missions de maîtrise d'ouvrage) sont précisées par le décret no 2004-123 du 9 février 2004, paru au Journal officiel le 11 février 2004.
+L'Agence nationale pour la rénovation urbaine (Anru) est un établissement public à caractère industriel et commercial créé par l'article 10 de la loi d'orientation et de programmation pour la ville et la rénovation urbaine du 1er août 2003, sous la mandature de Jean-Louis Borloo, alors ministre délégué à la Ville, afin d'assurer le financement et la mise en œuvre du programme national de rénovation urbaine (PNRU). Ses modalités de fonctionnement (organisation juridico-administrative, régime financier, exercices comptables et missions de maîtrise d'ouvrage) sont précisées par le décret no 2004-123 du 9 février 2004, paru au Journal officiel le 11 février 2004.
 
 ## Cadrage
 

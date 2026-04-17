@@ -2,7 +2,9 @@
 
 Emmanuelle Cosse, née le 15 novembre 1974 dans le 14e arrondissement de Paris, est une militante associative, journaliste et femme politique française.
 
-Elle est secrétaire nationale d'Europe Écologie Les Verts (EELV) du 30 novembre 2013 au 11 février 2016, date à laquelle elle est nommée ministre du Logement. Elle n'est plus membre d'EELV après cette nomination, devient peu après membre du Parti écologiste (PE) et s'en éloigne dès 2017 après que François de Rugy a rejoint Emmanuel Macron.
+Élue secrétaire nationale d'Europe Écologie Les Verts le 30 novembre 2013, elle quitte son poste le 11 février 2016, date à laquelle elle est nommée ministre du Logement et de l'Habitat durable dans le gouvernement Valls II. À l'été 2016, elle rejoint le Parti écologiste ayant été écarté d'EELV quelques jours après son entrée au gouvernement. Elle s'en éloigne cependant dès 2017 après le ralliement de François de Rugy à Emmanuel Macron.
+
+En 2020, elle devient présidente de l'Union sociale pour l'habitat.
 
 ## Biographie
 
@@ -12,7 +14,7 @@ Emmanuelle Cosse grandit dans le 12e arrondissement de Paris, elle est issue d'
 
 Titulaire d'un diplôme d'études approfondies de droit public économique en 1997, elle enseigne quelques années à la faculté de droit de Paris XII-Val-de-Marne.
 
-Le 20 juin 2015, elle épouse Denis Baupin, ancien député de Paris et ancien vice-président de l'Assemblée nationale, avec qui elle a eu des jumeaux nés en 2013. Elle soutient son mari face aux accusations de harcèlement sexuel portées contre celui-ci en 2016 par huit femmes dont Sandrine Rousseau, dans une enquête publiée conjointement par Mediapart et Libération.
+Le 20 juin 2015, elle épouse Denis Baupin, alors député et vice-président de l'Assemblée nationale, avec qui elle a eu des jumeaux nés en 2013. Elle soutient son mari face aux accusations de harcèlement sexuel portées contre lui en 2016 par huit femmes dont Sandrine Rousseau dans une enquête publiée conjointement par Mediapart et Libération.
 
 ### Carrière de journaliste
 

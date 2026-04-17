@@ -10,7 +10,7 @@ Le 12 octobre 2025, il est nommé ministre de la Ville et du Logement dans le go
 
 ### Jeunesse et études
 
-Fils d'un chauffeur-livreur devenu directeur des achats et d'une mère au foyer d'origine italienne (Frioul), Vincent Jeanbrun grandit à L'Haÿ-les-Roses, dans le quartier Paul-Hochart, au sein de l'une des « tours marron », avant que sa famille ne s'installe dans un appartement du voisinage.
+Fils d'un père chauffeur-livreur et d'une mère au foyer d'origine italienne (du Frioul), Vincent Jeanbrun grandit à L'Haÿ-les-Roses, d'abord dans la cité Paul-Hochart dite « les Tours Marron » du quartier Lallier, avant que sa famille ne change de logement pour un autre appartement HLM d'un quartier voisin.
 
 Lui-même aime à rappeler être né « du mauvais côté de l'autoroute », en référence à l'A6 qui coupe la ville en deux, se présentant comme un « enfant du logement social » revendiqué. Ces origines modestes nourrissent souvent le récit personnel qu'il met en avant dans sa politique.
 
@@ -62,6 +62,8 @@ Au moment de sa nomination, il est visé par une enquête préliminaire ouverte 
 
 Cette enquête, révélée notamment par Mediapart, suscite de nombreuses réactions au sein de la classe politique. Plusieurs élus de gauche dénoncent une nomination jugée inappropriée au regard des soupçons visant Vincent Jeanbrun. L'adjoint au logement de la Ville de Paris, Jacques Baudrier, la qualifie de « provocation caricaturale », tandis que certains acteurs du logement social, dont l'Union sociale pour l'habitat, expriment leurs réserves et appellent à la vigilance quant à la politique qui sera menée.
 
+En 2026, il met en place un dispositif visant à encourager l'investissement locatif, reposant sur un avantage fiscal accordé aux propriétaires louant leur bien à un loyer encadré, parfois désigné comme « dispositif Jeanbrun ».
+
 ## Affaires politico-judiciaires
 
 ### Affaire de la roseraie du Val-de-Marne
@@ -86,11 +88,13 @@ Selon Mediapart, lorsqu'il présidait le syndicat intercommunal du cimetière de
 
 Vincent Jeanbrun conteste ces accusations et déclare « pouvoir démontrer la légalité de \[ses\] actes et \[sa\] bonne foi ».
 
-## Publication
+## Publications
 
 - Les Deux France, Albin Michel, Paris, 2024 (ISBN 978-2-22649-018-6)
 
-## Pour approfondir
+## Notes et références
+
+## Voir aussi
 
 ### Articles connexes
 
@@ -102,8 +106,6 @@ Vincent Jeanbrun conteste ces accusations et déclare « pouvoir démontrer la 
   - Assemblée nationale
   - Haute Autorité pour la transparence de la vie publique
   - Base Sycomore
-
-## Références
 
 - Portail de la politique française
 - Portail du Val-de-Marne

@@ -1,6 +1,6 @@
 # Logement intermédiaire
 
-Le logement locatif intermédiaire ou logement intermédiaire est un logement à loyer maitrisé c'est-à-dire inférieur aux prix du marché (en moyenne de 15%). Il a été créé en 2014 avec l'ambition de permettre l'accès à un logement à prix maitrisé dans les zones tendues aux classes moyennes n'ayant pas accès au parc sociale. Les niveaux de loyers se situent entre le marché social et le marché libre. L’objectif de ces logements est double : présenter des solutions aux ménages de la classe moyenne qui ne peuvent prétendre aux logements sociaux mais qui ne disposent pas non plus de revenus suffisants pour envisager le locatif libre ou l’accession à la propriété.
+Le logement locatif intermédiaire ou logement intermédiaire est un logement à loyer maitrisé c'est-à-dire inférieur aux prix du marché (en moyenne de 15%). Il a été créé en 2014 avec l'ambition de permettre l'accès à un logement à prix maitrisé dans les zones tendues aux classes moyennes n'ayant pas accès au parc social. Les niveaux de loyers se situent entre le marché social et le marché libre. L’objectif de ces logements est double : présenter des solutions aux ménages de la classe moyenne qui ne peuvent prétendre aux logements sociaux mais qui ne disposent pas non plus de revenus suffisants pour envisager le locatif libre ou l’accession à la propriété.
 
 Ce dispositif est particulièrement utile pour soutenir les salariés et les jeunes actifs des entreprises, rencontrant des difficultés à se loger et particulièrement dans les zones de forte tension locative.
 
