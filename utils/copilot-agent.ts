@@ -63,7 +63,7 @@ const locks = new Map<string, Promise<void>>();
  * Anchored to PROJECT_ROOT so it works regardless of process.cwd().
  */
 const knowledgePath = (configId: string): string => {
-  const p = join(PROJECT_ROOT, "datastores", Bun.env.SERVICE!, "knowledge", configId);
+  const p = join(PROJECT_ROOT, "datastores", Bun.env["SERVICE"]!, "knowledge", configId);
   if (!existsSync(p)) {
     throw new Error(`[COPILOT] Knowledge directory not found: ${p}`);
   }
@@ -102,6 +102,12 @@ const openSession = async (
     workingDirectory: kPath,
     onPermissionRequest: approveAll,
     model,
+    provider: {
+        baseUrl: Bun.env["AI_BASE_URL"],
+        apiKey: Bun.env["AI_API_KEY"],
+        type: Bun.env["AI_TYPE"],
+        wireApi: "responses",
+    },
     streaming: true,
     systemMessage: { mode: "replace" as const, content: "" },
     hooks: {
@@ -163,7 +169,7 @@ export async function* streamCopilot(
   convId: string,
   configId: string,
   prompt: string,
-  model = "claude-sonnet-4",
+  model = Bun.env['AI_MODEL'],
   signal?: AbortSignal,
 ): AsyncGenerator<CopilotChunk> {
   const t0 = Date.now();
@@ -171,7 +177,7 @@ export async function* streamCopilot(
   console.log(`[COPILOT] New request`);
   console.log(`[COPILOT]   conv_id  : ${convId}`);
   console.log(`[COPILOT]   config   : ${configId}`);
-  console.log(`[COPILOT]   SERVICE  : ${Bun.env.SERVICE}`);
+  console.log(`[COPILOT]   SERVICE  : ${Bun.env["SERVICE"]}`);
   console.log(`[COPILOT]   model    : ${model}`);
   console.log(`[COPILOT]   prompt   : "${prompt.substring(0, 120)}${prompt.length > 120 ? "..." : ""}"`);
   console.log(`${"=".repeat(60)}`);

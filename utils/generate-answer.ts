@@ -27,7 +27,7 @@ export const answer_user = (context: AIContext, signal?: AbortSignal) => {
         context.conv_id,
         context.config.id,
         context.content,
-        'claude-sonnet-4',
+        Bun.env['AI_MODEL'],
         signal
       )) {
         if (chunk.type === 'delta') {

@@ -1,4 +1,3 @@
-import type { LanguageModel, ProviderMetadata } from "ai";
 import { z } from "zod/v4";
 
 /**
@@ -33,12 +32,6 @@ export const Skill = z.object({
   skill: z.string().trim().nullable().default(null),
 });
 
-// Model
-export const Model = z.object({
-  providerOptions: z.custom<ProviderMetadata>(),
-  model: z.custom<LanguageModel>(),
-});
-
 /**
  * Represents a parsed user schema that extends the base `User` schema
  * by adding a `config` property. The `config` property is an array
@@ -71,7 +64,6 @@ export const Config = z
         }),
       )
       .default([]),
-    model: Model,
     knowledge: z.object({
       location: z.string().nullable().default(null).catch(null),
       community: z.boolean(),

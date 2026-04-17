@@ -15,16 +15,16 @@ ssh:
 volumes:
   - 'datastores:/app/datastores/'
 
-accessories:
-  ollama:
-    service: ollama
-    image: ollama/ollama
-    host: <%= ENV['IP'] %>
-    options:
-      gpus: all
-    # env:
-    #   clear:
-    #     NVIDIA_VISIBLE_DEVICES: <%= ENV['NVIDIA_VISIBLE_DEVICES'] %>
+# accessories:
+#   ollama:
+#     service: ollama
+#     image: ollama/ollama
+#     host: <%= ENV['IP'] %>
+#     options:
+#       gpus: all
+#     # env:
+#     #   clear:
+#     #     NVIDIA_VISIBLE_DEVICES: <%= ENV['NVIDIA_VISIBLE_DEVICES'] %>
 
 proxy:
   ssl: true
@@ -55,7 +55,4 @@ env:
     - WEBHOOK_KEY_1
     - WEBHOOK_KEY_2
     - WEBHOOK_KEY_3
-    - NVIDIA_VISIBLE_DEVICES
-    - HUGGINGFACE_ENDPOINT
-    - HUGGINGFACE_TOKEN
     - IP
