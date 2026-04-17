@@ -1,8 +1,6 @@
 import type { ModelMessage } from 'ai'
 import { SQL } from 'bun'
-import dedent from 'dedent'
 import type { Reply } from './_schema'
-import { extract_tag_value } from './augment-query'
 import { generate_text } from './generate-output'
 import { get_conversation, save_topic, score_conversation } from './handle-conversation'
 
@@ -64,7 +62,7 @@ export const score = async (): Promise<void> => {
         ...core_messages,
         {
           role: 'assistant',
-          content: dedent`
+          content: `
               Evaluate the preceding AI-user conversation and assign a quality score based on how well the AI understood and addressed the user's intent. Follow these precise steps:
               
               1. Carefully read the entire conversation, noting key requests, questions, and AI responses.

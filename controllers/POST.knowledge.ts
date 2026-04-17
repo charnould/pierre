@@ -1,6 +1,5 @@
 import type { Context } from 'hono'
-import { execute_pipeline } from '../utils/knowledge/_run'
-import { encode_filename } from '../utils/knowledge/generate-hash'
+import { run_pipeline } from '../utils/knowledge/run-pipeline'
 
 /**
  * Handles POST requests for knowledge management operations.
@@ -41,7 +40,7 @@ export const controller = async (c: Context) => {
 
       // Save each uploaded file
       for (const file of files) {
-        const filename = encode_filename(file.name)
+        const filename = file.name
         const path = `datastores/${service}/files/${filename}`
         await Bun.write(path, file)
       }
@@ -55,7 +54,7 @@ export const controller = async (c: Context) => {
     // CASE 2: User wants to download a file
     if (action === 'download') {
       const file = Bun.file(
-        `datastores/${Bun.env.SERVICE}/files/${encode_filename(filename as string)}`
+        `datastores/${Bun.env.SERVICE}/files/${filename as string}`
       )
       const stream = file.stream()
 
@@ -67,13 +66,13 @@ export const controller = async (c: Context) => {
     // CASE 3: User wants to delete a file
     if (action === 'destroy') {
       await Bun.file(
-        `datastores/${Bun.env.SERVICE}/files/${encode_filename(filename as string)}`
+        `datastores/${Bun.env.SERVICE}/files/${filename as string}`
       ).delete()
     }
 
     // CASE 4: Force knwoledge rebuild
     if (action === 'rebuild') {
-      await execute_pipeline({ proprietary: true, community: false })
+      await run_pipeline()
     }
 
     return c.redirect('/a/knowledge')

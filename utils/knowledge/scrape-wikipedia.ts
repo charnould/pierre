@@ -1,107 +1,117 @@
-import * as prettier from 'prettier'
-import TurndownService from 'turndown'
-import type { Knowledge } from './_run'
+import TurndownService from "turndown";
+import { format } from "oxfmt";
 
-export const scrape_wikipedia = async (knowledge: Knowledge) => {
-  if (knowledge.community === true) {
-    // Wikipédia pages currently scrapped.
-    // Add/remove any relevant pages.
-    const pages = [
-      'Agence_nationale_de_contrôle_du_logement_social',
-      'Agence_nationale_de_l%27habitat',
-      'Agence_nationale_pour_la_rénovation_urbaine',
-      'Aide_au_logement',
-      'Centre_d%27hébergement_d%27urgence',
-      'Centre_national_des_œuvres_universitaires_et_scolaires',
-      'Centre_régional_des_œuvres_universitaires_et_scolaires',
-      'Code_de_la_construction_et_de_l%27habitation',
-      'Crises_du_logement_en_France',
-      'Droit_au_logement_en_France',
-      'Emmanuelle_Cosse',
-      'Entreprise_sociale_pour_l%27habitat',
-      'Fondation_Abbé-Pierre_pour_le_logement_des_défavorisés',
-      'Garantie_universelle_des_loyers',
-      'Habitation_à_loyer_modéré_(France)',
-      'Historique_du_logement_social_en_France',
-      'Logement_étudiant_en_France',
-      'Logement_intermédiaire',
-      'Logement_social_en_France',
-      'Loi_d%27orientation_et_de_programmation_pour_la_ville_et_la_rénovation_urbaine',
-      'Loi_portant_évolution_du_logement,_de_l%27aménagement_et_du_numérique',
-      'Loi_pour_l%27accès_au_logement_et_un_urbanisme_rénové',
-      'Loi_relative_à_la_différenciation,_la_décentralisation,_la_déconcentration_et_portant_diverses_mesures_de_simplification_de_l%27action_publique_locale',
-      'Loi_relative_à_la_solidarité_et_au_renouvellement_urbains',
-      'Ministre_du_Logement',
-      'Mixité_sociale_en_France',
-      'Organisme_d%27habitations_à_loyer_modéré_(France)',
-      'Participation_des_employeurs_%C3%A0_l%27effort_de_construction',
-      'Prêt_locatif_à_usage_social',
-      'Prêt_locatif_intermédiaire',
-      'Prêt_locatif_social',
-      'Quartier_prioritaire_de_la_politique_de_la_ville',
-      'Union_sociale_pour_l%27habitat',
-      'Valérie_Létard',
-      'Vincent_Jeanbrun',
-      'Louis_Loucheur'
-    ]
+const WIKIPEDIA_PAGES = [
+  "Agence_nationale_de_contrôle_du_logement_social",
+  "Agence_nationale_de_l%27habitat",
+  "Agence_nationale_pour_la_rénovation_urbaine",
+  "Aide_au_logement",
+  "Centre_d%27hébergement_d%27urgence",
+  "Centre_national_des_œuvres_universitaires_et_scolaires",
+  "Centre_régional_des_œuvres_universitaires_et_scolaires",
+  "Code_de_la_construction_et_de_l%27habitation",
+  "Crises_du_logement_en_France",
+  "Droit_au_logement_en_France",
+  "Emmanuelle_Cosse",
+  "Entreprise_sociale_pour_l%27habitat",
+  "Fondation_Abbé-Pierre_pour_le_logement_des_défavorisés",
+  "Garantie_universelle_des_loyers",
+  "Habitation_à_loyer_modéré_(France)",
+  "Historique_du_logement_social_en_France",
+  "Logement_étudiant_en_France",
+  "Logement_intermédiaire",
+  "Logement_social_en_France",
+  "Loi_d%27orientation_et_de_programmation_pour_la_ville_et_la_rénovation_urbaine",
+  "Loi_portant_évolution_du_logement,_de_l%27aménagement_et_du_numérique",
+  "Loi_pour_l%27accès_au_logement_et_un_urbanisme_rénové",
+  "Loi_relative_à_la_différenciation,_la_décentralisation,_la_déconcentration_et_portant_diverses_mesures_de_simplification_de_l%27action_publique_locale",
+  "Loi_relative_à_la_solidarité_et_au_renouvellement_urbains",
+  "Ministre_du_Logement",
+  "Mixité_sociale_en_France",
+  "Organisme_d%27habitations_à_loyer_modéré_(France)",
+  "Participation_des_employeurs_%C3%A0_l%27effort_de_construction",
+  "Prêt_locatif_à_usage_social",
+  "Prêt_locatif_intermédiaire",
+  "Prêt_locatif_social",
+  "Quartier_prioritaire_de_la_politique_de_la_ville",
+  "Union_sociale_pour_l%27habitat",
+  "Valérie_Létard",
+  "Vincent_Jeanbrun",
+  "Louis_Loucheur",
+];
 
-    try {
-      for await (const page of pages) {
-        // Show respect to Wikipedia
-        Bun.sleep(1000 * 2)
+const RATE_LIMIT_MS = 2000;
+const WIKI_OUTPUT_DIR = "knowledge/Wikipédia";
+const SECTIONS_TO_REMOVE =
+  /(Annexes|Notes et références|Références|Voir aussi|Liens externes|Articles connexes|Pour approfondir|Notes|Galerie)/;
+const HTML_CLEANUP_PATTERNS = [
+  [/<span[^>]*>/g, ""],
+  [/<\/span>/g, ""],
+  [/<time[^>]*>/g, ""],
+  [/<\/time>/g, ""],
+  [/<abbr[^>]*>/g, ""],
+  [/<\/abbr>/g, ""],
+  [/<br>/g, ""],
+  [/<dl>/g, ""],
+  [/<dd>/g, ""],
+  [/<\/dl>/g, ""],
+  [/<\/dd>/g, ""],
+  [/<i>/g, ""],
+  [/<b>/g, ""],
+  [/<\/i>/g, ""],
+  [/<\/b>/g, ""],
+  [/<p><\/p>/g, ""],
+  [/class="[^"]*"/g, ""],
+  [/style="[^"]*"/g, ""],
+  [/ id="[^"]*"/g, ""],
+] as const;
 
-        // Get data from Wikipédia API
-        const json = await (
-          await fetch(
-            `https://fr.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&redirects=true&titles=${page}`
-          )
-        ).json()
+const turndownService = new TurndownService({ headingStyle: "atx" });
 
-        for (const p in json.query.pages) {
-          const page = json.query.pages[p]
+function cleanHtml(html: string): string {
+  return HTML_CLEANUP_PATTERNS.reduce(
+    (acc, [pattern, replacement]) => acc.replace(pattern, replacement),
+    html,
+  );
+}
 
-          // Cleanup data
-          let html = page.extract
-            .replace(/<span[^>]*>/g, '')
-            .replace(/<\/span>/g, '')
-            .replace(/<time[^>]*>/g, '')
-            .replace(/<\/time>/g, '')
-            .replace(/<abbr[^>]*>/g, '')
-            .replace(/<\/abbr>/g, '')
-            .replace(/<br>/g, '')
-            .replace(/<br>/g, '')
-            .replace(/<dl>/g, '')
-            .replace(/<dd>/g, '')
-            .replace(/<\/dl>/g, '')
-            .replace(/<\/dd>/g, '')
-            .replace(/<i>/g, '')
-            .replace(/<b>/g, '')
-            .replace(/<\/i>/g, '')
-            .replace(/<\/b>/g, '')
-            .replace(/<p><\/p>/g, '')
-            .replace(/class="[^"]*"/g, '')
-            .replace(/style="[^"]*"/g, '')
-            .replace(/ id="[^"]*"/g, '')
+function removeBoilerplateSections(html: string): string {
+  const sections = html.split(new RegExp(`<h2>${SECTIONS_TO_REMOVE.source}</h2>`, "gm"));
+  return sections[0];
+}
 
-          html = `<h1>${page.title}</h1>\n${html}`
-          html = html.split(
-            /<h2>(Annexes|Notes et références|Références|Voir aussi|Liens externes|Articles connexes|Pour approfondir|Notes|Galerie)<\/h2>/gm
-          )
+async function processWikipediaPage(
+  pageTitle: string,
+  pageData: { title: string; extract: string },
+): Promise<void> {
+  let html = cleanHtml(pageData.extract);
+  html = `<h1>${pageData.title}</h1>\n${html}`;
+  html = removeBoilerplateSections(html);
 
-          let markdown = new TurndownService({ headingStyle: 'atx' }).turndown(html[0])
-          markdown = await prettier.format(markdown, { parser: 'markdown' })
+  const markdown = turndownService.turndown(html);
+  const { code } = await format("a.md", markdown);
+  await Bun.write(`${WIKI_OUTPUT_DIR}/${pageData.title}.md`, code);
+}
 
-          await Bun.write(`knowledge/wiki/${page.title}.md`, markdown)
-        }
+export async function scrape_wikipedia(): Promise<void> {
+  try {
+    for (const page of WIKIPEDIA_PAGES) {
+      await Bun.sleep(RATE_LIMIT_MS);
+
+      const json = await (
+        await fetch(
+          `https://fr.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&redirects=true&titles=${page}`,
+        )
+      ).json();
+
+      for (const pageId in json.query.pages) {
+        const pageData = json.query.pages[pageId];
+        await processWikipediaPage(page, pageData);
       }
-
-      console.log('✅ Wikipedia scrapped')
-    } catch (e) {
-      console.log('❌ Wikipedia scrapping failed')
-      console.log(e)
-      return
     }
-  }
 
-  return
+    console.log("✅ Wikipedia scrapped");
+  } catch (e) {
+    console.error("❌ Wikipedia scrapping failed", e);
+  }
 }

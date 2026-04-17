@@ -37,9 +37,9 @@ for (const file of files) {
 // Compile production CSS file
 await $`bunx @tailwindcss/cli@latest -i assets/core/tailwind/style.css -o assets/core/dist/css/style.${timestamp}.css --minify`
 
-// Transpile and minify .ts scripts into .js to work in browser.
+// Transpile and minify .ts/.tsx scripts into .js to work in browser.
 // Rename one of these files (ai.js) to include a hash/timestamp (to avoid caching issue).
-await $`bun build --entrypoints assets/core/scripts/*.ts --outdir assets/core/dist/js --minify --target browser`
+await $`bun build --entrypoints assets/core/scripts/ai.tsx assets/core/scripts/widget.ts --outdir assets/core/dist/js --minify --target browser`
 await $`mv ./assets/core/dist/js/ai.js ./assets/core/dist/js/ai.${timestamp}.js`
 
 // Update "timestamped filepath" in all Views

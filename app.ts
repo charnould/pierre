@@ -1,7 +1,6 @@
 import { setup } from './utils/setup'
 import { authenticate } from './utils/authenticate-user'
-import { execute_pipeline } from './utils/knowledge/_run'
-import { is_ollama_ready } from './utils/search-by-vectors'
+import { run_pipeline } from './utils/knowledge/run-pipeline'
 import { topicize, score } from './utils/analyze-conversation'
 
 import { Hono } from 'hono'
@@ -23,17 +22,14 @@ import { controller as get_conversations } from './controllers/GET.conversations
 
 import { controller as post_login } from './controllers/POST.login'
 import { controller as post_users } from './controllers/POST.users'
-import { controller as post_bridge } from './controllers/POST.bridge'
 import { controller as post_knowledge } from './controllers/POST.knowledge'
 import { controller as post_conversation } from './controllers/POST.conversations'
-import { controller as post_bridge_answer } from './controllers/POST.bridge.answer'
 
 // Prepare the environment and database before starting the app:
 // 1. Ensure Ollama is running and models are preloaded
 // 2. Create necessary directories for the current service
 // 3. Initialize SQLite databases
 await setup()
-await is_ollama_ready()
 
 const app = new Hono()
 
@@ -57,7 +53,7 @@ app.use(
 
 // Update knowledge database with custom content
 CronJob.from({
-  onTick: async () => await execute_pipeline({ proprietary: true, community: false }),
+  onTick: async () => await run_pipeline(),
   cronTime: '0 0 4 * * *', // Runs every day at 4:00 AM
   timeZone: 'Europe/Paris',
   start: true
@@ -93,9 +89,7 @@ app.get('/a/statistics', authenticate, get_statistics)
 app.get('/a/conversations', authenticate, get_conversations)
 app.get('/bridge/skills', get_skills)
 
-app.post('/bridge/answer', post_bridge_answer)
 app.post('/a/login', post_login)
-app.post('/a/bridge', authenticate, post_bridge)
 app.post('/a/users', authenticate, post_users)
 app.post('/a/knowledge', authenticate, post_knowledge)
 app.post('/a/conversations', authenticate, post_conversation)
