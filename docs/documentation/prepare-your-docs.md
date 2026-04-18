@@ -1,6 +1,6 @@
 # Guide : préparer vos documents pour `PIERRE`
 
-Ce guide présente quels types de fichiers peuvent être transmis à `PIERRE` et comment les préparer pour qu’il les comprenne le mieux possible. Il décrit également le fichier spécial `_metadata.xlsx`, indispensable pour que `PIERRE` sache comment utiliser vos documents et avec qui les partager.
+Ce guide explique quels formats de fichiers `PIERRE` accepte, comment les préparer pour maximiser la qualité de ses réponses, et comment renseigner le fichier `_metadata.xlsx` — indispensable pour que `PIERRE` sache quoi lire et à qui répondre.
 
 ## Sommaire
 
@@ -16,113 +16,89 @@ Ce guide présente quels types de fichiers peuvent être transmis à `PIERRE` et
 
 ## Quels fichiers sont acceptés par `PIERRE` pour enrichir sa base de connaissances
 
-Les organismes de logement social (OLS ci-après) peuvent enrichir `PIERRE` de leurs propres données afin d'obtenir des réponses parfaitement adaptées à leur contexte. A titre d'exemple, il convient de founir à `PIERRE` les coordonnées du service-client afin qu'il puisse répondre aux demandes correspondantes.
+Les organismes de logement social (OLS) peuvent alimenter `PIERRE` avec leurs propres données pour obtenir des réponses précisément adaptées à leur contexte — par exemple, les coordonnées du service-client ou les procédures internes d'attribution.
 
-À ce jour, `PIERRE` reconnaît uniquement les fichiers aux formats suivants :
+`PIERRE` reconnaît trois formats :
 
 - `.xls`/`.xlsx`/`.xlsm`/`.xlsb` (Microsoft Excel)
 - `.doc`/`.docx` (Microsoft Word)
 - `.md` (Markdown)
 
 > [!CAUTION]
-> Les fichiers d’autres formats (`.pdf`, `.jpeg`, `.png`, etc.) ne sont pas compris par `PIERRE`. Par exemple : un fichier Excel enregistré en `.xls` ou `.xlsb` ne fonctionnera pas ; il faut absolument l’enregistrer en `.xlsx`.
+> Tout autre format (`.pdf`, `.jpeg`, `.png`, etc.) est ignoré par `PIERRE`.
 
 **Qu'est-ce que le Markdown ?**
 
-Le Markdown est un langage de balisage léger qui permet de formater du texte de manière simple et lisible ; il est principalement utilisé pour la rédaction de documents, de contenus web ou encore de notes. Il a été conçu pour être facile à lire dans sa forme brute. Grâce à sa syntaxe intuitive, Markdown permet de structurer un texte rapidement sans avoir à utiliser de balises complexes.
+Le Markdown est un format texte léger (« LLM-native ») conçu pour être lisible brut et facile à écrire. Sa syntaxe intuitive structure un document sans balises complexes. Quelques exemples courants :
 
-Voici quelques exemples courants :
-
-- Pour un titre de niveau 1, on utilise : # Titre 1
-- Pour un titre de niveau 2 : ## Titre 2
-- Pour du texte en gras : \*\*texte en gras\*\*
-- Pour du texte en italique : \_italique\_
+- Titre de niveau 1 : `# Titre 1`
+- Titre de niveau 2 : `## Titre 2`
+- Texte en gras : `**texte en gras**`
+- Texte en italique : `_italique_`
 
 ## Comment bien préparer vos documents ?
 
 ### Préparer vos documents `.doc`/`.docx` et `.md`
 
-Les fichiers `.doc`/`.docx` ou `.md` sont – _in fine_ et peu importe les modalités de traitement des données par `PIERRE` – des « fichiers-textes », qu’il s’agisse d’un modèle de courrier pour déposer son congé, d’une note de service sur le déroulé d’une CALEOL ou encore de la description du processus d’attribution au sein d'un OLS, etc.
+Qu'il s'agisse d'un modèle de courrier, d'une note de service sur le déroulé d'une CALEOL ou de la description du processus d'attribution d'un OLS, ces fichiers sont tous traités comme du texte brut par `PIERRE`.
 
-Pour que `PIERRE` les comprenne le mieux possible, pensez à les écrire/formater comme si vous vouliez en expliquer clairement le contenu à un nouveau collègue :
+Rédigez-les comme vous le feriez pour un nouveau collègue qui ne connaît rien du contexte :
 
 - Utilisez des titres et sous-titres clairs
-- Évitez de mélanger plusieurs sujets dans une même section
+- Limitez chaque section à un seul sujet
 - Regroupez les informations similaires au même endroit
-- Définissez les acronymes (ou mieux, évitez les)
-- Évitez les fautes de grammaire ou d’orthographe
-- Si vous écrivez en Markdown, respectez le balisage (titres, listes, gras, italique, etc.)
+- Définissez les acronymes — ou mieux, évitez-les
+- Soignez l'orthographe et la grammaire
+- En Markdown, respectez le balisage : titres, listes, gras, italique
 
 > [!CAUTION]
-> Les images contenues dans vos fichiers `.doc`/`.docx` et `.md` **NE SONT PAS interprétées**.
+> Les images intégrées dans vos fichiers `.doc`/`.docx` et `.md` **ne sont pas interprétées** par `PIERRE`.
 
 ### Préparer vos fichiers `.xls`/`.xlsx`/`.xlsm`/`.xlsb`
 
-Pour que `PIERRE` comprenne vos fichiers Excel :
-
-1. Utiliser Excel comme un tableur (= lignes x colonnes) et non comme un fichier Word.
-
-- A gauche, un véritable tableau : chaque ligne correspond à une donnée et facile à lire ligne par ligne
-- A droite, un « faux » tableau : texte organisé visuellement mais impossible à lire automatiquement.
+1. **Structurez vos données en tableau**, pas en mise en page visuelle. Chaque ligne doit correspondre à une entrée autonome et lisible ligne par ligne — à l'opposé d'un texte mis en forme à coups de cellules fusionnées.
+   - À gauche : un vrai tableau, chaque ligne est une donnée exploitable.
+   - À droite : une mise en forme visuelle, illisible automatiquement.
 
 <p float="left">
   <img src="../assets//images/documentation/ok.png" width="350" />
   <img src="../assets//images/documentation/ko.png" width="350" />
 </p>
 
-2. Donnez des noms de colonnes explicites et claires, y compris pour un non connaisseur : `49_3` (exemple de gauche) est une référence cryptique à une donnée, il faudrait – par exemple – indiquer “Solde locataire”.
+2. **Donnez des noms de colonnes explicites**, compréhensibles sans contexte. `49_3` est une référence opaque ; `Solde locataire` est immédiatement lisible.
 
-3. Soyez cohérent dans l'usage des majuscules/minuscule et évitez les acronymes qui peuvent être ambigus.
+3. **Soyez cohérent** dans les majuscules/minuscules et évitez les acronymes ambigus.
 
-4. Évitez a maxima de fusionner des cellules.
+4. **Ne fusionnez pas les cellules** — ou seulement en dernier recours.
 
-5. Ajoutez une colonne permettant à `PIERRE` de regrouper les données ci-besoin. À titre d'exemple ci-dessous, une colonne `type` a été ajoutée pour permettre à `PIERRE` de regrouper ensemble les scientifiques, écrivains, philosophes et politiques. En permettant à `PIERRE` de regrouper des lignes du fichier Excel, cela lui permet d'avoir à l'esprit – par exemple – tous les écrivains contenus dans le ficher Excel lorsque vous l'interrogez sur les écrivains.
-
-<p float="left">
-  <img src="../assets//images/documentation/regroupement.png" width="350" />
-</p>
+5. **Ajoutez une colonne de regroupement** si nécessaire. Par exemple, une colonne `type` avec les valeurs `scientifique`, `écrivain`, `philosophe`, `politique` permet à `PIERRE` de retrouver d'un coup tous les écrivains quand vous l'interrogez sur ce sujet.
 
 ## `_metadata.xlsx` : un fichier pour les gouverner tous (obligatoire)
 
-Le fichier `_metadata.xlsx` est un fichier obligatoire sans lequel `PIERRE` n'est PAS CAPABLE d'apprendre vos données ni de les utiliser à bon escient. Ce fichier indique à `PIERRE` :
+Sans `_metadata.xlsx`, `PIERRE` est incapable d'ingérer vos données. Ce fichier lui indique deux choses essentielles :
 
-- Quelle stratégie d’importation il lui faut appliquer à chaque fichier que vous allez lui fournir,
-- Qui a accès à la donnée contenue dans le fichier.
+- La stratégie d'importation à appliquer à chaque fichier
+- Les profils utilisateurs autorisés à accéder à chaque donnée
 
-Il se présente comme ci-dessous et est téléchargeable depuis la page `Encyclopédie` de l'interface d'administration :
+Il est téléchargeable depuis la page `Encyclopédie` de l'interface d'administration :
 
 ![_metadata.xlsx](../assets//images/documentation/_metadata.png)
 
-- Pour les fichiers `.doc`/`.docx` et `.md`, seules les colonnes `A` et `B` sont à compléter.  
-  Pour les fichiers `.xls`/`.xlsx`/`.xlsm`/`.xlsb`, les colonnes `A`, `B` , `C`, `D`, `F` sont obligatoires, `E` et `G` sont optionnelles mais recommandées.
+- Pour les fichiers `.doc`/`.docx` et `.md`, renseignez uniquement les colonnes `A`, `B` et `E`.
+- Pour les fichiers `.xls`/`.xlsx`/`.xlsm`/`.xlsb`, les cinq colonnes `A` à `E` sont obligatoires.
 
-- **Colonne A** : nom exact du fichier (la correspondance doit être parfait avec le nom réel du fichier)  
-  👉 Si le nom ne correspond pas, `PIERRE` ignorera le fichier.
+---
 
-- **Colonne B**: profils-utilisateurs autorisés à accéder à cette donnée  
-  En ligne 5, `PIERRE` sait qu'il ne peut communiquer le contenu de `Cahier de consignes (jour).xlsx` qu'aux collaborateurs ayant le profil `agent_jour`.
+- **Colonne A** — Nom exact du fichier, caractère pour caractère.  
+  👉 Toute différence avec le nom réel : `PIERRE` ignore le fichier.
 
-**Les colonnes ci-dessous ne sont à compléter et applicables qu'aux fichiers `.xslx`**
+- **Colonne B** — Profils utilisateurs autorisés à accéder à cette donnée.  
+  Exemple : à la ligne 5, `PIERRE` ne communique le contenu de `Bonnes pratiques pour les agents d'accueil.docx` qu'aux collaborateurs ayant le profil `agent`.
 
-- **Colonne C** : numéro de l’onglet concerné (1 = premier onglet, 2 = deuxième, 3 = troisième, etc.).  
-  👉 Si vous voulez faire apprendre à `PIERRE` 3 onglets, vous devez donc avoir 3 lignes dans `_metadata.xlsx`.
+- **Colonne C** _(fichiers Excel uniquement)_ — Numéro de l'onglet à importer (1 = premier onglet, 2 = deuxième…).  
+  👉 Pour importer 3 onglets d'un même fichier, créez 3 lignes dans `_metadata.xlsx`.
 
-- **Colonne D** : numéro de la ligne qui contient les entêtes  
-  En guise d’exemple, dans la capture ci-dessous, la ligne d’entête est en ligne 2 (elle pourrait dans un autre onglet être en ligne 1 ou 25).
+- **Colonne D** _(fichiers Excel uniquement)_ — Numéro de la ligne contenant les en-têtes de colonnes. Cette ligne peut se trouver en position 1, 2 ou 25 selon l'onglet — indiquez-la précisément. Dans l'exemple plus haut, la ligne d'en-têtes est la 2.
 
-<p float="left">
-  <img src="../assets//images/documentation/regroupement.png" width="350" />
-</p>
-
-- **Colonne E** (optionnelle, mais recommandée) : indique à `PIERRE` comment regrouper les données (_cf._ supra). Dans l'exemple ci-dessus, il serait pertinent de regrouper les données par `type` (colonne A soit la colonne 1) afin que les écrivains restent grouper.
-
-- **Colonne F** : indique à `PIERRE` s’il doit interpréter le tableau ligne à ligne (`true`) ou d’un seul bloc (`false`). Prenons quelques exemples pour comprendre la logique sur la base de l'exemple ci-dessus et imaginons qu'il s'agisse de la liste des personnages dont nous devons apprendre la biographie d'ici la fin de l'année.
-  - Si le fichier contient une dizaine de lignes (comme ici), on comprend qu'il est plus logique que `PIERRE` considère ce tableau comme un tout cohérent (la liste des biographies à connaitre) plutôt que comme 10 éléments indépendants. De fait on indiquera `false` (= NE PAS lire ce tableau ligne-à-ligne). Généralement, on peut appliquer ce paramètre (`false`) pour des tableux contenant a maxima 500 cellules (ex : 50 lignes x 10 colonnes)
-  - Si le fichier contient 1 000 lignes (par exemple, les 1 000 résidences d'un bailleur social) et que les colonnes présentent leurs caractéristiques techniques, alors on comprend que la résidence A est distincte de la résidence B. De fait on indiquera `true` (= lire ce tableau ligne-à-ligne).
-
-- **Colonne G** : description de l’onglet  
-  Il est recommandé de la compléter afin de donner des éléments de contexte à `PIERRE` sur ce que représente soit le fichier `xlsx` dans son intégralité, soit une unique ligne (selon ce qui a été indiqué en colonne `F`). En guise d'exemple, une description du fichier ci-dessous aurait pu être : _"Ci-après la liste des personnages célébres dont les éléves de Terminal Littéraire doit apprendre et connaitre parfaitement la biographie complète durant leur année scolaire"_.
-
-<p float="left">
-  <img src="../assets//images/documentation/regroupement.png" width="350" />
-</p>
+- **Colonne E** — Intitulé descriptif du fichier.  
+  Un nom de fichier comme `export_mars.xlsx` ne dit rien à `PIERRE`. Indiquez ici un intitulé clair, par exemple `Liste des locataires avec soldes négatifs au 31 mars`. Plus l'intitulé est précis, plus `PIERRE` navigue efficacement dans vos données.
