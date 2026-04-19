@@ -2,17 +2,16 @@ FROM oven/bun:latest
 
 WORKDIR /app
 
-COPY . .
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    sqlite3 \
+    openssh-client \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN <<EOF
-    apt-get update
-    apt-get -y install curl
-    apt-get -y install sqlite3
-    apt-get -y install openssh-client
-    apt-get -y install imagemagick ghostscript
-    apt-get -y install libgomp1 libatlas-base-dev liblapack-dev libsqlite3-dev
-    bun install --production
-EOF
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile --production
+
+COPY . .
 
 EXPOSE 3000
 
