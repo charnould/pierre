@@ -5,7 +5,6 @@ import { topicize, score } from './utils/analyze-conversation'
 
 import { Hono } from 'hono'
 import { CronJob } from 'cron'
-import { cors } from 'hono/cors'
 import { serveStatic } from 'hono/bun'
 import { secureHeaders } from 'hono/secure-headers'
 
@@ -14,9 +13,7 @@ import { controller as get_login } from './controllers/GET.login'
 import { controller as get_index } from './controllers/GET.index'
 import { controller as get_admin } from './controllers/GET.admin'
 import { controller as get_users } from './controllers/GET.users'
-import { controller as get_bridge } from './controllers/GET.bridge'
 import { controller as get_knowledge } from './controllers/GET.knowledge'
-import { controller as get_skills } from './controllers/GET.bridge.skills'
 import { controller as get_statistics } from './controllers/GET.statistics'
 import { controller as get_conversations } from './controllers/GET.conversations'
 
@@ -26,16 +23,11 @@ import { controller as post_knowledge } from './controllers/POST.knowledge'
 import { controller as post_conversation } from './controllers/POST.conversations'
 
 // Prepare the environment and database before starting the app:
-// 1. Ensure Ollama is running and models are preloaded
-// 2. Create necessary directories for the current service
-// 3. Initialize SQLite databases
+// 1. Create necessary directories for the current service
+// 2. Initialize SQLite databases
 await setup()
 
 const app = new Hono()
-
-// Enable CORS for the Bridge browser extension to access PIERRE from the legacy system
-// TODO: restrict CORS to specific origins
-app.use(cors())
 
 // Configure the secure headers for the app.
 // This allows other websites to iframe PIERRE
@@ -83,11 +75,9 @@ app.get('/ai', authenticate, get_ai)
 app.get('/a/login', get_login)
 app.get('/a', authenticate, get_admin)
 app.get('/a/users', authenticate, get_users)
-app.get('/a/bridge', authenticate, get_bridge)
 app.get('/a/knowledge', authenticate, get_knowledge)
 app.get('/a/statistics', authenticate, get_statistics)
 app.get('/a/conversations', authenticate, get_conversations)
-app.get('/bridge/skills', get_skills)
 
 app.post('/a/login', post_login)
 app.post('/a/users', authenticate, post_users)
