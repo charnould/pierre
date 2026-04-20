@@ -311,23 +311,23 @@
     </main>
     <script>
       function getQueryParam(param) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(param);
+        const urlParams = new URLSearchParams(window.location.search)
+        return urlParams.get(param)
       }
 
-      const config = getQueryParam("config");
+      const config = getQueryParam('config')
 
-      const configs = ["default", "demo_client", "demo_team"];
-      const pierreElement = document.querySelector("#pierre");
+      const configs = ['default', 'demo_client', 'demo_team']
+      const pierreElement = document.querySelector('#pierre')
 
       if (pierreElement) {
-        const configClass = configs.includes(config) ? config : "default";
-        pierreElement.classList.add(configClass);
-        const realConfig = configs.includes(config) ? config : "default";
-        const srcURL = `https://assistant.pierre-ia.org/c?config=${realConfig}`;
-        pierreElement.src = srcURL;
+        const configClass = configs.includes(config) ? config : 'default'
+        pierreElement.classList.add(configClass)
+        const realConfig = configs.includes(config) ? config : 'default'
+        const srcURL = `https://assistant.pierre-ia.org/c?config=${realConfig}`
+        pierreElement.src = srcURL
       } else {
-        console.error("Element with id 'pierre' not found.");
+        console.error("Element with id 'pierre' not found.")
       }
     </script>
   </body>

@@ -1,6 +1,4 @@
-/* DÉBUT : ** NE PAS MODIFIER */
 import type { Config } from '../../utils/_schema'
-/* FIN : ** NE PAS MODIFIER */
 
 export default {
   id: 'demo_client',
@@ -10,7 +8,6 @@ export default {
   api: [],
   protected: false,
   knowledge: {
-    location: null,
     community: true,
     proprietary: false
   },

@@ -20,11 +20,14 @@ import { controller as post_users } from './controllers/POST.users'
 // import { topicize, score } from "./utils/analyze-conversation";
 import { authenticate } from './utils/authenticate-user'
 import { run_pipeline } from './utils/knowledge/run-pipeline'
+import { cleanupOrphanedVms } from './utils/vm-registry'
 
 // Prepare the environment and database before starting the app:
 // 1. Create necessary directories for the current service
 // 2. Initialize SQLite databases
+// 3. Clean up any orphaned VMs that may be running from previous sessions
 await setup()
+await cleanupOrphanedVms()
 
 const app = new Hono()
 
@@ -71,6 +74,9 @@ app.post('/a/login', post_login)
 app.post('/a/users', authenticate, post_users)
 app.post('/a/knowledge', authenticate, post_knowledge)
 app.post('/a/conversations', authenticate, post_conversation)
+
+// Health check route for Kamal proxy
+app.get('/up', (c) => c.text('ok'))
 
 // Catch-all route that redirects to a new conversation
 app.notFound(async (c) =>

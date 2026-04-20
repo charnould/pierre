@@ -1,6 +1,4 @@
-/* DÉBUT : ** NE PAS MODIFIER */
 import type { Config } from '../../utils/_schema'
-/* FIN : ** NE PAS MODIFIER */
 
 //
 // ASTUCE : Pour vous assurer que le fichier de configuration est correctement
@@ -96,15 +94,6 @@ export default {
     // ci-dessus, PIERRE se comportera comme un simple wrapper autour d'un LLM,
     // sans base de connaissances. Les réponses seront quasi instantanées, mais
     // le risque d'hallucinations important.
-
-    // Il est fortement recommandé de renseigner `location` selon le format ci-dessous.
-    // Cette information est injectée dans les prompts afin que l’IA sache dans quel
-    // territoire se situe l’utilisateur. Sans cette précision, l’IA ne peut pas
-    // déduire la localisation concernée : par exemple, à la question « Quelles
-    // sont les associations d’aide au logement dans la région ? », elle ne
-    // saura pas s’il s’agit de la région PACA, de l’Occitanie ou d’une autre.
-    // Indiquer `null` pour ne pas fournir cette information.
-    location: null, // 'Gers (32) en région Occitanie'
 
     // `community` correspond aux connaissances en open data de PIERRE. Il
     // s'agit de connaissances générales sur les HLM. En principe, `community`

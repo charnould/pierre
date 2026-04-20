@@ -65,7 +65,6 @@ export const Config = z
       )
       .default([]),
     knowledge: z.object({
-      location: z.string().nullable().default(null).catch(null),
       community: z.boolean(),
       proprietary: z.boolean()
     }),

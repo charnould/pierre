@@ -1,5 +1,6 @@
 import type { Context } from 'hono'
 
+import { normalizeFilename } from '../utils/knowledge/normalize'
 import { run_pipeline } from '../utils/knowledge/run-pipeline'
 
 /**
@@ -41,14 +42,24 @@ export const controller = async (c: Context) => {
 
       // Save each uploaded file
       for (const file of files) {
-        const filename = file.name
+        // Preserve _metadata.xlsx as a reserved system filename
+        const filename =
+          file.name === '_metadata.xlsx' ? file.name : normalizeFilename(file.name.normalize('NFC'))
         const path = `datastores/${service}/files/${filename}`
         await Bun.write(path, file)
       }
 
       // Respond for CLI uploads with JSON
       if (c.req.header('authorization-context') === 'cli') {
-        return c.json({ status: 'ok', uploaded: files.map((f) => f.name) }, 200)
+        return c.json(
+          {
+            status: 'ok',
+            uploaded: files.map((f) =>
+              f.name === '_metadata.xlsx' ? f.name : normalizeFilename(f.name.normalize('NFC'))
+            )
+          },
+          200
+        )
       }
     }
 

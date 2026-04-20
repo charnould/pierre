@@ -1,4 +1,5 @@
 import { createServer } from 'node:net'
+import { arch as nodeArch } from 'node:os'
 import { resolve } from 'node:path'
 
 import { $ } from 'bun'
@@ -70,17 +71,31 @@ export async function createPierreInstance(
   const service = Bun.env['SERVICE']
   const hostPort = await findFreePort()
 
+  // Pick the smolmachine matching the host CPU architecture
+  const arch = nodeArch() === 'x64' ? 'amd64' : 'arm64'
+  const smolmachinePath = `config/smolvm/pierre-${arch}.smolmachine`
+
   const knowledgePath = resolve(PROJECT_ROOT, 'datastores', service!, 'knowledge', configId)
 
-  await $`smolvm machine create --net --from config/smolvm/pierre.smolmachine --volume ${knowledgePath}:/knowledge --port ${hostPort}:${VM_CLI_PORT} ${name}`
+  await $`smolvm machine create --net --from ${smolmachinePath} --volume ${knowledgePath}:/knowledge --port ${hostPort}:${VM_CLI_PORT} ${name}`
   await $`smolvm machine start --name ${name}`
+
+  // Verify copilot binary exists and log VM arch before attempting to start
+  const check =
+    await $`smolvm machine exec --name ${name} -- sh -c "ls -la /usr/local/bin/copilot 2>&1; uname -m"`
+      .quiet()
+      .nothrow()
+  console.log(`[SMOLVM] Preflight check:\n${check.stdout.toString()}${check.stderr.toString()}`)
 
   // Start copilot as a FOREGROUND exec — keeping this subprocess alive keeps
   // copilot running inside the VM. The exec session ends only when we kill it.
-  const startCmd = `source /root/.bashrc && exec /usr/local/bin/copilot --headless --no-auto-update --no-auto-login --port ${VM_CLI_PORT}`
+  const startCmd = `exec /usr/local/bin/copilot --headless --no-auto-update --no-auto-login --port ${VM_CLI_PORT}`
   const copilotProcess = Bun.spawn(
     ['smolvm', 'machine', 'exec', '--name', name, '--', 'bash', '-c', startCmd],
-    { stdout: 'ignore', stderr: 'ignore' }
+    { stdout: 'inherit', stderr: 'inherit' }
+  )
+  copilotProcess.exited.then((code) =>
+    console.log(`[SMOLVM] Copilot process exited with code ${code} for VM ${name}`)
   )
 
   // Wait until the forwarded port accepts connections on the host

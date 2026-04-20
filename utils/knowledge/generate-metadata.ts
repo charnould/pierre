@@ -2,6 +2,8 @@ import { format } from 'date-fns'
 import * as XLSX from 'xlsx'
 import { z } from 'zod'
 
+import { normalizeFilename } from './normalize'
+
 const METADATA_FILE_PATH = '_metadata.xlsx'
 const FILES_BASE_PATH = 'datastores'
 const METADATA_SHEET_INDEX = 0
@@ -27,15 +29,15 @@ interface MappedMetadataFile {
 }
 
 function getMetadataFilePath(): string {
-  return `${FILES_BASE_PATH}/${Bun.env.SERVICE}/files/${METADATA_FILE_PATH}`
+  return `${FILES_BASE_PATH}/${Bun.env['SERVICE']}/files/${METADATA_FILE_PATH}`
 }
 
-async function loadMetadataSheet(): Promise<XLSX.WorkSheet> {
+async function loadMetadataSheet(): Promise<XLSX.WorkSheet | null> {
   const filePath = getMetadataFilePath()
   const metadataFile = Bun.file(filePath)
 
   const exists = await metadataFile.exists()
-  if (!exists) throw new Error(`❌ ${METADATA_FILE_PATH} is missing`)
+  if (!exists) return null
 
   const workbook = XLSX.read(await metadataFile.arrayBuffer())
   return workbook.Sheets[workbook.SheetNames[METADATA_SHEET_INDEX]]
@@ -46,15 +48,18 @@ function parseRawRows(sheet: XLSX.WorkSheet): RawMetadataRow[] {
 }
 
 function mapToStandardFormat(rawFiles: RawMetadataRow[]): MappedMetadataFile[] {
-  return rawFiles.map((item) => ({
-    filepath: `${FILES_BASE_PATH}/${Bun.env.SERVICE}/files/${item.filename}`,
-    access: item.access?.split(',').map((p) => p.trim().toLowerCase()) ?? [],
-    headers: (item.headers || 1) - 1,
-    sheet: (item.sheet || 1) - 1,
-    filename: item.filename,
-    agent_filename: item.agent_filename,
-    last_modified: null
-  }))
+  return rawFiles.map((item) => {
+    const normalizedFilename = normalizeFilename(item.filename.normalize('NFC'))
+    return {
+      filepath: `${FILES_BASE_PATH}/${Bun.env['SERVICE']}/files/${normalizedFilename}`,
+      access: item.access?.split(',').map((p) => p.trim().toLowerCase()) ?? [],
+      headers: (item.headers || 1) - 1,
+      sheet: (item.sheet || 1) - 1,
+      filename: item.filename,
+      agent_filename: item.agent_filename,
+      last_modified: null
+    }
+  })
 }
 
 function explodeAndValidate(mappedFiles: MappedMetadataFile[]): z.infer<typeof Metadata>[] {
@@ -66,6 +71,10 @@ function explodeAndValidate(mappedFiles: MappedMetadataFile[]): z.infer<typeof M
 export async function generate_metadata(): Promise<z.infer<typeof Metadata>[] | undefined> {
   try {
     const sheet = await loadMetadataSheet()
+    if (sheet === null) {
+      console.warn(`⚠️ ${METADATA_FILE_PATH} not found — skipping file ingestion`)
+      return []
+    }
     const rawFiles = parseRawRows(sheet)
     const mappedFiles = mapToStandardFormat(rawFiles)
     const files = explodeAndValidate(mappedFiles)
