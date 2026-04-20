@@ -1,4 +1,5 @@
 import { CopilotClient } from '@github/copilot-sdk'
+import { $ } from 'bun'
 
 import type { PierreInstance } from './smolvm'
 import { createPierreInstance, destroyPierreInstance } from './smolvm'
@@ -81,6 +82,33 @@ export function releaseVm(convId: string): void {
   if (entry.activeRequests === 0 && !entry.timer) {
     armTimer(convId, entry)
   }
+}
+
+/**
+ * Lists all smolvm machines and force-deletes them.
+ * Called once at startup to remove VMs orphaned by a previous server crash or restart.
+ */
+export async function cleanupOrphanedVms(): Promise<void> {
+  let machines: { name: string }[]
+  try {
+    const raw = await $`smolvm machine ls --json`.json()
+    machines = Array.isArray(raw) ? raw : (raw?.machines ?? [])
+  } catch {
+    // smolvm unavailable or no machines — nothing to do
+    return
+  }
+
+  await Promise.allSettled(
+    machines.map(async ({ name }) => {
+      try {
+        await $`smolvm machine stop --name ${name}`.quiet()
+      } catch {
+        // already stopped or unreachable — proceed to delete
+      }
+      await $`smolvm machine delete -f ${name}`.quiet()
+      console.log(`[VM_REGISTRY] Deleted orphaned VM: ${name}`)
+    })
+  )
 }
 
 /**

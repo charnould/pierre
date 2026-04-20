@@ -1,2 +1,1 @@
-smolvm/pierre filter=lfs diff=lfs merge=lfs -text
-smolvm/*.smolmachine filter=lfs diff=lfs merge=lfs -text
+config/smolvm/* filter=lfs diff=lfs merge=lfs -text

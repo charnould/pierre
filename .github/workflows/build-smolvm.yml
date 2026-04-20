@@ -1,0 +1,66 @@
+name: Build smolmachine
+
+on:
+  push:
+    paths:
+      - 'config/build:smolvm.sh'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build-linux:
+    name: Build (AMD64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install smolvm
+        run: curl -sSL https://smolmachines.com/install.sh | bash
+
+      - name: Build smolmachine
+        run: bash config/build:smolvm.sh
+
+      - name: Upload AMD64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: smolmachine-amd64
+          path: |
+            config/smolvm/pierre-amd64
+            config/smolvm/pierre-amd64.smolmachine
+          retention-days: 7
+
+  commit:
+    name: Commit smolmachines
+    needs: [build-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Download AMD64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: smolmachine-amd64
+          path: config/smolvm/
+
+      - name: Restore executable permissions
+        run: chmod +x config/smolvm/pierre-amd64
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add config/smolvm/
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "build: build smolmachine artifacts (amd64) [skip ci]"
+          git push

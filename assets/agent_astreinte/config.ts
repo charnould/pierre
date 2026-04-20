@@ -5,24 +5,22 @@ export default {
   display: "Agent d'astreinte",
   show: [
     'agent_astreinte',
-    'cadre_astreinte',
     'agent_jour',
+    'cadre_astreinte',
     'charge_coproprietes',
     'charge_recouvrement',
     'default'
   ],
   custom_data: {},
   api: [],
-  protected: false,
+  protected: true,
   knowledge: {
-    location: null,
     community: true,
-    proprietary: true,
-    show_sources: false
+    proprietary: true
   },
   greeting: [
     'Bonjour 🖐️,',
-    "Je suis GUSTAVE, l'IA de GDH.",
+    "Je suis GUSTAVE #2, l'agent IA de GDH (orienté « agent d'astreinte »).",
     "À ce jour, je ne réponds qu'aux questions sur notre patrimoine, nos prestataires et tout ce qui peut aider nos collaborateurs d'astreinte à prendre les meilleures décisions possibles.",
     'Comme je dis souvent : je ne sais pas réparer une chaudière, mais je sais où trouver les radiateurs à prêter aux locataires. 😉'
   ],

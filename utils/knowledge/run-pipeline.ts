@@ -12,7 +12,7 @@ export const run_pipeline = async (knowledgeType: string): Promise<void> => {
     if (knowledgeType === COMMUNITY_TYPE) await scrape_wikipedia()
 
     const files = await generate_metadata()
-    if (!files) throw new Error('Failed to load metadata')
+    if (files === undefined) throw new Error('Failed to load metadata')
 
     await ingest_files(files)
 

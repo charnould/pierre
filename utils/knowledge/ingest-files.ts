@@ -13,6 +13,7 @@ import * as cpexcel from 'xlsx/dist/cpexcel.full.mjs'
 
 import { Config } from '../_schema'
 import type { Metadata } from './generate-metadata'
+import { normalizeFilename } from './normalize'
 
 interface FormattedContent {
   data: string
@@ -22,25 +23,6 @@ interface FormattedContent {
 const TIMEZONE = 'Europe/Paris'
 const COMMUNITY_KNOWLEDGE_DIR = 'donnees_universelles'
 const CORE_ASSET_SUFFIX = 'core'
-
-function normalizeFilename(filename: string): string {
-  // Remove extension
-  const lastDotIndex = filename.lastIndexOf('.')
-  const extension = lastDotIndex > 0 ? filename.slice(lastDotIndex) : ''
-  const nameWithoutExt = lastDotIndex > 0 ? filename.slice(0, lastDotIndex) : filename
-
-  // Normalize: remove accents, convert to lowercase, replace special chars with underscores
-  let normalized = nameWithoutExt
-    .replace('ç', 'c') // Handle special character
-    .replace('œ', 'oe') // Handle special ligature
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // Remove accents
-    .toLowerCase()
-    .replace(/[^a-z0-9_]+/g, '_') // Replace non-alphanumeric with underscores
-    .replace(/^_+|_+$/g, '') // Remove leading/trailing underscores
-
-  return normalized + extension
-}
 
 async function renameFilesRecursively(dirPath: string): Promise<void> {
   const files = await readdir(dirPath, { withFileTypes: true })
@@ -103,7 +85,8 @@ function normalizeSheetValue(value: unknown): unknown {
     return formatInTimeZone(value, TIMEZONE, 'PPPP', { locale: fr })
   }
   if (typeof value === 'string') {
-    return value.trim().replace(/\s+/g, ' ').toLowerCase()
+    const normalized = value.trim().replace(/\s+/g, ' ').toLowerCase()
+    return normalized === '' ? null : normalized
   }
   return value
 }
@@ -134,7 +117,7 @@ async function processXlsxFile(
 
   unmergeSheetCells(sheet)
 
-  const rows = XLSX.utils.sheet_to_json(sheet, { range: headerRowIndex })
+  const rows = XLSX.utils.sheet_to_json(sheet, { range: headerRowIndex, defval: null })
 
   const normalizedRows = rows.map((obj) =>
     Object.fromEntries(
@@ -187,7 +170,10 @@ export const ingest_files = async (files: Metadata[]): Promise<void> => {
 
     // Skip files that don't exist in the filesystem
     const fileExists = await Bun.file(metadata.filepath).exists()
-    if (!fileExists) continue
+    if (!fileExists) {
+      console.warn(`⚠️ Skipping file: not found on disk — ${metadata.filepath}`)
+      continue
+    }
 
     const content = await processFile(metadata)
     const outputPath = `./datastores/${Bun.env['SERVICE']}/knowledge/${metadata.access}/${normalizeFilename(metadata.agent_filename)}.${content.parser}`

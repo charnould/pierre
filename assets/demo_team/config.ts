@@ -10,7 +10,6 @@ export default {
   api: [],
   protected: false,
   knowledge: {
-    location: null,
     community: true,
     proprietary: true
   },

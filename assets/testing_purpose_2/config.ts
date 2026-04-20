@@ -17,7 +17,6 @@ export default {
   api: [],
   protected: false,
   knowledge: {
-    location: null,
     community: false,
     proprietary: false
   },

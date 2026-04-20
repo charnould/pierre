@@ -2,7 +2,8 @@
 # Builds a portable .smolmachine image with Debian, python3, and GitHub Copilot CLI.
 # The resulting artifact lets you boot a ready-to-use VM in <1s with no downloads.
 #
-# Output : config/smolvm/pierre + config/smolvm/pierre.smolmachine
+# Output : config/smolvm/pierre-<arch> + config/smolvm/pierre-<arch>.smolmachine
+#          where <arch> is amd64 (x86_64) or arm64 (aarch64)
 #
 # Usage  : bun run vm:build
 # Requirements: smolvm installed (curl -sSL https://smolmachines.com/install.sh | bash)
@@ -12,10 +13,22 @@ set -euo pipefail
 BUILD_VM="pierre-build"
 SMOLVM_DIR="./config/smolvm"
 
+# Map uname -m to a canonical arch name
+RAW_ARCH=$(uname -m)
+case "$RAW_ARCH" in
+  x86_64)  ARCH="amd64" ;;
+  aarch64) ARCH="arm64" ;;
+  arm64)   ARCH="arm64" ;;
+  *) echo "Unsupported architecture: $RAW_ARCH" >&2; exit 1 ;;
+esac
+
+OUTPUT_BASE="$SMOLVM_DIR/pierre-$ARCH"
+
+echo "Architecture détectée : $RAW_ARCH → $ARCH"
+
 cleanup() { smolvm machine delete "$BUILD_VM" -f 2>/dev/null || true; }
 trap cleanup EXIT
 
-rm -rf "$SMOLVM_DIR"
 mkdir -p "$SMOLVM_DIR"
 
 echo "Création de la VM de build..."
@@ -64,4 +77,7 @@ smolvm machine exec --name "$BUILD_VM" -- bash -c "
 
 echo "Packaging..."
 smolvm machine stop --name "$BUILD_VM"
-smolvm pack create --from-vm "$BUILD_VM" -o "$SMOLVM_DIR/pierre"
+smolvm pack create --from-vm "$BUILD_VM" -o "$OUTPUT_BASE"
+
+echo "Fichiers créés :"
+ls -lh "$SMOLVM_DIR/pierre-$ARCH"* 2>/dev/null || true

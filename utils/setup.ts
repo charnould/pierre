@@ -2,6 +2,8 @@ import { Database } from 'bun:sqlite'
 
 import { $ } from 'bun'
 
+import { run_pipeline } from './knowledge/run-pipeline'
+
 export const setup = async () => {
   await $`find . -name ".DS_Store" -type f -delete`
 
@@ -9,6 +11,7 @@ export const setup = async () => {
 
   await $`mkdir -p datastores/${Bun.env['SERVICE']}`
   await $`mkdir -p datastores/${Bun.env['SERVICE']}/files`
+  await $`mkdir -p datastores/${Bun.env['SERVICE']}/knowledge`
 
   new Database(`datastores/${Bun.env['SERVICE']}/datastore.sqlite`).run(`
     CREATE TABLE IF NOT EXISTS telemetry
@@ -40,3 +43,4 @@ export const setup = async () => {
 }
 
 await setup()
+await run_pipeline()

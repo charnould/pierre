@@ -15,8 +15,18 @@ import { existsSync } from 'node:fs'
 import { readdir } from 'node:fs/promises'
 import { resolve, join } from 'node:path'
 
-import type { CopilotClient, CopilotSession, SessionEvent } from '@github/copilot-sdk'
-import { approveAll } from '@github/copilot-sdk'
+import type {
+  CopilotClient,
+  CopilotSession,
+  SessionEvent,
+  PermissionRequest,
+  PermissionRequestResult
+} from '@github/copilot-sdk'
+
+const denyWrite = (request: PermissionRequest): PermissionRequestResult => {
+  if (request.kind === 'write') return { kind: 'denied-interactively-by-user' }
+  return { kind: 'approved' }
+}
 
 import { parse_markdown_sections } from './parse-markdown-sections'
 import { acquireVm, releaseVm } from './vm-registry'
@@ -84,7 +94,7 @@ const openSession = async (
 
   const config = {
     workingDirectory,
-    onPermissionRequest: approveAll,
+    onPermissionRequest: denyWrite,
     model,
     // Pass BYOK provider config directly — the SDK sends it over RPC to the CLI.
     // This is more reliable than env var injection (which breaks in non-interactive shells).
