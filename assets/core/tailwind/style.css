@@ -1,18 +1,20 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @source '../../../node_modules/streamdown/dist/*.js';
 
 @theme {
-  --font-sans: 'Inter', 'sans-serif';
+  --font-sans: "Inter", "sans-serif";
   --text-base: 15px;
 
   /* Streamdown design tokens (sober gray palette) */
+  --color-background: oklch(100% 0 0);
   --color-foreground: oklch(21% 0.034 264.665);
   --color-primary: oklch(21% 0.034 264.665);
   --color-primary-foreground: oklch(100% 0 0);
   --color-muted: oklch(96.7% 0.003 264.542);
   --color-muted-foreground: oklch(55.1% 0.027 264.364);
   --color-border: oklch(92.8% 0.006 264.531);
+  --color-sidebar: oklch(96.7% 0.003 264.542);
 }
 
 .prose {
@@ -50,7 +52,7 @@ html::-webkit-scrollbar,
 
 /* Disclaimer */
 
-[data-role='disclaimer'] {
+[data-role="disclaimer"] {
   @apply mt-3 max-w-sm text-[12px] leading-snug text-gray-400;
 }
 
@@ -82,7 +84,7 @@ html::-webkit-scrollbar,
 /* Status line */
 
 .status-line {
-  @apply mt-3 mb-1 text-[13px] text-gray-400;
+  @apply mt-3 mb-1 text-[14px] text-gray-400;
   transition:
     opacity 0.3s ease,
     filter 0.3s ease,
@@ -103,8 +105,8 @@ html::-webkit-scrollbar,
 
 /* ── Streamdown list alignment ── */
 
-[data-streamdown='ordered-list'],
-[data-streamdown='unordered-list'] {
+[data-streamdown="ordered-list"],
+[data-streamdown="unordered-list"] {
   list-style-position: outside !important;
   padding-left: 1.25em;
 }
