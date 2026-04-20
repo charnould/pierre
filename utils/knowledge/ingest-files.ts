@@ -70,7 +70,7 @@ async function loadConfigs(): Promise<Config[]> {
 
 async function setupKnowledgeDirectories(configs: Config[]): Promise<void> {
   for (const config of configs) {
-    const knowledgePath = `datastores/${Bun.env.SERVICE}/knowledge/${config.id}`;
+    const knowledgePath = `datastores/${Bun.env["SERVICE"]}/knowledge/${config.id}`;
     await $`rm -rf ${knowledgePath} && mkdir ${knowledgePath}`;
 
     if (config.knowledge.community) {
@@ -79,7 +79,7 @@ async function setupKnowledgeDirectories(configs: Config[]): Promise<void> {
       await renameFilesRecursively(copiedPath);
     }
 
-    await $`cp ./assets/${config.id}/AGENTS.md ${knowledgePath}/AGENTS.md`;
+    await $`find . -name ".DS_Store" -type f -delete`;
   }
 }
 
@@ -188,7 +188,7 @@ export const ingest_files = async (files: Metadata[]): Promise<void> => {
     if (!fileExists) continue;
 
     const content = await processFile(metadata);
-    const outputPath = `./datastores/${Bun.env.SERVICE}/knowledge/${metadata.access}/${normalizeFilename(metadata.agent_filename)}`;
+    const outputPath = `./datastores/${Bun.env["SERVICE"]}/knowledge/${metadata.access}/${normalizeFilename(metadata.agent_filename)}.${content.parser}`;
 
     await saveFormattedFile(outputPath, content);
   }
