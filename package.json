@@ -7,6 +7,7 @@
   "module": "app.ts",
   "scripts": {
     "------------------ BUILD ------------------": "------------------",
+    "vm:build": "bash config/build:smolvm.sh",
     "app:build": "bun --env-file=.env.production run config/build:app.ts",
     "------------------ GLOBAL ------------------": "------------------",
     "dev": "DEBUG=true bun --env-file=.env.production --watch run app.ts",

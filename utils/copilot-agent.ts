@@ -1,52 +1,26 @@
 /**
  * GitHub Copilot SDK integration for PIERRE
  *
- * Manages a singleton CopilotClient and per-conversation sessions.
- * The agent works within a specific knowledge directory determined
- * by the SERVICE env var and the config ID from the URL.
+ * Manages per-conversation Copilot sessions backed by isolated smolVMs.
+ * Each conversation (`convId`) gets its own VM where the Copilot CLI runs
+ * in TCP server mode. The SDK client on the host connects via `cliUrl`.
  *
- * Example: SERVICE=pierre-production, config=default
- *   → agent works in datastores/pierre-production/knowledge/default/
+ * VM lifecycle is managed by `vm-registry.ts` (30 min inactivity timeout).
  *
- * Agent instructions are loaded from the AGENTS.md in that knowledge folder
- * (auto-discovered by the SDK via workingDirectory).
+ * The agent's working directory inside the VM is `/knowledge`, where the
+ * config's knowledge folder is mounted.
  */
 
 import { resolve, join } from "node:path";
 import { existsSync } from "node:fs";
 import { readdir } from "node:fs/promises";
-import { CopilotClient, approveAll, type CopilotSession, type SessionEvent } from "@github/copilot-sdk";
+import type { CopilotClient, CopilotSession, SessionEvent } from "@github/copilot-sdk";
+import { approveAll } from "@github/copilot-sdk";
+import { acquireVm, releaseVm } from "./vm-registry";
+import { parse_markdown_sections } from "./parse-markdown-sections";
 
 // Stable project root anchored to this file's location (utils/ → ../)
 const PROJECT_ROOT = resolve(import.meta.dir, "..");
-
-// ---------------------------------------------------------------------------
-// Singleton CopilotClient
-// ---------------------------------------------------------------------------
-
-let clientPromise: Promise<CopilotClient> | null = null;
-
-const getClient = async (): Promise<CopilotClient> => {
-  if (!clientPromise) {
-    console.log("[COPILOT] Initializing singleton client...");
-    clientPromise = (async () => {
-      const c = new CopilotClient();
-      await c.start();
-      console.log("[COPILOT] Client started");
-      return c;
-    })();
-  }
-
-  const client = await clientPromise;
-
-  if (client.getState() !== "connected") {
-    console.warn("[COPILOT] Client disconnected — reinitializing");
-    clientPromise = null;
-    return getClient();
-  }
-
-  return client;
-};
 
 // ---------------------------------------------------------------------------
 // Per-conversation lock (prevents concurrent turns on the same session)
@@ -59,10 +33,10 @@ const locks = new Map<string, Promise<void>>();
 // ---------------------------------------------------------------------------
 
 /**
- * Resolve the absolute path to a config's knowledge folder.
- * Anchored to PROJECT_ROOT so it works regardless of process.cwd().
+ * Resolve the absolute path to a config's knowledge folder on the host.
+ * Used only for listing files to inject into the session context.
  */
-const knowledgePath = (configId: string): string => {
+const knowledgePathOnHost = (configId: string): string => {
   const p = join(PROJECT_ROOT, "datastores", Bun.env["SERVICE"]!, "knowledge", configId);
   if (!existsSync(p)) {
     throw new Error(`[COPILOT] Knowledge directory not found: ${p}`);
@@ -93,23 +67,65 @@ const openSession = async (
   client: CopilotClient,
   convId: string,
   configId: string,
-  model: string,
+  model: string | undefined,
 ): Promise<CopilotSession> => {
-  const kPath = knowledgePath(configId);
-  console.log(`[COPILOT] Knowledge path: ${kPath}`);
+  // The knowledge dir is mounted at /knowledge inside the VM
+  const workingDirectory = "/knowledge";
+  // We still list files from the host path for the additionalContext hook
+  const hostKPath = knowledgePathOnHost(configId);
+  console.log(`[COPILOT] Knowledge path: ${workingDirectory} (mounted from ${hostKPath})`);
+
+  const instructionsPath = join(PROJECT_ROOT, "assets", configId, "INSTRUCTIONS.md");
+  const sections = existsSync(instructionsPath)
+    ? await parse_markdown_sections(instructionsPath)
+    : {};
 
   const config = {
-    workingDirectory: kPath,
+    workingDirectory,
     onPermissionRequest: approveAll,
     model,
-    provider: {
-        baseUrl: Bun.env["AI_BASE_URL"],
-        apiKey: Bun.env["AI_API_KEY"],
-        type: Bun.env["AI_TYPE"],
-        wireApi: "responses",
-    },
+    // Pass BYOK provider config directly — the SDK sends it over RPC to the CLI.
+    // This is more reliable than env var injection (which breaks in non-interactive shells).
+    provider:
+      Bun.env["AI_API_KEY"] && Bun.env["AI_BASE_URL"]
+        ? {
+            type: Bun.env["AI_TYPE"] as "openai" | "azure" | "anthropic" | undefined,
+            baseUrl: Bun.env["AI_BASE_URL"],
+            modelName: Bun.env["AI_MODEL"],
+            apiKey: Bun.env["AI_API_KEY"],
+          }
+        : undefined,
     streaming: true,
-    systemMessage: { mode: "replace" as const, content: "" },
+    reasoningEffort: "medium" as const,
+    // Keep the native CLI system prompt (tool_efficiency, tool_instructions, etc.)
+    // and only remove the coding-specific section irrelevant to PIERRE.
+    // https://github.com/github/copilot-sdk/tree/main/nodejs#customize-mode
+    systemMessage: {
+      mode: "customize" as const,
+      sections: {
+        identity: {
+          action: "replace",
+          content: sections["identity"] ?? "",
+        },
+        tone: {
+          action: "replace",
+          content: sections["tone"] ?? "",
+        },
+        guidelines: {
+          action: "append",
+          content: sections["guidelines"] ?? "",
+        },
+        code_change_rules: { action: "remove" as const },
+        safety: {
+          action: "append",
+          content: sections["safety"] ?? "",
+        },
+        custom_instructions: {
+          action: "replace",
+          content: sections["custom_instructions"] ?? "",
+        },
+      },
+    },
     hooks: {
       onSessionStart: async (
         input: { source: string; initialPrompt?: string },
@@ -119,7 +135,7 @@ const openSession = async (
 
         if (input.source !== "resume") {
           try {
-            const files = await listFilesRecursive(kPath);
+            const files = await listFilesRecursive(hostKPath);
             console.log(`[COPILOT] Injected file listing (${files.length} files)`);
             return {
               additionalContext: [
@@ -154,7 +170,13 @@ const openSession = async (
 export type CopilotChunk =
   | { type: "delta"; content: string }
   | { type: "reset" }
-  | { type: "done"; fullContent: string; reasoning?: string; inputTokens?: number; outputTokens?: number };
+  | {
+      type: "done";
+      fullContent: string;
+      reasoning?: string;
+      inputTokens?: number;
+      outputTokens?: number;
+    };
 
 /**
  * Stream a response from Copilot as incremental chunks.
@@ -163,13 +185,14 @@ export type CopilotChunk =
  *   - `delta` chunks as the assistant generates text
  *   - `done` with the authoritative full content and metadata
  *
- * The agent works in: datastores/{SERVICE}/knowledge/{configId}
+ * Each conversation (`convId`) runs in its own smolVM. The VM is created on
+ * the first call and reused for subsequent messages of the same conversation.
  */
 export async function* streamCopilot(
   convId: string,
   configId: string,
   prompt: string,
-  model = Bun.env['AI_MODEL'],
+  model = Bun.env["AI_MODEL"],
   signal?: AbortSignal,
 ): AsyncGenerator<CopilotChunk> {
   const t0 = Date.now();
@@ -179,7 +202,9 @@ export async function* streamCopilot(
   console.log(`[COPILOT]   config   : ${configId}`);
   console.log(`[COPILOT]   SERVICE  : ${Bun.env["SERVICE"]}`);
   console.log(`[COPILOT]   model    : ${model}`);
-  console.log(`[COPILOT]   prompt   : "${prompt.substring(0, 120)}${prompt.length > 120 ? "..." : ""}"`);
+  console.log(
+    `[COPILOT]   prompt   : "${prompt.substring(0, 120)}${prompt.length > 120 ? "..." : ""}"`,
+  );
   console.log(`${"=".repeat(60)}`);
 
   // Bail early if already aborted
@@ -193,12 +218,14 @@ export async function* streamCopilot(
   });
   locks.set(convId, lockNext);
   await prev;
+  // Re-check abort after waiting for the lock (caller may have disconnected)
+  if (signal?.aborted) throw new DOMException("Request aborted", "AbortError");
 
   try {
-    // Step 1 — Get client
-    console.log(`[COPILOT] Step 1/3 — Getting client...`);
+    // Step 1 — Get (or create) the VM and client for this conversation
+    console.log(`[COPILOT] Step 1/3 — Getting VM client...`);
     const t1 = Date.now();
-    const client = await getClient();
+    const { client } = await acquireVm(convId, configId);
     console.log(`[COPILOT] Step 1/3 — Client ready (${Date.now() - t1}ms)`);
 
     // Step 2 — Open session
@@ -354,13 +381,17 @@ export async function* streamCopilot(
       clearTimeout(timeoutId);
       signal?.removeEventListener("abort", abortHandler);
       unsubscribe();
-      await session.disconnect().catch((e) => console.warn("[COPILOT] Disconnect error (ignored):", e));
+      await session
+        .disconnect()
+        .catch((e) => console.warn("[COPILOT] Disconnect error (ignored):", e));
     }
 
     console.log(`[COPILOT] ✅ Complete (total: ${Date.now() - t0}ms, tools: ${toolCount})`);
-    if (inputTokens || outputTokens) console.log(`[COPILOT]   Tokens — in: ${inputTokens}, out: ${outputTokens}`);
+    if (inputTokens || outputTokens)
+      console.log(`[COPILOT]   Tokens — in: ${inputTokens}, out: ${outputTokens}`);
   } finally {
     releaseLock();
     if (locks.get(convId) === lockNext) locks.delete(convId);
+    releaseVm(convId);
   }
 }
