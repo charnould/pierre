@@ -17,7 +17,7 @@ import { controller as post_knowledge } from "./controllers/POST.knowledge";
 import { controller as post_login } from "./controllers/POST.login";
 import { controller as post_users } from "./controllers/POST.users";
 
-import { topicize, score } from "./utils/analyze-conversation";
+// import { topicize, score } from "./utils/analyze-conversation";
 import { authenticate } from "./utils/authenticate-user";
 import { run_pipeline } from "./utils/knowledge/run-pipeline";
 
@@ -46,8 +46,8 @@ Bun.cron("0 4 * * *", async () => {
   // Update knowledge database with custom content
   await run_pipeline();
   // Score conversation and assign topic with AI
-  await topicize();
-  await score();
+  // await topicize();
+  // await score();
 });
 
 // Serve static files from the assets directory
