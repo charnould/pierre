@@ -1,3 +1,6 @@
+// oxfmt-ignore
+import { setup } from './utils/setup'
+
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
 import { secureHeaders } from 'hono/secure-headers'
@@ -17,7 +20,6 @@ import { controller as post_users } from './controllers/POST.users'
 // import { topicize, score } from "./utils/analyze-conversation";
 import { authenticate } from './utils/authenticate-user'
 import { run_pipeline } from './utils/knowledge/run-pipeline'
-import { setup } from './utils/setup'
 
 // Prepare the environment and database before starting the app:
 // 1. Create necessary directories for the current service
