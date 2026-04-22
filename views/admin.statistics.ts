@@ -1,6 +1,7 @@
 import * as Plot from '@observablehq/plot'
 import { html, raw } from 'hono/html'
 import { JSDOM } from 'jsdom'
+
 import type { StatisticOptions } from '../controllers/GET.statistics'
 
 /**

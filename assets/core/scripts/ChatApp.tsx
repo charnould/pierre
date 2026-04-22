@@ -1,24 +1,24 @@
-import { useState, useEffect, useRef, useCallback, memo } from "react";
-import { Streamdown } from "streamdown";
+import { useState, useEffect, useRef, useCallback, memo } from 'react'
+import { Streamdown } from 'streamdown'
 
-import { usePierreChat, type ChatStatus } from "./hooks/usePierreChat";
+import { usePierreChat, type ChatStatus } from './hooks/usePierreChat'
 
 // Boot data injected by the server via <script type="application/json">
 type BootData = {
-  convId: string;
-  configId: string;
-  dataParam: string;
-  disclaimer: string | null;
-  greeting: string[];
-  examples: string[];
-  displayableConfigs: { id: string; display: string; is_active: boolean }[];
-  assetId: string;
-};
+  convId: string
+  configId: string
+  dataParam: string
+  disclaimer: string | null
+  greeting: string[]
+  examples: string[]
+  displayableConfigs: { id: string; display: string; is_active: boolean }[]
+  assetId: string
+}
 
 function getBootData(): BootData {
-  const el = document.getElementById("pierre-data");
-  if (!el?.textContent) throw new Error("Missing #pierre-data script tag");
-  return JSON.parse(el.textContent);
+  const el = document.getElementById('pierre-data')
+  if (!el?.textContent) throw new Error('Missing #pierre-data script tag')
+  return JSON.parse(el.textContent)
 }
 
 // ---------------------------------------------------------------------------
@@ -36,14 +36,14 @@ function Greeting({ greeting, assetId }: { greeting: string[]; assetId: string }
         alt="IA"
       />
       <div className="prose" data-role="system">
-        <Streamdown isAnimating={false}>{greeting.join("\n\n")}</Streamdown>
+        <Streamdown isAnimating={false}>{greeting.join('\n\n')}</Streamdown>
       </div>
     </>
-  );
+  )
 }
 
-function ConfigSelector({ configs }: { configs: BootData["displayableConfigs"] }) {
-  if (configs.length <= 1) return null;
+function ConfigSelector({ configs }: { configs: BootData['displayableConfigs'] }) {
+  if (configs.length <= 1) return null
   return (
     <div>
       <p className="mt-4 mb-2 text-xs font-medium tracking-wide text-gray-500">VOUS ÊTES...</p>
@@ -52,22 +52,22 @@ function ConfigSelector({ configs }: { configs: BootData["displayableConfigs"] }
           key={c.id}
           data-config=""
           href={`/?config=${c.id}`}
-          {...(c.is_active ? { "data-active": "" } : {})}
+          {...(c.is_active ? { 'data-active': '' } : {})}
           className="mr-2 mb-2 inline-block w-fit cursor-pointer rounded border border-gray-200 px-3 py-2.5 text-left text-sm/snug text-gray-600 hover:border-gray-300 hover:bg-gray-50 data-active:border-gray-400 data-active:bg-gray-100"
         >
           {c.display}
         </a>
       ))}
     </div>
-  );
+  )
 }
 
 function ExampleButtons({
   examples,
-  onSelect,
+  onSelect
 }: {
-  examples: string[];
-  onSelect: (text: string) => void;
+  examples: string[]
+  onSelect: (text: string) => void
 }) {
   return (
     <div>
@@ -83,103 +83,102 @@ function ExampleButtons({
         </button>
       ))}
     </div>
-  );
+  )
 }
 
 // Fake status messages shown while the agent is thinking
 const STATUS_MESSAGES = [
-  "Prise en compte de la question…",
-  "Lecture de la demande…",
-  "Analyse du besoin…",
-  "Compréhension des attentes…",
-  "Identification du contexte…",
-  "Définition du périmètre…",
-  "Cadrage de la réponse…",
-  "Mise en structure…",
-  "Organisation des éléments…",
-  "Structuration des idées…",
-  "Mise en cohérence des éléments…",
-  "Analyse des points clés…",
-  "Examen des éléments disponibles…",
-  "Appréciation des enjeux…",
-  "Affinage de l’analyse…",
-  "Approfondissement du raisonnement…",
-  "Consolidation de la réflexion…",
-  "Hiérarchisation des priorités…",
-  "Mise en relation des éléments…",
-  "Articulation de la réponse…",
-  "Construction de l’argumentation…",
-  "Développement de la réponse…",
-  "Précision du raisonnement…",
-  "Clarification de la réponse…",
-  "Synthèse des points essentiels…",
-  "Formalisation des éléments…",
-  "Rédaction structurée…",
-  "Validation de la réponse…",
-  "Contrôle de cohérence…",
-  "Vérification globale…",
-  "Mise au propre…",
-  "Préparation de la restitution…",
-];
+  'Prise en compte de la question…',
+  'Lecture de la demande…',
+  'Analyse du besoin…',
+  'Compréhension des attentes…',
+  'Identification du contexte…',
+  'Définition du périmètre…',
+  'Cadrage de la réponse…',
+  'Mise en structure…',
+  'Organisation des éléments…',
+  'Structuration des idées…',
+  'Mise en cohérence des éléments…',
+  'Analyse des points clés…',
+  'Examen des éléments disponibles…',
+  'Appréciation des enjeux…',
+  'Affinage de l’analyse…',
+  'Approfondissement du raisonnement…',
+  'Consolidation de la réflexion…',
+  'Hiérarchisation des priorités…',
+  'Mise en relation des éléments…',
+  'Articulation de la réponse…',
+  'Construction de l’argumentation…',
+  'Développement de la réponse…',
+  'Précision du raisonnement…',
+  'Clarification de la réponse…',
+  'Synthèse des points essentiels…',
+  'Formalisation des éléments…',
+  'Rédaction structurée…',
+  'Validation de la réponse…',
+  'Contrôle de cohérence…',
+  'Vérification globale…',
+  'Mise au propre…',
+  'Préparation de la restitution…'
+]
 
 function ThinkingIndicator() {
   const [statusText, setStatusText] = useState(
-    () =>
-      STATUS_MESSAGES[Math.floor(Math.random() * STATUS_MESSAGES.length)] ?? STATUS_MESSAGES[0]!,
-  );
-  const [fade, setFade] = useState(true);
+    () => STATUS_MESSAGES[Math.floor(Math.random() * STATUS_MESSAGES.length)] ?? STATUS_MESSAGES[0]!
+  )
+  const [fade, setFade] = useState(true)
 
   useEffect(() => {
-    let lastIdx = STATUS_MESSAGES.indexOf(statusText);
+    let lastIdx = STATUS_MESSAGES.indexOf(statusText)
     const rotate = () => {
-      setFade(false);
+      setFade(false)
       setTimeout(() => {
-        let idx = Math.floor(Math.random() * STATUS_MESSAGES.length);
-        if (idx === lastIdx) idx = (idx + 1) % STATUS_MESSAGES.length;
-        lastIdx = idx;
-        setStatusText(STATUS_MESSAGES[idx] ?? STATUS_MESSAGES[0]!);
-        setFade(true);
-      }, 300);
-    };
-    const id = setInterval(rotate, 3000);
-    return () => clearInterval(id);
-  }, []);
+        let idx = Math.floor(Math.random() * STATUS_MESSAGES.length)
+        if (idx === lastIdx) idx = (idx + 1) % STATUS_MESSAGES.length
+        lastIdx = idx
+        setStatusText(STATUS_MESSAGES[idx] ?? STATUS_MESSAGES[0]!)
+        setFade(true)
+      }, 300)
+    }
+    const id = setInterval(rotate, 3000)
+    return () => clearInterval(id)
+  }, [])
 
   return (
     <div>
-      <div className={`status-line ${fade ? "status-in" : "status-out"}`}>{statusText}</div>
+      <div className={`status-line ${fade ? 'status-in' : 'status-out'}`}>{statusText}</div>
       <div className="thinking" />
     </div>
-  );
+  )
 }
 
 const UserMessage = memo(({ content }: { content: string }) => (
   <div data-role="user" className="user prose">
     <Streamdown isAnimating={false}>{content}</Streamdown>
   </div>
-));
+))
 
 function AIMessage({
   content,
   isStreaming,
   isSubmitted,
   isError,
-  onRegenerate,
+  onRegenerate
 }: {
-  content: string;
-  isStreaming: boolean;
-  isSubmitted: boolean;
-  isError: boolean;
-  onRegenerate: () => void;
+  content: string
+  isStreaming: boolean
+  isSubmitted: boolean
+  isError: boolean
+  onRegenerate: () => void
 }) {
   if (isError && !content) {
     return (
       <div data-role="system">
         <div className="prose" data-section="response">
           <p className="pierre_error">
-            Une erreur s'est produite chez le fournisseur de modèle de langage.{" "}
+            Une erreur s'est produite chez le fournisseur de modèle de langage.{' '}
             <span
-              style={{ cursor: "pointer", fontWeight: 600, textDecoration: "underline" }}
+              style={{ cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
               onClick={onRegenerate}
             >
               Cliquer pour regénérer une réponse
@@ -188,7 +187,7 @@ function AIMessage({
           </p>
         </div>
       </div>
-    );
+    )
   }
 
   // Waiting for first token or content reset during tool execution
@@ -197,14 +196,14 @@ function AIMessage({
       <div data-role="system">
         <ThinkingIndicator />
       </div>
-    );
+    )
   }
 
   return (
     <div data-role="system">
       <div className="prose" data-section="response">
         <Streamdown
-          animated={{ animation: "blurIn", duration: 200, easing: "ease-out" }}
+          animated={{ animation: 'blurIn', duration: 200, easing: 'ease-out' }}
           isAnimating={isStreaming}
           caret="block"
         >
@@ -212,51 +211,51 @@ function AIMessage({
         </Streamdown>
       </div>
     </div>
-  );
+  )
 }
 
 function Disclaimer({ text }: { text: string }) {
-  return <div data-role="disclaimer">{text}</div>;
+  return <div data-role="disclaimer">{text}</div>
 }
 
 function ChatInput({
   status,
   onSend,
-  onStop,
+  onStop
 }: {
-  status: ChatStatus;
-  onSend: (text: string) => void;
-  onStop: () => void;
+  status: ChatStatus
+  onSend: (text: string) => void
+  onStop: () => void
 }) {
-  const [value, setValue] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const isDisabled = status === "submitted" || status === "streaming";
+  const [value, setValue] = useState('')
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const isDisabled = status === 'submitted' || status === 'streaming'
 
   const autoResize = useCallback(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 250)}px`;
-  }, []);
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 250)}px`
+  }, [])
 
   const submit = useCallback(() => {
-    const text = value.trim();
-    if (!text || isDisabled) return;
-    onSend(text);
-    setValue("");
+    const text = value.trim()
+    if (!text || isDisabled) return
+    onSend(text)
+    setValue('')
     // Reset textarea height after clearing
-    setTimeout(() => autoResize(), 0);
-  }, [value, isDisabled, onSend, autoResize]);
+    setTimeout(() => autoResize(), 0)
+  }, [value, isDisabled, onSend, autoResize])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        submit();
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault()
+        submit()
       }
     },
-    [submit],
-  );
+    [submit]
+  )
 
   return (
     <footer className="fixed bottom-0 w-full max-w-4xl bg-white shadow-[0_0_40px_40px_rgba(255,255,255,1)]">
@@ -269,8 +268,8 @@ function ChatInput({
           placeholder="Comment puis-je vous aider ?"
           value={value}
           onChange={(e) => {
-            setValue(e.target.value);
-            autoResize();
+            setValue(e.target.value)
+            autoResize()
           }}
           onKeyDown={handleKeyDown}
           disabled={isDisabled}
@@ -305,22 +304,22 @@ function ChatInput({
         </button>
       </div>
     </footer>
-  );
+  )
 }
 
 function ScrollAnchor({ messages, status }: { messages: unknown[]; status: ChatStatus }) {
-  const anchorRef = useRef<HTMLDivElement>(null);
-  const lastScrollRef = useRef(0);
+  const anchorRef = useRef<HTMLDivElement>(null)
+  const lastScrollRef = useRef(0)
 
   useEffect(() => {
-    const now = Date.now();
+    const now = Date.now()
     // Throttle scroll to every 200ms during streaming
-    if (status === "streaming" && now - lastScrollRef.current < 200) return;
-    lastScrollRef.current = now;
-    anchorRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, status]);
+    if (status === 'streaming' && now - lastScrollRef.current < 200) return
+    lastScrollRef.current = now
+    anchorRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, status])
 
-  return <div ref={anchorRef} className="h-1" />;
+  return <div ref={anchorRef} className="h-1" />
 }
 
 // ---------------------------------------------------------------------------
@@ -328,18 +327,18 @@ function ScrollAnchor({ messages, status }: { messages: unknown[]; status: ChatS
 // ---------------------------------------------------------------------------
 
 export function ChatApp() {
-  const boot = useRef(getBootData()).current;
+  const boot = useRef(getBootData()).current
   const { messages, status, sendMessage, stop, regenerate } = usePierreChat({
     convId: boot.convId,
     configParam: boot.configId,
-    dataParam: boot.dataParam,
-  });
+    dataParam: boot.dataParam
+  })
 
-  const hasMessages = messages.length > 0;
+  const hasMessages = messages.length > 0
   // Show disclaimer after first completed assistant response
   const showDisclaimer =
     boot.disclaimer &&
-    messages.some((m) => m.role === "assistant" && m.content && status === "ready");
+    messages.some((m) => m.role === 'assistant' && m.content && status === 'ready')
 
   return (
     <>
@@ -351,21 +350,21 @@ export function ChatApp() {
         {!hasMessages && <ExampleButtons examples={boot.examples} onSelect={sendMessage} />}
 
         {messages.map((msg, i) => {
-          const isLast = i === messages.length - 1;
-          const isLastAssistant = isLast && msg.role === "assistant";
+          const isLast = i === messages.length - 1
+          const isLastAssistant = isLast && msg.role === 'assistant'
 
-          return msg.role === "user" ? (
+          return msg.role === 'user' ? (
             <UserMessage key={msg.id} content={msg.content} />
           ) : (
             <AIMessage
               key={msg.id}
               content={msg.content}
-              isStreaming={isLastAssistant && status === "streaming"}
-              isSubmitted={isLastAssistant && status === "submitted"}
-              isError={isLastAssistant && status === "error"}
+              isStreaming={isLastAssistant && status === 'streaming'}
+              isSubmitted={isLastAssistant && status === 'submitted'}
+              isError={isLastAssistant && status === 'error'}
               onRegenerate={regenerate}
             />
-          );
+          )
         })}
 
         {showDisclaimer && <Disclaimer text={boot.disclaimer!} />}
@@ -374,5 +373,5 @@ export function ChatApp() {
 
       <ChatInput status={status} onSend={sendMessage} onStop={stop} />
     </>
-  );
+  )
 }

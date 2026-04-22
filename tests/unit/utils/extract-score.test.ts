@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+
 import { extract_score_and_reasoning } from '../../../utils/rank-chunks'
 
 describe('extract_score', () => {

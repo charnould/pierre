@@ -1,4 +1,5 @@
 import { expect, it } from 'bun:test'
+
 import { decrypt, encrypt } from '../../../utils/authenticate-user'
 
 it('should cipher/decipher a string', async () => {

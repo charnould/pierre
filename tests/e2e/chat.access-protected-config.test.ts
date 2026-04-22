@@ -1,8 +1,9 @@
 import { expect, it } from 'bun:test'
+
 import puppeteer from 'puppeteer'
 
 it('should grant access to protected config for logged user', async () => {
-  Bun.env.SERVICE = 'pierre-production'
+  Bun.env['SERVICE'] = 'pierre-production'
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
 

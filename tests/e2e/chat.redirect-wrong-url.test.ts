@@ -1,4 +1,5 @@
 import { expect, it } from 'bun:test'
+
 import puppeteer from 'puppeteer'
 
 it('should redirect to the default config for invalid paths and parameters + preserve valid config/data pairs', async () => {

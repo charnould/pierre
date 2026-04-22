@@ -1,12 +1,14 @@
 import { beforeAll, expect, it } from 'bun:test'
+
 import { SQL } from 'bun'
 import puppeteer from 'puppeteer'
+
 import { delete_all_users, save_user } from '../../utils/handle-user'
 
-const _sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
+const _sql = new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
 
 beforeAll(async () => {
-  Bun.env.SERVICE = 'pierre-production'
+  Bun.env['SERVICE'] = 'pierre-production'
   await delete_all_users()
   await save_user({
     email: 'test@test.org',

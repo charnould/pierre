@@ -1,4 +1,5 @@
 import type { Context } from 'hono'
+
 import { delete_conversation, score_conversation } from '../utils/handle-conversation'
 
 export const controller = async (c: Context) => {

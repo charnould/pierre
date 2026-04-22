@@ -1,7 +1,8 @@
+import { format, parseISO } from 'date-fns'
 import { html, raw } from 'hono/html'
 import { marked } from 'marked'
+
 import type { Reply } from '../utils/_schema'
-import { format, parseISO } from 'date-fns'
 
 export const view = (data, conversation: Reply[] | []) => {
   return html`<!doctype html>
@@ -36,39 +37,37 @@ export const view = (data, conversation: Reply[] | []) => {
           <div class="mt-6 h-137.5 overflow-y-auto rounded-lg border border-stone-200 shadow-lg">
             ${data.map(
               (conv) => html` <a href="/a/conversations?id=${conv[0].conv_id}">
-                  ${conv[0].metadata.topics === 'TODO'
-                    ? html`<div
-                          class="mx-6 mt-3 mb-px flex w-fit items-center rounded-sm bg-amber-200 px-1 py-px text-[9px] font-medium text-red-500"
-                        >
-                          L'IA NE SAIT PAS
-                        </div>`
-                    : null}
-
-                  <div class="mx-6 mt-3 flex w-auto items-center text-[12px] text-neutral-400">
-                    <span
-                      data-score="${conv[0].metadata.evaluation.ai.score}"
-                      class="mr-px h-3 w-2 shrink-0 rounded-xs bg-neutral-400 data-[score='-1']:bg-red-500 data-[score='0']:bg-red-500 data-[score='1']:bg-orange-400 data-[score='2']:bg-lime-300 data-[score='3']:bg-green-500"
-                      >&nbsp;</span
+                ${conv[0].metadata.topics === 'TODO'
+                  ? html`<div
+                      class="mx-6 mt-3 mb-px flex w-fit items-center rounded-sm bg-amber-200 px-1 py-px text-[9px] font-medium text-red-500"
                     >
-                    <span
-                      data-score="${conv[0].metadata.evaluation.organization.score}"
-                      class="mr-px h-3 w-2 shrink-0 rounded-xs bg-neutral-400 data-[score='0']:bg-red-500 data-[score='1']:bg-orange-400 data-[score='2']:bg-lime-300 data-[score='3']:bg-green-500"
-                      >&nbsp;</span
-                    >
+                      L'IA NE SAIT PAS
+                    </div>`
+                  : null}
 
-                    <span class="w-full truncate"
-                      >&nbsp;• ${format(parseISO(conv[0].timestamp), "dd/MM/yyyy '·' H:mm")} •
-                      ${conv[0].config} •
-                      ${conv[0].metadata.user !== null
-                        ? conv[0].metadata.user
-                        : 'Utilisateur inconnu'}
-                    </span>
-                  </div>
+                <div class="mx-6 mt-3 flex w-auto items-center text-[12px] text-neutral-400">
+                  <span
+                    data-score="${conv[0].metadata.evaluation.ai.score}"
+                    class="mr-px h-3 w-2 shrink-0 rounded-xs bg-neutral-400 data-[score='-1']:bg-red-500 data-[score='0']:bg-red-500 data-[score='1']:bg-orange-400 data-[score='2']:bg-lime-300 data-[score='3']:bg-green-500"
+                    >&nbsp;</span
+                  >
+                  <span
+                    data-score="${conv[0].metadata.evaluation.organization.score}"
+                    class="mr-px h-3 w-2 shrink-0 rounded-xs bg-neutral-400 data-[score='0']:bg-red-500 data-[score='1']:bg-orange-400 data-[score='2']:bg-lime-300 data-[score='3']:bg-green-500"
+                    >&nbsp;</span
+                  >
 
-                  <div class="border-b border-neutral-200 px-6 pb-2 text-sm">
-                    ${conv[0].content}
-                  </div>
-                </a>`
+                  <span class="w-full truncate"
+                    >&nbsp;• ${format(parseISO(conv[0].timestamp), "dd/MM/yyyy '·' H:mm")} •
+                    ${conv[0].config} •
+                    ${conv[0].metadata.user !== null
+                      ? conv[0].metadata.user
+                      : 'Utilisateur inconnu'}
+                  </span>
+                </div>
+
+                <div class="border-b border-neutral-200 px-6 pb-2 text-sm">${conv[0].content}</div>
+              </a>`
             )}
           </div>
           <!-- END: conversations list -->
@@ -81,10 +80,10 @@ export const view = (data, conversation: Reply[] | []) => {
             : html`
                 ${conversation.map(
                   (c) => html`<div
-                      class="prose odd:float-right odd:my-8 odd:max-w-lg odd:rounded-xl odd:bg-gray-100 odd:px-5 odd:py-2 odd:font-serif odd:text-base even:clear-both"
-                    >
-                      ${raw(marked.parse(c.content))}
-                    </div>`
+                    class="prose odd:float-right odd:my-8 odd:max-w-lg odd:rounded-xl odd:bg-gray-100 odd:px-5 odd:py-2 odd:font-serif odd:text-base even:clear-both"
+                  >
+                    ${raw(marked.parse(c.content))}
+                  </div>`
                 )}
                 <!-- START: Score conversation -->
                 <form method="post" class="clear-both mt-12 flex flex-col">

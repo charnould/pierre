@@ -1,5 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, setSystemTime } from 'bun:test'
+
 import { SQL } from 'bun'
+
 import { AIContext } from '../../../utils/_schema'
 import {
   delete_conversation,
@@ -10,7 +12,7 @@ import {
   score_conversation
 } from '../../../utils/handle-conversation'
 
-const sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
+const sql = new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
 const config = (await import(`../../../assets/default/config`)).default
 
 // Simulated responses for test cases

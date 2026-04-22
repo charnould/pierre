@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+
 import { parse_markdown_sections } from '../../../utils/parse-markdown-sections'
 
 const fixture = new URL('./__mocks__/parse-markdown-sections.md', import.meta.url)

@@ -1,10 +1,11 @@
 import { SQL } from 'bun'
 import { format } from 'date-fns'
 import { z } from 'zod'
+
 import type { AIContext, Reply } from './_schema'
 import { send_webhook } from './webhook'
 
-const sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
+const sql = new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
 
 /**
  * Retrieves all conversation replies associated with the specified conversation ID.
@@ -132,28 +133,34 @@ export const score_conversation = async ({
     SET
       metadata = json_set (
         metadata,
-        ${scorer === 'organization'
-          ? sql`
+        ${
+          scorer === 'organization'
+            ? sql`
               '$.evaluation.organization.score',
               ${score},
               '$.evaluation.organization.comment',
               ${comment}
             `
-          : sql``} ${scorer === 'customer'
-          ? sql`
+            : sql``
+        } ${
+          scorer === 'customer'
+            ? sql`
               '$.evaluation.customer.score',
               ${score},
               '$.evaluation.customer.comment',
               ${comment}
             `
-          : sql``} ${scorer === 'ai'
-          ? sql`
+            : sql``
+        } ${
+          scorer === 'ai'
+            ? sql`
               '$.evaluation.ai.score',
               ${score},
               '$.evaluation.ai.comment',
               ${comment}
             `
-          : sql``}
+            : sql``
+        }
       )
     WHERE
       conv_id = ${conv_id}

@@ -1,12 +1,14 @@
 import { expect, it } from 'bun:test'
+
 import { $ } from 'bun'
 import puppeteer, { type ElementHandle } from 'puppeteer'
 
 it('should upload knowledge files successfully', async () => {
   // Remove mock files from datastore
-  Bun.env.SERVICE = 'pierre-production'
-  await $`rm -rf ./datastores/${Bun.env.SERVICE}/files`
-  await $`mkdir -p ./datastores/${Bun.env.SERVICE}/files/`
+  // Remove mock files from datastore
+  Bun.env['SERVICE'] = 'pierre-production'
+  await $`rm -rf ./datastores/${Bun.env['SERVICE']}/files`
+  await $`mkdir -p ./datastores/${Bun.env['SERVICE']}/files/`
 
   //Go to `/a`
   const browser = await puppeteer.launch()

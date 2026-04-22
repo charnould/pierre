@@ -1,6 +1,8 @@
 import { readdir } from 'node:fs/promises'
+
 import type { Context } from 'hono'
 import { deleteCookie, setSignedCookie } from 'hono/cookie'
+
 import { User } from '../utils/_schema'
 import { encrypt } from '../utils/authenticate-user'
 import { get_user, save_user } from '../utils/handle-user'
@@ -102,9 +104,9 @@ export const controller = async (c: Context) => {
           config: user.config,
           role: user.role
         }),
-        Bun.env.AUTH_SECRET as string
+        Bun.env['AUTH_SECRET'] as string
       ),
-      Bun.env.AUTH_SECRET as string,
+      Bun.env['AUTH_SECRET'] as string,
       { maxAge: 3600 * 24 * 365 } // 1-year expiration
     )
 

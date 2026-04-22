@@ -1,4 +1,5 @@
 import type { Context } from 'hono'
+
 import { run_pipeline } from '../utils/knowledge/run-pipeline'
 
 /**
@@ -53,9 +54,7 @@ export const controller = async (c: Context) => {
 
     // CASE 2: User wants to download a file
     if (action === 'download') {
-      const file = Bun.file(
-        `datastores/${Bun.env.SERVICE}/files/${filename as string}`
-      )
+      const file = Bun.file(`datastores/${Bun.env['SERVICE']}/files/${filename as string}`)
       const stream = file.stream()
 
       c.header('Content-Disposition', `attachment; filename="${filename}"`)
@@ -65,9 +64,7 @@ export const controller = async (c: Context) => {
 
     // CASE 3: User wants to delete a file
     if (action === 'destroy') {
-      await Bun.file(
-        `datastores/${Bun.env.SERVICE}/files/${filename as string}`
-      ).delete()
+      await Bun.file(`datastores/${Bun.env['SERVICE']}/files/${filename as string}`).delete()
     }
 
     // CASE 4: Force knwoledge rebuild

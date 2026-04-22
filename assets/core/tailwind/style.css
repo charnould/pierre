@@ -1,9 +1,9 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @source '../../../node_modules/streamdown/dist/*.js';
 
 @theme {
-  --font-sans: "Inter", "sans-serif";
+  --font-sans: 'Inter', 'sans-serif';
   --text-base: 15px;
 
   /* Streamdown design tokens (sober gray palette) */
@@ -52,7 +52,7 @@ html::-webkit-scrollbar,
 
 /* Disclaimer */
 
-[data-role="disclaimer"] {
+[data-role='disclaimer'] {
   @apply mt-3 max-w-sm text-[12px] leading-snug text-gray-400;
 }
 
@@ -105,8 +105,8 @@ html::-webkit-scrollbar,
 
 /* ── Streamdown list alignment ── */
 
-[data-streamdown="ordered-list"],
-[data-streamdown="unordered-list"] {
+[data-streamdown='ordered-list'],
+[data-streamdown='unordered-list'] {
   list-style-position: outside !important;
   padding-left: 1.25em;
 }

@@ -1,10 +1,11 @@
 import type { ModelMessage } from 'ai'
 import { SQL } from 'bun'
+
 import type { Reply } from './_schema'
 import { generate_text } from './generate-output'
 import { get_conversation, save_topic, score_conversation } from './handle-conversation'
 
-const sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
+const sql = new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
 
 /**
  * Scores conversations using an AI model.

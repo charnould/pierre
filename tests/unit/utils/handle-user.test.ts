@@ -1,9 +1,10 @@
 import { beforeAll, expect, it } from 'bun:test'
+
 import { User } from '../../../utils/_schema'
 import { delete_all_users, get_user, get_users, save_user } from '../../../utils/handle-user'
 
 beforeAll(async () => {
-  Bun.env.SERVICE = 'pierre-production'
+  Bun.env['SERVICE'] = 'pierre-production'
   await delete_all_users()
 })
 

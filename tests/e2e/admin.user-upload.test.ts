@@ -1,9 +1,11 @@
 import { expect, it } from 'bun:test'
+
 import puppeteer, { type ElementHandle } from 'puppeteer'
+
 import { delete_all_users } from '../../utils/handle-user'
 
 it('should upload user file successfully', async () => {
-  Bun.env.SERVICE = 'pierre-production'
+  Bun.env['SERVICE'] = 'pierre-production'
   await delete_all_users()
   const browser = await puppeteer.launch()
   const page = await browser.newPage()

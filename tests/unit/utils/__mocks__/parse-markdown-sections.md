@@ -11,4 +11,3 @@ Be concise and clear.
 _Always cite sources._
 
 # empty_section
-

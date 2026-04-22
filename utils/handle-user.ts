@@ -1,7 +1,8 @@
 import { SQL } from 'bun'
+
 import type { Parsed_User, User } from './_schema'
 
-const sql = new SQL(`sqlite:datastores/${Bun.env.SERVICE}/datastore.sqlite`)
+const sql = new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
 
 /**
  * Saves a user to the database by inserting or replacing the user record.

@@ -1,4 +1,5 @@
 import { html } from 'hono/html'
+
 import type { Parsed_User } from '../utils/_schema'
 
 export const view = (users: Parsed_User[]) => {
@@ -89,16 +90,14 @@ export const view = (users: Parsed_User[]) => {
         <ul class="mb-20">
           ${users.map(
             (user) => html`<li class="flex items-center text-base">
-                <span>${user.email}</span>
-                <span class="ml-2 rounded-lg bg-blue-200 px-2 text-xs font-light"
-                  >${user.role}</span
-                >
-                ${user.config.map(
-                  (c) => html`<span class="ml-1 rounded-lg bg-gray-200 px-2 text-xs font-light"
-                      >${c}</span
-                    >`
-                )}
-              </li> `
+              <span>${user.email}</span>
+              <span class="ml-2 rounded-lg bg-blue-200 px-2 text-xs font-light">${user.role}</span>
+              ${user.config.map(
+                (c) => html`<span class="ml-1 rounded-lg bg-gray-200 px-2 text-xs font-light"
+                  >${c}</span
+                >`
+              )}
+            </li> `
           )}
         </ul>
       </body>

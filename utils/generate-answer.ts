@@ -1,6 +1,6 @@
 import type { AIContext } from './_schema'
-import { save_reply } from './handle-conversation'
 import { streamCopilot } from './copilot-agent'
+import { save_reply } from './handle-conversation'
 
 /**
  * Generate an AI answer using GitHub Copilot SDK with real-time streaming.

@@ -1,5 +1,5 @@
 /* DÉBUT : ** NE PAS MODIFIER */
-import type { Config } from "../../utils/_schema";
+import type { Config } from '../../utils/_schema'
 /* FIN : ** NE PAS MODIFIER */
 
 //
@@ -9,11 +9,11 @@ import type { Config } from "../../utils/_schema";
 
 export default {
   // Doit être à identique au nom du dossier dans `assets/`
-  id: "default",
+  id: 'default',
 
   // Le nom de la configuration telle que vous souhaitez qu'elle soit affichée
   // dans l'interface-utilisateur de PIERRE.
-  display: "PIERRE (défaut)",
+  display: 'PIERRE (défaut)',
 
   // Si vous paramétrez PIERRE de manière à ce qu'il dispose de plusieurs
   // configurations, vous pouvez choisir de n'afficher que certaines d'entre
@@ -26,7 +26,7 @@ export default {
   //
   // Ici, lorsque vous accédez à l'interface de PIERRE, vous pourrez accéder aux
   // configurations `default`, `demo_client` et `demo_team`.
-  show: ["default", "demo_client", "demo_team"],
+  show: ['default', 'demo_client', 'demo_team'],
 
   // Vous pouvez communiquer des données externes à PIERRE via son URL avec le
   // paramétre de requête `data`. S'il y a plusieurs données, séparez-les par un
@@ -42,8 +42,8 @@ export default {
   // `string` customisable et compréhensible par un LLM.
   custom_data: {
     format: (data: string[]) => {
-      return `${data[0]} a une solde locataire de ${data[1]} euros`; // "Luc a un solde locataire de -7.12 euros"
-    },
+      return `${data[0]} a une solde locataire de ${data[1]} euros` // "Luc a un solde locataire de -7.12 euros"
+    }
   },
 
   // Pour intégrer les conversations de PIERRE dans votre SI, vous pouvez le
@@ -57,10 +57,10 @@ export default {
       // La clef API correspondante doit être renseignée dans vos variables
       // d'environnement. A ce jour, PIERRE autorise maximum 3 webhooks :
       // WEBHOOK_KEY_1, WEBHOOK_KEY_2 et WEBHOOK_KEY_3
-      key: "WEBHOOK_KEY_1",
+      key: 'WEBHOOK_KEY_1',
 
       // L'URL à laquelle PIERRE envoie le webhook (ici un exemple)
-      url: "ex : https://api.ikos.com",
+      url: 'ex : https://api.ikos.com',
 
       // Le format des données envoyées par le webhook. Il peut notamment
       // inclure des `custom_data` permettant d'identifier le locataire (cf.
@@ -72,9 +72,9 @@ export default {
         client_id: custom_data[0],
         date: Date.now(),
         content,
-        role,
-      }),
-    },
+        role
+      })
+    }
   ],
   //
   // Si `false` :
@@ -114,27 +114,27 @@ export default {
     // `proprietary` correspond aux connaissances propres à un organisme HLM,
     // qu'il ne souhaite pas partager avec `community` et qu'il gère en son
     // nom propre.
-    proprietary: false,
+    proprietary: false
   },
   // Le message qui s'affiche par défaut dans l'interface de PIERRE.
   greeting: [
-    "Bonjour 🖐️,",
-    "Je suis PIERRE, une intelligence artificielle open source, personnalisable et plurilingue au service du mouvement HLM, de ses candidats, locataires et collaborateurs.",
-    "Ma mission : répondre 24/7/365 à toutes les questions de « premier niveau » des candidats et locataires ou celles (plus complexes) des équipes.",
-    "PS. Je n'ai pas connaissance à ce jour des spécificités des bailleurs.",
+    'Bonjour 🖐️,',
+    'Je suis PIERRE, une intelligence artificielle open source, personnalisable et plurilingue au service du mouvement HLM, de ses candidats, locataires et collaborateurs.',
+    'Ma mission : répondre 24/7/365 à toutes les questions de « premier niveau » des candidats et locataires ou celles (plus complexes) des équipes.',
+    "PS. Je n'ai pas connaissance à ce jour des spécificités des bailleurs."
   ],
 
   // Les exemples qui s'affichent par défaut dans l'interface de PIERRE.
   examples: [
-    "Comment déposer mon préavis de congé pour mon logement ? Et avez-vous un modèle de courrier ?",
+    'Comment déposer mon préavis de congé pour mon logement ? Et avez-vous un modèle de courrier ?',
     "Y-a-t-il des associations d'entraide dans le cadre de violences conjugales dans le Vaucluse ?",
-    "Enquête SLS, kézako + suis-je concerné ?",
+    'Enquête SLS, kézako + suis-je concerné ?',
     "Qu'est-ce que l'avance Loca-Pass et comment savoir si j'y suis éligible ?",
-    "Je cherche un logement social dans le Cantal. Comment déposer un dossier et quel est le processus ?",
-    "كيفية الاتصال بالمكتب الرئيسي لبلدية Grand Dijon Habitat؟",
+    'Je cherche un logement social dans le Cantal. Comment déposer un dossier et quel est le processus ?',
+    'كيفية الاتصال بالمكتب الرئيسي لبلدية Grand Dijon Habitat؟'
   ],
 
   // Une mention qui s'affiche à la fin de chaque réponse de l'IA. Pour ne pas
   // afficher de mention, indiquer `null`.
-  disclaimer: "Une IA peut se tromper. Vérifiez les informations importantes.",
-} as Config;
+  disclaimer: 'Une IA peut se tromper. Vérifiez les informations importantes.'
+} as Config
