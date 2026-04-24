@@ -42,7 +42,13 @@ function Greeting({ greeting, assetId }: { greeting: string[]; assetId: string }
   )
 }
 
-function ConfigSelector({ configs }: { configs: BootData['displayableConfigs'] }) {
+function ConfigSelector({
+  configs,
+  isCompact
+}: {
+  configs: BootData['displayableConfigs']
+  isCompact: boolean
+}) {
   if (configs.length <= 1) return null
   return (
     <div>
@@ -51,7 +57,7 @@ function ConfigSelector({ configs }: { configs: BootData['displayableConfigs'] }
         <a
           key={c.id}
           data-config=""
-          href={`/?config=${c.id}`}
+          href={`/?config=${c.id}${isCompact ? '&compact' : ''}`}
           {...(c.is_active ? { 'data-active': '' } : {})}
           className="mr-2 mb-2 inline-block w-fit cursor-pointer rounded border border-gray-200 px-3 py-2.5 text-left text-sm/snug text-gray-600 hover:border-gray-300 hover:bg-gray-50 data-active:border-gray-400 data-active:bg-gray-100"
         >
@@ -310,8 +316,34 @@ function ChatInput({
 function ScrollAnchor({ messages, status }: { messages: unknown[]; status: ChatStatus }) {
   const anchorRef = useRef<HTMLDivElement>(null)
   const lastScrollRef = useRef(0)
+  const isInitialMount = useRef(true)
+  const userScrolledUp = useRef(false)
+
+  // Detect manual scroll-up
+  useEffect(() => {
+    const onScroll = () => {
+      const distanceFromBottom =
+        document.documentElement.scrollHeight - window.scrollY - window.innerHeight
+      userScrolledUp.current = distanceFromBottom > 100
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // Reset "scrolled up" flag when the user submits a new message
+  useEffect(() => {
+    if (status === 'submitted') userScrolledUp.current = false
+  }, [status])
 
   useEffect(() => {
+    if (messages.length === 0) return
+    // Skip scroll on initial load (e.g. resuming a conversation)
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
+    // Don't scroll if the user has scrolled up to read
+    if (userScrolledUp.current) return
     const now = Date.now()
     // Throttle scroll to every 200ms during streaming
     if (status === 'streaming' && now - lastScrollRef.current < 200) return
@@ -328,6 +360,7 @@ function ScrollAnchor({ messages, status }: { messages: unknown[]; status: ChatS
 
 export function ChatApp() {
   const boot = useRef(getBootData()).current
+  const isCompact = new URLSearchParams(window.location.search).has('compact')
   const { messages, status, sendMessage, stop, regenerate } = usePierreChat({
     convId: boot.convId,
     configParam: boot.configId,
@@ -345,8 +378,8 @@ export function ChatApp() {
       <header className="fixed top-0 left-0 w-full shadow-[0_0_15px_15px_rgba(255,255,255,1)]" />
 
       <main className="flex flex-col px-6 pb-40">
-        <Greeting greeting={boot.greeting} assetId={boot.assetId} />
-        {!hasMessages && <ConfigSelector configs={boot.displayableConfigs} />}
+        {!isCompact && <Greeting greeting={boot.greeting} assetId={boot.assetId} />}
+        {!hasMessages && <ConfigSelector configs={boot.displayableConfigs} isCompact={isCompact} />}
         {!hasMessages && <ExampleButtons examples={boot.examples} onSelect={sendMessage} />}
 
         {messages.map((msg, i) => {

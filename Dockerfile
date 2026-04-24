@@ -6,6 +6,7 @@ ENV PATH="/root/.local/bin:$PATH"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates curl wget iproute2 nftables procps sudo sqlite3 openssh-client \
+    imagemagick ghostscript \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -sSL https://smolmachines.com/install.sh | bash \

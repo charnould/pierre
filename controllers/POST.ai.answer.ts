@@ -5,7 +5,6 @@ import type { Context } from 'hono'
 
 import { convertToImage } from '../utils/convert-to-image'
 import { streamCopilot } from '../utils/copilot-agent'
-import { send_telemetry } from '../utils/send-telemetry'
 
 /**
  * POST /ai/answer
@@ -74,7 +73,6 @@ export const controller = async (c: Context) => {
       }
     }
 
-    send_telemetry('ai.answer')
     return c.json({ content: fullContent })
   } catch (e) {
     console.error('[POST.AI.ANSWER] Error:', e)

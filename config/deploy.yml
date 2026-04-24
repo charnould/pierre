@@ -17,7 +17,7 @@ ssh:
   port: <%= ENV['SSH_PORT'] %>
 
 volumes:
-  - "datastores:/app/datastores/"
+  - 'datastores:/app/datastores/'
 
 proxy:
   ssl: true

@@ -23,9 +23,15 @@ import type {
   PermissionRequestResult
 } from '@github/copilot-sdk'
 
+import { today_is } from './today-is'
+
 const denyWrite = (request: PermissionRequest): PermissionRequestResult => {
-  if (request.kind === 'write') return { kind: 'denied-interactively-by-user' }
-  return { kind: 'approved' }
+  if (
+    request.kind === 'write' &&
+    !(request as unknown as { fileName: string }).fileName.startsWith('/tmp/')
+  )
+    return { kind: 'reject' }
+  return { kind: 'approve-once' }
 }
 
 import { parse_markdown_sections } from './parse-markdown-sections'
@@ -88,9 +94,40 @@ const openSession = async (
   console.log(`[COPILOT] Knowledge path: ${workingDirectory} (mounted from ${hostKPath})`)
 
   const instructionsPath = join(PROJECT_ROOT, 'assets', configId, 'INSTRUCTIONS.md')
-  const sections = existsSync(instructionsPath)
-    ? await parse_markdown_sections(instructionsPath)
-    : {}
+  const dateContext = `Current date and time (Europe/Paris): ${today_is()}.`
+
+  // Skills (configId starts with 'skill_') inject INSTRUCTIONS.md as raw content.
+  // Other configs parse the file into named sections (identity, tone, guidelines…).
+  // https://github.com/github/copilot-sdk/tree/main/nodejs#system-message-customization
+  const isSkill = configId.startsWith('skill_')
+  let systemMessage: object
+
+  if (isSkill) {
+    const rawInstructions = existsSync(instructionsPath)
+      ? await Bun.file(instructionsPath).text()
+      : ''
+    systemMessage = {
+      content: rawInstructions ? `${rawInstructions}\n\n${dateContext}` : dateContext
+    }
+  } else {
+    const sections = existsSync(instructionsPath)
+      ? await parse_markdown_sections(instructionsPath)
+      : {}
+    sections['custom_instructions'] =
+      (sections['custom_instructions'] ? sections['custom_instructions'] + '\n\n' : '') +
+      dateContext
+    systemMessage = {
+      mode: 'customize' as const,
+      sections: {
+        identity: { action: 'replace', content: sections['identity'] ?? '' },
+        tone: { action: 'replace', content: sections['tone'] ?? '' },
+        guidelines: { action: 'append', content: sections['guidelines'] ?? '' },
+        code_change_rules: { action: 'remove' as const },
+        safety: { action: 'append', content: sections['safety'] ?? '' },
+        custom_instructions: { action: 'replace', content: sections['custom_instructions'] ?? '' }
+      }
+    }
+  }
 
   const config = {
     workingDirectory,
@@ -109,35 +146,7 @@ const openSession = async (
         : undefined,
     streaming: true,
     reasoningEffort: 'medium' as const,
-    // Keep the native CLI system prompt (tool_efficiency, tool_instructions, etc.)
-    // and only remove the coding-specific section irrelevant to PIERRE.
-    // https://github.com/github/copilot-sdk/tree/main/nodejs#customize-mode
-    systemMessage: {
-      mode: 'customize' as const,
-      sections: {
-        identity: {
-          action: 'replace',
-          content: sections['identity'] ?? ''
-        },
-        tone: {
-          action: 'replace',
-          content: sections['tone'] ?? ''
-        },
-        guidelines: {
-          action: 'append',
-          content: sections['guidelines'] ?? ''
-        },
-        code_change_rules: { action: 'remove' as const },
-        safety: {
-          action: 'append',
-          content: sections['safety'] ?? ''
-        },
-        custom_instructions: {
-          action: 'replace',
-          content: sections['custom_instructions'] ?? ''
-        }
-      }
-    },
+    systemMessage,
     hooks: {
       onSessionStart: async (
         input: { source: string; initialPrompt?: string },
@@ -205,7 +214,8 @@ export async function* streamCopilot(
   configId: string,
   prompt: string,
   model = Bun.env['AI_MODEL'],
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  attachments?: Array<{ type: 'file'; path: string }>
 ): AsyncGenerator<CopilotChunk> {
   const t0 = Date.now()
   console.log(`\n${'='.repeat(60)}`)
@@ -318,7 +328,13 @@ export async function* streamCopilot(
 
         case 'tool.execution_complete': {
           const name = toolNames.get(event.data.toolCallId) ?? event.data.toolCallId
-          console.log(`[COPILOT]   ↳ Tool done: ${name} (success=${event.data.success})`)
+          if (event.data.success) {
+            console.log(`[COPILOT]   ↳ Tool done: ${name} (success=true)`)
+          } else {
+            console.error(
+              `[COPILOT]   ↳ Tool done: ${name} (success=false) — ${event.data.error?.code ?? ''}: ${event.data.error?.message ?? 'unknown error'}`
+            )
+          }
           break
         }
 
@@ -372,7 +388,7 @@ export async function* streamCopilot(
     // Step 3 — Send prompt (non-blocking; events arrive via listener)
     console.log(`[COPILOT] Step 3/3 — Sending prompt...`)
     const t3 = Date.now()
-    await session.send({ prompt })
+    await session.send({ prompt, attachments })
     console.log(`[COPILOT] Step 3/3 — Prompt sent (${Date.now() - t3}ms), streaming events...`)
 
     // Consume queue — yield chunks to the caller

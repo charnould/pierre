@@ -85,16 +85,18 @@ export const authenticate = async (c: Context, next: Next) => {
   if (c.req.path.startsWith('/c')) {
     c.set('user', user)
 
+    const compact_param = c.req.query('compact') !== undefined ? '&compact' : ''
+
     // Case 0: Invalid config query
     // If the config query is invalid, redirect
     if (c.req.query('data') === undefined || c.req.query('data') === 'undefined') {
-      return c.redirect(`/c?config=${config.id}&data=${data_query}`)
+      return c.redirect(`/c?config=${config.id}&data=${data_query}${compact_param}`)
     }
 
     // Case 1: Invalid config query
     // If the config query is invalid, redirect
     if (has_valid_config_query === false) {
-      return c.redirect(`/c?config=${config.id}&data=${data_query}`)
+      return c.redirect(`/c?config=${config.id}&data=${data_query}${compact_param}`)
     }
 
     // Case 2: Context not protected

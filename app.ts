@@ -1,4 +1,5 @@
 // oxfmt-ignore
+// Must stay at the top of the file to setup the environment
 import { setup } from './utils/setup'
 
 import { Hono } from 'hono'
@@ -7,12 +8,14 @@ import { secureHeaders } from 'hono/secure-headers'
 
 import { controller as get_admin } from './controllers/GET.admin'
 import { controller as get_ai } from './controllers/GET.ai'
+import { controller as get_ai_skills } from './controllers/GET.ai.skills'
 import { controller as get_conversations } from './controllers/GET.conversations'
 import { controller as get_index } from './controllers/GET.index'
 import { controller as get_knowledge } from './controllers/GET.knowledge'
 import { controller as get_login } from './controllers/GET.login'
 import { controller as get_statistics } from './controllers/GET.statistics'
 import { controller as get_users } from './controllers/GET.users'
+import { controller as post_ai_answer } from './controllers/POST.ai.answer'
 import { controller as post_conversation } from './controllers/POST.conversations'
 import { controller as post_knowledge } from './controllers/POST.knowledge'
 import { controller as post_login } from './controllers/POST.login'
@@ -62,6 +65,8 @@ app.use('/assets/*', serveStatic({ root: './' }))
 // AI generation routes
 app.get('/c', authenticate, get_index)
 app.get('/ai', authenticate, get_ai)
+app.get('/ai/skills', authenticate, get_ai_skills)
+app.post('/ai/answer', authenticate, post_ai_answer)
 
 // Admin routes
 app.get('/a/login', get_login)
@@ -82,7 +87,9 @@ app.post('/telemetry', post_telemetry)
 
 // Catch-all route that redirects to a new conversation
 app.notFound(async (c) =>
-  c.redirect(`/c?config=${c.req.query('config')}&data=${c.req.query('data')}`)
+  c.redirect(
+    `/c?config=${c.req.query('config')}&data=${c.req.query('data')}${c.req.query('compact') !== undefined ? '&compact' : ''}`
+  )
 )
 
 // Handle errors by returning a 404 response

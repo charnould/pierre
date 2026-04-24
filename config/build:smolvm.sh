@@ -13,6 +13,7 @@ set -euo pipefail
 BUILD_VM="pierre-build"
 SMOLVM_DIR="./config/smolvm"
 
+
 # Map uname -m to a canonical arch name
 RAW_ARCH=$(uname -m)
 case "$RAW_ARCH" in
@@ -39,6 +40,7 @@ echo "Installation de python3, curl et de l'agent IA..."
 smolvm machine exec --name "$BUILD_VM" -- bash -c "
 set -e
 export DEBIAN_FRONTEND=noninteractive
+
 
 apt-get update -qq \
     && apt-get install -y -qq --no-install-recommends \

@@ -1,4 +1,5 @@
 node_modules/
+desktop/node_modules/
 datastores/
 temp/
 .DS_Store
