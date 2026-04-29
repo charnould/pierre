@@ -334,6 +334,6 @@ curl -X POST https://URL/a/knowledge \
 
 # Licence
 
-Le code-source du présent dépôt est sous licence [GNU Affero General Public License Version 3](https://github.com/charnould/pierre/blob/master/LICENSE.md). La base de connaissances (dossier `/knowledge`) est sous licence [Creative Commons BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+Le code-source du présent dépôt est sous licence [GNU Affero General Public License Version 3](https://github.com/charnould/pierre/blob/master/LICENSE.md), complétée par une clause additionnelle de restriction commerciale en fin de fichier LICENSE.md. La base de connaissances (dossier `/knowledge`) est sous licence [Creative Commons BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 
 Copyright (c) 2024-aujourd'hui, Charles-Henri Arnould/BECKREL (charnould@pierre-ia.org) et les contributeurs.

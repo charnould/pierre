@@ -660,3 +660,39 @@ You should also get your employer (if you work as a programmer) or school,
 if any, to sign a "copyright disclaimer" for the program, if necessary.
 For more information on this, and how to apply and follow the GNU AGPL, see
 <https://www.gnu.org/licenses/>.
+
+---
+
+ADDITIONAL COMMERCIAL RESTRICTION
+
+The Software is provided under the GNU Affero General Public License (AGPL), subject to the following additional condition.
+
+1. No Sale of the Software
+
+The License does not grant the right to Sell the Software.
+
+For purposes of this clause, “Sell” means providing to third parties, for a fee or other consideration (including, without limitation, fees for hosting or access), a product or service whose primary value derives from the functionality of the Software.
+
+This includes, without limitation:
+
+- offering the Software as a hosted or managed service (SaaS);
+- providing access to the Software or its functionality over a network;
+- sublicensing or reselling the Software.
+
+2. Permitted Services
+
+For the avoidance of doubt, the following are permitted:
+
+- charging fees for installation, configuration, integration, or deployment;
+- providing consulting, support, or training services related to the Software;
+- developing custom modifications or extensions for a specific client, provided that no fee is charged for access to the Software itself.
+
+Such services must not include charging for access to, or use of, the Software as such.
+
+3. Attribution
+
+Any license notice or attribution required by the AGPL must also include this Additional Commercial Restriction.
+
+Software: PIERRE
+License: GNU Affero General Public License
+Licensor: Charles-Henri Arnould
