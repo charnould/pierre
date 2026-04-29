@@ -39,9 +39,9 @@ Plus concrètement, PIERRE c'est à la fois :
     - [Redéployer PIERRE sur un serveur de production](#red%C3%A9ployer-pierre-sur-un-serveur-de-production)
     - [Déployer et redéployer PIERRE sur un serveur de tests](#d%C3%A9ployer-et-red%C3%A9ployer-pierre-sur-un-serveur-de-tests)
 - [Modifier et paramétrer PIERRE (self-hosting)](#modifier-et-param%C3%A9trer-pierre-self-hosting)
-  - [Modifier l'interface du agent IA](#modifier-linterface-du-agent IA)
-  - [Modifier la personnalité du agent IA](#modifier-la-personnalit%C3%A9-du-agent IA)
-    - [Demander au agent IA de citer ses sources](#demander-au-agent IA-de-citer-ses-sources)
+  - [Modifier l'interface du agent IA](#modifier-linterface-du-agent-ia)
+  - [Modifier la personnalité du agent IA](#modifier-la-personnalit%C3%A9-du-agent-ia)
+    - [Demander au agent IA de citer ses sources](#demander-au-agent-ia-de-citer-ses-sources)
   - [Modifier le modèle de langage utilisé](#modifier-le-mod%C3%A8le-de-langage-utilis%C3%A9)
     - [Comment modifier le modèle de langage ?](#comment-modifier-le-mod%C3%A8le-de-langage)
     - [Quels modèles est-il possible d'utiliser ?](#quels-mod%C3%A8les-est-il-possible-dutiliser)
@@ -150,10 +150,11 @@ Les instructions ci-après sont pour `Windows`+`WSL` (sous-système Windows pour
 1. Installer `WSL` et vérifier sa bonne installation ([instructions](https://learn.microsoft.com/fr-fr/windows/wsl/install)).
 2. Installer `Bun` (≥ `1.3.13`) et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
 3. Installer `SQlite3` et vérifier sa bonne installation ([instructions](https://www.sqlite.org/download.html)).
-4. Forker/cloner le présent dépôt.
-5. Lancer `bun install` dans votre terminal pour installer les dépendances.
-6. Renommer le fichier `.env.example` en `.env.production` et compléter le.
-7. Et voilà : PIERRE est accessible à http://localhost:3000 et répond à vos questions !
+4. Installer `smol machines` (isolated microVM) et vérifier sa bonne installation ([instructions](https://smolmachines.com/)).
+5. Forker/cloner le présent dépôt.
+6. Lancer `bun install` dans votre terminal pour installer les dépendances.
+7. Renommer le fichier `.env.example` en `.env.production` et compléter le.
+8. Et voilà : PIERRE est accessible à http://localhost:3000 et répond à vos questions !
 
 ### Déployer pour la première fois PIERRE sur un serveur de production
 
