@@ -77,7 +77,7 @@ function ExampleButtons({
           key={i}
           type="button"
           onClick={() => onSelect(eg)}
-          className="mb-2 block w-fit cursor-pointer rounded border border-gray-200 px-3 py-2.5 text-left text-sm/snug text-gray-600 hover:border-gray-300 hover:bg-gray-50 disabled:cursor-progress disabled:text-gray-400 disabled:hover:bg-white"
+          className="mb-2 block w-fit cursor-pointer rounded border border-gray-200 px-3 py-2.5 text-left text-sm/snug text-balance text-gray-600 hover:border-gray-300 hover:bg-gray-50 disabled:cursor-progress disabled:text-gray-400 disabled:hover:bg-white"
         >
           {eg}
         </button>
