@@ -40,7 +40,7 @@ const c2_r1 = await AIContext.parseAsync({
   custom_data: { raw: ['julie', '456.56'] }
 })
 
-beforeAll(async () => await sql`DELETE FROM telemetry`)
+beforeAll(async () => await sql`DELETE FROM conversations`)
 afterAll(() => setSystemTime())
 
 //

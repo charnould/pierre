@@ -1,6 +1,7 @@
 import type { AIContext } from './_schema'
 import { streamCopilot } from './copilot-agent'
 import { save_reply } from './handle-conversation'
+import { send_telemetry } from './send-telemetry'
 
 /**
  * Generate an AI answer using GitHub Copilot SDK with real-time streaming.
@@ -55,6 +56,7 @@ export const answer_user = (context: AIContext, signal?: AbortSignal) => {
         total: inputTokens != null && outputTokens != null ? inputTokens + outputTokens : null
       }
       await save_reply(context)
+      send_telemetry('ai.chat')
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
         console.log('[ANSWER] Request aborted by client')

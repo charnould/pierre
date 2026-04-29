@@ -24,7 +24,7 @@ export const get_conversation = async (conv_id: string): Promise<Reply[]> => {
     SELECT
       *
     FROM
-      telemetry
+      conversations
     WHERE
       conv_id = ${conv_id}
     ORDER BY
@@ -47,7 +47,7 @@ export const get_conversation = async (conv_id: string): Promise<Reply[]> => {
  */
 export const delete_conversation = async (conv_id: string) =>
   await sql`
-    DELETE FROM telemetry
+    DELETE FROM conversations
     WHERE
       conv_id = ${conv_id}
   `
@@ -70,7 +70,7 @@ export const save_reply = async (context: AIContext): Promise<void> => {
   if (typeof context.config !== 'string') {
     await sql`
       INSERT
-      OR IGNORE INTO telemetry ${sql({
+      OR IGNORE INTO conversations ${sql({
         timestamp: format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX"),
         metadata: JSON.stringify(context.metadata),
         config: context.config.id,
@@ -129,7 +129,7 @@ export const score_conversation = async ({
   comment: string
 }): Promise<void> =>
   await sql`
-    UPDATE telemetry
+    UPDATE conversations
     SET
       metadata = json_set (
         metadata,
@@ -178,7 +178,7 @@ export const score_conversation = async ({
  */
 export const save_topic = async ({ conv_id, topic }: { conv_id: string; topic: string }) =>
   await sql`
-    UPDATE telemetry
+    UPDATE conversations
     SET
       metadata = json_set (
         metadata,
@@ -202,7 +202,7 @@ export const get_conversations = async (): Promise<Reply[]> => {
     SELECT
       *
     FROM
-      telemetry
+      conversations
     ORDER BY
       timestamp DESC
   `

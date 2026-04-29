@@ -30,6 +30,7 @@ Plus concrètement, PIERRE c'est à la fois :
   - [Modèles de langage (ou LLM)](#mod%C3%A8les-de-langage-ou-llm)
   - [Technologies + Services](#technologies--services)
   - [Les coûts associés à l'usage de PIERRE](#les-co%C3%BBts-associ%C3%A9s-%C3%A0-lusage-de-pierre)
+  - [Télémétrie](#t%C3%A9l%C3%A9m%C3%A9trie)
 - [Comment déployer PIERRE ?](#comment-d%C3%A9ployer-pierre)
   - [Faire héberger PIERRE (le plus simple)](#faire-h%C3%A9berger-pierre-le-plus-simple)
   - [Héberger PIERRE (self-hosting)](#h%C3%A9berger-pierre-self-hosting)
@@ -124,6 +125,10 @@ Déployer PIERRE sur un serveur génére des coûts :
 
 - La location d'un serveur (VPS) : €45 par mois
 - L'usage d'un LLM pour l'agent IA : environ $2,50 (_in_) et $15 (_out_) / MTokens
+
+## Télémétrie
+
+Afin de mesurer l'usage de PIERRE et comprendre quelles fonctionnalités sont utilisées, **chaque instance de PIERRE envoie automatiquement et silencieusement un ping anonyme à `pierre-ia.org`** à chaque interaction avec l'agent IA (`ai.chat` pour le chatbot, `ai.answer` pour la génération de réponse). Ce ping contient uniquement l'URL de l'instance (`HOST`) et le type d'événement — aucune donnée personnelle, aucun contenu de conversation.
 
 # Comment déployer PIERRE ?
 

@@ -10,7 +10,7 @@ const sql = new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
 
 beforeAll(async () => {
   // Simulated responses for test cases
-  await sql`DELETE FROM telemetry`
+  await sql`DELETE FROM conversations`
   setSystemTime(new Date('2012-12-12T12:05:00'))
   await save_reply(
     await AIContext.parseAsync({

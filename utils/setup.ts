@@ -14,7 +14,7 @@ export const setup = async () => {
   await $`mkdir -p datastores/${Bun.env['SERVICE']}/knowledge`
 
   new Database(`datastores/${Bun.env['SERVICE']}/datastore.sqlite`).run(`
-    CREATE TABLE IF NOT EXISTS telemetry
+    CREATE TABLE IF NOT EXISTS conversations
       (
         conv_id     TEXT,
         config      TEXT,
@@ -33,11 +33,12 @@ export const setup = async () => {
         password_hash   TEXT NOT NULL
       );
 
-    CREATE TABLE IF NOT EXISTS skills
+    CREATE TABLE IF NOT EXISTS telemetry
       (
-        id          TEXT PRIMARY KEY UNIQUE NOT NULL,
-        name        TEXT,
-        skill       TEXT
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp   TEXT,
+        host        TEXT,
+        event       TEXT
       );
     `)
 }

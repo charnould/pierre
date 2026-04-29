@@ -108,7 +108,7 @@ export const get_data = async (options: StatisticOptions): Promise<string> => {
     SELECT
       *
     FROM
-      telemetry
+      conversations
     WHERE
       timestamp > ${limit_date}
     ORDER BY
@@ -184,7 +184,7 @@ export const generate_csv = async (): Promise<string> => {
       json_extract (metadata, '$.evaluation.ai.score') AS ai_score,
       json_extract (metadata, '$.topics') AS topic
     FROM
-      telemetry;
+      conversations;
   `
 
   // prettier-ignore

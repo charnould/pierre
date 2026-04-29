@@ -16,6 +16,7 @@ import { controller as get_users } from './controllers/GET.users'
 import { controller as post_conversation } from './controllers/POST.conversations'
 import { controller as post_knowledge } from './controllers/POST.knowledge'
 import { controller as post_login } from './controllers/POST.login'
+import { controller as post_telemetry } from './controllers/POST.telemetry'
 import { controller as post_users } from './controllers/POST.users'
 // import { topicize, score } from "./utils/analyze-conversation";
 import { authenticate } from './utils/authenticate-user'
@@ -75,8 +76,9 @@ app.post('/a/users', authenticate, post_users)
 app.post('/a/knowledge', authenticate, post_knowledge)
 app.post('/a/conversations', authenticate, post_conversation)
 
-// Health check route for Kamal proxy
+// Health check route for Kamal proxy + Telemetry endpoint
 app.get('/up', (c) => c.text('ok'))
+app.post('/telemetry', post_telemetry)
 
 // Catch-all route that redirects to a new conversation
 app.notFound(async (c) =>
