@@ -13,7 +13,6 @@ set -euo pipefail
 BUILD_VM="pierre-build"
 SMOLVM_DIR="./config/smolvm"
 
-
 # Map uname -m to a canonical arch name
 RAW_ARCH=$(uname -m)
 case "$RAW_ARCH" in
