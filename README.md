@@ -115,7 +115,7 @@ Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Bring Your Own 
 
 - Language: `Typescript`/`Javascript`
 - Framework: [`Hono`](https://github.com/honojs/hono) (with [`Bun`](https://github.com/oven-sh/bun) runtime)
-- Agent IA : [`GitHub Copilot CLI` + `SDK`](https://github.com/features/copilot/cli) (licence MIT)
+- Agent IA : [`GH Copilot CLI](https://github.com/features/copilot/cli) + [`GH Copilot SDK` + `SDK`](https://github.com/github/copilot-sdk) (licence MIT)
 - Deployment: [`Kamal`](https://kamal-deploy.org) (with [`Docker`](https://www.docker.com))
 - LLM: « Bring Your Own LLM Key/Model » (BYOK)
 
@@ -123,7 +123,8 @@ Lorsque l'on auto-héberge PIERRE — et sur le principe du **« Bring Your Own 
 
 Déployer PIERRE sur un serveur génére des coûts :
 
-- La location d'un serveur (VPS) : €45 par mois
+- La location d'un serveur (VPS) : €45 par mois  
+  Nul besoin de GPU, mais le serveur doit **impérativement** proposer la _nested virtualisation_.
 - L'usage d'un LLM pour l'agent IA : environ $2,50 (_in_) et $15 (_out_) / MTokens
 
 ## Télémétrie
@@ -198,18 +199,18 @@ Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE, l
 
 <img src="docs/assets/images/personnalisation-de-PIERRE.webp" height="400">
 
-1. Dans le répertoire `./assets`, supprimer les répertoires `demo_client`, `demo_team` et `testing_purpose_1`, `testing_purpose_2` (ne pas supprimer `core`), puis modifier et/ou dupliquer le dossier `default`.
-   2.. Créer une icône `system.svg` et remplacer la précédente. Cette icône est celle qui apparait dans l'interface du agent IA (au dessus de « Bonjour 👋 »).
-2. [Générer les icônes](https://www.pwabuilder.com/imageGenerator) qui permettront d'ajouter votre agent IA sur l'écran d'accueil des smartphones de vos utilisateurs et remplacer celles dans le dossier `icons` (les icônes Windows ne sont pas nécessaires). Conservez la structure du répertoire et le nommage des fichiers (automatique).
-3. Modifier `config.ts` :  
+1. Dans le répertoire `./assets`, supprimer tous les répertoires à l'exception de `core` et `default` (vous pouvez modifier ou dupliquer `default`).
+2. Créer une icône `system.svg` et remplacer la précédente dans `default`. Cette icône est celle qui apparait dans l'interface du agent IA (au dessus de « Bonjour 👋 »).
+3. [Générer les icônes](https://www.pwabuilder.com/imageGenerator) qui permettront d'ajouter votre agent IA sur l'écran d'accueil des smartphones de vos utilisateurs et remplacer celles dans le dossier `icons` (les icônes Windows ne sont pas nécessaires). Conservez la structure du répertoire et le nommage des fichiers (automatique).
+4. Modifier `config.ts` :  
    – `id` avec le nom exact du répertoire
    –`greeting`qui est le message d'accueil de votre agent IA  
    –`examples`qui sont les exemples proposés après votre message d'accueil  
    –`disclaimer` qui est le message s'affichant après chaque réponse générée (ex : _Une IA peut se tromper, vérifier les informations._).
-4. Modifier dans `manifest.json` :  
+5. Modifier dans `manifest.json` :  
    – `short_name` par le nom souhaité de votre agent IA  
    – `start_url` par `https://180.81.82.83/?config=default` (ou par le nom du répertoire que vous avez créé)
-5. Et voilà, votre chabot personnalisé est disponible à http://localhost:3000/?config=PIERRE-habitat
+6. Et voilà, votre chabot personnalisé est disponible à http://localhost:3000/?config=PIERRE-habitat
 
 > [!TIP]
 > Pour vous assurer que `config.ts` est correctement paramétré, notamment lors des montées de version qui peuvent en modifier la structure, lancer `bun pierre:config`.
