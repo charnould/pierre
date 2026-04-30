@@ -4,6 +4,7 @@ import { setup } from './utils/setup'
 
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
+import { cors } from 'hono/cors'
 import { secureHeaders } from 'hono/secure-headers'
 
 import { controller as get_admin } from './controllers/GET.admin'
@@ -60,6 +61,9 @@ Bun.cron('0 4 * * *', async () => {
 // Serve static files from the assets directory
 // Except for the config.ts file, which should return a 404 or redirect
 app.get('/assets/:domain/config.ts', (c) => c.notFound())
+
+// Allow cross-origin loading of core widget assets
+app.use('/assets/core/*', cors())
 app.use('/assets/*', serveStatic({ root: './' }))
 
 // AI generation routes

@@ -243,10 +243,10 @@ PIERRE permet l'usage des principaux modèles de langage, qu'ils soient proprié
 ### Via une fenêtre modale
 
 ```html
-<script crossorigin="anonymous" src="http://180.81.82.83/assets/core/dist/js/widget.js"></script>
+<script crossorigin="anonymous" src="https://180.81.82.83/assets/core/dist/js/widget.js"></script>
 <p
-  id="PIERRE-ia"
-  data-url="http://180.81.82.83"
+  id="pierre-ia"
+  data-url="https://180.81.82.83"
   data-configuration="default"
   style="
         right: 20px;
