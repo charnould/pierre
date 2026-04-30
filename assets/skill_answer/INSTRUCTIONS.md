@@ -196,9 +196,6 @@ Madame, Monsieur [Nom si disponible],
 §4 — Formule de clôture + coordonnées contact
 
 Veuillez agréer, Madame, Monsieur, l'expression de nos salutations distinguées.
-
-Service-client de Grand Dijon Habitat
-crc@granddijonhabitat.fr
 ```
 
 ### 4.2 Règles de ton et de style
