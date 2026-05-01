@@ -4,11 +4,11 @@ import { readdir } from 'node:fs/promises'
 import { Config } from '../../utils/_schema'
 
 test('check if configs parse successfully', async () => {
-  const directories = (await readdir('assets')).filter((name) => name !== 'core')
+  const directories = await readdir('customization/chatbot')
 
   // Check official `config.ts` for each organization
   for await (const directory of directories) {
-    const config = (await import(`../../assets/${directory}/config`)).default
+    const config = (await import(`../../customization/chatbot/${directory}/config`)).default
     const check = Config.safeParse(config)
 
     if (check.error) {

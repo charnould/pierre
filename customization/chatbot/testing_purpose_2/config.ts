@@ -1,10 +1,10 @@
 /* DÉBUT : ** NE PAS MODIFIER */
-import type { Config } from '../../utils/_schema'
+import type { Config } from '../../../utils/_schema'
 /* FIN : ** NE PAS MODIFIER */
 
 export default {
-  id: 'testing_purpose_1',
-  display: 'Test 1',
+  id: 'testing_purpose_2',
+  display: 'Test 2',
   show: [
     'demo_client',
     'demo_team',
@@ -15,7 +15,7 @@ export default {
   ],
   custom_data: {},
   api: [],
-  protected: true,
+  protected: false,
   knowledge: {
     community: false,
     proprietary: false

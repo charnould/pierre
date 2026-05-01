@@ -57,7 +57,7 @@ export const controller = async (c: Context) => {
       if (password === Bun.env.AUTH_PASSWORD) {
         const default_user = User.parse({
           role: 'administrator',
-          config: JSON.stringify((await readdir('assets')).sort()),
+          config: JSON.stringify((await readdir('customization/chatbot')).sort()),
           email: 'admin@pierre-ia.org',
           password_hash: await Bun.password.hash(password)
         })

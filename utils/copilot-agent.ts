@@ -93,13 +93,20 @@ const openSession = async (
   const hostKPath = knowledgePathOnHost(configId)
   console.log(`[COPILOT] Knowledge path: ${workingDirectory} (mounted from ${hostKPath})`)
 
-  const instructionsPath = join(PROJECT_ROOT, 'assets', configId, 'INSTRUCTIONS.md')
+  const skillDir = join(PROJECT_ROOT, 'customization', 'skills', configId)
+  const isSkill = existsSync(skillDir)
+  const instructionsPath = join(
+    PROJECT_ROOT,
+    'customization',
+    isSkill ? 'skills' : 'chatbot',
+    configId,
+    'INSTRUCTIONS.md'
+  )
   const dateContext = `Current date and time (Europe/Paris): ${today_is()}.`
 
-  // Skills (configId starts with 'skill_') inject INSTRUCTIONS.md as raw content.
+  // Skills inject INSTRUCTIONS.md as raw content.
   // Other configs parse the file into named sections (identity, tone, guidelines…).
   // https://github.com/github/copilot-sdk/tree/main/nodejs#system-message-customization
-  const isSkill = configId.startsWith('skill_')
   let systemMessage: object
 
   if (isSkill) {

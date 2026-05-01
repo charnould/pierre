@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 
-@source '../../../node_modules/streamdown/dist/*.js';
+@source '../../node_modules/streamdown/dist/*.js';
 
 @theme {
   --font-sans: 'Inter', 'sans-serif';
@@ -21,6 +21,14 @@
   font-size: 15px;
 }
 
+.prose p {
+  @apply mb-3;
+}
+
+.user.prose p {
+  @apply mb-0;
+}
+
 /* Hide scrollbars */
 
 html,
@@ -37,7 +45,7 @@ html::-webkit-scrollbar,
 /* User message bubble */
 
 .user {
-  @apply mt-8 mb-6.5 block max-w-[92%] self-end rounded-xl bg-gray-100 px-4 py-3 text-base/snug text-gray-900 sm:max-w-[80%];
+  @apply mt-8 mb-6.5 block max-w-[92%] self-end rounded-xl bg-gray-100 px-4 py-3 text-base/snug text-balance text-gray-900 sm:max-w-[80%];
 }
 
 /* Error */

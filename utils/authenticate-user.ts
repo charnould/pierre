@@ -38,28 +38,28 @@ export const authenticate = async (c: Context, next: Next) => {
   }
 
   // Check if a valid `config` query is provided in the request. If provided,
-  // attempt to load the corresponding config from the `assets` folder. If the
+  // attempt to load the corresponding config from the `customization/chatbot` folder. If the
   // query is invalid or missing, fall back to the `default` config
   let has_valid_config_query = false
 
   const config: Config = await (async () => {
     if (c.req.query('config') === undefined) {
       has_valid_config_query = false
-      return (await import('../assets/default/config')).default
+      return (await import('../customization/chatbot/default/config')).default
     }
     try {
       if (user !== null) {
         has_valid_config_query = user.config.includes(c.req.query('config') as string)
         if (has_valid_config_query) {
-          return (await import(`../assets/${c.req.query('config')}/config`)).default
+          return (await import(`../customization/chatbot/${c.req.query('config')}/config`)).default
         }
-        return (await import(`../assets/${user.config[0]}/config`)).default
+        return (await import(`../customization/chatbot/${user.config[0]}/config`)).default
       }
       has_valid_config_query = true
-      return (await import(`../assets/${c.req.query('config')}/config`)).default
+      return (await import(`../customization/chatbot/${c.req.query('config')}/config`)).default
     } catch {
       has_valid_config_query = false
-      return (await import('../assets/default/config')).default
+      return (await import('../customization/chatbot/default/config')).default
     }
   })()
 

@@ -223,7 +223,7 @@ ipcMain.handle('generate-answer', async (_, { url, conv_id, message, context, sk
   formData.set('conv_id', conv_id)
   formData.set('message', message ?? '')
   formData.set('context', context ?? '')
-  formData.set('skill', skill ?? 'skill_answer')
+  formData.set('skill', skill ?? 'answer')
 
   if (Array.isArray(files)) {
     for (const f of files) {

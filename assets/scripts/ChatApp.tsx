@@ -30,7 +30,7 @@ function Greeting({ greeting, assetId }: { greeting: string[]; assetId: string }
     <>
       <img
         className="mt-6 mb-3"
-        src={`../assets/${assetId}/system.svg`}
+        src={`../customization/chatbot/${assetId}/system.svg`}
         height={33}
         width={33}
         alt="IA"
@@ -184,7 +184,11 @@ function AIMessage({
           <p className="pierre_error">
             Une erreur s'est produite chez le fournisseur de modèle de langage.{' '}
             <span
-              style={{ cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
+              style={{
+                cursor: 'pointer',
+                fontWeight: 600,
+                textDecoration: 'underline'
+              }}
               onClick={onRegenerate}
             >
               Cliquer pour regénérer une réponse

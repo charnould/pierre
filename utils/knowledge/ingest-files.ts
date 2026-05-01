@@ -23,7 +23,6 @@ interface FormattedContent {
 
 const TIMEZONE = 'Europe/Paris'
 const COMMUNITY_KNOWLEDGE_DIR = 'donnees_universelles'
-const CORE_ASSET_SUFFIX = 'core'
 
 async function renameFilesRecursively(dirPath: string): Promise<void> {
   const files = await readdir(dirPath, { withFileTypes: true })
@@ -41,12 +40,11 @@ async function renameFilesRecursively(dirPath: string): Promise<void> {
 const turndownService = new TurndownService({ headingStyle: 'atx' })
 
 async function loadConfigs(): Promise<Config[]> {
-  const assetDirs = await readdir('./assets')
-  const configDirs = assetDirs.filter((dir) => !dir.endsWith(CORE_ASSET_SUFFIX))
+  const chatbotDirs = await readdir('./customization/chatbot')
 
   const configs: Config[] = []
-  for (const dir of configDirs) {
-    const content = (await import(`../../assets/${dir}/config`)).default as Config
+  for (const dir of chatbotDirs) {
+    const content = (await import(`../../customization/chatbot/${dir}/config`)).default as Config
     configs.push(content)
   }
 

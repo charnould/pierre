@@ -1,7 +1,7 @@
 import type { Config } from '../../utils/_schema'
 
 export default {
-  id: 'skill_answer',
+  id: 'answer',
   display: 'Répondre à une question',
   show: [],
   custom_data: {},

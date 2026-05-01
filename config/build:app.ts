@@ -8,8 +8,8 @@ import toc from 'markdown-toc'
 const timestamp = Date.now()
 
 // Remove old files
-await $`rm -rf assets/core/dist/css`
-await $`rm -rf assets/core/dist/js`
+await $`rm -rf assets/dist/css`
+await $`rm -rf assets/dist/js`
 await $`rm -f docs/assets/widget.js`
 await $`find . -name ".DS_Store" -type f -delete`
 
@@ -36,12 +36,12 @@ for (const file of files) {
 }
 
 // Compile production CSS file
-await $`bunx @tailwindcss/cli@latest -i assets/core/tailwind/style.css -o assets/core/dist/css/style.${timestamp}.css --minify`
+await $`bunx @tailwindcss/cli@latest -i assets/tailwind/style.css -o assets/dist/css/style.${timestamp}.css --minify`
 
 // Transpile and minify .ts/.tsx scripts into .js to work in browser.
 // Rename one of these files (ai.js) to include a hash/timestamp (to avoid caching issue).
-await $`bun build --entrypoints assets/core/scripts/ai.tsx assets/core/scripts/widget.ts --outdir assets/core/dist/js --minify --target browser`
-await $`mv ./assets/core/dist/js/ai.js ./assets/core/dist/js/ai.${timestamp}.js`
+await $`bun build --entrypoints assets/scripts/ai.tsx assets/scripts/widget.ts --outdir assets/dist/js --minify --target browser`
+await $`mv ./assets/dist/js/ai.js ./assets/dist/js/ai.${timestamp}.js`
 
 // Update "timestamped filepath" in all Views
 const views = await readdir('views')
@@ -52,19 +52,16 @@ for (const view of views) {
   await Bun.write(
     `./views/${view}`,
     content
+      .replace(/..\/assets\/dist\/js\/ai\.\d+\.js/, `../assets/dist/js/ai.${timestamp}.js`)
       .replace(
-        /..\/assets\/core\/dist\/js\/ai\.\d+\.js/,
-        `../assets/core/dist/js/ai.${timestamp}.js`
-      )
-      .replace(
-        /..\/assets\/core\/dist\/css\/style\.\d+\.css/,
-        `../assets/core/dist/css/style.${timestamp}.css`
+        /..\/assets\/dist\/css\/style\.\d+\.css/,
+        `../assets/dist/css/style.${timestamp}.css`
       )
   )
 }
 
 // Copy transpiled/minified widget.js in `docs` folder, aka PIERRE website
-await $`cp assets/core/dist/js/widget.js docs/assets`
+await $`cp assets/dist/js/widget.js docs/assets`
 
 await $`bun lint`
 await $`bun format`

@@ -1,5 +1,5 @@
 /* DÉBUT : ** NE PAS MODIFIER */
-import type { Config } from '../../utils/_schema'
+import type { Config } from '../../../utils/_schema'
 /* FIN : ** NE PAS MODIFIER */
 
 export default {

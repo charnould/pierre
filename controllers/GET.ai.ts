@@ -16,7 +16,7 @@ export const controller = async (c: Context) => {
   try {
     // Parse context from request
     const context = await AIContext.parseAsync({
-      config: (await import(`../assets/${c.req.query('config')}/config`)).default,
+      config: (await import(`../customization/chatbot/${c.req.query('config')}/config`)).default,
       custom_data: { raw: c.req.query('data')?.split('|') },
       metadata: { user: c.get('user')?.email ?? null },
       content: c.req.query('message'),

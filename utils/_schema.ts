@@ -43,7 +43,7 @@ export const Skill = z.object({
 export const Parsed_User = User.extend({ config: z.array(z.string()) })
 
 //
-// `./assets/Config` schema
+// `./customization/chatbot` config schema
 export const Config = z
   .object({
     id: z.string(),
