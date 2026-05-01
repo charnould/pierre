@@ -1,5 +1,6 @@
 import * as fs from 'node:fs'
 import { readdir, rename } from 'node:fs/promises'
+import { basename } from 'node:path'
 import { Readable } from 'node:stream'
 
 import { $ } from 'bun'
@@ -154,26 +155,57 @@ async function saveFormattedFile(outputPath: string, content: FormattedContent):
   await Bun.write(outputPath, code)
 }
 
-export const ingest_files = async (files: Metadata[]): Promise<void> => {
+export const ingest_files = async (
+  files: Metadata[]
+): Promise<{ anomalies: { code: string; subject: string | null }[] }> => {
+  const anomalies: { code: string; subject: string | null }[] = []
+
   const configs = await loadConfigs()
   await setupKnowledgeDirectories(configs)
 
-  // Build set of valid config IDs for validation
   const validConfigIds = new Set(configs.map((c) => c.id))
+  const metadataFilenames = new Set(files.map((f) => basename(f.filepath)))
+  const metadataProfiles = new Set(files.map((f) => f.access).filter(Boolean) as string[])
 
+  // Pass 1 — File anomalies (profile-agnostic, deduplicated by filepath)
+  const checkedFilepaths = new Set<string>()
   for (const metadata of files) {
-    // Validate that the access config was loaded and verified
-    if (!validConfigIds.has(metadata.access)) {
-      console.warn(`⚠️ Skipping file: config "${metadata.access}" not found in loaded configs`)
-      continue
-    }
+    if (checkedFilepaths.has(metadata.filepath)) continue
+    checkedFilepaths.add(metadata.filepath)
 
-    // Skip files that don't exist in the filesystem
     const fileExists = await Bun.file(metadata.filepath).exists()
     if (!fileExists) {
-      console.warn(`⚠️ Skipping file: not found on disk — ${metadata.filepath}`)
-      continue
+      console.warn(`⚠️ File not found on disk — ${metadata.filepath}`)
+      anomalies.push({ code: 'METADATA_NOT_IN_FILES', subject: metadata.filename })
     }
+  }
+
+  const diskFiles = await readdir(`datastores/${Bun.env['SERVICE']}/files`)
+  for (const f of diskFiles) {
+    if (f !== '_metadata.xlsx' && !metadataFilenames.has(f)) {
+      anomalies.push({ code: 'FILE_NOT_IN_METADATA', subject: f })
+    }
+  }
+
+  // Pass 2 — Profile anomalies (file-existence-agnostic)
+  for (const profile of metadataProfiles) {
+    if (!validConfigIds.has(profile)) {
+      anomalies.push({ code: 'PROFILE_MISSING_IN_ASSETS', subject: profile })
+    }
+  }
+
+  for (const config of configs) {
+    if (config.knowledge.proprietary && !metadataProfiles.has(config.id)) {
+      anomalies.push({ code: 'PROFILE_NOT_IN_METADATA', subject: config.id })
+    }
+  }
+
+  // Pass 3 — Process files with valid profile and existing on disk
+  for (const metadata of files) {
+    if (!metadata.access || !validConfigIds.has(metadata.access)) continue
+
+    const fileExists = await Bun.file(metadata.filepath).exists()
+    if (!fileExists) continue
 
     const content = await processFile(metadata)
     const outputPath = `./datastores/${Bun.env['SERVICE']}/knowledge/${metadata.access}/${normalizeFilename(metadata.agent_filename)}.${content.parser}`
@@ -182,4 +214,5 @@ export const ingest_files = async (files: Metadata[]): Promise<void> => {
   }
 
   console.log('✅ Files processed')
+  return { anomalies }
 }

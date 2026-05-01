@@ -1,3 +1,4 @@
+import { Database } from 'bun:sqlite'
 import { readdir } from 'node:fs/promises'
 
 import type { Context } from 'hono'
@@ -28,7 +29,18 @@ export const controller = async (c: Context) => {
       a.filename.localeCompare(b.filename, 'fr', { sensitivity: 'base' })
     )
 
-    return c.html(view(metadata))
+    const db = new Database(`datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
+    const events = db
+      .query<KnowledgeBuildRow, []>(
+        `SELECT source, kind, code, subject
+         FROM knowledge_build
+         ORDER BY
+           CASE kind WHEN 'error' THEN 1 WHEN 'warning' THEN 2 WHEN 'info' THEN 3 ELSE 4 END,
+           id`
+      )
+      .all()
+
+    return c.html(view(metadata, events))
   } catch (e) {
     console.log(e)
   }
@@ -41,4 +53,11 @@ export type Metadata = {
   last_access_time: string
   last_modification_time: string
   file_creation: string
+}
+
+export type KnowledgeBuildRow = {
+  source: 'cli' | 'pipeline'
+  kind: 'action' | 'info' | 'warning' | 'error'
+  code: string
+  subject: string | null
 }

@@ -1,3 +1,5 @@
+import { Database } from 'bun:sqlite'
+
 import type { Context } from 'hono'
 
 import { normalizeFilename } from '../utils/knowledge/normalize'
@@ -51,15 +53,21 @@ export const controller = async (c: Context) => {
 
       // Respond for CLI uploads with JSON
       if (c.req.header('authorization-context') === 'cli') {
-        return c.json(
-          {
-            status: 'ok',
-            uploaded: files.map((f) =>
-              f.name === '_metadata.xlsx' ? f.name : normalizeFilename(f.name.normalize('NFC'))
-            )
-          },
-          200
+        const uploadedNames = files.map((f) =>
+          f.name === '_metadata.xlsx' ? f.name : normalizeFilename(f.name.normalize('NFC'))
         )
+
+        // Record each CLI upload in knowledge_build
+        const db = new Database(`datastores/${service}/datastore.sqlite`)
+        const stmt = db.prepare(
+          "INSERT INTO knowledge_build (created_at, source, kind, code, subject) VALUES (?, 'cli', 'action', 'CLI_UPLOAD', ?)"
+        )
+        const now = new Date().toISOString()
+        for (const name of uploadedNames) {
+          stmt.run(now, name)
+        }
+
+        return c.json({ status: 'ok', uploaded: uploadedNames }, 200)
       }
     }
 
