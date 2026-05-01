@@ -20,7 +20,7 @@ it('should upload knowledge files with cURL successfully', async () => {
   expect(stdout.toString().trim()).toBe('200')
 
   const files = await readdir(`datastores/${Bun.env['SERVICE']}/files`)
-  expect(files).toStrictEqual(['ZXhjZWw.xlsx', 'd29yZA.docx'])
+  expect(files).toStrictEqual(['word.docx', 'excel.xlsx'])
 
   // Remove mock files from datastore
   await $`rm -rf ./datastores/${Bun.env['SERVICE']}/files`

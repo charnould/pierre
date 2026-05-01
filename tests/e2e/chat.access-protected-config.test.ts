@@ -15,7 +15,7 @@ it('should grant access to protected config for logged user', async () => {
   )
 
   await page.type('input[type="email"]', 'admin@pierre-ia.org')
-  await page.type('input[type="password"]', 'harry84')
+  await page.type('input[type="password"]', Bun.env['AUTH_PASSWORD'])
   await Promise.all([page.click('input[type="submit"]'), page.waitForNavigation()])
 
   const cookie = (await browser.cookies()).find((cookie) => cookie.name === 'pierre-ia')
