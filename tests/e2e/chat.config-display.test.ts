@@ -6,7 +6,6 @@ import { delete_all_users, save_user } from '../../utils/handle-user'
 
 it('should display the correct config options for anonymous and authenticated users', async () => {
   // Initial setup
-  // Initial setup
   Bun.env['SERVICE'] = 'pierre-production'
   await delete_all_users()
 

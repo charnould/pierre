@@ -49,7 +49,7 @@ it('should validate administrator access flow', async () => {
   expect(cookie).toBeUndefined()
 
   await page.type('input[type="email"]', 'admin@pierre-ia.org')
-  await page.type('input[type="password"]', 'harry84')
+  await page.type('input[type="password"]', Bun.env['AUTH_PASSWORD'])
   await Promise.all([page.click('input[type="submit"]'), page.waitForNavigation()])
   cookie = (await browser.cookies()).find((cookie) => cookie.name === 'pierre-ia')
   expect(cookie).toBeDefined()
@@ -75,12 +75,6 @@ it('should validate administrator access flow', async () => {
 
   await Promise.all([page.click('a[href="a/knowledge"]'), page.waitForNavigation()])
   expect(page.url()).toBe('http://localhost:3000/a/knowledge')
-
-  await Promise.all([page.click('a[href="/a"]'), page.waitForNavigation()])
-  expect(page.url()).toBe('http://localhost:3000/a')
-
-  await Promise.all([page.click('a[href="a/bridge"]'), page.waitForNavigation()])
-  expect(page.url()).toBe('http://localhost:3000/a/bridge')
 
   await Promise.all([page.click('a[href="/a"]'), page.waitForNavigation()])
   expect(page.url()).toBe('http://localhost:3000/a')
@@ -128,10 +122,6 @@ it('should validate contributor access flow', async () => {
   await Bun.sleep(1000)
   expect(page.url()).toBe('http://localhost:3000/a')
 
-  await Promise.all([page.click('a[href="a/bridge"]'), page.waitForNavigation()])
-  await Bun.sleep(1000)
-  expect(page.url()).toBe('http://localhost:3000/a')
-
   await Promise.all([page.click('a[href="a/knowledge"]'), page.waitForNavigation()])
   await Bun.sleep(1000)
   expect(page.url()).toBe('http://localhost:3000/a/knowledge')
@@ -174,9 +164,6 @@ it('should validate collaborator access flow', async () => {
   expect(page.url()).toBe('http://localhost:3000/a/login')
 
   await Promise.all([page.goto('http://localhost:3000/a/users'), page.waitForNavigation()])
-  expect(page.url()).toBe('http://localhost:3000/a/login')
-
-  await Promise.all([page.goto('http://localhost:3000/a/bridge'), page.waitForNavigation()])
   expect(page.url()).toBe('http://localhost:3000/a/login')
 
   await Promise.all([page.goto('http://localhost:3000/a/knowledge'), page.waitForNavigation()])

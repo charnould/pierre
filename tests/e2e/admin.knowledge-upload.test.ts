@@ -20,7 +20,7 @@ it('should upload knowledge files successfully', async () => {
 
   // Login
   await page.type('input[type="email"]', 'admin@pierre-ia.org')
-  await page.type('input[type="password"]', 'harry84')
+  await page.type('input[type="password"]', Bun.env['AUTH_PASSWORD'])
   await Promise.all([page.click('input[type="submit"]'), page.waitForNavigation()])
   expect(page.url()).toBe('http://localhost:3000/a')
 
