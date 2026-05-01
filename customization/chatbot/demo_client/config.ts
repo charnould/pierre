@@ -1,4 +1,4 @@
-import type { Config } from '../../utils/_schema'
+import type { Config } from '../../../utils/_schema'
 
 export default {
   id: 'demo_client',

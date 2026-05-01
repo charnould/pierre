@@ -88,7 +88,8 @@ export const score = async (): Promise<void> => {
         }
       ]
 
-      const config = (await import(`../assets/${conversation[0].config}/config`)).default
+      const config = (await import(`../customization/chatbot/${conversation[0].config}/config`))
+        .default
       const model = config.models.answer_with
       const answer = await generate_text({
         model: model,

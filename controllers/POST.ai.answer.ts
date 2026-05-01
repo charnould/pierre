@@ -13,7 +13,7 @@ import { streamCopilot } from '../utils/copilot-agent'
  *   - conv_id  : conversation identifier
  *   - message  : clipboard content (main context)
  *   - context  : optional additional context
- *   - skill    : skill config id (default: skill_answer)
+ *   - skill    : skill config id (default: answer)
  *   - files    : uploaded PDF or image files (optional, converted to PNG stripes)
  *
  * Each uploaded file is converted to a single PNG (multi-page PDFs become a vertical stripe).
@@ -25,7 +25,7 @@ export const controller = async (c: Context) => {
   try {
     const formData = await c.req.formData()
     const conv_id = (formData.get('conv_id') as string | null) ?? Bun.randomUUIDv7()
-    const skill = (formData.get('skill') as string | null) ?? 'skill_answer'
+    const skill = (formData.get('skill') as string | null) ?? 'answer'
     const message = (formData.get('message') as string | null) ?? ''
     const context = (formData.get('context') as string | null) ?? ''
 

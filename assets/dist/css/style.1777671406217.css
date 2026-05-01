@@ -3854,6 +3854,12 @@
 .prose {
   font-size: 15px;
 }
+.prose p {
+  margin-bottom: calc(var(--spacing) * 3);
+}
+.user.prose p {
+  margin-bottom: calc(var(--spacing) * 0);
+}
 html,
 * {
   -ms-overflow-style: none;
@@ -3875,6 +3881,7 @@ html::-webkit-scrollbar {
   padding-block: calc(var(--spacing) * 3);
   font-size: var(--text-base);
   line-height: var(--leading-snug);
+  text-wrap: balance;
   color: var(--color-gray-900);
   align-self: flex-end;
   display: block;

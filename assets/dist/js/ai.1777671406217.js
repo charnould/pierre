@@ -47628,7 +47628,7 @@ function Pi({ greeting: H, assetId: q }) {
           'img',
           {
             className: 'mt-6 mb-3',
-            src: `../assets/${q}/system.svg`,
+            src: `../customization/chatbot/${q}/system.svg`,
             height: 33,
             width: 33,
             alt: 'IA'

@@ -22,7 +22,8 @@ export const controller = async (c: Context) => {
   try {
     const user = c.get('user') as Parsed_User | null
     const config = c.req.query('config') as string
-    const active_config = (await import(`../assets/${config}/config`)).default as Config
+    const active_config = (await import(`../customization/chatbot/${config}/config`))
+      .default as Config
     const displayable_configs = await get_displayable_configs({
       user,
       active_config
@@ -62,10 +63,10 @@ export const get_displayable_configs = async (params: {
   active_config: Config
 }): Promise<Displayable_configs> => {
   try {
-    const assets = (await readdir('assets')).filter((name) => name !== 'core')
+    const assets = await readdir('customization/chatbot')
     const configs = await Promise.all(
       assets.map(async (file) => {
-        const config: Config = (await import(`../assets/${file}/config`)).default
+        const config: Config = (await import(`../customization/chatbot/${file}/config`)).default
         const should_be_displayed = params.active_config.show.includes(config.id)
         const user_is_authorized = !params.user?.config || params.user?.config.includes(config.id)
         const is_active = file === params.active_config.id

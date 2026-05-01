@@ -34,14 +34,17 @@ export const view = (params: {
         />
         <link rel="preconnect" href="https://rsms.me" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/core/dist/css/style.1777635076336.css" />
+        <link rel="stylesheet" href="../assets/dist/css/style.1777671406217.css" />
         <link
           rel="icon"
-          href="../assets/${params.active_config.id}/system.svg"
+          href="../customization/chatbot/${params.active_config.id}/system.svg"
           type="image/svg+xml"
         />
-        <link rel="manifest" href="../assets/${params.active_config.id}/manifest.json" />
-        <script type="module" src="../assets/core/dist/js/ai.1777635076336.js"></script>
+        <link
+          rel="manifest"
+          href="../customization/chatbot/${params.active_config.id}/manifest.json"
+        />
+        <script type="module" src="../assets/dist/js/ai.1777671406217.js"></script>
         <title>Comment puis-je vous aider ? 🖐️</title>
       </head>
 

@@ -58,13 +58,14 @@ Bun.cron('0 4 * * *', async () => {
   // await score();
 })
 
-// Serve static files from the assets directory
-// Except for the config.ts file, which should return a 404 or redirect
-app.get('/assets/:domain/config.ts', (c) => c.notFound())
+// Block server-side-only files from being served over HTTP
+app.get('/customization/:path{.+}/config.ts', (c) => c.notFound())
+app.get('/customization/:path{.+}/INSTRUCTIONS.md', (c) => c.notFound())
 
-// Allow cross-origin loading of core widget assets
-app.use('/assets/core/*', cors())
+// Serve widget assets (with CORS for cross-origin embedding) and customization files
+app.use('/assets/*', cors())
 app.use('/assets/*', serveStatic({ root: './' }))
+app.use('/customization/*', serveStatic({ root: './' }))
 
 // AI generation routes
 app.get('/c', authenticate, get_index)
