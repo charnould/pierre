@@ -62,28 +62,51 @@ function mapToStandardFormat(rawFiles: RawMetadataRow[]): MappedMetadataFile[] {
   })
 }
 
-function explodeAndValidate(mappedFiles: MappedMetadataFile[]): z.infer<typeof Metadata>[] {
-  return mappedFiles.flatMap((item) =>
-    item.access.filter(Boolean).map((access) => Metadata.parse({ ...item, access }))
-  )
+function explodeAndValidate(mappedFiles: MappedMetadataFile[]): {
+  files: z.infer<typeof Metadata>[]
+  errors: string[]
+} {
+  const files: z.infer<typeof Metadata>[] = []
+  const errors: string[] = []
+
+  for (const item of mappedFiles) {
+    for (const access of item.access.filter(Boolean)) {
+      const result = Metadata.safeParse({ ...item, access })
+      if (result.success) {
+        files.push(result.data)
+      } else {
+        const msg = `${item.filename} (access: ${access}) — ${result.error.issues.map((i) => i.message).join(', ')}`
+        errors.push(msg)
+        console.warn(`⚠️ Format invalide dans _metadata — ${msg}`)
+      }
+    }
+  }
+
+  return { files, errors }
 }
 
-export async function generate_metadata(): Promise<z.infer<typeof Metadata>[] | undefined> {
+export async function generate_metadata(): Promise<{
+  files: z.infer<typeof Metadata>[]
+  anomalies: { code: string; subject: string | null }[]
+}> {
   try {
     const sheet = await loadMetadataSheet()
     if (sheet === null) {
       console.warn(`⚠️ ${METADATA_FILE_PATH} not found — skipping file ingestion`)
-      return []
+      return { files: [], anomalies: [{ code: 'METADATA_MISSING', subject: null }] }
     }
     const rawFiles = parseRawRows(sheet)
     const mappedFiles = mapToStandardFormat(rawFiles)
-    const files = explodeAndValidate(mappedFiles)
+    const { files, errors } = explodeAndValidate(mappedFiles)
+
+    const anomalies = errors.map((e) => ({ code: 'METADATA_FORMAT_ERROR', subject: e }))
 
     console.log('✅ Metadata generated')
-    return files
+    return { files, anomalies }
   } catch (e) {
     console.log('❌ Metadata generation failed')
     console.error(e)
+    return { files: [], anomalies: [{ code: 'METADATA_FORMAT_ERROR', subject: String(e) }] }
   }
 }
 

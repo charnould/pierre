@@ -40,6 +40,16 @@ export const setup = async () => {
         host        TEXT,
         event       TEXT
       );
+
+    CREATE TABLE IF NOT EXISTS knowledge_build
+      (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at  TEXT,
+        source      TEXT,
+        kind        TEXT,
+        code        TEXT,
+        subject     TEXT
+      );
     `)
 }
 
