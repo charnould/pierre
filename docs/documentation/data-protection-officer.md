@@ -23,13 +23,9 @@ Trois usages, ou manipulations, par PIERRE des données-propriétaires des organ
   - [Processus d'upload via l'interface d'administration et conséquences RGPD](#processus-dupload-via-linterface-dadministration-et-cons%C3%A9quences-rgpd)
   - [En synthèse](#en-synth%C3%A8se)
 - [Utilisation des données-propriétaires uploadées via l'interface d'administration de PIERRE](#utilisation-des-donn%C3%A9es-propri%C3%A9taires-upload%C3%A9es-via-linterface-dadministration-de-pierre)
-  - [Etape 1. Query expansion](#etape-1-query-expansion)
-  - [Etape 2. Transformation vectorielle et requête de données](#etape-2-transformation-vectorielle-et-requ%C3%AAte-de-donn%C3%A9es)
-  - [Etape 3. Reranking](#etape-3-reranking)
-  - [Etape 4. Génération de la réponse finale](#etape-4-g%C3%A9n%C3%A9ration-de-la-r%C3%A9ponse-finale)
-- [Interaction de l'extension navigateur de PIERRE avec vos applicatifs et données](#interaction-de-lextension-navigateur-de-pierre-avec-vos-applicatifs-et-donn%C3%A9es)
+- [Interaction de l'applicatin (client lourd) PIERRE avec vos applicatifs et données](#interaction-de-lapplicatin-client-lourd-pierre-avec-vos-applicatifs-et-donn%C3%A9es)
   - [Présentation de l'extension](#pr%C3%A9sentation-de-lextension)
-  - [Processus à l'oeuvre lors de l'utilisation de l'extension navigateur](#processus-%C3%A0-loeuvre-lors-de-lutilisation-de-lextension-navigateur)
+  - [Processus à l'oeuvre lors de l'utilisation de l'application](#processus-%C3%A0-loeuvre-lors-de-lutilisation-de-lapplication)
 
 <!-- tocstop -->
 
