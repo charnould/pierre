@@ -28,7 +28,7 @@ export const view = (metadata: Metadata[], events: KnowledgeBuildRow[]) => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/core/dist/css/style.1777634860396.css" />
+        <link rel="stylesheet" href="../assets/core/dist/css/style.1777635076336.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap"
           rel="stylesheet"
