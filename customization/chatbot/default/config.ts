@@ -24,7 +24,7 @@ export default {
   //
   // Ici, lorsque vous accédez à l'interface de PIERRE, vous pourrez accéder aux
   // configurations `default`, `demo_client` et `demo_team`.
-  show: ['default', 'demo_client', 'demo_team'],
+  show: ['default', 'demo_client', 'demo_team', 'zmode'],
 
   // Vous pouvez communiquer des données externes à PIERRE via son URL avec le
   // paramétre de requête `data`. S'il y a plusieurs données, séparez-les par un

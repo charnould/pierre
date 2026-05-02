@@ -3,7 +3,7 @@ import type { Config } from '../../../utils/_schema'
 export default {
   id: 'demo_client',
   display: 'Locataire',
-  show: ['default', 'demo_client', 'demo_team'],
+  show: ['default', 'demo_client', 'demo_team', 'zmode'],
   custom_data: {},
   api: [],
   protected: false,

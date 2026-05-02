@@ -43,6 +43,7 @@ exports[`should AIContext parse correctly 1`] = `
       "default",
       "demo_client",
       "demo_team",
+      "zmode",
     ],
   },
   "content": "bonjour",
