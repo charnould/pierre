@@ -57,6 +57,8 @@ it('should display the correct config options for anonymous and authenticated us
   await Promise.all([page.click('input[type="submit"]'), page.waitForNavigation()])
   expect(page.url()).toBe('http://localhost:3000/c?config=testing_purpose_1&data=')
 
+  await page.waitForSelector('a[data-config]')
+
   configs = await page.$$eval('a[data-config]', (anchors) => {
     return anchors.map((a) => a.href)
   })
