@@ -1,4 +1,5 @@
 import * as fs from 'node:fs'
+import { existsSync } from 'node:fs'
 import { readdir, rename } from 'node:fs/promises'
 import { basename } from 'node:path'
 import { Readable } from 'node:stream'
@@ -40,18 +41,33 @@ async function renameFilesRecursively(dirPath: string): Promise<void> {
 const turndownService = new TurndownService({ headingStyle: 'atx' })
 
 async function loadConfigs(): Promise<Config[]> {
-  const chatbotDirs = await readdir('./customization/chatbot')
-
   const configs: Config[] = []
+
+  const chatbotDirs = await readdir('./customization/chatbot')
   for (const dir of chatbotDirs) {
     const content = (await import(`../../customization/chatbot/${dir}/config`)).default as Config
     configs.push(content)
   }
 
+  if (existsSync('./customization/skills')) {
+    const skillEntries = await readdir('./customization/skills', { withFileTypes: true })
+    for (const entry of skillEntries.filter((e) => e.isDirectory())) {
+      try {
+        const content = (await import(`../../customization/skills/${entry.name}/config`))
+          .default as Config
+        configs.push(content)
+      } catch {
+        // skip skills with broken configs
+      }
+    }
+  }
+
   return configs
 }
 
-async function setupKnowledgeDirectories(configs: Config[]): Promise<void> {
+export async function setupKnowledgeDirectories(): Promise<void> {
+  const configs = await loadConfigs()
+
   for (const config of configs) {
     const knowledgePath = `datastores/${Bun.env['SERVICE']}/knowledge/${config.id}`
     await $`rm -rf ${knowledgePath} && mkdir ${knowledgePath}`
@@ -61,9 +77,9 @@ async function setupKnowledgeDirectories(configs: Config[]): Promise<void> {
       await $`cp -r ./knowledge ${copiedPath}`
       await renameFilesRecursively(copiedPath)
     }
-
-    await $`find . -name ".DS_Store" -type f -delete`
   }
+
+  await $`find . -name ".DS_Store" -type f -delete`
 }
 
 async function processDocxFile(filepath: string): Promise<FormattedContent> {
@@ -159,7 +175,6 @@ export const ingest_files = async (
   const anomalies: { code: string; subject: string | null }[] = []
 
   const configs = await loadConfigs()
-  await setupKnowledgeDirectories(configs)
 
   const validConfigIds = new Set(configs.map((c) => c.id))
   const metadataFilenames = new Set(files.map((f) => basename(f.filepath)))
