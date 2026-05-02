@@ -1,7 +1,7 @@
 import { Database } from 'bun:sqlite'
 
 import { generate_metadata } from './generate-metadata'
-import { ingest_files } from './ingest-files'
+import { ingest_files, setupKnowledgeDirectories } from './ingest-files'
 import { scrape_wikipedia } from './scrape-wikipedia'
 
 const COMMUNITY_FLAG = '--community'
@@ -59,6 +59,10 @@ export const run_pipeline = async (knowledgeType?: string): Promise<void> => {
     const startTime = performance.now()
 
     if (knowledgeType === COMMUNITY_TYPE) await scrape_wikipedia()
+
+    // Always setup knowledge directories and copy community data,
+    // even when _metadata.xlsx is missing
+    await setupKnowledgeDirectories()
 
     const { files, anomalies: metaAnomalies } = await generate_metadata()
     const metadataMissing = metaAnomalies.some((a) => a.code === 'METADATA_MISSING')
