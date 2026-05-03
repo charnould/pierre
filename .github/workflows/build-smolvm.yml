@@ -32,4 +32,4 @@ jobs:
           path: |
             config/smolvm/pierre-amd64
             config/smolvm/pierre-amd64.smolmachine
-          retention-days: 90
+          retention-days: 7
