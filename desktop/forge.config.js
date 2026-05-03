@@ -28,22 +28,7 @@ export default {
     ]
   },
   makers: [
-    {
-      name: '@electron-forge/maker-dmg',
-      config: {
-        icon: 'src/assets/icons/macos/icon.icns'
-      }
-    },
-    {
-      name: '@electron-forge/maker-zip',
-      platforms: ['darwin']
-    },
-    {
-      name: '@electron-forge/maker-squirrel',
-      config: {
-        name: 'pierre',
-        setupIcon: 'src/assets/icons/windows/icon.ico'
-      }
-    }
+    { name: '@electron-forge/maker-dmg', config: { icon: 'src/assets/icons/macos/icon.icns' } },
+    { name: '@electron-forge/maker-zip', platforms: ['darwin', 'win32'] }
   ]
 }

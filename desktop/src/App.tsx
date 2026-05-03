@@ -34,8 +34,6 @@ export function App() {
   const [activeTab, setActiveTab] = useState<Tab>('parametres')
   const [settings, setSettings] = useState<Settings>({})
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [clipboard, setClipboard] = useState('')
-  const [clipboardKey, setClipboardKey] = useState(0)
 
   // Load settings and auto-login on mount
   useEffect(() => {
@@ -50,17 +48,7 @@ export function App() {
           setActiveTab('discuter')
         }
       }
-      const initial = await window.api?.readClipboard()
-      if (initial) setClipboard(initial)
     })()
-  }, [])
-
-  // Register clipboard update listener (increments key to trigger resets in RepondrePanel)
-  useEffect(() => {
-    window.api?.onClipboardUpdate((text) => {
-      setClipboard(text)
-      setClipboardKey((k) => k + 1)
-    })
   }, [])
 
   const handleTabChange = useCallback(
@@ -91,12 +79,7 @@ export function App() {
           <AppSidebar activeTab={activeTab} isLoggedIn={isLoggedIn} onTabChange={handleTabChange} />
 
           <main className="flex flex-1 overflow-hidden">
-            <RepondrePanel
-              hidden={activeTab !== 'repondre'}
-              settings={settings}
-              clipboard={clipboard}
-              clipboardKey={clipboardKey}
-            />
+            <RepondrePanel hidden={activeTab !== 'repondre'} settings={settings} />
 
             <DiscuterPanel
               hidden={activeTab !== 'discuter'}

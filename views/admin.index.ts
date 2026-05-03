@@ -1,6 +1,6 @@
 import { html } from 'hono/html'
 
-export const view = (user) => {
+export const view = (user, desktop_version: string | null) => {
   return html`<!doctype html>
     <html lang="fr">
       <head>
@@ -59,20 +59,37 @@ export const view = (user) => {
           >Utilisateurs</a
         >
 
+        <p class="mt-10 text-sm">
+          Application bureau${desktop_version ? ` — v.${desktop_version}` : ''}<br />
+          <a
+            href="https://github.com/charnould/pierre/raw/refs/heads/master/config/app/pierre-desktop-latest.zip?download="
+            class="font-bold underline decoration-2 underline-offset-4"
+            >Télécharger pour Windows</a
+          >
+          &nbsp;·&nbsp;
+          <a
+            href="https://github.com/charnould/pierre/raw/refs/heads/master/config/app/pierre-desktop-latest.dmg?download="
+            class="font-bold underline decoration-2 underline-offset-4"
+            >Télécharger pour macOS</a
+          >
+        </p>
+
+        <p class="mt-6 text-sm">
+          Une question ou remarque sur ce projet
+          <span class="font-bold">open-source</span> ?<br />
+          Adressez un email à
+          <span class="font-bold">charnould@pierre-ia.org</span>.
+        </p>
+
         <form method="post" action="a/login">
           <button
-            class="mt-20 cursor-pointer text-sm font-medium underline decoration-2 underline-offset-4"
+            class="mt-6 cursor-pointer text-sm font-medium underline decoration-2 underline-offset-4"
             value="logout"
             name="action"
           >
             Se déconnecter
           </button>
         </form>
-
-        <p class="mt-6 text-sm">
-          Une question ou remarque sur ce projet <span class="font-bold">open-source</span> ?<br />
-          Adressez un email à <span class="font-bold">charnould@pierre-ia.org</span>.
-        </p>
       </body>
     </html>`
 }
