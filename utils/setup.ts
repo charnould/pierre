@@ -5,8 +5,6 @@ import { $ } from 'bun'
 import { run_pipeline } from './knowledge/run-pipeline'
 
 export const setup = async () => {
-  await $`find . -name ".DS_Store" -type f -delete`
-
   if (Bun.env['SERVICE'] === undefined) Bun.env['SERVICE'] = 'default'
 
   await $`mkdir -p datastores/${Bun.env['SERVICE']}`

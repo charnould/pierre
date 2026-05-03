@@ -85,7 +85,12 @@ export const run_pipeline = async (knowledgeType?: string): Promise<void> => {
             : a.code === 'METADATA_NOT_IN_FILES'
               ? 'warning'
               : 'info'
-        events.push({ source: 'pipeline', kind, code: a.code, subject: a.subject })
+        events.push({
+          source: 'pipeline',
+          kind,
+          code: a.code,
+          subject: a.subject
+        })
       }
     }
 

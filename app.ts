@@ -1,6 +1,6 @@
 // oxfmt-ignore
 // Must stay at the top of the file to setup the environment
-import { setup } from './utils/setup'
+import { setup } from "./utils/setup";
 
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
