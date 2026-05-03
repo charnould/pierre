@@ -50,7 +50,9 @@ async function loadConfigs(): Promise<Config[]> {
   }
 
   if (existsSync('./customization/skills')) {
-    const skillEntries = await readdir('./customization/skills', { withFileTypes: true })
+    const skillEntries = await readdir('./customization/skills', {
+      withFileTypes: true
+    })
     for (const entry of skillEntries.filter((e) => e.isDirectory())) {
       try {
         const content = (await import(`../../customization/skills/${entry.name}/config`))
@@ -78,8 +80,6 @@ export async function setupKnowledgeDirectories(): Promise<void> {
       await renameFilesRecursively(copiedPath)
     }
   }
-
-  await $`find . -name ".DS_Store" -type f -delete`
 }
 
 async function processDocxFile(filepath: string): Promise<FormattedContent> {
@@ -111,7 +111,10 @@ function unmergeSheetCells(sheet: XLSX.WorkSheet): void {
     const mergedValue = sheet[XLSX.utils.encode_cell(merge.s)]?.v ?? ''
     for (let row = merge.s.r; row <= merge.e.r; row++) {
       for (let col = merge.s.c; col <= merge.e.c; col++) {
-        sheet[XLSX.utils.encode_cell({ r: row, c: col })] = { t: 's', v: mergedValue }
+        sheet[XLSX.utils.encode_cell({ r: row, c: col })] = {
+          t: 's',
+          v: mergedValue
+        }
       }
     }
   }
@@ -127,12 +130,17 @@ async function processXlsxFile(
   XLSX.set_cptable(cpexcel)
   XLSX.stream.set_readable(Readable)
 
-  const workbook = XLSX.read(await Bun.file(filepath).arrayBuffer(), { cellDates: true })
+  const workbook = XLSX.read(await Bun.file(filepath).arrayBuffer(), {
+    cellDates: true
+  })
   const sheet = workbook.Sheets[workbook.SheetNames[sheetIndex]]
 
   unmergeSheetCells(sheet)
 
-  const rows = XLSX.utils.sheet_to_json(sheet, { range: headerRowIndex, defval: null })
+  const rows = XLSX.utils.sheet_to_json(sheet, {
+    range: headerRowIndex,
+    defval: null
+  })
 
   const normalizedRows = rows.map((obj) =>
     Object.fromEntries(
@@ -189,7 +197,10 @@ export const ingest_files = async (
     const fileExists = await Bun.file(metadata.filepath).exists()
     if (!fileExists) {
       console.warn(`⚠️ File not found on disk — ${metadata.filepath}`)
-      anomalies.push({ code: 'METADATA_NOT_IN_FILES', subject: metadata.filename })
+      anomalies.push({
+        code: 'METADATA_NOT_IN_FILES',
+        subject: metadata.filename
+      })
     }
   }
 

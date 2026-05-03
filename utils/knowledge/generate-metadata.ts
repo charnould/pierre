@@ -44,7 +44,9 @@ async function loadMetadataSheet(): Promise<XLSX.WorkSheet | null> {
 }
 
 function parseRawRows(sheet: XLSX.WorkSheet): RawMetadataRow[] {
-  return XLSX.utils.sheet_to_json<RawMetadataRow>(sheet, { range: METADATA_HEADER_ROW })
+  return XLSX.utils.sheet_to_json<RawMetadataRow>(sheet, {
+    range: METADATA_HEADER_ROW
+  })
 }
 
 function mapToStandardFormat(rawFiles: RawMetadataRow[]): MappedMetadataFile[] {
@@ -93,20 +95,29 @@ export async function generate_metadata(): Promise<{
     const sheet = await loadMetadataSheet()
     if (sheet === null) {
       console.warn(`⚠️ ${METADATA_FILE_PATH} not found — skipping file ingestion`)
-      return { files: [], anomalies: [{ code: 'METADATA_MISSING', subject: null }] }
+      return {
+        files: [],
+        anomalies: [{ code: 'METADATA_MISSING', subject: null }]
+      }
     }
     const rawFiles = parseRawRows(sheet)
     const mappedFiles = mapToStandardFormat(rawFiles)
     const { files, errors } = explodeAndValidate(mappedFiles)
 
-    const anomalies = errors.map((e) => ({ code: 'METADATA_FORMAT_ERROR', subject: e }))
+    const anomalies = errors.map((e) => ({
+      code: 'METADATA_FORMAT_ERROR',
+      subject: e
+    }))
 
     console.log('✅ Metadata generated')
     return { files, anomalies }
   } catch (e) {
     console.log('❌ Metadata generation failed')
     console.error(e)
-    return { files: [], anomalies: [{ code: 'METADATA_FORMAT_ERROR', subject: String(e) }] }
+    return {
+      files: [],
+      anomalies: [{ code: 'METADATA_FORMAT_ERROR', subject: String(e) }]
+    }
   }
 }
 
