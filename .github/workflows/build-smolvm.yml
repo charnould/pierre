@@ -1,9 +1,7 @@
 name: Build smolmachine
 
 on:
-  push:
-    paths:
-      - 'config/build:smolvm.sh'
+  workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -34,33 +32,4 @@ jobs:
           path: |
             config/smolvm/pierre-amd64
             config/smolvm/pierre-amd64.smolmachine
-          retention-days: 7
-
-  commit:
-    name: Commit smolmachines
-    needs: [build-linux]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          lfs: true
-
-      - name: Download AMD64 artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: smolmachine-amd64
-          path: config/smolvm/
-
-      - name: Restore executable permissions
-        run: chmod +x config/smolvm/pierre-amd64
-
-      - name: Commit and push
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add config/smolvm/
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
-          git commit -m "build: build smolmachine artifacts (amd64) [skip ci]"
-          git push
+          retention-days: 90
