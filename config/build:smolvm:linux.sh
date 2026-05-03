@@ -22,6 +22,9 @@ echo "Run ID : $RUN_ID — https://github.com/$REPO/actions/runs/$RUN_ID"
 echo "En attente de la fin du build (~10-15 min)..."
 gh run watch "$RUN_ID" --repo "$REPO"
 
+echo "Suppression des anciens binaires..."
+rm -f "$SMOLVM_DIR/pierre-amd64" "$SMOLVM_DIR/pierre-amd64.smolmachine"
+
 echo "Téléchargement des artifacts dans $SMOLVM_DIR/..."
 gh run download "$RUN_ID" --repo "$REPO" --name smolmachine-amd64 --dir "$SMOLVM_DIR"
 
