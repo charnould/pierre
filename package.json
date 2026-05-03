@@ -7,9 +7,10 @@
   "module": "app.ts",
   "scripts": {
     "------------------ DESKTOP ------------------": "------------------",
-    "desktop:build": "cd desktop && bun run vite build",
     "desktop:start": "cd desktop && npx electron-forge start",
-    "desktop:make": "bun run desktop:build && cd desktop && npx electron-forge make",
+    "desktop:build": "bun desktop:build:osx && bun desktop:build:windows",
+    "desktop:build:osx": "bash config/build:desktop:osx.sh",
+    "desktop:build:windows": "bash config/build:desktop:windows.sh",
     "------------------ BUILD ------------------": "------------------",
     "vm:build:osx": "bash config/build:smolvm.sh",
     "vm:build:linux": "bash config/build:smolvm:linux.sh",
