@@ -19,13 +19,13 @@ Trois usages, ou manipulations, par PIERRE des données-propriétaires des organ
 <!-- toc -->
 
 - [L'upload de données-propriétaires via l'interface d'administration de PIERRE](#lupload-de-donn%C3%A9es-propri%C3%A9taires-via-linterface-dadministration-de-pierre)
-  - [Types et formats de données](#types-et-formats-de-donn%C3%A9es)
-  - [Processus d'upload via l'interface d'administration et conséquences RGPD](#processus-dupload-via-linterface-dadministration-et-cons%C3%A9quences-rgpd)
-  - [En synthèse](#en-synth%C3%A8se)
+  * [Types et formats de données](#types-et-formats-de-donn%C3%A9es)
+  * [Processus d'upload via l'interface d'administration et conséquences RGPD](#processus-dupload-via-linterface-dadministration-et-cons%C3%A9quences-rgpd)
+  * [En synthèse](#en-synth%C3%A8se)
 - [Utilisation des données-propriétaires uploadées via l'interface d'administration de PIERRE](#utilisation-des-donn%C3%A9es-propri%C3%A9taires-upload%C3%A9es-via-linterface-dadministration-de-pierre)
 - [Interaction de l'applicatin (client lourd) PIERRE avec vos applicatifs et données](#interaction-de-lapplicatin-client-lourd-pierre-avec-vos-applicatifs-et-donn%C3%A9es)
-  - [Présentation de l'extension](#pr%C3%A9sentation-de-lextension)
-  - [Processus à l'oeuvre lors de l'utilisation de l'application](#processus-%C3%A0-loeuvre-lors-de-lutilisation-de-lapplication)
+  * [Présentation de l'extension](#pr%C3%A9sentation-de-lextension)
+  * [Processus à l'oeuvre lors de l'utilisation de l'application](#processus-%C3%A0-loeuvre-lors-de-lutilisation-de-lapplication)
 
 <!-- tocstop -->
 
