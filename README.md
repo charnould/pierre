@@ -1,7 +1,7 @@
 # PIERRE – L'agent IA open source du mouvement HLM
 
 > [!IMPORTANT]
-> PIERRE est actuellement en version `0.37.x` (consulter les [releases](https://github.com/charnould/pierre/releases)) avec une **qualité de base de connaissances estimée à `20 %`**. Par ailleurs, la documentation ci-dessous est en cours de rédaction. En cas de difficultés, créer une `issue` ou envoyer un email à charnould@pierre-ia.org.<br><br>PIERRE ne connait pas les spécificités des bailleurs (ex : taille des parcs, coordonnées des agences, procédures internes, etc.). **Ces éléments peuvent néanmoins lui être enseignés – littéralement – en 5 secondes.**
+> PIERRE est actuellement en version `0.38.x` (consulter les [releases](https://github.com/charnould/pierre/releases)) avec une **qualité de base de connaissances estimée à `20 %`**. Par ailleurs, la documentation ci-dessous est en cours de rédaction. En cas de difficultés, créer une `issue` ou envoyer un email à charnould@pierre-ia.org.<br><br>PIERRE ne connait pas les spécificités des bailleurs (ex : taille des parcs, coordonnées des agences, procédures internes, etc.). **Ces éléments peuvent néanmoins lui être enseignés – littéralement – en 5 secondes.**
 
 ## PIERRE : kézako ?
 
@@ -199,7 +199,7 @@ Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE, l
 
 <img src="docs/assets/images/personnalisation-de-PIERRE.webp" height="400">
 
-1. Dans le répertoire `./assets`, supprimer tous les répertoires à l'exception de `core` et `default` (vous pouvez modifier ou dupliquer `default`).
+1. Dans le répertoire `./customization/chatbot`, supprimer tous les répertoires à l'exception de `default` (vous pouvez modifier ou dupliquer `default`).
 2. Créer une icône `system.svg` et remplacer la précédente dans `default`. Cette icône est celle qui apparait dans l'interface du agent IA (au dessus de « Bonjour 👋 »).
 3. [Générer les icônes](https://www.pwabuilder.com/imageGenerator) qui permettront d'ajouter votre agent IA sur l'écran d'accueil des smartphones de vos utilisateurs et remplacer celles dans le dossier `icons` (les icônes Windows ne sont pas nécessaires). Conservez la structure du répertoire et le nommage des fichiers (automatique).
 4. Modifier `config.ts` :  
@@ -271,7 +271,7 @@ avec :
 - `style` : le style CSS du bouton (libre à vous de le modifier)
 - `180.81.82.83` dans l'URL du script le domaine/IP du serveur où le script est accessible
 - `data-url` : le domaine/IP (sans slash de fin) du serveur où PIERRE est accessible
-- `data-configuration` : `default` ou le nom du répertoire que vous avez créé plus tôt dans `./assets` (_cf._ supra).
+- `data-configuration` : `default` ou le nom du répertoire que vous avez créé plus tôt dans `./customization/chatbot` (_cf._ supra).
 
 ### Via une iframe
 
