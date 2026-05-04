@@ -190,6 +190,22 @@ Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE, l
 2. Lancer `bun staging:setup` pour déployer la première fois.
 3. Lancer `bun staging:deploy` pour redéployer.
 
+## Application desktop Windows et MacOS (alpha)
+
+PIERRE dispose d'une application desktop (Windows et MacOS) téléchargeable depuis le dossier [`config/app/`](./config/app/). Un lien de téléchargement est également disponible depuis la page d'acceuil de l'interface d'administration.
+
+> [!NOTE]
+> **macOS** — Lors du premier lancement, macOS peut afficher un avertissement de sécurité car l'application n'est pas notarisée par Apple. Si vous voyez le message _"pierre est endommagé et ne peut pas être ouvert"_, exécutez la commande suivante dans le Terminal, puis relancez l'application :
+>
+> ```bash
+> sudo xattr -rd com.apple.quarantine /Applications/pierre.app
+> ```
+>
+> Vous pouvez également faire un clic droit sur l'application > **Ouvrir**, puis confirmer dans la boîte de dialogue, ou aller dans **Réglages système > Confidentialité et sécurité** et cliquer sur **Ouvrir quand même**.
+
+> [!NOTE]
+> **Windows** — Lors du premier lancement, Windows SmartScreen peut afficher _"Windows a protégé votre ordinateur"_. Cliquez sur **Informations complémentaires**, puis sur **Exécuter quand même**.
+
 # Modifier et paramétrer PIERRE (self-hosting)
 
 > [!NOTE]

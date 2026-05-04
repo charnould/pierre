@@ -9,8 +9,6 @@ const PARTITION = 'persist:pierre'
 
 let settingsPath,
   win,
-  lastClipboard = '',
-  clipboardInterval,
   activeStreamController = null
 
 function readSettings() {
@@ -25,17 +23,6 @@ function writeSettings(data) {
   const dir = dirname(settingsPath)
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
   writeFileSync(settingsPath, JSON.stringify(data, null, 2))
-}
-
-function sendClipboard() {
-  try {
-    if (!win || win.isDestroyed() || !win.webContents || win.webContents.isDestroyed()) return
-    const text = clipboard.readText()
-    if (text && text !== lastClipboard) {
-      lastClipboard = text
-      win.webContents.send('clipboard-update', text)
-    }
-  } catch {}
 }
 
 function createWindow() {
@@ -74,7 +61,7 @@ function createWindow() {
   })()
 
   win = new BrowserWindow({
-    width: 480,
+    width: 900,
     height: 840,
     minWidth: 360,
     minHeight: 400,
@@ -96,15 +83,6 @@ function createWindow() {
   } else {
     win.loadFile(join(__dirname, '../renderer/index.html'))
   }
-  win.on('focus', sendClipboard)
-
-  win.webContents.on('did-finish-load', () => {
-    const text = clipboard.readText()
-    if (text) {
-      win.webContents.send('clipboard-update', text)
-      lastClipboard = text
-    }
-  })
 
   win.once('ready-to-show', () => win.show())
 }
@@ -122,15 +100,12 @@ app.whenReady().then(() => {
   })
 
   createWindow()
-  lastClipboard = clipboard.readText()
-  clipboardInterval = setInterval(sendClipboard, 400)
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
 
 app.on('window-all-closed', () => {
-  clearInterval(clipboardInterval)
   if (process.platform !== 'darwin') app.quit()
 })
 
@@ -141,11 +116,8 @@ ipcMain.handle('save-settings', (_, data) => {
   return true
 })
 
-ipcMain.handle('read-clipboard', () => clipboard.readText())
-
 ipcMain.handle('write-clipboard', (_, text) => {
   clipboard.writeText(text)
-  lastClipboard = text
   return true
 })
 

@@ -7,13 +7,22 @@ import { Label } from '@/components/ui/label'
 
 import { doLogin } from '../App'
 import type { Settings } from '../types'
+import { AsciiBackground } from './AsciiBackground'
 
-interface Branding {
-  title: string
-  subtitle: string
-  organisme: string
-  charter: string
-  logo: string
+interface Config {
+  name: string
+  headline: string
+  organization: string
+}
+
+async function fetchLogo(baseUrl: string): Promise<string | null> {
+  try {
+    const resp = await fetch(`${baseUrl}/customization/desktop/logo.svg`)
+    if (!resp.ok) return null
+    return await resp.text()
+  } catch {
+    return null
+  }
 }
 
 interface Props {
@@ -24,11 +33,11 @@ interface Props {
   onLogout: () => void
 }
 
-async function fetchBranding(baseUrl: string): Promise<Branding | null> {
+async function fetchConfig(baseUrl: string): Promise<Config | null> {
   try {
-    const resp = await fetch(`${baseUrl}/assets/default/branding.json`)
+    const resp = await fetch(`${baseUrl}/customization/desktop/config.json`)
     if (!resp.ok) return null
-    return (await resp.json()) as Branding
+    return (await resp.json()) as Config
   } catch {
     return null
   }
@@ -42,7 +51,8 @@ export function ParametresPanel({ hidden, settings, isLoggedIn, onLogin, onLogou
   const [error, setError] = useState('')
   const [, setStatus] = useState<'ok' | 'error' | null>(null)
   const [loading, setLoading] = useState(false)
-  const [branding, setBranding] = useState<Branding | null>(null)
+  const [Config, setConfig] = useState<Config | null>(null)
+  const [logoSvg, setLogoSvg] = useState<string | null>(null)
   const [charterAccepted, setCharterAccepted] = useState(false)
 
   useEffect(() => {
@@ -51,7 +61,8 @@ export function ParametresPanel({ hidden, settings, isLoggedIn, onLogin, onLogou
     setPassword(settings.password ?? '')
     if (isLoggedIn) setStatus('ok')
     if (settings.url) {
-      void fetchBranding(settings.url).then(setBranding)
+      void fetchConfig(settings.url).then(setConfig)
+      void fetchLogo(settings.url).then(setLogoSvg)
     }
   }, [settings, isLoggedIn])
 
@@ -60,12 +71,15 @@ export function ParametresPanel({ hidden, settings, isLoggedIn, onLogin, onLogou
     try {
       baseUrl = new URL(url.trim()).origin
     } catch {
-      setBranding(null)
+      setConfig(null)
+      setLogoSvg(null)
       setCharterAccepted(false)
       return
     }
-    const b = await fetchBranding(baseUrl)
-    setBranding(b)
+    const b = await fetchConfig(baseUrl)
+    setConfig(b)
+    const logo = await fetchLogo(baseUrl)
+    setLogoSvg(logo)
     setCharterAccepted(false)
   }
 
@@ -105,7 +119,11 @@ export function ParametresPanel({ hidden, settings, isLoggedIn, onLogin, onLogou
   }
 
   async function handleLogout() {
-    await window.api.saveSettings({ ...settings, password: '', loggedOut: true })
+    await window.api.saveSettings({
+      ...settings,
+      password: '',
+      loggedOut: true
+    })
     await window.api.logout()
     setPassword('')
     setStatus(null)
@@ -113,108 +131,123 @@ export function ParametresPanel({ hidden, settings, isLoggedIn, onLogin, onLogou
   }
 
   return (
-    <div className={`flex flex-1 flex-col justify-between p-8${hidden ? ' hidden' : ''}`}>
-      {/* top */}
-      <div>
-        {branding?.logo && (
-          <div className="mt-10 mb-4 size-12" dangerouslySetInnerHTML={{ __html: branding.logo }} />
-        )}
-        <h1 className="mt-20 mb-4 text-7xl font-bold tracking-tight">
-          {branding?.title ?? 'Pierre'}{' '}
-          <span className="bg-foreground inline-block w-9 animate-[blink_1s_step-end_infinite] leading-none">
-            &nbsp;
-          </span>
-        </h1>
-        <h2 className="mb-5 text-[39px]/[41px] font-normal tracking-tight text-balance">
-          {branding?.subtitle ?? 'Agent IA open source au service des HLM'}
-        </h2>
-      </div>
+    <div className={`relative flex flex-1 overflow-hidden${hidden ? ' hidden' : ''}`}>
+      {/* ASCII symbol wall background */}
+      <AsciiBackground opacity={0.75} />
 
-      {/* bottom */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label className="text-[11px] font-semibold tracking-wider uppercase">
-            Adresse du serveur
-          </Label>
-          <Input
-            type="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            onBlur={() => void handleUrlBlur()}
-            placeholder="https://exemple.pierre-ia.org"
-            className="bg-muted/40 h-10"
-          />
-        </div>
+      {/* Centered card */}
+      <div className="absolute inset-0 flex items-center justify-center p-6">
+        <div className="w-full max-w-sm overflow-y-auto rounded-xl border border-gray-200 bg-white/95 p-8 shadow-xl backdrop-blur-sm">
+          {/* Logo + title */}
+          <div className="mb-8">
+            {logoSvg && (
+              <div className="mb-6 size-16" dangerouslySetInnerHTML={{ __html: logoSvg }} />
+            )}
+            <h1 className="mb-2 text-4xl font-bold tracking-tight">
+              {Config?.name ?? 'Pierre'}{' '}
+              <span className="bg-foreground inline-block w-5 animate-[blink_1s_step-end_infinite] leading-none">
+                &nbsp;
+              </span>
+            </h1>
+            <h2 className="text-[17px]/[22px] font-normal tracking-tight text-balance text-gray-500">
+              {Config?.headline ?? 'Agent IA open source au service des HLM'}
+            </h2>
+          </div>
 
-        <div className="flex flex-col gap-1.5">
-          <Label className="text-[11px] font-semibold tracking-wider uppercase">
-            Email professionnel
-          </Label>
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="votre@email.com"
-            className="bg-muted/40 h-10"
-          />
-        </div>
+          {/* Form fields */}
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[11px] font-semibold tracking-wider uppercase">
+                Adresse du serveur
+              </Label>
+              <Input
+                type="url"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                onBlur={() => void handleUrlBlur()}
+                placeholder="https://exemple.pierre-ia.org"
+                className="bg-muted/40 h-10"
+              />
+            </div>
 
-        <div className="flex flex-col gap-1.5">
-          <Label className="text-[11px] font-semibold tracking-wider uppercase">Mot de passe</Label>
-          <div className="relative">
-            <Input
-              type={showPw ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="bg-muted/40 h-10 pr-10"
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => setShowPw((v) => !v)}
-              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
-            >
-              {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-            </Button>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[11px] font-semibold tracking-wider uppercase">
+                Email professionnel
+              </Label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="votre@email.com"
+                className="bg-muted/40 h-10"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[11px] font-semibold tracking-wider uppercase">
+                Mot de passe
+              </Label>
+              <div className="relative">
+                <Input
+                  type={showPw ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="bg-muted/40 h-10 pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setShowPw((v) => !v)}
+                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                >
+                  {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </Button>
+              </div>
+            </div>
+
+            {error && (
+              <div className="border-destructive/25 bg-destructive/8 text-destructive flex items-start gap-2.5 rounded-lg border px-3.5 py-2.5">
+                <AlertCircle className="mt-px size-4 shrink-0" />
+                <p className="text-[12px] leading-snug">{error}</p>
+              </div>
+            )}
+
+            <label className={`flex items-start gap-2.5${!isLoggedIn ? ' cursor-pointer' : ''}`}>
+              <input
+                type="checkbox"
+                checked={isLoggedIn ? true : charterAccepted}
+                onChange={(e) => {
+                  if (!isLoggedIn) setCharterAccepted(e.target.checked)
+                }}
+                disabled={isLoggedIn}
+                className="mt-0.5 shrink-0"
+              />
+              <span className="text-[12px] leading-snug text-balance">
+                J’ai pris connaissance et j’accepte la charte IA de{' '}
+                {Config?.organization ?? 'mon organisme'}.
+              </span>
+            </label>
+
+            {!isLoggedIn ? (
+              <Button
+                onClick={() => void handleSave()}
+                disabled={loading || !charterAccepted}
+                className="w-full py-5 text-[13px] font-bold"
+              >
+                {loading ? 'Connexion…' : 'Se connecter →'}
+              </Button>
+            ) : (
+              <Button
+                onClick={() => void handleLogout()}
+                className="w-full py-5 text-[13px] font-bold"
+              >
+                Se déconnecter
+              </Button>
+            )}
           </div>
         </div>
-
-        {error && (
-          <div className="border-destructive/25 bg-destructive/8 text-destructive flex items-start gap-2.5 rounded-lg border px-3.5 py-2.5">
-            <AlertCircle className="mt-px size-4 shrink-0" />
-            <p className="text-[12px] leading-snug">{error}</p>
-          </div>
-        )}
-
-        {!isLoggedIn && branding?.charter && (
-          <label className="flex cursor-pointer items-start gap-2.5">
-            <input
-              type="checkbox"
-              checked={charterAccepted}
-              onChange={(e) => setCharterAccepted(e.target.checked)}
-              className="mt-0.5 shrink-0"
-            />
-            <span className="text-[12px] leading-snug">
-              J'ai pris connaissance de la charte IA de {branding.organisme}
-            </span>
-          </label>
-        )}
-
-        {!isLoggedIn ? (
-          <Button
-            onClick={() => void handleSave()}
-            disabled={loading || (!!branding?.charter && !charterAccepted)}
-            className="w-full py-5 text-[13px] font-bold"
-          >
-            {loading ? 'Connexion…' : 'Se connecter →'}
-          </Button>
-        ) : (
-          <Button onClick={() => void handleLogout()} className="w-full py-5 text-[13px] font-bold">
-            Se déconnecter
-          </Button>
-        )}
       </div>
     </div>
   )

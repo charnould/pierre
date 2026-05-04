@@ -1,5 +1,7 @@
 node_modules/
 desktop/node_modules/
+desktop/dist/
+desktop/out
 datastores/
 temp/
 .DS_Store
@@ -9,3 +11,4 @@ temp/
 .env.test
 .env.local
 .private.md
+/desktop/dist
