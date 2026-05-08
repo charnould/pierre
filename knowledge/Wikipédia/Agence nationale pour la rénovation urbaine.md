@@ -1,6 +1,6 @@
 # Agence nationale pour la rénovation urbaine
 
-L'Agence nationale pour la rénovation urbaine (Anru) est un établissement public à caractère industriel et commercial créé par l'article 10 de la loi d'orientation et de programmation pour la ville et la rénovation urbaine du 1er août 2003, sous la mandature de Jean-Louis Borloo, alors ministre délégué à la Ville, afin d'assurer le financement et la mise en œuvre du programme national de rénovation urbaine (PNRU). Ses modalités de fonctionnement (organisation juridico-administrative, régime financier, exercices comptables et missions de maîtrise d'ouvrage) sont précisées par le décret no 2004-123 du 9 février 2004, paru au Journal officiel le 11 février 2004.
+L'**Agence nationale pour la rénovation urbaine** (**Anru**) est un établissement public à caractère industriel et commercial créé par l'article 10 de la loi d'orientation et de programmation pour la ville et la rénovation urbaine du 1er août 2003, sous la mandature de Jean-Louis Borloo, alors ministre délégué à la Ville, afin d'assurer le financement et la mise en œuvre du programme national de rénovation urbaine (PNRU). Ses modalités de fonctionnement (organisation juridico-administrative, régime financier, exercices comptables et missions de maîtrise d'ouvrage) sont précisées par le décret no 2004-123 du 9 février 2004, paru au Journal officiel le 11 février 2004.
 
 ## Cadrage
 
@@ -18,10 +18,10 @@ L'agence s'installe dans son nouveau siège, conçu par l'architecte Rudy Riccio
 
 ## Objectif
 
-L'objectif général de l'agence est d'accompagner des projets urbains globaux pour transformer les quartiers en profondeur :
+L'objectif général de l'agence est d'accompagner des projets urbains globaux pour transformer les quartiers en profondeur :
 
-- En réinsérant les quartiers dans la ville ;
-- En créant de la mixité sociale dans et par l'habitat ;
+- En réinsérant les quartiers dans la ville ;
+- En créant de la mixité sociale dans et par l'habitat ;
 - En introduisant de la mixité urbaine par la diversification des fonctions urbaines (commerces de proximité, activités économiques relevant notamment de l'économie sociale et solidaire, activités culturelles et de loisir, etc.).
 
 L'Anru représente le guichet unique destiné à simplifier et harmoniser les procédures de financement des opérations de rénovation urbaine. L'agence soutient également des projets de développement de jardins partagés dans les quartiers prioritaires de la politique de la ville (QPV).
@@ -51,20 +51,20 @@ Au total, les moyens financiers consacrés à la mise en œuvre du PNRU entre 20
 
 ### Présidents
 
-- 6 juillet 2004 - 19 septembre 2007 : Jean-Paul Alduy
-- 19 septembre 2007 - 21 mai 2013 : Gérard Hamel
-- 21 mai 2013 : Michel Delebarre
-- novembre 2014 - juillet 2017 : François Pupponi
-- 30 novembre 2017- juillet 2022 : Olivier Klein
-- Septembre 2022 - janvier 2024 : Catherine Vautrin
-- Depuis janvier 2025 : Patrice Vergriete
+- 6 juillet 2004 - 19 septembre 2007 : Jean-Paul Alduy
+- 19 septembre 2007 - 21 mai 2013 : Gérard Hamel
+- 21 mai 2013 : Michel Delebarre
+- novembre 2014 - juillet 2017 : François Pupponi
+- 30 novembre 2017\- juillet 2022 : Olivier Klein
+- Septembre 2022 - janvier 2024 : Catherine Vautrin
+- Depuis janvier 2025 : Patrice Vergriete
 
 ### Directeurs généraux
 
-- 11 mars 2004 - 9 mai 2008 : Philippe Van de Maele
-- 1er août 2008 : Pierre Sallenave
-- 22 octobre 2014 : Nicolas Grivel
-- Depuis le 15 décembre 2021 : Anne-Claire Mialot
+- 11 mars 2004 - 9 mai 2008 : Philippe Van de Maele
+- 1er août 2008 : Pierre Sallenave
+- 22 octobre 2014 : Nicolas Grivel
+- Depuis le 15 décembre 2021 : Anne-Claire Mialot
 
 ## Dossier Anru
 
@@ -74,12 +74,12 @@ Un dossier Anru constitue la documentation officielle d'un projet de rénovation
 
 C’est la collectivité territoriale, généralement une communauté (communauté d'agglomération, syndicat d'agglomération nouvelle ou communauté de communes), qui est porteuse du projet de rénovation urbaine. Il lui appartient donc de monter le dossier en collectant auprès de tous les partenaires les éléments nécessaires à sa constitution.
 
-Toutes les pièces exigées par le règlement général de l'Anru doivent être fournies selon le contenu-type du dossier défini par l’agence. Notamment :
+Toutes les pièces exigées par le règlement général de l'Anru doivent être fournies selon le contenu-type du dossier défini par l’agence. Notamment :
 
-- le dossier explicitera de façon très précise la phase opérationnelle, qui fera l’objet de la contractualisation, et présentera à titre d’information les actions envisagées pour la partie non encore arrêtée précisément ;
-- le dossier doit correspondre à un projet pluriannuel totalement opérationnel se déroulant au plus tard jusqu’en 2018 ;
-- le dossier doit comporter un descriptif, opération par opération, année après année, de la maîtrise d’ouvrage et des plans de financement retenu ;
-- le dossier comprend surtout la « maquette financière », tableau de données chiffrées de 5 Mo, pièce contractuelle essentielle pour les futures décisions d'attributions de subvention (DAS) attribuées aux différents maîtres d'ouvrage.
+- le dossier explicitera de façon très précise la phase opérationnelle, qui fera l’objet de la contractualisation, et présentera à titre d’information les actions envisagées pour la partie non encore arrêtée précisément ;
+- le dossier doit correspondre à un projet pluriannuel totalement opérationnel se déroulant au plus tard jusqu’en 2018 ;
+- le dossier doit comporter un descriptif, opération par opération, année après année, de la maîtrise d’ouvrage et des plans de financement retenu ;
+- le dossier comprend surtout la « maquette financière », tableau de données chiffrées de 5 Mo, pièce contractuelle essentielle pour les futures décisions d'attributions de subvention (DAS) attribuées aux différents maîtres d'ouvrage.
 
 ### Instruction
 
@@ -93,17 +93,24 @@ Le comité d’engagement donne son avis sur la base duquel le projet de rénova
 
 La convention pluriannuelle rédigée (en concertation avec les maîtres d’ouvrage concernés par l’opération) par le délégué territorial, est soumise à l’approbation du conseil d’administration ou du directeur général (DG) de l'Anru.
 
-Le processus d'approbation varie selon trois seuils budgétaires :
+Le processus d'approbation varie selon trois seuils budgétaires :
 
-- Montant inférieur à 20 millions d’euros de subvention Anru : le DG de l'Anru peut approuver la convention après simple avis du comité d’engagement ;
-- Montant compris entre 20 et 50 millions d’euros : Le DG ou le comité d’engagement peuvent solliciter le conseil d’administration ou alors la convention est approuvée par le DG ;
-- Montant situé au-dessus de 50 millions d’euros : Les projets sont systématiquement examinés en conseil d’administration, sur l’avis du comité d’engagement.
+- Montant inférieur à 20 millions d’euros de subvention Anru : le DG de l'Anru peut approuver la convention après simple avis du comité d’engagement ;
+- Montant compris entre 20 et 50 millions d’euros : Le DG ou le comité d’engagement peuvent solliciter le conseil d’administration ou alors la convention est approuvée par le DG ;
+- Montant situé au-dessus de 50 millions d’euros : Les projets sont systématiquement examinés en conseil d’administration, sur l’avis du comité d’engagement.
 
 ## Les projets retenus ou financés par l'Anru au 15 janvier 2014
 
-L'Anru finance, à des taux variables selon les projets et la capacité financière des intervenants, de nombreux projets de rénovation urbaine qui concernent, au 15 janvier 2014, 515 quartiers accueillant 4 000 000 habitants. Le montant budgété total des travaux auxquels l'Anru contribue financièrement s'élève à 45,8 milliards d'euros.
+L'Anru finance, à des taux variables selon les projets et la capacité financière des intervenants, de nombreux projets de rénovation urbaine qui concernent, au 15 janvier 2014, 515 quartiers accueillant 4 000 000 habitants. Le montant budgété total des travaux auxquels l'Anru contribue financièrement s'élève à 45,8 milliards d'euros.
 
-Pour les seuls projets ayant fait l'objet d'une convention signée ou ayant été validés par le comité d'engagement de l'Anru, soit 397 quartiers au total, ces travaux se traduiront par :
+Pour les seuls projets ayant fait l'objet d'une convention signée ou ayant été validés par le comité d'engagement de l'Anru, soit 397 quartiers au total, ces travaux se traduiront par :
+
+| Projets programmés et validéspar le Comité d'engagement au 15 janvier 2014 | Nombre total de logements concernésen France par les projets Anru |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Logements sociaux à construire                                             | 140 495                                                           |
+| Logements à réhabiliter                                                    | 317 572                                                           |
+| Logements à démolir ou déconstruire                                        | 144 752                                                           |
+| Logement à résidentialiser                                                 | 353 040                                                           |
 
 Pour connaître la liste des projets passés en comité d'engagement, voir L’état d’avancement du programme au 15 janvier 2014 (en pdf).
 
@@ -127,7 +134,7 @@ La nouvelle procédure du NPNRU se décompose en deux phases. Dans un premier te
 
 La phase de préfiguration a pour objet d'établir de préciser les projets et de les chiffrer avant leur passage devant le comité d'engagement de l'Anru. Un rapport de la commission des affaires économiques du Sénat paru en 2017 indique cependant que la multiplication des études peut ralentir la procédure. Les sénatrices rapporteuses s'inquiètent notamment des sommes engagées pour la production d'études, et souhaitent qu'elles soient rationalisées.
 
-Ce programme concerne 480 quartiers, sur un total de près de 1 500 quartiers prioritaires, dont 216 sont classés d’intérêt national et 264 d'intérêt régional. Au 15 décembre 2016, 95 % des quartiers d'intérêt national avaient un protocole de préfiguration en cours d'instruction ou déjà signé.
+Ce programme concerne 480 quartiers, sur un total de près de 1 500 quartiers prioritaires, dont 216 sont classés d’intérêt national et 264 d'intérêt régional. Au 15 décembre 2016, 95 % des quartiers d'intérêt national avaient un protocole de préfiguration en cours d'instruction ou déjà signé.
 
 ### Programme national de revitalisation des quartiers anciens dégradés (PNRQAD)
 
@@ -137,45 +144,14 @@ Ce programme concerne 480 quartiers, sur un total de près de 1 500 quartiers 
 
 ### Suivi et évaluation des programmes
 
-Le 17 juin 2020, la Cour des comptes fait paraître un rapport questionnant le passage des missions de suivi, d'évaluation et de contrôle budgétaire et financier des programmes de l'Anru du ministère de l'action et des comptes publics vers la direction générale des Collectivités locales (DGCL), opéré de manière discrétionnaire, « par simple amendement parlementaire » selon les termes de la Cour.
+Le 17 juin 2020, la Cour des comptes fait paraître un rapport questionnant le passage des missions de suivi, d'évaluation et de contrôle budgétaire et financier des programmes de l'Anru du ministère de l'action et des comptes publics vers la direction générale des Collectivités locales (DGCL), opéré de manière discrétionnaire, « par simple amendement parlementaire » selon les termes de la Cour.
 
-Le 12 juin 2023, quatre députés du parti politique La France Insoumise, François Piquemal (Haute-Garonne), Marianne Maximi (Puy-de-Dôme), Farida Amrani (Essonne) et David Guiraud (Nord), présentent à l'Assemblée nationale un rapport issu de leur campagne « Allô Anru » et visant à interroger les habitants des QPV sur l'action de l'Anru. Ce dernier se montre en partie critique vis-à-vis du bilan de l'agence publique. Il regrette surtout l'absence d'évaluation ex-post des programmes de rénovation urbaine depuis son lancement en 2004.
+Le 12 juin 2023, quatre députés du parti politique La France Insoumise, François Piquemal (Haute-Garonne), Marianne Maximi (Puy-de-Dôme), Farida Amrani (Essonne) et David Guiraud (Nord), présentent à l'Assemblée nationale un rapport issu de leur campagne « Allô Anru » et visant à interroger les habitants des QPV sur l'action de l'Anru. Ce dernier se montre en partie critique vis-à-vis du bilan de l'agence publique. Il regrette surtout l'absence d'évaluation ex-post des programmes de rénovation urbaine depuis son lancement en 2004.
 
-Le 7 février 2024, France Stratégie fait paraître un rapport rédigé par Pierre-Yves Cusset, Clément Dherbécourt et Gabrielle Jacob dédié à l'évaluation du PNRU. Le rapport estime que le PNRU a certes eu un « impact causal significatif sur l’offre de logements et le peuplement des quartiers ciblés » mais que cet impact « s’observe essentiellement dans les quartiers où les opérations de démolition ont été les plus intenses, des quartiers en moyenne moins peuplés que les autres quartiers ciblés ». Toujours selon France Stratégie, la mise en œuvre du PNRU s'est néanmoins traduite par une « diminution notable de la part de logements sociaux et par une réduction de la part des ménages les plus pauvres ». Ainsi, « dans le quart des quartiers où les démolitions ont été les plus intenses, le PNRU a causé une diminution de plus de 9 % de la part de logements sociaux, ainsi qu'une baisse de 17% de la part des ménages les plus pauvres ». Le PNRU a donc « en partie atteint son objectif de renforcer la mixité sociale dans les quartiers concernés, en agissant sur l'offre de logements et le peuplement ».
+Le 7 février 2024, France Stratégie fait paraître un rapport rédigé par Pierre-Yves Cusset, Clément Dherbécourt et Gabrielle Jacob dédié à l'évaluation du PNRU. Le rapport estime que le PNRU a certes eu un « impact causal significatif sur l’offre de logements et le peuplement des quartiers ciblés » mais que cet impact « s’observe essentiellement dans les quartiers où les opérations de démolition ont été les plus intenses, des quartiers en moyenne moins peuplés que les autres quartiers ciblés ». Toujours selon France Stratégie, la mise en œuvre du PNRU s'est néanmoins traduite par une « diminution notable de la part de logements sociaux et par une réduction de la part des ménages les plus pauvres ». Ainsi, « dans le quart des quartiers où les démolitions ont été les plus intenses, le PNRU a causé une diminution de plus de 9 % de la part de logements sociaux, ainsi qu'une baisse de 17% de la part des ménages les plus pauvres ». Le PNRU a donc « en partie atteint son objectif de renforcer la mixité sociale dans les quartiers concernés, en agissant sur l'offre de logements et le peuplement ».
 
-Le 7 février 2024 également, l'entreprise de sondages d'opinion Harris Interactive et la société mère Toluna dont elle est filiale font paraître le troisième volet de l'enquête « Les Français dans leur quartier » commandée par l'Anru. Elle observe que l'image des quartiers s'améliore particulièrement parmi les habitants d'un QPV ayant fait l'objet d'opérations de renouvellement urbain.
+Le 7 février 2024 également, l'entreprise de sondages d'opinion Harris Interactive et la société mère Toluna dont elle est filiale font paraître le troisième volet de l'enquête « Les Français dans leur quartier » commandée par l'Anru. Elle observe que l'image des quartiers s'améliore particulièrement parmi les habitants d'un QPV ayant fait l'objet d'opérations de renouvellement urbain.
 
 ### Affaire interne
 
 En novembre 2012, l'Anru est l'objet d'un rappel à la loi de la part de la Cnil pour avoir instauré, à l'initiative de son directeur général, Pierre Sallenave, un système de surveillance généralisée de son personnel six mois durant.
-
-## Notes et références
-
-- Cet article est partiellement ou en totalité issu de l'article intitulé « Dossier ANRU » (voir la liste des auteurs).
-
-## Voir aussi
-
-### Bibliographie
-
-- \[PDF\] Dossier : Rénovation urbaine : enjeux, mise en œuvre, qualités, dans la Revue Urbanisme Hors-série no 30, février 2007 - (84 pages, 4,5 Mo)
-
-### Articles connexes
-
-- Politique de la ville
-- Quartier prioritaire de la politique de la ville
-- Liste des zones franches urbaines
-- Grand projet de ville (dispositif supprimé par la réforme créant l'Anru)
-- Contrat urbain de cohésion sociale
-- Glossaire de l'immobilier
-- Participation des employeurs à l'effort de construction
-
-### Liens externes
-
-- Site officiel
-- \[PDF\]État du PNRU au 15 janvier 2014
-- Décret statutaire de l'ANRU du 9 février 2004
-- Règlement général de l'ANRU (Arrêté du 20 mars 2007)
-
-- Portail du droit français
-- Portail de l’architecture et de l’urbanisme
-- Portail des politiques sociales

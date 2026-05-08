@@ -1,6 +1,6 @@
 # Garantie universelle des loyers
 
-La Garantie universelle des loyers (GUL) est un dispositif français issu de la loi pour l'Accès au logement et un urbanisme rénové (ALUR) dans son article 23, qui fournit une garantie contre les loyers impayés, gérée et financée par l'État français. L'objectif de cette garantie est également de favoriser l'accès au logement et de lutter contre les expulsions.
+La **Garantie universelle des loyers (GUL)** est un dispositif français issu de la loi pour l'Accès au logement et un urbanisme rénové (ALUR) dans son article 23, qui fournit une garantie contre les loyers impayés, gérée et financée par l'État français. L'objectif de cette garantie est également de favoriser l'accès au logement et de lutter contre les expulsions.
 
 La loi a été présentée par Cécile Duflot, alors ministre de l'Égalité des Territoires et du Logement, le 26 juin 2013. Le 31 janvier 2014, la loi est votée en seconde lecture au Sénat. Après un passage en commission mixte paritaire, la loi a été en discussion en séance publique les 17 et 19 février 2014 à l'Assemblée nationale, puis le 20 février 2014 au Sénat, où elle a été définitivement adoptée, sous sa forme finale. La loi a été promulguée le 24 mars 2014.
 
@@ -10,9 +10,9 @@ Il était prévu que la garantie s'applique aux contrats de location conclus à 
 
 ## Historique
 
-Différents dispositifs pré-existaient à ce nouveau dispositif : Loca-pass et GRL. Actuellement le dispositif intitulé GRL (Garantie des Risques Locatifs) est en vigueur. Il a subi plusieurs difficultés (un des principaux assureurs a résilié les contrats ) et a atteint une diffusion limitée (300 000 contrats). C'est un dispositif payant distribué par des assureurs, avec une réassurance de l'Etat. Il s'éteindra à l'entrée en vigueur du nouveau dispositif.
+Différents dispositifs pré-existaient à ce nouveau dispositif : Loca-pass et GRL. Actuellement le dispositif intitulé GRL (Garantie des Risques Locatifs) est en vigueur. Il a subi plusieurs difficultés (un des principaux assureurs a résilié les contrats ) et a atteint une diffusion limitée (300 000 contrats). C'est un dispositif payant distribué par des assureurs, avec une réassurance de l'Etat. Il s'éteindra à l'entrée en vigueur du nouveau dispositif.
 
-La garantie universelle des loyers est présentée comme une « sécurité sociale » du logement. Le nouveau dispositif est gratuit, et directement proposé pour tous les baux, il est destiné à permettre un accès plus facile au logement pour les locataires, sécuriser les propriétaires et à prévenir les expulsions.
+La garantie universelle des loyers est présentée comme une « sécurité sociale » du logement. Le nouveau dispositif est gratuit, et directement proposé pour tous les baux, il est destiné à permettre un accès plus facile au logement pour les locataires, sécuriser les propriétaires et à prévenir les expulsions.
 
 Une étude d'impact du projet de loi, du 25 juin 2013, fournit une grande quantité de données chiffrées et la justification des modalités du projet de loi initial.
 
@@ -28,7 +28,7 @@ Parmi les avantages évoqués après le vote, on trouve la promotion offerte par
 
 Un sondage en ligne évoque pour sa part le scepticisme des bailleurs.
 
-Didier Ridoret, président de la Fédération française du bâtiment, considère que la garantie universelle des loyers est une « usine à gaz » inapplicable.
+Didier Ridoret, président de la Fédération française du bâtiment, considère que la garantie universelle des loyers est une « usine à gaz » inapplicable.
 
 D'autres articles vantent ses avantages ainsi que ceux de la loi ALUR dans son ensemble .
 
@@ -38,7 +38,7 @@ Début juin 2014, Europe 1 fait état d'une remise en cause de la loi ALUR, et e
 
 Finalement, le Premier Ministre, Manuel Valls, annonce le 13 juin 2014, que des modifications seront prises, et seront annoncées officiellement en conseil des Ministres le 25 juin.
 
-Le même jour, Cécile Duflot, à l'origine de la loi, réagit vivement, dans une interview au Parisien.
+Le même jour, Cécile Duflot, à l'origine de la loi, réagit vivement, dans une interview au _Parisien_.
 
 ## Conditions d'application
 
@@ -46,15 +46,15 @@ Le dispositif concerne les baux privés (les logements sociaux ne sont pas conce
 
 Il concerne tous les publics, quels que soient leurs revenus.
 
-La garantie aura plusieurs limitations, dont voici les principales :
+La garantie aura plusieurs limitations, dont voici les principales :
 
-- une carence, période minimale pendant laquelle la garantie ne s'appliquera pas (paragraphe I, D, 3) ;
-- une franchise, période minimale d'impayé, qui ne sera pas remboursée (paragraphe I,D,5 ) ;
-- une durée limite d'indemnisation (paragraphe I,D 3) ;
-- un montant maximal de remboursement, égal au loyer de référence (paragraphe I, D, 2) , défini dans l'article 6 de la loi, ou au loyer de référence majoré, pour les étudiants ou les personnes à revenu précaire ;
-- une limitation dans le montant remboursé, si le bailleur a été négligent, ou si le loyer était supérieur à 50 % des ressources du locataire (hors cas de locataire étudiant): paragraphe I, D, 4.
+- une carence, période minimale pendant laquelle la garantie ne s'appliquera pas (paragraphe I, D, 3) ;
+- une franchise, période minimale d'impayé, qui ne sera pas remboursée (paragraphe I,D,5 ) ;
+- une durée limite d'indemnisation (paragraphe I,D 3) ;
+- un montant maximal de remboursement, égal au loyer de référence (paragraphe I, D, 2) , défini dans l'article 6 de la loi, ou au loyer de référence majoré, pour les étudiants ou les personnes à revenu précaire ;
+- une limitation dans le montant remboursé, si le bailleur a été négligent, ou si le loyer était supérieur à 50 % des ressources du locataire (hors cas de locataire étudiant): paragraphe I, D, 4.
 
-La garantie est exclusive d'un cautionnement (hormis les cas des étudiants) : paragraphe I, B, 1.
+La garantie est exclusive d'un cautionnement (hormis les cas des étudiants) : paragraphe I, B, 1.
 
 Dans le cas des étudiants et locataires précaires (CDD, intérim, ...), les limitations sont moins fortes (franchise notamment), les remboursements sont supérieurs (loyer majoré).
 
@@ -62,29 +62,12 @@ La garantie sera gratuite, et s'appliquera pour tous les baux, sauf si le bail p
 
 ## Mise en œuvre
 
-La mise en œuvre de la garantie sera la suivante :
+La mise en œuvre de la garantie sera la suivante :
 
-- le contrat de bail devra être enregistré (chapitre I, B, 5) ;
-- dès la survenue des impayés, le bailleur devra se manifester pour obtenir ses remboursements par l'Etat ;
+- le contrat de bail devra être enregistré (chapitre I, B, 5) ;
+- dès la survenue des impayés, le bailleur devra se manifester pour obtenir ses remboursements par l'Etat ;
 - l'Etat se retournera alors vers le locataire, pour obtenir le remboursement, par le Trésor public.
 
 La gestion de cette garantie sera assurée par un établissement public, créé au plus tard le 1er janvier 2015, et par le biais de centres de gestion agréés.
 
 Les conditions précises de mise en œuvre seront définies par décret en 2014.
-
-## Références
-
-## Voir aussi
-
-### Articles connexes
-
-- Contrat de bail en France
-- Glossaire de l'immobilier
-
-### Liens externes
-
-- Présentation des objectifs de la GUL sur le site du gouvernement
-- Loi ALUR et GUL sur vie-publique.fr
-
-- Portail du droit français
-- Portail des années 2010
