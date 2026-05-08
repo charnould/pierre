@@ -1,6 +1,6 @@
 # Agence nationale de l'habitat
 
-L'Agence nationale de l'habitat (ANAH) est un établissement public administratif de l'État français, placée sous la tutelle du ministère de la Transition écologique et de la Cohésion des territoires et du ministère de l'Économie et des Finances.
+L'**Agence nationale de l'habitat** (**ANAH**) est un établissement public administratif de l'État français, placée sous la tutelle du ministère de la Transition écologique et de la Cohésion des territoires et du ministère de l'Économie et des Finances.
 
 Cet établissement met en œuvre la politique nationale d'amélioration du parc de logements privés existants. Sa vocation sociale l'amène à se concentrer sur les publics les plus modestes.
 
@@ -14,18 +14,18 @@ En 1971, le Fonds est remplacé par l'Agence nationale pour l'amélioration de l
 
 En 1998, cette taxe fait place à la contribution additionnelle à la contribution annuelle représentative du droit de bail. Le critère d'admissibilité s'étend aux logements construits depuis au moins 15 ans.
 
-En 2006, l'Agence change de nom et devient « l'Agence nationale de l'habitat », l'acronyme restant le même. Au fil des années, ses activités vont s'élargir tout en restant axées sur la politique nationale en matière d'amélioration de l'habitat privé en intégrant la gestion de la prime à l'amélioration de l'habitat (PAH), réservée aux propriétaires occupants modestes.
+En 2006, l'Agence change de nom et devient « l'Agence nationale de l'habitat », l'acronyme restant le même. Au fil des années, ses activités vont s'élargir tout en restant axées sur la politique nationale en matière d'amélioration de l'habitat privé en intégrant la gestion de la prime à l'amélioration de l'habitat (PAH), réservée aux propriétaires occupants modestes.
 
 Par exemple, depuis 2009, dans le cadre de la loi de mobilisation pour le logement et la lutte contre l'exclusion (loi MOLLE), l'ANAH a vu ses compétences élargies en matière d'habitat indigne.
 
 ## Missions
 
-Les missions de l'ANAH ont une vocation solidaire, elles portent sur :
+Les missions de l'ANAH ont une vocation solidaire, elles portent sur :
 
-- le traitement de l'habitat indigne et très dégradé ;
-- la rénovation thermique des logements ;
-- l'adaptation des logements à la perte d'autonomie : maintien à domicile des personnes âgées, adaptation des logements au handicap ;
-- le développement d'une offre de logements à loyers et charges maîtrisés ;
+- le traitement de l'habitat indigne et très dégradé ;
+- la rénovation thermique des logements ;
+- l'adaptation des logements à la perte d'autonomie : maintien à domicile des personnes âgées, adaptation des logements au handicap ;
+- le développement d'une offre de logements à loyers et charges maîtrisés ;
 - le redressement des copropriétés en difficulté.
 
 Par ailleurs, l'ANAH contribue au financement de projets d'humanisation de centres d'hébergement pour les personnes sans domicile.
@@ -34,7 +34,7 @@ Par ailleurs, l'ANAH contribue au financement de projets d'humanisation de centr
 
 ### Organisation interne
 
-L'ANAH se compose d'un conseil d'administration, d'un siège situé à Paris, ainsi que de comités et commissions (commission des recours, commission nationale pour la lutte contre l'habitat indigne, comité financier). Elle est présente dans chaque département à travers ses délégations locales au sein des Directions départementales des territoires (DDT) ou ses « délégataires de compétence » qui peuvent être des Conseils généraux ou des établissements publics de coopération intercommunale (EPCI) à qui l'État a délégué la gestion des aides à la pierre.
+L'ANAH se compose d'un conseil d'administration, d'un siège situé à Paris, ainsi que de comités et commissions (commission des recours, commission nationale pour la lutte contre l'habitat indigne, comité financier). Elle est présente dans chaque département à travers ses délégations locales au sein des Directions départementales des territoires (DDT) ou ses « délégataires de compétence » qui peuvent être des Conseils généraux ou des établissements publics de coopération intercommunale (EPCI) à qui l'État a délégué la gestion des aides à la pierre.
 
 Au niveau régional, les préfets, délégués de l'ANAH, assurent la programmation des aides de l'Agence ainsi que les politiques d'intervention sur le parc privé, avec le soutien opérationnel des Directions régionales de l'environnement, de l'aménagement et du logement (DREAL). Au siège de l'ANAH, les chargés de développement territorial assurent le dialogue de gestion avec les DREAL pour garantir l'efficacité de la distribution et de l'orientation territoriales des aides de l'Agence.
 
@@ -44,63 +44,54 @@ De 2016 à 2022, l'ANAH recourt aux services du consultant privé Capgemini, pou
 
 Il en résulte un fort conflit d'intérêts, le consultant privé assurant notamment depuis mai 2022 l'intérim de direction du département des aides et des relations aux usagers. Le recours aux services de Capgemini a cru depuis 2016 en raison de la règle de la fongibilité asymétrique, qui ne permet pas à un gestionnaire public d'accroître les crédits de personnel en utilisant des crédits prévus pour d'autres natures de dépenses.
 
-L'ANAH, qui compte 207 agents publics en 2022, emploierait ainsi plus de 70 développeurs informatiques et 20 consultants de Capgemini, pour un coût très élevé et des résultats contestés. Cependant, en 2022, et au nom du « droit de suite », l'agence confie au même consultant les missions France Rénov' et MaPrimeAdapt', sans effectuer de nouvel appel d'offres. Un rapport de la commission d'enquête au Sénat sur l'emprise des cabinets de conseil dénonce en 2022 la persistance de conflits d'intérêts et « l'influence croissante des cabinets de conseil privés sur les politiques publiques ».
+L'ANAH, qui compte 207 agents publics en 2022, emploierait ainsi plus de 70 développeurs informatiques et 20 consultants de Capgemini, pour un coût très élevé et des résultats contestés. Cependant, en 2022, et au nom du « droit de suite », l'agence confie au même consultant les missions France Rénov' et MaPrimeAdapt', sans effectuer de nouvel appel d'offres. Un rapport de la commission d'enquête au Sénat sur l'emprise des cabinets de conseil dénonce en 2022 la persistance de conflits d'intérêts et « l'influence croissante des cabinets de conseil privés sur les politiques publiques ».
 
 ## Attribution des aides
 
-L'Agence accorde des aides, en échange d'un certain nombre d'engagements, pour le financement de travaux lourds ou d'amélioration de l'habitat :
+L'Agence accorde des aides, en échange d'un certain nombre d'engagements, pour le financement de travaux lourds ou d'amélioration de l'habitat :
 
-- à des propriétaires occupants modestes sous conditions de ressources ;
-- à des propriétaires bailleurs avec une contrepartie de maîtrise des loyers ;
-- aux syndicats de copropriétés en difficulté pour des travaux sur les parties communes ;
+- à des propriétaires occupants modestes sous conditions de ressources ;
+- à des propriétaires bailleurs avec une contrepartie de maîtrise des loyers ;
+- aux syndicats de copropriétés en difficulté pour des travaux sur les parties communes ;
 - à certaines collectivités territoriales dans le cadre de conventions (Opérations programmées d'amélioration de l'habitat, Programmes d'intérêt général).
 
 Les propriétaires bailleurs qui ne souhaitent pas réaliser de travaux peuvent également signer une convention avec l'ANAH qui les engagent à louer leur logement à des locataires dont les revenus ne dépassent pas un certain seuil et à un loyer inférieur à celui du marché en contrepartie d'avantages fiscaux.
 
-La décision d'attribution de l'aide est prise au niveau local. Pour ce faire, les priorités nationales sont adaptées en fonction des contextes propres à chaque territoire et des moyens disponibles. Chaque projet est étudié sous ses différents aspects : social, technique et montage financier.
+La décision d'attribution de l'aide est prise au niveau local. Pour ce faire, les priorités nationales sont adaptées en fonction des contextes propres à chaque territoire et des moyens disponibles. Chaque projet est étudié sous ses différents aspects : social, technique et montage financier.
 
 Les aides qu'accorde l'ANAH aux propriétaires occupants sont définies en fonction des ressources d'un foyer et soumises à des plafonds. Ces derniers varient selon le nombre de personnes composant le foyer, la situation géographique du logement et au type de ressources du foyer.
 
 ## Types de travaux aidés
 
-Les travaux qui peuvent recevoir le soutien financier de l'ANAH concernent des logements achevés depuis au moins quinze ans et doivent se rapporter à l'une des priorités d'intervention de l'Agence : travaux lourds pour le traitement de l'habitat indigne, travaux d'amélioration pour la sécurité et la salubrité de l'habitat, pour l'autonomie de la personne et l'accessibilité des logements, pour la rénovation thermique, redressement des copropriétés en difficulté. Ceci exclut les petits travaux d'entretien ou de décoration, ainsi que les travaux assimilables à de la construction neuve ou à de l'agrandissement.
+Les travaux qui peuvent recevoir le soutien financier de l'ANAH concernent des logements achevés depuis au moins quinze ans et doivent se rapporter à l'une des priorités d'intervention de l'Agence : travaux lourds pour le traitement de l'habitat indigne, travaux d'amélioration pour la sécurité et la salubrité de l'habitat, pour l'autonomie de la personne et l'accessibilité des logements, pour la rénovation thermique, redressement des copropriétés en difficulté. Ceci exclut les petits travaux d'entretien ou de décoration, ainsi que les travaux assimilables à de la construction neuve ou à de l'agrandissement.
 
 ## Présidents et directeurs
 
 ### Présidents du conseil d'administration
 
+- Louis Saget, novembre 1971
+- Désiré Arnaud, mars 1978
+- Henri Hasson, mars 1984
+- Jacques Badet, novembre 1989
+- Emmanuel Edou (d), novembre 1995
+- Philippe Pelletier, juin 1998
+- Marc-Philippe Daubresse, janvier 2009
+- Dominique Braye, mars 2010
+- Claude Dilain, mars 2014
+- Nathalie Appéré, juin 2015 (à la suite du décès de Claude Dilain)
+- Thierry Repentin, octobre 2020
+
 ### Directeurs
 
-## Notes et références
-
-Dans le Journal officiel de la République française (JORF), sur Légifrance :
-
-## Voir aussi
-
-### Bibliographie
-
-- Paul de Puylaroque, « L'agence nationale pour l'amélioration de l'habitat », Politiques et management public, vol. 20, no 3 « Actes de la journée d'étude organisée par la Cour des comptes et les chambres régionales des comptes, L'évaluation du contrôle interne, 7 décembre 2001 »,‎ septembre 2002, p. 187–195 (DOI 10.3406/pomap.2002.2755, lire en ligne).
-- Nadia Kesteman, « L'activité de l'Agence nationale pour l'amélioration de l'habitat en 2012 », Informations sociales, Caisse nationale des allocations familiales, no 184,‎ 2014, p. 134–137 (DOI 10.3917/inso.184.0134, lire en ligne).
-
-### Articles connexes
-
-- Opération programmée d'amélioration de l'habitat
-- Glossaire de l'immobilier
-- Mal-logement
-- Marchand de sommeil
-- Agence nationale pour la rénovation urbaine
-
-### Liens externes
-
-- Site officiel
-
-- Ressources relatives aux organisations :
-  - SIREN
-  - data.gouv.fr
-- Ressource relative à plusieurs domaines :
-  - Annuaire du service public français
-- Ressource relative à la vie publique :
-  - Nominations au Journal officiel
-
-- Portail du bâtiment et des travaux publics
-- Portail de la France
+- Gérard Dupont, décembre 1971
+- Henri Hasson, octobre 1975
+- Michel Lefoulon, mars 1983
+- Jean-Paul Lacaze, mars 1984
+- Christian Nicol, novembre 1992
+- Michel Gaillard (par intérim), mai 1998
+- Pierre Pommellet, août 1998
+- Serge Contat, mai 2002
+- Sabine Baïetto-Beysson (d), septembre 2007
+- Isabelle Rougier (d), mars 2010
+- Blanche Guillemot (d), mars 2014
+- Valérie Mancret-Taylor (d), janvier 2018

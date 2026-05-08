@@ -1,26 +1,26 @@
 # Loi relative à la différenciation, la décentralisation, la déconcentration et portant diverses mesures de simplification de l'action publique locale
 
-La loi n° 2022-217 du 21 février 2022 relative à la différenciation, la décentralisation, la déconcentration et portant diverses mesures de simplification de l'action publique locale, plus connue sous le sigle 3DS, est une loi française promulguée sous la présidence d’Emmanuel Macron, en réponse au mouvement des gilets jaunes. Elle vise notamment à rendre plus fluides les rapports entre l'État et les collectivités territoriales.
+La **loi** n° 2022-217 du 21 février 2022 **relative à la différenciation, la décentralisation, la déconcentration et portant diverses mesures de simplification de l'action publique locale**, plus connue sous le sigle **3DS**, est une loi française promulguée sous la présidence d’Emmanuel Macron, en réponse au mouvement des gilets jaunes. Elle vise notamment à rendre plus fluides les rapports entre l'État et les collectivités territoriales.
 
 ## Genèse de la loi
 
 ### Conférence nationale des territoires (2017)
 
-Rendez-vous semestriel promis lors de la campagne présidentielle par Emmanuel Macron, la conférence nationale des territoires devait permettre de nouer de nouvelles relations de travail entre l'État français et les collectivités territoriales, et de débattre des mesures qui les concernent. L’initiative est saluée par les acteurs locaux, mais leurs attentes restaient nombreuses et la plupart restent prudents à l'annonce de sa création.. Lors de la première conférence nationale des territoires qui se tient au Sénat le 17 juillet 2017, la question ainsi posée est : comment préserver l’égalité républicaine tout en adaptant l’application des lois aux spécificités territoriales ? « L’égalité, qui crée de l’uniformité, n’assure plus l’égalité des chances sur la totalité de notre territoire, souligne le président de la République lors de cette conférence
+Rendez-vous semestriel promis lors de la campagne présidentielle par Emmanuel Macron, la conférence nationale des territoires devait permettre de nouer de nouvelles relations de travail entre l'État français et les collectivités territoriales, et de débattre des mesures qui les concernent. L’initiative est saluée par les acteurs locaux, mais leurs attentes restaient nombreuses et la plupart restent prudents à l'annonce de sa création.. Lors de la première conférence nationale des territoires qui se tient au Sénat le 17 juillet 2017, la question ainsi posée est : comment préserver l’égalité républicaine tout en adaptant l’application des lois aux spécificités territoriales ? « L’égalité, qui crée de l’uniformité, n’assure plus l’égalité des chances sur la totalité de notre territoire, souligne le président de la République lors de cette conférence
 
 ### Gilets jaunes et grand débat (2019)
 
-Durant le mouvement des Gilets jaunes, Emmanuel Macron annonce le 18 décembre 2018 l'organisation d'un grand débat, sur tout le territoire et ouvert à tous les Français. Le gouvernement présente ce grand débat comme un « outil consultatif de sortie de crise ». Le gouvernement entend faire remonter les souhaits des Français autour de quatre thèmes : « transition écologique , « fiscalité », « démocratie et citoyenneté et « organisation de l'État et des services publics. Le grand débat remet ainsi les maires sur le devant de la scène mais aussi fait émerger l’échelon départemental. Le président de la République peut ainsi mesurer la nécessité de s’appuyer sur les élus locaux, de passer d’une relation de défiance à des rapports de confiance, de sortir de l’isolement d’un pouvoir centralisé. Lors de sa conférence de presse du 25 avril 2019, Emmanuel Macron annonce qu’il s’agit désormais de jeter les bases de ce « nouvel acte de décentralisation ». Une des premières conclusions qu’en tire le président est la généralisation des maisons France services à l’échelle des cantons. La loi du 27 décembre 2019 relative à l’engagement dans la vie locale et à la proximité de l’action publique constitue ensuite une première déclinaison législative visant à rapprocher l’action publique des citoyens, en transférant notamment un certain nombre de pouvoirs d’action concrets aux maires.
+Durant le mouvement des Gilets jaunes, Emmanuel Macron annonce le 18 décembre 2018 l'organisation d'un grand débat, sur tout le territoire et ouvert à tous les Français. Le gouvernement présente ce grand débat comme un « outil consultatif de sortie de crise ». Le gouvernement entend faire remonter les souhaits des Français autour de quatre thèmes : « transition écologique , « fiscalité », « démocratie et citoyenneté et « organisation de l'État et des services publics. Le grand débat remet ainsi les maires sur le devant de la scène mais aussi fait émerger l’échelon départemental. Le président de la République peut ainsi mesurer la nécessité de s’appuyer sur les élus locaux, de passer d’une relation de défiance à des rapports de confiance, de sortir de l’isolement d’un pouvoir centralisé. Lors de sa conférence de presse du 25 avril 2019, Emmanuel Macron annonce qu’il s’agit désormais de jeter les bases de ce « nouvel acte de décentralisation ». Une des premières conclusions qu’en tire le président est la généralisation des maisons France services à l’échelle des cantons. La loi du 27 décembre 2019 relative à l’engagement dans la vie locale et à la proximité de l’action publique constitue ensuite une première déclinaison législative visant à rapprocher l’action publique des citoyens, en transférant notamment un certain nombre de pouvoirs d’action concrets aux maires.
 
 ### Concertation et Covid-19 (2020)
 
-La concertation avec les élus locaux sur le projet de loi dit alors « 3D » (décentralisation, différenciation, déconcentration) est engagée en janvier 2020 en vue d'une présentation au deuxième trimestre 2020 devant le Parlement. Mais la crise du Covid-19 va non seulement perturber ce calendrier mais donner une autre dimension au projet. La crise sanitaire engendrée par le COVID fait ressortir la nécessité pour l'Etat de se recentrer sur ses priorités et d’ajuster son architecture à la réalité des territoires, en laissant aux élus locaux une plus grande part d’initiative. En révélant les limites et capacités d'action de l’État dans les territoires, elle pèse lourdement sur le projet de loi. « On l’a vu pendant la crise, si les territoires n’avaient pas été là, je ne suis pas totalement certain qu’on s’en serait sorti aussi bien », juge le président du Sénat, Gérard Larcher.
+La concertation avec les élus locaux sur le projet de loi dit alors « 3D » (décentralisation, différenciation, déconcentration) est engagée en janvier 2020 en vue d'une présentation au deuxième trimestre 2020 devant le Parlement. Mais la crise du Covid-19 va non seulement perturber ce calendrier mais donner une autre dimension au projet. La crise sanitaire engendrée par le COVID fait ressortir la nécessité pour l'Etat de se recentrer sur ses priorités et d’ajuster son architecture à la réalité des territoires, en laissant aux élus locaux une plus grande part d’initiative. En révélant les limites et capacités d'action de l’État dans les territoires, elle pèse lourdement sur le projet de loi. « On l’a vu pendant la crise, si les territoires n’avaient pas été là, je ne suis pas totalement certain qu’on s’en serait sorti aussi bien », juge le président du Sénat, Gérard Larcher.
 
-Aux 3 Ds de décentralisation, déconcentration et différenciation, Jean Castex ajoute un volet « décomplexification ».
+Aux 3 Ds de décentralisation, déconcentration et différenciation, Jean Castex ajoute un volet « décomplexification ».
 
 ### Parcours parlementaire (2021)
 
-Le projet de loi initialement baptisé « 4D » (pour « différenciation, décentralisation, déconcentration, dé-complexification »), est présenté le mercredi 12 mai en conseil des ministres. C'est un patchwork de 83 articles, qui couvrent de nombreux sujets y compris le logement et les compétences des collectivités transfrontalières. La loi rebaptisée 3DS est examinée et largement réécrite par le Sénat en juillet 2021. L’Assemblée nationale s'empare du texte composé de 200 articles à partir du 6 décembre.
+Le projet de loi initialement baptisé « 4D » (pour « différenciation, décentralisation, déconcentration, dé-complexification »), est présenté le mercredi 12 mai en conseil des ministres. C'est un patchwork de 83 articles, qui couvrent de nombreux sujets y compris le logement et les compétences des collectivités transfrontalières. La loi rebaptisée 3DS est examinée et largement réécrite par le Sénat en juillet 2021. L’Assemblée nationale s'empare du texte composé de 200 articles à partir du 6 décembre.
 
 ## Principales dispositions
 
@@ -68,11 +68,11 @@ Les maires peuvent désormais encadrer l'implantation d'éoliennes sur leur terr
 
 Des dispositions prévoient une meilleure et plus simple coopération entre les administrations afin qu'elles s'échangent plus facilement les données des usagers. Cette coopération inclura les administrations nationales comme locales.
 
-Une expérimentation de « territoires zéro non-recours » (TZNR) aux droits et prestations sociales est expérimenté, afin d'améliorer les conditions d'accès aux droits.
+Une expérimentation de « territoires zéro non-recours » (TZNR) aux droits et prestations sociales est expérimenté, afin d'améliorer les conditions d'accès aux droits.
 
 ### Solidarité et renouvellement urbains
 
-Le dispositif de solidarité et renouvellement urbains, instaurés par la loi du 13 décembre 2000, est prolongé au-delà de son échéance prévue (2025). Les grandes agglomérations doivent toujours disposer d'au moins 20 % ou 25 % de logements sociaux. Toutefois, les communes retardataires auront plus de temps pour s'adapter à l'objectif. Les objectifs de logements sociaux peuvent désormais être définis localement, à travers un contrat de mixité sociale signé par le maire et le préfet.
+Le dispositif de solidarité et renouvellement urbains, instaurés par la loi du 13 décembre 2000, est prolongé au-delà de son échéance prévue (2025). Les grandes agglomérations doivent toujours disposer d'au moins 20 % ou 25 % de logements sociaux. Toutefois, les communes retardataires auront plus de temps pour s'adapter à l'objectif. Les objectifs de logements sociaux peuvent désormais être définis localement, à travers un contrat de mixité sociale signé par le maire et le préfet.
 
 ### Adressage
 
@@ -86,7 +86,7 @@ Pour Frédéric Giraut, géographe spécialiste de la toponymie, cette mesure ac
 
 ### Gestion des routes
 
-La décentralisation d'une partie du réseau routier national est permise. Cette possibilité recouvre deux cas : la mise à disposition à titre expérimental à une région, ou le transfert effectif à un département ou à une métropole.
+La décentralisation d'une partie du réseau routier national est permise. Cette possibilité recouvre deux cas : la mise à disposition à titre expérimental à une région, ou le transfert effectif à un département ou à une métropole.
 
 ### Article 97: autorisations d’exploitation commerciale
 
@@ -94,9 +94,9 @@ L'article 97 prévoit une simplification de la délivrance des autorisations d�
 
 ## Chronologie législative
 
-## Références
-
-- Portail du droit français
-- Portail de la politique française
-- Portail des années 2020
-- Portail de la Cinquième République
+| Première lecture | Commission mixte paritaire | Conseil constitutionnel | Président |
+| ---------------- | -------------------------- | ----------------------- | --------- | -------------- | -------- | --------------- |
+| Sénat            | Assemblée                  | Assemblée + Sénat       |
+| Dépôt            | Vote                       | Dépôt                   | Vote      | Résultat       | Contrôle | Promulgation    |
+| 12 mai 2021      | 21 juillet 2021            | 21 juillet 2021         |           | 9 février 2022 |          | 21 février 2022 |
+| TI, EI           | TA                         | TT                      |           |                |          |                 |
