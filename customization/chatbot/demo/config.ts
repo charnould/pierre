@@ -1,26 +1,29 @@
 import type { Config } from '../../../utils/_schema'
 
 export default {
-  id: 'zmode',
-  display: 'Z-Mode',
+  id: 'demo',
+  display: 'Démonstration',
   show: ['default', 'demo', 'zmode'],
   custom_data: {},
   api: [],
   protected: false,
-  // community_knowledge à false : le chatbot ne s'appuie que sur des connaissances générales,
-  // sans accès à des données spécifiques ou réglementaires.
-  community_knowledge: false,
+  community_knowledge: true,
   greeting: [
     'Bonjour 🖐️,',
-    "Je suis PIERRE, je fonctionne ici en mode « wrapper LLM » (c'est-à-dire comme lorsque vous utilisez ChatGPT ou Claude), je réponds à partir de connaissances générales, sans accès à des données officielles ou spécifiques de votre organisme.",
-    'Pour des informations précises ou réglementaires, utilisez un profil connecté à des sources fiables.'
+    "Je suis Eiffel, l'IA de Grand Dijon Habitat.",
+    "Pour rappel, je suis une version de démonstration : mes connaissances sont donc à ce jour limitées sur Grand Dijon Habitat ; je ne connais par exemple pas les agences et les coordonnées des gardiens... On peut néanmoins me l'enseigner en quelques clics !",
+    'Comment puis-je vous aider ?'
   ],
   examples: [
-    'Rédige un court poème « à la Rimbaud » faisant l’éloge des HLM',
-    'Imagine une journée typique dans la vie d’un gardien d’immeuble',
-    'Donne-moi des idées pour mieux vivre avec ses voisins en logement social'
+    'كيفية الاتصال بالمكتب الرئيسي لبلدية Grand Dijon Habitat؟',
+    'Comment contacter le service-client de Grand Dijon Habitat ?',
+    "Présente-moi succinctement Grand Dijon Habitat et la société de coordination 'Amplitudes'.",
+    'Comment déposer mon préavis de congé pour mon logement ? Et avez-vous un modèle de courrier ?',
+    "Qu'est-ce que l'avance Loca-Pass et comment savoir si j'y suis éligible ?",
+    'Enquête SLS, kézako + suis-je concerné ?'
   ],
-  disclaimer: 'Une IA peut se tromper. Vérifiez les informations importantes.',
+  disclaimer:
+    "Eiffel peut faire des erreurs et n'est affilié d'aucune façon à Grand Dijon Habitat (démonstration uniquement).",
   reasoning_display: 'off',
   reasoning_effort: 'medium',
   reasoning_placeholders: [

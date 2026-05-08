@@ -21,7 +21,9 @@ export const view = (params: {
       display: c.display,
       is_active: c.is_active
     })),
-    assetId: params.active_config.id
+    assetId: params.active_config.id,
+    reasoningDisplay: params.active_config.reasoning_display,
+    reasoningPlaceholders: params.active_config.reasoning_placeholders
   }).replace(/</g, '\\u003c')
 
   return html`<!doctype html>
@@ -34,7 +36,7 @@ export const view = (params: {
         />
         <link rel="preconnect" href="https://rsms.me" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/dist/css/style.1777671406217.css" />
+        <link rel="stylesheet" href="../assets/dist/css/style.1778620232100.css" />
         <link
           rel="icon"
           href="../customization/chatbot/${params.active_config.id}/system.svg"
@@ -44,7 +46,7 @@ export const view = (params: {
           rel="manifest"
           href="../customization/chatbot/${params.active_config.id}/manifest.json"
         />
-        <script type="module" src="../assets/dist/js/ai.1777671406217.js"></script>
+        <script type="module" src="../assets/dist/js/ai.1778620232100.js"></script>
         <title>Comment puis-je vous aider ? 🖐️</title>
       </head>
 

@@ -64,14 +64,14 @@ export const Config = z
         })
       )
       .default([]),
-    knowledge: z.object({
-      community: z.boolean(),
-      proprietary: z.boolean()
-    }),
+    community_knowledge: z.boolean(),
     disclaimer: z.string().nullable(),
     greeting: z.array(z.string()),
     examples: z.array(z.string()),
-    protected: z.boolean()
+    protected: z.boolean(),
+    reasoning_display: z.enum(['off', 'partial', 'full']).default('off'),
+    reasoning_effort: z.enum(['low', 'medium', 'high']).default('medium'),
+    reasoning_placeholders: z.array(z.string()).min(1)
   })
   .strict()
 

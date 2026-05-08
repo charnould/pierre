@@ -23,16 +23,50 @@ export const answer_user = (context: AIContext, signal?: AbortSignal) => {
       let fullContent = ''
       let inputTokens: number | null = null
       let outputTokens: number | null = null
+      // In full mode, track whether the next reasoning chunk needs a bullet prefix
+      let needsBullet = true
 
       for await (const chunk of streamCopilot(
         context.conv_id,
         context.config.id,
         context.content,
         Bun.env['AI_MODEL'],
-        signal
+        signal,
+        undefined,
+        context.config.reasoning_effort
       )) {
         if (chunk.type === 'delta') {
           yield JSON.stringify({ t: 'response', d: { content: chunk.content } }) + '\n'
+        } else if (chunk.type === 'intent') {
+          // assistant.intent: short description of what the agent is doing
+          // shown only in partial mode (in full mode, reasoning text already covers it)
+          if (context.config.reasoning_display === 'partial') {
+            // Wrap with spaces and add a period if not already punctuated
+            const trimmed = chunk.content.trim()
+            const punctuated = /[.!?]$/.test(trimmed) ? trimmed : trimmed + '.'
+            const content = ' ' + punctuated + ' '
+            yield JSON.stringify({ t: 'thinking', d: { content } }) + '\n'
+          }
+        } else if (chunk.type === 'reasoning_delta') {
+          const mode = context.config.reasoning_display
+          if (mode === 'partial' && chunk.source === 'reasoning') {
+            // Partial: reasoning tokens only.
+            // Normalize newlines to spaces, then ensure a trailing space so adjacent
+            // chunks don't collide (e.g. "…info." + "Searching" → "…info. Searching")
+            let content = chunk.content.replace(/[\n\r]+/g, ' ')
+            if (content.length > 0 && !/\s$/.test(content)) content += ' '
+            yield JSON.stringify({ t: 'thinking', d: { content } }) + '\n'
+          } else if (mode === 'full' && chunk.source === 'reasoning') {
+            // Prepend bullet on first reasoning chunk and after each tool completion
+            const prefix = needsBullet ? '\n\n- ' : ''
+            needsBullet = false
+            yield JSON.stringify({ t: 'thinking', d: { content: prefix + chunk.content } }) + '\n'
+          } else if (mode === 'full' && chunk.source === 'tool_start') {
+            // tool_start already contains \n\n- prefix for tool lines, or \n\n for completion
+            // After a tool completes (\n\n), the next reasoning chunk needs a bullet
+            if (chunk.content === '\n\n') needsBullet = true
+            yield JSON.stringify({ t: 'thinking', d: { content: chunk.content } }) + '\n'
+          }
         } else if (chunk.type === 'reset') {
           yield JSON.stringify({ t: 'reset' }) + '\n'
         } else if (chunk.type === 'done') {

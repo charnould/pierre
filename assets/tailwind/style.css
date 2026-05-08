@@ -64,7 +64,7 @@ html::-webkit-scrollbar,
   @apply mt-3 max-w-sm text-[12px] leading-snug text-gray-400;
 }
 
-/* Thinking cursor */
+/* Thinking cursor (used when reasoning is off) */
 
 .thinking {
   display: inline-block;
@@ -76,6 +76,14 @@ html::-webkit-scrollbar,
   margin-top: 15px;
   margin-bottom: 5px;
   animation: blink 1s infinite;
+}
+
+.thinking--inline {
+  height: 0.85em;
+  width: 8px;
+  margin-top: 0;
+  margin-bottom: 0;
+  vertical-align: middle;
 }
 
 @keyframes blink {
@@ -109,6 +117,110 @@ html::-webkit-scrollbar,
   opacity: 0;
   filter: blur(6px);
   transform: translateY(-4px);
+}
+
+/* ── Reasoning tokens ── */
+
+.reasoning-wrapper {
+  @apply my-3 text-xs;
+}
+
+.reasoning-wrapper .thinking {
+  margin-left: 0;
+}
+
+.reasoning-summary {
+  @apply flex cursor-pointer items-center gap-1 text-gray-400 select-none;
+  font-size: 0.75rem;
+}
+
+.reasoning-pulse {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #a78bfa;
+  flex-shrink: 0;
+  animation: reasoning-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes reasoning-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.75);
+  }
+}
+
+.reasoning-content {
+  @apply max-h-36 overflow-y-auto text-gray-400;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  margin-top: 0.35rem;
+}
+
+.reasoning-cursor {
+  display: inline-block;
+  width: 0.55em;
+  height: 0.85em;
+  background-color: currentColor;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  animation: blink 1s infinite;
+}
+
+.reasoning-content--full {
+  @apply max-h-72;
+}
+
+/* Normalize all Streamdown elements inside reasoning to the same text level */
+.reasoning-content [data-streamdown='heading-1'],
+.reasoning-content [data-streamdown='heading-2'],
+.reasoning-content [data-streamdown='heading-3'],
+.reasoning-content [data-streamdown='heading-4'],
+.reasoning-content [data-streamdown='heading-5'],
+.reasoning-content [data-streamdown='heading-6'] {
+  font-size: inherit;
+  font-weight: 500;
+  color: inherit;
+  margin-top: 0.15rem;
+  margin-bottom: 0.15rem;
+}
+
+.reasoning-content p {
+  margin-bottom: 0.1rem;
+}
+
+.reasoning-content [data-streamdown='code-block'] {
+  font-size: inherit;
+  padding: 0.25rem 0.5rem;
+  margin: 0.25rem 0;
+}
+
+.reasoning-content [data-streamdown='inline-code'] {
+  font-size: inherit;
+}
+
+.reasoning-content [data-streamdown='blockquote'] {
+  margin: 0.2rem 0;
+  padding: 0 0.5rem;
+}
+
+.reasoning-content [data-streamdown='unordered-list'],
+.reasoning-content [data-streamdown='ordered-list'] {
+  margin: 0;
+  padding-left: 0;
+  list-style-type: none;
+}
+
+.reasoning-content [data-streamdown='list-item'] {
+  margin: 0.2rem 0;
+  padding: 0;
 }
 
 /* ── Streamdown list alignment ── */
