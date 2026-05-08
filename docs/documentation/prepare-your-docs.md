@@ -8,8 +8,8 @@ Ce guide explique quels formats de fichiers `PIERRE` accepte, comment les prépa
 
 - [Quels fichiers sont acceptés par `PIERRE` pour enrichir sa base de connaissances](#quels-fichiers-sont-accept%C3%A9s-par-pierre-pour-enrichir-sa-base-de-connaissances)
 - [Comment bien préparer vos documents ?](#comment-bien-pr%C3%A9parer-vos-documents)
-  * [Préparer vos documents `.doc`/`.docx` et `.md`](#pr%C3%A9parer-vos-documents-docdocx-et-md)
-  * [Préparer vos fichiers `.xls`/`.xlsx`/`.xlsm`/`.xlsb`](#pr%C3%A9parer-vos-fichiers-xlsxlsxxlsmxlsb)
+  - [Préparer vos documents `.doc`/`.docx` et `.md`](#pr%C3%A9parer-vos-documents-docdocx-et-md)
+  - [Préparer vos fichiers `.xls`/`.xlsx`/`.xlsm`/`.xlsb`](#pr%C3%A9parer-vos-fichiers-xlsxlsxxlsmxlsb)
 - [`_metadata.xlsx` : un fichier pour les gouverner tous (obligatoire)](#_metadataxlsx--un-fichier-pour-les-gouverner-tous-obligatoire)
 
 <!-- tocstop -->

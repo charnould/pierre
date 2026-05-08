@@ -22,42 +22,42 @@ Plus concrètement, PIERRE c'est à la fois :
 <!-- toc -->
 
 - [Les bases de connaissances de PIERRE](#les-bases-de-connaissances-de-pierre)
-  * [Deux bases, deux usages](#deux-bases-deux-usages)
-  * [Pourquoi c'est important ?](#pourquoi-cest-important)
-  * [Contribuer à la base de connaissances communautaire](#contribuer-%C3%A0-la-base-de-connaissances-communautaire)
-    + [Qu'est-ce que contribuer à la base de connaissances communautaire ?](#quest-ce-que-contribuer-%C3%A0-la-base-de-connaissances-communautaire)
-    + [Thématiques couvertes par la base de connaissances communautaire](#th%C3%A9matiques-couvertes-par-la-base-de-connaissances-communautaire)
-    + [Comment y contribuer concrètement ?](#comment-y-contribuer-concr%C3%A8tement)
+  - [Deux bases, deux usages](#deux-bases-deux-usages)
+  - [Pourquoi c'est important ?](#pourquoi-cest-important)
+  - [Contribuer à la base de connaissances communautaire](#contribuer-%C3%A0-la-base-de-connaissances-communautaire)
+    - [Qu'est-ce que contribuer à la base de connaissances communautaire ?](#quest-ce-que-contribuer-%C3%A0-la-base-de-connaissances-communautaire)
+    - [Thématiques couvertes par la base de connaissances communautaire](#th%C3%A9matiques-couvertes-par-la-base-de-connaissances-communautaire)
+    - [Comment y contribuer concrètement ?](#comment-y-contribuer-concr%C3%A8tement)
 - [Enrichir votre instance de PIERRE avec vos connaissances propriétaires](#enrichir-votre-instance-de-pierre-avec-vos-connaissances-propri%C3%A9taires)
 - [Architecture et fonctionnement technique](#architecture-et-fonctionnement-technique)
-  * [Sécurité, confidentialité & RGPD](#s%C3%A9curit%C3%A9-confidentialit%C3%A9--rgpd)
-  * [Contribuer au code source](#contribuer-au-code-source)
-  * [Technologies](#technologies)
-  * [Vue d'ensemble technique](#vue-densemble-technique)
-  * [Isolation par conversation : les smolVMs](#isolation-par-conversation--les-smolvms)
-  * [Le flux de streaming (NDJSON)](#le-flux-de-streaming-ndjson)
-  * [Déploiement : Kamal + Docker](#d%C3%A9ploiement--kamal--docker)
-  * [Modèles de langage (BYOK)](#mod%C3%A8les-de-langage-byok)
-  * [Télémétrie](#t%C3%A9l%C3%A9m%C3%A9trie)
-  * [Les coûts associés à l'usage de PIERRE](#les-co%C3%BBts-associ%C3%A9s-%C3%A0-lusage-de-pierre)
+  - [Sécurité, confidentialité & RGPD](#s%C3%A9curit%C3%A9-confidentialit%C3%A9--rgpd)
+  - [Contribuer au code source](#contribuer-au-code-source)
+  - [Technologies](#technologies)
+  - [Vue d'ensemble technique](#vue-densemble-technique)
+  - [Isolation par conversation : les smolVMs](#isolation-par-conversation--les-smolvms)
+  - [Le flux de streaming (NDJSON)](#le-flux-de-streaming-ndjson)
+  - [Déploiement : Kamal + Docker](#d%C3%A9ploiement--kamal--docker)
+  - [Modèles de langage (BYOK)](#mod%C3%A8les-de-langage-byok)
+  - [Télémétrie](#t%C3%A9l%C3%A9m%C3%A9trie)
+  - [Les coûts associés à l'usage de PIERRE](#les-co%C3%BBts-associ%C3%A9s-%C3%A0-lusage-de-pierre)
 - [Comment déployer PIERRE ?](#comment-d%C3%A9ployer-pierre)
-  * [Prérequis](#pr%C3%A9requis)
-  * [Faire héberger PIERRE (le plus simple)](#faire-h%C3%A9berger-pierre-le-plus-simple)
-  * [Héberger PIERRE (self-hosting)](#h%C3%A9berger-pierre-self-hosting)
-    + [Faire fonctionner PIERRE en local en 5 minutes](#faire-fonctionner-pierre-en-local-en-5-minutes)
-    + [Déployer pour la première fois PIERRE sur un serveur de production](#d%C3%A9ployer-pour-la-premi%C3%A8re-fois-pierre-sur-un-serveur-de-production)
-    + [Redéployer PIERRE sur un serveur de production](#red%C3%A9ployer-pierre-sur-un-serveur-de-production)
-    + [Déployer et redéployer PIERRE sur un serveur de tests](#d%C3%A9ployer-et-red%C3%A9ployer-pierre-sur-un-serveur-de-tests)
+  - [Prérequis](#pr%C3%A9requis)
+  - [Faire héberger PIERRE (le plus simple)](#faire-h%C3%A9berger-pierre-le-plus-simple)
+  - [Héberger PIERRE (self-hosting)](#h%C3%A9berger-pierre-self-hosting)
+    - [Faire fonctionner PIERRE en local en 5 minutes](#faire-fonctionner-pierre-en-local-en-5-minutes)
+    - [Déployer pour la première fois PIERRE sur un serveur de production](#d%C3%A9ployer-pour-la-premi%C3%A8re-fois-pierre-sur-un-serveur-de-production)
+    - [Redéployer PIERRE sur un serveur de production](#red%C3%A9ployer-pierre-sur-un-serveur-de-production)
+    - [Déployer et redéployer PIERRE sur un serveur de tests](#d%C3%A9ployer-et-red%C3%A9ployer-pierre-sur-un-serveur-de-tests)
 - [Modifier et paramétrer PIERRE (self-hosting)](#modifier-et-param%C3%A9trer-pierre-self-hosting)
-  * [Modifier l'interface de l'agent IA](#modifier-linterface-de-lagent-ia)
-  * [Modifier la personnalité de l'agent IA](#modifier-la-personnalit%C3%A9-de-lagent-ia)
-    + [Demander à l'agent IA de citer ses sources](#demander-%C3%A0-lagent-ia-de-citer-ses-sources)
-  * [Installer PIERRE sur votre site web](#installer-pierre-sur-votre-site-web)
-    + [Via une fenêtre modale](#via-une-fen%C3%AAtre-modale)
-    + [Via une iframe](#via-une-iframe)
+  - [Modifier l'interface de l'agent IA](#modifier-linterface-de-lagent-ia)
+  - [Modifier la personnalité de l'agent IA](#modifier-la-personnalit%C3%A9-de-lagent-ia)
+    - [Demander à l'agent IA de citer ses sources](#demander-%C3%A0-lagent-ia-de-citer-ses-sources)
+  - [Installer PIERRE sur votre site web](#installer-pierre-sur-votre-site-web)
+    - [Via une fenêtre modale](#via-une-fen%C3%AAtre-modale)
+    - [Via une iframe](#via-une-iframe)
 - [Administrer PIERRE avec une interface graphique](#administrer-pierre-avec-une-interface-graphique)
-  * [Ajouter des connaissances depuis l'interface](#ajouter-des-connaissances-depuis-linterface)
-  * [Automatiser l'upload des connaissances via cURL](#automatiser-lupload-des-connaissances-via-curl)
+  - [Ajouter des connaissances depuis l'interface](#ajouter-des-connaissances-depuis-linterface)
+  - [Automatiser l'upload des connaissances via cURL](#automatiser-lupload-des-connaissances-via-curl)
 - [Application desktop Windows et macOS (alpha/not-prod-ready)](#application-desktop-windows-et-macos-alphanot-prod-ready)
 - [Licence](#licence)
 
@@ -137,15 +137,15 @@ Pour contribuer au code source, créer une `issue` dans GitHub et suivre les us 
 
 ## Technologies
 
-| Composant                   | Technologie                                                                                                 |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Runtime                     | [Bun](https://bun.sh) (MIT)                                                                                 |
-| Framework                   | [Hono](https://hono.dev) (MIT)                                                                              |
-| Agent IA (« Harness »)      | [Copilot CLI](https://github.com/features/copilot/cli) + [SDK](https://github.com/github/copilot-sdk) (MIT) |
-| Isolation des conversations | [smol machines](https://smolmachines.com/), micro-VMs via KVM (Apache-2.0)                                  |
-| Base de données             | SQLite via `bun:sqlite` (Public Domain)                                                                     |
-| Déploiement                 | [Kamal](https://kamal-deploy.org) (MIT) via [Docker](https://www.docker.com) (Apache-2.0)                   |
-| LLM                         | BYOK — OpenAI / OpenAI-compatible / Anthropic                                                               |
+| Composant                   | Technologie                                                                               |
+| --------------------------- | ----------------------------------------------------------------------------------------- |
+| Runtime                     | [Bun](https://bun.sh) (MIT)                                                               |
+| Framework                   | [Hono](https://hono.dev) (MIT)                                                            |
+| Agent IA (« Harness »)      | [Pi](https://pi.dev) (MIT)                                                                |
+| Isolation des conversations | [smol machines](https://smolmachines.com/), micro-VMs via KVM (Apache-2.0)                |
+| Base de données             | SQLite via `bun:sqlite` (Public Domain)                                                   |
+| Déploiement                 | [Kamal](https://kamal-deploy.org) (MIT) via [Docker](https://www.docker.com) (Apache-2.0) |
+| LLM                         | BYOK — OpenAI / OpenAI-compatible / Anthropic                                             |
 
 ## Vue d'ensemble technique
 
@@ -171,12 +171,12 @@ Navigateur / Widget / Apps              VPS (production)
                                         |         |                            |
                                         +---------+----------------------------+
                                                   |
-                                                  | TCP (gRPC)
+                                                  | JSONL stdin/stdout
                                                   v
                                         +-- smolVM (micro-VM) ----------------+
                                         |                                     |
-                                        |  Copilot CLI                        |
-                                        |  (--headless --port 9000)           |
+                                        |  Pi                                 |
+                                        |  (RPC mode)                         |
                                         |         |                           |
                                         |         |-- lit /knowledge/**       |
                                         |         |-- appelle le LLM (BYOK)   |
@@ -198,11 +198,10 @@ C'est une particularité important de l'architecture de PIERRE pour du « privac
 
 1. À l'arrivée d'un premier message, PIERRE crée une micro-VM légère.
 2. La base de connaissance applicable est **montée en lecture** à l'intérieur de la VM.
-3. Le **CLI de l'agent** est démarré en mode serveur TCP à l'intérieur de cette VM (port `9000`).
-4. Un port libre de l'hôte est forwardé vers ce port (`hostPort → VM:9000`).
-5. Le **SDK de l'agent** se connecte en TCP à la VM via ce port.
-6. La conversation se déroule : l'agent peut lire les fichiers de la base de connaissances, raisonner, et répondre.
-7. Après **30 minutes d'inactivité**, la VM est automatiquement détruite.
+3. **Pi** est démarré en mode RPC (stdin/stdout JSONL) à l'intérieur de cette VM.
+4. Un processus hôte (`PiRpcClient`) communique avec Pi via les flux stdin/stdout du sous-processus.
+5. La conversation se déroule : Pi lit `AGENTS.md` (instructions système) et les fichiers de la base de connaissances, raisonne, et répond.
+6. Après **30 minutes d'inactivité**, la VM est automatiquement détruite.
 
 ```
   Serveur hôte
@@ -210,9 +209,9 @@ C'est une particularité important de l'architecture de PIERRE pour du « privac
   |                                                                              |
   |   vm-registry (Map<convId, VmEntry>)                                         |
   |                                                                              |
-  |   conversation_abc  -->  smolVM "conversation_abc"   port 54312 -> VM:9000   |
-  |   conversation_def  -->  smolVM "conversation_def"   port 54891 -> VM:9000   |
-  |   conversation_xyz  -->  smolVM "conversation_xyz"   port 55104 -> VM:9000   |
+  |   conversation_abc  -->  smolVM "conversation_abc"   PiRpcClient (stdin/stdout)   |
+  |   conversation_def  -->  smolVM "conversation_def"   PiRpcClient (stdin/stdout)   |
+  |   conversation_xyz  -->  smolVM "conversation_xyz"   PiRpcClient (stdin/stdout)   |
   |                                                                              |
   |   [timer 30min inactivité -> destroyVm()]                                    |
   |   [cleanup orphelins au démarrage]                                           |
@@ -226,30 +225,30 @@ C'est une particularité important de l'architecture de PIERRE pour du « privac
 | Isolation des conversations    | ✗ Contexte partagé         | ✓ VM étanche par conv.              |
 | Fichiers accessibles à l'agent | Injectés manuellement      | Montés nativement dans `/knowledge` |
 | Sécurité des écritures         | Aucune garantie            | Écritures bloquées hors `/tmp/`     |
-| Session persistante            | Reconstituée à chaque tour | Conservée nativement dans le CLI    |
+| Session persistante            | Reconstituée à chaque tour | Conservée nativement dans Pi        |
 
 ## Le flux de streaming (NDJSON)
 
 PIERRE ne retourne pas une réponse monolithique — il **streame** la réponse en temps réel vers le client. Le protocole utilisé est le **NDJSON** (Newline-Delimited JSON) : chaque événement est une ligne JSON terminée par `\n`.
 
 ```
-Agent CLI (VM)          streamCopilot()           Navigateur
+Pi (VM)                 streamCopilot()           Navigateur
      |                         |                        |
-     |  assistant.turn_start   |                        |
+     |  agent_start            |                        |
      | --------------------->  |                        |
-     |  message_delta "Bon"    |   {t:"response",       |
+     |  text_delta "Bon"       |   {t:"response",       |
      | --------------------->  | --  d:{content:"Bon"}} >
-     |  message_delta "jour"   |   {t:"response",       |
+     |  text_delta "jour"      |   {t:"response",       |
      | --------------------->  | --  d:{content:"jour"}}>
-     |  message (tool call)    |   {t:"reset"}          |
+     |  tool_start             |   {t:"reset"}          |
      | --------------------->  | ---------------------> |
-     |  tool.execution_start   |                        |
+     |  tool_start             |                        |
      | --------------------->  |   (log only)           |
-     |  tool.execution_done    |                        |
+     |  tool_result            |                        |
      | --------------------->  |   (log only)           |
-     |  message_delta "Voici…" |   {t:"response",       |
+     |  text_delta "Voici…"    |   {t:"response",       |
      | --------------------->  | --  d:{content:"…"}}  >|
-     |  session.idle           |   {t:"done",           |
+     |  agent_end              |   {t:"done",           |
      | --------------------->  | --  d:{content:"…"}}  >|
 ```
 
@@ -412,11 +411,11 @@ Pour tester en conditions réelles les mises à jour et nouveautés de PIERRE, l
 
 ## Modifier la personnalité de l'agent IA
 
-Si vous avez personnalisé visuellement votre agent IA (_cf._ supra), il affiche bien les icônes et les salutations de votre organisme, mais **il ne se présente pas encore comme l'agent IA de votre organisme** (essayez en lui demandant qui il est !). Pour modifier cela, modifier `INSTRUCTIONS.md` (**ne pas modifier le nom des rubriques** et préférer l'anglais).
+Si vous avez personnalisé visuellement votre agent IA (_cf._ supra), il affiche bien les icônes et les salutations de votre organisme, mais **il ne se présente pas encore comme l'agent IA de votre organisme** (essayez en lui demandant qui il est !). Pour modifier cela, modifier `AGENTS.md` (préférez l'anglais). Ce fichier suit la convention standard des systèmes agentiques : Pi le lit depuis son répertoire de travail (`/knowledge`) au démarrage de chaque VM.
 
 ### Demander à l'agent IA de citer ses sources
 
-Pour que l'agent IA cite systématiquement ses sources dans ses réponses, ajouter dans la section `guidelines` de votre `INSTRUCTIONS.md` une instruction explicite.
+Pour que l'agent IA cite systématiquement ses sources dans ses réponses, ajouter dans `AGENTS.md` une instruction explicite (not working).
 
 ## Installer PIERRE sur votre site web
 
@@ -426,10 +425,7 @@ Pour que l'agent IA cite systématiquement ses sources dans ses réponses, ajout
 ### Via une fenêtre modale
 
 ```html
-<script
-  crossorigin="anonymous"
-  src="https://180.81.82.83/assets/core/dist/js/widget.js"
-></script>
+<script crossorigin="anonymous" src="https://180.81.82.83/assets/core/dist/js/widget.js"></script>
 <p
   id="pierre-ia"
   data-url="https://180.81.82.83"
