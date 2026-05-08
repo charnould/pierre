@@ -1,5 +1,10 @@
+import { JSDOM } from 'jsdom'
 import { format } from 'oxfmt'
 import TurndownService from 'turndown'
+
+// ── Wikipedia pages to scrape ────────────────────────────────────────────────
+// Add or uncomment entries to expand the knowledge base.
+// Page names must be URL-encoded (e.g. %27 for apostrophes).
 
 const WIKIPEDIA_PAGES = [
   'Agence_nationale_de_contrôle_du_logement_social',
@@ -40,78 +45,254 @@ const WIKIPEDIA_PAGES = [
   'Louis_Loucheur'
 ]
 
-const RATE_LIMIT_MS = 2000
+// ── Constants ────────────────────────────────────────────────────────────────
+
+/** Output directory for generated Markdown files. */
 const WIKI_OUTPUT_DIR = 'knowledge/Wikipédia'
-const SECTIONS_TO_REMOVE =
-  /(Annexes|Notes et références|Références|Voir aussi|Liens externes|Articles connexes|Pour approfondir|Notes|Galerie)/
-const HTML_CLEANUP_PATTERNS = [
-  [/<span[^>]*>/g, ''],
-  [/<\/span>/g, ''],
-  [/<time[^>]*>/g, ''],
-  [/<\/time>/g, ''],
-  [/<abbr[^>]*>/g, ''],
-  [/<\/abbr>/g, ''],
-  [/<br>/g, ''],
-  [/<dl>/g, ''],
-  [/<dd>/g, ''],
-  [/<\/dl>/g, ''],
-  [/<\/dd>/g, ''],
-  [/<i>/g, ''],
-  [/<b>/g, ''],
-  [/<\/i>/g, ''],
-  [/<\/b>/g, ''],
-  [/<p><\/p>/g, ''],
-  [/class="[^"]*"/g, ''],
-  [/style="[^"]*"/g, ''],
-  [/ id="[^"]*"/g, '']
-] as const
 
-const turndownService = new TurndownService({ headingStyle: 'atx' })
+/** Delay between requests to avoid hammering the Wikipedia API. */
+const RATE_LIMIT_MS = 2000
 
-function cleanHtml(html: string): string {
-  return HTML_CLEANUP_PATTERNS.reduce(
-    (acc, [pattern, replacement]) => acc.replace(pattern, replacement),
-    html
-  )
-}
+/**
+ * Section headings whose entire content should be dropped from the output.
+ * These sections (references, external links, navigation aids, …) add noise
+ * without value for a text-only knowledge base.
+ */
+const SECTIONS_TO_REMOVE = new Set([
+  'Annexe',
+  'Annexes',
+  'Articles connexes',
+  'Bibliographie',
+  'Galerie',
+  'Lien externe',
+  'Liens',
+  'Liens externes',
+  'Notes',
+  'Notes et références',
+  'Pour approfondir',
+  'Références',
+  'Sources',
+  'Voir aussi'
+])
 
-function removeBoilerplateSections(html: string): string {
-  const sections = html.split(new RegExp(`<h2>${SECTIONS_TO_REMOVE.source}</h2>`, 'gm'))
-  return sections[0]
-}
+/** CSS selectors for elements that never carry useful encyclopaedic text. */
+const NOISE_SELECTORS = [
+  '.bandeau-container',
+  '.bandeau-portail',
+  '.bandeau-article',
+  '.homonymie',
+  '.hatnote',
+  '.metadata',
+  '.mw-editsection',
+  'figure',
+  '.thumb',
+  '.gallery',
+  '.infobox',
+  '.infobox_v2',
+  '.infobox-geography',
+  'table.infobox',
+  '.reflist',
+  '.references',
+  'sup.reference',
+  '.navbox',
+  '.catlinks',
+  '.sister-wikipedia',
+  '.noprint',
+  '#toc',
+  '.toc',
+  '.mw-empty-elt'
+]
 
-async function processWikipediaPage(
-  pageTitle: string,
-  pageData: { title: string; extract: string }
-): Promise<void> {
-  let html = cleanHtml(pageData.extract)
-  html = `<h1>${pageData.title}</h1>\n${html}`
-  html = removeBoilerplateSections(html)
+// ── HTML → clean HTML ────────────────────────────────────────────────────────
 
-  const markdown = turndownService.turndown(html)
-  const { code } = await format('a.md', markdown)
-  await Bun.write(`${WIKI_OUTPUT_DIR}/${pageData.title}.md`, code)
-}
+/**
+ * Strips Wikipedia chrome from the raw HTML returned by the `action=parse` API
+ * and returns simplified HTML ready for Markdown conversion.
+ *
+ * Processing pipeline:
+ *  1. Remove noise elements (infoboxes, banners, navboxes, images, …).
+ *  2. Unwrap all `<div>` and `<span>` wrappers so the DOM becomes a flat
+ *     sequence of block elements (headings, paragraphs, lists, tables).
+ *  3. Remove boilerplate sections (references, external links, …) by
+ *     deleting each matching heading and all its following siblings up to
+ *     the next heading of equal or higher level.
+ *  4. Prepend the page title as an `<h1>`.
+ *
+ * @param html  Raw HTML string from the Wikipedia parse API (`parse.text`).
+ * @param title Human-readable page title (`parse.title`).
+ * @returns     Cleaned inner HTML string.
+ */
+const clean_html = (html: string, title: string): string => {
+  const dom = new JSDOM(html)
+  const doc = dom.window.document
+  const body = doc.querySelector('.mw-parser-output') ?? doc.body
 
-export async function scrape_wikipedia(): Promise<void> {
-  try {
-    for (const page of WIKIPEDIA_PAGES) {
-      await Bun.sleep(RATE_LIMIT_MS)
+  // Step 1 — remove elements that never contain useful text
+  for (const sel of NOISE_SELECTORS) {
+    for (const el of body.querySelectorAll(sel)) el.remove()
+  }
 
-      const json = await (
-        await fetch(
-          `https://fr.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&redirects=true&titles=${page}`
-        )
-      ).json()
+  // Step 2 — unwrap <div> and <span> wrappers (inner-first via reverse())
+  // so headings become flat direct siblings of their content paragraphs.
+  for (const tag of ['div', 'span'] as const) {
+    for (const el of Array.from(body.querySelectorAll(tag)).reverse()) {
+      const parent = el.parentNode
+      if (!parent) continue
+      while (el.firstChild) parent.insertBefore(el.firstChild, el)
+      el.remove()
+    }
+  }
 
-      for (const pageId in json.query.pages) {
-        const pageData = json.query.pages[pageId]
-        await processWikipediaPage(page, pageData)
-      }
+  // Step 3 — remove boilerplate sections
+  for (const heading of Array.from(body.querySelectorAll('h2, h3, h4'))) {
+    if (!SECTIONS_TO_REMOVE.has(heading.textContent?.trim() ?? '')) continue
+
+    const level = parseInt(heading.tagName[1]!, 10)
+    const to_remove: Element[] = [heading]
+    let sibling = heading.nextElementSibling
+
+    while (sibling) {
+      if (
+        ['H1', 'H2', 'H3', 'H4'].includes(sibling.tagName) &&
+        parseInt(sibling.tagName[1]!, 10) <= level
+      )
+        break
+      to_remove.push(sibling)
+      sibling = sibling.nextElementSibling
     }
 
-    console.log('✅ Wikipedia scrapped')
-  } catch (e) {
-    console.error('❌ Wikipedia scrapping failed', e)
+    for (const el of to_remove) el.remove()
   }
+
+  // Step 4 — prepend the page title as the top-level heading
+  const h1 = doc.createElement('h1')
+  h1.textContent = title
+  body.prepend(h1)
+
+  return body.innerHTML
 }
+
+// ── Clean HTML → Markdown ────────────────────────────────────────────────────
+
+/**
+ * Converts the cleaned Wikipedia HTML to Markdown using Turndown.
+ *
+ * Custom rules applied on top of the defaults:
+ * - **images** – all `<img>`, `<figure>` and `<figcaption>` are dropped.
+ * - **tables** – wikitables are rendered as GFM pipe tables.
+ * - **links**  – all `<a>` tags are stripped; only their text is kept.
+ *
+ * Unicode clean-up is applied after conversion:
+ * - Non-breaking spaces (`\u00A0`) → regular spaces.
+ * - Zero-width and directional marks are removed.
+ *
+ * @param html Cleaned HTML string produced by {@link clean_html}.
+ * @returns    Markdown string.
+ */
+const html_to_markdown = (html: string): string => {
+  const td = new TurndownService({
+    headingStyle: 'atx',
+    bulletListMarker: '-',
+    codeBlockStyle: 'fenced'
+  })
+
+  td.addRule('images', {
+    filter: ['img', 'figure', 'figcaption'],
+    replacement: () => ''
+  })
+
+  td.addRule('table', {
+    filter: 'table',
+    replacement(_content, node) {
+      const rows = Array.from((node as HTMLTableElement).querySelectorAll('tr'))
+      if (rows.length === 0) return ''
+
+      const to_row = (cells: Element[]) =>
+        `| ${cells.map((c) => c.textContent?.trim().replace(/\|/g, '\\|') ?? '').join(' | ')} |`
+
+      const header_cells = Array.from(rows[0]!.querySelectorAll('th, td'))
+      const separator = `| ${header_cells.map(() => '---').join(' | ')} |`
+      const body_rows = rows
+        .slice(1)
+        .map((r) => to_row(Array.from(r.querySelectorAll('th, td'))))
+        .join('\n')
+
+      return `\n\n${to_row(header_cells)}\n${separator}\n${body_rows}\n\n`
+    }
+  })
+
+  td.addRule('links', {
+    filter: 'a',
+    replacement: (_content, node) => node.textContent ?? ''
+  })
+
+  return td
+    .turndown(html)
+    .replace(/\u00A0/g, ' ')
+    .replace(/\u200B|\u200C|\u200D|\u200E|\u200F|\uFEFF/g, '')
+}
+
+// ── Page processor ───────────────────────────────────────────────────────────
+
+/**
+ * Converts a single Wikipedia page (HTML) to a formatted Markdown file
+ * and writes it to {@link WIKI_OUTPUT_DIR}.
+ *
+ * @param title Human-readable page title used as the filename and H1.
+ * @param html  Raw HTML from the Wikipedia parse API.
+ */
+const process_wikipedia_page = async (title: string, html: string): Promise<void> => {
+  const cleaned = clean_html(html, title)
+  const markdown = html_to_markdown(cleaned)
+  const { code } = await format('a.md', markdown)
+  await Bun.write(`${WIKI_OUTPUT_DIR}/${title}.md`, code)
+}
+
+// ── Main entry point ─────────────────────────────────────────────────────────
+
+/**
+ * Fetches each page listed in {@link WIKIPEDIA_PAGES} from the French Wikipedia
+ * parse API, converts the result to Markdown, and writes one `.md` file per
+ * page to {@link WIKI_OUTPUT_DIR}.
+ *
+ * A {@link RATE_LIMIT_MS} delay is applied between requests to comply with
+ * Wikipedia's API usage guidelines.
+ */
+export const scrape_wikipedia = async (): Promise<void> => {
+  for (const page of WIKIPEDIA_PAGES) {
+    try {
+      await Bun.sleep(RATE_LIMIT_MS)
+
+      const response = await fetch(
+        `https://fr.wikipedia.org/w/api.php?action=parse&prop=text&formatversion=2&format=json&redirects=true&page=${page}`,
+        {
+          headers: {
+            'User-Agent': 'PIERRE/1.0 (contact: charnould@pierre-ia.org)'
+          }
+        }
+      )
+
+      if (!response.ok) {
+        console.error(`❌ Scraping failed:"${page}"`)
+        continue
+      }
+
+      let json: { parse: { title: string; text: string } }
+
+      try {
+        json = JSON.parse(await response.text())
+      } catch {
+        continue
+      }
+
+      await process_wikipedia_page(json.parse.title, json.parse.text)
+      console.log(`👉 Scraped: "${page}"`)
+    } catch (e) {
+      console.error(`❌ Scraping failed: "${page}"`, e)
+    }
+  }
+
+  console.log('✅ Wikipedia scraped')
+}
+
+await scrape_wikipedia()

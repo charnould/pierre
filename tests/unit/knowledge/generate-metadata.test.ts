@@ -9,15 +9,20 @@ XLSX.set_fs(fs)
 
 const METADATA_PATH = `datastores/${Bun.env['SERVICE']}/files/_metadata.xlsx`
 
-// Build a minimal _metadata.xlsx matching the expected format:
-// row 0 & 1 are ignored headers, row 2 is the column-name row, row 3+ are data rows
-function createXlsx(dataRows: (string | number | null)[][]): void {
-  const headerRow = ['filename', 'access', 'agent_filename', 'sheet', 'headers']
+/**
+ * Builds a minimal `_metadata.xlsx` matching the expected format:
+ * row 0 and 1 are ignored headers, row 2 is the column-name row,
+ * row 3+ are data rows.
+ *
+ * @param data_rows - Raw metadata rows to write below the header.
+ */
+const create_xlsx = (data_rows: (string | number | null)[][]): void => {
+  const header_row = ['filename', 'access', 'agent_filename', 'sheet', 'headers']
   const sheet = XLSX.utils.aoa_to_sheet([
     ['ignored row 0'],
     ['ignored row 1'],
-    headerRow,
-    ...dataRows
+    header_row,
+    ...data_rows
   ])
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, sheet, 'metadata')
@@ -41,7 +46,7 @@ describe('generate_metadata', () => {
 
   describe('when _metadata.xlsx has a valid row', () => {
     beforeAll(() => {
-      createXlsx([['mon_fichier.md', 'default', 'Mon fichier test', 1, 1]])
+      create_xlsx([['mon_fichier.md', 'default', 'Mon fichier test', 1, 1]])
     })
 
     afterAll(async () => {
@@ -67,7 +72,7 @@ describe('generate_metadata', () => {
   describe('when _metadata.xlsx has an invalid row (missing agent_filename)', () => {
     beforeAll(() => {
       // agent_filename is null/missing — Zod will reject it
-      createXlsx([['mon_fichier.md', 'default', null, 1, 1]])
+      create_xlsx([['mon_fichier.md', 'default', null, 1, 1]])
     })
 
     afterAll(async () => {
@@ -81,6 +86,38 @@ describe('generate_metadata', () => {
       expect(files).toHaveLength(0)
       const codes = anomalies.map((a) => a.code)
       expect(codes).toContain('METADATA_FORMAT_ERROR')
+    })
+  })
+
+  describe('file type inference from filename', () => {
+    afterAll(async () => {
+      await Bun.file(METADATA_PATH)
+        .delete()
+        .catch(() => {})
+    })
+
+    it('infers type "md" for .md files', async () => {
+      create_xlsx([['rapport.md', 'default', 'Rapport', 1, 1]])
+      const { files } = await generate_metadata()
+      expect(files.find((f) => f.filename === 'rapport.md')?.type).toBe('md')
+    })
+
+    it('infers type "docx" for .docx files', async () => {
+      create_xlsx([['notice.docx', 'default', 'Notice', 1, 1]])
+      const { files } = await generate_metadata()
+      expect(files.find((f) => f.filename === 'notice.docx')?.type).toBe('docx')
+    })
+
+    it('infers type "xlsx" for .xlsx files', async () => {
+      create_xlsx([['tableau.xlsx', 'default', 'Tableau', 1, 1]])
+      const { files } = await generate_metadata()
+      expect(files.find((f) => f.filename === 'tableau.xlsx')?.type).toBe('xlsx')
+    })
+
+    it('infers type from uppercase extensions while preserving filename casing', async () => {
+      create_xlsx([['TABLEAU.XLSX', 'default', 'Tableau', 1, 1]])
+      const { files } = await generate_metadata()
+      expect(files.find((f) => f.filename === 'TABLEAU.XLSX')?.type).toBe('xlsx')
     })
   })
 })

@@ -1,4 +1,4 @@
-import { CopilotClient } from '@github/copilot-sdk'
+import type { FileSink, Subprocess } from 'bun'
 import { $ } from 'bun'
 
 import type { PierreInstance } from './smolvm'
@@ -7,10 +7,158 @@ import { createPierreInstance, destroyPierreInstance } from './smolvm'
 // How long a VM lives without any activity before being destroyed
 const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000 // 30 minutes
 
+// ---------------------------------------------------------------------------
+// PiRpcClient — JSONL stdin/stdout bridge to the Pi RPC subprocess
+// ---------------------------------------------------------------------------
+
+type PendingCommand = {
+  resolve: (data: unknown) => void
+  reject: (err: Error) => void
+}
+
+/**
+ * Manages the JSONL RPC protocol between Pierre (host) and Pi (inside smolVM).
+ *
+ * - Commands sent via `sendCommand` receive a response matched by `id`
+ * - Events (streaming, tool calls, agent_end…) are dispatched to `onEvent` listeners
+ * - `dispose()` stops all listeners; the subprocess itself is killed by `destroyPierreInstance`
+ */
+export class PiRpcClient {
+  private readonly process: Subprocess<'pipe', 'pipe', 'inherit'>
+  private readonly pendingCommands = new Map<string, PendingCommand>()
+  private readonly eventListeners = new Set<(event: Record<string, unknown>) => void>()
+  private disposed = false
+
+  constructor(process: Subprocess<'pipe', 'pipe', 'inherit'>) {
+    this.process = process
+    this.startReader()
+  }
+
+  private async startReader(): Promise<void> {
+    let buffer = ''
+    const decoder = new TextDecoder()
+    try {
+      for await (const chunk of this.process.stdout) {
+        if (this.disposed) break
+        buffer += decoder.decode(chunk as Uint8Array, { stream: true })
+        // Pi docs: split on \n only (NOT \r\n, NOT Unicode line separators)
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (!trimmed) continue
+          try {
+            const msg = JSON.parse(trimmed) as Record<string, unknown>
+            const id = msg['id'] as string | undefined
+            if (id !== undefined && this.pendingCommands.has(id)) {
+              const pending = this.pendingCommands.get(id)!
+              this.pendingCommands.delete(id)
+              pending.resolve(msg)
+            } else {
+              for (const listener of this.eventListeners) listener(msg)
+            }
+          } catch {
+            console.warn('[PI_RPC] Unparseable line:', trimmed.slice(0, 200))
+          }
+        }
+      }
+    } catch (err) {
+      if (!this.disposed) console.warn('[PI_RPC] Reader error:', err)
+    }
+    // Fail any commands still waiting
+    for (const [, pending] of this.pendingCommands) {
+      pending.reject(new Error('Pi process stdout closed'))
+    }
+    this.pendingCommands.clear()
+  }
+
+  /** Sends a command with a unique id and waits for the matching response. */
+  async sendCommand<T = Record<string, unknown>>(
+    cmd: Record<string, unknown>,
+    timeoutMs?: number
+  ): Promise<T> {
+    const id = `cmd-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    return new Promise<T>((resolve, reject) => {
+      let timer: ReturnType<typeof setTimeout> | undefined
+      const cleanup = () => {
+        if (timer !== undefined) clearTimeout(timer)
+        this.pendingCommands.delete(id)
+      }
+      this.pendingCommands.set(id, {
+        resolve: (data) => {
+          cleanup()
+          resolve(data as T)
+        },
+        reject: (err) => {
+          cleanup()
+          reject(err)
+        }
+      })
+      if (timeoutMs !== undefined) {
+        timer = setTimeout(() => {
+          this.pendingCommands.delete(id)
+          reject(new Error(`Pi command "${cmd['type']}" timed out after ${timeoutMs}ms`))
+        }, timeoutMs)
+      }
+      this.write(JSON.stringify({ ...cmd, id }))
+    })
+  }
+
+  /** Sends a command without waiting for a response (fire-and-forget). */
+  sendRaw(cmd: Record<string, unknown>): void {
+    this.write(JSON.stringify(cmd))
+  }
+
+  /** Subscribes to Pi events (lines without a matching command id). Returns an unsubscribe fn. */
+  onEvent(listener: (event: Record<string, unknown>) => void): () => void {
+    this.eventListeners.add(listener)
+    return () => {
+      this.eventListeners.delete(listener)
+    }
+  }
+
+  /**
+   * Polls Pi with `get_session_stats` until it responds, confirming RPC is ready.
+   * Replaces the TCP `waitForPort` from the Copilot architecture.
+   */
+  async waitForReady(timeoutMs = 30_000): Promise<void> {
+    const deadline = Date.now() + timeoutMs
+    while (Date.now() < deadline) {
+      try {
+        await this.sendCommand({ type: 'get_session_stats' }, 500)
+        return
+      } catch {
+        await new Promise<void>((r) => setTimeout(r, 300))
+      }
+    }
+    throw new Error('Timed out waiting for Pi RPC to be ready')
+  }
+
+  /** Stops event dispatching; the subprocess is killed separately by destroyPierreInstance. */
+  dispose(): void {
+    this.disposed = true
+    for (const [, pending] of this.pendingCommands) {
+      pending.reject(new Error('Pi RPC client disposed'))
+    }
+    this.pendingCommands.clear()
+    this.eventListeners.clear()
+  }
+
+  private write(line: string): void {
+    const stdin = this.process.stdin as FileSink
+    stdin.write(line + '\n')
+    Promise.resolve(stdin.flush()).catch(() => {})
+  }
+}
+
+// ---------------------------------------------------------------------------
+// VM registry
+// ---------------------------------------------------------------------------
+
 type VmEntry = {
   instance: PierreInstance
   configId: string
-  client: CopilotClient
+  piClient: PiRpcClient
   timer: ReturnType<typeof setTimeout> | null
   activeRequests: number
 }
@@ -22,6 +170,11 @@ function armTimer(convId: string, entry: VmEntry): void {
     console.log(`[VM_REGISTRY] Inactivity timeout — destroying VM for conv=${convId}`)
     destroyVm(convId).catch((e) => console.error('[VM_REGISTRY] Destroy error:', e))
   }, INACTIVITY_TIMEOUT_MS)
+}
+
+/** Returns true if a VM is already running for the given conversation. */
+export function hasVm(convId: string): boolean {
+  return registry.has(convId)
 }
 
 /**
@@ -38,7 +191,6 @@ export async function acquireVm(convId: string, configId: string): Promise<VmEnt
         `[VM_REGISTRY] configId mismatch for conv=${convId}: expected ${entry.configId}, got ${configId}`
       )
     }
-    // Pause the inactivity timer while a request is in flight
     if (entry.timer) {
       clearTimeout(entry.timer)
       entry.timer = null
@@ -50,22 +202,20 @@ export async function acquireVm(convId: string, configId: string): Promise<VmEnt
   console.log(`[VM_REGISTRY] Creating VM for conv=${convId} config=${configId}`)
   const instance = await createPierreInstance(convId, configId)
 
-  let client: CopilotClient
+  let piClient: PiRpcClient
   try {
-    // When using cliUrl, the CLI manages its own auth — do not pass useLoggedInUser
-    client = new CopilotClient({ cliUrl: `localhost:${instance.hostPort}` })
-    await client.start()
-    console.log(`[VM_REGISTRY] CopilotClient connected to VM CLI on port ${instance.hostPort}`)
+    piClient = new PiRpcClient(instance.piProcess)
+    await piClient.waitForReady()
+    console.log(`[VM_REGISTRY] PiRpcClient ready for conv=${convId}`)
   } catch (err) {
-    // VM was created but client init failed — destroy it to avoid orphaned VMs
-    console.error(`[VM_REGISTRY] Client init failed for conv=${convId}, cleaning up VM:`, err)
+    console.error(`[VM_REGISTRY] Pi RPC init failed for conv=${convId}, cleaning up VM:`, err)
     await destroyPierreInstance(instance).catch((e) =>
       console.error('[VM_REGISTRY] Cleanup error:', e)
     )
     throw err
   }
 
-  entry = { instance, configId, client, timer: null, activeRequests: 1 }
+  entry = { instance, configId, piClient, timer: null, activeRequests: 1 }
   registry.set(convId, entry)
   return entry
 }
@@ -94,7 +244,6 @@ export async function cleanupOrphanedVms(): Promise<void> {
     const raw = await $`smolvm machine ls --json`.json()
     machines = Array.isArray(raw) ? raw : (raw?.machines ?? [])
   } catch {
-    // smolvm unavailable or no machines — nothing to do
     return
   }
 
@@ -112,7 +261,7 @@ export async function cleanupOrphanedVms(): Promise<void> {
 }
 
 /**
- * Stops the inactivity timer, gracefully stops the `CopilotClient`,
+ * Stops the inactivity timer, disposes the PiRpcClient,
  * and destroys the smolVM associated with `convId`.
  */
 export async function destroyVm(convId: string): Promise<void> {
@@ -122,11 +271,7 @@ export async function destroyVm(convId: string): Promise<void> {
   registry.delete(convId)
   if (entry.timer) clearTimeout(entry.timer)
 
-  try {
-    await entry.client.stop()
-  } catch (e) {
-    console.warn(`[VM_REGISTRY] Client stop error for conv=${convId}:`, e)
-  }
+  entry.piClient.dispose()
 
   try {
     await destroyPierreInstance(entry.instance)

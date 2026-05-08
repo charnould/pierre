@@ -74,8 +74,7 @@ describe('ingest_files', () => {
   })
 
   describe('PROFILE_NOT_IN_METADATA', () => {
-    it('should emit anomaly for proprietary configs not used in metadata', async () => {
-      // demo_team has knowledge.proprietary = true → should appear
+    it('should emit info for any config not present in metadata', async () => {
       const { anomalies } = await ingest_files([])
       const profiles = anomalies
         .filter((a) => a.code === 'PROFILE_NOT_IN_METADATA')
@@ -83,9 +82,18 @@ describe('ingest_files', () => {
       expect(profiles).toContain('demo')
     })
 
-    it('should NOT emit anomaly for non-proprietary configs not used in metadata', async () => {
-      // testing_purpose_1 has knowledge.proprietary = false → should NOT appear
-      const { anomalies } = await ingest_files([])
+    it('should NOT emit PROFILE_NOT_IN_METADATA when config id is present in metadata', async () => {
+      const entry: Metadata = {
+        filename: 'doc.md',
+        agent_filename: 'Doc',
+        filepath: `${FILES_DIR}/doc.md`,
+        type: 'md',
+        sheet: 0,
+        headers: 0,
+        access: 'testing_purpose_1',
+        last_modified: '2024-01-01T00:00:00+00:00'
+      }
+      const { anomalies } = await ingest_files([entry])
       const profiles = anomalies
         .filter((a) => a.code === 'PROFILE_NOT_IN_METADATA')
         .map((a) => a.subject)

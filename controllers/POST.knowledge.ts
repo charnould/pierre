@@ -2,8 +2,8 @@ import { Database } from 'bun:sqlite'
 
 import type { Context } from 'hono'
 
-import { normalizeFilename } from '../utils/knowledge/normalize'
 import { run_pipeline } from '../utils/knowledge/run-pipeline'
+import { normalize_knowledge_name } from '../utils/knowledge/utils'
 
 /**
  * Handles POST requests for knowledge management operations.
@@ -40,21 +40,31 @@ export const controller = async (c: Context) => {
     if (action === 'upload' || c.req.header('authorization-context') === 'cli') {
       // Determine target service
       const service =
-        c.req.header('authorization-context') === 'cli' ? (body.service as string) : Bun.env.SERVICE
+        c.req.header('authorization-context') === 'cli'
+          ? (body.service as string)
+          : Bun.env['SERVICE']
 
       // Save each uploaded file
       for (const file of files) {
         // Preserve _metadata.xlsx as a reserved system filename
         const filename =
-          file.name === '_metadata.xlsx' ? file.name : normalizeFilename(file.name.normalize('NFC'))
+          file.name === '_metadata.xlsx'
+            ? file.name
+            : normalize_knowledge_name(file.name.normalize('NFC'), {
+                preserve_extension: true
+              })
         const path = `datastores/${service}/files/${filename}`
         await Bun.write(path, file)
       }
 
       // Respond for CLI uploads with JSON
       if (c.req.header('authorization-context') === 'cli') {
-        const uploadedNames = files.map((f) =>
-          f.name === '_metadata.xlsx' ? f.name : normalizeFilename(f.name.normalize('NFC'))
+        const uploaded_names = files.map((f) =>
+          f.name === '_metadata.xlsx'
+            ? f.name
+            : normalize_knowledge_name(f.name.normalize('NFC'), {
+                preserve_extension: true
+              })
         )
 
         // Record each CLI upload in knowledge_build
@@ -63,11 +73,11 @@ export const controller = async (c: Context) => {
           "INSERT INTO knowledge_build (created_at, source, kind, code, subject) VALUES (?, 'cli', 'action', 'CLI_UPLOAD', ?)"
         )
         const now = new Date().toISOString()
-        for (const name of uploadedNames) {
+        for (const name of uploaded_names) {
           stmt.run(now, name)
         }
 
-        return c.json({ status: 'ok', uploaded: uploadedNames }, 200)
+        return c.json({ status: 'ok', uploaded: uploaded_names }, 200)
       }
     }
 
@@ -86,7 +96,7 @@ export const controller = async (c: Context) => {
       await Bun.file(`datastores/${Bun.env['SERVICE']}/files/${filename as string}`).delete()
     }
 
-    // CASE 4: Force knwoledge rebuild
+    // CASE 4: Force knowledge rebuild
     if (action === 'rebuild') {
       await run_pipeline()
     }
