@@ -1,4 +1,3 @@
-import { createServer } from 'node:net'
 import { arch as nodeArch } from 'node:os'
 import { resolve } from 'node:path'
 
@@ -7,61 +6,20 @@ import type { Subprocess } from 'bun'
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..')
 
-// Port on which the Copilot CLI listens inside the VM
-const VM_CLI_PORT = 9000
-
-/** Finds a free TCP port on the host by briefly binding to port 0. */
-export async function findFreePort(): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const srv = createServer()
-    srv.listen(0, '127.0.0.1', () => {
-      const addr = srv.address()
-      if (!addr || typeof addr === 'string') return reject(new Error('Could not allocate port'))
-      const port = addr.port
-      srv.close(() => resolve(port))
-    })
-    srv.on('error', reject)
-  })
-}
-
-/** Polls until the host port is accepting TCP connections (max `timeoutMs`). */
-async function waitForPort(port: number, timeoutMs = 30_000): Promise<void> {
-  const { createConnection } = await import('node:net')
-  const deadline = Date.now() + timeoutMs
-  while (Date.now() < deadline) {
-    const open = await new Promise<boolean>((resolve) => {
-      const sock = createConnection({ host: '127.0.0.1', port }, () => {
-        sock.destroy()
-        resolve(true)
-      })
-      sock.on('error', () => {
-        sock.destroy()
-        resolve(false)
-      })
-    })
-    if (open) return
-    await new Promise<void>((r) => setTimeout(r, 200))
-  }
-  throw new Error(`Timed out waiting for CLI server on port ${port}`)
-}
-
 export type PierreInstance = {
   name: string
-  hostPort: number
-  /** Long-lived exec subprocess that keeps the Copilot CLI alive inside the VM. */
-  copilotProcess: Subprocess
+  /** Long-lived exec subprocess that keeps Pi running inside the VM (stdin/stdout piped). */
+  piProcess: Subprocess<'pipe', 'pipe', 'inherit'>
 }
 
 /**
  * Creates and starts a smolVM instance for a Pierre conversation.
  *
  * - Mounts `datastores/<service>/knowledge/<configId>` into `/knowledge` in the VM
- * - Injects BYOK provider env vars into `/root/.bashrc`
- * - Starts the Copilot CLI in TCP server mode inside the VM
- * - Forwards a free host port → VM port 9000
- * - Waits until the CLI server is ready before returning
+ * - Starts Pi in RPC mode inside the VM with stdin/stdout as JSONL transport
+ * - Waits until the Pi subprocess is running before returning
  *
- * Returns `{ name, hostPort }`. Call `destroyPierreInstance` when done.
+ * Returns `{ name, piProcess }`. Call `destroyPierreInstance` when done.
  */
 export async function createPierreInstance(
   convId: string,
@@ -69,7 +27,6 @@ export async function createPierreInstance(
 ): Promise<PierreInstance> {
   const name = convId
   const service = Bun.env['SERVICE']
-  const hostPort = await findFreePort()
 
   // Pick the smolmachine matching the host CPU architecture
   const arch = nodeArch() === 'x64' ? 'amd64' : 'arm64'
@@ -77,39 +34,70 @@ export async function createPierreInstance(
 
   const knowledgePath = resolve(PROJECT_ROOT, 'datastores', service!, 'knowledge', configId)
 
-  await $`smolvm machine create --net --from ${smolmachinePath} --volume ${knowledgePath}:/knowledge --port ${hostPort}:${VM_CLI_PORT} ${name}`
+  await $`smolvm machine create --net --from ${smolmachinePath} --volume ${knowledgePath}:/knowledge ${name}`
   await $`smolvm machine start --name ${name}`
 
-  // Verify copilot binary exists and log VM arch before attempting to start
-  const check =
-    await $`smolvm machine exec --name ${name} -- sh -c "ls -la /usr/local/bin/copilot 2>&1; uname -m"`
-      .quiet()
-      .nothrow()
+  // Verify Pi binary exists inside the VM
+  const check = await $`smolvm machine exec --name ${name} -- sh -c "which pi 2>&1; uname -m"`
+    .quiet()
+    .nothrow()
   console.log(`[SMOLVM] Preflight check:\n${check.stdout.toString()}${check.stderr.toString()}`)
 
-  // Start copilot as a FOREGROUND exec — keeping this subprocess alive keeps
-  // copilot running inside the VM. The exec session ends only when we kill it.
-  const startCmd = `exec /usr/local/bin/copilot --headless --no-auto-update --no-auto-login --port ${VM_CLI_PORT}`
-  const copilotProcess = Bun.spawn(
-    ['smolvm', 'machine', 'exec', '--name', name, '--', 'bash', '-c', startCmd],
-    { stdout: 'inherit', stderr: 'inherit' }
-  )
-  copilotProcess.exited.then((code) =>
-    console.log(`[SMOLVM] Copilot process exited with code ${code} for VM ${name}`)
+  // Build Pi startup args — inject BYOK provider credentials via -e flags
+  const providerType = (Bun.env['AI_TYPE'] ?? 'anthropic').toLowerCase()
+  const model = Bun.env['AI_MODEL'] ?? 'claude-sonnet-4-5'
+  const apiKey = Bun.env['AI_API_KEY'] ?? ''
+  const baseUrl = Bun.env['AI_BASE_URL'] ?? ''
+
+  const envArgs: string[] = []
+  if (apiKey) {
+    if (providerType === 'openai' || providerType === 'azure') {
+      envArgs.push('-e', `OPENAI_API_KEY=${apiKey}`)
+      if (baseUrl) envArgs.push('-e', `OPENAI_BASE_URL=${baseUrl}`)
+    } else {
+      envArgs.push('-e', `ANTHROPIC_API_KEY=${apiKey}`)
+    }
+  }
+
+  // -i keeps stdin open so Pi (RPC mode) can read commands; -w sets the cwd.
+  // Pi reads AGENTS.md from its cwd (/knowledge) at startup.
+  const piProcess = Bun.spawn(
+    [
+      'smolvm',
+      'machine',
+      'exec',
+      '--name',
+      name,
+      '-i',
+      '-w',
+      '/knowledge',
+      ...envArgs,
+      '--',
+      'pi',
+      '--mode',
+      'rpc',
+      '--no-session',
+      '--provider',
+      providerType,
+      '--model',
+      model
+    ],
+    { stdin: 'pipe', stdout: 'pipe', stderr: 'inherit' }
+  ) as Subprocess<'pipe', 'pipe', 'inherit'>
+
+  piProcess.exited.then((code) =>
+    console.log(`[SMOLVM] Pi process exited with code ${code} for VM ${name}`)
   )
 
-  // Wait until the forwarded port accepts connections on the host
-  await waitForPort(hostPort)
-
-  console.log(`[SMOLVM] VM ${name} ready — CLI on host port ${hostPort}`)
-  return { name, hostPort, copilotProcess }
+  console.log(`[SMOLVM] VM ${name} ready — Pi RPC subprocess started`)
+  return { name, piProcess }
 }
 
 /**
- * Kills the Copilot exec subprocess, then stops and deletes the smolVM.
+ * Kills the Pi exec subprocess, then stops and deletes the smolVM.
  */
 export async function destroyPierreInstance(instance: PierreInstance): Promise<void> {
-  instance.copilotProcess.kill()
+  instance.piProcess.kill()
   await $`smolvm machine stop --name ${instance.name}`
   await $`smolvm machine delete -f ${instance.name}`
 }

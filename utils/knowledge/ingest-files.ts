@@ -1,10 +1,9 @@
 import * as fs from 'node:fs'
 import { existsSync } from 'node:fs'
-import { readdir, rename } from 'node:fs/promises'
+import { cp, mkdir, readdir, rename, rm } from 'node:fs/promises'
 import { basename } from 'node:path'
 import { Readable } from 'node:stream'
 
-import { $ } from 'bun'
 import { formatInTimeZone } from 'date-fns-tz'
 import { fr } from 'date-fns/locale'
 import mammoth from 'mammoth'
@@ -15,7 +14,7 @@ import * as cpexcel from 'xlsx/dist/cpexcel.full.mjs'
 
 import { Config } from '../_schema'
 import type { Metadata } from './generate-metadata'
-import { normalizeFilename } from './normalize'
+import { normalize_knowledge_name } from './utils'
 
 interface FormattedContent {
   data: string
@@ -25,41 +24,55 @@ interface FormattedContent {
 const TIMEZONE = 'Europe/Paris'
 const COMMUNITY_KNOWLEDGE_DIR = 'donnees_universelles'
 
-async function renameFilesRecursively(dirPath: string): Promise<void> {
-  const files = await readdir(dirPath, { withFileTypes: true })
+// Initialise xlsx I/O adapters once at module level
+XLSX.set_fs(fs)
+XLSX.set_cptable(cpexcel)
+XLSX.stream.set_readable(Readable)
+
+const turndown_service = new TurndownService({ headingStyle: 'atx' })
+
+/**
+ * Recursively renames every file and directory inside `dir_path` using
+ * `normalize_knowledge_name`, ensuring all paths are safe for downstream processing.
+ *
+ * @param dir_path - Root directory to traverse.
+ */
+const rename_files_recursively = async (dir_path: string): Promise<void> => {
+  const files = await readdir(dir_path, { withFileTypes: true })
 
   for (const file of files) {
-    const oldPath = `${dirPath}/${file.name}`
-    const newName = normalizeFilename(file.name)
-    const newPath = `${dirPath}/${newName}`
+    const old_path = `${dir_path}/${file.name}`
+    const new_name = normalize_knowledge_name(file.name, { preserve_extension: file.isFile() })
+    const new_path = `${dir_path}/${new_name}`
 
-    if (file.name !== newName) await rename(oldPath, newPath)
-    if (file.isDirectory()) await renameFilesRecursively(newPath)
+    if (file.name !== new_name) await rename(old_path, new_path)
+    if (file.isDirectory()) await rename_files_recursively(new_path)
   }
 }
 
-const turndownService = new TurndownService({ headingStyle: 'atx' })
-
-async function loadConfigs(): Promise<Config[]> {
+/**
+ * Loads all chatbot and skill configurations from the `customization/` directory.
+ *
+ * @returns An array of `Config` objects for all chatbots and skills found.
+ */
+const load_configs = async (): Promise<Config[]> => {
   const configs: Config[] = []
 
-  const chatbotDirs = await readdir('./customization/chatbot')
-  for (const dir of chatbotDirs) {
+  const chatbot_dirs = await readdir('./customization/chatbot')
+  for (const dir of chatbot_dirs) {
     const content = (await import(`../../customization/chatbot/${dir}/config`)).default as Config
     configs.push(content)
   }
 
   if (existsSync('./customization/skills')) {
-    const skillEntries = await readdir('./customization/skills', {
-      withFileTypes: true
-    })
-    for (const entry of skillEntries.filter((e) => e.isDirectory())) {
+    const skill_entries = await readdir('./customization/skills', { withFileTypes: true })
+    for (const entry of skill_entries.filter((e) => e.isDirectory())) {
       try {
         const content = (await import(`../../customization/skills/${entry.name}/config`))
           .default as Config
         configs.push(content)
-      } catch {
-        // skip skills with broken configs
+      } catch (error) {
+        console.warn(`⚠️ Skipping invalid skill config — ${entry.name}`, error)
       }
     }
   }
@@ -67,35 +80,36 @@ async function loadConfigs(): Promise<Config[]> {
   return configs
 }
 
-export async function setupKnowledgeDirectories(): Promise<void> {
-  const configs = await loadConfigs()
-
-  for (const config of configs) {
-    const knowledgePath = `datastores/${Bun.env['SERVICE']}/knowledge/${config.id}`
-    await $`rm -rf ${knowledgePath} && mkdir ${knowledgePath}`
-
-    if (config.knowledge.community) {
-      const copiedPath = `${knowledgePath}/${COMMUNITY_KNOWLEDGE_DIR}`
-      await $`cp -r ./knowledge ${copiedPath}`
-      await renameFilesRecursively(copiedPath)
-    }
-  }
-}
-
-async function processDocxFile(filepath: string): Promise<FormattedContent> {
+/**
+ * Converts a `.docx` file to Markdown, stripping embedded images.
+ *
+ * @param filepath - Absolute or relative path to the `.docx` file.
+ * @returns Formatted Markdown content.
+ */
+const process_docx_file = async (filepath: string): Promise<FormattedContent> => {
   const html = (await mammoth.convertToHtml({ path: filepath })).value
   // Remove images as image handling is not implemented
-  const cleanHtml = html.replace(/<img[^>]*\/>/g, '')
-  const markdown = turndownService.turndown(cleanHtml)
-
+  const clean_html = html.replace(/<img[^>]*\/>/g, '')
+  const markdown = turndown_service.turndown(clean_html)
   return { data: markdown, parser: 'md' }
 }
 
-function normalizeSheetKey(key: string): string {
-  return key.toLowerCase().trim()
-}
+/**
+ * Normalizes a spreadsheet column header key (lowercase + trimmed).
+ *
+ * @param key - Raw column header from the spreadsheet.
+ */
+const normalize_sheet_key = (key: string): string => key.toLowerCase().trim()
 
-function normalizeSheetValue(value: unknown): unknown {
+/**
+ * Normalizes a spreadsheet cell value:
+ * - Dates are formatted as locale-aware French strings in Europe/Paris timezone.
+ * - Strings are trimmed, whitespace-collapsed, and lowercased; empty → `null`.
+ * - Other values are returned as-is.
+ *
+ * @param value - Raw cell value from the spreadsheet.
+ */
+const normalize_sheet_value = (value: unknown): unknown => {
   if (value instanceof Date) {
     return formatInTimeZone(value, TIMEZONE, 'PPPP', { locale: fr })
   }
@@ -106,135 +120,201 @@ function normalizeSheetValue(value: unknown): unknown {
   return value
 }
 
-function unmergeSheetCells(sheet: XLSX.WorkSheet): void {
+/**
+ * Expands merged cells in-place so each cell in a merged region carries the
+ * top-left value, then clears the merge metadata.
+ *
+ * @param sheet - The XLSX worksheet to mutate.
+ */
+const unmerge_sheet_cells = (sheet: XLSX.WorkSheet): void => {
   for (const merge of sheet['!merges'] ?? []) {
-    const mergedValue = sheet[XLSX.utils.encode_cell(merge.s)]?.v ?? ''
+    const merged_value = sheet[XLSX.utils.encode_cell(merge.s)]?.v ?? ''
     for (let row = merge.s.r; row <= merge.e.r; row++) {
       for (let col = merge.s.c; col <= merge.e.c; col++) {
-        sheet[XLSX.utils.encode_cell({ r: row, c: col })] = {
-          t: 's',
-          v: mergedValue
-        }
+        sheet[XLSX.utils.encode_cell({ r: row, c: col })] = { t: 's', v: merged_value }
       }
     }
   }
   sheet['!merges'] = []
 }
 
-async function processXlsxFile(
+/**
+ * Parses a spreadsheet file into a JSON array of normalized row objects.
+ *
+ * @param filepath - Path to the `.xlsx` / `.xls` / `.xlsm` / `.xlsb` file.
+ * @param sheet_index - Zero-based worksheet index to read.
+ * @param header_row_index - Zero-based row index of the column header row.
+ * @returns JSON-serialized normalized rows.
+ */
+const process_xlsx_file = async (
   filepath: string,
-  sheetIndex: number,
-  headerRowIndex: number
-): Promise<FormattedContent> {
-  XLSX.set_fs(fs)
-  XLSX.set_cptable(cpexcel)
-  XLSX.stream.set_readable(Readable)
+  sheet_index: number,
+  header_row_index: number
+): Promise<FormattedContent> => {
+  const workbook = XLSX.read(await Bun.file(filepath).arrayBuffer(), { cellDates: true })
+  const sheet = workbook.Sheets[workbook.SheetNames[sheet_index]]
 
-  const workbook = XLSX.read(await Bun.file(filepath).arrayBuffer(), {
-    cellDates: true
-  })
-  const sheet = workbook.Sheets[workbook.SheetNames[sheetIndex]]
+  unmerge_sheet_cells(sheet)
 
-  unmergeSheetCells(sheet)
+  const rows = XLSX.utils.sheet_to_json(sheet, { range: header_row_index, defval: null })
 
-  const rows = XLSX.utils.sheet_to_json(sheet, {
-    range: headerRowIndex,
-    defval: null
-  })
-
-  const normalizedRows = rows.map((obj) =>
+  const normalized_rows = rows.map((obj) =>
     Object.fromEntries(
       Object.entries(obj).map(([key, value]) => [
-        normalizeSheetKey(key),
-        normalizeSheetValue(value)
+        normalize_sheet_key(key),
+        normalize_sheet_value(value)
       ])
     )
   )
 
-  return { data: JSON.stringify(normalizedRows), parser: 'json' }
+  return { data: JSON.stringify(normalized_rows), parser: 'json' }
 }
 
-async function processMarkdownFile(filepath: string): Promise<FormattedContent> {
-  const markdown = await Bun.file(filepath).text()
-  return { data: markdown, parser: 'md' }
-}
+/**
+ * Reads a Markdown file and returns its raw content.
+ *
+ * @param filepath - Path to the `.md` file.
+ */
+const process_markdown_file = async (filepath: string): Promise<FormattedContent> => ({
+  data: await Bun.file(filepath).text(),
+  parser: 'md'
+})
 
-async function processFile(metadata: Metadata): Promise<FormattedContent> {
+/**
+ * Dispatches file processing to the appropriate handler based on `metadata.type`.
+ *
+ * @param metadata - Validated metadata entry describing the file to process.
+ * @throws {Error} When `metadata.type` is not one of the supported types.
+ */
+const process_file = async (metadata: Metadata): Promise<FormattedContent> => {
   switch (metadata.type) {
     case 'docx':
-      return processDocxFile(metadata.filepath)
+      return process_docx_file(metadata.filepath)
     case 'xlsx':
-      return processXlsxFile(metadata.filepath, metadata.sheet, metadata.headers)
+      return process_xlsx_file(metadata.filepath, metadata.sheet, metadata.headers)
     case 'md':
-      return processMarkdownFile(metadata.filepath)
+      return process_markdown_file(metadata.filepath)
     default:
       throw new Error(`Unsupported file type: ${metadata.type}`)
   }
 }
 
-async function saveFormattedFile(outputPath: string, content: FormattedContent): Promise<void> {
+/**
+ * Formats and writes processed file content to `output_path`.
+ * For Markdown files, prepends a YAML frontmatter block with `url` when provided.
+ *
+ * @param output_path - Destination path for the formatted output.
+ * @param content - Processed content including data and parser type.
+ * @param url - Optional source URL to embed as frontmatter in Markdown files.
+ */
+const save_formatted_file = async (
+  output_path: string,
+  content: FormattedContent,
+  url?: string | null
+): Promise<void> => {
   const { code } = await format(`a.${content.parser}`, content.data)
-  await Bun.write(outputPath, code)
+  const final = url && content.parser === 'md' ? `---\nurl: ${url}\n---\n\n${code}` : code
+  await Bun.write(output_path, final)
 }
 
+/**
+ * Creates a knowledge directory for each config and optionally copies community
+ * knowledge data into it.
+ */
+export const setup_knowledge_directories = async (): Promise<void> => {
+  const configs = await load_configs()
+
+  for (const config of configs) {
+    const knowledge_path = `datastores/${Bun.env['SERVICE']}/knowledge/${config.id}`
+    await rm(knowledge_path, { recursive: true, force: true })
+    await mkdir(knowledge_path, { recursive: true })
+
+    if (config.community_knowledge) {
+      const copied_path = `${knowledge_path}/${COMMUNITY_KNOWLEDGE_DIR}`
+      await cp('./knowledge', copied_path, { recursive: true })
+      await rename_files_recursively(copied_path)
+    }
+  }
+}
+
+/**
+ * Ingests all validated files described by `files` metadata into the knowledge store.
+ *
+ * The function performs three passes:
+ * 1. **File anomalies** — detect files referenced in metadata but absent from disk.
+ * 2. **Profile anomalies** — detect mismatches between metadata profiles and config IDs.
+ * 3. **Processing** — convert and write valid files to the knowledge directory.
+ *
+ * @param files - Validated metadata entries returned by `generate_metadata`.
+ * @returns An object containing any anomaly codes and subjects found during ingestion.
+ */
 export const ingest_files = async (
   files: Metadata[]
 ): Promise<{ anomalies: { code: string; subject: string | null }[] }> => {
   const anomalies: { code: string; subject: string | null }[] = []
 
-  const configs = await loadConfigs()
+  const configs = await load_configs()
 
-  const validConfigIds = new Set(configs.map((c) => c.id))
-  const metadataFilenames = new Set(files.map((f) => basename(f.filepath)))
-  const metadataProfiles = new Set(files.map((f) => f.access).filter(Boolean) as string[])
+  const valid_config_ids = new Set(configs.map((c) => c.id))
+  const metadata_filenames = new Set(files.map((f) => basename(f.filepath)))
+  const metadata_profiles = new Set(files.map((f) => f.access).filter(Boolean) as string[])
 
   // Pass 1 — File anomalies (profile-agnostic, deduplicated by filepath)
-  const checkedFilepaths = new Set<string>()
+  const checked_filepaths = new Set<string>()
   for (const metadata of files) {
-    if (checkedFilepaths.has(metadata.filepath)) continue
-    checkedFilepaths.add(metadata.filepath)
+    if (checked_filepaths.has(metadata.filepath)) continue
+    checked_filepaths.add(metadata.filepath)
 
-    const fileExists = await Bun.file(metadata.filepath).exists()
-    if (!fileExists) {
+    if (!(await Bun.file(metadata.filepath).exists())) {
       console.warn(`⚠️ File not found on disk — ${metadata.filepath}`)
-      anomalies.push({
-        code: 'METADATA_NOT_IN_FILES',
-        subject: metadata.filename
-      })
+      anomalies.push({ code: 'METADATA_NOT_IN_FILES', subject: metadata.filename })
     }
   }
 
-  const diskFiles = await readdir(`datastores/${Bun.env['SERVICE']}/files`)
-  for (const f of diskFiles) {
-    if (f !== '_metadata.xlsx' && !metadataFilenames.has(f)) {
+  const disk_files = await readdir(`datastores/${Bun.env['SERVICE']}/files`)
+  for (const f of disk_files) {
+    if (f !== '_metadata.xlsx' && !metadata_filenames.has(f)) {
       anomalies.push({ code: 'FILE_NOT_IN_METADATA', subject: f })
     }
   }
 
   // Pass 2 — Profile anomalies (file-existence-agnostic)
-  for (const profile of metadataProfiles) {
-    if (!validConfigIds.has(profile)) {
+  for (const profile of metadata_profiles) {
+    if (!valid_config_ids.has(profile)) {
       anomalies.push({ code: 'PROFILE_MISSING_IN_ASSETS', subject: profile })
     }
   }
 
   for (const config of configs) {
-    if (config.knowledge.proprietary && !metadataProfiles.has(config.id)) {
+    if (!metadata_profiles.has(config.id)) {
       anomalies.push({ code: 'PROFILE_NOT_IN_METADATA', subject: config.id })
     }
   }
 
   // Pass 3 — Process files with valid profile and existing on disk
+  const sources_by_config = new Map<string, Record<string, string | null>>()
+
   for (const metadata of files) {
-    if (!metadata.access || !validConfigIds.has(metadata.access)) continue
+    if (!metadata.access || !valid_config_ids.has(metadata.access)) continue
+    if (!(await Bun.file(metadata.filepath).exists())) continue
 
-    const fileExists = await Bun.file(metadata.filepath).exists()
-    if (!fileExists) continue
+    const content = await process_file(metadata)
+    const normalized_name = normalize_knowledge_name(metadata.agent_filename)
+    const output_path = `./datastores/${Bun.env['SERVICE']}/knowledge/${metadata.access}/${normalized_name}.${content.parser}`
 
-    const content = await processFile(metadata)
-    const outputPath = `./datastores/${Bun.env['SERVICE']}/knowledge/${metadata.access}/${normalizeFilename(metadata.agent_filename)}.${content.parser}`
+    await save_formatted_file(output_path, content, metadata.url)
 
-    await saveFormattedFile(outputPath, content)
+    // Track all JSON files (with or without URL) for the _sources table
+    if (content.parser === 'json') {
+      if (!sources_by_config.has(metadata.access)) sources_by_config.set(metadata.access, {})
+      sources_by_config.get(metadata.access)![normalized_name] = metadata.url ?? null
+    }
+  }
+
+  // Write _sources.json for each config that has at least one JSON file
+  for (const [config, sources] of sources_by_config) {
+    const sources_path = `./datastores/${Bun.env['SERVICE']}/knowledge/${config}/_sources.json`
+    await Bun.write(sources_path, JSON.stringify(sources))
   }
 
   console.log('✅ Files processed')

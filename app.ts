@@ -20,6 +20,7 @@ import { controller as post_telemetry } from './controllers/POST.telemetry'
 import { controller as post_users } from './controllers/POST.users'
 // import { topicize, score } from "./utils/analyze-conversation";
 import { authenticate } from './utils/authenticate-user'
+import { buildAllAgentsFiles } from './utils/copilot-agent'
 import { run_pipeline } from './utils/knowledge/run-pipeline'
 import { setup } from './utils/setup'
 import { cleanupOrphanedVms } from './utils/vm-registry'
@@ -32,6 +33,7 @@ import { cleanupOrphanedVms } from './utils/vm-registry'
 await setup()
 await run_pipeline()
 await cleanupOrphanedVms()
+await buildAllAgentsFiles()
 
 const app = new Hono()
 
@@ -52,6 +54,8 @@ app.use(
 Bun.cron('0 4 * * *', async () => {
   // Update knowledge database with custom content
   await run_pipeline()
+  // Refresh AGENTS.md for all configs (date + schema may have changed)
+  await buildAllAgentsFiles()
   // Score conversation and assign topic with AI
   // await topicize();
   // await score();
@@ -59,7 +63,7 @@ Bun.cron('0 4 * * *', async () => {
 
 // Block server-side-only files from being served over HTTP
 app.get('/customization/:path{.+}/config.ts', (c) => c.notFound())
-app.get('/customization/:path{.+}/INSTRUCTIONS.md', (c) => c.notFound())
+app.get('/customization/:path{.+}/AGENTS.md', (c) => c.notFound())
 
 // Serve widget assets (with CORS for cross-origin embedding) and customization files
 app.use('/assets/*', cors())
