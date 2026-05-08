@@ -23,8 +23,85 @@ export default {
   // Si vous ne souhaitez pas utiliser cette fonctionnalité : show: []
   //
   // Ici, lorsque vous accédez à l'interface de PIERRE, vous pourrez accéder aux
-  // configurations `default`, `demo_client` et `demo_team`.
-  show: ['default', 'demo_client', 'demo_team', 'zmode'],
+  // configurations `default`, `demo` et `zmode`.
+  show: ['default', 'demo', 'zmode'],
+
+  //
+  // Si `false` :
+  //  - PIERRE sera accessible à 100 % des visiteurs sur internet.
+  //  - Il s'agit du paramétrage à renseigner pour un chatbot accessible aux locataires.
+  //
+  // Si `true` :
+  //  - PIERRE ne sera accessible qu'aux utilisateurs dûment habilités et connectés.
+  //  - C'est le paramétrage à choisir pour restreindre l'usage, par exemple, aux collaborateurs.
+  //
+  // Pour vous connecter la première fois, saisissez `admin@pierre-ia.org` et  la valeur
+  // de la variable d'environnement `AUTH_PASSWORD`, puis créer des utilisateurs.
+  protected: false,
+
+  // Si `false`, PIERRE se comportera comme un simple wrapper autour d'un LLM, sans base de
+  // connaissances. Les réponses seront quasi instantanées, mais le risque d'hallucinations important.
+  // `community_knowledge` correspond aux connaissances en open data de PIERRE (connaissances générales
+  // sur les HLM). En principe, doit toujours être `true` pour répondre en qualité aux questions.
+  community_knowledge: true,
+
+  // Pour ce profil particulier et pour le modèle défini dans `.env.*`, définissez
+  // l'effort de raisonnement que doit utiliser le modèle (sous réserve qu'il supporte
+  // cette configuration). Uniquement `low`, `medium` et `high` sont disponibles.
+  reasoning_effort: 'medium',
+
+  // Permet d'afficher les traces de raisonnement de l'agent dans l'interface.
+  // - `off`    : l'agent n'affiche pas le raisonnement mais les `reasoning_placeholders` ci-dessous.
+  // - `partial`: l'agent affiche des traces partielles de raisonnement.
+  // - `full`   : l'agent affiche des traces complètes de raisonnement.
+  reasoning_display: 'full',
+
+  // Ces messages s'affichent aléatoirement durant la génération de la réponse
+  // lorsque `reasoning_display` est `off`. Sans effet pour `partial` et `full`.
+  reasoning_placeholders: [
+    'Je réfléchis…',
+    'Je creuse la question…',
+    'Les rouages tournent…',
+    "J'analyse tout ça…",
+    'Je pèse les options…',
+    'Je tisse les fils…',
+    "J'assemble les pièces…",
+    'Je cherche la meilleure approche…',
+    "Je mets de l'ordre dans tout ça…",
+    'Je passe ça au crible…',
+    'Je synthétise…',
+    'Je retourne le problème dans tous les sens…',
+    'Je fouille dans les possibilités…',
+    'Je fais le tour de la question…',
+    'Ça avance…',
+    'Je peaufine la réponse…',
+    'Je vérifie mes angles…',
+    "Je prends le temps d'y réfléchir…",
+    'Je démêle tout ça…',
+    'Je mets les idées en ordre…'
+  ],
+
+  // Le message qui s'affiche par défaut dans l'interface de PIERRE.
+  greeting: [
+    'Bonjour 🖐️,',
+    'Je suis PIERRE, une intelligence artificielle open source, personnalisable et plurilingue au service du mouvement HLM, de ses candidats, locataires et collaborateurs.',
+    'Ma mission : répondre 24/7/365 à toutes les questions de « premier niveau » des candidats et locataires ou celles (plus complexes) des équipes.',
+    "PS. Je n'ai pas connaissance à ce jour des spécificités des bailleurs."
+  ],
+
+  // Les exemples qui s'affichent par défaut dans l'interface de PIERRE.
+  examples: [
+    'Comment déposer mon préavis de congé pour mon logement ? Et avez-vous un modèle de courrier ?',
+    "Y-a-t-il des associations d'entraide dans le cadre de violences conjugales dans le Vaucluse ?",
+    'Enquête SLS, kézako + suis-je concerné ?',
+    "Qu'est-ce que l'avance Loca-Pass et comment savoir si j'y suis éligible ?",
+    'Je cherche un logement social dans le Cantal. Comment déposer un dossier et quel est le processus ?',
+    'كيفية الاتصال بالمكتب الرئيسي لبلدية Grand Dijon Habitat؟'
+  ],
+
+  // Une mention qui s'affiche à la fin de chaque réponse de l'IA.
+  // Pour ne pas afficher de mention, indiquer `null`.
+  disclaimer: 'Une IA peut se tromper. Vérifiez les informations importantes.',
 
   // Vous pouvez communiquer des données externes à PIERRE via son URL avec le
   // paramétre de requête `data`. S'il y a plusieurs données, séparez-les par un
@@ -73,57 +150,5 @@ export default {
         role
       })
     }
-  ],
-  //
-  // Si `false` :
-  //  - PIERRE sera accessible à 100 % des visiteurs sur internet.
-  //  - Il s'agit du paramétrage à renseigner pour un chatbot accessible aux locataires.
-  //
-  // Si `true` :
-  //  - PIERRE ne sera accessible qu'aux utilisateurs dûment habilités et connectés.
-  //  - C'est le paramétrage à choisir pour restreindre l'usage, par exemple, aux collaborateurs.
-  //
-  // Pour vous connecter la première fois, saisissez `admin@pierre-ia.org` et
-  // la valeur de la variable d'environnement `AUTH_PASSWORD`, puis créer des
-  // utilisateurs.
-  protected: false,
-
-  // Quelles connaissances peut utiliser PIERRE lorsqu'il génère ses réponses ?
-  knowledge: {
-    // Astuce : Si vous renseignez `false` pour l'ensemble des connaissances
-    // ci-dessus, PIERRE se comportera comme un simple wrapper autour d'un LLM,
-    // sans base de connaissances. Les réponses seront quasi instantanées, mais
-    // le risque d'hallucinations important.
-
-    // `community` correspond aux connaissances en open data de PIERRE. Il
-    // s'agit de connaissances générales sur les HLM. En principe, `community`
-    // doit toujours être `true` pour répondre en qualité aux questions.
-    community: true,
-
-    // `proprietary` correspond aux connaissances propres à un organisme HLM,
-    // qu'il ne souhaite pas partager avec `community` et qu'il gère en son
-    // nom propre.
-    proprietary: false
-  },
-  // Le message qui s'affiche par défaut dans l'interface de PIERRE.
-  greeting: [
-    'Bonjour 🖐️,',
-    'Je suis PIERRE, une intelligence artificielle open source, personnalisable et plurilingue au service du mouvement HLM, de ses candidats, locataires et collaborateurs.',
-    'Ma mission : répondre 24/7/365 à toutes les questions de « premier niveau » des candidats et locataires ou celles (plus complexes) des équipes.',
-    "PS. Je n'ai pas connaissance à ce jour des spécificités des bailleurs."
-  ],
-
-  // Les exemples qui s'affichent par défaut dans l'interface de PIERRE.
-  examples: [
-    'Comment déposer mon préavis de congé pour mon logement ? Et avez-vous un modèle de courrier ?',
-    "Y-a-t-il des associations d'entraide dans le cadre de violences conjugales dans le Vaucluse ?",
-    'Enquête SLS, kézako + suis-je concerné ?',
-    "Qu'est-ce que l'avance Loca-Pass et comment savoir si j'y suis éligible ?",
-    'Je cherche un logement social dans le Cantal. Comment déposer un dossier et quel est le processus ?',
-    'كيفية الاتصال بالمكتب الرئيسي لبلدية Grand Dijon Habitat؟'
-  ],
-
-  // Une mention qui s'affiche à la fin de chaque réponse de l'IA. Pour ne pas
-  // afficher de mention, indiquer `null`.
-  disclaimer: 'Une IA peut se tromper. Vérifiez les informations importantes.'
+  ]
 } as Config

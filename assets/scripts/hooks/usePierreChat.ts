@@ -4,6 +4,8 @@ export type Message = {
   id: string
   role: 'user' | 'assistant'
   content: string
+  reasoning?: string
+  reasoningDuration?: number
 }
 
 export type ChatStatus = 'ready' | 'submitted' | 'streaming' | 'error'
@@ -32,6 +34,9 @@ export function usePierreChat(config: Config) {
       const ac = new AbortController()
       abortRef.current = ac
 
+      const reasoningStart = Date.now()
+      let reasoningSealed = false
+
       try {
         const url = `/ai?message=${encodeURIComponent(text)}&config=${encodeURIComponent(config.configParam)}&data=${encodeURIComponent(config.dataParam)}&conv_id=${encodeURIComponent(config.convId)}`
         const res = await fetch(url, { signal: ac.signal })
@@ -48,15 +53,30 @@ export function usePierreChat(config: Config) {
           try {
             const event = JSON.parse(trimmed)
             switch (event.t) {
-              case 'response':
+              case 'thinking':
                 setMessages((prev) => {
                   const updated = [...prev]
                   const last = updated[updated.length - 1]
                   if (last?.role === 'assistant') {
                     updated[updated.length - 1] = {
                       ...last,
-                      content: last.content + event.d.content
+                      reasoning: (last.reasoning ?? '') + event.d.content
                     }
+                  }
+                  return updated
+                })
+                break
+              case 'response':
+                setMessages((prev) => {
+                  const updated = [...prev]
+                  const last = updated[updated.length - 1]
+                  if (last?.role === 'assistant') {
+                    const patch: Partial<Message> = { content: last.content + event.d.content }
+                    if (!reasoningSealed) {
+                      patch.reasoningDuration = Math.round((Date.now() - reasoningStart) / 1000)
+                      reasoningSealed = true
+                    }
+                    updated[updated.length - 1] = { ...last, ...patch }
                   }
                   return updated
                 })

@@ -1,4 +1,4 @@
-import type { Config } from '../../utils/_schema'
+import type { Config } from '../../../utils/_schema'
 
 export default {
   id: 'answer',
@@ -7,10 +7,10 @@ export default {
   custom_data: {},
   api: [],
   protected: true,
-  knowledge: {
-    community: true,
-    proprietary: true
-  },
+  community_knowledge: true,
+  reasoning_effort: 'medium',
+  reasoning_display: 'off',
+  reasoning_placeholders: [],
   greeting: [],
   examples: [],
   disclaimer: ''

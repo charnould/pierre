@@ -14,11 +14,16 @@ export default {
   custom_data: {},
   api: [],
   protected: true,
-  knowledge: {
-    community: false,
-    proprietary: false
-  },
+  community_knowledge: false,
   greeting: ["Cette configuration n'existe qu'à des fins de tests"],
   examples: [],
-  disclaimer: null
+  disclaimer: null,
+  reasoning_display: 'off',
+  reasoning_effort: 'medium',
+  reasoning_placeholders: [
+    'Compréhension des attentes…',
+    'Identification du contexte…',
+    'Définition du périmètre…',
+    'Cadrage de la réponse…'
+  ]
 } as Config

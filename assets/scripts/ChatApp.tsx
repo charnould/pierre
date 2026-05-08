@@ -1,3 +1,4 @@
+import { ChevronRight, ChevronDown } from 'lucide-react'
 import { useState, useEffect, useRef, useCallback, memo } from 'react'
 import { Streamdown } from 'streamdown'
 
@@ -13,6 +14,8 @@ type BootData = {
   examples: string[]
   displayableConfigs: { id: string; display: string; is_active: boolean }[]
   assetId: string
+  reasoningDisplay: 'off' | 'partial' | 'full'
+  reasoningPlaceholders: string[]
 }
 
 function getBootData(): BootData {
@@ -92,68 +95,161 @@ function ExampleButtons({
   )
 }
 
-// Fake status messages shown while the agent is thinking
-const STATUS_MESSAGES = [
-  'Prise en compte de la question…',
-  'Lecture de la demande…',
-  'Analyse du besoin…',
-  'Compréhension des attentes…',
-  'Identification du contexte…',
-  'Définition du périmètre…',
-  'Cadrage de la réponse…',
-  'Mise en structure…',
-  'Organisation des éléments…',
-  'Structuration des idées…',
-  'Mise en cohérence des éléments…',
-  'Analyse des points clés…',
-  'Examen des éléments disponibles…',
-  'Appréciation des enjeux…',
-  'Affinage de l’analyse…',
-  'Approfondissement du raisonnement…',
-  'Consolidation de la réflexion…',
-  'Hiérarchisation des priorités…',
-  'Mise en relation des éléments…',
-  'Articulation de la réponse…',
-  'Construction de l’argumentation…',
-  'Développement de la réponse…',
-  'Précision du raisonnement…',
-  'Clarification de la réponse…',
-  'Synthèse des points essentiels…',
-  'Formalisation des éléments…',
-  'Rédaction structurée…',
-  'Validation de la réponse…',
-  'Contrôle de cohérence…',
-  'Vérification globale…',
-  'Mise au propre…',
-  'Préparation de la restitution…'
-]
-
-function ThinkingIndicator() {
+// Placeholder messages shown while the agent is reasoning (when reasoning_display is 'off')
+function ThinkingIndicator({ reasoningPlaceholders }: { reasoningPlaceholders: string[] }) {
   const [statusText, setStatusText] = useState(
-    () => STATUS_MESSAGES[Math.floor(Math.random() * STATUS_MESSAGES.length)] ?? STATUS_MESSAGES[0]!
+    () =>
+      reasoningPlaceholders[Math.floor(Math.random() * reasoningPlaceholders.length)] ??
+      reasoningPlaceholders[0]!
   )
   const [fade, setFade] = useState(true)
 
   useEffect(() => {
-    let lastIdx = STATUS_MESSAGES.indexOf(statusText)
+    let lastIdx = reasoningPlaceholders.indexOf(statusText)
     const rotate = () => {
       setFade(false)
       setTimeout(() => {
-        let idx = Math.floor(Math.random() * STATUS_MESSAGES.length)
-        if (idx === lastIdx) idx = (idx + 1) % STATUS_MESSAGES.length
+        let idx = Math.floor(Math.random() * reasoningPlaceholders.length)
+        if (idx === lastIdx) idx = (idx + 1) % reasoningPlaceholders.length
         lastIdx = idx
-        setStatusText(STATUS_MESSAGES[idx] ?? STATUS_MESSAGES[0]!)
+        setStatusText(reasoningPlaceholders[idx] ?? reasoningPlaceholders[0]!)
         setFade(true)
       }, 300)
     }
     const id = setInterval(rotate, 3000)
     return () => clearInterval(id)
-  }, [])
+  }, [reasoningPlaceholders])
 
   return (
     <div>
       <div className={`status-line ${fade ? 'status-in' : 'status-out'}`}>{statusText}</div>
       <div className="thinking" />
+    </div>
+  )
+}
+
+function ThinkingContent({ reasoning, mode }: { reasoning: string; mode: 'partial' | 'full' }) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  // In partial mode: collapsed by default; in full mode: always expanded
+  const [open, setOpen] = useState(mode === 'full')
+  const contentClass =
+    mode === 'full' ? 'reasoning-content reasoning-content--full' : 'reasoning-content'
+
+  useEffect(() => {
+    if (open && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [reasoning, open])
+
+  return (
+    <div className="reasoning-wrapper">
+      {mode === 'partial' ? (
+        <>
+          <div
+            className="reasoning-summary"
+            onClick={() => setOpen((o) => !o)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && setOpen((o) => !o)}
+          >
+            <span>Réflexion en cours…</span>
+            {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+          </div>
+          {!open && <div className="thinking" style={{ marginLeft: 0 }} />}
+        </>
+      ) : (
+        <div className="mb-1 text-gray-400">Mon raisonnement :</div>
+      )}
+      {open && (
+        <div ref={scrollRef} className={contentClass}>
+          <Streamdown
+            animated={{
+              animation: 'blurIn',
+              duration: 200,
+              easing: 'ease-out'
+            }}
+            isAnimating={true}
+            disallowedElements={[
+              'table',
+              'thead',
+              'tbody',
+              'tr',
+              'th',
+              'td',
+              'h1',
+              'h2',
+              'h3',
+              'h4',
+              'h5',
+              'h6',
+              'hr',
+              'blockquote',
+              'pre',
+              'code'
+            ]}
+            unwrapDisallowed
+          >
+            {reasoning}
+          </Streamdown>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ThinkingContentDone({
+  reasoning,
+  durationSeconds,
+  mode
+}: {
+  reasoning: string
+  durationSeconds?: number
+  mode: 'partial' | 'full'
+}) {
+  const [open, setOpen] = useState(false)
+  const contentClass =
+    mode === 'full' ? 'reasoning-content reasoning-content--full' : 'reasoning-content'
+
+  return (
+    <div className="reasoning-wrapper">
+      <div
+        className="reasoning-summary"
+        onClick={() => setOpen((o) => !o)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === 'Enter' && setOpen((o) => !o)}
+      >
+        <span>Réflexion pendant {durationSeconds ?? 0}s</span>
+        {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+      </div>
+      {open && (
+        <div className={contentClass}>
+          <Streamdown
+            isAnimating={false}
+            disallowedElements={[
+              'table',
+              'thead',
+              'tbody',
+              'tr',
+              'th',
+              'td',
+              'h1',
+              'h2',
+              'h3',
+              'h4',
+              'h5',
+              'h6',
+              'hr',
+              'blockquote',
+              'pre',
+              'code'
+            ]}
+            unwrapDisallowed
+          >
+            {reasoning}
+          </Streamdown>
+        </div>
+      )}
     </div>
   )
 }
@@ -166,15 +262,23 @@ const UserMessage = memo(({ content }: { content: string }) => (
 
 function AIMessage({
   content,
+  reasoning,
+  reasoningDuration,
   isStreaming,
   isSubmitted,
   isError,
+  showThinking,
+  reasoningPlaceholders,
   onRegenerate
 }: {
   content: string
+  reasoning?: string
+  reasoningDuration?: number
   isStreaming: boolean
   isSubmitted: boolean
   isError: boolean
+  showThinking: 'off' | 'partial' | 'full'
+  reasoningPlaceholders: string[]
   onRegenerate: () => void
 }) {
   if (isError && !content) {
@@ -204,13 +308,24 @@ function AIMessage({
   if (!content && (isSubmitted || isStreaming)) {
     return (
       <div data-role="system">
-        <ThinkingIndicator />
+        {showThinking !== 'off' && reasoning ? (
+          <ThinkingContent reasoning={reasoning} mode={showThinking} />
+        ) : (
+          <ThinkingIndicator reasoningPlaceholders={reasoningPlaceholders} />
+        )}
       </div>
     )
   }
 
   return (
     <div data-role="system">
+      {showThinking !== 'off' && reasoning && (
+        <ThinkingContentDone
+          reasoning={reasoning}
+          durationSeconds={reasoningDuration}
+          mode={showThinking}
+        />
+      )}
       <div className="prose" data-section="response">
         <Streamdown
           animated={{ animation: 'blurIn', duration: 200, easing: 'ease-out' }}
@@ -272,7 +387,7 @@ function ChatInput({
       <div className="mx-6 mb-6 flex h-fit flex-none items-center justify-between gap-x-2 rounded-lg border border-gray-200 bg-white py-3 pr-2 pl-4 shadow-sm">
         <textarea
           ref={textareaRef}
-          className="row-span-2 min-h-11 flex-1 resize-none border-none text-[15px]/snug outline-0 placeholder:text-gray-400"
+          className="row-span-2 min-h-11 flex-1 resize-none border-none text-base/snug outline-0 placeholder:text-gray-400"
           id="prompt__input"
           name="message"
           placeholder="Comment puis-je vous aider ?"
@@ -396,9 +511,13 @@ export function ChatApp() {
             <AIMessage
               key={msg.id}
               content={msg.content}
+              reasoning={msg.reasoning}
+              reasoningDuration={msg.reasoningDuration}
               isStreaming={isLastAssistant && status === 'streaming'}
               isSubmitted={isLastAssistant && status === 'submitted'}
               isError={isLastAssistant && status === 'error'}
+              showThinking={boot.reasoningDisplay}
+              reasoningPlaceholders={boot.reasoningPlaceholders}
               onRegenerate={regenerate}
             />
           )

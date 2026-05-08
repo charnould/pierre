@@ -11,8 +11,8 @@
  * config's knowledge folder is mounted.
  */
 
+import { Database } from 'bun:sqlite'
 import { existsSync } from 'node:fs'
-import { readdir } from 'node:fs/promises'
 import { resolve, join } from 'node:path'
 
 import type {
@@ -52,7 +52,7 @@ const locks = new Map<string, Promise<void>>()
 
 /**
  * Resolve the absolute path to a config's knowledge folder on the host.
- * Used only for listing files to inject into the session context.
+ * Used to read db.sqlite and inject its schema into the session context.
  */
 const knowledgePathOnHost = (configId: string): string => {
   const p = join(PROJECT_ROOT, 'datastores', Bun.env['SERVICE']!, 'knowledge', configId)
@@ -60,21 +60,6 @@ const knowledgePathOnHost = (configId: string): string => {
     throw new Error(`[COPILOT] Knowledge directory not found: ${p}`)
   }
   return p
-}
-
-/** Recursively list all files in a directory, returning paths relative to `root`. */
-const listFilesRecursive = async (dir: string, root = dir): Promise<string[]> => {
-  const entries = await readdir(dir, { withFileTypes: true })
-  const files: string[] = []
-  for (const entry of entries) {
-    const full = `${dir}/${entry.name}`
-    if (entry.isDirectory()) {
-      files.push(...(await listFilesRecursive(full, root)))
-    } else if (entry.name !== 'AGENTS.md') {
-      files.push(full.slice(root.length + 1))
-    }
-  }
-  return files
 }
 
 // ---------------------------------------------------------------------------
@@ -85,11 +70,12 @@ const openSession = async (
   client: CopilotClient,
   convId: string,
   configId: string,
-  model: string | undefined
+  model: string | undefined,
+  reasoningEffort: 'low' | 'medium' | 'high' = 'medium'
 ): Promise<CopilotSession> => {
   // The knowledge dir is mounted at /knowledge inside the VM
   const workingDirectory = '/knowledge'
-  // We still list files from the host path for the additionalContext hook
+  // We read the schema from the host path in the additionalContext hook
   const hostKPath = knowledgePathOnHost(configId)
   console.log(`[COPILOT] Knowledge path: ${workingDirectory} (mounted from ${hostKPath})`)
 
@@ -102,8 +88,6 @@ const openSession = async (
     configId,
     'INSTRUCTIONS.md'
   )
-  const dateContext = `Current date and time (Europe/Paris): ${today_is()}.`
-
   // Skills inject INSTRUCTIONS.md as raw content.
   // Other configs parse the file into named sections (identity, tone, guidelines…).
   // https://github.com/github/copilot-sdk/tree/main/nodejs#system-message-customization
@@ -114,15 +98,12 @@ const openSession = async (
       ? await Bun.file(instructionsPath).text()
       : ''
     systemMessage = {
-      content: rawInstructions ? `${rawInstructions}\n\n${dateContext}` : dateContext
+      content: rawInstructions
     }
   } else {
     const sections = existsSync(instructionsPath)
       ? await parse_markdown_sections(instructionsPath)
       : {}
-    sections['custom_instructions'] =
-      (sections['custom_instructions'] ? sections['custom_instructions'] + '\n\n' : '') +
-      dateContext
     systemMessage = {
       mode: 'customize' as const,
       sections: {
@@ -130,8 +111,14 @@ const openSession = async (
         tone: { action: 'replace', content: sections['tone'] ?? '' },
         guidelines: { action: 'append', content: sections['guidelines'] ?? '' },
         code_change_rules: { action: 'remove' as const },
-        safety: { action: 'append', content: sections['safety'] ?? '' },
-        custom_instructions: { action: 'replace', content: sections['custom_instructions'] ?? '' }
+        environment_context: { action: 'remove' as const },
+        tool_instructions: { action: 'remove' as const },
+        last_instructions: { action: 'remove' as const },
+        safety: { action: 'replace', content: sections['safety'] ?? '' },
+        custom_instructions: {
+          action: 'replace',
+          content: sections['custom_instructions'] ?? ''
+        }
       }
     }
   }
@@ -152,7 +139,7 @@ const openSession = async (
           }
         : undefined,
     streaming: true,
-    reasoningEffort: 'medium' as const,
+    reasoningEffort,
     systemMessage,
     hooks: {
       onSessionStart: async (
@@ -161,22 +148,26 @@ const openSession = async (
       ): Promise<{ additionalContext?: string } | void> => {
         console.log(`[COPILOT] Session ${invocation.sessionId} started (source=${input.source})`)
 
+        const parts: string[] = [`Current date and time (Europe/Paris): ${today_is()}.`]
+
         if (input.source !== 'resume') {
-          try {
-            const files = await listFilesRecursive(hostKPath)
-            console.log(`[COPILOT] Injected file listing (${files.length} files)`)
-            return {
-              additionalContext: [
-                '## Available knowledge files (relative to working directory)',
-                '',
-                ...files.map((f) => `- ${f}`)
-              ].join('\n')
+          const dbPath = join(hostKPath, 'db.sqlite')
+          if (existsSync(dbPath)) {
+            try {
+              const db = new Database(dbPath, { readonly: true })
+              const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
+              db.close()
+              if (row?.content) {
+                console.log(`[COPILOT] Injected db schema from _readme`)
+                parts.push(`The SQLite database is at \`/knowledge/db.sqlite\`.\n\n${row.content}`)
+              }
+            } catch (err) {
+              console.warn('[COPILOT] Could not read db schema:', err)
             }
-          } catch (err) {
-            console.warn('[COPILOT] Could not list knowledge folder:', err)
           }
         }
-        return {}
+
+        return { additionalContext: parts.join('\n\n') }
       }
     }
   }
@@ -197,6 +188,8 @@ const openSession = async (
 
 export type CopilotChunk =
   | { type: 'delta'; content: string }
+  | { type: 'reasoning_delta'; content: string; source: 'reasoning' | 'tool_start' | 'tool_result' }
+  | { type: 'intent'; content: string }
   | { type: 'reset' }
   | {
       type: 'done'
@@ -205,6 +198,58 @@ export type CopilotChunk =
       inputTokens?: number
       outputTokens?: number
     }
+
+// Extract a short label from tool arguments to show next to the tool name
+function toolArgLabel(args: Record<string, unknown> | undefined): string {
+  if (!args) return ''
+  const path = args['path'] ?? args['file'] ?? args['filename'] ?? args['filePath']
+  if (path) return ` · ${String(path)}`
+  const cmd = args['command'] ?? args['cmd']
+  if (cmd) return ` · ${String(cmd)}`
+  const pattern = args['pattern'] ?? args['query'] ?? args['search']
+  if (pattern) return ` · ${String(pattern)}`
+  return ''
+}
+
+type ToolResult = {
+  content: string
+  detailedContent?: string
+  contents?: Array<{
+    type: string
+    text?: string
+    cwd?: string
+    exitCode?: number
+  }>
+}
+
+// Filters out noise lines from tool terminal output
+const isNoiseLine = (l: string) => !l || /<exited with exit code/i.test(l)
+
+// Format tool result for display in the reasoning area.
+// Pipe characters (|) are escaped to prevent Streamdown from interpreting
+// SQLite output as markdown table syntax.
+function toolResultSummary(result: ToolResult | undefined): string {
+  if (!result) return ''
+  // Prefer terminal blocks — show full output, filtering noise lines
+  const terminal = result.contents?.find((c) => c.type === 'terminal')
+  if (terminal && terminal.text) {
+    const lines = terminal.text
+      .split('\n')
+      .map((l) => l.trim().replace(/\|/g, '\\|'))
+      .filter((l) => !isNoiseLine(l))
+    if (lines.length === 0) return ''
+    return `\n\n${lines.join('\n\n')}`
+  }
+  // Fall back to detailedContent or content, also filtering noise
+  const text = (result.detailedContent ?? result.content ?? '').trim()
+  if (!text) return ''
+  const lines = text
+    .split('\n')
+    .map((l) => l.trim().replace(/\|/g, '\\|'))
+    .filter((l) => !isNoiseLine(l))
+  if (lines.length === 0) return ''
+  return `\n\n${lines.join('\n\n')}`
+}
 
 /**
  * Stream a response from Copilot as incremental chunks.
@@ -222,7 +267,8 @@ export async function* streamCopilot(
   prompt: string,
   model = Bun.env['AI_MODEL'],
   signal?: AbortSignal,
-  attachments?: Array<{ type: 'file'; path: string }>
+  attachments?: Array<{ type: 'file'; path: string }>,
+  reasoningEffort: 'low' | 'medium' | 'high' = 'medium'
 ): AsyncGenerator<CopilotChunk> {
   const t0 = Date.now()
   console.log(`\n${'='.repeat(60)}`)
@@ -260,7 +306,7 @@ export async function* streamCopilot(
     // Step 2 — Open session
     console.log(`[COPILOT] Step 2/3 — Opening session...`)
     const t2 = Date.now()
-    const session = await openSession(client, convId, configId, model)
+    const session = await openSession(client, convId, configId, model, reasoningEffort)
     console.log(`[COPILOT] Step 2/3 — Session ready (${Date.now() - t2}ms)`)
 
     // Queue to bridge event callbacks → async generator
@@ -292,12 +338,23 @@ export async function* streamCopilot(
     let outputTokens: number | undefined
     let toolCount = 0
     const toolNames = new Map<string, string>()
+    const toolStartTimes = new Map<string, number>()
+    let turnStartTime = 0
+
+    // Elapsed seconds since the request started — shown on every key log line
+    const s = () => `+${((Date.now() - t0) / 1000).toFixed(1)}s`
 
     // Subscribe to events for streaming + debug logging
     const unsubscribe = session.on((event: SessionEvent) => {
       switch (event.type) {
         case 'assistant.turn_start':
-          console.log(`[COPILOT]   ▶ Turn started`)
+          turnStartTime = Date.now()
+          console.log(`[COPILOT]   ▶ Turn started (${s()})`)
+          break
+
+        case 'assistant.intent':
+          enqueue({ type: 'intent', content: event.data.intent })
+          console.log(`[COPILOT]   💡 Intent: ${event.data.intent} (${s()})`)
           break
 
         case 'assistant.message_delta':
@@ -306,40 +363,112 @@ export async function* streamCopilot(
 
         case 'assistant.reasoning_delta':
           reasoningContent += event.data.deltaContent
+          enqueue({
+            type: 'reasoning_delta',
+            source: 'reasoning',
+            content: event.data.deltaContent
+          })
           break
 
         case 'assistant.reasoning':
+          // Only enqueue as a single chunk if no streaming deltas were received
+          // (some models emit reasoning only as a final complete block, not as deltas)
+          if (!reasoningContent) {
+            enqueue({
+              type: 'reasoning_delta',
+              source: 'reasoning',
+              content: event.data.content
+            })
+          }
           reasoningContent = event.data.content
-          console.log(`[COPILOT]   💭 Reasoning (${reasoningContent.length} chars)`)
+          console.log(`[COPILOT]   💭 Reasoning (${reasoningContent.length} chars, ${s()})`)
           break
 
         case 'assistant.message':
           if (event.data.toolRequests?.length) {
-            // Tool turn — tell the frontend to discard accumulated deltas
-            // (they were pre-tool reasoning, not the actual answer)
+            // Tool turn — tell the frontend to discard accumulated response deltas
             enqueue({ type: 'reset' })
+            enqueue({ type: 'reasoning_delta', source: 'tool_start', content: '\n\n' })
             console.log(
-              `[COPILOT]   🔧 Tool requests (reset streamed deltas): ${event.data.toolRequests.map((t: { name: string }) => t.name).join(', ')}`
+              `[COPILOT]   🔧 Tool requests (${s()}): ${event.data.toolRequests.map((t: { name: string }) => t.name).join(', ')}`
             )
           } else {
             finalContent = event.data.content
-            console.log(`[COPILOT]   ✉ Final message (${finalContent.length} chars)`)
+            console.log(`[COPILOT]   ✉ Final message (${finalContent.length} chars, ${s()})`)
           }
           break
 
-        case 'tool.execution_start':
+        case 'tool.execution_start': {
           toolCount++
+          // Skip meta-tools that produce noise in the reasoning display
+          if (event.data.toolName === 'report_intent') {
+            console.log(
+              `[COPILOT]   ↳ Tool #${toolCount} start: ${event.data.toolName} (${s()}) [skipped]`
+            )
+            break
+          }
           toolNames.set(event.data.toolCallId, event.data.toolName)
-          console.log(`[COPILOT]   ↳ Tool #${toolCount} start: ${event.data.toolName}`)
+          toolStartTimes.set(event.data.toolCallId, Date.now())
+          const args = event.data.arguments as Record<string, unknown> | undefined
+          const argLabel = toolArgLabel(args)
+          enqueue({
+            type: 'reasoning_delta',
+            source: 'tool_start',
+            content: `\n\n- ${event.data.toolName}${argLabel}`
+          })
+          console.log(`[COPILOT]   ↳ Tool #${toolCount} start: ${event.data.toolName} (${s()})`)
+          break
+        }
+
+        case 'tool.execution_partial_result':
+          // Partial output not displayed — final result is shown in tool.execution_complete
+          break
+
+        case 'tool.execution_progress':
+          // Human-readable progress message — show as a sub-line under the current tool
+          if (toolNames.has(event.data.toolCallId)) {
+            enqueue({
+              type: 'reasoning_delta',
+              source: 'tool_start',
+              content: `  \n_${event.data.progressMessage}_`
+            })
+          }
           break
 
         case 'tool.execution_complete': {
-          const name = toolNames.get(event.data.toolCallId) ?? event.data.toolCallId
+          // If the tool was not tracked (e.g. report_intent was skipped), ignore
+          if (!toolNames.has(event.data.toolCallId)) {
+            console.log(`[COPILOT]   ↳ Tool done: (untracked, ${s()})`)
+            break
+          }
+          const name = toolNames.get(event.data.toolCallId)!
+          const toolMs = Date.now() - (toolStartTimes.get(event.data.toolCallId) ?? Date.now())
+          toolStartTimes.delete(event.data.toolCallId)
+          toolNames.delete(event.data.toolCallId)
           if (event.data.success) {
-            console.log(`[COPILOT]   ↳ Tool done: ${name} (success=true)`)
+            const summary = toolResultSummary(event.data.result)
+            enqueue({
+              type: 'reasoning_delta',
+              source: 'tool_start',
+              content: `\n\n`
+            })
+            if (summary) {
+              enqueue({
+                type: 'reasoning_delta',
+                source: 'tool_result',
+                content: summary
+              })
+            }
+            console.log(`[COPILOT]   ↳ Tool done: ${name} (${toolMs}ms, ${s()})`)
           } else {
+            const errMsg = event.data.error?.message ?? 'erreur inconnue'
+            enqueue({
+              type: 'reasoning_delta',
+              source: 'tool_start',
+              content: ` ✗ ${errMsg}`
+            })
             console.error(
-              `[COPILOT]   ↳ Tool done: ${name} (success=false) — ${event.data.error?.code ?? ''}: ${event.data.error?.message ?? 'unknown error'}`
+              `[COPILOT]   ↳ Tool done: ${name} (failed, ${toolMs}ms, ${s()}) — ${event.data.error?.code ?? ''}: ${errMsg}`
             )
           }
           break
@@ -349,21 +478,23 @@ export async function* streamCopilot(
           inputTokens = event.data.inputTokens
           outputTokens = event.data.outputTokens
           console.log(
-            `[COPILOT]   📊 Tokens — in: ${inputTokens ?? '?'}, out: ${outputTokens ?? '?'}, model: ${event.data.model}`
+            `[COPILOT]   📊 Tokens — in: ${inputTokens ?? '?'}, out: ${outputTokens ?? '?'}, model: ${event.data.model} (${s()})`
           )
           break
 
         case 'session.error':
-          console.error(`[COPILOT]   ❌ Session error: ${event.data.message}`)
+          console.error(`[COPILOT]   ❌ Session error (${s()}): ${event.data.message}`)
           failStream(new Error(event.data.message))
           break
 
-        case 'assistant.turn_end':
-          console.log(`[COPILOT]   ■ Turn ended`)
+        case 'assistant.turn_end': {
+          const turnMs = Date.now() - turnStartTime
+          console.log(`[COPILOT]   ■ Turn ended (${turnMs}ms, ${s()})`)
           break
+        }
 
         case 'session.idle':
-          console.log(`[COPILOT]   ⏸ Session idle`)
+          console.log(`[COPILOT]   ⏸ Session idle (${s()})`)
           enqueue({
             type: 'done',
             fullContent: finalContent,

@@ -80,7 +80,7 @@ describe('ingest_files', () => {
       const profiles = anomalies
         .filter((a) => a.code === 'PROFILE_NOT_IN_METADATA')
         .map((a) => a.subject)
-      expect(profiles).toContain('demo_team')
+      expect(profiles).toContain('demo')
     })
 
     it('should NOT emit anomaly for non-proprietary configs not used in metadata', async () => {
