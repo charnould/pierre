@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds a portable .smolmachine image with Debian, python3, and GitHub Copilot CLI.
+# Builds a portable .smolmachine image with Ubuntu, python3, Node.js 22 and Pi agent.
 # The resulting artifact lets you boot a ready-to-use VM in <1s with no downloads.
 #
 # Output : config/smolvm/pierre-<arch> + config/smolvm/pierre-<arch>.smolmachine
@@ -35,34 +35,31 @@ echo "Création de la VM de build..."
 smolvm machine create --net "$BUILD_VM" --image ubuntu:resolute-20260413
 smolvm machine start --name "$BUILD_VM"
 
-echo "Installation de python3, curl et de l'agent IA..."
+echo "Installation de python3, Node.js 22, curl et de l'agent IA Pi..."
 smolvm machine exec --name "$BUILD_VM" -- bash -c "
 set -e
 export DEBIAN_FRONTEND=noninteractive
 
-
 apt-get update -qq \
     && apt-get install -y -qq --no-install-recommends \
          python3 \
-         python3-pip \
-         python3-venv \
          python-is-python3 \
          coreutils \
          findutils \
          fd-find \
-         tree \
          file \
          ripgrep \
          grep \
-         diffutils \
          sed \
-         mawk \
          jq \
+         sqlite3 \
          procps \
          ca-certificates \
          curl \
     && ln -sf \$(command -v fdfind) /usr/local/bin/fd \
-    && curl -fsSL https://gh.io/copilot-install | bash \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y -qq nodejs \
+    && npm install -g @earendil-works/pi-coding-agent \
     && apt-get purge -y curl \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* /root/.cache \
