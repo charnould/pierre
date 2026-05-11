@@ -12,3 +12,4 @@ temp/
 .env.local
 .private.md
 /desktop/dist
+.DS_Store
