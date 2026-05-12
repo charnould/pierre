@@ -19,6 +19,9 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Install smolvm dependencies
+        run: sudo apt-get install -y libvirglrenderer1
+
       - name: Install smolvm
         run: curl -sSL https://smolmachines.com/install.sh | bash
 
