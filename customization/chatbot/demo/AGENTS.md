@@ -58,6 +58,7 @@ BM25 is keyword-based, not semantic. For every `MATCH` query:
 - Expand terms with French synonyms, abbreviations, and related concepts via `OR`
 - All keywords must be in French
 - Wrap `MATCH` expressions in **single quotes**; escape hyphens and special characters
+- **Always include `content` in the SELECT.** The full document text is returned in the first query — never issue a second query to re-fetch content already retrieved.
 
 ```sql
 SELECT rowid, filename, source, content,
