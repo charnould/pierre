@@ -1,7 +1,3 @@
-// oxfmt-ignore
-// Must stay at the top of the file to setup the environment
-import { setup } from "./utils/setup";
-
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
 import { cors } from 'hono/cors'
@@ -25,13 +21,16 @@ import { controller as post_users } from './controllers/POST.users'
 // import { topicize, score } from "./utils/analyze-conversation";
 import { authenticate } from './utils/authenticate-user'
 import { run_pipeline } from './utils/knowledge/run-pipeline'
+import { setup } from './utils/setup'
 import { cleanupOrphanedVms } from './utils/vm-registry'
 
 // Prepare the environment and database before starting the app:
 // 1. Create necessary directories for the current service
 // 2. Initialize SQLite databases
-// 3. Clean up any orphaned VMs that may be running from previous sessions
+// 3. Run the knowledge pipeline (initial build on startup)
+// 4. Clean up any orphaned VMs that may be running from previous sessions
 await setup()
+await run_pipeline()
 await cleanupOrphanedVms()
 
 const app = new Hono()

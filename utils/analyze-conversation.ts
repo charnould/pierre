@@ -5,7 +5,8 @@ import type { Reply } from './_schema'
 import { generate_text } from './generate-output'
 import { get_conversation, save_topic, score_conversation } from './handle-conversation'
 
-const sql = new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
+let _sql: SQL | undefined
+const getSQL = () => (_sql ??= new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`))
 
 /**
  * Scores conversations using an AI model.
@@ -34,7 +35,7 @@ const sql = new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
  */
 export const score = async (): Promise<void> => {
   // Get the `conv_id` of conversations that have no score
-  let conv_ids_missing_score = await sql`
+  let conv_ids_missing_score = await getSQL()`
     SELECT DISTINCT
       conv_id
     FROM
@@ -137,7 +138,7 @@ export const score = async (): Promise<void> => {
  */
 export const topicize = async (): Promise<void> => {
   // Get the `conv_id` of conversations that have no assigned topic
-  let conv_ids_missing_topic = await sql`
+  let conv_ids_missing_topic = await getSQL()`
     SELECT DISTINCT
       conv_id
     FROM

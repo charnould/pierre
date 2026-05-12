@@ -4,8 +4,6 @@ import { format } from 'date-fns'
 import type { Context } from 'hono'
 import { z } from 'zod/v4'
 
-const sql = new Database(`datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
-
 const TelemetryPayload = z.object({
   host: z.string().trim().min(1),
   event: z.string().trim().min(1),
@@ -25,6 +23,7 @@ export const controller = async (c: Context) => {
 
     if (!payload.success) return c.json({ ok: false }, 400)
 
+    const sql = new Database(`datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
     sql.run(`INSERT INTO telemetry (timestamp, host, event) VALUES (?, ?, ?)`, [
       format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX"),
       payload.data.host,

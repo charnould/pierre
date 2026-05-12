@@ -6,7 +6,8 @@ import { z } from 'zod'
 
 import { view } from '../views/admin.statistics'
 
-const sql = new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
+let _sql: SQL | undefined
+const getSQL = () => (_sql ??= new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`))
 
 /**
  * Controller function to handle GET requests for statistics.
@@ -104,7 +105,7 @@ export const get_data = async (options: StatisticOptions): Promise<string> => {
           : new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
   ).toISOString()
 
-  const data = await sql`
+  const data = await getSQL()`
     SELECT
       *
     FROM
@@ -176,7 +177,7 @@ export const get_data = async (options: StatisticOptions): Promise<string> => {
  *
  */
 export const generate_csv = async (): Promise<string> => {
-  const data = await sql`
+  const data = await getSQL()`
     SELECT
       *,
       json_extract (metadata, '$.evaluation.cus.score') AS cus_score,
