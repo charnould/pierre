@@ -54,7 +54,7 @@ export default {
   // - `off`    : l'agent n'affiche pas le raisonnement mais les `reasoning_placeholders` ci-dessous.
   // - `partial`: l'agent affiche des traces partielles de raisonnement.
   // - `full`   : l'agent affiche des traces complètes de raisonnement.
-  reasoning_display: 'full',
+  reasoning_display: 'off',
 
   // Ces messages s'affichent aléatoirement durant la génération de la réponse
   // lorsque `reasoning_display` est `off`. Sans effet pour `partial` et `full`.
