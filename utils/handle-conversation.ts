@@ -5,7 +5,8 @@ import { z } from 'zod'
 import type { AIContext, Reply } from './_schema'
 import { send_webhook } from './webhook'
 
-const sql = new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
+let _sql: SQL | undefined
+const getSQL = () => (_sql ??= new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`))
 
 /**
  * Retrieves all conversation replies associated with the specified conversation ID.
@@ -20,7 +21,7 @@ const sql = new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
  *
  */
 export const get_conversation = async (conv_id: string): Promise<Reply[]> => {
-  const records = await sql`
+  const records = await getSQL()`
     SELECT
       *
     FROM
@@ -46,7 +47,7 @@ export const get_conversation = async (conv_id: string): Promise<Reply[]> => {
  *
  */
 export const delete_conversation = async (conv_id: string) =>
-  await sql`
+  await getSQL()`
     DELETE FROM conversations
     WHERE
       conv_id = ${conv_id}
@@ -68,9 +69,9 @@ export const delete_conversation = async (conv_id: string) =>
  */
 export const save_reply = async (context: AIContext): Promise<void> => {
   if (typeof context.config !== 'string') {
-    await sql`
+    await getSQL()`
       INSERT
-      OR IGNORE INTO conversations ${sql({
+      OR IGNORE INTO conversations ${getSQL()({
         timestamp: format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX"),
         metadata: JSON.stringify(context.metadata),
         config: context.config.id,
@@ -128,38 +129,38 @@ export const score_conversation = async ({
   score: number
   comment: string
 }): Promise<void> =>
-  await sql`
+  await getSQL()`
     UPDATE conversations
     SET
       metadata = json_set (
         metadata,
         ${
           scorer === 'organization'
-            ? sql`
+            ? getSQL()`
               '$.evaluation.organization.score',
               ${score},
               '$.evaluation.organization.comment',
               ${comment}
             `
-            : sql``
+            : getSQL()``
         } ${
           scorer === 'customer'
-            ? sql`
+            ? getSQL()`
               '$.evaluation.customer.score',
               ${score},
               '$.evaluation.customer.comment',
               ${comment}
             `
-            : sql``
+            : getSQL()``
         } ${
           scorer === 'ai'
-            ? sql`
+            ? getSQL()`
               '$.evaluation.ai.score',
               ${score},
               '$.evaluation.ai.comment',
               ${comment}
             `
-            : sql``
+            : getSQL()``
         }
       )
     WHERE
@@ -177,7 +178,7 @@ export const score_conversation = async ({
  *
  */
 export const save_topic = async ({ conv_id, topic }: { conv_id: string; topic: string }) =>
-  await sql`
+  await getSQL()`
     UPDATE conversations
     SET
       metadata = json_set (
@@ -198,7 +199,7 @@ export const save_topic = async ({ conv_id, topic }: { conv_id: string; topic: s
  * This function is tested.
  */
 export const get_conversations = async (): Promise<Reply[]> => {
-  const records = await sql`
+  const records = await getSQL()`
     SELECT
       *
     FROM

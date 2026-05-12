@@ -2,8 +2,6 @@ import { Database } from 'bun:sqlite'
 
 import { $ } from 'bun'
 
-import { run_pipeline } from './knowledge/run-pipeline'
-
 export const setup = async () => {
   if (Bun.env['SERVICE'] === undefined) Bun.env['SERVICE'] = 'default'
 
@@ -50,6 +48,3 @@ export const setup = async () => {
       );
     `)
 }
-
-await setup()
-await run_pipeline()

@@ -2,7 +2,8 @@ import { SQL } from 'bun'
 
 import type { Parsed_User, User } from './_schema'
 
-const sql = new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
+let _sql: SQL | undefined
+const getSQL = () => (_sql ??= new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`))
 
 /**
  * Saves a user to the database by inserting or replacing the user record.
@@ -11,9 +12,9 @@ const sql = new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
  * @returns A promise that resolves when the user has been saved.
  */
 export const save_user = async ({ email, role, config, password_hash }: User) =>
-  await sql`
+  await getSQL()`
     INSERT
-    OR REPLACE INTO users ${sql({
+    OR REPLACE INTO users ${getSQL()({
       email,
       role,
       config,
@@ -33,7 +34,7 @@ export const save_user = async ({ email, role, config, password_hash }: User) =>
  * @returns A `Parsed_User` object if the user exists, otherwise `undefined`.
  */
 export const get_user = async (email: string) => {
-  const users = await sql`
+  const users = await getSQL()`
     SELECT
       *
     FROM
@@ -57,7 +58,7 @@ export const get_user = async (email: string) => {
  * @throws {Error} If the database query fails or if parsing the user configuration fails.
  */
 export const get_users = async (): Promise<Parsed_User[]> => {
-  const db_users = (await sql`
+  const db_users = (await getSQL()`
     SELECT
       *
     FROM
@@ -81,7 +82,7 @@ export const get_users = async (): Promise<Parsed_User[]> => {
  * @returns A promise that resolves when the operation is complete.
  */
 export const delete_all_users = async () =>
-  await sql`
+  await getSQL()`
     DELETE FROM users;
 
     VACUUM;
