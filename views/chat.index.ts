@@ -36,7 +36,7 @@ export const view = (params: {
         />
         <link rel="preconnect" href="https://rsms.me" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/dist/css/style.1778620232100.css" />
+        <link rel="stylesheet" href="../assets/dist/css/style.1778653825767.css" />
         <link
           rel="icon"
           href="../customization/chatbot/${params.active_config.id}/system.svg"
@@ -46,7 +46,7 @@ export const view = (params: {
           rel="manifest"
           href="../customization/chatbot/${params.active_config.id}/manifest.json"
         />
-        <script type="module" src="../assets/dist/js/ai.1778620232100.js"></script>
+        <script type="module" src="../assets/dist/js/ai.1778653825767.js"></script>
         <title>Comment puis-je vous aider ? 🖐️</title>
       </head>
 
