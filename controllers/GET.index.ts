@@ -68,7 +68,10 @@ export const get_displayable_configs = async (params: {
       assets.map(async (file) => {
         const config: Config = (await import(`../customization/chatbot/${file}/config`)).default
         const should_be_displayed = params.active_config.show.includes(config.id)
-        const user_is_authorized = !params.user?.config || params.user?.config.includes(config.id)
+        const user_is_authorized =
+          params.user?.role === 'administrator' ||
+          !params.user?.config ||
+          params.user?.config.includes(config.id)
         const is_active = file === params.active_config.id
 
         return {
