@@ -13,14 +13,14 @@ beforeAll(async () => {
     email: 'collaborator@pierre-ia.org',
     role: 'collaborator',
     password_hash: await Bun.password.hash('de17a9bb-1cd0-440b-98cb-5be2fda3e5e2'),
-    config: JSON.stringify(['default', 'demo_team'])
+    config: JSON.stringify(['default', 'demo'])
   })
 
   await save_user({
     email: 'contributor@pierre-ia.org',
     role: 'contributor',
     password_hash: await Bun.password.hash('de17a9bb-1cd0-440b-98cb-5be2fda3e5e2'),
-    config: JSON.stringify(['default', 'demo_team'])
+    config: JSON.stringify(['default', 'demo'])
   })
 })
 

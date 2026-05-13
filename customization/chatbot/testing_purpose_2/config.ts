@@ -3,14 +3,7 @@ import type { Config } from '../../../utils/_schema'
 export default {
   id: 'testing_purpose_2',
   display: 'Test 2',
-  show: [
-    'demo_client',
-    'demo_team',
-    'default',
-    'testing_purpose_1',
-    'testing_purpose_2',
-    'fake_profil'
-  ],
+  show: ['demo', 'default', 'testing_purpose_1', 'testing_purpose_2', 'fake_profil'],
   custom_data: {},
   api: [],
   protected: false,

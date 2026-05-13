@@ -14,7 +14,7 @@ beforeAll(async () => {
     email: 'test@test.org',
     role: 'collaborator',
     password_hash: await Bun.password.hash('complicated-test-password'),
-    config: JSON.stringify(['demo_team', 'testing_purpose_1', 'non_existing'])
+    config: JSON.stringify(['demo', 'testing_purpose_1', 'non_existing'])
   })
 })
 
@@ -47,14 +47,14 @@ it('should redirect and resolve configuration access correctly for anonymous and
 
   // Test fallback to default config when accessing an unknown config
   await page.goto('http://localhost:3000/c?config=non_existing&data=')
-  expect(page.url()).toBe('http://localhost:3000/c?config=demo_team&data=')
+  expect(page.url()).toBe('http://localhost:3000/c?config=demo&data=')
 
   await page.goto('http://localhost:3000/c?config=hello_wordg&data=')
-  expect(page.url()).toBe('http://localhost:3000/c?config=demo_team&data=')
+  expect(page.url()).toBe('http://localhost:3000/c?config=demo&data=')
 
   // Test user can access config he has access to
-  await page.goto('http://localhost:3000/c?config=demo_teamg&data=')
-  expect(page.url()).toBe('http://localhost:3000/c?config=demo_team&data=')
+  await page.goto('http://localhost:3000/c?config=demog&data=')
+  expect(page.url()).toBe('http://localhost:3000/c?config=demo&data=')
 
   await browser.close()
 })
