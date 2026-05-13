@@ -68,14 +68,6 @@
       iA?
     </p>
 
-    <p class="smartphone">
-      Pour une meilleure expérience, affichez PIERRE en plein écran. Choisissez l'habillage :
-      <a href="https://assistant.pierre-ia.org/c?config=default">Générique</a>,
-      <a href="https://assistant.pierre-ia.org/c?config=demo_client">Grand Dijon Habitat</a>
-      ou
-      <a href="https://assistant.pierre-ia.org/c?config=demo_team">Assistant des collaborateurs</a>.
-    </p>
-
     <main>
       <div class="explanation">
         <a target="_blank" class="github" href="https://github.com/charnould/pierre">GitHub</a>
@@ -118,9 +110,9 @@
             les collaborateurs du monde HLM et qui apprend de vos procédures et pratiques.
           </li>
           <li>
-            Une <b>extension Web/Chrome™/Edge™</b> (alpha) qui permet d'injecter de l'IA dans vos
+            Une <b>application Desktop</b> (alpha) qui permet d'injecter de l'IA dans vos
             applicatifs historiques (ARAVIS™, IKOS™, HOMERE™...) et d'accélerer – par exemple –
-            <a href="https://www.youtube.com/watch?v=U3r_BBxpsro" target="_blank"
+            <a href="https://www.youtube.com/watch?v=sKsB6U9Nfo4" target="_blank"
               >les délais de réponse aux locataires</a
             >.
           </li>
@@ -233,49 +225,6 @@
           valeur ajoutée.
         </p>
 
-        <h3 id="test_pierre">Comment tester PIERRE ?</h3>
-
-        <p>
-          Pour tester PIERRE, rien de plus simple : écrivez-lui ; il vous indiquera lorsque ses
-          connaissances sont (à ce jour) insuffisantes.
-        </p>
-
-        <p>
-          Alternativement, ci-dessous, quelques cas d'usage pour tester à la fois la
-          personnalisation, la contextualisation et les possibilités de PIERRE :
-        </p>
-
-        <ul>
-          <li>
-            <b>Locataire HLM</b> —
-            <a href="?config=demo_client"
-              >Cliquez pour accéder à PIERRE en mode 'Grand Dijon Habitat'</a
-            >
-            , puis posez-lui des questions sur votre état des lieux, les travaux que vous pouvez
-            réaliser dans votre logement, les coordonnées du service-client, les charges locatives,
-            la Garantie Visale ou les prêts et aides Action Logement disponibles.
-          </li>
-
-          <li>
-            <b>Collaborateur HLM</b> —
-            <a href="?config=demo_team">Cliquez pour accéder à PIERRE en mode 'Pierre Habitat'</a>
-            (un bailleur social fictif), puis interrogez-le sur les procédures internes (toutes
-            aussi fictives) pour un aperçu de comment une IA peut aider vos équipes au quotidien.
-          </li>
-          <li>
-            <b>Demandeur de logement social</b> ou <b>simple curieux</b> —
-            <a href="?config=default">Demandez-lui en mode 'Généraliste'</a>
-            comment obtenir un logement social, interrogez-le sur l'histoire du logement social, le
-            Ministre, la loi SRU, sur les APL...
-          </li>
-
-          <li>
-            <b>Hébergement d'urgence</b> — Indiquez à PIERRE que vous subissez des violences
-            conjuguales et devez urgemment quitter votre domicile ; indiquez également habiter à
-            Orange (84100) dans le Vaucluse.
-          </li>
-        </ul>
-
         <h3>Et maintenant...</h3>
 
         <p>Qu'en pense le mouvement HLM ?</p>
@@ -320,7 +269,7 @@
 
       const config = getQueryParam('config')
 
-      const configs = ['default', 'demo_client', 'demo_team']
+      const configs = ['default', 'demo']
       const pierreElement = document.querySelector('#pierre')
 
       if (pierreElement) {
