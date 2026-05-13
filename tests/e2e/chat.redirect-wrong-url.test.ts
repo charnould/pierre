@@ -42,8 +42,8 @@ it('should redirect to the default config for invalid paths and parameters + pre
 
   // Valid config and data pair
   // should be preserved as-is
-  await page.goto(`${path}?config=demo_team&data=test`)
-  expect(page.url()).toBe('http://localhost:3000/c?config=demo_team&data=test')
+  await page.goto(`${path}?config=demo&data=test`)
+  expect(page.url()).toBe('http://localhost:3000/c?config=demo&data=test')
 
   await browser.close()
 })

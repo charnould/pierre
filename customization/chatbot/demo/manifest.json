@@ -1,7 +1,7 @@
 {
   "short_name": "Eiffel",
   "id": "/",
-  "start_url": "https://assistant.pierre-ia.org/?config=demo_client",
+  "start_url": "https://assistant.pierre-ia.org/?config=demo",
   "background_color": "#ffffff",
   "scope": "/",
   "theme_color": "#ffffff",

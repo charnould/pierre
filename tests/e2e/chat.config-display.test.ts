@@ -13,7 +13,7 @@ it('should display the correct config options for anonymous and authenticated us
     email: 'test@test.org',
     role: 'collaborator',
     password_hash: await Bun.password.hash('a-complicated-password'),
-    config: JSON.stringify(['demo_team', 'testing_purpose_1', 'testing_purpose_2', 'non_existing'])
+    config: JSON.stringify(['demo', 'testing_purpose_1', 'testing_purpose_2', 'non_existing'])
   })
 
   const browser = await puppeteer.launch()
@@ -38,8 +38,7 @@ it('should display the correct config options for anonymous and authenticated us
   })
 
   expect(configs).toEqual([
-    'http://localhost:3000/?config=demo_team',
-    'http://localhost:3000/?config=demo_client',
+    'http://localhost:3000/?config=demo',
     'http://localhost:3000/?config=default',
     'http://localhost:3000/?config=testing_purpose_1',
     'http://localhost:3000/?config=testing_purpose_2'
@@ -64,7 +63,7 @@ it('should display the correct config options for anonymous and authenticated us
   })
 
   expect(configs).toEqual([
-    'http://localhost:3000/?config=demo_team',
+    'http://localhost:3000/?config=demo',
     'http://localhost:3000/?config=testing_purpose_1',
     'http://localhost:3000/?config=testing_purpose_2'
   ])

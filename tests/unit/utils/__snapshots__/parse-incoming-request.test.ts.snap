@@ -36,7 +36,7 @@ exports[`should AIContext parse correctly 1`] = `
     ],
     "id": "default",
     "protected": false,
-    "reasoning_display": "partial",
+    "reasoning_display": "off",
     "reasoning_effort": "medium",
     "reasoning_placeholders": [
       "Je réfléchis…",
