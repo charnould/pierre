@@ -1,7 +1,7 @@
 # PIERRE – Agent IA HLM open source
 
 > [!IMPORTANT]
-> PIERRE est actuellement en version `0.38.x` (consulter les [releases](https://github.com/charnould/pierre/releases)). La **qualité de la base de connaissances est estimée à `20 %`** — elle s'améliore en continu grâce aux contributions du mouvement HLM. En cas de difficultés, créer une `issue` ou envoyer un email à charnould@pierre-ia.org.
+> PIERRE est actuellement en version `0.39.x` (consulter les [releases](https://github.com/charnould/pierre/releases)). La **qualité de la base de connaissances est estimée à `20 %`** — elle s'améliore en continu grâce aux contributions du mouvement HLM. En cas de difficultés, créer une `issue` ou envoyer un email à charnould@pierre-ia.org.
 >
 > PIERRE ne connaît pas les spécificités de votre organisme (taille du parc, coordonnées des agences, procédures internes…). **Ces éléments peuvent lui être enseignés en quelques secondes.**
 
