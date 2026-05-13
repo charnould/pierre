@@ -121,10 +121,9 @@ const build_readme = (db: Database): string | null => {
       '',
       '| Column | Type | Notes |',
       '|-|-|-|',
+      '| `rowid`| metadata| Primary key — fetch full content with `SELECT content FROM documents WHERE rowid = N`|',
       '| `content`| FTS| MATCH target — full document text|',
-      '| `rowid`| metadata| Primary key; re-fetch via `WHERE rowid = N`|',
-      '| `filename`| metadata| e.g. `procedures_agent_astreinte`|',
-      "| `source`| metadata| `'client'` = docs from client · `'community'` = shared HLM knowledge|",
+      '| `filename`| metadata| Semantically rich — expresses the content of the file (e.g. `enquetes_locataire`)|',
       '| `url`| metadata| Nullable|',
       '',
       'Metadata columns use SQL operators (`=`, `IN`, `LIKE`), never `MATCH`.'
@@ -199,13 +198,11 @@ const build_database_for_config = async (config_id: string, service: string): Pr
 
     db.run('DROP TABLE IF EXISTS documents')
     db.run(
-      'CREATE VIRTUAL TABLE documents USING fts5(content, filename UNINDEXED, source UNINDEXED, url UNINDEXED, tokenize = "unicode61 remove_diacritics 2 tokenchars \'-\'")'
+      'CREATE VIRTUAL TABLE documents USING fts5(content, filename UNINDEXED, url UNINDEXED, tokenize = "unicode61 remove_diacritics 2 tokenchars \'-\'")'
     )
 
     md_files = walk_files(source_dir, '.md')
-    const insert_doc = db.prepare(
-      'INSERT INTO documents (content, filename, source, url) VALUES (?, ?, ?, ?)'
-    )
+    const insert_doc = db.prepare('INSERT INTO documents (content, filename, url) VALUES (?, ?, ?)')
 
     for (const file_path of md_files) {
       const raw = await Bun.file(file_path).text()
@@ -222,8 +219,7 @@ const build_database_for_config = async (config_id: string, service: string): Pr
       }
 
       const filename = basename(file_path, '.md')
-      const source = file_path.includes('donnees_universelles') ? 'community' : 'client'
-      insert_doc.run(content, filename, source, url)
+      insert_doc.run(content, filename, url)
     }
 
     // ── _sources table from _sources.json (JSON table URLs) ─────────────────────

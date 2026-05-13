@@ -160,37 +160,6 @@ describe('build_knowledge_databases', () => {
       expect(row?.filename).toBe('guide')
       expect(row?.content).toContain('Guide')
     })
-
-    it('sets source to "client" for files outside donnees_universelles/', async () => {
-      await write_md('faq.md', '# FAQ')
-
-      await build_knowledge_databases()
-
-      const db = open_db()
-      const row = db
-        .query<{ source: string }, [string]>('SELECT source FROM documents WHERE filename = ?')
-        .get('faq')
-      db.close()
-
-      expect(row?.source).toBe('client')
-    })
-
-    it('sets source to "community" for files inside donnees_universelles/', async () => {
-      await write_md('donnees_universelles/connaissances_generales/logement.md', '# Logement')
-
-      await build_knowledge_databases()
-
-      const db = open_db()
-      const row = db
-        .query<{ filename: string; source: string }, [string]>(
-          'SELECT filename, source FROM documents WHERE filename = ?'
-        )
-        .get('logement')
-      db.close()
-
-      expect(row?.source).toBe('community')
-      expect(row?.filename).toBe('logement')
-    })
   })
 
   describe('YAML frontmatter in Markdown files', () => {
