@@ -173,7 +173,14 @@ const build_database_for_config = async (config_id: string, service: string): Pr
 
       const table_name = normalize_knowledge_name(basename(file_path, '.json')) || 'data'
       const sanitized_keys = build_unique_sql_identifiers(keys)
-      const col_defs = sanitized_keys.map((k) => `"${k}" TEXT`).join(', ')
+
+      // Infer SQLite column type: use REAL when every non-null value is a JS number
+      const col_types = keys.map((k) => {
+        const non_null = rows.map((r) => r[k]).filter((v) => v !== null && v !== undefined)
+        return non_null.length > 0 && non_null.every((v) => typeof v === 'number') ? 'REAL' : 'TEXT'
+      })
+
+      const col_defs = sanitized_keys.map((k, i) => `"${k}" ${col_types[i]}`).join(', ')
 
       db.run(`DROP TABLE IF EXISTS "${table_name}"`)
       db.run(`CREATE TABLE "${table_name}" (${col_defs})`)
@@ -187,7 +194,9 @@ const build_database_for_config = async (config_id: string, service: string): Pr
         for (const row of rows) {
           const values = keys.map((k) => {
             const v = row[k]
-            return v === null || v === undefined ? null : String(v)
+            if (v === null || v === undefined) return null
+            if (typeof v === 'number') return v
+            return String(v)
           })
           stmt.run(...values)
         }

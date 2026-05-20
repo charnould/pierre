@@ -1,7 +1,61 @@
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 
 import type { Metadata } from '../../../utils/knowledge/generate-metadata'
-import { ingest_files } from '../../../utils/knowledge/ingest-files'
+import { ingest_files, parse_numeric_string } from '../../../utils/knowledge/ingest-files'
+
+describe('parse_numeric_string', () => {
+  it('parses european format with space thousands separator', () => {
+    expect(parse_numeric_string('1 234,56')).toBe(1234.56)
+  })
+
+  it('parses european format with dot thousands and comma decimal', () => {
+    expect(parse_numeric_string('1.234,56')).toBe(1234.56)
+  })
+
+  it('parses standard format with period decimal', () => {
+    expect(parse_numeric_string('1234,56')).toBe(1234.56)
+  })
+
+  it('parses standard format with comma thousands and period decimal', () => {
+    expect(parse_numeric_string('1,234.56')).toBe(1234.56)
+  })
+
+  it('parses plain integer', () => {
+    expect(parse_numeric_string('1234')).toBe(1234)
+  })
+
+  it('parses negative number with comma decimal', () => {
+    expect(parse_numeric_string('-3,5')).toBe(-3.5)
+  })
+
+  it('converts percentage to decimal', () => {
+    expect(parse_numeric_string('25%')).toBe(0.25)
+  })
+
+  it('converts percentage with space before symbol', () => {
+    expect(parse_numeric_string('25 %')).toBe(0.25)
+  })
+
+  it('strips euro symbol', () => {
+    expect(parse_numeric_string('50 €')).toBe(50)
+  })
+
+  it('strips euro symbol with european thousands format', () => {
+    expect(parse_numeric_string('1 234,56 €')).toBe(1234.56)
+  })
+
+  it('returns null for non-numeric string', () => {
+    expect(parse_numeric_string('abc')).toBeNull()
+  })
+
+  it('returns null for empty string', () => {
+    expect(parse_numeric_string('')).toBeNull()
+  })
+
+  it('returns null for lone dash', () => {
+    expect(parse_numeric_string('-')).toBeNull()
+  })
+})
 
 const SERVICE = Bun.env['SERVICE']!
 const FILES_DIR = `datastores/${SERVICE}/files`

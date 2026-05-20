@@ -102,9 +102,61 @@ const process_docx_file = async (filepath: string): Promise<FormattedContent> =>
 const normalize_sheet_key = (key: string): string => key.toLowerCase().trim()
 
 /**
+ * Attempts to parse a cleaned string as a numeric value.
+ *
+ * Handles:
+ * - European format with comma decimal separator: `"1 234,56"` → `1234.56`
+ * - Dot-thousands + comma decimal: `"1.234,56"` → `1234.56`
+ * - Standard format with period decimal: `"1,234.56"` → `1234.56`
+ * - Plain integers: `"1234"` → `1234`
+ * - Percentages: `"25 %"` → `0.25`
+ * - Currency symbols stripped: `"1 234,56 €"` → `1234.56`
+ *
+ * @param s - Already-trimmed, lowercased string (post basic normalization).
+ * @returns A finite `number`, or `null` if `s` is not a recognizable numeric string.
+ */
+export const parse_numeric_string = (s: string): number | null => {
+  let str = s
+
+  // Detect and strip trailing percentage sign
+  const is_percent = str.endsWith('%')
+  if (is_percent) str = str.slice(0, -1).trim()
+
+  // Strip common currency symbols and surrounding whitespace
+  str = str.replace(/[€$£¥₹]/g, '').trim()
+
+  // Remove all whitespace (thousands separators such as spaces or non-breaking spaces)
+  str = str.replace(/[\s\u00A0]/g, '')
+
+  if (str === '' || str === '-') return null
+
+  const last_comma = str.lastIndexOf(',')
+  const last_period = str.lastIndexOf('.')
+
+  if (last_comma > last_period) {
+    // Comma is the decimal separator (e.g. "1.234,56" or "1234,56")
+    str = str.replace(/\./g, '').replace(',', '.')
+  } else if (last_period > last_comma) {
+    // Period is the decimal separator (e.g. "1,234.56" or "1234.56")
+    str = str.replace(/,/g, '')
+  }
+  // No separator → plain integer string, nothing to change
+
+  // Validate that only numeric characters remain
+  if (!/^-?\d+(\.\d+)?$/.test(str)) return null
+
+  const num = Number(str)
+  if (!Number.isFinite(num)) return null
+
+  return is_percent ? num / 100 : num
+}
+
+/**
  * Normalizes a spreadsheet cell value:
  * - Dates are formatted as locale-aware French strings in Europe/Paris timezone.
- * - Strings are trimmed, whitespace-collapsed, and lowercased; empty → `null`.
+ * - Strings are trimmed, whitespace-collapsed, and lowercased.
+ *   If the result looks like a number (including European formats, %, currency symbols),
+ *   it is converted to a JS `number`; empty strings become `null`.
  * - Other values are returned as-is.
  *
  * @param value - Raw cell value from the spreadsheet.
@@ -115,7 +167,9 @@ const normalize_sheet_value = (value: unknown): unknown => {
   }
   if (typeof value === 'string') {
     const normalized = value.trim().replace(/\s+/g, ' ').toLowerCase()
-    return normalized === '' ? null : normalized
+    if (normalized === '') return null
+    const as_number = parse_numeric_string(normalized)
+    return as_number !== null ? as_number : normalized
   }
   return value
 }
