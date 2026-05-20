@@ -516,7 +516,7 @@ avec :
 
 # Application desktop Windows et macOS (alpha/not-prod-ready)
 
-PIERRE dispose d'une application desktop (Windows et macOS) [téléchargeable ici](./config/app/). Un lien de téléchargement est également disponible depuis la page d'accueil de l'interface d'administration.
+PIERRE dispose d'une application desktop (Windows et macOS) [téléchargeable ici](https://github.com/charnould/pierre/releases/latest). Un lien de téléchargement est également disponible depuis la page d'accueil de l'interface d'administration.
 
 > [!NOTE]
 > **macOS** — Lors du premier lancement, macOS peut afficher un avertissement de sécurité car l'application n'est pas notarisée par Apple. Si vous voyez le message _"pierre est endommagé et ne peut pas être ouvert"_, exécutez la commande suivante dans le Terminal, puis relancez l'application :

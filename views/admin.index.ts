@@ -62,16 +62,17 @@ export const view = (user, desktop_version: string | null) => {
         <p class="mt-10 text-sm">
           Application bureau${desktop_version ? ` — v.${desktop_version}` : ''}<br />
           <a
-            href="https://github.com/charnould/pierre/raw/refs/heads/master/config/app/pierre-desktop-latest.zip?download="
+            href="https://github.com/charnould/pierre/releases/latest/download/pierre-win32-setup.exe"
             class="font-bold underline decoration-2 underline-offset-4"
             >Télécharger pour Windows</a
           >
-          &nbsp;·&nbsp;
+          (mise à jour automatique) &nbsp;·&nbsp;
           <a
-            href="https://github.com/charnould/pierre/raw/refs/heads/master/config/app/pierre-desktop-latest.dmg?download="
+            href="https://github.com/charnould/pierre/releases/latest/download/pierre-macos.dmg"
             class="font-bold underline decoration-2 underline-offset-4"
             >Télécharger pour macOS</a
           >
+          (sans mise à jour automatique · Apple Silicon)
         </p>
 
         <p class="mt-6 text-sm">
