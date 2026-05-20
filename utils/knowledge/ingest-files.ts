@@ -4,8 +4,8 @@ import { cp, mkdir, readdir, rename, rm } from 'node:fs/promises'
 import { basename } from 'node:path'
 import { Readable } from 'node:stream'
 
-import { formatInTimeZone } from 'date-fns-tz'
-import { fr } from 'date-fns/locale'
+import { TZDate } from '@date-fns/tz'
+import { format as formatDate } from 'date-fns'
 import mammoth from 'mammoth'
 import { format } from 'oxfmt'
 import TurndownService from 'turndown'
@@ -153,21 +153,26 @@ export const parse_numeric_string = (s: string): number | null => {
 
 /**
  * Normalizes a spreadsheet cell value:
- * - Dates are formatted as locale-aware French strings in Europe/Paris timezone.
+ * - Dates are formatted as `YYYY-MM-DD` strings in the Europe/Paris timezone.
  * - Strings are trimmed, whitespace-collapsed, and lowercased.
+ *   Strings matching `DD/MM/YYYY` are converted to `YYYY-MM-DD`.
  *   If the result looks like a number (including European formats, %, currency symbols),
  *   it is converted to a JS `number`; empty strings become `null`.
  * - Other values are returned as-is.
  *
  * @param value - Raw cell value from the spreadsheet.
  */
-const normalize_sheet_value = (value: unknown): unknown => {
+export const normalize_sheet_value = (value: unknown): unknown => {
   if (value instanceof Date) {
-    return formatInTimeZone(value, TIMEZONE, 'PPPP', { locale: fr })
+    return formatDate(new TZDate(value, TIMEZONE), 'yyyy-MM-dd')
   }
   if (typeof value === 'string') {
     const normalized = value.trim().replace(/\s+/g, ' ').toLowerCase()
     if (normalized === '') return null
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(normalized)) {
+      const [dd, mm, yyyy] = normalized.split('/')
+      return `${yyyy}-${mm}-${dd}`
+    }
     const as_number = parse_numeric_string(normalized)
     return as_number !== null ? as_number : normalized
   }
