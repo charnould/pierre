@@ -143,6 +143,64 @@ describe('build_knowledge_databases', () => {
       expect(cols).toContain('name')
       expect(cols.some((c) => c.includes('empty'))).toBe(false)
     })
+
+    it('creates numeric-only columns as REAL and mixed columns as TEXT', async () => {
+      await write_json('stats.json', [
+        { label: 'Paris', population: 2161000, score: 9.5 },
+        { label: 'Lyon', population: 515695, score: 8.1 }
+      ])
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const col_info = db
+        .query<{ name: string; type: string }, []>('PRAGMA table_info("stats")')
+        .all()
+      db.close()
+
+      const type_of = Object.fromEntries(col_info.map((r) => [r.name, r.type]))
+      expect(type_of['label']).toBe('TEXT')
+      expect(type_of['population']).toBe('REAL')
+      expect(type_of['score']).toBe('REAL')
+    })
+
+    it('stores numeric values as numbers (not strings) in REAL columns', async () => {
+      await write_json('measures.json', [
+        { name: 'a', value: 42.5 },
+        { name: 'b', value: 100 }
+      ])
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const rows = db
+        .query<{ name: string; value: number }, []>('SELECT name, value FROM measures')
+        .all()
+      db.close()
+
+      expect(typeof rows[0]!.value).toBe('number')
+      expect(rows[0]!.value).toBe(42.5)
+      expect(rows[1]!.value).toBe(100)
+    })
+
+    it('keeps TEXT type when a numeric column has at least one null', async () => {
+      await write_json('partial.json', [
+        { name: 'a', value: 42 },
+        { name: 'b', value: null }
+      ])
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const col_info = db
+        .query<{ name: string; type: string }, []>('PRAGMA table_info("partial")')
+        .all()
+      db.close()
+
+      const type_of = Object.fromEntries(col_info.map((r) => [r.name, r.type]))
+      // null rows are excluded from the check, so 'value' is still fully numeric → REAL
+      expect(type_of['value']).toBe('REAL')
+    })
   })
 
   describe('Markdown files → FTS5 documents table', () => {
