@@ -174,10 +174,13 @@ const build_database_for_config = async (config_id: string, service: string): Pr
       const table_name = normalize_knowledge_name(basename(file_path, '.json')) || 'data'
       const sanitized_keys = build_unique_sql_identifiers(keys)
 
-      // Infer SQLite column type: use REAL when every non-null value is a JS number
+      // Infer SQLite column type: use INTEGER when every non-null value is a JS number.
+      // SQLite's loose type affinity stores decimals correctly even in INTEGER columns.
       const col_types = keys.map((k) => {
         const non_null = rows.map((r) => r[k]).filter((v) => v !== null && v !== undefined)
-        return non_null.length > 0 && non_null.every((v) => typeof v === 'number') ? 'REAL' : 'TEXT'
+        return non_null.length > 0 && non_null.every((v) => typeof v === 'number')
+          ? 'INTEGER'
+          : 'TEXT'
       })
 
       const col_defs = sanitized_keys.map((k, i) => `"${k}" ${col_types[i]}`).join(', ')
