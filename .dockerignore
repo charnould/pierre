@@ -10,4 +10,3 @@ temp/
 .private.md
 config/smolvm/pierre-arm64
 config/smolvm/pierre-arm64.smolmachine
-config/app

@@ -33,3 +33,4 @@ jobs:
       - run: bun install
       - run: bun run utils/setup.ts
       - run: SERVICE=pierre-production bun test:unit
+      - run: cd desktop && bun install && bun test

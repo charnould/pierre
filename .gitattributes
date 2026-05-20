@@ -1,2 +1,1 @@
 config/smolvm/* filter=lfs diff=lfs merge=lfs -text
-config/app/* filter=lfs diff=lfs merge=lfs -text
