@@ -1,7 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 
 import type { Metadata } from '../../../utils/knowledge/generate-metadata'
-import { ingest_files, parse_numeric_string } from '../../../utils/knowledge/ingest-files'
+import {
+  ingest_files,
+  normalize_sheet_value,
+  parse_numeric_string
+} from '../../../utils/knowledge/ingest-files'
 
 describe('parse_numeric_string', () => {
   it('parses european format with space thousands separator', () => {
@@ -54,6 +58,42 @@ describe('parse_numeric_string', () => {
 
   it('returns null for lone dash', () => {
     expect(parse_numeric_string('-')).toBeNull()
+  })
+})
+
+describe('normalize_sheet_value', () => {
+  it('formats a Date as YYYY-MM-DD in Europe/Paris timezone', () => {
+    // 2026-05-20T00:00:00Z is 2026-05-20 02:00 in Paris (UTC+2) → same date
+    expect(normalize_sheet_value(new Date('2026-05-20T00:00:00.000Z'))).toBe('2026-05-20')
+  })
+
+  it('formats a Date at UTC midnight correctly even when Paris is UTC+2', () => {
+    // 2026-01-15T23:00:00Z is 2026-01-16 00:00 in Paris (UTC+1) → next day
+    expect(normalize_sheet_value(new Date('2026-01-15T23:00:00.000Z'))).toBe('2026-01-16')
+  })
+
+  it('converts DD/MM/YYYY string to YYYY-MM-DD', () => {
+    expect(normalize_sheet_value('20/05/2026')).toBe('2026-05-20')
+  })
+
+  it('converts DD/MM/YYYY string with leading zeros to YYYY-MM-DD', () => {
+    expect(normalize_sheet_value('01/01/2024')).toBe('2024-01-01')
+  })
+
+  it('leaves plain strings unchanged', () => {
+    expect(normalize_sheet_value('hello world')).toBe('hello world')
+  })
+
+  it('converts numeric strings to numbers', () => {
+    expect(normalize_sheet_value('1 234,56')).toBe(1234.56)
+  })
+
+  it('returns null for empty strings', () => {
+    expect(normalize_sheet_value('')).toBeNull()
+  })
+
+  it('returns null as-is', () => {
+    expect(normalize_sheet_value(null)).toBeNull()
   })
 })
 
