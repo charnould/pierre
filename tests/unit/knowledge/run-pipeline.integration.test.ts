@@ -158,8 +158,9 @@ describe('run_pipeline — full integration', () => {
 
       expect(row?.content).toBeTruthy()
       const schema = JSON.parse(row!.content!.replace(/^```json\n/, '').replace(/\n```$/, ''))
-      expect(schema).toHaveProperty('documents')
-      expect(schema.documents.type).toBe('fts5')
+      const docs = schema.tables.find((t: { name: string }) => t.name === 'documents')
+      expect(docs).toBeDefined()
+      expect(docs.engine).toBe('fts5')
     })
 
     it('records no error-level events when the pipeline runs cleanly', async () => {

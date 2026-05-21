@@ -500,6 +500,64 @@ describe('build_knowledge_databases', () => {
     })
   })
 
+  describe('documents entry in _readme tables', () => {
+    it('includes documents entry inside tables array (not as a separate key)', async () => {
+      await write_md('guide.md', '# Guide\nContenu.')
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
+      db.close()
+
+      const schema = parse_readme(row!.content)
+      expect(schema.documents).toBeUndefined()
+      const docs = schema.tables.find((t: { name: string }) => t.name === 'documents')
+      expect(docs).toBeDefined()
+    })
+
+    it('documents entry has correct engine, tokenizer, rows, columns and query_examples', async () => {
+      await write_md('guide.md', '# Guide\nContenu.')
+      await write_md('faq.md', '# FAQ\nQuestions.')
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
+      db.close()
+
+      const schema = parse_readme(row!.content)
+      const docs = schema.tables.find((t: { name: string }) => t.name === 'documents')
+      expect(docs?.type).toBeUndefined()
+      expect(docs?.engine).toBe('fts5')
+      expect(docs?.tokenizer).toBe("unicode61 remove_diacritics 2 tokenchars '-'")
+      expect(docs?.rows).toBe(2)
+      expect(docs?.filenames).toBeUndefined()
+      expect(docs?.columns).toEqual([
+        { name: 'rowid', indexed: true },
+        { name: 'content', indexed: true },
+        { name: 'filename', indexed: false },
+        { name: 'url', indexed: false }
+      ])
+      expect(Array.isArray(docs?.query_examples)).toBe(true)
+      expect(docs?.query_examples.length).toBe(3)
+    })
+
+    it('does not add documents entry when there are no markdown files', async () => {
+      await write_json('ref.json', [{ id: '1' }])
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
+      db.close()
+
+      const schema = parse_readme(row!.content)
+      const docs = schema.tables.find((t: { name: string }) => t.name === 'documents')
+      expect(docs).toBeUndefined()
+    })
+  })
+
   describe('JSON edge cases (skipped files)', () => {
     it('skips a JSON file that is not an array', async () => {
       await Bun.write(`${SOURCE_DIR}/not_array.json`, JSON.stringify({ key: 'value' }))
