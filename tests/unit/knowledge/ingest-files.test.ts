@@ -59,6 +59,27 @@ describe('parse_numeric_string', () => {
   it('returns null for lone dash', () => {
     expect(parse_numeric_string('-')).toBeNull()
   })
+
+  it('strips dollar symbol', () => {
+    expect(parse_numeric_string('99$')).toBe(99)
+  })
+
+  it('strips pound symbol', () => {
+    expect(parse_numeric_string('£1,234.56')).toBe(1234.56)
+  })
+
+  it('strips yen symbol', () => {
+    expect(parse_numeric_string('¥500')).toBe(500)
+  })
+
+  it('strips rupee symbol', () => {
+    expect(parse_numeric_string('₹1 000')).toBe(1000)
+  })
+
+  it('handles non-breaking space as thousands separator', () => {
+    // \u00A0 is a non-breaking space, used as thousands separator in French locale
+    expect(parse_numeric_string('1\u00A0234,56')).toBe(1234.56)
+  })
 })
 
 describe('normalize_sheet_value', () => {
@@ -94,6 +115,28 @@ describe('normalize_sheet_value', () => {
 
   it('returns null as-is', () => {
     expect(normalize_sheet_value(null)).toBeNull()
+  })
+
+  it('returns boolean values as-is', () => {
+    expect(normalize_sheet_value(true)).toBe(true)
+    expect(normalize_sheet_value(false)).toBe(false)
+  })
+
+  it('returns numeric values as-is', () => {
+    expect(normalize_sheet_value(42)).toBe(42)
+    expect(normalize_sheet_value(3.14)).toBe(3.14)
+  })
+
+  it('lowercases string values', () => {
+    expect(normalize_sheet_value('HELLO WORLD')).toBe('hello world')
+  })
+
+  it('collapses multiple spaces in strings', () => {
+    expect(normalize_sheet_value('foo   bar')).toBe('foo bar')
+  })
+
+  it('trims leading and trailing whitespace from strings', () => {
+    expect(normalize_sheet_value('  bonjour  ')).toBe('bonjour')
   })
 })
 

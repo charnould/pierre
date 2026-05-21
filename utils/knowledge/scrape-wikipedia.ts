@@ -122,7 +122,7 @@ const NOISE_SELECTORS = [
  * @param title Human-readable page title (`parse.title`).
  * @returns     Cleaned inner HTML string.
  */
-const clean_html = (html: string, title: string): string => {
+export const clean_html = (html: string, title: string): string => {
   const dom = new JSDOM(html)
   const doc = dom.window.document
   const body = doc.querySelector('.mw-parser-output') ?? doc.body
@@ -189,7 +189,7 @@ const clean_html = (html: string, title: string): string => {
  * @param html Cleaned HTML string produced by {@link clean_html}.
  * @returns    Markdown string.
  */
-const html_to_markdown = (html: string): string => {
+export const html_to_markdown = (html: string): string => {
   const td = new TurndownService({
     headingStyle: 'atx',
     bulletListMarker: '-',
@@ -295,4 +295,4 @@ export const scrape_wikipedia = async (): Promise<void> => {
   console.log('✅ Wikipedia scraped')
 }
 
-await scrape_wikipedia()
+if (import.meta.main) await scrape_wikipedia()

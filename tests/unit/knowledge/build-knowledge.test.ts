@@ -407,6 +407,72 @@ describe('build_knowledge_databases', () => {
     })
   })
 
+  describe('JSON edge cases (skipped files)', () => {
+    it('skips a JSON file that is not an array', async () => {
+      await Bun.write(`${SOURCE_DIR}/not_array.json`, JSON.stringify({ key: 'value' }))
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const has_table =
+        db
+          .query<{ n: number }, []>(
+            `SELECT COUNT(*) as n FROM sqlite_master WHERE type='table' AND name='not_array'`
+          )
+          .get()!.n > 0
+      db.close()
+
+      expect(has_table).toBe(false)
+    })
+
+    it('skips a JSON file that is an empty array', async () => {
+      await Bun.write(`${SOURCE_DIR}/empty.json`, JSON.stringify([]))
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const has_table =
+        db
+          .query<{ n: number }, []>(
+            `SELECT COUNT(*) as n FROM sqlite_master WHERE type='table' AND name='empty'`
+          )
+          .get()!.n > 0
+      db.close()
+
+      expect(has_table).toBe(false)
+    })
+
+    it('skips a JSON array whose items are all non-objects', async () => {
+      await Bun.write(`${SOURCE_DIR}/strings.json`, JSON.stringify(['alpha', 'beta', null, 42]))
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const has_table =
+        db
+          .query<{ n: number }, []>(
+            `SELECT COUNT(*) as n FROM sqlite_master WHERE type='table' AND name='strings'`
+          )
+          .get()!.n > 0
+      db.close()
+
+      expect(has_table).toBe(false)
+    })
+  })
+
+  describe('_readme when database is empty', () => {
+    it('stores null in _readme when there are no tables and no markdown documents', async () => {
+      // No JSON and no MD files → empty db
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const row = db.query<{ content: string | null }, []>('SELECT content FROM _readme').get()
+      db.close()
+
+      expect(row?.content).toBeNull()
+    })
+  })
+
   describe('cleanup after build', () => {
     it('deletes source JSON and MD files', async () => {
       await write_json('data.json', [{ id: '1' }])
