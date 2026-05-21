@@ -372,6 +372,58 @@ describe('build_knowledge_databases', () => {
       expect(col?.values).toContain('inactif')
     })
 
+    it('includes discrete_count for discrete columns', async () => {
+      await write_json('ref.json', [
+        { status: 'actif' },
+        { status: 'inactif' },
+        { status: 'actif' }
+      ])
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
+      db.close()
+
+      const schema = parse_readme(row!.content)
+      const table = schema.tables.find((t: { name: string }) => t.name === 'ref')
+      const col = table?.columns.find((c: { name: string }) => c.name === 'status')
+      expect(col?.discrete_count).toBe(2)
+    })
+
+    it('omits values but keeps discrete_count when any discrete value exceeds 80 characters', async () => {
+      const long_value = 'a'.repeat(81)
+      await write_json('ref.json', [{ status: 'actif' }, { status: long_value }])
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
+      db.close()
+
+      const schema = parse_readme(row!.content)
+      const table = schema.tables.find((t: { name: string }) => t.name === 'ref')
+      const col = table?.columns.find((c: { name: string }) => c.name === 'status')
+      expect(col?.nature).toBe('discrete')
+      expect(col?.discrete_count).toBe(2)
+      expect(col?.values).toBeUndefined()
+    })
+
+    it('omits source_url key from table when source_url is null', async () => {
+      await write_json('ref.json', [{ id: '1' }])
+      // No _sources.json → source_url will be null
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
+      db.close()
+
+      const schema = parse_readme(row!.content)
+      const table = schema.tables.find((t: { name: string }) => t.name === 'ref')
+      expect(Object.prototype.hasOwnProperty.call(table, 'source_url')).toBe(false)
+    })
+
     it('marks an INTEGER column with > 20 distinct values as continuous and shows min→max range', async () => {
       const rows = Array.from({ length: 25 }, (_, i) => ({ score: i + 1 }))
       await write_json('measures.json', rows)
