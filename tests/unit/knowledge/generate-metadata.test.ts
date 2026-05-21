@@ -120,4 +120,64 @@ describe('generate_metadata', () => {
       expect(files.find((f) => f.filename === 'TABLEAU.XLSX')?.type).toBe('xlsx')
     })
   })
+
+  describe('multi-access rows', () => {
+    beforeAll(() => {
+      // The header row includes a 'url' column at index 5 to test URL passthrough too
+      const sheet = XLSX.utils.aoa_to_sheet([
+        ['ignored row 0'],
+        ['ignored row 1'],
+        ['filename', 'access', 'agent_filename', 'sheet', 'headers', 'url'],
+        ['rapport.md', 'default, admin', 'Rapport test', 1, 1, null]
+      ])
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, sheet, 'metadata')
+      XLSX.writeFile(wb, METADATA_PATH)
+    })
+
+    afterAll(async () => {
+      await Bun.file(METADATA_PATH)
+        .delete()
+        .catch(() => {})
+    })
+
+    it('produces one entry per access value', async () => {
+      const { files } = await generate_metadata()
+      const entries = files.filter((f) => f.filename === 'rapport.md')
+      expect(entries).toHaveLength(2)
+    })
+
+    it('produces entries with the correct individual access values', async () => {
+      const { files } = await generate_metadata()
+      const accesses = files.filter((f) => f.filename === 'rapport.md').map((f) => f.access)
+      expect(accesses).toContain('default')
+      expect(accesses).toContain('admin')
+    })
+  })
+
+  describe('url field', () => {
+    beforeAll(() => {
+      const sheet = XLSX.utils.aoa_to_sheet([
+        ['ignored row 0'],
+        ['ignored row 1'],
+        ['filename', 'access', 'agent_filename', 'sheet', 'headers', 'url'],
+        ['guide.md', 'default', 'Guide', 1, 1, 'https://example.com/guide.pdf']
+      ])
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, sheet, 'metadata')
+      XLSX.writeFile(wb, METADATA_PATH)
+    })
+
+    afterAll(async () => {
+      await Bun.file(METADATA_PATH)
+        .delete()
+        .catch(() => {})
+    })
+
+    it('passes the url field through to the validated entry', async () => {
+      const { files } = await generate_metadata()
+      const entry = files.find((f) => f.filename === 'guide.md')
+      expect(entry?.url).toBe('https://example.com/guide.pdf')
+    })
+  })
 })
