@@ -25,7 +25,15 @@ type ColDescription =
       max: number
     }
   | { col: string; sql_type: string; not_null: boolean; nature: 'continuous_text' }
-  | { col: string; sql_type: string; not_null: boolean; nature: 'date'; min: string; max: string }
+  | {
+      col: string
+      sql_type: string
+      not_null: boolean
+      nature: 'date'
+      format: 'ISO-8601'
+      min: string
+      max: string
+    }
 
 /** A single JSON object row eligible for tabular import. */
 type JsonRow = Record<string, unknown>
@@ -134,7 +142,15 @@ const describe_columns = (db: Database, table: string): ColDescription[] => {
               `SELECT MIN("${name}") AS min, MAX("${name}") AS max FROM "${table}"`
             )
             .get()!
-          return { col: name, sql_type: type, not_null, nature: 'date', min, max }
+          return {
+            col: name,
+            sql_type: type,
+            not_null,
+            nature: 'date',
+            format: 'ISO-8601',
+            min,
+            max
+          }
         }
       }
     }
@@ -194,8 +210,10 @@ const build_readme = (db: Database): string | null => {
       }
       if (desc.nature === 'discrete') {
         const discrete_count = desc.values.length
-        const has_long_value = desc.values.some((v) => v.length > 80)
-        return has_long_value ? { ...base, discrete_count } : { ...base, discrete_count, values: desc.values }
+        const has_long_value = desc.values.some((v) => v.length > 40)
+        return has_long_value
+          ? { ...base, discrete_count }
+          : { ...base, discrete_count, values: desc.values }
       }
       if (desc.nature === 'continuous_numeric') return { ...base, min: desc.min, max: desc.max }
       if (desc.nature === 'date') return { ...base, min: desc.min, max: desc.max }
@@ -206,10 +224,25 @@ const build_readme = (db: Database): string | null => {
   })
 
   if (doc_count > 0) {
-    schema['documents'] = {
-      type: 'fts5',
-      columns: ['rowid', 'content', 'filename', 'url']
-    }
+    ;(schema['tables'] as unknown[]).push({
+      name: 'documents',
+      description:
+        'Documents applicable to the current context. Each record represents one complete document and is not chunked or split into partial content.',
+      engine: 'fts5',
+      tokenizer: "unicode61 remove_diacritics 2 tokenchars '-'",
+      rows: doc_count,
+      columns: [
+        { name: 'rowid', indexed: true },
+        { name: 'content', indexed: true },
+        { name: 'filename', indexed: false },
+        { name: 'url', indexed: false }
+      ],
+      query_examples: [
+        "SELECT rowid, content, filename, url FROM documents WHERE documents MATCH 'chauffage';",
+        "SELECT rowid, content, filename, snippet(documents, 0, '[', ']', '...', 20) FROM documents WHERE documents MATCH 'ascenseur';",
+        'SELECT rowid, content, filename FROM documents WHERE documents MATCH \'"dégât des eaux" AND urgence\';'
+      ]
+    })
   }
 
   return `\`\`\`json\n${JSON.stringify(schema)}\n\`\`\``
