@@ -23,6 +23,9 @@ const DB_PATH = `${SOURCE_DIR}/db.sqlite`
 const write_json = (filename: string, rows: object[]) =>
   Bun.write(`${SOURCE_DIR}/${filename}`, JSON.stringify(rows))
 
+const parse_readme = (content: string) =>
+  JSON.parse(content.replace(/^```json\n/, '').replace(/\n```$/, ''))
+
 const write_md = async (rel_path: string, content: string) => {
   const full_path = `${SOURCE_DIR}/${rel_path}`
   const dir = full_path.split('/').slice(0, -1).join('/')
@@ -327,7 +330,9 @@ describe('build_knowledge_databases', () => {
       const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
       db.close()
 
-      expect(row?.content).toContain('https://example.com/planning.xlsx')
+      const schema = parse_readme(row!.content)
+      const table = schema.tables.find((t: { name: string }) => t.name === 'planning')
+      expect(table?.source_url).toBe('https://example.com/planning.xlsx')
     })
   })
 
@@ -342,7 +347,63 @@ describe('build_knowledge_databases', () => {
       db.close()
 
       expect(row?.content).toBeTruthy()
-      expect(row?.content).toContain('ref')
+      const schema = parse_readme(row!.content)
+      expect(schema.tables.some((t: { name: string }) => t.name === 'ref')).toBe(true)
+    })
+
+    it('marks a TEXT column with ≤ 20 distinct values as discrete and lists values', async () => {
+      await write_json('ref.json', [
+        { status: 'actif' },
+        { status: 'inactif' },
+        { status: 'actif' }
+      ])
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
+      db.close()
+
+      const schema = parse_readme(row!.content)
+      const table = schema.tables.find((t: { name: string }) => t.name === 'ref')
+      const col = table?.columns.find((c: { name: string }) => c.name === 'status')
+      expect(col?.nature).toBe('discrete')
+      expect(col?.values).toContain('actif')
+      expect(col?.values).toContain('inactif')
+    })
+
+    it('marks an INTEGER column with > 20 distinct values as continuous and shows min→max range', async () => {
+      const rows = Array.from({ length: 25 }, (_, i) => ({ score: i + 1 }))
+      await write_json('measures.json', rows)
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
+      db.close()
+
+      const schema = parse_readme(row!.content)
+      const table = schema.tables.find((t: { name: string }) => t.name === 'measures')
+      const col = table?.columns.find((c: { name: string }) => c.name === 'score')
+      expect(col?.nature).toBe('continuous_numeric')
+      expect(col?.min).toBe(1)
+      expect(col?.max).toBe(25)
+    })
+
+    it('marks a TEXT column with > 20 distinct values as continuous text libre', async () => {
+      const rows = Array.from({ length: 25 }, (_, i) => ({ label: `label_${i}` }))
+      await write_json('labels.json', rows)
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
+      db.close()
+
+      const schema = parse_readme(row!.content)
+      const table = schema.tables.find((t: { name: string }) => t.name === 'labels')
+      const col = table?.columns.find((c: { name: string }) => c.name === 'label')
+      expect(col?.nature).toBe('continuous_text')
     })
   })
 
