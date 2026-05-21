@@ -10,8 +10,21 @@ import { normalize_knowledge_name } from './utils'
 /** A row returned by `sqlite_master` or `PRAGMA table_list` queries. */
 type TableRow = { name: string }
 
-/** A row returned by `PRAGMA table_info(…)` — only `name` is used here. */
-type ColRow = { name: string }
+/** A row returned by `PRAGMA table_info(…)`. */
+type ColRow = { name: string; type: string; notnull: number }
+
+/** Description of a single column for schema documentation. */
+type ColDescription =
+  | { col: string; sql_type: string; not_null: boolean; nature: 'discrete'; values: string[] }
+  | {
+      col: string
+      sql_type: string
+      not_null: boolean
+      nature: 'continuous_numeric'
+      min: number
+      max: number
+    }
+  | { col: string; sql_type: string; not_null: boolean; nature: 'continuous_text' }
 
 /** A single JSON object row eligible for tabular import. */
 type JsonRow = Record<string, unknown>
@@ -61,11 +74,56 @@ const walk_files = (dir: string, ext: string): string[] =>
     .map((f) => join(dir, f))
 
 /**
- * Builds a Markdown schema description of all tables in the database and
+ * Analyzes each column of a table and returns a description of its nature.
+ *
+ * - ≤ 20 distinct non-null values → **discrete** (values listed)
+ * - > 20 distinct values + INTEGER type → **continuous_numeric** (min/max range)
+ * - > 20 distinct values + TEXT type → **continuous_text**
+ *
+ * @param db - Open SQLite database instance.
+ * @param table - Table name to analyze.
+ * @returns Array of column descriptions.
+ */
+const DISCRETE_THRESHOLD = 20
+
+const describe_columns = (db: Database, table: string): ColDescription[] => {
+  const cols = db.query<ColRow, []>(`PRAGMA table_info("${table}")`).all()
+
+  return cols.map(({ name, type, notnull }) => {
+    const not_null = notnull === 1
+    const { dc } = db
+      .query<{ dc: number }, []>(`SELECT COUNT(DISTINCT "${name}") AS dc FROM "${table}"`)
+      .get()!
+
+    if (dc <= DISCRETE_THRESHOLD) {
+      const values = db
+        .query<{ v: string | number | null }, []>(
+          `SELECT DISTINCT "${name}" AS v FROM "${table}" WHERE "${name}" IS NOT NULL ORDER BY "${name}"`
+        )
+        .all()
+        .map((r) => String(r.v))
+      return { col: name, sql_type: type, not_null, nature: 'discrete', values }
+    }
+
+    if (type === 'INTEGER' || type === 'REAL') {
+      const { min, max } = db
+        .query<{ min: number; max: number }, []>(
+          `SELECT MIN("${name}") AS min, MAX("${name}") AS max FROM "${table}"`
+        )
+        .get()!
+      return { col: name, sql_type: type, not_null, nature: 'continuous_numeric', min, max }
+    }
+
+    return { col: name, sql_type: type, not_null, nature: 'continuous_text' }
+  })
+}
+
+/**
+ * Builds a minified JSON schema description of all tables in the database and
  * stores it in the `_readme` table.
  *
  * @param db - Open SQLite database instance.
- * @returns Formatted Markdown string, or `null` if the database contains no tables and no documents.
+ * @returns Minified JSON string, or `null` if the database contains no tables and no documents.
  */
 const build_readme = (db: Database): string | null => {
   const tables = db
@@ -96,41 +154,35 @@ const build_readme = (db: Database): string | null => {
     for (const r of rows) if (r.url) url_by_name.set(r.name, r.url)
   }
 
-  const lines: string[] = [`# Database Schema \`db.sqlite\``, '']
+  const schema: Record<string, unknown> = { access: 'read-only' }
 
-  if (tables.length > 0) {
-    lines.push('## Table Overview', '', '| Table | Rows | Columns | URL |', '|---|---|---|---|')
+  schema['tables'] = tables.map(({ name }) => {
+    const rows = db.query<{ n: number }, []>(`SELECT COUNT(*) as n FROM "${name}"`).get()!.n
+    const source_url = url_by_name.get(name) ?? null
 
-    for (const { name } of tables) {
-      const count = db.query<{ n: number }, []>(`SELECT COUNT(*) as n FROM "${name}"`).get()!.n
-      const cols = db
-        .query<ColRow, []>(`PRAGMA table_info("${name}")`)
-        .all()
-        .map((r) => r.name)
-      const url = url_by_name.get(name) ?? ''
-      lines.push(`| \`${name}\` | ${count} | ${cols.map((c) => `\`${c}\``).join(', ')} | ${url} |`)
+    const columns = describe_columns(db, name).map((desc) => {
+      const base = {
+        name: desc.col,
+        type: desc.sql_type,
+        not_null: desc.not_null,
+        nature: desc.nature
+      }
+      if (desc.nature === 'discrete') return { ...base, values: desc.values }
+      if (desc.nature === 'continuous_numeric') return { ...base, min: desc.min, max: desc.max }
+      return base
+    })
+
+    return { name, rows, source_url, columns }
+  })
+
+  if (doc_count > 0) {
+    schema['documents'] = {
+      type: 'fts5',
+      columns: ['rowid', 'content', 'filename', 'url']
     }
   }
 
-  if (doc_count > 0) {
-    lines.push(
-      '',
-      '## documents (FTS5)',
-      '',
-      "Tokenizer: `unicode61 remove_diacritics 2 tokenchars '-'`",
-      '',
-      '| Column | Type | Notes |',
-      '|-|-|-|',
-      '| `rowid`| metadata| Primary key — fetch full content with `SELECT content FROM documents WHERE rowid = N`|',
-      '| `content`| FTS| MATCH target — full document text|',
-      '| `filename`| metadata| Semantically rich — expresses the content of the file (e.g. `enquetes_locataire`)|',
-      '| `url`| metadata| Nullable|',
-      '',
-      'Metadata columns use SQL operators (`=`, `IN`, `LIKE`), never `MATCH`.'
-    )
-  }
-
-  return lines.join('\n')
+  return `\`\`\`json\n${JSON.stringify(schema)}\n\`\`\``
 }
 
 /**
