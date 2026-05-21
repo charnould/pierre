@@ -192,13 +192,17 @@ const build_readme = (db: Database): string | null => {
         not_null: desc.not_null,
         nature: desc.nature
       }
-      if (desc.nature === 'discrete') return { ...base, values: desc.values }
+      if (desc.nature === 'discrete') {
+        const discrete_count = desc.values.length
+        const has_long_value = desc.values.some((v) => v.length > 80)
+        return has_long_value ? { ...base, discrete_count } : { ...base, discrete_count, values: desc.values }
+      }
       if (desc.nature === 'continuous_numeric') return { ...base, min: desc.min, max: desc.max }
       if (desc.nature === 'date') return { ...base, min: desc.min, max: desc.max }
       return base
     })
 
-    return { name, rows, source_url, columns }
+    return source_url ? { name, rows, source_url, columns } : { name, rows, columns }
   })
 
   if (doc_count > 0) {
