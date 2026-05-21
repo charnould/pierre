@@ -405,6 +405,47 @@ describe('build_knowledge_databases', () => {
       const col = table?.columns.find((c: { name: string }) => c.name === 'label')
       expect(col?.nature).toBe('continuous_text')
     })
+
+    it('marks a TEXT column with > 20 distinct YYYY-MM-DD values as date with min and max', async () => {
+      const rows = Array.from({ length: 25 }, (_, i) => {
+        const d = new Date(2020, 0, i + 1)
+        return { date_signature: d.toISOString().slice(0, 10) }
+      })
+      await write_json('events.json', rows)
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
+      db.close()
+
+      const schema = parse_readme(row!.content)
+      const table = schema.tables.find((t: { name: string }) => t.name === 'events')
+      const col = table?.columns.find((c: { name: string }) => c.name === 'date_signature')
+      expect(col?.nature).toBe('date')
+      expect(col?.min).toBe('2020-01-01')
+      expect(col?.max).toBe('2020-01-25')
+    })
+
+    it('does not mark as date a TEXT column where some values are not YYYY-MM-DD', async () => {
+      const rows = Array.from({ length: 24 }, (_, i) => {
+        const d = new Date(2020, 0, i + 1)
+        return { date_signature: d.toISOString().slice(0, 10) }
+      })
+      rows.push({ date_signature: 'not-a-date' })
+      await write_json('mixed.json', rows)
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
+      db.close()
+
+      const schema = parse_readme(row!.content)
+      const table = schema.tables.find((t: { name: string }) => t.name === 'mixed')
+      const col = table?.columns.find((c: { name: string }) => c.name === 'date_signature')
+      expect(col?.nature).toBe('continuous_text')
+    })
   })
 
   describe('JSON edge cases (skipped files)', () => {

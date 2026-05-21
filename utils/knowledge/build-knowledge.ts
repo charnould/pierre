@@ -25,6 +25,7 @@ type ColDescription =
       max: number
     }
   | { col: string; sql_type: string; not_null: boolean; nature: 'continuous_text' }
+  | { col: string; sql_type: string; not_null: boolean; nature: 'date'; min: string; max: string }
 
 /** A single JSON object row eligible for tabular import. */
 type JsonRow = Record<string, unknown>
@@ -114,6 +115,30 @@ const describe_columns = (db: Database, table: string): ColDescription[] => {
       return { col: name, sql_type: type, not_null, nature: 'continuous_numeric', min, max }
     }
 
+    if (type === 'TEXT') {
+      const { non_null_count } = db
+        .query<{ non_null_count: number }, []>(
+          `SELECT COUNT("${name}") AS non_null_count FROM "${table}" WHERE "${name}" IS NOT NULL`
+        )
+        .get()!
+      if (non_null_count > 0) {
+        const { date_count } = db
+          .query<{ date_count: number }, []>(
+            `SELECT COUNT("${name}") AS date_count FROM "${table}"
+             WHERE "${name}" IS NOT NULL AND "${name}" GLOB '????-??-??' AND length("${name}") = 10`
+          )
+          .get()!
+        if (date_count === non_null_count) {
+          const { min, max } = db
+            .query<{ min: string; max: string }, []>(
+              `SELECT MIN("${name}") AS min, MAX("${name}") AS max FROM "${table}"`
+            )
+            .get()!
+          return { col: name, sql_type: type, not_null, nature: 'date', min, max }
+        }
+      }
+    }
+
     return { col: name, sql_type: type, not_null, nature: 'continuous_text' }
   })
 }
@@ -169,6 +194,7 @@ const build_readme = (db: Database): string | null => {
       }
       if (desc.nature === 'discrete') return { ...base, values: desc.values }
       if (desc.nature === 'continuous_numeric') return { ...base, min: desc.min, max: desc.max }
+      if (desc.nature === 'date') return { ...base, min: desc.min, max: desc.max }
       return base
     })
 
