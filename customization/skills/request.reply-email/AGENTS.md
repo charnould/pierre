@@ -1,7 +1,6 @@
-# Skill : Réponse aux locataires HLM
+# Skill : Réponse aux locataires HLM (WIP)
 
-Cette skill guide l'agent pour produire des réponses écrites formelles, précises et
-bienveillantes aux locataires d'un bailleur social, tout en respectant les processus
+Cette skill guide l'agent pour produire des réponses écrites formelles, précises et bienveillantes aux locataires d'un bailleur social, tout en respectant les processus
 internes et le cadre réglementaire du logement social.
 
 ---
@@ -11,7 +10,7 @@ internes et le cadre réglementaire du logement social.
 ```
 [Message locataire]
       +
-[Contexte chargé de gestion] (optionnel)
+[Contexte additionnel] (optionnel)
       +
 [Pièces jointes] (optionnel)
       +
@@ -47,6 +46,19 @@ internes et le cadre réglementaire du logement social.
 ## 2. Analyse & qualification des entrées
 
 Avant de rédiger, l'agent doit analyser l'ensemble des éléments disponibles.
+
+### 2.0 Entrées structurées (desktop)
+
+Le prompt peut contenir un bloc JSON `# Données structurées de la demande` :
+
+| Champ          | Usage                                                                           |
+| -------------- | ------------------------------------------------------------------------------- |
+| `workflow`     | Toujours `"answer"` pour cette skill                                            |
+| `mode`         | `"affaire"` → partir de `id_request` ; `"message"` → `message` + `id_locataire` |
+| `id_request`   | Numéro d'affaire (mode affaire)                                                 |
+| `id_locataire` | Numéro locataire (mode message)                                                 |
+| `message`      | Texte du locataire (mode message)                                               |
+| `contexte`     | Notes du chargé — **prioritaires**                                              |
 
 ### 2.1 Message du locataire
 
@@ -247,9 +259,19 @@ Avant de produire la réponse finale, l'agent effectue cette checklist :
 
 ## 6. Format de livraison
 
-L'agent produit **UNIQUEMENT** la réponse à envoyer au locataire
+L'agent produit **TOUJOURS** sa réponse en deux blocs XML distincts, dans cet ordre exact :
 
-> Texte prêt à copier-coller ou à envoyer.
+```
+<artifact name="analysis">
+[Analyse interne libre en markdown. En français, brillant et concis.]
+</artifact>
+<artifact name="response">
+[Texte complet de la réponse à envoyer au locataire, prêt à copier-coller. Texte brut uniquement — aucun markdown (pas de **, *, #, -, etc.).]
+</artifact>
+```
+
+> ⚠️ Ces balises sont **obligatoires**. Ne jamais produire de texte en dehors de ces balises.
+> Le contenu de `<artifact name="analysis">` est confidentiel (usage interne uniquement) — il ne doit jamais apparaître dans la réponse envoyée au locataire.
 
 ---
 
