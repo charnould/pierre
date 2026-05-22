@@ -188,15 +188,18 @@ export async function acquireVm(convId: string, configId: string): Promise<VmEnt
   if (entry) {
     if (entry.configId !== configId) {
       console.warn(
-        `[VM_REGISTRY] configId mismatch for conv=${convId}: expected ${entry.configId}, got ${configId}`
+        `[VM_REGISTRY] configId mismatch for conv=${convId}: destroying VM (was ${entry.configId}, need ${configId})`
       )
+      await destroyVm(convId)
+      entry = undefined
+    } else {
+      if (entry.timer) {
+        clearTimeout(entry.timer)
+        entry.timer = null
+      }
+      entry.activeRequests++
+      return entry
     }
-    if (entry.timer) {
-      clearTimeout(entry.timer)
-      entry.timer = null
-    }
-    entry.activeRequests++
-    return entry
   }
 
   console.log(`[VM_REGISTRY] Creating VM for conv=${convId} config=${configId}`)
