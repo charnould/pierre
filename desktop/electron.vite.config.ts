@@ -9,7 +9,7 @@ export default defineConfig({
     build: {
       rollupOptions: {
         external: ['electron'],
-        input: { main: resolve(__dirname, 'main.ts') },
+        input: { main: resolve(__dirname, 'electron/main.ts') },
         output: { format: 'cjs' }
       }
     }
@@ -18,7 +18,7 @@ export default defineConfig({
     build: {
       rollupOptions: {
         external: ['electron'],
-        input: { preload: resolve(__dirname, 'preload.cjs') },
+        input: { index: resolve(__dirname, 'preload/index.ts') },
         output: { format: 'cjs' }
       }
     }

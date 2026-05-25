@@ -1,0 +1,28 @@
+/**
+ * Tickets table — contenu flush dans Card chrome (shell commun : globals.css .desk-form-panel).
+ */
+
+.desk-form-panel [data-variant='chrome'] [data-slot='card-body'].tickets-table-body {
+  position: relative;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  gap: 0;
+}
+
+.desk-form-panel
+  [data-variant='chrome']
+  [data-slot='card-body'].tickets-table-body
+  .tickets-data-table {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.desk-form-panel
+  [data-variant='chrome']
+  [data-slot='card-body'].tickets-table-body
+  .desk-table-dock {
+  padding-bottom: 0.875rem;
+}
