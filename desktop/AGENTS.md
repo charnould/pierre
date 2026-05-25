@@ -68,3 +68,21 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+---
+
+## Design System
+
+This app ships a **light-only** design system. See **[`design-system.html`](./design-system.html)** at the repo `desktop/` root for the living visual reference (tokens, typography, components, status pills, LLM answer block).
+
+Conventions:
+
+- **Light-only.** No dark mode — there is no active `.dark` block in `src/globals.css`; residual `dark:` utilities in shadcn primitives are inert.
+- **Surface:** distinctive warm **cream** background; cards are slightly lighter for layering.
+- **Accent:** warm **ink** (`--primary`) for CTA button fills; **historic-hyperlink blue** (`--link`) for links and focus rings only — never as button fill.
+- **Typography:** **Inter** for all UI; **Source Serif 4** (bundled in `src/assets`) for agent-generated content — use the `.llm-answer` class or the `--font-source-serif` token.
+- **Components:** always use shadcn primitives from `src/shared/components/ui/`, built on `@base-ui/react`. Do not hand-roll buttons, inputs, menus, or dialogs; justify any exception (Motion, Streamdown, Lexical, resizable panels).
+- **Animations:** use [Motion](https://motion.dev) (`motion/react`) for UI transitions; CSS `transition-colors` only for simple hovers.
+- **Status pills:** use the `Badge` semantic variants `success | warning | danger | info | neutral` (backed by `--*-soft` / `--*-soft-foreground` tokens).
+- **Density:** base UI font-size is 13px (`0.8125rem`); prefer compact spacing.
+- Tailwind v4, shadcn components, lucide-react icons, shadcn sidebar (icon-collapsed) + TitleBar Electron for history.

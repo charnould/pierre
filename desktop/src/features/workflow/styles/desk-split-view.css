@@ -1,0 +1,409 @@
+/**
+ * Split formulaire · rapport — gouttières desk, feuilles bordées (About, Tickets, …).
+ * Tokens desk → globals.css :root (--auto-desk-*, --auto-surface-*, --auto-ink-*).
+ */
+
+.desk-split-view .auto-report-stack > .desk-sheet {
+  --card: var(--auto-surface-page);
+  background: var(--auto-surface-page);
+  border: 1px solid var(--auto-border-active);
+  border-radius: var(--auto-surface-radius);
+  overflow: hidden;
+}
+
+.desk-split-view .auto-report-page--open .auto-report-page-header,
+.desk-split-view .auto-report-form .auto-report-page-header {
+  background: var(--auto-surface-page);
+}
+
+.desk-split-view .desk-split-column {
+  box-sizing: border-box;
+}
+
+/* Gouttières : sidebar-gap (gauche) · gutter-x avant génération · poignée = bord gauche feuille droite */
+.desk-split-view .desk-split-column--form {
+  padding: 0 var(--auto-desk-gutter-x) var(--auto-desk-gutter-y-bottom) 0;
+}
+
+.desk-split-view .desk-split-column--detail {
+  padding: 0 var(--auto-desk-gutter-x) var(--auto-desk-gutter-y-bottom) 0;
+}
+
+/* Panes master/detail — shell commun (Automations, Synthèse, Tickets, …) */
+.desk-split-view
+  :is(
+    .automations-list-pane,
+    .automations-detail-pane,
+    .about-form-pane,
+    .about-detail-pane,
+    .tickets-form-pane,
+    .tickets-detail-pane
+  ) {
+  box-sizing: border-box;
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+  border: none;
+  box-shadow: none;
+}
+
+.desk-split-view
+  :is(
+    .automations-list-pane > .automations-list,
+    .automations-detail-pane > *,
+    .about-form-pane > .desk-form-panel,
+    .about-detail-pane > .desk-output-panel,
+    .tickets-form-pane > .desk-form-panel,
+    .tickets-detail-pane > .desk-output-panel
+  ) {
+  min-height: 0;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+}
+
+/* Stacks scrollables — padding bas de fin de scroll (liste, formulaire, rapport) */
+.desk-split-view :is(.desk-pane-scroll, .automations-list-scroll) {
+  scroll-padding-bottom: var(--auto-desk-gap);
+}
+
+.desk-split-view .automations-list-scroll {
+  min-height: 0;
+  padding-bottom: var(--auto-desk-gap);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.desk-split-view [data-slot='card-body'].desk-pane-scroll {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  scroll-padding-bottom: var(--auto-desk-gap);
+  padding-bottom: calc(var(--auto-list-item-padding) + var(--auto-desk-gap));
+}
+
+.desk-split-view .auto-report-stack {
+  scroll-padding-bottom: var(--auto-desk-gap);
+}
+
+.desk-split-view .auto-report-form > .auto-report-page-body {
+  scroll-padding-bottom: var(--auto-desk-gap);
+  padding-bottom: var(--auto-desk-gap);
+}
+
+/* Pleine page (liste tickets, …) — gouttières homogènes */
+.desk-split-view .desk-page-column {
+  box-sizing: border-box;
+  min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0 var(--auto-desk-gutter-x) var(--auto-desk-gutter-y-bottom) 0;
+}
+
+.desk-table-panel {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.desk-split-view .desk-table-panel .auto-report-stack {
+  margin: 0;
+  width: 100%;
+  max-width: none;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  min-width: 0;
+  height: 100%;
+  max-height: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  --auto-report-ink-faint: var(--auto-border-active);
+  --auto-report-page-shadow: none;
+}
+
+.desk-split-view .desk-table-sheet {
+  display: flex;
+  width: 100%;
+  min-height: 0;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.desk-split-view .desk-table-sheet__body {
+  position: relative;
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.desk-split-view .desk-table-sheet .tickets-data-table {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.desk-split-view .desk-table-sheet .desk-table-dock {
+  padding-bottom: 0.875rem;
+}
+
+.desk-split-view .desk-sheet__body .workflow-context-form {
+  padding: 0;
+  gap: 0.875rem;
+}
+
+.desk-split-view .desk-sheet {
+  width: 100%;
+  min-width: 0;
+}
+
+.desk-split-view .desk-sheet__body {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+  padding: var(--auto-report-page-padding-y) var(--auto-content-inset-x)
+    calc(var(--auto-report-page-padding-y) + 0.125rem);
+}
+
+.desk-split-view .desk-form-panel .auto-report-stack {
+  margin: 0;
+  width: 100%;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  height: 100%;
+  overflow: hidden;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  --auto-report-ink-faint: var(--auto-border-active);
+  --auto-report-page-shadow: none;
+}
+
+.desk-split-view .desk-form-panel .auto-report-form,
+.desk-split-view .desk-form-panel .desk-sheet {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.desk-split-view .desk-form-panel .auto-report-form__body {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+}
+
+.desk-split-view .desk-form-panel .auto-report-form__body [data-slot='field-group'] {
+  gap: 0.875rem;
+}
+
+.desk-split-view .desk-form-panel .auto-report-form__footer {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: stretch;
+  gap: 0.75rem;
+  margin-top: 0.875rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--auto-border-divider);
+}
+
+.desk-detail {
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.desk-split-view .desk-output-panel .auto-report-stack {
+  margin: 0;
+  width: 100%;
+  max-width: none;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  min-width: 0;
+  height: 100%;
+  max-height: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  --auto-report-ink-faint: var(--auto-border-active);
+  --auto-report-page-shadow: none;
+}
+
+.desk-split-view .desk-output-panel .desk-output-page {
+  display: flex;
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--auto-surface-radius);
+}
+
+.desk-split-view .desk-output-panel .desk-output-page .workflow-output-column {
+  width: 100%;
+  min-width: 0;
+}
+
+.desk-split-view .auto-report-page--open .auto-report-page-header {
+  border-bottom: 1px solid var(--auto-border-divider);
+}
+
+.desk-split-view .auto-report-page-header-title {
+  font-weight: 500;
+  color: var(--auto-ink-active);
+}
+
+.desk-split-view .auto-report-form__desc {
+  color: var(--auto-ink-active-meta);
+}
+
+.desk-split-view .auto-report-stack,
+.desk-split-view .auto-report-page {
+  --card: var(--auto-surface-page);
+}
+
+.desk-split-view .auto-report-page {
+  --auto-report-page-padding-x: var(--auto-content-inset-x);
+  --auto-report-content-inset: var(--auto-content-inset-x);
+  --auto-report-ink-faint: var(--auto-border-divider);
+}
+
+.desk-split-view .auto-report-form .auto-report-page-header {
+  cursor: default;
+  flex-shrink: 0;
+}
+
+.desk-split-view .auto-report-form .auto-report-page-header:hover {
+  background: var(--auto-surface-page);
+}
+
+.desk-split-view .desk-output-page .auto-report-page-header {
+  cursor: default;
+  flex-shrink: 0;
+}
+
+.desk-split-view .desk-output-page .auto-report-page-header:hover {
+  background: var(--auto-surface-page);
+}
+
+.desk-split-view .desk-form-panel .auto-report-form__footer > * {
+  width: 100%;
+}
+
+.desk-split-view
+  .auto-report-form
+  :is(input, textarea, [data-slot='select-trigger'], [data-slot='combobox-chips']) {
+  border-radius: var(--auto-surface-radius);
+}
+
+.desk-split-view .desk-split-handle {
+  position: relative;
+  z-index: 20;
+  width: 0 !important;
+  min-width: 0 !important;
+  flex: 0 0 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.desk-split-view .desk-split-handle::before,
+.desk-split-view .desk-split-handle::after {
+  display: none !important;
+  content: none !important;
+}
+
+.desk-split-view .desk-split-handle > div {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  height: 1rem;
+  width: 0.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--auto-surface-radius);
+  border: var(--auto-border-width) solid var(--auto-border);
+  background: var(--auto-surface-page);
+  box-shadow: none;
+  transform: translate(-50%, -50%);
+}
+
+.desk-split-view .desk-split-handle > div svg {
+  width: 0.625rem;
+  height: 0.625rem;
+  color: var(--auto-ink-idle-meta);
+}
+
+.desk-split-view .desk-output-page .workflow-output-artifact--reponse,
+.desk-split-view .desk-output-page .workflow-output-artifact--analyse {
+  --workflow-output-inset-x: var(--auto-content-inset-x);
+}
+
+.desk-split-view .desk-output-page .auto-report-page-body {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.desk-split-view .desk-output-page .workflow-output-artifact-body {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.desk-split-view .desk-output-empty {
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+.desk-split-view .auto-report-markdown :not(pre) > code,
+.desk-split-view .auto-report-markdown pre,
+.desk-split-view .auto-report-markdown blockquote,
+.desk-split-view .auto-report-markdown .auto-report-table-scroll,
+.desk-split-view .auto-report-markdown .auto-report-chart-scroll,
+.desk-split-view .auto-report-markdown img {
+  border-radius: var(--auto-surface-radius);
+}

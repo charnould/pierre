@@ -10,5 +10,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "main.ts", "electron.vite.config.ts"]
+  "include": ["src", "electron", "preload", "electron.vite.config.ts"]
 }
