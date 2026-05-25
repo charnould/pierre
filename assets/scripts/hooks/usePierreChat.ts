@@ -16,6 +16,35 @@ type Config = {
   dataParam: string
 }
 
+type AiStreamEvent =
+  | { type: 'delta'; content: string }
+  | { type: 'reasoning_delta'; content: string }
+  | { type: 'reset' }
+  | { type: 'done'; content: string }
+  | { type: 'error' }
+
+function parseAiStreamLine(line: string): AiStreamEvent | null {
+  const trimmed = line.trim()
+  if (!trimmed) return null
+  try {
+    const p = JSON.parse(trimmed) as { type: string; content?: string }
+    if (p.type === 'reasoning_delta' && p.content) {
+      return { type: 'reasoning_delta', content: p.content }
+    }
+    if (p.type === 'delta' && p.content) {
+      return { type: 'delta', content: p.content }
+    }
+    if (p.type === 'reset') return { type: 'reset' }
+    if (p.type === 'done' && p.content !== undefined) {
+      return { type: 'done', content: p.content }
+    }
+    if (p.type === 'error') return { type: 'error' }
+  } catch {
+    if (trimmed.includes('pierre_error')) return { type: 'error' }
+  }
+  return null
+}
+
 export function usePierreChat(config: Config) {
   const [messages, setMessages] = useState<Message[]>([])
   const [status, setStatus] = useState<ChatStatus>('ready')
@@ -48,67 +77,61 @@ export function usePierreChat(config: Config) {
         let buffer = ''
 
         const processLine = (line: string) => {
-          const trimmed = line.trim()
-          if (!trimmed) return
-          try {
-            const event = JSON.parse(trimmed)
-            switch (event.t) {
-              case 'thinking':
-                setMessages((prev) => {
-                  const updated = [...prev]
-                  const last = updated[updated.length - 1]
-                  if (last?.role === 'assistant') {
-                    updated[updated.length - 1] = {
-                      ...last,
-                      reasoning: (last.reasoning ?? '') + event.d.content
-                    }
+          const event = parseAiStreamLine(line)
+          if (!event) return
+
+          switch (event.type) {
+            case 'reasoning_delta':
+              setMessages((prev) => {
+                const updated = [...prev]
+                const last = updated[updated.length - 1]
+                if (last?.role === 'assistant') {
+                  updated[updated.length - 1] = {
+                    ...last,
+                    reasoning: (last.reasoning ?? '') + event.content
                   }
-                  return updated
-                })
-                break
-              case 'response':
-                setMessages((prev) => {
-                  const updated = [...prev]
-                  const last = updated[updated.length - 1]
-                  if (last?.role === 'assistant') {
-                    const patch: Partial<Message> = { content: last.content + event.d.content }
-                    if (!reasoningSealed) {
-                      patch.reasoningDuration = Math.round((Date.now() - reasoningStart) / 1000)
-                      reasoningSealed = true
-                    }
-                    updated[updated.length - 1] = { ...last, ...patch }
+                }
+                return updated
+              })
+              break
+            case 'delta':
+              setMessages((prev) => {
+                const updated = [...prev]
+                const last = updated[updated.length - 1]
+                if (last?.role === 'assistant') {
+                  const patch: Partial<Message> = { content: last.content + event.content }
+                  if (!reasoningSealed) {
+                    patch.reasoningDuration = Math.round((Date.now() - reasoningStart) / 1000)
+                    reasoningSealed = true
                   }
-                  return updated
-                })
-                break
-              case 'reset':
-                // Tool turn detected — discard streamed reasoning
-                setMessages((prev) => {
-                  const updated = [...prev]
-                  const last = updated[updated.length - 1]
-                  if (last?.role === 'assistant') {
-                    updated[updated.length - 1] = { ...last, content: '' }
-                  }
-                  return updated
-                })
-                break
-              case 'done':
-                // Authoritative final content
-                setMessages((prev) => {
-                  const updated = [...prev]
-                  const last = updated[updated.length - 1]
-                  if (last?.role === 'assistant') {
-                    updated[updated.length - 1] = { ...last, content: event.d.content }
-                  }
-                  return updated
-                })
-                break
-              case 'error':
-                setStatus('error')
-                break
-            }
-          } catch {
-            if (trimmed.includes('pierre_error')) setStatus('error')
+                  updated[updated.length - 1] = { ...last, ...patch }
+                }
+                return updated
+              })
+              break
+            case 'reset':
+              setMessages((prev) => {
+                const updated = [...prev]
+                const last = updated[updated.length - 1]
+                if (last?.role === 'assistant') {
+                  updated[updated.length - 1] = { ...last, content: '' }
+                }
+                return updated
+              })
+              break
+            case 'done':
+              setMessages((prev) => {
+                const updated = [...prev]
+                const last = updated[updated.length - 1]
+                if (last?.role === 'assistant') {
+                  updated[updated.length - 1] = { ...last, content: event.content }
+                }
+                return updated
+              })
+              break
+            case 'error':
+              setStatus('error')
+              break
           }
         }
 
@@ -147,11 +170,9 @@ export function usePierreChat(config: Config) {
   }, [])
 
   const regenerate = useCallback(() => {
-    // Find the last user message and resend it
     const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user')
     if (!lastUserMsg) return
 
-    // Remove the last assistant message (and possibly the failed one)
     setMessages((prev) => {
       const idx = prev.findLastIndex((m) => m.role === 'user')
       return idx >= 0 ? prev.slice(0, idx) : prev

@@ -5,6 +5,7 @@ import { secureHeaders } from 'hono/secure-headers'
 
 import { controller as get_admin } from './controllers/GET.admin'
 import { controller as get_ai } from './controllers/GET.ai'
+import { controller as get_ai_boot } from './controllers/GET.ai.boot'
 import { controller as get_ai_skills } from './controllers/GET.ai.skills'
 import { controller as get_conversations } from './controllers/GET.conversations'
 import { controller as get_index } from './controllers/GET.index'
@@ -18,6 +19,7 @@ import { controller as post_knowledge } from './controllers/POST.knowledge'
 import { controller as post_login } from './controllers/POST.login'
 import { controller as post_telemetry } from './controllers/POST.telemetry'
 import { controller as post_users } from './controllers/POST.users'
+import desktop_config from './customization/desktop/config.ts'
 // import { topicize, score } from "./utils/analyze-conversation";
 import { authenticate } from './utils/authenticate-user'
 import { buildAllAgentsFiles } from './utils/copilot-agent'
@@ -65,6 +67,9 @@ Bun.cron('0 4 * * *', async () => {
 app.get('/customization/:path{.+}/config.ts', (c) => c.notFound())
 app.get('/customization/:path{.+}/AGENTS.md', (c) => c.notFound())
 
+// Serve desktop config.ts as plain JSON
+app.get('/customization/desktop/config.json', (c) => c.json(desktop_config))
+
 // Serve widget assets (with CORS for cross-origin embedding) and customization files
 app.use('/assets/*', cors())
 app.use('/assets/*', serveStatic({ root: './' }))
@@ -73,6 +78,7 @@ app.use('/customization/*', serveStatic({ root: './' }))
 // AI generation routes
 app.get('/c', authenticate, get_index)
 app.get('/ai', authenticate, get_ai)
+app.get('/ai/boot', authenticate, get_ai_boot)
 app.get('/ai/skills', authenticate, get_ai_skills)
 app.post('/ai/answer', authenticate, post_ai_answer)
 

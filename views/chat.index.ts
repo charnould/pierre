@@ -1,30 +1,17 @@
-import { randomUUIDv7 } from 'bun'
 import { html, raw } from 'hono/html'
 
 import type { Displayable_configs } from '../controllers/GET.index'
 import type { Config } from '../utils/_schema'
+import { buildChatBootData } from '../utils/chat-boot'
 
 export const view = (params: {
   active_config: Config
   displayable_configs: Displayable_configs
 }) => {
   // Boot data serialized as JSON, with `<` escaped to prevent `</script>` from closing the tag
-  const bootData = JSON.stringify({
-    convId: randomUUIDv7(),
-    configId: params.active_config.id,
-    dataParam: '',
-    disclaimer: params.active_config.disclaimer ?? null,
-    greeting: params.active_config.greeting,
-    examples: params.active_config.examples,
-    displayableConfigs: params.displayable_configs.map((c) => ({
-      id: c.id,
-      display: c.display,
-      is_active: c.is_active
-    })),
-    assetId: params.active_config.id,
-    reasoningDisplay: params.active_config.reasoning_display,
-    reasoningPlaceholders: params.active_config.reasoning_placeholders
-  }).replace(/</g, '\\u003c')
+  const bootData = JSON.stringify(
+    buildChatBootData(params.active_config, params.displayable_configs)
+  ).replace(/</g, '\\u003c')
 
   return html`<!doctype html>
     <html lang="fr" class="scroll-smooth bg-white tracking-[-0.1px] antialiased">
