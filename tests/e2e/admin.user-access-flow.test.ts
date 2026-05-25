@@ -1,8 +1,7 @@
 import { beforeAll, expect, it } from 'bun:test'
 
-import puppeteer from 'puppeteer'
-
 import { delete_all_users, save_user } from '../../utils/handle-user'
+import { clickAndWaitNavigation, launchE2EBrowser } from './launch-browser'
 
 // Initial setup
 beforeAll(async () => {
@@ -32,7 +31,7 @@ beforeAll(async () => {
 //
 // Test `admin@pierre-ia`
 it('should validate administrator access flow', async () => {
-  const browser = await puppeteer.launch({ slowMo: 10 })
+  const browser = await launchE2EBrowser({ slowMo: 10 })
   await browser.deleteCookie()
   const page = await browser.newPage()
   await page.setViewport({ width: 1080, height: 1024 })
@@ -41,7 +40,7 @@ it('should validate administrator access flow', async () => {
   expect(page.url()).toBe('http://localhost:3000/a/login')
   await page.type('input[type="email"]', 'admin@pierre-ia.org')
   await page.type('input[type="password"]', 'oXVOtYqxODmD')
-  await Promise.all([page.click('input[type="submit"]'), page.waitForNavigation()])
+  await clickAndWaitNavigation(page, 'input[type="submit"]')
   expect(page.url()).toBe(
     'http://localhost:3000/a/login?message=wrong_root_password&redirection=%2Fa'
   )
@@ -50,36 +49,36 @@ it('should validate administrator access flow', async () => {
 
   await page.type('input[type="email"]', 'admin@pierre-ia.org')
   await page.type('input[type="password"]', Bun.env['AUTH_PASSWORD'])
-  await Promise.all([page.click('input[type="submit"]'), page.waitForNavigation()])
+  await clickAndWaitNavigation(page, 'input[type="submit"]')
   cookie = (await browser.cookies()).find((cookie) => cookie.name === 'pierre-ia')
   expect(cookie).toBeDefined()
   expect(page.url()).toBe('http://localhost:3000/a')
 
-  await Promise.all([page.click('a[href="a/conversations"]'), page.waitForNavigation()])
+  await clickAndWaitNavigation(page, 'a[href="a/conversations"]')
   expect(page.url()).toBe('http://localhost:3000/a/conversations')
 
-  await Promise.all([page.click('a[href="/a"]'), page.waitForNavigation()])
+  await clickAndWaitNavigation(page, 'a[href="/a"]')
   expect(page.url()).toBe('http://localhost:3000/a')
 
-  await Promise.all([page.click('a[href="a/statistics"]'), page.waitForNavigation()])
+  await clickAndWaitNavigation(page, 'a[href="a/statistics"]')
   expect(page.url()).toBe('http://localhost:3000/a/statistics')
 
-  await Promise.all([page.click('a[href="/a"]'), page.waitForNavigation()])
+  await clickAndWaitNavigation(page, 'a[href="/a"]')
   expect(page.url()).toBe('http://localhost:3000/a')
 
-  await Promise.all([page.click('a[href="a/users"]'), page.waitForNavigation()])
+  await clickAndWaitNavigation(page, 'a[href="a/users"]')
   expect(page.url()).toBe('http://localhost:3000/a/users')
 
-  await Promise.all([page.click('a[href="/a"]'), page.waitForNavigation()])
+  await clickAndWaitNavigation(page, 'a[href="/a"]')
   expect(page.url()).toBe('http://localhost:3000/a')
 
-  await Promise.all([page.click('a[href="a/knowledge"]'), page.waitForNavigation()])
+  await clickAndWaitNavigation(page, 'a[href="a/knowledge"]')
   expect(page.url()).toBe('http://localhost:3000/a/knowledge')
 
-  await Promise.all([page.click('a[href="/a"]'), page.waitForNavigation()])
+  await clickAndWaitNavigation(page, 'a[href="/a"]')
   expect(page.url()).toBe('http://localhost:3000/a')
 
-  await Promise.all([page.click('button[value="logout"]'), page.waitForNavigation()])
+  await clickAndWaitNavigation(page, 'button[value="logout"]')
   expect(page.url()).toBe('http://localhost:3000/a/login')
   cookie = (await browser.cookies()).find((cookie) => cookie.name === 'pierre-ia')
   expect(cookie).toBeUndefined()
@@ -95,7 +94,7 @@ it('should validate administrator access flow', async () => {
 //
 // Test contributor@pierre-ia.org
 it('should validate contributor access flow', async () => {
-  const browser = await puppeteer.launch({ slowMo: 10 }) // TODO: this test fails if there is no slowMo: why?
+  const browser = await launchE2EBrowser({ slowMo: 10 }) // TODO: this test fails if there is no slowMo: why?
   await browser.deleteCookie()
   const page = await browser.newPage()
   await page.setViewport({ width: 1080, height: 1024 })
@@ -105,25 +104,25 @@ it('should validate contributor access flow', async () => {
 
   await page.type('input[type="email"]', 'contributor@pierre-ia.org')
   await page.type('input[type="password"]', 'de17a9bb-1cd0-440b-98cb-5be2fda3e5e2')
-  await Promise.all([page.click('input[type="submit"]'), page.waitForNavigation()])
+  await clickAndWaitNavigation(page, 'input[type="submit"]')
   expect(page.url()).toBe('http://localhost:3000/a')
   const cookie = (await browser.cookies()).find((cookie) => cookie.name === 'pierre-ia')
   expect(cookie).toBeDefined()
 
-  await Promise.all([page.click('a[href="a/conversations"]'), page.waitForNavigation()])
-  await Bun.sleep(1000)
+  await clickAndWaitNavigation(page, 'a[href="a/conversations"]', {
+    url: 'http://localhost:3000/a'
+  })
   expect(page.url()).toBe('http://localhost:3000/a')
 
-  await Promise.all([page.click('a[href="a/statistics"]'), page.waitForNavigation()])
-  await Bun.sleep(1000)
+  await clickAndWaitNavigation(page, 'a[href="a/statistics"]', {
+    url: 'http://localhost:3000/a'
+  })
   expect(page.url()).toBe('http://localhost:3000/a')
 
-  await Promise.all([page.click('a[href="a/users"]'), page.waitForNavigation()])
-  await Bun.sleep(1000)
+  await clickAndWaitNavigation(page, 'a[href="a/users"]', { url: 'http://localhost:3000/a' })
   expect(page.url()).toBe('http://localhost:3000/a')
 
-  await Promise.all([page.click('a[href="a/knowledge"]'), page.waitForNavigation()])
-  await Bun.sleep(1000)
+  await clickAndWaitNavigation(page, 'a[href="a/knowledge"]')
   expect(page.url()).toBe('http://localhost:3000/a/knowledge')
 
   await browser.close()
@@ -137,7 +136,7 @@ it('should validate contributor access flow', async () => {
 //
 // Test collaborator@pierre-ia.org
 it('should validate collaborator access flow', async () => {
-  const browser = await puppeteer.launch()
+  const browser = await launchE2EBrowser()
   await browser.deleteCookie()
   const page = await browser.newPage()
   await page.setViewport({ width: 1080, height: 1024 })
@@ -180,7 +179,7 @@ it('should validate collaborator access flow', async () => {
 //
 // Test an unknown user
 it('should validate unknown user access flow', async () => {
-  const browser = await puppeteer.launch()
+  const browser = await launchE2EBrowser()
   await browser.deleteCookie()
   const page = await browser.newPage()
   await page.setViewport({ width: 1080, height: 1024 })

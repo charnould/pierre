@@ -1,9 +1,9 @@
 import { expect, it } from 'bun:test'
 
-import puppeteer from 'puppeteer'
+import { launchE2EBrowser } from './launch-browser'
 
 it('should redirect to the default config for invalid paths and parameters + preserve valid config/data pairs', async () => {
-  const browser = await puppeteer.launch()
+  const browser = await launchE2EBrowser()
   await browser.deleteCookie()
   const page = await browser.newPage()
 

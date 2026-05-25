@@ -1,13 +1,14 @@
 import { expect, it } from 'bun:test'
 
-import puppeteer, { type ElementHandle } from 'puppeteer'
+import { type ElementHandle } from 'puppeteer'
 
 import { delete_all_users } from '../../utils/handle-user'
+import { launchE2EBrowser } from './launch-browser'
 
 it('should upload user file successfully', async () => {
   Bun.env['SERVICE'] = 'pierre-production'
   await delete_all_users()
-  const browser = await puppeteer.launch()
+  const browser = await launchE2EBrowser()
   const page = await browser.newPage()
   await page.setViewport({ width: 1080, height: 1024 })
 

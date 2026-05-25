@@ -1,7 +1,9 @@
 import { expect, it } from 'bun:test'
 
 import { $ } from 'bun'
-import puppeteer, { type ElementHandle } from 'puppeteer'
+import { type ElementHandle } from 'puppeteer'
+
+import { launchE2EBrowser } from './launch-browser'
 
 it('should upload knowledge files successfully', async () => {
   // Remove mock files from datastore
@@ -11,7 +13,7 @@ it('should upload knowledge files successfully', async () => {
   await $`mkdir -p ./datastores/${Bun.env['SERVICE']}/files/`
 
   //Go to `/a`
-  const browser = await puppeteer.launch()
+  const browser = await launchE2EBrowser()
   const page = await browser.newPage()
 
   await page.goto('http://localhost:3000/a')
