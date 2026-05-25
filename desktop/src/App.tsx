@@ -1,17 +1,23 @@
 import { useState, useEffect, useCallback } from 'react'
 
-import { AppSidebar } from './components/AppSidebar'
-import { DiscuterPanel } from './components/DiscuterPanel'
-import { ParametresPanel } from './components/ParametresPanel'
-import { RepondrePanel } from './components/RepondrePanel'
-import { TitleBar } from './components/TabNav'
+import { AppSidebar } from './components/layout/AppSidebar'
+import { TitleBar } from './components/layout/TabNav'
 import { SidebarProvider } from './components/ui/sidebar'
 import { TooltipProvider } from './components/ui/tooltip'
-import type { Settings } from './types'
+import { AboutSummary } from './components/views/AboutSummary'
+import { Chat } from './components/views/Chat'
+import { Home } from './components/views/Home'
+import { RepaymentPlan } from './components/views/RepaymentPlan'
+import { RequestReply } from './components/views/RequestReply'
+import { fetchConfig, Settings } from './components/views/Settings'
+import { REPAYMENT_PLAN_ENABLED } from './lib/feature-flags'
+import { readStoredTab, tabAfterAutoLogin, writeStoredTab } from './lib/session-tab'
+import type { Tab } from './lib/tabs'
+import type { Settings as SettingsType } from './types'
 
-export type Tab = 'repondre' | 'discuter' | 'parametres'
+export type { Tab } from './lib/tabs'
 
-export async function doLogin({ url, email, password }: Settings): Promise<boolean> {
+export async function doLogin({ url, email, password }: SettingsType): Promise<boolean> {
   try {
     const body = new URLSearchParams({ email: email!, password: password!, action: 'login' })
     const resp = await fetch(`${url}/a/login`, {
@@ -26,16 +32,16 @@ export async function doLogin({ url, email, password }: Settings): Promise<boole
   }
 }
 
-function isConfigured(s: Settings) {
+function isConfigured(s: SettingsType) {
   return !!(s?.url && s?.email && s?.password && !s?.loggedOut)
 }
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('parametres')
-  const [settings, setSettings] = useState<Settings>({})
+  const [activeTab, setActiveTab] = useState<Tab>('settings')
+  const [settings, setSettings] = useState<SettingsType>({})
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [agentName, setAgentName] = useState("l'agent IA")
 
-  // Load settings and auto-login on mount
   useEffect(() => {
     void (async () => {
       const s = await window.api?.getSettings()
@@ -45,7 +51,10 @@ export function App() {
         const ok = await doLogin(s)
         if (ok) {
           setIsLoggedIn(true)
-          setActiveTab('discuter')
+          const stored = readStoredTab()
+          setActiveTab(tabAfterAutoLogin(stored))
+          const config = await fetchConfig(s.url!)
+          if (config?.name) setAgentName(config.name)
         }
       }
     })()
@@ -53,42 +62,77 @@ export function App() {
 
   const handleTabChange = useCallback(
     (tab: Tab) => {
-      if (!isLoggedIn && (tab === 'repondre' || tab === 'discuter')) return
+      if (!isLoggedIn && tab !== 'settings') return
+      if (tab === 'repayment' && !REPAYMENT_PLAN_ENABLED) return
       setActiveTab(tab)
+      writeStoredTab(tab)
     },
     [isLoggedIn]
   )
 
-  const handleLogin = useCallback((s: Settings) => {
+  const handleLogin = useCallback((s: SettingsType, name?: string) => {
     setSettings(s)
     setIsLoggedIn(true)
-    setTimeout(() => setActiveTab('discuter'), 700)
+    writeStoredTab('home')
+    setTimeout(() => setActiveTab('home'), 700)
+    if (name) setAgentName(name)
   }, [])
 
   const handleLogout = useCallback(() => {
     setIsLoggedIn(false)
-    setActiveTab('parametres')
+    writeStoredTab('settings')
+    setActiveTab('settings')
   }, [])
 
   return (
     <TooltipProvider>
-      <div className="flex h-screen flex-col overflow-hidden bg-gray-50 font-sans text-gray-800 antialiased">
-        <TitleBar isLoggedIn={isLoggedIn} onSettingsClick={() => handleTabChange('parametres')} />
+      <div className="bg-background text-foreground flex h-screen flex-col overflow-hidden font-sans antialiased">
+        <TitleBar activeTab={activeTab} isLoggedIn={isLoggedIn} />
+        <SidebarProvider
+          defaultOpen={false}
+          className="bg-background min-h-0 flex-1 overflow-hidden"
+        >
+          <AppSidebar
+            activeTab={activeTab}
+            isLoggedIn={isLoggedIn}
+            onTabChange={handleTabChange}
+            agentName={agentName}
+          />
+          {/* Views stay mounted while hidden so streams and form state survive tab switches. */}
+          <main className="bg-background relative flex min-h-0 flex-1 overflow-hidden">
+            <Chat hidden={activeTab !== 'chat'} isLoggedIn={isLoggedIn} url={settings.url} />
 
-        <SidebarProvider defaultOpen={false} className="min-h-0 flex-1 overflow-hidden">
-          <AppSidebar activeTab={activeTab} isLoggedIn={isLoggedIn} onTabChange={handleTabChange} />
-
-          <main className="flex flex-1 overflow-hidden">
-            <RepondrePanel hidden={activeTab !== 'repondre'} settings={settings} />
-
-            <DiscuterPanel
-              hidden={activeTab !== 'discuter'}
-              isLoggedIn={isLoggedIn}
-              url={settings.url}
+            <Home
+              hidden={activeTab !== 'home'}
+              onNavigate={handleTabChange}
+              agentName={agentName}
             />
 
-            <ParametresPanel
-              hidden={activeTab !== 'parametres'}
+            <RequestReply
+              hidden={activeTab !== 'request'}
+              settings={settings}
+              onNavigate={handleTabChange}
+              agentName={agentName}
+            />
+
+            {REPAYMENT_PLAN_ENABLED ? (
+              <RepaymentPlan
+                hidden={activeTab !== 'repayment'}
+                settings={settings}
+                onNavigate={handleTabChange}
+                agentName={agentName}
+              />
+            ) : null}
+
+            <AboutSummary
+              hidden={activeTab !== 'about'}
+              settings={settings}
+              onNavigate={handleTabChange}
+              agentName={agentName}
+            />
+
+            <Settings
+              hidden={activeTab !== 'settings'}
               settings={settings}
               isLoggedIn={isLoggedIn}
               onLogin={handleLogin}

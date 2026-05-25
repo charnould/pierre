@@ -61,17 +61,18 @@ function createWindow() {
   })()
 
   win = new BrowserWindow({
-    width: 900,
-    height: 840,
+    width: 1000,
+    height: 900,
     minWidth: 360,
     minHeight: 400,
     titleBarStyle: 'hiddenInset',
+    trafficLightPosition: { x: 18, y: 10 },
     ...(iconPath ? { icon: iconPath } : {}),
+    backgroundColor: '#fafaf9',
     webPreferences: {
       preload: join(__dirname, '../preload/preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      webviewTag: true,
       partition: PARTITION,
       webSecurity: app.isPackaged
     },
@@ -89,15 +90,6 @@ function createWindow() {
 
 app.whenReady().then(() => {
   settingsPath = join(app.getPath('userData'), 'settings.json')
-
-  // Strip dangerous options from any webview before it attaches
-  app.on('web-contents-created', (_, contents) => {
-    contents.on('will-attach-webview', (_, webPreferences) => {
-      delete webPreferences.preload
-      delete webPreferences.preloadURL
-      webPreferences.nodeIntegration = false
-    })
-  })
 
   createWindow()
   app.on('activate', () => {
@@ -126,12 +118,27 @@ ipcMain.handle('resize-to', (_, { width, height }) => {
   win.setSize(width, height, true)
 })
 
-ipcMain.handle('start-stream', async (event, { url, config, message, conv_id }) => {
+ipcMain.handle('get-chat-boot', async (_, { url, config, data }) => {
+  const ses = session.fromPartition(PARTITION)
+  const params = new URLSearchParams()
+  if (config) params.set('config', config)
+  if (data) params.set('data', data)
+  const qs = params.toString()
+  try {
+    const resp = await net.fetch(`${url}/ai/boot${qs ? `?${qs}` : ''}`, { session: ses })
+    if (!resp.ok) return null
+    return await resp.json()
+  } catch {
+    return null
+  }
+})
+
+ipcMain.handle('start-stream', async (event, { url, config, message, conv_id, data }) => {
   if (activeStreamController) activeStreamController.abort()
   activeStreamController = new AbortController()
 
   const ses = session.fromPartition(PARTITION)
-  const params = new URLSearchParams({ config, message, conv_id })
+  const params = new URLSearchParams({ config, message, conv_id, data: data ?? '' })
 
   try {
     const resp = await net.fetch(`${url}/ai?${params}`, {
@@ -141,7 +148,7 @@ ipcMain.handle('start-stream', async (event, { url, config, message, conv_id }) 
 
     if (!resp.ok || !resp.body) {
       if (!event.sender.isDestroyed())
-        event.sender.send('ai-chunk', JSON.stringify({ t: 'error', d: {} }) + '\n')
+        event.sender.send('ai-chunk', JSON.stringify({ type: 'error' }) + '\n')
       return false
     }
 
@@ -162,7 +169,7 @@ ipcMain.handle('start-stream', async (event, { url, config, message, conv_id }) 
     return true
   } catch (e) {
     if (e.name !== 'AbortError' && !event.sender.isDestroyed())
-      event.sender.send('ai-chunk', JSON.stringify({ t: 'error', d: {} }) + '\n')
+      event.sender.send('ai-chunk', JSON.stringify({ type: 'error' }) + '\n')
     return false
   } finally {
     activeStreamController = null
@@ -188,35 +195,64 @@ ipcMain.handle('cancel-stream', () => {
   }
 })
 
-ipcMain.handle('generate-answer', async (_, { url, conv_id, message, context, skill, files }) => {
-  const ses = session.fromPartition(PARTITION)
+ipcMain.handle(
+  'generate-answer',
+  async (event, { url, conv_id, message, context, payload, skill, files }) => {
+    if (activeStreamController) activeStreamController.abort()
+    activeStreamController = new AbortController()
 
-  const formData = new FormData()
-  formData.set('conv_id', conv_id)
-  formData.set('message', message ?? '')
-  formData.set('context', context ?? '')
-  formData.set('skill', skill ?? 'answer')
+    const ses = session.fromPartition(PARTITION)
 
-  if (Array.isArray(files)) {
-    for (const f of files) {
-      formData.append('files', new Blob([f.buffer], { type: f.type }), f.name)
+    const formData = new FormData()
+    formData.set('conv_id', conv_id)
+    formData.set('message', message ?? '')
+    formData.set('context', context ?? '')
+    if (payload) formData.set('payload', payload)
+    formData.set('skill', skill ?? 'answer')
+
+    if (Array.isArray(files)) {
+      for (const f of files) {
+        formData.append('files', new Blob([f.buffer], { type: f.type }), f.name)
+      }
+    }
+
+    try {
+      const resp = await net.fetch(`${url}/ai/answer`, {
+        method: 'POST',
+        body: formData,
+        signal: activeStreamController.signal,
+        session: ses
+      })
+
+      if (!resp.ok || !resp.body) {
+        if (!event.sender.isDestroyed())
+          event.sender.send('ai-chunk', JSON.stringify({ type: 'error' }) + '\n')
+        return false
+      }
+
+      const reader = resp.body.getReader()
+      const decoder = new TextDecoder('utf-8')
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        if (value && !event.sender.isDestroyed())
+          event.sender.send('ai-chunk', decoder.decode(value, { stream: true }))
+      }
+
+      const tail = decoder.decode()
+      if (tail && !event.sender.isDestroyed()) event.sender.send('ai-chunk', tail)
+
+      return true
+    } catch (e) {
+      if (e.name !== 'AbortError' && !event.sender.isDestroyed())
+        event.sender.send('ai-chunk', JSON.stringify({ type: 'error' }) + '\n')
+      return false
+    } finally {
+      activeStreamController = null
     }
   }
-
-  try {
-    const resp = await net.fetch(`${url}/ai/answer`, {
-      method: 'POST',
-      body: formData,
-      session: ses
-    })
-
-    if (!resp.ok) return { error: true }
-    const data = await resp.json()
-    return { content: data.content ?? '' }
-  } catch {
-    return { error: true }
-  }
-})
+)
 
 ipcMain.handle('get-skills', async (_, { url }) => {
   const ses = session.fromPartition(PARTITION)

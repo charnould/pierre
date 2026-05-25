@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('api', {
   saveSettings: (data) => ipcRenderer.invoke('save-settings', data),
   writeClipboard: (text) => ipcRenderer.invoke('write-clipboard', text),
   resizeTo: (dims) => ipcRenderer.invoke('resize-to', dims),
+  getChatBoot: (params) => ipcRenderer.invoke('get-chat-boot', params),
   startStream: (params) => ipcRenderer.invoke('start-stream', params),
   logout: () => ipcRenderer.invoke('logout'),
   cancelStream: () => ipcRenderer.invoke('cancel-stream'),
