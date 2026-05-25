@@ -164,7 +164,7 @@ Navigateur / Widget / Apps              VPS (production)
 |          | <------------------------- |    |-- authenticate                  |
 +----------+   NDJSON stream            |    |-- parse AIContext               |
                {t:"response", d:{...}}  |    |-- save user message (SQLite)    |
-               {t:"reset"}              |    |-- answer_user()                 |
+               {type:"reset"}            |    |-- streamChatAnswer()            |
                {t:"done", d:{...}}      |         |                            |
                                         |         v                            |
                                         |    streamCopilot()                   |
