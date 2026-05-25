@@ -1,23 +1,34 @@
-import { mkdirSync, rmSync } from 'node:fs'
-import { join } from 'node:path'
+import { existsSync, mkdirSync, rmSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 
 import type { Context } from 'hono'
+import { stream } from 'hono/streaming'
 
 import { convertToImage } from '../utils/convert-to-image'
 import { streamCopilot } from '../utils/copilot-agent'
+import { copilotChunkToNdjson, ndjsonLine } from '../utils/stream-to-ndjson'
+import { resolveAnswerPrompt } from '../utils/workflow-payload'
+
+const PROJECT_ROOT = resolve(import.meta.dir, '..')
+
+async function loadSkillReasoningDisplay(skillId: string): Promise<'off' | 'partial' | 'full'> {
+  const skillsDir = join(PROJECT_ROOT, 'customization', 'skills')
+  if (!existsSync(join(skillsDir, skillId, 'config.ts'))) return 'off'
+  try {
+    const mod = await import(`../customization/skills/${skillId}/config`)
+    const display = mod.default?.reasoning_display
+    if (display === 'partial' || display === 'full') return display
+    return 'off'
+  } catch {
+    return 'off'
+  }
+}
 
 /**
  * POST /ai/answer
  *
- * Accepts multipart/form-data from the Electron desktop app:
- *   - conv_id  : conversation identifier
- *   - message  : clipboard content (main context)
- *   - context  : optional additional context
- *   - skill    : skill config id (default: answer)
- *   - files    : uploaded PDF or image files (optional, converted to PNG stripes)
- *
- * Each uploaded file is converted to a single PNG (multi-page PDFs become a vertical stripe).
- * PNGs are attached to the Copilot session for multimodal analysis, then cleaned up.
+ * Multipart: conv_id, message, context, skill, payload (optional JSON), files (optional).
+ * Streams canonical NDJSON: delta, reasoning_delta, reset, done, error.
  */
 export const controller = async (c: Context) => {
   const tempDir = join('/tmp', `pierre-${Bun.randomUUIDv7()}`)
@@ -28,16 +39,16 @@ export const controller = async (c: Context) => {
     const skill = (formData.get('skill') as string | null) ?? 'answer'
     const message = (formData.get('message') as string | null) ?? ''
     const context = (formData.get('context') as string | null) ?? ''
+    const payload = (formData.get('payload') as string | null) ?? ''
 
-    const prompt = context.trim()
-      ? `# Message du locataire\n\n${message}\n\n# Contexte additionnel mentionné par le chargé de relation-client\n\n${context}`
-      : message
+    const prompt = resolveAnswerPrompt(payload, message, context)
 
     if (!prompt.trim()) {
       return c.json({ error: 'Empty prompt' }, 400)
     }
 
-    // Convert each uploaded file to a single PNG stripe
+    const reasoningDisplay = await loadSkillReasoningDisplay(skill)
+
     const rawFiles = formData.getAll('files') as File[]
     const attachments: Array<{ type: 'file'; path: string }> = []
 
@@ -58,29 +69,48 @@ export const controller = async (c: Context) => {
       )
     }
 
-    let fullContent = ''
+    c.header('Content-Type', 'application/x-ndjson; charset=utf-8')
 
-    for await (const chunk of streamCopilot(
-      conv_id,
-      skill,
-      prompt,
-      undefined,
-      undefined,
-      attachments
-    )) {
-      if (chunk.type === 'done') {
-        fullContent = chunk.fullContent
+    return stream(
+      c,
+      async (s) => {
+        const ac = new AbortController()
+        s.onAbort(() => ac.abort())
+
+        const formatState = { needsBullet: true }
+
+        try {
+          for await (const chunk of streamCopilot(
+            conv_id,
+            skill,
+            prompt,
+            undefined,
+            ac.signal,
+            attachments
+          )) {
+            for (const event of copilotChunkToNdjson(chunk, reasoningDisplay, formatState)) {
+              await s.write(ndjsonLine(event))
+            }
+          }
+        } finally {
+          try {
+            rmSync(tempDir, { recursive: true, force: true })
+          } catch {}
+        }
+      },
+      async (e, s) => {
+        console.error('[POST.AI.ANSWER] Stream error:', e)
+        try {
+          rmSync(tempDir, { recursive: true, force: true })
+        } catch {}
+        await s.write(ndjsonLine({ type: 'error' }))
       }
-    }
-
-    return c.json({ content: fullContent })
+    )
   } catch (e) {
     console.error('[POST.AI.ANSWER] Error:', e)
-    return c.json({ error: 'Generation failed' }, 500)
-  } finally {
-    // Clean up temp files regardless of success or failure
     try {
       rmSync(tempDir, { recursive: true, force: true })
     } catch {}
+    return c.json({ error: 'Generation failed' }, 500)
   }
 }

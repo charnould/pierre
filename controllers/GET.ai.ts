@@ -2,8 +2,8 @@ import type { Context } from 'hono'
 import { stream } from 'hono/streaming'
 
 import { AIContext } from '../utils/_schema'
-import { answer_user } from '../utils/generate-answer'
 import { save_reply } from '../utils/handle-conversation'
+import { streamChatAnswer } from '../utils/stream-chat'
 
 /**
  * Controller for NDJSON streaming with Copilot SDK.
@@ -15,9 +15,13 @@ export const controller = async (c: Context) => {
 
   try {
     // Parse context from request
+    const dataQuery = c.req.query('data')
+    const customRaw =
+      dataQuery === undefined || dataQuery === 'undefined' ? [''] : dataQuery.split('|')
+
     const context = await AIContext.parseAsync({
       config: (await import(`../customization/chatbot/${c.req.query('config')}/config`)).default,
-      custom_data: { raw: c.req.query('data')?.split('|') },
+      custom_data: { raw: customRaw },
       metadata: { user: c.get('user')?.email ?? null },
       content: c.req.query('message'),
       conv_id: c.req.query('conv_id'),
@@ -37,20 +41,20 @@ export const controller = async (c: Context) => {
           ac.abort()
         })
 
-        const { textStream } = answer_user(context, ac.signal)
+        const { textStream } = streamChatAnswer(context, ac.signal)
         for await (const chunk of textStream) {
           if (chunk) s.write(chunk)
         }
       },
       async (e, s) => {
         console.error('[STREAM_ERROR]', e)
-        s.write(JSON.stringify({ t: 'error', d: {} }) + '\n')
+        s.write(JSON.stringify({ type: 'error' }) + '\n')
       }
     )
   } catch (e) {
     console.error('[CONTROLLER_ERROR]', e)
     return stream(c, async (s) => {
-      s.write(JSON.stringify({ t: 'error', d: {} }) + '\n')
+      s.write(JSON.stringify({ type: 'error' }) + '\n')
     })
   }
 }
