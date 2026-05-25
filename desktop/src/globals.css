@@ -1,8 +1,13 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
+@import 'streamdown/styles.css';
 
 @custom-variant dark (&:is(.dark *));
+
+@source '../node_modules/streamdown/dist/*.js';
+@source '../src/components/ai/**/*.tsx';
+@source '../src/components/chat/**/*.tsx';
 
 @font-face {
   font-family: 'Inter';
@@ -13,19 +18,16 @@
 }
 
 @font-face {
-  font-family: 'SourceSerif4';
-  src: url('./assets/SourceSerif4.ttf') format('truetype');
+  font-family: 'MontaguSlab';
+  src: url('./assets/MontaguSlab.ttf') format('truetype');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 
 :root {
-  font-family: 'Inter', system-ui, sans-serif;
-  font-feature-settings:
-    'liga' 1,
-    'calt' 1;
-  --background: oklch(1 0 0);
+  --radius: 0.625rem;
+  --background: var(--color-stone-50);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -43,8 +45,12 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-  --radius: 0.375rem;
-  --sidebar: oklch(0.985 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
   --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -54,14 +60,44 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
-@supports (font-variation-settings: normal) {
-  :root {
-    font-family: 'Inter', system-ui, sans-serif;
-  }
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
 }
 
 @theme inline {
   --font-sans: 'Inter', system-ui, sans-serif;
+  --font-inter: 'Inter', system-ui, sans-serif;
+  --font-montagu: 'MontaguSlab', serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -88,35 +124,18 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 @layer base {
@@ -134,6 +153,7 @@
 html,
 body {
   height: 100%;
+  caret-color: var(--ring);
 }
 
 /* Electron drag regions */
@@ -144,52 +164,426 @@ body {
   -webkit-app-region: no-drag;
 }
 
-/* Status dot states */
-.status-dot.thinking {
-  @apply bg-amber-400;
-}
-.status-dot.generating {
-  @apply bg-blue-400;
-}
-.status-dot.pulse {
-  animation: pulse 0.8s ease-out;
+/* Sidebar: start below the titlebar (h-8 = 2rem) so it doesn't overlap traffic lights */
+[data-slot='sidebar-container'] {
+  top: 2rem !important;
+  height: calc(100svh - 2rem) !important;
 }
 
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.35);
-  }
-  100% {
-    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
-  }
-}
-
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
-}
-
-.setup-hidden {
-  display: none !important;
-}
-
-/* Refined scrollbar */
+/* Hide scrollbars */
 ::-webkit-scrollbar {
-  width: 3px;
+  display: none;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: oklch(0.922 0 0);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.87 0 0);
+* {
+  scrollbar-width: none;
 }
 
 /* Selection */
 ::selection {
-  background: rgba(255, 255, 0, 0.8);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+/* Streamdown caret — tw-animate-css (pas d’animation caret dans streamdown lui-même) */
+[style*='--streamdown-caret'] > *:last-child::after {
+  animation: var(--animate-caret-blink);
+}
+
+/* Messages utilisateur (Discuter) — hors MessageContent pour éviter les conflits group-[.is-user] */
+.user-message-bubble {
+  border-radius: 16px;
+  background-color: var(--muted);
+  padding: 14px 18px;
+}
+
+.user-message-bubble .sd-response {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--foreground);
+}
+
+/* Trigger « Réflexion… » — aligné sur les traces */
+.reasoning-trigger {
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--muted-foreground);
+}
+
+.reasoning-trigger:hover {
+  opacity: 0.85;
+}
+
+/* Workflow — zone scrollable (réponse + détail réflexion) */
+.workflow-output-scroll {
+  padding-top: 4px;
+  background-color: var(--background);
+}
+
+.workflow-output-scroll .sd-response {
+  margin-top: 12px;
+}
+
+.workflow-output-scroll .sd-response:first-child {
+  margin-top: 0;
+}
+
+.workflow-output-scroll:has(.workflow-output-panels) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.workflow-output-panels {
+  min-height: 280px;
+  min-width: 0;
+  flex: 1;
+}
+
+.workflow-output-artifact {
+  display: flex;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--background);
+}
+
+.workflow-output-artifact--analyse {
+  border: 1px solid var(--border);
+  border-right: 0;
+  border-radius: 0.5rem 0 0 0.5rem;
+  background: transparent;
+}
+
+.workflow-output-artifact--reponse {
+  border: 1px solid var(--border);
+  border-left: 0;
+  border-radius: 0 0.5rem 0.5rem 0;
+  @apply bg-stone-100;
+}
+
+.workflow-output-artifact-header {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 16px 0;
+}
+
+.workflow-output-artifact-body {
+  min-height: 0;
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 14px 16px 18px;
+}
+
+.workflow-output-artifact-body .sd-response {
+  margin-top: 0;
+}
+
+.workflow-artifact-editor-toolbar {
+  display: flex;
+  height: 32px;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.workflow-output-section {
+  margin-top: 20px;
+}
+
+.workflow-output-section:first-child {
+  margin-top: 0;
+}
+
+/* Workflow — barre Réflexion + actions */
+.workflow-output-toolbar-wrap {
+  padding-top: 20px;
+  padding-bottom: 10px;
+}
+
+.workflow-output-toolbar-wrap--compact {
+  padding-top: 8px;
+}
+
+.workflow-output-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  min-height: 32px;
+  --color-muted-foreground: var(--muted-foreground);
+}
+
+.workflow-output-toolbar .reasoning-trigger {
+  display: inline-flex;
+  height: 32px;
+  min-height: 32px;
+  width: auto;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.workflow-output-toolbar .reasoning-trigger p,
+.workflow-output-toolbar .reasoning-trigger > span {
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  line-height: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+
+.workflow-output-toolbar .reasoning-trigger svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+}
+
+.workflow-output-toolbar .reasoning-trigger:hover {
+  opacity: 0.85;
+}
+
+/* Raisonnement agent — carte compacte, mono, sans puces */
+.reasoning-plain-box {
+  height: 100px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  overflow: hidden;
+}
+
+.reasoning-plain-scroll {
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.reasoning-plain-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.reasoning-plain-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--border);
+}
+
+.reasoning-plain-text {
+  margin: 0;
+  font-family: ui-monospace, monospace;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--muted-foreground);
+  white-space: normal;
+  word-break: break-word;
+}
+
+.workflow-output-scroll .reasoning-plain {
+  margin-bottom: 12px;
+}
+
+/* Streamdown: markdown output */
+.sd-response {
+  font-size: 1rem;
+  line-height: 1.625;
+  color: var(--foreground);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+.sd-response > * + * {
+  margin-top: 0.75rem;
+}
+.sd-response p {
+  margin: 0;
+}
+.sd-response strong {
+  font-weight: 700;
+}
+.sd-response em {
+  font-style: italic;
+}
+.sd-response ul {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+}
+.sd-response ol {
+  list-style-type: decimal;
+  padding-left: 1.25rem;
+}
+.sd-response li + li {
+  margin-top: 0.25rem;
+}
+
+/* Streamdown lists — puces hors du flux de texte (preflight: list-style: none ; util list-inside à surcharger) */
+[data-streamdown='unordered-list'] {
+  list-style-type: disc !important;
+  list-style-position: outside !important;
+  padding-inline-start: 1.25rem;
+}
+[data-streamdown='ordered-list'] {
+  list-style-type: decimal !important;
+  list-style-position: outside !important;
+  padding-inline-start: 1.25rem;
+}
+
+/* Lexical artifact editor — comfortable reading prose */
+.artifact-lexical-root {
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--foreground);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+.artifact-lexical-paragraph {
+  margin: 0 0 0.875rem;
+  position: relative;
+}
+
+.artifact-lexical-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.artifact-lexical-heading {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+}
+
+.artifact-lexical-heading:first-child {
+  margin-top: 0;
+}
+
+.artifact-lexical-heading-h1 {
+  margin: 1.75rem 0 0.625rem;
+  font-size: 1.875rem;
+  line-height: 1.25;
+}
+
+.artifact-lexical-heading-h2 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1.5rem;
+  line-height: 1.3;
+}
+
+.artifact-lexical-heading-h3 {
+  margin: 1.375rem 0 0.5rem;
+  font-size: 1.25rem;
+  line-height: 1.35;
+}
+
+.artifact-lexical-heading-h4 {
+  margin: 1.25rem 0 0.375rem;
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+
+.artifact-lexical-heading-h5 {
+  margin: 1rem 0 0.375rem;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.artifact-lexical-heading-h6 {
+  margin: 1rem 0 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.artifact-lexical-list {
+  margin: 0.375rem 0 0.875rem;
+  padding-inline-start: 1.375rem;
+}
+
+.artifact-lexical-list-ul {
+  list-style-type: disc;
+  list-style-position: outside;
+}
+
+.artifact-lexical-list-ol {
+  list-style-type: decimal;
+  list-style-position: outside;
+}
+
+.artifact-lexical-listitem {
+  padding-block: 0.1875rem;
+}
+
+.artifact-lexical-listitem + .artifact-lexical-listitem {
+  margin-top: 0.125rem;
+}
+
+.artifact-lexical-listitem > .artifact-lexical-paragraph {
+  display: inline;
+  margin: 0;
+}
+
+.artifact-lexical-text-bold {
+  font-weight: 700;
+}
+
+.artifact-lexical-text-italic {
+  font-style: italic;
+}
+
+/* Tailwind preflight resets list-style — reinforce for Lexical editors */
+.workflow-output-artifact--analyse [contenteditable] .artifact-lexical-list-ul,
+.workflow-output-artifact--reponse [contenteditable] .artifact-lexical-list-ul {
+  list-style-type: disc !important;
+  list-style-position: outside !important;
+}
+
+.workflow-output-artifact--analyse [contenteditable] .artifact-lexical-list-ol,
+.workflow-output-artifact--reponse [contenteditable] .artifact-lexical-list-ol {
+  list-style-type: decimal !important;
+  list-style-position: outside !important;
+}
+
+/* Floating chat composer — subtle pulse while generating */
+@keyframes composer-ring-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 1px 2px rgba(20, 20, 19, 0.04),
+      0 8px 28px rgba(20, 20, 19, 0.07),
+      0 0 0 0 rgba(20, 20, 19, 0);
+  }
+  50% {
+    box-shadow:
+      0 1px 3px rgba(20, 20, 19, 0.06),
+      0 12px 36px rgba(20, 20, 19, 0.09),
+      0 0 0 3px rgba(20, 20, 19, 0.06);
+  }
+}
+
+.composer-generating {
+  animation: composer-ring-pulse 2s ease-in-out infinite;
 }
