@@ -1,8 +1,7 @@
 import { expect, it } from 'bun:test'
 
-import puppeteer from 'puppeteer'
-
 import { delete_all_users, save_user } from '../../utils/handle-user'
+import { launchE2EBrowser } from './launch-browser'
 
 it('should display the correct config options for anonymous and authenticated users', async () => {
   // Initial setup
@@ -16,7 +15,7 @@ it('should display the correct config options for anonymous and authenticated us
     config: JSON.stringify(['demo', 'testing_purpose_1', 'testing_purpose_2', 'non_existing'])
   })
 
-  const browser = await puppeteer.launch()
+  const browser = await launchE2EBrowser()
   await browser.deleteCookie()
   const page = await browser.newPage()
   page.setDefaultNavigationTimeout(60000)

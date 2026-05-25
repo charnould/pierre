@@ -1,9 +1,9 @@
 import { beforeAll, expect, it } from 'bun:test'
 
 import { SQL } from 'bun'
-import puppeteer from 'puppeteer'
 
 import { delete_all_users, save_user } from '../../utils/handle-user'
+import { launchE2EBrowser } from './launch-browser'
 
 const _sql = new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
 
@@ -19,7 +19,7 @@ beforeAll(async () => {
 })
 
 it('should redirect and resolve configuration access correctly for anonymous and authenticated users', async () => {
-  const browser = await puppeteer.launch()
+  const browser = await launchE2EBrowser()
   const page = await browser.newPage()
   page.setDefaultNavigationTimeout(60000)
 

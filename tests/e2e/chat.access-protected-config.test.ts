@@ -1,10 +1,10 @@
 import { expect, it } from 'bun:test'
 
-import puppeteer from 'puppeteer'
+import { launchE2EBrowser } from './launch-browser'
 
 it('should grant access to protected config for logged user', async () => {
   Bun.env['SERVICE'] = 'pierre-production'
-  const browser = await puppeteer.launch()
+  const browser = await launchE2EBrowser()
   const page = await browser.newPage()
 
   await page.goto('http://localhost:3000/?config=testing_purpose_1')
