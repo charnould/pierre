@@ -27,6 +27,8 @@ proxy:
   buffering:
     responses: false
 
+deploy_timeout: 300
+
 builder:
   arch: amd64
 
