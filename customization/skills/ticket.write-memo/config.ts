@@ -1,7 +1,7 @@
 import type { Config } from '../../../utils/_schema'
 
 export default {
-  id: 'request.write-note',
+  id: 'ticket.write-memo',
   display: '',
   show: [],
   custom_data: {},

@@ -1,7 +1,7 @@
 import type { Config } from '../../../utils/_schema'
 
 export default {
-  id: 'about.unit',
+  id: 'ticket.rewrite-ticket',
   display: '',
   show: [],
   custom_data: {},
