@@ -14,7 +14,6 @@
 
 import { Database } from 'bun:sqlite'
 import { existsSync } from 'node:fs'
-import { readdir } from 'node:fs/promises'
 import { resolve, join } from 'node:path'
 
 import { today_is } from './today-is'
@@ -86,30 +85,6 @@ async function buildAgentsFile(configId: string): Promise<void> {
 
   await Bun.write(join(knowledgePath, 'AGENTS.md'), parts.join('\n\n'))
   console.log(`[AGENT] AGENTS.md written (${parts.length} sections)`)
-}
-
-/**
- * Builds AGENTS.md for every knowledge directory that exists for the current service.
- * Call at server startup and in the daily cron so Pi always has fresh instructions.
- */
-export async function buildAllAgentsFiles(): Promise<void> {
-  const knowledgeBase = join(PROJECT_ROOT, 'datastores', Bun.env['SERVICE']!, 'knowledge')
-
-  if (!existsSync(knowledgeBase)) {
-    console.log('[AGENT] No knowledge directory found — skipping AGENTS.md build')
-    return
-  }
-
-  const entries = await readdir(knowledgeBase, { withFileTypes: true })
-  const configIds = entries.filter((e) => e.isDirectory()).map((e) => e.name)
-
-  const results = await Promise.allSettled(configIds.map((id) => buildAgentsFile(id)))
-  const ok = results.filter((r) => r.status === 'fulfilled').length
-  results.forEach((r, i) => {
-    if (r.status === 'rejected')
-      console.warn(`[AGENT] Failed to build AGENTS.md for ${configIds[i]}:`, r.reason)
-  })
-  console.log(`[AGENT] Built AGENTS.md for ${ok}/${configIds.length} configs`)
 }
 
 // ---------------------------------------------------------------------------
