@@ -1,7 +1,7 @@
 import type { Config } from '../../../utils/_schema'
 
 export default {
-  id: 'request.reply-letter',
+  id: 'ticket.answer-ticket',
   display: '',
   show: [],
   custom_data: {},
