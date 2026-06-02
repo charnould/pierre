@@ -22,5 +22,18 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noPropertyAccessFromIndexSignature": true
-  }
+  },
+  "include": [
+    "app.ts",
+    "assets/scripts/**/*",
+    "config/**/*",
+    "controllers/**/*",
+    "customization/**/*",
+    "datastores/**/*",
+    "knowledge/**/*",
+    "tests/**/*",
+    "utils/**/*",
+    "views/**/*"
+  ],
+  "exclude": ["desktop", "node_modules", "dist", "build", ".next", ".turbo"]
 }
