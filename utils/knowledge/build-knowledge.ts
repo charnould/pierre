@@ -3,6 +3,7 @@ import { existsSync, readdirSync } from 'node:fs'
 import { rm, readdir } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 
+import { import_json_rows, type JsonRow } from './sqlite-table-import'
 import { normalize_knowledge_name } from './utils'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -35,31 +36,7 @@ type ColDescription =
       max: string
     }
 
-/** A single JSON object row eligible for tabular import. */
-type JsonRow = Record<string, unknown>
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/**
- * Returns a non-empty, unique SQLite identifier for each input key.
- *
- * @param keys - Raw JSON object keys.
- * @returns SQLite-safe column names aligned with `keys`.
- */
-const build_unique_sql_identifiers = (keys: string[]): string[] => {
-  const seen = new Map<string, number>()
-
-  return keys.map((key) => {
-    const base_identifier = normalize_knowledge_name(key) || 'column'
-    const occurrence = seen.get(base_identifier) ?? 0
-    seen.set(base_identifier, occurrence + 1)
-
-    if (occurrence === 0) return base_identifier
-
-    const suffix = `_${occurrence + 1}`
-    return `${base_identifier}${suffix}`
-  })
-}
 
 /**
  * Checks whether a parsed JSON value is an object row suitable for tabular import.
@@ -259,7 +236,11 @@ const build_readme = (db: Database): string | null => {
  * @param config_id - Config directory name (e.g. `'default'`).
  * @param service - Service name (e.g. `'pierre-production'`).
  */
-const build_database_for_config = async (config_id: string, service: string): Promise<void> => {
+const build_database_for_config = async (
+  config_id: string,
+  service: string,
+  datastore_db: Database
+): Promise<void> => {
   const source_dir = `datastores/${service}/knowledge/${config_id}`
   const db_path = `datastores/${service}/knowledge/${config_id}/db.sqlite`
 
@@ -282,43 +263,13 @@ const build_database_for_config = async (config_id: string, service: string): Pr
       const rows = parsed_json.filter(is_json_row)
       if (rows.length === 0) continue
 
-      const all_keys = Array.from(new Set(rows.flatMap((row) => Object.keys(row))))
-      const keys = all_keys.filter((k) => !k.startsWith('__empty'))
-      if (keys.length === 0) continue
-
       const table_name = normalize_knowledge_name(basename(file_path, '.json')) || 'data'
-      const sanitized_keys = build_unique_sql_identifiers(keys)
 
-      // Infer SQLite column type: use INTEGER when every non-null value is a JS number.
-      // SQLite's loose type affinity stores decimals correctly even in INTEGER columns.
-      const col_types = keys.map((k) => {
-        const non_null = rows.map((r) => r[k]).filter((v) => v !== null && v !== undefined)
-        return non_null.length > 0 && non_null.every((v) => typeof v === 'number')
-          ? 'INTEGER'
-          : 'TEXT'
-      })
+      import_json_rows(db, table_name, rows)
 
-      const col_defs = sanitized_keys.map((k, i) => `"${k}" ${col_types[i]}`).join(', ')
-
-      db.run(`DROP TABLE IF EXISTS "${table_name}"`)
-      db.run(`CREATE TABLE "${table_name}" (${col_defs})`)
-
-      const placeholders = sanitized_keys.map(() => '?').join(', ')
-      const stmt = db.prepare(
-        `INSERT INTO "${table_name}" (${sanitized_keys.map((k) => `"${k}"`).join(', ')}) VALUES (${placeholders})`
-      )
-
-      db.transaction(() => {
-        for (const row of rows) {
-          const values = keys.map((k) => {
-            const v = row[k]
-            if (v === null || v === undefined) return null
-            if (typeof v === 'number') return v
-            return String(v)
-          })
-          stmt.run(...values)
-        }
-      })()
+      if (table_name === 'reclamations') {
+        import_json_rows(datastore_db, 'reclamations', rows)
+      }
     }
 
     // ── Markdown files → FTS5 documents table ───────────────────────────────────
@@ -417,7 +368,13 @@ export const build_knowledge_databases = async (): Promise<void> => {
     return
   }
 
-  await Promise.all(config_dirs.map((id) => build_database_for_config(id, service)))
+  const datastore_db = new Database(`datastores/${service}/datastore.sqlite`)
+
+  try {
+    await Promise.all(config_dirs.map((id) => build_database_for_config(id, service, datastore_db)))
+  } finally {
+    datastore_db.close()
+  }
 
   console.info('✅ All knowledge databases built')
 }

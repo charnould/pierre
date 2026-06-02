@@ -206,6 +206,67 @@ describe('build_knowledge_databases', () => {
     })
   })
 
+  describe('tickets dual-write to datastore.sqlite', () => {
+    const DATASTORE_PATH = `datastores/${TEST_SERVICE}/datastore.sqlite`
+
+    beforeEach(() => {
+      mkdirSync(`datastores/${TEST_SERVICE}`, { recursive: true })
+      new Database(DATASTORE_PATH).close()
+    })
+
+    it('mirrors tickets rows into datastore.sqlite', async () => {
+      await write_json('reclamations.json', [
+        {
+          id_reclamation: 'REQ-1',
+          id_locataire: 'LOC-A',
+          id_lot: 'LOT-1',
+          date_creation: '2025-01-10',
+          statut: 'ouvert'
+        },
+        {
+          id_reclamation: 'REQ-2',
+          id_locataire: 'LOC-B',
+          id_lot: 'LOT-2',
+          date_creation: '2025-02-15',
+          statut: 'clos'
+        }
+      ])
+
+      await build_knowledge_databases()
+
+      const knowledgeDb = open_db()
+      const knowledgeRows = knowledgeDb
+        .query('SELECT * FROM reclamations ORDER BY id_reclamation')
+        .all()
+      knowledgeDb.close()
+
+      const datastoreDb = new Database(DATASTORE_PATH)
+      const datastoreRows = datastoreDb
+        .query('SELECT * FROM reclamations ORDER BY id_reclamation')
+        .all()
+      datastoreDb.close()
+
+      expect(knowledgeRows).toHaveLength(2)
+      expect(datastoreRows).toEqual(knowledgeRows)
+    })
+
+    it('does not create tickets in datastore when building other tables', async () => {
+      await write_json('communes.json', [{ nom: 'Paris', code: '75056' }])
+
+      await build_knowledge_databases()
+
+      const datastoreDb = new Database(DATASTORE_PATH)
+      const tables = datastoreDb
+        .query<{ name: string }, []>(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='reclamations'"
+        )
+        .all()
+      datastoreDb.close()
+
+      expect(tables).toHaveLength(0)
+    })
+  })
+
   describe('Markdown files → FTS5 documents table', () => {
     it('inserts markdown files with correct filename and content', async () => {
       await write_md('guide.md', '# Guide\nContenu du guide.')

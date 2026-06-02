@@ -205,6 +205,10 @@ const unmerge_sheet_cells = (sheet: XLSX.WorkSheet): void => {
  * @param header_row_index - Zero-based row index of the column header row.
  * @returns JSON-serialized normalized rows.
  */
+/** Cache key for parsed source files shared across multiple access profiles. */
+export const content_cache_key = (metadata: Metadata): string =>
+  `${metadata.filepath}:${metadata.type}:${metadata.sheet}:${metadata.headers}`
+
 const process_xlsx_file = async (
   filepath: string,
   sheet_index: number,
@@ -266,11 +270,16 @@ const process_file = async (metadata: Metadata): Promise<FormattedContent> => {
  * @param content - Processed content including data and parser type.
  * @param url - Optional source URL to embed as frontmatter in Markdown files.
  */
-const save_formatted_file = async (
+export const save_formatted_file = async (
   output_path: string,
   content: FormattedContent,
   url?: string | null
 ): Promise<void> => {
+  if (content.parser === 'json') {
+    await Bun.write(output_path, content.data)
+    return
+  }
+
   const { code } = await format(`a.${content.parser}`, content.data)
   const final = url && content.parser === 'md' ? `---\nurl: ${url}\n---\n\n${code}` : code
   await Bun.write(output_path, final)
@@ -352,16 +361,31 @@ export const ingest_files = async (
 
   // Pass 3 — Process files with valid profile and existing on disk
   const sources_by_config = new Map<string, Record<string, string | null>>()
+  const parsed_by_source = new Map<string, FormattedContent>()
 
   for (const metadata of files) {
     if (!metadata.access || !valid_config_ids.has(metadata.access)) continue
     if (!(await Bun.file(metadata.filepath).exists())) continue
 
-    const content = await process_file(metadata)
+    const cache_key = content_cache_key(metadata)
+    let content = parsed_by_source.get(cache_key)
+    if (!content) {
+      const parse_start = performance.now()
+      content = await process_file(metadata)
+      parsed_by_source.set(cache_key, content)
+      const parse_seconds = ((performance.now() - parse_start) / 1000).toFixed(3)
+      console.info(`📄 Parsed ${metadata.filename} in ${parse_seconds}s`)
+    }
+
     const normalized_name = normalize_knowledge_name(metadata.agent_filename)
     const output_path = `./datastores/${Bun.env['SERVICE']}/knowledge/${metadata.access}/${normalized_name}.${content.parser}`
 
+    const write_start = performance.now()
     await save_formatted_file(output_path, content, metadata.url)
+    const write_seconds = ((performance.now() - write_start) / 1000).toFixed(3)
+    console.info(
+      `💾 Wrote ${normalized_name}.${content.parser} → ${metadata.access} in ${write_seconds}s`
+    )
 
     // Track all JSON files (with or without URL) for the _sources table
     if (content.parser === 'json') {
