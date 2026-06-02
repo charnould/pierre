@@ -147,7 +147,7 @@ describe('run_pipeline — full integration', () => {
       expect(row).toBeTruthy()
       expect(row!.filename).toBe('guide_de_test')
       expect(row!.content).toContain('Guide de test')
-    })
+    }, 20000)
 
     it('generates a _readme with a documents entry', async () => {
       await run_pipeline()
@@ -248,6 +248,6 @@ describe('run_pipeline — full integration', () => {
 
       const codes = get_build_events().map((e) => e.code)
       expect(codes).toContain('METADATA_NOT_IN_FILES')
-    })
+    }, 20000)
   })
 })

@@ -1,11 +1,20 @@
-import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
+import { afterAll, beforeAll, describe, expect, it, spyOn } from 'bun:test'
+import * as fs from 'node:fs'
+import { mkdir, rm } from 'node:fs/promises'
+
+import * as oxfmt from 'oxfmt'
+import * as XLSX from 'xlsx'
 
 import type { Metadata } from '../../../utils/knowledge/generate-metadata'
 import {
+  content_cache_key,
   ingest_files,
   normalize_sheet_value,
-  parse_numeric_string
+  parse_numeric_string,
+  save_formatted_file
 } from '../../../utils/knowledge/ingest-files'
+
+XLSX.set_fs(fs)
 
 describe('parse_numeric_string', () => {
   it('parses european format with space thousands separator', () => {
@@ -236,5 +245,105 @@ describe('ingest_files', () => {
         .map((a) => a.subject)
       expect(profiles).not.toContain('testing_purpose_1')
     })
+  })
+})
+
+describe('content_cache_key', () => {
+  it('combines filepath, type, sheet and headers', () => {
+    const metadata: Metadata = {
+      filename: 'reclamations.xlsx',
+      agent_filename: 'Réclamations',
+      filepath: '/data/reclamations.xlsx',
+      type: 'xlsx',
+      sheet: 1,
+      headers: 2,
+      access: 'default',
+      last_modified: '2024-01-01T00:00:00+00:00'
+    }
+    expect(content_cache_key(metadata)).toBe('/data/reclamations.xlsx:xlsx:1:2')
+  })
+})
+
+describe('save_formatted_file', () => {
+  it('writes JSON directly without calling oxfmt', async () => {
+    const output_path = `${FILES_DIR}/_test_save_json.json`
+    const format_spy = spyOn(oxfmt, 'format')
+
+    try {
+      await save_formatted_file(output_path, { data: '[{"a":1}]', parser: 'json' })
+      expect(format_spy).not.toHaveBeenCalled()
+      expect(await Bun.file(output_path).text()).toBe('[{"a":1}]')
+    } finally {
+      format_spy.mockRestore()
+      await Bun.file(output_path)
+        .delete()
+        .catch(() => {})
+    }
+  })
+})
+
+describe('ingest_files parse cache', () => {
+  const CACHE_XLSX = `${FILES_DIR}/_test_cache_shared.xlsx`
+  const KNOWLEDGE_ROOT = `datastores/${SERVICE}/knowledge`
+
+  beforeAll(async () => {
+    const sheet = XLSX.utils.aoa_to_sheet([
+      ['id', 'valeur'],
+      ['A1', 1],
+      ['A2', 2]
+    ])
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, sheet, 'Feuille1')
+    XLSX.writeFile(wb, CACHE_XLSX)
+
+    await mkdir(`${KNOWLEDGE_ROOT}/testing_purpose_1`, { recursive: true })
+    await mkdir(`${KNOWLEDGE_ROOT}/default`, { recursive: true })
+  })
+
+  afterAll(async () => {
+    await Bun.file(CACHE_XLSX)
+      .delete()
+      .catch(() => {})
+    await rm(`${KNOWLEDGE_ROOT}/testing_purpose_1/donnees_cache_test.json`, { force: true }).catch(
+      () => {}
+    )
+    await rm(`${KNOWLEDGE_ROOT}/default/donnees_cache_test.json`, { force: true }).catch(() => {})
+  })
+
+  it('writes the same parsed xlsx to multiple profiles without re-parsing', async () => {
+    const base: Omit<Metadata, 'access'> = {
+      filename: '_test_cache_shared.xlsx',
+      agent_filename: 'Données cache test',
+      filepath: CACHE_XLSX,
+      type: 'xlsx',
+      sheet: 0,
+      headers: 0,
+      last_modified: '2024-01-01T00:00:00+00:00'
+    }
+
+    const parse_logs: string[] = []
+    const original_info = console.info
+    console.info = (...args: unknown[]) => {
+      const line = args.map(String).join(' ')
+      if (line.includes('Parsed _test_cache_shared.xlsx')) parse_logs.push(line)
+      original_info(...args)
+    }
+
+    try {
+      await ingest_files([
+        { ...base, access: 'testing_purpose_1' },
+        { ...base, access: 'default' }
+      ])
+
+      expect(parse_logs).toHaveLength(1)
+
+      const path_a = `${KNOWLEDGE_ROOT}/testing_purpose_1/donnees_cache_test.json`
+      const path_b = `${KNOWLEDGE_ROOT}/default/donnees_cache_test.json`
+      expect(await Bun.file(path_a).exists()).toBe(true)
+      expect(await Bun.file(path_b).exists()).toBe(true)
+      expect(await Bun.file(path_a).text()).toBe(await Bun.file(path_b).text())
+    } finally {
+      console.info = original_info
+    }
   })
 })

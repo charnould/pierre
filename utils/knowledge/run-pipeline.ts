@@ -93,9 +93,13 @@ export const run_pipeline = async (): Promise<void> => {
 
     // Always setup knowledge directories and copy community data,
     // even when _metadata.xlsx is missing
+    let step_start = performance.now()
     await setup_knowledge_directories()
+    console.info(`⏱ setup: ${((performance.now() - step_start) / 1000).toFixed(3)}s`)
 
+    step_start = performance.now()
     const { files, anomalies: meta_anomalies } = await generate_metadata()
+    console.info(`⏱ metadata: ${((performance.now() - step_start) / 1000).toFixed(3)}s`)
     const metadata_missing = meta_anomalies.some((a) => a.code === 'METADATA_MISSING')
 
     for (const a of meta_anomalies) {
@@ -109,7 +113,9 @@ export const run_pipeline = async (): Promise<void> => {
 
     if (!metadata_missing) {
       try {
+        step_start = performance.now()
         const { anomalies: ingest_anomalies } = await ingest_files(files)
+        console.info(`⏱ ingest: ${((performance.now() - step_start) / 1000).toFixed(3)}s`)
         for (const a of ingest_anomalies) {
           const kind =
             a.code === 'PROFILE_MISSING_IN_ASSETS'
@@ -134,7 +140,9 @@ export const run_pipeline = async (): Promise<void> => {
     // at minimum community knowledge is indexed.
     // Placed after a self-contained ingest try/catch so it always runs,
     // even when ingest_files throws (e.g. corrupt file).
+    step_start = performance.now()
     await build_knowledge_databases()
+    console.info(`⏱ build: ${((performance.now() - step_start) / 1000).toFixed(3)}s`)
 
     const duration_seconds = ((performance.now() - start_time) / 1000).toFixed(3)
     console.info(`✅ Pipeline completed in ${duration_seconds}s`)
