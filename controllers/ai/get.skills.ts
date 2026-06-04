@@ -4,7 +4,7 @@ import { resolve, join } from 'node:path'
 
 import type { Context } from 'hono'
 
-const PROJECT_ROOT = resolve(import.meta.dir, '..')
+const PROJECT_ROOT = resolve(import.meta.dir, '../..')
 
 /**
  * GET /ai/skills
@@ -27,7 +27,7 @@ export const controller = async (c: Context) => {
       const configPath = join(skillsDir, folder, 'config.ts')
       if (!existsSync(configPath)) continue
       try {
-        const mod = await import(`../customization/skills/${folder}/config`)
+        const mod = await import(`../../customization/skills/${folder}/config`)
         const cfg = mod.default as {
           id: string
           display: string
@@ -45,7 +45,7 @@ export const controller = async (c: Context) => {
 
     return c.json(skills)
   } catch (e) {
-    console.error('[GET.AI.SKILLS] Error:', e)
+    console.error('[get.ai.skills] Error:', e)
     return c.json([], 500)
   }
 }

@@ -46,5 +46,26 @@ export const setup = async () => {
         code        TEXT,
         subject     TEXT
       );
+
+    CREATE TABLE IF NOT EXISTS reclamation_drafts
+      (
+        id_reclamation              TEXT NOT NULL,
+        id_skill                    TEXT NOT NULL,
+        channel                     TEXT,
+        generated_output            TEXT,
+        generated_reasoning         TEXT,
+        generated_duration_ms       INTEGER,
+        generated_at                TEXT NOT NULL,
+        generated_by                TEXT NOT NULL,
+        automation_id               TEXT,
+        edited_output               TEXT,
+        edited_at                   TEXT,
+        edited_by                   TEXT,
+        feedback_rating             INTEGER,
+        feedback_comment            TEXT,
+        feedback_at                 TEXT,
+        feedback_by                 TEXT,
+        UNIQUE(id_reclamation, id_skill)
+      );
     `)
 }

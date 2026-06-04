@@ -4,7 +4,7 @@ import type { Context } from 'hono'
 import _ from 'lodash'
 import { z } from 'zod'
 
-import { view } from '../views/admin.statistics'
+import { view } from '../../../views/admin.statistics'
 
 let _sql: SQL | undefined
 const getSQL = () => (_sql ??= new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`))

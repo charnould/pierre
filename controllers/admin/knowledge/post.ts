@@ -2,8 +2,8 @@ import { Database } from 'bun:sqlite'
 
 import type { Context } from 'hono'
 
-import { run_pipeline } from '../utils/knowledge/run-pipeline'
-import { normalize_knowledge_name } from '../utils/knowledge/utils'
+import { run_pipeline } from '../../../utils/knowledge/run-pipeline'
+import { normalize_knowledge_name } from '../../../utils/knowledge/utils'
 
 /**
  * Handles POST requests for knowledge management operations.

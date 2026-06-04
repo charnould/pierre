@@ -1,6 +1,6 @@
 import { html } from 'hono/html'
 
-import type { KnowledgeBuildRow, Metadata } from '../controllers/GET.knowledge'
+import type { KnowledgeBuildRow, Metadata } from '../controllers/a/knowledge/get'
 
 const KIND_LABEL: Record<string, string> = {
   error: 'Erreur',

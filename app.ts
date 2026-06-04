@@ -3,22 +3,27 @@ import { serveStatic } from 'hono/bun'
 import { cors } from 'hono/cors'
 import { secureHeaders } from 'hono/secure-headers'
 
-import { controller as get_admin } from './controllers/GET.admin'
-import { controller as get_ai } from './controllers/GET.ai'
-import { controller as get_ai_boot } from './controllers/GET.ai.boot'
-import { controller as get_ai_skills } from './controllers/GET.ai.skills'
-import { controller as get_conversations } from './controllers/GET.conversations'
-import { controller as get_index } from './controllers/GET.index'
-import { controller as get_knowledge } from './controllers/GET.knowledge'
-import { controller as get_login } from './controllers/GET.login'
-import { controller as get_statistics } from './controllers/GET.statistics'
-import { controller as get_users } from './controllers/GET.users'
-import { controller as post_ai_answer } from './controllers/POST.ai.answer'
-import { controller as post_conversation } from './controllers/POST.conversations'
-import { controller as post_knowledge } from './controllers/POST.knowledge'
-import { controller as post_login } from './controllers/POST.login'
-import { controller as post_telemetry } from './controllers/POST.telemetry'
-import { controller as post_users } from './controllers/POST.users'
+import { controller as get_admin_login } from './controllers/admin/auth/get.login'
+import { controller as post_admin_login } from './controllers/admin/auth/post.login'
+import { controller as get_admin_conversations } from './controllers/admin/conversations/get'
+import { controller as post_admin_conversations } from './controllers/admin/conversations/post'
+import { controller as get_admin_dashboard } from './controllers/admin/get.dashboard'
+import { controller as get_admin_knowledge } from './controllers/admin/knowledge/get'
+import { controller as post_admin_knowledge } from './controllers/admin/knowledge/post'
+import { controller as get_admin_statistics } from './controllers/admin/statistics/get'
+import { controller as get_admin_users } from './controllers/admin/users/get'
+import { controller as post_admin_users } from './controllers/admin/users/post'
+import { controller as get_ai } from './controllers/ai/get'
+import { controller as get_ai_boot } from './controllers/ai/get.boot'
+import { controller as get_ai_skills } from './controllers/ai/get.skills'
+import { controller as post_ai_answer } from './controllers/ai/post.answer'
+import { controller as get_index } from './controllers/chat/get'
+import { controller as get_desktop_tickets } from './controllers/desktop/tickets/get'
+import { controller as get_desktop_tickets_drafts } from './controllers/desktop/tickets/get.draft'
+import { controller as get_desktop_tickets_facets } from './controllers/desktop/tickets/get.facets'
+import { controller as put_desktop_tickets } from './controllers/desktop/tickets/put'
+import { controller as put_desktop_tickets_drafts } from './controllers/desktop/tickets/put.draft'
+import { controller as post_telemetry } from './controllers/telemetry/post'
 import desktop_config from './customization/desktop/config.ts'
 // import { topicize, score } from "./utils/analyze-conversation";
 import { authenticate } from './utils/authenticate-user'
@@ -76,20 +81,25 @@ app.get('/c', authenticate, get_index)
 app.get('/ai', authenticate, get_ai)
 app.get('/ai/boot', authenticate, get_ai_boot)
 app.get('/ai/skills', authenticate, get_ai_skills)
+app.get('/desktop/tickets/facets', authenticate, get_desktop_tickets_facets)
+app.get('/desktop/tickets/drafts', authenticate, get_desktop_tickets_drafts)
+app.put('/desktop/tickets/drafts', authenticate, put_desktop_tickets_drafts)
+app.put('/desktop/tickets', authenticate, put_desktop_tickets)
+app.get('/desktop/tickets', authenticate, get_desktop_tickets)
 app.post('/ai/answer', authenticate, post_ai_answer)
 
 // Admin routes
-app.get('/a/login', get_login)
-app.get('/a', authenticate, get_admin)
-app.get('/a/users', authenticate, get_users)
-app.get('/a/knowledge', authenticate, get_knowledge)
-app.get('/a/statistics', authenticate, get_statistics)
-app.get('/a/conversations', authenticate, get_conversations)
+app.get('/a/login', get_admin_login)
+app.get('/a', authenticate, get_admin_dashboard)
+app.get('/a/users', authenticate, get_admin_users)
+app.get('/a/knowledge', authenticate, get_admin_knowledge)
+app.get('/a/statistics', authenticate, get_admin_statistics)
+app.get('/a/conversations', authenticate, get_admin_conversations)
 
-app.post('/a/login', post_login)
-app.post('/a/users', authenticate, post_users)
-app.post('/a/knowledge', authenticate, post_knowledge)
-app.post('/a/conversations', authenticate, post_conversation)
+app.post('/a/login', post_admin_login)
+app.post('/a/users', authenticate, post_admin_users)
+app.post('/a/knowledge', authenticate, post_admin_knowledge)
+app.post('/a/conversations', authenticate, post_admin_conversations)
 
 // Health check route for Kamal proxy + Telemetry endpoint
 app.get('/up', (c) => c.text('ok'))

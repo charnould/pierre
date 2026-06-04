@@ -1,9 +1,9 @@
 import type { Context } from 'hono'
 import { stream } from 'hono/streaming'
 
-import { AIContext } from '../utils/_schema'
-import { save_reply } from '../utils/handle-conversation'
-import { streamChatAnswer } from '../utils/stream-chat'
+import { AIContext } from '../../utils/_schema'
+import { save_reply } from '../../utils/handle-conversation'
+import { streamChatAnswer } from '../../utils/stream-chat'
 
 /**
  * Controller for NDJSON streaming with Copilot SDK.
@@ -20,7 +20,7 @@ export const controller = async (c: Context) => {
       dataQuery === undefined || dataQuery === 'undefined' ? [''] : dataQuery.split('|')
 
     const context = await AIContext.parseAsync({
-      config: (await import(`../customization/chatbot/${c.req.query('config')}/config`)).default,
+      config: (await import(`../../customization/chatbot/${c.req.query('config')}/config`)).default,
       custom_data: { raw: customRaw },
       metadata: { user: c.get('user')?.email ?? null },
       content: c.req.query('message'),

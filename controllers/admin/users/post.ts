@@ -1,8 +1,8 @@
 import type { Context } from 'hono'
 import * as XLSX from 'xlsx'
 
-import { User } from '../utils/_schema'
-import { delete_all_users, save_user } from '../utils/handle-user'
+import { User } from '../../../utils/_schema'
+import { delete_all_users, save_user } from '../../../utils/handle-user'
 
 /**
  * Handles the POST request to upload and process a list of users from an Excel file.

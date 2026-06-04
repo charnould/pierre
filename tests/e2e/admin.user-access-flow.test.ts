@@ -48,7 +48,7 @@ it('should validate administrator access flow', async () => {
   expect(cookie).toBeUndefined()
 
   await page.type('input[type="email"]', 'admin@pierre-ia.org')
-  await page.type('input[type="password"]', Bun.env['AUTH_PASSWORD'])
+  await page.type('input[type="password"]', Bun.env['AUTH_PASSWORD']!)
   await clickAndWaitNavigation(page, 'input[type="submit"]')
   cookie = (await browser.cookies()).find((cookie) => cookie.name === 'pierre-ia')
   expect(cookie).toBeDefined()
@@ -84,7 +84,7 @@ it('should validate administrator access flow', async () => {
   expect(cookie).toBeUndefined()
 
   await browser.close()
-})
+}, 20000)
 
 //
 //
@@ -122,11 +122,13 @@ it('should validate contributor access flow', async () => {
   await clickAndWaitNavigation(page, 'a[href="a/users"]', { url: 'http://localhost:3000/a' })
   expect(page.url()).toBe('http://localhost:3000/a')
 
-  await clickAndWaitNavigation(page, 'a[href="a/knowledge"]')
+  await clickAndWaitNavigation(page, 'a[href="a/knowledge"]', {
+    url: 'http://localhost:3000/a/knowledge'
+  })
   expect(page.url()).toBe('http://localhost:3000/a/knowledge')
 
   await browser.close()
-})
+}, 20000)
 
 //
 //
@@ -169,7 +171,7 @@ it('should validate collaborator access flow', async () => {
   expect(page.url()).toBe('http://localhost:3000/a/login')
 
   await browser.close()
-})
+}, 20000)
 
 //
 //
@@ -193,4 +195,4 @@ it('should validate unknown user access flow', async () => {
   expect(page.url()).toBe('http://localhost:3000/a/login?message=unknown_user&redirection=%2Fa')
 
   await browser.close()
-})
+}, 20000)

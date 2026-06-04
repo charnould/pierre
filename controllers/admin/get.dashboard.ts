@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'fs'
 
 import type { Context } from 'hono'
 
-import { view } from '../views/admin.index'
+import { view } from '../../views/admin.index'
 
 export const controller = async (c: Context) => {
   let desktop_version: string | null = null

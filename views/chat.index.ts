@@ -1,6 +1,6 @@
 import { html, raw } from 'hono/html'
 
-import type { Displayable_configs } from '../controllers/GET.index'
+import type { Displayable_configs } from '../controllers/chat/get'
 import type { Config } from '../utils/_schema'
 import { buildChatBootData } from '../utils/chat-boot'
 

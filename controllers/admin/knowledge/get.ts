@@ -3,7 +3,7 @@ import { readdir } from 'node:fs/promises'
 
 import type { Context } from 'hono'
 
-import { view } from '../views/admin.knowledge'
+import { view } from '../../../views/admin.knowledge'
 
 export const controller = async (c: Context) => {
   try {

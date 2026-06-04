@@ -18,6 +18,7 @@ import { resolve, join } from 'node:path'
 
 import { today_is } from './today-is'
 import { acquireVm, hasVm, releaseVm } from './vm-registry'
+import type { WorkflowPayload } from './workflow-payload'
 
 // Stable project root anchored to this file's location (utils/ → ../)
 const PROJECT_ROOT = resolve(import.meta.dir, '..')
@@ -49,7 +50,7 @@ const knowledgePathOnHost = (configId: string): string => {
  * Pi reads this file from its working directory (`/knowledge`) at startup.
  * Content: current date + AGENTS.md sections + SQLite schema.
  */
-async function buildAgentsFile(configId: string): Promise<void> {
+async function buildAgentsFile(configId: string, workflowPayload?: WorkflowPayload): Promise<void> {
   const knowledgePath = knowledgePathOnHost(configId)
   const skillDir = join(PROJECT_ROOT, 'customization', 'skills', configId)
   const isSkill = existsSync(skillDir)
@@ -78,6 +79,15 @@ async function buildAgentsFile(configId: string): Promise<void> {
       } catch (err) {
         console.warn('[AGENT] Could not read db schema:', err)
       }
+    }
+
+    if (workflowPayload && raw.includes('<!-- WORKFLOW_PAYLOAD_HERE -->')) {
+      const compact = Object.fromEntries(
+        Object.entries(workflowPayload as Record<string, unknown>).filter(
+          ([, v]) => v !== null && v !== undefined && v !== ''
+        )
+      )
+      raw = raw.replace('<!-- WORKFLOW_PAYLOAD_HERE -->', JSON.stringify(compact, null, 2))
     }
 
     if (raw) parts.push(raw)
@@ -165,7 +175,8 @@ export async function* streamCopilot(
   model = Bun.env['AI_MODEL'],
   signal?: AbortSignal,
   _attachments?: Array<{ type: 'file'; path: string }>,
-  reasoningEffort: 'low' | 'medium' | 'high' = 'medium'
+  reasoningEffort: 'low' | 'medium' | 'high' = 'medium',
+  options?: { workflowPayload?: WorkflowPayload }
 ): AsyncGenerator<CopilotChunk> {
   const t0 = Date.now()
   console.log(`\n${'='.repeat(60)}`)
@@ -193,7 +204,7 @@ export async function* streamCopilot(
     console.log(`[AGENT] Step 1/2 — Getting VM...`)
     const t1 = Date.now()
     // Refresh AGENTS.md with the current date/time before creating a new VM
-    if (!hasVm(convId)) await buildAgentsFile(configId)
+    if (!hasVm(convId)) await buildAgentsFile(configId, options?.workflowPayload)
     const { piClient } = await acquireVm(convId, configId)
     console.log(`[AGENT] Step 1/2 — VM ready (${Date.now() - t1}ms)`)
 
