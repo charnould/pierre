@@ -1,6 +1,6 @@
 import { randomUUIDv7 } from 'bun'
 
-import type { Displayable_configs } from '../controllers/GET.index'
+import type { Displayable_configs } from '../controllers/chat/get'
 import type { Config } from './_schema'
 
 export type ChatBootData = {

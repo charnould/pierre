@@ -1,7 +1,7 @@
 import type { Context } from 'hono'
 
-import { get_users } from '../utils/handle-user'
-import { view } from '../views/admin.users'
+import { get_users } from '../../../utils/handle-user'
+import { view } from '../../../views/admin.users'
 
 /**
  * Handles the GET request to retrieve and display a list of users.

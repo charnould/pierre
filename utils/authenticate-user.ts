@@ -18,7 +18,7 @@ export const authenticate = async (c: Context, next: Next) => {
   // This allows programmatic uploads without using the web interface.
   if (c.req.header('authorization-context') === 'cli' && c.req.path === '/a/knowledge') {
     return await bearerAuth({
-      token: Bun.env.AUTH_BEARER!
+      token: Bun.env['AUTH_BEARER']!
     })(c, next)
   }
 
@@ -28,13 +28,15 @@ export const authenticate = async (c: Context, next: Next) => {
 
   let user: Parsed_User | null = null // TODO modifiy to undefined
 
-  const cookie = await getSignedCookie(c, Bun.env.AUTH_SECRET as string, 'pierre-ia')
+  const cookie = await getSignedCookie(c, Bun.env['AUTH_SECRET'] as string, 'pierre-ia')
 
   if (cookie) {
-    user = JSON.parse(decrypt(cookie, Bun.env.AUTH_SECRET as string)) as Parsed_User
-    const user_exists = (await get_user(user.email)) !== undefined
-    if (user_exists) can_access_protected_context = true
-    else user = null
+    const cookie_user = JSON.parse(decrypt(cookie, Bun.env['AUTH_SECRET'] as string)) as Parsed_User
+    const db_user = await get_user(cookie_user.email)
+    if (db_user) {
+      user = db_user
+      can_access_protected_context = true
+    }
   }
 
   // Check if a valid `config` query is provided in the request. If provided,
@@ -135,11 +137,24 @@ export const authenticate = async (c: Context, next: Next) => {
 
   //
   //
+  // Case B2: Desktop request
+  // Desktop-only API routes require an authenticated session cookie.
+  //
+  if (c.req.path.startsWith('/desktop/')) {
+    if (user === null) {
+      return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
+    }
+    c.set('user', user)
+    return await next()
+  }
+
+  //
+  //
   // Case C: Admin request
   // This block handles requests where the path starts with '/a/',
   // indicating that the request is intended for admin routes.
   //
-  if (c.req.path.startsWith('/a')) {
+  if (c.req.path === '/a' || c.req.path.startsWith('/a/')) {
     // If the `user` variable is `undefined`,
     // redirect the client to the login page.
     if (user === null) return c.redirect('/a/login')

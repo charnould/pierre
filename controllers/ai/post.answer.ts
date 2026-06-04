@@ -4,18 +4,18 @@ import { join, resolve } from 'node:path'
 import type { Context } from 'hono'
 import { stream } from 'hono/streaming'
 
-import { convertToImage } from '../utils/convert-to-image'
-import { streamCopilot } from '../utils/copilot-agent'
-import { copilotChunkToNdjson, ndjsonLine } from '../utils/stream-to-ndjson'
-import { resolveAnswerPrompt } from '../utils/workflow-payload'
+import { convertToImage } from '../../utils/convert-to-image'
+import { streamCopilot } from '../../utils/copilot-agent'
+import { copilotChunkToNdjson, ndjsonLine } from '../../utils/stream-to-ndjson'
+import { parseWorkflowPayload, WORKFLOW_USER_PROMPT } from '../../utils/workflow-payload'
 
-const PROJECT_ROOT = resolve(import.meta.dir, '..')
+const PROJECT_ROOT = resolve(import.meta.dir, '../..')
 
 async function loadSkillReasoningDisplay(skillId: string): Promise<'off' | 'partial' | 'full'> {
   const skillsDir = join(PROJECT_ROOT, 'customization', 'skills')
   if (!existsSync(join(skillsDir, skillId, 'config.ts'))) return 'off'
   try {
-    const mod = await import(`../customization/skills/${skillId}/config`)
+    const mod = await import(`../../customization/skills/${skillId}/config`)
     const display = mod.default?.reasoning_display
     if (display === 'partial' || display === 'full') return display
     return 'off'
@@ -27,7 +27,7 @@ async function loadSkillReasoningDisplay(skillId: string): Promise<'off' | 'part
 /**
  * POST /ai/answer
  *
- * Multipart: conv_id, message, context, skill, payload (optional JSON), files (optional).
+ * Multipart: conv_id, id_skill, payload (JSON), files (optional).
  * Streams canonical NDJSON: delta, reasoning_delta, reset, done, error.
  */
 export const controller = async (c: Context) => {
@@ -36,16 +36,15 @@ export const controller = async (c: Context) => {
   try {
     const formData = await c.req.formData()
     const conv_id = (formData.get('conv_id') as string | null) ?? Bun.randomUUIDv7()
-    const skill = (formData.get('skill') as string | null) ?? 'answer'
-    const message = (formData.get('message') as string | null) ?? ''
-    const context = (formData.get('context') as string | null) ?? ''
-    const payload = (formData.get('payload') as string | null) ?? ''
+    const skill = (formData.get('id_skill') as string | null) ?? 'answer'
+    const payloadRaw = (formData.get('payload') as string | null) ?? ''
 
-    const prompt = resolveAnswerPrompt(payload, message, context)
-
-    if (!prompt.trim()) {
-      return c.json({ error: 'Empty prompt' }, 400)
+    const workflowPayload = parseWorkflowPayload(payloadRaw)
+    if (!workflowPayload) {
+      return c.json({ error: 'Invalid payload' }, 400)
     }
+
+    const prompt = WORKFLOW_USER_PROMPT
 
     const reasoningDisplay = await loadSkillReasoningDisplay(skill)
 
@@ -86,7 +85,9 @@ export const controller = async (c: Context) => {
             prompt,
             undefined,
             ac.signal,
-            attachments
+            attachments,
+            'medium',
+            { workflowPayload }
           )) {
             for (const event of copilotChunkToNdjson(chunk, reasoningDisplay, formatState)) {
               await s.write(ndjsonLine(event))
@@ -99,7 +100,7 @@ export const controller = async (c: Context) => {
         }
       },
       async (e, s) => {
-        console.error('[POST.AI.ANSWER] Stream error:', e)
+        console.error('[post.ai.answer] Stream error:', e)
         try {
           rmSync(tempDir, { recursive: true, force: true })
         } catch {}
@@ -107,7 +108,7 @@ export const controller = async (c: Context) => {
       }
     )
   } catch (e) {
-    console.error('[POST.AI.ANSWER] Error:', e)
+    console.error('[post.ai.answer] Error:', e)
     try {
       rmSync(tempDir, { recursive: true, force: true })
     } catch {}

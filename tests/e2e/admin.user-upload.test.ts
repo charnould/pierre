@@ -15,7 +15,7 @@ it('should upload user file successfully', async () => {
   // Login and navigate to `knowledge`
   await page.goto('http://localhost:3000/a/login')
   await page.type('input[type="email"]', 'admin@pierre-ia.org')
-  await page.type('input[type="password"]', Bun.env['AUTH_PASSWORD'])
+  await page.type('input[type="password"]', Bun.env['AUTH_PASSWORD']!)
   await Promise.all([page.click('input[type="submit"]'), page.waitForNavigation()])
   expect(page.url()).toBe('http://localhost:3000/a')
   await Promise.all([page.click('a[href="a/users"]'), page.waitForNavigation()])
@@ -29,7 +29,7 @@ it('should upload user file successfully', async () => {
 
   // Login and navigate to `knowledge`
   await page.type('input[type="email"]', 'admin@pierre-ia.org')
-  await page.type('input[type="password"]', Bun.env['AUTH_PASSWORD'])
+  await page.type('input[type="password"]', Bun.env['AUTH_PASSWORD']!)
   await Promise.all([page.click('input[type="submit"]'), page.waitForNavigation()])
   expect(page.url()).toBe('http://localhost:3000/a')
   await Promise.all([page.click('a[href="a/users"]'), page.waitForNavigation()])
@@ -47,7 +47,7 @@ it('should upload user file successfully', async () => {
 
   // Login and navigate to `knowledge`
   await page.type('input[type="email"]', 'admin@pierre-ia.org')
-  await page.type('input[type="password"]', Bun.env['AUTH_PASSWORD'])
+  await page.type('input[type="password"]', Bun.env['AUTH_PASSWORD']!)
   await Promise.all([page.click('input[type="submit"]'), page.waitForNavigation()])
   expect(page.url()).toBe('http://localhost:3000/a')
   await Promise.all([page.click('a[href="a/users"]'), page.waitForNavigation()])

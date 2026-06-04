@@ -3,8 +3,8 @@ import { readdir } from 'node:fs/promises'
 import type { Context } from 'hono'
 import { z } from 'zod'
 
-import type { Config, Parsed_User } from '../utils/_schema'
-import { view } from '../views/chat.index'
+import type { Config, Parsed_User } from '../../utils/_schema'
+import { view } from '../../views/chat.index'
 
 /**
  * Handles the GET request for the index route.
@@ -22,7 +22,7 @@ export const controller = async (c: Context) => {
   try {
     const user = c.get('user') as Parsed_User | null
     const config = c.req.query('config') as string
-    const active_config = (await import(`../customization/chatbot/${config}/config`))
+    const active_config = (await import(`../../customization/chatbot/${config}/config`))
       .default as Config
     const displayable_configs = await get_displayable_configs({
       user,
@@ -66,12 +66,13 @@ export const get_displayable_configs = async (params: {
     const assets = await readdir('customization/chatbot')
     const configs = await Promise.all(
       assets.map(async (file) => {
-        const config: Config = (await import(`../customization/chatbot/${file}/config`)).default
-        const should_be_displayed = params.active_config.show.includes(config.id)
+        const config: Config = (await import(`../../customization/chatbot/${file}/config`)).default
+        const should_be_displayed =
+          params.user != null
+            ? params.user.config.includes(config.id)
+            : params.active_config.show.includes(config.id)
         const user_is_authorized =
-          params.user?.role === 'administrator' ||
-          !params.user?.config ||
-          params.user?.config.includes(config.id)
+          params.user != null ? params.user.config.includes(config.id) : true
         const is_active = file === params.active_config.id
 
         return {

@@ -1,27 +1,34 @@
 import type { Context } from 'hono'
 
-import type { Config, Parsed_User } from '../utils/_schema'
-import { buildChatBootData } from '../utils/chat-boot'
-import { get_displayable_configs } from './GET.index'
+import type { Config, Parsed_User } from '../../utils/_schema'
+import { buildChatBootData } from '../../utils/chat-boot'
+import { get_displayable_configs } from '../chat/get'
 
 async function resolveActiveConfig(c: Context): Promise<Config> {
   const user = c.get('user') as Parsed_User | null
   const queryConfig = c.req.query('config')
 
   if (queryConfig === undefined) {
-    return (await import('../customization/chatbot/default/config')).default
+    if (user?.config?.length) {
+      try {
+        return (await import(`../../customization/chatbot/${user.config[0]}/config`)).default
+      } catch {
+        return (await import('../../customization/chatbot/default/config')).default
+      }
+    }
+    return (await import('../../customization/chatbot/default/config')).default
   }
 
   try {
     if (user !== null && user !== undefined) {
       if (user.config.includes(queryConfig)) {
-        return (await import(`../customization/chatbot/${queryConfig}/config`)).default
+        return (await import(`../../customization/chatbot/${queryConfig}/config`)).default
       }
-      return (await import(`../customization/chatbot/${user.config[0]}/config`)).default
+      return (await import(`../../customization/chatbot/${user.config[0]}/config`)).default
     }
-    return (await import(`../customization/chatbot/${queryConfig}/config`)).default
+    return (await import(`../../customization/chatbot/${queryConfig}/config`)).default
   } catch {
-    return (await import('../customization/chatbot/default/config')).default
+    return (await import('../../customization/chatbot/default/config')).default
   }
 }
 
@@ -41,7 +48,7 @@ export const controller = async (c: Context) => {
 
     return c.json(buildChatBootData(active_config, displayable_configs, dataParam))
   } catch (error) {
-    console.error('[GET.ai.boot] Error:', error)
+    console.error('[get.ai.boot] Error:', error)
     return c.json({ error: 'Internal Server Error' }, 500)
   }
 }

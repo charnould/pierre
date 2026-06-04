@@ -22,7 +22,7 @@ it('should upload knowledge files successfully', async () => {
 
   // Login
   await page.type('input[type="email"]', 'admin@pierre-ia.org')
-  await page.type('input[type="password"]', Bun.env['AUTH_PASSWORD'])
+  await page.type('input[type="password"]', Bun.env['AUTH_PASSWORD']!)
   await Promise.all([page.click('input[type="submit"]'), page.waitForNavigation()])
   expect(page.url()).toBe('http://localhost:3000/a')
 
@@ -63,7 +63,7 @@ it('should upload knowledge files successfully', async () => {
   buttons = await page.$$eval('button[name="filename"]', (b) => b.length)
   expect(buttons).toBe(4)
 
-  // Return to hompage
+  // Return to homepage
   await Promise.all([page.click('a[href="/a"]'), page.waitForNavigation()])
   expect(page.url()).toBe('http://localhost:3000/a')
 
