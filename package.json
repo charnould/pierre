@@ -23,6 +23,7 @@
     "format": "bun run oxfmt -c ./config/oxfmt.jsonc",
     "generate:wikipedia": "bun --env-file=.env.production run ./utils/knowledge/scrape-wikipedia.ts",
     "generate:knowledge": "bun --env-file=.env.production run ./utils/knowledge/build-knowledge.ts",
+    "generate:updates": "bun run config/build:updates.ts",
     "transpile": "bun build --entrypoints assets/scripts/ai.tsx assets/scripts/widget.ts --outdir assets/dist/js --minify --target browser --watch",
     "pierre:config": "bun test check-config",
     "pierre:version": "bun run utils/update-pierre.ts",
