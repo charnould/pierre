@@ -1,14 +1,14 @@
 [
   {
-    "slug": "2026-06-13-test",
-    "title": "A test",
-    "date": "2026-06-13",
-    "audience": "workforce"
+    "slug": "2026-06-15-product-building-a-desktop-app-alpha",
+    "title": "Lancement de l’alpha de l'application Desktop",
+    "date": "2026-06-15",
+    "audience": "product"
   },
   {
-    "slug": "2026-05-27-from-rag-to-sqlite-and-harness-(EN)",
-    "title": "One SQLite File and One Harness Is Enough for French Social Housing (EN)",
+    "slug": "2026-05-27-dev-from-rag-to-sqlite-and-harness",
+    "title": "(EN) One SQLite File and One Harness Is Enough for French Social Housing",
     "date": "2026-05-27",
-    "audience": "technical"
+    "audience": "dev"
   }
 ]

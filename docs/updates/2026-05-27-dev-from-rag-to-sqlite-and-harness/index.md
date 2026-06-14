@@ -1,4 +1,4 @@
-# One SQLite File and One Harness Is Enough for French Social Housing
+# (EN) One SQLite File and One Harness Is Enough for French Social Housing
 
 I deleted a lot of glue code. 10+ dependencies. A chunking strategy. A vector database. French stemmers. An embedding model. A reranker. A costly and lengthy build pipeline. A €200/month Hetzner GPU. A €15/month Hugging Face inference endpoint. A few euros per month for LLM-as-reranker calls on Groq or Cerebras.
 
@@ -25,7 +25,7 @@ That is the open source product[^oss].
 
 [^oss]: **Why is PIERRE open source?** French social housing landlords do the same public-interest job across territories. Paris and Avignon are not in a market battle — same procedures, same laws, different spreadsheets. So the shared HLM knowledge base is open data, the code is open, and any landlord can fork, host, and improve it. Some already do. HLM must not miss the AI wave. "AI strategy" too often means proprietary tooling, expensive integrations, and fresh dependency. PIERRE is built the **other way**: open, modular, pragmatic. Modern enough to be useful. Simple enough for a small IT team. And able to plug into the prehistoric apps the sector cannot drop overnight. Own your IT stack — every euro spent on complexity or vendor lock-in is a euro not spent on social housing.
 
-![Desktop screenshot](../assets/2026-05-from-rag-to-sqlite-and-harness/desktop-screenshot.png)
+![Desktop screenshot](./desktop-screenshot.png)
 
 ## The Previous Version Looked Serious
 
