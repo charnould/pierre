@@ -21,9 +21,7 @@ Less "chat with AI". More old-school software powered by an agent. And new use c
 
 French bureaucracy, with people's homes attached.
 
-That is the open source product[^oss].
-
-[^oss]: **Why is PIERRE open source?** French social housing landlords do the same public-interest job across territories. Paris and Avignon are not in a market battle — same procedures, same laws, different spreadsheets. So the shared HLM knowledge base is open data, the code is open, and any landlord can fork, host, and improve it. Some already do. HLM must not miss the AI wave. "AI strategy" too often means proprietary tooling, expensive integrations, and fresh dependency. PIERRE is built the **other way**: open, modular, pragmatic. Modern enough to be useful. Simple enough for a small IT team. And able to plug into the prehistoric apps the sector cannot drop overnight. Own your IT stack — every euro spent on complexity or vendor lock-in is a euro not spent on social housing.
+That is the open source product.
 
 ![Desktop screenshot](./desktop-screenshot.png)
 

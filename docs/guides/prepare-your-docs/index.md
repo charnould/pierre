@@ -61,8 +61,8 @@ Rédigez-les comme vous le feriez pour un nouveau collègue qui ne connaît rien
    - À droite : une mise en forme visuelle, illisible automatiquement.
 
 <p float="left">
-  <img src="../assets//images/documentation/ok.png" width="350" />
-  <img src="../assets//images/documentation/ko.png" width="350" />
+  <img src="./ok.png" width="350" />
+  <img src="./ko.png" width="350" />
 </p>
 
 2. **Donnez des noms de colonnes explicites**, compréhensibles sans contexte. `49_3` est une référence opaque ; `Solde locataire` est immédiatement lisible.
@@ -82,7 +82,7 @@ Sans `_metadata.xlsx`, `PIERRE` est incapable d'ingérer vos données. Ce fichie
 
 Il est téléchargeable depuis la page `Encyclopédie` de l'interface d'administration :
 
-![_metadata.xlsx](../assets//images/documentation/_metadata.png)
+![_metadata.xlsx](./_metadata.png)
 
 - Pour les fichiers `.doc`/`.docx` et `.md`, renseignez uniquement les colonnes `A`, `B` et `E`.
 - Pour les fichiers `.xls`/`.xlsx`/`.xlsm`/`.xlsb`, les cinq colonnes `A` à `E` sont obligatoires.
