@@ -126,7 +126,7 @@ export const view = (metadata: Metadata[], events: KnowledgeBuildRow[]) => {
           <a
             target="_blank"
             class="cursor-pointer text-blue-600 underline decoration-1 underline-offset-3"
-            href="https://github.com/charnould/pierre/blob/master/docs/documentation/prepare-your-docs.md#guide--pr%C3%A9parer-vos-documents-pour-pierre"
+            href="https://github.com/charnould/pierre/blob/master/docs/guides/prepare-your-docs/index.md#guide--pr%C3%A9parer-vos-documents-pour-pierre"
             >Consultez les consignes</a
           >
           pour comprendre comment PIERRE interprète vos fichiers/données.

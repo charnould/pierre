@@ -15,8 +15,6 @@ Plus concrètement, PIERRE c'est à la fois :
 
 2. Une **base de connaissances** en **open data** ([consultation](./knowledge/community)), utilisable indépendamment de l'agent IA et indispensable à toute [IA agentique](https://fr.wikipedia.org/wiki/Intelligence_artificielle_agentique).
 
-→ [Télécharger une présentation de PIERRE](./docs/assets/PIERRE-Présentation.pdf) (PDF · 2,7 Mo)
-
 ## Sommaire
 
 <!-- toc -->
@@ -121,7 +119,7 @@ Il y a deux façons d'enrichir une instance de PIERRE avec vos données proprié
 
 Pour que l'ingestion fonctionne correctement, les fichiers doivent être accompagnés d'un `_metadata.xlsx`. Ce fichier indique à PIERRE comment importer chaque document et quels profils-utilisateurs peuvent y accéder.
 
-Le détail opérationnel est volontairement conservé dans un guide dédié : [préparer vos documents pour PIERRE](./docs/documentation/prepare-your-docs.md). C'est le document à transmettre aux équipes-métier avant une première campagne d'alimentation documentaire.
+Le détail opérationnel est volontairement conservé dans un guide dédié : [préparer vos documents pour PIERRE](./docs/guides/prepare-your-docs/index.md). C'est le document à transmettre aux équipes-métier avant une première campagne d'alimentation documentaire.
 
 # Architecture et fonctionnement technique
 
@@ -129,7 +127,7 @@ Le détail opérationnel est volontairement conservé dans un guide dédié : [p
 
 PIERRE est pensé pour être hébergé sur l'infrastructure choisie par l'organisme HLM ou par **pierre-ia.org**. Les données propriétaires, les contenus extraits et les conversations sont uniquement stockés sur l'instance déployée. Lorsqu'un utilisateur interroge PIERRE, le contenu nécessaire à la réponse peut être transmis au modèle de langage configuré/choisi par l'organisme.
 
-Les questions RGPD, DPO, localisation des données, rôles de responsabilité et traitements associés sont détaillés dans la note dédiée : [Data Protection Officer](./docs/documentation/data-protection-officer.md).
+Les questions RGPD, DPO, localisation des données, rôles de responsabilité et traitements associés sont détaillés dans la note dédiée : [Data Protection Officer](./docs/guides/data-protection-officer/index.md).
 
 ## Contribuer au code source
 
@@ -485,7 +483,7 @@ Si vous hébergez PIERRE :
 
 Depuis la page `Encyclopédie`, un administrateur peut ajouter les documents propriétaires de l'organisme. Cette action alimente la base de connaissances utilisée par PIERRE pour répondre selon vos procédures, vos coordonnées et vos consignes locales.
 
-Avant le premier import, transmettre aux équipes concernées le guide [préparer vos documents pour PIERRE](./docs/documentation/prepare-your-docs.md). Il détaille les formats acceptés, la structure attendue des fichiers Word/Excel/Markdown et le rôle du fichier `_metadata.xlsx`.
+Avant le premier import, transmettre aux équipes concernées le guide [préparer vos documents pour PIERRE](./docs/guides/prepare-your-docs/index.md). Il détaille les formats acceptés, la structure attendue des fichiers Word/Excel/Markdown et le rôle du fichier `_metadata.xlsx`.
 
 1. Se connecter à https://180.81.82.83/a, puis cliquer sur `Encyclopédie`.
 2. Télécharger `_metadata.xlsx`, le compléter **scrupuleusement** et le ré-uploader avec les fichiers associés.
