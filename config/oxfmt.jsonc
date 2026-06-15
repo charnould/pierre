@@ -7,5 +7,5 @@
   "sortPackageJson": true,
   "sortImports": true,
   "sortTailwindcss": true,
-  "ignorePatterns": ["**/*.js", "assets/core/dist"]
+  "ignorePatterns": ["**/*.js", "assets/dist"]
 }

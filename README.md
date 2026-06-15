@@ -425,7 +425,7 @@ Pour que l'agent IA cite systématiquement ses sources dans ses réponses, ajout
 ### Via une fenêtre modale
 
 ```html
-<script crossorigin="anonymous" src="https://180.81.82.83/assets/core/dist/js/widget.js"></script>
+<script crossorigin="anonymous" src="https://180.81.82.83/assets/dist/js/widget.js"></script>
 <p
   id="pierre-ia"
   data-url="https://180.81.82.83"
