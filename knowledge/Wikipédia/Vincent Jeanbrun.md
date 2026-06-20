@@ -1,6 +1,6 @@
 # Vincent Jeanbrun
 
-**Vincent Jeanbrun**, né le 5 mai 1984 à Paris (France), est un homme politique français, membre des Républicains. Il est élu député de la 7e circonscription du Val-de-Marne en 2024.
+**Vincent Jeanbrun**, né le 5 mai 1984 à Paris, est un homme politique français. Membre des Républicains, il est élu député de la 7e circonscription du Val-de-Marne en 2024.
 
 Il est également maire de L'Haÿ-les-Roses de 2014 à 2024, conseiller départemental du Val-de-Marne en 2015 et conseiller régional d'Île-de-France depuis 2015.
 
@@ -64,7 +64,9 @@ Au moment de sa nomination, il est visé par une enquête préliminaire ouverte 
 
 Cette enquête, révélée notamment par _Mediapart_, suscite de nombreuses réactions au sein de la classe politique. Plusieurs élus de gauche dénoncent une nomination jugée inappropriée au regard des soupçons visant Vincent Jeanbrun. L'adjoint au logement de la Ville de Paris, Jacques Baudrier, la qualifie de « provocation caricaturale », tandis que certains acteurs du logement social, dont l'Union sociale pour l'habitat, expriment leurs réserves et appellent à la vigilance quant à la politique qui sera menée.
 
-En 2026, il met en place un dispositif visant à encourager l'investissement locatif, reposant sur un avantage fiscal accordé aux propriétaires louant leur bien à un loyer encadré, parfois désigné comme « dispositif Jeanbrun ».
+En 2026, il fait adopter le **statut du bailleur privé**, dispositif fiscal issu de la loi de finances pour 2026 (loi n° 2026-103 du 19 février 2026), communément désigné comme le **dispositif Jeanbrun**. Ce mécanisme succède au dispositif Pinel, dont le régime a pris fin le 31 décembre 2024, et introduit une logique inédite pour la location nue : au lieu d'une réduction d'impôt forfaitaire, le propriétaire bailleur peut déduire chaque année un amortissement fiscal représentant entre 3,5 % et 5,5 % de 80 % de la valeur d'acquisition du bien, selon la catégorie locative retenue (intermédiaire, sociale ou très sociale), générant ainsi un déficit foncier imputable sur son revenu global. Le dispositif, applicable du 21 février 2026 au 31 décembre 2028, couvre les zones A bis, A, B1 et B2 et impose un engagement locatif minimal de neuf ans.
+
+Jeanbrun a présenté ce dispositif comme un outil de relance capable de générer 50 000 logements supplémentaires par an. La réforme a reçu un accueil mitigé : si certains économistes ont salué le passage d'un mécanisme de réduction d'impôt à un système d'amortissement plus neutre vis-à-vis des promoteurs, des architectes ont exprimé des réserves quant à l'impact d'une politique centrée sur le volume de construction sur la qualité des logements neufs. L'Union sociale pour l'habitat a par ailleurs souligné que le dispositif bénéficiait principalement aux foyers fiscaux fortement imposés.
 
 ## Affaires politico-judiciaires
 
