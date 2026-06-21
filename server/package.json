@@ -1,6 +1,6 @@
 {
   "name": "@pierre/server",
-  "version": "0.40.5",
+  "version": "0.40.6",
   "private": true,
   "license": "AGPL-3.0-only",
   "type": "module",
