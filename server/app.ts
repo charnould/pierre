@@ -18,6 +18,7 @@ import { controller as get_ai } from './controllers/ai/get'
 import { controller as get_ai_boot } from './controllers/ai/get.boot'
 import { controller as get_ai_skills } from './controllers/ai/get.skills'
 import { controller as post_ai_answer } from './controllers/ai/post.answer'
+import { controller as post_ai_vm_release } from './controllers/ai/post.vm.release'
 import { controller as get_index } from './controllers/chat/get'
 import { controller as get_desktop_tickets } from './controllers/desktop/tickets/get'
 import { controller as get_desktop_tickets_drafts } from './controllers/desktop/tickets/get.draft'
@@ -30,6 +31,7 @@ import { authenticate } from './utils/authenticate-user'
 import { run_pipeline } from './utils/knowledge/run-pipeline'
 import { CUSTOMIZATION_STATIC_ROOT, SERVER_ROOT } from './utils/paths'
 import { setup } from './utils/setup'
+import { initVmPool } from './utils/vm-pool'
 import { cleanupOrphanedVms } from './utils/vm-registry'
 
 // Prepare the environment and database before starting the app:
@@ -40,6 +42,7 @@ import { cleanupOrphanedVms } from './utils/vm-registry'
 await setup()
 await run_pipeline()
 await cleanupOrphanedVms()
+await initVmPool()
 
 const app = new Hono()
 
@@ -88,6 +91,7 @@ app.put('/desktop/tickets/drafts', authenticate, put_desktop_tickets_drafts)
 app.put('/desktop/tickets', authenticate, put_desktop_tickets)
 app.get('/desktop/tickets', authenticate, get_desktop_tickets)
 app.post('/ai/answer', authenticate, post_ai_answer)
+app.post('/ai/vm/release', authenticate, post_ai_vm_release)
 
 // Admin routes
 app.get('/a/login', get_admin_login)

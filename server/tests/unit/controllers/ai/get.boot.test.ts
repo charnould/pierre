@@ -1,8 +1,16 @@
 import { beforeAll, expect, it } from 'bun:test'
 
-import server from '../../../../app.ts'
+import { Hono } from 'hono'
+
+import { controller as post_admin_login } from '../../../../controllers/admin/auth/post.login'
+import { controller as get_ai_boot } from '../../../../controllers/ai/get.boot'
 import { User } from '../../../../utils/_schema'
+import { authenticate } from '../../../../utils/authenticate-user'
 import { delete_all_users, save_user } from '../../../../utils/handle-user'
+
+const app = new Hono()
+app.post('/a/login', post_admin_login)
+app.get('/ai/boot', authenticate, get_ai_boot)
 
 beforeAll(async () => {
   Bun.env['SERVICE'] = 'pierre-production'
@@ -35,7 +43,7 @@ function cookieFromLoginResponse(res: Response): string {
 }
 
 it('GET /ai/boot lists profiles from users.config, not default.show only', async () => {
-  const loginRes = await server.fetch(
+  const loginRes = await app.fetch(
     new Request('http://localhost/a/login?client=desktop', {
       method: 'POST',
       headers: {
@@ -55,7 +63,7 @@ it('GET /ai/boot lists profiles from users.config, not default.show only', async
   expect(loginRes.status).toBe(200)
 
   const cookie = cookieFromLoginResponse(loginRes)
-  const bootRes = await server.fetch(
+  const bootRes = await app.fetch(
     new Request('http://localhost/ai/boot', {
       headers: { Cookie: cookie }
     })
