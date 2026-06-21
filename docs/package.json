@@ -1,0 +1,6 @@
+{
+  "name": "@pierre/docs",
+  "scripts": {
+    "updates": "bun run ../config/build:updates.ts"
+  }
+}
