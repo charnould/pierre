@@ -1,6 +1,6 @@
 import { html } from 'hono/html'
 
-export const view = (user, desktop_version: string | null) => {
+export const view = (user, _desktop_version: string | null) => {
   return html`<!doctype html>
     <html lang="fr">
       <head>
@@ -11,7 +11,7 @@ export const view = (user, desktop_version: string | null) => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/dist/css/style.1782029557965.css" />
+        <link rel="stylesheet" href="../assets/dist/css/style.1782057273517.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap"
           rel="stylesheet"
@@ -58,22 +58,6 @@ export const view = (user, desktop_version: string | null) => {
             : html`class="block text-7xl font-extrabold mb-1 cursor-not-allowed text-neutral-400"`}
           >Utilisateurs</a
         >
-
-        <p class="mt-10 text-sm">
-          Application bureau${desktop_version ? ` — v.${desktop_version}` : ''}<br />
-          <a
-            href="https://github.com/charnould/pierre/releases/latest/download/pierre-win32-setup.exe"
-            class="font-bold underline decoration-2 underline-offset-4"
-            >Télécharger pour Windows</a
-          >
-          (mise à jour automatique) &nbsp;·&nbsp;
-          <a
-            href="https://github.com/charnould/pierre/releases/latest/download/pierre-macos.dmg"
-            class="font-bold underline decoration-2 underline-offset-4"
-            >Télécharger pour macOS</a
-          >
-          (sans mise à jour automatique · Apple Silicon)
-        </p>
 
         <p class="mt-6 text-sm">
           Une question ou remarque sur ce projet
