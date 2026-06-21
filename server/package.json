@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "DEBUG=true bun --env-file=../.env.production --watch run app.ts",
+    "modal": "bun --port=1984 tests/e2e/_open-modal.html & sleep 1 && open http://localhost:1984",
     "start": "NODE_ENV=production bun run app.ts",
     "css": "bunx @tailwindcss/cli@latest -i assets/tailwind/style.css -o assets/dist/css/style.css --minify --watch",
     "transpile": "bun build --entrypoints assets/scripts/ai.tsx assets/scripts/widget.ts --outdir assets/dist/js --minify --target browser --watch",
