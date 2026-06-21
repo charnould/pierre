@@ -32,5 +32,5 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install
       - run: bun run --cwd server utils/setup.ts
-      - run: SERVICE=pierre-production bun --filter @pierre/server test:unit
-      - run: bun --filter @pierre/desktop test
+      - run: SERVICE=pierre-production bun --filter "@pierre/server" test:unit
+      - run: bun --filter "@pierre/desktop" test

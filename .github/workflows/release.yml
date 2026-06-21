@@ -56,7 +56,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           bun install --frozen-lockfile
-          bun --filter @pierre/desktop run publish -- --platform=win32 --arch=x64
+          bun --filter "@pierre/desktop" run publish -- --platform=win32 --arch=x64
 
   release-macos:
     needs: release-windows
@@ -77,4 +77,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           bun install --frozen-lockfile
-          bun --filter @pierre/desktop run publish -- --platform=darwin --arch=arm64
+          bun --filter "@pierre/desktop" run publish -- --platform=darwin --arch=arm64
