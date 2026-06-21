@@ -10,14 +10,26 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libvirglrenderer1 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -sSL https://smolmachines.com/install.sh | bash \
+RUN curl -sSL https://smolmachines.com/install.sh | bash -s -- --version 1.0.4 \
     && test -x /root/.smolvm/smolvm \
     && ln -sf /root/.smolvm/smolvm /usr/local/bin/smolvm
 
 COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile --production
+COPY server/package.json ./server/
+COPY docs/package.json ./docs/
+COPY desktop/package.json ./desktop/
+COPY customization/package.json ./customization/
+RUN bun install --frozen-lockfile --production --filter @pierre/server
 
-COPY . .
+COPY customization/ ./customization/
+COPY config/smolvm/pierre-amd64 ./config/smolvm/pierre-amd64
+COPY config/smolvm/pierre-amd64.smolmachine ./config/smolvm/pierre-amd64.smolmachine
+COPY server/ ./server/
+
+WORKDIR /app/server
+
+# Kamal mounts persistent data at /app/datastores; the app uses cwd-relative paths.
+RUN mkdir -p /app/datastores && ln -sf /app/datastores datastores
 
 EXPOSE 3000
 
