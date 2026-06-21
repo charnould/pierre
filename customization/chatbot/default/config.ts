@@ -1,4 +1,4 @@
-import type { Config } from '../../../utils/_schema'
+import type { Config } from '../../../server/utils/_schema'
 
 //
 // ASTUCE : Pour vous assurer que le fichier de configuration est correctement

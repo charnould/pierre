@@ -5,7 +5,7 @@
 
 export default {
   // Nom de l'agent dans l'application
-  name: 'Gustave',
+  name: 'Pierre',
   // Headline sur l'écran de connexion
   headline: 'Agent IA HLM open source',
   // Modèle d’URL pour pouvoir accéder en un clic
