@@ -2,6 +2,7 @@
   "name": "@pierre/desktop",
   "version": "0.40.4",
   "description": "pierre—desktop-app",
+  "author": "Charles-Henri ARNOULD <charnould@pierre-ia.org>",
   "repository": {
     "type": "git",
     "url": "https://github.com/charnould/pierre.git",
