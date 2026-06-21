@@ -39,9 +39,21 @@ describe('renameReleaseArtifacts', () => {
     await writeFile(setupPath, 'setup')
 
     const results = await renameReleaseArtifacts([
-      { platform: 'darwin', arch: 'arm64', artifacts: [dmgPath, zipPath] },
-      { platform: 'win32', arch: 'x64', artifacts: [setupPath] }
+      {
+        platform: 'darwin',
+        arch: 'arm64',
+        artifacts: [dmgPath, zipPath],
+        packageJSON: { version: '0.40.5' }
+      },
+      {
+        platform: 'win32',
+        arch: 'x64',
+        artifacts: [setupPath],
+        packageJSON: { version: '0.40.5' }
+      }
     ])
+
+    expect(results[0]?.packageJSON).toEqual({ version: '0.40.5' })
 
     expect(results[0]?.artifacts).toEqual([
       join(dir, 'pierre-macos.dmg'),

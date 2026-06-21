@@ -5,6 +5,7 @@ export type MakeResult = {
   platform: string
   arch: string
   artifacts: string[]
+  packageJSON?: Record<string, unknown>
 }
 
 export function targetArtifactName(file: string, platform: string, arch: string): string | null {
@@ -17,7 +18,8 @@ export function targetArtifactName(file: string, platform: string, arch: string)
 
 export async function renameReleaseArtifacts(makeResults: MakeResult[]): Promise<MakeResult[]> {
   return Promise.all(
-    makeResults.map(async ({ platform, arch, artifacts }) => {
+    makeResults.map(async (makeResult) => {
+      const { platform, arch, artifacts } = makeResult
       const renamed = await Promise.all(
         artifacts.map(async (file) => {
           const targetName = targetArtifactName(file, platform, arch)
@@ -28,7 +30,7 @@ export async function renameReleaseArtifacts(makeResults: MakeResult[]): Promise
           return dest
         })
       )
-      return { platform, arch, artifacts: renamed }
+      return { ...makeResult, artifacts: renamed }
     })
   )
 }
