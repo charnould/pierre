@@ -11,7 +11,7 @@ import {
   rebuildUpdatesIndex,
   rejectFrontmatter,
   validateSlug
-} from '../../../../config/build:updates.ts'
+} from '../../../../config/build-updates.ts'
 
 const FIXTURE_ROOT = path.join(import.meta.dir, '_fixtures', 'updates-index')
 const FIXTURE_UPDATES_DIR = path.join(FIXTURE_ROOT, 'docs/updates')

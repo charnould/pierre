@@ -26,7 +26,7 @@ jobs:
         run: curl -sSL https://smolmachines.com/install.sh | bash -s -- --version 1.0.4
 
       - name: Build smolmachine
-        run: bash config/build:smolvm.sh
+        run: bash config/build-smolvm.sh
 
       - name: Upload AMD64 artifact
         uses: actions/upload-artifact@v4

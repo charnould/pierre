@@ -5,9 +5,9 @@
   "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
-    "vm:build:osx": "bash ../config/build:smolvm.sh",
-    "vm:build:linux": "bash ../config/build:smolvm:linux.sh",
-    "server:build": "cd .. && bun --env-file=.env.production run config/build:server.ts",
+    "vm:build:osx": "bash ../config/build-smolvm.sh",
+    "vm:build:linux": "bash ../config/build-smolvm-linux.sh",
+    "server:build": "cd .. && bun --env-file=.env.production run config/build-server.ts",
     "dev": "DEBUG=true bun --env-file=../.env.production --watch run app.ts",
     "modal": "bun --port=1984 tests/e2e/_open-modal.html & sleep 1 && open http://localhost:1984",
     "start": "NODE_ENV=production bun run app.ts",
