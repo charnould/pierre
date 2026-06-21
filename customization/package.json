@@ -1,0 +1,6 @@
+{
+  "name": "@pierre/customization",
+  "scripts": {
+    "check": "cd .. && cd server && bun test check-configs.test.ts"
+  }
+}
