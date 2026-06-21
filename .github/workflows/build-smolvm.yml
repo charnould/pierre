@@ -23,7 +23,7 @@ jobs:
         run: sudo apt-get install -y libvirglrenderer1
 
       - name: Install smolvm
-        run: curl -sSL https://smolmachines.com/install.sh | bash
+        run: curl -sSL https://smolmachines.com/install.sh | bash -s -- --version 1.0.4
 
       - name: Build smolmachine
         run: bash config/build:smolvm.sh
