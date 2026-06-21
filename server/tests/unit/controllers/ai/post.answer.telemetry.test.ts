@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it, mock } from 'bun:test'
+import { afterAll, beforeAll, describe, expect, it, mock, spyOn } from 'bun:test'
 
 import { Hono } from 'hono'
 
@@ -72,12 +72,19 @@ describe('POST /ai/answer telemetry', () => {
   it('does not emit telemetry when the stream fails', async () => {
     telemetryCalls.length = 0
     streamShouldFail = true
+    const errorSpy = spyOn(console, 'error').mockImplementation(() => {})
 
-    const res = await postAnswer('about.summary')
+    try {
+      const res = await postAnswer('about.summary')
 
-    expect(res.status).toBe(200)
-    await res.text()
-
-    expect(telemetryCalls).toEqual([])
+      expect(res.status).toBe(200)
+      const body = await res.text()
+      expect(body).toContain('{"type":"error"}')
+      expect(telemetryCalls).toEqual([])
+      expect(errorSpy).toHaveBeenCalled()
+    } finally {
+      errorSpy.mockRestore()
+      streamShouldFail = false
+    }
   })
 })
