@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    outputs:
+      desktop_changed: ${{ steps.check.outputs.desktop_changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+
+      - name: Check desktop changes and verify version
+        id: check
+        shell: bash
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          PKG_VERSION=$(node -p "require('./desktop/package.json').version")
+          if [ "$TAG" != "$PKG_VERSION" ]; then
+            echo "Release tag $TAG does not match desktop/package.json version $PKG_VERSION"
+            exit 1
+          fi
+
+          PREV=$(git tag -l '[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | grep -A1 "^${TAG}$" | tail -1 || true)
+          if [ -z "$PREV" ] || ! git diff --quiet "$PREV" "$TAG" -- desktop/; then
+            echo "desktop_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "desktop_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify GitHub release is published
+        if: steps.check.outputs.desktop_changed == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "${{ github.event.release.tag_name }}" --json isDraft | jq -e '.isDraft == false'
+
+      - uses: oven-sh/setup-bun@v2
+        if: steps.check.outputs.desktop_changed == 'true'
+
+      - name: Publish Windows
+        if: steps.check.outputs.desktop_changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          bun install --frozen-lockfile
+          bun --filter @pierre/desktop run publish -- --platform=win32 --arch=x64
+
+  release-macos:
+    needs: release-windows
+    if: needs.release-windows.outputs.desktop_changed == 'true'
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Publish macOS
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          bun install --frozen-lockfile
+          bun --filter @pierre/desktop run publish -- --platform=darwin --arch=arm64
