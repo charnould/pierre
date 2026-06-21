@@ -8,5 +8,5 @@
   "env": {
     "builtin": true
   },
-  "ignorePatterns": ["**/*.js", "assets/dist"]
+  "ignorePatterns": ["**/*.js", "../server/assets/dist/**", "../docs/assets/**"]
 }

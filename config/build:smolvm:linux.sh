@@ -7,9 +7,10 @@
 
 set -euo pipefail
 
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WORKFLOW="build-smolvm.yml"
 REPO="charnould/pierre"
-SMOLVM_DIR="config/smolvm"
+SMOLVM_DIR="$REPO_ROOT/config/smolvm"
 
 echo "Déclenchement du build Linux (AMD64) sur GitHub Actions..."
 gh workflow run "$WORKFLOW" --repo "$REPO"

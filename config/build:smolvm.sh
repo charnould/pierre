@@ -10,8 +10,9 @@
 
 set -euo pipefail
 
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD_VM="pierre-build"
-SMOLVM_DIR="./config/smolvm"
+SMOLVM_DIR="$REPO_ROOT/config/smolvm"
 
 # Map uname -m to a canonical arch name
 RAW_ARCH=$(uname -m)
