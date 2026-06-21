@@ -2,10 +2,16 @@ import type { FileSink, Subprocess } from 'bun'
 import { $ } from 'bun'
 
 import type { PierreInstance } from './smolvm'
-import { createPierreInstance, destroyPierreInstance } from './smolvm'
+import {
+  createPierreInstance,
+  destroyPierreInstance,
+  getKnowledgePath,
+  startPierreOnPoolVm
+} from './smolvm'
+import { takePoolVm } from './vm-pool'
 
 // How long a VM lives without any activity before being destroyed
-const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000 // 30 minutes
+const INACTIVITY_TIMEOUT_MS = Number(Bun.env['VM_INACTIVITY_TIMEOUT_MS'] ?? 10 * 60 * 1000)
 
 // ---------------------------------------------------------------------------
 // PiRpcClient — JSONL stdin/stdout bridge to the Pi RPC subprocess
@@ -203,7 +209,16 @@ export async function acquireVm(convId: string, configId: string): Promise<VmEnt
   }
 
   console.log(`[VM_REGISTRY] Creating VM for conv=${convId} config=${configId}`)
-  const instance = await createPierreInstance(convId, configId)
+  const knowledgePath = getKnowledgePath(configId)
+  const poolName = takePoolVm()
+  let instance: PierreInstance
+  if (poolName) {
+    console.log(`[VM_REGISTRY] Using pool VM ${poolName} for conv=${convId}`)
+    instance = await startPierreOnPoolVm(poolName, knowledgePath)
+  } else {
+    console.log(`[VM_REGISTRY] Pool empty — creating VM from .smolmachine for conv=${convId}`)
+    instance = await createPierreInstance(convId, configId)
+  }
 
   let piClient: PiRpcClient
   try {
@@ -225,7 +240,7 @@ export async function acquireVm(convId: string, configId: string): Promise<VmEnt
 
 /**
  * Decrements the active-request counter for `convId`.
- * When it reaches zero, arms the 30-minute inactivity timer.
+ * When it reaches zero, arms the inactivity timer.
  */
 export function releaseVm(convId: string): void {
   const entry = registry.get(convId)
@@ -257,7 +272,7 @@ export async function cleanupOrphanedVms(): Promise<void> {
       } catch {
         // already stopped or unreachable — proceed to delete
       }
-      await $`smolvm machine delete -f ${name}`.quiet()
+      await $`smolvm machine delete --name ${name} -f`.quiet()
       console.log(`[VM_REGISTRY] Deleted orphaned VM: ${name}`)
     })
   )

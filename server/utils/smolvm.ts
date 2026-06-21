@@ -1,57 +1,26 @@
-import { existsSync } from 'node:fs'
-import { arch as nodeArch } from 'node:os'
 import { resolve } from 'node:path'
 
 import { $ } from 'bun'
 import type { Subprocess } from 'bun'
 
-import { SERVER_ROOT, SMOLVM_DIR } from './paths'
+import { SERVER_ROOT } from './paths'
+import { getSmolmachinePath, returnPoolVm } from './vm-pool'
 
 export type PierreInstance = {
   name: string
+  knowledgePath: string
+  fromPool: boolean
   /** Long-lived exec subprocess that keeps Pi running inside the VM (stdin/stdout piped). */
   piProcess: Subprocess<'pipe', 'pipe', 'inherit'>
 }
 
-/**
- * Creates and starts a smolVM instance for a Pierre conversation.
- *
- * - Mounts `datastores/<service>/knowledge/<configId>` into `/knowledge` in the VM
- * - Starts Pi in RPC mode inside the VM with stdin/stdout as JSONL transport
- * - Waits until the Pi subprocess is running before returning
- *
- * Returns `{ name, piProcess }`. Call `destroyPierreInstance` when done.
- */
-export async function createPierreInstance(
-  convId: string,
-  configId: string
-): Promise<PierreInstance> {
-  const name = convId
+export function getKnowledgePath(configId: string): string {
   const service = Bun.env['SERVICE']
+  return resolve(SERVER_ROOT, 'datastores', service!, 'knowledge', configId)
+}
 
-  // Pick the smolmachine matching the host CPU architecture
-  const arch = nodeArch() === 'x64' ? 'amd64' : 'arm64'
-  const smolmachinePath = resolve(SMOLVM_DIR, `pierre-${arch}.smolmachine`)
-  if (!existsSync(smolmachinePath)) {
-    throw new Error(
-      `Smolmachine not found: ${smolmachinePath}. Run \`bun vm:build:osx\` or download artifacts to config/smolvm/.`
-    )
-  }
-
-  const knowledgePath = resolve(SERVER_ROOT, 'datastores', service!, 'knowledge', configId)
-
-  await $`smolvm machine create --net --from ${smolmachinePath} --volume ${knowledgePath}:/knowledge --name ${name}`
-  await $`smolvm machine start --name ${name}`
-
-  // Verify Pi binary exists inside the VM
-  const check = await $`smolvm machine exec --name ${name} -- sh -c "which pi 2>&1; uname -m"`
-    .quiet()
-    .nothrow()
-  console.log(`[SMOLVM] Preflight check:\n${check.stdout.toString()}${check.stderr.toString()}`)
-
-  // Build Pi startup args — inject BYOK provider credentials via -e flags
+function buildPiEnvArgs(): string[] {
   const providerType = (Bun.env['AI_TYPE'] ?? 'anthropic').toLowerCase()
-  const model = Bun.env['AI_MODEL'] ?? 'claude-sonnet-4-5'
   const apiKey = Bun.env['AI_API_KEY'] ?? ''
   const baseUrl = Bun.env['AI_BASE_URL'] ?? ''
 
@@ -64,9 +33,16 @@ export async function createPierreInstance(
       envArgs.push('-e', `ANTHROPIC_API_KEY=${apiKey}`)
     }
   }
+  return envArgs
+}
 
-  // -i keeps stdin open so Pi (RPC mode) can read commands; -w sets the cwd.
-  // Pi reads AGENTS.md from its cwd (/knowledge) at startup.
+/** Faster Pi RPC boot: skip extension/skill/template discovery and startup network I/O. */
+const PI_LEAN_ARGS = ['-ne', '-ns', '-np', '--no-themes', '--offline'] as const
+
+function spawnPiProcess(name: string): Subprocess<'pipe', 'pipe', 'inherit'> {
+  const providerType = (Bun.env['AI_TYPE'] ?? 'anthropic').toLowerCase()
+  const model = Bun.env['AI_MODEL'] ?? 'claude-sonnet-4-5'
+
   const piProcess = Bun.spawn(
     [
       'smolvm',
@@ -77,7 +53,7 @@ export async function createPierreInstance(
       '-i',
       '-w',
       '/knowledge',
-      ...envArgs,
+      ...buildPiEnvArgs(),
       '--',
       'pi',
       '--mode',
@@ -86,7 +62,8 @@ export async function createPierreInstance(
       '--provider',
       providerType,
       '--model',
-      model
+      model,
+      ...PI_LEAN_ARGS
     ],
     { stdin: 'pipe', stdout: 'pipe', stderr: 'inherit' }
   ) as Subprocess<'pipe', 'pipe', 'inherit'>
@@ -95,15 +72,58 @@ export async function createPierreInstance(
     console.log(`[SMOLVM] Pi process exited with code ${code} for VM ${name}`)
   )
 
-  console.log(`[SMOLVM] VM ${name} ready — Pi RPC subprocess started`)
-  return { name, piProcess }
+  return piProcess
 }
 
 /**
- * Kills the Pi exec subprocess, then stops and deletes the smolVM.
+ * Configures a pre-created pool VM with the knowledge mount, starts it, and spawns Pi.
+ * Skips .smolmachine extraction (~15s) already paid at server startup.
+ */
+export async function startPierreOnPoolVm(
+  name: string,
+  knowledgePath: string
+): Promise<PierreInstance> {
+  await $`smolvm machine update --name ${name} -v ${knowledgePath}:/knowledge --net`
+  await $`smolvm machine start --name ${name}`
+
+  const piProcess = spawnPiProcess(name)
+  console.log(`[SMOLVM] Pool VM ${name} ready — Pi RPC subprocess started`)
+  return { name, knowledgePath, fromPool: true, piProcess }
+}
+
+/**
+ * Creates and starts a smolVM instance for a Pierre conversation (slow path).
+ * Used when the VM pool is empty.
+ */
+export async function createPierreInstance(
+  convId: string,
+  configId: string
+): Promise<PierreInstance> {
+  const name = convId
+  const knowledgePath = getKnowledgePath(configId)
+
+  await $`smolvm machine create --net --from ${getSmolmachinePath()} --volume ${knowledgePath}:/knowledge --name ${name}`
+  await $`smolvm machine start --name ${name}`
+
+  const piProcess = spawnPiProcess(name)
+  console.log(`[SMOLVM] VM ${name} ready — Pi RPC subprocess started`)
+  return { name, knowledgePath, fromPool: false, piProcess }
+}
+
+/**
+ * Kills the Pi exec subprocess, then stops the smolVM.
+ * Pool VMs are returned to the pool; others are deleted.
  */
 export async function destroyPierreInstance(instance: PierreInstance): Promise<void> {
   instance.piProcess.kill()
-  await $`smolvm machine stop --name ${instance.name}`
-  await $`smolvm machine delete -f ${instance.name}`
+  await $`smolvm machine stop --name ${instance.name}`.nothrow().quiet()
+
+  if (instance.fromPool) {
+    await $`smolvm machine update --name ${instance.name} --remove-volume ${instance.knowledgePath}:/knowledge`
+      .nothrow()
+      .quiet()
+    returnPoolVm(instance.name)
+  } else {
+    await $`smolvm machine delete --name ${instance.name} -f`
+  }
 }
