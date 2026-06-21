@@ -34,7 +34,7 @@ export async function createPierreInstance(
 
   const knowledgePath = resolve(PROJECT_ROOT, 'datastores', service!, 'knowledge', configId)
 
-  await $`smolvm machine create --net --from ${smolmachinePath} --volume ${knowledgePath}:/knowledge ${name}`
+  await $`smolvm machine create --net --from ${smolmachinePath} --volume ${knowledgePath}:/knowledge --name ${name}`
   await $`smolvm machine start --name ${name}`
 
   // Verify Pi binary exists inside the VM

@@ -32,7 +32,7 @@ trap cleanup EXIT
 mkdir -p "$SMOLVM_DIR"
 
 echo "Création de la VM de build..."
-smolvm machine create --net --image ubuntu:resolute-20260413 "$BUILD_VM"
+smolvm machine create --net --image ubuntu:resolute-20260413 --name "$BUILD_VM"
 smolvm machine start --name "$BUILD_VM"
 
 echo "Installation de python3, Node.js 22, curl et de l'agent IA Pi..."
