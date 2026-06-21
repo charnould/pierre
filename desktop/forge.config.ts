@@ -48,6 +48,7 @@ export default {
       name: '@electron-forge/maker-squirrel',
       platforms: ['win32'],
       config: {
+        name: 'pierre',
         setupExe: 'pierre-win32-setup.exe',
         iconUrl:
           'https://raw.githubusercontent.com/charnould/pierre/master/desktop/src/assets/icons/windows/icon.ico',

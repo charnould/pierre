@@ -11,6 +11,7 @@ describe('forge config release invariants', () => {
     )
 
     expect(squirrel?.platforms).toEqual(['win32'])
+    expect(squirrel?.config?.name).toBe('pierre')
     expect(squirrel?.config?.setupExe).toBe('pierre-win32-setup.exe')
     expect(squirrel?.config?.noDelta).toBe(true)
   })
