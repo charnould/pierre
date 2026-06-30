@@ -30,8 +30,8 @@
   },
   "devDependencies": {
     "markdown-toc": "^1.2.0",
-    "oxfmt": "^0.55.0",
-    "oxlint": "^1.70.0",
+    "oxfmt": "^0.57.0",
+    "oxlint": "^1.72.0",
     "typescript": "^6.0.3"
   }
 }
