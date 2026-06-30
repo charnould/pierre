@@ -74,7 +74,7 @@ export const view = (data, options: StatisticOptions) => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/dist/css/style.1782057273517.css" />
+        <link rel="stylesheet" href="../assets/dist/css/style.1782809598817.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap"
           rel="stylesheet"
