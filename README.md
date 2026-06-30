@@ -422,35 +422,31 @@ Pour que l'agent IA cite systématiquement ses sources dans ses réponses, ajout
 
 ### Via une fenêtre modale
 
+Le bouton launcher est **vôtre** (HTML + CSS). PIERRE injecte automatiquement l'iframe modale — aucune feuille de style sur votre page (hors un effet d'animation à l'apparition de la fenêtre modale).
+
 ```html
-<script crossorigin="anonymous" src="https://180.81.82.83/assets/dist/js/widget.js"></script>
-<p
-  id="pierre-ia"
-  data-url="https://180.81.82.83"
-  data-configuration="default"
-  style="
-        right: 20px;
-        bottom: 20px;
-        color: #000;
-        font-size: 30px;
-        font-weight: bold;
-        padding: 2px 12px;
-        background-color: #fff;
-        border-radius: 8px;
-        border: 4px solid black;
-        box-shadow: 2px 2px 6px #00000080;"
+<script
+  crossorigin="anonymous"
+  src="https://180.81.82.83/assets/dist/js/pierre.js"
+  data-pierre-config="default"
+  async
+></script>
+
+<button
+  type="button"
+  data-pierre-open
+  style="position:fixed; bottom:20px; right:20px; z-index:9999;"
 >
   iA?
-</p>
+</button>
 ```
 
 avec :
 
-- `iA?` : le nom d'affichage du bouton (libre à vous de le modifier)
-- `style` : le style CSS du bouton (libre à vous de le modifier)
-- `180.81.82.83` dans l'URL du script le domaine/IP du serveur où le script est accessible
-- `data-url` : le domaine/IP (sans slash de fin) du serveur où PIERRE est accessible
-- `data-configuration` : `default` ou le nom du répertoire que vous avez créé plus tôt dans `./customization/chatbot` (_cf._ supra).
+- `src` : URL absolue du serveur PIERRE (`/assets/dist/js/pierre.js`)
+- `data-pierre-config` : `default` ou nom du répertoire dans `./customization/chatbot` si l'on souhaite afficher un différent profil.
+- `data-pierre-open` : marque le bouton qui ouvre la modale (obligatoire)
+- `style` sur le bouton : entièrement libre et à votre main
 
 ### Via une iframe
 

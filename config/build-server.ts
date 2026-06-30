@@ -6,11 +6,13 @@ import toc from 'markdown-toc'
 
 const ROOT = import.meta.dir.replace(/\/config$/, '')
 const SERVER = join(ROOT, 'server')
-const WIDGET_SCRIPTS = join(SERVER, 'assets/scripts')
+const PIERRE_HOST = join(SERVER, 'assets/host')
+const PIERRE_EMBED = join(SERVER, 'assets/embed')
 
-const WIDGET_SHELL_RADIUS = '12px'
-const WIDGET_SHADOW_REST = '0 2px 8px rgba(0, 0, 0, 0.04), 0 16px 48px -12px rgba(15, 23, 42, 0.18)'
-const WIDGET_NOISE_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`
+const PIERRE_MODAL_SHELL_RADIUS = '12px'
+const PIERRE_MODAL_SHADOW_REST =
+  '0 2px 8px rgba(0, 0, 0, 0.04), 0 16px 48px -12px rgba(15, 23, 42, 0.18)'
+const PIERRE_MODAL_NOISE_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`
 
 function minifyCss(css: string): string {
   return css
@@ -21,22 +23,23 @@ function minifyCss(css: string): string {
     .trim()
 }
 
-async function generateWidgetStyles(): Promise<void> {
-  const css = await Bun.file(join(WIDGET_SCRIPTS, 'widget.css')).text()
-  const minified = minifyCss(css)
-    .replaceAll('__NOISE_BG__', WIDGET_NOISE_BG)
-    .replaceAll('__SHELL_RADIUS__', WIDGET_SHELL_RADIUS)
-    .replaceAll('__SHADOW_REST__', WIDGET_SHADOW_REST)
-
-  await Bun.write(
-    join(WIDGET_SCRIPTS, 'widget.styles.gen.ts'),
-    `export const WIDGET_CSS = ${JSON.stringify(minified)}\n`
-  )
+async function buildPierreEmbedModalCss(): Promise<string> {
+  const css = await Bun.file(join(PIERRE_EMBED, 'pierre-embed-modal.css')).text()
+  return minifyCss(css)
+    .replaceAll('__NOISE_BG__', PIERRE_MODAL_NOISE_BG)
+    .replaceAll('__SHELL_RADIUS__', PIERRE_MODAL_SHELL_RADIUS)
+    .replaceAll('__SHADOW_REST__', PIERRE_MODAL_SHADOW_REST)
 }
 
-function assertWidgetMinified(widgetPath: string, widget: string): void {
-  if (widget.includes('pierre_is_open') || widget.includes('\n.pierre-ia,\n')) {
-    throw new Error(`${widgetPath} was not minified — check oxfmt/format-on-save`)
+function assertPierreHostMinified(pierrePath: string, pierre: string): void {
+  if (pierre.includes('pierre_is_open') || pierre.includes('pierre-embed-modal')) {
+    throw new Error(`${pierrePath} was not minified — check oxfmt/format-on-save`)
+  }
+}
+
+function assertPierreEmbedMinified(pierreEmbedPath: string, pierreEmbed: string): void {
+  if (pierreEmbed.includes('\nconst MODAL_ID')) {
+    throw new Error(`${pierreEmbedPath} was not minified — check oxfmt/format-on-save`)
   }
 }
 
@@ -46,6 +49,7 @@ const timestamp = Date.now()
 // Remove old files
 await $`rm -rf ${SERVER}/assets/dist/css`
 await $`rm -rf ${SERVER}/assets/dist/js`
+await $`rm -f ${ROOT}/docs/assets/pierre.js`
 await $`rm -f ${ROOT}/docs/assets/widget.js`
 await $`find ${ROOT} -name ".DS_Store" -type f -delete`
 
@@ -75,17 +79,28 @@ for (const mdRoot of mdRoots) {
 await $`bun lint`
 await $`bun format`
 
-await generateWidgetStyles()
-
 // Compile production CSS file
 await $`bunx @tailwindcss/cli@latest -i ${SERVER}/assets/tailwind/style.css -o ${SERVER}/assets/dist/css/style.${timestamp}.css --minify`
 
-// Transpile and minify .ts/.tsx scripts into .js to work in browser.
-await $`bun build --entrypoints ${SERVER}/assets/scripts/ai.tsx ${SERVER}/assets/scripts/widget.ts --outdir ${SERVER}/assets/dist/js --minify --target browser`
-await $`mv ${SERVER}/assets/dist/js/ai.js ${SERVER}/assets/dist/js/ai.${timestamp}.js`
+const embed_frame_css = minifyCss(
+  await Bun.file(join(PIERRE_EMBED, 'pierre-embed-frame.css')).text()
+)
+await Bun.write(join(SERVER, 'assets/dist/css/pierre-embed-frame.css'), embed_frame_css)
+await Bun.write(
+  join(SERVER, 'assets/dist/css/pierre-embed-modal.css'),
+  await buildPierreEmbedModalCss()
+)
 
-const widgetDistPath = join(SERVER, 'assets/dist/js/widget.js')
-assertWidgetMinified(widgetDistPath, await Bun.file(widgetDistPath).text())
+// Transpile and minify .ts/.tsx scripts into .js to work in browser.
+await $`bun build ${SERVER}/assets/scripts/ai.tsx --outfile ${SERVER}/assets/dist/js/ai.${timestamp}.js --minify --target browser`
+await $`bun build ${PIERRE_HOST}/pierre.ts --outfile ${SERVER}/assets/dist/js/pierre.js --minify --target browser`
+await $`bun build ${PIERRE_EMBED}/pierre-embed.ts --outfile ${SERVER}/assets/dist/js/pierre-embed.js --minify --target browser`
+
+const pierreDistPath = join(SERVER, 'assets/dist/js/pierre.js')
+assertPierreHostMinified(pierreDistPath, await Bun.file(pierreDistPath).text())
+
+const pierreEmbedDistPath = join(SERVER, 'assets/dist/js/pierre-embed.js')
+assertPierreEmbedMinified(pierreEmbedDistPath, await Bun.file(pierreEmbedDistPath).text())
 
 // Update "timestamped filepath" in all Views
 const views = await readdir(join(SERVER, 'views'))
@@ -105,12 +120,7 @@ for (const view of views) {
   )
 }
 
-// Copy transpiled/minified widget.js in `docs` folder, aka PIERRE website
-await $`cp ${SERVER}/assets/dist/js/widget.js ${ROOT}/docs/assets`
-
-assertWidgetMinified(
-  join(ROOT, 'docs/assets/widget.js'),
-  await Bun.file(join(ROOT, 'docs/assets/widget.js')).text()
-)
+// Copy pierre.js for the PIERRE website (docs)
+await $`cp ${SERVER}/assets/dist/js/pierre.js ${ROOT}/docs/assets`
 
 console.log(`✅ BUILD DONE!`)

@@ -1,33 +1,4 @@
-.pierre-ia,
-#pierre-ia {
-  margin: 0;
-  z-index: 9997;
-  cursor: pointer;
-  font-family:
-    system-ui,
-    Segoe UI,
-    Roboto,
-    Ubuntu,
-    Helvetica Neue,
-    sans-serif;
-  transition:
-    transform 0.2s cubic-bezier(0.215, 0.61, 0.355, 1),
-    opacity 0.2s ease;
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  touch-action: manipulation;
-}
-.pierre-ia:focus-visible,
-#pierre-ia:focus-visible {
-  outline: 2px solid rgba(0, 122, 255, 0.85);
-  outline-offset: 3px;
-}
-.pierre-ia.pierre-ia--disabled,
-#pierre-ia.pierre-ia--disabled {
-  pointer-events: none;
-}
-#pierre-wrapper {
+#pierre-embed-modal {
   z-index: 9998;
   justify-content: center;
   align-items: center;
@@ -49,11 +20,11 @@
   -webkit-backdrop-filter: blur(18px) brightness(0.65) saturate(0.72);
 }
 @supports not (backdrop-filter: blur(1px)) {
-  #pierre-wrapper {
+  #pierre-embed-modal {
     background: rgba(10, 14, 22, 0.55);
   }
 }
-#pierre-wrapper::before {
+#pierre-embed-modal::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -64,7 +35,7 @@
   background-image: __NOISE_BG__;
   background-size: 220px 220px;
 }
-#pierre-iframe-container {
+#pierre-embed-modal-shell {
   position: relative;
   z-index: 1;
   overflow: hidden;
@@ -74,11 +45,11 @@
   max-width: calc(100vw - 32px);
   max-height: 90dvh;
 }
-#pierre-iframe-content {
+#pierre-embed-modal-body {
   opacity: 0;
   line-height: 0;
 }
-#pierre-iframe {
+#pierre-embed-modal-chat {
   display: block;
   z-index: 9999;
   width: min(600px, calc(100vw - 32px));
@@ -86,7 +57,7 @@
   height: min(700px, 90dvh);
   background: #fff;
 }
-#pierre-close {
+#pierre-embed-modal-close {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -115,43 +86,39 @@
     opacity 0.15s ease,
     color 0.15s ease;
 }
-#pierre-close:focus,
-#pierre-close:focus-visible {
+#pierre-embed-modal-close:focus,
+#pierre-embed-modal-close:focus-visible {
   outline: none;
   box-shadow: none;
 }
-#pierre-close:hover {
+#pierre-embed-modal-close:hover {
   background: rgba(255, 255, 255, 0.92);
   color: rgba(0, 0, 0, 0.78);
   opacity: 1;
 }
 @media (max-width: 600px) {
-  #pierre-iframe-container {
+  #pierre-embed-modal-shell {
     box-shadow: none;
     border-radius: 0;
     max-width: 100vw;
     max-height: 100dvh;
   }
-  #pierre-iframe {
+  #pierre-embed-modal-chat {
     width: 100vw;
     height: 100dvh;
   }
-  #pierre-close {
+  #pierre-embed-modal-close {
     top: max(12px, env(safe-area-inset-top));
     right: max(12px, env(safe-area-inset-right));
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  #pierre-wrapper {
+  #pierre-embed-modal {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     background: rgba(10, 14, 22, 0.52);
   }
-  #pierre-wrapper::before {
+  #pierre-embed-modal::before {
     display: none;
-  }
-  .pierre-ia,
-  #pierre-ia {
-    transition: opacity 0.15s ease;
   }
 }

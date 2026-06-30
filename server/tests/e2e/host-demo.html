@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PIERRE — démo modale hôte</title>
+    <script
+      src="http://localhost:3000/assets/dist/js/pierre.js"
+      data-pierre-config="default"
+      async
+    ></script>
+    <style>
+      body {
+        font-size: 2rem;
+        margin: 150px;
+        font-family: system-ui, sans-serif;
+        background-color: aquamarine;
+      }
+
+      .pierre-launcher {
+        position: fixed;
+        z-index: 9999;
+        cursor: pointer;
+        margin: 0;
+        font-family: inherit;
+        color: #000;
+        font-weight: bold;
+        background-color: #fff;
+        border: 3px solid black;
+        box-shadow: 2px 2px 6px #00000080;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>PIERRE</h1>
+    <h2>
+      Une IA open source et plurilingue au service du mouvement HLM, de ses candidats, locataires et
+      collaborateurs.
+    </h2>
+    <h3>En 30 secondes, PIERRE c'est :</h3>
+    <ul>
+      <li>
+        Un service-client plurilingue propulsé par IA pour répondre 24/7/365 à toutes les
+        questions-logements de « premier niveau » des demandeurs et locataires HLM.
+      </li>
+      <li>
+        Un assistant (ou aide de camp) propulsé par IA pour aider au quotidien les collaborateurs du
+        monde HLM et qui apprend de vos procédures et pratiques.
+      </li>
+      <li>
+        Du temps rendu aux équipes des bailleurs pour se concentrer sur des actions à forte valeur
+        ajoutée et de la qualité de service en plus pour les locataires.
+      </li>
+      <li>
+        Un chatbot open source, plurilingue et spécialement adapté au secteur HLM que l'on peut
+        déployer en 10 minutes sur n'importe quel VPS.
+      </li>
+      <li>
+        Un corpus de connaissances en open data pour entraîner une IA à répondre précisément aux
+        questions des demandeurs ou locataires HLM.
+      </li>
+    </ul>
+
+    <p style="font-size: 1rem; max-width: 40rem">
+      Démo modale — cliquez sur un bouton IA (coins, milieu des bords, centre) pour vérifier
+      l'animation dock depuis n'importe quelle position. Lancer <code>bun run dev:server</code> puis
+      <code>bun run embed</code> (serve cette page sur <code>http://localhost:3001</code>).
+      <strong>Ne pas ouvrir ce fichier en <code>file://</code></strong> (CSP iframe).
+    </p>
+    <p style="font-size: 1rem">
+      <a href="#test">Lien de test</a> (cliquable quand la modale est fermée).
+    </p>
+
+    <button
+      type="button"
+      class="pierre-launcher"
+      data-pierre-open
+      style="top: 24px; left: 24px; font-size: 22px; padding: 6px 14px; border-radius: 999px"
+    >
+      IA ↖
+    </button>
+
+    <button
+      type="button"
+      class="pierre-launcher"
+      data-pierre-open
+      style="top: 24px; right: 24px; font-size: 22px; padding: 6px 14px; border-radius: 12px"
+    >
+      IA ↗
+    </button>
+
+    <button
+      type="button"
+      class="pierre-launcher"
+      data-pierre-open
+      style="
+        top: 50%;
+        left: 24px;
+        transform: translateY(-50%);
+        font-size: 18px;
+        padding: 10px 8px;
+        border-radius: 8px;
+        writing-mode: vertical-rl;
+      "
+    >
+      IA ←
+    </button>
+
+    <button
+      type="button"
+      class="pierre-launcher"
+      data-pierre-open
+      style="
+        top: 50%;
+        right: 24px;
+        transform: translateY(-50%);
+        font-size: 18px;
+        padding: 10px 8px;
+        border-radius: 8px;
+        writing-mode: vertical-rl;
+      "
+    >
+      IA →
+    </button>
+
+    <button
+      type="button"
+      class="pierre-launcher"
+      data-pierre-open
+      style="
+        bottom: 24px;
+        left: 24px;
+        font-size: 26px;
+        padding: 4px 16px;
+        border-radius: 8px;
+        border-width: 4px;
+      "
+    >
+      IA ↙
+    </button>
+
+    <button
+      type="button"
+      class="pierre-launcher"
+      data-pierre-open
+      style="
+        bottom: 50px;
+        right: 50px;
+        font-size: 30px;
+        padding: 2px 12px;
+        border-radius: 8px;
+        border-width: 4px;
+      "
+    >
+      iA?
+    </button>
+
+    <button
+      type="button"
+      class="pierre-launcher"
+      data-pierre-open
+      style="
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 24px;
+        padding: 8px 20px;
+        border-radius: 999px;
+      "
+    >
+      IA ●
+    </button>
+
+    <button
+      type="button"
+      class="pierre-launcher"
+      data-pierre-open
+      style="
+        top: 120px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 11px;
+        width: 32px;
+        height: 32px;
+        line-height: 32px;
+        padding: 0;
+        border-radius: 6px;
+        border-width: 2px;
+        box-shadow: 1px 1px 4px #00000080;
+      "
+    >
+      ia
+    </button>
+  </body>
+</html>
