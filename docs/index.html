@@ -44,17 +44,23 @@
       PIERRE — Une intelligence artificielle open source, plurilingue et agentique au service du
       mouvement HLM, de ses candidats, locataires et collaborateurs.
     </title>
+    <script
+      crossorigin="anonymous"
+      src="https://assistant.pierre-ia.org/assets/dist/js/pierre.js"
+      data-pierre-config="default"
+      async
+    ></script>
   </head>
 
   <body>
-    <script crossorigin="anonymous" src="assets/widget.js"></script>
-    <p
-      id="pierre-ia"
-      data-configuration="default"
-      data-url="https://assistant.pierre-ia.org"
+    <button
+      type="button"
+      data-pierre-open
       style="
+        position: fixed;
         right: 20px;
         bottom: 20px;
+        z-index: 9999;
         color: #000;
         font-size: 30px;
         font-weight: bold;
@@ -63,10 +69,11 @@
         border-radius: 8px;
         border: 4px solid black;
         box-shadow: 2px 2px 6px #00000080;
+        cursor: pointer;
       "
     >
       iA?
-    </p>
+    </button>
 
     <main>
       <div class="explanation">

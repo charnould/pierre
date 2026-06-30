@@ -6,7 +6,6 @@ desktop/dist/
 desktop/out
 server/datastores/
 server/temp/
-server/assets/scripts/widget.styles.gen.ts
 
 .env
 .env.production

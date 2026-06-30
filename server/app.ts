@@ -25,6 +25,7 @@ import { controller as get_desktop_tickets_drafts } from './controllers/desktop/
 import { controller as get_desktop_tickets_facets } from './controllers/desktop/tickets/get.facets'
 import { controller as put_desktop_tickets } from './controllers/desktop/tickets/put'
 import { controller as put_desktop_tickets_drafts } from './controllers/desktop/tickets/put.draft'
+import { controller as get_embed } from './controllers/embed/get'
 import { controller as post_telemetry } from './controllers/telemetry/post'
 // import { topicize, score } from "./utils/analyze-conversation";
 import { authenticate } from './utils/authenticate-user'
@@ -75,7 +76,7 @@ app.get('/customization/:path{.+}/AGENTS.md', (c) => c.notFound())
 // Serve desktop config.ts as plain JSON
 app.get('/customization/desktop/config.json', (c) => c.json(desktop_config))
 
-// Serve widget assets (with CORS for cross-origin embedding) and customization files
+// Serve PIERRE assets (with CORS for cross-origin embedding) and customization files
 app.use('/assets/*', cors())
 app.use('/assets/*', serveStatic({ root: SERVER_ROOT }))
 app.use('/customization/*', serveStatic({ root: CUSTOMIZATION_STATIC_ROOT }))
@@ -110,12 +111,17 @@ app.post('/a/conversations', authenticate, post_admin_conversations)
 app.get('/up', (c) => c.text('ok'))
 app.post('/telemetry', post_telemetry)
 
+// PIERRE embed shell (modal isolated from host page CSS/DOM)
+app.get('/embed', get_embed)
+
 // Catch-all route that redirects to a new conversation
-app.notFound(async (c) =>
-  c.redirect(
+app.notFound(async (c) => {
+  if (c.req.path.startsWith('/assets/')) return c.text('Not Found', 404)
+
+  return c.redirect(
     `/c?config=${c.req.query('config')}&data=${c.req.query('data')}${c.req.query('compact') !== undefined ? '&compact' : ''}`
   )
-)
+})
 
 // Handle errors by returning a 404 response
 app.onError((_err, c) => c.notFound())

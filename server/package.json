@@ -9,7 +9,7 @@
     "vm:build:linux": "bash ../config/build-smolvm-linux.sh",
     "server:build": "cd .. && bun --env-file=.env.production run config/build-server.ts",
     "dev": "DEBUG=true bun --env-file=../.env.production --watch run app.ts",
-    "modal": "bun --port=1984 tests/e2e/_open-modal.html & sleep 1 && open http://localhost:1984",
+    "embed": "BUN_PORT=3001 bun --watch tests/e2e/host-demo.html",
     "start": "NODE_ENV=production bun run app.ts",
     "wikipedia": "bun --env-file=../.env.production run ./utils/knowledge/scrape-wikipedia.ts",
     "pierre:version": "bun run utils/update-pierre.ts",
