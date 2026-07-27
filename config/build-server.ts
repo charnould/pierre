@@ -31,16 +31,27 @@ async function buildPierreEmbedModalCss(): Promise<string> {
     .replaceAll('__SHADOW_REST__', PIERRE_MODAL_SHADOW_REST)
 }
 
+function assertPierreIife(path: string, code: string): void {
+  const trimmed = code.trimStart()
+  // Host/embed scripts run on third-party pages (jQuery, etc.). Minified top-level
+  // `var $` / short globals must stay inside an IIFE — never leak to window.
+  if (!/^\(?function\b|^!\s*function\b|^\(\s*\(\s*\)\s*=>/.test(trimmed)) {
+    throw new Error(`${path} must be an IIFE (--format=iife) to avoid host global clashes`)
+  }
+}
+
 function assertPierreHostMinified(pierrePath: string, pierre: string): void {
   if (pierre.includes('pierre_is_open') || pierre.includes('pierre-embed-modal')) {
     throw new Error(`${pierrePath} was not minified — check oxfmt/format-on-save`)
   }
+  assertPierreIife(pierrePath, pierre)
 }
 
 function assertPierreEmbedMinified(pierreEmbedPath: string, pierreEmbed: string): void {
   if (pierreEmbed.includes('\nconst MODAL_ID')) {
     throw new Error(`${pierreEmbedPath} was not minified — check oxfmt/format-on-save`)
   }
+  assertPierreIife(pierreEmbedPath, pierreEmbed)
 }
 
 // A timestamp used in filename to avoid caching issue (CSS + JS)
@@ -76,9 +87,6 @@ for (const mdRoot of mdRoots) {
   }
 }
 
-await $`bun lint`
-await $`bun format`
-
 // Compile production CSS file
 await $`bunx @tailwindcss/cli@latest -i ${SERVER}/assets/tailwind/style.css -o ${SERVER}/assets/dist/css/style.${timestamp}.css --minify`
 
@@ -92,9 +100,9 @@ await Bun.write(
 )
 
 // Transpile and minify .ts/.tsx scripts into .js to work in browser.
-await $`bun build ${SERVER}/assets/scripts/ai.tsx --outfile ${SERVER}/assets/dist/js/ai.${timestamp}.js --minify --target browser`
-await $`bun build ${PIERRE_HOST}/pierre.ts --outfile ${SERVER}/assets/dist/js/pierre.js --minify --target browser`
-await $`bun build ${PIERRE_EMBED}/pierre-embed.ts --outfile ${SERVER}/assets/dist/js/pierre-embed.js --minify --target browser`
+await $`bun build ${SERVER}/assets/scripts/ai.tsx --outfile ${SERVER}/assets/dist/js/ai.${timestamp}.js --minify --target browser --production`
+await $`bun build ${PIERRE_HOST}/pierre.ts --outfile ${SERVER}/assets/dist/js/pierre.js --minify --target browser --format=iife`
+await $`bun build ${PIERRE_EMBED}/pierre-embed.ts --outfile ${SERVER}/assets/dist/js/pierre-embed.js --minify --target browser --format=iife`
 
 const pierreDistPath = join(SERVER, 'assets/dist/js/pierre.js')
 assertPierreHostMinified(pierreDistPath, await Bun.file(pierreDistPath).text())
