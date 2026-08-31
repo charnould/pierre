@@ -1,12 +1,16 @@
 {
   "$schema": "../node_modules/oxlint/configuration_schema.json",
-  "plugins": ["typescript", "unicorn", "oxc"],
+  "plugins": ["typescript", "unicorn", "oxc", "react"],
   "categories": {
     "correctness": "error"
   },
-  "rules": {},
+  "rules": {
+    // Neither is in the correctness category, so the plugin alone does not
+    // enable them.
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "error"
+  },
   "env": {
     "builtin": true
-  },
-  "ignorePatterns": ["**/*.js", "../server/assets/dist/**", "../docs/assets/**"]
+  }
 }

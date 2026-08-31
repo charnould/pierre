@@ -43,7 +43,10 @@ env:
     - AUTH_SECRET
     - AUTH_BEARER
     - AUTH_PASSWORD
+    - CM_PRODUCT_TOKEN
+    - CM_FROM
+    - CM_WEBHOOK_SECRET
+    - IP
     - WEBHOOK_KEY_1
     - WEBHOOK_KEY_2
     - WEBHOOK_KEY_3
-    - IP

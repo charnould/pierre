@@ -3,6 +3,8 @@ name: CI/CD Pipeline
 on:
   pull_request:
     branches: ['master']
+  push:
+    branches: ['master']
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -14,23 +16,71 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
       - run: bun install
-      - run: bun lint
+      - run: bun lint:check
+      - run: bun knip
+      - run: bun knip:production
   format:
     name: Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
       - run: bun install
-      - run: bun format
+      - run: bun format:check
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install
+      - run: bun --filter "@pierre/desktop" typecheck
+      - run: bun --filter "@pierre/server" typecheck
   test_unit:
     name: Test (unit)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
       - run: bun install
       - run: bun run --cwd server utils/setup.ts
+      - run: bun test config/checks shared
       - run: SERVICE=pierre-production bun --filter "@pierre/server" test:unit
       - run: bun --filter "@pierre/desktop" test
+      - run: bun --filter "@pierre/docs" test
+  package:
+    name: Package
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install
+      - run: bun --filter "@pierre/desktop" build
+      - run: bun --filter "@pierre/desktop" perf:check
+      - run: cd desktop && bun run package

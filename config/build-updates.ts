@@ -62,6 +62,7 @@ export function extractAudienceFromSlug(slug: string): UpdateAudience | null {
   if (!match) return null
 
   const token = match[2]
+  if (!token) return null
   return AUDIENCE_TOKENS[token] ?? null
 }
 

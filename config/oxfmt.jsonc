@@ -6,6 +6,5 @@
   "printWidth": 100,
   "sortPackageJson": true,
   "sortImports": true,
-  "sortTailwindcss": true,
-  "ignorePatterns": ["**/*.js", "../server/assets/dist/**", "../docs/assets/**"]
+  "sortTailwindcss": true
 }
