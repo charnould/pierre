@@ -20,7 +20,6 @@ COPY docs/package.json ./docs/
 COPY desktop/package.json ./desktop/
 RUN bun install --frozen-lockfile --production --filter @pierre/server
 
-COPY customization/ ./customization/
 COPY config/smolvm/pierre-amd64 ./config/smolvm/pierre-amd64
 COPY config/smolvm/pierre-amd64.smolmachine ./config/smolvm/pierre-amd64.smolmachine
 COPY server/ ./server/

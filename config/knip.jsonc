@@ -14,16 +14,8 @@
         "config/build-server.ts!",
         "config/build-updates.ts!",
         "config/smolvm/extensions/ask-user.ts!",
-        // CI-only validator: production Knip excludes the workflow tests that import it.
-        "config/checks/workflow-config.ts!",
         "config/checks/*.test.ts",
-        "shared/**/*.test.ts",
-        // Hosted instance files: imported by the server at runtime, not by this workspace.
-        "customization/config.ts!",
-        "customization/chatbots/*/config.ts!",
-        "customization/skills/*/config.ts!",
-        "customization/repayments/config.ts!",
-        "customization/tickets/config.ts!"
+        "shared/**/*.test.ts"
       ],
       "ignoreDependencies": [
         // Oxlint loads JavaScript plugins from config strings that Knip cannot trace.
@@ -69,9 +61,7 @@
       ]
     },
     "docs": {
-      "entry": ["scripts/build.ts!", "scripts/**/*.test.ts"],
-      // TypeScript consumes this ambient declaration package without a source import.
-      "ignoreDependencies": ["@types/markdown-it"]
+      "entry": ["scripts/build.ts!", "scripts/**/*.test.ts"]
     },
     "server": {
       "entry": [

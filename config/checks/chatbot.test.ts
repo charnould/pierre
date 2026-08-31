@@ -5,8 +5,7 @@ import { join, resolve } from 'node:path'
 import {
   chatbotSiteFields,
   DefaultChatbotConfig,
-  InternalChatbotConfig,
-  SkillConfig
+  InternalChatbotConfig
 } from '../../server/utils/_schema'
 
 const CUSTOMIZATION_DIR = resolve(import.meta.dir, '../../customization')
@@ -90,35 +89,4 @@ test('chatbotSiteFields hides blank chrome', () => {
     examples: [],
     disclaimer: null
   })
-})
-
-test('skill configs reject chatbot-only fields and require trace', () => {
-  const config = {
-    id: 'skill.x',
-    display: 'X',
-    community_knowledge: false,
-    reasoning_effort: 'medium'
-  }
-  expect(SkillConfig.safeParse(config).success).toBe(false)
-  expect(SkillConfig.safeParse({ ...config, trace: 'expanded' }).success).toBe(true)
-  expect(
-    SkillConfig.safeParse({
-      ...config,
-      trace: 'expanded',
-      greetings: ['hello'],
-      attachments: true
-    }).success
-  ).toBe(false)
-})
-
-test('skill configs parse successfully', async () => {
-  const directories = await readdir(join(CUSTOMIZATION_DIR, 'skills'))
-
-  for (const directory of directories) {
-    const path = join(CUSTOMIZATION_DIR, 'skills', directory, 'config.ts')
-    if (!(await Bun.file(path).exists())) continue
-    const config = (await import(`../../customization/skills/${directory}/config`)).default
-    const check = SkillConfig.safeParse(config)
-    expect(check.success, directory).toBe(true)
-  }
 })
