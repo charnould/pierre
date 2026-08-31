@@ -1,0 +1,8 @@
+# Keep in sync with config/oxfmt.ignore.
+# Wired from package.json via --ignore-path="$PWD/config/oxlint.ignore"
+# (oxlint resolves relative --ignore-path against this file's directory, which
+# would only cover config/ — $PWD forces repo-root matching).
+**/*.js
+**/dist/**
+docs/assets/**
+**/plans/**

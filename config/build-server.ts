@@ -2,7 +2,6 @@ import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { $ } from 'bun'
-import toc from 'markdown-toc'
 
 const ROOT = import.meta.dir.replace(/\/config$/, '')
 const SERVER = join(ROOT, 'server')
@@ -60,35 +59,11 @@ const timestamp = Date.now()
 // Remove old files
 await $`rm -rf ${SERVER}/assets/dist/css`
 await $`rm -rf ${SERVER}/assets/dist/js`
-await $`rm -f ${ROOT}/docs/assets/pierre.js`
-await $`rm -f ${ROOT}/docs/assets/widget.js`
 await $`find ${ROOT} -name ".DS_Store" -type f -delete`
 
-// Read markdown under repo root and server/knowledge
-const mdRoots = [ROOT, join(SERVER, 'knowledge')]
-for (const mdRoot of mdRoots) {
-  const files = await readdir(mdRoot, { recursive: true })
-  for (const file of files) {
-    const path = typeof file === 'string' ? join(mdRoot, file) : join(mdRoot, String(file))
-    if (path.includes('node_modules') || !path.endsWith('.md')) continue
-    const content = await Bun.file(path).text()
-    const updated_content = toc.insert(content, {
-      maxdepth: 3,
-      slugify: function slugify(value: string) {
-        return value
-          .toLowerCase()
-          .trim()
-          .replace(/[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,./:;<=>?@[\]^`{|}~]/g, '')
-          .replace(/\s/g, '-')
-          .replace(/-$/, '')
-      }
-    })
-    await Bun.write(path, updated_content)
-  }
-}
-
-// Compile production CSS file
-await $`bunx @tailwindcss/cli@latest -i ${SERVER}/assets/tailwind/style.css -o ${SERVER}/assets/dist/css/style.${timestamp}.css --minify`
+// Compile production CSS file (local CLI — avoid bunx @latest resolving/updating lockfile)
+const tailwindcss = join(SERVER, 'node_modules/.bin/tailwindcss')
+await $`${tailwindcss} -i ${SERVER}/assets/tailwind/style.css -o ${SERVER}/assets/dist/css/style.${timestamp}.css --minify`
 
 const embed_frame_css = minifyCss(
   await Bun.file(join(PIERRE_EMBED, 'pierre-embed-frame.css')).text()
@@ -127,8 +102,5 @@ for (const view of views) {
       )
   )
 }
-
-// Copy pierre.js for the PIERRE website (docs)
-await $`cp ${SERVER}/assets/dist/js/pierre.js ${ROOT}/docs/assets`
 
 console.log(`✅ BUILD DONE!`)
