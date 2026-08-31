@@ -1,5 +1,10 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
+import {
+  applyWorkflowStreamEvent,
+  createWorkflowStreamSession,
+  isWorkflowReasoningPhase
+} from '@/features/workflow/lib/workflow-stream-buffers'
 import { parseWorkflowStream } from '@/shared/lib/parse-result'
 import { createRafThrottle } from '@/shared/lib/raf-throttle'
 import { releaseConversationVm } from '@/shared/lib/release-conversation-vm'
@@ -38,7 +43,7 @@ const EMPTY: WorkflowGenerationState = {
 
 type Options = {
   url?: string
-  /** When false, reasoning_delta chunks are ignored (e.g. Clearance-style; unused on stub). */
+  /** When false, structured thinking events are ignored. */
   captureReasoning?: boolean
   onErrorReturnToForm?: () => void
 }
@@ -49,12 +54,15 @@ type Options = {
 export function useWorkflowGeneration(options: Options = {}) {
   const { url, captureReasoning = true, onErrorReturnToForm } = options
   const urlRef = useRef(url)
-  urlRef.current = url
   const isGeneratingRef = useRef(false)
   const activeRequestIdRef = useRef<string | null>(null)
   const convId = useRef(crypto.randomUUID())
 
   const [state, setState] = useState<WorkflowGenerationState>(EMPTY)
+
+  useEffect(() => {
+    urlRef.current = url
+  })
 
   const releaseCurrentVm = useCallback(() => {
     releaseConversationVm(urlRef.current, convId.current)
@@ -107,20 +115,24 @@ export function useWorkflowGeneration(options: Options = {}) {
         errMsg: ''
       })
 
-      const streamBuf = { current: '' }
-      const reasoningBuf = { current: '' }
+      const session = createWorkflowStreamSession()
       const startedAt = performance.now()
 
       const streamThrottle = createRafThrottle(() => {
-        const parsed = parseWorkflowStream(streamBuf.current, id_skill, true)
+        const parsed = parseWorkflowStream(session.text, id_skill, true)
         const hasOutput = !!parsed.output.trim()
-        const reasoning = reasoningBuf.current
         setState((s) => ({
           ...s,
           output: parsed.output,
           subject: parsed.subject,
-          reasoning,
-          isReasoningPhase: hasOutput ? false : s.isReasoningPhase
+          reasoning: session.thinking,
+          isReasoningPhase: isWorkflowReasoningPhase({
+            isStreaming: true,
+            hasOutput,
+            captureReasoning: shouldCaptureReasoning,
+            resetsSeen: session.toolCallsSeen,
+            hadReasoningDelta: session.thinking.length > 0
+          })
         }))
       })
 
@@ -138,13 +150,16 @@ export function useWorkflowGeneration(options: Options = {}) {
             setState((s) => ({ ...s, errMsg: 'Erreur de génération.' }))
             return
           }
-          if (event.type === 'reasoning_delta' && shouldCaptureReasoning) {
-            reasoningBuf.current += event.content
-            streamThrottle.schedule()
-            return
-          }
-          if (event.type === 'delta') {
-            streamBuf.current += event.content
+          applyWorkflowStreamEvent(session, event, shouldCaptureReasoning)
+          if (
+            event.type === 'text_delta' ||
+            event.type === 'text_end' ||
+            event.type === 'thinking_delta' ||
+            event.type === 'thinking_end' ||
+            event.type === 'toolcall_start' ||
+            event.type === 'message_end' ||
+            event.type === 'stream_end'
+          ) {
             streamThrottle.schedule()
           }
         }
@@ -171,7 +186,7 @@ export function useWorkflowGeneration(options: Options = {}) {
         return { ok: false as const }
       }
 
-      const finalParsed = parseWorkflowStream(streamBuf.current, id_skill, false)
+      const finalParsed = parseWorkflowStream(session.text, id_skill, false)
       const generation_duration_ms = Math.round(performance.now() - startedAt)
       activeRequestIdRef.current = null
       setState((s) => ({
@@ -188,7 +203,7 @@ export function useWorkflowGeneration(options: Options = {}) {
         output: finalParsed.output,
         subject: finalParsed.subject,
         raw: finalParsed.raw,
-        reasoning: reasoningBuf.current,
+        reasoning: session.thinking,
         generated_duration_ms: generation_duration_ms
       }
     },

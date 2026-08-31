@@ -69,6 +69,18 @@ describe('shouldNavigateHomeOnEscape', () => {
     ).toBe(false)
   })
 
+  test('blocked when find-in-page is open', () => {
+    expect(
+      shouldNavigateHomeOnEscape({
+        activeTab: 'chat',
+        isLoggedIn: true,
+        isTypingInField: false,
+        hasOpenDialog: false,
+        hasOpenFindInPage: true
+      })
+    ).toBe(false)
+  })
+
   test('blocked when logged out', () => {
     expect(
       shouldNavigateHomeOnEscape({

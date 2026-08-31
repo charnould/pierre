@@ -1,0 +1,40 @@
+export type {
+  ActionActivityContent,
+  ActionActivityEvent,
+  ActionActivityState,
+  Activite,
+  ActiviteListItem,
+  ActivitiesListResponse,
+  ActivityContext,
+  ActivityFeedSyncData,
+  ActivityFeedSyncResult,
+  ActivityPatch,
+  ActivityResponse,
+  ActivityStatus,
+  ActivityType,
+  CommunicationType,
+  CreateActivityBody,
+  CreateActivityPayload,
+  DeleteActivityPayload,
+  DeleteActivityResponse,
+  GetActivitiesParams,
+  GetActivityFeedSyncParams,
+  Mention,
+  PatchActivityPayload,
+  SendCommunicationPayload
+} from '../../../../shared/activites'
+
+export {
+  ACTIVITY_CONTENT_VERSION,
+  COMMUNICATION_TYPES,
+  activity_payload,
+  activity_texte,
+  activity_timestamp,
+  is_boost_notification,
+  mention_of,
+  parse_action_activity_content,
+  parse_action_creation_content,
+  parse_contenu_json,
+  parse_message_activity_content,
+  parse_repayment_tag_change_content
+} from '../../../../shared/activites'

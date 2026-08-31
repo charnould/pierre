@@ -1,7 +1,8 @@
-import { ipcMain, net, session, type Session } from 'electron'
+import { ipcMain, session, type Session } from 'electron'
 
 import { pierreCookieLinesFromWebHeaders } from '../../../src/features/auth/login'
 import type { LoginErrorCode } from '../../../src/shared/lib/login-errors'
+import { netFetch } from '../../lib/net-fetch'
 import { logMainError, logMainInfo } from '../../services/logging'
 import type { SettingsStore } from '../../services/settings-store'
 import { IpcChannel } from '../channels'
@@ -17,7 +18,7 @@ const LOGIN_HEADERS = {
 /**
  * Removes all cookies from the persistent Pierre session partition.
  */
-export async function clearSessionCookies(ses: Session): Promise<void> {
+async function clearSessionCookies(ses: Session): Promise<void> {
   const cookies = await ses.cookies.get({})
   for (const cookie of cookies) {
     const domain = cookie.domain?.startsWith('.') ? cookie.domain.slice(1) : cookie.domain
@@ -59,7 +60,7 @@ async function postLoginForm(
   const loginUrl = `${baseUrl}/a/login?client=desktop`
   let resp: Response
   try {
-    resp = await net.fetch(loginUrl, {
+    resp = await netFetch(loginUrl, {
       method: 'POST',
       headers: LOGIN_HEADERS,
       body: params,
@@ -125,6 +126,29 @@ export function registerAuthHandlers(partition: string, store: SettingsStore): v
     }
   })
 
+  ipcMain.handle(IpcChannel.auth.loginStored, async () => {
+    const saved = store.readSettings()
+    const url = typeof saved?.url === 'string' ? saved.url : ''
+    const email = typeof saved?.email === 'string' ? saved.email : ''
+    const password = typeof saved?.password === 'string' ? saved.password : ''
+    if (!url || !email || !password) return { ok: false, message: 'server_error' }
+    const ses = session.fromPartition(partition)
+    await clearSessionCookies(ses)
+    try {
+      const result = await postLoginForm(
+        ses,
+        url,
+        new URLSearchParams({ email, password, action: 'login' })
+      )
+      if (!result.ok) await clearSessionCookies(ses)
+      return result
+    } catch (error) {
+      logMainError('login-stored', error)
+      await clearSessionCookies(ses)
+      return { ok: false, message: 'network_error' }
+    }
+  })
+
   ipcMain.handle(IpcChannel.auth.logout, async () => {
     const ses = session.fromPartition(partition)
     const saved = store.readSettings()
@@ -146,7 +170,7 @@ export function registerAuthHandlers(partition: string, store: SettingsStore): v
     if (data) params.set('data', data)
     const qs = params.toString()
     try {
-      const resp = await net.fetch(`${url}/ai/boot${qs ? `?${qs}` : ''}`, { session: ses })
+      const resp = await netFetch(`${url}/ai/boot${qs ? `?${qs}` : ''}`, { session: ses })
       if (!resp.ok) return null
       return await resp.json()
     } catch (error) {
@@ -158,7 +182,7 @@ export function registerAuthHandlers(partition: string, store: SettingsStore): v
   ipcMain.handle(IpcChannel.auth.getSkills, async (_, { url }) => {
     const ses = session.fromPartition(partition)
     try {
-      const resp = await net.fetch(`${url}/ai/skills`, { session: ses })
+      const resp = await netFetch(`${url}/ai/skills`, { session: ses })
       if (!resp.ok) return []
       return await resp.json()
     } catch (error) {

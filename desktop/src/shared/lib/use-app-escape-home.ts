@@ -1,7 +1,11 @@
 import { useEffect } from 'react'
 
 import { isTypingInField } from '@/features/workflow/lib/workflow-keyboard'
-import { hasOpenDialog, shouldNavigateHomeOnEscape } from '@/shared/lib/app-escape-home'
+import {
+  hasOpenDialog,
+  hasOpenFindInPage,
+  shouldNavigateHomeOnEscape
+} from '@/shared/lib/app-escape-home'
 import { isFocusInHiddenPanel } from '@/shared/lib/release-hidden-panel-focus'
 import type { Tab } from '@/shared/lib/tabs'
 
@@ -21,7 +25,8 @@ export function useAppEscapeHome(options: {
           activeTab,
           isLoggedIn,
           isTypingInField: typing,
-          hasOpenDialog: hasOpenDialog()
+          hasOpenDialog: hasOpenDialog(),
+          hasOpenFindInPage: hasOpenFindInPage()
         })
       ) {
         return

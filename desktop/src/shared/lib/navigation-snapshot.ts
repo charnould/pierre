@@ -1,17 +1,12 @@
-import type { AboutSubject, TicketSkillKey } from '@/features/tickets/lib/knowledge-skills'
-import type { DraftRevision } from '@/features/tickets/lib/ticket-draft-revision'
+import type { AboutSubject } from '@/features/tickets/lib/knowledge-skills'
 import type { WorkflowStep } from '@/features/workflow/hooks/useWorkflowPanel'
 import type { Tab } from '@/shared/lib/tabs'
 
-export type TicketsNavigationState = {
-  step: WorkflowStep
-  ticketNumber: string
-  tenantNumber: string
-  message: string
-  context: string
-  ticketFormat: TicketSkillKey
-  draftRevision?: DraftRevision
-}
+export type ActivityTarget =
+  | { view: 'repayment'; tenantId: string; idClient?: string | null; activityId?: number }
+  | { view: 'tickets'; id_reclamation: string; activityId?: number }
+  | { view: 'automations'; automationId: string; activityId?: number }
+  | { view: 'updates'; slug: string; title: string; date: string }
 
 export type AboutNavigationState = {
   step: WorkflowStep
@@ -24,31 +19,8 @@ export type AboutNavigationState = {
 
 export type NavigationSnapshot = {
   tab: Tab
-  tickets?: TicketsNavigationState
+  activityTarget?: ActivityTarget
   about?: AboutNavigationState
-}
-
-export function defaultTicketsTableState(): TicketsNavigationState {
-  return {
-    step: 'form',
-    ticketNumber: '',
-    tenantNumber: '',
-    message: '',
-    context: '',
-    ticketFormat: 'ticketReplyEmail'
-  }
-}
-
-function ticketsEqual(a: TicketsNavigationState, b: TicketsNavigationState): boolean {
-  return (
-    a.step === b.step &&
-    a.ticketNumber === b.ticketNumber &&
-    a.tenantNumber === b.tenantNumber &&
-    a.message === b.message &&
-    a.context === b.context &&
-    a.ticketFormat === b.ticketFormat &&
-    a.draftRevision === b.draftRevision
-  )
 }
 
 function aboutEqual(a: AboutNavigationState, b: AboutNavigationState): boolean {
@@ -62,12 +34,35 @@ function aboutEqual(a: AboutNavigationState, b: AboutNavigationState): boolean {
   )
 }
 
+function activityTargetEqual(
+  a: ActivityTarget | undefined,
+  b: ActivityTarget | undefined
+): boolean {
+  if (!a && !b) return true
+  if (!a || !b) return false
+  if (a.view !== b.view) return false
+  if (a.view === 'repayment' && b.view === 'repayment') {
+    return (
+      a.tenantId === b.tenantId &&
+      a.activityId === b.activityId &&
+      (a.idClient ?? null) === (b.idClient ?? null)
+    )
+  }
+  if (a.view === 'tickets' && b.view === 'tickets') {
+    return a.id_reclamation === b.id_reclamation && a.activityId === b.activityId
+  }
+  if (a.view === 'automations' && b.view === 'automations') {
+    return a.automationId === b.automationId && a.activityId === b.activityId
+  }
+  if (a.view === 'updates' && b.view === 'updates') {
+    return a.slug === b.slug
+  }
+  return false
+}
+
 export function snapshotsEqual(a: NavigationSnapshot, b: NavigationSnapshot): boolean {
   if (a.tab !== b.tab) return false
-  if (a.tickets || b.tickets) {
-    if (!a.tickets || !b.tickets) return false
-    if (!ticketsEqual(a.tickets, b.tickets)) return false
-  }
+  if (!activityTargetEqual(a.activityTarget, b.activityTarget)) return false
   if (a.about || b.about) {
     if (!a.about || !b.about) return false
     if (!aboutEqual(a.about, b.about)) return false
@@ -82,8 +77,10 @@ export function mergeSnapshot(
   const tab = partial.tab ?? base.tab
   const result: NavigationSnapshot = { tab }
 
-  if (tab === 'tickets') {
-    result.tickets = partial.tickets ?? (base.tab === 'tickets' ? base.tickets : undefined)
+  if (partial.activityTarget !== undefined) {
+    result.activityTarget = partial.activityTarget
+  } else if (tab === base.tab) {
+    result.activityTarget = base.activityTarget
   }
 
   if (tab === 'about') {

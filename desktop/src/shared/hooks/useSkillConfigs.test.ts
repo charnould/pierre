@@ -11,9 +11,9 @@ describe('reasoningUiForSkill', () => {
     })
   })
 
-  test('captureReasoningForSkill falls back for ticket skills before API load', () => {
+  test('captureReasoningForSkill falls back for ticket and about skills before API load', () => {
     expect(captureReasoningForSkill({}, 'ticket.answer-ticket')).toBe(true)
-    expect(captureReasoningForSkill({}, 'about.summary')).toBe(false)
+    expect(captureReasoningForSkill({}, 'about.summary')).toBe(true)
   })
 
   test('captureReasoningForSkill respects loaded off config', () => {

@@ -111,7 +111,7 @@ export class ColumnValuePaletteExhaustedError extends Error {
 
 export const pairKey = (style: ColumnValueStyle): string => `${style.bgColor}|${style.textColor}`
 
-export const assignColumnValueStylesRoundRobin = (
+const assignColumnValueStylesRoundRobin = (
   keys: string[],
   groups: readonly ColumnValueColorFamily[],
   random: () => number
@@ -217,6 +217,23 @@ export const hasColumnValueStyles = (
 
 export const columnColorizeButtonLabel = (hasExistingStyles: boolean): string =>
   hasExistingStyles ? 'Recoloriser' : 'Coloriser les colonnes'
+
+export const columnDecolorizeButtonLabel = (): string => 'Décoloriser'
+
+/** Retire les styles d’une colonne (insensible à la casse du nom de colonne). */
+export function clearColumnValueStyles(
+  columnValues: ColumnValuesConfig | undefined,
+  column: string
+): ColumnValuesConfig {
+  if (!columnValues) return {}
+  const columnKey = normalizeColumnValueKey(column).toLowerCase()
+  const next: ColumnValuesConfig = {}
+  for (const [name, styles] of Object.entries(columnValues)) {
+    if (normalizeColumnValueKey(name).toLowerCase() === columnKey) continue
+    next[name] = styles
+  }
+  return next
+}
 
 export const isValidColumnValuePalette = (palette: readonly ColumnValueStyle[]): boolean => {
   if (palette.length !== COLUMN_VALUE_PALETTE_SIZE) return false

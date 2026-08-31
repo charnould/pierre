@@ -1,23 +1,8 @@
 import type { UiSettings } from '@/shared/lib/ui-settings/schema'
 import { resolveTicketColumnLabel } from '@/shared/lib/ui-settings/schema'
 
-import type { Automation, TicketAutomationFilters, TicketFilterRule } from '../lib/automation-types'
+import type { TicketAutomationFilters, TicketFilterRule } from '../lib/automation-types'
 import { COMPARE_OPERATOR_LABELS } from '../lib/ticket-filters-client'
-
-export type { Automation, AutomationStatus } from '../lib/automation-types'
-export { isReportAutomation, isTicketReplyAutomation } from '../lib/automation-types'
-
-export function extractReportTitle(report: string, fallback: string): string {
-  const match = /^#\s+(.+)$/m.exec(report.trim())
-  return match?.[1].trim() ?? fallback
-}
-
-export function runDisplayStatus(automation: Automation, isLatest: boolean): Automation['status'] {
-  if (!isLatest) return 'success'
-  if (automation.status === 'error') return 'error'
-  if (automation.status === 'running') return 'running'
-  return 'success'
-}
 
 function formatRuleLabel(rule: TicketFilterRule, settings?: UiSettings): string {
   const label = resolveTicketColumnLabel(rule.column, settings)
@@ -34,15 +19,17 @@ function formatRuleLabel(rule: TicketFilterRule, settings?: UiSettings): string 
   return `${label} ${op} ${date}`
 }
 
+const HIDDEN_FILTER_COLUMNS = new Set(['type_affaire', 'avancement'])
+
+function visibleTicketFilterRules(rules: TicketFilterRule[]): TicketFilterRule[] {
+  return rules.filter((rule) => !HIDDEN_FILTER_COLUMNS.has(rule.column))
+}
+
 export function formatTicketFilters(
   filters: TicketAutomationFilters,
   settings?: UiSettings
 ): string {
-  if (filters.rules.length === 0) return 'Aucun filtre'
-  return filters.rules.map((r) => formatRuleLabel(r, settings)).join(' · ')
-}
-
-export function countOrphanedRules(rules: TicketFilterRule[], columnNames: string[]): number {
-  const allowed = new Set(columnNames)
-  return rules.filter((r) => !allowed.has(r.column)).length
+  const visibleRules = visibleTicketFilterRules(filters.rules)
+  if (visibleRules.length === 0) return 'Aucun filtre'
+  return visibleRules.map((rule) => formatRuleLabel(rule, settings)).join(' · ')
 }

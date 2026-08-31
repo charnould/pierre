@@ -18,13 +18,19 @@ describe('shouldEscapeNavigateHome', () => {
 
 describe('isTypingInField', () => {
   test('returns true for textarea and input', () => {
-    expect(isTypingInField({ tagName: 'TEXTAREA', readOnly: false })).toBe(true)
-    expect(isTypingInField({ tagName: 'INPUT', readOnly: false })).toBe(true)
+    expect(
+      isTypingInField({ tagName: 'TEXTAREA', readOnly: false } as unknown as EventTarget)
+    ).toBe(true)
+    expect(isTypingInField({ tagName: 'INPUT', readOnly: false } as unknown as EventTarget)).toBe(
+      true
+    )
   })
 
   test('returns false for readonly fields and other targets', () => {
-    expect(isTypingInField({ tagName: 'TEXTAREA', readOnly: true })).toBe(false)
-    expect(isTypingInField({ tagName: 'BUTTON' })).toBe(false)
+    expect(isTypingInField({ tagName: 'TEXTAREA', readOnly: true } as unknown as EventTarget)).toBe(
+      false
+    )
+    expect(isTypingInField({ tagName: 'BUTTON' } as unknown as EventTarget)).toBe(false)
     expect(isTypingInField(null)).toBe(false)
   })
 })

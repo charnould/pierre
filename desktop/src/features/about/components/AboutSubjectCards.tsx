@@ -1,13 +1,12 @@
-import { Building2, Home, User } from 'lucide-react'
+import { Building2, Handshake, Home, User } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { useId } from 'react'
 
 import { isValidAboutSubject } from '@/features/about/lib/about-form'
 import { ABOUT_SUBJECTS, type AboutSubject } from '@/features/tickets/lib/knowledge-skills'
+import { ChoiceTile } from '@/shared/components/ChoiceTile'
 import { Field, FieldDescription, FieldLabel } from '@/shared/components/ui/field'
 import { RadioGroup, RadioGroupItem } from '@/shared/components/ui/radio-group'
-import { FIELD_CAPTION, FIELD_HEADING, FIELD_HEADING_GROUP } from '@/shared/lib/form-chrome'
-import { cn } from '@/shared/lib/utils'
 
 const SUBJECT_OPTIONS: {
   value: AboutSubject
@@ -15,8 +14,9 @@ const SUBJECT_OPTIONS: {
   icon: ComponentType<{ className?: string; strokeWidth?: number }>
 }[] = [
   { value: 'locataire', label: 'Locataire', icon: User },
+  { value: 'client', label: 'Client', icon: Handshake },
   { value: 'lot', label: 'Lot', icon: Home },
-  { value: 'programme', label: 'Programme', icon: Building2 }
+  { value: 'batiment', label: 'Bâtiment', icon: Building2 }
 ]
 
 interface Props {
@@ -31,16 +31,13 @@ export function AboutSubjectCards({ value, onValueChange }: Props) {
 
   return (
     <Field>
-      <div className={FIELD_HEADING_GROUP}>
-        <FieldLabel id={labelId} className={FIELD_HEADING}>
-          Objet de la synthèse
-        </FieldLabel>
-        <FieldDescription id={descriptionId} className={FIELD_CAPTION}>
-          De quoi souhaitez-vous une synthèse&nbsp;?
-        </FieldDescription>
-      </div>
+      <FieldLabel id={labelId}>Objet de la synthèse</FieldLabel>
+      <FieldDescription id={descriptionId}>
+        De quoi souhaitez-vous une synthèse&nbsp;?
+      </FieldDescription>
       <RadioGroup
         value={value}
+        aria-label="Objet de la synthèse"
         aria-labelledby={labelId}
         aria-describedby={descriptionId}
         onValueChange={(v) => {
@@ -48,27 +45,22 @@ export function AboutSubjectCards({ value, onValueChange }: Props) {
             onValueChange(v)
           }
         }}
-        className="workflow-choice-radio-group"
+        className="grid-cols-2"
       >
         {SUBJECT_OPTIONS.map((opt) => {
           const id = `${baseId}-${opt.value}`
-          const isSelected = value === opt.value
           const Icon = opt.icon
           return (
-            <label
+            <ChoiceTile
               key={opt.value}
+              as="label"
               htmlFor={id}
-              className={cn(
-                'workflow-choice-row workflow-choice-row--label-only',
-                isSelected && 'workflow-choice-row--selected'
-              )}
-            >
-              <RadioGroupItem value={opt.value} id={id} className="workflow-choice-radio-sr" />
-              <span className="workflow-choice-row__icon">
-                <Icon strokeWidth={1.75} />
-              </span>
-              <span className="workflow-choice-row__label">{opt.label}</span>
-            </label>
+              interactive
+              selected={value === opt.value}
+              icon={<Icon className="size-4" strokeWidth={1.5} />}
+              title={opt.label}
+              signal={<RadioGroupItem value={opt.value} id={id} />}
+            />
           )
         })}
       </RadioGroup>

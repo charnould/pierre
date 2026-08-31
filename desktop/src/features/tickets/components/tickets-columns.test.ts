@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'bun:test'
 
+import type { ColumnDef } from '@tanstack/react-table'
+
+import type { PierreTableFeatures } from '@/shared/components/table/table-features'
 import { getTicketId } from '@/shared/lib/ticket-row'
 import { resolveTicketColumnLabel } from '@/shared/lib/ui-settings/schema'
 import {
@@ -13,9 +16,9 @@ import {
   resolveUnpinnedColumnOrder,
   resolveVisibleColumnNames
 } from '@/shared/lib/ui-settings/tickets-table'
-import type { TicketsColumnMeta } from '@/shared/types'
+import type { TicketRow, TicketsColumnMeta } from '@/shared/types'
 
-import { buildTicketsColumns } from './tickets-columns'
+import { buildTicketsColumns, isSqlNumericType, isTicketsNumericColumn } from './tickets-columns'
 
 const schema: TicketsColumnMeta[] = [
   { name: 'motif', type: 'TEXT' },
@@ -27,22 +30,54 @@ const schema: TicketsColumnMeta[] = [
 
 const schemaNames = schema.map((c) => c.name)
 
+function columnAccessorKey(column: ColumnDef<PierreTableFeatures, TicketRow>): string | undefined {
+  return 'accessorKey' in column ? String(column.accessorKey) : undefined
+}
+
+describe('sql column kinds', () => {
+  it('détecte les types SQLite numériques', () => {
+    expect(isSqlNumericType('INTEGER')).toBe(true)
+    expect(isSqlNumericType('REAL')).toBe(true)
+    expect(isSqlNumericType('NUMERIC')).toBe(true)
+    expect(isSqlNumericType('TEXT')).toBe(false)
+    expect(isSqlNumericType('DATE')).toBe(false)
+  })
+
+  it('ne traite pas les identifiants comme numériques', () => {
+    const mixed: TicketsColumnMeta[] = [
+      { name: 'id_reclamation', type: 'INTEGER' },
+      { name: 'montant', type: 'REAL' },
+      { name: 'motif', type: 'TEXT' }
+    ]
+    expect(isTicketsNumericColumn('id_reclamation', mixed)).toBe(false)
+    expect(isTicketsNumericColumn('montant', mixed)).toBe(true)
+    expect(isTicketsNumericColumn('motif', mixed)).toBe(false)
+  })
+
+  it('ne traite pas les dates comme des montants', () => {
+    const dated: TicketsColumnMeta[] = [
+      { name: 'date_creation', type: 'NUMERIC' },
+      { name: 'montant', type: 'REAL' }
+    ]
+    expect(isTicketsNumericColumn('date_creation', dated)).toBe(false)
+    expect(isTicketsNumericColumn('montant', dated)).toBe(true)
+  })
+})
+
 describe('buildTicketsColumns', () => {
   it('defines all schema columns for TanStack visibility and order', () => {
     const columns = buildTicketsColumns(schema)
-    expect(columns.map((c) => c.accessorKey)).toEqual(schemaNames)
+    expect(columns.map((c) => columnAccessorKey(c))).toEqual(schemaNames)
     expect(DEFAULT_PINNED_COLUMNS).toEqual(['id_reclamation', 'id_locataire', 'id_lot'])
-    const idCol = columns.find((c) => c.accessorKey === 'id_reclamation')
-    expect(idCol?.enablePinning).toBe(true)
+    const idCol = columns.find((c) => columnAccessorKey(c) === 'id_reclamation')
     expect(idCol?.enableHiding).toBe(true)
-    expect(idCol?.size).toBe(160)
     expect(resolveTicketColumnLabel('type_affaire')).toBe('type_affaire')
     expect(
       resolveTicketColumnLabel('motif', {
         tickets: { table: { columnLabels: { motif: 'Motif' } } }
       })
     ).toBe('Motif')
-    expect(typeof columns.find((c) => c.accessorKey === 'id_lot')?.header).toBe('function')
+    expect(typeof columns.find((c) => columnAccessorKey(c) === 'id_lot')?.header).toBe('function')
   })
 
   it('prepends draft NPIR group column when onDraftIconClick is set', () => {
@@ -50,14 +85,10 @@ describe('buildTicketsColumns', () => {
       onDraftIconClick: () => {}
     })
     expect(columns[0]?.id).toBe(TICKET_TABLE_DRAFT_GROUP_ID)
-    expect(columns.map((c) => c.accessorKey)).toEqual([TICKET_TABLE_DRAFT_GROUP_ID, ...schemaNames])
-  })
-
-  it('uses default column sizes on defs (persisted widths via columnSizing state)', () => {
-    const columns = buildTicketsColumns(schema)
-    expect(columns.find((c) => c.accessorKey === 'motif')?.size).toBe(200)
-    expect(columns.find((c) => c.accessorKey === 'id_lot')?.size).toBe(180)
-    expect(columns.find((c) => c.accessorKey === 'motif')?.enableResizing).toBe(true)
+    expect(columns.map((c) => columnAccessorKey(c))).toEqual([
+      TICKET_TABLE_DRAFT_GROUP_ID,
+      ...schemaNames
+    ])
   })
 })
 

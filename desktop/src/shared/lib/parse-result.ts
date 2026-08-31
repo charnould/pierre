@@ -47,10 +47,8 @@ function parseTicketAnswer(raw: string, streaming: boolean): ParsedWorkflowResul
   return { output, subject, raw }
 }
 
-function parsePlain(raw: string, streaming = false): ParsedWorkflowResult {
-  const legacyOutput = extractArtifact('output', raw, streaming)
-  const trimmed = legacyOutput || stripArtifactTags(raw)
-  return { output: trimmed, subject: '', raw }
+function parsePlain(raw: string): ParsedWorkflowResult {
+  return { output: stripArtifactTags(raw), subject: '', raw }
 }
 
 export function parseWorkflowStream(
@@ -59,21 +57,5 @@ export function parseWorkflowStream(
   streaming = false
 ): ParsedWorkflowResult {
   if (skillId === TICKET_ANSWER_SKILL) return parseTicketAnswer(raw, streaming)
-  return parsePlain(raw, streaming)
-}
-
-export function serializeTicketAnswer(input: { subject: string; body: string }): string {
-  const subject = input.subject.trim()
-  const body = input.body.trim()
-  if (!subject) return body
-  return `<artifact name="subject">${subject}</artifact>\n${body}`
-}
-
-export function resolveDraftContent(draft: {
-  generated_output: string | null
-  edited_output: string | null
-}): { body: string; subject: string } {
-  const raw = draft.edited_output ?? draft.generated_output ?? ''
-  const parsed = parseTicketAnswer(raw, false)
-  return { body: parsed.output, subject: parsed.subject }
+  return parsePlain(raw)
 }

@@ -1,9 +1,9 @@
-export const AUTOMATIONS_SPLIT_MIN = 20
-export const AUTOMATIONS_SPLIT_MAX = 45
+const AUTOMATIONS_SPLIT_MIN = 20
+const AUTOMATIONS_SPLIT_MAX = 45
 export const AUTOMATIONS_SPLIT_DEFAULT_LIST = 28
 
-export const AUTOMATIONS_PANEL_LIST = 'automations-list'
-export const AUTOMATIONS_PANEL_DETAIL = 'automations-detail'
+const AUTOMATIONS_PANEL_LIST = 'automations-list'
+const AUTOMATIONS_PANEL_DETAIL = 'automations-detail'
 
 export type AutomationsPanelSplit = {
   listPercent?: number

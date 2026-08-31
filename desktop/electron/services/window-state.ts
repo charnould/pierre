@@ -1,6 +1,12 @@
 import { screen, type BrowserWindow } from 'electron'
 
-import { clampWindowSize, DEFAULT_WINDOW_BOUNDS } from '../../src/shared/lib/ui-settings/schema'
+import { SURFACE_BASE_HEX } from '../../src/shared/lib/surface-colors'
+import {
+  clampWindowSize,
+  DEFAULT_WINDOW_BOUNDS,
+  LOGIN_WINDOW_BOUNDS
+} from '../../src/shared/lib/ui-settings/schema'
+import { easeOutCubic } from './ease-out-cubic'
 import type { SettingsStore } from './settings-store'
 import {
   computeCenteredPosition,
@@ -23,6 +29,13 @@ export function resolveInitialWindowBoundsOnScreen(raw: Record<string, unknown>)
 
 const PERSIST_DEBOUNCE_MS = 400
 const MIN_VISIBLE_PX = 100
+/** Cross-platform tween when Electron's native `animate` flag is unavailable. */
+const AUTH_LAYOUT_TWEEN_MS = 280
+const AUTH_LAYOUT_NATIVE_FALLBACK_MS = 420
+
+type Rect = { x: number; y: number; width: number; height: number }
+
+let authLayoutAnimToken = 0
 
 function windowIsWithinWorkArea(
   area: Electron.Rectangle,
@@ -60,24 +73,176 @@ export function ensureBoundsOnScreen(bounds: WindowBounds): WindowBounds {
   return { x, y, width, height }
 }
 
-function applyBoundsToWindow(win: BrowserWindow, bounds: WindowBounds): void {
+function toRect(win: BrowserWindow, bounds: WindowBounds): Rect {
   const adjusted = ensureBoundsOnScreen(bounds)
-  if (adjusted.x !== undefined && adjusted.y !== undefined) {
-    win.setBounds({
-      x: adjusted.x,
-      y: adjusted.y,
-      width: adjusted.width,
-      height: adjusted.height
-    })
-    return
+  const current = win.getBounds()
+  return {
+    x: adjusted.x ?? current.x,
+    y: adjusted.y ?? current.y,
+    width: adjusted.width,
+    height: adjusted.height
+  }
+}
+
+function rectsNearlyEqual(a: Rect, b: Rect): boolean {
+  return (
+    Math.abs(a.x - b.x) <= 1 &&
+    Math.abs(a.y - b.y) <= 1 &&
+    Math.abs(a.width - b.width) <= 1 &&
+    Math.abs(a.height - b.height) <= 1
+  )
+}
+
+function applyBoundsToWindow(win: BrowserWindow, bounds: WindowBounds): void {
+  win.setBounds(toRect(win, bounds))
+}
+
+/**
+ * Drop the React tree out of layout/paint so AppKit can animate a solid window
+ * without Chromium reflowing blur layers every frame.
+ */
+async function freezeWindowContents(win: BrowserWindow): Promise<void> {
+  if (win.isDestroyed() || win.webContents.isDestroyed()) return
+  try {
+    await win.webContents.executeJavaScript(
+      `(() => {
+        const root = document.getElementById('root')
+        if (root) root.style.display = 'none'
+        document.documentElement.style.background = '${SURFACE_BASE_HEX}'
+        document.body.style.background = '${SURFACE_BASE_HEX}'
+      })()`,
+      true
+    )
+  } catch {
+    // Best-effort: animation still proceeds without a freeze.
+  }
+}
+
+async function unfreezeWindowContents(win: BrowserWindow): Promise<void> {
+  if (win.isDestroyed() || win.webContents.isDestroyed()) return
+  try {
+    await win.webContents.executeJavaScript(
+      `(() => {
+        const root = document.getElementById('root')
+        if (root) root.style.display = ''
+        document.documentElement.style.background = ''
+        document.body.style.background = ''
+      })()`,
+      true
+    )
+  } catch {
+    // ignore
+  }
+}
+
+function tweenBoundsTo(win: BrowserWindow, target: Rect, token: number): Promise<void> {
+  return new Promise((resolve) => {
+    const start = win.getBounds()
+    const t0 = performance.now()
+
+    const tick = () => {
+      if (token !== authLayoutAnimToken || win.isDestroyed()) {
+        resolve()
+        return
+      }
+      const p = easeOutCubic((performance.now() - t0) / AUTH_LAYOUT_TWEEN_MS)
+      win.setBounds({
+        x: Math.round(start.x + (target.x - start.x) * p),
+        y: Math.round(start.y + (target.y - start.y) * p),
+        width: Math.round(start.width + (target.width - start.width) * p),
+        height: Math.round(start.height + (target.height - start.height) * p)
+      })
+      if (p < 1) {
+        setImmediate(tick)
+        return
+      }
+      resolve()
+    }
+    tick()
+  })
+}
+
+function animateBoundsTo(win: BrowserWindow, target: Rect): Promise<void> {
+  const token = ++authLayoutAnimToken
+
+  if (rectsNearlyEqual(win.getBounds(), target)) {
+    return Promise.resolve()
   }
 
-  win.setSize(adjusted.width, adjusted.height, true)
+  // Native animation is macOS-only; elsewhere we tween setBounds ourselves.
+  if (process.platform === 'darwin') {
+    return new Promise((resolve) => {
+      let settled = false
+      const finish = () => {
+        if (settled || token !== authLayoutAnimToken) return
+        settled = true
+        win.removeListener('resized', onResized)
+        resolve()
+      }
+      const onResized = () => finish()
+      win.once('resized', onResized)
+      win.setBounds(target, true)
+      setTimeout(finish, AUTH_LAYOUT_NATIVE_FALLBACK_MS)
+    })
+  }
+
+  return tweenBoundsTo(win, target, token)
 }
 
 export type WindowStateHandle = {
   runWithoutPersist: (fn: () => void) => void
+  setPersistEnabled: (enabled: boolean) => void
   dispose: () => void
+}
+
+/**
+ * Login shell: compact centered window, bounds not written to ui-settings.
+ * Session shell: restore saved (or default) bounds and resume persistence.
+ *
+ * Freezes the renderer during the resize so the OS animates a solid surface
+ * (Chromium layout/paint is the usual source of stutter). Optional `beforeAnimate`
+ * runs while frozen — used to swap login ↔ session UI before the shell moves.
+ */
+export async function applyAuthWindowLayout(
+  win: BrowserWindow | null,
+  options: {
+    loggedIn: boolean
+    uiSettingsRaw: Record<string, unknown>
+    handle?: WindowStateHandle | null
+    beforeAnimate?: () => Promise<void>
+  }
+): Promise<void> {
+  if (!win || win.isDestroyed()) return
+
+  const { loggedIn, uiSettingsRaw, handle, beforeAnimate } = options
+  const bounds = loggedIn
+    ? resolveInitialWindowBoundsOnScreen(uiSettingsRaw)
+    : ensureBoundsOnScreen(centerWindowBounds(LOGIN_WINDOW_BOUNDS))
+  const target = toRect(win, bounds)
+
+  // Keep mid-animation sizes out of ui-settings; re-enable only for session.
+  handle?.setPersistEnabled(false)
+
+  if (rectsNearlyEqual(win.getBounds(), target)) {
+    if (!win.isDestroyed()) win.setResizable(loggedIn)
+    if (loggedIn) handle?.setPersistEnabled(true)
+    return
+  }
+
+  win.setResizable(false)
+
+  await freezeWindowContents(win)
+  try {
+    await beforeAnimate?.()
+    await animateBoundsTo(win, target)
+  } finally {
+    await unfreezeWindowContents(win)
+    if (!win.isDestroyed()) win.setResizable(loggedIn)
+  }
+
+  if (loggedIn && !win.isDestroyed()) {
+    handle?.setPersistEnabled(true)
+  }
 }
 
 export function applyWindowBoundsFromSettings(
@@ -99,18 +264,25 @@ export function attachWindowStatePersistence(
   store: SettingsStore
 ): WindowStateHandle {
   let suppressPersist = false
+  let persistEnabled = true
   let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
+  const clearDebounce = () => {
+    if (!debounceTimer) return
+    clearTimeout(debounceTimer)
+    debounceTimer = null
+  }
+
   const persist = () => {
-    if (suppressPersist || win.isDestroyed()) return
+    if (!persistEnabled || suppressPersist || win.isDestroyed()) return
     const [width, height] = win.getSize()
     const [x, y] = win.getPosition()
     void store.patchWindowSerialized({ width, height, x, y })
   }
 
   const schedulePersist = () => {
-    if (suppressPersist) return
-    if (debounceTimer) clearTimeout(debounceTimer)
+    if (!persistEnabled || suppressPersist) return
+    clearDebounce()
     debounceTimer = setTimeout(() => {
       debounceTimer = null
       persist()
@@ -132,8 +304,12 @@ export function attachWindowStatePersistence(
         suppressPersist = false
       }
     },
+    setPersistEnabled(enabled) {
+      persistEnabled = enabled
+      if (!enabled) clearDebounce()
+    },
     dispose() {
-      if (debounceTimer) clearTimeout(debounceTimer)
+      clearDebounce()
       if (!win.isDestroyed()) {
         win.removeListener('resize', onResize)
         win.removeListener('move', onMove)
@@ -141,9 +317,3 @@ export function attachWindowStatePersistence(
     }
   }
 }
-
-export {
-  boundsToPartial,
-  parseWindowBoundsFromSettings,
-  resolveInitialWindowBounds
-} from './window-bounds'

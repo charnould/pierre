@@ -12,7 +12,7 @@ describe('persistTicketReclamation', () => {
       })
     )
 
-    ;(globalThis as { window: { api: { putTicket: typeof putTicket } } }).window = {
+    ;(globalThis as unknown as { window: { api: Window['api'] } }).window = {
       api: { putTicket } as unknown as Window['api']
     }
 

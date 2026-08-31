@@ -1,4 +1,4 @@
-import { UpdatesUnreadIndicator } from '@/features/updates/components/UpdatesUnreadIndicator'
+import { ActivityNotificationsTrigger } from '@/features/activity/components/ActivityNotificationsTrigger'
 import {
   Sidebar,
   SidebarContent,
@@ -7,40 +7,31 @@ import {
   SidebarGroupContent,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarRail
+  SidebarMenuItem
 } from '@/shared/components/ui/sidebar'
-import { buildNavItems, buildSettingsNavItem, buildUpdatesNavItem } from '@/shared/lib/nav-items'
+import { buildNavItems, buildSettingsNavItem } from '@/shared/lib/nav-items'
+import { preloadTab } from '@/shared/lib/preload-tab'
 import type { Tab } from '@/shared/lib/tabs'
-import { cn } from '@/shared/lib/utils'
 
 interface Props {
   activeTab: Tab
   isLoggedIn: boolean
   onTabChange: (tab: Tab) => void
   agentName: string
-  updatesUnreadCount?: number
+  unreadCount: number
 }
 
 function blurSidebarButton(event: React.MouseEvent<HTMLButtonElement>) {
   event.currentTarget.blur()
 }
 
-export function AppSidebar({
-  activeTab,
-  isLoggedIn,
-  onTabChange,
-  agentName,
-  updatesUnreadCount = 0
-}: Props) {
+export function AppSidebar({ activeTab, isLoggedIn, onTabChange, agentName, unreadCount }: Props) {
   const navItems = buildNavItems(agentName)
-  const updatesItem = buildUpdatesNavItem()
   const settingsItem = buildSettingsNavItem()
-  const UpdatesIcon = updatesItem.icon
   const SettingsIcon = settingsItem.icon
 
   return (
-    <Sidebar collapsible="icon" variant="floating" className="no-drag">
+    <Sidebar collapsible="icon" variant="sidebar" className="no-drag">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -51,6 +42,7 @@ export function AppSidebar({
                     isActive={activeTab === id}
                     disabled={!isLoggedIn}
                     tooltip={label}
+                    onPointerEnter={() => preloadTab(id)}
                     onClick={(event) => {
                       blurSidebarButton(event)
                       if (isLoggedIn) onTabChange(id)
@@ -65,29 +57,9 @@ export function AppSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="gap-0">
+      <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              isActive={activeTab === 'updates'}
-              className={cn(
-                'relative',
-                updatesUnreadCount > 0 && 'pr-7 group-data-[collapsible=icon]:p-2!'
-              )}
-              tooltip={updatesItem.label}
-              onClick={(event) => {
-                blurSidebarButton(event)
-                onTabChange('updates')
-              }}
-            >
-              <span className="relative flex size-4 shrink-0 items-center justify-center">
-                <UpdatesIcon />
-                <UpdatesUnreadIndicator count={updatesUnreadCount} part="dot" />
-              </span>
-              <span>{updatesItem.label}</span>
-            </SidebarMenuButton>
-            <UpdatesUnreadIndicator count={updatesUnreadCount} part="badge" />
-          </SidebarMenuItem>
+          <ActivityNotificationsTrigger unreadCount={unreadCount} disabled={!isLoggedIn} />
           <SidebarMenuItem>
             <SidebarMenuButton
               isActive={activeTab === 'settings'}
@@ -103,7 +75,6 @@ export function AppSidebar({
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   )
 }

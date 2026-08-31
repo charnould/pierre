@@ -53,13 +53,13 @@ describe('buildSynthesePayload', () => {
 
     expect(
       buildSynthesePayload({
-        about_subject: 'programme',
-        identifiant: 'PRG-1',
+        about_subject: 'batiment',
+        identifiant: 'BAT-1',
         year_from: 2020,
         year_to: 2029,
         context: ''
       }).about_subject
-    ).toBe('programme')
+    ).toBe('batiment')
   })
 })
 

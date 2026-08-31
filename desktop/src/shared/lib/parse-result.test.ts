@@ -1,11 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import {
-  parseWorkflowStream,
-  resolveDraftContent,
-  serializeTicketAnswer,
-  TICKET_ANSWER_SKILL
-} from './parse-result'
+import { parseWorkflowStream, TICKET_ANSWER_SKILL } from './parse-result'
 
 const TICKET_SAMPLE = `<artifact name="subject">Objet du courrier</artifact>
 Madame, Monsieur, bonjour.`
@@ -71,40 +66,8 @@ describe('parseWorkflowStream plain skills', () => {
     })
   })
 
-  test('strips legacy output artifacts', () => {
+  test('strips unknown artifact tags', () => {
     const input = `<artifact name="output">Note interne</artifact>`
-    expect(parseWorkflowStream(input, 'ticket.write-memo').output).toBe('Note interne')
-  })
-})
-
-describe('serializeTicketAnswer', () => {
-  test('embeds subject artifact before body', () => {
-    expect(serializeTicketAnswer({ subject: 'Objet', body: 'Corps' })).toBe(
-      `<artifact name="subject">Objet</artifact>\nCorps`
-    )
-  })
-
-  test('returns body only when subject empty', () => {
-    expect(serializeTicketAnswer({ subject: '', body: 'Corps' })).toBe('Corps')
-  })
-})
-
-describe('resolveDraftContent', () => {
-  test('prefers edited_output', () => {
-    expect(
-      resolveDraftContent({
-        generated_output: serializeTicketAnswer({ subject: 'A', body: 'gen' }),
-        edited_output: serializeTicketAnswer({ subject: 'B', body: 'edit' })
-      })
-    ).toEqual({ body: 'edit', subject: 'B' })
-  })
-
-  test('falls back to generated_output', () => {
-    expect(
-      resolveDraftContent({
-        generated_output: serializeTicketAnswer({ subject: 'A', body: 'gen' }),
-        edited_output: null
-      })
-    ).toEqual({ body: 'gen', subject: 'A' })
+    expect(parseWorkflowStream(input, 'ticket.write-memo').output).toBe('')
   })
 })

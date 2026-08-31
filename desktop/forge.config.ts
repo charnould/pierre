@@ -1,10 +1,12 @@
-import { renameReleaseArtifacts } from './forge/rename-release-artifacts.ts'
+import { type MakeResult, renameReleaseArtifacts } from './forge/rename-release-artifacts.ts'
 
-const platformIcon = {
+const platformIcons: Partial<Record<NodeJS.Platform, string>> = {
   darwin: 'src/assets/icons/macos/icon',
   win32: 'src/assets/icons/windows/icon',
   linux: 'src/assets/icons/linux/icons/512x512'
-}[process.platform]
+}
+
+const platformIcon = platformIcons[process.platform]
 
 export default {
   packagerConfig: {
@@ -19,7 +21,9 @@ export default {
     ...(process.platform === 'darwin' && { osxSign: { identity: '-' } }),
     extraResources: [
       { from: 'src/assets/icons/windows/icon.ico', to: 'icons/windows/icon.ico' },
-      { from: 'src/assets/icons/linux/icons/512x512.png', to: 'icons/linux/icons/512x512.png' }
+      { from: 'src/assets/icons/linux/icons/512x512.png', to: 'icons/linux/icons/512x512.png' },
+      { from: 'src/assets/report', to: 'report' },
+      { from: 'src/assets/fonts', to: 'fonts' }
     ],
     ignore: [
       /node_modules/,
@@ -50,6 +54,7 @@ export default {
       config: {
         name: 'pierre',
         setupExe: 'pierre-win32-setup.exe',
+        setupIcon: 'src/assets/icons/windows/icon.ico',
         iconUrl:
           'https://raw.githubusercontent.com/charnould/pierre/master/desktop/src/assets/icons/windows/icon.ico',
         noDelta: true
@@ -71,6 +76,7 @@ export default {
     }
   ],
   hooks: {
-    postMake: async (_forgeConfig, makeResults) => renameReleaseArtifacts(makeResults)
+    postMake: async (_forgeConfig: unknown, makeResults: MakeResult[]) =>
+      renameReleaseArtifacts(makeResults)
   }
 }

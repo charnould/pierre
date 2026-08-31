@@ -1,4 +1,4 @@
-import type { ColumnVisibilityState } from '@tanstack/react-table'
+import type { ColumnVisibilityState } from '@/shared/lib/ui-settings/tickets-table'
 
 import type { TicketsTableSettings } from './schema'
 import {
@@ -14,14 +14,6 @@ export type TicketsTablePreferencesState = {
   hiddenColumns: string[]
   pinnedColumns: string[] | undefined
   columnWidths: Record<string, number>
-}
-
-export const EMPTY_TICKETS_TABLE_PREFERENCES: TicketsTablePreferencesState = {
-  columnOrder: [],
-  columnFilters: {},
-  hiddenColumns: [],
-  pinnedColumns: undefined,
-  columnWidths: {}
 }
 
 export type TicketsTablePreferencesAction =

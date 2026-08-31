@@ -8,7 +8,9 @@ import {
   COLUMN_VALUE_PALETTE_SIZE,
   COLUMN_VALUE_VARIANTS_PER_FAMILY,
   columnColorizeButtonLabel,
+  columnDecolorizeButtonLabel,
   ColumnValuePaletteExhaustedError,
+  clearColumnValueStyles,
   familyIdForStyle,
   findColumnValueStylesMap,
   generateColumnValueStyles,
@@ -137,5 +139,22 @@ describe('column-value-palette', () => {
   it('columnColorizeButtonLabel switches after first colorization', () => {
     expect(columnColorizeButtonLabel(false)).toBe('Coloriser les colonnes')
     expect(columnColorizeButtonLabel(true)).toBe('Recoloriser')
+    expect(columnDecolorizeButtonLabel()).toBe('Décoloriser')
+  })
+
+  it('clearColumnValueStyles retire une colonne sans toucher aux autres', () => {
+    const columnValues = {
+      statut: { ouvert: { bgColor: '#B5C2F4', textColor: '#2A40A0' } },
+      avancement: { urgent: { bgColor: '#F4B5B5', textColor: '#A02A2A' } }
+    }
+    expect(clearColumnValueStyles(columnValues, 'statut')).toEqual({
+      avancement: columnValues.avancement
+    })
+    expect(clearColumnValueStyles(columnValues, 'STATUT')).toEqual({
+      avancement: columnValues.avancement
+    })
+    expect(hasColumnValueStyles(clearColumnValueStyles(columnValues, 'statut'), 'statut')).toBe(
+      false
+    )
   })
 })

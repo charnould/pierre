@@ -40,7 +40,7 @@ export function useWorkflowExport(url: string | undefined) {
       }
       const buf = await resp.arrayBuffer()
       const bytes = await generateDocxFromTemplate(buf, { subject, body })
-      const blob = new Blob([bytes], {
+      const blob = new Blob([new Uint8Array(bytes)], {
         type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
       })
       const a = document.createElement('a')

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, type RefObject } from 'react'
+import { useLayoutEffect, useMemo } from 'react'
 
 import { markdownToStreamHtml } from '@/shared/lib/markdown-stream-preview'
 import { cn } from '@/shared/lib/utils'
@@ -7,7 +7,7 @@ export type WorkflowArtifactStreamPreviewProps = {
   content: string
   isStreaming: boolean
   variant?: 'analysis' | 'output'
-  scrollRef?: RefObject<HTMLElement | null>
+  onContentChange?: () => void
   className?: string
 }
 
@@ -15,7 +15,7 @@ export function WorkflowArtifactStreamPreview({
   content,
   isStreaming,
   variant,
-  scrollRef,
+  onContentChange,
   className
 }: WorkflowArtifactStreamPreviewProps) {
   const html = useMemo(
@@ -24,17 +24,16 @@ export function WorkflowArtifactStreamPreview({
   )
 
   useLayoutEffect(() => {
-    const el = scrollRef?.current
-    if (!el) return
-    el.scrollTop = el.scrollHeight
-  }, [content, scrollRef])
+    onContentChange?.()
+  }, [content, onContentChange])
 
   if (!content.trim()) return null
 
   const streamClass = cn(
-    'workflow-artifact-stream whitespace-pre-wrap',
-    variant === 'analysis' && 'workflow-artifact-stream--analysis px-4 py-3',
-    variant === 'output' && 'workflow-artifact-stream--output llm-answer',
+    'typeset',
+    variant === 'analysis' && 'px-4 py-3 whitespace-pre-wrap',
+    variant === 'output' && isStreaming && 'text-pretty whitespace-pre-wrap',
+    !variant && 'whitespace-pre-wrap',
     className
   )
 

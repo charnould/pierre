@@ -7,7 +7,8 @@ export function DockToolbar({ children, className }: { children: ReactNode; clas
   return (
     <div
       className={cn(
-        'output-dock flex w-full min-w-0 items-center gap-2 overflow-x-auto',
+        'flex w-full min-w-0 items-center gap-2 overflow-x-auto',
+        '[&_[data-slot=button]]:shadow-none',
         className
       )}
     >

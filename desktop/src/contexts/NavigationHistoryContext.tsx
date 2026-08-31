@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useEffectEvent,
   useMemo,
   useRef,
   useState,
@@ -10,11 +11,7 @@ import {
 } from 'react'
 
 import {
-  canGoBackInTicketsStack,
-  canGoForwardInTicketsStack,
   createNavigationStack,
-  goBackInStack,
-  goForwardInStack,
   pushNavigationEntry,
   replaceNavigationEntry,
   type NavigationStack
@@ -41,12 +38,7 @@ type NavigateOptions = {
 }
 
 type NavigationHistoryContextValue = {
-  showTitleBarHistory: boolean
-  canGoBack: boolean
-  canGoForward: boolean
   navigate: (partial: Partial<NavigationSnapshot>, options?: NavigateOptions) => void
-  goBack: () => Promise<void>
-  goForward: () => Promise<void>
   register: (tab: Tab, handlers: TabHandlers) => void
   unregister: (tab: Tab) => void
 }
@@ -60,14 +52,16 @@ interface ProviderProps {
 }
 
 export function NavigationHistoryProvider({ children, activeTab, onTabChange }: ProviderProps) {
-  const [stack, setStack] = useState<NavigationStack>(() =>
+  const [_stack, setStack] = useState<NavigationStack>(() =>
     createNavigationStack({ tab: activeTab })
   )
   const isRestoringRef = useRef(false)
   const activeTabRef = useRef(activeTab)
   const handlersRef = useRef<Partial<Record<Tab, TabHandlers>>>({})
 
-  activeTabRef.current = activeTab
+  useEffect(() => {
+    activeTabRef.current = activeTab
+  }, [activeTab])
 
   const readTabSnapshot = useCallback((tab: Tab): Partial<NavigationSnapshot> => {
     const getter = handlersRef.current[tab]?.getSnapshot
@@ -156,40 +150,6 @@ export function NavigationHistoryProvider({ children, activeTab, onTabChange }: 
     [applySnapshot, buildCurrentSnapshot, buildNavigateSnapshot, runBeforeLeave]
   )
 
-  const goBack = useCallback(async () => {
-    let leaving: NavigationSnapshot | undefined
-    let target: NavigationSnapshot | undefined
-
-    setStack((prev) => {
-      leaving = prev.entries[prev.index]
-      if (prev.index <= 0) return prev
-      const nextStack = goBackInStack(prev)
-      if (!nextStack) return prev
-      target = nextStack.entries[nextStack.index]
-      return nextStack
-    })
-
-    if (!leaving || !target) return
-
-    await runBeforeLeave(leaving)
-    await applySnapshot(target)
-  }, [applySnapshot, runBeforeLeave])
-
-  const goForward = useCallback(async () => {
-    let target: NavigationSnapshot | undefined
-
-    setStack((prev) => {
-      const nextStack = goForwardInStack(prev)
-      if (!nextStack) return prev
-      target = nextStack.entries[nextStack.index]
-      return nextStack
-    })
-
-    if (!target) return
-
-    await applySnapshot(target)
-  }, [applySnapshot])
-
   const register = useCallback((tab: Tab, handlers: TabHandlers) => {
     handlersRef.current[tab] = handlers
 
@@ -213,23 +173,14 @@ export function NavigationHistoryProvider({ children, activeTab, onTabChange }: 
     delete handlersRef.current[tab]
   }, [])
 
-  const value = useMemo<NavigationHistoryContextValue>(() => {
-    const current = stack.entries[stack.index]
-    const onTickets = current?.tab === 'tickets'
-    const canBack = canGoBackInTicketsStack(stack)
-    const canForward = canGoForwardInTicketsStack(stack)
-
-    return {
-      showTitleBarHistory: onTickets && (canBack || canForward),
-      canGoBack: canBack,
-      canGoForward: canForward,
+  const value = useMemo<NavigationHistoryContextValue>(
+    () => ({
       navigate,
-      goBack,
-      goForward,
       register,
       unregister
-    }
-  }, [goBack, goForward, navigate, register, stack, unregister])
+    }),
+    [navigate, register, unregister]
+  )
 
   return (
     <NavigationHistoryContext.Provider value={value}>{children}</NavigationHistoryContext.Provider>
@@ -251,15 +202,16 @@ export function useRegisterNavigationHandlers(
   }
 ) {
   const { register, unregister } = useNavigationHistory()
-  const handlersRef = useRef(handlers)
-  handlersRef.current = handlers
+  const getSnapshot = useEffectEvent(() => handlers.getSnapshot?.() ?? {})
+  const applySnapshot = useEffectEvent((snapshot: NavigationSnapshot) =>
+    handlers.applySnapshot?.(snapshot)
+  )
+  const beforeLeave = useEffectEvent((leaving: NavigationSnapshot) =>
+    handlers.beforeLeave?.(leaving)
+  )
 
   useEffect(() => {
-    register(tab, {
-      getSnapshot: () => handlersRef.current.getSnapshot?.() ?? {},
-      applySnapshot: (snapshot) => handlersRef.current.applySnapshot?.(snapshot),
-      beforeLeave: (leaving) => handlersRef.current.beforeLeave?.(leaving)
-    })
+    register(tab, { getSnapshot, applySnapshot, beforeLeave })
     return () => unregister(tab)
   }, [register, tab, unregister])
 }

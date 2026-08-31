@@ -7,7 +7,7 @@ import type { AboutNavigationState } from '@/shared/lib/navigation-snapshot'
 import { formatNumericRangeLabel, normalizeNumericRange } from '@/shared/lib/range-slider'
 
 export const ABOUT_YEAR_START = 2000
-export const ABOUT_YEAR_COUNT = 30
+const ABOUT_YEAR_COUNT = 30
 export const ABOUT_YEAR_END = ABOUT_YEAR_START + ABOUT_YEAR_COUNT - 1
 
 export const ABOUT_YEARS = Array.from({ length: ABOUT_YEAR_COUNT }, (_, i) =>
@@ -15,9 +15,10 @@ export const ABOUT_YEARS = Array.from({ length: ABOUT_YEAR_COUNT }, (_, i) =>
 )
 
 export const ABOUT_SUBJECT_ENTITY: Record<AboutSubject, { label: string; placeholder: string }> = {
-  locataire: { label: 'Numéro du locataire', placeholder: 'ex. LOC-187329' },
-  lot: { label: 'Numéro du lot', placeholder: 'ex. LOT-0029700099' },
-  programme: { label: 'Numéro du programme', placeholder: 'ex. PRG-001' }
+  locataire: { label: 'Numéro du locataire', placeholder: '18732' },
+  lot: { label: 'Numéro du lot', placeholder: '00297-00099' },
+  batiment: { label: 'Numéro du bâtiment', placeholder: '00297' },
+  client: { label: 'Numéro du client', placeholder: 'CLI-4521' }
 }
 
 export const ABOUT_OUTPUT_EMPTY = {
@@ -28,7 +29,8 @@ export const ABOUT_OUTPUT_EMPTY = {
 const ABOUT_SUBJECT_LABELS: Record<AboutSubject, string> = {
   locataire: 'locataire',
   lot: 'lot',
-  programme: 'programme'
+  batiment: 'batiment',
+  client: 'client'
 }
 
 export function aboutOutputHeaderTitle(subject: AboutSubject, entityId: string): string {

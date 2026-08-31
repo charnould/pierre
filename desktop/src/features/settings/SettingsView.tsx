@@ -1,11 +1,10 @@
 import { AnimatePresence, motion } from 'motion/react'
 
-import { EASE, EASE_IN, PANEL_BG_CLASS } from '@/features/workflow/components/WorkflowPanelChrome'
+import { EASE, EASE_IN } from '@/features/workflow/components/WorkflowPanelChrome'
 import type { Settings } from '@/shared/types'
 
-import { LoggedInSettingsPage } from './LoggedInSettingsPage'
-import { LoginPanel } from './LoginPanel'
-
+import { LoggedInSettingsPage } from './components/LoggedInSettingsPage'
+import { LoginPanel } from './components/LoginPanel'
 export { fetchConfig } from './settings-config'
 
 interface Props {
@@ -29,7 +28,8 @@ export function SettingsView({
 }: Props) {
   return (
     <motion.div
-      className={`tab-panel absolute inset-0 flex min-h-0 flex-col overflow-hidden ${PANEL_BG_CLASS}`}
+      data-tab-panel
+      className="bg-background absolute inset-0 flex min-h-0 flex-col overflow-hidden"
       initial={false}
       animate={hidden ? { opacity: 0, scale: 0.985, y: -8 } : { opacity: 1, scale: 1, y: 0 }}
       transition={hidden ? { duration: 0.22, ease: EASE_IN } : { duration: 0.35, ease: EASE }}

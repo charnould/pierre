@@ -1,29 +1,9 @@
 export const RECLAMATIONS_PAGE_SIZE = 150
 
 /** Must match `MAX_COLUMN_FILTER_DISTINCT_VALUES` in `utils/tickets-query.ts`. */
-export const MAX_COLUMN_FILTER_DISTINCT_VALUES = 99
 
 export const facetFilterUnavailableMessage = (totalDistinct: number): string =>
   `Cette colonne compte ${totalDistinct} valeurs distinctes. Saisissez une recherche pour filtrer.`
-
-/** Legacy system column id (removed UI); stripped from persisted column order. */
-export const TICKET_TABLE_LEGACY_ACTIONS_COLUMN_ID = '__actions__'
-
-/** @deprecated Legacy single draft column id; stripped from persisted column order. */
-export const TICKET_TABLE_DRAFTS_COLUMN_ID = '__drafts__'
-
-export const TICKET_TABLE_DRAFT_COLUMN_N = '__draft_n__'
-export const TICKET_TABLE_DRAFT_COLUMN_P = '__draft_p__'
-export const TICKET_TABLE_DRAFT_COLUMN_I = '__draft_i__'
-export const TICKET_TABLE_DRAFT_COLUMN_R = '__draft_r__'
-
-/** @deprecated Legacy per-letter column ids; stripped from persisted settings. */
-export const TICKET_TABLE_DRAFT_COLUMN_IDS = [
-  TICKET_TABLE_DRAFT_COLUMN_N,
-  TICKET_TABLE_DRAFT_COLUMN_P,
-  TICKET_TABLE_DRAFT_COLUMN_I,
-  TICKET_TABLE_DRAFT_COLUMN_R
-] as const
 
 /** Single pinned column containing the N/P/I/R grid. */
 export const TICKET_TABLE_DRAFT_GROUP_ID = '__draft_npir__'
@@ -31,15 +11,7 @@ export const TICKET_TABLE_DRAFT_GROUP_ID = '__draft_npir__'
 /** Total width of the flush NPIR column (4 tight dot segments, zero padding). */
 export const TICKET_TABLE_DRAFT_GROUP_WIDTH = 68
 
-/** @deprecated Use TICKET_TABLE_DRAFT_GROUP_WIDTH. */
-export const TICKET_TABLE_DRAFT_COLUMN_WIDTH = TICKET_TABLE_DRAFT_GROUP_WIDTH
-
-const TICKET_TABLE_SYSTEM_COLUMN_IDS = new Set<string>([
-  TICKET_TABLE_LEGACY_ACTIONS_COLUMN_ID,
-  TICKET_TABLE_DRAFTS_COLUMN_ID,
-  TICKET_TABLE_DRAFT_GROUP_ID,
-  ...TICKET_TABLE_DRAFT_COLUMN_IDS
-])
+const TICKET_TABLE_SYSTEM_COLUMN_IDS = new Set<string>([TICKET_TABLE_DRAFT_GROUP_ID])
 
 export const isTicketTableSystemColumn = (columnId: string): boolean =>
   TICKET_TABLE_SYSTEM_COLUMN_IDS.has(columnId)
@@ -51,8 +23,6 @@ export const stripTicketTableDraftColumnWidths = (
   widths: Record<string, number>
 ): Record<string, number> => {
   const next = { ...widths }
-  for (const id of TICKET_TABLE_DRAFT_COLUMN_IDS) delete next[id]
-  delete next[TICKET_TABLE_DRAFTS_COLUMN_ID]
   delete next[TICKET_TABLE_DRAFT_GROUP_ID]
   return next
 }
@@ -60,10 +30,10 @@ export const stripTicketTableDraftColumnWidths = (
 export const ticketTableDraftColumnSizing = (): Record<string, number> => ({
   [TICKET_TABLE_DRAFT_GROUP_ID]: TICKET_TABLE_DRAFT_GROUP_WIDTH
 })
-export const COLUMN_WIDTH_MIN = 60
-export const COLUMN_WIDTH_MAX = 800
+const COLUMN_WIDTH_MIN = 60
+const COLUMN_WIDTH_MAX = 800
 
-export const CORE_TICKET_COLUMN_ORDER = ['id_reclamation', 'id_locataire', 'id_lot'] as const
+const CORE_TICKET_COLUMN_ORDER = ['id_reclamation', 'id_locataire', 'id_lot'] as const
 
 export type ColumnFilters = Record<string, string[]>
 
@@ -93,7 +63,7 @@ export const parsePinnedColumns = (value: unknown): string[] | undefined => {
   return pinned.length > 0 ? pinned : undefined
 }
 
-export const parseColumnWidth = (value: unknown): number | undefined => {
+const parseColumnWidth = (value: unknown): number | undefined => {
   const n = typeof value === 'number' ? value : Number(value)
   if (!Number.isInteger(n) || n < COLUMN_WIDTH_MIN || n > COLUMN_WIDTH_MAX) return undefined
   return n
@@ -234,10 +204,7 @@ export const clearAllColumnFilters = (): ColumnFilters => ({})
 
 export const formatFacetLabel = (value: string): string => (value === '' ? '(vide)' : value)
 
-export const facetValueFromLabel = (label: string): string => (label === '(vide)' ? '' : label)
-
 export type ColumnValueBadgeDefaults = {
-  borderRadius?: string
   fontWeight?: number
   textColor?: string
 }
@@ -252,8 +219,8 @@ export type ColumnValuesConfig = Record<string, Record<string, ColumnValueStyle>
 export type TicketValueBadgeStyle = {
   background: string
   color: string
+  border: string
   fontWeight: number
-  borderRadius: string
 }
 
 export type TicketValueDisplay = {
@@ -261,22 +228,9 @@ export type TicketValueDisplay = {
   badgeStyle?: TicketValueBadgeStyle
 }
 
-export const DEFAULT_COLUMN_VALUE_BADGE: Required<ColumnValueBadgeDefaults> = {
-  borderRadius: '9999px',
+const DEFAULT_COLUMN_VALUE_BADGE: Required<ColumnValueBadgeDefaults> = {
   fontWeight: 500,
   textColor: '#FFFFFF'
-}
-
-/** Parses border radius as a px length (number or `"10px"` string). */
-export const parseBorderRadiusPx = (value: unknown): string | undefined => {
-  if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
-    return `${value}px`
-  }
-  if (typeof value !== 'string') return undefined
-  const trimmed = value.trim()
-  if (/^\d+(\.\d+)?px$/.test(trimmed)) return trimmed
-  if (/^\d+(\.\d+)?$/.test(trimmed)) return `${trimmed}px`
-  return undefined
 }
 
 export const parseBadgeFontWeight = (value: unknown): number | undefined => {
@@ -291,12 +245,10 @@ export const parseColumnValueBadgeDefaults = (
 ): ColumnValueBadgeDefaults | undefined => {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return undefined
   const raw = value as Record<string, unknown>
-  const borderRadius = parseBorderRadiusPx(raw.borderRadius)
   const fontWeight = parseBadgeFontWeight(raw.fontWeight)
   const textColor = parseHexColor(raw.textColor)
-  if (!borderRadius && !fontWeight && !textColor) return undefined
+  if (!fontWeight && !textColor) return undefined
   return {
-    ...(borderRadius ? { borderRadius } : {}),
     ...(fontWeight ? { fontWeight } : {}),
     ...(textColor ? { textColor } : {})
   }
@@ -305,10 +257,12 @@ export const parseColumnValueBadgeDefaults = (
 export const resolveColumnValueBadgeDefaults = (
   defaults?: ColumnValueBadgeDefaults
 ): Required<ColumnValueBadgeDefaults> => ({
-  borderRadius: defaults?.borderRadius ?? DEFAULT_COLUMN_VALUE_BADGE.borderRadius,
   fontWeight: defaults?.fontWeight ?? DEFAULT_COLUMN_VALUE_BADGE.fontWeight,
   textColor: defaults?.textColor ?? DEFAULT_COLUMN_VALUE_BADGE.textColor
 })
+
+export const colorizeBadgeBorder = (background: string, color: string): string =>
+  `color-mix(in oklch, ${background} 72%, ${color})`
 
 export const columnValueStyleToBadge = (
   style: ColumnValueStyle,
@@ -316,11 +270,18 @@ export const columnValueStyleToBadge = (
 ): TicketValueBadgeStyle => ({
   background: style.bgColor,
   color: style.textColor,
-  fontWeight: defaults.fontWeight,
-  borderRadius: defaults.borderRadius
+  border: colorizeBadgeBorder(style.bgColor, style.textColor),
+  fontWeight: defaults.fontWeight
 })
 
-export const formatBadgeText = (text: string): string => {
+export const colorizeBadgeStyle = (badge: TicketValueBadgeStyle) => ({
+  backgroundColor: badge.background,
+  color: badge.color,
+  fontWeight: badge.fontWeight,
+  borderColor: badge.border
+})
+
+const formatBadgeText = (text: string): string => {
   if (text === '—') return text
   const normalized = text.normalize('NFC').trim().toLocaleLowerCase('fr-FR')
   return normalized.charAt(0).toLocaleUpperCase('fr-FR') + normalized.slice(1)
@@ -393,12 +354,12 @@ export const parseColumnValues = (value: unknown): ColumnValuesConfig | undefine
 }
 
 /** Maps a SQLite cell value to the `columnValues` JSON lookup key. */
-export const columnValueLookupKey = (value: unknown): string => {
+const columnValueLookupKey = (value: unknown): string => {
   if (value === null || value === undefined) return ''
   return normalizeColumnValueKey(String(value))
 }
 
-export const cellDisplayText = (value: unknown): string => {
+const cellDisplayText = (value: unknown): string => {
   if (value === null || value === undefined || value === '') return '—'
   return String(value)
 }

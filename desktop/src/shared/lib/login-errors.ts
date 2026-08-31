@@ -10,7 +10,13 @@ export type LoginErrorCode =
 
 export type LoginResult = { ok: true } | { ok: false; message?: LoginErrorCode | string }
 
-export function isAuthCredentialError(message?: string): boolean {
+export type LoginField = 'url' | 'email' | 'password'
+export type LoginFieldErrors = Partial<Record<LoginField, string>>
+
+export const LOGIN_REQUIRED_LABEL = 'Champ obligatoire.'
+export const LOGIN_INVALID_URL_LABEL = 'URL invalide. Exemple : http://localhost:3000'
+
+function isAuthCredentialError(message?: string): boolean {
   return (
     message === 'wrong_password' || message === 'wrong_root_password' || message === 'unknown_user'
   )
@@ -24,38 +30,57 @@ export function loginErrorKind(message?: string): ConnectionErrorKind {
   return 'server'
 }
 
-export function connectionFieldInvalid(
-  field: 'url' | 'email' | 'password',
-  error: string,
-  errorKind: ConnectionErrorKind
-): boolean {
-  if (!error || !errorKind) return false
-  if (errorKind === 'validation') {
-    if (error.startsWith('URL invalide')) return field === 'url'
-    if (error.startsWith('Tous les champs')) return true
+export function connectionFieldInvalid(field: LoginField, errors: LoginFieldErrors): boolean {
+  return Boolean(errors[field])
+}
+
+export function validateLoginFields(input: {
+  url: string
+  email: string
+  password: string
+}): LoginFieldErrors {
+  const errors: LoginFieldErrors = {}
+  const url = input.url.trim()
+  if (!url) {
+    errors.url = LOGIN_REQUIRED_LABEL
+  } else {
+    try {
+      void new URL(url).origin
+    } catch {
+      errors.url = LOGIN_INVALID_URL_LABEL
+    }
   }
-  if (errorKind === 'auth') return field === 'password'
-  return false
+  if (!input.email.trim()) errors.email = LOGIN_REQUIRED_LABEL
+  if (!input.password.trim()) errors.password = LOGIN_REQUIRED_LABEL
+  return errors
+}
+
+export function loginFieldErrorsFromCode(code?: LoginErrorCode | string): LoginFieldErrors {
+  const label = loginErrorLabel(code)
+  if (code === 'unknown_user') return { email: label }
+  if (code === 'wrong_password' || code === 'wrong_root_password') return { password: label }
+  if (!code) return { password: label }
+  return { url: label }
 }
 
 export function loginErrorLabel(message?: string): string {
   switch (message) {
     case 'wrong_root_password':
-      return 'Mot de passe administrateur incorrect (AUTH_PASSWORD du serveur).'
+      return 'Mot de passe incorrect.'
     case 'unknown_user':
-      return 'Email inconnu sur ce serveur.'
+      return 'Utilisateur inconnu sur ce serveur.'
     case 'wrong_password':
       return 'Mot de passe incorrect.'
     case 'network_error':
-      return 'Impossible de joindre le serveur. Vérifiez que Pierre tourne sur cette URL.'
+      return 'Impossible de joindre ce serveur.'
     case 'invalid_response':
-      return 'Réponse serveur inattendue. Vérifiez la version de Pierre.'
+      return 'Impossible de joindre ce serveur.'
     case 'session_cookie_missing':
       return 'Connexion refusée par le client (cookie de session). Vérifiez l’URL du serveur.'
     case 'server_error':
-      return 'Erreur serveur lors de la connexion. Réessayez plus tard.'
+      return 'Impossible de joindre ce serveur.'
     case 'api_unavailable':
-      return 'API desktop indisponible. Relancez l’application Electron (bun run dev).'
+      return 'Impossible de joindre ce serveur.'
     default:
       if (message) {
         return `Erreur de connexion (${message}).`

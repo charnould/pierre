@@ -1,0 +1,5 @@
+[test]
+# `bun run package` copies the whole source tree, tests included, into out/.
+# Without this, those copies are collected as real test files.
+pathIgnorePatterns = ["out/**"]
+preload = ["./test/dom-preload.ts"]

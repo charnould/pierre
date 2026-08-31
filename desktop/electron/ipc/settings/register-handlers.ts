@@ -1,9 +1,8 @@
 import { ipcMain, type BrowserWindow } from 'electron'
 
+import { publicSettings } from '../../../src/shared/lib/settings-configured'
 import type {
-  AutomationsSettings,
   TicketsTableSettings,
-  UpdatesSettings,
   WorkflowSettings
 } from '../../../src/shared/lib/ui-settings/schema'
 import { resolveUiSettingsFromRaw } from '../../../src/shared/lib/ui-settings/schema'
@@ -24,7 +23,7 @@ export function registerSettingsHandlers(
   uiSettingsPath: string,
   ctx?: SettingsHandlersContext
 ): void {
-  ipcMain.handle(IpcChannel.settings.get, () => store.readSettings() ?? {})
+  ipcMain.handle(IpcChannel.settings.get, () => publicSettings(store.readSettings()))
 
   ipcMain.handle(IpcChannel.settings.save, (_, data) => {
     store.writeSettings(data)
@@ -39,10 +38,10 @@ export function registerSettingsHandlers(
 
   ipcMain.handle(IpcChannel.uiSettings.save, async (_, raw) => {
     const result = await store.writeUiSettingsSerialized(raw)
-    if (ctx && typeof raw === 'object' && raw !== null && !Array.isArray(raw)) {
+    if (ctx) {
       applyWindowBoundsFromSettings(
         ctx.getWindow(),
-        raw as Record<string, unknown>,
+        { window: result.window ?? {} },
         ctx.getWindowStateHandle()
       )
     }
@@ -56,15 +55,6 @@ export function registerSettingsHandlers(
 
   ipcMain.handle(IpcChannel.uiSettings.patchWorkflow, (_, partial: Partial<WorkflowSettings>) =>
     store.patchWorkflowSerialized(partial)
-  )
-
-  ipcMain.handle(
-    IpcChannel.uiSettings.patchAutomations,
-    (_, partial: Partial<AutomationsSettings>) => store.patchAutomationsSerialized(partial)
-  )
-
-  ipcMain.handle(IpcChannel.uiSettings.patchUpdates, (_, partial: Partial<UpdatesSettings>) =>
-    store.patchUpdatesSerialized(partial)
   )
 
   ipcMain.handle(IpcChannel.uiSettings.getPath, () => uiSettingsPath)

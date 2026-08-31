@@ -37,7 +37,7 @@ export function reasoningDisplayForSkill(
   return byId[skillId]?.reasoning_display ?? 'off'
 }
 
-/** Whether to capture reasoning_delta for this skill (handles API load race). */
+/** Whether to capture structured thinking events for this skill (handles API load race). */
 export function captureReasoningForSkill(
   byId: Record<string, SkillSummary>,
   skillId: string
@@ -45,10 +45,10 @@ export function captureReasoningForSkill(
   const display = reasoningDisplayForSkill(byId, skillId)
   if (display !== 'off') return true
   if (Object.keys(byId).length > 0) return false
-  return skillId.startsWith('ticket.')
+  return skillId.startsWith('ticket.') || skillId.startsWith('about.')
 }
 
-export function reasoningCollapsibleMode(display: ReasoningDisplay): 'partial' | 'full' | null {
+function reasoningCollapsibleMode(display: ReasoningDisplay): 'partial' | 'full' | null {
   if (display === 'off') return null
   return display === 'partial' ? 'partial' : 'full'
 }

@@ -5,7 +5,6 @@ import {
   TICKET_SKILL_KEYS,
   formatFromDraft,
   formatToWire,
-  ticketSkillKeyActions,
   skillHasDocxTemplate
 } from './knowledge-skills'
 
@@ -13,7 +12,7 @@ describe('KNOWLEDGE_SKILL ids', () => {
   test('expose customization ids for wire skills', () => {
     expect(KNOWLEDGE_SKILL.ticketAnswerTicket).toBe('ticket.answer-ticket')
     expect(KNOWLEDGE_SKILL.ticketWriteMemo).toBe('ticket.write-memo')
-    expect(KNOWLEDGE_SKILL.ticketRewriteTicket).toBe('ticket.rewrite-ticket')
+    expect(KNOWLEDGE_SKILL.ticketSummarizeTicket).toBe('ticket.summarize-ticket')
   })
 
   test('uses unified about.summary skill', () => {
@@ -22,8 +21,8 @@ describe('KNOWLEDGE_SKILL ids', () => {
 })
 
 describe('TICKET_SKILL_KEYS', () => {
-  test('exposes four UI format keys', () => {
-    expect(TICKET_SKILL_KEYS).toHaveLength(4)
+  test('exposes three UI format keys', () => {
+    expect(TICKET_SKILL_KEYS).toHaveLength(3)
   })
 })
 
@@ -39,9 +38,8 @@ describe('formatToWire', () => {
     })
   })
 
-  test('maps memo and rewrite to their skills', () => {
+  test('maps memo to its skill', () => {
     expect(formatToWire('ticketWriteMemo')).toEqual({ id_skill: 'ticket.write-memo' })
-    expect(formatToWire('ticketRewriteTicket')).toEqual({ id_skill: 'ticket.rewrite-ticket' })
   })
 })
 
@@ -53,29 +51,14 @@ describe('formatFromDraft', () => {
   })
 })
 
-describe('ticketSkillKeyActions', () => {
-  test('maps hotkeys to skill setters', () => {
-    let skill: string | undefined
-    const actions = ticketSkillKeyActions((s) => {
-      skill = s
-    })
-    actions.a()
-    expect(skill).toBe('ticketReplyEmail')
-    actions.c()
-    expect(skill).toBe('ticketRewriteTicket')
-    actions.d()
-    expect(skill).toBe('ticketWriteMemo')
-  })
-})
-
 describe('skillHasDocxTemplate', () => {
   test('answer-ticket has template', () => {
     expect(skillHasDocxTemplate(KNOWLEDGE_SKILL.ticketAnswerTicket)).toBe(true)
   })
 
-  test('write-memo, rewrite-ticket, and about have no template', () => {
+  test('write-memo, summarize-ticket, and about have no template', () => {
     expect(skillHasDocxTemplate(KNOWLEDGE_SKILL.ticketWriteMemo)).toBe(false)
-    expect(skillHasDocxTemplate(KNOWLEDGE_SKILL.ticketRewriteTicket)).toBe(false)
+    expect(skillHasDocxTemplate(KNOWLEDGE_SKILL.ticketSummarizeTicket)).toBe(false)
     expect(skillHasDocxTemplate(KNOWLEDGE_SKILL.aboutSummary)).toBe(false)
   })
 })

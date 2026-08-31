@@ -1,9 +1,9 @@
-export const UPDATES_SPLIT_MIN = 24
-export const UPDATES_SPLIT_MAX = 45
+const UPDATES_SPLIT_MIN = 24
+const UPDATES_SPLIT_MAX = 45
 export const UPDATES_SPLIT_DEFAULT_LIST = 28
 
-export const UPDATES_PANEL_LIST = 'list'
-export const UPDATES_PANEL_DETAIL = 'detail'
+const UPDATES_PANEL_LIST = 'list'
+const UPDATES_PANEL_DETAIL = 'detail'
 
 export type UpdatesPanelSplit = {
   listPercent?: number

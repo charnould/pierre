@@ -1,12 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 
 import {
-  mergeAutomationsPatch,
+  mergeSectionPatch,
   mergeTicketsTablePatch,
-  mergeUpdatesPatch,
-  mergeWindowPatch,
-  mergeWorkflowPatch,
   parseAndPatchAutomations,
+  parseAndPatchMascot,
   parseAndPatchTicketsTable,
   parseAndPatchUpdates,
   parseAndPatchWindow,
@@ -47,12 +45,11 @@ describe('mergeTicketsTablePatch', () => {
   })
 })
 
-describe('mergeWorkflowPatch', () => {
+describe('mergeSectionPatch: workflow', () => {
   it('merges workflow partial without dropping other sections', () => {
-    const result = mergeWorkflowPatch(
-      { tickets: { table: { columnOrder: ['a'] } } },
-      { ticketsOutputSplit: { contextePercent: 35 } }
-    )
+    const result = mergeSectionPatch({ tickets: { table: { columnOrder: ['a'] } } }, 'workflow', {
+      ticketsOutputSplit: { contextePercent: 35 }
+    })
 
     expect(result).toEqual({
       tickets: { table: { columnOrder: ['a'] } },
@@ -61,13 +58,14 @@ describe('mergeWorkflowPatch', () => {
   })
 
   it('merges aboutOutputSplit without dropping ticketsOutputSplit', () => {
-    const result = mergeWorkflowPatch(
+    const result = mergeSectionPatch(
       {
         workflow: {
           ticketsOutputSplit: { contextePercent: 40 },
           aboutOutputSplit: { contextePercent: 28 }
         }
       },
+      'workflow',
       { aboutOutputSplit: { contextePercent: 55 } }
     )
 
@@ -78,11 +76,14 @@ describe('mergeWorkflowPatch', () => {
   })
 })
 
-describe('mergeAutomationsPatch', () => {
+describe('mergeSectionPatch: automations', () => {
   it('merges automations partial without dropping other sections', () => {
-    const result = mergeAutomationsPatch(
+    const result = mergeSectionPatch(
       { tickets: { table: { columnOrder: ['a'] } } },
-      { panelSplit: { listPercent: 40 } }
+      'automations',
+      {
+        panelSplit: { listPercent: 40 }
+      }
     )
 
     expect(result).toEqual({
@@ -92,12 +93,11 @@ describe('mergeAutomationsPatch', () => {
   })
 })
 
-describe('mergeUpdatesPatch', () => {
+describe('mergeSectionPatch: updates', () => {
   it('merges updates partial without dropping other sections', () => {
-    const result = mergeUpdatesPatch(
-      { tickets: { table: { columnOrder: ['a'] } } },
-      { panelSplit: { listPercent: 28 } }
-    )
+    const result = mergeSectionPatch({ tickets: { table: { columnOrder: ['a'] } } }, 'updates', {
+      panelSplit: { listPercent: 28 }
+    })
 
     expect(result).toEqual({
       tickets: { table: { columnOrder: ['a'] } },
@@ -119,10 +119,11 @@ describe('parseAndPatchUpdates', () => {
   })
 })
 
-describe('mergeWindowPatch', () => {
+describe('mergeSectionPatch: window', () => {
   it('merges window partial without dropping other sections', () => {
-    const result = mergeWindowPatch(
+    const result = mergeSectionPatch(
       { tickets: { table: { columnOrder: ['a'] } }, window: { width: 1200, height: 800 } },
+      'window',
       { width: 1280, x: 10, y: 20 }
     )
 
@@ -149,6 +150,26 @@ describe('parseAndPatchWindow', () => {
   })
 })
 
+describe('parseAndPatchMascot', () => {
+  it('merges mascot settings without dropping other sections', () => {
+    const result = parseAndPatchMascot(
+      { updates: { panelSplit: { listPercent: 28 } }, mascot: { enabled: true, x: 10 } },
+      { enabled: false, y: 40 }
+    )
+
+    expect(result.mascot).toEqual({ enabled: false, x: 10, y: 40 })
+    expect(result.updates).toEqual({ panelSplit: { listPercent: 28 } })
+  })
+})
+
+describe('mergeSectionPatch: mascot', () => {
+  it('merges partial mascot settings', () => {
+    const result = mergeSectionPatch({ mascot: { enabled: true, x: 12 } }, 'mascot', { y: 34 })
+
+    expect(result.mascot).toEqual({ enabled: true, x: 12, y: 34 })
+  })
+})
+
 describe('parseAndPatchAutomations', () => {
   it('normalizes invalid split values', () => {
     const result = parseAndPatchAutomations(
@@ -171,6 +192,162 @@ describe('parseAndPatchWorkflow', () => {
 
     expect(result.workflow).toEqual({
       ticketsOutputSplit: { contextePercent: 50 }
+    })
+  })
+})
+
+/**
+ * Characterization of the six section patch paths, written to pin the current
+ * behaviour before it is deduplicated. Every expectation below was captured from
+ * the code as it stood; none of it is aspirational. If one of these fails, the
+ * patcher changed what it persists.
+ */
+type SectionCase = {
+  /** Top-level key of the document this section owns. */
+  owns: string
+  /** Reads the patched section back out of a document. */
+  read: (doc: Record<string, unknown>) => unknown
+  /** Applies the characterized patch to an arbitrary raw document. */
+  apply: (raw: unknown) => Record<string, unknown>
+  /** Section value expected when the patch lands on an empty document. */
+  fromEmpty: Record<string, unknown>
+  /** Document that already carries this section, plus a user-defined extra key. */
+  existing: Record<string, unknown>
+  /** Section value expected when the patch lands on `existing`. */
+  merged: Record<string, unknown>
+}
+
+const CUSTOM_COLUMN_VALUES = {
+  my_col: { 'my value': { bgColor: '#ABCDEF', textColor: '#123456' } }
+}
+
+/**
+ * Every known section populated. Round-trips through `parseUiSettings` unchanged,
+ * so it doubles as the "other sections untouched" fixture.
+ */
+const FULL_DOCUMENT: Record<string, unknown> = {
+  window: { width: 1400, height: 950, x: 5, y: 6 },
+  mascot: { enabled: true, x: 33, y: 44 },
+  tickets: { table: { columnOrder: ['id_reclamation'], columnValues: CUSTOM_COLUMN_VALUES } },
+  workflow: {
+    ticketsOutputSplit: { contextePercent: 30 },
+    aboutOutputSplit: { contextePercent: 31 }
+  },
+  automations: { panelSplit: { listPercent: 32 } },
+  updates: { panelSplit: { listPercent: 34 } }
+}
+
+/**
+ * Every section is normalized field-by-field, so a user-defined key inside
+ * it is dropped. Encoded in the `merged` values below.
+ */
+const SECTION_CASES: SectionCase[] = [
+  {
+    owns: 'tickets',
+    read: (doc) => (doc.tickets as { table?: unknown } | undefined)?.table,
+    apply: (raw) => parseAndPatchTicketsTable(raw, { hiddenColumns: ['b'] }),
+    fromEmpty: { hiddenColumns: ['b'] },
+    existing: {
+      tickets: {
+        table: { columnOrder: ['a'], columnValues: CUSTOM_COLUMN_VALUES, legacyKey: 'drop-me' }
+      }
+    },
+    merged: {
+      columnOrder: ['a'],
+      columnValues: CUSTOM_COLUMN_VALUES,
+      hiddenColumns: ['b']
+    }
+  },
+  {
+    owns: 'workflow',
+    read: (doc) => doc.workflow,
+    apply: (raw) => parseAndPatchWorkflow(raw, { aboutOutputSplit: { contextePercent: 55 } }),
+    fromEmpty: { aboutOutputSplit: { contextePercent: 55 } },
+    existing: {
+      workflow: { ticketsOutputSplit: { contextePercent: 30 }, legacyKey: 'drop-me' }
+    },
+    merged: {
+      ticketsOutputSplit: { contextePercent: 30 },
+      aboutOutputSplit: { contextePercent: 55 }
+    }
+  },
+  {
+    owns: 'automations',
+    read: (doc) => doc.automations,
+    apply: (raw) => parseAndPatchAutomations(raw, { panelSplit: { listPercent: 40 } }),
+    fromEmpty: { panelSplit: { listPercent: 40 } },
+    existing: { automations: { panelSplit: { listPercent: 32 }, legacyKey: 'drop-me' } },
+    merged: { panelSplit: { listPercent: 40 } }
+  },
+  {
+    owns: 'updates',
+    read: (doc) => doc.updates,
+    apply: (raw) => parseAndPatchUpdates(raw, { panelSplit: { listPercent: 42 } }),
+    fromEmpty: { panelSplit: { listPercent: 42 } },
+    existing: { updates: { panelSplit: { listPercent: 34 }, legacyKey: 'drop-me' } },
+    merged: { panelSplit: { listPercent: 42 } }
+  },
+  {
+    owns: 'window',
+    read: (doc) => doc.window,
+    apply: (raw) => parseAndPatchWindow(raw, { x: 10, y: 20 }),
+    fromEmpty: { x: 10, y: 20 },
+    existing: { window: { width: 1400, height: 950, legacyKey: 'dropped' } },
+    merged: { width: 1400, height: 950, x: 10, y: 20 }
+  },
+  {
+    owns: 'mascot',
+    read: (doc) => doc.mascot,
+    apply: (raw) => parseAndPatchMascot(raw, { y: 44 }),
+    fromEmpty: { y: 44 },
+    existing: { mascot: { enabled: true, x: 33, legacyKey: 'dropped' } },
+    merged: { enabled: true, x: 33, y: 44 }
+  }
+]
+
+describe('ui-settings section patch characterization', () => {
+  for (const testCase of SECTION_CASES) {
+    describe(testCase.owns, () => {
+      it('creates the section when patching an empty document', () => {
+        expect(testCase.read(testCase.apply({}))).toEqual(testCase.fromEmpty)
+      })
+
+      it('merges into an existing section rather than replacing it', () => {
+        expect(testCase.read(testCase.apply(testCase.existing))).toEqual(testCase.merged)
+      })
+
+      it('leaves every other section byte-identical', () => {
+        const patched = testCase.apply(FULL_DOCUMENT)
+        for (const key of Object.keys(FULL_DOCUMENT)) {
+          if (key === testCase.owns) continue
+          expect(patched[key]).toEqual(FULL_DOCUMENT[key])
+        }
+      })
+
+      it('drops an unknown top-level key', () => {
+        expect(
+          testCase.apply({ ...FULL_DOCUMENT, sidebar: { collapsed: true } }).sidebar
+        ).toBeUndefined()
+      })
+
+      for (const malformed of [null, undefined, [], 'a string', 42, { tickets: 5 }] as unknown[]) {
+        it(`does not throw on a malformed document: ${JSON.stringify(malformed)}`, () => {
+          const patched = testCase.apply(malformed)
+          expect(typeof patched).toBe('object')
+          expect(patched).not.toBeNull()
+        })
+      }
+    })
+  }
+
+  it('keeps user-defined columnValues through a table patch that omits them', () => {
+    const patched = parseAndPatchTicketsTable(
+      { tickets: { table: { columnValues: CUSTOM_COLUMN_VALUES } } },
+      { columnOrder: ['id_reclamation'] }
+    )
+
+    expect(patched.tickets).toEqual({
+      table: { columnValues: CUSTOM_COLUMN_VALUES, columnOrder: ['id_reclamation'] }
     })
   })
 })
@@ -245,7 +422,8 @@ describe('parseAndPatchTicketsTable', () => {
       }
     )
 
-    expect(result.tickets?.table?.columnValues).toEqual({
+    const tickets = result.tickets as { table?: { columnValues?: unknown } } | undefined
+    expect(tickets?.table?.columnValues).toEqual({
       avancement: {
         'en cours': { bgColor: '#0057FF', textColor: '#1D4ED8' }
       },

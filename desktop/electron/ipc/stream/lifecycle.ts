@@ -1,4 +1,4 @@
-export type ActiveStream = {
+type ActiveStream = {
   requestId: string
   controller: AbortController
 }

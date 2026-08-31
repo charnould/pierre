@@ -2,14 +2,13 @@ import type { UpdateEntry } from '@/features/updates/types'
 
 import { resolveMarkdownImages } from './resolve-markdown-images'
 import { stripFrontmatter, stripLeadingH1 } from './strip-frontmatter'
-import { updateMarkdownUrl, updatesIndexUrl } from './updates-urls'
-
-export {
-  updateAssetUrl,
-  updateGitHubWebUrl,
+import {
+  getChangelogFolder,
+  resetChangelogFolder,
+  setChangelogFolder,
   updateMarkdownUrl,
   updatesIndexUrl,
-  UPDATES_GITHUB_BASE
+  UPDATES_CHANGELOG_FOLDER
 } from './updates-urls'
 
 const indexCache = {
@@ -18,29 +17,51 @@ const indexCache = {
 }
 const markdownCache = new Map<string, string>()
 
+export type ParsedUpdatesToc = {
+  folder: string | null
+  entries: UpdateEntry[]
+}
+
 function isUpdateEntry(value: unknown): value is UpdateEntry {
   if (!value || typeof value !== 'object') return false
   const entry = value as Record<string, unknown>
   return (
     typeof entry.slug === 'string' &&
     typeof entry.title === 'string' &&
-    typeof entry.date === 'string' &&
-    typeof entry.audience === 'string'
+    typeof entry.date === 'string'
   )
 }
 
-export function parseUpdatesIndex(raw: unknown): UpdateEntry[] {
-  if (!Array.isArray(raw)) return []
-  return raw
-    .filter(isUpdateEntry)
-    .slice()
-    .sort((a, b) => b.date.localeCompare(a.date))
+function stripOrder(name: string) {
+  return name.replace(/^\d{1,2}-/, '')
+}
+
+function sortEntries(entries: UpdateEntry[]): UpdateEntry[] {
+  return entries.slice().sort((a, b) => b.date.localeCompare(a.date))
+}
+
+/** Parse docs/toc.json — locate the changelog section and its `entries`. */
+export function parseUpdatesToc(raw: unknown): ParsedUpdatesToc {
+  if (!Array.isArray(raw)) return { folder: null, entries: [] }
+
+  for (const section of raw) {
+    if (!section || typeof section !== 'object') continue
+    const folder = (section as { folder?: unknown }).folder
+    if (typeof folder !== 'string') continue
+    if (folder !== UPDATES_CHANGELOG_FOLDER && stripOrder(folder) !== 'changelog') continue
+    const entriesRaw = (section as { entries?: unknown }).entries
+    const entries = Array.isArray(entriesRaw) ? sortEntries(entriesRaw.filter(isUpdateEntry)) : []
+    return { folder, entries }
+  }
+
+  return { folder: null, entries: [] }
 }
 
 export function clearUpdatesCache(): void {
   indexCache.value = null
   indexCache.promise = null
   markdownCache.clear()
+  resetChangelogFolder()
 }
 
 async function fetchText(url: string): Promise<string> {
@@ -50,7 +71,10 @@ async function fetchText(url: string): Promise<string> {
     return text
   }
 
-  const response = await fetch(url)
+  const headers: HeadersInit = url.includes('api.github.com')
+    ? { Accept: 'application/vnd.github.raw', 'User-Agent': 'pierre-desktop' }
+    : {}
+  const response = await fetch(url, { headers })
   if (!response.ok) {
     throw new Error(`fetch_failed:${response.status}`)
   }
@@ -63,9 +87,10 @@ export async function fetchUpdatesIndex(options?: { force?: boolean }): Promise<
 
   indexCache.promise = (async () => {
     const text = await fetchText(updatesIndexUrl())
-    const entries = parseUpdatesIndex(JSON.parse(text) as unknown)
-    indexCache.value = entries
-    return entries
+    const parsed = parseUpdatesToc(JSON.parse(text) as unknown)
+    setChangelogFolder(parsed.folder ?? UPDATES_CHANGELOG_FOLDER)
+    indexCache.value = parsed.entries
+    return parsed.entries
   })()
 
   try {
@@ -83,7 +108,7 @@ export async function fetchUpdateMarkdown(
     return markdownCache.get(slug)!
   }
 
-  const raw = await fetchText(updateMarkdownUrl(slug))
+  const raw = await fetchText(updateMarkdownUrl(slug, getChangelogFolder()))
   const markdown = resolveMarkdownImages(stripLeadingH1(stripFrontmatter(raw)), slug)
   markdownCache.set(slug, markdown)
   return markdown

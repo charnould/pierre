@@ -1,10 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
 import type {
-  AutomationsSettings,
   TicketsTableSettings,
   UiSettings,
-  UpdatesSettings,
   WorkflowSettings
 } from '@/shared/lib/ui-settings/schema'
 import { UI_SETTINGS_DEFAULTS } from '@/shared/lib/ui-settings/schema'
@@ -23,8 +21,6 @@ type UiSettingsContextValue = {
   save: (raw: unknown) => Promise<UiSettings>
   patchTicketsTable: (partial: Partial<TicketsTableSettings>) => Promise<UiSettings>
   patchWorkflow: (partial: Partial<WorkflowSettings>) => Promise<UiSettings>
-  patchAutomations: (partial: Partial<AutomationsSettings>) => Promise<UiSettings>
-  patchUpdates: (partial: Partial<UpdatesSettings>) => Promise<UiSettings>
 }
 
 const UiSettingsContext = createContext<UiSettingsContextValue | null>(null)
@@ -32,17 +28,19 @@ const UiSettingsContext = createContext<UiSettingsContextValue | null>(null)
 export function UiSettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<UiSettings>(UI_SETTINGS_DEFAULTS)
   const [settingsPath, setSettingsPath] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [hydrated, setHydrated] = useState(false)
+  const [inFlight, setInFlight] = useState(false)
   const [settingsEpoch, setSettingsEpoch] = useState(0)
+  const hasSettingsApi = Boolean(window.api?.getUiSettings)
+  const loading = (hasSettingsApi && !hydrated) || inFlight
 
   const reload = useCallback(async () => {
     if (!window.api?.getUiSettings) {
       setSettings(UI_SETTINGS_DEFAULTS)
-      setLoading(false)
       return
     }
 
-    setLoading(true)
+    setInFlight(true)
     try {
       const [nextSettings, path] = await Promise.all([
         window.api.getUiSettings(),
@@ -51,32 +49,33 @@ export function UiSettingsProvider({ children }: { children: React.ReactNode }) 
       setSettings(nextSettings)
       setSettingsPath(path)
       setSettingsEpoch((n) => n + 1)
+      setHydrated(true)
     } finally {
-      setLoading(false)
+      setInFlight(false)
     }
   }, [])
 
   const resetToFactory = useCallback(async () => {
     if (window.api?.resetUiSettings) {
-      setLoading(true)
+      setInFlight(true)
       try {
         const next = await window.api.resetUiSettings()
         setSettings(next)
         setSettingsEpoch((n) => n + 1)
       } finally {
-        setLoading(false)
+        setInFlight(false)
       }
       return
     }
 
     if (window.api?.saveUiSettings) {
-      setLoading(true)
+      setInFlight(true)
       try {
         const next = await window.api.saveUiSettings({})
         setSettings(next)
         setSettingsEpoch((n) => n + 1)
       } finally {
-        setLoading(false)
+        setInFlight(false)
       }
       return
     }
@@ -96,21 +95,8 @@ export function UiSettingsProvider({ children }: { children: React.ReactNode }) 
   const patchTicketsTable = useCallback(async (partial: Partial<TicketsTableSettings>) => {
     if (!window.api?.patchUiSettingsTicketsTable) return UI_SETTINGS_DEFAULTS
     const next = await window.api.patchUiSettingsTicketsTable(partial)
-    let merged = next
-    setSettings((prev) => {
-      merged = {
-        ...next,
-        tickets: {
-          ...next.tickets,
-          table: {
-            ...next.tickets?.table,
-            columnValues: next.tickets?.table?.columnValues ?? prev.tickets?.table?.columnValues
-          }
-        }
-      }
-      return merged
-    })
-    return merged
+    setSettings(next)
+    return next
   }, [])
 
   const patchWorkflow = useCallback(async (partial: Partial<WorkflowSettings>) => {
@@ -120,23 +106,22 @@ export function UiSettingsProvider({ children }: { children: React.ReactNode }) 
     return next
   }, [])
 
-  const patchAutomations = useCallback(async (partial: Partial<AutomationsSettings>) => {
-    if (!window.api?.patchUiSettingsAutomations) return UI_SETTINGS_DEFAULTS
-    const next = await window.api.patchUiSettingsAutomations(partial)
-    setSettings(next)
-    return next
-  }, [])
-
-  const patchUpdates = useCallback(async (partial: Partial<UpdatesSettings>) => {
-    if (!window.api?.patchUiSettingsUpdates) return UI_SETTINGS_DEFAULTS
-    const next = await window.api.patchUiSettingsUpdates(partial)
-    setSettings(next)
-    return next
-  }, [])
-
   useEffect(() => {
-    void reload()
-  }, [reload])
+    if (!window.api?.getUiSettings) return
+    let cancelled = false
+    void Promise.all([window.api.getUiSettings(), window.api.getUiSettingsPath()]).then(
+      ([nextSettings, path]) => {
+        if (cancelled) return
+        setSettings(nextSettings)
+        setSettingsPath(path)
+        setSettingsEpoch((n) => n + 1)
+        setHydrated(true)
+      }
+    )
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const value = useMemo(
     () => ({
@@ -148,9 +133,7 @@ export function UiSettingsProvider({ children }: { children: React.ReactNode }) 
       resetToFactory,
       save,
       patchTicketsTable,
-      patchWorkflow,
-      patchAutomations,
-      patchUpdates
+      patchWorkflow
     }),
     [
       settings,
@@ -161,9 +144,7 @@ export function UiSettingsProvider({ children }: { children: React.ReactNode }) 
       resetToFactory,
       save,
       patchTicketsTable,
-      patchWorkflow,
-      patchAutomations,
-      patchUpdates
+      patchWorkflow
     ]
   )
 
@@ -174,4 +155,10 @@ export function useUiSettings() {
   const ctx = useContext(UiSettingsContext)
   if (!ctx) throw new Error('useUiSettings must be used within UiSettingsProvider')
   return ctx
+}
+
+/** Settings, or factory defaults outside the provider. */
+export function useResolvedUiSettings(): UiSettings {
+  const ctx = useContext(UiSettingsContext)
+  return ctx?.settings ?? UI_SETTINGS_DEFAULTS
 }

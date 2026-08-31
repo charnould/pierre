@@ -1,5 +1,4 @@
 import { snapshotsEqual, type NavigationSnapshot } from '@/shared/lib/navigation-snapshot'
-import type { Tab } from '@/shared/lib/tabs'
 
 export type NavigationStack = {
   entries: NavigationSnapshot[]
@@ -28,46 +27,4 @@ export function replaceNavigationEntry(
   next: NavigationSnapshot
 ): NavigationStack {
   return { entries: [next], index: 0 }
-}
-
-export function goBackInStack(stack: NavigationStack): NavigationStack | null {
-  if (stack.index <= 0) return null
-  return { ...stack, index: stack.index - 1 }
-}
-
-export function goForwardInStack(stack: NavigationStack): NavigationStack | null {
-  if (stack.index >= stack.entries.length - 1) return null
-  return { ...stack, index: stack.index + 1 }
-}
-
-export function canGoBackInTab(stack: NavigationStack, tab: Tab): boolean {
-  if (stack.index <= 0) return false
-  return stack.entries[stack.index - 1]?.tab === tab
-}
-
-export function canGoForwardInTab(stack: NavigationStack, tab: Tab): boolean {
-  if (stack.index >= stack.entries.length - 1) return false
-  return stack.entries[stack.index + 1]?.tab === tab
-}
-
-function isTicketsFormEntry(entry: NavigationSnapshot | undefined): boolean {
-  return entry?.tab === 'tickets' && entry.tickets?.step === 'form'
-}
-
-function isTicketsOutputEntry(entry: NavigationSnapshot | undefined): boolean {
-  return entry?.tab === 'tickets' && entry.tickets?.step === 'output'
-}
-
-export function canGoBackInTicketsStack(stack: NavigationStack): boolean {
-  if (stack.index <= 0) return false
-  const current = stack.entries[stack.index]
-  const previous = stack.entries[stack.index - 1]
-  return isTicketsOutputEntry(current) && isTicketsFormEntry(previous)
-}
-
-export function canGoForwardInTicketsStack(stack: NavigationStack): boolean {
-  if (stack.index >= stack.entries.length - 1) return false
-  const current = stack.entries[stack.index]
-  const next = stack.entries[stack.index + 1]
-  return isTicketsFormEntry(current) && isTicketsOutputEntry(next)
 }
