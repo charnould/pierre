@@ -4,18 +4,39 @@
   "private": true,
   "license": "AGPL-3.0-only",
   "author": "Charles-Henri ARNOULD <charnould@pierre-ia.org>",
-  "workspaces": [
-    "docs",
-    "server",
-    "desktop",
-    "customization"
-  ],
+  "workspaces": {
+    "packages": [
+      "docs",
+      "server",
+      "desktop",
+      "customization"
+    ],
+    "catalog": {
+      "@observablehq/plot": "^0.6.17",
+      "@types/bun": "^1.4.0",
+      "@types/jsdom": "^30.0.0",
+      "@types/react": "^19.2.18",
+      "jsdom": "^30.0.1",
+      "lucide-react": "^1.38.0",
+      "marked": "^18.0.11",
+      "oxfmt": "^0.65.0",
+      "oxlint": "^1.80.0",
+      "react": "^19.2.8",
+      "react-dom": "^19.2.8",
+      "streamdown": "^2.6.0",
+      "tailwindcss": "^4.3.3",
+      "typescript": "^7.0.2"
+    }
+  },
   "scripts": {
     "------------------ GLOBAL ------------------": "------------------",
     "dev:server": "bun --filter @pierre/server dev",
     "dev:desktop": "bun --filter @pierre/desktop dev",
-    "lint": "bun run oxlint -c ./config/oxlint.jsonc . --fix --fix-suggestions --fix-dangerously",
-    "format": "bun run oxfmt -c ./config/oxfmt.jsonc",
+    "lint": "bun run oxlint -c ./config/oxlint.jsonc --ignore-path=\"$PWD/config/oxlint.ignore\" . --fix --fix-suggestions --fix-dangerously",
+    "lint:check": "bun run oxlint -c ./config/oxlint.jsonc --ignore-path=\"$PWD/config/oxlint.ignore\" .",
+    "format": "bun run oxfmt -c ./config/oxfmt.jsonc --ignore-path=\"$PWD/config/oxfmt.ignore\"",
+    "format:check": "bun run oxfmt -c ./config/oxfmt.jsonc --ignore-path=\"$PWD/config/oxfmt.ignore\" --check",
+    "docs": "bun --filter @pierre/docs build",
     "release": "bash config/release.sh",
     "------------------ STAGING ------------------": "------------------",
     "staging:logs": "bun --env-file=.env.staging run kamal app logs -c config/deploy.yml",
@@ -29,9 +50,8 @@
     "prod:console": "bun --env-file=.env.production run kamal app exec -i bash -c config/deploy.yml"
   },
   "devDependencies": {
-    "markdown-toc": "^1.2.0",
-    "oxfmt": "^0.57.0",
-    "oxlint": "^1.72.0",
-    "typescript": "^6.0.3"
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:"
   }
 }
