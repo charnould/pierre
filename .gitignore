@@ -1,16 +1,22 @@
 node_modules/
-desktop/node_modules/
-server/node_modules/
 
+desktop/node_modules/
 desktop/dist/
-desktop/out
+desktop/out/
+desktop/perf/out/
+
+server/node_modules/
 server/datastores/
 server/temp/
+
+docs/node_modules/
 
 .env
 .env.production
 .env.staging
 
 .cursor/
+.agents/
+skills-lock.json
 
 .DS_Store
