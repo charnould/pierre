@@ -9,12 +9,16 @@ import {
   aboutYearRangeToSliderValues
 } from '@/features/about/lib/about-form'
 import type { AboutSubject } from '@/features/tickets/lib/knowledge-skills'
-import { Card, CardBody, CardFooter } from '@/shared/components/ui/card'
-import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/shared/components/ui/field'
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel
+} from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
 import { Slider } from '@/shared/components/ui/slider'
 import { Textarea } from '@/shared/components/ui/textarea'
-import { FIELD_CAPTION, FIELD_HEADING, FIELD_HEADING_GROUP } from '@/shared/lib/form-chrome'
 import { formatNumericRangeLabel } from '@/shared/lib/range-slider'
 
 interface Props {
@@ -31,32 +35,6 @@ interface Props {
   onContextChange: (value: string) => void
   primaryAction: ReactNode
   errMsg: string | null
-}
-
-function AboutField({
-  id,
-  label,
-  description,
-  className,
-  children
-}: {
-  id?: string
-  label: string
-  description: ReactNode
-  className?: string
-  children: ReactNode
-}) {
-  return (
-    <Field className={className}>
-      <div className={FIELD_HEADING_GROUP}>
-        <FieldLabel htmlFor={id} className={FIELD_HEADING}>
-          {label}
-        </FieldLabel>
-        <FieldDescription className={FIELD_CAPTION}>{description}</FieldDescription>
-      </div>
-      {children}
-    </Field>
-  )
 }
 
 export function AboutContextColumn({
@@ -81,78 +59,73 @@ export function AboutContextColumn({
   const [rangeFrom, rangeTo] = aboutYearRangeToSliderValues(yearFrom, yearTo)
 
   return (
-    <div className="desk-form-panel">
-      <Card variant="chrome">
-        <CardBody inset="chrome" className="workflow-context-form desk-pane-scroll">
-          <FieldGroup className="shrink-0">
-            <AboutSubjectCards value={aboutSubject} onValueChange={onAboutSubjectChange} />
+    <div className="bg-background flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4">
+        <FieldGroup>
+          <AboutSubjectCards value={aboutSubject} onValueChange={onAboutSubjectChange} />
 
-            <AboutField id={entityIdFieldId} label={entityLabel} description="Identifiant interne">
-              <Input
-                id={entityIdFieldId}
-                type="text"
-                inputMode="numeric"
-                variant="desk"
-                value={entityId}
-                onChange={(e) => onEntityIdChange(e.target.value)}
-                placeholder={entityPlaceholder}
+          <Field>
+            <FieldLabel htmlFor={entityIdFieldId}>{entityLabel}</FieldLabel>
+            <FieldDescription>Identifiant interne</FieldDescription>
+            <Input
+              id={entityIdFieldId}
+              aria-label={entityLabel}
+              type="text"
+              inputMode="numeric"
+              value={entityId}
+              onChange={(e) => onEntityIdChange(e.target.value)}
+              placeholder={entityPlaceholder}
+            />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor={yearFieldId}>Quelle période inclure&nbsp;?</FieldLabel>
+            <FieldDescription>Bornes incluses</FieldDescription>
+            <div className="flex flex-col gap-2">
+              <Slider
+                id={yearFieldId}
+                min={ABOUT_YEAR_START}
+                max={ABOUT_YEAR_END}
+                step={1}
+                value={[rangeFrom, rangeTo]}
+                onValueChange={(values) => {
+                  const sliderValues = Array.isArray(values) ? values : [values]
+                  const next = aboutYearRangeFromSliderValues(sliderValues)
+                  onYearFromChange(next.yearFrom)
+                  onYearToChange(next.yearTo)
+                }}
+                aria-label="Période incluse dans la synthèse"
               />
-            </AboutField>
-
-            <AboutField
-              id={yearFieldId}
-              label="Quelle période inclure&nbsp;?"
-              description="Bornes incluses dans la synthèse."
-            >
-              <div className="desk-year-range">
-                <div className="desk-year-range__value">
-                  <span aria-live="polite" className={FIELD_HEADING}>
-                    {formatNumericRangeLabel(rangeFrom, rangeTo)}
-                  </span>
-                </div>
-                <Slider
-                  id={yearFieldId}
-                  min={ABOUT_YEAR_START}
-                  max={ABOUT_YEAR_END}
-                  step={1}
-                  value={[rangeFrom, rangeTo]}
-                  onValueChange={(values) => {
-                    const next = aboutYearRangeFromSliderValues(values)
-                    onYearFromChange(next.yearFrom)
-                    onYearToChange(next.yearTo)
-                  }}
-                  aria-label="Période incluse dans la synthèse"
-                />
-                <div className="desk-year-range__bounds">
-                  <span>{ABOUT_YEAR_START}</span>
-                  <span>{ABOUT_YEAR_END}</span>
-                </div>
+              <div className="flex items-center justify-between">
+                <span className="pierre-meta tabular-nums">{ABOUT_YEAR_START}</span>
+                <span className="text-xs tabular-nums">
+                  {formatNumericRangeLabel(rangeFrom, rangeTo)}
+                </span>
+                <span className="pierre-meta tabular-nums">{ABOUT_YEAR_END}</span>
               </div>
-            </AboutField>
-          </FieldGroup>
+            </div>
+          </Field>
 
-          <div className="workflow-context-fields">
-            <AboutField
+          <Field>
+            <FieldLabel htmlFor={contextFieldId}>Contexte additionnel</FieldLabel>
+            <FieldDescription>
+              Optionnel · Précisions utiles pour permettre à {agentName} de générer une synthèse
+              pertinente
+            </FieldDescription>
+            <Textarea
               id={contextFieldId}
-              label="Contexte additionnel"
-              description={`Optionnel · Précisions utiles pour permettre à ${agentName} de générer une synthèse pertinente`}
-              className="workflow-context-field-grow"
-            >
-              <Textarea
-                id={contextFieldId}
-                variant="desk"
-                value={context}
-                onChange={(e) => onContextChange(e.target.value)}
-                className="workflow-context-textarea-grow"
-              />
-            </AboutField>
-          </div>
+              aria-label="Contexte additionnel"
+              value={context}
+              onChange={(e) => onContextChange(e.target.value)}
+              className="resize-y"
+            />
+          </Field>
 
-          {errMsg ? <p className="workflow-context-error">{errMsg}</p> : null}
-        </CardBody>
+          {errMsg ? <FieldError className="shrink-0">{errMsg}</FieldError> : null}
+        </FieldGroup>
+      </div>
 
-        <CardFooter inset="chrome">{primaryAction}</CardFooter>
-      </Card>
+      <div className="shrink-0 border-t px-4 py-2">{primaryAction}</div>
     </div>
   )
 }

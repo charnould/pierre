@@ -3,7 +3,6 @@ import { describe, expect, it } from 'bun:test'
 import {
   contextePercentFromLayout,
   defaultWorkflowPanelLayout,
-  parseWorkflowOutputSplit,
   parseWorkflowTicketsOutputSplit,
   resolveWorkflowOutputSplit,
   splitFromLayout,
@@ -15,12 +14,12 @@ describe('workflow output split settings', () => {
     expect(parseWorkflowTicketsOutputSplit({ contextePercent: 30 })).toEqual({
       contextePercent: 30
     })
-    expect(parseWorkflowTicketsOutputSplit({ contextePercent: 30, analysePercent: 35 })).toEqual({
+    expect(parseWorkflowTicketsOutputSplit({ contextePercent: 30, extra: 35 })).toEqual({
       contextePercent: 30
     })
-    expect(parseWorkflowTicketsOutputSplit({ analysePercent: 45 })).toBeUndefined()
+    expect(parseWorkflowTicketsOutputSplit({ extra: 45 })).toBeUndefined()
     expect(parseWorkflowTicketsOutputSplit({ contextePercent: 10 })).toBeUndefined()
-    expect(parseWorkflowTicketsOutputSplit({ analysePercent: 99 })).toBeUndefined()
+    expect(parseWorkflowTicketsOutputSplit({ extra: 99 })).toBeUndefined()
   })
 
   it('builds default 2-panel layout', () => {
@@ -40,10 +39,6 @@ describe('workflow output split settings', () => {
     expect(splitFromLayout({ contexte: 25, output: 75 })).toEqual({
       contextePercent: 25
     })
-  })
-
-  it('parseWorkflowOutputSplit mirrors tickets parser', () => {
-    expect(parseWorkflowOutputSplit({ contextePercent: 32 })).toEqual({ contextePercent: 32 })
   })
 
   it('resolveWorkflowOutputSplit reads the requested key with 28% default', () => {

@@ -1,5 +1,6 @@
-import { ipcMain, net, session, type IpcMainInvokeEvent } from 'electron'
+import { ipcMain, session, type IpcMainInvokeEvent } from 'electron'
 
+import { netFetch } from '../../lib/net-fetch'
 import { logMainError } from '../../services/logging'
 import { IpcChannel, aiChunkEventChannel } from '../channels'
 import { createStreamBatcher } from './batcher'
@@ -12,6 +13,7 @@ type StreamStartParams = {
   message: string
   conv_id: string
   data?: string
+  files?: Array<{ name: string; type: string; buffer: ArrayBuffer }>
 }
 
 type GenerateAnswerParams = {
@@ -21,6 +23,14 @@ type GenerateAnswerParams = {
   payload: string
   id_skill: string
   files: Array<{ name: string; type: string; buffer: ArrayBuffer }>
+}
+
+type UiResponseParams = {
+  url: string
+  conv_id: string
+  request_id: string
+  response_secret: string
+  answers: Array<{ question: string; answer: string }>
 }
 
 const activeStreams = new Map<string, { requestId: string; controller: AbortController }>()
@@ -84,18 +94,42 @@ export function registerStreamHandlers(partition: string): void {
   ipcMain.handle(IpcChannel.stream.start, async (event, params: StreamStartParams) => {
     const controller = beginStream(activeStreams, params.requestId)
     const ses = session.fromPartition(partition)
-    const query = new URLSearchParams({
-      config: params.config,
-      message: params.message,
-      conv_id: params.conv_id,
-      data: params.data ?? ''
-    })
 
     try {
+      if (params.files && params.files.length > 0) {
+        const formData = new FormData()
+        formData.set('config', params.config)
+        formData.set('message', params.message)
+        formData.set('conv_id', params.conv_id)
+        formData.set('data', params.data ?? '')
+        for (const file of params.files) {
+          formData.append('files', new Blob([file.buffer], { type: file.type }), file.name)
+        }
+
+        return await streamResponseToRenderer(
+          event,
+          params.requestId,
+          netFetch(`${params.url}/ai`, {
+            method: 'POST',
+            body: formData,
+            signal: controller.signal,
+            session: ses
+          }),
+          controller.signal
+        )
+      }
+
+      const query = new URLSearchParams({
+        config: params.config,
+        message: params.message,
+        conv_id: params.conv_id,
+        data: params.data ?? ''
+      })
+
       return await streamResponseToRenderer(
         event,
         params.requestId,
-        net.fetch(`${params.url}/ai?${query}`, {
+        netFetch(`${params.url}/ai?${query}`, {
           signal: controller.signal,
           session: ses
         }),
@@ -124,7 +158,7 @@ export function registerStreamHandlers(partition: string): void {
       return await streamResponseToRenderer(
         event,
         params.requestId,
-        net.fetch(`${params.url}/ai/answer`, {
+        netFetch(`${params.url}/ai/answer`, {
           method: 'POST',
           body: formData,
           signal: controller.signal,
@@ -137,6 +171,27 @@ export function registerStreamHandlers(partition: string): void {
     }
   })
 
+  ipcMain.handle(IpcChannel.stream.postUiResponse, async (_, params: UiResponseParams) => {
+    const ses = session.fromPartition(partition)
+    try {
+      const response = await netFetch(`${params.url}/ai/ui-response`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conv_id: params.conv_id,
+          request_id: params.request_id,
+          response_secret: params.response_secret,
+          answers: params.answers
+        }),
+        session: ses
+      })
+      return response.ok
+    } catch (error) {
+      logMainError('post-ai-ui-response', error)
+      return false
+    }
+  })
+
   ipcMain.handle(IpcChannel.stream.cancel, (_, requestId: string) => {
     cancelStream(activeStreams, requestId)
   })
@@ -146,7 +201,7 @@ export function registerStreamHandlers(partition: string): void {
     async (_, params: { url: string; conv_id: string }) => {
       const ses = session.fromPartition(partition)
       try {
-        const response = await net.fetch(`${params.url}/ai/vm/release`, {
+        const response = await netFetch(`${params.url}/ai/vm/release`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ conv_id: params.conv_id }),

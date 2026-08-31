@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import { isTab, migrateLegacyTabId } from './tabs'
+import { isTab } from './tabs'
 
 describe('isTab', () => {
   test('accepts current tab ids', () => {
@@ -9,19 +9,18 @@ describe('isTab', () => {
     expect(isTab('repayment')).toBe(true)
     expect(isTab('insurance-attestation')).toBe(true)
     expect(isTab('relocation')).toBe(true)
-    expect(isTab('updates')).toBe(true)
+    expect(isTab('attributions')).toBe(true)
+    expect(isTab('ventes')).toBe(true)
+    expect(isTab('automations')).toBe(true)
+    expect(isTab('bulk')).toBe(true)
   })
 
   test('rejects unknown ids', () => {
     expect(isTab('agent')).toBe(false)
     expect(isTab('clearance')).toBe(false)
     expect(isTab('request')).toBe(false)
-  })
-})
-
-describe('migrateLegacyTabId', () => {
-  test('maps request to tickets', () => {
-    expect(migrateLegacyTabId('request')).toBe('tickets')
-    expect(migrateLegacyTabId('home')).toBe('home')
+    expect(isTab('updates')).toBe(false)
+    expect(isTab('markdown')).toBe(false)
+    expect(isTab('outreach')).toBe(false)
   })
 })

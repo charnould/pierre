@@ -1,348 +1,323 @@
-import { MousePointerClick } from 'lucide-react'
-import { AnimatePresence, motion, MotionConfig, useReducedMotion } from 'motion/react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
+import { useRegisterNavigationHandlers } from '@/contexts/NavigationHistoryContext'
 import { useUiSettings } from '@/contexts/UiSettingsContext'
+import type { NotificationsApi } from '@/features/activity/hooks/use-notifications'
+import { AutomationDetailEmpty } from '@/features/automations/components/AutomationDetailEmpty'
 import { AutomationForm } from '@/features/automations/components/AutomationForm'
-import { AutomationReport } from '@/features/automations/components/AutomationReport'
-import { AUTO_DETAIL_CROSSFADE } from '@/features/automations/components/automations-chrome'
+import { AutomationFormDialog } from '@/features/automations/components/AutomationFormDialog'
 import { AutomationsList } from '@/features/automations/components/AutomationsList'
+import { useAutomationsListFilters } from '@/features/automations/hooks/useAutomationsListFilters'
 import {
-  MOCK_AUTOMATIONS,
-  trimRunsToLimit,
-  type Automation
-} from '@/features/automations/components/mock-data'
-import {
-  automationMaxRuns,
-  isReportAutomation,
   isTicketReplyAutomation,
+  recordToAutomation,
+  type Automation,
   type ReportAutomation,
-  type TicketReplyAutomation,
-  type TicketReplyRun
+  type TicketReplyAutomation
 } from '@/features/automations/lib/automation-types'
-import { Card, CardBody } from '@/shared/components/ui/card'
-import { DeskHandle, DeskPane, DeskShell, DeskSplit } from '@/shared/components/ui/desk-shell'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle
-} from '@/shared/components/ui/empty'
-import { useDebouncedAutomationsPatch } from '@/shared/hooks/useDebouncedAutomationsPatch'
-import {
-  AUTOMATIONS_PANEL_DETAIL,
-  AUTOMATIONS_PANEL_LIST,
-  AUTOMATIONS_SPLIT_DEFAULT_LIST,
-  defaultAutomationsPanelLayout,
-  splitFromAutomationsLayout
-} from '@/shared/lib/ui-settings/automations-panel'
+import { openAutomationRun } from '@/features/automations/lib/open-automation-run'
+import { toast } from '@/shared/components/ui/toast'
 import { cn } from '@/shared/lib/utils'
+import type { CreateAutomationBody, PatchAutomationBody } from '@/shared/types/automations'
 import type { Settings } from '@/shared/types/settings'
-
-import '@/features/automations/styles/auto-report-markdown.css'
-
-type RightPanelMode = 'report' | 'form'
 
 interface Props {
   hidden: boolean
   agentName: string
+  userLogin: string
   settings: Settings
+  notifications?: NotificationsApi
 }
 
-export function AutomationsView({ hidden, agentName, settings }: Props) {
-  const reduceMotion = useReducedMotion()
+function automationsSheetTitle(isCreatingNew: boolean): string {
+  return isCreatingNew ? 'Créer une automatisation' : "Modifier l'automatisation"
+}
+
+export function AutomationsView({
+  hidden,
+  agentName,
+  userLogin,
+  settings,
+  notifications: _notifications
+}: Props) {
   const { settings: settingsUi, loading } = useUiSettings()
-  const { patch: patchAutomations, cancel: cancelAutomationsPatch } = useDebouncedAutomationsPatch({
-    delayMs: 400
-  })
-
-  const savedSplitRef = useRef(settingsUi.automations?.panelSplit)
-  useEffect(() => {
-    savedSplitRef.current = settingsUi.automations?.panelSplit
-  }, [settingsUi.automations?.panelSplit])
-
-  useEffect(() => {
-    if (loading) cancelAutomationsPatch()
-  }, [loading, cancelAutomationsPatch])
-
-  const panelSplit = settingsUi.automations?.panelSplit
-  const panelGroupKey = panelSplit?.listPercent ?? AUTOMATIONS_SPLIT_DEFAULT_LIST
-  const defaultLayout = defaultAutomationsPanelLayout(panelSplit)
   const panelReady = !loading && !hidden
 
-  const handleLayoutChanged = useCallback(
-    (layout: Record<string, number>) => {
-      if (!panelReady) return
-      const nextSplit = splitFromAutomationsLayout(layout)
-      if (savedSplitRef.current?.listPercent === nextSplit.listPercent) return
-      savedSplitRef.current = nextSplit
-      patchAutomations({ panelSplit: nextSplit })
-    },
-    [panelReady, patchAutomations]
-  )
-
-  const [automations, setAutomations] = useState<Automation[]>(MOCK_AUTOMATIONS)
-
+  const [automations, setAutomations] = useState<Automation[]>([])
   const [selectedAutomationId, setSelectedAutomationId] = useState<string | null>(null)
-  const [rightPanelMode, setRightPanelMode] = useState<RightPanelMode>('report')
-  const [editingAutomationId, setEditingAutomationId] = useState<string | null>(null)
+  const [isCreatingNew, setIsCreatingNew] = useState(false)
+
+  const sheetOpen = isCreatingNew || selectedAutomationId !== null
+  const selectedAutomation = automations.find((a) => a.id === selectedAutomationId) ?? null
+  const { query, setQuery, sortKey, setSortKey, normalizedQuery, sortedAutomations } =
+    useAutomationsListFilters(automations)
+
+  const refresh = useCallback(async () => {
+    if (!settings.url || !window.api?.getAutomations || !userLogin) {
+      return
+    }
+    const res = await window.api.getAutomations({ url: settings.url })
+    if (!res) return
+    setAutomations(res.data.map((row) => recordToAutomation(row, userLogin)))
+  }, [settings.url, userLogin])
 
   useEffect(() => {
-    if (
-      selectedAutomationId !== null &&
-      !automations.some((automation) => automation.id === selectedAutomationId)
-    ) {
-      setSelectedAutomationId(null)
-    }
-  }, [automations, selectedAutomationId])
+    if (hidden || sheetOpen || !settings.url || !window.api?.getAutomations || !userLogin) return
+    const url = settings.url
+    const login = userLogin
+    void window.api.getAutomations({ url }).then((res) => {
+      if (!res) return
+      setAutomations(res.data.map((row) => recordToAutomation(row, login)))
+    })
+    const id = window.setInterval(() => {
+      void refresh()
+    }, 15_000)
+    return () => window.clearInterval(id)
+  }, [hidden, refresh, settings.url, sheetOpen, userLogin])
 
-  const selectedAutomation = automations.find((a) => a.id === selectedAutomationId) ?? null
-  const editingAutomation = automations.find((a) => a.id === editingAutomationId) ?? null
+  useRegisterNavigationHandlers('automations', {
+    getSnapshot: () =>
+      selectedAutomationId
+        ? {
+            activityTarget: {
+              view: 'automations',
+              automationId: selectedAutomationId
+            }
+          }
+        : {},
+    applySnapshot: (snapshot) => {
+      const target = snapshot.activityTarget
+      if (target?.view !== 'automations') return
+      setSelectedAutomationId(target.automationId)
+      setIsCreatingNew(false)
+    }
+  })
+
+  if (
+    selectedAutomationId !== null &&
+    automations.length > 0 &&
+    !automations.some((automation) => automation.id === selectedAutomationId)
+  ) {
+    setSelectedAutomationId(null)
+  }
+
+  function closeSheet() {
+    setSelectedAutomationId(null)
+    setIsCreatingNew(false)
+  }
 
   function handleSelectAutomation(automation: Automation) {
     setSelectedAutomationId(automation.id)
-    setRightPanelMode('report')
-    setEditingAutomationId(null)
-  }
-
-  function handleClearSelection() {
-    setSelectedAutomationId(null)
-    setRightPanelMode('report')
-    setEditingAutomationId(null)
-  }
-
-  function handleEdit(automation: Automation) {
-    setEditingAutomationId(automation.id)
-    setRightPanelMode('form')
+    setIsCreatingNew(false)
   }
 
   function handleNewAutomation() {
-    setEditingAutomationId(null)
-    setRightPanelMode('form')
+    setSelectedAutomationId(null)
+    setIsCreatingNew(true)
   }
 
-  function handleCancel() {
-    setRightPanelMode('report')
-    setEditingAutomationId(null)
-  }
+  async function handleSave(data: Partial<Automation>) {
+    if (!settings.url || !window.api) return
 
-  function handleSave(data: Partial<Automation>) {
-    if (editingAutomationId) {
-      setAutomations((prev) =>
-        prev.map((a) => {
-          if (a.id !== editingAutomationId) return a
-          if (isReportAutomation(a) && data.type !== 'ticket_reply') {
-            return { ...a, ...data } as ReportAutomation
-          }
-          if (isTicketReplyAutomation(a) && data.type !== 'report') {
-            return { ...a, ...data } as TicketReplyAutomation
-          }
-          return { ...a, ...data } as Automation
-        })
-      )
-    } else if (data.type === 'ticket_reply') {
-      const newAuto: TicketReplyAutomation = {
-        type: 'ticket_reply',
-        id: `auto-${Date.now()}`,
-        name: data.name ?? 'Nouvelle automatisation',
-        description: data.description ?? '',
-        status: 'scheduled',
-        owner: 'gensel',
-        collaborators: data.collaborators ?? [],
-        isCreator: true,
-        runs: [],
-        skillId: 'ticket.answer-ticket',
-        ticketFilters: data.ticketFilters ?? { rules: [] },
-        maxRuns: data.maxRuns ?? 6,
-        frequency: data.frequency ?? 'weekly',
+    if (selectedAutomationId && !isCreatingNew) {
+      const patch: PatchAutomationBody = {
+        name: data.name,
+        description: data.description,
+        mentions: data.mentions,
+        frequency: data.frequency,
         frequencyDay: data.frequencyDay,
-        frequencyTime: data.frequencyTime ?? '08:00',
-        nextRunDate: undefined
+        frequencyTime: data.frequencyTime
       }
-      setAutomations((prev) => [newAuto, ...prev])
-      setSelectedAutomationId(newAuto.id)
-    } else {
-      const newAuto: ReportAutomation = {
-        type: 'report',
-        id: `auto-${Date.now()}`,
-        name: data.name ?? 'Nouvelle automatisation',
-        description: data.description ?? '',
-        status: 'scheduled',
-        owner: 'gensel',
-        collaborators: data.collaborators ?? [],
-        isCreator: true,
-        runs: [],
-        maxReports: data.maxReports ?? 6,
-        frequency: data.frequency ?? 'weekly',
-        frequencyDay: data.frequencyDay,
-        frequencyTime: data.frequencyTime ?? '08:00',
-        prompt: data.prompt ?? '',
-        nextRunDate: undefined
+      if (data.type === 'report' || (!data.type && selectedAutomation?.type === 'report')) {
+        if ('prompt' in data) patch.prompt = (data as Partial<ReportAutomation>).prompt
+        if ('maxReports' in data) patch.maxReports = (data as Partial<ReportAutomation>).maxReports
+      } else {
+        const reply = data as Partial<TicketReplyAutomation>
+        if (reply.channel) patch.channel = reply.channel
+        if (reply.ticketFilters) patch.ticketFilters = reply.ticketFilters
+        if (reply.maxItems !== undefined) patch.maxItems = reply.maxItems
       }
-      setAutomations((prev) => [newAuto, ...prev])
-      setSelectedAutomationId(newAuto.id)
-    }
-    setRightPanelMode('report')
-    setEditingAutomationId(null)
-  }
-
-  function handleTogglePause() {
-    if (!editingAutomationId) return
-    setAutomations((prev) =>
-      prev.map((a) =>
-        a.id === editingAutomationId
-          ? { ...a, status: a.status === 'paused' ? 'scheduled' : 'paused' }
-          : a
-      )
-    )
-  }
-
-  function handleDelete() {
-    if (!editingAutomationId) return
-    const remaining = automations.filter((a) => a.id !== editingAutomationId)
-    setAutomations(remaining)
-    setSelectedAutomationId((current) => (current === editingAutomationId ? null : current))
-    setRightPanelMode('report')
-    setEditingAutomationId(null)
-  }
-
-  function handleLaunch() {
-    if (!editingAutomationId) return
-    const now = new Date().toISOString()
-    setAutomations((prev) =>
-      prev.map((a) => {
-        if (a.id !== editingAutomationId) return a
-        if (isTicketReplyAutomation(a)) {
-          const newRun: TicketReplyRun = {
-            id: `run-${a.id}-${Date.now()}`,
-            automationId: a.id,
-            date: now,
-            summary: { total: 3, generated: 2, skipped: 1, errors: 0 },
-            tickets: [
-              { id_reclamation: 'REQ-MOCK-1', outcome: 'generated' },
-              { id_reclamation: 'REQ-MOCK-2', outcome: 'generated' },
-              { id_reclamation: 'REQ-MOCK-3', outcome: 'skipped_existing_draft' }
-            ]
-          }
-          return {
-            ...a,
-            status: 'success' as const,
-            lastRunDate: now,
-            runs: trimRunsToLimit([newRun, ...a.runs], a.maxRuns)
-          }
-        }
-        const newRun = {
-          id: `run-${a.id}-${Date.now()}`,
-          automationId: a.id,
-          date: now,
-          report: `# ${a.name}\n\nGénération manuelle du ${new Date(now).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}.\n\n_Rapport placeholder — contenu à générer par l'agent._`
-        }
-        return {
-          ...a,
-          status: 'success' as const,
-          lastRunDate: now,
-          runs: trimRunsToLimit([newRun, ...a.runs], automationMaxRuns(a))
-        }
+      const res = await window.api.patchAutomation({
+        url: settings.url,
+        id: selectedAutomationId,
+        patch
       })
-    )
-    setRightPanelMode('report')
-    setEditingAutomationId(null)
-    setSelectedAutomationId(editingAutomationId)
+      if (!res) {
+        toast.add({ title: 'Enregistrement impossible', type: 'error' })
+        return
+      }
+      await refresh()
+      closeSheet()
+      toast.add({ title: 'Automatisation mise à jour', type: 'success' })
+      return
+    }
+
+    const body: CreateAutomationBody =
+      data.type === 'ticket_reply'
+        ? {
+            type: 'ticket_reply',
+            name: data.name ?? 'Nouvelle automatisation',
+            description: data.description ?? '',
+            mentions: data.mentions ?? [],
+            frequency: data.frequency ?? 'weekly',
+            frequencyDay: data.frequencyDay,
+            frequencyTime: data.frequencyTime ?? '08:00',
+            channel: (data as Partial<TicketReplyAutomation>).channel ?? 'email',
+            ticketFilters: (data as Partial<TicketReplyAutomation>).ticketFilters ?? {
+              rules: []
+            },
+            maxItems: (data as Partial<TicketReplyAutomation>).maxItems ?? 20
+          }
+        : {
+            type: 'report',
+            name: data.name ?? 'Nouvelle automatisation',
+            description: data.description ?? '',
+            mentions: data.mentions ?? [],
+            frequency: data.frequency ?? 'weekly',
+            frequencyDay: data.frequencyDay,
+            frequencyTime: data.frequencyTime ?? '08:00',
+            prompt: (data as Partial<ReportAutomation>).prompt ?? '',
+            maxReports: (data as Partial<ReportAutomation>).maxReports ?? 6
+          }
+
+    const res = await window.api.createAutomation({ url: settings.url, ...body })
+    if (!res) {
+      toast.add({ title: 'Création impossible', type: 'error' })
+      return
+    }
+    await refresh()
+    closeSheet()
+    toast.add({ title: 'Automatisation créée', type: 'success' })
   }
 
-  const detailEmpty = (
-    <div className="desk-output-panel">
-      <Card variant="report">
-        <CardBody inset="report">
-          <Empty className="desk-output-empty">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <MousePointerClick />
-              </EmptyMedia>
-              <EmptyTitle>Aucune automatisation sélectionnée</EmptyTitle>
-              <EmptyDescription>
-                {automations.length === 0
-                  ? 'Créez une automatisation pour commencer.'
-                  : "Sélectionnez une automatisation dans la liste pour l'afficher."}
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        </CardBody>
-      </Card>
-    </div>
-  )
+  async function handleTogglePause(automationId: string) {
+    if (!settings.url || !window.api?.patchAutomation) return
+    const current = automations.find((a) => a.id === automationId)
+    if (!current) return
+    const res = await window.api.patchAutomation({
+      url: settings.url,
+      id: automationId,
+      patch: { status: current.status === 'paused' ? 'scheduled' : 'paused' }
+    })
+    if (!res) {
+      toast.add({ title: 'Mise en pause impossible', type: 'error' })
+      return
+    }
+    await refresh()
+    closeSheet()
+  }
+
+  async function handleDelete() {
+    if (!selectedAutomationId || !settings.url || !window.api?.deleteAutomation) return
+    const res = await window.api.deleteAutomation({
+      url: settings.url,
+      id: selectedAutomationId
+    })
+    if (!res) {
+      toast.add({ title: 'Suppression impossible', type: 'error' })
+      return
+    }
+    closeSheet()
+    await refresh()
+    toast.add({ title: 'Automatisation supprimée', type: 'success' })
+  }
+
+  async function handleTogglePin(automation: Automation) {
+    if (!settings.url || !window.api) return
+    const res = automation.pinned
+      ? await window.api.unpinAutomation({ url: settings.url, id: automation.id })
+      : await window.api.pinAutomation({ url: settings.url, id: automation.id })
+    if (!res) {
+      toast.add({ title: 'Épinglage impossible', type: 'error' })
+      return
+    }
+    await refresh()
+  }
+
+  async function handleLaunch() {
+    if (!selectedAutomationId || !settings.url || !window.api?.runAutomation) return
+    const res = await window.api.runAutomation({
+      url: settings.url,
+      id: selectedAutomationId
+    })
+    if (!res) {
+      toast.add({ title: 'Exécution impossible', type: 'error' })
+      return
+    }
+    await refresh()
+    closeSheet()
+    toast.add({
+      title: isTicketReplyAutomation(recordToAutomation(res.data, userLogin))
+        ? 'Brouillons disponibles dans les notifications'
+        : 'Rapport disponible dans les notifications',
+      type: 'success'
+    })
+  }
+
+  function renderDialogContent() {
+    if (isCreatingNew || selectedAutomation?.isCreator) {
+      return (
+        <AutomationForm
+          key={selectedAutomation?.id ?? 'new'}
+          agentName={agentName}
+          url={settings.url}
+          uiSettings={settingsUi}
+          automation={isCreatingNew ? undefined : (selectedAutomation ?? undefined)}
+          onCancel={closeSheet}
+          onSave={(data) => void handleSave(data)}
+          onLaunch={selectedAutomation?.isCreator ? () => void handleLaunch() : undefined}
+          onTogglePause={
+            selectedAutomation?.isCreator && selectedAutomationId
+              ? () => void handleTogglePause(selectedAutomationId)
+              : undefined
+          }
+          onDelete={selectedAutomation?.isCreator ? () => void handleDelete() : undefined}
+        />
+      )
+    }
+    if (selectedAutomation) {
+      return (
+        <AutomationDetailEmpty variant="collaborator" automationName={selectedAutomation.name} />
+      )
+    }
+    return null
+  }
 
   return (
     <div
+      data-tab-panel
       className={cn(
-        'tab-panel relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
+        'relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
         hidden ? 'hidden' : 'flex'
       )}
     >
       {panelReady ? (
-        <DeskShell className="min-h-0 flex-1">
-          <DeskSplit
-            key={panelGroupKey}
-            id="automations-view"
-            orientation="horizontal"
-            defaultLayout={defaultLayout}
-            onLayoutChanged={handleLayoutChanged}
-          >
-            <DeskPane id={AUTOMATIONS_PANEL_LIST} minSize="20%" maxSize="45%">
-              <div className="desk-list-panel">
-                <AutomationsList
-                  automations={automations}
-                  selectedAutomationId={selectedAutomationId}
-                  uiSettings={settingsUi}
-                  onSelectAutomation={handleSelectAutomation}
-                  onClearSelection={handleClearSelection}
-                  onEdit={handleEdit}
-                  onNewAutomation={handleNewAutomation}
-                />
-              </div>
-            </DeskPane>
-
-            <DeskHandle />
-
-            <DeskPane id={AUTOMATIONS_PANEL_DETAIL} minSize="40%">
-              <MotionConfig
-                reducedMotion={reduceMotion ? 'always' : 'never'}
-                transition={AUTO_DETAIL_CROSSFADE}
-              >
-                {rightPanelMode === 'form' ? (
-                  <AutomationForm
-                    agentName={agentName}
-                    url={settings.url}
-                    uiSettings={settingsUi}
-                    automation={editingAutomation ?? undefined}
-                    onCancel={handleCancel}
-                    onSave={handleSave}
-                    onLaunch={editingAutomation ? handleLaunch : undefined}
-                    onTogglePause={editingAutomation ? handleTogglePause : undefined}
-                    onDelete={editingAutomation ? handleDelete : undefined}
-                  />
-                ) : selectedAutomation ? (
-                  <AnimatePresence mode="popLayout" initial={false}>
-                    <motion.div
-                      key={selectedAutomation.id}
-                      className="flex h-full min-h-0 min-w-0 flex-1 flex-col"
-                      initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
-                      transition={reduceMotion ? { duration: 0 } : AUTO_DETAIL_CROSSFADE}
-                    >
-                      <AutomationReport automation={selectedAutomation} />
-                    </motion.div>
-                  </AnimatePresence>
-                ) : (
-                  detailEmpty
-                )}
-              </MotionConfig>
-            </DeskPane>
-          </DeskSplit>
-        </DeskShell>
+        <div className="flex min-h-0 w-full min-w-0 flex-1 scroll-pb-4 flex-col overflow-x-hidden overflow-y-auto overscroll-contain pb-6">
+          <AutomationsList
+            automations={sortedAutomations}
+            url={settings.url}
+            agentName={agentName}
+            query={query}
+            normalizedQuery={normalizedQuery}
+            onQueryChange={setQuery}
+            sortKey={sortKey}
+            onSortKeyChange={setSortKey}
+            selectedAutomationId={selectedAutomationId}
+            onSelectAutomation={handleSelectAutomation}
+            onTogglePin={(automation) => void handleTogglePin(automation)}
+            onNewAutomation={handleNewAutomation}
+            onOpenRun={openAutomationRun}
+          />
+        </div>
       ) : null}
+
+      <AutomationFormDialog
+        open={sheetOpen}
+        title={automationsSheetTitle(isCreatingNew)}
+        onClose={closeSheet}
+      >
+        {renderDialogContent()}
+      </AutomationFormDialog>
     </div>
   )
 }

@@ -36,6 +36,20 @@ describe('forge config release invariants', () => {
     expect(publisher?.config?.prerelease).toBe(false)
   })
 
+  it('externalises only what the packaged app can still resolve', async () => {
+    // Forge ships no node_modules, so anything left external in the main bundle
+    // is a MODULE_NOT_FOUND at startup. Only electron survives, being supplied
+    // by the runtime itself.
+    const prunesNodeModules = forgeConfig.packagerConfig.ignore.some((pattern) =>
+      pattern.test('/node_modules/oxfmt/index.js')
+    )
+    expect(prunesNodeModules).toBe(true)
+
+    const viteConfig = (await import('../electron.vite.config.ts')).default
+
+    expect(viteConfig.main?.build?.rollupOptions?.external).toEqual(['electron'])
+  })
+
   it('declares the desktop package directory for update.electronjs.org', () => {
     const pkg = JSON.parse(
       readFileSync(join(import.meta.dirname, '..', 'package.json'), 'utf8')

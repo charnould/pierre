@@ -16,8 +16,7 @@ export type TicketDraftIconEntry = {
 const LETTER_BY_FORMAT: Record<TicketSkillKey, string> = {
   ticketReplyEmail: 'N',
   ticketReplyLetter: 'P',
-  ticketWriteMemo: 'I',
-  ticketRewriteTicket: 'R'
+  ticketWriteMemo: 'I'
 }
 
 export const TICKET_DRAFT_ICON_ENTRIES: TicketDraftIconEntry[] = TICKET_SKILL_OPTIONS.map((opt) => {
@@ -61,10 +60,6 @@ const DRAFT_ICON_TOOLTIP: Record<TicketSkillKey, { generate: string; read: strin
   ticketWriteMemo: {
     generate: 'Générer une note interne',
     read: 'Lire la note interne'
-  },
-  ticketRewriteTicket: {
-    generate: 'Générer une réclamation rédigée',
-    read: 'Lire la réclamation rédigée'
   }
 }
 
@@ -84,9 +79,3 @@ export function draftIsAutomation(
   const { id_skill } = formatToWire(format)
   return draft_automation_skills.includes(id_skill)
 }
-
-/** Muted — no draft yet for this skill. */
-export const DRAFT_ICON_NOT_GENERATED_CLASS = 'text-muted-foreground/40'
-
-/** Unified highlight when a draft exists (any skill). */
-export const DRAFT_ICON_GENERATED_CLASS = 'text-black'

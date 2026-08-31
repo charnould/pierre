@@ -1,6 +1,3 @@
-import Docxtemplater from 'docxtemplater'
-import PizZip from 'pizzip'
-
 export function generateDocxFilename(): string {
   const now = new Date()
   const yyyy = now.getFullYear()
@@ -9,12 +6,30 @@ export function generateDocxFilename(): string {
   return `${yyyy}-${mm}-${dd} - Courrier sortant`
 }
 
+export async function renderDocxTemplate(
+  templateBuffer: ArrayBuffer,
+  data: Record<string, unknown>
+): Promise<Uint8Array> {
+  const [{ default: Docxtemplater }, { default: PizZip }] = await Promise.all([
+    import('docxtemplater'),
+    import('pizzip')
+  ])
+  const zip = new PizZip(templateBuffer)
+  const doc = new Docxtemplater(zip, {
+    paragraphLoop: true,
+    linebreaks: true,
+    delimiters: { start: '{{', end: '}}' }
+  })
+  doc.render(data)
+  return doc.getZip().generate({ type: 'uint8array' })
+}
+
 export async function generateDocxFromTemplate(
   templateBuffer: ArrayBuffer,
   data: { subject: string; body: string }
 ): Promise<Uint8Array> {
-  const zip = new PizZip(templateBuffer)
-  const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true })
-  doc.render({ subject: data.subject, body: data.body })
-  return doc.getZip().generate({ type: 'uint8array' })
+  return renderDocxTemplate(templateBuffer, {
+    subject: data.subject,
+    body: data.body
+  })
 }

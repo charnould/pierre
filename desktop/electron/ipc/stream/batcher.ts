@@ -1,5 +1,5 @@
 /** Default flush interval (~1 frame) to reduce IPC chatter during NDJSON streaming. */
-export const STREAM_BATCH_FLUSH_MS = 16
+const STREAM_BATCH_FLUSH_MS = 16
 
 /**
  * Coalesces small network chunks before sending them to the renderer.

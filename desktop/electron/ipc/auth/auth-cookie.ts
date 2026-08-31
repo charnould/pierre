@@ -33,7 +33,7 @@ export function pierreAuthCookieLinesFromResponse(resp: Response): string[] {
 }
 
 /** Whether the Electron session already has a `pierre-ia` cookie for this server. */
-export async function hasPierreAuthCookie(ses: Session, baseUrl: string): Promise<boolean> {
+async function hasPierreAuthCookie(ses: Session, baseUrl: string): Promise<boolean> {
   const byUrl = await ses.cookies.get({ url: baseUrl })
   if (byUrl.some((c) => c.name === COOKIE_NAME)) return true
   const byName = await ses.cookies.get({ name: COOKIE_NAME })
@@ -41,7 +41,7 @@ export async function hasPierreAuthCookie(ses: Session, baseUrl: string): Promis
 }
 
 /** Writes `pierre-ia` into the session jar from a Set-Cookie header line. */
-export async function setPierreAuthCookieFromLine(
+async function setPierreAuthCookieFromLine(
   ses: Session,
   baseUrl: string,
   setCookieLine: string

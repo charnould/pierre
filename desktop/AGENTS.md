@@ -1,4 +1,4 @@
-# CLAUDE.md
+# Agents.md
 
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
@@ -71,18 +71,28 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ---
 
+## Formatting
+
+Format from the **repo root**, never from `desktop/`:
+
+```bash
+bun run format:check                            # whole repo, read-only
+bun run oxfmt -c ./config/oxfmt.jsonc <files>   # specific files
+```
+
+`bun run format` and `bun run lint` end in `--fix`/`--fix-dangerously` and rewrite every matching file in the repo, not just yours — including uncommitted work you did not touch. Use `format:check` and `lint:check` to find problems, and fix your own files by passing them explicitly.
+
+The config (single quotes, no semicolons, `printWidth` 100, `sortImports`, `sortTailwindcss`) lives at `config/oxfmt.jsonc`. Running `oxfmt` without `-c` silently falls back to its defaults — double quotes and semicolons, the opposite of this project — and reports only an easily-missed `No config found` line, printed last.
+
+---
+
 ## Design System
 
-This app ships a **light-only** design system. See **[`design-system.html`](./design-system.html)** at the repo `desktop/` root for the living visual reference (tokens, typography, components, status pills, LLM answer block).
+Lire intégralement `desktop/design-system.md` avant toute création, modification ou revue
+d’interface.
 
-Conventions:
+Ce document est l’unique source de vérité des règles UI et visuelles et prévaut en cas de
+conflit.
 
-- **Light-only.** No dark mode — there is no active `.dark` block in `src/globals.css`; residual `dark:` utilities in shadcn primitives are inert.
-- **Surface:** distinctive warm **cream** background; cards are slightly lighter for layering.
-- **Accent:** warm **ink** (`--primary`) for CTA button fills; **historic-hyperlink blue** (`--link`) for links and focus rings only — never as button fill.
-- **Typography:** **Inter** for all UI; **Source Serif 4** (bundled in `src/assets`) for agent-generated content — use the `.llm-answer` class or the `--font-source-serif` token.
-- **Components:** always use shadcn primitives from `src/shared/components/ui/`, built on `@base-ui/react`. Do not hand-roll buttons, inputs, menus, or dialogs; justify any exception (Motion, Streamdown, Lexical, resizable panels).
-- **Animations:** use [Motion](https://motion.dev) (`motion/react`) for UI transitions; CSS `transition-colors` only for simple hovers.
-- **Status pills:** use the `Badge` semantic variants `success | warning | danger | info | neutral` (backed by `--*-soft` / `--*-soft-foreground` tokens).
-- **Density:** base UI font-size is 13px (`0.8125rem`); prefer compact spacing.
-- Tailwind v4, shadcn components, lucide-react icons, shadcn sidebar (icon-collapsed) + TitleBar Electron for history.
+Toute nouvelle règle visuelle doit être validée puis documentée dans
+`desktop/design-system.md`, jamais dans `AGENTS.md`.

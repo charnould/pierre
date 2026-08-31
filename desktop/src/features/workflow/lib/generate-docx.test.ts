@@ -39,6 +39,14 @@ describe('generateDocxFromTemplate', () => {
     expect(result.length).toBeGreaterThan(0)
     expect(result[0]).toBe(0x50)
     expect(result[1]).toBe(0x4b)
+
+    const { default: PizZip } = await import('pizzip')
+    const zip = new PizZip(result)
+    const xml = zip.file('word/document.xml')?.asText() ?? ''
+    expect(xml).toContain('Objet test')
+    expect(xml).toContain('Bonjour, voici le courrier.')
+    const text = xml.replace(/<[^>]*>/g, '')
+    expect(text).not.toMatch(/\{\{[^{}]+}}/)
   })
 
   it('gère un contenu multi-lignes', async () => {

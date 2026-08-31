@@ -1,14 +1,7 @@
 import type { ComponentProps, ReactNode } from 'react'
 
-import { TICKETS_COLUMN_HEADER_TITLE_CLASS } from '@/features/tickets/components/TicketsColumnHeader'
+import { Button } from '@/shared/components/ui/button'
 import { cn } from '@/shared/lib/utils'
-
-export const DRAFT_NPIR_LETTER_CLASS = 'text-[10px] uppercase leading-none tracking-tight'
-
-const DRAFT_NPIR_SEGMENT_CLASS = 'inline-flex m-0 w-2 shrink-0 items-center justify-center'
-
-const DRAFT_NPIR_BUTTON_CLASS =
-  'gap-0 rounded-none border-0 p-0 shadow-none outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50'
 
 interface GroupProps extends ComponentProps<'div'> {
   children: ReactNode
@@ -45,7 +38,7 @@ export function TicketDraftLetterCell({
   if (disabled) {
     return (
       <span
-        className={cn(TICKETS_COLUMN_HEADER_TITLE_CLASS, DRAFT_NPIR_SEGMENT_CLASS, 'truncate px-0')}
+        className="inline-flex size-4 shrink-0 items-center justify-center truncate text-xs uppercase"
         title={tooltip}
       >
         {letter}
@@ -54,16 +47,10 @@ export function TicketDraftLetterCell({
   }
 
   return (
-    <button
-      type="button"
-      className={cn(
-        DRAFT_NPIR_LETTER_CLASS,
-        DRAFT_NPIR_SEGMENT_CLASS,
-        DRAFT_NPIR_BUTTON_CLASS,
-        hasDraft
-          ? 'bg-foreground/[0.06] font-semibold text-foreground shadow-[var(--elevation-pill-inset)] hover:bg-foreground/[0.09]'
-          : 'bg-transparent font-normal text-foreground/35 hover:bg-muted/20 hover:text-foreground/55'
-      )}
+    <Button
+      variant="ghost"
+      size="icon-xs"
+      className={cn('size-4 text-xs uppercase', hasDraft ? 'font-semibold' : 'font-normal')}
       aria-label={tooltip}
       title={tooltip}
       onClick={(e) => {
@@ -72,12 +59,9 @@ export function TicketDraftLetterCell({
       }}
     >
       {letter}
-    </button>
+    </Button>
   )
 }
-
-const DRAFT_NPIR_DOT_BUTTON_CLASS =
-  'rounded-none border-0 bg-transparent p-0 shadow-none outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 hover:opacity-80'
 
 interface DotProps {
   hasDraft: boolean
@@ -88,9 +72,10 @@ interface DotProps {
 
 export function TicketDraftDotCell({ hasDraft, isAutomation = false, tooltip, onClick }: DotProps) {
   return (
-    <button
-      type="button"
-      className={cn(DRAFT_NPIR_SEGMENT_CLASS, DRAFT_NPIR_DOT_BUTTON_CLASS)}
+    <Button
+      variant="ghost"
+      size="icon-xs"
+      className="size-4"
       aria-label={tooltip}
       title={tooltip}
       onClick={(e) => {
@@ -101,12 +86,12 @@ export function TicketDraftDotCell({ hasDraft, isAutomation = false, tooltip, on
       <span
         aria-hidden
         className={cn(
-          'size-2 shrink-0 rounded-full transition-colors',
-          hasDraft && isAutomation && 'draft-npir-dot--automation',
-          hasDraft && !isAutomation && 'bg-foreground shadow-[var(--elevation-pill-inset)]',
+          'size-2 shrink-0 rounded-full',
+          hasDraft && isAutomation && 'bg-primary ring-background animate-pulse ring-2',
+          hasDraft && !isAutomation && 'bg-foreground',
           !hasDraft && 'bg-foreground/25'
         )}
       />
-    </button>
+    </Button>
   )
 }

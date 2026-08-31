@@ -1,4 +1,14 @@
 import {
+  DEFAULT_MASCOT_BADGE_COLOR,
+  DEFAULT_MASCOT_COLOR,
+  DEFAULT_MASCOT_SHAPE,
+  parseMascotColor,
+  parseMascotShape,
+  type MascotColor,
+  type MascotShape
+} from '../../../mascot/look'
+import { MASCOT_VIEWBOX_SIZE } from '../../../mascot/profiles'
+import {
   AUTOMATIONS_SPLIT_DEFAULT_LIST,
   parseAutomationsPanelSplit,
   type AutomationsPanelSplit
@@ -26,51 +36,21 @@ import {
   type WorkflowTicketsOutputSplit
 } from './workflow-output'
 
-export type { AutomationsPanelSplit } from './automations-panel'
+export { AUTOMATIONS_SPLIT_DEFAULT_LIST, parseAutomationsPanelSplit } from './automations-panel'
+
+export { UPDATES_SPLIT_DEFAULT_LIST, parseUpdatesPanelSplit } from './updates-panel'
+export type { WorkflowOutputSplitKey } from './workflow-output'
 export {
-  AUTOMATIONS_PANEL_DETAIL,
-  AUTOMATIONS_PANEL_LIST,
-  AUTOMATIONS_SPLIT_DEFAULT_LIST,
-  defaultAutomationsPanelLayout,
-  listPercentFromLayout,
-  parseAutomationsPanelSplit,
-  splitFromAutomationsLayout
-} from './automations-panel'
-export type { UpdatesPanelSplit } from './updates-panel'
-export {
-  UPDATES_PANEL_DETAIL,
-  UPDATES_PANEL_LIST,
-  UPDATES_SPLIT_DEFAULT_LIST,
-  defaultUpdatesPanelLayout,
-  listPercentFromUpdatesLayout,
-  parseUpdatesPanelSplit,
-  splitFromUpdatesLayout
-} from './updates-panel'
-export type {
-  WorkflowTicketsOutputSplit,
-  WorkflowOutputSplit,
-  WorkflowOutputSplitKey
-} from './workflow-output'
-export {
-  WORKFLOW_PANEL_ANALYSE,
   WORKFLOW_PANEL_CONTEXTE,
   WORKFLOW_PANEL_OUTPUT,
-  WORKFLOW_PANEL_REPONSE,
   WORKFLOW_SPLIT_DEFAULT_CONTEXTE,
-  contextePercentFromLayout,
   defaultWorkflowPanelLayout,
-  parseWorkflowOutputSplit,
   parseWorkflowTicketsOutputSplit,
   resolveWorkflowOutputSplit,
   splitFromLayout
 } from './workflow-output'
 
-export type {
-  ColumnValueBadgeDefaults,
-  ColumnValueStyle,
-  ColumnValuesConfig
-} from './tickets-table'
-export { resolveTicketValueDisplay } from './tickets-table'
+export type { ColumnValuesConfig } from './tickets-table'
 
 export type TicketsTableSettings = {
   columnLabels?: Record<string, string>
@@ -103,11 +83,39 @@ export type WindowSettings = {
   y?: number
 }
 
+export type MascotSettings = {
+  enabled?: boolean
+  /** Diamètre du corps, en pixels. */
+  size?: number
+  x?: number
+  y?: number
+  shape?: MascotShape
+  color?: MascotColor
+  badgeColor?: MascotColor
+}
+
 export const DEFAULT_WINDOW_BOUNDS = { width: 1190, height: 840 } as const
+/**
+ * Compact centered shell fitted to the login stack (titlebar + px-6 py-6 +
+ * 64px mark + legal checkboxes at 12/16). FieldError sits under the field or
+ * the legal block — not reserved. Do not stretch the form with flex-1.
+ */
+export const LOGIN_WINDOW_BOUNDS = { width: 400, height: 560 } as const
 export const WINDOW_MIN_SIZE = { width: 360, height: 400 } as const
+export const MASCOT_SIZE_RANGE = { min: 80, max: 240, step: 10 } as const
+/** Diamètre du corps dans le viewBox (unités). */
+const MASCOT_BODY_DIAMETER = 100
+export const DEFAULT_MASCOT_SETTINGS: MascotSettings = {
+  enabled: true,
+  size: 120,
+  shape: DEFAULT_MASCOT_SHAPE,
+  color: DEFAULT_MASCOT_COLOR,
+  badgeColor: DEFAULT_MASCOT_BADGE_COLOR
+}
 
 export type UiSettings = {
   window?: WindowSettings
+  mascot?: MascotSettings
   tickets?: {
     table?: TicketsTableSettings
   }
@@ -146,6 +154,7 @@ export const TICKET_COLUMN_VALUES_DEFAULTS: ColumnValuesConfig = {
 
 export const UI_SETTINGS_DEFAULTS: UiSettings = {
   window: { ...DEFAULT_WINDOW_BOUNDS },
+  mascot: { ...DEFAULT_MASCOT_SETTINGS },
   workflow: {
     ticketsOutputSplit: { contextePercent: WORKFLOW_SPLIT_DEFAULT_CONTEXTE },
     aboutOutputSplit: { contextePercent: WORKFLOW_SPLIT_DEFAULT_CONTEXTE }
@@ -171,56 +180,30 @@ export const UI_SETTINGS_DEFAULTS: UiSettings = {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
-/** Deep-merges raw UI settings documents before parse (preserves table keys omitted in partial saves). */
-export function mergeUiSettingsRawDocuments(
-  existing: Record<string, unknown>,
-  incoming: Record<string, unknown>
-): Record<string, unknown> {
-  if (Object.keys(incoming).length === 0) {
-    return {}
-  }
+export function isUiSettingsFileObject(value: unknown): value is Record<string, unknown> {
+  return isRecord(value)
+}
 
-  const existingTickets = isRecord(existing.tickets) ? existing.tickets : {}
-  const incomingTickets = isRecord(incoming.tickets) ? incoming.tickets : {}
-  const existingTable = isRecord(existingTickets.table) ? existingTickets.table : {}
-  const incomingTable = isRecord(incomingTickets.table) ? incomingTickets.table : {}
-  const existingWorkflow = isRecord(existing.workflow) ? existing.workflow : {}
-  const incomingWorkflow = isRecord(incoming.workflow) ? incoming.workflow : {}
-  const existingAutomations = isRecord(existing.automations) ? existing.automations : {}
-  const incomingAutomations = isRecord(incoming.automations) ? incoming.automations : {}
-  const existingUpdates = isRecord(existing.updates) ? existing.updates : {}
-  const incomingUpdates = isRecord(incoming.updates) ? incoming.updates : {}
-  const existingWindow = isRecord(existing.window) ? existing.window : {}
-  const incomingWindow = isRecord(incoming.window) ? incoming.window : {}
-
-  return {
-    ...existing,
-    ...incoming,
-    window: {
-      ...existingWindow,
-      ...incomingWindow
-    },
-    tickets: {
-      ...existingTickets,
-      ...incomingTickets,
-      table: {
-        ...existingTable,
-        ...incomingTable
-      }
-    },
-    workflow: {
-      ...existingWorkflow,
-      ...incomingWorkflow
-    },
-    automations: {
-      ...existingAutomations,
-      ...incomingAutomations
-    },
-    updates: {
-      ...existingUpdates,
-      ...incomingUpdates
+function collectDroppedKeys(raw: unknown, parsed: unknown, prefix = ''): string[] {
+  if (!isRecord(raw)) return []
+  const parsedRecord = isRecord(parsed) ? parsed : {}
+  const dropped: string[] = []
+  for (const key of Object.keys(raw)) {
+    const path = prefix ? `${prefix}.${key}` : key
+    if (!(key in parsedRecord)) {
+      dropped.push(path)
+      continue
+    }
+    if (isRecord(raw[key])) {
+      dropped.push(...collectDroppedKeys(raw[key], parsedRecord[key], path))
     }
   }
+  return dropped
+}
+
+/** Dotted paths dropped by `parseUiSettings` (unknown keys and values that fail validation). */
+export function listDroppedUiSettingsKeys(raw: unknown): string[] {
+  return collectDroppedKeys(raw, parseUiSettings(raw))
 }
 
 const parseColumnLabels = (value: unknown): Record<string, string> | undefined => {
@@ -232,73 +215,73 @@ const parseColumnLabels = (value: unknown): Record<string, string> | undefined =
   return Object.keys(labels).length > 0 ? labels : undefined
 }
 
+const assignIfNonEmpty = (
+  target: Record<string, unknown>,
+  key: string,
+  value: Record<string, unknown>
+): void => {
+  if (Object.keys(value).length > 0) target[key] = value
+}
+
 const normalizeTableSection = (table: Record<string, unknown>): Record<string, unknown> => {
-  const normalizedTable: Record<string, unknown> = { ...table }
+  const normalizedTable: Record<string, unknown> = {}
 
   if ('columnLabels' in table) {
     const labels = parseColumnLabels(table.columnLabels)
     if (labels) normalizedTable.columnLabels = labels
-    else delete normalizedTable.columnLabels
   }
 
   if ('columnOrder' in table) {
     const order = parseColumnOrder(table.columnOrder)
     if (order) normalizedTable.columnOrder = order
-    else delete normalizedTable.columnOrder
   }
 
   if ('hiddenColumns' in table) {
     const hidden = parseHiddenColumns(table.hiddenColumns)
     if (hidden) normalizedTable.hiddenColumns = hidden
-    else delete normalizedTable.hiddenColumns
   }
 
   if ('pinnedColumns' in table) {
     const pinned = parsePinnedColumns(table.pinnedColumns)
     if (pinned) normalizedTable.pinnedColumns = pinned
-    else delete normalizedTable.pinnedColumns
   }
 
   if ('columnWidths' in table) {
     const widths = parseColumnWidths(table.columnWidths)
     if (widths) normalizedTable.columnWidths = widths
-    else delete normalizedTable.columnWidths
   }
 
   if ('columnFilters' in table) {
     const filters = parseColumnFilters(table.columnFilters)
     if (filters) normalizedTable.columnFilters = filters
-    else delete normalizedTable.columnFilters
   }
 
   if ('columnValueBadge' in table) {
     const badgeDefaults = parseColumnValueBadgeDefaults(table.columnValueBadge)
     if (badgeDefaults) normalizedTable.columnValueBadge = badgeDefaults
-    else delete normalizedTable.columnValueBadge
   }
 
   if ('columnValues' in table) {
     const values = parseColumnValues(table.columnValues)
+    // `parseColumnValues` collapses an empty map to `undefined`. Dropping the key
+    // here would make "the user cleared every badge colour" read back as a fresh
+    // install, and the defaults would return.
     if (values) normalizedTable.columnValues = values
-    else delete normalizedTable.columnValues
+    else if (isRecord(table.columnValues)) normalizedTable.columnValues = {}
   }
-
-  delete normalizedTable.pageSize
 
   return normalizedTable
 }
 
 const normalizeWorkflowSection = (workflow: Record<string, unknown>): Record<string, unknown> => {
-  const normalized: Record<string, unknown> = { ...workflow }
+  const normalized: Record<string, unknown> = {}
   if ('ticketsOutputSplit' in workflow) {
     const split = parseWorkflowTicketsOutputSplit(workflow.ticketsOutputSplit)
     if (split) normalized.ticketsOutputSplit = split
-    else delete normalized.ticketsOutputSplit
   }
   if ('aboutOutputSplit' in workflow) {
     const split = parseWorkflowTicketsOutputSplit(workflow.aboutOutputSplit)
     if (split) normalized.aboutOutputSplit = split
-    else delete normalized.aboutOutputSplit
   }
   return normalized
 }
@@ -306,21 +289,19 @@ const normalizeWorkflowSection = (workflow: Record<string, unknown>): Record<str
 const normalizeAutomationsSection = (
   automations: Record<string, unknown>
 ): Record<string, unknown> => {
-  const normalized: Record<string, unknown> = { ...automations }
+  const normalized: Record<string, unknown> = {}
   if ('panelSplit' in automations) {
     const split = parseAutomationsPanelSplit(automations.panelSplit)
     if (split) normalized.panelSplit = split
-    else delete normalized.panelSplit
   }
   return normalized
 }
 
 const normalizeUpdatesSection = (updates: Record<string, unknown>): Record<string, unknown> => {
-  const normalized: Record<string, unknown> = { ...updates }
+  const normalized: Record<string, unknown> = {}
   if ('panelSplit' in updates) {
     const split = parseUpdatesPanelSplit(updates.panelSplit)
     if (split) normalized.panelSplit = split
-    else delete normalized.panelSplit
   }
   return normalized
 }
@@ -328,6 +309,14 @@ const normalizeUpdatesSection = (updates: Record<string, unknown>): Record<strin
 const parseFiniteInt = (value: unknown): number | undefined => {
   if (typeof value !== 'number' || !Number.isFinite(value)) return undefined
   return Math.round(value)
+}
+
+export function clampMascotSize(size: number): number {
+  return Math.min(Math.max(Math.round(size), MASCOT_SIZE_RANGE.min), MASCOT_SIZE_RANGE.max)
+}
+
+export function mascotWindowExtent(size: number): number {
+  return Math.round((clampMascotSize(size) * MASCOT_VIEWBOX_SIZE) / MASCOT_BODY_DIAMETER)
 }
 
 export function clampWindowSize(width: number, height: number): { width: number; height: number } {
@@ -360,67 +349,92 @@ export function parseWindowSettings(value: unknown): WindowSettings | undefined 
   return Object.keys(result).length > 0 ? result : undefined
 }
 
+function parseMascotSettings(value: unknown): MascotSettings | undefined {
+  if (!isRecord(value)) return undefined
+
+  const result: MascotSettings = {}
+  if (typeof value.enabled === 'boolean') result.enabled = value.enabled
+  const x = parseFiniteInt(value.x)
+  const y = parseFiniteInt(value.y)
+  const size = parseFiniteInt(value.size)
+  if (x !== undefined) result.x = x
+  if (y !== undefined) result.y = y
+  if (size !== undefined) result.size = clampMascotSize(size)
+  const shape = parseMascotShape(value.shape)
+  const color = parseMascotColor(value.color)
+  const badgeColor = parseMascotColor(value.badgeColor)
+  if (shape) result.shape = shape
+  if (color) result.color = color
+  if (badgeColor) result.badgeColor = badgeColor
+
+  return Object.keys(result).length > 0 ? result : undefined
+}
+
+export function resolveMascotSettings(
+  settings?: UiSettings | null
+): Required<Pick<MascotSettings, 'enabled' | 'size' | 'shape' | 'color' | 'badgeColor'>> &
+  Pick<MascotSettings, 'x' | 'y'> {
+  return {
+    enabled: settings?.mascot?.enabled ?? DEFAULT_MASCOT_SETTINGS.enabled!,
+    size: settings?.mascot?.size ?? DEFAULT_MASCOT_SETTINGS.size!,
+    shape: settings?.mascot?.shape ?? DEFAULT_MASCOT_SETTINGS.shape!,
+    color: settings?.mascot?.color ?? DEFAULT_MASCOT_SETTINGS.color!,
+    badgeColor: settings?.mascot?.badgeColor ?? DEFAULT_MASCOT_SETTINGS.badgeColor!,
+    x: settings?.mascot?.x,
+    y: settings?.mascot?.y
+  }
+}
+
 const normalizeWindowSection = (window: Record<string, unknown>): Record<string, unknown> => {
   const parsed = parseWindowSettings(window)
   return parsed ? { ...parsed } : {}
 }
 
-/** Validates known sections; preserves unknown top-level keys. */
+const normalizeMascotSection = (mascot: Record<string, unknown>): Record<string, unknown> => {
+  const parsed = parseMascotSettings(mascot)
+  return parsed ? { ...parsed } : {}
+}
+
+/** Validates known sections; drops keys outside the `UiSettings` contract. */
 export function parseUiSettings(raw: unknown): Record<string, unknown> {
   if (!isRecord(raw)) return {}
 
-  const result: Record<string, unknown> = { ...raw }
+  const result: Record<string, unknown> = {}
 
   if ('window' in raw && isRecord(raw.window)) {
-    result.window = normalizeWindowSection(raw.window)
+    assignIfNonEmpty(result, 'window', normalizeWindowSection(raw.window))
   }
 
-  if ('workflow' in raw && isRecord(raw.workflow)) {
-    result.workflow = normalizeWorkflowSection(raw.workflow)
-  }
-
-  if ('automations' in raw && isRecord(raw.automations)) {
-    result.automations = normalizeAutomationsSection(raw.automations)
-  }
-
-  if ('updates' in raw && isRecord(raw.updates)) {
-    result.updates = normalizeUpdatesSection(raw.updates)
+  if ('mascot' in raw && isRecord(raw.mascot)) {
+    assignIfNonEmpty(result, 'mascot', normalizeMascotSection(raw.mascot))
   }
 
   if ('tickets' in raw && isRecord(raw.tickets)) {
-    const tickets = raw.tickets
-    const normalized: Record<string, unknown> = { ...tickets }
-
-    if ('table' in tickets && isRecord(tickets.table)) {
-      normalized.table = normalizeTableSection(tickets.table)
+    const tickets: Record<string, unknown> = {}
+    if ('table' in raw.tickets && isRecord(raw.tickets.table)) {
+      assignIfNonEmpty(tickets, 'table', normalizeTableSection(raw.tickets.table))
     }
+    assignIfNonEmpty(result, 'tickets', tickets)
+  }
 
-    result.tickets = normalized
+  if ('workflow' in raw && isRecord(raw.workflow)) {
+    assignIfNonEmpty(result, 'workflow', normalizeWorkflowSection(raw.workflow))
+  }
+
+  if ('automations' in raw && isRecord(raw.automations)) {
+    assignIfNonEmpty(result, 'automations', normalizeAutomationsSection(raw.automations))
+  }
+
+  if ('updates' in raw && isRecord(raw.updates)) {
+    assignIfNonEmpty(result, 'updates', normalizeUpdatesSection(raw.updates))
   }
 
   return result
 }
 
-/** Merges parsed settings with raw `columnValues` when normalization dropped them. */
-export function resolveUiSettingsFromRaw(raw: Record<string, unknown>): UiSettings {
-  const rawColumnValues =
-    isRecord(raw.tickets) && isRecord(raw.tickets.table)
-      ? raw.tickets.table.columnValues
-      : undefined
-  const merged = mergeUiSettings(parseUiSettings(raw))
-  const columnValues = merged.tickets?.table?.columnValues ?? parseColumnValues(rawColumnValues)
-  if (!columnValues) return merged
-
-  return {
-    ...merged,
-    tickets: {
-      ...merged.tickets,
-      table: {
-        ...merged.tickets?.table,
-        columnValues
-      }
-    }
-  }
+/** Runtime settings: known keys from `raw`, with factory defaults filled in. */
+export function resolveUiSettingsFromRaw(raw: unknown): UiSettings {
+  return mergeUiSettings(isRecord(raw) ? raw : {})
 }
 
 export function mergeUiSettings(user: Record<string, unknown>): UiSettings {
@@ -440,17 +454,25 @@ export function mergeUiSettings(user: Record<string, unknown>): UiSettings {
   const userUpdates = isRecord(user.updates) ? user.updates : {}
   const userWindow = isRecord(user.window) ? user.window : {}
   const parsedWindow = parseWindowSettings(userWindow)
+  const userMascot = isRecord(user.mascot) ? user.mascot : {}
+  const parsedMascot = parseMascotSettings(userMascot)
 
   return {
-    ...user,
     window:
       parsedWindow?.width !== undefined && parsedWindow.height !== undefined
         ? parsedWindow
         : { ...DEFAULT_WINDOW_BOUNDS },
+    mascot: {
+      enabled: parsedMascot?.enabled ?? DEFAULT_MASCOT_SETTINGS.enabled,
+      size: parsedMascot?.size ?? DEFAULT_MASCOT_SETTINGS.size,
+      shape: parsedMascot?.shape ?? DEFAULT_MASCOT_SETTINGS.shape,
+      color: parsedMascot?.color ?? DEFAULT_MASCOT_SETTINGS.color,
+      badgeColor: parsedMascot?.badgeColor ?? DEFAULT_MASCOT_SETTINGS.badgeColor,
+      ...(parsedMascot?.x !== undefined ? { x: parsedMascot.x } : {}),
+      ...(parsedMascot?.y !== undefined ? { y: parsedMascot.y } : {})
+    },
     tickets: {
-      ...userTickets,
       table: {
-        ...userTable,
         columnLabels: mergedLabels,
         columnValueBadge: resolveColumnValueBadgeDefaults(
           parseColumnValueBadgeDefaults(userTable.columnValueBadge)
@@ -460,11 +482,12 @@ export function mergeUiSettings(user: Record<string, unknown>): UiSettings {
         pinnedColumns: parsePinnedColumns(userTable.pinnedColumns),
         columnWidths: parseColumnWidths(userTable.columnWidths),
         columnFilters: parseColumnFilters(userTable.columnFilters),
-        columnValues: parseColumnValues(userTable.columnValues)
+        columnValues: isRecord(userTable.columnValues)
+          ? (parseColumnValues(userTable.columnValues) ?? {})
+          : TICKET_COLUMN_VALUES_DEFAULTS
       }
     },
     workflow: {
-      ...userWorkflow,
       ticketsOutputSplit:
         parseWorkflowTicketsOutputSplit(userWorkflow.ticketsOutputSplit) ??
         UI_SETTINGS_DEFAULTS.workflow!.ticketsOutputSplit,
@@ -473,13 +496,11 @@ export function mergeUiSettings(user: Record<string, unknown>): UiSettings {
         UI_SETTINGS_DEFAULTS.workflow!.aboutOutputSplit
     },
     automations: {
-      ...userAutomations,
       panelSplit:
         parseAutomationsPanelSplit(userAutomations.panelSplit) ??
         UI_SETTINGS_DEFAULTS.automations!.panelSplit
     },
     updates: {
-      ...userUpdates,
       panelSplit:
         parseUpdatesPanelSplit(userUpdates.panelSplit) ?? UI_SETTINGS_DEFAULTS.updates!.panelSplit
     }
@@ -506,84 +527,68 @@ export const FACTORY_UI_SETTINGS_FILE_CONTENT = formatUiSettingsFileContent(
   buildFactoryUiSettingsDocument()
 )
 
-export function isFactoryUiSettingsFileContent(text: string): boolean {
-  const trimmed = text.trim()
-  if (trimmed === '' || trimmed === '{}') return true
-
-  try {
-    const parsed = JSON.parse(text) as unknown
-    return isRecord(parsed) && Object.keys(parsed).length === 0
-  } catch {
-    return false
-  }
-}
-
-export const UI_SETTINGS_EXAMPLE = `{
-  "window": {
-    "width": 1190,
-    "height": 840
+const UI_SETTINGS_EXAMPLE_DOCUMENT: UiSettings = {
+  window: { ...DEFAULT_WINDOW_BOUNDS },
+  mascot: {
+    enabled: DEFAULT_MASCOT_SETTINGS.enabled,
+    size: DEFAULT_MASCOT_SETTINGS.size,
+    shape: DEFAULT_MASCOT_SETTINGS.shape,
+    color: DEFAULT_MASCOT_SETTINGS.color,
+    badgeColor: DEFAULT_MASCOT_SETTINGS.badgeColor
   },
-  "workflow": {
-    "ticketsOutputSplit": {
-      "contextePercent": 28
-    },
-    "aboutOutputSplit": {
-      "contextePercent": 28
-    }
+  workflow: {
+    ticketsOutputSplit: { contextePercent: WORKFLOW_SPLIT_DEFAULT_CONTEXTE },
+    aboutOutputSplit: { contextePercent: WORKFLOW_SPLIT_DEFAULT_CONTEXTE }
   },
-  "automations": {
-    "panelSplit": {
-      "listPercent": 28
-    }
+  automations: {
+    panelSplit: { listPercent: AUTOMATIONS_SPLIT_DEFAULT_LIST }
   },
-  "updates": {
-    "panelSplit": {
-      "listPercent": 28
-    }
+  updates: {
+    panelSplit: { listPercent: UPDATES_SPLIT_DEFAULT_LIST }
   },
-  "tickets": {
-    "table": {
-      "columnLabels": {
-        "id_reclamation": "N° d'affaire",
-        "id_locataire": "Locataire",
-        "motif": "Motif"
+  tickets: {
+    table: {
+      columnLabels: {
+        id_reclamation: "N° d'affaire",
+        id_locataire: 'Locataire',
+        motif: 'Motif'
       },
-      "columnOrder": ["id_reclamation", "motif", "id_locataire", "id_lot"],
-      "hiddenColumns": [],
-      "pinnedColumns": ["id_reclamation", "id_locataire", "id_lot"],
-      "columnWidths": {
-        "description": 320,
-        "motif": 240
+      columnOrder: ['id_reclamation', 'motif', 'id_locataire', 'id_lot'],
+      pinnedColumns: ['id_reclamation', 'id_locataire', 'id_lot'],
+      columnWidths: {
+        description: 320,
+        motif: 240
       },
-      "columnFilters": {
-        "motif": ["fuite"]
+      columnFilters: {
+        motif: ['fuite']
       },
-      "columnValueBadge": {
-        "borderRadius": "9999px",
-        "fontWeight": 500
+      columnValueBadge: {
+        fontWeight: 500
       },
-      "columnValues": {
-        "avancement": {
-          "aucun traitement": { "bgColor": "#EED1A2", "textColor": "#906008" },
-          "en cours": { "bgColor": "#B5C2F4", "textColor": "#2A40A0" },
-          "terminé": { "bgColor": "#A1D1C0", "textColor": "#0A6850" }
+      columnValues: {
+        avancement: {
+          'aucun traitement': { bgColor: '#EED1A2', textColor: '#906008' },
+          'en cours': { bgColor: '#B5C2F4', textColor: '#2A40A0' },
+          terminé: { bgColor: '#A1D1C0', textColor: '#0A6850' }
         },
-        "statut": {
-          "ouvert": { "bgColor": "#B5C2F4", "textColor": "#2A40A0" },
-          "clos": { "bgColor": "#A1D1C0", "textColor": "#0A6850" },
-          "annulé": { "bgColor": "#DAAFC0", "textColor": "#882858" },
-          "nouveau": { "bgColor": "#9ED4CC", "textColor": "#087068" }
+        statut: {
+          ouvert: { bgColor: '#B5C2F4', textColor: '#2A40A0' },
+          clos: { bgColor: '#A1D1C0', textColor: '#0A6850' },
+          annulé: { bgColor: '#DAAFC0', textColor: '#882858' },
+          nouveau: { bgColor: '#9ED4CC', textColor: '#087068' }
         },
-        "degre_urgence": {
-          "urgent": { "bgColor": "#EAB0B4", "textColor": "#B02838" },
-          "normal": { "bgColor": "#AEBCC0", "textColor": "#34404C" }
+        degre_urgence: {
+          urgent: { bgColor: '#EAB0B4', textColor: '#B02838' },
+          normal: { bgColor: '#AEBCC0', textColor: '#34404C' }
         },
-        "type_affaire": {
-          "réclamation": { "bgColor": "#EAB0B4", "textColor": "#B02838" },
-          "demande": { "bgColor": "#B5C2F4", "textColor": "#2A40A0" },
-          "incident": { "bgColor": "#EED1A2", "textColor": "#906008" }
+        type_affaire: {
+          réclamation: { bgColor: '#EAB0B4', textColor: '#B02838' },
+          demande: { bgColor: '#B5C2F4', textColor: '#2A40A0' },
+          incident: { bgColor: '#EED1A2', textColor: '#906008' }
         }
       }
     }
   }
-}`
+}
+
+export const UI_SETTINGS_EXAMPLE = formatUiSettingsFileContent(UI_SETTINGS_EXAMPLE_DOCUMENT)

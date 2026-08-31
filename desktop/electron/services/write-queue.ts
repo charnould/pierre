@@ -23,5 +23,3 @@ export function createWriteQueue() {
     }
   }
 }
-
-export type WriteQueue = ReturnType<typeof createWriteQueue>

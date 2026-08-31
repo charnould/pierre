@@ -1,5 +1,7 @@
 import { motion, useReducedMotion } from 'motion/react'
 
+import { cn } from '@/shared/lib/utils'
+
 type WorkflowReasoningAmbientProps = {
   isLive: boolean
 }
@@ -45,21 +47,33 @@ const ORB_MOTION = {
 
 type OrbColor = keyof typeof ORB_MOTION
 
-function ReasoningOrb({ color, static: isStatic }: { color: OrbColor; static?: boolean }) {
-  const motionProps = ORB_MOTION[color]
+const ORB_BASE =
+  'absolute top-1/2 aspect-square rounded-full bg-muted-foreground/40 blur-[68px] [translate:-50%_-50%]'
 
-  if (isStatic) {
-    return (
-      <div
-        className={`workflow-reasoning-ambient__orb workflow-reasoning-ambient__orb--${color}`}
-      />
-    )
+const ORB_PLACEMENT: Record<OrbColor, string> = {
+  red: 'left-[28%] w-[min(52vw,22rem)]',
+  blue: 'left-[58%] w-[min(52vw,22rem)]',
+  yellow: 'left-[40%] w-[min(46vw,19rem)]',
+  green: 'left-[68%] w-[min(44vw,18rem)]'
+}
+
+function ReasoningOrb({ color, reduceMotion }: { color: OrbColor; reduceMotion: boolean }) {
+  const motionProps = ORB_MOTION[color]
+  const className = cn(ORB_BASE, ORB_PLACEMENT[color])
+
+  if (reduceMotion) {
+    return <div className={className} />
   }
 
   return (
     <motion.div
-      className={`workflow-reasoning-ambient__orb workflow-reasoning-ambient__orb--${color}`}
-      animate={motionProps.animate}
+      className={className}
+      animate={{
+        x: [...motionProps.animate.x],
+        y: [...motionProps.animate.y],
+        scale: [...motionProps.animate.scale],
+        opacity: [...motionProps.animate.opacity]
+      }}
       transition={motionProps.transition}
     />
   )
@@ -71,16 +85,16 @@ export function WorkflowReasoningAmbient({ isLive }: WorkflowReasoningAmbientPro
   return (
     <motion.div
       aria-hidden
-      className="workflow-reasoning-ambient"
+      className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
       initial={false}
       animate={{ opacity: isLive ? 1 : 0 }}
-      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: reduceMotion ? 0.15 : 0.35, ease: [0.23, 1, 0.32, 1] }}
     >
-      <div className="workflow-reasoning-ambient__stage">
-        <ReasoningOrb color="red" static={reduceMotion ?? false} />
-        <ReasoningOrb color="blue" static={reduceMotion ?? false} />
-        <ReasoningOrb color="yellow" static={reduceMotion ?? false} />
-        <ReasoningOrb color="green" static={reduceMotion ?? false} />
+      <div className="absolute inset-0 overflow-hidden [mask-image:radial-gradient(ellipse_85%_75%_at_50%_50%,#000_0%,#000_42%,transparent_100%)]">
+        <ReasoningOrb color="red" reduceMotion={Boolean(reduceMotion)} />
+        <ReasoningOrb color="blue" reduceMotion={Boolean(reduceMotion)} />
+        <ReasoningOrb color="yellow" reduceMotion={Boolean(reduceMotion)} />
+        <ReasoningOrb color="green" reduceMotion={Boolean(reduceMotion)} />
       </div>
     </motion.div>
   )

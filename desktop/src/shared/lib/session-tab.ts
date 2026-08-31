@@ -1,5 +1,5 @@
 import { warnRenderer } from './renderer-log'
-import { isTab, migrateLegacyTabId, type Tab } from './tabs'
+import { isTab, type Tab } from './tabs'
 
 /** sessionStorage key for the last active tab (survives Vite HMR remounts in dev). */
 export const ACTIVE_TAB_STORAGE_KEY = 'pierre:activeTab'
@@ -12,9 +12,9 @@ export function readStoredTab(storage: Storage = sessionStorage): Tab | null {
   try {
     const raw = storage.getItem(ACTIVE_TAB_STORAGE_KEY)
     if (!raw) return null
-    const migrated = migrateLegacyTabId(raw)
-    if (!isTab(migrated)) return null
-    return migrated
+    const tab = raw === 'outreach' ? 'automations' : raw
+    if (!isTab(tab)) return null
+    return tab
   } catch (error) {
     warnRenderer('session-tab.readStoredTab', error)
     return null

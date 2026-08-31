@@ -44,9 +44,13 @@ export function useDebouncedTablePatch({ delayMs, onDirty, onPersisted }: Option
   useEffect(() => {
     return () => {
       if (timer.current) clearTimeout(timer.current)
+      const merged = pending.current
       pending.current = {}
+      if (Object.keys(merged).length > 0) {
+        void patchTicketsTable(merged).then(() => onPersisted?.())
+      }
     }
-  }, [])
+  }, [onPersisted, patchTicketsTable])
 
   return patch
 }

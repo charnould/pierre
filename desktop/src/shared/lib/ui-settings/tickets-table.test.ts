@@ -2,15 +2,12 @@ import { describe, expect, it } from 'bun:test'
 
 import {
   areColumnFiltersEqual,
-  TICKET_TABLE_LEGACY_ACTIONS_COLUMN_ID,
   clearAllColumnFilters,
   filtersToQueryParams,
   formatFacetLabel,
   facetFilterUnavailableMessage,
   hasActiveColumnFilters,
   isTicketTableSystemColumn,
-  TICKET_TABLE_DRAFTS_COLUMN_ID,
-  TICKET_TABLE_DRAFT_COLUMN_IDS,
   parseColumnFilters,
   parseColumnValues,
   parseColumnWidths,
@@ -21,7 +18,8 @@ import {
   resolveColumnWidth,
   resolvePinnedColumns,
   columnValueStyleToBadge,
-  parseBorderRadiusPx,
+  colorizeBadgeBorder,
+  colorizeBadgeStyle,
   parseBadgeFontWeight,
   parseColumnValueBadgeDefaults,
   resolveColumnValueBadgeDefaults,
@@ -37,8 +35,7 @@ import {
 } from './tickets-table'
 
 const DEFAULT_BADGE_STYLE = {
-  fontWeight: 500,
-  borderRadius: '9999px'
+  fontWeight: 500
 } as const
 
 describe('tickets-table settings helpers', () => {
@@ -140,15 +137,30 @@ describe('tickets-table settings helpers', () => {
     }
     expect(resolveTicketValueDisplay('degre_urgence', 'urgent', columnValues)).toEqual({
       text: 'Urgent',
-      badgeStyle: { background: '#FF0033', color: '#991B1B', ...DEFAULT_BADGE_STYLE }
+      badgeStyle: {
+        background: '#FF0033',
+        color: '#991B1B',
+        border: colorizeBadgeBorder('#FF0033', '#991B1B'),
+        ...DEFAULT_BADGE_STYLE
+      }
     })
     expect(resolveTicketValueDisplay('degre_urgence', 'Urgent', columnValues)).toEqual({
       text: 'Urgent',
-      badgeStyle: { background: '#FF0033', color: '#991B1B', ...DEFAULT_BADGE_STYLE }
+      badgeStyle: {
+        background: '#FF0033',
+        color: '#991B1B',
+        border: colorizeBadgeBorder('#FF0033', '#991B1B'),
+        ...DEFAULT_BADGE_STYLE
+      }
     })
     expect(resolveTicketValueDisplay('avancement', 'en cours', columnValues)).toEqual({
       text: 'En cours',
-      badgeStyle: { background: '#0057FF', color: '#1D4ED8', ...DEFAULT_BADGE_STYLE }
+      badgeStyle: {
+        background: '#0057FF',
+        color: '#1D4ED8',
+        border: colorizeBadgeBorder('#0057FF', '#1D4ED8'),
+        ...DEFAULT_BADGE_STYLE
+      }
     })
     expect(resolveTicketValueDisplay('avancement', 'En cours de traitement', columnValues)).toEqual(
       {
@@ -173,11 +185,16 @@ describe('tickets-table settings helpers', () => {
     const nfd = 'annule\u0301'
     expect(resolveTicketValueDisplay('etat_de_la_reclamation', nfd, columnValues)).toEqual({
       text: 'Annulé',
-      badgeStyle: { background: '#FF0039', color: '#BE123C', ...DEFAULT_BADGE_STYLE }
+      badgeStyle: {
+        background: '#FF0039',
+        color: '#BE123C',
+        border: colorizeBadgeBorder('#FF0039', '#BE123C'),
+        ...DEFAULT_BADGE_STYLE
+      }
     })
   })
 
-  it('resolveTicketValueDisplay applies table badge defaults for radius and weight', () => {
+  it('resolveTicketValueDisplay applies table badge defaults for font weight', () => {
     const columnValues = {
       degre_urgence: {
         urgent: { bgColor: '#DD7568', textColor: '#5C2E26' }
@@ -185,7 +202,6 @@ describe('tickets-table settings helpers', () => {
     }
     expect(
       resolveTicketValueDisplay('degre_urgence', 'urgent', columnValues, {
-        borderRadius: '12px',
         fontWeight: 400
       })
     ).toEqual({
@@ -193,32 +209,35 @@ describe('tickets-table settings helpers', () => {
       badgeStyle: {
         background: '#DD7568',
         color: '#5C2E26',
-        fontWeight: 400,
-        borderRadius: '12px'
+        border: colorizeBadgeBorder('#DD7568', '#5C2E26'),
+        fontWeight: 400
       }
     })
   })
 
-  it('parseColumnValueBadgeDefaults accepts px radius and numeric font weight', () => {
-    expect(parseColumnValueBadgeDefaults({ borderRadius: '12px', fontWeight: 500 })).toEqual({
-      borderRadius: '12px',
+  it('parseColumnValueBadgeDefaults ignores legacy borderRadius', () => {
+    expect(parseColumnValueBadgeDefaults({ borderRadius: '0', fontWeight: 500 })).toEqual({
       fontWeight: 500
     })
-    expect(parseBorderRadiusPx(10)).toBe('10px')
-    expect(parseBorderRadiusPx('soft')).toBeUndefined()
+    expect(parseColumnValueBadgeDefaults({ borderRadius: '12px' })).toBeUndefined()
     expect(parseBadgeFontWeight('medium')).toBeUndefined()
   })
 
-  it('columnValueStyleToBadge maps bgColor and textColor', () => {
+  it('columnValueStyleToBadge maps fill, ink and hue-matched filet', () => {
     const defaults = resolveColumnValueBadgeDefaults()
-    expect(columnValueStyleToBadge({ bgColor: '#FFD600', textColor: '#5C4A18' }, defaults)).toEqual(
-      {
-        background: '#FFD600',
-        color: '#5C4A18',
-        fontWeight: 500,
-        borderRadius: '9999px'
-      }
-    )
+    const badge = columnValueStyleToBadge({ bgColor: '#FFD600', textColor: '#5C4A18' }, defaults)
+    expect(badge).toEqual({
+      background: '#FFD600',
+      color: '#5C4A18',
+      border: colorizeBadgeBorder('#FFD600', '#5C4A18'),
+      fontWeight: 500
+    })
+    expect(colorizeBadgeStyle(badge)).toEqual({
+      backgroundColor: '#FFD600',
+      color: '#5C4A18',
+      fontWeight: 500,
+      borderColor: badge.border
+    })
   })
 
   it('formatFacetLabel does not rename facet values', () => {
@@ -262,23 +281,17 @@ describe('tickets-table settings helpers', () => {
     expect(clearAllColumnFilters()).toEqual({})
   })
 
-  it('isTicketTableSystemColumn identifies system columns', () => {
-    expect(isTicketTableSystemColumn(TICKET_TABLE_LEGACY_ACTIONS_COLUMN_ID)).toBe(true)
-    expect(isTicketTableSystemColumn(TICKET_TABLE_DRAFTS_COLUMN_ID)).toBe(true)
-    for (const id of TICKET_TABLE_DRAFT_COLUMN_IDS) {
-      expect(isTicketTableSystemColumn(id)).toBe(true)
-    }
+  it('isTicketTableSystemColumn identifies the draft group column', () => {
+    expect(isTicketTableSystemColumn(TICKET_TABLE_DRAFT_GROUP_ID)).toBe(true)
     expect(isTicketTableSystemColumn('id_reclamation')).toBe(false)
   })
 
-  it('stripTicketTableSystemColumns removes legacy and draft columns from order arrays', () => {
+  it('stripTicketTableSystemColumns removes the draft group from order arrays', () => {
     expect(
       stripTicketTableSystemColumns([
-        TICKET_TABLE_LEGACY_ACTIONS_COLUMN_ID,
-        TICKET_TABLE_DRAFTS_COLUMN_ID,
-        ...TICKET_TABLE_DRAFT_COLUMN_IDS,
+        TICKET_TABLE_DRAFT_GROUP_ID,
         'id_reclamation',
-        TICKET_TABLE_LEGACY_ACTIONS_COLUMN_ID
+        TICKET_TABLE_DRAFT_GROUP_ID
       ])
     ).toEqual(['id_reclamation'])
   })
@@ -289,12 +302,10 @@ describe('tickets-table settings helpers', () => {
     })
   })
 
-  it('stripTicketTableDraftColumnWidths removes draft keys from persisted widths', () => {
+  it('stripTicketTableDraftColumnWidths removes the draft group from persisted widths', () => {
     expect(
       stripTicketTableDraftColumnWidths({
         __draft_npir__: 120,
-        __draft_n__: 120,
-        __drafts__: 88,
         id_reclamation: 160
       })
     ).toEqual({ id_reclamation: 160 })

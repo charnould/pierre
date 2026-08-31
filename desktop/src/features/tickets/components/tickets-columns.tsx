@@ -7,14 +7,15 @@ import {
   draftIconTooltip,
   draftIsAutomation
 } from '@/features/tickets/lib/ticket-draft-icons'
+import type {
+  AnyPierreColumn,
+  AnyPierreTable
+} from '@/shared/components/table/column-header-options-menu'
+import type { PierreTableFeatures } from '@/shared/components/table/table-features'
 import { getTicketCell, getTicketId } from '@/shared/lib/ticket-row'
 import { resolveTicketColumnLabel, type UiSettings } from '@/shared/lib/ui-settings/schema'
 import type { ColumnFilters } from '@/shared/lib/ui-settings/tickets-table'
-import {
-  COLUMN_WIDTH_MIN,
-  TICKET_TABLE_DRAFT_GROUP_ID,
-  TICKET_TABLE_DRAFT_GROUP_WIDTH
-} from '@/shared/lib/ui-settings/tickets-table'
+import { TICKET_TABLE_DRAFT_GROUP_ID } from '@/shared/lib/ui-settings/tickets-table'
 import type { TicketRow, TicketsColumnMeta } from '@/shared/types'
 
 import { TicketCellValue } from './TicketCellValue'
@@ -25,19 +26,39 @@ import {
 } from './TicketDraftLetterCell'
 import { TicketsColumnHeader } from './TicketsColumnHeader'
 
-const CORE_SIZING: Record<string, { size: number; minSize: number }> = {
-  id_reclamation: { size: 160, minSize: 140 },
-  id_locataire: { size: 140, minSize: 120 },
-  id_lot: { size: 180, minSize: 160 }
+const DATA_CELL = 'tabular-nums'
+
+/** SQLite type affinity used to right-align amounts (not identifiers). */
+export function isSqlNumericType(type: string): boolean {
+  const t = type.toUpperCase()
+  return (
+    t.includes('INT') ||
+    t.includes('REAL') ||
+    t.includes('FLOA') ||
+    t.includes('DOUB') ||
+    t.includes('NUM') ||
+    t.includes('DEC')
+  )
 }
 
-const DRAFT_NPIR_WRAP_CLASS = 'flex h-full min-h-0 w-full min-w-0'
+function isTicketsIdColumn(name: string): boolean {
+  return name === 'id_reclamation' || name.startsWith('id_')
+}
+
+function isTicketsDateColumn(name: string): boolean {
+  return name === 'date' || name.startsWith('date_')
+}
+
+export function isTicketsNumericColumn(columnId: string, columns: TicketsColumnMeta[]): boolean {
+  const column = columns.find((entry) => entry.name === columnId)
+  if (!column || isTicketsIdColumn(column.name) || isTicketsDateColumn(column.name)) return false
+  return isSqlNumericType(column.type)
+}
 
 export type BuildTicketsColumnsOptions = {
   settings?: UiSettings
   columnFilters?: ColumnFilters
   url?: string
-  enableColumnDnD?: boolean
   onColumnFiltersChange?: (filters: ColumnFilters) => void
   onDraftIconClick?: (
     id_reclamation: string,
@@ -48,34 +69,28 @@ export type BuildTicketsColumnsOptions = {
   ) => void
 }
 
-export function buildDraftColumn(
+function buildDraftColumn(
   onDraftIconClick: NonNullable<BuildTicketsColumnsOptions['onDraftIconClick']>
-): ColumnDef<TicketRow> {
+): ColumnDef<PierreTableFeatures, TicketRow> {
   return {
     id: TICKET_TABLE_DRAFT_GROUP_ID,
     accessorKey: TICKET_TABLE_DRAFT_GROUP_ID,
-    size: TICKET_TABLE_DRAFT_GROUP_WIDTH,
-    minSize: TICKET_TABLE_DRAFT_GROUP_WIDTH,
-    maxSize: TICKET_TABLE_DRAFT_GROUP_WIDTH,
-    enablePinning: true,
-    enableResizing: false,
     enableHiding: false,
     enableSorting: false,
-    meta: { compact: true, compactFlush: true },
+    enableResizing: false,
+    size: 120,
     header: () => (
-      <div className={DRAFT_NPIR_WRAP_CLASS}>
-        <TicketDraftNpirGroup className="bg-muted/20">
-          {TICKET_DRAFT_ICON_ENTRIES.map(({ format, letter }) => (
-            <TicketDraftLetterCell
-              key={format}
-              letter={letter}
-              hasDraft={false}
-              disabled
-              tooltip={letter}
-            />
-          ))}
-        </TicketDraftNpirGroup>
-      </div>
+      <TicketDraftNpirGroup>
+        {TICKET_DRAFT_ICON_ENTRIES.map(({ format, letter }) => (
+          <TicketDraftLetterCell
+            key={format}
+            letter={letter}
+            hasDraft={false}
+            disabled
+            tooltip={letter}
+          />
+        ))}
+      </TicketDraftNpirGroup>
     ),
     cell: ({ row }) => {
       const id_reclamation = getTicketId(row.original)
@@ -84,36 +99,34 @@ export function buildDraftColumn(
       const draft_answer_channel = row.original.draft_answer_channel
       const draft_automation_skills = row.original.draft_automation_skills
       return (
-        <div className={DRAFT_NPIR_WRAP_CLASS} onClick={(e) => e.stopPropagation()}>
-          <TicketDraftNpirGroup>
-            {TICKET_DRAFT_ICON_ENTRIES.map(({ format }) => {
-              const hasDraft = draftHasFormat(draft_id_skills, format, draft_answer_channel)
-              const isAutomation = draftIsAutomation(
-                format,
-                draft_id_skills,
-                draft_answer_channel,
-                draft_automation_skills
-              )
-              return (
-                <TicketDraftDotCell
-                  key={format}
-                  hasDraft={hasDraft}
-                  isAutomation={isAutomation}
-                  tooltip={draftIconTooltip(format, hasDraft)}
-                  onClick={() =>
-                    onDraftIconClick(
-                      id_reclamation,
-                      format,
-                      hasDraft,
-                      draft_id_skills,
-                      draft_answer_channel
-                    )
-                  }
-                />
-              )
-            })}
-          </TicketDraftNpirGroup>
-        </div>
+        <TicketDraftNpirGroup onClick={(event) => event.stopPropagation()}>
+          {TICKET_DRAFT_ICON_ENTRIES.map(({ format }) => {
+            const hasDraft = draftHasFormat(draft_id_skills, format, draft_answer_channel)
+            const isAutomation = draftIsAutomation(
+              format,
+              draft_id_skills,
+              draft_answer_channel,
+              draft_automation_skills
+            )
+            return (
+              <TicketDraftDotCell
+                key={format}
+                hasDraft={hasDraft}
+                isAutomation={isAutomation}
+                tooltip={draftIconTooltip(format, hasDraft)}
+                onClick={() =>
+                  onDraftIconClick(
+                    id_reclamation,
+                    format,
+                    hasDraft,
+                    draft_id_skills,
+                    draft_answer_channel
+                  )
+                }
+              />
+            )
+          })}
+        </TicketDraftNpirGroup>
       )
     }
   }
@@ -122,28 +135,26 @@ export function buildDraftColumn(
 export function buildTicketsColumns(
   columns: TicketsColumnMeta[],
   options: BuildTicketsColumnsOptions = {}
-): ColumnDef<TicketRow>[] {
-  const dataColumns = columns.map(({ name }) => {
-    const sizing = CORE_SIZING[name] ?? { size: 200, minSize: 160 }
+): ColumnDef<PierreTableFeatures, TicketRow>[] {
+  const dataColumns: ColumnDef<PierreTableFeatures, TicketRow>[] = columns.map(({ name }) => {
     const title = resolveTicketColumnLabel(name, options.settings)
+    const numeric = isTicketsNumericColumn(name, columns)
+    const date = isTicketsDateColumn(name)
+    const tabular = numeric || date || isTicketsIdColumn(name)
 
     return {
       accessorKey: name,
       id: name,
-      size: sizing.size,
-      minSize: COLUMN_WIDTH_MIN,
-      enablePinning: true,
-      enableResizing: true,
       enableHiding: true,
-      header: ({ column }) => (
+      header: ({ column, table }) => (
         <TicketsColumnHeader
-          column={column}
+          column={column as AnyPierreColumn}
+          table={table as AnyPierreTable}
           title={title}
           columnName={name}
           url={options.url}
           columnFilters={options.columnFilters}
           onColumnFiltersChange={options.onColumnFiltersChange}
-          enableColumnDnD={options.enableColumnDnD}
         />
       ),
       cell: ({ row }) => {
@@ -153,6 +164,7 @@ export function buildTicketsColumns(
             column={name}
             value={value}
             columnValues={options.settings?.tickets?.table?.columnValues}
+            className={tabular ? DATA_CELL : undefined}
           />
         )
       }
@@ -162,8 +174,4 @@ export function buildTicketsColumns(
   if (!options.onDraftIconClick) return dataColumns
 
   return [buildDraftColumn(options.onDraftIconClick), ...dataColumns]
-}
-
-export function buildInitialColumnOrder(columns: TicketsColumnMeta[]): string[] {
-  return columns.map((c) => c.name)
 }

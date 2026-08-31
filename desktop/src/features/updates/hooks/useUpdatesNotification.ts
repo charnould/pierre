@@ -32,11 +32,7 @@ export function useUpdatesNotification({
 }: UseUpdatesNotificationOptions): UseUpdatesNotificationResult {
   const [entries, setEntries] = useState<UpdateEntry[]>([])
   const notifyScope = resolveUpdatesNotifyScope(settings)
-  const readSlugs = resolveUpdatesReadSlugs(
-    entries,
-    settings.updatesReadSlugs,
-    settings.updatesLastSeenSlug
-  )
+  const readSlugs = resolveUpdatesReadSlugs(settings.updatesReadSlugs)
 
   const refresh = useCallback(async () => {
     try {
@@ -48,8 +44,10 @@ export function useUpdatesNotification({
   }, [])
 
   useEffect(() => {
-    void refresh()
-  }, [refresh])
+    void fetchUpdatesIndex({ force: true })
+      .then(setEntries)
+      .catch(() => setEntries([]))
+  }, [])
 
   useEffect(() => {
     function handleFocus() {
@@ -64,8 +62,7 @@ export function useUpdatesNotification({
     const nextReadSlugs = markScopeRead(entries, notifyScope, settings.updatesReadSlugs)
     if (nextReadSlugs.length === (settings.updatesReadSlugs?.length ?? 0)) return
 
-    const { updatesLastSeenSlug: _legacy, ...rest } = settings
-    const nextSettings = { ...rest, updatesReadSlugs: nextReadSlugs }
+    const nextSettings = { ...settings, updatesReadSlugs: nextReadSlugs }
     onSettingsChange(nextSettings)
     if (window.api?.saveSettings) {
       await window.api.saveSettings(nextSettings)

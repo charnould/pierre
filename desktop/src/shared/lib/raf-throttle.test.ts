@@ -36,4 +36,34 @@ describe('createRafThrottle', () => {
 
     expect(count).toBe(1)
   })
+
+  test('waits for the minimum interval before flushing again', () => {
+    let count = 0
+    const throttle = createRafThrottle(() => {
+      count += 1
+    }, 32)
+
+    throttle.schedule()
+    rafCallbacks[0]?.(0)
+    throttle.schedule()
+    rafCallbacks[1]?.(16)
+
+    expect(count).toBe(1)
+
+    rafCallbacks[2]?.(32)
+    expect(count).toBe(2)
+  })
+
+  test('cancel drops pending work without flushing', () => {
+    let count = 0
+    const throttle = createRafThrottle(() => {
+      count += 1
+    })
+
+    throttle.schedule()
+    throttle.cancel()
+    for (const cb of rafCallbacks) cb(0)
+
+    expect(count).toBe(0)
+  })
 })

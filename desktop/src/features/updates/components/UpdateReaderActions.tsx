@@ -1,4 +1,4 @@
-import { Check, Copy, ExternalLink } from 'lucide-react'
+import { Check, Copy, ExternalLink, X } from 'lucide-react'
 
 import { Button } from '@/shared/components/ui/button'
 import { ButtonGroup } from '@/shared/components/ui/button-group'
@@ -9,7 +9,8 @@ interface Props {
   copied: boolean
   copyDisabled: boolean
   onCopy: () => void
-  onOpenGitHub: () => void
+  onOpenGitHub?: () => void
+  onClose?: () => void
   className?: string
 }
 
@@ -18,47 +19,60 @@ export function UpdateReaderActions({
   copyDisabled,
   onCopy,
   onOpenGitHub,
+  onClose,
   className
 }: Props) {
   return (
-    <ButtonGroup aria-label="Actions article" className={cn('shrink-0', className)}>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              disabled={copyDisabled}
-              aria-label={copied ? 'Copié' : 'Copier le texte'}
-              aria-pressed={copied || undefined}
-              className={cn('text-muted-foreground', copied && 'text-foreground')}
-              onClick={onCopy}
-            />
-          }
-        >
-          {copied ? <Check /> : <Copy />}
-        </TooltipTrigger>
-        <TooltipContent>{copied ? 'Copié' : 'Copier le texte'}</TooltipContent>
-      </Tooltip>
+    <div
+      role="toolbar"
+      aria-label="Actions article"
+      className={cn('flex shrink-0 items-center gap-2', className)}
+    >
+      <ButtonGroup>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                disabled={copyDisabled}
+                aria-label={copied ? 'Copié' : 'Copier le texte'}
+                aria-pressed={copied || undefined}
+                onClick={onCopy}
+              />
+            }
+          >
+            {copied ? <Check /> : <Copy />}
+          </TooltipTrigger>
+          <TooltipContent>{copied ? 'Copié' : 'Copier le texte'}</TooltipContent>
+        </Tooltip>
 
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              aria-label="Voir sur GitHub"
-              className="text-muted-foreground"
-              onClick={onOpenGitHub}
-            />
-          }
-        >
-          <ExternalLink />
-        </TooltipTrigger>
-        <TooltipContent>Voir sur GitHub</TooltipContent>
-      </Tooltip>
-    </ButtonGroup>
+        {onOpenGitHub ? (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon-sm"
+                  aria-label="Voir sur GitHub"
+                  onClick={onOpenGitHub}
+                />
+              }
+            >
+              <ExternalLink />
+            </TooltipTrigger>
+            <TooltipContent>Voir sur GitHub</TooltipContent>
+          </Tooltip>
+        ) : null}
+      </ButtonGroup>
+
+      {onClose ? (
+        <Button type="button" variant="ghost" size="icon-sm" aria-label="Close" onClick={onClose}>
+          <X />
+        </Button>
+      ) : null}
+    </div>
   )
 }

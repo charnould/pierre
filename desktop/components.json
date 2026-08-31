@@ -6,7 +6,7 @@
   "tailwind": {
     "config": "",
     "css": "src/globals.css",
-    "baseColor": "neutral",
+    "baseColor": "taupe",
     "cssVariables": true,
     "prefix": ""
   },
@@ -16,11 +16,12 @@
     "components": "@/shared/components",
     "utils": "@/shared/lib/utils",
     "ui": "@/shared/components/ui",
-    "ai": "@/features/chat/components/ai",
     "lib": "@/shared/lib",
     "hooks": "@/shared/hooks"
   },
   "menuColor": "default",
   "menuAccent": "subtle",
-  "registries": {}
+  "registries": {
+    "@reui": "https://reui.io/r/{style}/{name}.json"
+  }
 }

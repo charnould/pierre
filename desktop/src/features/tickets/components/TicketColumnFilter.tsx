@@ -1,23 +1,26 @@
-import type { Column } from '@tanstack/react-table'
-import { Filter } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import { useUiSettings } from '@/contexts/UiSettingsContext'
-import { Button } from '@/shared/components/ui/button'
+import {
+  ColumnHeaderColorMenuItems,
+  ColumnHeaderLayoutMenuItems,
+  ColumnHeaderOptionsTrigger,
+  type AnyPierreColumn,
+  type AnyPierreTable
+} from '@/shared/components/table/column-header-options-menu'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuGroup,
-  DropdownMenuHint,
-  DropdownMenuInput,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuStatus,
   DropdownMenuTrigger
 } from '@/shared/components/ui/dropdown-menu'
+import { Input } from '@/shared/components/ui/input'
 import {
+  clearColumnValueStyles,
   columnColorizeButtonLabel,
   generateColumnValueStyles,
   hasColumnValueStyles
@@ -27,20 +30,22 @@ import {
   formatFacetLabel,
   normalizeColumnValueKey
 } from '@/shared/lib/ui-settings/tickets-table'
-import { cn } from '@/shared/lib/utils'
-import type { TicketRow } from '@/shared/types'
 
 const FACET_SEARCH_DEBOUNCE_MS = 300
+const EMPTY_FACET_VALUES: string[] = []
 
 interface Props {
+  column?: AnyPierreColumn
+  table?: AnyPierreTable
   url: string | undefined
-  column: string
+  columnName: string
   columnLabel: string
   selected: string[]
   onChange: (values: string[]) => void
   compact?: boolean
   enableColorize?: boolean
-  sortColumn?: Column<TicketRow, unknown>
+  enableFacets?: boolean
+  lockedColumnIds?: ReadonlySet<string>
 }
 
 export function filterFacetValues(values: string[], search: string): string[] {
@@ -66,69 +71,79 @@ export function canShowFacetValueList(
 }
 
 export function TicketColumnFilter({
-  url,
   column,
+  table,
+  url,
+  columnName,
   columnLabel,
   selected,
   onChange,
   compact = false,
   enableColorize = false,
-  sortColumn
+  enableFacets = true,
+  lockedColumnIds
 }: Props) {
   const { settings, patchTicketsTable } = useUiSettings()
   const columnValues = settings.tickets?.table?.columnValues
 
   const [open, setOpen] = useState(false)
-  const [allValues, setAllValues] = useState<string[]>([])
-  const [filterable, setFilterable] = useState<boolean | null>(null)
-  const [totalDistinct, setTotalDistinct] = useState(0)
-  const [loading, setLoading] = useState(false)
   const [colorizing, setColorizing] = useState(false)
   const [search, setSearch] = useState('')
+  const [facetSnapshot, setFacetSnapshot] = useState<{
+    key: string
+    values: string[]
+    filterable: boolean | null
+    totalDistinct: number
+  }>({ key: '', values: [], filterable: null, totalDistinct: 0 })
 
-  const sorted = sortColumn?.getIsSorted() ?? false
-
-  const loadFacets = useCallback(
-    async (q?: string) => {
-      if (!url || !window.api?.getTicketFacets) return
-      setLoading(true)
-      try {
-        const res = await window.api.getTicketFacets({ url, column, q: q || undefined })
-        setAllValues(res?.values ?? [])
-        setFilterable(res?.filterable ?? true)
-        setTotalDistinct(res?.total ?? res?.values?.length ?? 0)
-      } finally {
-        setLoading(false)
-      }
-    },
-    [url, column]
-  )
+  const sorted = column?.getIsSorted() ?? false
+  const facetKey = open && enableFacets && url ? `${url}\0${columnName}` : ''
+  const allValues = facetSnapshot.key === facetKey ? facetSnapshot.values : EMPTY_FACET_VALUES
+  const filterable = facetSnapshot.key === facetKey ? facetSnapshot.filterable : null
+  const totalDistinct = facetSnapshot.key === facetKey ? facetSnapshot.totalDistinct : 0
+  const loading = Boolean(facetKey) && facetSnapshot.key !== facetKey
 
   useEffect(() => {
-    if (!open) return
-    void loadFacets()
-  }, [open, loadFacets])
-
-  useEffect(() => {
-    if (!open || filterable !== false) return
-    const q = search.trim()
-    if (!q) {
-      setAllValues([])
-      return
+    if (!open || !enableFacets || !url || !window.api?.getTicketFacets) return
+    const capturedKey = `${url}\0${columnName}`
+    let cancelled = false
+    void window.api.getTicketFacets({ url, column: columnName }).then((res) => {
+      if (cancelled) return
+      setFacetSnapshot({
+        key: capturedKey,
+        values: res?.values ?? [],
+        filterable: res?.filterable ?? true,
+        totalDistinct: res?.total ?? res?.values?.length ?? 0
+      })
+    })
+    return () => {
+      cancelled = true
     }
+  }, [open, enableFacets, url, columnName])
+
+  useEffect(() => {
+    if (!open || !enableFacets || !url || !window.api?.getTicketFacets) return
+    if (filterable !== false) return
+    const q = search.trim()
+    if (!q) return
+    const capturedKey = `${url}\0${columnName}`
     const timer = window.setTimeout(() => {
-      void loadFacets(q)
+      void window.api.getTicketFacets({ url, column: columnName, q }).then((res) => {
+        setFacetSnapshot({
+          key: capturedKey,
+          values: res?.values ?? [],
+          filterable: res?.filterable ?? true,
+          totalDistinct: res?.total ?? res?.values?.length ?? 0
+        })
+      })
     }, FACET_SEARCH_DEBOUNCE_MS)
     return () => window.clearTimeout(timer)
-  }, [open, filterable, search, loadFacets])
+  }, [open, enableFacets, filterable, search, url, columnName])
 
-  useEffect(() => {
-    if (open) return
-    setSearch('')
-    setFilterable(null)
-    setAllValues([])
-    setTotalDistinct(0)
-  }, [open])
+  if (!open && search) setSearch('')
+  if (!open && facetSnapshot.key !== '') {
+    setFacetSnapshot({ key: '', values: [], filterable: null, totalDistinct: 0 })
+  }
 
   const displayedValues = useMemo(() => {
     if (filterable === false) return allValues
@@ -138,8 +153,8 @@ export function TicketColumnFilter({
   const selectedSet = useMemo(() => new Set(selected), [selected])
   const hasActiveFilter = selected.length > 0
   const hasExistingStyles = useMemo(
-    () => hasColumnValueStyles(columnValues, column),
-    [columnValues, column]
+    () => hasColumnValueStyles(columnValues, columnName),
+    [columnValues, columnName]
   )
   const colorizeLabel = columnColorizeButtonLabel(hasExistingStyles)
   const showMenuHighlight = hasActiveFilter || Boolean(sorted)
@@ -160,7 +175,7 @@ export function TicketColumnFilter({
     try {
       const generated = generateColumnValueStyles(allValues)
       const existing = settings.tickets?.table?.columnValues ?? {}
-      const columnKey = normalizeColumnValueKey(column)
+      const columnKey = normalizeColumnValueKey(columnName)
       await patchTicketsTable({
         columnValues: {
           ...existing,
@@ -172,94 +187,58 @@ export function TicketColumnFilter({
     }
   }
 
-  const filterTrigger = useMemo(
-    () => (
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-xs"
-        className={cn(
-          'relative shrink-0 px-0',
-          compact ? 'size-5' : 'size-6',
-          showMenuHighlight && 'bg-primary/10 text-primary'
-        )}
-        aria-label={
-          hasActiveFilter
-            ? `Options ${columnLabel} — ${selected.length} valeur${selected.length > 1 ? 's' : ''} sélectionnée${selected.length > 1 ? 's' : ''}`
-            : `Options ${columnLabel}`
-        }
-      >
-        <Filter className={compact ? 'size-2.5' : 'size-3.5'} />
-        {hasActiveFilter ? (
-          <span
-            className={cn(
-              'bg-primary text-primary-foreground absolute flex items-center justify-center rounded-full leading-none font-medium ring-1 ring-background',
-              compact
-                ? 'top-px right-px size-2.5 text-[8px]'
-                : 'top-0.5 right-0.5 size-3 text-[9px]'
-            )}
-          >
-            {selected.length}
-          </span>
-        ) : null}
-      </Button>
-    ),
-    [columnLabel, compact, hasActiveFilter, selected.length, showMenuHighlight]
-  )
+  const handleDecolorize = async () => {
+    if (!enableColorize || filterable !== true || !hasExistingStyles) return
+    const existing = settings.tickets?.table?.columnValues ?? {}
+    await patchTicketsTable({
+      columnValues: clearColumnValueStyles(existing, columnName)
+    })
+  }
 
-  const showColorize = enableColorize && filterable === true && allValues.length > 0 && !loading
-  const showValueList = canShowFacetValueList(filterable, search, loading)
+  const showColorize =
+    enableFacets && enableColorize && filterable === true && allValues.length > 0 && !loading
+  const showValueList = enableFacets && canShowFacetValueList(filterable, search, loading)
   const showSearchHint =
-    filterable === false && !loading && search.trim().length === 0 && totalDistinct > 0
+    enableFacets &&
+    filterable === false &&
+    !loading &&
+    search.trim().length === 0 &&
+    totalDistinct > 0
   const emptyListMessage = showSearchHint
     ? facetFilterUnavailableMessage(totalDistinct)
     : 'Aucune valeur'
 
-  return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger render={filterTrigger} />
-      <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{columnLabel}</DropdownMenuLabel>
-        </DropdownMenuGroup>
-        <DropdownMenuInput
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Rechercher…"
-          onKeyDown={(e) => e.stopPropagation()}
-        />
+  let facetBody: ReactNode = null
+  if (enableFacets) {
+    facetBody = (
+      <>
+        <DropdownMenuSeparator />
+        <div className="px-1.5 py-1">
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher…"
+            aria-label="Rechercher une valeur"
+            onKeyDown={(e) => e.stopPropagation()}
+          />
+        </div>
         {showSearchHint ? (
-          <DropdownMenuHint>{facetFilterUnavailableMessage(totalDistinct)}</DropdownMenuHint>
+          <p className="text-muted-foreground px-2 py-1.5 text-xs">
+            {facetFilterUnavailableMessage(totalDistinct)}
+          </p>
+        ) : null}
+        {showColorize ? (
+          <>
+            <DropdownMenuSeparator />
+            <ColumnHeaderColorMenuItems
+              colorizeLabel={colorizeLabel}
+              colorizing={colorizing}
+              onColorize={handleColorize}
+              onDecolorize={hasExistingStyles ? handleDecolorize : undefined}
+            />
+          </>
         ) : null}
         <DropdownMenuSeparator />
-        {sortColumn ? (
-          <DropdownMenuGroup>
-            <DropdownMenuItem
-              disabled={sorted === 'asc'}
-              onClick={() => sortColumn.toggleSorting(false)}
-            >
-              Trier croissant
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              disabled={sorted === 'desc'}
-              onClick={() => sortColumn.toggleSorting(true)}
-            >
-              Trier décroissant
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled={!sorted} onClick={() => sortColumn.clearSorting()}>
-              Supprimer le tri
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        ) : null}
-        {sortColumn ? <DropdownMenuSeparator /> : null}
-        {showColorize ? (
-          <DropdownMenuGroup>
-            <DropdownMenuItem disabled={colorizing} onClick={() => void handleColorize()}>
-              {colorizing ? 'Colorisation…' : colorizeLabel}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        ) : null}
-        {showColorize ? <DropdownMenuSeparator /> : null}
         <DropdownMenuGroup>
           <DropdownMenuItem
             disabled={displayedValues.length === 0}
@@ -272,9 +251,9 @@ export function TicketColumnFilter({
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           {loading ? (
-            <DropdownMenuStatus>Chargement…</DropdownMenuStatus>
+            <DropdownMenuItem disabled>Chargement…</DropdownMenuItem>
           ) : !showValueList ? null : displayedValues.length === 0 ? (
-            <DropdownMenuStatus>{emptyListMessage}</DropdownMenuStatus>
+            <DropdownMenuItem disabled>{emptyListMessage}</DropdownMenuItem>
           ) : (
             displayedValues.map((value) => (
               <DropdownMenuCheckboxItem
@@ -287,6 +266,38 @@ export function TicketColumnFilter({
             ))
           )}
         </DropdownMenuGroup>
+      </>
+    )
+  }
+
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
+      <DropdownMenuTrigger
+        render={(triggerProps) => (
+          <ColumnHeaderOptionsTrigger
+            {...triggerProps}
+            columnLabel={columnLabel}
+            compact={compact}
+            highlighted={showMenuHighlight}
+            badgeCount={hasActiveFilter ? selected.length : 0}
+          />
+        )}
+      />
+      <DropdownMenuContent align="end" className="w-auto min-w-56">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>{columnLabel}</DropdownMenuLabel>
+        </DropdownMenuGroup>
+        {column && table ? (
+          <>
+            <DropdownMenuSeparator />
+            <ColumnHeaderLayoutMenuItems
+              column={column}
+              table={table}
+              lockedColumnIds={lockedColumnIds}
+            />
+          </>
+        ) : null}
+        {facetBody}
       </DropdownMenuContent>
     </DropdownMenu>
   )

@@ -4,7 +4,3 @@ export function generateTicketIds() {
     id_locataire: `locataire-${crypto.randomUUID()}`
   }
 }
-
-export function needsGeneratedTicketIds(ticketNumber: string, tenantNumber: string) {
-  return !ticketNumber.trim() && !tenantNumber.trim()
-}

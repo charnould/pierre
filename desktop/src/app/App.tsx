@@ -1,40 +1,32 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { toast } from 'sonner'
+import { useState, useEffect, useCallback, useRef, useMemo, startTransition } from 'react'
 
+import { AgentIdentityProvider } from '@/contexts/AgentIdentityContext'
 import {
   NavigationHistoryProvider,
   useNavigationHistory
 } from '@/contexts/NavigationHistoryContext'
+import { ThemeProvider } from '@/contexts/ThemeProvider'
 import { UiSettingsProvider } from '@/contexts/UiSettingsContext'
-import { AboutView } from '@/features/about/AboutView'
-import { loginWithStoredCredentials } from '@/features/auth/credentials'
-import { AutomationsView } from '@/features/automations/AutomationsView'
-import { ChatView } from '@/features/chat/ChatView'
-import { HomeView } from '@/features/home/HomeView'
-import { PlaceholderFeatureView } from '@/features/placeholder/PlaceholderFeatureView'
-import { fetchConfig, SettingsView } from '@/features/settings/SettingsView'
-import { TicketsView } from '@/features/tickets/TicketsView'
-import { useUpdatesNotification } from '@/features/updates/hooks/useUpdatesNotification'
-import { markEntryRead } from '@/features/updates/lib/updates-notification'
-import { UpdatesView } from '@/features/updates/UpdatesView'
+import { ActivityPanel } from '@/features/activity'
+import { useActivityFeed } from '@/features/activity/hooks/useActivityFeed'
+import { ActivityRailProvider, useActivityRail } from '@/features/activity/lib/ActivityRailContext'
+import { loginWithStoredCredentials } from '@/features/auth'
+import { fetchConfig } from '@/features/settings'
+import { FindInPageBar } from '@/shared/components/find-in-page/FindInPageBar'
 import { AppSidebar } from '@/shared/components/layout/AppSidebar'
 import { TitleBar } from '@/shared/components/layout/TitleBar'
 import { SidebarInset, SidebarProvider } from '@/shared/components/ui/sidebar'
-import { Toaster } from '@/shared/components/ui/sonner'
+import { toast, Toaster } from '@/shared/components/ui/toast'
 import { TooltipProvider } from '@/shared/components/ui/tooltip'
-import { defaultTicketsTableState } from '@/shared/lib/navigation-snapshot'
-import { getAppPlatform } from '@/shared/lib/platform'
+import { fetchOrgUsers } from '@/shared/lib/org-users-cache'
 import { releaseHiddenPanelFocus } from '@/shared/lib/release-hidden-panel-focus'
 import { readStoredTab, tabAfterAutoLogin, writeStoredTab } from '@/shared/lib/session-tab'
-import type { Tab } from '@/shared/lib/tabs'
+import { isSettingsConfigured } from '@/shared/lib/settings-configured'
+import { isGuestAccessibleTab, type Tab } from '@/shared/lib/tab-registry'
 import { useAppEscapeHome } from '@/shared/lib/use-app-escape-home'
 import type { Settings } from '@/shared/types'
 
-export type { Tab } from '@/shared/lib/tabs'
-
-function isConfigured(s: Settings) {
-  return !!(s?.url && s?.email && s?.password && !s?.loggedOut)
-}
+import { TabWorkspace } from './TabWorkspace'
 
 interface AppContentProps {
   activeTab: Tab
@@ -61,39 +53,50 @@ function AppContent({
 
   const handleTabChange = useCallback(
     (tab: Tab) => {
-      if (!isLoggedIn && tab !== 'settings' && tab !== 'updates') return
-      if (tab === 'tickets') {
-        navigate(
-          {
-            tab: 'tickets',
-            tickets: defaultTicketsTableState()
-          },
-          { replace: true }
-        )
-        return
-      }
-      navigate({ tab })
+      if (!isLoggedIn && !isGuestAccessibleTab(tab)) return
+      startTransition(() => {
+        navigate({ tab })
+      })
     },
     [isLoggedIn, navigate]
   )
 
   const handleLogin = useCallback(
     (s: Settings, meta?: { agentName?: string }) => {
-      toast.success('Connexion réussie')
-      onTabChange('home')
-      navigate({ tab: 'home' }, { replace: true })
       setSettings(s)
-      setIsLoggedIn(true)
       if (meta?.agentName) setAgentName(meta.agentName)
+      // Main freezes the renderer, swaps UI via onAuthWindowLayoutSwap, then animates.
+      void (async () => {
+        await window.api?.setAuthWindowLayout?.({ loggedIn: true })
+        toast.add({ title: 'Connexion réussie', type: 'success' })
+      })()
     },
-    [navigate, onTabChange, setAgentName, setIsLoggedIn, setSettings]
+    [setAgentName, setSettings]
   )
 
   const handleLogout = useCallback(() => {
     setSettings((prev) => ({ ...prev, password: '', loggedOut: true }))
-    setIsLoggedIn(false)
-    navigate({ tab: 'settings' }, { replace: true })
-  }, [navigate, setIsLoggedIn, setSettings])
+    void window.api?.setAuthWindowLayout?.({ loggedIn: false })
+  }, [setSettings])
+
+  useEffect(() => {
+    return window.api?.onAuthWindowLayoutSwap?.(({ loggedIn }) => {
+      if (loggedIn) {
+        setIsLoggedIn(true)
+        onTabChange('home')
+        navigate({ tab: 'home' }, { replace: true })
+      } else {
+        setIsLoggedIn(false)
+        navigate({ tab: 'settings' }, { replace: true })
+      }
+      // Let React commit the swap while #root is still display:none, then ack.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.api?.ackAuthWindowLayoutSwap?.()
+        })
+      })
+    })
+  }, [navigate, onTabChange, setIsLoggedIn])
 
   const handleSettingsChange = useCallback(
     (next: Settings) => {
@@ -102,22 +105,36 @@ function AppContent({
     [setSettings]
   )
 
-  const { unreadCount } = useUpdatesNotification({
-    settings,
-    onSettingsChange: handleSettingsChange
-  })
+  const userLogin = useMemo(() => (settings.email ?? '').trim().toLowerCase(), [settings.email])
 
-  const handleMarkUpdateRead = useCallback(
-    (slug: string) => {
-      const nextReadSlugs = markEntryRead(settings.updatesReadSlugs, slug)
-      if (nextReadSlugs === settings.updatesReadSlugs) return
-      const { updatesLastSeenSlug: _legacy, ...rest } = settings
-      const nextSettings = { ...rest, updatesReadSlugs: nextReadSlugs }
-      handleSettingsChange(nextSettings)
-      void window.api?.saveSettings(nextSettings)
-    },
-    [handleSettingsChange, settings]
-  )
+  useEffect(() => {
+    if (!isLoggedIn || !settings.url) return
+    void fetchOrgUsers(settings.url)
+  }, [isLoggedIn, settings.url])
+
+  const feed = useActivityFeed({
+    settings,
+    onSettingsChange: handleSettingsChange,
+    userLogin,
+    isLoggedIn
+  })
+  const notifications = feed.notifications
+  const repaymentDeps = useMemo(() => ({ notifications, userLogin }), [notifications, userLogin])
+  const { readerTarget, setOpen } = useActivityRail()
+
+  useEffect(() => {
+    void window.api?.setMascotUnreadCount?.(feed.unreadCount)
+  }, [feed.unreadCount])
+
+  useEffect(() => {
+    void window.api?.syncMascotVisibility?.(isLoggedIn)
+  }, [isLoggedIn])
+
+  useEffect(() => {
+    return window.api?.onOpenNotificationsFromMascot?.(() => {
+      setOpen(true)
+    })
+  }, [setOpen])
 
   useEffect(() => {
     releaseHiddenPanelFocus()
@@ -130,80 +147,43 @@ function AppContent({
 
   useAppEscapeHome({ activeTab, isLoggedIn, onGoHome: goHome })
 
-  const platform = getAppPlatform()
-
   return (
     <SidebarProvider
-      defaultOpen={false}
-      data-platform={platform}
-      className="app-shell bg-background text-foreground flex h-screen flex-col overflow-hidden font-sans antialiased"
+      open={false}
+      onOpenChange={() => {}}
+      className="app-shell flex h-full flex-col overflow-hidden"
     >
       <TitleBar />
+      <ActivityPanel feed={feed} url={settings.url} userLogin={userLogin} />
       <div className="flex min-h-0 flex-1 overflow-hidden">
-        <AppSidebar
-          activeTab={activeTab}
-          isLoggedIn={isLoggedIn}
-          onTabChange={handleTabChange}
-          agentName={agentName}
-          updatesUnreadCount={unreadCount}
-        />
+        {isLoggedIn ? (
+          <AppSidebar
+            activeTab={activeTab}
+            isLoggedIn={isLoggedIn}
+            onTabChange={handleTabChange}
+            agentName={agentName}
+            unreadCount={feed.unreadCount}
+          />
+        ) : null}
         <SidebarInset className="overflow-hidden">
-          {/* Views stay mounted while hidden so streams and form state survive tab switches. */}
-          <main className="bg-background relative flex min-h-0 flex-1 overflow-hidden">
-            <ChatView hidden={activeTab !== 'chat'} isLoggedIn={isLoggedIn} url={settings.url} />
-
-            <HomeView
-              hidden={activeTab !== 'home'}
-              onNavigate={handleTabChange}
-              agentName={agentName}
-            />
-
-            <TicketsView
-              hidden={activeTab !== 'tickets'}
-              settings={settings}
-              onNavigate={handleTabChange}
-              agentName={agentName}
-            />
-
-            <PlaceholderFeatureView hidden={activeTab !== 'repayment'} tab="repayment" />
-
-            <PlaceholderFeatureView
-              hidden={activeTab !== 'insurance-attestation'}
-              tab="insurance-attestation"
-            />
-
-            <PlaceholderFeatureView hidden={activeTab !== 'relocation'} tab="relocation" />
-
-            <AboutView
-              hidden={activeTab !== 'about'}
-              settings={settings}
-              onNavigate={handleTabChange}
-              agentName={agentName}
-            />
-
-            <AutomationsView
-              hidden={activeTab !== 'automations'}
-              agentName={agentName}
-              settings={settings}
-            />
-
-            <UpdatesView
-              hidden={activeTab !== 'updates'}
-              readSlugs={settings.updatesReadSlugs}
-              legacyLastSeenSlug={settings.updatesLastSeenSlug}
-              onMarkEntryRead={handleMarkUpdateRead}
-            />
-
-            <SettingsView
-              hidden={activeTab !== 'settings'}
-              settings={settings}
-              isLoggedIn={isLoggedIn}
-              agentName={agentName}
-              onLogin={handleLogin}
-              onLogout={handleLogout}
-              onSettingsChange={handleSettingsChange}
-            />
-          </main>
+          <div className="bg-background relative flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+              <TabWorkspace
+                activeTab={activeTab}
+                isLoggedIn={isLoggedIn}
+                settings={settings}
+                agentName={agentName}
+                userLogin={userLogin}
+                notifications={notifications}
+                repaymentDeps={repaymentDeps}
+                readerTarget={readerTarget}
+                onTabChange={handleTabChange}
+                onLogin={handleLogin}
+                onLogout={handleLogout}
+                onSettingsChange={handleSettingsChange}
+              />
+            </div>
+          </div>
         </SidebarInset>
       </div>
     </SidebarProvider>
@@ -226,47 +206,52 @@ export function App() {
       const s = await window.api?.getSettings()
       if (!s) return
       setSettings(s)
-      if (isConfigured(s)) {
-        const result = await loginWithStoredCredentials(s)
+      if (isSettingsConfigured(s)) {
+        const result = await loginWithStoredCredentials()
         if (result.ok) {
           setIsLoggedIn(true)
+          void window.api?.setAuthWindowLayout?.({ loggedIn: true })
           const stored = readStoredTab()
           const tab = tabAfterAutoLogin(stored)
           setActiveTab(tab)
           writeStoredTab(tab)
           const config = await fetchConfig(s.url!)
           if (config?.name) setAgentName(config.name)
+        } else {
+          void window.api?.setAuthWindowLayout?.({ loggedIn: false })
         }
+      } else {
+        void window.api?.setAuthWindowLayout?.({ loggedIn: false })
       }
     })()
   }, [])
 
   return (
-    <UiSettingsProvider>
-      <NavigationHistoryProvider activeTab={activeTab} onTabChange={onTabChange}>
-        <NavigationBootstrap activeTab={activeTab} />
-        <TooltipProvider>
-          <Toaster
-            position="top-right"
-            duration={2500}
-            offset={{
-              top: 'calc(var(--titlebar-height) + 0.5rem)',
-              right: 16
-            }}
-          />
-          <AppContent
-            activeTab={activeTab}
-            settings={settings}
-            isLoggedIn={isLoggedIn}
-            agentName={agentName}
-            onTabChange={onTabChange}
-            setSettings={setSettings}
-            setIsLoggedIn={setIsLoggedIn}
-            setAgentName={setAgentName}
-          />
-        </TooltipProvider>
-      </NavigationHistoryProvider>
-    </UiSettingsProvider>
+    <ThemeProvider>
+      <UiSettingsProvider>
+        <AgentIdentityProvider name={agentName}>
+          <NavigationHistoryProvider activeTab={activeTab} onTabChange={onTabChange}>
+            <ActivityRailProvider>
+              <NavigationBootstrap activeTab={activeTab} />
+              <TooltipProvider>
+                <Toaster timeout={2500} />
+                <FindInPageBar />
+                <AppContent
+                  activeTab={activeTab}
+                  settings={settings}
+                  isLoggedIn={isLoggedIn}
+                  agentName={agentName}
+                  onTabChange={onTabChange}
+                  setSettings={setSettings}
+                  setIsLoggedIn={setIsLoggedIn}
+                  setAgentName={setAgentName}
+                />
+              </TooltipProvider>
+            </ActivityRailProvider>
+          </NavigationHistoryProvider>
+        </AgentIdentityProvider>
+      </UiSettingsProvider>
+    </ThemeProvider>
   )
 }
 

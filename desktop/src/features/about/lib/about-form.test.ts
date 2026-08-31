@@ -58,8 +58,8 @@ describe('aboutYearRangeFromSliderValues', () => {
 describe('ABOUT_SUBJECT_ENTITY', () => {
   test('defines labels and placeholders for every subject', () => {
     expect(ABOUT_SUBJECT_ENTITY.locataire.label).toContain('locataire')
-    expect(ABOUT_SUBJECT_ENTITY.lot.placeholder).toContain('LOT')
-    expect(ABOUT_SUBJECT_ENTITY.programme.label).toContain('programme')
+    expect(ABOUT_SUBJECT_ENTITY.lot.placeholder).toContain('-')
+    expect(ABOUT_SUBJECT_ENTITY.batiment.label).toContain('bâtiment')
   })
 })
 
@@ -121,7 +121,8 @@ describe('isValidAboutSubject', () => {
   test('accepts known subjects', () => {
     expect(isValidAboutSubject('locataire')).toBe(true)
     expect(isValidAboutSubject('lot')).toBe(true)
-    expect(isValidAboutSubject('programme')).toBe(true)
+    expect(isValidAboutSubject('batiment')).toBe(true)
+    expect(isValidAboutSubject('client')).toBe(true)
   })
 
   test('rejects unknown values', () => {
@@ -134,7 +135,8 @@ describe('aboutIdSkill', () => {
   test('maps all subjects to about.summary', () => {
     expect(aboutIdSkill('locataire')).toBe('about.summary')
     expect(aboutIdSkill('lot')).toBe('about.summary')
-    expect(aboutIdSkill('programme')).toBe('about.summary')
+    expect(aboutIdSkill('batiment')).toBe('about.summary')
+    expect(aboutIdSkill('client')).toBe('about.summary')
   })
 })
 
@@ -232,7 +234,7 @@ describe('aboutOutputHeaderMeta', () => {
 describe('about synthese wire payload', () => {
   test('navigation form fields serialize to synthese payload', () => {
     const state = buildAboutNavigationState('output', {
-      aboutSubject: 'programme',
+      aboutSubject: 'batiment',
       entityId: ' PRG-001 ',
       yearFrom: '2018',
       yearTo: '2020',
@@ -252,7 +254,7 @@ describe('about synthese wire payload', () => {
     expect(payload).toEqual({
       version: 1,
       workflow: 'synthese',
-      about_subject: 'programme',
+      about_subject: 'batiment',
       identifiant: 'PRG-001',
       year_from: 2018,
       year_to: 2020,

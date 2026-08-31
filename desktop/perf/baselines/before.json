@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "label": "before",
+  "createdAt": "2026-08-31T13:20:33.953Z",
+  "commit": "f67e71e4",
+  "profile": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M1 Pro",
+    "cpuCount": 8,
+    "totalMemoryBytes": 17179869184,
+    "mode": "build"
+  },
+  "bundle": {
+    "main": {
+      "file": "main/main.js",
+      "rawBytes": 989851,
+      "gzipBytes": 252906
+    },
+    "preload": {
+      "file": "preload/index.js",
+      "rawBytes": 12274,
+      "gzipBytes": 2555
+    },
+    "rendererEntry": {
+      "file": "assets/index-FBYABB8t.js",
+      "rawBytes": 1398743,
+      "gzipBytes": 316105
+    },
+    "rendererColdStart": {
+      "rawBytes": 3563441,
+      "gzipBytes": 806678,
+      "assets": [
+        {
+          "file": "assets/ActivityTimelineEvent-BSK6s7HC.js",
+          "rawBytes": 360561,
+          "gzipBytes": 84819
+        },
+        {
+          "file": "assets/MascotSvg-mh0cX1vc.js",
+          "rawBytes": 618653,
+          "gzipBytes": 121270
+        },
+        {
+          "file": "assets/collapsible-D8MrycPg.js",
+          "rawBytes": 368727,
+          "gzipBytes": 92793
+        },
+        {
+          "file": "assets/column-value-palette-BkHhxa6X.js",
+          "rawBytes": 225923,
+          "gzipBytes": 47641
+        },
+        {
+          "file": "assets/empty-CMe3bgAA.js",
+          "rawBytes": 264890,
+          "gzipBytes": 63675
+        },
+        {
+          "file": "assets/index-FBYABB8t.js",
+          "rawBytes": 1398743,
+          "gzipBytes": 316105
+        },
+        {
+          "file": "assets/input-group-C5Jse-Wz.js",
+          "rawBytes": 72715,
+          "gzipBytes": 16532
+        },
+        {
+          "file": "assets/item-Cp4kPBCi.js",
+          "rawBytes": 162454,
+          "gzipBytes": 43210
+        },
+        {
+          "file": "assets/preload-helper-DJPyzz3z.js",
+          "rawBytes": 7306,
+          "gzipBytes": 2242
+        },
+        {
+          "file": "assets/resolveAriaLabelledBy-Bv-hhr3k.js",
+          "rawBytes": 1393,
+          "gzipBytes": 548
+        },
+        {
+          "file": "assets/rolldown-runtime-DC62tzP2.js",
+          "rawBytes": 1445,
+          "gzipBytes": 676
+        },
+        {
+          "file": "assets/select-CcllSoe9.js",
+          "rawBytes": 80631,
+          "gzipBytes": 17167
+        }
+      ]
+    },
+    "rendererTotalJs": {
+      "rawBytes": 6822594,
+      "gzipBytes": 1555493,
+      "assetCount": 34
+    }
+  }
+}

@@ -1,14 +1,30 @@
 {
   "compilerOptions": {
     "target": "ESNext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "jsx": "react-jsx",
     "strict": true,
     "skipLibCheck": true,
+    "types": ["bun"],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@customization/*": ["../customization/*"]
     }
   },
-  "include": ["src", "electron", "preload", "electron.vite.config.ts"]
+  "include": [
+    "src",
+    "electron",
+    "preload",
+    "forge",
+    "forge.config.ts",
+    "electron.vite.config.ts",
+    "../customization/desktop.ts",
+    "../customization/repayments/config.ts",
+    "../customization/tickets/config.ts",
+    "../shared"
+  ]
 }

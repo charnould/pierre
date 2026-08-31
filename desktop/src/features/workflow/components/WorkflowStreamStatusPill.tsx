@@ -16,8 +16,8 @@ export function WorkflowStreamStatusPill({
   const label = workflowStreamStatusLabel({ showReasoningTokens, isReasoningPhase })
 
   return (
-    <Badge variant="warning" size="compact" className={className}>
-      <Spinner className="size-2.5" aria-label={label} />
+    <Badge variant="outline" className={className}>
+      <Spinner data-icon="inline-start" aria-label={label} />
       {label}
     </Badge>
   )

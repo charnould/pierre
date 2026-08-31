@@ -1,101 +1,103 @@
-import { Loader2, Square, X } from 'lucide-react'
-import { motion } from 'motion/react'
-import { useCallback, useState, type ChangeEvent } from 'react'
+import { ArrowUpIcon, SquareIcon } from 'lucide-react'
+import { useState, type FormEvent, type KeyboardEvent } from 'react'
 
+import { isChatGenerating, type ChatStatus } from '@/features/chat/lib/chat-session-types'
 import {
-  PromptInput,
-  PromptInputSubmit,
-  PromptInputTextarea,
-  type PromptInputMessage
-} from '@/features/chat/components/ai/prompt-input'
-import type { ChatStatus } from '@/features/chat/hooks/use-chat-session'
-import { InputGroupAddon } from '@/shared/components/ui/input-group'
-import { cn } from '@/shared/lib/utils'
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea
+} from '@/shared/components/ui/input-group'
 import type { ChatBootData } from '@/shared/types'
 
-import {
-  CHAT_COMPOSER_GENERATING_CLASS,
-  CHAT_COMPOSER_INPUT_GROUP_CLASS,
-  CHAT_COMPOSER_SUBMIT_CLASS,
-  CHAT_COMPOSER_SURFACE_CLASS,
-  CHAT_COMPOSER_TEXTAREA_CLASS,
-  CHAT_COMPOSER_TOOLBAR_CLASS,
-  chatComposerSubmitToneClass,
-  isChatGenerating
-} from './chat-utils'
 import { ProfileSelector } from './ProfileSelector'
-import { SendPaperPlaneIcon } from './SendPaperPlaneIcon'
 
 interface Props {
   boot: ChatBootData
   status: ChatStatus
+  agentName: string
   onSend: (text: string) => void
   onStop: () => void
   onProfileSelect: (id: string) => void
 }
 
-function SubmitIcon({ status }: { status: ChatStatus }) {
-  if (status === 'submitted') {
-    return <Loader2 className="size-4 animate-spin" strokeWidth={2} />
-  }
-  if (status === 'streaming') {
-    return <Square className="size-3.5 fill-current" strokeWidth={0} />
-  }
-  if (status === 'error') {
-    return <X className="size-4" strokeWidth={2} />
-  }
-  return <SendPaperPlaneIcon className="size-4" />
-}
-
-export function ChatComposer({ boot, status, onSend, onStop, onProfileSelect }: Props) {
+export function ChatComposer({ boot, status, agentName, onSend, onStop, onProfileSelect }: Props) {
   const [draft, setDraft] = useState('')
+  const [isComposing, setIsComposing] = useState(false)
 
-  const handleSubmit = (message: PromptInputMessage) => {
-    const text = message.text?.trim()
-    if (!text) return
+  const generating = isChatGenerating(status)
+  const canSend = draft.trim().length > 0 && !generating
+
+  function handleSubmit(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault()
+    const text = draft.trim()
+    if (!text || generating) return
     onSend(text)
     setDraft('')
   }
 
-  const handleTextChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
-    setDraft(e.target.value)
-  }, [])
-
-  const generating = isChatGenerating(status)
-  const canSend = draft.trim().length > 0 && !generating
-  const submitActive = canSend || generating
+  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (
+      event.key === 'Enter' &&
+      !event.shiftKey &&
+      !isComposing &&
+      !event.nativeEvent.isComposing
+    ) {
+      event.preventDefault()
+      handleSubmit()
+    }
+  }
 
   return (
-    <motion.div layout className="relative">
-      <div
-        className={cn(CHAT_COMPOSER_SURFACE_CLASS, generating && CHAT_COMPOSER_GENERATING_CLASS)}
-      >
-        <PromptInput onSubmit={handleSubmit} inputGroupClassName={CHAT_COMPOSER_INPUT_GROUP_CLASS}>
-          <PromptInputTextarea
-            onChange={handleTextChange}
-            placeholder="Posez votre question…"
-            className={CHAT_COMPOSER_TEXTAREA_CLASS}
-          />
-
-          <InputGroupAddon align="block-end" className={CHAT_COMPOSER_TOOLBAR_CLASS}>
+    <form className="w-full" aria-busy={generating} onSubmit={handleSubmit}>
+      <InputGroup className="has-disabled:bg-transparent has-disabled:opacity-100">
+        <InputGroupTextarea
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          onKeyDown={handleKeyDown}
+          onCompositionStart={() => setIsComposing(true)}
+          onCompositionEnd={() => setIsComposing(false)}
+          aria-label="Message"
+          placeholder="Envoyer un message…"
+          className="max-h-36 min-h-10 px-3 py-2"
+        />
+        <InputGroupAddon align="block-end" className="px-2 py-1 pb-1.5">
+          {boot.displayableConfigs.length > 0 ? (
             <ProfileSelector
               configs={boot.displayableConfigs}
               activeId={boot.configId}
+              agentName={agentName}
               onSelect={onProfileSelect}
               disabled={generating}
             />
-
-            <PromptInputSubmit
-              status={status}
-              onStop={onStop}
-              disabled={!canSend && !generating}
-              className={cn(CHAT_COMPOSER_SUBMIT_CLASS, chatComposerSubmitToneClass(submitActive))}
+          ) : null}
+          {generating ? (
+            <InputGroupButton
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              className="ms-auto"
+              aria-label="Arrêter"
+              onClick={onStop}
             >
-              <SubmitIcon status={status} />
-            </PromptInputSubmit>
-          </InputGroupAddon>
-        </PromptInput>
-      </div>
-    </motion.div>
+              <SquareIcon />
+              <span className="sr-only">Arrêter</span>
+            </InputGroupButton>
+          ) : (
+            <InputGroupButton
+              type="submit"
+              variant="default"
+              size="icon-sm"
+              className="ms-auto"
+              aria-label="Envoyer"
+              disabled={!canSend}
+            >
+              <ArrowUpIcon />
+              <span className="sr-only">Envoyer</span>
+            </InputGroupButton>
+          )}
+        </InputGroupAddon>
+      </InputGroup>
+    </form>
   )
 }

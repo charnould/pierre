@@ -11,6 +11,12 @@ export type TicketRow = {
   draft_generated_by?: string
   draft_edited_by?: string
   draft_automation_skills?: string[]
+  draft_markers?: Array<{
+    activity_id: number
+    id_skill: string
+    channel: string | null
+    automation: boolean
+  }>
   [key: string]: unknown
 }
 
@@ -23,7 +29,7 @@ export type TicketsFacetsResponse = {
   filterable: boolean
 }
 
-export type TicketFilterRule =
+type TicketFilterRule =
   | { kind: 'values'; column: string; values: string[] }
   | { kind: 'compare'; column: string; operator: 'gt' | 'gte' | 'lt' | 'lte'; value: string }
 

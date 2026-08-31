@@ -1,21 +1,57 @@
 import { describe, expect, test } from 'bun:test'
 
-import { connectionFieldInvalid, loginErrorKind, loginErrorLabel } from '@/shared/lib/login-errors'
+import {
+  connectionFieldInvalid,
+  loginErrorKind,
+  loginErrorLabel,
+  loginFieldErrorsFromCode,
+  LOGIN_INVALID_URL_LABEL,
+  LOGIN_REQUIRED_LABEL,
+  validateLoginFields
+} from '@/shared/lib/login-errors'
 
-describe('connectionFieldInvalid', () => {
-  test('marks only password for auth errors', () => {
-    expect(connectionFieldInvalid('url', 'x', 'auth')).toBe(false)
-    expect(connectionFieldInvalid('password', 'x', 'auth')).toBe(true)
+describe('validateLoginFields', () => {
+  test('flags each empty field', () => {
+    expect(validateLoginFields({ url: '', email: '', password: '' })).toEqual({
+      url: LOGIN_REQUIRED_LABEL,
+      email: LOGIN_REQUIRED_LABEL,
+      password: LOGIN_REQUIRED_LABEL
+    })
   })
 
-  test('marks url only for URL validation errors', () => {
-    expect(connectionFieldInvalid('url', 'URL invalide. Exemple', 'validation')).toBe(true)
-    expect(connectionFieldInvalid('email', 'URL invalide. Exemple', 'validation')).toBe(false)
+  test('flags an invalid URL without touching filled credentials', () => {
+    expect(
+      validateLoginFields({
+        url: 'not-a-url',
+        email: 'a@b.fr',
+        password: 'secret'
+      })
+    ).toEqual({ url: LOGIN_INVALID_URL_LABEL })
+  })
+})
+
+describe('loginFieldErrorsFromCode', () => {
+  test('places unknown_user on email', () => {
+    expect(loginFieldErrorsFromCode('unknown_user')).toEqual({
+      email: loginErrorLabel('unknown_user')
+    })
   })
 
-  test('does not mark fields for server errors', () => {
-    expect(connectionFieldInvalid('url', 'x', 'server')).toBe(false)
-    expect(connectionFieldInvalid('password', 'x', 'server')).toBe(false)
+  test('places password codes on password', () => {
+    expect(loginFieldErrorsFromCode('wrong_password')).toEqual({
+      password: loginErrorLabel('wrong_password')
+    })
+    expect(loginFieldErrorsFromCode('wrong_root_password')).toEqual({
+      password: loginErrorLabel('wrong_root_password')
+    })
+  })
+
+  test('places network and server codes on url', () => {
+    expect(loginFieldErrorsFromCode('network_error')).toEqual({
+      url: loginErrorLabel('network_error')
+    })
+    expect(connectionFieldInvalid('url', loginFieldErrorsFromCode('server_error'))).toBe(true)
+    expect(connectionFieldInvalid('email', loginFieldErrorsFromCode('server_error'))).toBe(false)
   })
 })
 
@@ -29,21 +65,25 @@ describe('loginErrorKind', () => {
 describe('loginErrorLabel', () => {
   test('maps server messages to French labels', () => {
     expect(loginErrorLabel('wrong_password')).toContain('Mot de passe incorrect')
-    expect(loginErrorLabel('unknown_user')).toContain('Email inconnu')
-    expect(loginErrorLabel('wrong_root_password')).toContain('AUTH_PASSWORD')
-    expect(loginErrorLabel('network_error')).toContain('Pierre tourne')
-    expect(loginErrorLabel('invalid_response')).toContain('Réponse serveur')
+    expect(loginErrorLabel('unknown_user')).toContain('Utilisateur inconnu')
+    expect(loginErrorLabel('wrong_root_password')).toContain('Mot de passe incorrect')
+    expect(loginErrorLabel('network_error')).toContain('Impossible de joindre')
+    expect(loginErrorLabel('invalid_response')).toContain('Impossible de joindre')
     expect(loginErrorLabel('session_cookie_missing')).toContain('cookie de session')
-    expect(loginErrorLabel('api_unavailable')).toContain('Electron')
+    expect(loginErrorLabel('api_unavailable')).toContain('Impossible de joindre')
     expect(loginErrorLabel('some_unknown_code')).toContain('some_unknown_code')
     expect(loginErrorLabel()).toContain('Identifiant ou mot de passe')
   })
 })
 
-describe('POST /a/login JSON @ localhost', () => {
-  const base = process.env.PIERRE_TEST_URL ?? 'http://localhost:3000'
-  const adminPassword = process.env.AUTH_PASSWORD ?? 'harry121284'
+const base = process.env.PIERRE_TEST_URL ?? 'http://localhost:3000'
+const adminPassword = process.env.AUTH_PASSWORD
 
+const serverUp = await fetch(`${base}/up`)
+  .then((r) => r.ok)
+  .catch(() => false)
+
+describe('POST /a/login JSON @ localhost', () => {
   async function jsonLogin(email: string, password: string) {
     const res = await fetch(`${base}/a/login?client=desktop`, {
       method: 'POST',
@@ -57,34 +97,31 @@ describe('POST /a/login JSON @ localhost', () => {
     return { res, body: (await res.json()) as { ok: boolean; message?: string } }
   }
 
-  test('wrong password → 401 ok false', async () => {
-    const up = await fetch(`${base}/up`).catch(() => null)
-    if (!up?.ok) return
-
+  test.skipIf(!serverUp)('wrong password → 401 ok false', async () => {
     const { res, body } = await jsonLogin('admin@pierre-ia.org', 'wrong-password')
     expect(res.status).toBe(401)
     expect(body.ok).toBe(false)
     expect(body.message).toBe('wrong_root_password')
   })
 
-  test('valid admin → 200 ok true + cookie usable on /ai/boot', async () => {
-    const up = await fetch(`${base}/up`).catch(() => null)
-    if (!up?.ok) return
+  test.skipIf(!serverUp || !adminPassword)(
+    'valid admin → 200 ok true + cookie usable on /ai/boot',
+    async () => {
+      const { res, body } = await jsonLogin('admin@pierre-ia.org', adminPassword!)
+      expect(res.status).toBe(200)
+      expect(body.ok).toBe(true)
 
-    const { res, body } = await jsonLogin('admin@pierre-ia.org', adminPassword)
-    expect(res.status).toBe(200)
-    expect(body.ok).toBe(true)
+      const setCookie = res.headers.getSetCookie?.() ?? []
+      const raw = res.headers.get('set-cookie')
+      const line = setCookie.find((c) => c.startsWith('pierre-ia=')) ?? raw
+      expect(line).toBeTruthy()
 
-    const setCookie = res.headers.getSetCookie?.() ?? []
-    const raw = res.headers.get('set-cookie')
-    const line = setCookie.find((c) => c.startsWith('pierre-ia=')) ?? raw
-    expect(line).toBeTruthy()
-
-    const pair = line!.startsWith('pierre-ia=') ? line!.split(';')[0] : `pierre-ia=${line}`
-    const boot = await fetch(`${base}/ai/boot`, { headers: { Cookie: pair } })
-    expect(boot.ok).toBe(true)
-    const data = (await boot.json()) as { displayableConfigs: { id: string }[] }
-    const ids = data.displayableConfigs.map((c) => c.id)
-    expect(ids.length).toBeGreaterThan(3)
-  })
+      const pair = line!.startsWith('pierre-ia=') ? line!.split(';')[0] : `pierre-ia=${line}`
+      const boot = await fetch(`${base}/ai/boot`, { headers: { Cookie: pair } })
+      expect(boot.ok).toBe(true)
+      const data = (await boot.json()) as { displayableConfigs: { id: string }[] }
+      const ids = data.displayableConfigs.map((c) => c.id)
+      expect(ids.length).toBeGreaterThan(3)
+    }
+  )
 })

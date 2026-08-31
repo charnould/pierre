@@ -4,9 +4,22 @@
     <meta charset="UTF-8" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src *; img-src 'self' https://raw.githubusercontent.com"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src *; img-src 'self' data: blob: https://raw.githubusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'"
     />
     <title>Pierre</title>
+    <meta name="description" content="PIERRE – Application agentique open source HLM." />
+    <link rel="icon" type="image/png" href="./src/assets/icons/linux/icons/32x32.png" />
+    <meta property="og:title" content="Pierre" />
+    <meta property="og:description" content="PIERRE – Application agentique open source HLM." />
+    <meta
+      property="og:image"
+      content="https://raw.githubusercontent.com/charnould/pierre/master/desktop/src/assets/icons/icon.png"
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:image"
+      content="https://raw.githubusercontent.com/charnould/pierre/master/desktop/src/assets/icons/icon.png"
+    />
   </head>
   <body>
     <div id="root"></div>

@@ -6,21 +6,11 @@ export function filterEntriesByScope(
   scope: UpdatesNotifyScope
 ): UpdateEntry[] {
   if (scope === 'off') return []
-  if (scope === 'product') return entries.filter((entry) => entry.audience === 'product')
   return entries
 }
 
-export function resolveUpdatesReadSlugs(
-  entries: UpdateEntry[],
-  readSlugs: string[] | undefined,
-  legacyLastSeenSlug: string | undefined
-): string[] {
-  if (readSlugs?.length) return readSlugs
-  if (!legacyLastSeenSlug || entries.length === 0) return []
-
-  const seenIndex = entries.findIndex((entry) => entry.slug === legacyLastSeenSlug)
-  if (seenIndex === -1) return []
-  return entries.slice(seenIndex).map((entry) => entry.slug)
+export function resolveUpdatesReadSlugs(readSlugs: string[] | undefined): string[] {
+  return readSlugs ?? []
 }
 
 export function isUpdateEntryUnread(readSlugs: string[] | undefined, entry: UpdateEntry): boolean {
@@ -31,6 +21,11 @@ export function isUpdateEntryUnread(readSlugs: string[] | undefined, entry: Upda
 export function markEntryRead(readSlugs: string[] | undefined, slug: string): string[] {
   if (readSlugs?.includes(slug)) return readSlugs
   return [...(readSlugs ?? []), slug]
+}
+
+export function markEntryUnread(readSlugs: string[] | undefined, slug: string): string[] {
+  if (!readSlugs?.includes(slug)) return readSlugs ?? []
+  return readSlugs.filter((entry) => entry !== slug)
 }
 
 export function markScopeRead(
@@ -62,12 +57,4 @@ export function latestUnreadEntry(
 ): UpdateEntry | null {
   const relevant = filterEntriesByScope(entries, scope)
   return relevant.find((entry) => isUpdateEntryUnread(readSlugs, entry)) ?? null
-}
-
-/** @deprecated Prefer markScopeRead — kept for hook compatibility. */
-export function markSeenSlug(
-  entries: UpdateEntry[],
-  scope: UpdatesNotifyScope
-): string | undefined {
-  return filterEntriesByScope(entries, scope)[0]?.slug
 }

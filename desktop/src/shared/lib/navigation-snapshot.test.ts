@@ -4,26 +4,12 @@ import { mergeSnapshot, snapshotsEqual, type NavigationSnapshot } from './naviga
 
 const ticketsA: NavigationSnapshot = {
   tab: 'tickets',
-  tickets: {
-    step: 'output',
-    ticketNumber: '716274',
-    tenantNumber: '',
-    message: '',
-    context: 'ctx',
-    ticketFormat: 'ticketReplyEmail'
-  }
+  activityTarget: { view: 'tickets', id_reclamation: '716274' }
 }
 
-const ticketsTable: NavigationSnapshot = {
+const ticketsB: NavigationSnapshot = {
   tab: 'tickets',
-  tickets: {
-    step: 'form',
-    ticketNumber: '',
-    tenantNumber: '',
-    message: '',
-    context: '',
-    ticketFormat: 'ticketReplyEmail'
-  }
+  activityTarget: { view: 'tickets', id_reclamation: '1' }
 }
 
 const aboutOutput: NavigationSnapshot = {
@@ -52,29 +38,15 @@ const aboutForm: NavigationSnapshot = {
 
 describe('snapshotsEqual', () => {
   test('matches identical snapshots', () => {
-    expect(snapshotsEqual(ticketsA, { ...ticketsA, tickets: { ...ticketsA.tickets! } })).toBe(true)
+    expect(snapshotsEqual(ticketsA, { ...ticketsA })).toBe(true)
   })
 
   test('differs on tab', () => {
     expect(snapshotsEqual(ticketsA, { tab: 'home' })).toBe(false)
   })
 
-  test('differs on tickets sub-state', () => {
-    expect(
-      snapshotsEqual(ticketsA, {
-        ...ticketsA,
-        tickets: { ...ticketsA.tickets!, ticketNumber: '1' }
-      })
-    ).toBe(false)
-  })
-
-  test('differs on tickets draftRevision', () => {
-    expect(
-      snapshotsEqual(ticketsA, {
-        ...ticketsA,
-        tickets: { ...ticketsA.tickets!, draftRevision: 'edited' }
-      })
-    ).toBe(false)
+  test('differs on tickets activity target', () => {
+    expect(snapshotsEqual(ticketsA, ticketsB)).toBe(false)
   })
 
   test('matches identical about snapshots', () => {
@@ -94,15 +66,8 @@ describe('snapshotsEqual', () => {
 })
 
 describe('mergeSnapshot', () => {
-  test('keeps tickets state when updating step on same tab', () => {
-    expect(
-      mergeSnapshot(ticketsA, {
-        tickets: { ...ticketsA.tickets!, step: 'form' }
-      })
-    ).toEqual({
-      ...ticketsA,
-      tickets: { ...ticketsA.tickets!, step: 'form' }
-    })
+  test('keeps tickets activity when updating on same tab', () => {
+    expect(mergeSnapshot(ticketsA, { activityTarget: ticketsA.activityTarget })).toEqual(ticketsA)
   })
 
   test('drops tickets state when switching to another tab', () => {
@@ -110,7 +75,7 @@ describe('mergeSnapshot', () => {
   })
 
   test('uses explicit tickets state when switching to tickets tab', () => {
-    expect(mergeSnapshot({ tab: 'home' }, ticketsTable)).toEqual(ticketsTable)
+    expect(mergeSnapshot({ tab: 'home' }, ticketsA)).toEqual(ticketsA)
   })
 
   test('keeps about state when updating step on same tab', () => {

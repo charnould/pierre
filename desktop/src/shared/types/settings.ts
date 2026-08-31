@@ -1,29 +1,24 @@
-export type UpdatesNotifyScope = 'off' | 'product' | 'all'
+export type UpdatesNotifyScope = 'off' | 'all'
 
-export const DEFAULT_UPDATES_NOTIFY_SCOPE: UpdatesNotifyScope = 'product'
+export const DEFAULT_UPDATES_NOTIFY_SCOPE: UpdatesNotifyScope = 'all'
 
 export interface Settings {
   url?: string
   email?: string
   password?: string
+  /** Present on renderer reads: a password exists in the main-process store. */
+  hasPassword?: boolean
   loggedOut?: boolean
   updatesNotify?: UpdatesNotifyScope
   /** Slugs of individually read update articles. */
   updatesReadSlugs?: string[]
-  /** @deprecated Migrated to `updatesReadSlugs` on read. */
-  updatesLastSeenSlug?: string
+  /** Include activities authored by the signed-in user in the activity center. */
+  showOwnActivity?: boolean
+  /** Canonical `user:email` authors followed in the activity center. */
+  followedActivityAuthors?: string[]
 }
 
-export function resolveUpdatesNotifyScope(settings: Settings): UpdatesNotifyScope {
-  const scope = settings.updatesNotify
-  if (scope === 'off' || scope === 'product' || scope === 'all') return scope
+/** Changelog notifications are always on: they cannot be turned off. */
+export function resolveUpdatesNotifyScope(_settings: Settings): UpdatesNotifyScope {
   return DEFAULT_UPDATES_NOTIFY_SCOPE
-}
-
-export function isFactoryUpdatesNotifySettings(settings: Settings): boolean {
-  return (
-    resolveUpdatesNotifyScope(settings) === DEFAULT_UPDATES_NOTIFY_SCOPE &&
-    !settings.updatesReadSlugs?.length &&
-    !settings.updatesLastSeenSlug
-  )
 }

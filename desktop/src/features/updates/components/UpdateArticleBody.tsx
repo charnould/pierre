@@ -1,27 +1,18 @@
-import { cjk } from '@streamdown/cjk'
-import { code } from '@streamdown/code'
-import { math } from '@streamdown/math'
-import { mermaid } from '@streamdown/mermaid'
-import { Streamdown } from 'streamdown'
+import { useMemo } from 'react'
 
-import { cn } from '@/shared/lib/utils'
-
-const streamdownPlugins = { cjk, code, math, mermaid }
-
-const updateArticleClassName = cn(
-  'size-full text-sm',
-  '[&_.sd-response]:text-sm [&_.sd-response]:leading-normal',
-  '[&>*:first-child]:mt-0 [&>*:last-child]:mb-0'
-)
+import { parseProseMarkdown } from '@/shared/lib/markdown/parse-prose-markdown'
 
 interface Props {
   markdown: string
 }
 
 export function UpdateArticleBody({ markdown }: Props) {
+  const html = useMemo(() => parseProseMarkdown(markdown), [markdown])
+
   return (
-    <Streamdown isAnimating={false} plugins={streamdownPlugins} className={updateArticleClassName}>
-      {markdown}
-    </Streamdown>
+    <div
+      className="typeset text-pretty [--typeset-flow:1em] [--typeset-font-body:var(--font-sans)] [--typeset-font-heading:var(--font-sans)] [--typeset-leading:1.5] [--typeset-size:1em]"
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
   )
 }

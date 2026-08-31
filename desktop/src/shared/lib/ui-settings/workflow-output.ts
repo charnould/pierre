@@ -1,20 +1,12 @@
-export const WORKFLOW_SPLIT_MIN = 20
-export const WORKFLOW_SPLIT_MAX = 80
+const WORKFLOW_SPLIT_MIN = 20
+const WORKFLOW_SPLIT_MAX = 80
 export const WORKFLOW_SPLIT_DEFAULT_CONTEXTE = 28
 
 export const WORKFLOW_PANEL_CONTEXTE = 'contexte'
 export const WORKFLOW_PANEL_OUTPUT = 'output'
 
-/** @deprecated Legacy 3-panel id — ignored when reading persisted layout. */
-export const WORKFLOW_PANEL_ANALYSE = 'analyse'
-
-/** @deprecated Legacy 3-panel id — maps to WORKFLOW_PANEL_OUTPUT. */
-export const WORKFLOW_PANEL_REPONSE = 'reponse'
-
 export type WorkflowTicketsOutputSplit = {
   contextePercent?: number
-  /** @deprecated Ignored — kept for backward-compatible parse only. */
-  analysePercent?: number
 }
 
 /** Shared dual-panel split shape (tickets, about, …). */
@@ -40,8 +32,6 @@ export const parseWorkflowTicketsOutputSplit = (
   return { contextePercent }
 }
 
-export const parseWorkflowOutputSplit = parseWorkflowTicketsOutputSplit
-
 export type WorkflowSettingsLike = {
   ticketsOutputSplit?: WorkflowOutputSplit
   aboutOutputSplit?: WorkflowOutputSplit
@@ -51,7 +41,7 @@ export const resolveWorkflowOutputSplit = (
   workflow: WorkflowSettingsLike | undefined,
   key: WorkflowOutputSplitKey
 ): WorkflowOutputSplit => {
-  const split = parseWorkflowOutputSplit(workflow?.[key])
+  const split = parseWorkflowTicketsOutputSplit(workflow?.[key])
   return split ?? { contextePercent: WORKFLOW_SPLIT_DEFAULT_CONTEXTE }
 }
 

@@ -2,12 +2,23 @@ import { afterEach, describe, expect, test } from 'bun:test'
 
 import { cancelNdjsonStream, runNdjsonStream } from './run-ndjson-stream'
 
-const originalApi = globalThis.window?.api
+let didStubWindow = false
+let windowBeforeStub: typeof globalThis.window | undefined
+
+function stubWindowApi(api: Record<string, unknown>) {
+  windowBeforeStub = globalThis.window
+  didStubWindow = true
+  ;(globalThis as typeof globalThis & { window: Window }).window = {
+    api
+  } as unknown as Window & typeof globalThis
+}
 
 afterEach(() => {
-  if (originalApi) {
-    ;(globalThis as typeof globalThis & { window: Window }).window.api = originalApi
-  }
+  if (!didStubWindow) return
+  if (windowBeforeStub) globalThis.window = windowBeforeStub
+  else delete (globalThis as { window?: Window }).window
+  didStubWindow = false
+  windowBeforeStub = undefined
 })
 
 describe('runNdjsonStream', () => {
@@ -15,28 +26,26 @@ describe('runNdjsonStream', () => {
     let chunkCb: ((chunk: string) => void) | null = null
     let unsubscribed = false
 
-    ;(globalThis as typeof globalThis & { window: Window }).window = {
-      api: {
-        onAiChunk: (_requestId: string, cb: (chunk: string) => void) => {
-          chunkCb = cb
-          return () => {
-            unsubscribed = true
-          }
-        },
-        cancelStream: async () => {}
-      }
-    } as unknown as Window & typeof globalThis
+    stubWindowApi({
+      onAiChunk: (_requestId: string, cb: (chunk: string) => void) => {
+        chunkCb = cb
+        return () => {
+          unsubscribed = true
+        }
+      },
+      cancelStream: async () => {}
+    })
 
     const events: string[] = []
 
     const resultPromise = runNdjsonStream({
       requestId: 'req-1',
       start: async () => {
-        chunkCb?.('{"type":"delta","content":"hi"}\n')
+        chunkCb?.('{"type":"text_delta","contentIndex":0,"delta":"hi"}\n')
         return true
       },
       onEvent: (e) => {
-        if (e.type === 'delta') events.push(e.content)
+        if (e.type === 'text_delta') events.push(e.delta)
       }
     })
 
@@ -47,12 +56,10 @@ describe('runNdjsonStream', () => {
   })
 
   test('returns cancelled when isCancelled after start', async () => {
-    ;(globalThis as typeof globalThis & { window: Window }).window = {
-      api: {
-        onAiChunk: () => () => {},
-        cancelStream: async () => {}
-      }
-    } as unknown as Window & typeof globalThis
+    stubWindowApi({
+      onAiChunk: () => () => {},
+      cancelStream: async () => {}
+    })
 
     const result = await runNdjsonStream({
       requestId: 'req-2',
@@ -65,12 +72,10 @@ describe('runNdjsonStream', () => {
   })
 
   test('passes request id to start callback', async () => {
-    ;(globalThis as typeof globalThis & { window: Window }).window = {
-      api: {
-        onAiChunk: () => () => {},
-        cancelStream: async () => {}
-      }
-    } as unknown as Window & typeof globalThis
+    stubWindowApi({
+      onAiChunk: () => () => {},
+      cancelStream: async () => {}
+    })
 
     let seenRequestId = ''
     const result = await runNdjsonStream({
@@ -92,15 +97,13 @@ describe('cancelNdjsonStream', () => {
     let cancelledRequestId = ''
     let cancelled = false
 
-    ;(globalThis as typeof globalThis & { window: Window }).window = {
-      api: {
-        onAiChunk: () => () => {},
-        cancelStream: async (requestId: string) => {
-          cancelled = true
-          cancelledRequestId = requestId
-        }
+    stubWindowApi({
+      onAiChunk: () => () => {},
+      cancelStream: async (requestId: string) => {
+        cancelled = true
+        cancelledRequestId = requestId
       }
-    } as unknown as Window & typeof globalThis
+    })
 
     cancelNdjsonStream('req-42')
     expect(cancelled).toBe(true)

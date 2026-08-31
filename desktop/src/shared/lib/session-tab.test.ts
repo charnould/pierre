@@ -40,10 +40,12 @@ describe('session-tab', () => {
     expect(readStoredTab(s)).toBe('tickets')
   })
 
-  test('migrates legacy request tab id', () => {
+  test('readStoredTab returns null for retired tab ids', () => {
     const s = mockStorage()
     s.setItem(ACTIVE_TAB_STORAGE_KEY, 'request')
-    expect(readStoredTab(s)).toBe('tickets')
+    expect(readStoredTab(s)).toBeNull()
+    s.setItem(ACTIVE_TAB_STORAGE_KEY, 'markdown')
+    expect(readStoredTab(s)).toBeNull()
   })
 
   test('writeStoredTab clears storage for settings', () => {
@@ -63,5 +65,11 @@ describe('session-tab', () => {
     const s = mockStorage()
     s.setItem(ACTIVE_TAB_STORAGE_KEY, 'repayment')
     expect(readStoredTab(s)).toBe('repayment')
+  })
+
+  test('readStoredTab migrates retired outreach tab to automations', () => {
+    const s = mockStorage()
+    s.setItem(ACTIVE_TAB_STORAGE_KEY, 'outreach')
+    expect(readStoredTab(s)).toBe('automations')
   })
 })
