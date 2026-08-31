@@ -8,9 +8,8 @@ export default {
   api: [],
   protected: true,
   community_knowledge: true,
-  reasoning_effort: 'medium',
+  reasoning_effort: 'low',
   reasoning_display: 'full',
-  reasoning_placeholders: [],
   greeting: [],
   examples: [],
   disclaimer: ''

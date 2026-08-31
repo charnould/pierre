@@ -26,27 +26,5 @@ export default {
   disclaimer:
     "Eiffel peut faire des erreurs et n'est affilié d'aucune façon à Grand Dijon Habitat (démonstration uniquement).",
   reasoning_display: 'full',
-  reasoning_effort: 'medium',
-  reasoning_placeholders: [
-    'Je réfléchis…',
-    'Je creuse la question…',
-    'Les rouages tournent…',
-    "J'analyse tout ça…",
-    'Je pèse les options…',
-    'Je tisse les fils…',
-    "J'assemble les pièces…",
-    'Je cherche la meilleure approche…',
-    "Je mets de l'ordre dans tout ça…",
-    'Je passe ça au crible…',
-    'Je synthétise…',
-    'Je retourne le problème dans tous les sens…',
-    'Je fouille dans les possibilités…',
-    'Je fais le tour de la question…',
-    'Ça avance…',
-    'Je peaufine la réponse…',
-    'Je vérifie mes angles…',
-    "Je prends le temps d'y réfléchir…",
-    'Je démêle tout ça…',
-    'Je mets les idées en ordre…'
-  ]
+  reasoning_effort: 'medium'
 } as Config

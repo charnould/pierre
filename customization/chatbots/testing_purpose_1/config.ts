@@ -13,10 +13,5 @@ export default {
   disclaimer: null,
   reasoning_display: 'off',
   reasoning_effort: 'medium',
-  reasoning_placeholders: [
-    'Compréhension des attentes…',
-    'Identification du contexte…',
-    'Définition du périmètre…',
-    'Cadrage de la réponse…'
-  ]
-} as Config
+  layout: 'compact'
+} satisfies Config

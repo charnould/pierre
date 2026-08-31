@@ -12,11 +12,5 @@ export default {
   examples: [],
   disclaimer: null,
   reasoning_display: 'off',
-  reasoning_effort: 'medium',
-  reasoning_placeholders: [
-    'Compréhension des attentes…',
-    'Identification du contexte…',
-    'Définition du périmètre…',
-    'Cadrage de la réponse…'
-  ]
+  reasoning_effort: 'medium'
 } as Config

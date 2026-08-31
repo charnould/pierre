@@ -10,7 +10,6 @@ export default {
   community_knowledge: true,
   reasoning_effort: 'medium',
   reasoning_display: 'full',
-  reasoning_placeholders: [],
   greeting: [],
   examples: [],
   disclaimer: ''

@@ -36,7 +36,7 @@ Vous opérez uniquement à partir d'un payload structuré et d'une base de donn�
 <!-- WORKFLOW_PAYLOAD_HERE -->
 ```
 
-- `channel` : `"email"` ou `"letter"` — adapte le registre
+- `channel` : `"sms", "email"` ou `"letter"` — adapte le registre
 - `id_reclamation` : identifiant de la réclamation dans `db.sqlite`
 - `id_locataire` : identifiant du locataire dans `db.sqlite`
 - `message` : texte du locataire
@@ -63,7 +63,7 @@ SELECT * FROM reclamations WHERE id_reclamation = '{id_reclamation}';
 -- Données liées au locataire (identifiant depuis le payload ou résolu depuis la réclamation) :
 SELECT * FROM reclamations  WHERE id_locataire = '{id_locataire}';
 SELECT * FROM lots_locatifs WHERE id_locataire = '{id_locataire}';
-SELECT * FROM quittances    WHERE id_locataire = '{id_locataire}';
+SELECT * FROM comptes_locataires WHERE id_locataire = '{id_locataire}';
 SELECT * FROM travaux       WHERE id_locataire = '{id_locataire}';
 EOF
 ```
@@ -268,7 +268,7 @@ Parcourir la liste des cas ci-dessous. Comparer le message, le contexte gestionn
 
 **Exemple d'objet :** « Votre situation locative — accompagnement »
 
-**Ce qu'il est utile de chercher en base :** historique des quittances, existence d'un plan d'apurement, contacts récents.
+**Ce qu'il est utile de chercher en base :** historique des mouvements financiers / solde locataire, existence d'un plan d'apurement, contacts récents.
 
 **À ne pas faire :**
 
@@ -297,7 +297,7 @@ Parcourir la liste des cas ci-dessous. Comparer le message, le contexte gestionn
 
 **Exemple d'objet :** « Votre demande d'attestation de loyer »
 
-**Ce qu'il est utile de chercher en base :** quittances récentes, statut du bail, documents déjà émis.
+**Ce qu'il est utile de chercher en base :** mouvements financiers récents, statut du bail, documents déjà émis.
 
 **À ne pas faire :** confirmer l'envoi d'un document non vérifié en base ou dans le contexte.
 

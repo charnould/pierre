@@ -51,43 +51,21 @@ export default {
   reasoning_effort: 'medium',
 
   // Permet d'afficher les traces de raisonnement de l'agent dans l'interface.
-  // - `off`    : l'agent n'affiche pas le raisonnement mais les `reasoning_placeholders` ci-dessous.
-  // - `partial`: l'agent affiche des traces partielles de raisonnement.
-  // - `full`   : l'agent affiche des traces complètes de raisonnement.
+  // - `off`    : skimmer avec messages rotatifs codés dans l'app (pas de traces).
+  // - `partial`: traces partielles de raisonnement.
+  // - `full`   : traces complètes de raisonnement.
   reasoning_display: 'off',
 
-  // Ces messages s'affichent aléatoirement durant la génération de la réponse
-  // lorsque `reasoning_display` est `off`. Sans effet pour `partial` et `full`.
-  reasoning_placeholders: [
-    'Je réfléchis…',
-    'Je creuse la question…',
-    'Les rouages tournent…',
-    "J'analyse tout ça…",
-    'Je pèse les options…',
-    'Je tisse les fils…',
-    "J'assemble les pièces…",
-    'Je cherche la meilleure approche…',
-    "Je mets de l'ordre dans tout ça…",
-    'Je passe ça au crible…',
-    'Je synthétise…',
-    'Je retourne le problème dans tous les sens…',
-    'Je fouille dans les possibilités…',
-    'Je fais le tour de la question…',
-    'Ça avance…',
-    'Je peaufine la réponse…',
-    'Je vérifie mes angles…',
-    "Je prends le temps d'y réfléchir…",
-    'Je démêle tout ça…',
-    'Je mets les idées en ordre…'
-  ],
-
-  // Le message qui s'affiche par défaut dans l'interface de PIERRE.
+  // Le message qui s'affiche en mode `layout: 'default'` (masqué en mode `compact`).
   greeting: [
     'Bonjour 🖐️,',
     'Je suis PIERRE, une intelligence artificielle open source, personnalisable et plurilingue au service du mouvement HLM, de ses candidats, locataires et collaborateurs.',
     'Ma mission : répondre 24/7/365 à toutes les questions de « premier niveau » des candidats et locataires ou celles (plus complexes) des équipes.',
     "PS. Je n'ai pas connaissance à ce jour des spécificités des bailleurs."
   ],
+
+  // `compact` : composer centré, exemples discrets (défaut desktop). `default` : greeting + liste verticale.
+  layout: 'compact',
 
   // Les exemples qui s'affichent par défaut dans l'interface de PIERRE.
   examples: [
