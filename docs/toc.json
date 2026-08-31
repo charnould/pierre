@@ -1,0 +1,25 @@
+[
+  {
+    "folder": "01-changelog",
+    "title": "Changelog",
+    "entries": [
+      {
+        "slug": "2026-08-20-desktop-alpha",
+        "title": "Lancement de l’alpha de l'application Desktop",
+        "date": "2026-08-20"
+      }
+    ]
+  },
+  {
+    "folder": "02-core-data-hlm",
+    "title": "Core Data HLM"
+  },
+  {
+    "folder": "03-install",
+    "title": "Installation & Paramétrage"
+  },
+  {
+    "folder": "05-articles",
+    "title": "Articles"
+  }
+]

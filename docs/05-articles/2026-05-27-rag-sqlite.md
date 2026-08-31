@@ -1,4 +1,4 @@
-# (EN) One SQLite File and One Harness Is Enough for French Social Housing
+# One SQLite File and One Harness Is Enough for French Social Housing (EN)
 
 I deleted a lot of glue code. 10+ dependencies. A chunking strategy. A vector database. French stemmers. An embedding model. A reranker. A costly and lengthy build pipeline. A €200/month Hetzner GPU. A €15/month Hugging Face inference endpoint. A few euros per month for LLM-as-reranker calls on Groq or Cerebras.
 
