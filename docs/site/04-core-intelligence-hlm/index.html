@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CORE INTELLIGENCE HLM · PIERRE</title>
+    <link rel="icon" href="../../assets/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Knewave&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap"
+    />
+    <style>
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        background: #fff;
+      }
+      .article {
+        box-sizing: border-box;
+        max-width: 850px;
+        margin: 0;
+        padding: 2rem 2rem 3rem 4rem;
+        font-family: Merriweather, Georgia, serif;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 24px;
+        letter-spacing: 0;
+        color: rgb(17, 17, 17);
+        text-align: left;
+        -webkit-font-smoothing: antialiased;
+      }
+      @media (max-width: 39.99rem) {
+        .article {
+          padding: 1.25rem 1.25rem 2rem;
+        }
+      }
+      .article h1,
+      .article h2,
+      .article h3,
+      .article h4,
+      .article h5,
+      .article h6 {
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        font-weight: 700;
+        letter-spacing: 0;
+        color: rgb(17, 17, 17);
+        text-wrap: balance;
+        -webkit-font-smoothing: antialiased;
+      }
+      .article h1 {
+        font-size: 36px;
+        line-height: 40.32px;
+        margin: 0 0 16px;
+      }
+      .article h2 {
+        font-size: 36px;
+        line-height: 40.32px;
+        margin: 80px 0 40px;
+      }
+      .article h3 {
+        font-size: 24px;
+        line-height: 28px;
+        margin: 40px 0 20px;
+      }
+      .article p {
+        margin: 0 0 16px;
+        text-wrap: pretty;
+      }
+      .article ul,
+      .article ol {
+        margin: 0 0 16px;
+        padding-inline-start: 1.5em;
+      }
+      .article ul {
+        list-style-type: disc;
+      }
+      .article ol {
+        list-style-type: decimal;
+      }
+      .article li {
+        display: list-item;
+        margin: 0 0 8px;
+        padding-inline-start: 0.25em;
+      }
+      .article li:last-child {
+        margin-bottom: 0;
+      }
+      .article ul ul {
+        list-style-type: circle;
+        margin: 8px 0 0;
+      }
+      .article a {
+        color: #0000ee;
+        text-underline-offset: 0.15em;
+      }
+      .article a:hover {
+        text-decoration-thickness: 2px;
+      }
+      .article strong {
+        font-weight: 600;
+      }
+      .article pre:not(.cadre) {
+        padding: 1em;
+      }
+      .article :not(pre) > code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.875em;
+      }
+      .article p:has(> .shot) {
+        --shot-gap: 0.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--shot-gap);
+        justify-content: flex-start;
+        width: min(calc(32rem * 3 + var(--shot-gap) * 2), calc(100vw - 4rem));
+        max-width: none;
+        margin-block-start: 30px;
+        margin-inline: 0;
+      }
+      @media (max-width: 39.99rem) {
+        .article p:has(> .shot) {
+          width: calc(100vw - 2.5rem);
+        }
+      }
+      .article .shot {
+        position: relative;
+        isolation: isolate;
+        overflow: visible;
+        flex: 0 1 100%;
+        width: 100%;
+        max-width: 100%;
+      }
+      @media (min-width: 40rem) {
+        .article .shot {
+          flex: 0 1 calc((100% - var(--shot-gap) * 2) / 3);
+          width: calc((100% - var(--shot-gap) * 2) / 3);
+          max-width: calc((100% - var(--shot-gap) * 2) / 3);
+        }
+        .article p:has(> .shot:only-child) .shot:has(img[data-zoomable]),
+        .article p:has(> .shot:nth-child(even):last-child) .shot:has(img[data-zoomable]) {
+          flex-basis: calc((100% - var(--shot-gap)) / 2);
+          width: calc((100% - var(--shot-gap)) / 2);
+          max-width: calc((100% - var(--shot-gap)) / 2);
+        }
+        .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) {
+          flex-basis: 90%;
+          width: 90%;
+          max-width: 90%;
+        }
+      }
+      .article .shot img {
+        display: block;
+        width: 100%;
+        margin: 0;
+        transform: translateX(-4.01%);
+      }
+      .article .shot img[data-zoomable] {
+        cursor: zoom-in;
+      }
+      .article .shot-title {
+        position: absolute;
+        top: 0.45rem;
+        left: -0.65rem;
+        z-index: 1;
+        max-width: calc(100% - 1rem);
+        padding: 0.15rem 0.55rem 0.08rem;
+        background: #ffe500;
+        color: #111;
+        font-family: Knewave, cursive;
+        font-size: 1.05rem;
+        font-weight: 400;
+        font-synthesis: none;
+        letter-spacing: 0.01em;
+        line-height: 1.15;
+        text-transform: uppercase;
+        text-wrap: balance;
+        transform: rotate(-2deg);
+        transform-origin: left center;
+        pointer-events: none;
+      }
+      .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) .shot-title {
+        top: 1.5rem;
+        left: -0.65rem;
+      }
+      body.is-zooming .shot-title {
+        opacity: 0;
+      }
+
+      /*
+ Solarized Color Schemes originally by Ethan Schoonover
+ http://ethanschoonover.com/solarized
+
+ Ported for PrismJS by Hector Matos
+ Website: https://krakendev.io
+ Twitter Handle: https://twitter.com/allonsykraken)
+*/
+
+      /*
+SOLARIZED HEX
+--------- -------
+base03    #002b36
+base02    #073642
+base01    #586e75
+base00    #657b83
+base0     #839496
+base1     #93a1a1
+base2     #eee8d5
+base3     #fdf6e3
+yellow    #b58900
+orange    #cb4b16
+red       #dc322f
+magenta   #d33682
+violet    #6c71c4
+blue      #268bd2
+cyan      #2aa198
+green     #859900
+*/
+
+      code[class*='language-'],
+      pre[class*='language-'] {
+        color: #657b83; /* base00 */
+        font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+        font-size: 1em;
+        text-align: left;
+        white-space: pre;
+        word-spacing: normal;
+        word-break: normal;
+        word-wrap: normal;
+
+        line-height: 1.5;
+
+        -moz-tab-size: 4;
+        -o-tab-size: 4;
+        tab-size: 4;
+
+        -webkit-hyphens: none;
+        -moz-hyphens: none;
+        -ms-hyphens: none;
+        hyphens: none;
+      }
+
+      pre[class*='language-']::-moz-selection,
+      pre[class*='language-'] ::-moz-selection,
+      code[class*='language-']::-moz-selection,
+      code[class*='language-'] ::-moz-selection {
+        background: #073642; /* base02 */
+      }
+
+      pre[class*='language-']::selection,
+      pre[class*='language-'] ::selection,
+      code[class*='language-']::selection,
+      code[class*='language-'] ::selection {
+        background: #073642; /* base02 */
+      }
+
+      /* Code blocks */
+      pre[class*='language-'] {
+        padding: 1em;
+        margin: 0.5em 0;
+        overflow: auto;
+        border-radius: 0.3em;
+      }
+
+      :not(pre) > code[class*='language-'],
+      pre[class*='language-'] {
+        background-color: #fdf6e3; /* base3 */
+      }
+
+      /* Inline code */
+      :not(pre) > code[class*='language-'] {
+        padding: 0.1em;
+        border-radius: 0.3em;
+      }
+
+      .token.comment,
+      .token.prolog,
+      .token.doctype,
+      .token.cdata {
+        color: #93a1a1; /* base1 */
+      }
+
+      .token.punctuation {
+        color: #586e75; /* base01 */
+      }
+
+      .token.namespace {
+        opacity: 0.7;
+      }
+
+      .token.property,
+      .token.tag,
+      .token.boolean,
+      .token.number,
+      .token.constant,
+      .token.symbol,
+      .token.deleted {
+        color: #268bd2; /* blue */
+      }
+
+      .token.selector,
+      .token.attr-name,
+      .token.string,
+      .token.char,
+      .token.builtin,
+      .token.url,
+      .token.inserted {
+        color: #2aa198; /* cyan */
+      }
+
+      .token.entity {
+        color: #657b83; /* base00 */
+        background: #eee8d5; /* base2 */
+      }
+
+      .token.atrule,
+      .token.attr-value,
+      .token.keyword {
+        color: #859900; /* green */
+      }
+
+      .token.function,
+      .token.class-name {
+        color: #b58900; /* yellow */
+      }
+
+      .token.regex,
+      .token.important,
+      .token.variable {
+        color: #cb4b16; /* orange */
+      }
+
+      .token.important,
+      .token.bold {
+        font-weight: bold;
+      }
+      .token.italic {
+        font-style: italic;
+      }
+
+      .token.entity {
+        cursor: help;
+      }
+    </style>
+  </head>
+  <body>
+    <article class="article">
+      <h5 id="pierreindexmd--core-intelligence-hlm">
+        <a href="../../index.html">PIERRE</a> ∕ CORE INTELLIGENCE HLM
+      </h5>
+      <h1 id="core-intelligence-hlm">CORE INTELLIGENCE HLM</h1>
+      <p>
+        Une intelligence artificielle qui lit les <strong>Core Data HLM</strong> voit des faits.
+        Pour qu'elle puisse agir comme un collaborateur HLM expérimenté, il lui faut également les
+        règles, les pratiques et les réflexes du métier.
+      </p>
+      <p>
+        <strong>Core Intelligence HLM est ce savoir prêt à l’emploi</strong>, chacun peut s’en
+        servir tel quel, ou l’adapter librement à son organisme — prompts procéduraux, templates de
+        document, connaissances HLM et paramétrages de PIERRE.
+      </p>
+      <p>
+        Cette collection (vivante) est née à l’été 2026 des échanges avec
+        <a href="http://granddijonhabitat.fr/">Grand Dijon Habitat</a> lors du développement de
+        PIERRE. Un template, un processus ou un prompt qui sert à tous les bailleurs sociaux ?
+        <a href="mailto:charnould@pierre-ia.org">charnould@pierre-ia.org</a>.
+      </p>
+      <h2
+        id="templateshttpsgithubcomcharnouldpierretreemasterdocs04-core-intelligence-hlmtemplates"
+      >
+        <a
+          href="https://github.com/charnould/pierre/tree/master/docs/04-core-intelligence-hlm/templates"
+          >Templates</a
+        >
+      </h2>
+      <ul>
+        <li>
+          <strong>Template de plan d'apurement</strong> en 3 versions.<br />
+          (1) un template compatible avec le module « Impayés » de PIERRE<br />
+          (2) un exemple dûment complété (données fictives)<br />
+          (3) un modèle vierge
+        </li>
+      </ul>
+      <h2 id="promptshttpsgithubcomcharnouldpierretreemasterdocs04-core-intelligence-hlmprompts">
+        <a
+          href="https://github.com/charnould/pierre/tree/master/docs/04-core-intelligence-hlm/prompts"
+          >Prompts</a
+        >
+      </h2>
+      <p>
+        Un « prompt » est la consigne donnée à un agent pour traiter une situation, dès lors
+        naturellement que les données relatives à cette situation lui sont accessibles. PIERRE
+        utilise ces prompts pour intervenir opérationnellement dans les processus HLM, aux côtés des
+        collaborateurs, de jour comme de nuit.
+      </p>
+      <p>
+        Ces prompts procéduraux — généralement rédigés en « français contrôlé » (dérivé de
+        <a href="https://fr.wikipedia.org/wiki/Anglais_technique_simplifi%C3%A9">ASD STE-100</a>)
+        afin d'en faciliter la compréhension par une IA — sont le reflet des pratiques et processus
+        d'un bailleur social en particulier ; ils sont donc à ajuster pour correspondre pleinement à
+        votre environnement.
+      </p>
+      <ul>
+        <li>Répondre aux réclamations (<em>à venir</em>)</li>
+        <li>Analyser un dossier d'impayés (<em>à venir</em>)</li>
+      </ul>
+      <h2
+        id="paramétrageshttpsgithubcomcharnouldpierretreemasterdocs04-core-intelligence-hlmparametrages"
+      >
+        <a
+          href="https://github.com/charnould/pierre/tree/master/docs/04-core-intelligence-hlm/parametrages"
+          >Paramétrages</a
+        >
+      </h2>
+      <p>
+        Ces paramétrages sont nécessaire au fonctionnement de PIERRE. Ils accélèrent la mise en
+        route et sont parfaitement personnalisables (consulter la documentation de PIERRE).
+      </p>
+      <ul>
+        <li>
+          <code>tickets.json</code> — paramétrage du module « Réclamations » (<em>à venir</em>)
+        </li>
+        <li><code>repayment.json</code> — paramétrage du module « Impayés » (<em>à venir</em>)</li>
+        <li><code>icon.svg</code> — exemple d’icône (<em>à venir</em>)</li>
+        <li><code>email.html</code> — template d'email transactionnel (<em>à venir</em>)</li>
+        <li><code>default.json</code> — paramétrage du chatbot public (<em>à venir</em>)</li>
+        <li><code>default.md</code> — personnalité du chatbot public (<em>à venir</em>)</li>
+      </ul>
+      <h2
+        id="knowledgehttpsgithubcomcharnouldpierretreemasterdocs04-core-intelligence-hlmknowledge"
+      >
+        <a
+          href="https://github.com/charnould/pierre/tree/master/docs/04-core-intelligence-hlm/knowledge"
+          >Knowledge</a
+        >
+      </h2>
+      <p>
+        Cette base de connaissances (en cours de constitution) permet à un agent conversationnel de
+        répondre aux questions de premier niveau des locataires et candidats HLM. C’est elle
+        qu’utilise l'agent « grand public » de PIERRE. Elle est constituée de :
+      </p>
+      <ul>
+        <li>
+          <code>Connaissances générales</code><br />
+          Connaissances génériques applicables sur tout le territoire (ex : comment gérer un trouble
+          du voisinage ? qu'est-ce que les charges locatives ?).
+        </li>
+        <li>
+          <code>Spécificités locales</code><br />
+          Connaissances spécifiques à un territoire donné (ex : les associations d'hébergement
+          d'urgence dans l'Ain, les structures d'aide contre les violences conjugales dans l'Eure).
+        </li>
+        <li>
+          <code>Organismes HLM</code><br />
+          Connaissances relatives à un organisme en particulier (ex : qu'est-ce que Grand Dijon
+          Habitat et quelles sont les coordonnées de ses agences ?).
+        </li>
+        <li>
+          <code>Wikipédia</code><br />
+          Connaissances importées de Wikipédia (ex : l'histoire du logement social).
+        </li>
+      </ul>
+      <h3 id="comment-y-contribuer-concrètement-">Comment y contribuer concrètement ?</h3>
+      <p>
+        Très simplement. Consulter la base de connaissances, et si vous identifiez un manque, une
+        imprécision ou une erreur : envoyer un email à
+        <a href="mailto:charnould@pierre-ia.org">charnould@pierre-ia.org</a>.
+      </p>
+      <p>
+        Au fur et à mesure de l'amélioration de cette base de connaissances, c'est tout le mouvement
+        HLM qui en profite. C'est plus malin que de réinventer perpétuellement une roue incomplète.
+      </p>
+      <h2 id="licence">Licence</h2>
+      <p>
+        L'intégralité des documents de Core Intelligence HLM est sous licence
+        <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.fr">CC BY-NC-SA 4.0</a
+        >.<br />
+        Copyright (c) 2026-aujourd'hui, Charles-Henri Arnould/BECKREL et les contributeurs.
+      </p>
+    </article>
+
+    <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+    <script>
+      const zoom = mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
+      zoom.on('open', () => document.body.classList.add('is-zooming'))
+      zoom.on('closed', () => document.body.classList.remove('is-zooming'))
+    </script>
+  </body>
+</html>

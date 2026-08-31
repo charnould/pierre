@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>`comptes_locataires` · PIERRE</title>
+    <link rel="icon" href="../../assets/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Knewave&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap"
+    />
+    <style>
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        background: #fff;
+      }
+      .article {
+        box-sizing: border-box;
+        max-width: 850px;
+        margin: 0;
+        padding: 2rem 2rem 3rem 4rem;
+        font-family: Merriweather, Georgia, serif;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 24px;
+        letter-spacing: 0;
+        color: rgb(17, 17, 17);
+        text-align: left;
+        -webkit-font-smoothing: antialiased;
+      }
+      @media (max-width: 39.99rem) {
+        .article {
+          padding: 1.25rem 1.25rem 2rem;
+        }
+      }
+      .article h1,
+      .article h2,
+      .article h3,
+      .article h4,
+      .article h5,
+      .article h6 {
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        font-weight: 700;
+        letter-spacing: 0;
+        color: rgb(17, 17, 17);
+        text-wrap: balance;
+        -webkit-font-smoothing: antialiased;
+      }
+      .article h1 {
+        font-size: 36px;
+        line-height: 40.32px;
+        margin: 0 0 16px;
+      }
+      .article h2 {
+        font-size: 36px;
+        line-height: 40.32px;
+        margin: 80px 0 40px;
+      }
+      .article h3 {
+        font-size: 24px;
+        line-height: 28px;
+        margin: 40px 0 20px;
+      }
+      .article p {
+        margin: 0 0 16px;
+        text-wrap: pretty;
+      }
+      .article ul,
+      .article ol {
+        margin: 0 0 16px;
+        padding-inline-start: 1.5em;
+      }
+      .article ul {
+        list-style-type: disc;
+      }
+      .article ol {
+        list-style-type: decimal;
+      }
+      .article li {
+        display: list-item;
+        margin: 0 0 8px;
+        padding-inline-start: 0.25em;
+      }
+      .article li:last-child {
+        margin-bottom: 0;
+      }
+      .article ul ul {
+        list-style-type: circle;
+        margin: 8px 0 0;
+      }
+      .article a {
+        color: #0000ee;
+        text-underline-offset: 0.15em;
+      }
+      .article a:hover {
+        text-decoration-thickness: 2px;
+      }
+      .article strong {
+        font-weight: 600;
+      }
+      .article pre:not(.cadre) {
+        padding: 1em;
+      }
+      .article :not(pre) > code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.875em;
+      }
+      .article p:has(> .shot) {
+        --shot-gap: 0.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--shot-gap);
+        justify-content: flex-start;
+        width: min(calc(32rem * 3 + var(--shot-gap) * 2), calc(100vw - 4rem));
+        max-width: none;
+        margin-block-start: 30px;
+        margin-inline: 0;
+      }
+      @media (max-width: 39.99rem) {
+        .article p:has(> .shot) {
+          width: calc(100vw - 2.5rem);
+        }
+      }
+      .article .shot {
+        position: relative;
+        isolation: isolate;
+        overflow: visible;
+        flex: 0 1 100%;
+        width: 100%;
+        max-width: 100%;
+      }
+      @media (min-width: 40rem) {
+        .article .shot {
+          flex: 0 1 calc((100% - var(--shot-gap) * 2) / 3);
+          width: calc((100% - var(--shot-gap) * 2) / 3);
+          max-width: calc((100% - var(--shot-gap) * 2) / 3);
+        }
+        .article p:has(> .shot:only-child) .shot:has(img[data-zoomable]),
+        .article p:has(> .shot:nth-child(even):last-child) .shot:has(img[data-zoomable]) {
+          flex-basis: calc((100% - var(--shot-gap)) / 2);
+          width: calc((100% - var(--shot-gap)) / 2);
+          max-width: calc((100% - var(--shot-gap)) / 2);
+        }
+        .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) {
+          flex-basis: 90%;
+          width: 90%;
+          max-width: 90%;
+        }
+      }
+      .article .shot img {
+        display: block;
+        width: 100%;
+        margin: 0;
+        transform: translateX(-4.01%);
+      }
+      .article .shot img[data-zoomable] {
+        cursor: zoom-in;
+      }
+      .article .shot-title {
+        position: absolute;
+        top: 0.45rem;
+        left: -0.65rem;
+        z-index: 1;
+        max-width: calc(100% - 1rem);
+        padding: 0.15rem 0.55rem 0.08rem;
+        background: #ffe500;
+        color: #111;
+        font-family: Knewave, cursive;
+        font-size: 1.05rem;
+        font-weight: 400;
+        font-synthesis: none;
+        letter-spacing: 0.01em;
+        line-height: 1.15;
+        text-transform: uppercase;
+        text-wrap: balance;
+        transform: rotate(-2deg);
+        transform-origin: left center;
+        pointer-events: none;
+      }
+      .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) .shot-title {
+        top: 1.5rem;
+        left: -0.65rem;
+      }
+      body.is-zooming .shot-title {
+        opacity: 0;
+      }
+
+      /*
+ Solarized Color Schemes originally by Ethan Schoonover
+ http://ethanschoonover.com/solarized
+
+ Ported for PrismJS by Hector Matos
+ Website: https://krakendev.io
+ Twitter Handle: https://twitter.com/allonsykraken)
+*/
+
+      /*
+SOLARIZED HEX
+--------- -------
+base03    #002b36
+base02    #073642
+base01    #586e75
+base00    #657b83
+base0     #839496
+base1     #93a1a1
+base2     #eee8d5
+base3     #fdf6e3
+yellow    #b58900
+orange    #cb4b16
+red       #dc322f
+magenta   #d33682
+violet    #6c71c4
+blue      #268bd2
+cyan      #2aa198
+green     #859900
+*/
+
+      code[class*='language-'],
+      pre[class*='language-'] {
+        color: #657b83; /* base00 */
+        font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+        font-size: 1em;
+        text-align: left;
+        white-space: pre;
+        word-spacing: normal;
+        word-break: normal;
+        word-wrap: normal;
+
+        line-height: 1.5;
+
+        -moz-tab-size: 4;
+        -o-tab-size: 4;
+        tab-size: 4;
+
+        -webkit-hyphens: none;
+        -moz-hyphens: none;
+        -ms-hyphens: none;
+        hyphens: none;
+      }
+
+      pre[class*='language-']::-moz-selection,
+      pre[class*='language-'] ::-moz-selection,
+      code[class*='language-']::-moz-selection,
+      code[class*='language-'] ::-moz-selection {
+        background: #073642; /* base02 */
+      }
+
+      pre[class*='language-']::selection,
+      pre[class*='language-'] ::selection,
+      code[class*='language-']::selection,
+      code[class*='language-'] ::selection {
+        background: #073642; /* base02 */
+      }
+
+      /* Code blocks */
+      pre[class*='language-'] {
+        padding: 1em;
+        margin: 0.5em 0;
+        overflow: auto;
+        border-radius: 0.3em;
+      }
+
+      :not(pre) > code[class*='language-'],
+      pre[class*='language-'] {
+        background-color: #fdf6e3; /* base3 */
+      }
+
+      /* Inline code */
+      :not(pre) > code[class*='language-'] {
+        padding: 0.1em;
+        border-radius: 0.3em;
+      }
+
+      .token.comment,
+      .token.prolog,
+      .token.doctype,
+      .token.cdata {
+        color: #93a1a1; /* base1 */
+      }
+
+      .token.punctuation {
+        color: #586e75; /* base01 */
+      }
+
+      .token.namespace {
+        opacity: 0.7;
+      }
+
+      .token.property,
+      .token.tag,
+      .token.boolean,
+      .token.number,
+      .token.constant,
+      .token.symbol,
+      .token.deleted {
+        color: #268bd2; /* blue */
+      }
+
+      .token.selector,
+      .token.attr-name,
+      .token.string,
+      .token.char,
+      .token.builtin,
+      .token.url,
+      .token.inserted {
+        color: #2aa198; /* cyan */
+      }
+
+      .token.entity {
+        color: #657b83; /* base00 */
+        background: #eee8d5; /* base2 */
+      }
+
+      .token.atrule,
+      .token.attr-value,
+      .token.keyword {
+        color: #859900; /* green */
+      }
+
+      .token.function,
+      .token.class-name {
+        color: #b58900; /* yellow */
+      }
+
+      .token.regex,
+      .token.important,
+      .token.variable {
+        color: #cb4b16; /* orange */
+      }
+
+      .token.important,
+      .token.bold {
+        font-weight: bold;
+      }
+      .token.italic {
+        font-style: italic;
+      }
+
+      .token.entity {
+        cursor: help;
+      }
+    </style>
+  </head>
+  <body>
+    <article class="article">
+      <h5 id="pierreindexmd--core-data-hlmindexmd--compteslocataires">
+        <a href="../../index.html">PIERRE</a> ∕
+        <a href="../../02-core-data-hlm/index.html">CORE DATA HLM</a> ∕ COMPTES_LOCATAIRES
+      </h5>
+      <h1 id="compteslocataires"><code>comptes_locataires</code></h1>
+      <h2 id="objectif">Objectif</h2>
+      <p>
+        Exposer le <strong>compte locataire sous forme de lignes</strong> : chaque ligne est une
+        écriture comptable qui augmente ou diminue la dette du locataire envers le bailleur — appel
+        de loyer, encaissement, aide CAF, régularisation de charges, frais de relance, travaux
+        récupérables, rejet de prélèvement, annulation comptable, etc.
+      </p>
+      <p>
+        L’objectif-métier est de <strong>reconstituer le solde</strong> (« combien le locataire
+        doit-il ? », « d’où vient cette dette ? », « lui doit-on de l’argent ? »)
+        <strong>sans export séparé de balance</strong> : le solde est la somme des mouvements, pas
+        une colonne pré-calculée.
+      </p>
+      <p>
+        Le fichier ne se limite <strong>pas</strong> aux quittances émises : il couvre tout ce qui
+        impacte le compte locataire en gestion locative et recouvrement.
+      </p>
+      <p>
+        La table logique est <code>comptes_locataires</code> ; le fichier transmis à PIERRE est
+        <code>core.comptes_locataires.csv</code>.
+      </p>
+      <h2 id="nature-du-fichier--compte-locataire-par-mouvement">
+        Nature du fichier : compte locataire par mouvement
+      </h2>
+      <p>
+        Une ligne = une <strong>écriture comptable</strong> (mouvement financier). Chaque export est
+        une photographie datée par <code>date_extraction</code> portant l'<strong
+          >historique cumulé</strong
+        >
+        des mouvements du périmètre — pas seulement les opérations du jour.
+      </p>
+      <p>
+        Le solde se <strong>reconstitue par somme</strong> : il n'existe pas de colonne pré-calculée
+        <code>solde</code>. Ce modèle garantit que chaque affectation, rejet, régularisation se
+        retrouve expliqué dans les données.
+      </p>
+      <p>
+        <strong>Fraîcheur des données</strong> : une <strong>mise à jour quotidienne</strong> est
+        recommandée pour que les encaissements, rejets et nouveaux appels reflètent la réalité du
+        recouvrement.
+      </p>
+      <p><strong>Périmètre recommandé</strong> :</p>
+      <ul>
+        <li>
+          <strong>Locataires en place</strong> — historique financier complet nécessaire pour
+          expliquer le solde courant.
+        </li>
+        <li>
+          <strong>Locataires partis avec dette</strong> — conservation obligatoire tant qu’un solde
+          débiteur subsiste.
+        </li>
+        <li>
+          <strong>Patrimoine actuellement en gestion</strong> — chaque mouvement porte les clés
+          patrimoniales du socle (<code>id_lot</code>, <code>id_site</code>, etc.). Ces clés étant
+          <strong>immuables dans le temps</strong> (cf. socle), la jointure avec
+          <code>lots_locatifs</code> est garantie, quel que soit le locataire ayant occupé le lot.
+        </li>
+        <li>
+          <strong>Historique suffisant</strong> — le fichier doit permettre de recalculer le solde
+          par somme des mouvements. Si l’historique intégral n’est pas disponible côté SI, un
+          mouvement d’initialisation explicite (ex. <code>categorie</code> =
+          <code>solde_initial</code>) doit porter le solde de départ.
+        </li>
+      </ul>
+      <blockquote>
+        <p><strong>Note</strong></p>
+        <p>
+          <strong>Reconstruction intégrale à l’import PIERRE</strong> — Ce fichier n’est
+          <strong>pas</strong> historisé. À chaque import, PIERRE
+          <strong>remplace l’ensemble</strong> des mouvements précédemment chargés. Chaque export
+          doit donc contenir l’<strong>historique complet</strong> du périmètre.
+        </p>
+      </blockquote>
+      <h2 id="entité-logique-et-convention-de-signe">Entité logique et convention de signe</h2>
+      <p>
+        Une ligne augmente ou diminue la <strong>dette du locataire envers le bailleur</strong> :
+      </p>
+      <ul>
+        <li>
+          <code>montant_en_euros &gt; 0</code> → <strong>augmente la dette</strong> (appel de loyer,
+          rejet de prélèvement, frais).
+        </li>
+        <li>
+          <code>montant_en_euros &lt; 0</code> → <strong>diminue la dette</strong> (paiement,
+          remboursement, aide CAF).
+        </li>
+      </ul>
+      <p><strong>Sens du solde</strong> (verrouillé) :</p>
+      <ul>
+        <li>Solde <strong>&gt; 0</strong> = <strong>dû au bailleur</strong> (impayé)</li>
+        <li>Solde <strong>&lt; 0</strong> = <strong>crédit locataire</strong> (trop-perçu)</li>
+        <li>Solde <strong>= 0</strong> = compte équilibré</li>
+      </ul>
+      <h2 id="dossier-locataire-et-personne-client">Dossier locataire et personne (client)</h2>
+      <p>Dans le langage-métier d’un ERP locatif :</p>
+      <ul>
+        <li>
+          <strong><code>id_locataire</code></strong> = un <strong>dossier locataire</strong> (un
+          bail, une occupation comptable, un compte locataire dans le SI).
+        </li>
+        <li>
+          <strong><code>id_client</code></strong> = la <strong>personne</strong> ; une même personne
+          peut cumuler plusieurs <code>id_locataire</code> (successions de baux, plusieurs
+          logements).
+        </li>
+      </ul>
+      <p>
+        <strong>Règle spécifique à ce fichier (dérogation au socle)</strong> — Contrairement à
+        <code>lots_locatifs</code> où <code>id_locataire</code> et <code>id_client</code> peuvent
+        être <code>null</code> (lot vacant),
+        <strong
+          >tout mouvement porte obligatoirement <code>id_locataire</code> ET
+          <code>id_client</code> renseignés</strong
+        >
+        : un mouvement financier est toujours rattaché à un (ex-)locataire identifié. Sans ces clés,
+        la ligne est inexploitable.
+      </p>
+      <h2 id="colonnes-normatives">Colonnes normatives</h2>
+      <p>
+        <code>comptes_locataires</code> reprend l’intégralité du
+        <strong><a href="../../02-core-data-hlm/02-socle.html">socle normatif partagé</a></strong>
+        et y ajoute les colonnes spécifiques ci-dessous. Toutes doivent figurer dans l’export (<a
+          href="../../02-core-data-hlm/01-conventions.html#colonnes-requises-et-d%C3%A9finitions-canoniques"
+          >présence obligatoire</a
+        >) ; leurs valeurs peuvent être <code>null</code> lorsque le champ n’est pas applicable —
+        <strong
+          >exception : <code>id_locataire</code> et <code>id_client</code> sont obligatoirement
+          renseignés</strong
+        >
+        (cf.
+        <a href="#dossier-locataire-et-personne-client">Dossier locataire et personne (client)</a>).
+      </p>
+      <div class="typeset-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Champ</th>
+              <th>Définition canonique</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>id_travaux</code></td>
+              <td>
+                Jointure <strong>optionnelle</strong> vers
+                <a href="../../02-core-data-hlm/06-travaux.html"><code>travaux</code></a> pour un
+                mouvement récupérable (réparation locative, etc.) ; <code>null</code> si non
+                applicable
+              </td>
+            </tr>
+            <tr>
+              <td><code>mois_concerne</code></td>
+              <td>
+                <strong>Mois locatif</strong> concerné par le mouvement, au format
+                <strong><code>YYYY-MM</code></strong> (ex. <code>2026-06</code> pour le loyer de
+                juin) ; <code>null</code> si le mouvement n’est pas imputé à un mois précis (frais
+                ponctuels, rejet…)
+              </td>
+            </tr>
+            <tr>
+              <td><code>date_exigibilite</code></td>
+              <td>
+                <strong>Date d'exigibilité</strong> de prise en compte au grand livre —
+                <strong>une seule sémantique</strong> (≠ <code>date_extraction</code> du fichier).
+                Horodatage <strong><code>YYYY-MM-DDTHH:MM:SS</code> recommandé</strong> pour
+                ordonner les mouvements d’une même journée ; à défaut <code>YYYY-MM-DD</code>. Doit
+                être la <strong>date d'exigibilité</strong> pour savoir précisément quand la balance
+                devient négative et que celle-ci devient exigible pour identifier en « temps réel »
+                les situations d'impayés.
+              </td>
+            </tr>
+            <tr>
+              <td><code>montant_en_euros</code></td>
+              <td>
+                Montant signé <strong>en euros</strong> : positif si la dette augmente, négatif si
+                elle diminue. Décimales avec point ou virgule (cohérence par colonne)
+              </td>
+            </tr>
+            <tr>
+              <td><code>categorie</code></td>
+              <td>
+                Nature métier du mouvement (voir
+                <a href="#exemple-de-nomenclature-pour-categorie"
+                  >nomenclature recommandée ci-dessous</a
+                >)
+              </td>
+            </tr>
+            <tr>
+              <td><code>email_client</code></td>
+              <td>Courriel du client (ex. <code>henri.becquerel@gmail.com</code>)</td>
+            </tr>
+            <tr>
+              <td><code>telephone_client</code></td>
+              <td>Téléphone du client, de préférence mobile (ex. <code>06 11 56 39 59</code>)</td>
+            </tr>
+            <tr>
+              <td><code>adresse</code></td>
+              <td><code>20, rue des Pyramides</code></td>
+            </tr>
+            <tr>
+              <td><code>nom_client</code></td>
+              <td><code>Becquerel</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <blockquote>
+        <p><strong>Note</strong></p>
+        <p>
+          À l’import, PIERRE normalise les montants (<code>montant_en_euros</code>) et les dates
+          pour garantir une exploitation homogène. La notion de <em>client partis</em> est déduite
+          en croisant avec <code>comptes_locataires</code> et <code>lots_locatifs</code>.
+        </p>
+      </blockquote>
+      <h2 id="exemple-de-nomenclature-pour-categorie">
+        Exemple de nomenclature pour <code>categorie</code>
+      </h2>
+      <p>
+        La colonne <code>categorie</code> doit rester lisible par un humain et exploitable par un
+        Agent. Le SI n’a pas toujours le détail d’imputation d’un encaissement : dans ce cas,
+        <code>encaissement_locataire</code> est la valeur de repli honnête — sans inventer une
+        ventilation fictive.
+      </p>
+      <div class="typeset-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Exemple</th>
+              <th>Usage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>loyer_principal</code></td>
+              <td>Appel de loyer principal</td>
+            </tr>
+            <tr>
+              <td><code>charges</code></td>
+              <td>Appel de charges ou provision de charges</td>
+            </tr>
+            <tr>
+              <td><code>regularisation_charges</code></td>
+              <td>
+                Régularisation de charges : <code>+</code> si complément dû, <code>-</code> si
+                trop-perçu rendu au locataire
+              </td>
+            </tr>
+            <tr>
+              <td><code>apurement</code></td>
+              <td>Échéance d’un plan d’apurement appelée au locataire</td>
+            </tr>
+            <tr>
+              <td><code>frais</code></td>
+              <td>
+                Frais <strong>administratifs ou contentieux</strong> : relance, commandement de
+                payer, dossier contentieux
+              </td>
+            </tr>
+            <tr>
+              <td><code>travaux</code></td>
+              <td>
+                <strong>Réparations locatives</strong> récupérables auprès du locataire (remise en
+                état, dégradations)
+              </td>
+            </tr>
+            <tr>
+              <td><code>materiel</code></td>
+              <td>
+                Fourniture ou mise à disposition de <strong>matériel</strong> récupérable (badges,
+                télécommandes, clés)
+              </td>
+            </tr>
+            <tr>
+              <td><code>caf_apl</code></td>
+              <td>
+                Aide ou versement <strong>tiers payeur</strong> diminuant la dette locataire ; c’est
+                une <strong>catégorie</strong>, pas un <code>mode_de_paiement</code>
+              </td>
+            </tr>
+            <tr>
+              <td><code>encaissement_locataire</code></td>
+              <td>
+                Paiement du locataire lorsque le SI ne sait pas l’imputer à une rubrique précise
+              </td>
+            </tr>
+            <tr>
+              <td><code>remboursement_locataire</code></td>
+              <td>
+                Somme remboursée au locataire (trop-perçu) : réduit un solde créditeur, donc
+                mouvement <strong>positif</strong>
+              </td>
+            </tr>
+            <tr>
+              <td><code>rejet_paiement</code></td>
+              <td>
+                <strong>Rejet bancaire</strong> d’un encaissement déjà comptabilisé (prélèvement
+                rejeté, chèque impayé) : ré-augmente la dette
+              </td>
+            </tr>
+            <tr>
+              <td><code>annulation</code></td>
+              <td>
+                <strong>Contrepassation comptable</strong> d’un mouvement antérieur erroné : signe
+                <strong>opposé</strong> au mouvement d’origine
+              </td>
+            </tr>
+            <tr>
+              <td><code>solde_initial</code></td>
+              <td>Mouvement d’initialisation lorsque l’historique complet n’est pas disponible</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h2 id="règles-de-reconstitution-du-solde">Règles de reconstitution du solde</h2>
+      <p>
+        Le fichier est correctement réalisé si le
+        <strong>solde affiché en gestion locative est exactement la somme des lignes</strong>.
+      </p>
+      <p><strong>Vérification SQL</strong> — pour un dossier <code>id_locataire</code> :</p>
+      <pre><code class="language-sql">select
+  id_locataire,
+  sum(montant_en_euros) as solde_debiteur
+from comptes_locataires
+group by id_locataire;
+</code></pre>
+      <p>
+        <strong>Interprétation du signe</strong> — un solde <strong>positif</strong> est dû au
+        bailleur (impayé), <strong>négatif</strong> un crédit locataire, <strong>nul</strong> un
+        compte équilibré (cf.
+        <a href="#entit%C3%A9-logique-et-convention-de-signe">convention de signe</a>).
+      </p>
+      <p>
+        <strong>Si la somme ne reproduit pas le solde SI</strong> : export incomplet (historique
+        tronqué, <code>solde_initial</code> manquant) ou mal signé.
+      </p>
+      <h2 id="exemples-de-colonnes-libres">Exemples de colonnes libres</h2>
+      <ul>
+        <li>
+          <code>sous_categorie</code> : ex. <code>frais_relance</code>,
+          <code>commandement_payer</code>, <code>reparation_locative</code>
+        </li>
+        <li>
+          <code>mode_de_paiement</code> : ex. <code>virement</code>, <code>prelevement</code>,
+          <code>cheque</code>, <code>especes</code>
+        </li>
+        <li><code>plan_apurement_en_cours</code>: ex. <code>oui</code>/<code>non</code></li>
+        <li><code>date_de_naissance</code></li>
+      </ul>
+      <div style="display: flex; justify-content: space-between; margin-top: 50px">
+        <p>←<a href="../../02-core-data-hlm/06-candidats.html">core.candidats.csv</a></p>
+        <p>&nbsp;</p>
+      </div>
+    </article>
+
+    <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+    <script>
+      const zoom = mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
+      zoom.on('open', () => document.body.classList.add('is-zooming'))
+      zoom.on('closed', () => document.body.classList.remove('is-zooming'))
+    </script>
+  </body>
+</html>

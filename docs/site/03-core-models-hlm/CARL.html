@@ -1,0 +1,1320 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CARL · PIERRE</title>
+    <link rel="icon" href="../../assets/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Knewave&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap"
+    />
+    <style>
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        background: #fff;
+      }
+      .article {
+        box-sizing: border-box;
+        max-width: 850px;
+        margin: 0;
+        padding: 2rem 2rem 3rem 4rem;
+        font-family: Merriweather, Georgia, serif;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 24px;
+        letter-spacing: 0;
+        color: rgb(17, 17, 17);
+        text-align: left;
+        -webkit-font-smoothing: antialiased;
+      }
+      @media (max-width: 39.99rem) {
+        .article {
+          padding: 1.25rem 1.25rem 2rem;
+        }
+      }
+      .article h1,
+      .article h2,
+      .article h3,
+      .article h4,
+      .article h5,
+      .article h6 {
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        font-weight: 700;
+        letter-spacing: 0;
+        color: rgb(17, 17, 17);
+        text-wrap: balance;
+        -webkit-font-smoothing: antialiased;
+      }
+      .article h1 {
+        font-size: 36px;
+        line-height: 40.32px;
+        margin: 0 0 16px;
+      }
+      .article h2 {
+        font-size: 36px;
+        line-height: 40.32px;
+        margin: 80px 0 40px;
+      }
+      .article h3 {
+        font-size: 24px;
+        line-height: 28px;
+        margin: 40px 0 20px;
+      }
+      .article p {
+        margin: 0 0 16px;
+        text-wrap: pretty;
+      }
+      .article ul,
+      .article ol {
+        margin: 0 0 16px;
+        padding-inline-start: 1.5em;
+      }
+      .article ul {
+        list-style-type: disc;
+      }
+      .article ol {
+        list-style-type: decimal;
+      }
+      .article li {
+        display: list-item;
+        margin: 0 0 8px;
+        padding-inline-start: 0.25em;
+      }
+      .article li:last-child {
+        margin-bottom: 0;
+      }
+      .article ul ul {
+        list-style-type: circle;
+        margin: 8px 0 0;
+      }
+      .article a {
+        color: #0000ee;
+        text-underline-offset: 0.15em;
+      }
+      .article a:hover {
+        text-decoration-thickness: 2px;
+      }
+      .article strong {
+        font-weight: 600;
+      }
+      .article pre:not(.cadre) {
+        padding: 1em;
+      }
+      .article :not(pre) > code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.875em;
+      }
+      .article p:has(> .shot) {
+        --shot-gap: 0.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--shot-gap);
+        justify-content: flex-start;
+        width: min(calc(32rem * 3 + var(--shot-gap) * 2), calc(100vw - 4rem));
+        max-width: none;
+        margin-block-start: 30px;
+        margin-inline: 0;
+      }
+      @media (max-width: 39.99rem) {
+        .article p:has(> .shot) {
+          width: calc(100vw - 2.5rem);
+        }
+      }
+      .article .shot {
+        position: relative;
+        isolation: isolate;
+        overflow: visible;
+        flex: 0 1 100%;
+        width: 100%;
+        max-width: 100%;
+      }
+      @media (min-width: 40rem) {
+        .article .shot {
+          flex: 0 1 calc((100% - var(--shot-gap) * 2) / 3);
+          width: calc((100% - var(--shot-gap) * 2) / 3);
+          max-width: calc((100% - var(--shot-gap) * 2) / 3);
+        }
+        .article p:has(> .shot:only-child) .shot:has(img[data-zoomable]),
+        .article p:has(> .shot:nth-child(even):last-child) .shot:has(img[data-zoomable]) {
+          flex-basis: calc((100% - var(--shot-gap)) / 2);
+          width: calc((100% - var(--shot-gap)) / 2);
+          max-width: calc((100% - var(--shot-gap)) / 2);
+        }
+        .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) {
+          flex-basis: 90%;
+          width: 90%;
+          max-width: 90%;
+        }
+      }
+      .article .shot img {
+        display: block;
+        width: 100%;
+        margin: 0;
+        transform: translateX(-4.01%);
+      }
+      .article .shot img[data-zoomable] {
+        cursor: zoom-in;
+      }
+      .article .shot-title {
+        position: absolute;
+        top: 0.45rem;
+        left: -0.65rem;
+        z-index: 1;
+        max-width: calc(100% - 1rem);
+        padding: 0.15rem 0.55rem 0.08rem;
+        background: #ffe500;
+        color: #111;
+        font-family: Knewave, cursive;
+        font-size: 1.05rem;
+        font-weight: 400;
+        font-synthesis: none;
+        letter-spacing: 0.01em;
+        line-height: 1.15;
+        text-transform: uppercase;
+        text-wrap: balance;
+        transform: rotate(-2deg);
+        transform-origin: left center;
+        pointer-events: none;
+      }
+      .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) .shot-title {
+        top: 1.5rem;
+        left: -0.65rem;
+      }
+      body.is-zooming .shot-title {
+        opacity: 0;
+      }
+
+      body.has-bench .article {
+        overflow-wrap: break-word;
+      }
+      body.has-bench .article .typeset-scroll {
+        max-width: 100%;
+        overflow-x: auto;
+        margin: 0 0 16px;
+      }
+      body.has-bench .article table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        font-size: 14px;
+        line-height: 20px;
+      }
+      body.has-bench .article th,
+      body.has-bench .article td {
+        font-weight: 400;
+        text-align: left;
+        vertical-align: top;
+        padding: 8px 16px 8px 0;
+        border-bottom: 1px solid #ececec;
+      }
+      body.has-bench .article tr > :first-child {
+        font-weight: 700;
+        width: 11rem;
+      }
+      body.has-bench .article :not(pre) > code {
+        position: relative;
+        top: -0.05em;
+      }
+      body.has-bench .article blockquote {
+        margin: 0 0 16px;
+        padding-left: 14px;
+        border-left: 2px solid #111;
+      }
+      .banc {
+        position: relative;
+        box-sizing: border-box;
+        margin: 44px 2px 52px;
+        padding: 28px 24px 22px;
+        overflow: visible;
+        background: #fff;
+        border: 1px solid #e6e6e6;
+        border-radius: 8px;
+        box-shadow:
+          0 1px 2px rgb(17 17 17 / 0.06),
+          0 12px 40px rgb(17 17 17 / 0.12);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13px;
+        line-height: 18px;
+        color: #111;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .banc {
+          transform: none;
+        }
+      }
+      .banc .marque {
+        position: absolute;
+        top: -0.72rem;
+        left: -0.65rem;
+        z-index: 1;
+        margin: 0;
+        padding: 0.15rem 0.55rem 0.08rem;
+        background: #ffe500;
+        color: #111;
+        font-family: Knewave, cursive;
+        font-size: 1.05rem;
+        font-weight: 400;
+        font-synthesis: none;
+        letter-spacing: 0.01em;
+        line-height: 1.15;
+        text-transform: uppercase;
+        pointer-events: none;
+      }
+      .banc .exemples {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        margin: 4px 0 22px;
+      }
+      .banc .exemples button {
+        height: 28px;
+        padding: 0 10px;
+        border: 1px solid #d4d4d4;
+        border-radius: 4px;
+        background: #fff;
+        color: #111;
+        font: inherit;
+        cursor: pointer;
+      }
+      .banc .exemples button:hover {
+        border-color: #111;
+        background: #f6f6f6;
+      }
+      .banc .exemples button:focus-visible {
+        outline: 1px solid #111;
+        outline-offset: 2px;
+      }
+      .banc .exemples button[aria-pressed='true'] {
+        border-color: #111;
+        background: #ffe500;
+      }
+      .banc .exemples button[aria-pressed='true']:hover {
+        background: #ffe500;
+      }
+      .banc .paire {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        align-items: start;
+      }
+      .banc label,
+      .banc .entete {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin: 0 0 8px;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 18px;
+      }
+      .banc .entete span:last-child {
+        margin-left: auto;
+        color: #666;
+        font-weight: 400;
+        font-variant-numeric: tabular-nums;
+      }
+      .banc textarea,
+      .banc .cadre {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 8rem;
+        margin: 0;
+        padding: 12px 14px;
+        border: 1px solid #d4d4d4;
+        border-radius: 6px;
+        background: #fff;
+        color: #111;
+      }
+      .banc textarea {
+        display: block;
+        font: inherit;
+        resize: vertical;
+      }
+      .banc textarea::placeholder {
+        color: #8a8a8a;
+      }
+      .banc textarea:focus {
+        outline: none;
+        border-color: #111;
+      }
+      .banc .attente {
+        margin: 0;
+        color: #666;
+      }
+      .banc .envoyer {
+        height: 32px;
+        margin-top: 12px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 6px;
+        background: #111;
+        color: #fff;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .banc .envoyer:disabled {
+        opacity: 0.45;
+        cursor: progress;
+      }
+      body.has-bench .banc pre.cadre {
+        margin: 0;
+        overflow: auto;
+        background: #fff;
+        font: inherit;
+        white-space: pre-wrap;
+      }
+      @media (max-width: 40rem) {
+        .banc {
+          margin-inline: 0;
+          padding: 26px 16px 18px;
+        }
+        .banc .paire {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /*
+ Solarized Color Schemes originally by Ethan Schoonover
+ http://ethanschoonover.com/solarized
+
+ Ported for PrismJS by Hector Matos
+ Website: https://krakendev.io
+ Twitter Handle: https://twitter.com/allonsykraken)
+*/
+
+      /*
+SOLARIZED HEX
+--------- -------
+base03    #002b36
+base02    #073642
+base01    #586e75
+base00    #657b83
+base0     #839496
+base1     #93a1a1
+base2     #eee8d5
+base3     #fdf6e3
+yellow    #b58900
+orange    #cb4b16
+red       #dc322f
+magenta   #d33682
+violet    #6c71c4
+blue      #268bd2
+cyan      #2aa198
+green     #859900
+*/
+
+      code[class*='language-'],
+      pre[class*='language-'] {
+        color: #657b83; /* base00 */
+        font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+        font-size: 1em;
+        text-align: left;
+        white-space: pre;
+        word-spacing: normal;
+        word-break: normal;
+        word-wrap: normal;
+
+        line-height: 1.5;
+
+        -moz-tab-size: 4;
+        -o-tab-size: 4;
+        tab-size: 4;
+
+        -webkit-hyphens: none;
+        -moz-hyphens: none;
+        -ms-hyphens: none;
+        hyphens: none;
+      }
+
+      pre[class*='language-']::-moz-selection,
+      pre[class*='language-'] ::-moz-selection,
+      code[class*='language-']::-moz-selection,
+      code[class*='language-'] ::-moz-selection {
+        background: #073642; /* base02 */
+      }
+
+      pre[class*='language-']::selection,
+      pre[class*='language-'] ::selection,
+      code[class*='language-']::selection,
+      code[class*='language-'] ::selection {
+        background: #073642; /* base02 */
+      }
+
+      /* Code blocks */
+      pre[class*='language-'] {
+        padding: 1em;
+        margin: 0.5em 0;
+        overflow: auto;
+        border-radius: 0.3em;
+      }
+
+      :not(pre) > code[class*='language-'],
+      pre[class*='language-'] {
+        background-color: #fdf6e3; /* base3 */
+      }
+
+      /* Inline code */
+      :not(pre) > code[class*='language-'] {
+        padding: 0.1em;
+        border-radius: 0.3em;
+      }
+
+      .token.comment,
+      .token.prolog,
+      .token.doctype,
+      .token.cdata {
+        color: #93a1a1; /* base1 */
+      }
+
+      .token.punctuation {
+        color: #586e75; /* base01 */
+      }
+
+      .token.namespace {
+        opacity: 0.7;
+      }
+
+      .token.property,
+      .token.tag,
+      .token.boolean,
+      .token.number,
+      .token.constant,
+      .token.symbol,
+      .token.deleted {
+        color: #268bd2; /* blue */
+      }
+
+      .token.selector,
+      .token.attr-name,
+      .token.string,
+      .token.char,
+      .token.builtin,
+      .token.url,
+      .token.inserted {
+        color: #2aa198; /* cyan */
+      }
+
+      .token.entity {
+        color: #657b83; /* base00 */
+        background: #eee8d5; /* base2 */
+      }
+
+      .token.atrule,
+      .token.attr-value,
+      .token.keyword {
+        color: #859900; /* green */
+      }
+
+      .token.function,
+      .token.class-name {
+        color: #b58900; /* yellow */
+      }
+
+      .token.regex,
+      .token.important,
+      .token.variable {
+        color: #cb4b16; /* orange */
+      }
+
+      .token.important,
+      .token.bold {
+        font-weight: bold;
+      }
+      .token.italic {
+        font-style: italic;
+      }
+
+      .token.entity {
+        cursor: help;
+      }
+    </style>
+  </head>
+  <body class="has-bench">
+    <article class="article">
+      <h5 id="pierreindexmd--core-models-hlmindexmd--carl">
+        <a href="../../index.html">PIERRE</a> ∕
+        <a href="../../03-core-models-hlm/index.html">CORE MODELS HLM</a> ∕ CARL
+      </h5>
+      <h1 id="carl">CARL</h1>
+      <p>
+        CARL qualifie en 50 millisecondes le message d’un locataire ou candidat HLM parmi près de
+        300 motifs possibles. Il ne répond pas : il qualifie, pour simplifier les traitements
+        ultérieurs, humains, automatisés et agentiques.
+      </p>
+      <p>
+        CARL est le premier né de « <strong>Core Models HLM</strong> » : une
+        <a href="../../03-core-models-hlm/index.html">famille</a> de modèles de langage open-weight,
+        auto-hébergeables, hyper-spécialisés, frugaux et souverains, conçus pour les besoins
+        opérationnels des bailleurs sociaux et du mouvement HLM.
+      </p>
+      <p>
+        La taxonomie et les données d’entraînement ont été enrichies grâce à la contribution de
+        <a href="http://granddijonhabitat.fr/">Grand Dijon Habitat</a>. CARL est un hommage à
+        <a href="https://fr.wikipedia.org/wiki/Carl_von_Linn%C3%A9">Carl von Linné</a>, le « grand
+        nomenclateur », qui a posé les bases de la nomenclature binominale moderne.
+      </p>
+      <p>
+        Vous souhaitez proposer une amélioration à la taxonomie, ou mettre à disposition des
+        messages de locataires ou candidats pour améliorer CARL ?
+        <a href="mailto:charnould@pierre-ia.org">charnould@pierre-ia.org</a>
+      </p>
+      <aside class="banc">
+        <p class="marque">Sélectionner un exemple ou saisir un message</p>
+        <div class="exemples">
+          <button
+            type="button"
+            data-texte="Fuite d&#x27;eau dans la salle de bain, au lavabo, en filet depuis hier."
+            aria-pressed="false"
+          >
+            Fuite</button
+          ><button
+            type="button"
+            data-texte="Plus de chauffage depuis hier soir, les radiateurs sont froids."
+            aria-pressed="false"
+          >
+            Chauffage</button
+          ><button
+            type="button"
+            data-texte="Plus de courant dans tout l&#x27;appartement depuis ce matin."
+            aria-pressed="false"
+          >
+            Courant</button
+          ><button
+            type="button"
+            data-texte="L&#x27;ascenseur est en panne depuis ce matin."
+            aria-pressed="false"
+          >
+            Ascenseur</button
+          ><button
+            type="button"
+            data-texte="Il y a des taches noires de moisissure dans la chambre."
+            aria-pressed="false"
+          >
+            Moisissure</button
+          ><button
+            type="button"
+            data-texte="Les parties communes sont sales, le hall est plein de sacs."
+            aria-pressed="false"
+          >
+            Hall</button
+          ><button
+            type="button"
+            data-texte="Le volet de la chambre ne remonte plus."
+            aria-pressed="false"
+          >
+            Volet</button
+          ><button
+            type="button"
+            data-texte="Vous êtes des incapables, ma porte ne ferme plus."
+            aria-pressed="false"
+          >
+            Porte</button
+          ><button
+            type="button"
+            data-texte="Pouvez-vous m&#x27;envoyer ma quittance de loyer ?"
+            aria-pressed="false"
+          >
+            Quittance</button
+          ><button
+            type="button"
+            data-texte="Je souhaite donner mon préavis pour quitter le logement."
+            aria-pressed="false"
+          >
+            Préavis</button
+          ><button
+            type="button"
+            data-texte="Où en est ma demande de logement ?"
+            aria-pressed="false"
+          >
+            Candidature</button
+          ><button
+            type="button"
+            data-texte="Je vous transmets mon attestation d&#x27;assurance habitation."
+            aria-pressed="false"
+          >
+            Assurance</button
+          ><button
+            type="button"
+            data-texte="Les voisins ont mis la musique jusqu&#x27;à minuit."
+            aria-pressed="false"
+          >
+            Musique</button
+          ><button
+            type="button"
+            data-texte="Mon voisin me harcèle et m&#x27;insulte dans le hall."
+            aria-pressed="false"
+          >
+            Harcèlement</button
+          ><button
+            type="button"
+            data-texte="Le logement d&#x27;à côté est squatté depuis une semaine."
+            aria-pressed="false"
+          >
+            Squat</button
+          ><button
+            type="button"
+            data-texte="Je suis tombé dans la salle de bain, je n&#x27;arrive pas à me relever."
+            aria-pressed="false"
+          >
+            Détresse</button
+          ><button
+            type="button"
+            data-texte="Ma voisine âgée ne répond plus depuis plusieurs jours."
+            aria-pressed="false"
+          >
+            Isolement</button
+          ><button
+            type="button"
+            data-texte="Mon chat est enfermé sur le balcon, je n&#x27;arrive pas à le récupérer."
+            aria-pressed="false"
+          >
+            Animal
+          </button>
+        </div>
+        <div class="paire">
+          <form id="classer-s-lectionner-un-exemple-ou-saisir-un-message">
+            <label for="texte-s-lectionner-un-exemple-ou-saisir-un-message">Message</label>
+            <textarea
+              id="texte-s-lectionner-un-exemple-ou-saisir-un-message"
+              name="texte"
+              placeholder="Écrire un message…"
+              autocomplete="off"
+            ></textarea>
+            <button class="envoyer" type="submit">Qualifier</button>
+          </form>
+          <div class="sortie">
+            <div class="entete">
+              <span>Résultat</span>
+              <span
+                id="duree-s-lectionner-un-exemple-ou-saisir-un-message"
+                aria-live="polite"
+              ></span>
+            </div>
+            <p class="cadre attente" id="attente-s-lectionner-un-exemple-ou-saisir-un-message">
+              Le JSON apparaît ici.
+            </p>
+            <p
+              class="cadre"
+              id="erreur-s-lectionner-un-exemple-ou-saisir-un-message"
+              hidden
+              aria-live="polite"
+            ></p>
+            <pre
+              class="cadre"
+              id="resultat-s-lectionner-un-exemple-ou-saisir-un-message"
+              hidden
+              aria-live="polite"
+            ></pre>
+          </div>
+        </div>
+        <script>
+          const banc = document.currentScript.closest('.banc')
+          const API = 'http://localhost:3000/api/models/carl'
+          const ORIGINE = 'http://localhost:3000'
+          const PLACEHOLDER = 'Écrire un message…'
+          const form = banc.querySelector('form')
+          const zone = banc.querySelector('textarea')
+          const erreur = banc.querySelector('[id^="erreur-"]')
+          const resultat = banc.querySelector('[id^="resultat-"]')
+          const attente = banc.querySelector('[id^="attente-"]')
+          const duree = banc.querySelector('[id^="duree-"]')
+          const envoyer = form.querySelector('button[type="submit"]')
+          const exemples = banc.querySelector('.exemples')
+
+          function exempleDe(noeud) {
+            return noeud && noeud.closest ? noeud.closest('[data-texte]') : null
+          }
+
+          function marquerExemples() {
+            for (const bouton of banc.querySelectorAll('[data-texte]')) {
+              bouton.setAttribute(
+                'aria-pressed',
+                bouton.dataset.texte === zone.value ? 'true' : 'false'
+              )
+            }
+          }
+
+          function majPlaceholder(cible) {
+            zone.placeholder = cible && cible.dataset.texte ? cible.dataset.texte : PLACEHOLDER
+          }
+
+          function montrerErreur(message) {
+            resultat.hidden = true
+            attente.hidden = true
+            duree.textContent = ''
+            erreur.hidden = false
+            erreur.textContent = message
+          }
+
+          function montrer(payload) {
+            erreur.hidden = true
+            attente.hidden = true
+            resultat.hidden = false
+            resultat.textContent = JSON.stringify(payload.output, null, 2)
+            const ms = payload.milliseconds
+            duree.textContent =
+              ms < 1000 ? ms + ' ms' : (ms / 1000).toFixed(1).replace('.', ',') + ' s'
+          }
+
+          async function classer() {
+            const texte = zone.value
+            if (!texte.trim()) {
+              montrerErreur('Écrivez un message, ou choisissez un exemple.')
+              zone.focus()
+              return
+            }
+            envoyer.disabled = true
+            envoyer.textContent = 'Qualification…'
+            form.setAttribute('aria-busy', 'true')
+            try {
+              const reponse = await fetch(API, {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ texte })
+              })
+              const payload = await reponse.json().catch(() => null)
+              if (!reponse.ok) {
+                if (reponse.status === 503) {
+                  montrerErreur('Les poids ne sont pas installés. Depuis models : bun fetch.')
+                } else if (!payload) {
+                  montrerErreur('Le serveur a répondu sans JSON.')
+                } else {
+                  montrerErreur(
+                    payload.error && payload.error.message
+                      ? payload.error.message
+                      : 'Le classement a échoué.'
+                  )
+                }
+                return
+              }
+              montrer(payload)
+            } catch {
+              montrerErreur('PIERRE ne répond pas sur ' + ORIGINE + '.')
+            } finally {
+              envoyer.disabled = false
+              envoyer.textContent = 'Qualifier'
+              form.removeAttribute('aria-busy')
+            }
+          }
+
+          form.addEventListener('submit', (event) => {
+            event.preventDefault()
+            classer()
+          })
+          zone.addEventListener('input', marquerExemples)
+          exemples.addEventListener('mouseover', (event) => {
+            const bouton = exempleDe(event.target)
+            if (bouton) majPlaceholder(bouton)
+          })
+          exemples.addEventListener('mouseout', (event) => {
+            if (!exempleDe(event.target)) return
+            const vers = exempleDe(event.relatedTarget)
+            if (vers) {
+              majPlaceholder(vers)
+              return
+            }
+            const actif = document.activeElement
+            majPlaceholder(actif && banc.contains(actif) ? exempleDe(actif) : null)
+          })
+          exemples.addEventListener('focusin', (event) => {
+            const bouton = exempleDe(event.target)
+            if (bouton) majPlaceholder(bouton)
+          })
+          exemples.addEventListener('focusout', (event) => {
+            if (exempleDe(event.relatedTarget)) return
+            if (banc.querySelector('[data-texte]:hover')) return
+            majPlaceholder(null)
+          })
+          for (const bouton of banc.querySelectorAll('[data-texte]')) {
+            bouton.addEventListener('click', () => {
+              zone.value = bouton.dataset.texte || ''
+              marquerExemples()
+              classer()
+            })
+          }
+          zone.focus()
+        </script>
+      </aside>
+      <h2 id="présentation">Présentation</h2>
+      <h3 id="synthèse">Synthèse</h3>
+      <div class="typeset-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Version</th>
+              <th>CARL-0.1 (2026-10-10)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Architecture</td>
+              <td>ModernBERT / typed-decisions</td>
+            </tr>
+            <tr>
+              <td>Weights</td>
+              <td>ONNX · FP32 · ~550 Mb (approx. 136M parameters)</td>
+            </tr>
+            <tr>
+              <td>Training</td>
+              <td>Synthetic + Grand Dijon Habitat's real-world dataset</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h3 id="exemple-de-sortie">Exemple de sortie</h3>
+      <pre
+        class="language-json"
+      ><code class="language-json"><span class="token punctuation">{</span>
+  <span class="token property">"domaine"</span><span class="token operator">:</span> <span class="token string">"technique"</span><span class="token punctuation">,</span>
+  <span class="token property">"sous_domaine"</span><span class="token operator">:</span> <span class="token string">"menuiserie"</span><span class="token punctuation">,</span>
+  <span class="token property">"motif"</span><span class="token operator">:</span> <span class="token string">"volet_defectueux"</span><span class="token punctuation">,</span>
+  <span class="token property">"integrite_physique"</span><span class="token operator">:</span> <span class="token string">"intacte"</span><span class="token punctuation">,</span>
+  <span class="token property">"lieu"</span><span class="token operator">:</span> <span class="token string">"logement"</span><span class="token punctuation">,</span>
+  <span class="token property">"obligation_reglementaire"</span><span class="token operator">:</span> <span class="token string">"bailleur"</span><span class="token punctuation">,</span>
+  <span class="token property">"ton"</span><span class="token operator">:</span> <span class="token string">"neutre"</span>
+<span class="token punctuation">}</span>
+</code></pre>
+      <h2 id="comment-utiliser-carl-">Comment utiliser CARL ?</h2>
+      <ol>
+        <li>
+          <strong>En utilisant PIERRE :</strong> CARL est utilisé pour qualifier automatiquement, en
+          quasi-temps réel, les messages des locataires et candidats HLM chargés dans le module «
+          Réclamations ». Cette qualification « nouvelle génération » autorise de nombreux usages,
+          humains, automatisés et agentiques (<em>présentation à venir</em>).
+        </li>
+        <li>
+          <strong>En expérimentant :</strong>
+          <a href="https://github.com/charnould/pierre/releases/download/carl/model.onnx"
+            >télécharger CARL</a
+          >, dézipper le dossier et suivre les instructions.
+        </li>
+        <li>
+          <strong>En l'intégrant dans un applicatif :</strong> les poids de CARL sont disponibles
+          sous license
+          <a href="https://github.com/charnould/pierre/blob/master/LICENSE.md">AGPL-3.0</a> pour
+          l'expérimentation, l’évaluation et l’usage exclusivement et uniquement interne des
+          bailleurs sociaux. Toute utilisation commerciale – par API ou intégration dans un logiciel
+          commercial notamment dans un ERP – nécessite une licence commerciale accordée par
+          <a href="mailto:charnould@pierre-ia.org">charnould@pierre-ia.org</a>.
+        </li>
+      </ol>
+      <h2 id="taxonomie">Taxonomie</h2>
+      <p>
+        CARL couvre l’ensemble des principales sollicitations adressées par les locataires et
+        candidats aux bailleurs sociaux :
+        <strong
+          >incidents et demandes techniques dans le logement et les parties communes, démarches
+          administratives et liées au bail, troubles de voisinage et tranquillité résidentielle,
+          situations d’assistance ou de vulnérabilité</strong
+        >. Il les qualifie selon <strong>leur nature et leur niveau de précision</strong>, et ajoute
+        des dimensions transversales relatives à
+        <strong
+          >l’intégrité physique, au lieu concerné, à l’obligation du bailleur ou du locataire et au
+          ton du message</strong
+        >.
+      </p>
+      <p>
+        Un message produit une seule qualification. Si le message contient plusieurs demandes
+        distinctes, c'est la plus aiguë qui est retenue.
+      </p>
+      <p>
+        Le délai de résolution, l’urgence opérationnelle et le service destinataire ne font pas
+        partie de la taxonomie. Ils dépendent de l’organisation et de la politique de chaque
+        bailleur social.
+      </p>
+      <pre
+        class="language-yaml"
+      ><code class="language-yaml"><span class="token key atrule">integrite_physique</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> intacte
+  <span class="token punctuation">-</span> menacee
+  <span class="token punctuation">-</span> atteinte
+  <span class="token punctuation">-</span> sans_objet
+<span class="token key atrule">lieu</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> logement
+  <span class="token punctuation">-</span> annexe
+  <span class="token punctuation">-</span> parties_communes
+  <span class="token punctuation">-</span> toit_facade
+  <span class="token punctuation">-</span> abords
+  <span class="token punctuation">-</span> chez_voisin
+  <span class="token punctuation">-</span> plusieurs_logements
+  <span class="token punctuation">-</span> indetermine
+  <span class="token punctuation">-</span> sans_objet
+<span class="token key atrule">obligation_reglementaire</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> bailleur
+  <span class="token punctuation">-</span> locataire
+  <span class="token punctuation">-</span> indeterminee
+  <span class="token punctuation">-</span> sans_objet
+<span class="token key atrule">ton</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> neutre
+  <span class="token punctuation">-</span> insatisfait
+  <span class="token punctuation">-</span> agressif
+<span class="token key atrule">domaine</span><span class="token punctuation">:</span>
+  <span class="token key atrule">technique</span><span class="token punctuation">:</span>
+    <span class="token key atrule">eau</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> fuite_source_indeterminee
+      <span class="token punctuation">-</span> canalisation_fuite
+      <span class="token punctuation">-</span> compteur_fuite
+      <span class="token punctuation">-</span> ballon_fuite
+      <span class="token punctuation">-</span> compteur_defectueux
+      <span class="token punctuation">-</span> compteur_releve
+      <span class="token punctuation">-</span> coupure
+      <span class="token punctuation">-</span> pression_insuffisante
+      <span class="token punctuation">-</span> eau_chaude_absente
+      <span class="token punctuation">-</span> eau_chaude_temperature
+      <span class="token punctuation">-</span> eau_chaude_lente
+      <span class="token punctuation">-</span> qualite_anormale
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">assainissement</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> canalisation_bouchee
+      <span class="token punctuation">-</span> refoulement
+      <span class="token punctuation">-</span> pompe_relevage_panne
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">gaz</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> fuite
+      <span class="token punctuation">-</span> coupure
+      <span class="token punctuation">-</span> pression_insuffisante
+      <span class="token punctuation">-</span> compteur_defectueux
+      <span class="token punctuation">-</span> compteur_releve
+      <span class="token punctuation">-</span> robinet_flexible_defectueux
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">chauffage</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> panne
+      <span class="token punctuation">-</span> insuffisant
+      <span class="token punctuation">-</span> exces
+      <span class="token punctuation">-</span> bruit
+      <span class="token punctuation">-</span> equipement_fuite_eau
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">electricite</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> coupure
+      <span class="token punctuation">-</span> disjonction
+      <span class="token punctuation">-</span> luminaire_defectueux
+      <span class="token punctuation">-</span> prise_interrupteur_defectueux
+      <span class="token punctuation">-</span> tableau_defectueux
+      <span class="token punctuation">-</span> compteur_defectueux
+      <span class="token punctuation">-</span> compteur_releve
+      <span class="token punctuation">-</span> fil_dangereux
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">air</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> vmc_panne
+      <span class="token punctuation">-</span> vmc_bruit
+      <span class="token punctuation">-</span> humidite
+      <span class="token punctuation">-</span> moisissure
+      <span class="token punctuation">-</span> odeur
+      <span class="token punctuation">-</span> surchauffe
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">alarme</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> declenchee
+      <span class="token punctuation">-</span> defectueuse
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">television</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> reception_defectueuse
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">sanitaires</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> wc_bouche
+      <span class="token punctuation">-</span> wc_refoule
+      <span class="token punctuation">-</span> wc_chasse_defectueuse
+      <span class="token punctuation">-</span> wc_chasse_coule
+      <span class="token punctuation">-</span> wc_fuite
+      <span class="token punctuation">-</span> wc_casse
+      <span class="token punctuation">-</span> wc_autre
+      <span class="token punctuation">-</span> robinet_fuite
+      <span class="token punctuation">-</span> robinet_defectueux
+      <span class="token punctuation">-</span> douche_baignoire_bouchee
+      <span class="token punctuation">-</span> douche_baignoire_fuite
+      <span class="token punctuation">-</span> douche_baignoire_defectueuse
+      <span class="token punctuation">-</span> lavabo_evier_bouche
+      <span class="token punctuation">-</span> lavabo_evier_fuite
+      <span class="token punctuation">-</span> lavabo_evier_defectueux
+      <span class="token punctuation">-</span> vanne_arret_defectueuse
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">menuiserie</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> fenetre_defectueuse
+      <span class="token punctuation">-</span> volet_defectueux
+      <span class="token punctuation">-</span> porte_interieure_defectueuse
+      <span class="token punctuation">-</span> vitrage_casse
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">serrurerie</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> porte_logement_bloquee
+      <span class="token punctuation">-</span> porte_logement_fermeture_defectueuse
+      <span class="token punctuation">-</span> porte_logement_endommagee
+      <span class="token punctuation">-</span> cylindre_defectueux
+      <span class="token punctuation">-</span> cle_perdue_cassee
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">structure</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> fissure
+      <span class="token punctuation">-</span> balcon_coursive_degrade
+      <span class="token punctuation">-</span> escalier_degrade
+      <span class="token punctuation">-</span> garde_corps_defectueux
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">enveloppe</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> toiture_infiltration
+      <span class="token punctuation">-</span> toiture_degradee
+      <span class="token punctuation">-</span> facade_infiltration
+      <span class="token punctuation">-</span> facade_degradee
+      <span class="token punctuation">-</span> menuiserie_exterieure_infiltration
+      <span class="token punctuation">-</span> gouttiere_defectueuse
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">revetements</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> mur_plafond_degrade
+      <span class="token punctuation">-</span> sol_degrade
+      <span class="token punctuation">-</span> isolant_degrade
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">ascenseur</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> panne
+      <span class="token punctuation">-</span> porte_defectueuse
+      <span class="token punctuation">-</span> bruit
+      <span class="token punctuation">-</span> personne_enfermee
+      <span class="token punctuation">-</span> accident
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">acces</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> badge_remplacement
+      <span class="token punctuation">-</span> badge_activation
+      <span class="token punctuation">-</span> telecommande_remplacement
+      <span class="token punctuation">-</span> interphone_panne
+      <span class="token punctuation">-</span> boite_lettres_defectueuse
+      <span class="token punctuation">-</span> porte_commune_defectueuse
+      <span class="token punctuation">-</span> porte_commune_degondee
+      <span class="token punctuation">-</span> porte_technique_defectueuse
+      <span class="token punctuation">-</span> porte_annexe_defectueuse
+      <span class="token punctuation">-</span> portail_barriere_bloque
+      <span class="token punctuation">-</span> portail_barriere_defectueux
+      <span class="token punctuation">-</span> ferme_porte_defectueux
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">proprete</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> salissure
+      <span class="token punctuation">-</span> dechets
+      <span class="token punctuation">-</span> encombrants
+      <span class="token punctuation">-</span> odeur
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">nuisibles</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> infestation_punaises
+      <span class="token punctuation">-</span> infestation_blattes
+      <span class="token punctuation">-</span> presence_rongeurs
+      <span class="token punctuation">-</span> nid_guepes_frelons
+      <span class="token punctuation">-</span> nid_oiseaux
+      <span class="token punctuation">-</span> presence_indeterminee
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">exterieurs</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> arbre_dangereux
+      <span class="token punctuation">-</span> espaces_verts_entretien
+      <span class="token punctuation">-</span> voirie_degradee
+      <span class="token punctuation">-</span> neige_verglas
+      <span class="token punctuation">-</span> aire_jeux_degradee
+      <span class="token punctuation">-</span> stationnement_genant
+      <span class="token punctuation">-</span> vehicule_abandonne
+      <span class="token punctuation">-</span> mobilier_degrade
+      <span class="token punctuation">-</span> cloture_degradee
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">securite_incendie</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> incendie_explosion
+      <span class="token punctuation">-</span> detecteur_declenche
+      <span class="token punctuation">-</span> detecteur_defectueux
+      <span class="token punctuation">-</span> alarme_declenchee
+      <span class="token punctuation">-</span> alarme_defectueuse
+      <span class="token punctuation">-</span> desenfumage_defectueux
+      <span class="token punctuation">-</span> extincteur_absent_vide
+      <span class="token punctuation">-</span> eclairage_secours_defectueux
+      <span class="token punctuation">-</span> porte_coupe_feu_defectueuse
+      <span class="token punctuation">-</span> colonne_seche_defectueuse
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">sinistre</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> degat_eaux
+      <span class="token punctuation">-</span> apres_incendie
+      <span class="token punctuation">-</span> remise_en_etat
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">surete</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> effraction
+      <span class="token punctuation">-</span> vandalisme
+      <span class="token punctuation">-</span> vol
+      <span class="token punctuation">-</span> alarme_intrusion_declenchee
+      <span class="token punctuation">-</span> alarme_intrusion_defectueuse
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">autre</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> autre
+  <span class="token key atrule">administratif</span><span class="token punctuation">:</span>
+    <span class="token key atrule">candidature</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> demande
+      <span class="token punctuation">-</span> pieces
+      <span class="token punctuation">-</span> suivi
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">bail</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> copie
+      <span class="token punctuation">-</span> clause
+      <span class="token punctuation">-</span> avenant
+      <span class="token punctuation">-</span> titulaire
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">entree_sortie</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> etat_lieux_entree
+      <span class="token punctuation">-</span> remise_cles
+      <span class="token punctuation">-</span> preavis
+      <span class="token punctuation">-</span> etat_lieux_sortie
+      <span class="token punctuation">-</span> indemnites_locatives
+      <span class="token punctuation">-</span> depot_garantie
+      <span class="token punctuation">-</span> deces
+      <span class="token punctuation">-</span> logement_abandonne
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">loyer</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> quittance
+      <span class="token punctuation">-</span> avis_echeance
+      <span class="token punctuation">-</span> incomprehension
+      <span class="token punctuation">-</span> charges
+      <span class="token punctuation">-</span> sls
+      <span class="token punctuation">-</span> aides_logement
+      <span class="token punctuation">-</span> difficulte
+      <span class="token punctuation">-</span> mode_paiement
+      <span class="token punctuation">-</span> imputation
+      <span class="token punctuation">-</span> facturation
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">assurance</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> attestation
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">dossier_sinistre</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> declaration
+      <span class="token punctuation">-</span> expertise
+      <span class="token punctuation">-</span> prise_en_charge
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">documents</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> demande
+      <span class="token punctuation">-</span> transmission
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">mutation</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> demande
+      <span class="token punctuation">-</span> logement_inadapte
+      <span class="token punctuation">-</span> suivi
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">stationnement</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> demande
+      <span class="token punctuation">-</span> gestion
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">travaux_locataire</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> autorisation
+      <span class="token punctuation">-</span> adaptation
+      <span class="token punctuation">-</span> fibre
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">travaux_bailleur</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> information
+      <span class="token punctuation">-</span> programme
+      <span class="token punctuation">-</span> suivi
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">diagnostic</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> document
+      <span class="token punctuation">-</span> rendez_vous
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">contentieux</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> procedure
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">indemnisation</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> reduction_loyer
+      <span class="token punctuation">-</span> compensation
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">rendez_vous</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> situation_non_precisee
+      <span class="token punctuation">-</span> technique_non_precise
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">accession</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> achat
+      <span class="token punctuation">-</span> suivi
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">information</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> question
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">relation</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> agent
+      <span class="token punctuation">-</span> prestataire
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">autre</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> autre
+  <span class="token key atrule">tranquillite_residentielle</span><span class="token punctuation">:</span>
+    <span class="token key atrule">bruit</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> musique
+      <span class="token punctuation">-</span> travaux
+      <span class="token punctuation">-</span> animal
+      <span class="token punctuation">-</span> tapage
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">conflit</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> dispute
+      <span class="token punctuation">-</span> harcelement
+      <span class="token punctuation">-</span> menaces
+      <span class="token punctuation">-</span> violence
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">nuisance</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> odeurs
+      <span class="token punctuation">-</span> fumee
+      <span class="token punctuation">-</span> jets
+      <span class="token punctuation">-</span> salete
+      <span class="token punctuation">-</span> encombrement
+      <span class="token punctuation">-</span> animal
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">occupation</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> squat
+      <span class="token punctuation">-</span> sous_location
+      <span class="token punctuation">-</span> defaut_usage
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">securite</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> intrusion
+      <span class="token punctuation">-</span> trafic
+      <span class="token punctuation">-</span> arme
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">autre</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> autre
+  <span class="token key atrule">assistance</span><span class="token punctuation">:</span>
+    <span class="token key atrule">secours</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> detresse
+      <span class="token punctuation">-</span> deces_suspect
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">vulnerabilite</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> isolement
+      <span class="token punctuation">-</span> information_preoccupante
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">aide</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> quotidien
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">animal</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> enferme
+      <span class="token punctuation">-</span> coince
+      <span class="token punctuation">-</span> errant
+      <span class="token punctuation">-</span> autre
+    <span class="token key atrule">autre</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> autre
+  <span class="token key atrule">inexploitable</span><span class="token punctuation">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+  <span class="token key atrule">hors_perimetre</span><span class="token punctuation">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+</code></pre>
+      <h2 id="licence">Licence</h2>
+      <p>
+        CARL est un modèle fine-tuné à partir de
+        <a href="https://huggingface.co/alphaedge-ai/mmBERT-base-fra-32768"
+          >alphaedge-ai/mmBERT-base-fra-32768</a
+        >
+        (MIT).
+      </p>
+      <p>
+        La taxonomie de CARL est distribuée sous
+        <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      </p>
+      <p>
+        Les poids de CARL sont disponibles sous
+        <a href="https://github.com/charnould/pierre/blob/master/LICENSE.md">AGPL-3.0</a> pour
+        l'expérimentation, l'évaluation et l'usage interne des bailleurs sociaux.
+        <strong
+          >Toute utilisation commerciale ou intégration dans un logiciel commercial, notamment dans
+          un ERP ou via une API, nécessite une licence commerciale distincte accordée par
+          <a href="mailto:charnould@pierre-ia.org">charnould@pierre-ia.org</a>.</strong
+        >
+      </p>
+      <p>Copyright (c) 2026-aujourd'hui, Charles-Henri Arnould/BECKREL et les contributeurs.</p>
+    </article>
+
+    <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+    <script>
+      const zoom = mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
+      zoom.on('open', () => document.body.classList.add('is-zooming'))
+      zoom.on('closed', () => document.body.classList.remove('is-zooming'))
+    </script>
+  </body>
+</html>

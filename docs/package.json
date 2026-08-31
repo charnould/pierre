@@ -1,6 +1,12 @@
 {
   "name": "@pierre/docs",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "updates": "bun run ../config/build-updates.ts"
+    "generate": "bun run scripts/build.ts",
+    "test": "bun test scripts"
+  },
+  "dependencies": {
+    "prismjs": "^1.30.0"
   }
 }

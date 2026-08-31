@@ -1,284 +1,639 @@
 <!doctype html>
 <html lang="fr">
   <head>
-    <meta charset="UTF-8" />
-    <meta
-      property="description"
-      content="PIERRE — Une intelligence artificielle open source et plurilingue au service du mouvement HLM, de ses candidats, locataires et collaborateurs"
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PIERRE · PIERRE</title>
+    <link rel="icon" href="./assets/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Knewave&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap"
     />
-    <meta
-      property="og:description"
-      content="PIERRE — Une intelligence artificielle open source et plurilingue au service du mouvement HLM, de ses candidats, locataires et collaborateurs"
-    />
-    <meta
-      name="description"
-      content="PIERRE — Une intelligence artificielle open source et plurilingue au service du mouvement HLM, de ses candidats, locataires et collaborateurs"
-    />
+    <style>
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        background: #fff;
+      }
+      .article {
+        box-sizing: border-box;
+        max-width: 850px;
+        margin: 0;
+        padding: 2rem 2rem 3rem 4rem;
+        font-family: Merriweather, Georgia, serif;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 24px;
+        letter-spacing: 0;
+        color: rgb(17, 17, 17);
+        text-align: left;
+        -webkit-font-smoothing: antialiased;
+      }
+      @media (max-width: 39.99rem) {
+        .article {
+          padding: 1.25rem 1.25rem 2rem;
+        }
+      }
+      .article h1,
+      .article h2,
+      .article h3,
+      .article h4,
+      .article h5,
+      .article h6 {
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        font-weight: 700;
+        letter-spacing: 0;
+        color: rgb(17, 17, 17);
+        text-wrap: balance;
+        -webkit-font-smoothing: antialiased;
+      }
+      .article h1 {
+        font-size: 36px;
+        line-height: 40.32px;
+        margin: 0 0 16px;
+      }
+      .article h2 {
+        font-size: 36px;
+        line-height: 40.32px;
+        margin: 80px 0 40px;
+      }
+      .article h3 {
+        font-size: 24px;
+        line-height: 28px;
+        margin: 40px 0 20px;
+      }
+      .article p {
+        margin: 0 0 16px;
+        text-wrap: pretty;
+      }
+      .article ul,
+      .article ol {
+        margin: 0 0 16px;
+        padding-inline-start: 1.5em;
+      }
+      .article ul {
+        list-style-type: disc;
+      }
+      .article ol {
+        list-style-type: decimal;
+      }
+      .article li {
+        display: list-item;
+        margin: 0 0 8px;
+        padding-inline-start: 0.25em;
+      }
+      .article li:last-child {
+        margin-bottom: 0;
+      }
+      .article ul ul {
+        list-style-type: circle;
+        margin: 8px 0 0;
+      }
+      .article a {
+        color: #0000ee;
+        text-underline-offset: 0.15em;
+      }
+      .article a:hover {
+        text-decoration-thickness: 2px;
+      }
+      .article strong {
+        font-weight: 600;
+      }
+      .article pre:not(.cadre) {
+        padding: 1em;
+      }
+      .article :not(pre) > code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.875em;
+      }
+      .article p:has(> .shot) {
+        --shot-gap: 0.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--shot-gap);
+        justify-content: flex-start;
+        width: min(calc(32rem * 3 + var(--shot-gap) * 2), calc(100vw - 4rem));
+        max-width: none;
+        margin-block-start: 30px;
+        margin-inline: 0;
+      }
+      @media (max-width: 39.99rem) {
+        .article p:has(> .shot) {
+          width: calc(100vw - 2.5rem);
+        }
+      }
+      .article .shot {
+        position: relative;
+        isolation: isolate;
+        overflow: visible;
+        flex: 0 1 100%;
+        width: 100%;
+        max-width: 100%;
+      }
+      @media (min-width: 40rem) {
+        .article .shot {
+          flex: 0 1 calc((100% - var(--shot-gap) * 2) / 3);
+          width: calc((100% - var(--shot-gap) * 2) / 3);
+          max-width: calc((100% - var(--shot-gap) * 2) / 3);
+        }
+        .article p:has(> .shot:only-child) .shot:has(img[data-zoomable]),
+        .article p:has(> .shot:nth-child(even):last-child) .shot:has(img[data-zoomable]) {
+          flex-basis: calc((100% - var(--shot-gap)) / 2);
+          width: calc((100% - var(--shot-gap)) / 2);
+          max-width: calc((100% - var(--shot-gap)) / 2);
+        }
+        .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) {
+          flex-basis: 90%;
+          width: 90%;
+          max-width: 90%;
+        }
+      }
+      .article .shot img {
+        display: block;
+        width: 100%;
+        margin: 0;
+        transform: translateX(-4.01%);
+      }
+      .article .shot img[data-zoomable] {
+        cursor: zoom-in;
+      }
+      .article .shot-title {
+        position: absolute;
+        top: 0.45rem;
+        left: -0.65rem;
+        z-index: 1;
+        max-width: calc(100% - 1rem);
+        padding: 0.15rem 0.55rem 0.08rem;
+        background: #ffe500;
+        color: #111;
+        font-family: Knewave, cursive;
+        font-size: 1.05rem;
+        font-weight: 400;
+        font-synthesis: none;
+        letter-spacing: 0.01em;
+        line-height: 1.15;
+        text-transform: uppercase;
+        text-wrap: balance;
+        transform: rotate(-2deg);
+        transform-origin: left center;
+        pointer-events: none;
+      }
+      .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) .shot-title {
+        top: 1.5rem;
+        left: -0.65rem;
+      }
+      body.is-zooming .shot-title {
+        opacity: 0;
+      }
 
-    <meta
-      property="og:title"
-      content="PIERRE — Essayez l'IA open source et plurilingue du mouvement HLM !"
-    />
-    <meta
-      property="title"
-      content="PIERRE — Essayez l'IA open source et plurilingue du mouvement HLM !"
-    />
-    <meta name="image" property="og:image" content="assets/images/pierre.png" />
-    <meta property="og:image" content="assets/images/pierre.png" />
-    <meta property="og:url" content="https://pierre-ia.org" />
-    <meta name="author" content="Charles-Henri Arnould" />
-    <meta property="og:type" content="website" />
-    <meta name="theme-color" content="#f4f6f7" />
-    <link rel="canonical" href="https://pierre-ia.org" />
-    <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml" />
-    <link rel="”mask-icon”" href="assets/images/favicon.svg" color="#f4f6f7" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="assets/index.css" />
+      /*
+ Solarized Color Schemes originally by Ethan Schoonover
+ http://ethanschoonover.com/solarized
 
-    <script
-      defer
-      data-domain="charnould.github.io/pierre"
-      src="https://plausible.io/js/script.js"
-    ></script>
-    <title>
-      PIERRE — Une intelligence artificielle open source, plurilingue et agentique au service du
-      mouvement HLM, de ses candidats, locataires et collaborateurs.
-    </title>
-    <script
-      crossorigin="anonymous"
-      src="https://assistant.pierre-ia.org/assets/dist/js/pierre.js"
-      data-pierre-config="default"
-      async
-    ></script>
-  </head>
+ Ported for PrismJS by Hector Matos
+ Website: https://krakendev.io
+ Twitter Handle: https://twitter.com/allonsykraken)
+*/
 
-  <body>
-    <button
-      type="button"
-      data-pierre-open
-      style="
-        position: fixed;
-        right: 20px;
-        bottom: 20px;
-        z-index: 9999;
-        color: #000;
-        font-size: 30px;
+      /*
+SOLARIZED HEX
+--------- -------
+base03    #002b36
+base02    #073642
+base01    #586e75
+base00    #657b83
+base0     #839496
+base1     #93a1a1
+base2     #eee8d5
+base3     #fdf6e3
+yellow    #b58900
+orange    #cb4b16
+red       #dc322f
+magenta   #d33682
+violet    #6c71c4
+blue      #268bd2
+cyan      #2aa198
+green     #859900
+*/
+
+      code[class*='language-'],
+      pre[class*='language-'] {
+        color: #657b83; /* base00 */
+        font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+        font-size: 1em;
+        text-align: left;
+        white-space: pre;
+        word-spacing: normal;
+        word-break: normal;
+        word-wrap: normal;
+
+        line-height: 1.5;
+
+        -moz-tab-size: 4;
+        -o-tab-size: 4;
+        tab-size: 4;
+
+        -webkit-hyphens: none;
+        -moz-hyphens: none;
+        -ms-hyphens: none;
+        hyphens: none;
+      }
+
+      pre[class*='language-']::-moz-selection,
+      pre[class*='language-'] ::-moz-selection,
+      code[class*='language-']::-moz-selection,
+      code[class*='language-'] ::-moz-selection {
+        background: #073642; /* base02 */
+      }
+
+      pre[class*='language-']::selection,
+      pre[class*='language-'] ::selection,
+      code[class*='language-']::selection,
+      code[class*='language-'] ::selection {
+        background: #073642; /* base02 */
+      }
+
+      /* Code blocks */
+      pre[class*='language-'] {
+        padding: 1em;
+        margin: 0.5em 0;
+        overflow: auto;
+        border-radius: 0.3em;
+      }
+
+      :not(pre) > code[class*='language-'],
+      pre[class*='language-'] {
+        background-color: #fdf6e3; /* base3 */
+      }
+
+      /* Inline code */
+      :not(pre) > code[class*='language-'] {
+        padding: 0.1em;
+        border-radius: 0.3em;
+      }
+
+      .token.comment,
+      .token.prolog,
+      .token.doctype,
+      .token.cdata {
+        color: #93a1a1; /* base1 */
+      }
+
+      .token.punctuation {
+        color: #586e75; /* base01 */
+      }
+
+      .token.namespace {
+        opacity: 0.7;
+      }
+
+      .token.property,
+      .token.tag,
+      .token.boolean,
+      .token.number,
+      .token.constant,
+      .token.symbol,
+      .token.deleted {
+        color: #268bd2; /* blue */
+      }
+
+      .token.selector,
+      .token.attr-name,
+      .token.string,
+      .token.char,
+      .token.builtin,
+      .token.url,
+      .token.inserted {
+        color: #2aa198; /* cyan */
+      }
+
+      .token.entity {
+        color: #657b83; /* base00 */
+        background: #eee8d5; /* base2 */
+      }
+
+      .token.atrule,
+      .token.attr-value,
+      .token.keyword {
+        color: #859900; /* green */
+      }
+
+      .token.function,
+      .token.class-name {
+        color: #b58900; /* yellow */
+      }
+
+      .token.regex,
+      .token.important,
+      .token.variable {
+        color: #cb4b16; /* orange */
+      }
+
+      .token.important,
+      .token.bold {
         font-weight: bold;
-        padding: 2px 12px;
-        background-color: #fff;
-        border-radius: 8px;
-        border: 4px solid black;
-        box-shadow: 2px 2px 6px #00000080;
-        cursor: pointer;
-      "
-    >
-      iA?
-    </button>
+      }
+      .token.italic {
+        font-style: italic;
+      }
 
-    <main>
-      <div class="explanation">
-        <a target="_blank" class="github" href="https://github.com/charnould/pierre">GitHub</a>
+      .token.entity {
+        cursor: help;
+      }
+    </style>
+  </head>
+  <body>
+    <article class="article">
+      <h1 id="pierre">PIERRE</h1>
+      <h2 id="une-application-agentique-open-source-et-gratuite-au-service-du-mouvement-hlm">
+        Une application agentique, open source et gratuite au service du mouvement HLM
+      </h2>
+      <ol>
+        <li>
+          <p>
+            <strong>Un outil pour tous les métiers</strong> : réclamations, impayés, relocation,
+            assurance-habitation… PIERRE réunit les équipes dans une interface cohérente et
+            nativement collaborative, avec les mêmes repères d’un processus à l’autre. Une
+            <strong>application « User-First »</strong> conçue pour simplifier le quotidien des
+            collaborateurs et renforcer la performance opérationnelle.
+          </p>
+        </li>
+        <li>
+          <p>
+            <strong>Une application également « AI-First »</strong> : l’intelligence artificielle de
+            votre choix comprend les dossiers, prépare les actions et les communications, automatise
+            les tâches répétitives et attire l’attention de la bonne personne au bon moment au bon
+            endroit. <strong>Nativement agentique</strong>, PIERRE ne se contente pas de répondre :
+            il contribue et fluidifie la mise en oeuvre <strong>de vos processus</strong> aux côtés
+            des équipes, et accompagne les locataires 24/7/365.
+          </p>
+        </li>
+        <li>
+          <p>
+            <strong>Un triple socle mutualisé pour accélérer tout le mouvement HLM</strong> :
+            <a href="./site/02-core-data-hlm/index.html">Core Data HLM</a> donne aux IA un langage
+            commun pour lire et comprendre les données-métier, sans multiplier les exports SI.
+            <a href="./site/03-core-models-hlm/index.html">Core Models HLM</a>, une famille de
+            modèles de langage open source, ultra-compacts et hyper-spécialisés, conçus pour
+            accélérer et améliorer certaines tâches concrètes et chronophages du mouvement HLM.
+            <a href="./site/04-core-intelligence-hlm/index.html">Core Intelligence HLM</a> réunit
+            les connaissances et les instructions qui leur permettent de raisonner et d’agir dans
+            les processus. Évolutifs et enrichis en continu par les organismes, ces deux socles
+            transforment chaque contribution locale en progrès collectif.
+          </p>
+        </li>
+        <li>
+          <p>
+            <strong>Un « multiple commun numérique HLM », libre, souverain et gratuit</strong> :
+            code open source, auditable et adaptable, auto-hébergement, maîtrise des données, libre
+            choix du modèle d’IA, compatible RGPD et conforme aux exigences de l'IA act de l'UE.
+            Aucun bailleur n’est captif d’un éditeur.
+            <strong
+              >Chaque euro disponible est mobilisé pour financer l'activité patrimoniale et
+              améliorer la qualité de service rendue au locataire.</strong
+            >
+          </p>
+        </li>
+      </ol>
+      <p>
+        <span class="shot"
+          ><span class="shot-title" aria-hidden="true"
+            >L&#x27;écran d&#x27;accueil de PIERRE depuis lequel on accède aux différents
+            modules</span
+          ><img
+            src="./assets/index/accueil.png"
+            alt="L'écran d'accueil de PIERRE depuis lequel on accède aux différents modules"
+        /></span>
+      </p>
+      <h2 id="construire-les--communs-numériques--du-mouvement-hlm">
+        Construire les « communs numériques » du mouvement HLM
+      </h2>
+      <h3 id="300-man-depuis-plus-de-20-ans">300 M€/an. Depuis plus de 20 ans.</h3>
+      <p>
+        Le mouvement HLM consacre chaque année près de <strong>300 millions d'euros</strong> à ses
+        applications-métiers : licences, maintenance, abonnements, études, intégration, recettes...
+        Sur vingt ans,
+        <a
+          href="https://github.com/charnould/pierre/blob/master/docs/07-articles/2026-08-19-300M%E2%82%ACY-for-IT.md"
+          >6 milliards</a
+        >
+      </p>
+      <p>
+        Le problème n'est pas tant le montant que ce qu'en obtient — en échange — le mouvement. Nul
+        ne s'en satisfait, malgré l'engagement de tous ceux qui ont porté ces systèmes. Ni les
+        locataires, ni les collaborateurs, ni les directions informatiques, ni les directions
+        générales. Depuis plus de 20 ans.
+      </p>
+      <p>
+        À l'intersection d'un <em>coût de production logicielle qui tend vers zéro</em> (du fait des
+        progrès extraordinaires de l'intelligence artificielle) et du
+        <a href="https://en.wikipedia.org/wiki/Forward_Deployed_Engineer"
+          >forward-deployed engineering</a
+        >
+        (= intelligence du terrain × capacité à construire),
+        <strong
+          >réinventer l'IT HLM n'est désormais plus contraint — comme hier — par le temps, la
+          technologie ou le budget</strong
+        >, mais par la volonté des organismes HLM à opérer, ensemble, cette réinvention.
+      </p>
+      <h3 id="lépoque-epoch-est-aux-builders-et-communs-hlm">
+        L'époque (<em>epoch</em>) est aux builders et communs HLM
+      </h3>
+      <p>
+        Depuis plus d'un siècle, le mouvement HLM bâtit un patrimoine commun, et des millions de
+        logements ont été construits grâce à une conviction simple : ce qui est d'intérêt collectif
+        mérite d'être construit collectivement. Cette même conviction peut désormais s'appliquer au
+        numérique.
+      </p>
+      <p>
+        Les bailleurs sociaux — davantage confrères que concurrents —
+        <strong>partagent les mêmes métiers et les mêmes défis quotidiens</strong>. Un plan
+        d'apurement, une procédure d'astreinte, un état des lieux ou un parcours-locataire peuvent
+        comporter des spécificités locales, mais reposent partout sur un même socle-métier. Pendant
+        des décennies, chacun a pourtant financé (et souvent plusieurs fois) des logiciels répondant
+        imparfaitement aux mêmes besoins. Les dettes technniques se sont accumulées,
+        <strong
+          >et les évolutions sont devenues toujours plus longues, coûteuses et complexes</strong
+        >. À l'image d'un directeur général d’organisme HLM qui oublierait ce qu’est le métier réel
+        d'un gardien, les éditeurs logiciels ont oublié le terrain.
+      </p>
+      <p>
+        Le mouvement HLM a inventé les « <em>communs immobiliers</em> », il peut désormais inventer
+        et mutualiser ses « <em>communs numériques open source</em> » que chacun est libre
+        d'utiliser, d'améliorer et d'adapter à ses besoins.
+        <strong>PIERRE constitue <em>la première pierre</em> de cette ambition</strong>.
+      </p>
+      <h3 id="pas-de-données-pas-dinnovation-technologique">
+        Pas de données. Pas d’innovation technologique.
+      </h3>
+      <p>
+        Sans données structurées, pas d'innovation durable. Des
+        <a href="https://www.moduls.immo">initiatives récentes</a> le rappellent utilement. La
+        tentation naturelle est alors d'y répondre par plusieurs années passées à concevoir un
+        référentiel parfait, avant le moindre usage concret, retardant d'autant la valeur pour les
+        équipes.
+      </p>
+      <p>
+        PIERRE prend donc une trajectoire orthogonale. Application agentique, elle n'a pas besoin
+        d'un référentiel de données <em>parfait</em> — juste
+        <strong>d'un socle minimal, solide et auto-compréhensible par une IA</strong> pour être
+        véritablement utile aux équipes et démultiplier les usages possibles.
+      </p>
+      <p>
+        Pas de modèle ontologique de 400 pages, pas de comité de normalisation sur trois ans. PIERRE
+        propose un pragmatisme technologique et métier assumé avec des
+        <a href="./site/02-core-data-hlm/index.html">Core Data HLM</a>. Co-construit à l’été 2026
+        avec <strong>Grand Dijon Habitat</strong>.
+      </p>
+      <h3 id="un-logiciel-user-first-ai-first--au-service-du-hlm">
+        Un logiciel « User-First × AI-First » au service du HLM
+      </h3>
+      <p>
+        Les applicatifs historiques ont trop accumulé. Trop d'interfaces, trop de dette technique,
+        trop de code spaghetti, trop de roadmap qui s'étirent à l'infini, épuisant les équipes et ne
+        satisfaisant jamais réellement les utilisateurs (lassés d'avoir trop attendu). Cette
+        accumulation a complexifié les parcours, introduit des lenteurs et progressivement — mais
+        sûrement — fait diverger les outils des pratiques du quotidien et alimente les frustrations
+        des utilisateurs.
+      </p>
+      <p>
+        Introduire l’IA dans les processus HLM ne consiste donc pas à ajouter un chatbot au-dessus
+        de logiciels inchangés. <strong>Il faut réinventer le logiciel lui-même</strong>.
+      </p>
+      <p>
+        D'abord son architecture, pour permettre — <em>on demand</em> — l'agréagation des
+        informations nécessaires à l’analyse <em>agentique</em> d’une situation d’impayé, d’une
+        relocation ou d’une réclamation. Ensuite son interface, pour que l’IA puisse intervenir au
+        bon moment, au bon endroit, automatiquement ou toujours sous le contrôle de l’utilisateur.
+      </p>
+      <p>
+        PIERRE est « <strong>User-First × AI-First</strong> » : l’intelligence artificielle n’est
+        utile que lorsqu’elle simplifie concrètement le travail et renforce la capacité d’action des
+        équipes. « <strong>Human + IA : side-by-side</strong> »
+      </p>
+      <h3 id="une-complexité-que-lon-peut-choisir-de-ne-pas-subir">
+        Une complexité que l'on peut choisir de ne pas subir.
+      </h3>
+      <p>
+        Le mouvement HLM n'a pas les contraintes de Wall Street : pas de trading haute fréquence,
+        pas de millions de transactions par seconde, pas de besoins d'infrastructures que seuls les
+        <em>hyperscalers</em> peuvent fournir.
+      </p>
+      <p>
+        À l'échelle volumétrique du mouvement HLM — quelques millions de logements, quelques
+        millions de réclamations, quelques dizaines de millions de quittances, un temps réel
+        <em>au quart d'heure</em> — une architecture simple n'est pas un manque d'ambition, c'est un
+        arbitrage stratégique assumé : «
+        <a
+          href="https://github.com/charnould/pierre/blob/master/docs/07-articles/2026-05-27-rag-sqlite.md"
+          >SQLite et un harnais suffisent pour le logement social français</a
+        >
+        » (anglais).
+      </p>
+      <h3
+        id="modèle-économique--gouvernance--une-autre-façon-de-construire-et-faire-vivre-les-logiciels-hlm"
+      >
+        Modèle économique + gouvernance : une autre façon de construire et faire vivre les logiciels
+        HLM
+      </h3>
+      <p>
+        Le modèle historique des logiciels HLM repose sur des licences, des projets d'intégration
+        coûteux, une forte dépendance à l'éditeur et une innovation très lente.
+      </p>
+      <p>
+        PIERRE prend le contre-pied :
+        <strong>le logiciel est librement accessible en open source (gratuit)</strong>, il peut être
+        téléchargé, installé, modifié, et amélioré librement par n'importe quel bailleur social.
+        Pour que chaque euro serve d'abord à financer l'activité patrimoniale et améliorer la
+        qualité de service rendue au locataire. Quant à la <strong>gouvernance</strong> : n'y
+        aurait-il pas là quelque chose d'innovant à inventer au croisement de l'USH, des
+        fédérations, des acteurs et de ses besoins ?
+      </p>
+      <h3 id="souveraineté-sécurité-et-protection-des-données-by-design">
+        Souveraineté, sécurité et protection des données. By design
+      </h3>
+      <p>
+        La confidentialité est un principe fondateur de PIERRE.
+        <em>Les données directement identifiantes</em> — nom, prénom, adresse précise, e-mail ou
+        numéro de téléphone — sont protégées. Chaque organisme conserve la maîtrise de son
+        hébergement, de ses données et des services auxquels il choisit de faire appel.
+      </p>
+      <p>
+        PIERRE est compatible avec une approche <em>Bring Your Own Key</em> (BYOK) : chaque bailleur
+        choisit le modèle d’IA qu’il souhaite utiliser, ainsi que les conditions techniques et
+        contractuelles de cet usage.
+      </p>
+      <p>
+        Les <em>conversations agentiques</em> sont exécutées dans des environnements dédiés avec une
+        <em>isolation matérielle</em> afin d'éliminer la circulation de données entre les sessions.
+        Cette architecture et les mesures associées ont été validées dans le cadre d’une
+        <strong
+          >Analyse d’impact relative à la protection des données (AIPD) conduite avec Grand Dijon
+          Habitat</strong
+        >.
+      </p>
+      <p>
+        PIERRE,
+        <strong
+          >c'est la première brique de <em>souveraineté numérique</em> du logement social</strong
+        >
+        : un code auditable et maîtrisable, des données conservées sous le contrôle du bailleur et
+        aucun fournisseur d’IA imposé.
+      </p>
+      <h3 id="un--commun--ne-vaut-que-sil-est-adopté-par-les-équipes">
+        Un « commun » ne vaut que s’il est adopté par les équipes
+      </h3>
+      <p>
+        Changer d’outil demande toujours un effort. En utiliser une vingtaine, sans cohérence
+        d’interface ni continuité entre les processus, en demande davantage encore — chaque jour.
+      </p>
+      <p>
+        PIERRE propose une <strong>expérience commune à l’ensemble des métiers</strong> : mêmes
+        repères, mêmes principes d’interaction et même espace de collaboration. Cette cohérence
+        réduit la charge d’apprentissage et facilite le passage d’un processus à l’autre.
+      </p>
+      <p>
+        Mais aucune interface, même bien conçue, ne suffit à transformer une organisation.
+        L’appropriation repose aussi sur l’implication des métiers, l’exemplarité du management, la
+        formation et l’accompagnement du changement : PIERRE simplifie la prise en main ;
+        <strong>aux organismes d’en faire une capacité collective.</strong>
+      </p>
+      <h2 id="fonctionnalités--installation">Fonctionnalités + installation</h2>
+      <p>
+        <em>PIERRE prépare quelque chose.</em><br />
+        <em>Bientôt avec Grand Dijon Habitat.</em><br />
+        🚀
+      </p>
+      <h2 id="licence">Licence</h2>
+      <p>
+        Les différents composants de PIERRE — code source, modèles, données, taxonomies, prompts et
+        ressources associées — sont distribués sous des licences adaptées à leur nature et à leurs
+        usages.
+      </p>
+      <p>
+        La philosophie de PIERRE repose sur des licences ouvertes, notamment l’<code>AGPLv3</code>
+        et les licences <code>Creative Commons</code>. La licence applicable est précisée
+        individuellement pour chaque composant.
+      </p>
+      <p>
+        Les usages commerciaux par des tiers qui ne sont pas des bailleurs sociaux peuvent être
+        soumis à une licence commerciale spécifique.
+      </p>
+      <p>
+        PIERRE s'appuie sur de nombreuses bibliothèques open source ; elles sont toutes listées dans
+        les <code>package.json</code> du dépôt. Merci à leurs créateurs et <em>mainteneurs</em> qui
+        <a href="https://xkcd.com/2347/">soutiennent l'infrastructure logicielle mondiale</a>.
+      </p>
+      <p>Copyright © 2024-aujourd'hui · Charles-Henri Arnould/BECKREL SAS et les contributeurs.</p>
+    </article>
 
-        <p class="small">
-          <br /><br />
-          PIERRE est en version <b>0.40.x</b> avec une
-          <b>qualité de base de connaissances estimée à 20 %</b>
-          puisqu'elle
-          <b>NE CONTIENT PAS les caractéristiques et spécificités des bailleurs sociaux</b>
-          (ex : coordonnées du service-client, nombre de logements en gestion...), hors cas de
-          démonstration.
-        </p>
-
-        <p class="small">
-          À des fins de démonstration, PIERRE utilise les noms, marques et logos de quelques acteurs
-          du monde du logement réglementé. Ces acteurs ne sont aucunement affiliés à PIERRE et leurs
-          responsabilités ne sauraient être engagées par les contenus générés.
-          <br /><br /><br />
-        </p>
-
-        <h1>PIERRE</h1>
-        <h2>
-          Une IA open source, plurilingue et agentique au service du mouvement HLM, de ses
-          candidats, locataires et collaborateurs.
-        </h2>
-
-        <h3>En 30 secondes, PIERRE c'est :</h3>
-
-        <ul>
-          <li>
-            Un
-            <b>service-client plurilingue propulsé par IA</b>
-            pour répondre 24/7/365 à toutes les questions de « premier niveau » des demandeurs et
-            locataires HLM.
-          </li>
-          <li>
-            Un
-            <b>assistant</b> (ou <b>aide de camp</b>) <b>propulsé par IA</b> pour aider au quotidien
-            les collaborateurs du monde HLM et qui apprend de vos procédures et pratiques.
-          </li>
-          <li>
-            Une <b>application Desktop</b> (alpha) qui permet d'injecter de l'IA dans vos
-            applicatifs historiques (ARAVIS™, IKOS™, HOMERE™...) et d'accélerer – par exemple –
-            <a href="https://www.youtube.com/watch?v=sKsB6U9Nfo4" target="_blank"
-              >les délais de réponse aux locataires</a
-            >.
-          </li>
-          <li>
-            Du <b>temps rendu aux équipes des bailleurs</b> pour se concentrer sur des actions à
-            forte valeur ajoutée et de la <b>qualité de service en plus pour les locataires</b>.
-          </li>
-          <li>
-            Un
-            <b>chatbot open source</b>, <b>plurilingue</b> et
-            <b>spécialement adapté au secteur HLM</b> que l'on peut déployer en 10 minutes sur
-            n'importe quel VPS (<a
-              href="https://github.com/charnould/pierre?tab=readme-ov-file#comment-d%C3%A9ployer-pierre-"
-              target="_blank"
-              >comment faire ?</a
-            >).
-          </li>
-          <li>
-            Un <b>corpus de connaissances en open data</b> pour entraîner une IA à répondre
-            précisément aux questions des demandeurs ou locataires HLM, et utilisable indépendamment
-            du chatbot (<a
-              href="https://github.com/charnould/pierre/tree/master/knowledge"
-              target="_blank"
-              >disponible ici</a
-            >).
-          </li>
-        </ul>
-        <h3>Introduction</h3>
-
-        <p>
-          Propulsé par un ChatGPT anglo-saxon, le momentum est à la mystification de l'IA. Et si ses
-          applications opérationnelles sont nombreuses, le chatbot a le vent en poupe puisque — pour
-          nombre d'acteurs de la relation-client — il est un Graal.
-        </p>
-        <p>
-          Les arguments sont connus : une disponibilité 24/7/365, des clients autonomes qui trouvent
-          eux-mêmes — en langage naturel — réponses à leurs interrogations, la réduction du nombre
-          de sollicitations au service-client, s'en suit une augmentation de la productivité et de
-          la satisfaction.
-        </p>
-
-        <p>
-          Tous les secteurs, privés ou publics, s'y essaient ; souvent à coût de millions. L'IA, ce
-          n'est pourtant pas si compliqué, et il est aisé pour un secteur industriel de disposer de
-          sa propre IA open source, souveraine et hautement spécialisée.
-        </p>
-
-        <p>
-          C'est cela PIERRE : d'abord une question adressée au secteur HLM (est-ce qu'une IA
-          spécialiste des questions-logements pourrait servir les citoyens et le secteur ?) ;
-          ensuite une expérimentation technique open source (cette IA peut-elle exister ?).
-        </p>
-
-        <p>
-          À la dernière, la réponse est positive (PIERRE en est la démonstration).<br />
-          À la première, la question est ouverte.
-        </p>
-
-        <h3>Pourquoi PIERRE ?</h3>
-        <p>
-          Dans une société où avoir un toit est une des premières nécessités, les
-          questions-logements (dans leur acception la plus large) peuvent être nombreuses, mais —
-          dans le même temps — toujours un peu les mêmes.
-        </p>
-        <p>
-          Quelle utilité et valeur ajoutée alors à répéter inlassablement les mêmes choses, mais —
-          dans le même temps — quel sens du service public à ne pas fournir de réponses éclairées
-          (et territorialement localisées) instantanément, 24/7/365, sur ces sujets ?
-        </p>
-
-        <h3>PIERRE : kézako alors ?</h3>
-        <p>
-          Imaginez un chatbot ubiquitaire, qui s'améliore continuellement, à l'apparence totalement
-          personnalisable et que l'on peut intégrer partout en deux clics.
-        </p>
-        <p>
-          Imaginez-le dans la poche d'un locataire, sur le site internet d'un bailleur social, d'un
-          gestionnaire de résidences étudiantes, d'Action Logement, de l'ANAH ou de la DRIHL, sur
-          les pages-logement des mairies et départements ou sur l'intranet de grands employeurs
-          dotés d'une politique-logement.
-        </p>
-
-        <p>
-          Imaginez-le répondre précisément, au fait des dernières actualités, à toutes les
-          questions-logement. Que l'on soit demandeur ou locataire HLM, étudiant ou jeune
-          travailleur, employé ou employeur d'une entreprise de plus ou moins 20 salariés, ou à la
-          recherche d'un hébergement d'urgence.
-        </p>
-
-        <p>
-          Et enfin, imaginez-le à la fois générique (il connait les obligations réglementaires d'un
-          locataire) et spécifique (il sait apporter des réponses localisées si son interlocuteur
-          est Avignonnais et orienter au bon endroit selon qu'il est locataire d'ARPEJ, de Grand
-          Dijon Habitat ou de l'OPAC 43).
-        </p>
-
-        <p>
-          Bref, imaginez PIERRE comme un service-client, disponible 24h/24, répondant à 100 % des
-          questions de « premier niveau », recueillant et orientant les réclamations, adressant les
-          documents... pour permettre aux équipes de se concentrer sur des actions à plus forte
-          valeur ajoutée.
-        </p>
-
-        <h3>Et maintenant...</h3>
-
-        <p>Qu'en pense le mouvement HLM ?</p>
-
-        <p>
-          N'y aurait-il pas là une innovation — à portée de main — dont les acteurs du mouvement
-          pourraient s'emparer ? Car, qui mieux qu'eux sait l'importance d'apporter au quotidien des
-          réponses-logements, à tous, tout le temps et sur tous les territoires.
-        </p>
-
-        <p>
-          Discutons-en :
-          <a href="mailto:charnould@pierre-ia.org">charnould@pierre-ia.org</a>
-          ou via
-          <a href="https://github.com/charnould/pierre" target="_blank">GitHub</a>.
-        </p>
-
-        <p class="small">
-          <br /><br /><br /><br />
-          <b>LICENCE</b>
-        </p>
-        <p class="small">
-          Le code source de PIERRE est sous licence open source
-          <a href="https://github.com/charnould/pierre/blob/master/LICENSE.md" target="_blank"
-            >GNU Affero General Public License Version 3</a
-          >, complétée par une clause additionnelle de restriction commerciale en fin de fichier
-          LICENSE.md. La base de connaissances sous licence
-          <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank"
-            >Creative Commons BY-NC-SA 4.0</a
-          >. Copyright © 2024-aujourd'hui · Charles-Henri Arnould et les contributeurs.
-        </p>
-      </div>
-
-      <iframe id="pierre" title="PIERRE - IA HLM open source" width="450" height="620" src="">
-      </iframe>
-    </main>
+    <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
     <script>
-      function getQueryParam(param) {
-        const urlParams = new URLSearchParams(window.location.search)
-        return urlParams.get(param)
-      }
-
-      const config = getQueryParam('config')
-
-      const configs = ['default', 'demo']
-      const pierreElement = document.querySelector('#pierre')
-
-      if (pierreElement) {
-        const configClass = configs.includes(config) ? config : 'default'
-        pierreElement.classList.add(configClass)
-        const realConfig = configs.includes(config) ? config : 'default'
-        const srcURL = `https://assistant.pierre-ia.org/c?config=${realConfig}`
-        pierreElement.src = srcURL
-      } else {
-        console.error("Element with id 'pierre' not found.")
-      }
+      const zoom = mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
+      zoom.on('open', () => document.body.classList.add('is-zooming'))
+      zoom.on('closed', () => document.body.classList.remove('is-zooming'))
     </script>
   </body>
 </html>
