@@ -4,7 +4,7 @@ Un **logement social, en France**, est un logement destiné, à la suite d'une i
 
 Le logement social est un compromis entre une préfiguration du « fordisme » esquissé dès la fin du XIXe siècle pour calmer le jeu des antagonismes dans le monde du travail, la concrétisation d'un projet républicain d'assurer par la loi les conditions d'une plus grande égalité de fait entre tous les citoyens, et un projet moderne dans le domaine de l'urbanisme, de l'architecture, de la construction et de l'ingénierie sociale au XXe siècle.
 
-Le logement social représente 17 % du parc total français en 2013.
+Le logement social représente 17 % du parc total français en 2013 et tient une place structurelle dans la politique du logement française.
 
 ## Histoire
 
@@ -111,7 +111,7 @@ L'habitat social peut être de tout type : « grands ensembles », « petit coll
 
 ## Financement
 
-En France, le logement social est financé par plusieurs acteurs : L’État sous quatre formes principales, ci-après très synthétisées :
+En France, le logement social est financé par plusieurs acteurs sur le principe de l'équilibre d'opération : L’État sous quatre formes principales, ci-après très synthétisées :
 
 - une subvention fonction de la vocation sociale du projet, dite communément "aide à la pierre" ;
 - des exonérations fiscales dont principalement l’exonération de la taxe foncière sur les propriétés bâties (TFPB) - les collectivités locales (bénéficiaires de cet impôt) étant en partie dédommagées par un fonds de compensation - et l'exonération de l'impôt sur les sociétés ;

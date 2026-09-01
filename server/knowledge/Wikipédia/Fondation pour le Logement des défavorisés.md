@@ -1,6 +1,6 @@
-# Fondation pour le Logement des défavorisés
+# Fondation pour le logement des défavorisés
 
-La **fondation pour le Logement des défavorisés**, anciennement **fondation Abbé-Pierre pour le logement des défavorisés** (FAP), est une organisation créée en 1987 et reconnue d'utilité publique le 11 février 1992, qui a pour mission de permettre à toute personne démunie d'accéder à un logement décent et à une vie digne, quels que soient le montant de ses ressources et sa situation sociale.
+La **Fondation pour le logement des défavorisés** (**FLD**), anciennement **Fondation Abbé-Pierre pour le logement des défavorisés** ou simplement **Fondation Abbé-Pierre** (**FAP**) jusqu'en 2025, est une organisation créée en 1987 et reconnue d'utilité publique le 11 février 1992, qui a pour mission de permettre à toute personne démunie d'accéder à un logement décent et à une vie digne, quels que soient le montant de ses ressources et sa situation sociale.
 
 L’abbé Pierre, son fondateur, en a été le président d’honneur jusqu'à sa mort le 22 janvier 2007.
 
@@ -8,7 +8,7 @@ La fondation pour le Logement des défavorisés finance et accompagne des associ
 
 Elle est présente sur l'ensemble du territoire français au travers de neuf agences régionales, vingt-huit boutiques solidarité (accueils de jour) et quarante et une pension de famille (lieux de vie).
 
-En 2025, après les accusations d'agressions sexuelles et de viols à l'encontre de l'abbé Pierre, la fondation change de nom : la « fondation Abbé-Pierre pour le logement des défavorisés » devient la « fondation pour le Logement des défavorisés ».
+En 2025, après les accusations d'agressions sexuelles et de viols à l'encontre de l'abbé Pierre, la fondation change de nom : la « fondation Abbé-Pierre pour le logement des défavorisés » devient la « Fondation pour le logement des défavorisés ».
 
 ## Origine et création
 
@@ -70,7 +70,7 @@ Selon le rapport sur l’état du mal-logement en France, fin 2024, la France co
 
 La Fondation s’inquiète aussi face à la stagnation de production de logements sociaux et l’augmentation des expulsions locatives.
 
-Le 4 février 2025, la fondation pour le Logement des défavorisés publie son trentième rapport sur l’état du mal-logement. Le rapport alerte sur les discriminations, en particulier celles subies par les personnes en situation de handicap, qui ont moins de chances d'obtenir un logement social alors qu’elles sont censées être prioritaires. Les discriminations concernent les personnes atteintes de handicaps moteurs vis-à-vis de l’adaptation des logements mais aussi envers les personnes malentendantes, non-voyantes ou atteintes de troubles psychiques ou intellectuels. Les personnes âgées, ayant des difficultés à accomplir les gestes du quotidien sont également concernées. L’offre de logements adaptés est « incomplète, pour ne pas dire marginale », s’inquiète la Fondation.
+Le 4 février 2025, la Fondation pour le logement des défavorisés publie son trentième rapport sur l’état du mal-logement. Le rapport alerte sur les discriminations, en particulier celles subies par les personnes en situation de handicap, qui ont moins de chances d'obtenir un logement social alors qu’elles sont censées être prioritaires. Les discriminations concernent les personnes atteintes de handicaps moteurs vis-à-vis de l’adaptation des logements mais aussi envers les personnes malentendantes, non-voyantes ou atteintes de troubles psychiques ou intellectuels. Les personnes âgées, ayant des difficultés à accomplir les gestes du quotidien sont également concernées. L’offre de logements adaptés est « incomplète, pour ne pas dire marginale », s’inquiète la Fondation.
 
 Selon le rapport, 735 personnes sont mortes dans la rue, un record en douze ans. La France compte 350 000 de personnes sans domicile, ce qui correspond à une hausse de 6 % sur un an et de 145 % depuis 2012.
 
@@ -124,10 +124,10 @@ Ainsi, en janvier 2005, au lendemain du tsunami en Asie du Sud-Est, la Fondation
 
 L'action de la fondation pour le Logement des défavorisés s'articule autour de plusieurs grandes missions liées au logement :
 
-- **accueillir** les personnes en grande précarité via son réseau de boutiques solidarité et de pensions de famille[source insuffisante] ;
-- **construire** des logements sociaux. Depuis 2005, la fondation apporte un important soutien financier à la création de logements très sociaux, des logements financés par le prêt locatif aidé d’intégration (PLAI) via plusieurs programmes successifs : _1 500 logements très sociaux_, _2 000 toits pour 2000 familles_ et _Toits d’abord_[source insuffisante] lancé en 2012 ;
-- **réhabiliter** les logements indignes (très dégradés, insalubres, présentant un danger pour la santé ou la sécurité des habitants). En 2017, la fondation estime que 600 000 ménages vivent dans des taudis en France ;
-- **conseiller,** accompagner et informer sur leurs droits les personnes en situation de mal-logement ou menacées d’expulsion. C’est le rôle de l’Espace Solidarité Habitat, structure ouverte par la Fondation en 2000 en Île-de-France, et d’une plate-forme téléphonique : _Allô Prévention Expulsion_.
+- **Accueillir** les personnes en grande précarité via son réseau de boutiques solidarité et de pensions de famille[source insuffisante] ;
+- **Construire** des logements sociaux. Depuis 2005, la fondation apporte un important soutien financier à la création de logements très sociaux, des logements financés par le prêt locatif aidé d’intégration (PLAI) via plusieurs programmes successifs : _1 500 logements très sociaux_, _2 000 toits pour 2000 familles_ et _Toits d’abord_[source insuffisante] lancé en 2012 ;
+- **Réhabiliter** les logements indignes (très dégradés, insalubres, présentant un danger pour la santé ou la sécurité des habitants). En 2017, la fondation estime que 600 000 ménages vivent dans des taudis en France ;
+- **Conseiller**, accompagner et informer sur leurs droits les personnes en situation de mal-logement ou menacées d’expulsion. C’est le rôle de l’Espace Solidarité Habitat, structure ouverte par la Fondation en 2000 en Île-de-France, et d’une plate-forme téléphonique : _Allô Prévention Expulsion_.
 
 Depuis 2023, l’association est une « fondation abritante ». La première fondation abritée est « Solidarités nouvelles pour le logement ». La Fondation pour le logement des Défavorisés abrite également « Alynea – Samu Social 69 ».
 
@@ -165,10 +165,10 @@ En 2025, les équipes sont constituées de 150 salariés et de 200 bénévoles.
 
 La Fondation est dirigée par un président, un délégué général et une déléguée générale adjointe. Ses orientations sont arrêtées par un conseil d'administration constitué par douze membres bénévoles de la société civile. Des représentants des ministères chargés du logement et de l'Intérieur siègent également au conseil d'administration de la fondation.
 
-En 2025, la direction de la Fondation est composée de :
+En 2026, la direction de la Fondation est composée de :
 
-- Présidente : Marie-Hélène Le Nedic
-- Vice-président : Dominique Ayrault
+- Présidente : Marie-Hélène Le Nédic
+- Vice-président : Patrick Rouyer
 - Délégué général : Christophe Robert ;
 - Déléguée générale adjointe : Sonia Hurcet ;
 
@@ -202,11 +202,11 @@ La fondation pour le Logement des défavorisés est financée à plus de 95 % pa
 
 Le 17 juillet 2024, Emmaüs International publie un rapport de huit pages commandé au cabinet Egaé, qui présente les témoignages de sept femmes rapportant des « comportements pouvant s'apparenter à des agressions sexuelles ou des faits de harcèlement sexuel » de la part de l'abbé Pierre entre la fin des années 1970 et 2005, l'une d'entre elles étant mineure au moment des premiers faits. Les témoignages recueillis rapportent notamment des attouchements répétés sur la poitrine généralement commis lorsque l’abbé Pierre est seul avec ses victimes sur lesquelles il semble exercer une emprise psychologique.
 
-Le 6 septembre 2024, le cabinet Egaé publie un rapport faisant état de dix-sept nouveaux témoignages qui évoquent des propos à caractère sexuel, des baisers imposés, des agressions sexuelles sur une personne vulnérable et sur une mineure, ainsi que des fellations imposées, qui constituent des faits de viols. Les accusations concernent la période comprise entre les années 1950 et 2000 et émanent de différents pays, qui comprennent, outre la France, les États-Unis, le Maroc et la Suisse. Dans un communiqué publié avec Emmaüs France et Emmaüs International, la Fondation pour le logement des Défavorisés (ex Fondation Abbé-Pierre) annonce le changement de son nom et de son logo, la fermeture du lieu de mémoire d'Esteville dédié à son ancien président d'honneur et la mise en place d'une commission indépendante chargée d'enquêter sur les dysfonctionnements qui ont permis à l'abbé Pierre de commettre des abus pendant plus de 50 ans.
+Le 6 septembre 2024, le cabinet Egaé publie un rapport faisant état de dix-sept nouveaux témoignages qui évoquent des propos à caractère sexuel, des baisers imposés, des agressions sexuelles sur une personne vulnérable et sur une mineure, ainsi que des fellations imposées, qui constituent des faits de viols. Les accusations concernent la période comprise entre les années 1950 et 2000 et émanent de différents pays, qui comprennent, outre la France, les États-Unis, le Maroc et la Suisse. Dans un communiqué publié avec Emmaüs France et Emmaüs International, la Fondation pour le logement des défavorisés (ex Fondation Abbé-Pierre) annonce le changement de son nom et de son logo, la fermeture du lieu de mémoire d'Esteville dédié à son ancien président d'honneur et la mise en place d'une commission indépendante chargée d'enquêter sur les dysfonctionnements qui ont permis à l'abbé Pierre de commettre des abus pendant plus de 50 ans.
 
 Le délégué général de la Fondation déclare le 19 décembre 2024 que les dons ont baissé de 30 % depuis le mois de juillet, au début des révélations sur l'abbé Pierre, et appelle à la générosité du public.
 
-Le 25 janvier 2025, le changement de nom est publié au _Journal officiel_ : la « fondation Abbé-Pierre pour le logement des défavorisés » devient la « fondation pour le Logement des défavorisés ».
+Le 25 janvier 2025, le changement de nom est publié au _Journal officiel_ : la « Fondation Abbé-Pierre pour le logement des défavorisés » devient la « Fondation pour le logement des défavorisés ».
 
 Après avoir changé son nom en mars 2025, la Fondation efface le visage de l’abbé Pierre de son site. Depuis juillet 2024, elle fait face à une baisse de 30 % des dons de particuliers, cette diminution des dons n’ayant eu, jusqu’alors, qu’un « impact limité ». Le directeur, Christophe Robert, affirme néanmoins assumer l’histoire de l’association.
 
