@@ -42,7 +42,7 @@ Vers 1928-1929, le peintre fit son portrait (musée des Beaux-Arts de Lille), do
 
 ## Engagement européen
 
-Fidèle lieutenant des options européistes d'Aristide Briand, représentant de la branche modernisatrice et cartelliste du patronat français, partisan du rapprochement industriel entre la France et l'Allemagne, Loucheur est un des plus actifs promoteurs des idées et projets de construction économique européenne des années 1920. À ce titre, il peut être considéré comme un des inspirateurs intellectuels de l'Union européenne[réf. nécessaire].
+Fidèle lieutenant des options européistes d'Aristide Briand, représentant de la branche modernisatrice et cartelliste du patronat français, partisan du rapprochement industriel entre la France et l'Allemagne, Loucheur est considéré comme l'un des promoteurs des idées et projets de construction économique européenne des années 1920. À ce titre, il peut être considéré comme un des inspirateurs intellectuels de l'Union européenne[réf. nécessaire].
 
 Il formule notamment le projet Loucheur, qui préconise le développement des ententes de production et l'abaissement des barrières douanières en Europe. Ces idées constituent le socle des travaux de la Conférence économique internationale, dont il est l'initiateur en 1925, qui se réunit à Genève en 1927. Vice-président de cette conférence, Loucheur exerce un rôle majeur dans son organisation et ses débats et influence notablement ses conclusions, véritable laboratoire à idées de l'Europe économique du futur.
 
@@ -52,4 +52,7 @@ Enfin, il est l'inspirateur du volet économique du Projet d'Union européenne, 
 
 ## Hommages
 
-- Une rue porte son nom dans le 17e arrondissement de Paris.
+En France, plusieurs voies portent son nom :
+
+- Une rue dans le 17e arrondissement de Paris.
+- Une rue dans le 9e arrondissement de Lyon (depuis 1933).
