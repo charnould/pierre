@@ -25,7 +25,6 @@ function attachmentExtension(name: string): string {
 }
 
 export function isSupportedAttachment(file: Pick<File, 'name' | 'type'>): boolean {
-  if (file.type.startsWith('text/')) return true
   const ext = attachmentExtension(file.name)
   return ext.length > 0 && ATTACHMENT_SUPPORTED_EXTENSIONS.has(ext)
 }

@@ -11,7 +11,7 @@ export const view = (user, _desktop_version: string | null) => {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/dist/css/style.1788381380835.css" />
+        <link rel="stylesheet" href="../assets/dist/css/style.1788426191084.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap"
           rel="stylesheet"
