@@ -1,9 +1,9 @@
-import { resolve } from 'node:path'
+import { join } from 'node:path'
 
 import { $ } from 'bun'
 import type { Subprocess } from 'bun'
 
-import { SERVER_ROOT } from './paths'
+import { datastorePaths } from './paths'
 import { getSmolmachinePath, returnPoolVm } from './vm-pool'
 
 export type PierreInstance = {
@@ -15,8 +15,7 @@ export type PierreInstance = {
 }
 
 export function getKnowledgePath(configId: string): string {
-  const service = Bun.env['SERVICE']
-  return resolve(SERVER_ROOT, 'datastores', service!, 'knowledge', configId)
+  return join(datastorePaths().knowledge, configId)
 }
 
 function buildPiEnvArgs(): string[] {

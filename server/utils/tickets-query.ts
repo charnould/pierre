@@ -2,6 +2,7 @@ import { Database } from 'bun:sqlite'
 
 import { z } from 'zod'
 
+import { datastorePaths } from './paths'
 import { draft_summaries_by_ticket } from './ticket-drafts'
 import { buildTicketFiltersWhere, type TicketFilterRule } from './ticket-filters'
 
@@ -71,8 +72,6 @@ export class TicketsSchemaError extends Error {
     this.name = 'TicketsSchemaError'
   }
 }
-
-const datastore_path = (): string => `datastores/${Bun.env['SERVICE']}/datastore.sqlite`
 
 const empty_meta = (
   limit: number,
@@ -198,7 +197,7 @@ export const parse_tickets_filters = (
  * Column names for filters and sort are validated against `PRAGMA table_info("reclamations")`.
  */
 export const list_tickets = (input: TicketsListInput): TicketsListResult => {
-  const db = new Database(datastore_path(), { readonly: true })
+  const db = new Database(datastorePaths().database, { readonly: true })
 
   try {
     if (!table_exists(db)) {
@@ -274,7 +273,7 @@ export const list_tickets = (input: TicketsListInput): TicketsListResult => {
  * Returns distinct values for a tickets column (full table, not paginated).
  */
 export const get_ticket_column_facets = (input: TicketsFacetsInput): TicketsFacetsResult => {
-  const db = new Database(datastore_path(), { readonly: true })
+  const db = new Database(datastorePaths().database, { readonly: true })
 
   try {
     if (!table_exists(db)) {

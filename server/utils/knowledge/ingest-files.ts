@@ -13,7 +13,7 @@ import * as XLSX from 'xlsx'
 import * as cpexcel from 'xlsx/dist/cpexcel.full.mjs'
 
 import { Config } from '../_schema'
-import { CUSTOMIZATION_DIR } from '../paths'
+import { CUSTOMIZATION_DIR, datastorePaths } from '../paths'
 import type { Metadata } from './generate-metadata'
 import { normalize_knowledge_name } from './utils'
 
@@ -293,9 +293,10 @@ export const save_formatted_file = async (
  */
 export const setup_knowledge_directories = async (): Promise<void> => {
   const configs = await load_configs()
+  const { knowledge } = datastorePaths()
 
   for (const config of configs) {
-    const knowledge_path = `datastores/${Bun.env['SERVICE']}/knowledge/${config.id}`
+    const knowledge_path = join(knowledge, config.id)
     await rm(knowledge_path, { recursive: true, force: true })
     await mkdir(knowledge_path, { recursive: true })
 
@@ -324,6 +325,7 @@ export const ingest_files = async (
   const anomalies: { code: string; subject: string | null }[] = []
 
   const configs = await load_configs()
+  const paths = datastorePaths()
 
   const valid_config_ids = new Set(configs.map((c) => c.id))
   const metadata_filenames = new Set(files.map((f) => basename(f.filepath)))
@@ -341,7 +343,7 @@ export const ingest_files = async (
     }
   }
 
-  const disk_files = await readdir(`datastores/${Bun.env['SERVICE']}/files`)
+  const disk_files = await readdir(paths.files)
   for (const f of disk_files) {
     if (f !== '_metadata.xlsx' && !metadata_filenames.has(f)) {
       anomalies.push({ code: 'FILE_NOT_IN_METADATA', subject: f })
@@ -380,7 +382,11 @@ export const ingest_files = async (
     }
 
     const normalized_name = normalize_knowledge_name(metadata.agent_filename)
-    const output_path = `./datastores/${Bun.env['SERVICE']}/knowledge/${metadata.access}/${normalized_name}.${content.parser}`
+    const output_path = join(
+      paths.knowledge,
+      metadata.access,
+      `${normalized_name}.${content.parser}`
+    )
 
     const write_start = performance.now()
     await save_formatted_file(output_path, content, metadata.url)
@@ -398,7 +404,7 @@ export const ingest_files = async (
 
   // Write _sources.json for each config that has at least one JSON file
   for (const [config, sources] of sources_by_config) {
-    const sources_path = `./datastores/${Bun.env['SERVICE']}/knowledge/${config}/_sources.json`
+    const sources_path = join(paths.knowledge, config, '_sources.json')
     await Bun.write(sources_path, JSON.stringify(sources))
   }
 

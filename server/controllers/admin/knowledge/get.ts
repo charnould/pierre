@@ -1,18 +1,22 @@
 import { Database } from 'bun:sqlite'
 import { readdir } from 'node:fs/promises'
+import { join } from 'node:path'
 
 import type { Context } from 'hono'
 
+import { datastorePaths } from '../../../utils/paths'
 import { view } from '../../../views/admin.knowledge'
 
 export const controller = async (c: Context) => {
   try {
-    const files = await readdir(`datastores/${Bun.env['SERVICE']}/files`)
+    const paths = datastorePaths()
+    const files = await readdir(paths.files)
 
     let metadata: Metadata[] = []
 
     for (const f of files) {
-      const file = Bun.file(`datastores/${Bun.env['SERVICE']}/files/${f}`)
+      const file_path = join(paths.files, f)
+      const file = Bun.file(file_path)
       const stats = await file.stat()
 
       metadata.push({
@@ -29,7 +33,7 @@ export const controller = async (c: Context) => {
       a.filename.localeCompare(b.filename, 'fr', { sensitivity: 'base' })
     )
 
-    const db = new Database(`datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
+    const db = new Database(paths.database)
     const events = db
       .query<KnowledgeBuildRow, []>(
         `SELECT source, kind, code, subject

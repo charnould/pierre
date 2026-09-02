@@ -1,5 +1,6 @@
 import { Database } from 'bun:sqlite'
 
+import { datastorePaths } from './paths'
 import { CORE_RECLAMATION_COLUMNS } from './tickets-query'
 
 export class ReclamationsUpsertError extends Error {
@@ -19,8 +20,6 @@ export type ReclamationUpsertResult = {
   id_reclamation: string
   id_locataire: string
 }
-
-const datastore_path = (): string => `datastores/${Bun.env['SERVICE']}/datastore.sqlite`
 
 const table_exists = (db: Database): boolean =>
   db
@@ -94,7 +93,7 @@ export const upsert_reclamation = (input: ReclamationUpsertInput): ReclamationUp
     throw new ReclamationsUpsertError('id_locataire is required')
   }
 
-  const db = new Database(datastore_path())
+  const db = new Database(datastorePaths().database)
 
   try {
     ensure_reclamations_table(db)

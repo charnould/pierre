@@ -1,5 +1,6 @@
 import { Database } from 'bun:sqlite'
 
+import { datastorePaths } from '../paths'
 import { build_knowledge_databases } from './build-knowledge'
 import { generate_metadata } from './generate-metadata'
 import { ingest_files, setup_knowledge_directories } from './ingest-files'
@@ -33,7 +34,7 @@ export type KnowledgeBuildEvent = {
  * @throws {Error} When the `SERVICE` environment variable is not set or the database is unreachable.
  */
 export const save_events = (events: KnowledgeBuildEvent[]): void => {
-  const db = new Database(`datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
+  const db = new Database(datastorePaths().database)
   const now = new Date().toISOString()
 
   try {
