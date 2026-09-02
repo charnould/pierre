@@ -11,24 +11,24 @@ async function resolveActiveConfig(c: Context): Promise<Config> {
   if (queryConfig === undefined) {
     if (user?.config?.length) {
       try {
-        return (await import(`../../../customization/chatbot/${user.config[0]}/config`)).default
+        return (await import(`../../../customization/chatbots/${user.config[0]}/config`)).default
       } catch {
-        return (await import('../../../customization/chatbot/default/config')).default
+        return (await import('../../../customization/chatbots/default/config')).default
       }
     }
-    return (await import('../../../customization/chatbot/default/config')).default
+    return (await import('../../../customization/chatbots/default/config')).default
   }
 
   try {
     if (user !== null && user !== undefined) {
       if (user.config.includes(queryConfig)) {
-        return (await import(`../../../customization/chatbot/${queryConfig}/config`)).default
+        return (await import(`../../../customization/chatbots/${queryConfig}/config`)).default
       }
-      return (await import(`../../../customization/chatbot/${user.config[0]}/config`)).default
+      return (await import(`../../../customization/chatbots/${user.config[0]}/config`)).default
     }
-    return (await import(`../../../customization/chatbot/${queryConfig}/config`)).default
+    return (await import(`../../../customization/chatbots/${queryConfig}/config`)).default
   } catch {
-    return (await import('../../../customization/chatbot/default/config')).default
+    return (await import('../../../customization/chatbots/default/config')).default
   }
 }
 

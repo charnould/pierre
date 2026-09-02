@@ -1,7 +1,7 @@
 import { expect, it } from 'bun:test'
 
-import defaultConfig from '../../../../../customization/chatbot/default/config'
-import testing1Config from '../../../../../customization/chatbot/testing_purpose_1/config'
+import defaultConfig from '../../../../../customization/chatbots/default/config'
+import testing1Config from '../../../../../customization/chatbots/testing_purpose_1/config'
 import { get_displayable_configs } from '../../../../controllers/chat/get'
 import type { Parsed_User } from '../../../../utils/_schema'
 

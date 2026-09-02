@@ -35,6 +35,7 @@ exports[`should AIContext parse correctly 1`] = `
       "PS. Je n'ai pas connaissance à ce jour des spécificités des bailleurs.",
     ],
     "id": "default",
+    "layout": "compact",
     "protected": false,
     "reasoning_display": "off",
     "reasoning_effort": "medium",

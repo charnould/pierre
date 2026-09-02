@@ -59,9 +59,10 @@ const rename_files_recursively = async (dir_path: string): Promise<void> => {
 const load_configs = async (): Promise<Config[]> => {
   const configs: Config[] = []
 
-  const chatbot_dirs = await readdir(join(CUSTOMIZATION_DIR, 'chatbot'))
+  const chatbot_dirs = await readdir(join(CUSTOMIZATION_DIR, 'chatbots'))
   for (const dir of chatbot_dirs) {
-    const content = (await import(`../../../customization/chatbot/${dir}/config`)).default as Config
+    const content = (await import(`../../../customization/chatbots/${dir}/config`))
+      .default as Config
     configs.push(content)
   }
 

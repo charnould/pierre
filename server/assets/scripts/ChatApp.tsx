@@ -33,7 +33,7 @@ function Greeting({ greeting, assetId }: { greeting: string[]; assetId: string }
     <>
       <img
         className="mt-6 mb-3"
-        src={`../customization/chatbot/${assetId}/system.svg`}
+        src={`../customization/chatbots/${assetId}/system.svg`}
         height={33}
         width={33}
         alt="IA"
@@ -105,14 +105,16 @@ function ThinkingIndicator({ reasoningPlaceholders }: { reasoningPlaceholders: s
   const [fade, setFade] = useState(true)
 
   useEffect(() => {
-    let lastIdx = reasoningPlaceholders.indexOf(statusText)
     const rotate = () => {
       setFade(false)
       setTimeout(() => {
-        let idx = Math.floor(Math.random() * reasoningPlaceholders.length)
-        if (idx === lastIdx) idx = (idx + 1) % reasoningPlaceholders.length
-        lastIdx = idx
-        setStatusText(reasoningPlaceholders[idx] ?? reasoningPlaceholders[0]!)
+        setStatusText((current) => {
+          let idx = Math.floor(Math.random() * reasoningPlaceholders.length)
+          if (reasoningPlaceholders[idx] === current) {
+            idx = (idx + 1) % reasoningPlaceholders.length
+          }
+          return reasoningPlaceholders[idx] ?? reasoningPlaceholders[0]!
+        })
         setFade(true)
       }, 300)
     }
@@ -478,7 +480,7 @@ function ScrollAnchor({ messages, status }: { messages: unknown[]; status: ChatS
 // ---------------------------------------------------------------------------
 
 export function ChatApp() {
-  const boot = useRef(getBootData()).current
+  const [boot] = useState(getBootData)
   const isCompact = new URLSearchParams(window.location.search).has('compact')
   const { messages, status, sendMessage, stop, regenerate } = usePierreChat({
     convId: boot.convId,

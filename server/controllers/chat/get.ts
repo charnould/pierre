@@ -24,7 +24,7 @@ export const controller = async (c: Context) => {
   try {
     const user = c.get('user') as Parsed_User | null
     const config = c.req.query('config') as string
-    const active_config = (await import(`../../../customization/chatbot/${config}/config`))
+    const active_config = (await import(`../../../customization/chatbots/${config}/config`))
       .default as Config
     const displayable_configs = await get_displayable_configs({
       user,
@@ -65,10 +65,10 @@ export const get_displayable_configs = async (params: {
   active_config: Config
 }): Promise<Displayable_configs> => {
   try {
-    const assets = await readdir(join(CUSTOMIZATION_DIR, 'chatbot'))
+    const assets = await readdir(join(CUSTOMIZATION_DIR, 'chatbots'))
     const configs = await Promise.all(
       assets.map(async (file) => {
-        const config: Config = (await import(`../../../customization/chatbot/${file}/config`))
+        const config: Config = (await import(`../../../customization/chatbots/${file}/config`))
           .default
         const should_be_displayed =
           params.user != null

@@ -62,8 +62,10 @@ export const controller = async (c: Context) => {
         const default_user = User.parse({
           role: 'administrator',
           config: JSON.stringify(
-            (await readdir(join(CUSTOMIZATION_DIR, 'chatbot')))
-              .filter((entry) => existsSync(join(CUSTOMIZATION_DIR, 'chatbot', entry, 'config.ts')))
+            (await readdir(join(CUSTOMIZATION_DIR, 'chatbots')))
+              .filter((entry) =>
+                existsSync(join(CUSTOMIZATION_DIR, 'chatbots', entry, 'config.ts'))
+              )
               .sort()
           ),
           email: 'admin@pierre-ia.org',

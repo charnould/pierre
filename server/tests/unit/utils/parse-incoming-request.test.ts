@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test'
 
 import { AIContext } from '../../../utils/_schema'
 
-const config = (await import(`../../../../customization/chatbot/default/config`)).default
+const config = (await import(`../../../../customization/chatbots/default/config`)).default
 
 test('should AIContext parse correctly', async () => {
   expect(

@@ -13,7 +13,7 @@ import {
 } from '../../../utils/handle-conversation'
 
 const sql = new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
-const config = (await import(`../../../../customization/chatbot/default/config`)).default
+const config = (await import(`../../../../customization/chatbots/default/config`)).default
 
 // Simulated responses for test cases
 const c1_r1 = await AIContext.parseAsync({
