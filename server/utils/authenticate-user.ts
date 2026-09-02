@@ -4,6 +4,7 @@ import type { Context, Next } from 'hono'
 import { bearerAuth } from 'hono/bearer-auth'
 import { getSignedCookie } from 'hono/cookie'
 
+import { COMMUNICATION_TYPES } from '../../shared/activites'
 import { get_user } from '../utils/handle-user'
 import type { Config, Parsed_User } from './_schema'
 
@@ -31,38 +32,50 @@ export const authenticate = async (c: Context, next: Next) => {
   const cookie = await getSignedCookie(c, Bun.env['AUTH_SECRET'] as string, 'pierre-ia')
 
   if (cookie) {
-    const cookie_user = JSON.parse(decrypt(cookie, Bun.env['AUTH_SECRET'] as string)) as Parsed_User
-    const db_user = await get_user(cookie_user.email)
-    if (db_user) {
-      user = db_user
-      can_access_protected_context = true
+    let email: string | null = null
+    try {
+      const cookie_user = JSON.parse(
+        decrypt(cookie, Bun.env['AUTH_SECRET'] as string)
+      ) as Partial<Parsed_User>
+      if (typeof cookie_user.email === 'string' && cookie_user.email.trim()) {
+        email = cookie_user.email
+      }
+    } catch {
+      // Invalid or stale encrypted session: treat it as unauthenticated.
+    }
+    if (email) {
+      const db_user = await get_user(email)
+      if (db_user) {
+        user = db_user
+        can_access_protected_context = true
+      }
     }
   }
 
   // Check if a valid `config` query is provided in the request. If provided,
-  // attempt to load the corresponding config from the `customization/chatbot` folder. If the
+  // attempt to load the corresponding config from the `customization/chatbots` folder. If the
   // query is invalid or missing, fall back to the `default` config
   let has_valid_config_query = false
 
   const config: Config = await (async () => {
     if (c.req.query('config') === undefined) {
       has_valid_config_query = false
-      return (await import('../../customization/chatbot/default/config')).default
+      return (await import('../../customization/chatbots/default/config')).default
     }
     try {
       if (user !== null) {
         has_valid_config_query = user.config.includes(c.req.query('config') as string)
         if (has_valid_config_query) {
-          return (await import(`../../customization/chatbot/${c.req.query('config')}/config`))
+          return (await import(`../../customization/chatbots/${c.req.query('config')}/config`))
             .default
         }
-        return (await import(`../../customization/chatbot/${user.config[0]}/config`)).default
+        return (await import(`../../customization/chatbots/${user.config[0]}/config`)).default
       }
       has_valid_config_query = true
-      return (await import(`../../customization/chatbot/${c.req.query('config')}/config`)).default
+      return (await import(`../../customization/chatbots/${c.req.query('config')}/config`)).default
     } catch {
       has_valid_config_query = false
-      return (await import('../../customization/chatbot/default/config')).default
+      return (await import('../../customization/chatbots/default/config')).default
     }
   })()
 
@@ -151,6 +164,19 @@ export const authenticate = async (c: Context, next: Next) => {
 
   //
   //
+  // Case B3: Outbound communication (desktop + traitements de masse)
+  // Same session cookie as /desktop/. JSON 401 — never a chatbot HTML redirect.
+  //
+  if (c.req.path === '/mailto' || COMMUNICATION_TYPES.some((type) => c.req.path === `/${type}`)) {
+    if (user === null) {
+      return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
+    }
+    c.set('user', user)
+    return await next()
+  }
+
+  //
+  //
   // Case C: Admin request
   // This block handles requests where the path starts with '/a/',
   // indicating that the request is intended for admin routes.
@@ -223,6 +249,7 @@ export const encrypt = (text: string, secret_key: string) => {
 //
 export const decrypt = (encrypted_text: string, secret_key: string) => {
   const [ivHex, encryptedDataHex] = encrypted_text.split(':')
+  if (!ivHex || !encryptedDataHex) throw new Error('Invalid encrypted value')
   const iv = Buffer.from(ivHex, 'hex')
   const encrypted_data = Buffer.from(encryptedDataHex, 'hex')
   const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(secret_key), iv)
