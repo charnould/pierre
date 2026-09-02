@@ -11,6 +11,8 @@ const userByLogin = new Map<string, OrgUser>()
 const userByEmail = new Map<string, OrgUser>()
 const photoInflight = new Map<string, Promise<void>>()
 let cacheVersion = 0
+let activeUrl = ''
+let activationVersion = 0
 const cacheListeners = new Set<() => void>()
 
 function bump(): void {
@@ -18,18 +20,33 @@ function bump(): void {
   for (const listener of cacheListeners) listener()
 }
 
-function indexOrgUsers(users: OrgUser[]): void {
+const normalizedUrl = (url: string): string => {
+  try {
+    return new URL(url).toString().replace(/\/$/, '')
+  } catch {
+    return url.replace(/\/$/, '')
+  }
+}
+const photoKey = (url: string, email: string): string =>
+  `${normalizedUrl(url)}\0${email.trim().toLowerCase()}`
+
+function indexOrgUsers(url: string, users: OrgUser[]): void {
+  activeUrl = normalizedUrl(url)
   userByLogin.clear()
   userByEmail.clear()
+  const usersByLogin = new Map<string, OrgUser[]>()
   for (const user of users) {
     const loginKey = user.login.toLowerCase()
-    userByLogin.set(loginKey, user)
+    usersByLogin.set(loginKey, [...(usersByLogin.get(loginKey) ?? []), user])
     const emailKey = user.email.trim().toLowerCase()
     if (emailKey) userByEmail.set(emailKey, user)
     if (!user.hasAvatar) {
-      photoByLogin.delete(loginKey)
-      bytesByLogin.delete(loginKey)
+      photoByLogin.delete(photoKey(activeUrl, emailKey))
+      bytesByLogin.delete(photoKey(activeUrl, emailKey))
     }
+  }
+  for (const [login, matches] of usersByLogin) {
+    if (matches.length === 1) userByLogin.set(login, matches[0]!)
   }
   bump()
 }
@@ -38,16 +55,18 @@ function hydratePhotos(url: string, users: OrgUser[]): void {
   if (!window.api?.getAvatar) return
   for (const user of users) {
     if (!user.hasAvatar) continue
-    const loginKey = user.login.toLowerCase()
-    if (bytesByLogin.get(loginKey) === user.avatarBytes && photoByLogin.has(loginKey)) continue
-    const key = `${url}:${loginKey}:${user.avatarBytes}`
+    const emailKey = user.email.trim().toLowerCase()
+    const cacheKey = photoKey(url, emailKey)
+    const version = user.avatarVersion
+    if (bytesByLogin.get(cacheKey) === version && photoByLogin.has(cacheKey)) continue
+    const key = `${cacheKey}:${version}`
     if (photoInflight.has(key)) continue
     const pending = (async () => {
       try {
-        const bytes = await window.api.getAvatar({ url, login: user.login })
+        const bytes = await window.api.getAvatar({ url, email: user.email })
         if (!bytes) return
-        photoByLogin.set(loginKey, bytesToDataUri(bytes, 'image/webp'))
-        bytesByLogin.set(loginKey, user.avatarBytes)
+        photoByLogin.set(cacheKey, bytesToDataUri(bytes, 'image/webp'))
+        bytesByLogin.set(cacheKey, version)
         bump()
       } finally {
         photoInflight.delete(key)
@@ -59,8 +78,13 @@ function hydratePhotos(url: string, users: OrgUser[]): void {
 
 /** Fetches org users for a server URL, with in-memory cache + in-flight dedupe. */
 export async function fetchOrgUsers(url: string): Promise<OrgUser[]> {
+  const activation = ++activationVersion
   const hit = cache.get(url)
-  if (hit) return hit
+  if (hit) {
+    indexOrgUsers(url, hit)
+    hydratePhotos(url, hit)
+    return hit
+  }
 
   let pending = inflight.get(url)
   if (!pending) {
@@ -71,8 +95,6 @@ export async function fetchOrgUsers(url: string): Promise<OrgUser[]> {
         if (!res) return []
         const users = res.users ?? []
         cache.set(url, users)
-        indexOrgUsers(users)
-        hydratePhotos(url, users)
         return users
       } finally {
         inflight.delete(url)
@@ -80,7 +102,12 @@ export async function fetchOrgUsers(url: string): Promise<OrgUser[]> {
     })()
     inflight.set(url, pending)
   }
-  return pending
+  const users = await pending
+  if (activation === activationVersion) {
+    indexOrgUsers(url, users)
+    hydratePhotos(url, users)
+  }
+  return users
 }
 
 export async function resolveOrgUsersUrl(url: string | undefined): Promise<string | undefined> {
@@ -141,10 +168,10 @@ export function formatOrgCollaboratorLabel(raw: string, fallbackLogin?: string |
 /** Sync lookup of a collaborator's photo data-URI by login, email, or email local-part. */
 export function resolveUserAvatar(login: string): string | null {
   const user = resolveOrgUserByLoginOrEmail(login)
-  if (user) return photoByLogin.get(user.login.toLowerCase()) ?? null
+  if (user) return photoByLogin.get(photoKey(activeUrl, user.email)) ?? null
   const key = login.trim().toLowerCase()
   if (!key) return null
-  return photoByLogin.get(key) ?? photoByLogin.get(loginKeyFrom(key)) ?? null
+  return photoByLogin.get(photoKey(activeUrl, key)) ?? null
 }
 
 export function subscribeOrgUsersCache(listener: () => void): () => void {
@@ -162,18 +189,20 @@ export function getOrgUsersCacheVersion(): number {
 export function applyLocalAvatar(
   login: string,
   photoUrl: string | null | undefined,
-  displayName?: string
+  displayName?: string,
+  url: string = activeUrl
 ): void {
   const loginKey = loginKeyFrom(login)
   if (!loginKey) return
+  const existing = userByEmail.get(login.trim().toLowerCase()) ?? userByLogin.get(loginKey) ?? null
+  const avatarKey = photoKey(url, existing?.email ?? login)
   if (photoUrl !== undefined) {
-    if (photoUrl) photoByLogin.set(loginKey, photoUrl)
+    if (photoUrl) photoByLogin.set(avatarKey, photoUrl)
     else {
-      photoByLogin.delete(loginKey)
-      bytesByLogin.delete(loginKey)
+      photoByLogin.delete(avatarKey)
+      bytesByLogin.delete(avatarKey)
     }
   }
-  const existing = userByLogin.get(loginKey) ?? userByEmail.get(login.trim().toLowerCase()) ?? null
   if (existing) {
     const next = {
       ...existing,
@@ -182,7 +211,9 @@ export function applyLocalAvatar(
         photoUrl === undefined ? existing.avatarBytes : photoUrl ? existing.avatarBytes : 0,
       ...(displayName !== undefined ? { displayName } : {})
     }
-    userByLogin.set(existing.login.toLowerCase(), next)
+    if (userByLogin.get(existing.login.toLowerCase()) === existing) {
+      userByLogin.set(existing.login.toLowerCase(), next)
+    }
     const emailKey = existing.email.trim().toLowerCase()
     if (emailKey) userByEmail.set(emailKey, next)
   }
@@ -208,5 +239,7 @@ export function clearOrgUsersCache(): void {
   photoInflight.clear()
   userByLogin.clear()
   userByEmail.clear()
+  activeUrl = ''
+  activationVersion = 0
   bump()
 }

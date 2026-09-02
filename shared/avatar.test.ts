@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import { parseAvatarHex, parseAvatarLogin } from './avatar'
+import { parseAvatarEmail, parseAvatarHex } from './avatar'
 
 describe('parseAvatarHex', () => {
   test('accepts lowercase 6-digit hex', () => {
@@ -15,15 +15,15 @@ describe('parseAvatarHex', () => {
   })
 })
 
-describe('parseAvatarLogin', () => {
-  test('normalizes a valid email local-part', () => {
-    expect(parseAvatarLogin('Alice.Martin')).toBe('alice.martin')
+describe('parseAvatarEmail', () => {
+  test('normalizes a valid account email', () => {
+    expect(parseAvatarEmail('Alice.Martin@Example.org')).toBe('alice.martin@example.org')
   })
 
   test('rejects empty, path-like, or oversized values', () => {
-    expect(parseAvatarLogin('')).toBeNull()
-    expect(parseAvatarLogin('../secret')).toBeNull()
-    expect(parseAvatarLogin('a/b')).toBeNull()
-    expect(parseAvatarLogin('x'.repeat(81))).toBeNull()
+    expect(parseAvatarEmail('')).toBeNull()
+    expect(parseAvatarEmail('../secret')).toBeNull()
+    expect(parseAvatarEmail('alice')).toBeNull()
+    expect(parseAvatarEmail(`${'x'.repeat(250)}@example.org`)).toBeNull()
   })
 })

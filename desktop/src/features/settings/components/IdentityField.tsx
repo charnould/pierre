@@ -58,7 +58,7 @@ export function IdentityField({ url, email, agentName }: Props) {
   const nameErrorId = useId()
   const zoomId = useId()
   const login = loginFromEmail(email)
-  const photoUrl = useUserAvatar(login)
+  const photoUrl = useUserAvatar(email)
   const [hasAvatar, setHasAvatar] = useState(false)
   const [displayName, setDisplayName] = useState(login)
   const [displayNameDraft, setDisplayNameDraft] = useState(login)
@@ -76,7 +76,7 @@ export function IdentityField({ url, email, agentName }: Props) {
     let cancelled = false
     void fetchOrgUsers(url).then((users) => {
       if (cancelled) return
-      const me = users.find((user) => user.login.toLowerCase() === login.toLowerCase())
+      const me = users.find((user) => user.email.toLowerCase() === email.toLowerCase())
       if (!me) return
       setHasAvatar(me.hasAvatar)
       const name = me.displayName?.trim() || login
@@ -86,7 +86,7 @@ export function IdentityField({ url, email, agentName }: Props) {
     return () => {
       cancelled = true
     }
-  }, [url, login])
+  }, [url, email, login])
 
   async function patchDisplayName(next: string | null): Promise<boolean> {
     if (!window.api?.patchMyPreferences) {
@@ -102,7 +102,7 @@ export function IdentityField({ url, email, agentName }: Props) {
       }
       setDisplayName(res.data.displayName)
       setDisplayNameDraft(res.data.displayName)
-      applyLocalAvatar(login, undefined, res.data.displayName)
+      applyLocalAvatar(email, undefined, res.data.displayName, url)
       return true
     } catch {
       toast.add({ title: SAVE_ERROR, type: 'error' })
@@ -213,7 +213,7 @@ export function IdentityField({ url, email, agentName }: Props) {
           toast.add({ title: SAVE_ERROR, type: 'error' })
           return
         }
-        applyLocalAvatar(login, null, res.data.displayName)
+        applyLocalAvatar(email, null, res.data.displayName, url)
         setHasAvatar(false)
         setEditorOpen(false)
         return
@@ -239,7 +239,7 @@ export function IdentityField({ url, email, agentName }: Props) {
         toast.add({ title: SAVE_ERROR, type: 'error' })
         return
       }
-      applyLocalAvatar(login, bytesToDataUri(buffer, type), res.data.displayName)
+      applyLocalAvatar(email, bytesToDataUri(buffer, type), res.data.displayName, url)
       setHasAvatar(true)
       setEditorOpen(false)
     } catch {
