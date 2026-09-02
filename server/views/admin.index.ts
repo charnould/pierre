@@ -5,13 +5,13 @@ export const view = (user, _desktop_version: string | null) => {
     <html lang="fr">
       <head>
         <meta charset="UTF-8" />
-        <link rel="icon" href="../customization/chatbot/default/system.svg" type="image/svg+xml" />
+        <link rel="icon" href="../customization/chatbots/default/system.svg" type="image/svg+xml" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="preconnect" href="https://rsms.me" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/dist/css/style.1785136764643.css" />
+        <link rel="stylesheet" href="../assets/dist/css/style.1788381380835.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap"
           rel="stylesheet"
@@ -26,36 +26,44 @@ export const view = (user, _desktop_version: string | null) => {
 
         <a
           href="a/conversations"
-          ${user.role === 'administrator'
-            ? html`class="block cursor-pointer text-7xl font-extrabold mb-1 hover:underline
-              hover:underline-offset-4"`
-            : html`class="block text-7xl font-extrabold mb-1 cursor-not-allowed text-neutral-400"`}
+          ${
+            user.role === 'administrator'
+              ? html`class="block cursor-pointer text-7xl font-extrabold mb-1 hover:underline
+                hover:underline-offset-4"`
+              : html`class="block text-7xl font-extrabold mb-1 cursor-not-allowed text-neutral-400"`
+          }
           >Conversations</a
         >
 
         <a
           href="a/knowledge"
-          ${user.role === 'administrator' || user.role === 'contributor'
-            ? html`class="block cursor-pointer text-7xl font-extrabold mb-1 hover:underline
-              hover:underline-offset-4"`
-            : html`class="block text-7xl font-extrabold mb-1 cursor-not-allowed text-neutral-400"`}
+          ${
+            user.role === 'administrator' || user.role === 'contributor'
+              ? html`class="block cursor-pointer text-7xl font-extrabold mb-1 hover:underline
+                hover:underline-offset-4"`
+              : html`class="block text-7xl font-extrabold mb-1 cursor-not-allowed text-neutral-400"`
+          }
           >Encyclopédie</a
         >
 
         <a
           href="a/statistics"
-          ${user.role === 'administrator'
-            ? html`class="block cursor-pointer text-7xl font-extrabold mb-1 hover:underline
-              hover:underline-offset-4"`
-            : html`class="block text-7xl font-extrabold mb-1 cursor-not-allowed text-neutral-400"`}
+          ${
+            user.role === 'administrator'
+              ? html`class="block cursor-pointer text-7xl font-extrabold mb-1 hover:underline
+                hover:underline-offset-4"`
+              : html`class="block text-7xl font-extrabold mb-1 cursor-not-allowed text-neutral-400"`
+          }
           >Statistiques</a
         >
         <a
           href="a/users"
-          ${user.role === 'administrator'
-            ? html`class="block cursor-pointer text-7xl font-extrabold mb-1 hover:underline
-              hover:underline-offset-4"`
-            : html`class="block text-7xl font-extrabold mb-1 cursor-not-allowed text-neutral-400"`}
+          ${
+            user.role === 'administrator'
+              ? html`class="block cursor-pointer text-7xl font-extrabold mb-1 hover:underline
+                hover:underline-offset-4"`
+              : html`class="block text-7xl font-extrabold mb-1 cursor-not-allowed text-neutral-400"`
+          }
           >Utilisateurs</a
         >
 
