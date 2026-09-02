@@ -31,6 +31,7 @@ it('should display the correct config options for anonymous and authenticated us
   // Visit an alternative non protected config as an anonymous user
   await page.goto('http://localhost:3000/?config=testing_purpose_2')
   expect(page.url()).toBe('http://localhost:3000/c?config=testing_purpose_2&data=')
+  await page.waitForSelector('a[data-config]')
 
   let configs = await page.$$eval('a[data-config]', (anchors) => {
     return anchors.map((a) => a.href)

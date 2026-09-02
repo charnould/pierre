@@ -32,6 +32,7 @@
     "------------------ GLOBAL ------------------": "------------------",
     "dev:server": "bun --filter @pierre/server dev",
     "dev:desktop": "bun --filter @pierre/desktop dev",
+    "test:e2e": "bun --filter @pierre/server test:e2e",
     "lint": "bun run oxlint -c ./config/oxlint.jsonc --ignore-path=\"$PWD/config/oxlint.ignore\" . --fix --fix-suggestions --fix-dangerously",
     "lint:check": "bun run oxlint -c ./config/oxlint.jsonc --ignore-path=\"$PWD/config/oxlint.ignore\" .",
     "format": "bun run oxfmt -c ./config/oxfmt.jsonc --ignore-path=\"$PWD/config/oxfmt.ignore\"",

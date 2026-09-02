@@ -16,7 +16,7 @@ let refillPromise: Promise<void> | null = null
 function poolSize(): number {
   const raw = Bun.env['SMOLVM_POOL_SIZE'] ?? String(DEFAULT_POOL_SIZE)
   const n = parseInt(raw, 10)
-  return Number.isFinite(n) && n > 0 ? n : DEFAULT_POOL_SIZE
+  return Number.isFinite(n) && n >= 0 ? n : DEFAULT_POOL_SIZE
 }
 
 export function getSmolmachinePath(): string {
@@ -106,6 +106,10 @@ async function createPoolMachines(count: number): Promise<void> {
 /** Pre-creates smolVMs at server startup so conversations skip asset extraction. */
 export async function initVmPool(): Promise<void> {
   const size = poolSize()
+  if (size === 0) {
+    console.log('[VM_POOL] Disabled')
+    return
+  }
 
   const stale = await listPoolMachineNames()
   for (const name of stale) {
