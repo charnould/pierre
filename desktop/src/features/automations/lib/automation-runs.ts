@@ -109,5 +109,5 @@ export function buildAutomationRunEntries(
 
 export function automationRunLimit(automation: Automation): number {
   if (isReportAutomation(automation)) return automationMaxReports(automation)
-  return 0
+  return automation.maxItems
 }

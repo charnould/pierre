@@ -162,6 +162,8 @@ export const baseline = {
       next_run_at TEXT,
       last_run_at TEXT,
       last_run_status TEXT,
+      run_token TEXT,
+      lease_expires_at TEXT,
       config TEXT NOT NULL,
       CHECK (json_valid(mentions)),
       CHECK (json_valid(config))

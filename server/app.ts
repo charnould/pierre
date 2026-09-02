@@ -27,6 +27,13 @@ import { controller as get_desktop_activities } from './controllers/desktop/acti
 import { controller as get_desktop_activity_feed_sync } from './controllers/desktop/activities/get.feed-sync'
 import { controller as patch_desktop_activity } from './controllers/desktop/activities/patch'
 import { controller as post_desktop_activity } from './controllers/desktop/activities/post'
+import { controller as delete_desktop_automation } from './controllers/desktop/automations/delete'
+import { controller as delete_desktop_automation_pin } from './controllers/desktop/automations/delete.pin'
+import { controller as get_desktop_automations } from './controllers/desktop/automations/get'
+import { controller as patch_desktop_automation } from './controllers/desktop/automations/patch'
+import { controller as post_desktop_automation } from './controllers/desktop/automations/post'
+import { controller as post_desktop_automation_pin } from './controllers/desktop/automations/post.pin'
+import { controller as post_desktop_automation_run } from './controllers/desktop/automations/post.run'
 import { controller as get_desktop_tickets } from './controllers/desktop/tickets/get'
 import { controller as get_desktop_tickets_facets } from './controllers/desktop/tickets/get.facets'
 import { controller as put_desktop_tickets } from './controllers/desktop/tickets/put'
@@ -48,6 +55,7 @@ import { controller as post_telemetry } from './controllers/telemetry/post'
 // import { topicize, score } from "./utils/analyze-conversation";
 import { authenticate } from './utils/authenticate-user'
 import { authorize_mutation } from './utils/authorize-role'
+import { run_due_automations } from './utils/automations/run'
 import { refresh_stale_sms_contacts_for_service } from './utils/contacts'
 import { run_pipeline } from './utils/knowledge/run-pipeline'
 import { CUSTOMIZATION_STATIC_ROOT, SERVER_ROOT } from './utils/paths'
@@ -90,6 +98,11 @@ Bun.cron('0 4 * * *', async () => {
   // await score();
 })
 
+// Automations due-poll every minute
+Bun.cron('* * * * *', async () => {
+  await run_due_automations()
+})
+
 // Block server-side-only files from being served over HTTP
 app.get('/customization/:path{.+}/config.ts', (c) => c.notFound())
 app.get('/customization/:path{.+}/AGENTS.md', (c) => c.notFound())
@@ -112,6 +125,28 @@ app.get('/desktop/activity-feed/sync', authenticate, get_desktop_activity_feed_s
 app.post('/desktop/activities', authenticate, authorize_mutation, post_desktop_activity)
 app.patch('/desktop/activities/:id', authenticate, authorize_mutation, patch_desktop_activity)
 app.delete('/desktop/activities/:id', authenticate, authorize_mutation, delete_desktop_activity)
+app.get('/desktop/automations', authenticate, get_desktop_automations)
+app.post('/desktop/automations', authenticate, authorize_mutation, post_desktop_automation)
+app.patch('/desktop/automations/:id', authenticate, authorize_mutation, patch_desktop_automation)
+app.delete('/desktop/automations/:id', authenticate, authorize_mutation, delete_desktop_automation)
+app.post(
+  '/desktop/automations/:id/run',
+  authenticate,
+  authorize_mutation,
+  post_desktop_automation_run
+)
+app.post(
+  '/desktop/automations/:id/pin',
+  authenticate,
+  authorize_mutation,
+  post_desktop_automation_pin
+)
+app.delete(
+  '/desktop/automations/:id/pin',
+  authenticate,
+  authorize_mutation,
+  delete_desktop_automation_pin
+)
 app.get('/desktop/tickets/facets', authenticate, get_desktop_tickets_facets)
 app.put('/desktop/tickets', authenticate, authorize_mutation, put_desktop_tickets)
 app.get('/desktop/tickets', authenticate, get_desktop_tickets)
