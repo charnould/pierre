@@ -3,6 +3,7 @@ import { existsSync, readdirSync } from 'node:fs'
 import { rm, readdir } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 
+import { datastorePaths, resolveServiceName } from '../paths'
 import { import_json_rows, type JsonRow } from './sqlite-table-import'
 import { normalize_knowledge_name } from './utils'
 
@@ -241,8 +242,8 @@ const build_database_for_config = async (
   service: string,
   datastore_db: Database
 ): Promise<void> => {
-  const source_dir = `datastores/${service}/knowledge/${config_id}`
-  const db_path = `datastores/${service}/knowledge/${config_id}/db.sqlite`
+  const source_dir = join(datastorePaths(service).knowledge, config_id)
+  const db_path = join(source_dir, 'db.sqlite')
 
   if (!existsSync(source_dir)) {
     console.info(`⏭️  ${config_id}: no source directory — skipping`)
@@ -343,17 +344,14 @@ const build_database_for_config = async (
 
 /**
  * Builds a SQLite knowledge database for every config directory found under
- * `datastores/${SERVICE}/knowledge/`.
+ * the current service's knowledge directory.
  *
  * Config directories are processed in parallel.
- *
- * @throws {Error} When the `SERVICE` environment variable is not set.
  */
 export const build_knowledge_databases = async (): Promise<void> => {
-  const service = Bun.env['SERVICE']
-  if (!service) throw new Error('SERVICE env var is required')
-
-  const knowledge_dir = `datastores/${service}/knowledge`
+  const service = resolveServiceName(Bun.env['SERVICE'])
+  const paths = datastorePaths(service)
+  const knowledge_dir = paths.knowledge
 
   if (!existsSync(knowledge_dir)) {
     console.info('⏭️  No knowledge directory — skipping DB build')
@@ -368,7 +366,7 @@ export const build_knowledge_databases = async (): Promise<void> => {
     return
   }
 
-  const datastore_db = new Database(`datastores/${service}/datastore.sqlite`)
+  const datastore_db = new Database(paths.database)
 
   try {
     await Promise.all(config_dirs.map((id) => build_database_for_config(id, service, datastore_db)))

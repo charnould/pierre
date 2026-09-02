@@ -1,11 +1,13 @@
+import { join } from 'node:path'
+
 import { format } from 'date-fns'
 import * as XLSX from 'xlsx'
 import { z } from 'zod'
 
+import { datastorePaths } from '../paths'
 import { normalize_knowledge_name } from './utils'
 
 const METADATA_FILE_PATH = '_metadata.xlsx'
-const FILES_BASE_PATH = 'datastores'
 const METADATA_SHEET_INDEX = 0
 const METADATA_HEADER_ROW = 2
 const METADATA_FILE_TYPES = ['doc', 'docx', 'xlsx', 'xls', 'xlsm', 'xlsb', 'md'] as const
@@ -34,8 +36,7 @@ interface MappedMetadataFile {
 }
 
 /** Returns the absolute path to the `_metadata.xlsx` file for the current service. */
-const get_metadata_file_path = (): string =>
-  `${FILES_BASE_PATH}/${Bun.env['SERVICE']}/files/${METADATA_FILE_PATH}`
+const get_metadata_file_path = (): string => join(datastorePaths().files, METADATA_FILE_PATH)
 
 /**
  * Loads the first worksheet from `_metadata.xlsx`.
@@ -76,7 +77,7 @@ const map_to_standard_format = (raw_files: RawMetadataRow[]): MappedMetadataFile
       preserve_extension: true
     })
     return {
-      filepath: `${FILES_BASE_PATH}/${Bun.env['SERVICE']}/files/${normalized_filename}`,
+      filepath: join(datastorePaths().files, normalized_filename),
       access: item.access?.split(',').map((p) => p.trim().toLowerCase()) ?? [],
       headers: (item.headers || 1) - 1,
       sheet: (item.sheet || 1) - 1,

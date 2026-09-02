@@ -4,9 +4,18 @@ import { SQL } from 'bun'
 import type { Reply } from './_schema'
 import { generate_text } from './generate-output'
 import { get_conversation, save_topic, score_conversation } from './handle-conversation'
+import { datastorePaths } from './paths'
 
-let _sql: SQL | undefined
-const getSQL = () => (_sql ??= new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`))
+const sql_by_path = new Map<string, SQL>()
+const getSQL = () => {
+  const path = datastorePaths().database
+  let sql = sql_by_path.get(path)
+  if (!sql) {
+    sql = new SQL(`sqlite:${path}`)
+    sql_by_path.set(path, sql)
+  }
+  return sql
+}
 
 /**
  * Scores conversations using an AI model.

@@ -2,6 +2,8 @@ import { Database } from 'bun:sqlite'
 
 import { z } from 'zod'
 
+import { datastorePaths } from './paths'
+
 export const TICKET_ID_SKILLS = [
   'ticket.answer-ticket',
   'ticket.write-memo',
@@ -40,8 +42,6 @@ export type DraftSummaryByTicket = {
   generated_by?: string
   edited_by?: string
 }
-
-const datastore_path = (): string => `datastores/${Bun.env['SERVICE']}/datastore.sqlite`
 
 const DRAFT_COLUMNS = `
   id_reclamation, id_skill, channel, generated_output, generated_reasoning, generated_duration_ms,
@@ -104,7 +104,7 @@ export class TicketDraftsError extends Error {
 
 export const upsert_ticket_draft = (input: UpsertTicketDraftInput): TicketDraft => {
   const parsed = UpsertTicketDraftInput.parse(input)
-  const db = new Database(datastore_path())
+  const db = new Database(datastorePaths().database)
 
   try {
     if (parsed.save_kind === 'generation') {
@@ -216,7 +216,7 @@ export const upsert_ticket_draft = (input: UpsertTicketDraftInput): TicketDraft 
 }
 
 export const get_ticket_draft = (id_reclamation: string, id_skill: string): TicketDraft | null => {
-  const db = new Database(datastore_path(), { readonly: true })
+  const db = new Database(datastorePaths().database, { readonly: true })
 
   try {
     const row = db
@@ -233,7 +233,7 @@ export const get_ticket_draft = (id_reclamation: string, id_skill: string): Tick
 }
 
 export const list_ticket_drafts = (id_reclamation: string): TicketDraft[] => {
-  const db = new Database(datastore_path(), { readonly: true })
+  const db = new Database(datastorePaths().database, { readonly: true })
 
   try {
     return db
@@ -254,7 +254,7 @@ export const draft_summaries_by_ticket = (
   const result = new Map<string, DraftSummaryByTicket>()
   if (ticket_ids.length === 0) return result
 
-  const db = new Database(datastore_path(), { readonly: true })
+  const db = new Database(datastorePaths().database, { readonly: true })
 
   try {
     const placeholders = ticket_ids.map(() => '?').join(', ')

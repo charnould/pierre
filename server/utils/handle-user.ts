@@ -1,9 +1,18 @@
 import { SQL } from 'bun'
 
 import type { Parsed_User, User } from './_schema'
+import { datastorePaths } from './paths'
 
-let _sql: SQL | undefined
-const getSQL = () => (_sql ??= new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`))
+const sql_by_path = new Map<string, SQL>()
+const getSQL = () => {
+  const path = datastorePaths().database
+  let sql = sql_by_path.get(path)
+  if (!sql) {
+    sql = new SQL(`sqlite:${path}`)
+    sql_by_path.set(path, sql)
+  }
+  return sql
+}
 
 /**
  * Saves a user to the database by inserting or replacing the user record.
@@ -13,13 +22,12 @@ const getSQL = () => (_sql ??= new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/
  */
 export const save_user = async ({ email, role, config, password_hash }: User) =>
   await getSQL()`
-    INSERT
-    OR REPLACE INTO users ${getSQL()({
-      email,
-      role,
-      config,
-      password_hash
-    })}
+    INSERT INTO users (email, role, config, password_hash, preferences)
+    VALUES (${email}, ${role}, ${config}, ${password_hash}, '{}')
+    ON CONFLICT(email) DO UPDATE SET
+      role = excluded.role,
+      config = excluded.config,
+      password_hash = excluded.password_hash
   `
 
 /**
@@ -36,7 +44,10 @@ export const save_user = async ({ email, role, config, password_hash }: User) =>
 export const get_user = async (email: string) => {
   const users = await getSQL()`
     SELECT
-      *
+      email,
+      role,
+      config,
+      password_hash
     FROM
       users
     WHERE
@@ -60,7 +71,10 @@ export const get_user = async (email: string) => {
 export const get_users = async (): Promise<Parsed_User[]> => {
   const db_users = (await getSQL()`
     SELECT
-      *
+      email,
+      role,
+      config,
+      password_hash
     FROM
       users
     ORDER BY

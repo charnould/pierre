@@ -1,9 +1,23 @@
 import { Database } from 'bun:sqlite'
+import { basename, join } from 'node:path'
 
 import type { Context } from 'hono'
 
 import { run_pipeline } from '../../../utils/knowledge/run-pipeline'
 import { normalize_knowledge_name } from '../../../utils/knowledge/utils'
+import { datastorePaths, resolveServiceName } from '../../../utils/paths'
+
+const knowledge_file_path = (files_root: string, filename: unknown): string => {
+  if (
+    typeof filename !== 'string' ||
+    !filename ||
+    filename !== basename(filename) ||
+    /[\0\r\n]/.test(filename)
+  ) {
+    throw new Error('Invalid knowledge filename')
+  }
+  return join(files_root, filename)
+}
 
 /**
  * Handles POST requests for knowledge management operations.
@@ -39,10 +53,12 @@ export const controller = async (c: Context) => {
     // CASE 1: User wants to upload files (either via web UI or cURL)
     if (action === 'upload' || c.req.header('authorization-context') === 'cli') {
       // Determine target service
-      const service =
+      const service = resolveServiceName(
         c.req.header('authorization-context') === 'cli'
           ? (body.service as string)
           : Bun.env['SERVICE']
+      )
+      const paths = datastorePaths(service)
 
       // Save each uploaded file
       for (const file of files) {
@@ -53,7 +69,7 @@ export const controller = async (c: Context) => {
             : normalize_knowledge_name(file.name.normalize('NFC'), {
                 preserve_extension: true
               })
-        const path = `datastores/${service}/files/${filename}`
+        const path = knowledge_file_path(paths.files, filename)
         await Bun.write(path, file)
       }
 
@@ -68,13 +84,17 @@ export const controller = async (c: Context) => {
         )
 
         // Record each CLI upload in knowledge_build
-        const db = new Database(`datastores/${service}/datastore.sqlite`)
+        const db = new Database(paths.database)
         const stmt = db.prepare(
           "INSERT INTO knowledge_build (created_at, source, kind, code, subject) VALUES (?, 'cli', 'action', 'CLI_UPLOAD', ?)"
         )
         const now = new Date().toISOString()
-        for (const name of uploaded_names) {
-          stmt.run(now, name)
+        try {
+          for (const name of uploaded_names) {
+            stmt.run(now, name)
+          }
+        } finally {
+          db.close()
         }
 
         return c.json({ status: 'ok', uploaded: uploaded_names }, 200)
@@ -83,7 +103,7 @@ export const controller = async (c: Context) => {
 
     // CASE 2: User wants to download a file
     if (action === 'download') {
-      const file = Bun.file(`datastores/${Bun.env['SERVICE']}/files/${filename as string}`)
+      const file = Bun.file(knowledge_file_path(datastorePaths().files, filename))
       const stream = file.stream()
 
       c.header('Content-Disposition', `attachment; filename="${filename}"`)
@@ -93,7 +113,7 @@ export const controller = async (c: Context) => {
 
     // CASE 3: User wants to delete a file
     if (action === 'destroy') {
-      await Bun.file(`datastores/${Bun.env['SERVICE']}/files/${filename as string}`).delete()
+      await Bun.file(knowledge_file_path(datastorePaths().files, filename)).delete()
     }
 
     // CASE 4: Force knowledge rebuild

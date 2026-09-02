@@ -16,14 +16,14 @@ import { Database } from 'bun:sqlite'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { CUSTOMIZATION_DIR, SERVER_ROOT } from './paths'
+import { CUSTOMIZATION_DIR, datastorePaths } from './paths'
 import { today_is } from './today-is'
 import { acquireVm, hasVm, releaseVm } from './vm-registry'
 import type { WorkflowPayload } from './workflow-payload'
 
 // Stable project root anchored to this file's location (utils/ → ../)
 const knowledgePathOnHost = (configId: string): string => {
-  const p = join(SERVER_ROOT, 'datastores', Bun.env['SERVICE']!, 'knowledge', configId)
+  const p = join(datastorePaths().knowledge, configId)
   if (!existsSync(p)) {
     throw new Error(`[AGENT] Knowledge directory not found: ${p}`)
   }

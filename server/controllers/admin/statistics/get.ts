@@ -4,10 +4,19 @@ import type { Context } from 'hono'
 import _ from 'lodash'
 import { z } from 'zod'
 
+import { datastorePaths } from '../../../utils/paths'
 import { view } from '../../../views/admin.statistics'
 
-let _sql: SQL | undefined
-const getSQL = () => (_sql ??= new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`))
+const sql_by_path = new Map<string, SQL>()
+const getSQL = () => {
+  const path = datastorePaths().database
+  let sql = sql_by_path.get(path)
+  if (!sql) {
+    sql = new SQL(`sqlite:${path}`)
+    sql_by_path.set(path, sql)
+  }
+  return sql
+}
 
 /**
  * Controller function to handle GET requests for statistics.
