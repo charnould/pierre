@@ -6,7 +6,6 @@ export const baseline = {
     'users',
     'telemetry',
     'knowledge_build',
-    'reclamation_drafts',
     'activites',
     'idx_activites_rattachement',
     'idx_activites_client',
@@ -20,6 +19,7 @@ export const baseline = {
     'idx_activites_bulk',
     'idx_activites_execution',
     'idx_activites_idempotency',
+    'idx_activites_ticket_draft',
     'automations',
     'idx_automations_due',
     'bulk_operations',
@@ -30,7 +30,7 @@ export const baseline = {
     'contacts'
   ],
   sql: `
-    CREATE TABLE IF NOT EXISTS conversations (
+    CREATE TABLE conversations (
       conv_id TEXT,
       config TEXT,
       role TEXT,
@@ -40,7 +40,7 @@ export const baseline = {
       UNIQUE(conv_id, timestamp)
     );
 
-    CREATE TABLE IF NOT EXISTS users (
+    CREATE TABLE users (
       config TEXT NOT NULL,
       email TEXT PRIMARY KEY UNIQUE NOT NULL,
       role TEXT NOT NULL,
@@ -49,14 +49,14 @@ export const baseline = {
       avatar BLOB
     );
 
-    CREATE TABLE IF NOT EXISTS telemetry (
+    CREATE TABLE telemetry (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       timestamp TEXT,
       host TEXT,
       event TEXT
     );
 
-    CREATE TABLE IF NOT EXISTS knowledge_build (
+    CREATE TABLE knowledge_build (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       created_at TEXT,
       source TEXT,
@@ -65,27 +65,7 @@ export const baseline = {
       subject TEXT
     );
 
-    CREATE TABLE IF NOT EXISTS reclamation_drafts (
-      id_reclamation TEXT NOT NULL,
-      id_skill TEXT NOT NULL,
-      channel TEXT,
-      generated_output TEXT,
-      generated_reasoning TEXT,
-      generated_duration_ms INTEGER,
-      generated_at TEXT NOT NULL,
-      generated_by TEXT NOT NULL,
-      automation_id TEXT,
-      edited_output TEXT,
-      edited_at TEXT,
-      edited_by TEXT,
-      feedback_rating INTEGER,
-      feedback_comment TEXT,
-      feedback_at TEXT,
-      feedback_by TEXT,
-      UNIQUE(id_reclamation, id_skill)
-    );
-
-    CREATE TABLE IF NOT EXISTS activites (
+    CREATE TABLE activites (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       date_creation TEXT NOT NULL,
       date_statut TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
@@ -139,34 +119,38 @@ export const baseline = {
       UNIQUE(thread_id, revision)
     );
 
-    CREATE INDEX IF NOT EXISTS idx_activites_rattachement
+    CREATE INDEX idx_activites_rattachement
       ON activites (rattachement, date_creation DESC, id DESC);
-    CREATE INDEX IF NOT EXISTS idx_activites_client
+    CREATE INDEX idx_activites_client
       ON activites (id_client, date_creation DESC);
-    CREATE INDEX IF NOT EXISTS idx_activites_locataire
+    CREATE INDEX idx_activites_locataire
       ON activites (id_locataire, date_creation DESC);
-    CREATE INDEX IF NOT EXISTS idx_activites_locataire_type
+    CREATE INDEX idx_activites_locataire_type
       ON activites (id_locataire, type, date_creation DESC, id DESC);
-    CREATE INDEX IF NOT EXISTS idx_activites_lot
+    CREATE INDEX idx_activites_lot
       ON activites (id_lot, date_creation DESC);
-    CREATE INDEX IF NOT EXISTS idx_activites_type
+    CREATE INDEX idx_activites_type
       ON activites (type, date_creation DESC);
-    CREATE INDEX IF NOT EXISTS idx_activites_auteur
+    CREATE INDEX idx_activites_auteur
       ON activites (auteur, date_creation DESC);
-    CREATE INDEX IF NOT EXISTS idx_activites_statut
+    CREATE INDEX idx_activites_statut
       ON activites (statut, date_creation DESC);
-    CREATE INDEX IF NOT EXISTS idx_activites_rattachement_thread
+    CREATE INDEX idx_activites_rattachement_thread
       ON activites (rattachement, type, thread_id, revision DESC)
       WHERE thread_id IS NOT NULL;
-    CREATE INDEX IF NOT EXISTS idx_activites_bulk
+    CREATE INDEX idx_activites_bulk
       ON activites (bulk_id, date_creation DESC);
-    CREATE INDEX IF NOT EXISTS idx_activites_execution
+    CREATE INDEX idx_activites_execution
       ON activites (execution_id, date_creation DESC);
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_activites_idempotency
+    CREATE UNIQUE INDEX idx_activites_idempotency
       ON activites (idempotency_key)
       WHERE idempotency_key IS NOT NULL;
+    CREATE UNIQUE INDEX idx_activites_ticket_draft
+      ON activites (rattachement, type)
+      WHERE statut = 'draft'
+        AND type IN ('ticket_reply', 'ticket_memo', 'ticket_summary');
 
-    CREATE TABLE IF NOT EXISTS automations (
+    CREATE TABLE automations (
       id TEXT PRIMARY KEY,
       type TEXT NOT NULL,
       name TEXT NOT NULL,
@@ -183,10 +167,10 @@ export const baseline = {
       CHECK (json_valid(config))
     );
 
-    CREATE INDEX IF NOT EXISTS idx_automations_due
+    CREATE INDEX idx_automations_due
       ON automations (status, next_run_at);
 
-    CREATE TABLE IF NOT EXISTS bulk_operations (
+    CREATE TABLE bulk_operations (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       description TEXT NOT NULL DEFAULT '',
@@ -197,7 +181,7 @@ export const baseline = {
       CHECK (json_valid(edits) AND json_type(edits) = 'array')
     );
 
-    CREATE TABLE IF NOT EXISTS bulk_jobs (
+    CREATE TABLE bulk_jobs (
       id TEXT PRIMARY KEY,
       bulk_operation_id TEXT NOT NULL,
       execution_id TEXT NOT NULL,
@@ -218,15 +202,15 @@ export const baseline = {
       UNIQUE (execution_id, item_id)
     );
 
-    CREATE INDEX IF NOT EXISTS idx_bulk_jobs_report_operation_execution
+    CREATE INDEX idx_bulk_jobs_report_operation_execution
       ON bulk_jobs (bulk_operation_id, execution_id);
-    CREATE INDEX IF NOT EXISTS idx_bulk_jobs_report_execution_status
+    CREATE INDEX idx_bulk_jobs_report_execution_status
       ON bulk_jobs (execution_id, report_status);
-    CREATE INDEX IF NOT EXISTS idx_bulk_jobs_due
+    CREATE INDEX idx_bulk_jobs_due
       ON bulk_jobs (run_at)
       WHERE report_status = 'in_progress' AND run_at IS NOT NULL;
 
-    CREATE TABLE IF NOT EXISTS contacts (
+    CREATE TABLE contacts (
       value TEXT PRIMARY KEY,
       status TEXT NOT NULL,
       checked_at TEXT NOT NULL

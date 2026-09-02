@@ -1,10 +1,9 @@
 import { Database } from 'bun:sqlite'
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
-import { mkdir, rm } from 'node:fs/promises'
+import { mkdir, rm, writeFile } from 'node:fs/promises'
 
 import {
   APP_MIGRATIONS,
-  DatastoreSchemaError,
   DatastoreVersionError,
   migrate_datastore,
   type DatastoreMigration
@@ -27,45 +26,6 @@ const future_migration: DatastoreMigration = {
   objects: ['future_records'],
   sql: 'CREATE TABLE future_records (id TEXT PRIMARY KEY, value TEXT NOT NULL)'
 }
-
-const LEGACY_SCHEMA_SQL = `
-  CREATE TABLE conversations (
-    conv_id TEXT, config TEXT, role TEXT, timestamp TEXT, content TEXT, metadata TEXT,
-    UNIQUE(conv_id, timestamp)
-  );
-  CREATE TABLE users (
-    config TEXT NOT NULL,
-    email TEXT PRIMARY KEY UNIQUE NOT NULL,
-    role TEXT NOT NULL,
-    password_hash TEXT NOT NULL
-  );
-  CREATE TABLE telemetry (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, host TEXT, event TEXT
-  );
-  CREATE TABLE knowledge_build (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    created_at TEXT, source TEXT, kind TEXT, code TEXT, subject TEXT
-  );
-  CREATE TABLE reclamation_drafts (
-    id_reclamation TEXT NOT NULL,
-    id_skill TEXT NOT NULL,
-    channel TEXT,
-    generated_output TEXT,
-    generated_reasoning TEXT,
-    generated_duration_ms INTEGER,
-    generated_at TEXT NOT NULL,
-    generated_by TEXT NOT NULL,
-    automation_id TEXT,
-    edited_output TEXT,
-    edited_at TEXT,
-    edited_by TEXT,
-    feedback_rating INTEGER,
-    feedback_comment TEXT,
-    feedback_at TEXT,
-    feedback_by TEXT,
-    UNIQUE(id_reclamation, id_skill)
-  );
-`
 
 beforeEach(async () => {
   await mkdir(ROOT, { recursive: true })
@@ -118,78 +78,23 @@ describe('datastore migrations', () => {
     }
   })
 
-  it('refuses an unknown existing database without deleting its data', async () => {
+  it('deletes and bootstraps an existing database without a ledger', async () => {
     const legacy = open()
     legacy.run('CREATE TABLE legacy_data (value TEXT)')
-    legacy.run("INSERT INTO legacy_data VALUES ('must be kept')")
+    legacy.run("INSERT INTO legacy_data VALUES ('must be deleted')")
     legacy.close()
-
-    await expect(migrate_datastore(PATH)).rejects.toBeInstanceOf(DatastoreSchemaError)
-
-    const db = open()
-    try {
-      expect(db.query<{ value: string }, []>('SELECT value FROM legacy_data').get()?.value).toBe(
-        'must be kept'
-      )
-      expect(
-        db
-          .query<{ n: number }, []>(
-            `SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'schema_migrations'`
-          )
-          .get()?.n
-      ).toBe(0)
-    } finally {
-      db.close()
-    }
-  })
-
-  it('adopts the previous server schema without losing users or ticket drafts', async () => {
-    const legacy = open()
-    legacy.run(LEGACY_SCHEMA_SQL)
-    legacy.run(
-      `INSERT INTO users (config, email, role, password_hash)
-       VALUES ('default', 'kept@example.com', 'admin', 'hash')`
-    )
-    legacy.run(
-      `INSERT INTO reclamation_drafts (id_reclamation, id_skill, generated_at, generated_by)
-       VALUES ('REQ-1', 'ticket.answer-ticket', '2026-01-01', 'admin')`
-    )
-    legacy.close()
+    await writeFile(`${PATH}-wal`, 'stale')
+    await writeFile(`${PATH}-shm`, 'stale')
 
     await migrate_datastore(PATH)
 
     const db = open()
     try {
       expect(versions(db)).toEqual([1])
-      expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(1)
-      expect(
-        db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM reclamation_drafts').get()?.n
-      ).toBe(1)
-      const user_columns = db
-        .query<{ name: string }, []>('PRAGMA table_info(users)')
-        .all()
-        .map((column) => column.name)
-      expect(user_columns).toContain('preferences')
-      expect(user_columns).toContain('avatar')
-    } finally {
-      db.close()
-    }
-  })
-
-  it('refuses a legacy lookalike with unexpected user columns', async () => {
-    const legacy = open()
-    legacy.run(LEGACY_SCHEMA_SQL)
-    legacy.run('ALTER TABLE users ADD COLUMN arbitrary TEXT')
-    legacy.close()
-
-    await expect(migrate_datastore(PATH)).rejects.toBeInstanceOf(DatastoreSchemaError)
-
-    const db = open()
-    try {
       expect(
         db
           .query<{ n: number }, []>(
-            `SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'schema_migrations'`
+            `SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'legacy_data'`
           )
           .get()?.n
       ).toBe(0)
@@ -198,45 +103,7 @@ describe('datastore migrations', () => {
     }
   })
 
-  it('does not adopt a legacy lookalike missing required constraints', async () => {
-    const legacy = open()
-    legacy.run(`
-      CREATE TABLE conversations (
-        conv_id TEXT, config TEXT, role TEXT, timestamp TEXT, content TEXT, metadata TEXT
-      );
-      CREATE TABLE users (
-        config TEXT NOT NULL,
-        email TEXT PRIMARY KEY UNIQUE NOT NULL,
-        role TEXT NOT NULL,
-        password_hash TEXT NOT NULL
-      );
-      CREATE TABLE telemetry (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, host TEXT, event TEXT
-      );
-      CREATE TABLE knowledge_build (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        created_at TEXT, source TEXT, kind TEXT, code TEXT, subject TEXT
-      );
-    `)
-    legacy.close()
-
-    await expect(migrate_datastore(PATH)).rejects.toBeInstanceOf(DatastoreSchemaError)
-
-    const db = open()
-    try {
-      expect(
-        db
-          .query<{ n: number }, []>(
-            `SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'schema_migrations'`
-          )
-          .get()?.n
-      ).toBe(0)
-    } finally {
-      db.close()
-    }
-  })
-
-  it('repairs a missing owned index without losing application data', async () => {
+  it('resets a ledger database whose application schema is incompatible', async () => {
     await migrate_datastore(PATH)
     const damaged = open()
     damaged.run(
@@ -250,7 +117,7 @@ describe('datastore migrations', () => {
 
     const db = open()
     try {
-      expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(1)
+      expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(0)
       expect(
         db
           .query<{ n: number }, []>(
@@ -259,28 +126,6 @@ describe('datastore migrations', () => {
           )
           .get()?.n
       ).toBe(1)
-      expect(versions(db)).toEqual([1])
-    } finally {
-      db.close()
-    }
-  })
-
-  it('fails closed when an owned table is incompatible', async () => {
-    await migrate_datastore(PATH)
-    const damaged = open()
-    damaged.run(
-      `INSERT INTO users (config, email, role, password_hash)
-       VALUES ('default', 'kept@example.com', 'admin', 'hash')`
-    )
-    damaged.run('DROP TABLE contacts')
-    damaged.run('CREATE TABLE contacts (value TEXT PRIMARY KEY)')
-    damaged.close()
-
-    await expect(migrate_datastore(PATH)).rejects.toBeInstanceOf(DatastoreSchemaError)
-
-    const db = open()
-    try {
-      expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(1)
       expect(versions(db)).toEqual([1])
     } finally {
       db.close()
