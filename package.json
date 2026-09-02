@@ -36,6 +36,8 @@
     "lint:check": "bun run oxlint -c ./config/oxlint.jsonc --ignore-path=\"$PWD/config/oxlint.ignore\" .",
     "format": "bun run oxfmt -c ./config/oxfmt.jsonc --ignore-path=\"$PWD/config/oxfmt.ignore\"",
     "format:check": "bun run oxfmt -c ./config/oxfmt.jsonc --ignore-path=\"$PWD/config/oxfmt.ignore\" --check",
+    "knip": "knip --no-config-hints",
+    "knip:production": "knip --no-config-hints --production --include files,dependencies",
     "docs": "bun --filter @pierre/docs build",
     "release": "bash config/release.sh",
     "------------------ STAGING ------------------": "------------------",
@@ -50,6 +52,7 @@
     "prod:console": "bun --env-file=.env.production run kamal app exec -i bash -c config/deploy.yml"
   },
   "devDependencies": {
+    "knip": "^6.33.0",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "typescript": "catalog:"
