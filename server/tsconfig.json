@@ -31,7 +31,8 @@
     "knowledge/**/*",
     "tests/**/*",
     "utils/**/*",
-    "views/**/*"
+    "views/**/*",
+    "../shared/**/*"
   ],
   "exclude": ["node_modules", "dist", "build"]
 }
