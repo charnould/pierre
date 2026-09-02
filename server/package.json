@@ -13,7 +13,7 @@
     "start": "NODE_ENV=production bun run start.ts",
     "wikipedia": "bun --env-file=../.env.production run ./utils/knowledge/scrape-wikipedia.ts",
     "pierre:version": "bun run utils/update-pierre.ts",
-    "test:e2e": "bun test e2e --timeout 60000 --env-file=../.env.production --preload ./utils/setup.ts",
+    "test:e2e": "bun run tests/e2e/run.ts",
     "test:unit": "bun test unit --env-file=../.env.production --preload ./utils/setup.ts"
   },
   "dependencies": {
