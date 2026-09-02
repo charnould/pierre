@@ -10,13 +10,13 @@ export const view = (data, conversation: Reply[] | []) => {
       <head>
         <meta charset="UTF-8" />
         <script src="https://unpkg.com/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
-        <link rel="icon" href="../customization/chatbot/default/system.svg" type="image/svg+xml" />
+        <link rel="icon" href="../customization/chatbots/default/system.svg" type="image/svg+xml" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="preconnect" href="https://rsms.me" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/dist/css/style.1785136764643.css" />
+        <link rel="stylesheet" href="../assets/dist/css/style.1788381380835.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Inclusive+Sans:wght@350&display=swap"
           rel="stylesheet"
@@ -37,13 +37,15 @@ export const view = (data, conversation: Reply[] | []) => {
           <div class="mt-6 h-137.5 overflow-y-auto rounded-lg border border-stone-200 shadow-lg">
             ${data.map(
               (conv) => html` <a href="/a/conversations?id=${conv[0].conv_id}">
-                ${conv[0].metadata.topics === 'TODO'
-                  ? html`<div
-                      class="mx-6 mt-3 mb-px flex w-fit items-center rounded-sm bg-amber-200 px-1 py-px text-[9px] font-medium text-red-500"
-                    >
-                      L'IA NE SAIT PAS
-                    </div>`
-                  : null}
+                ${
+                  conv[0].metadata.topics === 'TODO'
+                    ? html`<div
+                        class="mx-6 mt-3 mb-px flex w-fit items-center rounded-sm bg-amber-200 px-1 py-px text-[9px] font-medium text-red-500"
+                      >
+                        L'IA NE SAIT PAS
+                      </div>`
+                    : null
+                }
 
                 <div class="mx-6 mt-3 flex w-auto items-center text-[12px] text-neutral-400">
                   <span
@@ -60,9 +62,9 @@ export const view = (data, conversation: Reply[] | []) => {
                   <span class="w-full truncate"
                     >&nbsp;• ${format(parseISO(conv[0].timestamp), "dd/MM/yyyy '·' H:mm")} •
                     ${conv[0].config} •
-                    ${conv[0].metadata.user !== null
-                      ? conv[0].metadata.user
-                      : 'Utilisateur inconnu'}
+                    ${
+                      conv[0].metadata.user !== null ? conv[0].metadata.user : 'Utilisateur inconnu'
+                    }
                   </span>
                 </div>
 
@@ -75,113 +77,123 @@ export const view = (data, conversation: Reply[] | []) => {
 
         <!-- START: Displayed conversation -->
         <div class="w-175">
-          ${conversation.length === 0
-            ? null
-            : html`
-                ${conversation.map(
-                  (c) => html`<div
-                    class="prose odd:float-right odd:my-8 odd:max-w-lg odd:rounded-xl odd:bg-gray-100 odd:px-5 odd:py-2 odd:font-serif odd:text-base even:clear-both"
-                  >
-                    ${raw(marked.parse(c.content))}
-                  </div>`
-                )}
-                <!-- START: Score conversation -->
-                <form method="post" class="clear-both mt-12 flex flex-col">
-                  <div
-                    class="flex flex-row items-center gap-x-4 rounded-lg border border-stone-100 p-2 pr-3 pl-3 shadow-lg"
-                  >
-                    <input
-                      name="comment"
-                      type="text"
-                      placeholder="Votre commentaire sur la conversation"
-                      value="${conversation[0]?.metadata.evaluation.organization.comment}"
-                      class="flex-1 border-0 p-2 outline-none"
-                    />
-                    <fieldset>
+          ${
+            conversation.length === 0
+              ? null
+              : html`
+                  ${conversation.map(
+                    (c) => html`<div
+                      class="prose odd:float-right odd:my-8 odd:max-w-lg odd:rounded-xl odd:bg-gray-100 odd:px-5 odd:py-2 odd:font-serif odd:text-base even:clear-both"
+                    >
+                      ${raw(marked.parse(c.content))}
+                    </div>`
+                  )}
+                  <!-- START: Score conversation -->
+                  <form method="post" class="clear-both mt-12 flex flex-col">
+                    <div
+                      class="flex flex-row items-center gap-x-4 rounded-lg border border-stone-100 p-2 pr-3 pl-3 shadow-lg"
+                    >
                       <input
-                        id="s0"
-                        type="radio"
-                        class="peer/s0 hidden"
-                        name="score"
-                        value="0"
-                        ${conversation[0]?.metadata.evaluation.organization.score === 0
-                          ? 'checked'
-                          : ''}
+                        name="comment"
+                        type="text"
+                        placeholder="Votre commentaire sur la conversation"
+                        value="${conversation[0]?.metadata.evaluation.organization.comment}"
+                        class="flex-1 border-0 p-2 outline-none"
                       />
-                      <label
-                        for="s0"
-                        class="cursor-pointer rounded-full bg-red-500 px-0.5 text-2xl peer-checked/s0:rounded-full peer-checked/s0:ring-3"
-                        >&nbsp;&nbsp;&nbsp;&nbsp;</label
-                      >
+                      <fieldset>
+                        <input
+                          id="s0"
+                          type="radio"
+                          class="peer/s0 hidden"
+                          name="score"
+                          value="0"
+                          ${
+                            conversation[0]?.metadata.evaluation.organization.score === 0
+                              ? 'checked'
+                              : ''
+                          }
+                        />
+                        <label
+                          for="s0"
+                          class="cursor-pointer rounded-full bg-red-500 px-0.5 text-2xl peer-checked/s0:rounded-full peer-checked/s0:ring-3"
+                          >&nbsp;&nbsp;&nbsp;&nbsp;</label
+                        >
+
+                        <input
+                          id="s1"
+                          type="radio"
+                          class="peer/s1 hidden"
+                          name="score"
+                          value="1"
+                          ${
+                            conversation[0]?.metadata.evaluation.organization.score === 1
+                              ? 'checked'
+                              : ''
+                          }
+                        />
+                        <label
+                          for="s1"
+                          class="cursor-pointer rounded-full bg-orange-400 px-0.5 text-2xl peer-checked/s1:rounded-full peer-checked/s1:ring-3"
+                          >&nbsp;&nbsp;&nbsp;&nbsp;</label
+                        >
+
+                        <input
+                          id="s2"
+                          type="radio"
+                          class="peer/s2 hidden"
+                          name="score"
+                          value="2"
+                          ${
+                            conversation[0]?.metadata.evaluation.organization.score === 2
+                              ? 'checked'
+                              : ''
+                          }
+                        />
+                        <label
+                          for="s2"
+                          class="cursor-pointer rounded-full bg-lime-300 px-0.5 text-2xl peer-checked/s2:rounded-full peer-checked/s2:ring-3"
+                          >&nbsp;&nbsp;&nbsp;&nbsp;</label
+                        >
+
+                        <input
+                          id="s3"
+                          type="radio"
+                          class="peer/s3 hidden"
+                          name="score"
+                          value="3"
+                          ${
+                            conversation[0]?.metadata.evaluation.organization.score === 3
+                              ? 'checked'
+                              : ''
+                          }
+                        />
+                        <label
+                          for="s3"
+                          class="cursor-pointer rounded-full bg-green-500 px-0.5 text-2xl peer-checked/s3:rounded-full peer-checked/s3:ring-3"
+                          >&nbsp;&nbsp;&nbsp;&nbsp;</label
+                        >
+                      </fieldset>
+
+                      <input name="scorer" type="hidden" value="organization" />
 
                       <input
-                        id="s1"
-                        type="radio"
-                        class="peer/s1 hidden"
-                        name="score"
-                        value="1"
-                        ${conversation[0]?.metadata.evaluation.organization.score === 1
-                          ? 'checked'
-                          : ''}
+                        type="submit"
+                        value="→"
+                        class="h-8 w-8 cursor-pointer rounded-full bg-slate-900 text-center text-white"
                       />
-                      <label
-                        for="s1"
-                        class="cursor-pointer rounded-full bg-orange-400 px-0.5 text-2xl peer-checked/s1:rounded-full peer-checked/s1:ring-3"
-                        >&nbsp;&nbsp;&nbsp;&nbsp;</label
-                      >
+                    </div>
 
-                      <input
-                        id="s2"
-                        type="radio"
-                        class="peer/s2 hidden"
-                        name="score"
-                        value="2"
-                        ${conversation[0]?.metadata.evaluation.organization.score === 2
-                          ? 'checked'
-                          : ''}
-                      />
-                      <label
-                        for="s2"
-                        class="cursor-pointer rounded-full bg-lime-300 px-0.5 text-2xl peer-checked/s2:rounded-full peer-checked/s2:ring-3"
-                        >&nbsp;&nbsp;&nbsp;&nbsp;</label
-                      >
-
-                      <input
-                        id="s3"
-                        type="radio"
-                        class="peer/s3 hidden"
-                        name="score"
-                        value="3"
-                        ${conversation[0]?.metadata.evaluation.organization.score === 3
-                          ? 'checked'
-                          : ''}
-                      />
-                      <label
-                        for="s3"
-                        class="cursor-pointer rounded-full bg-green-500 px-0.5 text-2xl peer-checked/s3:rounded-full peer-checked/s3:ring-3"
-                        >&nbsp;&nbsp;&nbsp;&nbsp;</label
-                      >
-                    </fieldset>
-
-                    <input name="scorer" type="hidden" value="organization" />
-
-                    <input
-                      type="submit"
-                      value="→"
-                      class="h-8 w-8 cursor-pointer rounded-full bg-slate-900 text-center text-white"
-                    />
-                  </div>
-
-                  <button
-                    name="deletion"
-                    value="true"
-                    class="mt-2 mb-10 cursor-pointer text-xs text-blue-700 underline underline-offset-3"
-                  >
-                    Supprimer définitivement cette conversation
-                  </button>
-                </form>
-                <!-- END: Score conversation -->
-              `}
+                    <button
+                      name="deletion"
+                      value="true"
+                      class="mt-2 mb-10 cursor-pointer text-xs text-blue-700 underline underline-offset-3"
+                    >
+                      Supprimer définitivement cette conversation
+                    </button>
+                  </form>
+                  <!-- END: Score conversation -->
+                `
+          }
         </div>
         <!-- END: Displayed conversation -->
       </body>

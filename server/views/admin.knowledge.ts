@@ -22,13 +22,13 @@ export const view = (metadata: Metadata[], events: KnowledgeBuildRow[]) => {
       <head>
         <meta charset="UTF-8" />
         <script src="https://unpkg.com/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js"></script>
-        <link rel="icon" href="../customization/chatbot/default/system.svg" type="image/svg+xml" />
+        <link rel="icon" href="../customization/chatbots/default/system.svg" type="image/svg+xml" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="preconnect" href="https://rsms.me" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/dist/css/style.1785136764643.css" />
+        <link rel="stylesheet" href="../assets/dist/css/style.1788381380835.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap"
           rel="stylesheet"
@@ -160,35 +160,38 @@ export const view = (metadata: Metadata[], events: KnowledgeBuildRow[]) => {
         </h2>
 
         <div class="mb-10">
-          ${events.length === 0
-            ? html`<p class="text-sm text-neutral-400">Aucun rapport disponible.</p>`
-            : html`<table class="w-full text-sm">
-                <thead>
-                  <tr class="border-b border-neutral-200 text-left text-xs text-neutral-400">
-                    <th class="pr-10 pb-2 font-medium">Sévérité</th>
-                    <th class="pr-10 pb-2 font-medium">Code</th>
-                    <th class="pb-2 font-medium">Sujet</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${events.map(
-                    (e) =>
-                      html`<tr class="border-b border-neutral-100">
-                        <td class="py-1 pr-16">
-                          <span
-                            class="${KIND_CLASS[e.kind] ??
-                            'bg-neutral-100 text-neutral-600'} rounded px-2 py-0.5 font-mono text-xs"
-                            >${KIND_LABEL[e.kind] ?? e.kind}</span
-                          >
-                        </td>
-                        <td class="py-1.5 pr-16 font-mono text-[13px]">${e.code}</td>
-                        <td class="truncate py-1.5 text-[13px] text-neutral-500">
-                          ${e.subject ?? '—'}
-                        </td>
-                      </tr>`
-                  )}
-                </tbody>
-              </table>`}
+          ${
+            events.length === 0
+              ? html`<p class="text-sm text-neutral-400">Aucun rapport disponible.</p>`
+              : html`<table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-neutral-200 text-left text-xs text-neutral-400">
+                      <th class="pr-10 pb-2 font-medium">Sévérité</th>
+                      <th class="pr-10 pb-2 font-medium">Code</th>
+                      <th class="pb-2 font-medium">Sujet</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${events.map(
+                      (e) =>
+                        html`<tr class="border-b border-neutral-100">
+                          <td class="py-1 pr-16">
+                            <span
+                              class="${
+                                KIND_CLASS[e.kind] ?? 'bg-neutral-100 text-neutral-600'
+                              } rounded px-2 py-0.5 font-mono text-xs"
+                              >${KIND_LABEL[e.kind] ?? e.kind}</span
+                            >
+                          </td>
+                          <td class="py-1.5 pr-16 font-mono text-[13px]">${e.code}</td>
+                          <td class="truncate py-1.5 text-[13px] text-neutral-500">
+                            ${e.subject ?? '—'}
+                          </td>
+                        </tr>`
+                    )}
+                  </tbody>
+                </table>`
+          }
         </div>
 
         <h2 class="mb-6 text-2xl font-extrabold">Fichiers présents sur le serveur</h2>
