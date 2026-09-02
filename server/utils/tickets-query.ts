@@ -3,16 +3,14 @@ import { Database } from 'bun:sqlite'
 import { z } from 'zod'
 
 import { datastorePaths } from './paths'
-import { draft_summaries_by_ticket } from './ticket-drafts'
+import { draft_summaries_by_ticket } from './ticket-activities'
 import { buildTicketFiltersWhere, type TicketFilterRule } from './ticket-filters'
-
-export type { TicketFilterRule } from './ticket-filters'
 
 export const CORE_RECLAMATION_COLUMNS = ['id_reclamation', 'id_locataire', 'id_lot'] as const
 
 export const DEFAULT_TICKETS_SORT = '-id_reclamation'
 
-export const RESERVED_TICKETS_QUERY_PARAMS = ['limit', 'offset', 'sort'] as const
+const RESERVED_TICKETS_QUERY_PARAMS = ['limit', 'offset', 'sort', 'rules'] as const
 
 export type TicketsColumnMeta = { name: string; type: string }
 
@@ -24,9 +22,6 @@ export const TicketsPaginationQuery = z.object({
 
 export type TicketsPaginationQuery = z.infer<typeof TicketsPaginationQuery>
 
-/** @deprecated Use TicketsPaginationQuery — kept for tests migrating off column-specific fields. */
-export const TicketsQuery = TicketsPaginationQuery
-
 export type TicketsListInput = TicketsPaginationQuery & {
   filters: Record<string, string[]>
   filter_rules?: TicketFilterRule[]
@@ -37,8 +32,8 @@ export type TicketsFacetsInput = {
   q?: string
 }
 
-export const MAX_COLUMN_FILTER_DISTINCT_VALUES = 99
-export const MAX_COLUMN_FACET_SEARCH_RESULTS = 50
+const MAX_COLUMN_FILTER_DISTINCT_VALUES = 99
+const MAX_COLUMN_FACET_SEARCH_RESULTS = 50
 
 export type TicketsFacetsResult = {
   column: string
@@ -72,6 +67,8 @@ export class TicketsSchemaError extends Error {
     this.name = 'TicketsSchemaError'
   }
 }
+
+const datastore_path = (): string => datastorePaths().database
 
 const empty_meta = (
   limit: number,
@@ -158,16 +155,16 @@ const build_filters = (filters: Record<string, string[]>): { where: string; para
 }
 
 const merge_where_clauses = (
-  legacy: { where: string; params: string[] },
+  columnFilters: { where: string; params: string[] },
   rules: { where: string; params: string[] }
 ): { where: string; params: string[] } => {
-  const legacyCond = legacy.where.replace(/^WHERE\s+/i, '')
+  const filtersCond = columnFilters.where.replace(/^WHERE\s+/i, '')
   const rulesCond = rules.where.replace(/^WHERE\s+/i, '')
-  const conditions = [legacyCond, rulesCond].filter((c) => c.length > 0)
+  const conditions = [filtersCond, rulesCond].filter((c) => c.length > 0)
   if (conditions.length === 0) return { where: '', params: [] }
   return {
     where: `WHERE ${conditions.join(' AND ')}`,
-    params: [...legacy.params, ...rules.params]
+    params: [...columnFilters.params, ...rules.params]
   }
 }
 
@@ -197,7 +194,7 @@ export const parse_tickets_filters = (
  * Column names for filters and sort are validated against `PRAGMA table_info("reclamations")`.
  */
 export const list_tickets = (input: TicketsListInput): TicketsListResult => {
-  const db = new Database(datastorePaths().database, { readonly: true })
+  const db = new Database(datastore_path(), { readonly: true })
 
   try {
     if (!table_exists(db)) {
@@ -210,12 +207,12 @@ export const list_tickets = (input: TicketsListInput): TicketsListResult => {
 
     validate_filters(input.filters, names)
     const sort = resolve_sort(input.sort, names)
-    const legacyWhere = build_filters(input.filters)
+    const filtersWhere = build_filters(input.filters)
     const rulesWhere =
       input.filter_rules && input.filter_rules.length > 0
         ? buildTicketFiltersWhere(input.filter_rules, names)
         : { where: '', params: [] as string[] }
-    const { where, params } = merge_where_clauses(legacyWhere, rulesWhere)
+    const { where, params } = merge_where_clauses(filtersWhere, rulesWhere)
     const { column, direction } = parse_sort(sort)
 
     const total = db
@@ -250,7 +247,8 @@ export const list_tickets = (input: TicketsListInput): TicketsListResult => {
           : {}),
         ...(summary?.latest_at ? { draft_latest_at: summary.latest_at } : {}),
         ...(summary?.generated_by ? { draft_generated_by: summary.generated_by } : {}),
-        ...(summary?.edited_by ? { draft_edited_by: summary.edited_by } : {})
+        ...(summary?.edited_by ? { draft_edited_by: summary.edited_by } : {}),
+        draft_markers: summary?.markers ?? []
       }
     })
 
@@ -273,7 +271,7 @@ export const list_tickets = (input: TicketsListInput): TicketsListResult => {
  * Returns distinct values for a tickets column (full table, not paginated).
  */
 export const get_ticket_column_facets = (input: TicketsFacetsInput): TicketsFacetsResult => {
-  const db = new Database(datastorePaths().database, { readonly: true })
+  const db = new Database(datastore_path(), { readonly: true })
 
   try {
     if (!table_exists(db)) {

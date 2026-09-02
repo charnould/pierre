@@ -6,8 +6,9 @@ import { Hono } from 'hono'
 
 import { controller as get_desktop_tickets } from '../../../../../controllers/desktop/tickets/get'
 import { import_json_rows } from '../../../../../utils/knowledge/sqlite-table-import'
+import { datastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
-import { upsert_ticket_draft } from '../../../../../utils/ticket-drafts'
+import { upsert_ticket_draft } from '../../../../../utils/ticket-activities'
 import { DEFAULT_TICKETS_SORT } from '../../../../../utils/tickets-query'
 
 const FIXTURE_ROWS = [
@@ -43,8 +44,9 @@ const FIXTURE_ROWS = [
 
 const TEST_SERVICE = '_test_tickets_api_svc'
 const ORIGINAL_SERVICE = Bun.env['SERVICE']
-const DATASTORE_ROOT = `datastores/${TEST_SERVICE}`
-const DATASTORE_SQLITE = `${DATASTORE_ROOT}/datastore.sqlite`
+const TEST_PATHS = datastorePaths(TEST_SERVICE)
+const DATASTORE_ROOT = TEST_PATHS.root
+const DATASTORE_SQLITE = TEST_PATHS.database
 
 const app = new Hono()
 app.get('/desktop/tickets', get_desktop_tickets)
@@ -59,7 +61,7 @@ const seed_tickets = (): void => {
 }
 
 const fetch_tickets = (query = ''): Promise<Response> =>
-  app.fetch(new Request(`http://localhost/desktop/tickets${query}`))
+  Promise.resolve(app.fetch(new Request(`http://localhost/desktop/tickets${query}`)))
 
 beforeAll(() => {
   Bun.env['SERVICE'] = TEST_SERVICE
@@ -154,6 +156,26 @@ describe('GET /desktop/tickets', () => {
     const res = await fetch_tickets('?motif=fuite&motif=chauffage')
     const body = (await res.json()) as { data: unknown[] }
     expect(body.data).toHaveLength(3)
+  })
+
+  it('applies structured rules sent by the desktop', async () => {
+    seed_tickets()
+    const rules = encodeURIComponent(
+      JSON.stringify([{ kind: 'values', column: 'type_affaire', values: ['sinistre'] }])
+    )
+    const res = await fetch_tickets(`?rules=${rules}`)
+    const body = (await res.json()) as { data: { id_reclamation: string }[] }
+    expect(res.status).toBe(200)
+    expect(body.data.map((row) => row.id_reclamation)).toEqual(['REQ-3', 'REQ-1'])
+  })
+
+  it('rejects malformed structured rules', async () => {
+    seed_tickets()
+    const res = await fetch_tickets('?rules=not-json')
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({
+      error: { code: 'invalid_query', message: 'rules must be a valid JSON array' }
+    })
   })
 
   it('returns 400 for invalid sort column', async () => {
