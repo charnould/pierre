@@ -1,0 +1,88 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  // These are copied or emitted by build/package steps rather than imported as modules.
+  "ignore": [
+    "desktop/src/assets/report/**/*",
+    "server/assets/dist/**/*",
+    "server/assets/embed/*.css",
+    "server/assets/tailwind/*.css"
+  ],
+  // Installed by deployment scripts in the VM host environment, not by Bun.
+  "ignoreBinaries": ["smolvm"],
+  "workspaces": {
+    ".": {
+      "entry": [
+        "config/build-server.ts!",
+        "config/build-updates.ts!",
+        "config/smolvm/extensions/ask-user.ts!",
+        "config/checks/*.test.ts",
+        "shared/**/*.test.ts"
+      ],
+      // The Pi extension runtime provides TypeBox inside the guest VM.
+      "ignoreDependencies": ["typebox"]
+    },
+    "config/smolvm/document-extract": {
+      "entry": ["extract-spreadsheet.mjs!"]
+    },
+    "customization": {
+      // Runtime directory scans select organization and skill configs by name.
+      "entry": [
+        "chatbots/*/config.ts!",
+        "skills/*/config.ts!",
+        "desktop.ts!",
+        "insurances/config.ts!",
+        "repayments/config.ts!",
+        "tickets/config.ts!"
+      ]
+    },
+    "desktop": {
+      "electron-vite": false,
+      "entry": [
+        "electron.vite.config.ts!",
+        "forge.config.ts!",
+        "forge/rename-release-artifacts.ts!",
+        "electron/main.ts!",
+        "preload/index.ts!",
+        "preload/mascot.ts!",
+        "src/app/main.tsx!",
+        "src/mascot/main.tsx!",
+        "perf/cli.ts!",
+        "**/*.test.ts",
+        "**/*.test.tsx"
+      ],
+      "project": [
+        "**/*.{ts,tsx,css}!",
+        "!**/*.test.{ts,tsx}!",
+        "!test/**!",
+        "!src/features/repayment/lib/repayment-test-fixtures.ts!"
+      ],
+      // Electron Forge resolves maker and publisher packages from string names in its config.
+      "ignoreDependencies": [
+        "@electron-forge/maker-dmg",
+        "@electron-forge/maker-squirrel",
+        "@electron-forge/maker-zip",
+        "@electron-forge/publisher-github"
+      ]
+    },
+    "docs": {
+      "entry": ["scripts/build.ts!", "scripts/**/*.test.ts"],
+      // TypeScript consumes this ambient declaration package without a source import.
+      "ignoreDependencies": ["@types/markdown-it"]
+    },
+    "server": {
+      "entry": [
+        "app.ts!",
+        "assets/embed/pierre-embed.ts!",
+        "assets/host/pierre.ts!",
+        "assets/scripts/ai.tsx!",
+        "utils/knowledge/scrape-wikipedia.ts!",
+        "utils/update-pierre.ts!",
+        "assets/scripts/**/*.test.ts",
+        "tests/**/*.test.ts"
+      ],
+      "project": ["**/*.{ts,tsx,css}!", "!tests/**!", "!assets/scripts/**/*.test.ts!"],
+      // The build script invokes Tailwind through its resolved local binary.
+      "ignoreDependencies": ["@tailwindcss/cli", "tailwindcss"]
+    }
+  }
+}
