@@ -3,7 +3,7 @@ import { serveStatic } from 'hono/bun'
 import { cors } from 'hono/cors'
 import { secureHeaders } from 'hono/secure-headers'
 
-import desktop_config from '../customization/desktop/config.ts'
+import desktop_config from '../customization/desktop'
 import { controller as get_admin_login } from './controllers/admin/auth/get.login'
 import { controller as post_admin_login } from './controllers/admin/auth/post.login'
 import { controller as get_admin_conversations } from './controllers/admin/conversations/get'
@@ -20,15 +20,19 @@ import { controller as get_ai_skills } from './controllers/ai/get.skills'
 import { controller as post_ai_answer } from './controllers/ai/post.answer'
 import { controller as post_ai_vm_release } from './controllers/ai/post.vm.release'
 import { controller as get_index } from './controllers/chat/get'
+import { controller as delete_desktop_activity } from './controllers/desktop/activities/delete'
+import { controller as get_desktop_activities } from './controllers/desktop/activities/get'
+import { controller as get_desktop_activity_feed_sync } from './controllers/desktop/activities/get.feed-sync'
+import { controller as patch_desktop_activity } from './controllers/desktop/activities/patch'
+import { controller as post_desktop_activity } from './controllers/desktop/activities/post'
 import { controller as get_desktop_tickets } from './controllers/desktop/tickets/get'
-import { controller as get_desktop_tickets_drafts } from './controllers/desktop/tickets/get.draft'
 import { controller as get_desktop_tickets_facets } from './controllers/desktop/tickets/get.facets'
 import { controller as put_desktop_tickets } from './controllers/desktop/tickets/put'
-import { controller as put_desktop_tickets_drafts } from './controllers/desktop/tickets/put.draft'
 import { controller as get_embed } from './controllers/embed/get'
 import { controller as post_telemetry } from './controllers/telemetry/post'
 // import { topicize, score } from "./utils/analyze-conversation";
 import { authenticate } from './utils/authenticate-user'
+import { authorize_mutation } from './utils/authorize-role'
 import { run_pipeline } from './utils/knowledge/run-pipeline'
 import { CUSTOMIZATION_STATIC_ROOT, SERVER_ROOT } from './utils/paths'
 import { setup } from './utils/setup'
@@ -86,10 +90,13 @@ app.get('/c', authenticate, get_index)
 app.get('/ai', authenticate, get_ai)
 app.get('/ai/boot', authenticate, get_ai_boot)
 app.get('/ai/skills', authenticate, get_ai_skills)
+app.get('/desktop/activities', authenticate, get_desktop_activities)
+app.get('/desktop/activity-feed/sync', authenticate, get_desktop_activity_feed_sync)
+app.post('/desktop/activities', authenticate, authorize_mutation, post_desktop_activity)
+app.patch('/desktop/activities/:id', authenticate, authorize_mutation, patch_desktop_activity)
+app.delete('/desktop/activities/:id', authenticate, authorize_mutation, delete_desktop_activity)
 app.get('/desktop/tickets/facets', authenticate, get_desktop_tickets_facets)
-app.get('/desktop/tickets/drafts', authenticate, get_desktop_tickets_drafts)
-app.put('/desktop/tickets/drafts', authenticate, put_desktop_tickets_drafts)
-app.put('/desktop/tickets', authenticate, put_desktop_tickets)
+app.put('/desktop/tickets', authenticate, authorize_mutation, put_desktop_tickets)
 app.get('/desktop/tickets', authenticate, get_desktop_tickets)
 app.post('/ai/answer', authenticate, post_ai_answer)
 app.post('/ai/vm/release', authenticate, post_ai_vm_release)

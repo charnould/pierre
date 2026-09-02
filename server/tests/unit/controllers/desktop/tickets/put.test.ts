@@ -1,3 +1,4 @@
+import { Database } from 'bun:sqlite'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
 import { mkdir, rm } from 'node:fs/promises'
 
@@ -5,11 +6,13 @@ import { Hono } from 'hono'
 
 import { controller as put_desktop_tickets } from '../../../../../controllers/desktop/tickets/put'
 import type { Parsed_User } from '../../../../../utils/_schema'
+import { datastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
 
 const TEST_SERVICE = '_test_put_tickets_svc'
 const ORIGINAL_SERVICE = Bun.env['SERVICE']
-const DATASTORE_ROOT = `datastores/${TEST_SERVICE}`
+const TEST_PATHS = datastorePaths(TEST_SERVICE)
+const DATASTORE_ROOT = TEST_PATHS.root
 
 const TEST_USER: Parsed_User = {
   email: 'tester@example.com',
@@ -18,11 +21,15 @@ const TEST_USER: Parsed_User = {
   password_hash: 'x'
 }
 
-const app = new Hono()
-app.put('/desktop/tickets', async (c, next) => {
-  c.set('user', TEST_USER)
-  return put_desktop_tickets(c, next)
-})
+const app = new Hono<{ Variables: { user: Parsed_User } }>()
+app.put(
+  '/desktop/tickets',
+  async (c, next) => {
+    c.set('user', TEST_USER)
+    await next()
+  },
+  put_desktop_tickets
+)
 
 beforeAll(() => {
   Bun.env['SERVICE'] = TEST_SERVICE
@@ -37,6 +44,16 @@ afterAll(async () => {
 beforeEach(async () => {
   await mkdir(DATASTORE_ROOT, { recursive: true })
   await setup()
+  const db = new Database(TEST_PATHS.database)
+  db.run(`
+    CREATE TABLE reclamations (
+      id_reclamation TEXT PRIMARY KEY,
+      id_locataire TEXT NOT NULL,
+      id_lot TEXT,
+      message TEXT
+    )
+  `)
+  db.close()
 })
 
 afterEach(async () => {

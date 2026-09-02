@@ -21,12 +21,7 @@ export type ReclamationUpsertResult = {
   id_locataire: string
 }
 
-const table_exists = (db: Database): boolean =>
-  db
-    .query<{ n: number }, []>(
-      "SELECT COUNT(*) as n FROM sqlite_master WHERE type='table' AND name='reclamations'"
-    )
-    .get()!.n > 0
+const datastore_path = (): string => datastorePaths().database
 
 const get_column_names = (db: Database): Set<string> =>
   new Set(
@@ -35,19 +30,6 @@ const get_column_names = (db: Database): Set<string> =>
       .all()
       .map((c) => c.name)
   )
-
-const ensure_reclamations_table = (db: Database): void => {
-  if (table_exists(db)) return
-
-  db.run(`
-    CREATE TABLE reclamations (
-      id_reclamation TEXT NOT NULL,
-      id_locataire TEXT,
-      id_lot TEXT,
-      message TEXT
-    )
-  `)
-}
 
 const row_exists = (db: Database, id_reclamation: string): boolean => {
   const row = db
@@ -79,8 +61,8 @@ const filter_row_to_columns = (
 }
 
 /**
- * Inserts or updates a reclamation row in `datastore.sqlite`.
- * Only writes columns that exist in the current table schema.
+ * Inserts or updates a row in the HLM `reclamations` snapshot.
+ * The knowledge pipeline must have created the mirror before this is called.
  */
 export const upsert_reclamation = (input: ReclamationUpsertInput): ReclamationUpsertResult => {
   const id_reclamation = input.id_reclamation.trim()
@@ -93,50 +75,53 @@ export const upsert_reclamation = (input: ReclamationUpsertInput): ReclamationUp
     throw new ReclamationsUpsertError('id_locataire is required')
   }
 
-  const db = new Database(datastorePaths().database)
+  const db = new Database(datastore_path())
+  db.run('PRAGMA busy_timeout = 5000')
 
   try {
-    ensure_reclamations_table(db)
-    const columns = get_column_names(db)
+    const upsert = db.transaction(() => {
+      const columns = get_column_names(db)
 
-    for (const core of CORE_RECLAMATION_COLUMNS) {
-      if (!columns.has(core)) {
-        throw new ReclamationsUpsertError(`missing required column: ${core}`)
+      for (const core of CORE_RECLAMATION_COLUMNS) {
+        if (!columns.has(core)) {
+          throw new ReclamationsUpsertError(`missing required column: ${core}`)
+        }
       }
-    }
 
-    const row = filter_row_to_columns(
-      { id_reclamation, id_locataire, message: input.message },
-      columns
-    )
-    const keys = Object.keys(row)
-
-    if (keys.length === 0) {
-      throw new ReclamationsUpsertError('no writable columns')
-    }
-
-    if (row_exists(db, id_reclamation)) {
-      const assignments = keys
-        .filter((k) => k !== 'id_reclamation')
-        .map((k) => `"${k}" = ?`)
-        .join(', ')
-
-      if (assignments.length > 0) {
-        const values = keys.filter((k) => k !== 'id_reclamation').map((k) => row[k] ?? null)
-        db.run(`UPDATE reclamations SET ${assignments} WHERE id_reclamation = ?`, [
-          ...values,
-          id_reclamation
-        ])
-      }
-    } else {
-      const placeholders = keys.map(() => '?').join(', ')
-      db.run(
-        `INSERT INTO reclamations (${keys.map((k) => `"${k}"`).join(', ')}) VALUES (${placeholders})`,
-        keys.map((k) => row[k] ?? null)
+      const row = filter_row_to_columns(
+        { id_reclamation, id_locataire, message: input.message },
+        columns
       )
-    }
+      const keys = Object.keys(row)
 
-    return { id_reclamation, id_locataire }
+      if (keys.length === 0) {
+        throw new ReclamationsUpsertError('no writable columns')
+      }
+
+      if (row_exists(db, id_reclamation)) {
+        const assignments = keys
+          .filter((k) => k !== 'id_reclamation')
+          .map((k) => `"${k}" = ?`)
+          .join(', ')
+
+        if (assignments.length > 0) {
+          const values = keys.filter((k) => k !== 'id_reclamation').map((k) => row[k] ?? null)
+          db.run(`UPDATE reclamations SET ${assignments} WHERE id_reclamation = ?`, [
+            ...values,
+            id_reclamation
+          ])
+        }
+      } else {
+        const placeholders = keys.map(() => '?').join(', ')
+        db.run(
+          `INSERT INTO reclamations (${keys.map((k) => `"${k}"`).join(', ')}) VALUES (${placeholders})`,
+          keys.map((k) => row[k] ?? null)
+        )
+      }
+
+      return { id_reclamation, id_locataire }
+    })
+    return upsert.immediate()
   } finally {
     db.close()
   }

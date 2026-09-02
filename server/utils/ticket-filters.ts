@@ -1,6 +1,6 @@
 import type { TicketsColumnMeta } from './tickets-query'
 
-export type CompareOperator = 'gt' | 'gte' | 'lt' | 'lte'
+type CompareOperator = 'gt' | 'gte' | 'lt' | 'lte'
 
 export type TicketFilterRule =
   | { kind: 'values'; column: string; values: string[] }
@@ -97,19 +97,21 @@ export const parseTicketFilterRules = (raw: unknown): TicketFilterRule[] => {
   const rules: TicketFilterRule[] = []
 
   for (const item of raw) {
-    if (!isRecord(item) || typeof item.column !== 'string' || !item.column.trim()) continue
-    const column = item.column.trim()
+    if (!isRecord(item) || typeof item['column'] !== 'string' || !item['column'].trim()) continue
+    const column = item['column'].trim()
 
-    if (item.kind === 'values' && Array.isArray(item.values)) {
-      const values = item.values.filter((v): v is string => typeof v === 'string' && v.length > 0)
+    if (item['kind'] === 'values' && Array.isArray(item['values'])) {
+      const values = item['values'].filter(
+        (v): v is string => typeof v === 'string' && v.length > 0
+      )
       if (values.length > 0) rules.push({ kind: 'values', column, values })
       continue
     }
 
-    if (item.kind === 'compare' && typeof item.value === 'string') {
-      const operator = parseCompareOperator(item.operator)
-      if (operator && item.value.trim()) {
-        rules.push({ kind: 'compare', column, operator, value: item.value.trim() })
+    if (item['kind'] === 'compare' && typeof item['value'] === 'string') {
+      const operator = parseCompareOperator(item['operator'])
+      if (operator && item['value'].trim()) {
+        rules.push({ kind: 'compare', column, operator, value: item['value'].trim() })
       }
     }
   }

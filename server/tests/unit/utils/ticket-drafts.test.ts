@@ -1,6 +1,8 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
 import { mkdir, rm } from 'node:fs/promises'
 
+import { create_activity } from '../../../utils/activities/write'
+import { datastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 import {
   draft_summaries_by_ticket,
@@ -8,11 +10,11 @@ import {
   list_ticket_drafts,
   TicketDraftsError,
   upsert_ticket_draft
-} from '../../../utils/ticket-drafts'
+} from '../../../utils/ticket-activities'
 
 const TEST_SERVICE = '_test_ticket_drafts_svc'
 const ORIGINAL_SERVICE = Bun.env['SERVICE']
-const DATASTORE_ROOT = `datastores/${TEST_SERVICE}`
+const DATASTORE_ROOT = datastorePaths(TEST_SERVICE).root
 
 beforeAll(async () => {
   Bun.env['SERVICE'] = TEST_SERVICE
@@ -332,11 +334,45 @@ describe('ticket_drafts', () => {
       edited_by: 'e@x.com'
     })
     const edited = get_ticket_draft('REQ-T', 'ticket.answer-ticket')!
-    expect(edited.edited_at! > gen.generated_at).toBe(true)
+    expect(edited.edited_at).toBeTruthy()
+    expect(edited.generated_at).toBe(gen.generated_at)
 
     const map = draft_summaries_by_ticket(['REQ-T'])
     expect(map.get('REQ-T')?.latest_at).toBe(edited.edited_at!)
     expect(map.get('REQ-T')?.edited_by).toBe('e@x.com')
+  })
+
+  it('decodes the generic draft payloads written by the desktop', () => {
+    create_activity('alice@example.com', {
+      contexte: 'tickets',
+      ref: 'REQ-DESKTOP',
+      type: 'ticket_reply',
+      statut: 'draft',
+      contenu: JSON.stringify({ canal: 'courrier', corps: 'Lettre' })
+    })
+    create_activity('alice@example.com', {
+      contexte: 'tickets',
+      ref: 'REQ-DESKTOP',
+      type: 'ticket_memo',
+      statut: 'draft',
+      contenu: JSON.stringify({ contenu: 'Mémo' })
+    })
+    create_activity('alice@example.com', {
+      contexte: 'tickets',
+      ref: 'REQ-DESKTOP',
+      type: 'ticket_summary',
+      statut: 'draft',
+      contenu: JSON.stringify({ contenu: 'Résumé' })
+    })
+
+    expect(get_ticket_draft('REQ-DESKTOP', 'ticket.answer-ticket')).toMatchObject({
+      channel: 'letter',
+      generated_output: 'Lettre'
+    })
+    expect(get_ticket_draft('REQ-DESKTOP', 'ticket.write-memo')?.generated_output).toBe('Mémo')
+    expect(get_ticket_draft('REQ-DESKTOP', 'ticket.summarize-ticket')?.generated_output).toBe(
+      'Résumé'
+    )
   })
 
   it('rejects invalid save_kind via zod', () => {

@@ -3,13 +3,25 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { mkdir, rm } from 'node:fs/promises'
 
 import { import_json_rows } from '../../../utils/knowledge/sqlite-table-import'
+import { datastorePaths } from '../../../utils/paths'
 import { ReclamationsUpsertError, upsert_reclamation } from '../../../utils/reclamations-upsert'
 import { setup } from '../../../utils/setup'
 
 const TEST_SERVICE = '_test_reclamations_upsert_svc'
 const ORIGINAL_SERVICE = Bun.env['SERVICE']
-const DATASTORE_ROOT = `datastores/${TEST_SERVICE}`
-const DATASTORE_SQLITE = `${DATASTORE_ROOT}/datastore.sqlite`
+const TEST_PATHS = datastorePaths(TEST_SERVICE)
+const DATASTORE_ROOT = TEST_PATHS.root
+const DATASTORE_SQLITE = TEST_PATHS.database
+
+const create_reclamations_table = () => {
+  const db = new Database(DATASTORE_SQLITE)
+  db.run(
+    `CREATE TABLE reclamations (
+       id_reclamation TEXT UNIQUE, id_locataire TEXT, id_lot TEXT, message TEXT
+     )`
+  )
+  db.close()
+}
 
 beforeAll(async () => {
   Bun.env['SERVICE'] = TEST_SERVICE
@@ -31,7 +43,8 @@ afterEach(async () => {
 })
 
 describe('upsert_reclamation', () => {
-  it('creates table and inserts a minimal row', () => {
+  it('inserts a minimal row into the imported schema', () => {
+    create_reclamations_table()
     const result = upsert_reclamation({
       id_reclamation: 'reclamation-abc',
       id_locataire: 'locataire-xyz'
@@ -65,6 +78,7 @@ describe('upsert_reclamation', () => {
   })
 
   it('updates message on existing row', () => {
+    create_reclamations_table()
     upsert_reclamation({
       id_reclamation: 'reclamation-abc',
       id_locataire: 'locataire-xyz'
