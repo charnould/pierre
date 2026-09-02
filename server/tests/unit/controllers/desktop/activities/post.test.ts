@@ -9,11 +9,12 @@ import { controller as postActivity } from '../../../../../controllers/desktop/a
 import type { Parsed_User } from '../../../../../utils/_schema'
 import { get_activity } from '../../../../../utils/activities/rows'
 import { authorize_mutation } from '../../../../../utils/authorize-role'
+import { datastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
 import { get_ticket_draft, upsert_ticket_draft } from '../../../../../utils/ticket-activities'
 
 const SERVICE = '_test_activity_write_controllers'
-const ROOT = `datastores/${SERVICE}`
+const ROOT = datastorePaths(SERVICE).root
 const originalService = Bun.env['SERVICE']
 
 const app = new Hono<{ Variables: { user: Parsed_User } }>()

@@ -1,5 +1,6 @@
 import { Database } from 'bun:sqlite'
 
+import { insert_contacts_from_rows } from '../contacts'
 import { normalize_knowledge_name } from './utils'
 
 /** A single JSON object row eligible for tabular import. */
@@ -129,6 +130,7 @@ export const import_json_rows = (db: Database, table_name: string, rows: JsonRow
     if (table === 'reclamations' && sanitized_keys.includes('id_reclamation')) {
       db.run('CREATE UNIQUE INDEX idx_reclamations_id_reclamation ON reclamations(id_reclamation)')
     }
+    if (table_exists(db, 'contacts')) insert_contacts_from_rows(db, stored_rows)
     emit_reclamation_changes(db, previous, stored_rows)
   })
   replace_table.immediate()

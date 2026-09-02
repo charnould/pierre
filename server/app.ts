@@ -20,6 +20,8 @@ import { controller as get_ai_skills } from './controllers/ai/get.skills'
 import { controller as post_ai_answer } from './controllers/ai/post.answer'
 import { controller as post_ai_vm_release } from './controllers/ai/post.vm.release'
 import { controller as get_index } from './controllers/chat/get'
+import { controller as post_courrier } from './controllers/courrier/post'
+import { controller as post_courrier_webhook } from './controllers/courrier/post.webhook'
 import { controller as delete_desktop_activity } from './controllers/desktop/activities/delete'
 import { controller as get_desktop_activities } from './controllers/desktop/activities/get'
 import { controller as get_desktop_activity_feed_sync } from './controllers/desktop/activities/get.feed-sync'
@@ -28,11 +30,25 @@ import { controller as post_desktop_activity } from './controllers/desktop/activ
 import { controller as get_desktop_tickets } from './controllers/desktop/tickets/get'
 import { controller as get_desktop_tickets_facets } from './controllers/desktop/tickets/get.facets'
 import { controller as put_desktop_tickets } from './controllers/desktop/tickets/put'
+import { controller as post_email } from './controllers/email/post'
+import { controller as post_email_webhook } from './controllers/email/post.webhook'
 import { controller as get_embed } from './controllers/embed/get'
+import { controller as post_lrar } from './controllers/lrar/post'
+import { controller as post_lrar_webhook } from './controllers/lrar/post.webhook'
+import { controller as post_lre } from './controllers/lre/post'
+import { controller as post_lre_webhook } from './controllers/lre/post.webhook'
+import { controller as post_mailto } from './controllers/mailto/post'
+import { controller as post_rcs } from './controllers/rcs/post'
+import { controller as post_rcs_webhook } from './controllers/rcs/post.webhook'
+import { controller as post_signature } from './controllers/signature/post'
+import { controller as post_signature_webhook } from './controllers/signature/post.webhook'
+import { controller as post_sms } from './controllers/sms/post'
+import { controller as post_sms_webhook } from './controllers/sms/post.webhook'
 import { controller as post_telemetry } from './controllers/telemetry/post'
 // import { topicize, score } from "./utils/analyze-conversation";
 import { authenticate } from './utils/authenticate-user'
 import { authorize_mutation } from './utils/authorize-role'
+import { refresh_stale_sms_contacts_for_service } from './utils/contacts'
 import { run_pipeline } from './utils/knowledge/run-pipeline'
 import { CUSTOMIZATION_STATIC_ROOT, SERVER_ROOT } from './utils/paths'
 import { setup } from './utils/setup'
@@ -66,6 +82,7 @@ app.use(
 // Cronjob
 // Runs every day at 4:00 AM
 Bun.cron('0 4 * * *', async () => {
+  refresh_stale_sms_contacts_for_service()
   // Update knowledge database with custom content
   await run_pipeline()
   // Score conversation and assign topic with AI
@@ -98,6 +115,21 @@ app.delete('/desktop/activities/:id', authenticate, authorize_mutation, delete_d
 app.get('/desktop/tickets/facets', authenticate, get_desktop_tickets_facets)
 app.put('/desktop/tickets', authenticate, authorize_mutation, put_desktop_tickets)
 app.get('/desktop/tickets', authenticate, get_desktop_tickets)
+app.post('/rcs', authenticate, authorize_mutation, post_rcs)
+app.post('/sms', authenticate, authorize_mutation, post_sms)
+app.post('/email', authenticate, authorize_mutation, post_email)
+app.post('/mailto', authenticate, authorize_mutation, post_mailto)
+app.post('/courrier', authenticate, authorize_mutation, post_courrier)
+app.post('/lrar', authenticate, authorize_mutation, post_lrar)
+app.post('/lre', authenticate, authorize_mutation, post_lre)
+app.post('/signature', authenticate, authorize_mutation, post_signature)
+app.post('/webhook/rcs', post_rcs_webhook)
+app.post('/webhook/sms', post_sms_webhook)
+app.post('/webhook/email', post_email_webhook)
+app.post('/webhook/courrier', post_courrier_webhook)
+app.post('/webhook/lrar', post_lrar_webhook)
+app.post('/webhook/lre', post_lre_webhook)
+app.post('/webhook/signature', post_signature_webhook)
 app.post('/ai/answer', authenticate, post_ai_answer)
 app.post('/ai/vm/release', authenticate, post_ai_vm_release)
 
