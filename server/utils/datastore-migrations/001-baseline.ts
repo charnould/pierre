@@ -46,7 +46,8 @@ export const baseline = {
       role TEXT NOT NULL,
       password_hash TEXT NOT NULL,
       preferences TEXT NOT NULL DEFAULT '{}',
-      avatar BLOB
+      avatar BLOB,
+      avatar_version INTEGER NOT NULL DEFAULT 0
     );
 
     CREATE TABLE telemetry (

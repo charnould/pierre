@@ -40,6 +40,7 @@ const alice: OrgUser = {
   config: [],
   hasAvatar: false,
   avatarBytes: 0,
+  avatarVersion: 0,
   displayName: 'Alice Martin'
 }
 

@@ -160,6 +160,25 @@ export function set_user_preferences(email: string, preferences: UserPreferences
   }
 }
 
+export function patch_user_preferences(
+  email: string,
+  patch: Partial<UserPreferences>
+): UserPreferences {
+  const db = open_db()
+  try {
+    return db
+      .transaction(() => {
+        const current = get_user_preferences_with_db(db, email)
+        const next = { ...current, ...patch }
+        set_user_preferences_with_db(db, email, next)
+        return next
+      })
+      .immediate()
+  } finally {
+    db.close()
+  }
+}
+
 function purge_pin_from_all_users(db: Database, automation_id: string): void {
   const rows = db
     .query<{ email: string; preferences: string | null }, []>(

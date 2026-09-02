@@ -23,6 +23,7 @@ const USERS = [
     config: ['default'],
     hasAvatar: false,
     avatarBytes: 0,
+    avatarVersion: 0,
     displayName: 'amartin'
   },
   {
@@ -32,6 +33,7 @@ const USERS = [
     config: ['default', 'agent'],
     hasAvatar: true,
     avatarBytes: 3,
+    avatarVersion: 1,
     displayName: 'Camille Dubois'
   }
 ]
@@ -94,6 +96,31 @@ describe('org-users-cache', () => {
     expect(getUsers).toHaveBeenCalledTimes(1)
   })
 
+  test('conserve le dernier serveur demandé malgré une réponse plus ancienne', async () => {
+    const resolvers = new Map<string, (value: { users: typeof USERS }) => void>()
+    stubWindowApi({
+      getUsers: mock(
+        ({ url }: { url: string }) =>
+          new Promise<{ users: typeof USERS }>((resolve) => {
+            resolvers.set(url, resolve)
+          })
+      )
+    })
+    const first = fetchOrgUsers('https://one.test')
+    const second = fetchOrgUsers('https://two.test')
+
+    resolvers.get('https://two.test')?.({
+      users: [{ ...USERS[0]!, displayName: 'Serveur deux' }, USERS[1]!]
+    })
+    await second
+    resolvers.get('https://one.test')?.({
+      users: [{ ...USERS[0]!, displayName: 'Serveur un' }, USERS[1]!]
+    })
+    await first
+
+    expect(resolveOrgUser('amartin')?.displayName).toBe('Serveur deux')
+  })
+
   test('fetchOrgUsers retourne [] si getUsers échoue sans mettre en cache', async () => {
     const getUsers = mock(() => Promise.resolve(null))
     stubWindowApi({ getUsers })
@@ -146,7 +173,10 @@ describe('org-users-cache', () => {
     stubWindowApi({ getUsers, getAvatar })
     await fetchOrgUsers('https://pierre.test')
     await Promise.resolve()
-    expect(getAvatar).toHaveBeenCalledWith({ url: 'https://pierre.test', login: 'cdubois' })
+    expect(getAvatar).toHaveBeenCalledWith({
+      url: 'https://pierre.test',
+      email: 'cdubois@exemple.fr'
+    })
     expect(getAvatar).toHaveBeenCalledTimes(1)
     expect(resolveUserAvatar('amartin')).toBeNull()
     expect(resolveUserAvatar('cdubois')).toBe(bytesToDataUri(bytes, 'image/webp'))
@@ -154,6 +184,45 @@ describe('org-users-cache', () => {
     applyLocalAvatar('cdubois', PHOTO, 'Camille')
     expect(resolveUserAvatar('cdubois')).toBe(PHOTO)
     expect(resolveOrgUser('cdubois')?.displayName).toBe('Camille')
+  })
+
+  test('isole les comptes qui partagent le même local-part', async () => {
+    const users = [
+      { ...USERS[1]!, login: 'alice', email: 'alice@one.test', avatarVersion: 1 },
+      { ...USERS[1]!, login: 'alice', email: 'alice@two.test', avatarVersion: 2 }
+    ]
+    const getAvatar = mock(({ email }: { email: string }) =>
+      Promise.resolve(new TextEncoder().encode(email).buffer)
+    )
+    stubWindowApi({
+      getUsers: mock(() => Promise.resolve({ users })),
+      getAvatar
+    })
+    await fetchOrgUsers('https://pierre.test')
+    await Promise.resolve()
+
+    expect(resolveOrgUser('alice')).toBeNull()
+    expect(resolveUserAvatar('alice@one.test')).not.toBe(resolveUserAvatar('alice@two.test'))
+    expect(getAvatar).toHaveBeenCalledTimes(2)
+  })
+
+  test('isole les photos de comptes identiques entre serveurs', async () => {
+    const getAvatar = mock(({ url }: { url: string }) =>
+      Promise.resolve(new TextEncoder().encode(url).buffer)
+    )
+    stubWindowApi({
+      getUsers: mock(() => Promise.resolve({ users: USERS })),
+      getAvatar
+    })
+
+    await fetchOrgUsers('https://pierre.test/Org')
+    await Promise.resolve()
+    const first = resolveUserAvatar('cdubois@exemple.fr')
+    await fetchOrgUsers('https://pierre.test/org')
+    await Promise.resolve()
+
+    expect(resolveUserAvatar('cdubois@exemple.fr')).not.toBe(first)
+    expect(getAvatar).toHaveBeenCalledTimes(2)
   })
 
   test('résout avatar, user et displayName par email comme par login', async () => {
@@ -188,10 +257,10 @@ describe('org-users-cache', () => {
     expect(resolveUserAvatar('cdubois@exemple.fr')).toBe('data:image/webp;base64,Qg==')
   })
 
-  test('applyLocalAvatar sans cache org résout encore l’email via le login', () => {
+  test('applyLocalAvatar sans cache org reste limité à son identifiant exact', () => {
     applyLocalAvatar('cdubois', PHOTO)
     expect(resolveUserAvatar('cdubois')).toBe(PHOTO)
-    expect(resolveUserAvatar('cdubois@exemple.fr')).toBe(PHOTO)
+    expect(resolveUserAvatar('cdubois@exemple.fr')).toBeNull()
   })
 
   test('applyLocalAvatar(undefined) ne touche pas la photo', () => {

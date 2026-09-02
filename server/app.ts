@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { bodyLimit } from 'hono/body-limit'
 import { serveStatic } from 'hono/bun'
 import { cors } from 'hono/cors'
 import { secureHeaders } from 'hono/secure-headers'
@@ -34,9 +35,13 @@ import { controller as patch_desktop_automation } from './controllers/desktop/au
 import { controller as post_desktop_automation } from './controllers/desktop/automations/post'
 import { controller as post_desktop_automation_pin } from './controllers/desktop/automations/post.pin'
 import { controller as post_desktop_automation_run } from './controllers/desktop/automations/post.run'
+import { controller as get_desktop_avatars } from './controllers/desktop/avatars/get'
+import { controller as post_desktop_me_avatar } from './controllers/desktop/me/avatar/post'
+import { controller as patch_desktop_me_preferences } from './controllers/desktop/me/preferences/patch'
 import { controller as get_desktop_tickets } from './controllers/desktop/tickets/get'
 import { controller as get_desktop_tickets_facets } from './controllers/desktop/tickets/get.facets'
 import { controller as put_desktop_tickets } from './controllers/desktop/tickets/put'
+import { controller as get_desktop_users } from './controllers/desktop/users/get'
 import { controller as post_email } from './controllers/email/post'
 import { controller as post_email_webhook } from './controllers/email/post.webhook'
 import { controller as get_embed } from './controllers/embed/get'
@@ -56,6 +61,7 @@ import { controller as post_telemetry } from './controllers/telemetry/post'
 import { authenticate } from './utils/authenticate-user'
 import { authorize_mutation } from './utils/authorize-role'
 import { run_due_automations } from './utils/automations/run'
+import { AVATAR_MAX_UPLOAD_BYTES } from './utils/avatar-image'
 import { refresh_stale_sms_contacts_for_service } from './utils/contacts'
 import { run_pipeline } from './utils/knowledge/run-pipeline'
 import { CUSTOMIZATION_STATIC_ROOT, SERVER_ROOT } from './utils/paths'
@@ -74,6 +80,11 @@ await cleanupOrphanedVms()
 await initVmPool()
 
 const app = new Hono()
+const avatarBodyLimit = bodyLimit({
+  maxSize: AVATAR_MAX_UPLOAD_BYTES + 64 * 1024,
+  onError: (c) =>
+    c.json({ error: { code: 'avatar_too_large', message: 'Avatar upload is too large' } }, 413)
+})
 
 // Configure the secure headers for the app.
 // This allows other websites to iframe PIERRE
@@ -150,6 +161,10 @@ app.delete(
 app.get('/desktop/tickets/facets', authenticate, get_desktop_tickets_facets)
 app.put('/desktop/tickets', authenticate, authorize_mutation, put_desktop_tickets)
 app.get('/desktop/tickets', authenticate, get_desktop_tickets)
+app.get('/desktop/users', authenticate, get_desktop_users)
+app.patch('/desktop/me/preferences', authenticate, patch_desktop_me_preferences)
+app.post('/desktop/me/avatar', authenticate, avatarBodyLimit, post_desktop_me_avatar)
+app.get('/desktop/avatars/:email', authenticate, get_desktop_avatars)
 app.post('/rcs', authenticate, authorize_mutation, post_rcs)
 app.post('/sms', authenticate, authorize_mutation, post_sms)
 app.post('/email', authenticate, authorize_mutation, post_email)

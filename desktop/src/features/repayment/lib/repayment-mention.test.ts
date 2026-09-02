@@ -17,6 +17,7 @@ const orgUser = (login: string, displayName = login): OrgUser => ({
   config: ['default'],
   hasAvatar: false,
   avatarBytes: 0,
+  avatarVersion: 0,
   displayName
 })
 

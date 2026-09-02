@@ -1,10 +1,11 @@
 export type OrgUser = {
   login: string
   email: string
-  role: string
-  config: string[]
+  role?: string
+  config?: string[]
   hasAvatar: boolean
   avatarBytes: number
+  avatarVersion: number
   /** Resolved label: custom display name or email local-part. */
   displayName: string
 }
@@ -37,13 +38,14 @@ export type UploadMyAvatarResponse = {
   data: {
     hasAvatar: boolean
     avatarBytes: number
+    avatarVersion: number
     displayName: string
   }
 }
 
 export type GetAvatarPayload = {
   url: string
-  login: string
+  email: string
 }
 
 /** Native file dialog + main-process decode. `null` if the user cancelled. */

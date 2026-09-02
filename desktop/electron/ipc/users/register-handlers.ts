@@ -59,7 +59,7 @@ export function registerUsersHandlers(partition: string): void {
     const ses = session.fromPartition(partition)
     try {
       const resp = await netFetch(
-        `${params.url.replace(/\/$/, '')}/desktop/avatars/${encodeURIComponent(params.login)}`,
+        `${params.url.replace(/\/$/, '')}/desktop/avatars/${encodeURIComponent(params.email)}`,
         { session: ses }
       )
       if (!resp.ok) return null

@@ -207,7 +207,7 @@ declare global {
       patchMyPreferences: (
         params: PatchMyPreferencesPayload
       ) => Promise<PatchMyPreferencesResponse | null>
-      /** `GET /desktop/avatars/:login` — stored WebP bytes, or null. */
+      /** `GET /desktop/avatars/:email` — stored WebP bytes, or null. */
       getAvatar: (params: GetAvatarPayload) => Promise<ArrayBuffer | null>
       /** Native photo picker; main process reads and re-encodes the file. */
       pickAvatarImage: () => Promise<PickedAvatarImage | null>

@@ -18,6 +18,7 @@ const CAMILLE: OrgUser = {
   config: ['default'],
   hasAvatar: false,
   avatarBytes: 0,
+  avatarVersion: 0,
   displayName: 'Camille Dubois'
 }
 
@@ -28,6 +29,7 @@ const AMARTIN: OrgUser = {
   config: ['default'],
   hasAvatar: false,
   avatarBytes: 0,
+  avatarVersion: 0,
   displayName: 'amartin'
 }
 
