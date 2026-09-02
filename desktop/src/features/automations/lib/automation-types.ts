@@ -1,4 +1,3 @@
-import { loginFromEmail } from '@/features/activity/lib/notification-types'
 import {
   decodeCronToSchedule,
   type AutomationFrequency,
@@ -10,10 +9,10 @@ import {
   type TicketFilterRule
 } from '@/shared/types/automations'
 
-/** Owner is a login; the desktop viewer is often the full email. */
+/** Automation ownership uses the canonical account email. */
 export function sameAutomationLogin(a: string, b: string): boolean {
-  const left = loginFromEmail(a.trim().toLowerCase())
-  const right = loginFromEmail(b.trim().toLowerCase())
+  const left = a.trim().toLowerCase()
+  const right = b.trim().toLowerCase()
   return Boolean(left) && left === right
 }
 
