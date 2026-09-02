@@ -6,10 +6,8 @@ import {
   type AutomationRecord,
   type AutomationRunStatus,
   type AutomationType,
-  type ReportAutomationConfig,
   type TicketAutomationFilters,
-  type TicketFilterRule,
-  type TicketReplyAutomationConfig
+  type TicketFilterRule
 } from '@/shared/types/automations'
 
 /** Owner is a login; the desktop viewer is often the full email. */
@@ -108,22 +106,20 @@ export function recordToAutomation(record: AutomationRecord, viewerLogin: string
     cron: record.cron
   }
   if (record.type === 'report') {
-    const config = record.config as ReportAutomationConfig
     return {
       ...base,
       type: 'report',
-      prompt: config.prompt,
-      maxReports: config.maxReports,
+      prompt: record.config.prompt,
+      maxReports: record.config.maxReports,
       runs: []
     }
   }
-  const config = record.config as TicketReplyAutomationConfig
   return {
     ...base,
     type: 'ticket_reply',
-    skillId: config.skillId,
-    channel: config.channel,
-    ticketFilters: config.ticketFilters,
-    maxItems: config.maxItems
+    skillId: record.config.skillId,
+    channel: record.config.channel,
+    ticketFilters: record.config.ticketFilters,
+    maxItems: record.config.maxItems
   }
 }

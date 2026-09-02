@@ -6,7 +6,9 @@ import {
 } from '@/features/automations/lib/automation-types'
 import type { AutomationRecord } from '@/shared/types/automations'
 
-function record(overrides: Partial<AutomationRecord> = {}): AutomationRecord {
+type ReportAutomationRecord = Extract<AutomationRecord, { type: 'report' }>
+
+function record(overrides: Partial<ReportAutomationRecord> = {}): ReportAutomationRecord {
   return {
     id: 'a1',
     type: 'report',
