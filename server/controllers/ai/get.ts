@@ -20,7 +20,7 @@ export const controller = async (c: Context) => {
       dataQuery === undefined || dataQuery === 'undefined' ? [''] : dataQuery.split('|')
 
     const context = await AIContext.parseAsync({
-      config: (await import(`../../../customization/chatbot/${c.req.query('config')}/config`))
+      config: (await import(`../../../customization/chatbots/${c.req.query('config')}/config`))
         .default,
       custom_data: { raw: customRaw },
       metadata: { user: c.get('user')?.email ?? null },

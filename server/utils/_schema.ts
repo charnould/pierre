@@ -43,7 +43,7 @@ export const Skill = z.object({
 export const Parsed_User = User.extend({ config: z.array(z.string()) })
 
 //
-// `./customization/chatbot` config schema
+// `./customization/chatbots` config schema
 export const Config = z
   .object({
     id: z.string(),
@@ -71,7 +71,33 @@ export const Config = z
     protected: z.boolean(),
     reasoning_display: z.enum(['off', 'partial', 'full']).default('off'),
     reasoning_effort: z.enum(['low', 'medium', 'high']).default('medium'),
-    reasoning_placeholders: z.array(z.string()).min(1)
+    reasoning_placeholders: z
+      .array(z.string())
+      .min(1)
+      .default([
+        'Je réfléchis…',
+        'Je creuse la question…',
+        'Les rouages tournent…',
+        "J'analyse tout ça…",
+        'Je pèse les options…',
+        'Je tisse les fils…',
+        "J'assemble les pièces…",
+        'Je cherche la meilleure approche…',
+        "Je mets de l'ordre dans tout ça…",
+        'Je passe ça au crible…',
+        'Je synthétise…',
+        'Je retourne le problème dans tous les sens…',
+        'Je fouille dans les possibilités…',
+        'Je fais le tour de la question…',
+        'Ça avance…',
+        'Je peaufine la réponse…',
+        'Je vérifie mes angles…',
+        "Je prends le temps d'y réfléchir…",
+        'Je démêle tout ça…',
+        'Je mets les idées en ordre…'
+      ]),
+    // `compact`: centered composer (desktop default). `default`: greeting + vertical examples.
+    layout: z.enum(['default', 'compact']).default('default')
   })
   .strict()
 

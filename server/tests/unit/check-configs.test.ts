@@ -6,11 +6,11 @@ import { Config } from '../../utils/_schema'
 import { CUSTOMIZATION_DIR } from '../../utils/paths'
 
 test('check if configs parse successfully', async () => {
-  const directories = await readdir(join(CUSTOMIZATION_DIR, 'chatbot'))
+  const directories = await readdir(join(CUSTOMIZATION_DIR, 'chatbots'))
 
   // Check official `config.ts` for each organization
   for await (const directory of directories) {
-    const config = (await import(`../../../customization/chatbot/${directory}/config`)).default
+    const config = (await import(`../../../customization/chatbots/${directory}/config`)).default
     const check = Config.safeParse(config)
 
     if (check.error) {

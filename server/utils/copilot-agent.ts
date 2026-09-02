@@ -51,7 +51,7 @@ async function buildAgentsFile(configId: string, workflowPayload?: WorkflowPaylo
   const isSkill = existsSync(skillDir)
   const instructionsPath = join(
     CUSTOMIZATION_DIR,
-    isSkill ? 'skills' : 'chatbot',
+    isSkill ? 'skills' : 'chatbots',
     configId,
     'AGENTS.md'
   )
