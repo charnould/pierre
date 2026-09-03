@@ -8,6 +8,7 @@ import {
   migrate_datastore,
   type DatastoreMigration
 } from '../../../utils/datastore-migrations'
+import { baseline } from '../../../utils/datastore-migrations/001-baseline'
 
 const ROOT = 'datastores/_test_datastore_migrations'
 const PATH = `${ROOT}/datastore.sqlite`
@@ -36,6 +37,25 @@ afterEach(async () => {
 })
 
 describe('datastore migrations', () => {
+  it('keeps owned-object metadata in sync with the baseline SQL', () => {
+    const db = new Database(':memory:')
+    try {
+      db.run(baseline.sql)
+      const actual = db
+        .query<{ name: string }, []>(
+          `SELECT name FROM sqlite_master
+           WHERE sql IS NOT NULL AND name NOT LIKE 'sqlite_%'
+           ORDER BY name`
+        )
+        .all()
+        .map(({ name }) => name)
+
+      expect(actual).toEqual([...baseline.objects].sort())
+    } finally {
+      db.close()
+    }
+  })
+
   it('bootstraps a missing database with baseline tables, indexes, and ledger', async () => {
     await migrate_datastore(PATH)
 
