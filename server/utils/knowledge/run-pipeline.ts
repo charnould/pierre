@@ -20,6 +20,10 @@ export type KnowledgeBuildEvent = {
   subject: string | null
 }
 
+type RunPipelineDependencies = {
+  build_knowledge_databases?: typeof build_knowledge_databases
+}
+
 /**
  * Persists a set of pipeline build events to the `knowledge_build` table.
  *
@@ -83,10 +87,11 @@ export const save_events = (events: KnowledgeBuildEvent[]): void => {
  * 4. Builds SQLite knowledge databases from the ingested files.
  *
  * Any anomalies detected during the run are saved to the `knowledge_build` table
- * via {@link save_events}. Pipeline errors are caught internally and recorded as
- * `INGEST_FAILED` events rather than propagated, so the function never rejects.
+ * via {@link save_events}. Ingestion, build, and orchestration errors are caught
+ * internally and persisted before returning, so the function never rejects for
+ * those failures.
  */
-export const run_pipeline = async (): Promise<void> => {
+export const run_pipeline = async (dependencies: RunPipelineDependencies = {}): Promise<void> => {
   const events: KnowledgeBuildEvent[] = []
 
   try {
@@ -142,13 +147,30 @@ export const run_pipeline = async (): Promise<void> => {
     // Placed after a self-contained ingest try/catch so it always runs,
     // even when ingest_files throws (e.g. corrupt file).
     step_start = performance.now()
-    await build_knowledge_databases()
+    try {
+      await (dependencies.build_knowledge_databases ?? build_knowledge_databases)()
+    } catch (e) {
+      console.error('❌ Knowledge database build failed', e)
+      events.push({
+        source: 'pipeline',
+        kind: 'error',
+        code: 'BUILD_FAILED',
+        subject: String(e)
+      })
+      return
+    }
     console.info(`⏱ build: ${((performance.now() - step_start) / 1000).toFixed(3)}s`)
 
     const duration_seconds = ((performance.now() - start_time) / 1000).toFixed(3)
     console.info(`✅ Pipeline completed in ${duration_seconds}s`)
   } catch (e) {
     console.error('❌ Pipeline execution failed', e)
+    events.push({
+      source: 'pipeline',
+      kind: 'error',
+      code: 'PIPELINE_FAILED',
+      subject: String(e)
+    })
   } finally {
     save_events(events)
   }

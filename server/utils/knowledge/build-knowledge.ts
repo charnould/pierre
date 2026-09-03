@@ -9,6 +9,10 @@ import { migrate_datastore } from '../datastore-migrations'
 import { DATASTORE_MIRROR_TABLES } from '../datastore-tables'
 import { datastorePaths, resolveServiceName } from '../paths'
 import { strip_pii_from_rows } from '../pii-columns'
+import {
+  COMMUNES_PAR_CODE_POSTAL_TABLE,
+  import_communes_par_code_postal_table
+} from './codes-postaux'
 import { import_json_rows, type JsonRow } from './sqlite-table-import'
 import { normalize_knowledge_name } from './utils'
 
@@ -184,6 +188,26 @@ const build_readme = (db: Database): string | null => {
     const rows = db.query<{ n: number }, []>(`SELECT COUNT(*) as n FROM "${name}"`).get()!.n
     const source_url = url_by_name.get(name) ?? null
 
+    if (name === COMMUNES_PAR_CODE_POSTAL_TABLE) {
+      return {
+        name,
+        description:
+          'Référentiel géographique français. Un code postal peut correspondre à plusieurs communes.',
+        rows,
+        columns: [
+          { name: 'code_postal', type: 'TEXT', not_null: true, indexed: true },
+          { name: 'code_insee', type: 'TEXT', not_null: true },
+          { name: 'nom_commune', type: 'TEXT', not_null: true },
+          { name: 'nom_epci', type: 'TEXT', not_null: false },
+          { name: 'nom_departement', type: 'TEXT', not_null: true },
+          { name: 'code_departement', type: 'TEXT', not_null: true },
+          { name: 'nom_region', type: 'TEXT', not_null: true },
+          { name: 'zonage_abc', type: 'TEXT', not_null: false },
+          { name: 'zonage_123', type: 'TEXT', not_null: false }
+        ]
+      }
+    }
+
     const columns = describe_columns(db, name).map((desc) => {
       const base = {
         name: desc.col,
@@ -274,10 +298,10 @@ const build_database_for_config = async (
       insert_contacts_from_rows(datastore_db, rows)
 
       if ((DATASTORE_MIRROR_TABLES as readonly string[]).includes(table_name)) {
-        import_json_rows(datastore_db, table_name, rows)
+        await import_json_rows(datastore_db, table_name, rows)
       }
 
-      import_json_rows(db, table_name, strip_pii_from_rows(rows))
+      await import_json_rows(db, table_name, strip_pii_from_rows(rows))
     }
 
     // ── Markdown files → FTS5 documents table ───────────────────────────────────
@@ -322,6 +346,8 @@ const build_database_for_config = async (
     }
 
     // ── Auto-generate schema and store in _readme ────────────────────────────────
+
+    await import_communes_par_code_postal_table(db)
 
     db.run('DROP TABLE IF EXISTS _readme')
     db.run('CREATE TABLE _readme (content TEXT)')

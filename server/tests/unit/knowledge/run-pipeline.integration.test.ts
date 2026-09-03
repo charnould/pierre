@@ -119,6 +119,24 @@ describe('run_pipeline — full integration', () => {
       // With no source files at all the knowledge dir may not exist yet — pipeline should not throw.
       await expect(run_pipeline()).resolves.toBeUndefined()
     })
+
+    it('persists BUILD_FAILED and never PIPELINE_OK when the knowledge build fails', async () => {
+      await expect(
+        run_pipeline({
+          build_knowledge_databases: async () => {
+            throw new Error('postal reference unavailable')
+          }
+        })
+      ).resolves.toBeUndefined()
+
+      const events = get_build_events()
+      expect(events).toContainEqual({
+        source: 'pipeline',
+        kind: 'error',
+        code: 'BUILD_FAILED'
+      })
+      expect(events.map(({ code }) => code)).not.toContain('PIPELINE_OK')
+    })
   })
 
   describe('when _metadata.xlsx references a markdown file', () => {

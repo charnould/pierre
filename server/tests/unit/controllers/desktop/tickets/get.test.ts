@@ -51,10 +51,10 @@ const DATASTORE_SQLITE = TEST_PATHS.database
 const app = new Hono()
 app.get('/desktop/tickets', get_desktop_tickets)
 
-const seed_tickets = (): void => {
+const seed_tickets = async (): Promise<void> => {
   const db = new Database(DATASTORE_SQLITE)
   try {
-    import_json_rows(db, 'reclamations', FIXTURE_ROWS)
+    await import_json_rows(db, 'reclamations', FIXTURE_ROWS)
   } finally {
     db.close()
   }
@@ -87,7 +87,7 @@ afterEach(async () => {
 
 describe('GET /desktop/tickets', () => {
   it('returns 200 with data, schema meta and default_sort', async () => {
-    seed_tickets()
+    await seed_tickets()
     const res = await fetch_tickets()
     expect(res.status).toBe(200)
 
@@ -114,7 +114,7 @@ describe('GET /desktop/tickets', () => {
   })
 
   it('paginates with limit query param', async () => {
-    seed_tickets()
+    await seed_tickets()
     const res = await fetch_tickets('?limit=2')
     const body = (await res.json()) as { data: unknown[]; meta: { total: number } }
     expect(body.data).toHaveLength(2)
@@ -122,7 +122,7 @@ describe('GET /desktop/tickets', () => {
   })
 
   it('filters by id_reclamation', async () => {
-    seed_tickets()
+    await seed_tickets()
     const res = await fetch_tickets('?id_reclamation=REQ-2')
     const body = (await res.json()) as { data: { id_reclamation: string }[] }
     expect(body.data).toHaveLength(1)
@@ -130,7 +130,7 @@ describe('GET /desktop/tickets', () => {
   })
 
   it('filters by schema column motif', async () => {
-    seed_tickets()
+    await seed_tickets()
     const res = await fetch_tickets('?id_locataire=LOC-B&motif=fuite')
     const body = (await res.json()) as { data: { id_reclamation: string }[] }
     expect(body.data).toHaveLength(1)
@@ -138,7 +138,7 @@ describe('GET /desktop/tickets', () => {
   })
 
   it('returns 400 for limit above max', async () => {
-    seed_tickets()
+    await seed_tickets()
     const res = await fetch_tickets('?limit=1001')
     expect(res.status).toBe(400)
     const body = (await res.json()) as { error: { code: string } }
@@ -146,20 +146,20 @@ describe('GET /desktop/tickets', () => {
   })
 
   it('accepts custom limit 378', async () => {
-    seed_tickets()
+    await seed_tickets()
     const res = await fetch_tickets('?limit=378')
     expect(res.status).toBe(200)
   })
 
   it('filters with repeated query params (IN)', async () => {
-    seed_tickets()
+    await seed_tickets()
     const res = await fetch_tickets('?motif=fuite&motif=chauffage')
     const body = (await res.json()) as { data: unknown[] }
     expect(body.data).toHaveLength(3)
   })
 
   it('applies structured rules sent by the desktop', async () => {
-    seed_tickets()
+    await seed_tickets()
     const rules = encodeURIComponent(
       JSON.stringify([{ kind: 'values', column: 'type_affaire', values: ['sinistre'] }])
     )
@@ -170,7 +170,7 @@ describe('GET /desktop/tickets', () => {
   })
 
   it('rejects malformed structured rules', async () => {
-    seed_tickets()
+    await seed_tickets()
     const res = await fetch_tickets('?rules=not-json')
     expect(res.status).toBe(400)
     expect(await res.json()).toEqual({
@@ -179,7 +179,7 @@ describe('GET /desktop/tickets', () => {
   })
 
   it('returns 400 for invalid sort column', async () => {
-    seed_tickets()
+    await seed_tickets()
     const res = await fetch_tickets('?sort=bad')
     expect(res.status).toBe(400)
     const body = (await res.json()) as { error: { code: string } }
@@ -187,7 +187,7 @@ describe('GET /desktop/tickets', () => {
   })
 
   it('returns 400 for unknown filter column', async () => {
-    seed_tickets()
+    await seed_tickets()
     const res = await fetch_tickets('?unknown_col=x')
     expect(res.status).toBe(400)
     const body = (await res.json()) as { error: { code: string } }
@@ -209,7 +209,7 @@ describe('GET /desktop/tickets', () => {
   })
 
   it('returns last row with offset beyond first page', async () => {
-    seed_tickets()
+    await seed_tickets()
     const res = await fetch_tickets('?offset=3&limit=10&sort=id_reclamation')
     const body = (await res.json()) as { data: { id_reclamation: string }[] }
     expect(body.data).toHaveLength(1)
@@ -217,7 +217,7 @@ describe('GET /desktop/tickets', () => {
   })
 
   it('includes draft_id_skills on ticket rows', async () => {
-    seed_tickets()
+    await seed_tickets()
     upsert_ticket_draft({
       save_kind: 'generation',
       id_reclamation: 'REQ-1',

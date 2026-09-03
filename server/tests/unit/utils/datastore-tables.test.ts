@@ -56,13 +56,13 @@ describe('get_datastore_tables', () => {
     expect(() => get_datastore_tables()).toThrow()
   })
 
-  it('marks only imported tables as present and sorts present rows first', () => {
+  it('marks only imported tables as present and sorts present rows first', async () => {
     const db = new Database(DATASTORE_SQLITE)
     try {
-      import_json_rows(db, 'reclamations', [
+      await import_json_rows(db, 'reclamations', [
         { id_reclamation: 'REQ-1', id_locataire: 'LOC-A', id_lot: 'LOT-1' }
       ])
-      import_json_rows(db, 'comptes_locataires', [
+      await import_json_rows(db, 'comptes_locataires', [
         {
           id_locataire: 'LOC-A',
           id_client: 'CLI-A',

@@ -24,7 +24,7 @@ beforeEach(async () => {
   await mkdir(paths.root, { recursive: true })
   await setup()
   const db = new Database(paths.database)
-  import_json_rows(db, 'comptes_locataires', [
+  await import_json_rows(db, 'comptes_locataires', [
     {
       id_client: 'CLIENT-1',
       id_locataire: 'LOC-1',

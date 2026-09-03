@@ -81,11 +81,16 @@ describe('build_knowledge_databases', () => {
 
       const db = open_db()
       const rows = db.query<{ nom: string; code: string }, []>('SELECT * FROM communes').all()
+      const tables = db
+        .query<{ name: string }, []>("SELECT name FROM sqlite_master WHERE type='table'")
+        .all()
+        .map(({ name }) => name)
       db.close()
 
       expect(rows).toHaveLength(2)
       expect(rows[0]).toMatchObject({ nom: 'Paris', code: '75056' })
       expect(rows[1]).toMatchObject({ nom: 'Lyon', code: '69123' })
+      expect(tables).toContain('communes_par_code_postal')
     })
 
     it('sanitizes column names (accents, spaces → snake_case)', async () => {
@@ -302,6 +307,36 @@ describe('build_knowledge_databases', () => {
       expect(indexes).toContain('idx_lots_id_lot_id_locataire')
       expect(indexes).not.toContain('idx_comptes_locataires_id_locataire')
       expect(indexes).not.toContain('idx_lots_id_lot')
+    })
+
+    it('imports communes_par_code_postal into knowledge and datastore when lots have code_postal', async () => {
+      await write_json('lots_locatifs.json', [{ id_lot: 'LOT-A', code_postal: 1000 }])
+
+      await build_knowledge_databases()
+
+      const knowledgeDb = open_db()
+      const knowledgeCommunes = knowledgeDb
+        .query<{ nom_commune: string }, []>(
+          `SELECT c.nom_commune FROM lots_locatifs l
+           JOIN communes_par_code_postal c ON c.code_postal = l.code_postal
+           ORDER BY c.nom_commune`
+        )
+        .all()
+        .map(({ nom_commune }) => nom_commune)
+      knowledgeDb.close()
+
+      const datastoreDb = new Database(DATASTORE_PATH)
+      const datastoreCount = datastoreDb
+        .query<{ n: number }, []>('SELECT COUNT(*) AS n FROM communes_par_code_postal')
+        .get()!.n
+      const datastoreCode = datastoreDb
+        .query<{ code_postal: string }, []>('SELECT code_postal FROM lots_locatifs')
+        .get()!.code_postal
+      datastoreDb.close()
+
+      expect(knowledgeCommunes).toEqual(['Bourg-en-Bresse', 'Saint-Denis-lès-Bourg'])
+      expect(datastoreCount).toBe(35_510)
+      expect(datastoreCode).toBe('01000')
     })
 
     it('does not create tickets in datastore when building other tables', async () => {
@@ -726,16 +761,22 @@ describe('build_knowledge_databases', () => {
     })
   })
 
-  describe('_readme when database is empty', () => {
-    it('stores null in _readme when there are no tables and no markdown documents', async () => {
-      // No JSON and no MD files → empty db
+  describe('_readme with no uploaded data', () => {
+    it('documents the built-in postal reference table', async () => {
       await build_knowledge_databases()
 
       const db = open_db()
       const row = db.query<{ content: string | null }, []>('SELECT content FROM _readme').get()
+      const postalCount = db
+        .query<{ n: number }, []>('SELECT COUNT(*) AS n FROM communes_par_code_postal')
+        .get()!.n
       db.close()
 
-      expect(row?.content).toBeNull()
+      const schema = parse_readme(row!.content!)
+      expect(postalCount).toBe(35_510)
+      expect(
+        schema.tables.some((table: { name: string }) => table.name === 'communes_par_code_postal')
+      ).toBe(true)
     })
   })
 

@@ -59,7 +59,7 @@ describe('GET /desktop/datastore/tables', () => {
   it('returns 200 with imported tables marked present', async () => {
     const db = new Database(DATASTORE_SQLITE)
     try {
-      import_json_rows(db, 'travaux', [{ id_travaux: 'TRV-1' }])
+      await import_json_rows(db, 'travaux', [{ id_travaux: 'TRV-1' }])
     } finally {
       db.close()
     }
