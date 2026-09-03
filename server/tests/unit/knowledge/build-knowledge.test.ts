@@ -288,9 +288,11 @@ describe('build_knowledge_databases', () => {
         .all()
         .map(({ name }) => name)
       expect(
-        datastoreDb.query<{ status: string }, []>(
-          "SELECT status FROM contacts WHERE value = 'client@example.org'"
-        ).get()
+        datastoreDb
+          .query<{ status: string }, []>(
+            "SELECT status FROM contacts WHERE value = 'client@example.org'"
+          )
+          .get()
       ).toEqual({ status: 'ok' })
       datastoreDb.close()
 

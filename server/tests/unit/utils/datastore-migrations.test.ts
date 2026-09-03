@@ -99,10 +99,10 @@ describe('datastore migrations', () => {
   })
 
   it('deletes and bootstraps an existing database without a ledger', async () => {
-    const legacy = open()
-    legacy.run('CREATE TABLE legacy_data (value TEXT)')
-    legacy.run("INSERT INTO legacy_data VALUES ('must be deleted')")
-    legacy.close()
+    const obsolete = open()
+    obsolete.run('CREATE TABLE obsolete_data (value TEXT)')
+    obsolete.run("INSERT INTO obsolete_data VALUES ('must be deleted')")
+    obsolete.close()
     await writeFile(`${PATH}-wal`, 'stale')
     await writeFile(`${PATH}-shm`, 'stale')
 
@@ -114,7 +114,7 @@ describe('datastore migrations', () => {
       expect(
         db
           .query<{ n: number }, []>(
-            `SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'legacy_data'`
+            `SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'obsolete_data'`
           )
           .get()?.n
       ).toBe(0)
@@ -152,6 +152,33 @@ describe('datastore migrations', () => {
     }
   })
 
+  it('resets unexpected application objects but preserves declared mirror tables', async () => {
+    await migrate_datastore(PATH)
+    const db = open()
+    db.run('CREATE TABLE removed_feature (id TEXT)')
+    db.run(
+      `INSERT INTO users (config, email, role, password_hash)
+       VALUES ('default', 'lost@example.com', 'admin', 'hash')`
+    )
+    db.close()
+
+    await migrate_datastore(PATH)
+
+    const reset = open()
+    try {
+      expect(reset.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(0)
+      expect(
+        reset
+          .query<{ n: number }, []>(
+            "SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'removed_feature'"
+          )
+          .get()?.n
+      ).toBe(0)
+    } finally {
+      reset.close()
+    }
+  })
+
   it('is idempotent and ignores HLM mirror tables outside application migrations', async () => {
     await migrate_datastore(PATH)
     const seeded = open()
@@ -160,6 +187,7 @@ describe('datastore migrations', () => {
        VALUES ('default', 'kept@example.com', 'admin', 'hash')`
     )
     seeded.run('CREATE TABLE reclamations (id_reclamation TEXT, id_locataire TEXT)')
+    seeded.run('CREATE INDEX idx_reclamations_dynamic ON reclamations (id_reclamation)')
     seeded.run("INSERT INTO reclamations VALUES ('REQ-1', 'LOC-1')")
     seeded.close()
 
@@ -169,6 +197,13 @@ describe('datastore migrations', () => {
     try {
       expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(1)
       expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM reclamations').get()?.n).toBe(1)
+      expect(
+        db
+          .query<{ n: number }, []>(
+            "SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'idx_reclamations_dynamic'"
+          )
+          .get()?.n
+      ).toBe(1)
       expect(versions(db)).toEqual([1])
     } finally {
       db.close()
