@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
-import { MAX_EML_BYTES, parseEml, parseEmlFile } from './parse-eml'
+import { MAX_EML_BYTES, parseEml, parseEmlFile } from '@/shared/lib/activities/parse-eml'
 
 const originalDom = new Map<string, unknown>()
 

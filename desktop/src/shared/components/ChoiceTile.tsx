@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { MouseEventHandler, PointerEventHandler, ReactNode } from 'react'
 
 import { FieldLabel } from '@/shared/components/ui/field'
 import {
@@ -12,7 +12,7 @@ import {
 import { cn } from '@/shared/lib/utils'
 
 interface Props {
-  as?: 'label' | 'div'
+  as?: 'label' | 'div' | 'button'
   htmlFor?: string
   icon?: ReactNode
   title: ReactNode
@@ -23,6 +23,9 @@ interface Props {
   placeholder?: boolean
   disabled?: boolean
   className?: string
+  onClick?: MouseEventHandler<HTMLElement>
+  onPointerEnter?: PointerEventHandler<HTMLElement>
+  'data-door'?: string
 }
 
 export function ChoiceTile({
@@ -36,24 +39,41 @@ export function ChoiceTile({
   interactive = false,
   placeholder = false,
   disabled = false,
-  className
+  className,
+  onClick,
+  onPointerEnter,
+  'data-door': dataDoor
 }: Props) {
   return (
     <Item
       variant={placeholder ? 'muted' : 'outline'}
       size="sm"
-      render={Tag === 'label' ? <FieldLabel htmlFor={htmlFor} /> : <div />}
+      data-selected={selected || undefined}
+      data-disabled={disabled || undefined}
+      data-door={dataDoor}
+      aria-disabled={disabled || undefined}
+      render={
+        Tag === 'label' ? (
+          <FieldLabel htmlFor={htmlFor} />
+        ) : Tag === 'button' ? (
+          <button type="button" />
+        ) : (
+          <div />
+        )
+      }
+      onClick={onClick}
+      onPointerEnter={onPointerEnter}
       className={cn(
         'items-start',
         selected && 'bg-muted',
-        interactive && !disabled && 'cursor-pointer',
         disabled && 'pointer-events-none opacity-50',
+        interactive && !disabled && 'cursor-pointer',
         className
       )}
     >
       {icon ? <ItemMedia variant="icon">{icon}</ItemMedia> : null}
       <ItemContent className="min-w-0">
-        <ItemTitle className="max-w-full truncate">{title}</ItemTitle>
+        <ItemTitle className="max-w-full">{title}</ItemTitle>
         {caption ? <ItemDescription>{caption}</ItemDescription> : null}
       </ItemContent>
       {signal ? (

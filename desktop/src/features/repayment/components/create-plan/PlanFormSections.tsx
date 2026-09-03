@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { useId, type ReactNode } from 'react'
 
+import { ChoiceTile } from '@/shared/components/ChoiceTile'
 import { Button } from '@/shared/components/ui/button'
 import {
   Field,
@@ -23,7 +24,6 @@ import {
   FieldSet
 } from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
-import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from '@/shared/components/ui/item'
 import { RadioGroup, RadioGroupItem } from '@/shared/components/ui/radio-group'
 import {
   Select,
@@ -187,40 +187,25 @@ function ChoiceCards<T extends string>({
       <FieldLegend variant="label">{label}</FieldLegend>
       <FieldDescription>{description}</FieldDescription>
       <RadioGroup
+        className={columns ? 'grid-cols-[repeat(auto-fit,minmax(13rem,1fr))]' : 'flex flex-col'}
         value={value}
         onValueChange={(next) => onChange(next as T)}
-        className={
-          columns
-            ? 'grid grid-cols-[repeat(auto-fit,minmax(13rem,1fr))] gap-2'
-            : 'flex flex-col gap-2'
-        }
       >
         {options.map((option) => {
           const id = `${baseId}-${option.value}`
           const Icon = option.icon
           const selected = value === option.value
           return (
-            <Item
+            <ChoiceTile
               key={option.value}
-              variant="outline"
-              size="sm"
-              render={<FieldLabel htmlFor={id} />}
-              className={
-                selected
-                  ? 'border-foreground/20 bg-muted cursor-pointer'
-                  : 'hover:bg-muted/50 cursor-pointer'
-              }
-            >
-              <ItemMedia variant="icon">
-                <Icon strokeWidth={1.75} aria-hidden />
-              </ItemMedia>
-              <ItemContent className="min-w-0">
-                <ItemTitle className="max-w-full truncate">{option.title}</ItemTitle>
-              </ItemContent>
-              <ItemActions>
-                <RadioGroupItem value={option.value} id={id} />
-              </ItemActions>
-            </Item>
+              as="label"
+              htmlFor={id}
+              icon={<Icon strokeWidth={1.75} aria-hidden />}
+              title={option.title}
+              selected={selected}
+              interactive
+              signal={<RadioGroupItem value={option.value} id={id} />}
+            />
           )
         })}
       </RadioGroup>
@@ -290,7 +275,7 @@ export function SectionLogement({
   return (
     <PlanSection title="Logement" description="Adresse du logement concerné.">
       <div className="flex flex-wrap items-end gap-3">
-        <Field className="w-auto min-w-48 flex-[2]">
+        <Field className="w-auto min-w-48 flex-2">
           <FieldLabel htmlFor={addressId}>Adresse du logement</FieldLabel>
           <Input
             id={addressId}

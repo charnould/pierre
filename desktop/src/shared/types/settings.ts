@@ -5,10 +5,6 @@ export const DEFAULT_UPDATES_NOTIFY_SCOPE: UpdatesNotifyScope = 'all'
 export interface Settings {
   url?: string
   email?: string
-  password?: string
-  /** Present on renderer reads: a password exists in the main-process store. */
-  hasPassword?: boolean
-  loggedOut?: boolean
   updatesNotify?: UpdatesNotifyScope
   /** Slugs of individually read update articles. */
   updatesReadSlugs?: string[]

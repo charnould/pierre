@@ -1,1 +1,1 @@
-export { PANEL_IDENTITY, PANEL_NAV_TABS } from './tab-registry'
+export { PANEL_IDENTITY } from './tab-registry'

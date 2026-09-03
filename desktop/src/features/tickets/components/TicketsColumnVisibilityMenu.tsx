@@ -18,15 +18,13 @@ interface Props {
   settings: UiSettings
   hiddenColumns: string[]
   onHiddenChange: (hiddenColumns: string[]) => void
-  triggerClassName?: string
 }
 
 export function TicketsColumnVisibilityMenu({
   columns,
   settings,
   hiddenColumns,
-  onHiddenChange,
-  triggerClassName
+  onHiddenChange
 }: Props) {
   const hiddenSet = new Set(hiddenColumns)
 
@@ -39,9 +37,7 @@ export function TicketsColumnVisibilityMenu({
 
   return (
     <DropdownMenu modal={false}>
-      <DropdownMenuTrigger
-        render={<Button type="button" variant="outline" size="sm" className={triggerClassName} />}
-      >
+      <DropdownMenuTrigger render={<Button type="button" variant="outline" size="sm" />}>
         <Columns3 data-icon="inline-start" />
         Colonnes
       </DropdownMenuTrigger>

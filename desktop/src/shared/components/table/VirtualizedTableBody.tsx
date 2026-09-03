@@ -21,7 +21,7 @@ interface Props<Row> {
   renderRow: (row: Row, meta: VirtualRowMeta) => ReactNode
 }
 
-function listOffsetInScroller(tbody: HTMLElement, scrollEl: HTMLElement) {
+export function listOffsetInScroller(tbody: HTMLElement, scrollEl: HTMLElement) {
   return (
     tbody.getBoundingClientRect().top - scrollEl.getBoundingClientRect().top + scrollEl.scrollTop
   )
@@ -110,7 +110,7 @@ export function VirtualizedTableBody<Row>({
   return (
     <TableBody ref={bindTbody}>
       {paddingTop > 0 ? (
-        <TableRow aria-hidden className="hover:bg-transparent">
+        <TableRow aria-hidden hover={false}>
           <TableCell colSpan={columnCount} className="p-0" style={{ height: paddingTop }} />
         </TableRow>
       ) : null}
@@ -125,7 +125,7 @@ export function VirtualizedTableBody<Row>({
         })
       })}
       {paddingBottom > 0 ? (
-        <TableRow aria-hidden className="hover:bg-transparent">
+        <TableRow aria-hidden hover={false}>
           <TableCell colSpan={columnCount} className="p-0" style={{ height: paddingBottom }} />
         </TableRow>
       ) : null}

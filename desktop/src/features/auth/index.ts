@@ -1,1 +1,1 @@
-export { loginWithStoredCredentials } from './credentials'
+export { loginWithTypedCredentials, restoreSession } from './credentials'

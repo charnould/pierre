@@ -83,9 +83,8 @@ function AutomationItem({
                 aria-label={automation.pinned ? 'Désépingler' : 'Épingler'}
                 aria-pressed={automation.pinned}
                 className={cn(
-                  automation.pinned
-                    ? 'opacity-100'
-                    : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100'
+                  !automation.pinned &&
+                    'opacity-0 group-hover:opacity-100 focus-visible:opacity-100'
                 )}
                 onClick={(event) => {
                   event.stopPropagation()

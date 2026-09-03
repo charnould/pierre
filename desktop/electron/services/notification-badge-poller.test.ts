@@ -7,14 +7,12 @@ import {
 } from './notification-badge-poller'
 
 describe('countUnreadRows', () => {
-  it('counts only rows with my.lu === false', () => {
+  it('counts only unread rows', () => {
     expect(
-      countUnreadRows([
-        { my: { destinataire: 'user:alice@pierre.test', lu: false, boost: null } },
-        { my: { destinataire: 'user:alice@pierre.test', lu: true, boost: null } },
-        { my: null }
-      ] as Parameters<typeof countUnreadRows>[0])
-    ).toBe(1)
+      countUnreadRows([{ read: false }, { read: true }, { read: false }] as Parameters<
+        typeof countUnreadRows
+      >[0])
+    ).toBe(2)
   })
 })
 

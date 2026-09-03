@@ -1,4 +1,4 @@
-import repaymentConfig from '@customization/repayments/config'
+import { repaymentSetup } from '@/shared/lib/instance-customization'
 
 import type { RepaymentBucketId } from './repayment-bucket'
 import { PLAN_CLOSE_MOTIFS, type PlanCloseMotif } from './repayment-plan-close'
@@ -12,8 +12,8 @@ export type RepaymentCreatePlanConfig = {
   close: Record<PlanCloseMotif, PlanCloseConfigEntry>
 }
 
-function buildCreatePlanConfig(): RepaymentCreatePlanConfig {
-  const raw = repaymentConfig.create_plan as {
+export function repaymentCreatePlanConfig(): RepaymentCreatePlanConfig {
+  const raw = repaymentSetup().create_plan as {
     signed_bucket_id: string
     close: Record<string, { bucket_id: string }>
   }
@@ -22,14 +22,12 @@ function buildCreatePlanConfig(): RepaymentCreatePlanConfig {
   for (const motif of PLAN_CLOSE_MOTIFS) {
     const entry = raw.close[motif]!
     close[motif] = {
-      bucketId: entry.bucket_id as RepaymentBucketId
+      bucketId: entry.bucket_id
     }
   }
 
   return {
-    signedBucketId: raw.signed_bucket_id as RepaymentBucketId,
+    signedBucketId: raw.signed_bucket_id,
     close
   }
 }
-
-export const REPAYMENT_CREATE_PLAN_CONFIG = buildCreatePlanConfig()

@@ -19,7 +19,7 @@ function activity(
     id_client: null,
     id_locataire: 'LOC-1',
     id_lot: null,
-    statut: 'logged',
+    channel: null,
     mentions: [],
     ...partial
   }
@@ -32,8 +32,8 @@ describe('deriveRepaymentAdvancement', () => {
         activity({
           id: 1,
           date_creation: '2026-06-12 12:00',
-          type: 'note',
-          contenu: JSON.stringify({ contenu: 'Note', action: 'relance', phase: 'amiable' })
+          type: 'note.published',
+          contenu: JSON.stringify({ version: 2, text: 'action: relance, phase: amiable' })
         })
       ])
     ).toEqual({ bucket: null, action: null })
@@ -45,37 +45,32 @@ describe('deriveRepaymentAdvancement', () => {
         activity({
           id: 1,
           date_creation: '2026-06-10 10:00',
-          type: 'repayment_phase_change',
+          type: 'case.group_changed',
           contenu: JSON.stringify({
-            version: 1,
-            phase_precedente: 'non_traites',
-            phase: 'amiable'
+            version: 2,
+            before: 'non_traites',
+            after: 'amiable'
           })
         }),
         activity({
           id: 2,
           date_creation: '2026-06-11 11:00',
-          type: 'action',
+          type: 'task.completed',
           thread_id: 'todo-1',
-          event: 'completed',
-          state: 'fait',
           revision: 2,
           contenu: JSON.stringify({
-            version: 1,
-            action: 'Joindre le locataire',
-            etat: 'fait',
-            cree_par: 'user:alice@exemple.fr',
-            cree_le: '2026-06-10T10:00:00Z'
+            version: 2,
+            task: { title: 'Joindre le locataire', state: 'completed' }
           })
         }),
         activity({
           id: 3,
           date_creation: '2026-06-09 09:00',
-          type: 'repayment_phase_change',
+          type: 'case.group_changed',
           contenu: JSON.stringify({
-            version: 1,
-            phase_precedente: 'amiable',
-            phase: 'contentieux'
+            version: 2,
+            before: 'amiable',
+            after: 'contentieux'
           })
         })
       ])
@@ -87,37 +82,32 @@ describe('deriveRepaymentAdvancement', () => {
       activity({
         id: 1,
         date_creation: '2026-06-10 10:00',
-        type: 'repayment_phase_change',
+        type: 'case.group_changed',
         contenu: JSON.stringify({
-          version: 1,
-          phase_precedente: 'non_traites',
-          phase: 'amiable'
+          version: 2,
+          before: 'non_traites',
+          after: 'amiable'
         })
       }),
       activity({
         id: 2,
         date_creation: '2026-06-11 11:00',
-        type: 'action',
+        type: 'task.completed',
         thread_id: 'todo-1',
-        event: 'completed',
-        state: 'fait',
         revision: 2,
         contenu: JSON.stringify({
-          version: 1,
-          action: 'Joindre le locataire',
-          etat: 'fait',
-          cree_par: 'user:alice@exemple.fr',
-          cree_le: '2026-06-10T10:00:00Z'
+          version: 2,
+          task: { title: 'Joindre le locataire', state: 'completed' }
         })
       }),
       activity({
         id: 3,
         date_creation: '2026-06-09 09:00',
-        type: 'repayment_phase_change',
+        type: 'case.group_changed',
         contenu: JSON.stringify({
-          version: 1,
-          phase_precedente: 'amiable',
-          phase: 'contentieux'
+          version: 2,
+          before: 'amiable',
+          after: 'contentieux'
         })
       })
     ]
@@ -133,14 +123,14 @@ describe('deriveRepaymentAdvancement', () => {
         activity({
           id: 1,
           date_creation: '2026-06-10 10:00',
-          type: 'repayment_phase_change',
-          contenu: JSON.stringify({ version: 1, phase: 'inconnu' })
+          type: 'case.group_changed',
+          contenu: JSON.stringify({ version: 2, before: null, after: 'inconnu' })
         }),
         activity({
           id: 2,
           date_creation: '2026-06-11 11:00',
-          type: 'action',
-          contenu: JSON.stringify({ version: 1, action: 'Inconnue', etat: 'fait' })
+          type: 'task.completed',
+          contenu: JSON.stringify({ version: 2, task: { title: '', state: 'completed' } })
         })
       ])
     ).toEqual({ bucket: null, action: null })
@@ -158,21 +148,21 @@ describe('deriveRepaymentGestionnaire', () => {
         activity({
           id: 1,
           date_creation: '2026-06-10 10:00',
-          type: 'repayment_assignment',
+          type: 'case.assignee_changed',
           contenu: JSON.stringify({
-            version: 1,
-            gestionnaire_precedent: null,
-            gestionnaire: 'old@example.org'
+            version: 2,
+            before: null,
+            after: { id: 'old@example.org', label: 'old' }
           })
         }),
         activity({
           id: 2,
           date_creation: '2026-06-11 11:00',
-          type: 'repayment_assignment',
+          type: 'case.assignee_changed',
           contenu: JSON.stringify({
-            version: 1,
-            gestionnaire_precedent: 'old@example.org',
-            gestionnaire: 'cdubois@example.org'
+            version: 2,
+            before: { id: 'old@example.org', label: 'old' },
+            after: { id: 'cdubois@example.org', label: 'cdubois' }
           })
         })
       ])
@@ -184,21 +174,21 @@ describe('deriveRepaymentGestionnaire', () => {
       activity({
         id: 1,
         date_creation: '2026-06-10 10:00',
-        type: 'repayment_assignment',
+        type: 'case.assignee_changed',
         contenu: JSON.stringify({
-          version: 1,
-          gestionnaire_precedent: null,
-          gestionnaire: 'old@example.org'
+          version: 2,
+          before: null,
+          after: { id: 'old@example.org', label: 'old' }
         })
       }),
       activity({
         id: 2,
         date_creation: '2026-06-11 11:00',
-        type: 'repayment_assignment',
+        type: 'case.assignee_changed',
         contenu: JSON.stringify({
-          version: 1,
-          gestionnaire_precedent: 'old@example.org',
-          gestionnaire: 'cdubois@example.org'
+          version: 2,
+          before: { id: 'old@example.org', label: 'old' },
+          after: { id: 'cdubois@example.org', label: 'cdubois' }
         })
       })
     ]
@@ -214,20 +204,20 @@ describe('sortRepaymentActivitiesDesc', () => {
     const older = activity({
       id: 2,
       date_creation: '2026-06-10 10:00',
-      type: 'note',
-      contenu: ''
+      type: 'note.published',
+      contenu: JSON.stringify({ version: 2, text: '' })
     })
     const newerLowId = activity({
       id: 1,
       date_creation: '2026-06-11 11:00',
-      type: 'note',
-      contenu: ''
+      type: 'note.published',
+      contenu: JSON.stringify({ version: 2, text: '' })
     })
     const newerHighId = activity({
       id: 3,
       date_creation: '2026-06-11 11:00',
-      type: 'note',
-      contenu: ''
+      type: 'note.published',
+      contenu: JSON.stringify({ version: 2, text: '' })
     })
 
     expect(
@@ -239,14 +229,14 @@ describe('sortRepaymentActivitiesDesc', () => {
     const first = activity({
       id: 1,
       date_creation: '2026-06-10 10:00',
-      type: 'note',
-      contenu: ''
+      type: 'note.published',
+      contenu: JSON.stringify({ version: 2, text: '' })
     })
     const second = activity({
       id: 2,
       date_creation: '2026-06-11 11:00',
-      type: 'note',
-      contenu: ''
+      type: 'note.published',
+      contenu: JSON.stringify({ version: 2, text: '' })
     })
     const input = [first, second]
 

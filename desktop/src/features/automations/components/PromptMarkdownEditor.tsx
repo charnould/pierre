@@ -7,7 +7,11 @@ import {
   ListNode,
   REMOVE_LIST_COMMAND
 } from '@lexical/list'
-import { $convertFromMarkdownString, $convertToMarkdownString } from '@lexical/markdown'
+import {
+  $convertFromMarkdownString,
+  $convertToMarkdownString,
+  $generateNodesFromMarkdownString
+} from '@lexical/markdown'
 import { LexicalComposer } from '@lexical/react/LexicalComposer'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { ContentEditable } from '@lexical/react/LexicalContentEditable'
@@ -32,7 +36,9 @@ import {
   $createParagraphNode,
   $getSelection,
   $isRangeSelection,
+  COMMAND_PRIORITY_HIGH,
   FORMAT_TEXT_COMMAND,
+  PASTE_COMMAND,
   type EditorThemeClasses
 } from 'lexical'
 import {
@@ -171,7 +177,7 @@ function PromptMarkdownToolbar() {
     <div
       role="toolbar"
       aria-label="Mise en forme"
-      className="border-border/60 flex flex-wrap items-center gap-1 border-b px-1 py-1"
+      className="border-border/60 flex shrink-0 flex-wrap items-center gap-1 border-b px-1 py-1"
     >
       <ButtonGroup>
         <ToolbarButton
@@ -273,7 +279,6 @@ function ToolbarButton({
             size="icon-sm"
             aria-label={label}
             aria-pressed={pressed}
-            className={pressed ? 'bg-muted' : undefined}
             onMouseDown={(event) => event.preventDefault()}
             onClick={onClick}
           />
@@ -284,6 +289,31 @@ function ToolbarButton({
       <TooltipContent>{label}</TooltipContent>
     </Tooltip>
   )
+}
+
+function MarkdownPastePlugin() {
+  const [editor] = useLexicalComposerContext()
+
+  useEffect(() => {
+    return editor.registerCommand(
+      PASTE_COMMAND,
+      (event) => {
+        if (!(event instanceof ClipboardEvent)) return false
+        const text = event.clipboardData?.getData('text/plain')
+        if (!text?.trim()) return false
+        event.preventDefault()
+        editor.update(() => {
+          const selection = $getSelection()
+          if (!$isRangeSelection(selection)) return
+          selection.insertNodes($generateNodesFromMarkdownString(text, PROMPT_TRANSFORMERS))
+        })
+        return true
+      },
+      COMMAND_PRIORITY_HIGH
+    )
+  }, [editor])
+
+  return null
 }
 
 function MarkdownSyncPlugin({ onChange }: { onChange: (markdown: string) => void }) {
@@ -303,12 +333,14 @@ export function PromptMarkdownEditor({
   id,
   value,
   onChange,
-  placeholder
+  placeholder,
+  className
 }: {
   id: string
   value: string
   onChange: (markdown: string) => void
   placeholder: string
+  className?: string
 }) {
   const initialMarkdown = useRef(value).current
 
@@ -328,13 +360,14 @@ export function PromptMarkdownEditor({
     >
       <div
         className={cn(
-          'w-full rounded-lg border border-input bg-transparent transition-colors',
+          'flex h-full min-h-78 w-full flex-col overflow-hidden rounded-lg border border-input bg-transparent transition-colors',
           'has-[:focus-visible]:border-ring has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/50',
-          'dark:bg-input/30'
+          'dark:bg-input/30',
+          className
         )}
       >
         <PromptMarkdownToolbar />
-        <div className="relative">
+        <div className="relative min-h-0 flex-1 overflow-y-auto">
           <RichTextPlugin
             contentEditable={
               <ContentEditable
@@ -346,7 +379,7 @@ export function PromptMarkdownEditor({
                     {placeholder}
                   </div>
                 }
-                className="min-h-78 px-2.5 py-2 text-sm outline-none"
+                className="min-h-full px-2.5 py-2 text-sm outline-none"
               />
             }
             ErrorBoundary={LexicalErrorBoundary}
@@ -357,6 +390,7 @@ export function PromptMarkdownEditor({
       <ListPlugin />
       <TablePlugin hasCellMerge={false} hasCellBackgroundColor={false} hasHorizontalScroll />
       <MarkdownShortcutPlugin transformers={PROMPT_TRANSFORMERS} />
+      <MarkdownPastePlugin />
       <MarkdownSyncPlugin onChange={onChange} />
     </LexicalComposer>
   )

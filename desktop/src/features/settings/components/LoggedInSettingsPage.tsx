@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react'
 
 import { useUiSettings } from '@/contexts/UiSettingsContext'
 import { HistoricalAppsConnectionField } from '@/features/settings/components/HistoricalAppsConnectionField'
+import { HomeExcerptField } from '@/features/settings/components/HomeExcerptField'
 import { IdentityField } from '@/features/settings/components/IdentityField'
 import { MascotField, type MascotAppearance } from '@/features/settings/components/MascotField'
 import { useAppVersion } from '@/features/settings/hooks/useAppVersion'
@@ -26,6 +27,8 @@ import {
   FACTORY_UI_SETTINGS_FILE_CONTENT,
   isUiSettingsFileObject,
   listDroppedUiSettingsKeys,
+  resolveHomeSettings,
+  type HomeSettings,
   UI_SETTINGS_EXAMPLE
 } from '@/shared/lib/ui-settings/schema'
 import type { Settings } from '@/shared/types'
@@ -53,6 +56,23 @@ export function LoggedInSettingsPage({ settings, agentName, onLogout }: Props) {
   const [mascotToggling, setMascotToggling] = useState(false)
   const [confirm, setConfirm] = useState<'reset' | 'logout' | null>(null)
   const appVersion = useAppVersion()
+
+  const homeExcerpts = resolveHomeSettings(uiSettings)
+
+  const persistHome = useCallback(
+    async (home: HomeSettings) => {
+      if (!window.api?.getUiSettingsFile) return
+      let parsed: unknown
+      try {
+        parsed = JSON.parse(await window.api.getUiSettingsFile())
+      } catch {
+        return
+      }
+      if (!isUiSettingsFileObject(parsed)) return
+      await save({ ...parsed, home })
+    },
+    [save]
+  )
 
   const mascotEnabled = uiSettings.mascot?.enabled ?? true
   const mascotSize = uiSettings.mascot?.size ?? DEFAULT_MASCOT_SETTINGS.size!
@@ -177,12 +197,6 @@ export function LoggedInSettingsPage({ settings, agentName, onLogout }: Props) {
   }
 
   async function handleLogout() {
-    await window.api.saveSettings({
-      ...settings,
-      password: '',
-      loggedOut: true
-    })
-    await window.api.logout()
     onLogout()
   }
 
@@ -254,12 +268,14 @@ export function LoggedInSettingsPage({ settings, agentName, onLogout }: Props) {
 
           <HistoricalAppsConnectionField agentName={agentName} />
 
-          <Field className="border-border rounded-md border p-4">
+          <HomeExcerptField value={homeExcerpts} onPersist={persistHome} />
+
+          <Field variant="document-setting">
             <div className="flex flex-col gap-0.5">
               <FieldLabel htmlFor={jsonFieldId}>Fichier d’interface</FieldLabel>
               <FieldDescription>
-                JSON local : fenêtre, compagnon, tableau et panneaux. Enregistrer remplace le
-                fichier entier. Partagez-le pour aligner l’affichage de l’équipe.
+                JSON local : fenêtre, compagnon, accueil, tableau et panneaux. Enregistrer remplace
+                le fichier entier. Partagez-le pour aligner l’affichage de l’équipe.
               </FieldDescription>
             </div>
             <Textarea
@@ -276,7 +292,8 @@ export function LoggedInSettingsPage({ settings, agentName, onLogout }: Props) {
               aria-describedby="ui-settings-json-error"
               aria-errormessage="ui-settings-json-error"
               placeholder={UI_SETTINGS_EXAMPLE}
-              className="text-foreground/90 [field-sizing:fixed] min-h-52 resize-y font-mono text-xs leading-normal"
+              variant="code"
+              className="field-sizing-fixed min-h-52 resize-y"
             />
             {error ? (
               <FieldError id="ui-settings-json-error">{error}</FieldError>

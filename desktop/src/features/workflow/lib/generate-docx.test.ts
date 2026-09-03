@@ -8,9 +8,8 @@ const TEMPLATE_PATH = join(
   import.meta.dir,
   '../../../../..',
   'customization',
-  'skills',
-  'ticket.answer-ticket',
-  'template.docx'
+  'tickets',
+  'letter.docx'
 )
 
 describe('generateDocxFilename', () => {

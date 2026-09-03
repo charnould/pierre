@@ -9,11 +9,5 @@ interface Props {
 }
 
 export function RepaymentActionCell({ action, columnValues }: Props) {
-  return (
-    <RepaymentActionBadge
-      action={action}
-      columnValues={columnValues}
-      className="max-w-full text-[0.8125rem]"
-    />
-  )
+  return <RepaymentActionBadge action={action} columnValues={columnValues} className="max-w-full" />
 }

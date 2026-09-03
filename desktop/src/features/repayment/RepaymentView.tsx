@@ -5,8 +5,10 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useRegisterNavigationHandlers } from '@/contexts/NavigationHistoryContext'
 import { useActivityRail } from '@/features/activity/lib/ActivityRailContext'
 import { CartoonErrorObject } from '@/shared/components/icons/koboyo-empty'
+import { ModuleGate } from '@/shared/components/ModuleGate'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/shared/components/ui/empty'
 import { useDatastoreTables } from '@/shared/hooks/useDatastoreTables'
+import { moduleReady, useCustomizationStatus } from '@/shared/lib/instance-customization'
 import { cn } from '@/shared/lib/utils'
 import type { Activite } from '@/shared/types/activites'
 
@@ -23,7 +25,7 @@ import type { TenantRepaymentRow } from './lib/classify-tenants'
 import { isComptesLocatairesMissing } from './lib/comptes-locataires-table'
 import { groupRepaymentRowsByBucket } from './lib/group-repayment-rows-by-bucket'
 import { parseRepaymentPlanForm, parseRepaymentPlanProposal } from './lib/repayment-activity-text'
-import { REPAYMENT_CREATE_PLAN_CONFIG } from './lib/repayment-create-plan-config'
+import { repaymentCreatePlanConfig } from './lib/repayment-create-plan-config'
 import {
   subscribeRepaymentPlanEditor,
   type RepaymentPlanEditorRequest
@@ -52,13 +54,14 @@ function RepaymentBoardStatus({
         <EmptyMedia variant="icon">
           <Icon />
         </EmptyMedia>
-        <EmptyTitle className="text-sm leading-5 font-medium">{title}</EmptyTitle>
+        <EmptyTitle size="sm">{title}</EmptyTitle>
       </EmptyHeader>
     </Empty>
   )
 }
 
 export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
+  const customizationStatus = useCustomizationStatus()
   const scrollRef = useRef<HTMLDivElement>(null)
   const {
     snapshotDate,
@@ -146,7 +149,7 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
       void (async () => {
         if (applyAdvancement) {
           if (signed) {
-            await handleAdvancementChange(REPAYMENT_CREATE_PLAN_CONFIG.signedBucketId, '', {
+            await handleAdvancementChange(repaymentCreatePlanConfig().signedBucketId, '', {
               id_locataire
             })
           }
@@ -161,7 +164,7 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
   const handlePlanClosed = useCallback(
     ({ id_locataire, activityId, motif }: PlanClosedPayload) => {
       void (async () => {
-        const entry = REPAYMENT_CREATE_PLAN_CONFIG.close[motif]
+        const entry = repaymentCreatePlanConfig().close[motif]
         await handleAdvancementChange(entry.bucketId, '', { id_locataire })
         setPlanEditor(null)
         openTenantSheet(id_locataire, { activityId })
@@ -179,8 +182,11 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
   )
 
   const bucketSections = useMemo(
-    () => groupRepaymentRowsByBucket(allRows, getBucketForRow),
-    [allRows, getBucketForRow]
+    () =>
+      customizationStatus === 'ready' && moduleReady('repayment')
+        ? groupRepaymentRowsByBucket(allRows, getBucketForRow)
+        : [],
+    [allRows, getBucketForRow, customizationStatus]
   )
 
   useEffect(() => {
@@ -205,6 +211,20 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
       })
     }
   })
+
+  if (customizationStatus !== 'ready' || !moduleReady('repayment')) {
+    return (
+      <div
+        data-tab-panel
+        className={cn(
+          'relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
+          hidden ? 'hidden' : 'flex'
+        )}
+      >
+        <ModuleGate entry="repayment">{null}</ModuleGate>
+      </div>
+    )
+  }
 
   if (planEditor) {
     return (

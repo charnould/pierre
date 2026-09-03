@@ -136,10 +136,7 @@ export type ReasoningTriggerProps = ComponentProps<typeof CollapsibleTrigger> & 
   getThinkingMessage?: (duration?: number) => ReactNode
 }
 
-const REASONING_TRIGGER_CLASS =
-  'flex items-center gap-1.5 text-sm font-normal text-muted-foreground transition-opacity hover:opacity-85'
-
-const triggerTextClass = cn(REASONING_TRIGGER_CLASS, 'm-0 w-full')
+const triggerTextClass = 'm-0 w-full'
 
 const defaultGetThinkingMessage = (duration?: number) =>
   formatThinkingMessage(triggerTextClass, duration)
@@ -154,12 +151,18 @@ export const ReasoningTrigger = memo(
     const { duration } = useReasoning()
 
     return (
-      <CollapsibleTrigger className={cn(REASONING_TRIGGER_CLASS, 'w-full', className)} {...props}>
+      <CollapsibleTrigger
+        className={cn(
+          'text-muted-foreground flex w-full items-center gap-1.5 font-normal transition-opacity hover:opacity-85',
+          className
+        )}
+        {...props}
+      >
         {children ?? (
-          <>
+          <span className="pierre-type-table-header flex items-center gap-1.5">
             {getThinkingMessage(duration)}
-            <ChevronDownIcon className="text-muted-foreground size-3 shrink-0 transition-transform in-data-[panel-open]:rotate-180" />
-          </>
+            <ChevronDownIcon className="size-3 shrink-0 transition-transform in-data-[panel-open]:rotate-180" />
+          </span>
         )}
       </CollapsibleTrigger>
     )

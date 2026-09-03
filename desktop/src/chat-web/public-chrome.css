@@ -1,0 +1,63 @@
+/*
+  Chrome du chatbot public (`/` et `/embed`).
+
+  Bundle chat-web seulement — ne jamais importer depuis l’app Electron.
+  Discuter lit `globals.css` (taupe). Même ChatPanel, autre document, autres tokens.
+
+  `data-chat-chrome` est un libellé d’inspection, pas un sélecteur de thème.
+  Pas de couleurs dans ChatPanel.
+
+  Invité sur les sites bailleurs : papier blanc, encre H 260 à chroma faible.
+  Pas de crème, pas de lavande — l’hôte a déjà une marque.
+*/
+
+:root {
+  --pierre-public-paper: oklch(1 0 0);
+  --pierre-public-chip: oklch(0.965 0.003 260);
+  --pierre-public-line: oklch(0.88 0.004 260);
+  --pierre-public-meta: oklch(0.44 0.008 260);
+  --pierre-public-ink: oklch(0.2 0.006 260);
+  --pierre-public-focus: oklch(0.5 0.012 260);
+  --pierre-public-danger: oklch(0.577 0.245 27.325);
+
+  --background: var(--pierre-public-paper);
+  --foreground: var(--pierre-public-ink);
+  --card: var(--pierre-public-paper);
+  --card-foreground: var(--pierre-public-ink);
+  --popover: var(--pierre-public-paper);
+  --popover-foreground: var(--pierre-public-ink);
+  --primary: var(--pierre-public-ink);
+  --primary-foreground: var(--pierre-public-paper);
+  --secondary: var(--pierre-public-chip);
+  --secondary-foreground: var(--pierre-public-ink);
+  --muted: var(--pierre-public-chip);
+  --muted-foreground: var(--pierre-public-meta);
+  --accent: var(--pierre-public-chip);
+  --accent-foreground: var(--pierre-public-ink);
+  --destructive: var(--pierre-public-danger);
+  --border: var(--pierre-public-line);
+  --input: var(--pierre-public-line);
+  --ring: var(--pierre-public-focus);
+  --chart-1: oklch(0.9 0.003 260);
+  --chart-2: oklch(0.7 0.005 260);
+  --chart-3: oklch(0.55 0.007 260);
+  --chart-4: oklch(0.4 0.008 260);
+  --chart-5: oklch(0.2 0.006 260);
+  --sidebar: var(--pierre-public-paper);
+  --sidebar-foreground: var(--pierre-public-ink);
+  --sidebar-primary: var(--pierre-public-ink);
+  --sidebar-primary-foreground: var(--pierre-public-paper);
+  --sidebar-accent: var(--pierre-public-chip);
+  --sidebar-accent-foreground: var(--pierre-public-ink);
+  --sidebar-border: var(--pierre-public-line);
+  --sidebar-ring: var(--pierre-public-focus);
+}
+
+[data-slot='chat-invitation'] [data-slot='input-group-control']::placeholder {
+  color: color-mix(in oklch, var(--foreground) 50%, transparent);
+  opacity: 1;
+}
+
+[data-slot='chat-invitation'] [data-slot='input-group-control'][data-example-preview]::placeholder {
+  color: color-mix(in oklch, var(--foreground) 65%, transparent);
+}

@@ -6,10 +6,8 @@ export type {
   AutomationType,
   CreateAutomationBody,
   PatchAutomationBody,
-  ReportAutomationConfig,
   TicketAutomationFilters,
-  TicketFilterRule,
-  TicketReplyAutomationConfig
+  TicketFilterRule
 } from '../../../../shared/automations'
 
 export { decodeCronToSchedule } from '../../../../shared/automations'

@@ -11,8 +11,7 @@
     "skipLibCheck": true,
     "types": ["bun"],
     "paths": {
-      "@/*": ["./src/*"],
-      "@customization/*": ["../customization/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [
@@ -22,9 +21,6 @@
     "forge",
     "forge.config.ts",
     "electron.vite.config.ts",
-    "../customization/desktop.ts",
-    "../customization/repayments/config.ts",
-    "../customization/tickets/config.ts",
     "../shared"
   ]
 }

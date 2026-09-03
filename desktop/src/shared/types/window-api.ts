@@ -15,7 +15,9 @@ import type {
   GetActivitiesParams,
   GetActivityFeedSyncParams,
   PatchActivityPayload,
-  SendCommunicationPayload
+  RecordExternalCommunicationPayload,
+  SendCommunicationPayload,
+  SendCommunicationResponse
 } from './activites'
 import type {
   AutomationResponse,
@@ -45,10 +47,19 @@ import type {
   PreviewBulkOperationMessagePayload,
   PreviewBulkOperationQueryPayload
 } from './bulk-operations'
-import type { ChatBootData, SkillSummary } from './chat'
+import type { ChatBoot } from './chat'
 import type { DatastoreTablesResponse } from './datastore-tables'
 import type {
+  KnowledgeBuildResponse,
+  KnowledgeBuildsResponse,
+  KnowledgeEntry,
+  KnowledgeResponse,
+  KnowledgeSourceResponse,
+  KnowledgeUploadResponse
+} from './knowledge'
+import type {
   LedgerListResponse,
+  LedgerMetaResponse,
   LedgerQueryParams,
   RepaymentTimelineQueryParams,
   RepaymentTimelineResponse
@@ -58,15 +69,26 @@ import type { GetTicketDraftResult } from './ticket-draft'
 import type {
   TicketsFacetsResponse,
   TicketsListResponse,
+  TicketsMetaResponse,
   TicketsQueryParams,
   PutTicketPayload,
   PutTicketResult
 } from './tickets'
 import type {
+  AdminUserMutationResponse,
+  AdminUserProfileMutationResponse,
+  AdminUsersResponse,
+  DeleteAdminUserProfileResponse,
+  DeleteAdminUserResponse,
   GetAvatarPayload,
+  ImportAdminUsersResponse,
+  PatchAdminUserPayload,
+  PatchAdminUserProfilePayload,
   PatchMyPreferencesPayload,
   PatchMyPreferencesResponse,
   PickedAvatarImage,
+  SaveAdminUserPayload,
+  SaveAdminUserProfilePayload,
   UploadMyAvatarPayload,
   UploadMyAvatarResponse,
   UsersListResponse
@@ -87,15 +109,22 @@ declare global {
       /** Replaces `ui-settings.json` with factory defaults (`{}`). */
       resetUiSettings: () => Promise<UiSettings>
       getUiSettingsPath: () => Promise<string>
-      /** `POST /a/login` with Accept: application/json — same session as `/ai/boot`. */
+      /** Better Auth email/password login through the main process. */
       login: (params: { url: string; email: string; password: string }) => Promise<LoginResult>
-      /** Login with the password that stays in the main-process store. */
-      loginStored: () => Promise<LoginResult>
+      /** Restore the Better Auth session held by the Electron partition. */
+      restoreSession: () => Promise<LoginResult>
       writeClipboard: (text: string) => Promise<boolean>
       /** Open a URL in the system browser (ERP deep links from the tickets table). */
       openExternal: (url: string) => Promise<boolean>
       /** Open an automation HTML report in a modal window (offline shell). */
       openAutomationReport: (params: { html: string }) => Promise<boolean>
+      /** Open a module's external application and, when asked, copy or inject the text. */
+      openExternalApplication: (params: {
+        transport: 'browser' | 'external'
+        url: string
+        clipboard?: string
+        selector?: string
+      }) => Promise<boolean>
       /** Compact login shell vs restored session window size (login size is not persisted). */
       setAuthWindowLayout: (params: { loggedIn: boolean }) => Promise<void>
       /** Fired while the shell is frozen — commit login/session UI, then ack. */
@@ -129,12 +158,8 @@ declare global {
         }) => void
       ) => () => void
       /** `GET /ai/boot` — chat session metadata. */
-      getChatBoot: (params: {
-        url: string
-        config?: string
-        data?: string
-      }) => Promise<ChatBootData | null>
-      /** `GET /ai` canonical structured NDJSON stream; chunks via `onAiChunk`. */
+      getChatBoot: (params: { url: string; config?: string }) => Promise<ChatBoot | null>
+      /** `POST /ai` canonical structured NDJSON stream; chunks via `onAiChunk`. */
       startStream: (params: {
         requestId: string
         url: string
@@ -181,12 +206,32 @@ declare global {
       patchUiSettingsTicketsTable: (partial: Partial<TicketsTableSettings>) => Promise<UiSettings>
       /** Atomically patch only `workflow` settings in main process. */
       patchUiSettingsWorkflow: (partial: Partial<WorkflowSettings>) => Promise<UiSettings>
-      /** `GET /ai/skills` — skill metadata for workflow reasoning display. */
-      getSkills: (params: { url: string }) => Promise<SkillSummary[]>
+      /** `GET /desktop/admin/setup` */
+      getAdminSetup: (params: { url: string }) => Promise<{
+        texts: Record<string, string | null>
+        binaries: string[]
+        ready: Record<string, boolean>
+      } | null>
+      /** `PUT /desktop/admin/setup/*` */
+      putAdminSetup: (params: {
+        url: string
+        id: string
+        body?: string
+        bytes?: Uint8Array
+      }) => Promise<{ data: { id: string } } | null>
+      /** `DELETE /desktop/admin/setup/chatbots/:id` */
+      deleteAdminChatbot: (params: {
+        url: string
+        id: string
+      }) => Promise<{ data: { id: string } } | null>
       /** `GET /desktop/tickets` — paginated tickets from datastore.sqlite. */
       getTickets: (params: TicketsQueryParams) => Promise<TicketsListResponse | null>
+      /** `GET /desktop/tickets/meta` — ticket schema/count without row data. */
+      getTicketsMeta: (params: TicketsQueryParams) => Promise<TicketsMetaResponse | null>
       /** `GET /desktop/ledger` — paginated tenant balances from datastore.sqlite. */
       getLedger: (params: LedgerQueryParams) => Promise<LedgerListResponse | null>
+      /** `GET /desktop/ledger/meta` — ledger schema without row data. */
+      getLedgerMeta: (params: LedgerQueryParams) => Promise<LedgerMetaResponse | null>
       /** One repayment tenant timeline payload: movements, activities and open actions. */
       getRepaymentTimeline: (
         params: RepaymentTimelineQueryParams
@@ -199,10 +244,49 @@ declare global {
       }) => Promise<TicketsFacetsResponse | null>
       /** `PUT /desktop/tickets` — upsert reclamation row in datastore.sqlite. */
       putTicket: (params: { url: string } & PutTicketPayload) => Promise<PutTicketResult | null>
+      /** `GET /desktop/customization` — instance name, module configs, templates. */
+      /** `GET /desktop/setup` */
+      getSetup: (params: { url: string }) => Promise<unknown>
+      /** `GET /desktop/setup/*` */
+      getSetupFile: (params: { url: string; id: string }) => Promise<ArrayBuffer | null>
       /** `GET /desktop/datastore/tables` — datastore table presence in datastore.sqlite. */
       getDatastoreTables: (params: { url: string }) => Promise<DatastoreTablesResponse | null>
       /** `GET /desktop/users` — org users for mentions / collaborator pickers. */
       getUsers: (params: { url: string }) => Promise<UsersListResponse | null>
+      getAdminUsers: (params: { url: string }) => Promise<AdminUsersResponse | null>
+      createAdminUser: (params: SaveAdminUserPayload) => Promise<AdminUserMutationResponse | null>
+      patchAdminUser: (params: PatchAdminUserPayload) => Promise<AdminUserMutationResponse | null>
+      deleteAdminUser: (params: {
+        url: string
+        email: string
+      }) => Promise<DeleteAdminUserResponse | null>
+      importAdminUsersCsv: (params: { url: string }) => Promise<ImportAdminUsersResponse | null>
+      createAdminUserProfile: (
+        params: SaveAdminUserProfilePayload
+      ) => Promise<AdminUserProfileMutationResponse | null>
+      patchAdminUserProfile: (
+        params: PatchAdminUserProfilePayload
+      ) => Promise<AdminUserProfileMutationResponse | null>
+      deleteAdminUserProfile: (params: {
+        url: string
+        id: string
+      }) => Promise<DeleteAdminUserProfileResponse | null>
+      getAdminKnowledge: (params: { url: string }) => Promise<KnowledgeResponse | null>
+      uploadKnowledgeSources: (params: { url: string }) => Promise<KnowledgeUploadResponse | null>
+      patchKnowledgeSource: (params: {
+        url: string
+        id: string
+        entries: KnowledgeEntry[]
+        updatedAt: string
+      }) => Promise<KnowledgeSourceResponse | null>
+      deleteKnowledgeSource: (params: { url: string; id: string }) => Promise<boolean>
+      downloadKnowledgeSource: (params: {
+        url: string
+        id: string
+        originalName: string
+      }) => Promise<boolean>
+      getKnowledgeBuilds: (params: { url: string }) => Promise<KnowledgeBuildsResponse | null>
+      rebuildKnowledge: (params: { url: string }) => Promise<KnowledgeBuildResponse | null>
       /** `PATCH /desktop/me/preferences` — display name, or `{ avatar: null }` to reset photo. */
       patchMyPreferences: (
         params: PatchMyPreferencesPayload
@@ -218,7 +302,12 @@ declare global {
         params: GetActivityFeedSyncParams
       ) => Promise<ActivityFeedSyncResult | null>
       createActivity: (params: CreateActivityPayload) => Promise<ActivityResponse | null>
-      sendCommunication: (params: SendCommunicationPayload) => Promise<ActivityResponse | null>
+      recordExternalCommunication: (
+        params: RecordExternalCommunicationPayload
+      ) => Promise<ActivityResponse | null>
+      sendCommunication: (
+        params: SendCommunicationPayload
+      ) => Promise<SendCommunicationResponse | null>
       patchActivity: (params: PatchActivityPayload) => Promise<ActivityResponse | null>
       deleteActivity: (params: DeleteActivityPayload) => Promise<DeleteActivityResponse | null>
       getAutomations: (params: ListAutomationsParams) => Promise<AutomationsListResponse | null>
@@ -256,7 +345,7 @@ declare global {
         params: PreviewBulkOperationMessagePayload
       ) => Promise<BulkOperationPreviewMessageResponse | null>
       /** Push unread notification count to the desktop mascot window. */
-      setMascotUnreadCount: (count: number) => Promise<boolean>
+      setMascotUnreadCount: (count: number, options?: { orbit?: boolean }) => Promise<boolean>
       /** Mascot click — restore/focus main window and open notifications. */
       activateFromMascot: () => Promise<boolean>
       /** Move the mascot window; set `persist` to write position to ui-settings. */
@@ -283,7 +372,7 @@ declare global {
       /** Show the mascot only when logged in (and enabled). */
       syncMascotVisibility: (loggedIn: boolean) => Promise<boolean>
       /** Mascot window: subscribe to unread count pushes from main. */
-      onMascotUnreadCount: (cb: (count: number) => void) => () => void
+      onMascotUnreadCount: (cb: (payload: { count: number; orbit: boolean }) => void) => () => void
       /** Mascot window: subscribe to shape + color pushes from main. */
       onMascotLook: (
         cb: (look: { shape: string; color: string; badgeColor: string }) => void

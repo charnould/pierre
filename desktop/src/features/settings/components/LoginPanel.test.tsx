@@ -104,7 +104,7 @@ describe('LoginPanel', () => {
 
     const fieldGroups = [...host.querySelectorAll('[data-slot="field-group"]')]
     expect(fieldGroups).toHaveLength(2)
-    expect(fieldGroups[1]?.className.split(/\s+/)).toContain('gap-2')
+    expect(fieldGroups[1]?.getAttribute('data-spacing')).toBe('compact')
 
     const submit = host.querySelector('button[type="submit"]')
     expect(submit?.textContent).toContain('Se connecter')

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 
 import { Input } from '@/shared/components/ui/input'
-import { cn } from '@/shared/lib/utils'
 
 import { formatYearMonthDisplay, parseYearMonthInput } from '../../lib/apurement-plan/installments'
 
@@ -36,7 +35,8 @@ function YearMonthInputDraft({
       disabled={disabled}
       placeholder="MM/AAAA"
       inputMode="numeric"
-      className={cn('tabular-nums', className)}
+      numeric
+      className={className}
       value={draft}
       onChange={(event) => setDraft(event.target.value)}
       onBlur={() => {

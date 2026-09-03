@@ -13,11 +13,18 @@ function row(overrides: Partial<ActiviteListItem> = {}): ActiviteListItem {
     id_client: null,
     id_locataire: null,
     id_lot: null,
-    type: 'ticket_change',
-    statut: 'logged',
+    type: 'ticket.field_changed',
+    channel: null,
     mentions: [],
-    contenu: JSON.stringify({ avant: 'ouvert', apres: 'clos' }),
+    contenu: JSON.stringify({
+      version: 2,
+      field: 'statut',
+      before: 'ouvert',
+      after: 'clos'
+    }),
     my: null,
+    read: true,
+    reaction: null,
     ...overrides
   }
 }
@@ -41,24 +48,28 @@ describe('mapAuthoredActivityRows', () => {
     const [item] = mapAuthoredActivityRows([
       row({
         rattachement: 'repayment:LOC-1',
-        type: 'repayment_phase_change',
+        type: 'case.group_changed',
         contenu: JSON.stringify({
-          version: 1,
-          phase_precedente: 'amiable',
-          phase: 'pre_contentieux',
+          version: 2,
+          before: 'amiable',
+          after: 'pre_contentieux',
           note: 'Échec des relances amiables.'
         })
       })
     ])
 
-    expect(item?.row?.type).toBe('repayment_phase_change')
+    expect(item?.row?.type).toBe('case.group_changed')
     expect(item?.moduleLabel).toBe('Impayés')
     expect(item?.row).toBeDefined()
   })
 
   it('conserve les traitements de masse visibles mais non ouvrables dans un Inspector', () => {
     const [item] = mapAuthoredActivityRows([
-      row({ rattachement: 'bulk:TRAITEMENT-1', type: 'bulk_run' })
+      row({
+        rattachement: 'bulk:TRAITEMENT-1',
+        type: 'bulk.ran',
+        contenu: JSON.stringify({ version: 2, title: 'Traitement 1' })
+      })
     ])
 
     expect(item?.moduleLabel).toBe('Traitements de masse')

@@ -1,9 +1,11 @@
-import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
+import { afterAll, beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
-import type { RepaymentActionDraft } from '../lib/repayment-action-activity'
-import { REPAYMENT_TAG_OPTIONS } from '../lib/repayment-tags'
+import type { ActionDraft } from '@/shared/lib/activities/action-activity'
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
+
+import { repaymentTagOptions } from '../lib/repayment-tags'
 import { sampleRepaymentRow } from '../lib/repayment-test-fixtures'
 import type { RepaymentComposeMode } from './RepaymentComposeBlock'
 
@@ -107,13 +109,19 @@ async function renderCompose(
     gestionnaireEmail?: string | null
     currentTags?: string[]
     activePlan?: { row: import('@/shared/types/activites').Activite; signed: boolean } | null
+    rcsCompose?: {
+      destinataire: string
+      body: string
+      sms_fallback: string
+      choices: []
+    }
   } = {}
 ) {
   const { act, useState } = await import('react')
   const { createRoot } = await import('react-dom/client')
   const { RepaymentComposeBlock } = await import('./RepaymentComposeBlock')
 
-  const onSubmitAction = mock((_draft: RepaymentActionDraft) => {})
+  const onSubmitAction = mock((_draft: ActionDraft) => {})
   const onSubmitNote = mock((_comment?: string) => {})
   const onStartNote = mock(() => {})
   const onStartTodo = mock(() => {})
@@ -174,8 +182,10 @@ async function renderCompose(
         onSubmitAdvancement={() => {}}
         onSubmitTags={() => {}}
         onSubmitAction={onSubmitAction}
-        rcsMessage=""
-        onRcsMessageChange={() => {}}
+        rcsCompose={
+          options.rcsCompose ?? { destinataire: '', body: '', sms_fallback: '', choices: [] }
+        }
+        onRcsComposeChange={() => {}}
         onSubmitRcs={() => {}}
         emailSubject=""
         onEmailSubjectChange={() => {}}
@@ -215,6 +225,61 @@ function buttonLabels() {
 }
 
 describe('RepaymentComposeBlock', () => {
+  beforeEach(() => {
+    loadCustomizationFixture()
+  })
+
+  test('keeps SMS as an automatic fallback without exposing a channel selector', async () => {
+    const { cleanup } = await renderCompose('rcs')
+
+    try {
+      const labels = [...document.querySelectorAll('label')].map((label) => label.textContent)
+      expect(labels).toEqual(['Téléphone', 'Message RCS', 'Actions proposées', 'SMS de secours'])
+      expect(document.body.textContent).toContain('Envoyé au même numéro si le RCS échoue.')
+      expect(document.body.textContent).toContain('Ajouter une action')
+      expect(document.body.textContent).not.toContain('Canal')
+      expect(document.body.textContent).not.toContain('Objet')
+      const send = [...document.querySelectorAll('button')].find(
+        (button) => button.textContent === 'Envoyer'
+      )
+      expect(send?.hasAttribute('disabled')).toBe(true)
+    } finally {
+      await cleanup()
+    }
+  })
+
+  test('envoie le RCS quand le composeur est prêt', async () => {
+    const { cleanup } = await renderCompose('rcs', {
+      rcsCompose: {
+        destinataire: '0612345678',
+        body: 'Relance',
+        sms_fallback: 'SMS Relance',
+        choices: []
+      }
+    })
+
+    try {
+      const send = [...document.querySelectorAll('button')].find(
+        (button) => button.textContent === 'Envoyer'
+      )
+      expect(send?.hasAttribute('disabled')).toBe(false)
+    } finally {
+      await cleanup()
+    }
+  })
+
+  test('reserves the subject field for email', async () => {
+    const { cleanup } = await renderCompose('email')
+
+    try {
+      const labels = [...document.querySelectorAll('label')].map((label) => label.textContent)
+      expect(labels).toContain('Objet')
+      expect(labels).toContain('Message')
+    } finally {
+      await cleanup()
+    }
+  })
+
   test('montre la pile dépliée, sans Tracer ni Autres', async () => {
     const { cleanup } = await renderCompose()
 
@@ -308,7 +373,7 @@ describe('RepaymentComposeBlock', () => {
       expect(document.body.textContent).toContain('décès')
       expect(document.body.textContent).toContain('+65 ans')
       const boxes = document.querySelectorAll('[data-slot="checkbox"]')
-      expect(boxes.length).toBe(REPAYMENT_TAG_OPTIONS.length)
+      expect(boxes.length).toBe(repaymentTagOptions().length)
     } finally {
       await cleanup()
     }
@@ -352,10 +417,10 @@ describe('RepaymentComposeBlock', () => {
       id_client: 'CLI-1',
       id_locataire: 'LOC-1',
       id_lot: null,
-      type: 'repayment_plan' as const,
-      statut: 'draft' as const,
+      type: 'repayment_plan.created' as const,
+      channel: null,
       mentions: [],
-      contenu: '{}'
+      contenu: JSON.stringify({ version: 2, title: "Plan d'apurement" })
     }
     const draft = await renderCompose(null, { activePlan: { row: unsigned, signed: false } })
     try {

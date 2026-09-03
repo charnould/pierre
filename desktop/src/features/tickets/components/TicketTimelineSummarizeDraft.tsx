@@ -1,5 +1,6 @@
 import { useId } from 'react'
 
+import type { AgentWorkPart } from '@/shared/components/AgentWorkTrace'
 import { InspectorComposeField } from '@/shared/components/inspector/inspector-compose-field'
 import { InspectorComposeFooter } from '@/shared/components/inspector/inspector-compose-shell'
 import { Button } from '@/shared/components/ui/button'
@@ -12,11 +13,10 @@ interface Props {
   aiBusy?: boolean
   aiGenerating?: boolean
   showReasoning?: boolean
-  reasoning?: string
+  workParts?: AgentWorkPart[]
+  reasoningDuration?: number
   streamOutput?: string
   isStreaming?: boolean
-  isReasoningPhase?: boolean
-  onDraft: () => void
   onSave: () => void
   onCancel: () => void
   showConnector: boolean
@@ -30,11 +30,10 @@ export function TicketTimelineSummarizeDraft({
   aiBusy,
   aiGenerating,
   showReasoning,
-  reasoning,
+  workParts,
+  reasoningDuration,
   streamOutput,
   isStreaming,
-  isReasoningPhase,
-  onDraft,
   onSave,
   onCancel,
   showConnector: _showConnector,
@@ -58,21 +57,13 @@ export function TicketTimelineSummarizeDraft({
           disabled={busy}
           aiGenerating={aiGenerating}
           showReasoning={showReasoning}
-          reasoning={reasoning}
+          workParts={workParts}
+          reasoningDuration={reasoningDuration}
           streamOutput={streamOutput}
           isStreaming={isStreaming}
-          isReasoningPhase={isReasoningPhase}
         />
       </InspectorComposeField>
-      <InspectorComposeFooter
-        onCancel={onCancel}
-        pending={busy}
-        extra={
-          <Button type="button" variant="outline" size="sm" disabled={busy} onClick={onDraft}>
-            Rédiger avec IA
-          </Button>
-        }
-      >
+      <InspectorComposeFooter onCancel={onCancel} pending={busy} extra={null}>
         <Button type="button" size="sm" disabled={!canSave || busy} onClick={onSave}>
           Enregistrer
         </Button>

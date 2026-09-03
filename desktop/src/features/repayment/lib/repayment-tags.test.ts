@@ -1,7 +1,6 @@
-import { describe, expect, test } from 'bun:test'
+import { beforeEach, describe, expect, test } from 'bun:test'
 
-import repaymentConfig from '@customization/repayments/config'
-
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 import type { Activite } from '@/shared/types/activites'
 
 import { sortRepaymentActivitiesDesc } from './repayment-activity-order'
@@ -11,7 +10,7 @@ import {
   deriveRepaymentTagsFromSorted,
   getRepaymentTagMeta,
   REPAYMENT_TAG_COLOR,
-  REPAYMENT_TAG_OPTIONS,
+  repaymentTagOptions,
   sameRepaymentTagSet
 } from './repayment-tags'
 
@@ -24,28 +23,32 @@ function activity(
     id_client: null,
     id_locataire: 'LOC-1',
     id_lot: null,
-    statut: 'logged',
+    channel: null,
     mentions: [],
     ...partial
   }
 }
 
 describe('repayment-tags', () => {
-  test('lit la liste fermée de la configuration, dans l’ordre', () => {
-    expect(REPAYMENT_TAG_OPTIONS).toEqual(repaymentConfig.tags)
+  beforeEach(() => {
+    loadCustomizationFixture()
+  })
+
+  test('lit la liste fermée du store, dans l’ordre', () => {
+    expect(repaymentTagOptions()).toEqual(['décès', '+65 ans'])
   })
 
   test('tous les tags partagent la même paire hex', () => {
     expect(REPAYMENT_TAG_COLOR).toEqual({ bgColor: '#E8E8E8', textColor: '#333333' })
-    for (const label of REPAYMENT_TAG_OPTIONS) {
+    for (const label of repaymentTagOptions()) {
       expect(getRepaymentTagMeta(label)).toEqual({ label, color: REPAYMENT_TAG_COLOR })
     }
   })
 
   test('canonise dans l’ordre de configuration et ignore hors config', () => {
-    expect(canonicalizeRepaymentTags(['Redémarrage APL', 'décès', 'décès', 'inconnu'])).toEqual([
+    expect(canonicalizeRepaymentTags(['+65 ans', 'décès', 'décès', 'inconnu'])).toEqual([
       'décès',
-      'Redémarrage APL'
+      '+65 ans'
     ])
   })
 
@@ -60,21 +63,21 @@ describe('repayment-tags', () => {
         activity({
           id: 1,
           date_creation: '2026-06-10 10:00',
-          type: 'repayment_tag_change',
+          type: 'case.tags_changed',
           contenu: JSON.stringify({
-            version: 1,
-            tags_precedents: [],
-            tags: ['décès']
+            version: 2,
+            before: [],
+            after: ['décès']
           })
         }),
         activity({
           id: 2,
           date_creation: '2026-06-11 11:00',
-          type: 'repayment_tag_change',
+          type: 'case.tags_changed',
           contenu: JSON.stringify({
-            version: 1,
-            tags_precedents: ['décès'],
-            tags: []
+            version: 2,
+            before: ['décès'],
+            after: []
           })
         })
       ])
@@ -87,25 +90,25 @@ describe('repayment-tags', () => {
         activity({
           id: 1,
           date_creation: '2026-06-10 10:00',
-          type: 'repayment_tag_change',
+          type: 'case.tags_changed',
           contenu: JSON.stringify({
-            version: 1,
-            tags_precedents: [],
-            tags: ['décès']
+            version: 2,
+            before: [],
+            after: ['décès']
           })
         }),
         activity({
           id: 2,
           date_creation: '2026-06-11 11:00',
-          type: 'repayment_tag_change',
+          type: 'case.tags_changed',
           contenu: JSON.stringify({
-            version: 1,
-            tags_precedents: ['décès'],
-            tags: ['+65 ans', 'Redémarrage APL']
+            version: 2,
+            before: ['décès'],
+            after: ['+65 ans']
           })
         })
       ])
-    ).toEqual(['+65 ans', 'Redémarrage APL'])
+    ).toEqual(['+65 ans'])
   })
 
   test('FromSorted égale le wrapper après tri canonique', () => {
@@ -113,21 +116,21 @@ describe('repayment-tags', () => {
       activity({
         id: 1,
         date_creation: '2026-06-10 10:00',
-        type: 'repayment_tag_change',
+        type: 'case.tags_changed',
         contenu: JSON.stringify({
-          version: 1,
-          tags_precedents: [],
-          tags: ['décès']
+          version: 2,
+          before: [],
+          after: ['décès']
         })
       }),
       activity({
         id: 2,
         date_creation: '2026-06-11 11:00',
-        type: 'repayment_tag_change',
+        type: 'case.tags_changed',
         contenu: JSON.stringify({
-          version: 1,
-          tags_precedents: ['décès'],
-          tags: ['+65 ans', 'Redémarrage APL']
+          version: 2,
+          before: ['décès'],
+          after: ['+65 ans']
         })
       })
     ]
@@ -143,11 +146,11 @@ describe('repayment-tags', () => {
         activity({
           id: 1,
           date_creation: '2026-06-11 11:00',
-          type: 'repayment_tag_change',
+          type: 'case.tags_changed',
           contenu: JSON.stringify({
-            version: 1,
-            tags_precedents: [],
-            tags: ['inconnu']
+            version: 2,
+            before: [],
+            after: ['inconnu']
           })
         })
       ])

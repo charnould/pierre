@@ -4,9 +4,21 @@ import type { NotificationsApi } from '@/features/activity/hooks/use-notificatio
 import type { ActivityTarget } from '@/shared/lib/navigation-snapshot'
 import { getTicketCellText } from '@/shared/lib/ticket-row'
 import type { TicketRow } from '@/shared/types'
-import type { ActivityStatus, ActivityType } from '@/shared/types/activites'
+import type { ActivityType } from '@/shared/types/activites'
 
-export type TicketComposeMode = 'comment' | 'rcs' | 'email' | 'letter' | 'summarize' | null
+export type TicketComposeMode =
+  | 'comment'
+  | 'todo'
+  | 'action'
+  | 'bucket'
+  | 'tags'
+  | 'assignment'
+  | 'rcs'
+  | 'email'
+  | 'letter'
+  | 'external'
+  | 'summarize'
+  | null
 
 export type TicketsViewDataDeps = {
   notifications: NotificationsApi
@@ -52,7 +64,7 @@ export function useTicketsViewData(deps: TicketsViewDataDeps) {
   )
 
   const postActivity = useCallback(
-    async (type: ActivityType, statut: ActivityStatus, contenu: string): Promise<number | null> => {
+    async (type: ActivityType, contenu: string): Promise<number | null> => {
       if (!selected) return null
       const id = getTicketCellText(selected, 'id_reclamation')
       if (!id) return null
@@ -61,7 +73,6 @@ export function useTicketsViewData(deps: TicketsViewDataDeps) {
         contexte: 'tickets',
         ref: id,
         type,
-        statut,
         contenu
       })
       return res?.data?.id ?? null

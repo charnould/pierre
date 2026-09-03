@@ -1,4 +1,6 @@
-import { describe, expect, test } from 'bun:test'
+import { beforeEach, describe, expect, test } from 'bun:test'
+
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 
 import { getRepaymentBucketMeta } from './repayment-bucket'
 import {
@@ -9,6 +11,10 @@ import {
 import { sampleRepaymentRow } from './repayment-test-fixtures'
 
 describe('repayment-column-values', () => {
+  beforeEach(() => {
+    loadCustomizationFixture()
+  })
+
   const rows = [
     sampleRepaymentRow({ id_locataire: 'LOC-1', id_site: 'SITE-A', statut: 'client' }),
     sampleRepaymentRow({ id_locataire: 'LOC-2', id_site: 'SITE-B', statut: 'ex-client' })

@@ -284,12 +284,13 @@ export function BulkTemplateField({
         />
       </div>
       <PopoverContent
+        variant="command"
         side="bottom"
         align="start"
         sideOffset={6}
         initialFocus={false}
         finalFocus={editorRef}
-        className="w-(--anchor-width) p-0"
+        className="w-(--anchor-width)"
         onMouseDown={(event) => event.preventDefault()}
       >
         <Command shouldFilter={false}>
@@ -309,7 +310,7 @@ export function BulkTemplateField({
                     value={field.value}
                     data-field-index={index}
                     aria-selected={index === activeIndex}
-                    className={cn(index === activeIndex && 'bg-muted text-foreground')}
+                    active={index === activeIndex}
                     onMouseEnter={() => setActiveIndex(index)}
                     onSelect={() => selectField(field.value)}
                   >

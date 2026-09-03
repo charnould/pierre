@@ -1,6 +1,6 @@
 # PIERRE — Design system
 
-Apple Premium. Cubique dans l’outil. Accueil : exception colorée.
+Apple Premium. Cubique dans l’outil. Accueil : hub (métiers, rails).
 
 PIERRE n’est pas un dashboard SaaS. C’est un outil de travail intelligent. shadcn/ui est une collection de primitives techniques, pas une direction artistique. Si un écran est seulement _propre_, il n’est pas fini.
 
@@ -12,11 +12,37 @@ Tokens → Primitives (ui/* owned) → Patterns → Page types → Pages
 
 Une page n’invente ni couleur, ni radius, ni hauteur de contrôle. Si ça manque : token, ou édition de la primitive. Jamais un wrapper. Jamais une variante de plus. Si un cas ne rentre pas dans ce contrat : s’arrêter et le signaler.
 
+### Delta registre shadcn
+
+`src/shared/components/ui/*` suit le registre shadcn `base-nova`. Après un `shadcn add --diff`,
+la version du registre est la base ; aucun ancien fichier n’est restauré en bloc.
+
+Le delta Pierre autorisé est limité à : light-only, contrôles `h-8` et chrome `h-7`, géométrie
+Electron sous la TitleBar, Drawers Inspector/Activity, Empty Koboyo 160/32 sans wash, Field
+12/16, avatars Inspector `xs`, labels accessibles des Sliders et DatePicker local
+`YYYY-MM-DD`, et surfaces d’export limitées aux usages réels de l’application. Toute autre
+divergence doit être justifiée dans ce document ou supprimée.
+
+### Contrat nominal des primitives
+
+Une feature peut positionner une primitive (`layout`) mais ne redéfinit pas son apparence. Couleur,
+espacement interne, typographie, radius, bord, ombre et états visuels utilisent d’abord l’API
+générique du registre. Un seul caller ne crée ni taille, ni variante, ni prop comportementale.
+
+`Button` conserve uniquement les variantes et tailles génériques du registre. `Badge` ajoute les
+tailles Pierre réellement partagées `compact` et `data`, l’état `unread`, et une propriété neutre
+`appearance` pour les couleurs de données dynamiques. La palette des initiales d’avatar vit
+uniquement en CSS ; TypeScript ne calcule que son index déterministe.
+
+Les exceptions exactes de `config/shadcn-lint.jsonc` couvrent seulement une géométrie locale hors
+échelle ou une dimension calculée à l’exécution. Elles autorisent la déclaration Tailwind ou
+`style` au caller ; elles ne sont ni des tokens, ni un précédent pour étendre une primitive.
+
 ---
 
 ## 1. Philosophie
 
-Loi : **cubique** dans l’outil. 90°. Une matière. Joints 1 px. Radius 6 px. **Exception écrite : l’accueil** — une scène composée (héros, bento, paper), pas un lanceur.
+Loi : **cubique** dans l’outil. 90°. Une matière. Joints 1 px. Radius 6 px. Accueil : hub paper (portes métiers, quatre rails). Pas une scène. Pas un lanceur.
 
 Premium = réduction, cohérence, densité maîtrisée, absence de bruit. Pas luxe. Pas glass. Pas vitrine.
 
@@ -46,6 +72,7 @@ Chaque vue React appartient à **exactement un** type. Les overlays ne sont pas 
 | Contacter par lots | Directory    |
 | Synthèse           | Split        |
 | Paramètres         | Document     |
+| Administration     | Directory    |
 | Login              | Login        |
 | Assurances         | Placeholder  |
 | Relocation         | Placeholder  |
@@ -54,7 +81,7 @@ Chaque vue React appartient à **exactement un** type. Les overlays ne sont pas 
 
 ### Home
 
-Seule vraie scène. Paper, bento, `rounded-2xl` (12 px), pigments `--home-*`, héros chat. **Ne pas** la normaliser jusqu’à ressembler aux Boards ou Documents.
+Paper. Hub, pas une scène. Padding 16. Une colonne ancrée en haut, `max-w` = 4 × 19 rem + 3 × 0.5 rem. Portes métiers : `ChoiceTile` (`HomeDoor`) en grille 3 pistes / `gap-2`. Une ligne : verbe `tabNavLabel` 14 medium. Paper, liseret 1 px + icône 20 + verbe = `--door-*-mark` (`button[data-door]`, utilities). Padding 16. Hover `bg-muted`. Pas de titre de page, pas de compagnon, pas de greeting, pas de Source Serif. Quatre rails **19 rem max** sur **une** ligne, grille 4 pistes / `gap-2`, **un filet par rail** (`rounded-md border`), **hauteur = contenu** (`items-start`) : Mes notifications / Mes tâches / Tâches que j’ai assignées / Activités. N par rail depuis les settings (2–20, défaut 10). Tout voir tâches = drawer Tâches (2 onglets), exclusif de la cloche. Empty Koboyo (`blockprint-compact-view-notifications` / `blockprint-success-state-for-task` / `blockprint-delegation-arrow` / `blockprint-card-activity`). Pas de tuiles Windows, pas de pigments `--home-*`, pas d’aplat saturé. **Ne pas** en faire un Board ni un Document.
 
 ### Board
 
@@ -68,19 +95,90 @@ Synthèse. Configuration → résultat. `Resizable`. Formulaire | output. Footer
 
 ### Document
 
-Paramètres. `px-6` centré. `PageHeader`. Contenu documentaire / formulaire. Pas de `CardHeader` comme chrome de page. Paramètres **uniquement** : `max-w-4xl` + un filet 1 px (`rounded-md border p-4`) **par** paramètre (identité, compagnon, applicatifs, JSON). Login n’est **pas** un Document.
+Paramètres. `px-6` centré. `PageHeader`. Contenu documentaire / formulaire. Pas de `CardHeader` comme chrome de page. Paramètres **uniquement** : `max-w-4xl` + un filet 1 px (`rounded-md border p-4`) **par** paramètre (identité, compagnon, applicatifs, accueil, JSON). Login n’est **pas** un Document.
 
 ### Directory
 
 Automatisations et Contacter par lots. Collection d’objets — ni Board ni Document. Flush. **Une rubrique par onglet** — même chrome que DualTable : `bg-background`, titre Inter `text-xl` + · + compte, CTA outline + une primaire. **Interdit :** fusionner les buckets. Liste paper (`DirectoryList`). Lignes **identité empilée** (nom + description, 2 lignes max) + **métadonnées en colonnes alignées à gauche** (`text-start` partout, y compris actions). Séparateur `border-border/60` **ou** whitespace, jamais les deux. Hover / selected = `bg-muted`. Recherche `InputGroup`. Automatisations : formulaire = Dialog `max-w-2xl`. Contacter par lots : éditeur **plein cadre**, corps centré `max-w-4xl px-6` (requête / résultats / envoi), pas de Dialog de formulaire. Historique d’un traitement = pile de rubriques flush (même chrome DualTable : Inter `text-xl` + · + méta), table Inter 13 / thead 11, un scroll, pas DualTable, pas Document ; clic ligne = même Inspector Impayés. Le corps **peut** grouper les champs par `FieldSet` + `FieldLegend` (16/24). Pas de `PageHeader`. Pas de Card comme shell. Pas de filet « un bloc = un paramètre » (Document). Pas de DualTable.
 
+Administration est un Directory à navigation secondaire avec la primitive `Tabs` existante.
+Utilisateurs est l’exception à deux rubriques : `Profils` puis `Utilisateurs`, sans fusion.
+Chaque rubrique a son chrome Directory (titre · compte, CTA). Créer / éditer un profil =
+Dialog `max-w-2xl` (nom, modules, chatbots). Le dialog utilisateur assigne un profil ou
+`Personnalisé` ; les cases modules / chatbots sont `disabled` si un profil est choisi.
+Administrateur reste hors profil. Libellé **Chatbots**. Identité profil = Avatar + `IdCard` +
+nom. Les lignes utilisateurs portent une checkbox ; dès qu’une case est cochée, un CTA outline
+**Affecter un profil** ouvre le menu des profils. Pas de tout sélectionner. Les sections non
+implémentées utilisent l’Empty canonique. Aucun chrome ou mouvement propre n’est ajouté aux
+onglets.
+
+Encyclopédie est l’exception Directory à deux buckets : `Core Data HLM` puis `Autres sources`,
+sans fusion. Core Data affiche toujours le catalogue théorique complet, y compris les tables
+absentes ; ses identités sont les cinq noms réservés `core.*.csv` (L1) et le label métier (L2).
+Autres sources réunit toutes les entrées CSV/DOCX/Markdown/Excel non Core Data, affectées ou non.
+Une ligne représente un fichier CSV/DOCX/Markdown ou un onglet Excel. Autres sources : L1 = titre
+encyclopédie tel quel (14 medium), L2 = nom de fichier uploadé avec extension. Les profils ne
+vivent pas dans l’identité. Icône à gauche alignée sur L1 (`h-5` / `size-4`) : `Table2` pour
+CSV/Excel, `FileText` pour DOCX/MD ; sa couleur reprend l’état (`muted` / `primary` si OK /
+`destructive` si KO). Une seule toolbar globale porte recherche, statut de reconstruction et
+actions. Les lignes partagent quatre colonnes : identité, Badge d’état + comptes d’affectation,
+dernière modification, actions. Tous les états (Absent, Non affecté, À construire, En cours, OK, KO)
+sont des `Badge` existants ; les affectations s’affichent en méta 12 muted (`2 profils` · `1 module`).
+Le détail des noms s’ouvre au survol dans un Popover existant (blocs Profils puis Modules, titres 14
+medium, listes 12). Les actions icône ont un Tooltip. `Non affecté` n’est jamais
+une rubrique. Affectation = profils (chatbots / skills) et modules desktop, listes indépendantes.
+Vide des deux = non affecté. Un module se publie vers ses skills existants. Désaffecter conserve la
+ligne. Suppression fichier ou onglet depuis la ligne
+(`Trash2` + `ConfirmDialog`), jamais depuis le dialog. Le titre d’une source ordinaire est le nom
+de fichier ou d’onglet, overridable ; le vider restaure ce titre officiel. Une ligne d’aide montre
+le `snake_case` agent. Un titre Core
+est le stem sans `core.` et n’est pas éditable. Le dialog n’a ni URL, ni preview, ni supprimer.
+`Reconstructions` n’a ni CTA ni Dialog ; le polling du dernier build suffit.
+L’UI configure : upload, affectation et suppression ne publient qu’au clic sur `Reconstruire`.
+La CLI livre : un fichier affecté dont les octets changent déclenche la publication. Tant que le
+catalogue diffère du dernier build réussi, la toolbar rappelle de reconstruire et les lignes
+affectées sont `À construire`. Pendant un build global, elles sont `En cours` et le bouton est
+disabled. Aucun overlay global : l’encyclopédie précédente reste publiée jusqu’au swap atomique.
+
 ### Conversation
 
-Discuter reprend la composition de `shadcn-ui/chatbot-template` : canvas initial vide, fil
-`max-w-2xl`, user bubble `muted`, assistant sans bulle colorée et dock inférieur. Aucun greeting,
-exemple ou suggestion. Anatomie : message → travail de l’agent → réponse → état. Raisonnement et
-outils sont une preuve secondaire regroupée ; ils ne concurrencent jamais la réponse. Le
-Questionnaire prend temporairement la priorité dans le dock sans recouvrir le fil.
+Deux empty states, un `ChatPanel`. Rien qui n’est pas un message n’entre dans le fil.
+
+Discuter et public : un `ChatPanel`. Greeting, exemples et disclaimer viennent de la config
+(`greetings` / `examples` / `disclaimer`). Absents ou vides : rien. Greeting serif, une
+salutation tirée au hasard — pas une question (l’invitation est le placeholder du composer).
+Public (`arrival` depuis ChatWebApp, page et embed) : marque Lucide fermée (`Hand` / `Bot` /
+`BotMessageSquare` / `Rocket`) sur la même ligne que le greeting, première ligne,
+même index que la salutation, emoji de fin retiré. Greeting `text-4xl` / 450 + marque `size-8`
+(embed : `text-2xl` + `size-6`). Exemples : liste quiet
+(Inter 14 muted, `px-3`, pas de filet). Discuter : greeting `text-2xl` + emoji de config, sans
+marque ; exemples liste filetée `rounded-xl` `divide-y`. Clic = envoi. Survol ou focus d’un
+exemple : le placeholder du composer reprend le texte (pas le draft). Encre alignée (`px-3`).
+Tant qu’il n’y a pas de message, l’invitation (greeting + composer + exemples) est
+centrée dans le canvas — deux spacers `flex-1`. Au premier message greeting et exemples
+disparaissent, le composer se pinne en bas ; le disclaimer (s’il existe) apparaît alors sous le
+composer, 10/16 muted centré (`mt-2`). Pas de disclaimer à l’empty. Scroll fenêtre sur `/` (pas de
+MessageScroller). Scroll interne sur `/embed` et Discuter. Chrome public : `public-chrome.css`
+(papier blanc `1 0 0`, encre `0.20` H 260 chroma faible), bundle chat-web seulement. Discuter :
+`globals.css` taupe.
+`data-chat-chrome` libelle le document (`public`) ou le panneau (`desktop`) ; ce n’est pas un
+sélecteur. ChatPanel ne porte aucune couleur.
+Pas d’icône dans le chat, **sauf** la marque Lucide de l’empty public. Composer : filet au focus,
+pas de halo `ring-3`. Curseur dans le champ
+sur `/` et Discuter, pas sur `/embed`.
+
+Fil, empty et dock partagent `max-w-3xl px-6`. User bubble `muted` Inter 14/20, assistant sans
+bulle. Anatomie : message → travail de l’agent → réponse → état. Raisonnement et outils sont une
+preuve secondaire. Le Questionnaire prend la priorité dans le dock sans recouvrir le fil.
+
+Réponses assistant (`typeset-reply`) : Source Serif 4, 16/23, graisse 450, optical size, tracking 0,
+flow 14. Listes : 0.5em, marqueurs encre, `ol` tabular-nums. Greeting empty : même voix, `px-3`,
+salutation issue de `greetings[]`. Public : `text-4xl` / 450 + marque Lucide `size-8` en ligne
+(embed : `text-2xl` + `size-6`). Discuter : `text-2xl` / 450, sans marque. Chrome,
+exemples,
+bulle user, composer et traces : Inter 11/16. `<pre>` d’outil : mono UI. Exemples public : liste
+quiet Inter 14 muted, pas de pastille. Exemples Discuter : liste filetée Inter 14. Méta
+12/16.
 
 ### Login
 
@@ -95,8 +193,8 @@ Champs : `FieldLabel` 14 medium → `Input` `h-8` → `FieldError` 12 sous **ce*
 | Champ        | Erreurs                                        |
 | ------------ | ---------------------------------------------- |
 | Serveur      | URL invalide, réseau, API, cookie, 500         |
-| Email        | vide, `unknown_user`                           |
-| Mot de passe | vide, `wrong_password`, `wrong_root_password`  |
+| Email        | vide                                           |
+| Mot de passe | vide, `invalid_credentials`, `rate_limited`    |
 | Acceptations | les deux cases ; `FieldError` sous le **bloc** |
 
 Acceptations : deux `Checkbox` + `FieldDescription` (12 muted), `gap-2`. Interdit : `FieldLabel` restylé en `text-xs`.
@@ -115,37 +213,40 @@ Assurances, Relocation, Attributions, Ventes. Uniquement Empty canonique. Pas de
 
 Le chrome global reste responsable **uniquement** du chrome global.
 
-| Surface                 | Règle                                                                                                                                     |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| TitleBar                | `h-8` `border-b` drag. Aucun padding de canvas.                                                                                           |
-| Sidebar                 | icon-collapsed, `border-r`, items ghost, actif = `bg-muted`, tooltip sur les icônes                                                       |
-| Canvas                  | `App.tsx` **ne décide plus** du padding par tab. Le page type compose sa surface. Un seul composant responsable du padding d’une surface. |
-| Activity                | Drawer gauche 24 rem, même chrome que l’Inspector. Pas une page.                                                                          |
-| Find-in-page            | Overlay flottant, `fixed`, `rounded-md`, `shadow-md`, `h-7`, `InputGroup`                                                                 |
-| Reports HTML / mascotte | Hors arbre React. Ne pas les « shadcn-iser ».                                                                                             |
+| Surface                                       | Règle                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TitleBar                                      | `h-8` `border-b` drag. Une grappe `.no-drag` opposée aux contrôles natifs : leading Windows/Linux, trailing mac. Ordre : Accueil · Tâches · Notifications · Paramètres · Admin si admin · Manuel (`FileQuestionMark`, ouvre le manuel dans le navigateur, dernier). Actif = `bg-muted`. Le reste = drag. Gouttière 8 (`px-2`) après le chrome natif — jamais flush au bord, aux feux ou aux captions. Windows/Linux : `env(titlebar-area-*)` + 8 avant les captions. Aucun padding de canvas. |
+| Canvas                                        | `App.tsx` **ne décide plus** du padding par tab. Le page type compose sa surface. Un seul composant responsable du padding d’une surface.                                                                                                                                                                                                                                                                                                                                                     |
+| Activity                                      | Drawer gauche 24 rem, même chrome que l’Inspector. Pas une page. Trigger = cloche TitleBar (`Bell` uniquement, jamais `BellRing`). Non-lus = point `badgeColor` (pastille compagnon) `start-full`, pas de compte.                                                                                                                                                                                                                                                                             |
+| Tâches                                        | Second drawer gauche 24 rem, même chrome. Onglets Mes tâches / Tâches assignées. Exclusif d’Activity. Trigger = icône `SquareCheck` TitleBar + Tout voir des rails tâches.                                                                                                                                                                                                                                                                                                                    |
+| Find-in-page                                  | Overlay flottant, `fixed`, `rounded-md`, `shadow-md`, `h-7`, `InputGroup`                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Reports HTML / application externe / mascotte | Hors arbre React. Ne pas les « shadcn-iser ».                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 La fenêtre principale conserve les contrôles natifs de l’OS et un titre visible vide. Le drag
-reste limité à la `TitleBar` ; ses contrôles sont `.no-drag`. Drawers horizontaux et leur
-overlay s’arrêtent sous `--titlebar-height` — feux macOS et caption Windows restent hors
-canvas, comme la sidebar.
+reste limité à la `TitleBar` ; ses contrôles sont `.no-drag`. Une grappe, à l’opposé des
+contrôles natifs (leading Windows/Linux, trailing mac). Gouttière 8 ; Windows/Linux
+ajoutent `env(titlebar-area-*)` avant les captions. Drawers horizontaux et leur overlay
+s’arrêtent sous `--titlebar-height` — feux macOS et caption Windows restent hors canvas.
+Pas de sidebar : les métiers ne s’ouvrent que depuis l’accueil.
 
 ---
 
 ## 4. Overlays
 
-| Niveau                  | Usage                           | Chrome                                                                         |
-| ----------------------- | ------------------------------- | ------------------------------------------------------------------------------ |
-| Transient               | Tooltip / Menu / Popover        | `rounded-md` `shadow-sm`                                                       |
-| Confirm / petit éditeur | `ConfirmDialog`                 | Dialog `max-w-md` `rounded-lg` `shadow-md`                                     |
-| Formulaire objet        | AutomationForm, etc.            | Dialog `max-w-2xl` `rounded-lg` `shadow-md`. Pas de Card interne.              |
-| Inspector               | Dossier locataire / réclamation | Drawer 60 rem, 24 rem présent + 36 rem historique, paper, filet, `rounded-md`. |
-| Workspace               | Plan d’apurement                | Plein canvas. Ne pas le réduire en Drawer ni en Document.                      |
-| Inbox / suivi           | ActivityPanel                   | Drawer gauche 24 rem, même chrome que l’Inspector. Listes Directory.           |
+| Niveau                  | Usage                           | Chrome                                                                            |
+| ----------------------- | ------------------------------- | --------------------------------------------------------------------------------- |
+| Transient               | Tooltip / Menu / Popover        | `rounded-md` `shadow-sm`                                                          |
+| Confirm / petit éditeur | `ConfirmDialog`                 | Dialog `max-w-md` `rounded-lg` `shadow-md`                                        |
+| Formulaire objet        | AutomationForm, etc.            | Dialog `max-w-2xl` `rounded-lg` `shadow-md`. Pas de Card interne.                 |
+| Inspector               | Dossier locataire / réclamation | Drawer 60 rem, 24 rem présent + 36 rem historique, paper, filet, `rounded-md`.    |
+| Workspace               | Plan d’apurement                | Plein canvas. Ne pas le réduire en Drawer ni en Document.                         |
+| Inbox / suivi           | ActivityPanel                   | Drawer gauche 24 rem, même chrome que l’Inspector. Listes Directory.              |
+| Tâches                  | TasksPanel                      | Second drawer gauche 24 rem, exclusif d’Activity. Onglets Mes tâches / Assignées. |
 
 Inspector ≠ Inbox / suivi ≠ Workspace. Inbox à gauche (24 rem), dossier à droite
 (60 rem). Frères : aucun effet nested de réduction ou d’assombrissement du parent.
 
-Sheet : fallback sidebar / mobile uniquement. Pas de pattern métier.
+Sheet : pas un pattern métier.
 
 `window.confirm` est interdit. Utiliser `ConfirmDialog`.
 
@@ -191,7 +292,7 @@ FieldSet
 - Ne pas utiliser `text-sm` pour les descriptions
 - `FieldDescription` : `text-balance` (toutes les descriptions de label)
 - `Field` est la seule primitive de formulaire Directory / Workspace. Inspector compose = `InspectorComposeField`. Ne pas créer un troisième système.
-- Instructions d’automation (rapport) : contrôle markdown Lexical dans le chrome Textarea (`rounded-lg border-input`, `min-h-78`) + toolbar `h-7` ghost `icon-sm`. Contenu Inter 14, pas `typeset`. Features : gras, italique, titres, listes, tableaux, citations, code. Persisté en markdown oxfmt, jamais en JSON Lexical.
+- Instructions d’automation (rapport) : contrôle markdown Lexical dans le chrome Textarea (`rounded-lg border-input`, `min-h-78`) + toolbar `h-7` ghost `icon-sm`. Quand le parent borne la hauteur, la barre reste et le corps défile à l’intérieur du cadre. Contenu Inter 14, pas `typeset`. Features : gras, italique, titres, listes, tableaux, citations, code. Persisté en markdown oxfmt, jamais en JSON Lexical.
 
 ### Identité collègue
 
@@ -209,7 +310,7 @@ Fichier : `src/shared/components/ChoiceTile.tsx`.
 
 Anatomie : outline, `rounded-md`, titre 14 medium, caption 12 muted si utile, icône 16, selected = `bg-muted`, pas de ring coloré hors focus.
 
-Aliases minces autorisés : `SettingsFieldOptionTile`, `AboutSubjectCards`, `AutomationTypeCards`, `AutomationReplyFormatCards`. Pas quatre systèmes visuels.
+Aliases minces autorisés : `SettingsFieldOptionTile`, `AboutSubjectCards`, `AutomationTypeCards`, `AutomationReplyFormatCards`, `HomeDoor`. Pas quatre systèmes visuels.
 
 ### DirectoryList
 
@@ -271,8 +372,7 @@ Ne pas réécrire la logique métier pour unifier le chrome. Unifier **cette** g
 Identité de l’objet + fermer. Rien d’autre.
 
 - Titre objet = rôle encre (14 medium) s’il existe un nom humain
-- Si l’objet **est** un identifiant (dossier locataire), le titre tient sur **une seule ligne** : `id_client · id_locataire` — Inter 14 medium, `tabular-nums`, `truncate`, pas JetBrains. Pas d’avatar générique ni de label décoratif
-- IDs en sous-ligne (Réclamations) = Inter 13 regular, `tabular-nums`
+- Si l’objet **est** un identifiant, le titre tient sur **une seule ligne** : Impayés `id_client · id_locataire` ; Réclamations `id_reclamation` — Inter 14 medium, `tabular-nums`, `truncate`, pas JetBrains. Pas d’avatar générique ni de label décoratif. Pas de sous-ligne.
 - Les IDs ne sont jamais le substitut d’un statut ou d’un CTA
 - Close : ghost `icon-sm`, toujours, y compris `embedded` (ferme l’Inspector, pas Activity)
 - Interdit dans le header : verbes métier, badges de phase, dette, filtres, toolbar d’icônes
@@ -281,7 +381,11 @@ Identité de l’objet + fermer. Rien d’autre.
 
 Hors du rail. Pas d’acteur, pas de date, pas un événement.
 
-Une seule surface paper (`rounded-md`, filet). Même ossature que « À faire » : ancre `size-4` (`Box` muted, `mt-0.5`, inerte) alignée sur `Square` ; titre **Contexte** 14 medium (même cran que le libellé « À faire »). La grille méta commence 8 px sous le titre. La dette est la **première ligne méta** (label « Dette », montant · équivalent loyer `tabular-nums`, flèche de tendance dans la valeur). Ordre des lignes : Dette · Courriel · Téléphone · Référent · Groupe · Dernière action · Tags. Grille indentée : labels 12 muted, colonne `max-content`, valeurs 12 encre, chips compact `h-4` (phase, action, tags, collab, statut contact). Ligne **Tags** en dernier, masquée si aucun tag ; chips **inline** (`flex-wrap`), pas un chip par ligne. Seuls les libellés encore dans `customization/repayments/config.ts` s’affichent. Chips tags = une paire hex unique (`#E8E8E8` / `#333333`), pas de palette auto, pas de Coloriser DualTable. Pas d’icônes Lucide en tête de ligne méta. Pas de répétition des IDs du header. Pas de grille de KPI. Pas de date de bail (colonne ledger). Colorize = fill + encre + filet 1 px `color-mix(bg 72%, text)` (hex métier ou palette algo), **pas** de swatch / carré en tête, **pas** de `border-border` taupe sur un fill hex. Identité collab chip = avatar + nom (displayName org, sinon login), compact `h-4` comme « À faire » — pas `@login`, pas `h-5` Board. Liste de sélection = `OrgUserListItem` (avatar + nom + login). Voir **Identité collègue**.
+Une seule surface paper (`rounded-md`, filet). Même ossature que « À faire » : ancre `size-4` (`Box` muted, `mt-0.5`, inerte) alignée sur `Square` ; titre **Contexte** 14 medium (même cran que le libellé « À faire »). La grille méta commence 8 px sous le titre. Grille indentée : labels 12 muted, colonne `max-content`, valeurs 12 encre, chips compact `h-4`. Ligne **Tags** en dernier, masquée si aucun tag ; chips **inline** (`flex-wrap`), pas un chip par ligne. Pas d’icônes Lucide en tête de ligne méta. Pas de répétition des IDs du header. Pas de grille de KPI. Colorize = fill + encre + filet 1 px `color-mix(bg 72%, text)` (hex métier ou palette algo), **pas** de swatch / carré en tête, **pas** de `border-border` taupe sur un fill hex. Identité collab chip = avatar + nom (displayName org, sinon login), compact `h-4` comme « À faire » — pas `@login`, pas `h-5` Board. Liste de sélection = `OrgUserListItem` (avatar + nom + login). Voir **Identité collègue**.
+
+**Impayés** — la dette est la **première ligne méta** (label « Dette », montant · équivalent loyer `tabular-nums`, flèche de tendance dans la valeur). Ordre : Dette · Courriel · Téléphone · Référent · Groupe · Dernière action · Tags. Seuls les libellés du paramétrage Impayés s’affichent. Chips tags = une paire hex unique (`#E8E8E8` / `#333333`), pas de palette auto, pas de Coloriser DualTable. Pas de date de bail (colonne ledger).
+
+**Réclamations** — même `Box` + titre Contexte. Pas de message dans le snapshot : le contenu vit dans l’historique (card courriel). Ordre : Locataire · Lot · Site · Reçue le · Canal · Qualification · État · État de la réclamation · Avancement · Panier · Référent · Tags. Lignes vides masquées. `etat_de_la_reclamation` et `avancement` = chips Colorize DualTable. Pas de répétition de `id_reclamation`.
 
 #### Corps — à faire
 
@@ -295,9 +399,9 @@ Colonne gauche, sous snapshot / à faire. Pas un événement : pas d’avatar, p
 
 États : `idle` (saisie) · `submitting` (champs et actions disabled, `aria-busy`) · `success` (reset + pile) · `error` (toast existant, brouillon intact). Reset **uniquement** si la soumission renvoie `true`. Annuler = reset volontaire, pas d’appel réseau. Focus : premier champ à l’ouverture ; CTA déclencheur après Annuler / succès.
 
-**Impayés** — pile verticale `w-fit`, outline, icône 16 + label 14 medium, un rang = un métier. Ordre et libellés : `Laisser une note` · `Créer une tâche` · `Consigner une action réalisée` · `Contacter un tiers` · un rang Plan d’état (`Créer un plan d’apurement` / `Modifier le plan d’apurement` / `Clôturer le plan d’apurement`) · `Importer un email` · `Changer le groupe` · `Changer les tags` · `Affecter à un référent` ou `Réaffecter à un référent`. Pas de liste d’actes dans la pile. Tâche = Action (requis) · Qui (défaut = utilisateur courant) · Quand (défaut = aujourd’hui ; une échéance aujourd’hui est licite) · Note optionnelle · primaire `Planifier`. Action déjà réalisée = Action (requis) · Note optionnelle · primaire `Consigner`. `Contacter un tiers` = menu groupé par `group` (ordre `template_groups` ou alpha `fr`) ; `channel: rcs` et `channel: email` = revue inline, labels visibles ; `channel: mailto` = client mail puis `ConfirmDialog`. `Importer un email` = sélecteur `.eml` uniquement, parse immédiat, pas de preview, pas de drag-and-drop, pas de Dialog. Plan = un verbe exclusif qui **quitte** vers Workspace (Clôturer = canvas read-only, motif inchangé). Groupe, tags et référent = brouillons dans le même shell.
+**Impayés** — pile verticale `w-fit`, outline, icône 16 + label 14 medium, un rang = un métier. Ordre et libellés : `Laisser une note` · `Créer une tâche` · `Consigner une action réalisée` · `Contacter un tiers` · un rang Plan d’état (`Créer un plan d’apurement` / `Modifier le plan d’apurement` / `Clôturer le plan d’apurement`) · `Importer un email` · `Changer le groupe` · `Changer les tags` · `Affecter à un référent` ou `Réaffecter à un référent`. Pas de liste d’actes dans la pile. Tâche = Action (requis) · Qui (défaut = utilisateur courant) · Quand (défaut = aujourd’hui ; une échéance aujourd’hui est licite) · Note optionnelle · primaire `Planifier`. Action déjà réalisée = Action (requis) · Note optionnelle · primaire `Consigner`. `Contacter un tiers` = menu groupé par `group` (ordre `template_groups` ou alpha `fr`) ; `channel: rcs` = revue inline Téléphone (destinataire de cet envoi, prérempli une fois depuis le dossier, indépendant du modèle, non écrit sur le locataire) · Message RCS · Actions proposées (Réponse, Appel, Lien `https:`) · SMS de secours ; Envoyer si le composeur est prêt ; tentative RCS puis SMS de secours côté serveur au même numéro, sans sélecteur SMS ; `channel: email` = revue inline Objet + Message puis information de canal non configuré, brouillon conservé ; `channel: mailto` = client mail puis `ConfirmDialog`. `Importer un email` = sélecteur `.eml` uniquement, parse immédiat, pas de preview, pas de drag-and-drop, pas de Dialog. Plan = un verbe exclusif qui **quitte** vers Workspace (Clôturer = canvas read-only, motif inchangé). Groupe, tags et référent = brouillons dans le même shell.
 
-**Réclamations** — même pile, même shell, mêmes labels 12 / contrôles 14. Cinq verbes : `Ajouter une note` · `Envoyer un RCS au locataire` · `Envoyer un courriel au locataire` · `Envoyer un courrier postal au locataire` · `Générer un point de situation`. IA / brouillon / export restent des actions métier dans le footer, sans deuxième filled dominante.
+**Réclamations** — même pile, même shell, mêmes labels 12 / contrôles 14. Ordre : `Répondre au locataire` · `Générer un point de situation` · `Ajouter une note` · `Créer une tâche` · `Consigner une action réalisée` · `Changer de panier` · `Importer un email` · `Changer les tags` · `Affecter à un référent`. `Répondre au locataire` ouvre un composeur unique : Format (`name` de l’application configurée si sa configuration est complète · `SMS / RCS` · `Courriel` · `Via la poste`) → Objet sauf SMS / RCS et format externe → Message. Le format externe, toujours courriel-like, est sélectionné par défaut lorsqu’il est disponible, sinon le courriel. Le champ Message occupe toute la hauteur restante du présent, avec un minimum éditable ; pendant la génération, il utilise exactement `AgentWorkTrace` + `GeneratedMarkdown` comme le module Synthèse, puis redevient une textarea éditable. Footer : `Rédiger avec {agent configuré}` · `Exporter en DOCX` pour le postal · `Annuler` · une seule primaire filled : `name` pour le format externe, `Envoyer` pour les formats directs. L’application externe est configurée par module (`name`, `transport`, `clipboard`, `url`, `selector`) : `browser` ouvre une fenêtre Electron modale, `external` ouvre la cible via le système. La confirmation « Avez-vous envoyé cette réponse ? » journalise ou non la réponse au locataire, même sans coordonnée connue, sans perdre le brouillon.
 
 Pas de `DrawerFooter`. Pas de nested drawer. Dialog : `ConfirmDialog` (irréversible, « e-mail envoyé ? »). Un travail canvas (plan d’apurement) **quitte** l’Inspector vers Workspace. Pas une primaire de page permanente.
 
@@ -309,25 +413,52 @@ Rail 1 px `border-border/60` et avatar d’acteur **uniquement à droite** :
 
 ```
 L1  Date = formatter Inspector (`JJ/MM/AAAA · HHhMM`, `.pierre-meta` muted, jamais relatif)
-L2  Acteur + verbe au passé     (12, encre ; verbe `font-normal`)
-    Corps selon l’ontologie
+    Activités ajoute `module · ref`
+L2  Acteur medium + verbe au passé regular (12, encre)
+    Corps 8 px sous L2, registre 12/16
 ```
 
-Réclamations : L1 peut porter la méta d’acheminement (badge). Impayés : communications = pied de card, pas L1.
+Une ligne raconte une action. Aucun badge ou icône de type. Chips `h-4` seulement pour les valeurs métier. Une erreur colore uniquement sa valeur en `text-destructive`. Aucun JSON, HTML ou enum brut. Texte libre `text-pretty`. Paragraphes `gap-1`. Activity 24 rem = scan (texte libre coupé à 240). Inspector 36 rem = détail.
 
-| Ontologie         | Corps                                                                                                                                                                                         |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Contenu           | Surface filetée (citation), pas un Card                                                                                                                                                       |
-| Courriel Impayés  | Surface filetée : objet visible ; corps repliable, fermé par défaut ; état d’acheminement en pied (11, muted). Import `.eml` : même card, pied `De … · À … · Envoyé le …`, pas d’acheminement |
-| Transition d’état | Phrase unique L2 ; corps = note si elle existe, pas avant → après                                                                                                                             |
-| Fait système      | Acteur base ; montant / solde                                                                                                                                                                 |
-| Artefact          | Titre + statut + ouvrir (si Workspace)                                                                                                                                                        |
+| Corps         | Usage                                                                 |
+| ------------- | --------------------------------------------------------------------- |
+| Citation      | `<blockquote>` filet gauche `/60` `ps-2` `gap-1` `text-pretty`        |
+| Objet         | `rounded-md border-border/60 border p-2`, titre 12 medium, méta 12/16 |
+| Delta         | scalaire `avant → après` ; collection = grille Avant/Après            |
+| Fait          | label muted, valeur encre, nombres `tabular-nums`                     |
+| Communication | enveloppe actuelle ; canal une fois dans L2 ; dernier statut projeté  |
 
-Actions **de l’événement** : elles n’entrent pas dans la pile du présent. `outline` `xs` (même filet que les verbes du présent). Répondre = toujours visible. Modifier / Supprimer = visibles au hover / focus-within. Boost = emoji dans un `outline` `xs`, pas un label « Boost ». **Supprimer** (note) / **Supprimer la tâche** : créateur seul ; hard delete = tout le thread.
+Le canal n’est jamais le `type`. Canaux : RCS, SMS, Courriel, courrier postal simple, LRAR, ERE, LRE. Prestataire (AR24, La Poste…) optionnel dans le corps, jamais dans L2. Signature ≠ canal : `document.sent_for_signature` puis une ligne par `document.signed` / refus / expiration. Envoi : « Alice a envoyé le plan d’apurement pour signature électronique » + Objet (document, signataires, canal, prestataire). Pas d’enveloppe Communication en doublon.
 
-Une entrée de tâche dans l’historique est une phrase L2 wrappable, même registre 12 : acteur texte + verbe + chips (`Badge` `h-4` pour le libellé, `CollaboratorChip` compact pour le responsable, `Badge` date + Calendar pour l’échéance). Création, réalisation et réouverture portent la même suite « assignée à » / « pour le ». L1 reste la date de l’événement. Le corps ne reprend ni le titre ni les métas — seulement note / résultat / motif s’ils existent. Seul le dernier événement `completed` du cycle peut proposer `Rouvrir la tâche` en `outline` `xs`. L’ancre Square, l’ignorance, l’édition et la réassignation restent dans la surface « À faire ».
+Actions **de l’événement** : elles n’entrent pas dans la pile du présent. `outline` `xs`. Répondre = toujours visible. Modifier / Supprimer = visibles au hover / focus-within. Boost = emoji dans un `outline` `xs`. Retrait d’une note = `note.withdrawn`. Suppression d’une tâche = `task.deleted`.
 
-Une entrée courriel Impayés est la même phrase L2 : acteur + « a » + chip du libellé `action` + « par e-mail » (le médium vient du `type` d’activité, pas du `channel` du modèle : `mailto` journalise en `email`). L1 = date seule. Le corps est une surface filetée : objet toujours visible ; corps du message repliable, fermé par défaut ; en pied, une ligne 11 muted `Envoyé vers … · état au …` (RCS, courrier et autres communications : même pied). Pas de checkbox ni de Badge de statut. Un courriel importé (`.eml`) : L2 « a importé un courriel » ; L1 = date d’upload ; même card objet/corps ; pied `De … · À … · Envoyé le JJ/MM/AAAA · HHhMM` en clair. Pas de Dialog. Pas de drag-and-drop.
+Une tâche est une phrase L2 (« a créé une tâche ») + Objet (titre, assigné, échéance). Le corps porte note / résultat / motif en Citation, et les `changes` d’un `task.updated` en Delta. Seul le dernier `task.completed` du thread peut proposer `Rouvrir la tâche`. L’ancre Square, l’ignorance et l’édition restent dans « À faire ».
+
+Une communication est une phrase L2 : acteur + verbe + canal, puis `·` + action et/ou `Traitement de masse`. Ex. « Alice a envoyé un courriel · Contacter la CAF ». L1 = `date_creation` de l’événement d’ouverture. Les `communication.ok` / `failed` sont projetés dans la même enveloppe, jamais comme lignes autonomes.
+
+Le corps est **la même enveloppe** pour tous les canaux (`TimelineCommunicationEnvelope`) :
+
+```
+Grille Inspector (`max-content` / `1fr`), typo unique 12 / `leading-4`.
+Rail gauche = icônes Lucide muted `size-3.5` dans `h-4 w-4` (pas des labels
+texte), calées sur la 1re ligne 12 : De `UserRound` · À `AtSign` ·
+Envoyé le `Clock` · Objet `TextQuote` · Document `FileText` ·
+Statut `CircleCheck` · Corps `AlignLeft` · Choix proposés `Reply`.
+Libellé en `sr-only` + tooltip.
+Exception : le snapshot Contexte reste sans icône en tête de méta.
+De                 — expéditeur (`expediteur` ou auteur)
+Objet / Document   — une ligne, `truncate`, `title` = entier
+Statut             — avant le corps ; échec = `text-destructive` sur la valeur
+Corps              — avant les choix ; reflow `\n\n` → pile `gap-1`
+                     (pas de ligne vide) ; jusqu’à 240, coupe au paragraphe
+                     puis au mot ; `text-pretty`. Inspector : chevron 1em ;
+                     Activity : ellipse
+Choix proposés     — après le corps ; pills `Badge` secondary compact
+                     `h-4` en wrap, un `li` par bouton ; pas une phrase
+                     `A · B`
+```
+
+Coordonnées en clair (courriel et téléphone). Le canal ne change ni le chrome ni la réduction : seule la longueur décide. Pas de Badge, pas de couleur de canal, pas d’exception « réception initiale ouverte », pas de CTA textuel. Import `.eml` : L2 « a importé un courriel » ; L1 = date d’upload. Pas de Dialog. Pas de drag-and-drop.
 
 Une transition d’état (groupe, affectation, réaffectation, tags) est aussi une phrase L2 unique : « a déplacé le dossier du groupe … vers … », « a affecté le dossier à … », « a réaffecté le dossier de … à … », « a mis à jour les tags » + chips du snapshot (ou « Aucun tag »). Le corps ne reprend pas avant → après — seulement la note si elle existe, même registre 12 muted que les tâches.
 
@@ -361,7 +492,8 @@ Le Drawer droit est un frère, pas un Drawer nested. Ne pas substituer une liste
 Motion Inspector : le shell entre depuis la droite avec la primitive Drawer. Le header puis le
 split se révèlent dans le même sens (`transform` + `opacity`, 35–65 ms d’écart), sans différer
 l’affichage du shell pendant le chargement métier. Révélation du contenu `220 ms` maximum, sortie
-`120 ms`. Tous les Inspectors partagent `INSPECTOR_DRAWER_CLASS` ; pas d’override métier local.
+`120 ms`. Tous les Inspectors utilisent `DrawerContent variant="inspector"` ; pas d’override
+métier local.
 
 Le changelog Updates n’est **pas** un Inspector : exception ActivityReader.
 
@@ -398,28 +530,64 @@ Le changelog Updates n’est **pas** un Inspector : exception ActivityReader.
 
 Formulaire à gauche, résultat à droite, `ResizableHandle`, footer `border-t`, une primaire. Empty canonique dans le panneau output. Card bornée `max-w-sm` uniquement pour un objet unique (ex. tables datastore).
 
+Un Split qui produit du contenu généré conserve cette grammaire de configuration → résultat :
+
+- Les pièces jointes complémentaires vivent dans un `Field` de la colonne formulaire. Dépôt ciblé
+  sur son `InputGroup`, liste `Item` compacte et erreurs inline ; pas de composer, de Dropzone ou de
+  voile plein canvas.
+- Le résultat commence par une identité 14 medium et une méta 12 muted. Le travail de l’agent est
+  une preuve secondaire, avec la même divulgation que Conversation : ouverte en `expanded`, fermée
+  en `collapsed`, outils seuls en `tools`, rien en `none`.
+- Le Markdown est rendu en `typeset` pendant et après le stream. Les nouveaux mots utilisent le
+  reveal partagé et le caret ; le résultat reste immédiatement lisible avec
+  `prefers-reduced-motion`.
+- Loading = trace active + statut compact dans le dock existant. Pas de scène ambient, de Card de
+  chargement ni de second chrome concurrent du résultat.
+
 ### Conversation
 
-Composition `shadcn-ui/chatbot-template`, adaptée au desktop Pierre. Fil et dock partagent
-`max-w-2xl px-6`. Rythme fermé : 24 entre tours, 16 entre travail et réponse, 8 à l’intérieur d’un
-bloc. Le sélecteur de profil est le seul raccord visuel Pierre.
+Composition `shadcn-ui/chatbot-template`, adaptée au desktop Pierre. Deux documents, un panel :
+`public-chrome.css` sur `/` et `/embed`, `globals.css` taupe dans Discuter. Fil, empty public et
+dock partagent `max-w-3xl px-6`. Rythme fermé : 24 entre tours, 16 entre travail et réponse, 8 à
+l’intérieur d’un bloc. Le sélecteur de profil est le seul raccord visuel Pierre, en
+`inline-start` de la ligne de saisie.
+
+Dès l’envoi, la ligne assistant affiche Réflexion + spinner dans le fil. Elle reste jusqu’au
+premier contenu visible de la trace — pas de trou, pas de second indicateur dans le dock.
 
 Le travail de l’agent regroupe chaque suite contiguë de raisonnement et d’outils dans une seule
-divulgation. En `full`, elle est ouverte uniquement pendant l’activité puis se referme ; en
-`partial`, elle reste fermée ; en `off`, le raisonnement est masqué mais les outils restent
-consultables. Une fois terminé, son résumé porte durée et nombre d’outils. Les détails sont
-chronologiques : résumé et ligne d’outil en 12, raisonnement et sortie technique en mono 11/16.
+divulgation. `trace` a quatre modes : `none` ne montre rien une fois le contenu arrivé ; `tools`
+montre seulement les outils ; `collapsed` reste fermée ; `expanded` reste ouverte, y compris après
+la fin du tour. Une fois terminé, son résumé porte durée et nombre d’outils. Les détails sont
+chronologiques : résumé, ligne d’outil et raisonnement en Inter 11/16. Icône Lucide `size-3.5` sur la même ligne que le nom d’outil (`items-center`). `<pre>` de sortie : mono UI.
 JSON, stdout et contenus techniques équivalents ont une divulgation secondaire fermée par défaut,
-même pendant le stream ; les réponses `ask_user` restent inline. Erreur ou interruption reste
-visible sous une réponse partielle, sans seconde alerte.
+même pendant le stream : bloc fileté `rounded-md` scroll, `whitespace-pre`, pas un wrap. Les
+réponses `ask_user` restent inline. Erreur ou interruption reste visible sous une réponse
+partielle, sans seconde alerte.
 
-Le dock inférieur contient le Questionnaire prioritaire puis le composer compact. Il est hors du
-viewport scrollé : aucune surface ne recouvre la dernière réponse. L’état vide conserve seulement
-ce composer. Conversation autorise `rounded-xl` pour la bulle utilisateur et le composer, et
-`rounded-2xl` pour le Questionnaire, comme surfaces conversationnelles bornées ; aucune ombre de
-page et aucun radius supplémentaire.
+Le dock contient le Questionnaire prioritaire, puis le greeting empty, le composer, puis les
+exemples (liste quiet sur public, filetée sur Discuter). Empty : l’invitation est centrée
+(spacers `flex-1`), sans disclaimer. `/` :
+`min-h-dvh`, scroll fenêtre si l’invitation dépasse. `/embed` et Discuter : le stage empty scrolle.
+Au premier message, plus de spacers : fil + dock bas (fixe sur `/`) ; disclaimer sous le composer
+s’il est configuré. Rythme empty : 16 entre greeting et composer sur public (`arrival`), 8 sur
+Discuter, 16 jusqu’aux exemples. Encre
+`px-3`. Placeholder du composer : invitation par défaut, encre à 50 % (`public-chrome.css` /
+`globals.css`) ; au survol ou focus d’un exemple, le placeholder devient cet exemple (65 %), le
+draft ne change pas, le clic envoie. Conversation autorise `rounded-xl` pour la bulle utilisateur, le composer et le
+Questionnaire. Dock : `shadow-sm` sur le composer seulement.
+Composer : colonne. Texte 3 lignes, `block` `text-start` (pas `flex` : le placeholder Chromium se centre). Barre
+`h-10` dessous : profil à gauche, trombone / envoyer à droite. Focus : filet, `ring-0`. Drop : `ring-1`.
 
-Pendant le stream, les nouveaux mots reprennent le reveal `blurIn` de Streamdown (200 ms,
+Le dépôt de pièces jointes cible tout le canvas mais désigne le composer : `dropActive` = ring du
+`InputGroup`, pas de voile plein écran. Le survol reste neutre car Electron ne garantit pas
+l’extension avant le drop. Trombone (`input type="file"`) si `attachments`. Après validation, les
+fichiers sont des chips `Item` `xs` `w-fit` (extension 10/16 · nom tronqué · taille), miniature
+image éventuelle, `FieldError` inline et retrait ghost. Aucun Dropzone, Card, Dialog, dashed ou
+toast. `dragover` ne déclenche aucun rendu ; les octets ne sont lus qu’à l’envoi. Dans le fil, les
+mêmes chips sont read-only sous la bulle utilisateur.
+
+Pendant le stream, les nouveaux mots reprennent le reveal partagé `blurIn` (200 ms,
 stagger 40 ms, backlog borné à 24 mots) et le dernier bloc textuel porte un caret `▋`. Outils et
 questionnaire ne sont jamais différés. `prefers-reduced-motion` supprime le reveal et le blink.
 
@@ -429,6 +597,8 @@ Tout Markdown généré converti en HTML utilise `typeset` (`src/typeset.css`). 
 rythme de prose avec des variants locaux et ne pas ajouter `@tailwindcss/typography`. Utiliser
 `not-typeset` pour exclure un sous-arbre et `.typeset-scroll` autour des tables GFM larges.
 Discuter utilise `react-markdown` + `remark-gfm` dans `typeset`, sans Streamdown.
+Le renderer partagé de contenu généré porte également le reveal `blurIn` et le caret
+`.generated-stream-caret` ; ces comportements ne sont pas propres au type Conversation.
 
 ### Workspace
 
@@ -487,13 +657,13 @@ Light only. Pas de `.dark`. Thème shadcn taupe.
 | `unread`            | dots / badges non-lus, alias encre | `bg-unread`                    |
 | `unread-foreground` | papier sur badge non-lu            | `text-unread-foreground`       |
 
-**Interdit :** `gray-*`, `slate-*`, couleurs arbitraires de chrome, gradients hors Home, couleur pour créer une hiérarchie.
+**Interdit :** `gray-*`, `slate-*`, couleurs arbitraires de chrome, `bg-gradient-*` / `from-*`, couleur pour créer une hiérarchie.
 
-**Exceptions légitimes :** pigments Home, `--pierre-debt`, hex métier des statuts (données, pas chrome), couleurs data / charts.
+**Exceptions légitimes :** `--pierre-debt`, hex métier des statuts (données, pas chrome), couleurs data / charts, `--door-*-mark` (liseret + icône d’accueil, pas chrome).
 
 ### Typographie
 
-Inter + JetBrains Mono. Pas de Lora. Pas d’autre famille. Inter pour toute donnée d’interface (IDs, montants, dates, en-têtes de colonnes) + `tabular-nums` sur les chiffres. JetBrains **uniquement** pour le littéral (JSON Paramètres, `<pre>`, raisonnement).
+Inter + JetBrains Mono. Pas de Lora. Inter pour toute donnée d’interface (IDs, montants, dates, en-têtes de colonnes) + `tabular-nums` sur les chiffres. JetBrains **uniquement** pour le littéral (JSON Paramètres). Exception Conversation : Source Serif 4 sur le corps des réponses assistant (`typeset-reply`, 16/23, 450) et le greeting empty (`text-4xl` public, `text-2xl` embed et Discuter, 450). Traces : Inter 11/16. `<pre>` d’outil : mono UI. Exemples, bulles user et composer restent Inter. Accueil : Inter partout.
 
 | Rôle                  | Taille            | Poids               | Classe / primitive                                       |
 | --------------------- | ----------------- | ------------------- | -------------------------------------------------------- |
@@ -506,12 +676,19 @@ Inter + JetBrains Mono. Pas de Lora. Pas d’autre famille. Inter pour toute don
 | Erreur de champ       | 12/16             | regular destructive | `FieldError`                                             |
 | Data / IDs            | 13/20 Inter       | regular             | DualTable, sous-ligne drawer, Directory + `tabular-nums` |
 | Dates / horodatages   | 13/20 Inter       | regular             | `tabular-nums`                                           |
-| Table header          | 11/16 Inter muted | medium              | `DataColumnHeader` — `text-[0.6875rem]`                  |
+| Table header          | 11/16 Inter muted | medium              | `DataColumnHeader` — `.pierre-type-table-header`         |
 | Dette                 | 20/24 Inter       | medium              | `.pierre-debt-amount`                                    |
 
-`.pierre-meta` : 12/16 muted, **sans** `tracking-wide`. Signatures `globals.css` : `.pierre-display`, `.pierre-meta`, `.pierre-debt-amount`.
+`.pierre-meta` : 12/16 muted, **sans** `tracking-wide`. Signatures `globals.css` :
+`.pierre-display`, `.pierre-meta`, `.pierre-debt-amount`, `.pierre-type-data` (13/20),
+`.pierre-type-table-header` (11/16), `.pierre-type-code-sm` (13/18) et
+`.pierre-type-micro` (10/16).
 
-**Tables = Inter `text-[0.8125rem]` (13)** pour les cellules, `font-sans tabular-nums` sur le `<table>`. **En-têtes = Inter `text-[0.6875rem]` muted**. **Alignement = `text-start` partout** (y compris montants). Jamais `font-mono` ni `text-end` en cellule. JetBrains : JSON, `<pre>`, raisonnement. Pas de classe `.pierre-data`.
+**Tables = Inter `.pierre-type-data` (13/20)** pour les cellules,
+`font-sans tabular-nums` sur le `<table>`. **En-têtes = Inter
+`.pierre-type-table-header` (11/16) muted**. **Alignement = `text-start` partout**
+(y compris montants). Jamais `font-mono` ni `text-end` en cellule. JetBrains : JSON
+Paramètres. Conversation `<pre>` d’outil : mono UI.
 
 Hiérarchie par poids, contraste, position, taille — pas uniquement par couleur.
 
@@ -521,12 +698,13 @@ Hiérarchie par poids, contraste, position, taille — pas uniquement par couleu
 
 Ne pas introduire comme rythme de page : 12, 20, 32, 48.
 
-| Usage                                   | Valeur                    |
-| --------------------------------------- | ------------------------- |
-| Anatomie champ (label → desc → control) | 8 (`gap-2`)               |
-| Entre champs                            | 16 (`FieldGroup` `gap-4`) |
-| Padding flush (Board, Split, Directory) | 16                        |
-| Document                                | 24 (`px-6`)               |
+| Usage                                         | Valeur                    |
+| --------------------------------------------- | ------------------------- |
+| Anatomie champ (label → desc → control)       | 8 (`gap-2`)               |
+| Entre champs                                  | 16 (`FieldGroup` `gap-4`) |
+| Padding flush (Board, Split, Directory, Home) | 16                        |
+| Document                                      | 24 (`px-6`)               |
+| Gouttière TitleBar                            | 8 (`px-2`)                |
 
 Ne pas empiler App + vue + enfant.
 
@@ -552,6 +730,7 @@ Ne pas empiler App + vue + enfant.
 | Surface                                         | Largeur                          |
 | ----------------------------------------------- | -------------------------------- |
 | Document (Paramètres)                           | `max-w-4xl`                      |
+| Home board (toolbar + rails)                    | `4 × 19 rem + 3 × 0.5 rem`       |
 | Login                                           | coquille (`LOGIN_WINDOW_BOUNDS`) |
 | Confirm                                         | `max-w-md`                       |
 | Form dialog                                     | `max-w-2xl`                      |
@@ -566,10 +745,10 @@ Ne pas empiler App + vue + enfant.
 | -------------- | -------------- | --- |
 | Canvas         | `rounded-md`   | 6   |
 | Overlay        | `rounded-lg`   | 8   |
-| Home           | `rounded-2xl`  | 12  |
+| Home           | canvas         | —   |
 | Badge / avatar | `rounded-full` | —   |
 
-Interdit : `rounded-lg` / `xl` / `2xl` sur le canvas hors Home.
+Interdit : `rounded-lg` / `xl` / `2xl` sur le canvas.
 
 ### Borders / shadows
 
@@ -579,11 +758,11 @@ Interdit : `rounded-lg` / `xl` / `2xl` sur le canvas hors Home.
 | `border-input`     | contrôles                                                           |
 | `border-border/60` | lignes de liste **ou** whitespace — jamais les deux + grand padding |
 
-| Shadow      | Usage                        |
-| ----------- | ---------------------------- |
-| aucune      | page                         |
-| `shadow-sm` | menu, tooltip                |
-| `shadow-md` | dialog, drawer, find-in-page |
+| Shadow      | Usage                                       |
+| ----------- | ------------------------------------------- |
+| aucune      | page                                        |
+| `shadow-sm` | menu, tooltip, dock Conversation (composer) |
+| `shadow-md` | dialog, drawer, find-in-page                |
 
 ### States
 
@@ -599,7 +778,7 @@ Interdit : `rounded-lg` / `xl` / `2xl` sur le canvas hors Home.
 
 ### Icons
 
-Lucide pour sidebar et toute l’interface (canvas / nav / tuiles : 16. Chrome sm : 14. Autres : stroke 1.5). Cloche Notifications : stroke only, jamais `fill-unread`. Empty : Koboyo 160, fill, `currentColor`, pas de wash — pas Lucide. In-table (bucket DualTable) : Koboyo 32. Exception Login : marque Koboyo 64.
+Lucide pour toute l’interface (canvas / nav / métiers : 16. Chrome sm : 14. Autres : stroke 1.5). Cloche Notifications : stroke only, jamais `fill-unread`. Empty : Koboyo 160, fill, `currentColor`, pas de wash — pas Lucide. In-table (bucket DualTable) : Koboyo 32. Exception Login : marque Koboyo 64.
 
 ---
 
@@ -607,7 +786,13 @@ Lucide pour sidebar et toute l’interface (canvas / nav / tuiles : 16. Chrome s
 
 ### DualTable — Boards uniquement
 
-Paper continu. Pas de Card. Deux `<table className="table-fixed font-sans text-[0.8125rem] leading-5 tabular-nums">` + deux `colgroup`. Scroll H sync. Headers sticky `h-8`. `DataColumnHeader` : label Inter 11 muted + menu Filter. Pas de pinning, pas de DnD. Lignes ~32, `hover:bg-muted/50`. Cellules = Inter 13, `tabular-nums`, **`text-start`**. En-têtes colonnes = Inter `text-[0.6875rem]`, aussi à gauche. Empty / loading dans la table. Virtualisation si nécessaire.
+Paper continu. Pas de Card. Deux
+`<table className="pierre-type-data table-fixed font-sans tabular-nums">` + deux
+`colgroup`. Scroll H sync. Headers sticky `h-8`. `DataColumnHeader` : label Inter 11
+muted (`.pierre-type-table-header`) + menu Filter. Pas de pinning, pas de DnD.
+Lignes ~32, `hover:bg-muted/50`. Cellules = Inter 13, `tabular-nums`,
+**`text-start`**. En-têtes colonnes = Inter 11, aussi à gauche. Empty / loading dans
+la table. Virtualisation si nécessaire.
 
 Rubrique, thead et lignes = `bg-background`. Hiérarchie par filets, typo (rubrique Inter `text-xl` / colonnes Inter 11 px / cellules Inter 13), pas par fond. CTA rubrique = `variant="outline"` stock. Impayés = pile de rubriques (`RepaymentBucketSection`). Tickets = une rubrique. Pills colorize (`TableCellValue`) = `Badge` + label ; couleur = fill + encre + filet mix(bg, text), pas de swatch. **Interdit :** fusionner les buckets, KPI cards, DualTable hors Board, lavage de chrome, `text-end` en cellule ou en-tête.
 
@@ -623,8 +808,8 @@ Notifications, `Activity` Activités) + fermer `icon-sm`. Titre `sr-only`.
 (local, pas persisté) « Afficher les lues et non-lues » / « Afficher uniquement
 les non-lues » + « Tout lu » si des non-lues ; Activités = « Suivre des
 collaborateurs · N » à gauche.
-Pas de ` · N` dans l’onglet (badge sidebar encre / pastille mascotte
-`badgeColor` uniquement sur le compagnon). Pages de 50,
+Pas de ` · N` dans l’onglet (non-lus = point `badgeColor` sur la cloche
+TitleBar, même pastille que le compagnon). Pages de 50,
 sentinelle en bas des deux listes. « Notifications » = non-lues
 (`source !== activity`) sauf après le verbe lues ; voile + « Non lu » sur les
 lues. « Activités » = auteurs
@@ -661,7 +846,7 @@ Focus visible (`ring-1 ring-ring/40`). Contraste AA body. `prefers-reduced-motio
 
 ## 9. Responsive Electron
 
-Fenêtre desktop, pas un site. Pas de breakpoint mobile comme cible. Largeur utile : table + Inspector 60 rem ; inbox 24 rem à gauche. TitleBar drag ; contrôles `.no-drag`. Sheet uniquement en fallback sidebar.
+Fenêtre desktop, pas un site. Pas de breakpoint mobile comme cible. Largeur utile : table + Inspector 60 rem ; inbox 24 rem à gauche. TitleBar drag ; contrôles `.no-drag`.
 
 ---
 
@@ -679,7 +864,7 @@ Ne pas introduire / supprimer :
 - padding conditionnel par tab dans `App.tsx`
 - `p-6` sur un enfant déjà paddé
 - h1 sur Board / Split / Conversation
-- `rounded-lg` / `xl` / `2xl` sur canvas hors Home
+- `rounded-lg` / `xl` / `2xl` sur canvas
 - ombre de page
 - deux primaires visuelles sur une même surface
 - `size="lg"` comme défaut
@@ -707,21 +892,21 @@ Ne pas introduire / supprimer :
 
 ## 11. Exceptions volontairement conservées
 
-| Exception                             | Pourquoi                                                                    |
-| ------------------------------------- | --------------------------------------------------------------------------- |
-| Home `rounded-2xl` + pigments + bento | Seule scène                                                                 |
-| Hex des statuts                       | Données métier, pas chrome                                                  |
-| `--pierre-debt`                       | Montants uniquement                                                         |
-| `--unread`                            | Alias `--foreground` pour dots / badges ; pastille compagnon = `badgeColor` |
-| Reports HTML                          | Hors React                                                                  |
-| Mascotte                              | Hors React                                                                  |
-| DualTable                             | Boards uniquement                                                           |
-| Conversation                          | Famille propre (largeur interne `max-w-2xl`)                                |
-| Workspace                             | Famille propre                                                              |
-| ActivityReader                        | Overlay lecteur : `max-w-3xl`, `rounded-t-xl`                               |
-| Empty icon                            | Koboyo 160 (`size-40`), fill, pas de wash ; 32 in-table                     |
-| Login coquille compacte               | Première surface : fenêtre calée sur la pile                                |
-| Login marque Koboyo 64                | Première surface, `currentColor`, pas Lucide                                |
+| Exception               | Pourquoi                                                                    |
+| ----------------------- | --------------------------------------------------------------------------- |
+| Hex des statuts         | Données métier, pas chrome                                                  |
+| `--pierre-debt`         | Montants uniquement                                                         |
+| `--door-*-mark`         | Liseret 1 px + icône + verbe des portes ; encres, pas aplats                |
+| `--unread`              | Alias `--foreground` pour dots / badges ; pastille compagnon = `badgeColor` |
+| Reports HTML            | Hors React                                                                  |
+| Mascotte                | Hors React                                                                  |
+| DualTable               | Boards uniquement                                                           |
+| Conversation            | Famille propre (largeur interne `max-w-3xl`)                                |
+| Workspace               | Famille propre                                                              |
+| ActivityReader          | Overlay lecteur : `max-w-3xl`, `rounded-t-xl`                               |
+| Empty icon              | Koboyo 160 (`size-40`), fill, pas de wash ; 32 in-table                     |
+| Login coquille compacte | Première surface : fenêtre calée sur la pile                                |
+| Login marque Koboyo 64  | Première surface, `currentColor`, pas Lucide                                |
 
 ---
 
@@ -751,20 +936,18 @@ Ne jamais résoudre un problème par un override local simplement parce que c’
 8. L’écran est-il un outil, ou un dashboard SaaS ?
 9. Puis-je supprimer 20 % du chrome sans perdre d’information ?
 10. Plus d’un `Button` filled ?
-11. Titre > `text-xl` hors Home ?
-12. Ombre sur la page (hors tuiles d’accueil) ?
+11. Titre > `text-xl` ?
+12. Ombre sur la page ?
 13. `App.tsx` connaît-il encore le padding de cette tab ?
 14. Ce cas invente-t-il une règle locale au lieu d’utiliser un pattern ?
 15. Cet Inspector est-il une page miniature (footer, KPI, DualTable, Document) ?
 
 ---
 
-## Home — scène (exception)
+## Home — hub
 
-L’accueil n’est pas un lanceur. C’est la porte. Paper autour, cluster centré (`max-w-[72rem]`), bloom radial `--home-bloom`.
+L’accueil **ouvre** les métiers et **montre** le travail. On **fait** dans l’Inspector / le board. Paper. Pas de PageHeader. Pas de tuiles. Pas de compagnon. Pas de greeting.
 
-**Composition.** Bento 4×4 plein cadre (`flex-1`, `p-2` `gap-2` partout). Radius 12 px. Pas de filet sur les cellules. **chat = héros** (`col-span-2 row-span-2`). Métiers, automatisations et contact par lots en tuiles 1×1. Synthèse, attributions et ventes en bandeau (`col-span-2`). Pas de footer. Pas de titre de page.
+**Métiers.** Première rangée. Grille 3 pistes / `gap-2`, pas calée sur les rails. `HomeDoor` = `ChoiceTile` `as="button"`. Une ligne : verbe `tabNavLabel`. Paper. Liseret 1 px, icône 20 et verbe = `--door-*-mark` (`button[data-door] { color; border }`, utilities — bat `border-border`). Padding 16. Hover `bg-muted`. Impayés n’est pas rouge. Pas de titre de page. `aria-label="Métiers"`.
 
-**Tuiles.** Pas le `Card` shadcn. Classe `.home-tile` + `.home-tile-n`. `rounded-2xl` (12 px). Héros : `p-6`, icône `size-32`, titre `2.25rem / 1.1`. Autres : `p-4`, icône `size-24`, titre `1.5rem / 1.15`. Titre seul. Motion `TILE_ENTER` **intacte**.
-
-Palette : même matière, dix pigments. Ailleurs : interdit `bg-gradient-*` / `from-*` / `--home-*`.
+**Quatre rails, une ligne** (grille 4 pistes / `gap-2`, `items-start`) : à `max-w` du board, une piste = 19 rem. Hauteur = contenu de chaque rail (`h-fit self-start`), pas de stretch. Mes notifications (extrait cloche, `ActivityNotificationRow`) / Mes tâches / Tâches que j’ai assignées / Activités (`ActivityTimelineList`, même grammaire que l’onglet Activités). **Un filet par rail** (`rounded-md border`). Empty Koboyo : `blockprint-compact-view-notifications` / `blockprint-success-state-for-task` / `blockprint-delegation-arrow` / `blockprint-card-activity`. Seaux En retard → Prochaines. Ligne tâche = `OpenActionRow` (Square inert). Clic = Inspector droit, drawers gauches inchangés. Tout voir notifications / activités = drawer Activity. Tout voir tâches = drawer Tâches (onglet source).

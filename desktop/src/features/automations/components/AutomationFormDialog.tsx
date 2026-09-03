@@ -17,10 +17,7 @@ export function AutomationFormDialog({ open, title, onClose, children }: Props) 
         if (!nextOpen) onClose()
       }}
     >
-      <DialogContent
-        className="max-h-[min(90dvh,48rem)] overflow-y-auto sm:max-w-2xl"
-        showCloseButton
-      >
+      <DialogContent viewport="form" className="overflow-y-auto sm:max-w-2xl" showCloseButton>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>

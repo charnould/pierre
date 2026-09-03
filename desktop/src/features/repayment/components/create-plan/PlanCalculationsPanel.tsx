@@ -28,9 +28,7 @@ function MetricRow({
         {label}
         {labelExtra}
       </span>
-      <span className="text-foreground text-[0.8125rem] leading-[1.125rem] font-medium tabular-nums">
-        {value}
-      </span>
+      <span className="text-foreground pierre-type-data font-medium tabular-nums">{value}</span>
     </div>
   )
 }
@@ -65,14 +63,13 @@ export function PlanCalculationsPanel({ form }: Props) {
                       type="button"
                       size="icon-xs"
                       variant="ghost"
-                      className="text-muted-foreground"
                       aria-label="Définition INSEE des unités de consommation"
                     />
                   }
                 >
                   <CircleHelp className="size-3.5" />
                 </TooltipTrigger>
-                <TooltipContent className="max-w-xs text-pretty">{UC_INSEE_TOOLTIP}</TooltipContent>
+                <TooltipContent>{UC_INSEE_TOOLTIP}</TooltipContent>
               </Tooltip>
             }
           />

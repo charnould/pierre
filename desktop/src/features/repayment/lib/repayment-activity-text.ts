@@ -1,6 +1,13 @@
+import { formatTimelineCommunicationPlain } from '@/shared/lib/timeline/timeline-communication'
 import type { Activite } from '@/shared/types/activites'
-import { activity_payload, parse_repayment_tag_change_content } from '@/shared/types/activites'
+import {
+  activity_payload,
+  activity_texte,
+  parse_case_change_content,
+  parse_repayment_plan_content
+} from '@/shared/types/activites'
 
+import { typicalMonthlyAmount } from './apurement-plan/installments'
 import { formatMoneyDisplay } from './apurement-plan/money'
 import type { ApurementPlanFormData } from './apurement-plan/types'
 import type { RepaymentBucketId } from './repayment-bucket'
@@ -9,7 +16,7 @@ import {
   isRepaymentBucketId,
   resolveRepaymentBucket
 } from './repayment-bucket'
-import { formatTimelineMessageBodyPlain } from './repayment-outbound-message'
+import { repaymentPlanSnapshotToForm } from './repayment-plan-persist'
 import { canonicalizeRepaymentTags } from './repayment-tags'
 
 export type RepaymentStatusChangeDisplay =
@@ -50,17 +57,17 @@ function formatStatusChangeValue(champ: string, value: unknown): string {
 
 export function parseRepaymentStatusChange(row: Activite): RepaymentStatusChangeDisplay | null {
   if (
-    (row.type !== 'repayment_phase_change' && row.type !== 'repayment_assignment') ||
+    (row.type !== 'case.group_changed' && row.type !== 'case.assignee_changed') ||
     !row.rattachement.startsWith('repayment:')
   ) {
     return null
   }
 
-  const payload = activity_payload(row.type, row.contenu)
-  if (row.type === 'repayment_phase_change') {
-    const apresRaw = payload['phase']
+  if (row.type === 'case.group_changed') {
+    const change = parse_case_change_content(row.contenu)
+    const apresRaw = typeof change?.after === 'string' ? change.after : null
     if (typeof apresRaw !== 'string' || !isRepaymentBucketId(apresRaw)) return null
-    const avantRaw = payload['phase_precedente']
+    const avantRaw = change?.before
     const avant =
       typeof avantRaw === 'string' && isRepaymentBucketId(avantRaw)
         ? avantRaw
@@ -68,20 +75,24 @@ export function parseRepaymentStatusChange(row: Activite): RepaymentStatusChange
     return { champ: 'bucket', avant, apres: apresRaw, avantUnset: false }
   }
 
-  const apresRaw = payload['gestionnaire']
-  if (typeof apresRaw === 'string' && apresRaw.trim() !== '') {
-    const avantRaw = payload['gestionnaire_precedent']
+  const change = parse_case_change_content(row.contenu)
+  const apresRaw =
+    change?.after && typeof change.after === 'object' && !Array.isArray(change.after)
+      ? change.after
+      : null
+  if (apresRaw) {
+    const avantRaw =
+      change?.before && typeof change.before === 'object' && !Array.isArray(change.before)
+        ? change.before.id
+        : null
     const avantUnset = avantRaw == null || avantRaw === ''
-    const avant =
-      !avantUnset && typeof avantRaw === 'string' && avantRaw.trim() !== '' ? avantRaw.trim() : null
-    const email = apresRaw.includes('@') ? apresRaw.trim().toLowerCase() : null
+    const avant = !avantUnset ? avantRaw.trim() : null
+    const email = apresRaw.id.trim().toLowerCase()
     return {
       champ: 'gestionnaire',
       avant,
-      apres: apresRaw.trim(),
-      login: email
-        ? email.slice(0, email.indexOf('@') === -1 ? email.length : email.indexOf('@'))
-        : null,
+      apres: email,
+      login: apresRaw.label.trim() || loginFromIdentity(email),
       avantUnset
     }
   }
@@ -169,31 +180,11 @@ export function formatRepaymentStatusChangeText(row: Activite): string | null {
   return `${quote(avant)} → ${quote(apres)}`
 }
 
-function isApurementPlanFormData(value: unknown): value is ApurementPlanFormData {
-  if (!value || typeof value !== 'object') return false
-  const form = value as ApurementPlanFormData
-  return (
-    typeof form.rentalDebt === 'number' &&
-    typeof form.signed === 'boolean' &&
-    typeof form.planType === 'string' &&
-    typeof form.address === 'string' &&
-    Array.isArray(form.installments) &&
-    form.household != null &&
-    typeof form.household === 'object' &&
-    Array.isArray(form.household.adults) &&
-    Array.isArray(form.household.children) &&
-    Array.isArray(form.income) &&
-    Array.isArray(form.expenses) &&
-    Array.isArray(form.requestedAids)
-  )
-}
-
-function normalizePlanFormIds(form: ApurementPlanFormData): ApurementPlanFormData {
-  return {
-    ...form,
-    idLocataire: typeof form.idLocataire === 'string' ? form.idLocataire : '',
-    idClient: typeof form.idClient === 'string' ? form.idClient : ''
-  }
+function repaymentPlanSigned(row: Activite): boolean {
+  if (row.type === 'repayment_plan.finalized') return true
+  if (row.type !== 'repayment_plan.closed') return false
+  const content = parse_repayment_plan_content(row.type, row.contenu)
+  return content != null && 'reason' in content && content.reason !== 'withdrawn'
 }
 
 /** Newest `repayment_plan` that still carries an editable form, or null. */
@@ -201,11 +192,7 @@ export function latestEditableRepaymentPlan(rows: Activite[]): Activite | null {
   let latest: Activite | null = null
   for (const row of rows) {
     if (!parseRepaymentPlanForm(row)) continue
-    if (
-      latest == null ||
-      row.date_creation.localeCompare(latest.date_creation) > 0 ||
-      (row.date_creation === latest.date_creation && row.id > latest.id)
-    ) {
+    if (latest == null || row.id > latest.id) {
       latest = row
     }
   }
@@ -217,69 +204,49 @@ export type ActiveRepaymentPlan = {
   signed: boolean
 }
 
-function closedPlanActivityIds(rows: Activite[]): Set<number> {
-  const ids = new Set<number>()
-  for (const row of rows) {
-    if (row.type !== 'repayment_plan_close') continue
-    const payload = activity_payload(row.type, row.contenu)
-    const planId = payload['id_activite_plan']
-    if (typeof planId === 'number') ids.add(planId)
-  }
-  return ids
-}
-
 /** Latest plan that is not closed. `null` → the pile verb is « Créer ». */
 export function latestActiveRepaymentPlan(rows: Activite[]): ActiveRepaymentPlan | null {
   const latest = latestEditableRepaymentPlan(rows)
   if (!latest) return null
-  if (closedPlanActivityIds(rows).has(latest.id)) return null
+  if (latest.type === 'repayment_plan.closed') return null
   return { row: latest, signed: parseRepaymentPlanProposal(latest)?.signed === true }
 }
 
-/** Full editable form stored under `contenu.formulaire`, or null if missing/invalid. */
+/** Full editable form restored from the current plan snapshot, or null on a light milestone. */
 export function parseRepaymentPlanForm(row: Activite): ApurementPlanFormData | null {
-  if (row.type !== 'repayment_plan') return null
-  const payload = activity_payload(row.type, row.contenu)
-  const form = payload['formulaire']
-  if (!isApurementPlanFormData(form)) return null
-  return normalizePlanFormIds(form)
+  if (!row.type.startsWith('repayment_plan.')) return null
+  const content = parse_repayment_plan_content(row.type, row.contenu)
+  return content?.plan ? repaymentPlanSnapshotToForm(content.plan, repaymentPlanSigned(row)) : null
 }
 
 export function parseRepaymentPlanProposal(row: Activite): RepaymentPlanProposalDisplay | null {
-  if (row.type !== 'repayment_plan') return null
+  if (!row.type.startsWith('repayment_plan.')) return null
 
-  const payload = activity_payload(row.type, row.contenu)
-  const titre =
-    typeof payload['titre'] === 'string' && payload['titre'].trim()
-      ? payload['titre'].trim()
-      : "Plan d'apurement"
-  const planValide = payload['etat'] === 'signe'
-  const note =
-    typeof payload['note'] === 'string' && payload['note'].trim() ? payload['note'].trim() : null
-
-  const resumeRaw = payload['resume']
+  const content = parse_repayment_plan_content(row.type, row.contenu)
+  if (!content) return null
+  const signed = repaymentPlanSigned(row)
   let resume: string | null = null
-  const signed = payload['etat'] === 'signe'
-  if (resumeRaw && typeof resumeRaw === 'object' && !Array.isArray(resumeRaw)) {
-    const values = resumeRaw as Record<string, unknown>
-    const monthlyAmount = Number(values['mensualite'])
-    const durationMonths = Number(values['nombre_echeances'])
-    const monthly = formatMoneyDisplay(Number.isFinite(monthlyAmount) ? monthlyAmount : 0)
-    resume = durationMonths ? `${monthly} × ${durationMonths} mois` : monthly
+  if (content.plan?.installments.length) {
+    const installments = content.plan.installments.map((installment, index) => ({
+      id: String(index),
+      yearMonth: installment.year_month,
+      amount: installment.amount
+    }))
+    resume = `${formatMoneyDisplay(typicalMonthlyAmount(installments))} × ${installments.length} mois`
   }
 
   return {
-    titre,
+    titre: content.title,
     signed,
-    planValide,
-    note,
+    planValide: signed,
+    note: content.note ?? null,
     resume
   }
 }
 
 export function formatRepaymentActivityBody(row: Activite): string {
   const bulkPayload = activity_payload(row.type, row.contenu)
-  if (row.type === 'bulk_application') {
+  if (row.type === 'bulk.applied') {
     const action =
       typeof bulkPayload['action'] === 'string' ? bulkPayload['action'] : 'Action de masse'
     const phase =
@@ -296,7 +263,7 @@ export function formatRepaymentActivityBody(row: Activite): string {
       .filter(Boolean)
       .join(' ')
   }
-  if (row.type === 'bulk_no_route') {
+  if (row.type === 'bulk.no_route') {
     return [
       'Aucun envoi n’a pu être tenté.',
       typeof bulkPayload['referent_notification'] === 'string'
@@ -309,10 +276,11 @@ export function formatRepaymentActivityBody(row: Activite): string {
   const statusChange = formatRepaymentStatusChangeText(row)
   if (statusChange) return statusChange
 
-  const tagChange =
-    row.type === 'repayment_tag_change' ? parse_repayment_tag_change_content(row.contenu) : null
-  if (tagChange) {
-    const tags = canonicalizeRepaymentTags(tagChange.tags)
+  const tagChange = row.type === 'case.tags_changed' ? parse_case_change_content(row.contenu) : null
+  if (tagChange && Array.isArray(tagChange.after)) {
+    const tags = canonicalizeRepaymentTags(
+      tagChange.after.map((entry) => (typeof entry === 'string' ? entry : entry.label))
+    )
     const snapshot = tags.length > 0 ? tags.join(' · ') : 'Aucun tag'
     return tagChange.note ? `${snapshot}\n${tagChange.note}` : snapshot
   }
@@ -322,11 +290,12 @@ export function formatRepaymentActivityBody(row: Activite): string {
     return [plan.titre, plan.resume, plan.note].filter(Boolean).join('\n')
   }
 
-  const message = formatTimelineMessageBodyPlain(row)
+  const message = formatTimelineCommunicationPlain(row)
   if (message) return message
 
+  const text = activity_texte(row.type, row.contenu)
+  if (text) return text
   const payload = activity_payload(row.type, row.contenu)
-  if (typeof payload['contenu'] === 'string') return payload['contenu']
   if (typeof payload['titre'] === 'string') return payload['titre']
   return row.type
 }

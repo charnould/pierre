@@ -29,6 +29,7 @@ export function DirectoryRow({
 }: DirectoryRowProps) {
   function handleKeyDown(event: KeyboardEvent<HTMLLIElement>) {
     if (!onSelect) return
+    if (event.target !== event.currentTarget) return
     if (event.key !== 'Enter' && event.key !== ' ') return
     event.preventDefault()
     onSelect()

@@ -45,11 +45,11 @@ describe('parseUpdatesToc', () => {
 })
 
 describe('updatesIndexUrl', () => {
-  test('points at GitHub Contents API toc.json on the docs branch', () => {
+  test('points at GitHub Contents API toc.json on master', () => {
     expect(updatesIndexUrl()).toContain(
       'api.github.com/repos/charnould/pierre/contents/docs/toc.json'
     )
-    expect(updatesIndexUrl()).toContain('ref=docs%2Fhlm-data-domain-model')
+    expect(updatesIndexUrl()).toContain('ref=master')
   })
 })
 

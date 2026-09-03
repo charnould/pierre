@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { NotificationsApi } from '@/features/activity/hooks/use-notifications'
 import { warnRenderer } from '@/shared/lib/renderer-log'
 import type { LedgerListResponse } from '@/shared/types/ledger'
-import type { RepaymentNotificationChannel } from '@/shared/types/notification-repayment'
 
 import type { TenantRepaymentRow } from './classify-tenants'
 import { mapLedgerRowToTenantRepaymentRow } from './map-ledger-row'
@@ -15,14 +14,13 @@ import {
   executeRepaymentAdvancementOperations,
   executeRepaymentTagChangeOperations,
   resolveAdvancementTenant,
-  type RepaymentAdvancementContext,
-  type RepaymentMessageOptions
+  type RepaymentAdvancementContext
 } from './repayment-activity-mutations'
 import type { RepaymentBucketId } from './repayment-bucket'
 import { isDepartedTenantRow, resolveBucketForTenantRow } from './repayment-bucket'
 import type { TenantLastAction } from './repayment-last-action'
 import { ledgerColumnIdsFromMeta } from './repayment-table-columns'
-import { repaymentFallbackDestinataire, sendRepaymentMessage } from './send-repayment-message'
+import { sendRepaymentNote, type RepaymentMessageResult } from './send-repayment-message'
 import { useRepaymentTenantBucket } from './use-repayment-tenant-bucket'
 
 const LEDGER_FETCH_LIMIT = 10_000
@@ -194,24 +192,15 @@ export function useRepaymentViewData(
   )
 
   const handleAddNote = useCallback(
-    async (
-      comment: string,
-      channel: RepaymentNotificationChannel,
-      options?: RepaymentMessageOptions
-    ): Promise<boolean> => {
-      if (!selected) return false
-      return sendRepaymentMessage({
-        url,
+    async (comment: string): Promise<RepaymentMessageResult> => {
+      if (!selected) return { ok: false }
+      return sendRepaymentNote({
         tenantId: selected.id_locataire,
         comment,
-        channel,
-        destinataire:
-          options?.destinataire?.trim() ?? repaymentFallbackDestinataire(selected, channel),
-        options,
         createActivity: (activity) => deps.notifications.createActivity(activity)
       })
     },
-    [selected, deps.notifications, url]
+    [selected, deps.notifications]
   )
 
   const handleAssignGestionnaire = useCallback(

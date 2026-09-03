@@ -1,6 +1,5 @@
 import { ipcMain, type BrowserWindow } from 'electron'
 
-import { publicSettings } from '../../../src/shared/lib/settings-configured'
 import type {
   TicketsTableSettings,
   WorkflowSettings
@@ -23,7 +22,7 @@ export function registerSettingsHandlers(
   uiSettingsPath: string,
   ctx?: SettingsHandlersContext
 ): void {
-  ipcMain.handle(IpcChannel.settings.get, () => publicSettings(store.readSettings()))
+  ipcMain.handle(IpcChannel.settings.get, () => store.readSettings() ?? {})
 
   ipcMain.handle(IpcChannel.settings.save, (_, data) => {
     store.writeSettings(data)

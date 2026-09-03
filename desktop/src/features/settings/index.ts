@@ -1,1 +1,1 @@
-export { fetchConfig, SettingsView } from './SettingsView'
+export { SettingsView } from './SettingsView'

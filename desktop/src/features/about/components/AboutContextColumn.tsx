@@ -1,5 +1,6 @@
 import { useId, type ReactNode } from 'react'
 
+import { AboutAttachmentField } from '@/features/about/components/AboutAttachmentField'
 import { AboutSubjectCards } from '@/features/about/components/AboutSubjectCards'
 import {
   ABOUT_SUBJECT_ENTITY,
@@ -33,6 +34,11 @@ interface Props {
   onYearToChange: (value: string) => void
   context: string
   onContextChange: (value: string) => void
+  files: File[]
+  fileErrors: string[]
+  onAddFiles: (files: File[]) => void
+  onRemoveFile: (index: number) => void
+  isStreaming: boolean
   primaryAction: ReactNode
   errMsg: string | null
 }
@@ -49,6 +55,11 @@ export function AboutContextColumn({
   onYearToChange,
   context,
   onContextChange,
+  files,
+  fileErrors,
+  onAddFiles,
+  onRemoveFile,
+  isStreaming,
   primaryAction,
   errMsg
 }: Props) {
@@ -120,6 +131,14 @@ export function AboutContextColumn({
               className="resize-y"
             />
           </Field>
+
+          <AboutAttachmentField
+            files={files}
+            errors={fileErrors}
+            disabled={isStreaming}
+            onAddFiles={onAddFiles}
+            onRemoveFile={onRemoveFile}
+          />
 
           {errMsg ? <FieldError className="shrink-0">{errMsg}</FieldError> : null}
         </FieldGroup>

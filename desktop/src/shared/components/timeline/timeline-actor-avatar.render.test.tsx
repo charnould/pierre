@@ -4,6 +4,7 @@ import { JSDOM } from 'jsdom'
 
 import { mascotBodyPaint } from '@/mascot/look'
 import { mascotBodyPath } from '@/mascot/profiles'
+import type { TimelineActorKind } from '@/shared/lib/timeline/parse-activity-author'
 
 const MASCOT_COLOR = '#5b8c5a' as const
 
@@ -70,7 +71,7 @@ afterAll(() => {
   }
 })
 
-async function renderActor(kind: 'agent' | 'database', size: 'default' | 'lg' = 'lg') {
+async function renderActor(kind: TimelineActorKind, size: 'default' | 'lg' = 'lg') {
   const { act } = await import('react')
   const { createRoot } = await import('react-dom/client')
   const { TooltipProvider } = await import('@/shared/components/ui/tooltip')
@@ -83,7 +84,7 @@ async function renderActor(kind: 'agent' | 'database', size: 'default' | 'lg' = 
     root.render(
       <TooltipProvider>
         <TimelineActorAvatar
-          actor={{ kind, id: kind, label: kind === 'agent' ? 'Bot' : 'Base de données' }}
+          actor={{ kind, id: kind, label: kind === 'agent' ? 'Bot' : kind }}
           size={size}
         />
       </TooltipProvider>
@@ -126,5 +127,22 @@ describe('TimelineActorAvatar', () => {
     const className = icon?.className.baseVal ?? icon?.getAttribute('class') ?? ''
     expect(className).toContain('lucide-book-marked')
     await unmount()
+  })
+
+  test('non-user actors use their timeline token classes', async () => {
+    const cases: Array<[TimelineActorKind, string]> = [
+      ['database', 'bg-timeline-database'],
+      ['tenant', 'bg-timeline-tenant'],
+      ['external', 'bg-timeline-external'],
+      ['candidate', 'bg-timeline-candidate']
+    ]
+
+    for (const [kind, expectedClass] of cases) {
+      const { host, unmount } = await renderActor(kind)
+      expect(host.querySelector('[data-slot="avatar-fallback"]')?.className).toContain(
+        expectedClass
+      )
+      await unmount()
+    }
   })
 })

@@ -18,11 +18,13 @@ function row(id: number): ActiviteListItem {
     id_client: null,
     id_locataire: null,
     id_lot: null,
-    type: 'note',
-    statut: 'logged',
+    type: 'note.published',
+    channel: null,
     mentions: [],
-    contenu: '',
-    my: null
+    contenu: JSON.stringify({ version: 2, text: '' }),
+    my: null,
+    read: true,
+    reaction: null
   }
 }
 

@@ -12,6 +12,7 @@ import {
   type WebContents
 } from 'electron'
 
+import { classifyLaunchTarget } from '../../../../shared/external-application'
 import { SURFACE_BASE_HEX } from '../../../src/shared/lib/surface-colors'
 import {
   DEFAULT_WINDOW_BOUNDS,
@@ -28,6 +29,11 @@ import {
 } from '../../services/window-state'
 import { AuthWindowLayoutSwapEvent, IpcChannel } from '../channels'
 import { buildReportInjectScript } from './automation-report'
+import {
+  buildExternalApplicationErrorHtml,
+  buildExternalApplicationInjectScript,
+  EXTERNAL_APPLICATION_PARTITION
+} from './external-application-inject'
 import { isAllowedExternalUrl } from './external-url'
 
 type SystemHandlersContext = {
@@ -236,4 +242,112 @@ export function registerSystemHandlers(ctx: SystemHandlersContext): void {
       })
     })
   })
+
+  ipcMain.handle(
+    IpcChannel.system.openExternalApplication,
+    async (
+      _,
+      params: {
+        transport?: unknown
+        url?: unknown
+        clipboard?: unknown
+        selector?: unknown
+      }
+    ) => {
+      const transport = params?.transport
+      const rawUrl = typeof params?.url === 'string' ? params.url.trim() : ''
+      const clipboardText = typeof params?.clipboard === 'string' ? params.clipboard : undefined
+      const selector = typeof params?.selector === 'string' ? params.selector.trim() : ''
+      if (transport !== 'browser' && transport !== 'external') return false
+      if (clipboardText !== undefined && !clipboardText.trim()) return false
+      const target = classifyLaunchTarget(rawUrl)
+      if (!target) return false
+
+      if (transport === 'external') {
+        if (selector) return false
+        if (clipboardText) clipboard.writeText(clipboardText)
+        try {
+          if (target.kind === 'path') return (await shell.openPath(target.path)) === ''
+          await shell.openExternal(target.href)
+          return true
+        } catch (error) {
+          logMainError('external-application-open', error)
+          return false
+        }
+      }
+
+      if (target.kind !== 'url') return false
+      const targetUrl = new URL(target.href)
+      if (targetUrl.protocol !== 'http:' && targetUrl.protocol !== 'https:') return false
+      if (Boolean(clipboardText) !== Boolean(selector)) return false
+      const parent = ctx.getWindow()
+      if (!parent || parent.isDestroyed()) return false
+      if (clipboardText) clipboard.writeText(clipboardText)
+
+      const [width, height] = parent.getSize()
+      const child = new BrowserWindow({
+        parent,
+        modal: true,
+        width,
+        height,
+        backgroundColor: SURFACE_BASE_HEX,
+        webPreferences: {
+          contextIsolation: true,
+          nodeIntegration: false,
+          partition: EXTERNAL_APPLICATION_PARTITION
+        },
+        show: false
+      })
+      attachWindowGuards(child.webContents, { allowedOrigins: [targetUrl.origin] })
+
+      let loadFailed = false
+      let ready = !selector
+
+      child.webContents.on('did-finish-load', () => {
+        if (loadFailed) return
+        if (!selector || !clipboardText) {
+          ready = true
+          child.show()
+          return
+        }
+        void child.webContents
+          .executeJavaScript(buildExternalApplicationInjectScript(clipboardText, selector))
+          .then((result) => {
+            ready = result === true
+            child.show()
+          })
+          .catch((error) => {
+            logMainError('external-application-inject', error)
+            child.show()
+          })
+      })
+
+      child.webContents.on(
+        'did-fail-load',
+        (_event, _code, _description, validatedUrl, isMainFrame) => {
+          if (!isMainFrame) return
+          loadFailed = true
+          void child
+            .loadURL(
+              `data:text/html;charset=utf-8,${encodeURIComponent(
+                buildExternalApplicationErrorHtml(validatedUrl || rawUrl)
+              )}`
+            )
+            .then(() => child.show())
+            .catch((error) => {
+              logMainError('external-application-error-page', error)
+              if (!child.isDestroyed()) child.close()
+            })
+        }
+      )
+
+      return new Promise<boolean>((resolve) => {
+        child.on('closed', () => resolve(ready && !loadFailed))
+        void child.loadURL(target.href).catch((error) => {
+          logMainError('external-application-load', error)
+          if (!child.isDestroyed()) child.close()
+        })
+      })
+    }
+  )
 }

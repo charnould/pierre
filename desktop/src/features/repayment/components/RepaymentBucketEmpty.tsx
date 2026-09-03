@@ -37,7 +37,7 @@ export function RepaymentBucketEmpty({ bucketEmpty, className }: Props) {
         <EmptyMedia variant="icon" size="sm">
           <EmptyFolder />
         </EmptyMedia>
-        <EmptyTitle className="text-sm leading-5 font-medium">{title}</EmptyTitle>
+        <EmptyTitle size="sm">{title}</EmptyTitle>
         <EmptyDescription>{description}</EmptyDescription>
       </EmptyHeader>
     </Empty>

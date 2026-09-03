@@ -2,7 +2,7 @@ import { formatActivityBoostBody } from '@/features/activity/lib/activity-boost-
 import { extractReportTitle } from '@/features/automations/lib/extract-report-title'
 import type { ActivityTarget } from '@/shared/lib/navigation-snapshot'
 import type { ActiviteListItem, ActivityType, Mention } from '@/shared/types/activites'
-import { activity_payload, activity_texte, is_boost_notification } from '@/shared/types/activites'
+import { activity_payload, activity_texte } from '@/shared/types/activites'
 
 type ActivityModule = 'tickets' | 'repayment' | 'automations' | 'bulk' | 'updates'
 
@@ -32,12 +32,13 @@ export type ActivityNotificationItem = {
   boostEmoji?: string
 }
 
-export function mentionsToBoosts(mentions: Mention[]): Record<string, string> {
-  const boosts: Record<string, string> = {}
-  for (const mention of mentions) {
-    if (mention.boost) boosts[mention.destinataire] = mention.boost
-  }
-  return boosts
+export function mentionsToBoosts(
+  mentions: Mention[],
+  reaction?: string | null
+): Record<string, string> {
+  if (!reaction) return {}
+  const first = mentions[0]?.destinataire
+  return first ? { [first]: reaction } : { reaction }
 }
 
 const splitRattachement = (rattachement: string): { type: ActivityModule; ref: string } | null => {
@@ -50,9 +51,9 @@ const splitRattachement = (rattachement: string): { type: ActivityModule; ref: s
 }
 
 function sourceActivityId(row: ActiviteListItem): number {
-  if (!is_boost_notification(row.type)) return row.id
+  if (row.type !== 'activity.reaction_changed') return row.id
   const payload = activity_payload(row.type, row.contenu)
-  const sourceId = Number(payload['activite_source_id'])
+  const sourceId = Number(payload['source_activity_id'])
   return Number.isInteger(sourceId) && sourceId > 0 ? sourceId : row.id
 }
 
@@ -90,13 +91,14 @@ export function mapActivityRow(
     typeof payload['type_activite_source'] === 'string'
       ? (payload['type_activite_source'] as ActivityType)
       : row.type
-  const body = is_boost_notification(row.type)
-    ? formatActivityBoostBody(sourceType, boostEmoji)
-    : parsed?.type === 'automations' && typeof payload['titre'] === 'string'
-      ? payload['titre']
-      : parsed?.type === 'automations' && contenu
-        ? extractReportTitle(contenu, row.type)
-        : contenu || row.type
+  const body =
+    row.type === 'activity.reaction_changed'
+      ? formatActivityBoostBody(sourceType, boostEmoji)
+      : parsed?.type === 'automations' && typeof payload['title'] === 'string'
+        ? payload['title']
+        : parsed?.type === 'automations' && contenu
+          ? extractReportTitle(contenu, row.type)
+          : contenu || row.type
 
   return {
     id: row.id,
@@ -106,14 +108,14 @@ export function mapActivityRow(
     sender: row.auteur.includes(':') ? row.auteur.slice(row.auteur.indexOf(':') + 1) : row.auteur,
     body,
     createdAt: row.date_creation,
-    isRead: row.my?.lu === true,
-    boosts: mentionsToBoosts(row.mentions),
+    isRead: row.read,
+    boosts: mentionsToBoosts(row.mentions, row.reaction),
     target,
     contextLabel,
     moduleLabel,
     notificationId: row.id,
     readerContent: parsed?.type === 'automations' && contenu ? contenu : undefined,
-    boostEmoji: is_boost_notification(row.type) && boostEmoji ? boostEmoji : undefined
+    boostEmoji: boostEmoji || undefined
   }
 }
 

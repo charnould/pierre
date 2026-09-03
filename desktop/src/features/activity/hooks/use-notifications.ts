@@ -13,7 +13,6 @@ import { toast } from '@/shared/components/ui/toast'
 import type {
   ActiviteListItem,
   CreateActivityBody,
-  Mention,
   ActivityContext
 } from '@/shared/types/activites'
 import { mention_of } from '@/shared/types/activites'
@@ -174,11 +173,7 @@ export function useNotifications(
   const destinataire = userLogin.includes(':') ? userLogin : `user:${userLogin}`
 
   const patchMention = useCallback(
-    async (
-      row: ActiviteListItem,
-      patch: Partial<Pick<Mention, 'lu' | 'boost'>>,
-      options?: { refresh?: boolean }
-    ) => {
+    async (row: ActiviteListItem, patch: { lu?: boolean }, options?: { refresh?: boolean }) => {
       if (!url || !window.api?.patchActivity || !mention_of(row.mentions, destinataire)) return null
       const res = await window.api.patchActivity({
         url,
@@ -210,7 +205,7 @@ export function useNotifications(
   )
 
   const markAllRead = useCallback(async () => {
-    const unread = rows.filter((row) => row.my?.lu === false)
+    const unread = rows.filter((row) => row.read === false)
     await Promise.all(unread.map((row) => patchMention(row, { lu: true }, { refresh: false })))
     await refresh()
   }, [patchMention, refresh, rows])
@@ -219,7 +214,7 @@ export function useNotifications(
     async (id: number, emoji: ActivityBoostEmoji) => {
       if (!url || !window.api?.patchActivity) return null
       const row = rows.find((entry) => entry.id === id)
-      const current = mention_of(row?.mentions ?? [], destinataire)?.boost ?? null
+      const current = row?.reaction ?? null
       const nextEmoji = current === emoji ? null : emoji
       const res = await window.api.patchActivity({
         url,
@@ -229,29 +224,29 @@ export function useNotifications(
       if (res) await refresh()
       return res
     },
-    [destinataire, refresh, rows, url]
+    [refresh, rows, url]
   )
 
   const getBoost = useCallback(
     (id: number): ActivityBoostEmoji | undefined => {
       const row = rows.find((entry) => entry.id === id)
       if (!row) return undefined
-      const emoji = mention_of(row.mentions, destinataire)?.boost ?? undefined
+      const emoji = row.reaction ?? undefined
       return emoji as ActivityBoostEmoji | undefined
     },
-    [destinataire, rows]
+    [rows]
   )
 
   const hasUnreadFor = useCallback(
     (type: ActivityContext, ref: string) =>
-      rows.some((row) => row.rattachement === `${type}:${ref}` && row.my?.lu === false),
+      rows.some((row) => row.rattachement === `${type}:${ref}` && row.read === false),
     [rows]
   )
 
   const markAllReadForRef = useCallback(
     async (type: ActivityContext, ref: string) => {
       const unread = rows.filter(
-        (row) => row.rattachement === `${type}:${ref}` && row.my?.lu === false
+        (row) => row.rattachement === `${type}:${ref}` && row.read === false
       )
       await Promise.all(unread.map((row) => patchMention(row, { lu: true }, { refresh: false })))
       await refresh()
@@ -259,7 +254,7 @@ export function useNotifications(
     [patchMention, refresh, rows]
   )
 
-  const unreadCount = useMemo(() => rows.filter((row) => row.my?.lu === false).length, [rows])
+  const unreadCount = useMemo(() => rows.filter((row) => row.read === false).length, [rows])
 
   return useMemo(
     () => ({

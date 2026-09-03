@@ -20,7 +20,7 @@ const TYPE_OPTIONS: {
     icon: FileText
   },
   {
-    value: 'ticket_reply',
+    value: 'replies',
     title: 'Pré-génération de réponses',
     description:
       'Pierre prépare des brouillons de réponse aux locataires selon vos critères. Les brouillons déjà présents ne sont pas régénérés.',
@@ -50,7 +50,7 @@ export function AutomationTypeCards({ value, onValueChange }: Props) {
         aria-labelledby={labelId}
         aria-describedby={descriptionId}
         onValueChange={(next) => {
-          if (next === 'report' || next === 'ticket_reply') onValueChange(next)
+          if (next === 'report' || next === 'replies') onValueChange(next)
         }}
       >
         {TYPE_OPTIONS.map((opt) => {

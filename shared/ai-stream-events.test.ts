@@ -14,6 +14,16 @@ describe('canonical AI stream parser', () => {
       contentIndex: 0,
       delta: 'hello'
     })
+    expect(parseAiStreamLine('{"type":"attachment_uploads_ready"}')).toEqual({
+      type: 'attachment_uploads_ready'
+    })
+    expect(parseAiStreamLine('{"type":"attachment_uploads_ready","files":2,"bytes":1024}')).toEqual(
+      {
+        type: 'attachment_uploads_ready',
+        files: 2,
+        bytes: 1024
+      }
+    )
     expect(parseAiStreamLine('{"type":"stream_end"}')).toEqual({ type: 'stream_end' })
   })
 

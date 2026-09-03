@@ -9,6 +9,8 @@ import { AboutContextColumn } from '@/features/about/components/AboutContextColu
 import { AboutOutputPanel } from '@/features/about/components/AboutOutputPanel'
 import {
   aboutIdSkill,
+  aboutOutputHeaderMeta,
+  aboutOutputHeaderTitle,
   aboutPrimaryActionLabel,
   buildAboutNavigationState,
   canSubmitAboutForm,
@@ -24,6 +26,7 @@ import {
   buildSynthesePayload,
   serializeWorkflowPayload
 } from '@/features/workflow/lib/workflow-payload'
+import { ModuleGate } from '@/shared/components/ModuleGate'
 import { Button } from '@/shared/components/ui/button'
 import {
   ResizableHandle,
@@ -31,7 +34,7 @@ import {
   ResizablePanelGroup
 } from '@/shared/components/ui/resizable'
 import { useDebouncedWorkflowPatch } from '@/shared/hooks/useDebouncedWorkflowPatch'
-import { reasoningDisplayForSkill } from '@/shared/hooks/useSkillConfigs'
+import { mergeAttachmentFiles } from '@/shared/lib/attachment-files'
 import type { AboutNavigationState, NavigationSnapshot } from '@/shared/lib/navigation-snapshot'
 import { releaseConversationVm } from '@/shared/lib/release-conversation-vm'
 import type { Tab } from '@/shared/lib/tabs'
@@ -68,6 +71,14 @@ export function AboutView({ hidden, settings, onNavigate, agentName }: Props) {
   const [yearTo, setYearTo] = useState(defaults.yearTo)
   const [entityId, setEntityId] = useState(defaults.entityId)
   const [context, setContext] = useState(defaults.context)
+  const [pendingFiles, setPendingFiles] = useState<File[]>([])
+  const [fileErrors, setFileErrors] = useState<string[]>([])
+  const [submittedIdentity, setSubmittedIdentity] = useState<{
+    subject: AboutSubject
+    entityId: string
+    yearFrom: string
+    yearTo: string
+  } | null>(null)
   const snapshotAppliedRef = useRef(false)
   const prevAboutSubjectRef = useRef<AboutSubject | null>(null)
   const { navigate } = useNavigationHistory()
@@ -107,6 +118,9 @@ export function AboutView({ hidden, settings, onNavigate, agentName }: Props) {
     setYearTo(next.yearTo)
     setEntityId(next.entityId)
     setContext(next.context)
+    setPendingFiles([])
+    setFileErrors([])
+    setSubmittedIdentity(null)
   }, [])
 
   const {
@@ -116,7 +130,6 @@ export function AboutView({ hidden, settings, onNavigate, agentName }: Props) {
     clearOutput,
     copyText,
     reasoningUi,
-    skillConfigs,
     step,
     setStep,
     isOutput,
@@ -172,22 +185,35 @@ export function AboutView({ hidden, settings, onNavigate, agentName }: Props) {
     }
   }, [step, setStep])
 
-  const { output, reasoning, isStreaming, isReasoningPhase, reasoningCapture, errMsg } = state
-  const showReasoningForRun =
-    reasoningCapture && (reasoningUi.showReasoningTokens || Object.keys(skillConfigs).length === 0)
+  const { output, workParts, reasoningDuration, isStreaming, isReasoningPhase, errMsg } = state
+  const reasoningDisplay = reasoningUi.display
   const hasOutputText = !!output.trim()
+
+  const addFiles = useCallback((incoming: File[]) => {
+    setPendingFiles((current) => {
+      const result = mergeAttachmentFiles(current, incoming)
+      setFileErrors(result.errors)
+      return result.files
+    })
+  }, [])
+
+  const removeFile = useCallback((index: number) => {
+    setPendingFiles((current) => current.filter((_, fileIndex) => fileIndex !== index))
+    setFileErrors([])
+  }, [])
 
   useEffect(() => {
     const prev = prevAboutSubjectRef.current
     prevAboutSubjectRef.current = aboutSubject
     if (!shouldClearAboutOutputOnSubjectChange(prev, aboutSubject, isOutput, isStreaming)) return
     clearOutput()
+    setSubmittedIdentity(null)
     resetConvId()
   }, [aboutSubject, isOutput, isStreaming, clearOutput, resetConvId])
 
   const runGenerate = useCallback(async () => {
     const url = settings.url
-    if (!url || !canSubmit || !isOutput) return
+    if (!url || !canSubmit || !isOutput || isStreaming) return
     const id = entityId.trim()
     const from = parseAboutYear(yearFrom)
     const to = parseAboutYear(yearTo)
@@ -203,7 +229,6 @@ export function AboutView({ hidden, settings, onNavigate, agentName }: Props) {
         context
       })
     })
-
     const payload = buildSynthesePayload({
       about_subject: aboutSubject,
       identifiant: id,
@@ -211,26 +236,45 @@ export function AboutView({ hidden, settings, onNavigate, agentName }: Props) {
       year_to: to,
       context
     })
-    const display = reasoningDisplayForSkill(skillConfigs, id_skill)
+    let files: Array<{ name: string; type: string; buffer: ArrayBuffer }> = []
+    try {
+      files = await Promise.all(
+        pendingFiles.map(async (file) => ({
+          name: file.name,
+          type: file.type,
+          buffer: await file.arrayBuffer()
+        }))
+      )
+    } catch {
+      setFileErrors(["Impossible de lire l'une des pièces jointes."])
+      return
+    }
 
+    setSubmittedIdentity({
+      subject: aboutSubject,
+      entityId: id,
+      yearFrom,
+      yearTo
+    })
     await generate({
       url,
       conv_id: convId.current,
       payload: serializeWorkflowPayload(payload),
       id_skill,
-      files: [],
-      captureReasoning: display !== 'off'
+      files,
+      captureReasoning: true
     })
   }, [
     settings.url,
     canSubmit,
     isOutput,
+    isStreaming,
     entityId,
     yearFrom,
     yearTo,
     context,
     aboutSubject,
-    skillConfigs,
+    pendingFiles,
     generate,
     convId,
     id_skill,
@@ -266,66 +310,81 @@ export function AboutView({ hidden, settings, onNavigate, agentName }: Props) {
   )
 
   return (
-    <div
-      data-tab-panel
-      className={cn(
-        'relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
-        hidden ? 'hidden' : 'flex'
-      )}
-    >
-      {panelReady && isOutput ? (
-        <ResizablePanelGroup
-          key={panelGroupKey}
-          id="about-view"
-          orientation="horizontal"
-          defaultLayout={defaultLayout}
-          onLayoutChanged={handleLayoutChanged}
-          className="min-h-0 flex-1"
-        >
-          <ResizablePanel
-            id={WORKFLOW_PANEL_CONTEXTE}
-            minSize="20%"
-            maxSize="45%"
-            className="flex min-h-0 min-w-0 flex-col overflow-hidden"
+    <ModuleGate entry="about" hidden={hidden}>
+      <div
+        data-tab-panel
+        className={cn(
+          'relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
+          hidden ? 'hidden' : 'flex'
+        )}
+      >
+        {panelReady && isOutput ? (
+          <ResizablePanelGroup
+            key={panelGroupKey}
+            id="about-view"
+            orientation="horizontal"
+            defaultLayout={defaultLayout}
+            onLayoutChanged={handleLayoutChanged}
+            className="min-h-0 flex-1"
           >
-            <AboutContextColumn
-              aboutSubject={aboutSubject}
-              onAboutSubjectChange={setAboutSubject}
-              entityId={entityId}
-              onEntityIdChange={setEntityId}
-              yearFrom={yearFrom}
-              onYearFromChange={setYearFrom}
-              yearTo={yearTo}
-              onYearToChange={setYearTo}
-              context={context}
-              onContextChange={setContext}
-              agentName={agentName}
-              primaryAction={primaryAction}
-              errMsg={errMsg}
-            />
-          </ResizablePanel>
+            <ResizablePanel
+              id={WORKFLOW_PANEL_CONTEXTE}
+              minSize="20%"
+              maxSize="45%"
+              className="flex min-h-0 min-w-0 flex-col overflow-hidden"
+            >
+              <AboutContextColumn
+                aboutSubject={aboutSubject}
+                onAboutSubjectChange={setAboutSubject}
+                entityId={entityId}
+                onEntityIdChange={setEntityId}
+                yearFrom={yearFrom}
+                onYearFromChange={setYearFrom}
+                yearTo={yearTo}
+                onYearToChange={setYearTo}
+                context={context}
+                onContextChange={setContext}
+                files={pendingFiles}
+                fileErrors={fileErrors}
+                onAddFiles={addFiles}
+                onRemoveFile={removeFile}
+                isStreaming={isStreaming}
+                agentName={agentName}
+                primaryAction={primaryAction}
+                errMsg={errMsg}
+              />
+            </ResizablePanel>
 
-          <ResizableHandle withHandle />
+            <ResizableHandle withHandle />
 
-          <ResizablePanel
-            id={WORKFLOW_PANEL_OUTPUT}
-            minSize="40%"
-            className="flex min-h-0 min-w-0 flex-col overflow-hidden"
-          >
-            <AboutOutputPanel
-              agentName={agentName}
-              url={settings.url}
-              showReasoningTokens={showReasoningForRun}
-              reasoning={reasoning}
-              isStreaming={isStreaming}
-              isReasoningPhase={isReasoningPhase}
-              hasOutput={hasOutputText}
-              output={output}
-              onCopy={copyText}
-            />
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      ) : null}
-    </div>
+            <ResizablePanel
+              id={WORKFLOW_PANEL_OUTPUT}
+              minSize="40%"
+              className="flex min-h-0 min-w-0 flex-col overflow-hidden"
+            >
+              <AboutOutputPanel
+                url={settings.url}
+                reasoningDisplay={reasoningDisplay}
+                workParts={workParts}
+                reasoningDuration={reasoningDuration}
+                isStreaming={isStreaming}
+                isReasoningPhase={isReasoningPhase}
+                hasOutput={hasOutputText}
+                output={output}
+                title={aboutOutputHeaderTitle(
+                  submittedIdentity?.subject ?? aboutSubject,
+                  submittedIdentity?.entityId ?? entityId
+                )}
+                meta={aboutOutputHeaderMeta(
+                  submittedIdentity?.yearFrom ?? yearFrom,
+                  submittedIdentity?.yearTo ?? yearTo
+                )}
+                onCopy={copyText}
+              />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        ) : null}
+      </div>
+    </ModuleGate>
   )
 }

@@ -1,9 +1,8 @@
 import { mergeProps } from '@base-ui/react/merge-props'
 import { useRender } from '@base-ui/react/use-render'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { cn } from 'cn'
 import * as React from 'react'
-
-import { cn } from '@/shared/lib/utils'
 
 function ItemGroup({ className, ...props }: React.ComponentProps<'div'>) {
   return (
@@ -52,7 +51,7 @@ function Item({
     defaultTagName: 'div',
     props: mergeProps<'div'>(
       {
-        className: cn(itemVariants({ variant, size, className }))
+        className: cn(itemVariants({ variant, size }), className)
       },
       props
     ),

@@ -1,6 +1,5 @@
-import { Badge } from '@/shared/components/ui/badge'
+import { Badge, type BadgeSize } from '@/shared/components/ui/badge'
 import {
-  colorizeBadgeStyle,
   columnValueStyleToBadge,
   findColumnValueStyle,
   normalizeColumnValueKey,
@@ -14,10 +13,11 @@ import { getRepaymentActionMeta, type RepaymentActionId } from '../lib/repayment
 interface Props {
   action: RepaymentActionId
   columnValues?: ColumnValuesConfig
+  size?: BadgeSize
   className?: string
 }
 
-export function RepaymentActionBadge({ action, columnValues, className }: Props) {
+export function RepaymentActionBadge({ action, columnValues, size = 'data', className }: Props) {
   const meta = getRepaymentActionMeta(action)
   const columnStyle = findColumnValueStyle(
     columnValues,
@@ -32,8 +32,9 @@ export function RepaymentActionBadge({ action, columnValues, className }: Props)
   return (
     <Badge
       variant="secondary"
+      size={size}
+      appearance={badge}
       className={cn('min-w-0 max-w-full', className)}
-      style={colorizeBadgeStyle(badge)}
     >
       <span className="truncate">{meta.label}</span>
     </Badge>

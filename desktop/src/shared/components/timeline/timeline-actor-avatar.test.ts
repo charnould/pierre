@@ -1,31 +1,7 @@
 import { afterEach, describe, expect, mock, test } from 'bun:test'
 
-import {
-  actorDisplayName,
-  avatarFallbackClass
-} from '@/shared/components/timeline/timeline-actor-avatar'
+import { actorDisplayName } from '@/shared/components/timeline/timeline-actor-avatar'
 import { clearOrgUsersCache, fetchOrgUsers } from '@/shared/lib/org-users-cache'
-import type { TimelineActorKind } from '@/shared/lib/timeline/parse-activity-author'
-
-describe('avatarFallbackClass', () => {
-  test('maps each kind to timeline token classes', () => {
-    const cases: Array<[TimelineActorKind, string]> = [
-      ['agent', 'bg-timeline-bot text-timeline-bot-foreground'],
-      ['automation', 'bg-timeline-bot text-timeline-bot-foreground'],
-      ['system', 'bg-timeline-bot text-timeline-bot-foreground'],
-      ['database', 'bg-timeline-database text-timeline-database-foreground'],
-      ['user', 'bg-timeline-user text-timeline-user-foreground'],
-      ['tenant', 'bg-timeline-tenant text-timeline-tenant-foreground'],
-      ['external', 'bg-timeline-external text-timeline-external-foreground'],
-      ['candidate', 'bg-timeline-candidate text-timeline-candidate-foreground'],
-      ['unknown', 'bg-timeline-user text-timeline-user-foreground']
-    ]
-
-    for (const [kind, expected] of cases) {
-      expect(avatarFallbackClass(kind)).toBe(expected)
-    }
-  })
-})
 
 describe('actorDisplayName', () => {
   let didStubWindow = false
@@ -52,8 +28,6 @@ describe('actorDisplayName', () => {
               {
                 login: 'cdubois',
                 email: 'cdubois@exemple.fr',
-                role: 'administrator',
-                config: ['default'],
                 hasAvatar: false,
                 avatarBytes: 0,
                 displayName: 'Camille Dubois'
@@ -61,8 +35,6 @@ describe('actorDisplayName', () => {
               {
                 login: 'amartin',
                 email: 'amartin@exemple.fr',
-                role: 'collaborator',
-                config: ['default'],
                 hasAvatar: false,
                 avatarBytes: 0,
                 displayName: 'amartin'

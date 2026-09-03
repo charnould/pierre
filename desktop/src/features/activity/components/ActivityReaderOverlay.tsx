@@ -5,7 +5,7 @@ interface Props {
   target: ReaderTarget
 }
 
-/** Lecteur plein panneau contenu — titlebar et sidebar restent visibles. */
+/** Lecteur plein panneau contenu — titlebar reste visible. */
 export function ActivityReaderOverlay({ target }: Props) {
   return (
     <div className="bg-background absolute inset-0 z-20 flex min-h-0 flex-col overflow-hidden">

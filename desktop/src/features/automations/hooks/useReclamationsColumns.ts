@@ -16,13 +16,13 @@ export function useReclamationsColumns(url: string | undefined) {
   const [state, setState] = useState<State>({ status: 'idle' })
 
   const reload = useCallback(async () => {
-    if (!url || !window.api?.getTickets) {
+    if (!url || !window.api?.getTicketsMeta) {
       setState({ status: 'unavailable' })
       return
     }
     setState({ status: 'loading' })
     try {
-      const res = await window.api.getTickets({ url, limit: 1, offset: 0 })
+      const res = await window.api.getTicketsMeta({ url, limit: 1, offset: 0 })
       const columns = res?.meta?.columns
       if (!columns || columns.length === 0) {
         setState({ status: 'unavailable' })

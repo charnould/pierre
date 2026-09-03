@@ -15,9 +15,9 @@ describe('ABOUT_SUBJECT_ENTITY coverage', () => {
 })
 
 describe('aboutIdSkill alignment', () => {
-  test('returns about.* skill for each subject', () => {
+  test('returns the about prompt for each subject', () => {
     for (const subject of ABOUT_SUBJECTS) {
-      expect(aboutIdSkill(subject)).toMatch(/^about\./)
+      expect(aboutIdSkill(subject)).toBe('about')
     }
   })
 })

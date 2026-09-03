@@ -2,10 +2,9 @@ import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { Button } from '@/shared/components/ui/button'
-import { cn } from '@/shared/lib/utils'
 
-export const TIMELINE_ACTION_BUTTON_CLASS =
-  "h-8 w-full max-w-full items-center justify-start gap-2 rounded-md border-border/60 px-3 pl-3 text-start text-sm leading-5 font-medium hover:bg-muted [&_svg]:text-muted-foreground [&_svg:not([class*='size-'])]:size-4"
+const TIMELINE_ACTION_BUTTON_CLASS =
+  'w-full max-w-full justify-start gap-2 rounded-md border-border/60 px-3 text-start has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 [&_svg]:text-muted-foreground'
 
 interface CommonProps {
   icon: LucideIcon
@@ -17,7 +16,7 @@ type Props = CommonProps &
     | {
         onClick: () => void
         trigger?: never
-        emphasis?: 'primary' | 'outline' | 'ghost'
+        emphasis?: 'primary' | 'outline'
       }
     | {
         onClick?: never
@@ -36,15 +35,11 @@ export function TimelineActionRow(props: Props) {
     <Button
       type="button"
       variant={props.emphasis === 'primary' ? 'default' : (props.emphasis ?? 'outline')}
-      size="default"
-      className={cn(
-        TIMELINE_ACTION_BUTTON_CLASS,
-        props.emphasis === 'ghost' && 'text-muted-foreground hover:text-foreground'
-      )}
+      className={TIMELINE_ACTION_BUTTON_CLASS}
       onClick={props.onClick}
     >
-      <Icon data-icon="inline-start" className="text-muted-foreground size-4" aria-hidden />
-      <span className="[text-wrap:balance]">{label}</span>
+      <Icon data-icon="inline-start" className="size-4" aria-hidden />
+      <span className="text-balance">{label}</span>
     </Button>
   )
 

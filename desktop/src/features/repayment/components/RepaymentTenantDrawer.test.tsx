@@ -4,10 +4,8 @@ import { JSDOM } from 'jsdom'
 
 import type { Activite } from '@/shared/types/activites'
 
-import {
-  buildApurementPlanOutput,
-  createDefaultApurementPlanForm
-} from '../lib/apurement-plan/defaults'
+import { createDefaultApurementPlanForm } from '../lib/apurement-plan/defaults'
+import { repaymentPlanFormToSnapshot } from '../lib/repayment-plan-persist'
 
 mock.module('../lib/outbound-email-templates.bundle', () => ({
   listOutboundTemplateGroups: () => [],
@@ -102,7 +100,7 @@ async function verifyClose(embedded: boolean) {
         id_locataire: `LOC-${sheetOpenToken}`,
         solde_locataire: 100
       }}
-      onAddNote={() => true}
+      onAddNote={() => ({ ok: true })}
       onAdvancementChange={() => true}
       onTagsChange={() => true}
       onCreatePlan={() => {}}
@@ -179,9 +177,13 @@ function gestionnaireActivity(login: string, email: string): Activite {
     id_locataire: 'LOC-GESTIONNAIRE',
     id_lot: null,
     date_creation: '2026-08-08 18:00',
-    type: 'repayment_assignment',
-    contenu: JSON.stringify({ version: 1, gestionnaire: email, login }),
-    statut: 'logged',
+    type: 'case.assignee_changed',
+    channel: null,
+    contenu: JSON.stringify({
+      version: 2,
+      before: null,
+      after: { id: email, label: login }
+    }),
     mentions: []
   }
 }
@@ -195,9 +197,9 @@ function tagActivity(tags: string[]): Activite {
     id_locataire: 'LOC-GESTIONNAIRE',
     id_lot: null,
     date_creation: '2026-08-09 18:00',
-    type: 'repayment_tag_change',
-    contenu: JSON.stringify({ version: 1, tags_precedents: [], tags }),
-    statut: 'logged',
+    type: 'case.tags_changed',
+    channel: null,
+    contenu: JSON.stringify({ version: 2, before: [], after: tags }),
     mentions: []
   }
 }
@@ -218,7 +220,8 @@ async function verifyGestionnaire(
         movements: [],
         notifications: activities,
         openActionEvents: activities.filter(
-          (activity) => activity.type === 'action' && activity.state === 'a_faire'
+          (activity) =>
+            activity.type === 'task.created' && JSON.parse(activity.contenu).task?.state === 'open'
         )
       },
       errors: { movements: false, notifications: false, openActions: false }
@@ -244,7 +247,7 @@ async function verifyGestionnaire(
               id_locataire: 'LOC-GESTIONNAIRE',
               solde_locataire: 100
             }}
-            onAddNote={() => true}
+            onAddNote={() => ({ ok: true })}
             onAdvancementChange={() => true}
             onTagsChange={() => true}
             onCreatePlan={() => {}}
@@ -309,7 +312,7 @@ describe('RepaymentTenantDrawer shell', () => {
             onOpenChange={() => {}}
             sheetOpenToken={0}
             tenant={null}
-            onAddNote={() => true}
+            onAddNote={() => ({ ok: true })}
             onAdvancementChange={() => true}
             onTagsChange={() => true}
             onCreatePlan={() => {}}
@@ -330,7 +333,7 @@ describe('RepaymentTenantDrawer shell', () => {
               id_locataire: 'LOC-SHELL',
               solde_locataire: 100
             }}
-            onAddNote={() => true}
+            onAddNote={() => ({ ok: true })}
             onAdvancementChange={() => true}
             onTagsChange={() => true}
             onCreatePlan={() => {}}
@@ -340,14 +343,16 @@ describe('RepaymentTenantDrawer shell', () => {
 
       const popup = document.querySelector<HTMLElement>('[data-slot="drawer-popup"]')
       expect(popup).not.toBeNull()
-      expect(popup?.hasAttribute('data-starting-style')).toBe(true)
       expect(popup?.classList.contains('[--drawer-bleed-background:transparent]')).toBe(true)
       expect(popup?.classList.contains('[--drawer-inset:0.75rem]')).toBe(true)
       expect(popup?.classList.contains('rounded-md')).toBe(true)
       expect(popup?.classList.contains('border')).toBe(true)
       expect(popup?.classList.contains('shadow-md')).toBe(true)
-      expect(popup?.classList.contains('inspector-drawer-motion')).toBe(true)
-      expect(popup?.className).toContain('top-[var(--titlebar-height)]')
+      expect(popup?.dataset.drawerVariant).toBe('inspector')
+      expect(popup?.className).toContain('top-(--titlebar-height)')
+      expect(document.querySelector('[data-slot="drawer-viewport"]')?.className).toContain(
+        'top-(--titlebar-height)'
+      )
       expect(
         popup?.classList.contains('data-[swipe-axis=x]:sm:[--drawer-content-width:60rem]')
       ).toBe(true)
@@ -356,9 +361,7 @@ describe('RepaymentTenantDrawer shell', () => {
       expect(popup?.querySelector('[data-inspector-motion="body"]')).not.toBeNull()
       const title = header?.querySelector('[data-slot="drawer-title"]')
       expect(title?.textContent).toBe('CLI-SHELL · LOC-SHELL')
-      expect(title?.classList.contains('text-sm')).toBe(true)
-      expect(title?.classList.contains('font-sans')).toBe(true)
-      expect(title?.classList.contains('whitespace-nowrap')).toBe(true)
+      expect(title?.getAttribute('data-variant')).toBe('inspector-id')
       expect(header?.querySelector('[data-slot="avatar"]')).toBeNull()
     } finally {
       globalThis.requestAnimationFrame = originalRequestAnimationFrame
@@ -429,8 +432,12 @@ describe('RepaymentTenantDrawer top card', () => {
       }
     ])
     try {
-      expect(document.body.textContent).toContain('décès')
-      expect(document.body.textContent).not.toContain('inconnu')
+      const title = [...document.querySelectorAll('p')].find(
+        (element) => element.textContent === 'Contexte'
+      )
+      const context = title?.parentElement?.textContent ?? ''
+      expect(context).toContain('décès')
+      expect(context).not.toContain('inconnu')
     } finally {
       await cleanup()
     }
@@ -507,7 +514,6 @@ describe('RepaymentTenantDrawer top card', () => {
 function planActivity(id: number, auteur: string, commentaire: string): Activite {
   const form = createDefaultApurementPlanForm()
   form.signed = false
-  const output = buildApurementPlanOutput('LOC-NOTES', form)
   return {
     id,
     rattachement: 'repayment:LOC-NOTES',
@@ -516,22 +522,16 @@ function planActivity(id: number, auteur: string, commentaire: string): Activite
     id_locataire: 'LOC-NOTES',
     id_lot: null,
     date_creation: '2026-08-19 20:00',
-    type: 'repayment_plan',
+    type: 'repayment_plan.updated',
+    channel: null,
     contenu: JSON.stringify({
-      version: 1,
-      titre: "Plan d'apurement",
-      etat: 'brouillon',
-      resume: {
-        mensualite: output.summary.monthlyAmount,
-        nombre_echeances: output.summary.durationMonths,
-        montant_total: output.summary.totalDebt
-      },
-      note: commentaire,
-      formulaire: output.form,
-      calculs: output.calculations
+      version: 2,
+      title: "Plan d'apurement",
+      plan: repaymentPlanFormToSnapshot(form),
+      note: commentaire
     }),
-    statut: 'draft',
-    mentions: []
+    mentions: [],
+    thread_id: `plan-${id}`
   }
 }
 
@@ -544,9 +544,9 @@ function noteActivity(id: number, auteur: string, contenu: string): Activite {
     id_locataire: 'LOC-NOTES',
     id_lot: null,
     date_creation: '2026-08-09 12:00',
-    type: 'note',
-    contenu: JSON.stringify({ version: 1, note: contenu }),
-    statut: 'logged',
+    type: 'note.published',
+    channel: null,
+    contenu: JSON.stringify({ version: 2, text: contenu }),
     mentions: []
   }
 }
@@ -560,21 +560,19 @@ function openActionActivity(id: number): Activite {
     id_locataire: 'LOC-NOTES',
     id_lot: null,
     date_creation: '2026-08-20 12:00',
-    type: 'action',
+    type: 'task.created',
+    channel: null,
     contenu: JSON.stringify({
-      version: 1,
-      action: 'Appeler le locataire',
-      etat: 'a_faire',
-      assigne_a: 'user:alice@exemple.fr',
-      date_echeance: '2026-08-25',
-      cree_par: 'user:alice@exemple.fr',
-      cree_le: '2026-08-20 12:00'
+      version: 2,
+      task: {
+        title: 'Appeler le locataire',
+        state: 'open',
+        assignee: { id: 'user:alice@exemple.fr', label: 'Alice' },
+        due_date: '2026-08-25'
+      }
     }),
-    statut: 'logged',
     mentions: [],
     thread_id: `todo-${id}`,
-    event: 'created',
-    state: 'a_faire',
     revision: 1
   }
 }
@@ -582,18 +580,17 @@ function openActionActivity(id: number): Activite {
 function completedActionActivity(id: number): Activite {
   return {
     ...openActionActivity(id),
+    type: 'task.completed',
     contenu: JSON.stringify({
-      version: 1,
-      action: 'Appeler le locataire',
-      etat: 'fait',
-      assigne_a: 'user:alice@exemple.fr',
-      date_echeance: '2026-08-25',
-      cree_par: 'user:alice@exemple.fr',
-      cree_le: '2026-08-20 12:00'
+      version: 2,
+      task: {
+        title: 'Appeler le locataire',
+        state: 'completed',
+        assignee: { id: 'user:alice@exemple.fr', label: 'Alice' },
+        due_date: '2026-08-25'
+      }
     }),
     date_creation: '2026-08-22T20:00:00',
-    event: 'completed',
-    state: 'fait',
     revision: 2
   }
 }
@@ -650,6 +647,7 @@ async function renderNotesDrawer(
   )
   const deleteActivity = mock(async () => ({ data: { deleted: true } }))
   const createActivity = mock(async () => ({ data: { id: 99 } }))
+  const recordExternalCommunication = mock(async () => ({ data: { id: 99 } }))
 
   window.api = {
     getRepaymentTimeline: async () => ({
@@ -657,14 +655,16 @@ async function renderNotesDrawer(
         movements: openDebtMovements,
         notifications: activities,
         openActionEvents: activities.filter(
-          (activity) => activity.type === 'action' && activity.state === 'a_faire'
+          (activity) =>
+            activity.type === 'task.created' && JSON.parse(activity.contenu).task?.state === 'open'
         )
       },
       errors: { movements: false, notifications: false, openActions: false }
     }),
     patchActivity,
     deleteActivity,
-    createActivity
+    createActivity,
+    recordExternalCommunication
   } as unknown as typeof window.api
 
   const host = (nextTenant: typeof tenant) => (
@@ -678,7 +678,7 @@ async function renderNotesDrawer(
           sheetOpenToken={1}
           embedded
           tenant={nextTenant}
-          onAddNote={() => true}
+          onAddNote={() => ({ ok: true })}
           onAdvancementChange={() => true}
           onTagsChange={() => true}
           onCreatePlan={() => {}}
@@ -703,6 +703,7 @@ async function renderNotesDrawer(
     patchActivity,
     deleteActivity,
     createActivity,
+    recordExternalCommunication,
     rerender: async (nextTenant: typeof tenant) => {
       await act(async () => {
         root.render(host(nextTenant))
@@ -728,42 +729,41 @@ describe('RepaymentTenantDrawer courriel', () => {
       id_locataire: 'LOC-NOTES',
       id_lot: null,
       date_creation: '2026-06-28 17:45',
-      date_statut: '2026-08-27T09:54:00.000Z',
-      type: 'email',
+      type: 'communication.sent',
+      channel: 'email',
       destinataire: 'caf@example.fr',
       contenu: JSON.stringify({
-        version: 1,
+        version: 2,
+        sender: 'gregoire@exemple.fr',
         action: 'Contacter la CAF',
-        objet: 'Dossier APL',
-        corps: 'Merci de rétablir le versement.'
+        subject: 'Dossier APL',
+        body: 'Merci de rétablir le versement.'
       }),
-      statut: 'sent',
       mentions: []
     }
     const { cleanup } = await renderNotesDrawer('alice@exemple.fr', [email])
     try {
       const body = document.body.textContent ?? ''
-      expect(body).toContain('Contacter la CAF')
-      expect(body).toContain('par e-mail')
-      expect(body).not.toContain('a envoyé un courriel')
+      expect(body).toContain('a envoyé un courriel · Contacter la CAF')
+      expect(body).not.toContain('par e-mail')
       expect(body).toContain('Dossier APL')
-      expect(body).toContain('Corps du message')
-      expect(body).toContain('Envoyé')
-      expect(body).toContain('vers c•••@example.fr')
-      expect(body).toContain('état au')
-      expect(document.querySelector('input[type="checkbox"]')).toBeNull()
-      const panel = document.querySelector('[data-slot="collapsible-content"]')
-      if (panel) {
-        expect(panel.getAttribute('hidden')).not.toBeNull()
-      } else {
-        expect(body).not.toContain('Merci de rétablir le versement.')
-      }
+      expect(body).toContain('Merci de rétablir le versement.')
+      expect(body).toContain('De')
+      expect(body).toContain('gregoire@exemple.fr')
+      expect(body).toContain('À')
+      expect(body).toContain('caf@example.fr')
+      expect(body).not.toContain('Statut')
+      expect(body).not.toContain('Afficher la suite')
+      const envelope = document.querySelector('[data-slot="timeline-communication"]')
+      expect(envelope).not.toBeNull()
+      expect(envelope?.querySelector('input[type="checkbox"]')).toBeNull()
+      expect(envelope?.querySelector('[data-slot="badge"]')).toBeNull()
     } finally {
       await cleanup()
     }
   })
 
-  test('affiche un courriel importé avec De / À', async () => {
+  test('affiche un courriel importé avec son expéditeur', async () => {
     const imported: Activite = {
       id: 22,
       rattachement: 'repayment:LOC-NOTES',
@@ -772,17 +772,15 @@ describe('RepaymentTenantDrawer courriel', () => {
       id_locataire: 'LOC-NOTES',
       id_lot: null,
       date_creation: '2026-08-27T12:00:00Z',
-      type: 'email_import',
+      type: 'communication.imported',
+      channel: 'email',
       destinataire: 'Bob <bob@locataire.fr>',
       contenu: JSON.stringify({
-        version: 1,
-        objet: 'Relance loyer',
-        corps: 'Merci de régulariser.',
-        expediteur: 'Alice <alice@bailleur.fr>',
-        destinataire: 'Bob <bob@locataire.fr>',
-        date_envoi: '2026-08-12T08:00:00Z'
+        version: 2,
+        sender: 'Alice <alice@bailleur.fr>',
+        subject: 'Relance loyer',
+        body: 'Merci de régulariser.'
       }),
-      statut: 'logged',
       mentions: []
     }
     const { cleanup } = await renderNotesDrawer('alice@exemple.fr', [imported])
@@ -790,10 +788,10 @@ describe('RepaymentTenantDrawer courriel', () => {
       const body = document.body.textContent ?? ''
       expect(body).toContain('a importé un courriel')
       expect(body).toContain('Relance loyer')
-      expect(body).toContain('De Alice <alice@bailleur.fr>')
-      expect(body).toContain('À Bob <bob@locataire.fr>')
-      expect(body).toContain('Envoyé le')
-      expect(body).toContain('12/08/2026')
+      expect(body).toContain('De')
+      expect(body).toContain('Alice <alice@bailleur.fr>')
+      expect(body).not.toContain('Bob <bob@locataire.fr>')
+      expect(body).not.toContain('Envoyé le')
       expect(body).not.toContain('par e-mail')
     } finally {
       await cleanup()
@@ -801,7 +799,10 @@ describe('RepaymentTenantDrawer courriel', () => {
   })
 
   test('importe un .eml via le sélecteur de fichier', async () => {
-    const { act, cleanup, createActivity } = await renderNotesDrawer('alice@exemple.fr', [])
+    const { act, cleanup, recordExternalCommunication } = await renderNotesDrawer(
+      'alice@exemple.fr',
+      []
+    )
     try {
       const input = document.querySelector<HTMLInputElement>('input[type="file"][accept=".eml"]')
       expect(input).not.toBeNull()
@@ -825,16 +826,26 @@ describe('RepaymentTenantDrawer courriel', () => {
         input?.dispatchEvent(new Event('change', { bubbles: true }))
         await new Promise((resolve) => window.setTimeout(resolve, 80))
       })
-      expect(createActivity).toHaveBeenCalledTimes(1)
-      const firstCall = createActivity.mock.calls[0] as unknown as [
-        { type?: string; contenu?: string }
+      expect(recordExternalCommunication).toHaveBeenCalledTimes(1)
+      const firstCall = recordExternalCommunication.mock.calls[0] as unknown as [
+        {
+          channel?: string
+          imported?: boolean
+          destinataire?: string
+          contenu?: { subject?: string; body?: string; sender?: string }
+        }
       ]
       expect(firstCall).toBeDefined()
       const payload = firstCall[0]
-      expect(payload.type).toBe('email_import')
-      expect(JSON.parse(payload.contenu ?? '{}')).toMatchObject({
-        objet: 'Relance loyer',
-        corps: 'Merci de régulariser.'
+      expect(payload).toMatchObject({
+        channel: 'email',
+        imported: true,
+        destinataire: 'Bob <bob@locataire.fr>',
+        contenu: {
+          subject: 'Relance loyer',
+          body: 'Merci de régulariser.',
+          sender: 'Alice <alice@bailleur.fr>'
+        }
       })
     } finally {
       await cleanup()
@@ -842,7 +853,10 @@ describe('RepaymentTenantDrawer courriel', () => {
   })
 
   test('n’envoie pas un fichier .eml illisible', async () => {
-    const { act, cleanup, createActivity } = await renderNotesDrawer('alice@exemple.fr', [])
+    const { act, cleanup, recordExternalCommunication } = await renderNotesDrawer(
+      'alice@exemple.fr',
+      []
+    )
     try {
       const input = document.querySelector<HTMLInputElement>('input[type="file"][accept=".eml"]')
       const file = new File(['pas un mail'], 'mail.msg')
@@ -851,7 +865,7 @@ describe('RepaymentTenantDrawer courriel', () => {
         input?.dispatchEvent(new Event('change', { bubbles: true }))
         await new Promise((resolve) => window.setTimeout(resolve, 80))
       })
-      expect(createActivity).not.toHaveBeenCalled()
+      expect(recordExternalCommunication).not.toHaveBeenCalled()
     } finally {
       await cleanup()
     }
@@ -890,11 +904,10 @@ describe('RepaymentTenantDrawer note edit/delete', () => {
     try {
       expect(document.body.textContent).toContain('tu l’as vu ?')
 
-      const planCard = [...document.querySelectorAll('.rounded-md.border')].find((element) =>
-        element.textContent?.includes('Brouillon')
+      const planEvent = [...document.querySelectorAll('[data-slot="timeline-content"]')].find(
+        (element) => element.textContent?.includes("Plan d'apurement")
       )
-      expect(planCard?.textContent).toContain('Modifier')
-      expect(planCard?.textContent).not.toContain('tu l’as vu ?')
+      expect(planEvent?.textContent).toContain('Ouvrir')
 
       const replyButtons = [...document.querySelectorAll('button')].filter(
         (button) => button.textContent === 'Répondre'
@@ -914,7 +927,9 @@ describe('RepaymentTenantDrawer note edit/delete', () => {
     const { act, cleanup, patchActivity } = await renderNotesDrawer('alice@exemple.fr', [own])
 
     try {
-      const modifier = document.querySelector<HTMLButtonElement>('[data-note-edit-id="3"]')
+      const modifier = [...document.querySelectorAll<HTMLButtonElement>('button')].find(
+        (button) => button.textContent === 'Modifier'
+      )
       expect(modifier).toBeTruthy()
 
       await act(async () => {
@@ -958,7 +973,7 @@ describe('RepaymentTenantDrawer note edit/delete', () => {
           id: 3,
           patch: {
             operation: 'edit_content',
-            contenu: JSON.stringify({ version: 1, note: 'Texte modifié' })
+            contenu: JSON.stringify({ version: 2, text: 'Texte modifié' })
           }
         })
       )
@@ -1229,13 +1244,13 @@ describe('RepaymentTenantDrawer actions', () => {
   test('le libellé d’une action à faire n’est pas tronqué', async () => {
     const action = openActionActivity(12)
     action.contenu = JSON.stringify({
-      version: 1,
-      action: 'Relancer le locataire pour le\nvirement promis vendredi',
-      etat: 'a_faire',
-      assigne_a: 'user:bob@exemple.fr',
-      date_echeance: '2026-08-28',
-      cree_par: 'user:alice@exemple.fr',
-      cree_le: '2026-08-20 12:00'
+      version: 2,
+      task: {
+        title: 'Relancer le locataire pour le\nvirement promis vendredi',
+        state: 'open',
+        assignee: { id: 'user:bob@exemple.fr', label: 'Bob' },
+        due_date: '2026-08-28'
+      }
     })
     const { cleanup } = await renderNotesDrawer('alice@exemple.fr', [action])
 
@@ -1275,9 +1290,13 @@ describe('RepaymentTenantDrawer actions', () => {
 
   test('affiche la poubelle À faire pour le créateur uniquement', async () => {
     const action = openActionActivity(15)
+    const content = JSON.parse(action.contenu)
     action.contenu = JSON.stringify({
-      ...JSON.parse(action.contenu),
-      assigne_a: 'user:bob@exemple.fr'
+      ...content,
+      task: {
+        ...content.task,
+        assignee: { id: 'user:bob@exemple.fr', label: 'Bob' }
+      }
     })
 
     const asCreator = await renderNotesDrawer('alice@exemple.fr', [action])
@@ -1358,13 +1377,13 @@ function statusChangeActivity(id: number, auteur: string): Activite {
     id_locataire: 'LOC-NOTES',
     id_lot: null,
     date_creation: '2026-08-09 11:00',
-    type: 'repayment_phase_change',
+    type: 'case.group_changed',
+    channel: null,
     contenu: JSON.stringify({
-      version: 1,
-      phase_precedente: 'amiable',
-      phase: 'pre_contentieux'
+      version: 2,
+      before: 'amiable',
+      after: 'pre_contentieux'
     }),
-    statut: 'logged',
     mentions: []
   }
 }
@@ -1382,7 +1401,7 @@ describe('RepaymentTenantDrawer boosts', () => {
       )
       expect(boostButtons.length).toBeGreaterThanOrEqual(2)
       expect(document.body.textContent).toContain('Commentaire de Bob')
-      expect(document.body.textContent).toContain('a déplacé le dossier du groupe')
+      expect(document.body.textContent).toContain('a déplacé le dossier de groupe')
     } finally {
       await cleanup()
     }

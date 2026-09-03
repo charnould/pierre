@@ -5,8 +5,9 @@ import { UpdatesActivityDrawer } from '@/features/activity/components/UpdatesAct
 import { useNotifications } from '@/features/activity/hooks/use-notifications'
 import { useActivityRail } from '@/features/activity/lib/ActivityRailContext'
 import { TicketReclamationDrawer } from '@/features/tickets/components/TicketReclamationDrawer'
+import { ModuleGate } from '@/shared/components/ModuleGate'
 import type { TicketRow } from '@/shared/types'
-import type { ActivityStatus, ActivityType } from '@/shared/types/activites'
+import type { ActivityType } from '@/shared/types/activites'
 
 interface Props {
   url: string | undefined
@@ -46,13 +47,12 @@ export function ActivityContextNested({ url, userLogin }: Props) {
   const resolvedTicket = contextTarget?.view === 'tickets' ? ticket : null
 
   const handlePostActivity = useCallback(
-    async (type: string, statut: string, contenu: string) => {
+    async (type: string, _statut: string, contenu: string) => {
       if (!contextTarget || contextTarget.view !== 'tickets') return null
       const res = await notifications.createActivity({
         contexte: 'tickets',
         ref: contextTarget.id_reclamation,
         type: type as ActivityType,
-        statut: statut as ActivityStatus,
         contenu
       })
       return res?.data?.id ?? null
@@ -66,9 +66,13 @@ export function ActivityContextNested({ url, userLogin }: Props) {
       const res = await notifications.createActivity({
         contexte: 'tickets',
         ref: contextTarget.id_reclamation,
-        type: 'ticket_summary',
-        statut: 'logged',
-        contenu: JSON.stringify({ contenu: content, skill: 'ticket.summarize-ticket' })
+        type: 'artifact.generated',
+        contenu: JSON.stringify({
+          version: 2,
+          title: 'Point de situation',
+          values: { skill: 'ticket.summarize-ticket' },
+          note: content
+        })
       })
       return res?.data?.id ?? null
     },
@@ -79,15 +83,17 @@ export function ActivityContextNested({ url, userLogin }: Props) {
 
   if (contextTarget.view === 'repayment') {
     return (
-      <RepaymentActivityDrawer
-        url={url}
-        userLogin={userLogin}
-        tenantId={contextTarget.tenantId}
-        idClient={contextTarget.idClient}
-        notificationId={contextTarget.activityId}
-        sheetOpenToken={contextOpenToken}
-        onClose={closeContextTarget}
-      />
+      <ModuleGate entry="repayment">
+        <RepaymentActivityDrawer
+          url={url}
+          userLogin={userLogin}
+          tenantId={contextTarget.tenantId}
+          idClient={contextTarget.idClient}
+          notificationId={contextTarget.activityId}
+          sheetOpenToken={contextOpenToken}
+          onClose={closeContextTarget}
+        />
+      </ModuleGate>
     )
   }
 
@@ -106,20 +112,22 @@ export function ActivityContextNested({ url, userLogin }: Props) {
   if (contextTarget.view !== 'tickets' || !resolvedTicket) return null
 
   return (
-    <TicketReclamationDrawer
-      url={url}
-      userLogin={userLogin}
-      open
-      onOpenChange={(next) => {
-        if (!next) closeContextTarget()
-      }}
-      sheetOpenToken={contextOpenToken}
-      embedded
-      ticket={resolvedTicket}
-      initialComposeMode={null}
-      highlightActivityId={contextTarget.activityId}
-      onPostActivity={handlePostActivity}
-      onSummarizeActivity={handleSummarizeActivity}
-    />
+    <ModuleGate entry="tickets">
+      <TicketReclamationDrawer
+        url={url}
+        userLogin={userLogin}
+        open
+        onOpenChange={(next) => {
+          if (!next) closeContextTarget()
+        }}
+        sheetOpenToken={contextOpenToken}
+        embedded
+        ticket={resolvedTicket}
+        initialComposeMode={null}
+        highlightActivityId={contextTarget.activityId}
+        onPostActivity={handlePostActivity}
+        onSummarizeActivity={handleSummarizeActivity}
+      />
+    </ModuleGate>
   )
 }

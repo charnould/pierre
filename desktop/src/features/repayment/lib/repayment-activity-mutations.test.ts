@@ -1,4 +1,6 @@
-import { describe, expect, test } from 'bun:test'
+import { beforeEach, describe, expect, test } from 'bun:test'
+
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 
 import {
   buildRepaymentAdvancementOperations,
@@ -10,45 +12,21 @@ import {
   resolveAdvancementTenant
 } from './repayment-activity-mutations'
 
+beforeEach(() => {
+  loadCustomizationFixture()
+})
+
 describe('buildRepaymentMessageActivity', () => {
-  test('écrit un courriel avec action, objet et corps', () => {
+  test('délègue les communications aux API communication', () => {
     const activity = buildRepaymentMessageActivity('LOC-1', 'Merci de rétablir l’APL.', 'email', {
       objet: 'Dossier APL',
       action: 'Contacter la CAF'
     })
-
-    expect(activity?.statut).toBe('queued')
-    expect(JSON.parse(activity?.contenu ?? '{}')).toEqual({
-      version: 1,
-      action: 'Contacter la CAF',
-      objet: 'Dossier APL',
-      corps: 'Merci de rétablir l’APL.'
-    })
-  })
-
-  test('accepte un courriel avec objet seul si l’action est présente', () => {
-    const activity = buildRepaymentMessageActivity('LOC-1', '', 'email', {
-      objet: 'Dossier APL',
-      action: 'Contacter la CAF'
-    })
-
-    expect(JSON.parse(activity?.contenu ?? '{}')).toEqual({
-      version: 1,
-      action: 'Contacter la CAF',
-      objet: 'Dossier APL',
-      corps: ''
-    })
-  })
-
-  test('écrit un RCS avec action et corps', () => {
-    const activity = buildRepaymentMessageActivity('LOC-1', 'Bonjour', 'rcs', {
+    const rcs = buildRepaymentMessageActivity('LOC-1', 'Bonjour', 'rcs', {
       action: 'Envoyer un RCS de relance'
     })
-    expect(JSON.parse(activity?.contenu ?? '{}')).toEqual({
-      version: 1,
-      action: 'Envoyer un RCS de relance',
-      corps: 'Bonjour'
-    })
+    expect(activity).toBeNull()
+    expect(rcs).toBeNull()
   })
 
   test('rejette un courriel ou un RCS sans action', () => {
@@ -78,16 +56,14 @@ describe('buildRepaymentEmailImportActivity', () => {
       body: 'Merci de régulariser.',
       sentAt: '2026-08-12T08:00:00Z'
     })
-    expect(activity?.type).toBe('email_import')
-    expect(activity?.statut).toBe('logged')
+    expect(activity?.type).toBe('communication.imported')
+    expect(activity?.channel).toBe('email')
     expect(activity?.destinataire).toBe('Bob <bob@locataire.fr>')
     expect(JSON.parse(activity?.contenu ?? '{}')).toEqual({
-      version: 1,
-      objet: 'Relance loyer',
-      corps: 'Merci de régulariser.',
-      expediteur: 'Alice <alice@bailleur.fr>',
-      destinataire: 'Bob <bob@locataire.fr>',
-      date_envoi: '2026-08-12T08:00:00Z'
+      version: 2,
+      sender: 'Alice <alice@bailleur.fr>',
+      subject: 'Relance loyer',
+      body: 'Merci de régulariser.'
     })
   })
 
@@ -137,9 +113,9 @@ describe('buildRepaymentAdvancementOperations', () => {
 
     expect(operations).toHaveLength(1)
     expect(JSON.parse(operations[0]?.activity.contenu ?? '{}')).toMatchObject({
-      version: 1,
-      phase_precedente: 'amiable',
-      phase: 'pre_contentieux',
+      version: 2,
+      before: 'amiable',
+      after: 'pre_contentieux',
       note: 'Échec des relances amiables.'
     })
   })
@@ -157,9 +133,9 @@ describe('buildRepaymentTagChangeOperations', () => {
     expect(operations[0]?.kind).toBe('tags')
     expect(operations[0]?.activity.recipients).toEqual(['bob'])
     expect(JSON.parse(operations[0]?.activity.contenu ?? '{}')).toEqual({
-      version: 1,
-      tags_precedents: ['décès'],
-      tags: ['décès', '+65 ans'],
+      version: 2,
+      before: ['décès'],
+      after: ['décès', '+65 ans'],
       note: 'Relance avec @bob'
     })
   })
@@ -193,9 +169,9 @@ describe('buildRepaymentTagChangeOperations', () => {
       comment: ''
     })
     expect(JSON.parse(operations[0]?.activity.contenu ?? '{}')).toEqual({
-      version: 1,
-      tags_precedents: [],
-      tags: ['décès']
+      version: 2,
+      before: [],
+      after: ['décès']
     })
   })
 
@@ -207,9 +183,9 @@ describe('buildRepaymentTagChangeOperations', () => {
       comment: ''
     })
     expect(JSON.parse(operations[0]?.activity.contenu ?? '{}')).toEqual({
-      version: 1,
-      tags_precedents: ['décès'],
-      tags: []
+      version: 2,
+      before: ['décès'],
+      after: []
     })
   })
 })
@@ -224,11 +200,9 @@ describe('buildRepaymentAssignmentActivity', () => {
     )
     expect(activity?.recipients).toEqual(['alice'])
     expect(JSON.parse(activity?.contenu ?? '{}')).toEqual({
-      version: 1,
-      gestionnaire_precedent: 'bob@bailleur.fr',
-      gestionnaire: 'alice@bailleur.fr',
-      login: 'alice',
-      origine: 'manual'
+      version: 2,
+      before: { id: 'bob@bailleur.fr', label: 'bob@bailleur.fr' },
+      after: { id: 'alice@bailleur.fr', label: 'alice' }
     })
   })
 
@@ -239,10 +213,9 @@ describe('buildRepaymentAssignmentActivity', () => {
       null
     )
     expect(JSON.parse(activity?.contenu ?? '{}')).toEqual({
-      version: 1,
-      gestionnaire_precedent: null,
-      gestionnaire: 'alice@bailleur.fr',
-      login: 'alice'
+      version: 2,
+      before: null,
+      after: { id: 'alice@bailleur.fr', label: 'alice' }
     })
   })
 
@@ -256,11 +229,9 @@ describe('buildRepaymentAssignmentActivity', () => {
     )
     expect(activity?.recipients).toEqual(['alice', 'bob'])
     expect(JSON.parse(activity?.contenu ?? '{}')).toEqual({
-      version: 1,
-      gestionnaire_precedent: null,
-      gestionnaire: 'alice@bailleur.fr',
-      login: 'alice',
-      origine: 'manual',
+      version: 2,
+      before: null,
+      after: { id: 'alice@bailleur.fr', label: 'alice' },
       note: 'Relance avec @bob'
     })
   })
@@ -274,10 +245,9 @@ describe('buildRepaymentAssignmentActivity', () => {
       '   '
     )
     expect(JSON.parse(activity?.contenu ?? '{}')).toEqual({
-      version: 1,
-      gestionnaire_precedent: null,
-      gestionnaire: 'alice@bailleur.fr',
-      login: 'alice'
+      version: 2,
+      before: null,
+      after: { id: 'alice@bailleur.fr', label: 'alice' }
     })
   })
 })

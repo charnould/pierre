@@ -1,12 +1,5 @@
 import { ArrowLeft } from 'lucide-react'
-import {
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type RefObject
-} from 'react'
+import { useCallback, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 
 import { RepaymentActivityDrawer } from '@/features/activity/components/RepaymentActivityDrawer'
 import { useConditionalPolling } from '@/features/outreach/hooks/useConditionalPolling'
@@ -107,10 +100,7 @@ export function BulkReportRunSection({
   }, [])
 
   return (
-    <section
-      className="bg-background flex w-full min-w-0 flex-col [&:first-child>header]:border-t-0"
-      style={{ '--run-chrome-height': `${chromeHeight}px` } as CSSProperties}
-    >
+    <section className="bg-background flex w-full min-w-0 flex-col [&:first-child>header]:border-t-0">
       <header
         ref={headerRef}
         className="border-border bg-background sticky top-0 z-20 flex shrink-0 flex-wrap items-baseline gap-2 border-t border-b py-2 ps-4 pe-2"
@@ -134,16 +124,14 @@ export function BulkReportRunSection({
               <EmptyMedia variant="icon" size="sm">
                 <CartoonBulkSelectFiles />
               </EmptyMedia>
-              <EmptyTitle className="text-sm leading-5 font-medium">
-                Aucun élément dans cette exécution.
-              </EmptyTitle>
+              <EmptyTitle size="sm">Aucun élément dans cette exécution.</EmptyTitle>
             </EmptyHeader>
           </Empty>
         ) : (
-          <table className="w-full table-fixed font-sans text-[0.8125rem] leading-5 tabular-nums">
+          <table className="pierre-type-data w-full table-fixed font-sans tabular-nums">
             <thead
-              className="bg-background text-muted-foreground sticky z-10 text-[0.6875rem]"
-              style={{ top: 'var(--run-chrome-height, 0px)' }}
+              className="bg-background text-muted-foreground pierre-type-table-header sticky z-10"
+              style={{ top: chromeHeight }}
             >
               <tr className="border-border border-b">
                 <th className="h-8 w-32 px-2 text-start font-medium">Identité</th>

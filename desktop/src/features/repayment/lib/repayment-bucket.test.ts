@@ -1,37 +1,30 @@
-import { describe, expect, test } from 'bun:test'
+import { beforeEach, describe, expect, test } from 'bun:test'
 
-import repaymentConfig from '@customization/repayments/config'
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 
 import {
   CLIENTS_PARTIS_BUCKET_ID,
   getRepaymentBucketMeta,
   isDepartedTenantRow,
   NON_TRAITES_BUCKET_ID,
-  REPAYMENT_BUCKET_IDS,
+  repaymentBucketIds,
   resolveBucketForTenantRow,
   resolveRepaymentBucket
 } from './repayment-bucket'
 
 describe('repayment-bucket', () => {
-  test('les phases système obligatoires sont présentes', () => {
-    expect(REPAYMENT_BUCKET_IDS).toContain(NON_TRAITES_BUCKET_ID)
-    expect(REPAYMENT_BUCKET_IDS).toContain(CLIENTS_PARTIS_BUCKET_ID)
+  beforeEach(() => {
+    loadCustomizationFixture()
+  })
 
-    // Les ids attendus par le code métier.
-    for (const id of ['amiable', 'pre_contentieux', 'contentieux', 'post_jugement']) {
-      expect(REPAYMENT_BUCKET_IDS).toContain(id)
-    }
-
-    // L’ordre vient de la config (l’opérateur le choisit), il n’est pas retrié.
-    expect(REPAYMENT_BUCKET_IDS).toEqual(repaymentConfig.buckets.map((entry) => entry.id))
-
-    for (const entry of repaymentConfig.buckets) {
-      expect(typeof entry).toBe('object')
-      expect(typeof entry.id).toBe('string')
-      expect(typeof entry.label).toBe('string')
-    }
-
-    expect(new Set(REPAYMENT_BUCKET_IDS).size).toBe(REPAYMENT_BUCKET_IDS.length)
+  test('lit les phases depuis le store, dans l’ordre', () => {
+    expect(repaymentBucketIds()).toEqual([
+      NON_TRAITES_BUCKET_ID,
+      'amiable',
+      'contentieux',
+      CLIENTS_PARTIS_BUCKET_ID
+    ])
+    expect(new Set(repaymentBucketIds()).size).toBe(repaymentBucketIds().length)
   })
 
   test('resolveRepaymentBucket retombe sur non_traites par défaut', () => {
@@ -46,17 +39,9 @@ describe('repayment-bucket', () => {
     expect(resolveRepaymentBucket(CLIENTS_PARTIS_BUCKET_ID)).toBe(CLIENTS_PARTIS_BUCKET_ID)
   })
 
-  test('getRepaymentBucketMeta expose le label et la description depuis la config', () => {
-    const meta = getRepaymentBucketMeta('amiable')
-    const configEntry = repaymentConfig.buckets.find((entry) => entry.id === 'amiable')
-    expect(configEntry).toBeDefined()
-    expect(meta.label).toBe(configEntry!.label)
-    expect(meta.description).toBe(configEntry!.description?.trim())
-  })
-
-  test('l’id est celui déclaré en config (pas dérivé du label)', () => {
+  test('getRepaymentBucketMeta expose le label depuis le store', () => {
+    expect(getRepaymentBucketMeta('amiable').label).toBe('Recouvrement amiable')
     expect(getRepaymentBucketMeta(NON_TRAITES_BUCKET_ID).label).not.toBe(NON_TRAITES_BUCKET_ID)
-    expect(REPAYMENT_BUCKET_IDS).toContain(CLIENTS_PARTIS_BUCKET_ID)
   })
 
   test('ex-client est forcé en clients_partis', () => {

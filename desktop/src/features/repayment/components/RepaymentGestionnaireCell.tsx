@@ -1,13 +1,11 @@
+import { CollaboratorChip } from '@/shared/components/inspector/collaborator-chip'
 import {
-  colorizeBadgeStyle,
   columnValueStyleToBadge,
   findColumnValueStyle,
   normalizeColumnValueKey,
   resolveColumnValueBadgeDefaults,
   type ColumnValuesConfig
 } from '@/shared/lib/ui-settings/tickets-table'
-
-import { CollaboratorChip } from './CollaboratorChip'
 
 interface Props {
   identity: string
@@ -23,19 +21,16 @@ export function RepaymentGestionnaireCell({ identity, label, columnValues }: Pro
     'gestionnaire',
     normalizeColumnValueKey(label)
   )
+  const appearance = columnStyle
+    ? columnValueStyleToBadge(columnStyle, resolveColumnValueBadgeDefaults())
+    : undefined
 
   return (
     <CollaboratorChip
       identity={identity}
       title={identity.includes('@') ? identity : undefined}
-      className="max-w-full text-[0.8125rem]"
-      style={
-        columnStyle
-          ? colorizeBadgeStyle(
-              columnValueStyleToBadge(columnStyle, resolveColumnValueBadgeDefaults())
-            )
-          : undefined
-      }
+      className="max-w-full"
+      appearance={appearance}
     />
   )
 }

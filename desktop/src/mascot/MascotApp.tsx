@@ -27,6 +27,7 @@ const DRAG_THRESHOLD_PX = 4
 export function MascotApp() {
   const reduceMotion = useReducedMotion()
   const [unreadCount, setUnreadCount] = useState(0)
+  const [allowOrbit, setAllowOrbit] = useState(true)
   const [shape, setShape] = useState<MascotShape>(DEFAULT_MASCOT_SHAPE)
   const [color, setColor] = useState<MascotColor>(DEFAULT_MASCOT_COLOR)
   const [badgeColor, setBadgeColor] = useState<MascotColor>(DEFAULT_MASCOT_BADGE_COLOR)
@@ -40,8 +41,9 @@ export function MascotApp() {
   } | null>(null)
 
   useEffect(() => {
-    return window.api?.onMascotUnreadCount?.((count) => {
-      setUnreadCount(typeof count === 'number' ? Math.max(0, count) : 0)
+    return window.api?.onMascotUnreadCount?.((payload) => {
+      setUnreadCount(Math.max(0, payload.count))
+      setAllowOrbit(payload.orbit !== false)
     })
   }, [])
 
@@ -56,7 +58,7 @@ export function MascotApp() {
     })
   }, [])
 
-  const life = useMascotLife(unreadCount, reduceMotion)
+  const life = useMascotLife(unreadCount, reduceMotion, Math.random, allowOrbit)
 
   const onPointerDown = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
     if (event.button !== 0) return

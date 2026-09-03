@@ -6,13 +6,9 @@ import {
   generateDocxFromTemplate
 } from '@/features/workflow/lib/generate-docx'
 
-export function skillDocxTemplateUrl(baseUrl: string, skillId: string): string {
-  return `${baseUrl}/customization/skills/${skillId}/template.docx`
-}
-
 /**
  * Clipboard copy + Word export for workflow panels.
- * DOCX templates are loaded per skill from `customization/skills/<skillId>/template.docx`.
+ * DOCX templates are loaded per skill from the authenticated desktop API.
  */
 export function useWorkflowExport(url: string | undefined) {
   const copyText = useCallback(async (text: string, setCopied: (v: boolean) => void) => {
@@ -28,17 +24,16 @@ export function useWorkflowExport(url: string | undefined) {
 
   const downloadDocx = useCallback(
     async (body: string, skillId: string, subject = ''): Promise<boolean> => {
-      if (!url) return false
+      if (!url || !window.api?.getSetupFile) return false
       if (!skillHasDocxTemplate(skillId)) {
         console.error(`[export] No DOCX template for skill: ${skillId}`)
         return false
       }
-      const resp = await fetch(skillDocxTemplateUrl(url, skillId))
-      if (!resp.ok) {
-        console.error(`[export] Failed to load template (${resp.status}): ${skillId}`)
+      const buf = await window.api.getSetupFile({ url, id: 'tickets/letter.docx' })
+      if (!buf) {
+        console.error(`[export] Failed to load template: ${skillId}`)
         return false
       }
-      const buf = await resp.arrayBuffer()
       const bytes = await generateDocxFromTemplate(buf, { subject, body })
       const blob = new Blob([new Uint8Array(bytes)], {
         type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'

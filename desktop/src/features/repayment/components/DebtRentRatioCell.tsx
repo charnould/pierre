@@ -19,5 +19,5 @@ export function DebtRentRatioCell({ ratio, columnValues }: Props) {
   const label = formatDebtRentRatioMonths(ratio)
   const display = resolveTicketValueDisplay('ratio_dette_loyer', label, columnValues)
 
-  return <TableCellValue display={display} className="tabular-nums" />
+  return <TableCellValue display={display} numeric />
 }

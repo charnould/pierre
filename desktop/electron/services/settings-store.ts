@@ -62,23 +62,21 @@ function ensureParentDirectory(path: string): void {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
-/**
- * The OS-keychain boundary for the stored credential. It lives here, and the
- * `safeStorage` implementation lives in `secret-crypto.ts`, because `electron`
- * resolves to the binary path outside an Electron runtime — importing it from
- * this module would break every test that loads the store.
- *
- * Both directions return `null` instead of throwing: a credential that cannot be
- * encrypted is not written, and one that cannot be decrypted reads back as
- * absent, which the app already treats as "logged out".
- */
-export type SecretCrypto = {
-  encrypt: (value: string) => string | null
-  decrypt: (value: string) => string | null
-}
+const SETTINGS_KEYS = [
+  'url',
+  'email',
+  'updatesNotify',
+  'updatesReadSlugs',
+  'showOwnActivity',
+  'followedActivityAuthors'
+] as const
 
-/** No keychain: nothing is persisted rather than persisted in cleartext. */
-const unavailableSecretCrypto: SecretCrypto = { encrypt: () => null, decrypt: () => null }
+function normalizeSettingsDocument(data: unknown): Record<string, unknown> {
+  if (!isRecord(data)) return {}
+  return Object.fromEntries(
+    SETTINGS_KEYS.flatMap((key) => (data[key] === undefined ? [] : [[key, data[key]]]))
+  )
+}
 
 function readJsonFile(
   path: string,
@@ -93,38 +91,16 @@ function readJsonFile(
   }
 }
 
-/**
- * Creates a file-backed store with a single-writer queue for UI settings.
- *
- * `crypto` is the keychain used for the stored credential; it defaults to "no
- * keychain", which persists no password at all. Production wires
- * `safeStorageCrypto` in `main.ts`.
- */
-export function createSettingsStore(
-  settingsPath: string,
-  uiSettingsPath: string,
-  crypto: SecretCrypto = unavailableSecretCrypto
-): SettingsStore {
+/** Creates a file-backed store with a single-writer queue for UI settings. */
+export function createSettingsStore(settingsPath: string, uiSettingsPath: string): SettingsStore {
   const uiWriteQueue = createWriteQueue()
-
-  /**
-   * Swaps the in-memory `password` for the on-disk `passwordEnc`. A credential
-   * that cannot be encrypted is dropped rather than written in cleartext, and any
-   * `passwordEnc` echoed back by a caller is discarded in favour of a fresh one.
-   */
-  const encodeSettingsDocument = (data: Record<string, unknown>): Record<string, unknown> => {
-    const { password, passwordEnc: _stale, ...rest } = data
-    if (typeof password !== 'string' || !password) return rest
-    const ciphertext = crypto.encrypt(password)
-    return ciphertext ? { ...rest, passwordEnc: ciphertext } : rest
-  }
 
   const persistSettingsDocument = (document: unknown): void => {
     ensureParentDirectory(settingsPath)
     writeFileSync(settingsPath, JSON.stringify(document, null, 2), { mode: 0o600 })
     try {
       // `mode` only applies when the file is created, so tighten pre-existing
-      // ones too — this file used to be world-readable and holds a credential.
+      // ones too — this file used to be world-readable.
       chmodSync(settingsPath, 0o600)
     } catch (error) {
       // The settings are already saved; a filesystem that refuses the mode must
@@ -166,57 +142,12 @@ export function createSettingsStore(
     readSettings: () => {
       const raw = readJsonFile(settingsPath, null)
       if (!isRecord(raw)) return raw
-      const { password: cleartext, passwordEnc, ...rest } = raw
-
-      // A cleartext `password` wins over any ciphertext beside it: only a build
-      // without this migration writes one, and it would have echoed back the
-      // `passwordEnc` it read, leaving the ciphertext the older of the two.
-      if (typeof cleartext === 'string') {
-        if (!cleartext) return rest
-        const settings = { ...rest, password: cleartext }
-        const encoded = encodeSettingsDocument(settings)
-        // Migrate only once the credential is safely encrypted; rewriting the
-        // file without it would delete a password the user is still logged in
-        // with (a Linux box with no keyring, say).
-        if (typeof encoded['passwordEnc'] === 'string') {
-          try {
-            persistSettingsDocument(encoded)
-          } catch (error) {
-            logMainError('settings-password-migration', error)
-          }
-        }
-        return settings
-      }
-
-      if (typeof passwordEnc !== 'string' || !passwordEnc) return rest
-      const password = crypto.decrypt(passwordEnc)
-      return password ? { ...rest, password } : rest
+      const normalized = normalizeSettingsDocument(raw)
+      if (JSON.stringify(normalized) !== JSON.stringify(raw)) persistSettingsDocument(normalized)
+      return normalized
     },
 
-    writeSettings: (data) => {
-      if (!isRecord(data)) {
-        persistSettingsDocument(data)
-        return
-      }
-      const { hasPassword: _hasPassword, ...incoming } = data
-      if (typeof incoming.password === 'string') {
-        persistSettingsDocument(encodeSettingsDocument(incoming))
-        return
-      }
-      const existing = readJsonFile(settingsPath, null)
-      const existingEnc =
-        isRecord(existing) && typeof existing.passwordEnc === 'string'
-          ? existing.passwordEnc
-          : undefined
-      const keepCredential =
-        Boolean(existingEnc) &&
-        (typeof incoming.url === 'string' || typeof incoming.email === 'string')
-      persistSettingsDocument(
-        keepCredential
-          ? { ...encodeSettingsDocument(incoming), passwordEnc: existingEnc }
-          : encodeSettingsDocument(incoming)
-      )
-    },
+    writeSettings: (data) => persistSettingsDocument(normalizeSettingsDocument(data)),
 
     readUiSettingsRaw,
     readUiSettingsContent: () => {

@@ -1,17 +1,25 @@
+import {
+  buildCaseAssignmentActivity,
+  buildCaseBucketChangeActivity,
+  buildCaseTagChangeActivity
+} from '@/shared/lib/activities/case-activities'
 import type { CreateActivityBody } from '@/shared/types/activites'
 import { ACTIVITY_CONTENT_VERSION } from '@/shared/types/activites'
 import type { RepaymentNotificationChannel } from '@/shared/types/notification-repayment'
 
 import type { RepaymentBucketId } from './repayment-bucket'
-import { extractMentionsFromText } from './repayment-mention'
-import { canonicalizeRepaymentTags, sameRepaymentTagSet } from './repayment-tags'
+import {
+  canonicalizeRepaymentTags,
+  repaymentTagOptions,
+  sameRepaymentTagSet
+} from './repayment-tags'
 
 export type RepaymentMessageOptions = {
   objet?: string
   action?: string
   destinataire?: string
-  /** Template `channel: mailto` — journalise sans envoyer via l’API courriel. */
-  transport?: 'mailto'
+  /** Communication déjà envoyée par une application extérieure à Pierre. */
+  delivery?: 'external'
 }
 
 export function buildRepaymentMessageActivity(
@@ -32,54 +40,34 @@ export function buildRepaymentMessageActivity(
     return null
   }
 
-  return {
-    contexte: 'repayment',
-    ref,
-    type: channel,
-    statut: channel === 'note' ? 'logged' : 'queued',
-    contenu: JSON.stringify(
-      channel === 'note'
-        ? {
-            version: ACTIVITY_CONTENT_VERSION,
-            note: contenu
-          }
-        : {
-            version: ACTIVITY_CONTENT_VERSION,
-            ...(action ? { action } : {}),
-            ...(objet ? { objet } : {}),
-            corps: contenu
-          }
-    )
+  if (channel === 'note') {
+    return {
+      contexte: 'repayment',
+      ref,
+      type: 'note.published',
+      contenu: JSON.stringify({
+        version: ACTIVITY_CONTENT_VERSION,
+        text: contenu
+      })
+    }
   }
+  return null
 }
 
 export function buildRepaymentAssignmentActivity(
   ref: string,
   user: { login: string; email: string },
   previousEmail: string | null,
-  origine?: 'manual',
+  _origine?: 'manual',
   comment?: string
 ): CreateActivityBody | null {
-  const email = user.email.trim()
-  const login = user.login.trim().toLowerCase()
-  if (!email || !login) return null
-  const trimmedComment = comment?.trim() ?? ''
-  const recipients = [...new Set([login, ...extractMentionsFromText(trimmedComment)])]
-  return {
+  return buildCaseAssignmentActivity({
     contexte: 'repayment',
     ref,
-    type: 'repayment_assignment',
-    statut: 'logged',
-    recipients,
-    contenu: JSON.stringify({
-      version: ACTIVITY_CONTENT_VERSION,
-      gestionnaire_precedent: previousEmail,
-      gestionnaire: email,
-      login,
-      ...(origine ? { origine } : {}),
-      ...(trimmedComment ? { note: trimmedComment } : {})
-    })
-  }
+    user,
+    previousEmail,
+    comment
+  })
 }
 
 export type RepaymentAdvancementContext = {
@@ -119,20 +107,17 @@ export function buildRepaymentAdvancementOperations({
   const trimmedComment = comment.trim()
 
   if (bucket != null && bucket !== previousBucket) {
+    const activity = buildCaseBucketChangeActivity({
+      contexte: 'repayment',
+      ref,
+      bucket,
+      previousBucket,
+      comment: trimmedComment
+    })
+    if (!activity) return operations
     operations.push({
       kind: 'bucket',
-      activity: {
-        contexte: 'repayment',
-        ref,
-        type: 'repayment_phase_change',
-        statut: 'logged',
-        contenu: JSON.stringify({
-          version: ACTIVITY_CONTENT_VERSION,
-          phase_precedente: previousBucket,
-          phase: bucket,
-          ...(trimmedComment ? { note: trimmedComment } : {})
-        })
-      }
+      activity
     })
   }
 
@@ -142,11 +127,10 @@ export function buildRepaymentAdvancementOperations({
       activity: {
         contexte: 'repayment',
         ref,
-        type: 'note',
-        statut: 'logged',
+        type: 'note.published',
         contenu: JSON.stringify({
           version: ACTIVITY_CONTENT_VERSION,
-          note: trimmedComment
+          text: trimmedComment
         })
       }
     })
@@ -178,22 +162,18 @@ export function buildRepaymentTagChangeOperations({
   const tagsChanged = !sameRepaymentTagSet(nextTags, previous)
 
   if (tagsChanged) {
-    const recipients = [...new Set(extractMentionsFromText(trimmedComment))]
+    const activity = buildCaseTagChangeActivity({
+      contexte: 'repayment',
+      ref,
+      tags: nextTags,
+      previousTags: previous,
+      tagOptions: repaymentTagOptions(),
+      comment: trimmedComment
+    })
+    if (!activity) return operations
     operations.push({
       kind: 'tags',
-      activity: {
-        contexte: 'repayment',
-        ref,
-        type: 'repayment_tag_change',
-        statut: 'logged',
-        ...(recipients.length > 0 ? { recipients } : {}),
-        contenu: JSON.stringify({
-          version: ACTIVITY_CONTENT_VERSION,
-          tags_precedents: previous,
-          tags: nextTags,
-          ...(trimmedComment ? { note: trimmedComment } : {})
-        })
-      }
+      activity
     })
   } else if (trimmedComment) {
     operations.push({
@@ -201,11 +181,10 @@ export function buildRepaymentTagChangeOperations({
       activity: {
         contexte: 'repayment',
         ref,
-        type: 'note',
-        statut: 'logged',
+        type: 'note.published',
         contenu: JSON.stringify({
           version: ACTIVITY_CONTENT_VERSION,
-          note: trimmedComment
+          text: trimmedComment
         })
       }
     })
@@ -241,16 +220,14 @@ export function buildRepaymentEmailImportActivity(
   return {
     contexte: 'repayment',
     ref,
-    type: 'email_import',
-    statut: 'logged',
+    type: 'communication.imported',
+    channel: 'email',
     ...(parsed.to.trim() ? { destinataire: parsed.to.trim() } : {}),
     contenu: JSON.stringify({
       version: ACTIVITY_CONTENT_VERSION,
-      ...(objet ? { objet } : {}),
-      corps,
-      ...(parsed.from.trim() ? { expediteur: parsed.from.trim() } : {}),
-      ...(parsed.to.trim() ? { destinataire: parsed.to.trim() } : {}),
-      ...(parsed.sentAt ? { date_envoi: parsed.sentAt } : {})
+      sender: parsed.from.trim() || 'inconnu',
+      body: corps,
+      ...(objet ? { subject: objet } : {})
     })
   }
 }

@@ -1,31 +1,33 @@
-import { describe, expect, test } from 'bun:test'
+import { beforeEach, describe, expect, test } from 'bun:test'
 
-import repaymentConfig from '@customization/repayments/config'
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 
 import {
   getRepaymentActionByLabel,
   getRepaymentActionMeta,
   isRepaymentActionId,
-  REPAYMENT_ACTION_OPTIONS,
-  REPAYMENT_BULK_ACTION_OPTIONS,
-  REPAYMENT_DOSSIER_ACTION_OPTIONS
+  repaymentActionOptions,
+  repaymentBulkActionOptions,
+  repaymentDossierActionOptions
 } from './repayment-action'
 
 describe('repayment-action', () => {
-  test('les actes dossier et bulk proviennent de la configuration', () => {
-    const configured = [
-      ...repaymentConfig.actions.dossier,
-      ...repaymentConfig.actions.bulk_operations
-    ]
-    expect(REPAYMENT_ACTION_OPTIONS.map((o) => o.label)).toEqual(configured)
-    expect(REPAYMENT_DOSSIER_ACTION_OPTIONS).toHaveLength(repaymentConfig.actions.dossier.length)
-    expect(REPAYMENT_BULK_ACTION_OPTIONS).toHaveLength(
-      repaymentConfig.actions.bulk_operations.length
-    )
+  beforeEach(() => {
+    loadCustomizationFixture()
+  })
+
+  test('les actes dossier et bulk proviennent du store', () => {
+    expect(repaymentActionOptions().map((o) => o.label)).toEqual([
+      'Analyser le dossier',
+      'Joindre le locataire',
+      'Envoyer un RCS de relance'
+    ])
+    expect(repaymentDossierActionOptions()).toHaveLength(2)
+    expect(repaymentBulkActionOptions()).toHaveLength(1)
   })
 
   test('chaque motif a une couleur', () => {
-    for (const option of REPAYMENT_ACTION_OPTIONS) {
+    for (const option of repaymentActionOptions()) {
       expect(option.color.bgColor).toMatch(/^#[0-9A-F]{6}$/)
       expect(option.color.textColor).toMatch(/^#[0-9A-F]{6}$/)
     }

@@ -1,4 +1,4 @@
-import type { Column, Header, Row, Table } from '@tanstack/react-table'
+import type { Column, Header, Table } from '@tanstack/react-table'
 import { ArrowLeftIcon, ArrowRightIcon, EyeOffIcon, Filter } from 'lucide-react'
 import type { ComponentProps } from 'react'
 
@@ -19,7 +19,6 @@ import type { PierreTableFeatures } from './table-features'
 export type AnyPierreColumn = Column<PierreTableFeatures, any>
 export type AnyPierreTable = Table<PierreTableFeatures, any>
 export type AnyPierreHeader = Header<PierreTableFeatures, any, unknown>
-export type AnyPierreRow = Row<PierreTableFeatures, any>
 
 interface TriggerProps extends ComponentProps<typeof Button> {
   columnLabel: string
@@ -43,7 +42,7 @@ export function ColumnHeaderOptionsTrigger({
       type="button"
       variant={highlighted ? 'secondary' : 'ghost'}
       size="icon-xs"
-      className={cn('relative shrink-0 px-0', compact ? 'size-5' : 'size-6', className)}
+      className={cn('relative shrink-0', compact ? 'size-5' : 'size-6', className)}
       aria-label={
         hasBadge
           ? `Options ${columnLabel} — ${badgeCount} valeur${badgeCount > 1 ? 's' : ''} sélectionnée${badgeCount > 1 ? 's' : ''}`

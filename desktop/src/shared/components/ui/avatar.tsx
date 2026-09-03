@@ -1,9 +1,17 @@
 import { Avatar as AvatarPrimitive } from '@base-ui/react/avatar'
+import { cn } from 'cn'
 import * as React from 'react'
 
-import { cn } from '@/shared/lib/utils'
-
 export type AvatarSize = 'xs' | 'sm' | 'default' | 'lg'
+type AvatarFallbackTone =
+  | 'default'
+  | 'user-initials'
+  | 'timeline-bot'
+  | 'timeline-database'
+  | 'timeline-user'
+  | 'timeline-tenant'
+  | 'timeline-external'
+  | 'timeline-candidate'
 
 function Avatar({
   className,
@@ -35,12 +43,17 @@ function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
   )
 }
 
-function AvatarFallback({ className, ...props }: AvatarPrimitive.Fallback.Props) {
+function AvatarFallback({
+  className,
+  tone = 'default',
+  ...props
+}: AvatarPrimitive.Fallback.Props & { tone?: AvatarFallbackTone }) {
   return (
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
+      data-tone={tone}
       className={cn(
-        'flex size-full items-center justify-center rounded-full bg-muted text-sm text-muted-foreground group-data-[size=sm]/avatar:text-xs group-data-[size=xs]/avatar:text-[0.5rem]',
+        'flex size-full items-center justify-center rounded-full bg-muted text-sm text-muted-foreground group-data-[size=sm]/avatar:text-xs group-data-[size=xs]/avatar:text-[0.5rem] data-[tone=user-initials]:text-[38cqmin] data-[tone=user-initials]:font-medium data-[tone=user-initials]:tracking-tight data-[tone=user-initials]:uppercase data-[tone=timeline-bot]:bg-timeline-bot data-[tone=timeline-bot]:text-timeline-bot-foreground data-[tone=timeline-database]:bg-timeline-database data-[tone=timeline-database]:text-timeline-database-foreground data-[tone=timeline-user]:bg-timeline-user data-[tone=timeline-user]:text-timeline-user-foreground data-[tone=timeline-tenant]:bg-timeline-tenant data-[tone=timeline-tenant]:text-timeline-tenant-foreground data-[tone=timeline-external]:bg-timeline-external data-[tone=timeline-external]:text-timeline-external-foreground data-[tone=timeline-candidate]:bg-timeline-candidate data-[tone=timeline-candidate]:text-timeline-candidate-foreground',
         className
       )}
       {...props}

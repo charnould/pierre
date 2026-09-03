@@ -230,7 +230,8 @@ export function buildRepaymentColumns(
             column={columnId}
             value={getValue()}
             columnValues={columnValues}
-            className={numeric ? 'block tabular-nums' : undefined}
+            numeric={numeric}
+            className={numeric ? 'block' : undefined}
           />
         ),
         enableSorting: true,

@@ -1,33 +1,58 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { X } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 
 import { useNotificationTimeline } from '@/features/activity/hooks/use-notification-timeline'
-import { replyAuthorMentionSeed } from '@/features/repayment/lib/repayment-mention'
+import { useTicketOutboundState } from '@/features/tickets/hooks/use-ticket-outbound-state'
 import { buildTicketTimeline } from '@/features/tickets/lib/build-ticket-timeline'
-import { KNOWLEDGE_SKILL } from '@/features/tickets/lib/knowledge-skills'
-import { useTicketSheetAi } from '@/features/tickets/lib/use-ticket-sheet-ai'
+import {
+  NON_TRAITEES_TICKET_BUCKET_ID,
+  isTicketBucketId,
+  resolveTicketBucket,
+  type TicketBucketId
+} from '@/features/tickets/lib/ticket-bucket'
+import { canonicalizeTicketTags, ticketTagOptions } from '@/features/tickets/lib/ticket-tags'
 import type { TicketComposeMode } from '@/features/tickets/lib/use-tickets-view-data'
 import { useWorkflowExport } from '@/features/workflow/hooks/useWorkflowExport'
-import {
-  INSPECTOR_DRAWER_CLASS,
-  InspectorSplit
-} from '@/shared/components/inspector/inspector-split'
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
+import { InspectorSplit } from '@/shared/components/inspector/inspector-split'
 import { InspectorTimelineSkeleton } from '@/shared/components/inspector/inspector-timeline-skeleton'
+import { OpenActionsCard } from '@/shared/components/inspector/open-actions-card'
 import { ContextTimeline } from '@/shared/components/timeline/context-timeline'
+import { Button } from '@/shared/components/ui/button'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/shared/components/ui/drawer'
 import { toast } from '@/shared/components/ui/toast'
+import { useCaseActivityActions } from '@/shared/hooks/use-case-activity-actions'
 import { useScrollToTopOnOpen } from '@/shared/hooks/use-scroll-to-top-on-open'
+import { listOpenActions, type ActionDraft } from '@/shared/lib/activities/action-activity'
+import {
+  deriveCaseAssignment,
+  deriveCaseBucket,
+  deriveCaseTags
+} from '@/shared/lib/activities/case-activities'
+import { replyAuthorMentionSeed } from '@/shared/lib/activities/mentions'
+import {
+  readExternalApplication,
+  resolveExternalApplicationTarget
+} from '@/shared/lib/external-application'
+import { ticketsSetup } from '@/shared/lib/instance-customization'
 import { scrollBehavior } from '@/shared/lib/prefers-reduced-motion'
 import { getTicketCellText } from '@/shared/lib/ticket-row'
 import type { TicketRow } from '@/shared/types'
+import { activity_texte, type Activite } from '@/shared/types/activites'
+import type { OrgUser } from '@/shared/types/users'
 
+import { rcs_compose_payload, type RcsContenu } from '../../../../../shared/rcs-message'
 import {
   TicketComposeBlock,
   TicketSummaryCard,
   type TicketAiGenerationProps
 } from './TicketComposeBlock'
 import { TicketReclamationTimeline } from './TicketReclamationTimeline'
+import type { TicketReplyFormat } from './TicketTenantReplyDraft'
 
-const EMAIL_SUBJECT_PLACEHOLDER = 'Relance — situation de compte locataire'
+function externalApplication() {
+  return readExternalApplication(ticketsSetup())
+}
 
 interface Props {
   url: string | undefined
@@ -45,6 +70,7 @@ interface Props {
   highlightActivityId?: number
   onPostActivity: (type: string, statut: string, contenu: string) => Promise<number | null>
   onSummarizeActivity: (content: string) => Promise<number | null>
+  onCaseStateChange?: () => void | Promise<void>
 }
 
 export function TicketReclamationDrawer({
@@ -58,20 +84,40 @@ export function TicketReclamationDrawer({
   initialComposeMode,
   highlightActivityId,
   onPostActivity,
-  onSummarizeActivity
+  onSummarizeActivity,
+  onCaseStateChange
 }: Props) {
   const [composeMode, setComposeMode] = useState<TicketComposeMode>(null)
   const [comment, setComment] = useState('')
-  const [rcsMessage, setRcsMessage] = useState('')
-  const [emailSubject, setEmailSubject] = useState('')
-  const [emailBody, setEmailBody] = useState('')
-  const [letterSubject, setLetterSubject] = useState('')
-  const [letterBody, setLetterBody] = useState('')
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null)
+  const [deleteActivityId, setDeleteActivityId] = useState<number | null>(null)
+  const [draftTags, setDraftTags] = useState<string[]>([])
+  const [tagComment, setTagComment] = useState('')
+  const [draftBucket, setDraftBucket] = useState<TicketBucketId | null>(null)
+  const [bucketComment, setBucketComment] = useState('')
+  const {
+    destinataireAddress,
+    destinataireEmail,
+    emailBody,
+    emailSubject,
+    externalBody,
+    externalConfirmation,
+    externalSubject,
+    letterBody,
+    letterSubject,
+    rcsCompose,
+    reset: resetOutbound,
+    seedRcsFromTicket,
+    setEmailBody,
+    setEmailSubject,
+    setExternalBody,
+    setExternalConfirmation,
+    setExternalSubject,
+    setLetterBody,
+    setLetterSubject,
+    setRcsCompose
+  } = useTicketOutboundState(ticket)
   const [summarizeContent, setSummarizeContent] = useState('')
-  const [aiComposeTarget, setAiComposeTarget] = useState<Exclude<
-    TicketComposeMode,
-    'comment' | null
-  > | null>(null)
   const [lastHighlightId, setLastHighlightId] = useState<number | undefined>()
   const [submitting, setSubmitting] = useState(false)
   const submittingRef = useRef(false)
@@ -79,8 +125,6 @@ export function TicketReclamationDrawer({
   const historyScrollElRef = useRef<HTMLDivElement | null>(null)
 
   const idReclamation = ticket ? getTicketCellText(ticket, 'id_reclamation') : ''
-  const idLocataire = ticket ? getTicketCellText(ticket, 'id_locataire') : ''
-  const ticketMessage = ticket ? getTicketCellText(ticket, 'message') : ''
 
   const { rows, loading, initialLoading, refresh } = useNotificationTimeline(
     url,
@@ -88,23 +132,69 @@ export function TicketReclamationDrawer({
     idReclamation || undefined,
     open && ticket != null
   )
-  const timelineItems = useMemo(() => buildTicketTimeline(rows), [rows])
+  const timelineItems = useMemo(() => buildTicketTimeline(rows, ticket), [rows, ticket])
   const hasTimelineHistory = timelineItems.length > 0
+  const sortedActivities = useMemo(
+    () => [...rows].sort((a, b) => b.date_creation.localeCompare(a.date_creation)),
+    [rows]
+  )
+  const currentTags = useMemo(
+    () => canonicalizeTicketTags(deriveCaseTags(sortedActivities)),
+    [sortedActivities]
+  )
+  const currentBucket = useMemo(
+    () =>
+      resolveTicketBucket(
+        deriveCaseBucket(
+          sortedActivities,
+          resolveTicketBucket(
+            typeof ticket?.pierre_bucket === 'string'
+              ? ticket.pierre_bucket
+              : NON_TRAITEES_TICKET_BUCKET_ID
+          ),
+          isTicketBucketId
+        )
+      ),
+    [sortedActivities, ticket]
+  )
+  const currentReferent = useMemo(
+    () => deriveCaseAssignment(sortedActivities, getTicketCellText(ticket ?? {}, 'affectation_1')),
+    [sortedActivities, ticket]
+  )
+  const currentActionRows = useMemo(() => {
+    const latestRevision = new Map<string, Activite>()
+    for (const row of rows) {
+      if (!row.type.startsWith('task.') || !row.thread_id) continue
+      const previous = latestRevision.get(row.thread_id)
+      if (!previous || (row.revision ?? 0) > (previous.revision ?? 0)) {
+        latestRevision.set(row.thread_id, row)
+      }
+    }
+    return [...latestRevision.values()]
+  }, [rows])
+  const openActions = useMemo(() => listOpenActions(currentActionRows), [currentActionRows])
 
-  const { runAnswer, runSummarize, generation, getShowReasoning, aiBusy } = useTicketSheetAi(url)
+  const caseActions = useCaseActivityActions({
+    url,
+    contexte: 'tickets',
+    ref: idReclamation,
+    userLogin,
+    refresh
+  })
+
   const { downloadDocx } = useWorkflowExport(url)
 
   const resetCompose = useCallback(() => {
     setComposeMode(null)
-    setAiComposeTarget(null)
     setComment('')
-    setRcsMessage('')
-    setEmailSubject('')
-    setEmailBody('')
-    setLetterSubject('')
-    setLetterBody('')
+    setEditingNoteId(null)
+    setDraftTags([])
+    setTagComment('')
+    setDraftBucket(null)
+    setBucketComment('')
+    resetOutbound()
     setSummarizeContent('')
-  }, [])
+  }, [resetOutbound])
 
   const scrollComposeIntoView = useCallback(() => {
     const el = bodyScrollElRef.current
@@ -135,7 +225,7 @@ export function TicketReclamationDrawer({
     if (!open || !ticket || !url || !initialComposeMode) return
     if (initialComposeMode !== 'email' && initialComposeMode !== 'letter') return
 
-    const idSkill = KNOWLEDGE_SKILL.ticketAnswerTicket
+    const idSkill = 'replies'
     const channel = initialComposeMode === 'letter' ? 'letter' : 'email'
 
     void window.api
@@ -152,16 +242,16 @@ export function TicketReclamationDrawer({
         if (initialComposeMode === 'email') setEmailBody(body)
         else setLetterBody(body)
       })
-  }, [open, ticket, url, initialComposeMode, idReclamation, sheetOpenToken])
-
-  const ticketContext = useCallback(
-    () => ({
-      id_reclamation: idReclamation,
-      id_locataire: idLocataire,
-      message: ticketMessage
-    }),
-    [idReclamation, idLocataire, ticketMessage]
-  )
+  }, [
+    open,
+    ticket,
+    url,
+    initialComposeMode,
+    idReclamation,
+    sheetOpenToken,
+    setEmailBody,
+    setLetterBody
+  ])
 
   const runTicketSubmission = async (task: () => Promise<boolean>): Promise<boolean> => {
     if (submittingRef.current) return false
@@ -184,7 +274,7 @@ export function TicketReclamationDrawer({
       if (!activityId) return false
       toast.add({
         title:
-          type === 'note'
+          type === 'note.published' || type === 'note'
             ? 'Note enregistrée dans l’historique'
             : 'Message enregistré dans l’historique',
         type: 'success'
@@ -196,25 +286,36 @@ export function TicketReclamationDrawer({
   }
 
   const sendAndRefresh = async (
-    type: 'rcs' | 'email' | 'courrier',
-    destinataire: string,
-    contenu: { objet?: string; corps: string }
+    params:
+      | { channel: 'rcs'; destinataire: string; contenu: RcsContenu }
+      | {
+          channel: 'email' | 'postal_letter'
+          destinataire: string
+          contenu: { subject?: string; body: string }
+        }
   ) => {
     return runTicketSubmission(async () => {
-      if (!url || !window.api?.sendCommunication || !destinataire.trim()) {
+      if (!url || !window.api?.sendCommunication || !params.destinataire.trim()) {
         toast.add({ title: 'Coordonnée du destinataire indisponible', type: 'error' })
         return false
       }
       const response = await window.api.sendCommunication({
         url,
         idempotencyKey: crypto.randomUUID(),
-        type,
         contexte: 'tickets',
         ref: idReclamation,
-        destinataire: destinataire.trim(),
-        contenu
+        ...params,
+        destinataire: params.destinataire.trim()
       })
-      if (!response?.data?.id) return false
+      if (!response) {
+        toast.add({ title: 'Impossible d’envoyer le message', type: 'error' })
+        return false
+      }
+      if ('error' in response) {
+        toast.add({ title: response.error.message, type: 'error' })
+        if (response.data) await refresh()
+        return false
+      }
       toast.add({ title: 'Message enregistré dans l’historique', type: 'success' })
       await refresh()
       resetCompose()
@@ -222,63 +323,80 @@ export function TicketReclamationDrawer({
     })
   }
 
-  const handleAiDraft = async (
-    target: Exclude<TicketComposeMode, 'comment' | null>,
-    channel: 'email' | 'letter' | undefined,
-    setBody: (v: string) => void,
-    setSubject: (v: string) => void
+  const recordExternalAndRefresh = async (
+    applicationName: string,
+    destinataire: string | undefined,
+    subject: string,
+    message: string
   ) => {
-    const ctx = ticketContext()
-    if (!ctx.id_reclamation || !ctx.message.trim()) {
-      toast.add({ title: 'Message locataire requis pour la génération.', type: 'info' })
-      return
-    }
-    setAiComposeTarget(target)
-    try {
-      const result = await runAnswer({
-        id_reclamation: ctx.id_reclamation,
-        id_locataire: ctx.id_locataire,
-        message: ctx.message,
-        channel
+    return runTicketSubmission(async () => {
+      if (!url || !window.api?.recordExternalCommunication) return false
+      const response = await window.api.recordExternalCommunication({
+        url,
+        idempotencyKey: crypto.randomUUID(),
+        channel: 'email',
+        contexte: 'tickets',
+        ref: idReclamation,
+        ...(destinataire?.trim() ? { destinataire: destinataire.trim() } : {}),
+        contenu: {
+          ...(subject ? { subject } : {}),
+          body: message,
+          external_application: { name: applicationName }
+        }
       })
-      if (!result) return
-      setBody(result.body)
-      if (result.subject) setSubject(result.subject)
-      else if (channel === 'email') {
-        setSubject(EMAIL_SUBJECT_PLACEHOLDER)
+      if (!response?.data?.id) {
+        toast.add({ title: 'Impossible d’enregistrer le message', type: 'error' })
+        return false
       }
-    } finally {
-      setAiComposeTarget(null)
-    }
+      toast.add({ title: 'Message enregistré dans l’historique', type: 'success' })
+      await refresh()
+      resetCompose()
+      return true
+    })
   }
 
-  const handleAiSummarize = async () => {
-    const ctx = ticketContext()
-    if (!ctx.id_reclamation || !ctx.message.trim()) {
-      toast.add({ title: 'Message locataire requis pour la génération.', type: 'info' })
+  const aiGeneration: TicketAiGenerationProps | null = null
+
+  const handleExternalInjection = async () => {
+    const application = externalApplication()
+    if (!ticket || composeMode !== 'external' || !application) return
+    const message = externalBody.trim()
+    const subject = externalSubject.trim()
+    const destinataire = destinataireEmail
+    const externalUrl = resolveExternalApplicationTarget(application, ticket)
+    if (!externalUrl || !message || !window.api?.openExternalApplication) {
+      toast.add({
+        title: 'Impossible d’ouvrir',
+        type: 'error'
+      })
       return
     }
-    setAiComposeTarget('summarize')
-    try {
-      const text = await runSummarize({
-        id_reclamation: ctx.id_reclamation,
-        id_locataire: ctx.id_locataire,
-        message: ctx.message,
-        activities: rows
-      })
-      if (text) setSummarizeContent(text)
-    } finally {
-      setAiComposeTarget(null)
-    }
-  }
 
-  const aiGeneration: TicketAiGenerationProps | null = aiComposeTarget
-    ? {
-        target: aiComposeTarget,
-        ...generation,
-        showReasoning: getShowReasoning(aiComposeTarget)
-      }
-    : null
+    let opened = false
+    try {
+      opened = await window.api.openExternalApplication({
+        transport: application.transport,
+        url: externalUrl,
+        ...(application.clipboard ? { clipboard: message } : {}),
+        ...(application.selector ? { selector: application.selector } : {})
+      })
+    } catch {
+      opened = false
+    }
+    if (!opened) {
+      toast.add({
+        title: application.selector ? 'Impossible d’injecter la réponse' : 'Impossible d’ouvrir',
+        type: 'error'
+      })
+      return
+    }
+    setExternalConfirmation({
+      applicationName: application.name,
+      subject,
+      message,
+      ...(destinataire.trim() ? { destinataire: destinataire.trim() } : {})
+    })
+  }
 
   const scrollToTopRef = useScrollToTopOnOpen(
     open && ticket != null,
@@ -302,8 +420,37 @@ export function TicketReclamationDrawer({
       leftRef={scrollRef}
       rightRef={historyScrollRef}
       left={
-        <>
-          <TicketSummaryCard ticket={ticket} />
+        <div className="flex min-h-full flex-col">
+          <TicketSummaryCard
+            ticket={ticket}
+            tags={currentTags}
+            referent={currentReferent.email}
+            bucket={currentBucket}
+          />
+          <OpenActionsCard
+            actions={openActions}
+            saving={caseActions.submitting === 'action'}
+            userLogin={userLogin}
+            url={url}
+            onComplete={(id) => void caseActions.patchAction(id, { operation: 'complete_action' })}
+            onIgnore={(id, motif) =>
+              void caseActions.patchAction(id, {
+                operation: 'ignore_action',
+                ...(motif.trim() ? { motif: motif.trim() } : {})
+              })
+            }
+            onEdit={(id, values) =>
+              void caseActions.patchAction(id, {
+                operation: 'update_action',
+                action: values.action,
+                assigne_a: values.assigneA,
+                date_echeance: values.dateEcheance,
+                ...(values.note.trim() ? { note: values.note.trim() } : {})
+              })
+            }
+            onDelete={setDeleteActivityId}
+            className="mb-3"
+          />
           {initialLoading ? (
             <InspectorTimelineSkeleton variant="ticket" pane="present" />
           ) : (
@@ -311,12 +458,12 @@ export function TicketReclamationDrawer({
               ticket={ticket}
               composeMode={composeMode}
               hasTimelineHistory={hasTimelineHistory}
-              aiBusy={aiBusy}
+              aiBusy={false}
               aiGeneration={aiGeneration}
               comment={comment}
               onCommentChange={setComment}
-              rcsMessage={rcsMessage}
-              onRcsMessageChange={setRcsMessage}
+              rcsCompose={rcsCompose}
+              onRcsComposeChange={setRcsCompose}
               emailSubject={emailSubject}
               onEmailSubjectChange={setEmailSubject}
               emailBody={emailBody}
@@ -325,41 +472,107 @@ export function TicketReclamationDrawer({
               onLetterSubjectChange={setLetterSubject}
               letterBody={letterBody}
               onLetterBodyChange={setLetterBody}
+              externalSubject={externalSubject}
+              onExternalSubjectChange={setExternalSubject}
+              externalBody={externalBody}
+              onExternalBodyChange={setExternalBody}
               summarizeContent={summarizeContent}
               onSummarizeContentChange={setSummarizeContent}
               onStartComment={() => {
                 setComment('')
+                setEditingNoteId(null)
                 setComposeMode('comment')
                 scrollComposeIntoView()
               }}
-              onStartRcs={() => {
-                setRcsMessage('')
-                setComposeMode('rcs')
+              onStartTodo={() => setComposeMode('todo')}
+              onStartAction={() => setComposeMode('action')}
+              onStartBucket={() => {
+                setDraftBucket(currentBucket)
+                setBucketComment('')
+                setComposeMode('bucket')
               }}
-              onStartEmail={() => {
-                setEmailSubject('')
-                setEmailBody('')
-                setComposeMode('email')
+              onStartTags={() => {
+                setDraftTags(currentTags)
+                setTagComment('')
+                setComposeMode('tags')
               }}
-              onStartLetter={() => {
-                setLetterSubject('')
-                setLetterBody('')
-                setComposeMode('letter')
+              onStartAssignment={() => {
+                setTagComment('')
+                setComposeMode('assignment')
               }}
-              onStartSummarize={() => {
-                setSummarizeContent('')
-                setComposeMode('summarize')
-                void handleAiSummarize()
+              onStartReply={() => {
+                if (externalApplication()) {
+                  setExternalSubject('')
+                  setExternalBody('')
+                  setComposeMode('external')
+                } else {
+                  setEmailSubject('')
+                  setEmailBody('')
+                  setComposeMode('email')
+                }
+              }}
+              onReplyFormatChange={(format: TicketReplyFormat) => {
+                if (format === 'rcs') seedRcsFromTicket()
+                setComposeMode(format)
               }}
               onCancelCompose={resetCompose}
               onSubmitComment={() => {
                 if (!comment.trim()) return
-                void postAndRefresh('note', 'logged', comment.trim())
+                if (editingNoteId != null) {
+                  void caseActions.editNote(editingNoteId, comment).then((ok) => {
+                    if (ok) resetCompose()
+                  })
+                } else {
+                  void postAndRefresh(
+                    'note.published',
+                    'logged',
+                    JSON.stringify({ version: 2, text: comment.trim() })
+                  )
+                }
               }}
-              onSummarizeDraft={() => {
-                void handleAiSummarize()
+              onSubmitAction={(draft: ActionDraft) =>
+                caseActions.createAction(draft).then((ok) => {
+                  if (ok) resetCompose()
+                  return ok
+                })
+              }
+              draftBucket={draftBucket}
+              currentBucket={currentBucket}
+              onDraftBucketChange={setDraftBucket}
+              bucketComment={bucketComment}
+              onBucketCommentChange={setBucketComment}
+              onSubmitBucket={() => {
+                if (!draftBucket) return
+                void caseActions
+                  .saveBucket(draftBucket, currentBucket, bucketComment)
+                  .then(async (ok) => {
+                    if (!ok) return
+                    resetCompose()
+                    await onCaseStateChange?.()
+                  })
               }}
-              submitting={submitting}
+              draftTags={draftTags}
+              currentTags={currentTags}
+              onDraftTagsChange={setDraftTags}
+              tagComment={tagComment}
+              onTagCommentChange={setTagComment}
+              onSubmitTags={() => {
+                void caseActions
+                  .saveTags(draftTags, currentTags, tagComment, ticketTagOptions())
+                  .then((ok) => {
+                    if (ok) resetCompose()
+                  })
+              }}
+              onAssignReferent={(user: OrgUser) => {
+                void caseActions
+                  .assignReferent(user, currentReferent.email, tagComment)
+                  .then((ok) => {
+                    if (ok) resetCompose()
+                  })
+              }}
+              onImportEml={(file) => void caseActions.importEml(file)}
+              url={url}
+              submitting={submitting || caseActions.submitting != null}
               onSummarizeSave={() => {
                 const trimmed = summarizeContent.trim()
                 if (!trimmed) return
@@ -373,87 +586,44 @@ export function TicketReclamationDrawer({
                   return true
                 })
               }}
-              onRcsDraft={() => {
-                void handleAiDraft('rcs', undefined, setRcsMessage, () => {})
-              }}
-              onRcsSaveDraft={() => {
-                const trimmed = rcsMessage.trim()
-                if (!trimmed) return
-                void postAndRefresh(
-                  'ticket_reply',
-                  'draft',
-                  JSON.stringify({ canal: 'rcs', corps: trimmed })
-                )
-              }}
               onRcsSend={() => {
-                const trimmed = rcsMessage.trim()
-                if (!trimmed) return
-                const phone = String(ticket['telephone_locataire'] ?? ticket['telephone'] ?? '')
-                void sendAndRefresh('rcs', phone, { corps: trimmed })
-              }}
-              onEmailDraft={() => {
-                void handleAiDraft('email', 'email', setEmailBody, setEmailSubject)
-              }}
-              onEmailSaveDraft={() => {
-                const trimmed = emailBody.trim()
-                if (!trimmed) return
-                void postAndRefresh(
-                  'ticket_reply',
-                  'draft',
-                  JSON.stringify({
-                    canal: 'email',
-                    objet: emailSubject.trim(),
-                    corps: trimmed
-                  })
-                )
+                const payload = rcs_compose_payload(rcsCompose)
+                if (!payload) return
+                void sendAndRefresh({ channel: 'rcs', ...payload })
               }}
               onEmailSend={() => {
                 const trimmed = emailBody.trim()
                 if (!trimmed) return
-                const email = String(ticket['email_locataire'] ?? ticket['email'] ?? '')
-                void sendAndRefresh('email', email, {
-                  objet: emailSubject.trim(),
-                  corps: trimmed
+                void sendAndRefresh({
+                  channel: 'email',
+                  destinataire: destinataireEmail,
+                  contenu: {
+                    ...(emailSubject.trim() ? { subject: emailSubject.trim() } : {}),
+                    body: trimmed
+                  }
                 })
-              }}
-              onLetterDraft={() => {
-                void handleAiDraft('letter', 'letter', setLetterBody, setLetterSubject)
-              }}
-              onLetterSaveDraft={() => {
-                const trimmed = letterBody.trim()
-                if (!trimmed) return
-                void postAndRefresh(
-                  'ticket_reply',
-                  'draft',
-                  JSON.stringify({
-                    canal: 'courrier',
-                    objet: letterSubject.trim(),
-                    corps: trimmed
-                  })
-                )
               }}
               onLetterExportWord={() => {
                 const trimmed = letterBody.trim()
                 if (!trimmed) return
-                void downloadDocx(trimmed, KNOWLEDGE_SKILL.ticketAnswerTicket, letterSubject)
+                void downloadDocx(trimmed, 'replies', letterSubject)
               }}
-              onLetterMarkSent={() => {
+              onLetterSend={() => {
                 const trimmed = letterBody.trim()
                 if (!trimmed) return
-                const address = String(
-                  ticket['adresse_locataire'] ??
-                    ticket['adresse'] ??
-                    ticket['adresse_reclamation'] ??
-                    ''
-                )
-                void sendAndRefresh('courrier', address, {
-                  objet: letterSubject.trim(),
-                  corps: trimmed
+                void sendAndRefresh({
+                  channel: 'postal_letter',
+                  destinataire: destinataireAddress,
+                  contenu: {
+                    ...(letterSubject.trim() ? { subject: letterSubject.trim() } : {}),
+                    body: trimmed
+                  }
                 })
               }}
+              onExternalInject={() => void handleExternalInjection()}
             />
           )}
-        </>
+        </div>
       }
       right={
         initialLoading ? (
@@ -465,11 +635,26 @@ export function TicketReclamationDrawer({
               items={timelineItems}
               loading={loading}
               highlightId={lastHighlightId ?? highlightActivityId}
+              userLogin={userLogin}
               onStartReply={(_id, auteur) => {
                 setComment(replyAuthorMentionSeed(auteur, userLogin))
                 setComposeMode('comment')
                 scrollComposeIntoView()
               }}
+              onStartEditNote={(row) => {
+                setEditingNoteId(row.id)
+                setComment(activity_texte(row.type, row.contenu))
+                setComposeMode('comment')
+                scrollComposeIntoView()
+              }}
+              onDeleteActivity={setDeleteActivityId}
+              onReopenAction={(id, assigneA, dateEcheance) =>
+                void caseActions.patchAction(id, {
+                  operation: 'reopen_action',
+                  assigne_a: assigneA,
+                  date_echeance: dateEcheance
+                })
+              }
             />
           </ContextTimeline>
         )
@@ -477,33 +662,87 @@ export function TicketReclamationDrawer({
     />
   )
 
-  const drawerTitle = `Réclamation ${idReclamation}`
+  const handleClose = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation()
+    onOpenChange(false)
+  }
+  const drawerHeader = (
+    <DrawerHeader variant="chrome" data-inspector-motion="header" className="justify-between">
+      <div className="min-w-0 flex-1">
+        <DrawerTitle variant="inspector-id" title={idReclamation}>
+          {idReclamation}
+        </DrawerTitle>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        className="no-drag"
+        aria-label="Fermer le dossier"
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={handleClose}
+      >
+        <X aria-hidden />
+      </Button>
+    </DrawerHeader>
+  )
+  const deleteDialog = (
+    <ConfirmDialog
+      open={deleteActivityId != null}
+      title="Supprimer définitivement"
+      description="Cette action est irréversible. Tout le fil disparaîtra de l’historique."
+      confirmLabel="Supprimer"
+      confirmVariant="destructive"
+      onCancel={() => setDeleteActivityId(null)}
+      onConfirm={() => {
+        if (deleteActivityId == null) return
+        void caseActions.deleteActivity(deleteActivityId).then((ok) => {
+          if (ok) setDeleteActivityId(null)
+        })
+      }}
+    />
+  )
+  const externalApplicationDialog = (
+    <ConfirmDialog
+      open={externalConfirmation != null}
+      title="Avez-vous envoyé cette réponse ?"
+      description={
+        externalConfirmation?.subject
+          ? `Objet : ${externalConfirmation.subject}`
+          : 'Confirmez l’envoi pour l’enregistrer dans l’historique du dossier.'
+      }
+      confirmLabel="Oui, enregistrer"
+      cancelLabel="Non"
+      onCancel={() => setExternalConfirmation(null)}
+      onConfirm={() => {
+        if (!externalConfirmation) return
+        const { applicationName, subject, message, destinataire } = externalConfirmation
+        void recordExternalAndRefresh(applicationName, destinataire, subject, message)
+      }}
+    />
+  )
 
   if (embedded) {
     return (
       <>
-        <DrawerTitle className="sr-only">{drawerTitle}</DrawerTitle>
+        {drawerHeader}
         {drawerBody}
+        {externalApplicationDialog}
+        {deleteDialog}
       </>
     )
   }
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
-      <DrawerContent className={INSPECTOR_DRAWER_CLASS}>
-        <DrawerHeader
-          data-inspector-motion="header"
-          className="flex-row items-center justify-between gap-2 border-b p-3 text-start"
-        >
-          <div className="min-w-0 flex-1">
-            <DrawerTitle>Réclamation</DrawerTitle>
-            <p className="truncate text-[0.8125rem] leading-[1.125rem] tabular-nums">
-              {idReclamation}
-            </p>
-          </div>
-        </DrawerHeader>
-        {drawerBody}
-      </DrawerContent>
-    </Drawer>
+    <>
+      <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
+        <DrawerContent variant="inspector">
+          {drawerHeader}
+          {drawerBody}
+        </DrawerContent>
+      </Drawer>
+      {externalApplicationDialog}
+      {deleteDialog}
+    </>
   )
 }

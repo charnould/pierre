@@ -1,9 +1,13 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
+  canAccessTab,
   GUEST_ACCESSIBLE_TABS,
+  HIDDEN_PANEL_TABS,
   isGuestAccessibleTab,
+  isPanelTabVisible,
   isTab,
+  moduleIdForTab,
   PANEL_NAV_TABS,
   TAB_REGISTRY,
   TABS
@@ -19,6 +23,20 @@ describe('tab-registry', () => {
     expect(PANEL_NAV_TABS).not.toContain('home')
     expect(PANEL_NAV_TABS).toContain('automations')
     expect(PANEL_NAV_TABS).toContain('bulk')
+  })
+
+  test('hidden panel tabs remain valid but are excluded from navigation', () => {
+    expect(HIDDEN_PANEL_TABS).toEqual([
+      'insurance-attestation',
+      'relocation',
+      'attributions',
+      'ventes'
+    ])
+    for (const tab of HIDDEN_PANEL_TABS) {
+      expect(isTab(tab)).toBe(true)
+      expect(isPanelTabVisible(tab)).toBe(false)
+      expect(PANEL_NAV_TABS).not.toContain(tab)
+    }
   })
 
   test('automations and bulk have distinct home labels', () => {
@@ -44,5 +62,27 @@ describe('tab-registry', () => {
       expect(isTab(id)).toBe(true)
     }
     expect(isTab('request')).toBe(false)
+  })
+
+  test('maps business tabs to their access ids', () => {
+    expect(moduleIdForTab('tickets')).toBe('tickets')
+    expect(moduleIdForTab('chat')).toBeNull()
+    expect(moduleIdForTab('administration')).toBeNull()
+  })
+
+  test('enforces module and administrator access independently', () => {
+    const collaborator = {
+      isAdministrator: false,
+      moduleIds: ['tickets'] as const,
+      chatbotIds: ['default']
+    }
+    expect(canAccessTab('home', collaborator)).toBe(true)
+    expect(canAccessTab('chat', collaborator)).toBe(true)
+    expect(canAccessTab('tickets', collaborator)).toBe(true)
+    expect(canAccessTab('repayment', collaborator)).toBe(false)
+    expect(canAccessTab('administration', collaborator)).toBe(false)
+    expect(canAccessTab('administration', { ...collaborator, isAdministrator: true })).toBe(true)
+    expect(canAccessTab('chat', { ...collaborator, chatbotIds: [] })).toBe(true)
+    expect(canAccessTab('settings', null)).toBe(true)
   })
 })

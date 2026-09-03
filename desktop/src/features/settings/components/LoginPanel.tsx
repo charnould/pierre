@@ -1,8 +1,8 @@
 import { Eye, EyeOff } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useEffect, useId, useState } from 'react'
+import { useId, useState } from 'react'
 
-import { loginWithTypedCredentials } from '@/features/auth/credentials'
+import { loginWithTypedCredentials } from '@/features/auth'
 import { panelScreen } from '@/features/workflow/components/WorkflowPanelChrome'
 import { Button } from '@/shared/components/ui/button'
 import { Checkbox } from '@/shared/components/ui/checkbox'
@@ -30,25 +30,24 @@ import {
 } from '@/shared/lib/login-errors'
 import { warnRenderer } from '@/shared/lib/renderer-log'
 import type { Settings } from '@/shared/types'
+import type { UserPrincipal } from '@/shared/types/users'
 
-import { fetchConfig, type DesktopConfig } from '../settings-config'
 import { LoginMark } from './LoginMark'
 
 const LOGIN_LEGAL_REQUIRED = 'Acceptez les deux conditions pour continuer.'
 
 interface Props {
   settings: Settings
-  onLogin: (s: Settings, meta?: { agentName?: string }) => void
+  onLogin: (s: Settings, meta: { user: UserPrincipal }) => void
 }
 
 export function LoginPanel({ settings, onLogin }: Props) {
   const [url, setUrl] = useState(settings.url ?? '')
   const [email, setEmail] = useState(settings.email ?? '')
-  const [password, setPassword] = useState(settings.loggedOut ? '' : (settings.password ?? ''))
+  const [password, setPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({})
   const [loading, setLoading] = useState(false)
-  const [config, setConfig] = useState<DesktopConfig | null>(null)
   const [charterAccepted, setCharterAccepted] = useState(false)
   const [aiDisclaimerAccepted, setAiDisclaimerAccepted] = useState(false)
   const [legalError, setLegalError] = useState('')
@@ -63,16 +62,11 @@ export function LoginPanel({ settings, onLogin }: Props) {
   const aiDisclaimerId = useId()
   const legalErrorId = useId()
 
-  useEffect(() => {
-    if (!settings.url) return
-    void fetchConfig(settings.url).then(setConfig)
-  }, [settings.url])
-
   if (appliedSettings !== settings) {
     setAppliedSettings(settings)
     setUrl(settings.url ?? '')
     setEmail(settings.email ?? '')
-    if (!settings.loggedOut) setPassword(settings.password ?? '')
+    setPassword('')
   }
 
   function clearFieldError(field: LoginField) {
@@ -82,24 +76,6 @@ export function LoginPanel({ settings, onLogin }: Props) {
       delete next[field]
       return next
     })
-  }
-
-  async function handleUrlBlur() {
-    let baseUrl: string
-    try {
-      baseUrl = new URL(url.trim()).origin
-    } catch {
-      setConfig(null)
-      setCharterAccepted(false)
-      setAiDisclaimerAccepted(false)
-      setLegalError('')
-      return
-    }
-    const nextConfig = await fetchConfig(baseUrl)
-    setConfig(nextConfig)
-    setCharterAccepted(false)
-    setAiDisclaimerAccepted(false)
-    setLegalError('')
   }
 
   async function handleSubmit() {
@@ -116,16 +92,14 @@ export function LoginPanel({ settings, onLogin }: Props) {
     setLoading(true)
     const next: Settings = {
       url: new URL(url.trim()).origin,
-      email: email.trim(),
-      password: password.trim(),
-      loggedOut: false
+      email: email.trim()
     }
 
     try {
-      const result = await loginWithTypedCredentials(next)
+      const result = await loginWithTypedCredentials({ ...next, password })
       if (result.ok) {
         await window.api.saveSettings(next)
-        onLogin(next, { agentName: config?.name })
+        onLogin(next, { user: result.user })
       } else {
         setFieldErrors(loginFieldErrorsFromCode(result.message))
       }
@@ -171,7 +145,6 @@ export function LoginPanel({ settings, onLogin }: Props) {
                 setUrl(e.target.value)
                 clearFieldError('url')
               }}
-              onBlur={() => void handleUrlBlur()}
               placeholder="https://exemple.pierre-ia.org"
               autoComplete="url"
               aria-invalid={urlInvalid}
@@ -238,7 +211,7 @@ export function LoginPanel({ settings, onLogin }: Props) {
           </Field>
         </FieldGroup>
 
-        <FieldGroup className="gap-2" aria-describedby={legalError ? legalErrorId : undefined}>
+        <FieldGroup spacing="compact" aria-describedby={legalError ? legalErrorId : undefined}>
           <Field orientation="horizontal" className="items-start">
             <Checkbox
               id={charterId}

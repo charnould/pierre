@@ -31,8 +31,7 @@ export default defineConfig({
     plugins: [react({ compiler: true }), tailwindcss()],
     resolve: {
       alias: {
-        '@': resolve(__dirname, './src'),
-        '@customization': resolve(__dirname, '../customization')
+        '@': resolve(__dirname, './src')
       },
       dedupe: ['react', 'react-dom', '@tanstack/react-table', '@tanstack/react-virtual']
     },

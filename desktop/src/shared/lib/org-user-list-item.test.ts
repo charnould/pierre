@@ -14,8 +14,6 @@ import {
 const CAMILLE: OrgUser = {
   login: 'cdubois',
   email: 'cdubois@exemple.fr',
-  role: 'administrator',
-  config: ['default'],
   hasAvatar: false,
   avatarBytes: 0,
   avatarVersion: 0,
@@ -25,8 +23,6 @@ const CAMILLE: OrgUser = {
 const AMARTIN: OrgUser = {
   login: 'amartin',
   email: 'amartin@exemple.fr',
-  role: 'collaborator',
-  config: ['default'],
   hasAvatar: false,
   avatarBytes: 0,
   avatarVersion: 0,

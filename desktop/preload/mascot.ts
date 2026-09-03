@@ -19,8 +19,17 @@ contextBridge.exposeInMainWorld('api', {
     persist?: boolean
   }) => ipcRenderer.invoke(setBounds, params) as Promise<boolean>,
   showMascotMenu: () => ipcRenderer.invoke(showMenu) as Promise<boolean>,
-  onMascotUnreadCount: (cb: (count: number) => void) => {
-    const listener = (_: unknown, count: number) => cb(count)
+  onMascotUnreadCount: (cb: (payload: { count: number; orbit: boolean }) => void) => {
+    const listener = (_: unknown, payload: { count: number; orbit: boolean } | number) => {
+      if (typeof payload === 'number') {
+        cb({ count: payload, orbit: true })
+        return
+      }
+      cb({
+        count: typeof payload?.count === 'number' ? payload.count : 0,
+        orbit: payload?.orbit !== false
+      })
+    }
     ipcRenderer.on(unreadCountEvent, listener)
     return () => {
       ipcRenderer.removeListener(unreadCountEvent, listener)

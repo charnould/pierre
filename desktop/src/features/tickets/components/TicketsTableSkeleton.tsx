@@ -17,7 +17,7 @@ export function TicketsTableSkeleton({ columns, settings }: Props) {
   const colgroup = () => (
     <colgroup>
       {columns.map((col) => (
-        <col key={col.name} style={{ width: COLUMN_WIDTH }} />
+        <col key={col.name} className="w-[8.75rem]" />
       ))}
     </colgroup>
   )
@@ -30,17 +30,14 @@ export function TicketsTableSkeleton({ columns, settings }: Props) {
     >
       <div className="bg-background overflow-x-auto">
         <table
-          className="table-fixed caption-bottom font-sans text-[0.8125rem] leading-5 tabular-nums"
+          className="pierre-type-data table-fixed caption-bottom font-sans tabular-nums"
           style={{ width: tableWidth }}
         >
           {colgroup()}
           <TableHeader>
-            <TableRow className="hover:bg-transparent">
+            <TableRow hover={false}>
               {columns.map((col) => (
-                <TableHead
-                  key={col.name}
-                  className="border-border bg-background relative h-9 border-b px-2 text-start"
-                >
+                <TableHead key={col.name} variant="board" className="relative h-8 text-start">
                   <Skeleton className="h-3 w-3/4" aria-hidden />
                   <span className="sr-only">{resolveTicketColumnLabel(col.name, settings)}</span>
                 </TableHead>
@@ -52,7 +49,7 @@ export function TicketsTableSkeleton({ columns, settings }: Props) {
 
       <div className="overflow-x-auto">
         <table
-          className="table-fixed caption-bottom font-sans text-[0.8125rem] leading-5 tabular-nums"
+          className="pierre-type-data table-fixed caption-bottom font-sans tabular-nums"
           style={{ width: tableWidth }}
         >
           {colgroup()}

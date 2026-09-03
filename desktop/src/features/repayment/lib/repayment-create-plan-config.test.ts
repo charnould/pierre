@@ -1,21 +1,23 @@
-import { describe, expect, test } from 'bun:test'
+import { beforeEach, describe, expect, test } from 'bun:test'
 
-import repaymentConfig from '@customization/repayments/config'
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 
-import { REPAYMENT_CREATE_PLAN_CONFIG } from './repayment-create-plan-config'
+import { repaymentCreatePlanConfig } from './repayment-create-plan-config'
 
 describe('repayment-create-plan-config', () => {
-  test('lit la phase du plan signé depuis config.ts', () => {
-    const raw = repaymentConfig.create_plan
-    expect(raw?.signed_bucket_id).toBe('plan_apurement_en_cours')
-    expect(REPAYMENT_CREATE_PLAN_CONFIG.signedBucketId).toBe('plan_apurement_en_cours')
+  beforeEach(() => {
+    loadCustomizationFixture()
   })
 
-  test('chaque motif de clôture a une phase valide', () => {
-    const close = REPAYMENT_CREATE_PLAN_CONFIG.close
-    expect(close.execution_complete).toEqual({ bucketId: 'clos' })
-    expect(close.non_respect).toEqual({ bucketId: 'pre_contentieux' })
+  test('lit la phase du plan signé depuis le store', () => {
+    expect(repaymentCreatePlanConfig().signedBucketId).toBe('amiable')
+  })
+
+  test('chaque motif de clôture a une phase', () => {
+    const close = repaymentCreatePlanConfig().close
+    expect(close.execution_complete).toEqual({ bucketId: 'non_traites' })
+    expect(close.non_respect).toEqual({ bucketId: 'contentieux' })
     expect(close.remplacement_par_nouveau_plan).toEqual({ bucketId: 'amiable' })
-    expect(close.effacement_de_dette).toEqual({ bucketId: 'clos' })
+    expect(close.effacement_de_dette).toEqual({ bucketId: 'non_traites' })
   })
 })

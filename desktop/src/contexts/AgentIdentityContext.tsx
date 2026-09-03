@@ -7,9 +7,11 @@ export type AgentIdentity = {
   handle: string
 }
 
+export const DEFAULT_AGENT_NAME = 'Pierre'
+
 const DEFAULT_AGENT_IDENTITY: AgentIdentity = {
-  name: 'Agent IA',
-  handle: 'agent'
+  name: DEFAULT_AGENT_NAME,
+  handle: desktopAgentMentionHandle(DEFAULT_AGENT_NAME)
 }
 
 const AgentIdentityContext = createContext<AgentIdentity>(DEFAULT_AGENT_IDENTITY)

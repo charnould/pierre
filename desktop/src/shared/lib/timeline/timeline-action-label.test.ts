@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import type { Activite } from '@/shared/types/activites'
+import type { Activite, CommunicationChannel } from '@/shared/types/activites'
 
 import {
   formatTimelineActivityTitle,
@@ -17,142 +17,116 @@ function sampleActivity(overrides: Partial<Activite> = {}): Activite {
     id_client: 'CLI-1',
     id_locataire: 'LOC-1',
     id_lot: 'LOT-1',
-    type: 'note',
-    statut: 'logged',
+    type: 'note.published',
+    channel: null,
     mentions: [],
-    contenu: 'Relance',
+    contenu: JSON.stringify({ version: 2, text: 'Relance' }),
     ...overrides
   }
 }
 
+function sent(channel: CommunicationChannel, extras: Partial<Activite> = {}): Activite {
+  return sampleActivity({
+    type: 'communication.sent',
+    channel,
+    contenu: JSON.stringify({ version: 2, sender: 'Alice', body: 'Bonjour' }),
+    ...extras
+  })
+}
+
 describe('timelineActivityActionVerb', () => {
-  test('maps channel and plan types', () => {
-    expect(timelineActivityActionVerb(sampleActivity({ type: 'note' }))).toBe('a laissé une note')
-    expect(timelineActivityActionVerb(sampleActivity({ type: 'ticket_memo' }))).toBe(
+  test('maps notes, channels and plans', () => {
+    expect(timelineActivityActionVerb(sampleActivity({ type: 'note.published' }))).toBe(
       'a laissé une note'
     )
-    expect(timelineActivityActionVerb(sampleActivity({ type: 'rcs' }))).toBe('a envoyé un RCS')
-    expect(timelineActivityActionVerb(sampleActivity({ type: 'email' }))).toBe(
-      'a envoyé un courriel'
+    expect(timelineActivityActionVerb(sent('rcs'))).toBe('a envoyé un RCS')
+    expect(timelineActivityActionVerb(sent('email'))).toBe('a envoyé un courriel')
+    expect(
+      timelineActivityActionVerb(
+        sampleActivity({
+          type: 'communication.imported',
+          channel: 'email',
+          contenu: JSON.stringify({ version: 2, sender: 'Alice', body: 'Bonjour' })
+        })
+      )
+    ).toBe('a importé un courriel')
+    expect(timelineActivityActionVerb(sent('postal_letter'))).toBe(
+      'a envoyé un courrier postal simple'
     )
-    expect(timelineActivityActionVerb(sampleActivity({ type: 'email_import' }))).toBe(
-      'a importé un courriel'
-    )
-    expect(timelineActivityActionVerb(sampleActivity({ type: 'courrier' }))).toBe(
-      'a envoyé un courrier'
-    )
-    expect(timelineActivityActionVerb(sampleActivity({ type: 'bulk_run' }))).toBe(
+    expect(timelineActivityActionVerb(sampleActivity({ type: 'bulk.ran' }))).toBe(
       'a exécuté un traitement de masse'
     )
-    expect(
-      timelineActivityActionVerb(sampleActivity({ type: 'rcs', auteur: 'tenant:LOC-1' }))
-    ).toBe('a répondu par RCS')
-    expect(
-      timelineActivityActionVerb(sampleActivity({ type: 'email', auteur: 'tenant:LOC-1' }))
-    ).toBe('a répondu par courriel')
-    expect(timelineActivityActionVerb(sampleActivity({ type: 'repayment_plan' }))).toBe(
+    expect(timelineActivityActionVerb(sent('rcs', { auteur: 'tenant:LOC-1' }))).toBe(
+      'a répondu par RCS'
+    )
+    expect(timelineActivityActionVerb(sent('email', { auteur: 'tenant:LOC-1' }))).toBe(
+      'a répondu par Courriel'
+    )
+    expect(timelineActivityActionVerb(sampleActivity({ type: 'repayment_plan.created' }))).toBe(
       'a créé un plan d’apurement'
     )
   })
 
-  test('maps repayment events and action states', () => {
-    expect(
-      timelineActivityActionVerb(
-        sampleActivity({
-          type: 'repayment_phase_change'
-        })
-      )
-    ).toBe('a changé le groupe')
-    expect(
-      timelineActivityActionVerb(
-        sampleActivity({
-          type: 'repayment_assignment'
-        })
-      )
-    ).toBe('a affecté le dossier')
-    expect(
-      timelineActivityActionVerb(
-        sampleActivity({
-          type: 'repayment_tag_change'
-        })
-      )
-    ).toBe('a mis à jour les tags')
-    expect(
-      timelineActivityActionVerb(
-        sampleActivity({
-          type: 'action',
-          event: 'created',
-          contenu: JSON.stringify({
-            version: 1,
-            action: 'Joindre le locataire',
-            etat: 'a_faire',
-            assigne_a: 'alice@example.org',
-            date_echeance: '2026-06-20'
-          })
-        })
-      )
-    ).toBe('a créé une tâche')
-    expect(
-      timelineActivityActionVerb(
-        sampleActivity({
-          type: 'action',
-          event: 'completed',
-          contenu: JSON.stringify({
-            version: 1,
-            action: 'Joindre le locataire',
-            etat: 'fait'
-          })
-        })
-      )
-    ).toBe('a réalisé une tâche')
+  test('maps case changes and task states', () => {
+    expect(timelineActivityActionVerb(sampleActivity({ type: 'case.group_changed' }))).toBe(
+      'a déplacé le dossier de groupe'
+    )
+    expect(timelineActivityActionVerb(sampleActivity({ type: 'case.assignee_changed' }))).toBe(
+      'a affecté le dossier'
+    )
+    expect(timelineActivityActionVerb(sampleActivity({ type: 'case.tags_changed' }))).toBe(
+      'a mis à jour les tags'
+    )
+    expect(timelineActivityActionVerb(sampleActivity({ type: 'task.created' }))).toBe(
+      'a créé une tâche'
+    )
+    expect(timelineActivityActionVerb(sampleActivity({ type: 'task.completed' }))).toBe(
+      'a réalisé une tâche'
+    )
   })
 
-  test('maps ticket and automation types', () => {
-    expect(timelineActivityActionVerb(sampleActivity({ type: 'automation_report' }))).toBe(
+  test('maps artifacts and ticket fields', () => {
+    expect(timelineActivityActionVerb(sampleActivity({ type: 'automation.reported' }))).toBe(
       'a publié un rapport'
     )
+    expect(timelineActivityActionVerb(sampleActivity({ type: 'artifact.generated' }))).toBe(
+      'a généré un document'
+    )
     expect(
       timelineActivityActionVerb(
         sampleActivity({
-          type: 'ticket_reply',
-          contenu: JSON.stringify({ titre: 'Réponses' })
+          type: 'ticket.field_changed',
+          contenu: JSON.stringify({ version: 2, field: 'statut', before: 'ouvert', after: 'clos' })
         })
       )
-    ).toBe('a pré-généré des réponses')
-    expect(timelineActivityActionVerb(sampleActivity({ type: 'ticket_change' }))).toBe(
-      'a mis à jour le ticket'
-    )
-    expect(timelineActivityActionVerb(sampleActivity({ type: 'ticket_summary' }))).toBe(
-      'a résumé le ticket'
-    )
+    ).toBe('a modifié statut')
   })
 
-  test('identifies the object boosted from the notification payload', () => {
+  test('ajoute l’action métier au courriel', () => {
     expect(
       timelineActivityActionVerb(
-        sampleActivity({
-          type: 'activity_boost',
+        sent('email', {
           contenu: JSON.stringify({
-            version: 1,
-            activite_source_id: 42,
-            type_activite_source: 'note',
-            emoji: '👍'
+            version: 2,
+            sender: 'Alice',
+            action: 'Contacter la CAF',
+            body: 'Bonjour'
           })
         })
       )
-    ).toBe('a boosté une note 👍')
+    ).toBe('a envoyé un courriel · Contacter la CAF')
   })
 })
 
 describe('formatTimelineActivityTitle', () => {
   test('joins actor name and verb', () => {
     expect(
-      formatTimelineActivityTitle('Charles-H. Arnould', sampleActivity({ type: 'note' }))
+      formatTimelineActivityTitle('Charles-H. Arnould', sampleActivity({ type: 'note.published' }))
     ).toBe('Charles-H. Arnould a laissé une note')
   })
 
   test('falls back when name is blank', () => {
-    expect(formatTimelineActivityTitle('  ', sampleActivity({ type: 'note' }))).toBe(
+    expect(formatTimelineActivityTitle('  ', sampleActivity({ type: 'note.published' }))).toBe(
       'Inconnu a laissé une note'
     )
   })

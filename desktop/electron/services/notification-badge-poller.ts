@@ -93,7 +93,7 @@ export function createNotificationBadgePoller(
 
 /** Inbox rows already filtered to unread when `unread_only=true`. */
 export function countUnreadRows(data: ActivitiesListResponse['data']): number {
-  return data.filter((row) => row.my?.lu === false).length
+  return data.filter((row) => row.read === false).length
 }
 
 export function readSettingsUrl(store: SettingsStore | null): string | null {

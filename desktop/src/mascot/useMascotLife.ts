@@ -151,7 +151,8 @@ function createSleeper(): Sleeper {
 export function useMascotLife(
   unreadCount: number,
   reduceMotion: boolean | null,
-  random: () => number = Math.random
+  random: () => number = Math.random,
+  allowOrbit = true
 ): MascotLife {
   const [gazeX, setGazeX] = useState<number>(REST_GAZE.x)
   const [gazeY, setGazeY] = useState<number>(REST_GAZE.y)
@@ -198,7 +199,7 @@ export function useMascotLife(
     const prev = prevUnread.current
     prevUnread.current = unreadCount
 
-    if (shouldPlayOrbit(prev, unreadCount)) {
+    if (allowOrbit && shouldPlayOrbit(prev, unreadCount)) {
       stopAnim()
       busy.current = true
       orbiting.current = true
@@ -249,7 +250,7 @@ export function useMascotLife(
       }
       animFrame.current = window.requestAnimationFrame(tick)
     }
-  }, [reduceMotion, unreadCount])
+  }, [allowOrbit, reduceMotion, unreadCount])
 
   useEffect(() => () => stopAnim(), [])
 

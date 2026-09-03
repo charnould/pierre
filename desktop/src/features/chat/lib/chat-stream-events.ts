@@ -318,6 +318,7 @@ export function applyChatStreamEvent(
         reasoningEndedAt
       }
     case 'extension_ui_request':
+    case 'attachment_uploads_ready':
       return { messages, reasoningEndedAt }
     case 'stream_end':
     case 'error':

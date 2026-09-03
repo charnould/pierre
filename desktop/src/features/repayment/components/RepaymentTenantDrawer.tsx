@@ -2,11 +2,9 @@ import { X } from 'lucide-react'
 import type { MouseEvent } from 'react'
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import {
-  INSPECTOR_DRAWER_CLASS,
-  InspectorSplit
-} from '@/shared/components/inspector/inspector-split'
+import { InspectorSplit } from '@/shared/components/inspector/inspector-split'
 import { InspectorTimelineSkeleton } from '@/shared/components/inspector/inspector-timeline-skeleton'
+import { OpenActionsCard } from '@/shared/components/inspector/open-actions-card'
 import { ContextTimeline } from '@/shared/components/timeline/context-timeline'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -20,24 +18,23 @@ import {
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/shared/components/ui/drawer'
 import { toast } from '@/shared/components/ui/toast'
 import { useScrollToTopOnOpen } from '@/shared/hooks/use-scroll-to-top-on-open'
+import { listOpenActions } from '@/shared/lib/activities/action-activity'
+import { replyAuthorMentionSeed } from '@/shared/lib/activities/mentions'
 import { scrollBehavior } from '@/shared/lib/prefers-reduced-motion'
 import type { ColumnValuesConfig } from '@/shared/lib/ui-settings/tickets-table'
 import { activity_texte, type Activite } from '@/shared/types/activites'
-import type { RepaymentNotificationChannel } from '@/shared/types/notification-repayment'
 import type { OrgUser } from '@/shared/types/users'
 
+import { rcs_compose_payload } from '../../../../../shared/rcs-message'
 import { useRepaymentComposeState } from '../hooks/use-repayment-compose-state'
 import { useRepaymentOutboundState } from '../hooks/use-repayment-outbound-state'
 import { useRepaymentTenantActions } from '../hooks/use-repayment-tenant-actions'
 import { useRepaymentTenantTimeline } from '../hooks/use-repayment-tenant-timeline'
 import { debtEpisodeTrend } from '../lib/build-tenant-balance-series'
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
+import { formatDebutBailDisplay } from '../lib/format-debut-bail'
 import type { OutboundEmailResolved, OutboundRcsResolved } from '../lib/outbound-email-templates'
-import { listOpenRepaymentActions } from '../lib/repayment-action-activity'
-import type {
-  RepaymentAdvancementContext,
-  RepaymentMessageOptions
-} from '../lib/repayment-activity-mutations'
+import type { RepaymentAdvancementContext } from '../lib/repayment-activity-mutations'
 import { sortRepaymentActivitiesDesc } from '../lib/repayment-activity-order'
 import { latestActiveRepaymentPlan } from '../lib/repayment-activity-text'
 import {
@@ -45,11 +42,15 @@ import {
   deriveRepaymentGestionnaireFromSorted
 } from '../lib/repayment-advancement'
 import type { RepaymentBucketId } from '../lib/repayment-bucket'
-import { replyAuthorMentionSeed } from '../lib/repayment-mention'
 import { deriveRepaymentTagsFromSorted } from '../lib/repayment-tags'
 import { actionForTemplate } from '../lib/repayment-template-actions'
+import {
+  recordRepaymentEmail,
+  repaymentFallbackDestinataire,
+  sendRepaymentRcs,
+  type RepaymentMessageResult
+} from '../lib/send-repayment-message'
 import { RepaymentComposeBlock } from './RepaymentComposeBlock'
-import { RepaymentOpenActionsCard } from './RepaymentOpenActionsCard'
 import { RepaymentTenantTimeline } from './RepaymentTenantTimeline'
 import { TenantSnapshotCard } from './TenantSnapshotCard'
 
@@ -69,11 +70,7 @@ interface Props {
   tenant: TenantRepaymentRow | null
   columnValues?: ColumnValuesConfig
   highlightActivityId?: number
-  onAddNote: (
-    comment: string,
-    channel: RepaymentNotificationChannel,
-    options?: RepaymentMessageOptions
-  ) => boolean | Promise<boolean>
+  onAddNote: (comment: string) => RepaymentMessageResult | Promise<RepaymentMessageResult>
   onAdvancementChange: (
     bucket: RepaymentBucketId | null,
     comment: string,
@@ -183,8 +180,6 @@ export function RepaymentTenantDrawer({
     emailBody,
     emailConfirmOpen,
     emailSubject,
-    pendingEmailTemplateId,
-    pendingEmailTo,
     pendingMailto,
     pendingRcsTemplateId,
     reset: resetOutbound,
@@ -193,14 +188,15 @@ export function RepaymentTenantDrawer({
     selectRcsTemplate,
     setEmailBody,
     setEmailSubject,
-    setRcsMessage,
-    rcsMessage
+    setRcsCompose,
+    rcsCompose
   } = useRepaymentOutboundState(onEmailOpenError)
   const {
     submitting,
     deleteTarget,
     deletingNote,
     runSubmission,
+    revalidateTimeline,
     afterSuccessfulWrite,
     handleEditNote,
     handleRequestDeleteNote,
@@ -224,7 +220,7 @@ export function RepaymentTenantDrawer({
     () => timelineEntries.slice(0, timelineVisibleCount),
     [timelineEntries, timelineVisibleCount]
   )
-  const openActions = useMemo(() => listOpenRepaymentActions(openActionEvents), [openActionEvents])
+  const openActions = useMemo(() => listOpenActions(openActionEvents), [openActionEvents])
 
   const scrollComposeIntoView = useCallback(() => {
     const el = bodyScrollElRef.current
@@ -351,25 +347,27 @@ export function RepaymentTenantDrawer({
 
   const handleConfirmEmailSent = useCallback(() => {
     const email = pendingMailto
-    if (!email) return
+    if (!tenant || !email) return
     void runSubmission('email', async (isCurrent) => {
       const { templateId, subject, body } = email
       const action = actionForTemplate(templateId)
       if (!action) return false
-      const ok = await onAddNote(body, 'email', {
-        objet: subject,
-        action,
+      const result = await recordRepaymentEmail({
+        url,
+        tenantId: tenant.id_locataire,
         destinataire: email.toAddress,
-        transport: 'mailto'
+        subject,
+        body,
+        action
       })
-      if (!ok) return false
+      if (!result.ok) return false
       await afterSuccessfulWrite(isCurrent)
       if (!isCurrent()) return true
       toast.add({ title: 'Message enregistré dans l’historique', type: 'success' })
       clearPendingMailto()
       return true
     })
-  }, [clearPendingMailto, afterSuccessfulWrite, onAddNote, pendingMailto, runSubmission])
+  }, [clearPendingMailto, afterSuccessfulWrite, pendingMailto, runSubmission, tenant, url])
 
   const handleSubmitActionCompose = useCallback(
     async (draft: Parameters<typeof handleSubmitAction>[0]) => {
@@ -396,8 +394,8 @@ export function RepaymentTenantDrawer({
         return
       }
       void runSubmission('note', async (isCurrent) => {
-        const ok = await onAddNote(text, 'note')
-        if (!ok) return false
+        const result = await onAddNote(text)
+        if (!result.ok) return false
         await afterSuccessfulWrite(isCurrent)
         if (!isCurrent()) return true
         toast.add({ title: 'Note enregistrée dans l’historique', type: 'success' })
@@ -469,63 +467,57 @@ export function RepaymentTenantDrawer({
   ])
 
   const handleSubmitRcs = useCallback(() => {
-    const trimmed = rcsMessage.trim()
-    if (!trimmed || !tenant) return
+    const payload = tenant ? rcs_compose_payload(rcsCompose) : null
+    if (!tenant || !payload) return
     const action = pendingRcsTemplateId ? actionForTemplate(pendingRcsTemplateId) : null
-    if (!action) return
+    if (!action) {
+      toast.add({ title: 'Modèle de message invalide', type: 'error' })
+      return
+    }
     void runSubmission('rcs', async (isCurrent) => {
-      const destinataire =
-        typeof tenant.telephone_client === 'string' ? tenant.telephone_client : undefined
-      const ok = await onAddNote(trimmed, 'rcs', { action, destinataire })
-      if (!ok) return false
+      const result = await sendRepaymentRcs({
+        url,
+        tenantId: tenant.id_locataire,
+        destinataire: payload.destinataire,
+        contenu: { ...payload.contenu, action }
+      })
+      if (!result.ok) {
+        if (result.activity) await revalidateTimeline()
+        if (isCurrent()) {
+          toast.add({
+            title: result.message ?? 'Impossible d’envoyer le message',
+            type: 'error'
+          })
+        }
+        return false
+      }
       await afterSuccessfulWrite(isCurrent)
       if (!isCurrent()) return true
-      toast.add({ title: 'Message enregistré dans l’historique', type: 'success' })
+      toast.add({ title: 'Message envoyé', type: 'success' })
       clearRcsReview()
       resetCompose()
       return true
     })
   }, [
-    clearRcsReview,
     afterSuccessfulWrite,
-    onAddNote,
+    clearRcsReview,
     pendingRcsTemplateId,
     resetCompose,
+    revalidateTimeline,
+    rcsCompose,
     runSubmission,
-    rcsMessage,
-    tenant
+    tenant,
+    url
   ])
 
   const handleSubmitEmail = useCallback(() => {
     const trimmed = emailBody.trim()
     if (!trimmed) return
-    const action = pendingEmailTemplateId ? actionForTemplate(pendingEmailTemplateId) : null
-    if (!action) return
-    void runSubmission('email', async (isCurrent) => {
-      const ok = await onAddNote(trimmed, 'email', {
-        action,
-        objet: emailSubject,
-        destinataire: pendingEmailTo
-      })
-      if (!ok) return false
-      await afterSuccessfulWrite(isCurrent)
-      if (!isCurrent()) return true
-      toast.add({ title: 'Message enregistré dans l’historique', type: 'success' })
-      clearEmailReview()
-      resetCompose()
-      return true
+    toast.add({
+      title: 'L’envoi d’e-mails depuis Pierre n’est pas encore configuré',
+      type: 'info'
     })
-  }, [
-    clearEmailReview,
-    emailBody,
-    emailSubject,
-    afterSuccessfulWrite,
-    onAddNote,
-    pendingEmailTemplateId,
-    pendingEmailTo,
-    resetCompose,
-    runSubmission
-  ])
+  }, [emailBody])
 
   const handleCreatePlan = () => {
     if (!tenant) return
@@ -582,11 +574,12 @@ export function RepaymentTenantDrawer({
 
   const handleSelectRcsTemplate = useCallback(
     (resolved: OutboundRcsResolved) => {
+      if (!tenant) return
       startRcs()
-      selectRcsTemplate(resolved)
+      selectRcsTemplate(resolved, repaymentFallbackDestinataire(tenant, 'rcs'))
       scrollComposeIntoView()
     },
-    [scrollComposeIntoView, selectRcsTemplate, startRcs]
+    [scrollComposeIntoView, selectRcsTemplate, startRcs, tenant]
   )
 
   const handleSelectEmailTemplate = useCallback(
@@ -609,7 +602,7 @@ export function RepaymentTenantDrawer({
           onOpenChangeComplete={handleDrawerOpenChangeComplete}
           swipeDirection="right"
         >
-          <DrawerContent className={INSPECTOR_DRAWER_CLASS} />
+          <DrawerContent variant="inspector" />
         </Drawer>
       </>
     )
@@ -619,15 +612,9 @@ export function RepaymentTenantDrawer({
   const drawerTitle = `${tenant.id_client} · ${tenant.id_locataire}`
 
   const drawerHeader = (
-    <DrawerHeader
-      data-inspector-motion="header"
-      className="flex-row items-center justify-between gap-2 border-b px-4 py-2 text-start"
-    >
+    <DrawerHeader variant="chrome" data-inspector-motion="header" className="justify-between">
       <div className="min-w-0 flex-1">
-        <DrawerTitle
-          className="min-w-0 truncate font-sans text-sm leading-5 font-medium whitespace-nowrap tabular-nums"
-          title={drawerTitle}
-        >
+        <DrawerTitle variant="inspector-id" title={drawerTitle}>
           {drawerTitle}
         </DrawerTitle>
       </div>
@@ -694,8 +681,9 @@ export function RepaymentTenantDrawer({
             columnValues={columnValues}
             className="mb-3"
           />
-          <RepaymentOpenActionsCard
+          <OpenActionsCard
             actions={openActions}
+            formatDate={(value) => formatDebutBailDisplay(value) ?? value}
             saving={submitting === 'action'}
             userLogin={userLogin}
             url={url}
@@ -760,8 +748,8 @@ export function RepaymentTenantDrawer({
                 submitting === 'eml' ||
                 submitting === 'tags'
               }
-              rcsMessage={rcsMessage}
-              onRcsMessageChange={setRcsMessage}
+              rcsCompose={rcsCompose}
+              onRcsComposeChange={setRcsCompose}
               onSubmitRcs={handleSubmitRcs}
               emailSubject={emailSubject}
               onEmailSubjectChange={setEmailSubject}
@@ -780,7 +768,6 @@ export function RepaymentTenantDrawer({
             <RepaymentTenantTimeline
               items={visibleTimelineEntries}
               journal={notifications}
-              columnValues={columnValues}
               highlightId={highlightActivityId}
               userLogin={userLogin}
               onEditPlan={onEditPlan ? handleEditPlan : undefined}
@@ -854,7 +841,7 @@ export function RepaymentTenantDrawer({
         onOpenChangeComplete={handleDrawerOpenChangeComplete}
         swipeDirection="right"
       >
-        <DrawerContent className={INSPECTOR_DRAWER_CLASS}>
+        <DrawerContent variant="inspector">
           {drawerHeader}
           {drawerBody}
         </DrawerContent>

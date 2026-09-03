@@ -44,7 +44,6 @@ export function AutomationRunsMenu({ automation, url, onOpenRun }: Props) {
           <Button
             type="button"
             variant="link"
-            size="xs"
             className="text-muted-foreground hover:text-foreground h-auto shrink-0 p-0 font-normal"
             aria-label="Historique des rapports"
             onClick={stopCardClick}

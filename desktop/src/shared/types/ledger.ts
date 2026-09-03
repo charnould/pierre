@@ -1,4 +1,4 @@
-import type { Activite } from './activites'
+import type { ActiviteListItem } from './activites'
 
 export type LedgerRow = Record<string, unknown>
 
@@ -34,6 +34,8 @@ export type LedgerListResponse = {
   }
 }
 
+export type LedgerMetaResponse = Pick<LedgerListResponse, 'meta'>
+
 export type RepaymentTimelineQueryParams = {
   url: string
   id_locataire: string
@@ -42,8 +44,8 @@ export type RepaymentTimelineQueryParams = {
 export type RepaymentTimelineResponse = {
   data: {
     movements: LedgerMovementRow[]
-    notifications: Activite[]
-    openActionEvents: Activite[]
+    notifications: ActiviteListItem[]
+    openActionEvents: ActiviteListItem[]
   }
   errors: {
     movements: boolean

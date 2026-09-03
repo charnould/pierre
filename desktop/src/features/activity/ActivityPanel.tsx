@@ -3,21 +3,16 @@ import type { MouseEvent, RefObject } from 'react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { ActivityNotificationRow } from '@/features/activity/components/ActivityNotificationRow'
-import { activityNotificationsDismissGuard } from '@/features/activity/components/ActivityNotificationsTrigger'
 import {
   ActivityFollowList,
   ActivityScopeControls,
-  activityAuthorKey,
-  followedPeopleCount
+  followedPeopleCount,
+  selectAuthoredActivityItems
 } from '@/features/activity/components/ActivityScopeControls'
 import type { ActivityFeedApi } from '@/features/activity/hooks/useActivityFeed'
-import { useActivityRail } from '@/features/activity/lib/ActivityRailContext'
+import { useActivityRail, type ActivityRailTab } from '@/features/activity/lib/ActivityRailContext'
 import type { ActivityNotificationItem } from '@/features/activity/lib/notification-types'
 import { CartoonNotificationGrouped } from '@/shared/components/icons/koboyo-empty'
-import {
-  INBOX_DRAWER_WIDTH_CLASS,
-  INSPECTOR_DRAWER_CLASS
-} from '@/shared/components/inspector/inspector-split'
 import { Button } from '@/shared/components/ui/button'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/shared/components/ui/drawer'
 import {
@@ -40,16 +35,7 @@ const ActivityTimelineList = lazy(() =>
   }))
 )
 
-type ActivityTab = 'notifications' | 'activities'
-
 const EMPTY_ROUTINE_NAMES: Record<string, string> = {}
-
-const ACTIVITY_DRAWER_CLASS = [
-  INBOX_DRAWER_WIDTH_CLASS,
-  'rounded-md border',
-  'data-[swipe-direction=left]:rounded-md data-[swipe-direction=left]:rounded-r-md data-[swipe-direction=left]:border',
-  '[--drawer-bleed-background:transparent] [--drawer-inset:0.75rem]'
-].join(' ')
 
 interface Props {
   feed: ActivityFeedApi
@@ -188,10 +174,16 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
     hasMoreNotifications,
     hasMoreActivities
   } = feed
-  const { open, setOpen, contextTarget, closeContextTarget, openContextTarget } = useActivityRail()
+  const {
+    open,
+    setOpen,
+    railTab,
+    setRailTab,
+    contextTarget,
+    closeContextTarget,
+    openContextTarget
+  } = useActivityRail()
   const contextOpen = contextTarget != null
-
-  const [activeTab, setActiveTab] = useState<ActivityTab>('notifications')
   const [routineNames, setRoutineNames] = useState<Record<string, string>>({})
   const routineIdsKey = useMemo(
     () =>
@@ -231,18 +223,6 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
     setOpen(false)
   }, [setOpen])
 
-  const handleOpenChange = useCallback(
-    (nextOpen: boolean) => {
-      if (!nextOpen && activityNotificationsDismissGuard.current) return
-      if (nextOpen) {
-        setOpen(true)
-      } else {
-        closePanel()
-      }
-    },
-    [closePanel, setOpen]
-  )
-
   const handleCloseButton = useCallback(
     (event: MouseEvent<HTMLButtonElement>) => {
       event.stopPropagation()
@@ -262,15 +242,14 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
     [items, showRead]
   )
 
-  const activityItems = useMemo(() => {
-    const ownAuthor = activityAuthorKey(userLogin)
-    const followed = new Set(feed.followedActivityAuthors)
-    return items.filter((item) => {
-      if (item.source !== 'activity') return false
-      const author = activityAuthorKey(item.sender)
-      return author === ownAuthor ? feed.showOwnActivity : followed.has(author)
-    })
-  }, [feed.followedActivityAuthors, feed.showOwnActivity, items, userLogin])
+  const activityItems = useMemo(
+    () =>
+      selectAuthoredActivityItems(items, userLogin, {
+        followedActivityAuthors: feed.followedActivityAuthors,
+        showOwnActivity: feed.showOwnActivity
+      }),
+    [feed.followedActivityAuthors, feed.showOwnActivity, items, userLogin]
+  )
 
   const handleContextOpenChange = useCallback(
     (nextOpen: boolean) => {
@@ -318,16 +297,16 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
 
   return (
     <>
-      <Drawer open={open} onOpenChange={handleOpenChange} swipeDirection="left">
-        <DrawerContent className={ACTIVITY_DRAWER_CLASS}>
+      <Drawer open={open} onOpenChange={setOpen} swipeDirection="left">
+        <DrawerContent variant="activity">
           <Tabs
-            value={activeTab}
-            onValueChange={(value) => setActiveTab(value as ActivityTab)}
+            value={railTab}
+            onValueChange={(value) => setRailTab(value as ActivityRailTab)}
             className="min-h-0 min-w-0 flex-1 gap-0"
           >
             <DrawerHeader
+              variant="chrome"
               data-activity-motion="header"
-              className="no-drag flex-row items-center gap-2 border-b px-4 py-2 text-start"
               onPointerDown={(event) => event.stopPropagation()}
             >
               <DrawerTitle className="sr-only">Notifications</DrawerTitle>
@@ -335,7 +314,7 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
                 aria-label="Notifications et activités"
                 className="relative grid grid-cols-2"
               >
-                <span aria-hidden data-active-tab={activeTab} className="activity-tab-indicator" />
+                <span aria-hidden data-active-tab={railTab} className="activity-tab-indicator" />
                 <TabsTrigger
                   value="notifications"
                   className="z-10 data-active:bg-transparent data-active:shadow-none"
@@ -363,13 +342,13 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
                 <XIcon aria-hidden />
               </Button>
             </DrawerHeader>
-            {activeTab === 'notifications' || (activeTab === 'activities' && hasFollowedAnyone) ? (
+            {railTab === 'notifications' || (railTab === 'activities' && hasFollowedAnyone) ? (
               <div
                 data-activity-motion="actions"
                 className="no-drag flex shrink-0 items-center gap-1 px-4 py-1.5"
                 onPointerDown={(event) => event.stopPropagation()}
               >
-                {activeTab === 'notifications' ? (
+                {railTab === 'notifications' ? (
                   <>
                     <Button
                       type="button"
@@ -415,7 +394,7 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
                 onMarkUnread={handleMarkUnread}
                 onLoadMore={loadMoreNotifications}
                 hasMore={hasMoreNotifications}
-                loadMoreEnabled={open && activeTab === 'notifications'}
+                loadMoreEnabled={open && railTab === 'notifications'}
               />
             </TabsContent>
             <TabsContent
@@ -434,7 +413,7 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
                     onOpen={handleOpenItem}
                     onLoadMore={loadMoreActivities}
                     hasMore={hasMoreActivities}
-                    loadMoreEnabled={open && activeTab === 'activities'}
+                    loadMoreEnabled={open && railTab === 'activities'}
                   />
                 </Suspense>
               ) : (
@@ -446,7 +425,7 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
       </Drawer>
 
       <Drawer open={contextOpen} onOpenChange={handleContextOpenChange} swipeDirection="right">
-        <DrawerContent className={INSPECTOR_DRAWER_CLASS}>
+        <DrawerContent variant="inspector">
           {contextOpen ? (
             <Suspense fallback={null}>
               <ActivityContextNested url={url} userLogin={userLogin} />

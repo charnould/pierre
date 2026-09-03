@@ -55,7 +55,7 @@ afterAll(() => {
   savedGlobals = null
 })
 
-function activityRow(id: number, lu: boolean): ActiviteListItem {
+function activityRow(id: number, read: boolean): ActiviteListItem {
   return {
     id,
     date_creation: '2026-07-26T10:00:00.000Z',
@@ -64,11 +64,13 @@ function activityRow(id: number, lu: boolean): ActiviteListItem {
     id_client: null,
     id_locataire: null,
     id_lot: null,
-    type: 'note',
-    statut: 'logged',
-    mentions: [{ destinataire: 'user:alice@pierre.test', lu, boost: null }],
-    contenu: 'coucou',
-    my: { destinataire: 'user:alice@pierre.test', lu, boost: null }
+    type: 'note.published',
+    channel: null,
+    mentions: [{ destinataire: 'user:alice@pierre.test' }],
+    contenu: JSON.stringify({ version: 2, text: 'coucou' }),
+    my: { destinataire: 'user:alice@pierre.test' },
+    read,
+    reaction: null
   }
 }
 
@@ -192,10 +194,10 @@ describe('useActivityFeed owns the only notification store', () => {
     await harness.cleanup()
   })
 
-  test('marking read through the store moves the badge the sidebar and mascot read', async () => {
+  test('marking read through the store moves the badge the titlebar and mascot read', async () => {
     const harness = await renderFeed()
 
-    // `feed.unreadCount` is what drives both the sidebar badge and, over IPC,
+    // `feed.unreadCount` is what drives both the titlebar badge and, over IPC,
     // the mascot's. It used to be backed by a second store that never saw this.
     expect(harness.last().unreadCount).toBe(2)
     expect(harness.last().notifications.unreadCount).toBe(2)

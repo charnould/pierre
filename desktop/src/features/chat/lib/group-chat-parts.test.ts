@@ -22,13 +22,18 @@ describe('groupChatParts', () => {
     ])
   })
 
-  test('starts a new work group after answer text', () => {
+  test('hides retrieval chatter that precedes the last tool', () => {
+    const tool = { type: 'tool', contentIndex: 1, status: 'running', name: 'search' } as const
+    const after = { type: 'text', contentIndex: 2, text: 'After' } as const
     const parts: ChatMessagePart[] = [
-      { type: 'text', contentIndex: 0, text: 'Before' },
-      { type: 'tool', contentIndex: 1, status: 'running', name: 'search' },
-      { type: 'text', contentIndex: 2, text: 'After' }
+      { type: 'text', contentIndex: 0, text: "Doc rowid 64. Let's read it." },
+      tool,
+      after
     ]
 
-    expect(groupChatParts(parts).map((group) => group.type)).toEqual(['text', 'work', 'text'])
+    expect(groupChatParts(parts)).toEqual([
+      { type: 'work', parts: [tool] },
+      { type: 'text', part: after }
+    ])
   })
 })

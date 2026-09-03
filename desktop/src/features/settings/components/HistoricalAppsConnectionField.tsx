@@ -52,7 +52,7 @@ export function HistoricalAppsConnectionField({ agentName }: Props) {
   const displayName = agentName.trim() || 'l’agent'
 
   return (
-    <Field className="border-border rounded-md border p-4">
+    <Field variant="document-setting">
       <div className="flex flex-col gap-0.5">
         <FieldLabel>Applicatifs historiques (inactifs à ce stade)</FieldLabel>
         <FieldDescription>

@@ -36,8 +36,6 @@ afterAll(() => {
 const alice: OrgUser = {
   login: 'alice',
   email: 'alice@ex.fr',
-  role: 'agent',
-  config: [],
   hasAvatar: false,
   avatarBytes: 0,
   avatarVersion: 0,

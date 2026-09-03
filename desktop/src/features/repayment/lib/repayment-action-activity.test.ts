@@ -1,65 +1,73 @@
 import { describe, expect, test } from 'bun:test'
 
-import { parse_action_creation_content } from '@/shared/types/activites'
-import type { Activite } from '@/shared/types/activites'
-
 import {
-  buildRepaymentActionActivity,
-  listOpenRepaymentActions,
-  mapRepaymentDoneActionForm,
-  mapRepaymentTodoForm,
-  parseRepaymentActionActivity,
-  repaymentActionTimelineDate,
-  todoTimelineSentence
-} from './repayment-action-activity'
+  actionTimelineDate,
+  buildActionActivity,
+  indexTodoRevisions,
+  listOpenActions,
+  mapDoneActionForm,
+  mapTodoForm,
+  parseActionActivity,
+  previousTodoContent
+} from '@/shared/lib/activities/action-activity'
+import { parse_task_content, type Activite, type ActivityType } from '@/shared/types/activites'
 
-function actionRow(
-  id: number,
-  contenu: Record<string, unknown>,
-  date = '2026-08-20T10:00:00'
-): Activite {
+function taskRow({
+  id,
+  type,
+  state,
+  title,
+  threadId,
+  revision,
+  dueDate,
+  assignee
+}: {
+  id: number
+  type: ActivityType
+  state: 'open' | 'completed' | 'ignored' | 'deleted'
+  title: string
+  threadId: string
+  revision: number
+  dueDate?: string
+  assignee?: string
+}): Activite {
   return {
     id,
-    date_creation: date,
+    date_creation: `2026-08-${String(20 + id).padStart(2, '0')}T10:00:00`,
     rattachement: 'repayment:LOC-1',
     auteur: 'user:charles@example.org',
     id_client: 'CLI-1',
     id_locataire: 'LOC-1',
     id_lot: null,
-    type: 'action',
-    statut: 'logged',
+    type,
+    channel: null,
     mentions: [],
     contenu: JSON.stringify({
-      version: 1,
-      cree_par: 'user:charles@example.org',
-      cree_le: date,
-      ...contenu
+      version: 2,
+      task: {
+        title,
+        state,
+        ...(assignee ? { assignee: { id: assignee, label: assignee } } : {}),
+        ...(dueDate ? { due_date: dueDate } : {})
+      }
     }),
-    thread_id: `todo-${id}`,
-    event:
-      contenu['etat'] === 'fait'
-        ? 'completed'
-        : contenu['etat'] === 'ignore'
-          ? 'ignored'
-          : 'created',
-    state: contenu['etat'] as 'a_faire' | 'fait' | 'ignore',
-    revision: 1
+    thread_id: threadId,
+    revision
   }
 }
 
-describe('repayment-action-activity', () => {
-  test('mapRepaymentTodoForm planifie même pour aujourd’hui ; mapRepaymentDoneActionForm enregistre', () => {
+describe('action-activity v2', () => {
+  test('mappe les formulaires de création et de réalisation', () => {
     expect(
-      mapRepaymentTodoForm({
+      mapTodoForm({
         action: '',
         assigneA: 'alice',
         dateEcheance: '2026-08-24',
         note: 'note'
       })
     ).toBeNull()
-
     expect(
-      mapRepaymentTodoForm({
+      mapTodoForm({
         action: 'Joindre le locataire',
         assigneA: 'bob@example.org',
         dateEcheance: '2026-08-24',
@@ -72,203 +80,137 @@ describe('repayment-action-activity', () => {
       dateEcheance: '2026-08-24',
       note: 'relance'
     })
-
-    expect(mapRepaymentDoneActionForm({ action: '', commentaire: 'appel ok' })).toBeNull()
-    expect(
-      mapRepaymentDoneActionForm({ action: 'Joindre le locataire', commentaire: 'appel ok' })
-    ).toEqual({
+    expect(mapDoneActionForm({ action: '', commentaire: 'appel ok' })).toBeNull()
+    expect(mapDoneActionForm({ action: 'Joindre le locataire', commentaire: 'appel ok' })).toEqual({
       mode: 'enregistrer',
       action: 'Joindre le locataire',
       resultat: 'appel ok'
     })
   })
 
-  test('planifie une action libre avec assigné et échéance', () => {
-    const activity = buildRepaymentActionActivity(
-      'LOC-1',
-      {
-        mode: 'planifier',
-        action: 'Contacter le garant',
-        assigneA: 'alice@example.org',
-        dateEcheance: '2026-08-30',
-        note: 'Le garant est joignable le matin.'
-      },
-      'user:charles@example.org'
-    )
-
-    expect(activity.type).toBe('action')
-    expect(parse_action_creation_content(activity.contenu ?? '')).toEqual({
-      version: 1,
+  test('construit une tâche ouverte avec EntityRef et échéance', () => {
+    const activity = buildActionActivity('repayment', 'LOC-1', {
+      mode: 'planifier',
       action: 'Contacter le garant',
-      etat: 'a_faire',
-      assigne_a: 'alice@example.org',
-      date_echeance: '2026-08-30',
+      assigneA: 'alice@example.org',
+      dateEcheance: '2026-08-30',
+      note: 'Le garant est joignable le matin.'
+    })
+
+    expect(activity.type).toBe('task.created')
+    expect(parse_task_content(activity.contenu ?? '')).toEqual({
+      version: 2,
+      task: {
+        title: 'Contacter le garant',
+        state: 'open',
+        assignee: { id: 'alice@example.org', label: 'alice@example.org' },
+        due_date: '2026-08-30'
+      },
       note: 'Le garant est joignable le matin.'
     })
   })
 
-  test('listOpenRepaymentActions ne garde que les a_faire, triées par échéance', () => {
-    const later = actionRow(1, {
-      action: 'Plus tard',
-      etat: 'a_faire',
-      assigne_a: 'alice@example.org',
-      date_echeance: '2026-09-10'
+  test('construit une tâche déjà réalisée', () => {
+    const activity = buildActionActivity('repayment', 'LOC-1', {
+      mode: 'enregistrer',
+      action: 'Contacter le garant',
+      resultat: 'Garant joint'
     })
-    const sooner = actionRow(
-      2,
-      {
-        action: 'Plus tôt',
-        etat: 'a_faire',
-        assigne_a: 'bob@example.org',
-        date_echeance: '2026-08-25'
-      },
-      '2026-08-21T10:00:00'
-    )
-    const done = actionRow(3, {
-      action: 'Déjà fait',
-      etat: 'fait'
+    expect(activity.type).toBe('task.completed')
+    expect(parse_task_content(activity.contenu ?? '')).toEqual({
+      version: 2,
+      task: { title: 'Contacter le garant', state: 'completed' },
+      result: 'Garant joint'
+    })
+  })
+
+  test('ne garde que le dernier snapshot ouvert de chaque thread, trié par échéance', () => {
+    const later = taskRow({
+      id: 1,
+      type: 'task.created',
+      state: 'open',
+      title: 'Plus tard',
+      threadId: 'task-later',
+      revision: 1,
+      dueDate: '2026-09-10'
+    })
+    const sooner = taskRow({
+      id: 2,
+      type: 'task.created',
+      state: 'open',
+      title: 'Plus tôt',
+      threadId: 'task-sooner',
+      revision: 1,
+      dueDate: '2026-08-25'
+    })
+    const completed = taskRow({
+      id: 3,
+      type: 'task.completed',
+      state: 'completed',
+      title: 'Plus tard',
+      threadId: 'task-later',
+      revision: 2
     })
 
     expect(
-      listOpenRepaymentActions([later, done, sooner]).map((item) => item.contenu.action)
-    ).toEqual(['Plus tôt', 'Plus tard'])
+      listOpenActions([later, sooner, completed]).map((item) => item.contenu.task.title)
+    ).toEqual(['Plus tôt'])
+  })
+
+  test('parse le thread, la révision et le créateur de la tâche', () => {
+    const created = taskRow({
+      id: 4,
+      type: 'task.created',
+      state: 'open',
+      title: 'Analyser le rejet',
+      threadId: 'task-4',
+      revision: 1
+    })
+    expect(parseActionActivity(created)).toMatchObject({
+      event: 'task.created',
+      state: 'open',
+      threadId: 'task-4',
+      revision: 1,
+      createdBy: 'user:charles@example.org'
+    })
+    expect(parseActionActivity({ ...created, type: 'note.published' })).toBeNull()
+    expect(parseActionActivity({ ...created, revision: null })).toBeNull()
+  })
+
+  test('indexe les révisions et retrouve le snapshot précédent', () => {
+    const created = taskRow({
+      id: 5,
+      type: 'task.created',
+      state: 'open',
+      title: 'Analyser le rejet',
+      threadId: 'task-5',
+      revision: 1,
+      assignee: 'alice@example.org'
+    })
+    const updated = taskRow({
+      id: 6,
+      type: 'task.updated',
+      state: 'open',
+      title: 'Analyser le rejet',
+      threadId: 'task-5',
+      revision: 2,
+      assignee: 'bob@example.org'
+    })
+    const index = indexTodoRevisions([created, updated])
+
+    expect(previousTodoContent(index, 'task-5', 2)).toEqual(parse_task_content(created.contenu))
+    expect(previousTodoContent(index, 'task-5', 1)).toBeNull()
   })
 
   test('date chaque événement avec la date de sa ligne', () => {
-    const base = {
-      date_creation: '2026-08-20T10:00:00',
-      rattachement: 'repayment:LOC-1',
-      auteur: 'user:charles@example.org',
-      id_client: 'CLI-1',
-      id_locataire: 'LOC-1',
-      id_lot: null,
-      type: 'action' as const,
-      statut: null,
-      mentions: []
-    }
-    const done = {
-      ...base,
-      id: 2,
-      contenu: JSON.stringify({
-        version: 1,
-        action: 'Analyser le dossier',
-        etat: 'fait',
-        cree_par: 'user:charles@example.org',
-        cree_le: '2026-08-20T10:00:00'
-      }),
-      thread_id: 'todo-2',
-      event: 'completed' as const,
-      state: 'fait' as const,
+    const row = taskRow({
+      id: 7,
+      type: 'task.completed',
+      state: 'completed',
+      title: 'Analyser le dossier',
+      threadId: 'task-7',
       revision: 2
-    }
-
-    expect(repaymentActionTimelineDate(done)).toBe('2026-08-20T10:00:00')
-  })
-
-  test('todoTimelineSentence décrit la création avec responsable et échéance', () => {
-    const created = parseRepaymentActionActivity(
-      actionRow(4, {
-        action: 'Analyser un rejet de prélèvement',
-        etat: 'a_faire',
-        assigne_a: 'user:gregoire@exemple.fr',
-        date_echeance: '2026-08-28'
-      })
-    )
-    expect(created).not.toBeNull()
-    expect(todoTimelineSentence(created!, null)).toEqual([
-      { type: 'text', text: 'a créé' },
-      { type: 'text', text: 'la tâche' },
-      { type: 'title', text: 'Analyser un rejet de prélèvement' },
-      { type: 'text', text: 'assignée à' },
-      { type: 'person', identity: 'user:gregoire@exemple.fr' },
-      { type: 'text', text: 'pour le' },
-      { type: 'date', iso: '2026-08-28' }
-    ])
-  })
-
-  test('todoTimelineSentence décrit la réalisation avec responsable et échéance', () => {
-    const completed = parseRepaymentActionActivity(
-      actionRow(8, {
-        action: 'Analyser un rejet de prélèvement',
-        etat: 'fait',
-        assigne_a: 'user:abraconnier@exemple.fr',
-        date_echeance: '2026-08-29'
-      })
-    )
-    expect(completed).not.toBeNull()
-    expect(todoTimelineSentence(completed!, null)).toEqual([
-      { type: 'text', text: 'a réalisé' },
-      { type: 'text', text: 'la tâche' },
-      { type: 'title', text: 'Analyser un rejet de prélèvement' },
-      { type: 'text', text: 'assignée à' },
-      { type: 'person', identity: 'user:abraconnier@exemple.fr' },
-      { type: 'text', text: 'pour le' },
-      { type: 'date', iso: '2026-08-29' }
-    ])
-  })
-
-  test('todoTimelineSentence distingue échéance, responsable et libellé', () => {
-    const previous = {
-      version: 1 as const,
-      action: 'Analyser un rejet de prélèvement',
-      etat: 'a_faire' as const,
-      assigne_a: 'user:alice@exemple.fr',
-      date_echeance: '2026-08-20',
-      cree_par: 'user:charles@example.org',
-      cree_le: '2026-08-20T10:00:00'
-    }
-    const due = parseRepaymentActionActivity(
-      actionRow(5, {
-        action: previous.action,
-        etat: 'a_faire',
-        assigne_a: previous.assigne_a,
-        date_echeance: '2026-08-28'
-      })
-    )!
-    due.event = 'updated'
-    due.revision = 2
-    expect(todoTimelineSentence(due, previous)).toEqual([
-      { type: 'text', text: 'a modifié l’échéance de' },
-      { type: 'text', text: 'la tâche' },
-      { type: 'title', text: previous.action },
-      { type: 'text', text: 'au' },
-      { type: 'date', iso: '2026-08-28' }
-    ])
-
-    const assignee = parseRepaymentActionActivity(
-      actionRow(6, {
-        action: previous.action,
-        etat: 'a_faire',
-        assigne_a: 'user:bob@exemple.fr',
-        date_echeance: previous.date_echeance
-      })
-    )!
-    assignee.event = 'updated'
-    expect(todoTimelineSentence(assignee, previous)).toEqual([
-      { type: 'text', text: 'a modifié le responsable de' },
-      { type: 'text', text: 'la tâche' },
-      { type: 'title', text: previous.action },
-      { type: 'text', text: 'à' },
-      { type: 'person', identity: 'user:bob@exemple.fr' }
-    ])
-
-    const both = parseRepaymentActionActivity(
-      actionRow(7, {
-        action: previous.action,
-        etat: 'a_faire',
-        assigne_a: 'user:bob@exemple.fr',
-        date_echeance: '2026-08-28'
-      })
-    )!
-    both.event = 'updated'
-    expect(todoTimelineSentence(both, previous)).toEqual([
-      { type: 'text', text: 'a modifié l’échéance et le responsable de' },
-      { type: 'text', text: 'la tâche' },
-      { type: 'title', text: previous.action },
-      { type: 'text', text: 'au' },
-      { type: 'date', iso: '2026-08-28' },
-      { type: 'text', text: 'à' },
-      { type: 'person', identity: 'user:bob@exemple.fr' }
-    ])
+    })
+    expect(actionTimelineDate(row)).toBe(row.date_creation)
   })
 })

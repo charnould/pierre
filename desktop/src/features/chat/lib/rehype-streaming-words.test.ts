@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import { createStreamingWordsPlugin } from '@/features/chat/lib/rehype-streaming-words'
+import { createStreamingWordsPlugin } from '@/shared/lib/rehype-streaming-words'
 
 type TestNode = {
   type: string

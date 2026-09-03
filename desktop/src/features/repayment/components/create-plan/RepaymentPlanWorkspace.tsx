@@ -1,7 +1,7 @@
 import { ChevronDown, FileDown } from 'lucide-react'
 import { useCallback, useState } from 'react'
 
-import { RepaymentMentionTextarea } from '@/features/repayment/components/RepaymentMentionTextarea'
+import { MentionTextarea } from '@/shared/components/inspector/mention-textarea'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -21,13 +21,13 @@ import {
 import { Label } from '@/shared/components/ui/label'
 import { Switch } from '@/shared/components/ui/switch'
 import { toast } from '@/shared/components/ui/toast'
+import { extractMentionsFromText } from '@/shared/lib/activities/mentions'
 
 import { createDefaultApurementPlanForm } from '../../lib/apurement-plan/defaults'
 import { exportApurementPlanDocx } from '../../lib/apurement-plan/export-plan-docx'
 import { rebuildInstallments } from '../../lib/apurement-plan/installments'
 import type { ApurementPlanFormData } from '../../lib/apurement-plan/types'
 import type { TenantRepaymentRow } from '../../lib/classify-tenants'
-import { extractMentionsFromText } from '../../lib/repayment-mention'
 import {
   PLAN_CLOSE_MOTIF_LABELS,
   PLAN_CLOSE_MOTIFS,
@@ -119,7 +119,7 @@ export function RepaymentPlanWorkspace({
     async (commentaire?: string): Promise<boolean> => {
       if (readOnly) return false
       const comment = resolvePlanComment(commentaire, savedComment)
-      const contenu = buildPlanContenu(form, tenant.id_locataire, comment)
+      const contenu = buildPlanContenu(form, comment)
 
       if (!url) {
         toast.add({ title: 'Plan prêt (aperçu local)', type: 'success' })
@@ -142,7 +142,10 @@ export function RepaymentPlanWorkspace({
           const response = await window.api?.patchActivity({
             url,
             id: existingActivityId,
-            patch: { operation: 'edit_content', contenu }
+            patch: {
+              operation: form.signed ? 'finalize_repayment_plan' : 'save_repayment_plan',
+              contenu
+            }
           })
           activityId = response?.data?.id ?? existingActivityId
           if (!response?.data?.id) {
@@ -154,8 +157,7 @@ export function RepaymentPlanWorkspace({
             url,
             contexte: 'repayment',
             ref: tenant.id_locataire,
-            type: 'repayment_plan',
-            statut: form.signed ? 'logged' : 'draft',
+            type: form.signed ? 'repayment_plan.finalized' : 'repayment_plan.created',
             recipients: recipients.length > 0 ? recipients : undefined,
             contenu
           })
@@ -234,7 +236,7 @@ export function RepaymentPlanWorkspace({
         return
       }
       invalidateRepaymentTimelineCache(url, tenant.id_client, tenant.id_locataire)
-      toast.add({ title: 'Plan supprimé', type: 'success' })
+      toast.add({ title: 'Brouillon retiré', type: 'success' })
       setDeleteOpen(false)
       onPlanDeleted?.({ id_locataire: tenant.id_locataire })
     } finally {
@@ -246,17 +248,10 @@ export function RepaymentPlanWorkspace({
     if (!url || !existingActivityId || !closeMotif || !form.signed) return
     setSaving(true)
     try {
-      const closed = await window.api?.createActivity({
+      const closed = await window.api?.patchActivity({
         url,
-        contexte: 'repayment',
-        ref: tenant.id_locataire,
-        type: 'repayment_plan_close',
-        statut: 'logged',
-        contenu: JSON.stringify({
-          version: 1,
-          id_activite_plan: existingActivityId,
-          motif: PLAN_CLOSE_MOTIF_LABELS[closeMotif]
-        })
+        id: existingActivityId,
+        patch: { operation: 'close_repayment_plan', reason: closeMotif }
       })
       if (!closed?.data?.id) {
         toast.add({ title: "Le plan n'a pas pu être clôturé", type: 'error' })
@@ -297,20 +292,19 @@ export function RepaymentPlanWorkspace({
                 disabled={readOnly}
                 onCheckedChange={(signed) => patchForm({ signed })}
               />
-              <Label htmlFor="plan-signed" className="text-sm font-medium whitespace-nowrap">
+              <Label htmlFor="plan-signed" className="whitespace-nowrap">
                 Plan ou protocole signé
               </Label>
             </div>
             {footer.showDelete ? (
               <Button
                 type="button"
-                variant="outline"
+                variant="destructive"
                 size="sm"
                 disabled={saving}
-                className="text-destructive hover:text-destructive"
                 onClick={() => setDeleteOpen(true)}
               >
-                Supprimer
+                Retirer
               </Button>
             ) : null}
             {footer.showClose ? (
@@ -384,7 +378,7 @@ export function RepaymentPlanWorkspace({
             </DialogDescription>
           </DialogHeader>
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-            <RepaymentMentionTextarea
+            <MentionTextarea
               url={url}
               value={commentDraft}
               onChange={setCommentDraft}
@@ -418,9 +412,10 @@ export function RepaymentPlanWorkspace({
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Supprimer le plan</DialogTitle>
+            <DialogTitle>Retirer le brouillon</DialogTitle>
             <DialogDescription>
-              Cette action est définitive. Le plan disparaîtra de la timeline du dossier.
+              Le brouillon sera retiré des plans actifs. Son historique restera visible dans la
+              timeline du dossier.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -440,7 +435,7 @@ export function RepaymentPlanWorkspace({
               disabled={saving}
               onClick={() => void handleDelete()}
             >
-              Supprimer
+              Retirer
             </Button>
           </DialogFooter>
         </DialogContent>

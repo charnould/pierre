@@ -1,5 +1,1 @@
-export {
-  type RepaymentNotificationChannel,
-  isRepaymentNotificationChannel,
-  repaymentNotificationChannelLabel
-} from '../../../../shared/notification-repayment'
+export type { RepaymentNotificationChannel } from '../../../../shared/notification-repayment'

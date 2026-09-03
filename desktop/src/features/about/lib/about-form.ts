@@ -29,7 +29,7 @@ export const ABOUT_OUTPUT_EMPTY = {
 const ABOUT_SUBJECT_LABELS: Record<AboutSubject, string> = {
   locataire: 'locataire',
   lot: 'lot',
-  batiment: 'batiment',
+  batiment: 'bâtiment',
   client: 'client'
 }
 

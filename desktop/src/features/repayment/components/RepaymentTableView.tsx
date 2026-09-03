@@ -6,16 +6,11 @@ import {
   type SortingState,
   type ColumnVisibilityState
 } from '@tanstack/react-table'
-import { memo, useCallback, useMemo, useRef, type RefObject, type UIEvent } from 'react'
+import { memo, useMemo, type RefObject } from 'react'
 
-import type {
-  AnyPierreHeader,
-  AnyPierreRow
-} from '@/shared/components/table/column-header-options-menu'
-import { ColumnResizeHandle } from '@/shared/components/table/column-resize-handle'
+import { BoardDualTable } from '@/shared/components/table/board-dual-table'
 import { pierreTableFeatures } from '@/shared/components/table/table-features'
-import { VirtualizedTableBody } from '@/shared/components/table/VirtualizedTableBody'
-import { TableCell, TableHead, TableHeader, TableRow } from '@/shared/components/ui/table'
+import { TableCell, TableRow } from '@/shared/components/ui/table'
 import { useOrgUsersVersion } from '@/shared/hooks/useUserAvatar'
 import type { ColumnFilters, ColumnValuesConfig } from '@/shared/lib/ui-settings/tickets-table'
 
@@ -91,32 +86,6 @@ export const RepaymentTableView = memo(function RepaymentTableView({
   emptyMessage = 'Aucun dossier dans cette phase.',
   scrollRef
 }: Props) {
-  const headerScrollRef = useRef<HTMLDivElement>(null)
-  const bodyScrollRef = useRef<HTMLDivElement>(null)
-  const syncingScroll = useRef(false)
-
-  const syncScrollLeft = useCallback((source: 'header' | 'body', scrollLeft: number) => {
-    if (syncingScroll.current) return
-    syncingScroll.current = true
-    const target = source === 'header' ? bodyScrollRef.current : headerScrollRef.current
-    if (target && target.scrollLeft !== scrollLeft) target.scrollLeft = scrollLeft
-    syncingScroll.current = false
-  }, [])
-
-  const onHeaderScroll = useCallback(
-    (event: UIEvent<HTMLDivElement>) => {
-      syncScrollLeft('header', event.currentTarget.scrollLeft)
-    },
-    [syncScrollLeft]
-  )
-
-  const onBodyScroll = useCallback(
-    (event: UIEvent<HTMLDivElement>) => {
-      syncScrollLeft('body', event.currentTarget.scrollLeft)
-    },
-    [syncScrollLeft]
-  )
-
   const orgUsersVersion = useOrgUsersVersion()
 
   const columns = useMemo(() => {
@@ -198,89 +167,40 @@ export const RepaymentTableView = memo(function RepaymentTableView({
   )
 
   const dataTable = useTable(tableOptions)
-  const tableRows = dataTable.getRowModel().rows as AnyPierreRow[]
+  const tableRows = dataTable.getRowModel().rows
   const headerGroups = dataTable.getHeaderGroups()
   const leafHeaders = headerGroups[0]?.headers ?? []
-  const tableWidth = leafHeaders.reduce((sum, header) => sum + header.getSize(), 0)
-
-  const colgroup = () => (
-    <colgroup>
-      {leafHeaders.map((header) => (
-        <col key={header.id} style={{ width: header.getSize() }} />
-      ))}
-    </colgroup>
-  )
 
   return (
-    <div className="relative w-full min-w-0">
-      <div
-        ref={headerScrollRef}
-        onScroll={onHeaderScroll}
-        className="bg-background sticky z-10 scrollbar-none overflow-x-auto"
-        style={{ top: 'var(--repayment-bucket-chrome-height, 0px)' }}
-      >
-        <table
-          className="table-fixed caption-bottom font-sans text-[0.8125rem] leading-5 tabular-nums"
-          style={{ width: tableWidth }}
-        >
-          {colgroup()}
-          <TableHeader>
-            {headerGroups.map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="hover:bg-transparent">
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="bg-background border-border relative h-9 border-b px-2 text-start"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                    <ColumnResizeHandle header={header as AnyPierreHeader} />
-                  </TableHead>
-                ))}
-              </TableRow>
+    <BoardDualTable
+      headerGroups={headerGroups}
+      leafHeaders={leafHeaders}
+      rows={tableRows}
+      scrollRef={scrollRef}
+      emptyMessage={emptyMessage}
+      renderRow={(row, { index, measureRef }) => {
+        const original = row.original as TenantRepaymentRow
+        return (
+          <TableRow
+            key={row.id}
+            data-index={index}
+            ref={measureRef}
+            className="cursor-pointer"
+            data-state={original.id_locataire === selectedId ? 'selected' : undefined}
+            onClick={() => onRowClick(original)}
+            onPointerEnter={onRowHover ? () => onRowHover(original) : undefined}
+            onFocus={onRowHover ? () => onRowHover(original) : undefined}
+          >
+            {row.getVisibleCells().map((cell) => (
+              <TableCell key={cell.id} className="max-w-0 overflow-hidden text-start">
+                <div className="truncate">
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </div>
+              </TableCell>
             ))}
-          </TableHeader>
-        </table>
-      </div>
-
-      <div ref={bodyScrollRef} onScroll={onBodyScroll} className="overflow-x-auto">
-        <table
-          className="table-fixed caption-bottom font-sans text-[0.8125rem] leading-5 tabular-nums"
-          style={{ width: tableWidth }}
-        >
-          {colgroup()}
-          <VirtualizedTableBody
-            rows={tableRows}
-            scrollRef={scrollRef}
-            columnCount={columns.length}
-            emptyMessage={emptyMessage}
-            renderRow={(row, { index, measureRef }) => {
-              const original = row.original as TenantRepaymentRow
-              return (
-                <TableRow
-                  key={row.id}
-                  data-index={index}
-                  ref={measureRef}
-                  className="cursor-pointer"
-                  data-state={original.id_locataire === selectedId ? 'selected' : undefined}
-                  onClick={() => onRowClick(original)}
-                  onPointerEnter={onRowHover ? () => onRowHover(original) : undefined}
-                  onFocus={onRowHover ? () => onRowHover(original) : undefined}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="max-w-0 overflow-hidden text-start">
-                      <div className="truncate">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </div>
-                    </TableCell>
-                  ))}
-                </TableRow>
-              )
-            }}
-          />
-        </table>
-      </div>
-    </div>
+          </TableRow>
+        )
+      }}
+    />
   )
 })

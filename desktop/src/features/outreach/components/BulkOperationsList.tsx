@@ -39,7 +39,7 @@ function LastEditor({ login, at }: { login: string; at: string }) {
   const name = formatOrgCollaboratorLabel(login)
   return (
     <div className="flex min-w-0 items-center gap-2">
-      <Badge variant="outline" className="min-w-0 px-1.5">
+      <Badge variant="outline" size="data" className="min-w-0">
         <UserAvatar photoUrl={avatar} name={name} login={login} size="sm" className="size-3.5!" />
         <span className="truncate">{name}</span>
       </Badge>

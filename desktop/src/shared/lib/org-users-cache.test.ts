@@ -19,8 +19,6 @@ const USERS = [
   {
     login: 'amartin',
     email: 'amartin@exemple.fr',
-    role: 'collaborator',
-    config: ['default'],
     hasAvatar: false,
     avatarBytes: 0,
     avatarVersion: 0,
@@ -29,8 +27,6 @@ const USERS = [
   {
     login: 'cdubois',
     email: 'cdubois@exemple.fr',
-    role: 'administrator',
-    config: ['default', 'agent'],
     hasAvatar: true,
     avatarBytes: 3,
     avatarVersion: 1,

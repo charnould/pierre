@@ -81,8 +81,6 @@ afterEach(() => {
 const ME = {
   login: 'alice.martin',
   email: 'alice.martin@exemple.fr',
-  role: 'collaborator',
-  config: ['default'],
   hasAvatar: true,
   avatarBytes: 12,
   displayName: 'alice.martin'

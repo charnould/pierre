@@ -57,8 +57,8 @@ export type ReportAutomation = AutomationBase & {
 }
 
 export type TicketReplyAutomation = AutomationBase & {
-  type: 'ticket_reply'
-  skillId: 'ticket.answer-ticket'
+  type: 'replies'
+  skillId: 'replies'
   channel: TicketReplyChannel
   ticketFilters: TicketAutomationFilters
   maxItems: number
@@ -68,7 +68,7 @@ export type Automation = ReportAutomation | TicketReplyAutomation
 
 export const AUTOMATION_TYPE_LABELS: Record<AutomationType, string> = {
   report: "Rapport d'analyse",
-  ticket_reply: 'Pré-génération'
+  replies: 'Pré-génération'
 }
 
 export function isReportAutomation(automation: Automation): automation is ReportAutomation {
@@ -78,7 +78,7 @@ export function isReportAutomation(automation: Automation): automation is Report
 export function isTicketReplyAutomation(
   automation: Automation
 ): automation is TicketReplyAutomation {
-  return automation.type === 'ticket_reply'
+  return automation.type === 'replies'
 }
 
 export function automationMaxReports(automation: ReportAutomation): number {
@@ -115,7 +115,7 @@ export function recordToAutomation(record: AutomationRecord, viewerLogin: string
   }
   return {
     ...base,
-    type: 'ticket_reply',
+    type: 'replies',
     skillId: record.config.skillId,
     channel: record.config.channel,
     ticketFilters: record.config.ticketFilters,

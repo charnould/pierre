@@ -7,7 +7,7 @@ import { getTicketId } from '@/shared/lib/ticket-row'
 import { resolveTicketColumnLabel } from '@/shared/lib/ui-settings/schema'
 import {
   DEFAULT_PINNED_COLUMNS,
-  TICKET_TABLE_DRAFT_GROUP_ID,
+  TICKET_TABLE_ALERT_COLUMN_ID,
   columnVisibilityToHiddenColumns,
   hiddenColumnsToColumnVisibility,
   mergeFullColumnOrder,
@@ -67,7 +67,8 @@ describe('sql column kinds', () => {
 describe('buildTicketsColumns', () => {
   it('defines all schema columns for TanStack visibility and order', () => {
     const columns = buildTicketsColumns(schema)
-    expect(columns.map((c) => columnAccessorKey(c))).toEqual(schemaNames)
+    expect(columns[0]?.id).toBe(TICKET_TABLE_ALERT_COLUMN_ID)
+    expect(columns.slice(1).map((c) => columnAccessorKey(c))).toEqual(schemaNames)
     expect(DEFAULT_PINNED_COLUMNS).toEqual(['id_reclamation', 'id_locataire', 'id_lot'])
     const idCol = columns.find((c) => columnAccessorKey(c) === 'id_reclamation')
     expect(idCol?.enableHiding).toBe(true)
@@ -80,15 +81,14 @@ describe('buildTicketsColumns', () => {
     expect(typeof columns.find((c) => columnAccessorKey(c) === 'id_lot')?.header).toBe('function')
   })
 
-  it('prepends draft NPIR group column when onDraftIconClick is set', () => {
+  it('prepends the locked unread notification column', () => {
     const columns = buildTicketsColumns(schema, {
-      onDraftIconClick: () => {}
+      hasUnread: (row) => row.id_reclamation === 'REQ-1'
     })
-    expect(columns[0]?.id).toBe(TICKET_TABLE_DRAFT_GROUP_ID)
-    expect(columns.map((c) => columnAccessorKey(c))).toEqual([
-      TICKET_TABLE_DRAFT_GROUP_ID,
-      ...schemaNames
-    ])
+    expect(columns[0]?.id).toBe(TICKET_TABLE_ALERT_COLUMN_ID)
+    expect(columns[0]?.enableHiding).toBe(false)
+    expect(columns[0]?.enableResizing).toBe(false)
+    expect(columns.slice(1).map((c) => columnAccessorKey(c))).toEqual(schemaNames)
   })
 })
 

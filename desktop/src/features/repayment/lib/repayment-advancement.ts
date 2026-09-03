@@ -1,5 +1,11 @@
-import type { Activite } from '@/shared/types/activites'
-import { activity_payload, parse_action_activity_content } from '@/shared/types/activites'
+import { deriveCaseAssignment } from '@/shared/lib/activities/case-activities'
+import {
+  activity_payload,
+  parse_case_change_content,
+  parse_communication_opened_content,
+  parse_task_content,
+  type Activite
+} from '@/shared/types/activites'
 
 import type { RepaymentActionId } from './repayment-action'
 import { sortRepaymentActivitiesDesc } from './repayment-activity-order'
@@ -23,32 +29,30 @@ export function deriveRepaymentAdvancementFromSorted(
 
   for (const row of activities) {
     const payload = activity_payload(row.type, row.contenu)
-    const phase = payload['phase']
-    if (
-      bucket === null &&
-      (row.type === 'repayment_phase_change' || row.type === 'bulk_application') &&
-      typeof phase === 'string' &&
-      isRepaymentBucketId(phase)
-    ) {
-      bucket = phase
+    if (bucket === null && row.type === 'case.group_changed') {
+      const change = parse_case_change_content(row.contenu)
+      const value = typeof change?.after === 'string' ? change.after : null
+      if (value && isRepaymentBucketId(value)) bucket = value
     }
-    const actionContent = row.type === 'action' ? parse_action_activity_content(row.contenu) : null
-    if (action === null && actionContent?.etat === 'fait') {
-      action = actionContent.action
+    if (bucket === null && row.type === 'bulk.applied') {
+      const phase =
+        payload['values'] && typeof payload['values'] === 'object'
+          ? (payload['values'] as Record<string, unknown>)['phase']
+          : payload['phase']
+      if (typeof phase === 'string' && isRepaymentBucketId(phase)) bucket = phase
+    }
+    const task = parse_task_content(row.contenu)
+    if (action === null && row.type === 'task.completed' && task) {
+      action = task.task.title
     } else if (
       action === null &&
-      row.type === 'bulk_application' &&
-      typeof payload['action'] === 'string'
+      row.type === 'bulk.applied' &&
+      typeof payload['title'] === 'string'
     ) {
-      action = payload['action']
-    } else if (
-      action === null &&
-      ['rcs', 'sms', 'email', 'courrier', 'lrar', 'lre', 'signature'].includes(row.type) &&
-      row.statut != null &&
-      ['sent', 'delivered', 'read', 'signed'].includes(row.statut) &&
-      typeof payload['action'] === 'string'
-    ) {
-      action = payload['action']
+      action = payload['title']
+    } else if (action === null && row.type === 'communication.sent') {
+      const opened = parse_communication_opened_content(row.contenu)
+      if (opened?.action) action = opened.action
     }
     if (bucket !== null && action !== null) break
   }
@@ -60,22 +64,11 @@ export function deriveRepaymentAdvancement(activities: Activite[]): RepaymentAdv
   return deriveRepaymentAdvancementFromSorted(sortRepaymentActivitiesDesc(activities))
 }
 
-/** Latest Pierre gestionnaire assignment from repayment_assignment activities. */
+/** Latest Pierre referent assignment from shared case activities. */
 export function deriveRepaymentGestionnaireFromSorted(
   activities: readonly Activite[]
 ): RepaymentGestionnaireAssignment {
-  for (const row of activities) {
-    if (row.type !== 'repayment_assignment') continue
-    const payload = activity_payload(row.type, row.contenu)
-    const apres = payload['gestionnaire']
-    if (typeof apres !== 'string' || !apres.trim()) continue
-    const email = apres.includes('@') ? apres.trim().toLowerCase() : null
-    return {
-      email: email ?? apres.trim(),
-      login: email && email.includes('@') ? email.slice(0, email.indexOf('@')) : null
-    }
-  }
-  return { email: null, login: null }
+  return deriveCaseAssignment(activities)
 }
 
 export function deriveRepaymentGestionnaire(

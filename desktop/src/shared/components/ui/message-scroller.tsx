@@ -1,9 +1,9 @@
 import { MessageScroller as MessageScrollerPrimitive } from '@shadcn/react/message-scroller'
+import { cn } from 'cn'
 import { ArrowDownIcon } from 'lucide-react'
 import * as React from 'react'
 
 import { Button } from '@/shared/components/ui/button'
-import { cn } from '@/shared/lib/utils'
 
 function MessageScrollerProvider(
   props: React.ComponentProps<typeof MessageScrollerPrimitive.Provider>
@@ -35,7 +35,7 @@ function MessageScrollerViewport({
     <MessageScrollerPrimitive.Viewport
       data-slot="message-scroller-viewport"
       className={cn(
-        'size-full min-h-0 min-w-0 scroll-fade-b scrollbar-thin scrollbar-gutter-stable overflow-y-auto overscroll-contain contain-content data-autoscrolling:scrollbar-thumb-transparent data-autoscrolling:scrollbar-track-transparent',
+        'size-full min-h-0 min-w-0 scroll-fade-b scrollbar-thin scrollbar-gutter-stable overflow-y-auto overscroll-contain contain-content data-autoscrolling:scrollbar-thumb-transparent data-autoscrolling:scrollbar-track-transparent data-pending-scroll:invisible',
         className
       )}
       {...props}

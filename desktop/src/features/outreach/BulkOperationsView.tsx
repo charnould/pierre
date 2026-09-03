@@ -9,6 +9,7 @@ import {
   sortBulkOperations,
   type BulkOperationSortKey
 } from '@/features/outreach/lib/sort-bulk-operations'
+import { ModuleGate } from '@/shared/components/ModuleGate'
 import { Spinner } from '@/shared/components/ui/spinner'
 import { cn } from '@/shared/lib/utils'
 import type { BulkOperationRecord, BulkOperationSummary } from '@/shared/types/bulk-operations'
@@ -156,21 +157,23 @@ export function BulkOperationsView({ hidden, settings, userLogin }: Props) {
       ) : editingBulkOperation &&
         settings.url &&
         (isCreatingBulkOperation || selectedBulkOperation) ? (
-        <BulkEditor
-          url={settings.url}
-          record={isCreatingBulkOperation ? null : selectedBulkOperation}
-          onBack={closeBulkEditor}
-          onSaved={(row) => {
-            setIsCreatingBulkOperation(false)
-            setSelectedBulkOperationId(row.id)
-            setSelectedBulkOperation(row)
-            setBulkOperations((current) => {
-              const without = current.filter((item) => item.id !== row.id)
-              return [row, ...without]
-            })
-          }}
-          onArchived={closeBulkEditor}
-        />
+        <ModuleGate entry="repayment">
+          <BulkEditor
+            url={settings.url}
+            record={isCreatingBulkOperation ? null : selectedBulkOperation}
+            onBack={closeBulkEditor}
+            onSaved={(row) => {
+              setIsCreatingBulkOperation(false)
+              setSelectedBulkOperationId(row.id)
+              setSelectedBulkOperation(row)
+              setBulkOperations((current) => {
+                const without = current.filter((item) => item.id !== row.id)
+                return [row, ...without]
+              })
+            }}
+            onArchived={closeBulkEditor}
+          />
+        </ModuleGate>
       ) : hidden ? null : (
         <div className="flex min-h-0 w-full min-w-0 flex-1 scroll-pb-4 flex-col overflow-x-hidden overflow-y-auto overscroll-contain pb-6">
           <BulkOperationsList

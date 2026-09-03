@@ -2,9 +2,8 @@ import { useId } from 'react'
 
 import { InspectorComposeField } from '@/shared/components/inspector/inspector-compose-field'
 import { InspectorComposeFooter } from '@/shared/components/inspector/inspector-compose-shell'
+import { MentionTextarea } from '@/shared/components/inspector/mention-textarea'
 import { Button } from '@/shared/components/ui/button'
-
-import { RepaymentMentionTextarea } from './RepaymentMentionTextarea'
 
 interface Props {
   value: string
@@ -30,7 +29,7 @@ export function RepaymentInlineNoteForm({
   return (
     <>
       <InspectorComposeField htmlFor={noteId} label="Note">
-        <RepaymentMentionTextarea
+        <MentionTextarea
           id={noteId}
           value={value}
           onChange={onChange}

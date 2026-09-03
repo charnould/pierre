@@ -94,6 +94,20 @@ export type MascotSettings = {
   badgeColor?: MascotColor
 }
 
+export type HomeSettings = {
+  notifications?: number
+  mine?: number
+  delegated?: number
+  activities?: number
+}
+
+export type HomeExcerptCounts = {
+  notifications: number
+  mine: number
+  delegated: number
+  activities: number
+}
+
 export const DEFAULT_WINDOW_BOUNDS = { width: 1190, height: 840 } as const
 /**
  * Compact centered shell fitted to the login stack (titlebar + px-6 py-6 +
@@ -103,6 +117,8 @@ export const DEFAULT_WINDOW_BOUNDS = { width: 1190, height: 840 } as const
 export const LOGIN_WINDOW_BOUNDS = { width: 400, height: 560 } as const
 export const WINDOW_MIN_SIZE = { width: 360, height: 400 } as const
 export const MASCOT_SIZE_RANGE = { min: 80, max: 240, step: 10 } as const
+/** Items shown on each Accueil rail. */
+export const HOME_EXCERPT_RANGE = { min: 2, max: 20, default: 10 } as const
 /** Diamètre du corps dans le viewBox (unités). */
 const MASCOT_BODY_DIAMETER = 100
 export const DEFAULT_MASCOT_SETTINGS: MascotSettings = {
@@ -113,9 +129,17 @@ export const DEFAULT_MASCOT_SETTINGS: MascotSettings = {
   badgeColor: DEFAULT_MASCOT_BADGE_COLOR
 }
 
+export const DEFAULT_HOME_SETTINGS: HomeExcerptCounts = {
+  notifications: HOME_EXCERPT_RANGE.default,
+  mine: HOME_EXCERPT_RANGE.default,
+  delegated: HOME_EXCERPT_RANGE.default,
+  activities: HOME_EXCERPT_RANGE.default
+}
+
 export type UiSettings = {
   window?: WindowSettings
   mascot?: MascotSettings
+  home?: HomeSettings
   tickets?: {
     table?: TicketsTableSettings
   }
@@ -155,6 +179,7 @@ export const TICKET_COLUMN_VALUES_DEFAULTS: ColumnValuesConfig = {
 export const UI_SETTINGS_DEFAULTS: UiSettings = {
   window: { ...DEFAULT_WINDOW_BOUNDS },
   mascot: { ...DEFAULT_MASCOT_SETTINGS },
+  home: { ...DEFAULT_HOME_SETTINGS },
   workflow: {
     ticketsOutputSplit: { contextePercent: WORKFLOW_SPLIT_DEFAULT_CONTEXTE },
     aboutOutputSplit: { contextePercent: WORKFLOW_SPLIT_DEFAULT_CONTEXTE }
@@ -315,6 +340,10 @@ export function clampMascotSize(size: number): number {
   return Math.min(Math.max(Math.round(size), MASCOT_SIZE_RANGE.min), MASCOT_SIZE_RANGE.max)
 }
 
+function clampHomeExcerpt(value: number): number {
+  return Math.min(HOME_EXCERPT_RANGE.max, Math.max(HOME_EXCERPT_RANGE.min, Math.round(value)))
+}
+
 export function mascotWindowExtent(size: number): number {
   return Math.round((clampMascotSize(size) * MASCOT_VIEWBOX_SIZE) / MASCOT_BODY_DIAMETER)
 }
@@ -385,6 +414,38 @@ export function resolveMascotSettings(
   }
 }
 
+function parseHomeExcerpt(value: unknown): number | undefined {
+  const parsed = parseFiniteInt(value)
+  if (parsed === undefined) return undefined
+  return clampHomeExcerpt(parsed)
+}
+
+function parseHomeSettings(value: unknown): HomeSettings | undefined {
+  if (!isRecord(value)) return undefined
+
+  const result: HomeSettings = {}
+  const notifications = parseHomeExcerpt(value.notifications)
+  const mine = parseHomeExcerpt(value.mine)
+  const delegated = parseHomeExcerpt(value.delegated)
+  const activities = parseHomeExcerpt(value.activities)
+  if (notifications !== undefined) result.notifications = notifications
+  if (mine !== undefined) result.mine = mine
+  if (delegated !== undefined) result.delegated = delegated
+  if (activities !== undefined) result.activities = activities
+
+  return Object.keys(result).length > 0 ? result : undefined
+}
+
+export function resolveHomeSettings(settings?: UiSettings | null): HomeExcerptCounts {
+  const parsed = parseHomeSettings(settings?.home)
+  return {
+    notifications: parsed?.notifications ?? DEFAULT_HOME_SETTINGS.notifications,
+    mine: parsed?.mine ?? DEFAULT_HOME_SETTINGS.mine,
+    delegated: parsed?.delegated ?? DEFAULT_HOME_SETTINGS.delegated,
+    activities: parsed?.activities ?? DEFAULT_HOME_SETTINGS.activities
+  }
+}
+
 const normalizeWindowSection = (window: Record<string, unknown>): Record<string, unknown> => {
   const parsed = parseWindowSettings(window)
   return parsed ? { ...parsed } : {}
@@ -392,6 +453,11 @@ const normalizeWindowSection = (window: Record<string, unknown>): Record<string,
 
 const normalizeMascotSection = (mascot: Record<string, unknown>): Record<string, unknown> => {
   const parsed = parseMascotSettings(mascot)
+  return parsed ? { ...parsed } : {}
+}
+
+const normalizeHomeSection = (home: Record<string, unknown>): Record<string, unknown> => {
+  const parsed = parseHomeSettings(home)
   return parsed ? { ...parsed } : {}
 }
 
@@ -407,6 +473,10 @@ export function parseUiSettings(raw: unknown): Record<string, unknown> {
 
   if ('mascot' in raw && isRecord(raw.mascot)) {
     assignIfNonEmpty(result, 'mascot', normalizeMascotSection(raw.mascot))
+  }
+
+  if ('home' in raw && isRecord(raw.home)) {
+    assignIfNonEmpty(result, 'home', normalizeHomeSection(raw.home))
   }
 
   if ('tickets' in raw && isRecord(raw.tickets)) {
@@ -503,7 +573,8 @@ export function mergeUiSettings(user: Record<string, unknown>): UiSettings {
     updates: {
       panelSplit:
         parseUpdatesPanelSplit(userUpdates.panelSplit) ?? UI_SETTINGS_DEFAULTS.updates!.panelSplit
-    }
+    },
+    home: resolveHomeSettings({ home: parseHomeSettings(user.home) })
   }
 }
 
@@ -536,6 +607,7 @@ const UI_SETTINGS_EXAMPLE_DOCUMENT: UiSettings = {
     color: DEFAULT_MASCOT_SETTINGS.color,
     badgeColor: DEFAULT_MASCOT_SETTINGS.badgeColor
   },
+  home: { ...DEFAULT_HOME_SETTINGS },
   workflow: {
     ticketsOutputSplit: { contextePercent: WORKFLOW_SPLIT_DEFAULT_CONTEXTE },
     aboutOutputSplit: { contextePercent: WORKFLOW_SPLIT_DEFAULT_CONTEXTE }

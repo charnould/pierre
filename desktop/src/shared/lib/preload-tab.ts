@@ -20,6 +20,9 @@ export function preloadTab(tab: Tab): void {
     case 'about':
       void import('@/features/about')
       return
+    case 'administration':
+      void import('@/features/administration')
+      return
     default:
       return
   }

@@ -28,7 +28,7 @@ export function QuestionCard({
   const [submitting, setSubmitting] = useState(false)
 
   return (
-    <div className="border-border bg-popover text-popover-foreground w-full rounded-2xl border p-4 text-sm shadow-sm">
+    <div className="border-border bg-popover text-popover-foreground w-full rounded-xl border p-4 text-sm shadow-none">
       <Questionnaire
         key={pending.toolCallId}
         defaultItem="q0"

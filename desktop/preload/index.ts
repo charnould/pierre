@@ -9,6 +9,7 @@ import {
   MascotOpenNotificationsEvent,
   MascotUnreadCountEvent
 } from '../electron/ipc/channels'
+import type { LoginResult } from '../src/shared/lib/login-errors'
 import type {
   TicketsTableSettings,
   UiSettings,
@@ -24,7 +25,9 @@ import type {
   GetActivitiesParams,
   GetActivityFeedSyncParams,
   PatchActivityPayload,
-  SendCommunicationPayload
+  RecordExternalCommunicationPayload,
+  SendCommunicationPayload,
+  SendCommunicationResponse
 } from '../src/shared/types/activites'
 import type {
   AutomationResponse,
@@ -54,10 +57,19 @@ import type {
   PreviewBulkOperationMessagePayload,
   PreviewBulkOperationQueryPayload
 } from '../src/shared/types/bulk-operations'
-import type { ChatBootData, SkillSummary } from '../src/shared/types/chat'
+import type { ChatBoot } from '../src/shared/types/chat'
 import type { DatastoreTablesResponse } from '../src/shared/types/datastore-tables'
 import type {
+  KnowledgeBuildResponse,
+  KnowledgeBuildsResponse,
+  KnowledgeEntry,
+  KnowledgeResponse,
+  KnowledgeSourceResponse,
+  KnowledgeUploadResponse
+} from '../src/shared/types/knowledge'
+import type {
   LedgerListResponse,
+  LedgerMetaResponse,
   LedgerQueryParams,
   RepaymentTimelineQueryParams,
   RepaymentTimelineResponse
@@ -69,13 +81,24 @@ import type {
   PutTicketResult,
   TicketsFacetsResponse,
   TicketsListResponse,
+  TicketsMetaResponse,
   TicketsQueryParams
 } from '../src/shared/types/tickets'
 import type {
+  AdminUserMutationResponse,
+  AdminUserProfileMutationResponse,
+  AdminUsersResponse,
+  DeleteAdminUserProfileResponse,
+  DeleteAdminUserResponse,
   GetAvatarPayload,
+  ImportAdminUsersResponse,
+  PatchAdminUserPayload,
+  PatchAdminUserProfilePayload,
   PatchMyPreferencesPayload,
   PatchMyPreferencesResponse,
   PickedAvatarImage,
+  SaveAdminUserPayload,
+  SaveAdminUserProfilePayload,
   UploadMyAvatarPayload,
   UploadMyAvatarResponse,
   UsersListResponse
@@ -102,6 +125,12 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke(IpcChannel.system.openExternal, url) as Promise<boolean>,
   openAutomationReport: (params: { html: string }) =>
     ipcRenderer.invoke(IpcChannel.system.openAutomationReport, params) as Promise<boolean>,
+  openExternalApplication: (params: {
+    transport: 'browser' | 'external'
+    url: string
+    clipboard?: string
+    selector?: string
+  }) => ipcRenderer.invoke(IpcChannel.system.openExternalApplication, params) as Promise<boolean>,
   setAuthWindowLayout: (params: { loggedIn: boolean }) =>
     ipcRenderer.invoke(IpcChannel.system.setAuthWindowLayout, params) as Promise<void>,
   onAuthWindowLayoutSwap: (cb: (params: { loggedIn: boolean }) => void) => {
@@ -154,10 +183,10 @@ contextBridge.exposeInMainWorld('api', {
     }
   },
   login: (params: { url: string; email: string; password: string }) =>
-    ipcRenderer.invoke(IpcChannel.auth.login, params),
-  loginStored: () => ipcRenderer.invoke(IpcChannel.auth.loginStored),
-  getChatBoot: (params: { url: string; config?: string; data?: string }) =>
-    ipcRenderer.invoke(IpcChannel.auth.getChatBoot, params) as Promise<ChatBootData | null>,
+    ipcRenderer.invoke(IpcChannel.auth.login, params) as Promise<LoginResult>,
+  restoreSession: () => ipcRenderer.invoke(IpcChannel.auth.restoreSession) as Promise<LoginResult>,
+  getChatBoot: (params: { url: string; config?: string }) =>
+    ipcRenderer.invoke(IpcChannel.auth.getChatBoot, params) as Promise<ChatBoot | null>,
   startStream: (params: {
     requestId: string
     url: string
@@ -208,12 +237,14 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke(IpcChannel.uiSettings.patchTicketsTable, partial) as Promise<UiSettings>,
   patchUiSettingsWorkflow: (partial: Partial<WorkflowSettings>) =>
     ipcRenderer.invoke(IpcChannel.uiSettings.patchWorkflow, partial) as Promise<UiSettings>,
-  getSkills: (params: { url: string }) =>
-    ipcRenderer.invoke(IpcChannel.auth.getSkills, params) as Promise<SkillSummary[]>,
   getTickets: (params: TicketsQueryParams) =>
     ipcRenderer.invoke(IpcChannel.tickets.list, params) as Promise<TicketsListResponse | null>,
+  getTicketsMeta: (params: TicketsQueryParams) =>
+    ipcRenderer.invoke(IpcChannel.tickets.meta, params) as Promise<TicketsMetaResponse | null>,
   getLedger: (params: LedgerQueryParams) =>
     ipcRenderer.invoke(IpcChannel.ledger.list, params) as Promise<LedgerListResponse | null>,
+  getLedgerMeta: (params: LedgerQueryParams) =>
+    ipcRenderer.invoke(IpcChannel.ledger.meta, params) as Promise<LedgerMetaResponse | null>,
   getRepaymentTimeline: (params: RepaymentTimelineQueryParams) =>
     ipcRenderer.invoke(
       IpcChannel.ledger.repaymentTimeline,
@@ -225,6 +256,23 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke(IpcChannel.tickets.putTicket, params) as Promise<PutTicketResult | null>,
   getTicketDraft: (params: { url: string; id_reclamation: string; id_skill?: string }) =>
     ipcRenderer.invoke(IpcChannel.tickets.getDraft, params) as Promise<GetTicketDraftResult | null>,
+  getSetup: (params: { url: string }) => ipcRenderer.invoke(IpcChannel.setup.get, params),
+  getSetupFile: (params: { url: string; id: string }) =>
+    ipcRenderer.invoke(IpcChannel.setup.file, params) as Promise<ArrayBuffer | null>,
+  getAdminSetup: (params: { url: string }) =>
+    ipcRenderer.invoke(IpcChannel.setup.adminGet, params) as Promise<{
+      texts: Record<string, string | null>
+      binaries: string[]
+      ready: Record<string, boolean>
+    } | null>,
+  putAdminSetup: (params: { url: string; id: string; body?: string; bytes?: Uint8Array }) =>
+    ipcRenderer.invoke(IpcChannel.setup.adminPut, params) as Promise<{
+      data: { id: string }
+    } | null>,
+  deleteAdminChatbot: (params: { url: string; id: string }) =>
+    ipcRenderer.invoke(IpcChannel.setup.adminDelete, params) as Promise<{
+      data: { id: string }
+    } | null>,
   getDatastoreTables: (params: { url: string }) =>
     ipcRenderer.invoke(
       IpcChannel.datastore.tables,
@@ -232,6 +280,74 @@ contextBridge.exposeInMainWorld('api', {
     ) as Promise<DatastoreTablesResponse | null>,
   getUsers: (params: { url: string }) =>
     ipcRenderer.invoke(IpcChannel.users.list, params) as Promise<UsersListResponse | null>,
+  getAdminUsers: (params: { url: string }) =>
+    ipcRenderer.invoke(IpcChannel.users.adminList, params) as Promise<AdminUsersResponse | null>,
+  createAdminUser: (params: SaveAdminUserPayload) =>
+    ipcRenderer.invoke(
+      IpcChannel.users.adminCreate,
+      params
+    ) as Promise<AdminUserMutationResponse | null>,
+  patchAdminUser: (params: PatchAdminUserPayload) =>
+    ipcRenderer.invoke(
+      IpcChannel.users.adminPatch,
+      params
+    ) as Promise<AdminUserMutationResponse | null>,
+  deleteAdminUser: (params: { url: string; email: string }) =>
+    ipcRenderer.invoke(
+      IpcChannel.users.adminDelete,
+      params
+    ) as Promise<DeleteAdminUserResponse | null>,
+  importAdminUsersCsv: (params: { url: string }) =>
+    ipcRenderer.invoke(
+      IpcChannel.users.adminImportCsv,
+      params
+    ) as Promise<ImportAdminUsersResponse | null>,
+  createAdminUserProfile: (params: SaveAdminUserProfilePayload) =>
+    ipcRenderer.invoke(
+      IpcChannel.users.adminCreateProfile,
+      params
+    ) as Promise<AdminUserProfileMutationResponse | null>,
+  patchAdminUserProfile: (params: PatchAdminUserProfilePayload) =>
+    ipcRenderer.invoke(
+      IpcChannel.users.adminPatchProfile,
+      params
+    ) as Promise<AdminUserProfileMutationResponse | null>,
+  deleteAdminUserProfile: (params: { url: string; id: string }) =>
+    ipcRenderer.invoke(
+      IpcChannel.users.adminDeleteProfile,
+      params
+    ) as Promise<DeleteAdminUserProfileResponse | null>,
+  getAdminKnowledge: (params: { url: string }) =>
+    ipcRenderer.invoke(IpcChannel.knowledge.get, params) as Promise<KnowledgeResponse | null>,
+  uploadKnowledgeSources: (params: { url: string }) =>
+    ipcRenderer.invoke(
+      IpcChannel.knowledge.upload,
+      params
+    ) as Promise<KnowledgeUploadResponse | null>,
+  patchKnowledgeSource: (params: {
+    url: string
+    id: string
+    entries: KnowledgeEntry[]
+    updatedAt: string
+  }) =>
+    ipcRenderer.invoke(
+      IpcChannel.knowledge.patch,
+      params
+    ) as Promise<KnowledgeSourceResponse | null>,
+  deleteKnowledgeSource: (params: { url: string; id: string }) =>
+    ipcRenderer.invoke(IpcChannel.knowledge.delete, params) as Promise<boolean>,
+  downloadKnowledgeSource: (params: { url: string; id: string; originalName: string }) =>
+    ipcRenderer.invoke(IpcChannel.knowledge.download, params) as Promise<boolean>,
+  getKnowledgeBuilds: (params: { url: string }) =>
+    ipcRenderer.invoke(
+      IpcChannel.knowledge.builds,
+      params
+    ) as Promise<KnowledgeBuildsResponse | null>,
+  rebuildKnowledge: (params: { url: string }) =>
+    ipcRenderer.invoke(
+      IpcChannel.knowledge.rebuild,
+      params
+    ) as Promise<KnowledgeBuildResponse | null>,
   patchMyPreferences: (params: PatchMyPreferencesPayload) =>
     ipcRenderer.invoke(
       IpcChannel.users.patchPreferences,
@@ -258,11 +374,16 @@ contextBridge.exposeInMainWorld('api', {
     ) as Promise<ActivityFeedSyncResult | null>,
   createActivity: (params: CreateActivityPayload) =>
     ipcRenderer.invoke(IpcChannel.activities.create, params) as Promise<ActivityResponse | null>,
+  recordExternalCommunication: (params: RecordExternalCommunicationPayload) =>
+    ipcRenderer.invoke(
+      IpcChannel.activities.recordExternalCommunication,
+      params
+    ) as Promise<ActivityResponse | null>,
   sendCommunication: (params: SendCommunicationPayload) =>
     ipcRenderer.invoke(
       IpcChannel.activities.sendCommunication,
       params
-    ) as Promise<ActivityResponse | null>,
+    ) as Promise<SendCommunicationResponse | null>,
   patchActivity: (params: PatchActivityPayload) =>
     ipcRenderer.invoke(IpcChannel.activities.patch, params) as Promise<ActivityResponse | null>,
   deleteActivity: (params: DeleteActivityPayload) =>
@@ -335,8 +456,8 @@ contextBridge.exposeInMainWorld('api', {
       IpcChannel.bulkOperations.previewMessage,
       params
     ) as Promise<BulkOperationPreviewMessageResponse | null>,
-  setMascotUnreadCount: (count: number) =>
-    ipcRenderer.invoke(IpcChannel.mascot.setUnreadCount, count) as Promise<boolean>,
+  setMascotUnreadCount: (count: number, options?: { orbit?: boolean }) =>
+    ipcRenderer.invoke(IpcChannel.mascot.setUnreadCount, count, options) as Promise<boolean>,
   activateFromMascot: () => ipcRenderer.invoke(IpcChannel.mascot.activate) as Promise<boolean>,
   setMascotBounds: (params: {
     x?: number

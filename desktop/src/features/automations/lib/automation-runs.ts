@@ -1,6 +1,6 @@
 import type { ReaderTarget } from '@/features/activity/lib/reader-target'
 import type { Activite } from '@/shared/types/activites'
-import { activity_payload } from '@/shared/types/activites'
+import { activity_payload, activity_texte } from '@/shared/types/activites'
 
 import {
   automationMaxReports,
@@ -36,15 +36,15 @@ function formatRunMenuDate(dateStr: string): string {
 
 function activityRowToReaderTarget(row: Activite, automation: Automation): ReaderTarget {
   const payload = activity_payload(row.type, row.contenu)
-  const titre = typeof payload['titre'] === 'string' ? payload['titre'] : automation.name
-  const contenu = typeof payload['contenu'] === 'string' ? payload['contenu'] : undefined
+  const title = typeof payload['title'] === 'string' ? payload['title'] : automation.name
+  const content = activity_texte(row.type, row.contenu) || undefined
 
   return {
     kind: 'automation',
     activityId: row.id,
     automationId: automation.id,
-    title: titre,
-    content: contenu,
+    title,
+    content,
     date: row.date_creation
   }
 }

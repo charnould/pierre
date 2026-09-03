@@ -9,7 +9,7 @@ import {
   type UiSettings
 } from '../../src/shared/lib/ui-settings/schema'
 import { seedMissingUiSettingsDefaults } from './seed-ui-settings-defaults'
-import { createSettingsStore, type SecretCrypto, type SettingsStore } from './settings-store'
+import { createSettingsStore, type SettingsStore } from './settings-store'
 
 describe('createSettingsStore integration', () => {
   it('serializes concurrent table patches without losing keys', async () => {
@@ -583,33 +583,12 @@ describe('ui-settings persistence round-trip', () => {
   })
 })
 
-/** Obviously-fake stand-in for the credential under test. */
-const FAKE_PASSWORD = 'not-a-real-password-0000'
-
-/**
- * Stands in for the OS keychain: reversible, recognisably not the plaintext, and
- * rejecting anything truncated or malformed the way `safeStorage` does.
- */
-const reversibleCrypto: SecretCrypto = {
-  encrypt: (value) => `enc:${Buffer.from(value, 'utf-8').toString('base64')}`,
-  decrypt: (value) => {
-    if (!value.startsWith('enc:')) return null
-    const payload = value.slice(4)
-    const decoded = Buffer.from(payload, 'base64')
-    if (decoded.toString('base64') !== payload) return null
-    return decoded.toString('utf-8')
-  }
-}
-
-/** Stands in for a machine with no keyring. */
-const noCrypto: SecretCrypto = { encrypt: () => null, decrypt: () => null }
-
-function setupSettings(crypto: SecretCrypto) {
+function setupSettings() {
   const dir = mkdtempSync(join(tmpdir(), 'pierre-settings-'))
   const settingsPath = join(dir, 'settings.json')
   return {
     settingsPath,
-    store: createSettingsStore(settingsPath, join(dir, 'ui-settings.json'), crypto),
+    store: createSettingsStore(settingsPath, join(dir, 'ui-settings.json')),
     readRaw: () => JSON.parse(readFileSync(settingsPath, 'utf-8')) as Record<string, unknown>,
     writeRaw: (doc: Record<string, unknown>) =>
       writeFileSync(settingsPath, JSON.stringify(doc, null, 2)),
@@ -617,185 +596,68 @@ function setupSettings(crypto: SecretCrypto) {
   }
 }
 
-describe('createSettingsStore credential at rest', () => {
-  it('writes the credential as ciphertext and never as cleartext', () => {
-    const { store, settingsPath, readRaw, cleanup } = setupSettings(reversibleCrypto)
-
-    store.writeSettings({
+describe('createSettingsStore public settings', () => {
+  it('round-trips every allowlisted setting', () => {
+    const { store, readRaw, cleanup } = setupSettings()
+    const settings = {
       url: 'https://example.test',
       email: 'agent@example.test',
-      password: FAKE_PASSWORD,
-      loggedOut: false
-    })
-
-    const raw = readRaw()
-    expect(raw['password']).toBeUndefined()
-    expect(typeof raw['passwordEnc']).toBe('string')
-    expect(raw['url']).toBe('https://example.test')
-
-    const bytes = readFileSync(settingsPath, 'utf-8')
-    expect(bytes).not.toContain(FAKE_PASSWORD)
-
-    cleanup()
-  })
-
-  it('reads the credential back as a plain password without leaking passwordEnc', () => {
-    const { store, cleanup } = setupSettings(reversibleCrypto)
-
-    store.writeSettings({ email: 'agent@example.test', password: FAKE_PASSWORD })
-    const settings = store.readSettings()
-
-    expect(settings?.['password']).toBe(FAKE_PASSWORD)
-    expect(settings).not.toHaveProperty('passwordEnc')
-
-    cleanup()
-  })
-
-  it('migrates a legacy cleartext file on read, keeping the user logged in', () => {
-    const { store, settingsPath, readRaw, writeRaw, cleanup } = setupSettings(reversibleCrypto)
-
-    writeRaw({ url: 'https://example.test', password: FAKE_PASSWORD, loggedOut: false })
-    const settings = store.readSettings()
-
-    expect(settings?.['password']).toBe(FAKE_PASSWORD)
-
-    const raw = readRaw()
-    expect(raw['password']).toBeUndefined()
-    expect(typeof raw['passwordEnc']).toBe('string')
-    expect(readFileSync(settingsPath, 'utf-8')).not.toContain(FAKE_PASSWORD)
-
-    cleanup()
-  })
-
-  it('persists neither field when the keychain is unavailable', () => {
-    const { store, readRaw, cleanup } = setupSettings(noCrypto)
-
-    store.writeSettings({ email: 'agent@example.test', password: FAKE_PASSWORD })
-
-    const raw = readRaw()
-    expect(raw['password']).toBeUndefined()
-    expect(raw['passwordEnc']).toBeUndefined()
-    expect(raw['email']).toBe('agent@example.test')
-
-    cleanup()
-  })
-
-  it('leaves a legacy cleartext file untouched when the keychain is unavailable', () => {
-    const { store, readRaw, writeRaw, cleanup } = setupSettings(noCrypto)
-
-    writeRaw({ url: 'https://example.test', password: FAKE_PASSWORD })
-    const settings = store.readSettings()
-
-    // Rewriting here would strip the only copy of a credential the user is still
-    // logged in with, so the migration is deferred until a keychain exists.
-    expect(settings?.['password']).toBe(FAKE_PASSWORD)
-    expect(readRaw()['password']).toBe(FAKE_PASSWORD)
-
-    cleanup()
-  })
-
-  it('reads as logged out when the ciphertext cannot be decrypted', () => {
-    const { store, writeRaw, cleanup } = setupSettings(reversibleCrypto)
-
-    writeRaw({ url: 'https://example.test', passwordEnc: 'enc:tru', loggedOut: false })
-    const settings = store.readSettings()
-
-    expect(settings?.['password']).toBeUndefined()
-    expect(settings?.['url']).toBe('https://example.test')
-
-    cleanup()
-  })
-
-  it('returns no credential for a file that has none', () => {
-    const { store, writeRaw, cleanup } = setupSettings(reversibleCrypto)
-
-    writeRaw({ url: 'https://example.test', updatesNotify: 'all' })
-    const settings = store.readSettings()
-
-    expect(settings?.['password']).toBeUndefined()
-    expect(settings?.['updatesNotify']).toBe('all')
-
-    cleanup()
-  })
-
-  it('treats an empty password as no credential in both directions', () => {
-    const { store, readRaw, writeRaw, cleanup } = setupSettings(reversibleCrypto)
-
-    store.writeSettings({ url: 'https://example.test', password: '', loggedOut: true })
-    expect(readRaw()['passwordEnc']).toBeUndefined()
-    expect(readRaw()['loggedOut']).toBe(true)
-
-    writeRaw({ password: '', loggedOut: true })
-    expect(store.readSettings()?.['password']).toBeUndefined()
-
-    cleanup()
-  })
-
-  it('prefers a cleartext password over stale ciphertext written beside it', () => {
-    const { store, readRaw, writeRaw, cleanup } = setupSettings(reversibleCrypto)
-
-    // The shape an older build leaves behind: it echoes back the passwordEnc it
-    // read while saving the freshly typed credential in cleartext.
-    writeRaw({
-      password: FAKE_PASSWORD,
-      passwordEnc: reversibleCrypto.encrypt('a-previous-password-0000'),
-      loggedOut: false
-    })
-
-    expect(store.readSettings()?.['password']).toBe(FAKE_PASSWORD)
-    expect(readRaw()['password']).toBeUndefined()
-    expect(store.readSettings()?.['password']).toBe(FAKE_PASSWORD)
-
-    cleanup()
-  })
-
-  it('round-trips unknown fields from a newer version untouched', () => {
-    const { store, readRaw, writeRaw, cleanup } = setupSettings(reversibleCrypto)
-
-    writeRaw({
-      url: 'https://example.test',
-      passwordEnc: reversibleCrypto.encrypt(FAKE_PASSWORD),
-      futureField: { nested: true }
-    })
-
-    const settings = store.readSettings()
-    expect(settings?.['futureField']).toEqual({ nested: true })
+      updatesNotify: 'all',
+      updatesReadSlugs: ['desktop-session'],
+      showOwnActivity: true,
+      followedActivityAuthors: ['colleague@example.test']
+    }
 
     store.writeSettings(settings)
-    expect(readRaw()['futureField']).toEqual({ nested: true })
+
+    expect(readRaw()).toEqual(settings)
+    expect(store.readSettings()).toEqual(settings)
 
     cleanup()
   })
 
-  it('keeps existing ciphertext when the renderer omits password', () => {
-    const { store, readRaw, cleanup } = setupSettings(reversibleCrypto)
+  it('drops fields outside the public allowlist on write', () => {
+    const { store, readRaw, cleanup } = setupSettings()
 
     store.writeSettings({
       url: 'https://example.test',
       email: 'agent@example.test',
-      password: FAKE_PASSWORD
+      internalMetadata: { source: 'renderer' }
     })
-    expect(typeof readRaw()['passwordEnc']).toBe('string')
 
-    store.writeSettings({
+    expect(readRaw()).toEqual({
+      url: 'https://example.test',
+      email: 'agent@example.test'
+    })
+
+    cleanup()
+  })
+
+  it('normalizes an existing document to the public allowlist on read', () => {
+    const { store, readRaw, writeRaw, cleanup } = setupSettings()
+
+    writeRaw({
       url: 'https://example.test',
       email: 'agent@example.test',
-      hasPassword: true,
-      updatesReadSlugs: ['hello']
+      loggedOut: false,
+      internalMetadata: { source: 'older-build' }
     })
-    expect(typeof readRaw()['passwordEnc']).toBe('string')
-    expect(readRaw()['hasPassword']).toBeUndefined()
-    expect(readRaw()['updatesReadSlugs']).toEqual(['hello'])
-    expect(store.readSettings()?.['password']).toBe(FAKE_PASSWORD)
+
+    const expected = {
+      url: 'https://example.test',
+      email: 'agent@example.test'
+    }
+    expect(store.readSettings()).toEqual(expected)
+    expect(readRaw()).toEqual(expected)
 
     cleanup()
   })
 
   it('keeps the settings file unreadable by other accounts', () => {
-    const { store, settingsPath, writeRaw, cleanup } = setupSettings(reversibleCrypto)
+    const { store, settingsPath, writeRaw, cleanup } = setupSettings()
 
     writeRaw({ url: 'https://example.test' })
-    store.writeSettings({ url: 'https://example.test', password: FAKE_PASSWORD })
+    store.writeSettings({ url: 'https://example.test' })
 
     expect(statSync(settingsPath).mode & 0o077).toBe(0)
 

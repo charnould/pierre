@@ -85,7 +85,7 @@ function ValuesRuleEditor({
               onChange={onChange}
             />
           ) : null}
-          <FieldDescription className="min-w-0 flex-1 truncate">
+          <FieldDescription className="min-w-0 flex-1">
             {rule.values.length === 0 ? 'Aucune valeur sélectionnée' : rule.values.join(', ')}
           </FieldDescription>
         </div>
@@ -222,11 +222,11 @@ export function AutomationTicketFilters({ url, uiSettings, value, onChange }: Pr
   }
 
   const runPreview = async () => {
-    if (!url || !window.api?.getTickets) return
+    if (!url || !window.api?.getTicketsMeta) return
     setPreviewLoading(true)
     setPreviewCount(null)
     try {
-      const res = await window.api.getTickets({
+      const res = await window.api.getTicketsMeta({
         url,
         limit: 1,
         offset: 0,

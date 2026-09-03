@@ -3,13 +3,16 @@ import { describe, expect, it } from 'bun:test'
 import { clearColumnValueStyles } from './column-value-palette'
 import {
   AUTOMATIONS_SPLIT_DEFAULT_LIST,
+  DEFAULT_HOME_SETTINGS,
   DEFAULT_MASCOT_SETTINGS,
   DEFAULT_WINDOW_BOUNDS,
+  HOME_EXCERPT_RANGE,
   listDroppedUiSettingsKeys,
   LOGIN_WINDOW_BOUNDS,
   MASCOT_SIZE_RANGE,
   mergeUiSettings,
   parseUiSettings,
+  resolveHomeSettings,
   resolveTicketColumnLabel,
   resolveUiSettingsFromRaw,
   TICKET_COLUMN_VALUES_DEFAULTS,
@@ -192,6 +195,26 @@ describe('parseUiSettings', () => {
     const parsed = JSON.parse(UI_SETTINGS_EXAMPLE) as Record<string, unknown>
     expect(parseUiSettings(parsed)).toEqual(parsed)
   })
+
+  it('keeps a valid home excerpt section', () => {
+    expect(parseUiSettings({ home: { mine: 8, extra: true } })).toEqual({
+      home: { mine: 8 }
+    })
+  })
+
+  it('clamps home excerpts to 2–20', () => {
+    expect(
+      parseUiSettings({
+        home: { notifications: 4, mine: 30, delegated: 10.4, activities: 0 }
+      })
+    ).toEqual({
+      home: { notifications: 4, mine: 20, delegated: 10, activities: 2 }
+    })
+  })
+
+  it('drops an invalid home section', () => {
+    expect(parseUiSettings({ home: { notifications: 'many' } })).toEqual({})
+  })
 })
 
 describe('listDroppedUiSettingsKeys', () => {
@@ -220,6 +243,23 @@ describe('mergeUiSettings', () => {
   it('falls back to default mascot settings when the section is missing', () => {
     expect(mergeUiSettings({})).toMatchObject({
       mascot: { ...DEFAULT_MASCOT_SETTINGS }
+    })
+  })
+
+  it('falls back to default home excerpts when the section is missing', () => {
+    expect(mergeUiSettings({})).toMatchObject({
+      home: { ...DEFAULT_HOME_SETTINGS }
+    })
+    expect(resolveHomeSettings(undefined)).toEqual(DEFAULT_HOME_SETTINGS)
+    expect(HOME_EXCERPT_RANGE).toEqual({ min: 2, max: 20, default: 10 })
+  })
+
+  it('merges a partial home section onto the defaults', () => {
+    expect(mergeUiSettings({ home: { mine: 12 } }).home).toEqual({
+      notifications: 10,
+      mine: 12,
+      delegated: 10,
+      activities: 10
     })
   })
 

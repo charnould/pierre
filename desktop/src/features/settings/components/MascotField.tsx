@@ -108,7 +108,7 @@ export function MascotField({
   }
 
   return (
-    <Field aria-labelledby={headingId} className="border-border rounded-md border p-4">
+    <Field variant="document-setting" aria-labelledby={headingId}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-0.5">
           <FieldLabel id={headingId} htmlFor={switchId}>
@@ -151,7 +151,7 @@ export function MascotField({
         >
           <DialogHeader>
             <DialogTitle>Modifier l’apparence</DialogTitle>
-            <DialogDescription className="text-balance">
+            <DialogDescription>
               Forme, couleurs et taille du compagnon sur le bureau.
             </DialogDescription>
           </DialogHeader>
@@ -196,9 +196,7 @@ export function MascotField({
               <FieldGroup className="min-w-0 flex-1">
                 <Field>
                   <FieldLabel>Forme</FieldLabel>
-                  <FieldDescription className="text-balance">
-                    Silhouette du compagnon sur le bureau.
-                  </FieldDescription>
+                  <FieldDescription>Silhouette du compagnon sur le bureau.</FieldDescription>
                   <div className="flex flex-wrap gap-2">
                     {MASCOT_SHAPES.map((id) => (
                       <button
@@ -253,7 +251,7 @@ export function MascotField({
                         }}
                       />
                     </div>
-                    <span className="w-12 shrink-0 text-end text-[0.8125rem] leading-[1.125rem] tabular-nums">
+                    <span className="pierre-type-code-sm w-12 shrink-0 text-end tabular-nums">
                       {draft.size} px
                     </span>
                   </div>
@@ -290,7 +288,7 @@ function ColorField({
   return (
     <Field className="w-auto">
       <FieldLabel>{label}</FieldLabel>
-      <FieldDescription className="text-balance">{description}</FieldDescription>
+      <FieldDescription>{description}</FieldDescription>
       <div>
         <input
           type="color"

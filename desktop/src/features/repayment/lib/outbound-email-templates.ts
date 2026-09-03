@@ -1,3 +1,8 @@
+import {
+  parse_rcs_contenu,
+  with_sms_fallback,
+  type RcsChoice
+} from '../../../../../shared/rcs-message'
 import type { TenantRepaymentRow } from './classify-tenants'
 
 export type OutboundEmailRecipient = 'caf' | 'locataire'
@@ -24,6 +29,8 @@ export type OutboundRcsTemplate = {
   action: string
   label: string
   body: string
+  sms_fallback: string
+  choices: RcsChoice[]
 }
 
 export type OutboundTemplate = OutboundEmailTemplate | OutboundRcsTemplate
@@ -46,6 +53,8 @@ export type OutboundEmailResolved = {
 export type OutboundRcsResolved = {
   templateId: string
   body: string
+  sms_fallback: string
+  choices: RcsChoice[]
 }
 
 const PLACEHOLDER_KEYS = ['id_locataire', 'id_client', 'email_client', 'telephone_client'] as const
@@ -83,9 +92,53 @@ function applyPlaceholders(text: string, tenant: TenantRepaymentRow): string {
   })
 }
 
-/** Parse un fichier markdown template repayment. Retourne null si invalide. */
+function parseOutboundRcsJson(raw: string): OutboundRcsTemplate | null {
+  let data: unknown
+  try {
+    data = JSON.parse(raw)
+  } catch {
+    return null
+  }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return null
+  const entry = data as Record<string, unknown>
+  if (entry['channel'] !== 'rcs') return null
+  const id = typeof entry['id'] === 'string' ? entry['id'] : ''
+  const group = typeof entry['group'] === 'string' ? entry['group'].trim() : ''
+  const action = typeof entry['action'] === 'string' ? entry['action'].trim() : ''
+  const label = typeof entry['label'] === 'string' ? entry['label'].trim() : ''
+  if (!TEMPLATE_ID_RE.test(id) || !group || !action || !label) return null
+  const parsed = parse_rcs_contenu({
+    body: entry['body'],
+    sms_fallback: entry['sms_fallback'],
+    choices: entry['choices']
+  })
+  if (!parsed) return null
+  return { channel: 'rcs', id, group, action, label, ...with_sms_fallback(parsed) }
+}
+
+function resolveChoice(choice: RcsChoice, tenant: TenantRepaymentRow): RcsChoice {
+  if (choice.type === 'reply') {
+    return { type: 'reply', label: applyPlaceholders(choice.label, tenant) }
+  }
+  if (choice.type === 'dial') {
+    return {
+      type: 'dial',
+      label: applyPlaceholders(choice.label, tenant),
+      phone: applyPlaceholders(choice.phone, tenant)
+    }
+  }
+  return {
+    type: 'url',
+    label: applyPlaceholders(choice.label, tenant),
+    url: applyPlaceholders(choice.url, tenant)
+  }
+}
+
+/** Parse un template repayment (JSON RCS ou markdown email). */
 export function parseOutboundTemplate(raw: string): OutboundTemplate | null {
   const trimmed = raw.replace(/^\uFEFF/, '')
+  if (trimmed.trimStart().startsWith('{')) return parseOutboundRcsJson(trimmed)
+
   const fmMatch = trimmed.match(FRONTMATTER_RE)
   if (!fmMatch) return null
 
@@ -104,11 +157,7 @@ export function parseOutboundTemplate(raw: string): OutboundTemplate | null {
   const action = readFrontmatterValue(frontmatter, 'action')
   if (!label || !group || !action) return null
 
-  if (channel === 'rcs') {
-    return { channel: 'rcs', id, group, action, label, body }
-  }
-
-  if (channel !== 'email' && channel !== 'mailto') return null
+  if (channel === 'rcs' || (channel !== 'email' && channel !== 'mailto')) return null
 
   const toRaw = readFrontmatterValue(frontmatter, 'to')
   if (toRaw !== 'caf' && toRaw !== 'locataire') return null
@@ -151,7 +200,12 @@ export function resolveOutboundRcs(
   template: OutboundRcsTemplate,
   tenant: TenantRepaymentRow
 ): OutboundRcsResolved {
-  return { templateId: template.id, body: applyPlaceholders(template.body, tenant) }
+  return {
+    templateId: template.id,
+    body: applyPlaceholders(template.body, tenant),
+    sms_fallback: applyPlaceholders(template.sms_fallback, tenant),
+    choices: template.choices.map((choice) => resolveChoice(choice, tenant))
+  }
 }
 
 export function templatesFromRawModules(rawModules: Record<string, string>): OutboundTemplate[] {

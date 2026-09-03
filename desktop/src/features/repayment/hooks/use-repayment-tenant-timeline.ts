@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import type { Activite } from '@/shared/types/activites'
+import {
+  parse_activity_meta_content,
+  type Activite,
+  type ActiviteListItem
+} from '@/shared/types/activites'
 import type { LedgerMovementRow } from '@/shared/types/ledger'
 
 import { buildRepaymentTimeline, type RepaymentTimelineItem } from '../lib/build-repayment-timeline'
@@ -17,7 +21,7 @@ import {
 
 /** Stable identities, so the timeline memo does not recompute on every render. */
 const NO_MOVEMENTS: LedgerMovementRow[] = []
-const NO_NOTIFICATIONS: Activite[] = []
+const NO_NOTIFICATIONS: ActiviteListItem[] = []
 
 export type TimelineRefreshResult = {
   ok: boolean
@@ -36,20 +40,35 @@ const IDLE_REFRESH: TimelineRefreshResult = {
 type TimelineState = {
   key: string | null
   movements: LedgerMovementRow[]
-  notifications: Activite[]
-  openActionEvents: Activite[]
+  notifications: ActiviteListItem[]
+  openActionEvents: ActiviteListItem[]
   movementsError: boolean
   notificationsError: boolean
   openActionsError: boolean
   status: 'idle' | 'loading' | 'refreshing' | 'ready'
 }
 
-function replaceActivityById(rows: Activite[], activity: Activite): Activite[] {
+function replaceActivityById(
+  rows: ActiviteListItem[],
+  activity: Activite | ActiviteListItem
+): ActiviteListItem[] {
+  if (activity.type === 'activity.reaction_changed') {
+    const reaction = parse_activity_meta_content(activity.contenu)
+    if (!reaction) return rows
+    return rows.map((row) =>
+      row.id === reaction.source_activity_id ? { ...row, reaction: reaction.emoji ?? null } : row
+    )
+  }
   let found = false
   const next = rows.map((row) => {
-    if (row.id !== activity.id) return row
+    const sameActivity = row.id === activity.id
+    const sameNoteThread =
+      activity.type === 'note.updated' &&
+      activity.thread_id != null &&
+      row.thread_id === activity.thread_id
+    if (!sameActivity && !sameNoteThread) return row
     found = true
-    return activity
+    return { ...row, ...activity }
   })
   return found ? next : rows
 }
@@ -190,7 +209,7 @@ export function useRepaymentTenantTimeline(
   )
 
   const applyActivityPatch = useCallback(
-    (activity: Activite) => {
+    (activity: Activite | ActiviteListItem) => {
       requestIdRef.current += 1
       if (requestKey) patchRepaymentTimelineActivity(requestKey, activity)
       setState((current) => {
@@ -270,8 +289,8 @@ export function useRepaymentTenantTimeline(
     applyActivityPatch
   } satisfies {
     entries: RepaymentTimelineItem[]
-    notifications: Activite[]
-    openActionEvents: Activite[]
+    notifications: ActiviteListItem[]
+    openActionEvents: ActiviteListItem[]
     movements: LedgerMovementRow[]
     episode: TenantBalancePoint[] | null
     loading: boolean
@@ -282,6 +301,6 @@ export function useRepaymentTenantTimeline(
     notificationsError: boolean
     openActionsError: boolean
     refresh: (options?: { force?: boolean }) => Promise<TimelineRefreshResult>
-    applyActivityPatch: (activity: Activite) => void
+    applyActivityPatch: (activity: Activite | ActiviteListItem) => void
   }
 }

@@ -1,10 +1,12 @@
-import { describe, expect, test } from 'bun:test'
+import { beforeEach, describe, expect, test } from 'bun:test'
+
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 
 import type { TenantRepaymentRow } from './classify-tenants'
 import { groupRepaymentRowsByBucket } from './group-repayment-rows-by-bucket'
 import {
   CLIENTS_PARTIS_BUCKET_ID,
-  REPAYMENT_BUCKET_IDS,
+  repaymentBucketIds,
   resolveBucketForTenantRow,
   type RepaymentBucketId
 } from './repayment-bucket'
@@ -19,6 +21,10 @@ function row(id: string, overrides: Partial<TenantRepaymentRow> = {}): TenantRep
 }
 
 describe('groupRepaymentRowsByBucket', () => {
+  beforeEach(() => {
+    loadCustomizationFixture()
+  })
+
   test('returns one section per phase in config order', () => {
     const getBucket = (r: TenantRepaymentRow): RepaymentBucketId =>
       resolveBucketForTenantRow(
@@ -31,7 +37,7 @@ describe('groupRepaymentRowsByBucket', () => {
       getBucket
     )
 
-    expect(sections.map((s) => s.bucket)).toEqual([...REPAYMENT_BUCKET_IDS])
+    expect(sections.map((s) => s.bucket)).toEqual(repaymentBucketIds())
     expect(sections.find((s) => s.bucket === 'amiable')?.rows.map((r) => r.id_locataire)).toEqual([
       'a'
     ])

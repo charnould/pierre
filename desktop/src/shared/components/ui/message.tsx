@@ -1,6 +1,5 @@
+import { cn } from 'cn'
 import * as React from 'react'
-
-import { cn } from '@/shared/lib/utils'
 
 function Message({
   className,

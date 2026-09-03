@@ -253,8 +253,8 @@ export function AutomationForm({
     } else {
       onSave({
         ...base,
-        type: 'ticket_reply',
-        skillId: 'ticket.answer-ticket',
+        type: 'replies',
+        skillId: 'replies',
         channel,
         ticketFilters,
         maxItems
@@ -315,7 +315,7 @@ export function AutomationForm({
                 aria-label="Rapports conservés"
                 type="number"
                 min={1}
-                className="tabular-nums"
+                numeric
                 value={maxReports}
                 onChange={(e) => setMaxReports(Math.max(1, Number(e.target.value) || 1))}
               />
@@ -397,7 +397,7 @@ export function AutomationForm({
                   aria-label="Limite"
                   type="number"
                   min={1}
-                  className="tabular-nums"
+                  numeric
                   value={maxItems}
                   onChange={(e) => setMaxItems(Math.max(1, Number(e.target.value) || 1))}
                 />

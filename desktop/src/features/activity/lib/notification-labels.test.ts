@@ -30,8 +30,6 @@ describe('activitySenderLabel', () => {
               {
                 login: 'cdubois',
                 email: 'cdubois@exemple.fr',
-                role: 'administrator',
-                config: ['default'],
                 hasAvatar: false,
                 avatarBytes: 0,
                 displayName: 'Camille Dubois'

@@ -2,6 +2,8 @@ import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
+import type { ActiviteListItem, ActivityType } from '@/shared/types/activites'
+
 mock.module('@/contexts/NavigationHistoryContext', () => ({
   useNavigationHistory: () => ({ navigate: mock(() => {}) })
 }))
@@ -25,8 +27,21 @@ mock.module('@/features/repayment/lib/outbound-email-templates.bundle', () => ({
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
 
+function installAnimationFrames(win: Record<string, unknown>) {
+  if (typeof win.requestAnimationFrame !== 'function') {
+    win.requestAnimationFrame = (callback: FrameRequestCallback) =>
+      (win.setTimeout as typeof setTimeout)(callback, 0)
+  }
+  if (typeof win.cancelAnimationFrame !== 'function') {
+    win.cancelAnimationFrame = (id: number) => (win.clearTimeout as typeof clearTimeout)(id)
+  }
+}
+
 beforeAll(() => {
-  if (typeof globalThis.document !== 'undefined') return
+  if (typeof globalThis.document !== 'undefined') {
+    installAnimationFrames(globalThis.window as unknown as Record<string, unknown>)
+    return
+  }
   const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>')
   dom.window.scrollTo = () => {}
   const globals = globalThis as Record<string, unknown>
@@ -49,12 +64,13 @@ beforeAll(() => {
     if (key === 'document') globals[key] = dom.window.document
     else if (key === 'getComputedStyle') {
       globals[key] = dom.window.getComputedStyle.bind(dom.window)
-    } else if (key === 'requestAnimationFrame') {
-      globals[key] = (callback: FrameRequestCallback) => window.setTimeout(callback, 0)
-    } else if (key === 'cancelAnimationFrame') {
-      globals[key] = (id: number) => window.clearTimeout(id)
-    } else globals[key] = win[key]
+    } else if (key !== 'requestAnimationFrame' && key !== 'cancelAnimationFrame') {
+      globals[key] = win[key]
+    }
   }
+  installAnimationFrames(win)
+  globals.requestAnimationFrame = win.requestAnimationFrame
+  globals.cancelAnimationFrame = win.cancelAnimationFrame
   if (typeof globalThis.IntersectionObserver === 'undefined') {
     globalThis.IntersectionObserver = class {
       observe() {}
@@ -89,11 +105,12 @@ function activityRow(
   overrides: {
     rattachement?: string
     auteur?: string
-    type?: string
+    type?: ActivityType
     contenu?: string
     date_creation?: string
+    channel?: ActiviteListItem['channel']
   } = {}
-) {
+): ActiviteListItem {
   return {
     id,
     date_creation: overrides.date_creation ?? '2026-08-21T09:00:00',
@@ -102,11 +119,15 @@ function activityRow(
     id_client: null,
     id_locataire: null,
     id_lot: null,
-    type: overrides.type ?? 'ticket_change',
-    statut: 'logged' as const,
+    type: overrides.type ?? 'ticket.field_changed',
+    channel: overrides.channel ?? null,
     mentions: [],
-    contenu: overrides.contenu ?? JSON.stringify({ avant: 'ouvert', apres: 'clos' }),
-    my: null
+    contenu:
+      overrides.contenu ??
+      JSON.stringify({ version: 2, field: 'statut', before: 'ouvert', after: 'clos' }),
+    my: null,
+    read: true,
+    reaction: null
   }
 }
 
@@ -159,8 +180,8 @@ const items = [
     row: activityRow(3, {
       rattachement: 'tickets:REC-2',
       auteur: 'user:bob@example.test',
-      type: 'note',
-      contenu: 'Bob a ajouté une note',
+      type: 'note.published',
+      contenu: JSON.stringify({ version: 2, text: 'Bob a ajouté une note' }),
       date_creation: '2026-08-21T08:00:00'
     })
   },
@@ -185,8 +206,6 @@ function orgUser(login: string, email: string, displayName: string) {
   return {
     login,
     email,
-    role: 'user',
-    config: [],
     hasAvatar: false,
     avatarBytes: 0,
     displayName
@@ -289,7 +308,7 @@ describe('ActivityPanel', () => {
       )
       expect(document.body.textContent).toContain('Message reçu')
       expect(document.body.textContent).not.toContain('Ancien message')
-      expect(document.body.textContent).not.toContain('a mis à jour le ticket')
+      expect(document.body.textContent).not.toContain('a modifié statut')
       expect(document.body.textContent).not.toContain('Bob a ajouté une note')
       expect(document.body.textContent).toContain('Tout lu')
       const showAll = [...document.querySelectorAll<HTMLButtonElement>('button')].find(
@@ -321,10 +340,10 @@ describe('ActivityPanel', () => {
       expect(sheet?.className).toContain('rounded-md')
       expect(sheet?.className).toContain('[--drawer-inset:0.75rem]')
       expect(sheet?.className).toContain('[--drawer-content-width:24rem]')
-      expect(sheet?.className).toContain('top-[var(--titlebar-height)]')
+      expect(sheet?.className).toContain('top-(--titlebar-height)')
       expect(sheet?.className).not.toContain('90dvh')
       expect(document.querySelector('[data-slot="drawer-overlay"]')?.className).toContain(
-        'top-[var(--titlebar-height)]'
+        'top-(--titlebar-height)'
       )
       expect(document.querySelector('[data-slot="drawer-header"]')?.textContent).toContain(
         'Notifications'
@@ -359,7 +378,8 @@ describe('ActivityPanel', () => {
       expect(drawers[0]?.dataset.swipeDirection).toBe('left')
       expect(drawers[1]?.dataset.swipeDirection).toBe('right')
       expect(drawers[0]?.contains(drawers[1] ?? null)).toBe(false)
-      expect(drawers[1]?.classList.contains('inspector-drawer-motion')).toBe(true)
+      expect(drawers[0]?.dataset.drawerVariant).toBe('activity')
+      expect(drawers[1]?.dataset.drawerVariant).toBe('inspector')
       expect(drawers[1]?.classList.contains('shadow-md')).toBe(true)
 
       const activitiesTab = [...document.querySelectorAll<HTMLElement>('[role="tab"]')].find(
@@ -373,7 +393,7 @@ describe('ActivityPanel', () => {
       expect(document.querySelector('[data-slot="timeline-separator"]')).not.toBeNull()
       expect(document.querySelector('[id^="activity-activities-date-"]')).toBeNull()
       expect(document.querySelector('[id^="activity-activities-folder-"]')).toBeNull()
-      expect(document.body.textContent).toContain('a mis à jour le ticket')
+      expect(document.body.textContent).toContain('a modifié statut')
       expect(document.body.textContent).toContain('Réclamations · REC-1')
       expect(document.body.textContent).not.toContain('Message reçu')
       expect(document.body.textContent).not.toContain('Ancien message')
@@ -439,7 +459,7 @@ describe('ActivityPanel', () => {
       )
       await act(async () => activitiesTab?.click())
       expect(document.body.textContent).toContain('Qui suivre')
-      expect(document.body.textContent).not.toContain('a mis à jour le ticket')
+      expect(document.body.textContent).not.toContain('a modifié statut')
       expect(document.body.textContent).not.toContain('Bob a ajouté une note')
       expect(document.querySelector('[data-slot="popover-trigger"]')).toBeNull()
 
@@ -504,6 +524,77 @@ describe('ActivityPanel', () => {
       expect(loadMoreNotifications).toHaveBeenCalled()
     } finally {
       globalThis.IntersectionObserver = OriginalObserver
+      await cleanup()
+    }
+  })
+
+  test('montre l’enveloppe de communication et ouvre le dossier au clic', async () => {
+    const emailRow = activityRow(21, {
+      type: 'communication.sent',
+      channel: 'email',
+      auteur: 'user:alice@example.test',
+      contenu: JSON.stringify({
+        version: 2,
+        sender: 'alice@example.test',
+        action: 'Contacter la CAF',
+        subject: 'Dossier APL',
+        body: 'Merci de rétablir le versement.'
+      })
+    })
+    const { act, cleanup } = await renderPanel({
+      items: [
+        {
+          id: 21,
+          type: 'repayment' as const,
+          source: 'activity' as const,
+          ref: 'LOC-1',
+          sender: 'alice@example.test',
+          body: 'Alice a envoyé un courriel',
+          createdAt: '2026-08-21T11:00:00',
+          isRead: true,
+          boosts: {},
+          target: { view: 'repayment' as const, tenantId: 'LOC-1', activityId: 21 },
+          contextLabel: 'Impayés · LOC-1',
+          moduleLabel: 'Impayés',
+          notificationId: 21,
+          row: {
+            ...emailRow,
+            destinataire: 'caf@example.fr',
+            my: null
+          }
+        }
+      ],
+      unreadCount: 0,
+      markItemRead: mock(async () => {}),
+      markUnread: mock(async () => {}),
+      markAllRead: mock(async () => {}),
+      showOwnActivity: true,
+      followedActivityAuthors: [],
+      setShowOwnActivity: mock(async () => {}),
+      setFollowedActivityAuthors: mock(async () => {})
+    })
+
+    try {
+      const activitiesTab = [...document.querySelectorAll<HTMLElement>('[role="tab"]')].find(
+        (tab) => tab.textContent === 'Activités'
+      )
+      await act(async () => activitiesTab?.click())
+      expect(document.body.textContent).toContain('a envoyé un courriel · Contacter la CAF')
+      expect(document.body.textContent).toContain('Dossier APL')
+      expect(document.body.textContent).toContain('Merci de rétablir le versement.')
+      expect(document.body.textContent).toContain('caf@example.fr')
+      expect(document.querySelector('[data-slot="timeline-communication"] button')).toBeNull()
+      const activityRowEl = document.querySelector<HTMLElement>(
+        '[data-slot="timeline-item"][role="button"]'
+      )
+      expect(activityRowEl).not.toBeNull()
+      await act(async () => {
+        activityRowEl?.click()
+      })
+      expect([...document.querySelectorAll<HTMLElement>('[data-slot="drawer-popup"]')].length).toBe(
+        2
+      )
+    } finally {
       await cleanup()
     }
   })

@@ -6,10 +6,10 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/shared/components/ui/select'
-import type { ChatBootData } from '@/shared/types'
+import type { ChatBoot } from '@/shared/types'
 
 interface Props {
-  configs: ChatBootData['displayableConfigs']
+  configs: ChatBoot['displayableConfigs']
   activeId: string
   agentName: string
   onSelect: (id: string) => void
@@ -28,7 +28,7 @@ export function ProfileSelector({ configs, activeId, agentName, onSelect, disabl
         if (typeof next === 'string' && next !== activeId) onSelect(next)
       }}
     >
-      <SelectTrigger aria-label={`Profil de ${agentName}`} size="sm" className="bg-transparent">
+      <SelectTrigger aria-label={`Profil de ${agentName}`} size="sm">
         <SelectValue />
       </SelectTrigger>
       <SelectContent alignItemWithTrigger={false}>

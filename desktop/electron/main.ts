@@ -26,14 +26,16 @@ if (
 import { isSettingsConfigured } from '../src/shared/lib/settings-configured'
 import { LOGIN_WINDOW_BOUNDS, WINDOW_MIN_SIZE } from '../src/shared/lib/ui-settings/schema'
 import { registerActivitiesHandlers } from './ipc/activities/register-handlers'
-import { registerAuthHandlers, installAuthCookieInterceptor } from './ipc/auth/register-handlers'
+import { registerAuthHandlers } from './ipc/auth/register-handlers'
 import { registerAutomationsHandlers } from './ipc/automations/register-handlers'
 import { registerBulkOperationsHandlers } from './ipc/bulk-operations/register-handlers'
 import { FoundInPageEvent } from './ipc/channels'
 import { registerDatastoreHandlers } from './ipc/datastore/register-handlers'
+import { registerKnowledgeHandlers } from './ipc/knowledge/register-handlers'
 import { registerLedgerHandlers } from './ipc/ledger/register-handlers'
 import { registerMascotHandlers } from './ipc/mascot/register-handlers'
 import { registerSettingsHandlers } from './ipc/settings/register-handlers'
+import { registerSetupHandlers } from './ipc/setup/register-handlers'
 import { registerStreamHandlers } from './ipc/stream/register-handlers'
 import { isAllowedExternalUrl } from './ipc/system/external-url'
 import { registerSystemHandlers } from './ipc/system/register-handlers'
@@ -49,7 +51,6 @@ import {
   readSettingsUrl,
   type NotificationBadgePoller
 } from './services/notification-badge-poller'
-import { safeStorageCrypto } from './services/secret-crypto'
 import { seedMissingUiSettingsDefaults } from './services/seed-ui-settings-defaults'
 import { createSettingsStore } from './services/settings-store'
 import {
@@ -170,11 +171,10 @@ app.whenReady().then(() => {
   const userData = app.getPath('userData')
   const settingsPath = join(userData, 'settings.json')
   uiSettingsPath = join(userData, 'ui-settings.json')
-  store = createSettingsStore(settingsPath, uiSettingsPath, safeStorageCrypto)
+  store = createSettingsStore(settingsPath, uiSettingsPath)
 
   const mascotPreloadPath = join(__dirname, '../preload/mascot.js')
 
-  installAuthCookieInterceptor(PARTITION)
   registerSettingsHandlers(store, uiSettingsPath, {
     getWindow: () => win,
     getWindowStateHandle: () => windowStateHandle
@@ -183,10 +183,12 @@ app.whenReady().then(() => {
   registerStreamHandlers(PARTITION)
   registerTicketsHandlers(PARTITION)
   registerLedgerHandlers(PARTITION)
+  registerKnowledgeHandlers(PARTITION)
   registerActivitiesHandlers(PARTITION)
   registerAutomationsHandlers(PARTITION)
   registerBulkOperationsHandlers(PARTITION)
   registerDatastoreHandlers(PARTITION)
+  registerSetupHandlers(PARTITION)
   registerUsersHandlers(PARTITION)
   registerSystemHandlers({
     getWindow: () => win,

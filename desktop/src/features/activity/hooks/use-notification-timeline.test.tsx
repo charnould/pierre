@@ -36,10 +36,10 @@ function activity(id: number): Activite {
     id_client: null,
     id_locataire: null,
     id_lot: null,
-    type: 'note',
-    statut: 'logged',
+    type: 'note.published',
+    channel: null,
     mentions: [],
-    contenu: 'hello'
+    contenu: JSON.stringify({ version: 2, text: 'hello' })
   }
 }
 

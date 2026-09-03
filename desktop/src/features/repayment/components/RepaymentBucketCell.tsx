@@ -1,6 +1,5 @@
 import { Badge } from '@/shared/components/ui/badge'
 import {
-  colorizeBadgeStyle,
   columnValueStyleToBadge,
   findColumnValueStyle,
   normalizeColumnValueKey,
@@ -29,9 +28,7 @@ function BucketLabelBadge({
       <Badge
         variant="secondary"
         className="max-w-full min-w-0"
-        style={colorizeBadgeStyle(
-          columnValueStyleToBadge(columnStyle, resolveColumnValueBadgeDefaults())
-        )}
+        appearance={columnValueStyleToBadge(columnStyle, resolveColumnValueBadgeDefaults())}
       >
         <span className="truncate">{label}</span>
       </Badge>

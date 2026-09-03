@@ -16,6 +16,7 @@ import {
   type TicketReplyAutomation
 } from '@/features/automations/lib/automation-types'
 import { openAutomationRun } from '@/features/automations/lib/open-automation-run'
+import { ModuleGate } from '@/shared/components/ModuleGate'
 import { toast } from '@/shared/components/ui/toast'
 import { cn } from '@/shared/lib/utils'
 import type { CreateAutomationBody, PatchAutomationBody } from '@/shared/types/automations'
@@ -153,9 +154,9 @@ export function AutomationsView({
     }
 
     const body: CreateAutomationBody =
-      data.type === 'ticket_reply'
+      data.type === 'replies'
         ? {
-            type: 'ticket_reply',
+            type: 'replies',
             name: data.name ?? 'Nouvelle automatisation',
             description: data.description ?? '',
             mentions: data.mentions ?? [],
@@ -284,40 +285,42 @@ export function AutomationsView({
   }
 
   return (
-    <div
-      data-tab-panel
-      className={cn(
-        'relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
-        hidden ? 'hidden' : 'flex'
-      )}
-    >
-      {panelReady ? (
-        <div className="flex min-h-0 w-full min-w-0 flex-1 scroll-pb-4 flex-col overflow-x-hidden overflow-y-auto overscroll-contain pb-6">
-          <AutomationsList
-            automations={sortedAutomations}
-            url={settings.url}
-            agentName={agentName}
-            query={query}
-            normalizedQuery={normalizedQuery}
-            onQueryChange={setQuery}
-            sortKey={sortKey}
-            onSortKeyChange={setSortKey}
-            selectedAutomationId={selectedAutomationId}
-            onSelectAutomation={handleSelectAutomation}
-            onTogglePin={(automation) => void handleTogglePin(automation)}
-            onNewAutomation={handleNewAutomation}
-            onOpenRun={openAutomationRun}
-          />
-        </div>
-      ) : null}
-
-      <AutomationFormDialog
-        open={sheetOpen}
-        title={automationsSheetTitle(isCreatingNew)}
-        onClose={closeSheet}
+    <ModuleGate entry="automations" hidden={hidden}>
+      <div
+        data-tab-panel
+        className={cn(
+          'relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
+          hidden ? 'hidden' : 'flex'
+        )}
       >
-        {renderDialogContent()}
-      </AutomationFormDialog>
-    </div>
+        {panelReady ? (
+          <div className="flex min-h-0 w-full min-w-0 flex-1 scroll-pb-4 flex-col overflow-x-hidden overflow-y-auto overscroll-contain pb-6">
+            <AutomationsList
+              automations={sortedAutomations}
+              url={settings.url}
+              agentName={agentName}
+              query={query}
+              normalizedQuery={normalizedQuery}
+              onQueryChange={setQuery}
+              sortKey={sortKey}
+              onSortKeyChange={setSortKey}
+              selectedAutomationId={selectedAutomationId}
+              onSelectAutomation={handleSelectAutomation}
+              onTogglePin={(automation) => void handleTogglePin(automation)}
+              onNewAutomation={handleNewAutomation}
+              onOpenRun={openAutomationRun}
+            />
+          </div>
+        ) : null}
+
+        <AutomationFormDialog
+          open={sheetOpen}
+          title={automationsSheetTitle(isCreatingNew)}
+          onClose={closeSheet}
+        >
+          {renderDialogContent()}
+        </AutomationFormDialog>
+      </div>
+    </ModuleGate>
   )
 }

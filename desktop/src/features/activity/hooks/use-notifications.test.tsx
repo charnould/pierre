@@ -41,11 +41,13 @@ function activityRow(id: number): ActiviteListItem {
     id_client: null,
     id_locataire: null,
     id_lot: null,
-    type: 'note',
-    statut: 'logged',
-    mentions: [{ destinataire: 'user:alice@pierre.test', lu: false, boost: null }],
-    contenu: 'coucou',
-    my: { destinataire: 'user:alice@pierre.test', lu: false, boost: null }
+    type: 'note.published',
+    channel: null,
+    mentions: [{ destinataire: 'user:alice@pierre.test' }],
+    contenu: JSON.stringify({ version: 2, text: 'coucou' }),
+    my: { destinataire: 'user:alice@pierre.test' },
+    read: false,
+    reaction: null
   }
 }
 

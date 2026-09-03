@@ -22,9 +22,7 @@ export function RepaymentMissingTableEmpty({ className, onCreatePlan }: Props) {
         <EmptyMedia variant="icon">
           <CartoonErrorObject />
         </EmptyMedia>
-        <EmptyTitle className="text-sm leading-5 font-medium">
-          comptes_locataires n’est pas défini
-        </EmptyTitle>
+        <EmptyTitle size="sm">comptes_locataires n’est pas défini</EmptyTitle>
         <EmptyDescription>
           La table SQLite comptes_locataires est absente du datastore. Les soldes locataires ne
           peuvent pas être calculés.

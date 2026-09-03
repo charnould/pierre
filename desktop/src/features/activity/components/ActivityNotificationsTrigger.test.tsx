@@ -1,4 +1,8 @@
-import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
+import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
+
+mock.module('@/contexts/UiSettingsContext', () => ({
+  useResolvedUiSettings: () => ({ mascot: { badgeColor: '#ff6a45' } })
+}))
 
 import { JSDOM } from 'jsdom'
 
@@ -76,7 +80,6 @@ async function renderTrigger(unreadCount: number) {
   const { act } = await import('react')
   const { createRoot } = await import('react-dom/client')
   const { ActivityRailProvider } = await import('@/features/activity/lib/ActivityRailContext')
-  const { SidebarProvider } = await import('@/shared/components/ui/sidebar')
   const { TooltipProvider } = await import('@/shared/components/ui/tooltip')
   const { ActivityNotificationsTrigger } =
     await import('@/features/activity/components/ActivityNotificationsTrigger')
@@ -87,13 +90,9 @@ async function renderTrigger(unreadCount: number) {
   await act(async () => {
     root.render(
       <TooltipProvider>
-        <SidebarProvider>
-          <ActivityRailProvider>
-            <ul>
-              <ActivityNotificationsTrigger unreadCount={unreadCount} />
-            </ul>
-          </ActivityRailProvider>
-        </SidebarProvider>
+        <ActivityRailProvider>
+          <ActivityNotificationsTrigger unreadCount={unreadCount} />
+        </ActivityRailProvider>
       </TooltipProvider>
     )
   })
@@ -115,11 +114,11 @@ describe('ActivityNotificationsTrigger', () => {
     const trigger = await renderTrigger(0)
     const button = trigger.host.querySelector<HTMLButtonElement>('button')
 
-    expect(button?.hasAttribute('data-active')).toBe(false)
+    expect(button?.getAttribute('aria-pressed')).toBe('false')
     await trigger.act(async () => button?.click())
-    expect(button?.hasAttribute('data-active')).toBe(true)
+    expect(button?.getAttribute('aria-pressed')).toBe('true')
     await trigger.act(async () => button?.click())
-    expect(button?.hasAttribute('data-active')).toBe(false)
+    expect(button?.getAttribute('aria-pressed')).toBe('false')
 
     await trigger.unmount()
   })
@@ -131,9 +130,15 @@ describe('ActivityNotificationsTrigger', () => {
       unread.host.querySelector('svg')?.getAttribute('class') ??
       ''
     expect(unreadClass).not.toContain('fill-unread')
-    expect(
-      unread.host.querySelector('.updates-unread-indicator')?.hasAttribute('data-visible')
-    ).toBe(true)
+    const unreadDot = unread.host.querySelector('[data-unread-dot]')
+    expect(unread.host.querySelector('[data-slot="badge"]')).toBeNull()
+    expect(unreadDot).not.toBeNull()
+    expect((unreadDot as HTMLElement | null)?.style.getPropertyValue('--mascot-badge')).toBe(
+      '#ff6a45'
+    )
+    expect(unread.host.querySelector('button')?.getAttribute('aria-label')).toBe(
+      'Notifications, 2 non-lues'
+    )
     await unread.unmount()
 
     const read = await renderTrigger(0)
@@ -142,9 +147,9 @@ describe('ActivityNotificationsTrigger', () => {
       read.host.querySelector('svg')?.getAttribute('class') ??
       ''
     expect(readClass).not.toContain('fill-unread')
-    expect(read.host.querySelector('.updates-unread-indicator')?.getAttribute('aria-hidden')).toBe(
-      'true'
-    )
+    expect(read.host.querySelector('[data-slot="badge"]')).toBeNull()
+    expect(read.host.querySelector('[data-unread-dot]')).toBeNull()
+    expect(read.host.querySelector('button')?.getAttribute('aria-label')).toBe('Notifications')
     await read.unmount()
   })
 })

@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, test } from 'bun:test
 
 import { JSDOM } from 'jsdom'
 
-import { avatarTone } from '@/shared/lib/avatar/initials'
+import { avatarToneIndex } from '@/shared/lib/avatar/initials'
 
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
@@ -78,12 +78,9 @@ describe('UserAvatar', () => {
     expect(host.querySelector('img')).toBeNull()
     expect(host.querySelector('[data-slot="avatar-fallback"]')?.textContent).toContain('AM')
     expect(host.querySelector('.sr-only')?.textContent).toBe('Alice Martin')
-    const tone = avatarTone('alice.martin')
     const fallback = host.querySelector('[data-slot="avatar-fallback"]') as HTMLElement
-    const r = Number.parseInt(tone.bg.slice(1, 3), 16)
-    const g = Number.parseInt(tone.bg.slice(3, 5), 16)
-    const b = Number.parseInt(tone.bg.slice(5, 7), 16)
-    expect(fallback.style.backgroundColor).toBe(`rgb(${r}, ${g}, ${b})`)
+    expect(fallback.dataset.avatarTone).toBe(String(avatarToneIndex('alice.martin')))
+    expect(fallback.getAttribute('style')).toBeNull()
 
     await act(async () => {
       root.unmount()

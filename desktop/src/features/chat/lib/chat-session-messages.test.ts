@@ -49,7 +49,29 @@ describe('chat session messages', () => {
   test('buildRegeneratePayload includes the latest user text', () => {
     const messages: Message[] = [userMessage('analyze'), assistantMessage('done')]
     const payload = buildRegeneratePayload(messages)
-    expect(payload).toEqual({ text: 'analyze' })
+    expect(payload).toEqual({ text: 'analyze', attachments: [], files: [] })
+  })
+
+  test('buildRegeneratePayload reuses persisted attachments without file bytes', () => {
+    const attachment = new File(['content'], 'rapport.pdf', { type: 'application/pdf' })
+    const message = userMessage('')
+    message.attachments = [{ name: attachment.name, type: attachment.type, size: attachment.size }]
+    message.attachmentsPersisted = true
+
+    expect(buildRegeneratePayload([message, assistantMessage('done')])).toEqual({
+      text: '',
+      attachments: [{ name: 'rapport.pdf', type: 'application/pdf', size: 7 }],
+      files: []
+    })
+  })
+
+  test('buildRegeneratePayload retains bytes for an upload that did not persist', () => {
+    const attachment = new File(['content'], 'rapport.pdf', { type: 'application/pdf' })
+    const message = userMessage('Analyse')
+    message.attachments = [{ name: attachment.name, type: attachment.type, size: attachment.size }]
+    message.attachmentFiles = [attachment]
+
+    expect(buildRegeneratePayload([message])?.files).toEqual([attachment])
   })
 
   test('buildRegeneratePayload returns null without user message', () => {

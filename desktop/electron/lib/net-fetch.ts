@@ -8,5 +8,7 @@ export type NetFetchInit = RequestInit & {
 
 export function netFetch(input: string | URL, init?: NetFetchInit): ReturnType<typeof net.fetch> {
   const url = typeof input === 'string' ? input : input.href
-  return net.fetch(url, init as Parameters<typeof net.fetch>[1])
+  if (!init?.session) return net.fetch(url, init)
+  const { session, ...options } = init
+  return session.fetch(url, { credentials: 'include', ...options })
 }

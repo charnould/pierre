@@ -132,11 +132,11 @@ describe('isValidAboutSubject', () => {
 })
 
 describe('aboutIdSkill', () => {
-  test('maps all subjects to about.summary', () => {
-    expect(aboutIdSkill('locataire')).toBe('about.summary')
-    expect(aboutIdSkill('lot')).toBe('about.summary')
-    expect(aboutIdSkill('batiment')).toBe('about.summary')
-    expect(aboutIdSkill('client')).toBe('about.summary')
+  test('maps all subjects to about', () => {
+    expect(aboutIdSkill('locataire')).toBe('about')
+    expect(aboutIdSkill('lot')).toBe('about')
+    expect(aboutIdSkill('batiment')).toBe('about')
+    expect(aboutIdSkill('client')).toBe('about')
   })
 })
 
@@ -252,10 +252,7 @@ describe('about synthese wire payload', () => {
     })
 
     expect(payload).toEqual({
-      version: 1,
-      workflow: 'synthese',
-      about_subject: 'batiment',
-      identifiant: 'PRG-001',
+      id_batiment: 'PRG-001',
       year_from: 2018,
       year_to: 2020,
       context: 'Contexte test'

@@ -1,5 +1,3 @@
-import planTemplateUrl from '@customization/repayments/templates/template.docx?url'
-
 import { renderDocxTemplate } from '@/features/workflow/lib/generate-docx'
 
 import { buildPlanDocxData, resolveLeaseHolders } from './build-plan-docx-data'
@@ -43,18 +41,19 @@ export async function exportApurementPlanDocx(
   form: ApurementPlanFormData,
   ctx: ExportPlanDocxContext
 ): Promise<boolean> {
-  const resp = await fetch(planTemplateUrl)
-  if (!resp.ok) {
-    console.error(`[export] Failed to load plan template (${resp.status})`)
+  const settings = await window.api?.getSettings?.()
+  const url = settings?.url
+  if (!url || !window.api?.getSetupFile) {
+    console.error('[export] Failed to load plan template')
     return false
   }
-  const buffer = await resp.arrayBuffer()
-
-  let email = ctx.email?.trim() ?? ''
-  if (!email) {
-    const settings = await window.api?.getSettings?.()
-    email = settings?.email?.trim() ?? ''
+  const buffer = await window.api.getSetupFile({ url, id: 'repayment/template.docx' })
+  if (!buffer) {
+    console.error('[export] Failed to load plan template')
+    return false
   }
+
+  let email = ctx.email?.trim() ?? settings?.email?.trim() ?? ''
 
   const ids = resolvePlanExportIds(form, ctx)
   const data = buildPlanDocxData(form, {

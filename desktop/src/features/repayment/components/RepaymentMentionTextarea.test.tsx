@@ -5,10 +5,9 @@ import { useState } from 'react'
 
 import { AgentIdentityProvider } from '@/contexts/AgentIdentityContext'
 import { mascotBodyPath } from '@/mascot/profiles'
+import { MentionText } from '@/shared/components/inspector/mention-text'
+import { MentionTextarea } from '@/shared/components/inspector/mention-textarea'
 import { clearOrgUsersCache } from '@/shared/lib/org-users-cache'
-
-import { RepaymentMentionText } from './RepaymentMentionText'
-import { RepaymentMentionTextarea } from './RepaymentMentionTextarea'
 
 let installedDom = false
 let installedResizeObserver = false
@@ -102,7 +101,7 @@ function Harness() {
   const [value, setValue] = useState('')
   return (
     <AgentIdentityProvider name="Pierre">
-      <RepaymentMentionTextarea
+      <MentionTextarea
         value={value}
         onChange={setValue}
         aria-label="Note"
@@ -128,7 +127,7 @@ async function typeMention(
   })
 }
 
-describe('RepaymentMentionTextarea', () => {
+describe('MentionTextarea', () => {
   test('selects the configured agent with the keyboard', async () => {
     const { act } = await import('react')
     const { createRoot } = await import('react-dom/client')
@@ -181,8 +180,8 @@ describe('RepaymentMentionTextarea', () => {
     await act(async () => {
       root.render(
         <AgentIdentityProvider name="Pierre">
-          <RepaymentMentionText text="Avec @pierre" />
-          <RepaymentMentionText text="Pour @pierre" inline mentionVariant="inline" />
+          <MentionText text="Avec @pierre" />
+          <MentionText text="Pour @pierre" inline mentionVariant="inline" />
         </AgentIdentityProvider>
       )
     })

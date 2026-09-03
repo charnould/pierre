@@ -1,6 +1,5 @@
 import { Slider as SliderPrimitive } from '@base-ui/react/slider'
-
-import { cn } from '@/shared/lib/utils'
+import { cn } from 'cn'
 
 type SliderProps = SliderPrimitive.Root.Props & {
   getAriaLabel?: SliderPrimitive.Thumb.Props['getAriaLabel']

@@ -13,11 +13,6 @@ declare module '*.md' {
   export default content
 }
 
-declare module '*.md?raw' {
-  const content: string
-  export default content
-}
-
 declare module '*.docx?url' {
   const src: string
   export default src

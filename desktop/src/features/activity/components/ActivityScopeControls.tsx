@@ -2,6 +2,7 @@ import { Users } from 'lucide-react'
 import { useMemo } from 'react'
 
 import type { ActivityFeedApi } from '@/features/activity/hooks/useActivityFeed'
+import type { ActivityNotificationItem } from '@/features/activity/lib/notification-types'
 import { OrgUserListItem } from '@/shared/components/OrgUserListItem'
 import { Button } from '@/shared/components/ui/button'
 import { Checkbox } from '@/shared/components/ui/checkbox'
@@ -23,6 +24,20 @@ interface Props {
 
 export function activityAuthorKey(email: string): string {
   return `user:${email.trim().toLowerCase()}`
+}
+
+export function selectAuthoredActivityItems(
+  items: ActivityNotificationItem[],
+  userLogin: string,
+  options: { followedActivityAuthors: string[]; showOwnActivity: boolean }
+): ActivityNotificationItem[] {
+  const ownAuthor = activityAuthorKey(userLogin)
+  const followed = new Set(options.followedActivityAuthors)
+  return items.filter((item) => {
+    if (item.source !== 'activity') return false
+    const author = activityAuthorKey(item.sender)
+    return author === ownAuthor ? options.showOwnActivity : followed.has(author)
+  })
 }
 
 export function followedPeopleCount(

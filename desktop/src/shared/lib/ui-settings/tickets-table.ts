@@ -1,3 +1,5 @@
+import type { BadgeAppearance } from '@/shared/components/ui/badge'
+
 export const RECLAMATIONS_PAGE_SIZE = 150
 
 /** Must match `MAX_COLUMN_FILTER_DISTINCT_VALUES` in `utils/tickets-query.ts`. */
@@ -5,13 +7,12 @@ export const RECLAMATIONS_PAGE_SIZE = 150
 export const facetFilterUnavailableMessage = (totalDistinct: number): string =>
   `Cette colonne compte ${totalDistinct} valeurs distinctes. Saisissez une recherche pour filtrer.`
 
-/** Single pinned column containing the N/P/I/R grid. */
-export const TICKET_TABLE_DRAFT_GROUP_ID = '__draft_npir__'
+/** Locked first column containing only the unread notification signal. */
+export const TICKET_TABLE_ALERT_COLUMN_ID = '__alertes__'
 
-/** Total width of the flush NPIR column (4 tight dot segments, zero padding). */
-export const TICKET_TABLE_DRAFT_GROUP_WIDTH = 68
+export const TICKET_TABLE_ALERT_COLUMN_WIDTH = 40
 
-const TICKET_TABLE_SYSTEM_COLUMN_IDS = new Set<string>([TICKET_TABLE_DRAFT_GROUP_ID])
+const TICKET_TABLE_SYSTEM_COLUMN_IDS = new Set<string>([TICKET_TABLE_ALERT_COLUMN_ID])
 
 export const isTicketTableSystemColumn = (columnId: string): boolean =>
   TICKET_TABLE_SYSTEM_COLUMN_IDS.has(columnId)
@@ -19,16 +20,16 @@ export const isTicketTableSystemColumn = (columnId: string): boolean =>
 export const stripTicketTableSystemColumns = (columnIds: string[]): string[] =>
   columnIds.filter((id) => !isTicketTableSystemColumn(id))
 
-export const stripTicketTableDraftColumnWidths = (
+export const stripTicketTableSystemColumnWidths = (
   widths: Record<string, number>
 ): Record<string, number> => {
   const next = { ...widths }
-  delete next[TICKET_TABLE_DRAFT_GROUP_ID]
+  delete next[TICKET_TABLE_ALERT_COLUMN_ID]
   return next
 }
 
-export const ticketTableDraftColumnSizing = (): Record<string, number> => ({
-  [TICKET_TABLE_DRAFT_GROUP_ID]: TICKET_TABLE_DRAFT_GROUP_WIDTH
+export const ticketTableSystemColumnSizing = (): Record<string, number> => ({
+  [TICKET_TABLE_ALERT_COLUMN_ID]: TICKET_TABLE_ALERT_COLUMN_WIDTH
 })
 const COLUMN_WIDTH_MIN = 60
 const COLUMN_WIDTH_MAX = 800
@@ -216,16 +217,9 @@ export type ColumnValueStyle = {
 
 export type ColumnValuesConfig = Record<string, Record<string, ColumnValueStyle>>
 
-export type TicketValueBadgeStyle = {
-  background: string
-  color: string
-  border: string
-  fontWeight: number
-}
-
 export type TicketValueDisplay = {
   text: string
-  badgeStyle?: TicketValueBadgeStyle
+  badgeStyle?: BadgeAppearance
 }
 
 const DEFAULT_COLUMN_VALUE_BADGE: Required<ColumnValueBadgeDefaults> = {
@@ -267,18 +261,11 @@ export const colorizeBadgeBorder = (background: string, color: string): string =
 export const columnValueStyleToBadge = (
   style: ColumnValueStyle,
   defaults: Required<ColumnValueBadgeDefaults>
-): TicketValueBadgeStyle => ({
+): BadgeAppearance => ({
   background: style.bgColor,
   color: style.textColor,
   border: colorizeBadgeBorder(style.bgColor, style.textColor),
   fontWeight: defaults.fontWeight
-})
-
-export const colorizeBadgeStyle = (badge: TicketValueBadgeStyle) => ({
-  backgroundColor: badge.background,
-  color: badge.color,
-  fontWeight: badge.fontWeight,
-  borderColor: badge.border
 })
 
 const formatBadgeText = (text: string): string => {

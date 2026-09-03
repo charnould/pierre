@@ -1,10 +1,14 @@
-import type { Activite } from '@/shared/types/activites'
+import {
+  parse_activity_meta_content,
+  type Activite,
+  type ActiviteListItem
+} from '@/shared/types/activites'
 import type { LedgerMovementRow } from '@/shared/types/ledger'
 
 export type RepaymentTimelineCacheEntry = {
   movements: LedgerMovementRow[]
-  notifications: Activite[]
-  openActionEvents: Activite[]
+  notifications: ActiviteListItem[]
+  openActionEvents: ActiviteListItem[]
   movementsError: boolean
   notificationsError: boolean
   openActionsError: boolean
@@ -59,18 +63,36 @@ export function invalidateRepaymentTimelineCache(
   cache.delete(key)
 }
 
-function replaceActivityById(rows: Activite[], activity: Activite): Activite[] {
+function replaceActivityById(
+  rows: ActiviteListItem[],
+  activity: Activite | ActiviteListItem
+): ActiviteListItem[] {
+  if (activity.type === 'activity.reaction_changed') {
+    const reaction = parse_activity_meta_content(activity.contenu)
+    if (!reaction) return rows
+    return rows.map((row) =>
+      row.id === reaction.source_activity_id ? { ...row, reaction: reaction.emoji ?? null } : row
+    )
+  }
   let found = false
   const next = rows.map((row) => {
-    if (row.id !== activity.id) return row
+    const sameActivity = row.id === activity.id
+    const sameNoteThread =
+      activity.type === 'note.updated' &&
+      activity.thread_id != null &&
+      row.thread_id === activity.thread_id
+    if (!sameActivity && !sameNoteThread) return row
     found = true
-    return activity
+    return { ...row, ...activity }
   })
   return found ? next : rows
 }
 
 /** Applies a confirmed PATCH locally and invalidates any in-flight prefetch. */
-export function patchRepaymentTimelineActivity(key: string, activity: Activite): void {
+export function patchRepaymentTimelineActivity(
+  key: string,
+  activity: Activite | ActiviteListItem
+): void {
   const existing = cache.get(key)
   const generation = (generations.get(key) ?? 0) + 1
   generations.set(key, generation)

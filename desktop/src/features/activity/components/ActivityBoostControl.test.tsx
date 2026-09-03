@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
-import type { Activite } from '@/shared/types/activites'
+import type { ActiviteListItem } from '@/shared/types/activites'
 
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
@@ -58,7 +58,7 @@ afterAll(() => {
   }
 })
 
-function sampleActivity(overrides: Partial<Activite> = {}): Activite {
+function sampleActivity(overrides: Partial<ActiviteListItem> = {}): ActiviteListItem {
   return {
     id: 7,
     date_creation: '2026-08-17T10:00:00',
@@ -67,15 +67,18 @@ function sampleActivity(overrides: Partial<Activite> = {}): Activite {
     id_client: 'CLI-1',
     id_locataire: 'LOC-1',
     id_lot: null,
-    type: 'note',
-    statut: 'logged',
+    type: 'note.published',
+    channel: null,
     mentions: [],
-    contenu: 'Relance',
+    contenu: JSON.stringify({ version: 2, text: 'Relance' }),
+    my: null,
+    read: true,
+    reaction: null,
     ...overrides
   }
 }
 
-async function renderControl(activity: Activite, currentUser: string) {
+async function renderControl(activity: ActiviteListItem, currentUser: string) {
   const { act } = await import('react')
   const { createRoot } = await import('react-dom/client')
   const { ActivityBoostControl } = await import('./ActivityBoostControl')
@@ -123,7 +126,11 @@ describe('ActivityBoostControl', () => {
 
   test('shows a boost trigger on a colleague’s bulk courrier', async () => {
     const { cleanup } = await renderControl(
-      sampleActivity({ type: 'courrier', bulk_id: 'bulk-r1' }),
+      sampleActivity({
+        type: 'bulk.ran',
+        bulk_id: 'bulk-r1',
+        contenu: JSON.stringify({ version: 2, title: 'Courrier locataires' })
+      }),
       'alice@exemple.fr'
     )
     try {
@@ -137,7 +144,8 @@ describe('ActivityBoostControl', () => {
     const { act } = await import('react')
     const { cleanup, onBoost } = await renderControl(
       sampleActivity({
-        mentions: [{ destinataire: 'user:alice@exemple.fr', lu: true, boost: '👍', inbox: false }]
+        my: { destinataire: 'user:alice@exemple.fr' },
+        reaction: '👍'
       }),
       'alice@exemple.fr'
     )
@@ -175,17 +183,18 @@ describe('ActivityBoostControl', () => {
     }
   })
 
-  test('shows received boosts on the author’s own activity without a picker', async () => {
+  test('shows the projected reaction on the author’s own activity without a picker', async () => {
     const { cleanup } = await renderControl(
       sampleActivity({
         auteur: 'user:alice@exemple.fr',
-        mentions: [{ destinataire: 'user:bob@exemple.fr', lu: true, boost: '🔥', inbox: false }]
+        mentions: [{ destinataire: 'user:bob@exemple.fr' }],
+        reaction: '🔥'
       }),
       'alice@exemple.fr'
     )
     try {
       expect(document.querySelector('[aria-label="Booster"]')).toBeNull()
-      expect(document.querySelector('[aria-label="Boosts"]')?.textContent).toContain('🔥')
+      expect(document.body.textContent).toContain('🔥')
     } finally {
       await cleanup()
     }

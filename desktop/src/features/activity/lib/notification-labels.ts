@@ -3,7 +3,7 @@ import {
   type ActivityNotificationItem
 } from '@/features/activity/lib/notification-types'
 import { ACTIVITY_MODULE_LABELS, type ActivityModuleView } from '@/features/home/home-ui'
-import { formatMentionDisplay } from '@/features/repayment/lib/repayment-mention'
+import { formatMentionDisplay } from '@/shared/lib/activities/mentions'
 import type { ActivityContext } from '@/shared/types/activites'
 
 export function moduleLabelForType(type: ActivityContext): string {
@@ -23,10 +23,6 @@ export function contextLabelForNotification(type: ActivityContext, ref: string):
     return ref
   }
   return ref
-}
-
-export function ticketContextLabel(id_reclamation: string): string {
-  return contextLabelForNotification('tickets', id_reclamation)
 }
 
 export function activitySenderLabel(

@@ -11,7 +11,9 @@ import type {
   GetActivitiesParams,
   GetActivityFeedSyncParams,
   PatchActivityPayload,
-  SendCommunicationPayload
+  RecordExternalCommunicationPayload,
+  SendCommunicationPayload,
+  SendCommunicationResponse
 } from '../../../src/shared/types/activites'
 import { netFetch } from '../../lib/net-fetch'
 import { logMainError } from '../../services/logging'
@@ -67,11 +69,11 @@ export function registerActivitiesHandlers(partition: string): void {
   })
 
   ipcMain.handle(
-    IpcChannel.activities.sendCommunication,
-    async (_, params: SendCommunicationPayload) => {
-      const { url, idempotencyKey, type, ...body } = params
+    IpcChannel.activities.recordExternalCommunication,
+    async (_, params: RecordExternalCommunicationPayload) => {
+      const { url, idempotencyKey, ...body } = params
       try {
-        const response = await netFetch(`${url}/${type}`, {
+        const response = await netFetch(`${url}/communications/external`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -81,7 +83,46 @@ export function registerActivitiesHandlers(partition: string): void {
           session: session.fromPartition(partition)
         })
         if (!response.ok) throw new Error(`${response.status} ${await response.text()}`)
+        if (!response.headers.get('content-type')?.toLowerCase().includes('application/json')) {
+          throw new Error(
+            `${response.status} Serveur incompatible : réponse non JSON de /communications/external`
+          )
+        }
         return (await response.json()) as ActivityResponse
+      } catch (error) {
+        logMainError('record-external-communication', error)
+        return null
+      }
+    }
+  )
+
+  ipcMain.handle(
+    IpcChannel.activities.sendCommunication,
+    async (_, params: SendCommunicationPayload) => {
+      const { url, idempotencyKey, channel, ...body } = params
+      const route =
+        channel === 'postal_letter'
+          ? 'courrier'
+          : channel === 'postal_registered_letter_with_acknowledgement'
+            ? 'lrar'
+            : channel === 'electronic_registered_delivery' ||
+                channel === 'electronic_registered_letter'
+              ? 'lre'
+              : channel
+      try {
+        const response = await netFetch(`${url}/${route}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Idempotency-Key': idempotencyKey
+          },
+          body: JSON.stringify(body),
+          session: session.fromPartition(partition)
+        })
+        if (!response.headers.get('content-type')?.toLowerCase().includes('application/json')) {
+          throw new Error(`${response.status} Serveur incompatible : réponse non JSON de /${route}`)
+        }
+        return (await response.json()) as SendCommunicationResponse
       } catch (error) {
         logMainError('send-communication', error)
         return null
@@ -122,6 +163,11 @@ async function request<T>(
     })
     const responseText = await response.text()
     if (!response.ok) throw new Error(`${response.status} ${responseText}`)
+    if (!response.headers.get('content-type')?.toLowerCase().includes('application/json')) {
+      throw new Error(
+        `${response.status} Serveur incompatible : réponse non JSON (${responseText.slice(0, 200)})`
+      )
+    }
     return JSON.parse(responseText) as T
   } catch (error) {
     logMainError(`${method.toLowerCase()}-activity`, error)

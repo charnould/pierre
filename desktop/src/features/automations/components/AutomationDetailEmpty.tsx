@@ -53,7 +53,7 @@ export function AutomationDetailEmpty({ variant, automationName, hasAutomations 
         <EmptyMedia variant="icon">
           <Icon />
         </EmptyMedia>
-        <EmptyTitle className="text-sm leading-5 font-medium">{title}</EmptyTitle>
+        <EmptyTitle size="sm">{title}</EmptyTitle>
         <EmptyDescription>{description(automationName, hasAutomations)}</EmptyDescription>
       </EmptyHeader>
     </Empty>

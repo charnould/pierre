@@ -16,15 +16,7 @@ function AccessAvatar({ login }: { login: string }) {
   return (
     <Tooltip>
       <TooltipTrigger
-        render={
-          <UserAvatar
-            photoUrl={avatar}
-            name={label}
-            login={login}
-            size="sm"
-            className="ring-background ring-2"
-          />
-        }
+        render={<UserAvatar photoUrl={avatar} name={label} login={login} size="sm" />}
       />
       <TooltipContent>{label}</TooltipContent>
     </Tooltip>
@@ -59,9 +51,7 @@ export function AutomationAccessAvatars({ automation }: { automation: Automation
           <Tooltip>
             <TooltipTrigger
               render={
-                <AvatarGroupCount className="size-6 text-[0.625rem]">
-                  +{hidden.length}
-                </AvatarGroupCount>
+                <AvatarGroupCount className="pierre-type-micro">+{hidden.length}</AvatarGroupCount>
               }
             />
             <TooltipContent>

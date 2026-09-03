@@ -1,7 +1,7 @@
 import type { ColumnVisibilityState } from '@tanstack/react-table'
 import { ArrowDownUp, FilterX, RefreshCw } from 'lucide-react'
 
-import { Button, buttonVariants } from '@/shared/components/ui/button'
+import { Button } from '@/shared/components/ui/button'
 
 import type { RepaymentColumnId } from '../lib/repayment-table-columns'
 import { RepaymentColumnVisibilityMenu } from './RepaymentColumnVisibilityMenu'
@@ -35,10 +35,6 @@ export function RepaymentBucketSectionActions({
         activeColumnIds={activeColumnIds}
         columnVisibility={columnVisibility}
         onToggleColumn={onToggleColumn}
-        triggerClassName={buttonVariants({
-          variant: 'outline',
-          size: 'sm'
-        })}
       />
 
       <Button

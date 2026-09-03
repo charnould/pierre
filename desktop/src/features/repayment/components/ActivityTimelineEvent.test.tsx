@@ -22,7 +22,7 @@ import { ContextTimeline } from '@/shared/components/timeline/context-timeline'
 import { parseActivityAuthor } from '@/shared/lib/timeline/parse-activity-author'
 import type { Activite } from '@/shared/types/activites'
 
-import { ActivityTimelineEvent } from './ActivityTimelineEvent'
+import { RepaymentActivityTimelineEvent } from './RepaymentActivityTimelineEvent'
 
 function row(overrides: Partial<Activite> = {}): Activite {
   return {
@@ -33,10 +33,10 @@ function row(overrides: Partial<Activite> = {}): Activite {
     id_client: 'CLI-1',
     id_locataire: 'LOC-1',
     id_lot: null,
-    type: 'note',
-    statut: 'logged',
+    type: 'note.published',
+    channel: null,
     mentions: [],
-    contenu: JSON.stringify({ version: 1, note: 'Relance' }),
+    contenu: JSON.stringify({ version: 2, text: 'Relance' }),
     ...overrides
   }
 }
@@ -44,7 +44,7 @@ function row(overrides: Partial<Activite> = {}): Activite {
 function renderEvent(activity: Activite) {
   return renderToStaticMarkup(
     <ContextTimeline>
-      <ActivityTimelineEvent
+      <RepaymentActivityTimelineEvent
         row={activity}
         actor={parseActivityAuthor(activity.auteur)}
         step={1}
@@ -67,61 +67,58 @@ describe('ActivityTimelineEvent', () => {
   it('formule un changement de groupe avec les chips Inspector', () => {
     const html = renderEvent(
       row({
-        type: 'repayment_phase_change',
+        type: 'case.group_changed',
         contenu: JSON.stringify({
-          version: 1,
-          phase_precedente: 'amiable',
-          phase: 'pre_contentieux',
+          version: 2,
+          before: 'amiable',
+          after: 'pre_contentieux',
           note: 'Échec des relances amiables.'
         })
       })
     )
-    expect(html).toContain('a déplacé le dossier du groupe')
-    expect(html).toContain('Recouvrement amiable')
-    expect(html).toContain('Précontentieux')
+    expect(html).toContain('a déplacé le dossier de groupe')
+    expect(html).toContain('amiable')
+    expect(html).toContain('pre_contentieux')
     expect(html).toContain('Échec des relances amiables.')
   })
 
   it('formule une tâche créée avec chips titre / responsable / échéance', () => {
     const html = renderEvent(
       row({
-        type: 'action',
-        event: 'created',
-        state: 'a_faire',
+        type: 'task.created',
         thread_id: 'todo-1',
         revision: 1,
         contenu: JSON.stringify({
-          version: 1,
-          action: 'Analyser un rejet',
-          etat: 'a_faire',
-          cree_par: 'user:alice@example.test',
-          cree_le: '2026-08-21T10:00:00',
-          assigne_a: 'user:gregoire@exemple.fr',
-          date_echeance: '2026-08-28'
+          version: 2,
+          task: {
+            title: 'Analyser un rejet',
+            state: 'open',
+            assignee: { id: 'user:gregoire@exemple.fr', label: 'Grégoire' },
+            due_date: '2026-08-28'
+          }
         })
       })
     )
     expect(html).toContain('a créé')
     expect(html).toContain('Analyser un rejet')
-    expect(html).toContain('assignée à')
+    expect(html).toContain('Assignée à')
   })
 
-  it('nomme l’objet boosté sans afficher le type technique', () => {
+  it('rend un événement de réaction sans afficher le type technique', () => {
     const html = renderEvent(
       row({
         auteur: 'user:bob@example.test',
-        type: 'activity_boost',
+        type: 'activity.reaction_changed',
         contenu: JSON.stringify({
-          version: 1,
-          activite_source_id: 42,
-          type_activite_source: 'note',
+          version: 2,
+          source_activity_id: 42,
           emoji: '👍'
         })
       })
     )
-    expect(html).toContain('bob@example.test')
-    expect(html).toContain('a boosté une note 👍')
-    expect(html).not.toContain('activity_boost')
+    expect(html).toMatch(/Bob|bob@example\.test/)
+    expect(html).toContain('a mis à jour une activité')
+    expect(html).not.toContain('activity.reaction_changed')
     expect(html).toContain('21/08/2026 · 10h00')
   })
 })

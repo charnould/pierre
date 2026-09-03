@@ -25,11 +25,11 @@ import {
 } from '@/features/outreach/lib/labels'
 import { resolveContactStatusBadge } from '@/features/repayment/lib/contact-status'
 import {
-  REPAYMENT_ACTION_OPTIONS,
-  REPAYMENT_BULK_ACTION_OPTIONS
+  repaymentActionOptions,
+  repaymentBulkActionOptions
 } from '@/features/repayment/lib/repayment-action'
-import { REPAYMENT_BUCKET_OPTIONS } from '@/features/repayment/lib/repayment-bucket'
-import { REPAYMENT_TAG_OPTIONS } from '@/features/repayment/lib/repayment-tags'
+import { repaymentBucketOptions } from '@/features/repayment/lib/repayment-bucket'
+import { repaymentTagOptions } from '@/features/repayment/lib/repayment-tags'
 import { ChoiceTile } from '@/shared/components/ChoiceTile'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { CartoonBulkSelectFiles } from '@/shared/components/icons/koboyo-empty'
@@ -190,7 +190,7 @@ type PlaceholderColumnLoader = (params: { url: string; limit: number }) => Promi
 
 export async function loadPlaceholderColumnItems(
   url: string,
-  getLedger: PlaceholderColumnLoader | undefined = window.api?.getLedger
+  getLedger: PlaceholderColumnLoader | undefined = window.api?.getLedgerMeta
 ): Promise<Array<{ value: string; label: string }>> {
   if (!getLedger) throw new Error('Impossible de charger les colonnes disponibles.')
   const response = await getLedger({ url, limit: 1 })
@@ -333,9 +333,9 @@ function JsonObjectField({
     <Field data-invalid={error ? '' : undefined}>
       <FieldLabel htmlFor={id}>Contenu RCS enrichi (JSON)</FieldLabel>
       <Textarea
+        variant="code"
         id={id}
         rows={8}
-        className="font-mono"
         value={draft}
         aria-invalid={error ? true : undefined}
         onChange={(event) => {
@@ -373,14 +373,14 @@ export function BulkMessagePreview({ preview }: { preview: PreviewMessageResult 
     return (
       <div className="space-y-4">
         <p className="whitespace-pre-wrap">{preview.body}</p>
-        <pre className="overflow-x-auto font-mono text-[0.8125rem] leading-[1.125rem] whitespace-pre-wrap">
+        <pre className="pierre-type-code-sm overflow-x-auto font-mono whitespace-pre-wrap">
           {JSON.stringify(preview.richContent, null, 2)}
         </pre>
       </div>
     )
   }
   return (
-    <pre className="overflow-x-auto font-mono text-[0.8125rem] leading-[1.125rem] whitespace-pre-wrap">
+    <pre className="pierre-type-code-sm overflow-x-auto font-mono whitespace-pre-wrap">
       {preview.rendered}
     </pre>
   )
@@ -521,7 +521,7 @@ function RangeField({
 function TagSelection({
   label,
   description,
-  items = REPAYMENT_TAG_OPTIONS.map((tag) => ({ value: tag, label: tag })),
+  items = repaymentTagOptions().map((tag) => ({ value: tag, label: tag })),
   value,
   excluded,
   onChange
@@ -622,8 +622,7 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
   const placeholderColumnsUnavailable =
     hasPlaceholders && (placeholderColumnsLoading || placeholderColumnsError !== null)
   const bulkActionItems = useMemo(
-    () =>
-      REPAYMENT_BULK_ACTION_OPTIONS.map((action) => ({ value: action.id, label: action.label })),
+    () => repaymentBulkActionOptions().map((action) => ({ value: action.id, label: action.label })),
     []
   )
 
@@ -941,12 +940,7 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
         </div>
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
           {savedId ? (
-            <Button
-              type="button"
-              variant="outline"
-              className="text-destructive"
-              onClick={() => setConfirmDelete(true)}
-            >
+            <Button type="button" variant="destructive" onClick={() => setConfirmDelete(true)}>
               Supprimer
             </Button>
           ) : null}
@@ -988,7 +982,7 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-4xl px-6 py-6">
-          <FieldGroup className="gap-6">
+          <FieldGroup spacing="loose">
             <FieldSet>
               <FieldLegend>Traitement</FieldLegend>
               <FieldGroup>
@@ -1659,7 +1653,7 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
                         rejoint ce panier.
                       </FieldDescription>
                       <Select
-                        items={REPAYMENT_BUCKET_OPTIONS.map((bucket) => ({
+                        items={repaymentBucketOptions().map((bucket) => ({
                           value: bucket.id,
                           label: bucket.label
                         }))}
@@ -1671,7 +1665,7 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItems
-                            items={REPAYMENT_BUCKET_OPTIONS.map((bucket) => ({
+                            items={repaymentBucketOptions().map((bucket) => ({
                               value: bucket.id,
                               label: bucket.label
                             }))}
@@ -1687,7 +1681,7 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
                     <TagSelection
                       label="Paniers"
                       description="Le dossier doit appartenir à l’un des paniers sélectionnés."
-                      items={REPAYMENT_BUCKET_OPTIONS.map((bucket) => ({
+                      items={repaymentBucketOptions().map((bucket) => ({
                         value: bucket.id,
                         label: bucket.label
                       }))}
@@ -1698,7 +1692,7 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
                     <TagSelection
                       label="Actions"
                       description="Le dossier doit déjà avoir reçu toutes les actions sélectionnées."
-                      items={REPAYMENT_ACTION_OPTIONS.map((action) => ({
+                      items={repaymentActionOptions().map((action) => ({
                         value: action.id,
                         label: action.label
                       }))}
@@ -1770,9 +1764,9 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
                 {channelTotals ? ` · ${channelTotals}` : ''}
                 {previewing ? ' · Mise à jour…' : ''}
               </p>
-              <div ref={resultsScrollRef} className="mt-4 max-h-[32rem] overflow-auto">
-                <table className="w-max min-w-full table-fixed font-sans text-[0.8125rem] leading-5 tabular-nums">
-                  <thead className="bg-background text-muted-foreground sticky top-0 z-10 text-[0.6875rem]">
+              <div ref={resultsScrollRef} className="mt-4 max-h-128 overflow-auto">
+                <table className="pierre-type-data w-max min-w-full table-fixed font-sans tabular-nums">
+                  <thead className="bg-background text-muted-foreground pierre-type-table-header sticky top-0 z-10">
                     <tr className="border-border/60 border-b">
                       <th className="w-28 p-2 text-start font-medium">Locataire</th>
                       <th className="w-28 p-2 text-start font-medium">Dette</th>

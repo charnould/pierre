@@ -1,4 +1,4 @@
-const UPDATES_GITHUB_BRANCH = 'docs/hlm-data-domain-model'
+const UPDATES_GITHUB_BRANCH = 'master'
 export const UPDATES_CHANGELOG_FOLDER = '01-changelog'
 
 const REPO = 'charnould/pierre'

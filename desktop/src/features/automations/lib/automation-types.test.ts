@@ -8,7 +8,7 @@ import {
 import type { AutomationRecord } from '@/shared/types/automations'
 
 type ReportAutomationRecord = Extract<AutomationRecord, { type: 'report' }>
-type TicketReplyAutomationRecord = Extract<AutomationRecord, { type: 'ticket_reply' }>
+type TicketReplyAutomationRecord = Extract<AutomationRecord, { type: 'replies' }>
 
 function record(overrides: Partial<ReportAutomationRecord> = {}): ReportAutomationRecord {
   return {
@@ -48,9 +48,9 @@ describe('recordToAutomation', () => {
   test('keeps ticket-reply run history visible', () => {
     const ticketRecord: TicketReplyAutomationRecord = {
       ...record(),
-      type: 'ticket_reply',
+      type: 'replies',
       config: {
-        skillId: 'ticket.answer-ticket',
+        skillId: 'replies',
         channel: 'email',
         ticketFilters: { rules: [] },
         maxItems: 20

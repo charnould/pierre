@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
+import type { Activite } from '@/shared/types/activites'
 import type { LedgerMovementRow } from '@/shared/types/ledger'
 
 import { invalidateRepaymentTimelineCache } from '../lib/repayment-timeline-cache'
@@ -133,10 +134,13 @@ describe('useRepaymentTenantTimeline', () => {
           id_client: 'CLI-1',
           id_locataire: 'LOC-1',
           id_lot: null,
-          type: 'note',
-          statut: 'logged',
+          type: 'note.published',
+          channel: null,
           mentions: [],
-          contenu: 'Relance'
+          contenu: JSON.stringify({ version: 2, text: 'Relance' }),
+          my: null,
+          read: true,
+          reaction: null
         }
       ],
       openActionEvents: [],
@@ -185,7 +189,7 @@ describe('useRepaymentTenantTimeline', () => {
     container.remove()
   })
 
-  test('applyActivityPatch updates mentions without going through loading', async () => {
+  test('applyActivityPatch projects appended note and reaction events without loading', async () => {
     const { act } = await import('react')
     const { createRoot } = await import('react-dom/client')
     const { setRepaymentTimelineCache, repaymentTimelineCacheKey } =
@@ -200,15 +204,15 @@ describe('useRepaymentTenantTimeline', () => {
       id_client: 'CLI-1',
       id_locataire: 'LOC-1',
       id_lot: null,
-      type: 'note' as const,
-      statut: 'logged' as const,
-      mentions: [] as {
-        destinataire: string
-        lu: boolean
-        boost: string | null
-        inbox?: boolean
-      }[],
-      contenu: 'Relance'
+      type: 'note.published' as const,
+      channel: null,
+      mentions: [],
+      contenu: JSON.stringify({ version: 2, text: 'Relance' }),
+      thread_id: 'note-thread',
+      revision: 1,
+      my: null,
+      read: true,
+      reaction: null
     }
     setRepaymentTimelineCache(repaymentTimelineCacheKey(url, 'CLI-1', 'LOC-1'), {
       movements: [],
@@ -238,13 +242,47 @@ describe('useRepaymentTenantTimeline', () => {
     })
 
     await act(async () => {
-      renders.at(-1)!.applyActivityPatch({
-        ...note,
-        mentions: [{ destinataire: 'user:alice@exemple.fr', lu: true, boost: '👏', inbox: false }]
-      })
+      const reaction: Activite = {
+        id: 2,
+        date_creation: '2026-09-14T10:01:00Z',
+        rattachement: note.rattachement,
+        auteur: 'user:alice@exemple.fr',
+        id_client: note.id_client,
+        id_locataire: note.id_locataire,
+        id_lot: note.id_lot,
+        type: 'activity.reaction_changed',
+        channel: null,
+        mentions: [],
+        contenu: JSON.stringify({ version: 2, source_activity_id: note.id, emoji: '👏' })
+      }
+      renders.at(-1)!.applyActivityPatch(reaction)
     })
     expect(renders.at(-1)!.initialLoading).toBe(false)
-    expect(renders.at(-1)!.notifications[0]?.mentions[0]?.boost).toBe('👏')
+    expect(renders.at(-1)!.notifications[0]?.reaction).toBe('👏')
+
+    await act(async () => {
+      const update: Activite = {
+        id: 3,
+        date_creation: '2026-09-14T10:02:00Z',
+        rattachement: note.rattachement,
+        auteur: 'user:bob@exemple.fr',
+        id_client: note.id_client,
+        id_locataire: note.id_locataire,
+        id_lot: note.id_lot,
+        type: 'note.updated',
+        channel: null,
+        mentions: [],
+        contenu: JSON.stringify({ version: 2, text: 'Relance corrigée' }),
+        thread_id: note.thread_id,
+        revision: 2
+      }
+      renders.at(-1)!.applyActivityPatch(update)
+    })
+    expect(renders.at(-1)!.notifications[0]).toMatchObject({
+      id: 3,
+      contenu: JSON.stringify({ version: 2, text: 'Relance corrigée' }),
+      reaction: '👏'
+    })
 
     await act(async () => {
       root.unmount()

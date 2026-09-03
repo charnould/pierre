@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
 
-import { reasoningUiForSkill, useSkillConfigs } from '@/shared/hooks/useSkillConfigs'
 import type { Tab } from '@/shared/lib/tabs'
 
 import { useWorkflowExport } from './useWorkflowExport'
@@ -22,7 +21,6 @@ export type UseWorkflowPanelOptions = {
  */
 export function useWorkflowPanel({
   url,
-  id_skill,
   onNavigate,
   resetForm,
   onErrorReturnToForm
@@ -30,8 +28,11 @@ export function useWorkflowPanel({
   const [step, setStep] = useState<WorkflowStep>('form')
   const feedRef = useRef<HTMLDivElement>(null)
 
-  const skillConfigs = useSkillConfigs(url)
-  const reasoningUi = reasoningUiForSkill(skillConfigs, id_skill)
+  const reasoningUi = {
+    display: 'expanded' as const,
+    showReasoningTokens: true,
+    reasoningCollapsible: 'full' as const
+  }
 
   const { state, convId, generate, cancel, clearOutput, resetConvId, patchState } =
     useWorkflowGeneration({
@@ -75,7 +76,6 @@ export function useWorkflowPanel({
     copyText,
     downloadDocx,
     reasoningUi,
-    skillConfigs,
     isOutput: step === 'output',
     resetWorkflow,
     goHome,

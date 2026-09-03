@@ -50,7 +50,6 @@ export function CollaboratorPopoverPicker({
           <Button
             type="button"
             variant="outline"
-            size="sm"
             className="h-auto min-h-8 w-full justify-start py-1 font-normal"
           />
         }
@@ -65,9 +64,9 @@ export function CollaboratorPopoverPicker({
       </PopoverTrigger>
       <PopoverContent
         align="start"
+        className="gap-0 rounded-md p-0 shadow-sm"
         initialFocus={false}
         finalFocus={triggerRef}
-        className="w-[min(18rem,calc(24rem-2rem))] rounded-md p-0 shadow-sm"
       >
         <div className="p-2 pb-0">
           <Input
@@ -76,10 +75,9 @@ export function CollaboratorPopoverPicker({
             onChange={(event) => setQuery(event.target.value)}
             placeholder={placeholder}
             autoFocus
-            className="h-8"
           />
         </div>
-        <Command shouldFilter={false} className="rounded-none bg-transparent p-0 shadow-none">
+        <Command shouldFilter={false} className="rounded-none! bg-transparent p-0 shadow-none">
           <CommandList className="max-h-56">
             <CommandGroup>
               {loading ? (

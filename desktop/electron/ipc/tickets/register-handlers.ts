@@ -9,6 +9,28 @@ import { netFetch } from '../../lib/net-fetch'
 import { logMainError } from '../../services/logging'
 import { IpcChannel } from '../channels'
 
+function ticketSearch(params: TicketsQueryParams): string {
+  const { filters, filter_rules, limit, offset, sort, bucket } = params
+  const search = new URLSearchParams()
+  if (limit !== undefined) search.set('limit', String(limit))
+  if (offset !== undefined) search.set('offset', String(offset))
+  if (sort) search.set('sort', sort)
+  if (bucket) search.set('bucket', bucket)
+  if (filters) {
+    for (const [key, values] of Object.entries(filters)) {
+      for (const value of values) {
+        if (value !== undefined && value !== null && value !== '') {
+          search.append(key, String(value))
+        }
+      }
+    }
+  }
+  if (filter_rules && filter_rules.length > 0) {
+    search.set('rules', JSON.stringify(filter_rules))
+  }
+  return search.toString()
+}
+
 const activityToDraft = (activity: Activite): TicketDraft => {
   const metadata = parse_contenu_json(activity.contenu)
   const edition =
@@ -59,11 +81,7 @@ async function fetchTicketDraftActivities(
   })
   if (!response.ok) return []
   const body = (await response.json()) as { data?: Activite[] }
-  return (body.data ?? []).filter(
-    (activity) =>
-      activity.statut === 'draft' &&
-      ['ticket_memo', 'ticket_summary', 'ticket_reply'].includes(activity.type)
-  )
+  return body.data ?? []
 }
 
 /**
@@ -71,26 +89,9 @@ async function fetchTicketDraftActivities(
  */
 export function registerTicketsHandlers(partition: string): void {
   ipcMain.handle(IpcChannel.tickets.list, async (_, params: TicketsQueryParams) => {
-    const { url, filters, filter_rules, limit, offset, sort } = params
+    const { url } = params
     const ses = session.fromPartition(partition)
-    const search = new URLSearchParams()
-    if (limit !== undefined) search.set('limit', String(limit))
-    if (offset !== undefined) search.set('offset', String(offset))
-    if (sort) search.set('sort', sort)
-    if (filters) {
-      for (const [key, values] of Object.entries(filters)) {
-        for (const value of values) {
-          if (value !== undefined && value !== null && value !== '') {
-            search.append(key, String(value))
-          }
-        }
-      }
-    }
-    if (filter_rules && filter_rules.length > 0) {
-      search.set('rules', JSON.stringify(filter_rules))
-    }
-
-    const qs = search.toString()
+    const qs = ticketSearch(params)
     try {
       const resp = await netFetch(`${url}/desktop/tickets${qs ? `?${qs}` : ''}`, {
         session: ses
@@ -99,6 +100,21 @@ export function registerTicketsHandlers(partition: string): void {
       return await resp.json()
     } catch (error) {
       logMainError('get-tickets', error)
+      return null
+    }
+  })
+
+  ipcMain.handle(IpcChannel.tickets.meta, async (_, params: TicketsQueryParams) => {
+    const ses = session.fromPartition(partition)
+    const qs = ticketSearch(params)
+    try {
+      const resp = await netFetch(`${params.url}/desktop/tickets/meta${qs ? `?${qs}` : ''}`, {
+        session: ses
+      })
+      if (!resp.ok) return null
+      return await resp.json()
+    } catch (error) {
+      logMainError('get-tickets-meta', error)
       return null
     }
   })

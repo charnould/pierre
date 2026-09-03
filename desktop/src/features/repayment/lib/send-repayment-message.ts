@@ -1,10 +1,12 @@
-import type { CreateActivityBody } from '@/shared/types/activites'
+import type { Activite, CreateActivityBody } from '@/shared/types/activites'
 import type { RepaymentNotificationChannel } from '@/shared/types/notification-repayment'
 
-import {
-  buildRepaymentMessageActivity,
-  type RepaymentMessageOptions
-} from './repayment-activity-mutations'
+import type { RcsContenu } from '../../../../../shared/rcs-message'
+import { buildRepaymentMessageActivity } from './repayment-activity-mutations'
+
+export type RepaymentMessageResult =
+  | { ok: true }
+  | { ok: false; message?: string; activity?: Activite }
 
 export function repaymentFallbackDestinataire(
   tenant: Record<string, unknown>,
@@ -19,37 +21,65 @@ export function repaymentFallbackDestinataire(
   return typeof fallback === 'string' ? fallback.trim() : ''
 }
 
-export async function sendRepaymentMessage(params: {
+export async function sendRepaymentRcs(params: {
   url: string | undefined
   tenantId: string
-  comment: string
-  channel: RepaymentNotificationChannel
   destinataire: string
-  options?: RepaymentMessageOptions
-  createActivity: (body: CreateActivityBody) => Promise<unknown>
-}): Promise<boolean> {
-  const { url, tenantId, comment, channel, destinataire, options, createActivity } = params
-  if (channel !== 'note') {
-    if (!url || !window.api?.sendCommunication) return false
-    if (!destinataire) return false
-    const action = options?.action?.trim()
-    const response = await window.api.sendCommunication({
-      url,
-      idempotencyKey: crypto.randomUUID(),
-      type: options?.transport === 'mailto' ? 'mailto' : channel,
-      contexte: 'repayment',
-      ref: tenantId,
-      destinataire,
-      contenu: {
-        ...(action ? { action } : {}),
-        ...(options?.objet?.trim() ? { objet: options.objet.trim() } : {}),
-        corps: comment.trim()
-      }
-    })
-    return response != null
+  contenu: RcsContenu
+}): Promise<RepaymentMessageResult> {
+  const destinataire = params.destinataire.trim()
+  if (!params.url || !destinataire) return { ok: false }
+  const response = await window.api?.sendCommunication?.({
+    url: params.url,
+    idempotencyKey: crypto.randomUUID(),
+    contexte: 'repayment',
+    ref: params.tenantId,
+    destinataire,
+    channel: 'rcs',
+    contenu: params.contenu
+  })
+  if (!response) return { ok: false }
+  if ('error' in response) {
+    return { ok: false, message: response.error.message, activity: response.data }
   }
-  const activity = buildRepaymentMessageActivity(tenantId, comment, channel, options)
-  if (!activity) return false
-  const res = await createActivity(activity)
-  return res != null
+  return { ok: true }
+}
+
+export async function recordRepaymentEmail(params: {
+  url: string | undefined
+  tenantId: string
+  destinataire: string
+  subject?: string
+  body: string
+  action?: string
+}): Promise<RepaymentMessageResult> {
+  const destinataire = params.destinataire.trim()
+  if (!params.url || !destinataire) return { ok: false }
+  const action = params.action?.trim()
+  const subject = params.subject?.trim()
+  const response = await window.api?.recordExternalCommunication?.({
+    url: params.url,
+    idempotencyKey: crypto.randomUUID(),
+    contexte: 'repayment',
+    ref: params.tenantId,
+    destinataire,
+    channel: 'email',
+    contenu: {
+      ...(action ? { action } : {}),
+      ...(subject ? { subject } : {}),
+      body: params.body.trim()
+    }
+  })
+  return response != null ? { ok: true } : { ok: false }
+}
+
+export async function sendRepaymentNote(params: {
+  tenantId: string
+  comment: string
+  createActivity: (body: CreateActivityBody) => Promise<unknown>
+}): Promise<RepaymentMessageResult> {
+  const activity = buildRepaymentMessageActivity(params.tenantId, params.comment, 'note')
+  if (!activity) return { ok: false }
+  const response = await params.createActivity(activity)
+  return response != null ? { ok: true } : { ok: false }
 }

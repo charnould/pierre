@@ -4,7 +4,7 @@ type Props = {
   className?: string
 }
 
-/** Shared unread signal (tables, sidebar bell, …) — foreground marker. */
+/** Shared unread signal (tables, titlebar bell, …) — foreground marker. */
 export function UnreadPingIndicator({ className }: Props) {
   return (
     <span

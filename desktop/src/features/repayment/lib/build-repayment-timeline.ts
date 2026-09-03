@@ -1,4 +1,6 @@
-import { is_boost_notification, type Activite } from '@/shared/types/activites'
+import { actionTimelineDate } from '@/shared/lib/activities/action-activity'
+import { projectTimelineItems } from '@/shared/lib/timeline/project-timeline'
+import type { Activite } from '@/shared/types/activites'
 import type { LedgerMovementRow } from '@/shared/types/ledger'
 
 import {
@@ -9,7 +11,6 @@ import {
 import { roundToCents } from './euro-amount'
 import { formatSignedEuro } from './format-repayment'
 import { compareLedgerDatesAsc, compareLedgerDatesDesc, parseLedgerDate } from './ledger-date'
-import { repaymentActionTimelineDate } from './repayment-action-activity'
 
 function movementMontant(row: LedgerMovementRow): number | null {
   const raw = row.montant_en_euros
@@ -97,7 +98,7 @@ export type RepaymentTimelineItem =
       soldeAfter: number
       soldeDelta: number | null
     }
-  | { source: 'activity'; id: string; date: string; row: Activite }
+  | { source: 'activity'; id: string; date: string; row: Activite; statuses: Activite[] }
 
 const CATEGORY_LABELS: Record<string, string> = {
   loyer_principal: 'Loyer principal',
@@ -166,13 +167,15 @@ export function mapLedgerMovementToEntry(row: LedgerMovementRow): {
 }
 
 export function mapNotificationToEntry(
-  row: Activite
+  row: Activite,
+  statuses: Activite[] = []
 ): Extract<RepaymentTimelineItem, { source: 'activity' }> {
   return {
     source: 'activity',
     id: `activity:${row.id}`,
-    date: repaymentActionTimelineDate(row),
-    row
+    date: actionTimelineDate(row),
+    row,
+    statuses
   }
 }
 
@@ -228,18 +231,17 @@ export function buildRepaymentTimeline(
         inputIndex: record.inputIndex
       }
     }),
-    ...notifications
-      .filter((row) => {
-        return !is_boost_notification(row.type)
-      })
-      .map((row, inputIndex) => {
-        const entry = mapNotificationToEntry(row)
-        return {
-          entry,
-          sortId: entry.id,
-          inputIndex: movements.length + inputIndex
-        }
-      })
+    ...projectTimelineItems(notifications).map((item, inputIndex) => {
+      const entry = mapNotificationToEntry(
+        item.row,
+        item.kind === 'communication' ? item.statuses : []
+      )
+      return {
+        entry,
+        sortId: entry.id,
+        inputIndex: movements.length + inputIndex
+      }
+    })
   ]
 
   return entries

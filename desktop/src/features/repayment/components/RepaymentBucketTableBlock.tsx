@@ -1,9 +1,11 @@
 import { useMemo, type RefObject } from 'react'
 
+import { BoardTableSection } from '@/shared/components/table/board-table-section'
 import type { ColumnValuesConfig } from '@/shared/lib/ui-settings/tickets-table'
 
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
-import type { RepaymentBucketId } from '../lib/repayment-bucket'
+import { formatEuro } from '../lib/format-repayment'
+import { getRepaymentBucketMeta, type RepaymentBucketId } from '../lib/repayment-bucket'
 import { filterRepaymentRows } from '../lib/repayment-column-filters'
 import type { TenantLastAction } from '../lib/repayment-last-action'
 import type { RepaymentRowSignal } from '../lib/repayment-row-signal'
@@ -13,7 +15,6 @@ import {
   type ColumnValuesUpdater
 } from '../lib/use-repayment-table-preferences'
 import { RepaymentBucketEmpty } from './RepaymentBucketEmpty'
-import { RepaymentBucketSection } from './RepaymentBucketSection'
 import { RepaymentBucketSectionActions } from './RepaymentBucketSectionActions'
 import { RepaymentTableView } from './RepaymentTableView'
 
@@ -92,12 +93,12 @@ export function RepaymentBucketTableBlock({
     () => filteredRows.reduce((sum, row) => sum + row.solde_locataire, 0),
     [filteredRows]
   )
+  const countLabel = `${filteredRows.length} dossier${filteredRows.length === 1 ? '' : 's'}`
 
   return (
-    <RepaymentBucketSection
-      bucket={bucket}
-      visibleCount={filteredRows.length}
-      totalSolde={totalSolde}
+    <BoardTableSection
+      title={getRepaymentBucketMeta(bucket).label}
+      metadata={[countLabel, formatEuro(totalSolde)]}
       actions={
         <RepaymentBucketSectionActions
           activeColumnIds={activeColumnIds}
@@ -141,6 +142,6 @@ export function RepaymentBucketTableBlock({
           scrollRef={scrollRef}
         />
       )}
-    </RepaymentBucketSection>
+    </BoardTableSection>
   )
 }

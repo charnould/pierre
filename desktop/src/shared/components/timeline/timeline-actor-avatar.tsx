@@ -15,24 +15,24 @@ import {
 import { resolveMascotSettings } from '@/shared/lib/ui-settings/schema'
 import { cn } from '@/shared/lib/utils'
 
-export function avatarFallbackClass(kind: TimelineActorKind): string {
+function actorFallback(kind: TimelineActorKind, icon: ReactNode): ReactNode {
   switch (kind) {
     case 'agent':
     case 'automation':
     case 'system':
-      return 'bg-timeline-bot text-timeline-bot-foreground'
+      return <AvatarFallback tone="timeline-bot">{icon}</AvatarFallback>
     case 'database':
-      return 'bg-timeline-database text-timeline-database-foreground'
+      return <AvatarFallback tone="timeline-database">{icon}</AvatarFallback>
     case 'user':
-      return 'bg-timeline-user text-timeline-user-foreground'
+      return <AvatarFallback tone="timeline-user">{icon}</AvatarFallback>
     case 'tenant':
-      return 'bg-timeline-tenant text-timeline-tenant-foreground'
+      return <AvatarFallback tone="timeline-tenant">{icon}</AvatarFallback>
     case 'external':
-      return 'bg-timeline-external text-timeline-external-foreground'
+      return <AvatarFallback tone="timeline-external">{icon}</AvatarFallback>
     case 'candidate':
-      return 'bg-timeline-candidate text-timeline-candidate-foreground'
+      return <AvatarFallback tone="timeline-candidate">{icon}</AvatarFallback>
     case 'unknown':
-      return 'bg-timeline-user text-timeline-user-foreground'
+      return <AvatarFallback tone="timeline-user">{icon}</AvatarFallback>
   }
 }
 
@@ -121,7 +121,7 @@ export function TimelineActorAvatar({ actor, className, size = 'default' }: Prop
           />
         ) : (
           <Avatar size={size} className={className}>
-            <AvatarFallback className={avatarFallbackClass(actor.kind)}>{icon}</AvatarFallback>
+            {actorFallback(actor.kind, icon)}
           </Avatar>
         )}
       </TooltipTrigger>

@@ -11,8 +11,7 @@ import {
   buildRepaymentTagChangeOperations,
   executeRepaymentAdvancementOperations,
   executeRepaymentTagChangeOperations,
-  type RepaymentAdvancementContext,
-  type RepaymentMessageOptions
+  type RepaymentAdvancementContext
 } from '@/features/repayment/lib/repayment-activity-mutations'
 import {
   parseRepaymentPlanForm,
@@ -21,12 +20,11 @@ import {
 import type { RepaymentBucketId } from '@/features/repayment/lib/repayment-bucket'
 import { requestRepaymentPlanEditor } from '@/features/repayment/lib/repayment-plan-editor-intent'
 import {
-  repaymentFallbackDestinataire,
-  sendRepaymentMessage
+  sendRepaymentNote,
+  type RepaymentMessageResult
 } from '@/features/repayment/lib/send-repayment-message'
 import { useRepaymentColumnValues } from '@/features/repayment/lib/use-repayment-table-preferences'
 import type { Activite } from '@/shared/types/activites'
-import type { RepaymentNotificationChannel } from '@/shared/types/notification-repayment'
 
 interface Props {
   url: string | undefined
@@ -143,23 +141,14 @@ export function RepaymentActivityDrawer({
   }, [ledgerTenant, resolvedClient, tenantId])
 
   const onAddNote = useCallback(
-    async (
-      comment: string,
-      channel: RepaymentNotificationChannel,
-      options?: RepaymentMessageOptions
-    ): Promise<boolean> => {
-      return sendRepaymentMessage({
-        url,
+    async (comment: string): Promise<RepaymentMessageResult> => {
+      return sendRepaymentNote({
         tenantId,
         comment,
-        channel,
-        destinataire:
-          options?.destinataire?.trim() ?? repaymentFallbackDestinataire(tenant, channel),
-        options,
         createActivity: (activity) => notifications.createActivity(activity)
       })
     },
-    [notifications, tenant, tenantId, url]
+    [notifications, tenantId]
   )
 
   const onAdvancementChange = useCallback(

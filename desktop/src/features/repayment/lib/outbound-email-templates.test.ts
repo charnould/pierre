@@ -1,6 +1,4 @@
 import { describe, expect, test } from 'bun:test'
-import { readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
 
 import type { TenantRepaymentRow } from './classify-tenants'
 import {
@@ -50,23 +48,26 @@ Bonjour {{id_client}}.
     })
   })
 
-  test('parse un modèle SMS valide', () => {
-    const parsed = parseOutboundTemplate(`---
-channel: rcs
-id: locataire_sms_relance
-group: SMS au locataire
-action: Envoyer un SMS de relance
-label: Relance
----
-Bonjour {{id_locataire}}
-`)
+  test('parse un modèle RCS JSON valide', () => {
+    const parsed = parseOutboundTemplate(`{
+  "channel": "rcs",
+  "id": "locataire_sms_relance",
+  "group": "SMS au locataire",
+  "action": "Envoyer un SMS de relance",
+  "label": "Relance",
+  "body": "Bonjour {{id_locataire}}",
+  "sms_fallback": "SMS {{id_locataire}}",
+  "choices": [{ "type": "reply", "label": "Rappelez-moi" }]
+}`)
     expect(parsed).toEqual({
       channel: 'rcs',
       id: 'locataire_sms_relance',
       group: 'SMS au locataire',
       action: 'Envoyer un SMS de relance',
       label: 'Relance',
-      body: 'Bonjour {{id_locataire}}'
+      body: 'Bonjour {{id_locataire}}',
+      sms_fallback: 'SMS {{id_locataire}}',
+      choices: [{ type: 'reply', label: 'Rappelez-moi' }]
     })
   })
 
@@ -98,24 +99,26 @@ Corps
 `)
     ).toBeNull()
     expect(
-      parseOutboundTemplate(`---
-channel: rcs
-id: locataire_sms_relance
-action: Envoyer un SMS de relance
-label: Relance
----
-Corps
-`)
+      parseOutboundTemplate(`{
+  "channel": "rcs",
+  "id": "locataire_sms_relance",
+  "action": "Envoyer un SMS de relance",
+  "label": "Relance",
+  "body": "Corps",
+  "sms_fallback": "SMS",
+  "choices": []
+}`)
     ).toBeNull()
     expect(
-      parseOutboundTemplate(`---
-channel: rcs
-id: locataire_sms_relance
-group: SMS au locataire
-label: Relance
----
-Corps
-`)
+      parseOutboundTemplate(`{
+  "channel": "rcs",
+  "id": "locataire_sms_relance",
+  "group": "SMS au locataire",
+  "label": "Relance",
+  "body": "Corps",
+  "sms_fallback": "SMS",
+  "choices": []
+}`)
     ).toBeNull()
     expect(
       parseOutboundTemplate(`---
@@ -190,41 +193,68 @@ Corps
 
 describe('resolveOutboundRcs', () => {
   test('substitue les placeholders', () => {
-    const template = parseOutboundTemplate(`---
-channel: rcs
-id: locataire_sms_relance
-group: SMS au locataire
-action: Envoyer un SMS de relance
-label: Relance
----
-Réf {{id_locataire}} / {{telephone_client}}
-`)
+    const template = parseOutboundTemplate(`{
+  "channel": "rcs",
+  "id": "locataire_sms_relance",
+  "group": "SMS au locataire",
+  "action": "Envoyer un SMS de relance",
+  "label": "Relance",
+  "body": "Réf {{id_locataire}} / {{telephone_client}}",
+  "sms_fallback": "SMS {{id_locataire}}",
+  "choices": []
+}`)
     expect(template?.channel).toBe('rcs')
     if (template?.channel !== 'rcs') return
     expect(resolveOutboundRcs(template, tenant)).toEqual({
       templateId: 'locataire_sms_relance',
-      body: 'Réf LOC-1 / 0601020304'
+      body: 'Réf LOC-1 / 0601020304',
+      sms_fallback: 'SMS LOC-1',
+      choices: []
     })
   })
 })
 
-describe('templates customization/repayments/templates', () => {
-  test('charge et filtre les modèles markdown du dépôt', () => {
-    const dir = join(import.meta.dir, '../../../../../customization/repayments/templates')
-    const rawModules: Record<string, string> = {}
-    for (const name of readdirSync(dir)) {
-      if (!name.endsWith('.md')) continue
-      rawModules[name] = readFileSync(join(dir, name), 'utf8')
-    }
-
-    const all = templatesFromRawModules(rawModules)
+describe('templatesFromRawModules', () => {
+  test('charge et filtre un jeu de modèles inline', () => {
+    const all = templatesFromRawModules({
+      'caf_email_retablir_versement_apl.md': `---
+channel: mailto
+id: caf_email_retablir_versement_apl
+to: caf
+group: Courriel à la CAF
+action: Contacter la CAF
+label: Rétablir APL
+subject: APL
+---
+Bonjour`,
+      'locataire_email_relance_impaye.md': `---
+channel: email
+id: locataire_email_relance_impaye
+to: locataire
+group: Courriel au locataire
+action: Relancer le locataire
+label: Relance
+subject: Impayé
+---
+Bonjour`,
+      'locataire_rcs_relance_impaye.json': `{
+  "channel": "rcs",
+  "id": "locataire_rcs_relance_impaye",
+  "group": "RCS/SMS au (ex-)client",
+  "action": "Envoyer un RCS de relance",
+  "label": "Relance",
+  "body": "Réf {{id_locataire}}",
+  "sms_fallback": "SMS {{id_locataire}}",
+  "choices": []
+}`
+    })
     const caf = filterOutboundEmailTemplates(all, 'caf')
     const locataire = filterOutboundEmailTemplates(all, 'locataire')
     const sms = filterOutboundRcsTemplates(all)
 
-    expect(caf.length).toBeGreaterThanOrEqual(1)
-    expect(locataire.length).toBeGreaterThanOrEqual(1)
-    expect(sms.length).toBeGreaterThanOrEqual(1)
+    expect(caf).toHaveLength(1)
+    expect(locataire).toHaveLength(1)
+    expect(sms).toHaveLength(1)
     expect(caf.every((entry) => entry.to === 'caf')).toBe(true)
     expect(caf.every((entry) => entry.channel === 'mailto')).toBe(true)
     expect(locataire.every((entry) => entry.to === 'locataire')).toBe(true)
@@ -247,7 +277,16 @@ describe('templates customization/repayments/templates', () => {
 })
 
 function smsTemplate(id: string, group: string, label: string): OutboundRcsTemplate {
-  return { channel: 'rcs', id, group, action: 'Envoyer un RCS de relance', label, body: '' }
+  return {
+    channel: 'rcs',
+    id,
+    group,
+    action: 'Envoyer un RCS de relance',
+    label,
+    body: 'RCS',
+    sms_fallback: 'SMS',
+    choices: []
+  }
 }
 
 describe('groupOutboundTemplates', () => {

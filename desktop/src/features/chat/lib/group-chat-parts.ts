@@ -5,7 +5,9 @@ import type {
   ChatToolPart
 } from '@/features/chat/lib/chat-session-types'
 
-export type ChatWorkPart = ChatThinkingPart | ChatToolPart
+import { dropTextBeforeLastTool } from '../../../../../shared/ai-stream-events'
+
+type ChatWorkPart = ChatThinkingPart | ChatToolPart
 
 export type ChatRenderGroup =
   | { type: 'text'; part: ChatTextPart }
@@ -14,7 +16,7 @@ export type ChatRenderGroup =
 export function groupChatParts(parts: ChatMessagePart[]): ChatRenderGroup[] {
   const groups: ChatRenderGroup[] = []
 
-  for (const part of parts) {
+  for (const part of dropTextBeforeLastTool(parts)) {
     if (part.type === 'text') {
       groups.push({ type: 'text', part })
       continue

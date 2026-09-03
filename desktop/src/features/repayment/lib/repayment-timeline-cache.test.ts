@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test'
 
-import type { Activite } from '@/shared/types/activites'
+import type { Activite, ActiviteListItem } from '@/shared/types/activites'
 
 import {
   getRepaymentTimelineCache,
@@ -28,7 +28,7 @@ afterEach(() => {
   windowBeforeStub = undefined
 })
 
-function activity(id: number, contenu = String(id)): Activite {
+function activity(id: number, text = String(id)): ActiviteListItem {
   return {
     id,
     date_creation: '2026-06-10T14:00:00',
@@ -37,10 +37,13 @@ function activity(id: number, contenu = String(id)): Activite {
     id_client: 'CLI-1',
     id_locataire: 'LOC-1',
     id_lot: null,
-    type: 'note',
-    statut: 'logged',
+    type: 'note.published',
+    channel: null,
     mentions: [],
-    contenu
+    contenu: JSON.stringify({ version: 2, text }),
+    my: null,
+    read: true,
+    reaction: null
   }
 }
 
@@ -61,8 +64,8 @@ function timelineResponse({
   openActionsError = false
 }: {
   movements?: Record<string, unknown>[]
-  notifications?: Activite[]
-  openActionEvents?: Activite[]
+  notifications?: ActiviteListItem[]
+  openActionEvents?: ActiviteListItem[]
   movementsError?: boolean
   notificationsError?: boolean
   openActionsError?: boolean
@@ -294,17 +297,27 @@ describe('repayment-timeline-cache', () => {
       id_locataire: 'LOC-1',
       force: true
     })
-    patchRepaymentTimelineActivity(key, {
-      ...activity(9, 'boosted'),
-      mentions: [{ destinataire: 'user:alice@exemple.fr', lu: true, boost: '👍', inbox: false }]
-    })
+    const reaction: Activite = {
+      id: 10,
+      date_creation: '2026-06-10T14:01:00',
+      rattachement: 'repayment:LOC-1',
+      auteur: 'user:test@exemple.fr',
+      id_client: 'CLI-1',
+      id_locataire: 'LOC-1',
+      id_lot: null,
+      type: 'activity.reaction_changed',
+      channel: null,
+      mentions: [],
+      contenu: JSON.stringify({ version: 2, source_activity_id: 9, emoji: '👍' })
+    }
+    patchRepaymentTimelineActivity(key, reaction)
     pending.resolve(timelineResponse({ notifications: [activity(9, 'stale')] }))
     await stale
 
     expect(getRepaymentTimelineCache(key)?.notifications[0]).toMatchObject({
       id: 9,
-      contenu: 'boosted',
-      mentions: [{ boost: '👍' }]
+      contenu: JSON.stringify({ version: 2, text: 'before' }),
+      reaction: '👍'
     })
   })
 

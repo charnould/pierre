@@ -1,18 +1,15 @@
-import { Bell, BellRing } from 'lucide-react'
+import { Bell } from 'lucide-react'
 import { motion, useAnimationControls } from 'motion/react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type CSSProperties } from 'react'
 
+import { useResolvedUiSettings } from '@/contexts/UiSettingsContext'
 import { useActivityRail } from '@/features/activity/lib/ActivityRailContext'
-import { UpdatesUnreadIndicator } from '@/features/updates/components/UpdatesUnreadIndicator'
-import { SidebarMenuButton, SidebarMenuItem } from '@/shared/components/ui/sidebar'
-import { cn } from '@/shared/lib/utils'
-
-/** Évite la fermeture immédiate du sheet quand on bascule depuis la sidebar. */
-export const activityNotificationsDismissGuard = { current: false }
+import { Button } from '@/shared/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
+import { resolveMascotSettings } from '@/shared/lib/ui-settings/schema'
 
 interface Props {
   unreadCount: number
-  disabled?: boolean
 }
 
 /** Burst fini — signale une arrivée sans maintenir la navigation en mouvement. */
@@ -20,12 +17,16 @@ const RING_ROTATE = [0, -20, 18, -12, 8, -4, 0] as const
 const RING_SCALE = [1, 1.08, 1.03, 1.06, 1.02, 1.01, 1] as const
 const RING_EASE = [0.77, 0, 0.175, 1] as const
 
-export function ActivityNotificationsTrigger({ unreadCount, disabled = false }: Props) {
-  const { open, setOpen } = useActivityRail()
+export function ActivityNotificationsTrigger({ unreadCount }: Props) {
+  const { open, setOpen, openRail } = useActivityRail()
   const ringControls = useAnimationControls()
   const previousUnreadCount = useRef(unreadCount)
   const hasUnread = unreadCount > 0
-  const Icon = hasUnread ? BellRing : Bell
+  const badgeColor = resolveMascotSettings(useResolvedUiSettings()).badgeColor
+  const ariaLabel =
+    unreadCount > 0
+      ? `Notifications, ${unreadCount} non-lue${unreadCount > 1 ? 's' : ''}`
+      : 'Notifications'
 
   useEffect(() => {
     const previous = previousUnreadCount.current
@@ -40,32 +41,37 @@ export function ActivityNotificationsTrigger({ unreadCount, disabled = false }: 
   }, [ringControls, unreadCount])
 
   return (
-    <SidebarMenuItem className="group">
-      <SidebarMenuButton
-        isActive={open}
-        tooltip="Notifications"
-        disabled={disabled}
-        onClick={(event) => {
-          event.stopPropagation()
-          activityNotificationsDismissGuard.current = true
-          setOpen(!open)
-          window.setTimeout(() => {
-            activityNotificationsDismissGuard.current = false
-          }, 0)
-        }}
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="no-drag relative"
+            aria-label={ariaLabel}
+            aria-pressed={open}
+            onClick={() => (open ? setOpen(false) : openRail('notifications'))}
+          />
+        }
       >
         <motion.span
           aria-hidden
-          className="flex size-4 shrink-0 items-center justify-center will-change-transform"
-          style={{ originX: 0.5, originY: 0.1 }}
+          className="relative flex size-4 shrink-0 origin-[50%_10%] items-center justify-center will-change-transform"
           initial={false}
           animate={ringControls}
         >
-          <Icon strokeWidth={hasUnread ? 2.85 : 2} className="size-4" />
+          <Bell className="size-4" />
+          {hasUnread ? (
+            <span
+              data-unread-dot=""
+              className="pointer-events-none absolute start-full top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-(--mascot-badge)"
+              style={{ '--mascot-badge': badgeColor } as CSSProperties}
+            />
+          ) : null}
         </motion.span>
-        <span className={cn(hasUnread && 'font-semibold')}>Notifications</span>
-      </SidebarMenuButton>
-      <UpdatesUnreadIndicator count={unreadCount} />
-    </SidebarMenuItem>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">Notifications</TooltipContent>
+    </Tooltip>
   )
 }

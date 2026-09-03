@@ -10,11 +10,10 @@ import {
 import { mentionsToBoosts } from '@/features/activity/lib/notification-types'
 import { Button } from '@/shared/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
-import { cn } from '@/shared/lib/utils'
-import type { Activite } from '@/shared/types/activites'
+import type { Activite, ActiviteListItem } from '@/shared/types/activites'
 
 interface Props {
-  activity: Activite
+  activity: Activite | ActiviteListItem
   currentUser: string
   onBoost: (emoji: ActivityBoostEmoji | null) => void | Promise<void>
   disabled?: boolean
@@ -38,7 +37,7 @@ function BoostEmojiButton({
       type="button"
       variant="ghost"
       size="icon-lg"
-      className={cn('text-xl leading-none', selected && 'bg-muted')}
+      className="aria-pressed:bg-muted text-xl leading-none"
       aria-label={`Boost ${emoji}`}
       aria-pressed={selected}
       onClick={() => onSelect(emoji)}
@@ -51,8 +50,9 @@ function BoostEmojiButton({
 export function ActivityBoostControl({ activity, currentUser, onBoost, disabled }: Props) {
   const [open, setOpen] = useState(false)
   const eligible = canBoostActivity(activity, currentUser)
-  const mine = currentActivityBoost(activity.mentions, currentUser)
-  const others = uniqueBoostEmojis(mentionsToBoosts(activity.mentions)).filter(
+  const reaction = 'reaction' in activity ? activity.reaction : null
+  const mine = currentActivityBoost(reaction)
+  const others = uniqueBoostEmojis(mentionsToBoosts(activity.mentions, reaction)).filter(
     (emoji) => emoji !== mine
   )
 
@@ -112,7 +112,7 @@ export function ActivityBoostControl({ activity, currentUser, onBoost, disabled 
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="text-muted-foreground justify-start"
+                className="justify-start"
                 onClick={clearBoost}
               >
                 Retirer le boost

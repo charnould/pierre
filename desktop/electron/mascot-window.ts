@@ -32,7 +32,7 @@ const MASCOT_SCREEN_MARGIN = 24
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export type MascotController = {
-  setUnreadCount: (count: number) => void
+  setUnreadCount: (count: number, options?: { orbit?: boolean }) => void
   activate: () => void
   setBounds: (params: {
     x?: number
@@ -100,6 +100,7 @@ function loadMascotPage(win: BrowserWindow): void {
 export function createMascotController(opts: MascotControllerOptions): MascotController {
   let mascotWin: BrowserWindow | null = null
   let unreadCount = 0
+  let unreadOrbit = true
   let loggedIn = false
   let look: MascotLook = {
     shape: DEFAULT_MASCOT_SHAPE,
@@ -120,7 +121,7 @@ export function createMascotController(opts: MascotControllerOptions): MascotCon
 
   const pushUnread = (win: BrowserWindow) => {
     if (win.isDestroyed()) return
-    win.webContents.send(MascotUnreadCountEvent, unreadCount)
+    win.webContents.send(MascotUnreadCountEvent, { count: unreadCount, orbit: unreadOrbit })
   }
 
   const pushLook = (win: BrowserWindow) => {
@@ -216,8 +217,9 @@ export function createMascotController(opts: MascotControllerOptions): MascotCon
   }
 
   const controller: MascotController = {
-    setUnreadCount(count: number) {
+    setUnreadCount(count: number, options?: { orbit?: boolean }) {
       unreadCount = Math.max(0, Math.floor(count))
+      if (options?.orbit !== undefined) unreadOrbit = options.orbit
       if (mascotWin && !mascotWin.isDestroyed() && mascotWin.isVisible()) {
         pushUnread(mascotWin)
       }

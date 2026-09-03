@@ -22,10 +22,10 @@ function sampleActivity(overrides: Partial<Activite> = {}): Activite {
     id_client: 'CLI-1',
     id_locataire: 'LOC-1',
     id_lot: 'LOT-1',
-    type: 'note',
-    statut: 'logged',
+    type: 'note.published',
+    channel: null,
     mentions: [],
-    contenu: 'Relance effectuée @amartin',
+    contenu: JSON.stringify({ version: 2, text: 'Relance effectuée @amartin' }),
     ...overrides
   }
 }
@@ -119,6 +119,68 @@ describe('buildRepaymentTimeline', () => {
     ).toEqual(['activity:1'])
   })
 
+  test('projects ordered delivery statuses without standalone technical rows', () => {
+    const sent = sampleActivity({
+      id: 10,
+      type: 'communication.sent',
+      channel: 'email',
+      thread_id: 'mail-1',
+      date_creation: '2026-06-10T10:00:00',
+      contenu: JSON.stringify({ version: 2, sender: 'Alice', body: 'Bonjour' })
+    })
+    const failed = sampleActivity({
+      id: 20,
+      type: 'communication.sent',
+      channel: 'rcs',
+      thread_id: 'rcs-1',
+      date_creation: '2026-06-09T10:00:00',
+      contenu: JSON.stringify({ version: 2, sender: 'Alice', body: 'Bonjour' })
+    })
+    const items = buildRepaymentTimeline(
+      [],
+      [
+        sampleActivity({
+          id: 12,
+          type: 'communication.ok',
+          thread_id: 'mail-1',
+          date_creation: '2026-06-10T12:00:00',
+          contenu: JSON.stringify({ version: 2, result: 'read' })
+        }),
+        sampleActivity({
+          id: 11,
+          type: 'communication.ok',
+          thread_id: 'mail-1',
+          date_creation: '2026-06-10T11:00:00',
+          contenu: JSON.stringify({ version: 2, result: 'delivered' })
+        }),
+        sampleActivity({
+          id: 21,
+          type: 'communication.failed',
+          thread_id: 'rcs-1',
+          date_creation: '2026-06-09T11:00:00',
+          contenu: JSON.stringify({ version: 2, reason: 'Destinataire inconnu' })
+        }),
+        sampleActivity({
+          id: 30,
+          type: 'communication.failed',
+          thread_id: 'orphan',
+          date_creation: '2026-06-11T11:00:00',
+          contenu: JSON.stringify({ version: 2, reason: 'Sans origine' })
+        }),
+        failed,
+        sent
+      ]
+    )
+
+    expect(items.map((item) => item.id)).toEqual(['activity:10', 'activity:20'])
+    const activityItems = items.filter((item) => item.source === 'activity')
+    expect(activityItems[0]?.statuses.map((status) => status.id)).toEqual([11, 12])
+    expect(activityItems[1]?.statuses.map((status) => status.id)).toEqual([21])
+    expect(activityItems.flatMap((item) => item.statuses).map((status) => status.id)).toEqual([
+      11, 12, 21
+    ])
+  })
+
   test('merges and sorts DESC by date within the unpaid episode', () => {
     const items = buildRepaymentTimeline(openDebtMovements, [
       sampleActivity({ id: 10, date_creation: '2026-06-13T10:00:00' })
@@ -134,7 +196,7 @@ describe('buildRepaymentTimeline', () => {
       sampleActivity({
         id: 11,
         date_creation: '2026-06-13T11:00:00',
-        contenu: 'Réponse @amartin'
+        contenu: JSON.stringify({ version: 2, text: 'Réponse @amartin' })
       })
     ])
 
@@ -199,13 +261,14 @@ describe('buildRepaymentTimeline', () => {
     const entry = mapNotificationToEntry(
       sampleActivity({
         id: 9,
-        type: 'email_import',
+        type: 'communication.imported',
+        channel: 'email',
         date_creation: '2026-08-27T12:00:00Z',
         contenu: JSON.stringify({
-          version: 1,
-          objet: 'Relance',
-          corps: 'Bonjour',
-          date_envoi: '2026-04-02T09:00:00Z'
+          version: 2,
+          sender: 'Alice',
+          subject: 'Relance',
+          body: 'Bonjour'
         })
       })
     )
@@ -360,34 +423,27 @@ describe('buildRepaymentTimeline open actions', () => {
     const items = buildRepaymentTimeline(openDebtMovements, [
       sampleActivity({
         id: 20,
-        type: 'action',
+        type: 'task.created',
         thread_id: 'todo-20',
-        event: 'created',
-        state: 'a_faire',
         revision: 1,
         contenu: JSON.stringify({
-          version: 1,
-          action: 'Appeler le locataire',
-          etat: 'a_faire',
-          assigne_a: 'user:alice@exemple.fr',
-          date_echeance: '2026-08-25',
-          cree_par: 'user:alice@exemple.fr',
-          cree_le: '2026-08-20T10:00:00Z'
+          version: 2,
+          task: {
+            title: 'Appeler le locataire',
+            state: 'open',
+            assignee: { id: 'user:alice@exemple.fr', label: 'Alice' },
+            due_date: '2026-08-25'
+          }
         })
       }),
       sampleActivity({
         id: 21,
-        type: 'action',
+        type: 'task.completed',
         thread_id: 'todo-21',
-        event: 'completed',
-        state: 'fait',
         revision: 1,
         contenu: JSON.stringify({
-          version: 1,
-          action: 'Analyser le dossier',
-          etat: 'fait',
-          cree_par: 'user:alice@exemple.fr',
-          cree_le: '2026-08-22T09:00:00Z'
+          version: 2,
+          task: { title: 'Analyser le dossier', state: 'completed' }
         })
       })
     ])
@@ -399,18 +455,17 @@ describe('buildRepaymentTimeline open actions', () => {
   })
 })
 
-describe('buildRepaymentTimeline boost notifications', () => {
-  test('hides activity_boost events from the métier timeline', () => {
+describe('buildRepaymentTimeline reaction notifications', () => {
+  test('hides reaction events from the métier timeline', () => {
     const items = buildRepaymentTimeline(openDebtMovements, [
       sampleActivity({ id: 10, date_creation: '2026-06-13T10:00:00' }),
       sampleActivity({
         id: 11,
-        type: 'activity_boost',
+        type: 'activity.reaction_changed',
         date_creation: '2026-06-13T11:00:00',
         contenu: JSON.stringify({
-          version: 1,
-          activite_source_id: 10,
-          type_activite_source: 'note',
+          version: 2,
+          source_activity_id: 10,
           emoji: '👍'
         })
       })

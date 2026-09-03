@@ -18,10 +18,10 @@ function sampleActivity(overrides: Partial<Activite> = {}): Activite {
     id_client: 'CLI-1',
     id_locataire: 'LOC-1',
     id_lot: null,
-    type: 'note',
-    statut: 'logged',
+    type: 'note.published',
+    channel: null,
     mentions: [],
-    contenu: 'Relance',
+    contenu: JSON.stringify({ version: 2, text: 'Relance' }),
     ...overrides
   }
 }
@@ -39,9 +39,11 @@ describe('activityActorDestinataire', () => {
 describe('canBoostActivity', () => {
   it('allows boosting another collaborator’s action', () => {
     expect(canBoostActivity(sampleActivity(), 'alice@exemple.fr')).toBe(true)
-    expect(canBoostActivity(sampleActivity({ type: 'action' }), 'alice@exemple.fr')).toBe(true)
+    expect(canBoostActivity(sampleActivity({ type: 'task.created' }), 'alice@exemple.fr')).toBe(
+      true
+    )
     expect(
-      canBoostActivity(sampleActivity({ type: 'courrier', bulk_id: 'bulk-r1' }), 'alice@exemple.fr')
+      canBoostActivity(sampleActivity({ type: 'bulk.ran', bulk_id: 'bulk-r1' }), 'alice@exemple.fr')
     ).toBe(true)
   })
 
@@ -50,7 +52,10 @@ describe('canBoostActivity', () => {
     expect(
       canBoostActivity(sampleActivity({ auteur: 'agent:ticket.write-memo' }), 'alice@exemple.fr')
     ).toBe(false)
-    expect(canBoostActivity(sampleActivity({ type: 'activity_boost' }), 'alice@exemple.fr')).toBe(
+    expect(
+      canBoostActivity(sampleActivity({ type: 'activity.reaction_changed' }), 'alice@exemple.fr')
+    ).toBe(false)
+    expect(canBoostActivity(sampleActivity({ type: 'activity.unread' }), 'alice@exemple.fr')).toBe(
       false
     )
   })
@@ -58,11 +63,8 @@ describe('canBoostActivity', () => {
 
 describe('currentActivityBoost', () => {
   it('reads the current user’s emoji', () => {
-    const mentions = [
-      { destinataire: 'user:alice@exemple.fr', lu: true, boost: '👍', inbox: false as const }
-    ]
-    expect(currentActivityBoost(mentions, 'alice@exemple.fr')).toBe('👍')
-    expect(currentActivityBoost(mentions, 'bob@exemple.fr')).toBeUndefined()
+    expect(currentActivityBoost('👍')).toBe('👍')
+    expect(currentActivityBoost(null)).toBeUndefined()
   })
 })
 

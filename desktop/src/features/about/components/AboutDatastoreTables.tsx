@@ -26,7 +26,7 @@ export function AboutDatastoreTables({ url }: Props) {
   if (sorted.length === 0) return null
 
   return (
-    <Card size="sm" className="w-full max-w-sm border">
+    <Card size="sm" className="w-full max-w-sm">
       <CardHeader>
         <CardTitle>Données disponibles</CardTitle>
         <CardDescription>
@@ -37,9 +37,7 @@ export function AboutDatastoreTables({ url }: Props) {
         <ul aria-label="Tables de données importées" className="flex min-w-0 flex-col">
           {sorted.map(({ name, exists }) => (
             <li key={name} className="flex h-8 min-w-0 items-center justify-between gap-2">
-              <span className="truncate text-[0.8125rem] leading-[1.125rem] tabular-nums">
-                {name}
-              </span>
+              <span className="pierre-type-data truncate tabular-nums">{name}</span>
               {exists ? (
                 <span className="sr-only">disponible</span>
               ) : (

@@ -17,20 +17,16 @@ interface Props {
   activeColumnIds: RepaymentColumnId[]
   columnVisibility: Record<string, boolean>
   onToggleColumn: (columnId: RepaymentColumnId, visible: boolean) => void
-  triggerClassName?: string
 }
 
 export function RepaymentColumnVisibilityMenu({
   activeColumnIds,
   columnVisibility,
-  onToggleColumn,
-  triggerClassName
+  onToggleColumn
 }: Props) {
   return (
     <DropdownMenu modal={false}>
-      <DropdownMenuTrigger
-        render={<Button type="button" variant="outline" size="sm" className={triggerClassName} />}
-      >
+      <DropdownMenuTrigger render={<Button type="button" variant="outline" size="sm" />}>
         <Columns3 data-icon="inline-start" />
         Colonnes
       </DropdownMenuTrigger>

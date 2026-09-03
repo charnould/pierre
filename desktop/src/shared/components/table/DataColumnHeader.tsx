@@ -21,7 +21,7 @@ export function DataColumnHeader({ title, align = 'left', optionsMenu, titleClas
       {title ? (
         <span
           className={cn(
-            'text-muted-foreground truncate text-[0.6875rem] font-medium',
+            'text-muted-foreground pierre-type-table-header truncate font-medium',
             titleClassName
           )}
           title={title}

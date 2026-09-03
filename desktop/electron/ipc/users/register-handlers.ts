@@ -1,9 +1,22 @@
+import { readFile } from 'node:fs/promises'
+import { basename } from 'node:path'
+
 import { BrowserWindow, dialog, ipcMain, session } from 'electron'
 
 import type {
+  AdminUserMutationResponse,
+  AdminUserProfileMutationResponse,
+  AdminUsersResponse,
+  DeleteAdminUserProfileResponse,
+  DeleteAdminUserResponse,
   GetAvatarPayload,
+  ImportAdminUsersResponse,
   PatchMyPreferencesPayload,
   PatchMyPreferencesResponse,
+  PatchAdminUserPayload,
+  PatchAdminUserProfilePayload,
+  SaveAdminUserPayload,
+  SaveAdminUserProfilePayload,
   UploadMyAvatarPayload,
   UploadMyAvatarResponse,
   UsersListResponse
@@ -27,6 +40,166 @@ export function registerUsersHandlers(partition: string): void {
       return (await resp.json()) as UsersListResponse
     } catch (error) {
       logMainError('get-users', error)
+      return null
+    }
+  })
+
+  ipcMain.handle(IpcChannel.users.adminList, async (_, { url }: { url: string }) => {
+    const ses = session.fromPartition(partition)
+    try {
+      const resp = await netFetch(`${url.replace(/\/$/, '')}/desktop/admin/users`, {
+        session: ses
+      })
+      return (await resp.json()) as AdminUsersResponse
+    } catch (error) {
+      logMainError('get-admin-users', error)
+      return null
+    }
+  })
+
+  ipcMain.handle(IpcChannel.users.adminCreate, async (_, params: SaveAdminUserPayload) => {
+    const { url, ...body } = params
+    const ses = session.fromPartition(partition)
+    try {
+      const resp = await netFetch(`${url.replace(/\/$/, '')}/desktop/admin/users`, {
+        session: ses,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+      return (await resp.json()) as AdminUserMutationResponse
+    } catch (error) {
+      logMainError('create-admin-user', error)
+      return null
+    }
+  })
+
+  ipcMain.handle(IpcChannel.users.adminPatch, async (_, params: PatchAdminUserPayload) => {
+    const { url, email, ...body } = params
+    const ses = session.fromPartition(partition)
+    try {
+      const resp = await netFetch(
+        `${url.replace(/\/$/, '')}/desktop/admin/users/${encodeURIComponent(email)}`,
+        {
+          session: ses,
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        }
+      )
+      return (await resp.json()) as AdminUserMutationResponse
+    } catch (error) {
+      logMainError('patch-admin-user', error)
+      return null
+    }
+  })
+
+  ipcMain.handle(
+    IpcChannel.users.adminDelete,
+    async (_, { url, email }: { url: string; email: string }) => {
+      const ses = session.fromPartition(partition)
+      try {
+        const resp = await netFetch(
+          `${url.replace(/\/$/, '')}/desktop/admin/users/${encodeURIComponent(email)}`,
+          { session: ses, method: 'DELETE' }
+        )
+        return (await resp.json()) as DeleteAdminUserResponse
+      } catch (error) {
+        logMainError('delete-admin-user', error)
+        return null
+      }
+    }
+  )
+
+  ipcMain.handle(
+    IpcChannel.users.adminCreateProfile,
+    async (_, params: SaveAdminUserProfilePayload) => {
+      const { url, ...body } = params
+      const ses = session.fromPartition(partition)
+      try {
+        const resp = await netFetch(`${url.replace(/\/$/, '')}/desktop/admin/users/profiles`, {
+          session: ses,
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        })
+        return (await resp.json()) as AdminUserProfileMutationResponse
+      } catch (error) {
+        logMainError('create-admin-user-profile', error)
+        return null
+      }
+    }
+  )
+
+  ipcMain.handle(
+    IpcChannel.users.adminPatchProfile,
+    async (_, params: PatchAdminUserProfilePayload) => {
+      const { url, id, ...body } = params
+      const ses = session.fromPartition(partition)
+      try {
+        const resp = await netFetch(
+          `${url.replace(/\/$/, '')}/desktop/admin/users/profiles/${encodeURIComponent(id)}`,
+          {
+            session: ses,
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          }
+        )
+        return (await resp.json()) as AdminUserProfileMutationResponse
+      } catch (error) {
+        logMainError('patch-admin-user-profile', error)
+        return null
+      }
+    }
+  )
+
+  ipcMain.handle(
+    IpcChannel.users.adminDeleteProfile,
+    async (_, { url, id }: { url: string; id: string }) => {
+      const ses = session.fromPartition(partition)
+      try {
+        const resp = await netFetch(
+          `${url.replace(/\/$/, '')}/desktop/admin/users/profiles/${encodeURIComponent(id)}`,
+          { session: ses, method: 'DELETE' }
+        )
+        return (await resp.json()) as DeleteAdminUserProfileResponse
+      } catch (error) {
+        logMainError('delete-admin-user-profile', error)
+        return null
+      }
+    }
+  )
+
+  ipcMain.handle(IpcChannel.users.adminImportCsv, async (_, { url }: { url: string }) => {
+    const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
+    const result = win
+      ? await dialog.showOpenDialog(win, {
+          title: 'Importer des utilisateurs',
+          properties: ['openFile'],
+          filters: [{ name: 'CSV', extensions: ['csv'] }]
+        })
+      : await dialog.showOpenDialog({
+          title: 'Importer des utilisateurs',
+          properties: ['openFile'],
+          filters: [{ name: 'CSV', extensions: ['csv'] }]
+        })
+    const path = result.filePaths[0]
+    if (result.canceled || !path) return null
+
+    const ses = session.fromPartition(partition)
+    try {
+      const bytes = await readFile(path)
+      const form = new FormData()
+      form.set('file', new File([bytes], basename(path), { type: 'text/csv' }))
+      const resp = await netFetch(`${url.replace(/\/$/, '')}/desktop/admin/users/import`, {
+        session: ses,
+        method: 'POST',
+        body: form
+      })
+      return (await resp.json()) as ImportAdminUsersResponse
+    } catch (error) {
+      logMainError('import-admin-users-csv', error)
       return null
     }
   })

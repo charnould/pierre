@@ -15,10 +15,9 @@ export const IpcChannel = {
   },
   auth: {
     login: 'login',
-    loginStored: 'login-stored',
+    restoreSession: 'restore-session',
     logout: 'logout',
-    getChatBoot: 'get-chat-boot',
-    getSkills: 'get-skills'
+    getChatBoot: 'get-chat-boot'
   },
   stream: {
     start: 'start-stream',
@@ -29,28 +28,55 @@ export const IpcChannel = {
   },
   tickets: {
     list: 'get-tickets',
+    meta: 'get-tickets-meta',
     facets: 'get-ticket-facets',
     putTicket: 'put-ticket',
     getDraft: 'get-ticket-draft'
   },
   ledger: {
     list: 'get-ledger',
+    meta: 'get-ledger-meta',
     repaymentTimeline: 'get-repayment-timeline'
   },
   datastore: {
     tables: 'get-datastore-tables'
   },
+  setup: {
+    get: 'get-setup',
+    file: 'get-setup-file',
+    adminGet: 'get-admin-setup',
+    adminPut: 'put-admin-setup',
+    adminDelete: 'delete-admin-chatbot'
+  },
   users: {
     list: 'get-users',
+    adminList: 'get-admin-users',
+    adminCreate: 'create-admin-user',
+    adminPatch: 'patch-admin-user',
+    adminDelete: 'delete-admin-user',
+    adminImportCsv: 'import-admin-users-csv',
+    adminCreateProfile: 'create-admin-user-profile',
+    adminPatchProfile: 'patch-admin-user-profile',
+    adminDeleteProfile: 'delete-admin-user-profile',
     patchPreferences: 'patch-my-preferences',
     getAvatar: 'get-avatar',
     uploadAvatar: 'upload-avatar',
     pickAvatar: 'pick-avatar'
   },
+  knowledge: {
+    get: 'get-admin-knowledge',
+    upload: 'upload-knowledge-sources',
+    patch: 'patch-knowledge-source',
+    delete: 'delete-knowledge-source',
+    download: 'download-knowledge-source',
+    builds: 'get-knowledge-builds',
+    rebuild: 'rebuild-knowledge'
+  },
   activities: {
     list: 'get-activities',
     syncFeed: 'sync-activity-feed',
     create: 'create-activity',
+    recordExternalCommunication: 'record-external-communication',
     sendCommunication: 'send-communication',
     patch: 'patch-activity',
     delete: 'delete-activity'
@@ -79,6 +105,7 @@ export const IpcChannel = {
     writeClipboard: 'write-clipboard',
     openExternal: 'open-external',
     openAutomationReport: 'open-automation-report',
+    openExternalApplication: 'open-external-application',
     setAuthWindowLayout: 'set-auth-window-layout',
     authWindowLayoutSwapAck: 'auth-window-layout-swap-ack',
     resetWindowToFactory: 'reset-window-to-factory',

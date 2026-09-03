@@ -1,10 +1,9 @@
-import type { RefObject } from 'react'
+import type { ReactNode, RefObject } from 'react'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 import type { ActivityNotificationItem } from '@/features/activity/lib/notification-types'
-import { ActivityTimelineEvent } from '@/features/repayment/components/ActivityTimelineEvent'
-import { indexTodoRevisions } from '@/features/repayment/lib/repayment-action-activity'
 import { CartoonNotificationGrouped } from '@/shared/components/icons/koboyo-empty'
+import { ActivityTimelineEvent } from '@/shared/components/timeline/activity-timeline-event'
 import { ContextTimeline } from '@/shared/components/timeline/context-timeline'
 import {
   Empty,
@@ -13,6 +12,7 @@ import {
   EmptyMedia,
   EmptyTitle
 } from '@/shared/components/ui/empty'
+import { indexTodoRevisions } from '@/shared/lib/activities/action-activity'
 import { formatInspectorTimelineDateline } from '@/shared/lib/timeline/activity-notification-date'
 import { parseActivityAuthor } from '@/shared/lib/timeline/parse-activity-author'
 
@@ -48,6 +48,8 @@ function ListSentinel({
 export function ActivityTimelineList({
   items,
   emptyCopy,
+  emptyIcon,
+  fit = false,
   onOpen,
   onLoadMore,
   hasMore = false,
@@ -55,6 +57,8 @@ export function ActivityTimelineList({
 }: {
   items: ActivityNotificationItem[]
   emptyCopy: { title: string; description: string }
+  emptyIcon?: ReactNode
+  fit?: boolean
   onOpen: (item: ActivityNotificationItem) => void
   onLoadMore?: () => void
   hasMore?: boolean
@@ -70,13 +74,14 @@ export function ActivityTimelineList({
   )
 
   return (
-    <div ref={scrollRef} className="scroll-fade min-h-0 flex-1 overflow-y-auto">
+    <div
+      ref={scrollRef}
+      className={fit ? 'overflow-visible' : 'scroll-fade min-h-0 flex-1 overflow-y-auto'}
+    >
       {items.length === 0 ? (
-        <Empty>
+        <Empty className={fit ? 'flex-none' : undefined}>
           <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <CartoonNotificationGrouped />
-            </EmptyMedia>
+            <EmptyMedia variant="icon">{emptyIcon ?? <CartoonNotificationGrouped />}</EmptyMedia>
             <EmptyTitle>{emptyCopy.title}</EmptyTitle>
             <EmptyDescription>{emptyCopy.description}</EmptyDescription>
           </EmptyHeader>

@@ -49,7 +49,7 @@ export function RepaymentTimelineMovementRow({ row, soldeAfter, soldeDelta, clas
         ) : null}
       </p>
       {label ? (
-        <p className="text-muted-foreground mt-0.5 text-[0.6875rem] leading-4">{label}</p>
+        <p className="text-muted-foreground pierre-type-table-header mt-0.5">{label}</p>
       ) : null}
     </div>
   )

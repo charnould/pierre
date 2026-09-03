@@ -1,48 +1,13 @@
-import type { AboutSubject, AnswerChannel } from '@/features/tickets/lib/knowledge-skills'
+import type { AboutSubject } from '@/features/tickets/lib/knowledge-skills'
 
-export const WORKFLOW_PAYLOAD_VERSION = 1 as const
-
-export type { AboutSubject, AnswerChannel }
-
-export type AnswerPayload = {
-  version: typeof WORKFLOW_PAYLOAD_VERSION
-  workflow: 'answer'
-  channel?: AnswerChannel
-  id_reclamation: string | null
-  id_locataire: string | null
-  message: string | null
-  context: string | null
-}
-
-export type SynthesePayload = {
-  version: typeof WORKFLOW_PAYLOAD_VERSION
-  workflow: 'synthese'
-  about_subject: AboutSubject
-  identifiant: string
+type SyntheseBase = {
   year_from: number
   year_to: number
-  context: string | null
+  context?: string
 }
 
-export type WorkflowPayload = AnswerPayload | SynthesePayload
-
-export function buildAnswerPayload(p: {
-  id_reclamation: string
-  id_locataire: string
-  message: string
-  context: string
-  channel?: AnswerChannel
-}): AnswerPayload {
-  return {
-    version: WORKFLOW_PAYLOAD_VERSION,
-    workflow: 'answer',
-    id_reclamation: p.id_reclamation.trim() || null,
-    id_locataire: p.id_locataire.trim() || null,
-    message: p.message.trim() || null,
-    context: p.context.trim() || null,
-    ...(p.channel ? { channel: p.channel } : {})
-  }
-}
+export type SynthesePayload = SyntheseBase &
+  ({ id_locataire: string } | { id_client: string } | { id_lot: string } | { id_batiment: string })
 
 export function buildSynthesePayload(p: {
   about_subject: AboutSubject
@@ -51,17 +16,25 @@ export function buildSynthesePayload(p: {
   year_to: number
   context: string
 }): SynthesePayload {
-  return {
-    version: WORKFLOW_PAYLOAD_VERSION,
-    workflow: 'synthese',
-    about_subject: p.about_subject,
-    identifiant: p.identifiant.trim(),
+  const context = p.context.trim()
+  const id = p.identifiant.trim()
+  const base = {
     year_from: p.year_from,
     year_to: p.year_to,
-    context: p.context.trim() || null
+    ...(context ? { context } : {})
+  }
+  switch (p.about_subject) {
+    case 'locataire':
+      return { ...base, id_locataire: id }
+    case 'client':
+      return { ...base, id_client: id }
+    case 'lot':
+      return { ...base, id_lot: id }
+    case 'batiment':
+      return { ...base, id_batiment: id }
   }
 }
 
-export function serializeWorkflowPayload(payload: WorkflowPayload): string {
+export function serializeWorkflowPayload(payload: SynthesePayload): string {
   return JSON.stringify(payload)
 }

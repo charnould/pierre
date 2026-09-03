@@ -38,6 +38,7 @@ import { isReservedDisplayName, normalizeDisplayName } from '../../../../../shar
 const PREVIEW = 144
 const SAVE_ERROR = 'Impossible d’enregistrer l’identité.'
 const API_ERROR = 'Impossible d’enregistrer (API indisponible). Relancez l’application.'
+
 const UNREADABLE_ERROR =
   'Ce fichier n’est pas disponible en local (Drive, iCloud…). Copiez-le sur le Bureau, puis réessayez.'
 
@@ -252,7 +253,7 @@ export function IdentityField({ url, email, agentName }: Props) {
   const cover = photo ? (PREVIEW / Math.min(photo.width, photo.height)) * zoom : 1
 
   return (
-    <Field aria-labelledby={headingId} className="border-border rounded-md border p-4">
+    <Field variant="document-setting" aria-labelledby={headingId}>
       <div className="flex flex-col gap-0.5">
         <FieldTitle id={headingId}>Identité</FieldTitle>
         <FieldDescription>
@@ -308,7 +309,7 @@ export function IdentityField({ url, email, agentName }: Props) {
         <DialogContent showCloseButton={false} className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Modifier votre avatar</DialogTitle>
-            <DialogDescription className="text-balance">
+            <DialogDescription>
               Choisissez une photo et cadrez-la dans le cercle avant l’envoi.
             </DialogDescription>
           </DialogHeader>
@@ -332,8 +333,8 @@ export function IdentityField({ url, email, agentName }: Props) {
                   draggable={false}
                   className="pointer-events-none absolute top-1/2 left-1/2 max-w-none select-none"
                   style={{
-                    width: `${photo.width * cover}px`,
-                    height: `${photo.height * cover}px`,
+                    width: photo.width * cover,
+                    height: photo.height * cover,
                     transform: `translate(calc(-50% + ${pan.x}px), calc(-50% + ${pan.y}px))`
                   }}
                 />

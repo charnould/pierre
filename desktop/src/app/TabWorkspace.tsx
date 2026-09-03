@@ -2,13 +2,16 @@ import { lazy, Suspense } from 'react'
 
 import { ActivityReaderOverlay } from '@/features/activity/components/ActivityReaderOverlay'
 import type { NotificationsApi } from '@/features/activity/hooks/use-notifications'
+import type { ActivityFeedApi } from '@/features/activity/hooks/useActivityFeed'
 import type { ReaderTarget } from '@/features/activity/lib/reader-target'
 import { HomeView } from '@/features/home'
 import { PLACEHOLDER_TABS, PlaceholderFeatureView } from '@/features/placeholder'
 import { SettingsView } from '@/features/settings'
+import type { ActionActivity } from '@/shared/lib/activities/action-activity'
 import type { Tab } from '@/shared/lib/tabs'
 import { useVisitedTabs } from '@/shared/lib/use-visited-tabs'
 import type { Settings } from '@/shared/types'
+import type { UserPrincipal } from '@/shared/types/users'
 
 const ChatView = lazy(() => import('@/features/chat').then((m) => ({ default: m.ChatView })))
 const TicketsView = lazy(() =>
@@ -24,6 +27,9 @@ const BulkOperationsView = lazy(() =>
   import('@/features/outreach/BulkOperationsView').then((m) => ({ default: m.BulkOperationsView }))
 )
 const AboutView = lazy(() => import('@/features/about').then((m) => ({ default: m.AboutView })))
+const AdministrationView = lazy(() =>
+  import('@/features/administration').then((m) => ({ default: m.AdministrationView }))
+)
 
 function LazyTabFallback() {
   return <div className="bg-background absolute inset-0" />
@@ -35,11 +41,18 @@ interface Props {
   settings: Settings
   agentName: string
   userLogin: string
+  feed: ActivityFeedApi
   notifications: NotificationsApi
   repaymentDeps: { notifications: NotificationsApi; userLogin: string }
   readerTarget: ReaderTarget | null
+  user: UserPrincipal | null
+  mine: ActionActivity[]
+  delegated: ActionActivity[]
+  refreshOpenActions: () => Promise<void>
   onTabChange: (tab: Tab) => void
-  onLogin: (s: Settings, meta?: { agentName?: string }) => void
+  onLogin: (s: Settings, meta: { user: UserPrincipal }) => void
+  onCurrentUserPasswordChange: () => Promise<void>
+  onUserChange: (user: UserPrincipal) => void
   onLogout: () => void
   onSettingsChange: (settings: Settings) => void
 }
@@ -50,11 +63,18 @@ export function TabWorkspace({
   settings,
   agentName,
   userLogin,
+  feed,
   notifications,
   repaymentDeps,
   readerTarget,
+  user,
+  mine,
+  delegated,
+  refreshOpenActions,
   onTabChange,
   onLogin,
+  onCurrentUserPasswordChange,
+  onUserChange,
   onLogout,
   onSettingsChange
 }: Props) {
@@ -62,8 +82,17 @@ export function TabWorkspace({
 
   return (
     <>
-      {visited.has('home') ? (
-        <HomeView hidden={activeTab !== 'home'} onNavigate={onTabChange} agentName={agentName} />
+      {visited.has('home') && user ? (
+        <HomeView
+          hidden={activeTab !== 'home'}
+          onNavigate={onTabChange}
+          agentName={agentName}
+          user={user}
+          feed={feed}
+          mine={mine}
+          delegated={delegated}
+          refresh={refreshOpenActions}
+        />
       ) : null}
 
       <SettingsView
@@ -129,6 +158,16 @@ export function TabWorkspace({
             hidden={activeTab !== 'bulk'}
             settings={settings}
             userLogin={userLogin}
+          />
+        ) : null}
+
+        {visited.has('administration') && user?.isAdministrator ? (
+          <AdministrationView
+            hidden={activeTab !== 'administration'}
+            url={settings.url ?? ''}
+            user={user}
+            onCurrentUserPasswordChange={onCurrentUserPasswordChange}
+            onUserChange={onUserChange}
           />
         ) : null}
       </Suspense>

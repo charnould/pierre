@@ -10,14 +10,17 @@ import {
   PiggyBank,
   Settings,
   ShieldCheck,
-  Workflow
+  Workflow,
+  Wrench
 } from 'lucide-react'
 import type { ComponentType } from 'react'
+
+import type { BusinessModuleId } from '../../../../shared/modules'
 
 interface TabIdentity {
   icon: ComponentType<{ className?: string; size?: number; strokeWidth?: number }>
   label: string
-  /** When true, sidebar label becomes `Discuter avec ${agentName}`. */
+  /** When true, the home door label becomes `Discuter avec ${agentName}`. */
   labelUsesAgentName?: boolean
 }
 
@@ -28,6 +31,8 @@ interface TabDefinition {
   navGroup: TabNavGroup
   identity: TabIdentity
   guestAccessible?: boolean
+  moduleId?: BusinessModuleId
+  administratorOnly?: boolean
 }
 
 /** Single source of truth for navigation tabs (order matters for panel tiles). */
@@ -49,47 +54,62 @@ export const TAB_REGISTRY = [
   {
     id: 'tickets',
     navGroup: 'panel',
-    identity: { icon: MessageSquareReply, label: 'Traiter les réclamations' }
+    identity: { icon: MessageSquareReply, label: 'Traiter les réclamations' },
+    moduleId: 'tickets'
   },
   {
     id: 'automations',
     navGroup: 'panel',
-    identity: { icon: Workflow, label: 'Créer des automatisations' }
+    identity: { icon: Workflow, label: 'Créer des automatisations' },
+    moduleId: 'automations'
   },
   {
     id: 'bulk',
     navGroup: 'panel',
-    identity: { icon: Mails, label: 'Contacter par lots' }
+    identity: { icon: Mails, label: 'Contacter par lots' },
+    moduleId: 'bulk'
   },
   {
     id: 'about',
     navGroup: 'panel',
-    identity: { icon: Activity, label: 'Obtenir une synthèse' }
+    identity: { icon: Activity, label: 'Obtenir une synthèse' },
+    moduleId: 'about'
   },
   {
     id: 'repayment',
     navGroup: 'panel',
-    identity: { icon: PiggyBank, label: 'Piloter les impayés' }
+    identity: { icon: PiggyBank, label: 'Piloter les impayés' },
+    moduleId: 'repayment'
   },
   {
     id: 'insurance-attestation',
     navGroup: 'panel',
-    identity: { icon: ShieldCheck, label: 'Renouveler les assurances' }
+    identity: { icon: ShieldCheck, label: 'Renouveler les assurances' },
+    moduleId: 'insurance-attestation'
   },
   {
     id: 'relocation',
     navGroup: 'panel',
-    identity: { icon: ArrowRightLeft, label: 'Piloter la relocation' }
+    identity: { icon: ArrowRightLeft, label: 'Piloter la relocation' },
+    moduleId: 'relocation'
   },
   {
     id: 'attributions',
     navGroup: 'panel',
-    identity: { icon: ClipboardList, label: 'Piloter les attributions' }
+    identity: { icon: ClipboardList, label: 'Piloter les attributions' },
+    moduleId: 'attributions'
   },
   {
     id: 'ventes',
     navGroup: 'panel',
-    identity: { icon: Handshake, label: 'Piloter les ventes' }
+    identity: { icon: Handshake, label: 'Piloter les ventes' },
+    moduleId: 'ventes'
+  },
+  {
+    id: 'administration',
+    navGroup: 'footer',
+    identity: { icon: Wrench, label: 'Administration' },
+    administratorOnly: true
   },
   {
     id: 'settings',
@@ -108,13 +128,23 @@ const registryById = Object.fromEntries(TAB_REGISTRY.map((entry) => [entry.id, e
   (typeof TAB_REGISTRY)[number]
 >
 
+/** Empty feature panels temporarily hidden from home navigation. */
+export const HIDDEN_PANEL_TABS = [
+  'insurance-attestation',
+  'relocation',
+  'attributions',
+  'ventes'
+] as const satisfies readonly Tab[]
+
+const HIDDEN_PANEL_TAB_SET = new Set<Tab>(HIDDEN_PANEL_TABS)
+
 /** All valid navigation tab ids. */
 export const TABS = TAB_REGISTRY.map((entry) => entry.id)
 
-/** Feature panels in home tiles and sidebar (excluding home and settings). */
-export const PANEL_NAV_TABS = TAB_REGISTRY.filter((entry) => entry.navGroup === 'panel').map(
-  (entry) => entry.id
-) as Tab[]
+/** Visible feature panels in home tiles (excluding home and settings). */
+export const PANEL_NAV_TABS = TAB_REGISTRY.filter(
+  (entry) => entry.navGroup === 'panel' && !HIDDEN_PANEL_TAB_SET.has(entry.id)
+).map((entry) => entry.id) as Tab[]
 
 /** Tabs reachable without logging in. */
 export const GUEST_ACCESSIBLE_TABS = TAB_REGISTRY.filter(
@@ -127,7 +157,7 @@ export interface PanelIdentity {
   label: string
 }
 
-/** Labels and icons for home tiles and sidebar tooltips. */
+/** Labels and icons for home tiles and TitleBar tooltips. */
 export const PANEL_IDENTITY = Object.fromEntries(
   TAB_REGISTRY.map((entry) => [
     entry.id,
@@ -142,6 +172,33 @@ export function isTab(value: string): value is Tab {
 export function isGuestAccessibleTab(tab: Tab): boolean {
   const entry = registryById[tab]
   return entry != null && 'guestAccessible' in entry && entry.guestAccessible === true
+}
+
+export function isPanelTabVisible(tab: Tab): boolean {
+  return !HIDDEN_PANEL_TAB_SET.has(tab)
+}
+
+export function moduleIdForTab(tab: Tab): BusinessModuleId | null {
+  const entry = registryById[tab]
+  return entry && 'moduleId' in entry ? entry.moduleId : null
+}
+
+export function canAccessTab(
+  tab: Tab,
+  user: {
+    isAdministrator: boolean
+    moduleIds: readonly BusinessModuleId[]
+    chatbotIds: readonly string[]
+  } | null
+): boolean {
+  if (isGuestAccessibleTab(tab)) return true
+  if (!user) return false
+  if (tab === 'chat') return true
+  const entry = registryById[tab]
+  if ('administratorOnly' in entry && entry.administratorOnly) return user.isAdministrator
+  const moduleId = moduleIdForTab(tab)
+  if (!moduleId) return true
+  return isPanelTabVisible(tab) && user.moduleIds.includes(moduleId)
 }
 
 export function tabNavLabel(tab: Tab, agentName: string): string {

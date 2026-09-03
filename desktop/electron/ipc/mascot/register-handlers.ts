@@ -14,10 +14,13 @@ type MascotHandlersContext = {
  * Registers desktop-mascot IPC handlers (unread badge, activate, drag, visibility).
  */
 export function registerMascotHandlers(ctx: MascotHandlersContext): void {
-  ipcMain.handle(IpcChannel.mascot.setUnreadCount, (_, count: number) => {
-    ctx.getMascot()?.setUnreadCount(typeof count === 'number' ? count : 0)
-    return true
-  })
+  ipcMain.handle(
+    IpcChannel.mascot.setUnreadCount,
+    (_, count: number, options?: { orbit?: boolean }) => {
+      ctx.getMascot()?.setUnreadCount(typeof count === 'number' ? count : 0, options)
+      return true
+    }
+  )
 
   ipcMain.handle(IpcChannel.mascot.activate, () => {
     ctx.getMascot()?.activate()

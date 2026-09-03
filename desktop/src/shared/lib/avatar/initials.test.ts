@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import { AVATAR_TONE_BACKGROUNDS, avatarInitials, avatarTone } from './initials'
+import { avatarInitials, avatarToneIndex } from './initials'
 
 describe('avatarInitials', () => {
   test('uses the first letter of each login segment', () => {
@@ -25,21 +25,19 @@ describe('avatarInitials', () => {
   })
 })
 
-describe('avatarTone', () => {
+describe('avatarToneIndex', () => {
   test('is stable for a given login', () => {
-    expect(avatarTone('alice.martin')).toEqual(avatarTone('Alice.Martin'))
-    expect(avatarTone('alice.martin@exemple.fr')).toEqual(avatarTone('alice.martin'))
+    expect(avatarToneIndex('alice.martin')).toBe(avatarToneIndex('Alice.Martin'))
+    expect(avatarToneIndex('alice.martin@exemple.fr')).toBe(avatarToneIndex('alice.martin'))
   })
 
-  test('picks a palette background', () => {
-    const backgrounds: readonly string[] = AVATAR_TONE_BACKGROUNDS
-    expect(backgrounds).toContain(avatarTone('cdubois').bg)
+  test('returns a valid CSS palette index', () => {
+    expect(avatarToneIndex('cdubois')).toBeGreaterThanOrEqual(0)
+    expect(avatarToneIndex('cdubois')).toBeLessThan(7)
   })
 
   test('spreads different logins across the palette', () => {
-    const tones = ['alice.martin', 'cdubois', 'jleclerc', 'nberger'].map(
-      (login) => avatarTone(login).bg
-    )
+    const tones = ['alice.martin', 'cdubois', 'jleclerc', 'nberger'].map(avatarToneIndex)
     expect(new Set(tones).size).toBeGreaterThan(1)
   })
 })

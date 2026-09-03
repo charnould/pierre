@@ -1,5 +1,4 @@
-import repaymentConfig from '@customization/repayments/config'
-
+import { repaymentSetup } from '@/shared/lib/instance-customization'
 import { generateColumnValueStyles } from '@/shared/lib/ui-settings/column-value-palette'
 import {
   normalizeColumnValueKey,
@@ -63,25 +62,32 @@ function buildActionOptions(raw: readonly RawRepaymentAction[]): RepaymentAction
   })
 }
 
-const RAW_ACTIONS = repaymentConfig.actions as RawRepaymentActions
+function rawActions(): RawRepaymentActions {
+  return repaymentSetup().actions as RawRepaymentActions
+}
 
-export const REPAYMENT_DOSSIER_ACTION_OPTIONS = buildActionOptions(RAW_ACTIONS.dossier)
-export const REPAYMENT_BULK_ACTION_OPTIONS = buildActionOptions(RAW_ACTIONS.bulk_operations)
-export const REPAYMENT_ACTION_OPTIONS = [
-  ...REPAYMENT_DOSSIER_ACTION_OPTIONS,
-  ...REPAYMENT_BULK_ACTION_OPTIONS
-]
+export function repaymentDossierActionOptions(): RepaymentActionOption[] {
+  return buildActionOptions(rawActions().dossier)
+}
+
+export function repaymentBulkActionOptions(): RepaymentActionOption[] {
+  return buildActionOptions(rawActions().bulk_operations)
+}
+
+export function repaymentActionOptions(): RepaymentActionOption[] {
+  return [...repaymentDossierActionOptions(), ...repaymentBulkActionOptions()]
+}
 
 /** Libellé métier stocké tel quel dans les activités. */
 export type RepaymentActionId = string
 
-const ACTION_BY_ID = Object.fromEntries(
-  REPAYMENT_ACTION_OPTIONS.map((option) => [option.id, option])
-) as Record<RepaymentActionId, RepaymentActionOption>
+function actionById(): Record<RepaymentActionId, RepaymentActionOption> {
+  return Object.fromEntries(repaymentActionOptions().map((option) => [option.id, option]))
+}
 
-const ACTION_BY_LABEL = Object.fromEntries(
-  REPAYMENT_ACTION_OPTIONS.map((option) => [option.label, option])
-) as Record<string, RepaymentActionOption>
+function actionByLabel(): Record<string, RepaymentActionOption> {
+  return Object.fromEntries(repaymentActionOptions().map((option) => [option.label, option]))
+}
 
 export function isRepaymentActionId(value: string): value is RepaymentActionId {
   return value.trim().length > 0
@@ -89,7 +95,7 @@ export function isRepaymentActionId(value: string): value is RepaymentActionId {
 
 export function getRepaymentActionMeta(id: RepaymentActionId): RepaymentActionOption {
   return (
-    ACTION_BY_ID[id] ?? {
+    actionById()[id] ?? {
       id,
       label: id,
       color: { bgColor: '#E8E8E8', textColor: '#333333' }
@@ -98,5 +104,5 @@ export function getRepaymentActionMeta(id: RepaymentActionId): RepaymentActionOp
 }
 
 export function getRepaymentActionByLabel(label: string): RepaymentActionOption | undefined {
-  return ACTION_BY_LABEL[label]
+  return actionByLabel()[label]
 }
