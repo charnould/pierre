@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const ABOUT_SUBJECTS = ['locataire', 'lot', 'programme'] as const
+export const ABOUT_SUBJECTS = ['locataire', 'client', 'lot', 'batiment'] as const
 
 export const AnswerPayloadSchema = z
   .object({
