@@ -8,7 +8,6 @@ import {
   migrate_datastore,
   type DatastoreMigration
 } from '../../../utils/datastore-migrations'
-import { baseline } from '../../../utils/datastore-migrations/001-baseline'
 
 const ROOT = 'datastores/_test_datastore_migrations'
 const PATH = `${ROOT}/datastore.sqlite`
@@ -24,7 +23,6 @@ const versions = (db: Database): number[] =>
 const future_migration: DatastoreMigration = {
   version: 2,
   name: 'future-example',
-  objects: ['future_records'],
   sql: 'CREATE TABLE future_records (id TEXT PRIMARY KEY, value TEXT NOT NULL)'
 }
 
@@ -37,25 +35,6 @@ afterEach(async () => {
 })
 
 describe('datastore migrations', () => {
-  it('keeps owned-object metadata in sync with the baseline SQL', () => {
-    const db = new Database(':memory:')
-    try {
-      db.run(baseline.sql)
-      const actual = db
-        .query<{ name: string }, []>(
-          `SELECT name FROM sqlite_master
-           WHERE sql IS NOT NULL AND name NOT LIKE 'sqlite_%'
-           ORDER BY name`
-        )
-        .all()
-        .map(({ name }) => name)
-
-      expect(actual).toEqual([...baseline.objects].sort())
-    } finally {
-      db.close()
-    }
-  })
-
   it('bootstraps a missing database with baseline tables, indexes, and ledger', async () => {
     await migrate_datastore(PATH)
 
@@ -236,7 +215,6 @@ describe('datastore migrations', () => {
     const failing: DatastoreMigration = {
       version: 2,
       name: 'failing-example',
-      objects: ['half_created'],
       sql: `
         CREATE TABLE half_created (id TEXT PRIMARY KEY);
         INSERT INTO missing_table VALUES ('fail');
