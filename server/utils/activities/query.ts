@@ -1,6 +1,7 @@
 import { Database } from 'bun:sqlite'
 
 import { type ActiviteListItem, mention_of } from '../../../shared/activites'
+import { sql_date_key } from '../sql-normalization'
 import { datastore_path, row_to_activity, type ActivityDbRow, user_destinataire } from './rows'
 import { type ListActivitiesOptions } from './schema'
 
@@ -68,7 +69,7 @@ export const list_activities = (
     const rows = db
       .query<ActivityDbRow, Array<string | number>>(
         `SELECT a.* FROM activites a ${where}
-         ORDER BY a.date_creation DESC, a.id DESC
+         ORDER BY ${sql_date_key('a.date_creation')} DESC, a.id DESC
          LIMIT ? OFFSET ?`
       )
       .all(...params)

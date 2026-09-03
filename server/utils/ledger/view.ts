@@ -1,3 +1,4 @@
+import { sql_date_key, sql_money_cents } from '../sql-normalization'
 import {
   CONTACTS_TABLE,
   COMPTES_LOCATAIRES_TABLE,
@@ -10,7 +11,7 @@ export const non_empty_locataire = `"id_locataire" IS NOT NULL AND TRIM(CAST("id
 
 const build_movement_order = (movement_columns: Set<string>): string => {
   if (movement_columns.has('date_exigibilite')) {
-    return 'm."date_exigibilite" DESC, m.rowid DESC'
+    return `${sql_date_key('m."date_exigibilite"')} DESC, m.rowid DESC`
   }
   return 'm.rowid DESC'
 }
@@ -42,6 +43,59 @@ const can_join_lots = (lots_columns: Set<string>, movement_columns: Set<string>)
   movement_columns.has('id_lot') &&
   movement_columns.has('id_locataire')
 
+const build_lot_active_condition = (lots_columns: Set<string>, alias = 'l'): string => {
+  const column = (name: string) => (alias ? `${alias}."${name}"` : `"${name}"`)
+  const today = sql_date_key("strftime('%Y-%m-%d', 'now')")
+  const conditions: string[] = []
+  if (lots_columns.has('fin_bail')) {
+    const endDate = column('fin_bail')
+    conditions.push(
+      `(${endDate} IS NULL OR TRIM(CAST(${endDate} AS TEXT)) = '' OR ` +
+        `${sql_date_key(endDate)} >= ${today})`
+    )
+  }
+  return conditions.length > 0 ? `(${conditions.join(' AND ')})` : '1'
+}
+
+const build_lot_order = (lots_columns: Set<string>): string => {
+  const active = `CASE WHEN ${build_lot_active_condition(lots_columns)} THEN 1 ELSE 0 END DESC`
+  const end = lots_columns.has('fin_bail') ? `, ${sql_date_key('l."fin_bail"')} DESC` : ''
+  const start = lots_columns.has('debut_bail') ? `, ${sql_date_key('l."debut_bail"')} DESC` : ''
+  return `${active}${end}${start}, l.rowid DESC`
+}
+
+const build_deduplicated_lots_ctes = (lots_columns: Set<string>): string[] => {
+  const order = build_lot_order(lots_columns)
+  const active = build_lot_active_condition(lots_columns, '')
+  return [
+    `ranked_occupations AS (
+  SELECT
+    l.*,
+    ROW_NUMBER() OVER (
+      PARTITION BY l."id_lot", l."id_locataire"
+      ORDER BY ${order}
+    ) AS _ledger_occupation_rank
+  FROM "${LOTS_TABLE}" l
+),
+occupations AS (
+  SELECT * FROM ranked_occupations
+  WHERE _ledger_occupation_rank = 1 AND ${active}
+)`,
+    `ranked_lots AS (
+  SELECT
+    l.*,
+    ROW_NUMBER() OVER (
+      PARTITION BY l."id_lot"
+      ORDER BY ${order}
+    ) AS _ledger_lot_rank
+  FROM "${LOTS_TABLE}" l
+),
+lots AS (
+  SELECT * FROM ranked_lots WHERE _ledger_lot_rank = 1
+)`
+  ]
+}
+
 export const build_ledger_view_sql = (
   movement_column_list: LedgerColumnMeta[],
   has_lots: boolean,
@@ -58,14 +112,15 @@ export const build_ledger_view_sql = (
     `balances AS (
   SELECT
     "id_locataire",
-    SUM(CAST("montant_en_euros" AS REAL)) AS solde_locataire
+    SUM(${sql_money_cents('"montant_en_euros"')}) / 100.0 AS solde_locataire
   FROM "${COMPTES_LOCATAIRES_TABLE}"
   WHERE ${non_empty_locataire}
   GROUP BY "id_locataire"
-  HAVING solde_locataire > 0
+  HAVING SUM(${sql_money_cents('"montant_en_euros"')}) > 0
 )`,
     build_latest_movement_cte(movement_column_list)
   ]
+  if (join_lots) ctes.push(...build_deduplicated_lots_ctes(lots_columns))
 
   const statut = join_lots
     ? `CASE WHEN occ."id_locataire" IS NOT NULL THEN 'client' ELSE 'ex-client' END`
@@ -73,7 +128,7 @@ export const build_ledger_view_sql = (
 
   const rent =
     join_lots && lots_columns.has('loyer_mensuel_en_euros')
-      ? 'lot."loyer_mensuel_en_euros"'
+      ? `(${sql_money_cents('lot."loyer_mensuel_en_euros"')} / 100.0)`
       : 'NULL'
   const ratio = join_lots
     ? `CASE
@@ -97,9 +152,9 @@ export const build_ledger_view_sql = (
   LEFT JOIN latest_movement lm ON lm."id_locataire" = b."id_locataire"`
   if (join_lots) {
     joins += `
-  LEFT JOIN "${LOTS_TABLE}" occ
+  LEFT JOIN occupations occ
     ON occ."id_lot" = lm."id_lot" AND occ."id_locataire" = lm."id_locataire"
-  LEFT JOIN "${LOTS_TABLE}" lot ON lot."id_lot" = lm."id_lot"`
+  LEFT JOIN lots lot ON lot."id_lot" = lm."id_lot"`
   }
   if (join_contacts && has_email) {
     joins += `

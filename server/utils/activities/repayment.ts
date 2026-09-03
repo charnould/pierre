@@ -1,6 +1,7 @@
 import { Database } from 'bun:sqlite'
 
 import { parse_action_activity_content, parse_contenu_json } from '../../../shared/activites'
+import { chronological_date_key, sql_date_key } from '../sql-normalization'
 
 export type RepaymentActivityState = {
   bucket: string | null
@@ -32,12 +33,13 @@ export const latest_repayment_states = (
       `SELECT id_locataire, type, statut, date_creation, contenu
        FROM activites
        WHERE id_locataire IN (${placeholders})
+         AND rattachement = 'repayment:' || id_locataire
          AND type IN (
            'repayment_phase_change', 'repayment_assignment',
            'action', 'bulk_application',
            'rcs', 'sms', 'email', 'courrier', 'lrar', 'lre', 'signature'
          )
-       ORDER BY date_creation DESC, id DESC`
+       ORDER BY ${sql_date_key('date_creation')} DESC, id DESC`
     )
     .all(...ids)
   const bucketResolved = new Set<string>()
@@ -74,11 +76,17 @@ export const latest_repayment_states = (
             ? metadata['action']
             : null
     const actionDate = actionLabel ? row.date_creation : null
-    const latestActionDate = actionDates.get(row.id_locataire)
-    if (actionLabel && actionDate && (!latestActionDate || actionDate > latestActionDate)) {
+    const actionDateKey = actionDate ? chronological_date_key(actionDate) : null
+    const latestActionDateKey = actionDates.get(row.id_locataire)
+    if (
+      actionLabel &&
+      actionDate &&
+      actionDateKey &&
+      (!latestActionDateKey || actionDateKey > latestActionDateKey)
+    ) {
       state.derniere_action_realisee = actionLabel
       state.date_derniere_action_realisee = actionDate
-      actionDates.set(row.id_locataire, actionDate)
+      actionDates.set(row.id_locataire, actionDateKey)
     }
     if (!gestionnaireResolved.has(row.id_locataire) && row.type === 'repayment_assignment') {
       const apres = metadata['gestionnaire']
@@ -110,6 +118,7 @@ export const repayment_action_history = (
       `SELECT id_locataire, type, statut, contenu
        FROM activites
        WHERE id_locataire IN (${placeholders})
+         AND rattachement = 'repayment:' || id_locataire
          AND type IN (
            'action', 'bulk_application',
            'rcs', 'sms', 'email', 'courrier', 'lrar', 'lre', 'signature'

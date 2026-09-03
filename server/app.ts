@@ -51,8 +51,11 @@ import { controller as post_desktop_bulk_operation } from './controllers/desktop
 import { controller as post_desktop_bulk_operation_execute } from './controllers/desktop/bulk-operations/post.execute'
 import { controller as post_desktop_bulk_operation_preview_message } from './controllers/desktop/bulk-operations/post.preview-message'
 import { controller as post_desktop_bulk_operation_preview_query } from './controllers/desktop/bulk-operations/post.preview-query'
+import { controller as get_desktop_ledger } from './controllers/desktop/ledger/get'
+import { controller as get_desktop_ledger_facets } from './controllers/desktop/ledger/get.facets'
 import { controller as post_desktop_me_avatar } from './controllers/desktop/me/avatar/post'
 import { controller as patch_desktop_me_preferences } from './controllers/desktop/me/preferences/patch'
+import { controller as get_desktop_repayment_timeline } from './controllers/desktop/repayment/get.timeline'
 import { controller as get_desktop_tickets } from './controllers/desktop/tickets/get'
 import { controller as get_desktop_tickets_facets } from './controllers/desktop/tickets/get.facets'
 import { controller as put_desktop_tickets } from './controllers/desktop/tickets/put'
@@ -232,6 +235,9 @@ app.post(
 app.get('/desktop/tickets/facets', authenticate, get_desktop_tickets_facets)
 app.put('/desktop/tickets', authenticate, authorize_mutation, put_desktop_tickets)
 app.get('/desktop/tickets', authenticate, get_desktop_tickets)
+app.get('/desktop/ledger/facets', authenticate, get_desktop_ledger_facets)
+app.get('/desktop/ledger', authenticate, get_desktop_ledger)
+app.get('/desktop/repayment/timeline', authenticate, get_desktop_repayment_timeline)
 app.get('/desktop/users', authenticate, get_desktop_users)
 app.patch('/desktop/me/preferences', authenticate, patch_desktop_me_preferences)
 app.post('/desktop/me/avatar', authenticate, avatarBodyLimit, post_desktop_me_avatar)
