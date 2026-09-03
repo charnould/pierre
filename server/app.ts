@@ -18,7 +18,12 @@ import { controller as post_admin_users } from './controllers/admin/users/post'
 import { controller as get_ai } from './controllers/ai/get'
 import { controller as get_ai_boot } from './controllers/ai/get.boot'
 import { controller as get_ai_skills } from './controllers/ai/get.skills'
+import { controller as post_ai } from './controllers/ai/post'
 import { controller as post_ai_answer } from './controllers/ai/post.answer'
+import {
+  controller as post_ai_ui_response,
+  MAX_UI_RESPONSE_BODY_BYTES
+} from './controllers/ai/post.ui-response'
 import { controller as post_ai_vm_release } from './controllers/ai/post.vm.release'
 import { controller as get_index } from './controllers/chat/get'
 import { controller as post_courrier } from './controllers/courrier/post'
@@ -68,6 +73,7 @@ import { controller as post_sms } from './controllers/sms/post'
 import { controller as post_sms_webhook } from './controllers/sms/post.webhook'
 import { controller as post_telemetry } from './controllers/telemetry/post'
 // import { topicize, score } from "./utils/analyze-conversation";
+import { MAX_MULTIPART_REQUEST_BYTES } from './utils/ai-attachments'
 import { authenticate } from './utils/authenticate-user'
 import { authorize_administrator, authorize_mutation } from './utils/authorize-role'
 import { run_due_automations } from './utils/automations/run'
@@ -96,6 +102,19 @@ const avatarBodyLimit = bodyLimit({
   maxSize: AVATAR_MAX_UPLOAD_BYTES + 64 * 1024,
   onError: (c) =>
     c.json({ error: { code: 'avatar_too_large', message: 'Avatar upload is too large' } }, 413)
+})
+const aiMultipartBodyLimit = bodyLimit({
+  maxSize: MAX_MULTIPART_REQUEST_BYTES,
+  onError: (c) =>
+    c.json(
+      { error: { code: 'attachments_too_large', message: 'Multipart request is too large' } },
+      413
+    )
+})
+const aiUiResponseBodyLimit = bodyLimit({
+  maxSize: MAX_UI_RESPONSE_BODY_BYTES,
+  onError: (c) =>
+    c.json({ error: { code: 'ui_response_too_large', message: 'UI response is too large' } }, 413)
 })
 
 // Configure the secure headers for the app.
@@ -141,6 +160,7 @@ app.use('/customization/*', serveStatic({ root: CUSTOMIZATION_STATIC_ROOT }))
 // AI generation routes
 app.get('/c', authenticate, get_index)
 app.get('/ai', authenticate, get_ai)
+app.post('/ai', aiMultipartBodyLimit, authenticate, post_ai)
 app.get('/ai/boot', authenticate, get_ai_boot)
 app.get('/ai/skills', authenticate, get_ai_skills)
 app.get('/desktop/activities', authenticate, get_desktop_activities)
@@ -231,7 +251,8 @@ app.post('/webhook/courrier', post_courrier_webhook)
 app.post('/webhook/lrar', post_lrar_webhook)
 app.post('/webhook/lre', post_lre_webhook)
 app.post('/webhook/signature', post_signature_webhook)
-app.post('/ai/answer', authenticate, post_ai_answer)
+app.post('/ai/answer', aiMultipartBodyLimit, authenticate, authorize_mutation, post_ai_answer)
+app.post('/ai/ui-response', aiUiResponseBodyLimit, post_ai_ui_response)
 app.post('/ai/vm/release', authenticate, post_ai_vm_release)
 
 // Admin routes

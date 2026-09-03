@@ -2,6 +2,7 @@ import { ChevronRight, ChevronDown } from 'lucide-react'
 import { useState, useEffect, useRef, useCallback, memo } from 'react'
 import { Streamdown } from 'streamdown'
 
+import type { PendingAiQuestionnaire } from '../../../shared/ai-stream-events'
 import { usePierreChat, type ChatStatus } from './hooks/usePierreChat'
 
 // Boot data injected by the server via <script type="application/json">
@@ -345,6 +346,78 @@ function Disclaimer({ text }: { text: string }) {
   return <div data-role="disclaimer">{text}</div>
 }
 
+function Questionnaire({
+  pending,
+  error,
+  onSubmit
+}: {
+  pending: PendingAiQuestionnaire
+  error: string | null
+  onSubmit: (answers: Array<{ question: string; answer: string }>) => Promise<boolean>
+}) {
+  const [submitting, setSubmitting] = useState(false)
+
+  return (
+    <form
+      className="mx-6 mb-4 rounded-lg border border-gray-200 bg-white p-4"
+      onSubmit={(event) => {
+        event.preventDefault()
+        if (submitting) return
+        const formData = new FormData(event.currentTarget)
+        const answers = pending.questions.map((question, index) => {
+          const selected = String(formData.get(`q${index}`) ?? '')
+          return {
+            question: question.question,
+            answer:
+              selected === '__other__'
+                ? String(formData.get(`q${index}-other`) ?? '').trim()
+                : selected
+          }
+        })
+        if (answers.some(({ answer }) => !answer)) return
+        setSubmitting(true)
+        void onSubmit(answers).finally(() => setSubmitting(false))
+      }}
+    >
+      <div className="space-y-4">
+        {pending.questions.map((question, index) => (
+          <fieldset key={question.question} disabled={submitting}>
+            <legend className="mb-2 text-sm font-medium text-gray-700">{question.question}</legend>
+            <div className="space-y-2">
+              {question.choices.map((choice) => (
+                <label key={choice} className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input type="radio" name={`q${index}`} value={choice} required />
+                  <span>{choice}</span>
+                </label>
+              ))}
+              <label className="flex items-center gap-2 text-sm">
+                <input type="radio" name={`q${index}`} value="__other__" required />
+                <input
+                  className="min-w-0 flex-1 rounded border border-gray-200 px-2 py-1 outline-none focus:border-gray-400"
+                  name={`q${index}-other`}
+                  placeholder="Autre réponse…"
+                />
+              </label>
+            </div>
+          </fieldset>
+        ))}
+      </div>
+      {error ? (
+        <p role="alert" className="mt-3 text-sm text-red-700">
+          {error}
+        </p>
+      ) : null}
+      <button
+        type="submit"
+        disabled={submitting}
+        className="mt-4 rounded bg-gray-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+      >
+        {submitting ? 'Envoi…' : 'Répondre'}
+      </button>
+    </form>
+  )
+}
+
 function ChatInput({
   status,
   onSend,
@@ -385,7 +458,7 @@ function ChatInput({
   )
 
   return (
-    <footer className="fixed bottom-0 w-full max-w-4xl bg-white shadow-[0_0_40px_40px_rgba(255,255,255,1)]">
+    <div>
       <div className="mx-6 mb-6 flex h-fit flex-none items-center justify-between gap-x-2 rounded-lg border border-gray-200 bg-white py-3 pr-2 pl-4 shadow-sm">
         <textarea
           ref={textareaRef}
@@ -430,7 +503,7 @@ function ChatInput({
           )}
         </button>
       </div>
-    </footer>
+    </div>
   )
 }
 
@@ -482,7 +555,16 @@ function ScrollAnchor({ messages, status }: { messages: unknown[]; status: ChatS
 export function ChatApp() {
   const [boot] = useState(getBootData)
   const isCompact = new URLSearchParams(window.location.search).has('compact')
-  const { messages, status, sendMessage, stop, regenerate } = usePierreChat({
+  const {
+    messages,
+    status,
+    sendMessage,
+    stop,
+    regenerate,
+    pendingQuestionnaire,
+    questionnaireError,
+    submitQuestionnaire
+  } = usePierreChat({
     convId: boot.convId,
     configParam: boot.configId,
     dataParam: boot.dataParam
@@ -529,7 +611,16 @@ export function ChatApp() {
         <ScrollAnchor messages={messages} status={status} />
       </main>
 
-      <ChatInput status={status} onSend={sendMessage} onStop={stop} />
+      <footer className="fixed bottom-0 w-full max-w-4xl bg-white shadow-[0_0_40px_40px_rgba(255,255,255,1)]">
+        {pendingQuestionnaire ? (
+          <Questionnaire
+            pending={pendingQuestionnaire}
+            error={questionnaireError}
+            onSubmit={submitQuestionnaire}
+          />
+        ) : null}
+        <ChatInput status={status} onSend={sendMessage} onStop={stop} />
+      </footer>
     </>
   )
 }

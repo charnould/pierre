@@ -1,4 +1,5 @@
 import type { AIContext } from './_schema'
+import type { PiImageContent, ProcessedPiAttachments } from './ai-attachments'
 import { streamCopilot } from './copilot-agent'
 import { save_reply } from './handle-conversation'
 import { send_telemetry } from './send-telemetry'
@@ -6,9 +7,14 @@ import { copilotChunkToNdjson, ndjsonLine, type ReasoningDisplay } from './strea
 import { CHAT_TELEMETRY_EVENT } from './telemetry-event'
 
 /**
- * Chat stream: Copilot → canonical NDJSON, then persist assistant reply on `done`.
+ * Chat stream: Copilot → canonical NDJSON, then persist the internal final reply.
  */
-export function streamChatAnswer(context: AIContext, signal?: AbortSignal) {
+export function streamChatAnswer(
+  context: AIContext,
+  signal?: AbortSignal,
+  attachments?: PiImageContent[],
+  attachmentLifecycle?: Pick<ProcessedPiAttachments, 'claim' | 'rollback'>
+) {
   async function* run() {
     try {
       console.log(`[CHAT] Streaming for conv=${context.conv_id}...`)
@@ -16,7 +22,6 @@ export function streamChatAnswer(context: AIContext, signal?: AbortSignal) {
       let fullContent = ''
       let inputTokens: number | null = null
       let outputTokens: number | null = null
-      const formatState = { needsBullet: true }
       const reasoningDisplay: ReasoningDisplay = context.config.reasoning_display ?? 'off'
 
       for await (const chunk of streamCopilot(
@@ -25,8 +30,9 @@ export function streamChatAnswer(context: AIContext, signal?: AbortSignal) {
         context.content,
         Bun.env['AI_MODEL'],
         signal,
-        undefined,
-        context.config.reasoning_effort
+        attachments,
+        context.config.reasoning_effort,
+        attachmentLifecycle ? { onVmAcquired: attachmentLifecycle.claim } : undefined
       )) {
         if (chunk.type === 'done') {
           fullContent = chunk.fullContent
@@ -34,11 +40,12 @@ export function streamChatAnswer(context: AIContext, signal?: AbortSignal) {
           outputTokens = chunk.outputTokens ?? null
         }
 
-        for (const event of copilotChunkToNdjson(chunk, reasoningDisplay, formatState)) {
+        for (const event of copilotChunkToNdjson(chunk, reasoningDisplay)) {
           yield ndjsonLine(event)
         }
       }
 
+      attachmentLifecycle?.claim()
       console.log(`[CHAT] Stream complete (${fullContent.length} chars)`)
 
       context.role = 'assistant'
@@ -51,6 +58,7 @@ export function streamChatAnswer(context: AIContext, signal?: AbortSignal) {
       await save_reply(context)
       send_telemetry(CHAT_TELEMETRY_EVENT)
     } catch (err) {
+      await attachmentLifecycle?.rollback()
       if (err instanceof DOMException && err.name === 'AbortError') {
         console.log('[CHAT] Request aborted by client')
         return
