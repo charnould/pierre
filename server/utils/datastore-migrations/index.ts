@@ -3,16 +3,17 @@ import { existsSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 
 import { DATASTORE_TABLES } from '../datastore-tables'
-import { baseline } from './001-baseline'
+import baselineSql from './001-baseline.sql' with { type: 'text' }
 
 export type DatastoreMigration = {
   version: number
   name: string
-  objects: readonly string[]
   sql: string
 }
 
-export const APP_MIGRATIONS: readonly DatastoreMigration[] = [baseline]
+export const APP_MIGRATIONS: readonly DatastoreMigration[] = [
+  { version: 1, name: 'baseline', sql: baselineSql }
+]
 
 const LEDGER_SQL = `
   CREATE TABLE schema_migrations (
@@ -126,8 +127,8 @@ const app_schema_is_compatible = (
   migrations: readonly DatastoreMigration[],
   version: number
 ): boolean => {
-  const owned_objects = new Set(migrations.flatMap((migration) => [...migration.objects]))
   const expected = build_expected_schema(migrations, version)
+  const owned_objects = new Set(expected.keys())
   const actual = db
     .query<SchemaObject, []>(
       `SELECT type, name, tbl_name, sql FROM sqlite_master
