@@ -1,5 +1,13 @@
 import { useState, useRef, useCallback } from 'react'
 
+import {
+  createAiStreamState,
+  parseAiStreamLine,
+  reduceAiStreamState,
+  type AskUserAnswer,
+  type PendingAiQuestionnaire
+} from '../../../../shared/ai-stream-events'
+
 export type Message = {
   id: string
   role: 'user' | 'assistant'
@@ -16,38 +24,26 @@ type Config = {
   dataParam: string
 }
 
-type AiStreamEvent =
-  | { type: 'delta'; content: string }
-  | { type: 'reasoning_delta'; content: string }
-  | { type: 'reset' }
-  | { type: 'done'; content: string }
-  | { type: 'error' }
-
-function parseAiStreamLine(line: string): AiStreamEvent | null {
-  const trimmed = line.trim()
-  if (!trimmed) return null
-  try {
-    const p = JSON.parse(trimmed) as { type: string; content?: string }
-    if (p.type === 'reasoning_delta' && p.content) {
-      return { type: 'reasoning_delta', content: p.content }
-    }
-    if (p.type === 'delta' && p.content) {
-      return { type: 'delta', content: p.content }
-    }
-    if (p.type === 'reset') return { type: 'reset' }
-    if (p.type === 'done' && p.content !== undefined) {
-      return { type: 'done', content: p.content }
-    }
-    if (p.type === 'error') return { type: 'error' }
-  } catch {
-    if (trimmed.includes('pierre_error')) return { type: 'error' }
+export function buildUiResponseBody(
+  convId: string,
+  pending: PendingAiQuestionnaire,
+  answers: AskUserAnswer[]
+) {
+  return {
+    conv_id: convId,
+    request_id: pending.requestId,
+    response_secret: pending.responseSecret,
+    answers
   }
-  return null
 }
 
 export function usePierreChat(config: Config) {
   const [messages, setMessages] = useState<Message[]>([])
   const [status, setStatus] = useState<ChatStatus>('ready')
+  const [pendingQuestionnaire, setPendingQuestionnaire] = useState<PendingAiQuestionnaire | null>(
+    null
+  )
+  const [questionnaireError, setQuestionnaireError] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
 
   const sendMessage = useCallback(
@@ -65,6 +61,8 @@ export function usePierreChat(config: Config) {
 
       const reasoningStart = Date.now()
       let reasoningSealed = false
+      let reasoningDuration: number | undefined
+      const streamState = createAiStreamState()
 
       try {
         const url = `/ai?message=${encodeURIComponent(text)}&config=${encodeURIComponent(config.configParam)}&data=${encodeURIComponent(config.dataParam)}&conv_id=${encodeURIComponent(config.convId)}`
@@ -80,59 +78,30 @@ export function usePierreChat(config: Config) {
           const event = parseAiStreamLine(line)
           if (!event) return
 
-          switch (event.type) {
-            case 'reasoning_delta':
-              setMessages((prev) => {
-                const updated = [...prev]
-                const last = updated[updated.length - 1]
-                if (last?.role === 'assistant') {
-                  updated[updated.length - 1] = {
-                    ...last,
-                    reasoning: (last.reasoning ?? '') + event.content
-                  }
-                }
-                return updated
-              })
-              break
-            case 'delta':
-              setMessages((prev) => {
-                const updated = [...prev]
-                const last = updated[updated.length - 1]
-                if (last?.role === 'assistant') {
-                  const patch: Partial<Message> = { content: last.content + event.content }
-                  if (!reasoningSealed) {
-                    patch.reasoningDuration = Math.round((Date.now() - reasoningStart) / 1000)
-                    reasoningSealed = true
-                  }
-                  updated[updated.length - 1] = { ...last, ...patch }
-                }
-                return updated
-              })
-              break
-            case 'reset':
-              setMessages((prev) => {
-                const updated = [...prev]
-                const last = updated[updated.length - 1]
-                if (last?.role === 'assistant') {
-                  updated[updated.length - 1] = { ...last, content: '' }
-                }
-                return updated
-              })
-              break
-            case 'done':
-              setMessages((prev) => {
-                const updated = [...prev]
-                const last = updated[updated.length - 1]
-                if (last?.role === 'assistant') {
-                  updated[updated.length - 1] = { ...last, content: event.content }
-                }
-                return updated
-              })
-              break
-            case 'error':
-              setStatus('error')
-              break
+          reduceAiStreamState(streamState, event)
+          if (event.type === 'extension_ui_request') {
+            setPendingQuestionnaire(streamState.pendingQuestionnaire)
+            setQuestionnaireError(null)
           }
+          if (event.type === 'stream_end') setPendingQuestionnaire(null)
+          if (event.type === 'error') setStatus('error')
+          if (streamState.text && !reasoningSealed) {
+            reasoningSealed = true
+            reasoningDuration = Math.round((Date.now() - reasoningStart) / 1000)
+          }
+          setMessages((prev) => {
+            const updated = [...prev]
+            const last = updated.at(-1)
+            if (last?.role === 'assistant') {
+              updated[updated.length - 1] = {
+                ...last,
+                content: streamState.text,
+                reasoning: streamState.thinking || undefined,
+                ...(reasoningDuration !== undefined ? { reasoningDuration } : {})
+              }
+            }
+            return updated
+          })
         }
 
         while (true) {
@@ -166,6 +135,8 @@ export function usePierreChat(config: Config) {
   const stop = useCallback(() => {
     abortRef.current?.abort()
     abortRef.current = null
+    setPendingQuestionnaire(null)
+    setQuestionnaireError(null)
     setStatus('ready')
   }, [])
 
@@ -181,5 +152,37 @@ export function usePierreChat(config: Config) {
     sendMessage(lastUserMsg.content)
   }, [messages, sendMessage])
 
-  return { messages, status, sendMessage, stop, regenerate }
+  const submitQuestionnaire = useCallback(
+    async (answers: AskUserAnswer[]) => {
+      if (!pendingQuestionnaire) return false
+      setQuestionnaireError(null)
+      try {
+        const response = await fetch('/ai/ui-response', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(buildUiResponseBody(config.convId, pendingQuestionnaire, answers))
+        })
+        if (response.ok) {
+          setPendingQuestionnaire(null)
+          return true
+        }
+      } catch (error) {
+        console.error('[usePierreChat] UI response failed:', error)
+      }
+      setQuestionnaireError("La réponse n'a pas pu être envoyée.")
+      return false
+    },
+    [config.convId, pendingQuestionnaire]
+  )
+
+  return {
+    messages,
+    status,
+    sendMessage,
+    stop,
+    regenerate,
+    pendingQuestionnaire,
+    questionnaireError,
+    submitQuestionnaire
+  }
 }

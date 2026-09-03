@@ -16,9 +16,17 @@ import { Database } from 'bun:sqlite'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 
+import type { AiStreamEvent, AiStreamMessage, AskUserQuestion } from '../../shared/ai-stream-events'
+import type { PiImageContent } from './ai-attachments'
 import { CUSTOMIZATION_DIR, datastorePaths } from './paths'
 import { today_is } from './today-is'
-import { acquireVm, hasVm, releaseVm } from './vm-registry'
+import {
+  acquireVm,
+  cancelPendingUiRequest,
+  hasVm,
+  registerPendingUiRequest,
+  releaseVm
+} from './vm-registry'
 import type { WorkflowPayload } from './workflow-payload'
 
 // Stable project root anchored to this file's location (utils/ → ../)
@@ -96,14 +104,7 @@ async function buildAgentsFile(configId: string, workflowPayload?: WorkflowPaylo
 // ---------------------------------------------------------------------------
 
 export type CopilotChunk =
-  | { type: 'delta'; content: string }
-  | {
-      type: 'reasoning_delta'
-      content: string
-      source: 'reasoning' | 'tool_start' | 'tool_result'
-    }
-  | { type: 'intent'; content: string }
-  | { type: 'reset' }
+  | Exclude<AiStreamEvent, { type: 'stream_end' } | { type: 'error' }>
   | {
       type: 'done'
       fullContent: string
@@ -112,52 +113,171 @@ export type CopilotChunk =
       outputTokens?: number
     }
 
-// Extract a short label from tool arguments to show next to the tool name
-function toolArgLabel(args: Record<string, unknown> | undefined): string {
-  if (!args) return ''
-  const path = args['path'] ?? args['file'] ?? args['filename'] ?? args['filePath']
-  if (path) return ` · ${String(path)}`
-  const cmd = args['command'] ?? args['cmd']
-  if (cmd) return ` · ${String(cmd)}`
-  const pattern = args['pattern'] ?? args['query'] ?? args['search']
-  if (pattern) return ` · ${String(pattern)}`
-  return ''
+const ASK_USER_MARKER = 'pierre:ask_user:'
+
+export function parseAskUserMarker(title: unknown): string | null {
+  if (typeof title !== 'string' || !title.startsWith(ASK_USER_MARKER)) return null
+  try {
+    const marker = JSON.parse(title.slice(ASK_USER_MARKER.length)) as Record<string, unknown>
+    return typeof marker['toolCallId'] === 'string' && marker['toolCallId']
+      ? marker['toolCallId']
+      : null
+  } catch {
+    return null
+  }
 }
 
-// Filters out noise lines from tool terminal output
-const isNoiseLine = (l: string) => !l || /<exited with exit code/i.test(l)
+function isAskUserQuestions(value: unknown): value is AskUserQuestion[] {
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every(
+      (item) =>
+        typeof item === 'object' &&
+        item !== null &&
+        typeof (item as Record<string, unknown>)['question'] === 'string' &&
+        Array.isArray((item as Record<string, unknown>)['choices']) &&
+        ((item as Record<string, unknown>)['choices'] as unknown[]).length === 3 &&
+        ((item as Record<string, unknown>)['choices'] as unknown[]).every(
+          (choice) => typeof choice === 'string'
+        )
+    )
+  )
+}
 
-// Format Pi tool result content for display in the reasoning area.
-// Pipe characters (|) are escaped to prevent Streamdown from interpreting
-// SQLite output as markdown table syntax.
-function piToolResultSummary(result: unknown): string {
-  if (!result || typeof result !== 'object') return ''
-  const r = result as Record<string, unknown>
-  // Standard MCP tool result format: { content: [{ type: 'text', text: '...' }] }
-  if (Array.isArray(r['content'])) {
-    const lines = (r['content'] as Array<{ type: string; text?: string }>)
-      .filter((c) => c.type === 'text' && c.text)
-      .flatMap((c) => c.text!.split('\n'))
-      .map((l) => l.trim().replace(/\|/g, '\\|'))
-      .filter((l) => !isNoiseLine(l))
-    return lines.length > 0 ? `\n\n${lines.join('\n\n')}` : ''
+function messageText(message: AiStreamMessage): string {
+  return message.content
+    .filter((part): part is { type: 'text'; text: string } => part.type === 'text')
+    .map((part) => part.text)
+    .join('')
+}
+
+/** Maps display-relevant Pi RPC events without forwarding cumulative partial messages. */
+export function piEventToCopilotChunks(event: Record<string, unknown>): CopilotChunk[] {
+  const type = event['type']
+  if (type === 'message_update') {
+    const update = event['assistantMessageEvent']
+    if (!update || typeof update !== 'object') return []
+    const ae = update as Record<string, unknown>
+    const contentIndex = ae['contentIndex']
+    if (typeof contentIndex !== 'number') return []
+
+    switch (ae['type']) {
+      case 'text_start':
+        return [{ type: 'text_start', contentIndex }]
+      case 'text_delta':
+        return typeof ae['delta'] === 'string'
+          ? [{ type: 'text_delta', contentIndex, delta: ae['delta'] }]
+          : []
+      case 'text_end':
+        return typeof ae['content'] === 'string'
+          ? [{ type: 'text_end', contentIndex, content: ae['content'] }]
+          : []
+      case 'thinking_start':
+        return [{ type: 'thinking_start', contentIndex }]
+      case 'thinking_delta':
+        return typeof ae['delta'] === 'string'
+          ? [{ type: 'thinking_delta', contentIndex, delta: ae['delta'] }]
+          : []
+      case 'thinking_end':
+        return typeof ae['content'] === 'string'
+          ? [{ type: 'thinking_end', contentIndex, content: ae['content'] }]
+          : []
+      case 'toolcall_start':
+        return typeof ae['id'] === 'string' && typeof ae['toolName'] === 'string'
+          ? [
+              {
+                type: 'toolcall_start',
+                contentIndex,
+                toolCallId: ae['id'],
+                toolName: ae['toolName']
+              }
+            ]
+          : []
+      case 'toolcall_delta':
+        return typeof ae['delta'] === 'string'
+          ? [{ type: 'toolcall_delta', contentIndex, delta: ae['delta'] }]
+          : []
+      case 'toolcall_end': {
+        const toolCall = ae['toolCall']
+        if (!toolCall || typeof toolCall !== 'object') return []
+        return [
+          {
+            type: 'toolcall_end',
+            contentIndex,
+            toolCall: toolCall as {
+              type: 'toolCall'
+              id: string
+              name: string
+              arguments: unknown
+            }
+          }
+        ]
+      }
+      default:
+        return []
+    }
   }
-  // Fallback: plain text result
-  if (typeof r['text'] === 'string') {
-    const text = r['text'].trim().replace(/\|/g, '\\|')
-    return text ? `\n\n${text}` : ''
+
+  if (type === 'message_end') {
+    const message = event['message']
+    if (!message || typeof message !== 'object') return []
+    const assistantMessage = message as Record<string, unknown>
+    return assistantMessage['role'] === 'assistant' && Array.isArray(assistantMessage['content'])
+      ? [{ type: 'message_end', message: message as AiStreamMessage }]
+      : []
   }
-  return ''
+
+  if (type === 'tool_execution_start') {
+    return typeof event['toolCallId'] === 'string' && typeof event['toolName'] === 'string'
+      ? [
+          {
+            type,
+            toolCallId: event['toolCallId'],
+            toolName: event['toolName'],
+            args: event['args']
+          }
+        ]
+      : []
+  }
+
+  if (type === 'tool_execution_update') {
+    return typeof event['toolCallId'] === 'string' && typeof event['toolName'] === 'string'
+      ? [
+          {
+            type,
+            toolCallId: event['toolCallId'],
+            toolName: event['toolName'],
+            args: event['args'],
+            partialResult: event['partialResult']
+          }
+        ]
+      : []
+  }
+
+  if (type === 'tool_execution_end') {
+    return typeof event['toolCallId'] === 'string' && typeof event['toolName'] === 'string'
+      ? [
+          {
+            type,
+            toolCallId: event['toolCallId'],
+            toolName: event['toolName'],
+            result: event['result'],
+            isError: event['isError'] === true
+          }
+        ]
+      : []
+  }
+
+  return []
 }
 
 /**
  * Stream a response from Pi as incremental chunks.
  *
  * Yields:
- *   - `delta` chunks as the assistant generates text
- *   - `reasoning_delta` chunks for thinking / tool activity
- *   - `reset` when a tool call interrupts the current response
- *   - `done` with the authoritative full content and token metadata
+ * Yields structured message/tool lifecycle events plus an internal `done`
+ * record carrying persistence and telemetry metadata.
  *
  * Each conversation (`convId`) runs in its own smolVM. The VM is created on
  * the first call and reused for subsequent messages of the same conversation.
@@ -168,9 +288,9 @@ export async function* streamCopilot(
   prompt: string,
   model = Bun.env['AI_MODEL'],
   signal?: AbortSignal,
-  _attachments?: Array<{ type: 'file'; path: string }>,
+  images?: PiImageContent[],
   reasoningEffort: 'low' | 'medium' | 'high' = 'medium',
-  options?: { workflowPayload?: WorkflowPayload }
+  options?: { workflowPayload?: WorkflowPayload; onVmAcquired?: () => void }
 ): AsyncGenerator<CopilotChunk> {
   const t0 = Date.now()
   console.log(`\n${'='.repeat(60)}`)
@@ -180,6 +300,10 @@ export async function* streamCopilot(
   console.log(`[AGENT]   SERVICE  : ${Bun.env['SERVICE']}`)
   console.log(`[AGENT]   model    : ${model}`)
   console.log(`[AGENT]   prompt   : "${prompt}"`)
+  if (images?.length) {
+    const totalKb = Math.round(images.reduce((sum, image) => sum + image.data.length, 0) / 1024)
+    console.log(`[AGENT]   images   : ${images.length} (~${totalKb} KiB base64)`)
+  }
   console.log(`${'='.repeat(60)}`)
 
   if (signal?.aborted) throw new DOMException('Request aborted', 'AbortError')
@@ -199,7 +323,10 @@ export async function* streamCopilot(
     const t1 = Date.now()
     // Refresh AGENTS.md with the current date/time before creating a new VM
     if (!hasVm(convId)) await buildAgentsFile(configId, options?.workflowPayload)
+    if (signal?.aborted) throw new DOMException('Request aborted', 'AbortError')
     const { piClient } = await acquireVm(convId, configId)
+    options?.onVmAcquired?.()
+    if (signal?.aborted) throw new DOMException('Request aborted', 'AbortError')
     console.log(`[AGENT] Step 1/2 — VM ready (${Date.now() - t1}ms)`)
 
     // Set reasoning effort before sending the prompt
@@ -235,57 +362,83 @@ export async function* streamCopilot(
     let reasoningContent = ''
     let inputTokens: number | undefined
     let outputTokens: number | undefined
+    let assistantError: Error | null = null
     let toolCount = 0
     const toolStartTimes = new Map<string, number>()
+    const askUserQuestions = new Map<string, AskUserQuestion[]>()
+
+    const generationTimeoutMs = 180_000
+    let timeoutRemainingMs = generationTimeoutMs
+    let timeoutStartedAt = Date.now()
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
+    let generationTimedOut = false
+
+    const armGenerationTimeout = () => {
+      timeoutStartedAt = Date.now()
+      timeoutId = setTimeout(() => {
+        timeoutId = null
+        generationTimedOut = true
+        cancelPendingUiRequest(convId)
+        piClient.sendRaw({ type: 'abort' })
+        if (!streamDone) {
+          failStream(new Error(`Timeout: no response within ${generationTimeoutMs / 1000}s`))
+        }
+      }, timeoutRemainingMs)
+    }
+    const pauseGenerationTimeout = () => {
+      if (!timeoutId) return
+      clearTimeout(timeoutId)
+      timeoutId = null
+      timeoutRemainingMs = Math.max(0, timeoutRemainingMs - (Date.now() - timeoutStartedAt))
+    }
+    const resumeGenerationTimeout = () => {
+      if (timeoutId || streamDone || generationTimedOut) return
+      armGenerationTimeout()
+    }
 
     const s = () => `+${((Date.now() - t0) / 1000).toFixed(1)}s`
 
     const unsubscribe = piClient.onEvent((event) => {
       const type = event['type'] as string
 
+      if (type === 'message_update') {
+        const ae = event['assistantMessageEvent'] as Record<string, unknown> | undefined
+        if (ae?.['type'] === 'thinking_delta' && typeof ae['delta'] === 'string') {
+          reasoningContent += ae['delta']
+        }
+      } else if (type === 'message_end') {
+        const message = event['message'] as AiStreamMessage | undefined
+        if (message?.role === 'assistant') {
+          const diagnosticMessage = message as unknown as Record<string, unknown>
+          if (diagnosticMessage['stopReason'] === 'error') {
+            assistantError = new Error(
+              typeof diagnosticMessage['errorMessage'] === 'string'
+                ? diagnosticMessage['errorMessage']
+                : 'Pi assistant response failed'
+            )
+          }
+        }
+        if (message?.role === 'assistant' && Array.isArray(message.content)) {
+          finalContent = messageText(message)
+        }
+      }
+
+      for (const chunk of piEventToCopilotChunks(event)) enqueue(chunk)
+
       switch (type) {
         case 'agent_start':
           console.log(`[AGENT]   ▶ Agent started (${s()})`)
           break
-
-        case 'message_update': {
-          const ae = event['assistantMessageEvent'] as Record<string, unknown> | undefined
-          if (!ae) break
-          const aeType = ae['type'] as string
-          if (aeType === 'text_delta') {
-            enqueue({ type: 'delta', content: ae['delta'] as string })
-          } else if (aeType === 'thinking_delta') {
-            const delta = ae['delta'] as string
-            reasoningContent += delta
-            enqueue({
-              type: 'reasoning_delta',
-              source: 'reasoning',
-              content: delta
-            })
-          } else if (aeType === 'toolcall_start') {
-            enqueue({ type: 'reset' })
-            enqueue({
-              type: 'reasoning_delta',
-              source: 'tool_start',
-              content: '\n\n'
-            })
-            console.log(`[AGENT]   🔧 Tool call start (${s()})`)
-          }
-          break
-        }
 
         case 'tool_execution_start': {
           toolCount++
           const toolName = event['toolName'] as string
           const toolCallId = event['toolCallId'] as string | undefined
           const args = event['args'] as Record<string, unknown> | undefined
-          const argLabel = toolArgLabel(args)
           if (toolCallId) toolStartTimes.set(toolCallId, Date.now())
-          enqueue({
-            type: 'reasoning_delta',
-            source: 'tool_start',
-            content: `\n\n- ${toolName}${argLabel}`
-          })
+          if (toolName === 'ask_user' && toolCallId && isAskUserQuestions(args?.['questions'])) {
+            askUserQuestions.set(toolCallId, args['questions'])
+          }
           console.log(`[AGENT]   ↳ Tool #${toolCount} start: ${toolName} (${s()})`)
           break
         }
@@ -294,41 +447,71 @@ export async function* streamCopilot(
           const toolName = event['toolName'] as string
           const toolCallId = event['toolCallId'] as string | undefined
           const isError = event['isError'] as boolean | undefined
-          const result = event['result']
           const toolMs = toolCallId
             ? Date.now() - (toolStartTimes.get(toolCallId) ?? Date.now())
             : 0
           if (toolCallId) toolStartTimes.delete(toolCallId)
-          const summary = piToolResultSummary(result)
-          enqueue({
-            type: 'reasoning_delta',
-            source: 'tool_start',
-            content: '\n\n'
-          })
-          if (summary)
-            enqueue({
-              type: 'reasoning_delta',
-              source: 'tool_result',
-              content: summary
-            })
+          if (toolCallId) askUserQuestions.delete(toolCallId)
           console.log(
             `[AGENT]   ↳ Tool done: ${toolName} (${toolMs}ms, ${s()})${isError ? ' [error]' : ''}`
           )
           break
         }
 
+        case 'extension_ui_request': {
+          if (event['method'] !== 'input' || typeof event['id'] !== 'string') {
+            break
+          }
+
+          const toolCallId = parseAskUserMarker(event['title'])
+          const questions = toolCallId ? askUserQuestions.get(toolCallId) : undefined
+          if (!toolCallId || !questions) {
+            piClient.sendRaw({
+              type: 'extension_ui_response',
+              id: event['id'],
+              cancelled: true
+            })
+            break
+          }
+
+          const responseSecret = crypto
+            .getRandomValues(new Uint8Array(32))
+            .toBase64({ alphabet: 'base64url', omitPadding: true })
+          const registered = registerPendingUiRequest(
+            convId,
+            { requestId: event['id'], toolCallId, responseSecret },
+            resumeGenerationTimeout
+          )
+          if (!registered) {
+            piClient.sendRaw({
+              type: 'extension_ui_response',
+              id: event['id'],
+              cancelled: true
+            })
+            break
+          }
+
+          pauseGenerationTimeout()
+          enqueue({
+            type: 'extension_ui_request',
+            requestId: event['id'],
+            toolCallId,
+            method: 'input',
+            responseSecret,
+            questions
+          })
+          break
+        }
+
         case 'agent_end': {
-          // Fetch final text and token counts, then emit the done chunk
-          Promise.all([
-            piClient.sendCommand<Record<string, unknown>>(
-              { type: 'get_last_assistant_text' },
-              10_000
-            ),
-            piClient.sendCommand<Record<string, unknown>>({ type: 'get_session_stats' }, 10_000)
-          ])
-            .then(([textResp, statsResp]) => {
-              const data = textResp['data'] as Record<string, unknown> | undefined
-              finalContent = (data?.['text'] as string | undefined) ?? finalContent
+          if (assistantError) {
+            failStream(assistantError)
+            break
+          }
+          // message_end is authoritative for content; stats are fetched separately.
+          piClient
+            .sendCommand<Record<string, unknown>>({ type: 'get_session_stats' }, 10_000)
+            .then((statsResp) => {
               const stats = statsResp['data'] as Record<string, unknown> | undefined
               const tokens = stats?.['tokens'] as Record<string, number> | undefined
               inputTokens = tokens?.['input']
@@ -375,6 +558,7 @@ export async function* streamCopilot(
     // Wire abort signal
     const abortHandler = () => {
       console.log('[AGENT] ⚠ Abort signal received — aborting Pi session')
+      cancelPendingUiRequest(convId)
       piClient.sendRaw({ type: 'abort' })
       setTimeout(() => {
         if (!streamDone) failStream(new DOMException('Request aborted', 'AbortError'))
@@ -382,15 +566,20 @@ export async function* streamCopilot(
     }
     signal?.addEventListener('abort', abortHandler, { once: true })
 
-    // Safety timeout (180s)
-    const timeoutId = setTimeout(() => {
-      if (!streamDone) failStream(new Error('Timeout: no response within 180s'))
-    }, 180_000)
+    // Safety timeout counts generation time only; it is paused during native Pi UI input.
+    armGenerationTimeout()
 
     // Step 2 — Send prompt (Pi acks immediately, then streams events)
     console.log(`[AGENT] Step 2/2 — Sending prompt...`)
     const t3 = Date.now()
-    await piClient.sendCommand({ type: 'prompt', message: prompt }, 10_000)
+    await piClient.sendCommand(
+      {
+        type: 'prompt',
+        message: prompt,
+        ...(images?.length ? { images } : {})
+      },
+      10_000
+    )
     console.log(`[AGENT] Step 2/2 — Prompt accepted (${Date.now() - t3}ms), streaming events...`)
 
     // Consume queue — yield chunks to the caller
@@ -408,7 +597,8 @@ export async function* streamCopilot(
         if (streamDone) break
       }
     } finally {
-      clearTimeout(timeoutId)
+      if (timeoutId) clearTimeout(timeoutId)
+      if (!streamDone) cancelPendingUiRequest(convId)
       signal?.removeEventListener('abort', abortHandler)
       unsubscribe()
     }

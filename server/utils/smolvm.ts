@@ -1,21 +1,36 @@
-import { join } from 'node:path'
-
 import { $ } from 'bun'
 import type { Subprocess } from 'bun'
 
-import { datastorePaths } from './paths'
+import { assertCanonicalConversationId } from './ai-attachments'
+import { datastorePaths, resolvePathWithin } from './paths'
 import { getSmolmachinePath, returnPoolVm } from './vm-pool'
 
 export type PierreInstance = {
   name: string
   knowledgePath: string
+  uploadsPath: string
+  uploadsTarget: string
   fromPool: boolean
   /** Long-lived exec subprocess that keeps Pi running inside the VM (stdin/stdout piped). */
   piProcess: Subprocess<'pipe', 'pipe', 'inherit'>
 }
 
 export function getKnowledgePath(configId: string): string {
-  return join(datastorePaths().knowledge, configId)
+  return resolvePathWithin(datastorePaths().knowledge, configId)
+}
+
+/** Stable attachment storage, deliberately outside directories rebuilt by the knowledge pipeline. */
+export function getUploadsPath(configId: string): string {
+  const uploadsRoot = resolvePathWithin(datastorePaths().root, 'uploads')
+  return resolvePathWithin(uploadsRoot, configId)
+}
+
+export function getConversationUploadsPath(configId: string, convId: string): string {
+  return resolvePathWithin(getUploadsPath(configId), assertCanonicalConversationId(convId))
+}
+
+export function getConversationUploadsMountPath(convId: string): string {
+  return `/knowledge/_uploads/${assertCanonicalConversationId(convId)}`
 }
 
 function buildPiEnvArgs(): string[] {
@@ -36,7 +51,8 @@ function buildPiEnvArgs(): string[] {
 }
 
 /** Faster Pi RPC boot: skip extension/skill/template discovery and startup network I/O. */
-const PI_LEAN_ARGS = ['-ne', '-ns', '-np', '--no-themes', '--offline'] as const
+const PI_LEAN_ARGS = ['--no-extensions', '-ns', '-np', '--no-themes', '--offline'] as const
+const ASK_USER_EXTENSION_PATH = '/opt/pierre/extensions/ask-user.ts'
 
 function spawnPiProcess(name: string): Subprocess<'pipe', 'pipe', 'inherit'> {
   const providerType = (Bun.env['AI_TYPE'] ?? 'anthropic').toLowerCase()
@@ -62,7 +78,9 @@ function spawnPiProcess(name: string): Subprocess<'pipe', 'pipe', 'inherit'> {
       providerType,
       '--model',
       model,
-      ...PI_LEAN_ARGS
+      ...PI_LEAN_ARGS,
+      '-e',
+      ASK_USER_EXTENSION_PATH
     ],
     { stdin: 'pipe', stdout: 'pipe', stderr: 'inherit' }
   ) as Subprocess<'pipe', 'pipe', 'inherit'>
@@ -80,14 +98,18 @@ function spawnPiProcess(name: string): Subprocess<'pipe', 'pipe', 'inherit'> {
  */
 export async function startPierreOnPoolVm(
   name: string,
-  knowledgePath: string
+  knowledgePath: string,
+  uploadsPath: string,
+  convId: string
 ): Promise<PierreInstance> {
-  await $`smolvm machine update --name ${name} -v ${knowledgePath}:/knowledge --net`
+  const uploadsTarget = getConversationUploadsMountPath(convId)
+  await $`mkdir -p ${uploadsPath}`
+  await $`smolvm machine update --name ${name} -v ${knowledgePath}:/knowledge -v ${uploadsPath}:${uploadsTarget} --net`
   await $`smolvm machine start --name ${name}`
 
   const piProcess = spawnPiProcess(name)
   console.log(`[SMOLVM] Pool VM ${name} ready — Pi RPC subprocess started`)
-  return { name, knowledgePath, fromPool: true, piProcess }
+  return { name, knowledgePath, uploadsPath, uploadsTarget, fromPool: true, piProcess }
 }
 
 /**
@@ -100,13 +122,16 @@ export async function createPierreInstance(
 ): Promise<PierreInstance> {
   const name = convId
   const knowledgePath = getKnowledgePath(configId)
+  const uploadsPath = getConversationUploadsPath(configId, convId)
+  const uploadsTarget = getConversationUploadsMountPath(convId)
+  await $`mkdir -p ${uploadsPath}`
 
-  await $`smolvm machine create --net --from ${getSmolmachinePath()} --volume ${knowledgePath}:/knowledge --name ${name}`
+  await $`smolvm machine create --net --from ${getSmolmachinePath()} --volume ${knowledgePath}:/knowledge --volume ${uploadsPath}:${uploadsTarget} --name ${name}`
   await $`smolvm machine start --name ${name}`
 
   const piProcess = spawnPiProcess(name)
   console.log(`[SMOLVM] VM ${name} ready — Pi RPC subprocess started`)
-  return { name, knowledgePath, fromPool: false, piProcess }
+  return { name, knowledgePath, uploadsPath, uploadsTarget, fromPool: false, piProcess }
 }
 
 /**
@@ -119,6 +144,9 @@ export async function destroyPierreInstance(instance: PierreInstance): Promise<v
 
   if (instance.fromPool) {
     await $`smolvm machine update --name ${instance.name} --remove-volume ${instance.knowledgePath}:/knowledge`
+      .nothrow()
+      .quiet()
+    await $`smolvm machine update --name ${instance.name} --remove-volume ${instance.uploadsPath}:${instance.uploadsTarget}`
       .nothrow()
       .quiet()
     returnPoolVm(instance.name)

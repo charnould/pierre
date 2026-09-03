@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { isAbsolute, join, relative, resolve } from 'node:path'
 
 export const SERVER_ROOT = resolve(import.meta.dir, '..')
 export const DATASTORES_ROOT = join(SERVER_ROOT, 'datastores')
@@ -28,6 +28,17 @@ export const CUSTOMIZATION_DIR = existsSync(join(SERVER_ROOT, 'customization'))
   : join(resolve(SERVER_ROOT, '..'), 'customization')
 
 export const CUSTOMIZATION_STATIC_ROOT = resolve(CUSTOMIZATION_DIR, '..')
+export const CUSTOMIZATION_SKILLS_DIR = resolve(CUSTOMIZATION_DIR, 'skills')
+
+export function resolvePathWithin(root: string, ...segments: string[]): string {
+  const resolvedRoot = resolve(root)
+  const candidate = resolve(resolvedRoot, ...segments)
+  const relativePath = relative(resolvedRoot, candidate)
+  if (relativePath === '' || (!relativePath.startsWith('..') && !isAbsolute(relativePath))) {
+    return candidate
+  }
+  throw new Error('Resolved path escapes its root')
+}
 
 /** Monorepo local: config/smolvm at repo root. Docker: under /app/config/smolvm/. */
 export const SMOLVM_DIR = existsSync(join(SERVER_ROOT, 'config', 'smolvm'))
