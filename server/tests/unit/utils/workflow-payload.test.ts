@@ -58,4 +58,36 @@ describe('workflow-payload', () => {
       )
     ).toBeNull()
   })
+
+  it('parseWorkflowPayload accepts every desktop synthese subject', () => {
+    for (const about_subject of ['locataire', 'client', 'lot', 'batiment']) {
+      expect(
+        parseWorkflowPayload(
+          JSON.stringify({
+            version: 1,
+            workflow: 'synthese',
+            about_subject,
+            identifiant: 'REF-1',
+            year_from: 2020,
+            year_to: 2029
+          })
+        )
+      ).toMatchObject({ about_subject })
+    }
+  })
+
+  it('parseWorkflowPayload rejects unsupported synthese subjects', () => {
+    expect(
+      parseWorkflowPayload(
+        JSON.stringify({
+          version: 1,
+          workflow: 'synthese',
+          about_subject: 'programme',
+          identifiant: 'REF-1',
+          year_from: 2020,
+          year_to: 2029
+        })
+      )
+    ).toBeNull()
+  })
 })
