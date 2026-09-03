@@ -250,6 +250,58 @@ describe('build_knowledge_databases', () => {
       expect(datastoreRows).toEqual(knowledgeRows)
     })
 
+    it('mirrors ledger tables with lookup indexes while keeping PII out of knowledge', async () => {
+      await write_json('comptes_locataires.json', [
+        {
+          id_locataire: 'LOC-A',
+          id_client: 'CLI-A',
+          date_exigibilite: '2026-08-01',
+          montant_en_euros: 120,
+          email_client: 'client@example.org'
+        }
+      ])
+      await write_json('lots_locatifs.json', [
+        { id_lot: 'LOT-1', id_locataire: 'LOC-A', id_client: 'CLI-A' }
+      ])
+
+      await build_knowledge_databases()
+
+      const knowledgeDb = open_db()
+      const knowledgeColumns = knowledgeDb
+        .query<{ name: string }, []>('PRAGMA table_info("comptes_locataires")')
+        .all()
+        .map(({ name }) => name)
+      knowledgeDb.close()
+
+      const datastoreDb = new Database(DATASTORE_PATH)
+      expect(
+        datastoreDb
+          .query<{ email_client: string }, []>('SELECT email_client FROM comptes_locataires')
+          .get()
+      ).toEqual({ email_client: 'client@example.org' })
+      const indexes = datastoreDb
+        .query<{ name: string }, []>(
+          `SELECT name FROM sqlite_master
+           WHERE type = 'index' AND name LIKE 'idx_%'
+           ORDER BY name`
+        )
+        .all()
+        .map(({ name }) => name)
+      expect(
+        datastoreDb.query<{ status: string }, []>(
+          "SELECT status FROM contacts WHERE value = 'client@example.org'"
+        ).get()
+      ).toEqual({ status: 'ok' })
+      datastoreDb.close()
+
+      expect(knowledgeColumns).not.toContain('email_client')
+      expect(indexes).toContain('idx_comptes_locataires_locataire_date')
+      expect(indexes).toContain('idx_lots_id_locataire')
+      expect(indexes).toContain('idx_lots_id_lot_id_locataire')
+      expect(indexes).not.toContain('idx_comptes_locataires_id_locataire')
+      expect(indexes).not.toContain('idx_lots_id_lot')
+    })
+
     it('does not create tickets in datastore when building other tables', async () => {
       await write_json('communes.json', [{ nom: 'Paris', code: '75056' }])
 

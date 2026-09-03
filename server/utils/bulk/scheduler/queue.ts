@@ -31,7 +31,7 @@ export const drain_bulk_jobs = async (now?: Date): Promise<void> => {
            FROM bulk_jobs
            WHERE report_status = 'in_progress'
              AND run_at IS NOT NULL
-             AND julianday(run_at) <= julianday(?)
+             AND run_at <= ?
            ORDER BY run_at, id
            LIMIT 100`
         )

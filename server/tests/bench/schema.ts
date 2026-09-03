@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import { dirname, resolve } from 'node:path'
 import { performance } from 'node:perf_hooks'
 
+import { ensure_datastore_ledger_indexes } from '../../utils/datastore-indexes'
 import baselineSql from '../../utils/datastore-migrations/001-baseline.sql' with { type: 'text' }
 
 type Bindings = SQLQueryBindings[]
@@ -101,6 +102,7 @@ const seedSynthetic = (db: Database): void => {
   db.run('PRAGMA temp_store = MEMORY')
   db.run(baselineSql)
   createMirrorTables(db)
+  ensure_datastore_ledger_indexes(db)
   db.transaction(() => {
     db.run(
       `WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < ?)
@@ -264,42 +266,23 @@ const anonymize = (db: Database): void => {
 }
 
 const candidateIndexes = `
-  CREATE INDEX bench_activities_bulk_report
-    ON activites(
-      bulk_id,
-      COALESCE(json_extract(contenu, '$.completed_at'),
-               json_extract(contenu, '$.snapshot.confirmed_at')) DESC,
-      execution_id DESC
-    )
-    WHERE type = 'bulk_run' AND bulk_id IS NOT NULL;
-  CREATE INDEX bench_activities_inbound
-    ON activites(type, destinataire, thread_id) WHERE thread_id IS NOT NULL;
   CREATE INDEX bench_users_lower_email ON users(lower(email));
-  CREATE INDEX bench_conversations_timestamp ON conversations(timestamp DESC);
   CREATE INDEX bench_contacts_stale ON contacts(checked_at)
     WHERE status = 'sms_compatible' AND value NOT LIKE '%@%';
   CREATE INDEX bench_automations_stuck ON automations(lease_expires_at)
     WHERE status = 'running' AND run_token IS NOT NULL;
-  CREATE INDEX bench_comptes_locataires_id ON comptes_locataires(id_locataire);
-  CREATE INDEX bench_lots_locatifs_tenant ON lots_locatifs(id_locataire);
-  CREATE INDEX bench_lots_locatifs_lot ON lots_locatifs(id_lot);
   CREATE INDEX bench_candidats_id ON candidats(id_candidat);
   CREATE INDEX bench_reclamations_id ON reclamations(id_reclamation);
 `
 
 const queries: BenchQuery[] = [
   {
-    name: 'bulk queue julianday → ISO',
+    name: 'bulk queue',
     sql: `SELECT id, bulk_operation_id, execution_id, item_id, attempts,
                  current_activity_id, payload FROM bulk_jobs
           WHERE report_status = 'in_progress' AND run_at IS NOT NULL
-            AND julianday(run_at) <= julianday(?)
+            AND run_at <= ?
           ORDER BY run_at, id LIMIT 100`,
-    candidateSql: `SELECT id, bulk_operation_id, execution_id, item_id, attempts,
-                          current_activity_id, payload FROM bulk_jobs
-                   WHERE report_status = 'in_progress' AND run_at IS NOT NULL
-                     AND run_at <= ?
-                   ORDER BY run_at, id LIMIT 100`,
     params: [now],
     table: 'bulk_jobs',
     baselinePlan: /idx_bulk_jobs_due/,
@@ -321,7 +304,8 @@ const queries: BenchQuery[] = [
              json_extract(contenu, '$.snapshot.confirmed_at')) DESC, execution_id DESC`,
     params: ['bulk-0040'],
     table: 'activites',
-    candidatePlan: /bench_activities_bulk_report/
+    baselinePlan: /idx_activites_bulk_reports/,
+    candidatePlan: /idx_activites_bulk_reports/
   },
   {
     name: 'activity thread',
@@ -351,7 +335,8 @@ const queries: BenchQuery[] = [
           GROUP BY a.rattachement, a.thread_id HAVING MAX(a.date_creation) >= ?`,
     params: ['email', 'email', '+33600000001', '2025-01-01T00:00:00Z'],
     table: 'activites',
-    candidatePlan: /bench_activities_inbound/
+    baselinePlan: /idx_activites_inbound_thread/,
+    candidatePlan: /idx_activites_inbound_thread/
   },
   {
     name: 'users lower(email)',
@@ -373,7 +358,8 @@ const queries: BenchQuery[] = [
     sql: `SELECT * FROM conversations ORDER BY timestamp DESC LIMIT 100`,
     params: [],
     table: 'conversations',
-    candidatePlan: /bench_conversations_timestamp/
+    baselinePlan: /idx_conversations_timestamp/,
+    candidatePlan: /idx_conversations_timestamp/
   },
   {
     name: 'contacts stale refresh',
@@ -473,6 +459,7 @@ const main = async (): Promise<void> => {
       }
       baseline = new Database(baselinePath, { strict: true })
       createMirrorTables(baseline)
+      ensure_datastore_ledger_indexes(baseline)
       anonymize(baseline)
       console.log('mode: anonymized datastore clone')
     } else {

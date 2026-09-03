@@ -5,6 +5,7 @@ export const baseline = {
   name: 'baseline',
   objects: [
     'conversations',
+    'idx_conversations_timestamp',
     'users',
     'telemetry',
     'knowledge_build',
@@ -19,7 +20,9 @@ export const baseline = {
     'idx_activites_statut',
     'idx_activites_rattachement_thread',
     'idx_activites_bulk',
+    'idx_activites_bulk_reports',
     'idx_activites_execution',
+    'idx_activites_inbound_thread',
     'idx_activites_idempotency',
     'idx_activites_ticket_draft',
     'automations',

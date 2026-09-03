@@ -249,7 +249,7 @@ describe('bulk reports', () => {
       clientCommandId: 'delete'
     })
     stop_bulk_scheduler()
-    now = new Date(now.getTime() + 60_000)
+    now = new Date(now.getTime() + 61_000)
     await drain_bulk_jobs()
     stop_bulk_scheduler()
     const queued = get_activity_by_idempotency_key(

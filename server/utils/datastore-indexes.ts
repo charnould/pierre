@@ -22,12 +22,13 @@ export const ensure_datastore_ledger_indexes = (db: Database): void => {
       )
     }
     if (column_exists(db, 'comptes_locataires', 'id_locataire')) {
-      db.run(
-        'CREATE INDEX IF NOT EXISTS idx_comptes_locataires_id_locataire ON "comptes_locataires"("id_locataire")'
-      )
       if (column_exists(db, 'comptes_locataires', 'date_exigibilite')) {
         db.run(
           'CREATE INDEX IF NOT EXISTS idx_comptes_locataires_locataire_date ON "comptes_locataires"("id_locataire", "date_exigibilite" DESC)'
+        )
+      } else {
+        db.run(
+          'CREATE INDEX IF NOT EXISTS idx_comptes_locataires_id_locataire ON "comptes_locataires"("id_locataire")'
         )
       }
     }
@@ -38,12 +39,18 @@ export const ensure_datastore_ledger_indexes = (db: Database): void => {
       db.run('CREATE INDEX IF NOT EXISTS idx_lots_id_client ON "lots_locatifs"("id_client")')
     }
     if (column_exists(db, 'lots_locatifs', 'id_lot')) {
-      db.run('CREATE INDEX IF NOT EXISTS idx_lots_id_lot ON "lots_locatifs"("id_lot")')
       if (column_exists(db, 'lots_locatifs', 'id_locataire')) {
         db.run(
           'CREATE INDEX IF NOT EXISTS idx_lots_id_lot_id_locataire ON "lots_locatifs"("id_lot", "id_locataire")'
         )
+      } else {
+        db.run('CREATE INDEX IF NOT EXISTS idx_lots_id_lot ON "lots_locatifs"("id_lot")')
       }
+    }
+    if (column_exists(db, 'lots_locatifs', 'id_locataire')) {
+      db.run(
+        'CREATE INDEX IF NOT EXISTS idx_lots_id_locataire ON "lots_locatifs"("id_locataire")'
+      )
     }
   }
 }
