@@ -4,12 +4,13 @@ import { z } from 'zod'
 import { ACTIVITY_CONTEXTS, ACTIVITY_CONTENT_VERSION } from '../../shared/activites'
 import type { CommunicationType } from '../../shared/activites'
 import type { Parsed_User } from '../utils/_schema'
+import { update_status } from '../utils/bulk/status'
 import {
   cm_webhook_authorized,
   find_recent_thread,
   next_status_timestamp
 } from '../utils/communications/parsing'
-import { is_communication_status, update_status } from '../utils/communications/status'
+import { is_communication_status } from '../utils/communications/status'
 import {
   CommunicationsError,
   create_inbound,

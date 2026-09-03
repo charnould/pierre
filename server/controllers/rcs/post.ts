@@ -4,8 +4,8 @@ import { z } from 'zod'
 import { ACTIVITY_CONTEXTS, ACTIVITY_CONTENT_VERSION } from '../../../shared/activites'
 import type { Parsed_User } from '../../utils/_schema'
 import { get_activity } from '../../utils/activities/rows'
+import { update_status } from '../../utils/bulk/status'
 import { communication_reference, next_status_timestamp } from '../../utils/communications/parsing'
-import { update_status } from '../../utils/communications/status'
 import {
   claim_outbound_dispatch,
   CommunicationsError,

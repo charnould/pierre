@@ -285,12 +285,12 @@ describe('bulk execution', () => {
       thread_id: first.thread_id ?? undefined,
       idempotency_key: 'cm:reply-1'
     })
-    expect(
-      handle_rich_rcs_reply(first, inbound, {
-        event: { custom: { label: 'Suite', postbackdata: 'suite' } },
-        messageContext: `p${first.id}`
-      })
-    ).toBe(true)
+    const replyPayload = {
+      event: { custom: { label: 'Suite', postbackdata: 'suite' } },
+      messageContext: `p${first.id}`
+    }
+    expect(handle_rich_rcs_reply(first, inbound, replyPayload)).toBe(true)
+    expect(handle_rich_rcs_reply(first, inbound, replyPayload)).toBe(false)
     now = new Date(now.getTime() + 1_000)
     await drain_bulk_jobs(now)
     const second = get_activity_by_idempotency_key(
