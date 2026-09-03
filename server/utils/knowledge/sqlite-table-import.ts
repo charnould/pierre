@@ -1,6 +1,14 @@
 import { Database } from 'bun:sqlite'
 
 import { insert_contacts_from_rows } from '../contacts'
+import {
+  COMMUNES_PAR_CODE_POSTAL_TABLE,
+  import_communes_par_code_postal_table,
+  is_code_postal_column,
+  is_keep_as_text_column,
+  normalize_code_postal,
+  stringify_identifier
+} from './codes-postaux'
 import { normalize_knowledge_name } from './utils'
 
 /** A single JSON object row eligible for tabular import. */
@@ -47,7 +55,9 @@ const existing_reclamations = (db: Database, table: string): Map<string, JsonRow
   )
 }
 
-const to_sql_value = (value: unknown): string | number | null => {
+const to_sql_value = (column: string, value: unknown): string | number | null => {
+  if (is_code_postal_column(column)) return normalize_code_postal(value)
+  if (is_keep_as_text_column(column)) return stringify_identifier(value)
   if (value == null) return null
   return typeof value === 'number' ? value : String(value)
 }
@@ -88,13 +98,22 @@ const emit_reclamation_changes = (
 
 /**
  * Atomically replaces a table with rows inferred from JSON objects.
+ *
+ * The requested table replacement itself is synchronous, preserving immediate
+ * SQLite errors for existing consumers. Callers importing a `code_postal` column
+ * must await the returned promise, which resolves only after the postal reference
+ * has also been rebuilt.
  */
-export const import_json_rows = (db: Database, table_name: string, rows: JsonRow[]): void => {
-  if (rows.length === 0) return
+export const import_json_rows = (
+  db: Database,
+  table_name: string,
+  rows: JsonRow[]
+): Promise<void> => {
+  if (rows.length === 0) return Promise.resolve()
 
   const all_keys = Array.from(new Set(rows.flatMap((row) => Object.keys(row))))
   const keys = all_keys.filter((key) => !key.startsWith('__empty'))
-  if (keys.length === 0) return
+  if (keys.length === 0) return Promise.resolve()
 
   const table = normalize_knowledge_name(table_name)
   if (!table) throw new Error('Invalid table name')
@@ -104,11 +123,17 @@ export const import_json_rows = (db: Database, table_name: string, rows: JsonRow
   const sanitized_keys = build_unique_sql_identifiers(keys)
   const quoted_keys = sanitized_keys.map(quote_identifier)
   const stored_rows = rows.map((row) =>
-    Object.fromEntries(keys.map((key, index) => [sanitized_keys[index]!, to_sql_value(row[key])]))
+    Object.fromEntries(
+      keys.map((key, index) => [
+        sanitized_keys[index]!,
+        to_sql_value(sanitized_keys[index]!, row[key])
+      ])
+    )
   )
 
-  const col_types = keys.map((key) => {
-    const non_null = rows.map((row) => row[key]).filter((value) => value != null)
+  const col_types = sanitized_keys.map((key) => {
+    if (is_keep_as_text_column(key)) return 'TEXT'
+    const non_null = stored_rows.map((row) => row[key]).filter((value) => value != null)
     return non_null.length > 0 && non_null.every((value) => typeof value === 'number')
       ? 'INTEGER'
       : 'TEXT'
@@ -134,4 +159,9 @@ export const import_json_rows = (db: Database, table_name: string, rows: JsonRow
     emit_reclamation_changes(db, previous, stored_rows)
   })
   replace_table.immediate()
+
+  if (table !== COMMUNES_PAR_CODE_POSTAL_TABLE && sanitized_keys.includes('code_postal')) {
+    return import_communes_par_code_postal_table(db).then(() => {})
+  }
+  return Promise.resolve()
 }

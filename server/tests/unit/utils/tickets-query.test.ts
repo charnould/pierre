@@ -49,10 +49,10 @@ export const FIXTURE_ROWS = [
   }
 ]
 
-const seed_tickets = (rows = FIXTURE_ROWS): void => {
+const seed_tickets = async (rows = FIXTURE_ROWS): Promise<void> => {
   const db = new Database(DATASTORE_SQLITE)
   try {
-    import_json_rows(db, 'reclamations', rows)
+    await import_json_rows(db, 'reclamations', rows)
   } finally {
     db.close()
   }
@@ -123,16 +123,16 @@ describe('list_tickets', () => {
     expect(result.meta.default_sort).toBe(DEFAULT_TICKETS_SORT)
   })
 
-  it('returns all rows without filters', () => {
-    seed_tickets()
+  it('returns all rows without filters', async () => {
+    await seed_tickets()
     const result = list_tickets({ ...TicketsPaginationQuery.parse({}), filters: {} })
     expect(result.data).toHaveLength(4)
     expect(result.meta.total).toBe(4)
     expect(result.meta.columns).toEqual(table_columns().map(({ name, type }) => ({ name, type })))
   })
 
-  it('respects limit', () => {
-    seed_tickets()
+  it('respects limit', async () => {
+    await seed_tickets()
     const result = list_tickets({
       ...TicketsPaginationQuery.parse({ limit: 2 }),
       filters: {}
@@ -142,8 +142,8 @@ describe('list_tickets', () => {
     expect(result.meta.total).toBe(4)
   })
 
-  it('respects offset', () => {
-    seed_tickets()
+  it('respects offset', async () => {
+    await seed_tickets()
     const sorted = list_tickets({
       ...TicketsPaginationQuery.parse({ sort: 'id_reclamation', limit: 10 }),
       filters: {}
@@ -155,8 +155,8 @@ describe('list_tickets', () => {
     expect(paged.data[0]?.id_reclamation).toBe(sorted.data[1]?.id_reclamation)
   })
 
-  it('filters by id_reclamation', () => {
-    seed_tickets()
+  it('filters by id_reclamation', async () => {
+    await seed_tickets()
     const result = list_tickets({
       ...TicketsPaginationQuery.parse({}),
       filters: { id_reclamation: ['REQ-2'] }
@@ -165,8 +165,8 @@ describe('list_tickets', () => {
     expect(result.data[0]?.id_reclamation).toBe('REQ-2')
   })
 
-  it('filters by schema column motif', () => {
-    seed_tickets()
+  it('filters by schema column motif', async () => {
+    await seed_tickets()
     const result = list_tickets({
       ...TicketsPaginationQuery.parse({}),
       filters: { motif: ['fuite'] }
@@ -175,8 +175,8 @@ describe('list_tickets', () => {
     expect(result.data.every((r) => r.motif === 'fuite')).toBe(true)
   })
 
-  it('filters with IN for multiple values on one column', () => {
-    seed_tickets()
+  it('filters with IN for multiple values on one column', async () => {
+    await seed_tickets()
     const result = list_tickets({
       ...TicketsPaginationQuery.parse({}),
       filters: { motif: ['fuite', 'chauffage'] }
@@ -184,8 +184,8 @@ describe('list_tickets', () => {
     expect(result.data).toHaveLength(3)
   })
 
-  it('combines filters with AND logic', () => {
-    seed_tickets()
+  it('combines filters with AND logic', async () => {
+    await seed_tickets()
     const result = list_tickets({
       ...TicketsPaginationQuery.parse({}),
       filters: { id_locataire: ['LOC-B'], motif: ['fuite'] }
@@ -194,8 +194,8 @@ describe('list_tickets', () => {
     expect(result.data[0]?.id_reclamation).toBe('REQ-3')
   })
 
-  it('rejects unknown filter column', () => {
-    seed_tickets()
+  it('rejects unknown filter column', async () => {
+    await seed_tickets()
     expect(() =>
       list_tickets({
         ...TicketsPaginationQuery.parse({}),
@@ -204,15 +204,15 @@ describe('list_tickets', () => {
     ).toThrow(TicketsQueryError)
   })
 
-  it('sorts descending by id_reclamation by default', () => {
-    seed_tickets()
+  it('sorts descending by id_reclamation by default', async () => {
+    await seed_tickets()
     const result = list_tickets({ ...TicketsPaginationQuery.parse({}), filters: {} })
     expect(result.data.map((r) => r.id_reclamation)).toEqual(['REQ-4', 'REQ-3', 'REQ-2', 'REQ-1'])
     expect(result.meta.default_sort).toBe('-id_reclamation')
   })
 
-  it('sorts by schema column motif ascending', () => {
-    seed_tickets()
+  it('sorts by schema column motif ascending', async () => {
+    await seed_tickets()
     const result = list_tickets({
       ...TicketsPaginationQuery.parse({ sort: 'motif' }),
       filters: {}
@@ -220,8 +220,8 @@ describe('list_tickets', () => {
     expect(result.data.map((r) => r.motif)).toEqual(['ascenseur', 'chauffage', 'fuite', 'fuite'])
   })
 
-  it('rejects sort on absent column', () => {
-    seed_tickets()
+  it('rejects sort on absent column', async () => {
+    await seed_tickets()
     expect(() =>
       list_tickets({
         ...TicketsPaginationQuery.parse({ sort: 'missing_col' }),
@@ -246,58 +246,58 @@ describe('get_ticket_column_facets', () => {
     await mkdir(DATASTORE_ROOT, { recursive: true })
   })
 
-  it('returns distinct motif values from full table', () => {
-    seed_tickets()
+  it('returns distinct motif values from full table', async () => {
+    await seed_tickets()
     const result = get_ticket_column_facets({ column: 'motif' })
     expect(result.values).toEqual(['ascenseur', 'chauffage', 'fuite'])
     expect(result.total).toBe(3)
     expect(result.filterable).toBe(true)
   })
 
-  it('filters facet values with q prefix while total stays full-table distinct count', () => {
-    seed_tickets()
+  it('filters facet values with q prefix while total stays full-table distinct count', async () => {
+    await seed_tickets()
     const result = get_ticket_column_facets({ column: 'motif', q: 'f' })
     expect(result.values).toEqual(['fuite'])
     expect(result.total).toBe(3)
     expect(result.filterable).toBe(true)
   })
 
-  it('returns filterable true at exactly 99 distinct values', () => {
+  it('returns filterable true at exactly 99 distinct values', async () => {
     const rows = Array.from({ length: 99 }, (_, i) => ({
       id_reclamation: `REQ-${i + 1}`,
       id_locataire: 'LOC-A',
       id_lot: 'LOT-1',
       motif: `motif-${i + 1}`
     }))
-    seed_tickets(rows)
+    await seed_tickets(rows)
     const result = get_ticket_column_facets({ column: 'motif' })
     expect(result.total).toBe(99)
     expect(result.filterable).toBe(true)
     expect(result.values).toHaveLength(99)
   })
 
-  it('returns filterable false and empty values without q when distinct count exceeds 99', () => {
+  it('returns filterable false and empty values without q when distinct count exceeds 99', async () => {
     const rows = Array.from({ length: 100 }, (_, i) => ({
       id_reclamation: `REQ-${i + 1}`,
       id_locataire: 'LOC-A',
       id_lot: 'LOT-1',
       motif: `motif-${i + 1}`
     }))
-    seed_tickets(rows)
+    await seed_tickets(rows)
     const result = get_ticket_column_facets({ column: 'motif' })
     expect(result.total).toBe(100)
     expect(result.filterable).toBe(false)
     expect(result.values).toEqual([])
   })
 
-  it('returns search results with q when distinct count exceeds 99', () => {
+  it('returns search results with q when distinct count exceeds 99', async () => {
     const rows = Array.from({ length: 100 }, (_, i) => ({
       id_reclamation: `REQ-${i + 1}`,
       id_locataire: 'LOC-A',
       id_lot: 'LOT-1',
       motif: i === 50 ? 'fuite-special' : `motif-${i + 1}`
     }))
-    seed_tickets(rows)
+    await seed_tickets(rows)
     const result = get_ticket_column_facets({ column: 'motif', q: 'fuite' })
     expect(result.filterable).toBe(false)
     expect(result.total).toBe(100)

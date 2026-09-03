@@ -14,6 +14,12 @@ import * as cpexcel from 'xlsx/dist/cpexcel.full.mjs'
 
 import { Config } from '../_schema'
 import { CUSTOMIZATION_DIR, datastorePaths } from '../paths'
+import {
+  is_code_postal_column,
+  is_keep_as_text_column,
+  normalize_code_postal,
+  stringify_identifier
+} from './codes-postaux'
 import type { Metadata } from './generate-metadata'
 import { normalize_knowledge_name } from './utils'
 
@@ -164,8 +170,14 @@ export const parse_numeric_string = (s: string): number | null => {
  * - Other values are returned as-is.
  *
  * @param value - Raw cell value from the spreadsheet.
+ * @param column_key - Optional column name, used to preserve identifier columns as text.
  */
-export const normalize_sheet_value = (value: unknown): unknown => {
+export const normalize_sheet_value = (value: unknown, column_key?: string): unknown => {
+  const key = column_key ?? ''
+  if (is_keep_as_text_column(key)) {
+    return is_code_postal_column(key) ? normalize_code_postal(value) : stringify_identifier(value)
+  }
+
   if (value instanceof Date) {
     return formatDate(new TZDate(value, TIMEZONE), 'yyyy-MM-dd')
   }
@@ -226,10 +238,10 @@ const process_xlsx_file = async (
 
   const normalized_rows = rows.map((obj) =>
     Object.fromEntries(
-      Object.entries(obj).map(([key, value]) => [
-        normalize_sheet_key(key),
-        normalize_sheet_value(value)
-      ])
+      Object.entries(obj).map(([key, value]) => {
+        const column_key = normalize_sheet_key(key)
+        return [column_key, normalize_sheet_value(value, column_key)]
+      })
     )
   )
 

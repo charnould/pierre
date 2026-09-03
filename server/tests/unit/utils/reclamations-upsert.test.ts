@@ -98,9 +98,9 @@ describe('upsert_reclamation', () => {
     expect(rows[0]?.message).toBe('Bonjour, j ai une fuite.')
   })
 
-  it('respects existing ERP schema and ignores unknown columns', () => {
+  it('respects existing ERP schema and ignores unknown columns', async () => {
     const db = new Database(DATASTORE_SQLITE)
-    import_json_rows(db, 'reclamations', [
+    await import_json_rows(db, 'reclamations', [
       {
         id_reclamation: 'REQ-1',
         id_locataire: 'LOC-A',

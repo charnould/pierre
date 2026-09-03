@@ -40,7 +40,7 @@ beforeEach(async () => {
   db.run(
     "INSERT INTO users (config, email, role, password_hash) VALUES ('default', 'alice@example.org', 'contributor', 'x')"
   )
-  import_json_rows(db, 'comptes_locataires', [
+  await import_json_rows(db, 'comptes_locataires', [
     {
       id_client: 'CLIENT-1',
       id_locataire: 'LOC-1',
@@ -173,7 +173,7 @@ describe('GET /desktop/repayment/timeline', () => {
 
   it('returns more than 2,000 activities and 500 actions/movements without truncation', async () => {
     const db = new Database(paths.database)
-    import_json_rows(
+    await import_json_rows(
       db,
       'comptes_locataires',
       Array.from({ length: 501 }, (_, index) => ({

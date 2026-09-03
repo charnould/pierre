@@ -118,6 +118,34 @@ describe('normalize_sheet_value', () => {
     expect(normalize_sheet_value('1 234,56')).toBe(1234.56)
   })
 
+  it('keeps code_postal as a five-digit string', () => {
+    expect(normalize_sheet_value('01000', 'code_postal')).toBe('01000')
+    expect(typeof normalize_sheet_value('01000', 'code_postal')).toBe('string')
+  })
+
+  it('pads numeric Excel code_postal values', () => {
+    expect(normalize_sheet_value(1000, 'code_postal')).toBe('01000')
+    expect(normalize_sheet_value('1000', 'Code Postal')).toBe('01000')
+  })
+
+  it('returns null for empty or invalid code_postal values', () => {
+    expect(normalize_sheet_value('', 'code_postal')).toBeNull()
+    expect(normalize_sheet_value(null, 'code_postal')).toBeNull()
+    expect(normalize_sheet_value('75-001', 'code_postal')).toBeNull()
+  })
+
+  it('keeps code_insee as a string, including leading zeros', () => {
+    expect(normalize_sheet_value('01053', 'code_insee')).toBe('01053')
+    expect(typeof normalize_sheet_value('01053', 'code_insee')).toBe('string')
+    expect(normalize_sheet_value(1053, 'code_insee')).toBe('1053')
+  })
+
+  it('keeps code_departement as a string, including Corsican identifiers', () => {
+    expect(normalize_sheet_value('01', 'code_departement')).toBe('01')
+    expect(normalize_sheet_value('2A', 'code_departement')).toBe('2A')
+    expect(normalize_sheet_value(1, 'code_departement')).toBe('1')
+  })
+
   it('returns null for empty strings', () => {
     expect(normalize_sheet_value('')).toBeNull()
   })

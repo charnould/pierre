@@ -32,10 +32,10 @@ const DATASTORE_SQLITE = `${DATASTORE_ROOT}/datastore.sqlite`
 const app = new Hono()
 app.get('/desktop/tickets/facets', get_desktop_tickets_facets)
 
-const seed_tickets = (): void => {
+const seed_tickets = async (): Promise<void> => {
   const db = new Database(DATASTORE_SQLITE)
   try {
-    import_json_rows(db, 'reclamations', FIXTURE_ROWS)
+    await import_json_rows(db, 'reclamations', FIXTURE_ROWS)
   } finally {
     db.close()
   }
@@ -64,7 +64,7 @@ afterEach(async () => {
 
 describe('GET /desktop/tickets/facets', () => {
   it('returns distinct values for a column', async () => {
-    seed_tickets()
+    await seed_tickets()
     const res = await app.fetch(new Request('http://localhost/desktop/tickets/facets?column=motif'))
     expect(res.status).toBe(200)
     const body = (await res.json()) as {
@@ -88,7 +88,7 @@ describe('GET /desktop/tickets/facets', () => {
     }))
     const db = new Database(DATASTORE_SQLITE)
     try {
-      import_json_rows(db, 'reclamations', rows)
+      await import_json_rows(db, 'reclamations', rows)
     } finally {
       db.close()
     }
@@ -114,7 +114,7 @@ describe('GET /desktop/tickets/facets', () => {
     }))
     const db = new Database(DATASTORE_SQLITE)
     try {
-      import_json_rows(db, 'reclamations', rows)
+      await import_json_rows(db, 'reclamations', rows)
     } finally {
       db.close()
     }
@@ -129,13 +129,13 @@ describe('GET /desktop/tickets/facets', () => {
   })
 
   it('returns 400 when column is missing', async () => {
-    seed_tickets()
+    await seed_tickets()
     const res = await app.fetch(new Request('http://localhost/desktop/tickets/facets'))
     expect(res.status).toBe(400)
   })
 
   it('returns 400 for unknown column', async () => {
-    seed_tickets()
+    await seed_tickets()
     const res = await app.fetch(new Request('http://localhost/desktop/tickets/facets?column=bad'))
     expect(res.status).toBe(400)
   })

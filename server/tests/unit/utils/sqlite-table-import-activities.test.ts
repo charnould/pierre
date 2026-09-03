@@ -4,7 +4,7 @@ import { describe, expect, test } from 'bun:test'
 import { import_json_rows } from '../../../utils/knowledge/sqlite-table-import'
 
 describe('reclamations import activity history', () => {
-  test('emits one activity per changed normative field after the first import', () => {
+  test('emits one activity per changed normative field after the first import', async () => {
     const db = new Database(':memory:')
     db.run(`
       CREATE TABLE activites (
@@ -22,7 +22,7 @@ describe('reclamations import activity history', () => {
         CHECK (json_valid(mentions) AND json_type(mentions) = 'array')
       )
     `)
-    import_json_rows(db, 'reclamations', [
+    await import_json_rows(db, 'reclamations', [
       {
         id_reclamation: 'REQ-1',
         id_locataire: 'LOC-1',
@@ -33,7 +33,7 @@ describe('reclamations import activity history', () => {
     ])
     expect(db.query('SELECT * FROM activites').all()).toHaveLength(0)
 
-    import_json_rows(db, 'reclamations', [
+    await import_json_rows(db, 'reclamations', [
       {
         id_reclamation: 'REQ-1',
         id_locataire: 'LOC-1',
@@ -58,7 +58,7 @@ describe('reclamations import activity history', () => {
     db.close()
   })
 
-  test('does not emit changes for equivalent normalized keys and values', () => {
+  test('does not emit changes for equivalent normalized keys and values', async () => {
     const db = new Database(':memory:')
     db.run(`
       CREATE TABLE activites (
@@ -83,8 +83,8 @@ describe('reclamations import activity history', () => {
         'État ticket': true
       }
     ]
-    import_json_rows(db, 'reclamations', rows)
-    import_json_rows(db, 'reclamations', rows)
+    await import_json_rows(db, 'reclamations', rows)
+    await import_json_rows(db, 'reclamations', rows)
 
     expect(db.query('SELECT * FROM activites').all()).toHaveLength(0)
     db.close()
