@@ -9,8 +9,8 @@
   },
   "devDependencies": {
     "@shikijs/markdown-it": "^4.4.3",
-    "@types/markdown-it": "^14.1.2",
-    "markdown-it": "^15.0.0",
-    "markdown-it-github-alerts": "^1.0.0"
+    "@types/markdown-it": "^14.2.0",
+    "markdown-it": "^15.0.1",
+    "markdown-it-github-alerts": "^1.0.1"
   }
 }
