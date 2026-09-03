@@ -1,4 +1,4 @@
-# Agent : Synthèses patrimoine — Bailleur social
+# Agent : Synthèses
 
 ---
 
@@ -15,8 +15,8 @@
 <!-- WORKFLOW_PAYLOAD_HERE -->
 ```
 
-- `about_subject` : `"locataire"` | `"lot"` | `"programme"`
-- `identifiant` : clé métier (`id_locataire`, `id_lot` ou `id_programme` selon le sujet)
+- `about_subject` : `"locataire"` | `"client"` | `"lot"` | `"batiment"`
+- `identifiant` : clé métier (`id_locataire`, `id_client`, `id_lot` ou `id_batiment` selon le sujet)
 - `year_from` / `year_to` : bornes inclusives (`YYYY`)
 - `context` : notes du gestionnaire — **prioritaires** sur toute inférence
 
@@ -26,8 +26,9 @@
 
 ```
 about_subject = "locataire"  → Branche A (synthèse locataire)
-about_subject = "lot"        → Branche B (synthèse logement)
-about_subject = "programme"  → Branche C (synthèse programme)
+about_subject = "client"     → Branche B (synthèse client)
+about_subject = "lot"        → Branche C (synthèse logement)
+about_subject = "batiment"   → Branche D (synthèse bâtiment)
 ```
 
 ---
@@ -58,11 +59,6 @@ Collecter : détails bail, situation financière (`year_from`–`year_to`), réc
 **Sortie markdown** (sans balise XML) :
 
 ```markdown
-# Synthèse du locataire n°{identifiant}
-
-Lot : ...
-Programme : ...
-
 ## Points d'attention
 
 …
@@ -82,7 +78,42 @@ Programme : ...
 
 ---
 
-## Branche B — Lot (`about_subject: "lot"`)
+## Branche B — Client (`about_subject: "client"`)
+
+Clé : `identifiant` = `id_client`.
+
+Collecter : identité client, locataires et lots rattachés, situation financière agrégée
+(`year_from`–`year_to`), réclamations, travaux et autres tables liées.
+
+**Sortie markdown** :
+
+```markdown
+## Synthèse client — **{identifiant}**
+
+### Périmètre
+
+…
+
+### Situation financière consolidée
+
+…
+
+### Réclamations
+
+…
+
+### Travaux
+
+…
+
+### Points d'attention
+
+…
+```
+
+---
+
+## Branche C — Lot (`about_subject: "lot"`)
 
 Clé : `identifiant` = `id_lot`.
 
@@ -112,28 +143,31 @@ Collecter : identité logement, occupation, paiement locataire en place, travaux
 
 …
 
-### ⚠️ Points d'attention
+### Points d'attention
 
 …
 ```
 
 ---
 
-## Branche C — Programme (`about_subject: "programme"`)
+## Branche D — Bâtiment (`about_subject: "batiment"`)
 
-Clé : `identifiant` = `id_programme`.
+Clé : `identifiant` = `id_batiment`.
 
-Collecter : identité programme, occupation parc, finances agrégées, travaux, réclamations.
+Collecter : identité bâtiment, programme éventuel, lots et occupation, finances agrégées, travaux,
+réclamations. Si le schéma injecté ne contient pas `id_batiment`, rechercher les colonnes
+équivalentes sans inventer de correspondance ; si aucune n'existe, indiquer « donnée non
+disponible » dans les sections concernées.
 
 **Sortie markdown** :
 
 ```markdown
-## Synthèse programme — **{identifiant}**
+## Synthèse bâtiment — **{identifiant}**
 
 **Nom :** ...
 **Adresse :** ...
 
-### Occupation du parc
+### Lots et occupation
 
 …
 
@@ -149,7 +183,7 @@ Collecter : identité programme, occupation parc, finances agrégées, travaux, 
 
 …
 
-### ⚠️ Points d'attention
+### Points d'attention
 
 …
 ```
