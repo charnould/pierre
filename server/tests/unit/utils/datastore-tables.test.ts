@@ -1,6 +1,6 @@
 import { Database } from 'bun:sqlite'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
-import { mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, rm } from 'node:fs/promises'
 
 import {
   DATASTORE_TABLES,
@@ -52,7 +52,7 @@ describe('get_datastore_tables', () => {
 
   it('propagates datastore corruption instead of reporting every table absent', async () => {
     await rm(DATASTORE_SQLITE, { force: true })
-    await writeFile(DATASTORE_SQLITE, 'not a sqlite database')
+    await Bun.write(DATASTORE_SQLITE, 'not a sqlite database')
     expect(() => get_datastore_tables()).toThrow()
   })
 

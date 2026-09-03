@@ -1,6 +1,5 @@
 import { Database } from 'bun:sqlite'
 
-import { randomUUIDv7 } from 'bun'
 import { z } from 'zod'
 
 import { activity_timestamp } from '../../../shared/activites'
@@ -164,7 +163,7 @@ export const create_bulk_operation = (
   body: CreateBulkOperationBody
 ): BulkOperationRecord => {
   const parsed = CreateBulkOperationBodySchema.parse(body)
-  const id = randomUUIDv7()
+  const id = Bun.randomUUIDv7()
   const db = new Database(datastore_path())
   try {
     db.run(

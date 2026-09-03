@@ -1,5 +1,3 @@
-import { randomUUIDv7 } from 'bun'
-
 import type {
   AutomationRecord,
   ReportAutomationConfig,
@@ -83,7 +81,7 @@ async function execute_claimed(
   if (!automation) return null
   const executor = active_executor
   if (!executor) throw new AutomationsError('Automation executor is not configured', 'unavailable')
-  const run_id = randomUUIDv7()
+  const run_id = Bun.randomUUIDv7()
   const abort = new AbortController()
   const heartbeat = setInterval(() => {
     try {

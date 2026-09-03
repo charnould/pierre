@@ -65,7 +65,7 @@ export const insert_repayment_activity = (
       id_locataire,
       type,
       JSON.stringify(storedContent),
-      action ? crypto.randomUUID() : null,
+      action ? Bun.randomUUIDv7() : null,
       action ? event : null,
       state,
       action ? 1 : null

@@ -50,7 +50,7 @@ describe('webhooks de communication', () => {
       await next()
     })
     app.post('/email', emailSend)
-    const key = crypto.randomUUID()
+    const key = Bun.randomUUIDv7()
     const request = () =>
       app.request('/email', {
         method: 'POST',
@@ -81,7 +81,7 @@ describe('webhooks de communication', () => {
       type: 'email',
       destinataire: 'tenant@example.org',
       contenu: JSON.stringify({ version: 1, corps: 'Bonjour' }),
-      idempotency_key: crypto.randomUUID()
+      idempotency_key: Bun.randomUUIDv7()
     })
     const app = new Hono().post('/webhook/email', emailWebhook)
     const body = {
@@ -161,7 +161,7 @@ describe('webhooks de communication', () => {
         corps: 'Choisissez',
         choix: [{ id: 'rappeler', label: 'Être rappelé' }]
       }),
-      idempotency_key: crypto.randomUUID()
+      idempotency_key: Bun.randomUUIDv7()
     })
     const app = new Hono().post('/webhook/rcs', rcsWebhook)
     const headers = { 'Content-Type': 'application/json', 'Webhook-Secret': SECRET }
@@ -198,7 +198,7 @@ describe('webhooks de communication', () => {
     expect(get_activity(activity.id)?.statut).toBe('delivered')
 
     const inboundPayload = {
-      reference: crypto.randomUUID(),
+      reference: Bun.randomUUIDv7(),
       messageContext: `p${activity.id}`,
       from: { number: '+33612345678' },
       timeUtc: '2030-08-26T20:01:00Z',
@@ -226,7 +226,7 @@ describe('webhooks de communication', () => {
           headers,
           body: JSON.stringify({
             ...inboundPayload,
-            reference: crypto.randomUUID(),
+            reference: Bun.randomUUIDv7(),
             timeUtc: '2030-08-26T20:02:00Z',
             event: { custom: { postbackdata: 'confirmer' } }
           })
@@ -259,7 +259,7 @@ describe('POST /mailto et action', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Idempotency-Key': crypto.randomUUID()
+        'Idempotency-Key': Bun.randomUUIDv7()
       },
       body: JSON.stringify({
         contexte: 'automations',
@@ -300,7 +300,7 @@ describe('POST /mailto et action', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Idempotency-Key': crypto.randomUUID()
+          'Idempotency-Key': Bun.randomUUIDv7()
         },
         body: JSON.stringify({
           contexte: 'automations',
@@ -324,7 +324,7 @@ describe('POST /mailto et action', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Idempotency-Key': crypto.randomUUID()
+        'Idempotency-Key': Bun.randomUUIDv7()
       },
       body: JSON.stringify({
         contexte: 'automations',
@@ -341,7 +341,7 @@ describe('POST /mailto et action', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Idempotency-Key': crypto.randomUUID()
+        'Idempotency-Key': Bun.randomUUIDv7()
       },
       body: JSON.stringify({
         contexte: 'automations',

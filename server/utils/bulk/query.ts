@@ -107,14 +107,11 @@ const DocxStepSchema = z
     }
     let bytes: Uint8Array
     try {
-      bytes = Uint8Array.from(Buffer.from(fileBase64, 'base64'))
+      bytes = Uint8Array.fromBase64(fileBase64)
     } catch {
       bytes = new Uint8Array()
     }
-    if (
-      !/^[A-Za-z0-9+/]*={0,2}$/.test(fileBase64) ||
-      Buffer.from(bytes).toString('base64') !== fileBase64
-    ) {
+    if (!/^[A-Za-z0-9+/]*={0,2}$/.test(fileBase64) || bytes.toBase64() !== fileBase64) {
       ctx.addIssue({ code: 'custom', path: ['fileBase64'], message: 'Base64 invalide' })
     } else {
       if (bytes.byteLength > 1_000_000) {

@@ -1,6 +1,5 @@
 import { format, parseISO } from 'date-fns'
 import { html, raw } from 'hono/html'
-import { marked } from 'marked'
 
 import type { Reply } from '../utils/_schema'
 
@@ -85,7 +84,7 @@ export const view = (data, conversation: Reply[] | []) => {
                     (c) => html`<div
                       class="prose odd:float-right odd:my-8 odd:max-w-lg odd:rounded-xl odd:bg-gray-100 odd:px-5 odd:py-2 odd:font-serif odd:text-base even:clear-both"
                     >
-                      ${raw(marked.parse(c.content))}
+                      ${raw(Bun.markdown.html(c.content))}
                     </div>`
                   )}
                   <!-- START: Score conversation -->

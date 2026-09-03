@@ -118,7 +118,7 @@ const create_activity_internal = (
             auteur: author,
             facets,
             contenu: actionContent,
-            thread_id: crypto.randomUUID(),
+            thread_id: Bun.randomUUIDv7(),
             event: creation.etat === 'fait' ? 'completed' : 'created',
             state: creation.etat,
             revision: 1,

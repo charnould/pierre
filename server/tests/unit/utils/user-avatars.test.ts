@@ -12,9 +12,8 @@ import {
 } from '../../../utils/user-avatars'
 import { use_identity_test_env } from './identity-test-env'
 
-const PNG_1x1 = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
-  'base64'
+const PNG_1x1 = Uint8Array.fromBase64(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
 )
 
 use_identity_test_env('_test_user_avatars')

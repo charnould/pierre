@@ -46,7 +46,7 @@ describe('communications', () => {
       type: 'email',
       destinataire: 'tenant@example.org',
       contenu: JSON.stringify({ version: 1, corps: 'Premier' }),
-      idempotency_key: crypto.randomUUID()
+      idempotency_key: Bun.randomUUIDv7()
     })
     const second = create_outbound({
       actor: 'alice@example.org',
@@ -55,7 +55,7 @@ describe('communications', () => {
       type: 'email',
       destinataire: 'tenant@example.org',
       contenu: JSON.stringify({ version: 1, corps: 'Second' }),
-      idempotency_key: crypto.randomUUID()
+      idempotency_key: Bun.randomUUIDv7()
     })
     const rcs = create_outbound({
       actor: 'alice@example.org',
@@ -64,7 +64,7 @@ describe('communications', () => {
       type: 'rcs',
       destinataire: '06 12 34 56 78',
       contenu: JSON.stringify({ version: 1, corps: 'RCS' }),
-      idempotency_key: crypto.randomUUID()
+      idempotency_key: Bun.randomUUIDv7()
     })
 
     expect(first.thread_id).toBe(second.thread_id)
@@ -74,7 +74,7 @@ describe('communications', () => {
   })
 
   it('rend un retry identique sans doublon et refuse un conflit', () => {
-    const key = crypto.randomUUID()
+    const key = Bun.randomUUIDv7()
     const base = {
       actor: 'alice@example.org',
       contexte: 'automations' as const,
@@ -108,7 +108,7 @@ describe('communications', () => {
       type: 'rcs',
       destinataire: '+33612345678',
       contenu: JSON.stringify({ version: 1, corps: 'Bonjour' }),
-      idempotency_key: crypto.randomUUID()
+      idempotency_key: Bun.randomUUIDv7()
     })
     expect(claim_outbound_dispatch(activity.id)).toBe('claimed')
     expect(claim_outbound_dispatch(activity.id)).toBe('pending')
@@ -131,7 +131,7 @@ describe('communications', () => {
       type: 'email',
       destinataire: 'tenant@example.org',
       contenu: JSON.stringify({ version: 1, corps: 'Statut' }),
-      idempotency_key: crypto.randomUUID()
+      idempotency_key: Bun.randomUUIDv7()
     })
     const delivered = update_status({
       activity_id: activity.id,
@@ -207,7 +207,7 @@ describe('communications', () => {
                 ? 'tenant@example.org'
                 : '1 rue de la Paix',
           contenu: JSON.stringify({ version: 1, corps: 'Test' }),
-          idempotency_key: crypto.randomUUID()
+          idempotency_key: Bun.randomUUIDv7()
         })
         const failed = update_status({
           activity_id: activity.id,
@@ -233,7 +233,7 @@ describe('communications', () => {
       type: 'email',
       destinataire: 'tenant@example.org',
       contenu: JSON.stringify({ version: 1, corps: 'Question' }),
-      idempotency_key: crypto.randomUUID()
+      idempotency_key: Bun.randomUUIDv7()
     })
     const inbound = create_inbound({
       contexte: 'automations',
@@ -266,7 +266,7 @@ describe('communications', () => {
       type: 'email',
       destinataire: 'unique@example.org',
       contenu: JSON.stringify({ version: 1, corps: 'Unique' }),
-      idempotency_key: crypto.randomUUID()
+      idempotency_key: Bun.randomUUIDv7()
     })
     expect(find_recent_thread('email', 'unique@example.org')?.ref).toBe('HEURISTIC-1')
 
@@ -278,7 +278,7 @@ describe('communications', () => {
         type: 'email',
         destinataire: 'shared@example.org',
         contenu: JSON.stringify({ version: 1, corps: ref }),
-        idempotency_key: crypto.randomUUID()
+        idempotency_key: Bun.randomUUIDv7()
       })
     }
     expect(find_recent_thread('email', 'shared@example.org')).toBeNull()
@@ -296,7 +296,7 @@ describe('communications', () => {
         corps: 'Souhaitez-vous être rappelé ?',
         choix: [{ id: 'rappeler', label: 'Être rappelé' }]
       }),
-      idempotency_key: crypto.randomUUID()
+      idempotency_key: Bun.randomUUIDv7()
     })
     expect(activity).toMatchObject({
       auteur: 'user:alice@example.org',

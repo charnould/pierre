@@ -99,7 +99,7 @@ export const import_json_rows = (db: Database, table_name: string, rows: JsonRow
   const table = normalize_knowledge_name(table_name)
   if (!table) throw new Error('Invalid table name')
   const quoted_table = quote_identifier(table)
-  const staging = `${table}__import_${crypto.randomUUID().replaceAll('-', '')}`
+  const staging = `${table}__import_${Bun.randomUUIDv7().replaceAll('-', '')}`
   const quoted_staging = quote_identifier(staging)
   const sanitized_keys = build_unique_sql_identifiers(keys)
   const quoted_keys = sanitized_keys.map(quote_identifier)

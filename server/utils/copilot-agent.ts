@@ -60,11 +60,11 @@ async function buildAgentsFile(configId: string, workflowPayload?: WorkflowPaylo
     `<session>Current date and time (Europe/Paris): ${today_is()}</session>.`
   ]
 
-  if (existsSync(instructionsPath)) {
+  if (await Bun.file(instructionsPath).exists()) {
     let raw = (await Bun.file(instructionsPath).text()).trim()
 
     const dbPath = join(knowledgePath, 'db.sqlite')
-    if (raw.includes('<!-- KNOWLEDGE_SCHEMA_HERE -->') && existsSync(dbPath)) {
+    if (raw.includes('<!-- KNOWLEDGE_SCHEMA_HERE -->') && (await Bun.file(dbPath).exists())) {
       try {
         const db = new Database(dbPath, { readonly: true })
         const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()

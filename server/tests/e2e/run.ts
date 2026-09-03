@@ -49,6 +49,8 @@ try {
       'tests/e2e',
       '--timeout',
       '60000',
+      '--max-concurrency',
+      '1',
       '--env-file=../.env.production',
       '--preload',
       './utils/setup.ts'

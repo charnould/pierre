@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, rmSync } from 'node:fs'
+import { mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 
 import type { Context } from 'hono'
@@ -14,7 +14,7 @@ import { parseWorkflowPayload, WORKFLOW_USER_PROMPT } from '../../utils/workflow
 
 async function loadSkillReasoningDisplay(skillId: string): Promise<'off' | 'partial' | 'full'> {
   const skillsDir = join(CUSTOMIZATION_DIR, 'skills')
-  if (!existsSync(join(skillsDir, skillId, 'config.ts'))) return 'off'
+  if (!(await Bun.file(join(skillsDir, skillId, 'config.ts')).exists())) return 'off'
   try {
     const mod = await import(`../../../customization/skills/${skillId}/config`)
     const display = mod.default?.reasoning_display

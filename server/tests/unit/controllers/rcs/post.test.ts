@@ -29,7 +29,7 @@ app.post('/rcs', authorize_mutation, controller)
 
 const postRcs = (
   role: Parsed_User['role'] = 'contributor',
-  idempotencyKey: string = crypto.randomUUID()
+  idempotencyKey: string = Bun.randomUUIDv7()
 ) =>
   app.request('/rcs', {
     method: 'POST',
@@ -84,7 +84,7 @@ describe('POST /rcs provider boundary', () => {
       )
     })
     try {
-      const idempotencyKey = crypto.randomUUID()
+      const idempotencyKey = Bun.randomUUIDv7()
       const response = await postRcs('contributor', idempotencyKey)
       expect(response.status).toBe(201)
       expect((await response.json()) as unknown).toMatchObject({

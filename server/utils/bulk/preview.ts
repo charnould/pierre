@@ -185,7 +185,7 @@ export const preview_message = async (input: {
         kind: 'pdf',
         medium: step.medium,
         filename: pdf_filename(step.filename),
-        pdfBase64: Buffer.from(pdf).toString('base64'),
+        pdfBase64: pdf.toBase64(),
         mimeType: 'application/pdf'
       }
     }

@@ -1,7 +1,5 @@
 import { Database } from 'bun:sqlite'
 
-import { randomUUIDv7 } from 'bun'
-
 import { activity_timestamp } from '../../../shared/activites'
 import {
   bulkDeliveryError,
@@ -54,7 +52,7 @@ export const execute_bulk_operation = async (
   const deliveryError = bulkDeliveryError(bulkOperation.definition.delivery)
   if (deliveryError) throw new BulkExecutionError(deliveryError, 'invalid')
   const db = new Database(datastore_path())
-  const execution_id = randomUUIDv7()
+  const execution_id = Bun.randomUUIDv7()
   const runKey = `bulk:${bulkOperation.id}:command:${options.clientCommandId}`
   let result: ExecuteResult
   let queued = false
@@ -130,7 +128,7 @@ export const execute_bulk_operation = async (
     )
 
     for (const row of preview.rows) {
-      const jobId = randomUUIDv7()
+      const jobId = Bun.randomUUIDv7()
       const payload: BulkItemPayload =
         bulkOperation.definition.delivery.kind === 'rich_rcs'
           ? {

@@ -717,7 +717,7 @@ describe('set_boost', () => {
       [
         user(ALICE),
         JSON.stringify({ version: 1, canal: 'courrier', action: 'Envoyer le courrier R1' }),
-        crypto.randomUUID(),
+        Bun.randomUUIDv7(),
         'bulk-r1'
       ]
     )

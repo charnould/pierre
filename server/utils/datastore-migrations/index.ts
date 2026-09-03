@@ -1,5 +1,4 @@
 import { Database } from 'bun:sqlite'
-import { existsSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 
 import { DATASTORE_TABLES } from '../datastore-tables'
@@ -186,7 +185,7 @@ export const migrate_datastore = async (
   migrations: readonly DatastoreMigration[] = APP_MIGRATIONS
 ): Promise<void> => {
   validate_migrations(migrations)
-  if (!existsSync(path)) {
+  if (!(await Bun.file(path).exists())) {
     bootstrap(path, migrations)
     return
   }

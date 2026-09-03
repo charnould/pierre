@@ -1,5 +1,3 @@
-import crypto from 'node:crypto'
-
 import type { Context, Next } from 'hono'
 import { bearerAuth } from 'hono/bearer-auth'
 import { getSignedCookie } from 'hono/cookie'
@@ -35,7 +33,7 @@ export const authenticate = async (c: Context, next: Next) => {
     let email: string | null = null
     try {
       const cookie_user = JSON.parse(
-        decrypt(cookie, Bun.env['AUTH_SECRET'] as string)
+        await decrypt(cookie, Bun.env['AUTH_SECRET'] as string)
       ) as Partial<Parsed_User>
       if (typeof cookie_user.email === 'string' && cookie_user.email.trim()) {
         email = cookie_user.email
@@ -223,37 +221,52 @@ export const authenticate = async (c: Context, next: Next) => {
 //
 //
 //
-// Encrypt a string using AES-256-CBC encryption.
+// Encrypt a string using AES-256-GCM encryption.
 //
 // This function generates a random initialization vector (IV) and uses it to
 // encrypt the input text with the provided secret key. The resulting encrypted
-// string is returned in the format "IV:encryptedText" for later decryption.
+// string is returned in the format "IV:ciphertextTag" for later decryption.
 //
-export const encrypt = (text: string, secret_key: string) => {
-  const iv = crypto.randomBytes(16)
-  const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(secret_key), iv)
-  let encrypted = cipher.update(text, 'utf8', 'hex')
-  encrypted += cipher.final('hex')
-  return `${iv.toString('hex')}:${encrypted}`
+const is_ascii_key = (value: string): boolean =>
+  value.length === 32 && [...value].every((character) => character.charCodeAt(0) <= 0x7f)
+
+export const encrypt = async (text: string, secret_key: string): Promise<string> => {
+  if (!is_ascii_key(secret_key)) {
+    throw new Error('AUTH_SECRET must be 32 ASCII characters')
+  }
+  const encoder = new TextEncoder()
+  const key_bytes = encoder.encode(secret_key)
+  const key = await crypto.subtle.importKey('raw', key_bytes, 'AES-GCM', false, ['encrypt'])
+  const iv = crypto.getRandomValues(new Uint8Array(12))
+  const ciphertext_tag = new Uint8Array(
+    await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoder.encode(text))
+  )
+  return `${iv.toHex()}:${ciphertext_tag.toHex()}`
 }
 
 //
 //
 //
-// Decrypt a string encrypted with AES-256-CBC.
+// Decrypt a string encrypted with AES-256-GCM.
 //
-// This function takes an encrypted string in the format "IV:encryptedText" and
+// This function takes an encrypted string in the format "IV:ciphertextTag" and
 // uses the provided secret key to decrypt it. The initialization vector (IV) is
 // extracted from the encrypted string, and both the IV and key are used to
 // restore the original plaintext.
 //
-export const decrypt = (encrypted_text: string, secret_key: string) => {
-  const [ivHex, encryptedDataHex] = encrypted_text.split(':')
-  if (!ivHex || !encryptedDataHex) throw new Error('Invalid encrypted value')
-  const iv = Buffer.from(ivHex, 'hex')
-  const encrypted_data = Buffer.from(encryptedDataHex, 'hex')
-  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(secret_key), iv)
-  let decrypted = decipher.update(encrypted_data, 'hex', 'utf8')
-  decrypted += decipher.final('utf8')
-  return decrypted
+export const decrypt = async (encrypted_text: string, secret_key: string): Promise<string> => {
+  const parts = encrypted_text.split(':')
+  if (parts.length !== 2 || !parts[0] || !parts[1]) throw new Error('Invalid encrypted value')
+  const iv = Uint8Array.fromHex(parts[0])
+  const ciphertext_tag = Uint8Array.fromHex(parts[1])
+  if (iv.byteLength !== 12 || ciphertext_tag.byteLength < 16) {
+    throw new Error('Invalid encrypted value')
+  }
+  if (!is_ascii_key(secret_key)) {
+    throw new Error('AUTH_SECRET must be 32 ASCII characters')
+  }
+  const key_bytes = new TextEncoder().encode(secret_key)
+  const key = await crypto.subtle.importKey('raw', key_bytes, 'AES-GCM', false, ['decrypt'])
+  const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext_tag)
+  return new TextDecoder().decode(plaintext)
 }

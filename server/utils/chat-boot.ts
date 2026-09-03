@@ -1,5 +1,3 @@
-import { randomUUIDv7 } from 'bun'
-
 import type { Displayable_configs } from '../controllers/chat/get'
 import type { Config } from './_schema'
 
@@ -22,7 +20,7 @@ export function buildChatBootData(
   dataParam = ''
 ): ChatBootData {
   return {
-    convId: randomUUIDv7(),
+    convId: Bun.randomUUIDv7(),
     configId: active_config.id,
     dataParam,
     disclaimer: active_config.disclaimer ?? null,
