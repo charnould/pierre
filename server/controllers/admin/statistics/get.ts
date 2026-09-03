@@ -208,7 +208,7 @@ export const generate_csv = async (): Promise<string> => {
 		score_organisme: _.map(data, "org_score"),
 		score_ia: _.map(data, "ai_score"),
 		message: _.map(data, "content"),
-	};
+	}
 
   return table(result).toCSV()
 }
