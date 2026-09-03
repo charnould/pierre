@@ -36,6 +36,16 @@ import { controller as post_desktop_automation } from './controllers/desktop/aut
 import { controller as post_desktop_automation_pin } from './controllers/desktop/automations/post.pin'
 import { controller as post_desktop_automation_run } from './controllers/desktop/automations/post.run'
 import { controller as get_desktop_avatars } from './controllers/desktop/avatars/get'
+import { controller as delete_desktop_bulk_operation } from './controllers/desktop/bulk-operations/delete'
+import { controller as get_desktop_bulk_operations } from './controllers/desktop/bulk-operations/get'
+import { controller as get_desktop_bulk_operation } from './controllers/desktop/bulk-operations/get.one'
+import { controller as get_desktop_bulk_operation_report } from './controllers/desktop/bulk-operations/get.report'
+import { controller as get_desktop_bulk_operation_reports } from './controllers/desktop/bulk-operations/get.reports'
+import { controller as patch_desktop_bulk_operation } from './controllers/desktop/bulk-operations/patch'
+import { controller as post_desktop_bulk_operation } from './controllers/desktop/bulk-operations/post'
+import { controller as post_desktop_bulk_operation_execute } from './controllers/desktop/bulk-operations/post.execute'
+import { controller as post_desktop_bulk_operation_preview_message } from './controllers/desktop/bulk-operations/post.preview-message'
+import { controller as post_desktop_bulk_operation_preview_query } from './controllers/desktop/bulk-operations/post.preview-query'
 import { controller as post_desktop_me_avatar } from './controllers/desktop/me/avatar/post'
 import { controller as patch_desktop_me_preferences } from './controllers/desktop/me/preferences/patch'
 import { controller as get_desktop_tickets } from './controllers/desktop/tickets/get'
@@ -59,9 +69,10 @@ import { controller as post_sms_webhook } from './controllers/sms/post.webhook'
 import { controller as post_telemetry } from './controllers/telemetry/post'
 // import { topicize, score } from "./utils/analyze-conversation";
 import { authenticate } from './utils/authenticate-user'
-import { authorize_mutation } from './utils/authorize-role'
+import { authorize_administrator, authorize_mutation } from './utils/authorize-role'
 import { run_due_automations } from './utils/automations/run'
 import { AVATAR_MAX_UPLOAD_BYTES } from './utils/avatar-image'
+import { start_bulk_scheduler } from './utils/bulk/scheduler/queue'
 import { refresh_stale_sms_contacts_for_service } from './utils/contacts'
 import { run_pipeline } from './utils/knowledge/run-pipeline'
 import { CUSTOMIZATION_STATIC_ROOT, SERVER_ROOT } from './utils/paths'
@@ -75,6 +86,7 @@ import { cleanupOrphanedVms } from './utils/vm-registry'
 // 3. Run the knowledge pipeline (initial build on startup)
 // 4. Clean up any orphaned VMs that may be running from previous sessions
 await setup()
+await start_bulk_scheduler()
 await run_pipeline()
 await cleanupOrphanedVms()
 await initVmPool()
@@ -157,6 +169,45 @@ app.delete(
   authenticate,
   authorize_mutation,
   delete_desktop_automation_pin
+)
+app.post(
+  '/desktop/bulk-operations/preview-query',
+  authenticate,
+  authorize_mutation,
+  post_desktop_bulk_operation_preview_query
+)
+app.post(
+  '/desktop/bulk-operations/preview-message',
+  authenticate,
+  authorize_mutation,
+  post_desktop_bulk_operation_preview_message
+)
+app.get('/desktop/bulk-operations', authenticate, get_desktop_bulk_operations)
+app.post('/desktop/bulk-operations', authenticate, authorize_mutation, post_desktop_bulk_operation)
+app.get(
+  '/desktop/bulk-operations/:id/reports/:executionId',
+  authenticate,
+  get_desktop_bulk_operation_report
+)
+app.get('/desktop/bulk-operations/:id/reports', authenticate, get_desktop_bulk_operation_reports)
+app.get('/desktop/bulk-operations/:id', authenticate, get_desktop_bulk_operation)
+app.patch(
+  '/desktop/bulk-operations/:id',
+  authenticate,
+  authorize_mutation,
+  patch_desktop_bulk_operation
+)
+app.delete(
+  '/desktop/bulk-operations/:id',
+  authenticate,
+  authorize_mutation,
+  delete_desktop_bulk_operation
+)
+app.post(
+  '/desktop/bulk-operations/:id/execute',
+  authenticate,
+  authorize_administrator,
+  post_desktop_bulk_operation_execute
 )
 app.get('/desktop/tickets/facets', authenticate, get_desktop_tickets_facets)
 app.put('/desktop/tickets', authenticate, authorize_mutation, put_desktop_tickets)
