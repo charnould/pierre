@@ -2,6 +2,7 @@ import { Database } from 'bun:sqlite'
 import { existsSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 
+import { DATASTORE_TABLES } from '../datastore-tables'
 import { baseline } from './001-baseline'
 
 export type DatastoreMigration = {
@@ -21,11 +22,10 @@ const LEDGER_SQL = `
   )
 `
 
-const LEGACY_APP_OBJECTS = new Set(['bulk'])
-
 type SchemaObject = {
   type: string
   name: string
+  tbl_name: string
   sql: string | null
 }
 
@@ -106,7 +106,7 @@ const build_expected_schema = (
     return new Map(
       db
         .query<SchemaObject, []>(
-          `SELECT type, name, sql FROM sqlite_master
+          `SELECT type, name, tbl_name, sql FROM sqlite_master
            WHERE sql IS NOT NULL
              AND name <> 'schema_migrations'
              AND name NOT LIKE 'sqlite_%'`
@@ -130,14 +130,24 @@ const app_schema_is_compatible = (
   const expected = build_expected_schema(migrations, version)
   const actual = db
     .query<SchemaObject, []>(
-      `SELECT type, name, sql FROM sqlite_master
+      `SELECT type, name, tbl_name, sql FROM sqlite_master
        WHERE sql IS NOT NULL
          AND name <> 'schema_migrations'
          AND name NOT LIKE 'sqlite_%'`
     )
     .all()
 
-  if (actual.some((object) => LEGACY_APP_OBJECTS.has(object.name))) return false
+  const external_tables = new Set<string>(DATASTORE_TABLES)
+  if (
+    actual.some(
+      (object) =>
+        !owned_objects.has(object.name) &&
+        !external_tables.has(object.name) &&
+        !external_tables.has(object.tbl_name)
+    )
+  ) {
+    return false
+  }
 
   const actual_owned = new Map(
     actual.filter((object) => owned_objects.has(object.name)).map((object) => [object.name, object])

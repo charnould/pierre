@@ -48,9 +48,7 @@ export const ensure_datastore_ledger_indexes = (db: Database): void => {
       }
     }
     if (column_exists(db, 'lots_locatifs', 'id_locataire')) {
-      db.run(
-        'CREATE INDEX IF NOT EXISTS idx_lots_id_locataire ON "lots_locatifs"("id_locataire")'
-      )
+      db.run('CREATE INDEX IF NOT EXISTS idx_lots_id_locataire ON "lots_locatifs"("id_locataire")')
     }
   }
 }
