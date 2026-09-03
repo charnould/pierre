@@ -398,6 +398,20 @@ Le changelog Updates n’est **pas** un Inspector : exception ActivityReader.
 
 Formulaire à gauche, résultat à droite, `ResizableHandle`, footer `border-t`, une primaire. Empty canonique dans le panneau output. Card bornée `max-w-sm` uniquement pour un objet unique (ex. tables datastore).
 
+Un Split qui produit du contenu généré conserve cette grammaire de configuration → résultat :
+
+- Les pièces jointes complémentaires vivent dans un `Field` de la colonne formulaire. Dépôt ciblé
+  sur son `InputGroup`, liste `Item` compacte et erreurs inline ; pas de composer, de Dropzone ou de
+  voile plein canvas.
+- Le résultat commence par une identité 14 medium et une méta 12 muted. Le travail de l’agent est
+  une preuve secondaire, avec la même divulgation reasoning + outils que Conversation : ouverte
+  pendant l’activité en `full`, fermée en `partial`, outils encore consultables en `off`.
+- Le Markdown est rendu en `typeset` pendant et après le stream. Les nouveaux mots utilisent le
+  reveal partagé et le caret ; le résultat reste immédiatement lisible avec
+  `prefers-reduced-motion`.
+- Loading = trace active + statut compact dans le dock existant. Pas de scène ambient, de Card de
+  chargement ni de second chrome concurrent du résultat.
+
 ### Conversation
 
 Composition `shadcn-ui/chatbot-template`, adaptée au desktop Pierre. Fil et dock partagent
@@ -427,7 +441,7 @@ composer avec `InputGroupAddon` + `ItemGroup` / `Item` `xs`, miniature image év
 toast. `dragover` ne déclenche aucun rendu ; les octets ne sont lus qu’à l’envoi. Dans le fil, les
 mêmes `Item` deviennent read-only sous la bulle utilisateur.
 
-Pendant le stream, les nouveaux mots reprennent le reveal `blurIn` de Streamdown (200 ms,
+Pendant le stream, les nouveaux mots reprennent le reveal partagé `blurIn` (200 ms,
 stagger 40 ms, backlog borné à 24 mots) et le dernier bloc textuel porte un caret `▋`. Outils et
 questionnaire ne sont jamais différés. `prefers-reduced-motion` supprime le reveal et le blink.
 
@@ -437,6 +451,8 @@ Tout Markdown généré converti en HTML utilise `typeset` (`src/typeset.css`). 
 rythme de prose avec des variants locaux et ne pas ajouter `@tailwindcss/typography`. Utiliser
 `not-typeset` pour exclure un sous-arbre et `.typeset-scroll` autour des tables GFM larges.
 Discuter utilise `react-markdown` + `remark-gfm` dans `typeset`, sans Streamdown.
+Le renderer partagé de contenu généré porte également le reveal `blurIn` et le caret
+`.generated-stream-caret` ; ces comportements ne sont pas propres au type Conversation.
 
 ### Workspace
 

@@ -40,7 +40,7 @@ describe('buildSynthesePayload', () => {
     ).toBe(null)
   })
 
-  test('supports lot and programme subjects', () => {
+  test('supports lot and batiment subjects', () => {
     expect(
       buildSynthesePayload({
         about_subject: 'lot',

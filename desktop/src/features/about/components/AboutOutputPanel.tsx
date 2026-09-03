@@ -1,15 +1,17 @@
 import { Check, Copy } from 'lucide-react'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { AboutDatastoreTables } from '@/features/about/components/AboutDatastoreTables'
 import { ABOUT_OUTPUT_EMPTY } from '@/features/about/lib/about-form'
 import { DockToolbar } from '@/features/workflow/components/DockToolbar'
 import { DockToolbarPortal } from '@/features/workflow/components/DockToolbarPortal'
-import { WorkflowArtifactStreamPreview } from '@/features/workflow/components/WorkflowArtifactStreamPreview'
 import { WorkflowOutputDock } from '@/features/workflow/components/WorkflowOutputDock'
-import { WorkflowReasoningAccordion } from '@/features/workflow/components/WorkflowReasoningAccordion'
-import { WorkflowReasoningStream } from '@/features/workflow/components/WorkflowReasoningStream'
 import { WorkflowStreamStatusPill } from '@/features/workflow/components/WorkflowStreamStatusPill'
+import {
+  AgentWorkTrace,
+  GeneratedMarkdown,
+  type AgentWorkPart
+} from '@/shared/components/AgentWorkTrace'
 import { Docket } from '@/shared/components/icons/koboyo-empty'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -20,50 +22,48 @@ import {
   EmptyTitle
 } from '@/shared/components/ui/empty'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
-import { parseProseMarkdown } from '@/shared/lib/markdown/parse-prose-markdown'
 import { cn } from '@/shared/lib/utils'
+import type { ReasoningDisplay } from '@/shared/types'
 
 export type AboutOutputPanelProps = {
-  agentName: string
   url?: string
-  showReasoningTokens: boolean
-  reasoning: string
+  reasoningDisplay: ReasoningDisplay
+  workParts: AgentWorkPart[]
+  reasoningDuration?: number
   isStreaming: boolean
   isReasoningPhase: boolean
   hasOutput: boolean
   output: string
+  title: string
+  meta: string | null
   onCopy: (text: string, setCopied: (v: boolean) => void) => void | Promise<void>
 }
 
 export function AboutOutputPanel({
-  agentName,
   url,
-  showReasoningTokens,
-  reasoning,
+  reasoningDisplay,
+  workParts,
+  reasoningDuration,
   isStreaming,
   isReasoningPhase,
   hasOutput,
   output,
+  title,
+  meta,
   onCopy
 }: AboutOutputPanelProps) {
   const [toolbarSlot, setToolbarSlot] = useState<HTMLDivElement | null>(null)
   const [copiedFor, setCopiedFor] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
-  const inReasoningPhase = showReasoningTokens && isReasoningPhase
-  const showResponse = isStreaming || hasOutput
+  const showResponse = isStreaming || hasOutput || workParts.length > 0
   const showDock = showResponse
   const hasText = !!output.trim()
   const copied = copiedFor === output && hasText
 
-  const outputHtml = useMemo(
-    () => (isStreaming ? '' : parseProseMarkdown(output)),
-    [output, isStreaming]
-  )
-
-  const scrollOutputToBottom = useCallback(() => {
+  useEffect(() => {
     const el = scrollRef.current
     if (el) el.scrollTop = el.scrollHeight
-  }, [])
+  }, [output, workParts])
 
   const copyButton = (
     <Tooltip>
@@ -96,7 +96,7 @@ export function AboutOutputPanel({
       <div className="flex min-w-0 shrink-0 items-center gap-2">
         {isStreaming ? (
           <WorkflowStreamStatusPill
-            showReasoningTokens={showReasoningTokens}
+            showReasoningTokens={reasoningDisplay !== 'off'}
             isReasoningPhase={isReasoningPhase}
           />
         ) : null}
@@ -122,34 +122,22 @@ export function AboutOutputPanel({
             <AboutDatastoreTables url={url} />
           </div>
         ) : (
-          <div
-            ref={inReasoningPhase ? undefined : scrollRef}
-            className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4"
-          >
-            {inReasoningPhase ? (
-              <WorkflowReasoningStream reasoning={reasoning} isStreaming={isStreaming} />
-            ) : (
-              <>
-                <WorkflowReasoningAccordion
-                  agentName={agentName}
-                  show={showReasoningTokens}
-                  reasoning={reasoning}
-                  isStreaming={isStreaming}
-                  isReasoningPhase={isReasoningPhase}
-                  deskScoped
-                />
-                {isStreaming ? (
-                  <WorkflowArtifactStreamPreview
-                    content={output}
-                    isStreaming
-                    variant="output"
-                    onContentChange={scrollOutputToBottom}
-                  />
-                ) : hasText ? (
-                  <div className="typeset" dangerouslySetInnerHTML={{ __html: outputHtml }} />
-                ) : null}
-              </>
-            )}
+          <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
+            <div className="flex min-w-0 flex-col gap-1">
+              <h2 className="text-sm leading-5 font-medium">{title}</h2>
+              {meta ? <p className="pierre-meta tabular-nums">{meta}</p> : null}
+            </div>
+            <AgentWorkTrace
+              parts={workParts}
+              display={reasoningDisplay}
+              active={isStreaming}
+              duration={reasoningDuration}
+            />
+            {hasText ? (
+              <div className={cn(isStreaming && 'generated-stream-caret')}>
+                <GeneratedMarkdown animated={isStreaming}>{output}</GeneratedMarkdown>
+              </div>
+            ) : null}
           </div>
         )}
 

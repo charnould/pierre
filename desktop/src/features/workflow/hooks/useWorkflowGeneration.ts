@@ -5,6 +5,11 @@ import {
   createWorkflowStreamSession,
   isWorkflowReasoningPhase
 } from '@/features/workflow/lib/workflow-stream-buffers'
+import type { AgentWorkPart } from '@/shared/components/AgentWorkTrace'
+import {
+  applyAgentWorkStreamEvent,
+  createAgentWorkStreamState
+} from '@/shared/lib/agent-work-stream'
 import { parseWorkflowStream } from '@/shared/lib/parse-result'
 import { createRafThrottle } from '@/shared/lib/raf-throttle'
 import { releaseConversationVm } from '@/shared/lib/release-conversation-vm'
@@ -24,6 +29,8 @@ export type WorkflowGenerationState = {
   output: string
   subject: string
   reasoning: string
+  workParts: AgentWorkPart[]
+  reasoningDuration?: number
   isStreaming: boolean
   isReasoningPhase: boolean
   /** Fixed for the current generation run (avoids skill-config load race). */
@@ -35,6 +42,7 @@ const EMPTY: WorkflowGenerationState = {
   output: '',
   subject: '',
   reasoning: '',
+  workParts: [],
   isStreaming: false,
   isReasoningPhase: false,
   reasoningCapture: false,
@@ -88,6 +96,8 @@ export function useWorkflowGeneration(options: Options = {}) {
       output: '',
       subject: '',
       reasoning: '',
+      workParts: [],
+      reasoningDuration: undefined,
       reasoningCapture: false,
       errMsg: ''
     }))
@@ -109,6 +119,8 @@ export function useWorkflowGeneration(options: Options = {}) {
         output: '',
         subject: '',
         reasoning: '',
+        workParts: [],
+        reasoningDuration: undefined,
         isStreaming: true,
         isReasoningPhase: true,
         reasoningCapture: shouldCaptureReasoning,
@@ -116,7 +128,9 @@ export function useWorkflowGeneration(options: Options = {}) {
       })
 
       const session = createWorkflowStreamSession()
+      const workSession = createAgentWorkStreamState()
       const startedAt = performance.now()
+      let reasoningEndedAt: number | null = null
 
       const streamThrottle = createRafThrottle(() => {
         const parsed = parseWorkflowStream(session.text, id_skill, true)
@@ -126,6 +140,7 @@ export function useWorkflowGeneration(options: Options = {}) {
           output: parsed.output,
           subject: parsed.subject,
           reasoning: session.thinking,
+          workParts: [...workSession.parts],
           isReasoningPhase: isWorkflowReasoningPhase({
             isStreaming: true,
             hasOutput,
@@ -151,12 +166,27 @@ export function useWorkflowGeneration(options: Options = {}) {
             return
           }
           applyWorkflowStreamEvent(session, event, shouldCaptureReasoning)
+          applyAgentWorkStreamEvent(workSession, event, shouldCaptureReasoning)
+          if (event.type === 'thinking_start' || event.type === 'thinking_delta') {
+            reasoningEndedAt = null
+          }
+          if (
+            reasoningEndedAt === null &&
+            event.type === 'text_delta' &&
+            workSession.parts.some((part) => part.type === 'thinking')
+          ) {
+            reasoningEndedAt = performance.now()
+          }
           if (
             event.type === 'text_delta' ||
             event.type === 'text_end' ||
             event.type === 'thinking_delta' ||
             event.type === 'thinking_end' ||
             event.type === 'toolcall_start' ||
+            event.type === 'toolcall_end' ||
+            event.type === 'tool_execution_start' ||
+            event.type === 'tool_execution_update' ||
+            event.type === 'tool_execution_end' ||
             event.type === 'message_end' ||
             event.type === 'stream_end'
           ) {
@@ -188,11 +218,18 @@ export function useWorkflowGeneration(options: Options = {}) {
 
       const finalParsed = parseWorkflowStream(session.text, id_skill, false)
       const generation_duration_ms = Math.round(performance.now() - startedAt)
+      const reasoningDuration = Math.round(
+        ((reasoningEndedAt ?? performance.now()) - startedAt) / 1000
+      )
       activeRequestIdRef.current = null
       setState((s) => ({
         ...s,
         output: finalParsed.output,
         subject: finalParsed.subject,
+        workParts: [...workSession.parts],
+        reasoningDuration: workSession.parts.some((part) => part.type === 'thinking')
+          ? reasoningDuration
+          : undefined,
         isStreaming: false,
         isReasoningPhase: false,
         errMsg: ''

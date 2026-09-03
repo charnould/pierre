@@ -73,7 +73,7 @@ function transform(
 
     const base = child.position?.start?.offset ?? fallbackOffset.value
     let consumed = 0
-    const replacement: HastNode[] = units(child.value).map((unit) => {
+    return units(child.value).map((unit) => {
       const start = base + consumed
       const end = start + unit.length
       consumed += unit.length
@@ -108,7 +108,6 @@ function transform(
         children: [{ type: 'text', value: unit }]
       }
     })
-    return replacement
   })
 }
 

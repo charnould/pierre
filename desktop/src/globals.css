@@ -418,7 +418,7 @@
     animation: pierre-stream-blur-in 200ms ease-out var(--pierre-stream-delay, 0ms) backwards;
   }
 
-  .chat-stream-caret > .typeset:last-child > :last-child::after {
+  .generated-stream-caret > .typeset:last-child > :last-child::after {
     display: inline;
     vertical-align: baseline;
     content: ' ▋';
@@ -433,7 +433,7 @@
       animation: none;
     }
 
-    .chat-stream-caret > .typeset:last-child > :last-child::after {
+    .generated-stream-caret > .typeset:last-child > :last-child::after {
       animation: none;
     }
   }
