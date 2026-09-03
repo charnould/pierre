@@ -3,7 +3,12 @@ import { existsSync, readdirSync } from 'node:fs'
 import { rm, readdir } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 
+import { insert_contacts_from_rows } from '../contacts'
+import { ensure_datastore_ledger_indexes } from '../datastore-indexes'
+import { migrate_datastore } from '../datastore-migrations'
+import { DATASTORE_MIRROR_TABLES } from '../datastore-tables'
 import { datastorePaths, resolveServiceName } from '../paths'
+import { strip_pii_from_rows } from '../pii-columns'
 import { import_json_rows, type JsonRow } from './sqlite-table-import'
 import { normalize_knowledge_name } from './utils'
 
@@ -266,11 +271,13 @@ const build_database_for_config = async (
 
       const table_name = normalize_knowledge_name(basename(file_path, '.json')) || 'data'
 
-      import_json_rows(db, table_name, rows)
+      insert_contacts_from_rows(datastore_db, rows)
 
-      if (table_name === 'reclamations') {
-        import_json_rows(datastore_db, 'reclamations', rows)
+      if ((DATASTORE_MIRROR_TABLES as readonly string[]).includes(table_name)) {
+        import_json_rows(datastore_db, table_name, rows)
       }
+
+      import_json_rows(db, table_name, strip_pii_from_rows(rows))
     }
 
     // ── Markdown files → FTS5 documents table ───────────────────────────────────
@@ -366,10 +373,12 @@ export const build_knowledge_databases = async (): Promise<void> => {
     return
   }
 
+  await migrate_datastore(paths.database)
   const datastore_db = new Database(paths.database)
 
   try {
     await Promise.all(config_dirs.map((id) => build_database_for_config(id, service, datastore_db)))
+    ensure_datastore_ledger_indexes(datastore_db)
   } finally {
     datastore_db.close()
   }

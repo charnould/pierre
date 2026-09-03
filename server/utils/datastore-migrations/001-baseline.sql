@@ -8,6 +8,9 @@ CREATE TABLE conversations (
   UNIQUE(conv_id, timestamp)
 );
 
+CREATE INDEX idx_conversations_timestamp
+  ON conversations (timestamp DESC);
+
 CREATE TABLE users (
   config TEXT NOT NULL,
   email TEXT PRIMARY KEY UNIQUE NOT NULL,
@@ -109,8 +112,21 @@ CREATE INDEX idx_activites_rattachement_thread
   WHERE thread_id IS NOT NULL;
 CREATE INDEX idx_activites_bulk
   ON activites (bulk_id, date_creation DESC);
+CREATE INDEX idx_activites_bulk_reports
+  ON activites (
+    bulk_id,
+    COALESCE(
+      json_extract(contenu, '$.completed_at'),
+      json_extract(contenu, '$.snapshot.confirmed_at')
+    ) DESC,
+    execution_id DESC
+  )
+  WHERE type = 'bulk_run' AND bulk_id IS NOT NULL;
 CREATE INDEX idx_activites_execution
   ON activites (execution_id, date_creation DESC);
+CREATE INDEX idx_activites_inbound_thread
+  ON activites (type, destinataire, thread_id)
+  WHERE thread_id IS NOT NULL;
 CREATE UNIQUE INDEX idx_activites_idempotency
   ON activites (idempotency_key)
   WHERE idempotency_key IS NOT NULL;
