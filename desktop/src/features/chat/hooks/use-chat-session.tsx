@@ -5,6 +5,7 @@ import {
   truncateAfterLastUserMessage
 } from '@/features/chat/lib/chat-session-messages'
 import type {
+  ChatAttachment,
   ChatConfig,
   ChatStatus,
   Message,
@@ -28,6 +29,11 @@ const CHAT_STATUS_ANNOUNCEMENT: Record<ChatStatus, string> = {
 
 const CHAT_STREAM_FRAME_MS = 24
 
+type SendMessageOptions = {
+  files?: File[]
+  reusedAttachments?: ChatAttachment[]
+}
+
 function isDeferredStreamEvent(event: AiStreamEvent): boolean {
   return event.type === 'text_delta' || event.type === 'thinking_delta'
 }
@@ -44,6 +50,7 @@ export function useChatSession(config: ChatConfig) {
   )
   const [questionnaireError, setQuestionnaireError] = useState<string | null>(null)
   const [showActivity, setShowActivity] = useState(false)
+  const [attachmentUsage, setAttachmentUsage] = useState({ files: 0, bytes: 0 })
   const statusLiveRegion = (
     <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
       {CHAT_STATUS_ANNOUNCEMENT[status]}
@@ -83,17 +90,40 @@ export function useChatSession(config: ChatConfig) {
     setPendingQuestionnaire(null)
     setQuestionnaireError(null)
     setShowActivity(false)
+    setAttachmentUsage({ files: 0, bytes: 0 })
     stoppedByUserRef.current = false
   }, [])
 
-  const sendMessage = useCallback(async (text: string) => {
+  const sendMessage = useCallback(async (text: string, options: SendMessageOptions = {}) => {
+    const files = options.files ?? []
+    const reusedAttachments = options.reusedAttachments ?? []
     const trimmed = text.trim()
-    if (!trimmed || generatingRef.current) return
+    if (
+      (!trimmed && files.length === 0 && reusedAttachments.length === 0) ||
+      generatingRef.current
+    ) {
+      return
+    }
+    const attachmentFiles = [...files]
+    const attachments =
+      attachmentFiles.length > 0
+        ? attachmentFiles.map((file) => ({
+            name: file.name,
+            type: file.type,
+            size: file.size
+          }))
+        : reusedAttachments
 
     const userMsg: Message = {
       id: crypto.randomUUID(),
       role: 'user',
-      parts: [{ type: 'text', contentIndex: 0, text: trimmed }]
+      parts: [{ type: 'text', contentIndex: 0, text: trimmed }],
+      ...(attachments.length > 0
+        ? {
+            attachments,
+            ...(attachmentFiles.length > 0 ? { attachmentFiles } : { attachmentsPersisted: true })
+          }
+        : {})
     }
     const assistantMsg: Message = {
       id: crypto.randomUUID(),
@@ -115,6 +145,7 @@ export function useChatSession(config: ChatConfig) {
     stoppedByUserRef.current = false
 
     const requestId = crypto.randomUUID()
+    let attachmentUsageAcknowledged = false
     activeRequestIdRef.current = requestId
     const publish = () => {
       if (activeRequestIdRef.current !== requestId) return
@@ -126,18 +157,38 @@ export function useChatSession(config: ChatConfig) {
     const { url, convId, configId, dataParam } = configRef.current
     const { ok, cancelled } = await runNdjsonStream({
       requestId,
-      start: (activeRequestId) =>
-        window.api.startStream({
+      start: async (activeRequestId) => {
+        const uploadFiles = await Promise.all(
+          attachmentFiles.map(async (file) => ({
+            name: file.name,
+            type: file.type,
+            buffer: await file.arrayBuffer()
+          }))
+        )
+        return window.api.startStream({
           requestId: activeRequestId,
           url,
           config: configId,
           message: trimmed,
           conv_id: convId,
-          data: dataParam
-        }),
+          data: dataParam,
+          ...(uploadFiles.length > 0 ? { files: uploadFiles } : {})
+        })
+      },
       isCancelled: () => stoppedByUserRef.current,
       onEvent: (event) => {
         if (activeRequestIdRef.current !== requestId) return
+        if (event.type === 'attachment_uploads_ready' && attachmentFiles.length > 0) {
+          attachmentUsageAcknowledged = true
+          if (event.files !== undefined && event.bytes !== undefined) {
+            setAttachmentUsage({ files: event.files, bytes: event.bytes })
+          }
+          streamState.messages = streamState.messages.map((message) =>
+            message.id === userMsg.id
+              ? { ...message, attachmentFiles: undefined, attachmentsPersisted: true }
+              : message
+          )
+        }
         if (event.type !== 'error') setStatus('streaming')
         if (event.type === 'extension_ui_request') {
           setPendingQuestionnaire({
@@ -211,6 +262,19 @@ export function useChatSession(config: ChatConfig) {
     }
 
     setPendingQuestionnaire(null)
+    if (attachmentFiles.length > 0) {
+      if (!attachmentUsageAcknowledged) {
+        setAttachmentUsage((usage) => ({
+          files: usage.files + attachmentFiles.length,
+          bytes: usage.bytes + attachmentFiles.reduce((total, file) => total + file.size, 0)
+        }))
+      }
+      streamState.messages = streamState.messages.map((message) =>
+        message.id === userMsg.id
+          ? { ...message, attachmentFiles: undefined, attachmentsPersisted: true }
+          : message
+      )
+    }
     streamState.messages = sealReasoningDuration(
       streamState.messages,
       reasoningStart,
@@ -260,7 +324,10 @@ export function useChatSession(config: ChatConfig) {
 
     messagesRef.current = truncateAfterLastUserMessage(messagesRef.current)
     setMessages(messagesRef.current)
-    void sendMessage(payload.text)
+    void sendMessage(payload.text, {
+      files: payload.files,
+      reusedAttachments: payload.attachments
+    })
   }, [sendMessage])
 
   const submitQuestionnaire = useCallback(
@@ -290,6 +357,7 @@ export function useChatSession(config: ChatConfig) {
 
   return {
     messages,
+    attachmentUsage,
     status,
     showActivity,
     statusLiveRegion,

@@ -419,6 +419,14 @@ ce composer. Conversation autorise `rounded-xl` pour la bulle utilisateur et le 
 `rounded-2xl` pour le Questionnaire, comme surfaces conversationnelles bornées ; aucune ombre de
 page et aucun radius supplémentaire.
 
+Le dépôt de pièces jointes cible tout le canvas mais désigne visuellement le composer : voile
+paper sans blur, instruction centrée et ring de focus du `InputGroup`. Le survol reste neutre car
+Electron ne garantit pas l’extension avant le drop. Après validation, les fichiers vivent dans le
+composer avec `InputGroupAddon` + `ItemGroup` / `Item` `xs`, miniature image éventuelle,
+`FieldError` inline et retrait `InputGroupButton` ghost. Aucun Dropzone, Card, Dialog, dashed ou
+toast. `dragover` ne déclenche aucun rendu ; les octets ne sont lus qu’à l’envoi. Dans le fil, les
+mêmes `Item` deviennent read-only sous la bulle utilisateur.
+
 Pendant le stream, les nouveaux mots reprennent le reveal `blurIn` de Streamdown (200 ms,
 stagger 40 ms, backlog borné à 24 mots) et le dernier bloc textuel porte un caret `▋`. Outils et
 questionnaire ne sont jamais différés. `prefers-reduced-motion` supprime le reveal et le blink.

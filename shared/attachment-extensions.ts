@@ -20,6 +20,10 @@ export const ATTACHMENT_SUPPORTED_EXTENSIONS = new Set([
   ...ATTACHMENT_DOCUMENT_EXTENSIONS
 ])
 
+export const MAX_ATTACHMENT_FILES = 5
+export const MAX_ATTACHMENT_FILE_BYTES = 10 * 1024 * 1024
+export const MAX_ATTACHMENT_TOTAL_BYTES = 20 * 1024 * 1024
+
 function attachmentExtension(name: string): string {
   return name.split('.').pop()?.toLowerCase() ?? ''
 }

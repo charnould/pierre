@@ -13,9 +13,25 @@ export function streamChatAnswer(
   context: AIContext,
   signal?: AbortSignal,
   attachments?: PiImageContent[],
-  attachmentLifecycle?: Pick<ProcessedPiAttachments, 'claim' | 'rollback'>
+  attachmentLifecycle?: Pick<ProcessedPiAttachments, 'claim' | 'rollback' | 'usage'>
 ) {
   async function* run() {
+    let attachmentsReady = false
+    let attachmentsReadyEmitted = false
+    const claimAttachments = () => {
+      if (!attachmentLifecycle) return
+      attachmentLifecycle.claim()
+      attachmentsReady = true
+    }
+    const readyEvent = () => {
+      if (!attachmentsReady || attachmentsReadyEmitted) return null
+      attachmentsReadyEmitted = true
+      return ndjsonLine({
+        type: 'attachment_uploads_ready',
+        ...attachmentLifecycle?.usage
+      })
+    }
+
     try {
       console.log(`[CHAT] Streaming for conv=${context.conv_id}...`)
 
@@ -32,8 +48,10 @@ export function streamChatAnswer(
         signal,
         attachments,
         context.config.reasoning_effort,
-        attachmentLifecycle ? { onVmAcquired: attachmentLifecycle.claim } : undefined
+        attachmentLifecycle ? { onVmAcquired: claimAttachments } : undefined
       )) {
+        const attachmentEvent = readyEvent()
+        if (attachmentEvent) yield attachmentEvent
         if (chunk.type === 'done') {
           fullContent = chunk.fullContent
           inputTokens = chunk.inputTokens ?? null
@@ -45,7 +63,9 @@ export function streamChatAnswer(
         }
       }
 
-      attachmentLifecycle?.claim()
+      claimAttachments()
+      const attachmentEvent = readyEvent()
+      if (attachmentEvent) yield attachmentEvent
       console.log(`[CHAT] Stream complete (${fullContent.length} chars)`)
 
       context.role = 'assistant'
@@ -58,6 +78,8 @@ export function streamChatAnswer(
       await save_reply(context)
       send_telemetry(CHAT_TELEMETRY_EVENT)
     } catch (err) {
+      const attachmentEvent = readyEvent()
+      if (attachmentEvent) yield attachmentEvent
       await attachmentLifecycle?.rollback()
       if (err instanceof DOMException && err.name === 'AbortError') {
         console.log('[CHAT] Request aborted by client')

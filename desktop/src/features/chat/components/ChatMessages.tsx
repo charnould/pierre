@@ -3,6 +3,7 @@ import { memo, useLayoutEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
+import { ChatAttachmentItems } from '@/features/chat/components/ChatAttachmentItems'
 import { resolveAssistantPhase } from '@/features/chat/lib/chat-assistant-phase'
 import { readAskUserAnswers } from '@/features/chat/lib/chat-session-messages'
 import type {
@@ -419,6 +420,9 @@ const ChatUserRow = memo(function ChatUserRow({
           <Bubble variant="muted" align="end">
             <BubbleContent>{content}</BubbleContent>
           </Bubble>
+        ) : null}
+        {message.attachments ? (
+          <ChatAttachmentItems attachments={message.attachments} className="w-72 max-w-[80%]" />
         ) : null}
       </MessageContent>
     </Message>

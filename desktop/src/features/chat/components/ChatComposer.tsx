@@ -1,7 +1,9 @@
 import { ArrowUpIcon, SquareIcon } from 'lucide-react'
 import { useState, type FormEvent, type KeyboardEvent } from 'react'
 
+import { ChatAttachmentItems } from '@/features/chat/components/ChatAttachmentItems'
 import { isChatGenerating, type ChatStatus } from '@/features/chat/lib/chat-session-types'
+import { FieldError } from '@/shared/components/ui/field'
 import {
   InputGroup,
   InputGroupAddon,
@@ -16,24 +18,44 @@ interface Props {
   boot: ChatBootData
   status: ChatStatus
   agentName: string
-  onSend: (text: string) => void
+  files: File[]
+  previewUrls: Array<string | undefined>
+  fileErrors: string[]
+  dropActive: boolean
+  onSend: (text: string, files?: File[]) => void
+  onRemoveFile: (index: number) => void
+  onFilesSent: () => void
   onStop: () => void
   onProfileSelect: (id: string) => void
 }
 
-export function ChatComposer({ boot, status, agentName, onSend, onStop, onProfileSelect }: Props) {
+export function ChatComposer({
+  boot,
+  status,
+  agentName,
+  files,
+  previewUrls,
+  fileErrors,
+  dropActive,
+  onSend,
+  onRemoveFile,
+  onFilesSent,
+  onStop,
+  onProfileSelect
+}: Props) {
   const [draft, setDraft] = useState('')
   const [isComposing, setIsComposing] = useState(false)
 
   const generating = isChatGenerating(status)
-  const canSend = draft.trim().length > 0 && !generating
+  const canSend = (draft.trim().length > 0 || files.length > 0) && !generating
 
   function handleSubmit(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault()
     const text = draft.trim()
-    if (!text || generating) return
-    onSend(text)
+    if ((!text && files.length === 0) || generating) return
+    onSend(text, files)
     setDraft('')
+    onFilesSent()
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -50,7 +72,23 @@ export function ChatComposer({ boot, status, agentName, onSend, onStop, onProfil
 
   return (
     <form className="w-full" aria-busy={generating} onSubmit={handleSubmit}>
-      <InputGroup className="has-disabled:bg-transparent has-disabled:opacity-100">
+      <InputGroup
+        data-drop-active={dropActive}
+        className="has-disabled:bg-transparent has-disabled:opacity-100"
+      >
+        {files.length > 0 || fileErrors.length > 0 ? (
+          <InputGroupAddon align="block-start" className="flex-col items-stretch px-2">
+            <ChatAttachmentItems
+              attachments={files}
+              previewUrls={previewUrls}
+              onRemove={onRemoveFile}
+            />
+            <FieldError
+              id="chat-attachment-errors"
+              errors={fileErrors.map((message) => ({ message }))}
+            />
+          </InputGroupAddon>
+        ) : null}
         <InputGroupTextarea
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
@@ -58,6 +96,7 @@ export function ChatComposer({ boot, status, agentName, onSend, onStop, onProfil
           onCompositionStart={() => setIsComposing(true)}
           onCompositionEnd={() => setIsComposing(false)}
           aria-label="Message"
+          aria-describedby={fileErrors.length > 0 ? 'chat-attachment-errors' : undefined}
           placeholder="Envoyer un message…"
           className="max-h-36 min-h-10 px-3 py-2"
         />

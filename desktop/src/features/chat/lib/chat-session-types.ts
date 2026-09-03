@@ -24,10 +24,20 @@ export type ChatToolPart = {
 
 export type ChatMessagePart = ChatTextPart | ChatThinkingPart | ChatToolPart
 
+export type ChatAttachment = {
+  name: string
+  type: string
+  size: number
+}
+
 export type Message = {
   id: string
   role: 'user' | 'assistant'
   parts: ChatMessagePart[]
+  attachments?: ChatAttachment[]
+  /** Retained only while an upload may need retrying. */
+  attachmentFiles?: File[]
+  attachmentsPersisted?: boolean
   reasoningDuration?: number
   /** Offset for Pi assistant messages whose content indexes restart at zero after tools. */
   contentBase?: number

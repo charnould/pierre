@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 import {
@@ -197,6 +198,28 @@ describe('processUploadedAttachments', () => {
       expect(followUp.content).toContain(STAGED_INSTRUCTION)
       expect(followUp.content).toContain(`<file name="_uploads/${CONV_ID}/facture.pdf"></file>`)
       expect(await Bun.file(join(knowledgePath, CONV_ID, 'facture.pdf')).exists()).toBe(true)
+    } finally {
+      await removePath(knowledgePath)
+    }
+  })
+
+  it('reuses exact retried uploads without consuming conversation quota twice', async () => {
+    const knowledgePath = await createTempDir('pierre-knowledge-')
+    const files = Array.from(
+      { length: MAX_ATTACHMENT_FILES },
+      (_, index) => new File([`content-${index}`], `document-${index}.txt`)
+    )
+    try {
+      const initial = await processUploadedAttachments(files, knowledgePath, 'Analyse', CONV_ID)
+      initial.claim()
+      const retry = await processUploadedAttachments(files, knowledgePath, 'Réessaie', CONV_ID)
+      retry.claim()
+
+      expect(initial.usage).toEqual(retry.usage)
+      expect(retry.usage?.files).toBe(MAX_ATTACHMENT_FILES)
+      expect(readdirSync(join(knowledgePath, CONV_ID))).toHaveLength(MAX_ATTACHMENT_FILES)
+      expect(retry.content).toContain('Réessaie')
+      expect(retry.content).toContain('content-0')
     } finally {
       await removePath(knowledgePath)
     }

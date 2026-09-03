@@ -65,6 +65,7 @@ export type AiStreamEvent =
       responseSecret: string
       questions: AskUserQuestion[]
     }
+  | { type: 'attachment_uploads_ready'; files?: number; bytes?: number }
   | { type: 'stream_end' }
   | { type: 'error' }
 
@@ -195,6 +196,12 @@ function parseAiStreamEvent(value: unknown): AiStreamEvent | null {
             questions: value['questions']
           }
         : null
+    case 'attachment_uploads_ready':
+      return {
+        type: 'attachment_uploads_ready',
+        ...(typeof value['files'] === 'number' ? { files: value['files'] } : {}),
+        ...(typeof value['bytes'] === 'number' ? { bytes: value['bytes'] } : {})
+      }
     case 'stream_end':
     case 'error':
       return { type: value['type'] }
@@ -336,6 +343,8 @@ export function reduceAiStreamState(state: AiStreamState, event: AiStreamEvent):
         responseSecret: event.responseSecret,
         questions: event.questions
       }
+      break
+    case 'attachment_uploads_ready':
       break
     case 'stream_end':
       state.ended = true

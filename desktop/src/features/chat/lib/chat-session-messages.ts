@@ -1,4 +1,4 @@
-import type { Message } from '@/features/chat/lib/chat-session-types'
+import type { ChatAttachment, Message } from '@/features/chat/lib/chat-session-types'
 
 import type { AskUserAnswer } from '../../../../../shared/ai-stream-events'
 
@@ -14,6 +14,8 @@ export function truncateAfterLastUserMessage(messages: Message[]): Message[] {
 
 export type RegeneratePayload = {
   text: string
+  attachments: ChatAttachment[]
+  files: File[]
 }
 
 export function buildRegeneratePayload(messages: Message[]): RegeneratePayload | null {
@@ -23,7 +25,9 @@ export function buildRegeneratePayload(messages: Message[]): RegeneratePayload |
     text: lastUser.parts
       .filter((part) => part.type === 'text')
       .map((part) => part.text)
-      .join('')
+      .join(''),
+    attachments: lastUser.attachments ?? [],
+    files: lastUser.attachmentsPersisted ? [] : (lastUser.attachmentFiles ?? [])
   }
 }
 

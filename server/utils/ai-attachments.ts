@@ -4,9 +4,18 @@ import { extname, isAbsolute, relative, resolve, sep } from 'node:path'
 import {
   ATTACHMENT_IMAGE_EXTENSIONS,
   ATTACHMENT_TEXT_EXTENSIONS,
+  MAX_ATTACHMENT_FILES,
+  MAX_ATTACHMENT_FILE_BYTES,
+  MAX_ATTACHMENT_TOTAL_BYTES,
   isSupportedAttachment,
   needsDocumentExtract,
   unsupportedAttachmentDescription
+} from '../../shared/attachment-extensions'
+
+export {
+  MAX_ATTACHMENT_FILES,
+  MAX_ATTACHMENT_FILE_BYTES,
+  MAX_ATTACHMENT_TOTAL_BYTES
 } from '../../shared/attachment-extensions'
 
 /** Pi RPC `ImageContent` — see pi-coding-agent docs/rpc.md */
@@ -21,6 +30,8 @@ export type ProcessedPiAttachments = {
   content: string
   /** Conversation id used as the staging directory name under `_uploads/`. */
   uploadId: string | null
+  /** Authoritative conversation quota after this request. */
+  usage?: { files: number; bytes: number }
   /** Transfers ownership of newly staged files to the conversation VM. */
   claim(): void
   /** Removes only files written by this request until ownership is claimed. */
@@ -35,9 +46,6 @@ const STAGED_FILES_INSTRUCTION =
 
 const MAX_INLINE_IMAGE_BYTES = 4.5 * 1024 * 1024
 
-export const MAX_ATTACHMENT_FILES = 5
-export const MAX_ATTACHMENT_FILE_BYTES = 10 * 1024 * 1024
-export const MAX_ATTACHMENT_TOTAL_BYTES = 20 * 1024 * 1024
 export const MAX_MULTIPART_REQUEST_BYTES = 22 * 1024 * 1024
 
 const stagingLocks = new Map<string, Promise<void>>()
@@ -213,6 +221,48 @@ function uniqueStagedName(stagingDir: string, requestedName: string): string {
   return `${stem}-${suffix}${extension}`
 }
 
+function isStagedVersion(name: string, requestedName: string): boolean {
+  if (name === requestedName) return true
+  const extension = extname(requestedName)
+  const stem = requestedName.slice(0, requestedName.length - extension.length)
+  if (!name.startsWith(`${stem}-`) || !name.endsWith(extension)) return false
+  const suffix = name.slice(stem.length + 1, name.length - extension.length)
+  return /^\d+$/.test(suffix)
+}
+
+function attachmentDigest(buffer: ArrayBuffer): string {
+  const hasher = new Bun.CryptoHasher('sha256')
+  hasher.update(new Uint8Array(buffer))
+  return hasher.digest('hex')
+}
+
+async function matchingStagedName(
+  stagingDir: string,
+  requestedName: string,
+  size: number,
+  digest: string,
+  digestCache: Map<string, string>
+): Promise<string | null> {
+  const names = existsSync(stagingDir)
+    ? readdirSync(stagingDir, { withFileTypes: true })
+        .filter((entry) => entry.isFile())
+        .map((entry) => entry.name)
+    : []
+  for (const name of names) {
+    if (!isStagedVersion(name, requestedName)) continue
+    const path = containedPath(stagingDir, name)
+    const existing = Bun.file(path)
+    if ((await existing.stat()).size !== size) continue
+    let existingDigest = digestCache.get(name)
+    if (!existingDigest) {
+      existingDigest = attachmentDigest(await existing.arrayBuffer())
+      digestCache.set(name, existingDigest)
+    }
+    if (existingDigest === digest) return name
+  }
+  return null
+}
+
 function listConversationUploads(uploadRoot: string, convId: string): string[] {
   const dir = conversationStagingDir(uploadRoot, convId)
   if (!existsSync(dir)) return []
@@ -357,8 +407,34 @@ export async function processUploadedAttachments(
   const stagingDir = conversationStagingDir(uploadRoot, stagingKey)
   return withStagingLock(stagingDir, async () => {
     const stagingDirExisted = existsSync(stagingDir)
+    const digestCache = new Map<string, string>()
+    const preparedFiles = []
+    for (const file of rawFiles) {
+      const requestedName = sanitizeFilename(file.name)
+      const buffer = await file.arrayBuffer()
+      const digest = attachmentDigest(buffer)
+      preparedFiles.push({
+        file,
+        buffer,
+        requestedName,
+        existingName: await matchingStagedName(
+          stagingDir,
+          requestedName,
+          file.size,
+          digest,
+          digestCache
+        )
+      })
+    }
     const existingUsage = await existingAttachmentUsage(uploadRoot, stagingKey)
-    assertAttachmentLimits(rawFiles, existingUsage)
+    const newFiles = preparedFiles
+      .filter(({ existingName }) => !existingName)
+      .map(({ file }) => file)
+    assertAttachmentLimits(newFiles, existingUsage)
+    const usage = {
+      files: existingUsage.files + newFiles.length,
+      bytes: existingUsage.bytes + newFiles.reduce((total, file) => total + file.size, 0)
+    }
     mkdirSync(stagingDir, { recursive: true })
 
     const images: PiImageContent[] = []
@@ -383,13 +459,15 @@ export async function processUploadedAttachments(
     }
 
     try {
-      for (const file of rawFiles) {
-        const safeName = uniqueStagedName(stagingDir, sanitizeFilename(file.name))
+      for (const { file, buffer, requestedName, existingName } of preparedFiles) {
+        const safeName = existingName ?? uniqueStagedName(stagingDir, requestedName)
         const stagedPath = containedPath(stagingDir, safeName)
         const vmRelativePath = `_uploads/${stagingKey}/${safeName}`
 
-        writtenPaths.push(stagedPath)
-        await Bun.write(stagedPath, await file.arrayBuffer())
+        if (!existingName) {
+          writtenPaths.push(stagedPath)
+          await Bun.write(stagedPath, buffer)
+        }
 
         const ext = fileExtension(safeName)
 
@@ -424,6 +502,7 @@ export async function processUploadedAttachments(
       images,
       content: buildAttachmentPrompt(userMessage, fileBlocks, hasStagedDocuments),
       uploadId: stagingKey,
+      usage,
       claim() {
         claimed = true
       },

@@ -120,6 +120,15 @@ describe('applyChatStreamEvent', () => {
     const result = applyChatStreamEvent(messages, { type: 'stream_end' }, null)
     expect(result.messages).toEqual(messages)
   })
+
+  test('attachment acknowledgment leaves visible message content unchanged', () => {
+    const messages = [
+      assistantMessage({ parts: [{ type: 'text', contentIndex: 0, text: 'answer' }] })
+    ]
+    const result = applyChatStreamEvent(messages, { type: 'attachment_uploads_ready' }, null)
+
+    expect(result.messages).toEqual(messages)
+  })
 })
 
 describe('sealReasoningDuration', () => {
