@@ -1,11 +1,10 @@
-import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { $ } from 'bun'
 
-const rootPkg = JSON.parse(
-  readFileSync(join(import.meta.dirname, '..', '..', 'package.json'), 'utf8')
-) as { version?: string }
+const rootPkg = (await Bun.file(join(import.meta.dirname, '..', '..', 'package.json')).json()) as {
+  version?: string
+}
 
 const url = 'https://api.github.com/repos/charnould/pierre/releases'
 let latest_version: string | undefined

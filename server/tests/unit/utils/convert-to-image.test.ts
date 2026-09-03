@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it } from 'bun:test'
-import { existsSync, rmSync } from 'node:fs'
+import { rmSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { convertToImage } from '../../../utils/convert-to-image'
@@ -16,11 +16,11 @@ afterAll(() => {
 describe('convertToImage', () => {
   it('converts a 2-page PDF into a single PNG file', async () => {
     await convertToImage(MOCK_PDF, OUTPUT_PNG)
-    expect(existsSync(OUTPUT_PNG)).toBe(true)
+    expect(await Bun.file(OUTPUT_PNG).exists()).toBe(true)
   })
 
   it('output is a valid PNG (correct magic bytes)', async () => {
-    const buf = Buffer.from(await Bun.file(OUTPUT_PNG).arrayBuffer())
+    const buf = await Bun.file(OUTPUT_PNG).bytes()
     // PNG magic bytes: 89 50 4E 47 0D 0A 1A 0A
     expect(buf[0]).toBe(0x89)
     expect(buf[1]).toBe(0x50) // P

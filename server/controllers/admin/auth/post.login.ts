@@ -24,7 +24,7 @@ async function setAuthCookieForUser(c: Context, user: Parsed_User) {
   await setSignedCookie(
     c,
     'pierre-ia',
-    encrypt(
+    await encrypt(
       JSON.stringify({
         email: user.email,
         config: user.config,

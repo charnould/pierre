@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs'
 import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
@@ -25,7 +24,7 @@ export const controller = async (c: Context) => {
 
     for (const folder of skillFolders) {
       const configPath = join(skillsDir, folder, 'config.ts')
-      if (!existsSync(configPath)) continue
+      if (!(await Bun.file(configPath).exists())) continue
       try {
         const mod = await import(`../../../customization/skills/${folder}/config`)
         const cfg = mod.default as {

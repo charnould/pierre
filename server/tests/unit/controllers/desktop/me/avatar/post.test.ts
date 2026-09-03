@@ -9,9 +9,8 @@ import { save_user } from '../../../../../../utils/handle-user'
 import { user_has_avatar } from '../../../../../../utils/user-avatars'
 import { use_identity_test_env } from '../../../../utils/identity-test-env'
 
-const PNG_1x1 = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
-  'base64'
+const PNG_1x1 = Uint8Array.fromBase64(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
 )
 
 const app = new Hono<{ Variables: { user: Parsed_User } }>()

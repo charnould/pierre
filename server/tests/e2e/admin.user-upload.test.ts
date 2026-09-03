@@ -1,61 +1,71 @@
 import { expect, it } from 'bun:test'
 
-import { type ElementHandle } from 'puppeteer'
-
 import { delete_all_users } from '../../utils/handle-user'
-import { launchE2EBrowser } from './launch-browser'
+import {
+  clickAndWait,
+  createE2EView,
+  currentUrl,
+  elementCount,
+  fillInput,
+  navigate,
+  uploadFiles
+} from './launch-browser'
 
 it('should upload user file successfully', async () => {
   Bun.env['SERVICE'] = 'pierre-production'
   await delete_all_users()
-  const browser = await launchE2EBrowser()
-  const page = await browser.newPage()
-  await page.setViewport({ width: 1080, height: 1024 })
+  await using view = createE2EView()
 
   // Login and navigate to `knowledge`
-  await page.goto('http://localhost:3000/a/login')
-  await page.type('input[type="email"]', 'admin@pierre-ia.org')
-  await page.type('input[type="password"]', Bun.env['AUTH_PASSWORD']!)
-  await Promise.all([page.click('input[type="submit"]'), page.waitForNavigation()])
-  expect(page.url()).toBe('http://localhost:3000/a')
-  await Promise.all([page.click('a[href="a/users"]'), page.waitForNavigation()])
-  expect(page.url()).toBe('http://localhost:3000/a/users')
+  await navigate(view, 'http://localhost:3000/a/login')
+  await fillInput(view, 'input[type="email"]', 'admin@pierre-ia.org')
+  await fillInput(view, 'input[type="password"]', Bun.env['AUTH_PASSWORD']!)
+  await clickAndWait(view, 'input[type="submit"]', { url: 'http://localhost:3000/a' })
+  expect(await currentUrl(view)).toBe('http://localhost:3000/a')
+  await clickAndWait(view, 'a[href="a/users"]', {
+    url: 'http://localhost:3000/a/users'
+  })
+  expect(await currentUrl(view)).toBe('http://localhost:3000/a/users')
 
   // Upload `user_1.xlsx` file
-  let input = (await page.$('input[type="file"]')) as ElementHandle<HTMLInputElement>
-  await input.uploadFile('tests/e2e/mock-files/users_1.xlsx')
-  await Promise.all([page.click('button[type="submit"]'), page.waitForNavigation()])
-  expect(page.url()).toBe('http://localhost:3000/a/login')
+  await uploadFiles(view, 'input[type="file"]', 'tests/e2e/mock-files/users_1.xlsx')
+  await clickAndWait(view, 'button[type="submit"]', {
+    url: 'http://localhost:3000/a/login'
+  })
+  expect(await currentUrl(view)).toBe('http://localhost:3000/a/login')
 
   // Login and navigate to `knowledge`
-  await page.type('input[type="email"]', 'admin@pierre-ia.org')
-  await page.type('input[type="password"]', Bun.env['AUTH_PASSWORD']!)
-  await Promise.all([page.click('input[type="submit"]'), page.waitForNavigation()])
-  expect(page.url()).toBe('http://localhost:3000/a')
-  await Promise.all([page.click('a[href="a/users"]'), page.waitForNavigation()])
-  expect(page.url()).toBe('http://localhost:3000/a/users')
+  await fillInput(view, 'input[type="email"]', 'admin@pierre-ia.org')
+  await fillInput(view, 'input[type="password"]', Bun.env['AUTH_PASSWORD']!)
+  await clickAndWait(view, 'input[type="submit"]', { url: 'http://localhost:3000/a' })
+  expect(await currentUrl(view)).toBe('http://localhost:3000/a')
+  await clickAndWait(view, 'a[href="a/users"]', {
+    url: 'http://localhost:3000/a/users'
+  })
+  expect(await currentUrl(view)).toBe('http://localhost:3000/a/users')
 
   // Check if user count is correct
-  let li = await page.$$eval('li', (b) => b.length)
+  let li = await elementCount(view, 'li')
   expect(li).toBe(5)
 
   // Upload `user_2.xlsx` file
-  input = (await page.$('input[type="file"]')) as ElementHandle<HTMLInputElement>
-  await input.uploadFile('tests/e2e/mock-files/users_2.xlsx')
-  await Promise.all([page.click('button[type="submit"]'), page.waitForNavigation()])
-  expect(page.url()).toBe('http://localhost:3000/a/login')
+  await uploadFiles(view, 'input[type="file"]', 'tests/e2e/mock-files/users_2.xlsx')
+  await clickAndWait(view, 'button[type="submit"]', {
+    url: 'http://localhost:3000/a/login'
+  })
+  expect(await currentUrl(view)).toBe('http://localhost:3000/a/login')
 
   // Login and navigate to `knowledge`
-  await page.type('input[type="email"]', 'admin@pierre-ia.org')
-  await page.type('input[type="password"]', Bun.env['AUTH_PASSWORD']!)
-  await Promise.all([page.click('input[type="submit"]'), page.waitForNavigation()])
-  expect(page.url()).toBe('http://localhost:3000/a')
-  await Promise.all([page.click('a[href="a/users"]'), page.waitForNavigation()])
-  expect(page.url()).toBe('http://localhost:3000/a/users')
+  await fillInput(view, 'input[type="email"]', 'admin@pierre-ia.org')
+  await fillInput(view, 'input[type="password"]', Bun.env['AUTH_PASSWORD']!)
+  await clickAndWait(view, 'input[type="submit"]', { url: 'http://localhost:3000/a' })
+  expect(await currentUrl(view)).toBe('http://localhost:3000/a')
+  await clickAndWait(view, 'a[href="a/users"]', {
+    url: 'http://localhost:3000/a/users'
+  })
+  expect(await currentUrl(view)).toBe('http://localhost:3000/a/users')
 
   // Check if user count is correct
-  li = await page.$$eval('li', (b) => b.length)
+  li = await elementCount(view, 'li')
   expect(li).toBe(2)
-
-  await browser.close()
 })

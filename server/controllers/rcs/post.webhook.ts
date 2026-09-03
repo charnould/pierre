@@ -1,5 +1,3 @@
-import { createHash } from 'node:crypto'
-
 import type { Context } from 'hono'
 
 import { ACTIVITY_CONTENT_VERSION } from '../../../shared/activites'
@@ -76,7 +74,7 @@ const inbound_idempotency_key = (
   const identity = providerEventId
     ? `event:${providerEventId}`
     : `fingerprint:${phone}\0${occurred_at}\0${content}\0${context_reference ?? ''}`
-  return `cm:inbound:${createHash('sha256').update(identity).digest('hex')}`
+  return `cm:inbound:${new Bun.CryptoHasher('sha256').update(identity).digest('hex')}`
 }
 
 const content_from = (

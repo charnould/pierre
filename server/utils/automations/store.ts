@@ -1,7 +1,5 @@
 import { Database } from 'bun:sqlite'
 
-import { randomUUIDv7 } from 'bun'
-
 import {
   decodeCronToSchedule,
   encodeScheduleToCron,
@@ -241,7 +239,7 @@ export async function create_automation(
   })
   const config = await config_from_create(body)
   const canonicalOwner = owner.includes('@') ? owner.trim().toLowerCase() : owner
-  const id = randomUUIDv7()
+  const id = Bun.randomUUIDv7()
   const next_run_at = compute_next_run_at(cron, org_timezone())
   const db = open_db()
   try {
@@ -495,7 +493,7 @@ export function claim_automation(
 ): string | null {
   const db = open_db()
   try {
-    const token = randomUUIDv7()
+    const token = Bun.randomUUIDv7()
     const result = db.run(
       `UPDATE automations
        SET status = 'running', run_token = ?, lease_expires_at = ?
@@ -513,7 +511,7 @@ export function claim_automation(
 export function claim_automation_manual(id: string): string | null {
   const db = open_db()
   try {
-    const token = randomUUIDv7()
+    const token = Bun.randomUUIDv7()
     const result = db.run(
       `UPDATE automations
        SET status = 'running', run_token = ?, lease_expires_at = ?

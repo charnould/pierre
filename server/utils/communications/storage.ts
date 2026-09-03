@@ -71,7 +71,7 @@ const permanent_thread = (db: Database, rattachement: string, type: Communicatio
        LIMIT 1`
     )
     .get(rattachement, type)
-  return existing?.thread_id ?? crypto.randomUUID()
+  return existing?.thread_id ?? Bun.randomUUIDv7()
 }
 
 const table_has_column = (db: Database, table: string, column: string): boolean =>
@@ -410,7 +410,7 @@ export const create_inbound = (input: CreateInboundInput): Activite => {
 export const create_unmatched_inbound = (
   input: Omit<CreateInboundInput, 'contexte' | 'ref' | 'thread_id'>
 ): Activite => {
-  const id = crypto.randomUUID()
+  const id = Bun.randomUUIDv7()
   return create_inbound({
     ...input,
     contexte: 'a_qualifier',

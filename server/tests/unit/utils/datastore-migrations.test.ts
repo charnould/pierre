@@ -1,6 +1,6 @@
 import { Database } from 'bun:sqlite'
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
-import { mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, rm } from 'node:fs/promises'
 
 import {
   APP_MIGRATIONS,
@@ -82,8 +82,8 @@ describe('datastore migrations', () => {
     obsolete.run('CREATE TABLE obsolete_data (value TEXT)')
     obsolete.run("INSERT INTO obsolete_data VALUES ('must be deleted')")
     obsolete.close()
-    await writeFile(`${PATH}-wal`, 'stale')
-    await writeFile(`${PATH}-shm`, 'stale')
+    await Bun.write(`${PATH}-wal`, 'stale')
+    await Bun.write(`${PATH}-shm`, 'stale')
 
     await migrate_datastore(PATH)
 

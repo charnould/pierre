@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
-import { mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, rm } from 'node:fs/promises'
 import path from 'node:path'
 
 import {
@@ -28,7 +28,7 @@ afterEach(async () => {
 async function writeArticle(slug: string, markdown: string): Promise<void> {
   const dir = path.join(FIXTURE_UPDATES_DIR, slug)
   await mkdir(dir, { recursive: true })
-  await writeFile(path.join(dir, 'index.md'), markdown, 'utf8')
+  await Bun.write(path.join(dir, 'index.md'), markdown)
 }
 
 describe('isValidCalendarDate', () => {
@@ -181,11 +181,7 @@ describe('collectUpdateEntries', () => {
 
   it('ignores non-directory files at the updates root', async () => {
     await writeArticle('2026-06-13-dev-valid', '# Valid\n\nBody')
-    await writeFile(
-      path.join(FIXTURE_UPDATES_DIR, '2026-06-13-dev-flat.md'),
-      '# Flat\n\nBody',
-      'utf8'
-    )
+    await Bun.write(path.join(FIXTURE_UPDATES_DIR, '2026-06-13-dev-flat.md'), '# Flat\n\nBody')
 
     const { entries, errors } = await collectUpdateEntries(FIXTURE_UPDATES_DIR)
 
@@ -216,7 +212,7 @@ describe('rebuildUpdatesIndex', () => {
     await writeArticle('bad slug', '# Test\n\nBody')
 
     const indexPath = path.join(FIXTURE_UPDATES_DIR, 'index.json')
-    await writeFile(indexPath, '[]\n', 'utf8')
+    await Bun.write(indexPath, '[]\n')
 
     const { entries, errors } = await rebuildUpdatesIndex({
       updatesDir: FIXTURE_UPDATES_DIR,

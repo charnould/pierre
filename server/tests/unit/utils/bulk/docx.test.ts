@@ -22,7 +22,7 @@ const source_docx = (): string => {
       'document.xml',
       '<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Bonjour {{nom}}</w:t></w:r></w:p><w:sectPr><w:pgSz w:w="11906" w:h="16838"/></w:sectPr></w:body></w:document>'
     )
-  return Buffer.from(zip.generate({ type: 'uint8array' })).toString('base64')
+  return zip.generate({ type: 'uint8array' }).toBase64()
 }
 
 describe('bulk DOCX rendering', () => {

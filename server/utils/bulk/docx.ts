@@ -15,7 +15,7 @@ export class BulkDocxError extends Error {
 export const render_docx = (fileBase64: string, values: Record<string, string>): Uint8Array => {
   let source: Uint8Array
   try {
-    source = Uint8Array.from(Buffer.from(fileBase64, 'base64'))
+    source = Uint8Array.fromBase64(fileBase64)
     if (source.byteLength === 0 || source.byteLength > MAX_SOURCE_BYTES) {
       throw new Error('size')
     }

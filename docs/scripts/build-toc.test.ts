@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
-import { mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, rm } from 'node:fs/promises'
 import path from 'node:path'
 
 import { insertToc, matchTocFolder, renderDocsToc, updateDocsToc } from './build.ts'
@@ -19,7 +19,7 @@ afterEach(async () => {
 async function writeDoc(relativePath: string, markdown: string): Promise<string> {
   const filePath = path.join(FIXTURE_DOCS_DIR, relativePath)
   await mkdir(path.dirname(filePath), { recursive: true })
-  await writeFile(filePath, markdown, 'utf8')
+  await Bun.write(filePath, markdown)
   return filePath
 }
 
@@ -189,7 +189,7 @@ describe('updateDocsToc', () => {
   })
 
   it('skips non-markdown files', async () => {
-    await writeFile(path.join(FIXTURE_DOCS_DIR, 'notes.txt'), 'plain text', 'utf8')
+    await Bun.write(path.join(FIXTURE_DOCS_DIR, 'notes.txt'), 'plain text')
 
     const { updated } = await updateDocsToc({ docsDir: FIXTURE_DOCS_DIR })
 

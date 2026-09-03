@@ -1,5 +1,5 @@
 import { watch } from 'node:fs'
-import { readdir, stat, writeFile } from 'node:fs/promises'
+import { readdir, stat } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 
 const ROOT = join(import.meta.dir, '..')
@@ -42,14 +42,6 @@ function humanize(slug: string) {
   if (!raw.includes('-') && raw.length <= 4) return raw.toUpperCase()
   const spaced = raw.replace(/-/g, ' ')
   return spaced.charAt(0).toUpperCase() + spaced.slice(1)
-}
-
-function escapeHtml(s: string) {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
 }
 
 /** Match GitHub heading IDs: strip punctuation, keep each space as its own hyphen. */
@@ -215,7 +207,7 @@ async function syncChangelogEntries(toc: TocEntry[]): Promise<TocEntry[]> {
 
   entries.sort((a, b) => b.date.localeCompare(a.date))
   changelog.entries = entries
-  await writeFile(TOC_JSON, `${JSON.stringify(next, null, 2)}\n`)
+  await Bun.write(TOC_JSON, `${JSON.stringify(next, null, 2)}\n`)
   console.log(`✓ toc.json (${entries.length} changelog entries)`)
   return next
 }
@@ -328,7 +320,7 @@ async function updateRootReadme(pages: DocPage[], toc: TocEntry[]) {
     readme = `${block}\n\n${readme}`
   }
 
-  await writeFile(README, readme)
+  await Bun.write(README, readme)
   console.log('✓ README.md (docs toc)')
 }
 
@@ -338,7 +330,7 @@ function pageHtml(title: string, body: string) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${escapeHtml(title)} · PIERRE</title>
+  <title>${Bun.escapeHTML(title)} · PIERRE</title>
   <link rel="icon" href="./assets/favicon.ico" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Knewave&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" />
   <style>
@@ -567,7 +559,7 @@ async function renderMarkdown(raw: string) {
     const img = image?.(tokens, idx, options, env, self) ?? self.renderToken(tokens, idx, options)
     const title = token.content.trim()
     if (!title) return img
-    return `<span class="shot"><span class="shot-title" aria-hidden="true">${escapeHtml(title)}</span>${img}</span>`
+    return `<span class="shot"><span class="shot-title" aria-hidden="true">${Bun.escapeHTML(title)}</span>${img}</span>`
   }
 
   return md.render(raw)
@@ -576,7 +568,7 @@ async function renderMarkdown(raw: string) {
 async function buildLanding() {
   const raw = prepare(await Bun.file(join(ROOT, 'index.md')).text())
   const title = firstH1(raw, 'PIERRE')
-  await writeFile(join(ROOT, 'index.html'), pageHtml(title, await renderMarkdown(raw)))
+  await Bun.write(join(ROOT, 'index.html'), pageHtml(title, await renderMarkdown(raw)))
   console.log('✓ index.html')
 }
 

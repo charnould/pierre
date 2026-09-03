@@ -1,9 +1,16 @@
 import { expect, it } from 'bun:test'
 
 import { $ } from 'bun'
-import { type ElementHandle } from 'puppeteer'
 
-import { launchE2EBrowser } from './launch-browser'
+import {
+  clickAndWait,
+  createE2EView,
+  currentUrl,
+  elementCount,
+  fillInput,
+  navigate,
+  uploadFiles
+} from './launch-browser'
 
 it('should upload knowledge files successfully', async () => {
   // Remove mock files from datastore
@@ -13,37 +20,44 @@ it('should upload knowledge files successfully', async () => {
   await $`mkdir -p ./datastores/${Bun.env['SERVICE']}/files/`
 
   //Go to `/a`
-  const browser = await launchE2EBrowser()
-  const page = await browser.newPage()
+  await using view = createE2EView()
 
-  await page.goto('http://localhost:3000/a')
-  await page.setViewport({ width: 1080, height: 1024 })
-  expect(page.url()).toBe('http://localhost:3000/a/login')
+  await navigate(view, 'http://localhost:3000/a')
+  expect(await currentUrl(view)).toBe('http://localhost:3000/a/login')
 
   // Login
-  await page.type('input[type="email"]', 'admin@pierre-ia.org')
-  await page.type('input[type="password"]', Bun.env['AUTH_PASSWORD']!)
-  await Promise.all([page.click('input[type="submit"]'), page.waitForNavigation()])
-  expect(page.url()).toBe('http://localhost:3000/a')
+  await fillInput(view, 'input[type="email"]', 'admin@pierre-ia.org')
+  await fillInput(view, 'input[type="password"]', Bun.env['AUTH_PASSWORD']!)
+  await clickAndWait(view, 'input[type="submit"]', { url: 'http://localhost:3000/a' })
+  expect(await currentUrl(view)).toBe('http://localhost:3000/a')
 
   // Navigate to `knowledge`
-  await Promise.all([page.click('a[href="a/knowledge"]'), page.waitForNavigation()])
-  expect(page.url()).toBe('http://localhost:3000/a/knowledge')
+  await clickAndWait(view, 'a[href="a/knowledge"]', {
+    url: 'http://localhost:3000/a/knowledge'
+  })
+  expect(await currentUrl(view)).toBe('http://localhost:3000/a/knowledge')
 
   // Upload one file and check it is shown in UI
-  let input = (await page.$('input[type="file"]')) as ElementHandle<HTMLInputElement>
-  await input.uploadFile('tests/e2e/mock-files/markdown.md')
-  await Promise.all([page.click('button[type="submit"]'), page.waitForNavigation()])
+  await uploadFiles(view, 'input[type="file"]', 'tests/e2e/mock-files/markdown.md')
+  await clickAndWait(view, 'button[type="submit"]', {
+    dom: 'document.querySelectorAll(\'button[name="filename"]\').length === 2'
+  })
 
-  let buttons = await page.$$eval('button[name="filename"]', (b) => b.length)
+  let buttons = await elementCount(view, 'button[name="filename"]')
   expect(buttons).toBe(2)
 
   // Upload two other files and check there are shown in UI
-  input = (await page.$('input[type="file"]')) as ElementHandle<HTMLInputElement>
-  await input.uploadFile('tests/e2e/mock-files/word.docx', 'tests/e2e/mock-files/excel.xlsx')
-  await Promise.all([page.click('button[type="submit"]'), page.waitForNavigation()])
+  await uploadFiles(
+    view,
+    'input[type="file"]',
+    'tests/e2e/mock-files/word.docx',
+    'tests/e2e/mock-files/excel.xlsx'
+  )
+  await clickAndWait(view, 'button[type="submit"]', {
+    dom: 'document.querySelectorAll(\'button[name="filename"]\').length === 6'
+  })
 
-  buttons = await page.$$eval('button[name="filename"]', (b) => b.length)
+  buttons = await elementCount(view, 'button[name="filename"]')
   expect(buttons).toBe(6)
 
   // Check if all files where uploaded in file sytem
@@ -55,17 +69,14 @@ it('should upload knowledge files successfully', async () => {
   expect(m).toBe(true)
 
   // Delete a file and check it has been deleted from UI
-  await Promise.all([
-    page.click('button[value="excel.xlsx"][formaction="/a/knowledge?action=destroy"]'),
-    page.waitForNavigation()
-  ])
+  await clickAndWait(view, 'button[value="excel.xlsx"][formaction="/a/knowledge?action=destroy"]', {
+    dom: 'document.querySelectorAll(\'button[name="filename"]\').length === 4'
+  })
 
-  buttons = await page.$$eval('button[name="filename"]', (b) => b.length)
+  buttons = await elementCount(view, 'button[name="filename"]')
   expect(buttons).toBe(4)
 
   // Return to homepage
-  await Promise.all([page.click('a[href="/a"]'), page.waitForNavigation()])
-  expect(page.url()).toBe('http://localhost:3000/a')
-
-  await browser.close()
+  await clickAndWait(view, 'a[href="/a"]', { url: 'http://localhost:3000/a' })
+  expect(await currentUrl(view)).toBe('http://localhost:3000/a')
 })

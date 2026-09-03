@@ -306,7 +306,7 @@ describe('automations worker', () => {
        WHERE id = ?`,
       [
         new Date(Date.now() - 60_000).toISOString(),
-        crypto.randomUUID(),
+        Bun.randomUUIDv7(),
         new Date(Date.now() - 1000).toISOString(),
         auto.id
       ]

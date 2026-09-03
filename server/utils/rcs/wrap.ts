@@ -8,7 +8,7 @@ export function to_cm_number(phone: string): string {
 }
 
 export function new_rcs_reference(): string {
-  return `j${crypto.randomUUID().replaceAll('-', '').slice(0, 31)}`
+  return `j${Bun.randomUUIDv7().replaceAll('-', '').slice(0, 31)}`
 }
 
 export function wrap_rcs_message(input: {

@@ -154,7 +154,7 @@ describe('BulkOperationDefinitionSchema', () => {
 
   it('accepts an empty Word draft and rejects an invalid file', () => {
     const definition = emptyBulkOperationDefinition()
-    const fileBase64 = Buffer.from([0x50, 0x4b, 0x03, 0x04]).toString('base64')
+    const fileBase64 = new Uint8Array([0x50, 0x4b, 0x03, 0x04]).toBase64()
     const empty = {
       medium: 'courrier' as const,
       action: 'R1',

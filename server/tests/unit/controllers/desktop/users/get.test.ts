@@ -16,9 +16,8 @@ app.get('/desktop/users', get_desktop_users)
 const fetch_users = (): Promise<Response> =>
   Promise.resolve(app.fetch(new Request('http://localhost/desktop/users')))
 
-const PNG_1x1 = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
-  'base64'
+const PNG_1x1 = Uint8Array.fromBase64(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
 )
 
 use_identity_test_env('_test_desktop_users')

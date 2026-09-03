@@ -312,7 +312,7 @@ const build_database_for_config = async (
 
     db.run('DROP TABLE IF EXISTS _sources')
     const sources_path = join(source_dir, '_sources.json')
-    if (existsSync(sources_path)) {
+    if (await Bun.file(sources_path).exists()) {
       const sources = (await Bun.file(sources_path).json()) as Record<string, string | null>
       db.run('CREATE TABLE _sources (name TEXT PRIMARY KEY, url TEXT)')
       const insert_source = db.prepare('INSERT INTO _sources (name, url) VALUES (?, ?)')

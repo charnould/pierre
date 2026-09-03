@@ -1,4 +1,4 @@
-import { readdir, readFile, writeFile } from 'node:fs/promises'
+import { readdir } from 'node:fs/promises'
 import path from 'node:path'
 
 const ROOT = path.resolve(import.meta.dir, '..')
@@ -86,7 +86,7 @@ export async function findArticleMarkdown(
   const indexPath = path.join(updatesDir, slug, 'index.md')
 
   try {
-    return await readFile(indexPath, 'utf8')
+    return await Bun.file(indexPath).text()
   } catch {
     return null
   }
@@ -171,7 +171,7 @@ export async function rebuildUpdatesIndex(options?: {
   const { entries, errors } = await collectUpdateEntries(updatesDir)
 
   if (errors.length === 0 && !options?.dryRun) {
-    await writeFile(indexPath, `${JSON.stringify(entries, null, 2)}\n`, 'utf8')
+    await Bun.write(indexPath, `${JSON.stringify(entries, null, 2)}\n`)
   }
 
   return { entries, errors }

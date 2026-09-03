@@ -1,5 +1,4 @@
 import { existsSync } from 'node:fs'
-import { arch as nodeArch } from 'node:os'
 import { resolve } from 'node:path'
 
 import { $ } from 'bun'
@@ -20,7 +19,7 @@ function poolSize(): number {
 }
 
 export function getSmolmachinePath(): string {
-  const arch = nodeArch() === 'x64' ? 'amd64' : 'arm64'
+  const arch = process.arch === 'x64' ? 'amd64' : 'arm64'
   const smolmachinePath = resolve(SMOLVM_DIR, `pierre-${arch}.smolmachine`)
   if (!existsSync(smolmachinePath)) {
     throw new Error(
