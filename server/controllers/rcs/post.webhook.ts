@@ -4,12 +4,13 @@ import type { Context } from 'hono'
 
 import { ACTIVITY_CONTENT_VERSION } from '../../../shared/activites'
 import { parse_rattachement } from '../../utils/activities/rows'
+import { handle_rich_rcs_reply } from '../../utils/bulk/rich-rcs'
+import { update_status } from '../../utils/bulk/status'
 import {
   cm_webhook_authorized,
   communication_from_reference,
   find_recent_thread
 } from '../../utils/communications/parsing'
-import { update_status } from '../../utils/communications/status'
 import {
   CommunicationsError,
   create_inbound,
@@ -167,7 +168,7 @@ const handle_inbound = (payload: Record<string, unknown>): void => {
 
   if (exact) {
     const attachment = parse_rattachement(exact.rattachement)!
-    create_inbound({
+    const inbound = create_inbound({
       contexte: attachment.contexte,
       ref: attachment.ref,
       type: 'rcs',
@@ -177,6 +178,9 @@ const handle_inbound = (payload: Record<string, unknown>): void => {
       thread_id: exact.thread_id ?? undefined,
       idempotency_key: idempotencyKey
     })
+    if (exact.bulk_id && exact.execution_id) {
+      handle_rich_rcs_reply(exact, inbound, payload)
+    }
     return
   }
 
