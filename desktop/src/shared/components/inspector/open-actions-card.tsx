@@ -2,6 +2,9 @@ import { Calendar, EyeOff, Pencil, Square, Trash2 } from 'lucide-react'
 import { type ReactNode, useId, useMemo, useState } from 'react'
 
 import { CollaboratorPopoverPicker } from '@/shared/components/CollaboratorPopoverPicker'
+import { CollaboratorChip } from '@/shared/components/inspector/collaborator-chip'
+import { MentionText } from '@/shared/components/inspector/mention-text'
+import { MentionTextarea } from '@/shared/components/inspector/mention-textarea'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
@@ -9,22 +12,18 @@ import { DatePicker } from '@/shared/components/ui/date-picker'
 import { Field, FieldLabel } from '@/shared/components/ui/field'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { useOrgUsers } from '@/shared/hooks/useOrgUsers'
+import type { ActionActivity } from '@/shared/lib/activities/action-activity'
 import { resolveOrgUserFromFacetValue } from '@/shared/lib/org-user-list-item'
 import { parseActivityAuthor } from '@/shared/lib/timeline/parse-activity-author'
 import { cn } from '@/shared/lib/utils'
 import type { OrgUser } from '@/shared/types/users'
 
-import { formatDebutBailDisplay } from '../lib/format-debut-bail'
-import type { RepaymentActionActivity } from '../lib/repayment-action-activity'
-import { CollaboratorChip } from './CollaboratorChip'
-import { RepaymentMentionText } from './RepaymentMentionText'
-import { RepaymentMentionTextarea } from './RepaymentMentionTextarea'
-
 interface Props {
-  actions: RepaymentActionActivity[]
+  actions: ActionActivity[]
   saving?: boolean
   userLogin?: string
   url?: string
+  formatDate?: (value: string) => string
   onComplete?: (id: number) => void
   onIgnore?: (id: number, motif: string) => void
   onEdit?: (
@@ -145,15 +144,17 @@ function OpenActionMeta({
   auteur,
   assigneA,
   dateEcheance,
-  note
+  note,
+  formatDate
 }: {
   auteur: string
   assigneA: string
   dateEcheance: string
   note?: string
+  formatDate: (value: string) => string
 }) {
   const creator = creatorIdentity(auteur)
-  const dueLabel = formatDebutBailDisplay(dateEcheance) ?? dateEcheance
+  const dueLabel = formatDate(dateEcheance)
   const comment = note?.trim() ?? ''
 
   return (
@@ -185,7 +186,7 @@ function OpenActionMeta({
       {comment ? (
         <>
           <span className="self-start">Note</span>
-          <RepaymentMentionText
+          <MentionText
             text={comment}
             mentionVariant="activity"
             compact
@@ -278,7 +279,7 @@ function OpenActionEditFace({
       </Field>
       <Field>
         <FieldLabel htmlFor={commentId}>Note</FieldLabel>
-        <RepaymentMentionTextarea
+        <MentionTextarea
           id={commentId}
           value={comment}
           onChange={setComment}
@@ -304,11 +305,12 @@ function OpenActionEditFace({
   )
 }
 
-export function RepaymentOpenActionsCard({
+export function OpenActionsCard({
   actions,
   saving = false,
   userLogin,
   url,
+  formatDate = (value) => value,
   onComplete,
   onIgnore,
   onEdit,
@@ -398,10 +400,11 @@ export function RepaymentOpenActionsCard({
                       assigneA={contenu.assigne_a ?? ''}
                       dateEcheance={contenu.date_echeance ?? ''}
                       note={contenu.note}
+                      formatDate={formatDate}
                     />
                     {ignoring ? (
                       <div className="mt-2 flex flex-col gap-2">
-                        <RepaymentMentionTextarea
+                        <MentionTextarea
                           value={ignoreReason}
                           onChange={setIgnoreReason}
                           placeholder="Motif (optionnel)…"

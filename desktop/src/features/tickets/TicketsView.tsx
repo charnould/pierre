@@ -1,21 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useUiSettings } from '@/contexts/UiSettingsContext'
 import type { NotificationsApi } from '@/features/activity/hooks/use-notifications'
 import { useActivityRail } from '@/features/activity/lib/ActivityRailContext'
 import { TicketReclamationDrawer } from '@/features/tickets/components/TicketReclamationDrawer'
-import { TicketsActivityDrawer } from '@/features/tickets/components/TicketsActivityDrawer'
 import { TicketsTableView } from '@/features/tickets/components/TicketsTableView'
 import { useTicketsNavigation } from '@/features/tickets/hooks/useTicketsNavigation'
-import { generateTicketIds } from '@/features/tickets/lib/generate-ticket-ids'
-import type { TicketSkillKey } from '@/features/tickets/lib/knowledge-skills'
-import { persistTicketReclamation } from '@/features/tickets/lib/persist-ticket-reclamation'
+import { TICKET_BUCKET_OPTIONS } from '@/features/tickets/lib/ticket-bucket'
 import {
   type OpenTicketSheetOptions,
   type TicketComposeMode,
   useTicketsViewData
 } from '@/features/tickets/lib/use-tickets-view-data'
-import type { ActivityTarget } from '@/shared/lib/navigation-snapshot'
 import type { Tab } from '@/shared/lib/tabs'
 import { cn } from '@/shared/lib/utils'
 import type { Settings } from '@/shared/types'
@@ -37,15 +33,10 @@ export function TicketsView({
   userLogin,
   notifications
 }: Props) {
-  const [ticketsRefreshNonce, setTicketsRefreshNonce] = useState(0)
-  const [ticketActivitySheet, setTicketActivitySheet] = useState<Extract<
-    ActivityTarget,
-    { view: 'tickets' }
-  > | null>(null)
-  const [ticketSheetToken, setTicketSheetToken] = useState(0)
-
+  const scrollRef = useRef<HTMLDivElement>(null)
   const { contextTarget } = useActivityRail()
   const { patchTicketsTable } = useUiSettings()
+  const [ticketsRefreshNonce, setTicketsRefreshNonce] = useState(0)
 
   const ticketsDeps = useMemo(() => ({ notifications, userLogin }), [notifications, userLogin])
 
@@ -61,24 +52,9 @@ export function TicketsView({
     activityTarget
   } = useTicketsViewData(ticketsDeps)
 
-  const bumpTicketsRefresh = useCallback(() => {
-    setTicketsRefreshNonce((n) => n + 1)
-  }, [])
-
   useEffect(() => {
     if (contextTarget != null) setSheetOpen(false)
   }, [contextTarget, setSheetOpen])
-
-  const openTicketActivitySheet = useCallback(
-    (target: Extract<ActivityTarget, { view: 'tickets' }>) => {
-      setTicketActivitySheet(target)
-      setTicketSheetToken((token) => token + 1)
-      void patchTicketsTable({
-        columnFilters: { id_reclamation: [target.id_reclamation] }
-      })
-    },
-    [patchTicketsTable]
-  )
 
   const resolveAndOpenSheet = useCallback(
     async (
@@ -103,50 +79,20 @@ export function TicketsView({
 
   useTicketsNavigation({
     sheetActivityTarget: activityTarget,
-    railActivityTarget: ticketActivitySheet,
     onApplySheetTarget: (target) => {
       void resolveAndOpenSheet(target.id_reclamation, {
         activityId: target.activityId
       })
-    },
-    onApplyRailTarget: (target) => {
-      openTicketActivitySheet(target)
     }
   })
 
-  const handleDraftIconClick = useCallback(
-    async (
-      id_reclamation: string,
-      format: TicketSkillKey,
-      _hasDraft: boolean,
-      _draft_id_skills?: string[],
-      _draft_answer_channel?: string | null
-    ) => {
-      const composeMode: TicketComposeMode =
-        format === 'ticketReplyLetter' ? 'letter' : format === 'ticketReplyEmail' ? 'email' : null
-      if (!composeMode) return
-      await resolveAndOpenSheet(id_reclamation, { initialComposeMode: composeMode })
+  const hasUnread = useCallback(
+    (row: Parameters<typeof handleRowClick>[0]) => {
+      const id = String(row.id_reclamation ?? '').trim()
+      return id.length > 0 && notifications.hasUnreadFor('tickets', id)
     },
-    [resolveAndOpenSheet]
+    [notifications]
   )
-
-  const openManualMessage = useCallback(async () => {
-    const ids = generateTicketIds()
-    const url = settings.url
-    if (url) {
-      await persistTicketReclamation(url, ids)
-      bumpTicketsRefresh()
-      const res = await window.api.getTickets({
-        url,
-        limit: 1,
-        filters: { id_reclamation: [ids.id_reclamation] }
-      })
-      const row = res?.data?.[0]
-      if (row) {
-        openTicketSheet(row, { initialComposeMode: 'email' })
-      }
-    }
-  }, [settings.url, bumpTicketsRefresh, openTicketSheet])
 
   const handlePostActivity = useCallback(
     (type: string, statut: string, contenu: string) =>
@@ -164,6 +110,7 @@ export function TicketsView({
         'ticket_summary',
         'logged',
         JSON.stringify({
+          version: 1,
           titre: 'Point de situation',
           contenu: content
         })
@@ -179,14 +126,25 @@ export function TicketsView({
         hidden ? 'hidden' : 'flex'
       )}
     >
-      <TicketsTableView
-        hidden={hidden}
-        url={settings.url}
-        ticketsRefreshNonce={ticketsRefreshNonce}
-        onDraftIconClick={handleDraftIconClick}
-        onRowClick={handleRowClick}
-        onOpenManualMessage={openManualMessage}
-      />
+      <div
+        ref={scrollRef}
+        className="flex min-h-0 w-full min-w-0 flex-1 scroll-pb-4 flex-col overflow-x-hidden overflow-y-auto overscroll-contain pb-6"
+      >
+        {TICKET_BUCKET_OPTIONS.map((bucket) => (
+          <TicketsTableView
+            key={bucket.id}
+            hidden={hidden}
+            url={settings.url}
+            bucket={bucket.id}
+            title={bucket.label}
+            refreshNonce={ticketsRefreshNonce}
+            hasUnread={hasUnread}
+            selectedId={selected ? String(selected.id_reclamation ?? '').trim() : undefined}
+            onRowClick={handleRowClick}
+            scrollRef={scrollRef}
+          />
+        ))}
+      </div>
 
       <TicketReclamationDrawer
         url={settings.url}
@@ -199,13 +157,7 @@ export function TicketsView({
         highlightActivityId={activityTarget?.activityId}
         onPostActivity={handlePostActivity}
         onSummarizeActivity={handleSummarizeActivity}
-      />
-
-      <TicketsActivityDrawer
-        url={settings.url}
-        target={ticketActivitySheet}
-        sheetOpenToken={ticketSheetToken}
-        onClose={() => setTicketActivitySheet(null)}
+        onCaseStateChange={() => setTicketsRefreshNonce((nonce) => nonce + 1)}
       />
     </div>
   )

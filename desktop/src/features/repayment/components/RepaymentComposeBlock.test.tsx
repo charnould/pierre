@@ -2,7 +2,8 @@ import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
-import type { RepaymentActionDraft } from '../lib/repayment-action-activity'
+import type { ActionDraft } from '@/shared/lib/activities/action-activity'
+
 import { REPAYMENT_TAG_OPTIONS } from '../lib/repayment-tags'
 import { sampleRepaymentRow } from '../lib/repayment-test-fixtures'
 import type { RepaymentComposeMode } from './RepaymentComposeBlock'
@@ -113,7 +114,7 @@ async function renderCompose(
   const { createRoot } = await import('react-dom/client')
   const { RepaymentComposeBlock } = await import('./RepaymentComposeBlock')
 
-  const onSubmitAction = mock((_draft: RepaymentActionDraft) => {})
+  const onSubmitAction = mock((_draft: ActionDraft) => {})
   const onSubmitNote = mock((_comment?: string) => {})
   const onStartNote = mock(() => {})
   const onStartTodo = mock(() => {})

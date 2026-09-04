@@ -1,24 +1,44 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { X } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 
 import { useNotificationTimeline } from '@/features/activity/hooks/use-notification-timeline'
-import { replyAuthorMentionSeed } from '@/features/repayment/lib/repayment-mention'
 import { buildTicketTimeline } from '@/features/tickets/lib/build-ticket-timeline'
 import { KNOWLEDGE_SKILL } from '@/features/tickets/lib/knowledge-skills'
+import {
+  NON_TRAITEES_TICKET_BUCKET_ID,
+  isTicketBucketId,
+  resolveTicketBucket,
+  type TicketBucketId
+} from '@/features/tickets/lib/ticket-bucket'
+import { canonicalizeTicketTags, TICKET_TAG_OPTIONS } from '@/features/tickets/lib/ticket-tags'
 import { useTicketSheetAi } from '@/features/tickets/lib/use-ticket-sheet-ai'
 import type { TicketComposeMode } from '@/features/tickets/lib/use-tickets-view-data'
 import { useWorkflowExport } from '@/features/workflow/hooks/useWorkflowExport'
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import {
   INSPECTOR_DRAWER_CLASS,
   InspectorSplit
 } from '@/shared/components/inspector/inspector-split'
 import { InspectorTimelineSkeleton } from '@/shared/components/inspector/inspector-timeline-skeleton'
+import { OpenActionsCard } from '@/shared/components/inspector/open-actions-card'
 import { ContextTimeline } from '@/shared/components/timeline/context-timeline'
+import { Button } from '@/shared/components/ui/button'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/shared/components/ui/drawer'
 import { toast } from '@/shared/components/ui/toast'
+import { useCaseActivityActions } from '@/shared/hooks/use-case-activity-actions'
 import { useScrollToTopOnOpen } from '@/shared/hooks/use-scroll-to-top-on-open'
+import { listOpenActions, type ActionDraft } from '@/shared/lib/activities/action-activity'
+import {
+  deriveCaseAssignment,
+  deriveCaseBucket,
+  deriveCaseTags
+} from '@/shared/lib/activities/case-activities'
+import { replyAuthorMentionSeed } from '@/shared/lib/activities/mentions'
 import { scrollBehavior } from '@/shared/lib/prefers-reduced-motion'
 import { getTicketCellText } from '@/shared/lib/ticket-row'
 import type { TicketRow } from '@/shared/types'
+import { activity_texte, type Activite } from '@/shared/types/activites'
+import type { OrgUser } from '@/shared/types/users'
 
 import {
   TicketComposeBlock,
@@ -45,6 +65,7 @@ interface Props {
   highlightActivityId?: number
   onPostActivity: (type: string, statut: string, contenu: string) => Promise<number | null>
   onSummarizeActivity: (content: string) => Promise<number | null>
+  onCaseStateChange?: () => void | Promise<void>
 }
 
 export function TicketReclamationDrawer({
@@ -58,19 +79,26 @@ export function TicketReclamationDrawer({
   initialComposeMode,
   highlightActivityId,
   onPostActivity,
-  onSummarizeActivity
+  onSummarizeActivity,
+  onCaseStateChange
 }: Props) {
   const [composeMode, setComposeMode] = useState<TicketComposeMode>(null)
   const [comment, setComment] = useState('')
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null)
+  const [deleteActivityId, setDeleteActivityId] = useState<number | null>(null)
+  const [draftTags, setDraftTags] = useState<string[]>([])
+  const [tagComment, setTagComment] = useState('')
+  const [draftBucket, setDraftBucket] = useState<TicketBucketId | null>(null)
+  const [bucketComment, setBucketComment] = useState('')
   const [rcsMessage, setRcsMessage] = useState('')
   const [emailSubject, setEmailSubject] = useState('')
   const [emailBody, setEmailBody] = useState('')
   const [letterSubject, setLetterSubject] = useState('')
   const [letterBody, setLetterBody] = useState('')
   const [summarizeContent, setSummarizeContent] = useState('')
-  const [aiComposeTarget, setAiComposeTarget] = useState<Exclude<
+  const [aiComposeTarget, setAiComposeTarget] = useState<Extract<
     TicketComposeMode,
-    'comment' | null
+    'rcs' | 'email' | 'letter' | 'summarize'
   > | null>(null)
   const [lastHighlightId, setLastHighlightId] = useState<number | undefined>()
   const [submitting, setSubmitting] = useState(false)
@@ -79,8 +107,13 @@ export function TicketReclamationDrawer({
   const historyScrollElRef = useRef<HTMLDivElement | null>(null)
 
   const idReclamation = ticket ? getTicketCellText(ticket, 'id_reclamation') : ''
-  const idLocataire = ticket ? getTicketCellText(ticket, 'id_locataire') : ''
-  const ticketMessage = ticket ? getTicketCellText(ticket, 'message') : ''
+  const idLocataire = ticket
+    ? getTicketCellText(ticket, 'id_locataire') ||
+      getTicketCellText(ticket, 'ids_locataires_concernes')
+    : ''
+  const ticketMessage = ticket
+    ? getTicketCellText(ticket, 'message_initial') || getTicketCellText(ticket, 'message')
+    : ''
 
   const { rows, loading, initialLoading, refresh } = useNotificationTimeline(
     url,
@@ -88,8 +121,55 @@ export function TicketReclamationDrawer({
     idReclamation || undefined,
     open && ticket != null
   )
-  const timelineItems = useMemo(() => buildTicketTimeline(rows), [rows])
+  const timelineItems = useMemo(() => buildTicketTimeline(rows, ticket), [rows, ticket])
   const hasTimelineHistory = timelineItems.length > 0
+  const sortedActivities = useMemo(
+    () => [...rows].sort((a, b) => b.date_creation.localeCompare(a.date_creation)),
+    [rows]
+  )
+  const currentTags = useMemo(
+    () => canonicalizeTicketTags(deriveCaseTags(sortedActivities)),
+    [sortedActivities]
+  )
+  const currentBucket = useMemo(
+    () =>
+      resolveTicketBucket(
+        deriveCaseBucket(
+          sortedActivities,
+          resolveTicketBucket(
+            typeof ticket?.pierre_bucket === 'string'
+              ? ticket.pierre_bucket
+              : NON_TRAITEES_TICKET_BUCKET_ID
+          ),
+          isTicketBucketId
+        )
+      ),
+    [sortedActivities, ticket]
+  )
+  const currentReferent = useMemo(
+    () => deriveCaseAssignment(sortedActivities, getTicketCellText(ticket ?? {}, 'affectation_1')),
+    [sortedActivities, ticket]
+  )
+  const currentActionRows = useMemo(() => {
+    const latestRevision = new Map<string, Activite>()
+    for (const row of rows) {
+      if (row.type !== 'action' || !row.thread_id) continue
+      const previous = latestRevision.get(row.thread_id)
+      if (!previous || (row.revision ?? 0) > (previous.revision ?? 0)) {
+        latestRevision.set(row.thread_id, row)
+      }
+    }
+    return [...latestRevision.values()]
+  }, [rows])
+  const openActions = useMemo(() => listOpenActions(currentActionRows), [currentActionRows])
+
+  const caseActions = useCaseActivityActions({
+    url,
+    contexte: 'tickets',
+    ref: idReclamation,
+    userLogin,
+    refresh
+  })
 
   const { runAnswer, runSummarize, generation, getShowReasoning, aiBusy } = useTicketSheetAi(url)
   const { downloadDocx } = useWorkflowExport(url)
@@ -98,6 +178,11 @@ export function TicketReclamationDrawer({
     setComposeMode(null)
     setAiComposeTarget(null)
     setComment('')
+    setEditingNoteId(null)
+    setDraftTags([])
+    setTagComment('')
+    setDraftBucket(null)
+    setBucketComment('')
     setRcsMessage('')
     setEmailSubject('')
     setEmailBody('')
@@ -223,7 +308,7 @@ export function TicketReclamationDrawer({
   }
 
   const handleAiDraft = async (
-    target: Exclude<TicketComposeMode, 'comment' | null>,
+    target: Extract<TicketComposeMode, 'rcs' | 'email' | 'letter'>,
     channel: 'email' | 'letter' | undefined,
     setBody: (v: string) => void,
     setSubject: (v: string) => void
@@ -303,7 +388,36 @@ export function TicketReclamationDrawer({
       rightRef={historyScrollRef}
       left={
         <>
-          <TicketSummaryCard ticket={ticket} />
+          <TicketSummaryCard
+            ticket={ticket}
+            tags={currentTags}
+            referent={currentReferent.email}
+            bucket={currentBucket}
+          />
+          <OpenActionsCard
+            actions={openActions}
+            saving={caseActions.submitting === 'action'}
+            userLogin={userLogin}
+            url={url}
+            onComplete={(id) => void caseActions.patchAction(id, { operation: 'complete_action' })}
+            onIgnore={(id, motif) =>
+              void caseActions.patchAction(id, {
+                operation: 'ignore_action',
+                ...(motif.trim() ? { motif: motif.trim() } : {})
+              })
+            }
+            onEdit={(id, values) =>
+              void caseActions.patchAction(id, {
+                operation: 'update_action',
+                action: values.action,
+                assigne_a: values.assigneA,
+                date_echeance: values.dateEcheance,
+                ...(values.note.trim() ? { note: values.note.trim() } : {})
+              })
+            }
+            onDelete={setDeleteActivityId}
+            className="mb-3"
+          />
           {initialLoading ? (
             <InspectorTimelineSkeleton variant="ticket" pane="present" />
           ) : (
@@ -329,8 +443,25 @@ export function TicketReclamationDrawer({
               onSummarizeContentChange={setSummarizeContent}
               onStartComment={() => {
                 setComment('')
+                setEditingNoteId(null)
                 setComposeMode('comment')
                 scrollComposeIntoView()
+              }}
+              onStartTodo={() => setComposeMode('todo')}
+              onStartAction={() => setComposeMode('action')}
+              onStartBucket={() => {
+                setDraftBucket(currentBucket)
+                setBucketComment('')
+                setComposeMode('bucket')
+              }}
+              onStartTags={() => {
+                setDraftTags(currentTags)
+                setTagComment('')
+                setComposeMode('tags')
+              }}
+              onStartAssignment={() => {
+                setTagComment('')
+                setComposeMode('assignment')
               }}
               onStartRcs={() => {
                 setRcsMessage('')
@@ -354,12 +485,64 @@ export function TicketReclamationDrawer({
               onCancelCompose={resetCompose}
               onSubmitComment={() => {
                 if (!comment.trim()) return
-                void postAndRefresh('note', 'logged', comment.trim())
+                if (editingNoteId != null) {
+                  void caseActions.editNote(editingNoteId, comment).then((ok) => {
+                    if (ok) resetCompose()
+                  })
+                } else {
+                  void postAndRefresh(
+                    'note',
+                    'logged',
+                    JSON.stringify({ version: 1, note: comment.trim() })
+                  )
+                }
               }}
+              onSubmitAction={(draft: ActionDraft) =>
+                caseActions.createAction(draft).then((ok) => {
+                  if (ok) resetCompose()
+                  return ok
+                })
+              }
+              draftBucket={draftBucket}
+              currentBucket={currentBucket}
+              onDraftBucketChange={setDraftBucket}
+              bucketComment={bucketComment}
+              onBucketCommentChange={setBucketComment}
+              onSubmitBucket={() => {
+                if (!draftBucket) return
+                void caseActions
+                  .saveBucket(draftBucket, currentBucket, bucketComment)
+                  .then(async (ok) => {
+                    if (!ok) return
+                    resetCompose()
+                    await onCaseStateChange?.()
+                  })
+              }}
+              draftTags={draftTags}
+              currentTags={currentTags}
+              onDraftTagsChange={setDraftTags}
+              tagComment={tagComment}
+              onTagCommentChange={setTagComment}
+              onSubmitTags={() => {
+                void caseActions
+                  .saveTags(draftTags, currentTags, tagComment, TICKET_TAG_OPTIONS)
+                  .then((ok) => {
+                    if (ok) resetCompose()
+                  })
+              }}
+              onAssignReferent={(user: OrgUser) => {
+                void caseActions
+                  .assignReferent(user, currentReferent.email, tagComment)
+                  .then((ok) => {
+                    if (ok) resetCompose()
+                  })
+              }}
+              onImportEml={(file) => void caseActions.importEml(file)}
+              url={url}
               onSummarizeDraft={() => {
                 void handleAiSummarize()
               }}
-              submitting={submitting}
+              submitting={submitting || caseActions.submitting != null}
               onSummarizeSave={() => {
                 const trimmed = summarizeContent.trim()
                 if (!trimmed) return
@@ -382,7 +565,7 @@ export function TicketReclamationDrawer({
                 void postAndRefresh(
                   'ticket_reply',
                   'draft',
-                  JSON.stringify({ canal: 'rcs', corps: trimmed })
+                  JSON.stringify({ version: 1, canal: 'rcs', corps: trimmed })
                 )
               }}
               onRcsSend={() => {
@@ -401,6 +584,7 @@ export function TicketReclamationDrawer({
                   'ticket_reply',
                   'draft',
                   JSON.stringify({
+                    version: 1,
                     canal: 'email',
                     objet: emailSubject.trim(),
                     corps: trimmed
@@ -426,6 +610,7 @@ export function TicketReclamationDrawer({
                   'ticket_reply',
                   'draft',
                   JSON.stringify({
+                    version: 1,
                     canal: 'courrier',
                     objet: letterSubject.trim(),
                     corps: trimmed
@@ -465,11 +650,26 @@ export function TicketReclamationDrawer({
               items={timelineItems}
               loading={loading}
               highlightId={lastHighlightId ?? highlightActivityId}
+              userLogin={userLogin}
               onStartReply={(_id, auteur) => {
                 setComment(replyAuthorMentionSeed(auteur, userLogin))
                 setComposeMode('comment')
                 scrollComposeIntoView()
               }}
+              onStartEditNote={(row) => {
+                setEditingNoteId(row.id)
+                setComment(activity_texte(row.type, row.contenu))
+                setComposeMode('comment')
+                scrollComposeIntoView()
+              }}
+              onDeleteActivity={setDeleteActivityId}
+              onReopenAction={(id, assigneA, dateEcheance) =>
+                void caseActions.patchAction(id, {
+                  operation: 'reopen_action',
+                  assigne_a: assigneA,
+                  date_echeance: dateEcheance
+                })
+              }
             />
           </ContextTimeline>
         )
@@ -477,33 +677,68 @@ export function TicketReclamationDrawer({
     />
   )
 
-  const drawerTitle = `Réclamation ${idReclamation}`
+  const handleClose = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation()
+    onOpenChange(false)
+  }
+  const drawerHeader = (
+    <DrawerHeader
+      data-inspector-motion="header"
+      className="flex-row items-center justify-between gap-2 border-b px-4 py-2 text-start"
+    >
+      <div className="min-w-0 flex-1">
+        <DrawerTitle>Réclamation</DrawerTitle>
+        <p className="truncate text-[0.8125rem] leading-5 tabular-nums">{idReclamation}</p>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        className="no-drag"
+        aria-label="Fermer le dossier"
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={handleClose}
+      >
+        <X aria-hidden />
+      </Button>
+    </DrawerHeader>
+  )
+  const deleteDialog = (
+    <ConfirmDialog
+      open={deleteActivityId != null}
+      title="Supprimer définitivement"
+      description="Cette action est irréversible. Tout le fil disparaîtra de l’historique."
+      confirmLabel="Supprimer"
+      confirmVariant="destructive"
+      onCancel={() => setDeleteActivityId(null)}
+      onConfirm={() => {
+        if (deleteActivityId == null) return
+        void caseActions.deleteActivity(deleteActivityId).then((ok) => {
+          if (ok) setDeleteActivityId(null)
+        })
+      }}
+    />
+  )
 
   if (embedded) {
     return (
       <>
-        <DrawerTitle className="sr-only">{drawerTitle}</DrawerTitle>
+        {drawerHeader}
         {drawerBody}
+        {deleteDialog}
       </>
     )
   }
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
-      <DrawerContent className={INSPECTOR_DRAWER_CLASS}>
-        <DrawerHeader
-          data-inspector-motion="header"
-          className="flex-row items-center justify-between gap-2 border-b p-3 text-start"
-        >
-          <div className="min-w-0 flex-1">
-            <DrawerTitle>Réclamation</DrawerTitle>
-            <p className="truncate text-[0.8125rem] leading-[1.125rem] tabular-nums">
-              {idReclamation}
-            </p>
-          </div>
-        </DrawerHeader>
-        {drawerBody}
-      </DrawerContent>
-    </Drawer>
+    <>
+      <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
+        <DrawerContent className={INSPECTOR_DRAWER_CLASS}>
+          {drawerHeader}
+          {drawerBody}
+        </DrawerContent>
+      </Drawer>
+      {deleteDialog}
+    </>
   )
 }

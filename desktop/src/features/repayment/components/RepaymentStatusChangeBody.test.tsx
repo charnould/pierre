@@ -30,11 +30,11 @@ test('rend une affectation en une phrase', () => {
   const html = renderToStaticMarkup(
     <RepaymentStatusChangeSentence
       row={activity({
-        type: 'repayment_assignment',
+        type: 'case_assignment',
         contenu: JSON.stringify({
           version: 1,
-          gestionnaire_precedent: null,
-          gestionnaire: 'abraconnier@example.org',
+          referent_precedent: null,
+          referent: 'abraconnier@example.org',
           login: 'abraconnier'
         })
       })}
@@ -50,11 +50,11 @@ test('rend une réaffectation en une phrase', () => {
   const html = renderToStaticMarkup(
     <RepaymentStatusChangeSentence
       row={activity({
-        type: 'repayment_assignment',
+        type: 'case_assignment',
         contenu: JSON.stringify({
           version: 1,
-          gestionnaire_precedent: 'abraconnier@example.org',
-          gestionnaire: 'avwoillard@example.org',
+          referent_precedent: 'abraconnier@example.org',
+          referent: 'avwoillard@example.org',
           login: 'avwoillard'
         })
       })}
@@ -71,11 +71,11 @@ test('rend un changement de groupe en une phrase', () => {
   const html = renderToStaticMarkup(
     <RepaymentStatusChangeSentence
       row={activity({
-        type: 'repayment_phase_change',
+        type: 'case_bucket_change',
         contenu: JSON.stringify({
           version: 1,
-          phase_precedente: 'amiable',
-          phase: 'pre_contentieux'
+          bucket_precedent: 'amiable',
+          bucket: 'pre_contentieux'
         })
       })}
     />
@@ -92,11 +92,11 @@ test('affiche le commentaire sous un changement de groupe', () => {
   const html = renderToStaticMarkup(
     <RepaymentStatusChangeBody
       row={activity({
-        type: 'repayment_phase_change',
+        type: 'case_bucket_change',
         contenu: JSON.stringify({
           version: 1,
-          phase_precedente: 'amiable',
-          phase: 'pre_contentieux',
+          bucket_precedent: 'amiable',
+          bucket: 'pre_contentieux',
           note: 'Échec des relances. @bob à confirmer.'
         })
       })}
@@ -112,11 +112,11 @@ test('affiche le commentaire sous une affectation', () => {
   const html = renderToStaticMarkup(
     <RepaymentStatusChangeBody
       row={activity({
-        type: 'repayment_assignment',
+        type: 'case_assignment',
         contenu: JSON.stringify({
           version: 1,
-          gestionnaire_precedent: null,
-          gestionnaire: 'abraconnier@example.org',
+          referent_precedent: null,
+          referent: 'abraconnier@example.org',
           login: 'abraconnier',
           note: 'À relancer avec @bob.'
         })
@@ -134,11 +134,11 @@ test('n’affiche pas de corps sans commentaire ni pour une affectation', () => 
     renderToStaticMarkup(
       <RepaymentStatusChangeBody
         row={activity({
-          type: 'repayment_phase_change',
+          type: 'case_bucket_change',
           contenu: JSON.stringify({
             version: 1,
-            phase_precedente: 'amiable',
-            phase: 'pre_contentieux'
+            bucket_precedent: 'amiable',
+            bucket: 'pre_contentieux'
           })
         })}
       />
@@ -149,11 +149,11 @@ test('n’affiche pas de corps sans commentaire ni pour une affectation', () => 
     renderToStaticMarkup(
       <RepaymentStatusChangeBody
         row={activity({
-          type: 'repayment_assignment',
+          type: 'case_assignment',
           contenu: JSON.stringify({
             version: 1,
-            gestionnaire_precedent: null,
-            gestionnaire: 'alice@example.org'
+            referent_precedent: null,
+            referent: 'alice@example.org'
           })
         })}
       />

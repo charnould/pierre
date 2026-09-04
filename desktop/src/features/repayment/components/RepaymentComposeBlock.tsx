@@ -13,7 +13,11 @@ import {
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { type ReactNode, useRef } from 'react'
 
+import { ActionPicker } from '@/shared/components/inspector/action-picker'
+import { CaseBucketForm } from '@/shared/components/inspector/case-bucket-form'
+import { CaseTagsForm } from '@/shared/components/inspector/case-tags-form'
 import { InspectorComposeShell } from '@/shared/components/inspector/inspector-compose-shell'
+import { ReferentAssignmentForm } from '@/shared/components/inspector/referent-assignment-form'
 import { useInspectorComposeFocus } from '@/shared/components/inspector/use-inspector-compose-focus'
 import {
   TIMELINE_ACTION_BUTTON_CLASS,
@@ -25,6 +29,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger
 } from '@/shared/components/ui/dropdown-menu'
+import type { ActionDraft } from '@/shared/lib/activities/action-activity'
 import { composePresenceProps } from '@/shared/lib/timeline/compose-motion'
 import type { ColumnValuesConfig } from '@/shared/lib/ui-settings/tickets-table'
 import type { Activite } from '@/shared/types/activites'
@@ -32,19 +37,15 @@ import type { OrgUser } from '@/shared/types/users'
 
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
 import type { OutboundEmailResolved, OutboundRcsResolved } from '../lib/outbound-email-templates'
-import type { RepaymentActionDraft } from '../lib/repayment-action-activity'
+import { REPAYMENT_DOSSIER_ACTION_OPTIONS } from '../lib/repayment-action'
 import type { ActiveRepaymentPlan } from '../lib/repayment-activity-text'
 import type { RepaymentGestionnaireAssignment } from '../lib/repayment-advancement'
-import type { RepaymentBucketId } from '../lib/repayment-bucket'
+import { REPAYMENT_BUCKET_OPTIONS, type RepaymentBucketId } from '../lib/repayment-bucket'
 import { REPAYMENT_TAG_OPTIONS } from '../lib/repayment-tags'
-import { RepaymentActionPicker } from './RepaymentActionPicker'
 import { RepaymentEmailReviewForm } from './RepaymentEmailReviewForm'
-import { RepaymentGestionnaireAssignForm } from './RepaymentGestionnaireAssignForm'
 import { RepaymentInlineNoteForm } from './RepaymentInlineNoteForm'
 import { RepaymentOutboundTemplateItems } from './RepaymentOutboundTemplateMenu'
 import { RepaymentRcsReviewForm } from './RepaymentRcsReviewForm'
-import { RepaymentTagsForm } from './RepaymentTagsForm'
-import { RepaymentTimelineAdvancementDraft } from './RepaymentTimelineAdvancementDraft'
 
 export type RepaymentComposeMode =
   | 'note'
@@ -57,6 +58,8 @@ export type RepaymentComposeMode =
   | 'email'
   | 'tags'
   | null
+
+const ACTION_LABELS = REPAYMENT_DOSSIER_ACTION_OPTIONS.map((option) => option.label)
 
 interface Props {
   tenant: TenantRepaymentRow
@@ -94,7 +97,7 @@ interface Props {
   onSubmitNote: (comment?: string) => void
   onSubmitAdvancement: () => void
   onSubmitTags: () => void
-  onSubmitAction: (draft: RepaymentActionDraft) => void | Promise<boolean | void>
+  onSubmitAction: (draft: ActionDraft) => void | Promise<boolean | void>
   onAssignGestionnaire?: (user: OrgUser) => void
   composeEpoch?: number
   rcsMessage: string
@@ -157,7 +160,7 @@ function ComposeDraft({
 
   if (composeMode === 'assign_gestionnaire') {
     return (
-      <RepaymentGestionnaireAssignForm
+      <ReferentAssignmentForm
         url={props.url}
         comment={props.draftComment}
         onCommentChange={props.onDraftCommentChange}
@@ -170,9 +173,10 @@ function ComposeDraft({
 
   if (composeMode === 'todo' || composeMode === 'action') {
     return (
-      <RepaymentActionPicker
+      <ActionPicker
         key={props.composeEpoch}
         intent={composeMode === 'todo' ? 'todo' : 'done'}
+        actionLabels={ACTION_LABELS}
         url={props.url}
         defaultAssignee={props.userLogin}
         todayIso={props.todayIso}
@@ -211,8 +215,9 @@ function ComposeDraft({
 
   if (composeMode === 'tags') {
     return (
-      <RepaymentTagsForm
+      <CaseTagsForm
         tags={props.draftTags}
+        options={REPAYMENT_TAG_OPTIONS}
         onTagsChange={props.onDraftTagsChange}
         comment={props.draftComment}
         onCommentChange={props.onDraftCommentChange}
@@ -225,9 +230,10 @@ function ComposeDraft({
   }
 
   return (
-    <RepaymentTimelineAdvancementDraft
+    <CaseBucketForm
       bucket={props.draftBucket}
-      onBucketChange={props.onDraftBucketChange}
+      options={REPAYMENT_BUCKET_OPTIONS}
+      onBucketChange={(bucket) => props.onDraftBucketChange(bucket as RepaymentBucketId | null)}
       comment={props.draftComment}
       onCommentChange={props.onDraftCommentChange}
       columnValues={props.columnValues}
@@ -235,6 +241,7 @@ function ComposeDraft({
       onSave={props.onSubmitAdvancement}
       canSave={props.advancementCanSave}
       saving={props.submitting}
+      label="Groupe"
     />
   )
 }

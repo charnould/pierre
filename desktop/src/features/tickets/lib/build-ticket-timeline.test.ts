@@ -65,4 +65,28 @@ describe('buildTicketTimeline', () => {
     ])
     expect(items.map((item) => item.row.id)).toEqual([10])
   })
+
+  test('always derives the initial reception as a received email with full content', () => {
+    const message = 'Contenu intégral '.repeat(20)
+    const items = buildTicketTimeline([], {
+      id_reclamation: 'REC-1',
+      id_locataire: 'LOC-1',
+      cree_le: '2026-06-01T08:30:00Z',
+      message_initial: message
+    })
+    expect(items).toHaveLength(1)
+    expect(items[0]?.source).toBe('initial-reception')
+    expect(items[0]?.row.type).toBe('email')
+    expect(items[0]?.row.statut).toBe('received')
+    expect(JSON.parse(items[0]!.row.contenu).corps).toBe(message.trim())
+  })
+
+  test('supports legacy message and a deterministic missing-date fallback', () => {
+    const items = buildTicketTimeline([], {
+      id_reclamation: 'REC-2',
+      message: 'Ancien message'
+    })
+    expect(items[0]?.date).toBe('1970-01-01T00:00:00Z')
+    expect(JSON.parse(items[0]!.row.contenu).corps).toBe('Ancien message')
+  })
 })

@@ -1,5 +1,6 @@
 import { FileText, PenLine, PiggyBank } from 'lucide-react'
 
+import { MentionText } from '@/shared/components/inspector/mention-text'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { cn } from '@/shared/lib/utils'
@@ -7,7 +8,6 @@ import type { Activite } from '@/shared/types/activites'
 
 import { parseRepaymentPlanForm, parseRepaymentPlanProposal } from '../lib/repayment-activity-text'
 import { InspectorFactLine, InspectorFactText } from './InspectorFactLine'
-import { RepaymentMentionText } from './RepaymentMentionText'
 
 interface Props {
   row: Activite
@@ -60,7 +60,7 @@ export function RepaymentPlanProposalBody({ row, className, onEditPlan }: Props)
         ) : null}
       </div>
       {plan.note ? (
-        <RepaymentMentionText
+        <MentionText
           text={plan.note}
           mentionVariant="activity"
           className="text-foreground m-0 text-xs leading-4 break-words whitespace-pre-wrap"

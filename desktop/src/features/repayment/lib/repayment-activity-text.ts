@@ -1,5 +1,5 @@
 import type { Activite } from '@/shared/types/activites'
-import { activity_payload, parse_repayment_tag_change_content } from '@/shared/types/activites'
+import { activity_payload, parse_case_tag_change_content } from '@/shared/types/activites'
 
 import { formatMoneyDisplay } from './apurement-plan/money'
 import type { ApurementPlanFormData } from './apurement-plan/types'
@@ -50,17 +50,17 @@ function formatStatusChangeValue(champ: string, value: unknown): string {
 
 export function parseRepaymentStatusChange(row: Activite): RepaymentStatusChangeDisplay | null {
   if (
-    (row.type !== 'repayment_phase_change' && row.type !== 'repayment_assignment') ||
+    (row.type !== 'case_bucket_change' && row.type !== 'case_assignment') ||
     !row.rattachement.startsWith('repayment:')
   ) {
     return null
   }
 
   const payload = activity_payload(row.type, row.contenu)
-  if (row.type === 'repayment_phase_change') {
-    const apresRaw = payload['phase']
+  if (row.type === 'case_bucket_change') {
+    const apresRaw = payload['bucket']
     if (typeof apresRaw !== 'string' || !isRepaymentBucketId(apresRaw)) return null
-    const avantRaw = payload['phase_precedente']
+    const avantRaw = payload['bucket_precedent']
     const avant =
       typeof avantRaw === 'string' && isRepaymentBucketId(avantRaw)
         ? avantRaw
@@ -68,9 +68,9 @@ export function parseRepaymentStatusChange(row: Activite): RepaymentStatusChange
     return { champ: 'bucket', avant, apres: apresRaw, avantUnset: false }
   }
 
-  const apresRaw = payload['gestionnaire']
+  const apresRaw = payload['referent']
   if (typeof apresRaw === 'string' && apresRaw.trim() !== '') {
-    const avantRaw = payload['gestionnaire_precedent']
+    const avantRaw = payload['referent_precedent']
     const avantUnset = avantRaw == null || avantRaw === ''
     const avant =
       !avantUnset && typeof avantRaw === 'string' && avantRaw.trim() !== '' ? avantRaw.trim() : null
@@ -310,7 +310,7 @@ export function formatRepaymentActivityBody(row: Activite): string {
   if (statusChange) return statusChange
 
   const tagChange =
-    row.type === 'repayment_tag_change' ? parse_repayment_tag_change_content(row.contenu) : null
+    row.type === 'case_tag_change' ? parse_case_tag_change_content(row.contenu) : null
   if (tagChange) {
     const tags = canonicalizeRepaymentTags(tagChange.tags)
     const snapshot = tags.length > 0 ? tags.join(' · ') : 'Aucun tag'

@@ -1,17 +1,16 @@
 import { describe, expect, test } from 'bun:test'
 
+import {
+  actionTimelineDate,
+  buildActionActivity,
+  listOpenActions,
+  mapDoneActionForm,
+  mapTodoForm,
+  parseActionActivity,
+  todoTimelineSentence
+} from '@/shared/lib/activities/action-activity'
 import { parse_action_creation_content } from '@/shared/types/activites'
 import type { Activite } from '@/shared/types/activites'
-
-import {
-  buildRepaymentActionActivity,
-  listOpenRepaymentActions,
-  mapRepaymentDoneActionForm,
-  mapRepaymentTodoForm,
-  parseRepaymentActionActivity,
-  repaymentActionTimelineDate,
-  todoTimelineSentence
-} from './repayment-action-activity'
 
 function actionRow(
   id: number,
@@ -47,10 +46,10 @@ function actionRow(
   }
 }
 
-describe('repayment-action-activity', () => {
-  test('mapRepaymentTodoForm planifie même pour aujourd’hui ; mapRepaymentDoneActionForm enregistre', () => {
+describe('action-activity', () => {
+  test('mapTodoForm planifie même pour aujourd’hui ; mapDoneActionForm enregistre', () => {
     expect(
-      mapRepaymentTodoForm({
+      mapTodoForm({
         action: '',
         assigneA: 'alice',
         dateEcheance: '2026-08-24',
@@ -59,7 +58,7 @@ describe('repayment-action-activity', () => {
     ).toBeNull()
 
     expect(
-      mapRepaymentTodoForm({
+      mapTodoForm({
         action: 'Joindre le locataire',
         assigneA: 'bob@example.org',
         dateEcheance: '2026-08-24',
@@ -73,10 +72,8 @@ describe('repayment-action-activity', () => {
       note: 'relance'
     })
 
-    expect(mapRepaymentDoneActionForm({ action: '', commentaire: 'appel ok' })).toBeNull()
-    expect(
-      mapRepaymentDoneActionForm({ action: 'Joindre le locataire', commentaire: 'appel ok' })
-    ).toEqual({
+    expect(mapDoneActionForm({ action: '', commentaire: 'appel ok' })).toBeNull()
+    expect(mapDoneActionForm({ action: 'Joindre le locataire', commentaire: 'appel ok' })).toEqual({
       mode: 'enregistrer',
       action: 'Joindre le locataire',
       resultat: 'appel ok'
@@ -84,17 +81,13 @@ describe('repayment-action-activity', () => {
   })
 
   test('planifie une action libre avec assigné et échéance', () => {
-    const activity = buildRepaymentActionActivity(
-      'LOC-1',
-      {
-        mode: 'planifier',
-        action: 'Contacter le garant',
-        assigneA: 'alice@example.org',
-        dateEcheance: '2026-08-30',
-        note: 'Le garant est joignable le matin.'
-      },
-      'user:charles@example.org'
-    )
+    const activity = buildActionActivity('repayment', 'LOC-1', {
+      mode: 'planifier',
+      action: 'Contacter le garant',
+      assigneA: 'alice@example.org',
+      dateEcheance: '2026-08-30',
+      note: 'Le garant est joignable le matin.'
+    })
 
     expect(activity.type).toBe('action')
     expect(parse_action_creation_content(activity.contenu ?? '')).toEqual({
@@ -107,7 +100,7 @@ describe('repayment-action-activity', () => {
     })
   })
 
-  test('listOpenRepaymentActions ne garde que les a_faire, triées par échéance', () => {
+  test('listOpenActions ne garde que les a_faire, triées par échéance', () => {
     const later = actionRow(1, {
       action: 'Plus tard',
       etat: 'a_faire',
@@ -129,9 +122,10 @@ describe('repayment-action-activity', () => {
       etat: 'fait'
     })
 
-    expect(
-      listOpenRepaymentActions([later, done, sooner]).map((item) => item.contenu.action)
-    ).toEqual(['Plus tôt', 'Plus tard'])
+    expect(listOpenActions([later, done, sooner]).map((item) => item.contenu.action)).toEqual([
+      'Plus tôt',
+      'Plus tard'
+    ])
   })
 
   test('date chaque événement avec la date de sa ligne', () => {
@@ -162,11 +156,11 @@ describe('repayment-action-activity', () => {
       revision: 2
     }
 
-    expect(repaymentActionTimelineDate(done)).toBe('2026-08-20T10:00:00')
+    expect(actionTimelineDate(done)).toBe('2026-08-20T10:00:00')
   })
 
   test('todoTimelineSentence décrit la création avec responsable et échéance', () => {
-    const created = parseRepaymentActionActivity(
+    const created = parseActionActivity(
       actionRow(4, {
         action: 'Analyser un rejet de prélèvement',
         etat: 'a_faire',
@@ -187,7 +181,7 @@ describe('repayment-action-activity', () => {
   })
 
   test('todoTimelineSentence décrit la réalisation avec responsable et échéance', () => {
-    const completed = parseRepaymentActionActivity(
+    const completed = parseActionActivity(
       actionRow(8, {
         action: 'Analyser un rejet de prélèvement',
         etat: 'fait',
@@ -217,7 +211,7 @@ describe('repayment-action-activity', () => {
       cree_par: 'user:charles@example.org',
       cree_le: '2026-08-20T10:00:00'
     }
-    const due = parseRepaymentActionActivity(
+    const due = parseActionActivity(
       actionRow(5, {
         action: previous.action,
         etat: 'a_faire',
@@ -235,7 +229,7 @@ describe('repayment-action-activity', () => {
       { type: 'date', iso: '2026-08-28' }
     ])
 
-    const assignee = parseRepaymentActionActivity(
+    const assignee = parseActionActivity(
       actionRow(6, {
         action: previous.action,
         etat: 'a_faire',
@@ -252,7 +246,7 @@ describe('repayment-action-activity', () => {
       { type: 'person', identity: 'user:bob@exemple.fr' }
     ])
 
-    const both = parseRepaymentActionActivity(
+    const both = parseActionActivity(
       actionRow(7, {
         action: previous.action,
         etat: 'a_faire',

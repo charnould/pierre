@@ -3,29 +3,26 @@ import { useId, useState } from 'react'
 import { CollaboratorPopoverPicker } from '@/shared/components/CollaboratorPopoverPicker'
 import { InspectorComposeField } from '@/shared/components/inspector/inspector-compose-field'
 import { InspectorComposeFooter } from '@/shared/components/inspector/inspector-compose-shell'
+import { MentionTextarea } from '@/shared/components/inspector/mention-textarea'
 import { Button } from '@/shared/components/ui/button'
 import { useOrgUsers } from '@/shared/hooks/useOrgUsers'
 import type { OrgUser } from '@/shared/types/users'
 
-import { RepaymentMentionTextarea } from './RepaymentMentionTextarea'
-
-interface Props {
-  url?: string
-  comment: string
-  onCommentChange: (comment: string) => void
-  onCancel: () => void
-  onSave: (user: OrgUser) => void
-  saving?: boolean
-}
-
-export function RepaymentGestionnaireAssignForm({
+export function ReferentAssignmentForm({
   url,
   comment,
   onCommentChange,
   onCancel,
   onSave,
   saving
-}: Props) {
+}: {
+  url?: string
+  comment: string
+  onCommentChange: (comment: string) => void
+  onCancel: () => void
+  onSave: (user: OrgUser) => void
+  saving?: boolean
+}) {
   const { users, loading } = useOrgUsers(url)
   const commentId = useId()
   const [selected, setSelected] = useState<OrgUser | null>(null)
@@ -43,7 +40,7 @@ export function RepaymentGestionnaireAssignForm({
         />
       </InspectorComposeField>
       <InspectorComposeField htmlFor={commentId} label="Note (optionnel)">
-        <RepaymentMentionTextarea
+        <MentionTextarea
           id={commentId}
           value={comment}
           onChange={onCommentChange}

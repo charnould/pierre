@@ -4,6 +4,7 @@ import { JSDOM } from 'jsdom'
 
 import type { ColumnFilters } from '@/shared/lib/ui-settings/tickets-table'
 import type { TicketsListResponse } from '@/shared/types'
+import type { TicketsQueryParams } from '@/shared/types/tickets'
 
 import { useTickets } from './useTickets'
 
@@ -110,6 +111,54 @@ describe('useTickets out-of-order responses', () => {
     await act(async () => {
       root.unmount()
     })
+    container.remove()
+  })
+
+  test('returns to the last valid page when a bucket shrinks after refresh', async () => {
+    const { act, useEffect } = await import('react')
+    const { createRoot } = await import('react-dom/client')
+    const offsets: number[] = []
+    let shrunk = false
+    window.api = {
+      getTickets: async (params: TicketsQueryParams) => {
+        offsets.push(params.offset ?? 0)
+        return {
+          data: shrunk ? [] : [{ id_reclamation: params.offset ? 'last' : 'first' }],
+          meta: {
+            total: shrunk ? 0 : 151,
+            limit: 150,
+            offset: params.offset ?? 0,
+            columns: [{ name: 'id_reclamation', type: 'TEXT' }],
+            default_sort: 'id_reclamation'
+          }
+        }
+      }
+    } as unknown as typeof window.api
+
+    let latest: TicketsApi | null = null
+    function Harness({ refreshNonce }: { refreshNonce: number }) {
+      const value = useTickets('https://pierre.test', false, {
+        bucket: 'en_cours',
+        refreshNonce
+      })
+      useEffect(() => {
+        latest = value
+      }, [value])
+      return null
+    }
+
+    const container = document.createElement('div')
+    document.body.append(container)
+    const root = createRoot(container)
+    await act(async () => root.render(<Harness refreshNonce={0} />))
+    await act(async () => latest?.nextPage())
+    shrunk = true
+    await act(async () => root.render(<Harness refreshNonce={1} />))
+    await act(async () => sleep(0))
+
+    expect(offsets).toEqual([0, 150, 150, 0])
+
+    await act(async () => root.unmount())
     container.remove()
   })
 })

@@ -2,7 +2,7 @@ import { motion, useReducedMotion } from 'motion/react'
 
 import { PANEL_IDENTITY } from '@/shared/lib/panel-identity'
 import { preloadTab } from '@/shared/lib/preload-tab'
-import { tabNavLabel } from '@/shared/lib/tab-registry'
+import { isPanelTabVisible, tabNavLabel } from '@/shared/lib/tab-registry'
 import type { Tab } from '@/shared/lib/tabs'
 import { cn } from '@/shared/lib/utils'
 
@@ -20,12 +20,11 @@ const HOME_TILES = [
   'ventes'
 ] as const satisfies readonly Tab[]
 
-const HOME_SPAN: Partial<Record<(typeof HOME_TILES)[number], string>> = {
-  chat: 'col-span-2 row-span-2',
-  about: 'col-span-2',
-  attributions: 'col-span-2',
-  ventes: 'col-span-2'
-}
+const VISIBLE_HOME_TILES = HOME_TILES.filter(isPanelTabVisible)
+
+const HOME_TILE_COLUMNS = Math.max(1, Math.ceil(Math.sqrt(VISIBLE_HOME_TILES.length)))
+const HOME_TILE_FLEX =
+  `1 1 calc((100% - ${(HOME_TILE_COLUMNS - 1) * 8}px) / ${HOME_TILE_COLUMNS})` as const
 
 const TILE_MATERIAL: Record<(typeof HOME_TILES)[number], string> = {
   chat: 'home-tile-1',
@@ -72,24 +71,21 @@ function HomeNavTile({
   tab,
   agentName,
   onNavigate,
-  className,
   delayMs
 }: {
   tab: (typeof HOME_TILES)[number]
   agentName: string
   onNavigate: (tab: Tab) => void
-  className?: string
   delayMs: number
 }) {
   const identity = PANEL_IDENTITY[tab]!
   const Icon = identity.icon
-  const isHero = tab === 'chat'
   const reduceMotion = useReducedMotion()
 
   return (
     <div
-      className={cn('min-h-0', TILE_ENTER, className)}
-      style={{ transitionDelay: `${delayMs}ms` }}
+      className={cn('@container min-h-0 min-w-0', TILE_ENTER)}
+      style={{ flex: HOME_TILE_FLEX, transitionDelay: `${delayMs}ms` }}
     >
       <motion.button
         type="button"
@@ -106,7 +102,7 @@ function HomeNavTile({
         onPointerEnter={() => preloadTab(tab)}
         onClick={() => onNavigate(tab)}
       >
-        <div className={cn('flex h-full min-h-0 flex-col', isHero ? 'gap-4 p-6' : 'gap-3 p-4')}>
+        <div className="flex h-full min-h-0 flex-col gap-3 p-4">
           <div className="flex items-start justify-between gap-2 overflow-visible">
             <motion.span
               aria-hidden
@@ -114,17 +110,11 @@ function HomeNavTile({
               style={{ originX: 0, originY: 0 }}
               variants={iconHover}
             >
-              <Icon
-                className={cn('text-white', isHero ? 'size-32' : 'size-24')}
-                strokeWidth={1.5}
-              />
+              <Icon className="size-[clamp(6rem,32cqw,9rem)] text-white" strokeWidth={1.5} />
             </motion.span>
           </div>
           <motion.span
-            className={cn(
-              'mt-auto block font-medium tracking-tight text-balance text-white',
-              isHero ? 'text-[2.25rem] leading-[1.1]' : 'text-[1.5rem] leading-[1.15]'
-            )}
+            className="mt-auto block text-[clamp(1.25rem,9cqw,2rem)] leading-[1.15] font-medium tracking-tight text-balance text-white"
             variants={titleHover}
           >
             {tabNavLabel(tab, agentName)}
@@ -149,16 +139,15 @@ export function HomeView({ hidden, onNavigate, agentName }: Props) {
       )}
     >
       <nav
-        className="grid min-h-0 w-full flex-1 grid-cols-4 grid-rows-4 gap-2"
+        className="flex min-h-0 w-full flex-1 flex-wrap content-stretch gap-2"
         aria-label="Métiers"
       >
-        {HOME_TILES.map((tab, index) => (
+        {VISIBLE_HOME_TILES.map((tab, index) => (
           <HomeNavTile
             key={tab}
             tab={tab}
             agentName={agentName}
             onNavigate={onNavigate}
-            className={HOME_SPAN[tab]}
             delayMs={tileDelayMs(index)}
           />
         ))}

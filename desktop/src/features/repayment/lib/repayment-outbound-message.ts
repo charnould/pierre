@@ -1,11 +1,10 @@
+import type { TodoSentencePart } from '@/shared/lib/activities/action-activity'
 import {
   COMMUNICATION_TYPES,
   activity_payload,
   type Activite,
   type CommunicationType
 } from '@/shared/types/activites'
-
-import type { TodoSentencePart } from './repayment-action-activity'
 
 export type TimelineMessageBody =
   | { kind: 'note'; text: string }
@@ -99,8 +98,13 @@ export function outboundActionSentenceParts(
 }
 
 export function parseTimelineMessageBody(row: Activite): TimelineMessageBody | null {
-  if (row.type === 'repayment_phase_change' || row.type === 'repayment_assignment') return null
-  if (row.type === 'repayment_tag_change') return null
+  if (
+    row.type === 'case_bucket_change' ||
+    row.type === 'case_assignment' ||
+    row.type === 'case_tag_change'
+  ) {
+    return null
+  }
 
   const payload = activity_payload(row.type, row.contenu)
 

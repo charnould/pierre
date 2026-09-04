@@ -1,8 +1,7 @@
+import { MentionText } from '@/shared/components/inspector/mention-text'
 import { Button } from '@/shared/components/ui/button'
+import { parseActionActivity } from '@/shared/lib/activities/action-activity'
 import type { Activite } from '@/shared/types/activites'
-
-import { parseRepaymentActionActivity } from '../lib/repayment-action-activity'
-import { RepaymentMentionText } from './RepaymentMentionText'
 
 interface Props {
   row: Activite
@@ -19,7 +18,7 @@ export function RepaymentTodoEventBody({
   saving = false,
   onReopen
 }: Props) {
-  const parsed = parseRepaymentActionActivity(row)
+  const parsed = parseActionActivity(row)
   if (!parsed) return null
   const { contenu, event } = parsed
   const comment = contenu.note?.trim() ?? ''
@@ -40,7 +39,7 @@ export function RepaymentTodoEventBody({
   return (
     <div className="flex flex-col gap-1.5">
       {details.map((text) => (
-        <RepaymentMentionText
+        <MentionText
           key={text}
           text={text}
           mentionVariant="activity"

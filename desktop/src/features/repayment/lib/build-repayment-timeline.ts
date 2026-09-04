@@ -1,3 +1,4 @@
+import { actionTimelineDate } from '@/shared/lib/activities/action-activity'
 import { is_boost_notification, type Activite } from '@/shared/types/activites'
 import type { LedgerMovementRow } from '@/shared/types/ledger'
 
@@ -9,7 +10,6 @@ import {
 import { roundToCents } from './euro-amount'
 import { formatSignedEuro } from './format-repayment'
 import { compareLedgerDatesAsc, compareLedgerDatesDesc, parseLedgerDate } from './ledger-date'
-import { repaymentActionTimelineDate } from './repayment-action-activity'
 
 function movementMontant(row: LedgerMovementRow): number | null {
   const raw = row.montant_en_euros
@@ -171,7 +171,7 @@ export function mapNotificationToEntry(
   return {
     source: 'activity',
     id: `activity:${row.id}`,
-    date: repaymentActionTimelineDate(row),
+    date: actionTimelineDate(row),
     row
   }
 }

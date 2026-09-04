@@ -39,7 +39,7 @@ export function TicketsTableSkeleton({ columns, settings }: Props) {
               {columns.map((col) => (
                 <TableHead
                   key={col.name}
-                  className="border-border bg-background relative h-9 border-b px-2 text-start"
+                  className="border-border bg-background relative h-8 border-b px-2 text-start"
                 >
                   <Skeleton className="h-3 w-3/4" aria-hidden />
                   <span className="sr-only">{resolveTicketColumnLabel(col.name, settings)}</span>

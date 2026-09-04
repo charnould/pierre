@@ -5,6 +5,7 @@ import type { ActivityBoostEmoji } from '@/features/activity/lib/activity-boosts
 import { ContextTimelineEntryHeader } from '@/shared/components/timeline/context-timeline-entry-header'
 import { ContextTimelineItem } from '@/shared/components/timeline/context-timeline-item'
 import { Button } from '@/shared/components/ui/button'
+import { indexTodoRevisions, parseActionActivity } from '@/shared/lib/activities/action-activity'
 import { formatInspectorTimelineDateline } from '@/shared/lib/timeline/activity-notification-date'
 import {
   databaseTimelineActor,
@@ -16,9 +17,8 @@ import { cn } from '@/shared/lib/utils'
 import type { Activite } from '@/shared/types/activites'
 
 import type { RepaymentTimelineItem } from '../lib/build-repayment-timeline'
-import { indexTodoRevisions, parseRepaymentActionActivity } from '../lib/repayment-action-activity'
-import { ActivityTimelineEvent } from './ActivityTimelineEvent'
 import { NoteCommentActions, NOTE_AUTHOR_ACTION_CLASS } from './NoteCommentActions'
+import { RepaymentActivityTimelineEvent } from './RepaymentActivityTimelineEvent'
 import { isRepaymentPlanProposalActivity } from './RepaymentPlanProposalBody'
 import { RepaymentTimelineMessageBody } from './RepaymentTimelineMessageBody'
 import { RepaymentTimelineMovementRow } from './RepaymentTimelineMovementRow'
@@ -185,7 +185,7 @@ function TimelineItems({
         const isPlan = item.source === 'activity' && isRepaymentPlanProposalActivity(item.row)
         const canReply = (isNote || isPlan) && onStartReply != null
         const isAuthor = isNote && userLogin != null && item.row.auteur === `user:${userLogin}`
-        const todo = item.source === 'activity' ? parseRepaymentActionActivity(item.row) : null
+        const todo = item.source === 'activity' ? parseActionActivity(item.row) : null
         const isTodoCreator =
           todo != null && userLogin != null && todo.contenu.cree_par === `user:${userLogin}`
 
@@ -220,7 +220,7 @@ function TimelineItems({
         ) : undefined
 
         return (
-          <ActivityTimelineEvent
+          <RepaymentActivityTimelineEvent
             key={item.id}
             row={item.row}
             actor={actor}
@@ -258,7 +258,7 @@ function TimelineItems({
                 }
               />
             )}
-          </ActivityTimelineEvent>
+          </RepaymentActivityTimelineEvent>
         )
       })}
     </>

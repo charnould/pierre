@@ -24,6 +24,9 @@ export function timelineActivityActionVerb(row: Activite): string {
     case 'sms':
       return 'a envoyé un SMS'
     case 'email':
+      if (activity_payload(row.type, row.contenu)['reception_initiale'] === true) {
+        return 'a envoyé la réclamation'
+      }
       return inbound ? 'a répondu par courriel' : 'a envoyé un courriel'
     case 'email_import':
       return 'a importé un courriel'
@@ -53,11 +56,11 @@ export function timelineActivityActionVerb(row: Activite): string {
       if (row.event === 'reopened') return 'a rouvert une tâche'
       return 'a publié une action'
     }
-    case 'repayment_phase_change':
-      return 'a changé le groupe'
-    case 'repayment_assignment':
+    case 'case_bucket_change':
+      return row.rattachement.startsWith('repayment:') ? 'a changé le groupe' : 'a changé le panier'
+    case 'case_assignment':
       return 'a affecté le dossier'
-    case 'repayment_tag_change':
+    case 'case_tag_change':
       return 'a mis à jour les tags'
     case 'ticket_change':
       return 'a mis à jour le ticket'

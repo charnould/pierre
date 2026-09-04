@@ -3,7 +3,7 @@ import {
   type ActivityNotificationItem
 } from '@/features/activity/lib/notification-types'
 import { ACTIVITY_MODULE_LABELS, type ActivityModuleView } from '@/features/home/home-ui'
-import { formatMentionDisplay } from '@/features/repayment/lib/repayment-mention'
+import { formatMentionDisplay } from '@/shared/lib/activities/mentions'
 import type { ActivityContext } from '@/shared/types/activites'
 
 export function moduleLabelForType(type: ActivityContext): string {

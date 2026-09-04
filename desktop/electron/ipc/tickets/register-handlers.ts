@@ -71,12 +71,13 @@ async function fetchTicketDraftActivities(
  */
 export function registerTicketsHandlers(partition: string): void {
   ipcMain.handle(IpcChannel.tickets.list, async (_, params: TicketsQueryParams) => {
-    const { url, filters, filter_rules, limit, offset, sort } = params
+    const { url, filters, filter_rules, limit, offset, sort, bucket } = params
     const ses = session.fromPartition(partition)
     const search = new URLSearchParams()
     if (limit !== undefined) search.set('limit', String(limit))
     if (offset !== undefined) search.set('offset', String(offset))
     if (sort) search.set('sort', sort)
+    if (bucket) search.set('bucket', bucket)
     if (filters) {
       for (const [key, values] of Object.entries(filters)) {
         for (const value of values) {

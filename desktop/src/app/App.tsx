@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo, startTransition } from 'react'
 
-import { AgentIdentityProvider } from '@/contexts/AgentIdentityContext'
+import { AgentIdentityProvider, DEFAULT_AGENT_NAME } from '@/contexts/AgentIdentityContext'
 import {
   NavigationHistoryProvider,
   useNavigationHistory
@@ -194,7 +194,7 @@ export function App() {
   const [activeTab, setActiveTab] = useState<Tab>('settings')
   const [settings, setSettings] = useState<Settings>({})
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [agentName, setAgentName] = useState("l'agent IA")
+  const [agentName, setAgentName] = useState(DEFAULT_AGENT_NAME)
 
   const onTabChange = useCallback((tab: Tab) => {
     setActiveTab(tab)

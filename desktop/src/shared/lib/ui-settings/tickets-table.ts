@@ -5,13 +5,12 @@ export const RECLAMATIONS_PAGE_SIZE = 150
 export const facetFilterUnavailableMessage = (totalDistinct: number): string =>
   `Cette colonne compte ${totalDistinct} valeurs distinctes. Saisissez une recherche pour filtrer.`
 
-/** Single pinned column containing the N/P/I/R grid. */
-export const TICKET_TABLE_DRAFT_GROUP_ID = '__draft_npir__'
+/** Locked first column containing only the unread notification signal. */
+export const TICKET_TABLE_ALERT_COLUMN_ID = '__alertes__'
 
-/** Total width of the flush NPIR column (4 tight dot segments, zero padding). */
-export const TICKET_TABLE_DRAFT_GROUP_WIDTH = 68
+export const TICKET_TABLE_ALERT_COLUMN_WIDTH = 40
 
-const TICKET_TABLE_SYSTEM_COLUMN_IDS = new Set<string>([TICKET_TABLE_DRAFT_GROUP_ID])
+const TICKET_TABLE_SYSTEM_COLUMN_IDS = new Set<string>([TICKET_TABLE_ALERT_COLUMN_ID])
 
 export const isTicketTableSystemColumn = (columnId: string): boolean =>
   TICKET_TABLE_SYSTEM_COLUMN_IDS.has(columnId)
@@ -19,16 +18,16 @@ export const isTicketTableSystemColumn = (columnId: string): boolean =>
 export const stripTicketTableSystemColumns = (columnIds: string[]): string[] =>
   columnIds.filter((id) => !isTicketTableSystemColumn(id))
 
-export const stripTicketTableDraftColumnWidths = (
+export const stripTicketTableSystemColumnWidths = (
   widths: Record<string, number>
 ): Record<string, number> => {
   const next = { ...widths }
-  delete next[TICKET_TABLE_DRAFT_GROUP_ID]
+  delete next[TICKET_TABLE_ALERT_COLUMN_ID]
   return next
 }
 
-export const ticketTableDraftColumnSizing = (): Record<string, number> => ({
-  [TICKET_TABLE_DRAFT_GROUP_ID]: TICKET_TABLE_DRAFT_GROUP_WIDTH
+export const ticketTableSystemColumnSizing = (): Record<string, number> => ({
+  [TICKET_TABLE_ALERT_COLUMN_ID]: TICKET_TABLE_ALERT_COLUMN_WIDTH
 })
 const COLUMN_WIDTH_MIN = 60
 const COLUMN_WIDTH_MAX = 800

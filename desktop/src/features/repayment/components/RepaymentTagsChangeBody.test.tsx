@@ -27,7 +27,7 @@ test('rend le snapshot de tags en une phrase', () => {
   const html = renderToStaticMarkup(
     <RepaymentTagsChangeSentence
       row={activity({
-        type: 'repayment_tag_change',
+        type: 'case_tag_change',
         contenu: JSON.stringify({
           version: 1,
           tags_precedents: [],
@@ -47,7 +47,7 @@ test('rend un retrait total sans chips', () => {
   const html = renderToStaticMarkup(
     <RepaymentTagsChangeSentence
       row={activity({
-        type: 'repayment_tag_change',
+        type: 'case_tag_change',
         contenu: JSON.stringify({
           version: 1,
           tags_precedents: ['décès'],
@@ -65,7 +65,7 @@ test('n’affiche pas un tag hors configuration', () => {
   const html = renderToStaticMarkup(
     <RepaymentTagsChangeSentence
       row={activity({
-        type: 'repayment_tag_change',
+        type: 'case_tag_change',
         contenu: JSON.stringify({
           version: 1,
           tags_precedents: [],
@@ -83,7 +83,7 @@ test('un snapshot hors config se lit comme aucun tag', () => {
   const html = renderToStaticMarkup(
     <RepaymentTagsChangeSentence
       row={activity({
-        type: 'repayment_tag_change',
+        type: 'case_tag_change',
         contenu: JSON.stringify({
           version: 1,
           tags_precedents: [],
@@ -102,7 +102,7 @@ test('le corps n’affiche que la note', () => {
     renderToStaticMarkup(
       <RepaymentTagsChangeBody
         row={activity({
-          type: 'repayment_tag_change',
+          type: 'case_tag_change',
           contenu: JSON.stringify({
             version: 1,
             tags_precedents: [],
@@ -118,7 +118,7 @@ test('le corps n’affiche que la note', () => {
     renderToStaticMarkup(
       <RepaymentTagsChangeBody
         row={activity({
-          type: 'repayment_tag_change',
+          type: 'case_tag_change',
           contenu: JSON.stringify({
             version: 1,
             tags_precedents: [],

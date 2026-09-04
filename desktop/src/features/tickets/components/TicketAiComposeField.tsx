@@ -1,7 +1,7 @@
-import { RepaymentMentionTextarea } from '@/features/repayment/components/RepaymentMentionTextarea'
 import { WorkflowArtifactStreamPreview } from '@/features/workflow/components/WorkflowArtifactStreamPreview'
 import { WorkflowReasoningAmbient } from '@/features/workflow/components/WorkflowReasoningAmbient'
 import { useWorkflowReasoningScroll } from '@/features/workflow/hooks/useWorkflowReasoningScroll'
+import { MentionTextarea } from '@/shared/components/inspector/mention-textarea'
 import { ReasoningPlainContent } from '@/shared/components/reasoning/reasoning-plain-content'
 import { cn } from '@/shared/lib/utils'
 export type TicketAiComposeFieldProps = {
@@ -88,7 +88,7 @@ export function TicketAiComposeField({
   }
 
   return (
-    <RepaymentMentionTextarea
+    <MentionTextarea
       id={id}
       value={value}
       onChange={onChange}

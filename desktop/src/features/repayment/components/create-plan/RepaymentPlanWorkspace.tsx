@@ -1,7 +1,7 @@
 import { ChevronDown, FileDown } from 'lucide-react'
 import { useCallback, useState } from 'react'
 
-import { RepaymentMentionTextarea } from '@/features/repayment/components/RepaymentMentionTextarea'
+import { MentionTextarea } from '@/shared/components/inspector/mention-textarea'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
@@ -21,13 +21,13 @@ import {
 import { Label } from '@/shared/components/ui/label'
 import { Switch } from '@/shared/components/ui/switch'
 import { toast } from '@/shared/components/ui/toast'
+import { extractMentionsFromText } from '@/shared/lib/activities/mentions'
 
 import { createDefaultApurementPlanForm } from '../../lib/apurement-plan/defaults'
 import { exportApurementPlanDocx } from '../../lib/apurement-plan/export-plan-docx'
 import { rebuildInstallments } from '../../lib/apurement-plan/installments'
 import type { ApurementPlanFormData } from '../../lib/apurement-plan/types'
 import type { TenantRepaymentRow } from '../../lib/classify-tenants'
-import { extractMentionsFromText } from '../../lib/repayment-mention'
 import {
   PLAN_CLOSE_MOTIF_LABELS,
   PLAN_CLOSE_MOTIFS,
@@ -384,7 +384,7 @@ export function RepaymentPlanWorkspace({
             </DialogDescription>
           </DialogHeader>
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-            <RepaymentMentionTextarea
+            <MentionTextarea
               url={url}
               value={commentDraft}
               onChange={setCommentDraft}

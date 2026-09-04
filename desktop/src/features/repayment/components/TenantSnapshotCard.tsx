@@ -1,8 +1,12 @@
-import { Box, Minus, MoveDownRight, MoveUpRight } from 'lucide-react'
-import { memo, type ReactNode } from 'react'
+import { Minus, MoveDownRight, MoveUpRight } from 'lucide-react'
+import { memo } from 'react'
 
+import { CollaboratorChip } from '@/shared/components/inspector/collaborator-chip'
+import {
+  InspectorSnapshotCard,
+  InspectorSnapshotFact as SnapshotFact
+} from '@/shared/components/inspector/inspector-snapshot-card'
 import { Badge } from '@/shared/components/ui/badge'
-import { Card, CardContent } from '@/shared/components/ui/card'
 import type { ColumnValuesConfig } from '@/shared/lib/ui-settings/tickets-table'
 import { cn } from '@/shared/lib/utils'
 
@@ -17,7 +21,6 @@ import { formatDebtRentRatioMonthsOneDecimal, formatEuro } from '../lib/format-r
 import { isRepaymentActionId, type RepaymentActionId } from '../lib/repayment-action'
 import type { RepaymentGestionnaireAssignment } from '../lib/repayment-advancement'
 import { resolveBucketForTenantRow, type RepaymentBucketId } from '../lib/repayment-bucket'
-import { CollaboratorChip } from './CollaboratorChip'
 import { InspectorFactText } from './InspectorFactLine'
 import { RepaymentActionBadge } from './RepaymentActionBadge'
 import { RepaymentBucketBadge } from './RepaymentBucketBadge'
@@ -49,15 +52,6 @@ function debtLineParts(
   const amount = formatEuro(solde)
   if (ratio == null || ratio <= 0) return { amount, rentEquiv: null }
   return { amount, rentEquiv: formatDebtRentRatioMonthsOneDecimal(ratio) }
-}
-
-function SnapshotFact({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <>
-      <span>{label}</span>
-      <div className="flex min-w-0 flex-wrap items-center gap-1.5">{children}</div>
-    </>
-  )
 }
 
 function GestionnaireFact({ assignment }: { assignment: RepaymentGestionnaireAssignment }) {
@@ -138,72 +132,51 @@ export const TenantSnapshotCard = memo(function TenantSnapshotCard({
   const debtLabel = debt.rentEquiv ? `${debt.amount} · ${debt.rentEquiv} de loyer` : debt.amount
 
   return (
-    <Card
-      size="sm"
-      className={cn('border-border w-full gap-0 rounded-md border py-0 ring-0', className)}
-    >
-      <CardContent className="px-3 py-2">
-        <div className="flex min-w-0 items-start gap-2">
-          <Box aria-hidden className="text-muted-foreground mt-0.5 size-4 shrink-0" />
-          <div className="min-w-0 flex-1">
-            <p className="text-foreground m-0 text-sm leading-5 font-medium">Contexte</p>
-            <div className="text-muted-foreground mt-2 grid grid-cols-[max-content_minmax(0,1fr)] items-center gap-x-1.5 gap-y-1 text-xs leading-4">
-              <SnapshotFact label="Dette">
-                <InspectorFactText className="tabular-nums" title={debtLabel}>
-                  {debtLabel}
-                </InspectorFactText>
-                <DebtTrendIcon trend={trend} />
-              </SnapshotFact>
+    <InspectorSnapshotCard className={className}>
+      <SnapshotFact label="Dette">
+        <InspectorFactText className="tabular-nums" title={debtLabel}>
+          {debtLabel}
+        </InspectorFactText>
+        <DebtTrendIcon trend={trend} />
+      </SnapshotFact>
 
-              <SnapshotFact label="Courriel">
-                <ContactValue
-                  kind="email"
-                  value={tenant.email_client}
-                  status={tenant.email_status}
-                />
-              </SnapshotFact>
+      <SnapshotFact label="Courriel">
+        <ContactValue kind="email" value={tenant.email_client} status={tenant.email_status} />
+      </SnapshotFact>
 
-              <SnapshotFact label="Téléphone">
-                <ContactValue
-                  kind="telephone"
-                  value={tenant.telephone_client}
-                  status={tenant.telephone_status}
-                />
-              </SnapshotFact>
+      <SnapshotFact label="Téléphone">
+        <ContactValue
+          kind="telephone"
+          value={tenant.telephone_client}
+          status={tenant.telephone_status}
+        />
+      </SnapshotFact>
 
-              <SnapshotFact label="Référent">
-                <GestionnaireFact assignment={gestionnaire} />
-              </SnapshotFact>
+      <SnapshotFact label="Référent">
+        <GestionnaireFact assignment={gestionnaire} />
+      </SnapshotFact>
 
-              <SnapshotFact label="Groupe">
-                <RepaymentBucketBadge
-                  bucket={displayBucket}
-                  columnValues={columnValues}
-                  className={CHIP}
-                />
-              </SnapshotFact>
+      <SnapshotFact label="Groupe">
+        <RepaymentBucketBadge bucket={displayBucket} columnValues={columnValues} className={CHIP} />
+      </SnapshotFact>
 
-              {displayAction ? (
-                <SnapshotFact label="Dernière tâche">
-                  <RepaymentActionBadge
-                    action={displayAction}
-                    columnValues={columnValues}
-                    className={CHIP}
-                  />
-                </SnapshotFact>
-              ) : null}
+      {displayAction ? (
+        <SnapshotFact label="Dernière tâche">
+          <RepaymentActionBadge
+            action={displayAction}
+            columnValues={columnValues}
+            className={CHIP}
+          />
+        </SnapshotFact>
+      ) : null}
 
-              {tags.length > 0 ? (
-                <SnapshotFact label="Tags">
-                  {tags.map((tag) => (
-                    <RepaymentTagBadge key={tag} tag={tag} className={CHIP} />
-                  ))}
-                </SnapshotFact>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+      {tags.length > 0 ? (
+        <SnapshotFact label="Tags">
+          {tags.map((tag) => (
+            <RepaymentTagBadge key={tag} tag={tag} className={CHIP} />
+          ))}
+        </SnapshotFact>
+      ) : null}
+    </InspectorSnapshotCard>
   )
 })

@@ -6,7 +6,18 @@ import { getTicketCellText } from '@/shared/lib/ticket-row'
 import type { TicketRow } from '@/shared/types'
 import type { ActivityStatus, ActivityType } from '@/shared/types/activites'
 
-export type TicketComposeMode = 'comment' | 'rcs' | 'email' | 'letter' | 'summarize' | null
+export type TicketComposeMode =
+  | 'comment'
+  | 'todo'
+  | 'action'
+  | 'bucket'
+  | 'tags'
+  | 'assignment'
+  | 'rcs'
+  | 'email'
+  | 'letter'
+  | 'summarize'
+  | null
 
 export type TicketsViewDataDeps = {
   notifications: NotificationsApi

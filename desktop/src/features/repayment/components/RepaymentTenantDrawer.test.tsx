@@ -179,8 +179,8 @@ function gestionnaireActivity(login: string, email: string): Activite {
     id_locataire: 'LOC-GESTIONNAIRE',
     id_lot: null,
     date_creation: '2026-08-08 18:00',
-    type: 'repayment_assignment',
-    contenu: JSON.stringify({ version: 1, gestionnaire: email, login }),
+    type: 'case_assignment',
+    contenu: JSON.stringify({ version: 1, referent: email, login }),
     statut: 'logged',
     mentions: []
   }
@@ -195,7 +195,7 @@ function tagActivity(tags: string[]): Activite {
     id_locataire: 'LOC-GESTIONNAIRE',
     id_lot: null,
     date_creation: '2026-08-09 18:00',
-    type: 'repayment_tag_change',
+    type: 'case_tag_change',
     contenu: JSON.stringify({ version: 1, tags_precedents: [], tags }),
     statut: 'logged',
     mentions: []
@@ -1358,11 +1358,11 @@ function statusChangeActivity(id: number, auteur: string): Activite {
     id_locataire: 'LOC-NOTES',
     id_lot: null,
     date_creation: '2026-08-09 11:00',
-    type: 'repayment_phase_change',
+    type: 'case_bucket_change',
     contenu: JSON.stringify({
       version: 1,
-      phase_precedente: 'amiable',
-      phase: 'pre_contentieux'
+      bucket_precedent: 'amiable',
+      bucket: 'pre_contentieux'
     }),
     statut: 'logged',
     mentions: []

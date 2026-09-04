@@ -45,11 +45,11 @@ describe('deriveRepaymentAdvancement', () => {
         activity({
           id: 1,
           date_creation: '2026-06-10 10:00',
-          type: 'repayment_phase_change',
+          type: 'case_bucket_change',
           contenu: JSON.stringify({
             version: 1,
-            phase_precedente: 'non_traites',
-            phase: 'amiable'
+            bucket_precedent: 'non_traites',
+            bucket: 'amiable'
           })
         }),
         activity({
@@ -71,11 +71,11 @@ describe('deriveRepaymentAdvancement', () => {
         activity({
           id: 3,
           date_creation: '2026-06-09 09:00',
-          type: 'repayment_phase_change',
+          type: 'case_bucket_change',
           contenu: JSON.stringify({
             version: 1,
-            phase_precedente: 'amiable',
-            phase: 'contentieux'
+            bucket_precedent: 'amiable',
+            bucket: 'contentieux'
           })
         })
       ])
@@ -87,11 +87,11 @@ describe('deriveRepaymentAdvancement', () => {
       activity({
         id: 1,
         date_creation: '2026-06-10 10:00',
-        type: 'repayment_phase_change',
+        type: 'case_bucket_change',
         contenu: JSON.stringify({
           version: 1,
-          phase_precedente: 'non_traites',
-          phase: 'amiable'
+          bucket_precedent: 'non_traites',
+          bucket: 'amiable'
         })
       }),
       activity({
@@ -113,11 +113,11 @@ describe('deriveRepaymentAdvancement', () => {
       activity({
         id: 3,
         date_creation: '2026-06-09 09:00',
-        type: 'repayment_phase_change',
+        type: 'case_bucket_change',
         contenu: JSON.stringify({
           version: 1,
-          phase_precedente: 'amiable',
-          phase: 'contentieux'
+          bucket_precedent: 'amiable',
+          bucket: 'contentieux'
         })
       })
     ]
@@ -133,8 +133,8 @@ describe('deriveRepaymentAdvancement', () => {
         activity({
           id: 1,
           date_creation: '2026-06-10 10:00',
-          type: 'repayment_phase_change',
-          contenu: JSON.stringify({ version: 1, phase: 'inconnu' })
+          type: 'case_bucket_change',
+          contenu: JSON.stringify({ version: 1, bucket: 'inconnu' })
         }),
         activity({
           id: 2,
@@ -158,21 +158,21 @@ describe('deriveRepaymentGestionnaire', () => {
         activity({
           id: 1,
           date_creation: '2026-06-10 10:00',
-          type: 'repayment_assignment',
+          type: 'case_assignment',
           contenu: JSON.stringify({
             version: 1,
-            gestionnaire_precedent: null,
-            gestionnaire: 'old@example.org'
+            referent_precedent: null,
+            referent: 'old@example.org'
           })
         }),
         activity({
           id: 2,
           date_creation: '2026-06-11 11:00',
-          type: 'repayment_assignment',
+          type: 'case_assignment',
           contenu: JSON.stringify({
             version: 1,
-            gestionnaire_precedent: 'old@example.org',
-            gestionnaire: 'cdubois@example.org'
+            referent_precedent: 'old@example.org',
+            referent: 'cdubois@example.org'
           })
         })
       ])
@@ -184,21 +184,21 @@ describe('deriveRepaymentGestionnaire', () => {
       activity({
         id: 1,
         date_creation: '2026-06-10 10:00',
-        type: 'repayment_assignment',
+        type: 'case_assignment',
         contenu: JSON.stringify({
           version: 1,
-          gestionnaire_precedent: null,
-          gestionnaire: 'old@example.org'
+          referent_precedent: null,
+          referent: 'old@example.org'
         })
       }),
       activity({
         id: 2,
         date_creation: '2026-06-11 11:00',
-        type: 'repayment_assignment',
+        type: 'case_assignment',
         contenu: JSON.stringify({
           version: 1,
-          gestionnaire_precedent: 'old@example.org',
-          gestionnaire: 'cdubois@example.org'
+          referent_precedent: 'old@example.org',
+          referent: 'cdubois@example.org'
         })
       })
     ]

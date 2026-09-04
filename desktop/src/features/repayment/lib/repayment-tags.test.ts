@@ -60,7 +60,7 @@ describe('repayment-tags', () => {
         activity({
           id: 1,
           date_creation: '2026-06-10 10:00',
-          type: 'repayment_tag_change',
+          type: 'case_tag_change',
           contenu: JSON.stringify({
             version: 1,
             tags_precedents: [],
@@ -70,7 +70,7 @@ describe('repayment-tags', () => {
         activity({
           id: 2,
           date_creation: '2026-06-11 11:00',
-          type: 'repayment_tag_change',
+          type: 'case_tag_change',
           contenu: JSON.stringify({
             version: 1,
             tags_precedents: ['décès'],
@@ -87,7 +87,7 @@ describe('repayment-tags', () => {
         activity({
           id: 1,
           date_creation: '2026-06-10 10:00',
-          type: 'repayment_tag_change',
+          type: 'case_tag_change',
           contenu: JSON.stringify({
             version: 1,
             tags_precedents: [],
@@ -97,7 +97,7 @@ describe('repayment-tags', () => {
         activity({
           id: 2,
           date_creation: '2026-06-11 11:00',
-          type: 'repayment_tag_change',
+          type: 'case_tag_change',
           contenu: JSON.stringify({
             version: 1,
             tags_precedents: ['décès'],
@@ -113,7 +113,7 @@ describe('repayment-tags', () => {
       activity({
         id: 1,
         date_creation: '2026-06-10 10:00',
-        type: 'repayment_tag_change',
+        type: 'case_tag_change',
         contenu: JSON.stringify({
           version: 1,
           tags_precedents: [],
@@ -123,7 +123,7 @@ describe('repayment-tags', () => {
       activity({
         id: 2,
         date_creation: '2026-06-11 11:00',
-        type: 'repayment_tag_change',
+        type: 'case_tag_change',
         contenu: JSON.stringify({
           version: 1,
           tags_precedents: ['décès'],
@@ -143,7 +143,7 @@ describe('repayment-tags', () => {
         activity({
           id: 1,
           date_creation: '2026-06-11 11:00',
-          type: 'repayment_tag_change',
+          type: 'case_tag_change',
           contenu: JSON.stringify({
             version: 1,
             tags_precedents: [],

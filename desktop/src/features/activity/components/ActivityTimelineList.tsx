@@ -2,9 +2,8 @@ import type { RefObject } from 'react'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 import type { ActivityNotificationItem } from '@/features/activity/lib/notification-types'
-import { ActivityTimelineEvent } from '@/features/repayment/components/ActivityTimelineEvent'
-import { indexTodoRevisions } from '@/features/repayment/lib/repayment-action-activity'
 import { CartoonNotificationGrouped } from '@/shared/components/icons/koboyo-empty'
+import { ActivityTimelineEvent } from '@/shared/components/timeline/activity-timeline-event'
 import { ContextTimeline } from '@/shared/components/timeline/context-timeline'
 import {
   Empty,
@@ -13,6 +12,7 @@ import {
   EmptyMedia,
   EmptyTitle
 } from '@/shared/components/ui/empty'
+import { indexTodoRevisions } from '@/shared/lib/activities/action-activity'
 import { formatInspectorTimelineDateline } from '@/shared/lib/timeline/activity-notification-date'
 import { parseActivityAuthor } from '@/shared/lib/timeline/parse-activity-author'
 

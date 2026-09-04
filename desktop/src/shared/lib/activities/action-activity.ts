@@ -1,14 +1,14 @@
 import {
   ACTIVITY_CONTENT_VERSION,
   parse_action_activity_content,
+  type ActionActivityContent,
   type ActionActivityEvent,
   type ActionActivityState,
-  type ActionActivityContent,
   type Activite,
   type CreateActivityBody
 } from '@/shared/types/activites'
 
-export type RepaymentActionDraft =
+export type ActionDraft =
   | {
       mode: 'planifier'
       action: string
@@ -22,12 +22,12 @@ export type RepaymentActionDraft =
       resultat: string
     }
 
-export function mapRepaymentTodoForm(form: {
+export function mapTodoForm(form: {
   action: string
   assigneA: string
   dateEcheance: string
   note: string
-}): RepaymentActionDraft | null {
+}): ActionDraft | null {
   const action = form.action.trim()
   if (!action) return null
   return {
@@ -39,16 +39,16 @@ export function mapRepaymentTodoForm(form: {
   }
 }
 
-export function mapRepaymentDoneActionForm(form: {
+export function mapDoneActionForm(form: {
   action: string
   commentaire: string
-}): RepaymentActionDraft | null {
+}): ActionDraft | null {
   const action = form.action.trim()
   if (!action) return null
   return { mode: 'enregistrer', action, resultat: form.commentaire.trim() }
 }
 
-export type RepaymentActionActivity = {
+export type ActionActivity = {
   row: Activite
   contenu: ActionActivityContent
   event: ActionActivityEvent
@@ -57,10 +57,10 @@ export type RepaymentActionActivity = {
   revision: number
 }
 
-export function listOpenRepaymentActions(rows: Activite[]): RepaymentActionActivity[] {
+export function listOpenActions(rows: Activite[]): ActionActivity[] {
   return rows
     .flatMap((row) => {
-      const parsed = parseRepaymentActionActivity(row)
+      const parsed = parseActionActivity(row)
       return parsed?.state === 'a_faire' ? [parsed] : []
     })
     .sort((a, b) => {
@@ -70,7 +70,7 @@ export function listOpenRepaymentActions(rows: Activite[]): RepaymentActionActiv
     })
 }
 
-export function parseRepaymentActionActivity(row: Activite): RepaymentActionActivity | null {
+export function parseActionActivity(row: Activite): ActionActivity | null {
   if (row.type !== 'action') return null
   if (!row.event || !row.state || !row.thread_id || row.revision == null) return null
   const contenu = parse_action_activity_content(row.contenu)
@@ -86,7 +86,7 @@ export function parseRepaymentActionActivity(row: Activite): RepaymentActionActi
     : null
 }
 
-export function repaymentActionTimelineDate(row: Activite): string {
+export function actionTimelineDate(row: Activite): string {
   return row.date_creation
 }
 
@@ -96,10 +96,10 @@ export type TodoSentencePart =
   | { type: 'person'; identity: string }
   | { type: 'date'; iso: string }
 
-export function indexTodoRevisions(rows: Activite[]): Map<string, RepaymentActionActivity> {
-  const index = new Map<string, RepaymentActionActivity>()
+export function indexTodoRevisions(rows: Activite[]): Map<string, ActionActivity> {
+  const index = new Map<string, ActionActivity>()
   for (const row of rows) {
-    const parsed = parseRepaymentActionActivity(row)
+    const parsed = parseActionActivity(row)
     if (!parsed) continue
     index.set(`${parsed.threadId}:${parsed.revision}`, parsed)
   }
@@ -107,7 +107,7 @@ export function indexTodoRevisions(rows: Activite[]): Map<string, RepaymentActio
 }
 
 export function previousTodoContent(
-  index: Map<string, RepaymentActionActivity>,
+  index: Map<string, ActionActivity>,
   threadId: string,
   revision: number
 ): ActionActivityContent | null {
@@ -140,7 +140,7 @@ function assignedParts(assignee?: string, due?: string): TodoSentencePart[] {
 }
 
 export function todoTimelineSentence(
-  current: RepaymentActionActivity,
+  current: ActionActivity,
   previous: ActionActivityContent | null
 ): TodoSentencePart[] {
   const title = current.contenu.action
@@ -194,10 +194,10 @@ export function todoTimelineSentence(
   ]
 }
 
-export function buildRepaymentActionActivity(
+export function buildActionActivity(
+  contexte: CreateActivityBody['contexte'],
   ref: string,
-  draft: RepaymentActionDraft,
-  _realisateur: string
+  draft: ActionDraft
 ): CreateActivityBody {
   const common = {
     version: ACTIVITY_CONTENT_VERSION,
@@ -219,7 +219,7 @@ export function buildRepaymentActionActivity(
         }
 
   return {
-    contexte: 'repayment',
+    contexte,
     ref,
     type: 'action',
     contenu: JSON.stringify(contenu)

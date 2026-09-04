@@ -5,7 +5,7 @@ import {
   activitySenderLabel
 } from '@/features/activity/lib/notification-labels'
 import type { ActivityNotificationItem } from '@/features/activity/lib/notification-types'
-import { RepaymentMentionText } from '@/features/repayment/components/RepaymentMentionText'
+import { MentionText } from '@/shared/components/inspector/mention-text'
 import { TimelineActorAvatar } from '@/shared/components/timeline/timeline-actor-avatar'
 import { Button } from '@/shared/components/ui/button'
 import { useOrgUsersVersion } from '@/shared/hooks/useUserAvatar'
@@ -117,12 +117,7 @@ export function ActivityNotificationRow({
           </p>
           {preview ? (
             <p className="text-foreground mt-1 text-xs leading-4 whitespace-pre-wrap">
-              <RepaymentMentionText
-                compact
-                inline
-                text={preview}
-                mentionVariant="activityRecipient"
-              />
+              <MentionText compact inline text={preview} mentionVariant="activityRecipient" />
             </p>
           ) : null}
           <p className="text-muted-foreground mt-1 flex min-w-0 items-baseline text-xs leading-4">

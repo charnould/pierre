@@ -1,8 +1,8 @@
+import { MentionText } from '@/shared/components/inspector/mention-text'
 import type { Activite } from '@/shared/types/activites'
-import { parse_repayment_tag_change_content } from '@/shared/types/activites'
+import { parse_case_tag_change_content } from '@/shared/types/activites'
 
 import { canonicalizeRepaymentTags } from '../lib/repayment-tags'
-import { RepaymentMentionText } from './RepaymentMentionText'
 import { RepaymentTagBadge } from './RepaymentTagBadge'
 
 const SENTENCE_CHIP_CLASS = 'h-4 px-1.5 py-0 leading-none font-normal'
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export function RepaymentTagsChangeSentence({ row }: Props) {
-  const change = parse_repayment_tag_change_content(row.contenu)
+  const change = parse_case_tag_change_content(row.contenu)
   if (!change) return null
   const tags = canonicalizeRepaymentTags(change.tags)
 
@@ -29,12 +29,12 @@ export function RepaymentTagsChangeSentence({ row }: Props) {
 }
 
 export function RepaymentTagsChangeBody({ row }: Props) {
-  const change = parse_repayment_tag_change_content(row.contenu)
+  const change = parse_case_tag_change_content(row.contenu)
   const comment = change?.note?.trim() ?? ''
   if (!comment) return null
 
   return (
-    <RepaymentMentionText
+    <MentionText
       text={comment}
       mentionVariant="activity"
       compact
@@ -44,7 +44,5 @@ export function RepaymentTagsChangeBody({ row }: Props) {
 }
 
 export function isRepaymentTagChangeActivity(row: Activite): boolean {
-  return (
-    row.type === 'repayment_tag_change' && parse_repayment_tag_change_content(row.contenu) != null
-  )
+  return row.type === 'case_tag_change' && parse_case_tag_change_content(row.contenu) != null
 }

@@ -7,6 +7,7 @@ import {
   InspectorSplit
 } from '@/shared/components/inspector/inspector-split'
 import { InspectorTimelineSkeleton } from '@/shared/components/inspector/inspector-timeline-skeleton'
+import { OpenActionsCard } from '@/shared/components/inspector/open-actions-card'
 import { ContextTimeline } from '@/shared/components/timeline/context-timeline'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -20,6 +21,8 @@ import {
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/shared/components/ui/drawer'
 import { toast } from '@/shared/components/ui/toast'
 import { useScrollToTopOnOpen } from '@/shared/hooks/use-scroll-to-top-on-open'
+import { listOpenActions } from '@/shared/lib/activities/action-activity'
+import { replyAuthorMentionSeed } from '@/shared/lib/activities/mentions'
 import { scrollBehavior } from '@/shared/lib/prefers-reduced-motion'
 import type { ColumnValuesConfig } from '@/shared/lib/ui-settings/tickets-table'
 import { activity_texte, type Activite } from '@/shared/types/activites'
@@ -32,8 +35,8 @@ import { useRepaymentTenantActions } from '../hooks/use-repayment-tenant-actions
 import { useRepaymentTenantTimeline } from '../hooks/use-repayment-tenant-timeline'
 import { debtEpisodeTrend } from '../lib/build-tenant-balance-series'
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
+import { formatDebutBailDisplay } from '../lib/format-debut-bail'
 import type { OutboundEmailResolved, OutboundRcsResolved } from '../lib/outbound-email-templates'
-import { listOpenRepaymentActions } from '../lib/repayment-action-activity'
 import type {
   RepaymentAdvancementContext,
   RepaymentMessageOptions
@@ -45,11 +48,9 @@ import {
   deriveRepaymentGestionnaireFromSorted
 } from '../lib/repayment-advancement'
 import type { RepaymentBucketId } from '../lib/repayment-bucket'
-import { replyAuthorMentionSeed } from '../lib/repayment-mention'
 import { deriveRepaymentTagsFromSorted } from '../lib/repayment-tags'
 import { actionForTemplate } from '../lib/repayment-template-actions'
 import { RepaymentComposeBlock } from './RepaymentComposeBlock'
-import { RepaymentOpenActionsCard } from './RepaymentOpenActionsCard'
 import { RepaymentTenantTimeline } from './RepaymentTenantTimeline'
 import { TenantSnapshotCard } from './TenantSnapshotCard'
 
@@ -224,7 +225,7 @@ export function RepaymentTenantDrawer({
     () => timelineEntries.slice(0, timelineVisibleCount),
     [timelineEntries, timelineVisibleCount]
   )
-  const openActions = useMemo(() => listOpenRepaymentActions(openActionEvents), [openActionEvents])
+  const openActions = useMemo(() => listOpenActions(openActionEvents), [openActionEvents])
 
   const scrollComposeIntoView = useCallback(() => {
     const el = bodyScrollElRef.current
@@ -694,8 +695,9 @@ export function RepaymentTenantDrawer({
             columnValues={columnValues}
             className="mb-3"
           />
-          <RepaymentOpenActionsCard
+          <OpenActionsCard
             actions={openActions}
+            formatDate={(value) => formatDebutBailDisplay(value) ?? value}
             saving={submitting === 'action'}
             userLogin={userLogin}
             url={url}

@@ -1,17 +1,19 @@
 import { LoaderCircle } from 'lucide-react'
 import { memo, useMemo } from 'react'
 
-import { ActivityTimelineEvent } from '@/features/repayment/components/ActivityTimelineEvent'
-import { indexTodoRevisions } from '@/features/repayment/lib/repayment-action-activity'
 import { EmptyFolder } from '@/shared/components/icons/koboyo-empty'
+import { ActivityTimelineEvent } from '@/shared/components/timeline/activity-timeline-event'
+import { CaseBucketChangeBody } from '@/shared/components/timeline/case-bucket-change-body'
 import { ContextTimeline } from '@/shared/components/timeline/context-timeline'
 import { TIMELINE_CONTENT_INSET_CLASS } from '@/shared/components/timeline/timeline-layout'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/shared/components/ui/empty'
+import { indexTodoRevisions } from '@/shared/lib/activities/action-activity'
 import { formatInspectorTimelineDateline } from '@/shared/lib/timeline/activity-notification-date'
 import { parseActivityAuthor } from '@/shared/lib/timeline/parse-activity-author'
 import { cn } from '@/shared/lib/utils'
 
 import type { TicketTimelineItem } from '../lib/build-ticket-timeline'
+import { TICKET_BUCKET_OPTIONS } from '../lib/ticket-bucket'
 import { NoteReplyDraft } from './NoteReplyDraft'
 
 interface Props {
@@ -19,27 +21,59 @@ interface Props {
   loading?: boolean
   highlightId?: number
   embedded?: boolean
+  userLogin: string
   onStartReply?: (activityId: number, auteur: string) => void
+  onStartEditNote?: (row: TicketTimelineItem['row']) => void
+  onDeleteActivity?: (id: number) => void
+  onReopenAction?: (id: number, assigneA: string, dateEcheance: string) => void
 }
 
 function TimelineItems({
   items,
   highlightId,
   stepOffset = 0,
-  onStartReply
+  userLogin,
+  onStartReply,
+  onStartEditNote,
+  onDeleteActivity,
+  onReopenAction
 }: {
   items: TicketTimelineItem[]
   highlightId?: number
   stepOffset?: number
+  userLogin: string
   onStartReply?: (activityId: number, auteur: string) => void
+  onStartEditNote?: (row: TicketTimelineItem['row']) => void
+  onDeleteActivity?: (id: number) => void
+  onReopenAction?: (id: number, assigneA: string, dateEcheance: string) => void
 }) {
   const revisions = useMemo(() => indexTodoRevisions(items.map((item) => item.row)), [items])
+  const latestActionEventIds = useMemo(() => {
+    const latestByThread = new Map<string, { id: number; revision: number }>()
+    for (const item of items) {
+      const row = item.row
+      if (row.type !== 'action' || !row.thread_id) continue
+      const revision = row.revision ?? 0
+      const current = latestByThread.get(row.thread_id)
+      if (!current || revision > current.revision) {
+        latestByThread.set(row.thread_id, { id: row.id, revision })
+      }
+    }
+    return new Set([...latestByThread.values()].map((entry) => entry.id))
+  }, [items])
 
   return (
     <>
       {items.map((item, index) => {
         const actor = parseActivityAuthor(item.row.auteur)
         const canReply = item.row.type === 'note' && onStartReply != null
+        const authorLogin = actor.id.split('@')[0]?.toLowerCase()
+        const currentLogin = userLogin
+          .replace(/^user:/, '')
+          .split('@')[0]
+          ?.toLowerCase()
+        const canManageNote =
+          item.row.type === 'note' && authorLogin === currentLogin && item.source === 'activity'
 
         return (
           <ActivityTimelineEvent
@@ -53,9 +87,27 @@ function TimelineItems({
             highlight={highlightId === item.row.id}
             dataTimelineId={item.id}
             dataActivityId={item.row.id}
+            userLogin={userLogin}
+            onReopenAction={onReopenAction}
+            currentActionEvent={latestActionEventIds.has(item.row.id)}
+            body={
+              item.row.type === 'case_bucket_change' ? (
+                <CaseBucketChangeBody row={item.row} options={TICKET_BUCKET_OPTIONS} />
+              ) : undefined
+            }
           >
             {canReply ? (
-              <NoteReplyDraft onStartReply={() => onStartReply(item.row.id, item.row.auteur)} />
+              <NoteReplyDraft
+                onStartReply={() => onStartReply(item.row.id, item.row.auteur)}
+                onEdit={
+                  canManageNote && onStartEditNote ? () => onStartEditNote(item.row) : undefined
+                }
+                onDelete={
+                  canManageNote && onDeleteActivity
+                    ? () => onDeleteActivity(item.row.id)
+                    : undefined
+                }
+              />
             ) : null}
           </ActivityTimelineEvent>
         )
@@ -69,7 +121,11 @@ export const TicketReclamationTimeline = memo(function TicketReclamationTimeline
   loading,
   highlightId,
   embedded = false,
-  onStartReply
+  userLogin,
+  onStartReply,
+  onStartEditNote,
+  onDeleteActivity,
+  onReopenAction
 }: Props) {
   if (embedded) {
     if (loading && items.length === 0) {
@@ -80,7 +136,17 @@ export const TicketReclamationTimeline = memo(function TicketReclamationTimeline
       )
     }
     if (items.length === 0) return null
-    return <TimelineItems items={items} highlightId={highlightId} onStartReply={onStartReply} />
+    return (
+      <TimelineItems
+        items={items}
+        highlightId={highlightId}
+        userLogin={userLogin}
+        onStartReply={onStartReply}
+        onStartEditNote={onStartEditNote}
+        onDeleteActivity={onDeleteActivity}
+        onReopenAction={onReopenAction}
+      />
+    )
   }
 
   if (loading && items.length === 0) {
@@ -113,7 +179,15 @@ export const TicketReclamationTimeline = memo(function TicketReclamationTimeline
 
   return (
     <ContextTimeline defaultValue={items.length}>
-      <TimelineItems items={items} highlightId={highlightId} onStartReply={onStartReply} />
+      <TimelineItems
+        items={items}
+        highlightId={highlightId}
+        userLogin={userLogin}
+        onStartReply={onStartReply}
+        onStartEditNote={onStartEditNote}
+        onDeleteActivity={onDeleteActivity}
+        onReopenAction={onReopenAction}
+      />
     </ContextTimeline>
   )
 })

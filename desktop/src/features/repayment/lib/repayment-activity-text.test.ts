@@ -35,11 +35,11 @@ function activity(overrides: Partial<Activite>): Activite {
 describe('repayment phase and assignment activities', () => {
   test('lit un changement de phase explicite', () => {
     const row = activity({
-      type: 'repayment_phase_change',
+      type: 'case_bucket_change',
       contenu: JSON.stringify({
         version: 1,
-        phase_precedente: 'amiable',
-        phase: 'pre_contentieux'
+        bucket_precedent: 'amiable',
+        bucket: 'pre_contentieux'
       })
     })
 
@@ -60,11 +60,11 @@ describe('repayment phase and assignment activities', () => {
     expect(
       parseRepaymentStatusChangeComment(
         activity({
-          type: 'repayment_phase_change',
+          type: 'case_bucket_change',
           contenu: JSON.stringify({
             version: 1,
-            phase_precedente: 'amiable',
-            phase: 'pre_contentieux',
+            bucket_precedent: 'amiable',
+            bucket: 'pre_contentieux',
             note: '  Échec des relances amiables.  '
           })
         })
@@ -75,11 +75,11 @@ describe('repayment phase and assignment activities', () => {
   test('lit une affectation explicite', () => {
     const change = parseRepaymentStatusChange(
       activity({
-        type: 'repayment_assignment',
+        type: 'case_assignment',
         contenu: JSON.stringify({
           version: 1,
-          gestionnaire_precedent: null,
-          gestionnaire: 'alice@example.org'
+          referent_precedent: null,
+          referent: 'alice@example.org'
         })
       })
     )
@@ -94,11 +94,11 @@ describe('repayment phase and assignment activities', () => {
     expect(
       parseRepaymentStatusChangeComment(
         activity({
-          type: 'repayment_assignment',
+          type: 'case_assignment',
           contenu: JSON.stringify({
             version: 1,
-            gestionnaire_precedent: null,
-            gestionnaire: 'alice@example.org',
+            referent_precedent: null,
+            referent: 'alice@example.org',
             note: 'Dossier transféré.'
           })
         })
@@ -109,11 +109,11 @@ describe('repayment phase and assignment activities', () => {
   test('formule une réaffectation de A vers B', () => {
     const change = parseRepaymentStatusChange(
       activity({
-        type: 'repayment_assignment',
+        type: 'case_assignment',
         contenu: JSON.stringify({
           version: 1,
-          gestionnaire_precedent: 'abraconnier@example.org',
-          gestionnaire: 'avwoillard@example.org',
+          referent_precedent: 'abraconnier@example.org',
+          referent: 'avwoillard@example.org',
           login: 'avwoillard'
         })
       })
@@ -133,7 +133,7 @@ describe('repayment phase and assignment activities', () => {
     expect(
       formatRepaymentActivityBody(
         activity({
-          type: 'repayment_tag_change',
+          type: 'case_tag_change',
           contenu: JSON.stringify({
             version: 1,
             tags_precedents: [],
@@ -146,7 +146,7 @@ describe('repayment phase and assignment activities', () => {
     expect(
       formatRepaymentActivityBody(
         activity({
-          type: 'repayment_tag_change',
+          type: 'case_tag_change',
           contenu: JSON.stringify({
             version: 1,
             tags_precedents: ['décès'],

@@ -1,3 +1,4 @@
+import { CollaboratorChip } from '@/shared/components/inspector/collaborator-chip'
 import {
   colorizeBadgeStyle,
   columnValueStyleToBadge,
@@ -6,8 +7,6 @@ import {
   resolveColumnValueBadgeDefaults,
   type ColumnValuesConfig
 } from '@/shared/lib/ui-settings/tickets-table'
-
-import { CollaboratorChip } from './CollaboratorChip'
 
 interface Props {
   identity: string

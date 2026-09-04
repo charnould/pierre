@@ -1,3 +1,5 @@
+import { CollaboratorChip } from '@/shared/components/inspector/collaborator-chip'
+import { MentionText } from '@/shared/components/inspector/mention-text'
 import type { ColumnValuesConfig } from '@/shared/lib/ui-settings/tickets-table'
 import type { Activite } from '@/shared/types/activites'
 
@@ -6,9 +8,7 @@ import {
   parseRepaymentStatusChangeComment,
   statusChangeTimelineSentence
 } from '../lib/repayment-activity-text'
-import { CollaboratorChip } from './CollaboratorChip'
 import { RepaymentBucketBadge } from './RepaymentBucketBadge'
-import { RepaymentMentionText } from './RepaymentMentionText'
 
 const SENTENCE_CHIP_CLASS = 'h-4 px-1.5 py-0 leading-none font-normal'
 
@@ -48,7 +48,7 @@ export function RepaymentStatusChangeBody({ row }: { row: Activite }) {
   if (!comment) return null
 
   return (
-    <RepaymentMentionText
+    <MentionText
       text={comment}
       mentionVariant="activity"
       compact

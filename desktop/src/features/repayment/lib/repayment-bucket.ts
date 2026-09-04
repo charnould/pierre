@@ -1,16 +1,9 @@
 import repaymentConfig from '@customization/repayments/config'
 
-type RawRepaymentBucket = {
-  id: string
-  label: string
-  description?: string
-}
-
-export type RepaymentBucketOption = {
-  id: string
-  label: string
-  description?: string
-}
+import {
+  normalizeCaseBucketOptions,
+  type CaseBucketOption
+} from '@/shared/lib/activities/case-workflow-config'
 
 /** Point d’entrée du parcours : défaut si bucket absent / invalide. */
 export const NON_TRAITES_BUCKET_ID = 'non_traites'
@@ -18,16 +11,8 @@ export const NON_TRAITES_BUCKET_ID = 'non_traites'
 /** Bucket auto pour les locataires absents de `lots_locatifs` (`statut` = ex-client). */
 export const CLIENTS_PARTIS_BUCKET_ID = 'clients_partis'
 
-function buildBucketOptions(): RepaymentBucketOption[] {
-  const raw = repaymentConfig.buckets as readonly RawRepaymentBucket[]
-  return raw.map((entry) => {
-    const description = typeof entry.description === 'string' ? entry.description.trim() : ''
-    return {
-      id: entry.id.trim(),
-      label: entry.label.trim(),
-      ...(description ? { description } : {})
-    }
-  })
+function buildBucketOptions(): CaseBucketOption[] {
+  return normalizeCaseBucketOptions(repaymentConfig.buckets)
 }
 
 export const REPAYMENT_BUCKET_OPTIONS = buildBucketOptions()
@@ -40,7 +25,7 @@ export const REPAYMENT_BUCKET_IDS = REPAYMENT_BUCKET_OPTIONS.map(
 
 const BUCKET_BY_ID = Object.fromEntries(
   REPAYMENT_BUCKET_OPTIONS.map((option) => [option.id, option])
-) as Record<RepaymentBucketId, RepaymentBucketOption>
+) as Record<RepaymentBucketId, CaseBucketOption>
 
 if (!(NON_TRAITES_BUCKET_ID in BUCKET_BY_ID)) {
   throw new Error(
@@ -57,7 +42,7 @@ export function isRepaymentBucketId(value: string): value is RepaymentBucketId {
   return value in BUCKET_BY_ID
 }
 
-export function getRepaymentBucketMeta(id: RepaymentBucketId): RepaymentBucketOption {
+export function getRepaymentBucketMeta(id: RepaymentBucketId): CaseBucketOption {
   return BUCKET_BY_ID[id]
 }
 

@@ -1,10 +1,10 @@
 import { Calendar } from 'lucide-react'
 
+import { CollaboratorChip } from '@/shared/components/inspector/collaborator-chip'
 import { Badge } from '@/shared/components/ui/badge'
+import type { TodoSentencePart } from '@/shared/lib/activities/action-activity'
 
 import { formatDebutBailDisplay } from '../lib/format-debut-bail'
-import type { TodoSentencePart } from '../lib/repayment-action-activity'
-import { CollaboratorChip } from './CollaboratorChip'
 
 function TitleChip({ text }: { text: string }) {
   return (

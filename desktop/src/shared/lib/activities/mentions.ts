@@ -69,7 +69,6 @@ export function insertMentionAt(
   return { nextText, nextCaret }
 }
 
-/** Prefill `@login` of the note author (skip self / non-user). */
 export function replyAuthorMentionSeed(auteur: string, currentUser: string): string {
   const parsed = parseActivityAuthor(auteur)
   if (parsed.kind !== 'user' && parsed.kind !== 'unknown') return ''
@@ -83,7 +82,6 @@ export function replyAuthorMentionSeed(auteur: string, currentUser: string): str
   return `@${login} `
 }
 
-/** Label affiché en UI — displayName org si dispo, sinon login capitalisé. */
 export function formatMentionDisplay(raw: string): string {
   if (!raw) return raw
   const id = parseActivityAuthor(raw).id

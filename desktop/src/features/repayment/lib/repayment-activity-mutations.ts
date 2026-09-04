@@ -1,10 +1,18 @@
+import {
+  buildCaseAssignmentActivity,
+  buildCaseBucketChangeActivity,
+  buildCaseTagChangeActivity
+} from '@/shared/lib/activities/case-activities'
 import type { CreateActivityBody } from '@/shared/types/activites'
 import { ACTIVITY_CONTENT_VERSION } from '@/shared/types/activites'
 import type { RepaymentNotificationChannel } from '@/shared/types/notification-repayment'
 
 import type { RepaymentBucketId } from './repayment-bucket'
-import { extractMentionsFromText } from './repayment-mention'
-import { canonicalizeRepaymentTags, sameRepaymentTagSet } from './repayment-tags'
+import {
+  canonicalizeRepaymentTags,
+  REPAYMENT_TAG_OPTIONS,
+  sameRepaymentTagSet
+} from './repayment-tags'
 
 export type RepaymentMessageOptions = {
   objet?: string
@@ -57,29 +65,16 @@ export function buildRepaymentAssignmentActivity(
   ref: string,
   user: { login: string; email: string },
   previousEmail: string | null,
-  origine?: 'manual',
+  _origine?: 'manual',
   comment?: string
 ): CreateActivityBody | null {
-  const email = user.email.trim()
-  const login = user.login.trim().toLowerCase()
-  if (!email || !login) return null
-  const trimmedComment = comment?.trim() ?? ''
-  const recipients = [...new Set([login, ...extractMentionsFromText(trimmedComment)])]
-  return {
+  return buildCaseAssignmentActivity({
     contexte: 'repayment',
     ref,
-    type: 'repayment_assignment',
-    statut: 'logged',
-    recipients,
-    contenu: JSON.stringify({
-      version: ACTIVITY_CONTENT_VERSION,
-      gestionnaire_precedent: previousEmail,
-      gestionnaire: email,
-      login,
-      ...(origine ? { origine } : {}),
-      ...(trimmedComment ? { note: trimmedComment } : {})
-    })
-  }
+    user,
+    previousEmail,
+    comment
+  })
 }
 
 export type RepaymentAdvancementContext = {
@@ -119,20 +114,17 @@ export function buildRepaymentAdvancementOperations({
   const trimmedComment = comment.trim()
 
   if (bucket != null && bucket !== previousBucket) {
+    const activity = buildCaseBucketChangeActivity({
+      contexte: 'repayment',
+      ref,
+      bucket,
+      previousBucket,
+      comment: trimmedComment
+    })
+    if (!activity) return operations
     operations.push({
       kind: 'bucket',
-      activity: {
-        contexte: 'repayment',
-        ref,
-        type: 'repayment_phase_change',
-        statut: 'logged',
-        contenu: JSON.stringify({
-          version: ACTIVITY_CONTENT_VERSION,
-          phase_precedente: previousBucket,
-          phase: bucket,
-          ...(trimmedComment ? { note: trimmedComment } : {})
-        })
-      }
+      activity
     })
   }
 
@@ -178,22 +170,18 @@ export function buildRepaymentTagChangeOperations({
   const tagsChanged = !sameRepaymentTagSet(nextTags, previous)
 
   if (tagsChanged) {
-    const recipients = [...new Set(extractMentionsFromText(trimmedComment))]
+    const activity = buildCaseTagChangeActivity({
+      contexte: 'repayment',
+      ref,
+      tags: nextTags,
+      previousTags: previous,
+      tagOptions: REPAYMENT_TAG_OPTIONS,
+      comment: trimmedComment
+    })
+    if (!activity) return operations
     operations.push({
       kind: 'tags',
-      activity: {
-        contexte: 'repayment',
-        ref,
-        type: 'repayment_tag_change',
-        statut: 'logged',
-        ...(recipients.length > 0 ? { recipients } : {}),
-        contenu: JSON.stringify({
-          version: ACTIVITY_CONTENT_VERSION,
-          tags_precedents: previous,
-          tags: nextTags,
-          ...(trimmedComment ? { note: trimmedComment } : {})
-        })
-      }
+      activity
     })
   } else if (trimmedComment) {
     operations.push({

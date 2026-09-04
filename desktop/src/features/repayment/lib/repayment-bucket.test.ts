@@ -46,12 +46,11 @@ describe('repayment-bucket', () => {
     expect(resolveRepaymentBucket(CLIENTS_PARTIS_BUCKET_ID)).toBe(CLIENTS_PARTIS_BUCKET_ID)
   })
 
-  test('getRepaymentBucketMeta expose le label et la description depuis la config', () => {
+  test('getRepaymentBucketMeta expose le label depuis la config', () => {
     const meta = getRepaymentBucketMeta('amiable')
     const configEntry = repaymentConfig.buckets.find((entry) => entry.id === 'amiable')
     expect(configEntry).toBeDefined()
     expect(meta.label).toBe(configEntry!.label)
-    expect(meta.description).toBe(configEntry!.description?.trim())
   })
 
   test('l’id est celui déclaré en config (pas dérivé du label)', () => {

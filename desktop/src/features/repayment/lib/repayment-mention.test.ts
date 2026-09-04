@@ -1,14 +1,14 @@
 import { afterEach, describe, expect, mock, test } from 'bun:test'
 
-import { clearOrgUsersCache, fetchOrgUsers } from '@/shared/lib/org-users-cache'
-import type { OrgUser } from '@/shared/types/users'
-
-import { desktopAgentMentionHandle } from '../../../../../shared/agent-identity'
 import {
   filterMentionSuggestions,
   formatMentionDisplay,
   replyAuthorMentionSeed
-} from './repayment-mention'
+} from '@/shared/lib/activities/mentions'
+import { clearOrgUsersCache, fetchOrgUsers } from '@/shared/lib/org-users-cache'
+import type { OrgUser } from '@/shared/types/users'
+
+import { desktopAgentMentionHandle } from '../../../../../shared/agent-identity'
 
 const orgUser = (login: string, displayName = login): OrgUser => ({
   login,

@@ -13,6 +13,9 @@ export type {
   ActivityStatus,
   ActivityType,
   CommunicationType,
+  CaseAssignmentContent,
+  CaseBucketChangeContent,
+  CaseTagChangeContent,
   CreateActivityBody,
   CreateActivityPayload,
   DeleteActivityPayload,
@@ -35,6 +38,8 @@ export {
   parse_action_activity_content,
   parse_action_creation_content,
   parse_contenu_json,
-  parse_message_activity_content,
-  parse_repayment_tag_change_content
+  parse_case_assignment_content,
+  parse_case_bucket_change_content,
+  parse_case_tag_change_content,
+  parse_message_activity_content
 } from '../../../../shared/activites'

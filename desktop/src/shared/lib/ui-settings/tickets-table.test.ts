@@ -28,10 +28,10 @@ import {
   resolveVisibleColumnNames,
   sanitizeColumnFilters,
   stripTicketTableSystemColumns,
-  stripTicketTableDraftColumnWidths,
-  ticketTableDraftColumnSizing,
-  TICKET_TABLE_DRAFT_GROUP_ID,
-  TICKET_TABLE_DRAFT_GROUP_WIDTH
+  stripTicketTableSystemColumnWidths,
+  ticketTableSystemColumnSizing,
+  TICKET_TABLE_ALERT_COLUMN_ID,
+  TICKET_TABLE_ALERT_COLUMN_WIDTH
 } from './tickets-table'
 
 const DEFAULT_BADGE_STYLE = {
@@ -281,31 +281,31 @@ describe('tickets-table settings helpers', () => {
     expect(clearAllColumnFilters()).toEqual({})
   })
 
-  it('isTicketTableSystemColumn identifies the draft group column', () => {
-    expect(isTicketTableSystemColumn(TICKET_TABLE_DRAFT_GROUP_ID)).toBe(true)
+  it('isTicketTableSystemColumn identifies the alert column', () => {
+    expect(isTicketTableSystemColumn(TICKET_TABLE_ALERT_COLUMN_ID)).toBe(true)
     expect(isTicketTableSystemColumn('id_reclamation')).toBe(false)
   })
 
-  it('stripTicketTableSystemColumns removes the draft group from order arrays', () => {
+  it('stripTicketTableSystemColumns removes the alert column from order arrays', () => {
     expect(
       stripTicketTableSystemColumns([
-        TICKET_TABLE_DRAFT_GROUP_ID,
+        TICKET_TABLE_ALERT_COLUMN_ID,
         'id_reclamation',
-        TICKET_TABLE_DRAFT_GROUP_ID
+        TICKET_TABLE_ALERT_COLUMN_ID
       ])
     ).toEqual(['id_reclamation'])
   })
 
-  it('ticketTableDraftColumnSizing fixes width for the draft group column', () => {
-    expect(ticketTableDraftColumnSizing()).toEqual({
-      [TICKET_TABLE_DRAFT_GROUP_ID]: TICKET_TABLE_DRAFT_GROUP_WIDTH
+  it('ticketTableSystemColumnSizing fixes width for the alert column', () => {
+    expect(ticketTableSystemColumnSizing()).toEqual({
+      [TICKET_TABLE_ALERT_COLUMN_ID]: TICKET_TABLE_ALERT_COLUMN_WIDTH
     })
   })
 
-  it('stripTicketTableDraftColumnWidths removes the draft group from persisted widths', () => {
+  it('stripTicketTableSystemColumnWidths removes the alert column from persisted widths', () => {
     expect(
-      stripTicketTableDraftColumnWidths({
-        __draft_npir__: 120,
+      stripTicketTableSystemColumnWidths({
+        __alertes__: 40,
         id_reclamation: 160
       })
     ).toEqual({ id_reclamation: 160 })

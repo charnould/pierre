@@ -138,8 +138,8 @@ describe('buildRepaymentAdvancementOperations', () => {
     expect(operations).toHaveLength(1)
     expect(JSON.parse(operations[0]?.activity.contenu ?? '{}')).toMatchObject({
       version: 1,
-      phase_precedente: 'amiable',
-      phase: 'pre_contentieux',
+      bucket_precedent: 'amiable',
+      bucket: 'pre_contentieux',
       note: 'Échec des relances amiables.'
     })
   })
@@ -225,10 +225,9 @@ describe('buildRepaymentAssignmentActivity', () => {
     expect(activity?.recipients).toEqual(['alice'])
     expect(JSON.parse(activity?.contenu ?? '{}')).toEqual({
       version: 1,
-      gestionnaire_precedent: 'bob@bailleur.fr',
-      gestionnaire: 'alice@bailleur.fr',
-      login: 'alice',
-      origine: 'manual'
+      referent_precedent: 'bob@bailleur.fr',
+      referent: 'alice@bailleur.fr',
+      login: 'alice'
     })
   })
 
@@ -240,8 +239,8 @@ describe('buildRepaymentAssignmentActivity', () => {
     )
     expect(JSON.parse(activity?.contenu ?? '{}')).toEqual({
       version: 1,
-      gestionnaire_precedent: null,
-      gestionnaire: 'alice@bailleur.fr',
+      referent_precedent: null,
+      referent: 'alice@bailleur.fr',
       login: 'alice'
     })
   })
@@ -257,10 +256,9 @@ describe('buildRepaymentAssignmentActivity', () => {
     expect(activity?.recipients).toEqual(['alice', 'bob'])
     expect(JSON.parse(activity?.contenu ?? '{}')).toEqual({
       version: 1,
-      gestionnaire_precedent: null,
-      gestionnaire: 'alice@bailleur.fr',
+      referent_precedent: null,
+      referent: 'alice@bailleur.fr',
       login: 'alice',
-      origine: 'manual',
       note: 'Relance avec @bob'
     })
   })
@@ -275,8 +273,8 @@ describe('buildRepaymentAssignmentActivity', () => {
     )
     expect(JSON.parse(activity?.contenu ?? '{}')).toEqual({
       version: 1,
-      gestionnaire_precedent: null,
-      gestionnaire: 'alice@bailleur.fr',
+      referent_precedent: null,
+      referent: 'alice@bailleur.fr',
       login: 'alice'
     })
   })

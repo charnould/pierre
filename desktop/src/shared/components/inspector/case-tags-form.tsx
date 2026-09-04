@@ -2,14 +2,24 @@ import { useId } from 'react'
 
 import { InspectorComposeField } from '@/shared/components/inspector/inspector-compose-field'
 import { InspectorComposeFooter } from '@/shared/components/inspector/inspector-compose-shell'
+import { MentionTextarea } from '@/shared/components/inspector/mention-textarea'
 import { Button } from '@/shared/components/ui/button'
 import { Checkbox } from '@/shared/components/ui/checkbox'
+import { canonicalizeCaseTags } from '@/shared/lib/activities/case-workflow-config'
 
-import { canonicalizeRepaymentTags, REPAYMENT_TAG_OPTIONS } from '../lib/repayment-tags'
-import { RepaymentMentionTextarea } from './RepaymentMentionTextarea'
-
-interface Props {
+export function CaseTagsForm({
+  tags,
+  options,
+  onTagsChange,
+  comment,
+  onCommentChange,
+  onCancel,
+  onSave,
+  canSave,
+  saving
+}: {
   tags: string[]
+  options: readonly string[]
   onTagsChange: (tags: string[]) => void
   comment: string
   onCommentChange: (comment: string) => void
@@ -17,40 +27,29 @@ interface Props {
   onSave: () => void
   canSave: boolean
   saving?: boolean
-}
-
-export function RepaymentTagsForm({
-  tags,
-  onTagsChange,
-  comment,
-  onCommentChange,
-  onCancel,
-  onSave,
-  canSave,
-  saving = false
-}: Props) {
+}) {
   const tagsId = useId()
   const commentId = useId()
-  const selected = new Set(canonicalizeRepaymentTags(tags))
+  const selected = new Set(canonicalizeCaseTags(tags, options))
 
   function toggle(label: string, checked: boolean) {
-    if (checked) onTagsChange(canonicalizeRepaymentTags([...tags, label]))
-    else onTagsChange(tags.filter((tag) => tag !== label))
+    const next = checked ? [...tags, label] : tags.filter((tag) => tag !== label)
+    onTagsChange(canonicalizeCaseTags(next, options))
   }
 
   return (
     <>
       <InspectorComposeField label="Tags">
-        <div className="flex flex-col gap-2">
-          {REPAYMENT_TAG_OPTIONS.map((label) => {
-            const id = `${tagsId}-${label}`
+        <div id={tagsId} className="flex flex-col gap-2">
+          {options.map((label, index) => {
+            const id = `${tagsId}-${index}`
             return (
               <div key={label} className="flex items-center gap-2">
                 <Checkbox
                   id={id}
                   checked={selected.has(label)}
                   disabled={saving}
-                  onCheckedChange={(next) => toggle(label, next === true)}
+                  onCheckedChange={(checked) => toggle(label, checked === true)}
                 />
                 <label htmlFor={id} className="min-w-0 text-sm leading-5 font-normal">
                   {label}
@@ -61,7 +60,7 @@ export function RepaymentTagsForm({
         </div>
       </InspectorComposeField>
       <InspectorComposeField htmlFor={commentId} label="Note (optionnel)">
-        <RepaymentMentionTextarea
+        <MentionTextarea
           id={commentId}
           value={comment}
           onChange={onCommentChange}

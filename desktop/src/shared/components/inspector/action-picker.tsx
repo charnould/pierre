@@ -3,6 +3,7 @@ import { useId, useMemo, useState, type FormEvent } from 'react'
 import { CollaboratorPopoverPicker } from '@/shared/components/CollaboratorPopoverPicker'
 import { InspectorComposeField } from '@/shared/components/inspector/inspector-compose-field'
 import { InspectorComposeFooter } from '@/shared/components/inspector/inspector-compose-shell'
+import { MentionTextarea } from '@/shared/components/inspector/mention-textarea'
 import { Button } from '@/shared/components/ui/button'
 import {
   Combobox,
@@ -14,30 +15,27 @@ import {
 } from '@/shared/components/ui/combobox'
 import { DatePicker } from '@/shared/components/ui/date-picker'
 import { useOrgUsers } from '@/shared/hooks/useOrgUsers'
-import type { OrgUser } from '@/shared/types/users'
-
-import { REPAYMENT_DOSSIER_ACTION_OPTIONS } from '../lib/repayment-action'
 import {
-  mapRepaymentDoneActionForm,
-  mapRepaymentTodoForm,
-  type RepaymentActionDraft
-} from '../lib/repayment-action-activity'
-import { RepaymentMentionTextarea } from './RepaymentMentionTextarea'
-
-const ACTION_LABELS = REPAYMENT_DOSSIER_ACTION_OPTIONS.map((option) => option.label)
+  mapDoneActionForm,
+  mapTodoForm,
+  type ActionDraft
+} from '@/shared/lib/activities/action-activity'
+import type { OrgUser } from '@/shared/types/users'
 
 interface Props {
   intent: 'todo' | 'done'
+  actionLabels: string[]
   url?: string
   defaultAssignee?: string | null
   todayIso: string
   saving?: boolean
   onCancel?: () => void
-  onSave: (draft: RepaymentActionDraft) => void | Promise<boolean | void>
+  onSave: (draft: ActionDraft) => void | Promise<boolean | void>
 }
 
-export function RepaymentActionPicker({
+export function ActionPicker({
   intent,
+  actionLabels,
   url,
   defaultAssignee,
   todayIso,
@@ -74,13 +72,13 @@ export function RepaymentActionPicker({
     if (saving) return
     const mapped =
       intent === 'todo'
-        ? mapRepaymentTodoForm({
+        ? mapTodoForm({
             action: actionLabel,
             assigneA: assignee?.email ?? defaultAssignee ?? '',
             dateEcheance: dateEcheance || todayDate,
             note: comment
           })
-        : mapRepaymentDoneActionForm({ action: actionLabel, commentaire: comment })
+        : mapDoneActionForm({ action: actionLabel, commentaire: comment })
     if (mapped) void onSave(mapped)
   }
 
@@ -89,7 +87,7 @@ export function RepaymentActionPicker({
       <InspectorComposeField label="Action">
         <Combobox
           autoHighlight
-          items={ACTION_LABELS}
+          items={actionLabels}
           value={action}
           onValueChange={(next) => setAction(typeof next === 'string' ? next : null)}
           onInputValueChange={(next) => setActionQuery(next)}
@@ -144,7 +142,7 @@ export function RepaymentActionPicker({
       ) : null}
 
       <InspectorComposeField htmlFor={commentId} label="Note">
-        <RepaymentMentionTextarea
+        <MentionTextarea
           id={commentId}
           value={comment}
           onChange={setComment}

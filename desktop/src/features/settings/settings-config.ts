@@ -6,7 +6,7 @@ export interface DesktopConfig {
 
 export async function fetchConfig(baseUrl: string): Promise<DesktopConfig | null> {
   try {
-    const resp = await fetch(`${baseUrl}/customization/desktop.json`)
+    const resp = await fetch(`${baseUrl}/customization/desktop/config.json`)
     if (!resp.ok) return null
     return (await resp.json()) as DesktopConfig
   } catch (error) {

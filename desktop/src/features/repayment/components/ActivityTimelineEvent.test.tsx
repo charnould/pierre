@@ -22,7 +22,7 @@ import { ContextTimeline } from '@/shared/components/timeline/context-timeline'
 import { parseActivityAuthor } from '@/shared/lib/timeline/parse-activity-author'
 import type { Activite } from '@/shared/types/activites'
 
-import { ActivityTimelineEvent } from './ActivityTimelineEvent'
+import { RepaymentActivityTimelineEvent } from './RepaymentActivityTimelineEvent'
 
 function row(overrides: Partial<Activite> = {}): Activite {
   return {
@@ -44,7 +44,7 @@ function row(overrides: Partial<Activite> = {}): Activite {
 function renderEvent(activity: Activite) {
   return renderToStaticMarkup(
     <ContextTimeline>
-      <ActivityTimelineEvent
+      <RepaymentActivityTimelineEvent
         row={activity}
         actor={parseActivityAuthor(activity.auteur)}
         step={1}
@@ -67,11 +67,11 @@ describe('ActivityTimelineEvent', () => {
   it('formule un changement de groupe avec les chips Inspector', () => {
     const html = renderEvent(
       row({
-        type: 'repayment_phase_change',
+        type: 'case_bucket_change',
         contenu: JSON.stringify({
           version: 1,
-          phase_precedente: 'amiable',
-          phase: 'pre_contentieux',
+          bucket_precedent: 'amiable',
+          bucket: 'pre_contentieux',
           note: 'Échec des relances amiables.'
         })
       })

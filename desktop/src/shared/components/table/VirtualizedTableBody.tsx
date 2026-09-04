@@ -21,7 +21,7 @@ interface Props<Row> {
   renderRow: (row: Row, meta: VirtualRowMeta) => ReactNode
 }
 
-function listOffsetInScroller(tbody: HTMLElement, scrollEl: HTMLElement) {
+export function listOffsetInScroller(tbody: HTMLElement, scrollEl: HTMLElement) {
   return (
     tbody.getBoundingClientRect().top - scrollEl.getBoundingClientRect().top + scrollEl.scrollTop
   )

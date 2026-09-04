@@ -41,17 +41,17 @@ describe('mapAuthoredActivityRows', () => {
     const [item] = mapAuthoredActivityRows([
       row({
         rattachement: 'repayment:LOC-1',
-        type: 'repayment_phase_change',
+        type: 'case_bucket_change',
         contenu: JSON.stringify({
           version: 1,
-          phase_precedente: 'amiable',
-          phase: 'pre_contentieux',
+          bucket_precedent: 'amiable',
+          bucket: 'pre_contentieux',
           note: 'Échec des relances amiables.'
         })
       })
     ])
 
-    expect(item?.row?.type).toBe('repayment_phase_change')
+    expect(item?.row?.type).toBe('case_bucket_change')
     expect(item?.moduleLabel).toBe('Impayés')
     expect(item?.row).toBeDefined()
   })

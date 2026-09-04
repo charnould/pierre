@@ -5,18 +5,7 @@
  */
 export type TicketRow = {
   id_reclamation?: string | number | null
-  draft_id_skills?: string[]
-  draft_answer_channel?: string
-  draft_latest_at?: string
-  draft_generated_by?: string
-  draft_edited_by?: string
-  draft_automation_skills?: string[]
-  draft_markers?: Array<{
-    activity_id: number
-    id_skill: string
-    channel: string | null
-    automation: boolean
-  }>
+  pierre_bucket?: string
   [key: string]: unknown
 }
 
@@ -38,6 +27,7 @@ export type TicketsQueryParams = {
   limit?: number
   offset?: number
   sort?: string
+  bucket?: string
   filters?: Record<string, string[]>
   filter_rules?: TicketFilterRule[]
 }

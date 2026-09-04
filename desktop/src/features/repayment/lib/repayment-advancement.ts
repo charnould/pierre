@@ -1,5 +1,10 @@
+import { deriveCaseAssignment } from '@/shared/lib/activities/case-activities'
 import type { Activite } from '@/shared/types/activites'
-import { activity_payload, parse_action_activity_content } from '@/shared/types/activites'
+import {
+  activity_payload,
+  parse_action_activity_content,
+  parse_case_bucket_change_content
+} from '@/shared/types/activites'
 
 import type { RepaymentActionId } from './repayment-action'
 import { sortRepaymentActivitiesDesc } from './repayment-activity-order'
@@ -23,10 +28,14 @@ export function deriveRepaymentAdvancementFromSorted(
 
   for (const row of activities) {
     const payload = activity_payload(row.type, row.contenu)
-    const phase = payload['phase']
+    const caseBucket =
+      row.type === 'case_bucket_change'
+        ? parse_case_bucket_change_content(row.contenu)?.bucket
+        : null
+    const phase = row.type === 'bulk_application' ? payload['phase'] : caseBucket
     if (
       bucket === null &&
-      (row.type === 'repayment_phase_change' || row.type === 'bulk_application') &&
+      (row.type === 'case_bucket_change' || row.type === 'bulk_application') &&
       typeof phase === 'string' &&
       isRepaymentBucketId(phase)
     ) {
@@ -60,22 +69,11 @@ export function deriveRepaymentAdvancement(activities: Activite[]): RepaymentAdv
   return deriveRepaymentAdvancementFromSorted(sortRepaymentActivitiesDesc(activities))
 }
 
-/** Latest Pierre gestionnaire assignment from repayment_assignment activities. */
+/** Latest Pierre referent assignment from shared case activities. */
 export function deriveRepaymentGestionnaireFromSorted(
   activities: readonly Activite[]
 ): RepaymentGestionnaireAssignment {
-  for (const row of activities) {
-    if (row.type !== 'repayment_assignment') continue
-    const payload = activity_payload(row.type, row.contenu)
-    const apres = payload['gestionnaire']
-    if (typeof apres !== 'string' || !apres.trim()) continue
-    const email = apres.includes('@') ? apres.trim().toLowerCase() : null
-    return {
-      email: email ?? apres.trim(),
-      login: email && email.includes('@') ? email.slice(0, email.indexOf('@')) : null
-    }
-  }
-  return { email: null, login: null }
+  return deriveCaseAssignment(activities)
 }
 
 export function deriveRepaymentGestionnaire(

@@ -7,14 +7,13 @@ import { Command, CommandGroup, CommandItem, CommandList } from '@/shared/compon
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { useOrgUsers } from '@/shared/hooks/useOrgUsers'
-import { cn } from '@/shared/lib/utils'
-
 import {
   filterMentionSuggestions,
   getMentionTriggerAtCaret,
   insertMentionAt,
   type MentionTrigger
-} from '../lib/repayment-mention'
+} from '@/shared/lib/activities/mentions'
+import { cn } from '@/shared/lib/utils'
 
 interface Props {
   id?: string
@@ -29,7 +28,7 @@ interface Props {
   url?: string
 }
 
-export function RepaymentMentionTextarea({
+export function MentionTextarea({
   id,
   'aria-label': ariaLabel,
   value,
@@ -49,7 +48,6 @@ export function RepaymentMentionTextarea({
   const agent = useAgentIdentity()
 
   const suggestions = trigger ? filterMentionSuggestions(orgUsers, trigger.query, agent) : []
-  // Keep the popover open while @ is active so empty/loading states are visible.
   const open = trigger !== null
 
   const syncTrigger = useCallback((text: string, caret: number) => {
@@ -128,7 +126,6 @@ export function RepaymentMentionTextarea({
       }}
       modal={false}
     >
-      {/* Ancre de positionnement : la liste s'aligne sur la zone de saisie. */}
       <div className="relative">
         <PopoverTrigger
           render={<span />}

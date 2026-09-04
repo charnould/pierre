@@ -113,7 +113,7 @@ describe('parseTimelineMessageBody', () => {
     expect(
       parseTimelineMessageBody(
         activity({
-          type: 'repayment_phase_change',
+          type: 'case_bucket_change',
           contenu: JSON.stringify({ champ: 'bucket', avant: 'amiable', apres: 'contentieux' })
         })
       )
@@ -124,7 +124,7 @@ describe('parseTimelineMessageBody', () => {
     expect(
       parseTimelineMessageBody(
         activity({
-          type: 'repayment_tag_change',
+          type: 'case_tag_change',
           contenu: JSON.stringify({ version: 1, tags_precedents: [], tags: ['décès'] })
         })
       )

@@ -59,21 +59,21 @@ describe('timelineActivityActionVerb', () => {
     expect(
       timelineActivityActionVerb(
         sampleActivity({
-          type: 'repayment_phase_change'
+          type: 'case_bucket_change'
         })
       )
     ).toBe('a changé le groupe')
     expect(
       timelineActivityActionVerb(
         sampleActivity({
-          type: 'repayment_assignment'
+          type: 'case_assignment'
         })
       )
     ).toBe('a affecté le dossier')
     expect(
       timelineActivityActionVerb(
         sampleActivity({
-          type: 'repayment_tag_change'
+          type: 'case_tag_change'
         })
       )
     ).toBe('a mis à jour les tags')

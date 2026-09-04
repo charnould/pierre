@@ -11,7 +11,7 @@ describe('activityBoostNoun', () => {
     expect(activityBoostNoun('note')).toBe('note')
     expect(activityBoostNoun('action')).toBe('action')
     expect(activityBoostNoun('repayment_plan')).toBe('plan d’apurement')
-    expect(activityBoostNoun('repayment_tag_change')).toBe('mise à jour des tags')
+    expect(activityBoostNoun('case_tag_change')).toBe('mise à jour des tags')
     expect(activityBoostNoun('activity_boost')).toBe('action')
   })
 })

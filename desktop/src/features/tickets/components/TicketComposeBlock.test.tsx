@@ -94,7 +94,14 @@ function buttonLabels() {
   return [...document.querySelectorAll('button')].map((button) => button.textContent)
 }
 
-async function renderCompose(mode: TicketComposeMode = null) {
+async function renderCompose(
+  mode: TicketComposeMode = null,
+  ticket: Record<string, unknown> = {
+    id_reclamation: 'REC-1',
+    id_locataire: 'LOC-1',
+    message: 'Fuite'
+  }
+) {
   const { act, useState } = await import('react')
   const { createRoot } = await import('react-dom/client')
   const { TicketComposeBlock } = await import('./TicketComposeBlock')
@@ -112,7 +119,7 @@ async function renderCompose(mode: TicketComposeMode = null) {
     const [rcsMessage, setRcsMessage] = useState('Bonjour')
     return (
       <TicketComposeBlock
-        ticket={{ id_reclamation: 'REC-1', id_locataire: 'LOC-1', message: 'Fuite' }}
+        ticket={ticket}
         composeMode={composeMode}
         hasTimelineHistory={false}
         comment={comment}
@@ -133,12 +140,32 @@ async function renderCompose(mode: TicketComposeMode = null) {
           onStartComment()
           setComposeMode('comment')
         }}
+        onStartTodo={() => setComposeMode('todo')}
+        onStartAction={() => setComposeMode('action')}
+        onStartBucket={() => setComposeMode('bucket')}
+        onStartTags={() => setComposeMode('tags')}
+        onStartAssignment={() => setComposeMode('assignment')}
         onStartRcs={() => setComposeMode('rcs')}
         onStartEmail={() => setComposeMode('email')}
         onStartLetter={() => setComposeMode('letter')}
         onStartSummarize={() => setComposeMode('summarize')}
         onCancelCompose={() => setComposeMode(null)}
         onSubmitComment={onSubmitComment}
+        onSubmitAction={() => {}}
+        draftBucket="non_traitees"
+        currentBucket="non_traitees"
+        onDraftBucketChange={() => {}}
+        bucketComment=""
+        onBucketCommentChange={() => {}}
+        onSubmitBucket={() => {}}
+        draftTags={[]}
+        currentTags={[]}
+        onDraftTagsChange={() => {}}
+        tagComment=""
+        onTagCommentChange={() => {}}
+        onSubmitTags={() => {}}
+        onAssignReferent={() => {}}
+        onImportEml={() => {}}
         onSummarizeDraft={() => {}}
         onSummarizeSave={() => {}}
         onRcsDraft={() => {}}
@@ -174,14 +201,42 @@ async function renderCompose(mode: TicketComposeMode = null) {
 }
 
 describe('TicketComposeBlock', () => {
-  test('montre la pile des cinq verbes', async () => {
+  test('affiche le message initial intégral dans le contexte', async () => {
+    const message = 'Message intégral '.repeat(20).trim()
+    const { act } = await import('react')
+    const { createRoot } = await import('react-dom/client')
+    const { TicketSummaryCard } = await import('./TicketComposeBlock')
+    const container = document.createElement('div')
+    document.body.append(container)
+    const root = createRoot(container)
+    await act(async () => {
+      root.render(
+        <TicketSummaryCard ticket={{ id_reclamation: 'REC-1', message_initial: message }} />
+      )
+    })
+    try {
+      expect(container.textContent).toContain(message)
+      expect(container.textContent).not.toContain(`${message.slice(0, 120)}…`)
+    } finally {
+      await act(async () => root.unmount())
+      container.remove()
+    }
+  })
+
+  test('montre toutes les capacités de la réclamation', async () => {
     const { cleanup } = await renderCompose()
     try {
       const labels = buttonLabels()
       expect(labels).toContain('Ajouter une note')
+      expect(labels).toContain('Créer une tâche')
+      expect(labels).toContain('Consigner une action réalisée')
+      expect(labels).toContain('Changer de panier')
       expect(labels).toContain('Envoyer un RCS au locataire')
       expect(labels).toContain('Envoyer un courriel au locataire')
       expect(labels).toContain('Envoyer un courrier postal au locataire')
+      expect(labels).toContain('Importer un email')
+      expect(labels).toContain('Changer les tags')
+      expect(labels).toContain('Affecter à un référent')
       expect(labels).toContain('Générer un point de situation')
     } finally {
       await cleanup()
@@ -210,6 +265,25 @@ describe('TicketComposeBlock', () => {
       expect(onSubmitComment).toHaveBeenCalledTimes(1)
     } finally {
       await cleanup()
+    }
+  })
+
+  test('alimente tags et paniers depuis la customization Tickets', async () => {
+    const tags = await renderCompose('tags')
+    try {
+      expect(document.body.textContent).toContain('Sécurité des personnes')
+      expect(document.body.textContent).toContain('Attente prestataire')
+      expect(document.querySelectorAll('input[type="checkbox"]').length).toBeGreaterThan(0)
+    } finally {
+      await tags.cleanup()
+    }
+
+    const bucket = await renderCompose('bucket')
+    try {
+      expect(document.body.textContent).toContain('Changer de panier')
+      expect(document.body.textContent).toContain('Non traitées')
+    } finally {
+      await bucket.cleanup()
     }
   })
 

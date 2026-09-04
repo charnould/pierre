@@ -1,8 +1,8 @@
 import { useId } from 'react'
 
-import { RepaymentMentionTextarea } from '@/features/repayment/components/RepaymentMentionTextarea'
 import { InspectorComposeField } from '@/shared/components/inspector/inspector-compose-field'
 import { InspectorComposeFooter } from '@/shared/components/inspector/inspector-compose-shell'
+import { MentionTextarea } from '@/shared/components/inspector/mention-textarea'
 import { Button } from '@/shared/components/ui/button'
 
 interface Props {
@@ -29,7 +29,7 @@ export function TicketTimelineCommentDraft({
   return (
     <>
       <InspectorComposeField htmlFor={noteId} label="Note">
-        <RepaymentMentionTextarea
+        <MentionTextarea
           id={noteId}
           value={comment}
           onChange={onCommentChange}

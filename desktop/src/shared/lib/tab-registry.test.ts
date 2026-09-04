@@ -2,7 +2,9 @@ import { describe, expect, test } from 'bun:test'
 
 import {
   GUEST_ACCESSIBLE_TABS,
+  HIDDEN_PANEL_TABS,
   isGuestAccessibleTab,
+  isPanelTabVisible,
   isTab,
   PANEL_NAV_TABS,
   TAB_REGISTRY,
@@ -19,6 +21,20 @@ describe('tab-registry', () => {
     expect(PANEL_NAV_TABS).not.toContain('home')
     expect(PANEL_NAV_TABS).toContain('automations')
     expect(PANEL_NAV_TABS).toContain('bulk')
+  })
+
+  test('hidden panel tabs remain valid but are excluded from navigation', () => {
+    expect(HIDDEN_PANEL_TABS).toEqual([
+      'insurance-attestation',
+      'relocation',
+      'attributions',
+      'ventes'
+    ])
+    for (const tab of HIDDEN_PANEL_TABS) {
+      expect(isTab(tab)).toBe(true)
+      expect(isPanelTabVisible(tab)).toBe(false)
+      expect(PANEL_NAV_TABS).not.toContain(tab)
+    }
   })
 
   test('automations and bulk have distinct home labels', () => {

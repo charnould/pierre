@@ -2,14 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { ActivityBoostEmoji } from '@/features/activity/lib/activity-boosts'
 import { toast } from '@/shared/components/ui/toast'
+import { buildActionActivity, type ActionDraft } from '@/shared/lib/activities/action-activity'
+import { parseEmlFile } from '@/shared/lib/activities/parse-eml'
 import type { Activite } from '@/shared/types/activites'
 
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
-import { parseEmlFile } from '../lib/parse-eml'
-import {
-  buildRepaymentActionActivity,
-  type RepaymentActionDraft
-} from '../lib/repayment-action-activity'
 import { buildRepaymentEmailImportActivity } from '../lib/repayment-activity-mutations'
 import type { TimelineRefreshResult } from './use-repayment-tenant-timeline'
 
@@ -42,7 +39,7 @@ export function useRepaymentTenantActions(params: {
   refreshTimeline: (options?: { force?: boolean }) => Promise<TimelineRefreshResult>
   applyActivityPatch: (activity: Activite) => void
 }) {
-  const { url, tenant, userLogin, refreshTimeline, applyActivityPatch } = params
+  const { url, tenant, refreshTimeline, applyActivityPatch } = params
   const tenantKey = tenantKeyOf(tenant)
   const [submitting, setSubmitting] = useState<RepaymentSubmissionKind | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<RepaymentDeleteTarget | null>(null)
@@ -182,14 +179,10 @@ export function useRepaymentTenantActions(params: {
   )
 
   const handleSubmitAction = useCallback(
-    async (draft: RepaymentActionDraft): Promise<boolean> => {
+    async (draft: ActionDraft): Promise<boolean> => {
       if (!url || !tenant || !window.api?.createActivity) return false
       const result = await runSubmission('action', async (isCurrent) => {
-        const activity = buildRepaymentActionActivity(
-          tenant.id_locataire,
-          draft,
-          `user:${userLogin}`
-        )
+        const activity = buildActionActivity('repayment', tenant.id_locataire, draft)
         const response = await window.api.createActivity({ url, ...activity })
         if (!response?.data?.id) return false
         await afterSuccessfulWrite(isCurrent)
@@ -202,7 +195,7 @@ export function useRepaymentTenantActions(params: {
       })
       return result === true
     },
-    [afterSuccessfulWrite, runSubmission, tenant, url, userLogin]
+    [afterSuccessfulWrite, runSubmission, tenant, url]
   )
 
   const patchAction = useCallback(

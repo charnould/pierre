@@ -10,6 +10,7 @@ import {
 import type { TicketRow, TicketsColumnMeta, TicketsListResponse } from '@/shared/types'
 
 export type UseTicketsOptions = {
+  bucket?: string
   columnFilters?: ColumnFilters
   /** Increment to refetch the current page (e.g. after saving a draft). */
   refreshNonce?: number
@@ -29,6 +30,7 @@ export function useTickets(
   options: UseTicketsOptions = {}
 ) {
   const columnFilters = options.columnFilters
+  const bucket = options.bucket
   const refreshNonce = options.refreshNonce
   const filtersKey = useMemo(() => JSON.stringify(columnFilters ?? {}), [columnFilters])
 
@@ -38,7 +40,7 @@ export function useTickets(
     setPage({ filtersKey, url, offset: 0 })
   }
   const offset = filtersOrUrlChanged ? 0 : page.offset
-  const queryKey = `${url ?? ''}\0${filtersKey}\0${offset}\0${refreshNonce ?? 0}`
+  const queryKey = `${url ?? ''}\0${bucket ?? ''}\0${filtersKey}\0${offset}\0${refreshNonce ?? 0}`
 
   const [snapshot, setSnapshot] = useState<TicketsSnapshot>({
     queryKey: '',
@@ -49,6 +51,19 @@ export function useTickets(
   })
   const [refreshing, setRefreshing] = useState(false)
   const sequencerRef = useRef(createRequestSequencer())
+  const redirectOutOfRangePage = useCallback(
+    (res: TicketsListResponse, capturedOffset: number): boolean => {
+      if (capturedOffset === 0 || capturedOffset < res.meta.total) return false
+      const pageSize = Math.max(1, res.meta.limit || RECLAMATIONS_PAGE_SIZE)
+      const nextOffset =
+        res.meta.total === 0 ? 0 : Math.floor((res.meta.total - 1) / pageSize) * pageSize
+      setPage((current) =>
+        current.offset === nextOffset ? current : { ...current, offset: nextOffset }
+      )
+      return true
+    },
+    []
+  )
 
   const fetchPage = useCallback(async () => {
     if (!url || !window.api?.getTickets) return
@@ -62,6 +77,7 @@ export function useTickets(
         url,
         limit: RECLAMATIONS_PAGE_SIZE,
         offset: capturedOffset,
+        bucket,
         filters
       })
       if (
@@ -72,6 +88,7 @@ export function useTickets(
           url,
           limit: RECLAMATIONS_PAGE_SIZE,
           offset: capturedOffset,
+          bucket,
           filters: {}
         })
       }
@@ -79,6 +96,7 @@ export function useTickets(
       if (!res || !Array.isArray(res.meta?.columns) || res.meta.columns.length === 0) {
         throw new Error('missing_schema')
       }
+      if (redirectOutOfRangePage(res, capturedOffset)) return
       setSnapshot({
         queryKey: capturedKey,
         data: Array.isArray(res.data) ? res.data : [],
@@ -97,7 +115,7 @@ export function useTickets(
         error: 'Impossible de charger les réclamations.'
       })
     }
-  }, [columnFilters, offset, queryKey, url])
+  }, [bucket, columnFilters, offset, queryKey, redirectOutOfRangePage, url])
 
   useEffect(() => {
     if (hidden || !url || !window.api?.getTickets) return
@@ -111,6 +129,7 @@ export function useTickets(
         url,
         limit: RECLAMATIONS_PAGE_SIZE,
         offset: capturedOffset,
+        bucket,
         filters
       })
       .then(async (first) => {
@@ -123,6 +142,7 @@ export function useTickets(
             url,
             limit: RECLAMATIONS_PAGE_SIZE,
             offset: capturedOffset,
+            bucket,
             filters: {}
           })
         }
@@ -133,6 +153,7 @@ export function useTickets(
         if (!res || !Array.isArray(res.meta?.columns) || res.meta.columns.length === 0) {
           throw new Error('missing_schema')
         }
+        if (redirectOutOfRangePage(res, capturedOffset)) return
         setSnapshot({
           queryKey: capturedKey,
           data: Array.isArray(res.data) ? res.data : [],
@@ -152,7 +173,7 @@ export function useTickets(
           error: 'Impossible de charger les réclamations.'
         })
       })
-  }, [columnFilters, hidden, offset, queryKey, url])
+  }, [bucket, columnFilters, hidden, offset, queryKey, redirectOutOfRangePage, url])
 
   const reload = useCallback(async () => {
     setRefreshing(true)

@@ -108,13 +108,23 @@ const registryById = Object.fromEntries(TAB_REGISTRY.map((entry) => [entry.id, e
   (typeof TAB_REGISTRY)[number]
 >
 
+/** Empty feature panels temporarily hidden from home and sidebar navigation. */
+export const HIDDEN_PANEL_TABS = [
+  'insurance-attestation',
+  'relocation',
+  'attributions',
+  'ventes'
+] as const satisfies readonly Tab[]
+
+const HIDDEN_PANEL_TAB_SET = new Set<Tab>(HIDDEN_PANEL_TABS)
+
 /** All valid navigation tab ids. */
 export const TABS = TAB_REGISTRY.map((entry) => entry.id)
 
-/** Feature panels in home tiles and sidebar (excluding home and settings). */
-export const PANEL_NAV_TABS = TAB_REGISTRY.filter((entry) => entry.navGroup === 'panel').map(
-  (entry) => entry.id
-) as Tab[]
+/** Visible feature panels in home tiles and sidebar (excluding home and settings). */
+export const PANEL_NAV_TABS = TAB_REGISTRY.filter(
+  (entry) => entry.navGroup === 'panel' && !HIDDEN_PANEL_TAB_SET.has(entry.id)
+).map((entry) => entry.id) as Tab[]
 
 /** Tabs reachable without logging in. */
 export const GUEST_ACCESSIBLE_TABS = TAB_REGISTRY.filter(
@@ -142,6 +152,10 @@ export function isTab(value: string): value is Tab {
 export function isGuestAccessibleTab(tab: Tab): boolean {
   const entry = registryById[tab]
   return entry != null && 'guestAccessible' in entry && entry.guestAccessible === true
+}
+
+export function isPanelTabVisible(tab: Tab): boolean {
+  return !HIDDEN_PANEL_TAB_SET.has(tab)
 }
 
 export function tabNavLabel(tab: Tab, agentName: string): string {

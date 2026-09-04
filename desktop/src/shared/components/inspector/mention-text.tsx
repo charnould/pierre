@@ -1,9 +1,9 @@
 import { useAgentIdentity } from '@/contexts/AgentIdentityContext'
+import { CollaboratorChip } from '@/shared/components/inspector/collaborator-chip'
+import { formatMentionDisplay, splitTextWithMentions } from '@/shared/lib/activities/mentions'
 import { cn } from '@/shared/lib/utils'
 
 import { isDesktopAgentIdentity } from '../../../../../shared/agent-identity'
-import { formatMentionDisplay, splitTextWithMentions } from '../lib/repayment-mention'
-import { CollaboratorChip } from './CollaboratorChip'
 
 function loginKey(raw: string): string {
   const lower = raw.trim().toLowerCase()
@@ -24,7 +24,7 @@ interface Props {
   omitLogins?: readonly string[]
 }
 
-export function RepaymentMentionText({
+export function MentionText({
   text,
   className,
   inline = false,

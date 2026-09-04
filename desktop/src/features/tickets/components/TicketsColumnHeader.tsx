@@ -4,7 +4,6 @@ import {
 } from '@/shared/components/table/column-header-options-menu'
 import { DataColumnHeader } from '@/shared/components/table/DataColumnHeader'
 import type { ColumnFilters } from '@/shared/lib/ui-settings/tickets-table'
-import { TICKET_TABLE_DRAFT_GROUP_ID } from '@/shared/lib/ui-settings/tickets-table'
 
 import { TicketColumnFilter } from './TicketColumnFilter'
 
@@ -19,7 +18,7 @@ interface Props {
   onColumnFiltersChange?: (filters: ColumnFilters) => void
 }
 
-const lockedIds = new Set<string>([TICKET_TABLE_DRAFT_GROUP_ID])
+const lockedIds = new Set<string>()
 
 export function TicketsColumnHeader({
   column,
