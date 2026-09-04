@@ -8,7 +8,6 @@ import { controller as get_desktop_tickets } from '../../../../../controllers/de
 import { import_json_rows } from '../../../../../utils/knowledge/sqlite-table-import'
 import { datastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
-import { upsert_ticket_draft } from '../../../../../utils/ticket-activities'
 import { DEFAULT_TICKETS_SORT } from '../../../../../utils/tickets-query'
 
 const FIXTURE_ROWS = [
@@ -216,20 +215,12 @@ describe('GET /desktop/tickets', () => {
     expect(body.data[0]?.id_reclamation).toBe('REQ-4')
   })
 
-  it('includes draft_id_skills on ticket rows', async () => {
+  it('does not expose draft markers as table columns', async () => {
     await seed_tickets()
-    upsert_ticket_draft({
-      save_kind: 'generation',
-      id_reclamation: 'REQ-1',
-      id_skill: 'ticket.answer-ticket',
-      channel: 'email',
-      generated_output: 'o',
-      generated_by: 'u@x.com'
-    })
     const res = await fetch_tickets('?id_reclamation=REQ-1')
     const body = (await res.json()) as {
       data: { id_reclamation: string; draft_id_skills?: string[] }[]
     }
-    expect(body.data[0]?.draft_id_skills).toEqual(['ticket.answer-ticket'])
+    expect(body.data[0]?.draft_id_skills).toBeUndefined()
   })
 })
