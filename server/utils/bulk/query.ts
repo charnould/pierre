@@ -370,7 +370,8 @@ export const compile_query = (
   SELECT id_locataire, contenu,
     ROW_NUMBER() OVER (PARTITION BY id_locataire ORDER BY date_creation DESC, id DESC) AS rn
   FROM activites
-  WHERE type = 'repayment_tag_change'
+  WHERE type = 'case_tag_change'
+    AND rattachement = 'repayment:' || id_locataire
 ),
 current_repayment_tags AS (
   SELECT snapshots.id_locataire, CAST(tag.value AS TEXT) AS tag

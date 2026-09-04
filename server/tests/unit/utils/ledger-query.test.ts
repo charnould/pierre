@@ -221,17 +221,21 @@ describe('ledger SQL queries', () => {
     create_trusted_activity('agent@example.org', {
       contexte: 'repayment',
       ref: 'LOC-1',
-      type: 'repayment_phase_change',
+      type: 'case_bucket_change',
       statut: 'logged',
-      contenu: JSON.stringify({ phase: 'amiable' }),
+      contenu: JSON.stringify({ version: 1, bucket_precedent: null, bucket: 'amiable' }),
       auteur: 'system:repayment'
     })
     create_trusted_activity('agent@example.org', {
       contexte: 'repayment',
       ref: 'LOC-1',
-      type: 'repayment_assignment',
+      type: 'case_assignment',
       statut: 'logged',
-      contenu: JSON.stringify({ gestionnaire: 'agent@example.org' }),
+      contenu: JSON.stringify({
+        version: 1,
+        referent_precedent: null,
+        referent: 'agent@example.org'
+      }),
       auteur: 'system:repayment'
     })
     create_trusted_activity('agent@example.org', {
@@ -266,9 +270,9 @@ describe('ledger SQL queries', () => {
         'repayment:LOC-1',
         'system:repayment',
         'LOC-1',
-        'repayment_phase_change',
+        'case_bucket_change',
         'logged',
-        JSON.stringify({ phase: 'amiable' })
+        JSON.stringify({ version: 1, bucket_precedent: null, bucket: 'amiable' })
       ]
     )
     db.run(
@@ -280,9 +284,9 @@ describe('ledger SQL queries', () => {
         'tickets:TICKET-1',
         'system:test',
         'LOC-1',
-        'repayment_phase_change',
+        'case_bucket_change',
         'logged',
-        JSON.stringify({ phase: 'contentieux' })
+        JSON.stringify({ version: 1, bucket_precedent: 'amiable', bucket: 'contentieux' })
       ]
     )
     db.close()

@@ -23,9 +23,9 @@ export const ACTIVITY_TYPES = [
   ...COMMUNICATION_TYPES,
   'automation_report',
   'ticket_change',
-  'repayment_phase_change',
-  'repayment_assignment',
-  'repayment_tag_change',
+  'case_assignment',
+  'case_bucket_change',
+  'case_tag_change',
   'ticket_memo',
   'ticket_summary',
   'ticket_reply',
@@ -185,10 +185,25 @@ export const parse_action_creation_content = (
   }
 }
 
-export type RepaymentTagChangeContent = {
+export type CaseTagChangeContent = {
   version: typeof ACTIVITY_CONTENT_VERSION
   tags: string[]
   tags_precedents: string[]
+  note?: string
+}
+
+export type CaseBucketChangeContent = {
+  version: typeof ACTIVITY_CONTENT_VERSION
+  bucket: string
+  bucket_precedent: string | null
+  note?: string
+}
+
+export type CaseAssignmentContent = {
+  version: typeof ACTIVITY_CONTENT_VERSION
+  referent: string
+  referent_precedent: string | null
+  login?: string
   note?: string
 }
 
@@ -204,9 +219,7 @@ const parse_tag_labels = (value: unknown): string[] | null => {
   return tags
 }
 
-export const parse_repayment_tag_change_content = (
-  raw: string
-): RepaymentTagChangeContent | null => {
+export const parse_case_tag_change_content = (raw: string): CaseTagChangeContent | null => {
   const value = parse_contenu_json(raw)
   if (value['version'] !== ACTIVITY_CONTENT_VERSION) return null
   const tags = parse_tag_labels(value['tags'])
@@ -218,6 +231,37 @@ export const parse_repayment_tag_change_content = (
     version: ACTIVITY_CONTENT_VERSION,
     tags,
     tags_precedents,
+    ...(non_empty_string(value['note']) ? { note: value['note'].trim() } : {})
+  }
+}
+
+export const parse_case_bucket_change_content = (raw: string): CaseBucketChangeContent | null => {
+  const value = parse_contenu_json(raw)
+  if (value['version'] !== ACTIVITY_CONTENT_VERSION || !non_empty_string(value['bucket'])) {
+    return null
+  }
+  const previous = value['bucket_precedent']
+  if (previous !== null && previous !== undefined && typeof previous !== 'string') return null
+  return {
+    version: ACTIVITY_CONTENT_VERSION,
+    bucket: value['bucket'].trim(),
+    bucket_precedent: typeof previous === 'string' && previous.trim() ? previous.trim() : null,
+    ...(non_empty_string(value['note']) ? { note: value['note'].trim() } : {})
+  }
+}
+
+export const parse_case_assignment_content = (raw: string): CaseAssignmentContent | null => {
+  const value = parse_contenu_json(raw)
+  if (value['version'] !== ACTIVITY_CONTENT_VERSION || !non_empty_string(value['referent'])) {
+    return null
+  }
+  const previous = value['referent_precedent']
+  if (previous !== null && previous !== undefined && typeof previous !== 'string') return null
+  return {
+    version: ACTIVITY_CONTENT_VERSION,
+    referent: value['referent'].trim(),
+    referent_precedent: typeof previous === 'string' && previous.trim() ? previous.trim() : null,
+    ...(non_empty_string(value['login']) ? { login: value['login'].trim().toLowerCase() } : {}),
     ...(non_empty_string(value['note']) ? { note: value['note'].trim() } : {})
   }
 }

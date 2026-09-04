@@ -40,7 +40,7 @@ export const seed_users = (...emails: string[]) => {
 }
 
 export const insert_repayment_activity = (
-  type: 'repayment_phase_change' | 'repayment_assignment' | 'repayment_tag_change' | 'action',
+  type: 'case_bucket_change' | 'case_assignment' | 'case_tag_change' | 'action',
   id_locataire: string,
   date_creation: string,
   contenu: Record<string, unknown>

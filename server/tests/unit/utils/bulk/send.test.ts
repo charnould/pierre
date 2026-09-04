@@ -314,7 +314,7 @@ describe('bulk execution', () => {
       db
         .query<{ n: number }, [string]>(
           `SELECT COUNT(*) AS n FROM activites
-           WHERE execution_id = ? AND type = 'repayment_phase_change'`
+           WHERE execution_id = ? AND type = 'case_bucket_change'`
         )
         .get(result.execution_id)?.n
     ).toBe(1)
@@ -470,7 +470,7 @@ describe('bulk execution', () => {
       db
         .query<{ n: number }, [string]>(
           `SELECT COUNT(*) AS n FROM activites
-           WHERE execution_id = ? AND type = 'repayment_phase_change'`
+           WHERE execution_id = ? AND type = 'case_bucket_change'`
         )
         .get(result.execution_id)?.n
     ).toBe(1)

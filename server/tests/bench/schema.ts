@@ -187,12 +187,15 @@ const seedSynthetic = (db: Database): void => {
               printf('lot-%05d', i % 8000),
               CASE WHEN i % 20 = 0 THEN 'bulk_run'
                    WHEN i % 8 = 0 THEN 'email'
-                   WHEN i % 7 = 0 THEN 'repayment_assignment' ELSE 'note' END,
+                   WHEN i % 7 = 0 THEN 'case_assignment' ELSE 'note' END,
               CASE WHEN i % 8 = 0 THEN 'sent' ELSE 'logged' END, '[]',
               CASE WHEN i % 20 = 0 THEN
                 json_object('status', CASE WHEN i % 40 = 0 THEN 'ok' ELSE 'in_progress' END,
                   'completed_at', strftime('%Y-%m-%dT%H:%M:%SZ', '2025-01-01', '+' || i || ' seconds'),
                   'snapshot', json_object('confirmed_at', '2025-01-01T00:00:00Z'))
+                WHEN i % 8 <> 0 AND i % 7 = 0 THEN
+                  json_object('version', 1, 'referent_precedent', NULL,
+                    'referent', 'user00001@example.org')
                 ELSE '{}' END,
               CASE WHEN i % 8 = 0 AND i % 20 <> 0 THEN printf('thread-%05d', i % 3000) END,
               CASE WHEN i % 20 = 0 THEN printf('bulk-%04d', ((i - 1) % ?) + 1) END,

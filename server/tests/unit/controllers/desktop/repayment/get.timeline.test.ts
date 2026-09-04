@@ -92,9 +92,9 @@ describe('GET /desktop/repayment/timeline', () => {
     create_trusted_activity(user.email, {
       contexte: 'repayment',
       ref: 'LOC-1',
-      type: 'repayment_phase_change',
+      type: 'case_bucket_change',
       statut: 'logged',
-      contenu: JSON.stringify({ phase: 'amiable' }),
+      contenu: JSON.stringify({ version: 1, bucket_precedent: null, bucket: 'amiable' }),
       auteur: 'system:repayment'
     })
     create_activity(user.email, {
@@ -132,9 +132,9 @@ describe('GET /desktop/repayment/timeline', () => {
     create_trusted_activity(user.email, {
       contexte: 'repayment',
       ref: 'LOC-2',
-      type: 'repayment_tag_change',
+      type: 'case_tag_change',
       statut: 'logged',
-      contenu: JSON.stringify({ tag: 'fragile' }),
+      contenu: JSON.stringify({ version: 1, tags_precedents: [], tags: ['fragile'] }),
       auteur: 'system:repayment'
     })
 
@@ -158,15 +158,15 @@ describe('GET /desktop/repayment/timeline', () => {
     create_trusted_activity(user.email, {
       contexte: 'repayment',
       ref: 'LOC-1',
-      type: 'repayment_tag_change',
+      type: 'case_tag_change',
       statut: 'logged',
-      contenu: JSON.stringify({ tag: 'fragile' }),
+      contenu: JSON.stringify({ version: 1, tags_precedents: [], tags: ['fragile'] }),
       auteur: 'system:repayment'
     })
 
     const response = await request('?id_locataire=LOC-1')
     expect(await response.json()).toMatchObject({
-      data: { movements: [], notifications: [{ type: 'repayment_tag_change' }] },
+      data: { movements: [], notifications: [{ type: 'case_tag_change' }] },
       errors: { movements: false, notifications: false, openActions: false }
     })
   })
@@ -188,7 +188,7 @@ describe('GET /desktop/repayment/timeline', () => {
       `INSERT INTO activites (
          date_creation, rattachement, auteur, id_locataire, type, statut, mentions, contenu
        ) VALUES (?, 'repayment:LOC-1', 'system:test', 'LOC-1',
-                 'repayment_tag_change', 'logged', '[]', ?)`
+                 'case_tag_change', 'logged', '[]', ?)`
     )
     const insertAction = db.prepare(
       `INSERT INTO activites (
@@ -201,7 +201,7 @@ describe('GET /desktop/repayment/timeline', () => {
       for (let index = 0; index < 2_001; index += 1) {
         insertTag.run(
           new Date(Date.UTC(2035, 0, 1, 0, 0, index)).toISOString(),
-          JSON.stringify({ tag: `tag-${index}` })
+          JSON.stringify({ version: 1, tags_precedents: [], tags: [`tag-${index}`] })
         )
       }
       for (let index = 0; index < 501; index += 1) {

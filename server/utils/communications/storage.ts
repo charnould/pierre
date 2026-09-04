@@ -350,24 +350,26 @@ export const create_inbound = (input: CreateInboundInput): Activite => {
     const recipients: { destinataire: string; lu: boolean; boost: null }[] = []
     if (input.contexte === 'repayment' && facets.id_locataire) {
       const manager = db
-        .query<{ contenu: string }, [string]>(
+        .query<{ contenu: string }, [string, string]>(
           `SELECT contenu FROM activites
-           WHERE id_locataire = ? AND type = 'repayment_assignment'
+           WHERE id_locataire = ?
+             AND rattachement = 'repayment:' || ?
+             AND type = 'case_assignment'
            ORDER BY date_creation DESC, id DESC LIMIT 1`
         )
-        .get(facets.id_locataire)
+        .get(facets.id_locataire, facets.id_locataire)
       if (manager) {
         try {
-          const value = JSON.parse(manager.contenu) as { gestionnaire?: unknown }
-          if (typeof value.gestionnaire === 'string' && value.gestionnaire.trim()) {
+          const value = JSON.parse(manager.contenu) as { referent?: unknown }
+          if (typeof value.referent === 'string' && value.referent.trim()) {
             recipients.push({
-              destinataire: user_destinataire(value.gestionnaire),
+              destinataire: user_destinataire(value.referent),
               lu: false,
               boost: null
             })
           }
         } catch {
-          // A malformed historical assignment must not lose an inbound message.
+          // A malformed assignment must not lose an inbound message.
         }
       }
     }
