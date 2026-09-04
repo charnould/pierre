@@ -80,12 +80,11 @@ const table_has_column = (db: Database, table: string, column: string): boolean 
     .all()
     .some((item) => item.name === column)
 
-export type CreateOutboundInput = {
+type CreateOutboundInputBase = {
   actor: string
   contexte: ActivityContext
   ref: string
   type: CommunicationType
-  destinataire: string
   contenu: string
   idempotency_key: string
   bulk_id?: string | null
@@ -95,16 +94,27 @@ export type CreateOutboundInput = {
   require_bulk_run?: { bulk_operation_id: string; execution_id: string }
 }
 
+export type CreateOutboundInput = CreateOutboundInputBase &
+  (
+    | { destinataire: string; allow_missing_destination?: false }
+    | { destinataire?: string; allow_missing_destination: true }
+  )
+
 export const create_outbound_with_db = (db: Database, input: CreateOutboundInput): Activite => {
+  const rawDestination = input.destinataire ?? ''
   const destination =
     input.type === 'rcs' || input.type === 'sms'
-      ? normalize_telephone(input.destinataire)
+      ? normalize_telephone(rawDestination)
       : input.type === 'email' || input.type === 'lre'
-        ? normalize_email(input.destinataire)
-        : { value: input.destinataire.trim(), status: 'ok' as const }
-  if (!destination.value || destination.status === 'invalid') {
+        ? normalize_email(rawDestination)
+        : { value: rawDestination.trim(), status: 'ok' as const }
+  if (
+    (!destination.value && !input.allow_missing_destination) ||
+    (destination.value && destination.status === 'invalid')
+  ) {
     throw new CommunicationsError('Destinataire invalide')
   }
+  const destinationValue = destination.value || null
   if (input.require_bulk_run) {
     const activeRun = db
       .query<{ n: number }, [string, string]>(
@@ -156,7 +166,7 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
     if (
       existing.rattachement !== rattachement ||
       existing.type !== input.type ||
-      existing.destinataire !== destination.value ||
+      existing.destinataire !== destinationValue ||
       without_delivery_metadata(existing.contenu) !== without_delivery_metadata(requestedContent)
     ) {
       throw new CommunicationsError(
@@ -198,7 +208,7 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
     const expected = participant?.telephone_locataire
       ? normalize_telephone(participant.telephone_locataire)
       : null
-    if (expected && expected.status !== 'invalid' && expected.value !== destination.value) {
+    if (expected && expected.status !== 'invalid' && expected.value !== destinationValue) {
       throw new CommunicationsError(
         'Le numéro ne correspond pas au participant du dossier',
         'forbidden'
@@ -220,7 +230,7 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
       now,
       rattachement,
       user_destinataire(input.actor),
-      destination.value,
+      destinationValue,
       facets.id_client,
       facets.id_locataire,
       facets.id_lot,

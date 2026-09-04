@@ -421,7 +421,7 @@ export type DeleteActivityPayload = { url: string; id: number }
 export type SendCommunicationPayload = {
   url: string
   idempotencyKey: string
-  type: CommunicationType | 'mailto'
+  type: CommunicationType
   contexte: ActivityContext
   ref: string
   destinataire: string
@@ -430,6 +430,22 @@ export type SendCommunicationPayload = {
     corps: string
     action?: string
     choix?: { id: string; label: string }[]
+  }
+}
+export type RecordExternalCommunicationPayload = {
+  url: string
+  idempotencyKey: string
+  canal: CommunicationType
+  contexte: ActivityContext
+  ref: string
+  destinataire?: string
+  contenu: {
+    objet?: string
+    corps: string
+    action?: string
+    choix?: { id: string; label: string }[]
+    tenant_reply?: true
+    external_application?: { name: string }
   }
 }
 
