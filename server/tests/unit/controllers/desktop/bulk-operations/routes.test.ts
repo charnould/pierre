@@ -169,21 +169,24 @@ describe('bulk CRUD, previews and execution authorization', () => {
     })
   })
 
-  it('applies contributor/admin RBAC to every mutating route class', async () => {
+  it('allows collaborators on standard mutations and reserves execution for administrators', async () => {
     const created = (await (
       await app.request('/desktop/bulk-operations', request('POST', operationBody))
     ).json()) as { data: { id: string } }
 
-    for (const [method, path, body] of [
-      ['POST', '/desktop/bulk-operations', operationBody],
-      ['PATCH', `/desktop/bulk-operations/${created.data.id}`, { name: 'Non' }],
-      ['DELETE', `/desktop/bulk-operations/${created.data.id}`, undefined],
-      ['POST', '/desktop/bulk-operations/preview-query', { definition }],
-      ['POST', '/desktop/bulk-operations/preview-message', { definition, id_locataire: 'LOC-1' }]
+    for (const [method, path, body, expectedStatus] of [
+      ['POST', '/desktop/bulk-operations', operationBody, 201],
+      ['PATCH', `/desktop/bulk-operations/${created.data.id}`, { name: 'Oui' }, 200],
+      ['POST', '/desktop/bulk-operations/preview-query', { definition }, 200],
+      [
+        'POST',
+        '/desktop/bulk-operations/preview-message',
+        { definition, id_locataire: 'LOC-1' },
+        200
+      ]
     ] as const) {
       const response = await app.request(path, request(method, body, 'collaborator'))
-      expect(response.status).toBe(403)
-      expect(await response.json()).toMatchObject({ error: { code: 'forbidden' } })
+      expect(response.status).toBe(expectedStatus)
     }
 
     const contributorExecute = await app.request(
@@ -204,6 +207,14 @@ describe('bulk CRUD, previews and execution authorization', () => {
     expect((await adminExecute.json()) as unknown).toMatchObject({
       data: { totals: { total: 1, applied: 1 } }
     })
+    expect(
+      (
+        await app.request(
+          `/desktop/bulk-operations/${created.data.id}`,
+          request('DELETE', undefined, 'collaborator')
+        )
+      ).status
+    ).toBe(200)
   })
 })
 

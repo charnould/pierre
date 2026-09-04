@@ -124,24 +124,21 @@ describe('POST /ai/answer telemetry', () => {
     })
   })
 
-  it('rejects anonymous and collaborator requests', async () => {
+  it('rejects anonymous requests', async () => {
     const anonymous = await postAnswer('ticket.answer-ticket', null)
     expect(anonymous.status).toBe(401)
     expect(await anonymous.json()).toEqual({
       error: { code: 'unauthorized', message: 'Authentication required' }
     })
-
-    const collaborator = await postAnswer('ticket.answer-ticket', 'collaborator')
-    expect(collaborator.status).toBe(403)
-    expect(await collaborator.json()).toEqual({
-      error: { code: 'forbidden', message: 'Insufficient permissions' }
-    })
   })
 
-  it.each(['contributor', 'administrator'] as const)('allows an authenticated %s', async (role) => {
-    streamShouldFail = false
-    const res = await postAnswer('ticket.answer-ticket', role)
-    expect(res.status).toBe(200)
-    await res.text()
-  })
+  it.each(['collaborator', 'contributor', 'administrator'] as const)(
+    'allows an authenticated %s',
+    async (role) => {
+      streamShouldFail = false
+      const res = await postAnswer('ticket.answer-ticket', role)
+      expect(res.status).toBe(200)
+      await res.text()
+    }
+  )
 })

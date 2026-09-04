@@ -50,6 +50,20 @@ const postRcs = (
     })
   })
 
+const acceptProviderRequest = (async (
+  _url: Parameters<typeof fetch>[0],
+  init?: Parameters<typeof fetch>[1]
+) => {
+  const reference = JSON.parse(String(init?.body)).messages.msg[0].reference
+  return new Response(
+    JSON.stringify({
+      errorCode: 0,
+      messages: { msg: [{ reference, status: 'Accepted', messageErrorCode: 0 }] }
+    }),
+    { status: 200, headers: { 'Content-Type': 'application/json' } }
+  )
+}) as typeof fetch
+
 beforeAll(() => {
   Bun.env['SERVICE'] = SERVICE
   Bun.env['CM_PRODUCT_TOKEN'] = 'product-token-test'
@@ -73,16 +87,7 @@ afterAll(async () => {
 
 describe('POST /rcs provider boundary', () => {
   it('sends the wrapped CM payload and records a sent activity', async () => {
-    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(async (_url, init) => {
-      const reference = JSON.parse(String(init?.body)).messages.msg[0].reference
-      return new Response(
-        JSON.stringify({
-          errorCode: 0,
-          messages: { msg: [{ reference, status: 'Accepted', messageErrorCode: 0 }] }
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      )
-    })
+    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(acceptProviderRequest)
     try {
       const idempotencyKey = Bun.randomUUIDv7()
       const response = await postRcs('contributor', idempotencyKey)
@@ -147,12 +152,12 @@ describe('POST /rcs provider boundary', () => {
     }
   })
 
-  it('blocks collaborators before touching the provider', async () => {
-    const fetchSpy = spyOn(globalThis, 'fetch')
+  it('allows collaborators to send through the provider', async () => {
+    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(acceptProviderRequest)
     try {
       const response = await postRcs('collaborator')
-      expect(response.status).toBe(403)
-      expect(fetchSpy).not.toHaveBeenCalled()
+      expect(response.status).toBe(201)
+      expect(fetchSpy).toHaveBeenCalledTimes(1)
     } finally {
       fetchSpy.mockRestore()
     }

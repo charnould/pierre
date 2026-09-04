@@ -35,16 +35,10 @@ describe('role authorization policy', () => {
     }
   })
 
-  it('allows only contributors and administrators to mutate desktop resources', async () => {
-    expect(
-      (await app_for('collaborator').request('/desktop/write', { method: 'POST' })).status
-    ).toBe(403)
-    expect(
-      (await app_for('contributor').request('/desktop/write', { method: 'POST' })).status
-    ).toBe(200)
-    expect(
-      (await app_for('administrator').request('/desktop/write', { method: 'POST' })).status
-    ).toBe(200)
+  it('allows every authenticated role to mutate desktop resources', async () => {
+    for (const role of ['collaborator', 'contributor', 'administrator'] as const) {
+      expect((await app_for(role).request('/desktop/write', { method: 'POST' })).status).toBe(200)
+    }
   })
 
   it('reserves bulk execution for administrators and normalizes denials', async () => {

@@ -117,7 +117,7 @@ describe('activity write controllers', () => {
     expect(get_activity(created.data.id)).toBeNull()
   })
 
-  it('blocks collaborators from every mutation route', async () => {
+  it('allows collaborators on every mutation route', async () => {
     const created = await app.request('/desktop/activities', jsonRequest('POST', base))
     const id = ((await created.json()) as { data: { id: number } }).data.id
     for (const [method, path, body] of [
@@ -129,8 +129,7 @@ describe('activity write controllers', () => {
         path,
         jsonRequest(method, body, { 'x-test-role': 'collaborator' })
       )
-      expect(response.status).toBe(403)
-      expect(await response.json()).toMatchObject({ error: { code: 'forbidden' } })
+      expect(response.status).toBe(200)
     }
   })
 
