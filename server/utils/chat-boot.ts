@@ -9,7 +9,6 @@ export type ChatBootData = {
   greeting: string[]
   examples: string[]
   displayableConfigs: { id: string; display: string; is_active: boolean }[]
-  assetId: string
   reasoningDisplay: 'off' | 'partial' | 'full'
   reasoningPlaceholders: string[]
 }
@@ -31,7 +30,6 @@ export function buildChatBootData(
       display: c.display,
       is_active: c.id === active_config.id
     })),
-    assetId: active_config.id,
     reasoningDisplay: active_config.reasoning_display,
     reasoningPlaceholders: active_config.reasoning_placeholders
   }

@@ -14,7 +14,6 @@ type BootData = {
   greeting: string[]
   examples: string[]
   displayableConfigs: { id: string; display: string; is_active: boolean }[]
-  assetId: string
   reasoningDisplay: 'off' | 'partial' | 'full'
   reasoningPlaceholders: string[]
 }
@@ -29,16 +28,10 @@ function getBootData(): BootData {
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function Greeting({ greeting, assetId }: { greeting: string[]; assetId: string }) {
+function Greeting({ greeting }: { greeting: string[] }) {
   return (
     <>
-      <img
-        className="mt-6 mb-3"
-        src={`../customization/chatbots/${assetId}/system.svg`}
-        height={33}
-        width={33}
-        alt="IA"
-      />
+      <img className="mt-6 mb-3" src="/branding/system.svg" height={33} width={33} alt="IA" />
       <div className="prose" data-role="system">
         <Streamdown isAnimating={false}>{greeting.join('\n\n')}</Streamdown>
       </div>
@@ -581,7 +574,7 @@ export function ChatApp() {
       <header className="fixed top-0 left-0 w-full shadow-[0_0_15px_15px_rgba(255,255,255,1)]" />
 
       <main className="flex flex-col px-6 pb-40">
-        {!isCompact && <Greeting greeting={boot.greeting} assetId={boot.assetId} />}
+        {!isCompact && <Greeting greeting={boot.greeting} />}
         {!hasMessages && <ConfigSelector configs={boot.displayableConfigs} isCompact={isCompact} />}
         {!hasMessages && <ExampleButtons examples={boot.examples} onSelect={sendMessage} />}
 
