@@ -84,7 +84,7 @@ import { AVATAR_MAX_UPLOAD_BYTES } from './utils/avatar-image'
 import { start_bulk_scheduler } from './utils/bulk/scheduler/queue'
 import { refresh_stale_sms_contacts_for_service } from './utils/contacts'
 import { run_pipeline } from './utils/knowledge/run-pipeline'
-import { CUSTOMIZATION_STATIC_ROOT, SERVER_ROOT } from './utils/paths'
+import { CUSTOMIZATION_DIR, CUSTOMIZATION_STATIC_ROOT, SERVER_ROOT } from './utils/paths'
 import { setup } from './utils/setup'
 import { initVmPool } from './utils/vm-pool'
 import { cleanupOrphanedVms } from './utils/vm-registry'
@@ -158,6 +158,7 @@ app.get('/customization/desktop/config.json', (c) => c.json(desktop_config))
 // Serve PIERRE assets (with CORS for cross-origin embedding) and customization files
 app.use('/assets/*', cors())
 app.use('/assets/*', serveStatic({ root: SERVER_ROOT }))
+app.use('/branding/*', serveStatic({ root: CUSTOMIZATION_DIR }))
 app.use('/customization/*', serveStatic({ root: CUSTOMIZATION_STATIC_ROOT }))
 
 // AI generation routes
