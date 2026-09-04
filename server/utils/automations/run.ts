@@ -4,6 +4,7 @@ import type {
   TicketReplyAutomationConfig
 } from '../../../shared/automations'
 import { create_trusted_activity } from '../activities/write'
+import { DEMO_AUTOMATION_REPORT_HTML } from './demo-report'
 import {
   AutomationsError,
   claim_automation,
@@ -37,7 +38,10 @@ export type AutomationExecutor = (
   context: { runToken: string; signal: AbortSignal }
 ) => Promise<ExecutorResult>
 
-let active_executor: AutomationExecutor | null = null
+let active_executor: AutomationExecutor | null = async () => ({
+  kind: 'report',
+  contenu: DEMO_AUTOMATION_REPORT_HTML
+})
 
 /** Test / future agent hook. */
 export function set_automation_executor(executor: AutomationExecutor): void {

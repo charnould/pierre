@@ -2,6 +2,22 @@ import { expect, it } from 'bun:test'
 
 import { createE2EView, currentUrl, navigate } from './launch-browser'
 
+it('returns JSON for unknown communication API routes instead of redirecting to chat', async () => {
+  const response = await fetch('http://localhost:3000/communications/unknown', {
+    method: 'POST',
+    redirect: 'manual'
+  })
+
+  expect(response.status).toBe(404)
+  expect(response.headers.get('content-type')).toContain('application/json')
+  expect(await response.json()).toEqual({
+    error: {
+      code: 'not_found',
+      message: 'Communication endpoint not found'
+    }
+  })
+})
+
 it('should redirect to the default config for invalid paths and parameters + preserve valid config/data pairs', async () => {
   await using view = createE2EView()
 

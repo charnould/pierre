@@ -18,6 +18,23 @@ afterAll(() => {
 })
 
 describe('authenticate', () => {
+  test('does not classify the external communication endpoint as a chatbot route', async () => {
+    const app = new Hono()
+    app.use('*', authenticate)
+    app.post('/communications/external', (c) => c.json({ ok: true }))
+
+    const response = await app.request('/communications/external', {
+      method: 'POST',
+      redirect: 'manual'
+    })
+
+    expect(response.status).toBe(401)
+    expect(response.headers.get('location')).toBeNull()
+    expect(await response.json()).toEqual({
+      error: { code: 'unauthorized', message: 'Authentication required' }
+    })
+  })
+
   test('treats a signed but malformed encrypted cookie as unauthenticated', async () => {
     const issuer = new Hono()
     issuer.get('/', async (c) => {

@@ -63,11 +63,11 @@ import { controller as get_desktop_users } from './controllers/desktop/users/get
 import { controller as post_email } from './controllers/email/post'
 import { controller as post_email_webhook } from './controllers/email/post.webhook'
 import { controller as get_embed } from './controllers/embed/get'
+import { controller as post_external_communication } from './controllers/external-communication/post'
 import { controller as post_lrar } from './controllers/lrar/post'
 import { controller as post_lrar_webhook } from './controllers/lrar/post.webhook'
 import { controller as post_lre } from './controllers/lre/post'
 import { controller as post_lre_webhook } from './controllers/lre/post.webhook'
-import { controller as post_mailto } from './controllers/mailto/post'
 import { controller as post_rcs } from './controllers/rcs/post'
 import { controller as post_rcs_webhook } from './controllers/rcs/post.webhook'
 import { controller as post_signature } from './controllers/signature/post'
@@ -246,7 +246,7 @@ app.get('/desktop/avatars/:email', authenticate, get_desktop_avatars)
 app.post('/rcs', authenticate, authorize_mutation, post_rcs)
 app.post('/sms', authenticate, authorize_mutation, post_sms)
 app.post('/email', authenticate, authorize_mutation, post_email)
-app.post('/mailto', authenticate, authorize_mutation, post_mailto)
+app.post('/communications/external', authenticate, authorize_mutation, post_external_communication)
 app.post('/courrier', authenticate, authorize_mutation, post_courrier)
 app.post('/lrar', authenticate, authorize_mutation, post_lrar)
 app.post('/lre', authenticate, authorize_mutation, post_lre)
@@ -285,6 +285,17 @@ app.get('/embed', get_embed)
 // Catch-all route that redirects to a new conversation
 app.notFound(async (c) => {
   if (c.req.path.startsWith('/assets/')) return c.text('Not Found', 404)
+  if (c.req.path.startsWith('/communications/')) {
+    return c.json(
+      {
+        error: {
+          code: 'not_found',
+          message: 'Communication endpoint not found'
+        }
+      },
+      404
+    )
+  }
 
   return c.redirect(
     `/c?config=${c.req.query('config')}&data=${c.req.query('data')}${c.req.query('compact') !== undefined ? '&compact' : ''}`

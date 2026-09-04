@@ -6,7 +6,7 @@ import { Hono } from 'hono'
 import { controller as courrierWebhook } from '../../../controllers/courrier/post.webhook'
 import { controller as emailSend } from '../../../controllers/email/post'
 import { controller as emailWebhook } from '../../../controllers/email/post.webhook'
-import { controller as mailtoSend } from '../../../controllers/mailto/post'
+import { controller as externalCommunication } from '../../../controllers/external-communication/post'
 import { controller as rcsWebhook } from '../../../controllers/rcs/post.webhook'
 import { list_activities } from '../../../utils/activities/query'
 import { get_activity } from '../../../utils/activities/rows'
@@ -245,23 +245,24 @@ describe('webhooks de communication', () => {
   })
 })
 
-describe('POST /mailto et action', () => {
+describe('POST /communications/external et action', () => {
   const app = new Hono<{ Variables: { user: { email: string } } }>()
   app.use('*', async (c, next) => {
     c.set('user', { email: 'alice@example.org' })
     await next()
   })
-  app.post('/mailto', mailtoSend)
+  app.post('/communications/external', externalCommunication)
   app.post('/email', emailSend)
 
   it('journalise un courriel déjà envoyé (type email, sent) avec action', async () => {
-    const response = await app.request('/mailto', {
+    const response = await app.request('/communications/external', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Idempotency-Key': Bun.randomUUIDv7()
       },
       body: JSON.stringify({
+        canal: 'email',
         contexte: 'automations',
         ref: 'MAILTO-1',
         destinataire: 'caf@example.fr',
@@ -319,14 +320,15 @@ describe('POST /mailto et action', () => {
     }
   })
 
-  it('accepte un mailto avec objet seul', async () => {
-    const response = await app.request('/mailto', {
+  it('accepte une communication externe avec objet seul', async () => {
+    const response = await app.request('/communications/external', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Idempotency-Key': Bun.randomUUIDv7()
       },
       body: JSON.stringify({
+        canal: 'email',
         contexte: 'automations',
         ref: 'MAILTO-2',
         destinataire: 'caf@example.fr',
@@ -334,6 +336,75 @@ describe('POST /mailto et action', () => {
       })
     })
     expect(response.status).toBe(201)
+  })
+
+  it('journalise une réponse locataire externe sans coordonnée connue', async () => {
+    const response = await app.request('/communications/external', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': Bun.randomUUIDv7()
+      },
+      body: JSON.stringify({
+        canal: 'email',
+        contexte: 'tickets',
+        ref: 'EXTERNAL-NO-DESTINATION',
+        contenu: {
+          corps: 'Votre demande a été traitée.',
+          tenant_reply: true,
+          external_application: { name: 'Aravis' }
+        }
+      })
+    })
+    expect(response.status).toBe(201)
+    const body = (await response.json()) as {
+      data: { destinataire: string | null; contenu: string }
+    }
+    expect(body.data.destinataire).toBeNull()
+    expect(JSON.parse(body.data.contenu)).toMatchObject({
+      tenant_reply: true,
+      external_application: { name: 'Aravis' }
+    })
+  })
+
+  it('journalise chaque canal sans fournisseur et reste idempotent', async () => {
+    for (const canal of ['rcs', 'email', 'courrier'] as const) {
+      const idempotencyKey = Bun.randomUUIDv7()
+      const destinataire =
+        canal === 'rcs'
+          ? '+33600000000'
+          : canal === 'email'
+            ? 'locataire@example.org'
+            : '1 rue du Test, 75001 Paris'
+      const request = () =>
+        app.request('/communications/external', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Idempotency-Key': idempotencyKey
+          },
+          body: JSON.stringify({
+            canal,
+            contexte: 'tickets',
+            ref: `EXTERNAL-${canal}`,
+            destinataire,
+            contenu: { corps: `Réponse ${canal}` }
+          })
+        })
+
+      const first = await request()
+      expect(first.status).toBe(201)
+      const firstBody = (await first.json()) as {
+        data: { id: number; type: string; statut: string }
+      }
+      expect(firstBody.data).toMatchObject({ type: canal, statut: 'sent' })
+
+      const replay = await request()
+      expect(replay.status).toBe(201)
+      expect((await replay.json()) as unknown).toMatchObject({
+        data: { id: firstBody.data.id, type: canal, statut: 'sent' }
+      })
+    }
   })
 
   it('persiste action sur POST /email', async () => {

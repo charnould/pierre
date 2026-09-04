@@ -96,7 +96,7 @@ export const authenticate = async (c: Context, next: Next) => {
   // This block handles requests where the path starts with '/c/',
   // indicating that the request is intended for the chatbot.
   //
-  if (c.req.path.startsWith('/c')) {
+  if (c.req.path === '/c' || c.req.path.startsWith('/c/')) {
     c.set('user', user)
 
     const compact_param = c.req.query('compact') !== undefined ? '&compact' : ''
@@ -165,7 +165,10 @@ export const authenticate = async (c: Context, next: Next) => {
   // Case B3: Outbound communication (desktop + traitements de masse)
   // Same session cookie as /desktop/. JSON 401 — never a chatbot HTML redirect.
   //
-  if (c.req.path === '/mailto' || COMMUNICATION_TYPES.some((type) => c.req.path === `/${type}`)) {
+  if (
+    c.req.path === '/communications/external' ||
+    COMMUNICATION_TYPES.some((type) => c.req.path === `/${type}`)
+  ) {
     if (user === null) {
       return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
     }
