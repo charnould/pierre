@@ -20,7 +20,8 @@ export const controller = async (c: Context) => {
   const parsed = TicketsPaginationQuery.safeParse({
     limit: c.req.query('limit'),
     offset: c.req.query('offset'),
-    sort: c.req.query('sort') || undefined
+    sort: c.req.query('sort') || undefined,
+    bucket: c.req.query('bucket') || undefined
   })
 
   if (!parsed.success) {
