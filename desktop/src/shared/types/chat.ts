@@ -14,7 +14,6 @@ export type ChatBootData = {
   greeting: string[]
   examples: string[]
   displayableConfigs: { id: string; display: string; is_active: boolean }[]
-  assetId: string
   reasoningDisplay: ReasoningDisplay
   layout: 'default' | 'compact'
 }

@@ -13,7 +13,6 @@ const boot: ChatBootData = {
   greeting: [],
   examples: [],
   displayableConfigs: [],
-  assetId: '',
   reasoningDisplay: 'off',
   layout: 'default'
 }
