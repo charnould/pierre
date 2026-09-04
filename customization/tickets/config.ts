@@ -41,8 +41,14 @@ export default {
   ],
 
   /*
-    Modèle d’URL vers une réclamation dans les ERP (pré)-historiques.
-    Placeholder obligatoire : {{id_reclamation}}
+    Application externe du module Réclamations.
+
+    `url_pattern` peut référencer toute colonne d’une réclamation avec
+    `{{nom_de_colonne}}`. Un modèle sans variable est également valide.
   */
-  ticket_url_pattern: 'https://pierre-aravis.charnould.workers.dev?id={{id_reclamation}}'
+  external_application: {
+    name: 'Aravis',
+    url_pattern: 'https://pierre-aravis.charnould.workers.dev?id={{id_reclamation}}',
+    message_selector: '#pierre-bridge-demo-answer'
+  }
 }
