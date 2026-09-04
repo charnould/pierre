@@ -197,10 +197,10 @@ describe('create_activity', () => {
 
 describe('latest_repayment_states', () => {
   it('projette la phase et la dernière action réalisée', () => {
-    insert_repayment_activity('repayment_phase_change', 'LOC-1', '2026-06-10T10:00:00', {
+    insert_repayment_activity('case_bucket_change', 'LOC-1', '2026-06-10T10:00:00', {
       version: 1,
-      phase_precedente: 'non_traites',
-      phase: 'amiable'
+      bucket_precedent: 'non_traites',
+      bucket: 'amiable'
     })
     insert_repayment_activity('action', 'LOC-1', '2026-06-11T11:00:00', {
       version: 1,
@@ -242,15 +242,15 @@ describe('latest_repayment_states', () => {
   })
 
   it('lit le dernier gestionnaire', () => {
-    insert_repayment_activity('repayment_assignment', 'LOC-4', '2026-06-10T10:00:00', {
+    insert_repayment_activity('case_assignment', 'LOC-4', '2026-06-10T10:00:00', {
       version: 1,
-      gestionnaire_precedent: null,
-      gestionnaire: 'old@example.org'
+      referent_precedent: null,
+      referent: 'old@example.org'
     })
-    insert_repayment_activity('repayment_assignment', 'LOC-4', '2026-06-11T11:00:00', {
+    insert_repayment_activity('case_assignment', 'LOC-4', '2026-06-11T11:00:00', {
       version: 1,
-      gestionnaire_precedent: 'old@example.org',
-      gestionnaire: CDUBOIS
+      referent_precedent: 'old@example.org',
+      referent: CDUBOIS
     })
 
     const states = latest_repayment_states(new Database(DATASTORE_PATH), ['LOC-4'])
@@ -264,12 +264,12 @@ describe('latest_repayment_states', () => {
   })
 
   it('ignore un changement de tags pour le listing', () => {
-    insert_repayment_activity('repayment_phase_change', 'LOC-TAGS', '2026-06-10T10:00:00', {
+    insert_repayment_activity('case_bucket_change', 'LOC-TAGS', '2026-06-10T10:00:00', {
       version: 1,
-      phase_precedente: 'non_traites',
-      phase: 'amiable'
+      bucket_precedent: 'non_traites',
+      bucket: 'amiable'
     })
-    insert_repayment_activity('repayment_tag_change', 'LOC-TAGS', '2026-06-12T12:00:00', {
+    insert_repayment_activity('case_tag_change', 'LOC-TAGS', '2026-06-12T12:00:00', {
       version: 1,
       tags_precedents: [],
       tags: ['décès']
@@ -290,15 +290,27 @@ describe('latest_repayment_states', () => {
     create_activity(ALICE, {
       contexte: 'repayment',
       ref: 'LOC-5',
-      type: 'repayment_assignment',
+      type: 'case_assignment',
       statut: 'logged',
       recipients: [CDUBOIS],
       contenu: JSON.stringify({
         version: 1,
-        gestionnaire_precedent: null,
-        gestionnaire: CDUBOIS
+        referent_precedent: null,
+        referent: CDUBOIS
       })
     })
+    const db = new Database(DATASTORE_PATH)
+    db.run(
+      `INSERT INTO activites (
+         date_creation, date_statut, rattachement, auteur, id_locataire,
+         type, statut, mentions, contenu
+       ) VALUES (
+         '2099-08-26T19:00:00Z', '2099-08-26T19:00:00Z', 'tickets:REQ-5',
+         'user:alice', 'LOC-5', 'case_assignment', 'logged', '[]',
+         '{"version":1,"referent_precedent":null,"referent":"wrong@example.org"}'
+       )`
+    )
+    db.close()
 
     const inbound = create_inbound({
       contexte: 'repayment',
@@ -452,9 +464,9 @@ describe('patch_activity', () => {
     const alice = create_activity(ALICE, {
       contexte: 'repayment',
       ref: 'LOC-ALICE',
-      type: 'repayment_phase_change',
+      type: 'case_bucket_change',
       statut: 'logged',
-      contenu: JSON.stringify({ version: 1, phase_precedente: 'nouveau', phase: 'relance' })
+      contenu: JSON.stringify({ version: 1, bucket_precedent: 'nouveau', bucket: 'relance' })
     })
     const bob = create_activity(BOB, {
       contexte: 'tickets',
@@ -635,12 +647,12 @@ describe('set_boost', () => {
     const created = create_activity(ALICE, {
       contexte: 'repayment',
       ref: 'LOC-BOOST-2',
-      type: 'repayment_phase_change',
+      type: 'case_bucket_change',
       statut: 'logged',
       contenu: JSON.stringify({
         version: 1,
-        phase_precedente: 'amiable',
-        phase: 'pre_contentieux'
+        bucket_precedent: 'amiable',
+        bucket: 'pre_contentieux'
       })
     })
     patch_activity(BOB, created.id, { operation: 'set_boost', emoji: '👏' })

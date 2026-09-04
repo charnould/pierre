@@ -50,7 +50,8 @@ const database = (): Database => {
   )`)
   db.run('CREATE TABLE contacts (value TEXT PRIMARY KEY, status TEXT, checked_at TEXT)')
   db.run(`CREATE TABLE activites (
-    id INTEGER PRIMARY KEY, id_locataire TEXT, type TEXT, date_creation TEXT, contenu TEXT
+    id INTEGER PRIMARY KEY, id_locataire TEXT, type TEXT, date_creation TEXT, contenu TEXT,
+    rattachement TEXT
   )`)
   return db
 }
@@ -155,10 +156,12 @@ describe('compile_query', () => {
         [id, id]
       )
     }
-    db.run(`INSERT INTO activites VALUES
-      (1, 'ALL', 'repayment_tag_change', '2026-01-01', '{"version":1,"tags":["décès","+65 ans"]}'),
-      (2, 'OLD', 'repayment_tag_change', '2026-01-01', '{"version":1,"tags":["décès","+65 ans"]}'),
-      (3, 'OLD', 'repayment_tag_change', '2026-02-01', '{"version":1,"tags":["décès","Redémarrage APL"]}')`)
+    db.run(`INSERT INTO activites
+      (id, id_locataire, type, date_creation, contenu, rattachement) VALUES
+      (1, 'ALL', 'case_tag_change', '2026-01-01', '{"version":1,"tags_precedents":[],"tags":["décès","+65 ans"]}', 'repayment:ALL'),
+      (2, 'OLD', 'case_tag_change', '2026-01-01', '{"version":1,"tags_precedents":[],"tags":["décès","+65 ans"]}', 'repayment:OLD'),
+      (3, 'OLD', 'case_tag_change', '2026-02-01', '{"version":1,"tags_precedents":["décès","+65 ans"],"tags":["décès","Redémarrage APL"]}', 'repayment:OLD'),
+      (4, 'ALL', 'case_tag_change', '2099-01-01', '{"version":1,"tags_precedents":[],"tags":["Redémarrage APL"]}', 'tickets:REQ-ALL')`)
 
     expect(
       run(db, {

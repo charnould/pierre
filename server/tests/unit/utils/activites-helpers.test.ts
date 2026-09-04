@@ -9,8 +9,9 @@ import {
   is_boost_notification,
   is_inbox_mention,
   mention_of,
-  parse_contenu_json,
-  parse_repayment_tag_change_content
+  parse_case_assignment_content,
+  parse_case_tag_change_content,
+  parse_contenu_json
 } from '../../../../shared/activites'
 
 describe('shared/activites helpers', () => {
@@ -67,9 +68,9 @@ describe('shared/activites helpers', () => {
     expect(is_boost_notification('note')).toBe(false)
   })
 
-  it('parse_repayment_tag_change_content lit un snapshot, y compris vide', () => {
+  it('parse_case_tag_change_content lit un snapshot, y compris vide', () => {
     expect(
-      parse_repayment_tag_change_content(
+      parse_case_tag_change_content(
         JSON.stringify({
           version: 1,
           tags_precedents: ['décès'],
@@ -84,7 +85,7 @@ describe('shared/activites helpers', () => {
       note: 'Suivi'
     })
     expect(
-      parse_repayment_tag_change_content(
+      parse_case_tag_change_content(
         JSON.stringify({ version: 1, tags_precedents: ['décès'], tags: [] })
       )
     ).toEqual({
@@ -92,9 +93,32 @@ describe('shared/activites helpers', () => {
       tags_precedents: ['décès'],
       tags: []
     })
+    expect(parse_case_tag_change_content(JSON.stringify({ version: 1, tags: [''] }))).toBeNull()
+  })
+
+  it('valide les transitions génériques réutilisables par chaque processus', () => {
     expect(
-      parse_repayment_tag_change_content(JSON.stringify({ version: 1, tags: [''] }))
-    ).toBeNull()
+      parse_case_assignment_content(
+        JSON.stringify({
+          version: 1,
+          referent_precedent: null,
+          referent: 'Alice@Exemple.fr',
+          login: 'Alice',
+          note: ' Suivi '
+        })
+      )
+    ).toEqual({
+      version: 1,
+      referent_precedent: null,
+      referent: 'Alice@Exemple.fr',
+      login: 'alice',
+      note: 'Suivi'
+    })
+    expect(
+      parse_case_tag_change_content(
+        JSON.stringify({ version: 1, tags_precedents: [], tags: ['Urgent'] })
+      )
+    ).toEqual({ version: 1, tags_precedents: [], tags: ['Urgent'] })
   })
 
   it('activity_timestamp strippe les millisecondes et conserve UTC', () => {
@@ -106,9 +130,9 @@ describe('shared/activites helpers', () => {
     expect(ACTIVITY_TYPES).not.toContain('ticket_summarize')
     expect(ACTIVITY_TYPES).not.toContain('repayment_plan_proposal')
     expect(ACTIVITY_TYPES).not.toContain('repayment_change')
-    expect(ACTIVITY_TYPES).toContain('repayment_phase_change')
-    expect(ACTIVITY_TYPES).toContain('repayment_assignment')
-    expect(ACTIVITY_TYPES).toContain('repayment_tag_change')
+    expect(ACTIVITY_TYPES).toContain('case_bucket_change')
+    expect(ACTIVITY_TYPES).toContain('case_assignment')
+    expect(ACTIVITY_TYPES).toContain('case_tag_change')
     expect(ACTIVITY_TYPES).toContain('action')
     expect(ACTIVITY_TYPES).toContain('ticket_summary')
     expect(ACTIVITY_TYPES).toContain('ticket_reply')

@@ -35,7 +35,7 @@ export const latest_repayment_states = (
        WHERE id_locataire IN (${placeholders})
          AND rattachement = 'repayment:' || id_locataire
          AND type IN (
-           'repayment_phase_change', 'repayment_assignment',
+           'case_bucket_change', 'case_assignment',
            'action', 'bulk_application',
            'rcs', 'sms', 'email', 'courrier', 'lrar', 'lre', 'signature'
          )
@@ -56,10 +56,13 @@ export const latest_repayment_states = (
     const metadata = parse_contenu_json(row.contenu)
     if (
       !bucketResolved.has(row.id_locataire) &&
-      (row.type === 'repayment_phase_change' || row.type === 'bulk_application') &&
-      typeof metadata['phase'] === 'string'
+      (row.type === 'case_bucket_change' || row.type === 'bulk_application') &&
+      typeof (row.type === 'case_bucket_change' ? metadata['bucket'] : metadata['phase']) ===
+        'string'
     ) {
-      state.bucket = metadata['phase']
+      state.bucket = (
+        row.type === 'case_bucket_change' ? metadata['bucket'] : metadata['phase']
+      ) as string
       bucketResolved.add(row.id_locataire)
     }
     const action = row.type === 'action' ? parse_action_activity_content(row.contenu) : null
@@ -88,8 +91,8 @@ export const latest_repayment_states = (
       state.date_derniere_action_realisee = actionDate
       actionDates.set(row.id_locataire, actionDateKey)
     }
-    if (!gestionnaireResolved.has(row.id_locataire) && row.type === 'repayment_assignment') {
-      const apres = metadata['gestionnaire']
+    if (!gestionnaireResolved.has(row.id_locataire) && row.type === 'case_assignment') {
+      const apres = metadata['referent']
       if (typeof apres === 'string' && apres.trim() !== '') {
         state.gestionnaire = apres.trim()
         state.gestionnaire_email = apres.trim().toLowerCase()

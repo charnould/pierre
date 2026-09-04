@@ -11,7 +11,7 @@ export type BulkVisibleActivityInput = {
   bulkId: string
   executionId: string
   row: PreviewRow
-  type: Extract<ActivityType, 'repayment_phase_change' | 'bulk_application' | 'bulk_no_route'>
+  type: Extract<ActivityType, 'case_bucket_change' | 'bulk_application' | 'bulk_no_route'>
   status: 'logged'
   content: Record<string, unknown>
   idempotencyKey: string
@@ -79,11 +79,11 @@ export const apply_bucket_effect = (
   const previous = current_manager_state_bucket(db, input.row.id_locataire)
   return insert_bulk_visible_activity(db, {
     ...input,
-    type: 'repayment_phase_change',
+    type: 'case_bucket_change',
     status: 'logged',
     content: {
-      phase: input.bucketId,
-      phase_precedente: previous
+      bucket: input.bucketId,
+      bucket_precedent: previous
     },
     idempotencyKey: `bulk:${input.executionId}:recipient:${input.row.id_locataire}:effect:bucket`
   })
