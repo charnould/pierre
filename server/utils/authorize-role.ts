@@ -15,5 +15,5 @@ const authorize_roles =
     return await next()
   }
 
-export const authorize_mutation = authorize_roles('contributor', 'administrator')
+export const authorize_mutation = authorize_roles('collaborator', 'contributor', 'administrator')
 export const authorize_administrator = authorize_roles('administrator')
