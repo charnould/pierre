@@ -1,8 +1,10 @@
 import { test } from 'bun:test'
 
 import ticketConfig from '../../customization/tickets/config'
+import { validateWorkflowConfig } from './workflow-config'
 
 const PLACEHOLDER = '{{id_reclamation}}'
+const NON_TRAITEES_BUCKET_ID = 'non_traitees'
 
 /** Throw si `customization/tickets/config.ts` n’est pas conforme. */
 function assertTicketConfig(config: unknown): void {
@@ -14,6 +16,12 @@ function assertTicketConfig(config: unknown): void {
 
   const root = config as Record<string, unknown>
   const pattern = root.ticket_url_pattern
+  errors.push(
+    ...validateWorkflowConfig(root, {
+      namespace: 'ticket',
+      requiredBucketIds: [NON_TRAITEES_BUCKET_ID]
+    })
+  )
 
   if (typeof pattern !== 'string' || !pattern.trim()) {
     errors.push('ticket.ticket_url_pattern: string non vide requise')

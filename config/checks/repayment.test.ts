@@ -4,6 +4,7 @@ import { join } from 'node:path'
 
 import repaymentConfig from '../../customization/repayments/config'
 import { parseOutboundTemplate } from '../../desktop/src/features/repayment/lib/outbound-email-templates'
+import { validateWorkflowConfig } from './workflow-config'
 
 /** Motifs de clôture plan — alignés sur desktop/.../repayment-plan-close.ts */
 const PLAN_CLOSE_MOTIFS = [
@@ -41,6 +42,21 @@ function assertRepaymentConfig(config: unknown): void {
   }
 
   const root = config as Record<string, unknown>
+  errors.push(
+    ...validateWorkflowConfig(root, {
+      namespace: 'repayment',
+      requiredBucketIds: [NON_TRAITES_BUCKET_ID, CLIENTS_PARTIS_BUCKET_ID]
+    })
+  )
+  const bucketIds = new Set(
+    Array.isArray(root.buckets)
+      ? root.buckets.flatMap((entry) => {
+          if (entry == null || typeof entry !== 'object' || Array.isArray(entry)) return []
+          const id = (entry as { id?: unknown }).id
+          return typeof id === 'string' && id.trim() ? [id.trim()] : []
+        })
+      : []
+  )
 
   const actionLabels = new Set<string>()
   if (root.actions == null || typeof root.actions !== 'object' || Array.isArray(root.actions)) {
@@ -66,64 +82,6 @@ function assertRepaymentConfig(config: unknown): void {
         }
         actionLabels.add(label)
       }
-    }
-  }
-
-  const bucketIds = new Set<string>()
-  if (!Array.isArray(root.buckets)) {
-    errors.push('repayment.buckets: tableau requis')
-  } else {
-    for (const [i, entry] of root.buckets.entries()) {
-      if (entry == null || typeof entry !== 'object' || Array.isArray(entry)) {
-        errors.push(`repayment.buckets[${i}]: objet { id, label } requis`)
-        continue
-      }
-      const phase = entry as { id?: unknown; label?: unknown; description?: unknown }
-      const id = typeof phase.id === 'string' ? phase.id.trim() : ''
-      const label = typeof phase.label === 'string' ? phase.label.trim() : ''
-      if (!id) {
-        errors.push('repayment.buckets: chaque phase doit avoir un id non vide')
-        continue
-      }
-      if (!label) {
-        errors.push(`repayment.buckets: label manquant pour id « ${id} »`)
-      }
-      if (phase.description !== undefined) {
-        if (typeof phase.description !== 'string' || !phase.description.trim()) {
-          errors.push(
-            `repayment.buckets: description invalide pour id « ${id} » (string non vide requise si fournie)`
-          )
-        }
-      }
-      if (bucketIds.has(id)) {
-        errors.push(`repayment.buckets: id en double « ${id} »`)
-      }
-      bucketIds.add(id)
-    }
-    if (!bucketIds.has(NON_TRAITES_BUCKET_ID)) {
-      errors.push(`repayment.buckets: la phase système « ${NON_TRAITES_BUCKET_ID} » est requise`)
-    }
-    if (!bucketIds.has(CLIENTS_PARTIS_BUCKET_ID)) {
-      errors.push(`repayment.buckets: la phase système « ${CLIENTS_PARTIS_BUCKET_ID} » est requise`)
-    }
-  }
-
-  if (root.tags === undefined) {
-    errors.push('repayment.tags: tableau de chaînes requis')
-  } else if (!Array.isArray(root.tags)) {
-    errors.push('repayment.tags: tableau de chaînes requis')
-  } else {
-    const seenTags = new Set<string>()
-    for (const [i, entry] of root.tags.entries()) {
-      if (typeof entry !== 'string' || !entry.trim()) {
-        errors.push(`repayment.tags[${i}]: chaîne non vide requise`)
-        continue
-      }
-      const label = entry.trim()
-      if (seenTags.has(label)) {
-        errors.push(`repayment.tags: libellé en double « ${label} »`)
-      }
-      seenTags.add(label)
     }
   }
 
