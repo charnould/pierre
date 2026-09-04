@@ -11,19 +11,14 @@ export default {
 
     Chaque entrée DOIT être un objet :
       {
-        id: string           // obligatoire, technique, stable
-        label: string        // obligatoire, titre de la section
-        description?: string // optionnel, phrase d’aide sous le titre
+        id: string    // obligatoire, technique, stable
+        label: string // obligatoire, titre de la section
       }
 
     --- id -----------------------------------------------------------------
       - Immuable (snake_case recommandé, sans accents ni espaces)
-      - On peut renommer `label` / `description` SANS changer `id`.
+      - On peut renommer `label` SANS changer `id`.
       - Changer un `id` existant casse les historiques et préférences.
-
-    --- description --------------------------------------------------------
-      - Courte phrase affichée sous le label dans l’en-tête de section.
-      - Absente ou vide → rien n’est rendu sous le titre.
 
     --- ids réservés (OBLIGATOIRES ET NON MODIFIABLES) ---------------------
       - non_traites : point d’entrée par défaut du parcours-impayés des locataire en place.
@@ -35,73 +30,59 @@ export default {
   buckets: [
     {
       id: 'non_traites',
-      label: 'Non traités',
-      description: 'Dossiers entrants pas encore analysés ni orientés.'
+      label: 'Non traités'
     },
     {
       id: 'amiable',
-      label: 'Recouvrement amiable',
-      description: 'Pré-relance, rejet de prélèvement ou première relance en cours.'
+      label: 'Recouvrement amiable'
     },
     {
       id: 'plan_apurement_en_cours',
-      label: 'Plan amiable / EV en cours',
-      description: 'Plan d’apurement amiable ou engagement verbal en cours.'
+      label: 'Plan amiable / EV en cours'
     },
     {
       id: 'pre_contentieux',
-      label: 'Précontentieux',
-      description: 'R2 ou mise en demeure réalisée, avant commandement de payer.'
+      label: 'Précontentieux'
     },
     {
       id: 'commandement_de_payer',
-      label: 'Commandement de payer',
-      description: 'Commandement demandé ou signifié, avant transfert contentieux.'
+      label: 'Commandement de payer'
     },
     {
       id: 'plan_suite_cdp_en_cours',
-      label: 'Plan suite CDP',
-      description: 'Plan conclu après commandement de payer.'
+      label: 'Plan suite CDP'
     },
     {
       id: 'contentieux',
-      label: 'Contentieux',
-      description: 'Dossier transféré au service contentieux ou procédure engagée.'
+      label: 'Contentieux'
     },
     {
       id: 'post_jugement',
-      label: 'Post-jugement',
-      description: 'Exécution et suivi après décision judiciaire.'
+      label: 'Post-jugement'
     },
     {
       id: 'surendettement_instruction',
-      label: 'Surendettement en instruction',
-      description: 'Démarche Banque de France connue, en attente d’orientation.'
+      label: 'Surendettement en instruction'
     },
     {
       id: 'plan_bdf_en_cours',
-      label: 'Plan / mesures BDF en cours',
-      description: 'Plan ou mesures imposées Banque de France en cours.'
+      label: 'Plan / mesures BDF en cours'
     },
     {
       id: 'moratoire',
-      label: 'Moratoire Banque de France',
-      description: 'Dette gelée pendant la durée du moratoire.'
+      label: 'Moratoire Banque de France'
     },
     {
       id: 'prp',
-      label: 'Rétablissement personnel',
-      description: 'Procédure de rétablissement personnel en cours.'
+      label: 'Rétablissement personnel'
     },
     {
       id: 'clos',
-      label: 'Clos / soldé',
-      description: 'Dette soldée, effacée ou dossier définitivement clôturé.'
+      label: 'Clos / soldé'
     },
     {
       id: 'clients_partis',
-      label: 'Clients partis',
-      description: 'Locataires partis suivis sans commandement de payer.'
+      label: 'Clients partis'
     }
   ],
 
