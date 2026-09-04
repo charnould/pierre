@@ -54,7 +54,8 @@ describe('datastore migrations', () => {
              'knowledge_build',
              'telemetry',
              'users',
-             'idx_activites_execution'
+             'idx_activites_execution',
+             'idx_activites_case_bucket'
            )
            ORDER BY name`
         )
@@ -67,6 +68,7 @@ describe('datastore migrations', () => {
         'bulk_operations',
         'contacts',
         'conversations',
+        'idx_activites_case_bucket',
         'idx_activites_execution',
         'knowledge_build',
         'telemetry',

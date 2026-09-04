@@ -134,6 +134,9 @@ CREATE UNIQUE INDEX idx_activites_ticket_draft
   ON activites (rattachement, type)
   WHERE statut = 'draft'
     AND type IN ('ticket_reply', 'ticket_memo', 'ticket_summary');
+CREATE INDEX idx_activites_case_bucket
+  ON activites (rattachement, date_creation DESC, id DESC)
+  WHERE type = 'case_bucket_change';
 
 CREATE TABLE automations (
   id TEXT PRIMARY KEY,
