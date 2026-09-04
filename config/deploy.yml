@@ -21,6 +21,7 @@ volumes:
 
 proxy:
   ssl: true
+  forward_headers: true
   app_port: 3000
   response_timeout: 600
   host: <%= ENV['HOST'] %>
@@ -47,6 +48,3 @@ env:
     - CM_FROM
     - CM_WEBHOOK_SECRET
     - IP
-    - WEBHOOK_KEY_1
-    - WEBHOOK_KEY_2
-    - WEBHOOK_KEY_3

@@ -64,7 +64,7 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install
-      - run: bun test config/checks shared
+      - run: bun test config/checks shared/*.test.ts
       - run: SERVICE=pierre-production bun --filter "@pierre/server" test:unit
       - run: bun --filter "@pierre/desktop" test
       - run: bun --filter "@pierre/docs" test

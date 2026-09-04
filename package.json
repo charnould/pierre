@@ -13,21 +13,20 @@
     ],
     "catalog": {
       "@observablehq/plot": "^0.6.17",
-      "@types/bun": "^1.4.0",
+      "@types/bun": "^1.4.2",
       "@types/jsdom": "^30.0.0",
       "@types/react": "^19.2.18",
-      "@types/react-dom": "^19.2.5",
+      "@types/react-dom": "^19.2.7",
       "date-fns": "^4.4.0",
       "docxtemplater": "^3.69.3",
       "jsdom": "^30.0.1",
-      "lucide-react": "^1.40.0",
-      "marked": "^18.0.11",
-      "oxfmt": "^0.66.0",
-      "oxlint": "^1.81.0",
+      "lucide-react": "^1.43.0",
+      "marked": "^18.0.12",
+      "oxfmt": "^0.67.0",
+      "oxlint": "^1.82.0",
       "pizzip": "^3.2.0",
       "react": "^19.2.8",
       "react-dom": "^19.2.8",
-      "streamdown": "^2.6.0",
       "tailwindcss": "^4.3.3",
       "typescript": "^7.0.2"
     }
@@ -57,7 +56,8 @@
     "prod:console": "bun --env-file=.env.production run kamal app exec -i bash -c config/deploy.yml"
   },
   "devDependencies": {
-    "knip": "^6.34.0",
+    "@shadcn/lint": "^0.1.0",
+    "knip": "^6.35.1",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "typescript": "catalog:"

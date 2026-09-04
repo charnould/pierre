@@ -1,0 +1,631 @@
+{
+  "$schema": "../node_modules/oxlint/configuration_schema.json",
+  "rules": {
+    "shadcn/no-arbitrary-values": "error",
+    "shadcn/no-inline-styles": "error",
+    "shadcn/no-raw-colors": "error",
+    "shadcn/no-restyle": [
+      "error",
+      {
+        "allow": ["layout"]
+      }
+    ],
+    "shadcn/no-unknown-classes": "error",
+    "shadcn/require-static-classes": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/shared/components/ui/**"],
+      "rules": {
+        "shadcn/no-arbitrary-values": "off",
+        "shadcn/no-restyle": "off",
+        "shadcn/require-static-classes": "off"
+      }
+    },
+    {
+      "files": ["**/src/mascot/**"],
+      "rules": {
+        "shadcn/no-inline-styles": "off",
+        "shadcn/no-raw-colors": "off"
+      }
+    },
+    {
+      // Runtime geometry and motion values are data, not reusable visual tokens.
+      "files": [
+        "**/src/features/chat/ChatPanel.tsx",
+        "**/src/features/home/HomeView.tsx",
+        "**/src/features/outreach/components/BulkReports.tsx",
+        "**/src/features/settings/components/IdentityField.tsx",
+        "**/src/features/tickets/components/TicketsTableSkeleton.tsx",
+        "**/src/shared/components/table/VirtualizedTableBody.tsx",
+        "**/src/shared/components/table/board-dual-table.tsx",
+        "**/src/shared/components/ui/badge.tsx"
+      ],
+      "rules": {
+        "shadcn/no-inline-styles": "off"
+      }
+    },
+    {
+      // Exact local geometry is clearer than call-site aliases in globals.css.
+      "files": [
+        "**/src/features/activity/components/ActivityNotificationRow.tsx",
+        "**/src/features/activity/components/ActivityNotificationsTrigger.tsx",
+        "**/src/features/administration/components/UsersPanel.tsx",
+        "**/src/features/automations/components/AutomationsList.tsx",
+        "**/src/features/chat/ChatPanel.tsx",
+        "**/src/features/chat/components/ChatMessages.tsx",
+        "**/src/features/home/HomeView.tsx",
+        "**/src/features/outreach/components/BulkEditor.tsx",
+        "**/src/features/outreach/components/BulkOperationsList.tsx",
+        "**/src/features/repayment/components/create-plan/PlanFormSections.tsx",
+        "**/src/features/settings/components/HistoricalAppsConnectionField.tsx",
+        "**/src/features/settings/components/MascotField.tsx",
+        "**/src/features/tickets/components/TicketsTableSkeleton.tsx",
+        "**/src/features/updates/components/UpdateArticleBody.tsx",
+        "**/src/shared/components/DirectoryList.tsx",
+        "**/src/shared/components/UserAvatar.tsx",
+        "**/src/shared/components/inspector/inspector-snapshot-card.tsx",
+        "**/src/shared/components/inspector/open-actions-card.tsx",
+        "**/src/shared/components/reui/timeline.tsx",
+        "**/src/shared/components/timeline/timeline-communication-envelope.tsx"
+      ],
+      "rules": {
+        "shadcn/no-arbitrary-values": "off"
+      }
+    },
+    {
+      // Widths come from a finite typed map but are composed dynamically.
+      "files": ["**/src/shared/components/inspector/inspector-timeline-skeleton.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [{ "pattern": "^Skeleton$", "allow": ["layout", "rounded-full"] }]
+          }
+        ],
+        "shadcn/require-static-classes": "off"
+      }
+    },
+    {
+      "files": [
+        "**/src/features/activity/ActivityPanel.tsx",
+        "**/src/features/home/TasksPanel.tsx"
+      ],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              { "pattern": "^Tabs$", "allow": ["layout", "gap-0"] },
+              {
+                "pattern": "^TabsTrigger$",
+                "allow": ["layout", "data-active:bg-transparent", "data-active:shadow-none"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/administration/AdministrationView.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [{ "pattern": "^Tabs$", "allow": ["layout", "gap-0"] }]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/automations/components/AutomationRunsMenu.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^Button$",
+                "allow": [
+                  "layout",
+                  "text-muted-foreground",
+                  "hover:text-foreground",
+                  "p-0",
+                  "font-normal"
+                ]
+              },
+              { "pattern": "^DropdownMenuItem$", "allow": ["layout", "gap-0.5"] }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/automations/components/AutomationsList.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^Button$",
+                "allow": [
+                  "layout",
+                  "opacity-0",
+                  "group-hover:opacity-100",
+                  "focus-visible:opacity-100"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/shared/components/table/TableCellValue.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [{ "pattern": "^Badge$", "allow": ["layout", "tabular-nums"] }]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/shared/components/AgentWorkTrace.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^Button$",
+                "allow": [
+                  "layout",
+                  "pierre-type-table-header",
+                  "text-muted-foreground",
+                  "px-0",
+                  "hover:bg-transparent"
+                ]
+              },
+              { "pattern": "^CollapsibleTrigger$", "allow": ["layout", "text-xs"] }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/shared/components/inspector/collaborator-chip.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^Badge$",
+                "allow": [
+                  "layout",
+                  "gap-1",
+                  "px-0",
+                  "py-0",
+                  "ps-px",
+                  "pe-1",
+                  "leading-none",
+                  "pierre-type-data",
+                  "pe-1.5"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "**/src/features/repayment/components/RepaymentComposeBlock.tsx",
+        "**/src/shared/components/timeline/timeline-action-row.tsx"
+      ],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^Button$",
+                "allow": [
+                  "layout",
+                  "gap-2",
+                  "rounded-md",
+                  "border-border/60",
+                  "px-3",
+                  "has-data-[icon=inline-end]:pr-3",
+                  "has-data-[icon=inline-start]:pl-3",
+                  "[&_svg]:text-muted-foreground"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/chat/components/ChatMessages.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              { "pattern": "^Button$", "allow": ["layout", "p-0", "text-inherit"] },
+              {
+                "pattern": "^MessageContent$",
+                "allow": ["layout", "generated-stream-caret"]
+              },
+              {
+                "pattern": "^ItemGroup$",
+                "allow": ["layout", "max-w-[80%]"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/activity/components/ActivityBoostControl.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^Button$",
+                "allow": ["layout", "aria-pressed:bg-muted", "text-xl", "leading-none"]
+              },
+              { "pattern": "^PopoverContent$", "allow": ["layout", "gap-2", "p-2"] }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/activity/components/ActivityNotificationRow.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^Button$",
+                "allow": [
+                  "layout",
+                  "opacity-0",
+                  "transition-opacity",
+                  "duration-160",
+                  "ease-[cubic-bezier(0.23,1,0.32,1)]",
+                  "group-hover:opacity-100",
+                  "focus-visible:opacity-100"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/outreach/components/BulkEditor.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [{ "pattern": "^FieldLabel$", "allow": ["layout", "font-normal"] }]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "**/src/features/tickets/components/TicketReclamationDrawer.tsx",
+        "**/src/features/repayment/components/RepaymentTenantDrawer.tsx"
+      ],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [{ "pattern": "^Button$", "allow": ["layout", "no-drag"] }]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/shared/components/CollaboratorPopoverPicker.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              { "pattern": "^Button$", "allow": ["layout", "py-1", "font-normal"] },
+              {
+                "pattern": "^PopoverContent$",
+                "allow": ["layout", "gap-0", "rounded-md", "p-0", "shadow-sm"]
+              },
+              {
+                "pattern": "^Command$",
+                "allow": ["layout", "rounded-none!", "bg-transparent", "p-0", "shadow-none"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/administration/components/KnowledgeRow.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^Button$",
+                "allow": [
+                  "layout",
+                  "text-muted-foreground",
+                  "hover:text-foreground",
+                  "border-0",
+                  "bg-transparent",
+                  "p-0",
+                  "text-xs",
+                  "font-normal"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/shared/components/timeline/timeline-bodies.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^Badge$",
+                "allow": ["layout", "pierre-type-table-header", "font-normal"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/automations/components/AutomationAccessAvatars.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              { "pattern": "^AvatarGroup$", "allow": ["layout", "-space-x-1"] },
+              {
+                "pattern": "^AvatarGroupCount$",
+                "allow": ["layout", "pierre-type-micro"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/shared/components/find-in-page/FindInPageBar.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^InputGroup$",
+                "allow": ["layout", "border-0", "bg-transparent", "shadow-none"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/chat/ChatPanel.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^MessageScrollerContent$",
+                "allow": ["layout", "gap-6", "gap-8", "px-6", "pt-8", "pb-6", "py-6"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/shared/components/layout/TitleBar.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [{ "pattern": "^Button$", "allow": ["layout", "no-drag"] }]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/shared/components/reasoning/reasoning.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^CollapsibleTrigger$",
+                "allow": [
+                  "layout",
+                  "gap-1.5",
+                  "text-sm",
+                  "font-normal",
+                  "text-muted-foreground",
+                  "transition-opacity",
+                  "hover:opacity-85"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "**/src/features/activity/components/ActivityNotificationsTrigger.tsx",
+        "**/src/features/activity/components/ActivityTasksTrigger.tsx"
+      ],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [{ "pattern": "^Button$", "allow": ["layout", "no-drag"] }]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/shared/components/table/VirtualizedTableBody.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [{ "pattern": "^TableCell$", "allow": ["layout", "p-0"] }]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/shared/components/AttachmentItems.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              { "pattern": "^ItemGroup$", "allow": ["layout", "gap-2"] },
+              {
+                "pattern": "^ItemContent$",
+                "allow": ["layout", "group-data-[size=xs]/item:gap-1.5"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/chat/components/ChatComposer.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^InputGroup$",
+                "allow": [
+                  "layout",
+                  "rounded-xl",
+                  "shadow-sm",
+                  "has-disabled:bg-transparent",
+                  "has-disabled:opacity-100",
+                  "has-[[data-slot=input-group-control]:focus-visible]:border-foreground/30",
+                  "has-[[data-slot=input-group-control]:focus-visible]:ring-0",
+                  "border-ring",
+                  "ring-1",
+                  "ring-ring/30"
+                ]
+              },
+              { "pattern": "^InputGroupAddon$", "allow": ["layout", "px-2", "py-1", "pb-1.5"] },
+              {
+                "pattern": "^InputGroupTextarea$",
+                "allow": ["layout", "px-3", "pt-2.5", "pb-1", "leading-5"]
+              },
+              {
+                "pattern": "^InputGroupButton$",
+                "allow": ["layout", "text-muted-foreground"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/automations/components/AutomationFormScheduleFields.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [{ "pattern": "^SelectValue$", "allow": ["layout", "tabular-nums"] }]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/shared/components/ChoiceTile.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^Item$",
+                "allow": ["layout", "bg-muted", "pointer-events-none", "opacity-50"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/repayment/components/create-plan/MoneyInput.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [{ "pattern": "^InputGroupInput$", "allow": ["layout", "tabular-nums"] }]
+          }
+        ]
+      }
+    }
+  ]
+}

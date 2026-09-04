@@ -1,5 +1,7 @@
 {
   "$schema": "../node_modules/oxlint/configuration_schema.json",
+  "extends": ["./shadcn-lint.jsonc"],
+  "jsPlugins": ["@shadcn/lint"],
   "plugins": ["typescript", "unicorn", "oxc", "react"],
   "categories": {
     "correctness": "error"
@@ -9,6 +11,12 @@
     // enable them.
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "error"
+  },
+  "settings": {
+    "shadcn": {
+      "ui": "@/shared/components/ui",
+      "note": "See desktop/design-system.md for design rules and approved exceptions."
+    }
   },
   "env": {
     "builtin": true
