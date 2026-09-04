@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
 import { JSDOM } from 'jsdom'
 
 import type { TicketComposeMode } from '../lib/use-tickets-view-data'
+import type { TicketAiGenerationProps } from './TicketComposeBlock'
 
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
@@ -100,15 +101,18 @@ async function renderCompose(
     id_reclamation: 'REC-1',
     id_locataire: 'LOC-1',
     message: 'Fuite'
-  }
+  },
+  aiGeneration: TicketAiGenerationProps | null = null
 ) {
   const { act, useState } = await import('react')
   const { createRoot } = await import('react-dom/client')
+  const { AgentIdentityProvider } = await import('@/contexts/AgentIdentityContext')
   const { TicketComposeBlock } = await import('./TicketComposeBlock')
 
   const onSubmitComment = mock(() => {})
   const onStartComment = mock(() => {})
   const onRcsSend = mock(() => {})
+  const onExternalInject = mock(() => {})
   const container = document.createElement('div')
   document.body.append(container)
   const root = createRoot(container)
@@ -117,23 +121,34 @@ async function renderCompose(
     const [composeMode, setComposeMode] = useState(mode)
     const [comment, setComment] = useState('')
     const [rcsMessage, setRcsMessage] = useState('Bonjour')
+    const [emailSubject, setEmailSubject] = useState('')
+    const [emailBody, setEmailBody] = useState('')
+    const [letterSubject, setLetterSubject] = useState('')
+    const [letterBody, setLetterBody] = useState('')
+    const [externalSubject, setExternalSubject] = useState('')
+    const [externalBody, setExternalBody] = useState('Bonjour')
     return (
       <TicketComposeBlock
         ticket={ticket}
         composeMode={composeMode}
+        aiGeneration={aiGeneration}
         hasTimelineHistory={false}
         comment={comment}
         onCommentChange={setComment}
         rcsMessage={rcsMessage}
         onRcsMessageChange={setRcsMessage}
-        emailSubject=""
-        onEmailSubjectChange={() => {}}
-        emailBody=""
-        onEmailBodyChange={() => {}}
-        letterSubject=""
-        onLetterSubjectChange={() => {}}
-        letterBody=""
-        onLetterBodyChange={() => {}}
+        emailSubject={emailSubject}
+        onEmailSubjectChange={setEmailSubject}
+        emailBody={emailBody}
+        onEmailBodyChange={setEmailBody}
+        letterSubject={letterSubject}
+        onLetterSubjectChange={setLetterSubject}
+        letterBody={letterBody}
+        onLetterBodyChange={setLetterBody}
+        externalSubject={externalSubject}
+        onExternalSubjectChange={setExternalSubject}
+        externalBody={externalBody}
+        onExternalBodyChange={setExternalBody}
         summarizeContent=""
         onSummarizeContentChange={() => {}}
         onStartComment={() => {
@@ -145,9 +160,8 @@ async function renderCompose(
         onStartBucket={() => setComposeMode('bucket')}
         onStartTags={() => setComposeMode('tags')}
         onStartAssignment={() => setComposeMode('assignment')}
-        onStartRcs={() => setComposeMode('rcs')}
-        onStartEmail={() => setComposeMode('email')}
-        onStartLetter={() => setComposeMode('letter')}
+        onStartReply={() => setComposeMode('external')}
+        onReplyFormatChange={setComposeMode}
         onStartSummarize={() => setComposeMode('summarize')}
         onCancelCompose={() => setComposeMode(null)}
         onSubmitComment={onSubmitComment}
@@ -169,27 +183,31 @@ async function renderCompose(
         onSummarizeDraft={() => {}}
         onSummarizeSave={() => {}}
         onRcsDraft={() => {}}
-        onRcsSaveDraft={() => {}}
         onRcsSend={onRcsSend}
         onEmailDraft={() => {}}
-        onEmailSaveDraft={() => {}}
         onEmailSend={() => {}}
         onLetterDraft={() => {}}
-        onLetterSaveDraft={() => {}}
         onLetterExportWord={() => {}}
-        onLetterMarkSent={() => {}}
+        onLetterSend={() => {}}
+        onExternalDraft={() => {}}
+        onExternalInject={onExternalInject}
       />
     )
   }
 
   await act(async () => {
-    root.render(<Harness />)
+    root.render(
+      <AgentIdentityProvider name="Gustave">
+        <Harness />
+      </AgentIdentityProvider>
+    )
   })
 
   return {
     onSubmitComment,
     onStartComment,
     onRcsSend,
+    onExternalInject,
     act,
     cleanup: async () => {
       await act(async () => {
@@ -231,9 +249,10 @@ describe('TicketComposeBlock', () => {
       expect(labels).toContain('Créer une tâche')
       expect(labels).toContain('Consigner une action réalisée')
       expect(labels).toContain('Changer de panier')
-      expect(labels).toContain('Envoyer un RCS au locataire')
-      expect(labels).toContain('Envoyer un courriel au locataire')
-      expect(labels).toContain('Envoyer un courrier postal au locataire')
+      expect(labels).toContain('Répondre au locataire')
+      expect(labels).not.toContain('Envoyer un RCS au locataire')
+      expect(labels).not.toContain('Envoyer un courriel au locataire')
+      expect(labels).not.toContain('Envoyer un courrier postal au locataire')
       expect(labels).toContain('Importer un email')
       expect(labels).toContain('Changer les tags')
       expect(labels).toContain('Affecter à un référent')
@@ -287,15 +306,117 @@ describe('TicketComposeBlock', () => {
     }
   })
 
-  test('RCS expose un label Message et Envoyer le RCS', async () => {
+  test('le composeur RCS masque l’objet et expose les actions communes', async () => {
     const { cleanup } = await renderCompose('rcs')
     try {
-      expect(document.body.textContent).toContain('Envoyer un RCS au locataire')
+      expect(document.body.textContent).toContain('Répondre au locataire')
+      expect(document.body.textContent).toContain('Format')
       expect(document.body.textContent).toContain('Message')
-      expect(buttonLabels()).toContain('Envoyer le RCS')
-      expect(buttonLabels()).toContain('Rédiger avec IA')
+      expect(document.body.textContent).not.toContain('Objet')
+      expect(buttonLabels()).toContain('Envoyer')
+      expect(buttonLabels()).toContain('Rédiger avec Gustave')
+      expect(buttonLabels()).not.toContain('Injecter dans Aravis')
+      expect(buttonLabels()).not.toContain('Exporter en DOCX')
+      expect(document.querySelector('textarea')?.className).toContain('h-full')
+      expect(document.querySelector('[data-inspector-compose-shell]')?.className).toContain(
+        'h-full'
+      )
     } finally {
       await cleanup()
+    }
+  })
+
+  test('réutilise le rendu de Synthèse pendant la génération', async () => {
+    const compose = await renderCompose(
+      'email',
+      {
+        id_reclamation: 'REC-1',
+        id_locataire: 'LOC-1',
+        message: 'Fuite'
+      },
+      {
+        target: 'email',
+        isStreaming: true,
+        workParts: [{ type: 'thinking', contentIndex: 0, thinking: 'Analyse du dossier' }],
+        output: '**Bonjour**',
+        showReasoning: true
+      }
+    )
+    try {
+      expect(document.querySelector('textarea')).toBeNull()
+      expect(document.body.textContent).toContain('Bonjour')
+      expect(document.querySelector('.generated-stream-caret')).not.toBeNull()
+      expect(document.querySelector('.typeset-docs')).not.toBeNull()
+    } finally {
+      await compose.cleanup()
+    }
+  })
+
+  test('ouvre Aravis par défaut, remplace Envoyer et réserve le DOCX au courrier postal', async () => {
+    const external = await renderCompose()
+    try {
+      await external.act(async () => {
+        ;[...document.querySelectorAll('button')]
+          .find((button) => button.textContent === 'Répondre au locataire')
+          ?.click()
+        await new Promise((resolve) => setTimeout(resolve, 300))
+      })
+      expect(document.body.textContent).toContain('Via Aravis')
+      expect(document.body.textContent).toContain('Objet')
+      expect(buttonLabels()).toContain('Injecter dans Aravis')
+      expect(buttonLabels()).not.toContain('Envoyer')
+      expect(buttonLabels()).not.toContain('Exporter en DOCX')
+      await external.act(async () => {
+        ;[...document.querySelectorAll('button')]
+          .find((button) => button.textContent === 'Injecter dans Aravis')
+          ?.click()
+      })
+      expect(external.onExternalInject).toHaveBeenCalledTimes(1)
+    } finally {
+      await external.cleanup()
+    }
+
+    const letter = await renderCompose('letter')
+    try {
+      expect(document.body.textContent).toContain('Via la poste')
+      expect(document.body.textContent).toContain('Objet')
+      expect(buttonLabels()).toContain('Exporter en DOCX')
+    } finally {
+      await letter.cleanup()
+    }
+  })
+
+  test('conserve les champs propres à chaque format', async () => {
+    const compose = await renderCompose('email')
+    try {
+      const emailSubject = document.querySelector('input[placeholder="Objet du courriel"]')
+      const emailBody = document.querySelector('textarea')
+      await compose.act(async () => {
+        nativeInput(emailSubject as HTMLInputElement, 'Objet conservé')
+        nativeInput(emailBody as HTMLTextAreaElement, 'Corps conservé')
+        document.querySelector<HTMLElement>('[data-slot="select-trigger"]')?.click()
+      })
+      const rcsOption = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
+        (option) => option.textContent === 'SMS / RCS'
+      )
+      await compose.act(async () => rcsOption?.click())
+      expect(document.querySelector('input[placeholder="Objet du courriel"]')).toBeNull()
+
+      await compose.act(async () => {
+        document.querySelector<HTMLElement>('[data-slot="select-trigger"]')?.click()
+      })
+      const emailOption = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
+        (option) => option.textContent === 'Courriel'
+      )
+      await compose.act(async () => emailOption?.click())
+      expect(
+        (document.querySelector('input[placeholder="Objet du courriel"]') as HTMLInputElement).value
+      ).toBe('Objet conservé')
+      expect((document.querySelector('textarea') as HTMLTextAreaElement).value).toBe(
+        'Corps conservé'
+      )
+    } finally {
+      await compose.cleanup()
     }
   })
 

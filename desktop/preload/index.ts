@@ -24,6 +24,7 @@ import type {
   GetActivitiesParams,
   GetActivityFeedSyncParams,
   PatchActivityPayload,
+  RecordExternalCommunicationPayload,
   SendCommunicationPayload
 } from '../src/shared/types/activites'
 import type {
@@ -102,6 +103,8 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke(IpcChannel.system.openExternal, url) as Promise<boolean>,
   openAutomationReport: (params: { html: string }) =>
     ipcRenderer.invoke(IpcChannel.system.openAutomationReport, params) as Promise<boolean>,
+  openTicketExternalApplication: (params: { url: string; message: string; selector: string }) =>
+    ipcRenderer.invoke(IpcChannel.system.openTicketExternalApplication, params) as Promise<boolean>,
   setAuthWindowLayout: (params: { loggedIn: boolean }) =>
     ipcRenderer.invoke(IpcChannel.system.setAuthWindowLayout, params) as Promise<void>,
   onAuthWindowLayoutSwap: (cb: (params: { loggedIn: boolean }) => void) => {
@@ -258,6 +261,11 @@ contextBridge.exposeInMainWorld('api', {
     ) as Promise<ActivityFeedSyncResult | null>,
   createActivity: (params: CreateActivityPayload) =>
     ipcRenderer.invoke(IpcChannel.activities.create, params) as Promise<ActivityResponse | null>,
+  recordExternalCommunication: (params: RecordExternalCommunicationPayload) =>
+    ipcRenderer.invoke(
+      IpcChannel.activities.recordExternalCommunication,
+      params
+    ) as Promise<ActivityResponse | null>,
   sendCommunication: (params: SendCommunicationPayload) =>
     ipcRenderer.invoke(
       IpcChannel.activities.sendCommunication,

@@ -13,6 +13,7 @@ describe('IpcChannel.system app update channels', () => {
   it('registers stable wire names for version and update check', () => {
     expect(IpcChannel.system.getAppVersion).toBe('get-app-version')
     expect(IpcChannel.system.checkForAppUpdates).toBe('check-for-app-updates')
+    expect(IpcChannel.system.openTicketExternalApplication).toBe('open-ticket-external-application')
     expect(IpcChannel.system.setAuthWindowLayout).toBe('set-auth-window-layout')
     expect(IpcChannel.system.authWindowLayoutSwapAck).toBe('auth-window-layout-swap-ack')
     expect(AuthWindowLayoutSwapEvent).toBe('auth-window-layout-swap')
@@ -59,6 +60,7 @@ describe('IpcChannel.activities', () => {
   it('registers stable wire names for activities API', () => {
     expect(IpcChannel.activities.list).toBe('get-activities')
     expect(IpcChannel.activities.create).toBe('create-activity')
+    expect(IpcChannel.activities.recordExternalCommunication).toBe('record-external-communication')
     expect(IpcChannel.activities.sendCommunication).toBe('send-communication')
     expect(IpcChannel.activities.patch).toBe('patch-activity')
     expect(IpcChannel.activities.delete).toBe('delete-activity')

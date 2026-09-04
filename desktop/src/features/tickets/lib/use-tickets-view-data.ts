@@ -16,6 +16,7 @@ export type TicketComposeMode =
   | 'rcs'
   | 'email'
   | 'letter'
+  | 'external'
   | 'summarize'
   | null
 

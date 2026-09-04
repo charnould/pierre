@@ -51,6 +51,7 @@ export const IpcChannel = {
     list: 'get-activities',
     syncFeed: 'sync-activity-feed',
     create: 'create-activity',
+    recordExternalCommunication: 'record-external-communication',
     sendCommunication: 'send-communication',
     patch: 'patch-activity',
     delete: 'delete-activity'
@@ -79,6 +80,7 @@ export const IpcChannel = {
     writeClipboard: 'write-clipboard',
     openExternal: 'open-external',
     openAutomationReport: 'open-automation-report',
+    openTicketExternalApplication: 'open-ticket-external-application',
     setAuthWindowLayout: 'set-auth-window-layout',
     authWindowLayoutSwapAck: 'auth-window-layout-swap-ack',
     resetWindowToFactory: 'reset-window-to-factory',

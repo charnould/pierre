@@ -1,5 +1,6 @@
 import { useId } from 'react'
 
+import type { AgentWorkPart } from '@/shared/components/AgentWorkTrace'
 import { InspectorComposeField } from '@/shared/components/inspector/inspector-compose-field'
 import { InspectorComposeFooter } from '@/shared/components/inspector/inspector-compose-shell'
 import { Button } from '@/shared/components/ui/button'
@@ -12,10 +13,10 @@ interface Props {
   aiBusy?: boolean
   aiGenerating?: boolean
   showReasoning?: boolean
-  reasoning?: string
+  workParts?: AgentWorkPart[]
+  reasoningDuration?: number
   streamOutput?: string
   isStreaming?: boolean
-  isReasoningPhase?: boolean
   onDraft: () => void
   onSave: () => void
   onCancel: () => void
@@ -30,10 +31,10 @@ export function TicketTimelineSummarizeDraft({
   aiBusy,
   aiGenerating,
   showReasoning,
-  reasoning,
+  workParts,
+  reasoningDuration,
   streamOutput,
   isStreaming,
-  isReasoningPhase,
   onDraft,
   onSave,
   onCancel,
@@ -58,10 +59,10 @@ export function TicketTimelineSummarizeDraft({
           disabled={busy}
           aiGenerating={aiGenerating}
           showReasoning={showReasoning}
-          reasoning={reasoning}
+          workParts={workParts}
+          reasoningDuration={reasoningDuration}
           streamOutput={streamOutput}
           isStreaming={isStreaming}
-          isReasoningPhase={isReasoningPhase}
         />
       </InspectorComposeField>
       <InspectorComposeFooter

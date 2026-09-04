@@ -30,13 +30,12 @@ export async function sendRepaymentMessage(params: {
 }): Promise<boolean> {
   const { url, tenantId, comment, channel, destinataire, options, createActivity } = params
   if (channel !== 'note') {
-    if (!url || !window.api?.sendCommunication) return false
+    if (!url) return false
     if (!destinataire) return false
     const action = options?.action?.trim()
-    const response = await window.api.sendCommunication({
+    const payload = {
       url,
       idempotencyKey: crypto.randomUUID(),
-      type: options?.transport === 'mailto' ? 'mailto' : channel,
       contexte: 'repayment',
       ref: tenantId,
       destinataire,
@@ -45,7 +44,11 @@ export async function sendRepaymentMessage(params: {
         ...(options?.objet?.trim() ? { objet: options.objet.trim() } : {}),
         corps: comment.trim()
       }
-    })
+    } as const
+    const response =
+      options?.delivery === 'external'
+        ? await window.api?.recordExternalCommunication?.({ ...payload, canal: channel })
+        : await window.api?.sendCommunication?.({ ...payload, type: channel })
     return response != null
   }
   const activity = buildRepaymentMessageActivity(tenantId, comment, channel, options)

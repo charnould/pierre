@@ -15,6 +15,7 @@ import type {
   GetActivitiesParams,
   GetActivityFeedSyncParams,
   PatchActivityPayload,
+  RecordExternalCommunicationPayload,
   SendCommunicationPayload
 } from './activites'
 import type {
@@ -96,6 +97,12 @@ declare global {
       openExternal: (url: string) => Promise<boolean>
       /** Open an automation HTML report in a modal window (offline shell). */
       openAutomationReport: (params: { html: string }) => Promise<boolean>
+      /** Open the configured Tickets application and inject the reply. */
+      openTicketExternalApplication: (params: {
+        url: string
+        message: string
+        selector: string
+      }) => Promise<boolean>
       /** Compact login shell vs restored session window size (login size is not persisted). */
       setAuthWindowLayout: (params: { loggedIn: boolean }) => Promise<void>
       /** Fired while the shell is frozen — commit login/session UI, then ack. */
@@ -218,6 +225,9 @@ declare global {
         params: GetActivityFeedSyncParams
       ) => Promise<ActivityFeedSyncResult | null>
       createActivity: (params: CreateActivityPayload) => Promise<ActivityResponse | null>
+      recordExternalCommunication: (
+        params: RecordExternalCommunicationPayload
+      ) => Promise<ActivityResponse | null>
       sendCommunication: (params: SendCommunicationPayload) => Promise<ActivityResponse | null>
       patchActivity: (params: PatchActivityPayload) => Promise<ActivityResponse | null>
       deleteActivity: (params: DeleteActivityPayload) => Promise<DeleteActivityResponse | null>

@@ -127,6 +127,22 @@ describe('timelineActivityActionVerb', () => {
     )
   })
 
+  test('identifie explicitement une réponse locataire envoyée via une application externe', () => {
+    expect(
+      timelineActivityActionVerb(
+        sampleActivity({
+          type: 'email',
+          contenu: JSON.stringify({
+            version: 1,
+            corps: 'Votre demande a été traitée.',
+            tenant_reply: true,
+            external_application: { name: 'Aravis' }
+          })
+        })
+      )
+    ).toBe('a répondu au locataire via Aravis')
+  })
+
   test('identifies the object boosted from the notification payload', () => {
     expect(
       timelineActivityActionVerb(

@@ -44,6 +44,43 @@ describe('sendRepaymentMessage', () => {
     }
   })
 
+  test('records an externally sent email without calling sendCommunication', async () => {
+    let recorded: unknown
+    const previous = globalThis.window
+    globalThis.window = {
+      api: {
+        recordExternalCommunication: async (payload: unknown) => {
+          recorded = payload
+          return { data: { id: 1 } }
+        },
+        sendCommunication: async () => {
+          throw new Error('must not send')
+        }
+      }
+    } as unknown as Window & typeof globalThis
+    try {
+      await expect(
+        sendRepaymentMessage({
+          url: 'https://pierre.test',
+          tenantId: 'LOC-1',
+          comment: 'Relance',
+          channel: 'email',
+          destinataire: 'loc@exemple.fr',
+          options: { action: 'relance', objet: 'Impayé', delivery: 'external' },
+          createActivity: async () => null
+        })
+      ).resolves.toBe(true)
+      expect(recorded).toMatchObject({
+        canal: 'email',
+        contexte: 'repayment',
+        ref: 'LOC-1',
+        destinataire: 'loc@exemple.fr'
+      })
+    } finally {
+      globalThis.window = previous
+    }
+  })
+
   test('records a note via createActivity', async () => {
     let created: unknown
     const previous = globalThis.window

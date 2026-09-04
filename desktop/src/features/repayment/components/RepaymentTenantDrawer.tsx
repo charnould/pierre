@@ -361,7 +361,7 @@ export function RepaymentTenantDrawer({
         objet: subject,
         action,
         destinataire: email.toAddress,
-        transport: 'mailto'
+        delivery: 'external'
       })
       if (!ok) return false
       await afterSuccessfulWrite(isCurrent)

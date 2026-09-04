@@ -1,9 +1,13 @@
-import { WorkflowArtifactStreamPreview } from '@/features/workflow/components/WorkflowArtifactStreamPreview'
-import { WorkflowReasoningAmbient } from '@/features/workflow/components/WorkflowReasoningAmbient'
-import { useWorkflowReasoningScroll } from '@/features/workflow/hooks/useWorkflowReasoningScroll'
+import { useEffect, useRef } from 'react'
+
+import {
+  AgentWorkTrace,
+  GeneratedMarkdown,
+  type AgentWorkPart
+} from '@/shared/components/AgentWorkTrace'
 import { MentionTextarea } from '@/shared/components/inspector/mention-textarea'
-import { ReasoningPlainContent } from '@/shared/components/reasoning/reasoning-plain-content'
 import { cn } from '@/shared/lib/utils'
+
 export type TicketAiComposeFieldProps = {
   id?: string
   value: string
@@ -14,10 +18,11 @@ export type TicketAiComposeFieldProps = {
   disabled?: boolean
   aiGenerating?: boolean
   showReasoning?: boolean
-  reasoning?: string
+  workParts?: AgentWorkPart[]
+  reasoningDuration?: number
   streamOutput?: string
   isStreaming?: boolean
-  isReasoningPhase?: boolean
+  fillAvailable?: boolean
 }
 
 export function TicketAiComposeField({
@@ -30,58 +35,51 @@ export function TicketAiComposeField({
   disabled = false,
   aiGenerating = false,
   showReasoning = false,
-  reasoning = '',
+  workParts = [],
+  reasoningDuration,
   streamOutput = '',
   isStreaming = false,
-  isReasoningPhase = false
+  fillAvailable = false
 }: TicketAiComposeFieldProps) {
-  const inReasoningPhase = showReasoning && isReasoningPhase
   const showAiSurface = aiGenerating && isStreaming
-  const fixedHeightClass = className?.includes('min-h-40')
-    ? 'h-40'
-    : className?.includes('min-h-32') || rows >= 6
-      ? 'h-32'
-      : 'h-28'
-  const scrollContent = inReasoningPhase ? reasoning : `${reasoning}\n${streamOutput}`
+  const fixedHeightClass = fillAvailable
+    ? 'h-full min-h-32'
+    : className?.includes('min-h-40')
+      ? 'h-40'
+      : className?.includes('min-h-32') || rows >= 6
+        ? 'h-32'
+        : 'h-28'
+  const scrollRef = useRef<HTMLDivElement>(null)
 
-  const { scrollRef } = useWorkflowReasoningScroll({
-    isStreaming: showAiSurface,
-    reasoning: scrollContent
-  })
+  useEffect(() => {
+    const element = scrollRef.current
+    if (element) element.scrollTop = element.scrollHeight
+  }, [streamOutput, workParts])
 
   if (showAiSurface) {
     return (
       <div
         className={cn(
-          'border-border bg-muted shadow-xs relative overflow-hidden rounded-md border',
+          'border-border bg-background relative flex overflow-hidden rounded-md border',
           fixedHeightClass,
           className
         )}
       >
-        <WorkflowReasoningAmbient isLive={isStreaming} />
         <div
           ref={scrollRef}
-          className="relative z-10 h-full overflow-y-auto overscroll-contain px-3 py-2"
+          className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-3"
         >
-          {inReasoningPhase ? (
-            <ReasoningPlainContent embedded layout="flat" isStreaming={isStreaming}>
-              {reasoning}
-            </ReasoningPlainContent>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {showReasoning && reasoning.trim() ? (
-                <ReasoningPlainContent embedded layout="flat" isStreaming={false}>
-                  {reasoning}
-                </ReasoningPlainContent>
-              ) : null}
-              <WorkflowArtifactStreamPreview
-                content={streamOutput}
-                isStreaming={isStreaming}
-                variant="output"
-                className="text-foreground text-xs leading-relaxed"
-              />
+          <AgentWorkTrace
+            parts={workParts}
+            display={showReasoning ? 'full' : 'off'}
+            active={isStreaming}
+            duration={reasoningDuration}
+          />
+          {streamOutput.trim() ? (
+            <div className={cn(isStreaming && 'generated-stream-caret')}>
+              <GeneratedMarkdown animated={isStreaming}>{streamOutput}</GeneratedMarkdown>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     )
@@ -95,7 +93,12 @@ export function TicketAiComposeField({
       placeholder={placeholder}
       rows={rows}
       disabled={disabled}
-      className={cn('[field-sizing:fixed] min-h-0 overflow-auto', fixedHeightClass, className)}
+      className={cn(
+        '[field-sizing:fixed] min-h-0 overflow-auto',
+        fixedHeightClass,
+        fillAvailable && 'resize-none',
+        className
+      )}
     />
   )
 }

@@ -18,8 +18,8 @@ export type RepaymentMessageOptions = {
   objet?: string
   action?: string
   destinataire?: string
-  /** Template `channel: mailto` — journalise sans envoyer via l’API courriel. */
-  transport?: 'mailto'
+  /** Communication déjà envoyée par une application extérieure à Pierre. */
+  delivery?: 'external'
 }
 
 export function buildRepaymentMessageActivity(

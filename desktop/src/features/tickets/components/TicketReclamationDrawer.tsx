@@ -1,3 +1,4 @@
+import ticketConfig from '@customization/tickets/config'
 import { X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 
@@ -10,6 +11,10 @@ import {
   resolveTicketBucket,
   type TicketBucketId
 } from '@/features/tickets/lib/ticket-bucket'
+import {
+  getTicketExternalApplication,
+  resolveTicketExternalApplicationUrl
+} from '@/features/tickets/lib/ticket-external-application'
 import { canonicalizeTicketTags, TICKET_TAG_OPTIONS } from '@/features/tickets/lib/ticket-tags'
 import { useTicketSheetAi } from '@/features/tickets/lib/use-ticket-sheet-ai'
 import type { TicketComposeMode } from '@/features/tickets/lib/use-tickets-view-data'
@@ -46,8 +51,10 @@ import {
   type TicketAiGenerationProps
 } from './TicketComposeBlock'
 import { TicketReclamationTimeline } from './TicketReclamationTimeline'
+import type { TicketReplyFormat } from './TicketTenantReplyDraft'
 
 const EMAIL_SUBJECT_PLACEHOLDER = 'Relance — situation de compte locataire'
+const EXTERNAL_APPLICATION = getTicketExternalApplication(ticketConfig)
 
 interface Props {
   url: string | undefined
@@ -95,10 +102,18 @@ export function TicketReclamationDrawer({
   const [emailBody, setEmailBody] = useState('')
   const [letterSubject, setLetterSubject] = useState('')
   const [letterBody, setLetterBody] = useState('')
+  const [externalSubject, setExternalSubject] = useState('')
+  const [externalBody, setExternalBody] = useState('')
+  const [externalConfirmation, setExternalConfirmation] = useState<{
+    applicationName: string
+    subject: string
+    message: string
+    destinataire?: string
+  } | null>(null)
   const [summarizeContent, setSummarizeContent] = useState('')
   const [aiComposeTarget, setAiComposeTarget] = useState<Extract<
     TicketComposeMode,
-    'rcs' | 'email' | 'letter' | 'summarize'
+    'rcs' | 'email' | 'letter' | 'external' | 'summarize'
   > | null>(null)
   const [lastHighlightId, setLastHighlightId] = useState<number | undefined>()
   const [submitting, setSubmitting] = useState(false)
@@ -188,6 +203,9 @@ export function TicketReclamationDrawer({
     setEmailBody('')
     setLetterSubject('')
     setLetterBody('')
+    setExternalSubject('')
+    setExternalBody('')
+    setExternalConfirmation(null)
     setSummarizeContent('')
   }, [])
 
@@ -307,9 +325,42 @@ export function TicketReclamationDrawer({
     })
   }
 
+  const recordExternalAndRefresh = async (
+    applicationName: string,
+    destinataire: string | undefined,
+    subject: string,
+    message: string
+  ) => {
+    return runTicketSubmission(async () => {
+      if (!url || !window.api?.recordExternalCommunication) return false
+      const response = await window.api.recordExternalCommunication({
+        url,
+        idempotencyKey: crypto.randomUUID(),
+        canal: 'email',
+        contexte: 'tickets',
+        ref: idReclamation,
+        ...(destinataire?.trim() ? { destinataire: destinataire.trim() } : {}),
+        contenu: {
+          ...(subject ? { objet: subject } : {}),
+          corps: message,
+          tenant_reply: true,
+          external_application: { name: applicationName }
+        }
+      })
+      if (!response?.data?.id) {
+        toast.add({ title: 'Impossible d’enregistrer le message', type: 'error' })
+        return false
+      }
+      toast.add({ title: 'Message enregistré dans l’historique', type: 'success' })
+      await refresh()
+      resetCompose()
+      return true
+    })
+  }
+
   const handleAiDraft = async (
-    target: Extract<TicketComposeMode, 'rcs' | 'email' | 'letter'>,
-    channel: 'email' | 'letter' | undefined,
+    target: Extract<TicketComposeMode, 'rcs' | 'email' | 'letter' | 'external'>,
+    channel: 'sms' | 'email' | 'letter',
     setBody: (v: string) => void,
     setSubject: (v: string) => void
   ) => {
@@ -365,6 +416,45 @@ export function TicketReclamationDrawer({
       }
     : null
 
+  const handleExternalInjection = async () => {
+    if (!ticket || composeMode !== 'external' || !EXTERNAL_APPLICATION) return
+    const message = externalBody.trim()
+    const subject = externalSubject.trim()
+    const destinataire = String(ticket['email_locataire'] ?? ticket['email'] ?? '')
+    const externalUrl = resolveTicketExternalApplicationUrl(EXTERNAL_APPLICATION.urlPattern, ticket)
+    if (!externalUrl || !message || !window.api?.openTicketExternalApplication) {
+      toast.add({
+        title: `Impossible d’ouvrir ${EXTERNAL_APPLICATION.name}`,
+        type: 'error'
+      })
+      return
+    }
+
+    let injected = false
+    try {
+      injected = await window.api.openTicketExternalApplication({
+        url: externalUrl,
+        message,
+        selector: EXTERNAL_APPLICATION.messageSelector
+      })
+    } catch {
+      injected = false
+    }
+    if (!injected) {
+      toast.add({
+        title: `Impossible d’injecter la réponse dans ${EXTERNAL_APPLICATION.name}`,
+        type: 'error'
+      })
+      return
+    }
+    setExternalConfirmation({
+      applicationName: EXTERNAL_APPLICATION.name,
+      subject,
+      message,
+      ...(destinataire.trim() ? { destinataire: destinataire.trim() } : {})
+    })
+  }
+
   const scrollToTopRef = useScrollToTopOnOpen(
     open && ticket != null,
     ticket != null ? `${idReclamation}:${sheetOpenToken}` : null
@@ -387,7 +477,7 @@ export function TicketReclamationDrawer({
       leftRef={scrollRef}
       rightRef={historyScrollRef}
       left={
-        <>
+        <div className="flex min-h-full flex-col">
           <TicketSummaryCard
             ticket={ticket}
             tags={currentTags}
@@ -439,6 +529,10 @@ export function TicketReclamationDrawer({
               onLetterSubjectChange={setLetterSubject}
               letterBody={letterBody}
               onLetterBodyChange={setLetterBody}
+              externalSubject={externalSubject}
+              onExternalSubjectChange={setExternalSubject}
+              externalBody={externalBody}
+              onExternalBodyChange={setExternalBody}
               summarizeContent={summarizeContent}
               onSummarizeContentChange={setSummarizeContent}
               onStartComment={() => {
@@ -463,20 +557,18 @@ export function TicketReclamationDrawer({
                 setTagComment('')
                 setComposeMode('assignment')
               }}
-              onStartRcs={() => {
-                setRcsMessage('')
-                setComposeMode('rcs')
+              onStartReply={() => {
+                if (EXTERNAL_APPLICATION) {
+                  setExternalSubject('')
+                  setExternalBody('')
+                  setComposeMode('external')
+                } else {
+                  setEmailSubject('')
+                  setEmailBody('')
+                  setComposeMode('email')
+                }
               }}
-              onStartEmail={() => {
-                setEmailSubject('')
-                setEmailBody('')
-                setComposeMode('email')
-              }}
-              onStartLetter={() => {
-                setLetterSubject('')
-                setLetterBody('')
-                setComposeMode('letter')
-              }}
+              onReplyFormatChange={(format: TicketReplyFormat) => setComposeMode(format)}
               onStartSummarize={() => {
                 setSummarizeContent('')
                 setComposeMode('summarize')
@@ -557,16 +649,7 @@ export function TicketReclamationDrawer({
                 })
               }}
               onRcsDraft={() => {
-                void handleAiDraft('rcs', undefined, setRcsMessage, () => {})
-              }}
-              onRcsSaveDraft={() => {
-                const trimmed = rcsMessage.trim()
-                if (!trimmed) return
-                void postAndRefresh(
-                  'ticket_reply',
-                  'draft',
-                  JSON.stringify({ version: 1, canal: 'rcs', corps: trimmed })
-                )
+                void handleAiDraft('rcs', 'sms', setRcsMessage, () => {})
               }}
               onRcsSend={() => {
                 const trimmed = rcsMessage.trim()
@@ -576,20 +659,6 @@ export function TicketReclamationDrawer({
               }}
               onEmailDraft={() => {
                 void handleAiDraft('email', 'email', setEmailBody, setEmailSubject)
-              }}
-              onEmailSaveDraft={() => {
-                const trimmed = emailBody.trim()
-                if (!trimmed) return
-                void postAndRefresh(
-                  'ticket_reply',
-                  'draft',
-                  JSON.stringify({
-                    version: 1,
-                    canal: 'email',
-                    objet: emailSubject.trim(),
-                    corps: trimmed
-                  })
-                )
               }}
               onEmailSend={() => {
                 const trimmed = emailBody.trim()
@@ -603,26 +672,12 @@ export function TicketReclamationDrawer({
               onLetterDraft={() => {
                 void handleAiDraft('letter', 'letter', setLetterBody, setLetterSubject)
               }}
-              onLetterSaveDraft={() => {
-                const trimmed = letterBody.trim()
-                if (!trimmed) return
-                void postAndRefresh(
-                  'ticket_reply',
-                  'draft',
-                  JSON.stringify({
-                    version: 1,
-                    canal: 'courrier',
-                    objet: letterSubject.trim(),
-                    corps: trimmed
-                  })
-                )
-              }}
               onLetterExportWord={() => {
                 const trimmed = letterBody.trim()
                 if (!trimmed) return
                 void downloadDocx(trimmed, KNOWLEDGE_SKILL.ticketAnswerTicket, letterSubject)
               }}
-              onLetterMarkSent={() => {
+              onLetterSend={() => {
                 const trimmed = letterBody.trim()
                 if (!trimmed) return
                 const address = String(
@@ -636,9 +691,14 @@ export function TicketReclamationDrawer({
                   corps: trimmed
                 })
               }}
+              onExternalDraft={() => {
+                if (!EXTERNAL_APPLICATION) return
+                void handleAiDraft('external', 'email', setExternalBody, setExternalSubject)
+              }}
+              onExternalInject={() => void handleExternalInjection()}
             />
           )}
-        </>
+        </div>
       }
       right={
         initialLoading ? (
@@ -719,12 +779,32 @@ export function TicketReclamationDrawer({
       }}
     />
   )
+  const externalApplicationDialog = (
+    <ConfirmDialog
+      open={externalConfirmation != null}
+      title={`Avez-vous envoyé cette réponse avec ${externalConfirmation?.applicationName ?? ''} ?`}
+      description={
+        externalConfirmation?.subject
+          ? `Objet : ${externalConfirmation.subject}`
+          : 'Confirmez l’envoi pour l’enregistrer dans l’historique du dossier.'
+      }
+      confirmLabel="Oui, enregistrer"
+      cancelLabel="Non"
+      onCancel={() => setExternalConfirmation(null)}
+      onConfirm={() => {
+        if (!externalConfirmation) return
+        const { applicationName, subject, message, destinataire } = externalConfirmation
+        void recordExternalAndRefresh(applicationName, destinataire, subject, message)
+      }}
+    />
+  )
 
   if (embedded) {
     return (
       <>
         {drawerHeader}
         {drawerBody}
+        {externalApplicationDialog}
         {deleteDialog}
       </>
     )
@@ -738,6 +818,7 @@ export function TicketReclamationDrawer({
           {drawerBody}
         </DrawerContent>
       </Drawer>
+      {externalApplicationDialog}
       {deleteDialog}
     </>
   )

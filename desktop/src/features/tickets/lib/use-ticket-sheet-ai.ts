@@ -48,7 +48,7 @@ export function useTicketSheetAi(url: string | undefined) {
     (summarizeReasoningUi.showReasoningTokens || Object.keys(skillConfigs).length === 0)
 
   const getShowReasoning = useCallback(
-    (target: 'rcs' | 'email' | 'letter' | 'summarize') =>
+    (target: 'rcs' | 'email' | 'letter' | 'external' | 'summarize') =>
       target === 'summarize' ? showSummarizeReasoning : showAnswerReasoning,
     [showAnswerReasoning, showSummarizeReasoning]
   )
@@ -128,9 +128,18 @@ export function useTicketSheetAi(url: string | undefined) {
       isStreaming: state.isStreaming,
       isReasoningPhase: state.isReasoningPhase,
       reasoning: state.reasoning,
+      workParts: state.workParts,
+      reasoningDuration: state.reasoningDuration,
       output: state.output
     }),
-    [state.isStreaming, state.isReasoningPhase, state.reasoning, state.output]
+    [
+      state.isStreaming,
+      state.isReasoningPhase,
+      state.reasoning,
+      state.workParts,
+      state.reasoningDuration,
+      state.output
+    ]
   )
 
   return {

@@ -18,7 +18,7 @@ export const ABOUT_SUBJECTS = ['locataire', 'client', 'lot', 'batiment'] as cons
 export type TicketSkillKey = (typeof TICKET_SKILL_KEYS)[number]
 export type AboutSubject = (typeof ABOUT_SUBJECTS)[number]
 
-export type AnswerChannel = 'email' | 'letter'
+export type AnswerChannel = 'sms' | 'email' | 'letter'
 
 export const TICKET_SKILL_OPTIONS: {
   value: TicketSkillKey

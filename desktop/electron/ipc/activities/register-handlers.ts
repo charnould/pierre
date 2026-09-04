@@ -11,6 +11,7 @@ import type {
   GetActivitiesParams,
   GetActivityFeedSyncParams,
   PatchActivityPayload,
+  RecordExternalCommunicationPayload,
   SendCommunicationPayload
 } from '../../../src/shared/types/activites'
 import { netFetch } from '../../lib/net-fetch'
@@ -65,6 +66,34 @@ export function registerActivitiesHandlers(partition: string): void {
     const { url, ...body } = params
     return request<ActivityResponse>(partition, `${url}/desktop/activities`, 'POST', body)
   })
+
+  ipcMain.handle(
+    IpcChannel.activities.recordExternalCommunication,
+    async (_, params: RecordExternalCommunicationPayload) => {
+      const { url, idempotencyKey, ...body } = params
+      try {
+        const response = await netFetch(`${url}/communications/external`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Idempotency-Key': idempotencyKey
+          },
+          body: JSON.stringify(body),
+          session: session.fromPartition(partition)
+        })
+        if (!response.ok) throw new Error(`${response.status} ${await response.text()}`)
+        if (!response.headers.get('content-type')?.toLowerCase().includes('application/json')) {
+          throw new Error(
+            `${response.status} Serveur incompatible : réponse non JSON de /communications/external`
+          )
+        }
+        return (await response.json()) as ActivityResponse
+      } catch (error) {
+        logMainError('record-external-communication', error)
+        return null
+      }
+    }
+  )
 
   ipcMain.handle(
     IpcChannel.activities.sendCommunication,

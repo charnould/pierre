@@ -1,3 +1,4 @@
+import { useAgentIdentity } from '@/contexts/AgentIdentityContext'
 import { InspectorComposeFooter } from '@/shared/components/inspector/inspector-compose-shell'
 import { Button } from '@/shared/components/ui/button'
 
@@ -6,59 +7,58 @@ type Variant = 'rcs' | 'email' | 'letter'
 interface Props {
   variant: Variant
   canSend: boolean
+  externalApplicationName?: string
   aiBusy?: boolean
-  onDraft: () => void
-  onSaveDraft: () => void
+  onGenerate: () => void
+  onInject: () => void
   onSend?: () => void
-  onExportWord?: () => void
-  onMarkSent?: () => void
+  onExportDocx?: () => void
   onCancel: () => void
 }
 
 export function TicketOutboundMessageActions({
   variant,
   canSend,
+  externalApplicationName,
   aiBusy = false,
-  onDraft,
-  onSaveDraft,
+  onGenerate,
+  onInject,
   onSend,
-  onExportWord,
-  onMarkSent,
+  onExportDocx,
   onCancel
 }: Props) {
+  const agent = useAgentIdentity()
+
   return (
     <InspectorComposeFooter
       onCancel={onCancel}
       pending={aiBusy}
       extra={
         <>
-          <Button type="button" variant="outline" size="sm" disabled={aiBusy} onClick={onDraft}>
-            Rédiger avec IA
+          <Button type="button" variant="outline" size="sm" disabled={aiBusy} onClick={onGenerate}>
+            Rédiger avec {agent.name}
           </Button>
-          <Button type="button" variant="outline" size="sm" disabled={aiBusy} onClick={onSaveDraft}>
-            Sauvegarder
-          </Button>
+          {!externalApplicationName && variant === 'letter' ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!canSend || aiBusy}
+              onClick={onExportDocx}
+            >
+              Exporter en DOCX
+            </Button>
+          ) : null}
         </>
       }
     >
-      {variant === 'letter' ? (
-        <>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={!canSend || aiBusy}
-            onClick={onExportWord}
-          >
-            Exporter au format Word
-          </Button>
-          <Button type="button" size="sm" disabled={!canSend || aiBusy} onClick={onMarkSent}>
-            Marquer comme envoyé
-          </Button>
-        </>
+      {externalApplicationName ? (
+        <Button type="button" size="sm" disabled={!canSend || aiBusy} onClick={onInject}>
+          Injecter dans {externalApplicationName}
+        </Button>
       ) : (
         <Button type="button" size="sm" disabled={!canSend || aiBusy} onClick={onSend}>
-          {variant === 'rcs' ? 'Envoyer le RCS' : 'Envoyer au locataire'}
+          Envoyer
         </Button>
       )}
     </InspectorComposeFooter>

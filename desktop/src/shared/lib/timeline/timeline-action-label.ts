@@ -6,6 +6,17 @@ export const TIMELINE_MOVEMENT_TITLE = 'Mouvement comptable'
 /** Past-tense verb for a drawer timeline activity row. */
 export function timelineActivityActionVerb(row: Activite): string {
   const inbound = /^(tenant|candidate|external):/.test(row.auteur)
+  const payload = activity_payload(row.type, row.contenu)
+  const externalApplication = payload['external_application']
+  if (
+    payload['tenant_reply'] === true &&
+    externalApplication &&
+    typeof externalApplication === 'object' &&
+    typeof (externalApplication as Record<string, unknown>)['name'] === 'string'
+  ) {
+    const name = String((externalApplication as Record<string, unknown>)['name']).trim()
+    if (name) return `a répondu au locataire via ${name}`
+  }
   switch (row.type) {
     case 'activity_boost': {
       const payload = activity_payload(row.type, row.contenu)
@@ -24,7 +35,7 @@ export function timelineActivityActionVerb(row: Activite): string {
     case 'sms':
       return 'a envoyé un SMS'
     case 'email':
-      if (activity_payload(row.type, row.contenu)['reception_initiale'] === true) {
+      if (payload['reception_initiale'] === true) {
         return 'a envoyé la réclamation'
       }
       return inbound ? 'a répondu par courriel' : 'a envoyé un courriel'

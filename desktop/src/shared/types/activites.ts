@@ -24,6 +24,7 @@ export type {
   GetActivityFeedSyncParams,
   Mention,
   PatchActivityPayload,
+  RecordExternalCommunicationPayload,
   SendCommunicationPayload
 } from '../../../../shared/activites'
 

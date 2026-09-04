@@ -1,13 +1,12 @@
+import ticketConfig from '@customization/tickets/config'
 import {
-  AtSign,
   Check,
   ClipboardList,
   FolderKanban,
   ListTodo,
   MessageSquare,
   MessageSquareWarning,
-  Phone,
-  ScrollText,
+  Send,
   Tag,
   Upload,
   UserPlus,
@@ -16,6 +15,7 @@ import {
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useRef } from 'react'
 
+import type { AgentWorkPart } from '@/shared/components/AgentWorkTrace'
 import { ActionPicker } from '@/shared/components/inspector/action-picker'
 import { CaseBucketBadge } from '@/shared/components/inspector/case-bucket-badge'
 import { CaseBucketForm } from '@/shared/components/inspector/case-bucket-form'
@@ -34,6 +34,7 @@ import { toLocalIsoDate } from '@/shared/components/ui/date-picker'
 import type { ActionDraft } from '@/shared/lib/activities/action-activity'
 import { getTicketCellText } from '@/shared/lib/ticket-row'
 import { composePresenceProps } from '@/shared/lib/timeline/compose-motion'
+import { cn } from '@/shared/lib/utils'
 import type { TicketRow } from '@/shared/types'
 import type { OrgUser } from '@/shared/types/users'
 
@@ -42,21 +43,25 @@ import {
   TICKET_BUCKET_OPTIONS,
   type TicketBucketId
 } from '../lib/ticket-bucket'
+import { getTicketExternalApplication } from '../lib/ticket-external-application'
 import { TICKET_TAG_OPTIONS } from '../lib/ticket-tags'
 import type { TicketComposeMode } from '../lib/use-tickets-view-data'
+import { TicketTenantReplyDraft, type TicketReplyFormat } from './TicketTenantReplyDraft'
 import { TicketTimelineCommentDraft } from './TicketTimelineCommentDraft'
-import { TicketTimelineEmailDraft } from './TicketTimelineEmailDraft'
-import { TicketTimelineLetterDraft } from './TicketTimelineLetterDraft'
-import { TicketTimelineRcsDraft } from './TicketTimelineRcsDraft'
 import { TicketTimelineSummarizeDraft } from './TicketTimelineSummarizeDraft'
 
-type TicketAiComposeMode = Extract<TicketComposeMode, 'rcs' | 'email' | 'letter' | 'summarize'>
+type TicketAiComposeMode = Extract<
+  TicketComposeMode,
+  'rcs' | 'email' | 'letter' | 'external' | 'summarize'
+>
+
+const EXTERNAL_APPLICATION = getTicketExternalApplication(ticketConfig)
 
 export type TicketAiGenerationProps = {
   target: TicketAiComposeMode
   isStreaming: boolean
-  isReasoningPhase: boolean
-  reasoning: string
+  workParts: AgentWorkPart[]
+  reasoningDuration?: number
   output: string
   showReasoning: boolean
 }
@@ -80,6 +85,10 @@ interface Props {
   onLetterSubjectChange: (value: string) => void
   letterBody: string
   onLetterBodyChange: (value: string) => void
+  externalSubject: string
+  onExternalSubjectChange: (value: string) => void
+  externalBody: string
+  onExternalBodyChange: (value: string) => void
   summarizeContent: string
   onSummarizeContentChange: (value: string) => void
   onStartComment: () => void
@@ -88,9 +97,8 @@ interface Props {
   onStartBucket: () => void
   onStartTags: () => void
   onStartAssignment: () => void
-  onStartRcs: () => void
-  onStartEmail: () => void
-  onStartLetter: () => void
+  onStartReply: () => void
+  onReplyFormatChange: (format: TicketReplyFormat) => void
   onStartSummarize: () => void
   onCancelCompose: () => void
   onSubmitComment: () => void
@@ -113,15 +121,14 @@ interface Props {
   onSummarizeDraft: () => void
   onSummarizeSave: () => void
   onRcsDraft: () => void
-  onRcsSaveDraft: () => void
   onRcsSend: () => void
   onEmailDraft: () => void
-  onEmailSaveDraft: () => void
   onEmailSend: () => void
   onLetterDraft: () => void
-  onLetterSaveDraft: () => void
   onLetterExportWord: () => void
-  onLetterMarkSent: () => void
+  onLetterSend: () => void
+  onExternalDraft: () => void
+  onExternalInject: () => void
 }
 
 function composeMeta(mode: Exclude<TicketComposeMode, null>): { icon: LucideIcon; title: string } {
@@ -131,10 +138,9 @@ function composeMeta(mode: Exclude<TicketComposeMode, null>): { icon: LucideIcon
   if (mode === 'bucket') return { icon: FolderKanban, title: 'Changer de panier' }
   if (mode === 'tags') return { icon: Tag, title: 'Changer les tags' }
   if (mode === 'assignment') return { icon: UserPlus, title: 'Affecter à un référent' }
-  if (mode === 'rcs') return { icon: Phone, title: 'Envoyer un RCS au locataire' }
-  if (mode === 'email') return { icon: AtSign, title: 'Envoyer un courriel au locataire' }
-  if (mode === 'letter')
-    return { icon: ScrollText, title: 'Envoyer un courrier postal au locataire' }
+  if (mode === 'rcs' || mode === 'email' || mode === 'letter' || mode === 'external') {
+    return { icon: Send, title: 'Répondre au locataire' }
+  }
   return { icon: ClipboardList, title: 'Générer un point de situation' }
 }
 
@@ -227,19 +233,19 @@ function aiSurfaceFor(props: Props, mode: TicketAiComposeMode) {
     return {
       aiGenerating: false,
       showReasoning: false,
-      reasoning: '',
+      workParts: [],
+      reasoningDuration: undefined,
       streamOutput: '',
-      isStreaming: false,
-      isReasoningPhase: false
+      isStreaming: false
     }
   }
   return {
     aiGenerating: true,
     showReasoning: gen.showReasoning,
-    reasoning: gen.reasoning,
+    workParts: gen.workParts,
+    reasoningDuration: gen.reasoningDuration,
     streamOutput: gen.output,
-    isStreaming: gen.isStreaming,
-    isReasoningPhase: gen.isReasoningPhase
+    isStreaming: gen.isStreaming
   }
 }
 
@@ -324,40 +330,73 @@ function ComposeDraft({
       />
     )
   }
-  if (composeMode === 'rcs') {
-    const ai = aiSurfaceFor(props, 'rcs')
+  if (
+    composeMode === 'rcs' ||
+    composeMode === 'email' ||
+    composeMode === 'letter' ||
+    composeMode === 'external'
+  ) {
+    const ai = aiSurfaceFor(props, composeMode)
+    const subject =
+      composeMode === 'email'
+        ? props.emailSubject
+        : composeMode === 'letter'
+          ? props.letterSubject
+          : props.externalSubject
+    const message =
+      composeMode === 'rcs'
+        ? props.rcsMessage
+        : composeMode === 'email'
+          ? props.emailBody
+          : composeMode === 'letter'
+            ? props.letterBody
+            : props.externalBody
     return (
-      <TicketTimelineRcsDraft
-        embedded
-        message={props.rcsMessage}
-        onMessageChange={props.onRcsMessageChange}
+      <TicketTenantReplyDraft
+        format={composeMode}
+        onFormatChange={props.onReplyFormatChange}
+        externalApplication={EXTERNAL_APPLICATION}
+        subject={subject}
+        onSubjectChange={
+          composeMode === 'email'
+            ? props.onEmailSubjectChange
+            : composeMode === 'letter'
+              ? props.onLetterSubjectChange
+              : props.onExternalSubjectChange
+        }
+        message={message}
+        onMessageChange={
+          composeMode === 'rcs'
+            ? props.onRcsMessageChange
+            : composeMode === 'email'
+              ? props.onEmailBodyChange
+              : composeMode === 'letter'
+                ? props.onLetterBodyChange
+                : props.onExternalBodyChange
+        }
         aiBusy={props.aiBusy}
         {...ai}
-        onDraft={props.onRcsDraft}
-        onSaveDraft={props.onRcsSaveDraft}
-        onSend={props.onRcsSend}
+        onGenerate={
+          composeMode === 'rcs'
+            ? props.onRcsDraft
+            : composeMode === 'email'
+              ? props.onEmailDraft
+              : composeMode === 'letter'
+                ? props.onLetterDraft
+                : props.onExternalDraft
+        }
+        onInject={props.onExternalInject}
+        onSend={
+          composeMode === 'rcs'
+            ? props.onRcsSend
+            : composeMode === 'email'
+              ? props.onEmailSend
+              : composeMode === 'letter'
+                ? props.onLetterSend
+                : undefined
+        }
+        onExportDocx={composeMode === 'letter' ? props.onLetterExportWord : undefined}
         onCancel={props.onCancelCompose}
-        showConnector={props.hasTimelineHistory}
-        saving={props.submitting}
-      />
-    )
-  }
-  if (composeMode === 'email') {
-    const ai = aiSurfaceFor(props, 'email')
-    return (
-      <TicketTimelineEmailDraft
-        embedded
-        subject={props.emailSubject}
-        onSubjectChange={props.onEmailSubjectChange}
-        body={props.emailBody}
-        onBodyChange={props.onEmailBodyChange}
-        aiBusy={props.aiBusy}
-        {...ai}
-        onDraft={props.onEmailDraft}
-        onSaveDraft={props.onEmailSaveDraft}
-        onSend={props.onEmailSend}
-        onCancel={props.onCancelCompose}
-        showConnector={props.hasTimelineHistory}
         saving={props.submitting}
       />
     )
@@ -379,25 +418,7 @@ function ComposeDraft({
       />
     )
   }
-  const ai = aiSurfaceFor(props, 'letter')
-  return (
-    <TicketTimelineLetterDraft
-      embedded
-      subject={props.letterSubject}
-      onSubjectChange={props.onLetterSubjectChange}
-      body={props.letterBody}
-      onBodyChange={props.onLetterBodyChange}
-      aiBusy={props.aiBusy}
-      {...ai}
-      onDraft={props.onLetterDraft}
-      onSaveDraft={props.onLetterSaveDraft}
-      onExportWord={props.onLetterExportWord}
-      onMarkSent={props.onLetterMarkSent}
-      onCancel={props.onCancelCompose}
-      showConnector={props.hasTimelineHistory}
-      saving={props.submitting}
-    />
-  )
+  return null
 }
 
 export function TicketComposeBlock(props: Props) {
@@ -408,16 +429,31 @@ export function TicketComposeBlock(props: Props) {
   const zoneMotion = composePresenceProps(reduceMotion)
   const insertMotion = composePresenceProps(reduceMotion, true)
   const meta = composeMode != null ? composeMeta(composeMode) : null
+  const isTenantReply =
+    composeMode === 'rcs' ||
+    composeMode === 'email' ||
+    composeMode === 'letter' ||
+    composeMode === 'external'
+  const composeKey = isTenantReply ? 'tenant-reply' : composeMode
 
   return (
-    <div className="relative overflow-hidden">
+    <div
+      className={cn('relative overflow-hidden', isTenantReply && 'flex min-h-0 flex-1 flex-col')}
+    >
       <AnimatePresence mode="wait" initial={false}>
         {composeMode != null && meta ? (
-          <motion.div key={composeMode} ref={draftRef} {...insertMotion}>
+          <motion.div
+            key={composeKey}
+            ref={draftRef}
+            className={cn(isTenantReply && 'min-h-0 flex-1')}
+            {...insertMotion}
+          >
             <InspectorComposeShell
               icon={meta.icon}
               title={meta.title}
               pending={props.submitting || props.aiBusy}
+              className={cn(isTenantReply && 'flex h-full min-h-0 flex-col')}
+              contentClassName={cn(isTenantReply && 'min-h-0 flex-1')}
             >
               <ComposeDraft composeMode={composeMode} props={props} />
             </InspectorComposeShell>
@@ -449,19 +485,9 @@ export function TicketComposeBlock(props: Props) {
               onClick={props.onStartBucket}
             />
             <TimelineActionRow
-              icon={Phone}
-              label="Envoyer un RCS au locataire"
-              onClick={props.onStartRcs}
-            />
-            <TimelineActionRow
-              icon={AtSign}
-              label="Envoyer un courriel au locataire"
-              onClick={props.onStartEmail}
-            />
-            <TimelineActionRow
-              icon={ScrollText}
-              label="Envoyer un courrier postal au locataire"
-              onClick={props.onStartLetter}
+              icon={Send}
+              label="Répondre au locataire"
+              onClick={props.onStartReply}
             />
             <TimelineActionRow
               icon={ClipboardList}
