@@ -3,7 +3,6 @@ import { Database } from 'bun:sqlite'
 import { z } from 'zod'
 
 import { datastorePaths } from './paths'
-import { draft_summaries_by_ticket } from './ticket-activities'
 import { buildTicketFiltersWhere, type TicketFilterRule } from './ticket-filters'
 
 export const CORE_RECLAMATION_COLUMNS = ['id_reclamation', 'id_locataire', 'id_lot'] as const
@@ -225,35 +224,8 @@ export const list_tickets = (input: TicketsListInput): TicketsListResult => {
       )
       .all(...params, input.limit, input.offset)
 
-    const ticket_ids = rows
-      .map((row) => {
-        const v = row['id_reclamation']
-        if (v === null || v === undefined || v === '') return ''
-        return String(v).trim()
-      })
-      .filter((id) => id.length > 0)
-
-    const summaries = draft_summaries_by_ticket(ticket_ids)
-
-    const data = rows.map((row) => {
-      const id = String(row['id_reclamation'] ?? '').trim()
-      const summary = summaries.get(id)
-      return {
-        ...row,
-        draft_id_skills: summary?.id_skills ?? [],
-        ...(summary?.answer_channel ? { draft_answer_channel: summary.answer_channel } : {}),
-        ...(summary?.automation_skills?.length
-          ? { draft_automation_skills: summary.automation_skills }
-          : {}),
-        ...(summary?.latest_at ? { draft_latest_at: summary.latest_at } : {}),
-        ...(summary?.generated_by ? { draft_generated_by: summary.generated_by } : {}),
-        ...(summary?.edited_by ? { draft_edited_by: summary.edited_by } : {}),
-        draft_markers: summary?.markers ?? []
-      }
-    })
-
     return {
-      data,
+      data: rows,
       meta: {
         total,
         limit: input.limit,
