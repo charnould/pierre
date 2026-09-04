@@ -67,6 +67,29 @@ const table_columns = (): { name: string; type: string }[] => {
   }
 }
 
+const insert_ticket_bucket = (
+  idReclamation: string,
+  bucket: string,
+  dateCreation: string
+): void => {
+  const db = new Database(DATASTORE_SQLITE)
+  try {
+    db.run(
+      `INSERT INTO activites (
+         date_creation, date_statut, rattachement, auteur, type, statut, mentions, contenu
+       ) VALUES (?, ?, ?, 'user:test', 'case_bucket_change', 'logged', '[]', ?)`,
+      [
+        dateCreation,
+        dateCreation,
+        `tickets:${idReclamation}`,
+        JSON.stringify({ version: 1, bucket_precedent: null, bucket })
+      ]
+    )
+  } finally {
+    db.close()
+  }
+}
+
 beforeAll(() => {
   Bun.env['SERVICE'] = TEST_SERVICE
 })
@@ -127,6 +150,7 @@ describe('list_tickets', () => {
     await seed_tickets()
     const result = list_tickets({ ...TicketsPaginationQuery.parse({}), filters: {} })
     expect(result.data).toHaveLength(4)
+    expect(result.data.every((row) => row['pierre_bucket'] === 'non_traitees')).toBe(true)
     expect(result.meta.total).toBe(4)
     expect(result.meta.columns).toEqual(table_columns().map(({ name, type }) => ({ name, type })))
   })
@@ -153,6 +177,28 @@ describe('list_tickets', () => {
       filters: {}
     })
     expect(paged.data[0]?.id_reclamation).toBe(sorted.data[1]?.id_reclamation)
+  })
+
+  it('falls back to non_traitees for an unknown stored bucket', async () => {
+    await seed_tickets()
+    insert_ticket_bucket('REQ-1', 'ancien_panier', '2026-01-01T10:00:00Z')
+
+    const result = list_tickets({
+      ...TicketsPaginationQuery.parse({ bucket: 'non_traitees' }),
+      filters: {}
+    })
+
+    expect(result.data.map((row) => row['id_reclamation'])).toContain('REQ-1')
+  })
+
+  it('rejects an unknown requested ticket bucket', async () => {
+    await seed_tickets()
+    expect(() =>
+      list_tickets({
+        ...TicketsPaginationQuery.parse({ bucket: 'inconnu' }),
+        filters: {}
+      })
+    ).toThrow(TicketsQueryError)
   })
 
   it('filters by id_reclamation', async () => {

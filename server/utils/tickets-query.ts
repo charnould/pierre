@@ -2,6 +2,7 @@ import { Database } from 'bun:sqlite'
 
 import { z } from 'zod'
 
+import ticketConfig from '../../customization/tickets/config'
 import { datastorePaths } from './paths'
 import { buildTicketFiltersWhere, type TicketFilterRule } from './ticket-filters'
 
@@ -9,14 +10,19 @@ export const CORE_RECLAMATION_COLUMNS = ['id_reclamation', 'id_locataire', 'id_l
 
 export const DEFAULT_TICKETS_SORT = '-id_reclamation'
 
-const RESERVED_TICKETS_QUERY_PARAMS = ['limit', 'offset', 'sort', 'rules'] as const
+const RESERVED_TICKETS_QUERY_PARAMS = ['limit', 'offset', 'sort', 'rules', 'bucket'] as const
+export const DEFAULT_TICKET_BUCKET = 'non_traitees'
+const TICKET_BUCKET_IDS = ticketConfig.buckets.map((bucket) => bucket.id)
+const TICKET_BUCKET_ID_SET = new Set(TICKET_BUCKET_IDS)
+const TICKET_BUCKET_SQL = TICKET_BUCKET_IDS.map((id) => `'${id.replaceAll("'", "''")}'`).join(', ')
 
 export type TicketsColumnMeta = { name: string; type: string }
 
 export const TicketsPaginationQuery = z.object({
   limit: z.coerce.number().int().min(1).max(1000).default(50),
   offset: z.coerce.number().int().min(0).default(0),
-  sort: z.string().trim().min(1).optional()
+  sort: z.string().trim().min(1).optional(),
+  bucket: z.string().trim().min(1).optional()
 })
 
 export type TicketsPaginationQuery = z.infer<typeof TicketsPaginationQuery>
@@ -85,6 +91,13 @@ const table_exists = (db: Database): boolean =>
   db
     .query<{ n: number }, []>(
       "SELECT COUNT(*) as n FROM sqlite_master WHERE type='table' AND name='reclamations'"
+    )
+    .get()!.n > 0
+
+const activities_table_exists = (db: Database): boolean =>
+  db
+    .query<{ n: number }, []>(
+      "SELECT COUNT(*) as n FROM sqlite_master WHERE type='table' AND name='activites'"
     )
     .get()!.n > 0
 
@@ -203,6 +216,9 @@ export const list_tickets = (input: TicketsListInput): TicketsListResult => {
     const columns = get_table_columns(db)
     assert_core_columns(columns)
     const names = column_names(columns)
+    if (input.bucket && !TICKET_BUCKET_ID_SET.has(input.bucket)) {
+      throw new TicketsQueryError('invalid ticket bucket')
+    }
 
     validate_filters(input.filters, names)
     const sort = resolve_sort(input.sort, names)
@@ -211,16 +227,58 @@ export const list_tickets = (input: TicketsListInput): TicketsListResult => {
       input.filter_rules && input.filter_rules.length > 0
         ? buildTicketFiltersWhere(input.filter_rules, names)
         : { where: '', params: [] as string[] }
-    const { where, params } = merge_where_clauses(filtersWhere, rulesWhere)
+    const merged = merge_where_clauses(filtersWhere, rulesWhere)
+    const bucketCondition = input.bucket ? `"pierre_bucket" = ?` : ''
+    const existingCondition = merged.where.replace(/^WHERE\s+/i, '')
+    const conditions = [existingCondition, bucketCondition].filter(Boolean)
+    const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+    const params = [...merged.params, ...(input.bucket ? [input.bucket] : [])]
     const { column, direction } = parse_sort(sort)
+    const source = activities_table_exists(db)
+      ? `WITH ranked_ticket_buckets AS (
+           SELECT
+             substr(rattachement, length('tickets:') + 1) AS id_reclamation,
+             json_extract(contenu, '$.bucket') AS bucket,
+             ROW_NUMBER() OVER (
+               PARTITION BY rattachement
+               ORDER BY date_creation DESC, id DESC
+             ) AS row_number
+           FROM activites
+           WHERE type = 'case_bucket_change'
+             AND rattachement LIKE 'tickets:%'
+             AND json_valid(contenu)
+             AND json_extract(contenu, '$.version') = 1
+             AND json_type(contenu, '$.bucket') = 'text'
+             AND trim(json_extract(contenu, '$.bucket')) <> ''
+             AND json_extract(contenu, '$.bucket') IN (${TICKET_BUCKET_SQL})
+         ),
+         ticket_rows AS (
+           SELECT reclamations.*,
+             CASE
+               WHEN latest.bucket IN (${TICKET_BUCKET_SQL}) THEN latest.bucket
+               ELSE '${DEFAULT_TICKET_BUCKET}'
+             END AS pierre_bucket
+           FROM reclamations
+           LEFT JOIN ranked_ticket_buckets latest
+             ON latest.id_reclamation = CAST(reclamations.id_reclamation AS TEXT)
+            AND latest.row_number = 1
+         )`
+      : `WITH ticket_rows AS (
+           SELECT reclamations.*, '${DEFAULT_TICKET_BUCKET}' AS pierre_bucket
+           FROM reclamations
+         )`
 
     const total = db
-      .query<{ n: number }, string[]>(`SELECT COUNT(*) as n FROM reclamations ${where}`)
+      .query<{ n: number }, string[]>(`${source} SELECT COUNT(*) as n FROM ticket_rows ${where}`)
       .get(...params)!.n
 
     const rows = db
       .query<Record<string, unknown>, (string | number)[]>(
-        `SELECT * FROM reclamations ${where} ORDER BY "${column}" ${direction} LIMIT ? OFFSET ?`
+        `${source}
+         SELECT * FROM ticket_rows
+         ${where}
+         ORDER BY "${column}" ${direction}
+         LIMIT ? OFFSET ?`
       )
       .all(...params, input.limit, input.offset)
 

@@ -120,6 +120,26 @@ describe('GET /desktop/tickets', () => {
     expect(body.meta.total).toBe(4)
   })
 
+  it('paginates inside the configured default bucket', async () => {
+    await seed_tickets()
+    const res = await fetch_tickets('?bucket=non_traitees&limit=1')
+    const body = (await res.json()) as {
+      data: { id_reclamation: string; pierre_bucket: string }[]
+      meta: { total: number }
+    }
+
+    expect(res.status).toBe(200)
+    expect(body.meta.total).toBe(4)
+    expect(body.data).toHaveLength(1)
+    expect(body.data[0]?.pierre_bucket).toBe('non_traitees')
+  })
+
+  it('rejects an unknown bucket', async () => {
+    await seed_tickets()
+    const res = await fetch_tickets('?bucket=inconnu')
+    expect(res.status).toBe(400)
+  })
+
   it('filters by id_reclamation', async () => {
     await seed_tickets()
     const res = await fetch_tickets('?id_reclamation=REQ-2')
