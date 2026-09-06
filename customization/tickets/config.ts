@@ -15,7 +15,7 @@ export default {
   buckets: [
     {
       id: 'non_traitees',
-      label: 'Non traitées'
+      label: 'Réclamations'
     }
   ],
 
