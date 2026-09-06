@@ -4,12 +4,14 @@ import { memo, useMemo } from 'react'
 import { EmptyFolder } from '@/shared/components/icons/koboyo-empty'
 import { ActivityTimelineEvent } from '@/shared/components/timeline/activity-timeline-event'
 import { CaseBucketChangeBody } from '@/shared/components/timeline/case-bucket-change-body'
+import { CommunicationTimelineMessageBody } from '@/shared/components/timeline/communication-timeline-message-body'
 import { ContextTimeline } from '@/shared/components/timeline/context-timeline'
 import { TIMELINE_CONTENT_INSET_CLASS } from '@/shared/components/timeline/timeline-layout'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/shared/components/ui/empty'
 import { indexTodoRevisions } from '@/shared/lib/activities/action-activity'
 import { formatInspectorTimelineDateline } from '@/shared/lib/timeline/activity-notification-date'
 import { parseActivityAuthor } from '@/shared/lib/timeline/parse-activity-author'
+import { isTimelineCommunicationType } from '@/shared/lib/timeline/parse-timeline-message-body'
 import { cn } from '@/shared/lib/utils'
 
 import type { TicketTimelineItem } from '../lib/build-ticket-timeline'
@@ -93,6 +95,8 @@ function TimelineItems({
             body={
               item.row.type === 'case_bucket_change' ? (
                 <CaseBucketChangeBody row={item.row} options={TICKET_BUCKET_OPTIONS} />
+              ) : isTimelineCommunicationType(item.row.type) ? (
+                <CommunicationTimelineMessageBody row={item.row} />
               ) : undefined
             }
           >

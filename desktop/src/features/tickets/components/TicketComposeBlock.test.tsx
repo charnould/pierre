@@ -5,6 +5,15 @@ import { JSDOM } from 'jsdom'
 import type { TicketComposeMode } from '../lib/use-tickets-view-data'
 import type { TicketAiGenerationProps } from './TicketComposeBlock'
 
+mock.module('@/contexts/UiSettingsContext', () => ({
+  useUiSettings: () => ({
+    settings: { tickets: { table: { columnValues: {} } } }
+  }),
+  useResolvedUiSettings: () => ({
+    tickets: { table: { columnValues: {} } }
+  })
+}))
+
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
 
@@ -219,7 +228,7 @@ async function renderCompose(
 }
 
 describe('TicketComposeBlock', () => {
-  test('affiche le message initial intégral dans le contexte', async () => {
+  test('n’affiche plus le message initial dans le contexte', async () => {
     const message = 'Message intégral '.repeat(20).trim()
     const { act } = await import('react')
     const { createRoot } = await import('react-dom/client')
@@ -233,8 +242,60 @@ describe('TicketComposeBlock', () => {
       )
     })
     try {
-      expect(container.textContent).toContain(message)
-      expect(container.textContent).not.toContain(`${message.slice(0, 120)}…`)
+      expect(container.textContent).toContain('Contexte')
+      expect(container.textContent).not.toContain(message)
+      expect(container.textContent).not.toContain('Message')
+    } finally {
+      await act(async () => root.unmount())
+      container.remove()
+    }
+  })
+
+  test('ordonne lot, site, état de la réclamation et avancement dans le contexte', async () => {
+    const { act } = await import('react')
+    const { createRoot } = await import('react-dom/client')
+    const { TicketSummaryCard } = await import('./TicketComposeBlock')
+    const container = document.createElement('div')
+    document.body.append(container)
+    const root = createRoot(container)
+    await act(async () => {
+      root.render(
+        <TicketSummaryCard
+          ticket={{
+            id_reclamation: 'REC-1',
+            id_locataire: 'LOC-1',
+            id_lot: 'LOT-9',
+            id_site: 'SITE-2',
+            cree_le: '2026-06-01',
+            canal_contact: 'courriel',
+            motif: 'Fuite',
+            statut: 'ouvert',
+            etat_de_la_reclamation: 'en instruction',
+            avancement: 'en cours'
+          }}
+        />
+      )
+    })
+    try {
+      const title = [...container.querySelectorAll('p')].find((el) => el.textContent === 'Contexte')
+      const labels = [...(title?.nextElementSibling?.querySelectorAll(':scope > span') ?? [])].map(
+        (el) => el.textContent
+      )
+      expect(labels).toEqual([
+        'Locataire',
+        'Lot',
+        'Site',
+        'Reçue le',
+        'Canal',
+        'Qualification',
+        'État',
+        'État de la réclamation',
+        'Avancement'
+      ])
+      expect(container.textContent).toContain('LOT-9')
+      expect(container.textContent).toContain('SITE-2')
+      expect(container.textContent).toContain('en instruction')
+      expect(container.textContent).toContain('en cours')
     } finally {
       await act(async () => root.unmount())
       container.remove()
@@ -245,18 +306,21 @@ describe('TicketComposeBlock', () => {
     const { cleanup } = await renderCompose()
     try {
       const labels = buttonLabels()
-      expect(labels).toContain('Ajouter une note')
-      expect(labels).toContain('Créer une tâche')
-      expect(labels).toContain('Consigner une action réalisée')
-      expect(labels).toContain('Changer de panier')
-      expect(labels).toContain('Répondre au locataire')
+      const pile = [
+        'Répondre au locataire',
+        'Générer un point de situation',
+        'Ajouter une note',
+        'Créer une tâche',
+        'Consigner une action réalisée',
+        'Changer de panier',
+        'Importer un email',
+        'Changer les tags',
+        'Affecter à un référent'
+      ]
+      expect(labels.filter((label) => pile.includes(label ?? ''))).toEqual(pile)
       expect(labels).not.toContain('Envoyer un RCS au locataire')
       expect(labels).not.toContain('Envoyer un courriel au locataire')
       expect(labels).not.toContain('Envoyer un courrier postal au locataire')
-      expect(labels).toContain('Importer un email')
-      expect(labels).toContain('Changer les tags')
-      expect(labels).toContain('Affecter à un référent')
-      expect(labels).toContain('Générer un point de situation')
     } finally {
       await cleanup()
     }
@@ -362,7 +426,7 @@ describe('TicketComposeBlock', () => {
         await new Promise((resolve) => setTimeout(resolve, 300))
       })
       expect(document.body.textContent).toContain('Via Aravis')
-      expect(document.body.textContent).toContain('Objet')
+      expect(document.body.textContent).not.toContain('Objet')
       expect(buttonLabels()).toContain('Injecter dans Aravis')
       expect(buttonLabels()).not.toContain('Envoyer')
       expect(buttonLabels()).not.toContain('Exporter en DOCX')

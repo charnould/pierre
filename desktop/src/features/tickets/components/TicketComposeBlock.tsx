@@ -5,7 +5,6 @@ import {
   FolderKanban,
   ListTodo,
   MessageSquare,
-  MessageSquareWarning,
   Send,
   Tag,
   Upload,
@@ -46,6 +45,7 @@ import {
 import { getTicketExternalApplication } from '../lib/ticket-external-application'
 import { TICKET_TAG_OPTIONS } from '../lib/ticket-tags'
 import type { TicketComposeMode } from '../lib/use-tickets-view-data'
+import { TicketCellValue } from './TicketCellValue'
 import { TicketTenantReplyDraft, type TicketReplyFormat } from './TicketTenantReplyDraft'
 import { TicketTimelineCommentDraft } from './TicketTimelineCommentDraft'
 import { TicketTimelineSummarizeDraft } from './TicketTimelineSummarizeDraft'
@@ -158,6 +158,8 @@ export function TicketSummaryCard({
   const tenant =
     getTicketCellText(ticket, 'ids_locataires_concernes') ||
     getTicketCellText(ticket, 'id_locataire')
+  const lot = getTicketCellText(ticket, 'id_lot')
+  const site = getTicketCellText(ticket, 'id_site')
   const created = getTicketCellText(ticket, 'cree_le') || getTicketCellText(ticket, 'date_creation')
   const channel = getTicketCellText(ticket, 'canal_contact')
   const qualification =
@@ -168,15 +170,25 @@ export function TicketSummaryCard({
     getTicketCellText(ticket, 'statut') ||
     getTicketCellText(ticket, 'etat') ||
     getTicketCellText(ticket, 'dernier_evenement_type')
+  const claimState = getTicketCellText(ticket, 'etat_de_la_reclamation')
+  const progress = getTicketCellText(ticket, 'avancement')
   const effectiveReferent = referent || getTicketCellText(ticket, 'affectation_1')
-  const message =
-    getTicketCellText(ticket, 'message_initial') || getTicketCellText(ticket, 'message')
 
   return (
-    <InspectorSnapshotCard icon={MessageSquareWarning} className="mb-3">
+    <InspectorSnapshotCard className="mb-3">
       {tenant ? (
         <InspectorSnapshotFact label="Locataire">
           <span className="text-foreground break-words tabular-nums">{tenant}</span>
+        </InspectorSnapshotFact>
+      ) : null}
+      {lot ? (
+        <InspectorSnapshotFact label="Lot">
+          <span className="text-foreground break-words tabular-nums">{lot}</span>
+        </InspectorSnapshotFact>
+      ) : null}
+      {site ? (
+        <InspectorSnapshotFact label="Site">
+          <span className="text-foreground break-words tabular-nums">{site}</span>
         </InspectorSnapshotFact>
       ) : null}
       {created ? (
@@ -199,6 +211,24 @@ export function TicketSummaryCard({
           <span className="text-foreground break-words">{state}</span>
         </InspectorSnapshotFact>
       ) : null}
+      {claimState ? (
+        <InspectorSnapshotFact label="État">
+          <TicketCellValue
+            column="etat_de_la_reclamation"
+            value={claimState}
+            className="h-4 max-w-full px-1.5 py-0"
+          />
+        </InspectorSnapshotFact>
+      ) : null}
+      {progress ? (
+        <InspectorSnapshotFact label="Avancement">
+          <TicketCellValue
+            column="avancement"
+            value={progress}
+            className="h-4 max-w-full px-1.5 py-0"
+          />
+        </InspectorSnapshotFact>
+      ) : null}
       {bucket ? (
         <InspectorSnapshotFact label="Panier">
           <CaseBucketBadge bucket={getTicketBucketMeta(bucket)} />
@@ -216,11 +246,6 @@ export function TicketSummaryCard({
               {tag}
             </Badge>
           ))}
-        </InspectorSnapshotFact>
-      ) : null}
-      {message ? (
-        <InspectorSnapshotFact label="Message">
-          <span className="text-foreground break-words whitespace-pre-wrap">{message}</span>
         </InspectorSnapshotFact>
       ) : null}
     </InspectorSnapshotCard>
@@ -465,6 +490,16 @@ export function TicketComposeBlock(props: Props) {
             {...zoneMotion}
           >
             <TimelineActionRow
+              icon={Send}
+              label="Répondre au locataire"
+              onClick={props.onStartReply}
+            />
+            <TimelineActionRow
+              icon={ClipboardList}
+              label="Générer un point de situation"
+              onClick={props.onStartSummarize}
+            />
+            <TimelineActionRow
               icon={MessageSquare}
               label="Ajouter une note"
               onClick={props.onStartComment}
@@ -483,16 +518,6 @@ export function TicketComposeBlock(props: Props) {
               icon={FolderKanban}
               label="Changer de panier"
               onClick={props.onStartBucket}
-            />
-            <TimelineActionRow
-              icon={Send}
-              label="Répondre au locataire"
-              onClick={props.onStartReply}
-            />
-            <TimelineActionRow
-              icon={ClipboardList}
-              label="Générer un point de situation"
-              onClick={props.onStartSummarize}
             />
             <TimelineActionRow
               icon={Upload}

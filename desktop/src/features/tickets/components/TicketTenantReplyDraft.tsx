@@ -106,13 +106,13 @@ export function TicketTenantReplyDraft({
         </Select>
       </InspectorComposeField>
 
-      {variant !== 'rcs' ? (
+      {format === 'email' || format === 'letter' ? (
         <InspectorComposeField htmlFor={subjectId} label="Objet">
           <Input
             id={subjectId}
             value={subject}
             onChange={(event) => onSubjectChange(event.target.value)}
-            placeholder={variant === 'email' ? 'Objet du courriel' : 'Objet du courrier'}
+            placeholder={format === 'email' ? 'Objet du courriel' : 'Objet du courrier'}
             disabled={busy}
           />
         </InspectorComposeField>

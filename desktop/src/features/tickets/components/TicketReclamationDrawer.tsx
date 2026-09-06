@@ -379,6 +379,7 @@ export function TicketReclamationDrawer({
       })
       if (!result) return
       setBody(result.body)
+      if (target === 'external') return
       if (result.subject) setSubject(result.subject)
       else if (channel === 'email') {
         setSubject(EMAIL_SUBJECT_PLACEHOLDER)
@@ -747,8 +748,12 @@ export function TicketReclamationDrawer({
       className="flex-row items-center justify-between gap-2 border-b px-4 py-2 text-start"
     >
       <div className="min-w-0 flex-1">
-        <DrawerTitle>Réclamation</DrawerTitle>
-        <p className="truncate text-[0.8125rem] leading-5 tabular-nums">{idReclamation}</p>
+        <DrawerTitle
+          className="min-w-0 truncate font-sans text-sm leading-5 font-medium whitespace-nowrap tabular-nums"
+          title={idReclamation}
+        >
+          {idReclamation}
+        </DrawerTitle>
       </div>
       <Button
         type="button"
