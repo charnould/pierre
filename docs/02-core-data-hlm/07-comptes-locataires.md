@@ -2,29 +2,13 @@
 
 ## Objectif
 
-Exposer le **compte locataire sous forme de lignes** : chaque ligne est une écriture qui augmente ou diminue la dette du locataire envers le bailleur — appel de loyer, encaissement, aide CAF, régularisation de charges, frais de relance, travaux récupérables, rejet de prélèvement, annulation comptable, etc.
+Exposer le **compte locataire sous forme de lignes** : chaque ligne est une écriture comptable qui augmente ou diminue la dette du locataire envers le bailleur — appel de loyer, encaissement, aide CAF, régularisation de charges, frais de relance, travaux récupérables, rejet de prélèvement, annulation comptable, etc.
 
-L’objectif métier est de **reconstituer le solde** (« combien le locataire doit-il ? », « d’où vient cette dette ? », « lui doit-on de l’argent ? ») **sans export séparé de balance** : le solde est la somme des mouvements, pas une colonne pré-calculée.
+L’objectif-métier est de **reconstituer le solde** (« combien le locataire doit-il ? », « d’où vient cette dette ? », « lui doit-on de l’argent ? ») **sans export séparé de balance** : le solde est la somme des mouvements, pas une colonne pré-calculée.
 
 Le fichier ne se limite **pas** aux quittances émises : il couvre tout ce qui impacte le compte locataire en gestion locative et recouvrement.
 
 Il doit **impérativement** être nommé `comptes_locataires`.
-
-## Exemples de cas d’usage métier
-
-- **Suivi des impayés** — connaître le solde d’un locataire en place et l’historique qui l’explique (appels, paiements, rejets).
-- **Plans d’apurement** — identifier les échéances appelées (ex. `categorie` = `apurement`) et leur contribution au solde.
-- **Clients partis encore débiteurs** — conserver les mouvements des (ex-)locataires tant qu’une dette subsiste, même s’ils n’occupent plus de lot.
-- **Travaux récupérables** — relier une facturation locataire au bon de commande via `id_travaux` (cf. [`travaux`](06-travaux.md)).
-- **Recouvrement opérationnel** — détecter les rejets de prélèvement, frais contentieux, régularisations de charges.
-- **Brief Agent / IA** — expliquer l’origine d’un solde, son évolution mensuelle (`mois_concerne`), croiser dette et occupation patrimoniale via [`lots_locatifs`](03-lots-locatifs.md).
-
-## Ce que ce fichier n’est pas
-
-- **Pas** la comptabilité générale de l’organisme, ni le budget travaux, ni la trésorerie globale.
-- **Pas** un substitut aux quittances ou avis d’échéance PDF : ce sont des **mouvements tabulaires**, pas des documents.
-- **Pas** une balance âgée pré-calculée : le solde se **déduit par addition** des lignes (cf. [Règles de reconstitution du solde](#règles-de-reconstitution-du-solde)).
-- **Pas** limité aux seuls locataires en place : des mouvements peuvent concerner des **(ex-)locataires** absents de `lots_locatifs` (client parti avec dette).
 
 ## Nature du fichier : compte locataire par mouvement
 
@@ -42,7 +26,7 @@ Le solde se **reconstitue par somme** : il n'existe pas de colonne pré-calculé
 - **Historique suffisant** — le fichier doit permettre de recalculer le solde par somme des mouvements. Si l’historique intégral n’est pas disponible côté SI, un mouvement d’initialisation explicite (ex. `categorie` = `solde_initial`) doit porter le solde de départ.
 
 > [!NOTE]
-> **Reconstruction intégrale à l’import PIERRE** — Ce fichier n’est **pas** historisé comme `reclamations`. À chaque import, PIERRE **remplace l’ensemble** des mouvements précédemment chargés. Chaque export doit donc contenir l’**historique complet** du périmètre. Corollaire : pas de doublon inter-export si l’historique est complet.
+> **Reconstruction intégrale à l’import PIERRE** — Ce fichier n’est **pas** historisé. À chaque import, PIERRE **remplace l’ensemble** des mouvements précédemment chargés. Chaque export doit donc contenir l’**historique complet** du périmètre.
 
 ## Entité logique et convention de signe
 
@@ -59,7 +43,7 @@ Une ligne augmente ou diminue la **dette du locataire envers le bailleur** :
 
 ## Dossier locataire et personne (client)
 
-Dans le langage métier d’un ERP locatif :
+Dans le langage-métier d’un ERP locatif :
 
 - **`id_locataire`** = un **dossier locataire** (un bail, une occupation comptable, un compte locataire dans le SI).
 - **`id_client`** = la **personne** ; une même personne peut cumuler plusieurs `id_locataire` (successions de baux, plusieurs logements).
@@ -129,12 +113,3 @@ group by id_locataire;
 - `mode_de_paiement` : ex. `virement`, `prelevement`, `cheque`, `especes`
 - `plan_apurement_en_cours`: ex. `oui`/`non`
 - `date_de_naissance`
-
-## Questionnements internes (à challenger par GDH)
-
-- Comment identifier les rejets bancaires ?
-- GDH
-  - MàJ quotidienne vers 14h ?
-  - Identifier les rejets
-  - ajouter mode de paiement
-  - ajouter plan d'apurement en cours : oui/non (700/800 en flux environ chez GDH)
