@@ -77,10 +77,21 @@ Automatisations et Contacter par lots. Collection d’objets — ni Board ni Doc
 ### Conversation
 
 Discuter reprend la composition de `shadcn-ui/chatbot-template` : canvas initial vide, fil
-`max-w-2xl`, user bubble `muted`, assistant sans bulle colorée et dock inférieur. Aucun greeting,
+`max-w-[calc(42rem*1.15)]` (2xl + 15 %), user bubble `muted`, assistant sans bulle colorée et dock inférieur. Aucun greeting,
 exemple ou suggestion. Anatomie : message → travail de l’agent → réponse → état. Raisonnement et
 outils sont une preuve secondaire regroupée ; ils ne concurrencent jamais la réponse. Le
-Questionnaire prend temporairement la priorité dans le dock sans recouvrir le fil.
+Questionnaire prend temporairement la priorité dans le dock sans recouvrir le fil. Les réponses
+assistant et le greeting (`typeset-reply`) sont en Source Serif 4 (optical size, 16/1.55, graisse 450) ; chrome, bulle user, exemples, composer et traces restent Inter.
+
+Exception web (`/c`) : icône + greeting restent visibles dans le fil ; les exemples sont des
+bulles user `muted` alignées à droite et disparaissent dès le premier message. Le disclaimer
+apparaît après la première réponse assistant terminée. Pas
+de sélecteur de profil. Le scroll est celui de la fenêtre, pas d’un viewport interne. Le composer
+est `fixed` en bas de la fenêtre, champ flottant `rounded-2xl` (fond blanc, filet discret). Le
+thème est papier neutre plein écran (`chat-web/theme.css`), pas le taupe de `globals.css`. Typeset
+dense : `leading` 1.5, `flow` 0.75em, titres `h1–h4` à la taille du corps (`font-weight` 600),
+listes serrées (0.25em). Bulle utilisateur compacte `rounded-2xl`. La Conversation desktop reste
+sans introduction, avec scroll interne et tokens taupe.
 
 ### Login
 
@@ -407,8 +418,8 @@ Un Split qui produit du contenu généré conserve cette grammaire de configurat
   sur son `InputGroup`, liste `Item` compacte et erreurs inline ; pas de composer, de Dropzone ou de
   voile plein canvas.
 - Le résultat commence par une identité 14 medium et une méta 12 muted. Le travail de l’agent est
-  une preuve secondaire, avec la même divulgation reasoning + outils que Conversation : ouverte
-  pendant l’activité en `full`, fermée en `partial`, outils encore consultables en `off`.
+  une preuve secondaire, avec la même divulgation que Conversation : ouverte en `expanded`, fermée
+  en `collapsed`, outils seuls en `tools`, rien en `none`.
 - Le Markdown est rendu en `typeset` pendant et après le stream. Les nouveaux mots utilisent le
   reveal partagé et le caret ; le résultat reste immédiatement lisible avec
   `prefers-reduced-motion`.
@@ -418,14 +429,14 @@ Un Split qui produit du contenu généré conserve cette grammaire de configurat
 ### Conversation
 
 Composition `shadcn-ui/chatbot-template`, adaptée au desktop Pierre. Fil et dock partagent
-`max-w-2xl px-6`. Rythme fermé : 24 entre tours, 16 entre travail et réponse, 8 à l’intérieur d’un
+`max-w-[calc(42rem*1.15)] px-6`. Rythme fermé : 24 entre tours, 16 entre travail et réponse, 8 à l’intérieur d’un
 bloc. Le sélecteur de profil est le seul raccord visuel Pierre.
 
 Le travail de l’agent regroupe chaque suite contiguë de raisonnement et d’outils dans une seule
-divulgation. En `full`, elle est ouverte uniquement pendant l’activité puis se referme ; en
-`partial`, elle reste fermée ; en `off`, le raisonnement est masqué mais les outils restent
-consultables. Une fois terminé, son résumé porte durée et nombre d’outils. Les détails sont
-chronologiques : résumé et ligne d’outil en 12, raisonnement et sortie technique en mono 11/16.
+divulgation. `trace` a quatre modes : `none` ne montre rien ; `tools` montre seulement les outils ;
+`collapsed` reste fermée ; `expanded` reste ouverte, y compris après la fin du tour. Une fois
+terminé, son résumé porte durée et nombre d’outils. Les détails sont chronologiques : résumé et
+ligne d’outil en 12, raisonnement et sortie technique en mono 11/16.
 JSON, stdout et contenus techniques équivalents ont une divulgation secondaire fermée par défaut,
 même pendant le stream ; les réponses `ask_user` restent inline. Erreur ou interruption reste
 visible sous une réponse partielle, sans seconde alerte.
@@ -520,7 +531,7 @@ Light only. Pas de `.dark`. Thème shadcn taupe.
 
 ### Typographie
 
-Inter + JetBrains Mono. Pas de Lora. Pas d’autre famille. Inter pour toute donnée d’interface (IDs, montants, dates, en-têtes de colonnes) + `tabular-nums` sur les chiffres. JetBrains **uniquement** pour le littéral (JSON Paramètres, `<pre>`, raisonnement).
+Inter + JetBrains Mono. Pas de Lora. Inter pour toute donnée d’interface (IDs, montants, dates, en-têtes de colonnes) + `tabular-nums` sur les chiffres. JetBrains **uniquement** pour le littéral (JSON Paramètres, `<pre>`, raisonnement). Exception Conversation : Source Serif 4 sur le greeting et le corps des réponses assistant (`typeset-reply`), `/c` et Discuter.
 
 | Rôle                  | Taille            | Poids               | Classe / primitive                                       |
 | --------------------- | ----------------- | ------------------- | -------------------------------------------------------- |
@@ -743,7 +754,7 @@ Ne pas introduire / supprimer :
 | Reports HTML                          | Hors React                                                                  |
 | Mascotte                              | Hors React                                                                  |
 | DualTable                             | Boards uniquement                                                           |
-| Conversation                          | Famille propre (largeur interne `max-w-2xl`)                                |
+| Conversation                          | Famille propre (largeur interne `max-w-[calc(42rem*1.15)]`)                 |
 | Workspace                             | Famille propre                                                              |
 | ActivityReader                        | Overlay lecteur : `max-w-3xl`, `rounded-t-xl`                               |
 | Empty icon                            | Koboyo 160 (`size-40`), fill, pas de wash ; 32 in-table                     |

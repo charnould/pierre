@@ -1,5 +1,5 @@
 import { ArrowUpIcon, SquareIcon } from 'lucide-react'
-import { useState, type FormEvent, type KeyboardEvent } from 'react'
+import { useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react'
 
 import { ChatAttachmentItems } from '@/features/chat/components/ChatAttachmentItems'
 import { isChatGenerating, type ChatStatus } from '@/features/chat/lib/chat-session-types'
@@ -10,38 +10,30 @@ import {
   InputGroupButton,
   InputGroupTextarea
 } from '@/shared/components/ui/input-group'
-import type { ChatBootData } from '@/shared/types'
-
-import { ProfileSelector } from './ProfileSelector'
-
 interface Props {
-  boot: ChatBootData
   status: ChatStatus
-  agentName: string
   files: File[]
   previewUrls: Array<string | undefined>
   fileErrors: string[]
   dropActive: boolean
+  composerAccessory?: ReactNode
   onSend: (text: string, files?: File[]) => void
   onRemoveFile: (index: number) => void
   onFilesSent: () => void
   onStop: () => void
-  onProfileSelect: (id: string) => void
 }
 
 export function ChatComposer({
-  boot,
   status,
-  agentName,
   files,
   previewUrls,
   fileErrors,
   dropActive,
+  composerAccessory,
   onSend,
   onRemoveFile,
   onFilesSent,
-  onStop,
-  onProfileSelect
+  onStop
 }: Props) {
   const [draft, setDraft] = useState('')
   const [isComposing, setIsComposing] = useState(false)
@@ -101,14 +93,10 @@ export function ChatComposer({
           className="max-h-36 min-h-10 px-3 py-2"
         />
         <InputGroupAddon align="block-end" className="px-2 py-1 pb-1.5">
-          {boot.displayableConfigs.length > 0 ? (
-            <ProfileSelector
-              configs={boot.displayableConfigs}
-              activeId={boot.configId}
-              agentName={agentName}
-              onSelect={onProfileSelect}
-              disabled={generating}
-            />
+          {composerAccessory ? (
+            <div className={generating ? 'pointer-events-none opacity-50' : undefined}>
+              {composerAccessory}
+            </div>
           ) : null}
           {generating ? (
             <InputGroupButton

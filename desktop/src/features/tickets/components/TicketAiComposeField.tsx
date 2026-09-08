@@ -71,7 +71,7 @@ export function TicketAiComposeField({
         >
           <AgentWorkTrace
             parts={workParts}
-            display={showReasoning ? 'full' : 'off'}
+            display={showReasoning ? 'expanded' : 'none'}
             active={isStreaming}
             duration={reasoningDuration}
           />

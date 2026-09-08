@@ -1,8 +1,11 @@
 import { MessageSquare } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { DiscuterChat } from '@/features/chat/ChatPanel'
+import { useRegisterNavigationHandlers } from '@/contexts/NavigationHistoryContext'
+import { ChatPanel, type ChatPanelHandle } from '@/features/chat/ChatPanel'
+import { ProfileSelector } from '@/features/chat/components/ProfileSelector'
+import { createIpcChatTransport } from '@/features/chat/lib/ipc-chat-transport'
 import { panelScreen } from '@/features/workflow/components/WorkflowPanelChrome'
 import {
   Empty,
@@ -12,7 +15,8 @@ import {
   EmptyTitle
 } from '@/shared/components/ui/empty'
 import { Spinner } from '@/shared/components/ui/spinner'
-import type { ChatBootData } from '@/shared/types'
+import { releaseConversationVm } from '@/shared/lib/release-conversation-vm'
+import type { ChatBoot } from '@/shared/types'
 
 interface PanelProps {
   hidden: boolean
@@ -22,9 +26,10 @@ interface PanelProps {
 }
 
 export function ChatView({ hidden, isLoggedIn, agentName, url }: PanelProps) {
+  const panelRef = useRef<ChatPanelHandle>(null)
   const [bootSnapshot, setBootSnapshot] = useState<{
     url: string
-    data: ChatBootData | null
+    data: ChatBoot | null
   } | null>(null)
 
   useEffect(() => {
@@ -36,8 +41,33 @@ export function ChatView({ hidden, isLoggedIn, agentName, url }: PanelProps) {
   }, [hidden, isLoggedIn, url])
 
   const boot = bootSnapshot && bootSnapshot.url === url ? bootSnapshot.data : null
+  const transport = useMemo(() => (url ? createIpcChatTransport(url) : null), [url])
   const showPlaceholder = !isLoggedIn || !url || !boot
   const showBootLoading = Boolean(isLoggedIn && url && !hidden && bootSnapshot?.url !== url)
+
+  useRegisterNavigationHandlers('chat', {
+    beforeLeave: async () => {
+      if (!url || !boot) return
+      panelRef.current?.stop()
+      releaseConversationVm(url, boot.convId)
+    }
+  })
+
+  const handleProfileSelect = useCallback(
+    async (newConfigId: string) => {
+      if (!url || !boot || newConfigId === boot.configId) return
+      panelRef.current?.stop()
+      releaseConversationVm(url, boot.convId)
+      const data = await window.api.getChatBoot({ url, config: newConfigId })
+      if (!data) {
+        panelRef.current?.resetAfterAbortedStop()
+        return
+      }
+      panelRef.current?.clearMessages()
+      setBootSnapshot({ url, data })
+    },
+    [boot, url]
+  )
 
   return (
     <motion.div
@@ -69,12 +99,19 @@ export function ChatView({ hidden, isLoggedIn, agentName, url }: PanelProps) {
             </EmptyHeader>
           </Empty>
         </div>
-      ) : boot && url ? (
-        <DiscuterChat
-          url={url}
+      ) : boot && url && transport ? (
+        <ChatPanel
+          ref={panelRef}
           boot={boot}
-          agentName={agentName}
-          onBootChange={(data) => setBootSnapshot({ url, data })}
+          transport={transport}
+          composerAccessory={
+            <ProfileSelector
+              configs={boot.displayableConfigs}
+              activeId={boot.configId}
+              agentName={agentName}
+              onSelect={handleProfileSelect}
+            />
+          }
         />
       ) : null}
     </motion.div>

@@ -23,11 +23,11 @@ import {
 } from '@/shared/components/ui/empty'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
-import type { ReasoningDisplay } from '@/shared/types'
+import { showsThinking, type TraceMode } from '@/shared/types/chat'
 
 export type AboutOutputPanelProps = {
   url?: string
-  reasoningDisplay: ReasoningDisplay
+  reasoningDisplay: TraceMode
   workParts: AgentWorkPart[]
   reasoningDuration?: number
   isStreaming: boolean
@@ -96,7 +96,7 @@ export function AboutOutputPanel({
       <div className="flex min-w-0 shrink-0 items-center gap-2">
         {isStreaming ? (
           <WorkflowStreamStatusPill
-            showReasoningTokens={reasoningDisplay !== 'off'}
+            showReasoningTokens={showsThinking(reasoningDisplay)}
             isReasoningPhase={isReasoningPhase}
           />
         ) : null}

@@ -12,9 +12,9 @@ import type {
   PendingQuestionnaire
 } from '@/features/chat/lib/chat-session-types'
 import { applyChatStreamEvent, sealReasoningDuration } from '@/features/chat/lib/chat-stream-events'
+import type { ChatTransport } from '@/features/chat/lib/chat-transport'
 import type { AiStreamEvent } from '@/features/workflow/lib/parse-workflow-chunk'
 import { createRafThrottle } from '@/shared/lib/raf-throttle'
-import { cancelNdjsonStream, runNdjsonStream } from '@/shared/lib/run-ndjson-stream'
 
 export type { ChatConfig, ChatStatus, Message } from '@/features/chat/lib/chat-session-types'
 export { isChatGenerating } from '@/features/chat/lib/chat-session-types'
@@ -38,11 +38,14 @@ function isDeferredStreamEvent(event: AiStreamEvent): boolean {
   return event.type === 'text_delta' || event.type === 'thinking_delta'
 }
 
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError'
+}
+
 /**
- * In-memory chat session for the Electron panel.
- * Streams via IPC (`window.api.startStream`).
+ * In-memory chat session. Streaming and questionnaire go through `ChatTransport`.
  */
-export function useChatSession(config: ChatConfig) {
+export function useChatSession(config: ChatConfig, transport: ChatTransport) {
   const [messages, setMessages] = useState<Message[]>([])
   const [status, setStatus] = useState<ChatStatus>('ready')
   const [pendingQuestionnaire, setPendingQuestionnaire] = useState<PendingQuestionnaire | null>(
@@ -59,20 +62,21 @@ export function useChatSession(config: ChatConfig) {
   const messagesRef = useRef<Message[]>([])
   const generatingRef = useRef(false)
   const stoppedByUserRef = useRef(false)
-  const activeRequestIdRef = useRef<string | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
   const streamThrottleRef = useRef<ReturnType<typeof createRafThrottle> | null>(null)
   const configRef = useRef(config)
+  const transportRef = useRef(transport)
 
   useEffect(() => {
     configRef.current = config
+    transportRef.current = transport
   })
 
   useEffect(() => {
     return () => {
       streamThrottleRef.current?.cancel()
-      const requestId = activeRequestIdRef.current
-      if (requestId) cancelNdjsonStream(requestId)
-      activeRequestIdRef.current = null
+      abortRef.current?.abort()
+      abortRef.current = null
       generatingRef.current = false
     }
   }, [])
@@ -80,9 +84,8 @@ export function useChatSession(config: ChatConfig) {
   const clearMessages = useCallback(() => {
     streamThrottleRef.current?.cancel()
     streamThrottleRef.current = null
-    const requestId = activeRequestIdRef.current
-    if (requestId) cancelNdjsonStream(requestId)
-    activeRequestIdRef.current = null
+    abortRef.current?.abort()
+    abortRef.current = null
     generatingRef.current = false
     messagesRef.current = []
     setMessages(messagesRef.current)
@@ -144,119 +147,115 @@ export function useChatSession(config: ChatConfig) {
     generatingRef.current = true
     stoppedByUserRef.current = false
 
-    const requestId = crypto.randomUUID()
+    const abort = new AbortController()
+    abortRef.current = abort
     let attachmentUsageAcknowledged = false
-    activeRequestIdRef.current = requestId
     const publish = () => {
-      if (activeRequestIdRef.current !== requestId) return
+      if (abortRef.current !== abort) return
       messagesRef.current = streamState.messages
       setMessages(streamState.messages)
     }
     const streamThrottle = createRafThrottle(publish, CHAT_STREAM_FRAME_MS)
     streamThrottleRef.current = streamThrottle
-    const { url, convId, configId, dataParam } = configRef.current
-    const { ok, cancelled } = await runNdjsonStream({
-      requestId,
-      start: async (activeRequestId) => {
-        const uploadFiles = await Promise.all(
-          attachmentFiles.map(async (file) => ({
-            name: file.name,
-            type: file.type,
-            buffer: await file.arrayBuffer()
-          }))
-        )
-        return window.api.startStream({
-          requestId: activeRequestId,
-          url,
-          config: configId,
+    const { convId, configId, dataParam } = configRef.current
+
+    try {
+      await transportRef.current.stream(
+        {
+          configId,
+          convId,
+          dataParam,
           message: trimmed,
-          conv_id: convId,
-          data: dataParam,
-          ...(uploadFiles.length > 0 ? { files: uploadFiles } : {})
-        })
-      },
-      isCancelled: () => stoppedByUserRef.current,
-      onEvent: (event) => {
-        if (activeRequestIdRef.current !== requestId) return
-        if (event.type === 'attachment_uploads_ready' && attachmentFiles.length > 0) {
-          attachmentUsageAcknowledged = true
-          if (event.files !== undefined && event.bytes !== undefined) {
-            setAttachmentUsage({ files: event.files, bytes: event.bytes })
+          files: attachmentFiles
+        },
+        (event) => {
+          if (abortRef.current !== abort) return
+          if (event.type === 'attachment_uploads_ready' && attachmentFiles.length > 0) {
+            attachmentUsageAcknowledged = true
+            if (event.files !== undefined && event.bytes !== undefined) {
+              setAttachmentUsage({ files: event.files, bytes: event.bytes })
+            }
+            streamState.messages = streamState.messages.map((message) =>
+              message.id === userMsg.id
+                ? { ...message, attachmentFiles: undefined, attachmentsPersisted: true }
+                : message
+            )
           }
-          streamState.messages = streamState.messages.map((message) =>
-            message.id === userMsg.id
-              ? { ...message, attachmentFiles: undefined, attachmentsPersisted: true }
-              : message
+          if (event.type !== 'error') setStatus('streaming')
+          if (event.type === 'extension_ui_request') {
+            setPendingQuestionnaire({
+              requestId: event.requestId,
+              toolCallId: event.toolCallId,
+              responseSecret: event.responseSecret,
+              questions: event.questions
+            })
+            setQuestionnaireError(null)
+            setShowActivity(false)
+          } else if (
+            event.type === 'text_start' ||
+            event.type === 'text_delta' ||
+            event.type === 'text_end' ||
+            event.type === 'thinking_start' ||
+            event.type === 'thinking_delta' ||
+            event.type === 'thinking_end' ||
+            event.type === 'toolcall_start' ||
+            event.type === 'tool_execution_start' ||
+            event.type === 'tool_execution_update'
+          ) {
+            setShowActivity(false)
+          } else if (event.type === 'tool_execution_end') {
+            setShowActivity(true)
+          } else if (
+            event.type === 'stream_end' ||
+            event.type === 'error' ||
+            (event.type === 'message_end' &&
+              event.message.content.some(
+                (part) => part.type === 'text' && part.text.trim().length > 0
+              ))
+          ) {
+            setShowActivity(false)
+          }
+          streamState = applyChatStreamEvent(
+            streamState.messages,
+            event,
+            streamState.reasoningEndedAt
           )
-        }
-        if (event.type !== 'error') setStatus('streaming')
-        if (event.type === 'extension_ui_request') {
-          setPendingQuestionnaire({
-            requestId: event.requestId,
-            toolCallId: event.toolCallId,
-            responseSecret: event.responseSecret,
-            questions: event.questions
-          })
-          setQuestionnaireError(null)
-          setShowActivity(false)
-        } else if (
-          event.type === 'text_start' ||
-          event.type === 'text_delta' ||
-          event.type === 'text_end' ||
-          event.type === 'thinking_start' ||
-          event.type === 'thinking_delta' ||
-          event.type === 'thinking_end' ||
-          event.type === 'toolcall_start' ||
-          event.type === 'tool_execution_start' ||
-          event.type === 'tool_execution_update'
-        ) {
-          setShowActivity(false)
-        } else if (event.type === 'tool_execution_end') {
-          setShowActivity(true)
-        } else if (
-          event.type === 'stream_end' ||
-          event.type === 'error' ||
-          (event.type === 'message_end' &&
-            event.message.content.some(
-              (part) => part.type === 'text' && part.text.trim().length > 0
-            ))
-        ) {
-          setShowActivity(false)
-        }
-        streamState = applyChatStreamEvent(
-          streamState.messages,
-          event,
-          streamState.reasoningEndedAt
-        )
-        if (isDeferredStreamEvent(event)) {
-          streamThrottle.schedule()
-        } else if (event.type !== 'extension_ui_request') {
-          streamThrottle.flushNow()
-        }
-        if (event.type === 'error') setStatus('error')
-      }
-    })
-
-    if (activeRequestIdRef.current !== requestId) return
-
-    if (cancelled) {
+          if (isDeferredStreamEvent(event)) {
+            streamThrottle.schedule()
+          } else if (event.type !== 'extension_ui_request') {
+            streamThrottle.flushNow()
+          }
+          if (event.type === 'error') setStatus('error')
+        },
+        abort.signal
+      )
+    } catch (error) {
+      if (abortRef.current !== abort) return
       streamThrottle.flushNow()
       streamThrottleRef.current = null
-      activeRequestIdRef.current = null
+      abortRef.current = null
       generatingRef.current = false
-      stoppedByUserRef.current = false
-      setStatus('stopped')
+      if (stoppedByUserRef.current || isAbortError(error)) {
+        stoppedByUserRef.current = false
+        setStatus('stopped')
+        setShowActivity(false)
+        return
+      }
+      console.error('[useChatSession] Stream failed', error)
+      setStatus('error')
       setShowActivity(false)
       return
     }
 
-    if (!ok) {
+    if (abortRef.current !== abort) return
+
+    if (stoppedByUserRef.current) {
       streamThrottle.flushNow()
       streamThrottleRef.current = null
-      activeRequestIdRef.current = null
+      abortRef.current = null
       generatingRef.current = false
-      console.error('[useChatSession] Stream failed')
-      setStatus('error')
+      stoppedByUserRef.current = false
+      setStatus('stopped')
       setShowActivity(false)
       return
     }
@@ -282,10 +281,10 @@ export function useChatSession(config: ChatConfig) {
       false
     )
     streamThrottle.flushNow()
-    if (activeRequestIdRef.current !== requestId) return
+    if (abortRef.current !== abort) return
     streamThrottle.cancel()
     streamThrottleRef.current = null
-    activeRequestIdRef.current = null
+    abortRef.current = null
     generatingRef.current = false
     setShowActivity(false)
     setStatus((prev) => (prev === 'error' ? 'error' : 'ready'))
@@ -297,16 +296,14 @@ export function useChatSession(config: ChatConfig) {
     setQuestionnaireError(null)
     streamThrottleRef.current?.flushNow()
     streamThrottleRef.current = null
-    if (activeRequestIdRef.current) {
-      cancelNdjsonStream(activeRequestIdRef.current)
-      activeRequestIdRef.current = null
-    }
+    abortRef.current?.abort()
+    abortRef.current = null
     generatingRef.current = false
     setShowActivity(false)
     setStatus('stopped')
   }, [])
 
-  /** Undo a user-initiated stop when an follow-up action (e.g. profile switch) fails. */
+  /** Undo a user-initiated stop when a follow-up action (e.g. profile switch) fails. */
   const resetAfterAbortedStop = useCallback(() => {
     const last = messagesRef.current.at(-1)
     if (last?.role === 'assistant' && last.parts.length === 0) {
@@ -335,11 +332,10 @@ export function useChatSession(config: ChatConfig) {
       if (!pendingQuestionnaire) return false
       setQuestionnaireError(null)
       try {
-        const accepted = await window.api.postAiUiResponse({
-          url: configRef.current.url,
-          conv_id: configRef.current.convId,
-          request_id: pendingQuestionnaire.requestId,
-          response_secret: pendingQuestionnaire.responseSecret,
+        const accepted = await transportRef.current.submitQuestionnaire({
+          convId: configRef.current.convId,
+          requestId: pendingQuestionnaire.requestId,
+          responseSecret: pendingQuestionnaire.responseSecret,
           answers
         })
         if (accepted) {

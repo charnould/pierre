@@ -8,7 +8,7 @@ describe('AboutOutputPanel', () => {
   test('renders result identity, agent work and typeset output', () => {
     const markup = renderToStaticMarkup(
       <AboutOutputPanel
-        reasoningDisplay="full"
+        reasoningDisplay="expanded"
         workParts={[
           { type: 'thinking', contentIndex: 0, thinking: 'Analyse du dossier.' },
           {
@@ -41,7 +41,7 @@ describe('AboutOutputPanel', () => {
   test('uses the shared animated markdown caret while streaming', () => {
     const markup = renderToStaticMarkup(
       <AboutOutputPanel
-        reasoningDisplay="off"
+        reasoningDisplay="none"
         workParts={[]}
         isStreaming
         isReasoningPhase={false}

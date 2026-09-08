@@ -96,40 +96,21 @@ export function registerStreamHandlers(partition: string): void {
     const ses = session.fromPartition(partition)
 
     try {
-      if (params.files && params.files.length > 0) {
-        const formData = new FormData()
-        formData.set('config', params.config)
-        formData.set('message', params.message)
-        formData.set('conv_id', params.conv_id)
-        formData.set('data', params.data ?? '')
-        for (const file of params.files) {
-          formData.append('files', new Blob([file.buffer], { type: file.type }), file.name)
-        }
-
-        return await streamResponseToRenderer(
-          event,
-          params.requestId,
-          netFetch(`${params.url}/ai`, {
-            method: 'POST',
-            body: formData,
-            signal: controller.signal,
-            session: ses
-          }),
-          controller.signal
-        )
+      const formData = new FormData()
+      formData.set('config', params.config)
+      formData.set('message', params.message)
+      formData.set('conv_id', params.conv_id)
+      formData.set('data', params.data ?? '')
+      for (const file of params.files ?? []) {
+        formData.append('files', new Blob([file.buffer], { type: file.type }), file.name)
       }
-
-      const query = new URLSearchParams({
-        config: params.config,
-        message: params.message,
-        conv_id: params.conv_id,
-        data: params.data ?? ''
-      })
 
       return await streamResponseToRenderer(
         event,
         params.requestId,
-        netFetch(`${params.url}/ai?${query}`, {
+        netFetch(`${params.url}/ai`, {
+          method: 'POST',
+          body: formData,
           signal: controller.signal,
           session: ses
         }),

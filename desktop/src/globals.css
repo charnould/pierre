@@ -108,6 +108,7 @@
 @theme inline {
   --font-sans: InterVariable, ui-sans-serif, system-ui, sans-serif;
   --font-sans--font-feature-settings: var(--font-sans-features);
+  --font-serif: 'Source Serif 4 Variable', ui-serif, Georgia, 'Times New Roman', serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
   --radius-sm: 0.25rem;
   --radius-md: 0.375rem;

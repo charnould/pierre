@@ -1,0 +1,220 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import '../typeset.css';
+
+@font-face {
+  font-family: InterVariable;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../assets/fonts/InterVariable.woff2') format('woff2');
+}
+
+/*
+  /c — papier neutre. Pas le taupe de globals.css.
+*/
+:root {
+  --font-sans-features:
+    'calt' 1, 'dlig' 1, 'tnum' 1, 'case' 1, 'zero' 1, 'ss01' 1, 'ss02' 1, 'ss03' 1;
+  --font-heading: var(--font-sans);
+  --radius: 0.375rem;
+
+  --background: oklch(0.985 0.002 260);
+  --foreground: oklch(0.18 0.008 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.008 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.008 260);
+  --primary: oklch(0.18 0.008 260);
+  --primary-foreground: oklch(0.985 0.002 260);
+  --secondary: oklch(0.935 0.003 260);
+  --secondary-foreground: oklch(0.18 0.008 260);
+  --muted: oklch(0.935 0.003 260);
+  --muted-foreground: oklch(0.48 0.01 260);
+  --accent: oklch(0.935 0.003 260);
+  --accent-foreground: oklch(0.18 0.008 260);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.9 0.006 260);
+  --input: oklch(0.9 0.006 260);
+  --ring: oklch(0.62 0.01 260);
+  --chart-1: oklch(0.9 0.006 260);
+  --chart-2: oklch(0.7 0.01 260);
+  --chart-3: oklch(0.55 0.01 260);
+  --chart-4: oklch(0.4 0.01 260);
+  --chart-5: oklch(0.28 0.01 260);
+  --sidebar: oklch(0.985 0.002 260);
+  --sidebar-foreground: oklch(0.18 0.008 260);
+  --sidebar-primary: oklch(0.18 0.008 260);
+  --sidebar-primary-foreground: oklch(0.985 0.002 260);
+  --sidebar-accent: oklch(0.935 0.003 260);
+  --sidebar-accent-foreground: oklch(0.18 0.008 260);
+  --sidebar-border: oklch(0.9 0.006 260);
+  --sidebar-ring: oklch(0.62 0.01 260);
+}
+
+@theme inline {
+  --font-sans: InterVariable, ui-sans-serif, system-ui, sans-serif;
+  --font-sans--font-feature-settings: var(--font-sans-features);
+  --font-serif: 'Source Serif 4 Variable', ui-serif, Georgia, 'Times New Roman', serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply bg-background text-foreground scroll-smooth antialiased;
+  }
+  body {
+    @apply bg-background font-sans text-sm leading-5;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  @keyframes pierre-stream-blur-in {
+    0% {
+      display: none;
+      opacity: 0;
+      filter: blur(4px);
+    }
+    1% {
+      display: revert;
+      opacity: 0;
+      filter: blur(4px);
+    }
+    100% {
+      display: revert;
+      opacity: 1;
+      filter: blur(0);
+    }
+  }
+
+  @keyframes pierre-stream-caret {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  [data-pierre-stream-animate] {
+    animation: pierre-stream-blur-in 200ms ease-out var(--pierre-stream-delay, 0ms) backwards;
+  }
+
+  .generated-stream-caret > .typeset:last-child > :last-child::after {
+    display: inline;
+    vertical-align: baseline;
+    content: ' ▋';
+    animation: pierre-stream-caret 1s step-end infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-pierre-stream-animate] {
+      display: revert;
+      opacity: 1;
+      filter: none;
+      animation: none;
+    }
+
+    .generated-stream-caret > .typeset:last-child > :last-child::after {
+      animation: none;
+    }
+  }
+
+  .typeset :where(h1, h2, h3, h4, h5, h6) {
+    font-feature-settings: var(--font-sans-features);
+  }
+
+  .typeset {
+    --typeset-size: 0.9375rem;
+    --typeset-leading: 1.5;
+    --typeset-flow: 0.75em;
+    font-size: var(--typeset-size);
+  }
+
+  .typeset-docs {
+    --typeset-font-body: var(--font-sans);
+    --typeset-font-heading: var(--font-sans);
+    --typeset-font-mono: var(--font-mono);
+    --typeset-size: 0.9375rem;
+    --typeset-leading: 1.5;
+    --typeset-flow: 0.75em;
+  }
+
+  .typeset :where(h1, h2, h3, h4) {
+    font-size: 1em;
+    font-weight: 600;
+    line-height: 1.5;
+    margin-block-start: 1.15em;
+  }
+
+  .typeset :where(h1 + *, h2 + *, h3 + *, h4 + *) {
+    margin-block-start: 0.5em;
+  }
+
+  .typeset :where(li) {
+    margin-block-start: 0.25em;
+    padding-inline-start: 0.2em;
+  }
+
+  .typeset :where(li > p, li > ul, li > ol) {
+    margin-block-start: 0.25em;
+  }
+
+  [data-slot='bubble-content'] {
+    border-radius: 1rem;
+    padding-block: 0.375rem;
+    padding-inline: 0.75rem;
+    line-height: 1.45;
+  }
+
+  [data-slot='input-group'] {
+    border-radius: 1rem;
+    background-color: oklch(1 0 0);
+  }
+}

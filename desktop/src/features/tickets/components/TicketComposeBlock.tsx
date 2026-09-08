@@ -56,6 +56,7 @@ type TicketAiComposeMode = Extract<
 >
 
 const EXTERNAL_APPLICATION = getTicketExternalApplication(ticketConfig)
+export const TICKET_DOSSIER_ACTION_LABELS = ticketConfig.actions.dossier
 
 export type TicketAiGenerationProps = {
   target: TicketAiComposeMode
@@ -298,7 +299,7 @@ function ComposeDraft({
     return (
       <ActionPicker
         intent={composeMode === 'todo' ? 'todo' : 'done'}
-        actionLabels={[]}
+        actionLabels={TICKET_DOSSIER_ACTION_LABELS}
         url={props.url}
         todayIso={toLocalIsoDate(new Date())}
         saving={props.submitting}

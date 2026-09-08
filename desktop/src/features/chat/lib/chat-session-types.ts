@@ -58,7 +58,6 @@ export function isChatGenerating(status: ChatStatus): boolean {
 }
 
 export type ChatConfig = {
-  url: string
   convId: string
   configId: string
   dataParam: string

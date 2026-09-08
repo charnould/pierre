@@ -33,7 +33,7 @@ import {
   ResizablePanelGroup
 } from '@/shared/components/ui/resizable'
 import { useDebouncedWorkflowPatch } from '@/shared/hooks/useDebouncedWorkflowPatch'
-import { reasoningDisplayForSkill } from '@/shared/hooks/useSkillConfigs'
+import { traceForSkill } from '@/shared/hooks/useSkillConfigs'
 import { mergeAttachmentFiles } from '@/shared/lib/attachment-files'
 import type { AboutNavigationState, NavigationSnapshot } from '@/shared/lib/navigation-snapshot'
 import { releaseConversationVm } from '@/shared/lib/release-conversation-vm'
@@ -49,6 +49,7 @@ import {
 } from '@/shared/lib/ui-settings/schema'
 import { cn } from '@/shared/lib/utils'
 import type { Settings } from '@/shared/types'
+import { showsThinking } from '@/shared/types/chat'
 
 interface Props {
   hidden: boolean
@@ -196,7 +197,7 @@ export function AboutView({ hidden, settings, onNavigate, agentName }: Props) {
     errMsg
   } = state
   const reasoningDisplay =
-    reasoningCapture && Object.keys(skillConfigs).length === 0 ? 'full' : reasoningUi.display
+    reasoningCapture && Object.keys(skillConfigs).length === 0 ? 'expanded' : reasoningUi.display
   const hasOutputText = !!output.trim()
 
   const addFiles = useCallback((incoming: File[]) => {
@@ -246,7 +247,7 @@ export function AboutView({ hidden, settings, onNavigate, agentName }: Props) {
       year_to: to,
       context
     })
-    const display = reasoningDisplayForSkill(skillConfigs, id_skill)
+    const display = traceForSkill(skillConfigs, id_skill)
     let files: Array<{ name: string; type: string; buffer: ArrayBuffer }>
     try {
       files = await Promise.all(
@@ -273,7 +274,7 @@ export function AboutView({ hidden, settings, onNavigate, agentName }: Props) {
       payload: serializeWorkflowPayload(payload),
       id_skill,
       files,
-      captureReasoning: display !== 'off'
+      captureReasoning: showsThinking(display)
     })
   }, [
     settings.url,

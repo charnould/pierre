@@ -10,7 +10,7 @@ import { Button } from '@/shared/components/ui/button'
 import { Message, MessageContent } from '@/shared/components/ui/message'
 import { MessageScrollerItem } from '@/shared/components/ui/message-scroller'
 import { cn } from '@/shared/lib/utils'
-import type { ChatBootData } from '@/shared/types'
+import type { ChatBoot } from '@/shared/types'
 
 const COLUMN_CLASS = 'w-full min-w-0 text-inherit'
 
@@ -55,7 +55,7 @@ const ChatAssistantRow = memo(function ChatAssistantRow({
   msg: ChatMessage
   isLast: boolean
   status: ChatStatus
-  boot: ChatBootData
+  boot: ChatBoot
   onRegenerate?: () => void
   columnClass: string
 }) {
@@ -96,7 +96,11 @@ const ChatAssistantRow = memo(function ChatAssistantRow({
         {groups.map((group, index) => {
           if (group.type === 'text') {
             return (
-              <GeneratedMarkdown key={group.part.contentIndex} animated={isStreaming}>
+              <GeneratedMarkdown
+                key={group.part.contentIndex}
+                animated={isStreaming}
+                className="typeset-reply"
+              >
                 {group.part.text}
               </GeneratedMarkdown>
             )
@@ -105,7 +109,7 @@ const ChatAssistantRow = memo(function ChatAssistantRow({
             <AgentWorkTrace
               key={group.parts[0]?.contentIndex}
               parts={group.parts}
-              display={boot.reasoningDisplay}
+              display={boot.trace}
               active={isStreaming && index === groups.length - 1}
               duration={msg.reasoningDuration}
             />
@@ -171,7 +175,7 @@ const ChatUserRow = memo(function ChatUserRow({
 interface Props {
   messages: ChatMessage[]
   status: ChatStatus
-  boot: ChatBootData
+  boot: ChatBoot
   onRegenerate: () => void
 }
 

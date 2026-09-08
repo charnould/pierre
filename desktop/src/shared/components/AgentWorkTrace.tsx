@@ -13,7 +13,7 @@ import {
 import { readAskUserAnswers } from '@/shared/lib/read-ask-user-answers'
 import { createStreamingWordsPlugin } from '@/shared/lib/rehype-streaming-words'
 import { cn } from '@/shared/lib/utils'
-import type { ReasoningDisplay } from '@/shared/types'
+import { showsThinking, showsTools, type TraceMode } from '@/shared/types/chat'
 
 const TOOL_OUTPUT_LIMIT = 20_000
 const REMARK_PLUGINS = [remarkGfm]
@@ -236,19 +236,19 @@ export function AgentWorkTrace({
   duration
 }: {
   parts: AgentWorkPart[]
-  display: ReasoningDisplay
+  display: TraceMode
   active: boolean
   duration?: number
 }) {
-  const visibleParts = parts.filter(
-    (part) => part.type === 'tool' || (display !== 'off' && part.thinking.trim())
-  )
-  const [open, setOpen] = useState(display === 'full' && active)
-  const [syncKey, setSyncKey] = useState(`${display}:${active}`)
-  const nextKey = `${display}:${active}`
-  if (syncKey !== nextKey) {
-    setSyncKey(nextKey)
-    setOpen(display === 'full' && active)
+  const visibleParts = parts.filter((part) => {
+    if (part.type === 'thinking') return showsThinking(display) && part.thinking.trim()
+    return showsTools(display)
+  })
+  const [open, setOpen] = useState(display === 'expanded')
+  const [syncKey, setSyncKey] = useState(display)
+  if (syncKey !== display) {
+    setSyncKey(display)
+    setOpen(display === 'expanded')
   }
 
   if (visibleParts.length === 0) return null
@@ -256,7 +256,7 @@ export function AgentWorkTrace({
   return (
     <Reasoning
       className="mb-0"
-      displayMode={display === 'full' ? 'full' : 'partial'}
+      displayMode={display === 'expanded' ? 'full' : 'partial'}
       duration={duration}
       isReasoningActive={active}
       isStreaming={active}

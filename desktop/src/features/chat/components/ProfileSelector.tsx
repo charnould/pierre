@@ -6,10 +6,10 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/shared/components/ui/select'
-import type { ChatBootData } from '@/shared/types'
+import type { ChatBoot } from '@/shared/types'
 
 interface Props {
-  configs: ChatBootData['displayableConfigs']
+  configs: ChatBoot['displayableConfigs']
   activeId: string
   agentName: string
   onSelect: (id: string) => void

@@ -55,7 +55,7 @@ import type {
   PreviewBulkOperationMessagePayload,
   PreviewBulkOperationQueryPayload
 } from '../src/shared/types/bulk-operations'
-import type { ChatBootData, SkillSummary } from '../src/shared/types/chat'
+import type { ChatBoot, SkillSummary } from '../src/shared/types/chat'
 import type { DatastoreTablesResponse } from '../src/shared/types/datastore-tables'
 import type {
   LedgerListResponse,
@@ -160,7 +160,7 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke(IpcChannel.auth.login, params),
   loginStored: () => ipcRenderer.invoke(IpcChannel.auth.loginStored),
   getChatBoot: (params: { url: string; config?: string; data?: string }) =>
-    ipcRenderer.invoke(IpcChannel.auth.getChatBoot, params) as Promise<ChatBootData | null>,
+    ipcRenderer.invoke(IpcChannel.auth.getChatBoot, params) as Promise<ChatBoot | null>,
   startStream: (params: {
     requestId: string
     url: string

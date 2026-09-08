@@ -5,7 +5,7 @@ import { captureReasoningForSkill, reasoningUiForSkill } from './useSkillConfigs
 describe('reasoningUiForSkill', () => {
   test('hides reasoning when skill is unknown', () => {
     expect(reasoningUiForSkill({}, 'missing')).toEqual({
-      display: 'off',
+      display: 'none',
       showReasoningTokens: false,
       reasoningCollapsible: 'full'
     })
@@ -16,14 +16,14 @@ describe('reasoningUiForSkill', () => {
     expect(captureReasoningForSkill({}, 'about.summary')).toBe(true)
   })
 
-  test('captureReasoningForSkill respects loaded off config', () => {
+  test('captureReasoningForSkill respects loaded none config', () => {
     expect(
       captureReasoningForSkill(
         {
           'ticket.answer-ticket': {
             id: 'ticket.answer-ticket',
             display: 'x',
-            reasoning_display: 'off'
+            trace: 'none'
           }
         },
         'ticket.answer-ticket'
@@ -31,20 +31,20 @@ describe('reasoningUiForSkill', () => {
     ).toBe(false)
   })
 
-  test('enables partial collapsible mode', () => {
+  test('enables collapsed collapsible mode', () => {
     expect(
       reasoningUiForSkill(
         {
           'ticket.answer-ticket': {
             id: 'ticket.answer-ticket',
             display: 'x',
-            reasoning_display: 'partial'
+            trace: 'collapsed'
           }
         },
         'ticket.answer-ticket'
       )
     ).toEqual({
-      display: 'partial',
+      display: 'collapsed',
       showReasoningTokens: true,
       reasoningCollapsible: 'partial'
     })

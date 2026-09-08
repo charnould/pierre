@@ -1,19 +1,10 @@
-export type ReasoningDisplay = 'off' | 'partial' | 'full'
+export type { ChatBoot, TraceMode } from '../../../../shared/chat'
+export { isTraceMode, showsThinking, showsTools } from '../../../../shared/chat'
+
+import type { TraceMode } from '../../../../shared/chat'
 
 export type SkillSummary = {
   id: string
   display: string
-  reasoning_display: ReasoningDisplay
-}
-
-export type ChatBootData = {
-  convId: string
-  configId: string
-  dataParam: string
-  disclaimer: string | null
-  greeting: string[]
-  examples: string[]
-  displayableConfigs: { id: string; display: string; is_active: boolean }[]
-  reasoningDisplay: ReasoningDisplay
-  layout: 'default' | 'compact'
+  trace: TraceMode
 }

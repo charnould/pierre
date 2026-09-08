@@ -46,7 +46,7 @@ import type {
   PreviewBulkOperationMessagePayload,
   PreviewBulkOperationQueryPayload
 } from './bulk-operations'
-import type { ChatBootData, SkillSummary } from './chat'
+import type { ChatBoot, SkillSummary } from './chat'
 import type { DatastoreTablesResponse } from './datastore-tables'
 import type {
   LedgerListResponse,
@@ -140,8 +140,8 @@ declare global {
         url: string
         config?: string
         data?: string
-      }) => Promise<ChatBootData | null>
-      /** `GET /ai` canonical structured NDJSON stream; chunks via `onAiChunk`. */
+      }) => Promise<ChatBoot | null>
+      /** `POST /ai` canonical structured NDJSON stream; chunks via `onAiChunk`. */
       startStream: (params: {
         requestId: string
         url: string

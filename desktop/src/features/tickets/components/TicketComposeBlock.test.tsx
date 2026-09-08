@@ -370,6 +370,29 @@ describe('TicketComposeBlock', () => {
     }
   })
 
+  test('alimente les actions dossier depuis la customization Tickets', async () => {
+    const ticketConfig = (await import('@customization/tickets/config')).default
+    const { TICKET_DOSSIER_ACTION_LABELS } = await import('./TicketComposeBlock')
+    expect(TICKET_DOSSIER_ACTION_LABELS).toEqual([...ticketConfig.actions.dossier])
+    expect(TICKET_DOSSIER_ACTION_LABELS).toContain('Analyser le dossier')
+
+    const todo = await renderCompose('todo')
+    try {
+      expect(document.querySelector('[aria-label="Action"]')).not.toBeNull()
+      expect(document.body.textContent).toContain('Créer une tâche')
+    } finally {
+      await todo.cleanup()
+    }
+
+    const action = await renderCompose('action')
+    try {
+      expect(document.querySelector('[aria-label="Action"]')).not.toBeNull()
+      expect(document.body.textContent).toContain('Consigner une action réalisée')
+    } finally {
+      await action.cleanup()
+    }
+  })
+
   test('le composeur RCS masque l’objet et expose les actions communes', async () => {
     const { cleanup } = await renderCompose('rcs')
     try {
