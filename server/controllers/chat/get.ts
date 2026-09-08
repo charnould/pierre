@@ -5,6 +5,7 @@ import type { Context } from 'hono'
 import { z } from 'zod'
 
 import type { Config, Parsed_User } from '../../utils/_schema'
+import { loadChatbotConfig } from '../../utils/chatbot-config'
 import { CUSTOMIZATION_DIR } from '../../utils/paths'
 import { view } from '../../views/chat.index'
 
@@ -22,16 +23,13 @@ import { view } from '../../views/chat.index'
  */
 export const controller = async (c: Context) => {
   try {
-    const user = c.get('user') as Parsed_User | null
     const config = c.req.query('config') as string
-    const active_config = (await import(`../../../customization/chatbots/${config}/config`))
-      .default as Config
-    const displayable_configs = await get_displayable_configs({
-      user,
-      active_config
-    })
-
-    return c.html(view({ active_config, displayable_configs }))
+    const active_config = await loadChatbotConfig(config)
+    const dataParam =
+      c.req.query('data') === 'undefined' || c.req.query('data') === undefined
+        ? ''
+        : (c.req.query('data') ?? '')
+    return c.html(view({ active_config, displayable_configs: [], dataParam }))
   } catch (error) {
     console.error('Error loading configurations:', error)
     return c.html('<p>Internal Server Error</p>', 500)
@@ -68,6 +66,8 @@ export const get_displayable_configs = async (params: {
     const assets = await readdir(join(CUSTOMIZATION_DIR, 'chatbots'))
     const configs = await Promise.all(
       assets.map(async (file) => {
+        const path = join(CUSTOMIZATION_DIR, 'chatbots', file, 'config.ts')
+        if (!(await Bun.file(path).exists())) return null
         const config: Config = (await import(`../../../customization/chatbots/${file}/config`))
           .default
         const should_be_displayed =
@@ -89,6 +89,7 @@ export const get_displayable_configs = async (params: {
     )
 
     return configs
+      .filter((config): config is NonNullable<typeof config> => config !== null)
       .filter(({ is_active, should_be_displayed }) => is_active || should_be_displayed)
       .filter(({ user_is_authorized }) => user_is_authorized)
       .sort((a, b) => a.display.localeCompare(b.display))

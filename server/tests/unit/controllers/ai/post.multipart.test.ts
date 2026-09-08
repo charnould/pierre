@@ -101,6 +101,51 @@ describe('POST /ai multipart and stream boundary', () => {
     expect(conversationReservationCount(CONV_ID)).toBe(0)
   })
 
+  it('rejects files when attachments are disabled before reservation or processing', async () => {
+    let processed = false
+    const disabledApp = new Hono()
+    disabledApp.use('*', async (c, next) => {
+      c.set('user' as never, { email: 'alice@example.org', config: ['locked'] } as never)
+      await next()
+    })
+    disabledApp.post(
+      '/ai',
+      createPostAiController({
+        uploadsPath: (configName) => `/uploads/${configName}`,
+        loadConfig: async (configName) => ({
+          id: configName,
+          protected: false,
+          attachments: false
+        }),
+        parseContext: async (value) => value as never,
+        processAttachments: async () => {
+          processed = true
+          throw new Error('should not process attachments')
+        },
+        streamRequest: async (c) => c.text('should-not-stream'),
+        streamError: (c) => c.text('should-not-error')
+      })
+    )
+
+    const form = new FormData()
+    form.set('config', 'locked')
+    form.set('message', 'Question')
+    form.set('conv_id', CONV_ID)
+    form.append('files', new File(['secret'], 'note.txt', { type: 'text/plain' }))
+
+    const response = await disabledApp.request('/ai', { method: 'POST', body: form })
+
+    expect(response.status).toBe(403)
+    expect(await response.json()).toEqual({
+      error: {
+        code: 'attachments_disabled',
+        message: 'Attachments are disabled for this chatbot'
+      }
+    })
+    expect(processed).toBe(false)
+    expect(conversationReservationCount(CONV_ID)).toBe(0)
+  })
+
   it('normalizes absent custom data and emits a stream error when preprocessing fails', async () => {
     const form = new FormData()
     form.set('config', 'testing_purpose_1')

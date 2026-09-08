@@ -1,5 +1,7 @@
 import { z } from 'zod/v4'
 
+import { TRACE_MODES } from '../../shared/chat'
+
 /**
  * Represents a User schema definition using Zod.
  *
@@ -42,19 +44,25 @@ export const Skill = z.object({
  */
 export const Parsed_User = User.extend({ config: z.array(z.string()) })
 
-//
-// `./customization/chatbots` config schema
-export const Config = z
+const AgentFields = {
+  id: z.string(),
+  display: z.string(),
+  protected: z.boolean(),
+  community_knowledge: z.boolean(),
+  reasoning_effort: z.enum(['low', 'medium', 'high']),
+  trace: z.enum(TRACE_MODES)
+}
+
+export const ChatbotConfig = z
   .object({
-    id: z.string(),
-    display: z.string(),
+    ...AgentFields,
     show: z.array(z.string()),
     custom_data: z.object({ format: z.function() }).or(z.object({})),
     api: z
       .array(
         z.object({
           key: z.enum(['WEBHOOK_KEY_1', 'WEBHOOK_KEY_2', 'WEBHOOK_KEY_3']),
-          url: z.string(), // URL check is made elsewhere
+          url: z.string(),
           format: z.function({
             input: [
               z.object({ custom_data: z.array(z.string()), content: z.string(), role: z.string() })
@@ -64,42 +72,17 @@ export const Config = z
         })
       )
       .default([]),
-    community_knowledge: z.boolean(),
     disclaimer: z.string().nullable(),
     greeting: z.array(z.string()),
     examples: z.array(z.string()),
-    protected: z.boolean(),
-    reasoning_display: z.enum(['off', 'partial', 'full']).default('off'),
-    reasoning_effort: z.enum(['low', 'medium', 'high']).default('medium'),
-    reasoning_placeholders: z
-      .array(z.string())
-      .min(1)
-      .default([
-        'Je réfléchis…',
-        'Je creuse la question…',
-        'Les rouages tournent…',
-        "J'analyse tout ça…",
-        'Je pèse les options…',
-        'Je tisse les fils…',
-        "J'assemble les pièces…",
-        'Je cherche la meilleure approche…',
-        "Je mets de l'ordre dans tout ça…",
-        'Je passe ça au crible…',
-        'Je synthétise…',
-        'Je retourne le problème dans tous les sens…',
-        'Je fouille dans les possibilités…',
-        'Je fais le tour de la question…',
-        'Ça avance…',
-        'Je peaufine la réponse…',
-        'Je vérifie mes angles…',
-        "Je prends le temps d'y réfléchir…",
-        'Je démêle tout ça…',
-        'Je mets les idées en ordre…'
-      ]),
-    // `compact`: centered composer (desktop default). `default`: greeting + vertical examples.
-    layout: z.enum(['default', 'compact']).default('default')
+    attachments: z.boolean()
   })
   .strict()
+
+export const SkillConfig = z.object(AgentFields).strict()
+
+/** Conversation persistence and `/ai` use chatbot configs. */
+export const Config = ChatbotConfig
 
 //
 // Reflects datastore database schema
@@ -203,7 +186,9 @@ export type User = z.infer<typeof User>
 export type Skill = z.infer<typeof Skill>
 export type Reply = z.infer<typeof Reply>
 export type Model = z.infer<typeof Model>
-export type Config = z.infer<typeof Config>
+export type ChatbotConfig = z.infer<typeof ChatbotConfig>
+export type SkillConfig = z.infer<typeof SkillConfig>
+export type Config = ChatbotConfig
 export type AIContext = z.infer<typeof AIContext>
 export type Parsed_User = z.infer<typeof Parsed_User>
 export type Augmented_Query = z.infer<typeof Augmented_Query>

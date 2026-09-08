@@ -3,7 +3,7 @@ import type { PiImageContent, ProcessedPiAttachments } from './ai-attachments'
 import { streamCopilot } from './copilot-agent'
 import { save_reply } from './handle-conversation'
 import { send_telemetry } from './send-telemetry'
-import { copilotChunkToNdjson, ndjsonLine, type ReasoningDisplay } from './stream-to-ndjson'
+import { copilotChunkToNdjson, ndjsonLine } from './stream-to-ndjson'
 import { CHAT_TELEMETRY_EVENT } from './telemetry-event'
 
 /**
@@ -38,7 +38,7 @@ export function streamChatAnswer(
       let fullContent = ''
       let inputTokens: number | null = null
       let outputTokens: number | null = null
-      const reasoningDisplay: ReasoningDisplay = context.config.reasoning_display ?? 'off'
+      const trace = context.config.trace
 
       for await (const chunk of streamCopilot(
         context.conv_id,
@@ -58,7 +58,7 @@ export function streamChatAnswer(
           outputTokens = chunk.outputTokens ?? null
         }
 
-        for (const event of copilotChunkToNdjson(chunk, reasoningDisplay)) {
+        for (const event of copilotChunkToNdjson(chunk, trace)) {
           yield ndjsonLine(event)
         }
       }

@@ -2,36 +2,34 @@ import { html, raw } from 'hono/html'
 
 import type { Displayable_configs } from '../controllers/chat/get'
 import type { Config } from '../utils/_schema'
-import { buildChatBootData } from '../utils/chat-boot'
+import { buildChatBoot } from '../utils/chat-boot'
 
 export const view = (params: {
   active_config: Config
   displayable_configs: Displayable_configs
+  dataParam?: string
 }) => {
-  // Boot data serialized as JSON, with `<` escaped to prevent `</script>` from closing the tag
   const bootData = JSON.stringify(
-    buildChatBootData(params.active_config, params.displayable_configs)
+    buildChatBoot(params.active_config, params.displayable_configs, params.dataParam)
   ).replace(/</g, '\\u003c')
 
   return html`<!doctype html>
-    <html lang="fr" class="scroll-smooth bg-white tracking-[-0.1px] antialiased">
+    <html lang="fr" class="scroll-smooth antialiased">
       <head>
         <meta charset="UTF-8" />
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
         />
-        <link rel="preconnect" href="https://rsms.me" />
-        <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        <link rel="stylesheet" href="../assets/dist/css/style.1788526646178.css" />
+        <link rel="stylesheet" href="../assets/dist/css/style.1788813906141.css" />
         <link rel="icon" href="/branding/system.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/branding/icons/ios/180.png" />
         <link rel="manifest" href="/branding/manifest.webmanifest" />
-        <script type="module" src="../assets/dist/js/ai.1788526646178.js"></script>
+        <script type="module" src="../assets/dist/js/ai.1788813906141.js"></script>
         <title>Comment puis-je vous aider ? 🖐️</title>
       </head>
 
-      <body class="mx-auto h-svh max-w-4xl">
+      <body class="bg-background">
         <script type="application/json" id="pierre-data">
           ${raw(bootData)}
         </script>

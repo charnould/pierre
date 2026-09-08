@@ -12,7 +12,7 @@ import TurndownService from 'turndown'
 import * as XLSX from 'xlsx'
 import * as cpexcel from 'xlsx/dist/cpexcel.full.mjs'
 
-import { Config } from '../_schema'
+import { ChatbotConfig, SkillConfig } from '../_schema'
 import { CUSTOMIZATION_DIR, datastorePaths } from '../paths'
 import {
   is_code_postal_column,
@@ -62,14 +62,19 @@ const rename_files_recursively = async (dir_path: string): Promise<void> => {
  *
  * @returns An array of `Config` objects for all chatbots and skills found.
  */
-const load_configs = async (): Promise<Config[]> => {
-  const configs: Config[] = []
+type KnowledgeProfile = { id: string; community_knowledge: boolean }
+
+const load_configs = async (): Promise<KnowledgeProfile[]> => {
+  const configs: KnowledgeProfile[] = []
 
   const chatbot_dirs = await readdir(join(CUSTOMIZATION_DIR, 'chatbots'))
   for (const dir of chatbot_dirs) {
-    const content = (await import(`../../../customization/chatbots/${dir}/config`))
-      .default as Config
-    configs.push(content)
+    const path = join(CUSTOMIZATION_DIR, 'chatbots', dir, 'config.ts')
+    if (!existsSync(path)) continue
+    const parsed = ChatbotConfig.safeParse(
+      (await import(`../../../customization/chatbots/${dir}/config`)).default
+    )
+    if (parsed.success) configs.push(parsed.data)
   }
 
   const skillsDir = join(CUSTOMIZATION_DIR, 'skills')
@@ -77,9 +82,10 @@ const load_configs = async (): Promise<Config[]> => {
     const skill_entries = await readdir(skillsDir, { withFileTypes: true })
     for (const entry of skill_entries.filter((e) => e.isDirectory())) {
       try {
-        const content = (await import(`../../../customization/skills/${entry.name}/config`))
-          .default as Config
-        configs.push(content)
+        const parsed = SkillConfig.safeParse(
+          (await import(`../../../customization/skills/${entry.name}/config`)).default
+        )
+        if (parsed.success) configs.push(parsed.data)
       } catch (error) {
         console.warn(`⚠️ Skipping invalid skill config — ${entry.name}`, error)
       }

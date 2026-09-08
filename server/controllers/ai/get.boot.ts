@@ -1,7 +1,9 @@
 import type { Context } from 'hono'
 
 import type { Config, Parsed_User } from '../../utils/_schema'
-import { buildChatBootData } from '../../utils/chat-boot'
+import { buildChatBoot } from '../../utils/chat-boot'
+import { ChatConfigAccessError, resolveAuthorizedChatConfig } from '../../utils/chat-config-access'
+import { ChatbotConfigError, loadChatbotConfig } from '../../utils/chatbot-config'
 import { get_displayable_configs } from '../chat/get'
 
 async function resolveActiveConfig(c: Context): Promise<Config> {
@@ -9,27 +11,18 @@ async function resolveActiveConfig(c: Context): Promise<Config> {
   const queryConfig = c.req.query('config')
 
   if (queryConfig === undefined) {
-    if (user?.config?.length) {
+    const first = user?.config?.[0]
+    if (first) {
       try {
-        return (await import(`../../../customization/chatbots/${user.config[0]}/config`)).default
+        return await loadChatbotConfig(first)
       } catch {
-        return (await import('../../../customization/chatbots/default/config')).default
+        // Fall through to default when the stored profile no longer exists.
       }
     }
-    return (await import('../../../customization/chatbots/default/config')).default
+    return loadChatbotConfig('default')
   }
 
-  try {
-    if (user !== null && user !== undefined) {
-      if (user.config.includes(queryConfig)) {
-        return (await import(`../../../customization/chatbots/${queryConfig}/config`)).default
-      }
-      return (await import(`../../../customization/chatbots/${user.config[0]}/config`)).default
-    }
-    return (await import(`../../../customization/chatbots/${queryConfig}/config`)).default
-  } catch {
-    return (await import('../../../customization/chatbots/default/config')).default
-  }
+  return resolveAuthorizedChatConfig(queryConfig, user)
 }
 
 /**
@@ -46,8 +39,11 @@ export const controller = async (c: Context) => {
         ? ''
         : (c.req.query('data') ?? '')
 
-    return c.json(buildChatBootData(active_config, displayable_configs, dataParam))
+    return c.json(buildChatBoot(active_config, displayable_configs, dataParam))
   } catch (error) {
+    if (error instanceof ChatConfigAccessError || error instanceof ChatbotConfigError) {
+      return c.json({ error: { code: error.code, message: error.message } }, error.status)
+    }
     console.error('[get.ai.boot] Error:', error)
     return c.json({ error: 'Internal Server Error' }, 500)
   }

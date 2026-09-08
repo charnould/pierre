@@ -1,18 +1,15 @@
 import { beforeAll, expect, it } from 'bun:test'
 
-import { SQL } from 'bun'
-
 import { delete_all_users, save_user } from '../../utils/handle-user'
 import {
   clickAndWait,
   createE2EView,
   currentUrl,
+  evaluate,
   fillInput,
   getCookies,
   navigate
 } from './launch-browser'
-
-const _sql = new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
 
 beforeAll(async () => {
   Bun.env['SERVICE'] = 'pierre-production'
@@ -52,14 +49,18 @@ it('should redirect and resolve configuration access correctly for anonymous and
   cookie = (await getCookies(view)).find((cookie) => cookie.name === 'pierre-ia')
   expect(cookie).toBeDefined()
 
-  // Test fallback to default config when accessing an unknown config
   await navigate(view, 'http://localhost:3000/c?config=non_existing&data=')
-  expect(await currentUrl(view)).toBe('http://localhost:3000/c?config=demo&data=')
+  expect(await currentUrl(view)).toBe('http://localhost:3000/c?config=non_existing&data=')
+  expect(await evaluate<string>(view, 'document.body.textContent')).toContain(
+    'Configuration introuvable.'
+  )
 
   await navigate(view, 'http://localhost:3000/c?config=hello_wordg&data=')
-  expect(await currentUrl(view)).toBe('http://localhost:3000/c?config=demo&data=')
+  expect(await currentUrl(view)).toBe('http://localhost:3000/c?config=hello_wordg&data=')
+  expect(await evaluate<string>(view, 'document.body.textContent')).toContain(
+    'Configuration introuvable.'
+  )
 
-  // Test user can access config he has access to
-  await navigate(view, 'http://localhost:3000/c?config=demog&data=')
+  await navigate(view, 'http://localhost:3000/c?config=demo&data=')
   expect(await currentUrl(view)).toBe('http://localhost:3000/c?config=demo&data=')
 })

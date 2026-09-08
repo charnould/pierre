@@ -61,9 +61,10 @@ export class AttachmentRequestError extends Error {
       | 'too_many_files'
       | 'file_too_large'
       | 'attachments_too_large'
-      | 'unsupported_attachment',
+      | 'unsupported_attachment'
+      | 'attachments_disabled',
     message: string,
-    readonly status: 400 | 413 = 400
+    readonly status: 400 | 403 | 413 = 400
   ) {
     super(message)
     this.name = 'AttachmentRequestError'
