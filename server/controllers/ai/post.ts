@@ -11,6 +11,7 @@ import {
   type ProcessedPiAttachments
 } from '../../utils/ai-attachments'
 import { ChatConfigAccessError, resolveAuthorizedChatConfig } from '../../utils/chat-config-access'
+import { loadChatbotConfig } from '../../utils/chatbot-config'
 import { getUploadsPath } from '../../utils/smolvm'
 import { streamChatRequest, streamChatRequestError } from '../../utils/stream-chat-request'
 import { reserveConversation } from '../../utils/vm-registry'
@@ -28,8 +29,7 @@ const defaultDependencies: PostAiDependencies = {
   processAttachments: processUploadedAttachments,
   uploadsPath: getUploadsPath,
   parseContext: (value) => AIContext.parseAsync(value),
-  loadConfig: async (configName) =>
-    (await import(`../../../customization/chatbots/${configName}/config`)).default,
+  loadConfig: loadChatbotConfig,
   streamRequest: streamChatRequest,
   streamError: streamChatRequestError
 }
@@ -63,12 +63,19 @@ export const createPostAiController =
         c.get('user') as Parsed_User | null | undefined,
         deps.loadConfig
       )
-      const uploadRoot = deps.uploadsPath(config.id)
       const fileParts = formData.getAll('files')
       if (!fileParts.every((part): part is File => part instanceof File)) {
         throw new AttachmentRequestError('invalid_multipart', 'Invalid multipart file field')
       }
       const rawFiles = fileParts
+      if (rawFiles.length > 0 && config.attachments === false) {
+        throw new AttachmentRequestError(
+          'attachments_disabled',
+          'Attachments are disabled for this chatbot',
+          403
+        )
+      }
+      const uploadRoot = deps.uploadsPath(config.id)
       assertAttachmentLimits(rawFiles)
       releaseReservation = reserveConversation(conv_id)
       processed = bindAttachmentReservation(

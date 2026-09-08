@@ -5,6 +5,7 @@ import { getSignedCookie } from 'hono/cookie'
 import { COMMUNICATION_TYPES } from '../../shared/activites'
 import { get_user } from '../utils/handle-user'
 import type { Config, Parsed_User } from './_schema'
+import { ChatbotConfigError, loadChatbotConfig } from './chatbot-config'
 
 //
 //
@@ -50,37 +51,24 @@ export const authenticate = async (c: Context, next: Next) => {
     }
   }
 
-  // Check if a valid `config` query is provided in the request. If provided,
-  // attempt to load the corresponding config from the `customization/chatbots` folder. If the
-  // query is invalid or missing, fall back to the `default` config
-  let has_valid_config_query = false
-
-  const config: Config = await (async () => {
-    if (c.req.query('config') === undefined) {
-      has_valid_config_query = false
-      return (await import('../../customization/chatbots/default/config')).default
-    }
+  const requestedConfig = c.req.query('config')
+  let config: Config | null = null
+  let configError: ChatbotConfigError | null = null
+  if (requestedConfig === undefined) {
+    config = await loadChatbotConfig('default')
+  } else {
     try {
-      if (user !== null) {
-        has_valid_config_query = user.config.includes(c.req.query('config') as string)
-        if (has_valid_config_query) {
-          return (await import(`../../customization/chatbots/${c.req.query('config')}/config`))
-            .default
-        }
-        return (await import(`../../customization/chatbots/${user.config[0]}/config`)).default
-      }
-      has_valid_config_query = true
-      return (await import(`../../customization/chatbots/${c.req.query('config')}/config`)).default
-    } catch {
-      has_valid_config_query = false
-      return (await import('../../customization/chatbots/default/config')).default
+      config = await loadChatbotConfig(requestedConfig)
+    } catch (error) {
+      if (error instanceof ChatbotConfigError) configError = error
+      else throw error
     }
-  })()
+  }
 
   // Determine if the requested `context` is protected (i.e., accessible only by
   // authenticated users). The `auth` property in the config determines if
   // authentication is required for the context
-  const is_protected = config.protected ?? false
+  const is_protected = config?.protected ?? false
 
   // Retrieve the `data` query parameter from the request,
   // defaulting to '' if not specified.
@@ -99,37 +87,31 @@ export const authenticate = async (c: Context, next: Next) => {
   if (c.req.path === '/c' || c.req.path.startsWith('/c/')) {
     c.set('user', user)
 
-    const compact_param = c.req.query('compact') !== undefined ? '&compact' : ''
+    if (requestedConfig === undefined) {
+      return c.redirect(`/c?config=default&data=${data_query}`)
+    }
 
-    // Case 0: Invalid config query
-    // If the config query is invalid, redirect
+    if (!config || configError) {
+      return c.html('<p>Configuration introuvable.</p>', 404)
+    }
+
+    if (user !== null && is_protected && !user.config.includes(config.id)) {
+      return c.html('<p>Accès refusé.</p>', 403)
+    }
+
     if (c.req.query('data') === undefined || c.req.query('data') === 'undefined') {
-      return c.redirect(`/c?config=${config.id}&data=${data_query}${compact_param}`)
+      return c.redirect(`/c?config=${config.id}&data=${data_query}`)
     }
 
-    // Case 1: Invalid config query
-    // If the config query is invalid, redirect
-    if (has_valid_config_query === false) {
-      return c.redirect(`/c?config=${config.id}&data=${data_query}${compact_param}`)
-    }
-
-    // Case 2: Context not protected
-    // If the context is not protected, proceed to the next middleware
     if (is_protected === false) {
       return await next()
     }
 
-    // Case 3: No access to protected context
-    // If the context is protected but the user does
-    // not have access, redirect to the login page
     if (is_protected === true && can_access_protected_context === false) {
       const redirection = `c/?config=${config.id}&data=${data_query}`
       return c.redirect(`/a/login?redirection=${encodeURIComponent(redirection)}`)
     }
 
-    // Case 4: Access to protected context granted
-    // If the context is protected and the user has
-    // access, proceed to the next middleware
     if (is_protected === true && can_access_protected_context === true) {
       return await next()
     }

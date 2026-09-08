@@ -1,6 +1,6 @@
 import { expect, it } from 'bun:test'
 
-import { createE2EView, currentUrl, navigate } from './launch-browser'
+import { createE2EView, currentUrl, evaluate, navigate } from './launch-browser'
 
 it('returns JSON for unknown communication API routes instead of redirecting to chat', async () => {
   const response = await fetch('http://localhost:3000/communications/unknown', {
@@ -34,13 +34,17 @@ it('should redirect to the default config for invalid paths and parameters + pre
 
   const path = 'http://localhost:3000/c'
 
-  // Using invalid or missing config/context query
-  // parameters should fallback to default config
   await navigate(view, `${path}?config=wrong_config`)
-  expect(await currentUrl(view)).toBe('http://localhost:3000/c?config=default&data=')
+  expect(await currentUrl(view)).toContain('config=wrong_config')
+  expect(await evaluate<string>(view, 'document.body.textContent')).toContain(
+    'Configuration introuvable.'
+  )
 
   await navigate(view, `${path}?config=wrong_config&context=wrong_context`)
-  expect(await currentUrl(view)).toBe('http://localhost:3000/c?config=default&data=')
+  expect(await currentUrl(view)).toContain('config=wrong_config')
+  expect(await evaluate<string>(view, 'document.body.textContent')).toContain(
+    'Configuration introuvable.'
+  )
 
   // Providing a valid config but missing data should
   // still resolve properly, adding an empty data param

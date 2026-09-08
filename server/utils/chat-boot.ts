@@ -1,23 +1,14 @@
+import type { ChatBoot } from '../../shared/chat'
 import type { Displayable_configs } from '../controllers/chat/get'
 import type { Config } from './_schema'
 
-export type ChatBootData = {
-  convId: string
-  configId: string
-  dataParam: string
-  disclaimer: string | null
-  greeting: string[]
-  examples: string[]
-  displayableConfigs: { id: string; display: string; is_active: boolean }[]
-  reasoningDisplay: 'off' | 'partial' | 'full'
-  reasoningPlaceholders: string[]
-}
+export type { ChatBoot }
 
-export function buildChatBootData(
+export function buildChatBoot(
   active_config: Config,
   displayable_configs: Displayable_configs,
   dataParam = ''
-): ChatBootData {
+): ChatBoot {
   return {
     convId: Bun.randomUUIDv7(),
     configId: active_config.id,
@@ -30,7 +21,7 @@ export function buildChatBootData(
       display: c.display,
       is_active: c.id === active_config.id
     })),
-    reasoningDisplay: active_config.reasoning_display,
-    reasoningPlaceholders: active_config.reasoning_placeholders
+    trace: active_config.trace,
+    attachments: active_config.attachments
   }
 }

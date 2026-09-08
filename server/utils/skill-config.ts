@@ -1,7 +1,7 @@
 import { existsSync, realpathSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
-import type { Config } from './_schema'
+import { SkillConfig, type SkillConfig as SkillConfigType } from './_schema'
 import { CUSTOMIZATION_SKILLS_DIR, resolvePathWithin } from './paths'
 
 const CANONICAL_SKILL_ID = /^[a-z0-9]+(?:[.-][a-z0-9]+)*$/
@@ -25,13 +25,16 @@ export function assertCanonicalSkillId(value: string): string {
   return skillId
 }
 
-export function assertMatchingSkillConfig(skillId: string, config: Pick<Config, 'id'>): void {
+export function assertMatchingSkillConfig(
+  skillId: string,
+  config: Pick<SkillConfigType, 'id'>
+): void {
   if (config.id !== skillId) {
     throw new SkillRequestError('skill_not_found', 'Skill is not configured', 404)
   }
 }
 
-export async function loadConfiguredSkill(skillIdInput: string): Promise<Config> {
+export async function loadConfiguredSkill(skillIdInput: string): Promise<SkillConfigType> {
   const skillId = assertCanonicalSkillId(skillIdInput)
   const configPath = resolvePathWithin(CUSTOMIZATION_SKILLS_DIR, skillId, 'config.ts')
   if (!existsSync(configPath)) {
@@ -42,9 +45,12 @@ export async function loadConfiguredSkill(skillIdInput: string): Promise<Config>
   resolvePathWithin(CUSTOMIZATION_SKILLS_DIR, realConfigPath)
 
   try {
-    const config = (await import(pathToFileURL(realConfigPath).href)).default as Config
-    assertMatchingSkillConfig(skillId, config)
-    return config
+    const parsed = SkillConfig.safeParse((await import(pathToFileURL(realConfigPath).href)).default)
+    if (!parsed.success) {
+      throw new SkillRequestError('skill_not_found', 'Skill is not configured', 404)
+    }
+    assertMatchingSkillConfig(skillId, parsed.data)
+    return parsed.data
   } catch (error) {
     if (error instanceof SkillRequestError) throw error
     throw new SkillRequestError('skill_not_found', 'Skill is not configured', 404)

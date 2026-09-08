@@ -15,7 +15,6 @@ import { controller as post_admin_knowledge } from './controllers/admin/knowledg
 import { controller as get_admin_statistics } from './controllers/admin/statistics/get'
 import { controller as get_admin_users } from './controllers/admin/users/get'
 import { controller as post_admin_users } from './controllers/admin/users/post'
-import { controller as get_ai } from './controllers/ai/get'
 import { controller as get_ai_boot } from './controllers/ai/get.boot'
 import { controller as get_ai_skills } from './controllers/ai/get.skills'
 import { controller as post_ai } from './controllers/ai/post'
@@ -163,7 +162,6 @@ app.use('/customization/*', serveStatic({ root: CUSTOMIZATION_STATIC_ROOT }))
 
 // AI generation routes
 app.get('/c', authenticate, get_index)
-app.get('/ai', authenticate, get_ai)
 app.post('/ai', aiMultipartBodyLimit, authenticate, post_ai)
 app.get('/ai/boot', authenticate, get_ai_boot)
 app.get('/ai/skills', authenticate, get_ai_skills)
@@ -297,9 +295,13 @@ app.notFound(async (c) => {
     )
   }
 
-  return c.redirect(
-    `/c?config=${c.req.query('config')}&data=${c.req.query('data')}${c.req.query('compact') !== undefined ? '&compact' : ''}`
-  )
+  const configQuery = c.req.query('config')
+  const dataQuery =
+    c.req.query('data') === 'undefined' || c.req.query('data') === undefined
+      ? ''
+      : c.req.query('data')
+  const config = !configQuery || configQuery === 'undefined' ? 'default' : configQuery
+  return c.redirect(`/c?config=${config}&data=${dataQuery}`)
 })
 
 // Handle errors by returning a 404 response

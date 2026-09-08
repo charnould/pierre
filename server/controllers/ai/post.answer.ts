@@ -63,7 +63,7 @@ export const createPostAnswerController =
         )
       }
 
-      const reasoningDisplay = skillConfig.reasoning_display
+      const trace = skillConfig.trace
 
       const uploadRoot = getUploadsPath(skill)
       const fileParts = formData.getAll('files')
@@ -101,7 +101,7 @@ export const createPostAnswerController =
               'medium',
               { workflowPayload, onVmAcquired: attachmentLifecycle.claim }
             )) {
-              for (const event of copilotChunkToNdjson(chunk, reasoningDisplay)) {
+              for (const event of copilotChunkToNdjson(chunk, trace)) {
                 await s.write(ndjsonLine(event))
               }
             }

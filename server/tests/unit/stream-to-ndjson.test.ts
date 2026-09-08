@@ -8,14 +8,14 @@ describe('copilotChunkToNdjson', () => {
     expect([
       ...copilotChunkToNdjson(
         { type: 'done', fullContent: 'final', inputTokens: 1, outputTokens: 2 },
-        'off'
+        'none'
       )
     ]).toEqual([{ type: 'stream_end' }])
   })
 
-  test('filters structured thinking when off', () => {
+  test('filters structured thinking when none', () => {
     expect([
-      ...copilotChunkToNdjson({ type: 'thinking_delta', contentIndex: 0, delta: 'private' }, 'off')
+      ...copilotChunkToNdjson({ type: 'thinking_delta', contentIndex: 0, delta: 'private' }, 'none')
     ]).toEqual([])
     expect([
       ...copilotChunkToNdjson(
@@ -29,7 +29,7 @@ describe('copilotChunkToNdjson', () => {
             ]
           }
         },
-        'off'
+        'none'
       )
     ]).toEqual([
       {
@@ -37,6 +37,71 @@ describe('copilotChunkToNdjson', () => {
         message: { role: 'assistant', content: [{ type: 'text', text: 'public' }] }
       }
     ])
+  })
+
+  test('hides thinking but keeps tools in tools mode', () => {
+    expect([...copilotChunkToNdjson({ type: 'thinking_start', contentIndex: 0 }, 'tools')]).toEqual(
+      []
+    )
+    expect([
+      ...copilotChunkToNdjson(
+        { type: 'toolcall_start', contentIndex: 1, toolCallId: 'call-1', toolName: 'read' },
+        'tools'
+      )
+    ]).toEqual([
+      { type: 'toolcall_start', contentIndex: 1, toolCallId: 'call-1', toolName: 'read' }
+    ])
+    expect([
+      ...copilotChunkToNdjson(
+        {
+          type: 'message_end',
+          message: {
+            role: 'assistant',
+            content: [
+              { type: 'thinking', thinking: 'private' },
+              { type: 'toolCall', id: 'call-1', name: 'read', arguments: {} },
+              { type: 'text', text: 'public' }
+            ]
+          }
+        },
+        'tools'
+      )
+    ]).toEqual([
+      {
+        type: 'message_end',
+        message: {
+          role: 'assistant',
+          content: [
+            { type: 'toolCall', id: 'call-1', name: 'read', arguments: {} },
+            { type: 'text', text: 'public' }
+          ]
+        }
+      }
+    ])
+  })
+
+  test('keeps thinking and tools for collapsed and expanded', () => {
+    const thinking = { type: 'thinking_delta' as const, contentIndex: 0, delta: 'why' }
+    const tool = {
+      type: 'tool_execution_end' as const,
+      toolCallId: 'call-1',
+      toolName: 'read',
+      result: { content: [] },
+      isError: false
+    }
+    expect([...copilotChunkToNdjson(thinking, 'collapsed')]).toEqual([thinking])
+    expect([...copilotChunkToNdjson(tool, 'collapsed')]).toEqual([tool])
+    expect([...copilotChunkToNdjson(thinking, 'expanded')]).toEqual([thinking])
+    expect([...copilotChunkToNdjson(tool, 'expanded')]).toEqual([tool])
+  })
+
+  test('none also drops tool events', () => {
+    expect([
+      ...copilotChunkToNdjson(
+        { type: 'toolcall_start', contentIndex: 1, toolCallId: 'call-1', toolName: 'read' },
+        'none'
+      )
+    ]).toEqual([])
   })
 
   test('ndjsonLine appends newline', () => {

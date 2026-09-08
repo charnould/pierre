@@ -5,15 +5,14 @@ import {
   clickAndWait,
   createE2EView,
   currentUrl,
-  elementHrefs,
+  evaluate,
   fillInput,
   getCookies,
   navigate,
   waitForDom
 } from './launch-browser'
 
-it('should display the correct config options for anonymous and authenticated users', async () => {
-  // Initial setup
+it('loads the requested chatbot without a profile selector', async () => {
   Bun.env['SERVICE'] = 'pierre-production'
   await delete_all_users()
 
@@ -26,30 +25,18 @@ it('should display the correct config options for anonymous and authenticated us
 
   await using view = createE2EView()
 
-  // Case 1
-  // Visit chatbot page as an anonymous user
   await navigate(view, 'http://localhost:3000/c')
-  const cookie = (await getCookies(view)).find((cookie) => cookie.name === 'pierre-ia')
   expect(await currentUrl(view)).toBe('http://localhost:3000/c?config=default&data=')
-  expect(cookie).toBeUndefined()
+  expect((await getCookies(view)).find((cookie) => cookie.name === 'pierre-ia')).toBeUndefined()
+  await waitForDom(view, 'document.querySelector("img[src=\\"/branding/system.svg\\"]")')
+  expect(await evaluate<string>(view, 'document.body.innerText')).toContain('Bonjour')
+  expect(await evaluate<number>(view, 'document.querySelectorAll("a[data-config]").length')).toBe(0)
 
-  // Case 2
-  // Visit an alternative non protected config as an anonymous user
   await navigate(view, 'http://localhost:3000/?config=testing_purpose_2')
   expect(await currentUrl(view)).toBe('http://localhost:3000/c?config=testing_purpose_2&data=')
-  await waitForDom(view, 'document.querySelector("a[data-config]")')
+  await waitForDom(view, 'document.querySelector("#root")')
+  expect(await evaluate<number>(view, 'document.querySelectorAll("a[data-config]").length')).toBe(0)
 
-  let configs = await elementHrefs(view, 'a[data-config]')
-
-  expect(configs).toEqual([
-    'http://localhost:3000/?config=demo',
-    'http://localhost:3000/?config=default',
-    'http://localhost:3000/?config=testing_purpose_1',
-    'http://localhost:3000/?config=testing_purpose_2'
-  ])
-
-  // Case 3
-  // Visit a protected config and log in
   await navigate(view, 'http://localhost:3000/?config=testing_purpose_1')
   expect(await currentUrl(view)).toBe(
     'http://localhost:3000/a/login?redirection=c%2F%3Fconfig%3Dtesting_purpose_1%26data%3D'
@@ -61,14 +48,6 @@ it('should display the correct config options for anonymous and authenticated us
     url: 'http://localhost:3000/c?config=testing_purpose_1&data='
   })
   expect(await currentUrl(view)).toBe('http://localhost:3000/c?config=testing_purpose_1&data=')
-
-  await waitForDom(view, 'document.querySelector("a[data-config]")')
-
-  configs = await elementHrefs(view, 'a[data-config]')
-
-  expect(configs).toEqual([
-    'http://localhost:3000/?config=demo',
-    'http://localhost:3000/?config=testing_purpose_1',
-    'http://localhost:3000/?config=testing_purpose_2'
-  ])
+  await waitForDom(view, 'document.querySelector("#root")')
+  expect(await evaluate<number>(view, 'document.querySelectorAll("a[data-config]").length')).toBe(0)
 })

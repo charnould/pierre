@@ -31,23 +31,16 @@
     "mammoth": "^1.12.2",
     "oxfmt": "catalog:",
     "pizzip": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:",
     "reamkit": "^1.29.0",
-    "streamdown": "catalog:",
     "turndown": "^7.2.4",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.3.3",
     "@types/bun": "catalog:",
     "@types/jsdom": "catalog:",
     "@types/lodash": "^4.17.25",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
     "@types/turndown": "^5.0.6",
-    "tailwindcss": "catalog:",
     "typescript": "catalog:"
   }
 }
