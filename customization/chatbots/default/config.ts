@@ -1,4 +1,4 @@
-import type { Config } from '../../../server/utils/_schema'
+import type { ChatbotConfig } from '../../../server/utils/_schema'
 
 //
 // ASTUCE : Pour vous assurer que le fichier de configuration est correctement
@@ -50,22 +50,20 @@ export default {
   // cette configuration). Uniquement `low`, `medium` et `high` sont disponibles.
   reasoning_effort: 'medium',
 
-  // Permet d'afficher les traces de raisonnement de l'agent dans l'interface.
-  // - `off`    : skimmer avec messages rotatifs codés dans l'app (pas de traces).
-  // - `partial`: traces partielles de raisonnement.
-  // - `full`   : traces complètes de raisonnement.
-  reasoning_display: 'off',
+  // Trace visible dans l'interface.
+  // - `none`      : aucune trace.
+  // - `tools`     : outils seuls.
+  // - `collapsed` : raisonnement et outils repliés.
+  // - `expanded`  : raisonnement et outils ouverts.
+  trace: 'none',
+  attachments: true,
 
-  // Le message qui s'affiche en mode `layout: 'default'` (masqué en mode `compact`).
   greeting: [
     'Bonjour 🖐️,',
     'Je suis PIERRE, une intelligence artificielle open source, personnalisable et plurilingue au service du mouvement HLM, de ses candidats, locataires et collaborateurs.',
     'Ma mission : répondre 24/7/365 à toutes les questions de « premier niveau » des candidats et locataires ou celles (plus complexes) des équipes.',
     "PS. Je n'ai pas connaissance à ce jour des spécificités des bailleurs."
   ],
-
-  // `compact` : composer centré, exemples discrets (défaut desktop). `default` : greeting + liste verticale.
-  layout: 'compact',
 
   // Les exemples qui s'affichent par défaut dans l'interface de PIERRE.
   examples: [
@@ -129,4 +127,4 @@ export default {
       })
     }
   ]
-} as Config
+} satisfies ChatbotConfig

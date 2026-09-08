@@ -1,4 +1,4 @@
-import type { Config } from '../../../server/utils/_schema'
+import type { ChatbotConfig } from '../../../server/utils/_schema'
 
 export default {
   id: 'zmode',
@@ -21,6 +21,7 @@ export default {
     'Donne-moi des idées pour mieux vivre avec ses voisins en logement social'
   ],
   disclaimer: 'Une IA peut se tromper. Vérifiez les informations importantes.',
-  reasoning_display: 'off',
+  trace: 'none',
+  attachments: true,
   reasoning_effort: 'medium'
-} as Config
+} satisfies ChatbotConfig

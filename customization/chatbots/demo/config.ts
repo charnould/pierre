@@ -1,4 +1,4 @@
-import type { Config } from '../../../server/utils/_schema'
+import type { ChatbotConfig } from '../../../server/utils/_schema'
 
 export default {
   id: 'demo',
@@ -25,6 +25,7 @@ export default {
   ],
   disclaimer:
     "Eiffel peut faire des erreurs et n'est affilié d'aucune façon à Grand Dijon Habitat (démonstration uniquement).",
-  reasoning_display: 'full',
+  trace: 'expanded',
+  attachments: true,
   reasoning_effort: 'medium'
-} as Config
+} satisfies ChatbotConfig

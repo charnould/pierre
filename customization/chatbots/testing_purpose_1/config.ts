@@ -1,4 +1,4 @@
-import type { Config } from '../../../server/utils/_schema'
+import type { ChatbotConfig } from '../../../server/utils/_schema'
 
 export default {
   id: 'testing_purpose_1',
@@ -11,7 +11,7 @@ export default {
   greeting: ["Cette configuration n'existe qu'à des fins de tests"],
   examples: [],
   disclaimer: null,
-  reasoning_display: 'off',
-  reasoning_effort: 'medium',
-  layout: 'compact'
-} satisfies Config
+  trace: 'none',
+  attachments: true,
+  reasoning_effort: 'medium'
+} satisfies ChatbotConfig

@@ -19,6 +19,38 @@ export default {
     }
   ],
 
+  actions: {
+    dossier: [
+      'Analyser le dossier',
+      'Joindre le locataire',
+      'Constater un appel sans réponse',
+      'Réaliser une visite',
+      'Demander des pièces',
+      'Analyser un rejet de prélèvement',
+      'Modifier l’échéance de prélèvement',
+      'Proposer un plan',
+      'Préparer un projet de plan',
+      'Relancer une échéance de plan',
+      'Constater un incident de plan',
+      'Modifier un plan',
+      'Contacter la CAF',
+      'Transmettre une saisine CAF',
+      'Transmettre une mainlevée CAF',
+      'Contacter un travailleur social',
+      'Transmettre un dossier FSL',
+      'Solliciter un partenaire',
+      'Saisir la CCAPEX',
+      'Demander un commandement de payer',
+      'Enregistrer la signification du commandement de payer',
+      'Transférer le dossier au contentieux',
+      'Enregistrer une démarche Banque de France',
+      'Dénoncer un plan Banque de France',
+      'Contacter les héritiers ou le notaire',
+      'Enregistrer un paiement',
+      'Clôturer le dossier'
+    ]
+  },
+
   /*
     tags — étiquettes métier proposées dans le drawer
 
