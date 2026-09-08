@@ -4,8 +4,7 @@
   "ignore": [
     "desktop/src/assets/report/**/*",
     "server/assets/dist/**/*",
-    "server/assets/embed/*.css",
-    "server/assets/tailwind/*.css"
+    "server/assets/embed/*.css"
   ],
   // Installed by deployment scripts in the VM host environment, not by Bun.
   "ignoreBinaries": ["smolvm"],
@@ -45,7 +44,9 @@
         "preload/index.ts!",
         "preload/mascot.ts!",
         "src/app/main.tsx!",
+        "src/chat-web/main.tsx!",
         "src/mascot/main.tsx!",
+        "vite.chat-web.config.ts!",
         "perf/cli.ts!",
         "**/*.test.ts",
         "**/*.test.tsx"
@@ -74,15 +75,11 @@
         "app.ts!",
         "assets/embed/pierre-embed.ts!",
         "assets/host/pierre.ts!",
-        "assets/scripts/ai.tsx!",
         "utils/knowledge/scrape-wikipedia.ts!",
         "utils/update-pierre.ts!",
-        "assets/scripts/**/*.test.ts",
         "tests/**/*.test.ts"
       ],
-      "project": ["**/*.{ts,tsx,css}!", "!tests/**!", "!assets/scripts/**/*.test.ts!"],
-      // The build script invokes Tailwind through its resolved local binary.
-      "ignoreDependencies": ["@tailwindcss/cli", "tailwindcss"]
+      "project": ["**/*.{ts,tsx,css}!", "!tests/**!"]
     }
   }
 }

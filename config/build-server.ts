@@ -61,9 +61,10 @@ await $`rm -rf ${SERVER}/assets/dist/css`
 await $`rm -rf ${SERVER}/assets/dist/js`
 await $`find ${ROOT} -name ".DS_Store" -type f -delete`
 
-// Compile production CSS file (local CLI — avoid bunx @latest resolving/updating lockfile)
-const tailwindcss = join(SERVER, 'node_modules/.bin/tailwindcss')
-await $`${tailwindcss} -i ${SERVER}/assets/tailwind/style.css -o ${SERVER}/assets/dist/css/style.${timestamp}.css --minify`
+const desktop = join(ROOT, 'desktop')
+await $`PIERRE_ASSET_STAMP=${String(timestamp)} bun x --bun vite build --config ${desktop}/vite.chat-web.config.ts`.cwd(
+  desktop
+)
 
 const embed_frame_css = minifyCss(
   await Bun.file(join(PIERRE_EMBED, 'pierre-embed-frame.css')).text()
@@ -74,8 +75,6 @@ await Bun.write(
   await buildPierreEmbedModalCss()
 )
 
-// Transpile and minify .ts/.tsx scripts into .js to work in browser.
-await $`bun build ${SERVER}/assets/scripts/ai.tsx --outfile ${SERVER}/assets/dist/js/ai.${timestamp}.js --minify --target browser --production`
 await $`bun build ${PIERRE_HOST}/pierre.ts --outfile ${SERVER}/assets/dist/js/pierre.js --minify --target browser --format=iife`
 await $`bun build ${PIERRE_EMBED}/pierre-embed.ts --outfile ${SERVER}/assets/dist/js/pierre-embed.js --minify --target browser --format=iife`
 

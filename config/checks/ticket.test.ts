@@ -21,6 +21,27 @@ function assertTicketConfig(config: unknown): void {
     })
   )
 
+  const actions = root.actions
+  if (actions == null || typeof actions !== 'object' || Array.isArray(actions)) {
+    errors.push('ticket.actions: objet { dossier } requis')
+  } else {
+    const dossier = (actions as Record<string, unknown>).dossier
+    if (!Array.isArray(dossier)) {
+      errors.push('ticket.actions.dossier: tableau requis')
+    } else {
+      const seen = new Set<string>()
+      for (const [index, entry] of dossier.entries()) {
+        if (typeof entry !== 'string' || !entry.trim()) {
+          errors.push(`ticket.actions.dossier[${index}]: chaîne non vide requise`)
+          continue
+        }
+        const label = entry.trim()
+        if (seen.has(label)) errors.push(`ticket.actions.dossier: libellé en double « ${label} »`)
+        seen.add(label)
+      }
+    }
+  }
+
   const application = root.external_application
   if (application !== undefined && application !== null) {
     if (typeof application !== 'object' || Array.isArray(application)) {
@@ -84,4 +105,21 @@ test('external_application refuse un objet incomplet', () => {
       external_application: { name: 'Aravis' }
     })
   ).toThrow(/external_application/)
+})
+
+test('actions.dossier est requis et refuse les libellés vides ou en double', () => {
+  const { actions: _actions, ...withoutActions } = ticketConfig
+  expect(() => assertTicketConfig(withoutActions)).toThrow(/ticket\.actions/)
+  expect(() => assertTicketConfig({ ...ticketConfig, actions: { dossier: '' } })).toThrow(
+    /ticket\.actions\.dossier/
+  )
+  expect(() => assertTicketConfig({ ...ticketConfig, actions: { dossier: [''] } })).toThrow(
+    /chaîne non vide/
+  )
+  expect(() =>
+    assertTicketConfig({
+      ...ticketConfig,
+      actions: { dossier: ['Analyser le dossier', 'Analyser le dossier'] }
+    })
+  ).toThrow(/libellé en double/)
 })
