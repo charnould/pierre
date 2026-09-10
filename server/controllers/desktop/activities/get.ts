@@ -30,12 +30,11 @@ export const Query = z
     id_locataire: z.string().trim().min(1).optional(),
     id_lot: z.string().trim().min(1).optional(),
     type: z.string().trim().min(1).optional(),
-    statut: z.string().trim().min(1).optional(),
     current_threads: z
       .enum(['true', 'false'])
       .optional()
       .transform((value) => value === 'true'),
-    state: z.enum(['a_faire', 'fait', 'ignore']).optional(),
+    state: z.enum(['open', 'completed', 'ignored', 'deleted']).optional(),
     limit: z.coerce.number().int().positive().max(500).optional(),
     offset: z.coerce.number().int().nonnegative().optional()
   })
@@ -45,8 +44,8 @@ export const Query = z
   .refine((value) => !(value.rattachement && value.contexte), {
     message: 'use rattachement or contexte/ref, not both'
   })
-  .refine((value) => !value.current_threads || value.type === 'action', {
-    message: 'current_threads requires type=action'
+  .refine((value) => !value.current_threads || !value.type || value.type.startsWith('task.'), {
+    message: 'current_threads filters task threads'
   })
 
 export const controller = async (c: Context) => {

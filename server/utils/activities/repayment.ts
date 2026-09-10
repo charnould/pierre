@@ -1,6 +1,10 @@
 import { Database } from 'bun:sqlite'
 
-import { parse_action_activity_content, parse_contenu_json } from '../../../shared/activites'
+import {
+  parse_case_change_content,
+  parse_contenu_json,
+  parse_task_content
+} from '../../../shared/activites'
 import { chronological_date_key, sql_date_key } from '../sql-normalization'
 
 export type RepaymentActivityState = {
@@ -9,6 +13,16 @@ export type RepaymentActivityState = {
   date_derniere_action_realisee: string | null
   gestionnaire: string | null
   gestionnaire_email: string | null
+}
+
+const value_label = (value: unknown): string | null => {
+  if (typeof value === 'string' && value.trim()) return value.trim()
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const record = value as { id?: unknown; label?: unknown }
+    if (typeof record.label === 'string' && record.label.trim()) return record.label.trim()
+    if (typeof record.id === 'string' && record.id.trim()) return record.id.trim()
+  }
+  return null
 }
 
 export const latest_repayment_states = (
@@ -24,20 +38,21 @@ export const latest_repayment_states = (
       {
         id_locataire: string
         type: string
-        statut: string | null
         date_creation: string
         contenu: string
       },
       string[]
     >(
-      `SELECT id_locataire, type, statut, date_creation, contenu
+      `SELECT id_locataire, type, date_creation, contenu
        FROM activites
        WHERE id_locataire IN (${placeholders})
          AND rattachement = 'repayment:' || id_locataire
-         AND type IN (
-           'case_bucket_change', 'case_assignment',
-           'action', 'bulk_application',
-           'rcs', 'sms', 'email', 'courrier', 'lrar', 'lre', 'signature'
+         AND (
+           type IN (
+             'case.group_changed', 'case.assignee_changed',
+             'task.completed', 'bulk.applied'
+           )
+           OR type LIKE 'communication.%'
          )
        ORDER BY ${sql_date_key('date_creation')} DESC, id DESC`
     )
@@ -54,30 +69,32 @@ export const latest_repayment_states = (
       gestionnaire_email: null
     }
     const metadata = parse_contenu_json(row.contenu)
-    if (
-      !bucketResolved.has(row.id_locataire) &&
-      (row.type === 'case_bucket_change' || row.type === 'bulk_application') &&
-      typeof (row.type === 'case_bucket_change' ? metadata['bucket'] : metadata['phase']) ===
-        'string'
-    ) {
-      state.bucket = (
-        row.type === 'case_bucket_change' ? metadata['bucket'] : metadata['phase']
-      ) as string
-      bucketResolved.add(row.id_locataire)
+    if (!bucketResolved.has(row.id_locataire) && row.type === 'case.group_changed') {
+      const change = parse_case_change_content(row.contenu)
+      const bucket = value_label(change?.after)
+      if (bucket) {
+        state.bucket = bucket
+        bucketResolved.add(row.id_locataire)
+      }
     }
-    const action = row.type === 'action' ? parse_action_activity_content(row.contenu) : null
+    if (!bucketResolved.has(row.id_locataire) && row.type === 'bulk.applied') {
+      const phase =
+        metadata['values'] && typeof metadata['values'] === 'object'
+          ? (metadata['values'] as Record<string, unknown>)['phase']
+          : metadata['phase']
+      if (typeof phase === 'string') {
+        state.bucket = phase
+        bucketResolved.add(row.id_locataire)
+      }
+    }
+    const task = row.type === 'task.completed' ? parse_task_content(row.contenu) : null
     const actionLabel =
-      action?.etat === 'fait'
-        ? action.action
-        : row.type === 'bulk_application' && typeof metadata['action'] === 'string'
+      task?.task.title ??
+      (row.type === 'bulk.applied' && typeof metadata['title'] === 'string'
+        ? metadata['title']
+        : typeof metadata['action'] === 'string'
           ? metadata['action']
-          : row.type !== 'action' &&
-              row.type !== 'bulk_application' &&
-              row.statut != null &&
-              ['sent', 'delivered', 'read', 'signed'].includes(row.statut) &&
-              typeof metadata['action'] === 'string'
-            ? metadata['action']
-            : null
+          : null)
     const actionDate = actionLabel ? row.date_creation : null
     const actionDateKey = actionDate ? chronological_date_key(actionDate) : null
     const latestActionDateKey = actionDates.get(row.id_locataire)
@@ -91,11 +108,12 @@ export const latest_repayment_states = (
       state.date_derniere_action_realisee = actionDate
       actionDates.set(row.id_locataire, actionDateKey)
     }
-    if (!gestionnaireResolved.has(row.id_locataire) && row.type === 'case_assignment') {
-      const apres = metadata['referent']
-      if (typeof apres === 'string' && apres.trim() !== '') {
-        state.gestionnaire = apres.trim()
-        state.gestionnaire_email = apres.trim().toLowerCase()
+    if (!gestionnaireResolved.has(row.id_locataire) && row.type === 'case.assignee_changed') {
+      const change = parse_case_change_content(row.contenu)
+      const email = value_label(change?.after)
+      if (email) {
+        state.gestionnaire = email
+        state.gestionnaire_email = email.replace(/^user:/, '').toLowerCase()
         gestionnaireResolved.add(row.id_locataire)
       }
     }
@@ -114,35 +132,27 @@ export const repayment_action_history = (
   if (ids.length === 0) return result
   const placeholders = ids.map(() => '?').join(', ')
   const rows = db
-    .query<
-      { id_locataire: string; type: string; statut: string | null; contenu: string },
-      string[]
-    >(
-      `SELECT id_locataire, type, statut, contenu
+    .query<{ id_locataire: string; type: string; contenu: string }, string[]>(
+      `SELECT id_locataire, type, contenu
        FROM activites
        WHERE id_locataire IN (${placeholders})
          AND rattachement = 'repayment:' || id_locataire
-         AND type IN (
-           'action', 'bulk_application',
-           'rcs', 'sms', 'email', 'courrier', 'lrar', 'lre', 'signature'
+         AND (
+           type IN ('task.completed', 'bulk.applied')
+           OR type LIKE 'communication.%'
          )`
     )
     .all(...ids)
   for (const row of rows) {
     const metadata = parse_contenu_json(row.contenu)
-    const action = row.type === 'action' ? parse_action_activity_content(row.contenu) : null
+    const task = row.type === 'task.completed' ? parse_task_content(row.contenu) : null
     const label =
-      action?.etat === 'fait'
-        ? action.action
-        : row.type === 'bulk_application' && typeof metadata['action'] === 'string'
+      task?.task.title ??
+      (row.type === 'bulk.applied' && typeof metadata['title'] === 'string'
+        ? metadata['title']
+        : typeof metadata['action'] === 'string'
           ? metadata['action']
-          : row.type !== 'action' &&
-              row.type !== 'bulk_application' &&
-              row.statut != null &&
-              ['sent', 'delivered', 'read', 'signed'].includes(row.statut) &&
-              typeof metadata['action'] === 'string'
-            ? metadata['action']
-            : null
+          : null)
     if (!label?.trim()) continue
     const set = result.get(row.id_locataire) ?? new Set<string>()
     set.add(label)

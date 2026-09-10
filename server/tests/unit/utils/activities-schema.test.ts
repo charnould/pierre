@@ -39,9 +39,8 @@ describe('activites schema', () => {
     const created = create_activity(ALICE, {
       contexte: 'tickets',
       ref: 'REQ-1',
-      type: 'note',
-      statut: 'logged',
-      contenu: 'Bonjour'
+      type: 'note.published',
+      contenu: JSON.stringify({ version: 2, text: 'Bonjour' })
     })
     expect(typeof created.id).toBe('number')
     expect(Number.isInteger(created.id)).toBe(true)
@@ -49,86 +48,61 @@ describe('activites schema', () => {
     expect(created.date_creation).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)
     expect(created.auteur).toBe(user(ALICE))
     expect(created.mentions).toEqual([])
+    expect(created.thread_id).toBeTruthy()
+    expect(created.revision).toBe(1)
   })
 
-  it('refuse un objet mentions', () => {
+  it('refuse un contenu sans version 2', () => {
     const db = new Database(DATASTORE_PATH)
     expect(() =>
       db.run(
         `INSERT INTO activites (date_creation, rattachement, auteur, type, mentions, contenu)
-         VALUES ('2026-01-01T00:00:00', 'tickets:REQ-1', 'user:alice@exemple.fr', 'note', '{}', 'x')`
+         VALUES ('2026-01-01T00:00:00Z', 'tickets:REQ-1', 'user:alice@exemple.fr',
+           'note.published', '[]', '{"text":"x"}')`
       )
     ).toThrow()
     db.close()
   })
 
-  it('contraint les métadonnées action et crée les index du journal', () => {
+  it('exige un canal pour une communication et interdit UPDATE/DELETE', () => {
     const db = new Database(DATASTORE_PATH)
     expect(() =>
       db.run(
-        `INSERT INTO activites (date_creation, rattachement, auteur, type, mentions, contenu)
-         VALUES ('2026-01-01T00:00:00Z', 'repayment:LOC-1',
-           'user:alice@exemple.fr', 'action', '[]', '{}')`
-      )
-    ).toThrow()
-    expect(() =>
-      db.run(
         `INSERT INTO activites (
-           date_creation, rattachement, auteur, type, mentions, contenu,
-           thread_id, event, state, revision
-         ) VALUES ('2026-01-01T00:00:00Z', 'repayment:LOC-1',
-           'user:alice@exemple.fr', 'note', '[]', '{}',
-           'todo-1', 'created', 'a_faire', 1)`
+           date_creation, rattachement, auteur, type, mentions, contenu, thread_id, revision
+         ) VALUES (
+           '2026-01-01T00:00:00Z', 'repayment:LOC-1', 'user:alice@exemple.fr',
+           'communication.sent', '[]', '{"version":2,"sender":"Alice","body":"Hi"}',
+           'thread-1', 1
+         )`
       )
     ).toThrow()
+    db.run(
+      `INSERT INTO activites (
+         date_creation, rattachement, auteur, type, channel, mentions, contenu, thread_id, revision
+       ) VALUES (
+         '2026-01-01T00:00:00Z', 'repayment:LOC-1', 'user:alice@exemple.fr',
+         'communication.sent', 'email', '[]',
+         '{"version":2,"sender":"Alice","body":"Hi"}', 'thread-1', 1
+       )`
+    )
+    expect(() =>
+      db.run('UPDATE activites SET auteur = ? WHERE id = 1', ['user:eve@x.fr'])
+    ).toThrow()
+    expect(() => db.run('DELETE FROM activites WHERE id = 1')).toThrow()
+    db.close()
+  })
+
+  it('indexe le journal par rattachement et thread', () => {
+    const db = new Database(DATASTORE_PATH)
     const indexes = db
       .query<{ name: string }, []>("SELECT name FROM sqlite_master WHERE type = 'index'")
       .all()
       .map((row) => row.name)
     db.close()
     expect(indexes).toContain('idx_activites_rattachement_thread')
-    expect(indexes).not.toContain('idx_activites_thread')
-    expect(indexes).not.toContain('idx_activites_communication_thread')
-  })
-
-  it('réserve les threads sans révision aux communications', () => {
-    const db = new Database(DATASTORE_PATH)
-    for (const type of ['rcs', 'sms', 'email', 'courrier', 'lrar', 'lre', 'signature']) {
-      expect(() =>
-        db.run(
-          `INSERT INTO activites (
-             date_creation, rattachement, auteur, destinataire, type, statut,
-             mentions, contenu, thread_id
-           ) VALUES (
-             '2026-08-26T20:00:00Z', ?, 'user:alice@exemple.fr', 'destinataire',
-             ?, 'queued', '[]', '{}', ?
-           )`,
-          [`repayment:${type}`, type, `thread-${type}`]
-        )
-      ).not.toThrow()
-    }
-    expect(() =>
-      db.run(
-        `INSERT INTO activites (
-           date_creation, rattachement, auteur, type, statut, mentions, contenu,
-           thread_id, event
-         ) VALUES (
-           '2026-08-26T20:00:00Z', 'repayment:invalid-email',
-           'user:alice@exemple.fr', 'email', 'queued', '[]', '{}',
-           'thread-invalid', 'created'
-         )`
-      )
-    ).toThrow()
-    expect(() =>
-      db.run(
-        `INSERT INTO activites (
-           date_creation, rattachement, auteur, type, statut, mentions, contenu, thread_id
-         ) VALUES (
-           '2026-08-26T20:00:00Z', 'repayment:invalid-note',
-           'user:alice@exemple.fr', 'note', 'logged', '[]', '{}', 'thread-note'
-         )`
-      )
-    ).toThrow()
-    db.close()
+    expect(indexes).toContain('idx_activites_idempotency')
+    expect(indexes).toContain('idx_activites_repayment_plan_thread')
+    expect(indexes).toContain('idx_activites_repayment_plan_snapshot')
   })
 })

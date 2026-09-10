@@ -1,26 +1,29 @@
-import { Database, type SQLQueryBindings } from 'bun:sqlite'
+import { Database } from 'bun:sqlite'
 
 import {
-  ACTIVITY_CONTENT_VERSION,
-  type ActionActivityContent,
   type Activite,
   type ActivityPatch,
-  type Mention,
+  type TaskContent,
   activity_timestamp,
-  is_boost_notification,
-  mention_of,
-  parse_action_activity_content,
-  parse_action_creation_content,
-  parse_contenu_json,
-  parse_message_activity_content
+  entity_ref,
+  is_communication_type,
+  is_note_type,
+  is_task_type,
+  parse_activity_meta_content,
+  parse_note_content,
+  parse_task_content
 } from '../../../shared/activites'
-import { insert_action_event, patch_action } from './action'
-import { latest_repayment_states } from './repayment'
+import { insert_task_event, patch_action } from './action'
+import {
+  create_repayment_plan,
+  is_repayment_plan_row,
+  transition_repayment_plan
+} from './repayment-plan-write'
 import {
   build_mentions,
-  build_rattachement,
   datastore_path,
   get_activity_with_db,
+  insert_activity_row,
   merge_mentions_from_content,
   normalize_activity_content,
   org_email_index,
@@ -34,9 +37,29 @@ import {
   ActivityPatchInput,
   AUTHOR_RE,
   CreateActivityInput,
-  TrustedCreateActivityInput,
-  is_communication_type
+  TrustedCreateActivityInput
 } from './schema'
+
+const latest_thread_revision = (db: Database, thread_id: string): number => {
+  const row = db
+    .query<{ revision: number | null }, [string]>(
+      'SELECT MAX(revision) AS revision FROM activites WHERE thread_id = ?'
+    )
+    .get(thread_id)
+  return row?.revision ?? 0
+}
+
+const append = (db: Database, values: Parameters<typeof insert_activity_row>[1]): Activite => {
+  try {
+    return insert_activity_row(db, values)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    if (message.includes('UNIQUE') && values.idempotency_key) {
+      throw new ActivitiesError('Activity already exists for this treatment', 'conflict')
+    }
+    throw error
+  }
+}
 
 const create_activity_internal = (
   actor: string,
@@ -48,8 +71,8 @@ const create_activity_internal = (
   existing_db?: Database
 ): Activite => {
   const parsed = input
-  if (is_boost_notification(parsed.type)) {
-    throw new ActivitiesError('Cannot create boost notifications directly', 'forbidden')
+  if (parsed.type === 'activity.read' || parsed.type === 'activity.reaction_changed') {
+    throw new ActivitiesError('Cannot create this event directly', 'forbidden')
   }
   if (is_communication_type(parsed.type)) {
     throw new ActivitiesError('Communications require a dedicated endpoint', 'forbidden')
@@ -71,194 +94,111 @@ const create_activity_internal = (
     const perform = (): Activite => {
       const facets = resolve_activity_facets(db, parsed.contexte, parsed.ref)
       const date_creation = options.date_creation ?? activity_timestamp()
-      const rattachement = build_rattachement(parsed.contexte, parsed.ref)
-      let contenu = normalize_activity_content(parsed.type, parsed.contenu)
-      const date_statut = date_creation
+      const rattachement = `${parsed.contexte}:${parsed.ref.trim()}`
       const destinataire = parsed.destinataire ?? null
       const bulk_id = parsed.bulk_id ?? null
       const execution_id = parsed.execution_id ?? null
       const idempotency_key = parsed.idempotency_key ?? null
 
-      if (parsed.type === 'action') {
-        if (parsed.statut === 'draft') {
-          throw new ActivitiesError('Actions cannot be drafts')
-        }
-        const creation = parse_action_creation_content(contenu)
+      if (is_task_type(parsed.type)) {
+        const creation = parse_task_content(parsed.contenu)
         if (!creation) throw new ActivitiesError('Invalid action content')
-        const assignee = creation.assigne_a
-          ? resolve_destinataire(creation.assigne_a, org_email_index(db))
+        if (parsed.type !== 'task.created' && parsed.type !== 'task.completed') {
+          throw new ActivitiesError('Only task.created or task.completed can be created')
+        }
+        const assigneeId = creation.task.assignee
+          ? resolve_destinataire(creation.task.assignee.id, org_email_index(db))
           : null
-        if (creation.etat === 'a_faire' && !assignee) {
+        if (creation.task.state === 'open' && !assigneeId) {
           throw new ActivitiesError('Open actions require a known assignee')
         }
-        const actionContent: ActionActivityContent = {
-          version: ACTIVITY_CONTENT_VERSION,
-          action: creation.action,
-          etat: creation.etat,
-          cree_par: author,
-          cree_le: date_creation,
-          ...(assignee ? { assigne_a: assignee } : {}),
-          ...(creation.date_echeance ? { date_echeance: creation.date_echeance } : {}),
+        const assignee = assigneeId
+          ? entity_ref(assigneeId, creation.task.assignee?.label ?? assigneeId)
+          : undefined
+        const content: TaskContent = {
+          version: 2,
+          task: {
+            title: creation.task.title,
+            state: parsed.type === 'task.completed' ? 'completed' : 'open',
+            ...(assignee ? { assignee } : {}),
+            ...(creation.task.due_date ? { due_date: creation.task.due_date } : {})
+          },
           ...(creation.note ? { note: creation.note } : {}),
-          ...(creation.resultat ? { resultat: creation.resultat } : {})
+          ...(creation.result ? { result: creation.result } : {})
         }
-        contenu = JSON.stringify(actionContent)
-        const mentions = build_mentions(db, contenu, [
+        const mentions = build_mentions(db, JSON.stringify(content), [
           ...(parsed.recipients ?? []),
-          ...(assignee && creation.etat === 'a_faire' ? [assignee] : [])
+          ...(assignee && content.task.state === 'open' ? [assignee.id] : [])
         ]).map((mention) =>
-          mention.destinataire === assignee
+          mention.destinataire === assignee?.id
             ? { ...mention, motif: 'assignation' as const }
             : mention
         )
-        try {
-          return insert_action_event(db, {
-            date_creation,
-            rattachement,
-            auteur: author,
-            facets,
-            contenu: actionContent,
-            thread_id: Bun.randomUUIDv7(),
-            event: creation.etat === 'fait' ? 'completed' : 'created',
-            state: creation.etat,
-            revision: 1,
-            mentions,
-            statut: parsed.statut,
-            idempotency_key
-          })
-        } catch (error) {
-          const message = error instanceof Error ? error.message : String(error)
-          if (message.includes('UNIQUE') && idempotency_key) {
-            throw new ActivitiesError('Activity already exists for this treatment', 'conflict')
-          }
-          throw error
-        }
-      }
-
-      const recipients = [...(parsed.recipients ?? [])]
-      if (
-        parsed.contexte === 'repayment' &&
-        (parsed.type === 'email' || parsed.type === 'rcs') &&
-        author.startsWith('tenant:')
-      ) {
-        const tenantId = facets.id_locataire ?? parsed.ref
-        const email = latest_repayment_states(db, [tenantId]).get(tenantId)?.gestionnaire_email
-        if (email) recipients.push(email)
-      }
-      const mentions = build_mentions(
-        db,
-        is_boost_notification(parsed.type) ? '' : contenu,
-        recipients
-      )
-      const currentDraft =
-        parsed.statut === 'draft'
-          ? db
-              .query<{ id: number }, [string, string]>(
-                `SELECT id FROM activites
-               WHERE rattachement = ? AND type = ? AND statut = 'draft'
-               ORDER BY date_creation DESC, id DESC LIMIT 1`
-              )
-              .get(rattachement, parsed.type)
-          : null
-      if (currentDraft) {
-        db.run(
-          `UPDATE activites
-         SET date_creation = ?, auteur = ?, id_client = ?, id_locataire = ?, id_lot = ?,
-             date_statut = ?, destinataire = ?, mentions = ?, contenu = ?,
-             bulk_id = ?, execution_id = ?, idempotency_key = ?
-         WHERE id = ?`,
-          [
-            date_creation,
-            author,
-            facets.id_client,
-            facets.id_locataire,
-            facets.id_lot,
-            date_statut,
-            destinataire,
-            JSON.stringify(mentions),
-            contenu,
-            bulk_id,
-            execution_id,
-            idempotency_key,
-            currentDraft.id
-          ]
-        )
-        return {
-          id: Number(currentDraft.id),
+        return insert_task_event(db, {
           date_creation,
-          date_statut,
           rattachement,
           auteur: author,
-          destinataire,
-          ...facets,
-          type: parsed.type,
-          statut: 'draft',
+          facets,
+          contenu: content,
+          thread_id: parsed.thread_id ?? Bun.randomUUIDv7(),
+          type: parsed.type === 'task.completed' ? 'task.completed' : 'task.created',
+          revision: 1,
           mentions,
-          contenu,
-          thread_id: null,
-          event: null,
-          state: null,
-          revision: null,
-          bulk_id,
-          execution_id,
           idempotency_key
-        }
+        })
       }
-      let inserted: { id: number } | null = null
-      try {
-        inserted = db
-          .query<{ id: number }, SQLQueryBindings[]>(
-            `INSERT INTO activites (
-             date_creation, date_statut, rattachement, auteur, destinataire,
-             id_client, id_locataire, id_lot,
-             type, statut, mentions, contenu, bulk_id, execution_id, idempotency_key
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-           RETURNING id`
-          )
-          .get(
-            date_creation,
-            date_statut,
-            rattachement,
-            author,
-            destinataire,
-            facets.id_client,
-            facets.id_locataire,
-            facets.id_lot,
-            parsed.type,
-            parsed.statut ?? null,
-            JSON.stringify(mentions),
-            contenu,
-            bulk_id,
-            execution_id,
-            idempotency_key
-          )
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error)
-        if (message.includes('UNIQUE') && idempotency_key) {
-          throw new ActivitiesError('Activity already exists for this treatment', 'conflict')
+
+      if (parsed.type.startsWith('repayment_plan.')) {
+        if (
+          parsed.type !== 'repayment_plan.created' &&
+          parsed.type !== 'repayment_plan.finalized'
+        ) {
+          throw new ActivitiesError('This repayment plan event requires an existing plan')
         }
-        throw error
+        if (parsed.thread_id) {
+          throw new ActivitiesError('Repayment plan thread is assigned by the server')
+        }
+        const contenu = normalize_activity_content(parsed.type, parsed.contenu)
+        const mentions = build_mentions(db, contenu, parsed.recipients ?? [])
+        return create_repayment_plan(db, {
+          date_creation,
+          rattachement,
+          auteur: author,
+          facets,
+          mentions,
+          type: parsed.type,
+          contenu,
+          idempotency_key
+        })
       }
-      return {
-        id: Number(inserted?.id),
+
+      const contenu = normalize_activity_content(parsed.type, parsed.contenu)
+      const mentions = build_mentions(db, contenu, parsed.recipients ?? [])
+      const needsThread =
+        is_note_type(parsed.type) ||
+        parsed.type.startsWith('document.') ||
+        parsed.type.startsWith('artifact.')
+      const thread_id = needsThread
+        ? (parsed.thread_id ?? Bun.randomUUIDv7())
+        : (parsed.thread_id ?? null)
+      const revision = thread_id ? latest_thread_revision(db, thread_id) + 1 : null
+
+      return append(db, {
         date_creation,
-        date_statut,
         rattachement,
         auteur: author,
         destinataire,
-        ...facets,
+        facets,
         type: parsed.type,
-        statut: parsed.statut ?? null,
+        channel: parsed.channel ?? null,
         mentions,
         contenu,
-        thread_id: null,
-        event: null,
-        state: null,
-        revision: null,
+        thread_id,
+        revision,
         bulk_id,
         execution_id,
         idempotency_key
-      }
+      })
     }
     return existing_db ? perform() : db.transaction(perform).immediate()
   } finally {
@@ -300,90 +240,19 @@ export const create_trusted_activity_with_db = (
 }
 
 const can_edit = (activity: Activite, actor: string): boolean =>
-  activity.auteur === user_destinataire(actor) || activity.statut === 'draft'
+  activity.auteur === user_destinataire(actor)
 
-const apply_source_boost = (
-  mentions: Mention[],
-  destinataire: string,
-  emoji: string | null
-): Mention[] => {
-  const current = mention_of(mentions, destinataire)
-  if (emoji) {
-    if (!current) {
-      return [...mentions, { destinataire, lu: true, boost: emoji, inbox: false }]
-    }
-    return mentions.map((mention) =>
-      mention.destinataire === destinataire ? { ...current, boost: emoji } : mention
-    )
-  }
-  if (!current) return mentions
-  if (current.inbox === false) {
-    return mentions.filter((mention) => mention.destinataire !== destinataire)
-  }
-  return mentions.map((mention) =>
-    mention.destinataire === destinataire ? { ...current, boost: null } : mention
-  )
-}
-
-const upsert_boost_notification = (
-  db: Database,
-  auteur: string,
-  source: Activite,
-  emoji: string | null
-): void => {
-  const rows = db
-    .query<ActivityDbRow, [string, string]>(
+const latest_reaction = (db: Database, sourceId: number, auteur: string): string | null => {
+  const row = db
+    .query<ActivityDbRow, [number, string]>(
       `SELECT * FROM activites
-       WHERE type = 'activity_boost' AND auteur = ? AND rattachement = ?`
+       WHERE type = 'activity.reaction_changed' AND auteur = ?
+       ORDER BY date_creation DESC, id DESC`
     )
-    .all(auteur, source.rattachement)
-  const match =
-    rows.find(
-      (row) => Number(parse_contenu_json(row.contenu)['activite_source_id']) === source.id
-    ) ?? null
-
-  if (!emoji) {
-    if (match) db.run('DELETE FROM activites WHERE id = ?', [match.id])
-    return
-  }
-
-  const contenu = JSON.stringify({
-    version: 1,
-    activite_source_id: source.id,
-    type_activite_source: source.type,
-    emoji
-  })
-  const authorMentions = JSON.stringify([{ destinataire: source.auteur, lu: false, boost: null }])
-  const date_creation = activity_timestamp()
-
-  if (match) {
-    db.run('UPDATE activites SET date_creation = ?, mentions = ?, contenu = ? WHERE id = ?', [
-      date_creation,
-      authorMentions,
-      contenu,
-      match.id
-    ])
-    return
-  }
-
-  db.run(
-    `INSERT INTO activites (
-       date_creation, rattachement, auteur, id_client, id_locataire, id_lot,
-       type, statut, mentions, contenu
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      date_creation,
-      source.rattachement,
-      auteur,
-      source.id_client,
-      source.id_locataire,
-      source.id_lot,
-      'activity_boost',
-      'logged',
-      authorMentions,
-      contenu
-    ]
-  )
+    .all(sourceId, auteur)
+    .find((entry) => parse_activity_meta_content(entry.contenu)?.source_activity_id === sourceId)
+  if (!row) return null
+  return parse_activity_meta_content(row.contenu)?.emoji ?? null
 }
 
 export const patch_activity = (actor: string, id: number, patch: ActivityPatch): Activite => {
@@ -398,19 +267,32 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
 
       if (parsed.operation === 'set_boost') {
         const emoji = parsed.emoji?.trim() ? parsed.emoji.trim() : null
-        if (is_boost_notification(existing.type)) {
-          throw new ActivitiesError('Boost notifications cannot be boosted', 'forbidden')
-        }
         if (existing.auteur === destinataire) {
           throw new ActivitiesError('Cannot boost own activity', 'forbidden')
         }
         if (!existing.auteur.startsWith('user:')) {
           throw new ActivitiesError('Only collaborator actions can be boosted', 'forbidden')
         }
-        const mentions = apply_source_boost(existing.mentions, destinataire, emoji)
-        db.run('UPDATE activites SET mentions = ? WHERE id = ?', [JSON.stringify(mentions), id])
-        upsert_boost_notification(db, destinataire, existing, emoji)
-        return { ...existing, mentions }
+        if ((latest_reaction(db, existing.id, destinataire) ?? null) === emoji) {
+          return existing
+        }
+        return append(db, {
+          date_creation: activity_timestamp(),
+          rattachement: existing.rattachement,
+          auteur: destinataire,
+          facets: {
+            id_client: existing.id_client,
+            id_locataire: existing.id_locataire,
+            id_lot: existing.id_lot
+          },
+          type: 'activity.reaction_changed',
+          mentions: [{ destinataire: existing.auteur }],
+          contenu: JSON.stringify({
+            version: 2,
+            source_activity_id: existing.id,
+            ...(emoji ? { emoji } : {})
+          })
+        })
       }
 
       if (is_communication_type(existing.type)) {
@@ -418,111 +300,130 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
       }
 
       if (parsed.operation === 'set_mention') {
-        const current = mention_of(existing.mentions, destinataire)
+        const current = existing.mentions.find((mention) => mention.destinataire === destinataire)
         if (!current) throw new ActivitiesError('Actor is not mentioned', 'forbidden')
-        const mentions = existing.mentions.map((mention) =>
-          mention.destinataire === destinataire
-            ? {
-                ...current,
-                lu: parsed.lu ?? current.lu,
-                boost: parsed.boost === undefined ? current.boost : parsed.boost
-              }
-            : mention
-        )
-        db.run('UPDATE activites SET mentions = ? WHERE id = ?', [JSON.stringify(mentions), id])
-        return { ...existing, mentions }
+        if (parsed.lu !== true) return existing
+        return append(db, {
+          date_creation: activity_timestamp(),
+          rattachement: existing.rattachement,
+          auteur: destinataire,
+          facets: {
+            id_client: existing.id_client,
+            id_locataire: existing.id_locataire,
+            id_lot: existing.id_lot
+          },
+          type: 'activity.read',
+          mentions: [],
+          contenu: JSON.stringify({ version: 2, source_activity_id: existing.id })
+        })
       }
 
       const actionResult = patch_action(db, actor, existing, parsed)
       if (actionResult) return actionResult
 
       if (parsed.operation === 'withdraw_note') {
-        if (existing.type !== 'note' || existing.auteur !== destinataire) {
+        if (!is_note_type(existing.type) || existing.auteur !== destinataire) {
           throw new ActivitiesError('Forbidden', 'forbidden')
         }
-        const message = parse_message_activity_content(existing.contenu)
-        if (!message) throw new ActivitiesError('Invalid note content', 'invalid_body')
-        const nextContenu = JSON.stringify({
-          version: message.version,
-          note: '',
-          etat: 'retire',
-          date_retrait: activity_timestamp(),
-          retire_par: destinataire
+        if (!existing.thread_id) throw new ActivitiesError('Invalid note', 'invalid_body')
+        return append(db, {
+          date_creation: activity_timestamp(),
+          rattachement: existing.rattachement,
+          auteur: destinataire,
+          facets: {
+            id_client: existing.id_client,
+            id_locataire: existing.id_locataire,
+            id_lot: existing.id_lot
+          },
+          type: 'note.withdrawn',
+          mentions: [],
+          contenu: JSON.stringify({ version: 2 }),
+          thread_id: existing.thread_id,
+          revision: latest_thread_revision(db, existing.thread_id) + 1
         })
-        db.run('UPDATE activites SET contenu = ?, mentions = ? WHERE id = ?', [
-          nextContenu,
-          '[]',
-          id
-        ])
-        return { ...existing, contenu: nextContenu, mentions: [] }
-      }
-
-      if (
-        parsed.operation === 'edit_content' &&
-        existing.type === 'repayment_plan' &&
-        parse_contenu_json(existing.contenu)['etat'] === 'signe'
-      ) {
-        throw new ActivitiesError('Signed plans are immutable', 'forbidden')
       }
 
       if (!can_edit(existing, actor)) throw new ActivitiesError('Forbidden', 'forbidden')
 
-      if (parsed.operation === 'set_status') {
-        const date_statut = activity_timestamp()
-        db.run('UPDATE activites SET statut = ?, date_statut = ? WHERE id = ?', [
-          parsed.statut,
-          date_statut,
-          id
-        ])
-        return { ...existing, statut: parsed.statut, date_statut }
-      }
-
-      const existingPayload = parse_contenu_json(existing.contenu)
-
-      let nextContenu: string
-      let nextMentions: Mention[] | null = null
-      if (parsed.operation === 'edit_content') {
-        const incoming = parse_contenu_json(
-          normalize_activity_content(existing.type, parsed.contenu)
-        )
-        if (Object.keys(incoming).length > 0) {
-          const metadata: Record<string, unknown> = { ...existingPayload, ...incoming }
-          metadata['edition'] = { par: user_destinataire(actor), le: activity_timestamp() }
-          nextContenu = JSON.stringify(metadata)
-          if (existing.type === 'note') {
-            nextMentions = merge_mentions_from_content(db, nextContenu, existing.mentions)
-          }
-        } else {
-          const metadata = { ...existingPayload }
-          metadata['contenu'] = parsed.contenu
-          if (parsed.titre !== undefined) metadata['titre'] = parsed.titre
-          metadata['edition'] = { par: user_destinataire(actor), le: activity_timestamp() }
-          nextContenu = JSON.stringify(metadata)
+      if (is_repayment_plan_row(existing)) {
+        if (parsed.operation === 'save_repayment_plan') {
+          return transition_repayment_plan(db, {
+            existing,
+            auteur: destinataire,
+            operation: 'save',
+            contenu: parsed.contenu
+          })
         }
-      } else if (parsed.operation === 'set_evaluation') {
-        const evaluation =
-          parsed.score === null && !parsed.commentaire
-            ? null
-            : {
-                score: parsed.score,
-                commentaire: parsed.commentaire ?? null,
-                par: user_destinataire(actor),
-                le: activity_timestamp()
-              }
-        nextContenu = JSON.stringify({ ...existingPayload, evaluation })
-      } else {
-        throw new ActivitiesError('Invalid patch operation')
+        if (parsed.operation === 'finalize_repayment_plan') {
+          return transition_repayment_plan(db, {
+            existing,
+            auteur: destinataire,
+            operation: 'finalize',
+            contenu: parsed.contenu
+          })
+        }
+        if (parsed.operation === 'close_repayment_plan') {
+          return transition_repayment_plan(db, {
+            existing,
+            auteur: destinataire,
+            operation: 'close',
+            reason: parsed.reason
+          })
+        }
+        throw new ActivitiesError('Invalid repayment plan operation', 'forbidden')
       }
-      if (nextMentions) {
-        db.run('UPDATE activites SET contenu = ?, mentions = ? WHERE id = ?', [
-          nextContenu,
-          JSON.stringify(nextMentions),
-          id
-        ])
-        return { ...existing, contenu: nextContenu, mentions: nextMentions }
+
+      if (parsed.operation === 'edit_content') {
+        if (is_note_type(existing.type)) {
+          const incoming = parse_note_content(parsed.contenu)
+          if (!incoming) throw new ActivitiesError('Invalid note content')
+          if (!existing.thread_id) throw new ActivitiesError('Invalid note', 'invalid_body')
+          const contenu = JSON.stringify({ version: 2, text: incoming.text ?? '' })
+          return append(db, {
+            date_creation: activity_timestamp(),
+            rattachement: existing.rattachement,
+            auteur: destinataire,
+            facets: {
+              id_client: existing.id_client,
+              id_locataire: existing.id_locataire,
+              id_lot: existing.id_lot
+            },
+            type: 'note.updated',
+            mentions: merge_mentions_from_content(db, contenu, existing.mentions),
+            contenu,
+            thread_id: existing.thread_id,
+            revision: latest_thread_revision(db, existing.thread_id) + 1
+          })
+        }
+        throw new ActivitiesError('This activity cannot be edited', 'forbidden')
       }
-      db.run('UPDATE activites SET contenu = ? WHERE id = ?', [nextContenu, id])
-      return { ...existing, contenu: nextContenu }
+
+      if (parsed.operation === 'set_evaluation') {
+        return append(db, {
+          date_creation: activity_timestamp(),
+          rattachement: existing.rattachement,
+          auteur: destinataire,
+          facets: {
+            id_client: existing.id_client,
+            id_locataire: existing.id_locataire,
+            id_lot: existing.id_lot
+          },
+          type: 'artifact.feedback_recorded',
+          mentions: [],
+          contenu: JSON.stringify({
+            version: 2,
+            title: 'Évaluation',
+            values: {
+              score: parsed.score,
+              commentaire: parsed.commentaire ?? null
+            }
+          }),
+          thread_id: existing.thread_id ?? Bun.randomUUIDv7(),
+          revision: existing.thread_id ? latest_thread_revision(db, existing.thread_id) + 1 : 1
+        })
+      }
+
+      throw new ActivitiesError('Invalid patch operation')
     }
     return db.transaction(apply_patch).immediate()
   } finally {
@@ -541,39 +442,66 @@ export const delete_activity = (actor: string, id: number): void => {
         throw new ActivitiesError('Communications cannot be deleted', 'forbidden')
       }
       const destinataire = user_destinataire(actor)
-      const signedPlan =
-        existing.type === 'repayment_plan' &&
-        parse_contenu_json(existing.contenu)['etat'] === 'signe'
-      const isDraft = existing.statut === 'draft' && existing.type !== 'action' && !signedPlan
-      const isOwnBoost = existing.type === 'activity_boost' && existing.auteur === destinataire
-      const isNoteCreator = existing.type === 'note' && existing.auteur === destinataire
-      const action =
-        existing.type === 'action' ? parse_action_activity_content(existing.contenu) : null
-      const isActionCreator = action != null && action.cree_par === destinataire
-      if (!isDraft && !isOwnBoost && !isNoteCreator && !isActionCreator) {
-        throw new ActivitiesError('Forbidden', 'forbidden')
+      if (
+        is_repayment_plan_row(existing) &&
+        existing.auteur === destinataire &&
+        existing.thread_id
+      ) {
+        transition_repayment_plan(db, {
+          existing,
+          auteur: destinataire,
+          operation: 'withdraw'
+        })
+        return
       }
-
-      const threadRows = existing.thread_id
-        ? db
-            .query<{ id: number }, [string]>('SELECT id FROM activites WHERE thread_id = ?')
-            .all(existing.thread_id)
-        : [{ id: existing.id }]
-      const deletedIds = new Set(threadRows.map((row) => Number(row.id)))
-
-      const boosts = db
-        .query<ActivityDbRow, [string]>(
-          `SELECT * FROM activites WHERE type = 'activity_boost' AND rattachement = ?`
-        )
-        .all(existing.rattachement)
-      for (const boost of boosts) {
-        const sourceId = Number(parse_contenu_json(boost.contenu)['activite_source_id'])
-        if (deletedIds.has(sourceId)) deletedIds.add(Number(boost.id))
+      if (is_note_type(existing.type) && existing.auteur === destinataire && existing.thread_id) {
+        append(db, {
+          date_creation: activity_timestamp(),
+          rattachement: existing.rattachement,
+          auteur: destinataire,
+          facets: {
+            id_client: existing.id_client,
+            id_locataire: existing.id_locataire,
+            id_lot: existing.id_lot
+          },
+          type: 'note.withdrawn',
+          mentions: [],
+          contenu: JSON.stringify({ version: 2 }),
+          thread_id: existing.thread_id,
+          revision: latest_thread_revision(db, existing.thread_id) + 1
+        })
+        return
       }
-
-      const ids = [...deletedIds]
-      const placeholders = ids.map(() => '?').join(', ')
-      db.run(`DELETE FROM activites WHERE id IN (${placeholders})`, ids)
+      if (is_task_type(existing.type) && existing.thread_id) {
+        const created = db
+          .query<{ auteur: string }, [string]>(
+            `SELECT auteur FROM activites WHERE thread_id = ? AND type = 'task.created' LIMIT 1`
+          )
+          .get(existing.thread_id)
+        if (created?.auteur !== destinataire) throw new ActivitiesError('Forbidden', 'forbidden')
+        const task = parse_task_content(existing.contenu)
+        if (!task) throw new ActivitiesError('Invalid action content', 'invalid_body')
+        append(db, {
+          date_creation: activity_timestamp(),
+          rattachement: existing.rattachement,
+          auteur: destinataire,
+          facets: {
+            id_client: existing.id_client,
+            id_locataire: existing.id_locataire,
+            id_lot: existing.id_lot
+          },
+          type: 'task.deleted',
+          mentions: [],
+          contenu: JSON.stringify({
+            version: 2,
+            task: { ...task.task, state: 'deleted' }
+          }),
+          thread_id: existing.thread_id,
+          revision: latest_thread_revision(db, existing.thread_id) + 1
+        })
+        return
+      }
+      throw new ActivitiesError('Forbidden', 'forbidden')
     }
     db.transaction(remove).immediate()
   } finally {

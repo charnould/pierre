@@ -19,7 +19,14 @@ export const controller = async (c: Context) => {
     return c.json({ data: { deleted: true } })
   } catch (error) {
     if (error instanceof ActivitiesError) {
-      const status = error.code === 'not_found' ? 404 : error.code === 'forbidden' ? 403 : 400
+      const status =
+        error.code === 'not_found'
+          ? 404
+          : error.code === 'forbidden'
+            ? 403
+            : error.code === 'conflict'
+              ? 409
+              : 400
       return c.json({ error: { code: error.code, message: error.message } }, status)
     }
     throw error

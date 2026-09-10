@@ -79,9 +79,8 @@ export const controller = (c: Context) => {
   try {
     openActionEvents = all_activities(user.email, {
       rattachement: build_rattachement('repayment', id_locataire),
-      type: 'action',
       current_threads: true,
-      state: 'a_faire'
+      state: 'open'
     })
   } catch {
     errors.openActions = true

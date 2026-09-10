@@ -3,26 +3,25 @@ import { Database } from 'bun:sqlite'
 import desktop_config from '../../../customization/desktop'
 import {
   ACTIVITY_CONTEXTS,
-  type ActionActivityEvent,
-  type ActionActivityState,
   type Activite,
   type ActivityContext,
-  type ActivityStatus,
   type ActivityType,
+  type CommunicationChannel,
   type Mention,
-  parse_contenu_json
+  is_activity_type,
+  parse_activity_content
 } from '../../../shared/activites'
 import {
   DESKTOP_AGENT_DESTINATAIRE,
   desktopAgentMentionHandle
 } from '../../../shared/agent-identity'
 import { datastorePaths } from '../paths'
-import { AUTHOR_RE, MENTION_RE, parse_mentions } from './schema'
+import { ActivitiesError, AUTHOR_RE, MENTION_RE, parse_mentions } from './schema'
 
-export type ActivityDbRow = Omit<Activite, 'mentions' | 'type' | 'statut'> & {
+export type ActivityDbRow = Omit<Activite, 'mentions' | 'type' | 'channel'> & {
   mentions: string
   type: string
-  statut: string | null
+  channel: string | null
   bulk_id?: string | null
   execution_id?: string | null
   idempotency_key?: string | null
@@ -53,32 +52,78 @@ export const parse_rattachement = (
 }
 
 export const normalize_activity_content = (type: ActivityType, raw: string): string => {
-  const parsed = parse_contenu_json(raw)
-  if (Object.keys(parsed).length > 0) {
-    return JSON.stringify({ version: 1, ...parsed })
-  }
-  const textKey =
-    type === 'note' ? 'note' : type === 'rcs' || type === 'email' ? 'corps' : 'contenu'
-  return JSON.stringify({ version: 1, ...(raw ? { [textKey]: raw } : {}) })
+  const parsed = parse_activity_content(type, raw)
+  if (!parsed) throw new ActivitiesError(`Invalid ${type} content`)
+  return JSON.stringify(parsed)
 }
 
-export const row_to_activity = (row: ActivityDbRow): Activite => ({
-  ...row,
-  id: Number(row.id),
-  date_statut: row.date_statut || row.date_creation,
-  destinataire: row.destinataire ?? null,
-  type: row.type as ActivityType,
-  statut: (row.statut as ActivityStatus | null) ?? null,
-  mentions: parse_mentions(row.mentions),
-  contenu: row.contenu,
-  thread_id: row.thread_id ?? null,
-  event: (row.event as ActionActivityEvent | null) ?? null,
-  state: (row.state as ActionActivityState | null) ?? null,
-  revision: row.revision == null ? null : Number(row.revision),
-  bulk_id: row.bulk_id ?? null,
-  execution_id: row.execution_id ?? null,
-  idempotency_key: row.idempotency_key ?? null
-})
+export const row_to_activity = (row: ActivityDbRow): Activite => {
+  if (!is_activity_type(row.type)) throw new Error(`Unknown activity type ${row.type}`)
+  return {
+    ...row,
+    id: Number(row.id),
+    destinataire: row.destinataire ?? null,
+    type: row.type,
+    channel: (row.channel as CommunicationChannel | null) ?? null,
+    mentions: parse_mentions(row.mentions),
+    contenu: row.contenu,
+    thread_id: row.thread_id ?? null,
+    revision: row.revision == null ? null : Number(row.revision),
+    bulk_id: row.bulk_id ?? null,
+    execution_id: row.execution_id ?? null,
+    idempotency_key: row.idempotency_key ?? null
+  }
+}
+
+export type InsertActivityValues = {
+  date_creation: string
+  rattachement: string
+  auteur: string
+  destinataire?: string | null
+  facets: ActivityFacets
+  type: ActivityType
+  channel?: CommunicationChannel | null
+  mentions: Mention[]
+  contenu: string
+  thread_id?: string | null
+  revision?: number | null
+  bulk_id?: string | null
+  execution_id?: string | null
+  idempotency_key?: string | null
+}
+
+export const insert_activity_row = (db: Database, values: InsertActivityValues): Activite => {
+  const contenu = normalize_activity_content(values.type, values.contenu)
+  const row = db
+    .query<ActivityDbRow, Array<string | number | null>>(
+      `INSERT INTO activites (
+         date_creation, rattachement, auteur, destinataire,
+         id_client, id_locataire, id_lot, type, channel, mentions, contenu,
+         thread_id, revision, bulk_id, execution_id, idempotency_key
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       RETURNING *`
+    )
+    .get(
+      values.date_creation,
+      values.rattachement,
+      values.auteur,
+      values.destinataire ?? null,
+      values.facets.id_client,
+      values.facets.id_locataire,
+      values.facets.id_lot,
+      values.type,
+      values.channel ?? null,
+      JSON.stringify(values.mentions),
+      contenu,
+      values.thread_id ?? null,
+      values.revision ?? null,
+      values.bulk_id ?? null,
+      values.execution_id ?? null,
+      values.idempotency_key ?? null
+    )
+  if (!row) throw new Error('Failed to append activity')
+  return row_to_activity(row)
+}
 
 const table_columns = (db: Database, table: string): Set<string> =>
   new Set(
@@ -216,7 +261,7 @@ export const build_mentions = (
     const destinataire = resolve_destinataire(token, index)
     if (!destinataire || seen.has(destinataire)) continue
     seen.add(destinataire)
-    mentions.push({ destinataire, lu: false, boost: null })
+    mentions.push({ destinataire })
   }
   return mentions
 }
@@ -226,16 +271,8 @@ export const merge_mentions_from_content = (
   contenu: string,
   existing: Mention[]
 ): Mention[] => {
-  const next = build_mentions(db, contenu)
   const previous = new Map(existing.map((mention) => [mention.destinataire, mention]))
-  return next.map((fresh) => {
-    const current = previous.get(fresh.destinataire)
-    if (!current) return fresh
-    if (current.inbox === false) {
-      return { destinataire: fresh.destinataire, lu: false, boost: current.boost }
-    }
-    return current
-  })
+  return build_mentions(db, contenu).map((fresh) => previous.get(fresh.destinataire) ?? fresh)
 }
 
 export const get_activity_with_db = (db: Database, id: number): Activite | null => {

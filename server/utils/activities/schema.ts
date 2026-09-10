@@ -2,25 +2,22 @@ import { z } from 'zod'
 
 import {
   ACTIVITY_CONTEXTS,
-  ACTIVITY_STATUSES,
   ACTIVITY_TYPES,
-  COMMUNICATION_TYPES,
-  type ActionActivityState,
+  COMMUNICATION_CHANNELS,
+  REPAYMENT_PLAN_CLOSE_REASONS,
   type ActivityType,
-  type Mention
+  type Mention,
+  type TaskState
 } from '../../../shared/activites'
 
 export const MENTION_RE = /@([a-z0-9._-]+)/gi
 export const AUTHOR_RE = /^(user|agent|tenant|candidate|automation|system|external):.+$/
 
 export const is_communication_type = (type: ActivityType): boolean =>
-  (COMMUNICATION_TYPES as readonly string[]).includes(type)
+  type.startsWith('communication.')
 
 const MentionSchema = z.object({
   destinataire: z.string().min(1),
-  lu: z.boolean(),
-  boost: z.string().nullable(),
-  inbox: z.boolean().optional(),
   motif: z.enum(['mention', 'assignation']).optional()
 })
 
@@ -31,10 +28,11 @@ export const CreateActivityInput = z
     contexte: z.enum(ACTIVITY_CONTEXTS),
     ref: z.string().trim().min(1),
     type: z.enum(ACTIVITY_TYPES),
-    statut: z.enum(ACTIVITY_STATUSES).nullable().optional(),
+    channel: z.enum(COMMUNICATION_CHANNELS).nullable().optional(),
     destinataire: z.string().trim().min(1).nullable().optional(),
     recipients: z.array(z.string().trim().min(1)).optional(),
     contenu: z.string().default(''),
+    thread_id: z.string().trim().min(1).nullable().optional(),
     idempotency_key: z.string().trim().min(1).nullable().optional()
   })
   .strict()
@@ -55,7 +53,6 @@ export type TrustedCreateActivityInput = z.infer<typeof TrustedCreateActivityInp
 export const ActivityPatchInput = z.discriminatedUnion('operation', [
   z.object({
     operation: z.literal('edit_content'),
-    titre: z.string().nullable().optional(),
     contenu: z.string()
   }),
   z.object({
@@ -63,7 +60,6 @@ export const ActivityPatchInput = z.discriminatedUnion('operation', [
     score: z.number().int().min(1).max(5).nullable(),
     commentaire: z.string().nullable().optional()
   }),
-  z.object({ operation: z.literal('set_status'), statut: z.enum(ACTIVITY_STATUSES) }),
   z.object({
     operation: z.literal('update_action'),
     action: z.string().trim().min(1),
@@ -88,12 +84,23 @@ export const ActivityPatchInput = z.discriminatedUnion('operation', [
   z.object({ operation: z.literal('withdraw_note') }),
   z.object({
     operation: z.literal('set_mention'),
-    lu: z.boolean().optional(),
-    boost: z.string().nullable().optional()
+    lu: z.boolean().optional()
   }),
   z.object({
     operation: z.literal('set_boost'),
     emoji: z.string().trim().max(16).nullable()
+  }),
+  z.object({
+    operation: z.literal('save_repayment_plan'),
+    contenu: z.string()
+  }),
+  z.object({
+    operation: z.literal('finalize_repayment_plan'),
+    contenu: z.string()
+  }),
+  z.object({
+    operation: z.literal('close_repayment_plan'),
+    reason: z.enum(REPAYMENT_PLAN_CLOSE_REASONS)
   })
 ])
 
@@ -106,9 +113,8 @@ export type ListActivitiesOptions = {
   id_locataire?: string
   id_lot?: string
   type?: string
-  statut?: string
   current_threads?: boolean
-  state?: ActionActivityState
+  state?: TaskState
   limit?: number
   offset?: number
 }
