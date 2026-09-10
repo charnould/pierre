@@ -2,7 +2,9 @@ import type { Context } from 'hono'
 import { z } from 'zod'
 
 import { ACTIVITY_CONTEXTS, ACTIVITY_CONTENT_VERSION } from '../../shared/activites'
-import type { CommunicationType } from '../../shared/activites'
+
+const COMMUNICATION_MEDIA = ['rcs', 'sms', 'email', 'courrier', 'lrar', 'lre'] as const
+type CommunicationMedium = (typeof COMMUNICATION_MEDIA)[number]
 import type { Parsed_User } from '../utils/_schema'
 import { update_status } from '../utils/bulk/status'
 import {
@@ -60,7 +62,7 @@ const error_status = (error: CommunicationsError): 400 | 403 | 404 | 409 =>
         : 400
 
 export const fake_communication_controller =
-  (type: Exclude<CommunicationType, 'rcs'>) => async (c: Context) => {
+  (type: Exclude<CommunicationMedium, 'rcs'>) => async (c: Context) => {
     const user = c.get('user') as Parsed_User | null
     if (!user?.email) {
       return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
@@ -116,13 +118,11 @@ export const fake_communication_controller =
         }),
         idempotency_key: idempotencyKey
       })
-      if (activity.statut === 'queued') {
-        const fails =
-          Bun.env['NODE_ENV'] !== 'production' && /fail|invalide/i.test(parsed.data.destinataire)
+      if (/fail|invalide/i.test(parsed.data.destinataire)) {
         activity = update_status({
           activity_id: activity.id,
           type,
-          statut: fails ? 'failed' : 'sent',
+          statut: 'failed',
           occurred_at: next_status_timestamp(activity)
         })
       }
@@ -135,14 +135,14 @@ export const fake_communication_controller =
     }
   }
 
-const authorized = (c: Context, type: CommunicationType): boolean => {
+const authorized = (c: Context, type: CommunicationMedium): boolean => {
   if (type === 'email') return cm_webhook_authorized(c.req.header('Webhook-Secret'))
   const expected = Bun.env['FAKE_WEBHOOK_KEY']?.trim()
   return Boolean(expected && c.req.header('Webhook-Secret') === expected)
 }
 
 export const fake_webhook_controller =
-  (type: Exclude<CommunicationType, 'rcs'>, allowMessage = false) =>
+  (type: Exclude<CommunicationMedium, 'rcs'>, allowMessage = false) =>
   async (c: Context) => {
     if (!authorized(c, type)) {
       return c.json({ error: { code: 'unauthorized', message: 'Webhook key invalide' } }, 401)

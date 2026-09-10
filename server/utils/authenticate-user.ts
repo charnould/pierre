@@ -2,10 +2,11 @@ import type { Context, Next } from 'hono'
 import { bearerAuth } from 'hono/bearer-auth'
 import { getSignedCookie } from 'hono/cookie'
 
-import { COMMUNICATION_TYPES } from '../../shared/activites'
 import { get_user } from '../utils/handle-user'
 import type { Config, Parsed_User } from './_schema'
 import { ChatbotConfigError, loadChatbotConfig } from './chatbot-config'
+
+const COMMUNICATION_ROUTES = ['rcs', 'sms', 'email', 'courrier', 'lrar', 'lre'] as const
 
 //
 //
@@ -149,7 +150,7 @@ export const authenticate = async (c: Context, next: Next) => {
   //
   if (
     c.req.path === '/communications/external' ||
-    COMMUNICATION_TYPES.some((type) => c.req.path === `/${type}`)
+    COMMUNICATION_ROUTES.some((type) => c.req.path === `/${type}`)
   ) {
     if (user === null) {
       return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)

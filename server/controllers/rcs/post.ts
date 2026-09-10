@@ -99,24 +99,8 @@ export const controller = async (c: Context) => {
       }),
       idempotency_key: idempotencyKey
     })
-    if (activity.statut !== 'queued') {
-      return c.json({ data: activity }, 201)
-    }
     const dispatch = claim_outbound_dispatch(activity.id)
-    if (dispatch === 'pending') return c.json({ data: activity }, 202)
-    if (dispatch === 'abandoned') {
-      return c.json(
-        {
-          error: {
-            code: 'dispatch_state_unknown',
-            message: "L'état d'un précédent envoi RCS est inconnu"
-          },
-          data: get_activity(activity.id)
-        },
-        502
-      )
-    }
-    if (dispatch === 'not_queued') return c.json({ data: get_activity(activity.id) }, 201)
+    if (dispatch !== 'claimed') return c.json({ data: get_activity(activity.id) ?? activity }, 201)
 
     const conversation: Record<string, unknown> = { text: parsed.data.contenu.corps }
     if (parsed.data.contenu.choix?.length) {
@@ -153,12 +137,6 @@ export const controller = async (c: Context) => {
         status
       )
     }
-    activity = update_status({
-      activity_id: activity.id,
-      type: 'rcs',
-      statut: 'sent',
-      occurred_at: next_status_timestamp(activity)
-    })
     return c.json({ data: activity }, 201)
   } catch (error) {
     if (error instanceof CommunicationsError) {

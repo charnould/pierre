@@ -1,12 +1,10 @@
 import { Database } from 'bun:sqlite'
 
 import {
-  COMMUNICATION_TYPES,
   type Activite,
   type ActivityContext,
-  type ActivityType,
-  type CommunicationType,
-  activity_timestamp
+  activity_timestamp,
+  is_communication_type
 } from '../../../shared/activites'
 import { get_activity, parse_rattachement } from '../activities/rows'
 import { datastore_path } from './storage'
@@ -17,20 +15,18 @@ export const communication_from_reference = (reference: string): Activite | null
   const id = Number(match[1])
   if (!Number.isSafeInteger(id)) return null
   const activity = get_activity(id)
-  return activity && (COMMUNICATION_TYPES as readonly ActivityType[]).includes(activity.type)
-    ? activity
-    : null
+  return activity && is_communication_type(activity.type) ? activity : null
 }
 
 export const communication_reference = (activityId: number): string => `p${activityId}`
 
 export const next_status_timestamp = (activity: Activite, now: Date = new Date()): string => {
-  const current = new Date(activity.date_statut ?? activity.date_creation).getTime()
+  const current = new Date(activity.date_creation).getTime()
   return new Date(Math.max(now.getTime(), current + 1)).toISOString()
 }
 
 export const find_recent_thread = (
-  type: Extract<CommunicationType, 'rcs' | 'email'>,
+  type: 'rcs' | 'email',
   sender: string,
   now: Date = new Date()
 ): {
@@ -40,6 +36,7 @@ export const find_recent_thread = (
   id_locataire: string | null
 } | null => {
   const cutoff = activity_timestamp(new Date(now.getTime() - 72 * 60 * 60 * 1000))
+  const channel = type
   const db = new Database(datastore_path(), { readonly: true })
   try {
     const rows = db
@@ -55,16 +52,16 @@ export const find_recent_thread = (
         `SELECT a.rattachement, a.thread_id, MAX(a.id_locataire) AS id_locataire,
                 MAX(a.date_creation) AS last_message_at
          FROM activites a
-         WHERE a.type = ?
+         WHERE a.channel = ?
            AND a.thread_id IN (
              SELECT thread_id FROM activites
-             WHERE type = ? AND destinataire = ? AND thread_id IS NOT NULL
+             WHERE channel = ? AND destinataire = ? AND thread_id IS NOT NULL
            )
            AND a.rattachement NOT LIKE 'a_qualifier:%'
          GROUP BY a.rattachement, a.thread_id
          HAVING MAX(a.date_creation) >= ?`
       )
-      .all(type, type, sender, cutoff)
+      .all(channel, channel, sender, cutoff)
     if (rows.length !== 1) return null
     const row = rows[0]!
     const parsed = parse_rattachement(row.rattachement)

@@ -4,23 +4,23 @@ import { z } from 'zod'
 import {
   ACTIVITY_CONTENT_VERSION,
   ACTIVITY_CONTEXTS,
-  COMMUNICATION_TYPES
+  COMMUNICATION_CHANNELS
 } from '../../../shared/activites'
 import type { Parsed_User } from '../../utils/_schema'
-import { update_status } from '../../utils/bulk/status'
-import { next_status_timestamp } from '../../utils/communications/parsing'
 import { CommunicationsError, create_outbound } from '../../utils/communications/storage'
 
 const Body = z
   .object({
-    canal: z.enum(COMMUNICATION_TYPES),
+    channel: z.enum(COMMUNICATION_CHANNELS),
     contexte: z.enum(ACTIVITY_CONTEXTS),
     ref: z.string().trim().min(1),
     destinataire: z.string().trim().min(1).optional(),
+    imported: z.literal(true).optional(),
     contenu: z
       .object({
-        objet: z.string().trim().min(1).optional(),
-        corps: z.string(),
+        subject: z.string().trim().min(1).optional(),
+        body: z.string(),
+        sender: z.string().trim().min(1).optional(),
         action: z.string().trim().min(1).optional(),
         choix: z
           .array(z.object({ id: z.string().trim().min(1), label: z.string().trim().min(1) }))
@@ -32,8 +32,8 @@ const Body = z
           .optional()
       })
       .strict()
-      .refine((value) => Boolean(value.objet?.trim() || value.corps.trim()), {
-        message: 'objet ou corps requis'
+      .refine((value) => Boolean(value.subject?.trim() || value.body.trim()), {
+        message: 'subject ou body requis'
       })
   })
   .strict()
@@ -81,34 +81,29 @@ export const controller = async (c: Context) => {
   }
 
   try {
-    let activity = create_outbound({
+    const activity = create_outbound({
       actor: user.email,
       contexte: parsed.data.contexte,
       ref: parsed.data.ref,
-      type: parsed.data.canal,
+      type: parsed.data.channel,
       destinataire: parsed.data.destinataire,
       allow_missing_destination: true,
+      imported: parsed.data.imported,
       contenu: JSON.stringify({
         version: ACTIVITY_CONTENT_VERSION,
+        body: parsed.data.contenu.body.trim(),
+        ...(parsed.data.contenu.subject ? { subject: parsed.data.contenu.subject } : {}),
+        ...(parsed.data.contenu.sender ? { sender: parsed.data.contenu.sender } : {}),
         ...(parsed.data.contenu.action ? { action: parsed.data.contenu.action } : {}),
-        ...(parsed.data.contenu.objet ? { objet: parsed.data.contenu.objet } : {}),
-        corps: parsed.data.contenu.corps.trim(),
-        ...(parsed.data.contenu.choix ? { choix: parsed.data.contenu.choix } : {}),
-        ...(parsed.data.contenu.tenant_reply ? { tenant_reply: true } : {}),
+        ...(parsed.data.contenu.choix
+          ? { choices: parsed.data.contenu.choix.map((c) => c.label) }
+          : {}),
         ...(parsed.data.contenu.external_application
-          ? { external_application: parsed.data.contenu.external_application }
+          ? { provider: parsed.data.contenu.external_application.name }
           : {})
       }),
       idempotency_key: idempotencyKey
     })
-    if (activity.statut === 'queued') {
-      activity = update_status({
-        activity_id: activity.id,
-        type: parsed.data.canal,
-        statut: 'sent',
-        occurred_at: next_status_timestamp(activity)
-      })
-    }
     return c.json({ data: activity }, 201)
   } catch (error) {
     if (error instanceof CommunicationsError) {

@@ -1,44 +1,28 @@
-import { Database, type SQLQueryBindings } from 'bun:sqlite'
+import { Database } from 'bun:sqlite'
 
 import desktop_config from '../../../customization/desktop'
 import {
   type Activite,
   type ActivityContext,
-  type CommunicationType,
-  activity_timestamp
+  type CommunicationChannel,
+  activity_timestamp,
+  medium_to_channel,
+  parse_contenu_json
 } from '../../../shared/activites'
 import { latest_repayment_states } from '../activities/repayment'
 import {
   build_rattachement,
   get_activity_with_db,
+  insert_activity_row,
   login_from_email,
   resolve_activity_facets,
+  type ActivityDbRow,
   user_destinataire
 } from '../activities/rows'
 import { normalize_email, normalize_telephone } from '../contacts'
 import { datastorePaths } from '../paths'
 
 export const datastore_path = (): string => datastorePaths().database
-
-const without_delivery_metadata = (raw: string): string => {
-  try {
-    const value = JSON.parse(raw) as Record<string, unknown>
-    delete value['referent_notification']
-    if (value['delivery'] && typeof value['delivery'] === 'object') {
-      const delivery = { ...(value['delivery'] as Record<string, unknown>) }
-      delete delivery['history']
-      delete delivery['fallback']
-      delete delivery['finalFailure']
-      delete delivery['dispatch_started_at']
-      delete delivery['dispatch_abandoned_at']
-      if (Object.keys(delivery).length > 0) value['delivery'] = delivery
-      else delete value['delivery']
-    }
-    return JSON.stringify(value)
-  } catch {
-    return raw
-  }
-}
 
 export class CommunicationsError extends Error {
   constructor(
@@ -61,18 +45,76 @@ const require_activity_with_db = (db: Database, id: number): Activite => {
   return activity
 }
 
-const permanent_thread = (db: Database, rattachement: string, type: CommunicationType): string => {
-  const existing = db
-    .query<{ thread_id: string }, [string, string]>(
-      `SELECT thread_id
-       FROM activites
-       WHERE rattachement = ? AND type = ? AND thread_id IS NOT NULL
-       ORDER BY date_creation ASC, id ASC
-       LIMIT 1`
-    )
-    .get(rattachement, type)
-  return existing?.thread_id ?? Bun.randomUUIDv7()
+const require_channel = (medium: string): CommunicationChannel => {
+  const channel = medium_to_channel(medium)
+  if (!channel) throw new CommunicationsError('Canal invalide')
+  return channel
 }
+
+const opened_contenu = (raw: string, sender: string): string => {
+  const value = parse_contenu_json(raw)
+  const choices = Array.isArray(value['choix'])
+    ? value['choix'].flatMap((choice) => {
+        if (typeof choice === 'string' && choice.trim()) return [choice.trim()]
+        if (
+          choice &&
+          typeof choice === 'object' &&
+          typeof (choice as { label?: unknown }).label === 'string'
+        ) {
+          const label = String((choice as { label: string }).label).trim()
+          return label ? [label] : []
+        }
+        return []
+      })
+    : Array.isArray(value['choices'])
+      ? value['choices'].filter((entry): entry is string => typeof entry === 'string')
+      : []
+  return JSON.stringify({
+    version: 2,
+    sender:
+      typeof value['sender'] === 'string' && value['sender'].trim()
+        ? value['sender'].trim()
+        : typeof value['expediteur'] === 'string' && value['expediteur'].trim()
+          ? value['expediteur'].trim()
+          : sender,
+    body:
+      typeof value['body'] === 'string'
+        ? value['body']
+        : typeof value['corps'] === 'string'
+          ? value['corps']
+          : '',
+    ...(typeof value['subject'] === 'string' && value['subject'].trim()
+      ? { subject: value['subject'].trim() }
+      : typeof value['objet'] === 'string' && value['objet'].trim()
+        ? { subject: value['objet'].trim() }
+        : {}),
+    ...(typeof value['action'] === 'string' && value['action'].trim()
+      ? { action: value['action'].trim() }
+      : {}),
+    ...(choices.length > 0 ? { choices } : {}),
+    ...(typeof value['provider'] === 'string' && value['provider'].trim()
+      ? { provider: value['provider'].trim() }
+      : {}),
+    ...(value['purpose'] === 'general' ||
+    value['purpose'] === 'payment_plan' ||
+    value['purpose'] === 'bulk'
+      ? { purpose: value['purpose'] }
+      : {}),
+    ...(typeof value['related_id'] === 'string' && value['related_id'].trim()
+      ? { related_id: value['related_id'].trim() }
+      : {}),
+    ...(typeof value['fallback_from'] === 'string' && value['fallback_from'].trim()
+      ? { fallback_from: value['fallback_from'].trim() }
+      : {})
+  })
+}
+
+const thread_revision = (db: Database, thread_id: string): number =>
+  (db
+    .query<{ revision: number | null }, [string]>(
+      'SELECT MAX(revision) AS revision FROM activites WHERE thread_id = ?'
+    )
+    .get(thread_id)?.revision ?? 0) + 1
 
 const table_has_column = (db: Database, table: string, column: string): boolean =>
   db
@@ -84,7 +126,7 @@ type CreateOutboundInputBase = {
   actor: string
   contexte: ActivityContext
   ref: string
-  type: CommunicationType
+  type: string
   contenu: string
   idempotency_key: string
   bulk_id?: string | null
@@ -92,6 +134,7 @@ type CreateOutboundInputBase = {
   recipients?: string[]
   notify_current_manager?: boolean
   require_bulk_run?: { bulk_operation_id: string; execution_id: string }
+  imported?: boolean
 }
 
 export type CreateOutboundInput = CreateOutboundInputBase &
@@ -102,8 +145,9 @@ export type CreateOutboundInput = CreateOutboundInputBase &
 
 export const create_outbound_with_db = (db: Database, input: CreateOutboundInput): Activite => {
   const rawDestination = input.destinataire ?? ''
-  const destination =
-    input.type === 'rcs' || input.type === 'sms'
+  const destination = input.imported
+    ? { value: rawDestination.trim(), status: 'ok' as const }
+    : input.type === 'rcs' || input.type === 'sms'
       ? normalize_telephone(rawDestination)
       : input.type === 'email' || input.type === 'lre'
         ? normalize_email(rawDestination)
@@ -121,7 +165,7 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
         `SELECT COUNT(*) AS n
            FROM activites run
            JOIN bulk_operations operation ON operation.id = run.bulk_id
-           WHERE run.type = 'bulk_run'
+           WHERE run.type = 'bulk.ran'
              AND run.bulk_id = ? AND run.execution_id = ?`
       )
       .get(input.require_bulk_run.bulk_operation_id, input.require_bulk_run.execution_id)?.n
@@ -162,12 +206,14 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
          FROM activites WHERE idempotency_key = ? LIMIT 1`
     )
     .get(input.idempotency_key)
+  const channel = require_channel(input.type)
+  const openedType = input.imported ? 'communication.imported' : 'communication.sent'
+  const author = user_destinataire(input.actor)
   if (existing) {
     if (
       existing.rattachement !== rattachement ||
-      existing.type !== input.type ||
-      existing.destinataire !== destinationValue ||
-      without_delivery_metadata(existing.contenu) !== without_delivery_metadata(requestedContent)
+      existing.type !== openedType ||
+      existing.destinataire !== destinationValue
     ) {
       throw new CommunicationsError(
         'Idempotency-Key déjà utilisée pour une autre communication',
@@ -177,22 +223,8 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
     return require_activity_with_db(db, Number(existing.id))
   }
 
-  const now = new Date().toISOString()
-  let contenu = requestedContent
-  try {
-    const payload = JSON.parse(requestedContent) as Record<string, unknown>
-    contenu = JSON.stringify({
-      ...payload,
-      delivery: {
-        ...(payload['delivery'] && typeof payload['delivery'] === 'object'
-          ? (payload['delivery'] as Record<string, unknown>)
-          : {}),
-        history: [{ status: 'queued', occurred_at: now }]
-      }
-    })
-  } catch {
-    // Dedicated callers already validate communication content.
-  }
+  const now = activity_timestamp()
+  const contenu = opened_contenu(requestedContent, author)
   if (
     input.type === 'rcs' &&
     input.contexte === 'repayment' &&
@@ -215,43 +247,27 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
       )
     }
   }
-  const threadId = permanent_thread(db, rattachement, input.type)
-  const row = db
-    .query<{ id: number }, SQLQueryBindings[]>(
-      `INSERT INTO activites (
-           date_creation, date_statut, rattachement, auteur, destinataire,
-           id_client, id_locataire, id_lot, type, statut, mentions, contenu,
-           thread_id, bulk_id, execution_id, idempotency_key
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?, ?)
-         RETURNING id`
-    )
-    .get(
-      now,
-      now,
-      rattachement,
-      user_destinataire(input.actor),
-      destinationValue,
-      facets.id_client,
-      facets.id_locataire,
-      facets.id_lot,
-      input.type,
-      JSON.stringify(
-        [...(input.recipients ?? []), ...(manager ? [manager] : [])].map((recipient) => ({
-          destinataire: recipient.startsWith('user:')
-            ? recipient.toLowerCase()
-            : user_destinataire(recipient),
-          lu: false,
-          boost: null
-        }))
-      ),
-      contenu,
-      threadId,
-      input.bulk_id ?? null,
-      input.execution_id ?? null,
-      input.idempotency_key
-    )
-  if (!row) throw new CommunicationsError('Création de la communication impossible')
-  return require_activity_with_db(db, Number(row.id))
+  const threadId = Bun.randomUUIDv7()
+  return insert_activity_row(db, {
+    date_creation: now,
+    rattachement,
+    auteur: author,
+    destinataire: destinationValue,
+    facets,
+    type: openedType,
+    channel,
+    mentions: [...(input.recipients ?? []), ...(manager ? [manager] : [])].map((recipient) => ({
+      destinataire: recipient.startsWith('user:')
+        ? recipient.toLowerCase()
+        : user_destinataire(recipient)
+    })),
+    contenu,
+    thread_id: threadId,
+    revision: 1,
+    bulk_id: input.bulk_id ?? null,
+    execution_id: input.execution_id ?? null,
+    idempotency_key: input.idempotency_key
+  })
 }
 
 export const create_outbound = (input: CreateOutboundInput): Activite => {
@@ -272,49 +288,27 @@ export const create_outbound = (input: CreateOutboundInput): Activite => {
 
 export type DispatchClaim = 'claimed' | 'pending' | 'abandoned' | 'not_queued'
 
-/** Atomically claims a queued send and terminally fails stale, ambiguous dispatches. */
+/** Read-only: a send is claimable when its thread has no result yet. */
 export const claim_outbound_dispatch = (activity_id: number): DispatchClaim => {
   const db = new Database(datastore_path())
   db.run('PRAGMA busy_timeout = 5000')
   try {
-    const claim = db.transaction(() => {
-      const activity = get_activity_with_db(db, activity_id)
-      if (!activity || activity.statut !== 'queued') return 'not_queued'
-      const content = JSON.parse(activity.contenu) as Record<string, unknown>
-      const delivery =
-        content['delivery'] && typeof content['delivery'] === 'object'
-          ? { ...(content['delivery'] as Record<string, unknown>) }
-          : {}
-      const now = new Date()
-      const startedAt =
-        typeof delivery['dispatch_started_at'] === 'string'
-          ? new Date(delivery['dispatch_started_at']).getTime()
-          : Number.NaN
-      if (Number.isFinite(startedAt)) {
-        if (now.getTime() - startedAt < 60_000) return 'pending'
-        const occurredAt = activity_timestamp(now)
-        const history = Array.isArray(delivery['history']) ? delivery['history'] : []
-        delivery['history'] = [
-          ...history,
-          { status: 'failed', occurred_at: occurredAt, reason: 'dispatch_state_unknown' }
-        ]
-        delivery['dispatch_abandoned_at'] = occurredAt
-        db.run('UPDATE activites SET statut = ?, date_statut = ?, contenu = ? WHERE id = ?', [
-          'failed',
-          occurredAt,
-          JSON.stringify({ ...content, delivery }),
-          activity_id
-        ])
-        return 'abandoned'
-      }
-      delivery['dispatch_started_at'] = activity_timestamp(now)
-      db.run('UPDATE activites SET contenu = ? WHERE id = ?', [
-        JSON.stringify({ ...content, delivery }),
-        activity_id
-      ])
-      return 'claimed'
-    })
-    return claim.immediate()
+    const activity = get_activity_with_db(db, activity_id)
+    if (!activity || activity.type !== 'communication.sent' || !activity.thread_id) {
+      return 'not_queued'
+    }
+    const latest = db
+      .query<ActivityDbRow, [string]>(
+        `SELECT * FROM activites
+         WHERE thread_id = ? AND type LIKE 'communication.%'
+         ORDER BY revision DESC LIMIT 1`
+      )
+      .get(activity.thread_id)
+    if (!latest) return 'not_queued'
+    if (latest.type === 'communication.ok' || latest.type === 'communication.failed') {
+      return 'not_queued'
+    }
+    return 'claimed'
   } finally {
     db.close()
   }
@@ -323,7 +317,7 @@ export const claim_outbound_dispatch = (activity_id: number): DispatchClaim => {
 export type CreateInboundInput = {
   contexte: ActivityContext
   ref: string
-  type: Extract<CommunicationType, 'rcs' | 'email'>
+  type: 'rcs' | 'email'
   auteur: string
   contenu: string
   occurred_at: string
@@ -356,26 +350,31 @@ export const create_inbound = (input: CreateInboundInput): Activite => {
 
     const rattachement = build_rattachement(input.contexte, input.ref)
     const facets = resolve_activity_facets(db, input.contexte, input.ref)
-    const threadId = input.thread_id ?? permanent_thread(db, rattachement, input.type)
-    const recipients: { destinataire: string; lu: boolean; boost: null }[] = []
+    const threadId = input.thread_id ?? Bun.randomUUIDv7()
+    const mentions: { destinataire: string }[] = []
     if (input.contexte === 'repayment' && facets.id_locataire) {
       const manager = db
         .query<{ contenu: string }, [string, string]>(
           `SELECT contenu FROM activites
            WHERE id_locataire = ?
              AND rattachement = 'repayment:' || ?
-             AND type = 'case_assignment'
+             AND type = 'case.assignee_changed'
            ORDER BY date_creation DESC, id DESC LIMIT 1`
         )
         .get(facets.id_locataire, facets.id_locataire)
       if (manager) {
         try {
-          const value = JSON.parse(manager.contenu) as { referent?: unknown }
-          if (typeof value.referent === 'string' && value.referent.trim()) {
-            recipients.push({
-              destinataire: user_destinataire(value.referent),
-              lu: false,
-              boost: null
+          const value = JSON.parse(manager.contenu) as { after?: { id?: unknown } | string }
+          const after = value.after
+          const email =
+            typeof after === 'string'
+              ? after
+              : after && typeof after === 'object' && typeof after.id === 'string'
+                ? after.id
+                : ''
+          if (email.trim()) {
+            mentions.push({
+              destinataire: email.includes(':') ? email : user_destinataire(email)
             })
           }
         } catch {
@@ -383,32 +382,20 @@ export const create_inbound = (input: CreateInboundInput): Activite => {
         }
       }
     }
-    const row = db
-      .query<{ id: number }, SQLQueryBindings[]>(
-        `INSERT INTO activites (
-           date_creation, date_statut, rattachement, auteur, destinataire,
-           id_client, id_locataire, id_lot, type, statut, mentions, contenu,
-           thread_id, idempotency_key
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'received', ?, ?, ?, ?)
-         RETURNING id`
-      )
-      .get(
-        occurredAt,
-        occurredAt,
-        rattachement,
-        input.auteur,
-        desktop_config.name,
-        facets.id_client,
-        facets.id_locataire,
-        facets.id_lot,
-        input.type,
-        JSON.stringify(recipients),
-        input.contenu,
-        threadId,
-        input.idempotency_key ?? null
-      )
-    if (!row) throw new CommunicationsError('Réception de la communication impossible')
-    const activity = require_activity_with_db(db, Number(row.id))
+    const activity = insert_activity_row(db, {
+      date_creation: occurredAt,
+      rattachement,
+      auteur: input.auteur,
+      destinataire: desktop_config.name,
+      facets,
+      type: 'communication.received',
+      channel: require_channel(input.type),
+      mentions,
+      contenu: opened_contenu(input.contenu, input.auteur),
+      thread_id: threadId,
+      revision: thread_revision(db, threadId),
+      idempotency_key: input.idempotency_key ?? null
+    })
     db.run('COMMIT')
     return activity
   } catch (error) {

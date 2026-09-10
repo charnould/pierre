@@ -122,7 +122,7 @@ const handle_status = (payload: Record<string, unknown>): void => {
   const activity = communication_from_reference(reference)
   const statut = status_from_cm(code)
   if (!statut) throw new WebhookValidationError('Statut webhook inconnu')
-  if (!activity || activity.type !== 'rcs') {
+  if (!activity || activity.channel !== 'rcs') {
     throw new WebhookValidationError('Référence de communication invalide')
   }
   const occurredAt = string_at(payload, 'received') ?? string_at(payload, 'timeUtc')
@@ -158,7 +158,7 @@ const handle_inbound = (payload: Record<string, unknown>): void => {
     contextReference
   )
   const exact =
-    source?.type === 'rcs' &&
+    source?.channel === 'rcs' &&
     source.destinataire === phone.value &&
     parse_rattachement(source.rattachement)
       ? source

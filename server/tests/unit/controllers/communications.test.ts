@@ -254,7 +254,7 @@ describe('POST /communications/external et action', () => {
   app.post('/communications/external', externalCommunication)
   app.post('/email', emailSend)
 
-  it('journalise un courriel déjà envoyé (type email, sent) avec action', async () => {
+  it('journalise un courriel déjà envoyé (communication.sent) avec action', async () => {
     const response = await app.request('/communications/external', {
       method: 'POST',
       headers: {
@@ -262,34 +262,28 @@ describe('POST /communications/external et action', () => {
         'Idempotency-Key': Bun.randomUUIDv7()
       },
       body: JSON.stringify({
-        canal: 'email',
+        channel: 'email',
         contexte: 'automations',
         ref: 'MAILTO-1',
         destinataire: 'caf@example.fr',
         contenu: {
           action: 'Contacter la CAF',
-          objet: 'Dossier APL',
-          corps: 'Merci de rétablir l’APL.'
+          subject: 'Dossier APL',
+          body: 'Merci de rétablir l’APL.'
         }
       })
     })
     expect(response.status).toBe(201)
     const body = (await response.json()) as {
-      data: { type: string; statut: string; contenu: string }
+      data: { type: string; channel: string; contenu: string }
     }
-    expect(body.data.type).toBe('email')
-    expect(body.data.statut).toBe('sent')
+    expect(body.data.type).toBe('communication.sent')
+    expect(body.data.channel).toBe('email')
     expect(JSON.parse(body.data.contenu)).toMatchObject({
-      version: 1,
+      version: 2,
       action: 'Contacter la CAF',
-      objet: 'Dossier APL',
-      corps: 'Merci de rétablir l’APL.',
-      delivery: {
-        history: [
-          expect.objectContaining({ status: 'queued' }),
-          expect.objectContaining({ status: 'sent' })
-        ]
-      }
+      subject: 'Dossier APL',
+      body: 'Merci de rétablir l’APL.'
     })
   })
 
@@ -328,11 +322,11 @@ describe('POST /communications/external et action', () => {
         'Idempotency-Key': Bun.randomUUIDv7()
       },
       body: JSON.stringify({
-        canal: 'email',
+        channel: 'email',
         contexte: 'automations',
         ref: 'MAILTO-2',
         destinataire: 'caf@example.fr',
-        contenu: { objet: 'Dossier APL', corps: '' }
+        contenu: { subject: 'Dossier APL', body: '' }
       })
     })
     expect(response.status).toBe(201)
@@ -346,11 +340,11 @@ describe('POST /communications/external et action', () => {
         'Idempotency-Key': Bun.randomUUIDv7()
       },
       body: JSON.stringify({
-        canal: 'email',
+        channel: 'email',
         contexte: 'tickets',
         ref: 'EXTERNAL-NO-DESTINATION',
         contenu: {
-          corps: 'Votre demande a été traitée.',
+          body: 'Votre demande a été traitée.',
           tenant_reply: true,
           external_application: { name: 'Aravis' }
         }
@@ -362,18 +356,52 @@ describe('POST /communications/external et action', () => {
     }
     expect(body.data.destinataire).toBeNull()
     expect(JSON.parse(body.data.contenu)).toMatchObject({
-      tenant_reply: true,
-      external_application: { name: 'Aravis' }
+      provider: 'Aravis'
+    })
+  })
+
+  it('journalise un courriel importé (communication.imported)', async () => {
+    const response = await app.request('/communications/external', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': Bun.randomUUIDv7()
+      },
+      body: JSON.stringify({
+        channel: 'email',
+        imported: true,
+        contexte: 'tickets',
+        ref: 'EML-1',
+        destinataire: 'Bob <bob@locataire.fr>',
+        contenu: {
+          subject: 'Relance loyer',
+          body: 'Merci de régulariser.',
+          sender: 'Alice <alice@bailleur.fr>'
+        }
+      })
+    })
+    expect(response.status).toBe(201)
+    const body = (await response.json()) as {
+      data: { type: string; channel: string; destinataire: string | null; contenu: string }
+    }
+    expect(body.data.type).toBe('communication.imported')
+    expect(body.data.channel).toBe('email')
+    expect(body.data.destinataire).toBe('Bob <bob@locataire.fr>')
+    expect(JSON.parse(body.data.contenu)).toMatchObject({
+      version: 2,
+      subject: 'Relance loyer',
+      body: 'Merci de régulariser.',
+      sender: 'Alice <alice@bailleur.fr>'
     })
   })
 
   it('journalise chaque canal sans fournisseur et reste idempotent', async () => {
-    for (const canal of ['rcs', 'email', 'courrier'] as const) {
+    for (const channel of ['rcs', 'email', 'postal_letter'] as const) {
       const idempotencyKey = Bun.randomUUIDv7()
       const destinataire =
-        canal === 'rcs'
+        channel === 'rcs'
           ? '+33600000000'
-          : canal === 'email'
+          : channel === 'email'
             ? 'locataire@example.org'
             : '1 rue du Test, 75001 Paris'
       const request = () =>
@@ -384,25 +412,25 @@ describe('POST /communications/external et action', () => {
             'Idempotency-Key': idempotencyKey
           },
           body: JSON.stringify({
-            canal,
+            channel,
             contexte: 'tickets',
-            ref: `EXTERNAL-${canal}`,
+            ref: `EXTERNAL-${channel}`,
             destinataire,
-            contenu: { corps: `Réponse ${canal}` }
+            contenu: { body: `Réponse ${channel}` }
           })
         })
 
       const first = await request()
       expect(first.status).toBe(201)
       const firstBody = (await first.json()) as {
-        data: { id: number; type: string; statut: string }
+        data: { id: number; type: string; channel: string }
       }
-      expect(firstBody.data).toMatchObject({ type: canal, statut: 'sent' })
+      expect(firstBody.data).toMatchObject({ type: 'communication.sent', channel })
 
       const replay = await request()
       expect(replay.status).toBe(201)
       expect((await replay.json()) as unknown).toMatchObject({
-        data: { id: firstBody.data.id, type: canal, statut: 'sent' }
+        data: { id: firstBody.data.id, type: 'communication.sent', channel }
       })
     }
   })
