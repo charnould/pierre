@@ -1,5 +1,6 @@
 import { Database } from 'bun:sqlite'
 
+import { insert_activity_row } from '../activities/rows'
 import { insert_contacts_from_rows } from '../contacts'
 import {
   COMMUNES_PAR_CODE_POSTAL_TABLE,
@@ -70,13 +71,6 @@ const emit_reclamation_changes = (
   if (previous.size === 0 || !table_exists(db, 'activites')) return
   const ignored = new Set(['id_reclamation', 'id_locataire', 'id_lot'])
   const now = new Date().toISOString()
-  const insert = db.prepare(
-    `INSERT INTO activites (
-       date_creation, rattachement, auteur, id_client, id_locataire, id_lot,
-       type, statut, mentions, contenu
-     ) VALUES (?, ?, 'system:import.hlm', ?, ?, ?, 'ticket_change', 'logged', '[]', ?)`
-  )
-
   for (const row of rows) {
     const id = row['id_reclamation']
     if (typeof id !== 'string' || !id) continue
@@ -84,14 +78,38 @@ const emit_reclamation_changes = (
     if (!before) continue
     for (const field of new Set([...Object.keys(before), ...Object.keys(row)])) {
       if (ignored.has(field) || Object.is(before[field], row[field])) continue
-      insert.run(
-        now,
-        `tickets:${id}`,
-        typeof row['id_client'] === 'string' ? row['id_client'] : null,
-        typeof row['id_locataire'] === 'string' ? row['id_locataire'] : null,
-        typeof row['id_lot'] === 'string' ? row['id_lot'] : null,
-        JSON.stringify({ version: 1, champ: field, avant: before[field], apres: row[field] })
-      )
+      const beforeValue =
+        before[field] == null ||
+        typeof before[field] === 'string' ||
+        typeof before[field] === 'number' ||
+        typeof before[field] === 'boolean'
+          ? (before[field] as string | number | boolean | null)
+          : String(before[field])
+      const afterValue =
+        row[field] == null ||
+        typeof row[field] === 'string' ||
+        typeof row[field] === 'number' ||
+        typeof row[field] === 'boolean'
+          ? (row[field] as string | number | boolean | null)
+          : String(row[field])
+      insert_activity_row(db, {
+        date_creation: now,
+        rattachement: `tickets:${id}`,
+        auteur: 'system:import.hlm',
+        facets: {
+          id_client: typeof row['id_client'] === 'string' ? row['id_client'] : null,
+          id_locataire: typeof row['id_locataire'] === 'string' ? row['id_locataire'] : null,
+          id_lot: typeof row['id_lot'] === 'string' ? row['id_lot'] : null
+        },
+        type: 'ticket.field_changed',
+        mentions: [],
+        contenu: JSON.stringify({
+          version: 2,
+          field,
+          before: beforeValue,
+          after: afterValue
+        })
+      })
     }
   }
 }

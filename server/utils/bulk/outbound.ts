@@ -8,11 +8,10 @@ import type {
   SimpleDeliveryStep,
   SkippedDeliveryStep
 } from '../../../shared/bulk-operations'
-import { next_status_timestamp } from '../communications/parsing'
 import { create_outbound_with_db } from '../communications/storage'
+import { apply_sent_bucket_effect_with_db } from './jobs'
 import { render_content, step_placeholders, validate_bindings } from './placeholders'
 import { finalize_bulk_item_with_db } from './reports'
-import { update_status_with_db } from './status'
 
 export const bulk_step_destination = (row: PreviewRow, step: SimpleDeliveryStep): string =>
   step.medium === 'email' || step.medium === 'lre'
@@ -142,23 +141,18 @@ export const record_applied_outbound_with_db = (
      WHERE id = ? AND report_status = 'in_progress'`,
     [activity.id, input.jobId]
   )
-  const sent = update_status_with_db(db, {
-    activity_id: activity.id,
-    type,
-    statut: 'sent',
-    occurred_at: next_status_timestamp(activity)
-  }).activity
-
+  apply_sent_bucket_effect_with_db(db, activity)
   const item = db
     .query<{ payload: string }, [string]>('SELECT payload FROM bulk_jobs WHERE id = ?')
     .get(input.jobId)!
   finalize_bulk_item_with_db(db, {
     jobId: input.jobId,
     status: 'ok',
-    outcome: { code: 'applied', activity_id: sent.id, created: true },
-    currentActivityId: sent.id,
+    outcome: { code: 'applied', activity_id: activity.id, created: true },
+    currentActivityId: activity.id,
     payload: JSON.parse(item.payload) as Record<string, unknown>,
-    completedAt: sent.date_statut
+    completedAt: activity.date_creation
   })
-  return sent
+  void type
+  return activity
 }

@@ -2,10 +2,9 @@ import { Database } from 'bun:sqlite'
 
 import { z } from 'zod'
 
-import type { Activite, ActivityType } from '../../shared/activites'
-import { activity_timestamp, parse_contenu_json } from '../../shared/activites'
-import { build_rattachement } from './activities/rows'
-import { create_trusted_activity_with_db } from './activities/write'
+import type { Activite } from '../../shared/activites'
+import { activity_timestamp, parse_titled_content } from '../../shared/activites'
+import { build_rattachement, insert_activity_row, resolve_activity_facets } from './activities/rows'
 import { datastorePaths } from './paths'
 
 const TICKET_ID_SKILLS = [
@@ -99,197 +98,192 @@ export class TicketDraftsError extends Error {
   }
 }
 
-const activity_type = (skill: TicketIdSkill, _channel?: AnswerChannel): ActivityType => {
-  if (skill === 'ticket.write-memo') return 'ticket_memo'
-  if (skill === 'ticket.summarize-ticket') return 'ticket_summary'
-  return 'ticket_reply'
+const SKILL_TITLE: Record<TicketIdSkill, string> = {
+  'ticket.answer-ticket': 'Réponse',
+  'ticket.write-memo': 'Mémo',
+  'ticket.summarize-ticket': 'Synthèse'
 }
 
-type ActivityRow = Omit<Activite, 'mentions'> & {
-  mentions: string
-}
+const string_from = (value: unknown): string | null =>
+  typeof value === 'string' && value.trim() ? value.trim() : null
 
-const list_rows = (db: Database, id_reclamation: string): ActivityRow[] =>
-  db
-    .query<ActivityRow, [string]>(
-      `SELECT * FROM activites
-       WHERE rattachement = ? AND statut = 'draft'
-         AND type IN ('ticket_memo', 'ticket_summary', 'ticket_reply')
-       ORDER BY date_creation DESC, id DESC`
-    )
-    .all(build_rattachement('tickets', id_reclamation))
-
-const list_rows_for_tickets = (db: Database, ticket_ids: readonly string[]): ActivityRow[] => {
-  const rows: ActivityRow[] = []
-  for (let offset = 0; offset < ticket_ids.length; offset += 400) {
-    const rattachements = ticket_ids
-      .slice(offset, offset + 400)
-      .map((id) => build_rattachement('tickets', id))
-    if (rattachements.length === 0) continue
-    rows.push(
-      ...db
-        .query<ActivityRow, string[]>(
-          `SELECT * FROM activites
-           WHERE rattachement IN (${rattachements.map(() => '?').join(', ')})
-             AND statut = 'draft'
-             AND type IN ('ticket_memo', 'ticket_summary', 'ticket_reply')
-           ORDER BY date_creation DESC, id DESC`
-        )
-        .all(...rattachements)
-    )
-  }
-  return rows
-}
-
-const string_or_null = (value: unknown): string | null =>
-  typeof value === 'string' && value.trim().length > 0 ? value : null
-
-const number_or_null = (value: unknown): number | null =>
+const number_from = (value: unknown): number | null =>
   typeof value === 'number' && Number.isFinite(value) ? value : null
 
-const skill_for_row = (
-  row: Pick<ActivityRow, 'type'>,
-  metadata: Record<string, unknown>
-): TicketIdSkill => {
-  const explicit = string_or_null(metadata['skill'])
-  if (explicit && (TICKET_ID_SKILLS as readonly string[]).includes(explicit)) {
-    return explicit as TicketIdSkill
+const skill_of = (activity: Activite): TicketIdSkill | null => {
+  const skill = string_from(parse_titled_content(activity.contenu)?.values?.['skill'])
+  return skill && (TICKET_ID_SKILLS as readonly string[]).includes(skill)
+    ? (skill as TicketIdSkill)
+    : null
+}
+
+const list_rows = (db: Database, id_reclamation: string): Activite[] => {
+  const rattachement = build_rattachement('tickets', id_reclamation)
+  return db
+    .query<Activite & { mentions: string }, [string]>(
+      `SELECT * FROM activites
+       WHERE rattachement = ? AND type LIKE 'artifact.%'
+       ORDER BY date_creation DESC, id DESC`
+    )
+    .all(rattachement)
+    .map((row) => ({
+      ...row,
+      mentions: JSON.parse(row.mentions) as Activite['mentions']
+    }))
+}
+
+const latest_by_skill = (rows: Activite[]): Map<TicketIdSkill, Activite> => {
+  const latest = new Map<TicketIdSkill, Activite>()
+  for (const row of rows) {
+    const skill = skill_of(row)
+    if (!skill || latest.has(skill)) continue
+    latest.set(skill, row)
   }
-  if (row.type === 'ticket_memo') return 'ticket.write-memo'
-  if (row.type === 'ticket_summary') return 'ticket.summarize-ticket'
-  return 'ticket.answer-ticket'
+  return latest
 }
 
-const channel_from_metadata = (metadata: Record<string, unknown>): string | null => {
-  const channel = string_or_null(metadata['canal']) ?? string_or_null(metadata['channel'])
-  return channel === 'courrier' ? 'letter' : channel
-}
-
-const row_to_draft = (row: ActivityRow): TicketDraft => {
-  const metadata = parse_contenu_json(row.contenu)
-  const skill = skill_for_row(row, metadata)
-  const channel = channel_from_metadata(metadata)
-  const edition =
-    metadata['edition'] && typeof metadata['edition'] === 'object'
-      ? (metadata['edition'] as Record<string, unknown>)
-      : {}
-  const evaluation =
-    metadata['evaluation'] && typeof metadata['evaluation'] === 'object'
-      ? (metadata['evaluation'] as Record<string, unknown>)
-      : {}
+const row_to_draft = (row: Activite): TicketDraft => {
+  const content = parse_titled_content(row.contenu)
+  const values = content?.values ?? {}
+  const editedBy = string_from(values['edited_by'])
   return {
     activity_id: Number(row.id),
     id_reclamation: row.rattachement.slice(row.rattachement.indexOf(':') + 1),
-    id_skill: skill,
-    channel,
-    generated_output:
-      string_or_null(metadata['contenu_original']) ??
-      string_or_null(metadata['corps']) ??
-      string_or_null(metadata['contenu']),
-    generated_reasoning: string_or_null(metadata['raisonnement']),
-    generated_duration_ms: number_or_null(metadata['duree_ms']),
-    generated_at: row.date_creation,
-    generated_by: string_or_null(metadata['genere_par']) ?? row.auteur,
-    automation_id: string_or_null(metadata['automation_id']),
-    edited_output: edition['par'] == null ? null : string_or_null(metadata['contenu']),
-    edited_at: string_or_null(edition['le']),
-    edited_by: string_or_null(edition['par']),
-    feedback_rating: number_or_null(evaluation['score']),
-    feedback_comment: string_or_null(evaluation['commentaire']),
-    feedback_at: string_or_null(evaluation['le']),
-    feedback_by: string_or_null(evaluation['par'])
+    id_skill: string_from(values['skill']) ?? '',
+    channel: string_from(values['channel']),
+    generated_output: content?.note ?? null,
+    generated_reasoning: string_from(values['reasoning']),
+    generated_duration_ms: number_from(values['duration_ms']),
+    generated_at: string_from(values['generated_at']) ?? row.date_creation,
+    generated_by: string_from(values['generated_by']) ?? row.auteur,
+    automation_id: string_from(values['automation_id']),
+    edited_output: editedBy ? (content?.note ?? null) : null,
+    edited_at: string_from(values['edited_at']),
+    edited_by: editedBy,
+    feedback_rating: number_from(values['feedback_rating']),
+    feedback_comment: string_from(values['feedback_comment']),
+    feedback_at: string_from(values['feedback_at']),
+    feedback_by: string_from(values['feedback_by'])
   }
 }
 
-const find_row = (db: Database, id_reclamation: string, id_skill: string): ActivityRow | null =>
-  list_rows(db, id_reclamation).find(
-    (row) => skill_for_row(row, parse_contenu_json(row.contenu)) === id_skill
-  ) ?? null
+const append_draft = (
+  db: Database,
+  input: {
+    id_reclamation: string
+    skill: TicketIdSkill
+    type: 'artifact.generated' | 'artifact.regenerated' | 'artifact.feedback_recorded'
+    auteur: string
+    thread_id: string | null
+    values: Record<string, string | number | boolean | null | undefined>
+    note?: string
+  }
+): TicketDraft => {
+  const now = activity_timestamp()
+  const rattachement = build_rattachement('tickets', input.id_reclamation)
+  const thread_id = input.thread_id ?? Bun.randomUUIDv7()
+  const revision =
+    (db
+      .query<{ revision: number | null }, [string]>(
+        'SELECT MAX(revision) AS revision FROM activites WHERE thread_id = ?'
+      )
+      .get(thread_id)?.revision ?? 0) + 1
+  const created = insert_activity_row(db, {
+    date_creation: now,
+    rattachement,
+    auteur: input.auteur,
+    facets: resolve_activity_facets(db, 'tickets', input.id_reclamation),
+    type: input.type,
+    mentions: [],
+    contenu: JSON.stringify({
+      version: 2,
+      title: SKILL_TITLE[input.skill],
+      values: {
+        skill: input.skill,
+        ...Object.fromEntries(
+          Object.entries(input.values).filter(([, value]) => value !== null && value !== undefined)
+        )
+      },
+      ...(input.note != null ? { note: input.note } : {})
+    }),
+    thread_id,
+    revision
+  })
+  return row_to_draft(created)
+}
 
 export const upsert_ticket_draft = (input: UpsertTicketDraftInput): TicketDraft => {
   const parsed = UpsertTicketDraftInput.parse(input)
   const db = new Database(datastore_path())
   db.run('PRAGMA busy_timeout = 5000')
   try {
-    const upsert = db.transaction(() => {
-      if (parsed.save_kind === 'generation') {
-        const type = activity_type(parsed.id_skill, parsed.channel)
-        const existing = list_rows(db, parsed.id_reclamation).find((row) => row.type === type)
-        const now = activity_timestamp()
-        const author = parsed.automation_id
-          ? `automation:${parsed.automation_id}`
-          : `agent:${parsed.id_skill}`
-        const metadata = {
-          contenu: parsed.generated_output?.trim() ? parsed.generated_output : '',
-          skill: parsed.id_skill,
-          ...(parsed.channel ? { canal: parsed.channel } : {}),
-          contenu_original: parsed.generated_output?.trim() ? parsed.generated_output : null,
-          genere_par: parsed.generated_by,
-          raisonnement: parsed.generated_reasoning ?? null,
-          duree_ms: parsed.generated_duration_ms ?? null,
-          ...(parsed.tokens_entree === undefined ? {} : { tokens_entree: parsed.tokens_entree }),
-          ...(parsed.tokens_sortie === undefined ? {} : { tokens_sortie: parsed.tokens_sortie }),
-          ...(parsed.tokens_raisonnement === undefined
-            ? {}
-            : { tokens_raisonnement: parsed.tokens_raisonnement }),
-          ...(parsed.automation_id ? { automation_id: parsed.automation_id } : {})
-        }
-        const contenu = JSON.stringify(metadata)
-        if (existing) {
-          db.run(
-            `UPDATE activites
-           SET date_creation = ?, auteur = ?, contenu = ?
-           WHERE id = ?`,
-            [now, author, contenu, existing.id]
-          )
-          return row_to_draft({
-            ...existing,
-            date_creation: now,
+    return db
+      .transaction(() => {
+        const existing = latest_by_skill(list_rows(db, parsed.id_reclamation)).get(parsed.id_skill)
+        if (parsed.save_kind === 'generation') {
+          const author = parsed.automation_id
+            ? `automation:${parsed.automation_id}`
+            : `agent:${parsed.id_skill}`
+          return append_draft(db, {
+            id_reclamation: parsed.id_reclamation,
+            skill: parsed.id_skill,
+            type: existing ? 'artifact.regenerated' : 'artifact.generated',
             auteur: author,
-            contenu
+            thread_id: existing?.thread_id ?? null,
+            values: {
+              channel: parsed.channel ?? null,
+              generated_by: parsed.generated_by,
+              generated_at: activity_timestamp(),
+              reasoning: parsed.generated_reasoning ?? null,
+              duration_ms: parsed.generated_duration_ms ?? null,
+              automation_id: parsed.automation_id ?? null,
+              tokens_entree: parsed.tokens_entree ?? null,
+              tokens_sortie: parsed.tokens_sortie ?? null,
+              tokens_raisonnement: parsed.tokens_raisonnement ?? null
+            },
+            note: parsed.generated_output?.trim() ? parsed.generated_output : ''
           })
         }
-        const created = create_trusted_activity_with_db(db, parsed.generated_by, {
-          contexte: 'tickets',
-          ref: parsed.id_reclamation,
-          type,
-          statut: 'draft',
-          contenu,
-          auteur: author,
-          date_creation: now
-        })
-        return row_to_draft({
-          ...created,
-          mentions: JSON.stringify(created.mentions),
-          contenu: created.contenu
-        })
-      }
-
-      const existing = find_row(db, parsed.id_reclamation, parsed.id_skill)
-      if (!existing) throw new TicketDraftsError('Draft not found')
-      const metadata = parse_contenu_json(existing.contenu)
-      const now = activity_timestamp()
-      if (parsed.save_kind === 'edit') {
-        metadata['contenu'] = parsed.edited_output ?? ''
-        metadata['edition'] = { par: parsed.edited_by, le: now }
-      } else {
+        if (!existing) throw new TicketDraftsError('Draft not found')
+        const current = row_to_draft(existing)
+        if (parsed.save_kind === 'edit') {
+          return append_draft(db, {
+            id_reclamation: parsed.id_reclamation,
+            skill: parsed.id_skill,
+            type: 'artifact.regenerated',
+            auteur: existing.auteur,
+            thread_id: existing.thread_id ?? null,
+            values: {
+              skill: parsed.id_skill,
+              edited_by: parsed.edited_by,
+              edited_at: activity_timestamp()
+            },
+            note: parsed.edited_output ?? ''
+          })
+        }
         const hasFeedback =
           parsed.feedback_rating != null ||
           Boolean(parsed.feedback_comment && parsed.feedback_comment.trim())
-        metadata['evaluation'] = hasFeedback
-          ? {
-              score: parsed.feedback_rating ?? null,
-              commentaire: parsed.feedback_comment?.trim() || null,
-              le: now,
-              par: parsed.feedback_by
-            }
-          : null
-      }
-      const contenu = JSON.stringify(metadata)
-      db.run('UPDATE activites SET contenu = ? WHERE id = ?', [contenu, existing.id])
-      return row_to_draft({ ...existing, contenu })
-    })
-    return upsert.immediate()
+        return append_draft(db, {
+          id_reclamation: parsed.id_reclamation,
+          skill: parsed.id_skill,
+          type: 'artifact.feedback_recorded',
+          auteur: existing.auteur,
+          thread_id: existing.thread_id ?? null,
+          values: {
+            skill: parsed.id_skill,
+            channel: current.channel,
+            generated_by: current.generated_by,
+            generated_at: current.generated_at,
+            feedback_rating: hasFeedback ? (parsed.feedback_rating ?? null) : null,
+            feedback_comment: hasFeedback ? (parsed.feedback_comment?.trim() ?? null) : null,
+            feedback_at: hasFeedback ? activity_timestamp() : null,
+            feedback_by: hasFeedback ? parsed.feedback_by : null
+          },
+          note: current.edited_output ?? current.generated_output ?? ''
+        })
+      })
+      .immediate()
   } finally {
     db.close()
   }
@@ -298,7 +292,7 @@ export const upsert_ticket_draft = (input: UpsertTicketDraftInput): TicketDraft 
 export const get_ticket_draft = (id_reclamation: string, id_skill: string): TicketDraft | null => {
   const db = new Database(datastore_path(), { readonly: true })
   try {
-    const row = find_row(db, id_reclamation, id_skill)
+    const row = latest_by_skill(list_rows(db, id_reclamation)).get(id_skill as TicketIdSkill)
     return row ? row_to_draft(row) : null
   } finally {
     db.close()
@@ -308,7 +302,7 @@ export const get_ticket_draft = (id_reclamation: string, id_skill: string): Tick
 export const list_ticket_drafts = (id_reclamation: string): TicketDraft[] => {
   const db = new Database(datastore_path(), { readonly: true })
   try {
-    return list_rows(db, id_reclamation).map(row_to_draft)
+    return [...latest_by_skill(list_rows(db, id_reclamation)).values()].map(row_to_draft)
   } finally {
     db.close()
   }
@@ -318,53 +312,43 @@ export const draft_summaries_by_ticket = (
   ticket_ids: string[]
 ): Map<string, DraftSummaryByTicket> => {
   const result = new Map<string, DraftSummaryByTicket>()
-  const grouped = new Map<string, TicketDraft[]>()
-  if (ticket_ids.length > 0) {
-    const db = new Database(datastore_path(), { readonly: true })
-    try {
-      for (const row of list_rows_for_tickets(db, ticket_ids)) {
-        const draft = row_to_draft(row)
-        const drafts = grouped.get(draft.id_reclamation) ?? []
-        drafts.push(draft)
-        grouped.set(draft.id_reclamation, drafts)
-      }
-    } finally {
-      db.close()
+  const db = new Database(datastore_path(), { readonly: true })
+  try {
+    for (const id of ticket_ids) {
+      const drafts = [...latest_by_skill(list_rows(db, id)).values()].map(row_to_draft)
+      const markers = drafts.map((draft) => ({
+        activity_id: draft.activity_id,
+        id_skill: draft.id_skill,
+        channel: draft.channel,
+        automation: draft.automation_id != null
+      }))
+      const latest = [...drafts].sort((a, b) => {
+        const date = (b.edited_at ?? b.generated_at).localeCompare(a.edited_at ?? a.generated_at)
+        if (date !== 0) return date
+        return Number(Boolean(b.edited_at)) - Number(Boolean(a.edited_at))
+      })[0]
+      result.set(id, {
+        markers,
+        id_skills: [...new Set(drafts.map((draft) => draft.id_skill))].sort(),
+        answer_channel:
+          (drafts.find((draft) => draft.id_skill === 'ticket.answer-ticket')?.channel as
+            | AnswerChannel
+            | null
+            | undefined) ?? null,
+        automation_skills: [
+          ...new Set(drafts.filter((draft) => draft.automation_id).map((draft) => draft.id_skill))
+        ].sort(),
+        ...(latest
+          ? {
+              latest_at: latest.edited_at ?? latest.generated_at,
+              generated_by: latest.generated_by,
+              ...(latest.edited_by ? { edited_by: latest.edited_by } : {})
+            }
+          : {})
+      })
     }
-  }
-
-  for (const id of ticket_ids) {
-    const drafts = grouped.get(id) ?? []
-    const markers = drafts.map((draft) => ({
-      activity_id: draft.activity_id,
-      id_skill: draft.id_skill,
-      channel: draft.channel,
-      automation: draft.automation_id != null
-    }))
-    const latest = [...drafts].sort((a, b) => {
-      const date = (b.edited_at ?? b.generated_at).localeCompare(a.edited_at ?? a.generated_at)
-      if (date !== 0) return date
-      return Number(Boolean(b.edited_at)) - Number(Boolean(a.edited_at))
-    })[0]
-    result.set(id, {
-      markers,
-      id_skills: [...new Set(drafts.map((draft) => draft.id_skill))].sort(),
-      answer_channel:
-        (drafts.find((draft) => draft.id_skill === 'ticket.answer-ticket')?.channel as
-          | AnswerChannel
-          | null
-          | undefined) ?? null,
-      automation_skills: [
-        ...new Set(drafts.filter((draft) => draft.automation_id).map((draft) => draft.id_skill))
-      ].sort(),
-      ...(latest
-        ? {
-            latest_at: latest.edited_at ?? latest.generated_at,
-            generated_by: latest.generated_by,
-            ...(latest.edited_by ? { edited_by: latest.edited_by } : {})
-          }
-        : {})
-    })
+  } finally {
+    db.close()
   }
   return result
 }

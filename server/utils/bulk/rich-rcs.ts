@@ -1,8 +1,9 @@
 import { Database } from 'bun:sqlite'
 
-import type { Activite, ActivityStatus } from '../../../shared/activites'
+import type { Activite } from '../../../shared/activites'
 import type { BulkRichRcsResponse, BulkRichRcsNode } from '../../../shared/bulk-operations'
 import { datastorePaths } from '../paths'
+import type { DeliveryStatus } from './jobs'
 import { load_bulk_run_context_with_db, type BulkItemPayload } from './jobs'
 import { finalize_bulk_item_with_db } from './reports'
 
@@ -20,7 +21,7 @@ const string_at = (value: unknown, ...path: string[]): string | null => {
 export const handle_rich_rcs_status_with_db = (
   db: Database,
   activity: Activite,
-  status: ActivityStatus,
+  status: DeliveryStatus,
   occurredAt: string
 ): boolean => {
   if (!activity.bulk_id || !activity.execution_id || !activity.id_locataire) return false

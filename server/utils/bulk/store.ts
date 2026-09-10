@@ -12,8 +12,8 @@ import {
   type CreateBulkOperationBody,
   type PatchBulkOperationBody
 } from '../../../shared/bulk-operations'
+import { update_status_with_db } from '../communications/status'
 import { datastorePaths } from '../paths'
-import { enrich_final_failure } from './jobs'
 import { BulkOperationDefinitionSchema, BulkQueryError } from './query'
 import { purge_completed_runs_with_db } from './reports'
 
@@ -87,7 +87,7 @@ const last_run_by_id = (db: Database, ids: string[]): Map<string, string> => {
     .query<{ bulk_id: string; last_at: string }, string[]>(
       `SELECT bulk_id, MAX(date_creation) AS last_at
        FROM activites
-       WHERE type = 'bulk_run' AND bulk_id IN (${placeholders})
+       WHERE type = 'bulk.ran' AND bulk_id IN (${placeholders})
        GROUP BY bulk_id`
     )
     .all(...ids)
@@ -240,28 +240,26 @@ export const delete_bulk_operation = (id: string): BulkOperationRecord => {
     if (!existing) throw new BulkOperationsError('Bulk operation not found', 'not_found')
     const now = activity_timestamp()
     const communications = db
-      .query<{ id: number; statut: string | null }, [string]>(
-        `SELECT id, statut FROM activites
+      .query<{ id: number }, [string]>(
+        `SELECT id FROM activites
          WHERE bulk_id = ?
-           AND type IN ('rcs', 'sms', 'email', 'courrier', 'lrar', 'lre')
-           AND statut IN ('queued', 'sent')`
+           AND type = 'communication.sent'
+           AND thread_id IS NOT NULL
+           AND NOT EXISTS (
+             SELECT 1 FROM activites status
+             WHERE status.thread_id = activites.thread_id
+               AND status.type IN ('communication.ok', 'communication.failed')
+           )`
       )
       .all(id)
     for (const activity of communications) {
-      enrich_final_failure(db, activity.id, {
-        code: 'bulk_operation_deleted',
+      update_status_with_db(db, {
+        activity_id: activity.id,
+        statut: 'failed',
         occurred_at: now
       })
-      if (activity.statut === 'queued') {
-        db.run('UPDATE activites SET statut = ?, date_statut = ? WHERE id = ?', [
-          'failed',
-          now,
-          activity.id
-        ])
-      }
     }
     db.run('DELETE FROM bulk_jobs WHERE bulk_operation_id = ?', [id])
-    db.run(`DELETE FROM activites WHERE type = 'bulk_run' AND bulk_id = ?`, [id])
     db.run('DELETE FROM bulk_operations WHERE id = ?', [id])
     db.run('COMMIT')
     return existing

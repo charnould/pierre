@@ -15,7 +15,7 @@ import {
   type TicketReplyAutomationConfig,
   type UserPreferences
 } from '../../../shared/automations'
-import { build_rattachement, login_from_email } from '../activities/rows'
+import { login_from_email } from '../activities/rows'
 import { datastorePaths } from '../paths'
 import { format_automation_prompt } from './format-prompt'
 import { compute_next_run_at, org_timezone } from './schedule'
@@ -427,26 +427,11 @@ export function set_automation_pin(
 }
 
 export function trim_report_activities(
-  automation_id: string,
-  maxReports: number,
-  type: 'automation_report' | 'ticket_reply' = 'automation_report'
+  _automation_id: string,
+  _maxReports: number,
+  _type = 'automation.reported'
 ): void {
-  const rattachement = build_rattachement('automations', automation_id)
-  const db = open_db()
-  try {
-    db.run(
-      `DELETE FROM activites
-       WHERE id IN (
-         SELECT id FROM activites
-         WHERE rattachement = ? AND type = ?
-         ORDER BY date_creation DESC, id DESC
-         LIMIT -1 OFFSET ?
-       )`,
-      [rattachement, type, Math.max(0, maxReports)]
-    )
-  } finally {
-    db.close()
-  }
+  // Append-only: reports stay in activites.
 }
 
 export function list_due_automation_ids(nowIso: string = new Date().toISOString()): string[] {

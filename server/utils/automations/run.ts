@@ -1,8 +1,4 @@
-import type {
-  AutomationRecord,
-  ReportAutomationConfig,
-  TicketReplyAutomationConfig
-} from '../../../shared/automations'
+import type { AutomationRecord } from '../../../shared/automations'
 import { create_trusted_activity } from '../activities/write'
 import { DEMO_AUTOMATION_REPORT_HTML } from './demo-report'
 import {
@@ -13,8 +9,7 @@ import {
   get_automation_raw,
   list_due_automation_ids,
   list_stuck_running_ids,
-  renew_automation_lease,
-  trim_report_activities
+  renew_automation_lease
 } from './store'
 
 type ExecutorResult =
@@ -54,24 +49,25 @@ export function reset_automation_executor(): void {
 
 function notify_run(automation: AutomationRecord, result: ExecutorResult, run_id: string): void {
   const recipients = [...new Set([automation.owner, ...automation.mentions])]
-  const contenu =
-    result.kind === 'report'
-      ? result.contenu
-      : JSON.stringify({
-          titre: automation.name,
-          contenu: result.contenu,
-          automation_id: automation.id,
-          run_id,
-          summary: result.summary,
-          tickets: result.tickets
-        })
   create_trusted_activity(automation.owner, {
     contexte: 'automations',
     ref: automation.id,
-    type: result.kind === 'report' ? 'automation_report' : 'ticket_reply',
-    statut: 'logged',
+    type: 'automation.reported',
     recipients,
-    contenu,
+    contenu:
+      result.kind === 'report'
+        ? JSON.stringify({ version: 2, title: automation.name, note: result.contenu })
+        : JSON.stringify({
+            version: 2,
+            title: automation.name,
+            values: {
+              run_id,
+              generated: result.summary.generated,
+              skipped: result.summary.skipped,
+              errors: result.summary.errors
+            },
+            note: result.contenu
+          }),
     auteur: `automation:${automation.id}`
   })
 }
@@ -100,13 +96,6 @@ async function execute_claimed(
       throw new Error('Automation lease lost')
     }
     notify_run(automation, result, run_id)
-    if (automation.type === 'report') {
-      const max = (automation.config as ReportAutomationConfig).maxReports
-      trim_report_activities(id, max, 'automation_report')
-    } else {
-      const max = (automation.config as TicketReplyAutomationConfig).maxItems
-      trim_report_activities(id, max, 'ticket_reply')
-    }
     finalize_automation_run(id, run_token, 'success', options)
   } catch {
     finalize_automation_run(id, run_token, 'error', options)

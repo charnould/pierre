@@ -1,6 +1,6 @@
 import { Database } from 'bun:sqlite'
 
-import type { Activite, ActivityStatus, CommunicationType } from '../../../shared/activites'
+import type { Activite } from '../../../shared/activites'
 import {
   type UpdateStatusInput,
   update_status_with_db as update_communication_status_with_db
@@ -9,7 +9,8 @@ import { datastore_path } from '../communications/storage'
 import {
   apply_sent_bucket_effect_with_db,
   schedule_bulk_fallback_with_db,
-  settle_bulk_item_for_status_with_db
+  settle_bulk_item_for_status_with_db,
+  type DeliveryStatus
 } from './jobs'
 import { handle_rich_rcs_status_with_db } from './rich-rcs'
 import { arm_bulk_scheduler } from './scheduler/queue'
@@ -20,7 +21,7 @@ export const set_bulk_status_hook_for_tests = (hook: (() => void) | null): void 
   transitionHook = hook
 }
 
-const fallback_status = (type: CommunicationType, status: ActivityStatus): boolean =>
+const fallback_status = (type: string | undefined, status: string): boolean =>
   status === 'failed' ||
   (type === 'courrier' && status === 'returned') ||
   (type === 'lrar' && (status === 'returned' || status === 'refused')) ||
@@ -36,8 +37,9 @@ export const update_status_with_db = (
   transitionHook?.()
   const { activity, status, occurredAt } = result.transition
   if (status === 'sent') apply_sent_bucket_effect_with_db(db, activity)
-  const richConsumed = handle_rich_rcs_status_with_db(db, activity, status, occurredAt)
-  if (!richConsumed) settle_bulk_item_for_status_with_db(db, activity, status, occurredAt)
+  const deliveryStatus = status as DeliveryStatus
+  const richConsumed = handle_rich_rcs_status_with_db(db, activity, deliveryStatus, occurredAt)
+  if (!richConsumed) settle_bulk_item_for_status_with_db(db, activity, deliveryStatus, occurredAt)
   const fallbackScheduled =
     !richConsumed && fallback_status(input.type, status)
       ? schedule_bulk_fallback_with_db(db, activity, occurredAt)

@@ -21,6 +21,7 @@ type RunRow = {
   bulk_id: string
   execution_id: string
   contenu: string
+  date_creation: string
 }
 
 type ItemRow = {
@@ -61,19 +62,56 @@ const parse_object = (raw: string | null): Record<string, unknown> | null => {
   }
 }
 
-const parse_run = (row: RunRow): BulkReportSummary => {
-  const content = JSON.parse(row.contenu) as RunContent
+const parse_run = (row: RunRow, items: BulkReportItem[] = []): BulkReportSummary => {
+  const raw = JSON.parse(row.contenu) as RunContent & {
+    values?: {
+      source?: BulkSource
+      mode?: BulkExecutionMode
+      execution_id?: string
+      total?: number
+      queued?: number
+      no_usable_route?: number
+      applied?: number
+    }
+    snapshot?: { confirmed_at?: string }
+  }
+  const values = raw.values
+  const counts: BulkReportCounts = { total: 0, in_progress: 0, ok: 0, ko: 0 }
+  for (const item of items) {
+    counts[item.reportStatus] += 1
+    counts.total += 1
+  }
+  const status: BulkRunReportStatus =
+    items.length === 0
+      ? (raw.status ?? 'in_progress')
+      : counts.in_progress > 0
+        ? 'in_progress'
+        : counts.ok === counts.total
+          ? 'ok'
+          : counts.ko === counts.total
+            ? 'ko'
+            : 'partial'
+  const source = values?.source ?? raw.source
+  const mode = values?.mode ?? raw.mode
   return {
     bulkOperationId: row.bulk_id,
     executionId: row.execution_id,
-    source: content.source,
-    mode: content.mode,
-    status: content.status,
-    counts: content.counts,
-    confirmedAt: content.snapshot.confirmed_at,
-    completedAt: content.completed_at,
+    source,
+    mode,
+    status,
+    counts: items.length > 0 ? counts : (raw.counts ?? counts),
+    confirmedAt: raw.snapshot?.confirmed_at ?? row.date_creation,
+    completedAt: status === 'in_progress' ? null : (raw.completed_at ?? row.date_creation),
     actor: row.auteur.replace(/^[^:]+:/, ''),
-    result: content.result
+    result: raw.result ?? {
+      execution_id: row.execution_id,
+      totals: {
+        total: values?.total ?? counts.total,
+        queued: values?.queued ?? 0,
+        no_usable_route: values?.no_usable_route ?? 0,
+        applied: values?.applied ?? 0
+      }
+    }
   }
 }
 
@@ -112,14 +150,15 @@ const get_bulk_report_with_db = (
 ): BulkReportDetail | null => {
   const run = db
     .query<RunRow, [string, string]>(
-      `SELECT auteur, bulk_id, execution_id, contenu
+      `SELECT auteur, bulk_id, execution_id, contenu, date_creation
        FROM activites
-       WHERE type = 'bulk_run' AND bulk_id = ? AND execution_id = ?
+       WHERE type = 'bulk.ran' AND bulk_id = ? AND execution_id = ?
        LIMIT 1`
     )
     .get(bulkOperationId, executionId)
   if (!run) return null
-  return { report: parse_run(run), items: items_for_execution(db, executionId) }
+  const items = items_for_execution(db, executionId)
+  return { report: parse_run(run, items), items }
 }
 
 export const get_bulk_report = (
@@ -139,19 +178,16 @@ export const list_bulk_reports = (bulkOperationId: string): BulkReportDetail[] =
   try {
     return db
       .query<RunRow, [string]>(
-        `SELECT auteur, bulk_id, execution_id, contenu
+        `SELECT auteur, bulk_id, execution_id, contenu, date_creation
          FROM activites
-         WHERE type = 'bulk_run' AND bulk_id = ?
-         ORDER BY COALESCE(
-           json_extract(contenu, '$.completed_at'),
-           json_extract(contenu, '$.snapshot.confirmed_at')
-         ) DESC, execution_id DESC`
+         WHERE type = 'bulk.ran' AND bulk_id = ?
+         ORDER BY date_creation DESC, execution_id DESC`
       )
       .all(bulkOperationId)
-      .map((run) => ({
-        report: parse_run(run),
-        items: items_for_execution(db, run.execution_id)
-      }))
+      .map((run) => {
+        const items = items_for_execution(db, run.execution_id)
+        return { report: parse_run(run, items), items }
+      })
   } finally {
     db.close()
   }
@@ -166,9 +202,9 @@ export const purge_completed_runs_with_db = (
     .query<{ execution_id: string }, [string, number]>(
       `SELECT execution_id
        FROM activites
-       WHERE type = 'bulk_run'
+       WHERE type = 'bulk.ran'
          AND bulk_id = ?
-         AND json_extract(contenu, '$.status') <> 'in_progress'
+         AND json_extract(contenu, '$.values.mode') IS NOT NULL
        ORDER BY json_extract(contenu, '$.completed_at') DESC, execution_id DESC
        LIMIT -1 OFFSET ?`
     )
@@ -176,11 +212,6 @@ export const purge_completed_runs_with_db = (
     .map((row) => row.execution_id)
   for (const executionId of purged) {
     db.run('DELETE FROM bulk_jobs WHERE execution_id = ?', [executionId])
-    db.run(
-      `DELETE FROM activites
-       WHERE type = 'bulk_run' AND bulk_id = ? AND execution_id = ?`,
-      [bulkOperationId, executionId]
-    )
   }
   return purged
 }
@@ -192,9 +223,9 @@ export const aggregate_bulk_run_with_db = (
 ): BulkReportSummary | null => {
   const run = db
     .query<RunRow, [string]>(
-      `SELECT auteur, bulk_id, execution_id, contenu
+      `SELECT auteur, bulk_id, execution_id, contenu, date_creation
        FROM activites
-       WHERE type = 'bulk_run' AND execution_id = ?
+       WHERE type = 'bulk.ran' AND execution_id = ?
        LIMIT 1`
     )
     .get(executionId)
@@ -220,13 +251,6 @@ export const aggregate_bulk_run_with_db = (
         : counts.ko === counts.total
           ? 'ko'
           : 'partial'
-  const content = JSON.parse(run.contenu) as RunContent
-  const completedAt = status === 'in_progress' ? null : (content.completed_at ?? terminalizedAt)
-  db.run('UPDATE activites SET contenu = ? WHERE type = ? AND execution_id = ?', [
-    JSON.stringify({ ...content, status, counts, completed_at: completedAt }),
-    'bulk_run',
-    executionId
-  ])
   if (status !== 'in_progress') {
     const reportsToKeep =
       db
@@ -236,10 +260,8 @@ export const aggregate_bulk_run_with_db = (
         .get(run.bulk_id)?.reports_to_keep ?? 10
     purge_completed_runs_with_db(db, run.bulk_id, reportsToKeep)
   }
-  return parse_run({
-    ...run,
-    contenu: JSON.stringify({ ...content, status, counts, completed_at: completedAt })
-  })
+  void terminalizedAt
+  return parse_run(run, items_for_execution(db, executionId))
 }
 
 export const finalize_bulk_item_with_db = (

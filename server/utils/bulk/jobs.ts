@@ -1,7 +1,21 @@
 import { Database } from 'bun:sqlite'
 
-import type { ActivityStatus, Activite } from '../../../shared/activites'
+import type { Activite } from '../../../shared/activites'
+
+export type DeliveryStatus =
+  | 'sent'
+  | 'delivered'
+  | 'read'
+  | 'failed'
+  | 'undelivered'
+  | 'expired'
+  | 'rejected'
+  | 'bounced'
+  | 'returned'
+  | 'refused'
+  | 'unclaimed'
 import type {
+  BulkOperationDefinition,
   BulkOperationRecord,
   BulkRichRcsResponse,
   PreviewRow
@@ -15,7 +29,7 @@ export type BulkItemPayload =
       row: PreviewRow
       stage: 'attempt' | 'status'
       stepIndex: number
-      remainingStatuses?: ActivityStatus[]
+      remainingStatuses?: DeliveryStatus[]
       previousActivityId?: number
       effectsAppliedAt?: string
     }
@@ -37,68 +51,54 @@ export type BulkRunContext = {
   confirmedAt: string
 }
 
-type RunSnapshot = {
-  snapshot?: {
-    operation?: BulkRunContext['operation']
-    confirmed_at?: string
-  }
-}
-
-const parse_object = (raw: string): Record<string, unknown> => {
-  try {
-    const value = JSON.parse(raw)
-    return value != null && typeof value === 'object' && !Array.isArray(value)
-      ? (value as Record<string, unknown>)
-      : {}
-  } catch {
-    return {}
-  }
-}
-
 export const load_bulk_run_context_with_db = (
   db: Database,
   executionId: string,
   bulkOperationId?: string
 ): BulkRunContext | null => {
   const run = db
-    .query<{ contenu: string; auteur: string }, [string, string | null, string | null]>(
-      `SELECT run.contenu, run.auteur
+    .query<
+      {
+        auteur: string
+        date_creation: string
+        id: string
+        name: string
+        description: string
+        definition: string
+        reports_to_keep: number
+      },
+      [string, string | null, string | null]
+    >(
+      `SELECT run.auteur, run.date_creation, operation.id, operation.name,
+              operation.description, operation.definition, operation.reports_to_keep
        FROM activites run
        JOIN bulk_operations operation ON operation.id = run.bulk_id
-       WHERE run.type = 'bulk_run'
+       WHERE run.type = 'bulk.ran'
          AND run.execution_id = ?
          AND (? IS NULL OR run.bulk_id = ?)
        LIMIT 1`
     )
     .get(executionId, bulkOperationId ?? null, bulkOperationId ?? null)
   if (!run) return null
-  const parsed = JSON.parse(run.contenu) as RunSnapshot
-  if (!parsed.snapshot?.operation || !parsed.snapshot.confirmed_at) return null
   return {
     actor: run.auteur.replace(/^[^:]+:/, ''),
-    operation: parsed.snapshot.operation,
-    confirmedAt: parsed.snapshot.confirmed_at
+    operation: {
+      id: run.id,
+      name: run.name,
+      description: run.description,
+      definition: JSON.parse(run.definition) as BulkOperationDefinition,
+      reportsToKeep: run.reports_to_keep
+    },
+    confirmedAt: run.date_creation
   }
 }
 
 export const enrich_final_failure = (
-  db: Database,
-  activityId: number,
-  reason: Record<string, unknown>
+  _db: Database,
+  _activityId: number,
+  _reason: Record<string, unknown>
 ): void => {
-  const row = db
-    .query<{ contenu: string }, [number]>('SELECT contenu FROM activites WHERE id = ?')
-    .get(activityId)
-  if (!row) return
-  const content = parse_object(row.contenu)
-  const delivery =
-    content['delivery'] && typeof content['delivery'] === 'object'
-      ? (content['delivery'] as Record<string, unknown>)
-      : {}
-  db.run('UPDATE activites SET contenu = ? WHERE id = ?', [
-    JSON.stringify({ ...content, delivery: { ...delivery, finalFailure: reason } }),
-    activityId
-  ])
+  // Append-only: the communication.failed event already carries the reason.
 }
 
 export const schedule_bulk_fallback_with_db = (
@@ -124,7 +124,7 @@ export const schedule_bulk_fallback_with_db = (
   if (nextStep >= context.operation.definition.delivery.steps.length) {
     const finalFailure = {
       code: 'all_delivery_attempts_failed',
-      status: activity.statut,
+      status: activity.type === 'communication.failed' ? 'failed' : activity.type,
       occurred_at: occurredAt
     }
     enrich_final_failure(db, activity.id, finalFailure)
@@ -152,25 +152,7 @@ export const schedule_bulk_fallback_with_db = (
      WHERE id = ?`,
     [occurredAt, JSON.stringify(nextPayload), item.id]
   )
-  const content = parse_object(activity.contenu)
-  const delivery =
-    content['delivery'] && typeof content['delivery'] === 'object'
-      ? (content['delivery'] as Record<string, unknown>)
-      : {}
-  db.run('UPDATE activites SET contenu = ? WHERE id = ?', [
-    JSON.stringify({
-      ...content,
-      delivery: {
-        ...delivery,
-        fallback: {
-          scheduled: true,
-          occurred_at: occurredAt,
-          medium: nextStepDefinition.medium
-        }
-      }
-    }),
-    activity.id
-  ])
+  void nextStepDefinition
   return true
 }
 
@@ -194,14 +176,14 @@ export const apply_sent_bucket_effect_with_db = (db: Database, activity: Activit
     bucketId: context.operation.definition.bucketId,
     notifyManager: context.operation.definition.notifyManager
   })
-  const nextPayload: BulkItemPayload = { ...payload, effectsAppliedAt: activity.date_statut }
+  const nextPayload: BulkItemPayload = { ...payload, effectsAppliedAt: activity.date_creation }
   db.run('UPDATE bulk_jobs SET payload = ? WHERE id = ?', [JSON.stringify(nextPayload), item.id])
 }
 
 export const settle_bulk_item_for_status_with_db = (
   db: Database,
   activity: Activite,
-  status: ActivityStatus,
+  status: DeliveryStatus,
   occurredAt: string
 ): void => {
   if (
@@ -226,7 +208,7 @@ export const settle_bulk_item_for_status_with_db = (
   finalize_bulk_item_with_db(db, {
     jobId: item.id,
     status: 'ok',
-    outcome: { code: status, medium: activity.type, activity_id: activity.id },
+    outcome: { code: status, medium: activity.channel ?? activity.type, activity_id: activity.id },
     currentActivityId: activity.id,
     completedAt: occurredAt,
     payload

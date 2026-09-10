@@ -1,6 +1,6 @@
 import { Database } from 'bun:sqlite'
 
-import type { ActivityStatus, Activite } from '../../../../shared/activites'
+import type { Activite } from '../../../../shared/activites'
 import type { SimpleDeliveryStep } from '../../../../shared/bulk-operations'
 import { collect_rich_rcs_replies } from '../../../../shared/bulk-rich-rcs'
 import { communication_reference, next_status_timestamp } from '../../communications/parsing'
@@ -9,6 +9,7 @@ import { datastorePaths } from '../../paths'
 import { send_rcs_message } from '../../rcs/send'
 import { to_cm_number } from '../../rcs/wrap'
 import { insert_bulk_visible_activity } from '../activities'
+import type { DeliveryStatus } from '../jobs'
 import {
   enrich_final_failure,
   load_bulk_run_context_with_db,
@@ -81,7 +82,7 @@ const hash = (value: string): number => {
   return result >>> 0
 }
 
-const deterministic_status = (key: string, step: SimpleDeliveryStep): ActivityStatus => {
+const deterministic_status = (key: string, step: SimpleDeliveryStep): DeliveryStatus => {
   const value = hash(key)
   if (value % 10 === 0) return 'failed'
   if (
@@ -93,7 +94,7 @@ const deterministic_status = (key: string, step: SimpleDeliveryStep): ActivitySt
   return 'delivered'
 }
 
-const transition_delay = (key: string, status: ActivityStatus): number =>
+const transition_delay = (key: string, status: DeliveryStatus): number =>
   5 + (hash(`${key}:${status}`) % 6)
 
 const guarded_context = (db: Database, job: Job): BulkRunContext | null =>
@@ -163,9 +164,11 @@ const process_fallback_attempt = async (
           bulkId: context.operation.id,
           executionId: job.execution_id,
           row: activePayload.row,
-          type: 'bulk_no_route',
-          status: 'logged',
-          content: { no_usable_route: true, skipped_steps: skipped },
+          type: 'bulk.no_route',
+          content: {
+            title: 'Aucune route de communication exploitable',
+            skipped_steps: skipped.map((step) => step.medium).join(', ')
+          },
           notifyManager: context.operation.definition.notifyManager,
           idempotencyKey: `bulk:${job.execution_id}:recipient:${activePayload.row.id_locataire}:no-route`
         })
@@ -320,7 +323,9 @@ const process_fallback_status = (job: Job): void => {
       return
     }
     const activity = db
-      .query<{ date_statut: string }, [number]>('SELECT date_statut FROM activites WHERE id = ?')
+      .query<{ date_creation: string }, [number]>(
+        'SELECT date_creation FROM activites WHERE id = ?'
+      )
       .get(current.current_activity_id)
     if (!activity) throw new Error('Activité de simulation introuvable')
     update_status_with_db(db, {
@@ -328,7 +333,7 @@ const process_fallback_status = (job: Job): void => {
       type: context.operation.definition.delivery.steps[payload.stepIndex]!.medium,
       statut: status,
       occurred_at: next_status_timestamp(
-        { date_creation: activity.date_statut, date_statut: activity.date_statut } as Activite,
+        { date_creation: activity.date_creation } as Activite,
         clock.now()
       )
     })
