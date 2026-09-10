@@ -3,7 +3,8 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { Hono } from 'hono'
 import { setSignedCookie } from 'hono/cookie'
 
-import { authenticate } from '../../../utils/authenticate-user'
+import { authenticate, encrypt } from '../../../utils/authenticate-user'
+import { saveUser } from '../../../utils/handle-user'
 
 const SECRET = '0123456789abcdef0123456789abcdef'
 const ORIGINAL_AUTH_SECRET = Bun.env['AUTH_SECRET']
@@ -54,5 +55,51 @@ describe('authenticate', () => {
     expect(await response.json()).toEqual({
       error: { code: 'unauthorized', message: 'Authentication required' }
     })
+  })
+
+  test('reserves every /a page for administrators', async () => {
+    const issueCookie = async (email: string) => {
+      const issuer = new Hono()
+      issuer.get('/', async (c) => {
+        await setSignedCookie(
+          c,
+          'pierre-ia',
+          await encrypt(JSON.stringify({ email }), SECRET),
+          SECRET
+        )
+        return c.text('ok')
+      })
+      return (await issuer.request('/')).headers.get('set-cookie')!.split(';', 1)[0]!
+    }
+
+    await saveUser({
+      email: 'standard-auth-test@example.org',
+      isAdministrator: false,
+      moduleIds: [],
+      chatbotIds: ['default'],
+      passwordHash: 'unused'
+    })
+    await saveUser({
+      email: 'admin-auth-test@example.org',
+      isAdministrator: true,
+      moduleIds: [],
+      chatbotIds: ['default'],
+      passwordHash: 'unused'
+    })
+
+    const app = new Hono()
+    app.use('*', authenticate)
+    app.get('/a', (c) => c.text('ok'))
+
+    const standard = await app.request('/a', {
+      headers: { cookie: await issueCookie('standard-auth-test@example.org') }
+    })
+    expect(standard.status).toBe(302)
+    expect(standard.headers.get('location')).toBe('/a/login')
+
+    const administrator = await app.request('/a', {
+      headers: { cookie: await issueCookie('admin-auth-test@example.org') }
+    })
+    expect(administrator.status).toBe(200)
   })
 })

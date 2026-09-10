@@ -1,11 +1,11 @@
 import type { Context } from 'hono'
 
-import type { Parsed_User } from '../../../utils/_schema'
+import type { User } from '../../../utils/_schema'
 import { list_bulk_reports } from '../../../utils/bulk/reports'
 import { get_bulk_operation } from '../../../utils/bulk/store'
 
 export const controller = (c: Context) => {
-  const user = c.get('user') as Parsed_User | null
+  const user = c.get('user') as User | null
   if (!user?.email) {
     return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
   }

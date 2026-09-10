@@ -2,9 +2,9 @@ import { beforeAll, describe, expect, it, spyOn } from 'bun:test'
 
 import { Hono } from 'hono'
 
+import type { BusinessModuleId } from '../../../../../shared/modules'
 import { createPostAnswerController } from '../../../../controllers/ai/post.answer'
-import type { Parsed_User } from '../../../../utils/_schema'
-import { authorize_mutation } from '../../../../utils/authorize-role'
+import type { User } from '../../../../utils/_schema'
 import { conversationReservationCount } from '../../../../utils/vm-registry'
 
 const telemetryCalls: string[] = []
@@ -23,23 +23,23 @@ const controller = createPostAnswerController({
   }
 })
 
-const app = new Hono<{ Variables: { user: Parsed_User | null } }>()
+const app = new Hono<{ Variables: { user: User | null } }>()
 app.use('/ai/answer', async (c, next) => {
-  const role = c.req.header('x-test-role')
-  if (role) {
-    c.set(
-      'user' as never,
-      {
-        email: 'review@example.com',
-        role,
-        config: [],
-        password_hash: ''
-      } as never
-    )
+  if (c.req.header('x-test-user') !== 'true') {
+    return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
   }
+  c.set('user', {
+    email: 'review@example.com',
+    isAdministrator: false,
+    moduleIds: (c.req.header('x-test-modules') ?? 'tickets,about')
+      .split(',')
+      .filter(Boolean) as BusinessModuleId[],
+    chatbotIds: [],
+    passwordHash: ''
+  })
   return await next()
 })
-app.post('/ai/answer', authorize_mutation, controller)
+app.post('/ai/answer', controller)
 
 const answerPayload = JSON.stringify({
   version: 1,
@@ -50,10 +50,7 @@ const answerPayload = JSON.stringify({
   context: null
 })
 
-function postAnswer(
-  skill: string,
-  role: 'administrator' | 'contributor' | 'collaborator' | null = 'contributor'
-) {
+function postAnswer(skill: string, authenticated = true, modules?: string) {
   const formData = new FormData()
   formData.set('conv_id', CONV_ID)
   formData.set('id_skill', skill)
@@ -62,7 +59,9 @@ function postAnswer(
   return app.fetch(
     new Request('http://localhost/ai/answer', {
       method: 'POST',
-      headers: role ? { 'x-test-role': role } : undefined,
+      headers: authenticated
+        ? { 'x-test-user': 'true', ...(modules === undefined ? {} : { 'x-test-modules': modules }) }
+        : undefined,
       body: formData
     })
   )
@@ -125,20 +124,25 @@ describe('POST /ai/answer telemetry', () => {
   })
 
   it('rejects anonymous requests', async () => {
-    const anonymous = await postAnswer('ticket.answer-ticket', null)
+    const anonymous = await postAnswer('ticket.answer-ticket', false)
     expect(anonymous.status).toBe(401)
     expect(await anonymous.json()).toEqual({
       error: { code: 'unauthorized', message: 'Authentication required' }
     })
   })
 
-  it.each(['collaborator', 'contributor', 'administrator'] as const)(
-    'allows an authenticated %s',
-    async (role) => {
-      streamShouldFail = false
-      const res = await postAnswer('ticket.answer-ticket', role)
-      expect(res.status).toBe(200)
-      await res.text()
-    }
-  )
+  it('allows an authenticated user', async () => {
+    streamShouldFail = false
+    const res = await postAnswer('ticket.answer-ticket')
+    expect(res.status).toBe(200)
+    await res.text()
+  })
+
+  it('rejects a workflow whose module is not assigned', async () => {
+    const res = await postAnswer('ticket.answer-ticket', true, 'about')
+    expect(res.status).toBe(403)
+    expect(await res.json()).toEqual({
+      error: { code: 'forbidden', message: 'Insufficient permissions' }
+    })
+  })
 })

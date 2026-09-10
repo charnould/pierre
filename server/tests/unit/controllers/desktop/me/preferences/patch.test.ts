@@ -3,25 +3,26 @@ import { beforeEach, describe, expect, it } from 'bun:test'
 import { Hono } from 'hono'
 
 import { controller as patch_desktop_me_preferences } from '../../../../../../controllers/desktop/me/preferences/patch'
-import { User, type Parsed_User } from '../../../../../../utils/_schema'
+import { User } from '../../../../../../utils/_schema'
 import {
   get_user_preferences,
   set_user_preferences
 } from '../../../../../../utils/automations/store'
 import { encode_user_avatar } from '../../../../../../utils/avatar-image'
-import { save_user } from '../../../../../../utils/handle-user'
+import { saveUser } from '../../../../../../utils/handle-user'
 import { set_user_avatar, user_has_avatar } from '../../../../../../utils/user-avatars'
 import { use_identity_test_env } from '../../../../utils/identity-test-env'
 
-const app = new Hono<{ Variables: { user: Parsed_User } }>()
+const app = new Hono<{ Variables: { user: User } }>()
 app.patch(
   '/desktop/me/preferences',
   async (c, next) => {
     c.set('user', {
       email: 'alice.martin@exemple.fr',
-      role: 'collaborator',
-      config: ['default'],
-      password_hash: 'x'
+      isAdministrator: false,
+      moduleIds: [],
+      chatbotIds: ['default'],
+      passwordHash: 'x'
     })
     await next()
   },
@@ -35,12 +36,13 @@ const PNG_1x1 = Uint8Array.fromBase64(
 use_identity_test_env('_test_me_preferences')
 
 beforeEach(async () => {
-  await save_user(
+  await saveUser(
     User.parse({
       email: 'alice.martin@exemple.fr',
-      role: 'collaborator',
-      config: JSON.stringify(['default']),
-      password_hash: 'secret'
+      isAdministrator: false,
+      moduleIds: [],
+      chatbotIds: ['default'],
+      passwordHash: 'secret'
     })
   )
   set_user_preferences('alice.martin@exemple.fr', {

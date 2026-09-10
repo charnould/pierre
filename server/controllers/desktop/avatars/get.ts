@@ -1,7 +1,7 @@
 import type { Context } from 'hono'
 
 import { parseAvatarEmail } from '../../../../shared/avatar'
-import type { Parsed_User } from '../../../utils/_schema'
+import type { User } from '../../../utils/_schema'
 import { get_user_avatar } from '../../../utils/user-avatars'
 
 /**
@@ -10,7 +10,7 @@ import { get_user_avatar } from '../../../utils/user-avatars'
  * Serves the org user's stored WebP. 404 if none.
  */
 export const controller = async (c: Context) => {
-  const user = c.get('user') as Parsed_User | null
+  const user = c.get('user') as User | null
   if (!user?.email) {
     return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
   }

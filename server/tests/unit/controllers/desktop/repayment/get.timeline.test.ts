@@ -5,7 +5,7 @@ import { mkdir, rm } from 'node:fs/promises'
 import { Hono } from 'hono'
 
 import { controller } from '../../../../../controllers/desktop/repayment/get.timeline'
-import type { Parsed_User } from '../../../../../utils/_schema'
+import type { User } from '../../../../../utils/_schema'
 import { create_activity, create_trusted_activity } from '../../../../../utils/activities/write'
 import { import_json_rows } from '../../../../../utils/knowledge/sqlite-table-import'
 import { datastorePaths } from '../../../../../utils/paths'
@@ -14,14 +14,15 @@ import { setup } from '../../../../../utils/setup'
 const SERVICE = '_test_repayment_timeline'
 const originalService = Bun.env['SERVICE']
 const paths = datastorePaths(SERVICE)
-const user: Parsed_User = {
+const user: User = {
   email: 'alice@example.org',
-  role: 'contributor',
-  config: ['default'],
-  password_hash: 'unused'
+  isAdministrator: false,
+  moduleIds: ['repayment'],
+  chatbotIds: ['default'],
+  passwordHash: 'unused'
 }
 
-const app = new Hono<{ Variables: { user: Parsed_User } }>()
+const app = new Hono<{ Variables: { user: User } }>()
 app.use('*', async (context, next) => {
   if (context.req.header('x-authenticated') === 'true') context.set('user', user)
   await next()
@@ -37,9 +38,7 @@ beforeEach(async () => {
   await mkdir(paths.root, { recursive: true })
   await setup()
   const db = new Database(paths.database)
-  db.run(
-    "INSERT INTO users (config, email, role, password_hash) VALUES ('default', 'alice@example.org', 'contributor', 'x')"
-  )
+  db.run("INSERT INTO users (email, password_hash) VALUES ('alice@example.org', 'x')")
   await import_json_rows(db, 'comptes_locataires', [
     {
       id_client: 'CLIENT-1',

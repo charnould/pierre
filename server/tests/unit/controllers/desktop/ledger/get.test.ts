@@ -19,6 +19,7 @@ route.get('/desktop/ledger', authenticate, getLedger)
 
 const controller = new Hono()
 controller.get('/desktop/ledger', getLedger)
+controller.get('/desktop/ledger/meta', getLedger)
 
 beforeAll(() => {
   Bun.env['SERVICE'] = SERVICE
@@ -67,6 +68,14 @@ describe('GET /desktop/ledger', () => {
       data: [{ id_locataire: 'LOC-1', solde_locataire: 150 }],
       meta: { total: 1, limit: 1, offset: 0, snapshot_date: '2030-01-31' }
     })
+  })
+
+  it('returns metadata without ledger rows on the metadata route', async () => {
+    const response = await controller.request('/desktop/ledger/meta?limit=1')
+    expect(response.status).toBe(200)
+    const body = (await response.json()) as Record<string, unknown>
+    expect(body).not.toHaveProperty('data')
+    expect(body).toHaveProperty('meta')
   })
 
   it('rejects invalid pagination, sort and filter columns', async () => {

@@ -33,11 +33,9 @@ const DATASTORE_ROOT = TEST_PATHS.root
 
 function seed_user(email: string) {
   const db = new Database(TEST_PATHS.database)
-  db.run(
-    `INSERT INTO users (email, role, config, password_hash, preferences)
-     VALUES (?, 'contributor', ?, 'x', '{}')`,
-    [email, JSON.stringify(['default'])]
-  )
+  db.run(`INSERT INTO users (email, chatbot_ids, password_hash) VALUES (?, '["default"]', 'x')`, [
+    email
+  ])
   db.close()
 }
 

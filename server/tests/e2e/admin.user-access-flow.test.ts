@@ -1,6 +1,6 @@
 import { beforeAll, expect, it } from 'bun:test'
 
-import { delete_all_users, save_user } from '../../utils/handle-user'
+import { deleteAllUsers, saveUser } from '../../utils/handle-user'
 import {
   clickAndWait,
   createE2EView,
@@ -13,20 +13,22 @@ import {
 // Initial setup
 beforeAll(async () => {
   Bun.env['SERVICE'] = 'pierre-production'
-  await delete_all_users()
+  await deleteAllUsers()
 
-  await save_user({
+  await saveUser({
     email: 'collaborator@pierre-ia.org',
-    role: 'collaborator',
-    password_hash: await Bun.password.hash('de17a9bb-1cd0-440b-98cb-5be2fda3e5e2'),
-    config: JSON.stringify(['default', 'demo'])
+    isAdministrator: false,
+    moduleIds: [],
+    chatbotIds: ['default', 'demo'],
+    passwordHash: await Bun.password.hash('de17a9bb-1cd0-440b-98cb-5be2fda3e5e2')
   })
 
-  await save_user({
+  await saveUser({
     email: 'contributor@pierre-ia.org',
-    role: 'contributor',
-    password_hash: await Bun.password.hash('de17a9bb-1cd0-440b-98cb-5be2fda3e5e2'),
-    config: JSON.stringify(['default', 'demo'])
+    isAdministrator: false,
+    moduleIds: [],
+    chatbotIds: ['default', 'demo'],
+    passwordHash: await Bun.password.hash('de17a9bb-1cd0-440b-98cb-5be2fda3e5e2')
   })
 })
 
@@ -76,14 +78,6 @@ it('should validate administrator access flow', async () => {
   await clickAndWait(view, 'a[href="/a"]', { url: 'http://localhost:3000/a' })
   expect(await currentUrl(view)).toBe('http://localhost:3000/a')
 
-  await clickAndWait(view, 'a[href="a/users"]', {
-    url: 'http://localhost:3000/a/users'
-  })
-  expect(await currentUrl(view)).toBe('http://localhost:3000/a/users')
-
-  await clickAndWait(view, 'a[href="/a"]', { url: 'http://localhost:3000/a' })
-  expect(await currentUrl(view)).toBe('http://localhost:3000/a')
-
   await clickAndWait(view, 'a[href="a/knowledge"]', {
     url: 'http://localhost:3000/a/knowledge'
   })
@@ -115,28 +109,24 @@ it('should validate contributor access flow', async () => {
 
   await fillInput(view, 'input[type="email"]', 'contributor@pierre-ia.org')
   await fillInput(view, 'input[type="password"]', 'de17a9bb-1cd0-440b-98cb-5be2fda3e5e2')
-  await clickAndWait(view, 'input[type="submit"]', { url: 'http://localhost:3000/a' })
-  expect(await currentUrl(view)).toBe('http://localhost:3000/a')
+  await clickAndWait(view, 'input[type="submit"]', {
+    url: 'http://localhost:3000/c?config=default&data='
+  })
+  expect(await currentUrl(view)).toBe('http://localhost:3000/c?config=default&data=')
   const cookie = (await getCookies(view)).find((cookie) => cookie.name === 'pierre-ia')
   expect(cookie).toBeDefined()
 
-  await clickAndWait(view, 'a[href="a/conversations"]', {
-    url: 'http://localhost:3000/a'
-  })
-  expect(await currentUrl(view)).toBe('http://localhost:3000/a')
+  await navigate(view, 'http://localhost:3000/a')
+  expect(await currentUrl(view)).toBe('http://localhost:3000/a/login')
 
-  await clickAndWait(view, 'a[href="a/statistics"]', {
-    url: 'http://localhost:3000/a'
-  })
-  expect(await currentUrl(view)).toBe('http://localhost:3000/a')
+  await navigate(view, 'http://localhost:3000/a/conversations')
+  expect(await currentUrl(view)).toBe('http://localhost:3000/a/login')
 
-  await clickAndWait(view, 'a[href="a/users"]', { url: 'http://localhost:3000/a' })
-  expect(await currentUrl(view)).toBe('http://localhost:3000/a')
+  await navigate(view, 'http://localhost:3000/a/statistics')
+  expect(await currentUrl(view)).toBe('http://localhost:3000/a/login')
 
-  await clickAndWait(view, 'a[href="a/knowledge"]', {
-    url: 'http://localhost:3000/a/knowledge'
-  })
-  expect(await currentUrl(view)).toBe('http://localhost:3000/a/knowledge')
+  await navigate(view, 'http://localhost:3000/a/knowledge')
+  expect(await currentUrl(view)).toBe('http://localhost:3000/a/login')
 }, 20000)
 
 //
@@ -174,9 +164,6 @@ it('should validate collaborator access flow', async () => {
   expect(await currentUrl(view)).toBe('http://localhost:3000/a/login')
 
   await navigate(view, 'http://localhost:3000/a/statistics')
-  expect(await currentUrl(view)).toBe('http://localhost:3000/a/login')
-
-  await navigate(view, 'http://localhost:3000/a/users')
   expect(await currentUrl(view)).toBe('http://localhost:3000/a/login')
 
   await navigate(view, 'http://localhost:3000/a/knowledge')

@@ -6,9 +6,8 @@ import { Hono } from 'hono'
 import { controller as deleteActivity } from '../../../../../controllers/desktop/activities/delete'
 import { controller as patchActivity } from '../../../../../controllers/desktop/activities/patch'
 import { controller as postActivity } from '../../../../../controllers/desktop/activities/post'
-import type { Parsed_User } from '../../../../../utils/_schema'
+import type { User } from '../../../../../utils/_schema'
 import { get_activity } from '../../../../../utils/activities/rows'
-import { authorize_mutation } from '../../../../../utils/authorize-role'
 import { datastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
 import { get_ticket_draft, upsert_ticket_draft } from '../../../../../utils/ticket-activities'
@@ -17,19 +16,20 @@ const SERVICE = '_test_activity_write_controllers'
 const ROOT = datastorePaths(SERVICE).root
 const originalService = Bun.env['SERVICE']
 
-const app = new Hono<{ Variables: { user: Parsed_User } }>()
+const app = new Hono<{ Variables: { user: User } }>()
 app.use('*', async (c, next) => {
   c.set('user', {
     email: c.req.header('x-test-email') ?? 'alice@example.org',
-    role: (c.req.header('x-test-role') as Parsed_User['role']) ?? 'contributor',
-    config: ['default'],
-    password_hash: 'unused'
+    isAdministrator: false,
+    moduleIds: ['tickets'],
+    chatbotIds: ['default'],
+    passwordHash: 'unused'
   })
   await next()
 })
-app.post('/desktop/activities', authorize_mutation, postActivity)
-app.patch('/desktop/activities/:id', authorize_mutation, patchActivity)
-app.delete('/desktop/activities/:id', authorize_mutation, deleteActivity)
+app.post('/desktop/activities', postActivity)
+app.patch('/desktop/activities/:id', patchActivity)
+app.delete('/desktop/activities/:id', deleteActivity)
 
 const base = {
   contexte: 'tickets',
@@ -117,7 +117,7 @@ describe('activity write controllers', () => {
     expect(get_activity(created.data.id)).toBeNull()
   })
 
-  it('allows collaborators on every mutation route', async () => {
+  it('allows standard users on every mutation route', async () => {
     const created = await app.request('/desktop/activities', jsonRequest('POST', base))
     const id = ((await created.json()) as { data: { id: number } }).data.id
     for (const [method, path, body] of [
@@ -125,10 +125,7 @@ describe('activity write controllers', () => {
       ['PATCH', `/desktop/activities/${id}`, { operation: 'edit_content', contenu: 'Non' }],
       ['DELETE', `/desktop/activities/${id}`, undefined]
     ] as const) {
-      const response = await app.request(
-        path,
-        jsonRequest(method, body, { 'x-test-role': 'collaborator' })
-      )
+      const response = await app.request(path, jsonRequest(method, body))
       expect(response.status).toBe(200)
     }
   })

@@ -46,7 +46,8 @@ export const controller = async (c: Context) => {
   }
 
   try {
-    return c.json(list_tickets({ ...parsed.data, filters, filter_rules }))
+    const result = list_tickets({ ...parsed.data, filters, filter_rules })
+    return c.json(c.req.path.endsWith('/meta') ? { meta: result.meta } : result)
   } catch (e) {
     if (e instanceof TicketsQueryError) {
       return c.json({ error: { code: 'invalid_query', message: e.message } }, 400)

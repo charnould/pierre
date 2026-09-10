@@ -1,7 +1,7 @@
 import type { Context } from 'hono'
 import { z } from 'zod'
 
-import type { Parsed_User } from '../../../utils/_schema'
+import type { User } from '../../../utils/_schema'
 import { ReclamationsUpsertError, upsert_reclamation } from '../../../utils/reclamations-upsert'
 
 const PutTicketBody = z.object({
@@ -27,7 +27,7 @@ export const controller = async (c: Context) => {
     return c.json({ error: { code: 'invalid_body', message } }, 400)
   }
 
-  const user = c.get('user') as Parsed_User | null
+  const user = c.get('user') as User | null
   if (!user?.email) {
     return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
   }

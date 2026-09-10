@@ -4,8 +4,7 @@ import { rm } from 'node:fs/promises'
 import { Hono } from 'hono'
 
 import { controller } from '../../../../controllers/rcs/post'
-import type { Parsed_User } from '../../../../utils/_schema'
-import { authorize_mutation } from '../../../../utils/authorize-role'
+import type { User } from '../../../../utils/_schema'
 import { datastorePaths } from '../../../../utils/paths'
 import { setup } from '../../../../utils/setup'
 
@@ -15,28 +14,26 @@ const originalService = Bun.env['SERVICE']
 const originalToken = Bun.env['CM_PRODUCT_TOKEN']
 const originalFrom = Bun.env['CM_FROM']
 
-const app = new Hono<{ Variables: { user: Parsed_User } }>()
+const app = new Hono<{ Variables: { user: User } }>()
 app.use('*', async (c, next) => {
   c.set('user', {
     email: 'alice@example.org',
-    role: (c.req.header('x-test-role') as Parsed_User['role']) ?? 'contributor',
-    config: ['default'],
-    password_hash: 'unused'
+    isAdministrator: false,
+    moduleIds: c.req.header('x-test-no-access') === 'true' ? [] : ['tickets'],
+    chatbotIds: ['default'],
+    passwordHash: 'unused'
   })
   await next()
 })
-app.post('/rcs', authorize_mutation, controller)
+app.post('/rcs', controller)
 
-const postRcs = (
-  role: Parsed_User['role'] = 'contributor',
-  idempotencyKey: string = Bun.randomUUIDv7()
-) =>
+const postRcs = (idempotencyKey: string = Bun.randomUUIDv7(), hasAccess = true) =>
   app.request('/rcs', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Idempotency-Key': idempotencyKey,
-      'x-test-role': role
+      ...(hasAccess ? {} : { 'x-test-no-access': 'true' })
     },
     body: JSON.stringify({
       contexte: 'tickets',
@@ -86,11 +83,16 @@ afterAll(async () => {
 })
 
 describe('POST /rcs provider boundary', () => {
+  it('rejects users without access to the activity module', async () => {
+    const response = await postRcs(Bun.randomUUIDv7(), false)
+    expect(response.status).toBe(403)
+  })
+
   it('sends the wrapped CM payload and records a sent activity', async () => {
     const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(acceptProviderRequest)
     try {
       const idempotencyKey = Bun.randomUUIDv7()
-      const response = await postRcs('contributor', idempotencyKey)
+      const response = await postRcs(idempotencyKey)
       expect(response.status).toBe(201)
       expect((await response.json()) as unknown).toMatchObject({
         data: {
@@ -129,7 +131,7 @@ describe('POST /rcs provider boundary', () => {
           ]
         }
       })
-      expect((await postRcs('contributor', idempotencyKey)).status).toBe(201)
+      expect((await postRcs(idempotencyKey)).status).toBe(201)
       expect(fetchSpy).toHaveBeenCalledTimes(1)
     } finally {
       fetchSpy.mockRestore()
@@ -152,10 +154,10 @@ describe('POST /rcs provider boundary', () => {
     }
   })
 
-  it('allows collaborators to send through the provider', async () => {
+  it('allows standard users to send through the provider', async () => {
     const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(acceptProviderRequest)
     try {
-      const response = await postRcs('collaborator')
+      const response = await postRcs()
       expect(response.status).toBe(201)
       expect(fetchSpy).toHaveBeenCalledTimes(1)
     } finally {

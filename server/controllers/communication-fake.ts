@@ -2,10 +2,12 @@ import type { Context } from 'hono'
 import { z } from 'zod'
 
 import { ACTIVITY_CONTEXTS, ACTIVITY_CONTENT_VERSION } from '../../shared/activites'
+import { businessModuleForActivityContext } from '../../shared/modules'
 
 const COMMUNICATION_MEDIA = ['rcs', 'sms', 'email', 'courrier', 'lrar', 'lre'] as const
 type CommunicationMedium = (typeof COMMUNICATION_MEDIA)[number]
-import type { Parsed_User } from '../utils/_schema'
+import type { User } from '../utils/_schema'
+import { userCanAccessModule } from '../utils/authorize-role'
 import { update_status } from '../utils/bulk/status'
 import {
   cm_webhook_authorized,
@@ -63,7 +65,7 @@ const error_status = (error: CommunicationsError): 400 | 403 | 404 | 409 =>
 
 export const fake_communication_controller =
   (type: Exclude<CommunicationMedium, 'rcs'>) => async (c: Context) => {
-    const user = c.get('user') as Parsed_User | null
+    const user = c.get('user') as User | null
     if (!user?.email) {
       return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
     }
@@ -102,6 +104,9 @@ export const fake_communication_controller =
         },
         400
       )
+    }
+    if (!userCanAccessModule(user, businessModuleForActivityContext(parsed.data.contexte))) {
+      return c.json({ error: { code: 'forbidden', message: 'Insufficient permissions' } }, 403)
     }
     try {
       let activity = create_outbound({

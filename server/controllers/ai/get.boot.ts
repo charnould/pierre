@@ -1,17 +1,20 @@
 import type { Context } from 'hono'
 
-import type { Config, Parsed_User } from '../../utils/_schema'
+import type { Config, User } from '../../utils/_schema'
 import { buildChatBoot } from '../../utils/chat-boot'
 import { ChatConfigAccessError, resolveAuthorizedChatConfig } from '../../utils/chat-config-access'
 import { ChatbotConfigError, loadChatbotConfig } from '../../utils/chatbot-config'
 import { get_displayable_configs } from '../chat/get'
 
 async function resolveActiveConfig(c: Context): Promise<Config> {
-  const user = c.get('user') as Parsed_User | null
+  const user = c.get('user') as User | null
   const queryConfig = c.req.query('config')
 
   if (queryConfig === undefined) {
-    const first = user?.config?.[0]
+    if (user && user.chatbotIds.length === 0) {
+      throw new ChatConfigAccessError('forbidden', 'Chatbot configuration access denied', 403)
+    }
+    const first = user?.chatbotIds[0]
     if (first) {
       try {
         return await loadChatbotConfig(first)
@@ -30,7 +33,7 @@ async function resolveActiveConfig(c: Context): Promise<Config> {
  */
 export const controller = async (c: Context) => {
   try {
-    const user = c.get('user') as Parsed_User | null
+    const user = c.get('user') as User | null
     const active_config = await resolveActiveConfig(c)
     const displayable_configs = await get_displayable_configs({ user, active_config })
 

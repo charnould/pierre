@@ -13,8 +13,6 @@ import { controller as get_admin_dashboard } from './controllers/admin/get.dashb
 import { controller as get_admin_knowledge } from './controllers/admin/knowledge/get'
 import { controller as post_admin_knowledge } from './controllers/admin/knowledge/post'
 import { controller as get_admin_statistics } from './controllers/admin/statistics/get'
-import { controller as get_admin_users } from './controllers/admin/users/get'
-import { controller as post_admin_users } from './controllers/admin/users/post'
 import { controller as get_ai_boot } from './controllers/ai/get.boot'
 import { controller as get_ai_skills } from './controllers/ai/get.skills'
 import { controller as post_ai } from './controllers/ai/post'
@@ -32,6 +30,11 @@ import { controller as get_desktop_activities } from './controllers/desktop/acti
 import { controller as get_desktop_activity_feed_sync } from './controllers/desktop/activities/get.feed-sync'
 import { controller as patch_desktop_activity } from './controllers/desktop/activities/patch'
 import { controller as post_desktop_activity } from './controllers/desktop/activities/post'
+import { controller as delete_desktop_admin_user } from './controllers/desktop/admin/users/delete'
+import { controller as get_desktop_admin_users } from './controllers/desktop/admin/users/get'
+import { controller as patch_desktop_admin_user } from './controllers/desktop/admin/users/patch'
+import { controller as post_desktop_admin_user } from './controllers/desktop/admin/users/post'
+import { controller as post_desktop_admin_users_import } from './controllers/desktop/admin/users/post.import'
 import { controller as delete_desktop_automation } from './controllers/desktop/automations/delete'
 import { controller as delete_desktop_automation_pin } from './controllers/desktop/automations/delete.pin'
 import { controller as get_desktop_automations } from './controllers/desktop/automations/get'
@@ -77,7 +80,7 @@ import { controller as post_telemetry } from './controllers/telemetry/post'
 // import { topicize, score } from "./utils/analyze-conversation";
 import { MAX_MULTIPART_REQUEST_BYTES } from './utils/ai-attachments'
 import { authenticate } from './utils/authenticate-user'
-import { authorize_administrator, authorize_mutation } from './utils/authorize-role'
+import { authorizeAdministrator, authorizeAnyModule, authorizeModule } from './utils/authorize-role'
 import { run_due_automations } from './utils/automations/run'
 import { AVATAR_MAX_UPLOAD_BYTES } from './utils/avatar-image'
 import { start_bulk_scheduler } from './utils/bulk/scheduler/queue'
@@ -100,10 +103,21 @@ await cleanupOrphanedVms()
 await initVmPool()
 
 const app = new Hono()
+const authorizeTickets = authorizeModule('tickets')
+const authorizeRepayment = authorizeModule('repayment')
+const authorizeAutomations = authorizeModule('automations')
+const authorizeBulk = authorizeModule('bulk')
+const authorizeTicketsData = authorizeAnyModule('tickets', 'automations')
+const authorizeLedgerData = authorizeAnyModule('repayment', 'bulk')
 const avatarBodyLimit = bodyLimit({
   maxSize: AVATAR_MAX_UPLOAD_BYTES + 64 * 1024,
   onError: (c) =>
     c.json({ error: { code: 'avatar_too_large', message: 'Avatar upload is too large' } }, 413)
+})
+const adminCsvBodyLimit = bodyLimit({
+  maxSize: 1024 * 1024 + 64 * 1024,
+  onError: (c) =>
+    c.json({ error: { code: 'invalid_file', message: 'Le fichier CSV dépasse 1 Mo.' } }, 413)
 })
 const aiMultipartBodyLimit = bodyLimit({
   maxSize: MAX_MULTIPART_REQUEST_BYTES,
@@ -167,88 +181,123 @@ app.get('/ai/boot', authenticate, get_ai_boot)
 app.get('/ai/skills', authenticate, get_ai_skills)
 app.get('/desktop/activities', authenticate, get_desktop_activities)
 app.get('/desktop/activity-feed/sync', authenticate, get_desktop_activity_feed_sync)
-app.post('/desktop/activities', authenticate, authorize_mutation, post_desktop_activity)
-app.patch('/desktop/activities/:id', authenticate, authorize_mutation, patch_desktop_activity)
-app.delete('/desktop/activities/:id', authenticate, authorize_mutation, delete_desktop_activity)
-app.get('/desktop/automations', authenticate, get_desktop_automations)
-app.post('/desktop/automations', authenticate, authorize_mutation, post_desktop_automation)
-app.patch('/desktop/automations/:id', authenticate, authorize_mutation, patch_desktop_automation)
-app.delete('/desktop/automations/:id', authenticate, authorize_mutation, delete_desktop_automation)
+app.post('/desktop/activities', authenticate, post_desktop_activity)
+app.patch('/desktop/activities/:id', authenticate, patch_desktop_activity)
+app.delete('/desktop/activities/:id', authenticate, delete_desktop_activity)
+app.get('/desktop/automations', authenticate, authorizeAutomations, get_desktop_automations)
+app.post('/desktop/automations', authenticate, authorizeAutomations, post_desktop_automation)
+app.patch('/desktop/automations/:id', authenticate, authorizeAutomations, patch_desktop_automation)
+app.delete(
+  '/desktop/automations/:id',
+  authenticate,
+  authorizeAutomations,
+  delete_desktop_automation
+)
 app.post(
   '/desktop/automations/:id/run',
   authenticate,
-  authorize_mutation,
+  authorizeAutomations,
   post_desktop_automation_run
 )
 app.post(
   '/desktop/automations/:id/pin',
   authenticate,
-  authorize_mutation,
+  authorizeAutomations,
   post_desktop_automation_pin
 )
 app.delete(
   '/desktop/automations/:id/pin',
   authenticate,
-  authorize_mutation,
+  authorizeAutomations,
   delete_desktop_automation_pin
 )
 app.post(
   '/desktop/bulk-operations/preview-query',
   authenticate,
-  authorize_mutation,
+  authorizeBulk,
   post_desktop_bulk_operation_preview_query
 )
 app.post(
   '/desktop/bulk-operations/preview-message',
   authenticate,
-  authorize_mutation,
+  authorizeBulk,
   post_desktop_bulk_operation_preview_message
 )
-app.get('/desktop/bulk-operations', authenticate, get_desktop_bulk_operations)
-app.post('/desktop/bulk-operations', authenticate, authorize_mutation, post_desktop_bulk_operation)
+app.get('/desktop/bulk-operations', authenticate, authorizeBulk, get_desktop_bulk_operations)
+app.post('/desktop/bulk-operations', authenticate, authorizeBulk, post_desktop_bulk_operation)
 app.get(
   '/desktop/bulk-operations/:id/reports/:executionId',
   authenticate,
+  authorizeBulk,
   get_desktop_bulk_operation_report
 )
-app.get('/desktop/bulk-operations/:id/reports', authenticate, get_desktop_bulk_operation_reports)
-app.get('/desktop/bulk-operations/:id', authenticate, get_desktop_bulk_operation)
-app.patch(
-  '/desktop/bulk-operations/:id',
+app.get(
+  '/desktop/bulk-operations/:id/reports',
   authenticate,
-  authorize_mutation,
-  patch_desktop_bulk_operation
+  authorizeBulk,
+  get_desktop_bulk_operation_reports
 )
+app.get('/desktop/bulk-operations/:id', authenticate, authorizeBulk, get_desktop_bulk_operation)
+app.patch('/desktop/bulk-operations/:id', authenticate, authorizeBulk, patch_desktop_bulk_operation)
 app.delete(
   '/desktop/bulk-operations/:id',
   authenticate,
-  authorize_mutation,
+  authorizeBulk,
   delete_desktop_bulk_operation
 )
 app.post(
   '/desktop/bulk-operations/:id/execute',
   authenticate,
-  authorize_administrator,
+  authorizeBulk,
+  authorizeAdministrator,
   post_desktop_bulk_operation_execute
 )
-app.get('/desktop/tickets/facets', authenticate, get_desktop_tickets_facets)
-app.put('/desktop/tickets', authenticate, authorize_mutation, put_desktop_tickets)
-app.get('/desktop/tickets', authenticate, get_desktop_tickets)
-app.get('/desktop/ledger/facets', authenticate, get_desktop_ledger_facets)
-app.get('/desktop/ledger', authenticate, get_desktop_ledger)
-app.get('/desktop/repayment/timeline', authenticate, get_desktop_repayment_timeline)
+app.get('/desktop/tickets/facets', authenticate, authorizeTickets, get_desktop_tickets_facets)
+app.put('/desktop/tickets', authenticate, authorizeTickets, put_desktop_tickets)
+app.get('/desktop/tickets/meta', authenticate, authorizeTicketsData, get_desktop_tickets)
+app.get('/desktop/tickets', authenticate, authorizeTickets, get_desktop_tickets)
+app.get('/desktop/ledger/facets', authenticate, authorizeRepayment, get_desktop_ledger_facets)
+app.get('/desktop/ledger/meta', authenticate, authorizeLedgerData, get_desktop_ledger)
+app.get('/desktop/ledger', authenticate, authorizeRepayment, get_desktop_ledger)
+app.get(
+  '/desktop/repayment/timeline',
+  authenticate,
+  authorizeRepayment,
+  get_desktop_repayment_timeline
+)
 app.get('/desktop/users', authenticate, get_desktop_users)
+app.get('/desktop/admin/users', authenticate, authorizeAdministrator, get_desktop_admin_users)
+app.post('/desktop/admin/users', authenticate, authorizeAdministrator, post_desktop_admin_user)
+app.patch(
+  '/desktop/admin/users/:email',
+  authenticate,
+  authorizeAdministrator,
+  patch_desktop_admin_user
+)
+app.delete(
+  '/desktop/admin/users/:email',
+  authenticate,
+  authorizeAdministrator,
+  delete_desktop_admin_user
+)
+app.post(
+  '/desktop/admin/users/import',
+  authenticate,
+  authorizeAdministrator,
+  adminCsvBodyLimit,
+  post_desktop_admin_users_import
+)
 app.patch('/desktop/me/preferences', authenticate, patch_desktop_me_preferences)
 app.post('/desktop/me/avatar', authenticate, avatarBodyLimit, post_desktop_me_avatar)
 app.get('/desktop/avatars/:email', authenticate, get_desktop_avatars)
-app.post('/rcs', authenticate, authorize_mutation, post_rcs)
-app.post('/sms', authenticate, authorize_mutation, post_sms)
-app.post('/email', authenticate, authorize_mutation, post_email)
-app.post('/communications/external', authenticate, authorize_mutation, post_external_communication)
-app.post('/courrier', authenticate, authorize_mutation, post_courrier)
-app.post('/lrar', authenticate, authorize_mutation, post_lrar)
-app.post('/lre', authenticate, authorize_mutation, post_lre)
-app.post('/signature', authenticate, authorize_mutation, post_signature)
+app.post('/rcs', authenticate, post_rcs)
+app.post('/sms', authenticate, post_sms)
+app.post('/email', authenticate, post_email)
+app.post('/communications/external', authenticate, post_external_communication)
+app.post('/courrier', authenticate, post_courrier)
+app.post('/lrar', authenticate, post_lrar)
+app.post('/lre', authenticate, post_lre)
+app.post('/signature', authenticate, post_signature)
 app.post('/webhook/rcs', post_rcs_webhook)
 app.post('/webhook/sms', post_sms_webhook)
 app.post('/webhook/email', post_email_webhook)
@@ -256,20 +305,18 @@ app.post('/webhook/courrier', post_courrier_webhook)
 app.post('/webhook/lrar', post_lrar_webhook)
 app.post('/webhook/lre', post_lre_webhook)
 app.post('/webhook/signature', post_signature_webhook)
-app.post('/ai/answer', aiMultipartBodyLimit, authenticate, authorize_mutation, post_ai_answer)
+app.post('/ai/answer', aiMultipartBodyLimit, authenticate, post_ai_answer)
 app.post('/ai/ui-response', aiUiResponseBodyLimit, post_ai_ui_response)
 app.post('/ai/vm/release', authenticate, post_ai_vm_release)
 
 // Admin routes
 app.get('/a/login', get_admin_login)
 app.get('/a', authenticate, get_admin_dashboard)
-app.get('/a/users', authenticate, get_admin_users)
 app.get('/a/knowledge', authenticate, get_admin_knowledge)
 app.get('/a/statistics', authenticate, get_admin_statistics)
 app.get('/a/conversations', authenticate, get_admin_conversations)
 
 app.post('/a/login', post_admin_login)
-app.post('/a/users', authenticate, post_admin_users)
 app.post('/a/knowledge', authenticate, post_admin_knowledge)
 app.post('/a/conversations', authenticate, post_admin_conversations)
 

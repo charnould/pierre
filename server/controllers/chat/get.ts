@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import type { Context } from 'hono'
 import { z } from 'zod'
 
-import type { Config, Parsed_User } from '../../utils/_schema'
+import type { Config, User } from '../../utils/_schema'
 import { loadChatbotConfig } from '../../utils/chatbot-config'
 import { CUSTOMIZATION_DIR } from '../../utils/paths'
 import { view } from '../../views/chat.index'
@@ -59,7 +59,7 @@ export const controller = async (c: Context) => {
  * @throws Will throw an error if configuration files cannot be loaded.
  */
 export const get_displayable_configs = async (params: {
-  user: Parsed_User | null
+  user: User | null
   active_config: Config
 }): Promise<Displayable_configs> => {
   try {
@@ -72,10 +72,10 @@ export const get_displayable_configs = async (params: {
           .default
         const should_be_displayed =
           params.user != null
-            ? params.user.config.includes(config.id)
+            ? params.user.chatbotIds.includes(config.id)
             : params.active_config.show.includes(config.id)
         const user_is_authorized =
-          params.user != null ? params.user.config.includes(config.id) : true
+          params.user != null ? params.user.chatbotIds.includes(config.id) : true
         const is_active = file === params.active_config.id
 
         return {

@@ -1,6 +1,8 @@
 import type { Context } from 'hono'
 import { stream } from 'hono/streaming'
 
+import { businessModuleForSkillId } from '../../../shared/modules'
+import type { User } from '../../utils/_schema'
 import {
   assertAttachmentLimits,
   assertCanonicalConversationId,
@@ -10,6 +12,7 @@ import {
   processUploadedAttachments,
   type ProcessedPiAttachments
 } from '../../utils/ai-attachments'
+import { userCanAccessModule } from '../../utils/authorize-role'
 import { streamCopilot } from '../../utils/copilot-agent'
 import { send_telemetry } from '../../utils/send-telemetry'
 import { loadConfiguredSkill, SkillRequestError } from '../../utils/skill-config'
@@ -53,6 +56,13 @@ export const createPostAnswerController =
       const skillPart = formData.get('id_skill')
       const skillConfig = await loadConfiguredSkill(typeof skillPart === 'string' ? skillPart : '')
       const skill = skillConfig.id
+      const user = c.get('user') as User | null | undefined
+      if (!user) {
+        return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
+      }
+      if (!userCanAccessModule(user, businessModuleForSkillId(skill))) {
+        return c.json({ error: { code: 'forbidden', message: 'Insufficient permissions' } }, 403)
+      }
       const payloadRaw = (formData.get('payload') as string | null) ?? ''
 
       const workflowPayload = parseWorkflowPayload(payloadRaw)

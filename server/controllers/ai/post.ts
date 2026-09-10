@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 
-import { AIContext, type Parsed_User } from '../../utils/_schema'
+import { AIContext, type User } from '../../utils/_schema'
 import {
   assertAttachmentLimits,
   assertCanonicalConversationId,
@@ -60,7 +60,7 @@ export const createPostAiController =
 
       const config = await resolveAuthorizedChatConfig(
         configName,
-        c.get('user') as Parsed_User | null | undefined,
+        c.get('user') as User | null | undefined,
         deps.loadConfig
       )
       const fileParts = formData.getAll('files')

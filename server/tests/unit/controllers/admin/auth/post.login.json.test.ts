@@ -1,7 +1,7 @@
 import { beforeAll, expect, it } from 'bun:test'
 
 import { User } from '../../../../../utils/_schema'
-import { delete_all_users, save_user } from '../../../../../utils/handle-user'
+import { deleteAllUsers, saveUser } from '../../../../../utils/handle-user'
 
 const BASE = 'http://localhost:3000'
 const DESKTOP_HEADERS = {
@@ -24,21 +24,22 @@ function pierreCookie(res: Response): string | null {
   const raw = res.headers.get('set-cookie')
   const all = raw && lines.length === 0 ? [raw] : lines
   const pierre = all.find((c) => c.startsWith('pierre-ia='))
-  return pierre ? pierre.split(';')[0] : null
+  return pierre ? pierre.split(';', 1)[0]! : null
 }
 
 beforeAll(async () => {
   if (!(await serverUp())) return
   Bun.env['SERVICE'] = 'pierre-production'
   Bun.env['AUTH_PASSWORD'] ??= 'harry121284'
-  await delete_all_users()
+  await deleteAllUsers()
 
-  await save_user(
+  await saveUser(
     User.parse({
       email: 'json-login@pierre-ia.org',
-      role: 'collaborator',
-      config: JSON.stringify(['default', 'demo']),
-      password_hash: await Bun.password.hash('json-login-pw')
+      isAdministrator: false,
+      moduleIds: [],
+      chatbotIds: ['default', 'demo'],
+      passwordHash: await Bun.password.hash('json-login-pw')
     })
   )
 })
@@ -78,8 +79,24 @@ it('JSON login: valid credentials → 200, Set-Cookie', async () => {
   })
 
   expect(res.status).toBe(200)
-  const body = (await res.json()) as { ok: boolean }
-  expect(body.ok).toBe(true)
+  const body = (await res.json()) as {
+    ok: boolean
+    user: {
+      email: string
+      isAdministrator: boolean
+      moduleIds: string[]
+      chatbotIds: string[]
+    }
+  }
+  expect(body).toMatchObject({
+    ok: true,
+    user: {
+      email: 'admin@pierre-ia.org',
+      isAdministrator: true
+    }
+  })
+  expect(body.user.moduleIds).toContain('tickets')
+  expect(body.user.chatbotIds).toContain('default')
   expect(pierreCookie(res)).toMatch(/^pierre-ia=/)
 })
 

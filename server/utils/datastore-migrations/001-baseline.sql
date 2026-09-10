@@ -12,9 +12,12 @@ CREATE INDEX idx_conversations_timestamp
   ON conversations (timestamp DESC);
 
 CREATE TABLE users (
-  config TEXT NOT NULL,
   email TEXT PRIMARY KEY UNIQUE NOT NULL,
-  role TEXT NOT NULL,
+  is_administrator INTEGER NOT NULL DEFAULT 0 CHECK (is_administrator IN (0, 1)),
+  module_ids TEXT NOT NULL DEFAULT '[]'
+    CHECK (json_valid(module_ids) AND json_type(module_ids) = 'array'),
+  chatbot_ids TEXT NOT NULL DEFAULT '[]'
+    CHECK (json_valid(chatbot_ids) AND json_type(chatbot_ids) = 'array'),
   password_hash TEXT NOT NULL,
   preferences TEXT NOT NULL DEFAULT '{}',
   avatar BLOB,

@@ -1,4 +1,4 @@
-import type { Config, Parsed_User } from './_schema'
+import type { Config, User } from './_schema'
 import { loadChatbotConfig } from './chatbot-config'
 
 const CONFIG_ID = /^[a-z0-9][a-z0-9_-]{0,63}$/
@@ -16,7 +16,7 @@ export class ChatConfigAccessError extends Error {
 
 export async function resolveAuthorizedChatConfig(
   requestedId: string,
-  user: Parsed_User | null | undefined,
+  user: User | null | undefined,
   loadConfig: (configName: string) => Promise<unknown> = loadChatbotConfig
 ): Promise<Config> {
   if (!CONFIG_ID.test(requestedId)) {
@@ -34,7 +34,7 @@ export async function resolveAuthorizedChatConfig(
     throw new ChatConfigAccessError('invalid_config', 'Invalid chatbot configuration', 400)
   }
 
-  const isAllowed = user ? user.config.includes(requestedId) : config.protected !== true
+  const isAllowed = user ? user.chatbotIds.includes(requestedId) : config.protected !== true
   if (!isAllowed) {
     throw new ChatConfigAccessError('forbidden', 'Chatbot configuration access denied', 403)
   }

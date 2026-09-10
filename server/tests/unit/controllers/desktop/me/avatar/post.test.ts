@@ -4,8 +4,8 @@ import { Hono } from 'hono'
 
 import { controller as get_desktop_avatars } from '../../../../../../controllers/desktop/avatars/get'
 import { controller as post_desktop_me_avatar } from '../../../../../../controllers/desktop/me/avatar/post'
-import { User, type Parsed_User } from '../../../../../../utils/_schema'
-import { save_user } from '../../../../../../utils/handle-user'
+import { User } from '../../../../../../utils/_schema'
+import { saveUser } from '../../../../../../utils/handle-user'
 import { user_has_avatar } from '../../../../../../utils/user-avatars'
 import { use_identity_test_env } from '../../../../utils/identity-test-env'
 
@@ -13,15 +13,16 @@ const PNG_1x1 = Uint8Array.fromBase64(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
 )
 
-const app = new Hono<{ Variables: { user: Parsed_User } }>()
+const app = new Hono<{ Variables: { user: User } }>()
 app.post(
   '/desktop/me/avatar',
   async (c, next) => {
     c.set('user', {
       email: 'alice.martin@exemple.fr',
-      role: 'collaborator',
-      config: ['default'],
-      password_hash: 'x'
+      isAdministrator: false,
+      moduleIds: [],
+      chatbotIds: ['default'],
+      passwordHash: 'x'
     })
     await next()
   },
@@ -32,9 +33,10 @@ app.get(
   async (c, next) => {
     c.set('user', {
       email: 'alice.martin@exemple.fr',
-      role: 'collaborator',
-      config: ['default'],
-      password_hash: 'x'
+      isAdministrator: false,
+      moduleIds: [],
+      chatbotIds: ['default'],
+      passwordHash: 'x'
     })
     await next()
   },
@@ -44,12 +46,13 @@ app.get(
 use_identity_test_env('_test_me_avatar')
 
 beforeEach(async () => {
-  await save_user(
+  await saveUser(
     User.parse({
       email: 'alice.martin@exemple.fr',
-      role: 'collaborator',
-      config: JSON.stringify(['default']),
-      password_hash: 'secret'
+      isAdministrator: false,
+      moduleIds: [],
+      chatbotIds: ['default'],
+      passwordHash: 'secret'
     })
   )
 })

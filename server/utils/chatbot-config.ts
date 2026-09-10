@@ -1,4 +1,6 @@
 import { existsSync, realpathSync } from 'node:fs'
+import { readdir } from 'node:fs/promises'
+import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import { ChatbotConfig } from './_schema'
@@ -47,4 +49,18 @@ export async function loadChatbotConfig(requestedId: string): Promise<ChatbotCon
     if (error instanceof ChatbotConfigError) throw error
     throw new ChatbotConfigError('config_not_found', 'Chatbot configuration not found', 404)
   }
+}
+
+export async function listChatbotSummaries(): Promise<Array<{ id: string; label: string }>> {
+  const entries = await readdir(join(CUSTOMIZATION_DIR, 'chatbots'))
+  const configs = await Promise.all(
+    entries.map(async (entry) => {
+      if (!existsSync(join(CUSTOMIZATION_DIR, 'chatbots', entry, 'config.ts'))) return null
+      const config = await loadChatbotConfig(entry)
+      return { id: config.id, label: config.display }
+    })
+  )
+  return configs
+    .filter((config): config is NonNullable<typeof config> => config !== null)
+    .sort((a, b) => a.label.localeCompare(b.label, 'fr'))
 }

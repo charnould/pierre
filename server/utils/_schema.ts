@@ -1,22 +1,16 @@
 import { z } from 'zod/v4'
 
 import { TRACE_MODES } from '../../shared/chat'
+import { isBusinessModuleId, type BusinessModuleId } from '../../shared/modules'
 
-/**
- * Represents a User schema definition using Zod.
- *
- * This schema validates the structure of a user object with the following properties:
- *
- * - `email`: A string that is trimmed and converted to lowercase.
- * - `role`: An enumerated string that can be one of 'administrator', 'contributor', or 'collaborator'.
- * - `config`: A string that is trimmed.
- * - `password_hash`: A string representing the hashed password of the user.
- */
+const BusinessModuleIdSchema = z.custom<BusinessModuleId>(isBusinessModuleId)
+
 export const User = z.object({
-  role: z.enum(['administrator', 'contributor', 'collaborator']).catch('collaborator'),
-  config: z.string().trim().toLowerCase(),
-  email: z.email().trim().toLowerCase(),
-  password_hash: z.string()
+  email: z.string().trim().toLowerCase().pipe(z.email()),
+  isAdministrator: z.boolean(),
+  moduleIds: z.array(BusinessModuleIdSchema),
+  chatbotIds: z.array(z.string().trim().min(1)),
+  passwordHash: z.string()
 })
 
 /**
@@ -33,16 +27,6 @@ export const Skill = z.object({
   name: z.string().trim().nullable().default(null),
   skill: z.string().trim().nullable().default(null)
 })
-
-/**
- * Represents a parsed user schema that extends the base `User` schema
- * by adding a `config` property. The `config` property is an array
- * of strings, allowing for additional configuration options.
- *
- * This schema can be used to validate and type-check user data
- * with additional configuration details.
- */
-export const Parsed_User = User.extend({ config: z.array(z.string()) })
 
 const AgentFields = {
   id: z.string(),
@@ -190,5 +174,4 @@ export type ChatbotConfig = z.infer<typeof ChatbotConfig>
 export type SkillConfig = z.infer<typeof SkillConfig>
 export type Config = ChatbotConfig
 export type AIContext = z.infer<typeof AIContext>
-export type Parsed_User = z.infer<typeof Parsed_User>
 export type Augmented_Query = z.infer<typeof Augmented_Query>

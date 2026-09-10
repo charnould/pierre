@@ -8,6 +8,7 @@ import { controller as emailSend } from '../../../controllers/email/post'
 import { controller as emailWebhook } from '../../../controllers/email/post.webhook'
 import { controller as externalCommunication } from '../../../controllers/external-communication/post'
 import { controller as rcsWebhook } from '../../../controllers/rcs/post.webhook'
+import type { User } from '../../../utils/_schema'
 import { list_activities } from '../../../utils/activities/query'
 import { get_activity } from '../../../utils/activities/rows'
 import { create_outbound } from '../../../utils/communications/storage'
@@ -246,9 +247,15 @@ describe('webhooks de communication', () => {
 })
 
 describe('POST /communications/external et action', () => {
-  const app = new Hono<{ Variables: { user: { email: string } } }>()
+  const app = new Hono<{ Variables: { user: User } }>()
   app.use('*', async (c, next) => {
-    c.set('user', { email: 'alice@example.org' })
+    c.set('user', {
+      email: 'alice@example.org',
+      isAdministrator: false,
+      moduleIds: ['tickets', 'automations'],
+      chatbotIds: [],
+      passwordHash: 'unused'
+    })
     await next()
   })
   app.post('/communications/external', externalCommunication)

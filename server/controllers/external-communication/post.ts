@@ -6,7 +6,9 @@ import {
   ACTIVITY_CONTEXTS,
   COMMUNICATION_CHANNELS
 } from '../../../shared/activites'
-import type { Parsed_User } from '../../utils/_schema'
+import { businessModuleForActivityContext } from '../../../shared/modules'
+import type { User } from '../../utils/_schema'
+import { userCanAccessModule } from '../../utils/authorize-role'
 import { CommunicationsError, create_outbound } from '../../utils/communications/storage'
 
 const Body = z
@@ -49,7 +51,7 @@ const error_status = (error: CommunicationsError): 400 | 403 | 404 | 409 =>
 
 /** Journalise une communication déjà envoyée hors Pierre, sans appeler de fournisseur. */
 export const controller = async (c: Context) => {
-  const user = c.get('user') as Parsed_User | null
+  const user = c.get('user') as User | null
   if (!user?.email) {
     return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
   }
@@ -78,6 +80,9 @@ export const controller = async (c: Context) => {
       },
       400
     )
+  }
+  if (!userCanAccessModule(user, businessModuleForActivityContext(parsed.data.contexte))) {
+    return c.json({ error: { code: 'forbidden', message: 'Insufficient permissions' } }, 403)
   }
 
   try {

@@ -11,8 +11,7 @@ import { controller as patchAutomation } from '../../../../../controllers/deskto
 import { controller as postAutomation } from '../../../../../controllers/desktop/automations/post'
 import { controller as postPin } from '../../../../../controllers/desktop/automations/post.pin'
 import { controller as postRun } from '../../../../../controllers/desktop/automations/post.run'
-import type { Parsed_User } from '../../../../../utils/_schema'
-import { authorize_mutation } from '../../../../../utils/authorize-role'
+import type { User } from '../../../../../utils/_schema'
 import {
   reset_automation_executor,
   set_automation_executor
@@ -25,23 +24,24 @@ const TEST_PATHS = datastorePaths(SERVICE)
 const ROOT = TEST_PATHS.root
 const originalService = Bun.env['SERVICE']
 
-const app = new Hono<{ Variables: { user: Parsed_User } }>()
+const app = new Hono<{ Variables: { user: User } }>()
 app.use('*', async (c, next) => {
   c.set('user', {
     email: c.req.header('x-test-email') ?? 'alice@example.org',
-    role: (c.req.header('x-test-role') as Parsed_User['role']) ?? 'contributor',
-    config: ['default'],
-    password_hash: 'unused'
+    isAdministrator: false,
+    moduleIds: ['automations'],
+    chatbotIds: ['default'],
+    passwordHash: 'unused'
   })
   await next()
 })
 app.get('/desktop/automations', getAutomations)
-app.post('/desktop/automations', authorize_mutation, postAutomation)
-app.patch('/desktop/automations/:id', authorize_mutation, patchAutomation)
-app.delete('/desktop/automations/:id', authorize_mutation, deleteAutomation)
-app.post('/desktop/automations/:id/run', authorize_mutation, postRun)
-app.post('/desktop/automations/:id/pin', authorize_mutation, postPin)
-app.delete('/desktop/automations/:id/pin', authorize_mutation, deletePin)
+app.post('/desktop/automations', postAutomation)
+app.patch('/desktop/automations/:id', patchAutomation)
+app.delete('/desktop/automations/:id', deleteAutomation)
+app.post('/desktop/automations/:id/run', postRun)
+app.post('/desktop/automations/:id/pin', postPin)
+app.delete('/desktop/automations/:id/pin', deletePin)
 
 const reportBody = {
   type: 'report',
@@ -62,9 +62,7 @@ const request = (method: string, body?: unknown, headers: Record<string, string>
 
 const seedUsers = () => {
   const db = new Database(TEST_PATHS.database)
-  const insert = db.prepare(
-    "INSERT INTO users (config, email, role, password_hash) VALUES ('default', ?, 'contributor', 'x')"
-  )
+  const insert = db.prepare("INSERT INTO users (email, password_hash) VALUES (?, 'x')")
   insert.run('alice@example.org')
   insert.run('bob@example.org')
   db.close()
@@ -95,61 +93,51 @@ afterAll(async () => {
 })
 
 describe('automation route classes', () => {
-  it.each(['collaborator', 'contributor', 'administrator'] as const)(
-    'allows an authenticated %s to manage an owned automation',
-    async (role) => {
-      const roleHeaders = { 'x-test-role': role }
-      const created = await create(roleHeaders)
+  it('allows an authenticated user to manage an owned automation', async () => {
+    const created = await create()
 
-      const listedForMention = await app.request('/desktop/automations', {
-        headers: { 'x-test-email': 'bob@example.org', ...roleHeaders }
-      })
-      expect(listedForMention.status).toBe(200)
-      expect((await listedForMention.json()) as unknown).toMatchObject({
-        data: [{ id: created.data.id, pinned: false }]
-      })
+    const listedForMention = await app.request('/desktop/automations', {
+      headers: { 'x-test-email': 'bob@example.org' }
+    })
+    expect(listedForMention.status).toBe(200)
+    expect((await listedForMention.json()) as unknown).toMatchObject({
+      data: [{ id: created.data.id, pinned: false }]
+    })
 
-      const pinned = await app.request(
-        `/desktop/automations/${created.data.id}/pin`,
-        request('POST', undefined, { 'x-test-email': 'bob@example.org', ...roleHeaders })
-      )
-      expect(pinned.status).toBe(200)
-      expect((await pinned.json()) as unknown).toMatchObject({ data: { pinned: true } })
+    const pinned = await app.request(
+      `/desktop/automations/${created.data.id}/pin`,
+      request('POST', undefined, { 'x-test-email': 'bob@example.org' })
+    )
+    expect(pinned.status).toBe(200)
+    expect((await pinned.json()) as unknown).toMatchObject({ data: { pinned: true } })
 
-      const patched = await app.request(
-        `/desktop/automations/${created.data.id}`,
-        request('PATCH', { name: 'Rapport révisé', status: 'paused' }, roleHeaders)
-      )
-      expect(patched.status).toBe(200)
-      expect((await patched.json()) as unknown).toMatchObject({
-        data: { name: 'Rapport révisé', status: 'paused', next_run_at: null }
-      })
+    const patched = await app.request(
+      `/desktop/automations/${created.data.id}`,
+      request('PATCH', { name: 'Rapport révisé', status: 'paused' })
+    )
+    expect(patched.status).toBe(200)
+    expect((await patched.json()) as unknown).toMatchObject({
+      data: { name: 'Rapport révisé', status: 'paused', next_run_at: null }
+    })
 
-      const run = await app.request(
-        `/desktop/automations/${created.data.id}/run`,
-        request('POST', undefined, roleHeaders)
-      )
-      expect(run.status).toBe(200)
-      expect((await run.json()) as unknown).toMatchObject({
-        data: { status: 'paused', last_run_status: 'success' }
-      })
+    const run = await app.request(`/desktop/automations/${created.data.id}/run`, request('POST'))
+    expect(run.status).toBe(200)
+    expect((await run.json()) as unknown).toMatchObject({
+      data: { status: 'paused', last_run_status: 'success' }
+    })
 
-      const unpinned = await app.request(
-        `/desktop/automations/${created.data.id}/pin`,
-        request('DELETE', undefined, { 'x-test-email': 'bob@example.org', ...roleHeaders })
-      )
-      expect(unpinned.status).toBe(200)
-      expect((await unpinned.json()) as unknown).toMatchObject({ data: { pinned: false } })
+    const unpinned = await app.request(
+      `/desktop/automations/${created.data.id}/pin`,
+      request('DELETE', undefined, { 'x-test-email': 'bob@example.org' })
+    )
+    expect(unpinned.status).toBe(200)
+    expect((await unpinned.json()) as unknown).toMatchObject({ data: { pinned: false } })
 
-      const deleted = await app.request(
-        `/desktop/automations/${created.data.id}`,
-        request('DELETE', undefined, roleHeaders)
-      )
-      expect(deleted.status).toBe(200)
-      expect((await app.request('/desktop/automations')).status).toBe(200)
-      expect(await (await app.request('/desktop/automations')).json()).toEqual({ data: [] })
-    }
-  )
+    const deleted = await app.request(`/desktop/automations/${created.data.id}`, request('DELETE'))
+    expect(deleted.status).toBe(200)
+    expect((await app.request('/desktop/automations')).status).toBe(200)
+    expect(await (await app.request('/desktop/automations')).json()).toEqual({ data: [] })
+  })
 
   it('enforces ownership and visibility', async () => {
     const created = await create()

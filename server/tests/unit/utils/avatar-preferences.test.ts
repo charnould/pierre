@@ -12,7 +12,7 @@ import {
   resolve_display_name,
   set_display_name
 } from '../../../utils/avatar-preferences'
-import { save_user } from '../../../utils/handle-user'
+import { saveUser } from '../../../utils/handle-user'
 import { user_has_avatar } from '../../../utils/user-avatars'
 import { use_identity_test_env } from './identity-test-env'
 
@@ -55,12 +55,13 @@ describe('normalizeDisplayName', () => {
 
 describe('display_name', () => {
   test('defaults to email local-part; custom overrides; clear restores default', async () => {
-    await save_user(
+    await saveUser(
       User.parse({
         email: 'alice.martin@exemple.fr',
-        role: 'collaborator',
-        config: JSON.stringify(['default']),
-        password_hash: 'x'
+        isAdministrator: false,
+        moduleIds: [],
+        chatbotIds: ['default'],
+        passwordHash: 'x'
       })
     )
 
@@ -78,12 +79,13 @@ describe('display_name', () => {
     expect(set_display_name('alice.martin@exemple.fr', null)).toBe('alice.martin')
     expect(get_user_preferences('alice.martin@exemple.fr').display_name).toBeNull()
 
-    await save_user(
+    await saveUser(
       User.parse({
         email: 'pierre@exemple.fr',
-        role: 'collaborator',
-        config: JSON.stringify(['default']),
-        password_hash: 'x'
+        isAdministrator: false,
+        moduleIds: [],
+        chatbotIds: ['default'],
+        passwordHash: 'x'
       })
     )
     expect(patch_me_preferences('pierre@exemple.fr', { display_name: 'PIERRE' })).toEqual({

@@ -3,7 +3,7 @@ import { expect, it } from 'bun:test'
 import defaultConfig from '../../../../../customization/chatbots/default/config'
 import testing1Config from '../../../../../customization/chatbots/testing_purpose_1/config'
 import { get_displayable_configs } from '../../../../controllers/chat/get'
-import type { Parsed_User } from '../../../../utils/_schema'
+import type { User } from '../../../../utils/_schema'
 
 it('anonymous user sees profiles from active config show only', async () => {
   const configs = await get_displayable_configs({
@@ -14,12 +14,13 @@ it('anonymous user sees profiles from active config show only', async () => {
   expect(configs.map((c) => c.id).sort()).toEqual(['default', 'demo', 'zmode'])
 })
 
-it('authenticated user sees exactly profiles listed in user.config', async () => {
-  const user: Parsed_User = {
+it('authenticated user sees exactly the chatbots listed in user.chatbotIds', async () => {
+  const user: User = {
     email: 'collab@test.org',
-    role: 'collaborator',
-    password_hash: 'hash',
-    config: ['agent_astreinte', 'cadre_astreinte', 'demo']
+    isAdministrator: false,
+    moduleIds: [],
+    chatbotIds: ['agent_astreinte', 'cadre_astreinte', 'demo'],
+    passwordHash: 'hash'
   }
 
   const configs = await get_displayable_configs({
@@ -33,11 +34,12 @@ it('authenticated user sees exactly profiles listed in user.config', async () =>
 })
 
 it('authenticated user is not limited by active config show', async () => {
-  const user: Parsed_User = {
+  const user: User = {
     email: 'test@test.org',
-    role: 'collaborator',
-    password_hash: 'hash',
-    config: ['demo', 'testing_purpose_1', 'testing_purpose_2']
+    isAdministrator: false,
+    moduleIds: [],
+    chatbotIds: ['demo', 'testing_purpose_1', 'testing_purpose_2'],
+    passwordHash: 'hash'
   }
 
   const configs = await get_displayable_configs({

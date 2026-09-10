@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 
 import { User } from '../../../utils/_schema'
 import { encode_user_avatar } from '../../../utils/avatar-image'
-import { delete_all_users, save_user } from '../../../utils/handle-user'
+import { deleteAllUsers, saveUser } from '../../../utils/handle-user'
 import {
   clear_user_avatar,
   get_user_avatar,
@@ -20,13 +20,14 @@ use_identity_test_env('_test_user_avatars')
 
 describe('user-avatars store', () => {
   test('upsert, list meta without blob, clear', async () => {
-    await delete_all_users()
-    await save_user(
+    await deleteAllUsers()
+    await saveUser(
       User.parse({
         email: 'alice.martin@exemple.fr',
-        role: 'collaborator',
-        config: JSON.stringify(['default']),
-        password_hash: 'x'
+        isAdministrator: false,
+        moduleIds: [],
+        chatbotIds: ['default'],
+        passwordHash: 'x'
       })
     )
 

@@ -1,9 +1,12 @@
 import type { Context } from 'hono'
 import { z } from 'zod'
 
-import type { Parsed_User } from '../../../utils/_schema'
+import { businessModuleForActivityContext } from '../../../../shared/modules'
+import type { User } from '../../../utils/_schema'
+import { get_activity, parse_rattachement } from '../../../utils/activities/rows'
 import { ActivitiesError, ActivityPatchInput } from '../../../utils/activities/schema'
 import { patch_activity } from '../../../utils/activities/write'
+import { userCanAccessModule } from '../../../utils/authorize-role'
 
 const error_response = (c: Context, error: ActivitiesError) => {
   const status =
@@ -18,13 +21,21 @@ const error_response = (c: Context, error: ActivitiesError) => {
 }
 
 export const controller = async (c: Context) => {
-  const user = c.get('user') as Parsed_User | null
+  const user = c.get('user') as User | null
   if (!user?.email) {
     return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
   }
   const id = z.coerce.number().int().positive().safeParse(c.req.param('id'))
   if (!id.success) {
     return c.json({ error: { code: 'invalid_body', message: 'Activity id required' } }, 400)
+  }
+  const activity = get_activity(id.data)
+  const context = activity ? parse_rattachement(activity.rattachement)?.contexte : null
+  if (
+    activity &&
+    (!context || !userCanAccessModule(user, businessModuleForActivityContext(context)))
+  ) {
+    return c.json({ error: { code: 'forbidden', message: 'Insufficient permissions' } }, 403)
   }
   let body: unknown
   try {

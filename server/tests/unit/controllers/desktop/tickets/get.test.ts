@@ -49,6 +49,7 @@ const DATASTORE_SQLITE = TEST_PATHS.database
 
 const app = new Hono()
 app.get('/desktop/tickets', get_desktop_tickets)
+app.get('/desktop/tickets/meta', get_desktop_tickets)
 
 const seed_tickets = async (): Promise<void> => {
   const db = new Database(DATASTORE_SQLITE)
@@ -110,6 +111,14 @@ describe('GET /desktop/tickets', () => {
       'motif',
       'type_affaire'
     ])
+  })
+
+  it('returns metadata without ticket rows on the metadata route', async () => {
+    const response = await app.request('/desktop/tickets/meta?limit=1')
+    expect(response.status).toBe(200)
+    const body = (await response.json()) as Record<string, unknown>
+    expect(body).not.toHaveProperty('data')
+    expect(body).toHaveProperty('meta')
   })
 
   it('paginates with limit query param', async () => {

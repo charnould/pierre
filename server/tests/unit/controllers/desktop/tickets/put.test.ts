@@ -5,7 +5,7 @@ import { mkdir, rm } from 'node:fs/promises'
 import { Hono } from 'hono'
 
 import { controller as put_desktop_tickets } from '../../../../../controllers/desktop/tickets/put'
-import type { Parsed_User } from '../../../../../utils/_schema'
+import type { User } from '../../../../../utils/_schema'
 import { datastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
 
@@ -14,14 +14,15 @@ const ORIGINAL_SERVICE = Bun.env['SERVICE']
 const TEST_PATHS = datastorePaths(TEST_SERVICE)
 const DATASTORE_ROOT = TEST_PATHS.root
 
-const TEST_USER: Parsed_User = {
+const TEST_USER: User = {
   email: 'tester@example.com',
-  role: 'administrator',
-  config: ['default'],
-  password_hash: 'x'
+  isAdministrator: true,
+  moduleIds: ['tickets'],
+  chatbotIds: ['default'],
+  passwordHash: 'x'
 }
 
-const app = new Hono<{ Variables: { user: Parsed_User } }>()
+const app = new Hono<{ Variables: { user: User } }>()
 app.put(
   '/desktop/tickets',
   async (c, next) => {

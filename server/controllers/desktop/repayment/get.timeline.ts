@@ -2,7 +2,7 @@ import type { Context } from 'hono'
 import { z } from 'zod'
 
 import type { ActiviteListItem } from '../../../../shared/activites'
-import type { Parsed_User } from '../../../utils/_schema'
+import type { User } from '../../../utils/_schema'
 import { list_activities } from '../../../utils/activities/query'
 import { build_rattachement } from '../../../utils/activities/rows'
 import { list_ledger_movements } from '../../../utils/ledger/query'
@@ -41,7 +41,7 @@ const all_activities = (
 }
 
 export const controller = (c: Context) => {
-  const user = c.get('user') as Parsed_User | null | undefined
+  const user = c.get('user') as User | null | undefined
   if (!user?.email) {
     return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
   }

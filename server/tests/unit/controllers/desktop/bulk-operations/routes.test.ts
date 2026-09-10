@@ -13,32 +13,33 @@ import { controller as postBulk } from '../../../../../controllers/desktop/bulk-
 import { controller as executeBulk } from '../../../../../controllers/desktop/bulk-operations/post.execute'
 import { controller as previewMessage } from '../../../../../controllers/desktop/bulk-operations/post.preview-message'
 import { controller as previewQuery } from '../../../../../controllers/desktop/bulk-operations/post.preview-query'
-import type { Parsed_User } from '../../../../../utils/_schema'
-import { authorize_administrator, authorize_mutation } from '../../../../../utils/authorize-role'
+import type { User } from '../../../../../utils/_schema'
+import { authorizeAdministrator } from '../../../../../utils/authorize-role'
 import { setup } from '../../../../../utils/setup'
 
 const SERVICE = '_test_bulk_routes'
 const ROOT = `datastores/${SERVICE}`
 const originalService = Bun.env['SERVICE']
 
-const app = new Hono<{ Variables: { user: Parsed_User } }>()
+const app = new Hono<{ Variables: { user: User } }>()
 app.use('*', async (c, next) => {
   c.set('user', {
     email: 'alice@example.org',
-    role: (c.req.header('x-test-role') as Parsed_User['role']) ?? 'contributor',
-    config: ['default'],
-    password_hash: 'unused'
+    isAdministrator: c.req.header('x-test-admin') === 'true',
+    moduleIds: ['bulk'],
+    chatbotIds: ['default'],
+    passwordHash: 'unused'
   })
   await next()
 })
 app.get('/desktop/bulk-operations', getBulk)
 app.get('/desktop/bulk-operations/:id', getOneBulk)
-app.post('/desktop/bulk-operations', authorize_mutation, postBulk)
-app.patch('/desktop/bulk-operations/:id', authorize_mutation, patchBulk)
-app.delete('/desktop/bulk-operations/:id', authorize_mutation, deleteBulk)
-app.post('/desktop/bulk-operations/preview-query', authorize_mutation, previewQuery)
-app.post('/desktop/bulk-operations/preview-message', authorize_mutation, previewMessage)
-app.post('/desktop/bulk-operations/:id/execute', authorize_administrator, executeBulk)
+app.post('/desktop/bulk-operations', postBulk)
+app.patch('/desktop/bulk-operations/:id', patchBulk)
+app.delete('/desktop/bulk-operations/:id', deleteBulk)
+app.post('/desktop/bulk-operations/preview-query', previewQuery)
+app.post('/desktop/bulk-operations/preview-message', previewMessage)
+app.post('/desktop/bulk-operations/:id/execute', authorizeAdministrator, executeBulk)
 
 const definition = {
   ...emptyBulkOperationDefinition(),
@@ -66,11 +67,11 @@ const operationBody = {
   reportsToKeep: 2
 }
 
-const request = (method: string, body?: unknown, role?: Parsed_User['role']) => ({
+const request = (method: string, body?: unknown, isAdministrator = false) => ({
   method,
   headers: {
     'Content-Type': 'application/json',
-    ...(role ? { 'x-test-role': role } : {})
+    ...(isAdministrator ? { 'x-test-admin': 'true' } : {})
   },
   ...(body === undefined ? {} : { body: JSON.stringify(body) })
 })
@@ -169,7 +170,7 @@ describe('bulk CRUD, previews and execution authorization', () => {
     })
   })
 
-  it('allows collaborators on standard mutations and reserves execution for administrators', async () => {
+  it('allows standard users on ordinary mutations and reserves execution for administrators', async () => {
     const created = (await (
       await app.request('/desktop/bulk-operations', request('POST', operationBody))
     ).json()) as { data: { id: string } }
@@ -185,35 +186,26 @@ describe('bulk CRUD, previews and execution authorization', () => {
         200
       ]
     ] as const) {
-      const response = await app.request(path, request(method, body, 'collaborator'))
+      const response = await app.request(path, request(method, body))
       expect(response.status).toBe(expectedStatus)
     }
 
-    const contributorExecute = await app.request(
+    const userExecute = await app.request(
       `/desktop/bulk-operations/${created.data.id}/execute`,
-      request(
-        'POST',
-        { mode: 'apply_without_send', clientCommandId: 'cmd-contributor' },
-        'contributor'
-      )
+      request('POST', { mode: 'apply_without_send', clientCommandId: 'cmd-user' })
     )
-    expect(contributorExecute.status).toBe(403)
+    expect(userExecute.status).toBe(403)
 
     const adminExecute = await app.request(
       `/desktop/bulk-operations/${created.data.id}/execute`,
-      request('POST', { mode: 'apply_without_send', clientCommandId: 'cmd-admin' }, 'administrator')
+      request('POST', { mode: 'apply_without_send', clientCommandId: 'cmd-admin' }, true)
     )
     expect(adminExecute.status).toBe(200)
     expect((await adminExecute.json()) as unknown).toMatchObject({
       data: { totals: { total: 1, applied: 1 } }
     })
     expect(
-      (
-        await app.request(
-          `/desktop/bulk-operations/${created.data.id}`,
-          request('DELETE', undefined, 'collaborator')
-        )
-      ).status
+      (await app.request(`/desktop/bulk-operations/${created.data.id}`, request('DELETE'))).status
     ).toBe(200)
   })
 })

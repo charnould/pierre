@@ -1,11 +1,11 @@
 import type { Context } from 'hono'
 
-import type { Parsed_User } from '../../../utils/_schema'
+import type { User } from '../../../utils/_schema'
 import { CreateAutomationBodySchema } from '../../../utils/automations/schemas'
 import { AutomationsError, create_automation } from '../../../utils/automations/store'
 
 export const controller = async (c: Context) => {
-  const user = c.get('user') as Parsed_User | null
+  const user = c.get('user') as User | null
   if (!user?.email) {
     return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
   }

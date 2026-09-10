@@ -2,8 +2,9 @@ import type { Context } from 'hono'
 import { z } from 'zod'
 
 import type { ActivityFeedSyncData } from '../../../../shared/activites'
-import type { Parsed_User } from '../../../utils/_schema'
+import type { User } from '../../../utils/_schema'
 import { list_activities } from '../../../utils/activities/query'
+import { activityContextsForUser } from '../../../utils/authorize-role'
 
 export const Query = z.object({
   auteurs: z
@@ -30,7 +31,7 @@ export const etagFor = (data: ActivityFeedSyncData): string =>
   `"activity-feed-${Bun.hash(JSON.stringify(data)).toString(36)}"`
 
 export const controller = async (c: Context) => {
-  const user = c.get('user') as Parsed_User | null
+  const user = c.get('user') as User | null
   if (!user?.email) {
     return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
   }
@@ -50,6 +51,7 @@ export const controller = async (c: Context) => {
 
   const data: ActivityFeedSyncData = {
     notifications: list_activities(user.email, {
+      contexts: activityContextsForUser(user),
       inbox: true,
       unread_only: parsed.data.unread_only,
       limit: parsed.data.inbox_limit,
@@ -59,6 +61,7 @@ export const controller = async (c: Context) => {
       parsed.data.auteurs.length === 0
         ? []
         : list_activities(user.email, {
+            contexts: activityContextsForUser(user),
             auteurs: parsed.data.auteurs,
             limit: parsed.data.authored_limit,
             offset: 0

@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 
-import type { Parsed_User } from '../../../../utils/_schema'
+import type { User } from '../../../../utils/_schema'
 import { patch_me_preferences } from '../../../../utils/avatar-preferences'
 
 /**
@@ -9,7 +9,7 @@ import { patch_me_preferences } from '../../../../utils/avatar-preferences'
  * Updates the authenticated user's display_name, or clears the photo (avatar: null).
  */
 export const controller = async (c: Context) => {
-  const user = c.get('user') as Parsed_User | null
+  const user = c.get('user') as User | null
   if (!user?.email) {
     return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
   }

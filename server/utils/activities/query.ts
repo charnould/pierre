@@ -25,6 +25,13 @@ export const list_activities = (
   try {
     const conditions: string[] = []
     const params: Array<string | number> = []
+    if (options.contexts) {
+      if (options.contexts.length === 0) conditions.push('0 = 1')
+      else {
+        conditions.push(`(${options.contexts.map(() => 'a.rattachement LIKE ?').join(' OR ')})`)
+        params.push(...options.contexts.map((context) => `${context}:%`))
+      }
+    }
     if (options.rattachement) {
       conditions.push('a.rattachement = ?')
       params.push(options.rattachement)

@@ -1,7 +1,7 @@
 import type { Context } from 'hono'
 import { z } from 'zod'
 
-import type { Parsed_User } from '../../../utils/_schema'
+import type { User } from '../../../utils/_schema'
 import { BulkExecutionError, execute_bulk_operation } from '../../../utils/bulk/send'
 import { get_bulk_operation } from '../../../utils/bulk/store'
 
@@ -13,7 +13,7 @@ const ExecuteBodySchema = z
   .strict()
 
 export const controller = async (c: Context) => {
-  const user = c.get('user') as Parsed_User | null
+  const user = c.get('user') as User | null
   if (!user?.email) {
     return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
   }

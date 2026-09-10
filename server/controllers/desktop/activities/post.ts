@@ -1,12 +1,14 @@
 import type { Context } from 'hono'
 import { z } from 'zod'
 
-import type { Parsed_User } from '../../../utils/_schema'
+import { businessModuleForActivityContext } from '../../../../shared/modules'
+import type { User } from '../../../utils/_schema'
 import { ActivitiesError, CreateActivityInput } from '../../../utils/activities/schema'
 import { create_activity } from '../../../utils/activities/write'
+import { userCanAccessModule } from '../../../utils/authorize-role'
 
 export const controller = async (c: Context) => {
-  const user = c.get('user') as Parsed_User
+  const user = c.get('user') as User
   let body: unknown
   try {
     body = await c.req.json()
@@ -24,6 +26,9 @@ export const controller = async (c: Context) => {
       },
       400
     )
+  }
+  if (!userCanAccessModule(user, businessModuleForActivityContext(parsed.data.contexte))) {
+    return c.json({ error: { code: 'forbidden', message: 'Insufficient permissions' } }, 403)
   }
   try {
     return c.json({

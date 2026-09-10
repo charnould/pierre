@@ -5,6 +5,7 @@ import {
   ACTIVITY_TYPES,
   COMMUNICATION_CHANNELS,
   REPAYMENT_PLAN_CLOSE_REASONS,
+  type ActivityContext,
   type ActivityType,
   type Mention,
   type TaskState
@@ -105,6 +106,7 @@ export const ActivityPatchInput = z.discriminatedUnion('operation', [
 ])
 
 export type ListActivitiesOptions = {
+  contexts?: ActivityContext[]
   rattachement?: string
   inbox?: boolean
   unread_only?: boolean

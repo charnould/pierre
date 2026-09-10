@@ -31,10 +31,7 @@ export const mention = (email: string, lu = false, boost: string | null = null) 
 export const seed_users = (...emails: string[]) => {
   const db = new Database(DATASTORE_PATH)
   for (const email of emails) {
-    db.run(
-      `INSERT OR IGNORE INTO users (config, email, role, password_hash) VALUES ('{}', ?, 'user', 'x')`,
-      [email]
-    )
+    db.run(`INSERT OR IGNORE INTO users (email, password_hash) VALUES (?, 'x')`, [email])
   }
   db.close()
 }

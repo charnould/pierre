@@ -106,9 +106,9 @@ const seedSynthetic = (db: Database): void => {
   db.transaction(() => {
     db.run(
       `WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < ?)
-       INSERT INTO users (config, email, role, password_hash, preferences)
-       SELECT 'default', printf('User%05d@Example.org', i),
-              CASE WHEN i % 20 = 0 THEN 'administrator' ELSE 'user' END, 'hash', '{}'
+       INSERT INTO users (email, is_administrator, chatbot_ids, password_hash, preferences)
+       SELECT printf('User%05d@Example.org', i),
+              CASE WHEN i % 20 = 0 THEN 1 ELSE 0 END, '["default"]', 'hash', '{}'
        FROM n`,
       [rows.users]
     )

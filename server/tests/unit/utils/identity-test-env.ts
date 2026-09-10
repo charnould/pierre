@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach } from 'bun:test'
 import { rm } from 'node:fs/promises'
 
-import { delete_all_users } from '../../../utils/handle-user'
+import { deleteAllUsers } from '../../../utils/handle-user'
 import { datastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 
@@ -16,11 +16,11 @@ export const use_identity_test_env = (service: string): void => {
   })
 
   beforeEach(async () => {
-    await delete_all_users()
+    await deleteAllUsers()
   })
 
   afterAll(async () => {
-    await delete_all_users()
+    await deleteAllUsers()
     if (originalService === undefined) delete Bun.env['SERVICE']
     else Bun.env['SERVICE'] = originalService
   })

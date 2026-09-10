@@ -2,8 +2,8 @@ import type { Context, Next } from 'hono'
 import { bearerAuth } from 'hono/bearer-auth'
 import { getSignedCookie } from 'hono/cookie'
 
-import { get_user } from '../utils/handle-user'
-import type { Config, Parsed_User } from './_schema'
+import { getUser } from '../utils/handle-user'
+import type { Config, User } from './_schema'
 import { ChatbotConfigError, loadChatbotConfig } from './chatbot-config'
 
 const COMMUNICATION_ROUTES = ['rcs', 'sms', 'email', 'courrier', 'lrar', 'lre'] as const
@@ -27,7 +27,7 @@ export const authenticate = async (c: Context, next: Next) => {
   // and check if user (still) exists in `users` table
   let can_access_protected_context = false
 
-  let user: Parsed_User | null = null // TODO modifiy to undefined
+  let user: User | null = null
 
   const cookie = await getSignedCookie(c, Bun.env['AUTH_SECRET'] as string, 'pierre-ia')
 
@@ -36,7 +36,7 @@ export const authenticate = async (c: Context, next: Next) => {
     try {
       const cookie_user = JSON.parse(
         await decrypt(cookie, Bun.env['AUTH_SECRET'] as string)
-      ) as Partial<Parsed_User>
+      ) as Partial<User>
       if (typeof cookie_user.email === 'string' && cookie_user.email.trim()) {
         email = cookie_user.email
       }
@@ -44,7 +44,7 @@ export const authenticate = async (c: Context, next: Next) => {
       // Invalid or stale encrypted session: treat it as unauthenticated.
     }
     if (email) {
-      const db_user = await get_user(email)
+      const db_user = await getUser(email)
       if (db_user) {
         user = db_user
         can_access_protected_context = true
@@ -96,7 +96,7 @@ export const authenticate = async (c: Context, next: Next) => {
       return c.html('<p>Configuration introuvable.</p>', 404)
     }
 
-    if (user !== null && is_protected && !user.config.includes(config.id)) {
+    if (user !== null && is_protected && !user.chatbotIds.includes(config.id)) {
       return c.html('<p>Accès refusé.</p>', 403)
     }
 
@@ -166,39 +166,10 @@ export const authenticate = async (c: Context, next: Next) => {
   // indicating that the request is intended for admin routes.
   //
   if (c.req.path === '/a' || c.req.path.startsWith('/a/')) {
-    // If the `user` variable is `undefined`,
-    // redirect the client to the login page.
     if (user === null) return c.redirect('/a/login')
 
-    // Check if the user is a 'collaborator'
-    // Redirect to login if the user tries to access restricted admin pages
-    if (user.role === 'collaborator') {
-      if (
-        c.req.path.startsWith('/a/conversations') ||
-        c.req.path.startsWith('/a/statistics') ||
-        c.req.path.startsWith('/a/users') ||
-        c.req.path.startsWith('/a')
-      ) {
-        return c.redirect('/a/login')
-      }
-    }
+    if (!user.isAdministrator) return c.redirect('/a/login')
 
-    // Check if the user is a 'contributor'
-    // Redirect to the home page if the user tries
-    // to access restricted admin pages
-    if (user.role === 'contributor') {
-      if (
-        c.req.path.startsWith('/a/conversations') ||
-        c.req.path.startsWith('/a/statistics') ||
-        c.req.path.startsWith('/a/users')
-      ) {
-        return c.redirect('/a')
-      }
-    }
-
-    // If user isn't either a collaborator or a contributor:
-    // Set the 'user' in the response headers for further use
-    // Proceed to the next middleware or handler
     c.set('user', user)
     return await next()
   }

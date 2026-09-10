@@ -21,7 +21,7 @@ const versions = (db: Database): number[] =>
     .map((row) => row.version)
 
 const future_migration: DatastoreMigration = {
-  version: 2,
+  version: 3,
   name: 'future-example',
   sql: 'CREATE TABLE future_records (id TEXT PRIMARY KEY, value TEXT NOT NULL)'
 }
@@ -40,7 +40,7 @@ describe('datastore migrations', () => {
 
     const db = open()
     try {
-      expect(versions(db)).toEqual([1])
+      expect(versions(db)).toEqual([1, 2])
       const objects = db
         .query<{ name: string }, []>(
           `SELECT name FROM sqlite_master
@@ -55,7 +55,7 @@ describe('datastore migrations', () => {
              'telemetry',
              'users',
              'idx_activites_execution',
-             'idx_activites_case_bucket'
+             'idx_activites_case_group'
            )
            ORDER BY name`
         )
@@ -68,11 +68,26 @@ describe('datastore migrations', () => {
         'bulk_operations',
         'contacts',
         'conversations',
-        'idx_activites_case_bucket',
+        'idx_activites_case_group',
         'idx_activites_execution',
         'knowledge_build',
         'telemetry',
         'users'
+      ])
+      expect(
+        db
+          .query<{ name: string }, []>('PRAGMA table_info(users)')
+          .all()
+          .map(({ name }) => name)
+      ).toEqual([
+        'email',
+        'is_administrator',
+        'module_ids',
+        'chatbot_ids',
+        'password_hash',
+        'preferences',
+        'avatar',
+        'avatar_version'
       ])
     } finally {
       db.close()
@@ -91,7 +106,7 @@ describe('datastore migrations', () => {
 
     const db = open()
     try {
-      expect(versions(db)).toEqual([1])
+      expect(versions(db)).toEqual([1, 2])
       expect(
         db
           .query<{ n: number }, []>(
@@ -108,8 +123,8 @@ describe('datastore migrations', () => {
     await migrate_datastore(PATH)
     const damaged = open()
     damaged.run(
-      `INSERT INTO users (config, email, role, password_hash)
-       VALUES ('default', 'lost@example.com', 'admin', 'hash')`
+      `INSERT INTO users (email, is_administrator, password_hash)
+       VALUES ('lost@example.com', 1, 'hash')`
     )
     damaged.run('DROP INDEX idx_activites_execution')
     damaged.close()
@@ -127,7 +142,7 @@ describe('datastore migrations', () => {
           )
           .get()?.n
       ).toBe(1)
-      expect(versions(db)).toEqual([1])
+      expect(versions(db)).toEqual([1, 2])
     } finally {
       db.close()
     }
@@ -138,8 +153,8 @@ describe('datastore migrations', () => {
     const db = open()
     db.run('CREATE TABLE removed_feature (id TEXT)')
     db.run(
-      `INSERT INTO users (config, email, role, password_hash)
-       VALUES ('default', 'lost@example.com', 'admin', 'hash')`
+      `INSERT INTO users (email, is_administrator, password_hash)
+       VALUES ('lost@example.com', 1, 'hash')`
     )
     db.close()
 
@@ -164,8 +179,8 @@ describe('datastore migrations', () => {
     await migrate_datastore(PATH)
     const seeded = open()
     seeded.run(
-      `INSERT INTO users (config, email, role, password_hash)
-       VALUES ('default', 'kept@example.com', 'admin', 'hash')`
+      `INSERT INTO users (email, is_administrator, password_hash)
+       VALUES ('kept@example.com', 1, 'hash')`
     )
     seeded.run('CREATE TABLE reclamations (id_reclamation TEXT, id_locataire TEXT)')
     seeded.run('CREATE INDEX idx_reclamations_dynamic ON reclamations (id_reclamation)')
@@ -185,7 +200,7 @@ describe('datastore migrations', () => {
           )
           .get()?.n
       ).toBe(1)
-      expect(versions(db)).toEqual([1])
+      expect(versions(db)).toEqual([1, 2])
     } finally {
       db.close()
     }
@@ -195,8 +210,8 @@ describe('datastore migrations', () => {
     await migrate_datastore(PATH)
     const seeded = open()
     seeded.run(
-      `INSERT INTO users (config, email, role, password_hash)
-       VALUES ('default', 'kept@example.com', 'admin', 'hash')`
+      `INSERT INTO users (email, is_administrator, password_hash)
+       VALUES ('kept@example.com', 1, 'hash')`
     )
     seeded.close()
 
@@ -204,7 +219,7 @@ describe('datastore migrations', () => {
 
     const db = open()
     try {
-      expect(versions(db)).toEqual([1, 2])
+      expect(versions(db)).toEqual([1, 2, 3])
       expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(1)
       db.run("INSERT INTO future_records VALUES ('future-1', 'ok')")
     } finally {
@@ -215,7 +230,7 @@ describe('datastore migrations', () => {
   it('rolls back both schema and ledger writes when a migration fails', async () => {
     await migrate_datastore(PATH)
     const failing: DatastoreMigration = {
-      version: 2,
+      version: 3,
       name: 'failing-example',
       sql: `
         CREATE TABLE half_created (id TEXT PRIMARY KEY);
@@ -227,7 +242,7 @@ describe('datastore migrations', () => {
 
     const db = open()
     try {
-      expect(versions(db)).toEqual([1])
+      expect(versions(db)).toEqual([1, 2])
       expect(
         db
           .query<{ n: number }, []>(
@@ -244,8 +259,8 @@ describe('datastore migrations', () => {
     await migrate_datastore(PATH, [...APP_MIGRATIONS, future_migration])
     const seeded = open()
     seeded.run(
-      `INSERT INTO users (config, email, role, password_hash)
-       VALUES ('default', 'kept@example.com', 'admin', 'hash')`
+      `INSERT INTO users (email, is_administrator, password_hash)
+       VALUES ('kept@example.com', 1, 'hash')`
     )
     seeded.close()
 
@@ -253,7 +268,7 @@ describe('datastore migrations', () => {
 
     const db = open()
     try {
-      expect(versions(db)).toEqual([1, 2])
+      expect(versions(db)).toEqual([1, 2, 3])
       expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(1)
       expect(
         db

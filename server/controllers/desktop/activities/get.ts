@@ -2,9 +2,11 @@ import type { Context } from 'hono'
 import { z } from 'zod'
 
 import { ACTIVITY_CONTEXTS } from '../../../../shared/activites'
-import type { Parsed_User } from '../../../utils/_schema'
+import { businessModuleForActivityContext } from '../../../../shared/modules'
+import type { User } from '../../../utils/_schema'
 import { list_activities } from '../../../utils/activities/query'
-import { build_rattachement } from '../../../utils/activities/rows'
+import { build_rattachement, parse_rattachement } from '../../../utils/activities/rows'
+import { activityContextsForUser, userCanAccessModule } from '../../../utils/authorize-role'
 
 export const Query = z
   .object({
@@ -49,7 +51,7 @@ export const Query = z
   })
 
 export const controller = async (c: Context) => {
-  const user = c.get('user') as Parsed_User | null
+  const user = c.get('user') as User | null
   if (!user?.email) {
     return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
   }
@@ -67,6 +69,18 @@ export const controller = async (c: Context) => {
   }
   const { contexte, ref, ...options } = parsed.data
   const rattachement = contexte && ref ? build_rattachement(contexte, ref) : options.rattachement
-  const data = list_activities(user.email, { ...options, rattachement })
+  const targetContext =
+    contexte ?? (rattachement ? parse_rattachement(rattachement)?.contexte : null)
+  if (
+    targetContext &&
+    !userCanAccessModule(user, businessModuleForActivityContext(targetContext))
+  ) {
+    return c.json({ error: { code: 'forbidden', message: 'Insufficient permissions' } }, 403)
+  }
+  const data = list_activities(user.email, {
+    ...options,
+    rattachement,
+    contexts: activityContextsForUser(user)
+  })
   return c.json({ data })
 }

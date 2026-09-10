@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 
-import type { Parsed_User } from '../../../../utils/_schema'
+import type { User } from '../../../../utils/_schema'
 import { AVATAR_MAX_UPLOAD_BYTES, encode_user_avatar } from '../../../../utils/avatar-image'
 import { resolve_display_name } from '../../../../utils/avatar-preferences'
 import { set_user_avatar } from '../../../../utils/user-avatars'
@@ -15,7 +15,7 @@ let activeAvatarEncodings = 0
  * Uploads the current user's photo. Server re-encodes to 256² WebP.
  */
 export const controller = async (c: Context) => {
-  const user = c.get('user') as Parsed_User | null
+  const user = c.get('user') as User | null
   if (!user?.email) {
     return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
   }

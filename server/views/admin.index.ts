@@ -1,6 +1,8 @@
 import { html } from 'hono/html'
 
-export const view = (user, _desktop_version: string | null) => {
+import type { User } from '../utils/_schema'
+
+export const view = (user: User, _desktop_version: string | null) => {
   return html`<!doctype html>
     <html lang="fr">
       <head>
@@ -27,7 +29,7 @@ export const view = (user, _desktop_version: string | null) => {
         <a
           href="a/conversations"
           ${
-            user.role === 'administrator'
+            user.isAdministrator
               ? html`class="block cursor-pointer text-7xl font-extrabold mb-1 hover:underline
                 hover:underline-offset-4"`
               : html`class="block text-7xl font-extrabold mb-1 cursor-not-allowed text-neutral-400"`
@@ -38,7 +40,7 @@ export const view = (user, _desktop_version: string | null) => {
         <a
           href="a/knowledge"
           ${
-            user.role === 'administrator' || user.role === 'contributor'
+            user.isAdministrator
               ? html`class="block cursor-pointer text-7xl font-extrabold mb-1 hover:underline
                 hover:underline-offset-4"`
               : html`class="block text-7xl font-extrabold mb-1 cursor-not-allowed text-neutral-400"`
@@ -49,24 +51,13 @@ export const view = (user, _desktop_version: string | null) => {
         <a
           href="a/statistics"
           ${
-            user.role === 'administrator'
+            user.isAdministrator
               ? html`class="block cursor-pointer text-7xl font-extrabold mb-1 hover:underline
                 hover:underline-offset-4"`
               : html`class="block text-7xl font-extrabold mb-1 cursor-not-allowed text-neutral-400"`
           }
           >Statistiques</a
         >
-        <a
-          href="a/users"
-          ${
-            user.role === 'administrator'
-              ? html`class="block cursor-pointer text-7xl font-extrabold mb-1 hover:underline
-                hover:underline-offset-4"`
-              : html`class="block text-7xl font-extrabold mb-1 cursor-not-allowed text-neutral-400"`
-          }
-          >Utilisateurs</a
-        >
-
         <p class="mt-6 text-sm">
           Une question ou remarque sur ce projet
           <span class="font-bold">open-source</span> ?<br />

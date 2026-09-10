@@ -1,77 +1,172 @@
-import { beforeAll, expect, it } from 'bun:test'
+import { Database } from 'bun:sqlite'
+import { beforeEach, expect, it } from 'bun:test'
 
-import { User } from '../../../utils/_schema'
-import { delete_all_users, get_user, get_users, save_user } from '../../../utils/handle-user'
+import {
+  createUser,
+  deleteAllUsers,
+  deleteUser,
+  deleteUserAsAdministrator,
+  getUser,
+  getUsers,
+  importUserPasswords,
+  saveUser
+} from '../../../utils/handle-user'
+import { datastorePaths } from '../../../utils/paths'
 
-beforeAll(async () => {
+beforeEach(async () => {
   Bun.env['SERVICE'] = 'pierre-production'
-  await delete_all_users()
+  await deleteAllUsers()
 })
 
-it('should insert 2 users', async () => {
-  const user_1 = User.parse({
-    email: 'test1@pierre-ia.org',
-    role: 'administrator',
-    config: JSON.stringify(['default', 'demo']),
-    password_hash: 'password_1'
+it('stores normalized users without exposing the SQLite row shape', async () => {
+  await saveUser({
+    email: ' Test1@Pierre-IA.org ',
+    isAdministrator: true,
+    moduleIds: ['tickets', 'automations', 'tickets'],
+    chatbotIds: ['default', 'demo', 'default'],
+    passwordHash: 'password_1'
   })
 
-  const user_2 = User.parse({
+  await saveUser({
     email: 'test2@pierre-ia.org',
-    role: 'administrator',
-    config: JSON.stringify(['demo', 'default']),
-    password_hash: 'password_2'
+    isAdministrator: false,
+    moduleIds: ['about'],
+    chatbotIds: ['demo', 'default'],
+    passwordHash: 'password_2'
   })
 
-  await save_user(user_1)
-  await save_user(user_2)
-
-  expect(await get_users()).toStrictEqual([
+  expect(await getUsers()).toStrictEqual([
     {
-      config: ['default', 'demo'],
       email: 'test1@pierre-ia.org',
-      role: 'administrator',
-      password_hash: 'password_1'
+      isAdministrator: true,
+      moduleIds: ['tickets', 'automations'],
+      chatbotIds: ['default', 'demo'],
+      passwordHash: 'password_1'
     },
     {
-      config: ['demo', 'default'],
       email: 'test2@pierre-ia.org',
-      password_hash: 'password_2',
-      role: 'administrator'
+      isAdministrator: false,
+      moduleIds: ['about'],
+      chatbotIds: ['demo', 'default'],
+      passwordHash: 'password_2'
     }
   ])
 })
 
-it('should retrieve 1 user ', async () => {
-  expect(await get_user('test1@pierre-ia.org')).toStrictEqual({
-    config: ['default', 'demo'],
+it('retrieves and deletes users by normalized email', async () => {
+  await saveUser({
     email: 'test1@pierre-ia.org',
-    role: 'administrator',
-    password_hash: 'password_1'
+    isAdministrator: false,
+    moduleIds: [],
+    chatbotIds: ['default'],
+    passwordHash: 'password_1'
+  })
+
+  expect(await getUser(' TEST1@PIERRE-IA.ORG ')).toStrictEqual({
+    email: 'test1@pierre-ia.org',
+    isAdministrator: false,
+    moduleIds: [],
+    chatbotIds: ['default'],
+    passwordHash: 'password_1'
+  })
+
+  await deleteUser(' TEST1@PIERRE-IA.ORG ')
+  expect(await getUser('test1@pierre-ia.org')).toBeUndefined()
+})
+
+it('updates user access atomically without replacing preferences or avatar', async () => {
+  await saveUser({
+    email: 'test1@pierre-ia.org',
+    isAdministrator: false,
+    moduleIds: ['tickets'],
+    chatbotIds: ['default'],
+    passwordHash: 'password_1'
+  })
+  using db = new Database(datastorePaths().database)
+  db.run(`UPDATE users SET preferences = '{"display_name":"Alice"}', avatar = X'0102'
+    WHERE email = 'test1@pierre-ia.org'`)
+
+  await saveUser({
+    email: 'test1@pierre-ia.org',
+    isAdministrator: true,
+    moduleIds: ['automations'],
+    chatbotIds: ['demo'],
+    passwordHash: 'password_2'
+  })
+
+  expect(
+    db
+      .query<{ preferences: string; avatar: Uint8Array }, []>(
+        `SELECT preferences, avatar FROM users WHERE email = 'test1@pierre-ia.org'`
+      )
+      .get()
+  ).toEqual({
+    preferences: '{"display_name":"Alice"}',
+    avatar: new Uint8Array([1, 2])
   })
 })
 
-it('should return undefined when no user is found', async () => {
-  expect(await get_user('charnould@unknown.org')).toBeUndefined()
+it('deletes all users', async () => {
+  await deleteAllUsers()
+  expect(await getUsers()).toEqual([])
 })
 
-it('should retrieve all users', async () => {
-  expect(await get_users()).toStrictEqual([
-    {
-      config: ['default', 'demo'],
-      email: 'test1@pierre-ia.org',
-      password_hash: 'password_1',
-      role: 'administrator'
-    },
-    {
-      config: ['demo', 'default'],
-      email: 'test2@pierre-ia.org',
-      password_hash: 'password_2',
-      role: 'administrator'
-    }
+it('creates without overwriting a concurrent duplicate', async () => {
+  const user = {
+    email: 'unique@pierre-ia.org',
+    isAdministrator: false,
+    moduleIds: [],
+    chatbotIds: [],
+    passwordHash: 'first'
+  }
+  expect(await createUser(user)).toBe(true)
+  expect(await createUser({ ...user, passwordHash: 'second' })).toBe(false)
+  expect((await getUser(user.email))?.passwordHash).toBe('first')
+})
+
+it('imports only password hashes for existing users', async () => {
+  await saveUser({
+    email: 'existing@pierre-ia.org',
+    isAdministrator: true,
+    moduleIds: ['tickets'],
+    chatbotIds: ['default'],
+    passwordHash: 'old'
+  })
+  expect(
+    await importUserPasswords([
+      { email: 'existing@pierre-ia.org', passwordHash: 'new' },
+      { email: 'created@pierre-ia.org', passwordHash: 'created' }
+    ])
+  ).toEqual({ created: 1, updated: 1 })
+  expect(await getUser('existing@pierre-ia.org')).toMatchObject({
+    isAdministrator: true,
+    moduleIds: ['tickets'],
+    chatbotIds: ['default'],
+    passwordHash: 'new'
+  })
+  expect(await getUser('created@pierre-ia.org')).toMatchObject({
+    isAdministrator: false,
+    moduleIds: [],
+    chatbotIds: []
+  })
+})
+
+it('keeps one administrator under concurrent deletion attempts', async () => {
+  const first = {
+    email: 'first-admin@pierre-ia.org',
+    isAdministrator: true,
+    moduleIds: [],
+    chatbotIds: [],
+    passwordHash: 'first'
+  }
+  const second = { ...first, email: 'second-admin@pierre-ia.org' }
+  await saveUser(first)
+  await saveUser(second)
+
+  const results = await Promise.all([
+    deleteUserAsAdministrator(first.email, second.email),
+    deleteUserAsAdministrator(second.email, first.email)
   ])
-})
-
-it('should delete all users', async () => {
-  expect(await delete_all_users()).toStrictEqual([])
+  expect(results.filter(({ ok }) => ok)).toHaveLength(1)
+  expect((await getUsers()).filter(({ isAdministrator }) => isAdministrator)).toHaveLength(1)
 })

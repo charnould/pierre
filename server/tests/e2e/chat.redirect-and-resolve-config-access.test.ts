@@ -1,6 +1,6 @@
 import { beforeAll, expect, it } from 'bun:test'
 
-import { delete_all_users, save_user } from '../../utils/handle-user'
+import { deleteAllUsers, saveUser } from '../../utils/handle-user'
 import {
   clickAndWait,
   createE2EView,
@@ -13,12 +13,13 @@ import {
 
 beforeAll(async () => {
   Bun.env['SERVICE'] = 'pierre-production'
-  await delete_all_users()
-  await save_user({
+  await deleteAllUsers()
+  await saveUser({
     email: 'test@test.org',
-    role: 'collaborator',
-    password_hash: await Bun.password.hash('complicated-test-password'),
-    config: JSON.stringify(['demo', 'testing_purpose_1', 'non_existing'])
+    isAdministrator: false,
+    moduleIds: [],
+    chatbotIds: ['demo', 'testing_purpose_1', 'non_existing'],
+    passwordHash: await Bun.password.hash('complicated-test-password')
   })
 })
 

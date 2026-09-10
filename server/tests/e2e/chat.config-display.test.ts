@@ -1,6 +1,6 @@
 import { expect, it } from 'bun:test'
 
-import { delete_all_users, save_user } from '../../utils/handle-user'
+import { deleteAllUsers, saveUser } from '../../utils/handle-user'
 import {
   clickAndWait,
   createE2EView,
@@ -14,13 +14,14 @@ import {
 
 it('loads the requested chatbot without a profile selector', async () => {
   Bun.env['SERVICE'] = 'pierre-production'
-  await delete_all_users()
+  await deleteAllUsers()
 
-  await save_user({
+  await saveUser({
     email: 'test@test.org',
-    role: 'collaborator',
-    password_hash: await Bun.password.hash('a-complicated-password'),
-    config: JSON.stringify(['demo', 'testing_purpose_1', 'testing_purpose_2', 'non_existing'])
+    isAdministrator: false,
+    moduleIds: [],
+    chatbotIds: ['demo', 'testing_purpose_1', 'testing_purpose_2', 'non_existing'],
+    passwordHash: await Bun.password.hash('a-complicated-password')
   })
 
   await using view = createE2EView()

@@ -36,7 +36,8 @@ export const controller = (c: Context) => {
   const filters = parse_ledger_filters(searchParams)
 
   try {
-    return c.json(list_ledger_balances({ ...parsed.data, filters }))
+    const result = list_ledger_balances({ ...parsed.data, filters })
+    return c.json(c.req.path.endsWith('/meta') ? { meta: result.meta } : result)
   } catch (error) {
     if (error instanceof LedgerQueryError) {
       return c.json({ error: { code: 'invalid_query', message: error.message } }, 400)

@@ -1,7 +1,7 @@
 import type { Context } from 'hono'
 import { z } from 'zod'
 
-import type { Parsed_User } from '../../../utils/_schema'
+import type { User } from '../../../utils/_schema'
 import { BulkDocxError } from '../../../utils/bulk/docx'
 import { preview_message } from '../../../utils/bulk/preview'
 import { BulkOperationDefinitionSchema, BulkQueryError } from '../../../utils/bulk/query'
@@ -14,7 +14,7 @@ const BodySchema = z.object({
 })
 
 export const controller = async (c: Context) => {
-  const user = c.get('user') as Parsed_User | null
+  const user = c.get('user') as User | null
   if (!user?.email) {
     return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
   }

@@ -2,8 +2,10 @@ import type { Context } from 'hono'
 import { z } from 'zod'
 
 import { ACTIVITY_CONTEXTS, ACTIVITY_CONTENT_VERSION } from '../../../shared/activites'
-import type { Parsed_User } from '../../utils/_schema'
+import { businessModuleForActivityContext } from '../../../shared/modules'
+import type { User } from '../../utils/_schema'
 import { get_activity } from '../../utils/activities/rows'
+import { userCanAccessModule } from '../../utils/authorize-role'
 import { update_status } from '../../utils/bulk/status'
 import { communication_reference, next_status_timestamp } from '../../utils/communications/parsing'
 import {
@@ -50,7 +52,7 @@ const error_status = (error: CommunicationsError): 400 | 403 | 404 | 409 =>
         : 400
 
 export const controller = async (c: Context) => {
-  const user = c.get('user') as Parsed_User | null
+  const user = c.get('user') as User | null
   if (!user?.email) {
     return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
   }
@@ -78,6 +80,9 @@ export const controller = async (c: Context) => {
       },
       400
     )
+  }
+  if (!userCanAccessModule(user, businessModuleForActivityContext(parsed.data.contexte))) {
+    return c.json({ error: { code: 'forbidden', message: 'Insufficient permissions' } }, 403)
   }
   const normalized = normalize_telephone(parsed.data.destinataire)
   if (normalized.status === 'invalid') {
