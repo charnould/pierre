@@ -78,14 +78,6 @@ it('should validate administrator access flow', async () => {
   await clickAndWait(view, 'a[href="/a"]', { url: 'http://localhost:3000/a' })
   expect(await currentUrl(view)).toBe('http://localhost:3000/a')
 
-  await clickAndWait(view, 'a[href="a/knowledge"]', {
-    url: 'http://localhost:3000/a/knowledge'
-  })
-  expect(await currentUrl(view)).toBe('http://localhost:3000/a/knowledge')
-
-  await clickAndWait(view, 'a[href="/a"]', { url: 'http://localhost:3000/a' })
-  expect(await currentUrl(view)).toBe('http://localhost:3000/a')
-
   await clickAndWait(view, 'button[value="logout"]', {
     url: 'http://localhost:3000/a/login'
   })
@@ -124,9 +116,6 @@ it('should validate contributor access flow', async () => {
 
   await navigate(view, 'http://localhost:3000/a/statistics')
   expect(await currentUrl(view)).toBe('http://localhost:3000/a/login')
-
-  await navigate(view, 'http://localhost:3000/a/knowledge')
-  expect(await currentUrl(view)).toBe('http://localhost:3000/a/login')
 }, 20000)
 
 //
@@ -164,9 +153,6 @@ it('should validate collaborator access flow', async () => {
   expect(await currentUrl(view)).toBe('http://localhost:3000/a/login')
 
   await navigate(view, 'http://localhost:3000/a/statistics')
-  expect(await currentUrl(view)).toBe('http://localhost:3000/a/login')
-
-  await navigate(view, 'http://localhost:3000/a/knowledge')
   expect(await currentUrl(view)).toBe('http://localhost:3000/a/login')
 }, 20000)
 

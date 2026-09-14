@@ -1,5 +1,6 @@
 import { Database } from 'bun:sqlite'
 
+import { normalize_knowledge_name } from '../../../shared/knowledge'
 import { insert_activity_row } from '../activities/rows'
 import { insert_contacts_from_rows } from '../contacts'
 import {
@@ -10,7 +11,6 @@ import {
   normalize_code_postal,
   stringify_identifier
 } from './codes-postaux'
-import { normalize_knowledge_name } from './utils'
 
 /** A single JSON object row eligible for tabular import. */
 export type JsonRow = Record<string, unknown>
@@ -125,11 +125,16 @@ const emit_reclamation_changes = (
 export const import_json_rows = (
   db: Database,
   table_name: string,
-  rows: JsonRow[]
+  rows: JsonRow[],
+  options: {
+    columns?: string[]
+    transaction?: boolean
+    refreshPostalReference?: boolean
+  } = {}
 ): Promise<void> => {
-  if (rows.length === 0) return Promise.resolve()
-
-  const all_keys = Array.from(new Set(rows.flatMap((row) => Object.keys(row))))
+  const all_keys = Array.from(
+    new Set([...(options.columns ?? []), ...rows.flatMap((row) => Object.keys(row))])
+  )
   const keys = all_keys.filter((key) => !key.startsWith('__empty'))
   if (keys.length === 0) return Promise.resolve()
 
@@ -159,7 +164,7 @@ export const import_json_rows = (
   const col_defs = quoted_keys.map((key, index) => `${key} ${col_types[index]}`).join(', ')
   const placeholders = sanitized_keys.map(() => '?').join(', ')
 
-  const replace_table = db.transaction(() => {
+  const replace_table = () => {
     const previous = existing_reclamations(db, table)
     db.run(`CREATE TABLE ${quoted_staging} (${col_defs})`)
     const insert = db.prepare(
@@ -175,10 +180,15 @@ export const import_json_rows = (
     }
     if (table_exists(db, 'contacts')) insert_contacts_from_rows(db, stored_rows)
     emit_reclamation_changes(db, previous, stored_rows)
-  })
-  replace_table.immediate()
+  }
+  if (options.transaction === false) replace_table()
+  else db.transaction(replace_table).immediate()
 
-  if (table !== COMMUNES_PAR_CODE_POSTAL_TABLE && sanitized_keys.includes('code_postal')) {
+  if (
+    options.refreshPostalReference !== false &&
+    table !== COMMUNES_PAR_CODE_POSTAL_TABLE &&
+    sanitized_keys.includes('code_postal')
+  ) {
     return import_communes_par_code_postal_table(db).then(() => {})
   }
   return Promise.resolve()

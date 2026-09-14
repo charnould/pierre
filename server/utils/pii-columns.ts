@@ -1,3 +1,5 @@
+import { normalize_knowledge_name } from '../../shared/knowledge'
+
 /** Colonnes exclues de knowledge/db.sqlite (PII / RGPD). Éditer ici uniquement. */
 export const KNOWLEDGE_PII_COLUMNS = new Set([
   'nom_locataire',
@@ -12,8 +14,11 @@ export const KNOWLEDGE_PII_COLUMNS = new Set([
   'email_candidat',
   'telephone_candidat',
   'allocataire_caf',
-  'sne'
+  'demande_sne'
 ])
+
+export const is_knowledge_pii_column = (column: string): boolean =>
+  KNOWLEDGE_PII_COLUMNS.has(normalize_knowledge_name(column))
 
 /** Returns row copies without {@link KNOWLEDGE_PII_COLUMNS}. Missing keys are a no-op. */
 export const strip_pii_from_rows = (
@@ -22,7 +27,7 @@ export const strip_pii_from_rows = (
   rows.map((row) => {
     const out: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(row)) {
-      if (!KNOWLEDGE_PII_COLUMNS.has(k.toLowerCase().trim())) out[k] = v
+      if (!is_knowledge_pii_column(k)) out[k] = v
     }
     return out
   })

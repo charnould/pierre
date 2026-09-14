@@ -3,6 +3,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { mkdir, rm } from 'node:fs/promises'
 
 import {
+  CORE_DATA_CONTRACT,
   DATASTORE_TABLES,
   type DatastoreTableStatus,
   get_datastore_tables
@@ -41,6 +42,38 @@ afterEach(async () => {
 })
 
 describe('get_datastore_tables', () => {
+  it('exposes the canonical Core Data contract in business order', () => {
+    expect(
+      CORE_DATA_CONTRACT.map(({ table, filename, label }) => ({ table, filename, label }))
+    ).toEqual([
+      {
+        table: 'lots_locatifs',
+        filename: 'core.lots_locatifs.csv',
+        label: 'Patrimoine locatif et occupation courante'
+      },
+      {
+        table: 'reclamations',
+        filename: 'core.reclamations.csv',
+        label: 'Réclamations, demandes et relation client'
+      },
+      {
+        table: 'comptes_locataires',
+        filename: 'core.comptes_locataires.csv',
+        label: 'Écritures comptables des locataires'
+      },
+      {
+        table: 'travaux',
+        filename: 'core.travaux.csv',
+        label: 'Bons de travaux et interventions'
+      },
+      {
+        table: 'candidats',
+        filename: 'core.candidats.csv',
+        label: 'Candidats à l’attribution'
+      }
+    ])
+  })
+
   it('returns all tables as absent when none are imported', () => {
     expect(get_datastore_tables().tables).toEqual(all_missing())
   })
@@ -78,7 +111,7 @@ describe('get_datastore_tables', () => {
     expect(result.tables.map((t) => t.name)).toEqual([
       'comptes_locataires',
       'reclamations',
-      'candidatures',
+      'candidats',
       'lots_locatifs',
       'travaux'
     ])

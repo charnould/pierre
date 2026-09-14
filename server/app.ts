@@ -10,8 +10,6 @@ import { controller as post_admin_login } from './controllers/admin/auth/post.lo
 import { controller as get_admin_conversations } from './controllers/admin/conversations/get'
 import { controller as post_admin_conversations } from './controllers/admin/conversations/post'
 import { controller as get_admin_dashboard } from './controllers/admin/get.dashboard'
-import { controller as get_admin_knowledge } from './controllers/admin/knowledge/get'
-import { controller as post_admin_knowledge } from './controllers/admin/knowledge/post'
 import { controller as get_admin_statistics } from './controllers/admin/statistics/get'
 import { controller as get_ai_boot } from './controllers/ai/get.boot'
 import { controller as get_ai_skills } from './controllers/ai/get.skills'
@@ -22,6 +20,16 @@ import {
   MAX_UI_RESPONSE_BODY_BYTES
 } from './controllers/ai/post.ui-response'
 import { controller as post_ai_vm_release } from './controllers/ai/post.vm.release'
+import {
+  deleteKnowledgeSourceController,
+  downloadKnowledgeSource,
+  getKnowledge,
+  getKnowledgeBuilds,
+  MAX_KNOWLEDGE_UPLOAD_BYTES,
+  patchKnowledgeSource,
+  postKnowledgeBuild,
+  postKnowledgeSources
+} from './controllers/api/admin/knowledge'
 import { controller as get_index } from './controllers/chat/get'
 import { controller as post_courrier } from './controllers/courrier/post'
 import { controller as post_courrier_webhook } from './controllers/courrier/post.webhook'
@@ -79,13 +87,13 @@ import { controller as post_sms_webhook } from './controllers/sms/post.webhook'
 import { controller as post_telemetry } from './controllers/telemetry/post'
 // import { topicize, score } from "./utils/analyze-conversation";
 import { MAX_MULTIPART_REQUEST_BYTES } from './utils/ai-attachments'
-import { authenticate } from './utils/authenticate-user'
+import { authenticate, authenticateAdministratorApi } from './utils/authenticate-user'
 import { authorizeAdministrator, authorizeAnyModule, authorizeModule } from './utils/authorize-role'
 import { run_due_automations } from './utils/automations/run'
 import { AVATAR_MAX_UPLOAD_BYTES } from './utils/avatar-image'
 import { start_bulk_scheduler } from './utils/bulk/scheduler/queue'
 import { refresh_stale_sms_contacts_for_service } from './utils/contacts'
-import { run_pipeline } from './utils/knowledge/run-pipeline'
+import { initializeKnowledgeBuildCoordinator } from './utils/knowledge/build-coordinator'
 import { CUSTOMIZATION_DIR, CUSTOMIZATION_STATIC_ROOT, SERVER_ROOT } from './utils/paths'
 import { setup } from './utils/setup'
 import { initVmPool } from './utils/vm-pool'
@@ -98,7 +106,7 @@ import { cleanupOrphanedVms } from './utils/vm-registry'
 // 4. Clean up any orphaned VMs that may be running from previous sessions
 await setup()
 await start_bulk_scheduler()
-await run_pipeline()
+await initializeKnowledgeBuildCoordinator()
 await cleanupOrphanedVms()
 await initVmPool()
 
@@ -118,6 +126,11 @@ const adminCsvBodyLimit = bodyLimit({
   maxSize: 1024 * 1024 + 64 * 1024,
   onError: (c) =>
     c.json({ error: { code: 'invalid_file', message: 'Le fichier CSV dépasse 1 Mo.' } }, 413)
+})
+const knowledgeBodyLimit = bodyLimit({
+  maxSize: MAX_KNOWLEDGE_UPLOAD_BYTES + 64 * 1024,
+  onError: (c) =>
+    c.json({ error: { code: 'file_too_large', message: 'Le fichier dépasse 100 Mo.' } }, 413)
 })
 const aiMultipartBodyLimit = bodyLimit({
   maxSize: MAX_MULTIPART_REQUEST_BYTES,
@@ -149,8 +162,6 @@ app.use(
 // Runs every day at 4:00 AM
 Bun.cron('0 4 * * *', async () => {
   refresh_stale_sms_contacts_for_service()
-  // Update knowledge database with custom content
-  await run_pipeline()
   // Score conversation and assign topic with AI
   // await topicize();
   // await score();
@@ -287,6 +298,44 @@ app.post(
   adminCsvBodyLimit,
   post_desktop_admin_users_import
 )
+app.get('/api/admin/knowledge', authenticateAdministratorApi, authorizeAdministrator, getKnowledge)
+app.post(
+  '/api/admin/knowledge/sources',
+  knowledgeBodyLimit,
+  authenticateAdministratorApi,
+  authorizeAdministrator,
+  postKnowledgeSources
+)
+app.patch(
+  '/api/admin/knowledge/sources/:id',
+  authenticateAdministratorApi,
+  authorizeAdministrator,
+  patchKnowledgeSource
+)
+app.delete(
+  '/api/admin/knowledge/sources/:id',
+  authenticateAdministratorApi,
+  authorizeAdministrator,
+  deleteKnowledgeSourceController
+)
+app.get(
+  '/api/admin/knowledge/sources/:id/download',
+  authenticateAdministratorApi,
+  authorizeAdministrator,
+  downloadKnowledgeSource
+)
+app.get(
+  '/api/admin/knowledge/builds',
+  authenticateAdministratorApi,
+  authorizeAdministrator,
+  getKnowledgeBuilds
+)
+app.post(
+  '/api/admin/knowledge/builds',
+  authenticateAdministratorApi,
+  authorizeAdministrator,
+  postKnowledgeBuild
+)
 app.patch('/desktop/me/preferences', authenticate, patch_desktop_me_preferences)
 app.post('/desktop/me/avatar', authenticate, avatarBodyLimit, post_desktop_me_avatar)
 app.get('/desktop/avatars/:email', authenticate, get_desktop_avatars)
@@ -312,12 +361,10 @@ app.post('/ai/vm/release', authenticate, post_ai_vm_release)
 // Admin routes
 app.get('/a/login', get_admin_login)
 app.get('/a', authenticate, get_admin_dashboard)
-app.get('/a/knowledge', authenticate, get_admin_knowledge)
 app.get('/a/statistics', authenticate, get_admin_statistics)
 app.get('/a/conversations', authenticate, get_admin_conversations)
 
 app.post('/a/login', post_admin_login)
-app.post('/a/knowledge', authenticate, post_admin_knowledge)
 app.post('/a/conversations', authenticate, post_admin_conversations)
 
 // Health check route for Kamal proxy + Telemetry endpoint

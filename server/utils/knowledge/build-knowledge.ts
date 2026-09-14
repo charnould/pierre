@@ -3,18 +3,19 @@ import { existsSync, readdirSync } from 'node:fs'
 import { rm, readdir } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 
+import { normalize_knowledge_name } from '../../../shared/knowledge'
 import { insert_contacts_from_rows } from '../contacts'
 import { ensure_datastore_ledger_indexes } from '../datastore-indexes'
 import { migrate_datastore } from '../datastore-migrations'
-import { DATASTORE_MIRROR_TABLES } from '../datastore-tables'
-import { datastorePaths, resolveServiceName } from '../paths'
-import { strip_pii_from_rows } from '../pii-columns'
+import { DATASTORE_TABLES } from '../datastore-tables'
+import { datastorePaths } from '../paths'
+import { is_knowledge_pii_column, strip_pii_from_rows } from '../pii-columns'
 import {
   COMMUNES_PAR_CODE_POSTAL_TABLE,
-  import_communes_par_code_postal_table
+  import_communes_par_code_postal_table,
+  is_code_postal_column
 } from './codes-postaux'
 import { import_json_rows, type JsonRow } from './sqlite-table-import'
-import { normalize_knowledge_name } from './utils'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,6 +46,12 @@ type ColDescription =
       min: string
       max: string
     }
+
+export type KnowledgeBuildArtifacts = {
+  databases: Array<{ profileId: string; path: string }>
+  mirrorTables: Map<string, { columns: string[]; rows: JsonRow[] }>
+  contactRows: JsonRow[]
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -168,25 +175,10 @@ const build_readme = (db: Database): string | null => {
 
   if (tables.length === 0 && doc_count === 0) return null
 
-  // Build URL lookup from _sources table if it exists
-  const has_sources =
-    db
-      .query<{ n: number }, []>(
-        `SELECT COUNT(*) as n FROM sqlite_master WHERE type='table' AND name='_sources'`
-      )
-      .get()!.n > 0
-
-  const url_by_name = new Map<string, string>()
-  if (has_sources) {
-    const rows = db.query<{ name: string; url: string }, []>('SELECT name, url FROM _sources').all()
-    for (const r of rows) if (r.url) url_by_name.set(r.name, r.url)
-  }
-
   const schema: Record<string, unknown> = { access: 'read-only' }
 
   schema['tables'] = tables.map(({ name }) => {
     const rows = db.query<{ n: number }, []>(`SELECT COUNT(*) as n FROM "${name}"`).get()!.n
-    const source_url = url_by_name.get(name) ?? null
 
     if (name === COMMUNES_PAR_CODE_POSTAL_TABLE) {
       return {
@@ -227,7 +219,7 @@ const build_readme = (db: Database): string | null => {
       return base
     })
 
-    return source_url ? { name, rows, source_url, columns } : { name, rows, columns }
+    return { name, rows, columns }
   })
 
   if (doc_count > 0) {
@@ -268,15 +260,19 @@ const build_readme = (db: Database): string | null => {
  */
 const build_database_for_config = async (
   config_id: string,
-  service: string,
-  datastore_db: Database
-): Promise<void> => {
-  const source_dir = join(datastorePaths(service).knowledge, config_id)
+  knowledgeRoot: string
+): Promise<KnowledgeBuildArtifacts> => {
+  const source_dir = join(knowledgeRoot, config_id)
   const db_path = join(source_dir, 'db.sqlite')
+  const artifacts: KnowledgeBuildArtifacts = {
+    databases: [],
+    mirrorTables: new Map(),
+    contactRows: []
+  }
 
   if (!existsSync(source_dir)) {
     console.info(`⏭️  ${config_id}: no source directory — skipping`)
-    return
+    return artifacts
   }
 
   const json_files = walk_files(source_dir, '.json')
@@ -284,24 +280,40 @@ const build_database_for_config = async (
   const db = new Database(db_path)
 
   try {
+    const coreDataPath = join(source_dir, '_core_data.json')
+    const coreDataTables = new Set<string>(
+      (await Bun.file(coreDataPath).exists())
+        ? ((await Bun.file(coreDataPath).json()) as string[])
+        : []
+    )
     // ── JSON files → one table each ─────────────────────────────────────────────
 
-    for (const file_path of json_files) {
+    for (const file_path of json_files.filter((path) => path !== coreDataPath)) {
       const parsed_json = (await Bun.file(file_path).json()) as unknown
-      if (!Array.isArray(parsed_json) || parsed_json.length === 0) continue
-
-      const rows = parsed_json.filter(is_json_row)
-      if (rows.length === 0) continue
+      const payload =
+        is_json_row(parsed_json) &&
+        Array.isArray(parsed_json['columns']) &&
+        Array.isArray(parsed_json['rows'])
+          ? {
+              columns: parsed_json['columns'].filter(
+                (column): column is string => typeof column === 'string'
+              ),
+              rows: parsed_json['rows'].filter(is_json_row)
+            }
+          : null
+      if (!payload || payload.columns.length === 0) continue
 
       const table_name = normalize_knowledge_name(basename(file_path, '.json')) || 'data'
 
-      insert_contacts_from_rows(datastore_db, rows)
+      artifacts.contactRows.push(...payload.rows)
 
-      if ((DATASTORE_MIRROR_TABLES as readonly string[]).includes(table_name)) {
-        await import_json_rows(datastore_db, table_name, rows)
+      if (coreDataTables.has(table_name)) {
+        artifacts.mirrorTables.set(table_name, payload)
       }
 
-      await import_json_rows(db, table_name, strip_pii_from_rows(rows))
+      await import_json_rows(db, table_name, strip_pii_from_rows(payload.rows), {
+        columns: payload.columns.filter((column) => !is_knowledge_pii_column(column))
+      })
     }
 
     // ── Markdown files → FTS5 documents table ───────────────────────────────────
@@ -332,19 +344,6 @@ const build_database_for_config = async (
       insert_doc.run(content, filename, url)
     }
 
-    // ── _sources table from _sources.json (JSON table URLs) ─────────────────────
-
-    db.run('DROP TABLE IF EXISTS _sources')
-    const sources_path = join(source_dir, '_sources.json')
-    if (await Bun.file(sources_path).exists()) {
-      const sources = (await Bun.file(sources_path).json()) as Record<string, string | null>
-      db.run('CREATE TABLE _sources (name TEXT PRIMARY KEY, url TEXT)')
-      const insert_source = db.prepare('INSERT INTO _sources (name, url) VALUES (?, ?)')
-      db.transaction(() => {
-        for (const [name, url] of Object.entries(sources)) insert_source.run(name, url)
-      })()
-    }
-
     // ── Auto-generate schema and store in _readme ────────────────────────────────
 
     await import_communes_par_code_postal_table(db)
@@ -360,6 +359,7 @@ const build_database_for_config = async (
   console.info(
     `✅ ${config_id}: ${json_files.length} JSON files → tables, ${md_files.length} MD files → FTS5, schema → _readme`
   )
+  artifacts.databases.push({ profileId: config_id, path: db_path })
 
   // ── Delete all source files and subdirectories, keep only db.sqlite ──────────
 
@@ -373,6 +373,7 @@ const build_database_for_config = async (
           : rm(join(source_dir, e.name), { force: true })
       )
   )
+  return artifacts
 }
 
 /**
@@ -381,39 +382,82 @@ const build_database_for_config = async (
  *
  * Config directories are processed in parallel.
  */
-export const build_knowledge_databases = async (): Promise<void> => {
-  const service = resolveServiceName(Bun.env['SERVICE'])
-  const paths = datastorePaths(service)
-  const knowledge_dir = paths.knowledge
-
-  if (!existsSync(knowledge_dir)) {
-    console.info('⏭️  No knowledge directory — skipping DB build')
-    return
+export const build_knowledge_databases = async (
+  knowledgeRoot = datastorePaths().knowledge
+): Promise<KnowledgeBuildArtifacts> => {
+  const empty: KnowledgeBuildArtifacts = {
+    databases: [],
+    mirrorTables: new Map(),
+    contactRows: []
   }
 
-  const entries = await readdir(knowledge_dir, { withFileTypes: true })
-  const config_dirs = entries.filter((e) => e.isDirectory()).map((e) => e.name)
+  if (!existsSync(knowledgeRoot)) {
+    console.info('⏭️  No knowledge directory — skipping DB build')
+    return empty
+  }
+
+  const entries = await readdir(knowledgeRoot, { withFileTypes: true })
+  const config_dirs = entries
+    .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
+    .map((entry) => entry.name)
+    .sort()
 
   if (config_dirs.length === 0) {
     console.info('⏭️  No profile directories found — skipping DB build')
-    return
+    return empty
   }
 
-  await migrate_datastore(paths.database)
-  const datastore_db = new Database(paths.database)
-
-  try {
-    await Promise.all(config_dirs.map((id) => build_database_for_config(id, service, datastore_db)))
-    ensure_datastore_ledger_indexes(datastore_db)
-  } finally {
-    datastore_db.close()
+  const results = await Promise.all(
+    config_dirs.map((id) => build_database_for_config(id, knowledgeRoot))
+  )
+  for (const result of results) {
+    empty.databases.push(...result.databases)
+    empty.contactRows.push(...result.contactRows)
+    for (const [table, rows] of result.mirrorTables) {
+      if (!empty.mirrorTables.has(table)) empty.mirrorTables.set(table, rows)
+    }
   }
 
   console.info('✅ All knowledge databases built')
+  return empty
 }
 
-// ── CLI entry point ──────────────────────────────────────────────────────────
+export const publishKnowledgeMirrors = async (
+  artifacts: KnowledgeBuildArtifacts,
+  service?: string,
+  previouslyManaged: readonly string[] = []
+): Promise<void> => {
+  const paths = datastorePaths(service)
+  await migrate_datastore(paths.database)
+  const db = new Database(paths.database)
+  try {
+    const needsPostalReference = [...artifacts.mirrorTables.values()].some(({ rows }) =>
+      rows.some((row) => Object.keys(row).some(is_code_postal_column))
+    )
+    if (needsPostalReference) await import_communes_par_code_postal_table(db)
 
-if (import.meta.main) {
-  await build_knowledge_databases()
+    db.run('BEGIN IMMEDIATE')
+    try {
+      for (const table of DATASTORE_TABLES) {
+        const payload = artifacts.mirrorTables.get(table)
+        if (payload) {
+          await import_json_rows(db, table, payload.rows, {
+            columns: payload.columns,
+            transaction: false,
+            refreshPostalReference: false
+          })
+        } else if (previouslyManaged.includes(table)) {
+          db.run(`DROP TABLE IF EXISTS "${table}"`)
+        }
+      }
+      insert_contacts_from_rows(db, artifacts.contactRows)
+      ensure_datastore_ledger_indexes(db)
+      db.run('COMMIT')
+    } catch (error) {
+      db.run('ROLLBACK')
+      throw error
+    }
+  } finally {
+    db.close()
+  }
 }

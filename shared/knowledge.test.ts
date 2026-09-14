@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'bun:test'
 
-import { normalize_knowledge_name } from '../../../utils/knowledge/utils'
+import { isKnowledgeEntryAssigned, normalize_knowledge_name } from './knowledge'
+
+describe('isKnowledgeEntryAssigned', () => {
+  it('is assigned when a profile or a module is selected', () => {
+    expect(isKnowledgeEntryAssigned({ profileIds: [], moduleIds: [] })).toBe(false)
+    expect(isKnowledgeEntryAssigned({ profileIds: ['default'], moduleIds: [] })).toBe(true)
+    expect(isKnowledgeEntryAssigned({ profileIds: [], moduleIds: ['tickets'] })).toBe(true)
+  })
+})
 
 describe('normalize_knowledge_name', () => {
   describe('basic normalization', () => {

@@ -3,22 +3,45 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { Hono } from 'hono'
 import { setSignedCookie } from 'hono/cookie'
 
-import { authenticate, encrypt } from '../../../utils/authenticate-user'
+import {
+  authenticate,
+  authenticateAdministratorApi,
+  encrypt
+} from '../../../utils/authenticate-user'
 import { saveUser } from '../../../utils/handle-user'
 
 const SECRET = '0123456789abcdef0123456789abcdef'
 const ORIGINAL_AUTH_SECRET = Bun.env['AUTH_SECRET']
+const ORIGINAL_AUTH_BEARER = Bun.env['AUTH_BEARER']
 
 beforeAll(() => {
   Bun.env['AUTH_SECRET'] = SECRET
+  Bun.env['AUTH_BEARER'] = 'knowledge-test-token'
 })
 
 afterAll(() => {
   if (ORIGINAL_AUTH_SECRET === undefined) delete Bun.env['AUTH_SECRET']
   else Bun.env['AUTH_SECRET'] = ORIGINAL_AUTH_SECRET
+  if (ORIGINAL_AUTH_BEARER === undefined) delete Bun.env['AUTH_BEARER']
+  else Bun.env['AUTH_BEARER'] = ORIGINAL_AUTH_BEARER
 })
 
 describe('authenticate', () => {
+  test('accepts standard Bearer authentication for the knowledge API', async () => {
+    const app = new Hono()
+    app.use('*', authenticateAdministratorApi)
+    app.get('/api/admin/knowledge', (c) => c.json({ email: c.get('user').email }))
+
+    const unauthorized = await app.request('/api/admin/knowledge')
+    expect(unauthorized.status).toBe(401)
+
+    const authorized = await app.request('/api/admin/knowledge', {
+      headers: { Authorization: 'Bearer knowledge-test-token' }
+    })
+    expect(authorized.status).toBe(200)
+    expect(await authorized.json()).toEqual({ email: 'cli@pierre.local' })
+  })
+
   test('does not classify the external communication endpoint as a chatbot route', async () => {
     const app = new Hono()
     app.use('*', authenticate)

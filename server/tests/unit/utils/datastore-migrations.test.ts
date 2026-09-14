@@ -21,7 +21,7 @@ const versions = (db: Database): number[] =>
     .map((row) => row.version)
 
 const future_migration: DatastoreMigration = {
-  version: 3,
+  version: 4,
   name: 'future-example',
   sql: 'CREATE TABLE future_records (id TEXT PRIMARY KEY, value TEXT NOT NULL)'
 }
@@ -40,7 +40,7 @@ describe('datastore migrations', () => {
 
     const db = open()
     try {
-      expect(versions(db)).toEqual([1, 2])
+      expect(versions(db)).toEqual([1, 2, 3])
       const objects = db
         .query<{ name: string }, []>(
           `SELECT name FROM sqlite_master
@@ -51,7 +51,7 @@ describe('datastore migrations', () => {
              'bulk_jobs',
              'contacts',
              'conversations',
-             'knowledge_build',
+             'knowledge_records',
              'telemetry',
              'users',
              'idx_activites_execution',
@@ -70,7 +70,7 @@ describe('datastore migrations', () => {
         'conversations',
         'idx_activites_case_group',
         'idx_activites_execution',
-        'knowledge_build',
+        'knowledge_records',
         'telemetry',
         'users'
       ])
@@ -106,7 +106,7 @@ describe('datastore migrations', () => {
 
     const db = open()
     try {
-      expect(versions(db)).toEqual([1, 2])
+      expect(versions(db)).toEqual([1, 2, 3])
       expect(
         db
           .query<{ n: number }, []>(
@@ -142,7 +142,7 @@ describe('datastore migrations', () => {
           )
           .get()?.n
       ).toBe(1)
-      expect(versions(db)).toEqual([1, 2])
+      expect(versions(db)).toEqual([1, 2, 3])
     } finally {
       db.close()
     }
@@ -200,7 +200,7 @@ describe('datastore migrations', () => {
           )
           .get()?.n
       ).toBe(1)
-      expect(versions(db)).toEqual([1, 2])
+      expect(versions(db)).toEqual([1, 2, 3])
     } finally {
       db.close()
     }
@@ -219,9 +219,45 @@ describe('datastore migrations', () => {
 
     const db = open()
     try {
-      expect(versions(db)).toEqual([1, 2, 3])
+      expect(versions(db)).toEqual([1, 2, 3, 4])
       expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(1)
       db.run("INSERT INTO future_records VALUES ('future-1', 'ok')")
+    } finally {
+      db.close()
+    }
+  })
+
+  it('replaces the build event table without resetting application data', async () => {
+    await migrate_datastore(PATH, APP_MIGRATIONS.slice(0, 2))
+    const seeded = open()
+    seeded.run(
+      `INSERT INTO users (email, is_administrator, password_hash)
+       VALUES ('kept@example.com', 1, 'hash')`
+    )
+    seeded.run(
+      "INSERT INTO knowledge_build (created_at, source, kind, code) VALUES ('2026-01-01', 'pipeline', 'info', 'old')"
+    )
+    seeded.close()
+
+    await migrate_datastore(PATH)
+
+    const db = open()
+    try {
+      expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(1)
+      expect(
+        db
+          .query<{ n: number }, []>(
+            "SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'knowledge_build'"
+          )
+          .get()?.n
+      ).toBe(0)
+      expect(
+        db
+          .query<{ n: number }, []>(
+            "SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'knowledge_records'"
+          )
+          .get()?.n
+      ).toBe(1)
     } finally {
       db.close()
     }
@@ -230,7 +266,7 @@ describe('datastore migrations', () => {
   it('rolls back both schema and ledger writes when a migration fails', async () => {
     await migrate_datastore(PATH)
     const failing: DatastoreMigration = {
-      version: 3,
+      version: 4,
       name: 'failing-example',
       sql: `
         CREATE TABLE half_created (id TEXT PRIMARY KEY);
@@ -242,7 +278,7 @@ describe('datastore migrations', () => {
 
     const db = open()
     try {
-      expect(versions(db)).toEqual([1, 2])
+      expect(versions(db)).toEqual([1, 2, 3])
       expect(
         db
           .query<{ n: number }, []>(
@@ -268,7 +304,7 @@ describe('datastore migrations', () => {
 
     const db = open()
     try {
-      expect(versions(db)).toEqual([1, 2, 3])
+      expect(versions(db)).toEqual([1, 2, 3, 4])
       expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(1)
       expect(
         db

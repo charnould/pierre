@@ -38,17 +38,6 @@ export const view = (user: User, _desktop_version: string | null) => {
         >
 
         <a
-          href="a/knowledge"
-          ${
-            user.isAdministrator
-              ? html`class="block cursor-pointer text-7xl font-extrabold mb-1 hover:underline
-                hover:underline-offset-4"`
-              : html`class="block text-7xl font-extrabold mb-1 cursor-not-allowed text-neutral-400"`
-          }
-          >Encyclopédie</a
-        >
-
-        <a
           href="a/statistics"
           ${
             user.isAdministrator

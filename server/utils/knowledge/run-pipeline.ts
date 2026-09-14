@@ -1,177 +1,176 @@
 import { Database } from 'bun:sqlite'
+import { link, mkdir, rename, rm } from 'node:fs/promises'
+import { dirname, join } from 'node:path'
 
+import type { DatastoreTable } from '../datastore-tables'
 import { datastorePaths } from '../paths'
-import { build_knowledge_databases } from './build-knowledge'
-import { generate_metadata } from './generate-metadata'
+import {
+  build_knowledge_databases,
+  publishKnowledgeMirrors,
+  type KnowledgeBuildArtifacts
+} from './build-knowledge'
+import {
+  assignedKnowledgeItemKeys,
+  assertNoOutputCollisions,
+  flattenKnowledgeEntries,
+  getKnowledgeCatalogSnapshot,
+  type KnowledgeDiagnostic
+} from './catalog'
 import { ingest_files, setup_knowledge_directories } from './ingest-files'
+import { listKnowledgeProfiles } from './profiles'
 
-/**
- * A single event emitted during a knowledge build (CLI upload or pipeline run).
- * Events are persisted to the `knowledge_build` table by {@link save_events}.
- */
-export type KnowledgeBuildEvent = {
-  /** Origin of the event: a manual CLI upload or an automated pipeline run. */
-  source: 'cli' | 'pipeline'
-  /** Severity / nature of the event. */
-  kind: 'action' | 'info' | 'warning' | 'error'
-  /** Machine-readable event identifier (e.g. `'METADATA_MISSING'`, `'PIPELINE_OK'`). */
-  code: string
-  /** Optional context for the event (e.g. a filename or profile name). */
-  subject: string | null
+export class KnowledgeCatalogChangedError extends Error {
+  constructor() {
+    super('Knowledge catalog changed during build')
+    this.name = 'KnowledgeCatalogChangedError'
+  }
 }
 
-type RunPipelineDependencies = {
-  build_knowledge_databases?: typeof build_knowledge_databases
+export class KnowledgePipelineError extends Error {
+  constructor(
+    message: string,
+    readonly diagnostics: KnowledgeDiagnostic[],
+    readonly itemKeys: string[]
+  ) {
+    super(message)
+    this.name = 'KnowledgePipelineError'
+  }
 }
 
-/**
- * Persists a set of pipeline build events to the `knowledge_build` table.
- *
- * Housekeeping rules applied on each call:
- * - All previous `pipeline` rows are deleted.
- * - All `cli` rows older than today are deleted.
- * - If CLI uploads exist today without a `_metadata.xlsx` upload, a
- *   `CLI_UPLOAD_WITHOUT_METADATA` warning is inserted.
- * - If `events` is empty, a `PIPELINE_OK` info row is inserted.
- *
- * @param events - Build events emitted by the current pipeline run.
- * @throws {Error} When the `SERVICE` environment variable is not set or the database is unreachable.
- */
-export const save_events = (events: KnowledgeBuildEvent[]): void => {
-  const db = new Database(datastorePaths().database)
-  const now = new Date().toISOString()
+export type KnowledgePipelineResult = {
+  catalogFingerprint: string
+  diagnostics: KnowledgeDiagnostic[]
+  itemKeys: string[]
+  mirrorTables: DatastoreTable[]
+}
 
+const validateDatabase = (path: string): void => {
+  const db = new Database(path, { readonly: true })
   try {
-    const had_cli_uploads =
-      db
-        .query<{ n: number }, []>(
-          "SELECT COUNT(*) as n FROM knowledge_build WHERE source='cli' AND code='CLI_UPLOAD' AND DATE(created_at) = DATE('now')"
-        )
-        .get()!.n > 0
-
-    const had_metadata_upload =
-      db
-        .query<{ n: number }, []>(
-          "SELECT COUNT(*) as n FROM knowledge_build WHERE source='cli' AND code='CLI_UPLOAD' AND subject='_metadata.xlsx' AND DATE(created_at) = DATE('now')"
-        )
-        .get()!.n > 0
-
-    db.run("DELETE FROM knowledge_build WHERE source = 'pipeline'")
-    db.run("DELETE FROM knowledge_build WHERE source = 'cli' AND DATE(created_at) < DATE('now')")
-
-    const stmt = db.prepare(
-      'INSERT INTO knowledge_build (created_at, source, kind, code, subject) VALUES (?, ?, ?, ?, ?)'
-    )
-
-    for (const event of events) {
-      stmt.run(now, event.source, event.kind, event.code, event.subject)
-    }
-
-    if (had_cli_uploads && !had_metadata_upload) {
-      stmt.run(now, 'pipeline', 'warning', 'CLI_UPLOAD_WITHOUT_METADATA', null)
-    }
-
-    if (events.length === 0) {
-      stmt.run(now, 'pipeline', 'info', 'PIPELINE_OK', null)
-    }
+    const quickCheck = db.query<{ quick_check: string }, []>('PRAGMA quick_check').get()
+    if (quickCheck?.quick_check !== 'ok') throw new Error(`Invalid knowledge database: ${path}`)
+    const readme = db
+      .query<{ n: number }, []>(
+        "SELECT COUNT(*) AS n FROM sqlite_master WHERE type = 'table' AND name = '_readme'"
+      )
+      .get()
+    if (readme?.n !== 1) throw new Error(`Knowledge database has no _readme: ${path}`)
   } finally {
     db.close()
   }
 }
 
-/**
- * Runs the full knowledge ingestion pipeline:
- * 1. Sets up per-config knowledge directories and copies community data.
- * 2. Generates and validates metadata from `_metadata.xlsx`.
- * 3. Ingests valid files into each config's knowledge directory.
- * 4. Builds SQLite knowledge databases from the ingested files.
- *
- * Any anomalies detected during the run are saved to the `knowledge_build` table
- * via {@link save_events}. Ingestion, build, and orchestration errors are caught
- * internally and persisted before returning, so the function never rejects for
- * those failures.
- */
-export const run_pipeline = async (dependencies: RunPipelineDependencies = {}): Promise<void> => {
-  const events: KnowledgeBuildEvent[] = []
-
-  try {
-    const start_time = performance.now()
-
-    // Always setup knowledge directories and copy community data,
-    // even when _metadata.xlsx is missing
-    let step_start = performance.now()
-    await setup_knowledge_directories()
-    console.info(`⏱ setup: ${((performance.now() - step_start) / 1000).toFixed(3)}s`)
-
-    step_start = performance.now()
-    const { files, anomalies: meta_anomalies } = await generate_metadata()
-    console.info(`⏱ metadata: ${((performance.now() - step_start) / 1000).toFixed(3)}s`)
-    const metadata_missing = meta_anomalies.some((a) => a.code === 'METADATA_MISSING')
-
-    for (const a of meta_anomalies) {
-      events.push({
-        source: 'pipeline',
-        kind: a.code === 'METADATA_MISSING' ? 'error' : 'warning',
-        code: a.code,
-        subject: a.subject
-      })
-    }
-
-    if (!metadata_missing) {
-      try {
-        step_start = performance.now()
-        const { anomalies: ingest_anomalies } = await ingest_files(files)
-        console.info(`⏱ ingest: ${((performance.now() - step_start) / 1000).toFixed(3)}s`)
-        for (const a of ingest_anomalies) {
-          const kind =
-            a.code === 'PROFILE_MISSING_IN_ASSETS'
-              ? 'error'
-              : a.code === 'METADATA_NOT_IN_FILES'
-                ? 'warning'
-                : 'info'
-          events.push({ source: 'pipeline', kind, code: a.code, subject: a.subject })
-        }
-      } catch (e) {
-        console.error('❌ File ingestion failed', e)
-        events.push({
-          source: 'pipeline',
-          kind: 'error',
-          code: 'INGEST_FAILED',
-          subject: String(e)
-        })
+const publishDatabases = async (
+  artifacts: KnowledgeBuildArtifacts,
+  knowledgeRoot: string
+): Promise<{ commit: () => Promise<void>; rollback: () => Promise<void> }> => {
+  const published: Array<{ livePath: string; backupPath: string | null }> = []
+  const rollback = async () => {
+    for (const publication of published.reverse()) {
+      if (publication.backupPath) {
+        await rename(publication.backupPath, publication.livePath)
+      } else {
+        await rm(publication.livePath, { force: true })
       }
     }
+  }
 
-    // Always build knowledge databases — even without _metadata.xlsx,
-    // at minimum community knowledge is indexed.
-    // Placed after a self-contained ingest try/catch so it always runs,
-    // even when ingest_files throws (e.g. corrupt file).
-    step_start = performance.now()
-    try {
-      await (dependencies.build_knowledge_databases ?? build_knowledge_databases)()
-    } catch (e) {
-      console.error('❌ Knowledge database build failed', e)
-      events.push({
-        source: 'pipeline',
-        kind: 'error',
-        code: 'BUILD_FAILED',
-        subject: String(e)
-      })
-      return
+  try {
+    for (const candidate of artifacts.databases) {
+      const livePath = join(knowledgeRoot, candidate.profileId, 'db.sqlite')
+      await mkdir(dirname(livePath), { recursive: true })
+      const backupPath = (await Bun.file(livePath).exists())
+        ? `${livePath}.previous-${Bun.randomUUIDv7()}`
+        : null
+      if (backupPath) await link(livePath, backupPath)
+      published.push({ livePath, backupPath })
+      await rename(candidate.path, livePath)
     }
-    console.info(`⏱ build: ${((performance.now() - step_start) / 1000).toFixed(3)}s`)
+  } catch (error) {
+    await rollback()
+    throw error
+  }
 
-    const duration_seconds = ((performance.now() - start_time) / 1000).toFixed(3)
-    console.info(`✅ Pipeline completed in ${duration_seconds}s`)
-  } catch (e) {
-    console.error('❌ Pipeline execution failed', e)
-    events.push({
-      source: 'pipeline',
-      kind: 'error',
-      code: 'PIPELINE_FAILED',
-      subject: String(e)
-    })
+  return {
+    rollback,
+    commit: async () => {
+      await Promise.allSettled(
+        published.map(({ backupPath }) =>
+          backupPath ? rm(backupPath, { force: true }) : Promise.resolve()
+        )
+      )
+    }
+  }
+}
+
+export const runKnowledgePipeline = async (
+  buildId: string,
+  service?: string,
+  previouslyManagedMirrors: readonly string[] = []
+): Promise<KnowledgePipelineResult> => {
+  const paths = datastorePaths(service)
+  const stagingRoot = join(paths.knowledge, '.staging', buildId)
+  const diagnostics: KnowledgeDiagnostic[] = []
+  let itemKeys: string[] = []
+
+  await rm(stagingRoot, { recursive: true, force: true })
+  await mkdir(stagingRoot, { recursive: true })
+
+  try {
+    const snapshot = getKnowledgeCatalogSnapshot(service)
+    itemKeys = assignedKnowledgeItemKeys(snapshot)
+    const profiles = await listKnowledgeProfiles()
+    const knownIds = profiles.map((profile) => profile.id)
+    assertNoOutputCollisions(snapshot.sources, new Set(knownIds))
+    await setup_knowledge_directories(stagingRoot, profiles)
+    const entries = flattenKnowledgeEntries(snapshot, service, knownIds)
+    const { anomalies } = await ingest_files(entries, stagingRoot, profiles)
+    for (const anomaly of anomalies) {
+      diagnostics.push({
+        level: anomaly.code === 'SOURCE_FILE_MISSING' ? 'error' : 'warning',
+        code: anomaly.code,
+        message:
+          anomaly.code === 'SOURCE_FILE_MISSING'
+            ? 'Le fichier source est introuvable.'
+            : 'Le profil de connaissance est introuvable.',
+        subject: anomaly.subject
+      })
+    }
+    if (diagnostics.some((diagnostic) => diagnostic.level === 'error')) {
+      throw new KnowledgePipelineError('Knowledge source validation failed', diagnostics, itemKeys)
+    }
+
+    const artifacts = await build_knowledge_databases(stagingRoot)
+    for (const candidate of artifacts.databases) validateDatabase(candidate.path)
+
+    if (getKnowledgeCatalogSnapshot(service).fingerprint !== snapshot.fingerprint) {
+      throw new KnowledgeCatalogChangedError()
+    }
+
+    const publication = await publishDatabases(artifacts, paths.knowledge)
+    try {
+      await publishKnowledgeMirrors(artifacts, service, previouslyManagedMirrors)
+      await publication.commit()
+    } catch (error) {
+      await publication.rollback()
+      throw error
+    }
+    return {
+      catalogFingerprint: snapshot.fingerprint,
+      diagnostics,
+      itemKeys,
+      mirrorTables: [...artifacts.mirrorTables.keys()] as DatastoreTable[]
+    }
+  } catch (error) {
+    if (error instanceof KnowledgeCatalogChangedError || error instanceof KnowledgePipelineError) {
+      throw error
+    }
+    throw new KnowledgePipelineError(
+      error instanceof Error ? error.message : String(error),
+      diagnostics,
+      itemKeys
+    )
   } finally {
-    save_events(events)
+    await rm(stagingRoot, { recursive: true, force: true })
   }
 }

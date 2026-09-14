@@ -1,65 +1,39 @@
 import { Database } from 'bun:sqlite'
 import { existsSync } from 'node:fs'
 
+import { DATASTORE_TABLES, type DatastoreTable } from '../../shared/core-data'
 import { datastorePaths } from './paths'
 
-/**
- * Canonical HLM datastore tables backed by `datastore.sqlite`.
- *
- * Single source of truth for domain table names — importers and the desktop UI
- * consume this list. Add new tables here only.
- */
-export const DATASTORE_TABLES = [
-  'candidatures',
-  'lots_locatifs',
-  'comptes_locataires',
-  'reclamations',
-  'travaux'
-] as const
+export {
+  CORE_DATA_CONTRACT,
+  coreDataContractForFilename,
+  DATASTORE_TABLES,
+  resemblesCoreDataFilename,
+  type CoreDataContract,
+  type DatastoreTable
+} from '../../shared/core-data'
 
-/** HLM tables mirrored from knowledge JSON into `datastore.sqlite` on each build. */
-export const DATASTORE_MIRROR_TABLES = [
-  'reclamations',
-  'comptes_locataires',
-  'lots_locatifs'
-] as const
-
-type DatastoreTable = (typeof DATASTORE_TABLES)[number]
-
-/** One canonical table and whether it is present in the current service datastore. */
 export type DatastoreTableStatus = {
   name: DatastoreTable
   exists: boolean
 }
 
-/**
- * Presence report for every {@link DATASTORE_TABLES} entry.
- *
- * `tables` is sorted: present rows first, then absent; within each group, by `name`.
- */
 export type DatastoreTablesResult = {
   tables: DatastoreTableStatus[]
 }
 
-/** Present tables before absent ones; tie-break alphabetically by `name`. */
-const compare_table_status = (a: DatastoreTableStatus, b: DatastoreTableStatus): number =>
+const compareTableStatus = (a: DatastoreTableStatus, b: DatastoreTableStatus): number =>
   a.exists === b.exists ? a.name.localeCompare(b.name) : a.exists ? -1 : 1
 
-const to_result = (existing: ReadonlySet<DatastoreTable>): DatastoreTablesResult => ({
+const toResult = (existing: ReadonlySet<DatastoreTable>): DatastoreTablesResult => ({
   tables: DATASTORE_TABLES.map((name) => ({ name, exists: existing.has(name) })).sort(
-    compare_table_status
+    compareTableStatus
   )
 })
 
-/**
- * Reports which canonical tables exist in the service datastore.
- *
- * - Missing `datastore.sqlite` → every row has `exists: false` (no throw).
- * - SQLite errors after a successful open → propagates to the caller.
- */
 export function get_datastore_tables(): DatastoreTablesResult {
   const path = datastorePaths().database
-  if (!existsSync(path)) return to_result(new Set())
+  if (!existsSync(path)) return toResult(new Set())
   const db = new Database(path, { readonly: true })
 
   try {
@@ -73,7 +47,7 @@ export function get_datastore_tables(): DatastoreTablesResult {
         .map((row) => row.name as DatastoreTable)
     )
 
-    return to_result(existing)
+    return toResult(existing)
   } finally {
     db.close()
   }

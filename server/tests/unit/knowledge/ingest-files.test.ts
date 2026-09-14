@@ -5,7 +5,7 @@ import { mkdir, rm } from 'node:fs/promises'
 import * as oxfmt from 'oxfmt'
 import * as XLSX from 'xlsx'
 
-import type { Metadata } from '../../../utils/knowledge/generate-metadata'
+import type { KnowledgeIngestionEntry } from '../../../utils/knowledge/catalog'
 import {
   content_cache_key,
   ingest_files,
@@ -179,10 +179,8 @@ describe('normalize_sheet_value', () => {
 
 const SERVICE = Bun.env['SERVICE']!
 const FILES_DIR = `datastores/${SERVICE}/files`
-const GHOST_FILE = `${FILES_DIR}/_test_ghost_file_for_ingest.md`
 
-// Build a minimal valid Metadata entry for a file that does NOT exist on disk
-function missingFileEntry(): Metadata {
+function missingFileEntry(): KnowledgeIngestionEntry {
   return {
     filename: 'nonexistent_doc.md',
     agent_filename: 'Document inexistant',
@@ -191,14 +189,14 @@ function missingFileEntry(): Metadata {
     sheet: 0,
     headers: 0,
     access: 'default',
-    last_modified: '2024-01-01T00:00:00+00:00'
+    coreDataTable: null
   }
 }
 
 describe('ingest_files', () => {
-  describe('PROFILE_MISSING_IN_ASSETS', () => {
+  describe('PROFILE_MISSING', () => {
     it('should emit anomaly when access references a non-existent config', async () => {
-      const entry: Metadata = {
+      const entry: KnowledgeIngestionEntry = {
         filename: 'doc.md',
         agent_filename: 'Doc',
         filepath: `${FILES_DIR}/doc.md`,
@@ -206,79 +204,31 @@ describe('ingest_files', () => {
         sheet: 0,
         headers: 0,
         access: 'ghost_profile_xyz_not_real',
-        last_modified: '2024-01-01T00:00:00+00:00'
+        coreDataTable: null
       }
 
       const { anomalies } = await ingest_files([entry])
       const codes = anomalies.map((a) => a.code)
-      expect(codes).toContain('PROFILE_MISSING_IN_ASSETS')
-      const a = anomalies.find((x) => x.code === 'PROFILE_MISSING_IN_ASSETS')
+      expect(codes).toContain('PROFILE_MISSING')
+      const a = anomalies.find((x) => x.code === 'PROFILE_MISSING')
       expect(a?.subject).toBe('ghost_profile_xyz_not_real')
     })
   })
 
-  describe('METADATA_NOT_IN_FILES', () => {
-    it('should emit anomaly when file is in metadata but absent from disk', async () => {
+  describe('SOURCE_FILE_MISSING', () => {
+    it('should emit anomaly when a catalog source is absent from disk', async () => {
       const { anomalies } = await ingest_files([missingFileEntry()])
       const codes = anomalies.map((a) => a.code)
-      expect(codes).toContain('METADATA_NOT_IN_FILES')
-      const a = anomalies.find((x) => x.code === 'METADATA_NOT_IN_FILES')
+      expect(codes).toContain('SOURCE_FILE_MISSING')
+      const a = anomalies.find((x) => x.code === 'SOURCE_FILE_MISSING')
       expect(a?.subject).toBe('nonexistent_doc.md')
-    })
-  })
-
-  describe('FILE_NOT_IN_METADATA', () => {
-    beforeAll(async () => {
-      await Bun.write(GHOST_FILE, '# Ghost file\nThis file has no metadata entry.')
-    })
-
-    afterAll(async () => {
-      await Bun.file(GHOST_FILE)
-        .delete()
-        .catch(() => {})
-    })
-
-    it('should emit anomaly for disk file not referenced in metadata', async () => {
-      // Pass empty metadata so the ghost file is definitely not referenced
-      const { anomalies } = await ingest_files([])
-      const fnim = anomalies.filter((a) => a.code === 'FILE_NOT_IN_METADATA')
-      const subjects = fnim.map((a) => a.subject)
-      expect(subjects).toContain('_test_ghost_file_for_ingest.md')
-    })
-  })
-
-  describe('PROFILE_NOT_IN_METADATA', () => {
-    it('should emit info for any config not present in metadata', async () => {
-      const { anomalies } = await ingest_files([])
-      const profiles = anomalies
-        .filter((a) => a.code === 'PROFILE_NOT_IN_METADATA')
-        .map((a) => a.subject)
-      expect(profiles).toContain('demo')
-    })
-
-    it('should NOT emit PROFILE_NOT_IN_METADATA when config id is present in metadata', async () => {
-      const entry: Metadata = {
-        filename: 'doc.md',
-        agent_filename: 'Doc',
-        filepath: `${FILES_DIR}/doc.md`,
-        type: 'md',
-        sheet: 0,
-        headers: 0,
-        access: 'testing_purpose_1',
-        last_modified: '2024-01-01T00:00:00+00:00'
-      }
-      const { anomalies } = await ingest_files([entry])
-      const profiles = anomalies
-        .filter((a) => a.code === 'PROFILE_NOT_IN_METADATA')
-        .map((a) => a.subject)
-      expect(profiles).not.toContain('testing_purpose_1')
     })
   })
 })
 
 describe('content_cache_key', () => {
   it('combines filepath, type, sheet and headers', () => {
-    const metadata: Metadata = {
+    const entry: KnowledgeIngestionEntry = {
       filename: 'reclamations.xlsx',
       agent_filename: 'Réclamations',
       filepath: '/data/reclamations.xlsx',
@@ -286,9 +236,9 @@ describe('content_cache_key', () => {
       sheet: 1,
       headers: 2,
       access: 'default',
-      last_modified: '2024-01-01T00:00:00+00:00'
+      coreDataTable: null
     }
-    expect(content_cache_key(metadata)).toBe('/data/reclamations.xlsx:xlsx:1:2')
+    expect(content_cache_key(entry)).toBe('/data/reclamations.xlsx:xlsx:1:2')
   })
 })
 
@@ -306,6 +256,55 @@ describe('save_formatted_file', () => {
       await Bun.file(output_path)
         .delete()
         .catch(() => {})
+    }
+  })
+})
+
+describe('CSV ingestion', () => {
+  it('parses semicolon records and preserves an empty schema', async () => {
+    const path = `${FILES_DIR}/_test_csv.csv`
+    const knowledgeRoot = `datastores/${SERVICE}/knowledge`
+    await Bun.write(path, 'nom;description\nalpha;"ligne 1\nligne 2"')
+    await mkdir(`${knowledgeRoot}/testing_purpose_1`, { recursive: true })
+    try {
+      await ingest_files([
+        {
+          filename: '_test_csv.csv',
+          agent_filename: 'Indicateurs',
+          filepath: path,
+          type: 'csv',
+          sheet: 0,
+          headers: 0,
+          access: 'testing_purpose_1',
+          coreDataTable: null
+        }
+      ])
+      const payload = await Bun.file(`${knowledgeRoot}/testing_purpose_1/indicateurs.json`).json()
+      expect(payload).toEqual({
+        columns: ['nom', 'description'],
+        rows: [{ nom: 'alpha', description: 'ligne 1 ligne 2' }]
+      })
+
+      await Bun.write(path, 'nom;description\n')
+      await ingest_files([
+        {
+          filename: '_test_csv.csv',
+          agent_filename: 'Indicateurs',
+          filepath: path,
+          type: 'csv',
+          sheet: 0,
+          headers: 0,
+          access: 'testing_purpose_1',
+          coreDataTable: null
+        }
+      ])
+      expect(await Bun.file(`${knowledgeRoot}/testing_purpose_1/indicateurs.json`).json()).toEqual({
+        columns: ['nom', 'description'],
+        rows: []
+      })
+    } finally {
+      await rm(path, { force: true })
+      await rm(`${knowledgeRoot}/testing_purpose_1/indicateurs.json`, { force: true })
     }
   })
 })
@@ -339,14 +338,14 @@ describe('ingest_files parse cache', () => {
   })
 
   it('writes the same parsed xlsx to multiple profiles without re-parsing', async () => {
-    const base: Omit<Metadata, 'access'> = {
+    const base: Omit<KnowledgeIngestionEntry, 'access'> = {
       filename: '_test_cache_shared.xlsx',
       agent_filename: 'Données cache test',
       filepath: CACHE_XLSX,
       type: 'xlsx',
       sheet: 0,
       headers: 0,
-      last_modified: '2024-01-01T00:00:00+00:00'
+      coreDataTable: null
     }
 
     const parse_logs: string[] = []

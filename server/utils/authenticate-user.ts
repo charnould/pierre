@@ -13,44 +13,46 @@ const COMMUNICATION_ROUTES = ['rcs', 'sms', 'email', 'courrier', 'lrar', 'lre'] 
 //
 // Authenticate middleware
 //
-export const authenticate = async (c: Context, next: Next) => {
-  // If the request comes from a cURL/CLI client (authorization-context = 'cli')
-  // targeting the /a/knowledge endpoint, enforce Bearer auth.
-  // This allows programmatic uploads without using the web interface.
-  if (c.req.header('authorization-context') === 'cli' && c.req.path === '/a/knowledge') {
-    return await bearerAuth({
-      token: Bun.env['AUTH_BEARER']!
-    })(c, next)
-  }
+const CLI_ADMIN: User = {
+  email: 'cli@pierre.local',
+  isAdministrator: true,
+  moduleIds: [],
+  chatbotIds: [],
+  passwordHash: ''
+}
 
-  // Validate if a signed cookie is present and decrypt it to retrieve user date
-  // and check if user (still) exists in `users` table
-  let can_access_protected_context = false
-
-  let user: User | null = null
-
+const readSessionUser = async (c: Context): Promise<User | null> => {
   const cookie = await getSignedCookie(c, Bun.env['AUTH_SECRET'] as string, 'pierre-ia')
-
-  if (cookie) {
-    let email: string | null = null
-    try {
-      const cookie_user = JSON.parse(
-        await decrypt(cookie, Bun.env['AUTH_SECRET'] as string)
-      ) as Partial<User>
-      if (typeof cookie_user.email === 'string' && cookie_user.email.trim()) {
-        email = cookie_user.email
-      }
-    } catch {
-      // Invalid or stale encrypted session: treat it as unauthenticated.
-    }
-    if (email) {
-      const db_user = await getUser(email)
-      if (db_user) {
-        user = db_user
-        can_access_protected_context = true
-      }
-    }
+  if (!cookie) return null
+  try {
+    const cookie_user = JSON.parse(
+      await decrypt(cookie, Bun.env['AUTH_SECRET'] as string)
+    ) as Partial<User>
+    if (typeof cookie_user.email !== 'string' || !cookie_user.email.trim()) return null
+    return (await getUser(cookie_user.email)) ?? null
+  } catch {
+    return null
   }
+}
+
+export const authenticateAdministratorApi = async (c: Context, next: Next) => {
+  if (c.req.header('authorization')?.startsWith('Bearer ')) {
+    return await bearerAuth({ token: Bun.env['AUTH_BEARER']! })(c, async () => {
+      c.set('user', CLI_ADMIN)
+      return next()
+    })
+  }
+  const user = await readSessionUser(c)
+  if (user === null) {
+    return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
+  }
+  c.set('user', user)
+  return next()
+}
+
+export const authenticate = async (c: Context, next: Next) => {
+  const user = await readSessionUser(c)
+  const can_access_protected_context = user !== null
 
   const requestedConfig = c.req.query('config')
   let config: Config | null = null

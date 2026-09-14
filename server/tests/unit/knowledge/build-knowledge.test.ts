@@ -3,7 +3,10 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { mkdirSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 
-import { build_knowledge_databases } from '../../../utils/knowledge/build-knowledge'
+import {
+  build_knowledge_databases,
+  publishKnowledgeMirrors
+} from '../../../utils/knowledge/build-knowledge'
 
 // ─── Isolated test environment ────────────────────────────────────────────────
 //
@@ -20,8 +23,12 @@ const DB_PATH = `${SOURCE_DIR}/db.sqlite`
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const write_json = (filename: string, rows: object[]) =>
-  Bun.write(`${SOURCE_DIR}/${filename}`, JSON.stringify(rows))
+const write_json = (filename: string, rows: object[]) => {
+  const columns = [...new Set(rows.flatMap((row) => Object.keys(row)))]
+  return Bun.write(`${SOURCE_DIR}/${filename}`, JSON.stringify({ columns, rows }))
+}
+const mark_core_tables = (...tables: string[]) =>
+  Bun.write(`${SOURCE_DIR}/_core_data.json`, JSON.stringify(tables))
 
 const parse_readme = (content: string) =>
   JSON.parse(content.replace(/^```json\n/, '').replace(/\n```$/, ''))
@@ -34,6 +41,10 @@ const write_md = async (rel_path: string, content: string) => {
 }
 
 const open_db = () => new Database(DB_PATH)
+const build_and_publish = async () => {
+  const artifacts = await build_knowledge_databases()
+  await publishKnowledgeMirrors(artifacts)
+}
 
 // ─── Lifecycle ───────────────────────────────────────────────────────────────
 
@@ -66,7 +77,7 @@ describe('build_knowledge_databases', () => {
     it('skips without throwing', async () => {
       await rm(`datastores/${TEST_SERVICE}`, { recursive: true, force: true })
       mkdirSync(KNOWLEDGE_ROOT, { recursive: true })
-      await expect(build_knowledge_databases()).resolves.toBeUndefined()
+      await expect(build_knowledge_databases()).resolves.toMatchObject({ databases: [] })
     })
   })
 
@@ -236,8 +247,9 @@ describe('build_knowledge_databases', () => {
           statut: 'clos'
         }
       ])
+      await mark_core_tables('reclamations')
 
-      await build_knowledge_databases()
+      await build_and_publish()
 
       const knowledgeDb = open_db()
       const knowledgeRows = knowledgeDb
@@ -268,8 +280,9 @@ describe('build_knowledge_databases', () => {
       await write_json('lots_locatifs.json', [
         { id_lot: 'LOT-1', id_locataire: 'LOC-A', id_client: 'CLI-A' }
       ])
+      await mark_core_tables('comptes_locataires', 'lots_locatifs')
 
-      await build_knowledge_databases()
+      await build_and_publish()
 
       const knowledgeDb = open_db()
       const knowledgeColumns = knowledgeDb
@@ -311,8 +324,9 @@ describe('build_knowledge_databases', () => {
 
     it('imports communes_par_code_postal into knowledge and datastore when lots have code_postal', async () => {
       await write_json('lots_locatifs.json', [{ id_lot: 'LOT-A', code_postal: 1000 }])
+      await mark_core_tables('lots_locatifs')
 
-      await build_knowledge_databases()
+      await build_and_publish()
 
       const knowledgeDb = open_db()
       const knowledgeCommunes = knowledgeDb
@@ -339,10 +353,14 @@ describe('build_knowledge_databases', () => {
       expect(datastoreCode).toBe('01000')
     })
 
-    it('does not create tickets in datastore when building other tables', async () => {
+    it('removes a stale mirror when its source is no longer present', async () => {
+      await write_json('reclamations.json', [{ id_reclamation: 'REQ-OLD' }])
+      await mark_core_tables('reclamations')
+      await build_and_publish()
       await write_json('communes.json', [{ nom: 'Paris', code: '75056' }])
 
-      await build_knowledge_databases()
+      const artifacts = await build_knowledge_databases()
+      await publishKnowledgeMirrors(artifacts, undefined, ['reclamations'])
 
       const datastoreDb = new Database(DATASTORE_PATH)
       const tables = datastoreDb
@@ -353,6 +371,77 @@ describe('build_knowledge_databases', () => {
       datastoreDb.close()
 
       expect(tables).toHaveLength(0)
+    })
+
+    it('rolls back mirror publication when a replacement is invalid', async () => {
+      await publishKnowledgeMirrors({
+        databases: [],
+        contactRows: [],
+        mirrorTables: new Map([
+          [
+            'reclamations',
+            {
+              columns: ['id_reclamation', 'statut'],
+              rows: [{ id_reclamation: 'REQ-LIVE', statut: 'ouvert' }]
+            }
+          ]
+        ])
+      })
+
+      await expect(
+        publishKnowledgeMirrors({
+          databases: [],
+          contactRows: [],
+          mirrorTables: new Map([
+            [
+              'reclamations',
+              {
+                columns: ['id_reclamation', 'statut'],
+                rows: [
+                  { id_reclamation: 'REQ-DUPLICATE', statut: 'ouvert' },
+                  { id_reclamation: 'REQ-DUPLICATE', statut: 'clos' }
+                ]
+              }
+            ]
+          ])
+        })
+      ).rejects.toThrow()
+
+      const datastoreDb = new Database(DATASTORE_PATH)
+      const rows = datastoreDb
+        .query<{ id_reclamation: string }, []>('SELECT id_reclamation FROM reclamations')
+        .all()
+      datastoreDb.close()
+      expect(rows).toEqual([{ id_reclamation: 'REQ-LIVE' }])
+    })
+
+    it('publishes a valid empty snapshot with its schema', async () => {
+      await Bun.write(
+        `${SOURCE_DIR}/travaux.json`,
+        JSON.stringify({ columns: ['id_travaux', 'contexte'], rows: [] })
+      )
+      await mark_core_tables('travaux')
+
+      await build_and_publish()
+
+      const knowledgeDb = open_db()
+      const knowledgeColumns = knowledgeDb
+        .query<{ name: string }, []>('PRAGMA table_info("travaux")')
+        .all()
+        .map(({ name }) => name)
+      const knowledgeRows = knowledgeDb
+        .query<{ n: number }, []>('SELECT COUNT(*) AS n FROM travaux')
+        .get()!.n
+      knowledgeDb.close()
+      const datastoreDb = new Database(DATASTORE_PATH)
+      const datastoreRows = datastoreDb
+        .query<{ n: number }, []>('SELECT COUNT(*) AS n FROM travaux')
+        .get()!.n
+      datastoreDb.close()
+
+      expect(knowledgeColumns).toEqual(['id_travaux', 'contexte'])
+      expect(knowledgeRows).toBe(0)
+      expect(datastoreRows).toBe(0)
     })
   })
 
@@ -408,81 +497,6 @@ describe('build_knowledge_databases', () => {
       db.close()
 
       expect(row?.url).toBeNull()
-    })
-  })
-
-  describe('_sources table', () => {
-    it('creates _sources table from _sources.json', async () => {
-      await Bun.write(
-        `${SOURCE_DIR}/_sources.json`,
-        JSON.stringify({ procedures: 'https://example.com/proc.xlsx' })
-      )
-      await write_json('procedures.json', [{ id: '1' }])
-
-      await build_knowledge_databases()
-
-      const db = open_db()
-      const row = db
-        .query<{ name: string; url: string }, [string]>(
-          'SELECT name, url FROM _sources WHERE name = ?'
-        )
-        .get('procedures')
-      db.close()
-
-      expect(row?.name).toBe('procedures')
-      expect(row?.url).toBe('https://example.com/proc.xlsx')
-    })
-
-    it('creates _sources table with null url when no URL is provided', async () => {
-      await Bun.write(`${SOURCE_DIR}/_sources.json`, JSON.stringify({ ref: null }))
-      await write_json('ref.json', [{ id: '1' }])
-
-      await build_knowledge_databases()
-
-      const db = open_db()
-      const row = db
-        .query<{ name: string; url: string | null }, [string]>(
-          'SELECT name, url FROM _sources WHERE name = ?'
-        )
-        .get('ref')
-      db.close()
-
-      expect(row?.name).toBe('ref')
-      expect(row?.url).toBeNull()
-    })
-
-    it('does not create _sources table when _sources.json is absent', async () => {
-      await write_json('ref.json', [{ id: '1' }])
-
-      await build_knowledge_databases()
-
-      const db = open_db()
-      const has_sources = db
-        .query<{ n: number }, []>(
-          `SELECT COUNT(*) as n FROM sqlite_master WHERE type='table' AND name='_sources'`
-        )
-        .get()!.n
-      db.close()
-
-      expect(has_sources).toBe(0)
-    })
-
-    it('_readme includes URL when _sources is present', async () => {
-      await Bun.write(
-        `${SOURCE_DIR}/_sources.json`,
-        JSON.stringify({ planning: 'https://example.com/planning.xlsx' })
-      )
-      await write_json('planning.json', [{ id: '1' }])
-
-      await build_knowledge_databases()
-
-      const db = open_db()
-      const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
-      db.close()
-
-      const schema = parse_readme(row!.content)
-      const table = schema.tables.find((t: { name: string }) => t.name === 'planning')
-      expect(table?.source_url).toBe('https://example.com/planning.xlsx')
     })
   })
 
@@ -559,9 +573,8 @@ describe('build_knowledge_databases', () => {
       expect(col?.values).toBeUndefined()
     })
 
-    it('omits source_url key from table when source_url is null', async () => {
+    it('omits source_url from the generated table schema', async () => {
       await write_json('ref.json', [{ id: '1' }])
-      // No _sources.json → source_url will be null
 
       await build_knowledge_databases()
 

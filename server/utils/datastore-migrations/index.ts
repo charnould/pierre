@@ -4,6 +4,7 @@ import { rm } from 'node:fs/promises'
 import { DATASTORE_TABLES } from '../datastore-tables'
 import baselineSql from './001-baseline.sql' with { type: 'text' }
 import activitiesV2Sql from './002-activities-v2.sql' with { type: 'text' }
+import knowledgeCatalogSql from './003-knowledge-catalog.sql' with { type: 'text' }
 
 export type DatastoreMigration = {
   version: number
@@ -13,7 +14,8 @@ export type DatastoreMigration = {
 
 export const APP_MIGRATIONS: readonly DatastoreMigration[] = [
   { version: 1, name: 'baseline', sql: baselineSql },
-  { version: 2, name: 'activities-v2', sql: activitiesV2Sql }
+  { version: 2, name: 'activities-v2', sql: activitiesV2Sql },
+  { version: 3, name: 'knowledge-catalog', sql: knowledgeCatalogSql }
 ]
 
 const LEDGER_SQL = `
