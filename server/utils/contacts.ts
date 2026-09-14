@@ -44,18 +44,6 @@ const EmailSyntaxSchema = z.email()
 
 const datastore_path = (): string => datastorePaths().database
 
-/** True when the column is a tenant/client/candidate phone. */
-export const is_contact_phone_column = (column_key: string): boolean =>
-  CONTACT_PHONE_COLUMNS.has(column_key.toLowerCase().trim())
-
-/** True when the column is a tenant/client/candidate email. */
-export const is_contact_email_column = (column_key: string): boolean =>
-  CONTACT_EMAIL_COLUMNS.has(column_key.toLowerCase().trim())
-
-/** True for any `telephone_*` column (skip numeric sheet coercion). */
-export const is_telephone_column = (column_key: string): boolean =>
-  column_key.toLowerCase().trim().startsWith('telephone_')
-
 /**
  * Recovers a phone string from a spreadsheet cell.
  * Excel often stores `0611563959` as number `611563959` (leading 0 lost).

@@ -1,5 +1,3 @@
-import { resolve } from 'node:path'
-
 const DEFAULT_TIMEOUT = 60_000
 const POLL_INTERVAL = 25
 const initializedViews = new WeakSet<Bun.WebView>()
@@ -57,19 +55,6 @@ export async function navigate(view: Bun.WebView, url: string): Promise<void> {
 export async function fillInput(view: Bun.WebView, selector: string, value: string): Promise<void> {
   await view.click(selector, { timeout: DEFAULT_TIMEOUT })
   await view.type(value)
-}
-
-export async function waitForUrl(
-  view: Bun.WebView,
-  expected: string | RegExp,
-  timeout = DEFAULT_TIMEOUT
-): Promise<void> {
-  const source =
-    typeof expected === 'string'
-      ? `window.location.href === ${JSON.stringify(expected)}`
-      : `new RegExp(${JSON.stringify(expected.source)}, ${JSON.stringify(expected.flags)}).test(window.location.href)`
-
-  await waitFor(`URL ${String(expected)}`, () => evaluate<boolean>(view, source), timeout)
 }
 
 export async function waitForDom(
@@ -149,39 +134,9 @@ export async function clickAndWait(
   }
 }
 
-export async function elementCount(view: Bun.WebView, selector: string): Promise<number> {
-  return evaluate<number>(view, `document.querySelectorAll(${JSON.stringify(selector)}).length`)
-}
-
-export async function elementHrefs(view: Bun.WebView, selector: string): Promise<string[]> {
-  return evaluate<string[]>(
-    view,
-    `[...document.querySelectorAll(${JSON.stringify(selector)})].map((element) => element.href)`
-  )
-}
-
 export async function getCookies(view: Bun.WebView): Promise<Array<{ name: string }>> {
   const result = (await view.cdp('Network.getAllCookies')) as {
     cookies: Array<{ name: string }>
   }
   return result.cookies
-}
-
-export async function uploadFiles(
-  view: Bun.WebView,
-  selector: string,
-  ...files: string[]
-): Promise<void> {
-  const absoluteFiles = files.map((file) => resolve(file))
-  const { root } = (await view.cdp('DOM.getDocument')) as {
-    root: { nodeId: number }
-  }
-  const { nodeId } = (await view.cdp('DOM.querySelector', {
-    nodeId: root.nodeId,
-    selector
-  })) as { nodeId: number }
-
-  if (!nodeId) throw new Error(`File input not found: ${selector}`)
-
-  await view.cdp('DOM.setFileInputFiles', { files: absoluteFiles, nodeId })
 }

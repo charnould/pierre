@@ -13,21 +13,6 @@ export const User = z.object({
   passwordHash: z.string()
 })
 
-/**
- * Represents a Skill schema definition using Zod.
- *
- *  This schema validates the structure of a skill object with the following properties:
- *
- * - `id`: Unique identifier (UUIDv7 format)
- * - `name`: Name of the skill
- * - `skill`: Skill prompt
- */
-export const Skill = z.object({
-  id: z.uuidv7(),
-  name: z.string().trim().nullable().default(null),
-  skill: z.string().trim().nullable().default(null)
-})
-
 const AgentFields = {
   id: z.string(),
   display: z.string(),
@@ -65,15 +50,12 @@ export const ChatbotConfig = z
 
 export const SkillConfig = z.object(AgentFields).strict()
 
-/** Conversation persistence and `/ai` use chatbot configs. */
-export const Config = ChatbotConfig
-
 //
 // Reflects datastore database schema
 export const Reply = z.object({
   // Globals
   conv_id: z.string(),
-  config: Config,
+  config: ChatbotConfig,
   role: z.enum(['assistant', 'user', 'system']).default('user'),
   timestamp: z.iso.datetime({ offset: true }).nullish().default(null),
   content: z.string(),
@@ -117,7 +99,7 @@ export const Reply = z.object({
 
 //
 // Structured JSON LLM must output for each request
-export const Augmented_Query = z.object({
+const Augmented_Query = z.object({
   lang: z.string(),
   contains_profanity: z.boolean(),
   bm25_keywords: z.array(z.string()),
@@ -168,10 +150,8 @@ export const AIContext = z
 //
 //
 export type User = z.infer<typeof User>
-export type Skill = z.infer<typeof Skill>
 export type Reply = z.infer<typeof Reply>
 export type ChatbotConfig = z.infer<typeof ChatbotConfig>
 export type SkillConfig = z.infer<typeof SkillConfig>
 export type Config = ChatbotConfig
 export type AIContext = z.infer<typeof AIContext>
-export type Augmented_Query = z.infer<typeof Augmented_Query>

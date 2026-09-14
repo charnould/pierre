@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import { isAbsolute, join, relative, resolve } from 'node:path'
 
 export const SERVER_ROOT = resolve(import.meta.dir, '..')
-export const DATASTORES_ROOT = join(SERVER_ROOT, 'datastores')
+const DATASTORES_ROOT = join(SERVER_ROOT, 'datastores')
 
 export function resolveServiceName(raw: string | undefined): string {
   const service = raw === undefined ? 'default' : raw.trim()

@@ -86,7 +86,6 @@ import { controller as post_signature_webhook } from './controllers/signature/po
 import { controller as post_sms } from './controllers/sms/post'
 import { controller as post_sms_webhook } from './controllers/sms/post.webhook'
 import { controller as post_telemetry } from './controllers/telemetry/post'
-// import { topicize, score } from "./utils/analyze-conversation";
 import { MAX_MULTIPART_REQUEST_BYTES } from './utils/ai-attachments'
 import { authenticate, authenticateAdministratorApi } from './utils/authenticate-user'
 import { authorizeAdministrator, authorizeAnyModule, authorizeModule } from './utils/authorize-role'
@@ -163,9 +162,6 @@ app.use(
 // Runs every day at 4:00 AM
 Bun.cron('0 4 * * *', async () => {
   refresh_stale_sms_contacts_for_service()
-  // Score conversation and assign topic with AI
-  // await topicize();
-  // await score();
 })
 
 // Automations due-poll every minute

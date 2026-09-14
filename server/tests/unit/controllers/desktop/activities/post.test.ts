@@ -7,10 +7,11 @@ import { controller as deleteActivity } from '../../../../../controllers/desktop
 import { controller as patchActivity } from '../../../../../controllers/desktop/activities/patch'
 import { controller as postActivity } from '../../../../../controllers/desktop/activities/post'
 import type { User } from '../../../../../utils/_schema'
+import { list_activities } from '../../../../../utils/activities/query'
 import { get_activity } from '../../../../../utils/activities/rows'
+import { create_activity } from '../../../../../utils/activities/write'
 import { datastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
-import { get_ticket_draft, upsert_ticket_draft } from '../../../../../utils/ticket-activities'
 
 const SERVICE = '_test_activity_write_controllers'
 const ROOT = datastorePaths(SERVICE).root
@@ -141,20 +142,27 @@ describe('activity write controllers', () => {
   })
 
   it('runs a generated ticket draft through edit, feedback and discard events', async () => {
-    const draft = upsert_ticket_draft({
-      save_kind: 'generation',
-      id_reclamation: 'REQ-DRAFT',
-      id_skill: 'ticket.answer-ticket',
-      channel: 'email',
-      generated_output: 'Version générée',
-      generated_by: 'alice@example.org'
+    const draft = create_activity('alice@example.org', {
+      contexte: 'tickets',
+      ref: 'REQ-DRAFT',
+      type: 'artifact.generated',
+      contenu: JSON.stringify({
+        version: 2,
+        title: 'Réponse',
+        values: {
+          skill: 'ticket.answer-ticket',
+          channel: 'email',
+          generated_by: 'alice@example.org'
+        },
+        note: 'Version générée'
+      })
     })
 
     const edits = [
       { operation: 'edit_content', contenu: 'Version relue' },
       { operation: 'set_evaluation', score: 5, commentaire: 'Validé' }
     ]
-    let activityId = draft.activity_id
+    let activityId = draft.id
     for (const body of edits) {
       const response = await app.request(
         `/desktop/activities/${activityId}`,
@@ -163,27 +171,43 @@ describe('activity write controllers', () => {
       expect(response.status).toBe(200)
       activityId = ((await response.json()) as { data: { id: number } }).data.id
     }
-    expect(get_ticket_draft('REQ-DRAFT', 'ticket.answer-ticket')).toMatchObject({
-      edited_output: 'Version relue',
-      feedback_rating: 5,
-      feedback_comment: 'Validé'
+    expect(JSON.parse(get_activity(activityId)!.contenu)).toMatchObject({
+      note: 'Version relue',
+      values: {
+        generated_output: 'Version générée',
+        edited_by: 'alice@example.org',
+        feedback_rating: 5,
+        feedback_comment: 'Validé'
+      }
     })
 
     const discarded = await app.request(`/desktop/activities/${activityId}`, jsonRequest('DELETE'))
     expect(discarded.status).toBe(200)
-    expect(get_ticket_draft('REQ-DRAFT', 'ticket.answer-ticket')).toBeNull()
+    expect(
+      list_activities('alice@example.org', { rattachement: 'tickets:REQ-DRAFT' })[0]?.type
+    ).toBe('artifact.discarded')
 
-    const disposable = upsert_ticket_draft({
-      save_kind: 'generation',
-      id_reclamation: 'REQ-DISPOSABLE',
-      id_skill: 'ticket.write-memo',
-      generated_output: 'Mémo',
-      generated_by: 'alice@example.org'
+    const disposable = create_activity('alice@example.org', {
+      contexte: 'tickets',
+      ref: 'REQ-DISPOSABLE',
+      type: 'artifact.generated',
+      contenu: JSON.stringify({
+        version: 2,
+        title: 'Mémo',
+        values: {
+          skill: 'ticket.write-memo',
+          generated_by: 'alice@example.org'
+        },
+        note: 'Mémo'
+      })
     })
     expect(
-      (await app.request(`/desktop/activities/${disposable.activity_id}`, jsonRequest('DELETE')))
-        .status
+      (await app.request(`/desktop/activities/${disposable.id}`, jsonRequest('DELETE'))).status
     ).toBe(200)
-    expect(get_ticket_draft('REQ-DISPOSABLE', 'ticket.write-memo')).toBeNull()
+    expect(
+      list_activities('alice@example.org', {
+        rattachement: 'tickets:REQ-DISPOSABLE'
+      })[0]?.type
+    ).toBe('artifact.discarded')
   })
 })

@@ -11,7 +11,7 @@ export const CORE_RECLAMATION_COLUMNS = ['id_reclamation', 'id_locataire', 'id_l
 export const DEFAULT_TICKETS_SORT = '-id_reclamation'
 
 const RESERVED_TICKETS_QUERY_PARAMS = ['limit', 'offset', 'sort', 'rules', 'bucket'] as const
-export const DEFAULT_TICKET_BUCKET = 'non_traitees'
+const DEFAULT_TICKET_BUCKET = 'non_traitees'
 const TICKET_BUCKET_IDS = ticketConfig.buckets.map((bucket) => bucket.id)
 const TICKET_BUCKET_ID_SET = new Set(TICKET_BUCKET_IDS)
 const TICKET_BUCKET_SQL = TICKET_BUCKET_IDS.map((id) => `'${id.replaceAll("'", "''")}'`).join(', ')

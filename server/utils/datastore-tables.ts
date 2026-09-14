@@ -4,14 +4,7 @@ import { existsSync } from 'node:fs'
 import { DATASTORE_TABLES, type DatastoreTable } from '../../shared/core-data'
 import { datastorePaths } from './paths'
 
-export {
-  CORE_DATA_CONTRACT,
-  coreDataContractForFilename,
-  DATASTORE_TABLES,
-  resemblesCoreDataFilename,
-  type CoreDataContract,
-  type DatastoreTable
-} from '../../shared/core-data'
+export { CORE_DATA_CONTRACT, DATASTORE_TABLES, type DatastoreTable } from '../../shared/core-data'
 
 export type DatastoreTableStatus = {
   name: DatastoreTable

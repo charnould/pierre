@@ -4,7 +4,9 @@ import { encodeScheduleToCron } from './automations'
 import { bulkDeliveryError, type BulkDelivery } from './bulk-operations'
 import {
   isNotificationDeliveryStatus,
-  notificationDeliveryStatusBadgeVariant
+  notificationDeliveryStatusBadgeVariant,
+  notificationDeliveryStatusLabel,
+  type NotificationDeliveryStatus
 } from './notification-delivery'
 
 describe('bulk delivery contracts', () => {
@@ -24,6 +26,29 @@ describe('automation schedule contracts', () => {
 })
 
 describe('notification delivery contracts', () => {
+  test('maps every provider delivery status to its canonical French label', () => {
+    const labels: Record<NotificationDeliveryStatus, string> = {
+      queued: 'En file d’attente',
+      sent: 'Envoyé',
+      delivered: 'Délivré',
+      read: 'Lu',
+      received: 'Reçu',
+      failed: 'Échec',
+      undelivered: 'Non délivré',
+      rejected: 'Rejeté',
+      bounced: 'Rebond',
+      returned: 'Retourné',
+      signed: 'Signé',
+      refused: 'Refusé',
+      unclaimed: 'Non réclamé',
+      expired: 'Expiré'
+    }
+
+    for (const [status, label] of Object.entries(labels)) {
+      expect(notificationDeliveryStatusLabel(status as NotificationDeliveryStatus)).toBe(label)
+    }
+  })
+
   test('recognizes terminal provider failures as delivery statuses', () => {
     for (const status of ['undelivered', 'rejected', 'bounced', 'unclaimed'] as const) {
       expect(isNotificationDeliveryStatus(status)).toBe(true)

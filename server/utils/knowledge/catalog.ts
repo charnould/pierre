@@ -1,18 +1,12 @@
 export {
-  KnowledgeBuildDocumentSchema,
   KnowledgeEntrySchema,
-  KnowledgeSourceDocumentSchema,
   type KnowledgeBuild,
-  type KnowledgeBuildDocument,
   type KnowledgeBuildTrigger,
   type KnowledgeCatalogSnapshot,
   type KnowledgeDiagnostic,
   type KnowledgeEntry,
-  type KnowledgeEntryInput,
   type KnowledgeIngestionEntry,
-  type KnowledgeSource,
-  type KnowledgeSourceDocument,
-  type KnowledgeSourceDocumentInput
+  type KnowledgeSource
 } from './catalog-schema'
 export {
   assignedKnowledgeItemKeys,

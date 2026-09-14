@@ -6,16 +6,12 @@ import {
   COMMUNICATION_CHANNELS,
   REPAYMENT_PLAN_CLOSE_REASONS,
   type ActivityContext,
-  type ActivityType,
   type Mention,
   type TaskState
 } from '../../../shared/activites'
 
 export const MENTION_RE = /@([a-z0-9._-]+)/gi
 export const AUTHOR_RE = /^(user|agent|tenant|candidate|automation|system|external):.+$/
-
-export const is_communication_type = (type: ActivityType): boolean =>
-  type.startsWith('communication.')
 
 const MentionSchema = z.object({
   destinataire: z.string().min(1),

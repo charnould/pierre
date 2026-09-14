@@ -8,7 +8,7 @@ export type AskUserAnswer = {
   answer: string
 }
 
-export type PendingAiQuestionnaire = {
+type PendingAiQuestionnaire = {
   requestId: string
   toolCallId: string
   responseSecret: string

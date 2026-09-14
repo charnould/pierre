@@ -15,7 +15,6 @@ export const ALICE = 'alice@exemple.fr'
 export const BOB = 'bob@exemple.fr'
 export const CLAIRE = 'claire@exemple.fr'
 export const JEAN = 'jean.dupont@exemple.fr'
-export const CAROL = 'carol@exemple.fr'
 export const ADMIN = 'admin@exemple.fr'
 export const CDUBOIS = 'cdubois@example.org'
 

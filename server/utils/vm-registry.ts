@@ -219,7 +219,7 @@ function armTimer(convId: string, entry: VmEntry): void {
   }, INACTIVITY_TIMEOUT_MS)
 }
 
-export function isConversationReserved(convId: string): boolean {
+function isConversationReserved(convId: string): boolean {
   return (conversationReservations.get(convId) ?? 0) > 0
 }
 

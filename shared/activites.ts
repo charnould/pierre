@@ -6,18 +6,9 @@ import {
   parse_repayment_plan_content
 } from './repayment-plan'
 
-export {
-  REPAYMENT_PLAN_CLOSE_REASONS,
-  REPAYMENT_PLAN_EMPLOYMENT_STATUSES,
-  REPAYMENT_PLAN_EVENT_TYPES,
-  is_repayment_plan_event_type,
-  parse_repayment_plan_content,
-  parse_repayment_plan_snapshot
-} from './repayment-plan'
+export { REPAYMENT_PLAN_CLOSE_REASONS, parse_repayment_plan_content } from './repayment-plan'
 export type {
   RepaymentPlanCloseReason,
-  RepaymentPlanClosedContent,
-  RepaymentPlanEmploymentStatus,
   RepaymentPlanEventContent,
   RepaymentPlanEventType,
   RepaymentPlanSnapshot
@@ -43,7 +34,7 @@ export const COMMUNICATION_CHANNELS = [
 ] as const
 export type CommunicationChannel = (typeof COMMUNICATION_CHANNELS)[number]
 
-export const COMMUNICATION_CHANNEL_LABELS: Record<CommunicationChannel, string> = {
+const COMMUNICATION_CHANNEL_LABELS: Record<CommunicationChannel, string> = {
   rcs: 'RCS',
   sms: 'SMS',
   email: 'Courriel',
@@ -116,14 +107,14 @@ export type ActivityValue = null | string | string[] | number | boolean | Entity
 
 export type TaskState = 'open' | 'completed' | 'ignored' | 'deleted'
 
-export type TaskSnapshot = {
+type TaskSnapshot = {
   title: string
   state: TaskState
   assignee?: EntityRef
   due_date?: string
 }
 
-export type TaskChangeField = 'title' | 'assignee' | 'due_date' | 'note'
+type TaskChangeField = 'title' | 'assignee' | 'due_date' | 'note'
 
 export type TaskChange = {
   field: TaskChangeField
@@ -152,7 +143,7 @@ export type CaseChangeContent = {
   note?: string
 }
 
-export type TicketChangeContent = CaseChangeContent & {
+type TicketChangeContent = CaseChangeContent & {
   field: string
 }
 
@@ -278,7 +269,7 @@ const SIGNATURE_TYPES = new Set<string>([
 export const is_activity_type = (value: string): value is ActivityType =>
   (ACTIVITY_TYPES as readonly string[]).includes(value)
 
-export const is_communication_channel = (value: string): value is CommunicationChannel =>
+const is_communication_channel = (value: string): value is CommunicationChannel =>
   (COMMUNICATION_CHANNELS as readonly string[]).includes(value)
 
 export const is_communication_type = (type: string): boolean => COMMUNICATION_TYPES.has(type)
@@ -405,7 +396,7 @@ export const parse_case_change_content = (raw: string): CaseChangeContent | null
   }
 }
 
-export const parse_ticket_change_content = (raw: string): TicketChangeContent | null => {
+const parse_ticket_change_content = (raw: string): TicketChangeContent | null => {
   const parsed = parse_case_change_content(raw)
   const field = as_string(parse_contenu_json(raw)['field'])
   if (!parsed || !field) return null

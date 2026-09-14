@@ -101,7 +101,7 @@ export type StatisticOptions = z.infer<typeof StatisticOptions>
  * @param options - The options specifying the statistics window (e.g., 'last_1h', 'last_24h', 'last_30d', 'last_365d').
  * @returns A promise that resolves to a JSON string containing the processed statistics.
  */
-export const get_data = async (options: StatisticOptions): Promise<string> => {
+const get_data = async (options: StatisticOptions): Promise<string> => {
   // Define min date to query
   const now = new Date()
   const limit_date = (
@@ -185,7 +185,7 @@ export const get_data = async (options: StatisticOptions): Promise<string> => {
  * @returns {Promise<string>} A promise that resolves to the generated CSV string.
  *
  */
-export const generate_csv = async (): Promise<string> => {
+const generate_csv = async (): Promise<string> => {
   const data = await getSQL()`
     SELECT
       *,

@@ -11,7 +11,7 @@ import { encrypt } from '../../../utils/authenticate-user'
 import { getUser, saveUser } from '../../../utils/handle-user'
 import { CUSTOMIZATION_DIR } from '../../../utils/paths'
 
-export type LoginMessage = 'wrong_password' | 'wrong_root_password' | 'unknown_user'
+type LoginMessage = 'wrong_password' | 'wrong_root_password' | 'unknown_user'
 
 function wantsJson(c: Context): boolean {
   if (c.req.query('client') === 'desktop') return true

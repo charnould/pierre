@@ -34,7 +34,7 @@ export const CODES_POSTAUX_CSV_PATH = join(
 )
 
 /** Identifier columns whose leading zeros or letters are significant. */
-export const KEEP_AS_TEXT_COLUMNS = new Set(['code_postal', 'code_insee', 'code_departement'])
+const KEEP_AS_TEXT_COLUMNS = new Set(['code_postal', 'code_insee', 'code_departement'])
 
 export const is_keep_as_text_column = (column_key: string): boolean =>
   KEEP_AS_TEXT_COLUMNS.has(normalize_knowledge_name(column_key))

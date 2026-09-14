@@ -25,7 +25,7 @@ export type KnowledgeSource = {
   updatedAt: string
 }
 
-export type KnowledgeDiagnostic = {
+type KnowledgeDiagnostic = {
   level: 'info' | 'warning' | 'error'
   code: string
   message: string
@@ -64,7 +64,7 @@ export type KnowledgeData = {
   needsRebuild: boolean
 }
 
-export type KnowledgeApiError = {
+type KnowledgeApiError = {
   error: {
     code: string
     message: string

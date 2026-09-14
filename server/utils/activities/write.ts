@@ -241,24 +241,6 @@ export const create_trusted_activity = (
   })
 }
 
-export const create_trusted_activity_with_db = (
-  db: Database,
-  actor: string,
-  input: TrustedCreateActivityInput
-): Activite => {
-  const parsed = TrustedCreateActivityInput.parse(input)
-  const { auteur, date_creation, ...activity } = parsed
-  return create_activity_internal(
-    actor,
-    activity,
-    {
-      ...(auteur ? { trusted_author: auteur } : {}),
-      ...(date_creation ? { date_creation } : {})
-    },
-    db
-  )
-}
-
 const can_edit = (activity: Activite, actor: string): boolean =>
   activity.auteur === user_destinataire(actor)
 

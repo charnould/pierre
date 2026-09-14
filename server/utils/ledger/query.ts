@@ -62,7 +62,7 @@ const get_table_columns = (db: Database, table: string): LedgerColumnMeta[] =>
  * Pierre may assign a gestionnaire when the SI column is unused:
  * table missing, column missing, or every row is NULL/empty.
  */
-export const is_gestionnaire_assignable = (db: Database): boolean => {
+const is_gestionnaire_assignable = (db: Database): boolean => {
   if (!table_exists(db, COMPTES_LOCATAIRES_TABLE)) return true
   const columns = get_table_columns(db, COMPTES_LOCATAIRES_TABLE)
   if (!columns.some((column) => column.name === 'gestionnaire')) return true

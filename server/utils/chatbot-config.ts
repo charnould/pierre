@@ -19,7 +19,7 @@ export class ChatbotConfigError extends Error {
   }
 }
 
-export function assertCanonicalChatbotId(value: string): string {
+function assertCanonicalChatbotId(value: string): string {
   const id = value.trim()
   if (!CONFIG_ID.test(id)) {
     throw new ChatbotConfigError('invalid_config', 'Invalid chatbot configuration', 400)

@@ -1,8 +1,8 @@
 import { z } from 'zod'
 
-export const ABOUT_SUBJECTS = ['locataire', 'client', 'lot', 'batiment'] as const
+const ABOUT_SUBJECTS = ['locataire', 'client', 'lot', 'batiment'] as const
 
-export const AnswerPayloadSchema = z
+const AnswerPayloadSchema = z
   .object({
     version: z.literal(1).default(1),
     workflow: z.literal('answer'),
@@ -22,7 +22,7 @@ export const AnswerPayloadSchema = z
     }
   })
 
-export const SynthesePayloadSchema = z.object({
+const SynthesePayloadSchema = z.object({
   version: z.literal(1).default(1),
   workflow: z.literal('synthese'),
   about_subject: z.enum(ABOUT_SUBJECTS),
@@ -32,14 +32,12 @@ export const SynthesePayloadSchema = z.object({
   context: z.string().nullable().optional()
 })
 
-export const WorkflowPayloadSchema = z.discriminatedUnion('workflow', [
+const WorkflowPayloadSchema = z.discriminatedUnion('workflow', [
   AnswerPayloadSchema,
   SynthesePayloadSchema
 ])
 
 export type WorkflowPayload = z.infer<typeof WorkflowPayloadSchema>
-export type AnswerPayload = z.infer<typeof AnswerPayloadSchema>
-export type SynthesePayload = z.infer<typeof SynthesePayloadSchema>
 
 export function parseWorkflowPayload(raw: string): WorkflowPayload | null {
   try {

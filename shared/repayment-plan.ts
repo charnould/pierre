@@ -1,4 +1,4 @@
-export const REPAYMENT_PLAN_EVENT_TYPES = [
+const REPAYMENT_PLAN_EVENT_TYPES = [
   'repayment_plan.created',
   'repayment_plan.updated',
   'repayment_plan.finalized',
@@ -17,7 +17,7 @@ export const REPAYMENT_PLAN_CLOSE_REASONS = [
 
 export type RepaymentPlanCloseReason = (typeof REPAYMENT_PLAN_CLOSE_REASONS)[number]
 
-export const REPAYMENT_PLAN_EMPLOYMENT_STATUSES = [
+const REPAYMENT_PLAN_EMPLOYMENT_STATUSES = [
   'permanent',
   'permanent_trial',
   'fixed_term',
@@ -27,7 +27,7 @@ export const REPAYMENT_PLAN_EMPLOYMENT_STATUSES = [
   'retired'
 ] as const
 
-export type RepaymentPlanEmploymentStatus = (typeof REPAYMENT_PLAN_EMPLOYMENT_STATUSES)[number]
+type RepaymentPlanEmploymentStatus = (typeof REPAYMENT_PLAN_EMPLOYMENT_STATUSES)[number]
 
 export type RepaymentPlanSnapshot = {
   kind: 'repayment_plan' | 'social_cohesion_protocol'
@@ -137,7 +137,7 @@ const parse_amount_lines = (
   return lines
 }
 
-export const parse_repayment_plan_snapshot = (value: unknown): RepaymentPlanSnapshot | null => {
+const parse_repayment_plan_snapshot = (value: unknown): RepaymentPlanSnapshot | null => {
   const plan = as_record(value)
   if (!plan) return null
   if (plan['kind'] !== 'repayment_plan' && plan['kind'] !== 'social_cohesion_protocol') return null
