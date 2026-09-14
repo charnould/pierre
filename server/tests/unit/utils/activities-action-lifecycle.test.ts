@@ -5,69 +5,66 @@ import { parse_contenu_json } from '../../../../shared/activites'
 import { list_activities } from '../../../utils/activities/query'
 import { get_activity } from '../../../utils/activities/rows'
 import { create_activity, delete_activity, patch_activity } from '../../../utils/activities/write'
+import { datastorePaths } from '../../../utils/paths'
 import {
   ALICE,
   BOB,
   CLAIRE,
-  DATASTORE_PATH,
+  mention,
   seed_users,
   use_activities_test_env,
   user
 } from './activities-test-env'
 
-use_activities_test_env()
+const SERVICE = '_test_action_lifecycle'
+use_activities_test_env(SERVICE)
+
+const task_content = (assignee = BOB) =>
+  JSON.stringify({
+    version: 2,
+    task: {
+      title: 'Contacter le garant',
+      state: 'open',
+      assignee: { id: assignee, label: assignee },
+      due_date: '2026-08-30'
+    },
+    note: 'Premier contact.'
+  })
 
 describe('action lifecycle', () => {
-  it('planifie, réalise, replanifie puis ignore une action selon les permissions', () => {
+  it('planifie, réalise, replanifie puis ignore une tâche append-only', () => {
     seed_users(ALICE, BOB, CLAIRE)
     const created = create_activity(ALICE, {
       contexte: 'repayment',
       ref: 'LOC-ACTION',
-      type: 'action',
-      contenu: JSON.stringify({
-        version: 1,
-        action: 'Contacter le garant',
-        etat: 'a_faire',
-        assigne_a: BOB,
-        date_echeance: '2026-08-30',
-        note: 'Premier contact.'
-      })
+      type: 'task.created',
+      contenu: task_content()
     })
     const createdContent = created.contenu
 
-    expect(created).toMatchObject({
-      event: 'created',
-      state: 'a_faire',
-      revision: 1
-    })
+    expect(created).toMatchObject({ type: 'task.created', revision: 1 })
     expect(
       list_activities(ALICE, {
         rattachement: 'repayment:LOC-ACTION',
-        type: 'action',
         current_threads: true,
-        state: 'a_faire'
+        state: 'open'
       }).map((row) => row.id)
     ).toEqual([created.id])
-    expect(created.mentions).toContainEqual({
-      destinataire: user(BOB),
-      lu: false,
-      boost: null,
-      motif: 'assignation'
-    })
+    expect(created.mentions).toContainEqual(mention(BOB, 'assignation'))
 
     const completed = patch_activity(CLAIRE, created.id, {
       operation: 'complete_action',
       resultat: 'Garant joint.'
     })
     expect(parse_contenu_json(completed.contenu)).toMatchObject({
-      etat: 'fait',
-      resultat: 'Garant joint.'
+      version: 2,
+      task: { state: 'completed' },
+      result: 'Garant joint.'
     })
     expect(completed).toMatchObject({
       auteur: user(CLAIRE),
+      type: 'task.completed',
       thread_id: created.thread_id,
-      event: 'completed',
-      state: 'fait',
       revision: 2
     })
     expect(get_activity(created.id)?.contenu).toBe(createdContent)
@@ -86,9 +83,12 @@ describe('action lifecycle', () => {
       date_echeance: '2026-09-02'
     })
     expect(parse_contenu_json(reopened.contenu)).toMatchObject({
-      etat: 'a_faire',
-      assigne_a: user(BOB),
-      date_echeance: '2026-09-02'
+      version: 2,
+      task: {
+        state: 'open',
+        assignee: { id: user(BOB) },
+        due_date: '2026-09-02'
+      }
     })
 
     const ignored = patch_activity(ALICE, reopened.id, {
@@ -96,61 +96,60 @@ describe('action lifecycle', () => {
       motif: 'Sans objet.'
     })
     expect(parse_contenu_json(ignored.contenu)).toMatchObject({
-      etat: 'ignore',
-      motif: 'Sans objet.'
+      version: 2,
+      task: { state: 'ignored' },
+      reason: 'Sans objet.'
     })
     expect(ignored).toMatchObject({
       auteur: user(ALICE),
-      event: 'ignored',
-      state: 'ignore',
+      type: 'task.ignored',
       revision: 4
     })
     expect(
       list_activities(ALICE, {
         rattachement: 'repayment:LOC-ACTION',
-        type: 'action',
         current_threads: true
       }).map((row) => row.id)
     ).toEqual([ignored.id])
-    delete_activity(ALICE, completed.id)
-    expect(get_activity(created.id)).toBeNull()
-    expect(get_activity(completed.id)).toBeNull()
-    expect(get_activity(reopened.id)).toBeNull()
-    expect(get_activity(ignored.id)).toBeNull()
+
+    delete_activity(ALICE, ignored.id)
+    const rows = list_activities(ALICE, {
+      rattachement: 'repayment:LOC-ACTION',
+      current_threads: true
+    })
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({ type: 'task.deleted', revision: 5 })
+    expect(parse_contenu_json(rows[0]!.contenu)).toMatchObject({
+      version: 2,
+      task: { state: 'deleted' }
+    })
   })
 
-  it('retire le contenu d’une note sans supprimer son activité', () => {
+  it('retire une note en ajoutant note.withdrawn', () => {
     const message = create_activity(ALICE, {
       contexte: 'repayment',
       ref: 'LOC-MESSAGE',
-      type: 'note',
-      statut: 'logged',
-      contenu: JSON.stringify({ version: 1, note: 'Message sensible' })
+      type: 'note.published',
+      contenu: JSON.stringify({ version: 2, text: 'Message sensible' })
     })
 
     const withdrawn = patch_activity(ALICE, message.id, { operation: 'withdraw_note' })
-    expect(parse_contenu_json(withdrawn.contenu)).toMatchObject({
-      version: 1,
-      note: '',
-      etat: 'retire',
-      retire_par: user(ALICE)
+    expect(withdrawn).toMatchObject({
+      type: 'note.withdrawn',
+      thread_id: message.thread_id,
+      revision: 2
     })
+    expect(parse_contenu_json(withdrawn.contenu)).toEqual({ version: 2 })
     expect(get_activity(message.id)).not.toBeNull()
   })
 
-  it('autorise tout collaborateur à ignorer une todo ouverte', () => {
+  it('autorise tout collaborateur à ignorer une tâche ouverte', () => {
     seed_users(ALICE, BOB, CLAIRE)
     const created = create_activity(ALICE, {
       contexte: 'repayment',
       ref: 'LOC-IGNORE',
-      type: 'action',
-      contenu: JSON.stringify({
-        version: 1,
-        action: 'Relancer',
-        etat: 'a_faire',
-        assigne_a: BOB,
-        date_echeance: '2026-08-30'
-      })
+      type: 'task.created',
+      contenu: task_content()
     })
 
     const ignored = patch_activity(CLAIRE, created.id, {
@@ -160,11 +159,10 @@ describe('action lifecycle', () => {
 
     expect(ignored).toMatchObject({
       auteur: user(CLAIRE),
-      event: 'ignored',
-      state: 'ignore',
+      type: 'task.ignored',
       revision: 2
     })
-    expect(parse_contenu_json(ignored.contenu)['motif']).toBe('Plus nécessaire.')
+    expect(parse_contenu_json(ignored.contenu)['reason']).toBe('Plus nécessaire.')
   })
 
   it('produit une enveloppe JSON autosuffisante pour un LLM', () => {
@@ -172,20 +170,14 @@ describe('action lifecycle', () => {
     const created = create_activity(ALICE, {
       contexte: 'repayment',
       ref: 'LOC-LLM',
-      type: 'action',
-      contenu: JSON.stringify({
-        version: 1,
-        action: 'Appeler le locataire',
-        etat: 'a_faire',
-        assigne_a: BOB,
-        date_echeance: '2026-08-30'
-      })
+      type: 'task.created',
+      contenu: task_content()
     })
     const completed = patch_activity(BOB, created.id, {
       operation: 'complete_action',
       resultat: 'Promesse confirmée.'
     })
-    const db = new Database(DATASTORE_PATH)
+    const db = new Database(datastorePaths(SERVICE).database)
     const rows = db
       .query<{ activity: string }, [string]>(
         `SELECT json_object(
@@ -193,8 +185,6 @@ describe('action lifecycle', () => {
            'occurred_at', date_creation,
            'actor', auteur,
            'type', type,
-           'event', event,
-           'state', state,
            'thread_id', thread_id,
            'revision', revision,
            'content', json(contenu)
@@ -210,23 +200,19 @@ describe('action lifecycle', () => {
     expect(rows).toHaveLength(2)
     expect(rows[0]).toMatchObject({
       actor: user(ALICE),
-      event: 'created',
-      state: 'a_faire',
+      type: 'task.created',
       thread_id: created.thread_id,
       revision: 1
     })
     expect(rows[1]).toMatchObject({
       actor: user(BOB),
-      event: 'completed',
-      state: 'fait',
+      type: 'task.completed',
       thread_id: created.thread_id,
       revision: 2,
       content: {
-        version: 1,
-        action: 'Appeler le locataire',
-        etat: 'fait',
-        cree_par: user(ALICE),
-        resultat: 'Promesse confirmée.'
+        version: 2,
+        task: { title: 'Contacter le garant', state: 'completed' },
+        result: 'Promesse confirmée.'
       }
     })
     expect(completed.id).not.toBe(created.id)

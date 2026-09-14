@@ -98,6 +98,7 @@ afterAll(async () => {
 beforeEach(async () => {
   now = new Date(Date.now() - 60_000)
   set_bulk_clock_for_tests({ now: () => now })
+  await rm(ROOT, { recursive: true, force: true })
   await mkdir(ROOT, { recursive: true })
   await setup()
 })
@@ -175,7 +176,7 @@ describe('bulk reports', () => {
     expect(detail?.report.counts.ok).toBe(2501)
   })
 
-  it('garde exactement X runs terminés et permet de rejouer une clé purgée', async () => {
+  it('conserve les runs append-only et rejoue durablement une clé idempotente', async () => {
     seed(true)
     const bulk = operation(2)
     const first = await execute_bulk_operation('alice@example.org', bulk, {
@@ -191,9 +192,9 @@ describe('bulk reports', () => {
       clientCommandId: 'third'
     })
     expect(list_bulk_reports(bulk.id).map((detail) => detail.report.executionId)).toEqual(
-      [second.execution_id, third.execution_id].sort().reverse()
+      [first.execution_id, second.execution_id, third.execution_id].sort().reverse()
     )
-    expect(get_bulk_report(bulk.id, first.execution_id)).toBeNull()
+    expect(get_bulk_report(bulk.id, first.execution_id)).not.toBeNull()
     const db = new Database(DB_PATH, { readonly: true })
     expect(
       db
@@ -208,11 +209,11 @@ describe('bulk reports', () => {
       mode: 'apply_without_send',
       clientCommandId: 'first'
     })
-    expect(replay.execution_id).not.toBe(first.execution_id)
-    expect(list_bulk_reports(bulk.id)).toHaveLength(2)
+    expect(replay.execution_id).toBe(first.execution_id)
+    expect(list_bulk_reports(bulk.id)).toHaveLength(3)
   })
 
-  it('purge immédiatement après réduction sans toucher un run en cours', async () => {
+  it('ne supprime pas le journal après réduction de rétention', async () => {
     seed(true)
     const bulk = operation(3)
     const inProgress = await execute_bulk_operation('alice@example.org', bulk, {
@@ -235,7 +236,7 @@ describe('bulk reports', () => {
     })
     update_bulk_operation(bulk.id, 'alice', { reportsToKeep: 1 })
     const reports = list_bulk_reports(bulk.id)
-    expect(reports.filter((detail) => detail.report.status !== 'in_progress')).toHaveLength(1)
+    expect(reports.filter((detail) => detail.report.status !== 'in_progress')).toHaveLength(2)
     expect(
       reports.find((detail) => detail.report.executionId === inProgress.execution_id)?.report.status
     ).toBe('in_progress')
@@ -267,7 +268,11 @@ describe('bulk reports', () => {
       ref: 'LOC-NONE',
       type: 'email',
       destinataire: 'none@example.org',
-      contenu: '{"version":1,"corps":"queued"}',
+      contenu: JSON.stringify({
+        version: 2,
+        sender: 'user:alice@example.org',
+        body: 'queued'
+      }),
       bulk_id: bulk.id,
       execution_id: result.execution_id,
       idempotency_key: `bulk:${result.execution_id}:manual-queued`
@@ -280,23 +285,27 @@ describe('bulk reports', () => {
     expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM bulk_jobs').get()?.n).toBe(0)
     expect(
       db
-        .query<{ n: number }, []>(`SELECT COUNT(*) AS n FROM activites WHERE type = 'bulk_run'`)
+        .query<{ n: number }, []>(`SELECT COUNT(*) AS n FROM activites WHERE type = 'bulk.ran'`)
         .get()?.n
-    ).toBe(0)
-    const sent = db
-      .query<{ statut: string; contenu: string }, [number]>(
-        'SELECT statut, contenu FROM activites WHERE id = ?'
+    ).toBe(1)
+    const queuedRows = db
+      .query<{ type: string; contenu: string }, [string]>(
+        'SELECT type, contenu FROM activites WHERE thread_id = ? ORDER BY revision'
       )
-      .get(queued.id)
-    const cancelled = db
-      .query<{ statut: string; contenu: string }, [number]>(
-        'SELECT statut, contenu FROM activites WHERE id = ?'
+      .all(queued.thread_id!)
+    const cancelledRows = db
+      .query<{ type: string; contenu: string }, [string]>(
+        'SELECT type, contenu FROM activites WHERE thread_id = ? ORDER BY revision'
       )
-      .get(second.id)
+      .all(second.thread_id!)
     db.close()
-    expect(sent?.statut).toBe('sent')
-    expect(sent?.contenu).toContain('bulk_operation_deleted')
-    expect(cancelled?.statut).toBe('failed')
-    expect(cancelled?.contenu).toContain('bulk_operation_deleted')
+    expect(queuedRows.map((row) => row.type)).toEqual([
+      'communication.sent',
+      'communication.failed'
+    ])
+    expect(cancelledRows.map((row) => row.type)).toEqual([
+      'communication.sent',
+      'communication.failed'
+    ])
   })
 })

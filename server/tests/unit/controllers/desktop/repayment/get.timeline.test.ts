@@ -91,20 +91,22 @@ describe('GET /desktop/repayment/timeline', () => {
     create_trusted_activity(user.email, {
       contexte: 'repayment',
       ref: 'LOC-1',
-      type: 'case_bucket_change',
-      statut: 'logged',
-      contenu: JSON.stringify({ version: 1, bucket_precedent: null, bucket: 'amiable' }),
+      type: 'case.group_changed',
+      contenu: JSON.stringify({ version: 2, before: null, after: 'amiable' }),
       auteur: 'system:repayment'
     })
     create_activity(user.email, {
       contexte: 'repayment',
       ref: 'LOC-1',
-      type: 'action',
+      type: 'task.created',
       contenu: JSON.stringify({
-        action: 'Appeler le locataire',
-        etat: 'a_faire',
-        assigne_a: 'alice',
-        date_echeance: '2030-02-05'
+        version: 2,
+        task: {
+          title: 'Appeler le locataire',
+          state: 'open',
+          assignee: { id: user.email, label: user.email },
+          due_date: '2030-02-05'
+        }
       })
     })
 
@@ -117,9 +119,8 @@ describe('GET /desktop/repayment/timeline', () => {
         openActionEvents: [
           {
             rattachement: 'repayment:LOC-1',
-            type: 'action',
-            state: 'a_faire',
-            event: 'created'
+            type: 'task.created',
+            contenu: expect.stringContaining('"state":"open"')
           }
         ]
       },
@@ -131,9 +132,8 @@ describe('GET /desktop/repayment/timeline', () => {
     create_trusted_activity(user.email, {
       contexte: 'repayment',
       ref: 'LOC-2',
-      type: 'case_tag_change',
-      statut: 'logged',
-      contenu: JSON.stringify({ version: 1, tags_precedents: [], tags: ['fragile'] }),
+      type: 'case.tags_changed',
+      contenu: JSON.stringify({ version: 2, before: [], after: ['fragile'] }),
       auteur: 'system:repayment'
     })
 
@@ -157,15 +157,14 @@ describe('GET /desktop/repayment/timeline', () => {
     create_trusted_activity(user.email, {
       contexte: 'repayment',
       ref: 'LOC-1',
-      type: 'case_tag_change',
-      statut: 'logged',
-      contenu: JSON.stringify({ version: 1, tags_precedents: [], tags: ['fragile'] }),
+      type: 'case.tags_changed',
+      contenu: JSON.stringify({ version: 2, before: [], after: ['fragile'] }),
       auteur: 'system:repayment'
     })
 
     const response = await request('?id_locataire=LOC-1')
     expect(await response.json()).toMatchObject({
-      data: { movements: [], notifications: [{ type: 'case_tag_change' }] },
+      data: { movements: [], notifications: [{ type: 'case.tags_changed' }] },
       errors: { movements: false, notifications: false, openActions: false }
     })
   })
@@ -185,22 +184,22 @@ describe('GET /desktop/repayment/timeline', () => {
     )
     const insertTag = db.prepare(
       `INSERT INTO activites (
-         date_creation, rattachement, auteur, id_locataire, type, statut, mentions, contenu
+         date_creation, rattachement, auteur, id_locataire, type, mentions, contenu
        ) VALUES (?, 'repayment:LOC-1', 'system:test', 'LOC-1',
-                 'case_tag_change', 'logged', '[]', ?)`
+                 'case.tags_changed', '[]', ?)`
     )
     const insertAction = db.prepare(
       `INSERT INTO activites (
-           date_creation, rattachement, auteur, id_locataire, type, statut, mentions, contenu,
-           thread_id, event, state, revision
+           date_creation, rattachement, auteur, id_locataire, type, mentions, contenu,
+           thread_id, revision
          ) VALUES (?, 'repayment:LOC-1', 'user:alice@example.org', 'LOC-1',
-                   'action', 'logged', '[]', ?, ?, 'created', 'a_faire', 1)`
+                   'task.created', '[]', ?, ?, 1)`
     )
     db.transaction(() => {
       for (let index = 0; index < 2_001; index += 1) {
         insertTag.run(
           new Date(Date.UTC(2035, 0, 1, 0, 0, index)).toISOString(),
-          JSON.stringify({ version: 1, tags_precedents: [], tags: [`tag-${index}`] })
+          JSON.stringify({ version: 2, before: [], after: [`tag-${index}`] })
         )
       }
       for (let index = 0; index < 501; index += 1) {
@@ -208,13 +207,16 @@ describe('GET /desktop/repayment/timeline', () => {
         insertAction.run(
           date,
           JSON.stringify({
-            version: 1,
-            action: `Action ${index}`,
-            etat: 'a_faire',
-            cree_par: 'user:alice@example.org',
-            cree_le: date,
-            assigne_a: 'user:alice@example.org',
-            date_echeance: '2041-01-01'
+            version: 2,
+            task: {
+              title: `Action ${index}`,
+              state: 'open',
+              assignee: {
+                id: 'user:alice@example.org',
+                label: 'alice@example.org'
+              },
+              due_date: '2041-01-01'
+            }
           }),
           `thread-${index}`
         )

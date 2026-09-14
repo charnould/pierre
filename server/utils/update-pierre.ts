@@ -14,7 +14,7 @@ try {
   if (!response.ok) throw new Error(`Failed to fetch ${url}`)
   const releases: { tag_name: string }[] = await response.json()
 
-  if (releases.length > 0) latest_version = releases[0].tag_name.replace(/^v/, '')
+  if (releases.length > 0) latest_version = releases[0]?.tag_name.replace(/^v/, '')
   else latest_version = undefined
 } catch (error) {
   console.error('Error fetching the latest version:', error)

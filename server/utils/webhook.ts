@@ -41,7 +41,8 @@ export const send_webhook = async ({
       throw new Error(`HTTP ${response.status}: ${await response.text()}`)
     } catch (error) {
       attempt++
-      console.error(`Attempt ${attempt} failed for ${webhook}: ${error.message}`)
+      const message = error instanceof Error ? error.message : String(error)
+      console.error(`Attempt ${attempt} failed for ${webhook}: ${message}`)
 
       if (attempt > max_retries) {
         console.error('Max retries reached. Webhook failed.')

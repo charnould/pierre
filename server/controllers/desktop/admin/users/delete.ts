@@ -4,7 +4,7 @@ import type { User } from '../../../../utils/_schema'
 import { deleteUserAsAdministrator } from '../../../../utils/handle-user'
 
 export const controller = async (c: Context) => {
-  const email = c.req.param('email').trim().toLowerCase()
+  const email = (c.req.param('email') ?? '').trim().toLowerCase()
   const actor = c.get('user') as User
   const deleted = await deleteUserAsAdministrator(actor.email, email)
   if (!deleted.ok) {

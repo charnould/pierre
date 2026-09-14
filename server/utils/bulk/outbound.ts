@@ -9,6 +9,7 @@ import type {
   SkippedDeliveryStep
 } from '../../../shared/bulk-operations'
 import { create_outbound_with_db } from '../communications/storage'
+import { insert_bulk_visible_activity } from './activities'
 import { apply_sent_bucket_effect_with_db } from './jobs'
 import { render_content, step_placeholders, validate_bindings } from './placeholders'
 import { finalize_bulk_item_with_db } from './reports'
@@ -53,13 +54,12 @@ export const fallback_outbound_contenu = (
   skipped: SkippedDeliveryStep[]
 ): string =>
   JSON.stringify({
-    version: 1,
+    version: 2,
     action: step.action,
-    objet: rendered.subject ?? '',
-    corps: 'fileBase64' in step ? '' : rendered.body,
-    ...('fileBase64' in step ? { resume: step.summary } : {}),
-    canal: step.medium,
-    delivery: { skippedSteps: skipped, history: [] }
+    body: 'fileBase64' in step ? step.summary : rendered.body,
+    ...(rendered.subject ? { subject: rendered.subject } : {}),
+    purpose: 'bulk',
+    skipped_steps: skipped
   })
 
 export const rich_rcs_outbound_contenu = (
@@ -69,14 +69,11 @@ export const rich_rcs_outbound_contenu = (
   nodeIndex: number
 ): string =>
   JSON.stringify({
-    version: 1,
+    version: 2,
     action: delivery.action,
-    objet: '',
-    corps: rendered.body,
-    canal: 'rcs',
-    richContent: rendered.richContent,
-    nodeId: node.id,
-    nodeIndex
+    body: rendered.body,
+    purpose: 'bulk',
+    related_id: `${node.id}:${nodeIndex}`
   })
 
 export const record_applied_outbound_with_db = (
@@ -141,6 +138,20 @@ export const record_applied_outbound_with_db = (
      WHERE id = ? AND report_status = 'in_progress'`,
     [activity.id, input.jobId]
   )
+  insert_bulk_visible_activity(db, {
+    actor: input.actor,
+    bulkId: input.operation.id,
+    executionId: input.executionId,
+    row: input.row,
+    type: 'bulk.applied',
+    content: {
+      title: 'Communication appliquée sans envoi',
+      action: type,
+      communication_activity_id: activity.id
+    },
+    notifyManager: input.operation.definition.notifyManager,
+    idempotencyKey: `bulk:${input.executionId}:recipient:${input.row.id_locataire}:applied`
+  })
   apply_sent_bucket_effect_with_db(db, activity)
   const item = db
     .query<{ payload: string }, [string]>('SELECT payload FROM bulk_jobs WHERE id = ?')
@@ -153,6 +164,5 @@ export const record_applied_outbound_with_db = (
     payload: JSON.parse(item.payload) as Record<string, unknown>,
     completedAt: activity.date_creation
   })
-  void type
   return activity
 }

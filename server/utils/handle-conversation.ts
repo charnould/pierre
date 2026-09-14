@@ -6,6 +6,8 @@ import type { AIContext, Reply } from './_schema'
 import { datastorePaths } from './paths'
 import { send_webhook } from './webhook'
 
+export type StoredReply = Omit<Reply, 'config'> & { config: string }
+
 const sql_by_path = new Map<string, SQL>()
 const getSQL = () => {
   const path = datastorePaths().database
@@ -29,7 +31,7 @@ const getSQL = () => {
  * This function is tested.
  *
  */
-export const get_conversation = async (conv_id: string): Promise<Reply[]> => {
+export const get_conversation = async (conv_id: string): Promise<StoredReply[]> => {
   const records = await getSQL()`
     SELECT
       *
@@ -207,7 +209,7 @@ export const save_topic = async ({ conv_id, topic }: { conv_id: string; topic: s
  *
  * This function is tested.
  */
-export const get_conversations = async (): Promise<Reply[]> => {
+export const get_conversations = async (): Promise<StoredReply[]> => {
   const records = await getSQL()`
     SELECT
       *

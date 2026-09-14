@@ -3,10 +3,15 @@
  * Includes synchronous text generation and streaming text generation with context saving.
  ****/
 
-import { generateText, ModelMessage, streamText, StreamTextResult, Tool } from 'ai'
+import { generateText, streamText, type LanguageModel, type ModelMessage } from 'ai'
 
-import type { AIContext, Model } from './_schema'
+import type { AIContext } from './_schema'
 import { save_reply } from './handle-conversation'
+
+export type Model = {
+  model: LanguageModel
+  providerOptions?: Parameters<typeof generateText>[0]['providerOptions']
+}
 
 /**
  * Generates text by sending a chat completion request to the specified provider and model.
@@ -56,13 +61,7 @@ export const generate_text = async ({
  * Calls the streaming text generation API and updates the context metadata and content upon completion.
  * The onFinish callback saves the generated reply using the provided save_reply function.
  */
-export const stream_text = async ({
-  model,
-  context
-}: {
-  model: Model
-  context: AIContext
-}): Promise<StreamTextResult<Record<string, Tool>, unknown>> => {
+export const stream_text = async ({ model, context }: { model: Model; context: AIContext }) => {
   try {
     return streamText({
       model: model.model,

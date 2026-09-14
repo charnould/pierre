@@ -1,6 +1,7 @@
 import { Database } from 'bun:sqlite'
 
 import type { Activite } from '../../../shared/activites'
+import { get_activity_with_db } from '../activities/rows'
 import {
   type UpdateStatusInput,
   update_status_with_db as update_communication_status_with_db
@@ -31,18 +32,27 @@ export const update_status_with_db = (
   db: Database,
   input: UpdateStatusInput
 ): { activity: Activite; fallbackScheduled: boolean } => {
+  const source = get_activity_with_db(db, input.activity_id)
   const result = update_communication_status_with_db(db, input)
   if (!result.transition) return { activity: result.activity, fallbackScheduled: false }
 
   transitionHook?.()
   const { activity, status, occurredAt } = result.transition
-  if (status === 'sent') apply_sent_bucket_effect_with_db(db, activity)
+  const trackedActivity = source ?? activity
+  if (status === 'sent') apply_sent_bucket_effect_with_db(db, trackedActivity)
   const deliveryStatus = status as DeliveryStatus
-  const richConsumed = handle_rich_rcs_status_with_db(db, activity, deliveryStatus, occurredAt)
-  if (!richConsumed) settle_bulk_item_for_status_with_db(db, activity, deliveryStatus, occurredAt)
+  const richConsumed = handle_rich_rcs_status_with_db(
+    db,
+    trackedActivity,
+    deliveryStatus,
+    occurredAt
+  )
+  if (!richConsumed) {
+    settle_bulk_item_for_status_with_db(db, trackedActivity, deliveryStatus, occurredAt)
+  }
   const fallbackScheduled =
     !richConsumed && fallback_status(input.type, status)
-      ? schedule_bulk_fallback_with_db(db, activity, occurredAt)
+      ? schedule_bulk_fallback_with_db(db, trackedActivity, occurredAt)
       : false
   return { activity, fallbackScheduled }
 }

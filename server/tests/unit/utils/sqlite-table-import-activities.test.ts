@@ -12,13 +12,19 @@ describe('reclamations import activity history', () => {
         date_creation TEXT NOT NULL,
         rattachement TEXT NOT NULL,
         auteur TEXT NOT NULL,
+        destinataire TEXT,
         id_client TEXT,
         id_locataire TEXT,
         id_lot TEXT,
         type TEXT NOT NULL,
-        statut TEXT,
+        channel TEXT,
         mentions TEXT NOT NULL DEFAULT '[]',
-        contenu TEXT NOT NULL DEFAULT '',
+        contenu TEXT NOT NULL,
+        thread_id TEXT,
+        revision INTEGER,
+        bulk_id TEXT,
+        execution_id TEXT,
+        idempotency_key TEXT,
         CHECK (json_valid(mentions) AND json_type(mentions) = 'array')
       )
     `)
@@ -51,7 +57,7 @@ describe('reclamations import activity history', () => {
     expect(activities).toHaveLength(2)
     expect(activities.every((row) => row.rattachement === 'tickets:REQ-1')).toBe(true)
     expect(activities.every((row) => row.auteur === 'system:import.hlm')).toBe(true)
-    expect(activities.map((row) => JSON.parse(row.contenu).champ).sort()).toEqual([
+    expect(activities.map((row) => JSON.parse(row.contenu).field).sort()).toEqual([
       'affectation_1',
       'dernier_evenement_le'
     ])
@@ -66,13 +72,19 @@ describe('reclamations import activity history', () => {
         date_creation TEXT NOT NULL,
         rattachement TEXT NOT NULL,
         auteur TEXT NOT NULL,
+        destinataire TEXT,
         id_client TEXT,
         id_locataire TEXT,
         id_lot TEXT,
         type TEXT NOT NULL,
-        statut TEXT,
+        channel TEXT,
         mentions TEXT NOT NULL DEFAULT '[]',
-        contenu TEXT NOT NULL DEFAULT ''
+        contenu TEXT NOT NULL,
+        thread_id TEXT,
+        revision INTEGER,
+        bulk_id TEXT,
+        execution_id TEXT,
+        idempotency_key TEXT
       )
     `)
     const rows = [

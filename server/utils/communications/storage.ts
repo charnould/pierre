@@ -191,29 +191,35 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
       requestedContent = input.contenu
     }
   }
+  const channel = require_channel(input.type)
+  const openedType = input.imported ? 'communication.imported' : 'communication.sent'
+  const author = user_destinataire(input.actor)
+  const contenu = opened_contenu(requestedContent, author)
   const existing = db
     .query<
       {
         id: number
         rattachement: string
+        auteur: string
         type: string
+        channel: string | null
         destinataire: string | null
         contenu: string
       },
       [string]
     >(
-      `SELECT id, rattachement, type, destinataire, contenu
+      `SELECT id, rattachement, auteur, type, channel, destinataire, contenu
          FROM activites WHERE idempotency_key = ? LIMIT 1`
     )
     .get(input.idempotency_key)
-  const channel = require_channel(input.type)
-  const openedType = input.imported ? 'communication.imported' : 'communication.sent'
-  const author = user_destinataire(input.actor)
   if (existing) {
     if (
       existing.rattachement !== rattachement ||
+      existing.auteur !== author ||
       existing.type !== openedType ||
-      existing.destinataire !== destinationValue
+      existing.channel !== channel ||
+      existing.destinataire !== destinationValue ||
+      existing.contenu !== contenu
     ) {
       throw new CommunicationsError(
         'Idempotency-Key déjà utilisée pour une autre communication',
@@ -224,7 +230,6 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
   }
 
   const now = activity_timestamp()
-  const contenu = opened_contenu(requestedContent, author)
   if (
     input.type === 'rcs' &&
     input.contexte === 'repayment' &&

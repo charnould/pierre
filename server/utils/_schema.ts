@@ -157,7 +157,8 @@ export const AIContext = z
       ) {
         c.custom_data.transformed = ''
       } else {
-        c.custom_data.transformed = c.config.custom_data.format(c.custom_data.raw) as string
+        const format = c.config.custom_data.format as (data: string[]) => string
+        c.custom_data.transformed = format(c.custom_data.raw)
       }
     }
 
@@ -169,7 +170,6 @@ export const AIContext = z
 export type User = z.infer<typeof User>
 export type Skill = z.infer<typeof Skill>
 export type Reply = z.infer<typeof Reply>
-export type Model = z.infer<typeof Model>
 export type ChatbotConfig = z.infer<typeof ChatbotConfig>
 export type SkillConfig = z.infer<typeof SkillConfig>
 export type Config = ChatbotConfig

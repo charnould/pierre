@@ -55,7 +55,16 @@ const controller = createPostAiController({
 
 const app = new Hono()
 app.use('*', async (c, next) => {
-  c.set('user' as never, { email: 'alice@example.org', config: ['testing_purpose_1'] } as never)
+  c.set(
+    'user' as never,
+    {
+      email: 'alice@example.org',
+      isAdministrator: false,
+      moduleIds: [],
+      chatbotIds: ['testing_purpose_1'],
+      passwordHash: 'unused'
+    } as never
+  )
   await next()
 })
 app.post('/ai', controller)
@@ -105,7 +114,16 @@ describe('POST /ai multipart and stream boundary', () => {
     let processed = false
     const disabledApp = new Hono()
     disabledApp.use('*', async (c, next) => {
-      c.set('user' as never, { email: 'alice@example.org', config: ['locked'] } as never)
+      c.set(
+        'user' as never,
+        {
+          email: 'alice@example.org',
+          isAdministrator: false,
+          moduleIds: [],
+          chatbotIds: ['locked'],
+          passwordHash: 'unused'
+        } as never
+      )
       await next()
     })
     disabledApp.post(

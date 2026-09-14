@@ -8,7 +8,6 @@ import {
   type AutomationLifecycleStatus,
   type AutomationRecord,
   type AutomationRunStatus,
-  type AutomationType,
   type CreateAutomationBody,
   type PatchAutomationBody,
   type ReportAutomationConfig,
@@ -91,9 +90,8 @@ const canonical_mentions = (db: Database, values: readonly string[]): string[] =
 
 function row_to_record(row: AutomationDbRow, pinned = false): AutomationRecord {
   const config = AutomationConfigSchema.parse(JSON.parse(row.config))
-  return {
+  const record = {
     id: row.id,
-    type: row.type as AutomationType,
     name: row.name,
     description: row.description,
     status: row.status as AutomationLifecycleStatus,
@@ -103,9 +101,15 @@ function row_to_record(row: AutomationDbRow, pinned = false): AutomationRecord {
     next_run_at: row.next_run_at,
     last_run_at: row.last_run_at,
     last_run_status: (row.last_run_status as AutomationRunStatus | null) ?? null,
-    config,
     pinned
   }
+  if (row.type === 'report') {
+    return { ...record, type: 'report', config: config as ReportAutomationConfig }
+  }
+  if (row.type === 'ticket_reply') {
+    return { ...record, type: 'ticket_reply', config: config as TicketReplyAutomationConfig }
+  }
+  throw new AutomationsError(`Unknown automation type: ${row.type}`)
 }
 
 async function config_from_create(body: CreateAutomationBody): Promise<AutomationConfig> {

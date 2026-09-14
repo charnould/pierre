@@ -91,7 +91,7 @@ describe('upsert_reclamation', () => {
     })
 
     const db = new Database(DATASTORE_SQLITE)
-    const rows = db.query('SELECT * FROM reclamations').all()
+    const rows = db.query<{ message: string | null }, []>('SELECT * FROM reclamations').all()
     db.close()
 
     expect(rows).toHaveLength(1)

@@ -5,7 +5,7 @@ import { saveUserAsAdministrator } from '../../../../utils/handle-user'
 import { invalidBody, PatchUserBody, toAdminUser, validateChatbotIds } from './shared'
 
 export const controller = async (c: Context) => {
-  const email = c.req.param('email').trim().toLowerCase()
+  const email = (c.req.param('email') ?? '').trim().toLowerCase()
   const body = await c.req.json().catch(() => null)
   const parsed = PatchUserBody.safeParse(body)
   if (!parsed.success) return c.json(invalidBody(parsed.error), 400)

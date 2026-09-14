@@ -1,7 +1,8 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
 import { mkdir, rm } from 'node:fs/promises'
 
-import { create_activity } from '../../../utils/activities/write'
+import { ActivitiesError } from '../../../utils/activities/schema'
+import { create_activity, delete_activity, patch_activity } from '../../../utils/activities/write'
 import { datastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 import {
@@ -342,27 +343,49 @@ describe('ticket_drafts', () => {
     expect(map.get('REQ-T')?.edited_by).toBe('e@x.com')
   })
 
-  it('decodes the generic draft payloads written by the desktop', () => {
+  it('decodes generic v2 artifact payloads', () => {
     create_activity('alice@example.com', {
       contexte: 'tickets',
       ref: 'REQ-DESKTOP',
-      type: 'ticket_reply',
-      statut: 'draft',
-      contenu: JSON.stringify({ canal: 'courrier', corps: 'Lettre' })
+      type: 'artifact.generated',
+      contenu: JSON.stringify({
+        version: 2,
+        title: 'Réponse',
+        values: {
+          skill: 'ticket.answer-ticket',
+          channel: 'letter',
+          generated_by: 'alice@example.com'
+        },
+        note: 'Lettre'
+      })
     })
     create_activity('alice@example.com', {
       contexte: 'tickets',
       ref: 'REQ-DESKTOP',
-      type: 'ticket_memo',
-      statut: 'draft',
-      contenu: JSON.stringify({ contenu: 'Mémo' })
+      type: 'artifact.generated',
+      contenu: JSON.stringify({
+        version: 2,
+        title: 'Mémo',
+        values: {
+          skill: 'ticket.write-memo',
+          generated_by: 'alice@example.com'
+        },
+        note: 'Mémo'
+      })
     })
     create_activity('alice@example.com', {
       contexte: 'tickets',
       ref: 'REQ-DESKTOP',
-      type: 'ticket_summary',
-      statut: 'draft',
-      contenu: JSON.stringify({ contenu: 'Résumé' })
+      type: 'artifact.generated',
+      contenu: JSON.stringify({
+        version: 2,
+        title: 'Synthèse',
+        values: {
+          skill: 'ticket.summarize-ticket',
+          generated_by: 'alice@example.com'
+        },
+        note: 'Résumé'
+      })
     })
 
     expect(get_ticket_draft('REQ-DESKTOP', 'ticket.answer-ticket')).toMatchObject({
@@ -373,6 +396,44 @@ describe('ticket_drafts', () => {
     expect(get_ticket_draft('REQ-DESKTOP', 'ticket.summarize-ticket')?.generated_output).toBe(
       'Résumé'
     )
+  })
+
+  it('rejects stale and discarded artifact mutations', () => {
+    const original = create_activity('alice@example.com', {
+      contexte: 'tickets',
+      ref: 'REQ-STALE',
+      type: 'artifact.generated',
+      contenu: JSON.stringify({
+        version: 2,
+        title: 'Réponse',
+        values: {
+          skill: 'ticket.answer-ticket',
+          generated_by: 'alice@example.com'
+        },
+        note: 'Version initiale'
+      })
+    })
+    const edited = patch_activity('alice@example.com', original.id, {
+      operation: 'edit_content',
+      contenu: 'Version corrigée'
+    })
+
+    expect(() =>
+      patch_activity('alice@example.com', original.id, {
+        operation: 'edit_content',
+        contenu: 'Version obsolète'
+      })
+    ).toThrow(ActivitiesError)
+
+    delete_activity('alice@example.com', edited.id)
+    expect(get_ticket_draft('REQ-STALE', 'ticket.answer-ticket')).toBeNull()
+    expect(() =>
+      patch_activity('alice@example.com', edited.id, {
+        operation: 'edit_content',
+        contenu: 'Version ressuscitée'
+      })
+    ).toThrow(ActivitiesError)
+    expect(get_ticket_draft('REQ-STALE', 'ticket.answer-ticket')).toBeNull()
   })
 
   it('rejects invalid save_kind via zod', () => {

@@ -114,6 +114,8 @@ export const update_status_with_db = (
     contenu,
     thread_id: existing.thread_id,
     revision: (latest?.revision ?? existing.revision ?? 1) + 1,
+    bulk_id: existing.bulk_id,
+    execution_id: existing.execution_id,
     idempotency_key
   })
   return {

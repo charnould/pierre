@@ -34,12 +34,14 @@ describe('convertToImage', () => {
     await proc.exited
     const out = await new Response(proc.stdout).text()
     // A4 at 150dpi is ~826×1169px — two pages stacked → height should be ~2× width
-    const match = out
-      .trim()
-      .split('\n')[0]
-      .match(/^(\d+)x(\d+)$/)
+    const match =
+      out
+        .trim()
+        .split('\n')[0]
+        ?.match(/^(\d+)x(\d+)$/) ?? null
     expect(match).not.toBeNull()
-    const [, w, h] = match!.map(Number)
+    const w = Number(match?.[1])
+    const h = Number(match?.[2])
     expect(h).toBeGreaterThan(w)
   })
 

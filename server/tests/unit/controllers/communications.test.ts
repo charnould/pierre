@@ -45,9 +45,15 @@ afterAll(async () => {
 
 describe('webhooks de communication', () => {
   it('simule un envoi et ne le rejoue pas avec la même clé', async () => {
-    const app = new Hono<{ Variables: { user: { email: string } } }>()
+    const app = new Hono<{ Variables: { user: User } }>()
     app.use('*', async (c, next) => {
-      c.set('user', { email: 'alice@example.org' })
+      c.set('user', {
+        email: 'alice@example.org',
+        isAdministrator: false,
+        moduleIds: ['automations'],
+        chatbotIds: [],
+        passwordHash: 'unused'
+      })
       await next()
     })
     app.post('/email', emailSend)
@@ -68,9 +74,9 @@ describe('webhooks de communication', () => {
     const replay = await request()
     expect(first.status).toBe(201)
     expect(replay.status).toBe(201)
-    const firstBody = (await first.json()) as { data: { id: number; statut: string } }
-    const replayBody = (await replay.json()) as { data: { id: number; statut: string } }
-    expect(firstBody.data.statut).toBe('sent')
+    const firstBody = (await first.json()) as { data: { id: number; type: string } }
+    const replayBody = (await replay.json()) as { data: { id: number; type: string } }
+    expect(firstBody.data.type).toBe('communication.sent')
     expect(replayBody.data.id).toBe(firstBody.data.id)
   })
 
@@ -81,7 +87,7 @@ describe('webhooks de communication', () => {
       ref: 'EMAIL-1',
       type: 'email',
       destinataire: 'tenant@example.org',
-      contenu: JSON.stringify({ version: 1, corps: 'Bonjour' }),
+      contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Bonjour' }),
       idempotency_key: Bun.randomUUIDv7()
     })
     const app = new Hono().post('/webhook/email', emailWebhook)
@@ -100,14 +106,24 @@ describe('webhooks de communication', () => {
       body: JSON.stringify(body)
     })
     expect(response.status).toBe(200)
-    expect(get_activity(activity.id)?.statut).toBe('delivered')
+    expect(
+      list_activities('alice@example.org', {
+        rattachement: activity.rattachement,
+        limit: 10
+      }).some(
+        (row) =>
+          row.thread_id === activity.thread_id &&
+          row.type === 'communication.ok' &&
+          JSON.parse(row.contenu).result === 'delivered'
+      )
+    ).toBe(true)
     const invalid = await app.request('/webhook/email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Webhook-Secret': SECRET },
       body: JSON.stringify({ ...body, status: 'signed', occurredAt: '2030-08-26T20:01:00Z' })
     })
     expect(invalid.status).toBe(400)
-    expect(get_activity(activity.id)?.statut).toBe('delivered')
+    expect(get_activity(activity.id)?.type).toBe('communication.sent')
   })
 
   it('uses Webhook-Secret consistently for simulated providers', async () => {
@@ -158,9 +174,10 @@ describe('webhooks de communication', () => {
       type: 'rcs',
       destinataire: '+33612345678',
       contenu: JSON.stringify({
-        version: 1,
-        corps: 'Choisissez',
-        choix: [{ id: 'rappeler', label: 'Être rappelé' }]
+        version: 2,
+        sender: 'user:alice@example.org',
+        body: 'Choisissez',
+        choices: ['Être rappelé']
       }),
       idempotency_key: Bun.randomUUIDv7()
     })
@@ -196,7 +213,12 @@ describe('webhooks de communication', () => {
       })
     })
     expect(status.status).toBe(200)
-    expect(get_activity(activity.id)?.statut).toBe('delivered')
+    expect(
+      list_activities('alice@example.org', {
+        rattachement: activity.rattachement,
+        limit: 10
+      }).some((row) => row.type === 'communication.ok' && row.thread_id === activity.thread_id)
+    ).toBe(true)
 
     const inboundPayload = {
       reference: Bun.randomUUIDv7(),
@@ -239,9 +261,10 @@ describe('webhooks de communication', () => {
       limit: 10,
       offset: 0
     })
-    const received = rows.filter((row) => row.statut === 'received')
+    const received = rows.filter((row) => row.type === 'communication.received')
     expect(received.every((row) => row.thread_id === activity.thread_id)).toBe(true)
-    expect(received.some((row) => row.contenu.includes('Être rappelé'))).toBe(true)
+    expect(received.some((row) => row.contenu.includes('rappeler'))).toBe(true)
+    expect(received.some((row) => row.contenu.includes('confirmer'))).toBe(true)
     expect(received).toHaveLength(2)
   })
 })
@@ -464,8 +487,9 @@ describe('POST /communications/external et action', () => {
     const body = (await response.json()) as { data: { contenu: string } }
     expect(JSON.parse(body.data.contenu)).toMatchObject({
       action: 'Envoyer un e-mail de relance',
-      objet: 'Relance',
-      corps: 'Bonjour'
+      subject: 'Relance',
+      body: 'Bonjour',
+      version: 2
     })
   })
 })

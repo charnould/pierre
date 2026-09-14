@@ -72,7 +72,7 @@ afterEach(async () => {
 })
 
 describe('bulk execution', () => {
-  it('snapshots inline fallback content without duplicating it in jobs', async () => {
+  it('keeps inline fallback content in the operation without duplicating it in jobs', async () => {
     const operation = create_bulk_operation('alice', {
       name: 'Relance',
       definition: {
@@ -101,16 +101,24 @@ describe('bulk execution', () => {
     const run = JSON.parse(
       db
         .query<{ contenu: string }, [string]>(
-          `SELECT contenu FROM activites WHERE type = 'bulk_run' AND execution_id = ?`
+          `SELECT contenu FROM activites WHERE type = 'bulk.ran' AND execution_id = ?`
         )
         .get(result.execution_id)!.contenu
     )
     const job = db
       .query<{ payload: string }, [string]>('SELECT payload FROM bulk_jobs WHERE execution_id = ?')
       .get(result.execution_id)!
+    const storedOperation = JSON.parse(
+      db
+        .query<{ definition: string }, [string]>(
+          'SELECT definition FROM bulk_operations WHERE id = ?'
+        )
+        .get(operation.id)!.definition
+    )
     db.close()
-    expect(run.snapshot.templates).toBeUndefined()
-    expect(run.snapshot.operation.definition.delivery.steps[0].body).toContain('{{nom}}')
+    expect(run.version).toBe(2)
+    expect(run.values.execution_id).toBe(result.execution_id)
+    expect(storedOperation.delivery.steps[0].body).toContain('{{nom}}')
     expect(job.payload).not.toContain('Bonjour {{nom}}')
     expect(
       get_activity_by_idempotency_key(`bulk:${result.execution_id}:recipient:LOC-1:attempt:0`)
@@ -152,7 +160,7 @@ describe('bulk execution', () => {
       db
         .query<{ n: number }, [string]>(
           `SELECT COUNT(*) AS n FROM activites
-           WHERE execution_id = ? AND type = 'email'`
+           WHERE execution_id = ? AND type = 'communication.sent'`
         )
         .get(result.execution_id)?.n
     ).toBe(0)
@@ -177,12 +185,12 @@ describe('bulk execution', () => {
     db = new Database(`${DATASTORE_ROOT}/datastore.sqlite`, { readonly: true })
     expect(
       db
-        .query<{ statut: string }, [string]>(
-          `SELECT statut FROM activites
-           WHERE execution_id = ? AND type = 'email'`
+        .query<{ type: string }, [string]>(
+          `SELECT type FROM activites
+           WHERE execution_id = ? AND type = 'communication.sent'`
         )
-        .get(result.execution_id)?.statut
-    ).toBe('queued')
+        .get(result.execution_id)?.type
+    ).toBe('communication.sent')
     expect(
       db
         .query<{ report_status: string }, [string]>(
@@ -203,7 +211,7 @@ describe('bulk execution', () => {
       db
         .query<{ n: number }, [string]>(
           `SELECT COUNT(*) AS n FROM activites
-           WHERE execution_id = ? AND type = 'email'`
+           WHERE execution_id = ? AND type = 'communication.sent'`
         )
         .get(result.execution_id)?.n
     ).toBe(1)
@@ -274,13 +282,13 @@ describe('bulk execution', () => {
     const first = get_activity_by_idempotency_key(
       `bulk:${result.execution_id}:recipient:LOC-1:node:message_1`
     )!
-    expect(first.statut).toBe('sent')
+    expect(first).toMatchObject({ type: 'communication.sent', channel: 'rcs' })
     const inbound = create_inbound({
       contexte: 'repayment',
       ref: 'LOC-1',
       type: 'rcs',
       auteur: 'tenant:LOC-1',
-      contenu: JSON.stringify({ version: 1, corps: 'Suite' }),
+      contenu: JSON.stringify({ version: 2, sender: 'tenant:LOC-1', body: 'Suite' }),
       occurred_at: next_status_timestamp(first, now),
       thread_id: first.thread_id ?? undefined,
       idempotency_key: 'cm:reply-1'
@@ -314,7 +322,7 @@ describe('bulk execution', () => {
       db
         .query<{ n: number }, [string]>(
           `SELECT COUNT(*) AS n FROM activites
-           WHERE execution_id = ? AND type = 'case_bucket_change'`
+           WHERE execution_id = ? AND type = 'case.group_changed'`
         )
         .get(result.execution_id)?.n
     ).toBe(1)
@@ -453,8 +461,7 @@ describe('bulk execution', () => {
     const activity = get_activity_by_idempotency_key(
       `bulk:${result.execution_id}:recipient:LOC-1:attempt:0`
     )!
-    expect(activity.type).toBe('email')
-    expect(activity.statut).toBe('sent')
+    expect(activity).toMatchObject({ type: 'communication.sent', channel: 'email' })
     expect(activity.contenu).toContain('Courriel')
     expect(activity.contenu).toContain('Bonjour Ada')
     const db = new Database(`${DATASTORE_ROOT}/datastore.sqlite`, { readonly: true })
@@ -462,15 +469,15 @@ describe('bulk execution', () => {
       db
         .query<{ n: number }, [string]>(
           `SELECT COUNT(*) AS n FROM activites
-           WHERE execution_id = ? AND type = 'bulk_application'`
+           WHERE execution_id = ? AND type = 'bulk.applied'`
         )
         .get(result.execution_id)?.n
-    ).toBe(0)
+    ).toBe(1)
     expect(
       db
         .query<{ n: number }, [string]>(
           `SELECT COUNT(*) AS n FROM activites
-           WHERE execution_id = ? AND type = 'case_bucket_change'`
+           WHERE execution_id = ? AND type = 'case.group_changed'`
         )
         .get(result.execution_id)?.n
     ).toBe(1)

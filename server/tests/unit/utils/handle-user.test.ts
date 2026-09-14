@@ -1,5 +1,5 @@
 import { Database } from 'bun:sqlite'
-import { beforeEach, expect, it } from 'bun:test'
+import { expect, it } from 'bun:test'
 
 import {
   createUser,
@@ -12,11 +12,9 @@ import {
   saveUser
 } from '../../../utils/handle-user'
 import { datastorePaths } from '../../../utils/paths'
+import { use_identity_test_env } from './identity-test-env'
 
-beforeEach(async () => {
-  Bun.env['SERVICE'] = 'pierre-production'
-  await deleteAllUsers()
-})
+use_identity_test_env('_test_handle_user')
 
 it('stores normalized users without exposing the SQLite row shape', async () => {
   await saveUser({

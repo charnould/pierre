@@ -14,5 +14,5 @@ export const extract_tag_value = (
 ) => {
   const regex = new RegExp(`<${tag}>(.*?)</${tag}>`)
   const match = response.match(regex)
-  return match ? match[1].trim().toLowerCase() : fallback
+  return match?.[1] ? match[1].trim().toLowerCase() : fallback
 }

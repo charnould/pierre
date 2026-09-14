@@ -29,6 +29,7 @@ export const controller = async (c: Context) => {
   try {
     const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array' })
     const sheet = workbook.Sheets[workbook.SheetNames[0]!]
+    if (!sheet) throw new Error('Missing worksheet')
     rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, {
       header: 1,
       blankrows: false,

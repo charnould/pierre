@@ -99,8 +99,10 @@ export const controller = async (c: Context) => {
       contenu: JSON.stringify({
         version: ACTIVITY_CONTENT_VERSION,
         ...(parsed.data.contenu.action ? { action: parsed.data.contenu.action } : {}),
-        corps: parsed.data.contenu.corps,
-        ...(parsed.data.contenu.choix?.length ? { choix: parsed.data.contenu.choix } : {})
+        body: parsed.data.contenu.corps,
+        ...(parsed.data.contenu.choix?.length
+          ? { choices: parsed.data.contenu.choix.map((choice) => choice.label) }
+          : {})
       }),
       idempotency_key: idempotencyKey
     })

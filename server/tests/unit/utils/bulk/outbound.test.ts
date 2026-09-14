@@ -19,7 +19,7 @@ const row = (): PreviewRow => ({
 })
 
 describe('bulk outbound contenu', () => {
-  it('stores a Word summary in resume and leaves corps empty', () => {
+  it('stores a Word summary as the canonical body', () => {
     const step: SimpleDeliveryStep = {
       medium: 'courrier',
       action: 'R1',
@@ -32,17 +32,15 @@ describe('bulk outbound contenu', () => {
     const rendered = render_fallback_step(row(), '2026-08-29T08:00:00.000Z', step)
     expect(rendered.body).toBe('')
     expect(JSON.parse(fallback_outbound_contenu(step, rendered, []))).toEqual({
-      version: 1,
+      version: 2,
       action: 'R1',
-      objet: '',
-      corps: '',
-      resume: 'Relance amiable du solde.',
-      canal: 'courrier',
-      delivery: { skippedSteps: [], history: [] }
+      body: 'Relance amiable du solde.',
+      purpose: 'bulk',
+      skipped_steps: []
     })
   })
 
-  it('keeps rendered text in corps for a message step', () => {
+  it('keeps rendered text in the canonical body for a message step', () => {
     const step: SimpleDeliveryStep = {
       medium: 'email',
       action: 'Courriel',
@@ -52,12 +50,12 @@ describe('bulk outbound contenu', () => {
     }
     const rendered = render_fallback_step(row(), '2026-08-29T08:00:00.000Z', step)
     expect(JSON.parse(fallback_outbound_contenu(step, rendered, []))).toEqual({
-      version: 1,
+      version: 2,
       action: 'Courriel',
-      objet: 'Relance',
-      corps: 'Bonjour',
-      canal: 'email',
-      delivery: { skippedSteps: [], history: [] }
+      subject: 'Relance',
+      body: 'Bonjour',
+      purpose: 'bulk',
+      skipped_steps: []
     })
   })
 })

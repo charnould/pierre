@@ -1,6 +1,6 @@
+import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, describe, expect, it, setSystemTime } from 'bun:test'
-
-import { SQL } from 'bun'
+import { rm } from 'node:fs/promises'
 
 import { AIContext } from '../../../utils/_schema'
 import {
@@ -11,8 +11,12 @@ import {
   save_topic,
   score_conversation
 } from '../../../utils/handle-conversation'
+import { datastorePaths } from '../../../utils/paths'
+import { setup } from '../../../utils/setup'
 
-const sql = new SQL(`sqlite:datastores/${Bun.env['SERVICE']}/datastore.sqlite`)
+const TEST_SERVICE = '_test_handle_conversation'
+const ORIGINAL_SERVICE = Bun.env['SERVICE']
+const TEST_PATHS = datastorePaths(TEST_SERVICE)
 const config = (await import(`../../../../customization/chatbots/default/config`)).default
 
 // Simulated responses for test cases
@@ -40,8 +44,19 @@ const c2_r1 = await AIContext.parseAsync({
   custom_data: { raw: ['julie', '456.56'] }
 })
 
-beforeAll(async () => await sql`DELETE FROM conversations`)
-afterAll(() => setSystemTime())
+beforeAll(async () => {
+  Bun.env['SERVICE'] = TEST_SERVICE
+  await rm(TEST_PATHS.root, { recursive: true, force: true })
+  await setup()
+  using db = new Database(TEST_PATHS.database)
+  db.run('DELETE FROM conversations')
+})
+afterAll(async () => {
+  setSystemTime()
+  if (ORIGINAL_SERVICE === undefined) delete Bun.env['SERVICE']
+  else Bun.env['SERVICE'] = ORIGINAL_SERVICE
+  await rm(TEST_PATHS.root, { recursive: true, force: true })
+})
 
 //
 //

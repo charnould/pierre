@@ -83,7 +83,9 @@ const parse_run = (row: RunRow, items: BulkReportItem[] = []): BulkReportSummary
   }
   const status: BulkRunReportStatus =
     items.length === 0
-      ? (raw.status ?? 'in_progress')
+      ? values?.total === 0
+        ? 'ok'
+        : (raw.status ?? 'in_progress')
       : counts.in_progress > 0
         ? 'in_progress'
         : counts.ok === counts.total

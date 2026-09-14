@@ -49,7 +49,7 @@ export const FIXTURE_ROWS = [
   }
 ]
 
-const seed_tickets = async (rows = FIXTURE_ROWS): Promise<void> => {
+const seed_tickets = async (rows: Array<Record<string, string>> = FIXTURE_ROWS): Promise<void> => {
   const db = new Database(DATASTORE_SQLITE)
   try {
     await import_json_rows(db, 'reclamations', rows)
@@ -76,13 +76,12 @@ const insert_ticket_bucket = (
   try {
     db.run(
       `INSERT INTO activites (
-         date_creation, date_statut, rattachement, auteur, type, statut, mentions, contenu
-       ) VALUES (?, ?, ?, 'user:test', 'case_bucket_change', 'logged', '[]', ?)`,
+         date_creation, rattachement, auteur, type, mentions, contenu
+       ) VALUES (?, ?, 'user:test', 'case.bucket_changed', '[]', ?)`,
       [
         dateCreation,
-        dateCreation,
         `tickets:${idReclamation}`,
-        JSON.stringify({ version: 1, bucket_precedent: null, bucket })
+        JSON.stringify({ version: 2, before: null, after: bucket })
       ]
     )
   } finally {
@@ -176,12 +175,24 @@ describe('list_tickets', () => {
       ...TicketsPaginationQuery.parse({ sort: 'id_reclamation', limit: 2, offset: 1 }),
       filters: {}
     })
-    expect(paged.data[0]?.id_reclamation).toBe(sorted.data[1]?.id_reclamation)
+    expect(paged.data[0]?.['id_reclamation']).toBe(sorted.data[1]?.['id_reclamation'])
   })
 
   it('falls back to non_traitees for an unknown stored bucket', async () => {
     await seed_tickets()
     insert_ticket_bucket('REQ-1', 'ancien_panier', '2026-01-01T10:00:00Z')
+
+    const result = list_tickets({
+      ...TicketsPaginationQuery.parse({ bucket: 'non_traitees' }),
+      filters: {}
+    })
+
+    expect(result.data.map((row) => row['id_reclamation'])).toContain('REQ-1')
+  })
+
+  it('accepts a v2 case.bucket_changed fixture', async () => {
+    await seed_tickets()
+    insert_ticket_bucket('REQ-1', 'non_traitees', '2026-01-01T10:00:00Z')
 
     const result = list_tickets({
       ...TicketsPaginationQuery.parse({ bucket: 'non_traitees' }),
@@ -208,7 +219,7 @@ describe('list_tickets', () => {
       filters: { id_reclamation: ['REQ-2'] }
     })
     expect(result.data).toHaveLength(1)
-    expect(result.data[0]?.id_reclamation).toBe('REQ-2')
+    expect(result.data[0]?.['id_reclamation']).toBe('REQ-2')
   })
 
   it('filters by schema column motif', async () => {
@@ -218,7 +229,7 @@ describe('list_tickets', () => {
       filters: { motif: ['fuite'] }
     })
     expect(result.data).toHaveLength(2)
-    expect(result.data.every((r) => r.motif === 'fuite')).toBe(true)
+    expect(result.data.every((r) => r['motif'] === 'fuite')).toBe(true)
   })
 
   it('filters with IN for multiple values on one column', async () => {
@@ -237,7 +248,7 @@ describe('list_tickets', () => {
       filters: { id_locataire: ['LOC-B'], motif: ['fuite'] }
     })
     expect(result.data).toHaveLength(1)
-    expect(result.data[0]?.id_reclamation).toBe('REQ-3')
+    expect(result.data[0]?.['id_reclamation']).toBe('REQ-3')
   })
 
   it('rejects unknown filter column', async () => {
@@ -253,7 +264,12 @@ describe('list_tickets', () => {
   it('sorts descending by id_reclamation by default', async () => {
     await seed_tickets()
     const result = list_tickets({ ...TicketsPaginationQuery.parse({}), filters: {} })
-    expect(result.data.map((r) => r.id_reclamation)).toEqual(['REQ-4', 'REQ-3', 'REQ-2', 'REQ-1'])
+    expect(result.data.map((r) => r['id_reclamation'])).toEqual([
+      'REQ-4',
+      'REQ-3',
+      'REQ-2',
+      'REQ-1'
+    ])
     expect(result.meta.default_sort).toBe('-id_reclamation')
   })
 
@@ -263,7 +279,7 @@ describe('list_tickets', () => {
       ...TicketsPaginationQuery.parse({ sort: 'motif' }),
       filters: {}
     })
-    expect(result.data.map((r) => r.motif)).toEqual(['ascenseur', 'chauffage', 'fuite', 'fuite'])
+    expect(result.data.map((r) => r['motif'])).toEqual(['ascenseur', 'chauffage', 'fuite', 'fuite'])
   })
 
   it('rejects sort on absent column', async () => {

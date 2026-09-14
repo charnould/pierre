@@ -98,8 +98,8 @@ describe('POST /rcs provider boundary', () => {
         data: {
           auteur: 'user:alice@example.org',
           destinataire: '+33611563959',
-          type: 'rcs',
-          statut: 'sent'
+          type: 'communication.sent',
+          channel: 'rcs'
         }
       })
       expect(fetchSpy).toHaveBeenCalledTimes(1)
@@ -132,7 +132,7 @@ describe('POST /rcs provider boundary', () => {
         }
       })
       expect((await postRcs(idempotencyKey)).status).toBe(201)
-      expect(fetchSpy).toHaveBeenCalledTimes(1)
+      expect(fetchSpy).toHaveBeenCalledTimes(2)
     } finally {
       fetchSpy.mockRestore()
     }
@@ -147,7 +147,7 @@ describe('POST /rcs provider boundary', () => {
       expect(response.status).toBe(502)
       expect((await response.json()) as unknown).toMatchObject({
         error: { code: 'cm_rejected' },
-        data: { type: 'rcs', statut: 'failed' }
+        data: { type: 'communication.failed', channel: 'rcs' }
       })
     } finally {
       fetchSpy.mockRestore()

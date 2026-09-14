@@ -243,7 +243,7 @@ describe('automations worker', () => {
     expect(after.next_run_at).toBeTruthy()
   })
 
-  it('trim keeps maxReports activities', async () => {
+  it('trim preserves append-only report activities', async () => {
     const auto = await create_automation('alice', {
       type: 'report',
       name: 'Trim',
@@ -256,10 +256,9 @@ describe('automations worker', () => {
       create_trusted_activity('alice', {
         contexte: 'automations',
         ref: auto.id,
-        type: 'automation_report',
-        statut: 'logged',
+        type: 'automation.reported',
         recipients: ['alice'],
-        contenu: `r${i}`,
+        contenu: JSON.stringify({ version: 2, title: `Rapport ${i}` }),
         auteur: `automation:${auto.id}`
       })
     }
@@ -267,11 +266,11 @@ describe('automations worker', () => {
     const db = new Database(TEST_PATHS.database)
     const count = db
       .query<{ n: number }, [string]>(
-        `SELECT COUNT(*) as n FROM activites WHERE rattachement = ? AND type = 'automation_report'`
+        `SELECT COUNT(*) as n FROM activites WHERE rattachement = ? AND type = 'automation.reported'`
       )
       .get(build_rattachement('automations', auto.id))
     db.close()
-    expect(count!.n).toBe(2)
+    expect(count!.n).toBe(4)
   })
 
   it('manual run while paused restores paused without next_run_at', async () => {

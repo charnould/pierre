@@ -1,7 +1,8 @@
 import type { ModelMessage } from 'ai'
 import { SQL } from 'bun'
 
-import type { Reply } from './_schema'
+import { extract_tag_value } from './augment-query'
+import type { Model } from './generate-output'
 import { generate_text } from './generate-output'
 import { get_conversation, save_topic, score_conversation } from './handle-conversation'
 import { datastorePaths } from './paths'
@@ -42,9 +43,9 @@ const getSQL = () => {
  *
  * @returns {Promise<void>} A promise that resolves when the scoring process is complete.
  */
-export const score = async (): Promise<void> => {
+export const score = async (model: Model): Promise<void> => {
   // Get the `conv_id` of conversations that have no score
-  let conv_ids_missing_score = await getSQL()`
+  const rows = await getSQL()`
     SELECT DISTINCT
       conv_id
     FROM
@@ -52,14 +53,14 @@ export const score = async (): Promise<void> => {
     WHERE
       json_extract (metadata, '$.evaluation.ai.score') IS NULL;
   `
-  conv_ids_missing_score = conv_ids_missing_score.map((row) => row.conv_id)
+  const conv_ids_missing_score = rows.map((row: Record<string, unknown>) => String(row['conv_id']))
 
   // For each conversation:
   // 1. Retrieve all conversation content.
   // 2. Use an LLM to determine the topic.
   // 3. Save the topic back into the database.
   for await (const conv_id of conv_ids_missing_score) {
-    const conversation = (await get_conversation(conv_id)) as Reply[]
+    const conversation = await get_conversation(conv_id)
     const core_messages = conversation.map(({ role, content }) => ({ role, content }))
 
     let score: number | null
@@ -98,24 +99,23 @@ export const score = async (): Promise<void> => {
         }
       ]
 
-      const config = (await import(`../../customization/chatbots/${conversation[0].config}/config`))
-        .default
-      const model = config.models.answer_with
       const answer = await generate_text({
-        model: model,
+        model,
         messages: messages,
         max_tokens: undefined
       })
 
-      score = extract_tag_value(answer, 'score', null)
-      comment = extract_tag_value(answer, 'reasoning', null)
+      const extractedScore = extract_tag_value(answer, 'score', null)
+      score = typeof extractedScore === 'string' ? Number(extractedScore) : null
+      const extractedComment = extract_tag_value(answer, 'reasoning', null)
+      comment = typeof extractedComment === 'string' ? extractedComment : null
     }
 
     await score_conversation({
       conv_id: conv_id,
       scorer: 'ai',
-      score: score,
-      comment: comment
+      score: score ?? -1,
+      comment: comment ?? ''
     })
   }
 
@@ -145,9 +145,9 @@ export const score = async (): Promise<void> => {
  *
  * @returns {Promise<void>} A promise that resolves when the operation is complete.
  */
-export const topicize = async (): Promise<void> => {
+export const topicize = async (model: Model): Promise<void> => {
   // Get the `conv_id` of conversations that have no assigned topic
-  let conv_ids_missing_topic = await getSQL()`
+  const rows = await getSQL()`
     SELECT DISTINCT
       conv_id
     FROM
@@ -155,14 +155,14 @@ export const topicize = async (): Promise<void> => {
     WHERE
       json_extract (metadata, '$.topics') IS NULL;
   `
-  conv_ids_missing_topic = conv_ids_missing_topic.map((row) => row.conv_id)
+  const conv_ids_missing_topic = rows.map((row: Record<string, unknown>) => String(row['conv_id']))
 
   // For each conversation:
   // 1. Retrieve all conversation content.
   // 2. Use an LLM to determine the topic.
   // 3. Save the topic back into the database.
   for await (const conv_id of conv_ids_missing_topic) {
-    const conversation = (await get_conversation(conv_id)) as Reply[]
+    const conversation = await get_conversation(conv_id)
     const core_messages = conversation.map(({ role, content }) => ({
       role,
       content
@@ -172,7 +172,7 @@ export const topicize = async (): Promise<void> => {
       ...core_messages,
       {
         role: 'assistant',
-        content: dedent`
+        content: `
         
         Analyze the full preceding conversation and classify its primary topic into exactly one of the following predefined categories:
         
@@ -192,11 +192,19 @@ export const topicize = async (): Promise<void> => {
         - Do not include explanations, extra words, formatting, or any additional output.
         - Ensure the classification is 100% consistent and deterministic based on the given definitions.
         
-        Your classification:`
+        Your classification:`.trim()
       }
     ]
 
-    const topic = (await generate_text({ messages: messages, max_tokens: 50 })).toLowerCase().trim()
+    const topic = (
+      await generate_text({
+        model,
+        messages,
+        max_tokens: 50
+      })
+    )
+      .toLowerCase()
+      .trim()
 
     const topics = [
       'rent',

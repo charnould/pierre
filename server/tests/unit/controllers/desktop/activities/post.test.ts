@@ -34,8 +34,8 @@ app.delete('/desktop/activities/:id', deleteActivity)
 const base = {
   contexte: 'tickets',
   ref: 'TICKET-1',
-  type: 'note',
-  contenu: 'Bonjour'
+  type: 'note.published',
+  contenu: JSON.stringify({ version: 2, text: 'Bonjour' })
 }
 
 const jsonRequest = (method: string, body?: unknown, headers: Record<string, string> = {}) => ({
@@ -91,7 +91,10 @@ describe('activity write controllers', () => {
         jsonRequest(
           method,
           method === 'PATCH'
-            ? { operation: 'edit_content', contenu: 'Tentative de Bob' }
+            ? {
+                operation: 'edit_content',
+                contenu: JSON.stringify({ version: 2, text: 'Tentative de Bob' })
+              }
             : undefined,
           { 'x-test-email': 'bob@example.org' }
         )
@@ -102,7 +105,10 @@ describe('activity write controllers', () => {
 
     const edited = await app.request(
       `/desktop/activities/${created.data.id}`,
-      jsonRequest('PATCH', { operation: 'edit_content', contenu: 'Corrigé' })
+      jsonRequest('PATCH', {
+        operation: 'edit_content',
+        contenu: JSON.stringify({ version: 2, text: 'Corrigé' })
+      })
     )
     expect(edited.status).toBe(200)
     expect((await edited.json()) as unknown).toMatchObject({
@@ -114,7 +120,7 @@ describe('activity write controllers', () => {
       jsonRequest('DELETE')
     )
     expect(deleted.status).toBe(200)
-    expect(get_activity(created.data.id)).toBeNull()
+    expect(get_activity(created.data.id)).not.toBeNull()
   })
 
   it('allows standard users on every mutation route', async () => {
@@ -122,7 +128,11 @@ describe('activity write controllers', () => {
     const id = ((await created.json()) as { data: { id: number } }).data.id
     for (const [method, path, body] of [
       ['POST', '/desktop/activities', base],
-      ['PATCH', `/desktop/activities/${id}`, { operation: 'edit_content', contenu: 'Non' }],
+      [
+        'PATCH',
+        `/desktop/activities/${id}`,
+        { operation: 'edit_content', contenu: JSON.stringify({ version: 2, text: 'Non' }) }
+      ],
       ['DELETE', `/desktop/activities/${id}`, undefined]
     ] as const) {
       const response = await app.request(path, jsonRequest(method, body))
@@ -130,7 +140,7 @@ describe('activity write controllers', () => {
     }
   })
 
-  it('runs a generated ticket draft through edit, feedback, publish and delete semantics', async () => {
+  it('runs a generated ticket draft through edit, feedback and discard events', async () => {
     const draft = upsert_ticket_draft({
       save_kind: 'generation',
       id_reclamation: 'REQ-DRAFT',
@@ -144,12 +154,14 @@ describe('activity write controllers', () => {
       { operation: 'edit_content', contenu: 'Version relue' },
       { operation: 'set_evaluation', score: 5, commentaire: 'Validé' }
     ]
+    let activityId = draft.activity_id
     for (const body of edits) {
       const response = await app.request(
-        `/desktop/activities/${draft.activity_id}`,
+        `/desktop/activities/${activityId}`,
         jsonRequest('PATCH', body)
       )
       expect(response.status).toBe(200)
+      activityId = ((await response.json()) as { data: { id: number } }).data.id
     }
     expect(get_ticket_draft('REQ-DRAFT', 'ticket.answer-ticket')).toMatchObject({
       edited_output: 'Version relue',
@@ -157,15 +169,9 @@ describe('activity write controllers', () => {
       feedback_comment: 'Validé'
     })
 
-    const published = await app.request(
-      `/desktop/activities/${draft.activity_id}`,
-      jsonRequest('PATCH', { operation: 'set_status', statut: 'logged' })
-    )
-    expect(published.status).toBe(200)
+    const discarded = await app.request(`/desktop/activities/${activityId}`, jsonRequest('DELETE'))
+    expect(discarded.status).toBe(200)
     expect(get_ticket_draft('REQ-DRAFT', 'ticket.answer-ticket')).toBeNull()
-    expect(
-      (await app.request(`/desktop/activities/${draft.activity_id}`, jsonRequest('DELETE'))).status
-    ).toBe(403)
 
     const disposable = upsert_ticket_draft({
       save_kind: 'generation',

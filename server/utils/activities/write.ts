@@ -11,7 +11,8 @@ import {
   is_task_type,
   parse_activity_meta_content,
   parse_note_content,
-  parse_task_content
+  parse_task_content,
+  parse_titled_content
 } from '../../../shared/activites'
 import { insert_task_event, patch_action } from './action'
 import {
@@ -47,6 +48,25 @@ const latest_thread_revision = (db: Database, thread_id: string): number => {
     )
     .get(thread_id)
   return row?.revision ?? 0
+}
+
+const require_current_artifact = (db: Database, activity: Activite): void => {
+  if (!activity.type.startsWith('artifact.') || !activity.thread_id) return
+  const latest = db
+    .query<{ id: number; type: string }, [string]>(
+      `SELECT id, type FROM activites
+       WHERE thread_id = ?
+       ORDER BY revision DESC, id DESC
+       LIMIT 1`
+    )
+    .get(activity.thread_id)
+  if (
+    latest?.id !== activity.id ||
+    latest.type === 'artifact.discarded' ||
+    latest.type === 'artifact.finalized'
+  ) {
+    throw new ActivitiesError('Artifact revision conflict', 'conflict')
+  }
 }
 
 const append = (db: Database, values: Parameters<typeof insert_activity_row>[1]): Activite => {
@@ -244,13 +264,13 @@ const can_edit = (activity: Activite, actor: string): boolean =>
 
 const latest_reaction = (db: Database, sourceId: number, auteur: string): string | null => {
   const row = db
-    .query<ActivityDbRow, [number, string]>(
+    .query<ActivityDbRow, [string, number]>(
       `SELECT * FROM activites
        WHERE type = 'activity.reaction_changed' AND auteur = ?
+         AND json_extract(contenu, '$.source_activity_id') = ?
        ORDER BY date_creation DESC, id DESC`
     )
-    .all(sourceId, auteur)
-    .find((entry) => parse_activity_meta_content(entry.contenu)?.source_activity_id === sourceId)
+    .get(auteur, sourceId)
   if (!row) return null
   return parse_activity_meta_content(row.contenu)?.emoji ?? null
 }
@@ -343,7 +363,10 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
         })
       }
 
-      if (!can_edit(existing, actor)) throw new ActivitiesError('Forbidden', 'forbidden')
+      if (!can_edit(existing, actor) && !existing.type.startsWith('artifact.')) {
+        throw new ActivitiesError('Forbidden', 'forbidden')
+      }
+      require_current_artifact(db, existing)
 
       if (is_repayment_plan_row(existing)) {
         if (parsed.operation === 'save_repayment_plan') {
@@ -374,6 +397,38 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
       }
 
       if (parsed.operation === 'edit_content') {
+        if (existing.type.startsWith('artifact.')) {
+          const current = parse_titled_content(existing.contenu)
+          if (!current) throw new ActivitiesError('Invalid artifact content')
+          const values = current.values ?? {}
+          const generatedOutput =
+            typeof values['edited_by'] === 'string' ? values['generated_output'] : current.note
+          return append(db, {
+            date_creation: activity_timestamp(),
+            rattachement: existing.rattachement,
+            auteur: destinataire,
+            facets: {
+              id_client: existing.id_client,
+              id_locataire: existing.id_locataire,
+              id_lot: existing.id_lot
+            },
+            type: 'artifact.regenerated',
+            mentions: [],
+            contenu: JSON.stringify({
+              version: 2,
+              title: current.title,
+              values: {
+                ...values,
+                generated_output: generatedOutput ?? null,
+                edited_by: actor,
+                edited_at: activity_timestamp()
+              },
+              note: parsed.contenu
+            }),
+            thread_id: existing.thread_id ?? Bun.randomUUIDv7(),
+            revision: existing.thread_id ? latest_thread_revision(db, existing.thread_id) + 1 : 1
+          })
+        }
         if (is_note_type(existing.type)) {
           const incoming = parse_note_content(parsed.contenu)
           if (!incoming) throw new ActivitiesError('Invalid note content')
@@ -399,6 +454,11 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
       }
 
       if (parsed.operation === 'set_evaluation') {
+        const current = parse_titled_content(existing.contenu)
+        if (!current || !existing.type.startsWith('artifact.')) {
+          throw new ActivitiesError('This activity cannot be evaluated', 'forbidden')
+        }
+        const values = current.values ?? {}
         return append(db, {
           date_creation: activity_timestamp(),
           rattachement: existing.rattachement,
@@ -412,11 +472,15 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
           mentions: [],
           contenu: JSON.stringify({
             version: 2,
-            title: 'Évaluation',
+            title: current.title,
             values: {
-              score: parsed.score,
-              commentaire: parsed.commentaire ?? null
-            }
+              ...values,
+              feedback_rating: parsed.score,
+              feedback_comment: parsed.commentaire ?? null,
+              feedback_by: actor,
+              feedback_at: activity_timestamp()
+            },
+            ...(current.note != null ? { note: current.note } : {})
           }),
           thread_id: existing.thread_id ?? Bun.randomUUIDv7(),
           revision: existing.thread_id ? latest_thread_revision(db, existing.thread_id) + 1 : 1
@@ -498,6 +562,28 @@ export const delete_activity = (actor: string, id: number): void => {
           }),
           thread_id: existing.thread_id,
           revision: latest_thread_revision(db, existing.thread_id) + 1
+        })
+        return
+      }
+      if (existing.type.startsWith('artifact.')) {
+        require_current_artifact(db, existing)
+        const current = parse_titled_content(existing.contenu)
+        if (!current) throw new ActivitiesError('Invalid artifact content')
+        const thread_id = existing.thread_id ?? Bun.randomUUIDv7()
+        append(db, {
+          date_creation: activity_timestamp(),
+          rattachement: existing.rattachement,
+          auteur: destinataire,
+          facets: {
+            id_client: existing.id_client,
+            id_locataire: existing.id_locataire,
+            id_lot: existing.id_lot
+          },
+          type: 'artifact.discarded',
+          mentions: [],
+          contenu: JSON.stringify(current),
+          thread_id,
+          revision: existing.thread_id ? latest_thread_revision(db, existing.thread_id) + 1 : 1
         })
         return
       }

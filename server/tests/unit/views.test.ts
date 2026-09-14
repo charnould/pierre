@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test'
 
-import type { Reply } from '../../utils/_schema'
+import type { StoredReply } from '../../utils/handle-conversation'
 import { view as conversations_view } from '../../views/admin.conversations'
 
 test('admin conversations render Markdown with Bun', () => {
@@ -11,7 +11,7 @@ test('admin conversations render Markdown with Bun', () => {
         organization: { comment: null, score: null }
       }
     }
-  } as unknown as Reply
+  } as unknown as StoredReply
 
   expect(String(conversations_view([], [conversation]))).toContain('<strong>important</strong>')
 })

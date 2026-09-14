@@ -6,6 +6,7 @@ import { Hono } from 'hono'
 
 import { parse_repayment_plan_content } from '../../../../shared/activites'
 import { controller as postActivity } from '../../../controllers/desktop/activities/post'
+import type { User } from '../../../utils/_schema'
 import { list_activities } from '../../../utils/activities/query'
 import { create_activity, delete_activity, patch_activity } from '../../../utils/activities/write'
 import { datastorePaths } from '../../../utils/paths'
@@ -207,9 +208,15 @@ describe('repayment plan activity lifecycle', () => {
   })
 
   it('returns JSON for invalid plan content', async () => {
-    const app = new Hono<{ Variables: { user: { email: string } } }>()
+    const app = new Hono<{ Variables: { user: User } }>()
     app.use('*', async (context, next) => {
-      context.set('user', { email: ALICE })
+      context.set('user', {
+        email: ALICE,
+        isAdministrator: false,
+        moduleIds: ['repayment'],
+        chatbotIds: [],
+        passwordHash: 'unused'
+      })
       await next()
     })
     app.post('/desktop/activities', postActivity)

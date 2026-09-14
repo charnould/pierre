@@ -1,6 +1,6 @@
-import { beforeAll, expect, it } from 'bun:test'
+import { afterAll, beforeAll, expect, it } from 'bun:test'
 import { existsSync } from 'node:fs'
-import { readdir } from 'node:fs/promises'
+import { readdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { Hono } from 'hono'
@@ -12,14 +12,21 @@ import { controller as get_ai_boot } from '../../../../controllers/ai/get.boot'
 import { User, type User as UserType } from '../../../../utils/_schema'
 import { authenticate, decrypt } from '../../../../utils/authenticate-user'
 import { deleteAllUsers, getUser, saveUser } from '../../../../utils/handle-user'
-import { CUSTOMIZATION_DIR } from '../../../../utils/paths'
+import { CUSTOMIZATION_DIR, datastorePaths } from '../../../../utils/paths'
+import { setup } from '../../../../utils/setup'
 
 const app = new Hono()
 app.post('/a/login', post_admin_login)
 app.get('/ai/boot', authenticate, get_ai_boot)
 
+const SERVICE = '_test_ai_boot'
+const originalService = Bun.env['SERVICE']
+const root = datastorePaths(SERVICE).root
+
 beforeAll(async () => {
-  Bun.env['SERVICE'] = 'pierre-production'
+  Bun.env['SERVICE'] = SERVICE
+  await rm(root, { recursive: true, force: true })
+  await setup()
   Bun.env['AUTH_SECRET'] ??= '0123456789abcdef0123456789abcdef'
   await deleteAllUsers()
 
@@ -32,6 +39,13 @@ beforeAll(async () => {
       passwordHash: await Bun.password.hash('boot-test-pw')
     })
   )
+})
+
+afterAll(async () => {
+  await deleteAllUsers()
+  if (originalService === undefined) delete Bun.env['SERVICE']
+  else Bun.env['SERVICE'] = originalService
+  await rm(root, { recursive: true, force: true })
 })
 
 function cookieFromLoginResponse(res: Response): string {

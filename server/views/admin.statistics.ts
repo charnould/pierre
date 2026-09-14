@@ -2,7 +2,7 @@ import * as Plot from '@observablehq/plot'
 import { html, raw } from 'hono/html'
 import { JSDOM } from 'jsdom'
 
-import type { StatisticOptions } from '../controllers/a/statistics/get'
+import type { StatisticOptions } from '../controllers/admin/statistics/get'
 
 /**
  * Generates a graphic plot based on the provided data and options.
@@ -16,7 +16,7 @@ import type { StatisticOptions } from '../controllers/a/statistics/get'
  * @property {string} color - The color option for the plot.
  * @property {string} facet - The facet option for the plot.
  */
-const generate_graphic = (data, options: StatisticOptions) => {
+const generate_graphic = (data: string, options: StatisticOptions) => {
   const plot = Plot.waffleY(
     JSON.parse(data),
     Plot.groupX(
@@ -62,7 +62,7 @@ const generate_graphic = (data, options: StatisticOptions) => {
   return plot.outerHTML
 }
 
-export const view = (data, options: StatisticOptions) => {
+export const view = (data: string, options: StatisticOptions) => {
   return html`<!doctype html>
     <html lang="fr">
       <head>

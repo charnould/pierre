@@ -2,8 +2,7 @@ import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import { rm } from 'node:fs/promises'
 
-import type { ActivityStatus, CommunicationType } from '../../../../shared/activites'
-import { get_activity } from '../../../utils/activities/rows'
+import type { CommunicationChannel } from '../../../../shared/activites'
 import { create_activity, delete_activity, patch_activity } from '../../../utils/activities/write'
 import {
   cm_webhook_authorized,
@@ -38,14 +37,14 @@ afterAll(async () => {
 })
 
 describe('communications', () => {
-  it('réutilise un thread par dossier et sépare les mediums', () => {
+  it('crée un thread distinct pour chaque communication', () => {
     const first = create_outbound({
       actor: 'alice@example.org',
       contexte: 'automations',
       ref: 'A-1',
       type: 'email',
       destinataire: 'tenant@example.org',
-      contenu: JSON.stringify({ version: 1, corps: 'Premier' }),
+      contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Premier' }),
       idempotency_key: Bun.randomUUIDv7()
     })
     const second = create_outbound({
@@ -54,7 +53,7 @@ describe('communications', () => {
       ref: 'A-1',
       type: 'email',
       destinataire: 'tenant@example.org',
-      contenu: JSON.stringify({ version: 1, corps: 'Second' }),
+      contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Second' }),
       idempotency_key: Bun.randomUUIDv7()
     })
     const rcs = create_outbound({
@@ -63,11 +62,11 @@ describe('communications', () => {
       ref: 'A-1',
       type: 'rcs',
       destinataire: '06 12 34 56 78',
-      contenu: JSON.stringify({ version: 1, corps: 'RCS' }),
+      contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'RCS' }),
       idempotency_key: Bun.randomUUIDv7()
     })
 
-    expect(first.thread_id).toBe(second.thread_id)
+    expect(first.thread_id).not.toBe(second.thread_id)
     expect(rcs.thread_id).not.toBe(first.thread_id)
     expect(rcs.destinataire).toBe('+33612345678')
     expect(communication_reference(first.id)).toBe(`p${first.id}`)
@@ -81,14 +80,21 @@ describe('communications', () => {
       ref: 'A-2',
       type: 'email' as const,
       destinataire: 'tenant@example.org',
-      contenu: JSON.stringify({ version: 1, corps: 'Identique' }),
+      contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Identique' }),
       idempotency_key: key
     }
     const first = create_outbound(base)
     expect(create_outbound(base).id).toBe(first.id)
-    expect(() => create_outbound({ ...base, contenu: '{"version":1,"corps":"Autre"}' })).toThrow(
-      CommunicationsError
-    )
+    expect(() =>
+      create_outbound({
+        ...base,
+        contenu: JSON.stringify({
+          version: 2,
+          sender: 'user:alice@example.org',
+          body: 'Autre'
+        })
+      })
+    ).toThrow(CommunicationsError)
 
     const db = new Database(`${ROOT}/datastore.sqlite`, { readonly: true })
     const count = db
@@ -100,27 +106,25 @@ describe('communications', () => {
     expect(count).toBe(1)
   })
 
-  it('ne rejoue pas un dispatch et clôt un claim abandonné', () => {
+  it('laisse le dispatch réclamable jusqu’à un événement terminal', () => {
     const activity = create_outbound({
       actor: 'alice@example.org',
       contexte: 'tickets',
       ref: 'DISPATCH-1',
       type: 'rcs',
       destinataire: '+33612345678',
-      contenu: JSON.stringify({ version: 1, corps: 'Bonjour' }),
+      contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Bonjour' }),
       idempotency_key: Bun.randomUUIDv7()
     })
     expect(claim_outbound_dispatch(activity.id)).toBe('claimed')
-    expect(claim_outbound_dispatch(activity.id)).toBe('pending')
-
-    const db = new Database(datastorePaths(SERVICE).database)
-    const content = JSON.parse(activity.contenu)
-    content.delivery.dispatch_started_at = '2000-01-01T00:00:00Z'
-    db.run('UPDATE activites SET contenu = ? WHERE id = ?', [JSON.stringify(content), activity.id])
-    db.close()
-
-    expect(claim_outbound_dispatch(activity.id)).toBe('abandoned')
-    expect(get_activity(activity.id)?.statut).toBe('failed')
+    expect(claim_outbound_dispatch(activity.id)).toBe('claimed')
+    update_status({
+      activity_id: activity.id,
+      type: 'rcs',
+      statut: 'delivered',
+      occurred_at: '2030-08-26T20:00:00Z'
+    })
+    expect(claim_outbound_dispatch(activity.id)).toBe('not_queued')
   })
 
   it('ignore un statut retardé et bloque les écritures génériques', () => {
@@ -130,7 +134,7 @@ describe('communications', () => {
       ref: 'A-3',
       type: 'email',
       destinataire: 'tenant@example.org',
-      contenu: JSON.stringify({ version: 1, corps: 'Statut' }),
+      contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Statut' }),
       idempotency_key: Bun.randomUUIDv7()
     })
     const delivered = update_status({
@@ -145,29 +149,27 @@ describe('communications', () => {
       statut: 'sent',
       occurred_at: '2029-08-26T19:59:59Z'
     })
-    expect(delivered.statut).toBe('delivered')
-    expect(delayed.statut).toBe('delivered')
-    const history = JSON.parse(delayed.contenu).delivery.history as unknown[]
-    expect(history).toHaveLength(3)
+    expect(delivered.type).toBe('communication.ok')
+    expect(JSON.parse(delivered.contenu)).toMatchObject({ version: 2, result: 'delivered' })
+    expect(delayed.id).toBe(activity.id)
     const laterFailure = update_status({
       activity_id: activity.id,
       type: 'email',
       statut: 'failed',
       occurred_at: '2031-08-26T20:00:00Z'
     })
-    expect(laterFailure.statut).toBe('failed')
+    expect(laterFailure.id).toBe(activity.id)
     const duplicate = update_status({
       activity_id: activity.id,
       type: 'email',
       statut: 'sent',
       occurred_at: '2029-08-26T19:59:59Z'
     })
-    expect(duplicate.statut).toBe('failed')
-    expect(JSON.parse(duplicate.contenu).delivery.history).toHaveLength(4)
+    expect(duplicate.id).toBe(activity.id)
     expect(() =>
       patch_activity('alice@example.org', activity.id, {
-        operation: 'set_status',
-        statut: 'read'
+        operation: 'edit_content',
+        contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'x' })
       })
     ).toThrow()
     expect(() => delete_activity('alice@example.org', activity.id)).toThrow()
@@ -175,24 +177,26 @@ describe('communications', () => {
       create_activity('alice@example.org', {
         contexte: 'automations',
         ref: 'A-3',
-        type: 'email',
+        type: 'communication.sent',
+        channel: 'email',
         destinataire: 'tenant@example.org',
-        contenu: 'Contournement'
+        contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'x' })
       })
     ).toThrow()
   })
 
-  it('accepte la matrice terminale de tous les canaux et ordonne delivery.history', () => {
-    const failures: Record<Exclude<CommunicationType, 'signature'>, ActivityStatus[]> = {
+  it('accepte les événements d’échec terminaux de tous les canaux', () => {
+    const failures: Record<CommunicationChannel, string[]> = {
       rcs: ['failed'],
       sms: ['failed'],
       email: ['failed'],
-      courrier: ['returned', 'failed'],
-      lrar: ['refused', 'returned', 'failed'],
-      lre: ['refused', 'expired', 'failed']
+      postal_letter: ['returned', 'failed'],
+      postal_registered_letter_with_acknowledgement: ['refused', 'returned', 'failed'],
+      electronic_registered_delivery: ['refused', 'expired', 'failed'],
+      electronic_registered_letter: ['refused', 'expired', 'failed']
     }
     for (const [type, statuses] of Object.entries(failures) as Array<
-      [Exclude<CommunicationType, 'signature'>, ActivityStatus[]]
+      [CommunicationChannel, string[]]
     >) {
       for (const status of statuses) {
         const activity = create_outbound({
@@ -203,10 +207,12 @@ describe('communications', () => {
           destinataire:
             type === 'rcs' || type === 'sms'
               ? '+33612345678'
-              : type === 'email' || type === 'lre'
+              : type === 'email' ||
+                  type === 'electronic_registered_delivery' ||
+                  type === 'electronic_registered_letter'
                 ? 'tenant@example.org'
                 : '1 rue de la Paix',
-          contenu: JSON.stringify({ version: 1, corps: 'Test' }),
+          contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Test' }),
           idempotency_key: Bun.randomUUIDv7()
         })
         const failed = update_status({
@@ -215,12 +221,8 @@ describe('communications', () => {
           statut: status,
           occurred_at: '2031-01-01T00:00:00Z'
         })
-        expect(failed.statut).toBe(status)
-        expect(
-          (JSON.parse(failed.contenu).delivery.history as Array<{ status: string }>).map(
-            (item) => item.status
-          )
-        ).toEqual(['queued', status])
+        expect(failed.type).toBe('communication.failed')
+        expect(JSON.parse(failed.contenu)).toEqual({ version: 2, reason: status })
       }
     }
   })
@@ -232,7 +234,7 @@ describe('communications', () => {
       ref: 'A-4',
       type: 'email',
       destinataire: 'tenant@example.org',
-      contenu: JSON.stringify({ version: 1, corps: 'Question' }),
+      contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Question' }),
       idempotency_key: Bun.randomUUIDv7()
     })
     const inbound = create_inbound({
@@ -240,18 +242,27 @@ describe('communications', () => {
       ref: 'A-4',
       type: 'email',
       auteur: 'external:tenant@example.org',
-      contenu: JSON.stringify({ version: 1, corps: 'Réponse' }),
-      occurred_at: '2026-08-26T20:00:00Z'
+      contenu: JSON.stringify({
+        version: 2,
+        sender: 'external:tenant@example.org',
+        body: 'Réponse'
+      }),
+      occurred_at: '2026-08-26T20:00:00Z',
+      thread_id: outbound.thread_id!
     })
     const unmatched = create_unmatched_inbound({
       type: 'email',
       auteur: 'external:unknown@example.org',
-      contenu: JSON.stringify({ version: 1, corps: 'Inconnu' }),
+      contenu: JSON.stringify({
+        version: 2,
+        sender: 'external:unknown@example.org',
+        body: 'Inconnu'
+      }),
       occurred_at: '2026-08-26T20:01:00Z'
     })
 
     expect(inbound.thread_id).toBe(outbound.thread_id)
-    expect(inbound.statut).toBe('received')
+    expect(inbound.type).toBe('communication.received')
     expect(unmatched.rattachement.startsWith('a_qualifier:')).toBe(true)
     expect(unmatched.id_client).toBeNull()
     expect(unmatched.id_locataire).toBeNull()
@@ -265,7 +276,7 @@ describe('communications', () => {
       ref: 'HEURISTIC-1',
       type: 'email',
       destinataire: 'unique@example.org',
-      contenu: JSON.stringify({ version: 1, corps: 'Unique' }),
+      contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Unique' }),
       idempotency_key: Bun.randomUUIDv7()
     })
     expect(find_recent_thread('email', 'unique@example.org')?.ref).toBe('HEURISTIC-1')
@@ -277,7 +288,7 @@ describe('communications', () => {
         ref,
         type: 'email',
         destinataire: 'shared@example.org',
-        contenu: JSON.stringify({ version: 1, corps: ref }),
+        contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: ref }),
         idempotency_key: Bun.randomUUIDv7()
       })
     }
@@ -292,20 +303,20 @@ describe('communications', () => {
       type: 'rcs',
       destinataire: '+33612345678',
       contenu: JSON.stringify({
-        version: 1,
-        corps: 'Souhaitez-vous être rappelé ?',
-        choix: [{ id: 'rappeler', label: 'Être rappelé' }]
+        version: 2,
+        sender: 'user:alice@example.org',
+        body: 'Souhaitez-vous être rappelé ?',
+        choices: ['Être rappelé']
       }),
       idempotency_key: Bun.randomUUIDv7()
     })
     expect(activity).toMatchObject({
       auteur: 'user:alice@example.org',
       destinataire: '+33612345678',
-      type: 'rcs',
-      statut: 'queued'
+      type: 'communication.sent',
+      channel: 'rcs'
     })
     expect(activity.date_creation).toBeTruthy()
-    expect(activity.date_statut).toBeTruthy()
     expect(activity.contenu).toContain('Être rappelé')
     expect(activity.contenu).not.toContain('richContent')
     expect(activity.contenu).not.toContain('messages')

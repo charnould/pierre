@@ -52,7 +52,7 @@ export const controller = async (c: Context) => {
     }
   } catch (e) {
     console.log(e)
-    throw new Error('Error on statistics webpage', e)
+    throw new Error('Error on statistics webpage', { cause: e })
   }
 }
 

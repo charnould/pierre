@@ -15,3 +15,5 @@ export const setup = async () => {
   ])
   await migrate_datastore(paths.database)
 }
+
+if (import.meta.main) await setup()

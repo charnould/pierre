@@ -221,29 +221,29 @@ describe('ledger SQL queries', () => {
     create_trusted_activity('agent@example.org', {
       contexte: 'repayment',
       ref: 'LOC-1',
-      type: 'case_bucket_change',
-      statut: 'logged',
-      contenu: JSON.stringify({ version: 1, bucket_precedent: null, bucket: 'amiable' }),
+      type: 'case.group_changed',
+      contenu: JSON.stringify({ version: 2, before: null, after: 'amiable' }),
       auteur: 'system:repayment'
     })
     create_trusted_activity('agent@example.org', {
       contexte: 'repayment',
       ref: 'LOC-1',
-      type: 'case_assignment',
-      statut: 'logged',
+      type: 'case.assignee_changed',
       contenu: JSON.stringify({
-        version: 1,
-        referent_precedent: null,
-        referent: 'agent@example.org'
+        version: 2,
+        before: null,
+        after: { id: 'user:agent@example.org', label: 'agent@example.org' }
       }),
       auteur: 'system:repayment'
     })
     create_trusted_activity('agent@example.org', {
       contexte: 'repayment',
       ref: 'LOC-1',
-      type: 'action',
-      statut: 'logged',
-      contenu: JSON.stringify({ action: 'Relancer', etat: 'fait' }),
+      type: 'task.completed',
+      contenu: JSON.stringify({
+        version: 2,
+        task: { title: 'Relancer', state: 'completed' }
+      }),
       auteur: 'system:repayment'
     })
 
@@ -263,30 +263,28 @@ describe('ledger SQL queries', () => {
     const db = new Database(datastorePaths(SERVICE_A).database)
     db.run(
       `INSERT INTO activites (
-         date_creation, rattachement, auteur, id_locataire, type, statut, mentions, contenu
-       ) VALUES (?, ?, ?, ?, ?, ?, '[]', ?)`,
+         date_creation, rattachement, auteur, id_locataire, type, mentions, contenu
+       ) VALUES (?, ?, ?, ?, ?, '[]', ?)`,
       [
         '2030-02-01',
         'repayment:LOC-1',
         'system:repayment',
         'LOC-1',
-        'case_bucket_change',
-        'logged',
-        JSON.stringify({ version: 1, bucket_precedent: null, bucket: 'amiable' })
+        'case.group_changed',
+        JSON.stringify({ version: 2, before: null, after: 'amiable' })
       ]
     )
     db.run(
       `INSERT INTO activites (
-         date_creation, rattachement, auteur, id_locataire, type, statut, mentions, contenu
-       ) VALUES (?, ?, ?, ?, ?, ?, '[]', ?)`,
+         date_creation, rattachement, auteur, id_locataire, type, mentions, contenu
+       ) VALUES (?, ?, ?, ?, ?, '[]', ?)`,
       [
         '2030-03-01',
         'tickets:TICKET-1',
         'system:test',
         'LOC-1',
-        'case_bucket_change',
-        'logged',
-        JSON.stringify({ version: 1, bucket_precedent: 'amiable', bucket: 'contentieux' })
+        'case.group_changed',
+        JSON.stringify({ version: 2, before: 'amiable', after: 'contentieux' })
       ]
     )
     db.close()

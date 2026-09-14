@@ -1,8 +1,7 @@
 import { Database } from 'bun:sqlite'
 import { describe, expect, it } from 'bun:test'
 
-import { mention_of } from '../../../../shared/activites'
-import { parse_contenu_json } from '../../../../shared/activites'
+import { mention_of, parse_contenu_json } from '../../../../shared/activites'
 import { DESKTOP_AGENT_DESTINATAIRE } from '../../../../shared/agent-identity'
 import { list_activities } from '../../../utils/activities/query'
 import { latest_repayment_states } from '../../../utils/activities/repayment'
@@ -19,7 +18,6 @@ import {
   ADMIN,
   ALICE,
   BOB,
-  CAROL,
   CDUBOIS,
   CLAIRE,
   DATASTORE_PATH,
@@ -46,10 +44,9 @@ describe('create_activity', () => {
     const created = create_activity(ALICE, {
       contexte: 'tickets',
       ref: 'REQ-1',
-      type: 'note',
-      statut: 'logged',
+      type: 'note.published',
       recipients: ['jean.dupont', BOB],
-      contenu: 'Point avec @claire'
+      contenu: JSON.stringify({ version: 2, text: 'Point avec @claire' })
     })
     expect(created).toMatchObject({
       rattachement: 'tickets:REQ-1',
@@ -57,257 +54,137 @@ describe('create_activity', () => {
       id_client: 'CLI-1',
       id_locataire: 'LOC-1',
       id_lot: 'LOT-1',
-      contenu: JSON.stringify({ version: 1, note: 'Point avec @claire' })
+      type: 'note.published',
+      channel: null
+    })
+    expect(parse_contenu_json(created.contenu)).toEqual({
+      version: 2,
+      text: 'Point avec @claire'
     })
     expect(created.mentions).toEqual([mention(CLAIRE), mention(JEAN), mention(BOB)])
     expect(list_activities(JEAN, { inbox: true })).toHaveLength(1)
     expect(list_activities('jean', { inbox: true })).toHaveLength(0)
-    expect(list_activities(user(JEAN), { inbox: true })).toHaveLength(1)
 
-    patch_activity(JEAN, created.id, { operation: 'set_mention', lu: true, boost: '🔥' })
-    const after = list_activities(BOB, { inbox: true })[0]!
-    expect(after.mentions).toEqual([mention(CLAIRE), mention(JEAN, true, '🔥'), mention(BOB)])
-    expect(after.my).toEqual(mention(BOB))
+    patch_activity(JEAN, created.id, { operation: 'set_mention', lu: true })
+    const after = list_activities(JEAN, { inbox: true })[0]!
+    expect(after.my).toEqual(mention(JEAN))
+    expect(after.read).toBe(true)
   })
 
-  it('ignore un @login inconnu et accepte un destinataire déjà préfixé', () => {
-    seed_users(ALICE, BOB)
-    const created = create_activity(ALICE, {
-      contexte: 'tickets',
-      ref: 'REQ-9',
-      type: 'note',
-      statut: 'logged',
-      recipients: [user(BOB), 'ghost'],
-      contenu: 'Vu @inconnu et @bob'
-    })
-    expect(created.mentions).toEqual([mention(BOB)])
-  })
-
-  it('résout @pierre vers l’agent avant un utilisateur homonyme', () => {
-    seed_users(ALICE, 'pierre@exemple.fr')
+  it('ignore un @login inconnu et résout @pierre vers l’agent', () => {
+    seed_users(ALICE, BOB, 'pierre@exemple.fr')
     const created = create_activity(ALICE, {
       contexte: 'tickets',
       ref: 'REQ-AGENT',
-      type: 'note',
-      statut: 'logged',
-      recipients: ['pierre'],
-      contenu: 'Avis demandé à @pierre'
+      type: 'note.published',
+      recipients: [user(BOB), 'ghost', 'pierre'],
+      contenu: JSON.stringify({ version: 2, text: 'Vu @inconnu et @bob et @pierre' })
     })
-
-    expect(created.mentions).toEqual([
-      { destinataire: DESKTOP_AGENT_DESTINATAIRE, lu: false, boost: null }
-    ])
+    expect(created.mentions).toEqual([mention(BOB), { destinataire: DESKTOP_AGENT_DESTINATAIRE }])
     expect(list_activities(DESKTOP_AGENT_DESTINATAIRE, { inbox: true })).toHaveLength(1)
     expect(list_activities('pierre@exemple.fr', { inbox: true })).toHaveLength(0)
   })
 
-  it('conserve l’auto-mention pour que l’auteur puisse se notifier', () => {
+  it('conserve l’auto-mention et refuse les payloads v1', () => {
     seed_users(ADMIN)
-    const db = new Database(DATASTORE_PATH)
-    db.run('CREATE TABLE reclamations (id_reclamation TEXT, id_locataire TEXT, id_lot TEXT)')
-    db.run("INSERT INTO reclamations VALUES ('REQ-2', 'LOC-2', NULL)")
-    db.close()
-
     const created = create_activity(ADMIN, {
       contexte: 'repayment',
       ref: 'LOC-2',
-      type: 'note',
-      statut: 'logged',
-      contenu: '@admin rappel perso'
+      type: 'note.published',
+      contenu: JSON.stringify({ version: 2, text: '@admin rappel perso' })
     })
-
     expect(created.mentions).toEqual([mention(ADMIN)])
-    expect(list_activities(ADMIN, { inbox: true })).toHaveLength(1)
     expect(list_activities(ADMIN, { inbox: true })[0]?.id).toBe(created.id)
+
+    expect(() =>
+      create_activity(ALICE, {
+        contexte: 'automations',
+        ref: 'auto-1',
+        type: 'automation.reported',
+        contenu: JSON.stringify({ version: 1, contenu: '<h1>Rapport</h1>' })
+      })
+    ).toThrow(/Invalid automation\.reported content/)
   })
 
-  it('régénère un brouillon courant sur place et réécrit le contenu', () => {
-    const first = create_trusted_activity(ALICE, {
-      contexte: 'tickets',
-      ref: 'REQ-1',
-      type: 'ticket_memo',
-      statut: 'draft',
-      contenu: JSON.stringify({ contenu: 'v1', evaluation: { score: 5 } }),
-      auteur: 'agent:ticket.write-memo'
-    })
-    const regenerated = create_trusted_activity(ALICE, {
-      contexte: 'tickets',
-      ref: 'REQ-1',
-      type: 'ticket_memo',
-      statut: 'draft',
-      contenu: JSON.stringify({ contenu: 'v2' }),
-      auteur: 'agent:ticket.write-memo'
-    })
-    expect(regenerated.id).toBe(first.id)
-    expect(parse_contenu_json(regenerated.contenu)).toEqual({ version: 1, contenu: 'v2' })
-  })
-
-  it('normalise un contenu textuel dans un JSON versionné', () => {
-    const created = create_activity(ALICE, {
-      contexte: 'automations',
-      ref: 'auto-1',
-      type: 'automation_report',
-      statut: 'logged',
-      contenu: '<h1>Rapport</h1><p>HTML brut</p>'
-    })
-    expect(parse_contenu_json(created.contenu)).toEqual({
-      version: 1,
-      contenu: '<h1>Rapport</h1><p>HTML brut</p>'
-    })
-  })
-
-  it('refuse un auteur user: qui ne correspond pas à la session', () => {
+  it('valide les types fermés et les auteurs fiables', () => {
     expect(
       CreateActivityInput.safeParse({
         contexte: 'tickets',
         ref: 'REQ-1',
         type: 'note',
-        auteur: user(BOB),
-        contenu: 'usurpation'
+        contenu: JSON.stringify({ version: 2, text: 'ancien alias' })
       }).success
     ).toBe(false)
-  })
-
-  it('crée ticket_reply et ticket_summary comme types structurés', () => {
-    const reply = create_activity(ALICE, {
-      contexte: 'automations',
-      ref: 'auto-reply',
-      type: 'ticket_reply',
-      statut: 'logged',
-      contenu: JSON.stringify({
-        titre: 'Réponses',
-        contenu: 'Brouillons',
-        summary: { generated: 2, total: 3 }
-      })
-    })
-    const summary = create_trusted_activity(ALICE, {
+    const generated = create_trusted_activity(ALICE, {
       contexte: 'tickets',
-      ref: 'REQ-8',
-      type: 'ticket_summary',
-      statut: 'logged',
-      contenu: JSON.stringify({ contenu: 'Point', skill: 'ticket.summarize-ticket' }),
-      auteur: 'agent:ticket.summarize-ticket'
+      ref: 'REQ-1',
+      type: 'artifact.generated',
+      contenu: JSON.stringify({ version: 2, title: 'Mémo', note: 'Contenu' }),
+      auteur: 'agent:ticket.write-memo'
     })
-    expect(reply.type).toBe('ticket_reply')
-    expect(summary.type).toBe('ticket_summary')
-    expect(typeof reply.id).toBe('number')
-    expect(typeof summary.id).toBe('number')
+    expect(generated).toMatchObject({
+      type: 'artifact.generated',
+      auteur: 'agent:ticket.write-memo',
+      revision: 1
+    })
   })
 })
 
 describe('latest_repayment_states', () => {
-  it('projette la phase et la dernière action réalisée', () => {
-    insert_repayment_activity('case_bucket_change', 'LOC-1', '2026-06-10T10:00:00', {
-      version: 1,
-      bucket_precedent: 'non_traites',
-      bucket: 'amiable'
+  it('projette le groupe, la dernière tâche réalisée et le gestionnaire', () => {
+    insert_repayment_activity('case.group_changed', 'LOC-1', '2026-06-10T10:00:00Z', {
+      version: 2,
+      before: 'non_traites',
+      after: 'amiable'
     })
-    insert_repayment_activity('action', 'LOC-1', '2026-06-11T11:00:00', {
-      version: 1,
-      action: 'Joindre le locataire',
-      etat: 'fait'
+    insert_repayment_activity('case.assignee_changed', 'LOC-1', '2026-06-10T11:00:00Z', {
+      version: 2,
+      before: null,
+      after: { id: user(CDUBOIS), label: CDUBOIS }
     })
-    const db = new Database(DATASTORE_PATH)
-    db.run(
-      `INSERT INTO activites (
-         date_creation, rattachement, auteur, id_locataire, type, statut, mentions, contenu
-       ) VALUES ('2026-06-12T12:00:00', 'repayment:LOC-1', ?, 'LOC-1', 'note', 'logged', '[]', 'Note')`,
-      [user(ALICE)]
-    )
-    db.close()
+    const created = create_activity(ALICE, {
+      contexte: 'repayment',
+      ref: 'LOC-1',
+      type: 'task.created',
+      contenu: JSON.stringify({
+        version: 2,
+        task: {
+          title: 'Joindre le locataire',
+          state: 'open',
+          assignee: { id: ALICE, label: ALICE }
+        }
+      })
+    })
+    patch_activity(ALICE, created.id, {
+      operation: 'complete_action',
+      resultat: 'Locataire joint'
+    })
 
-    const states = latest_repayment_states(new Database(DATASTORE_PATH), ['LOC-1'])
-    expect(states.get('LOC-1')).toEqual({
+    const db = new Database(DATASTORE_PATH)
+    const states = latest_repayment_states(db, ['LOC-1'])
+    db.close()
+    expect(states.get('LOC-1')).toMatchObject({
       bucket: 'amiable',
       derniere_action_realisee: 'Joindre le locataire',
-      date_derniere_action_realisee: '2026-06-11T11:00:00',
-      gestionnaire: null,
-      gestionnaire_email: null
-    })
-  })
-
-  it('ignore une note qui imite un changement d’action', () => {
-    const db = new Database(DATASTORE_PATH)
-    db.run(
-      `INSERT INTO activites (
-         date_creation, rattachement, auteur, id_locataire, type, statut, mentions, contenu
-       ) VALUES ('2026-06-12T12:00:00', 'repayment:LOC-2', ?, 'LOC-2', 'note', 'logged', '[]',
-         '{"contenu":"Note","action":"appel"}')`,
-      [user(ALICE)]
-    )
-    db.close()
-
-    const states = latest_repayment_states(new Database(DATASTORE_PATH), ['LOC-2'])
-    expect(states.get('LOC-2')).toBeUndefined()
-  })
-
-  it('lit le dernier gestionnaire', () => {
-    insert_repayment_activity('case_assignment', 'LOC-4', '2026-06-10T10:00:00', {
-      version: 1,
-      referent_precedent: null,
-      referent: 'old@example.org'
-    })
-    insert_repayment_activity('case_assignment', 'LOC-4', '2026-06-11T11:00:00', {
-      version: 1,
-      referent_precedent: 'old@example.org',
-      referent: CDUBOIS
-    })
-
-    const states = latest_repayment_states(new Database(DATASTORE_PATH), ['LOC-4'])
-    expect(states.get('LOC-4')).toEqual({
-      bucket: null,
-      derniere_action_realisee: null,
-      date_derniere_action_realisee: null,
       gestionnaire: CDUBOIS,
       gestionnaire_email: CDUBOIS
     })
   })
 
-  it('ignore un changement de tags pour le listing', () => {
-    insert_repayment_activity('case_bucket_change', 'LOC-TAGS', '2026-06-10T10:00:00', {
-      version: 1,
-      bucket_precedent: 'non_traites',
-      bucket: 'amiable'
-    })
-    insert_repayment_activity('case_tag_change', 'LOC-TAGS', '2026-06-12T12:00:00', {
-      version: 1,
-      tags_precedents: [],
-      tags: ['décès']
-    })
-
-    const states = latest_repayment_states(new Database(DATASTORE_PATH), ['LOC-TAGS'])
-    expect(states.get('LOC-TAGS')).toEqual({
-      bucket: 'amiable',
-      derniere_action_realisee: null,
-      date_derniere_action_realisee: null,
-      gestionnaire: null,
-      gestionnaire_email: null
-    })
-    expect(states.get('LOC-TAGS')).not.toHaveProperty('tags')
-  })
-
-  it('un email entrant notifie le dernier gestionnaire affecté', () => {
-    create_activity(ALICE, {
-      contexte: 'repayment',
-      ref: 'LOC-5',
-      type: 'case_assignment',
-      statut: 'logged',
-      recipients: [CDUBOIS],
-      contenu: JSON.stringify({
-        version: 1,
-        referent_precedent: null,
-        referent: CDUBOIS
-      })
+  it('ignore les autres rattachements et notifie le gestionnaire sur un entrant', () => {
+    insert_repayment_activity('case.assignee_changed', 'LOC-5', '2026-06-10T10:00:00Z', {
+      version: 2,
+      before: null,
+      after: { id: user(CDUBOIS), label: CDUBOIS }
     })
     const db = new Database(DATASTORE_PATH)
     db.run(
       `INSERT INTO activites (
-         date_creation, date_statut, rattachement, auteur, id_locataire,
-         type, statut, mentions, contenu
+         date_creation, rattachement, auteur, id_locataire, type, mentions, contenu
        ) VALUES (
-         '2099-08-26T19:00:00Z', '2099-08-26T19:00:00Z', 'tickets:REQ-5',
-         'user:alice', 'LOC-5', 'case_assignment', 'logged', '[]',
-         '{"version":1,"referent_precedent":null,"referent":"wrong@example.org"}'
+         '2099-08-26T19:00:00Z', 'tickets:REQ-5', 'system:test', 'LOC-5',
+         'case.assignee_changed', '[]',
+         '{"version":2,"before":null,"after":"wrong@example.org"}'
        )`
     )
     db.close()
@@ -318,465 +195,72 @@ describe('latest_repayment_states', () => {
       type: 'email',
       auteur: 'tenant:LOC-5',
       occurred_at: '2026-08-26T20:00:00Z',
-      contenu: '{"version":1,"corps":"Réponse du locataire"}'
+      contenu: JSON.stringify({ version: 2, sender: 'tenant:LOC-5', body: 'Réponse' })
     })
-
     expect(inbound.mentions).toEqual([mention(CDUBOIS)])
   })
 })
 
-describe('patch_activity', () => {
-  it('edit_content remplace un plan structuré et pose edition { par, le }', () => {
-    const created = create_trusted_activity(ALICE, {
-      contexte: 'repayment',
-      ref: 'LOC-9',
-      type: 'repayment_plan',
-      statut: 'draft',
-      contenu: JSON.stringify({
-        version: 1,
-        titre: "Plan d'apurement",
-        etat: 'brouillon',
-        formulaire: { rentalDebt: 100, signed: false },
-        note: 'Ancien commentaire'
-      }),
-      auteur: 'agent:repayment.create-plan'
+describe('append-only patches', () => {
+  it('édite une note dans son thread et conserve la version publiée', () => {
+    seed_users(ALICE, BOB)
+    const created = create_activity(ALICE, {
+      contexte: 'tickets',
+      ref: 'REQ-EDIT',
+      type: 'note.published',
+      contenu: JSON.stringify({ version: 2, text: 'Salut @bob' })
     })
-
     const updated = patch_activity(ALICE, created.id, {
       operation: 'edit_content',
-      contenu: JSON.stringify({
-        version: 1,
-        titre: "Plan d'apurement",
-        etat: 'brouillon',
-        formulaire: { rentalDebt: 250, signed: false }
-      })
+      contenu: JSON.stringify({ version: 2, text: 'Bonjour @bob' })
     })
-
-    const payload = parse_contenu_json(updated.contenu)
-    expect(payload['titre']).toBe("Plan d'apurement")
-    expect((payload['formulaire'] as { rentalDebt: number }).rentalDebt).toBe(250)
-    expect(payload['note']).toBe('Ancien commentaire')
-    expect(payload['edition']).toEqual({
-      par: user(ALICE),
-      le: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)
+    expect(updated).toMatchObject({
+      type: 'note.updated',
+      thread_id: created.thread_id,
+      revision: 2
     })
+    expect(parse_contenu_json(updated.contenu)).toEqual({ version: 2, text: 'Bonjour @bob' })
+    expect(get_activity(created.id)?.contenu).toBe(created.contenu)
   })
 
-  it('edit_content d’une note met à jour le texte et fusionne les mentions', () => {
-    seed_users(ALICE, BOB, CAROL)
-    const created = create_activity(ALICE, {
-      contexte: 'repayment',
-      ref: 'LOC-11',
-      type: 'note',
-      statut: 'logged',
-      contenu: JSON.stringify({ version: 1, note: 'Salut @bob' })
-    })
-    expect(created.mentions).toEqual([mention(BOB)])
-
-    patch_activity(BOB, created.id, { operation: 'set_mention', lu: true, boost: '👍' })
-
-    const updated = patch_activity(ALICE, created.id, {
-      operation: 'edit_content',
-      contenu: JSON.stringify({ version: 1, note: 'Salut @bob et @carol' })
-    })
-
-    expect(parse_contenu_json(updated.contenu)['note']).toBe('Salut @bob et @carol')
-    expect(updated.mentions).toEqual([mention(BOB, true, '👍'), mention(CAROL)])
-  })
-
-  it('set_evaluation fonctionne sur tout contenu JSON structuré', () => {
-    const note = create_activity(ALICE, {
-      contexte: 'tickets',
-      ref: 'REQ-3',
-      type: 'note',
-      statut: 'logged',
-      contenu: JSON.stringify({ version: 1, note: 'Texte' })
-    })
-    expect(
-      parse_contenu_json(
-        patch_activity(ALICE, note.id, { operation: 'set_evaluation', score: 4 }).contenu
-      )['evaluation']
-    ).toMatchObject({ score: 4 })
-
-    const memo = create_trusted_activity(ALICE, {
-      contexte: 'tickets',
-      ref: 'REQ-3',
-      type: 'ticket_memo',
-      statut: 'draft',
-      contenu: JSON.stringify({ contenu: 'Mémo', skill: 'ticket.write-memo' }),
-      auteur: 'agent:ticket.write-memo'
-    })
-    const evaluated = patch_activity(ALICE, memo.id, {
-      operation: 'set_evaluation',
-      score: 4,
-      commentaire: 'Utile'
-    })
-    expect(parse_contenu_json(evaluated.contenu)['evaluation']).toEqual({
-      score: 4,
-      commentaire: 'Utile',
-      par: user(ALICE),
-      le: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)
-    })
-  })
-
-  it('refuse un statut hors enum fermé', () => {
-    const created = create_activity(ALICE, {
-      contexte: 'repayment',
-      ref: 'LOC-14',
-      type: 'note',
-      statut: 'logged',
-      contenu: 'x'
-    })
-    expect(() =>
-      patch_activity(ALICE, created.id, {
-        operation: 'set_status',
-        statut: 'non_respect' as never
-      })
-    ).toThrow()
-  })
-
-  it('inbox unread_only ne garde que lu: false', () => {
+  it('projette lecture et réaction sans muter la source', () => {
     seed_users(ALICE, BOB)
-    const unread = create_activity(ALICE, {
-      contexte: 'tickets',
-      ref: 'REQ-4',
-      type: 'note',
-      statut: 'logged',
+    const created = create_activity(ALICE, {
+      contexte: 'repayment',
+      ref: 'LOC-REACTION',
+      type: 'note.published',
       recipients: [BOB],
-      contenu: 'À lire'
-    })
-    const read = create_activity(ALICE, {
-      contexte: 'tickets',
-      ref: 'REQ-5',
-      type: 'note',
-      statut: 'logged',
-      recipients: [BOB],
-      contenu: 'Déjà vu'
-    })
-    patch_activity(BOB, read.id, { operation: 'set_mention', lu: true })
-    const inbox = list_activities(BOB, { inbox: true, unread_only: true })
-    expect(inbox.map((row) => row.id)).toEqual([unread.id])
-    expect(inbox[0]?.my?.lu).toBe(false)
-  })
-
-  it('filtre l’activité par plusieurs auteurs sans exposer leur inbox', () => {
-    seed_users(ALICE, BOB, CLAIRE)
-    const alice = create_activity(ALICE, {
-      contexte: 'repayment',
-      ref: 'LOC-ALICE',
-      type: 'case_bucket_change',
-      statut: 'logged',
-      contenu: JSON.stringify({ version: 1, bucket_precedent: 'nouveau', bucket: 'relance' })
-    })
-    const bob = create_activity(BOB, {
-      contexte: 'tickets',
-      ref: 'REC-BOB',
-      type: 'ticket_change',
-      statut: 'logged',
-      recipients: [CLAIRE],
-      contenu: JSON.stringify({ avant: 'ouvert', apres: 'clos' })
-    })
-    create_activity(CLAIRE, {
-      contexte: 'tickets',
-      ref: 'REC-CLAIRE',
-      type: 'note',
-      statut: 'logged',
-      contenu: 'Hors sélection'
-    })
-
-    const activity = list_activities(CLAIRE, {
-      auteurs: [user(ALICE), user(BOB)]
-    })
-
-    expect(activity.map((row) => row.id)).toEqual([bob.id, alice.id])
-    expect(activity[0]?.my).toEqual(mention(CLAIRE))
-    expect(activity.every((row) => [user(ALICE), user(BOB)].includes(row.auteur))).toBe(true)
-  })
-})
-
-describe('delete_activity', () => {
-  it('autorise le créateur à hard-deleter une note', () => {
-    const created = create_activity(ALICE, {
-      contexte: 'repayment',
-      ref: 'LOC-12',
-      type: 'note',
-      statut: 'logged',
-      contenu: 'À supprimer'
-    })
-
-    delete_activity(ALICE, created.id)
-    expect(get_activity(created.id)).toBeNull()
-  })
-
-  it('refuse la suppression d’une note par un non-auteur', () => {
-    const created = create_activity(ALICE, {
-      contexte: 'repayment',
-      ref: 'LOC-13',
-      type: 'note',
-      statut: 'logged',
-      contenu: 'Privé'
-    })
-
-    expect(() => delete_activity(BOB, created.id)).toThrow()
-    expect(get_activity(created.id)?.id).toBe(created.id)
-  })
-
-  it('supprime aussi les boosts liés à une note', () => {
-    seed_users(ALICE, BOB)
-    const created = create_activity(ALICE, {
-      contexte: 'repayment',
-      ref: 'LOC-12-BOOST',
-      type: 'note',
-      statut: 'logged',
-      contenu: 'À booster'
-    })
-    patch_activity(BOB, created.id, { operation: 'set_boost', emoji: '👍' })
-    const boost = list_activities(ALICE, { inbox: true })[0]
-    expect(boost?.type).toBe('activity_boost')
-
-    delete_activity(ALICE, created.id)
-    expect(get_activity(created.id)).toBeNull()
-    expect(boost ? get_activity(boost.id) : null).toBeNull()
-    expect(list_activities(ALICE, { inbox: true })).toHaveLength(0)
-  })
-
-  it('refuse la suppression d’une todo par un non-créateur', () => {
-    seed_users(ALICE, BOB)
-    const created = create_activity(ALICE, {
-      contexte: 'repayment',
-      ref: 'LOC-TODO-FORBID',
-      type: 'action',
-      contenu: JSON.stringify({
-        version: 1,
-        action: 'Relancer',
-        etat: 'a_faire',
-        assigne_a: BOB,
-        date_echeance: '2026-08-30'
-      })
-    })
-
-    expect(() => delete_activity(BOB, created.id)).toThrow(/Forbidden/)
-    expect(get_activity(created.id)?.id).toBe(created.id)
-  })
-
-  it('supprime un brouillon de plan mais conserve un plan signé', () => {
-    const draft = create_trusted_activity(ALICE, {
-      contexte: 'repayment',
-      ref: 'LOC-10',
-      type: 'repayment_plan',
-      statut: 'draft',
-      contenu: JSON.stringify({
-        version: 1,
-        titre: "Plan d'apurement",
-        etat: 'brouillon',
-        formulaire: { rentalDebt: 100, signed: false }
-      }),
-      auteur: 'agent:repayment.create-plan'
-    })
-
-    delete_activity(ALICE, draft.id)
-    expect(get_activity(draft.id)).toBeNull()
-
-    const signed = create_activity(ALICE, {
-      contexte: 'repayment',
-      ref: 'LOC-10',
-      type: 'repayment_plan',
-      statut: 'logged',
-      contenu: JSON.stringify({ version: 1, etat: 'signe', formulaire: { signed: true } })
-    })
-    expect(() => delete_activity(ALICE, signed.id)).toThrow()
-  })
-})
-
-describe('set_boost', () => {
-  it('autorise un boost sans mention préalable et notifie l’auteur', () => {
-    seed_users(ALICE, BOB)
-    const created = create_activity(ALICE, {
-      contexte: 'repayment',
-      ref: 'LOC-BOOST',
-      type: 'note',
-      statut: 'logged',
-      contenu: 'Relance effectuée'
-    })
-
-    const updated = patch_activity(BOB, created.id, { operation: 'set_boost', emoji: '👍' })
-    expect(updated.mentions).toEqual([
-      { destinataire: user(BOB), lu: true, boost: '👍', inbox: false }
-    ])
-    expect(list_activities(BOB, { inbox: true })).toHaveLength(0)
-
-    const inbox = list_activities(ALICE, { inbox: true })
-    expect(inbox).toHaveLength(1)
-    expect(inbox[0]?.type).toBe('activity_boost')
-    expect(inbox[0]?.auteur).toBe(user(BOB))
-    expect(inbox[0]?.my).toEqual({ destinataire: user(ALICE), lu: false, boost: null })
-    expect(parse_contenu_json(inbox[0]!.contenu)).toEqual({
-      version: 1,
-      activite_source_id: created.id,
-      type_activite_source: 'note',
-      emoji: '👍'
-    })
-  })
-
-  it('remplace l’emoji et recrée une notification non lue', () => {
-    seed_users(ALICE, BOB)
-    const created = create_activity(ALICE, {
-      contexte: 'tickets',
-      ref: 'REQ-BOOST',
-      type: 'note',
-      statut: 'logged',
-      contenu: 'Point'
-    })
-    patch_activity(BOB, created.id, { operation: 'set_boost', emoji: '👍' })
-    const first = list_activities(ALICE, { inbox: true })[0]!
-    patch_activity(ALICE, first.id, { operation: 'set_mention', lu: true })
-
-    patch_activity(BOB, created.id, { operation: 'set_boost', emoji: '🔥' })
-    const source = get_activity(created.id)!
-    expect(mention_of(source.mentions, user(BOB))?.boost).toBe('🔥')
-
-    const inbox = list_activities(ALICE, { inbox: true })
-    expect(inbox).toHaveLength(1)
-    expect(inbox[0]?.id).toBe(first.id)
-    expect(inbox[0]?.my?.lu).toBe(false)
-    expect(parse_contenu_json(inbox[0]!.contenu)['emoji']).toBe('🔥')
-  })
-
-  it('retire le boost et supprime la notification, sans polluer l’inbox du booster', () => {
-    seed_users(ALICE, BOB)
-    const created = create_activity(ALICE, {
-      contexte: 'repayment',
-      ref: 'LOC-BOOST-2',
-      type: 'case_bucket_change',
-      statut: 'logged',
-      contenu: JSON.stringify({
-        version: 1,
-        bucket_precedent: 'amiable',
-        bucket: 'pre_contentieux'
-      })
-    })
-    patch_activity(BOB, created.id, { operation: 'set_boost', emoji: '👏' })
-    patch_activity(BOB, created.id, { operation: 'set_boost', emoji: null })
-
-    expect(get_activity(created.id)?.mentions).toEqual([])
-    expect(list_activities(ALICE, { inbox: true })).toHaveLength(0)
-    expect(list_activities(BOB, { inbox: true })).toHaveLength(0)
-  })
-
-  it('conserve une mention réelle et son état lu quand on boost puis retire', () => {
-    seed_users(ALICE, BOB)
-    const created = create_activity(ALICE, {
-      contexte: 'tickets',
-      ref: 'REQ-BOOST-2',
-      type: 'note',
-      statut: 'logged',
-      recipients: [BOB],
-      contenu: 'Salut @bob'
+      contenu: JSON.stringify({ version: 2, text: 'Relance effectuée' })
     })
     patch_activity(BOB, created.id, { operation: 'set_mention', lu: true })
-    patch_activity(BOB, created.id, { operation: 'set_boost', emoji: '❤️' })
-    expect(list_activities(BOB, { inbox: true })).toHaveLength(1)
-
-    patch_activity(BOB, created.id, { operation: 'set_boost', emoji: null })
-    const source = get_activity(created.id)!
-    expect(mention_of(source.mentions, user(BOB))).toEqual(mention(BOB, true, null))
-    expect(list_activities(BOB, { inbox: true })[0]?.id).toBe(created.id)
+    const reaction = patch_activity(BOB, created.id, { operation: 'set_boost', emoji: '👍' })
+    expect(reaction.type).toBe('activity.reaction_changed')
+    expect(parse_contenu_json(reaction.contenu)).toEqual({
+      version: 2,
+      source_activity_id: created.id,
+      emoji: '👍'
+    })
+    const source = list_activities(BOB, { rattachement: created.rattachement }).find(
+      (row) => row.id === created.id
+    )!
+    expect(source.read).toBe(true)
+    expect(source.reaction).toBe('👍')
+    expect(mention_of(source.mentions, user(BOB))).toEqual(mention(BOB))
   })
 
-  it('refuse l’auto-boost, les auteurs non collaborateurs et le boost d’une notification', () => {
-    seed_users(ALICE, BOB)
-    const own = create_activity(ALICE, {
+  it('retire une note par événement et refuse auteur étranger ou auto-réaction', () => {
+    const created = create_activity(ALICE, {
       contexte: 'repayment',
-      ref: 'LOC-BOOST-3',
-      type: 'note',
-      statut: 'logged',
-      contenu: 'Moi'
+      ref: 'LOC-WITHDRAW',
+      type: 'note.published',
+      contenu: JSON.stringify({ version: 2, text: 'Privé' })
     })
-    expect(() => patch_activity(ALICE, own.id, { operation: 'set_boost', emoji: '👍' })).toThrow(
-      ActivitiesError
-    )
-
-    const agent = create_trusted_activity(ALICE, {
-      contexte: 'tickets',
-      ref: 'REQ-BOT',
-      type: 'ticket_memo',
-      statut: 'logged',
-      contenu: JSON.stringify({ contenu: 'Mémo' }),
-      auteur: 'agent:ticket.write-memo'
-    })
-    expect(() => patch_activity(BOB, agent.id, { operation: 'set_boost', emoji: '👍' })).toThrow(
-      /collaborator/
-    )
-
-    patch_activity(BOB, own.id, { operation: 'set_boost', emoji: '👍' })
-    const notification = list_activities(ALICE, { inbox: true })[0]!
+    expect(() => delete_activity(BOB, created.id)).toThrow(ActivitiesError)
     expect(() =>
-      patch_activity(BOB, notification.id, { operation: 'set_boost', emoji: '👏' })
-    ).toThrow(/cannot be boosted/i)
-  })
-
-  it('autorise le boost d’un courrier de masse et refuse d’en modifier le contenu', () => {
-    seed_users(ALICE, BOB)
-    const db = new Database(DATASTORE_PATH)
-    const inserted = db.run(
-      `INSERT INTO activites (
-         date_creation, date_statut, rattachement, auteur, id_locataire, type, statut,
-         mentions, contenu, thread_id, bulk_id
-       ) VALUES (
-         '2026-08-30T10:00:00', '2026-08-30T10:00:00', 'repayment:LOC-BULK-R1',
-         ?, 'LOC-BULK-R1', 'courrier', 'sent', '[]', ?, ?, ?
-       )`,
-      [
-        user(ALICE),
-        JSON.stringify({ version: 1, canal: 'courrier', action: 'Envoyer le courrier R1' }),
-        Bun.randomUUIDv7(),
-        'bulk-r1'
-      ]
-    )
-    const sourceId = Number(inserted.lastInsertRowid)
-    db.close()
-    expect(sourceId).toBeGreaterThan(0)
-
-    const updated = patch_activity(BOB, sourceId, { operation: 'set_boost', emoji: '👏' })
-    expect(updated.type).toBe('courrier')
-    expect(updated.bulk_id).toBe('bulk-r1')
-    expect(updated.mentions).toEqual([
-      { destinataire: user(BOB), lu: true, boost: '👏', inbox: false }
-    ])
-
-    const inbox = list_activities(ALICE, { inbox: true })
-    expect(inbox).toHaveLength(1)
-    expect(inbox[0]?.type).toBe('activity_boost')
-    expect(parse_contenu_json(inbox[0]!.contenu)).toMatchObject({
-      activite_source_id: sourceId,
-      type_activite_source: 'courrier',
-      emoji: '👏'
-    })
-
-    expect(() =>
-      patch_activity(BOB, sourceId, { operation: 'edit_content', contenu: 'autre texte' })
-    ).toThrow(/immutable/i)
-
-    patch_activity(BOB, sourceId, { operation: 'set_boost', emoji: null })
-    expect(get_activity(sourceId)?.mentions).toEqual([])
-    expect(list_activities(ALICE, { inbox: true })).toHaveLength(0)
-  })
-
-  it('refuse la création directe d’une activity_boost', () => {
-    expect(() =>
-      create_activity(BOB, {
-        contexte: 'repayment',
-        ref: 'LOC-X',
-        type: 'activity_boost',
-        statut: 'logged',
-        recipients: [ALICE],
-        contenu: JSON.stringify({
-          version: 1,
-          activite_source_id: 1,
-          type_activite_source: 'note',
-          emoji: '👍'
-        })
-      })
-    ).toThrow(/directly/)
+      patch_activity(ALICE, created.id, { operation: 'set_boost', emoji: '👍' })
+    ).toThrow(ActivitiesError)
+    delete_activity(ALICE, created.id)
+    const rows = list_activities(ALICE, { rattachement: created.rattachement })
+    expect(rows.map((row) => row.type)).toEqual(['note.withdrawn', 'note.published'])
   })
 })

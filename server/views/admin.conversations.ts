@@ -1,9 +1,9 @@
 import { format, parseISO } from 'date-fns'
 import { html, raw } from 'hono/html'
 
-import type { Reply } from '../utils/_schema'
+import type { StoredReply } from '../utils/handle-conversation'
 
-export const view = (data, conversation: Reply[] | []) => {
+export const view = (data: Array<[StoredReply, ...StoredReply[]]>, conversation: StoredReply[]) => {
   return html`<!doctype html>
     <html lang="fr">
       <head>
@@ -59,8 +59,13 @@ export const view = (data, conversation: Reply[] | []) => {
                   >
 
                   <span class="w-full truncate"
-                    >&nbsp;• ${format(parseISO(conv[0].timestamp), "dd/MM/yyyy '·' H:mm")} •
-                    ${conv[0].config} •
+                    >&nbsp;•
+                    ${
+                      conv[0].timestamp
+                        ? format(parseISO(conv[0].timestamp), "dd/MM/yyyy '·' H:mm")
+                        : ''
+                    }
+                    • ${conv[0].config} •
                     ${
                       conv[0].metadata.user !== null ? conv[0].metadata.user : 'Utilisateur inconnu'
                     }

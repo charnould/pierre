@@ -134,9 +134,12 @@ const list_rows = (db: Database, id_reclamation: string): Activite[] => {
 
 const latest_by_skill = (rows: Activite[]): Map<TicketIdSkill, Activite> => {
   const latest = new Map<TicketIdSkill, Activite>()
+  const seen = new Set<TicketIdSkill>()
   for (const row of rows) {
     const skill = skill_of(row)
-    if (!skill || latest.has(skill)) continue
+    if (!skill || seen.has(skill)) continue
+    seen.add(skill)
+    if (row.type === 'artifact.discarded' || row.type === 'artifact.finalized') continue
     latest.set(skill, row)
   }
   return latest
@@ -151,7 +154,7 @@ const row_to_draft = (row: Activite): TicketDraft => {
     id_reclamation: row.rattachement.slice(row.rattachement.indexOf(':') + 1),
     id_skill: string_from(values['skill']) ?? '',
     channel: string_from(values['channel']),
-    generated_output: content?.note ?? null,
+    generated_output: editedBy ? string_from(values['generated_output']) : (content?.note ?? null),
     generated_reasoning: string_from(values['reasoning']),
     generated_duration_ms: number_from(values['duration_ms']),
     generated_at: string_from(values['generated_at']) ?? row.date_creation,
@@ -255,6 +258,13 @@ export const upsert_ticket_draft = (input: UpsertTicketDraftInput): TicketDraft 
             thread_id: existing.thread_id ?? null,
             values: {
               skill: parsed.id_skill,
+              channel: current.channel,
+              generated_output: current.generated_output,
+              generated_by: current.generated_by,
+              generated_at: current.generated_at,
+              reasoning: current.generated_reasoning,
+              duration_ms: current.generated_duration_ms,
+              automation_id: current.automation_id,
               edited_by: parsed.edited_by,
               edited_at: activity_timestamp()
             },
@@ -273,8 +283,14 @@ export const upsert_ticket_draft = (input: UpsertTicketDraftInput): TicketDraft 
           values: {
             skill: parsed.id_skill,
             channel: current.channel,
+            generated_output: current.generated_output,
             generated_by: current.generated_by,
             generated_at: current.generated_at,
+            reasoning: current.generated_reasoning,
+            duration_ms: current.generated_duration_ms,
+            automation_id: current.automation_id,
+            edited_by: current.edited_by,
+            edited_at: current.edited_at,
             feedback_rating: hasFeedback ? (parsed.feedback_rating ?? null) : null,
             feedback_comment: hasFeedback ? (parsed.feedback_comment?.trim() ?? null) : null,
             feedback_at: hasFeedback ? activity_timestamp() : null,

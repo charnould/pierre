@@ -3,16 +3,20 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { Hono } from 'hono'
 import { setSignedCookie } from 'hono/cookie'
 
+import type { User } from '../../../utils/_schema'
 import {
   authenticate,
   authenticateAdministratorApi,
   encrypt
 } from '../../../utils/authenticate-user'
 import { saveUser } from '../../../utils/handle-user'
+import { use_identity_test_env } from './identity-test-env'
 
 const SECRET = '0123456789abcdef0123456789abcdef'
 const ORIGINAL_AUTH_SECRET = Bun.env['AUTH_SECRET']
 const ORIGINAL_AUTH_BEARER = Bun.env['AUTH_BEARER']
+
+use_identity_test_env('_test_authenticate_user')
 
 beforeAll(() => {
   Bun.env['AUTH_SECRET'] = SECRET
@@ -28,7 +32,7 @@ afterAll(() => {
 
 describe('authenticate', () => {
   test('accepts standard Bearer authentication for the knowledge API', async () => {
-    const app = new Hono()
+    const app = new Hono<{ Variables: { user: User } }>()
     app.use('*', authenticateAdministratorApi)
     app.get('/api/admin/knowledge', (c) => c.json({ email: c.get('user').email }))
 

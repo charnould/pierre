@@ -31,7 +31,7 @@ describe('VM registry conversation reservations', () => {
     let staged: ProcessedPiAttachments | undefined
 
     const dependencies: AcquireVmDependencies = {
-      takePoolInstance: () => null,
+      takePoolInstance: () => undefined,
       createInstance: async (convId, configId) => {
         events.push(`create:${configId}`)
         return {

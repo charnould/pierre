@@ -1,6 +1,6 @@
 import { html } from 'hono/html'
 
-export const view = (message) => {
+export const view = (message: string | null | undefined) => {
   return html`<!doctype html>
     <html lang="fr">
       <head>
