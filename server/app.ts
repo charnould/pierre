@@ -61,6 +61,7 @@ import { controller as post_desktop_bulk_operation } from './controllers/desktop
 import { controller as post_desktop_bulk_operation_execute } from './controllers/desktop/bulk-operations/post.execute'
 import { controller as post_desktop_bulk_operation_preview_message } from './controllers/desktop/bulk-operations/post.preview-message'
 import { controller as post_desktop_bulk_operation_preview_query } from './controllers/desktop/bulk-operations/post.preview-query'
+import { controller as get_desktop_datastore_tables } from './controllers/desktop/datastore/get.tables'
 import { controller as get_desktop_ledger } from './controllers/desktop/ledger/get'
 import { controller as get_desktop_ledger_facets } from './controllers/desktop/ledger/get.facets'
 import { controller as post_desktop_me_avatar } from './controllers/desktop/me/avatar/post'
@@ -276,6 +277,7 @@ app.get(
   authorizeRepayment,
   get_desktop_repayment_timeline
 )
+app.get('/desktop/datastore/tables', authenticate, get_desktop_datastore_tables)
 app.get('/desktop/users', authenticate, get_desktop_users)
 app.get('/desktop/admin/users', authenticate, authorizeAdministrator, get_desktop_admin_users)
 app.post('/desktop/admin/users', authenticate, authorizeAdministrator, post_desktop_admin_user)

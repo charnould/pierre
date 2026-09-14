@@ -81,6 +81,29 @@ describe('knowledge catalog', () => {
     expect(getKnowledgeCatalogSnapshot().fingerprint).not.toBe(initialFingerprint)
   })
 
+  it('fingerprints unassigned Core Data sources', () => {
+    const initialFingerprint = getKnowledgeCatalogSnapshot().fingerprint
+    insertKnowledgeSource({
+      storageName: 'core_travaux.csv',
+      originalName: 'core.travaux.csv',
+      fileType: 'csv',
+      sizeBytes: 12,
+      contentHash: 'e'.repeat(64),
+      origin: 'ui',
+      entries: [
+        {
+          title: 'travaux',
+          sheet: null,
+          sheetName: null,
+          headerRow: null,
+          profileIds: []
+        }
+      ]
+    })
+
+    expect(getKnowledgeCatalogSnapshot().fingerprint).not.toBe(initialFingerprint)
+  })
+
   it('persists the fingerprint of the snapshot supplied by the completed build', () => {
     const build = createKnowledgeBuild('manual', null)
 

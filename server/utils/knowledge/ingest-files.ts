@@ -11,9 +11,10 @@ import TurndownService from 'turndown'
 import * as XLSX from 'xlsx'
 import * as cpexcel from 'xlsx/dist/cpexcel.full.mjs'
 
+import { coreDataContractForFilename } from '../../../shared/core-data'
 import { normalize_knowledge_name } from '../../../shared/knowledge'
 import { datastorePaths } from '../paths'
-import type { KnowledgeIngestionEntry } from './catalog'
+import type { KnowledgeCatalogSnapshot, KnowledgeIngestionEntry } from './catalog'
 import {
   is_code_postal_column,
   is_keep_as_text_column,
@@ -21,6 +22,7 @@ import {
   stringify_identifier
 } from './codes-postaux'
 import { listKnowledgeProfiles, type KnowledgeProfile } from './profiles'
+import type { JsonRow } from './sqlite-table-import'
 
 interface FormattedContent {
   data: string
@@ -297,6 +299,33 @@ export const loadKnowledgeCsv = async (
   })
 
   return { columns, rows }
+}
+
+export const loadCoreDataMirrors = async (
+  snapshot: KnowledgeCatalogSnapshot,
+  service?: string
+): Promise<{
+  mirrors: Map<string, { columns: string[]; rows: JsonRow[] }>
+  anomalies: { code: string; subject: string | null }[]
+}> => {
+  const root = datastorePaths(service).files
+  const mirrors = new Map<string, { columns: string[]; rows: JsonRow[] }>()
+  const anomalies: { code: string; subject: string | null }[] = []
+
+  for (const source of snapshot.sources) {
+    const contract = coreDataContractForFilename(source.originalName)
+    if (!contract || source.fileType !== 'csv') continue
+    const filepath = join(root, source.storageName)
+    if (!(await Bun.file(filepath).exists())) {
+      anomalies.push({ code: 'SOURCE_FILE_MISSING', subject: source.originalName })
+      continue
+    }
+    const payload = await loadKnowledgeCsv(filepath)
+    if (payload.columns.length === 0) continue
+    mirrors.set(contract.table, { columns: payload.columns, rows: payload.rows })
+  }
+
+  return { mirrors, anomalies }
 }
 
 /**

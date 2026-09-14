@@ -342,6 +342,29 @@ describe('administrator knowledge API', () => {
     ).toBe(true)
   })
 
+  it('marks an unassigned Core Data upload as unpublished', async () => {
+    const build = createKnowledgeBuild('manual', null)
+    completeKnowledgeBuild(build.id, {
+      catalogFingerprint: getKnowledgeCatalogSnapshot().fingerprint,
+      diagnostics: [],
+      items: [],
+      mirrorTables: []
+    })
+
+    const core = coreCsv('travaux')
+    const form = new FormData()
+    form.set('files[]', new File([core.content], core.filename))
+    await request('/api/admin/knowledge/sources', { method: 'POST', body: form })
+
+    expect(
+      (
+        (await (await request('/api/admin/knowledge')).json()) as {
+          data: { needsRebuild: boolean }
+        }
+      ).data.needsRebuild
+    ).toBe(true)
+  })
+
   it('recognizes an exact Core Data filename and accepts ordinary CSV files', async () => {
     const core = coreCsv('reclamations')
     const form = new FormData()

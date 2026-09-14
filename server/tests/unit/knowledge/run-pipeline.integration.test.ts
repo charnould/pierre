@@ -112,6 +112,94 @@ describe('knowledge pipeline', () => {
     expect(columns).not.toContain('demande_sne')
   }, 20_000)
 
+  it('publishes an unassigned Core CSV to the datastore only', async () => {
+    const paths = datastorePaths()
+    const contract = CORE_DATA_CONTRACT.find(({ table }) => table === 'travaux')!
+    const csv = 'id_travaux;contexte\nTRV-1;toiture'
+    await Bun.write(`${paths.files}/core_travaux.csv`, csv)
+    insertKnowledgeSource({
+      storageName: 'core_travaux.csv',
+      originalName: contract.filename,
+      fileType: 'csv',
+      sizeBytes: csv.length,
+      contentHash: 'c'.repeat(64),
+      origin: 'ui',
+      entries: [
+        {
+          title: 'travaux',
+          sheet: null,
+          sheetName: null,
+          headerRow: null,
+          profileIds: []
+        }
+      ]
+    })
+
+    const result = await runKnowledgePipeline(Bun.randomUUIDv7())
+
+    expect(result.mirrorTables).toEqual(['travaux'])
+    const datastore = new Database(paths.database, { readonly: true })
+    expect(
+      datastore
+        .query<{ id_travaux: string; contexte: string }, []>(
+          'SELECT id_travaux, contexte FROM travaux'
+        )
+        .get()
+    ).toEqual({ id_travaux: 'trv-1', contexte: 'toiture' })
+    datastore.close()
+    const knowledge = new Database(knowledgeDatabase(), { readonly: true })
+    const tables = knowledge
+      .query<{ name: string }, []>(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'travaux'"
+      )
+      .all()
+    knowledge.close()
+    expect(tables).toHaveLength(0)
+  }, 20_000)
+
+  it('publishes Core CSV assigned only to a module without skills', async () => {
+    const paths = datastorePaths()
+    const contract = CORE_DATA_CONTRACT.find(({ table }) => table === 'comptes_locataires')!
+    const csv = 'id_locataire;id_client;montant_en_euros\nLOC-1;CLI-1;120'
+    await Bun.write(`${paths.files}/core_comptes_locataires.csv`, csv)
+    insertKnowledgeSource({
+      storageName: 'core_comptes_locataires.csv',
+      originalName: contract.filename,
+      fileType: 'csv',
+      sizeBytes: csv.length,
+      contentHash: 'd'.repeat(64),
+      origin: 'ui',
+      entries: [
+        {
+          title: 'comptes_locataires',
+          sheet: null,
+          sheetName: null,
+          headerRow: null,
+          profileIds: [],
+          moduleIds: ['repayment']
+        }
+      ]
+    })
+
+    await runKnowledgePipeline(Bun.randomUUIDv7())
+
+    const datastore = new Database(paths.database, { readonly: true })
+    expect(
+      datastore
+        .query<{ montant_en_euros: number }, []>('SELECT montant_en_euros FROM comptes_locataires')
+        .get()
+    ).toEqual({ montant_en_euros: 120 })
+    datastore.close()
+    const knowledge = new Database(knowledgeDatabase(), { readonly: true })
+    const tables = knowledge
+      .query<{ name: string }, []>(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'comptes_locataires'"
+      )
+      .all()
+    knowledge.close()
+    expect(tables).toHaveLength(0)
+  }, 20_000)
+
   it('does not index an unassigned source', async () => {
     const paths = datastorePaths()
     await Bun.write(`${paths.files}/private.md`, '# Non affecté')

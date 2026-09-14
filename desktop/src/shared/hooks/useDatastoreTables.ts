@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react'
 
 import type { DatastoreTableStatus } from '@/shared/types/datastore-tables'
 
-export function useDatastoreTables(url: string | undefined): {
+export function useDatastoreTables(
+  url: string | undefined,
+  active = true
+): {
   tables: DatastoreTableStatus[] | null
   loading: boolean
 } {
@@ -13,7 +16,7 @@ export function useDatastoreTables(url: string | undefined): {
   } | null>(null)
 
   useEffect(() => {
-    if (!requestKey) return
+    if (!requestKey || !active) return
 
     let cancelled = false
     void window.api
@@ -30,7 +33,7 @@ export function useDatastoreTables(url: string | undefined): {
     return () => {
       cancelled = true
     }
-  }, [requestKey])
+  }, [active, requestKey])
 
   if (!requestKey) {
     return { tables: null, loading: false }

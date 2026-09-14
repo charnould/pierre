@@ -16,7 +16,7 @@ import {
   getKnowledgeCatalogSnapshot,
   type KnowledgeDiagnostic
 } from './catalog'
-import { ingest_files, setup_knowledge_directories } from './ingest-files'
+import { ingest_files, loadCoreDataMirrors, setup_knowledge_directories } from './ingest-files'
 import { listKnowledgeProfiles } from './profiles'
 
 export class KnowledgeCatalogChangedError extends Error {
@@ -124,8 +124,15 @@ export const runKnowledgePipeline = async (
     assertNoOutputCollisions(snapshot.sources, new Set(knownIds))
     await setup_knowledge_directories(stagingRoot, profiles)
     const entries = flattenKnowledgeEntries(snapshot, service, knownIds)
-    const { anomalies } = await ingest_files(entries, stagingRoot, profiles)
-    for (const anomaly of anomalies) {
+    const [{ anomalies }, { mirrors: coreMirrors, anomalies: coreAnomalies }] = await Promise.all([
+      ingest_files(entries, stagingRoot, profiles),
+      loadCoreDataMirrors(snapshot, service)
+    ])
+    const seenAnomalies = new Set<string>()
+    for (const anomaly of [...anomalies, ...coreAnomalies]) {
+      const key = `${anomaly.code}:${anomaly.subject}`
+      if (seenAnomalies.has(key)) continue
+      seenAnomalies.add(key)
       diagnostics.push({
         level: anomaly.code === 'SOURCE_FILE_MISSING' ? 'error' : 'warning',
         code: anomaly.code,
@@ -141,6 +148,9 @@ export const runKnowledgePipeline = async (
     }
 
     const artifacts = await build_knowledge_databases(stagingRoot)
+    for (const [table, payload] of coreMirrors) {
+      artifacts.mirrorTables.set(table, payload)
+    }
     for (const candidate of artifacts.databases) validateDatabase(candidate.path)
 
     if (getKnowledgeCatalogSnapshot(service).fingerprint !== snapshot.fingerprint) {

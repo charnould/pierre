@@ -65,11 +65,17 @@ export const assertNoOutputCollisions = (
   }
 }
 
+const isCoreDataSource = (source: Pick<KnowledgeSource, 'originalName'>): boolean =>
+  coreDataContractForFilename(source.originalName) !== null
+
+const isFingerprintEntry = (source: KnowledgeSource, entry: KnowledgeEntry): boolean =>
+  isKnowledgeEntryAssigned(entry) || isCoreDataSource(source)
+
 export const catalogFingerprint = (sources: readonly KnowledgeSource[]): string => {
   const inputs = sources
     .flatMap((source) =>
       source.entries
-        .filter((entry) => isKnowledgeEntryAssigned(entry))
+        .filter((entry) => isFingerprintEntry(source, entry))
         .map((entry) => ({
           contentHash: source.contentHash,
           fileType: source.fileType,

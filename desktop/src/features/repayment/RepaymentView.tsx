@@ -85,7 +85,10 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
     reload
   } = useRepaymentViewData(url, hidden, repaymentDeps)
   const { columnValues, setColumnValues } = useRepaymentColumnValues()
-  const { tables: datastoreTables, loading: datastoreTablesLoading } = useDatastoreTables(url)
+  const { tables: datastoreTables, loading: datastoreTablesLoading } = useDatastoreTables(
+    url,
+    !hidden
+  )
   const comptesLocatairesMissing = isComptesLocatairesMissing(datastoreTables)
   const [planEditor, setPlanEditor] = useState<RepaymentPlanEditorRequest | null>(null)
   const { contextTarget } = useActivityRail()

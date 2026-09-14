@@ -56,7 +56,9 @@ export const getKnowledge = async (c: Context) => {
   const builds = listKnowledgeBuilds()
   const snapshot = getKnowledgeCatalogSnapshot()
   const lastSuccessfulBuild = builds.find(({ status }) => status === 'succeeded')
-  const hasAssignedEntries = snapshot.sources.some((source) => isAssigned(source))
+  const hasPublishableSources = snapshot.sources.some(
+    (source) => isAssigned(source) || coreDataContractForFilename(source.originalName) !== null
+  )
   const data = {
     sources: snapshot.sources.map(toKnowledgeSourceDto),
     profiles,
@@ -68,7 +70,7 @@ export const getKnowledge = async (c: Context) => {
     lastBuild: builds[0] ?? null,
     needsRebuild: lastSuccessfulBuild
       ? lastSuccessfulBuild.catalogFingerprint !== snapshot.fingerprint
-      : hasAssignedEntries
+      : hasPublishableSources
   } satisfies KnowledgeData
   return c.json({ data })
 }

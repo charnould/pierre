@@ -72,4 +72,9 @@ describe('GET /desktop/datastore/tables', () => {
     expect(body.tables.find((row) => row.name === 'travaux')?.exists).toBe(true)
     expect(body.tables.filter((row) => row.exists)).toHaveLength(1)
   })
+
+  it('keeps the desktop datastore tables endpoint registered in the server app', async () => {
+    const appSource = await Bun.file(new URL('../../../../../app.ts', import.meta.url)).text()
+    expect(appSource).toContain(`'/desktop/datastore/tables'`)
+  })
 })
