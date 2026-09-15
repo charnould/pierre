@@ -211,8 +211,7 @@ describe('repayment plan activity lifecycle', () => {
         email: ALICE,
         isAdministrator: false,
         moduleIds: ['repayment'],
-        chatbotIds: [],
-        passwordHash: 'unused'
+        chatbotIds: []
       })
       await next()
     })

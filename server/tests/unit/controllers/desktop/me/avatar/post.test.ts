@@ -4,9 +4,9 @@ import { Hono } from 'hono'
 
 import { controller as get_desktop_avatars } from '../../../../../../controllers/desktop/avatars/get'
 import { controller as post_desktop_me_avatar } from '../../../../../../controllers/desktop/me/avatar/post'
-import { User } from '../../../../../../utils/_schema'
-import { saveUser } from '../../../../../../utils/handle-user'
+import type { User } from '../../../../../../utils/_schema'
 import { user_has_avatar } from '../../../../../../utils/user-avatars'
+import { createTestUser } from '../../../../../test-user'
 import { use_identity_test_env } from '../../../../utils/identity-test-env'
 
 const PNG_1x1 = Uint8Array.fromBase64(
@@ -21,8 +21,7 @@ app.post(
       email: 'alice.martin@exemple.fr',
       isAdministrator: false,
       moduleIds: [],
-      chatbotIds: ['default'],
-      passwordHash: 'x'
+      chatbotIds: ['default']
     })
     await next()
   },
@@ -35,8 +34,7 @@ app.get(
       email: 'alice.martin@exemple.fr',
       isAdministrator: false,
       moduleIds: [],
-      chatbotIds: ['default'],
-      passwordHash: 'x'
+      chatbotIds: ['default']
     })
     await next()
   },
@@ -46,15 +44,12 @@ app.get(
 use_identity_test_env('_test_me_avatar')
 
 beforeEach(async () => {
-  await saveUser(
-    User.parse({
-      email: 'alice.martin@exemple.fr',
-      isAdministrator: false,
-      moduleIds: [],
-      chatbotIds: ['default'],
-      passwordHash: 'secret'
-    })
-  )
+  await createTestUser({
+    email: 'alice.martin@exemple.fr',
+    isAdministrator: false,
+    moduleIds: [],
+    chatbotIds: ['default']
+  })
 })
 
 describe('POST /desktop/me/avatar + GET /desktop/avatars/:email', () => {

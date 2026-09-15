@@ -5,15 +5,14 @@ import {
   normalizeDisplayName,
   parseUserPreferences
 } from '../../../../shared/automations'
-import { User } from '../../../utils/_schema'
 import { get_user_preferences } from '../../../utils/automations/store'
 import {
   patch_me_preferences,
   resolve_display_name,
   set_display_name
 } from '../../../utils/avatar-preferences'
-import { saveUser } from '../../../utils/handle-user'
 import { user_has_avatar } from '../../../utils/user-avatars'
+import { createTestUser } from '../../test-user'
 import { use_identity_test_env } from './identity-test-env'
 
 use_identity_test_env('_test_avatar_preferences')
@@ -55,15 +54,12 @@ describe('normalizeDisplayName', () => {
 
 describe('display_name', () => {
   test('defaults to email local-part; custom overrides; clear restores default', async () => {
-    await saveUser(
-      User.parse({
-        email: 'alice.martin@exemple.fr',
-        isAdministrator: false,
-        moduleIds: [],
-        chatbotIds: ['default'],
-        passwordHash: 'x'
-      })
-    )
+    await createTestUser({
+      email: 'alice.martin@exemple.fr',
+      isAdministrator: false,
+      moduleIds: [],
+      chatbotIds: ['default']
+    })
 
     expect(resolve_display_name('alice.martin@exemple.fr')).toBe('alice.martin')
     expect(user_has_avatar('alice.martin@exemple.fr')).toBe(false)
@@ -79,15 +75,12 @@ describe('display_name', () => {
     expect(set_display_name('alice.martin@exemple.fr', null)).toBe('alice.martin')
     expect(get_user_preferences('alice.martin@exemple.fr').display_name).toBeNull()
 
-    await saveUser(
-      User.parse({
-        email: 'pierre@exemple.fr',
-        isAdministrator: false,
-        moduleIds: [],
-        chatbotIds: ['default'],
-        passwordHash: 'x'
-      })
-    )
+    await createTestUser({
+      email: 'pierre@exemple.fr',
+      isAdministrator: false,
+      moduleIds: [],
+      chatbotIds: ['default']
+    })
     expect(patch_me_preferences('pierre@exemple.fr', { display_name: 'PIERRE' })).toEqual({
       hasAvatar: false,
       displayName: 'pierre'

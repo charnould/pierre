@@ -21,7 +21,7 @@ const versions = (db: Database): number[] =>
     .map((row) => row.version)
 
 const future_migration: DatastoreMigration = {
-  version: 4,
+  version: 2,
   name: 'future-example',
   sql: 'CREATE TABLE future_records (id TEXT PRIMARY KEY, value TEXT NOT NULL)'
 }
@@ -35,63 +35,78 @@ afterEach(async () => {
 })
 
 describe('datastore migrations', () => {
-  it('bootstraps a missing database with baseline tables, indexes, and ledger', async () => {
+  it('bootstraps the squashed baseline and Better Auth tables', async () => {
     await migrate_datastore(PATH)
 
-    const db = open()
-    try {
-      expect(versions(db)).toEqual([1, 2, 3])
-      const objects = db
-        .query<{ name: string }, []>(
-          `SELECT name FROM sqlite_master
-           WHERE name IN (
-             'activites',
-             'automations',
-             'bulk_operations',
-             'bulk_jobs',
-             'contacts',
-             'conversations',
-             'knowledge_records',
-             'telemetry',
-             'users',
-             'idx_activites_execution',
-             'idx_activites_case_group'
-           )
-           ORDER BY name`
-        )
-        .all()
-        .map((row) => row.name)
-      expect(objects).toEqual([
-        'activites',
-        'automations',
-        'bulk_jobs',
-        'bulk_operations',
-        'contacts',
-        'conversations',
-        'idx_activites_case_group',
-        'idx_activites_execution',
-        'knowledge_records',
-        'telemetry',
-        'users'
-      ])
-      expect(
-        db
-          .query<{ name: string }, []>('PRAGMA table_info(users)')
-          .all()
-          .map(({ name }) => name)
-      ).toEqual([
-        'email',
-        'is_administrator',
-        'module_ids',
-        'chatbot_ids',
-        'password_hash',
-        'preferences',
-        'avatar',
-        'avatar_version'
-      ])
-    } finally {
-      db.close()
-    }
+    using db = open()
+    expect(versions(db)).toEqual([1])
+
+    const objects = db
+      .query<{ name: string }, []>(
+        `SELECT name FROM sqlite_master
+         WHERE name IN (
+           'account',
+           'activites',
+           'automations',
+           'bulk_operations',
+           'bulk_jobs',
+           'contacts',
+           'conversations',
+           'knowledge_records',
+           'session',
+           'telemetry',
+           'users',
+           'verification',
+           'idx_activites_execution',
+           'idx_activites_case_group'
+         )
+         ORDER BY name`
+      )
+      .all()
+      .map((row) => row.name)
+
+    expect(objects).toEqual([
+      'account',
+      'activites',
+      'automations',
+      'bulk_jobs',
+      'bulk_operations',
+      'contacts',
+      'conversations',
+      'idx_activites_case_group',
+      'idx_activites_execution',
+      'knowledge_records',
+      'session',
+      'telemetry',
+      'users',
+      'verification'
+    ])
+    expect(
+      ['account', 'session', 'users', 'verification'].every((name) => objects.includes(name))
+    ).toBe(true)
+
+    const userColumns = db
+      .query<{ name: string }, []>('PRAGMA table_info(users)')
+      .all()
+      .map(({ name }) => name)
+    expect(userColumns).toEqual([
+      'id',
+      'name',
+      'email',
+      'emailVerified',
+      'image',
+      'createdAt',
+      'updatedAt',
+      'role',
+      'banned',
+      'banReason',
+      'banExpires',
+      'module_ids',
+      'chatbot_ids',
+      'preferences',
+      'avatar',
+      'avatar_version'
+    ])
   })
 
   it('deletes and bootstraps an existing database without a ledger', async () => {
@@ -104,83 +119,44 @@ describe('datastore migrations', () => {
 
     await migrate_datastore(PATH)
 
-    const db = open()
-    try {
-      expect(versions(db)).toEqual([1, 2, 3])
-      expect(
-        db
-          .query<{ n: number }, []>(
-            `SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'obsolete_data'`
-          )
-          .get()?.n
-      ).toBe(0)
-    } finally {
-      db.close()
-    }
+    using db = open()
+    expect(versions(db)).toEqual([1])
+    expect(
+      db
+        .query<{ n: number }, []>(
+          `SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'obsolete_data'`
+        )
+        .get()?.n
+    ).toBe(0)
   })
 
   it('resets a ledger database whose application schema is incompatible', async () => {
     await migrate_datastore(PATH)
     const damaged = open()
-    damaged.run(
-      `INSERT INTO users (email, is_administrator, password_hash)
-       VALUES ('lost@example.com', 1, 'hash')`
-    )
     damaged.run('DROP INDEX idx_activites_execution')
     damaged.close()
 
     await migrate_datastore(PATH)
 
-    const db = open()
-    try {
-      expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(0)
-      expect(
-        db
-          .query<{ n: number }, []>(
-            `SELECT COUNT(*) AS n FROM sqlite_master
-             WHERE type = 'index' AND name = 'idx_activites_execution'`
-          )
-          .get()?.n
-      ).toBe(1)
-      expect(versions(db)).toEqual([1, 2, 3])
-    } finally {
-      db.close()
-    }
+    using db = open()
+    expect(
+      db
+        .query<{ n: number }, []>(
+          `SELECT COUNT(*) AS n FROM sqlite_master
+           WHERE type = 'index' AND name = 'idx_activites_execution'`
+        )
+        .get()?.n
+    ).toBe(1)
+    expect(versions(db)).toEqual([1])
   })
 
-  it('resets unexpected application objects but preserves declared mirror tables', async () => {
-    await migrate_datastore(PATH)
-    const db = open()
-    db.run('CREATE TABLE removed_feature (id TEXT)')
-    db.run(
-      `INSERT INTO users (email, is_administrator, password_hash)
-       VALUES ('lost@example.com', 1, 'hash')`
-    )
-    db.close()
-
-    await migrate_datastore(PATH)
-
-    const reset = open()
-    try {
-      expect(reset.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(0)
-      expect(
-        reset
-          .query<{ n: number }, []>(
-            "SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'removed_feature'"
-          )
-          .get()?.n
-      ).toBe(0)
-    } finally {
-      reset.close()
-    }
-  })
-
-  it('is idempotent and ignores HLM mirror tables outside application migrations', async () => {
+  it('preserves Better Auth users and declared mirror tables when idempotent', async () => {
     await migrate_datastore(PATH)
     const seeded = open()
     seeded.run(
-      `INSERT INTO users (email, is_administrator, password_hash)
-       VALUES ('kept@example.com', 1, 'hash')`
+      `INSERT INTO users
+         (id, name, email, emailVerified, createdAt, updatedAt, role)
+       VALUES ('user-1', 'Kept', 'kept@example.com', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'admin')`
     )
     seeded.run('CREATE TABLE reclamations (id_reclamation TEXT, id_locataire TEXT)')
     seeded.run('CREATE INDEX idx_reclamations_dynamic ON reclamations (id_reclamation)')
@@ -189,84 +165,32 @@ describe('datastore migrations', () => {
 
     await migrate_datastore(PATH)
 
-    const db = open()
-    try {
-      expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(1)
-      expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM reclamations').get()?.n).toBe(1)
-      expect(
-        db
-          .query<{ n: number }, []>(
-            "SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'idx_reclamations_dynamic'"
-          )
-          .get()?.n
-      ).toBe(1)
-      expect(versions(db)).toEqual([1, 2, 3])
-    } finally {
-      db.close()
-    }
+    using db = open()
+    expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(1)
+    expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM reclamations').get()?.n).toBe(1)
+    expect(
+      db
+        .query<{ n: number }, []>(
+          "SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'idx_reclamations_dynamic'"
+        )
+        .get()?.n
+    ).toBe(1)
+    expect(versions(db)).toEqual([1])
   })
 
-  it('applies ordered pending migrations to a lower-version database', async () => {
+  it('applies ordered pending migrations to the baseline database', async () => {
     await migrate_datastore(PATH)
-    const seeded = open()
-    seeded.run(
-      `INSERT INTO users (email, is_administrator, password_hash)
-       VALUES ('kept@example.com', 1, 'hash')`
-    )
-    seeded.close()
-
     await migrate_datastore(PATH, [...APP_MIGRATIONS, future_migration])
 
-    const db = open()
-    try {
-      expect(versions(db)).toEqual([1, 2, 3, 4])
-      expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(1)
-      db.run("INSERT INTO future_records VALUES ('future-1', 'ok')")
-    } finally {
-      db.close()
-    }
-  })
-
-  it('replaces the build event table without resetting application data', async () => {
-    await migrate_datastore(PATH, APP_MIGRATIONS.slice(0, 2))
-    const seeded = open()
-    seeded.run(
-      `INSERT INTO users (email, is_administrator, password_hash)
-       VALUES ('kept@example.com', 1, 'hash')`
-    )
-    seeded.run(
-      "INSERT INTO knowledge_build (created_at, source, kind, code) VALUES ('2026-01-01', 'pipeline', 'info', 'old')"
-    )
-    seeded.close()
-
-    await migrate_datastore(PATH)
-
-    const db = open()
-    try {
-      expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(1)
-      expect(
-        db
-          .query<{ n: number }, []>(
-            "SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'knowledge_build'"
-          )
-          .get()?.n
-      ).toBe(0)
-      expect(
-        db
-          .query<{ n: number }, []>(
-            "SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'knowledge_records'"
-          )
-          .get()?.n
-      ).toBe(1)
-    } finally {
-      db.close()
-    }
+    using db = open()
+    expect(versions(db)).toEqual([1, 2])
+    db.run("INSERT INTO future_records VALUES ('future-1', 'ok')")
   })
 
   it('rolls back both schema and ledger writes when a migration fails', async () => {
     await migrate_datastore(PATH)
     const failing: DatastoreMigration = {
-      version: 4,
+      version: 2,
       name: 'failing-example',
       sql: `
         CREATE TABLE half_created (id TEXT PRIMARY KEY);
@@ -276,45 +200,30 @@ describe('datastore migrations', () => {
 
     await expect(migrate_datastore(PATH, [...APP_MIGRATIONS, failing])).rejects.toThrow()
 
-    const db = open()
-    try {
-      expect(versions(db)).toEqual([1, 2, 3])
-      expect(
-        db
-          .query<{ n: number }, []>(
-            `SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'half_created'`
-          )
-          .get()?.n
-      ).toBe(0)
-    } finally {
-      db.close()
-    }
+    using db = open()
+    expect(versions(db)).toEqual([1])
+    expect(
+      db
+        .query<{ n: number }, []>(
+          `SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'half_created'`
+        )
+        .get()?.n
+    ).toBe(0)
   })
 
   it('fails without resetting when the database version is ahead', async () => {
     await migrate_datastore(PATH, [...APP_MIGRATIONS, future_migration])
-    const seeded = open()
-    seeded.run(
-      `INSERT INTO users (email, is_administrator, password_hash)
-       VALUES ('kept@example.com', 1, 'hash')`
-    )
-    seeded.close()
 
     await expect(migrate_datastore(PATH)).rejects.toBeInstanceOf(DatastoreVersionError)
 
-    const db = open()
-    try {
-      expect(versions(db)).toEqual([1, 2, 3, 4])
-      expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(1)
-      expect(
-        db
-          .query<{ n: number }, []>(
-            `SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'future_records'`
-          )
-          .get()?.n
-      ).toBe(1)
-    } finally {
-      db.close()
-    }
+    using db = open()
+    expect(versions(db)).toEqual([1, 2])
+    expect(
+      db
+        .query<{ n: number }, []>(
+          `SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'future_records'`
+        )
+        .get()?.n
+    ).toBe(1)
   })
 })

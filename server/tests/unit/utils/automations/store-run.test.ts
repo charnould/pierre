@@ -25,16 +25,17 @@ import {
 } from '../../../../utils/automations/store'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { setup } from '../../../../utils/setup'
+import { createTestUser } from '../../../test-user'
 
 const paths = testDatastorePaths('automations')
 
-function seed_user(email: string) {
-  const db = new Database(paths.database)
-  db.run(`INSERT INTO users (email, chatbot_ids, password_hash) VALUES (?, '["default"]', 'x')`, [
-    email
-  ])
-  db.close()
-}
+const seed_user = (email: string): Promise<void> =>
+  createTestUser({
+    email,
+    isAdministrator: false,
+    moduleIds: [],
+    chatbotIds: ['default']
+  })
 
 beforeAll(() => {
   setDatastoreRoot(paths.root)
@@ -48,8 +49,8 @@ afterAll(async () => {
 beforeEach(async () => {
   await mkdir(paths.root, { recursive: true })
   await setup()
-  seed_user('alice@example.com')
-  seed_user('bob@example.com')
+  await seed_user('alice@example.com')
+  await seed_user('bob@example.com')
   reset_automation_executor()
   set_automation_executor(async () => ({ kind: 'report', contenu: '<p>Rapport de test</p>' }))
 })

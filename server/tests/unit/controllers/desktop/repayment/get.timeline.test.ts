@@ -10,14 +10,14 @@ import { create_activity, create_trusted_activity } from '../../../../../utils/a
 import { import_json_rows } from '../../../../../utils/knowledge/sqlite-table-import'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
+import { createTestUser } from '../../../../test-user'
 
 const paths = testDatastorePaths('repayment_timeline')
 const user: User = {
   email: 'alice@example.org',
   isAdministrator: false,
   moduleIds: ['repayment'],
-  chatbotIds: ['default'],
-  passwordHash: 'unused'
+  chatbotIds: ['default']
 }
 
 const app = new Hono<{ Variables: { user: User } }>()
@@ -35,8 +35,8 @@ beforeEach(async () => {
   await rm(paths.root, { recursive: true, force: true })
   await mkdir(paths.root, { recursive: true })
   await setup()
+  await createTestUser(user)
   const db = new Database(paths.database)
-  db.run("INSERT INTO users (email, password_hash) VALUES ('alice@example.org', 'x')")
   await import_json_rows(db, 'comptes_locataires', [
     {
       id_client: 'CLIENT-1',

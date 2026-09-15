@@ -2,7 +2,7 @@ import type { Context } from 'hono'
 
 import type { User } from '../../../../utils/_schema'
 import { saveUserAsAdministrator } from '../../../../utils/handle-user'
-import { invalidBody, PatchUserBody, toAdminUser, validateChatbotIds } from './shared'
+import { invalidBody, PatchUserBody, validateChatbotIds } from './shared'
 
 export const controller = async (c: Context) => {
   const email = (c.req.param('email') ?? '').trim().toLowerCase()
@@ -21,7 +21,7 @@ export const controller = async (c: Context) => {
     ...(input.isAdministrator === undefined ? {} : { isAdministrator: input.isAdministrator }),
     ...(input.moduleIds ? { moduleIds: input.moduleIds } : {}),
     ...(input.chatbotIds ? { chatbotIds: input.chatbotIds } : {}),
-    ...(input.password ? { passwordHash: await Bun.password.hash(input.password) } : {})
+    ...(input.password ? { password: input.password } : {})
   }
   const actor = c.get('user') as User
   const saved = await saveUserAsAdministrator(actor.email, email, patch)
@@ -40,7 +40,7 @@ export const controller = async (c: Context) => {
 
   return c.json({
     data: {
-      user: toAdminUser(saved.user)
+      user: saved.user
     }
   })
 }

@@ -106,9 +106,11 @@ const seedSynthetic = (db: Database): void => {
   db.transaction(() => {
     db.run(
       `WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < ?)
-       INSERT INTO users (email, is_administrator, chatbot_ids, password_hash, preferences)
-       SELECT printf('User%05d@Example.org', i),
-              CASE WHEN i % 20 = 0 THEN 1 ELSE 0 END, '["default"]', 'hash', '{}'
+       INSERT INTO users
+         (id, name, email, emailVerified, createdAt, updatedAt, role, chatbot_ids, preferences)
+       SELECT printf('user-%05d', i), printf('User %05d', i),
+              printf('User%05d@Example.org', i), 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP,
+              CASE WHEN i % 20 = 0 THEN 'admin' ELSE 'user' END, '["default"]', '{}'
        FROM n`,
       [rows.users]
     )
@@ -230,8 +232,8 @@ const seedSynthetic = (db: Database): void => {
 
 const anonymize = (db: Database): void => {
   const statements = [
-    `UPDATE users SET email = printf('user-%d@example.invalid', rowid),
-       password_hash = 'redacted', preferences = '{}', avatar = NULL`,
+    `UPDATE users SET name = printf('User %d', rowid),
+       email = printf('user-%d@example.invalid', rowid), preferences = '{}', avatar = NULL`,
     `UPDATE conversations SET conv_id = printf('conversation-%d', rowid),
        content = 'redacted', metadata = '{}'`,
     `UPDATE contacts SET value = CASE WHEN value LIKE '%@%' THEN

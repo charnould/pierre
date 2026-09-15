@@ -5,7 +5,7 @@ import { list_user_identities } from '../../../utils/user-avatars'
 /**
  * GET /desktop/users
  *
- * Lists org users with avatar presence and display name — never password_hash or blob.
+ * Lists org users with avatar presence and display name — never credentials or blobs.
  */
 export const controller = async (c: Context) => {
   try {

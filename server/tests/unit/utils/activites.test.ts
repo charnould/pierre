@@ -32,8 +32,8 @@ import {
 use_activities_test_env()
 
 describe('create_activity', () => {
-  it('facette un ticket et résout @login + destinataires vers user:email', () => {
-    seed_users(ALICE, JEAN, BOB, CLAIRE)
+  it('facette un ticket et résout @login + destinataires vers user:email', async () => {
+    await seed_users(ALICE, JEAN, BOB, CLAIRE)
     const db = new Database(DATASTORE_PATH)
     db.run('CREATE TABLE reclamations (id_reclamation TEXT, id_locataire TEXT, id_lot TEXT)')
     db.run('CREATE TABLE lots_locatifs (id_lot TEXT, id_client TEXT)')
@@ -71,8 +71,8 @@ describe('create_activity', () => {
     expect(after.read).toBe(true)
   })
 
-  it('ignore un @login inconnu et résout @pierre vers l’agent', () => {
-    seed_users(ALICE, BOB, 'pierre@exemple.fr')
+  it('ignore un @login inconnu et résout @pierre vers l’agent', async () => {
+    await seed_users(ALICE, BOB, 'pierre@exemple.fr')
     const created = create_activity(ALICE, {
       contexte: 'tickets',
       ref: 'REQ-AGENT',
@@ -85,8 +85,8 @@ describe('create_activity', () => {
     expect(list_activities('pierre@exemple.fr', { inbox: true })).toHaveLength(0)
   })
 
-  it('conserve l’auto-mention et refuse les payloads v1', () => {
-    seed_users(ADMIN)
+  it('conserve l’auto-mention et refuse les payloads v1', async () => {
+    await seed_users(ADMIN)
     const created = create_activity(ADMIN, {
       contexte: 'repayment',
       ref: 'LOC-2',
@@ -202,8 +202,8 @@ describe('latest_repayment_states', () => {
 })
 
 describe('append-only patches', () => {
-  it('édite une note dans son thread et conserve la version publiée', () => {
-    seed_users(ALICE, BOB)
+  it('édite une note dans son thread et conserve la version publiée', async () => {
+    await seed_users(ALICE, BOB)
     const created = create_activity(ALICE, {
       contexte: 'tickets',
       ref: 'REQ-EDIT',
@@ -223,8 +223,8 @@ describe('append-only patches', () => {
     expect(get_activity(created.id)?.contenu).toBe(created.contenu)
   })
 
-  it('projette lecture et réaction sans muter la source', () => {
-    seed_users(ALICE, BOB)
+  it('projette lecture et réaction sans muter la source', async () => {
+    await seed_users(ALICE, BOB)
     const created = create_activity(ALICE, {
       contexte: 'repayment',
       ref: 'LOC-REACTION',

@@ -14,8 +14,7 @@ const user = (isAdministrator: boolean): User => ({
   email: `${isAdministrator ? 'admin' : 'user'}@example.org`,
   isAdministrator,
   moduleIds: [],
-  chatbotIds: ['default'],
-  passwordHash: 'unused'
+  chatbotIds: ['default']
 })
 
 const app_for = (isAdministrator?: boolean) => {

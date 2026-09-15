@@ -1,27 +1,24 @@
 import { Database } from 'bun:sqlite'
 
-import { SQL } from 'bun'
-
 import { User as UserSchema, type User } from './_schema'
+import { hashPassword } from './auth'
 import { datastorePaths } from './paths'
 
-const sql_by_path = new Map<string, SQL>()
-const getSQL = () => {
-  const path = datastorePaths().database
-  let sql = sql_by_path.get(path)
-  if (!sql) {
-    sql = new SQL(`sqlite:${path}`)
-    sql_by_path.set(path, sql)
-  }
-  return sql
-}
-
 type UserRow = {
+  id: string
   email: string
-  is_administrator: number
+  role: string | null
   module_ids: string
   chatbot_ids: string
-  password_hash: string
+}
+
+export type StoredUser = User & { id: string }
+
+function openDatabase(): Database {
+  const db = new Database(datastorePaths().database)
+  db.run('PRAGMA busy_timeout = 5000')
+  db.run('PRAGMA foreign_keys = ON')
+  return db
 }
 
 const normalizeUser = (user: User): User => {
@@ -33,127 +30,114 @@ const normalizeUser = (user: User): User => {
   }
 }
 
-const deserializeUser = (row: UserRow): User =>
-  normalizeUser({
+const deserializeUser = (row: UserRow): StoredUser => ({
+  id: row.id,
+  ...normalizeUser({
     email: row.email,
-    isAdministrator: row.is_administrator === 1,
+    isAdministrator: (row.role ?? '').split(',').includes('admin'),
     moduleIds: JSON.parse(row.module_ids),
-    chatbotIds: JSON.parse(row.chatbot_ids),
-    passwordHash: row.password_hash
+    chatbotIds: JSON.parse(row.chatbot_ids)
   })
+})
 
-export const saveUser = async (user: User): Promise<void> => {
-  const normalized = normalizeUser(user)
-  await getSQL()`
-    INSERT INTO users (email, is_administrator, module_ids, chatbot_ids, password_hash)
-    VALUES (
-      ${normalized.email},
-      ${normalized.isAdministrator},
-      ${JSON.stringify(normalized.moduleIds)},
-      ${JSON.stringify(normalized.chatbotIds)},
-      ${normalized.passwordHash}
+function getStoredUserFromDatabase(db: Database, email: string): StoredUser | undefined {
+  const row = db
+    .query<UserRow, [string]>(
+      `SELECT id, email, role, module_ids, chatbot_ids
+       FROM users
+       WHERE email = ?`
     )
-    ON CONFLICT(email) DO UPDATE SET
-      is_administrator = excluded.is_administrator,
-      module_ids = excluded.module_ids,
-      chatbot_ids = excluded.chatbot_ids,
-      password_hash = excluded.password_hash
-  `
+    .get(email.trim().toLowerCase())
+  return row ? deserializeUser(row) : undefined
 }
 
-export const createUser = async (user: User): Promise<boolean> => {
-  const normalized = normalizeUser(user)
-  const db = new Database(datastorePaths().database)
-  db.run('PRAGMA busy_timeout = 5000')
-  try {
-    const result = db
-      .query(
-        `INSERT OR IGNORE INTO users (
-           email, is_administrator, module_ids, chatbot_ids, password_hash
-         ) VALUES (?, ?, ?, ?, ?)`
-      )
-      .run(
-        normalized.email,
-        normalized.isAdministrator ? 1 : 0,
-        JSON.stringify(normalized.moduleIds),
-        JSON.stringify(normalized.chatbotIds),
-        normalized.passwordHash
-      )
-    return result.changes === 1
-  } finally {
-    db.close()
-  }
+function insertUser(db: Database, user: User, passwordHash: string): void {
+  const id = Bun.randomUUIDv7()
+  const now = new Date().toISOString()
+  db.run(
+    `INSERT INTO users
+       (id, name, email, emailVerified, createdAt, updatedAt, role, banned, module_ids, chatbot_ids)
+     VALUES (?, ?, ?, 0, ?, ?, ?, 0, ?, ?)`,
+    [
+      id,
+      user.email,
+      user.email,
+      now,
+      now,
+      user.isAdministrator ? 'admin' : 'user',
+      JSON.stringify(user.moduleIds),
+      JSON.stringify(user.chatbotIds)
+    ]
+  )
+  db.run(
+    `INSERT INTO account
+       (id, accountId, providerId, userId, password, createdAt, updatedAt)
+     VALUES (?, ?, 'credential', ?, ?, ?, ?)`,
+    [Bun.randomUUIDv7(), id, id, passwordHash, now, now]
+  )
 }
 
-export const importUserPasswords = async (
-  users: ReadonlyArray<{ email: string; passwordHash: string }>
-): Promise<{ created: number; updated: number }> => {
-  const db = new Database(datastorePaths().database)
-  db.run('PRAGMA busy_timeout = 5000')
-  try {
-    const insert = db.prepare(`
-      INSERT INTO users (email, is_administrator, module_ids, chatbot_ids, password_hash)
-      VALUES (?, 0, '[]', '[]', ?)
-      ON CONFLICT(email) DO UPDATE SET password_hash = excluded.password_hash
-    `)
-    const exists = db.prepare('SELECT 1 FROM users WHERE email = ? LIMIT 1')
-    return db
-      .transaction(() => {
-        let created = 0
-        let updated = 0
-        for (const user of users) {
-          if (exists.get(user.email)) updated += 1
-          else created += 1
-          insert.run(user.email, user.passwordHash)
-        }
-        return { created, updated }
-      })
-      .immediate()
-  } finally {
-    db.close()
+function setPassword(db: Database, userId: string, passwordHash: string): void {
+  const now = new Date().toISOString()
+  const account = db
+    .query<{ id: string }, [string]>(
+      `SELECT id FROM account WHERE userId = ? AND providerId = 'credential'`
+    )
+    .get(userId)
+  if (account) {
+    db.run('UPDATE account SET password = ?, updatedAt = ? WHERE id = ?', [
+      passwordHash,
+      now,
+      account.id
+    ])
+  } else {
+    db.run(
+      `INSERT INTO account
+         (id, accountId, providerId, userId, password, createdAt, updatedAt)
+       VALUES (?, ?, 'credential', ?, ?, ?, ?)`,
+      [Bun.randomUUIDv7(), userId, userId, passwordHash, now, now]
+    )
   }
+  db.run('DELETE FROM session WHERE userId = ?', [userId])
+}
+
+export const getStoredUser = async (email: string): Promise<StoredUser | undefined> => {
+  using db = openDatabase()
+  return getStoredUserFromDatabase(db, email)
 }
 
 export const getUser = async (email: string): Promise<User | undefined> => {
-  const users = await getSQL()`
-    SELECT
-      email,
-      is_administrator,
-      module_ids,
-      chatbot_ids,
-      password_hash
-    FROM
-      users
-    WHERE
-      email = ${email.toLowerCase().trim()}
-  `
-
-  if (users.length === 0) return undefined
-
-  return deserializeUser(users[0] as UserRow)
+  const stored = await getStoredUser(email)
+  if (!stored) return undefined
+  const { id: _id, ...user } = stored
+  return user
 }
 
 export const getUsers = async (): Promise<User[]> => {
-  const rows = (await getSQL()`
-    SELECT
-      email,
-      is_administrator,
-      module_ids,
-      chatbot_ids,
-      password_hash
-    FROM
-      users
-    ORDER BY
-      email
-  `) as UserRow[]
-  return rows.map(deserializeUser)
+  using db = openDatabase()
+  const rows = db
+    .query<UserRow, []>(
+      `SELECT id, email, role, module_ids, chatbot_ids
+       FROM users
+       ORDER BY email`
+    )
+    .all()
+  return rows.map((row) => {
+    const { id: _id, ...user } = deserializeUser(row)
+    return user
+  })
 }
 
-export const deleteUser = async (email: string): Promise<void> => {
-  await getSQL()`
-    DELETE FROM users
-    WHERE email = ${email.toLowerCase().trim()}
-  `
+export const createUser = async (input: User & { password: string }): Promise<boolean> => {
+  const user = normalizeUser(input)
+  const passwordHash = await hashPassword(input.password)
+  using db = openDatabase()
+  const create = db.transaction(() => {
+    if (getStoredUserFromDatabase(db, user.email)) return false
+    insertUser(db, user, passwordHash)
+    return true
+  })
+  return create.immediate()
 }
 
 type AdministratorMutationResult =
@@ -163,50 +147,60 @@ type AdministratorMutationResult =
       code: 'user_not_found' | 'cannot_demote_self' | 'cannot_delete_self' | 'last_administrator'
     }
 
+const countAdministrators = (db: Database): number =>
+  db
+    .query<{ count: number }, []>(
+      `SELECT COUNT(*) AS count
+       FROM users
+       WHERE ',' || COALESCE(role, '') || ',' LIKE '%,admin,%'`
+    )
+    .get()!.count
+
 export const saveUserAsAdministrator = async (
   actorEmail: string,
   email: string,
-  patch: Partial<Pick<User, 'isAdministrator' | 'moduleIds' | 'chatbotIds' | 'passwordHash'>>
+  patch: Partial<Pick<User, 'isAdministrator' | 'moduleIds' | 'chatbotIds'>> & {
+    password?: string
+  }
 ): Promise<AdministratorMutationResult> => {
   const normalizedEmail = email.trim().toLowerCase()
-  const db = new Database(datastorePaths().database)
-  db.run('PRAGMA busy_timeout = 5000')
-  try {
-    return db
-      .transaction(() => {
-        const existing = db
-          .query<UserRow, [string]>('SELECT * FROM users WHERE email = ? LIMIT 1')
-          .get(normalizedEmail)
-        if (!existing) return { ok: false, code: 'user_not_found' } as const
-        const user = normalizeUser({ ...deserializeUser(existing), ...patch })
-        if (existing.is_administrator === 1 && !user.isAdministrator) {
-          if (user.email === actorEmail.trim().toLowerCase()) {
-            return { ok: false, code: 'cannot_demote_self' } as const
-          }
-          const count = db
-            .query<{ count: number }, []>(
-              'SELECT COUNT(*) AS count FROM users WHERE is_administrator = 1'
-            )
-            .get()!.count
-          if (count <= 1) return { ok: false, code: 'last_administrator' } as const
-        }
-        db.query(
-          `UPDATE users
-         SET is_administrator = ?, module_ids = ?, chatbot_ids = ?, password_hash = ?
-         WHERE email = ?`
-        ).run(
-          user.isAdministrator ? 1 : 0,
-          JSON.stringify(user.moduleIds),
-          JSON.stringify(user.chatbotIds),
-          user.passwordHash,
-          user.email
-        )
-        return { ok: true, user } as const
-      })
-      .immediate()
-  } finally {
-    db.close()
-  }
+  const passwordHash = patch.password === undefined ? undefined : await hashPassword(patch.password)
+  using db = openDatabase()
+  const save = db.transaction((): AdministratorMutationResult => {
+    const existing = getStoredUserFromDatabase(db, normalizedEmail)
+    if (!existing) return { ok: false, code: 'user_not_found' }
+
+    if (existing.isAdministrator && patch.isAdministrator === false) {
+      if (normalizedEmail === actorEmail.trim().toLowerCase()) {
+        return { ok: false, code: 'cannot_demote_self' }
+      }
+      if (countAdministrators(db) <= 1) {
+        return { ok: false, code: 'last_administrator' }
+      }
+    }
+
+    const user = normalizeUser({
+      email: normalizedEmail,
+      isAdministrator: patch.isAdministrator ?? existing.isAdministrator,
+      moduleIds: patch.moduleIds ?? existing.moduleIds,
+      chatbotIds: patch.chatbotIds ?? existing.chatbotIds
+    })
+    db.run(
+      `UPDATE users
+       SET role = ?, module_ids = ?, chatbot_ids = ?, updatedAt = ?
+       WHERE id = ?`,
+      [
+        user.isAdministrator ? 'admin' : 'user',
+        JSON.stringify(user.moduleIds),
+        JSON.stringify(user.chatbotIds),
+        new Date().toISOString(),
+        existing.id
+      ]
+    )
+    if (passwordHash !== undefined) setPassword(db, existing.id, passwordHash)
+    return { ok: true, user }
+  })
+  return save.immediate()
 }
 
 export const deleteUserAsAdministrator = async (
@@ -214,39 +208,67 @@ export const deleteUserAsAdministrator = async (
   email: string
 ): Promise<AdministratorMutationResult> => {
   const normalizedEmail = email.trim().toLowerCase()
-  const db = new Database(datastorePaths().database)
-  db.run('PRAGMA busy_timeout = 5000')
-  try {
-    return db
-      .transaction(() => {
-        if (normalizedEmail === actorEmail.trim().toLowerCase()) {
-          return { ok: false, code: 'cannot_delete_self' } as const
-        }
-        const existing = db
-          .query<UserRow, [string]>('SELECT * FROM users WHERE email = ? LIMIT 1')
-          .get(normalizedEmail)
-        if (!existing) return { ok: false, code: 'user_not_found' } as const
-        if (existing.is_administrator === 1) {
-          const count = db
-            .query<{ count: number }, []>(
-              'SELECT COUNT(*) AS count FROM users WHERE is_administrator = 1'
-            )
-            .get()!.count
-          if (count <= 1) return { ok: false, code: 'last_administrator' } as const
-        }
-        db.query('DELETE FROM users WHERE email = ?').run(normalizedEmail)
-        return { ok: true, user: deserializeUser(existing) } as const
-      })
-      .immediate()
-  } finally {
-    db.close()
+  if (normalizedEmail === actorEmail.trim().toLowerCase()) {
+    return { ok: false, code: 'cannot_delete_self' }
   }
+  using db = openDatabase()
+  const remove = db.transaction((): AdministratorMutationResult => {
+    const existing = getStoredUserFromDatabase(db, normalizedEmail)
+    if (!existing) return { ok: false, code: 'user_not_found' }
+    if (existing.isAdministrator && countAdministrators(db) <= 1) {
+      return { ok: false, code: 'last_administrator' }
+    }
+    db.run('DELETE FROM users WHERE id = ?', [existing.id])
+    return { ok: true, user: existing }
+  })
+  return remove.immediate()
+}
+
+export const importUserPasswords = async (
+  users: ReadonlyArray<{ email: string; password: string }>
+): Promise<{ created: number; updated: number }> => {
+  const prepared: Array<{ email: string; passwordHash: string }> = []
+  for (const user of users) {
+    prepared.push({
+      email: UserSchema.shape.email.parse(user.email),
+      passwordHash: await hashPassword(user.password)
+    })
+  }
+  using db = openDatabase()
+  const importUsers = db.transaction(() => {
+    let created = 0
+    let updated = 0
+    for (const user of prepared) {
+      const existing = getStoredUserFromDatabase(db, user.email)
+      if (existing) {
+        setPassword(db, existing.id, user.passwordHash)
+        updated += 1
+      } else {
+        insertUser(
+          db,
+          {
+            email: user.email,
+            isAdministrator: false,
+            moduleIds: [],
+            chatbotIds: []
+          },
+          user.passwordHash
+        )
+        created += 1
+      }
+    }
+    return { created, updated }
+  })
+  return importUsers.immediate()
 }
 
 export const deleteAllUsers = async (): Promise<void> => {
-  await getSQL()`
-    DELETE FROM users;
-
-    VACUUM;
-  `
+  using db = openDatabase()
+  const remove = db.transaction(() => {
+    db.run('DELETE FROM session')
+    db.run('DELETE FROM account')
+    db.run('DELETE FROM verification')
+    db.run('DELETE FROM users')
+  })
+  remove.immediate()
 }

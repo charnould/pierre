@@ -12,17 +12,66 @@ CREATE INDEX idx_conversations_timestamp
   ON conversations (timestamp DESC);
 
 CREATE TABLE users (
-  email TEXT PRIMARY KEY UNIQUE NOT NULL,
-  is_administrator INTEGER NOT NULL DEFAULT 0 CHECK (is_administrator IN (0, 1)),
+  id TEXT PRIMARY KEY NOT NULL,
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  emailVerified INTEGER NOT NULL,
+  image TEXT,
+  createdAt DATE NOT NULL,
+  updatedAt DATE NOT NULL,
+  role TEXT,
+  banned INTEGER,
+  banReason TEXT,
+  banExpires DATE,
   module_ids TEXT NOT NULL DEFAULT '[]'
     CHECK (json_valid(module_ids) AND json_type(module_ids) = 'array'),
   chatbot_ids TEXT NOT NULL DEFAULT '[]'
     CHECK (json_valid(chatbot_ids) AND json_type(chatbot_ids) = 'array'),
-  password_hash TEXT NOT NULL,
   preferences TEXT NOT NULL DEFAULT '{}',
   avatar BLOB,
   avatar_version INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TABLE session (
+  id TEXT PRIMARY KEY NOT NULL,
+  expiresAt DATE NOT NULL,
+  token TEXT UNIQUE NOT NULL,
+  createdAt DATE NOT NULL,
+  updatedAt DATE NOT NULL,
+  ipAddress TEXT,
+  userAgent TEXT,
+  userId TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+  impersonatedBy TEXT
+);
+
+CREATE TABLE account (
+  id TEXT PRIMARY KEY NOT NULL,
+  accountId TEXT NOT NULL,
+  providerId TEXT NOT NULL,
+  userId TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+  accessToken TEXT,
+  refreshToken TEXT,
+  idToken TEXT,
+  accessTokenExpiresAt DATE,
+  refreshTokenExpiresAt DATE,
+  scope TEXT,
+  password TEXT,
+  createdAt DATE NOT NULL,
+  updatedAt DATE NOT NULL
+);
+
+CREATE TABLE verification (
+  id TEXT PRIMARY KEY NOT NULL,
+  identifier TEXT NOT NULL,
+  value TEXT NOT NULL,
+  expiresAt DATE NOT NULL,
+  createdAt DATE NOT NULL,
+  updatedAt DATE NOT NULL
+);
+
+CREATE INDEX session_userId_idx ON session (userId);
+CREATE INDEX account_userId_idx ON account (userId);
+CREATE INDEX verification_identifier_idx ON verification (identifier);
 
 CREATE TABLE telemetry (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,19 +80,32 @@ CREATE TABLE telemetry (
   event TEXT
 );
 
-CREATE TABLE knowledge_build (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  created_at TEXT,
-  source TEXT,
-  kind TEXT,
-  code TEXT,
-  subject TEXT
+CREATE TABLE knowledge_records (
+  id TEXT PRIMARY KEY,
+  kind TEXT NOT NULL CHECK (kind IN ('source', 'build')),
+  document TEXT NOT NULL CHECK (
+    json_valid(document)
+    AND json_type(document) = 'object'
+  ),
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
 );
+
+CREATE INDEX idx_knowledge_records_kind_created
+  ON knowledge_records (kind, created_at DESC);
+
+CREATE UNIQUE INDEX idx_knowledge_records_storage_name
+  ON knowledge_records (json_extract(document, '$.storageName'))
+  WHERE kind = 'source';
+
+CREATE UNIQUE INDEX idx_knowledge_records_active_build
+  ON knowledge_records ((1))
+  WHERE kind = 'build'
+    AND json_extract(document, '$.status') IN ('queued', 'running');
 
 CREATE TABLE activites (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   date_creation TEXT NOT NULL,
-  date_statut TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
   rattachement TEXT NOT NULL,
   auteur TEXT NOT NULL,
   destinataire TEXT,
@@ -51,47 +113,92 @@ CREATE TABLE activites (
   id_locataire TEXT,
   id_lot TEXT,
   type TEXT NOT NULL,
-  statut TEXT,
+  channel TEXT,
   mentions TEXT NOT NULL DEFAULT '[]',
-  contenu TEXT NOT NULL DEFAULT '',
+  contenu TEXT NOT NULL,
   thread_id TEXT,
-  event TEXT,
-  state TEXT,
   revision INTEGER,
   bulk_id TEXT,
   execution_id TEXT,
   idempotency_key TEXT,
   CHECK (json_valid(mentions) AND json_type(mentions) = 'array'),
   CHECK (
+    json_valid(contenu)
+    AND json_type(contenu) = 'object'
+    AND json_extract(contenu, '$.version') IS 2
+  ),
+  CHECK (
     (
-      type = 'action'
+      type IN (
+        'repayment_plan.created',
+        'repayment_plan.updated',
+        'repayment_plan.finalized',
+        'repayment_plan.closed'
+      )
       AND thread_id IS NOT NULL
-      AND event IN ('created', 'updated', 'completed', 'ignored', 'reopened')
-      AND state IN ('a_faire', 'fait', 'ignore')
-      AND revision IS NOT NULL
-      AND revision > 0
+      AND revision IS NULL
+    )
+    OR (
+      type NOT IN (
+        'repayment_plan.created',
+        'repayment_plan.updated',
+        'repayment_plan.finalized',
+        'repayment_plan.closed'
+      )
       AND (
-        (event IN ('created', 'updated', 'reopened') AND state = 'a_faire')
-        OR (event = 'completed' AND state = 'fait')
-        OR (event = 'ignored' AND state = 'ignore')
+        (thread_id IS NULL AND revision IS NULL)
+        OR (thread_id IS NOT NULL AND revision IS NOT NULL AND revision > 0)
       )
     )
-    OR (
-      type IN ('rcs', 'sms', 'email', 'courrier', 'lrar', 'lre', 'signature')
+  ),
+  CHECK (
+    (
+      type IN (
+        'communication.sent',
+        'communication.ok',
+        'communication.failed',
+        'communication.received',
+        'communication.imported'
+      )
+      AND channel IS NOT NULL
+      AND channel IN (
+        'rcs',
+        'sms',
+        'email',
+        'postal_letter',
+        'postal_registered_letter_with_acknowledgement',
+        'electronic_registered_delivery',
+        'electronic_registered_letter'
+      )
       AND thread_id IS NOT NULL
-      AND event IS NULL
-      AND state IS NULL
-      AND revision IS NULL
     )
     OR (
-      type NOT IN ('action', 'rcs', 'sms', 'email', 'courrier', 'lrar', 'lre', 'signature')
-      AND thread_id IS NULL
-      AND event IS NULL
-      AND state IS NULL
-      AND revision IS NULL
+      type = 'document.sent_for_signature'
+      AND channel IS NOT NULL
+      AND channel IN (
+        'rcs',
+        'sms',
+        'email',
+        'postal_letter',
+        'postal_registered_letter_with_acknowledgement',
+        'electronic_registered_delivery',
+        'electronic_registered_letter'
+      )
+      AND thread_id IS NOT NULL
+    )
+    OR (
+      type NOT IN (
+        'communication.sent',
+        'communication.ok',
+        'communication.failed',
+        'communication.received',
+        'communication.imported',
+        'document.sent_for_signature'
+      )
+      AND channel IS NULL
     )
   ),
-  UNIQUE(thread_id, revision)
+  UNIQUE (thread_id, revision)
 );
 
 CREATE INDEX idx_activites_rattachement
@@ -108,11 +215,26 @@ CREATE INDEX idx_activites_type
   ON activites (type, date_creation DESC);
 CREATE INDEX idx_activites_auteur
   ON activites (auteur, date_creation DESC);
-CREATE INDEX idx_activites_statut
-  ON activites (statut, date_creation DESC);
 CREATE INDEX idx_activites_rattachement_thread
   ON activites (rattachement, type, thread_id, revision DESC)
   WHERE thread_id IS NOT NULL;
+CREATE INDEX idx_activites_repayment_plan_thread
+  ON activites (rattachement, thread_id, id DESC)
+  WHERE type IN (
+    'repayment_plan.created',
+    'repayment_plan.updated',
+    'repayment_plan.finalized',
+    'repayment_plan.closed'
+  );
+CREATE UNIQUE INDEX idx_activites_repayment_plan_snapshot
+  ON activites (thread_id)
+  WHERE type IN (
+    'repayment_plan.created',
+    'repayment_plan.updated',
+    'repayment_plan.finalized',
+    'repayment_plan.closed'
+  )
+  AND json_type(contenu, '$.plan') = 'object';
 CREATE INDEX idx_activites_bulk
   ON activites (bulk_id, date_creation DESC);
 CREATE INDEX idx_activites_bulk_reports
@@ -124,7 +246,7 @@ CREATE INDEX idx_activites_bulk_reports
     ) DESC,
     execution_id DESC
   )
-  WHERE type = 'bulk_run' AND bulk_id IS NOT NULL;
+  WHERE type = 'bulk.ran' AND bulk_id IS NOT NULL;
 CREATE INDEX idx_activites_execution
   ON activites (execution_id, date_creation DESC);
 CREATE INDEX idx_activites_inbound_thread
@@ -133,13 +255,47 @@ CREATE INDEX idx_activites_inbound_thread
 CREATE UNIQUE INDEX idx_activites_idempotency
   ON activites (idempotency_key)
   WHERE idempotency_key IS NOT NULL;
-CREATE UNIQUE INDEX idx_activites_ticket_draft
-  ON activites (rattachement, type)
-  WHERE statut = 'draft'
-    AND type IN ('ticket_reply', 'ticket_memo', 'ticket_summary');
-CREATE INDEX idx_activites_case_bucket
+CREATE INDEX idx_activites_case_group
   ON activites (rattachement, date_creation DESC, id DESC)
-  WHERE type = 'case_bucket_change';
+  WHERE type IN ('case.group_changed', 'case.bucket_changed');
+
+CREATE TRIGGER activites_no_update
+BEFORE UPDATE ON activites
+WHEN NOT (
+  OLD.type IN (
+    'repayment_plan.created',
+    'repayment_plan.updated',
+    'repayment_plan.finalized'
+  )
+  AND json_type(OLD.contenu, '$.plan') = 'object'
+  AND json_type(NEW.contenu, '$.plan') IS NULL
+  AND NEW.contenu = json_remove(OLD.contenu, '$.plan')
+  AND NEW.id IS OLD.id
+  AND NEW.date_creation IS OLD.date_creation
+  AND NEW.rattachement IS OLD.rattachement
+  AND NEW.auteur IS OLD.auteur
+  AND NEW.destinataire IS OLD.destinataire
+  AND NEW.id_client IS OLD.id_client
+  AND NEW.id_locataire IS OLD.id_locataire
+  AND NEW.id_lot IS OLD.id_lot
+  AND NEW.type IS OLD.type
+  AND NEW.channel IS OLD.channel
+  AND NEW.mentions IS OLD.mentions
+  AND NEW.thread_id IS OLD.thread_id
+  AND NEW.revision IS OLD.revision
+  AND NEW.bulk_id IS OLD.bulk_id
+  AND NEW.execution_id IS OLD.execution_id
+  AND NEW.idempotency_key IS OLD.idempotency_key
+)
+BEGIN
+  SELECT RAISE(ABORT, 'activites is append-only');
+END;
+
+CREATE TRIGGER activites_no_delete
+BEFORE DELETE ON activites
+BEGIN
+  SELECT RAISE(ABORT, 'activites is append-only');
+END;
 
 CREATE TABLE automations (
   id TEXT PRIMARY KEY,

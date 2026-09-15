@@ -9,8 +9,7 @@ export const User = z.object({
   email: z.string().trim().toLowerCase().pipe(z.email()),
   isAdministrator: z.boolean(),
   moduleIds: z.array(BusinessModuleIdSchema),
-  chatbotIds: z.array(z.string().trim().min(1)),
-  passwordHash: z.string()
+  chatbotIds: z.array(z.string().trim().min(1))
 })
 
 const AgentFields = {

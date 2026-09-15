@@ -21,8 +21,7 @@ app.use('*', async (c, next) => {
     email: c.req.header('x-test-email') ?? 'alice@example.org',
     isAdministrator: false,
     moduleIds: ['tickets'],
-    chatbotIds: ['default'],
-    passwordHash: 'unused'
+    chatbotIds: ['default']
   })
   await next()
 })

@@ -1,7 +1,7 @@
 import type { Context } from 'hono'
 
 import { createUser } from '../../../../utils/handle-user'
-import { CreateUserBody, invalidBody, toAdminUser, validateChatbotIds } from './shared'
+import { CreateUserBody, invalidBody, validateChatbotIds } from './shared'
 
 export const controller = async (c: Context) => {
   const body = await c.req.json().catch(() => null)
@@ -21,7 +21,7 @@ export const controller = async (c: Context) => {
     isAdministrator: input.isAdministrator,
     moduleIds: input.moduleIds,
     chatbotIds: input.chatbotIds,
-    passwordHash: await Bun.password.hash(input.password)
+    password: input.password
   }
   if (!(await createUser(user))) {
     return c.json(
@@ -29,11 +29,12 @@ export const controller = async (c: Context) => {
       409
     )
   }
+  const { password: _password, ...createdUser } = user
 
   return c.json(
     {
       data: {
-        user: toAdminUser(user)
+        user: createdUser
       }
     },
     201

@@ -61,8 +61,7 @@ app.use('*', async (c, next) => {
       email: 'alice@example.org',
       isAdministrator: false,
       moduleIds: [],
-      chatbotIds: ['testing_purpose_1'],
-      passwordHash: 'unused'
+      chatbotIds: ['testing_purpose_1']
     } as never
   )
   await next()
@@ -120,8 +119,7 @@ describe('POST /ai multipart and stream boundary', () => {
           email: 'alice@example.org',
           isAdministrator: false,
           moduleIds: [],
-          chatbotIds: ['locked'],
-          passwordHash: 'unused'
+          chatbotIds: ['locked']
         } as never
       )
       await next()

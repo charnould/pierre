@@ -30,8 +30,8 @@ const task_content = (assignee = BOB) =>
   })
 
 describe('action lifecycle', () => {
-  it('planifie, réalise, replanifie puis ignore une tâche append-only', () => {
-    seed_users(ALICE, BOB, CLAIRE)
+  it('planifie, réalise, replanifie puis ignore une tâche append-only', async () => {
+    await seed_users(ALICE, BOB, CLAIRE)
     const created = create_activity(ALICE, {
       contexte: 'repayment',
       ref: 'LOC-ACTION',
@@ -141,8 +141,8 @@ describe('action lifecycle', () => {
     expect(get_activity(message.id)).not.toBeNull()
   })
 
-  it('autorise tout collaborateur à ignorer une tâche ouverte', () => {
-    seed_users(ALICE, BOB, CLAIRE)
+  it('autorise tout collaborateur à ignorer une tâche ouverte', async () => {
+    await seed_users(ALICE, BOB, CLAIRE)
     const created = create_activity(ALICE, {
       contexte: 'repayment',
       ref: 'LOC-IGNORE',
@@ -163,8 +163,8 @@ describe('action lifecycle', () => {
     expect(parse_contenu_json(ignored.contenu)['reason']).toBe('Plus nécessaire.')
   })
 
-  it('produit une enveloppe JSON autosuffisante pour un LLM', () => {
-    seed_users(ALICE, BOB)
+  it('produit une enveloppe JSON autosuffisante pour un LLM', async () => {
+    await seed_users(ALICE, BOB)
     const created = create_activity(ALICE, {
       contexte: 'repayment',
       ref: 'LOC-LLM',

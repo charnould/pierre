@@ -9,10 +9,12 @@ import { controller as patchUserController } from '../../../../../../controllers
 import { controller as postUserController } from '../../../../../../controllers/desktop/admin/users/post'
 import { controller as importUsersController } from '../../../../../../controllers/desktop/admin/users/post.import'
 import type { User } from '../../../../../../utils/_schema'
+import { getAuth } from '../../../../../../utils/auth'
 import { authorizeAdministrator } from '../../../../../../utils/authorize-role'
-import { deleteAllUsers, getUser, getUsers, saveUser } from '../../../../../../utils/handle-user'
+import { deleteAllUsers, getUser, getUsers } from '../../../../../../utils/handle-user'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../../../utils/paths'
 import { setup } from '../../../../../../utils/setup'
+import { createTestUser } from '../../../../../test-user'
 
 const paths = testDatastorePaths('desktop_admin_users')
 
@@ -20,8 +22,7 @@ const ADMIN: User = {
   email: 'admin@example.org',
   isAdministrator: true,
   moduleIds: ['tickets', 'repayment'],
-  chatbotIds: ['default'],
-  passwordHash: 'unused'
+  chatbotIds: ['default']
 }
 const NON_ADMIN: User = {
   ...ADMIN,
@@ -42,11 +43,19 @@ app.post('/desktop/admin/users/import', authorizeAdministrator, importUsersContr
 app.patch('/desktop/admin/users/:email', authorizeAdministrator, patchUserController)
 app.delete('/desktop/admin/users/:email', authorizeAdministrator, deleteUserController)
 
+let adminCookie = ''
+let requestIp = 1
+const nextIp = (): string => {
+  requestIp += 1
+  return `198.51.100.${requestIp}`
+}
+
 const request = (path: string, init: RequestInit = {}, actor: 'admin' | 'user' | null = 'admin') =>
   app.request(path, {
     ...init,
     headers: {
       ...(actor ? { 'x-test-user': actor } : {}),
+      ...(actor === 'admin' ? { cookie: adminCookie } : {}),
       ...init.headers
     }
   })
@@ -57,6 +66,20 @@ const jsonRequest = (method: string, body: unknown) => ({
   body: JSON.stringify(body)
 })
 
+const canSignIn = async (email: string, password: string): Promise<boolean> =>
+  (
+    await getAuth().handler(
+      new Request('http://localhost/auth/sign-in/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': nextIp()
+        },
+        body: JSON.stringify({ email, password })
+      })
+    )
+  ).ok
+
 beforeAll(async () => {
   setDatastoreRoot(paths.root)
   await rm(paths.root, { recursive: true, force: true })
@@ -65,7 +88,22 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await deleteAllUsers()
-  await saveUser(ADMIN)
+  await createTestUser(ADMIN, 'admin-password')
+  const login = await getAuth().handler(
+    new Request('http://localhost/auth/sign-in/email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-forwarded-for': nextIp()
+      },
+      body: JSON.stringify({ email: ADMIN.email, password: 'admin-password' })
+    })
+  )
+  adminCookie =
+    login.headers
+      .getSetCookie()
+      .find((cookie) => cookie.includes('pierre.session_token='))
+      ?.split(';', 1)[0] ?? ''
 })
 
 afterAll(async () => {
@@ -79,7 +117,7 @@ describe('desktop administrator users API', () => {
     expect((await request('/desktop/admin/users', {}, 'user')).status).toBe(403)
   })
 
-  it('lists users and access catalogues without password hashes', async () => {
+  it('lists users and access catalogues without authentication storage fields', async () => {
     const response = await request('/desktop/admin/users')
     expect(response.status).toBe(200)
     const body = (await response.json()) as {
@@ -97,12 +135,11 @@ describe('desktop administrator users API', () => {
         chatbotIds: ADMIN.chatbotIds
       }
     ])
-    expect(body.data.users[0]).not.toHaveProperty('passwordHash')
     expect(body.data.modules.some(({ id }) => id === 'tickets')).toBe(true)
     expect(body.data.chatbots.some(({ id }) => id === 'default')).toBe(true)
   })
 
-  it('creates users with the explicit password without exposing its hash', async () => {
+  it('creates users with the explicit password', async () => {
     const manual = await request(
       '/desktop/admin/users',
       jsonRequest('POST', {
@@ -114,12 +151,7 @@ describe('desktop administrator users API', () => {
       })
     )
     expect(manual.status).toBe(201)
-    expect(
-      await Bun.password.verify(
-        ' manual-password ',
-        (await getUser('alice@example.org'))!.passwordHash
-      )
-    ).toBe(true)
+    expect(await canSignIn('alice@example.org', ' manual-password ')).toBe(true)
     expect(await manual.json()).toMatchObject({
       data: { user: { email: 'alice@example.org' } }
     })
@@ -129,6 +161,20 @@ describe('desktop administrator users API', () => {
           '/desktop/admin/users',
           jsonRequest('POST', {
             email: 'without-password@example.org',
+            isAdministrator: false,
+            moduleIds: [],
+            chatbotIds: []
+          })
+        )
+      ).status
+    ).toBe(400)
+    expect(
+      (
+        await request(
+          '/desktop/admin/users',
+          jsonRequest('POST', {
+            email: 'short-password@example.org',
+            password: 'short',
             isAdministrator: false,
             moduleIds: [],
             chatbotIds: []
@@ -177,11 +223,8 @@ describe('desktop administrator users API', () => {
   })
 
   it('updates access without changing the password and accepts an explicit replacement', async () => {
-    const existing = {
-      ...NON_ADMIN,
-      passwordHash: await Bun.password.hash('original-password')
-    }
-    await saveUser(existing)
+    const existing = { ...NON_ADMIN }
+    await createTestUser(existing, 'original-password')
 
     const access = await request(
       `/desktop/admin/users/${encodeURIComponent(existing.email)}`,
@@ -198,19 +241,14 @@ describe('desktop administrator users API', () => {
       chatbotIds: ['demo'],
       isAdministrator: true
     })
-    expect(await Bun.password.verify('original-password', updated.passwordHash)).toBe(true)
+    expect(await canSignIn(existing.email, 'original-password')).toBe(true)
 
     const password = await request(
       `/desktop/admin/users/${encodeURIComponent(existing.email)}`,
       jsonRequest('PATCH', { password: 'replacement-password' })
     )
     expect(password.status).toBe(200)
-    expect(
-      await Bun.password.verify(
-        'replacement-password',
-        (await getUser(existing.email))!.passwordHash
-      )
-    ).toBe(true)
+    expect(await canSignIn(existing.email, 'replacement-password')).toBe(true)
   })
 
   it('prevents self deletion and self demotion', async () => {
@@ -233,7 +271,7 @@ describe('desktop administrator users API', () => {
   })
 
   it('deletes another user explicitly', async () => {
-    await saveUser(NON_ADMIN)
+    await createTestUser(NON_ADMIN)
     const response = await request(`/desktop/admin/users/${encodeURIComponent(NON_ADMIN.email)}`, {
       method: 'DELETE'
     })
@@ -242,13 +280,10 @@ describe('desktop administrator users API', () => {
   })
 
   it('imports CSV atomically, preserving existing access and absent users', async () => {
-    const existing = {
-      ...NON_ADMIN,
-      passwordHash: await Bun.password.hash('old-password')
-    }
+    const existing = { ...NON_ADMIN }
     const absent = { ...NON_ADMIN, email: 'absent@example.org' }
-    await saveUser(existing)
-    await saveUser(absent)
+    await createTestUser(existing, 'old-password')
+    await createTestUser(absent)
 
     const form = new FormData()
     form.set(
@@ -263,9 +298,7 @@ describe('desktop administrator users API', () => {
     })
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ data: { created: 1, updated: 1 } })
-    expect(
-      await Bun.password.verify('new-password', (await getUser(existing.email))!.passwordHash)
-    ).toBe(true)
+    expect(await canSignIn(existing.email, 'new-password')).toBe(true)
     expect(await getUser(existing.email)).toMatchObject({
       moduleIds: existing.moduleIds,
       chatbotIds: existing.chatbotIds
@@ -282,7 +315,9 @@ describe('desktop administrator users API', () => {
     const form = new FormData()
     form.set(
       'file',
-      new File(['valid@example.org,password\ninvalid-row'], 'users.csv', { type: 'text/csv' })
+      new File(['valid@example.org,password\nshort@example.org,x'], 'users.csv', {
+        type: 'text/csv'
+      })
     )
     const response = await request('/desktop/admin/users/import', {
       method: 'POST',

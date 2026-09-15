@@ -19,8 +19,7 @@ app.use('*', async (c, next) => {
     email: 'alice@example.org',
     isAdministrator: false,
     moduleIds: c.req.header('x-test-no-access') === 'true' ? [] : ['tickets'],
-    chatbotIds: ['default'],
-    passwordHash: 'unused'
+    chatbotIds: ['default']
   })
   await next()
 })

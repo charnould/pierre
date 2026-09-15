@@ -19,8 +19,7 @@ it('authenticated user sees exactly the chatbots listed in user.chatbotIds', asy
     email: 'collab@test.org',
     isAdministrator: false,
     moduleIds: [],
-    chatbotIds: ['agent_astreinte', 'cadre_astreinte', 'demo'],
-    passwordHash: 'hash'
+    chatbotIds: ['agent_astreinte', 'cadre_astreinte', 'demo']
   }
 
   const configs = await get_displayable_configs({
@@ -38,8 +37,7 @@ it('authenticated user is not limited by active config show', async () => {
     email: 'test@test.org',
     isAdministrator: false,
     moduleIds: [],
-    chatbotIds: ['demo', 'testing_purpose_1', 'testing_purpose_2'],
-    passwordHash: 'hash'
+    chatbotIds: ['demo', 'testing_purpose_1', 'testing_purpose_2']
   }
 
   const configs = await get_displayable_configs({

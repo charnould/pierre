@@ -5,12 +5,6 @@ import { cors } from 'hono/cors'
 import { secureHeaders } from 'hono/secure-headers'
 
 import desktop_config from '../customization/desktop'
-import { controller as get_admin_login } from './controllers/admin/auth/get.login'
-import { controller as post_admin_login } from './controllers/admin/auth/post.login'
-import { controller as get_admin_conversations } from './controllers/admin/conversations/get'
-import { controller as post_admin_conversations } from './controllers/admin/conversations/post'
-import { controller as get_admin_dashboard } from './controllers/admin/get.dashboard'
-import { controller as get_admin_statistics } from './controllers/admin/statistics/get'
 import { controller as get_ai_boot } from './controllers/ai/get.boot'
 import { controller as get_ai_skills } from './controllers/ai/get.skills'
 import { controller as post_ai } from './controllers/ai/post'
@@ -30,6 +24,7 @@ import {
   postKnowledgeBuild,
   postKnowledgeSources
 } from './controllers/api/admin/knowledge'
+import { controller as get_login } from './controllers/auth/get.login'
 import { controller as get_index } from './controllers/chat/get'
 import { controller as post_courrier } from './controllers/courrier/post'
 import { controller as post_courrier_webhook } from './controllers/courrier/post.webhook'
@@ -65,6 +60,7 @@ import { controller as get_desktop_datastore_tables } from './controllers/deskto
 import { controller as get_desktop_ledger } from './controllers/desktop/ledger/get'
 import { controller as get_desktop_ledger_facets } from './controllers/desktop/ledger/get.facets'
 import { controller as post_desktop_me_avatar } from './controllers/desktop/me/avatar/post'
+import { controller as get_desktop_me } from './controllers/desktop/me/get'
 import { controller as patch_desktop_me_preferences } from './controllers/desktop/me/preferences/patch'
 import { controller as get_desktop_repayment_timeline } from './controllers/desktop/repayment/get.timeline'
 import { controller as get_desktop_tickets } from './controllers/desktop/tickets/get'
@@ -86,12 +82,19 @@ import { controller as post_signature_webhook } from './controllers/signature/po
 import { controller as post_sms } from './controllers/sms/post'
 import { controller as post_telemetry } from './controllers/telemetry/post'
 import { MAX_MULTIPART_REQUEST_BYTES } from './utils/ai-attachments'
-import { authenticate, authenticateAdministratorApi } from './utils/authenticate-user'
+import { getAuth } from './utils/auth'
+import {
+  authenticate,
+  authenticateAdministratorApi,
+  authenticateChat,
+  authenticateOptional
+} from './utils/authenticate-user'
 import { authorizeAdministrator, authorizeAnyModule, authorizeModule } from './utils/authorize-role'
 import { run_due_automations } from './utils/automations/run'
 import { AVATAR_MAX_UPLOAD_BYTES } from './utils/avatar-image'
 import { start_bulk_scheduler } from './utils/bulk/scheduler/queue'
 import { refresh_stale_sms_contacts } from './utils/contacts'
+import { ensureEnvAdmin } from './utils/ensure-env-admin'
 import { initializeKnowledgeBuildCoordinator } from './utils/knowledge/build-coordinator'
 import { CUSTOMIZATION_DIR, CUSTOMIZATION_STATIC_ROOT, SERVER_ROOT } from './utils/paths'
 import { setup } from './utils/setup'
@@ -104,6 +107,8 @@ import { cleanupOrphanedVms } from './utils/vm-registry'
 // 3. Run the knowledge pipeline (initial build on startup)
 // 4. Clean up any orphaned VMs that may be running from previous sessions
 await setup()
+await ensureEnvAdmin()
+const auth = getAuth()
 await start_bulk_scheduler()
 await initializeKnowledgeBuildCoordinator()
 await cleanupOrphanedVms()
@@ -181,11 +186,16 @@ app.use('/assets/*', serveStatic({ root: SERVER_ROOT }))
 app.use('/branding/*', serveStatic({ root: CUSTOMIZATION_DIR }))
 app.use('/customization/*', serveStatic({ root: CUSTOMIZATION_STATIC_ROOT }))
 
+// Better Auth owns the /auth namespace. Its admin API remains server-only.
+app.get('/login', get_login)
+app.all('/auth/admin/*', (c) => c.notFound())
+app.all('/auth/*', (c) => auth.handler(c.req.raw))
+
 // AI generation routes
-app.get('/c', authenticate, get_index)
-app.post('/ai', aiMultipartBodyLimit, authenticate, post_ai)
-app.get('/ai/boot', authenticate, get_ai_boot)
-app.get('/ai/skills', authenticate, get_ai_skills)
+app.get('/c', authenticateChat, get_index)
+app.post('/ai', aiMultipartBodyLimit, authenticateOptional, post_ai)
+app.get('/ai/boot', authenticateOptional, get_ai_boot)
+app.get('/ai/skills', authenticateOptional, get_ai_skills)
 app.get('/desktop/activities', authenticate, get_desktop_activities)
 app.get('/desktop/activity-feed/sync', authenticate, get_desktop_activity_feed_sync)
 app.post('/desktop/activities', authenticate, post_desktop_activity)
@@ -274,6 +284,7 @@ app.get(
 )
 app.get('/desktop/datastore/tables', authenticate, get_desktop_datastore_tables)
 app.get('/desktop/users', authenticate, get_desktop_users)
+app.get('/desktop/me', authenticate, get_desktop_me)
 app.get('/desktop/admin/users', authenticate, authorizeAdministrator, get_desktop_admin_users)
 app.post('/desktop/admin/users', authenticate, authorizeAdministrator, post_desktop_admin_user)
 app.patch(
@@ -350,18 +361,9 @@ app.post('/webhook/courrier', post_courrier_webhook)
 app.post('/webhook/lrar', post_lrar_webhook)
 app.post('/webhook/lre', post_lre_webhook)
 app.post('/webhook/signature', post_signature_webhook)
-app.post('/ai/answer', aiMultipartBodyLimit, authenticate, post_ai_answer)
+app.post('/ai/answer', aiMultipartBodyLimit, authenticateOptional, post_ai_answer)
 app.post('/ai/ui-response', aiUiResponseBodyLimit, post_ai_ui_response)
-app.post('/ai/vm/release', authenticate, post_ai_vm_release)
-
-// Admin routes
-app.get('/a/login', get_admin_login)
-app.get('/a', authenticate, get_admin_dashboard)
-app.get('/a/statistics', authenticate, get_admin_statistics)
-app.get('/a/conversations', authenticate, get_admin_conversations)
-
-app.post('/a/login', post_admin_login)
-app.post('/a/conversations', authenticate, post_admin_conversations)
+app.post('/ai/vm/release', authenticateOptional, post_ai_vm_release)
 
 // Health check route for Kamal proxy + Telemetry endpoint
 app.get('/up', (c) => c.text('ok'))

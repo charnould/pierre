@@ -1,8 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import { User } from '../../../utils/_schema'
 import { encode_user_avatar } from '../../../utils/avatar-image'
-import { deleteAllUsers, saveUser } from '../../../utils/handle-user'
 import {
   clear_user_avatar,
   get_user_avatar,
@@ -10,6 +8,7 @@ import {
   set_user_avatar,
   user_has_avatar
 } from '../../../utils/user-avatars'
+import { createTestUser } from '../../test-user'
 import { use_identity_test_env } from './identity-test-env'
 
 const PNG_1x1 = Uint8Array.fromBase64(
@@ -20,16 +19,12 @@ use_identity_test_env('_test_user_avatars')
 
 describe('user-avatars store', () => {
   test('upsert, list meta without blob, clear', async () => {
-    await deleteAllUsers()
-    await saveUser(
-      User.parse({
-        email: 'alice.martin@exemple.fr',
-        isAdministrator: false,
-        moduleIds: [],
-        chatbotIds: ['default'],
-        passwordHash: 'x'
-      })
-    )
+    await createTestUser({
+      email: 'alice.martin@exemple.fr',
+      isAdministrator: false,
+      moduleIds: [],
+      chatbotIds: ['default']
+    })
 
     expect(user_has_avatar('alice.martin@exemple.fr')).toBe(false)
     expect(get_user_avatar('alice.martin@exemple.fr')).toBeNull()

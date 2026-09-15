@@ -46,8 +46,7 @@ describe('webhooks de communication', () => {
         email: 'alice@example.org',
         isAdministrator: false,
         moduleIds: ['automations'],
-        chatbotIds: [],
-        passwordHash: 'unused'
+        chatbotIds: []
       })
       await next()
     })
@@ -304,8 +303,7 @@ describe('POST /communications/external et action', () => {
       email: 'alice@example.org',
       isAdministrator: false,
       moduleIds: ['tickets', 'automations'],
-      chatbotIds: [],
-      passwordHash: 'unused'
+      chatbotIds: []
     })
     await next()
   })

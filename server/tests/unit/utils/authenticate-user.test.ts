@@ -1,15 +1,17 @@
+import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 
 import { Hono } from 'hono'
-import { setSignedCookie } from 'hono/cookie'
 
 import type { User } from '../../../utils/_schema'
+import { getAuth } from '../../../utils/auth'
 import {
   authenticate,
   authenticateAdministratorApi,
-  encrypt
+  authenticateChat
 } from '../../../utils/authenticate-user'
-import { saveUser } from '../../../utils/handle-user'
+import { datastorePaths } from '../../../utils/paths'
+import { createTestUser } from '../../test-user'
 import { use_identity_test_env } from './identity-test-env'
 
 const SECRET = '0123456789abcdef0123456789abcdef'
@@ -46,87 +48,83 @@ describe('authenticate', () => {
     expect(await authorized.json()).toEqual({ email: 'cli@pierre.local' })
   })
 
-  test('does not classify the external communication endpoint as a chatbot route', async () => {
-    const app = new Hono()
-    app.use('*', authenticate)
-    app.post('/communications/external', (c) => c.json({ ok: true }))
-
-    const response = await app.request('/communications/external', {
-      method: 'POST',
-      redirect: 'manual'
-    })
-
-    expect(response.status).toBe(401)
-    expect(response.headers.get('location')).toBeNull()
-    expect(await response.json()).toEqual({
-      error: { code: 'unauthorized', message: 'Authentication required' }
-    })
-  })
-
-  test('treats a signed but malformed encrypted cookie as unauthenticated', async () => {
-    const issuer = new Hono()
-    issuer.get('/', async (c) => {
-      await setSignedCookie(c, 'pierre-ia', 'not-an-encrypted-session', SECRET)
-      return c.text('ok')
-    })
-    const issued = await issuer.request('/')
-    const cookie = issued.headers.get('set-cookie')?.split(';', 1)[0]
-    expect(cookie).toBeTruthy()
-
+  test('returns JSON 401 for anonymous desktop and communication requests', async () => {
     const app = new Hono()
     app.use('*', authenticate)
     app.get('/desktop/test', (c) => c.json({ ok: true }))
-    const response = await app.request('/desktop/test', { headers: { cookie: cookie! } })
+    app.post('/communications/external', (c) => c.json({ ok: true }))
 
-    expect(response.status).toBe(401)
-    expect(await response.json()).toEqual({
-      error: { code: 'unauthorized', message: 'Authentication required' }
-    })
+    for (const [path, method] of [
+      ['/desktop/test', 'GET'],
+      ['/communications/external', 'POST']
+    ] as const) {
+      const response = await app.request(path, { method, redirect: 'manual' })
+      expect(response.status).toBe(401)
+      expect(response.headers.get('location')).toBeNull()
+      expect(await response.json()).toEqual({
+        error: { code: 'unauthorized', message: 'Authentication required' }
+      })
+    }
   })
 
-  test('reserves every /a page for administrators', async () => {
-    const issueCookie = async (email: string) => {
-      const issuer = new Hono()
-      issuer.get('/', async (c) => {
-        await setSignedCookie(
-          c,
-          'pierre-ia',
-          await encrypt(JSON.stringify({ email }), SECRET),
-          SECRET
-        )
-        return c.text('ok')
-      })
-      return (await issuer.request('/')).headers.get('set-cookie')!.split(';', 1)[0]!
-    }
-
-    await saveUser({
-      email: 'standard-auth-test@example.org',
-      isAdministrator: false,
-      moduleIds: [],
-      chatbotIds: ['default'],
-      passwordHash: 'unused'
-    })
-    await saveUser({
-      email: 'admin-auth-test@example.org',
-      isAdministrator: true,
-      moduleIds: [],
-      chatbotIds: ['default'],
-      passwordHash: 'unused'
-    })
-
+  test('redirects an anonymous protected chatbot to /login', async () => {
     const app = new Hono()
-    app.use('*', authenticate)
-    app.get('/a', (c) => c.text('ok'))
+    app.use('*', authenticateChat)
+    app.get('/c', (c) => c.text('ok'))
 
-    const standard = await app.request('/a', {
-      headers: { cookie: await issueCookie('standard-auth-test@example.org') }
+    const response = await app.request('/c?config=testing_purpose_1&data=', {
+      redirect: 'manual'
     })
-    expect(standard.status).toBe(302)
-    expect(standard.headers.get('location')).toBe('/a/login')
+    expect(response.status).toBe(302)
+    expect(response.headers.get('location')).toBe(
+      '/login?redirect=%2Fc%3Fconfig%3Dtesting_purpose_1%26data%3D'
+    )
+  })
 
-    const administrator = await app.request('/a', {
-      headers: { cookie: await issueCookie('admin-auth-test@example.org') }
+  test('resolves a Better Auth session for protected routes', async () => {
+    await createTestUser(
+      {
+        email: 'session-test@example.org',
+        isAdministrator: false,
+        moduleIds: [],
+        chatbotIds: ['default']
+      },
+      'session-password'
+    )
+
+    const app = new Hono<{ Variables: { user: User } }>()
+    app.all('/auth/*', (c) => getAuth().handler(c.req.raw))
+    app.use('/desktop/*', authenticate)
+    app.get('/desktop/test', (c) => c.json({ email: c.get('user').email }))
+
+    const login = await app.request('/auth/sign-in/email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-forwarded-for': '198.51.100.202'
+      },
+      body: JSON.stringify({
+        email: 'session-test@example.org',
+        password: 'session-password'
+      })
     })
-    expect(administrator.status).toBe(200)
+    expect(login.status).toBe(200)
+
+    const setCookie = login.headers
+      .getSetCookie()
+      .find((cookie) => cookie.includes('pierre.session_token='))
+    expect(setCookie).toBeDefined()
+
+    using db = new Database(datastorePaths().database)
+    db.run('UPDATE session SET expiresAt = ?', [new Date(Date.now() + 86_400_000).toISOString()])
+
+    const response = await app.request('/desktop/test', {
+      headers: { cookie: setCookie!.split(';', 1)[0]! }
+    })
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ email: 'session-test@example.org' })
+    expect(
+      response.headers.getSetCookie().some((cookie) => cookie.includes('pierre.session_token='))
+    ).toBe(true)
   })
 })

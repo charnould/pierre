@@ -1,156 +1,96 @@
 import { afterAll, beforeAll, expect, it } from 'bun:test'
-import { existsSync } from 'node:fs'
-import { readdir, rm } from 'node:fs/promises'
-import { join } from 'node:path'
+import { rm } from 'node:fs/promises'
 
 import { Hono } from 'hono'
-import { getSignedCookie } from 'hono/cookie'
 
-import { BUSINESS_MODULE_IDS } from '../../../../../shared/modules'
-import { controller as post_admin_login } from '../../../../controllers/admin/auth/post.login'
 import { controller as get_ai_boot } from '../../../../controllers/ai/get.boot'
-import { User, type User as UserType } from '../../../../utils/_schema'
-import { authenticate, decrypt } from '../../../../utils/authenticate-user'
-import { deleteAllUsers, getUser, saveUser } from '../../../../utils/handle-user'
-import { CUSTOMIZATION_DIR, setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
+import type { User } from '../../../../utils/_schema'
+import { getAuth } from '../../../../utils/auth'
+import { authenticateOptional } from '../../../../utils/authenticate-user'
+import { deleteAllUsers } from '../../../../utils/handle-user'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { setup } from '../../../../utils/setup'
+import { createTestUser } from '../../../test-user'
 
-const app = new Hono()
-app.post('/a/login', post_admin_login)
-app.get('/ai/boot', authenticate, get_ai_boot)
+const app = new Hono<{ Variables: { user: User | null } }>()
+app.all('/auth/*', (c) => getAuth().handler(c.req.raw))
+app.get('/ai/boot', authenticateOptional, get_ai_boot)
 
 const paths = testDatastorePaths('ai_boot')
-const root = paths.root
 
 beforeAll(async () => {
   setDatastoreRoot(paths.root)
-  await rm(root, { recursive: true, force: true })
-  await setup()
+  await rm(paths.root, { recursive: true, force: true })
   Bun.env['AUTH_SECRET'] ??= '0123456789abcdef0123456789abcdef'
+  await setup()
   await deleteAllUsers()
-
-  await saveUser(
-    User.parse({
+  await createTestUser(
+    {
       email: 'boot-test@pierre-ia.org',
       isAdministrator: false,
       moduleIds: [],
-      chatbotIds: ['demo', 'testing_purpose_1', 'testing_purpose_2'],
-      passwordHash: await Bun.password.hash('boot-test-pw')
-    })
+      chatbotIds: ['demo', 'testing_purpose_1', 'testing_purpose_2']
+    },
+    'boot-test-pw'
   )
 })
 
 afterAll(async () => {
   await deleteAllUsers()
   setDatastoreRoot(null)
-  await rm(root, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
 })
 
-function cookieFromLoginResponse(res: Response): string {
-  const setCookie = res.headers.getSetCookie?.() ?? []
-  if (setCookie.length === 0) {
-    const raw = res.headers.get('set-cookie')
-    if (raw) setCookie.push(raw)
-  }
-  const pierre = setCookie.find((c) => c.startsWith('pierre-ia='))
-  if (!pierre) {
-    throw new Error(
-      `Missing pierre-ia cookie from login (status ${res.status}, location ${res.headers.get('location')})`
-    )
-  }
-  return pierre.split(';', 1)[0]!
+function sessionCookie(response: Response): string {
+  const cookies = response.headers.getSetCookie?.() ?? []
+  const fallback = response.headers.get('set-cookie')
+  if (fallback && cookies.length === 0) cookies.push(fallback)
+  const session = cookies.find((cookie) => cookie.includes('pierre.session_token='))
+  if (!session) throw new Error('Missing Better Auth session cookie')
+  return session.split(';', 1)[0]!
 }
 
-it('GET /ai/boot lists chatbots from user.chatbotIds, not default.show only', async () => {
-  const loginRes = await app.fetch(
-    new Request('http://localhost/a/login?client=desktop', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Accept: 'application/json',
-        'X-Pierre-Client': 'desktop'
-      },
-      body: new URLSearchParams({
-        email: 'boot-test@pierre-ia.org',
-        password: 'boot-test-pw',
-        action: 'login'
-      }),
-      redirect: 'manual'
+it('GET /ai/boot uses the Better Auth session and lists assigned chatbots', async () => {
+  const login = await app.request('/auth/sign-in/email', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-forwarded-for': '198.51.100.201'
+    },
+    body: JSON.stringify({
+      email: 'boot-test@pierre-ia.org',
+      password: 'boot-test-pw'
     })
-  )
-
-  expect(loginRes.status).toBe(200)
-
-  const cookie = cookieFromLoginResponse(loginRes)
-  const cookieInspector = new Hono()
-  cookieInspector.get('/', async (c) => {
-    const encrypted = await getSignedCookie(c, Bun.env['AUTH_SECRET']!, 'pierre-ia')
-    return c.json(JSON.parse(await decrypt(encrypted as string, Bun.env['AUTH_SECRET']!)))
   })
-  expect(
-    await (
-      await cookieInspector.request('/', {
-        headers: { Cookie: cookie }
-      })
-    ).json()
-  ).toEqual({ email: 'boot-test@pierre-ia.org' })
 
-  const bootRes = await app.fetch(
-    new Request('http://localhost/ai/boot', {
-      headers: { Cookie: cookie }
-    })
-  )
+  expect(login.status).toBe(200)
+  const cookie = sessionCookie(login)
+  expect(await getAuth().api.getSession({ headers: new Headers({ cookie }) })).not.toBeNull()
 
-  expect(bootRes.ok).toBe(true)
-  const boot = (await bootRes.json()) as {
+  const response = await app.request('/ai/boot', {
+    headers: { cookie }
+  })
+  expect(response.status).toBe(200)
+
+  const boot = (await response.json()) as {
     configId: string
     displayableConfigs: { id: string }[]
   }
-  const ids = boot.displayableConfigs.map((c) => c.id).sort()
-
+  const ids = boot.displayableConfigs.map(({ id }) => id).sort()
   expect(ids).toEqual(['demo', 'testing_purpose_1', 'testing_purpose_2'].sort())
   expect(ids).not.toContain('default')
   expect(ids).not.toContain('zmode')
   expect(boot.configId).toBe('demo')
 })
 
-it('bootstraps the root user with every business module and chatbot', async () => {
-  const password = Bun.env['AUTH_PASSWORD']
-  if (!password) throw new Error('AUTH_PASSWORD is required')
-
-  const response = await app.request('/a/login?client=desktop', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Accept: 'application/json'
-    },
-    body: new URLSearchParams({
-      email: 'admin@pierre-ia.org',
-      password,
-      action: 'login'
-    })
-  })
-
-  expect(response.status).toBe(200)
-  const root = await getUser('admin@pierre-ia.org')
-  expect(root?.isAdministrator).toBe(true)
-  expect(root?.moduleIds).toEqual(BUSINESS_MODULE_IDS)
-  expect(root?.chatbotIds).toEqual(
-    (await readdir(join(CUSTOMIZATION_DIR, 'chatbots')))
-      .filter((entry) => existsSync(join(CUSTOMIZATION_DIR, 'chatbots', entry, 'config.ts')))
-      .sort()
-  )
-})
-
 it('rejects authenticated users without an assigned chatbot profile', async () => {
-  const denied = new Hono<{ Variables: { user: UserType } }>()
+  const denied = new Hono<{ Variables: { user: User } }>()
   denied.use('*', async (c, next) => {
     c.set('user', {
       email: 'without-chatbot@pierre-ia.org',
       isAdministrator: false,
       moduleIds: [],
-      chatbotIds: [],
-      passwordHash: 'unused'
+      chatbotIds: []
     })
     await next()
   })

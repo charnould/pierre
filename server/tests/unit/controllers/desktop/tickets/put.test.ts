@@ -15,8 +15,7 @@ const TEST_USER: User = {
   email: 'tester@example.com',
   isAdministrator: true,
   moduleIds: ['tickets'],
-  chatbotIds: ['default'],
-  passwordHash: 'x'
+  chatbotIds: ['default']
 }
 
 const app = new Hono<{ Variables: { user: User } }>()

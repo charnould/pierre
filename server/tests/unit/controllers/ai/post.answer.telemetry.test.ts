@@ -34,8 +34,7 @@ app.use('/ai/answer', async (c, next) => {
     moduleIds: (c.req.header('x-test-modules') ?? 'tickets,about')
       .split(',')
       .filter(Boolean) as BusinessModuleId[],
-    chatbotIds: [],
-    passwordHash: ''
+    chatbotIds: []
   })
   return await next()
 })

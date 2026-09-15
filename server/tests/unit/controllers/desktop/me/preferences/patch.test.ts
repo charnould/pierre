@@ -3,14 +3,14 @@ import { beforeEach, describe, expect, it } from 'bun:test'
 import { Hono } from 'hono'
 
 import { controller as patch_desktop_me_preferences } from '../../../../../../controllers/desktop/me/preferences/patch'
-import { User } from '../../../../../../utils/_schema'
+import type { User } from '../../../../../../utils/_schema'
 import {
   get_user_preferences,
   set_user_preferences
 } from '../../../../../../utils/automations/store'
 import { encode_user_avatar } from '../../../../../../utils/avatar-image'
-import { saveUser } from '../../../../../../utils/handle-user'
 import { set_user_avatar, user_has_avatar } from '../../../../../../utils/user-avatars'
+import { createTestUser } from '../../../../../test-user'
 import { use_identity_test_env } from '../../../../utils/identity-test-env'
 
 const app = new Hono<{ Variables: { user: User } }>()
@@ -21,8 +21,7 @@ app.patch(
       email: 'alice.martin@exemple.fr',
       isAdministrator: false,
       moduleIds: [],
-      chatbotIds: ['default'],
-      passwordHash: 'x'
+      chatbotIds: ['default']
     })
     await next()
   },
@@ -36,15 +35,12 @@ const PNG_1x1 = Uint8Array.fromBase64(
 use_identity_test_env('_test_me_preferences')
 
 beforeEach(async () => {
-  await saveUser(
-    User.parse({
-      email: 'alice.martin@exemple.fr',
-      isAdministrator: false,
-      moduleIds: [],
-      chatbotIds: ['default'],
-      passwordHash: 'secret'
-    })
-  )
+  await createTestUser({
+    email: 'alice.martin@exemple.fr',
+    isAdministrator: false,
+    moduleIds: [],
+    chatbotIds: ['default']
+  })
   set_user_preferences('alice.martin@exemple.fr', {
     pinned_automation_ids: ['auto-1'],
     display_name: null

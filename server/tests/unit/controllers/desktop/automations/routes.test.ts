@@ -1,4 +1,3 @@
-import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
 import { rm } from 'node:fs/promises'
 
@@ -18,6 +17,7 @@ import {
 } from '../../../../../utils/automations/run'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
+import { createTestUser } from '../../../../test-user'
 
 const paths = testDatastorePaths('automation_routes')
 
@@ -27,8 +27,7 @@ app.use('*', async (c, next) => {
     email: c.req.header('x-test-email') ?? 'alice@example.org',
     isAdministrator: false,
     moduleIds: ['automations'],
-    chatbotIds: ['default'],
-    passwordHash: 'unused'
+    chatbotIds: ['default']
   })
   await next()
 })
@@ -57,12 +56,15 @@ const request = (method: string, body?: unknown, headers: Record<string, string>
   ...(body === undefined ? {} : { body: JSON.stringify(body) })
 })
 
-const seedUsers = () => {
-  const db = new Database(paths.database)
-  const insert = db.prepare("INSERT INTO users (email, password_hash) VALUES (?, 'x')")
-  insert.run('alice@example.org')
-  insert.run('bob@example.org')
-  db.close()
+const seedUsers = async (): Promise<void> => {
+  for (const email of ['alice@example.org', 'bob@example.org']) {
+    await createTestUser({
+      email,
+      isAdministrator: false,
+      moduleIds: ['automations'],
+      chatbotIds: ['default']
+    })
+  }
 }
 
 const create = async (headers: Record<string, string> = {}) => {
@@ -80,7 +82,7 @@ beforeEach(async () => {
   await setup()
   reset_automation_executor()
   set_automation_executor(async () => ({ kind: 'report', contenu: '<p>Rapport de test</p>' }))
-  seedUsers()
+  await seedUsers()
 })
 
 afterAll(async () => {

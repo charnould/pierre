@@ -31,8 +31,7 @@ const ADMIN: User = {
   email: 'admin@example.org',
   isAdministrator: true,
   moduleIds: [],
-  chatbotIds: [],
-  passwordHash: 'unused'
+  chatbotIds: []
 }
 const USER: User = { ...ADMIN, email: 'user@example.org', isAdministrator: false }
 

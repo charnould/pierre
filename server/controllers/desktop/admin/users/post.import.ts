@@ -54,8 +54,13 @@ export const controller = async (c: Context) => {
     const email = Email.safeParse(String(row[0] ?? ''))
     const password = String(row[1] ?? '')
     if (!email.success) errors.push({ row: rowNumber, message: 'Adresse e-mail invalide.' })
-    if (!password) errors.push({ row: rowNumber, message: 'Mot de passe manquant.' })
-    if (!email.success || !password) return
+    if (password.length < 8 || password.length > 128) {
+      errors.push({
+        row: rowNumber,
+        message: 'Le mot de passe doit contenir entre 8 et 128 caractères.'
+      })
+    }
+    if (!email.success || password.length < 8 || password.length > 128) return
     if (seen.has(email.data)) {
       errors.push({ row: rowNumber, message: 'Adresse e-mail présente plusieurs fois.' })
       return
@@ -80,12 +85,7 @@ export const controller = async (c: Context) => {
     )
   }
 
-  const records = await Promise.all(
-    users.map(async ({ email, password }) => ({
-      email,
-      passwordHash: await Bun.password.hash(password)
-    }))
-  )
+  const records = users.map(({ email, password }) => ({ email, password }))
   const result = await importUserPasswords(records)
 
   return c.json({ data: result })

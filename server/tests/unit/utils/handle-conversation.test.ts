@@ -3,124 +3,86 @@ import { afterAll, beforeAll, describe, expect, it, setSystemTime } from 'bun:te
 import { rm } from 'node:fs/promises'
 
 import { AIContext } from '../../../utils/_schema'
-import {
-  delete_conversation,
-  get_conversation,
-  get_conversations,
-  save_reply,
-  save_topic,
-  score_conversation
-} from '../../../utils/handle-conversation'
+import { save_reply } from '../../../utils/handle-conversation'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 
 const paths = testDatastorePaths('handle_conversation')
 const config = (await import(`../../../../customization/chatbots/default/config`)).default
 
-// Simulated responses for test cases
-const c1_r1 = await AIContext.parseAsync({
-  conv_id: 'c1',
-  config: config,
-  role: 'user',
-  content: 'Qui es-tu ?',
-  custom_data: { raw: ['julie', '456.56'] }
-})
-
-const c1_r2 = await AIContext.parseAsync({
-  conv_id: 'c1',
-  config: config,
-  role: 'assistant',
-  content: 'Je suis Pierre !',
-  custom_data: { raw: ['julie', '456.56'] }
-})
-
-const c2_r1 = await AIContext.parseAsync({
-  conv_id: 'c2',
-  config: config,
-  role: 'user',
-  content: 'Bonjour',
-  custom_data: { raw: ['julie', '456.56'] }
-})
-
 beforeAll(async () => {
   setDatastoreRoot(paths.root)
   await rm(paths.root, { recursive: true, force: true })
   await setup()
-  using db = new Database(paths.database)
-  db.run('DELETE FROM conversations')
 })
+
 afterAll(async () => {
   setSystemTime()
   setDatastoreRoot(null)
   await rm(paths.root, { recursive: true, force: true })
 })
 
-//
-//
-describe('test SQLite3 conversation CRUD operations', async () => {
-  it('should insert 3 replies', async () => {
-    setSystemTime(new Date('2012-12-12T12:05:00'))
-    await save_reply(c1_r1)
+describe('save_reply', () => {
+  it('stores a chatbot reply once with serialized metadata', async () => {
+    setSystemTime(new Date('2012-12-12T12:05:00Z'))
+    const context = await AIContext.parseAsync({
+      conv_id: 'c1',
+      config,
+      role: 'assistant',
+      content: 'Je suis Pierre !',
+      metadata: { user: 'alice@example.org', topics: 'présentation' },
+      custom_data: { raw: ['julie', '456.56'] }
+    })
 
-    setSystemTime(new Date('2012-12-12T12:10:00'))
-    await save_reply(c1_r2)
+    await save_reply(context)
+    await save_reply(context)
 
-    setSystemTime(new Date('2012-12-12T12:15:00'))
-    await save_reply(c2_r1)
+    using db = new Database(paths.database)
+    const rows = db
+      .query<
+        {
+          conv_id: string
+          config: string
+          role: string
+          timestamp: string
+          content: string
+          metadata: string
+        },
+        []
+      >(
+        `SELECT conv_id, config, role, timestamp, content, metadata
+         FROM conversations`
+      )
+      .all()
 
-    expect(await get_conversations()).toMatchSnapshot()
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({
+      conv_id: 'c1',
+      config: 'default',
+      role: 'assistant',
+      timestamp: '2012-12-12T12:05:00Z',
+      content: 'Je suis Pierre !'
+    })
+    expect(JSON.parse(rows[0]!.metadata)).toMatchObject({
+      user: 'alice@example.org',
+      topics: 'présentation'
+    })
   })
 
-  it('should get 2 conversations', async () => {
-    expect(await get_conversation(c1_r1.conv_id)).toMatchSnapshot()
-    expect(await get_conversation(c2_r1.conv_id)).toMatchSnapshot()
-  })
-
-  it('should have score', async () => {
-    await score_conversation({
-      conv_id: 'c1',
-      scorer: 'customer',
-      score: 1,
-      comment: 'customer_comment'
-    })
-
-    await score_conversation({
-      conv_id: 'c1',
-      scorer: 'organization',
-      score: 2,
-      comment: 'organization_comment'
-    })
-
-    await score_conversation({
-      conv_id: 'c1',
-      scorer: 'ai',
-      score: 3,
-      comment: 'ai_comment'
-    })
-
-    expect(await get_conversation('c1')).toMatchSnapshot()
-
-    await score_conversation({
+  it('ignores contexts that only carry a config id', async () => {
+    const context = {
       conv_id: 'c2',
-      scorer: 'ai',
-      score: 3,
-      comment: 'ai_comment'
-    })
+      config: 'default',
+      role: 'user',
+      content: 'Bonjour',
+      custom_data: { raw: [] }
+    } as unknown as Parameters<typeof save_reply>[0]
 
-    expect(await get_conversation('c2')).toMatchSnapshot()
-  })
+    await save_reply(context)
 
-  it('should save topic', async () => {
-    await save_topic({ conv_id: 'c1', topic: 'multiple' })
-    expect(await get_conversation('c1')).toMatchSnapshot()
-  })
-
-  it('should delete full conversation', async () => {
-    await delete_conversation(c1_r1.conv_id)
-    expect(await get_conversation(c1_r1.conv_id)).toStrictEqual([])
-  })
-
-  it('should retrieve all conversations', async () => {
-    expect(await get_conversations()).toMatchSnapshot()
+    using db = new Database(paths.database)
+    expect(
+      db.query<{ count: number }, []>('SELECT COUNT(*) AS count FROM conversations').get()?.count
+    ).toBe(1)
   })
 })

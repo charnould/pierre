@@ -26,8 +26,7 @@ app.use('*', async (c, next) => {
     email: 'alice@example.org',
     isAdministrator: c.req.header('x-test-admin') === 'true',
     moduleIds: ['bulk'],
-    chatbotIds: ['default'],
-    passwordHash: 'unused'
+    chatbotIds: ['default']
   })
   await next()
 })

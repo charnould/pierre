@@ -5,6 +5,7 @@ import { mkdir, rm } from 'node:fs/promises'
 import { user_destinataire } from '../../../utils/activities/rows'
 import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
+import { createTestUser } from '../../test-user'
 
 const TEST_PATHS = testDatastorePaths('activites')
 export const DATASTORE_PATH = TEST_PATHS.database
@@ -23,12 +24,15 @@ export const mention = (email: string, motif?: 'mention' | 'assignation') => ({
   ...(motif ? { motif } : {})
 })
 
-export const seed_users = (...emails: string[]) => {
-  const db = new Database(datastorePaths().database)
+export const seed_users = async (...emails: string[]): Promise<void> => {
   for (const email of emails) {
-    db.run(`INSERT OR IGNORE INTO users (email, password_hash) VALUES (?, 'x')`, [email])
+    await createTestUser({
+      email,
+      isAdministrator: false,
+      moduleIds: [],
+      chatbotIds: []
+    })
   }
-  db.close()
 }
 
 export const insert_repayment_activity = (
