@@ -7,8 +7,8 @@ export const view = (redirect: string) => html`<!doctype html>
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta name="color-scheme" content="light" />
       <link rel="icon" href="/branding/system.svg" type="image/svg+xml" />
-      <link rel="stylesheet" href="../assets/dist/css/style.1789491473888.css" />
-      <script type="module" src="../assets/dist/js/auth-login.1789491473888.js"></script>
+      <link rel="stylesheet" href="../assets/dist/css/style.1789501959414.css" />
+      <script type="module" src="../assets/dist/js/auth-login.1789501959414.js"></script>
       <title>Connexion — PIERRE</title>
     </head>
     <body class="bg-background text-foreground grid min-h-screen place-items-center p-4">

@@ -21,11 +21,11 @@ export const view = (params: {
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
         />
-        <link rel="stylesheet" href="../assets/dist/css/style.1789491473888.css" />
+        <link rel="stylesheet" href="../assets/dist/css/style.1789501959414.css" />
         <link rel="icon" href="/branding/system.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/branding/icons/ios/180.png" />
         <link rel="manifest" href="/branding/manifest.webmanifest" />
-        <script type="module" src="../assets/dist/js/ai.1789491473888.js"></script>
+        <script type="module" src="../assets/dist/js/ai.1789501959414.js"></script>
         <title>Comment puis-je vous aider ? 🖐️</title>
       </head>
 

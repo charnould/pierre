@@ -1,0 +1,39 @@
+{
+  "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.0/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-ext-opsz-italic.woff2": {
+    "file": "assets/source-serif-4-latin-ext-opsz-italic-BhUEwDRF.woff2",
+    "src": "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.0/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-ext-opsz-italic.woff2"
+  },
+  "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.0/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-ext-opsz-normal.woff2": {
+    "file": "assets/source-serif-4-latin-ext-opsz-normal-HoL-AExg.woff2",
+    "src": "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.0/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-ext-opsz-normal.woff2"
+  },
+  "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.0/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-italic.woff2": {
+    "file": "assets/source-serif-4-latin-opsz-italic-BOLXpvkj.woff2",
+    "src": "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.0/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-italic.woff2"
+  },
+  "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.0/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-normal.woff2": {
+    "file": "assets/source-serif-4-latin-opsz-normal-BpEBLj1O.woff2",
+    "src": "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.0/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-normal.woff2"
+  },
+  "src/assets/fonts/InterVariable.woff2": {
+    "file": "assets/InterVariable-DiVDrmQJ.woff2",
+    "src": "src/assets/fonts/InterVariable.woff2"
+  },
+  "src/chat-web/main.tsx": {
+    "file": "js/ai-DJNRf4bB.js",
+    "name": "ai",
+    "src": "src/chat-web/main.tsx",
+    "isEntry": true,
+    "assets": [
+      "assets/source-serif-4-latin-opsz-normal-BpEBLj1O.woff2",
+      "assets/source-serif-4-latin-ext-opsz-normal-HoL-AExg.woff2",
+      "assets/source-serif-4-latin-opsz-italic-BOLXpvkj.woff2",
+      "assets/source-serif-4-latin-ext-opsz-italic-BhUEwDRF.woff2",
+      "assets/InterVariable-DiVDrmQJ.woff2"
+    ]
+  },
+  "style.css": {
+    "file": "css/style-B1fr09A-.css",
+    "src": "style.css"
+  }
+}
