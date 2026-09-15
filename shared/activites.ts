@@ -6,7 +6,11 @@ import {
   parse_repayment_plan_content
 } from './repayment-plan'
 
-export { REPAYMENT_PLAN_CLOSE_REASONS, parse_repayment_plan_content } from './repayment-plan'
+export {
+  REPAYMENT_PLAN_CLOSE_REASONS,
+  is_repayment_plan_event_type,
+  parse_repayment_plan_content
+} from './repayment-plan'
 export type {
   RepaymentPlanCloseReason,
   RepaymentPlanEventContent,

@@ -23,10 +23,8 @@ CREATE TABLE users (
   banned INTEGER,
   banReason TEXT,
   banExpires DATE,
-  module_ids TEXT NOT NULL DEFAULT '[]'
-    CHECK (json_valid(module_ids) AND json_type(module_ids) = 'array'),
-  chatbot_ids TEXT NOT NULL DEFAULT '[]'
-    CHECK (json_valid(chatbot_ids) AND json_type(chatbot_ids) = 'array'),
+  module_ids TEXT NOT NULL DEFAULT '[]',
+  chatbot_ids TEXT NOT NULL DEFAULT '[]',
   preferences TEXT NOT NULL DEFAULT '{}',
   avatar BLOB,
   avatar_version INTEGER NOT NULL DEFAULT 0
@@ -82,11 +80,8 @@ CREATE TABLE telemetry (
 
 CREATE TABLE knowledge_records (
   id TEXT PRIMARY KEY,
-  kind TEXT NOT NULL CHECK (kind IN ('source', 'build')),
-  document TEXT NOT NULL CHECK (
-    json_valid(document)
-    AND json_type(document) = 'object'
-  ),
+  kind TEXT NOT NULL,
+  document TEXT NOT NULL,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -121,83 +116,6 @@ CREATE TABLE activites (
   bulk_id TEXT,
   execution_id TEXT,
   idempotency_key TEXT,
-  CHECK (json_valid(mentions) AND json_type(mentions) = 'array'),
-  CHECK (
-    json_valid(contenu)
-    AND json_type(contenu) = 'object'
-    AND json_extract(contenu, '$.version') IS 2
-  ),
-  CHECK (
-    (
-      type IN (
-        'repayment_plan.created',
-        'repayment_plan.updated',
-        'repayment_plan.finalized',
-        'repayment_plan.closed'
-      )
-      AND thread_id IS NOT NULL
-      AND revision IS NULL
-    )
-    OR (
-      type NOT IN (
-        'repayment_plan.created',
-        'repayment_plan.updated',
-        'repayment_plan.finalized',
-        'repayment_plan.closed'
-      )
-      AND (
-        (thread_id IS NULL AND revision IS NULL)
-        OR (thread_id IS NOT NULL AND revision IS NOT NULL AND revision > 0)
-      )
-    )
-  ),
-  CHECK (
-    (
-      type IN (
-        'communication.sent',
-        'communication.ok',
-        'communication.failed',
-        'communication.received',
-        'communication.imported'
-      )
-      AND channel IS NOT NULL
-      AND channel IN (
-        'rcs',
-        'sms',
-        'email',
-        'postal_letter',
-        'postal_registered_letter_with_acknowledgement',
-        'electronic_registered_delivery',
-        'electronic_registered_letter'
-      )
-      AND thread_id IS NOT NULL
-    )
-    OR (
-      type = 'document.sent_for_signature'
-      AND channel IS NOT NULL
-      AND channel IN (
-        'rcs',
-        'sms',
-        'email',
-        'postal_letter',
-        'postal_registered_letter_with_acknowledgement',
-        'electronic_registered_delivery',
-        'electronic_registered_letter'
-      )
-      AND thread_id IS NOT NULL
-    )
-    OR (
-      type NOT IN (
-        'communication.sent',
-        'communication.ok',
-        'communication.failed',
-        'communication.received',
-        'communication.imported',
-        'document.sent_for_signature'
-      )
-      AND channel IS NULL
-    )
-  ),
   UNIQUE (thread_id, revision)
 );
 
@@ -311,9 +229,7 @@ CREATE TABLE automations (
   last_run_status TEXT,
   run_token TEXT,
   lease_expires_at TEXT,
-  config TEXT NOT NULL,
-  CHECK (json_valid(mentions)),
-  CHECK (json_valid(config))
+  config TEXT NOT NULL
 );
 
 CREATE INDEX idx_automations_due
@@ -324,10 +240,8 @@ CREATE TABLE bulk_operations (
   name TEXT NOT NULL,
   description TEXT NOT NULL DEFAULT '',
   definition TEXT NOT NULL,
-  reports_to_keep INTEGER NOT NULL DEFAULT 10 CHECK (reports_to_keep >= 1),
-  edits TEXT NOT NULL DEFAULT '[]',
-  CHECK (json_valid(definition) AND json_type(definition) = 'object'),
-  CHECK (json_valid(edits) AND json_type(edits) = 'array')
+  reports_to_keep INTEGER NOT NULL DEFAULT 10,
+  edits TEXT NOT NULL DEFAULT '[]'
 );
 
 CREATE TABLE bulk_jobs (
@@ -335,19 +249,16 @@ CREATE TABLE bulk_jobs (
   bulk_operation_id TEXT NOT NULL,
   execution_id TEXT NOT NULL,
   item_id TEXT NOT NULL,
-  source TEXT NOT NULL CHECK (
-    source IN ('comptes_locataires', 'lots_locatifs', 'candidats', 'reclamations')
-  ),
-  mode TEXT NOT NULL CHECK (mode IN ('send', 'apply_without_send')),
-  report_status TEXT NOT NULL CHECK (report_status IN ('in_progress', 'ok', 'ko')),
-  outcome TEXT CHECK (outcome IS NULL OR json_valid(outcome)),
+  source TEXT NOT NULL,
+  mode TEXT NOT NULL,
+  report_status TEXT NOT NULL,
+  outcome TEXT,
   current_activity_id INTEGER,
   completed_at TEXT,
   run_at TEXT,
   attempts INTEGER NOT NULL DEFAULT 0,
   last_error TEXT,
   payload JSON NOT NULL,
-  CHECK (json_valid(payload)),
   UNIQUE (execution_id, item_id)
 );
 

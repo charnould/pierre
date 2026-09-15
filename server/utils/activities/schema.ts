@@ -5,6 +5,8 @@ import {
   ACTIVITY_TYPES,
   COMMUNICATION_CHANNELS,
   REPAYMENT_PLAN_CLOSE_REASONS,
+  is_communication_type,
+  is_repayment_plan_event_type,
   type ActivityContext,
   type Mention,
   type TaskState
@@ -46,6 +48,55 @@ export const TrustedCreateActivityInput = CreateActivityInput.extend({
 
 export type CreateActivityInput = z.infer<typeof CreateActivityInput>
 export type TrustedCreateActivityInput = z.infer<typeof TrustedCreateActivityInput>
+
+const requires_channel = (type: string): boolean =>
+  is_communication_type(type) || type === 'document.sent_for_signature'
+
+export const ActivityRowSchema = z
+  .object({
+    type: z.enum(ACTIVITY_TYPES),
+    channel: z.enum(COMMUNICATION_CHANNELS).nullable(),
+    thread_id: z.string().trim().min(1).nullable(),
+    revision: z.number().int().positive().nullable()
+  })
+  .superRefine((row, ctx) => {
+    if (is_repayment_plan_event_type(row.type)) {
+      if (row.thread_id == null) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['thread_id'],
+          message: 'Repayment plan requires thread_id'
+        })
+      }
+      if (row.revision != null) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['revision'],
+          message: 'Repayment plan revision must be null'
+        })
+      }
+      return
+    }
+    if ((row.thread_id == null) !== (row.revision == null)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['revision'],
+        message: 'thread_id and revision must both be set or both be null'
+      })
+    }
+    if (requires_channel(row.type)) {
+      if (row.channel == null) {
+        ctx.addIssue({ code: 'custom', path: ['channel'], message: 'Channel is required' })
+      }
+      if (row.thread_id == null) {
+        ctx.addIssue({ code: 'custom', path: ['thread_id'], message: 'Thread is required' })
+      }
+      return
+    }
+    if (row.channel != null) {
+      ctx.addIssue({ code: 'custom', path: ['channel'], message: 'Channel must be null' })
+    }
+  })
 
 export const ActivityPatchInput = z.discriminatedUnion('operation', [
   z.object({

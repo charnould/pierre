@@ -16,7 +16,7 @@ import {
   desktopAgentMentionHandle
 } from '../../../shared/agent-identity'
 import { datastorePaths } from '../paths'
-import { ActivitiesError, AUTHOR_RE, MENTION_RE, parse_mentions } from './schema'
+import { ActivitiesError, ActivityRowSchema, AUTHOR_RE, MENTION_RE, parse_mentions } from './schema'
 
 export type ActivityDbRow = Omit<Activite, 'mentions' | 'type' | 'channel'> & {
   mentions: string
@@ -93,6 +93,12 @@ export type InsertActivityValues = {
 }
 
 export const insert_activity_row = (db: Database, values: InsertActivityValues): Activite => {
+  const row_shape = ActivityRowSchema.parse({
+    type: values.type,
+    channel: values.channel ?? null,
+    thread_id: values.thread_id ?? null,
+    revision: values.revision ?? null
+  })
   const contenu = normalize_activity_content(values.type, values.contenu)
   const row = db
     .query<ActivityDbRow, Array<string | number | null>>(
@@ -111,12 +117,12 @@ export const insert_activity_row = (db: Database, values: InsertActivityValues):
       values.facets.id_client,
       values.facets.id_locataire,
       values.facets.id_lot,
-      values.type,
-      values.channel ?? null,
+      row_shape.type,
+      row_shape.channel,
       JSON.stringify(values.mentions),
       contenu,
-      values.thread_id ?? null,
-      values.revision ?? null,
+      row_shape.thread_id,
+      row_shape.revision,
       values.bulk_id ?? null,
       values.execution_id ?? null,
       values.idempotency_key ?? null

@@ -407,13 +407,7 @@ describe('knowledge catalog', () => {
     ).toEqual([])
   })
 
-  it('rejects malformed JSON at the SQLite boundary', () => {
-    const db = new Database(datastorePaths().database)
-    expect(() =>
-      db.run(
-        "INSERT INTO knowledge_records (id, kind, document, created_at, updated_at) VALUES ('bad', 'source', '[]', '', '')"
-      )
-    ).toThrow()
-    db.close()
+  it('rejects a non-object document at the write boundary', () => {
+    expect(() => insertKnowledgeSource([] as never)).toThrow()
   })
 })

@@ -2,7 +2,7 @@ import { Database } from 'bun:sqlite'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
 import { mkdir, rm } from 'node:fs/promises'
 
-import { user_destinataire } from '../../../utils/activities/rows'
+import { insert_activity_row, user_destinataire } from '../../../utils/activities/rows'
 import { create_activity } from '../../../utils/activities/write'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
@@ -48,40 +48,21 @@ describe('activites schema', () => {
     expect(created.revision).toBe(1)
   })
 
-  it('refuse un contenu sans version 2', () => {
-    const db = new Database(DATASTORE_PATH)
-    expect(() =>
-      db.run(
-        `INSERT INTO activites (date_creation, rattachement, auteur, type, mentions, contenu)
-         VALUES ('2026-01-01T00:00:00Z', 'tickets:REQ-1', 'user:alice@exemple.fr',
-           'note.published', '[]', '{"text":"x"}')`
-      )
-    ).toThrow()
-    db.close()
-  })
-
   it('exige un canal pour une communication et interdit UPDATE/DELETE', () => {
     const db = new Database(DATASTORE_PATH)
-    expect(() =>
-      db.run(
-        `INSERT INTO activites (
-           date_creation, rattachement, auteur, type, mentions, contenu, thread_id, revision
-         ) VALUES (
-           '2026-01-01T00:00:00Z', 'repayment:LOC-1', 'user:alice@exemple.fr',
-           'communication.sent', '[]', '{"version":2,"sender":"Alice","body":"Hi"}',
-           'thread-1', 1
-         )`
-      )
-    ).toThrow()
-    db.run(
-      `INSERT INTO activites (
-         date_creation, rattachement, auteur, type, channel, mentions, contenu, thread_id, revision
-       ) VALUES (
-         '2026-01-01T00:00:00Z', 'repayment:LOC-1', 'user:alice@exemple.fr',
-         'communication.sent', 'email', '[]',
-         '{"version":2,"sender":"Alice","body":"Hi"}', 'thread-1', 1
-       )`
-    )
+    const communication = {
+      date_creation: '2026-01-01T00:00:00Z',
+      rattachement: 'repayment:LOC-1',
+      auteur: user(ALICE),
+      facets: { id_client: null, id_locataire: null, id_lot: null },
+      type: 'communication.sent' as const,
+      mentions: [],
+      contenu: JSON.stringify({ version: 2, sender: 'Alice', body: 'Hi' }),
+      thread_id: 'thread-1',
+      revision: 1
+    }
+    expect(() => insert_activity_row(db, communication)).toThrow()
+    insert_activity_row(db, { ...communication, channel: 'email' })
     expect(() =>
       db.run('UPDATE activites SET auteur = ? WHERE id = 1', ['user:eve@x.fr'])
     ).toThrow()
