@@ -8,7 +8,6 @@ const COMMUNICATION_MEDIA = ['rcs', 'sms', 'email', 'courrier', 'lrar', 'lre'] a
 type CommunicationMedium = (typeof COMMUNICATION_MEDIA)[number]
 import type { User } from '../utils/_schema'
 import { userCanAccessModule } from '../utils/authorize-role'
-import { update_status } from '../utils/bulk/status'
 import {
   cm_webhook_authorized,
   find_recent_thread,
@@ -22,6 +21,7 @@ import {
   create_unmatched_inbound
 } from '../utils/communications/storage'
 import { normalize_email } from '../utils/contacts'
+import { update_status } from '../utils/delivery-status'
 
 const Body = z
   .object({
@@ -30,8 +30,8 @@ const Body = z
     destinataire: z.string().trim().min(1),
     contenu: z
       .object({
-        objet: z.string().trim().min(1).optional(),
-        corps: z.string().trim().min(1),
+        subject: z.string().trim().min(1).optional(),
+        body: z.string().trim().min(1),
         action: z.string().trim().min(1).optional()
       })
       .strict()
@@ -64,7 +64,7 @@ const error_status = (error: CommunicationsError): 400 | 403 | 404 | 409 =>
         : 400
 
 export const fake_communication_controller =
-  (type: Exclude<CommunicationMedium, 'rcs'>) => async (c: Context) => {
+  (type: Exclude<CommunicationMedium, 'rcs' | 'sms' | 'email'>) => async (c: Context) => {
     const user = c.get('user') as User | null
     if (!user?.email) {
       return c.json({ error: { code: 'unauthorized', message: 'Authentication required' } }, 401)
@@ -118,8 +118,8 @@ export const fake_communication_controller =
         contenu: JSON.stringify({
           version: ACTIVITY_CONTENT_VERSION,
           ...(parsed.data.contenu.action ? { action: parsed.data.contenu.action } : {}),
-          ...(parsed.data.contenu.objet ? { objet: parsed.data.contenu.objet } : {}),
-          corps: parsed.data.contenu.corps
+          ...(parsed.data.contenu.subject ? { subject: parsed.data.contenu.subject } : {}),
+          body: parsed.data.contenu.body
         }),
         idempotency_key: idempotencyKey
       })
@@ -147,7 +147,7 @@ const authorized = (c: Context, type: CommunicationMedium): boolean => {
 }
 
 export const fake_webhook_controller =
-  (type: Exclude<CommunicationMedium, 'rcs'>, allowMessage = false) =>
+  (type: Exclude<CommunicationMedium, 'rcs' | 'sms'>, allowMessage = false) =>
   async (c: Context) => {
     if (!authorized(c, type)) {
       return c.json({ error: { code: 'unauthorized', message: 'Webhook key invalide' } }, 401)
@@ -198,7 +198,7 @@ export const fake_webhook_controller =
                   : `external:${sender.value}`,
                 contenu: JSON.stringify({
                   version: ACTIVITY_CONTENT_VERSION,
-                  corps: message.data.content
+                  body: message.data.content
                 }),
                 occurred_at: message.data.occurredAt,
                 thread_id: recent.thread_id
@@ -208,7 +208,7 @@ export const fake_webhook_controller =
                 auteur: `external:${sender.value}`,
                 contenu: JSON.stringify({
                   version: ACTIVITY_CONTENT_VERSION,
-                  corps: message.data.content
+                  body: message.data.content
                 }),
                 occurred_at: message.data.occurredAt
               })

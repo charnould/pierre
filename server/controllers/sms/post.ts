@@ -1,3 +1,3 @@
-import { fake_communication_controller } from '../communication-fake'
+import { provider_not_configured_controller } from '../provider-not-configured'
 
-export const controller = fake_communication_controller('sms')
+export const controller = provider_not_configured_controller('sms')

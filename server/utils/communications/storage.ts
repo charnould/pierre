@@ -7,6 +7,7 @@ import {
   type CommunicationChannel,
   activity_timestamp,
   medium_to_channel,
+  parse_communication_opened_content,
   parse_contenu_json
 } from '../../../shared/activites'
 import { latest_repayment_states } from '../activities/repayment'
@@ -53,45 +54,20 @@ const require_channel = (medium: string): CommunicationChannel => {
 
 const opened_contenu = (raw: string, sender: string): string => {
   const value = parse_contenu_json(raw)
-  const choices = Array.isArray(value['choix'])
-    ? value['choix'].flatMap((choice) => {
-        if (typeof choice === 'string' && choice.trim()) return [choice.trim()]
-        if (
-          choice &&
-          typeof choice === 'object' &&
-          typeof (choice as { label?: unknown }).label === 'string'
-        ) {
-          const label = String((choice as { label: string }).label).trim()
-          return label ? [label] : []
-        }
-        return []
-      })
-    : Array.isArray(value['choices'])
-      ? value['choices'].filter((entry): entry is string => typeof entry === 'string')
-      : []
-  return JSON.stringify({
+  const normalized = JSON.stringify({
     version: 2,
     sender:
       typeof value['sender'] === 'string' && value['sender'].trim()
         ? value['sender'].trim()
-        : typeof value['expediteur'] === 'string' && value['expediteur'].trim()
-          ? value['expediteur'].trim()
-          : sender,
-    body:
-      typeof value['body'] === 'string'
-        ? value['body']
-        : typeof value['corps'] === 'string'
-          ? value['corps']
-          : '',
+        : sender,
+    body: typeof value['body'] === 'string' ? value['body'] : '',
     ...(typeof value['subject'] === 'string' && value['subject'].trim()
       ? { subject: value['subject'].trim() }
-      : typeof value['objet'] === 'string' && value['objet'].trim()
-        ? { subject: value['objet'].trim() }
-        : {}),
+      : {}),
     ...(typeof value['action'] === 'string' && value['action'].trim()
       ? { action: value['action'].trim() }
       : {}),
-    ...(choices.length > 0 ? { choices } : {}),
+    ...(value['choices'] !== undefined ? { choices: value['choices'] } : {}),
     ...(typeof value['provider'] === 'string' && value['provider'].trim()
       ? { provider: value['provider'].trim() }
       : {}),
@@ -107,6 +83,9 @@ const opened_contenu = (raw: string, sender: string): string => {
       ? { fallback_from: value['fallback_from'].trim() }
       : {})
   })
+  const content = parse_communication_opened_content(normalized)
+  if (!content) throw new CommunicationsError('Contenu de communication invalide')
+  return JSON.stringify(content)
 }
 
 const thread_revision = (db: Database, thread_id: string): number =>

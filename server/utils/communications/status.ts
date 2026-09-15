@@ -1,4 +1,4 @@
-import { Database } from 'bun:sqlite'
+import type { Database } from 'bun:sqlite'
 
 import {
   type Activite,
@@ -6,7 +6,7 @@ import {
   is_communication_opened_type
 } from '../../../shared/activites'
 import { get_activity_with_db, insert_activity_row, type ActivityDbRow } from '../activities/rows'
-import { CommunicationsError, datastore_path } from './storage'
+import { CommunicationsError } from './storage'
 
 const FAILURE_STATUSES = new Set([
   'failed',
@@ -32,6 +32,7 @@ export type UpdateStatusInput = {
   activity_id: number
   type?: string
   statut: string
+  reason?: string
   occurred_at: string
 }
 
@@ -44,7 +45,7 @@ const latest_thread_event = (db: Database, thread_id: string): ActivityDbRow | n
     )
     .get(thread_id) ?? null
 
-export const update_status_with_db = (
+export const project_communication_status_with_db = (
   db: Database,
   input: UpdateStatusInput
 ): {
@@ -87,7 +88,7 @@ export const update_status_with_db = (
   const contenu = JSON.stringify({
     version: 2,
     ...(failed
-      ? { reason: input.statut }
+      ? { reason: input.reason?.trim() || input.statut }
       : { result: input.statut === 'read' ? 'read' : 'delivered' })
   })
   const idempotency_key = `${existing.thread_id}:${type}:${input.statut}:${occurredAt}`
@@ -123,21 +124,4 @@ export const update_status_with_db = (
     projected: true,
     transition: { activity, status: input.statut, occurredAt }
   }
-}
-
-export const update_status = (input: UpdateStatusInput): Activite => {
-  const db = new Database(datastore_path())
-  db.run('PRAGMA busy_timeout = 5000')
-  let result: ReturnType<typeof update_status_with_db>
-  try {
-    db.run('BEGIN IMMEDIATE')
-    result = update_status_with_db(db, input)
-    db.run('COMMIT')
-  } catch (error) {
-    db.run('ROLLBACK')
-    throw error
-  } finally {
-    db.close()
-  }
-  return result!.activity
 }

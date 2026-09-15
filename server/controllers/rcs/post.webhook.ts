@@ -1,9 +1,11 @@
 import type { Context } from 'hono'
 
-import { ACTIVITY_CONTENT_VERSION } from '../../../shared/activites'
+import {
+  ACTIVITY_CONTENT_VERSION,
+  parse_communication_opened_content
+} from '../../../shared/activites'
 import { parse_rattachement } from '../../utils/activities/rows'
 import { handle_rich_rcs_reply } from '../../utils/bulk/rich-rcs'
-import { update_status } from '../../utils/bulk/status'
 import {
   cm_webhook_authorized,
   communication_from_reference,
@@ -15,6 +17,7 @@ import {
   create_unmatched_inbound
 } from '../../utils/communications/storage'
 import { normalize_telephone } from '../../utils/contacts'
+import { update_status } from '../../utils/delivery-status'
 
 class WebhookValidationError extends Error {}
 
@@ -85,24 +88,11 @@ const content_from = (
   if (text) return text
   const label = string_at(payload, 'event', 'custom', 'label')
   const postback = string_at(payload, 'event', 'custom', 'postbackdata')
-  let configuredLabel: string | null = null
-  if (postback && source) {
-    try {
-      const content = JSON.parse(source.contenu) as { choix?: unknown }
-      if (Array.isArray(content.choix)) {
-        const match = content.choix.find(
-          (choice) =>
-            choice != null &&
-            typeof choice === 'object' &&
-            !Array.isArray(choice) &&
-            (choice as Record<string, unknown>)['id'] === postback
-        ) as Record<string, unknown> | undefined
-        configuredLabel = typeof match?.['label'] === 'string' ? match['label'] : null
-      }
-    } catch {
-      configuredLabel = null
-    }
-  }
+  const configuredLabel = postback
+    ? parse_communication_opened_content(source?.contenu ?? '')?.choices?.find(
+        (choice) => choice.id === postback
+      )?.label
+    : null
   const choice = label ?? configuredLabel ?? postback
   return choice ? `Le locataire a choisi « ${choice} ».` : null
 }
@@ -171,7 +161,7 @@ const handle_inbound = (payload: Record<string, unknown>): void => {
       ref: attachment.ref,
       type: 'rcs',
       auteur: exact.id_locataire ? `tenant:${exact.id_locataire}` : `external:${phone.value}`,
-      contenu: JSON.stringify({ version: ACTIVITY_CONTENT_VERSION, corps: content }),
+      contenu: JSON.stringify({ version: ACTIVITY_CONTENT_VERSION, body: content }),
       occurred_at: occurredAt,
       thread_id: exact.thread_id ?? undefined,
       idempotency_key: idempotencyKey
@@ -189,7 +179,7 @@ const handle_inbound = (payload: Record<string, unknown>): void => {
       ref: recent.ref,
       type: 'rcs',
       auteur: recent.id_locataire ? `tenant:${recent.id_locataire}` : `external:${phone.value}`,
-      contenu: JSON.stringify({ version: ACTIVITY_CONTENT_VERSION, corps: content }),
+      contenu: JSON.stringify({ version: ACTIVITY_CONTENT_VERSION, body: content }),
       occurred_at: occurredAt,
       thread_id: recent.thread_id,
       idempotency_key: idempotencyKey
@@ -200,7 +190,7 @@ const handle_inbound = (payload: Record<string, unknown>): void => {
   create_unmatched_inbound({
     type: 'rcs',
     auteur: `external:${phone.value}`,
-    contenu: JSON.stringify({ version: ACTIVITY_CONTENT_VERSION, corps: content }),
+    contenu: JSON.stringify({ version: ACTIVITY_CONTENT_VERSION, body: content }),
     occurred_at: occurredAt,
     idempotency_key: idempotencyKey
   })

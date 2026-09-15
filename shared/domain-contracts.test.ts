@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
+import { parse_communication_opened_content } from './activites'
 import { encodeScheduleToCron } from './automations'
 import { bulkDeliveryError, type BulkDelivery } from './bulk-operations'
 import {
@@ -54,5 +55,22 @@ describe('notification delivery contracts', () => {
       expect(isNotificationDeliveryStatus(status)).toBe(true)
       expect(notificationDeliveryStatusBadgeVariant(status)).toBe('danger')
     }
+  })
+})
+
+describe('communication content contracts', () => {
+  test('requires choices to preserve both provider id and human label', () => {
+    const base = { version: 2, sender: 'alice@example.org', body: 'Choisissez' }
+    expect(
+      parse_communication_opened_content(
+        JSON.stringify({
+          ...base,
+          choices: [{ id: 'rappeler', label: 'Être rappelé' }]
+        })
+      )?.choices
+    ).toEqual([{ id: 'rappeler', label: 'Être rappelé' }])
+    expect(
+      parse_communication_opened_content(JSON.stringify({ ...base, choices: ['Être rappelé'] }))
+    ).toBeNull()
   })
 })

@@ -15,11 +15,14 @@ import {
   set_bulk_transport_for_tests
 } from '../../../../utils/bulk/scheduler/transport'
 import { execute_bulk_operation } from '../../../../utils/bulk/send'
-import { set_bulk_status_hook_for_tests, update_status } from '../../../../utils/bulk/status'
 import { create_bulk_operation } from '../../../../utils/bulk/store'
 import { next_status_timestamp } from '../../../../utils/communications/parsing'
 import { create_inbound } from '../../../../utils/communications/storage'
 import { insert_contact_if_absent } from '../../../../utils/contacts'
+import {
+  set_delivery_status_hook_for_tests,
+  update_status
+} from '../../../../utils/delivery-status'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { setup } from '../../../../utils/setup'
 
@@ -60,7 +63,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   stop_bulk_scheduler()
-  set_bulk_status_hook_for_tests(null)
+  set_delivery_status_hook_for_tests(null)
   set_bulk_transaction_hook_for_tests(null)
   set_bulk_transport_for_tests(null)
   set_bulk_clock_for_tests(null)
@@ -174,7 +177,7 @@ describe('bulk execution', () => {
     set_bulk_transaction_hook_for_tests(null)
     now = new Date(now.getTime() + 1_000)
     await drain_bulk_jobs(now)
-    set_bulk_status_hook_for_tests(() => {
+    set_delivery_status_hook_for_tests(() => {
       throw new Error('injected status failure')
     })
     now = new Date(now.getTime() + 20_000)
@@ -198,7 +201,7 @@ describe('bulk execution', () => {
     ).toBe('in_progress')
     db.close()
 
-    set_bulk_status_hook_for_tests(null)
+    set_delivery_status_hook_for_tests(null)
     now = new Date(now.getTime() + 1_000)
     await drain_bulk_jobs(now)
     now = new Date(now.getTime() + 20_000)

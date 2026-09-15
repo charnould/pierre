@@ -16,7 +16,6 @@ import {
 } from '../../../../utils/bulk/scheduler/queue'
 import { set_bulk_transport_for_tests } from '../../../../utils/bulk/scheduler/transport'
 import { execute_bulk_operation } from '../../../../utils/bulk/send'
-import { update_status } from '../../../../utils/bulk/status'
 import {
   create_bulk_operation,
   delete_bulk_operation,
@@ -25,6 +24,7 @@ import {
 } from '../../../../utils/bulk/store'
 import { create_outbound } from '../../../../utils/communications/storage'
 import { insert_contact_if_absent } from '../../../../utils/contacts'
+import { update_status } from '../../../../utils/delivery-status'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { setup } from '../../../../utils/setup'
 
@@ -305,5 +305,13 @@ describe('bulk reports', () => {
       'communication.sent',
       'communication.failed'
     ])
+    expect(JSON.parse(queuedRows.at(-1)!.contenu)).toEqual({
+      version: 2,
+      reason: 'bulk_operation_deleted'
+    })
+    expect(JSON.parse(cancelledRows.at(-1)!.contenu)).toEqual({
+      version: 2,
+      reason: 'bulk_operation_deleted'
+    })
   })
 })

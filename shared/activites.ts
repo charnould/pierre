@@ -147,13 +147,18 @@ type TicketChangeContent = CaseChangeContent & {
   field: string
 }
 
+export type CommunicationChoice = {
+  id: string
+  label: string
+}
+
 export type CommunicationOpenedContent = {
   version: 2
   sender: string
   subject?: string
   body: string
   action?: string
-  choices?: string[]
+  choices?: CommunicationChoice[]
   provider?: string
   purpose?: 'general' | 'payment_plan' | 'bulk'
   related_id?: string
@@ -424,8 +429,19 @@ export const parse_communication_opened_content = (
     return null
   }
   const choices = value['choices']
-  if (choices !== undefined) {
-    if (!Array.isArray(choices) || !choices.every((entry) => typeof entry === 'string')) return null
+  if (
+    choices !== undefined &&
+    (!Array.isArray(choices) ||
+      !choices.every(
+        (entry) =>
+          entry !== null &&
+          typeof entry === 'object' &&
+          !Array.isArray(entry) &&
+          non_empty_string((entry as Record<string, unknown>)['id']) &&
+          non_empty_string((entry as Record<string, unknown>)['label'])
+      ))
+  ) {
+    return null
   }
   return {
     version: 2,
@@ -433,7 +449,14 @@ export const parse_communication_opened_content = (
     body: value['body'],
     ...(as_string(value['subject']) ? { subject: as_string(value['subject']) } : {}),
     ...(as_string(value['action']) ? { action: as_string(value['action']) } : {}),
-    ...(choices ? { choices: choices as string[] } : {}),
+    ...(choices
+      ? {
+          choices: (choices as Array<Record<string, unknown>>).map((choice) => ({
+            id: String(choice['id']).trim(),
+            label: String(choice['label']).trim()
+          }))
+        }
+      : {}),
     ...(as_string(value['provider']) ? { provider: as_string(value['provider']) } : {}),
     ...(purpose ? { purpose } : {}),
     ...(as_string(value['related_id']) ? { related_id: as_string(value['related_id']) } : {}),
@@ -731,7 +754,7 @@ export type SendCommunicationPayload = {
     subject?: string
     body: string
     action?: string
-    choix?: { id: string; label: string }[]
+    choices?: CommunicationChoice[]
   }
 }
 export type RecordExternalCommunicationPayload = {
@@ -747,7 +770,7 @@ export type RecordExternalCommunicationPayload = {
     body: string
     sender?: string
     action?: string
-    choix?: { id: string; label: string }[]
+    choices?: CommunicationChoice[]
     tenant_reply?: true
     external_application?: { name: string }
   }
@@ -755,4 +778,7 @@ export type RecordExternalCommunicationPayload = {
 
 export type ActivitiesListResponse = { data: ActiviteListItem[] }
 export type ActivityResponse = { data: Activite }
+export type SendCommunicationResponse =
+  | ActivityResponse
+  | { error: { code: string; message: string }; data?: Activite }
 export type DeleteActivityResponse = { data: { deleted: true } }

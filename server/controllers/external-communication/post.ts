@@ -24,7 +24,7 @@ const Body = z
         body: z.string(),
         sender: z.string().trim().min(1).optional(),
         action: z.string().trim().min(1).optional(),
-        choix: z
+        choices: z
           .array(z.object({ id: z.string().trim().min(1), label: z.string().trim().min(1) }))
           .optional(),
         tenant_reply: z.literal(true).optional(),
@@ -100,9 +100,7 @@ export const controller = async (c: Context) => {
         ...(parsed.data.contenu.subject ? { subject: parsed.data.contenu.subject } : {}),
         ...(parsed.data.contenu.sender ? { sender: parsed.data.contenu.sender } : {}),
         ...(parsed.data.contenu.action ? { action: parsed.data.contenu.action } : {}),
-        ...(parsed.data.contenu.choix
-          ? { choices: parsed.data.contenu.choix.map((c) => c.label) }
-          : {}),
+        ...(parsed.data.contenu.choices ? { choices: parsed.data.contenu.choices } : {}),
         ...(parsed.data.contenu.external_application
           ? { provider: parsed.data.contenu.external_application.name }
           : {})

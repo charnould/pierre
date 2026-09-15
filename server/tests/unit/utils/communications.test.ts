@@ -9,7 +9,6 @@ import {
   communication_reference,
   find_recent_thread
 } from '../../../utils/communications/parsing'
-import { update_status } from '../../../utils/communications/status'
 import {
   claim_outbound_dispatch,
   CommunicationsError,
@@ -17,6 +16,7 @@ import {
   create_outbound,
   create_unmatched_inbound
 } from '../../../utils/communications/storage'
+import { update_status } from '../../../utils/delivery-status'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 
@@ -303,7 +303,7 @@ describe('communications', () => {
         version: 2,
         sender: 'user:alice@example.org',
         body: 'Souhaitez-vous être rappelé ?',
-        choices: ['Être rappelé']
+        choices: [{ id: 'rappeler', label: 'Être rappelé' }]
       }),
       idempotency_key: Bun.randomUUIDv7()
     })

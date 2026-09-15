@@ -5,6 +5,7 @@ import type { SimpleDeliveryStep } from '../../../../shared/bulk-operations'
 import { collect_rich_rcs_replies } from '../../../../shared/bulk-rich-rcs'
 import { communication_reference, next_status_timestamp } from '../../communications/parsing'
 import { create_outbound_with_db } from '../../communications/storage'
+import { update_status, update_status_with_db } from '../../delivery-status'
 import { datastorePaths } from '../../paths'
 import { send_rcs_message } from '../../rcs/send'
 import { to_cm_number } from '../../rcs/wrap'
@@ -25,7 +26,6 @@ import {
 import { render_content } from '../placeholders'
 import { finalize_bulk_item_with_db } from '../reports'
 import { select_fallback_route } from '../route-policy'
-import { update_status, update_status_with_db } from '../status'
 
 export type Job = {
   id: string

@@ -12,7 +12,7 @@ import {
   type CreateBulkOperationBody,
   type PatchBulkOperationBody
 } from '../../../shared/bulk-operations'
-import { update_status_with_db } from '../communications/status'
+import { project_communication_status_with_db } from '../communications/status'
 import { datastorePaths } from '../paths'
 import { BulkOperationDefinitionSchema, BulkQueryError } from './query'
 import { purge_completed_runs_with_db } from './reports'
@@ -239,7 +239,7 @@ export const delete_bulk_operation = (id: string): BulkOperationRecord => {
     const existing = get_with_db(db, id)
     if (!existing) throw new BulkOperationsError('Bulk operation not found', 'not_found')
     const now = activity_timestamp()
-    const communications = db
+    const pendingCommunications = db
       .query<{ id: number }, [string]>(
         `SELECT id FROM activites
          WHERE bulk_id = ?
@@ -252,10 +252,11 @@ export const delete_bulk_operation = (id: string): BulkOperationRecord => {
            )`
       )
       .all(id)
-    for (const activity of communications) {
-      update_status_with_db(db, {
+    for (const activity of pendingCommunications) {
+      project_communication_status_with_db(db, {
         activity_id: activity.id,
         statut: 'failed',
+        reason: 'bulk_operation_deleted',
         occurred_at: now
       })
     }

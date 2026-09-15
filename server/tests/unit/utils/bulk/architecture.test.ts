@@ -8,6 +8,7 @@ describe('bulk communications module graph', () => {
     for (const file of ['utils/communications/storage.ts', 'utils/communications/status.ts']) {
       expect(await source(file)).not.toMatch(/from ['"][^'"]*\/bulk(?:\/|['"])/)
     }
+    expect(await source('utils/communications/status.ts')).not.toMatch(/export const update_status/)
   })
 
   it('does not route touched bulk leaves through thin barrels', async () => {

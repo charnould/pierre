@@ -5,6 +5,7 @@ import { Hono } from 'hono'
 
 import { controller } from '../../../../controllers/rcs/post'
 import type { User } from '../../../../utils/_schema'
+import { list_activities } from '../../../../utils/activities/query'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { setup } from '../../../../utils/setup'
 
@@ -25,7 +26,22 @@ app.use('*', async (c, next) => {
 })
 app.post('/rcs', controller)
 
-const postRcs = (idempotencyKey: string = Bun.randomUUIDv7(), hasAccess = true) =>
+const validBody = {
+  contexte: 'tickets',
+  ref: 'REQ-RCS',
+  destinataire: '06 11 56 39 59',
+  contenu: {
+    action: 'Répondre au locataire',
+    body: 'Votre dossier est prêt.',
+    choices: [{ id: 'confirmer', label: 'Confirmer' }]
+  }
+}
+
+const postRcs = (
+  idempotencyKey: string = Bun.randomUUIDv7(),
+  hasAccess = true,
+  body: unknown = validBody
+) =>
   app.request('/rcs', {
     method: 'POST',
     headers: {
@@ -33,16 +49,7 @@ const postRcs = (idempotencyKey: string = Bun.randomUUIDv7(), hasAccess = true) 
       'Idempotency-Key': idempotencyKey,
       ...(hasAccess ? {} : { 'x-test-no-access': 'true' })
     },
-    body: JSON.stringify({
-      contexte: 'tickets',
-      ref: 'REQ-RCS',
-      destinataire: '06 11 56 39 59',
-      contenu: {
-        action: 'Répondre au locataire',
-        corps: 'Votre dossier est prêt.',
-        choix: [{ id: 'confirmer', label: 'Confirmer' }]
-      }
-    })
+    body: JSON.stringify(body)
   })
 
 const acceptProviderRequest = (async (
@@ -83,6 +90,14 @@ describe('POST /rcs provider boundary', () => {
   it('rejects users without access to the activity module', async () => {
     const response = await postRcs(Bun.randomUUIDv7(), false)
     expect(response.status).toBe(403)
+  })
+
+  it('rejects the removed corps payload', async () => {
+    const response = await postRcs(Bun.randomUUIDv7(), true, {
+      ...validBody,
+      contenu: { corps: 'Ancien contrat' }
+    })
+    expect(response.status).toBe(400)
   })
 
   it('sends the wrapped CM payload and records a sent activity', async () => {
@@ -128,6 +143,13 @@ describe('POST /rcs provider boundary', () => {
           ]
         }
       })
+      const rows = list_activities('alice@example.org', {
+        rattachement: 'tickets:REQ-RCS',
+        limit: 10
+      })
+      expect(rows.some((row) => row.channel === 'sms')).toBe(false)
+      const sent = rows.find((row) => row.type === 'communication.sent' && row.channel === 'rcs')
+      expect(JSON.parse(sent!.contenu).choices).toEqual([{ id: 'confirmer', label: 'Confirmer' }])
       expect((await postRcs(idempotencyKey)).status).toBe(201)
       expect(fetchSpy).toHaveBeenCalledTimes(2)
     } finally {
@@ -146,6 +168,25 @@ describe('POST /rcs provider boundary', () => {
         error: { code: 'cm_rejected' },
         data: { type: 'communication.failed', channel: 'rcs' }
       })
+      const rows = list_activities('alice@example.org', {
+        rattachement: 'tickets:REQ-RCS',
+        limit: 10
+      })
+      const sms = rows.find((row) => row.type === 'communication.sent' && row.channel === 'sms')
+      expect(sms).toBeDefined()
+      expect(JSON.parse(sms!.contenu)).toMatchObject({
+        body: 'Votre dossier est prêt.',
+        action: 'Répondre au locataire',
+        fallback_from: expect.stringMatching(/^p\d+$/)
+      })
+      expect(
+        rows.find(
+          (row) =>
+            row.thread_id === sms!.thread_id &&
+            row.type === 'communication.failed' &&
+            JSON.parse(row.contenu).reason === 'provider_not_configured'
+        )
+      ).toBeDefined()
     } finally {
       fetchSpy.mockRestore()
     }

@@ -6,7 +6,6 @@ import { businessModuleForActivityContext } from '../../../shared/modules'
 import type { User } from '../../utils/_schema'
 import { get_activity } from '../../utils/activities/rows'
 import { userCanAccessModule } from '../../utils/authorize-role'
-import { update_status } from '../../utils/bulk/status'
 import { communication_reference, next_status_timestamp } from '../../utils/communications/parsing'
 import {
   claim_outbound_dispatch,
@@ -14,6 +13,7 @@ import {
   create_outbound
 } from '../../utils/communications/storage'
 import { normalize_telephone } from '../../utils/contacts'
+import { update_status } from '../../utils/delivery-status'
 import { RcsSendError, send_rcs_message } from '../../utils/rcs/send'
 import { to_cm_number } from '../../utils/rcs/wrap'
 
@@ -24,9 +24,9 @@ const Body = z
     destinataire: z.string().trim().min(1),
     contenu: z
       .object({
-        corps: z.string().trim().min(1),
+        body: z.string().trim().min(1),
         action: z.string().trim().min(1).optional(),
-        choix: z
+        choices: z
           .array(
             z
               .object({
@@ -99,19 +99,17 @@ export const controller = async (c: Context) => {
       contenu: JSON.stringify({
         version: ACTIVITY_CONTENT_VERSION,
         ...(parsed.data.contenu.action ? { action: parsed.data.contenu.action } : {}),
-        body: parsed.data.contenu.corps,
-        ...(parsed.data.contenu.choix?.length
-          ? { choices: parsed.data.contenu.choix.map((choice) => choice.label) }
-          : {})
+        body: parsed.data.contenu.body,
+        ...(parsed.data.contenu.choices?.length ? { choices: parsed.data.contenu.choices } : {})
       }),
       idempotency_key: idempotencyKey
     })
     const dispatch = claim_outbound_dispatch(activity.id)
     if (dispatch !== 'claimed') return c.json({ data: get_activity(activity.id) ?? activity }, 201)
 
-    const conversation: Record<string, unknown> = { text: parsed.data.contenu.corps }
-    if (parsed.data.contenu.choix?.length) {
-      conversation['suggestions'] = parsed.data.contenu.choix.map((choice) => ({
+    const conversation: Record<string, unknown> = { text: parsed.data.contenu.body }
+    if (parsed.data.contenu.choices?.length) {
+      conversation['suggestions'] = parsed.data.contenu.choices.map((choice) => ({
         action: 'Reply',
         label: choice.label,
         postbackdata: choice.id
@@ -121,7 +119,7 @@ export const controller = async (c: Context) => {
       await send_rcs_message({
         phone: to_cm_number(normalized.value),
         richContent: { conversation: [conversation] },
-        body: { content: parsed.data.contenu.corps },
+        body: { content: parsed.data.contenu.body },
         reference: communication_reference(activity.id)
       })
     } catch (error) {

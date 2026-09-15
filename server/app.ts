@@ -84,7 +84,6 @@ import { controller as post_rcs_webhook } from './controllers/rcs/post.webhook'
 import { controller as post_signature } from './controllers/signature/post'
 import { controller as post_signature_webhook } from './controllers/signature/post.webhook'
 import { controller as post_sms } from './controllers/sms/post'
-import { controller as post_sms_webhook } from './controllers/sms/post.webhook'
 import { controller as post_telemetry } from './controllers/telemetry/post'
 import { MAX_MULTIPART_REQUEST_BYTES } from './utils/ai-attachments'
 import { authenticate, authenticateAdministratorApi } from './utils/authenticate-user'
@@ -346,7 +345,6 @@ app.post('/lrar', authenticate, post_lrar)
 app.post('/lre', authenticate, post_lre)
 app.post('/signature', authenticate, post_signature)
 app.post('/webhook/rcs', post_rcs_webhook)
-app.post('/webhook/sms', post_sms_webhook)
 app.post('/webhook/email', post_email_webhook)
 app.post('/webhook/courrier', post_courrier_webhook)
 app.post('/webhook/lrar', post_lrar_webhook)

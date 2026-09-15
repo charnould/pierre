@@ -8,6 +8,7 @@ import { controller as emailSend } from '../../../controllers/email/post'
 import { controller as emailWebhook } from '../../../controllers/email/post.webhook'
 import { controller as externalCommunication } from '../../../controllers/external-communication/post'
 import { controller as rcsWebhook } from '../../../controllers/rcs/post.webhook'
+import { controller as smsSend } from '../../../controllers/sms/post'
 import type { User } from '../../../utils/_schema'
 import { list_activities } from '../../../utils/activities/query'
 import { get_activity } from '../../../utils/activities/rows'
@@ -19,7 +20,6 @@ const paths = testDatastorePaths('communication_controllers')
 const SECRET = 'secret-test-key'
 const originalSecret = Bun.env['CM_WEBHOOK_SECRET']
 const originalFakeSecret = Bun.env['FAKE_WEBHOOK_KEY']
-const originalNodeEnv = Bun.env['NODE_ENV']
 
 beforeAll(async () => {
   setDatastoreRoot(paths.root)
@@ -36,12 +36,10 @@ afterAll(async () => {
   else Bun.env['CM_WEBHOOK_SECRET'] = originalSecret
   if (originalFakeSecret === undefined) delete Bun.env['FAKE_WEBHOOK_KEY']
   else Bun.env['FAKE_WEBHOOK_KEY'] = originalFakeSecret
-  if (originalNodeEnv === undefined) delete Bun.env['NODE_ENV']
-  else Bun.env['NODE_ENV'] = originalNodeEnv
 })
 
 describe('webhooks de communication', () => {
-  it('simule un envoi et ne le rejoue pas avec la même clé', async () => {
+  it('reports email and SMS providers as unavailable in every environment', async () => {
     const app = new Hono<{ Variables: { user: User } }>()
     app.use('*', async (c, next) => {
       c.set('user', {
@@ -54,27 +52,14 @@ describe('webhooks de communication', () => {
       await next()
     })
     app.post('/email', emailSend)
-    const key = Bun.randomUUIDv7()
-    const request = () =>
-      app.request('/email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
-        body: JSON.stringify({
-          contexte: 'automations',
-          ref: 'EMAIL-SEND-1',
-          destinataire: 'tenant@example.org',
-          contenu: { objet: 'Relance', corps: 'Bonjour' }
-        })
+    app.post('/sms', smsSend)
+    for (const route of ['/email', '/sms']) {
+      const response = await app.request(route, { method: 'POST' })
+      expect(response.status).toBe(501)
+      expect(await response.json()).toMatchObject({
+        error: { code: 'provider_not_configured' }
       })
-
-    const first = await request()
-    const replay = await request()
-    expect(first.status).toBe(201)
-    expect(replay.status).toBe(201)
-    const firstBody = (await first.json()) as { data: { id: number; type: string } }
-    const replayBody = (await replay.json()) as { data: { id: number; type: string } }
-    expect(firstBody.data.type).toBe('communication.sent')
-    expect(replayBody.data.id).toBe(firstBody.data.id)
+    }
   })
 
   it('protège et valide les webhooks simulés', async () => {
@@ -163,6 +148,52 @@ describe('webhooks de communication', () => {
     })
   })
 
+  it('creates one failed SMS fallback for duplicate asynchronous RCS failures', async () => {
+    const rcs = create_outbound({
+      actor: 'alice@example.org',
+      contexte: 'automations',
+      ref: 'RCS-FALLBACK',
+      type: 'rcs',
+      destinataire: '+33612345678',
+      contenu: JSON.stringify({
+        version: 2,
+        sender: 'user:alice@example.org',
+        body: 'Relance'
+      }),
+      idempotency_key: Bun.randomUUIDv7()
+    })
+    const app = new Hono().post('/webhook/rcs', rcsWebhook)
+    const request = () =>
+      app.request('/webhook/rcs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Webhook-Secret': SECRET },
+        body: JSON.stringify({
+          reference: `p${rcs.id}`,
+          status: { code: 1 },
+          received: '2030-08-26T20:00:00Z'
+        })
+      })
+
+    expect((await request()).status).toBe(200)
+    expect((await request()).status).toBe(200)
+
+    const rows = list_activities('alice@example.org', {
+      rattachement: 'automations:RCS-FALLBACK',
+      limit: 10
+    })
+    const sms = rows.filter((row) => row.type === 'communication.sent' && row.channel === 'sms')
+    expect(sms).toHaveLength(1)
+    expect(JSON.parse(sms[0]!.contenu)).toMatchObject({
+      body: 'Relance',
+      fallback_from: `p${rcs.id}`
+    })
+    expect(
+      rows.filter(
+        (row) => row.type === 'communication.failed' && row.thread_id === sms[0]!.thread_id
+      )
+    ).toHaveLength(1)
+  })
+
   it('mappe les statuts CM et rattache une réponse au thread référencé', async () => {
     const activity = create_outbound({
       actor: 'alice@example.org',
@@ -174,7 +205,7 @@ describe('webhooks de communication', () => {
         version: 2,
         sender: 'user:alice@example.org',
         body: 'Choisissez',
-        choices: ['Être rappelé']
+        choices: [{ id: 'rappeler', label: 'Être rappelé' }]
       }),
       idempotency_key: Bun.randomUUIDv7()
     })
@@ -260,7 +291,7 @@ describe('webhooks de communication', () => {
     })
     const received = rows.filter((row) => row.type === 'communication.received')
     expect(received.every((row) => row.thread_id === activity.thread_id)).toBe(true)
-    expect(received.some((row) => row.contenu.includes('rappeler'))).toBe(true)
+    expect(received.some((row) => row.contenu.includes('Être rappelé'))).toBe(true)
     expect(received.some((row) => row.contenu.includes('confirmer'))).toBe(true)
     expect(received).toHaveLength(2)
   })
@@ -296,7 +327,8 @@ describe('POST /communications/external et action', () => {
         contenu: {
           action: 'Contacter la CAF',
           subject: 'Dossier APL',
-          body: 'Merci de rétablir l’APL.'
+          body: 'Merci de rétablir l’APL.',
+          choices: [{ id: 'transmettre', label: 'Transmettre le justificatif' }]
         }
       })
     })
@@ -310,35 +342,9 @@ describe('POST /communications/external et action', () => {
       version: 2,
       action: 'Contacter la CAF',
       subject: 'Dossier APL',
-      body: 'Merci de rétablir l’APL.'
+      body: 'Merci de rétablir l’APL.',
+      choices: [{ id: 'transmettre', label: 'Transmettre le justificatif' }]
     })
-  })
-
-  it('does not claim a simulated provider sent messages in production', async () => {
-    const previous = Bun.env['NODE_ENV']
-    Bun.env['NODE_ENV'] = 'production'
-    try {
-      const response = await app.request('/email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Idempotency-Key': Bun.randomUUIDv7()
-        },
-        body: JSON.stringify({
-          contexte: 'automations',
-          ref: 'EMAIL-PRODUCTION-1',
-          destinataire: 'fail@example.org',
-          contenu: { objet: 'Relance', corps: 'Bonjour' }
-        })
-      })
-      expect(response.status).toBe(501)
-      expect(await response.json()).toMatchObject({
-        error: { code: 'provider_not_configured' }
-      })
-    } finally {
-      if (previous === undefined) delete Bun.env['NODE_ENV']
-      else Bun.env['NODE_ENV'] = previous
-    }
   })
 
   it('accepte une communication externe avec objet seul', async () => {
@@ -460,33 +466,5 @@ describe('POST /communications/external et action', () => {
         data: { id: firstBody.data.id, type: 'communication.sent', channel }
       })
     }
-  })
-
-  it('persiste action sur POST /email', async () => {
-    const response = await app.request('/email', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Idempotency-Key': Bun.randomUUIDv7()
-      },
-      body: JSON.stringify({
-        contexte: 'automations',
-        ref: 'EMAIL-ACTION-1',
-        destinataire: 'locataire@example.org',
-        contenu: {
-          action: 'Envoyer un e-mail de relance',
-          objet: 'Relance',
-          corps: 'Bonjour'
-        }
-      })
-    })
-    expect(response.status).toBe(201)
-    const body = (await response.json()) as { data: { contenu: string } }
-    expect(JSON.parse(body.data.contenu)).toMatchObject({
-      action: 'Envoyer un e-mail de relance',
-      subject: 'Relance',
-      body: 'Bonjour',
-      version: 2
-    })
   })
 })

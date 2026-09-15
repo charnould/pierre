@@ -1,24 +1,25 @@
 import { Database } from 'bun:sqlite'
 
-import type { Activite } from '../../../shared/activites'
-import { get_activity_with_db } from '../activities/rows'
-import {
-  type UpdateStatusInput,
-  update_status_with_db as update_communication_status_with_db
-} from '../communications/status'
-import { datastore_path } from '../communications/storage'
+import type { Activite } from '../../shared/activites'
+import { get_activity_with_db } from './activities/rows'
 import {
   apply_sent_bucket_effect_with_db,
   schedule_bulk_fallback_with_db,
   settle_bulk_item_for_status_with_db,
   type DeliveryStatus
-} from './jobs'
-import { handle_rich_rcs_status_with_db } from './rich-rcs'
-import { arm_bulk_scheduler } from './scheduler/queue'
+} from './bulk/jobs'
+import { handle_rich_rcs_status_with_db } from './bulk/rich-rcs'
+import { arm_bulk_scheduler } from './bulk/scheduler/queue'
+import { create_sms_fallback_with_db } from './communications/rcs-sms-fallback'
+import {
+  project_communication_status_with_db,
+  type UpdateStatusInput
+} from './communications/status'
+import { datastore_path } from './communications/storage'
 
 let transitionHook: (() => void) | null = null
 
-export const set_bulk_status_hook_for_tests = (hook: (() => void) | null): void => {
+export const set_delivery_status_hook_for_tests = (hook: (() => void) | null): void => {
   transitionHook = hook
 }
 
@@ -33,7 +34,7 @@ export const update_status_with_db = (
   input: UpdateStatusInput
 ): { activity: Activite; fallbackScheduled: boolean } => {
   const source = get_activity_with_db(db, input.activity_id)
-  const result = update_communication_status_with_db(db, input)
+  const result = project_communication_status_with_db(db, input)
   if (!result.transition) return { activity: result.activity, fallbackScheduled: false }
 
   transitionHook?.()
@@ -50,10 +51,14 @@ export const update_status_with_db = (
   if (!richConsumed) {
     settle_bulk_item_for_status_with_db(db, trackedActivity, deliveryStatus, occurredAt)
   }
+  const failed = fallback_status(input.type, status)
   const fallbackScheduled =
-    !richConsumed && fallback_status(input.type, status)
+    !richConsumed && failed
       ? schedule_bulk_fallback_with_db(db, trackedActivity, occurredAt)
       : false
+  if (failed && !trackedActivity.bulk_id && trackedActivity.channel === 'rcs') {
+    create_sms_fallback_with_db(db, trackedActivity)
+  }
   return { activity, fallbackScheduled }
 }
 
