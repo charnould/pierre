@@ -29,7 +29,7 @@ let server: ReturnType<typeof Bun.spawn> | null = null
 try {
   if (!(await serverIsReady())) {
     server = Bun.spawn({
-      cmd: [process.execPath, '--env-file=../.env.production', 'run', 'start.ts'],
+      cmd: [process.execPath, '--env-file=../.env', 'run', 'start.ts'],
       cwd: SERVER_ROOT,
       env: {
         ...process.env,
@@ -51,7 +51,7 @@ try {
       '60000',
       '--max-concurrency',
       '1',
-      '--env-file=../.env.production',
+      '--env-file=../.env',
       '--preload',
       './utils/setup.ts'
     ],

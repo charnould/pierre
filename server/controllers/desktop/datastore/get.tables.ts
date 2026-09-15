@@ -5,8 +5,7 @@ import { get_datastore_tables } from '../../../utils/datastore-tables'
 /**
  * GET /desktop/datastore/tables
  *
- * Returns whether each canonical datastore table is present in `datastore.sqlite`
- * for the current `SERVICE`.
+ * Returns whether each canonical datastore table is present in `datastore.sqlite`.
  *
  * @example Success — `{ tables: [{ name: "reclamations", exists: true }, …] }`
  * @example Failure — `{ error: { code: "internal_error", message: "…" } }` (HTTP 500)

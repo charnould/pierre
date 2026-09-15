@@ -4,16 +4,28 @@ import { isAbsolute, join, relative, resolve } from 'node:path'
 export const SERVER_ROOT = resolve(import.meta.dir, '..')
 const DATASTORES_ROOT = join(SERVER_ROOT, 'datastores')
 
-export function resolveServiceName(raw: string | undefined): string {
-  const service = raw === undefined ? 'default' : raw.trim()
-  if (!service || service.includes('..') || !/^[A-Za-z0-9_][A-Za-z0-9._-]{0,63}$/.test(service)) {
-    throw new Error(`Invalid SERVICE name: ${JSON.stringify(raw)}`)
-  }
-  return service
+let datastoreRoot = DATASTORES_ROOT
+
+export function setDatastoreRoot(root: string | null): void {
+  datastoreRoot = root ?? DATASTORES_ROOT
 }
 
-export function datastorePaths(service = resolveServiceName(Bun.env['SERVICE'])) {
-  const root = join(DATASTORES_ROOT, resolveServiceName(service))
+export function testDatastoreRoot(label: string): string {
+  return join(DATASTORES_ROOT, `.test-${label}`)
+}
+
+export function testDatastorePaths(label: string) {
+  const root = testDatastoreRoot(label)
+  return {
+    root,
+    database: join(root, 'datastore.sqlite'),
+    files: join(root, 'files'),
+    knowledge: join(root, 'knowledge')
+  } as const
+}
+
+export function datastorePaths() {
+  const root = datastoreRoot
   return {
     root,
     database: join(root, 'datastore.sqlite'),

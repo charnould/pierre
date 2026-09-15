@@ -5,7 +5,6 @@ import { parse_contenu_json } from '../../../../shared/activites'
 import { list_activities } from '../../../utils/activities/query'
 import { get_activity } from '../../../utils/activities/rows'
 import { create_activity, delete_activity, patch_activity } from '../../../utils/activities/write'
-import { datastorePaths } from '../../../utils/paths'
 import {
   ALICE,
   BOB,
@@ -16,8 +15,7 @@ import {
   user
 } from './activities-test-env'
 
-const SERVICE = '_test_action_lifecycle'
-use_activities_test_env(SERVICE)
+const paths = use_activities_test_env('action_lifecycle')
 
 const task_content = (assignee = BOB) =>
   JSON.stringify({
@@ -177,7 +175,7 @@ describe('action lifecycle', () => {
       operation: 'complete_action',
       resultat: 'Promesse confirmée.'
     })
-    const db = new Database(datastorePaths(SERVICE).database)
+    const db = new Database(paths.database)
     const rows = db
       .query<{ activity: string }, [string]>(
         `SELECT json_object(

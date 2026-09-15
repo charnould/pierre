@@ -15,11 +15,10 @@ import { controller as previewMessage } from '../../../../../controllers/desktop
 import { controller as previewQuery } from '../../../../../controllers/desktop/bulk-operations/post.preview-query'
 import type { User } from '../../../../../utils/_schema'
 import { authorizeAdministrator } from '../../../../../utils/authorize-role'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
 
-const SERVICE = '_test_bulk_routes'
-const ROOT = `datastores/${SERVICE}`
-const originalService = Bun.env['SERVICE']
+const paths = testDatastorePaths('bulk_routes')
 
 const app = new Hono<{ Variables: { user: User } }>()
 app.use('*', async (c, next) => {
@@ -77,13 +76,13 @@ const request = (method: string, body?: unknown, isAdministrator = false) => ({
 })
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 beforeEach(async () => {
-  await rm(ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
   await setup()
-  const db = new Database(`${ROOT}/datastore.sqlite`)
+  const db = new Database(`${paths.root}/datastore.sqlite`)
   db.run(`
     CREATE TABLE comptes_locataires (
       id_locataire TEXT,
@@ -106,9 +105,8 @@ beforeEach(async () => {
 })
 
 afterAll(async () => {
-  await rm(ROOT, { recursive: true, force: true })
-  if (originalService === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = originalService
+  await rm(paths.root, { recursive: true, force: true })
+  setDatastoreRoot(null)
 })
 
 describe('bulk CRUD, previews and execution authorization', () => {

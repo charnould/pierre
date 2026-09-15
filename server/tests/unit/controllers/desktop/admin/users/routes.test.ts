@@ -11,12 +11,10 @@ import { controller as importUsersController } from '../../../../../../controlle
 import type { User } from '../../../../../../utils/_schema'
 import { authorizeAdministrator } from '../../../../../../utils/authorize-role'
 import { deleteAllUsers, getUser, getUsers, saveUser } from '../../../../../../utils/handle-user'
-import { datastorePaths } from '../../../../../../utils/paths'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../../../utils/paths'
 import { setup } from '../../../../../../utils/setup'
 
-const SERVICE = '_test_desktop_admin_users'
-const ROOT = datastorePaths(SERVICE).root
-const originalService = Bun.env['SERVICE']
+const paths = testDatastorePaths('desktop_admin_users')
 
 const ADMIN: User = {
   email: 'admin@example.org',
@@ -60,8 +58,8 @@ const jsonRequest = (method: string, body: unknown) => ({
 })
 
 beforeAll(async () => {
-  Bun.env['SERVICE'] = SERVICE
-  await rm(ROOT, { recursive: true, force: true })
+  setDatastoreRoot(paths.root)
+  await rm(paths.root, { recursive: true, force: true })
   await setup()
 })
 
@@ -71,9 +69,8 @@ beforeEach(async () => {
 })
 
 afterAll(async () => {
-  await rm(ROOT, { recursive: true, force: true })
-  if (originalService === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = originalService
+  await rm(paths.root, { recursive: true, force: true })
+  setDatastoreRoot(null)
 })
 
 describe('desktop administrator users API', () => {

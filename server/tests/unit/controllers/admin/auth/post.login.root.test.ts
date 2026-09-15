@@ -5,12 +5,10 @@ import { Hono } from 'hono'
 
 import { controller } from '../../../../../controllers/admin/auth/post.login'
 import { getUser, saveUser } from '../../../../../utils/handle-user'
-import { datastorePaths } from '../../../../../utils/paths'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
 
-const SERVICE = '_test_root_login'
-const ROOT = datastorePaths(SERVICE).root
-const originalService = Bun.env['SERVICE']
+const paths = testDatastorePaths('root_login')
 const originalPassword = Bun.env['AUTH_PASSWORD']
 const originalSecret = Bun.env['AUTH_SECRET']
 
@@ -25,17 +23,16 @@ const login = (email: string, password: string) =>
   })
 
 beforeAll(async () => {
-  Bun.env['SERVICE'] = SERVICE
+  setDatastoreRoot(paths.root)
   Bun.env['AUTH_PASSWORD'] = 'bootstrap-password'
   Bun.env['AUTH_SECRET'] = '0123456789abcdef0123456789abcdef'
-  await rm(ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
   await setup()
 })
 
 afterAll(async () => {
-  await rm(ROOT, { recursive: true, force: true })
-  if (originalService === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = originalService
+  await rm(paths.root, { recursive: true, force: true })
+  setDatastoreRoot(null)
   if (originalPassword === undefined) delete Bun.env['AUTH_PASSWORD']
   else Bun.env['AUTH_PASSWORD'] = originalPassword
   if (originalSecret === undefined) delete Bun.env['AUTH_SECRET']

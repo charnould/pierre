@@ -302,13 +302,12 @@ export const loadKnowledgeCsv = async (
 }
 
 export const loadCoreDataMirrors = async (
-  snapshot: KnowledgeCatalogSnapshot,
-  service?: string
+  snapshot: KnowledgeCatalogSnapshot
 ): Promise<{
   mirrors: Map<string, { columns: string[]; rows: JsonRow[] }>
   anomalies: { code: string; subject: string | null }[]
 }> => {
-  const root = datastorePaths(service).files
+  const root = datastorePaths().files
   const mirrors = new Map<string, { columns: string[]; rows: JsonRow[] }>()
   const anomalies: { code: string; subject: string | null }[] = []
 

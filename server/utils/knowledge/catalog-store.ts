@@ -18,8 +18,8 @@ export type KnowledgeRecordRow = {
   updated_at: string
 }
 
-export const withKnowledgeDb = <T>(service: string | undefined, fn: (db: Database) => T): T => {
-  const db = new Database(datastorePaths(service).database)
+export const withKnowledgeDb = <T>(fn: (db: Database) => T): T => {
+  const db = new Database(datastorePaths().database)
   try {
     return fn(db)
   } finally {

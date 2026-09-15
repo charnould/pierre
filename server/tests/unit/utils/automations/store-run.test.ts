@@ -23,16 +23,13 @@ import {
   trim_report_activities,
   update_automation
 } from '../../../../utils/automations/store'
-import { datastorePaths } from '../../../../utils/paths'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { setup } from '../../../../utils/setup'
 
-const TEST_SERVICE = '_test_automations_svc'
-const ORIGINAL_SERVICE = Bun.env['SERVICE']
-const TEST_PATHS = datastorePaths(TEST_SERVICE)
-const DATASTORE_ROOT = TEST_PATHS.root
+const paths = testDatastorePaths('automations')
 
 function seed_user(email: string) {
-  const db = new Database(TEST_PATHS.database)
+  const db = new Database(paths.database)
   db.run(`INSERT INTO users (email, chatbot_ids, password_hash) VALUES (?, '["default"]', 'x')`, [
     email
   ])
@@ -40,17 +37,16 @@ function seed_user(email: string) {
 }
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = TEST_SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 afterAll(async () => {
-  if (ORIGINAL_SERVICE === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = ORIGINAL_SERVICE
-  await rm(DATASTORE_ROOT, { recursive: true, force: true })
+  setDatastoreRoot(null)
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 beforeEach(async () => {
-  await mkdir(DATASTORE_ROOT, { recursive: true })
+  await mkdir(paths.root, { recursive: true })
   await setup()
   seed_user('alice@example.com')
   seed_user('bob@example.com')
@@ -59,7 +55,7 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
-  await rm(DATASTORE_ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 describe('automations store', () => {
@@ -109,7 +105,7 @@ describe('automations store', () => {
     expect(get_automation(auto.id, 'bob@example.com', 'bob@example.com')?.pinned).toBe(true)
     expect(get_automation(auto.id, 'alice', 'alice@example.com')?.pinned).toBe(false)
     delete_automation(auto.id, 'alice')
-    const db = new Database(TEST_PATHS.database)
+    const db = new Database(paths.database)
     const bob = db
       .query<{ preferences: string }, [string]>('SELECT preferences FROM users WHERE email = ?')
       .get('bob@example.com')
@@ -169,7 +165,7 @@ describe('automations worker', () => {
     expect(after.status).toBe('scheduled')
     expect(after.next_run_at).toBeTruthy()
 
-    const db = new Database(TEST_PATHS.database)
+    const db = new Database(paths.database)
     const row = db
       .query<{ mentions: string }, [string]>(
         `SELECT mentions FROM activites WHERE rattachement = ? LIMIT 1`
@@ -191,7 +187,7 @@ describe('automations worker', () => {
       frequencyTime: '08:00',
       prompt: 'p'
     })
-    const db = new Database(TEST_PATHS.database)
+    const db = new Database(paths.database)
     db.run('UPDATE automations SET next_run_at = ? WHERE id = ?', [
       new Date(Date.now() - 1000).toISOString(),
       auto.id
@@ -209,7 +205,7 @@ describe('automations worker', () => {
       frequencyTime: '08:00',
       prompt: 'p'
     })
-    const db = new Database(TEST_PATHS.database)
+    const db = new Database(paths.database)
     db.run('UPDATE automations SET next_run_at = ? WHERE id = ?', [
       new Date(Date.now() - 1000).toISOString(),
       auto.id
@@ -263,7 +259,7 @@ describe('automations worker', () => {
       })
     }
     trim_report_activities(auto.id, 2)
-    const db = new Database(TEST_PATHS.database)
+    const db = new Database(paths.database)
     const count = db
       .query<{ n: number }, [string]>(
         `SELECT COUNT(*) as n FROM activites WHERE rattachement = ? AND type = 'automation.reported'`
@@ -296,7 +292,7 @@ describe('automations worker', () => {
       frequencyTime: '08:00',
       prompt: 'p'
     })
-    const db = new Database(TEST_PATHS.database)
+    const db = new Database(paths.database)
     db.run(
       `UPDATE automations
        SET status = 'running', next_run_at = ?, run_token = ?, lease_expires_at = ?
@@ -316,7 +312,7 @@ describe('automations worker', () => {
     expect(afterReclaim.last_run_status).toBe('error')
     expect(afterReclaim.status).toBe('scheduled')
 
-    const db2 = new Database(TEST_PATHS.database)
+    const db2 = new Database(paths.database)
     db2.run(`UPDATE automations SET next_run_at = ? WHERE id = ?`, [
       new Date(Date.now() - 1000).toISOString(),
       auto.id

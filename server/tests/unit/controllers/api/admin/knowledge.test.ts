@@ -22,12 +22,10 @@ import {
   createKnowledgeBuild,
   getKnowledgeCatalogSnapshot
 } from '../../../../../utils/knowledge/catalog'
-import { datastorePaths } from '../../../../../utils/paths'
+import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
 
-const SERVICE = '_test_admin_knowledge'
-const ROOT = datastorePaths(SERVICE).root
-const originalService = Bun.env['SERVICE']
+const paths = testDatastorePaths('admin_knowledge')
 const originalBearer = Bun.env['AUTH_BEARER']
 const ADMIN: User = {
   email: 'admin@example.org',
@@ -79,9 +77,9 @@ const request = (path: string, init: RequestInit = {}, actor: 'admin' | 'user' |
   })
 
 beforeAll(async () => {
-  Bun.env['SERVICE'] = SERVICE
+  setDatastoreRoot(paths.root)
   Bun.env['AUTH_BEARER'] = 'knowledge-api-test-token'
-  await rm(ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
   await setup()
 })
 
@@ -92,8 +90,7 @@ beforeEach(() => {
 })
 
 afterAll(async () => {
-  await rm(ROOT, { recursive: true, force: true })
-  Bun.env['SERVICE'] = originalService
+  await rm(paths.root, { recursive: true, force: true })
   Bun.env['AUTH_BEARER'] = originalBearer
 })
 

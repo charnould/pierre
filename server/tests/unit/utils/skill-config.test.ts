@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 
+import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import {
   assertCanonicalSkillId,
   assertMatchingSkillConfig,
@@ -39,15 +40,15 @@ describe('skill config request boundary', () => {
     )
   })
 
-  it('keeps stable uploads contained under the configured service root', () => {
-    const previousService = Bun.env['SERVICE']
-    Bun.env['SERVICE'] = '_skill_path_test'
+  it('keeps stable uploads contained under the datastore root', () => {
+    const paths = testDatastorePaths('skill_path')
+    setDatastoreRoot(paths.root)
     try {
-      expect(getUploadsPath('ticket.answer-ticket')).toEndWith(
-        '/datastores/_skill_path_test/uploads/ticket.answer-ticket'
+      expect(getUploadsPath('ticket.answer-ticket')).toBe(
+        `${paths.root}/uploads/ticket.answer-ticket`
       )
-      expect(getConversationUploadsPath('ticket.answer-ticket', CONV_ID)).toEndWith(
-        `/datastores/_skill_path_test/uploads/ticket.answer-ticket/${CONV_ID}`
+      expect(getConversationUploadsPath('ticket.answer-ticket', CONV_ID)).toBe(
+        `${paths.root}/uploads/ticket.answer-ticket/${CONV_ID}`
       )
       expect(getConversationUploadsMountPath(CONV_ID)).toBe(`/knowledge/_uploads/${CONV_ID}`)
       expect(() => getUploadsPath('../escape')).toThrow('Resolved path escapes its root')
@@ -55,8 +56,7 @@ describe('skill config request boundary', () => {
         'conv_id must be a canonical UUID'
       )
     } finally {
-      if (previousService === undefined) delete Bun.env['SERVICE']
-      else Bun.env['SERVICE'] = previousService
+      setDatastoreRoot(null)
     }
   })
 })

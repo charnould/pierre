@@ -8,12 +8,10 @@ import { controller } from '../../../../../controllers/desktop/repayment/get.tim
 import type { User } from '../../../../../utils/_schema'
 import { create_activity, create_trusted_activity } from '../../../../../utils/activities/write'
 import { import_json_rows } from '../../../../../utils/knowledge/sqlite-table-import'
-import { datastorePaths } from '../../../../../utils/paths'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
 
-const SERVICE = '_test_repayment_timeline'
-const originalService = Bun.env['SERVICE']
-const paths = datastorePaths(SERVICE)
+const paths = testDatastorePaths('repayment_timeline')
 const user: User = {
   email: 'alice@example.org',
   isAdministrator: false,
@@ -30,7 +28,7 @@ app.use('*', async (context, next) => {
 app.get('/desktop/repayment/timeline', controller)
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 beforeEach(async () => {
@@ -61,8 +59,7 @@ afterEach(async () => {
 })
 
 afterAll(() => {
-  if (originalService === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = originalService
+  setDatastoreRoot(null)
 })
 
 const request = (query: string, authenticated = true) =>

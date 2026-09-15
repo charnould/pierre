@@ -9,13 +9,11 @@ import { controller as postActivity } from '../../../controllers/desktop/activit
 import type { User } from '../../../utils/_schema'
 import { list_activities } from '../../../utils/activities/query'
 import { create_activity, delete_activity, patch_activity } from '../../../utils/activities/write'
-import { datastorePaths } from '../../../utils/paths'
+import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 
-const SERVICE = '_test_repayment_plan_activities'
-const ROOT = datastorePaths(SERVICE).root
-const DATABASE = datastorePaths(SERVICE).database
-const originalService = Bun.env['SERVICE']
+const paths = testDatastorePaths('repayment_plan_activities')
+const DATABASE = paths.database
 const ALICE = 'alice@example.org'
 
 const plan_content = (amount = 1_200, note?: string): string =>
@@ -70,17 +68,16 @@ const snapshots = (threadId: string) =>
   )
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 afterAll(async () => {
-  await rm(ROOT, { recursive: true, force: true })
-  if (originalService === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = originalService
+  await rm(paths.root, { recursive: true, force: true })
+  setDatastoreRoot(null)
 })
 
 beforeEach(async () => {
-  await rm(ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
   await setup()
 })
 

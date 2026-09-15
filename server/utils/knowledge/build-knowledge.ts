@@ -256,7 +256,6 @@ const build_readme = (db: Database): string | null => {
  * - Source files are deleted after ingestion; `donnees_universelles/` dir is removed
  *
  * @param config_id - Config directory name (e.g. `'default'`).
- * @param service - Service name (e.g. `'pierre-production'`).
  */
 const build_database_for_config = async (
   config_id: string,
@@ -378,7 +377,7 @@ const build_database_for_config = async (
 
 /**
  * Builds a SQLite knowledge database for every config directory found under
- * the current service's knowledge directory.
+ * the knowledge directory.
  *
  * Config directories are processed in parallel.
  */
@@ -424,10 +423,9 @@ export const build_knowledge_databases = async (
 
 export const publishKnowledgeMirrors = async (
   artifacts: KnowledgeBuildArtifacts,
-  service?: string,
   previouslyManaged: readonly string[] = []
 ): Promise<void> => {
-  const paths = datastorePaths(service)
+  const paths = datastorePaths()
   await migrate_datastore(paths.database)
   const db = new Database(paths.database)
   try {

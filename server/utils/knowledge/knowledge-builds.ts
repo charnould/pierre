@@ -17,8 +17,7 @@ export const createKnowledgeBuild = (
   requestedBy: string | null,
   mirrorTables: KnowledgeBuildDocument['mirrorTables'] = [],
   ownerId = 'local',
-  items: KnowledgeBuildDocument['items'] = [],
-  service?: string
+  items: KnowledgeBuildDocument['items'] = []
 ): KnowledgeBuild => {
   const now = new Date().toISOString()
   const document = KnowledgeBuildDocumentSchema.parse({
@@ -35,7 +34,7 @@ export const createKnowledgeBuild = (
     diagnostics: []
   })
   const id = Bun.randomUUIDv7()
-  return withKnowledgeDb(service, (db) => {
+  return withKnowledgeDb((db) => {
     db.run(
       "INSERT INTO knowledge_records (id, kind, document, created_at, updated_at) VALUES (?, 'build', ?, ?, ?)",
       [id, JSON.stringify(document), now, now]
@@ -44,14 +43,14 @@ export const createKnowledgeBuild = (
   })
 }
 
-export const getKnowledgeBuild = (id: string, service?: string): KnowledgeBuild | null =>
-  withKnowledgeDb(service, (db) => {
+export const getKnowledgeBuild = (id: string): KnowledgeBuild | null =>
+  withKnowledgeDb((db) => {
     const row = getRecord(db, id, 'build')
     return row ? parseBuildRow(row) : null
   })
 
-export const getActiveKnowledgeBuild = (service?: string): KnowledgeBuild | null =>
-  withKnowledgeDb(service, (db) => {
+export const getActiveKnowledgeBuild = (): KnowledgeBuild | null =>
+  withKnowledgeDb((db) => {
     const row = db
       .query<KnowledgeRecordRow, []>(
         `SELECT id, kind, document, created_at, updated_at
@@ -66,10 +65,9 @@ export const getActiveKnowledgeBuild = (service?: string): KnowledgeBuild | null
 
 export const updateKnowledgeBuild = (
   id: string,
-  update: Partial<KnowledgeBuildDocument>,
-  service?: string
+  update: Partial<KnowledgeBuildDocument>
 ): KnowledgeBuild | null =>
-  withKnowledgeDb(service, (db) =>
+  withKnowledgeDb((db) =>
     db
       .transaction(() => {
         const row = getRecord(db, id, 'build')
@@ -84,10 +82,9 @@ export const completeKnowledgeBuild = (
   update: Pick<
     KnowledgeBuildDocument,
     'catalogFingerprint' | 'diagnostics' | 'items' | 'mirrorTables'
-  >,
-  service?: string
+  >
 ): KnowledgeBuild | null =>
-  withKnowledgeDb(service, (db) =>
+  withKnowledgeDb((db) =>
     db
       .transaction(() => {
         const row = getRecord(db, id, 'build')
@@ -103,8 +100,8 @@ export const completeKnowledgeBuild = (
       .immediate()
   )
 
-export const listKnowledgeBuilds = (service?: string): KnowledgeBuild[] =>
-  withKnowledgeDb(service, (db) =>
+export const listKnowledgeBuilds = (): KnowledgeBuild[] =>
+  withKnowledgeDb((db) =>
     db
       .query<KnowledgeRecordRow, []>(
         "SELECT id, kind, document, created_at, updated_at FROM knowledge_records WHERE kind = 'build' ORDER BY created_at DESC"
@@ -113,9 +110,9 @@ export const listKnowledgeBuilds = (service?: string): KnowledgeBuild[] =>
       .map(parseBuildRow)
   )
 
-export const purgeOldKnowledgeBuilds = (service?: string, now = new Date()): number => {
+export const purgeOldKnowledgeBuilds = (now = new Date()): number => {
   const cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
-  return withKnowledgeDb(service, (db) => {
+  return withKnowledgeDb((db) => {
     return db.run(
       `DELETE FROM knowledge_records
        WHERE kind = 'build'
@@ -127,12 +124,11 @@ export const purgeOldKnowledgeBuilds = (service?: string, now = new Date()): num
 }
 
 export const failInterruptedKnowledgeBuilds = (
-  service?: string,
   staleBefore = new Date(Date.now() - 5 * 60 * 1000)
 ): number => {
   const now = new Date().toISOString()
   const cutoff = staleBefore.toISOString()
-  return withKnowledgeDb(service, (db) => {
+  return withKnowledgeDb((db) => {
     const rows = db
       .query<KnowledgeRecordRow, []>(
         `SELECT id, kind, document, created_at, updated_at

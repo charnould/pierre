@@ -9,8 +9,6 @@ server/datastores/
 server/temp/
 
 .env
-.env.production
-.env.staging
 
 config/smolvm/pierre-arm64
 config/smolvm/pierre-arm64.smolmachine
@@ -18,5 +16,4 @@ config/smolvm/pierre-arm64.smolmachine
 .cursor/
 .agents/
 
-.DS_Store
 .DS_Store

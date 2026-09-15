@@ -13,14 +13,13 @@ import {
   list_bulk_operations,
   update_bulk_operation
 } from '../../../../utils/bulk/store'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { setup } from '../../../../utils/setup'
 
-const TEST_SERVICE = '_test_bulk_operations_store'
-const ORIGINAL_SERVICE = Bun.env['SERVICE']
-const DATASTORE_ROOT = `datastores/${TEST_SERVICE}`
+const paths = testDatastorePaths('bulk_operations_store')
 
 function seed_mouvements() {
-  const db = new Database(`${DATASTORE_ROOT}/datastore.sqlite`)
+  const db = new Database(`${paths.root}/datastore.sqlite`)
   db.run(`
     CREATE TABLE comptes_locataires (
       id_locataire TEXT,
@@ -58,23 +57,22 @@ const body = {
 }
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = TEST_SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 afterAll(async () => {
-  if (ORIGINAL_SERVICE === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = ORIGINAL_SERVICE
-  await rm(DATASTORE_ROOT, { recursive: true, force: true })
+  setDatastoreRoot(null)
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 beforeEach(async () => {
-  await mkdir(DATASTORE_ROOT, { recursive: true })
+  await mkdir(paths.root, { recursive: true })
   await setup()
   seed_mouvements()
 })
 
 afterEach(async () => {
-  await rm(DATASTORE_ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 describe('bulk store', () => {

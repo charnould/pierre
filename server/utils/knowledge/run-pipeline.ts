@@ -105,10 +105,9 @@ const publishDatabases = async (
 
 export const runKnowledgePipeline = async (
   buildId: string,
-  service?: string,
   previouslyManagedMirrors: readonly string[] = []
 ): Promise<KnowledgePipelineResult> => {
-  const paths = datastorePaths(service)
+  const paths = datastorePaths()
   const stagingRoot = join(paths.knowledge, '.staging', buildId)
   const diagnostics: KnowledgeDiagnostic[] = []
   let itemKeys: string[] = []
@@ -117,16 +116,16 @@ export const runKnowledgePipeline = async (
   await mkdir(stagingRoot, { recursive: true })
 
   try {
-    const snapshot = getKnowledgeCatalogSnapshot(service)
+    const snapshot = getKnowledgeCatalogSnapshot()
     itemKeys = assignedKnowledgeItemKeys(snapshot)
     const profiles = await listKnowledgeProfiles()
     const knownIds = profiles.map((profile) => profile.id)
     assertNoOutputCollisions(snapshot.sources, new Set(knownIds))
     await setup_knowledge_directories(stagingRoot, profiles)
-    const entries = flattenKnowledgeEntries(snapshot, service, knownIds)
+    const entries = flattenKnowledgeEntries(snapshot, knownIds)
     const [{ anomalies }, { mirrors: coreMirrors, anomalies: coreAnomalies }] = await Promise.all([
       ingest_files(entries, stagingRoot, profiles),
-      loadCoreDataMirrors(snapshot, service)
+      loadCoreDataMirrors(snapshot)
     ])
     const seenAnomalies = new Set<string>()
     for (const anomaly of [...anomalies, ...coreAnomalies]) {
@@ -153,13 +152,13 @@ export const runKnowledgePipeline = async (
     }
     for (const candidate of artifacts.databases) validateDatabase(candidate.path)
 
-    if (getKnowledgeCatalogSnapshot(service).fingerprint !== snapshot.fingerprint) {
+    if (getKnowledgeCatalogSnapshot().fingerprint !== snapshot.fingerprint) {
       throw new KnowledgeCatalogChangedError()
     }
 
     const publication = await publishDatabases(artifacts, paths.knowledge)
     try {
-      await publishKnowledgeMirrors(artifacts, service, previouslyManagedMirrors)
+      await publishKnowledgeMirrors(artifacts, previouslyManagedMirrors)
       await publication.commit()
     } catch (error) {
       await publication.rollback()

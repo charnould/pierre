@@ -44,16 +44,12 @@
     "knip:production": "knip --config ./config/knip.jsonc --no-config-hints --production --include files,dependencies",
     "docs": "bun --filter @pierre/docs build",
     "release": "bash config/release.sh",
-    "------------------ STAGING ------------------": "------------------",
-    "staging:logs": "bun --env-file=.env.staging run kamal app logs -c config/deploy.yml",
-    "staging:setup": "bun --env-file=.env.staging run kamal setup -c config/deploy.yml",
-    "staging:deploy": "bun --env-file=.env.staging run kamal deploy -c config/deploy.yml",
-    "staging:console": "bun --env-file=.env.staging run kamal app exec -i bash -c config/deploy.yml",
-    "------------------ PRODUCTION ------------------": "------------------",
-    "prod:logs": "bun --env-file=.env.production run kamal app logs -c config/deploy.yml",
-    "prod:setup": "bun --env-file=.env.production run kamal setup -c config/deploy.yml",
-    "prod:deploy": "bun --env-file=.env.production run kamal deploy -c config/deploy.yml",
-    "prod:console": "bun --env-file=.env.production run kamal app exec -i bash -c config/deploy.yml"
+    "pierre:version": "bun run server/utils/update-pierre.ts",
+    "------------------ DEPLOY ------------------": "------------------",
+    "deploy:logs": "bun --env-file=.env run kamal app logs -c config/deploy.yml",
+    "deploy:setup": "bun --env-file=.env run kamal setup -c config/deploy.yml",
+    "deploy": "bun --env-file=.env run kamal deploy -c config/deploy.yml",
+    "deploy:console": "bun --env-file=.env run kamal app exec -i bash -c config/deploy.yml"
   },
   "devDependencies": {
     "@shadcn/lint": "^0.1.0",

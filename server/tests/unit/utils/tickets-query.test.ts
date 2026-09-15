@@ -3,6 +3,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { mkdir, rm } from 'node:fs/promises'
 
 import { import_json_rows } from '../../../utils/knowledge/sqlite-table-import'
+import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 import {
   DEFAULT_TICKETS_SORT,
@@ -13,10 +14,8 @@ import {
   TicketsSchemaError
 } from '../../../utils/tickets-query'
 
-const TEST_SERVICE = '_test_tickets_query_svc'
-const ORIGINAL_SERVICE = Bun.env['SERVICE']
-const DATASTORE_ROOT = `datastores/${TEST_SERVICE}`
-const DATASTORE_SQLITE = `${DATASTORE_ROOT}/datastore.sqlite`
+const paths = testDatastorePaths('tickets_query')
+const DATASTORE_SQLITE = `${paths.root}/datastore.sqlite`
 
 export const FIXTURE_ROWS = [
   {
@@ -90,25 +89,21 @@ const insert_ticket_bucket = (
 }
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = TEST_SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 afterAll(async () => {
-  if (ORIGINAL_SERVICE === undefined) {
-    delete Bun.env['SERVICE']
-  } else {
-    Bun.env['SERVICE'] = ORIGINAL_SERVICE
-  }
-  await rm(DATASTORE_ROOT, { recursive: true, force: true })
+  setDatastoreRoot(null)
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 afterEach(async () => {
-  await rm(DATASTORE_ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 describe('list_tickets', () => {
   beforeEach(async () => {
-    await mkdir(DATASTORE_ROOT, { recursive: true })
+    await mkdir(paths.root, { recursive: true })
     await setup()
   })
 
@@ -305,7 +300,7 @@ describe('list_tickets', () => {
 
 describe('get_ticket_column_facets', () => {
   beforeEach(async () => {
-    await mkdir(DATASTORE_ROOT, { recursive: true })
+    await mkdir(paths.root, { recursive: true })
   })
 
   it('returns distinct motif values from full table', async () => {

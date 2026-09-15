@@ -4,34 +4,30 @@ import { mkdir, rm } from 'node:fs/promises'
 
 import { user_destinataire } from '../../../utils/activities/rows'
 import { create_activity } from '../../../utils/activities/write'
-import { datastorePaths } from '../../../utils/paths'
+import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 
-const TEST_SERVICE = '_test_activities_schema'
-const ORIGINAL_SERVICE = Bun.env['SERVICE']
-const TEST_PATHS = datastorePaths(TEST_SERVICE)
-const DATASTORE_ROOT = TEST_PATHS.root
-const DATASTORE_PATH = TEST_PATHS.database
+const paths = testDatastorePaths('activities_schema')
+const DATASTORE_PATH = paths.database
 const ALICE = 'alice@exemple.fr'
 const user = (email: string) => user_destinataire(email)
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = TEST_SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 afterAll(async () => {
-  if (ORIGINAL_SERVICE === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = ORIGINAL_SERVICE
-  await rm(DATASTORE_ROOT, { recursive: true, force: true })
+  setDatastoreRoot(null)
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 beforeEach(async () => {
-  await mkdir(DATASTORE_ROOT, { recursive: true })
+  await mkdir(paths.root, { recursive: true })
   await setup()
 })
 
 afterEach(async () => {
-  await rm(DATASTORE_ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 describe('activites schema', () => {

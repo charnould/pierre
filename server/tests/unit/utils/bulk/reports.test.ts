@@ -25,12 +25,11 @@ import {
 } from '../../../../utils/bulk/store'
 import { create_outbound } from '../../../../utils/communications/storage'
 import { insert_contact_if_absent } from '../../../../utils/contacts'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { setup } from '../../../../utils/setup'
 
-const TEST_SERVICE = '_test_bulk_reports'
-const ORIGINAL_SERVICE = Bun.env['SERVICE']
-const ROOT = `datastores/${TEST_SERVICE}`
-const DB_PATH = `${ROOT}/datastore.sqlite`
+const paths = testDatastorePaths('bulk_reports')
+const DB_PATH = `${paths.root}/datastore.sqlite`
 let now = new Date(Date.now() - 60_000)
 
 const drainAll = async (): Promise<void> => {
@@ -86,20 +85,19 @@ const seed = (withRows: boolean): void => {
 }
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = TEST_SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 afterAll(async () => {
-  if (ORIGINAL_SERVICE === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = ORIGINAL_SERVICE
-  await rm(ROOT, { recursive: true, force: true })
+  setDatastoreRoot(null)
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 beforeEach(async () => {
   now = new Date(Date.now() - 60_000)
   set_bulk_clock_for_tests({ now: () => now })
-  await rm(ROOT, { recursive: true, force: true })
-  await mkdir(ROOT, { recursive: true })
+  await rm(paths.root, { recursive: true, force: true })
+  await mkdir(paths.root, { recursive: true })
   await setup()
 })
 
@@ -107,7 +105,7 @@ afterEach(async () => {
   stop_bulk_scheduler()
   set_bulk_transport_for_tests(null)
   set_bulk_clock_for_tests(null)
-  await rm(ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 describe('bulk reports', () => {

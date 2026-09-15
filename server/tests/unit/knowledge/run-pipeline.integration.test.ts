@@ -9,24 +9,22 @@ import {
   replaceKnowledgeSourceEntries
 } from '../../../utils/knowledge/catalog'
 import { runKnowledgePipeline } from '../../../utils/knowledge/run-pipeline'
-import { datastorePaths } from '../../../utils/paths'
+import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 
-const TEST_SERVICE = '_test_pipeline_svc'
+const paths = testDatastorePaths('pipeline')
 const TEST_PROFILE = 'testing_purpose_1'
-const ORIGINAL_SERVICE = Bun.env['SERVICE']
 
 const knowledgeDatabase = () => `${datastorePaths().knowledge}/${TEST_PROFILE}/db.sqlite`
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = TEST_SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 afterAll(() => {
-  Bun.env['SERVICE'] = ORIGINAL_SERVICE
+  setDatastoreRoot(null)
 })
 
 beforeEach(async () => {
-  const paths = datastorePaths()
   await mkdir(paths.files, { recursive: true })
   await mkdir(paths.knowledge, { recursive: true })
   await migrate_datastore(paths.database)
@@ -38,7 +36,6 @@ afterEach(async () => {
 
 describe('knowledge pipeline', () => {
   it('indexes an assigned Markdown source', async () => {
-    const paths = datastorePaths()
     await Bun.write(`${paths.files}/guide.md`, '# Guide test\n\nContenu propriétaire.')
     const source = insertKnowledgeSource({
       storageName: 'guide.md',
@@ -71,7 +68,6 @@ describe('knowledge pipeline', () => {
   }, 20_000)
 
   it('publishes Core CSV PII only to the datastore', async () => {
-    const paths = datastorePaths()
     const contract = CORE_DATA_CONTRACT.find(({ table }) => table === 'lots_locatifs')!
     const csv = 'id_lot;email_locataire;demande_sne\nLOT-1;locataire@example.org;SNE-1'
     await Bun.write(`${paths.files}/core_lots_locatifs.csv`, csv)
@@ -113,7 +109,6 @@ describe('knowledge pipeline', () => {
   }, 20_000)
 
   it('publishes an unassigned Core CSV to the datastore only', async () => {
-    const paths = datastorePaths()
     const contract = CORE_DATA_CONTRACT.find(({ table }) => table === 'travaux')!
     const csv = 'id_travaux;contexte\nTRV-1;toiture'
     await Bun.write(`${paths.files}/core_travaux.csv`, csv)
@@ -158,7 +153,6 @@ describe('knowledge pipeline', () => {
   }, 20_000)
 
   it('publishes Core CSV assigned only to a module without skills', async () => {
-    const paths = datastorePaths()
     const contract = CORE_DATA_CONTRACT.find(({ table }) => table === 'comptes_locataires')!
     const csv = 'id_locataire;id_client;montant_en_euros\nLOC-1;CLI-1;120'
     await Bun.write(`${paths.files}/core_comptes_locataires.csv`, csv)
@@ -201,7 +195,6 @@ describe('knowledge pipeline', () => {
   }, 20_000)
 
   it('does not index an unassigned source', async () => {
-    const paths = datastorePaths()
     await Bun.write(`${paths.files}/private.md`, '# Non affecté')
     insertKnowledgeSource({
       storageName: 'private.md',
@@ -262,7 +255,6 @@ describe('knowledge pipeline', () => {
   }, 20_000)
 
   it('keeps the live database when source validation fails', async () => {
-    const paths = datastorePaths()
     await Bun.write(`${paths.files}/guide.md`, '# Version valide')
     const source = insertKnowledgeSource({
       storageName: 'guide.md',

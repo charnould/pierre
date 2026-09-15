@@ -9,26 +9,24 @@ import {
 import { preview_message, preview_query } from '../../../../utils/bulk/preview'
 import { select_fallback_route } from '../../../../utils/bulk/route-policy'
 import { insert_contact_if_absent } from '../../../../utils/contacts'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { setup } from '../../../../utils/setup'
 
-const TEST_SERVICE = '_test_bulk_operations_preview'
-const ORIGINAL_SERVICE = Bun.env['SERVICE']
-const DATASTORE_ROOT = `datastores/${TEST_SERVICE}`
+const paths = testDatastorePaths('bulk_operations_preview')
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = TEST_SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 afterAll(async () => {
-  if (ORIGINAL_SERVICE === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = ORIGINAL_SERVICE
-  await rm(DATASTORE_ROOT, { recursive: true, force: true })
+  setDatastoreRoot(null)
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 beforeEach(async () => {
-  await mkdir(DATASTORE_ROOT, { recursive: true })
+  await mkdir(paths.root, { recursive: true })
   await setup()
-  const db = new Database(`${DATASTORE_ROOT}/datastore.sqlite`)
+  const db = new Database(`${paths.root}/datastore.sqlite`)
   db.run(`
     CREATE TABLE comptes_locataires (
       id_locataire TEXT, id_client TEXT, id_lot TEXT, date_exigibilite TEXT,
@@ -58,7 +56,7 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
-  await rm(DATASTORE_ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 const fallback = (): BulkOperationDefinition => ({

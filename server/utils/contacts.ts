@@ -158,25 +158,24 @@ const months_ago = (months: number, from: Date): Date => {
 }
 
 /** Reset stale `sms_compatible` phones to `rcs_compatible` (same assumption as ingest). */
-export const refresh_stale_sms_contacts = (db: Database, now: Date = new Date()): number => {
-  const checked_at = activity_timestamp(now)
-  const cutoff = activity_timestamp(months_ago(RCS_RECHECK_MONTHS, now))
-  return db.run(
-    `UPDATE contacts
-     SET status = 'rcs_compatible', checked_at = ?
-     WHERE status = 'sms_compatible'
-       AND checked_at <= ?
-       AND value NOT LIKE '%@%'`,
-    [checked_at, cutoff]
-  ).changes
-}
-
-/** Opens the service datastore, refreshes stale SMS rows, then closes. */
-export const refresh_stale_sms_contacts_for_service = (): number => {
-  const db = new Database(datastore_path())
+export const refresh_stale_sms_contacts = (db?: Database, now: Date = new Date()): number => {
+  const run = (database: Database) => {
+    const checked_at = activity_timestamp(now)
+    const cutoff = activity_timestamp(months_ago(RCS_RECHECK_MONTHS, now))
+    return database.run(
+      `UPDATE contacts
+       SET status = 'rcs_compatible', checked_at = ?
+       WHERE status = 'sms_compatible'
+         AND checked_at <= ?
+         AND value NOT LIKE '%@%'`,
+      [checked_at, cutoff]
+    ).changes
+  }
+  if (db) return run(db)
+  const opened = new Database(datastore_path())
   try {
-    return refresh_stale_sms_contacts(db)
+    return run(opened)
   } finally {
-    db.close()
+    opened.close()
   }
 }

@@ -14,11 +14,10 @@ import { controller as postExecute } from '../../../../../controllers/desktop/bu
 import { controller as postPreview } from '../../../../../controllers/desktop/bulk-operations/post.preview-query'
 import { execute_bulk_operation } from '../../../../../utils/bulk/send'
 import { create_bulk_operation } from '../../../../../utils/bulk/store'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
 
-const TEST_SERVICE = '_test_bulk_report_controllers'
-const ORIGINAL_SERVICE = Bun.env['SERVICE']
-const ROOT = `datastores/${TEST_SERVICE}`
+const paths = testDatastorePaths('bulk_report_controllers')
 
 const app = new Hono()
 app.use('*', async (c, next) => {
@@ -31,19 +30,18 @@ app.post('/desktop/bulk-operations/preview-query', postPreview)
 app.post('/desktop/bulk-operations/:id/execute', postExecute)
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = TEST_SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 afterAll(async () => {
-  if (ORIGINAL_SERVICE === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = ORIGINAL_SERVICE
-  await rm(ROOT, { recursive: true, force: true })
+  setDatastoreRoot(null)
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 beforeEach(async () => {
-  await mkdir(ROOT, { recursive: true })
+  await mkdir(paths.root, { recursive: true })
   await setup()
-  const db = new Database(`${ROOT}/datastore.sqlite`)
+  const db = new Database(`${paths.root}/datastore.sqlite`)
   db.run(`
     CREATE TABLE comptes_locataires (
       id_locataire TEXT,
@@ -57,7 +55,7 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
-  await rm(ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 describe('bulk report controllers', () => {

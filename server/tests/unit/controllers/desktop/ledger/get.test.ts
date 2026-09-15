@@ -7,12 +7,10 @@ import { Hono } from 'hono'
 import { controller as getLedger } from '../../../../../controllers/desktop/ledger/get'
 import { authenticate } from '../../../../../utils/authenticate-user'
 import { import_json_rows } from '../../../../../utils/knowledge/sqlite-table-import'
-import { datastorePaths } from '../../../../../utils/paths'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
 
-const SERVICE = '_test_ledger_controller'
-const originalService = Bun.env['SERVICE']
-const paths = datastorePaths(SERVICE)
+const paths = testDatastorePaths('ledger_controller')
 
 const route = new Hono()
 route.get('/desktop/ledger', authenticate, getLedger)
@@ -22,7 +20,7 @@ controller.get('/desktop/ledger', getLedger)
 controller.get('/desktop/ledger/meta', getLedger)
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 beforeEach(async () => {
@@ -46,8 +44,7 @@ afterEach(async () => {
 })
 
 afterAll(() => {
-  if (originalService === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = originalService
+  setDatastoreRoot(null)
 })
 
 describe('GET /desktop/ledger', () => {

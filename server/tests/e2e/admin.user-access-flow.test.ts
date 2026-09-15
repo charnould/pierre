@@ -12,7 +12,6 @@ import {
 
 // Initial setup
 beforeAll(async () => {
-  Bun.env['SERVICE'] = 'pierre-production'
   await deleteAllUsers()
 
   await saveUser({

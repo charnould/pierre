@@ -17,14 +17,12 @@ import {
   listKnowledgeBuilds,
   replaceKnowledgeSourceEntries
 } from '../../../utils/knowledge/catalog'
-import { datastorePaths } from '../../../utils/paths'
+import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 
-const SERVICE = '_test_knowledge_coordinator'
-const previousService = Bun.env['SERVICE']
+const paths = testDatastorePaths('knowledge_coordinator')
 
 beforeAll(async () => {
-  Bun.env['SERVICE'] = SERVICE
-  const paths = datastorePaths()
+  setDatastoreRoot(paths.root)
   await mkdir(paths.files, { recursive: true })
   await mkdir(paths.knowledge, { recursive: true })
   await migrate_datastore(paths.database)
@@ -32,7 +30,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await rm(datastorePaths().root, { recursive: true, force: true })
-  Bun.env['SERVICE'] = previousService
+  setDatastoreRoot(null)
 })
 
 const waitForBuild = async (id: string) => {
@@ -106,7 +104,7 @@ it('cleans abandoned staging directories without touching an active build', asyn
   await cleanupKnowledgeStaging()
   expect(await readdir(stagingRoot)).toEqual([active.id])
 
-  failInterruptedKnowledgeBuilds(undefined, new Date(Date.now() + 1000))
+  failInterruptedKnowledgeBuilds(new Date(Date.now() + 1000))
   await cleanupKnowledgeStaging()
   expect(await readdir(stagingRoot)).toEqual([])
 })

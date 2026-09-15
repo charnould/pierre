@@ -6,13 +6,10 @@ import { Hono } from 'hono'
 
 import { controller as put_desktop_tickets } from '../../../../../controllers/desktop/tickets/put'
 import type { User } from '../../../../../utils/_schema'
-import { datastorePaths } from '../../../../../utils/paths'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
 
-const TEST_SERVICE = '_test_put_tickets_svc'
-const ORIGINAL_SERVICE = Bun.env['SERVICE']
-const TEST_PATHS = datastorePaths(TEST_SERVICE)
-const DATASTORE_ROOT = TEST_PATHS.root
+const paths = testDatastorePaths('put_tickets')
 
 const TEST_USER: User = {
   email: 'tester@example.com',
@@ -33,19 +30,18 @@ app.put(
 )
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = TEST_SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 afterAll(async () => {
-  if (ORIGINAL_SERVICE === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = ORIGINAL_SERVICE
-  await rm(DATASTORE_ROOT, { recursive: true, force: true })
+  setDatastoreRoot(null)
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 beforeEach(async () => {
-  await mkdir(DATASTORE_ROOT, { recursive: true })
+  await mkdir(paths.root, { recursive: true })
   await setup()
-  const db = new Database(TEST_PATHS.database)
+  const db = new Database(paths.database)
   db.run(`
     CREATE TABLE reclamations (
       id_reclamation TEXT PRIMARY KEY,
@@ -58,7 +54,7 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
-  await rm(DATASTORE_ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 describe('PUT /desktop/tickets', () => {

@@ -6,17 +6,15 @@ import { Hono } from 'hono'
 
 import { controller } from '../../../../../controllers/desktop/ledger/get.facets'
 import { import_json_rows } from '../../../../../utils/knowledge/sqlite-table-import'
-import { datastorePaths } from '../../../../../utils/paths'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
 
-const SERVICE = '_test_ledger_facets_controller'
-const originalService = Bun.env['SERVICE']
-const paths = datastorePaths(SERVICE)
+const paths = testDatastorePaths('ledger_facets_controller')
 const app = new Hono()
 app.get('/desktop/ledger/facets', controller)
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 beforeEach(async () => {
@@ -46,8 +44,7 @@ afterEach(async () => {
 })
 
 afterAll(() => {
-  if (originalService === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = originalService
+  setDatastoreRoot(null)
 })
 
 describe('GET /desktop/ledger/facets', () => {

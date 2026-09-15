@@ -12,7 +12,6 @@ import {
 } from './launch-browser'
 
 beforeAll(async () => {
-  Bun.env['SERVICE'] = 'pierre-production'
   await deleteAllUsers()
   await saveUser({
     email: 'test@test.org',

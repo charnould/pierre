@@ -3,12 +3,10 @@ import { afterAll, afterEach, beforeAll, beforeEach } from 'bun:test'
 import { mkdir, rm } from 'node:fs/promises'
 
 import { user_destinataire } from '../../../utils/activities/rows'
-import { datastorePaths } from '../../../utils/paths'
+import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 
-const TEST_SERVICE = '_test_activites_svc'
-const ORIGINAL_SERVICE = Bun.env['SERVICE']
-const TEST_PATHS = datastorePaths(TEST_SERVICE)
+const TEST_PATHS = testDatastorePaths('activites')
 export const DATASTORE_PATH = TEST_PATHS.database
 
 export const ALICE = 'alice@exemple.fr'
@@ -65,15 +63,14 @@ export const insert_repayment_activity = (
   db.close()
 }
 
-export function use_activities_test_env(service = TEST_SERVICE) {
-  const paths = datastorePaths(service)
+export function use_activities_test_env(label = 'activites') {
+  const paths = testDatastorePaths(label)
   beforeAll(() => {
-    Bun.env['SERVICE'] = service
+    setDatastoreRoot(paths.root)
   })
 
   afterAll(async () => {
-    if (ORIGINAL_SERVICE === undefined) delete Bun.env['SERVICE']
-    else Bun.env['SERVICE'] = ORIGINAL_SERVICE
+    setDatastoreRoot(null)
     await rm(paths.root, { recursive: true, force: true })
   })
 
@@ -86,4 +83,6 @@ export function use_activities_test_env(service = TEST_SERVICE) {
   afterEach(async () => {
     await rm(paths.root, { recursive: true, force: true })
   })
+
+  return paths
 }

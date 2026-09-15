@@ -92,7 +92,7 @@ import { authorizeAdministrator, authorizeAnyModule, authorizeModule } from './u
 import { run_due_automations } from './utils/automations/run'
 import { AVATAR_MAX_UPLOAD_BYTES } from './utils/avatar-image'
 import { start_bulk_scheduler } from './utils/bulk/scheduler/queue'
-import { refresh_stale_sms_contacts_for_service } from './utils/contacts'
+import { refresh_stale_sms_contacts } from './utils/contacts'
 import { initializeKnowledgeBuildCoordinator } from './utils/knowledge/build-coordinator'
 import { CUSTOMIZATION_DIR, CUSTOMIZATION_STATIC_ROOT, SERVER_ROOT } from './utils/paths'
 import { setup } from './utils/setup'
@@ -100,7 +100,7 @@ import { initVmPool } from './utils/vm-pool'
 import { cleanupOrphanedVms } from './utils/vm-registry'
 
 // Prepare the environment and database before starting the app:
-// 1. Create necessary directories for the current service
+// 1. Create necessary datastore directories
 // 2. Initialize SQLite databases
 // 3. Run the knowledge pipeline (initial build on startup)
 // 4. Clean up any orphaned VMs that may be running from previous sessions
@@ -161,7 +161,7 @@ app.use(
 // Cronjob
 // Runs every day at 4:00 AM
 Bun.cron('0 4 * * *', async () => {
-  refresh_stale_sms_contacts_for_service()
+  refresh_stale_sms_contacts()
 })
 
 // Automations due-poll every minute

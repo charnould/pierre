@@ -297,7 +297,6 @@ export async function* streamCopilot(
   console.log(`[AGENT] New request`)
   console.log(`[AGENT]   conv_id  : ${convId}`)
   console.log(`[AGENT]   config   : ${configId}`)
-  console.log(`[AGENT]   SERVICE  : ${Bun.env['SERVICE']}`)
   console.log(`[AGENT]   model    : ${model}`)
   console.log(`[AGENT]   prompt   : "${prompt}"`)
   if (images?.length) {

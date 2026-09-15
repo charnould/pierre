@@ -11,12 +11,10 @@ import {
   save_topic,
   score_conversation
 } from '../../../utils/handle-conversation'
-import { datastorePaths } from '../../../utils/paths'
+import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 
-const TEST_SERVICE = '_test_handle_conversation'
-const ORIGINAL_SERVICE = Bun.env['SERVICE']
-const TEST_PATHS = datastorePaths(TEST_SERVICE)
+const paths = testDatastorePaths('handle_conversation')
 const config = (await import(`../../../../customization/chatbots/default/config`)).default
 
 // Simulated responses for test cases
@@ -45,17 +43,16 @@ const c2_r1 = await AIContext.parseAsync({
 })
 
 beforeAll(async () => {
-  Bun.env['SERVICE'] = TEST_SERVICE
-  await rm(TEST_PATHS.root, { recursive: true, force: true })
+  setDatastoreRoot(paths.root)
+  await rm(paths.root, { recursive: true, force: true })
   await setup()
-  using db = new Database(TEST_PATHS.database)
+  using db = new Database(paths.database)
   db.run('DELETE FROM conversations')
 })
 afterAll(async () => {
   setSystemTime()
-  if (ORIGINAL_SERVICE === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = ORIGINAL_SERVICE
-  await rm(TEST_PATHS.root, { recursive: true, force: true })
+  setDatastoreRoot(null)
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 //

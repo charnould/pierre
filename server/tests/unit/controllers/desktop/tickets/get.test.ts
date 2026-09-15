@@ -6,7 +6,7 @@ import { Hono } from 'hono'
 
 import { controller as get_desktop_tickets } from '../../../../../controllers/desktop/tickets/get'
 import { import_json_rows } from '../../../../../utils/knowledge/sqlite-table-import'
-import { datastorePaths } from '../../../../../utils/paths'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
 import { DEFAULT_TICKETS_SORT } from '../../../../../utils/tickets-query'
 
@@ -41,11 +41,8 @@ const FIXTURE_ROWS = [
   }
 ]
 
-const TEST_SERVICE = '_test_tickets_api_svc'
-const ORIGINAL_SERVICE = Bun.env['SERVICE']
-const TEST_PATHS = datastorePaths(TEST_SERVICE)
-const DATASTORE_ROOT = TEST_PATHS.root
-const DATASTORE_SQLITE = TEST_PATHS.database
+const paths = testDatastorePaths('tickets_api')
+const DATASTORE_SQLITE = paths.database
 
 const app = new Hono()
 app.get('/desktop/tickets', get_desktop_tickets)
@@ -64,25 +61,21 @@ const fetch_tickets = (query = ''): Promise<Response> =>
   Promise.resolve(app.fetch(new Request(`http://localhost/desktop/tickets${query}`)))
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = TEST_SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 afterAll(async () => {
-  if (ORIGINAL_SERVICE === undefined) {
-    delete Bun.env['SERVICE']
-  } else {
-    Bun.env['SERVICE'] = ORIGINAL_SERVICE
-  }
-  await rm(DATASTORE_ROOT, { recursive: true, force: true })
+  setDatastoreRoot(null)
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 beforeEach(async () => {
-  await mkdir(DATASTORE_ROOT, { recursive: true })
+  await mkdir(paths.root, { recursive: true })
   await setup()
 })
 
 afterEach(async () => {
-  await rm(DATASTORE_ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 describe('GET /desktop/tickets', () => {

@@ -13,7 +13,6 @@ import {
 } from './launch-browser'
 
 it('loads the requested chatbot without a profile selector', async () => {
-  Bun.env['SERVICE'] = 'pierre-production'
   await deleteAllUsers()
 
   await saveUser({

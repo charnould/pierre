@@ -35,14 +35,11 @@ const replaceSource = (
   return writeSourceDocument(db, id, document, current.createdAt)
 }
 
-export const listKnowledgeSources = (service?: string): KnowledgeSource[] =>
-  withKnowledgeDb(service, (db) => sourceRows(db).map(parseSourceRow))
+export const listKnowledgeSources = (): KnowledgeSource[] =>
+  withKnowledgeDb((db) => sourceRows(db).map(parseSourceRow))
 
-export const findKnowledgeSourceByStorageName = (
-  storageName: string,
-  service?: string
-): KnowledgeSource | null =>
-  withKnowledgeDb(service, (db) => {
+export const findKnowledgeSourceByStorageName = (storageName: string): KnowledgeSource | null =>
+  withKnowledgeDb((db) => {
     const row = db
       .query<KnowledgeRecordRow, [string]>(
         `SELECT id, kind, document, created_at, updated_at
@@ -53,19 +50,18 @@ export const findKnowledgeSourceByStorageName = (
     return row ? parseSourceRow(row) : null
   })
 
-export const getKnowledgeSource = (id: string, service?: string): KnowledgeSource | null =>
-  withKnowledgeDb(service, (db) => {
+export const getKnowledgeSource = (id: string): KnowledgeSource | null =>
+  withKnowledgeDb((db) => {
     const row = getRecord(db, id, 'source')
     return row ? parseSourceRow(row) : null
   })
 
 export const insertKnowledgeSource = (
   document: KnowledgeSourceDocumentInput,
-  service?: string,
   validProfileIds?: ReadonlySet<string>
 ): KnowledgeSource => {
   const parsed = KnowledgeSourceDocumentSchema.parse(document)
-  return withKnowledgeDb(service, (db) => {
+  return withKnowledgeDb((db) => {
     const now = new Date().toISOString()
     const id = Bun.randomUUIDv7()
     db.transaction(() => {
@@ -89,10 +85,9 @@ export const updateKnowledgeSourceFile = (
     KnowledgeSourceDocument,
     'originalName' | 'fileType' | 'sizeBytes' | 'contentHash' | 'origin'
   > & { entries?: KnowledgeEntry[] },
-  validProfileIds?: ReadonlySet<string>,
-  service?: string
+  validProfileIds?: ReadonlySet<string>
 ): KnowledgeSource | null =>
-  withKnowledgeDb(service, (db) =>
+  withKnowledgeDb((db) =>
     db
       .transaction(() => {
         const sources = sourceRows(db).map(parseSourceRow)
@@ -117,10 +112,9 @@ export const replaceKnowledgeSourceEntries = (
   id: string,
   entries: KnowledgeEntryInput[],
   validProfileIds: ReadonlySet<string>,
-  expectedUpdatedAt?: string,
-  service?: string
+  expectedUpdatedAt?: string
 ): KnowledgeSource | null =>
-  withKnowledgeDb(service, (db) =>
+  withKnowledgeDb((db) =>
     db
       .transaction(() => {
         const sources = sourceRows(db).map(parseSourceRow)
@@ -148,8 +142,8 @@ export const replaceKnowledgeSourceEntries = (
       .immediate()
   )
 
-export const deleteKnowledgeSource = (id: string, service?: string): KnowledgeSource | null =>
-  withKnowledgeDb(service, (db) =>
+export const deleteKnowledgeSource = (id: string): KnowledgeSource | null =>
+  withKnowledgeDb((db) =>
     db
       .transaction(() => {
         const row = getRecord(db, id, 'source')
@@ -160,7 +154,7 @@ export const deleteKnowledgeSource = (id: string, service?: string): KnowledgeSo
       .immediate()
   )
 
-export const getKnowledgeCatalogSnapshot = (service?: string): KnowledgeCatalogSnapshot => {
-  const sources = listKnowledgeSources(service)
+export const getKnowledgeCatalogSnapshot = (): KnowledgeCatalogSnapshot => {
+  const sources = listKnowledgeSources()
   return { sources, fingerprint: catalogFingerprint(sources) }
 }

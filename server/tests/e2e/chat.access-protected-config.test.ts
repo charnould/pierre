@@ -10,7 +10,6 @@ import {
 } from './launch-browser'
 
 it('should grant access to protected config for logged user', async () => {
-  Bun.env['SERVICE'] = 'pierre-production'
   await using view = createE2EView()
 
   await navigate(view, 'http://localhost:3000/?config=testing_purpose_1')

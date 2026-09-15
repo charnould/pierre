@@ -13,6 +13,7 @@ import {
   parse_numeric_string,
   save_formatted_file
 } from '../../../utils/knowledge/ingest-files'
+import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 
 XLSX.set_fs(fs)
 
@@ -177,8 +178,19 @@ describe('normalize_sheet_value', () => {
   })
 })
 
-const SERVICE = Bun.env['SERVICE']!
-const FILES_DIR = `datastores/${SERVICE}/files`
+const paths = testDatastorePaths('ingest_files')
+const FILES_DIR = paths.files
+
+beforeAll(async () => {
+  setDatastoreRoot(paths.root)
+  await mkdir(paths.files, { recursive: true })
+  await mkdir(paths.knowledge, { recursive: true })
+})
+
+afterAll(async () => {
+  setDatastoreRoot(null)
+  await rm(paths.root, { recursive: true, force: true })
+})
 
 function missingFileEntry(): KnowledgeIngestionEntry {
   return {
@@ -263,7 +275,7 @@ describe('save_formatted_file', () => {
 describe('CSV ingestion', () => {
   it('parses semicolon records and preserves an empty schema', async () => {
     const path = `${FILES_DIR}/_test_csv.csv`
-    const knowledgeRoot = `datastores/${SERVICE}/knowledge`
+    const knowledgeRoot = paths.knowledge
     await Bun.write(path, 'nom;description\nalpha;"ligne 1\nligne 2"')
     await mkdir(`${knowledgeRoot}/testing_purpose_1`, { recursive: true })
     try {
@@ -311,7 +323,7 @@ describe('CSV ingestion', () => {
 
 describe('ingest_files parse cache', () => {
   const CACHE_XLSX = `${FILES_DIR}/_test_cache_shared.xlsx`
-  const KNOWLEDGE_ROOT = `datastores/${SERVICE}/knowledge`
+  const KNOWLEDGE_ROOT = paths.knowledge
 
   beforeAll(async () => {
     const sheet = XLSX.utils.aoa_to_sheet([

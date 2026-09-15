@@ -46,7 +46,7 @@ const executeBuild = async (build: KnowledgeBuild): Promise<void> => {
       updateKnowledgeBuild(build.id, { heartbeatAt: new Date().toISOString() })
       let result: Awaited<ReturnType<typeof runKnowledgePipeline>>
       try {
-        result = await runKnowledgePipeline(build.id, undefined, mirrorTables)
+        result = await runKnowledgePipeline(build.id, mirrorTables)
       } catch (error) {
         if (error instanceof KnowledgeCatalogChangedError) continue
         throw error
@@ -131,8 +131,8 @@ export const requestKnowledgeBuild = (
   return build
 }
 
-export const cleanupKnowledgeStaging = async (service?: string): Promise<void> => {
-  const stagingRoot = join(datastorePaths(service).knowledge, '.staging')
+export const cleanupKnowledgeStaging = async (): Promise<void> => {
+  const stagingRoot = join(datastorePaths().knowledge, '.staging')
   const entries = await readdir(stagingRoot, { withFileTypes: true }).catch(
     (error: NodeJS.ErrnoException) => {
       if (error.code === 'ENOENT') return []
@@ -143,7 +143,7 @@ export const cleanupKnowledgeStaging = async (service?: string): Promise<void> =
     entries
       .filter((entry) => entry.isDirectory())
       .map(async (entry) => {
-        const build = getKnowledgeBuild(entry.name, service)
+        const build = getKnowledgeBuild(entry.name)
         if (build?.status === 'queued' || build?.status === 'running') return
         await rm(join(stagingRoot, entry.name), { recursive: true, force: true })
       })
@@ -152,7 +152,7 @@ export const cleanupKnowledgeStaging = async (service?: string): Promise<void> =
 
 export const initializeKnowledgeBuildCoordinator = async (): Promise<KnowledgeBuild> => {
   // A fresh process cannot resume work owned by the previous in-memory worker.
-  failInterruptedKnowledgeBuilds(undefined, new Date(Date.now() + 1))
+  failInterruptedKnowledgeBuilds(new Date(Date.now() + 1))
   await cleanupKnowledgeStaging()
   return requestKnowledgeBuild('startup', null)
 }

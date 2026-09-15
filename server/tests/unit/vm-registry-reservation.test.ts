@@ -1,6 +1,7 @@
 import { describe, expect, spyOn, test } from 'bun:test'
 
 import { processUploadedAttachments, type ProcessedPiAttachments } from '../../utils/ai-attachments'
+import { setDatastoreRoot, testDatastoreRoot } from '../../utils/paths'
 import type { PierreInstance } from '../../utils/smolvm'
 import {
   getConversationUploadsMountPath,
@@ -21,9 +22,8 @@ const CONV_ID = '0198f1a0-7b6c-7000-8000-000000000001'
 
 describe('VM registry conversation reservations', () => {
   test('replaces a mismatched VM immediately without deleting reserved staging', async () => {
-    const previousService = Bun.env['SERVICE']
-    const service = `_vm_reservation_${Bun.randomUUIDv7()}`
-    Bun.env['SERVICE'] = service
+    const root = testDatastoreRoot(`vm-reservation-${Bun.randomUUIDv7()}`)
+    setDatastoreRoot(root)
     const events: string[] = []
     const disposed: string[] = []
     const logSpy = spyOn(console, 'log').mockImplementation(() => {})
@@ -102,11 +102,10 @@ describe('VM registry conversation reservations', () => {
       releaseFirst()
       await staged?.rollback()
       await destroyVm(CONV_ID)
-      await Bun.spawn(['rm', '-rf', `${import.meta.dir}/../../datastores/${service}`]).exited
+      await Bun.spawn(['rm', '-rf', root]).exited
       logSpy.mockRestore()
       warnSpy.mockRestore()
-      if (previousService === undefined) delete Bun.env['SERVICE']
-      else Bun.env['SERVICE'] = previousService
+      setDatastoreRoot(null)
     }
   })
 })

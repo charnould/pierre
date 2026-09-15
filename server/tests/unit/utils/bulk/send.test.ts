@@ -20,31 +20,29 @@ import { create_bulk_operation } from '../../../../utils/bulk/store'
 import { next_status_timestamp } from '../../../../utils/communications/parsing'
 import { create_inbound } from '../../../../utils/communications/storage'
 import { insert_contact_if_absent } from '../../../../utils/contacts'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { setup } from '../../../../utils/setup'
 
-const TEST_SERVICE = '_test_bulk_operations_send'
-const ORIGINAL_SERVICE = Bun.env['SERVICE']
+const paths = testDatastorePaths('bulk_operations_send')
 const ORIGINAL_FETCH = globalThis.fetch
-const DATASTORE_ROOT = `datastores/${TEST_SERVICE}`
 let now = new Date()
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = TEST_SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 afterAll(async () => {
   globalThis.fetch = ORIGINAL_FETCH
-  if (ORIGINAL_SERVICE === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = ORIGINAL_SERVICE
-  await rm(DATASTORE_ROOT, { recursive: true, force: true })
+  setDatastoreRoot(null)
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 beforeEach(async () => {
   now = new Date(Date.now() + 60_000)
   set_bulk_clock_for_tests({ now: () => now })
-  await mkdir(DATASTORE_ROOT, { recursive: true })
+  await mkdir(paths.root, { recursive: true })
   await setup()
-  const db = new Database(`${DATASTORE_ROOT}/datastore.sqlite`)
+  const db = new Database(`${paths.root}/datastore.sqlite`)
   db.run(`
     CREATE TABLE comptes_locataires (
       id_locataire TEXT, id_client TEXT, montant_en_euros REAL,
@@ -68,7 +66,7 @@ afterEach(async () => {
   set_bulk_clock_for_tests(null)
   globalThis.fetch = ORIGINAL_FETCH
   delete Bun.env['CM_PRODUCT_TOKEN']
-  await rm(DATASTORE_ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 describe('bulk execution', () => {
@@ -97,7 +95,7 @@ describe('bulk execution', () => {
       clientCommandId: 'fallback'
     })
     await drain_bulk_jobs(now)
-    const db = new Database(`${DATASTORE_ROOT}/datastore.sqlite`, { readonly: true })
+    const db = new Database(`${paths.root}/datastore.sqlite`, { readonly: true })
     const run = JSON.parse(
       db
         .query<{ contenu: string }, [string]>(
@@ -155,7 +153,7 @@ describe('bulk execution', () => {
     })
     await drain_bulk_jobs(now)
 
-    let db = new Database(`${DATASTORE_ROOT}/datastore.sqlite`, { readonly: true })
+    let db = new Database(`${paths.root}/datastore.sqlite`, { readonly: true })
     expect(
       db
         .query<{ n: number }, [string]>(
@@ -182,7 +180,7 @@ describe('bulk execution', () => {
     now = new Date(now.getTime() + 20_000)
     await drain_bulk_jobs(now)
 
-    db = new Database(`${DATASTORE_ROOT}/datastore.sqlite`, { readonly: true })
+    db = new Database(`${paths.root}/datastore.sqlite`, { readonly: true })
     expect(
       db
         .query<{ type: string }, [string]>(
@@ -206,7 +204,7 @@ describe('bulk execution', () => {
     now = new Date(now.getTime() + 20_000)
     await drain_bulk_jobs(now)
 
-    db = new Database(`${DATASTORE_ROOT}/datastore.sqlite`, { readonly: true })
+    db = new Database(`${paths.root}/datastore.sqlite`, { readonly: true })
     expect(
       db
         .query<{ n: number }, [string]>(
@@ -310,7 +308,7 @@ describe('bulk execution', () => {
       statut: 'delivered',
       occurred_at: next_status_timestamp(second, now)
     })
-    const db = new Database(`${DATASTORE_ROOT}/datastore.sqlite`, { readonly: true })
+    const db = new Database(`${paths.root}/datastore.sqlite`, { readonly: true })
     expect(
       db
         .query<{ report_status: string }, [string]>(
@@ -355,7 +353,7 @@ describe('bulk execution', () => {
       clientCommandId: 'rich-no-token'
     })
     await drain_bulk_jobs(now)
-    const db = new Database(`${DATASTORE_ROOT}/datastore.sqlite`, { readonly: true })
+    const db = new Database(`${paths.root}/datastore.sqlite`, { readonly: true })
     const job = db
       .query<{ report_status: string; outcome: string }, [string]>(
         'SELECT report_status, outcome FROM bulk_jobs WHERE execution_id = ?'
@@ -415,7 +413,7 @@ describe('bulk execution', () => {
     await drain_bulk_jobs(now)
     now = new Date(now.getTime() + 2 * 60 * 60 * 1000 + 1)
     await drain_bulk_jobs(now)
-    const db = new Database(`${DATASTORE_ROOT}/datastore.sqlite`, { readonly: true })
+    const db = new Database(`${paths.root}/datastore.sqlite`, { readonly: true })
     const job = db
       .query<{ report_status: string; outcome: string }, [string]>(
         'SELECT report_status, outcome FROM bulk_jobs WHERE execution_id = ?'
@@ -464,7 +462,7 @@ describe('bulk execution', () => {
     expect(activity).toMatchObject({ type: 'communication.sent', channel: 'email' })
     expect(activity.contenu).toContain('Courriel')
     expect(activity.contenu).toContain('Bonjour Ada')
-    const db = new Database(`${DATASTORE_ROOT}/datastore.sqlite`, { readonly: true })
+    const db = new Database(`${paths.root}/datastore.sqlite`, { readonly: true })
     expect(
       db
         .query<{ n: number }, [string]>(

@@ -1,6 +1,6 @@
 minimum_version: 2.11.0
 
-service: <%= ENV['SERVICE'] %>
+service: pierre
 
 servers:
   web:
@@ -34,8 +34,6 @@ builder:
   arch: amd64
 
 env:
-  clear:
-    SERVICE: <%= ENV['SERVICE'] %>
   secret:
     - AI_TYPE
     - AI_MODEL

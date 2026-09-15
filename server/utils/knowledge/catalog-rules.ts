@@ -110,10 +110,9 @@ export const assignedKnowledgeItemKeys = (snapshot: KnowledgeCatalogSnapshot): s
 
 export const flattenKnowledgeEntries = (
   snapshot: KnowledgeCatalogSnapshot,
-  service?: string,
   knownIds: Iterable<string> = []
 ): KnowledgeIngestionEntry[] => {
-  const root = datastorePaths(service).files
+  const root = datastorePaths().files
   return snapshot.sources.flatMap((source) =>
     source.entries.flatMap((entry) => {
       const coreDataTable = coreDataContractForFilename(source.originalName)?.table ?? null

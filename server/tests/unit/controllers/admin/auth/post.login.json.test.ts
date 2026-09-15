@@ -29,7 +29,6 @@ function pierreCookie(res: Response): string | null {
 
 beforeAll(async () => {
   if (!(await serverUp())) return
-  Bun.env['SERVICE'] = 'pierre-production'
   Bun.env['AUTH_PASSWORD'] ??= 'harry121284'
   await deleteAllUsers()
 

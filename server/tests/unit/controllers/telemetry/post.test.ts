@@ -5,23 +5,21 @@ import { rm } from 'node:fs/promises'
 import { Hono } from 'hono'
 
 import { controller } from '../../../../controllers/telemetry/post'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { setup } from '../../../../utils/setup'
 
-const TEST_SERVICE = '_test_telemetry_post_svc'
-const ORIGINAL_SERVICE = Bun.env['SERVICE']
-const DATASTORE_ROOT = `datastores/${TEST_SERVICE}`
+const paths = testDatastorePaths('telemetry_post')
 
 const app = new Hono()
 app.post('/telemetry', controller)
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = TEST_SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 afterAll(async () => {
-  if (ORIGINAL_SERVICE === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = ORIGINAL_SERVICE
-  await rm(DATASTORE_ROOT, { recursive: true, force: true })
+  setDatastoreRoot(null)
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 beforeEach(async () => {
@@ -29,7 +27,7 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
-  await rm(DATASTORE_ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 describe('POST /telemetry', () => {
@@ -48,7 +46,7 @@ describe('POST /telemetry', () => {
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ ok: true })
 
-    const sql = new Database(`${DATASTORE_ROOT}/datastore.sqlite`)
+    const sql = new Database(`${paths.root}/datastore.sqlite`)
     const rows = sql.query('SELECT host, event FROM telemetry').all() as Array<{
       host: string
       event: string

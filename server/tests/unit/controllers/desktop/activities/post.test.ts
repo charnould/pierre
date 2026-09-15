@@ -10,12 +10,10 @@ import type { User } from '../../../../../utils/_schema'
 import { list_activities } from '../../../../../utils/activities/query'
 import { get_activity } from '../../../../../utils/activities/rows'
 import { create_activity } from '../../../../../utils/activities/write'
-import { datastorePaths } from '../../../../../utils/paths'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
 
-const SERVICE = '_test_activity_write_controllers'
-const ROOT = datastorePaths(SERVICE).root
-const originalService = Bun.env['SERVICE']
+const paths = testDatastorePaths('activity_write_controllers')
 
 const app = new Hono<{ Variables: { user: User } }>()
 app.use('*', async (c, next) => {
@@ -46,20 +44,19 @@ const jsonRequest = (method: string, body?: unknown, headers: Record<string, str
 })
 
 beforeAll(async () => {
-  Bun.env['SERVICE'] = SERVICE
-  await rm(ROOT, { recursive: true, force: true })
+  setDatastoreRoot(paths.root)
+  await rm(paths.root, { recursive: true, force: true })
   await setup()
 })
 
 beforeEach(async () => {
-  await rm(ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
   await setup()
 })
 
 afterAll(async () => {
-  await rm(ROOT, { recursive: true, force: true })
-  if (originalService === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = originalService
+  await rm(paths.root, { recursive: true, force: true })
+  setDatastoreRoot(null)
 })
 
 describe('activity write controllers', () => {

@@ -7,16 +7,14 @@ import {
   build_knowledge_databases,
   publishKnowledgeMirrors
 } from '../../../utils/knowledge/build-knowledge'
+import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 
 // ─── Isolated test environment ────────────────────────────────────────────────
 //
-// We override Bun.env.SERVICE to '_test_knowledge_svc' so that
-// build_knowledge_databases() only touches datastores/_test_knowledge_svc/
-// and never interferes with production databases.
+// Isolated datastore under datastores/.test-knowledge/
 
-const TEST_SERVICE = '_test_knowledge_svc'
-const ORIGINAL_SERVICE = Bun.env['SERVICE']
-const KNOWLEDGE_ROOT = `datastores/${TEST_SERVICE}/knowledge`
+const paths = testDatastorePaths('knowledge')
+const KNOWLEDGE_ROOT = paths.knowledge
 const CONFIG_ID = 'cfg'
 const SOURCE_DIR = `${KNOWLEDGE_ROOT}/${CONFIG_ID}`
 const DB_PATH = `${SOURCE_DIR}/db.sqlite`
@@ -49,16 +47,12 @@ const build_and_publish = async () => {
 // ─── Lifecycle ───────────────────────────────────────────────────────────────
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = TEST_SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 afterAll(async () => {
-  if (ORIGINAL_SERVICE === undefined) {
-    delete Bun.env['SERVICE']
-  } else {
-    Bun.env['SERVICE'] = ORIGINAL_SERVICE
-  }
-  await rm(`datastores/${TEST_SERVICE}`, { recursive: true, force: true })
+  setDatastoreRoot(null)
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 beforeEach(() => {
@@ -66,7 +60,7 @@ beforeEach(() => {
 })
 
 afterEach(async () => {
-  await rm(`datastores/${TEST_SERVICE}`, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
   mkdirSync(KNOWLEDGE_ROOT, { recursive: true })
 })
 
@@ -75,7 +69,7 @@ afterEach(async () => {
 describe('build_knowledge_databases', () => {
   describe('when no config directories exist', () => {
     it('skips without throwing', async () => {
-      await rm(`datastores/${TEST_SERVICE}`, { recursive: true, force: true })
+      await rm(paths.root, { recursive: true, force: true })
       mkdirSync(KNOWLEDGE_ROOT, { recursive: true })
       await expect(build_knowledge_databases()).resolves.toMatchObject({ databases: [] })
     })
@@ -223,10 +217,10 @@ describe('build_knowledge_databases', () => {
   })
 
   describe('tickets dual-write to datastore.sqlite', () => {
-    const DATASTORE_PATH = `datastores/${TEST_SERVICE}/datastore.sqlite`
+    const DATASTORE_PATH = paths.database
 
     beforeEach(() => {
-      mkdirSync(`datastores/${TEST_SERVICE}`, { recursive: true })
+      mkdirSync(paths.root, { recursive: true })
       new Database(DATASTORE_PATH).close()
     })
 
@@ -360,7 +354,7 @@ describe('build_knowledge_databases', () => {
       await write_json('communes.json', [{ nom: 'Paris', code: '75056' }])
 
       const artifacts = await build_knowledge_databases()
-      await publishKnowledgeMirrors(artifacts, undefined, ['reclamations'])
+      await publishKnowledgeMirrors(artifacts, ['reclamations'])
 
       const datastoreDb = new Database(DATASTORE_PATH)
       const tables = datastoreDb

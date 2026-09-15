@@ -288,7 +288,6 @@ const applyUploads = async (
       try {
         source = insertKnowledgeSource(
           { storageName: item.storageName, ...metadata },
-          undefined,
           validProfileIds
         )
       } catch (error) {

@@ -5,12 +5,10 @@ import { Hono } from 'hono'
 
 import { controller } from '../../../../controllers/rcs/post'
 import type { User } from '../../../../utils/_schema'
-import { datastorePaths } from '../../../../utils/paths'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { setup } from '../../../../utils/setup'
 
-const SERVICE = '_test_rcs_post'
-const ROOT = datastorePaths(SERVICE).root
-const originalService = Bun.env['SERVICE']
+const paths = testDatastorePaths('rcs_post')
 const originalToken = Bun.env['CM_PRODUCT_TOKEN']
 const originalFrom = Bun.env['CM_FROM']
 
@@ -62,20 +60,19 @@ const acceptProviderRequest = (async (
 }) as typeof fetch
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = SERVICE
+  setDatastoreRoot(paths.root)
   Bun.env['CM_PRODUCT_TOKEN'] = 'product-token-test'
   Bun.env['CM_FROM'] = 'PIERRE-TEST'
 })
 
 beforeEach(async () => {
-  await rm(ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
   await setup()
 })
 
 afterAll(async () => {
-  await rm(ROOT, { recursive: true, force: true })
-  if (originalService === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = originalService
+  await rm(paths.root, { recursive: true, force: true })
+  setDatastoreRoot(null)
   if (originalToken === undefined) delete Bun.env['CM_PRODUCT_TOKEN']
   else Bun.env['CM_PRODUCT_TOKEN'] = originalToken
   if (originalFrom === undefined) delete Bun.env['CM_FROM']

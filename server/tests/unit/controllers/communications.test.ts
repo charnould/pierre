@@ -12,29 +12,26 @@ import type { User } from '../../../utils/_schema'
 import { list_activities } from '../../../utils/activities/query'
 import { get_activity } from '../../../utils/activities/rows'
 import { create_outbound } from '../../../utils/communications/storage'
-import { datastorePaths } from '../../../utils/paths'
+import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 
-const SERVICE = '_test_communication_controllers'
-const ROOT = datastorePaths(SERVICE).root
+const paths = testDatastorePaths('communication_controllers')
 const SECRET = 'secret-test-key'
-const originalService = Bun.env['SERVICE']
 const originalSecret = Bun.env['CM_WEBHOOK_SECRET']
 const originalFakeSecret = Bun.env['FAKE_WEBHOOK_KEY']
 const originalNodeEnv = Bun.env['NODE_ENV']
 
 beforeAll(async () => {
-  Bun.env['SERVICE'] = SERVICE
+  setDatastoreRoot(paths.root)
   Bun.env['CM_WEBHOOK_SECRET'] = SECRET
   Bun.env['FAKE_WEBHOOK_KEY'] = SECRET
-  await rm(ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
   await setup()
 })
 
 afterAll(async () => {
-  await rm(ROOT, { recursive: true, force: true })
-  if (originalService === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = originalService
+  await rm(paths.root, { recursive: true, force: true })
+  setDatastoreRoot(null)
   if (originalSecret === undefined) delete Bun.env['CM_WEBHOOK_SECRET']
   else Bun.env['CM_WEBHOOK_SECRET'] = originalSecret
   if (originalFakeSecret === undefined) delete Bun.env['FAKE_WEBHOOK_KEY']

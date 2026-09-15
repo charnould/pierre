@@ -16,13 +16,10 @@ import {
   reset_automation_executor,
   set_automation_executor
 } from '../../../../../utils/automations/run'
-import { datastorePaths } from '../../../../../utils/paths'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
 
-const SERVICE = '_test_automation_routes'
-const TEST_PATHS = datastorePaths(SERVICE)
-const ROOT = TEST_PATHS.root
-const originalService = Bun.env['SERVICE']
+const paths = testDatastorePaths('automation_routes')
 
 const app = new Hono<{ Variables: { user: User } }>()
 app.use('*', async (c, next) => {
@@ -61,7 +58,7 @@ const request = (method: string, body?: unknown, headers: Record<string, string>
 })
 
 const seedUsers = () => {
-  const db = new Database(TEST_PATHS.database)
+  const db = new Database(paths.database)
   const insert = db.prepare("INSERT INTO users (email, password_hash) VALUES (?, 'x')")
   insert.run('alice@example.org')
   insert.run('bob@example.org')
@@ -75,11 +72,11 @@ const create = async (headers: Record<string, string> = {}) => {
 }
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = SERVICE
+  setDatastoreRoot(paths.root)
 })
 
 beforeEach(async () => {
-  await rm(ROOT, { recursive: true, force: true })
+  await rm(paths.root, { recursive: true, force: true })
   await setup()
   reset_automation_executor()
   set_automation_executor(async () => ({ kind: 'report', contenu: '<p>Rapport de test</p>' }))
@@ -87,9 +84,8 @@ beforeEach(async () => {
 })
 
 afterAll(async () => {
-  await rm(ROOT, { recursive: true, force: true })
-  if (originalService === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = originalService
+  await rm(paths.root, { recursive: true, force: true })
+  setDatastoreRoot(null)
 })
 
 describe('automation route classes', () => {

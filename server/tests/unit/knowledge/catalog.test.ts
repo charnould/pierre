@@ -18,21 +18,19 @@ import {
   purgeOldKnowledgeBuilds,
   replaceKnowledgeSourceEntries
 } from '../../../utils/knowledge/catalog'
-import { datastorePaths } from '../../../utils/paths'
+import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 
-const SERVICE = '_test_knowledge_catalog'
-const previousService = Bun.env['SERVICE']
+const paths = testDatastorePaths('knowledge_catalog')
 
 beforeEach(async () => {
-  Bun.env['SERVICE'] = SERVICE
-  const paths = datastorePaths()
+  setDatastoreRoot(paths.root)
   await mkdir(paths.root, { recursive: true })
-  await migrate_datastore(paths.database)
+  await migrate_datastore(datastorePaths().database)
 })
 
 afterEach(async () => {
   await rm(datastorePaths().root, { recursive: true, force: true })
-  Bun.env['SERVICE'] = previousService
+  setDatastoreRoot(null)
 })
 
 describe('knowledge catalog', () => {
@@ -231,7 +229,7 @@ describe('knowledge catalog', () => {
   it('marks interrupted builds as failed', () => {
     createKnowledgeBuild('startup', null)
 
-    expect(failInterruptedKnowledgeBuilds(undefined, new Date(Date.now() + 1000))).toBe(1)
+    expect(failInterruptedKnowledgeBuilds(new Date(Date.now() + 1000))).toBe(1)
     expect(listKnowledgeBuilds()[0]).toMatchObject({
       status: 'failed',
       diagnostics: [{ code: 'interrupted' }]
@@ -382,14 +380,13 @@ describe('knowledge catalog', () => {
             }
           ]
         },
-        undefined,
         profiles
       )
     ).toThrow('Knowledge title already used')
 
     const snapshot = getKnowledgeCatalogSnapshot()
     expect(
-      flattenKnowledgeEntries(snapshot, undefined, known)
+      flattenKnowledgeEntries(snapshot, known)
         .map((entry) => entry.access)
         .sort()
     ).toEqual(['ticket.answer-ticket', 'ticket.write-memo'])
@@ -405,7 +402,6 @@ describe('knowledge catalog', () => {
             }))
           }))
         },
-        undefined,
         known
       )
     ).toEqual([])

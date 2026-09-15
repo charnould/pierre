@@ -10,19 +10,16 @@ import {
   list_ledger_movements
 } from '../../../utils/ledger/query'
 import { LedgerPaginationQuery, LedgerQueryError } from '../../../utils/ledger/schema'
-import { datastorePaths } from '../../../utils/paths'
+import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 
-const SERVICE_A = '_test_ledger_query_a'
-const SERVICE_B = '_test_ledger_query_b'
-const originalService = Bun.env['SERVICE']
+const paths = testDatastorePaths('ledger_query')
 
 const seed = (
-  service: string,
   movements: Record<string, unknown>[],
   lots: Record<string, unknown>[] = []
 ): Promise<void> => {
-  const db = new Database(datastorePaths(service).database)
+  const db = new Database(datastorePaths().database)
   return import_json_rows(db, 'comptes_locataires', movements)
     .then(() => (lots.length > 0 ? import_json_rows(db, 'lots_locatifs', lots) : undefined))
     .finally(() => db.close())
@@ -43,33 +40,26 @@ const movement = (
 })
 
 beforeAll(() => {
-  Bun.env['SERVICE'] = SERVICE_A
+  setDatastoreRoot(paths.root)
 })
 
 beforeEach(async () => {
-  for (const service of [SERVICE_A, SERVICE_B]) {
-    await rm(datastorePaths(service).root, { recursive: true, force: true })
-    await mkdir(datastorePaths(service).root, { recursive: true })
-  }
-  Bun.env['SERVICE'] = SERVICE_A
+  await rm(paths.root, { recursive: true, force: true })
+  await mkdir(paths.root, { recursive: true })
   await setup()
 })
 
 afterEach(async () => {
-  for (const service of [SERVICE_A, SERVICE_B]) {
-    await rm(datastorePaths(service).root, { recursive: true, force: true })
-  }
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 afterAll(() => {
-  if (originalService === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = originalService
+  setDatastoreRoot(null)
 })
 
 describe('ledger SQL queries', () => {
   it('aggregates positive balances by dossier and uses the latest movement', async () => {
     await seed(
-      SERVICE_A,
       [
         movement('LOC-1', 500, '2030-01-01', { id_lot: 'LOT-1', categorie: 'loyer' }),
         movement('LOC-1', -100, '2030-01-12', { id_lot: 'LOT-1', categorie: 'paiement' }),
@@ -106,7 +96,7 @@ describe('ledger SQL queries', () => {
   })
 
   it('aggregates French money exactly to cents and ignores invalid values', async () => {
-    await seed(SERVICE_A, [
+    await seed([
       movement('LOC-1', '199,09', '2030-01-01'),
       movement('LOC-1', '1\u202f000,91', '2030-01-02'),
       movement('LOC-1', 'invalid', '2030-01-03'),
@@ -118,7 +108,7 @@ describe('ledger SQL queries', () => {
   })
 
   it('uses chronological ISO/French date keys for latest movement and timeline order', async () => {
-    await seed(SERVICE_A, [
+    await seed([
       movement('LOC-1', 10, '31/01/2030', { categorie: 'french' }),
       movement('LOC-1', 20, '2030-02-01', { categorie: 'iso' }),
       movement('LOC-1', 30, 'not-a-date', { categorie: 'invalid' })
@@ -135,7 +125,6 @@ describe('ledger SQL queries', () => {
 
   it('deduplicates historical occupations and lots to one ledger row per dossier', async () => {
     await seed(
-      SERVICE_A,
       [
         movement('LOC-OLD', 400, '2030-01-01', { id_lot: 'LOT-1', categorie: 'loyer' }),
         movement('LOC-OTHER', 200, '2030-01-01', { id_lot: 'LOT-2', categorie: 'frais' })
@@ -191,7 +180,7 @@ describe('ledger SQL queries', () => {
   })
 
   it('uses id_locataire as a stable tie-break on every ledger sort', async () => {
-    await seed(SERVICE_A, [
+    await seed([
       movement('LOC-C', 100, '2030-01-01'),
       movement('LOC-A', 100, '2030-01-01'),
       movement('LOC-B', 100, '2030-01-01')
@@ -206,7 +195,7 @@ describe('ledger SQL queries', () => {
   })
 
   it('keeps sibling tenant dossiers isolated', async () => {
-    await seed(SERVICE_A, [
+    await seed([
       movement('LOC-A', 120, '2030-01-01', { id_client: 'CLIENT-1' }),
       movement('LOC-B', 240, '2030-01-02', { id_client: 'CLIENT-1' })
     ])
@@ -217,7 +206,7 @@ describe('ledger SQL queries', () => {
   })
 
   it('overlays repayment phase, assignment and last completed action', async () => {
-    await seed(SERVICE_A, [movement('LOC-1', 300, '2030-01-01')])
+    await seed([movement('LOC-1', 300, '2030-01-01')])
     create_trusted_activity('agent@example.org', {
       contexte: 'repayment',
       ref: 'LOC-1',
@@ -259,8 +248,8 @@ describe('ledger SQL queries', () => {
   })
 
   it('ignores ticket activities carrying the same id_locataire', async () => {
-    await seed(SERVICE_A, [movement('LOC-1', 300, '2030-01-01')])
-    const db = new Database(datastorePaths(SERVICE_A).database)
+    await seed([movement('LOC-1', 300, '2030-01-01')])
+    const db = new Database(datastorePaths().database)
     db.run(
       `INSERT INTO activites (
          date_creation, rattachement, auteur, id_locataire, type, mentions, contenu
@@ -295,7 +284,7 @@ describe('ledger SQL queries', () => {
   })
 
   it('filters, sorts and facets only declared output columns', async () => {
-    await seed(SERVICE_A, [
+    await seed([
       movement('LOC-A', 100, '2030-01-01', { categorie: 'loyer' }),
       movement('LOC-B', 200, '2030-01-02', { categorie: 'frais' })
     ])
@@ -312,18 +301,5 @@ describe('ledger SQL queries', () => {
         filters: { 'categorie" OR 1=1 --': ['loyer'] }
       })
     ).toThrow(LedgerQueryError)
-  })
-
-  it('uses only the current service datastore', async () => {
-    await seed(SERVICE_A, [movement('LOC-A', 100, '2030-01-01')])
-    Bun.env['SERVICE'] = SERVICE_B
-    await setup()
-    await seed(SERVICE_B, [movement('LOC-B', 200, '2030-01-01')])
-
-    expect(
-      list_ledger_balances({ ...LedgerPaginationQuery.parse({}), filters: {} }).data.map(
-        (row) => row['id_locataire']
-      )
-    ).toEqual(['LOC-B'])
   })
 })

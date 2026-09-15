@@ -17,23 +17,20 @@ import {
   create_outbound,
   create_unmatched_inbound
 } from '../../../utils/communications/storage'
-import { datastorePaths } from '../../../utils/paths'
+import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 
-const SERVICE = '_test_communications'
-const ROOT = datastorePaths(SERVICE).root
-const originalService = Bun.env['SERVICE']
+const paths = testDatastorePaths('communications')
 
 beforeAll(async () => {
-  Bun.env['SERVICE'] = SERVICE
-  await rm(ROOT, { recursive: true, force: true })
+  setDatastoreRoot(paths.root)
+  await rm(paths.root, { recursive: true, force: true })
   await setup()
 })
 
 afterAll(async () => {
-  await rm(ROOT, { recursive: true, force: true })
-  if (originalService === undefined) delete Bun.env['SERVICE']
-  else Bun.env['SERVICE'] = originalService
+  await rm(paths.root, { recursive: true, force: true })
+  setDatastoreRoot(null)
 })
 
 describe('communications', () => {
@@ -96,7 +93,7 @@ describe('communications', () => {
       })
     ).toThrow(CommunicationsError)
 
-    const db = new Database(`${ROOT}/datastore.sqlite`, { readonly: true })
+    const db = new Database(`${paths.root}/datastore.sqlite`, { readonly: true })
     const count = db
       .query<{ count: number }, [string]>(
         'SELECT COUNT(*) AS count FROM activites WHERE idempotency_key = ?'
