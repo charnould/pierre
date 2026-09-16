@@ -1,7 +1,7 @@
 import type { Context } from 'hono'
 
 import { createUser } from '../../../../utils/handle-user'
-import { CreateUserBody, invalidBody, validateChatbotIds } from './shared'
+import { CreateUserBody, invalidBody, profileError, validateChatbotIds } from './shared'
 
 export const controller = async (c: Context) => {
   const body = await c.req.json().catch(() => null)
@@ -9,34 +9,29 @@ export const controller = async (c: Context) => {
   if (!parsed.success) return c.json(invalidBody(parsed.error), 400)
 
   const input = parsed.data
-  if (!(await validateChatbotIds(input.chatbotIds))) {
-    return c.json(
-      { error: { code: 'invalid_chatbot', message: 'Un profil de chatbot est inconnu.' } },
-      400
-    )
+  const profileId = input.profileId ?? null
+  if (!profileId && !(await validateChatbotIds(input.chatbotIds))) {
+    return c.json({ error: { code: 'invalid_chatbot', message: 'Un chatbot est inconnu.' } }, 400)
   }
 
-  const user = {
+  const created = await createUser({
     email: input.email,
     isAdministrator: input.isAdministrator,
     moduleIds: input.moduleIds,
     chatbotIds: input.chatbotIds,
+    profileId,
     password: input.password
-  }
-  if (!(await createUser(user))) {
+  })
+  if (!created.ok) {
+    if (created.code === 'profile_not_found') {
+      const { error, status } = profileError(created.code)
+      return c.json({ error }, status)
+    }
     return c.json(
       { error: { code: 'user_exists', message: 'Un utilisateur avec cet e-mail existe déjà.' } },
       409
     )
   }
-  const { password: _password, ...createdUser } = user
 
-  return c.json(
-    {
-      data: {
-        user: createdUser
-      }
-    },
-    201
-  )
+  return c.json({ data: { user: created.user } }, 201)
 }

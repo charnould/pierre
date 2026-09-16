@@ -11,6 +11,13 @@ CREATE TABLE conversations (
 CREATE INDEX idx_conversations_timestamp
   ON conversations (timestamp DESC);
 
+CREATE TABLE user_profiles (
+  id TEXT PRIMARY KEY NOT NULL,
+  name TEXT NOT NULL UNIQUE,
+  module_ids TEXT NOT NULL DEFAULT '[]',
+  chatbot_ids TEXT NOT NULL DEFAULT '[]'
+);
+
 CREATE TABLE users (
   id TEXT PRIMARY KEY NOT NULL,
   name TEXT NOT NULL,
@@ -25,6 +32,7 @@ CREATE TABLE users (
   banExpires DATE,
   module_ids TEXT NOT NULL DEFAULT '[]',
   chatbot_ids TEXT NOT NULL DEFAULT '[]',
+  profile_id TEXT REFERENCES user_profiles(id),
   preferences TEXT NOT NULL DEFAULT '{}',
   avatar BLOB,
   avatar_version INTEGER NOT NULL DEFAULT 0

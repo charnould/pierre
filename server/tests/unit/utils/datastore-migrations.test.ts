@@ -55,6 +55,7 @@ describe('datastore migrations', () => {
            'knowledge_records',
            'session',
            'telemetry',
+           'user_profiles',
            'users',
            'verification',
            'idx_activites_execution',
@@ -80,6 +81,7 @@ describe('datastore migrations', () => {
       'knowledge_records',
       'session',
       'telemetry',
+      'user_profiles',
       'users',
       'verification'
     ])
@@ -105,6 +107,7 @@ describe('datastore migrations', () => {
       'banExpires',
       'module_ids',
       'chatbot_ids',
+      'profile_id',
       'preferences',
       'avatar',
       'avatar_version'

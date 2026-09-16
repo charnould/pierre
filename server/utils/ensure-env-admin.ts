@@ -31,6 +31,7 @@ export async function ensureEnvAdmin(): Promise<void> {
     password: readAuthPassword(),
     isAdministrator: true,
     moduleIds: BUSINESS_MODULE_IDS,
-    chatbotIds: await listChatbotIds()
+    chatbotIds: await listChatbotIds(),
+    profileId: null
   })
 }

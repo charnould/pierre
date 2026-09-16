@@ -8,6 +8,11 @@ import { controller as getUsersController } from '../../../../../../controllers/
 import { controller as patchUserController } from '../../../../../../controllers/desktop/admin/users/patch'
 import { controller as postUserController } from '../../../../../../controllers/desktop/admin/users/post'
 import { controller as importUsersController } from '../../../../../../controllers/desktop/admin/users/post.import'
+import {
+  patch as patchProfileController,
+  post as postProfileController,
+  remove as deleteProfileController
+} from '../../../../../../controllers/desktop/admin/users/user-profiles'
 import type { User } from '../../../../../../utils/_schema'
 import { getAuth } from '../../../../../../utils/auth'
 import { authorizeAdministrator } from '../../../../../../utils/authorize-role'
@@ -40,6 +45,9 @@ app.use('*', async (c, next) => {
 app.get('/desktop/admin/users', authorizeAdministrator, getUsersController)
 app.post('/desktop/admin/users', authorizeAdministrator, postUserController)
 app.post('/desktop/admin/users/import', authorizeAdministrator, importUsersController)
+app.post('/desktop/admin/users/profiles', authorizeAdministrator, postProfileController)
+app.patch('/desktop/admin/users/profiles/:id', authorizeAdministrator, patchProfileController)
+app.delete('/desktop/admin/users/profiles/:id', authorizeAdministrator, deleteProfileController)
 app.patch('/desktop/admin/users/:email', authorizeAdministrator, patchUserController)
 app.delete('/desktop/admin/users/:email', authorizeAdministrator, deleteUserController)
 
@@ -123,6 +131,7 @@ describe('desktop administrator users API', () => {
     const body = (await response.json()) as {
       data: {
         users: Array<Record<string, unknown>>
+        profiles: unknown[]
         modules: Array<{ id: string }>
         chatbots: Array<{ id: string }>
       }
@@ -132,9 +141,11 @@ describe('desktop administrator users API', () => {
         email: ADMIN.email,
         isAdministrator: true,
         moduleIds: ADMIN.moduleIds,
-        chatbotIds: ADMIN.chatbotIds
+        chatbotIds: ADMIN.chatbotIds,
+        profileId: null
       }
     ])
+    expect(body.data.profiles).toEqual([])
     expect(body.data.modules.some(({ id }) => id === 'tickets')).toBe(true)
     expect(body.data.chatbots.some(({ id }) => id === 'default')).toBe(true)
   })
@@ -268,6 +279,179 @@ describe('desktop administrator users API', () => {
       ).status
     ).toBe(409)
     expect(await getUser(ADMIN.email)).toBeDefined()
+  })
+
+  it('creates a profile, applies it over the request body, then refuses delete while in use', async () => {
+    const created = await request(
+      '/desktop/admin/users/profiles',
+      jsonRequest('POST', {
+        name: 'Gestionnaire locatif',
+        moduleIds: ['tickets', 'repayment'],
+        chatbotIds: ['default']
+      })
+    )
+    expect(created.status).toBe(201)
+    const profile = ((await created.json()) as { data: { profile: { id: string } } }).data.profile
+
+    const user = await request(
+      '/desktop/admin/users',
+      jsonRequest('POST', {
+        email: 'linked@example.org',
+        password: 'linked-password',
+        isAdministrator: false,
+        profileId: profile.id,
+        moduleIds: ['ventes'],
+        chatbotIds: ['demo']
+      })
+    )
+    expect(user.status).toBe(201)
+    expect(await user.json()).toMatchObject({
+      data: {
+        user: {
+          email: 'linked@example.org',
+          profileId: profile.id,
+          moduleIds: ['tickets', 'repayment'],
+          chatbotIds: ['default'],
+          isAdministrator: false
+        }
+      }
+    })
+
+    const patched = await request(
+      `/desktop/admin/users/profiles/${profile.id}`,
+      jsonRequest('PATCH', { moduleIds: ['bulk'], chatbotIds: ['demo'] })
+    )
+    expect(patched.status).toBe(200)
+    expect(await getUser('linked@example.org')).toMatchObject({
+      moduleIds: ['bulk'],
+      chatbotIds: ['demo']
+    })
+
+    const inUse = await request(`/desktop/admin/users/profiles/${profile.id}`, { method: 'DELETE' })
+    expect(inUse.status).toBe(409)
+    expect(await inUse.json()).toMatchObject({ error: { code: 'profile_in_use' } })
+
+    const duplicate = await request(
+      '/desktop/admin/users/profiles',
+      jsonRequest('POST', {
+        name: 'Gestionnaire locatif',
+        moduleIds: ['tickets'],
+        chatbotIds: ['default']
+      })
+    )
+    expect(duplicate.status).toBe(409)
+    expect(await duplicate.json()).toMatchObject({ error: { code: 'profile_name_taken' } })
+
+    const missingProfile = await request(
+      '/desktop/admin/users/profiles/missing-profile',
+      jsonRequest('PATCH', { name: 'Absent' })
+    )
+    expect(missingProfile.status).toBe(404)
+    expect(await missingProfile.json()).toMatchObject({ error: { code: 'profile_not_found' } })
+
+    const missing = await request(
+      '/desktop/admin/users',
+      jsonRequest('POST', {
+        email: 'missing-profile@example.org',
+        password: 'linked-password',
+        isAdministrator: false,
+        profileId: 'missing-profile',
+        moduleIds: [],
+        chatbotIds: []
+      })
+    )
+    expect(missing.status).toBe(404)
+    expect(await missing.json()).toMatchObject({ error: { code: 'profile_not_found' } })
+  })
+
+  it('attaches a profile with PATCH profileId only', async () => {
+    const created = await request(
+      '/desktop/admin/users/profiles',
+      jsonRequest('POST', {
+        name: 'Technicien',
+        moduleIds: ['tickets'],
+        chatbotIds: ['default']
+      })
+    )
+    expect(created.status).toBe(201)
+    const profile = ((await created.json()) as { data: { profile: { id: string } } }).data.profile
+    await createTestUser({
+      email: 'custom@example.org',
+      isAdministrator: false,
+      moduleIds: ['ventes'],
+      chatbotIds: ['demo']
+    })
+
+    const patched = await request(
+      `/desktop/admin/users/${encodeURIComponent('custom@example.org')}`,
+      jsonRequest('PATCH', { profileId: profile.id })
+    )
+    expect(patched.status).toBe(200)
+    expect(await patched.json()).toMatchObject({
+      data: {
+        user: {
+          email: 'custom@example.org',
+          profileId: profile.id,
+          moduleIds: ['tickets'],
+          chatbotIds: ['default'],
+          isAdministrator: false
+        }
+      }
+    })
+
+    const missing = await request(
+      `/desktop/admin/users/${encodeURIComponent('custom@example.org')}`,
+      jsonRequest('PATCH', { profileId: 'missing-profile' })
+    )
+    expect(missing.status).toBe(404)
+    expect(await missing.json()).toMatchObject({ error: { code: 'profile_not_found' } })
+  })
+
+  it('detaches a profile and persists empty custom access', async () => {
+    const created = await request(
+      '/desktop/admin/users/profiles',
+      jsonRequest('POST', {
+        name: 'Comptable',
+        moduleIds: ['tickets'],
+        chatbotIds: ['default']
+      })
+    )
+    expect(created.status).toBe(201)
+    const profile = ((await created.json()) as { data: { profile: { id: string } } }).data.profile
+    await createTestUser({
+      email: 'detach@example.org',
+      isAdministrator: false,
+      moduleIds: ['ventes'],
+      chatbotIds: ['demo']
+    })
+    expect(
+      (
+        await request(
+          `/desktop/admin/users/${encodeURIComponent('detach@example.org')}`,
+          jsonRequest('PATCH', { profileId: profile.id })
+        )
+      ).status
+    ).toBe(200)
+
+    const detached = await request(
+      `/desktop/admin/users/${encodeURIComponent('detach@example.org')}`,
+      jsonRequest('PATCH', { profileId: null, moduleIds: [], chatbotIds: [] })
+    )
+    expect(detached.status).toBe(200)
+    expect(await detached.json()).toMatchObject({
+      data: {
+        user: {
+          email: 'detach@example.org',
+          profileId: null,
+          moduleIds: [],
+          chatbotIds: []
+        }
+      }
+    })
+    expect(await getUser('detach@example.org')).toMatchObject({
+      moduleIds: [],
+      chatbotIds: []
+    })
   })
 
   it('deletes another user explicitly', async () => {

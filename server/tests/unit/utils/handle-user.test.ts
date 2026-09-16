@@ -1,17 +1,32 @@
+import { Database } from 'bun:sqlite'
 import { expect, it } from 'bun:test'
 
 import { getAuth } from '../../../utils/auth'
 import {
   createUser,
+  createUserProfile,
   deleteAllUsers,
   deleteUserAsAdministrator,
+  deleteUserProfile,
+  getStoredUser,
   getUser,
   getUsers,
   importUserPasswords,
-  saveUserAsAdministrator
+  saveUserAsAdministrator,
+  saveUserProfile
 } from '../../../utils/handle-user'
+import { datastorePaths } from '../../../utils/paths'
 import { createTestUser } from '../../test-user'
 import { use_identity_test_env } from './identity-test-env'
+
+const storedAccessColumns = (email: string) => {
+  using db = new Database(datastorePaths().database)
+  return db
+    .query<{ module_ids: string; chatbot_ids: string }, [string]>(
+      `SELECT module_ids, chatbot_ids FROM users WHERE email = ?`
+    )
+    .get(email.trim().toLowerCase())
+}
 
 use_identity_test_env('_test_handle_user')
 
@@ -88,8 +103,14 @@ it('creates users without overwriting duplicates', async () => {
     moduleIds: [],
     chatbotIds: []
   }
-  expect(await createUser({ ...user, password: 'first-password' })).toBe(true)
-  expect(await createUser({ ...user, password: 'second-password' })).toBe(false)
+  expect(await createUser({ ...user, password: 'first-password', profileId: null })).toMatchObject({
+    ok: true,
+    user: { email: user.email, profileId: null }
+  })
+  expect(await createUser({ ...user, password: 'second-password', profileId: null })).toEqual({
+    ok: false,
+    code: 'user_exists'
+  })
   expect(await canSignIn(user.email, 'first-password')).toBe(true)
   expect(await canSignIn(user.email, 'second-password')).toBe(false)
 })
@@ -194,4 +215,182 @@ it('prevents deleting the last administrator and deletes another user', async ()
     await deleteUserAsAdministrator('admin@pierre-ia.org', 'member@pierre-ia.org')
   ).toMatchObject({ ok: true })
   expect(await getUser('member@pierre-ia.org')).toBeUndefined()
+})
+
+it('resolves access from the attached profile and clears stored user columns', async () => {
+  const created = await createUserProfile({
+    name: 'Gestionnaire locatif',
+    moduleIds: ['tickets', 'repayment'],
+    chatbotIds: ['default']
+  })
+  if (!created.ok) throw new Error('profile')
+  await createTestUser({
+    email: 'linked@pierre-ia.org',
+    isAdministrator: false,
+    moduleIds: ['about'],
+    chatbotIds: ['demo']
+  })
+  expect(
+    await saveUserAsAdministrator('admin@pierre-ia.org', 'linked@pierre-ia.org', {
+      profileId: created.profile.id,
+      moduleIds: ['ventes'],
+      chatbotIds: ['zmode']
+    })
+  ).toMatchObject({
+    ok: true,
+    user: {
+      profileId: created.profile.id,
+      moduleIds: ['tickets', 'repayment'],
+      chatbotIds: ['default'],
+      isAdministrator: false
+    }
+  })
+  expect(await getUser('linked@pierre-ia.org')).toMatchObject({
+    moduleIds: ['tickets', 'repayment'],
+    chatbotIds: ['default']
+  })
+  expect(storedAccessColumns('linked@pierre-ia.org')).toEqual({
+    module_ids: '[]',
+    chatbot_ids: '[]'
+  })
+
+  const saved = await saveUserProfile(created.profile.id, {
+    moduleIds: ['bulk'],
+    chatbotIds: ['demo']
+  })
+  if (!saved.ok) throw new Error('profile')
+  expect(await getUser('linked@pierre-ia.org')).toMatchObject({
+    moduleIds: ['bulk'],
+    chatbotIds: ['demo']
+  })
+})
+
+it('detaches a profile by writing the effective access as custom columns', async () => {
+  const created = await createUserProfile({
+    name: 'Comptable',
+    moduleIds: ['tickets', 'repayment'],
+    chatbotIds: ['default']
+  })
+  if (!created.ok) throw new Error('profile')
+  expect(
+    await createUser({
+      email: 'detached@pierre-ia.org',
+      password: 'test-password-123',
+      isAdministrator: false,
+      moduleIds: ['about'],
+      chatbotIds: ['demo'],
+      profileId: created.profile.id
+    })
+  ).toMatchObject({
+    ok: true,
+    user: {
+      email: 'detached@pierre-ia.org',
+      profileId: created.profile.id,
+      moduleIds: ['tickets', 'repayment'],
+      chatbotIds: ['default']
+    }
+  })
+  expect(storedAccessColumns('detached@pierre-ia.org')).toEqual({
+    module_ids: '[]',
+    chatbot_ids: '[]'
+  })
+
+  expect(
+    await saveUserAsAdministrator('admin@pierre-ia.org', 'detached@pierre-ia.org', {
+      profileId: null
+    })
+  ).toMatchObject({
+    ok: true,
+    user: {
+      profileId: null,
+      moduleIds: ['tickets', 'repayment'],
+      chatbotIds: ['default']
+    }
+  })
+  expect(storedAccessColumns('detached@pierre-ia.org')).toEqual({
+    module_ids: JSON.stringify(['tickets', 'repayment']),
+    chatbot_ids: JSON.stringify(['default'])
+  })
+  expect(await getStoredUser('detached@pierre-ia.org')).toMatchObject({
+    profileId: null,
+    moduleIds: ['tickets', 'repayment'],
+    chatbotIds: ['default']
+  })
+})
+
+it('detaches a profile to empty custom columns and returns normalized access', async () => {
+  const created = await createUserProfile({
+    name: 'Vide',
+    moduleIds: ['tickets'],
+    chatbotIds: ['default']
+  })
+  if (!created.ok) throw new Error('profile')
+  await createUser({
+    email: 'empty@pierre-ia.org',
+    password: 'test-password-123',
+    isAdministrator: false,
+    moduleIds: [],
+    chatbotIds: [],
+    profileId: created.profile.id
+  })
+
+  expect(
+    await saveUserAsAdministrator('admin@pierre-ia.org', 'empty@pierre-ia.org', {
+      profileId: null,
+      moduleIds: [],
+      chatbotIds: []
+    })
+  ).toEqual({
+    ok: true,
+    user: {
+      email: 'empty@pierre-ia.org',
+      isAdministrator: false,
+      profileId: null,
+      moduleIds: [],
+      chatbotIds: []
+    }
+  })
+  expect(storedAccessColumns('empty@pierre-ia.org')).toEqual({
+    module_ids: '[]',
+    chatbot_ids: '[]'
+  })
+
+  expect(
+    await saveUserAsAdministrator('admin@pierre-ia.org', 'empty@pierre-ia.org', {
+      moduleIds: ['tickets', 'tickets', 'about'],
+      chatbotIds: ['default', 'demo', 'default']
+    })
+  ).toMatchObject({
+    ok: true,
+    user: {
+      profileId: null,
+      moduleIds: ['tickets', 'about'],
+      chatbotIds: ['default', 'demo']
+    }
+  })
+})
+
+it('refuses to delete a profile still attached to a user', async () => {
+  const created = await createUserProfile({
+    name: 'Technicien',
+    moduleIds: ['tickets'],
+    chatbotIds: ['default']
+  })
+  if (!created.ok) throw new Error('profile')
+  await createUser({
+    email: 'tech@pierre-ia.org',
+    password: 'test-password-123',
+    isAdministrator: false,
+    moduleIds: [],
+    chatbotIds: [],
+    profileId: created.profile.id
+  })
+  expect(await deleteUserProfile(created.profile.id)).toEqual({
+    ok: false,
+    code: 'profile_in_use'
+  })
+  expect(await getUser('tech@pierre-ia.org')).toMatchObject({
+    moduleIds: ['tickets'],
+    chatbotIds: ['default']
+  })
 })

@@ -17,5 +17,7 @@ export async function createTestUser(user: User, password = DEFAULT_TEST_PASSWOR
     })
     remove.immediate()
   }
-  if (!(await createUser({ ...user, password }))) throw new Error(`Could not create ${user.email}`)
+  if (!(await createUser({ ...user, password, profileId: null })).ok) {
+    throw new Error(`Could not create ${user.email}`)
+  }
 }

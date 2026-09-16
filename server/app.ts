@@ -38,6 +38,11 @@ import { controller as get_desktop_admin_users } from './controllers/desktop/adm
 import { controller as patch_desktop_admin_user } from './controllers/desktop/admin/users/patch'
 import { controller as post_desktop_admin_user } from './controllers/desktop/admin/users/post'
 import { controller as post_desktop_admin_users_import } from './controllers/desktop/admin/users/post.import'
+import {
+  patch as patch_desktop_admin_user_profile,
+  post as post_desktop_admin_user_profile,
+  remove as delete_desktop_admin_user_profile
+} from './controllers/desktop/admin/users/user-profiles'
 import { controller as delete_desktop_automation } from './controllers/desktop/automations/delete'
 import { controller as delete_desktop_automation_pin } from './controllers/desktop/automations/delete.pin'
 import { controller as get_desktop_automations } from './controllers/desktop/automations/get'
@@ -287,6 +292,24 @@ app.get('/desktop/users', authenticate, get_desktop_users)
 app.get('/desktop/me', authenticate, get_desktop_me)
 app.get('/desktop/admin/users', authenticate, authorizeAdministrator, get_desktop_admin_users)
 app.post('/desktop/admin/users', authenticate, authorizeAdministrator, post_desktop_admin_user)
+app.post(
+  '/desktop/admin/users/profiles',
+  authenticate,
+  authorizeAdministrator,
+  post_desktop_admin_user_profile
+)
+app.patch(
+  '/desktop/admin/users/profiles/:id',
+  authenticate,
+  authorizeAdministrator,
+  patch_desktop_admin_user_profile
+)
+app.delete(
+  '/desktop/admin/users/profiles/:id',
+  authenticate,
+  authorizeAdministrator,
+  delete_desktop_admin_user_profile
+)
 app.patch(
   '/desktop/admin/users/:email',
   authenticate,
