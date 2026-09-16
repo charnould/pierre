@@ -24,6 +24,7 @@ import {
   update_status
 } from '../../../../utils/delivery-status'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
+import { TELEMETRY_URL } from '../../../../utils/send-telemetry'
 import { setup } from '../../../../utils/setup'
 
 const paths = testDatastorePaths('bulk_operations_send')
@@ -229,7 +230,8 @@ describe('bulk execution', () => {
   it('sends rich RCS, follows an exact postback, and applies effects once', async () => {
     Bun.env['CM_PRODUCT_TOKEN'] = 'token'
     globalThis.fetch = Object.assign(
-      async (_url: URL | RequestInfo, init?: BunFetchRequestInit | RequestInit) => {
+      async (url: URL | RequestInfo, init?: BunFetchRequestInit | RequestInit) => {
+        if (String(url) === TELEMETRY_URL) return new Response(null, { status: 204 })
         const reference = JSON.parse(String(init?.body)).messages.msg[0].reference
         return new Response(
           JSON.stringify({
@@ -370,7 +372,8 @@ describe('bulk execution', () => {
   it('expires an unanswered interactive node at the configured deadline', async () => {
     Bun.env['CM_PRODUCT_TOKEN'] = 'token'
     globalThis.fetch = Object.assign(
-      async (_url: URL | RequestInfo, init?: BunFetchRequestInit | RequestInit) => {
+      async (url: URL | RequestInfo, init?: BunFetchRequestInit | RequestInit) => {
+        if (String(url) === TELEMETRY_URL) return new Response(null, { status: 204 })
         const reference = JSON.parse(String(init?.body)).messages.msg[0].reference
         return new Response(
           JSON.stringify({
@@ -430,8 +433,8 @@ describe('bulk execution', () => {
   it('records the same outbound activity without transport when applying without send', async () => {
     let fetchCalls = 0
     globalThis.fetch = Object.assign(
-      async () => {
-        fetchCalls += 1
+      async (url: URL | RequestInfo) => {
+        if (String(url) !== TELEMETRY_URL) fetchCalls += 1
         return new Response('{}', { status: 200 })
       },
       { preconnect: () => {} }

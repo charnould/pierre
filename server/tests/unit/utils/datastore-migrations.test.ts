@@ -58,7 +58,8 @@ describe('datastore migrations', () => {
            'users',
            'verification',
            'idx_activites_execution',
-           'idx_activites_case_group'
+           'idx_activites_case_group',
+           'idx_telemetry_recorded_at'
          )
          ORDER BY name`
       )
@@ -75,6 +76,7 @@ describe('datastore migrations', () => {
       'conversations',
       'idx_activites_case_group',
       'idx_activites_execution',
+      'idx_telemetry_recorded_at',
       'knowledge_records',
       'session',
       'telemetry',

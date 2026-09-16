@@ -73,10 +73,13 @@ CREATE INDEX verification_identifier_idx ON verification (identifier);
 
 CREATE TABLE telemetry (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  timestamp TEXT,
-  host TEXT,
-  event TEXT
+  recorded_at TEXT NOT NULL,
+  host TEXT NOT NULL,
+  event TEXT NOT NULL
 );
+
+CREATE INDEX idx_telemetry_recorded_at
+  ON telemetry (recorded_at DESC, id DESC);
 
 CREATE TABLE knowledge_records (
   id TEXT PRIMARY KEY,

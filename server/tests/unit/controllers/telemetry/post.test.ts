@@ -47,7 +47,8 @@ describe('POST /telemetry', () => {
     expect(await res.json()).toEqual({ ok: true })
 
     const sql = new Database(`${paths.root}/datastore.sqlite`)
-    const rows = sql.query('SELECT host, event FROM telemetry').all() as Array<{
+    const rows = sql.query('SELECT recorded_at, host, event FROM telemetry').all() as Array<{
+      recorded_at: string
       host: string
       event: string
     }>
@@ -56,6 +57,7 @@ describe('POST /telemetry', () => {
     expect(rows).toHaveLength(1)
     expect(rows[0]?.host).toBe('test-host')
     expect(rows[0]?.event).toBe('ai.answer.ticket.write-memo')
+    expect(rows[0]?.recorded_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)
   })
 
   it('returns 400 for invalid payload', async () => {

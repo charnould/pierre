@@ -1,22 +1,21 @@
 import { Database } from 'bun:sqlite'
 
-import { format } from 'date-fns'
 import type { Context } from 'hono'
 import { z } from 'zod/v4'
 
 import { datastorePaths } from '../../utils/paths'
+import { persist_telemetry } from '../../utils/send-telemetry'
 
 const TelemetryPayload = z.object({
   host: z.string().trim().min(1),
-  event: z.string().trim().min(1),
-  timestamp: z.string().trim().optional()
+  event: z.string().trim().min(1)
 })
 
 /**
  * POST /telemetry
  *
  * Public endpoint that receives usage pings from Pierre instances.
- * Stores host, event, and timestamp in the local telemetry table.
+ * Stores host, event, and recorded_at in the local telemetry table.
  */
 export const controller = async (c: Context) => {
   try {
@@ -25,12 +24,8 @@ export const controller = async (c: Context) => {
 
     if (!payload.success) return c.json({ ok: false }, 400)
 
-    const sql = new Database(datastorePaths().database)
-    sql.run(`INSERT INTO telemetry (timestamp, host, event) VALUES (?, ?, ?)`, [
-      format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX"),
-      payload.data.host,
-      payload.data.event
-    ])
+    using sql = new Database(datastorePaths().database)
+    persist_telemetry(sql, payload.data.host, payload.data.event)
 
     return c.json({ ok: true })
   } catch {

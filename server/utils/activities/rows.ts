@@ -16,6 +16,7 @@ import {
   desktopAgentMentionHandle
 } from '../../../shared/agent-identity'
 import { datastorePaths } from '../paths'
+import { send_telemetry } from '../send-telemetry'
 import { ActivitiesError, ActivityRowSchema, AUTHOR_RE, MENTION_RE, parse_mentions } from './schema'
 
 export type ActivityDbRow = Omit<Activite, 'mentions' | 'type' | 'channel'> & {
@@ -128,6 +129,7 @@ export const insert_activity_row = (db: Database, values: InsertActivityValues):
       values.idempotency_key ?? null
     )
   if (!row) throw new Error('Failed to append activity')
+  send_telemetry(values.type, db)
   return row_to_activity(row)
 }
 

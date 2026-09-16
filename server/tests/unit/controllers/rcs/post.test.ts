@@ -7,6 +7,7 @@ import { controller } from '../../../../controllers/rcs/post'
 import type { User } from '../../../../utils/_schema'
 import { list_activities } from '../../../../utils/activities/query'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
+import { TELEMETRY_URL } from '../../../../utils/send-telemetry'
 import { setup } from '../../../../utils/setup'
 
 const paths = testDatastorePaths('rcs_post')
@@ -52,9 +53,10 @@ const postRcs = (
   })
 
 const acceptProviderRequest = (async (
-  _url: Parameters<typeof fetch>[0],
+  url: Parameters<typeof fetch>[0],
   init?: Parameters<typeof fetch>[1]
 ) => {
+  if (String(url) === TELEMETRY_URL) return new Response(null, { status: 204 })
   const reference = JSON.parse(String(init?.body)).messages.msg[0].reference
   return new Response(
     JSON.stringify({
@@ -64,6 +66,9 @@ const acceptProviderRequest = (async (
     { status: 200, headers: { 'Content-Type': 'application/json' } }
   )
 }) as typeof fetch
+
+const provider_calls = (calls: ReadonlyArray<readonly unknown[]>) =>
+  calls.filter((call) => String(call[0]) !== TELEMETRY_URL)
 
 beforeAll(() => {
   setDatastoreRoot(paths.root)
@@ -113,11 +118,11 @@ describe('POST /rcs provider boundary', () => {
           channel: 'rcs'
         }
       })
-      expect(fetchSpy).toHaveBeenCalledTimes(1)
-      const [url, init] = fetchSpy.mock.calls[0]!
+      expect(provider_calls(fetchSpy.mock.calls)).toHaveLength(1)
+      const [url, init] = provider_calls(fetchSpy.mock.calls)[0] as [string, RequestInit]
       expect(url).toBe('https://gw.messaging.cm.com/v1.0/message')
       expect(init).toBeDefined()
-      const requestInit = init!
+      const requestInit = init
       expect((requestInit.headers as Record<string, string>)['X-CM-PRODUCTTOKEN']).toBe(
         'product-token-test'
       )
@@ -150,7 +155,7 @@ describe('POST /rcs provider boundary', () => {
       const sent = rows.find((row) => row.type === 'communication.sent' && row.channel === 'rcs')
       expect(JSON.parse(sent!.contenu).choices).toEqual([{ id: 'confirmer', label: 'Confirmer' }])
       expect((await postRcs(idempotencyKey)).status).toBe(201)
-      expect(fetchSpy).toHaveBeenCalledTimes(2)
+      expect(provider_calls(fetchSpy.mock.calls)).toHaveLength(2)
     } finally {
       fetchSpy.mockRestore()
     }
@@ -196,7 +201,7 @@ describe('POST /rcs provider boundary', () => {
     try {
       const response = await postRcs()
       expect(response.status).toBe(201)
-      expect(fetchSpy).toHaveBeenCalledTimes(1)
+      expect(provider_calls(fetchSpy.mock.calls)).toHaveLength(1)
     } finally {
       fetchSpy.mockRestore()
     }
