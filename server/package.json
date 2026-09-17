@@ -13,7 +13,7 @@
     "start": "NODE_ENV=production bun run start.ts",
     "wikipedia": "bun --env-file=../.env run ./utils/knowledge/scrape-wikipedia.ts",
     "test:e2e": "bun run tests/e2e/run.ts",
-    "test:unit": "bun --env-file=../.env run utils/setup.ts && bun test unit --env-file=../.env",
+    "test:unit": "bun test unit --env-file=../.env",
     "typecheck": "tsc --noEmit",
     "bench:schema": "bun run tests/bench/schema.ts"
   },

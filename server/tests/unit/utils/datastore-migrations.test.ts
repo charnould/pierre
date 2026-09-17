@@ -114,28 +114,19 @@ describe('datastore migrations', () => {
     ])
   })
 
-  it('deletes and bootstraps an existing database without a ledger', async () => {
+  it('fails without deleting an existing database that has no schema_migrations', async () => {
     const obsolete = open()
     obsolete.run('CREATE TABLE obsolete_data (value TEXT)')
-    obsolete.run("INSERT INTO obsolete_data VALUES ('must be deleted')")
+    obsolete.run("INSERT INTO obsolete_data VALUES ('kept')")
     obsolete.close()
-    await Bun.write(`${PATH}-wal`, 'stale')
-    await Bun.write(`${PATH}-shm`, 'stale')
 
-    await migrate_datastore(PATH)
+    await expect(migrate_datastore(PATH)).rejects.toThrow(/schema_migrations/)
 
     using db = open()
-    expect(versions(db)).toEqual([1])
-    expect(
-      db
-        .query<{ n: number }, []>(
-          `SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'obsolete_data'`
-        )
-        .get()?.n
-    ).toBe(0)
+    expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM obsolete_data').get()?.n).toBe(1)
   })
 
-  it('resets a ledger database whose application schema is incompatible', async () => {
+  it('does not rebuild a hand-dropped application index', async () => {
     await migrate_datastore(PATH)
     const damaged = open()
     damaged.run('DROP INDEX idx_activites_execution')
@@ -151,8 +142,15 @@ describe('datastore migrations', () => {
            WHERE type = 'index' AND name = 'idx_activites_execution'`
         )
         .get()?.n
-    ).toBe(1)
+    ).toBe(0)
     expect(versions(db)).toEqual([1])
+  })
+
+  it('fails without rewriting a file that is not SQLite', async () => {
+    await Bun.write(PATH, 'not a sqlite database')
+
+    await expect(migrate_datastore(PATH)).rejects.toThrow()
+    expect(await Bun.file(PATH).text()).toBe('not a sqlite database')
   })
 
   it('preserves Better Auth users and declared mirror tables when idempotent', async () => {

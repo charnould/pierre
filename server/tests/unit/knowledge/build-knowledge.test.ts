@@ -221,7 +221,6 @@ describe('build_knowledge_databases', () => {
 
     beforeEach(() => {
       mkdirSync(paths.root, { recursive: true })
-      new Database(DATASTORE_PATH).close()
     })
 
     it('mirrors tickets rows into datastore.sqlite', async () => {
