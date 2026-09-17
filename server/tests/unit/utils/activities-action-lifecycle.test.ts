@@ -141,6 +141,104 @@ describe('action lifecycle', () => {
     expect(get_activity(message.id)).not.toBeNull()
   })
 
+  it('refuse une tâche ouverte sans échéance', async () => {
+    await seed_users(ALICE, BOB)
+    expect(() =>
+      create_activity(ALICE, {
+        contexte: 'repayment',
+        ref: 'LOC-NO-DUE',
+        type: 'task.created',
+        contenu: JSON.stringify({
+          version: 2,
+          task: {
+            title: 'Sans date',
+            state: 'open',
+            assignee: { id: BOB, label: BOB }
+          }
+        })
+      })
+    ).toThrow(/due date/)
+  })
+
+  it('liste mes tâches et celles que j’ai assignées, triées par échéance', async () => {
+    await seed_users(ALICE, BOB, CLAIRE)
+    const mineLater = create_activity(ALICE, {
+      contexte: 'repayment',
+      ref: 'LOC-MINE-LATER',
+      type: 'task.created',
+      contenu: JSON.stringify({
+        version: 2,
+        task: {
+          title: 'Plus tard',
+          state: 'open',
+          assignee: { id: ALICE, label: ALICE },
+          due_date: '2026-09-10'
+        }
+      })
+    })
+    const mineSooner = create_activity(ALICE, {
+      contexte: 'repayment',
+      ref: 'LOC-MINE-SOONER',
+      type: 'task.created',
+      contenu: JSON.stringify({
+        version: 2,
+        task: {
+          title: 'Plus tôt',
+          state: 'open',
+          assignee: { id: ALICE, label: ALICE },
+          due_date: '2026-09-02'
+        }
+      })
+    })
+    const delegated = create_activity(ALICE, {
+      contexte: 'repayment',
+      ref: 'LOC-DELEGATED',
+      type: 'task.created',
+      contenu: JSON.stringify({
+        version: 2,
+        task: {
+          title: 'Pour Bob',
+          state: 'open',
+          assignee: { id: BOB, label: BOB },
+          due_date: '2026-09-05'
+        }
+      })
+    })
+    create_activity(BOB, {
+      contexte: 'repayment',
+      ref: 'LOC-BOB-OWN',
+      type: 'task.created',
+      contenu: JSON.stringify({
+        version: 2,
+        task: {
+          title: 'À Bob par Bob',
+          state: 'open',
+          assignee: { id: BOB, label: BOB },
+          due_date: '2026-09-01'
+        }
+      })
+    })
+
+    expect(
+      list_activities(ALICE, {
+        current_threads: true,
+        state: 'open',
+        assignee: 'me',
+        order: 'due_asc'
+      }).map((row) => row.id)
+    ).toEqual([mineSooner.id, mineLater.id])
+
+    expect(
+      list_activities(ALICE, {
+        current_threads: true,
+        state: 'open',
+        created_by: 'me',
+        assignee: 'other',
+        order: 'due_asc'
+      }).map((row) => row.id)
+    ).toEqual([delegated.id])
+  })
+
   it('autorise tout collaborateur à ignorer une tâche ouverte', async () => {
     await seed_users(ALICE, BOB, CLAIRE)
     const created = create_activity(ALICE, {

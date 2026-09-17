@@ -37,6 +37,9 @@ export const Query = z
       .optional()
       .transform((value) => value === 'true'),
     state: z.enum(['open', 'completed', 'ignored', 'deleted']).optional(),
+    assignee: z.enum(['me', 'other']).optional(),
+    created_by: z.enum(['me']).optional(),
+    order: z.enum(['due_asc']).optional(),
     limit: z.coerce.number().int().positive().max(500).optional(),
     offset: z.coerce.number().int().nonnegative().optional()
   })

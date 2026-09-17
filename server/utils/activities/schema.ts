@@ -164,6 +164,9 @@ export type ListActivitiesOptions = {
   type?: string
   current_threads?: boolean
   state?: TaskState
+  assignee?: 'me' | 'other'
+  created_by?: 'me'
+  order?: 'due_asc'
   limit?: number
   offset?: number
 }

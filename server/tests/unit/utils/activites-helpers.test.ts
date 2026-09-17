@@ -96,6 +96,7 @@ describe('shared/activites helpers', () => {
     expect(ACTIVITY_TYPES).toContain('communication.sent')
     expect(ACTIVITY_TYPES).toContain('automation.reported')
     expect(ACTIVITY_TYPES).toContain('bulk.ran')
+    expect(ACTIVITY_TYPES).toContain('activity.unread')
     expect(ACTIVITY_TYPES).not.toContain('note')
     expect(ACTIVITY_TYPES).not.toContain('action')
     expect(ACTIVITY_TYPES).not.toContain('case_bucket_change')

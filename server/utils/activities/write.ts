@@ -6,6 +6,7 @@ import {
   type TaskContent,
   activity_timestamp,
   entity_ref,
+  is_activity_meta_type,
   is_communication_type,
   is_note_type,
   is_task_type,
@@ -91,7 +92,7 @@ const create_activity_internal = (
   existing_db?: Database
 ): Activite => {
   const parsed = input
-  if (parsed.type === 'activity.read' || parsed.type === 'activity.reaction_changed') {
+  if (is_activity_meta_type(parsed.type)) {
     throw new ActivitiesError('Cannot create this event directly', 'forbidden')
   }
   if (is_communication_type(parsed.type)) {
@@ -132,6 +133,10 @@ const create_activity_internal = (
         if (creation.task.state === 'open' && !assigneeId) {
           throw new ActivitiesError('Open actions require a known assignee')
         }
+        const dueDate = creation.task.due_date?.trim()
+        if (creation.task.state === 'open' && !dueDate) {
+          throw new ActivitiesError('Open actions require a due date')
+        }
         const assignee = assigneeId
           ? entity_ref(assigneeId, creation.task.assignee?.label ?? assigneeId)
           : undefined
@@ -141,7 +146,7 @@ const create_activity_internal = (
             title: creation.task.title,
             state: parsed.type === 'task.completed' ? 'completed' : 'open',
             ...(assignee ? { assignee } : {}),
-            ...(creation.task.due_date ? { due_date: creation.task.due_date } : {})
+            ...(dueDate ? { due_date: dueDate } : {})
           },
           ...(creation.note ? { note: creation.note } : {}),
           ...(creation.result ? { result: creation.result } : {})
@@ -257,6 +262,23 @@ const latest_reaction = (db: Database, sourceId: number, auteur: string): string
   return parse_activity_meta_content(row.contenu)?.emoji ?? null
 }
 
+const latest_receipt = (
+  db: Database,
+  sourceId: number,
+  auteur: string
+): 'activity.read' | 'activity.unread' | null => {
+  const row = db
+    .query<Pick<ActivityDbRow, 'type'>, [string, number]>(
+      `SELECT type FROM activites
+       WHERE type IN ('activity.read', 'activity.unread') AND auteur = ?
+         AND json_extract(contenu, '$.source_activity_id') = ?
+       ORDER BY date_creation DESC, id DESC`
+    )
+    .get(auteur, sourceId)
+  if (row?.type === 'activity.read' || row?.type === 'activity.unread') return row.type
+  return null
+}
+
 export const patch_activity = (actor: string, id: number, patch: ActivityPatch): Activite => {
   const parsed = ActivityPatchInput.parse(patch)
   const destinataire = user_destinataire(actor)
@@ -304,7 +326,9 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
       if (parsed.operation === 'set_mention') {
         const current = existing.mentions.find((mention) => mention.destinataire === destinataire)
         if (!current) throw new ActivitiesError('Actor is not mentioned', 'forbidden')
-        if (parsed.lu !== true) return existing
+        if (parsed.lu === undefined) return existing
+        const nextType = parsed.lu ? 'activity.read' : 'activity.unread'
+        if (latest_receipt(db, existing.id, destinataire) === nextType) return existing
         return append(db, {
           date_creation: activity_timestamp(),
           rattachement: existing.rattachement,
@@ -314,7 +338,7 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
             id_locataire: existing.id_locataire,
             id_lot: existing.id_lot
           },
-          type: 'activity.read',
+          type: nextType,
           mentions: [],
           contenu: JSON.stringify({ version: 2, source_activity_id: existing.id })
         })

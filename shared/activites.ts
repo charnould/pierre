@@ -77,6 +77,7 @@ export const ACTIVITY_TYPES = [
   'communication.received',
   'communication.imported',
   'activity.read',
+  'activity.unread',
   'activity.reaction_changed',
   'repayment_plan.created',
   'repayment_plan.updated',
@@ -255,7 +256,11 @@ const COMMUNICATION_TYPES = new Set<string>([
   ...COMMUNICATION_OPENED_TYPES,
   ...COMMUNICATION_STATUS_TYPES
 ])
-const META_TYPES = new Set<string>(['activity.read', 'activity.reaction_changed'])
+const META_TYPES = new Set<string>([
+  'activity.read',
+  'activity.unread',
+  'activity.reaction_changed'
+])
 const TITLED_TYPES = new Set<string>([
   'artifact.generated',
   'artifact.regenerated',
@@ -299,6 +304,8 @@ export const is_task_type = (type: string): boolean => TASK_TYPES.has(type)
 export const is_case_change_type = (type: string): boolean => CASE_CHANGE_TYPES.has(type)
 
 export const is_signature_type = (type: string): boolean => SIGNATURE_TYPES.has(type)
+
+export const is_activity_meta_type = (type: string): boolean => META_TYPES.has(type)
 
 export const is_hidden_timeline_type = (type: string): boolean =>
   META_TYPES.has(type) || COMMUNICATION_STATUS_TYPES.has(type)
@@ -707,6 +714,9 @@ export type GetActivitiesParams = {
   type?: string
   current_threads?: boolean
   state?: TaskState
+  assignee?: 'me' | 'other'
+  created_by?: 'me'
+  order?: 'due_asc'
   limit?: number
   offset?: number
 }

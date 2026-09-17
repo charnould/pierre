@@ -69,6 +69,18 @@ describe('create_activity', () => {
     const after = list_activities(JEAN, { inbox: true })[0]!
     expect(after.my).toEqual(mention(JEAN))
     expect(after.read).toBe(true)
+    expect(list_activities(JEAN, { inbox: true, unread_only: true })).toHaveLength(0)
+
+    const unreadEvent = patch_activity(JEAN, created.id, { operation: 'set_mention', lu: false })
+    expect(unreadEvent.type).toBe('activity.unread')
+    expect(list_activities(JEAN, { inbox: true })[0]?.read).toBe(false)
+    expect(list_activities(JEAN, { inbox: true, unread_only: true }).map((row) => row.id)).toEqual([
+      created.id
+    ])
+
+    const unreadAgain = patch_activity(JEAN, created.id, { operation: 'set_mention', lu: false })
+    expect(unreadAgain.id).toBe(created.id)
+    expect(unreadAgain.type).toBe('note.published')
   })
 
   it('ignore un @login inconnu et résout @pierre vers l’agent', async () => {

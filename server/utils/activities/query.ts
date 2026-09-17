@@ -9,12 +9,14 @@ import { sql_date_key } from '../sql-normalization'
 import { datastore_path, row_to_activity, type ActivityDbRow, user_destinataire } from './rows'
 import { type ListActivitiesOptions } from './schema'
 
-const READ_SQL = `EXISTS (
-  SELECT 1 FROM activites read_event
-  WHERE read_event.type = 'activity.read'
-    AND read_event.auteur = ?
+const READ_SQL = `(
+  SELECT read_event.type FROM activites read_event
+  WHERE read_event.auteur = ?
+    AND read_event.type IN ('activity.read', 'activity.unread')
     AND json_extract(read_event.contenu, '$.source_activity_id') = a.id
-)`
+  ORDER BY read_event.date_creation DESC, read_event.id DESC
+  LIMIT 1
+) = 'activity.read'`
 
 export const list_activities = (
   actor: string,
@@ -75,19 +77,51 @@ export const list_activities = (
          )`
       )
     }
+    if (options.assignee === 'me') {
+      conditions.push(`lower(json_extract(a.contenu, '$.task.assignee.id')) = lower(?)`)
+      params.push(destinataire)
+    } else if (options.assignee === 'other') {
+      conditions.push(
+        `json_extract(a.contenu, '$.task.assignee.id') IS NOT NULL
+         AND json_extract(a.contenu, '$.task.assignee.id') != ''
+         AND lower(json_extract(a.contenu, '$.task.assignee.id')) != lower(?)`
+      )
+      params.push(destinataire)
+    }
+    if (options.created_by === 'me') {
+      conditions.push(
+        `EXISTS (
+           SELECT 1 FROM activites created
+           WHERE created.thread_id = a.thread_id
+             AND created.type = 'task.created'
+             AND lower(created.auteur) = lower(?)
+         )`
+      )
+      params.push(destinataire)
+    }
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+    const order =
+      options.order === 'due_asc'
+        ? `CASE
+             WHEN json_extract(a.contenu, '$.task.due_date') IS NULL
+               OR json_extract(a.contenu, '$.task.due_date') = ''
+             THEN 1 ELSE 0
+           END,
+           json_extract(a.contenu, '$.task.due_date') ASC,
+           ${sql_date_key('a.date_creation')} ASC, a.id ASC`
+        : `${sql_date_key('a.date_creation')} DESC, a.id DESC`
     params.push(options.limit ?? 100, options.offset ?? 0)
     const rows = db
       .query<ActivityDbRow, Array<string | number>>(
         `SELECT a.* FROM activites a ${where}
-         ORDER BY ${sql_date_key('a.date_creation')} DESC, a.id DESC
+         ORDER BY ${order}
          LIMIT ? OFFSET ?`
       )
       .all(...params)
     const metaRows = db
       .query<ActivityDbRow, [string]>(
         `SELECT * FROM activites
-         WHERE auteur = ? AND type IN ('activity.read', 'activity.reaction_changed')
+         WHERE auteur = ? AND type IN ('activity.read', 'activity.unread', 'activity.reaction_changed')
          ORDER BY date_creation ASC, id ASC`
       )
       .all(destinataire)
@@ -97,6 +131,7 @@ export const list_activities = (
       const content = parse_activity_meta_content(meta.contenu)
       if (!content) continue
       if (meta.type === 'activity.read') reads.add(content.source_activity_id)
+      else if (meta.type === 'activity.unread') reads.delete(content.source_activity_id)
       else reactions.set(content.source_activity_id, content.emoji ?? null)
     }
     return rows.map((row) => {
