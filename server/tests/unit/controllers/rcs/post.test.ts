@@ -33,7 +33,8 @@ const validBody = {
   contenu: {
     action: 'Répondre au locataire',
     body: 'Votre dossier est prêt.',
-    choices: [{ id: 'confirmer', label: 'Confirmer' }]
+    sms_fallback: 'Votre dossier est prêt.',
+    choices: [{ type: 'reply', label: 'Confirmer' }]
   }
 }
 
@@ -104,6 +105,33 @@ describe('POST /rcs provider boundary', () => {
     expect(response.status).toBe(400)
   })
 
+  it('rejects the stored { id, label } reply shape on write', async () => {
+    const response = await postRcs(Bun.randomUUIDv7(), true, {
+      ...validBody,
+      contenu: { body: 'Choisissez', choices: [{ id: 'rappeler', label: 'Être rappelé' }] }
+    })
+    expect(response.status).toBe(400)
+  })
+
+  it('accepts a body-only RCS payload and stores the body as SMS fallback', async () => {
+    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(acceptProviderRequest)
+    try {
+      const response = await postRcs(Bun.randomUUIDv7(), true, {
+        ...validBody,
+        contenu: { body: 'Votre dossier est prêt.' }
+      })
+      expect(response.status).toBe(201)
+      const rows = list_activities('alice@example.org', {
+        rattachement: 'tickets:REQ-RCS',
+        limit: 10
+      })
+      const sent = rows.find((row) => row.type === 'communication.sent' && row.channel === 'rcs')
+      expect(JSON.parse(sent!.contenu).sms_fallback).toBe('Votre dossier est prêt.')
+    } finally {
+      fetchSpy.mockRestore()
+    }
+  })
+
   it('sends the wrapped CM payload and records a sent activity', async () => {
     const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(acceptProviderRequest)
     try {
@@ -138,7 +166,7 @@ describe('POST /rcs provider boundary', () => {
                   {
                     text: 'Votre dossier est prêt.',
                     suggestions: [
-                      { action: 'Reply', label: 'Confirmer', postbackdata: 'confirmer' }
+                      { action: 'Reply', label: 'Confirmer', postbackdata: 'Confirmer' }
                     ]
                   }
                 ]
@@ -153,7 +181,8 @@ describe('POST /rcs provider boundary', () => {
       })
       expect(rows.some((row) => row.channel === 'sms')).toBe(false)
       const sent = rows.find((row) => row.type === 'communication.sent' && row.channel === 'rcs')
-      expect(JSON.parse(sent!.contenu).choices).toEqual([{ id: 'confirmer', label: 'Confirmer' }])
+      expect(JSON.parse(sent!.contenu).choices).toEqual([{ type: 'reply', label: 'Confirmer' }])
+      expect(JSON.parse(sent!.contenu).sms_fallback).toBe('Votre dossier est prêt.')
       expect((await postRcs(idempotencyKey)).status).toBe(201)
       expect(provider_calls(fetchSpy.mock.calls)).toHaveLength(2)
     } finally {

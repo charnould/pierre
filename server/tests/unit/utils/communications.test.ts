@@ -303,7 +303,7 @@ describe('communications', () => {
         version: 2,
         sender: 'user:alice@example.org',
         body: 'Souhaitez-vous être rappelé ?',
-        choices: [{ id: 'rappeler', label: 'Être rappelé' }]
+        choices: [{ type: 'reply', label: 'Être rappelé' }]
       }),
       idempotency_key: Bun.randomUUIDv7()
     })

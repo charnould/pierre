@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, spyOn } from 'bun:test'
 
 import { RcsSendError, send_rcs_message } from '../../../utils/rcs/send'
-import { new_rcs_reference, to_cm_number, wrap_rcs_message } from '../../../utils/rcs/wrap'
+import {
+  new_rcs_reference,
+  to_cm_number,
+  to_cm_suggestions,
+  wrap_rcs_message
+} from '../../../utils/rcs/wrap'
 
 const PHONE_NATIONAL = '0621804969'
 const PHONE_SPACED = '06 21 80 49 69'
@@ -43,6 +48,25 @@ describe('wrap', () => {
       richContent,
       reference: 'jabc'
     })
+  })
+
+  it('maps choices to CM suggestions', () => {
+    expect(
+      to_cm_suggestions([
+        { type: 'reply', label: 'OK' },
+        { type: 'dial', label: 'Appeler', phone: '01 02 03 04 05' },
+        { type: 'url', label: 'Site', url: 'https://bailleur.fr' }
+      ])
+    ).toEqual([
+      { action: 'Reply', label: 'OK', postbackdata: 'OK' },
+      {
+        action: 'Dial',
+        label: 'Appeler',
+        postbackdata: 'Appeler',
+        dial: { PhoneNumber: '0102030405' }
+      },
+      { action: 'Openurl', label: 'Site', postbackdata: 'Site', url: 'https://bailleur.fr' }
+    ])
   })
 
   it('builds an alphanumeric reference of at most 32 chars', () => {

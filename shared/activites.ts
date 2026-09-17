@@ -1,3 +1,4 @@
+import { parse_stored_choices, type RcsChoice, type RcsContenu } from './rcs-message'
 import {
   type RepaymentPlanCloseReason,
   type RepaymentPlanClosedContent,
@@ -37,6 +38,12 @@ export const COMMUNICATION_CHANNELS = [
   'electronic_registered_letter'
 ] as const
 export type CommunicationChannel = (typeof COMMUNICATION_CHANNELS)[number]
+
+/** Canaux qu’un client peut envoyer ou journaliser. `sms` n’existe qu’en fallback serveur. */
+export type SubmittableChannel = Exclude<CommunicationChannel, 'sms'>
+export const SUBMITTABLE_CHANNELS = COMMUNICATION_CHANNELS.filter(
+  (channel): channel is SubmittableChannel => channel !== 'sms'
+) as [SubmittableChannel, ...SubmittableChannel[]]
 
 const COMMUNICATION_CHANNEL_LABELS: Record<CommunicationChannel, string> = {
   rcs: 'RCS',
@@ -151,18 +158,14 @@ type TicketChangeContent = CaseChangeContent & {
   field: string
 }
 
-export type CommunicationChoice = {
-  id: string
-  label: string
-}
-
 export type CommunicationOpenedContent = {
   version: 2
   sender: string
   subject?: string
   body: string
   action?: string
-  choices?: CommunicationChoice[]
+  choices?: RcsChoice[]
+  sms_fallback?: string
   provider?: string
   purpose?: 'general' | 'payment_plan' | 'bulk'
   related_id?: string
@@ -432,35 +435,17 @@ export const parse_communication_opened_content = (
   ) {
     return null
   }
-  const choices = value['choices']
-  if (
-    choices !== undefined &&
-    (!Array.isArray(choices) ||
-      !choices.every(
-        (entry) =>
-          entry !== null &&
-          typeof entry === 'object' &&
-          !Array.isArray(entry) &&
-          non_empty_string((entry as Record<string, unknown>)['id']) &&
-          non_empty_string((entry as Record<string, unknown>)['label'])
-      ))
-  ) {
-    return null
-  }
+  const choices = parse_stored_choices(value['choices'])
+  if (!choices) return null
+  const sms_fallback = as_string(value['sms_fallback'])
   return {
     version: 2,
     sender: value['sender'].trim(),
     body: value['body'],
     ...(as_string(value['subject']) ? { subject: as_string(value['subject']) } : {}),
     ...(as_string(value['action']) ? { action: as_string(value['action']) } : {}),
-    ...(choices
-      ? {
-          choices: (choices as Array<Record<string, unknown>>).map((choice) => ({
-            id: String(choice['id']).trim(),
-            label: String(choice['label']).trim()
-          }))
-        }
-      : {}),
+    ...(choices.length ? { choices } : {}),
+    ...(sms_fallback ? { sms_fallback } : {}),
     ...(as_string(value['provider']) ? { provider: as_string(value['provider']) } : {}),
     ...(purpose ? { purpose } : {}),
     ...(as_string(value['related_id']) ? { related_id: as_string(value['related_id']) } : {}),
@@ -747,38 +732,46 @@ export type ActivityFeedSyncResult =
 export type CreateActivityPayload = { url: string } & CreateActivityBody
 export type PatchActivityPayload = { url: string; id: number; patch: ActivityPatch }
 export type DeleteActivityPayload = { url: string; id: number }
-export type SendCommunicationPayload = {
+type SendCommunicationBase = {
   url: string
   idempotencyKey: string
-  channel: CommunicationChannel
   contexte: ActivityContext
   ref: string
   destinataire: string
-  contenu: {
-    subject?: string
-    body: string
-    action?: string
-    choices?: CommunicationChoice[]
-  }
 }
+
+export type SendCommunicationPayload = SendCommunicationBase &
+  (
+    | { channel: 'rcs'; contenu: RcsContenu }
+    | {
+        channel: Exclude<SubmittableChannel, 'rcs'>
+        contenu: { subject?: string; body: string; action?: string }
+      }
+  )
+
 export type RecordExternalCommunicationPayload = {
   url: string
   idempotencyKey: string
-  channel: CommunicationChannel
   contexte: ActivityContext
   ref: string
   destinataire?: string
   imported?: true
-  contenu: {
-    subject?: string
-    body: string
-    sender?: string
-    action?: string
-    choices?: CommunicationChoice[]
-    tenant_reply?: true
-    external_application?: { name: string }
-  }
-}
+} & (
+  | {
+      channel: 'rcs'
+      contenu: RcsContenu & { sender?: string; external_application?: { name: string } }
+    }
+  | {
+      channel: Exclude<SubmittableChannel, 'rcs'>
+      contenu: {
+        body: string
+        subject?: string
+        sender?: string
+        action?: string
+        external_application?: { name: string }
+      }
+    }
+)
 
 export type ActivitiesListResponse = { data: ActiviteListItem[] }
 export type ActivityResponse = { data: Activite }

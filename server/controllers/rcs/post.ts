@@ -1,8 +1,9 @@
 import type { Context } from 'hono'
 import { z } from 'zod'
 
-import { ACTIVITY_CONTEXTS, ACTIVITY_CONTENT_VERSION } from '../../../shared/activites'
+import { ACTIVITY_CONTEXTS } from '../../../shared/activites'
 import { businessModuleForActivityContext } from '../../../shared/modules'
+import { parse_rcs_contenu, with_sms_fallback } from '../../../shared/rcs-message'
 import type { User } from '../../utils/_schema'
 import { get_activity } from '../../utils/activities/rows'
 import { userCanAccessModule } from '../../utils/authorize-role'
@@ -15,30 +16,14 @@ import {
 import { normalize_telephone } from '../../utils/contacts'
 import { update_status } from '../../utils/delivery-status'
 import { RcsSendError, send_rcs_message } from '../../utils/rcs/send'
-import { to_cm_number } from '../../utils/rcs/wrap'
+import { to_cm_number, to_cm_suggestions } from '../../utils/rcs/wrap'
 
 const Body = z
   .object({
     contexte: z.enum(ACTIVITY_CONTEXTS),
     ref: z.string().trim().min(1),
     destinataire: z.string().trim().min(1),
-    contenu: z
-      .object({
-        body: z.string().trim().min(1),
-        action: z.string().trim().min(1).optional(),
-        choices: z
-          .array(
-            z
-              .object({
-                id: z.string().regex(/^[a-z][a-z0-9_]*$/),
-                label: z.string().trim().min(1)
-              })
-              .strict()
-          )
-          .max(12)
-          .optional()
-      })
-      .strict()
+    contenu: z.unknown()
   })
   .strict()
 
@@ -88,6 +73,10 @@ export const controller = async (c: Context) => {
   if (normalized.status === 'invalid') {
     return c.json({ error: { code: 'invalid_body', message: 'Numéro mobile invalide' } }, 400)
   }
+  const contenu = parse_rcs_contenu(parsed.data.contenu)
+  if (!contenu) {
+    return c.json({ error: { code: 'invalid_body', message: 'Contenu RCS invalide' } }, 400)
+  }
 
   try {
     let activity = create_outbound({
@@ -96,30 +85,25 @@ export const controller = async (c: Context) => {
       ref: parsed.data.ref,
       type: 'rcs',
       destinataire: normalized.value,
-      contenu: JSON.stringify({
-        version: ACTIVITY_CONTENT_VERSION,
-        ...(parsed.data.contenu.action ? { action: parsed.data.contenu.action } : {}),
-        body: parsed.data.contenu.body,
-        ...(parsed.data.contenu.choices?.length ? { choices: parsed.data.contenu.choices } : {})
-      }),
+      contenu: JSON.stringify(with_sms_fallback(contenu)),
       idempotency_key: idempotencyKey
     })
     const dispatch = claim_outbound_dispatch(activity.id)
     if (dispatch !== 'claimed') return c.json({ data: get_activity(activity.id) ?? activity }, 201)
 
-    const conversation: Record<string, unknown> = { text: parsed.data.contenu.body }
-    if (parsed.data.contenu.choices?.length) {
-      conversation['suggestions'] = parsed.data.contenu.choices.map((choice) => ({
-        action: 'Reply',
-        label: choice.label,
-        postbackdata: choice.id
-      }))
+    const richContent = {
+      conversation: [
+        {
+          text: contenu.body,
+          ...(contenu.choices.length ? { suggestions: to_cm_suggestions(contenu.choices) } : {})
+        }
+      ]
     }
     try {
       await send_rcs_message({
         phone: to_cm_number(normalized.value),
-        richContent: { conversation: [conversation] },
-        body: { content: parsed.data.contenu.body },
+        richContent,
+        body: { content: contenu.body },
         reference: communication_reference(activity.id)
       })
     } catch (error) {

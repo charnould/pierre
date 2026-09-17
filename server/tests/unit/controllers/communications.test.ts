@@ -157,7 +157,8 @@ describe('webhooks de communication', () => {
       contenu: JSON.stringify({
         version: 2,
         sender: 'user:alice@example.org',
-        body: 'Relance'
+        body: 'Relance',
+        sms_fallback: 'Relance'
       }),
       idempotency_key: Bun.randomUUIDv7()
     })
@@ -204,7 +205,7 @@ describe('webhooks de communication', () => {
         version: 2,
         sender: 'user:alice@example.org',
         body: 'Choisissez',
-        choices: [{ id: 'rappeler', label: 'Être rappelé' }]
+        choices: [{ type: 'reply', label: 'Être rappelé' }]
       }),
       idempotency_key: Bun.randomUUIDv7()
     })
@@ -252,7 +253,7 @@ describe('webhooks de communication', () => {
       messageContext: `p${activity.id}`,
       from: { number: '+33612345678' },
       timeUtc: '2030-08-26T20:01:00Z',
-      event: { custom: { postbackdata: 'rappeler' } }
+      event: { custom: { postbackdata: 'Être rappelé' } }
     }
     const inbound = await app.request('/webhook/rcs', {
       method: 'POST',
@@ -325,8 +326,7 @@ describe('POST /communications/external et action', () => {
         contenu: {
           action: 'Contacter la CAF',
           subject: 'Dossier APL',
-          body: 'Merci de rétablir l’APL.',
-          choices: [{ id: 'transmettre', label: 'Transmettre le justificatif' }]
+          body: 'Merci de rétablir l’APL.'
         }
       })
     })
@@ -340,9 +340,126 @@ describe('POST /communications/external et action', () => {
       version: 2,
       action: 'Contacter la CAF',
       subject: 'Dossier APL',
-      body: 'Merci de rétablir l’APL.',
-      choices: [{ id: 'transmettre', label: 'Transmettre le justificatif' }]
+      body: 'Merci de rétablir l’APL.'
     })
+    expect(JSON.parse(body.data.contenu).choices).toBeUndefined()
+  })
+
+  it('journalise un RCS avec boutons sans exiger sms_fallback', async () => {
+    const response = await app.request('/communications/external', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': Bun.randomUUIDv7()
+      },
+      body: JSON.stringify({
+        channel: 'rcs',
+        contexte: 'tickets',
+        ref: 'RCS-JOURNAL-1',
+        destinataire: '+33600000000',
+        contenu: {
+          body: 'Choisissez',
+          choices: [{ type: 'reply', label: 'Être rappelé' }]
+        }
+      })
+    })
+    expect(response.status).toBe(201)
+    const body = (await response.json()) as { data: { channel: string; contenu: string } }
+    expect(body.data.channel).toBe('rcs')
+    expect(JSON.parse(body.data.contenu)).toMatchObject({
+      body: 'Choisissez',
+      choices: [{ type: 'reply', label: 'Être rappelé' }]
+    })
+    expect(JSON.parse(body.data.contenu).sms_fallback).toBeUndefined()
+  })
+
+  it('journalise un RCS avec sender et application externe', async () => {
+    const response = await app.request('/communications/external', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': Bun.randomUUIDv7()
+      },
+      body: JSON.stringify({
+        channel: 'rcs',
+        contexte: 'tickets',
+        ref: 'RCS-JOURNAL-2',
+        destinataire: '+33600000000',
+        contenu: {
+          body: 'Choisissez',
+          sender: 'Alice <alice@bailleur.fr>',
+          external_application: { name: 'Izy' }
+        }
+      })
+    })
+    expect(response.status).toBe(201)
+    const body = (await response.json()) as { data: { contenu: string } }
+    expect(JSON.parse(body.data.contenu)).toMatchObject({
+      body: 'Choisissez',
+      sender: 'Alice <alice@bailleur.fr>',
+      provider: 'Izy'
+    })
+  })
+
+  it('n’accepte pas provider comme alias de external_application', async () => {
+    const response = await app.request('/communications/external', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': Bun.randomUUIDv7()
+      },
+      body: JSON.stringify({
+        channel: 'rcs',
+        contexte: 'tickets',
+        ref: 'RCS-JOURNAL-PROVIDER',
+        destinataire: '+33600000000',
+        contenu: { body: 'Choisissez', provider: 'Izy' }
+      })
+    })
+    expect(response.status).toBe(201)
+    expect(
+      JSON.parse(((await response.json()) as { data: { contenu: string } }).data.contenu).provider
+    ).toBeUndefined()
+  })
+
+  it('refuse de journaliser un SMS autonome', async () => {
+    const response = await app.request('/communications/external', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': Bun.randomUUIDv7()
+      },
+      body: JSON.stringify({
+        channel: 'sms',
+        contexte: 'tickets',
+        ref: 'SMS-JOURNAL',
+        destinataire: '+33600000000',
+        contenu: { body: 'Secours' }
+      })
+    })
+    expect(response.status).toBe(400)
+  })
+
+  it('refuse des boutons RCS sur un courriel', async () => {
+    const response = await app.request('/communications/external', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': Bun.randomUUIDv7()
+      },
+      body: JSON.stringify({
+        channel: 'email',
+        contexte: 'automations',
+        ref: 'MAILTO-CHOICES',
+        destinataire: 'caf@example.fr',
+        contenu: {
+          subject: 'Dossier APL',
+          body: 'Merci de rétablir l’APL.',
+          choices: [{ type: 'reply', label: 'Envoyer le justificatif' }]
+        }
+      })
+    })
+    expect(response.status).toBe(400)
   })
 
   it('accepte une communication externe avec objet seul', async () => {
@@ -376,7 +493,6 @@ describe('POST /communications/external et action', () => {
         ref: 'EXTERNAL-NO-DESTINATION',
         contenu: {
           body: 'Votre demande a été traitée.',
-          tenant_reply: true,
           external_application: { name: 'Aravis' }
         }
       })

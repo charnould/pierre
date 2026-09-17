@@ -25,6 +25,8 @@ export function create_sms_fallback_with_db(db: Database, rcsActivity: Activite)
   const attachment = parse_rattachement(rcsActivity.rattachement)
   const content = parse_communication_opened_content(rcsActivity.contenu)
   if (!attachment || !content) return null
+  const sms_body = content.sms_fallback ?? content.body
+  if (!sms_body) return null
 
   const sms = create_outbound_with_db(db, {
     actor: rcsActivity.auteur.slice('user:'.length),
@@ -34,7 +36,7 @@ export function create_sms_fallback_with_db(db: Database, rcsActivity: Activite)
     destinataire: rcsActivity.destinataire,
     contenu: JSON.stringify({
       version: ACTIVITY_CONTENT_VERSION,
-      body: content.body,
+      body: sms_body,
       ...(content.action ? { action: content.action } : {}),
       fallback_from: communication_reference(rcsActivity.id)
     }),

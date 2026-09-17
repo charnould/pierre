@@ -1,9 +1,6 @@
 import type { Context } from 'hono'
 
-import {
-  ACTIVITY_CONTENT_VERSION,
-  parse_communication_opened_content
-} from '../../../shared/activites'
+import { ACTIVITY_CONTENT_VERSION } from '../../../shared/activites'
 import { parse_rattachement } from '../../utils/activities/rows'
 import { handle_rich_rcs_reply } from '../../utils/bulk/rich-rcs'
 import {
@@ -80,20 +77,12 @@ const inbound_idempotency_key = (
   return `cm:inbound:${new Bun.CryptoHasher('sha256').update(identity).digest('hex')}`
 }
 
-const content_from = (
-  payload: Record<string, unknown>,
-  source: ReturnType<typeof communication_from_reference>
-): string | null => {
+const content_from = (payload: Record<string, unknown>): string | null => {
   const text = string_at(payload, 'message', 'text')
   if (text) return text
-  const label = string_at(payload, 'event', 'custom', 'label')
-  const postback = string_at(payload, 'event', 'custom', 'postbackdata')
-  const configuredLabel = postback
-    ? parse_communication_opened_content(source?.contenu ?? '')?.choices?.find(
-        (choice) => choice.id === postback
-      )?.label
-    : null
-  const choice = label ?? configuredLabel ?? postback
+  const choice =
+    string_at(payload, 'event', 'custom', 'label') ??
+    string_at(payload, 'event', 'custom', 'postbackdata')
   return choice ? `Le locataire a choisi « ${choice} ».` : null
 }
 
@@ -138,7 +127,7 @@ const handle_inbound = (payload: Record<string, unknown>): void => {
   }
   const contextReference = string_at(payload, 'messageContext')
   const source = contextReference ? communication_from_reference(contextReference) : null
-  const content = content_from(payload, source)
+  const content = content_from(payload)
   if (!content) throw new WebhookValidationError('Contenu webhook manquant')
   const idempotencyKey = inbound_idempotency_key(
     payload,

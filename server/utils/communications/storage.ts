@@ -54,36 +54,16 @@ const require_channel = (medium: string): CommunicationChannel => {
 
 const opened_contenu = (raw: string, sender: string): string => {
   const value = parse_contenu_json(raw)
-  const normalized = JSON.stringify({
-    version: 2,
-    sender:
-      typeof value['sender'] === 'string' && value['sender'].trim()
-        ? value['sender'].trim()
-        : sender,
-    body: typeof value['body'] === 'string' ? value['body'] : '',
-    ...(typeof value['subject'] === 'string' && value['subject'].trim()
-      ? { subject: value['subject'].trim() }
-      : {}),
-    ...(typeof value['action'] === 'string' && value['action'].trim()
-      ? { action: value['action'].trim() }
-      : {}),
-    ...(value['choices'] !== undefined ? { choices: value['choices'] } : {}),
-    ...(typeof value['provider'] === 'string' && value['provider'].trim()
-      ? { provider: value['provider'].trim() }
-      : {}),
-    ...(value['purpose'] === 'general' ||
-    value['purpose'] === 'payment_plan' ||
-    value['purpose'] === 'bulk'
-      ? { purpose: value['purpose'] }
-      : {}),
-    ...(typeof value['related_id'] === 'string' && value['related_id'].trim()
-      ? { related_id: value['related_id'].trim() }
-      : {}),
-    ...(typeof value['fallback_from'] === 'string' && value['fallback_from'].trim()
-      ? { fallback_from: value['fallback_from'].trim() }
-      : {})
-  })
-  const content = parse_communication_opened_content(normalized)
+  const injectedSender =
+    typeof value['sender'] === 'string' && value['sender'].trim() ? value['sender'].trim() : sender
+  const content = parse_communication_opened_content(
+    JSON.stringify({
+      ...value,
+      version: 2,
+      sender: injectedSender,
+      body: typeof value['body'] === 'string' ? value['body'] : ''
+    })
+  )
   if (!content) throw new CommunicationsError('Contenu de communication invalide')
   return JSON.stringify(content)
 }

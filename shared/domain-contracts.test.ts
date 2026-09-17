@@ -59,18 +59,63 @@ describe('notification delivery contracts', () => {
 })
 
 describe('communication content contracts', () => {
-  test('requires choices to preserve both provider id and human label', () => {
+  test('stores RCS choices as typed buttons', () => {
     const base = { version: 2, sender: 'alice@example.org', body: 'Choisissez' }
     expect(
       parse_communication_opened_content(
         JSON.stringify({
           ...base,
-          choices: [{ id: 'rappeler', label: 'Être rappelé' }]
+          sms_fallback: 'SMS',
+          choices: [{ type: 'reply', label: 'Être rappelé' }]
         })
-      )?.choices
-    ).toEqual([{ id: 'rappeler', label: 'Être rappelé' }])
+      )
+    ).toMatchObject({
+      sms_fallback: 'SMS',
+      choices: [{ type: 'reply', label: 'Être rappelé' }]
+    })
+    expect(parse_communication_opened_content(JSON.stringify({ ...base, choices: [] }))).toEqual({
+      version: 2,
+      sender: 'alice@example.org',
+      body: 'Choisissez'
+    })
     expect(
       parse_communication_opened_content(JSON.stringify({ ...base, choices: ['Être rappelé'] }))
     ).toBeNull()
+    // `{ id, label }` was the stored reply shape before typed buttons.
+    expect(
+      parse_communication_opened_content(
+        JSON.stringify({ ...base, choices: [{ id: 'rappeler', label: 'Être rappelé' }] })
+      )?.choices
+    ).toEqual([{ type: 'reply', label: 'Être rappelé' }])
+    expect(
+      parse_communication_opened_content(
+        JSON.stringify({
+          ...base,
+          choices: [{ type: 'reply', label: 'Être rappelé', id: 'legacy' }]
+        })
+      )?.choices
+    ).toEqual([{ type: 'reply', label: 'Être rappelé' }])
+    expect(
+      parse_communication_opened_content(
+        JSON.stringify({
+          ...base,
+          choices: [
+            { type: 'reply', label: 'Transmettre le justificatif' },
+            { type: 'reply', label: 'Transmettre le justificatif' }
+          ]
+        })
+      )?.body
+    ).toBe('Choisissez')
+    expect(
+      parse_communication_opened_content(
+        JSON.stringify({
+          ...base,
+          choices: Array.from({ length: 12 }, (_, index) => ({
+            type: 'reply',
+            label: `B${index}`
+          }))
+        })
+      )?.choices
+    ).toHaveLength(12)
   })
 })
