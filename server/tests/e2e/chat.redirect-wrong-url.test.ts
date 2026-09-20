@@ -2,7 +2,7 @@ import { expect, it } from 'bun:test'
 
 import { createE2EView, currentUrl, evaluate, navigate } from './launch-browser'
 
-it('returns JSON for unknown communication API routes instead of redirecting to chat', async () => {
+it('returns JSON for unknown communication API routes instead of the empty page', async () => {
   const response = await fetch('http://localhost:3000/communications/unknown', {
     method: 'POST',
     redirect: 'manual'
@@ -18,48 +18,24 @@ it('returns JSON for unknown communication API routes instead of redirecting to 
   })
 })
 
-it('should redirect to the default config for invalid paths and parameters + preserve valid config/data pairs', async () => {
+it('returns the empty page for unknown HTML paths', async () => {
   await using view = createE2EView()
 
-  // Accessing base `/c` route with no parameters or completely invalid
-  // paths should redirect to default config with empty data
-  await navigate(view, 'http://localhost:3000/c')
-  expect(await currentUrl(view)).toBe('http://localhost:3000/c?config=default&data=')
-
   await navigate(view, 'http://localhost:3000/wrong_path')
-  expect(await currentUrl(view)).toBe('http://localhost:3000/c?config=default&data=')
+  expect(await currentUrl(view)).toBe('http://localhost:3000/wrong_path')
+  expect(
+    await evaluate<boolean>(
+      view,
+      'Boolean(document.querySelector(\'img[src="/branding/lock.svg"]\'))'
+    )
+  ).toBe(true)
 
-  await navigate(view, 'http://localhost:3000/c/wrong_path')
-  expect(await currentUrl(view)).toBe('http://localhost:3000/c?config=default&data=')
-
-  const path = 'http://localhost:3000/c'
-
-  await navigate(view, `${path}?config=wrong_config`)
-  expect(await currentUrl(view)).toContain('config=wrong_config')
-  expect(await evaluate<string>(view, 'document.body.textContent')).toContain(
-    'Configuration introuvable.'
-  )
-
-  await navigate(view, `${path}?config=wrong_config&context=wrong_context`)
-  expect(await currentUrl(view)).toContain('config=wrong_config')
-  expect(await evaluate<string>(view, 'document.body.textContent')).toContain(
-    'Configuration introuvable.'
-  )
-
-  // Providing a valid config but missing data should
-  // still resolve properly, adding an empty data param
-
-  await navigate(view, `${path}?config=default`)
-  expect(await currentUrl(view)).toBe('http://localhost:3000/c?config=default&data=')
-
-  // Missing config but valid data should fallback
-  // to default config while preserving data
-
-  await navigate(view, `${path}?data=test`)
-  expect(await currentUrl(view)).toBe('http://localhost:3000/c?config=default&data=test')
-
-  // Valid config and data pair
-  // should be preserved as-is
-  await navigate(view, `${path}?config=demo&data=test`)
-  expect(await currentUrl(view)).toBe('http://localhost:3000/c?config=demo&data=test')
+  await navigate(view, 'http://localhost:3000/c')
+  expect(await currentUrl(view)).toBe('http://localhost:3000/c')
+  expect(
+    await evaluate<boolean>(
+      view,
+      'Boolean(document.querySelector(\'img[src="/branding/lock.svg"]\'))'
+    )
+  ).toBe(true)
 })

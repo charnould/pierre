@@ -3,7 +3,7 @@ import { readdir } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-import { ChatbotConfig, SkillConfig } from '../_schema'
+import { DefaultChatbotConfig, InternalChatbotConfig, SkillConfig } from '../_schema'
 import { CUSTOMIZATION_DIR } from '../paths'
 
 export type KnowledgeProfile = {
@@ -32,7 +32,12 @@ export const listKnowledgeProfiles = async (): Promise<KnowledgeProfile[]> => {
       const configPath = join(group.directory, entry.name, 'config.ts')
       if (!existsSync(configPath)) continue
       try {
-        const schema = group.kind === 'chatbot' ? ChatbotConfig : SkillConfig
+        const schema =
+          group.kind === 'skill'
+            ? SkillConfig
+            : entry.name === 'default'
+              ? DefaultChatbotConfig
+              : InternalChatbotConfig
         const parsed = schema.safeParse(await loadConfig(configPath))
         if (!parsed.success) continue
         profiles.push({

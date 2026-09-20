@@ -24,7 +24,6 @@ import {
   postKnowledgeBuild,
   postKnowledgeSources
 } from './controllers/api/admin/knowledge'
-import { controller as get_login } from './controllers/auth/get.login'
 import { controller as get_index } from './controllers/chat/get'
 import { controller as post_courrier } from './controllers/courrier/post'
 import { controller as post_courrier_webhook } from './controllers/courrier/post.webhook'
@@ -91,7 +90,6 @@ import { getAuth } from './utils/auth'
 import {
   authenticate,
   authenticateAdministratorApi,
-  authenticateChat,
   authenticateOptional
 } from './utils/authenticate-user'
 import { authorizeAdministrator, authorizeAnyModule, authorizeModule } from './utils/authorize-role'
@@ -105,6 +103,7 @@ import { CUSTOMIZATION_DIR, CUSTOMIZATION_STATIC_ROOT, SERVER_ROOT } from './uti
 import { setup } from './utils/setup'
 import { initVmPool } from './utils/vm-pool'
 import { cleanupOrphanedVms } from './utils/vm-registry'
+import { emptyPage } from './views/empty'
 
 // Prepare the environment and database before starting the app:
 // 1. Create necessary datastore directories
@@ -192,14 +191,13 @@ app.use('/branding/*', serveStatic({ root: CUSTOMIZATION_DIR }))
 app.use('/customization/*', serveStatic({ root: CUSTOMIZATION_STATIC_ROOT }))
 
 // Better Auth owns the /auth namespace. Its admin API remains server-only.
-app.get('/login', get_login)
 app.all('/auth/admin/*', (c) => c.notFound())
 app.all('/auth/*', (c) => auth.handler(c.req.raw))
 
-// AI generation routes
-app.get('/c', authenticateChat, get_index)
+// Public chatbot and AI generation routes
+app.get('/', get_index)
 app.post('/ai', aiMultipartBodyLimit, authenticateOptional, post_ai)
-app.get('/ai/boot', authenticateOptional, get_ai_boot)
+app.get('/ai/boot', authenticate, get_ai_boot)
 app.get('/ai/skills', authenticateOptional, get_ai_skills)
 app.get('/desktop/activities', authenticate, get_desktop_activities)
 app.get('/desktop/activity-feed/sync', authenticate, get_desktop_activity_feed_sync)
@@ -395,7 +393,7 @@ app.post('/telemetry', post_telemetry)
 // PIERRE embed shell (modal isolated from host page CSS/DOM)
 app.get('/embed', get_embed)
 
-// Catch-all route that redirects to a new conversation
+// Catch-all 404 except static assets and communication JSON
 app.notFound(async (c) => {
   if (c.req.path.startsWith('/assets/')) return c.text('Not Found', 404)
   if (c.req.path.startsWith('/communications/')) {
@@ -410,13 +408,7 @@ app.notFound(async (c) => {
     )
   }
 
-  const configQuery = c.req.query('config')
-  const dataQuery =
-    c.req.query('data') === 'undefined' || c.req.query('data') === undefined
-      ? ''
-      : c.req.query('data')
-  const config = !configQuery || configQuery === 'undefined' ? 'default' : configQuery
-  return c.redirect(`/c?config=${config}&data=${dataQuery}`)
+  return c.html(emptyPage(), 404)
 })
 
 // Handle errors by returning a 404 response

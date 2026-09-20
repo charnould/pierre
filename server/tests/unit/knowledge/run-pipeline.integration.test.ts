@@ -12,7 +12,7 @@ import { runKnowledgePipeline } from '../../../utils/knowledge/run-pipeline'
 import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 
 const paths = testDatastorePaths('pipeline')
-const TEST_PROFILE = 'testing_purpose_1'
+const TEST_PROFILE = 'default'
 
 const knowledgeDatabase = () => `${datastorePaths().knowledge}/${TEST_PROFILE}/db.sqlite`
 

@@ -23,7 +23,7 @@ const attachmentLifecycle = { claim() {}, async rollback() {} }
 
 const controller = createPostAiController({
   uploadsPath: (configName) => `/uploads/${configName}`,
-  loadConfig: async (configName) => ({ id: configName, protected: false }),
+  loadConfig: async (configName) => ({ id: configName }),
   parseContext: async (value) => value as never,
   processAttachments: async (files, knowledgePath, message, convId) => {
     capturedFiles = files
@@ -61,7 +61,7 @@ app.use('*', async (c, next) => {
       email: 'alice@example.org',
       isAdministrator: false,
       moduleIds: [],
-      chatbotIds: ['testing_purpose_1']
+      chatbotIds: ['interne']
     } as never
   )
   await next()
@@ -80,7 +80,7 @@ beforeEach(() => {
 describe('POST /ai multipart and stream boundary', () => {
   it('processes multipart fields/files and returns the canonical NDJSON stream', async () => {
     const form = new FormData()
-    form.set('config', 'testing_purpose_1')
+    form.set('config', 'interne')
     form.set('message', 'Question')
     form.set('conv_id', CONV_ID)
     form.set('data', 'tenant-1|ticket-2')
@@ -96,7 +96,7 @@ describe('POST /ai multipart and stream boundary', () => {
         .map((line) => JSON.parse(line))
     ).toEqual([{ type: 'text_delta', delta: 'Bonjour' }, { type: 'stream_end' }])
     expect(capturedFiles.map((file) => file.name)).toEqual(['photo.png'])
-    expect(capturedKnowledgePath).toBe('/uploads/testing_purpose_1')
+    expect(capturedKnowledgePath).toBe('/uploads/interne')
     expect(capturedContext).toMatchObject({
       custom_data: { raw: ['tenant-1', 'ticket-2'] },
       metadata: { user: 'alice@example.org' },
@@ -130,7 +130,6 @@ describe('POST /ai multipart and stream boundary', () => {
         uploadsPath: (configName) => `/uploads/${configName}`,
         loadConfig: async (configName) => ({
           id: configName,
-          protected: false,
           attachments: false
         }),
         parseContext: async (value) => value as never,
@@ -164,7 +163,7 @@ describe('POST /ai multipart and stream boundary', () => {
 
   it('normalizes absent custom data and emits a stream error when preprocessing fails', async () => {
     const form = new FormData()
-    form.set('config', 'testing_purpose_1')
+    form.set('config', 'interne')
     form.set('message', 'Question')
     form.set('conv_id', '0198f1a0-7b6c-7000-8000-000000000002')
     attachmentFailure = new Error('unsupported attachment')
@@ -183,7 +182,7 @@ describe('POST /ai multipart and stream boundary', () => {
       '/ai',
       createPostAiController({
         uploadsPath: () => '/uploads/public',
-        loadConfig: async (id) => ({ id, protected: false }),
+        loadConfig: async (id) => (id === 'default' ? { id, enabled: true } : { id }),
         processAttachments: async () => ({
           content: 'processed',
           images: [],
@@ -200,7 +199,7 @@ describe('POST /ai multipart and stream boundary', () => {
       })
     )
     const form = new FormData()
-    form.set('config', 'public_bot')
+    form.set('config', 'default')
     form.set('conv_id', CONV_ID)
     form.append('files', new File(['x'], 'note.txt', { type: 'text/plain' }))
 
@@ -218,7 +217,7 @@ describe('POST /ai multipart and stream boundary', () => {
       '/ai',
       createPostAiController({
         uploadsPath: () => '/uploads/protected',
-        loadConfig: async (id) => ({ id, protected: true }),
+        loadConfig: async (id) => ({ id }),
         processAttachments: async () => {
           processed = true
           return { content: '', images: [], uploadId: null, ...attachmentLifecycle }
@@ -226,7 +225,7 @@ describe('POST /ai multipart and stream boundary', () => {
       })
     )
     const form = new FormData()
-    form.set('config', 'protected_bot')
+    form.set('config', 'interne')
     form.set('conv_id', CONV_ID)
 
     const response = await anonymousApp.request('/ai', { method: 'POST', body: form })
@@ -245,7 +244,7 @@ describe('POST /ai multipart and stream boundary', () => {
       '/ai',
       createPostAiController({
         uploadsPath: () => '/uploads/public',
-        loadConfig: async (id) => ({ id, protected: false }),
+        loadConfig: async (id) => (id === 'default' ? { id, enabled: true } : { id }),
         parseContext: async (value) => value as never,
         processAttachments: async (_files, _path, message) => {
           processed = true
@@ -258,7 +257,7 @@ describe('POST /ai multipart and stream boundary', () => {
       })
     )
     const form = new FormData()
-    form.set('config', 'public_bot')
+    form.set('config', 'default')
     form.set('message', 'Bonjour')
     form.set('conv_id', CONV_ID)
 
@@ -271,7 +270,7 @@ describe('POST /ai multipart and stream boundary', () => {
 
   it('rejects too many files with the structured multipart error', async () => {
     const form = new FormData()
-    form.set('config', 'testing_purpose_1')
+    form.set('config', 'interne')
     form.set('conv_id', CONV_ID)
     for (let i = 0; i <= MAX_ATTACHMENT_FILES; i++) {
       form.append('files', new File(['x'], `${i}.txt`, { type: 'text/plain' }))

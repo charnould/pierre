@@ -12,6 +12,7 @@ export type ChatBoot = {
   displayableConfigs: { id: string; display: string; is_active: boolean }[]
   trace: TraceMode
   attachments: boolean
+  embed?: boolean
 }
 
 export function isTraceMode(value: unknown): value is TraceMode {

@@ -1,104 +1,108 @@
-import { afterAll, beforeAll, expect, it } from 'bun:test'
-import { rm } from 'node:fs/promises'
+import { describe, expect, it } from 'bun:test'
 
 import { Hono } from 'hono'
 
-import { controller as get_ai_boot } from '../../../../controllers/ai/get.boot'
-import type { User } from '../../../../utils/_schema'
-import { getAuth } from '../../../../utils/auth'
-import { authenticateOptional } from '../../../../utils/authenticate-user'
-import { deleteAllUsers } from '../../../../utils/handle-user'
-import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
-import { setup } from '../../../../utils/setup'
-import { createTestUser } from '../../../test-user'
+import { createGetAiBootController } from '../../../../controllers/ai/get.boot'
+import type { ChatbotConfig, User } from '../../../../utils/_schema'
+import { authenticate } from '../../../../utils/authenticate-user'
+import { listAccessibleChatbots } from '../../../../utils/chatbot-config'
 
-const app = new Hono<{ Variables: { user: User | null } }>()
-app.all('/auth/*', (c) => getAuth().handler(c.req.raw))
-app.get('/ai/boot', authenticateOptional, get_ai_boot)
-
-const paths = testDatastorePaths('ai_boot')
-
-beforeAll(async () => {
-  setDatastoreRoot(paths.root)
-  await rm(paths.root, { recursive: true, force: true })
-  Bun.env['AUTH_SECRET'] ??= '0123456789abcdef0123456789abcdef'
-  await setup()
-  await deleteAllUsers()
-  await createTestUser(
-    {
-      email: 'boot-test@pierre-ia.org',
-      isAdministrator: false,
-      moduleIds: [],
-      chatbotIds: ['demo', 'testing_purpose_1', 'testing_purpose_2']
-    },
-    'boot-test-pw'
-  )
-})
-
-afterAll(async () => {
-  await deleteAllUsers()
-  setDatastoreRoot(null)
-  await rm(paths.root, { recursive: true, force: true })
-})
-
-function sessionCookie(response: Response): string {
-  const cookies = response.headers.getSetCookie?.() ?? []
-  const fallback = response.headers.get('set-cookie')
-  if (fallback && cookies.length === 0) cookies.push(fallback)
-  const session = cookies.find((cookie) => cookie.includes('pierre.session_token='))
-  if (!session) throw new Error('Missing Better Auth session cookie')
-  return session.split(';', 1)[0]!
+const publicOn: ChatbotConfig = {
+  id: 'default',
+  display: 'Public',
+  enabled: true,
+  community_knowledge: true,
+  reasoning_effort: 'medium',
+  trace: 'none',
+  attachments: true,
+  greeting: ['Bonjour'],
+  examples: [],
+  disclaimer: null,
+  custom_data: {}
 }
 
-it('GET /ai/boot uses the Better Auth session and lists assigned chatbots', async () => {
-  const login = await app.request('/auth/sign-in/email', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-forwarded-for': '198.51.100.201'
-    },
-    body: JSON.stringify({
-      email: 'boot-test@pierre-ia.org',
-      password: 'boot-test-pw'
+const interne: ChatbotConfig = {
+  id: 'interne',
+  display: 'Interne',
+  community_knowledge: false,
+  reasoning_effort: 'low',
+  trace: 'none',
+  attachments: false
+}
+
+const load = async (id: string): Promise<ChatbotConfig> => {
+  if (id === 'default') return publicOn
+  if (id === 'interne') return interne
+  throw new Error('missing')
+}
+
+describe('GET /ai/boot', () => {
+  it('returns 401 for anonymous requests', async () => {
+    const app = new Hono()
+    app.get('/ai/boot', authenticate, createGetAiBootController({ loadConfig: load }))
+    const response = await app.request('/ai/boot')
+    expect(response.status).toBe(401)
+    expect(await response.json()).toEqual({
+      error: { code: 'unauthorized', message: 'Authentication required' }
     })
   })
 
-  expect(login.status).toBe(200)
-  const cookie = sessionCookie(login)
-  expect(await getAuth().api.getSession({ headers: new Headers({ cookie }) })).not.toBeNull()
-
-  const response = await app.request('/ai/boot', {
-    headers: { cookie }
-  })
-  expect(response.status).toBe(200)
-
-  const boot = (await response.json()) as {
-    configId: string
-    displayableConfigs: { id: string }[]
-  }
-  const ids = boot.displayableConfigs.map(({ id }) => id).sort()
-  expect(ids).toEqual(['demo', 'testing_purpose_1', 'testing_purpose_2'].sort())
-  expect(ids).not.toContain('default')
-  expect(ids).not.toContain('zmode')
-  expect(boot.configId).toBe('demo')
-})
-
-it('rejects authenticated users without an assigned chatbot profile', async () => {
-  const denied = new Hono<{ Variables: { user: User } }>()
-  denied.use('*', async (c, next) => {
-    c.set('user', {
-      email: 'without-chatbot@pierre-ia.org',
-      isAdministrator: false,
-      moduleIds: [],
-      chatbotIds: []
+  it('lists default when enabled plus assigned chatbots', async () => {
+    const app = new Hono<{ Variables: { user: User } }>()
+    app.use('*', async (c, next) => {
+      c.set('user', {
+        email: 'boot-test@pierre-ia.org',
+        isAdministrator: false,
+        moduleIds: [],
+        chatbotIds: ['interne']
+      })
+      await next()
     })
-    await next()
-  })
-  denied.get('/ai/boot', get_ai_boot)
+    app.get(
+      '/ai/boot',
+      createGetAiBootController({
+        loadConfig: load,
+        listAccessible: listAccessibleChatbots
+      })
+    )
 
-  const response = await denied.request('/ai/boot')
-  expect(response.status).toBe(403)
-  expect(await response.json()).toEqual({
-    error: { code: 'forbidden', message: 'Chatbot configuration access denied' }
+    const response = await app.request('/ai/boot')
+    expect(response.status).toBe(200)
+    const boot = (await response.json()) as {
+      configId: string
+      dataParam: string
+      displayableConfigs: { id: string }[]
+    }
+    expect(boot.dataParam).toBe('')
+    expect(boot.configId).toBe('interne')
+    expect(boot.displayableConfigs.map(({ id }) => id).sort()).toEqual(['default', 'interne'])
+  })
+
+  it('rejects authenticated users with no public chatbot and no assigned profile', async () => {
+    const app = new Hono<{ Variables: { user: User } }>()
+    app.use('*', async (c, next) => {
+      c.set('user', {
+        email: 'without-chatbot@pierre-ia.org',
+        isAdministrator: false,
+        moduleIds: [],
+        chatbotIds: []
+      })
+      await next()
+    })
+    app.get(
+      '/ai/boot',
+      createGetAiBootController({
+        loadConfig: async (id) => {
+          if (id === 'default') return { ...publicOn, enabled: false }
+          throw new Error('missing')
+        }
+      })
+    )
+
+    const response = await app.request('/ai/boot')
+    expect(response.status).toBe(403)
+    expect(await response.json()).toEqual({
+      error: { code: 'forbidden', message: 'Chatbot configuration access denied' }
+    })
   })
 })

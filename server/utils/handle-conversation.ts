@@ -1,10 +1,8 @@
 import { SQL } from 'bun'
 import { format } from 'date-fns'
-import { z } from 'zod'
 
 import type { AIContext } from './_schema'
 import { datastorePaths } from './paths'
-import { send_webhook } from './webhook'
 
 const sql_by_path = new Map<string, SQL>()
 const getSQL = () => {
@@ -31,19 +29,4 @@ export const save_reply = async (context: AIContext): Promise<void> => {
       role: context.role
     })}
   `
-
-  for (const element of context.config.api) {
-    if (!z.url().safeParse(element.url).success) continue
-    send_webhook({
-      webhook: element.url,
-      key: Bun.env[element.key] as string,
-      max_retries: 3,
-      delay: 1000,
-      data: element.format({
-        custom_data: context.custom_data.raw,
-        content: context.content,
-        role: context.role
-      }) as object
-    })
-  }
 }

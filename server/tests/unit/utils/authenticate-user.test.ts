@@ -5,11 +5,7 @@ import { Hono } from 'hono'
 
 import type { User } from '../../../utils/_schema'
 import { getAuth } from '../../../utils/auth'
-import {
-  authenticate,
-  authenticateAdministratorApi,
-  authenticateChat
-} from '../../../utils/authenticate-user'
+import { authenticate, authenticateAdministratorApi } from '../../../utils/authenticate-user'
 import { datastorePaths } from '../../../utils/paths'
 import { createTestUser } from '../../test-user'
 import { use_identity_test_env } from './identity-test-env'
@@ -67,27 +63,13 @@ describe('authenticate', () => {
     }
   })
 
-  test('redirects an anonymous protected chatbot to /login', async () => {
-    const app = new Hono()
-    app.use('*', authenticateChat)
-    app.get('/c', (c) => c.text('ok'))
-
-    const response = await app.request('/c?config=testing_purpose_1&data=', {
-      redirect: 'manual'
-    })
-    expect(response.status).toBe(302)
-    expect(response.headers.get('location')).toBe(
-      '/login?redirect=%2Fc%3Fconfig%3Dtesting_purpose_1%26data%3D'
-    )
-  })
-
   test('resolves a Better Auth session for protected routes', async () => {
     await createTestUser(
       {
         email: 'session-test@example.org',
         isAdministrator: false,
         moduleIds: [],
-        chatbotIds: ['default']
+        chatbotIds: []
       },
       'session-password'
     )

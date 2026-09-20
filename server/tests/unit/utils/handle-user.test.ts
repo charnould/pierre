@@ -52,13 +52,13 @@ it('stores normalized users without exposing Better Auth storage fields', async 
     email: ' Test1@Pierre-IA.org ',
     isAdministrator: true,
     moduleIds: ['tickets', 'automations', 'tickets'],
-    chatbotIds: ['default', 'demo', 'default']
+    chatbotIds: ['default', 'ops', 'default']
   })
   await createTestUser({
     email: 'test2@pierre-ia.org',
     isAdministrator: false,
     moduleIds: ['about'],
-    chatbotIds: ['demo', 'default']
+    chatbotIds: ['ops', 'default']
   })
 
   expect(await getUsers()).toStrictEqual([
@@ -66,13 +66,13 @@ it('stores normalized users without exposing Better Auth storage fields', async 
       email: 'test1@pierre-ia.org',
       isAdministrator: true,
       moduleIds: ['tickets', 'automations'],
-      chatbotIds: ['default', 'demo']
+      chatbotIds: ['ops']
     },
     {
       email: 'test2@pierre-ia.org',
       isAdministrator: false,
       moduleIds: ['about'],
-      chatbotIds: ['demo', 'default']
+      chatbotIds: ['ops']
     }
   ])
 })
@@ -89,7 +89,7 @@ it('retrieves users by normalized email and deletes all identity records', async
     email: 'test1@pierre-ia.org',
     isAdministrator: false,
     moduleIds: [],
-    chatbotIds: ['default']
+    chatbotIds: []
   })
 
   await deleteAllUsers()
@@ -139,7 +139,7 @@ it('updates access and passwords in one write', async () => {
     await saveUserAsAdministrator('admin@pierre-ia.org', 'member@pierre-ia.org', {
       isAdministrator: true,
       moduleIds: ['automations'],
-      chatbotIds: ['demo'],
+      chatbotIds: ['ops'],
       password: 'new-password'
     })
   ).toMatchObject({
@@ -148,7 +148,7 @@ it('updates access and passwords in one write', async () => {
       email: 'member@pierre-ia.org',
       isAdministrator: true,
       moduleIds: ['automations'],
-      chatbotIds: ['demo']
+      chatbotIds: ['ops']
     }
   })
   expect(await canSignIn('member@pierre-ia.org', 'old-password')).toBe(false)
@@ -174,7 +174,7 @@ it('imports passwords while preserving existing business access', async () => {
   ).toEqual({ created: 1, updated: 1 })
   expect(await getUser('existing@pierre-ia.org')).toMatchObject({
     moduleIds: ['tickets'],
-    chatbotIds: ['default']
+    chatbotIds: []
   })
   expect(await canSignIn('existing@pierre-ia.org', 'new-password')).toBe(true)
   expect(await getUser('created@pierre-ia.org')).toMatchObject({
@@ -224,30 +224,31 @@ it('resolves access from the attached profile and clears stored user columns', a
     chatbotIds: ['default']
   })
   if (!created.ok) throw new Error('profile')
+  expect(created.profile.chatbotIds).toEqual([])
   await createTestUser({
     email: 'linked@pierre-ia.org',
     isAdministrator: false,
     moduleIds: ['about'],
-    chatbotIds: ['demo']
+    chatbotIds: ['ops']
   })
   expect(
     await saveUserAsAdministrator('admin@pierre-ia.org', 'linked@pierre-ia.org', {
       profileId: created.profile.id,
       moduleIds: ['ventes'],
-      chatbotIds: ['zmode']
+      chatbotIds: ['ops']
     })
   ).toMatchObject({
     ok: true,
     user: {
       profileId: created.profile.id,
       moduleIds: ['tickets', 'repayment'],
-      chatbotIds: ['default'],
+      chatbotIds: [],
       isAdministrator: false
     }
   })
   expect(await getUser('linked@pierre-ia.org')).toMatchObject({
     moduleIds: ['tickets', 'repayment'],
-    chatbotIds: ['default']
+    chatbotIds: []
   })
   expect(storedAccessColumns('linked@pierre-ia.org')).toEqual({
     module_ids: '[]',
@@ -256,12 +257,12 @@ it('resolves access from the attached profile and clears stored user columns', a
 
   const saved = await saveUserProfile(created.profile.id, {
     moduleIds: ['bulk'],
-    chatbotIds: ['demo']
+    chatbotIds: ['ops']
   })
   if (!saved.ok) throw new Error('profile')
   expect(await getUser('linked@pierre-ia.org')).toMatchObject({
     moduleIds: ['bulk'],
-    chatbotIds: ['demo']
+    chatbotIds: ['ops']
   })
 })
 
@@ -278,7 +279,7 @@ it('detaches a profile by writing the effective access as custom columns', async
       password: 'test-password-123',
       isAdministrator: false,
       moduleIds: ['about'],
-      chatbotIds: ['demo'],
+      chatbotIds: ['ops'],
       profileId: created.profile.id
     })
   ).toMatchObject({
@@ -287,7 +288,7 @@ it('detaches a profile by writing the effective access as custom columns', async
       email: 'detached@pierre-ia.org',
       profileId: created.profile.id,
       moduleIds: ['tickets', 'repayment'],
-      chatbotIds: ['default']
+      chatbotIds: []
     }
   })
   expect(storedAccessColumns('detached@pierre-ia.org')).toEqual({
@@ -304,17 +305,17 @@ it('detaches a profile by writing the effective access as custom columns', async
     user: {
       profileId: null,
       moduleIds: ['tickets', 'repayment'],
-      chatbotIds: ['default']
+      chatbotIds: []
     }
   })
   expect(storedAccessColumns('detached@pierre-ia.org')).toEqual({
     module_ids: JSON.stringify(['tickets', 'repayment']),
-    chatbot_ids: JSON.stringify(['default'])
+    chatbot_ids: JSON.stringify([])
   })
   expect(await getStoredUser('detached@pierre-ia.org')).toMatchObject({
     profileId: null,
     moduleIds: ['tickets', 'repayment'],
-    chatbotIds: ['default']
+    chatbotIds: []
   })
 })
 
@@ -358,14 +359,14 @@ it('detaches a profile to empty custom columns and returns normalized access', a
   expect(
     await saveUserAsAdministrator('admin@pierre-ia.org', 'empty@pierre-ia.org', {
       moduleIds: ['tickets', 'tickets', 'about'],
-      chatbotIds: ['default', 'demo', 'default']
+      chatbotIds: ['default', 'ops', 'default']
     })
   ).toMatchObject({
     ok: true,
     user: {
       profileId: null,
       moduleIds: ['tickets', 'about'],
-      chatbotIds: ['default', 'demo']
+      chatbotIds: ['ops']
     }
   })
 })
@@ -391,6 +392,6 @@ it('refuses to delete a profile still attached to a user', async () => {
   })
   expect(await getUser('tech@pierre-ia.org')).toMatchObject({
     moduleIds: ['tickets'],
-    chatbotIds: ['default']
+    chatbotIds: []
   })
 })

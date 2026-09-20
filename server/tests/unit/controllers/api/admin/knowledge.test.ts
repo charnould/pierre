@@ -162,7 +162,7 @@ describe('administrator knowledge API', () => {
               sheet: null,
               sheetName: null,
               headerRow: null,
-              profileIds: ['testing_purpose_1']
+              profileIds: ['default']
             }
           ]
         })
@@ -211,7 +211,7 @@ describe('administrator knowledge API', () => {
                   sheet: null,
                   sheetName: null,
                   headerRow: null,
-                  profileIds: ['testing_purpose_1']
+                  profileIds: ['default']
                 }
               ]
             })
@@ -324,7 +324,7 @@ describe('administrator knowledge API', () => {
             sheet: null,
             sheetName: null,
             headerRow: null,
-            profileIds: ['testing_purpose_1']
+            profileIds: ['default']
           }
         ]
       })

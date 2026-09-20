@@ -61,7 +61,7 @@ const normalizeAccess = (access: Pick<User, 'moduleIds' | 'chatbotIds'>) => {
   }
   return {
     moduleIds: [...new Set(parsed.moduleIds)],
-    chatbotIds: [...new Set(parsed.chatbotIds)]
+    chatbotIds: [...new Set(parsed.chatbotIds)].filter((id) => id !== 'default')
   }
 }
 

@@ -1,4 +1,5 @@
 import type { Config, User } from './_schema'
+import { isDefaultChatbotConfig } from './_schema'
 import { loadChatbotConfig } from './chatbot-config'
 
 const CONFIG_ID = /^[a-z0-9][a-z0-9_-]{0,63}$/
@@ -34,7 +35,11 @@ export async function resolveAuthorizedChatConfig(
     throw new ChatConfigAccessError('invalid_config', 'Invalid chatbot configuration', 400)
   }
 
-  const isAllowed = user ? user.chatbotIds.includes(requestedId) : config.protected !== true
+  const isAllowed =
+    requestedId === 'default'
+      ? isDefaultChatbotConfig(config) && config.enabled
+      : Boolean(user?.chatbotIds.includes(requestedId))
+
   if (!isAllowed) {
     throw new ChatConfigAccessError('forbidden', 'Chatbot configuration access denied', 403)
   }

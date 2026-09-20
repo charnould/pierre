@@ -79,10 +79,10 @@ it('persists success and failure per assigned item', async () => {
         sheet: null,
         sheetName: null,
         headerRow: null,
-        profileIds: ['testing_purpose_1']
+        profileIds: ['default']
       }
     ],
-    new Set(['testing_purpose_1'])
+    new Set(['default'])
   )
 
   const successful = await waitForBuild(requestKnowledgeBuild('patch', null).id)

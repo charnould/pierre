@@ -163,6 +163,7 @@ describe('latest_repayment_states', () => {
         task: {
           title: 'Joindre le locataire',
           state: 'open',
+          due_date: '2026-06-15',
           assignee: { id: ALICE, label: ALICE }
         }
       })

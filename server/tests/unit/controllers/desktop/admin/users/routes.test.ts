@@ -27,7 +27,7 @@ const ADMIN: User = {
   email: 'admin@example.org',
   isAdministrator: true,
   moduleIds: ['tickets', 'repayment'],
-  chatbotIds: ['default']
+  chatbotIds: []
 }
 const NON_ADMIN: User = {
   ...ADMIN,
@@ -147,7 +147,7 @@ describe('desktop administrator users API', () => {
     ])
     expect(body.data.profiles).toEqual([])
     expect(body.data.modules.some(({ id }) => id === 'tickets')).toBe(true)
-    expect(body.data.chatbots.some(({ id }) => id === 'default')).toBe(true)
+    expect(body.data.chatbots.some(({ id }) => id === 'default')).toBe(false)
   })
 
   it('creates users with the explicit password', async () => {
@@ -158,7 +158,7 @@ describe('desktop administrator users API', () => {
         password: ' manual-password ',
         isAdministrator: false,
         moduleIds: ['tickets'],
-        chatbotIds: ['default']
+        chatbotIds: []
       })
     )
     expect(manual.status).toBe(201)
@@ -241,7 +241,7 @@ describe('desktop administrator users API', () => {
       `/desktop/admin/users/${encodeURIComponent(existing.email)}`,
       jsonRequest('PATCH', {
         moduleIds: ['automations'],
-        chatbotIds: ['demo'],
+        chatbotIds: [],
         isAdministrator: true
       })
     )
@@ -249,7 +249,7 @@ describe('desktop administrator users API', () => {
     const updated = (await getUser(existing.email))!
     expect(updated).toMatchObject({
       moduleIds: ['automations'],
-      chatbotIds: ['demo'],
+      chatbotIds: [],
       isAdministrator: true
     })
     expect(await canSignIn(existing.email, 'original-password')).toBe(true)
@@ -287,7 +287,7 @@ describe('desktop administrator users API', () => {
       jsonRequest('POST', {
         name: 'Gestionnaire locatif',
         moduleIds: ['tickets', 'repayment'],
-        chatbotIds: ['default']
+        chatbotIds: []
       })
     )
     expect(created.status).toBe(201)
@@ -301,7 +301,7 @@ describe('desktop administrator users API', () => {
         isAdministrator: false,
         profileId: profile.id,
         moduleIds: ['ventes'],
-        chatbotIds: ['demo']
+        chatbotIds: []
       })
     )
     expect(user.status).toBe(201)
@@ -311,7 +311,7 @@ describe('desktop administrator users API', () => {
           email: 'linked@example.org',
           profileId: profile.id,
           moduleIds: ['tickets', 'repayment'],
-          chatbotIds: ['default'],
+          chatbotIds: [],
           isAdministrator: false
         }
       }
@@ -319,12 +319,12 @@ describe('desktop administrator users API', () => {
 
     const patched = await request(
       `/desktop/admin/users/profiles/${profile.id}`,
-      jsonRequest('PATCH', { moduleIds: ['bulk'], chatbotIds: ['demo'] })
+      jsonRequest('PATCH', { moduleIds: ['bulk'], chatbotIds: [] })
     )
     expect(patched.status).toBe(200)
     expect(await getUser('linked@example.org')).toMatchObject({
       moduleIds: ['bulk'],
-      chatbotIds: ['demo']
+      chatbotIds: []
     })
 
     const inUse = await request(`/desktop/admin/users/profiles/${profile.id}`, { method: 'DELETE' })
@@ -336,7 +336,7 @@ describe('desktop administrator users API', () => {
       jsonRequest('POST', {
         name: 'Gestionnaire locatif',
         moduleIds: ['tickets'],
-        chatbotIds: ['default']
+        chatbotIds: []
       })
     )
     expect(duplicate.status).toBe(409)
@@ -370,7 +370,7 @@ describe('desktop administrator users API', () => {
       jsonRequest('POST', {
         name: 'Technicien',
         moduleIds: ['tickets'],
-        chatbotIds: ['default']
+        chatbotIds: []
       })
     )
     expect(created.status).toBe(201)
@@ -379,7 +379,7 @@ describe('desktop administrator users API', () => {
       email: 'custom@example.org',
       isAdministrator: false,
       moduleIds: ['ventes'],
-      chatbotIds: ['demo']
+      chatbotIds: []
     })
 
     const patched = await request(
@@ -393,7 +393,7 @@ describe('desktop administrator users API', () => {
           email: 'custom@example.org',
           profileId: profile.id,
           moduleIds: ['tickets'],
-          chatbotIds: ['default'],
+          chatbotIds: [],
           isAdministrator: false
         }
       }
@@ -413,7 +413,7 @@ describe('desktop administrator users API', () => {
       jsonRequest('POST', {
         name: 'Comptable',
         moduleIds: ['tickets'],
-        chatbotIds: ['default']
+        chatbotIds: []
       })
     )
     expect(created.status).toBe(201)
@@ -422,7 +422,7 @@ describe('desktop administrator users API', () => {
       email: 'detach@example.org',
       isAdministrator: false,
       moduleIds: ['ventes'],
-      chatbotIds: ['demo']
+      chatbotIds: []
     })
     expect(
       (

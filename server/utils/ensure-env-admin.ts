@@ -19,7 +19,10 @@ function readAuthPassword(): string {
 
 async function listChatbotIds(): Promise<string[]> {
   return (await readdir(join(CUSTOMIZATION_DIR, 'chatbots')))
-    .filter((entry) => existsSync(join(CUSTOMIZATION_DIR, 'chatbots', entry, 'config.ts')))
+    .filter(
+      (entry) =>
+        entry !== 'default' && existsSync(join(CUSTOMIZATION_DIR, 'chatbots', entry, 'config.ts'))
+    )
     .sort()
 }
 

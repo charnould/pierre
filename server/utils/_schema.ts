@@ -15,39 +15,53 @@ export const User = z.object({
 const AgentFields = {
   id: z.string(),
   display: z.string(),
-  protected: z.boolean(),
   community_knowledge: z.boolean(),
   reasoning_effort: z.enum(['low', 'medium', 'high']),
   trace: z.enum(TRACE_MODES)
 }
 
-export const ChatbotConfig = z
+const SharedChatbotFields = {
+  ...AgentFields,
+  attachments: z.boolean()
+}
+
+export const InternalChatbotConfig = z.object(SharedChatbotFields).strict()
+
+export const DefaultChatbotConfig = z
   .object({
-    ...AgentFields,
-    show: z.array(z.string()),
-    custom_data: z.object({ format: z.function() }).or(z.object({})),
-    api: z
-      .array(
-        z.object({
-          key: z.enum(['WEBHOOK_KEY_1', 'WEBHOOK_KEY_2', 'WEBHOOK_KEY_3']),
-          url: z.string(),
-          format: z.function({
-            input: [
-              z.object({ custom_data: z.array(z.string()), content: z.string(), role: z.string() })
-            ],
-            output: z.any()
-          })
-        })
-      )
-      .default([]),
-    disclaimer: z.string().nullable(),
+    ...SharedChatbotFields,
+    enabled: z.boolean(),
     greeting: z.array(z.string()),
     examples: z.array(z.string()),
-    attachments: z.boolean()
+    disclaimer: z.string().nullable(),
+    custom_data: z.object({ format: z.function() }).or(z.object({}))
   })
   .strict()
 
+export const ChatbotConfig = z.union([DefaultChatbotConfig, InternalChatbotConfig])
+
 export const SkillConfig = z.object(AgentFields).strict()
+
+export function isDefaultChatbotConfig(
+  config: ChatbotConfig
+): config is z.infer<typeof DefaultChatbotConfig> {
+  return 'enabled' in config
+}
+
+export function chatbotSiteFields(config: ChatbotConfig): {
+  greeting: string[]
+  examples: string[]
+  disclaimer: string | null
+} {
+  if (isDefaultChatbotConfig(config)) {
+    return {
+      greeting: config.greeting,
+      examples: config.examples,
+      disclaimer: config.disclaimer
+    }
+  }
+  return { greeting: [], examples: [], disclaimer: null }
+}
 
 //
 // Reflects datastore database schema
@@ -129,8 +143,7 @@ export const AIContext = z
     }).shape
   })
   .refine(async (c) => {
-    // Format data to be the one wanted by API
-    if ('format' in c.config.custom_data) {
+    if (isDefaultChatbotConfig(c.config) && 'format' in c.config.custom_data) {
       if (
         Array.isArray(c.custom_data.raw) &&
         c.custom_data.raw.length === 1 &&
@@ -150,6 +163,8 @@ export const AIContext = z
 //
 export type User = z.infer<typeof User>
 export type Reply = z.infer<typeof Reply>
+export type DefaultChatbotConfig = z.infer<typeof DefaultChatbotConfig>
+export type InternalChatbotConfig = z.infer<typeof InternalChatbotConfig>
 export type ChatbotConfig = z.infer<typeof ChatbotConfig>
 export type SkillConfig = z.infer<typeof SkillConfig>
 export type Config = ChatbotConfig

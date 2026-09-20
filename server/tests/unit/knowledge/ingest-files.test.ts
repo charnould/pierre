@@ -277,7 +277,7 @@ describe('CSV ingestion', () => {
     const path = `${FILES_DIR}/_test_csv.csv`
     const knowledgeRoot = paths.knowledge
     await Bun.write(path, 'nom;description\nalpha;"ligne 1\nligne 2"')
-    await mkdir(`${knowledgeRoot}/testing_purpose_1`, { recursive: true })
+    await mkdir(`${knowledgeRoot}/default`, { recursive: true })
     try {
       await ingest_files([
         {
@@ -287,11 +287,11 @@ describe('CSV ingestion', () => {
           type: 'csv',
           sheet: 0,
           headers: 0,
-          access: 'testing_purpose_1',
+          access: 'default',
           coreDataTable: null
         }
       ])
-      const payload = await Bun.file(`${knowledgeRoot}/testing_purpose_1/indicateurs.json`).json()
+      const payload = await Bun.file(`${knowledgeRoot}/default/indicateurs.json`).json()
       expect(payload).toEqual({
         columns: ['nom', 'description'],
         rows: [{ nom: 'alpha', description: 'ligne 1 ligne 2' }]
@@ -306,17 +306,17 @@ describe('CSV ingestion', () => {
           type: 'csv',
           sheet: 0,
           headers: 0,
-          access: 'testing_purpose_1',
+          access: 'default',
           coreDataTable: null
         }
       ])
-      expect(await Bun.file(`${knowledgeRoot}/testing_purpose_1/indicateurs.json`).json()).toEqual({
+      expect(await Bun.file(`${knowledgeRoot}/default/indicateurs.json`).json()).toEqual({
         columns: ['nom', 'description'],
         rows: []
       })
     } finally {
       await rm(path, { force: true })
-      await rm(`${knowledgeRoot}/testing_purpose_1/indicateurs.json`, { force: true })
+      await rm(`${knowledgeRoot}/default/indicateurs.json`, { force: true })
     }
   })
 })
@@ -335,7 +335,7 @@ describe('ingest_files parse cache', () => {
     XLSX.utils.book_append_sheet(wb, sheet, 'Feuille1')
     XLSX.writeFile(wb, CACHE_XLSX)
 
-    await mkdir(`${KNOWLEDGE_ROOT}/testing_purpose_1`, { recursive: true })
+    await mkdir(`${KNOWLEDGE_ROOT}/about.summary`, { recursive: true })
     await mkdir(`${KNOWLEDGE_ROOT}/default`, { recursive: true })
   })
 
@@ -343,7 +343,7 @@ describe('ingest_files parse cache', () => {
     await Bun.file(CACHE_XLSX)
       .delete()
       .catch(() => {})
-    await rm(`${KNOWLEDGE_ROOT}/testing_purpose_1/donnees_cache_test.json`, { force: true }).catch(
+    await rm(`${KNOWLEDGE_ROOT}/about.summary/donnees_cache_test.json`, { force: true }).catch(
       () => {}
     )
     await rm(`${KNOWLEDGE_ROOT}/default/donnees_cache_test.json`, { force: true }).catch(() => {})
@@ -370,13 +370,13 @@ describe('ingest_files parse cache', () => {
 
     try {
       await ingest_files([
-        { ...base, access: 'testing_purpose_1' },
+        { ...base, access: 'about.summary' },
         { ...base, access: 'default' }
       ])
 
       expect(parse_logs).toHaveLength(1)
 
-      const path_a = `${KNOWLEDGE_ROOT}/testing_purpose_1/donnees_cache_test.json`
+      const path_a = `${KNOWLEDGE_ROOT}/about.summary/donnees_cache_test.json`
       const path_b = `${KNOWLEDGE_ROOT}/default/donnees_cache_test.json`
       expect(await Bun.file(path_a).exists()).toBe(true)
       expect(await Bun.file(path_b).exists()).toBe(true)

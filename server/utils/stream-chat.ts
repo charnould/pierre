@@ -1,4 +1,10 @@
 import type { AIContext } from './_schema'
+
+/** Prefix `custom_data.format()` onto the model prompt, not the user bubble. */
+export function modelPrompt(context: AIContext): string {
+  const prefix = context.custom_data.transformed.trim()
+  return prefix === '' ? context.content : `${prefix}\n\n${context.content}`
+}
 import type { PiImageContent, ProcessedPiAttachments } from './ai-attachments'
 import { streamCopilot } from './copilot-agent'
 import { save_reply } from './handle-conversation'
@@ -27,7 +33,7 @@ export function streamChatAnswer(
       for await (const chunk of streamCopilot(
         context.conv_id,
         context.config.id,
-        context.content,
+        modelPrompt(context),
         Bun.env['AI_MODEL'],
         signal,
         attachments,
