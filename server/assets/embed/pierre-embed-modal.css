@@ -32,30 +32,44 @@
   opacity: 0.06;
   pointer-events: none;
   mix-blend-mode: soft-light;
-  background-image: __NOISE_BG__;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 220px 220px;
 }
 #pierre-embed-modal-shell {
   position: relative;
   z-index: 1;
   overflow: hidden;
-  border-radius: __SHELL_RADIUS__;
+  border-radius: 12px;
   background: #fff;
-  box-shadow: __SHADOW_REST__;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 16px 48px -12px rgba(15, 23, 42, 0.18);
   max-width: calc(100vw - 32px);
   max-height: 90dvh;
 }
 #pierre-embed-modal-body {
   opacity: 0;
-  line-height: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 #pierre-embed-modal-chat {
-  display: block;
+  display: flex;
+  flex-direction: column;
   z-index: 9999;
   width: min(600px, calc(100vw - 32px));
   border: none;
   height: min(700px, 90dvh);
+  min-height: 0;
+  overflow: hidden;
   background: #fff;
+}
+#pierre-embed-modal-chat #root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
 }
 #pierre-embed-modal-close {
   display: flex;

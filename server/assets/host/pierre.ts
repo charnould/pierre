@@ -40,16 +40,14 @@ const RECEDE_NODE_CAP = 12
 
 const host_script =
   (document.currentScript as HTMLScriptElement | null) ??
-  document.querySelector<HTMLScriptElement>('script[data-pierre-config]') ??
   document.querySelector<HTMLScriptElement>('script[src$="/pierre.js"]')
 
-const settings = (): { url: string; configuration: string } => {
+const settings = (): { url: string } => {
   const script_src = host_script?.src ?? ''
   const script_url = script_src ? new URL(script_src) : null
 
   return {
-    url: script_url?.origin ?? '',
-    configuration: host_script?.dataset.pierreConfig ?? 'default'
+    url: script_url?.origin ?? ''
   }
 }
 
@@ -319,7 +317,7 @@ const unlockBodyScroll = () => {
   document.documentElement.style.overscrollBehavior = overscroll_lock
 }
 
-const ensure_embed_iframe = (url: string, config: string): HTMLIFrameElement => {
+const ensure_embed_iframe = (url: string): HTMLIFrameElement => {
   const selector = host_script?.dataset.pierreEmbedTarget ?? `#${EMBED_ID}`
   const existing = document.querySelector<HTMLIFrameElement>(selector)
   if (existing) return existing
@@ -328,7 +326,7 @@ const ensure_embed_iframe = (url: string, config: string): HTMLIFrameElement => 
   const iframe = document.createElement('iframe')
   iframe.id = EMBED_ID
   iframe.title = 'PIERRE — assistant IA'
-  iframe.src = `${url.replace(/\/$/, '')}/embed?config=${encodeURIComponent(config)}&host=${host}`
+  iframe.src = `${url.replace(/\/$/, '')}/embed?host=${host}`
   iframe.setAttribute(
     'sandbox',
     'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms'
@@ -339,7 +337,7 @@ const ensure_embed_iframe = (url: string, config: string): HTMLIFrameElement => 
 }
 
 const init = () => {
-  const { url, configuration } = settings()
+  const { url } = settings()
   if (!url) {
     console.warn(
       '[PIERRE] Impossible de déterminer l’URL du serveur (attribut src manquant sur le <script> ?).'
@@ -398,7 +396,7 @@ const init = () => {
     }
   }
 
-  iframe = ensure_embed_iframe(url, configuration)
+  iframe = ensure_embed_iframe(url)
 
   const isTrustedEmbedMessage = (event: MessageEvent): boolean => {
     const type = event.data?.type

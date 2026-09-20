@@ -10,17 +10,23 @@ type HostRect = {
 const MODAL_ID = 'pierre-embed-modal'
 const MODAL_SHELL_ID = 'pierre-embed-modal-shell'
 const MODAL_BODY_ID = 'pierre-embed-modal-body'
-const MODAL_CHAT_ID = 'pierre-embed-modal-chat'
 const MODAL_CLOSE_ID = 'pierre-embed-modal-close'
 
 const HOST_INBOUND_TYPES = new Set(['pierre:probe', 'pierre:open'])
+
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])'
+].join(',')
 
 let pierre_is_open = false
 let pierre_is_animating = false
 let active_host_rect: HostRect | null = null
 let focus_trap_handler: ((event: KeyboardEvent) => void) | null = null
-let configuration: string
-let url: string
 let host_origin = ''
 
 const EASING_OPEN = 'cubic-bezier(0.34, 1.28, 0.64, 1)'
@@ -56,6 +62,13 @@ type TimelineElements = {
   content: HTMLElement
   close: HTMLButtonElement
   metrics: DockMetrics
+}
+
+type ModalElements = {
+  wrapper: HTMLElement
+  container: HTMLElement
+  content: HTMLElement
+  close: HTMLButtonElement
 }
 
 const prefers_reduced_motion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -205,16 +218,58 @@ const animateTimeline = async (elements: TimelineElements, direction: 'in' | 'ou
   ])
 }
 
-const trapFocus = (wrapper: HTMLElement) => {
-  const getFocusables = (): HTMLElement[] => {
-    const close = wrapper.querySelector<HTMLElement>(`#${MODAL_CLOSE_ID}`)
-    return close ? [close] : []
+const getModalElements = (): ModalElements | null => {
+  const wrapper = document.getElementById(MODAL_ID)
+  const container = document.getElementById(MODAL_SHELL_ID)
+  const content = document.getElementById(MODAL_BODY_ID)
+  const close = document.getElementById(MODAL_CLOSE_ID)
+  if (
+    !(wrapper instanceof HTMLElement) ||
+    !(container instanceof HTMLElement) ||
+    !(content instanceof HTMLElement) ||
+    !(close instanceof HTMLButtonElement)
+  ) {
+    return null
   }
+  return { wrapper, container, content, close }
+}
 
+const cancelModalAnimations = (elements: ModalElements) => {
+  for (const node of [elements.wrapper, elements.container, elements.content, elements.close]) {
+    for (const animation of node.getAnimations()) animation.cancel()
+  }
+}
+
+const resetModalInlineStyles = (elements: ModalElements) => {
+  elements.container.style.transform = ''
+  elements.container.style.opacity = ''
+  elements.container.style.borderRadius = ''
+  elements.container.style.boxShadow = ''
+  elements.container.style.transformOrigin = ''
+  elements.container.style.willChange = ''
+  elements.content.style.opacity = ''
+  elements.content.style.transform = ''
+  elements.close.style.opacity = ''
+  elements.close.style.transform = ''
+}
+
+const hideModal = (elements: ModalElements) => {
+  cancelModalAnimations(elements)
+  resetModalInlineStyles(elements)
+  elements.wrapper.hidden = true
+  elements.wrapper.setAttribute('aria-hidden', 'true')
+}
+
+const getFocusables = (wrapper: HTMLElement): HTMLElement[] =>
+  [...wrapper.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter(
+    (node) => !node.hasAttribute('disabled') && node.getAttribute('aria-hidden') !== 'true'
+  )
+
+const trapFocus = (wrapper: HTMLElement) => {
   focus_trap_handler = (event: KeyboardEvent) => {
     if (event.key !== 'Tab') return
 
-    const focusables = getFocusables()
+    const focusables = getFocusables(wrapper)
     if (!focusables.length) return
 
     const first = focusables[0]!
@@ -281,50 +336,27 @@ const notifyHostOpenCancelled = () => postToHost({ type: 'pierre:open-cancelled'
 const openModal = async (host_rect: HostRect) => {
   if (pierre_is_open || pierre_is_animating) return
 
-  const chat_iframe = document.getElementById(MODAL_CHAT_ID)
-  if (!chat_iframe) return
+  const elements = getModalElements()
+  if (!elements) return
 
   pierre_is_animating = true
   active_host_rect = host_rect
-
-  const wrapper = document.createElement('div')
-  wrapper.id = MODAL_ID
-  wrapper.setAttribute('role', 'dialog')
-  wrapper.setAttribute('aria-modal', 'true')
-  wrapper.setAttribute('aria-label', 'Assistant PIERRE')
-
-  const container = document.createElement('div')
-  container.id = MODAL_SHELL_ID
-
-  const content = document.createElement('div')
-  content.id = MODAL_BODY_ID
-
-  chat_iframe.style.display = 'block'
-  content.appendChild(chat_iframe)
-
-  const close = document.createElement('button')
-  close.type = 'button'
-  close.id = MODAL_CLOSE_ID
-  close.setAttribute('aria-label', 'Fermer')
-  close.innerHTML = '<span aria-hidden="true">✕</span>'
-
-  container.append(close, content)
-  wrapper.appendChild(container)
-  document.body.appendChild(wrapper)
-  trapFocus(wrapper)
+  cancelModalAnimations(elements)
+  resetModalInlineStyles(elements)
+  elements.wrapper.hidden = false
+  elements.wrapper.setAttribute('aria-hidden', 'false')
+  trapFocus(elements.wrapper)
 
   try {
     await afterLayout()
-    const metrics = measureDockFlipFromRect(host_rect, container.getBoundingClientRect())
-    await animateTimeline({ wrapper, container, content, close, metrics }, 'in')
-    container.style.willChange = ''
-    close.focus()
+    const metrics = measureDockFlipFromRect(host_rect, elements.container.getBoundingClientRect())
+    await animateTimeline({ ...elements, metrics }, 'in')
+    elements.container.style.willChange = ''
+    elements.close.focus()
     pierre_is_open = true
   } catch {
-    releaseFocusTrap(wrapper)
-    chat_iframe.style.display = 'none'
-    document.body.appendChild(chat_iframe)
-    wrapper.remove()
+    releaseFocusTrap(elements.wrapper)
+    hideModal(elements)
     active_host_rect = null
     notifyHostOpenCancelled()
   } finally {
@@ -335,42 +367,21 @@ const openModal = async (host_rect: HostRect) => {
 const close_modal = async () => {
   if (!pierre_is_open || pierre_is_animating || !active_host_rect) return
 
-  pierre_is_animating = true
-
-  const wrapper = document.getElementById(MODAL_ID)
-  const container = document.getElementById(MODAL_SHELL_ID)
-  const content = document.getElementById(MODAL_BODY_ID)
-  const close = document.getElementById(MODAL_CLOSE_ID) as HTMLButtonElement | null
-  const chat_iframe = document.getElementById(MODAL_CHAT_ID)
+  const elements = getModalElements()
   const host_rect = active_host_rect
-
-  if (!wrapper || !container || !content || !close || !chat_iframe) {
+  if (!elements) {
     pierre_is_animating = false
     return
   }
 
+  pierre_is_animating = true
   notifyHostClosing()
 
-  const metrics = measureDockFlipFromRect(host_rect, container.getBoundingClientRect())
-  await animateTimeline({ wrapper, container, content, close, metrics }, 'out')
+  const metrics = measureDockFlipFromRect(host_rect, elements.container.getBoundingClientRect())
+  await animateTimeline({ ...elements, metrics }, 'out')
 
-  releaseFocusTrap(wrapper)
-
-  chat_iframe.style.display = 'none'
-  document.body.appendChild(chat_iframe)
-
-  container.style.transform = ''
-  container.style.opacity = ''
-  container.style.borderRadius = ''
-  container.style.boxShadow = ''
-  container.style.transformOrigin = ''
-  container.style.willChange = ''
-  content.style.opacity = ''
-  content.style.transform = ''
-  close.style.opacity = ''
-  close.style.transform = ''
-
-  wrapper.remove()
+  releaseFocusTrap(elements.wrapper)
+  hideModal(elements)
   active_host_rect = null
   pierre_is_open = false
   pierre_is_animating = false
@@ -378,15 +389,7 @@ const close_modal = async () => {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  configuration = document.body.dataset.pierreConfig ?? 'default'
-  url = window.location.origin
   host_origin = parseHostOrigin()
-
-  const preloaded_iframe = document.createElement('iframe')
-  preloaded_iframe.src = `${url}/c?config=${encodeURIComponent(configuration)}&data=`
-  preloaded_iframe.style.display = 'none'
-  preloaded_iframe.id = MODAL_CHAT_ID
-  document.body.appendChild(preloaded_iframe)
 
   window.addEventListener('message', (event) => {
     if (!isTrustedHostMessage(event)) return

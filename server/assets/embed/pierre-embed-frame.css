@@ -5,7 +5,15 @@ body {
   pointer-events: none;
 }
 
-#pierre-embed-modal,
-#pierre-embed-modal * {
+#pierre-embed-modal {
   pointer-events: auto;
+}
+
+#pierre-embed-modal[hidden] {
+  display: none !important;
+}
+
+#pierre-embed-modal [class~='pointer-events-none'],
+#pierre-embed-modal [class~='pointer-events-none'] * {
+  pointer-events: none;
 }

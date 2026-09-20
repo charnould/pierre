@@ -7,13 +7,6 @@ exports[`should AIContext parse correctly 1`] = `
     "proprietary": [],
   },
   "config": {
-    "api": [
-      {
-        "format": [Function],
-        "key": "WEBHOOK_KEY_1",
-        "url": "ex : https://api.ikos.com",
-      },
-    ],
     "attachments": true,
     "community_knowledge": true,
     "custom_data": {
@@ -21,6 +14,7 @@ exports[`should AIContext parse correctly 1`] = `
     },
     "disclaimer": "Une IA peut se tromper. Vérifiez les informations importantes.",
     "display": "PIERRE (défaut)",
+    "enabled": true,
     "examples": [
       "Comment déposer mon préavis de congé pour mon logement ? Et avez-vous un modèle de courrier ?",
       "Y-a-t-il des associations d'entraide dans le cadre de violences conjugales dans le Vaucluse ?",
@@ -36,13 +30,7 @@ exports[`should AIContext parse correctly 1`] = `
       "PS. Je n'ai pas connaissance à ce jour des spécificités des bailleurs.",
     ],
     "id": "default",
-    "protected": false,
     "reasoning_effort": "medium",
-    "show": [
-      "default",
-      "demo",
-      "zmode",
-    ],
     "trace": "none",
   },
   "content": "bonjour",
