@@ -22,7 +22,7 @@
     "better-auth": "^1.7.5",
     "date-fns": "catalog:",
     "docxtemplater": "catalog:",
-    "hono": "^4.13.7",
+    "hono": "^4.13.8",
     "jsdom": "catalog:",
     "libphonenumber-js": "^1.13.12",
     "mammoth": "^1.12.2",
