@@ -8,8 +8,7 @@
     "packages": [
       "docs",
       "server",
-      "desktop",
-      "customization"
+      "desktop"
     ],
     "catalog": {
       "@types/bun": "^1.4.2",
@@ -41,6 +40,7 @@
     "format:check": "bun run oxfmt -c ./config/oxfmt.jsonc --ignore-path=\"$PWD/config/oxfmt.ignore\" --check",
     "knip": "knip --config ./config/knip.jsonc --no-config-hints",
     "knip:production": "knip --config ./config/knip.jsonc --no-config-hints --production --include files,dependencies",
+    "pierre:config": "bun test config/checks/",
     "docs": "bun --filter @pierre/docs build",
     "release": "bash config/release.sh",
     "pierre:version": "bun run server/utils/update-pierre.ts",

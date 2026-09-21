@@ -17,7 +17,13 @@
         // CI-only validator: production Knip excludes the workflow tests that import it.
         "config/checks/workflow-config.ts!",
         "config/checks/*.test.ts",
-        "shared/**/*.test.ts"
+        "shared/**/*.test.ts",
+        // Hosted instance files: imported by the server at runtime, not by this workspace.
+        "customization/config.ts!",
+        "customization/chatbots/*/config.ts!",
+        "customization/skills/*/config.ts!",
+        "customization/repayments/config.ts!",
+        "customization/tickets/config.ts!"
       ],
       "ignoreDependencies": [
         // Oxlint loads JavaScript plugins from config strings that Knip cannot trace.
@@ -28,17 +34,6 @@
     },
     "config/smolvm/document-extract": {
       "entry": ["extract-spreadsheet.mjs!"]
-    },
-    "customization": {
-      // Runtime directory scans select organization and skill configs by name.
-      "entry": [
-        "chatbots/*/config.ts!",
-        "skills/*/config.ts!",
-        "desktop.ts!",
-        "insurances/config.ts!",
-        "repayments/config.ts!",
-        "tickets/config.ts!"
-      ]
     },
     "desktop": {
       "electron-vite": false,

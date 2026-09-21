@@ -18,7 +18,6 @@ COPY package.json bun.lock ./
 COPY server/package.json ./server/
 COPY docs/package.json ./docs/
 COPY desktop/package.json ./desktop/
-COPY customization/package.json ./customization/
 RUN bun install --frozen-lockfile --production --filter @pierre/server
 
 COPY customization/ ./customization/
