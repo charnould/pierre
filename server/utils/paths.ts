@@ -39,7 +39,6 @@ export const CUSTOMIZATION_DIR = existsSync(join(SERVER_ROOT, 'customization'))
   ? join(SERVER_ROOT, 'customization')
   : join(resolve(SERVER_ROOT, '..'), 'customization')
 
-export const CUSTOMIZATION_STATIC_ROOT = resolve(CUSTOMIZATION_DIR, '..')
 export const CUSTOMIZATION_SKILLS_DIR = resolve(CUSTOMIZATION_DIR, 'skills')
 
 export function resolvePathWithin(root: string, ...segments: string[]): string {

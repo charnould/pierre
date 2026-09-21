@@ -4,7 +4,6 @@ import { serveStatic } from 'hono/bun'
 import { cors } from 'hono/cors'
 import { secureHeaders } from 'hono/secure-headers'
 
-import desktop_config from '../customization/desktop'
 import { controller as get_ai_boot } from './controllers/ai/get.boot'
 import { controller as get_ai_skills } from './controllers/ai/get.skills'
 import { controller as post_ai } from './controllers/ai/post'
@@ -60,6 +59,11 @@ import { controller as post_desktop_bulk_operation } from './controllers/desktop
 import { controller as post_desktop_bulk_operation_execute } from './controllers/desktop/bulk-operations/post.execute'
 import { controller as post_desktop_bulk_operation_preview_message } from './controllers/desktop/bulk-operations/post.preview-message'
 import { controller as post_desktop_bulk_operation_preview_query } from './controllers/desktop/bulk-operations/post.preview-query'
+import { controller as get_desktop_customization } from './controllers/desktop/customization/get'
+import {
+  repaymentTemplate as get_desktop_repayment_template,
+  skillTemplate as get_desktop_skill_template
+} from './controllers/desktop/customization/get.docx'
 import { controller as get_desktop_datastore_tables } from './controllers/desktop/datastore/get.tables'
 import { controller as get_desktop_ledger } from './controllers/desktop/ledger/get'
 import { controller as get_desktop_ledger_facets } from './controllers/desktop/ledger/get.facets'
@@ -99,7 +103,7 @@ import { start_bulk_scheduler } from './utils/bulk/scheduler/queue'
 import { refresh_stale_sms_contacts } from './utils/contacts'
 import { ensureEnvAdmin } from './utils/ensure-env-admin'
 import { initializeKnowledgeBuildCoordinator } from './utils/knowledge/build-coordinator'
-import { CUSTOMIZATION_DIR, CUSTOMIZATION_STATIC_ROOT, SERVER_ROOT } from './utils/paths'
+import { CUSTOMIZATION_DIR, SERVER_ROOT } from './utils/paths'
 import { setup } from './utils/setup'
 import { initVmPool } from './utils/vm-pool'
 import { cleanupOrphanedVms } from './utils/vm-registry'
@@ -177,18 +181,10 @@ Bun.cron('* * * * *', async () => {
   await run_due_automations()
 })
 
-// Block server-side-only files from being served over HTTP
-app.get('/customization/:path{.+}/config.ts', (c) => c.notFound())
-app.get('/customization/:path{.+}/AGENTS.md', (c) => c.notFound())
-
-// Serve desktop config.ts as plain JSON
-app.get('/customization/desktop/config.json', (c) => c.json(desktop_config))
-
-// Serve PIERRE assets (with CORS for cross-origin embedding) and customization files
+// Serve PIERRE assets (with CORS for cross-origin embedding) and branding
 app.use('/assets/*', cors())
 app.use('/assets/*', serveStatic({ root: SERVER_ROOT }))
 app.use('/branding/*', serveStatic({ root: CUSTOMIZATION_DIR }))
-app.use('/customization/*', serveStatic({ root: CUSTOMIZATION_STATIC_ROOT }))
 
 // Better Auth owns the /auth namespace. Its admin API remains server-only.
 app.all('/auth/admin/*', (c) => c.notFound())
@@ -288,6 +284,13 @@ app.get(
 app.get('/desktop/datastore/tables', authenticate, get_desktop_datastore_tables)
 app.get('/desktop/users', authenticate, get_desktop_users)
 app.get('/desktop/me', authenticate, get_desktop_me)
+app.get('/desktop/customization', authenticate, get_desktop_customization)
+app.get(
+  '/desktop/customization/repayments/templates/template.docx',
+  authenticate,
+  get_desktop_repayment_template
+)
+app.get('/desktop/customization/skills/:id/template.docx', authenticate, get_desktop_skill_template)
 app.get('/desktop/admin/users', authenticate, authorizeAdministrator, get_desktop_admin_users)
 app.post('/desktop/admin/users', authenticate, authorizeAdministrator, post_desktop_admin_user)
 app.post(

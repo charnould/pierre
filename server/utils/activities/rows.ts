@@ -1,6 +1,6 @@
 import { Database } from 'bun:sqlite'
 
-import desktop_config from '../../../customization/desktop'
+import instance_config from '../../../customization/config'
 import {
   ACTIVITY_CONTEXTS,
   type Activite,
@@ -241,7 +241,7 @@ export const resolve_destinataire = (
   const raw = token.trim()
   if (!raw) return null
   const lowered = raw.toLowerCase()
-  if (lowered === desktopAgentMentionHandle(desktop_config.name)) {
+  if (lowered === desktopAgentMentionHandle(instance_config.name)) {
     return DESKTOP_AGENT_DESTINATAIRE
   }
   if (AUTHOR_RE.test(raw)) return raw.startsWith('user:') ? raw.toLowerCase() : raw

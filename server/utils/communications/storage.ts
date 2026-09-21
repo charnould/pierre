@@ -1,6 +1,6 @@
 import { Database } from 'bun:sqlite'
 
-import desktop_config from '../../../customization/desktop'
+import instance_config from '../../../customization/config'
 import {
   type Activite,
   type ActivityContext,
@@ -350,7 +350,7 @@ export const create_inbound = (input: CreateInboundInput): Activite => {
       date_creation: occurredAt,
       rattachement,
       auteur: input.auteur,
-      destinataire: desktop_config.name,
+      destinataire: instance_config.name,
       facets,
       type: 'communication.received',
       channel: require_channel(input.type),

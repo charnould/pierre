@@ -1,6 +1,6 @@
 import { TZDate } from '@date-fns/tz'
 
-import desktop_config from '../../../customization/desktop.ts'
+import instance_config from '../../../customization/config'
 import { parseCronExpression, type ParsedCron } from '../../../shared/automations'
 
 function matchesCron(local: TZDate, cron: ParsedCron): boolean {
@@ -44,6 +44,6 @@ export function compute_next_run_at(
 }
 
 export function org_timezone(): string {
-  const tz = (desktop_config as { timezone?: string }).timezone
+  const tz = (instance_config as { timezone?: string }).timezone
   return typeof tz === 'string' && tz.trim() ? tz.trim() : 'Europe/Paris'
 }

@@ -1,6 +1,6 @@
 import { Database } from 'bun:sqlite'
 
-import desktop_config from '../../customization/desktop'
+import instance_config from '../../customization/config'
 import {
   isReservedDisplayName,
   normalizeDisplayName,
@@ -63,7 +63,7 @@ export function patch_me_preferences(
     const normalized = normalizeDisplayName(body.display_name)
     const fallback = default_display_name(email)
     const isCustom = normalized !== null && normalized.toLowerCase() !== fallback.toLowerCase()
-    if (isCustom && isReservedDisplayName(normalized, desktop_config.name)) {
+    if (isCustom && isReservedDisplayName(normalized, instance_config.name)) {
       return { error: 'display_name is reserved for the AI' }
     }
   }
