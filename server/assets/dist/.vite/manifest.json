@@ -20,7 +20,7 @@
     "src": "src/assets/fonts/InterVariable.woff2"
   },
   "src/chat-web/main.tsx": {
-    "file": "js/ai-DJNRf4bB.js",
+    "file": "js/ai-COEU1jQl.js",
     "name": "ai",
     "src": "src/chat-web/main.tsx",
     "isEntry": true,
@@ -33,7 +33,7 @@
     ]
   },
   "style.css": {
-    "file": "css/style-B1fr09A-.css",
+    "file": "css/style-CqN5Yu3X.css",
     "src": "style.css"
   }
 }
