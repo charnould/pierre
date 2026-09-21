@@ -15,8 +15,8 @@ export function buildChatBoot(
     convId: Bun.randomUUIDv7(),
     configId: active_config.id,
     dataParam,
+    greetings: site.greetings,
     disclaimer: site.disclaimer,
-    greeting: site.greeting,
     examples: site.examples,
     displayableConfigs: displayable.map((c) => ({
       id: c.id,

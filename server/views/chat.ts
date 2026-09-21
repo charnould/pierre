@@ -16,7 +16,7 @@ export function chatPage(params: {
   ).replace(/</g, '\\u003c')
 
   return htmlPage({
-    title: 'Comment puis-je vous aider ? 🖐️',
+    title: 'Comment puis-je vous aider ?',
     bodyClass: embed ? '' : 'bg-background',
     head: html`${
         embed

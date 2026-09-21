@@ -7,8 +7,9 @@ it('serves the public chatbot on / and embeds ?data= in the boot payload', async
 
   await navigate(view, 'http://localhost:3000/')
   expect(await currentUrl(view)).toBe('http://localhost:3000/')
-  await waitForDom(view, 'document.querySelector("img[src=\\"/branding/system.svg\\"]")')
-  expect(await evaluate<string>(view, 'document.body.innerText')).toContain('Bonjour')
+  await waitForDom(view, 'document.body.innerText.includes("préavis")')
+  expect(await evaluate<string>(view, 'document.body.innerText')).toContain('préavis')
+  expect(await evaluate<string>(view, 'document.body.innerText')).not.toContain('Exemples')
   expect(
     await evaluate<string>(view, 'document.getElementById("pierre-data")?.textContent ?? ""')
   ).toContain('"dataParam":""')

@@ -52,7 +52,7 @@ describe('pages', () => {
   it('keeps the empty page CSS-only', async () => {
     const html = await render(emptyPage())
     expect(html).toContain('<title>Rien de public ici !</title>')
-    expect(html).toContain('/branding/lock.svg')
+    expect(html).toContain('/branding/404.svg')
     expect(html).toContain(`href="${chatCss}"`)
     expect(html).not.toContain(chatJs)
     expect(html).not.toContain('id="pierre-data"')

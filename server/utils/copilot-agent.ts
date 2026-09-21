@@ -16,7 +16,12 @@ import { Database } from 'bun:sqlite'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 
-import type { AiStreamEvent, AiStreamMessage, AskUserQuestion } from '../../shared/ai-stream-events'
+import {
+  dropTextBeforeLastTool,
+  type AiStreamEvent,
+  type AiStreamMessage,
+  type AskUserQuestion
+} from '../../shared/ai-stream-events'
 import type { PiImageContent } from './ai-attachments'
 import { CUSTOMIZATION_DIR, datastorePaths } from './paths'
 import { today_is } from './today-is'
@@ -146,7 +151,7 @@ function isAskUserQuestions(value: unknown): value is AskUserQuestion[] {
 }
 
 function messageText(message: AiStreamMessage): string {
-  return message.content
+  return dropTextBeforeLastTool(message.content)
     .filter((part): part is { type: 'text'; text: string } => part.type === 'text')
     .map((part) => part.text)
     .join('')

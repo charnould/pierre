@@ -26,7 +26,7 @@ it('returns the empty page for unknown HTML paths', async () => {
   expect(
     await evaluate<boolean>(
       view,
-      'Boolean(document.querySelector(\'img[src="/branding/lock.svg"]\'))'
+      'Boolean(document.querySelector(\'img[src="/branding/404.svg"]\'))'
     )
   ).toBe(true)
 
@@ -35,7 +35,7 @@ it('returns the empty page for unknown HTML paths', async () => {
   expect(
     await evaluate<boolean>(
       view,
-      'Boolean(document.querySelector(\'img[src="/branding/lock.svg"]\'))'
+      'Boolean(document.querySelector(\'img[src="/branding/404.svg"]\'))'
     )
   ).toBe(true)
 })

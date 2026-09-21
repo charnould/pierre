@@ -348,3 +348,10 @@ export function reduceAiStreamState(state: AiStreamState, event: AiStreamEvent):
   }
   return state
 }
+
+/** Text before the last tool is retrieval chatter. Keep work parts and the answer after it. */
+export function dropTextBeforeLastTool<T extends { type: string }>(parts: readonly T[]): T[] {
+  const lastTool = parts.findLastIndex((part) => part.type === 'tool' || part.type === 'toolCall')
+  if (lastTool < 0) return parts as T[]
+  return parts.filter((part, index) => part.type !== 'text' || index > lastTool)
+}

@@ -6,8 +6,8 @@ export type ChatBoot = {
   convId: string
   configId: string
   dataParam: string
+  greetings: string[]
   disclaimer: string | null
-  greeting: string[]
   examples: string[]
   displayableConfigs: { id: string; display: string; is_active: boolean }[]
   trace: TraceMode

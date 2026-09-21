@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'bun:test'
 
-import { createAiStreamState, parseAiStreamLine, reduceAiStreamState } from './ai-stream-events'
+import {
+  createAiStreamState,
+  dropTextBeforeLastTool,
+  parseAiStreamLine,
+  reduceAiStreamState
+} from './ai-stream-events'
 
 describe('canonical AI stream parser', () => {
   test('parses structured events and the terminal event', () => {
@@ -80,5 +85,28 @@ describe('canonical AI stream reducer', () => {
     })
     expect(state.text).toBe('final')
     expect(state.toolCallsSeen).toBe(1)
+  })
+})
+
+describe('dropTextBeforeLastTool', () => {
+  test('keeps every text part when there is no tool', () => {
+    const parts = [
+      { type: 'text', text: 'Bonjour' },
+      { type: 'text', text: ' une question ?' }
+    ]
+    expect(dropTextBeforeLastTool(parts)).toEqual(parts)
+  })
+
+  test('drops retrieval chatter before the last tool and keeps the answer after it', () => {
+    expect(
+      dropTextBeforeLastTool([
+        { type: 'text', text: "Doc rowid 64 is the main one. Let's read its full content." },
+        { type: 'toolCall', id: '1', name: 'sqlite3', arguments: {} },
+        { type: 'text', text: 'Pour demander un logement social, déposez un dossier.' }
+      ])
+    ).toEqual([
+      { type: 'toolCall', id: '1', name: 'sqlite3', arguments: {} },
+      { type: 'text', text: 'Pour demander un logement social, déposez un dossier.' }
+    ])
   })
 })

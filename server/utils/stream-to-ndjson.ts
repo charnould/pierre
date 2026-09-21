@@ -1,4 +1,4 @@
-import type { AiStreamEvent } from '../../shared/ai-stream-events'
+import { dropTextBeforeLastTool, type AiStreamEvent } from '../../shared/ai-stream-events'
 import type { TraceMode } from '../../shared/chat'
 import { showsThinking, showsTools } from '../../shared/chat'
 import type { CopilotChunk } from './copilot-agent'
@@ -41,14 +41,15 @@ export function* copilotChunkToNdjson(
   }
 
   if (!showsThinking(trace) && isThinkingEvent(chunk.type)) return
-  if (!showsTools(trace) && isToolEvent(chunk.type)) return
+  // toolcall_start stays on `none`: a fence so the client can drop retrieval chatter.
+  if (!showsTools(trace) && isToolEvent(chunk.type) && chunk.type !== 'toolcall_start') return
 
   if (chunk.type === 'message_end') {
     yield {
       ...chunk,
       message: {
         ...chunk.message,
-        content: chunk.message.content.filter((part) => {
+        content: dropTextBeforeLastTool(chunk.message.content).filter((part) => {
           if (part.type === 'thinking') return showsThinking(trace)
           if (part.type === 'toolCall') return showsTools(trace)
           return true

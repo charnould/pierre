@@ -20,9 +20,15 @@ const AgentFields = {
   trace: z.enum(TRACE_MODES)
 }
 
+const chromeLines = z.array(z.string()).nullish()
+const chromeDisclaimer = z.string().nullish()
+
 const SharedChatbotFields = {
   ...AgentFields,
-  attachments: z.boolean()
+  attachments: z.boolean(),
+  greetings: chromeLines,
+  examples: chromeLines,
+  disclaimer: chromeDisclaimer
 }
 
 export const InternalChatbotConfig = z.object(SharedChatbotFields).strict()
@@ -31,9 +37,6 @@ export const DefaultChatbotConfig = z
   .object({
     ...SharedChatbotFields,
     enabled: z.boolean(),
-    greeting: z.array(z.string()),
-    examples: z.array(z.string()),
-    disclaimer: z.string().nullable(),
     custom_data: z.object({ format: z.function() }).or(z.object({}))
   })
   .strict()
@@ -48,19 +51,25 @@ export function isDefaultChatbotConfig(
   return 'enabled' in config
 }
 
+function chromeList(value: string[] | null | undefined): string[] {
+  return (value ?? []).map((line) => line.trim()).filter((line) => line.length > 0)
+}
+
+function chromeText(value: string | null | undefined): string | null {
+  const text = value?.trim() ?? ''
+  return text.length > 0 ? text : null
+}
+
 export function chatbotSiteFields(config: ChatbotConfig): {
-  greeting: string[]
+  greetings: string[]
   examples: string[]
   disclaimer: string | null
 } {
-  if (isDefaultChatbotConfig(config)) {
-    return {
-      greeting: config.greeting,
-      examples: config.examples,
-      disclaimer: config.disclaimer
-    }
+  return {
+    greetings: chromeList(config.greetings),
+    examples: chromeList(config.examples),
+    disclaimer: chromeText(config.disclaimer)
   }
-  return { greeting: [], examples: [], disclaimer: null }
 }
 
 //

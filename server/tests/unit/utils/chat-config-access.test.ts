@@ -18,7 +18,6 @@ const publicOn: ChatbotConfig = {
   reasoning_effort: 'medium',
   trace: 'none',
   attachments: true,
-  greeting: [],
   examples: [],
   disclaimer: null,
   custom_data: {}

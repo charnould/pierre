@@ -95,13 +95,53 @@ describe('copilotChunkToNdjson', () => {
     expect([...copilotChunkToNdjson(tool, 'expanded')]).toEqual([tool])
   })
 
-  test('none also drops tool events', () => {
+  test('none keeps toolcall_start as a fence and drops tool payloads', () => {
+    const start = {
+      type: 'toolcall_start' as const,
+      contentIndex: 1,
+      toolCallId: 'call-1',
+      toolName: 'read'
+    }
+    expect([...copilotChunkToNdjson(start, 'none')]).toEqual([start])
     expect([
       ...copilotChunkToNdjson(
-        { type: 'toolcall_start', contentIndex: 1, toolCallId: 'call-1', toolName: 'read' },
+        {
+          type: 'tool_execution_end',
+          toolCallId: 'call-1',
+          toolName: 'read',
+          result: { content: [] },
+          isError: false
+        },
         'none'
       )
     ]).toEqual([])
+  })
+
+  test('message_end drops text before the last tool', () => {
+    expect([
+      ...copilotChunkToNdjson(
+        {
+          type: 'message_end',
+          message: {
+            role: 'assistant',
+            content: [
+              { type: 'text', text: "Doc rowid 64. Let's read it." },
+              { type: 'toolCall', id: 'call-1', name: 'read', arguments: {} },
+              { type: 'text', text: 'Pour demander un logement social.' }
+            ]
+          }
+        },
+        'none'
+      )
+    ]).toEqual([
+      {
+        type: 'message_end',
+        message: {
+          role: 'assistant',
+          content: [{ type: 'text', text: 'Pour demander un logement social.' }]
+        }
+      }
+    ])
   })
 
   test('ndjsonLine appends newline', () => {
