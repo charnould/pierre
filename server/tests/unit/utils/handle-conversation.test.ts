@@ -2,13 +2,24 @@ import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, describe, expect, it, setSystemTime } from 'bun:test'
 import { rm } from 'node:fs/promises'
 
-import { AIContext } from '../../../utils/_schema'
+import { AIContext, type ChatbotConfig } from '../../../utils/_schema'
 import { save_reply } from '../../../utils/handle-conversation'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 
 const paths = testDatastorePaths('handle_conversation')
-const config = (await import(`../../../../customization/chatbots/default/config`)).default
+const config: ChatbotConfig = {
+  id: 'default',
+  display: 'PIERRE',
+  enabled: true,
+  community_knowledge: true,
+  reasoning_effort: 'medium',
+  trace: 'none',
+  attachments: false,
+  greetings: ['Bonjour'],
+  examples: ['Question'],
+  disclaimer: 'Vérifier.'
+}
 
 beforeAll(async () => {
   setDatastoreRoot(paths.root)

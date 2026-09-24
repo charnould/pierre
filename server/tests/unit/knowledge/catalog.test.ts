@@ -297,22 +297,32 @@ describe('knowledge catalog', () => {
     })
   })
 
-  it('expands a tickets module to ticket skills and ignores modules without skills', () => {
+  it('publishes a module into its prompt database and ignores modules without one', () => {
     const assigned = {
       title: 'Guide',
       sheet: null,
       sheetName: null,
       headerRow: null,
       profileIds: [] as string[],
-      moduleIds: ['tickets' as const]
+      moduleIds: ['about' as const]
     }
-    const known = ['default', 'ticket.answer-ticket', 'ticket.write-memo', 'about.summary']
+    const known = ['default', 'about', 'report', 'replies', 'repayment']
     expect(isKnowledgeEntryAssigned(assigned)).toBe(true)
-    expect(knowledgePublishTargets(assigned, known)).toEqual([
-      'ticket.answer-ticket',
-      'ticket.write-memo'
+    expect(knowledgePublishTargets(assigned, known)).toEqual(['about'])
+    expect(knowledgePublishTargets({ ...assigned, moduleIds: ['automations'] }, known)).toEqual([])
+    expect(knowledgePublishTargets({ ...assigned, moduleIds: ['repayment'] }, known)).toEqual([
+      'repayment'
     ])
-    expect(knowledgePublishTargets({ ...assigned, moduleIds: ['repayment'] }, known)).toEqual([])
+    expect(knowledgePublishTargets({ ...assigned, moduleIds: ['tickets'] }, known)).toEqual([])
+    expect(
+      knowledgePublishTargets({ ...assigned, profileIds: ['report'], moduleIds: [] }, known)
+    ).toEqual(['report'])
+    expect(
+      knowledgePublishTargets(
+        { ...assigned, profileIds: ['ticket.answer-ticket'], moduleIds: [] },
+        known
+      )
+    ).toEqual([])
 
     const first = insertKnowledgeSource({
       storageName: 'a.md',
@@ -340,7 +350,7 @@ describe('knowledge catalog', () => {
           sheetName: null,
           headerRow: null,
           profileIds: [],
-          moduleIds: ['tickets']
+          moduleIds: ['about']
         }
       ],
       profiles
@@ -355,7 +365,7 @@ describe('knowledge catalog', () => {
             sheetName: null,
             headerRow: null,
             profileIds: [],
-            moduleIds: ['tickets']
+            moduleIds: ['about']
           }
         ],
         profiles
@@ -376,7 +386,7 @@ describe('knowledge catalog', () => {
               sheetName: null,
               headerRow: null,
               profileIds: [],
-              moduleIds: ['tickets']
+              moduleIds: ['about']
             }
           ]
         },
@@ -389,7 +399,7 @@ describe('knowledge catalog', () => {
       flattenKnowledgeEntries(snapshot, known)
         .map((entry) => entry.access)
         .sort()
-    ).toEqual(['ticket.answer-ticket', 'ticket.write-memo'])
+    ).toEqual(['about'])
     expect(
       flattenKnowledgeEntries(
         {
@@ -398,7 +408,7 @@ describe('knowledge catalog', () => {
             ...source,
             entries: source.entries.map((entry) => ({
               ...entry,
-              moduleIds: ['repayment' as const]
+              moduleIds: ['tickets' as const]
             }))
           }))
         },

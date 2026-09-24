@@ -22,7 +22,7 @@ const ReportConfigSchema = z.object({
 })
 
 const TicketReplyConfigSchema = z.object({
-  skillId: z.literal('ticket.answer-ticket'),
+  skillId: z.literal('replies'),
   channel: z.enum(['email', 'letter']),
   ticketFilters: z.object({ rules: z.array(TicketFilterRuleSchema) }),
   maxItems: z.number().int().positive().max(500)
@@ -85,7 +85,7 @@ export const CreateAutomationBodySchema = z
       .strict(),
     z
       .object({
-        type: z.literal('ticket_reply'),
+        type: z.literal('replies'),
         name: z.string().trim().min(1),
         description: z.string().default(''),
         mentions: z.array(z.string().trim().min(1)).default([]),

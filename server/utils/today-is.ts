@@ -1,6 +1,8 @@
 import { TZDate } from '@date-fns/tz'
 import { format, getISOWeek, isSameDay, parseISO } from 'date-fns'
 
+import { timezone } from './setup-store'
+
 /**
  * Returns a human-readable string describing the current date, ISO week number and time,
  * and indicates if today is one of the predefined French public holidays.
@@ -54,7 +56,8 @@ export const today_is = (): string => {
     { date: '2027-12-25', name: 'Noël' }
   ]
 
-  const now = new TZDate(Date.now(), 'Europe/Paris')
+  const zone = timezone() ?? 'UTC'
+  const now = new TZDate(Date.now(), zone)
   const date = format(now, 'EEEE, MMMM dd, yyyy')
   const time = format(now, 'HH:mm')
   const week = getISOWeek(now)

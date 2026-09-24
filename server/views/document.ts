@@ -18,7 +18,6 @@ export function htmlPage(params: {
         <meta name="viewport" content="${VIEWPORT}" />
         <link rel="stylesheet" href="${chatCss}" />
         ${params.head ?? html``}
-        <link rel="icon" href="/branding/icons/icon.svg" type="image/svg+xml" />
         <title>${params.title}</title>
       </head>
       <body class="${params.bodyClass ?? ''}">

@@ -1,0 +1,915 @@
+{
+  "model_name": "alphaedge-ai/mmBERT-base-fra-32768",
+  "motif": [
+    ["administratif", "assurance", "attestation"],
+    ["administratif", "assurance", "autre"],
+    ["administratif", "autre", "autre"],
+    ["administratif", "bail", "autre"],
+    ["administratif", "bail", "avenant"],
+    ["administratif", "bail", "clause"],
+    ["administratif", "bail", "copie"],
+    ["administratif", "candidature", "autre"],
+    ["administratif", "candidature", "demande"],
+    ["administratif", "candidature", "pieces_candidat"],
+    ["administratif", "candidature", "suivi"],
+    ["administratif", "cles", "autre"],
+    ["administratif", "cles", "etat_des_lieux"],
+    ["administratif", "cles", "remise"],
+    ["administratif", "contentieux", "autre"],
+    ["administratif", "contentieux", "procedure"],
+    ["administratif", "depart", "autre"],
+    ["administratif", "depart", "deces"],
+    ["administratif", "depart", "depot_garantie"],
+    ["administratif", "depart", "preavis"],
+    ["administratif", "indemnitaire", "autre"],
+    ["administratif", "indemnitaire", "compensation"],
+    ["administratif", "indemnitaire", "reduction_loyer"],
+    ["administratif", "information", "autre"],
+    ["administratif", "information", "question"],
+    ["administratif", "loyer", "autre"],
+    ["administratif", "loyer", "caf"],
+    ["administratif", "loyer", "charges"],
+    ["administratif", "loyer", "cheque"],
+    ["administratif", "loyer", "cle_bip"],
+    ["administratif", "loyer", "difficulte"],
+    ["administratif", "loyer", "energie"],
+    ["administratif", "loyer", "imputation"],
+    ["administratif", "loyer", "incomprehension"],
+    ["administratif", "loyer", "paiement_carte"],
+    ["administratif", "loyer", "prelevement"],
+    ["administratif", "loyer", "quittance"],
+    ["administratif", "loyer", "sls"],
+    ["administratif", "loyer", "travaux"],
+    ["administratif", "mutation", "autre"],
+    ["administratif", "mutation", "changement"],
+    ["administratif", "mutation", "logement_inadapte"],
+    ["administratif", "pieces", "autre"],
+    ["administratif", "pieces", "demande_document"],
+    ["administratif", "pieces", "envoi_document"],
+    ["administratif", "rdv", "autre"],
+    ["administratif", "rdv", "situation"],
+    ["administratif", "rdv", "technique"],
+    ["administratif", "stationnement", "autre"],
+    ["administratif", "stationnement", "garage"],
+    ["administratif", "stationnement", "place"],
+    ["administratif", "travaux_locataire", "autorisation"],
+    ["administratif", "travaux_locataire", "autre"],
+    ["hors_demande", "null", "null"],
+    ["inexploitable", "null", "null"],
+    ["technique", "acces", "autre"],
+    ["technique", "acces", "badge"],
+    ["technique", "acces", "boite_aux_lettres"],
+    ["technique", "acces", "equipement_acces"],
+    ["technique", "acces", "interphone"],
+    ["technique", "acces", "portail"],
+    ["technique", "acces", "telecommande_garage"],
+    ["technique", "acces", "telecommande_portail"],
+    ["technique", "air", "autre"],
+    ["technique", "air", "humidite"],
+    ["technique", "air", "moisissure"],
+    ["technique", "air", "odeur_logement"],
+    ["technique", "air", "vmc"],
+    ["technique", "ascenseur", "autre"],
+    ["technique", "ascenseur", "bruit"],
+    ["technique", "ascenseur", "enferme"],
+    ["technique", "ascenseur", "panne"],
+    ["technique", "ascenseur", "porte"],
+    ["technique", "autre", "autre"],
+    ["technique", "chauffage", "autre"],
+    ["technique", "chauffage", "bruit"],
+    ["technique", "chauffage", "exces"],
+    ["technique", "chauffage", "insuffisant"],
+    ["technique", "chauffage", "panne"],
+    ["technique", "eau", "autre"],
+    ["technique", "eau", "compteur"],
+    ["technique", "eau", "coupure"],
+    ["technique", "eau", "eau_chaude"],
+    ["technique", "eau", "engorgement"],
+    ["technique", "eau", "fuite"],
+    ["technique", "eau", "pression"],
+    ["technique", "eau", "qualite"],
+    ["technique", "electricite", "autre"],
+    ["technique", "electricite", "coupure"],
+    ["technique", "electricite", "disjonction"],
+    ["technique", "electricite", "eclairage"],
+    ["technique", "electricite", "panne_equipement"],
+    ["technique", "enveloppe", "autre"],
+    ["technique", "enveloppe", "facade"],
+    ["technique", "enveloppe", "menuiserie_exterieure"],
+    ["technique", "enveloppe", "toiture"],
+    ["technique", "exterieurs", "autre"],
+    ["technique", "exterieurs", "epave"],
+    ["technique", "exterieurs", "espaces_verts"],
+    ["technique", "exterieurs", "voirie"],
+    ["technique", "menuiserie", "autre"],
+    ["technique", "menuiserie", "fenetre"],
+    ["technique", "menuiserie", "porte_interieure"],
+    ["technique", "menuiserie", "volet"],
+    ["technique", "proprete", "autre"],
+    ["technique", "proprete", "encombrants"],
+    ["technique", "proprete", "nuisibles"],
+    ["technique", "proprete", "odeurs_communes"],
+    ["technique", "proprete", "sacs_poubelle"],
+    ["technique", "proprete", "salissure"],
+    ["technique", "sanitaires", "autre"],
+    ["technique", "sanitaires", "douche_baignoire"],
+    ["technique", "sanitaires", "robinetterie"],
+    ["technique", "sanitaires", "wc"],
+    ["technique", "securite_incendie", "autre"],
+    ["technique", "securite_incendie", "desenfumage"],
+    ["technique", "securite_incendie", "detecteur_fumee"],
+    ["technique", "securite_incendie", "detresse"],
+    ["technique", "securite_incendie", "gaz"],
+    ["technique", "securite_incendie", "incendie"],
+    ["technique", "securite_incendie", "issue_secours"],
+    ["technique", "serrurerie", "autre"],
+    ["technique", "serrurerie", "cle_logement"],
+    ["technique", "serrurerie", "cylindre"],
+    ["technique", "serrurerie", "porte_logement"],
+    ["technique", "sinistre", "apres_incendie"],
+    ["technique", "sinistre", "autre"],
+    ["technique", "sinistre", "declaration"],
+    ["technique", "sinistre", "degat_eaux"],
+    ["technique", "sinistre", "embellissement"],
+    ["technique", "sinistre", "non_prise_en_charge"],
+    ["technique", "sinistre", "persistance"],
+    ["technique", "sinistre", "rapport_expertise"],
+    ["technique", "surete", "autre"],
+    ["technique", "surete", "effraction"],
+    ["technique", "surete", "vandalisme"],
+    ["technique", "surete", "vol"],
+    ["trouble_voisinage", "autre", "autre"],
+    ["trouble_voisinage", "bruit", "autre"],
+    ["trouble_voisinage", "bruit", "musique"],
+    ["trouble_voisinage", "bruit", "tapage"],
+    ["trouble_voisinage", "bruit", "travaux"],
+    ["trouble_voisinage", "conflit", "autre"],
+    ["trouble_voisinage", "conflit", "dispute"],
+    ["trouble_voisinage", "conflit", "harcelement"],
+    ["trouble_voisinage", "conflit", "menaces"],
+    ["trouble_voisinage", "nuisance", "autre"],
+    ["trouble_voisinage", "nuisance", "jets"],
+    ["trouble_voisinage", "nuisance", "odeurs"],
+    ["trouble_voisinage", "nuisance", "salete"],
+    ["trouble_voisinage", "occupation", "autre"],
+    ["trouble_voisinage", "occupation", "squat"]
+  ],
+  "plancher": [
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    null,
+    null,
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["dans_la_journee", "immediat"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["dans_la_journee", "immediat"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["dans_la_journee", "immediat"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["dans_la_journee", "immediat", "potentiel"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["potentiel"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["potentiel"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["potentiel"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["potentiel"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel", "avere"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "immediat",
+      "danger": "potentiel",
+      "monte": ["avere"]
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "aucun",
+      "monte": ["immediat"]
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["dans_la_journee", "immediat", "potentiel", "avere"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel", "avere"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["potentiel"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["potentiel"]
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel", "avere"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["dans_la_journee", "immediat", "potentiel", "avere"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "aucun",
+      "monte": ["immediat"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel"]
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel", "avere"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["dans_la_journee", "potentiel"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel", "avere"]
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel"]
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["dans_la_journee", "potentiel"]
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel"]
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel"]
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel"]
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel", "avere"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["potentiel"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["potentiel"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["potentiel"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["dans_la_journee", "potentiel"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["dans_la_journee", "immediat", "potentiel"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["potentiel"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["potentiel"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["potentiel"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "potentiel",
+      "monte": ["immediat", "avere"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "potentiel",
+      "monte": ["immediat"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "immediat",
+      "danger": "potentiel",
+      "monte": ["avere"]
+    },
+    {
+      "urgence": "immediat",
+      "danger": "potentiel",
+      "monte": ["avere"]
+    },
+    {
+      "urgence": "immediat",
+      "danger": "potentiel",
+      "monte": ["avere"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "potentiel",
+      "monte": ["immediat"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel"]
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["dans_la_journee", "immediat", "potentiel"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["potentiel"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["dans_la_journee", "potentiel"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel", "avere"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel", "avere"]
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "potentiel",
+      "monte": ["immediat", "avere"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel", "avere"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["immediat"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["immediat"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["immediat"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel", "avere"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["dans_la_journee"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "potentiel",
+      "monte": ["immediat", "avere"]
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "potentiel",
+      "monte": ["immediat", "avere"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["potentiel"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel", "avere"]
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["potentiel"]
+    },
+    {
+      "urgence": "planifiable",
+      "danger": "aucun",
+      "monte": []
+    },
+    {
+      "urgence": "sous_quelques_jours",
+      "danger": "aucun",
+      "monte": ["immediat", "potentiel"]
+    },
+    {
+      "urgence": "dans_la_journee",
+      "danger": "potentiel",
+      "monte": ["immediat", "avere"]
+    }
+  ],
+  "urgence": ["dans_la_journee", "immediat", "null", "planifiable", "sous_quelques_jours"],
+  "danger_personnes": ["aucun", "avere", "null", "potentiel"],
+  "lieu": ["abords", "indetermine", "mitoyen", "null", "parties_communes", "privatif", "vacant"],
+  "registre": ["agressif", "null", "standard"]
+}

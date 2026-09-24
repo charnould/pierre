@@ -1,6 +1,5 @@
 import { TZDate } from '@date-fns/tz'
 
-import instance_config from '../../../customization/config'
 import { parseCronExpression, type ParsedCron } from '../../../shared/automations'
 
 function matchesCron(local: TZDate, cron: ParsedCron): boolean {
@@ -41,9 +40,4 @@ export function compute_next_run_at(
     cursor = new TZDate(cursor.getTime() + 60_000, timezone)
   }
   throw new Error(`No next run found for cron=${cron} tz=${timezone}`)
-}
-
-export function org_timezone(): string {
-  const tz = (instance_config as { timezone?: string }).timezone
-  return typeof tz === 'string' && tz.trim() ? tz.trim() : 'Europe/Paris'
 }

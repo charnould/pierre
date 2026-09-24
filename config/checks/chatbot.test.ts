@@ -1,6 +1,4 @@
 import { expect, test } from 'bun:test'
-import { readdir } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
 
 import {
   chatbotSiteFields,
@@ -8,71 +6,29 @@ import {
   InternalChatbotConfig
 } from '../../server/utils/_schema'
 
-const CUSTOMIZATION_DIR = resolve(import.meta.dir, '../../customization')
-
 const shared = {
   display: 'X',
   community_knowledge: false,
   reasoning_effort: 'medium' as const,
   trace: 'none' as const,
-  attachments: true
+  attachments: true,
+  greetings: ['Bonjour'],
+  examples: ['Une question'],
+  disclaimer: 'Vérifier.'
 }
 
-test('default chatbot config parses with site fields', async () => {
-  const config = (await import('../../customization/chatbots/default/config')).default
-  const check = DefaultChatbotConfig.safeParse(config)
-  expect(check.success).toBe(true)
+test('default schema requires enabled', () => {
+  expect(DefaultChatbotConfig.safeParse({ id: 'default', ...shared }).success).toBe(false)
+  expect(DefaultChatbotConfig.safeParse({ id: 'default', ...shared, enabled: true }).success).toBe(
+    true
+  )
 })
 
-test('internal chatbot configs parse without public-only fields', async () => {
-  const directories = await readdir(join(CUSTOMIZATION_DIR, 'chatbots'))
-
-  for (const directory of directories) {
-    if (directory === 'default') continue
-    const path = join(CUSTOMIZATION_DIR, 'chatbots', directory, 'config.ts')
-    if (!(await Bun.file(path).exists())) continue
-    const config = (await import(`../../customization/chatbots/${directory}/config`)).default
-    const check = InternalChatbotConfig.safeParse(config)
-    expect(check.success, directory).toBe(true)
-    expect(DefaultChatbotConfig.safeParse(config).success, directory).toBe(false)
-  }
-})
-
-test('default schema requires enabled and custom_data', () => {
-  const config = { id: 'default', ...shared }
-  expect(DefaultChatbotConfig.safeParse(config).success).toBe(false)
-  expect(
-    DefaultChatbotConfig.safeParse({
-      ...config,
-      enabled: true,
-      custom_data: {}
-    }).success
-  ).toBe(true)
-})
-
-test('internal schema accepts chrome fields and rejects public-only fields', () => {
-  const config = { id: 'interne', ...shared }
-  expect(InternalChatbotConfig.safeParse(config).success).toBe(true)
-  expect(
-    InternalChatbotConfig.safeParse({
-      ...config,
-      greetings: ['Bonjour'],
-      examples: [],
-      disclaimer: null
-    }).success
-  ).toBe(true)
-  expect(
-    InternalChatbotConfig.safeParse({
-      ...config,
-      enabled: true
-    }).success
-  ).toBe(false)
-  expect(
-    InternalChatbotConfig.safeParse({
-      ...config,
-      custom_data: {}
-    }).success
-  ).toBe(false)
+test('internal schema rejects public-only fields', () => {
+  expect(InternalChatbotConfig.safeParse({ id: 'interne', ...shared }).success).toBe(true)
+  expect(InternalChatbotConfig.safeParse({ id: 'interne', ...shared, enabled: true }).success).toBe(
+    false
+  )
 })
 
 test('chatbotSiteFields hides blank chrome', () => {
@@ -82,11 +38,7 @@ test('chatbotSiteFields hides blank chrome', () => {
       ...shared,
       greetings: ['  ', 'Bonjour'],
       examples: null,
-      disclaimer: '   '
-    })
-  ).toEqual({
-    greetings: ['Bonjour'],
-    examples: [],
-    disclaimer: null
-  })
+      disclaimer: '  '
+    }).greetings
+  ).toEqual(['Bonjour'])
 })

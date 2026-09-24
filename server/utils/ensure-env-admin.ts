@@ -1,10 +1,6 @@
-import { existsSync } from 'node:fs'
-import { readdir } from 'node:fs/promises'
-import { join } from 'node:path'
-
 import { BUSINESS_MODULE_IDS } from '../../shared/modules'
 import { createUser, getStoredUser } from './handle-user'
-import { CUSTOMIZATION_DIR } from './paths'
+import { listInternalChatbots } from './setup-store'
 
 export const ENV_ADMIN_EMAIL = 'admin@pierre-ia.org'
 
@@ -17,12 +13,9 @@ function readAuthPassword(): string {
   return password
 }
 
-async function listChatbotIds(): Promise<string[]> {
-  return (await readdir(join(CUSTOMIZATION_DIR, 'chatbots')))
-    .filter(
-      (entry) =>
-        entry !== 'default' && existsSync(join(CUSTOMIZATION_DIR, 'chatbots', entry, 'config.ts'))
-    )
+function listChatbotIds(): string[] {
+  return listInternalChatbots()
+    .map((chatbot) => chatbot.id)
     .sort()
 }
 
@@ -34,7 +27,7 @@ export async function ensureEnvAdmin(): Promise<void> {
     password: readAuthPassword(),
     isAdministrator: true,
     moduleIds: BUSINESS_MODULE_IDS,
-    chatbotIds: await listChatbotIds(),
+    chatbotIds: listChatbotIds(),
     profileId: null
   })
 }

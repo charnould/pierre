@@ -1,10 +1,23 @@
 import { describe, expect, it } from 'bun:test'
 import { existsSync } from 'node:fs'
 
-import defaultConfig from '../../../../customization/chatbots/default/config'
+import type { ChatbotConfig } from '../../../utils/_schema'
 import { chatCss, chatJs, readChatWebEntry, widgetAssets } from '../../../views/assets'
 import { chatPage } from '../../../views/chat'
 import { emptyPage } from '../../../views/empty'
+
+const defaultConfig: ChatbotConfig = {
+  id: 'default',
+  display: 'PIERRE',
+  enabled: true,
+  community_knowledge: true,
+  reasoning_effort: 'medium',
+  trace: 'none',
+  attachments: false,
+  greetings: ['Bonjour'],
+  examples: ['Question'],
+  disclaimer: 'Vérifier.'
+}
 
 const HASHED_JS = /^\/assets\/dist\/js\/ai-[a-zA-Z0-9_-]+\.js$/
 const HASHED_CSS = /^\/assets\/dist\/css\/style-[a-zA-Z0-9_-]+\.css$/
@@ -52,7 +65,7 @@ describe('pages', () => {
   it('keeps the empty page CSS-only', async () => {
     const html = await render(emptyPage())
     expect(html).toContain('<title>Rien de public ici !</title>')
-    expect(html).toContain('/branding/404.svg')
+    expect(html).toContain('/assets/404.svg')
     expect(html).toContain(`href="${chatCss}"`)
     expect(html).not.toContain(chatJs)
     expect(html).not.toContain('id="pierre-data"')

@@ -27,6 +27,7 @@ import { insert_contact_if_absent } from '../../../../utils/contacts'
 import { update_status } from '../../../../utils/delivery-status'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { setup } from '../../../../utils/setup'
+import { seedInstanceSetup } from '../../../seed-setup'
 
 const paths = testDatastorePaths('bulk_reports')
 const DB_PATH = `${paths.root}/datastore.sqlite`
@@ -99,6 +100,7 @@ beforeEach(async () => {
   await rm(paths.root, { recursive: true, force: true })
   await mkdir(paths.root, { recursive: true })
   await setup()
+  await seedInstanceSetup()
 })
 
 afterEach(async () => {

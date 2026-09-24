@@ -17,6 +17,7 @@ import {
   type KnowledgeDiagnostic
 } from './catalog'
 import { ingest_files, loadCoreDataMirrors, setup_knowledge_directories } from './ingest-files'
+import { writeProfileFiles } from './profile-files'
 import { listKnowledgeProfiles } from './profiles'
 
 export class KnowledgeCatalogChangedError extends Error {
@@ -164,6 +165,9 @@ export const runKnowledgePipeline = async (
       await publication.rollback()
       throw error
     }
+    await Promise.all(
+      artifacts.databases.map((candidate) => writeProfileFiles(candidate.profileId))
+    )
     return {
       catalogFingerprint: snapshot.fingerprint,
       diagnostics,

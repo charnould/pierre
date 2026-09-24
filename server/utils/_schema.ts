@@ -36,14 +36,11 @@ export const InternalChatbotConfig = z.object(SharedChatbotFields).strict()
 export const DefaultChatbotConfig = z
   .object({
     ...SharedChatbotFields,
-    enabled: z.boolean(),
-    custom_data: z.object({ format: z.function() }).or(z.object({}))
+    enabled: z.boolean()
   })
   .strict()
 
 export const ChatbotConfig = z.union([DefaultChatbotConfig, InternalChatbotConfig])
-
-export const SkillConfig = z.object(AgentFields).strict()
 
 export function isDefaultChatbotConfig(
   config: ChatbotConfig
@@ -131,42 +128,25 @@ const Augmented_Query = z.object({
 
 //
 // AI Context
-export const AIContext = z
-  .object({
-    ...Reply.extend({ query: Augmented_Query.nullable().default(null) }).shape,
-    ...z.object({
-      chunks: z
-        .object({
-          community: z
-            .array(z.object({ chunk_text: z.string(), chunk_file: z.string() }))
-            .default([]),
-          proprietary: z
-            .array(z.object({ chunk_text: z.string(), chunk_file: z.string() }))
-            .default([])
-        })
-        .default({ community: [], proprietary: [] }),
-      custom_data: z.object({ raw: z.array(z.string()), transformed: z.string().default('') }),
-      conversation: z
-        .array(z.object({ role: z.enum(['assistant', 'user', 'system']), content: z.string() }))
-        .default([])
-    }).shape
-  })
-  .refine(async (c) => {
-    if (isDefaultChatbotConfig(c.config) && 'format' in c.config.custom_data) {
-      if (
-        Array.isArray(c.custom_data.raw) &&
-        c.custom_data.raw.length === 1 &&
-        c.custom_data.raw[0] === ''
-      ) {
-        c.custom_data.transformed = ''
-      } else {
-        const format = c.config.custom_data.format as (data: string[]) => string
-        c.custom_data.transformed = format(c.custom_data.raw)
-      }
-    }
-
-    return true
-  })
+export const AIContext = z.object({
+  ...Reply.extend({ query: Augmented_Query.nullable().default(null) }).shape,
+  ...z.object({
+    chunks: z
+      .object({
+        community: z
+          .array(z.object({ chunk_text: z.string(), chunk_file: z.string() }))
+          .default([]),
+        proprietary: z
+          .array(z.object({ chunk_text: z.string(), chunk_file: z.string() }))
+          .default([])
+      })
+      .default({ community: [], proprietary: [] }),
+    custom_data: z.object({ raw: z.array(z.string()), transformed: z.string().default('') }),
+    conversation: z
+      .array(z.object({ role: z.enum(['assistant', 'user', 'system']), content: z.string() }))
+      .default([])
+  }).shape
+})
 
 //
 //
@@ -175,6 +155,5 @@ export type Reply = z.infer<typeof Reply>
 export type DefaultChatbotConfig = z.infer<typeof DefaultChatbotConfig>
 export type InternalChatbotConfig = z.infer<typeof InternalChatbotConfig>
 export type ChatbotConfig = z.infer<typeof ChatbotConfig>
-export type SkillConfig = z.infer<typeof SkillConfig>
 export type Config = ChatbotConfig
 export type AIContext = z.infer<typeof AIContext>

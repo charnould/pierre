@@ -1,6 +1,10 @@
 import { Database } from 'bun:sqlite'
 
 import baselineSql from './001-baseline.sql' with { type: 'text' }
+import promptsSql from './002-prompts.sql' with { type: 'text' }
+import synthesePayloadSql from './003-synthese-payload.sql' with { type: 'text' }
+import dropArtifactTagsSql from './004-drop-artifact-tags.sql' with { type: 'text' }
+import setupSql from './005-setup.sql' with { type: 'text' }
 
 export type DatastoreMigration = {
   version: number
@@ -9,7 +13,11 @@ export type DatastoreMigration = {
 }
 
 export const APP_MIGRATIONS: readonly DatastoreMigration[] = [
-  { version: 1, name: 'baseline', sql: baselineSql }
+  { version: 1, name: 'baseline', sql: baselineSql },
+  { version: 2, name: 'prompts', sql: promptsSql },
+  { version: 3, name: 'synthese-payload', sql: synthesePayloadSql },
+  { version: 4, name: 'drop-artifact-tags', sql: dropArtifactTagsSql },
+  { version: 5, name: 'setup', sql: setupSql }
 ]
 
 const SCHEMA_MIGRATIONS_SQL = `

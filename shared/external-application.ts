@@ -66,13 +66,13 @@ function launchProbe(template: string): LaunchTarget | null {
 }
 
 function normalize(value: Record<string, unknown>): ExternalApplication | null {
-  const name = typeof value.name === 'string' ? value.name.trim() : ''
-  const transport = value.transport
-  const url = typeof value.url === 'string' ? value.url.trim() : ''
-  const selector = typeof value.selector === 'string' ? value.selector.trim() : undefined
+  const name = typeof value['name'] === 'string' ? value['name'].trim() : ''
+  const transport = value['transport']
+  const url = typeof value['url'] === 'string' ? value['url'].trim() : ''
+  const selector = typeof value['selector'] === 'string' ? value['selector'].trim() : undefined
   if (transport !== 'browser' && transport !== 'external') return null
-  if (typeof value.clipboard !== 'boolean' || !name || !url) return null
-  const application: ExternalApplication = { name, transport, clipboard: value.clipboard, url }
+  if (typeof value['clipboard'] !== 'boolean' || !name || !url) return null
+  const application: ExternalApplication = { name, transport, clipboard: value['clipboard'], url }
   if (selector) application.selector = selector
   return application
 }
@@ -85,11 +85,11 @@ export function validateExternalApplication(value: unknown, namespace: string): 
   }
   const external = value as Record<string, unknown>
   const errors: string[] = []
-  const name = external.name
-  const transport = external.transport
-  const clipboard = external.clipboard
-  const url = external.url
-  const selector = external.selector
+  const name = external['name']
+  const transport = external['transport']
+  const clipboard = external['clipboard']
+  const url = external['url']
+  const selector = external['selector']
   if (typeof name !== 'string' || !name.trim()) {
     errors.push(`${namespace}.name: string non vide requise`)
   }

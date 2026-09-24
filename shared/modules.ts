@@ -1,3 +1,5 @@
+import { PROMPTS } from './prompts'
+
 export const BUSINESS_MODULES = [
   { id: 'tickets', label: 'Traiter les réclamations' },
   { id: 'automations', label: 'Créer des automatisations' },
@@ -31,8 +33,17 @@ export function businessModuleForActivityContext(context: string): BusinessModul
 }
 
 export function businessModuleForSkillId(skillId: string): BusinessModuleId | null {
-  if (skillId.startsWith('ticket.')) return 'tickets'
-  if (skillId.startsWith('automation.')) return 'automations'
-  if (skillId.startsWith('about.')) return 'about'
-  return null
+  const prompt = PROMPTS.find((item) => item.id === skillId)
+  return prompt?.access ?? null
+}
+
+/** Modules whose checkbox fills exactly one knowledge database. */
+export function knowledgePublishModules() {
+  const ids = new Set<string>(PROMPTS.flatMap((prompt) => (prompt.publish ? [prompt.publish] : [])))
+  return BUSINESS_MODULES.filter((module) => ids.has(module.id))
+}
+
+export function publishModuleForPrompt(id: string): BusinessModuleId | null {
+  const prompt = PROMPTS.find((item) => item.id === id)
+  return prompt?.publish ?? null
 }

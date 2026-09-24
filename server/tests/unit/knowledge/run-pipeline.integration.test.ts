@@ -10,6 +10,7 @@ import {
 } from '../../../utils/knowledge/catalog'
 import { runKnowledgePipeline } from '../../../utils/knowledge/run-pipeline'
 import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
+import { seedInstanceSetup } from '../../seed-setup'
 
 const paths = testDatastorePaths('pipeline')
 const TEST_PROFILE = 'default'
@@ -28,6 +29,7 @@ beforeEach(async () => {
   await mkdir(paths.files, { recursive: true })
   await mkdir(paths.knowledge, { recursive: true })
   await migrate_datastore(paths.database)
+  await seedInstanceSetup()
 })
 
 afterEach(async () => {
@@ -65,6 +67,9 @@ describe('knowledge pipeline', () => {
     const row = db.query<{ content: string }, []>('SELECT content FROM documents').get()
     db.close()
     expect(row?.content).toContain('Contenu propriétaire')
+    const agents = await Bun.file(`${datastorePaths().knowledge}/default/AGENTS.md`).text()
+    expect(agents).toContain('Agent.')
+    expect(agents).not.toContain('Current date')
   }, 20_000)
 
   it('publishes Core CSV PII only to the datastore', async () => {

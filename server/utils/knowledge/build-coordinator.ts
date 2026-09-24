@@ -27,7 +27,7 @@ let currentBuild: KnowledgeBuild | null = null
 let pending: { trigger: KnowledgeBuildTrigger; requestedBy: string | null } | null = null
 
 const changesCatalog = (trigger: KnowledgeBuildTrigger): boolean =>
-  trigger === 'upload' || trigger === 'patch' || trigger === 'delete'
+  trigger === 'upload' || trigger === 'patch' || trigger === 'delete' || trigger === 'chatbot'
 
 const executeBuild = async (build: KnowledgeBuild): Promise<void> => {
   const heartbeat = setInterval(() => {
@@ -129,6 +129,24 @@ export const requestKnowledgeBuild = (
   }
   startWorker(build)
   return build
+}
+
+/** Attend la passe déclenchée par cet appel, y compris celle enchaînée si un build tournait déjà. */
+export async function awaitKnowledgeBuild(
+  trigger: KnowledgeBuildTrigger,
+  requestedBy: string | null
+): Promise<void> {
+  requestKnowledgeBuild(trigger, requestedBy)
+  let run = worker
+  while (run) {
+    const current = run
+    await current
+    run = worker !== current ? worker : null
+  }
+  const latest = listKnowledgeBuilds()[0]
+  if (latest?.status === 'failed') {
+    throw new Error(latest.diagnostics.at(-1)?.message ?? 'Knowledge build failed')
+  }
 }
 
 export const cleanupKnowledgeStaging = async (): Promise<void> => {

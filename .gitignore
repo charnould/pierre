@@ -18,3 +18,10 @@ docs/node_modules/
 skills-lock.json
 
 .DS_Store
+__pycache__/
+*.pyc
+.ruff_cache
+
+models/.venv/
+models/carl/checkpoints/
+server/models/carl/model.onnx

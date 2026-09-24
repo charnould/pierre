@@ -17,8 +17,10 @@ describe('business module registry', () => {
   test('maps transversal activity and workflow contexts', () => {
     expect(businessModuleForActivityContext('tickets')).toBe('tickets')
     expect(businessModuleForActivityContext('a_qualifier')).toBe('tickets')
-    expect(businessModuleForSkillId('ticket.answer-ticket')).toBe('tickets')
-    expect(businessModuleForSkillId('about.summary')).toBe('about')
+    expect(businessModuleForSkillId('about')).toBe('about')
+    expect(businessModuleForSkillId('report')).toBe('automations')
+    expect(businessModuleForSkillId('replies')).toBe('automations')
+    expect(businessModuleForSkillId('repayment')).toBe('automations')
     expect(businessModuleForSkillId('unknown')).toBeNull()
   })
 })

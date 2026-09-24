@@ -22,8 +22,11 @@ import {
   type AiStreamMessage,
   type AskUserQuestion
 } from '../../shared/ai-stream-events'
+import { isPromptId } from '../../shared/prompts'
 import type { PiImageContent } from './ai-attachments'
-import { CUSTOMIZATION_DIR, datastorePaths } from './paths'
+import { chatbotInstructions } from './chatbot-config'
+import { datastorePaths } from './paths'
+import { skillPrompt, timezone } from './setup-store'
 import { today_is } from './today-is'
 import {
   acquireVm,
@@ -60,23 +63,17 @@ const locks = new Map<string, Promise<void>>()
  */
 async function buildAgentsFile(configId: string, workflowPayload?: WorkflowPayload): Promise<void> {
   const knowledgePath = knowledgePathOnHost(configId)
-  const skillDir = join(CUSTOMIZATION_DIR, 'skills', configId)
-  const isSkill = existsSync(skillDir)
-  const instructionsPath = join(
-    CUSTOMIZATION_DIR,
-    isSkill ? 'skills' : 'chatbots',
-    configId,
-    'AGENTS.md'
-  )
+  const dbPath = join(knowledgePath, 'db.sqlite')
 
   const parts: string[] = [
-    `<session>Current date and time (Europe/Paris): ${today_is()}</session>.`
+    `<session>Current date and time (${timezone() ?? 'UTC'}): ${today_is()}</session>.`
   ]
 
-  if (await Bun.file(instructionsPath).exists()) {
-    let raw = (await Bun.file(instructionsPath).text()).trim()
+  let raw = (
+    isPromptId(configId) ? (skillPrompt(configId) ?? '') : chatbotInstructions(configId)
+  ).trim()
 
-    const dbPath = join(knowledgePath, 'db.sqlite')
+  if (raw) {
     if (raw.includes('<!-- KNOWLEDGE_SCHEMA_HERE -->') && (await Bun.file(dbPath).exists())) {
       try {
         const db = new Database(dbPath, { readonly: true })

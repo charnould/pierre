@@ -5,6 +5,7 @@ import { mkdir, rm } from 'node:fs/promises'
 import * as oxfmt from 'oxfmt'
 import * as XLSX from 'xlsx'
 
+import { migrate_datastore } from '../../../utils/datastore-migrations'
 import type { KnowledgeIngestionEntry } from '../../../utils/knowledge/catalog'
 import {
   content_cache_key,
@@ -14,6 +15,7 @@ import {
   save_formatted_file
 } from '../../../utils/knowledge/ingest-files'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
+import { seedInstanceSetup } from '../../seed-setup'
 
 XLSX.set_fs(fs)
 
@@ -185,6 +187,8 @@ beforeAll(async () => {
   setDatastoreRoot(paths.root)
   await mkdir(paths.files, { recursive: true })
   await mkdir(paths.knowledge, { recursive: true })
+  await migrate_datastore(paths.database)
+  await seedInstanceSetup()
 })
 
 afterAll(async () => {
@@ -335,7 +339,7 @@ describe('ingest_files parse cache', () => {
     XLSX.utils.book_append_sheet(wb, sheet, 'Feuille1')
     XLSX.writeFile(wb, CACHE_XLSX)
 
-    await mkdir(`${KNOWLEDGE_ROOT}/about.summary`, { recursive: true })
+    await mkdir(`${KNOWLEDGE_ROOT}/about`, { recursive: true })
     await mkdir(`${KNOWLEDGE_ROOT}/default`, { recursive: true })
   })
 
@@ -343,9 +347,7 @@ describe('ingest_files parse cache', () => {
     await Bun.file(CACHE_XLSX)
       .delete()
       .catch(() => {})
-    await rm(`${KNOWLEDGE_ROOT}/about.summary/donnees_cache_test.json`, { force: true }).catch(
-      () => {}
-    )
+    await rm(`${KNOWLEDGE_ROOT}/about/donnees_cache_test.json`, { force: true }).catch(() => {})
     await rm(`${KNOWLEDGE_ROOT}/default/donnees_cache_test.json`, { force: true }).catch(() => {})
   })
 
@@ -370,13 +372,13 @@ describe('ingest_files parse cache', () => {
 
     try {
       await ingest_files([
-        { ...base, access: 'about.summary' },
+        { ...base, access: 'about' },
         { ...base, access: 'default' }
       ])
 
       expect(parse_logs).toHaveLength(1)
 
-      const path_a = `${KNOWLEDGE_ROOT}/about.summary/donnees_cache_test.json`
+      const path_a = `${KNOWLEDGE_ROOT}/about/donnees_cache_test.json`
       const path_b = `${KNOWLEDGE_ROOT}/default/donnees_cache_test.json`
       expect(await Bun.file(path_a).exists()).toBe(true)
       expect(await Bun.file(path_b).exists()).toBe(true)

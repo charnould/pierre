@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'bun:test'
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
+import { mkdir, rm } from 'node:fs/promises'
 
 import {
   deliveryAction,
@@ -6,6 +7,24 @@ import {
   type BulkOperationDefinition
 } from '../../../../../shared/bulk-operations'
 import { BulkOperationDefinitionSchema } from '../../../../utils/bulk/query'
+import { migrate_datastore } from '../../../../utils/datastore-migrations'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
+import { seedInstanceSetup } from '../../../seed-setup'
+
+const paths = testDatastorePaths('bulk_contract')
+
+beforeAll(async () => {
+  setDatastoreRoot(paths.root)
+  await rm(paths.root, { recursive: true, force: true })
+  await mkdir(paths.root, { recursive: true })
+  await migrate_datastore(paths.database)
+  await seedInstanceSetup()
+})
+
+afterAll(async () => {
+  setDatastoreRoot(null)
+  await rm(paths.root, { recursive: true, force: true })
+})
 
 describe('BulkOperationDefinitionSchema', () => {
   it('accepts inline fallback content', () => {

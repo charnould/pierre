@@ -140,7 +140,7 @@ const seedSynthetic = (db: Database): void => {
        INSERT INTO automations
          (id, type, name, status, owner, cron, next_run_at, run_token,
           lease_expires_at, config)
-       SELECT printf('auto-%06d', i), CASE WHEN i % 2 = 0 THEN 'report' ELSE 'ticket_reply' END,
+       SELECT printf('auto-%06d', i), CASE WHEN i % 2 = 0 THEN 'report' ELSE 'replies' END,
               'Benchmark automation', CASE WHEN i % 4 = 0 THEN 'running'
                    WHEN i % 7 = 0 THEN 'paused' ELSE 'scheduled' END,
               'user00001@example.org', '0 8 * * *',

@@ -2,7 +2,6 @@ import { Database } from 'bun:sqlite'
 
 import { z } from 'zod'
 
-import repaymentConfig from '../../../customization/repayments/config'
 import {
   BULK_SOURCES,
   type BulkOperationDefinition,
@@ -16,6 +15,7 @@ import {
   type LedgerColumnMeta
 } from '../ledger/schema'
 import { build_ledger_view_sql } from '../ledger/view'
+import { repaymentReady } from '../setup-store'
 
 const IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_]*$/
 
@@ -36,12 +36,26 @@ const AmountRangeSchema = z
   })
   .strict()
 
-const configuredTags = new Set<string>(repaymentConfig.tags)
-const configuredBuckets = new Set<string>(repaymentConfig.buckets.map((bucket) => bucket.id))
-const configuredActions = new Set<string>([
-  ...repaymentConfig.actions.dossier,
-  ...repaymentConfig.actions.bulk_operations
-])
+function repaymentCatalog() {
+  const repayment = repaymentReady()
+  const buckets = Array.isArray(repayment?.buckets) ? repayment.buckets : []
+  const tags = Array.isArray(repayment?.tags) ? repayment.tags : []
+  const actions = repayment?.actions as { dossier?: unknown; bulk_operations?: unknown } | undefined
+  return {
+    buckets: new Set(
+      buckets.flatMap((entry: { id?: unknown }) =>
+        entry && typeof entry === 'object' && 'id' in entry ? [String(entry.id)] : []
+      )
+    ),
+    tags: new Set(tags.filter((tag: unknown): tag is string => typeof tag === 'string')),
+    actions: new Set(
+      [
+        ...(Array.isArray(actions?.dossier) ? actions.dossier : []),
+        ...(Array.isArray(actions?.bulk_operations) ? actions.bulk_operations : [])
+      ].filter((label): label is string => typeof label === 'string')
+    )
+  }
+}
 
 const QueryAudienceSchema = {
   source: z.enum(BULK_SOURCES),
@@ -195,15 +209,16 @@ const validate_audience = (
   ] as const) {
     const seen = new Set<string>()
     definition[key].forEach((tag, index) => {
-      const catalog =
+      const catalog = repaymentCatalog()
+      const values =
         key === 'requiredBuckets'
-          ? configuredBuckets
+          ? catalog.buckets
           : key === 'requiredActions'
-            ? configuredActions
-            : configuredTags
+            ? catalog.actions
+            : catalog.tags
       const label =
         key === 'requiredBuckets' ? 'Panier' : key === 'requiredActions' ? 'Action' : 'Tag'
-      if (!catalog.has(tag)) {
+      if (!values.has(tag)) {
         ctx.addIssue({
           code: 'custom',
           path: [key, index],
@@ -265,7 +280,7 @@ export const BulkOperationDefinitionSchema = z
   .strict()
   .superRefine((definition, ctx) => {
     validate_audience(definition, ctx)
-    if (!configuredBuckets.has(definition.bucketId)) {
+    if (!repaymentCatalog().buckets.has(definition.bucketId)) {
       ctx.addIssue({
         code: 'custom',
         path: ['bucketId'],

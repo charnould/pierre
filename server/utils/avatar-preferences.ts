@@ -1,6 +1,5 @@
 import { Database } from 'bun:sqlite'
 
-import instance_config from '../../customization/config'
 import {
   isReservedDisplayName,
   normalizeDisplayName,
@@ -10,6 +9,7 @@ import {
 import { login_from_email } from './activities/rows'
 import { get_user_preferences, patch_user_preferences } from './automations/store'
 import { datastorePaths } from './paths'
+import { name } from './setup-store'
 
 function default_display_name(email: string): string {
   return login_from_email(email)
@@ -63,7 +63,7 @@ export function patch_me_preferences(
     const normalized = normalizeDisplayName(body.display_name)
     const fallback = default_display_name(email)
     const isCustom = normalized !== null && normalized.toLowerCase() !== fallback.toLowerCase()
-    if (isCustom && isReservedDisplayName(normalized, instance_config.name)) {
+    if (isCustom && isReservedDisplayName(normalized, name())) {
       return { error: 'display_name is reserved for the AI' }
     }
   }

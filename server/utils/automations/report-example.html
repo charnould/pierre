@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Consignes de mise en forme et mise en fond — rapports</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./pierre-report.css?v=charts-max" />
+  </head>
+  <body>
+    <article class="report">
+      <h1>Consignes de mise en forme et de mise en fond</h1>
+      <h2>
+        Pas un design system à appliquer mécaniquement — un cadre pour formater le rapport
+        <em>et</em> construire le fond : primitives fermées, récit ouvert, tête qui décide.
+      </h2>
+
+      <p>
+        Ce document fixe les <strong>consignes</strong> pour générer un rapport d’automation :
+        <strong>mise en forme</strong> (HTML/CSS/ECharts allowlistés, layouts, typo, callouts) et
+        <strong>mise en fond</strong>
+        (quoi dire, à quelle profondeur, comment enchaîner les findings). Chaque bloc ci-dessous
+        illustre une primitive de forme ; l’esprit de génération dit comment penser le fond. Détail
+        machine aussi dans
+        <code>CONTRACT.md</code>.
+      </p>
+
+      <h2>Esprit de génération</h2>
+      <p>
+        <strong>Mise en forme</strong> : règles HTML / CSS / ECharts
+        <strong>strictes</strong> (allowlist, zéro dépendance, layouts 1×1 ou 2×1).
+        <strong>Mise en fond</strong> : travail d’édition — longueur, profondeur, densité de charts,
+        ordre des findings — décidé au cas par cas pour servir l’intent, pas pour « appliquer un
+        design system ».
+      </p>
+      <p>
+        L’ambition ou le brief de l’utilisateur n’est <strong>pas forcément parfait</strong> — flou,
+        incomplet, trop large, ou mal cadré. Tu dois <strong>extrapoler</strong>, comprendre
+        l’intention réelle, la resserrer et l’optimiser : viser l’intent final, pas la lettre brute
+        du prompt. Ensuite tu restitues / crées le meilleur rapport possible avec ces primitives —
+        clair, utile, proportionné au fond.
+      </p>
+      <ul>
+        <li>
+          <strong>Primitives = garde-fous, pas un uniforme.</strong> Tu n’inventes ni classe, ni
+          CSS, ni lib. Tu assembles sémantique + allowlist.
+        </li>
+        <li>
+          <strong>Réfléchir avant chaque bloc.</strong> Chaque <code>h2</code>/<code>h3</code>,
+          chaque card, chaque callout doit porter une affirmation. Si ça n’aide pas la lecture, tu
+          coupes.
+        </li>
+        <li>
+          <strong>Court ou complexe, les deux sont valides.</strong> Trois paragraphes + un chart
+          1×1 peuvent suffire. Une analyse longue avec outline profond, paires 2×1, tableaux et
+          citations aussi — si la forme suit le fond.
+        </li>
+        <li>
+          <strong>Optimiser la présentation.</strong> 1×1 vs 2×1 selon qu’on compare ou qu’on
+          focalise ; type de série selon la question ; citation locataire seulement si la voix
+          terrain compte ; callouts avec parcimonie.
+        </li>
+      </ul>
+      <div class="tip">
+        <p>
+          Compose avec les primitives. N’invente pas de classes, de styles, ni de charts hors
+          allowlist — le reste est jugement éditorial.
+        </p>
+      </div>
+      <div class="caution">
+        <p>
+          <strong>Intransigeance HTML :</strong> zéro CSS inventé, zéro <code>style=""</code>, zéro
+          classe hors allowlist. Squelette = balises sémantiques. Une classe hors contrat = rapport
+          invalide.
+        </p>
+      </div>
+
+      <h2>Répondre à la question — pas courir après la longueur</h2>
+      <p>
+        Ce fichier est ton prompt de <em>forme</em> et de <em>fond</em>. Il ne te demande pas un
+        pavé. Il te demande une <strong>réponse brillante à la question</strong> — c’est tout.
+      </p>
+      <p>
+        La longueur n’est pas un score. Un rapport court qui tranche, prouve et oriente vaut mieux
+        qu’une encyclopédie qui dilue. Un rapport long n’est légitime que si chaque section fait
+        avancer la réponse — jamais pour « faire dense », « faire expert », ou épuiser le catalogue
+        de primitives.
+      </p>
+      <ul>
+        <li>
+          <strong>Trouve la question réelle</strong> (souvent plus nette que le brief) et réponds-y.
+          Tout le reste est secondaire.
+        </li>
+        <li>
+          <strong>Une idée forte &gt; dix digressions.</strong> Si un paragraphe, un chart ou un
+          callout n’aide pas à trancher, il sort.
+        </li>
+        <li>
+          <strong>La preuve au service du claim</strong> — pas l’inverse. Tu n’ajoutes pas de
+          graphiques pour remplir : tu montres ce qui décide.
+        </li>
+        <li>
+          <strong>Finition = clarté</strong>, pas volume. Le lecteur doit repartir avec une
+          conclusion actionnable, pas avec l’impression d’avoir « beaucoup lu ».
+        </li>
+      </ul>
+      <div class="tip">
+        <p>
+          Critère de réussite : quelqu’un pressé comprend la réponse en une minute, et quelqu’un
+          exigeant trouve la preuve juste en dessous. Pas l’inverse. Pas plus.
+        </p>
+      </div>
+      <div class="warning">
+        <p>
+          Anti-pattern fatal : la course à la longueur. Plus de pages, plus de titres, plus de
+          charts ≠ meilleur rapport. Brillance = pertinence calibrée.
+        </p>
+      </div>
+
+      <h2>HTML sémantique — intransigeance absolue</h2>
+      <p>
+        Quand tu génères le rapport, tu n’écris <strong>pas de CSS</strong> et tu n’inventes
+        <strong>aucune classe</strong>. Le stylesheet unique et le boot ECharts sont déjà fournis
+        par le runtime. Ton job : du <strong>HTML sémantique</strong> qui s’appuie sur ces styles —
+        rien d’autre.
+      </p>
+      <ul>
+        <li>
+          <strong>Squelette = balises sémantiques.</strong>
+          <code>article</code>, <code>h1</code>–<code>h6</code>, <code>p</code>,
+          <code>ul</code>/<code>ol</code>/<code>li</code>, <code>strong</code>, <code>em</code>,
+          <code>code</code>, <code>table</code>, <code>blockquote</code>, <code>span</code>… sans
+          classe, sauf besoin explicite d’une primitive.
+        </li>
+        <li>
+          <strong>Classes = allowlist fermée, point final.</strong> Uniquement <code>report</code>,
+          <code>meta</code>, <code>muted</code>, <code>table-wrap</code>, <code>card</code>,
+          <code>chart</code>, <code>charts-pair</code>, <code>note</code>, <code>tip</code>,
+          <code>warning</code>, <code>caution</code>, <code>tenant-quote</code>. Pas une de plus.
+          Pas de variante (<code>card--lg</code>, <code>text-red</code>, etc.).
+        </li>
+        <li>
+          <strong>Interdit formel :</strong>
+          <code>&lt;style&gt;</code>, attribut <code>style=""</code>, Tailwind, CSS-in-JS, classes
+          inventées, <code>&lt;script&gt;</code> (hors shell), balises non sémantiques de chrome
+          (<code>nav</code>, <code>aside</code>
+          décoratif, etc.).
+        </li>
+      </ul>
+      <div class="caution">
+        <p>
+          Si tu sens le besoin d’une nouvelle classe ou d’un style inline : tu te trompes. Reformule
+          avec sémantique + primitives existantes. Aucune exception.
+        </p>
+      </div>
+
+      <h2>Typographie</h2>
+      <p>
+        Le corps est en <strong>Lora</strong> sur fond blanc (<code>#ffffff</code>, ~16px /
+        <code>line-height: 1.45</code>), prose dense, bornée en largeur. Titres
+        <strong>Manrope</strong>. Charts en cards gris clair (Observable-style) — éditorial compact,
+        pas un dashboard. Le <code>h1</code> (titre de document) porte <code>1.</code> sur la ligne
+        au-dessus, même taille, aligné à gauche ; le chapô <code>h1+h2</code> reste non numéroté ;
+        les sections partent en <code>1.1</code>, <code>1.1.1</code>…
+      </p>
+      <p class="muted">Ceci est un paragraphe <code>.muted</code> — légendes, sources, asides.</p>
+
+      <h2>Outline numéroté</h2>
+      <p>
+        Écrire le titre seul — le préfixe <code>1.</code> / <code>1.1</code> / <code>1.1.1</code>…
+        est injecté par le CSS <strong>sur la ligne au-dessus</strong>, même taille que le titre,
+        aligné à gauche (y compris le <code>h1</code>). Toujours un paragraphe (ou plus) sous chaque
+        niveau utilisé. Seul le chapô <code>h1 + h2</code> n’est pas numéroté.
+      </p>
+      <p>
+        Tu n’utilises <strong>que les niveaux nécessaires</strong>. Souvent <code>h1</code> +
+        sections <code>h2</code> + quelques <code>h3</code> suffisent. Descendre jusqu’à
+        <code>h6</code> n’est pas un objectif — c’est une possibilité.
+      </p>
+
+      <h3>Sous-section</h3>
+      <p>Texte sous un <code>h3</code> → <strong>1.x.1</strong>.</p>
+
+      <h4>Détail</h4>
+      <p>Texte sous un <code>h4</code> → <strong>1.x.1.1</strong>.</p>
+
+      <h5>Label secondaire</h5>
+      <p>Texte sous un <code>h5</code>.</p>
+
+      <h6>Label technique</h6>
+      <p>Texte sous un <code>h6</code>.</p>
+
+      <h3>Autre sous-section</h3>
+      <p>
+        Reprend au niveau <code>h3</code> suivant. Les compteurs se réinitialisent à chaque remontée
+        de niveau.
+      </p>
+
+      <p>Emphase et code : <strong>gras</strong>, <em>italique</em>, <code>token</code>.</p>
+      <ul>
+        <li>Un seul fichier CSS : <code>pierre-report.css</code>.</li>
+        <li>Pas de styles inline, pas de classes inventées.</li>
+        <li>Locale française pour nombres et dates.</li>
+      </ul>
+
+      <h2>Métadonnées</h2>
+      <p>
+        La classe <code>.meta</code> porte période, périmètre, horodatage. Sans-serif, discret,
+        filet bas. Optionnelle en tête de rapport.
+      </p>
+
+      <h2>Graphiques — toujours en card</h2>
+      <p>
+        ECharts only, toujours dans une <code>.card</code>. Deux layouts possibles — et seulement
+        ceux-là (1×1 ou 2×1). Palette et chrome (titre, sous-titre, légende) sont imposés par le
+        boot. Le catalogue de types plus bas est une <strong>allowlist</strong> : pioche ce qui sert
+        l’argument, n’aligne pas une démo de chaque série.
+      </p>
+
+      <h3>Palette</h3>
+      <p>
+        Huit couleurs fixes, dans cet ordre (ne pas surcharger
+        <code>color</code> dans l’option).
+      </p>
+      <div class="palette" aria-label="Palette ECharts">
+        <span class="c1">#003f5c</span>
+        <span class="c2">#31497e</span>
+        <span class="c3">#674f95</span>
+        <span class="c4">#a14e9a</span>
+        <span class="c5">#d44c8d</span>
+        <span class="c6">#f9596f</span>
+        <span class="c7">#ff7a47</span>
+        <span class="c8">#ffa600</span>
+      </div>
+
+      <h3>Layout 1×1 — une card par ligne</h3>
+      <p>
+        Un graphique important, pleine largeur : une seule
+        <code>.card</code>. Titre, sous-titre et légende passent par ECharts
+        (<code>title.text</code>, <code>title.subtext</code>, <code>series[].name</code>) — le boot
+        gère le chrome. Le plot occupe le maximum de la card (padding serré, grille compacte).
+      </p>
+
+      <div class="card">
+        <div
+          class="chart"
+          data-echarts
+          data-option='{"title":{"text":"Délai médian de traitement","subtext":"Jours · réclamations techniques · 12 semaines"},"tooltip":{"trigger":"axis"},"legend":{"data":["Médiane","P90","Objectif SLA"]},"xAxis":{"type":"category","boundaryGap":false,"data":["S10","S11","S12","S13","S14","S15","S16","S17","S18","S19","S20","S21"]},"yAxis":{"type":"value","name":"jours","min":0,"max":18},"series":[{"type":"line","name":"Médiane","smooth":true,"symbol":"circle","symbolSize":6,"areaStyle":{"opacity":0.12},"data":[7.2,6.8,7.5,8.1,7.9,9.4,11.2,10.6,9.8,8.4,7.6,7.1]},{"type":"line","name":"P90","smooth":true,"symbol":"none","lineStyle":{"type":"dashed","width":1.5},"data":[12.1,11.4,12.8,13.5,13.2,15.1,16.8,16.2,15.4,14.1,13.0,12.4]},{"type":"line","name":"Objectif SLA","symbol":"none","lineStyle":{"width":1.5,"type":"dotted"},"markLine":{"silent":true,"symbol":"none","data":[{"yAxis":8,"label":{"formatter":"SLA 8j","position":"insideEndTop"}}]},"data":[8,8,8,8,8,8,8,8,8,8,8,8]}]}'
+        ></div>
+      </div>
+
+      <h3>Layout 2×1 — deux cards par ligne</h3>
+      <p>
+        Comparaison côte à côte : <code>.charts-pair</code> contient
+        <strong>exactement deux</strong> <code>.card</code>. Même contrat titre / sous-titre /
+        légende.
+      </p>
+
+      <div class="charts-pair">
+        <div class="card">
+          <div
+            class="chart"
+            data-echarts
+            data-option='{"title":{"text":"Volume par site","subtext":"Réclamations ouvertes · empilé"},"legend":{"data":["Plomberie","Chauffage","Parties communes"]},"xAxis":{"type":"category","data":["Nord","Est","Sud","Ouest","Centre"]},"yAxis":{"type":"value"},"series":[{"type":"bar","name":"Plomberie","stack":"t","barMaxWidth":28,"data":[42,31,55,28,37]},{"type":"bar","name":"Chauffage","stack":"t","barMaxWidth":28,"data":[18,22,14,31,19]},{"type":"bar","name":"Parties communes","stack":"t","barMaxWidth":28,"data":[12,9,16,11,14]}]}'
+          ></div>
+        </div>
+        <div class="card">
+          <div
+            class="chart"
+            data-echarts
+            data-option='{"title":{"text":"Taux de clôture J+7","subtext":"% · observé vs. cible glissante"},"legend":{"data":["Observé","Cible"]},"xAxis":{"type":"category","boundaryGap":false,"data":["Jan","Fév","Mar","Avr","Mai","Jun"]},"yAxis":{"type":"value","min":50,"max":100,"axisLabel":{"formatter":"{value}%"}},"series":[{"type":"line","name":"Observé","smooth":true,"symbol":"circle","symbolSize":7,"areaStyle":{"opacity":0.1},"data":[62,65,71,68,74,78]},{"type":"line","name":"Cible","smooth":true,"symbol":"none","lineStyle":{"type":"dashed"},"data":[70,70,72,74,76,78]}]}'
+          ></div>
+        </div>
+      </div>
+
+      <h3>Types autorisés</h3>
+      <p>
+        Allowlist exclusive (exemples en 2×1 ci-dessous, mêmes types utilisables en 1×1). Pas de 3D
+        / GL / map geo. Titre / sous-titre via
+        <code>title</code> dans l’option — <strong>pas</strong> de <code>h3</code> dans la card (ça
+        vole de la place au plot). Rappel : ce n’est <strong>pas</strong> une liste de courses à
+        cocher.
+      </p>
+
+      <div class="charts-pair">
+        <div class="card">
+          <div
+            class="chart"
+            data-echarts
+            data-option='{"title":{"text":"pie · Motifs d’ouverture","subtext":"Part des nouveaux tickets · T2"},"series":[{"type":"pie","radius":["32%","68%"],"center":["50%","56%"],"avoidLabelOverlap":true,"itemStyle":{"borderRadius":3,"borderColor":"#fff","borderWidth":1},"label":{"formatter":"{b}\n{d}%","fontSize":10},"data":[{"name":"Fuite / humidité","value":128},{"name":"Chauffage","value":96},{"name":"Menuiserie","value":64},{"name":"Électricité","value":48},{"name":"Autres","value":31}]}]}'
+          ></div>
+        </div>
+        <div class="card">
+          <div
+            class="chart"
+            data-echarts
+            data-option='{"title":{"text":"scatter · Délai vs. surface","subtext":"Chaque point = logement · jours / m²"},"xAxis":{"type":"value","name":"m²","nameLocation":"middle","nameGap":22},"yAxis":{"type":"value","name":"jours"},"series":[{"type":"scatter","name":"Logements","symbolSize":8,"data":[[28,14],[32,11],[35,9],[38,16],[42,8],[45,12],[48,7],[52,18],[55,10],[58,6],[62,15],[65,9],[68,13],[72,5],[78,11],[82,8],[88,17],[95,7],[102,12],[110,6]],"markLine":{"symbol":"none","lineStyle":{"type":"dashed"},"data":[{"type":"average","name":"moy. délai"}]}}]}'
+          ></div>
+        </div>
+      </div>
+
+      <div class="charts-pair">
+        <div class="card">
+          <div
+            class="chart"
+            data-echarts
+            data-option='{"title":{"text":"radar · Qualité de service","subtext":"Score 0–10 · deux résidences"},"legend":{"data":["Rés. Hugo","Rés. Curie"]},"radar":{"indicator":[{"name":"Délai","max":10},{"name":"1er contact","max":10},{"name":"Clôture","max":10},{"name":"Relances","max":10},{"name":"Satisfaction","max":10}],"radius":"58%","center":["50%","55%"]},"series":[{"type":"radar","data":[{"name":"Rés. Hugo","value":[6.2,7.1,5.8,4.9,6.5],"areaStyle":{"opacity":0.15}},{"name":"Rés. Curie","value":[8.1,7.8,8.4,7.2,8.0],"areaStyle":{"opacity":0.12}}]}]}'
+          ></div>
+        </div>
+        <div class="card">
+          <div
+            class="chart"
+            data-echarts
+            data-option='{"title":{"text":"heatmap · Charge par jour / heure","subtext":"Ouvertures · semaine type"},"xAxis":{"type":"category","data":["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"]},"yAxis":{"type":"category","data":["8h","10h","12h","14h","16h","18h"]},"visualMap":{"min":0,"max":18,"orient":"horizontal","left":"center","bottom":4,"itemWidth":10,"itemHeight":80,"textStyle":{"fontSize":9},"inRange":{"color":["#e8eef2","#003f5c"]}},"grid":{"top":42,"bottom":48,"left":36,"right":12},"series":[{"type":"heatmap","data":[[0,0,3],[1,0,5],[2,0,4],[3,0,6],[4,0,5],[5,0,1],[6,0,0],[0,1,8],[1,1,12],[2,1,10],[3,1,14],[4,1,11],[5,1,2],[6,1,1],[0,2,6],[1,2,9],[2,2,7],[3,2,8],[4,2,6],[5,2,1],[6,2,0],[0,3,11],[1,3,15],[2,3,13],[3,3,16],[4,3,12],[5,3,3],[6,3,1],[0,4,9],[1,4,14],[2,4,12],[3,4,18],[4,4,10],[5,4,2],[6,4,0],[0,5,4],[1,5,7],[2,5,5],[3,5,6],[4,5,4],[5,5,1],[6,5,0]],"label":{"show":false}}]}'
+          ></div>
+        </div>
+      </div>
+
+      <div class="charts-pair">
+        <div class="card">
+          <div
+            class="chart"
+            data-echarts
+            data-option='{"title":{"text":"graph · Circuit de relance","subtext":"Force layout · nœuds = étapes"},"series":[{"type":"graph","layout":"force","roam":false,"draggable":false,"label":{"show":true,"fontSize":10},"force":{"repulsion":140,"edgeLength":[40,90]},"categories":[{"name":"Entrée"},{"name":"Traitement"},{"name":"Sortie"}],"data":[{"name":"Ouverture","id":"o","category":0,"symbolSize":28},{"name":"Tri","id":"t","category":1,"symbolSize":22},{"name":"Tech.","id":"tech","category":1,"symbolSize":26},{"name":"Relance","id":"r","category":1,"symbolSize":24},{"name":"Clôture","id":"c","category":2,"symbolSize":28},{"name":"Abandon","id":"a","category":2,"symbolSize":20}],"links":[{"source":"o","target":"t","value":120},{"source":"t","target":"tech","value":90},{"source":"t","target":"r","value":30},{"source":"tech","target":"c","value":70},{"source":"tech","target":"r","value":20},{"source":"r","target":"tech","value":18},{"source":"r","target":"a","value":12},{"source":"r","target":"c","value":8}],"lineStyle":{"curveness":0.15,"opacity":0.7},"emphasis":{"focus":"adjacency"}}]}'
+          ></div>
+        </div>
+        <div class="card">
+          <div
+            class="chart"
+            data-echarts
+            data-option='{"title":{"text":"tree · Escalade organisationnelle","subtext":"Qui traite quoi"},"series":[{"type":"tree","orient":"TB","layout":"orthogonal","symbol":"emptyCircle","symbolSize":8,"expandAndCollapse":false,"label":{"fontSize":10,"position":"top"},"leaves":{"label":{"position":"bottom"}},"data":[{"name":"Agence","children":[{"name":"Accueil","children":[{"name":"Tél."},{"name":"Guichet"}]},{"name":"Technique","children":[{"name":"Plomberie"},{"name":"Chauffage"},{"name":"Élec."}]},{"name":"Contentieux","children":[{"name":"Amiable"},{"name":"Contentieux"}]}]}]}]}'
+          ></div>
+        </div>
+      </div>
+
+      <div class="charts-pair">
+        <div class="card">
+          <div
+            class="chart"
+            data-echarts
+            data-option='{"title":{"text":"treemap · Stock ouvert","subtext":"Par résidence · taille ∝ tickets"},"series":[{"type":"treemap","roam":false,"nodeClick":false,"breadcrumb":{"show":false},"label":{"fontSize":10},"upperLabel":{"show":true,"height":18,"fontSize":10},"itemStyle":{"borderColor":"#fff","borderWidth":2,"gapWidth":2},"data":[{"name":"Hugo","value":86,"children":[{"name":"Plomberie","value":34},{"name":"Chauffage","value":28},{"name":"Autres","value":24}]},{"name":"Curie","value":64,"children":[{"name":"Plomberie","value":22},{"name":"Chauffage","value":18},{"name":"Autres","value":24}]},{"name":"Zola","value":51,"children":[{"name":"Plomberie","value":19},{"name":"Chauffage","value":14},{"name":"Autres","value":18}]},{"name":"Sand","value":39,"children":[{"name":"Plomberie","value":14},{"name":"Chauffage","value":12},{"name":"Autres","value":13}]}]}]}'
+          ></div>
+        </div>
+        <div class="card">
+          <div
+            class="chart"
+            data-echarts
+            data-option='{"title":{"text":"sunburst · Typologie multi-niveaux","subtext":"Domaine → motif → gravité"},"series":[{"type":"sunburst","radius":["12%","72%"],"center":["50%","55%"],"label":{"fontSize":9,"rotate":"radial"},"itemStyle":{"borderWidth":1,"borderColor":"#fff"},"data":[{"name":"Technique","children":[{"name":"Fuite","children":[{"name":"Critique","value":18},{"name":"Standard","value":42}]},{"name":"Chauffage","children":[{"name":"Critique","value":12},{"name":"Standard","value":34}]}]},{"name":"Cadre de vie","children":[{"name":"Bruit","children":[{"name":"Standard","value":22},{"name":"Mineur","value":15}]},{"name":"Propreté","children":[{"name":"Standard","value":19},{"name":"Mineur","value":11}]}]},{"name":"Administratif","children":[{"name":"Bail","value":14},{"name":"Quittance","value":9}]}]}]}'
+          ></div>
+        </div>
+      </div>
+
+      <div class="charts-pair">
+        <div class="card">
+          <div
+            class="chart"
+            data-echarts
+            data-option='{"title":{"text":"parallel · Profils de dossiers","subtext":"Chaque ligne = ticket"},"parallelAxis":[{"dim":0,"name":"Âge (j)","min":0,"max":60},{"dim":1,"name":"Relances","min":0,"max":8},{"dim":2,"name":"Gravité","min":1,"max":5},{"dim":3,"name":"Satisfaction","min":1,"max":5}],"parallel":{"left":48,"right":24,"top":48,"bottom":24},"series":[{"type":"parallel","lineStyle":{"width":1.2,"opacity":0.55},"data":[[4,0,2,4],[8,1,3,3],[12,2,4,2],[18,1,3,4],[22,3,5,1],[28,2,4,2],[35,4,5,1],[6,0,1,5],[14,1,2,4],[40,5,5,1],[9,0,2,5],[25,3,4,2],[31,4,3,3],[16,2,3,3],[45,6,5,1],[11,1,2,4],[20,2,3,3],[38,5,4,2]]}]}'
+          ></div>
+        </div>
+        <div class="card">
+          <div
+            class="chart"
+            data-echarts
+            data-option='{"title":{"text":"sankey · Flux d’orientation","subtext":"Canal → équipe → issue"},"series":[{"type":"sankey","nodeAlign":"justify","layoutIterations":32,"emphasis":{"focus":"adjacency"},"label":{"fontSize":10},"lineStyle":{"color":"gradient","curveness":0.5},"data":[{"name":"Tél."},{"name":"Portail"},{"name":"Agence"},{"name":"Tech."},{"name":"Accueil"},{"name":"Contentieux"},{"name":"Clôturé"},{"name":"En cours"},{"name":"Abandonné"}],"links":[{"source":"Tél.","target":"Tech.","value":48},{"source":"Tél.","target":"Accueil","value":22},{"source":"Portail","target":"Tech.","value":36},{"source":"Portail","target":"Accueil","value":18},{"source":"Agence","target":"Tech.","value":14},{"source":"Agence","target":"Contentieux","value":12},{"source":"Tech.","target":"Clôturé","value":70},{"source":"Tech.","target":"En cours","value":28},{"source":"Accueil","target":"Clôturé","value":30},{"source":"Accueil","target":"En cours","value":10},{"source":"Contentieux","target":"Clôturé","value":6},{"source":"Contentieux","target":"Abandonné","value":6},{"source":"En cours","target":"Abandonné","value":8}]}]}'
+          ></div>
+        </div>
+      </div>
+
+      <div class="charts-pair">
+        <div class="card">
+          <div
+            class="chart"
+            data-echarts
+            data-option='{"title":{"text":"gauge · SLA J+7","subtext":"Taux de clôture glissant 30 j"},"series":[{"type":"gauge","min":0,"max":100,"splitNumber":5,"radius":"85%","center":["50%","58%"],"axisLine":{"lineStyle":{"width":14,"color":[[0.6,"#f9596f"],[0.75,"#ff7a47"],[1,"#003f5c"]]}},"pointer":{"width":4,"length":"60%"},"axisTick":{"distance":-14,"length":6},"splitLine":{"distance":-14,"length":14},"axisLabel":{"distance":18,"fontSize":10},"detail":{"valueAnimation":true,"formatter":"{value}%","fontSize":22,"offsetCenter":[0,"70%"]},"data":[{"value":78,"name":"J+7"}]}]}'
+          ></div>
+        </div>
+        <div class="card">
+          <div
+            class="chart"
+            data-echarts
+            data-option='{"title":{"text":"themeRiver · Mix de motifs","subtext":"Volume quotidien · 2 semaines"},"singleAxis":{"type":"time","top":48,"bottom":28,"axisLabel":{"fontSize":9}},"series":[{"type":"themeRiver","emphasis":{"itemStyle":{"shadowBlur":4}},"label":{"show":false},"data":[["2026-03-01",12,"Fuite"],["2026-03-02",9,"Fuite"],["2026-03-03",14,"Fuite"],["2026-03-04",11,"Fuite"],["2026-03-05",16,"Fuite"],["2026-03-06",8,"Fuite"],["2026-03-07",5,"Fuite"],["2026-03-08",13,"Fuite"],["2026-03-09",10,"Fuite"],["2026-03-10",15,"Fuite"],["2026-03-11",12,"Fuite"],["2026-03-12",9,"Fuite"],["2026-03-13",7,"Fuite"],["2026-03-14",4,"Fuite"],["2026-03-01",7,"Chauffage"],["2026-03-02",8,"Chauffage"],["2026-03-03",6,"Chauffage"],["2026-03-04",9,"Chauffage"],["2026-03-05",11,"Chauffage"],["2026-03-06",4,"Chauffage"],["2026-03-07",3,"Chauffage"],["2026-03-08",8,"Chauffage"],["2026-03-09",7,"Chauffage"],["2026-03-10",10,"Chauffage"],["2026-03-11",6,"Chauffage"],["2026-03-12",5,"Chauffage"],["2026-03-13",4,"Chauffage"],["2026-03-14",2,"Chauffage"],["2026-03-01",5,"Cadre de vie"],["2026-03-02",4,"Cadre de vie"],["2026-03-03",6,"Cadre de vie"],["2026-03-04",5,"Cadre de vie"],["2026-03-05",7,"Cadre de vie"],["2026-03-06",3,"Cadre de vie"],["2026-03-07",2,"Cadre de vie"],["2026-03-08",6,"Cadre de vie"],["2026-03-09",5,"Cadre de vie"],["2026-03-10",8,"Cadre de vie"],["2026-03-11",4,"Cadre de vie"],["2026-03-12",3,"Cadre de vie"],["2026-03-13",3,"Cadre de vie"],["2026-03-14",1,"Cadre de vie"]]}]}'
+          ></div>
+        </div>
+      </div>
+
+      <div class="charts-pair">
+        <div class="card">
+          <div
+            class="chart"
+            data-echarts
+            data-option='{"title":{"text":"calendar · Intensité des ouvertures","subtext":"Mars 2026 · tickets / jour"},"calendar":{"range":"2026-03","cellSize":["auto",18],"left":36,"right":16,"top":52,"bottom":16,"yearLabel":{"show":false},"monthLabel":{"fontSize":10},"dayLabel":{"fontSize":9,"nameMap":"FR"}},"visualMap":{"min":0,"max":24,"show":false,"inRange":{"color":["#e8eef2","#31497e","#003f5c"]}},"series":[{"type":"heatmap","coordinateSystem":"calendar","data":[["2026-03-02",8],["2026-03-03",12],["2026-03-04",15],["2026-03-05",18],["2026-03-06",11],["2026-03-07",4],["2026-03-09",14],["2026-03-10",19],["2026-03-11",22],["2026-03-12",24],["2026-03-13",16],["2026-03-14",6],["2026-03-16",13],["2026-03-17",17],["2026-03-18",20],["2026-03-19",21],["2026-03-20",15],["2026-03-21",5],["2026-03-23",12],["2026-03-24",16],["2026-03-25",18],["2026-03-26",14],["2026-03-27",10],["2026-03-28",3],["2026-03-30",9],["2026-03-31",11]]}]}'
+          ></div>
+        </div>
+        <div class="card">
+          <div
+            class="chart"
+            data-echarts
+            data-option='{"title":{"text":"chord · Interactions entre équipes","subtext":"graph · layout circular"},"series":[{"type":"graph","layout":"circular","roam":false,"circular":{"rotateLabel":true},"label":{"show":true,"fontSize":10},"lineStyle":{"curveness":0.35,"opacity":0.65},"data":[{"name":"Accueil","symbolSize":30},{"name":"Tech.","symbolSize":36},{"name":"Contentieux","symbolSize":24},{"name":"Agence","symbolSize":28},{"name":"Prestataire","symbolSize":26}],"links":[{"source":"Accueil","target":"Tech.","value":48},{"source":"Tech.","target":"Prestataire","value":32},{"source":"Accueil","target":"Agence","value":18},{"source":"Agence","target":"Contentieux","value":12},{"source":"Tech.","target":"Accueil","value":14},{"source":"Contentieux","target":"Agence","value":8},{"source":"Prestataire","target":"Tech.","value":20},{"source":"Agence","target":"Accueil","value":10}],"emphasis":{"focus":"adjacency"}}]}'
+          ></div>
+        </div>
+      </div>
+
+      <div class="tip">
+        <p>
+          Palette fixée par le boot (<code>#003f5c</code> → <code>#ffa600</code>). Titre /
+          sous-titre / légende via <code>title</code> + <code>series[].name</code> — ne pas
+          redessiner le chrome ni coller un <code>h3</code> dans la card. JSON dans
+          <code>data-option</code>. <code>chord</code> = <code>graph</code> +
+          <code>layout: circular</code>.
+        </p>
+      </div>
+
+      <h2>Tableaux</h2>
+      <p>
+        Envelopper dans <code>.table-wrap</code> pour l’overflow. Typo sans, chiffres tabulaires dès
+        la 2ᵉ colonne.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Classe</th>
+              <th>Rôle</th>
+              <th>Max</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>.card</code></td>
+              <td>Conteneur obligatoire d’un chart</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code>.charts-pair</code></td>
+              <td>Grille de deux cards</td>
+              <td>2</td>
+            </tr>
+            <tr>
+              <td><code>.chart</code></td>
+              <td>Host ECharts (<code>data-echarts</code>)</td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Callouts</h2>
+      <p>Quatre tons, label auto via CSS. Contenu en sans, un cran plus petit que le corps Lora.</p>
+
+      <div class="note">
+        <p><code>.note</code> — contexte, méthode, source.</p>
+      </div>
+      <div class="tip">
+        <p><code>.tip</code> — recommandation actionnable.</p>
+      </div>
+      <div class="warning">
+        <p><code>.warning</code> — caveat, risque de mauvaise lecture.</p>
+      </div>
+      <div class="caution">
+        <p><code>.caution</code> — alerte urgente uniquement.</p>
+      </div>
+
+      <h2>Citation locataire</h2>
+      <p>
+        Bloc citation, distinct des callouts : fond alt, corps Lora roman, pas de filet coloré ni de
+        label. Attribution en Manrope muted via
+        <code>footer</code>.
+      </p>
+
+      <blockquote class="tenant-quote">
+        <p>
+          On a signalé la fuite trois fois. À chaque fois on nous dit que c’est transmis, et rien ne
+          change.
+        </p>
+        <footer>Locataire · Paris 18 · réclamation #4821</footer>
+      </blockquote>
+
+      <div class="note">
+        <p>
+          À côté : un <code>.note</code> reste une alerte système (sans, label, filet coloré) — pas
+          une voix locataire.
+        </p>
+      </div>
+
+      <h2>Zéro dépendance — artefact autonome</h2>
+      <p>
+        Quand le LLM génère le rapport, le fichier est
+        <strong>entièrement autonome</strong>. Aucun appel réseau à l’ouverture : pas de CDN, pas de
+        <code>fetch</code>, pas d’API, pas de polices distantes, pas de scripts externes.
+      </p>
+      <ul>
+        <li>
+          <strong>Données dans le HTML</strong> — séries et options ECharts en JSON inline dans
+          <code>data-option</code>. Pas de fichier <code>.json</code> à côté, pas de lazy-load.
+        </li>
+        <li>
+          <strong>Runtime fourni une fois</strong> — CSS, ECharts et boot sont déjà embarqués dans
+          le shell (inlinés ou assets locaux packagés avec l’app). Le LLM n’émet que le corps
+          <code>article.report</code>, jamais de <code>&lt;script src&gt;</code> /
+          <code>&lt;link href&gt;</code>
+          vers le web.
+        </li>
+        <li>
+          <strong>Hors-ligne</strong> — le rapport s’affiche identique sans internet. Toute
+          ressource manquante = bug de génération.
+        </li>
+      </ul>
+      <div class="caution">
+        <p>
+          Interdit : URLs externes, iframes, images distantes, fonts Google, jsDelivr, analytics,
+          webhooks.
+        </p>
+      </div>
+
+      <h2>Interdits</h2>
+      <ul>
+        <li>
+          Toute classe hors allowlist, tout <code>style=""</code>, tout <code>&lt;style&gt;</code>,
+          tout CSS inventé.
+        </li>
+        <li>Chart hors <code>.card</code>, ou plus de deux cards dans un pair.</li>
+        <li>Autre lib de charts, SVG maison, images de graphiques.</li>
+        <li>Sommaire, sidebar, classes hors allowlist.</li>
+        <li>Emoji dans les titres, dark mode.</li>
+        <li>Toute dépendance ou appel externe (voir chapitre précédent).</li>
+        <li>
+          Rapport fourre-tout / checklist complète des primitives « pour faire sérieux » — longueur
+          et complexité doivent suivre le fond.
+        </li>
+      </ul>
+
+      <div class="warning">
+        <p>
+          La prose introduit toujours le graphique. Pas de card orpheline sans phrase avant. Pas de
+          filler.
+        </p>
+      </div>
+    </article>
+
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+    <script src="./pierre-report-boot.js"></script>
+  </body>
+</html>

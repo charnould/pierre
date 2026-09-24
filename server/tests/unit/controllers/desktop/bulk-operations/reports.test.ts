@@ -16,6 +16,7 @@ import { execute_bulk_operation } from '../../../../../utils/bulk/send'
 import { create_bulk_operation } from '../../../../../utils/bulk/store'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
+import { seedInstanceSetup } from '../../../../seed-setup'
 
 const paths = testDatastorePaths('bulk_report_controllers')
 
@@ -41,6 +42,7 @@ afterAll(async () => {
 beforeEach(async () => {
   await mkdir(paths.root, { recursive: true })
   await setup()
+  await seedInstanceSetup()
   const db = new Database(`${paths.root}/datastore.sqlite`)
   db.run(`
     CREATE TABLE comptes_locataires (

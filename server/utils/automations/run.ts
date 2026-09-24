@@ -1,5 +1,6 @@
 import type { AutomationRecord } from '../../../shared/automations'
 import { create_trusted_activity } from '../activities/write'
+import { timezone } from '../setup-store'
 import { DEMO_AUTOMATION_REPORT_HTML } from './demo-report'
 import {
   AutomationsError,
@@ -18,7 +19,7 @@ type ExecutorResult =
       contenu: string
     }
   | {
-      kind: 'ticket_reply'
+      kind: 'replies'
       summary: { total: number; generated: number; skipped: number; errors: number }
       tickets: Array<{
         id_reclamation: string
@@ -109,7 +110,7 @@ let scheduler_active = false
 
 /** Reclaim crash-stuck `running` rows, then run all due automations. */
 export async function run_due_automations(): Promise<void> {
-  if (!active_executor || scheduler_active) return
+  if (!active_executor || scheduler_active || !timezone()) return
   scheduler_active = true
   try {
     const dueBefore = new Date().toISOString()

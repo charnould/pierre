@@ -26,6 +26,7 @@ import {
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { TELEMETRY_URL } from '../../../../utils/send-telemetry'
 import { setup } from '../../../../utils/setup'
+import { seedInstanceSetup } from '../../../seed-setup'
 
 const paths = testDatastorePaths('bulk_operations_send')
 const ORIGINAL_FETCH = globalThis.fetch
@@ -46,6 +47,7 @@ beforeEach(async () => {
   set_bulk_clock_for_tests({ now: () => now })
   await mkdir(paths.root, { recursive: true })
   await setup()
+  await seedInstanceSetup()
   const db = new Database(`${paths.root}/datastore.sqlite`)
   db.run(`
     CREATE TABLE comptes_locataires (

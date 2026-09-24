@@ -18,6 +18,7 @@ import {
   replaceKnowledgeSourceEntries
 } from '../../../utils/knowledge/catalog'
 import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
+import { seedInstanceSetup } from '../../seed-setup'
 
 const paths = testDatastorePaths('knowledge_coordinator')
 
@@ -26,6 +27,7 @@ beforeAll(async () => {
   await mkdir(paths.files, { recursive: true })
   await mkdir(paths.knowledge, { recursive: true })
   await migrate_datastore(paths.database)
+  await seedInstanceSetup()
 })
 
 afterAll(async () => {

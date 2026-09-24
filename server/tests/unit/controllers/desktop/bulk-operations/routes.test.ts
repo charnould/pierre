@@ -17,6 +17,7 @@ import type { User } from '../../../../../utils/_schema'
 import { authorizeAdministrator } from '../../../../../utils/authorize-role'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
+import { seedInstanceSetup } from '../../../../seed-setup'
 
 const paths = testDatastorePaths('bulk_routes')
 
@@ -81,6 +82,7 @@ beforeAll(() => {
 beforeEach(async () => {
   await rm(paths.root, { recursive: true, force: true })
   await setup()
+  await seedInstanceSetup()
   const db = new Database(`${paths.root}/datastore.sqlite`)
   db.run(`
     CREATE TABLE comptes_locataires (

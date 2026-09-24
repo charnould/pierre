@@ -9,6 +9,7 @@ import { import_json_rows } from '../../../../../utils/knowledge/sqlite-table-im
 import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
 import { DEFAULT_TICKETS_SORT } from '../../../../../utils/tickets-query'
+import { seedInstanceSetup } from '../../../../seed-setup'
 
 const FIXTURE_ROWS = [
   {
@@ -72,6 +73,7 @@ afterAll(async () => {
 beforeEach(async () => {
   await mkdir(paths.root, { recursive: true })
   await setup()
+  await seedInstanceSetup()
 })
 
 afterEach(async () => {

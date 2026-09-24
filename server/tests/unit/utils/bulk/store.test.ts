@@ -15,6 +15,7 @@ import {
 } from '../../../../utils/bulk/store'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { setup } from '../../../../utils/setup'
+import { seedInstanceSetup } from '../../../seed-setup'
 
 const paths = testDatastorePaths('bulk_operations_store')
 
@@ -68,6 +69,7 @@ afterAll(async () => {
 beforeEach(async () => {
   await mkdir(paths.root, { recursive: true })
   await setup()
+  await seedInstanceSetup()
   seed_mouvements()
 })
 

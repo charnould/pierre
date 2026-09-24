@@ -34,13 +34,6 @@ export function datastorePaths() {
   } as const
 }
 
-/** Monorepo local: customization/ is sibling of server/. Docker: under /app/customization/. */
-export const CUSTOMIZATION_DIR = existsSync(join(SERVER_ROOT, 'customization'))
-  ? join(SERVER_ROOT, 'customization')
-  : join(resolve(SERVER_ROOT, '..'), 'customization')
-
-export const CUSTOMIZATION_SKILLS_DIR = resolve(CUSTOMIZATION_DIR, 'skills')
-
 export function resolvePathWithin(root: string, ...segments: string[]): string {
   const resolvedRoot = resolve(root)
   const candidate = resolve(resolvedRoot, ...segments)

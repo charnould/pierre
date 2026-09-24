@@ -21,16 +21,9 @@ describe('GET /embed', () => {
     const response = await app.request('/embed?host=https://example.org', {
       headers: { 'sec-fetch-dest': 'iframe' }
     })
-    expect(response.status).toBe(200)
+    expect(response.status).toBe(404)
     const html = await response.text()
-    expect(html).toContain('pierre-embed.js')
-    expect(html).toContain('id="pierre-embed-modal"')
-    expect(html).toContain('id="pierre-embed-modal-shell"')
-    expect(html).toContain('id="pierre-embed-modal-chat"')
-    expect(html).toContain('id="root"')
-    expect(html.indexOf('id="pierre-embed-modal-chat"')).toBeLessThan(html.indexOf('id="root"'))
-    expect(html).not.toContain('display:none')
-    expect(html).not.toContain('L-42')
+    expect(html).toContain('/assets/404.svg')
   })
 
   it('does not load the retired /c chat route', async () => {

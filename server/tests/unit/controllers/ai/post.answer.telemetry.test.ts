@@ -41,12 +41,9 @@ app.use('/ai/answer', async (c, next) => {
 app.post('/ai/answer', controller)
 
 const answerPayload = JSON.stringify({
-  version: 1,
-  workflow: 'answer',
-  channel: 'email',
-  id_reclamation: 'REQ-1',
-  message: 'Bonjour',
-  context: null
+  id_locataire: '121284',
+  year_from: 2000,
+  year_to: 2029
 })
 
 function postAnswer(skill: string, authenticated = true, modules?: string) {
@@ -77,13 +74,13 @@ describe('POST /ai/answer telemetry', () => {
     telemetryCalls.length = 0
     streamShouldFail = false
 
-    const res = await postAnswer('ticket.answer-ticket')
+    const res = await postAnswer('about')
 
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toContain('application/x-ndjson')
     await res.text()
 
-    expect(telemetryCalls).toEqual(['ai.answer.ticket.answer-ticket'])
+    expect(telemetryCalls).toEqual(['ai.answer.about'])
     expect(reservationObservedDuringStream).toBe(1)
     expect(conversationReservationCount(CONV_ID)).toBe(0)
   })
@@ -94,7 +91,7 @@ describe('POST /ai/answer telemetry', () => {
     const errorSpy = spyOn(console, 'error').mockImplementation(() => {})
 
     try {
-      const res = await postAnswer('about.summary')
+      const res = await postAnswer('about')
 
       expect(res.status).toBe(200)
       const body = await res.text()
@@ -123,7 +120,7 @@ describe('POST /ai/answer telemetry', () => {
   })
 
   it('rejects anonymous requests', async () => {
-    const anonymous = await postAnswer('ticket.answer-ticket', false)
+    const anonymous = await postAnswer('about', false)
     expect(anonymous.status).toBe(401)
     expect(await anonymous.json()).toEqual({
       error: { code: 'unauthorized', message: 'Authentication required' }
@@ -132,13 +129,13 @@ describe('POST /ai/answer telemetry', () => {
 
   it('allows an authenticated user', async () => {
     streamShouldFail = false
-    const res = await postAnswer('ticket.answer-ticket')
+    const res = await postAnswer('about')
     expect(res.status).toBe(200)
     await res.text()
   })
 
   it('rejects a workflow whose module is not assigned', async () => {
-    const res = await postAnswer('ticket.answer-ticket', true, 'about')
+    const res = await postAnswer('replies', true, 'about')
     expect(res.status).toBe(403)
     expect(await res.json()).toEqual({
       error: { code: 'forbidden', message: 'Insufficient permissions' }

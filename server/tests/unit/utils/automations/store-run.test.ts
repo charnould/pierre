@@ -25,6 +25,7 @@ import {
 } from '../../../../utils/automations/store'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { setup } from '../../../../utils/setup'
+import { seedInstanceSetup } from '../../../seed-setup'
 import { createTestUser } from '../../../test-user'
 
 const paths = testDatastorePaths('automations')
@@ -49,6 +50,7 @@ afterAll(async () => {
 beforeEach(async () => {
   await mkdir(paths.root, { recursive: true })
   await setup()
+  await seedInstanceSetup()
   await seed_user('alice@example.com')
   await seed_user('bob@example.com')
   reset_automation_executor()

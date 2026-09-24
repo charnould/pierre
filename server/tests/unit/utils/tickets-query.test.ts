@@ -13,6 +13,7 @@ import {
   TicketsQueryError,
   TicketsSchemaError
 } from '../../../utils/tickets-query'
+import { seedInstanceSetup } from '../../seed-setup'
 
 const paths = testDatastorePaths('tickets_query')
 const DATASTORE_SQLITE = `${paths.root}/datastore.sqlite`
@@ -105,6 +106,7 @@ describe('list_tickets', () => {
   beforeEach(async () => {
     await mkdir(paths.root, { recursive: true })
     await setup()
+    await seedInstanceSetup()
   })
 
   it('returns empty list when tickets table is missing', () => {

@@ -2,8 +2,8 @@ import { Database } from 'bun:sqlite'
 
 import { z } from 'zod'
 
-import ticketConfig from '../../customization/tickets/config'
 import { datastorePaths } from './paths'
+import { ticketsReady } from './setup-store'
 import { buildTicketFiltersWhere, type TicketFilterRule } from './ticket-filters'
 
 export const CORE_RECLAMATION_COLUMNS = ['id_reclamation', 'id_locataire', 'id_lot'] as const
@@ -12,9 +12,18 @@ export const DEFAULT_TICKETS_SORT = '-id_reclamation'
 
 const RESERVED_TICKETS_QUERY_PARAMS = ['limit', 'offset', 'sort', 'rules', 'bucket'] as const
 const DEFAULT_TICKET_BUCKET = 'non_traitees'
-const TICKET_BUCKET_IDS = ticketConfig.buckets.map((bucket) => bucket.id)
-const TICKET_BUCKET_ID_SET = new Set(TICKET_BUCKET_IDS)
-const TICKET_BUCKET_SQL = TICKET_BUCKET_IDS.map((id) => `'${id.replaceAll("'", "''")}'`).join(', ')
+function ticketBuckets(): { ids: Set<string>; sql: string } {
+  const tickets = ticketsReady()
+  const ids = Array.isArray(tickets?.buckets)
+    ? tickets.buckets.flatMap((entry: { id?: unknown }) =>
+        entry && typeof entry === 'object' && 'id' in entry ? [String(entry.id)] : []
+      )
+    : []
+  return {
+    ids: new Set(ids),
+    sql: ids.length > 0 ? ids.map((id: string) => `'${id.replaceAll("'", "''")}'`).join(', ') : "''"
+  }
+}
 
 export type TicketsColumnMeta = { name: string; type: string }
 
@@ -216,7 +225,8 @@ export const list_tickets = (input: TicketsListInput): TicketsListResult => {
     const columns = get_table_columns(db)
     assert_core_columns(columns)
     const names = column_names(columns)
-    if (input.bucket && !TICKET_BUCKET_ID_SET.has(input.bucket)) {
+    const buckets = ticketBuckets()
+    if (input.bucket && !buckets.ids.has(input.bucket)) {
       throw new TicketsQueryError('invalid ticket bucket')
     }
 
@@ -250,12 +260,12 @@ export const list_tickets = (input: TicketsListInput): TicketsListResult => {
              AND json_extract(contenu, '$.version') = 1
              AND json_type(contenu, '$.bucket') = 'text'
              AND trim(json_extract(contenu, '$.bucket')) <> ''
-             AND json_extract(contenu, '$.bucket') IN (${TICKET_BUCKET_SQL})
+             AND json_extract(contenu, '$.bucket') IN (${buckets.sql})
          ),
          ticket_rows AS (
            SELECT reclamations.*,
              CASE
-               WHEN latest.bucket IN (${TICKET_BUCKET_SQL}) THEN latest.bucket
+               WHEN latest.bucket IN (${buckets.sql}) THEN latest.bucket
                ELSE '${DEFAULT_TICKET_BUCKET}'
              END AS pierre_bucket
            FROM reclamations

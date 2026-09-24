@@ -19,8 +19,7 @@ const publicOn: ChatbotConfig = {
   trace: 'none',
   attachments: true,
   examples: [],
-  disclaimer: null,
-  custom_data: {}
+  disclaimer: null
 }
 
 const publicOff: ChatbotConfig = { ...publicOn, enabled: false }

@@ -24,18 +24,12 @@ it('returns the empty page for unknown HTML paths', async () => {
   await navigate(view, 'http://localhost:3000/wrong_path')
   expect(await currentUrl(view)).toBe('http://localhost:3000/wrong_path')
   expect(
-    await evaluate<boolean>(
-      view,
-      'Boolean(document.querySelector(\'img[src="/branding/404.svg"]\'))'
-    )
+    await evaluate<boolean>(view, 'Boolean(document.querySelector(\'img[src="/assets/404.svg"]\'))')
   ).toBe(true)
 
   await navigate(view, 'http://localhost:3000/c')
   expect(await currentUrl(view)).toBe('http://localhost:3000/c')
   expect(
-    await evaluate<boolean>(
-      view,
-      'Boolean(document.querySelector(\'img[src="/branding/404.svg"]\'))'
-    )
+    await evaluate<boolean>(view, 'Boolean(document.querySelector(\'img[src="/assets/404.svg"]\'))')
   ).toBe(true)
 })

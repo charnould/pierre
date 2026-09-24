@@ -24,6 +24,7 @@ import {
 } from '../../../../../utils/knowledge/catalog'
 import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
+import { seedInstanceSetup } from '../../../../seed-setup'
 
 const paths = testDatastorePaths('admin_knowledge')
 const originalBearer = Bun.env['AUTH_BEARER']
@@ -80,6 +81,7 @@ beforeAll(async () => {
   Bun.env['AUTH_BEARER'] = 'knowledge-api-test-token'
   await rm(paths.root, { recursive: true, force: true })
   await setup()
+  await seedInstanceSetup()
 })
 
 beforeEach(() => {

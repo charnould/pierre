@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",
+    "@huggingface/tokenizers": "^0.2.0",
     "better-auth": "^1.7.5",
     "date-fns": "catalog:",
     "docxtemplater": "catalog:",
@@ -26,6 +27,7 @@
     "jsdom": "catalog:",
     "libphonenumber-js": "^1.13.12",
     "mammoth": "^1.12.2",
+    "onnxruntime-node": "^1.30.0",
     "oxfmt": "catalog:",
     "pizzip": "catalog:",
     "reamkit": "^1.29.0",

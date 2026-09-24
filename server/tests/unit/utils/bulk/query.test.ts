@@ -1,5 +1,6 @@
 import { Database } from 'bun:sqlite'
-import { describe, expect, it } from 'bun:test'
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
+import { mkdir, rm } from 'node:fs/promises'
 
 import {
   emptyBulkOperationQueryDefinition,
@@ -10,8 +11,26 @@ import {
   compile_query,
   execute_query
 } from '../../../../utils/bulk/query'
+import { migrate_datastore } from '../../../../utils/datastore-migrations'
 import type { LedgerColumnMeta } from '../../../../utils/ledger/schema'
 import { build_ledger_view_sql } from '../../../../utils/ledger/view'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
+import { seedInstanceSetup } from '../../../seed-setup'
+
+const paths = testDatastorePaths('bulk_query_schema')
+
+beforeAll(async () => {
+  setDatastoreRoot(paths.root)
+  await rm(paths.root, { recursive: true, force: true })
+  await mkdir(paths.root, { recursive: true })
+  await migrate_datastore(paths.database)
+  await seedInstanceSetup()
+})
+
+afterAll(async () => {
+  setDatastoreRoot(null)
+  await rm(paths.root, { recursive: true, force: true })
+})
 
 const movementColumns = [
   'id_locataire',

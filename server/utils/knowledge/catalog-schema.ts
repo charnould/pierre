@@ -115,7 +115,7 @@ const isDatastoreTable = (value: unknown): value is DatastoreTable =>
 export const KnowledgeBuildDocumentSchema = z
   .object({
     status: z.enum(['queued', 'running', 'succeeded', 'failed']),
-    trigger: z.enum(['startup', 'cron', 'upload', 'patch', 'delete', 'manual']),
+    trigger: z.enum(['startup', 'cron', 'upload', 'patch', 'delete', 'manual', 'chatbot']),
     requestedBy: z.string().trim().min(1).nullable(),
     catalogFingerprint: z.string().nullable().default(null),
     startedAt: z.iso.datetime().nullable(),

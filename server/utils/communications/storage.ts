@@ -1,6 +1,5 @@
 import { Database } from 'bun:sqlite'
 
-import instance_config from '../../../customization/config'
 import {
   type Activite,
   type ActivityContext,
@@ -22,6 +21,7 @@ import {
 } from '../activities/rows'
 import { normalize_email, normalize_telephone } from '../contacts'
 import { datastorePaths } from '../paths'
+import { name } from '../setup-store'
 
 export const datastore_path = (): string => datastorePaths().database
 
@@ -350,7 +350,7 @@ export const create_inbound = (input: CreateInboundInput): Activite => {
       date_creation: occurredAt,
       rattachement,
       auteur: input.auteur,
-      destinataire: instance_config.name,
+      destinataire: name(),
       facets,
       type: 'communication.received',
       channel: require_channel(input.type),

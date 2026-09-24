@@ -24,7 +24,8 @@ export function chatPage(params: {
               <link rel="stylesheet" href="${widgetAssets.modalCss}" />`
           : html``
       }
-      <link rel="apple-touch-icon" href="/branding/icons/ios/180.png" />
+      <link rel="icon" href="/branding/icons/icon.svg" type="image/svg+xml" />
+      <link rel="apple-touch-icon" href="/branding/icons/apple-touch-icon.png" />
       <link rel="manifest" href="/branding/manifest.webmanifest" />
       <script type="module" src="${chatJs}"></script>
       ${embed ? html`<script src="${widgetAssets.embedJs}"></script>` : html``}`,

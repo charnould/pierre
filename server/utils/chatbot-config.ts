@@ -1,8 +1,3 @@
-import { existsSync, realpathSync } from 'node:fs'
-import { readdir } from 'node:fs/promises'
-import { join } from 'node:path'
-import { pathToFileURL } from 'node:url'
-
 import {
   DefaultChatbotConfig,
   InternalChatbotConfig,
@@ -10,7 +5,13 @@ import {
   type ChatbotConfig,
   type User
 } from './_schema'
-import { CUSTOMIZATION_DIR, resolvePathWithin } from './paths'
+import {
+  chatbotAgents,
+  defaultChatbotReady,
+  internalChatbot,
+  listInternalChatbots,
+  readSetupBytes
+} from './setup-store'
 
 const CONFIG_ID = /^[a-z0-9][a-z0-9_-]{0,63}$/
 
@@ -33,43 +34,35 @@ function assertCanonicalChatbotId(value: string): string {
   return id
 }
 
+function withoutInstructions(root: any): Record<string, unknown> {
+  const { instructions: _instructions, ...config } = root
+  return config
+}
+
 export async function loadChatbotConfig(requestedId: string): Promise<ChatbotConfig> {
   const id = assertCanonicalChatbotId(requestedId)
-  const configPath = resolvePathWithin(CUSTOMIZATION_DIR, 'chatbots', id, 'config.ts')
-  if (!existsSync(configPath)) {
+  const root = id === 'default' ? defaultChatbotReady() : internalChatbot(id)
+  if (!root)
     throw new ChatbotConfigError('config_not_found', 'Chatbot configuration not found', 404)
+  const schema = id === 'default' ? DefaultChatbotConfig : InternalChatbotConfig
+  const parsed = schema.safeParse(withoutInstructions(root))
+  if (!parsed.success || parsed.data.id !== id) {
+    throw new ChatbotConfigError('invalid_config', 'Invalid chatbot configuration', 400)
   }
-
-  const realConfigPath = realpathSync(configPath)
-  resolvePathWithin(CUSTOMIZATION_DIR, 'chatbots', realConfigPath)
-
-  try {
-    const raw = (await import(pathToFileURL(realConfigPath).href)).default
-    const schema = id === 'default' ? DefaultChatbotConfig : InternalChatbotConfig
-    const parsed = schema.safeParse(raw)
-    if (!parsed.success || parsed.data.id !== id) {
-      throw new ChatbotConfigError('invalid_config', 'Invalid chatbot configuration', 400)
-    }
-    return parsed.data
-  } catch (error) {
-    if (error instanceof ChatbotConfigError) throw error
-    throw new ChatbotConfigError('config_not_found', 'Chatbot configuration not found', 404)
-  }
+  return parsed.data
 }
 
 export async function listChatbotSummaries(): Promise<Array<{ id: string; label: string }>> {
-  const entries = await readdir(join(CUSTOMIZATION_DIR, 'chatbots'))
-  const configs = await Promise.all(
-    entries.map(async (entry) => {
-      if (entry === 'default') return null
-      if (!existsSync(join(CUSTOMIZATION_DIR, 'chatbots', entry, 'config.ts'))) return null
-      const config = await loadChatbotConfig(entry)
-      return { id: config.id, label: config.display }
-    })
-  )
-  return configs
-    .filter((config): config is NonNullable<typeof config> => config !== null)
-    .sort((a, b) => a.label.localeCompare(b.label, 'fr'))
+  return listInternalChatbots().map((config) => ({ id: config.id, label: config.display }))
+}
+
+export function chatbotInstructions(id: string): string {
+  return chatbotAgents(id)
+}
+
+export function publicIcon(): Uint8Array | null {
+  if (!defaultChatbotReady()) return null
+  return readSetupBytes('chatbots/icons/icon.svg')
 }
 
 export async function listAccessibleChatbots(
@@ -81,18 +74,16 @@ export async function listAccessibleChatbots(
 
   try {
     const publicConfig = await loadConfig('default')
-    if (isDefaultChatbotConfig(publicConfig) && publicConfig.enabled) {
-      configs.push(publicConfig)
-    }
+    if (isDefaultChatbotConfig(publicConfig) && publicConfig.enabled) configs.push(publicConfig)
   } catch {
-    // Public chatbot is optional when disabled or missing.
+    // Public chatbot is absent until its entry is ready and enabled.
   }
 
   for (const id of assigned) {
     try {
       configs.push(await loadConfig(id))
     } catch {
-      // Assigned folder may have been removed.
+      // Assigned chatbot may have been removed.
     }
   }
 

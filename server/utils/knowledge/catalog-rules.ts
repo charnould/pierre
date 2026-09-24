@@ -2,7 +2,7 @@ import { join } from 'node:path'
 
 import { coreDataContractForFilename } from '../../../shared/core-data'
 import { isKnowledgeEntryAssigned, normalize_knowledge_name } from '../../../shared/knowledge'
-import { businessModuleForSkillId } from '../../../shared/modules'
+import { publishModuleForPrompt } from '../../../shared/modules'
 import { datastorePaths } from '../paths'
 import {
   isReservedCoreDataTitle,
@@ -18,11 +18,12 @@ export const knowledgePublishTargets = (
   entry: Pick<KnowledgeEntry, 'profileIds' | 'moduleIds'>,
   knownIds: Iterable<string>
 ): string[] => {
-  const targets = new Set(entry.profileIds)
+  const known = new Set(knownIds)
+  const targets = new Set([...entry.profileIds].filter((id) => known.has(id)))
   if (entry.moduleIds.length === 0) return [...targets].sort()
   const modules = new Set(entry.moduleIds)
-  for (const id of knownIds) {
-    const moduleId = businessModuleForSkillId(id)
+  for (const id of known) {
+    const moduleId = publishModuleForPrompt(id)
     if (moduleId && modules.has(moduleId)) targets.add(id)
   }
   return [...targets].sort()

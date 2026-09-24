@@ -6,7 +6,7 @@ export type AutomationLifecycleStatus = (typeof AUTOMATION_LIFECYCLE_STATUSES)[n
 const AUTOMATION_RUN_STATUSES = ['success', 'error'] as const
 export type AutomationRunStatus = (typeof AUTOMATION_RUN_STATUSES)[number]
 
-const AUTOMATION_TYPES = ['report', 'ticket_reply'] as const
+const AUTOMATION_TYPES = ['report', 'replies'] as const
 export type AutomationType = (typeof AUTOMATION_TYPES)[number]
 
 export const AUTOMATION_FREQUENCIES = ['daily', 'weekly', 'monthly', 'yearly'] as const
@@ -58,7 +58,7 @@ export type ReportAutomationConfig = {
 }
 
 export type TicketReplyAutomationConfig = {
-  skillId: 'ticket.answer-ticket'
+  skillId: 'replies'
   channel: 'email' | 'letter'
   ticketFilters: TicketAutomationFilters
   maxItems: number
@@ -89,7 +89,7 @@ type AutomationRecordBase = {
 
 export type AutomationRecord =
   | (AutomationRecordBase & { type: 'report'; config: ReportAutomationConfig })
-  | (AutomationRecordBase & { type: 'ticket_reply'; config: TicketReplyAutomationConfig })
+  | (AutomationRecordBase & { type: 'replies'; config: TicketReplyAutomationConfig })
 
 export type CreateAutomationBody =
   | {
@@ -104,7 +104,7 @@ export type CreateAutomationBody =
       maxReports?: number
     }
   | {
-      type: 'ticket_reply'
+      type: 'replies'
       name: string
       description?: string
       mentions?: string[]

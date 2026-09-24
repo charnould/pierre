@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
-import {
-  assertCanonicalSkillId,
-  assertMatchingSkillConfig,
-  SkillRequestError
-} from '../../../utils/skill-config'
+import { assertCanonicalSkillId, SkillRequestError } from '../../../utils/skill-config'
 import {
   getConversationUploadsMountPath,
   getConversationUploadsPath,
@@ -15,7 +11,7 @@ import {
 const CONV_ID = '0198f1a0-7b6c-7000-8000-000000000001'
 
 describe('skill config request boundary', () => {
-  it.each(['ticket.answer-ticket', 'automation.report', 'skill-2'])(
+  it.each(['about', 'report', 'replies', 'repayment'])(
     'accepts canonical skill ID %s',
     (skillId) => {
       expect(assertCanonicalSkillId(skillId)).toBe(skillId)
@@ -28,17 +24,6 @@ describe('skill config request boundary', () => {
       expect(() => assertCanonicalSkillId(skillId)).toThrow(SkillRequestError)
     }
   )
-
-  it('rejects a config whose declared ID does not match its directory ID', () => {
-    expect(() =>
-      assertMatchingSkillConfig('ticket.answer-ticket', { id: 'ticket.summarize-ticket' })
-    ).toThrow(
-      expect.objectContaining({
-        code: 'skill_not_found',
-        status: 404
-      })
-    )
-  })
 
   it('keeps stable uploads contained under the datastore root', () => {
     const paths = testDatastorePaths('skill_path')

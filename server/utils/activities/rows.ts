@@ -1,6 +1,5 @@
 import { Database } from 'bun:sqlite'
 
-import instance_config from '../../../customization/config'
 import {
   ACTIVITY_CONTEXTS,
   type Activite,
@@ -17,6 +16,7 @@ import {
 } from '../../../shared/agent-identity'
 import { datastorePaths } from '../paths'
 import { send_telemetry } from '../send-telemetry'
+import { name } from '../setup-store'
 import { ActivitiesError, ActivityRowSchema, AUTHOR_RE, MENTION_RE, parse_mentions } from './schema'
 
 export type ActivityDbRow = Omit<Activite, 'mentions' | 'type' | 'channel'> & {
@@ -241,7 +241,7 @@ export const resolve_destinataire = (
   const raw = token.trim()
   if (!raw) return null
   const lowered = raw.toLowerCase()
-  if (lowered === desktopAgentMentionHandle(instance_config.name)) {
+  if (lowered === desktopAgentMentionHandle(name())) {
     return DESKTOP_AGENT_DESTINATAIRE
   }
   if (AUTHOR_RE.test(raw)) return raw.startsWith('user:') ? raw.toLowerCase() : raw

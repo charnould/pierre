@@ -8,13 +8,8 @@ describe('telemetry-event', () => {
   })
 
   it('buildWorkflowTelemetryEvent prefixes id_skill with ai.answer.', () => {
-    expect(buildWorkflowTelemetryEvent('ticket.answer-ticket')).toBe(
-      'ai.answer.ticket.answer-ticket'
-    )
-    expect(buildWorkflowTelemetryEvent('about.summary')).toBe('ai.answer.about.summary')
-    expect(buildWorkflowTelemetryEvent('repayment.create-plan')).toBe(
-      'ai.answer.repayment.create-plan'
-    )
+    expect(buildWorkflowTelemetryEvent('about')).toBe('ai.answer.about')
+    expect(buildWorkflowTelemetryEvent('replies')).toBe('ai.answer.replies')
   })
 
   it('buildWorkflowTelemetryEvent rejects empty skillId', () => {

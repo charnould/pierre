@@ -5,7 +5,6 @@ import { cors } from 'hono/cors'
 import { secureHeaders } from 'hono/secure-headers'
 
 import { controller as get_ai_boot } from './controllers/ai/get.boot'
-import { controller as get_ai_skills } from './controllers/ai/get.skills'
 import { controller as post_ai } from './controllers/ai/post'
 import { controller as post_ai_answer } from './controllers/ai/post.answer'
 import {
@@ -59,11 +58,6 @@ import { controller as post_desktop_bulk_operation } from './controllers/desktop
 import { controller as post_desktop_bulk_operation_execute } from './controllers/desktop/bulk-operations/post.execute'
 import { controller as post_desktop_bulk_operation_preview_message } from './controllers/desktop/bulk-operations/post.preview-message'
 import { controller as post_desktop_bulk_operation_preview_query } from './controllers/desktop/bulk-operations/post.preview-query'
-import { controller as get_desktop_customization } from './controllers/desktop/customization/get'
-import {
-  repaymentTemplate as get_desktop_repayment_template,
-  skillTemplate as get_desktop_skill_template
-} from './controllers/desktop/customization/get.docx'
 import { controller as get_desktop_datastore_tables } from './controllers/desktop/datastore/get.tables'
 import { controller as get_desktop_ledger } from './controllers/desktop/ledger/get'
 import { controller as get_desktop_ledger_facets } from './controllers/desktop/ledger/get.facets'
@@ -71,6 +65,13 @@ import { controller as post_desktop_me_avatar } from './controllers/desktop/me/a
 import { controller as get_desktop_me } from './controllers/desktop/me/get'
 import { controller as patch_desktop_me_preferences } from './controllers/desktop/me/preferences/patch'
 import { controller as get_desktop_repayment_timeline } from './controllers/desktop/repayment/get.timeline'
+import {
+  deleteAdminChatbot as delete_desktop_admin_chatbot,
+  getAdminSetup as get_desktop_admin_setup,
+  getSetupFile as get_desktop_setup_file,
+  putAdminSetup as put_desktop_admin_setup
+} from './controllers/desktop/setup/admin'
+import { controller as get_desktop_setup } from './controllers/desktop/setup/get'
 import { controller as get_desktop_tickets } from './controllers/desktop/tickets/get'
 import { controller as get_desktop_tickets_facets } from './controllers/desktop/tickets/get.facets'
 import { controller as put_desktop_tickets } from './controllers/desktop/tickets/put'
@@ -83,6 +84,7 @@ import { controller as post_lrar } from './controllers/lrar/post'
 import { controller as post_lrar_webhook } from './controllers/lrar/post.webhook'
 import { controller as post_lre } from './controllers/lre/post'
 import { controller as post_lre_webhook } from './controllers/lre/post.webhook'
+import { controller as carl } from './controllers/models/carl'
 import { controller as post_rcs } from './controllers/rcs/post'
 import { controller as post_rcs_webhook } from './controllers/rcs/post.webhook'
 import { controller as post_signature } from './controllers/signature/post'
@@ -103,8 +105,9 @@ import { start_bulk_scheduler } from './utils/bulk/scheduler/queue'
 import { refresh_stale_sms_contacts } from './utils/contacts'
 import { ensureEnvAdmin } from './utils/ensure-env-admin'
 import { initializeKnowledgeBuildCoordinator } from './utils/knowledge/build-coordinator'
-import { CUSTOMIZATION_DIR, SERVER_ROOT } from './utils/paths'
+import { SERVER_ROOT } from './utils/paths'
 import { setup } from './utils/setup'
+import { name, readSetupBytes } from './utils/setup-store'
 import { initVmPool } from './utils/vm-pool'
 import { cleanupOrphanedVms } from './utils/vm-registry'
 import { emptyPage } from './views/empty'
@@ -184,7 +187,41 @@ Bun.cron('* * * * *', async () => {
 // Serve PIERRE assets (with CORS for cross-origin embedding) and branding
 app.use('/assets/*', cors())
 app.use('/assets/*', serveStatic({ root: SERVER_ROOT }))
-app.use('/branding/*', serveStatic({ root: CUSTOMIZATION_DIR }))
+app.get('/branding/icons/:file', (c) => {
+  const file = c.req.param('file')
+  const id =
+    file === 'icon.svg'
+      ? 'chatbots/icons/icon.svg'
+      : file === 'apple-touch-icon.png'
+        ? 'chatbots/icons/apple-touch-icon.png'
+        : file === 'icon-192.png'
+          ? 'chatbots/icons/icon-192.png'
+          : file === 'icon-512.png'
+            ? 'chatbots/icons/icon-512.png'
+            : null
+  if (!id) return c.notFound()
+  const bytes = readSetupBytes(id)
+  if (!bytes) return c.notFound()
+  const copy = new ArrayBuffer(bytes.byteLength)
+  new Uint8Array(copy).set(bytes)
+  const type = file.endsWith('.svg') ? 'image/svg+xml' : 'image/png'
+  return new Response(new Blob([copy]), { headers: { 'content-type': type } })
+})
+app.get('/branding/manifest.webmanifest', (c) => {
+  return c.json({
+    short_name: name(),
+    name: name(),
+    id: '/',
+    start_url: '/',
+    display: 'standalone',
+    icons: [
+      { src: 'icons/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+      { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+      { src: 'icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+    ]
+  })
+})
 
 // Better Auth owns the /auth namespace. Its admin API remains server-only.
 app.all('/auth/admin/*', (c) => c.notFound())
@@ -194,7 +231,6 @@ app.all('/auth/*', (c) => auth.handler(c.req.raw))
 app.get('/', get_index)
 app.post('/ai', aiMultipartBodyLimit, authenticateOptional, post_ai)
 app.get('/ai/boot', authenticate, get_ai_boot)
-app.get('/ai/skills', authenticateOptional, get_ai_skills)
 app.get('/desktop/activities', authenticate, get_desktop_activities)
 app.get('/desktop/activity-feed/sync', authenticate, get_desktop_activity_feed_sync)
 app.post('/desktop/activities', authenticate, post_desktop_activity)
@@ -284,13 +320,16 @@ app.get(
 app.get('/desktop/datastore/tables', authenticate, get_desktop_datastore_tables)
 app.get('/desktop/users', authenticate, get_desktop_users)
 app.get('/desktop/me', authenticate, get_desktop_me)
-app.get('/desktop/customization', authenticate, get_desktop_customization)
-app.get(
-  '/desktop/customization/repayments/templates/template.docx',
+app.get('/desktop/setup', authenticate, get_desktop_setup)
+app.get('/desktop/setup/*', authenticate, get_desktop_setup_file)
+app.get('/desktop/admin/setup', authenticate, authorizeAdministrator, get_desktop_admin_setup)
+app.put('/desktop/admin/setup/*', authenticate, authorizeAdministrator, put_desktop_admin_setup)
+app.delete(
+  '/desktop/admin/setup/chatbots/:id',
   authenticate,
-  get_desktop_repayment_template
+  authorizeAdministrator,
+  delete_desktop_admin_chatbot
 )
-app.get('/desktop/customization/skills/:id/template.docx', authenticate, get_desktop_skill_template)
 app.get('/desktop/admin/users', authenticate, authorizeAdministrator, get_desktop_admin_users)
 app.post('/desktop/admin/users', authenticate, authorizeAdministrator, post_desktop_admin_user)
 app.post(
@@ -395,6 +434,11 @@ app.post('/telemetry', post_telemetry)
 
 // PIERRE embed shell (modal isolated from host page CSS/DOM)
 app.get('/embed', get_embed)
+app.use(
+  '/api/models/carl',
+  cors({ origin: '*', allowMethods: ['POST', 'OPTIONS'], allowHeaders: ['Content-Type'] })
+)
+app.post('/api/models/carl', carl)
 
 // Catch-all 404 except static assets and communication JSON
 app.notFound(async (c) => {

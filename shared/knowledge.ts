@@ -35,7 +35,7 @@ type KnowledgeDiagnostic = {
 export type KnowledgeBuild = {
   id: string
   status: 'queued' | 'running' | 'succeeded' | 'failed'
-  trigger: 'startup' | 'cron' | 'upload' | 'patch' | 'delete' | 'manual'
+  trigger: 'startup' | 'cron' | 'upload' | 'patch' | 'delete' | 'manual' | 'chatbot'
   requestedBy: string | null
   catalogFingerprint: string | null
   startedAt: string | null

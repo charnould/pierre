@@ -16,8 +16,9 @@ import {
 } from '../../../shared/automations'
 import { login_from_email } from '../activities/rows'
 import { datastorePaths } from '../paths'
+import { timezone } from '../setup-store'
 import { format_automation_prompt } from './format-prompt'
-import { compute_next_run_at, org_timezone } from './schedule'
+import { compute_next_run_at } from './schedule'
 import { automation_schedule_error, AutomationConfigSchema } from './schemas'
 
 const datastore_path = (): string => datastorePaths().database
@@ -106,8 +107,8 @@ function row_to_record(row: AutomationDbRow, pinned = false): AutomationRecord {
   if (row.type === 'report') {
     return { ...record, type: 'report', config: config as ReportAutomationConfig }
   }
-  if (row.type === 'ticket_reply') {
-    return { ...record, type: 'ticket_reply', config: config as TicketReplyAutomationConfig }
+  if (row.type === 'replies') {
+    return { ...record, type: 'replies', config: config as TicketReplyAutomationConfig }
   }
   throw new AutomationsError(`Unknown automation type: ${row.type}`)
 }
@@ -117,7 +118,7 @@ async function config_from_create(body: CreateAutomationBody): Promise<Automatio
     return { prompt: await format_automation_prompt(body.prompt), maxReports: body.maxReports ?? 6 }
   }
   return {
-    skillId: 'ticket.answer-ticket',
+    skillId: 'replies',
     channel: body.channel ?? 'email',
     ticketFilters: body.ticketFilters ?? { rules: [] },
     maxItems: body.maxItems ?? 20
@@ -244,7 +245,9 @@ export async function create_automation(
   const config = await config_from_create(body)
   const canonicalOwner = owner.includes('@') ? owner.trim().toLowerCase() : owner
   const id = Bun.randomUUIDv7()
-  const next_run_at = compute_next_run_at(cron, org_timezone())
+  const zone = timezone()
+  if (!zone) throw new Error('Automatisations non paramétrées.')
+  const next_run_at = compute_next_run_at(cron, zone)
   const db = open_db()
   try {
     const mentions = canonical_mentions(db, body.mentions ?? [])
@@ -310,7 +313,9 @@ export async function update_automation(
   if (status === 'paused') {
     next_run_at = null
   } else if (status === 'scheduled' && (scheduleChanged || patch.status === 'scheduled')) {
-    next_run_at = compute_next_run_at(cron, org_timezone())
+    const zone = timezone()
+    if (!zone) throw new Error('Automatisations non paramétrées.')
+    next_run_at = compute_next_run_at(cron, zone)
   }
 
   let config = existing.config
@@ -339,7 +344,7 @@ export async function update_automation(
     }
     const reply = config as TicketReplyAutomationConfig
     config = {
-      skillId: 'ticket.answer-ticket',
+      skillId: 'replies',
       channel: patch.channel ?? reply.channel,
       ticketFilters: patch.ticketFilters ?? reply.ticketFilters,
       maxItems: patch.maxItems ?? reply.maxItems
@@ -553,10 +558,9 @@ export function finalize_automation_run(
         }
         const now = new Date().toISOString()
         const status: AutomationLifecycleStatus = options.restorePaused ? 'paused' : 'scheduled'
+        const zone = timezone()
         const next_run_at =
-          status === 'scheduled'
-            ? compute_next_run_at(row.cron, org_timezone(), new Date(now))
-            : null
+          status === 'scheduled' && zone ? compute_next_run_at(row.cron, zone, new Date(now)) : null
         return (
           db.run(
             `UPDATE automations SET

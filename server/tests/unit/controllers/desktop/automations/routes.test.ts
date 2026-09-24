@@ -17,6 +17,7 @@ import {
 } from '../../../../../utils/automations/run'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
+import { seedInstanceSetup } from '../../../../seed-setup'
 import { createTestUser } from '../../../../test-user'
 
 const paths = testDatastorePaths('automation_routes')
@@ -80,6 +81,7 @@ beforeAll(() => {
 beforeEach(async () => {
   await rm(paths.root, { recursive: true, force: true })
   await setup()
+  await seedInstanceSetup()
   reset_automation_executor()
   set_automation_executor(async () => ({ kind: 'report', contenu: '<p>Rapport de test</p>' }))
   await seedUsers()

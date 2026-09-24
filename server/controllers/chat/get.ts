@@ -1,7 +1,7 @@
 import type { Context } from 'hono'
 
 import { isDefaultChatbotConfig } from '../../utils/_schema'
-import { loadChatbotConfig } from '../../utils/chatbot-config'
+import { ChatbotConfigError, loadChatbotConfig } from '../../utils/chatbot-config'
 import { chatPage } from '../../views/chat'
 import { emptyPage } from '../../views/empty'
 
@@ -22,7 +22,8 @@ export const controller = async (c: Context) => {
     }
     return c.html(chatPage({ active_config: config, dataParam: dataQuery(c) }))
   } catch (error) {
-    console.error('Error loading public chatbot:', error)
+    if (!(error instanceof ChatbotConfigError))
+      console.error('Error loading public chatbot:', error)
     return c.html(emptyPage(), 404)
   }
 }
