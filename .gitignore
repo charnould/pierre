@@ -25,3 +25,5 @@ __pycache__/
 models/.venv/
 models/carl/checkpoints/
 server/models/carl/model.onnx
+
+server/models/carl/

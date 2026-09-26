@@ -22,7 +22,7 @@ export const controller = async (c: Context) => {
   if (!texte.trim()) {
     return c.json({ error: { code: 'invalid', message: 'Texte vide.' } }, 400)
   }
-  if (!modelFilesPresent()) {
+  if (!(await modelFilesPresent())) {
     return c.json({ error: { code: 'missing', message: MISSING } }, 503)
   }
   try {
