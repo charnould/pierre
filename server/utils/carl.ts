@@ -1,51 +1,39 @@
-import { existsSync } from 'node:fs'
-import { join } from 'node:path'
-
 import { SERVER_ROOT } from './paths'
 
-export const CARL_DIR = join(SERVER_ROOT, 'models', 'carl')
+export const CARL_DIR = `${SERVER_ROOT}/models/carl`
 export const SEQUENCE_LENGTH = 128
 
-export const FIELDS = [
-  'niveau_1',
-  'niveau_2',
-  'niveau_3',
-  'urgence',
-  'danger_personnes',
+export const HEADS = [
+  'code',
+  'integrite_physique',
   'lieu',
-  'registre'
+  'obligation_reglementaire',
+  'ton'
+] as const
+
+export const FIELDS = [
+  'domaine',
+  'sous_domaine',
+  'motif',
+  'integrite_physique',
+  'lieu',
+  'obligation_reglementaire',
+  'ton'
 ] as const
 
 export type Field = (typeof FIELDS)[number]
-export type Mention = Record<Field, string | null>
+export type Mention = Record<Field, string>
+export type Head = (typeof HEADS)[number]
 
-export type Floor = {
-  urgence: string
-  danger: string
-  monte: string[]
-} | null
+export type CarlLabels = Record<Head, string[]>
 
-export type CarlLabels = {
-  motif: [string, string, string][]
-  urgence: string[]
-  danger_personnes: string[]
-  lieu: string[]
-  registre: string[]
-  plancher?: Floor[]
-}
+const SIDE = ['integrite_physique', 'lieu', 'obligation_reglementaire', 'ton'] as const
+const SPECIAL = new Set(['hors_perimetre', 'inexploitable'])
 
-const URGENCE_RANK = ['planifiable', 'sous_quelques_jours', 'dans_la_journee', 'immediat']
-const DANGER_RANK = ['aucun', 'potentiel', 'avere']
-
-const SIDE = ['urgence', 'danger_personnes', 'lieu', 'registre'] as const
-
-export function modelFilesPresent(): boolean {
-  return (
-    existsSync(join(CARL_DIR, 'model.onnx')) &&
-    existsSync(join(CARL_DIR, 'labels.json')) &&
-    existsSync(join(CARL_DIR, 'tokenizer.json')) &&
-    existsSync(join(CARL_DIR, 'tokenizer_config.json'))
-  )
+export async function modelFilesPresent(): Promise<boolean> {
+  const names = ['model.onnx', 'labels.json', 'tokenizer.json', 'tokenizer_config.json']
+  const present = await Promise.all(names.map((name) => Bun.file(`${CARL_DIR}/${name}`).exists()))
+  return present.every(Boolean)
 }
 
 export function normalize(text: string): string {
@@ -58,29 +46,35 @@ export function normalize(text: string): string {
     .trim()
 }
 
-export function applyNulls(mention: Mention): Mention {
-  if (mention.niveau_1 === 'hors_demande') {
+type Predicted = Record<(typeof SIDE)[number], string>
+
+export function legalize(code: string, predicted: Predicted): Mention {
+  const ton = predicted.ton
+  if (SPECIAL.has(code)) {
     return {
-      niveau_1: 'hors_demande',
-      niveau_2: null,
-      niveau_3: null,
-      urgence: null,
-      danger_personnes: null,
-      lieu: null,
-      registre: null
+      domaine: code,
+      sous_domaine: 'sans_objet',
+      motif: 'sans_objet',
+      integrite_physique: 'sans_objet',
+      lieu: 'sans_objet',
+      obligation_reglementaire: 'sans_objet',
+      ton
     }
   }
-  if (mention.niveau_1 === 'inexploitable') {
-    return {
-      ...mention,
-      niveau_2: null,
-      niveau_3: null,
-      urgence: null,
-      danger_personnes: null,
-      lieu: null
-    }
+  const [domaine, sous_domaine, motif, extra] = code.split('.')
+  if (!domaine || !sous_domaine || !motif || extra !== undefined) {
+    throw new Error(`étiquette illisible: ${code}`)
   }
-  return mention
+  return {
+    domaine,
+    sous_domaine,
+    motif,
+    integrite_physique: predicted.integrite_physique,
+    lieu: predicted.lieu,
+    obligation_reglementaire:
+      domaine === 'technique' ? predicted.obligation_reglementaire : 'sans_objet',
+    ton
+  }
 }
 
 function argmax(values: Float32Array): number {
@@ -93,42 +87,6 @@ function argmax(values: Float32Array): number {
   return best
 }
 
-function clampLevel(
-  value: string | null,
-  floor: string,
-  monte: string[],
-  rank: readonly string[]
-): string {
-  const allowed = new Set([floor, ...monte.filter((item) => rank.includes(item))])
-  const floorRank = rank.indexOf(floor)
-  const valueRank = value === null ? -1 : rank.indexOf(value)
-  if (value !== null && allowed.has(value) && valueRank >= floorRank) return value
-  return floor
-}
-
-export function legalize(labels: CarlLabels, mention: Mention): Mention {
-  const out = applyNulls({ ...mention })
-  if (out.niveau_1 === 'hors_demande') return out
-  if (out.niveau_1 === 'inexploitable') {
-    if (out.registre === null) out.registre = 'standard'
-    return out
-  }
-  if (out.registre === null) out.registre = 'standard'
-  const floors = labels.plancher
-  if (!floors) return out
-  const index = labels.motif.findIndex(
-    ([niveau1, niveau2, niveau3]) =>
-      niveau1 === out.niveau_1 &&
-      niveau2 === (out.niveau_2 ?? 'null') &&
-      niveau3 === (out.niveau_3 ?? 'null')
-  )
-  const floor = index >= 0 ? floors[index] : null
-  if (!floor) return out
-  out.urgence = clampLevel(out.urgence, floor.urgence, floor.monte, URGENCE_RANK)
-  out.danger_personnes = clampLevel(out.danger_personnes, floor.danger, floor.monte, DANGER_RANK)
-  return out
-}
-
 function labelAt(labels: readonly string[], index: number): string {
   const label = labels[index]
   if (label === undefined) throw new Error(`indice de label hors vocabulaire: ${index}`)
@@ -136,27 +94,16 @@ function labelAt(labels: readonly string[], index: number): string {
 }
 
 export function decodeLogits(labels: CarlLabels, logits: Float32Array[]): Mention {
-  const motifLogits = logits[0]
-  if (!motifLogits || logits.length !== 5) throw new Error('logits Carl incomplets')
-  const motif = labels.motif[argmax(motifLogits)]
-  if (!motif) throw new Error('motif hors vocabulaire')
-  const [niveau_1, niveau_2, niveau_3] = motif
-  const mention: Mention = {
-    niveau_1,
-    niveau_2: niveau_2 === 'null' ? null : niveau_2,
-    niveau_3: niveau_3 === 'null' ? null : niveau_3,
-    urgence: null,
-    danger_personnes: null,
-    lieu: null,
-    registre: null
-  }
+  if (logits.length !== HEADS.length) throw new Error('logits Carl incomplets')
+  const codeLogits = logits[0]
+  if (!codeLogits) throw new Error('logits Carl incomplets')
+  const predicted = {} as Predicted
   for (const [offset, field] of SIDE.entries()) {
     const head = logits[offset + 1]
     if (!head) throw new Error(`logits manquants: ${field}`)
-    const label = labelAt(labels[field], argmax(head))
-    mention[field] = label === 'null' ? null : label
+    predicted[field] = labelAt(labels[field], argmax(head))
   }
-  return legalize(labels, mention)
+  return legalize(labelAt(labels.code, argmax(codeLogits)), predicted)
 }
 
 export function padTokens(

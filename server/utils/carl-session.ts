@@ -1,13 +1,17 @@
-import { readFileSync } from 'node:fs'
-import { availableParallelism } from 'node:os'
-import { join } from 'node:path'
-
 import { Tokenizer } from '@huggingface/tokenizers'
 import type { InferenceSession } from 'onnxruntime-node'
 
-import { CARL_DIR, decodeLogits, normalize, padTokens, type Mention, type CarlLabels } from './carl'
+import {
+  CARL_DIR,
+  HEADS,
+  decodeLogits,
+  normalize,
+  padTokens,
+  type Mention,
+  type CarlLabels
+} from './carl'
 
-const THREADS = Math.min(4, availableParallelism())
+const THREADS = Math.min(4, navigator.hardwareConcurrency)
 
 type Engine = {
   labels: CarlLabels
@@ -20,18 +24,16 @@ let loading: Promise<Engine> | null = null
 
 async function loadEngine(): Promise<Engine> {
   const ort = await import('onnxruntime-node')
-  const labels = JSON.parse(readFileSync(join(CARL_DIR, 'labels.json'), 'utf8')) as CarlLabels
-  const tokenizerConfig = JSON.parse(
-    readFileSync(join(CARL_DIR, 'tokenizer_config.json'), 'utf8')
-  ) as { pad_token?: string }
-  const tokenizer = new Tokenizer(
-    JSON.parse(readFileSync(join(CARL_DIR, 'tokenizer.json'), 'utf8')) as object,
-    tokenizerConfig
-  )
+  const [labels, tokenizerConfig, tokenizerJson] = await Promise.all([
+    Bun.file(`${CARL_DIR}/labels.json`).json() as Promise<CarlLabels>,
+    Bun.file(`${CARL_DIR}/tokenizer_config.json`).json() as Promise<{ pad_token?: string }>,
+    Bun.file(`${CARL_DIR}/tokenizer.json`).json() as Promise<object>
+  ])
+  const tokenizer = new Tokenizer(tokenizerJson, tokenizerConfig)
   const padToken = tokenizerConfig.pad_token ?? '[PAD]'
   const padId = tokenizer.token_to_id(padToken)
   if (padId === undefined) throw new Error(`jeton de padding absent: ${padToken}`)
-  const session = await ort.InferenceSession.create(join(CARL_DIR, 'model.onnx'), {
+  const session = await ort.InferenceSession.create(`${CARL_DIR}/model.onnx`, {
     executionProviders: ['cpu'],
     graphOptimizationLevel: 'all',
     intraOpNumThreads: THREADS,
@@ -60,8 +62,7 @@ export async function classify(text: string): Promise<Mention> {
     input_ids: new ort.Tensor('int64', inputIds, [1, inputIds.length]),
     attention_mask: new ort.Tensor('int64', attentionMask, [1, attentionMask.length])
   })
-  const order = ['motif', 'urgence', 'danger_personnes', 'lieu', 'registre'] as const
-  const logits = order.map((name) => {
+  const logits = HEADS.map((name) => {
     const tensor = outputs[name]
     if (!tensor || !(tensor.data instanceof Float32Array)) {
       throw new Error(`sortie ONNX absente: ${name}`)
