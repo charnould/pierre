@@ -342,7 +342,7 @@ export function benchHtml(bench: Bench = CARL): string {
           const payload = await reponse.json().catch(() => null)
           if (!reponse.ok) {
             if (reponse.status === 503) {
-              montrerErreur("Les poids ne sont pas installés. Depuis models : bun fetch.")
+              montrerErreur("Les poids ne sont pas installés. Déposez model.zip (release CARL-*) dans server/models/carl, puis lancez bun run server/carl.ts.")
             } else if (!payload) {
               montrerErreur('Le serveur a répondu sans JSON.')
             } else {

@@ -4,15 +4,17 @@
 
 Avant de déployer PIERRE, vérifier que vous disposez de :
 
-| Prérequis         | Détail                                                                   |
-| ----------------- | ------------------------------------------------------------------------ |
-| **Serveur**       | Linux, virtualisation imbriquée activée (`/dev/kvm` exposé au container) |
-| **Ports ouverts** | `80` (HTTP) et `443` (HTTPS)                                             |
-| **Accès SSH**     | Clef ou mot de passe                                                     |
-| **Clé API LLM**   | OpenAI, Anthropic ou tout provider compatible OpenAI API                 |
+| Prérequis         | Détail                                                      |
+| ----------------- | ----------------------------------------------------------- |
+| **Serveur**       | Ubuntu ou Debian, `x86_64`, avec `/dev/kvm`                 |
+| **Ports ouverts** | `80` (HTTP) et `443` (HTTPS)                                |
+| **Accès SSH**     | Clef ou mot de passe, en root                               |
+| **Clé API LLM**   | Anthropic, OpenAI ou un fournisseur compatible avec son API |
+
+> Recommandation de serveur
 
 > [!IMPORTANT]
-> La **nested virtualisation** (virtualisation imbriquée) est la seule contrainte matérielle de PIERRE **(nul besoin de GPU)**. Elle est indispensable pour que les smolVMs puissent s'exécuter à l'intérieur du container Docker. La plupart des VPS la proposent en option ou nativement.
+> `/dev/kvm` est la seule contrainte matérielle **(nul besoin de GPU)**. Les micro-VM tournent sur le KVM de la machine. Un serveur sans KVM, ou un conteneur qui ne l'expose pas, ne convient pas.
 
 > [!IMPORTANT]
 > Une seule instance de PIERRE est déployable par serveur.
@@ -41,7 +43,7 @@ Les instructions ci-après sont valables sous **macOS** et **Windows** (via WSL 
 4. Forker/cloner le présent dépôt.
 5. Lancer `bun install` dans votre terminal pour installer les dépendances.
 6. Renommer le fichier `.env.example` en `.env` et le compléter, notamment `AUTH_PASSWORD`.
-7. Lancer `bun dev:server` pour démarrer PIERRE.
+7. Lancer `bun dev:server` pour démarrer PIERRE. Le classement demande un second terminal : `bun run server/carl.ts`, et le modèle dans `server/models/carl` (le zip `model.zip` de la dernière release `CARL-*`).
 8. PIERRE est accessible à `http://localhost:3000`.
 9. [Télécharger la dernière version](https://github.com/charnould/pierre/releases) de l'application (`.dmg ` ou `.exe`), l'installer, la lancer et enfin saisir :
 
@@ -51,43 +53,73 @@ Les instructions ci-après sont valables sous **macOS** et **Windows** (via WSL 
 
 10. Et voilà, PIERRE fonctionne !
 
-### Déployer pour la première fois PIERRE sur un serveur
+### Déployer PIERRE sur un serveur
 
-Pour déployer PIERRE sur un serveur, il est indispensable d'être parvenu à le faire fonctionner en local.
+Le DNS du nom choisi doit pointer vers le serveur, sans proxy. Les ports `80` et `443` sont ouverts. Certains hébergeurs n'ouvrent pas le `22` : les commandes prennent alors `-p` pour `ssh` et `-P` pour `scp`, par exemple `ssh -p 2234 root@le-serveur`.
 
-1. Installer `Docker Desktop` et le lancer ([instructions](https://www.docker.com/products/docker-desktop/)). `Docker` gérera la conteneurisation.
-2. Lancer `gem install kamal` pour installer `Kamal` (≥`2.11.0`) qui gérera le déploiement ([instructions](https://kamal-deploy.org/docs/installation/)).
-3. Disposer d'un VPS et être en capacité de s'y connecter via `ssh` (avec une clef ou mot de passe). Les ports `80` (`http`) et `443` (`https`) doivent impérativement être ouverts.
-4. Finaliser les modifications du fichier `.env` que vous avez créé précédemment.
-5. Saisir dans votre terminal `bun deploy:setup`.
-6. PIERRE est accessible à l'adresse URL de votre serveur (prévoir quelques minutes pour la génération des certificats SSL).
-7. [Dans la dernière version](https://github.com/charnould/pierre/releases) de l'application (`.dmg ` ou `.exe`), saisir :
-   - serveur : celui renseigné dans `.env` pour `HOST`
-   - Email : `admin@pierre-ia.org`
-   - Mot de passe : la valeur de `AUTH_PASSWORD` dans `.env`
-8. Et voilà, PIERRE est déployé et accessible depuis le réseau !
+Connecté en root :
 
-> Si vous le souhaitez il est tout à fait possible d'exposer PIERRE sur le réseau sans utiliser un serveur tiers en utilisant - par exemple - [Tailscale](https://tailscale.com/).
+```bash
+curl -fsSL https://github.com/charnould/pierre/releases/latest/download/install.sh | bash
+```
+
+Le script s'arrête tout de suite si la machine n'est pas `x86_64` ou si `/dev/kvm` est absent. Sinon il ouvre un formulaire : le nom d'hôte, le mot de passe du compte `admin@pierre-ia.org`, le fournisseur (`anthropic` ou `openai`), son adresse et sa clé. Il essaie le fournisseur avec le modèle `claude-sonnet-5` et signale si le nom d'hôte ne pointe pas vers la machine. Puis une jauge installe les paquets, smolvm, Caddy, l'exécutable, l'image des micro-VM et le modèle CARL.
+
+`pierre` rouvre ce menu : installer, sauvegarder la base, tout supprimer. Quand la version installée n'est plus celle de la dernière release, le menu propose aussi de mettre à jour. Une mise à jour remplace l'exécutable et ne retélécharge l'image et le modèle que si leur contenu a changé. Elle ne redemande pas le formulaire et ne touche pas à la base.
+
+`pierre remove` demande confirmation et retire PIERRE et tout ce que l'installation a ajouté.
+
+Pour reprendre une base qui vivait dans Docker : copier `datastore.sqlite` à la racine de `/var/lib/pierre`, et les dossiers `files/`, `knowledge/` et `uploads/` à côté. Rien d'autre ne migre.
+
+### Vérifier
+
+```bash
+systemctl is-active pierre carl caddy
+curl -fsS http://127.0.0.1:3000/up
+curl -fsS https://le-nom-choisi/up
+```
+
+Le classement, avec une phrase courte, répond `200` et un objet `output` :
+
+```bash
+curl -fsS -X POST https://le-nom-choisi/api/models/carl \
+  -H 'content-type: application/json' \
+  -d '{"texte":"la chaudière est en panne"}'
+```
+
+### Sauvegarder la base
+
+Le menu « Sauvegarder la base », ou directement :
+
+```bash
+pierre backup
+scp root@le-serveur:/var/lib/pierre/backups/datastore.sqlite .
+```
+
+La commande écrit une copie cohérente pendant que le serveur tourne. Chaque sauvegarde remplace la précédente. `files/`, `knowledge/` et `uploads/` n'y sont pas. Si le SSH n'écoute pas sur le port `22`, `scp` prend `-P`.
 
 ### Redéployer PIERRE
 
-PIERRE — et notamment sa base de connaissances — évolue régulièrement et suit la convention `semver`. Pour le mettre à jour :
+Ouvrir `pierre` et choisir « Mettre à jour ». La base, `files/`, `knowledge/`, `uploads/` et `backups/` restent en place.
+w
 
-> [!WARNING]
-> Cette version repart d'un schéma SQLite neuf et ne migre aucune donnée. Avant son premier
-> déploiement, arrêtez l'instance puis supprimez `datastore.sqlite`, `datastore.sqlite-wal`,
-> `datastore.sqlite-shm` et le contenu généré de `datastores/knowledge`. Ne supprimez jamais
-> `datastores/files`, qui contient les fichiers sources.
+## Déploiement
 
-1. Saisir `bun pierre:version` pour connaître la dernière version disponible.
-2. Consulter les [releases](https://github.com/charnould/pierre/releases) pour connaître les modifications et éventuels _breaking changes_.
-3. Mettre à jour votre fork/clone.
-4. Ouvrir l’application, puis `Administration` → `Paramétrage`, et suivre le [guide de paramétrage](03-customize.md).
-5. Saisir `bun deploy` dans votre terminal pour redéployer.
+Sur un serveur, PIERRE est un exécutable. [Caddy](https://caddyserver.com) termine le TLS et transmet vers `127.0.0.1:3000`, sans bufferiser le flux NDJSON. Les temps de lecture, d'écriture et d'en-têtes sont de 30 minutes, le temps d'une réponse longue.
 
-# Étapes suivantes
+```
+Navigateur                          VPS
+----------                          --------------------------------
 
-– Personnaliser PIERRE
-– Apprendre à PIERRE vos données
+                                    Caddy :443
+                                       |
+                                       v
+                                    pierre  127.0.0.1:3000
+                                       |-- SQLite   /var/lib/pierre
+                                       |-- smolvm   /dev/kvm
+                                       |-- carl     127.0.0.1:3002
+```
 
-- Afficher PIERRE sur votre site internet, extranet-locataire ou intranet
+`carl` est le même exécutable, lancé avec l'argument `carl`. Il charge le modèle et ne fait que classer. La base, les fichiers et l'image smolVM vivent dans `/var/lib/pierre` : remplacer l'exécutable ne les touche pas.
+
+L'installation, la mise à jour, la sauvegarde et la suppression sont décrites dans [Déployer](01-deploy.md).

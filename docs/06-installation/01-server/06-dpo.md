@@ -14,6 +14,12 @@ Trois usages, ou manipulations, par PIERRE des données-propriétaires des organ
 2. Utilisation des données-propriétaires intégrées
 3. Interaction de l'extension navigateur avec vos applicatifs et données
 
+## Sécurité, confidentialité & RGPD
+
+PIERRE est pensé pour être hébergé sur l'infrastructure choisie par l'organisme HLM ou par **pierre-ia.org**. Les données propriétaires, les contenus extraits et les conversations sont uniquement stockés sur l'instance déployée. Lorsqu'un utilisateur interroge PIERRE, le contenu nécessaire à la réponse peut être transmis au modèle de langage configuré/choisi par l'organisme.
+
+Les questions RGPD, DPO, localisation des données, rôles de responsabilité et traitements associés sont détaillés dans la note dédiée : [Data Protection Officer](/guides/data-protection-officer).
+
 ## Sommaire
 
 <!-- toc maxdepth:3 -->

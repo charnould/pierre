@@ -16,7 +16,7 @@ Vous souhaitez proposer une amélioration à la taxonomie, ou mettre à disposit
 
 ### Synthèse
 
-| Version      | CARL-0.1 (2026-10-10)                                |
+| Version      | CARL-1.0.0 (2026-10-10)                              |
 | ------------ | ---------------------------------------------------- |
 | Architecture | ModernBERT / typed-decisions                         |
 | Weights      | ONNX · FP32 · ~550 Mb (approx. 136M parameters)      |
@@ -39,7 +39,7 @@ Vous souhaitez proposer une amélioration à la taxonomie, ou mettre à disposit
 ## Comment utiliser CARL ?
 
 1. **En utilisant PIERRE :** CARL est utilisé pour qualifier automatiquement, en quasi-temps réel, les messages des locataires et candidats HLM chargés dans le module « Réclamations ». Cette qualification « nouvelle génération » autorise de nombreux usages, humains, automatisés et agentiques (_présentation à venir_).
-2. **En expérimentant :** [télécharger CARL](https://github.com/charnould/pierre/releases/download/carl/model.onnx), dézipper le dossier et suivre les instructions.
+2. **En expérimentant :** [télécharger CARL](https://github.com/charnould/pierre/releases) (`model.zip` de la dernière release `CARL-*`), dézipper le dossier et suivre les instructions.
 3. **En l'intégrant dans un applicatif :** les poids de CARL sont disponibles sous license [AGPL-3.0](https://github.com/charnould/pierre/blob/master/LICENSE.md) pour l'expérimentation, l’évaluation et l’usage exclusivement et uniquement interne des bailleurs sociaux. Toute utilisation commerciale – par API ou intégration dans un logiciel commercial notamment dans un ERP – nécessite une licence commerciale accordée par [charnould@pierre-ia.org](mailto:charnould@pierre-ia.org).
 
 ## Taxonomie
