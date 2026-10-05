@@ -18,19 +18,21 @@ Pierre propose nativement l'ensemble des canaux de communication nécessaire aux
 
 > TODO: mettre toutes les noems Eidas & cie respectés et applicable pour prouver la souveraineté.
 
-## RCS (+ SMS)
+## RCS (+ fallback SMS) + Email transactionnel
 
 ### Prestataire
 
-L'envoi et la réception de `RCS`/`SMS` et `email` sont proposés via `CM.com`. `CM.com` est un acteur européen majeur du messaging et de la communication conversationnelle (SMS, RCS, email…). Société néerlandaise cotée, elle a réalisé 259 M€ de chiffre d’affaires en 2025, avec une activité répartie en Europe, en Asie-Pacifique et aux Amériques.
+L'envoi et la réception de `RCS`/`SMS` et `email` sont proposés via `CM.com`.
+
+`CM.com` est un acteur européen majeur du messaging et de la communication conversationnelle (SMS, RCS, email…). Société néerlandaise cotée, elle a réalisé 259 M€ de chiffre d’affaires en 2025, avec une activité répartie en Europe, en Asie-Pacifique et aux Amériques.
 
 ### Définitions
 
-Le **SMS** (Short Message Service) est le message texte classique, disponible sur tous les téléphones.
+L'**email** est ....
 
 Le **RCS** (Rich Communication Services) en est le successeur. Le locataire lit le message dans l’application de messagerie déjà installée (Messages sur iPhone, Google Messages ou Samsung Messages sur Android), sans nouvelle application. Le RCS permet des messages plus longs, des boutons, des sélections, des accusés de lecture et des pièces jointes.
 
-> TODO: mettre des capture d'écran exemple de RCS
+Le **SMS** (Short Message Service) est le message texte classique, disponible sur tous les téléphones.
 
 PIERRE tente d’abord le RCS. Si l’envoi échoue immédiatement ou si `CM.com` signale ensuite un échec de livraison (imcompatibilité du téléphone contacté), PIERRE lance automatiquement une tentative par SMS.
 
@@ -42,11 +44,21 @@ Les clients `CM.com` constatent plus de 85 % de compatibilité RCS en France (ao
 
 - **iPhone** — En principe, le RCS est activé par défaut à partir d’iOS 18. Les iPhone plus anciens peuvent recevoir le SMS de secours.
 
+### Coûts et charge de travail
+
+Ordres de grandeur, à confirmer avec `CM.com` lors de vos échanges.
+
+| Canal | Paramétrage       | Usage                                | Temps DSI |
+| ----- | ----------------- | ------------------------------------ | --------- |
+| RCS   | ~500 € (une fois) | à l’unité (message ou conversation)  | ~2 h      |
+| SMS   | inclus            | à l’unité (160 caractères)           | n/a       |
+| EMAIL | inclus            | à partir de 50€/mois pour 100K email | 1h        |
+
 ### Paramétrage
 
-##### 1. Ouvrir les canaux chez `CM.com`
+#### 1. Ouvrir les canaux chez `CM.com`
 
-Contacter votre chargé d’affaires `CM.com` pour ouvrir un canal **RCS** et un canal **SMS** de fallback, via `Time2Chat`. Pour ce faire, prendre attache auprès de `xxx@cm.com` et indiquer vouloir ouvrir les services nécessaires au projet `Pierre` porté par Charles-Henri Arnould/BECKREL SAS. (Ne pas hésiter à mettre charnould@pierre-ia.org en copie.)
+Contacter **Elodia Esteve (Partner manager — `elodia.esteve@cm.com`)** et indiquer vouloir ouvrir les services nécessaires au projet `BECKREL/PIERRE` pour ouvrir un canal **RCS (+ fallback SMS)** et un canal **email transactionnel** . Ne pas hésiter à mettre [charnould@pierre-ia.org](mailto:charnould@pierre-ia.org) en copie.
 
 #### 2. Paramétrer PIERRE et `CM.com`
 
@@ -83,21 +95,6 @@ Transmettre **cette même URL** à votre chargé d’affaires `CM.com` pour la r
 > [!IMPORTANT]
 > Sans le header `Webhook-Secret`, PIERRE répond `401`. Le secret ne doit figurer nulle part hors des fichiers `.env` et de la console `CM.com`.
 
-### Coûts et charge de travail
-
-Ordres de grandeur, à confirmer avec `CM.com` lors de vos échanges.
-
-| Canal | Paramétrage       | Usage                               | Temps DSI |
-| ----- | ----------------- | ----------------------------------- | --------- |
-| RCS   | ~500 € (une fois) | à l’unité (message ou conversation) | ~2 h      |
-| SMS   | inclus            | ~20 € / mois + à l’unité            | ~1 h      |
-
-## Email
-
-Même prestataire. L’endpoint `{HOST}/webhook/email` est réservé (même header `Webhook-Secret`).
-
-Souscrire à l'API à la consommation
-
 ## Courrier postal et électronique
 
 ### Prestataire
@@ -118,3 +115,9 @@ En contactant les chargés d'affaire `La Poste`, vous faites deux choses :
 
 - accélérer l'ouverture des services car le référent sait parfaitement de quoi il retourne
 - faire de Pierre un apporteur d'affaire permettant de financer - sans impact pour vous - le projet Pierre. Merci de votre soutien !
+
+## Signature électronique
+
+### Prestataire
+
+Le courrier postal simple, `LRAR`, `LRE AR24` et `ERE` sont proposés via le Groupe `La Poste`. `La Poste` (et ses filiales à 100 % `Docaposte` et `Maileva`) constitue un acteur français de tout autre dimension. `Docaposte` compte 6 500 collaborateurs, plus de 50 000 clients, 61 sites en France et 878 M€ de chiffre d’affaires en 2025. `Maileva`, sa plateforme d’échanges documentaires, représente à elle seule 62,6 M€ de CA en 2024 et s’appuie notamment sur des infrastructures et données hébergées en France.

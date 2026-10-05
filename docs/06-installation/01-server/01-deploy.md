@@ -1,6 +1,20 @@
-# Comment déployer PIERRE ?
+# Héberger & déployer PIERRE
 
-## Prérequis
+## Faire héberger PIERRE (le plus simple)
+
+Si vous ne souhaitez pas gérer l'infrastructure, le projet PIERRE propose une **offre d'hébergement managé** :
+
+- Déploiement et paramétrage clé en main sur serveur dédié
+- Mises à jour automatiques (dernière version en permanence)
+- Suivi et monitoring inclus
+- Hébergement chez l'hébergeur de votre choix
+- Aucune compétence technique requise côté bailleur
+
+Adresser un email à charnould@pierre-ia.org pour en savoir plus.
+
+## Héberger PIERRE (self-hosting)
+
+### Prérequis
 
 Avant de déployer PIERRE, vérifier que vous disposez de :
 
@@ -18,40 +32,6 @@ Avant de déployer PIERRE, vérifier que vous disposez de :
 
 > [!IMPORTANT]
 > Une seule instance de PIERRE est déployable par serveur.
-
-## Faire héberger PIERRE (le plus simple)
-
-Si vous ne souhaitez pas gérer l'infrastructure, le projet PIERRE propose une **offre d'hébergement managé** :
-
-- Déploiement et paramétrage clé en main sur serveur dédié
-- Mises à jour automatiques (dernière version en permanence)
-- Suivi et monitoring inclus
-- Hébergement chez l'hébergeur de votre choix
-- Aucune compétence technique requise côté bailleur
-
-Adresser un email à charnould@pierre-ia.org pour en savoir plus.
-
-## Héberger PIERRE (self-hosting)
-
-### Faire fonctionner PIERRE en local en 5 minutes
-
-Les instructions ci-après sont valables sous **macOS** et **Windows** (via WSL — [sous-système Windows pour Linux](https://learn.microsoft.com/fr-fr/windows/wsl/install)).
-
-1. Installer `Bun` (≥ `1.4.x`) et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
-2. Installer `SQLite3` et vérifier sa bonne installation ([instructions](https://www.sqlite.org/download.html)).
-3. Installer `smol machines` (micro-VM isolées) et vérifier sa bonne installation ([instructions](https://smolmachines.com/)).
-4. Forker/cloner le présent dépôt.
-5. Lancer `bun install` dans votre terminal pour installer les dépendances.
-6. Renommer le fichier `.env.example` en `.env` et le compléter, notamment `AUTH_PASSWORD`.
-7. Lancer `bun dev:server` pour démarrer PIERRE. Le classement demande un second terminal : `bun run server/carl.ts`, et le modèle dans `server/models/carl` (le zip `model.zip` de la dernière release `CARL-*`).
-8. PIERRE est accessible à `http://localhost:3000`.
-9. [Télécharger la dernière version](https://github.com/charnould/pierre/releases) de l'application (`.dmg ` ou `.exe`), l'installer, la lancer et enfin saisir :
-
-- serveur : `http://localhost:3000`
-- Email : `admin@pierre-ia.org`
-- Mot de passe : la valeur de `AUTH_PASSWORD` dans `.env`
-
-10. Et voilà, PIERRE fonctionne !
 
 ### Déployer PIERRE sur un serveur
 
@@ -103,7 +83,7 @@ La commande écrit une copie cohérente pendant que le serveur tourne. Chaque sa
 Ouvrir `pierre` et choisir « Mettre à jour ». La base, `files/`, `knowledge/`, `uploads/` et `backups/` restent en place.
 w
 
-## Déploiement
+### Déploiement
 
 Sur un serveur, PIERRE est un exécutable. [Caddy](https://caddyserver.com) termine le TLS et transmet vers `127.0.0.1:3000`, sans bufferiser le flux NDJSON. Les temps de lecture, d'écriture et d'en-têtes sont de 30 minutes, le temps d'une réponse longue.
 
@@ -123,3 +103,26 @@ Navigateur                          VPS
 `carl` est le même exécutable, lancé avec l'argument `carl`. Il charge le modèle et ne fait que classer. La base, les fichiers et l'image smolVM vivent dans `/var/lib/pierre` : remplacer l'exécutable ne les touche pas.
 
 L'installation, la mise à jour, la sauvegarde et la suppression sont décrites dans [Déployer](01-deploy.md).
+
+## Faire fonctionner PIERRE en local
+
+> Utile pour améliorer le code ou contribuer au projet.
+
+Les instructions ci-après sont valables pour **macOS** ; elles doivent être compatible avec **Windows** via [`WSL`](https://learn.microsoft.com/fr-fr/windows/wsl/install).
+
+1. Installer `Bun` (≥ `1.4.x`) et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
+2. Installer `SQLite3` et vérifier sa bonne installation ([instructions](https://www.sqlite.org/download.html)).
+3. Installer `smol` (microVM isolées) et vérifier sa bonne installation ([instructions](https://smolmachines.com/)).
+4. Forker/cloner le présent dépôt.
+5. Lancer `bun install` dans votre terminal pour installer les dépendances.
+6. Renommer le fichier `.env.example` en `.env` et le compléter.
+7. Dans votre terminal, lancer `bun dev:server` pour démarrer PIERRE Serveur (`http://localhost:3000` affiche une icône de verrou).
+8. Dans un deuxième terminal, lancer `bun dev:carl` pour démarrer [CARL](docs/03-core-models-hlm/CARL.md). S'il manque, la dernière release du modèle (`CARL-x.y.z`) est automatiquement téléchargée depuis [GitHub](https://github.com/charnould/pierre/releases).
+9. Dans un troisième terminal, lancer `bun dev:desktop` pour monter l'application desktop (elle se lance automatiquement).
+10. Renseigner dans l'application :
+
+- serveur : `http://localhost:3000`
+- Email : `admin@pierre-ia.org`
+- Mot de passe : la valeur de `AUTH_PASSWORD` dans `.env`
+
+11. Et voilà, PIERRE fonctionne — ne reste plus qu'à [le paramétrer](docs/05-user-manual) !

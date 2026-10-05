@@ -781,7 +781,7 @@ green     #859900
               const payload = await reponse.json().catch(() => null)
               if (!reponse.ok) {
                 if (reponse.status === 503) {
-                  montrerErreur('Les poids ne sont pas installés. Depuis models : bun fetch.')
+                  montrerErreur('Les poids ne sont pas installés.')
                 } else if (!payload) {
                   montrerErreur('Le serveur a répondu sans JSON.')
                 } else {
