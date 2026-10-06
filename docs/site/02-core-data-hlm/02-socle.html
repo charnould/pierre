@@ -1,194 +1,186 @@
 <!doctype html>
 <html lang="fr">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Socle normatif · PIERRE</title>
-    <link rel="icon" href="../../assets/favicon.ico" />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Knewave&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap"
-    />
-    <style>
-      html,
-      body {
-        margin: 0;
-      }
-      body {
-        background: #fff;
-      }
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Socle normatif · PIERRE</title>
+  <link rel="icon" href="../../assets/favicon.ico" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Knewave&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" />
+  <style>
+    html, body { margin: 0; }
+    body { background: #fff; }
+    .article {
+      box-sizing: border-box;
+      max-width: 850px;
+      margin: 0;
+      padding: 2rem 2rem 3rem 4rem;
+      font-family: Merriweather, Georgia, serif;
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 24px;
+      letter-spacing: 0;
+      color: rgb(17, 17, 17);
+      text-align: left;
+      -webkit-font-smoothing: antialiased;
+    }
+    @media (max-width: 39.99rem) {
       .article {
-        box-sizing: border-box;
-        max-width: 850px;
-        margin: 0;
-        padding: 2rem 2rem 3rem 4rem;
-        font-family: Merriweather, Georgia, serif;
-        font-size: 16px;
-        font-weight: 400;
-        line-height: 24px;
-        letter-spacing: 0;
-        color: rgb(17, 17, 17);
-        text-align: left;
-        -webkit-font-smoothing: antialiased;
+        padding: 1.25rem 1.25rem 2rem;
       }
-      @media (max-width: 39.99rem) {
-        .article {
-          padding: 1.25rem 1.25rem 2rem;
-        }
-      }
-      .article h1,
-      .article h2,
-      .article h3,
-      .article h4,
-      .article h5,
-      .article h6 {
-        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-        font-weight: 700;
-        letter-spacing: 0;
-        color: rgb(17, 17, 17);
-        text-wrap: balance;
-        -webkit-font-smoothing: antialiased;
-      }
-      .article h1 {
-        font-size: 36px;
-        line-height: 40.32px;
-        margin: 0 0 16px;
-      }
-      .article h2 {
-        font-size: 36px;
-        line-height: 40.32px;
-        margin: 80px 0 40px;
-      }
-      .article h3 {
-        font-size: 24px;
-        line-height: 28px;
-        margin: 40px 0 20px;
-      }
-      .article p {
-        margin: 0 0 16px;
-        text-wrap: pretty;
-      }
-      .article ul,
-      .article ol {
-        margin: 0 0 16px;
-        padding-inline-start: 1.5em;
-      }
-      .article ul {
-        list-style-type: disc;
-      }
-      .article ol {
-        list-style-type: decimal;
-      }
-      .article li {
-        display: list-item;
-        margin: 0 0 8px;
-        padding-inline-start: 0.25em;
-      }
-      .article li:last-child {
-        margin-bottom: 0;
-      }
-      .article ul ul {
-        list-style-type: circle;
-        margin: 8px 0 0;
-      }
-      .article a {
-        color: #0000ee;
-        text-underline-offset: 0.15em;
-      }
-      .article a:hover {
-        text-decoration-thickness: 2px;
-      }
-      .article strong {
-        font-weight: 600;
-      }
-      .article pre:not(.cadre) {
-        padding: 1em;
-      }
-      .article :not(pre) > code {
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 0.875em;
-      }
+    }
+    .article h1,
+    .article h2,
+    .article h3,
+    .article h4,
+    .article h5,
+    .article h6 {
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-weight: 700;
+      letter-spacing: 0;
+      color: rgb(17, 17, 17);
+      text-wrap: balance;
+      -webkit-font-smoothing: antialiased;
+    }
+    .article h1 {
+      font-size: 36px;
+      line-height: 40.32px;
+      margin: 0 0 16px;
+    }
+    .article h2 {
+      font-size: 36px;
+      line-height: 40.32px;
+      margin: 80px 0 40px;
+    }
+    .article h3 {
+      font-size: 24px;
+      line-height: 28px;
+      margin: 40px 0 20px;
+    }
+    .article p {
+      margin: 0 0 16px;
+      text-wrap: pretty;
+    }
+    .article ul,
+    .article ol {
+      margin: 0 0 16px;
+      padding-inline-start: 1.5em;
+    }
+    .article ul {
+      list-style-type: disc;
+    }
+    .article ol {
+      list-style-type: decimal;
+    }
+    .article li {
+      display: list-item;
+      margin: 0 0 8px;
+      padding-inline-start: 0.25em;
+    }
+    .article li:last-child {
+      margin-bottom: 0;
+    }
+    .article ul ul {
+      list-style-type: circle;
+      margin: 8px 0 0;
+    }
+    .article a {
+      color: #0000ee;
+      text-underline-offset: 0.15em;
+    }
+    .article a:hover {
+      text-decoration-thickness: 2px;
+    }
+    .article strong {
+      font-weight: 600;
+    }
+    .article pre:not(.cadre) {
+      padding: 1em;
+    }
+    .article :not(pre) > code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.875em;
+    }
+    .article p:has(> .shot) {
+      --shot-gap: 0.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--shot-gap);
+      justify-content: flex-start;
+      width: min(calc(32rem * 3 + var(--shot-gap) * 2), calc(100vw - 4rem));
+      max-width: none;
+      margin-block-start: 30px;
+      margin-inline: 0;
+    }
+    @media (max-width: 39.99rem) {
       .article p:has(> .shot) {
-        --shot-gap: 0.5rem;
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--shot-gap);
-        justify-content: flex-start;
-        width: min(calc(32rem * 3 + var(--shot-gap) * 2), calc(100vw - 4rem));
-        max-width: none;
-        margin-block-start: 30px;
-        margin-inline: 0;
+        width: calc(100vw - 2.5rem);
       }
-      @media (max-width: 39.99rem) {
-        .article p:has(> .shot) {
-          width: calc(100vw - 2.5rem);
-        }
-      }
+    }
+    .article .shot {
+      position: relative;
+      isolation: isolate;
+      overflow: visible;
+      flex: 0 1 100%;
+      width: 100%;
+      max-width: 100%;
+    }
+    @media (min-width: 40rem) {
       .article .shot {
-        position: relative;
-        isolation: isolate;
-        overflow: visible;
-        flex: 0 1 100%;
-        width: 100%;
-        max-width: 100%;
+        flex: 0 1 calc((100% - var(--shot-gap) * 2) / 3);
+        width: calc((100% - var(--shot-gap) * 2) / 3);
+        max-width: calc((100% - var(--shot-gap) * 2) / 3);
       }
-      @media (min-width: 40rem) {
-        .article .shot {
-          flex: 0 1 calc((100% - var(--shot-gap) * 2) / 3);
-          width: calc((100% - var(--shot-gap) * 2) / 3);
-          max-width: calc((100% - var(--shot-gap) * 2) / 3);
-        }
-        .article p:has(> .shot:only-child) .shot:has(img[data-zoomable]),
-        .article p:has(> .shot:nth-child(even):last-child) .shot:has(img[data-zoomable]) {
-          flex-basis: calc((100% - var(--shot-gap)) / 2);
-          width: calc((100% - var(--shot-gap)) / 2);
-          max-width: calc((100% - var(--shot-gap)) / 2);
-        }
-        .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) {
-          flex-basis: 90%;
-          width: 90%;
-          max-width: 90%;
-        }
+      .article p:has(> .shot:only-child) .shot:has(img[data-zoomable]),
+      .article p:has(> .shot:nth-child(even):last-child) .shot:has(img[data-zoomable]) {
+        flex-basis: calc((100% - var(--shot-gap)) / 2);
+        width: calc((100% - var(--shot-gap)) / 2);
+        max-width: calc((100% - var(--shot-gap)) / 2);
       }
-      .article .shot img {
-        display: block;
-        width: 100%;
-        margin: 0;
-        transform: translateX(-4.01%);
+      .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) {
+        flex-basis: 90%;
+        width: 90%;
+        max-width: 90%;
       }
-      .article .shot img[data-zoomable] {
-        cursor: zoom-in;
-      }
-      .article .shot-title {
-        position: absolute;
-        top: 0.45rem;
-        left: -0.65rem;
-        z-index: 1;
-        max-width: calc(100% - 1rem);
-        padding: 0.15rem 0.55rem 0.08rem;
-        background: #ffe500;
-        color: #111;
-        font-family: Knewave, cursive;
-        font-size: 1.05rem;
-        font-weight: 400;
-        font-synthesis: none;
-        letter-spacing: 0.01em;
-        line-height: 1.15;
-        text-transform: uppercase;
-        text-wrap: balance;
-        transform: rotate(-2deg);
-        transform-origin: left center;
-        pointer-events: none;
-      }
-      .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) .shot-title {
-        top: 1.5rem;
-        left: -0.65rem;
-      }
-      body.is-zooming .shot-title {
-        opacity: 0;
-      }
-
-      /*
+    }
+    .article .shot img {
+      display: block;
+      width: 100%;
+      margin: 0;
+      transform: translateX(-4.01%);
+    }
+    .article .shot img[data-zoomable] {
+      cursor: zoom-in;
+    }
+    .article .shot-title {
+      position: absolute;
+      top: 0.45rem;
+      left: -0.65rem;
+      z-index: 1;
+      max-width: calc(100% - 1rem);
+      padding: 0.15rem 0.55rem 0.08rem;
+      background: #ffe500;
+      color: #111;
+      font-family: Knewave, cursive;
+      font-size: 1.05rem;
+      font-weight: 400;
+      font-synthesis: none;
+      letter-spacing: 0.01em;
+      line-height: 1.15;
+      text-transform: uppercase;
+      text-wrap: balance;
+      transform: rotate(-2deg);
+      transform-origin: left center;
+      pointer-events: none;
+    }
+    .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) .shot-title {
+      top: 1.5rem;
+      left: -0.65rem;
+    }
+    body.is-zooming .shot-title {
+      opacity: 0;
+    }
+    
+    /*
  Solarized Color Schemes originally by Ethan Schoonover
  http://ethanschoonover.com/solarized
 
@@ -197,7 +189,7 @@
  Twitter Handle: https://twitter.com/allonsykraken)
 */
 
-      /*
+/*
 SOLARIZED HEX
 --------- -------
 base03    #002b36
@@ -218,317 +210,190 @@ cyan      #2aa198
 green     #859900
 */
 
-      code[class*='language-'],
-      pre[class*='language-'] {
-        color: #657b83; /* base00 */
-        font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-        font-size: 1em;
-        text-align: left;
-        white-space: pre;
-        word-spacing: normal;
-        word-break: normal;
-        word-wrap: normal;
+code[class*="language-"],
+pre[class*="language-"] {
+	color: #657b83; /* base00 */
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	font-size: 1em;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
 
-        line-height: 1.5;
+	line-height: 1.5;
 
-        -moz-tab-size: 4;
-        -o-tab-size: 4;
-        tab-size: 4;
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
 
-        -webkit-hyphens: none;
-        -moz-hyphens: none;
-        -ms-hyphens: none;
-        hyphens: none;
-      }
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
 
-      pre[class*='language-']::-moz-selection,
-      pre[class*='language-'] ::-moz-selection,
-      code[class*='language-']::-moz-selection,
-      code[class*='language-'] ::-moz-selection {
-        background: #073642; /* base02 */
-      }
+pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
+code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
+	background: #073642; /* base02 */
+}
 
-      pre[class*='language-']::selection,
-      pre[class*='language-'] ::selection,
-      code[class*='language-']::selection,
-      code[class*='language-'] ::selection {
-        background: #073642; /* base02 */
-      }
+pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
+code[class*="language-"]::selection, code[class*="language-"] ::selection {
+	background: #073642; /* base02 */
+}
 
-      /* Code blocks */
-      pre[class*='language-'] {
-        padding: 1em;
-        margin: 0.5em 0;
-        overflow: auto;
-        border-radius: 0.3em;
-      }
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+	border-radius: 0.3em;
+}
 
-      :not(pre) > code[class*='language-'],
-      pre[class*='language-'] {
-        background-color: #fdf6e3; /* base3 */
-      }
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background-color: #fdf6e3; /* base3 */
+}
 
-      /* Inline code */
-      :not(pre) > code[class*='language-'] {
-        padding: 0.1em;
-        border-radius: 0.3em;
-      }
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+}
 
-      .token.comment,
-      .token.prolog,
-      .token.doctype,
-      .token.cdata {
-        color: #93a1a1; /* base1 */
-      }
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: #93a1a1; /* base1 */
+}
 
-      .token.punctuation {
-        color: #586e75; /* base01 */
-      }
+.token.punctuation {
+	color: #586e75; /* base01 */
+}
 
-      .token.namespace {
-        opacity: 0.7;
-      }
+.token.namespace {
+	opacity: .7;
+}
 
-      .token.property,
-      .token.tag,
-      .token.boolean,
-      .token.number,
-      .token.constant,
-      .token.symbol,
-      .token.deleted {
-        color: #268bd2; /* blue */
-      }
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #268bd2; /* blue */
+}
 
-      .token.selector,
-      .token.attr-name,
-      .token.string,
-      .token.char,
-      .token.builtin,
-      .token.url,
-      .token.inserted {
-        color: #2aa198; /* cyan */
-      }
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.url,
+.token.inserted {
+	color: #2aa198; /* cyan */
+}
 
-      .token.entity {
-        color: #657b83; /* base00 */
-        background: #eee8d5; /* base2 */
-      }
+.token.entity {
+	color: #657b83; /* base00 */
+	background: #eee8d5; /* base2 */
+}
 
-      .token.atrule,
-      .token.attr-value,
-      .token.keyword {
-        color: #859900; /* green */
-      }
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+	color: #859900; /* green */
+}
 
-      .token.function,
-      .token.class-name {
-        color: #b58900; /* yellow */
-      }
+.token.function,
+.token.class-name {
+	color: #b58900; /* yellow */
+}
 
-      .token.regex,
-      .token.important,
-      .token.variable {
-        color: #cb4b16; /* orange */
-      }
+.token.regex,
+.token.important,
+.token.variable {
+	color: #cb4b16; /* orange */
+}
 
-      .token.important,
-      .token.bold {
-        font-weight: bold;
-      }
-      .token.italic {
-        font-style: italic;
-      }
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
 
-      .token.entity {
-        cursor: help;
-      }
-    </style>
-  </head>
-  <body>
-    <article class="article">
-      <h5 id="pierreindexmd--core-data-hlmindexmd--socle-normatif">
-        <a href="../../index.html">PIERRE</a> ∕
-        <a href="../../02-core-data-hlm/index.html">CORE DATA HLM</a> ∕ SOCLE NORMATIF
-      </h5>
-      <h1 id="socle-normatif">Socle normatif</h1>
-      <p>
-        Le <strong>socle normatif partagé</strong> est l’ensemble des colonnes
-        <strong>communes et obligatoires</strong> répétées dans chaque export des cinq
-        fichiers-sources. C’est ce socle qui rend les jointures inter-fichiers prévisibles pour
-        l’agent, tout en permettant des agrégations sans jointure excessive.
-      </p>
-      <p>
-        Ce chapitre décrit le <strong>catalogue</strong> de ces colonnes partagées. Pour les
-        conventions transverses (format d’entrée, dates, règles de nommage, snapshot…), se référer
-        aux <a href="../../02-core-data-hlm/01-conventions.html">conventions</a>.
-      </p>
-      <h2 id="snapshot-temporel">Snapshot temporel</h2>
-      <div class="typeset-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Clé</th>
-              <th>Rôle ou définition</th>
-              <th>Cardinalité</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>date_extraction</code></td>
-              <td>Date de l’export ; même valeur sur toutes les lignes d’un export quotidien</td>
-              <td>N/A</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <p>
-        <strong>Modèle snapshot</strong> — Chaque export est une <strong>photographie</strong> datée
-        par <code>date_extraction</code>. L'historique des changements (turnover locataires, baux
-        successifs, impayés) se reconstitue par analyse chronologique des fichiers complets
-        successifs, pas par versionnage ou historique de changements ligne par ligne.
-      </p>
-      <h2 id="hiérarchie-spatiale-et-organisationnelle">
-        Hiérarchie spatiale et organisationnelle
-      </h2>
-      <p>
-        Le patrimoine se décline en clés <code>id_*</code> hiérarchiques,
-        <strong>répétées sur chaque export</strong> (dénormalisées) — chaque fichier porte
-        l'intégralité de la hiérarchie. Valeur <code>null</code> si un niveau n'existe pas dans
-        l'organigramme du bailleur.
-      </p>
-      <p>
-        La numérotation des niveaux organisationnels démarre à <code>_6</code> : elle se situe
-        <strong>au-dessus</strong> des cinq niveaux spatiaux (du lot au site) et suit les
-        conventions relatives à <code>id_*</code> et à la segmentation hiérarchique (le chiffre le
-        plus élevé désigne le niveau le plus agrégé).
-      </p>
-      <div class="typeset-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Clé</th>
-              <th>Rôle ou définition</th>
-              <th>Cardinalité</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>id_rpls</code></td>
-              <td>Identifiant RPLS du logement lorsque applicable (<code>null</code> hors RPLS)</td>
-              <td>—</td>
-            </tr>
-            <tr>
-              <td><code>id_lot</code></td>
-              <td>Unité de gestion la plus fine (logement, garage, commerce…)</td>
-              <td>—</td>
-            </tr>
-            <tr>
-              <td><code>id_etage</code></td>
-              <td>Niveau dans le bâtiment</td>
-              <td>1 Étage → N Lots</td>
-            </tr>
-            <tr>
-              <td><code>id_entree</code></td>
-              <td>Cage d’escalier, hall</td>
-              <td>1 Entrée → N Étages</td>
-            </tr>
-            <tr>
-              <td><code>id_batiment</code></td>
-              <td>Immeuble, résidence</td>
-              <td>1 Bâtiment → N Entrées</td>
-            </tr>
-            <tr>
-              <td><code>id_site</code></td>
-              <td>Ensemble immobilier, groupe de résidences</td>
-              <td>1 Site → N Bâtiments</td>
-            </tr>
-            <tr>
-              <td><code>id_organisation_6</code></td>
-              <td>Secteur ou premier niveau organisationnel</td>
-              <td>1 <code>id_organisation_6</code> → N Sites</td>
-            </tr>
-            <tr>
-              <td><code>id_organisation_7</code></td>
-              <td>Agence ou niveau intermédiaire</td>
-              <td>1 <code>id_organisation_7</code> → N <code>id_organisation_6</code></td>
-            </tr>
-            <tr>
-              <td><code>id_organisation_8</code></td>
-              <td>Filiale ou niveau intermédiaire</td>
-              <td>1 <code>id_organisation_8</code> → N <code>id_organisation_7</code></td>
-            </tr>
-            <tr>
-              <td><code>id_organisation_9</code></td>
-              <td>Groupe ou niveau le plus agrégé</td>
-              <td>1 <code>id_organisation_9</code> → N <code>id_organisation_8</code></td>
-            </tr>
-            <tr>
-              <td><code>code_postal</code></td>
-              <td>Code postal du lot (<strong>pas</strong> le code INSEE)</td>
-              <td>1 <code>code_postal</code> → N entités précédentes</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <blockquote>
-        <p><strong>Note</strong></p>
-        <p>
-          <strong>Localisation avec PIERRE</strong> — Lorsque les exports alimentent PIERRE, ne
-          <strong>JAMAIS</strong> exposer la commune, le département, la région, le zonage ABC/123,
-          les coordonnées GPS, etc. — seuls <code>code_postal</code> (socle) et
-          <code>id_rpls</code> (si applicable) suffisent. Dès qu'une colonne
-          <code>code_postal</code> est présente, PIERRE importe à côté une table de référence
-          <code>communes_par_code_postal</code> (code INSEE, commune, EPCI, département, région,
-          zonages ABC et 123). Ajouter commune / département / région / zonage dans l'export
-          créerait une redondance avec des valeurs possiblement incohérentes.
-          <strong>Hors PIERRE</strong>, les bailleurs sont libres d'ajouter toutes données/colonnes
-          de localisation supplémentaires.
-        </p>
-      </blockquote>
-      <h2 id="entités-locatives">Entités locatives</h2>
-      <p>
-        Au sommet de la hiérarchie : les clés qui portent l'état actuel du locataire et du client.
-      </p>
-      <div class="typeset-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Clé</th>
-              <th>Rôle ou définition</th>
-              <th>Cardinalité</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>id_locataire</code></td>
-              <td>
-                Dossier de facturation du locataire <strong>en place</strong> ; <code>null</code> si
-                lot vacant
-              </td>
-              <td>—</td>
-            </tr>
-            <tr>
-              <td><code>id_client</code></td>
-              <td>
-                Identifiant unique de la personne physique ou morale ; <code>null</code> si lot
-                vacant
-              </td>
-              <td>1 Client → N <code>id_locataire</code></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div style="display: flex; justify-content: space-between; margin-top: 50px">
-        <p>←<a href="../../02-core-data-hlm/01-conventions.html">Convention</a></p>
-        <p><a href="../../02-core-data-hlm/03-lots-locatifs.html">core.lots_locatifs.csv</a>→</p>
-      </div>
-    </article>
+.token.entity {
+	cursor: help;
+}
 
-    <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
-    <script>
-      const zoom = mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
-      zoom.on('open', () => document.body.classList.add('is-zooming'))
-      zoom.on('closed', () => document.body.classList.remove('is-zooming'))
-    </script>
-  </body>
+  </style>
+</head>
+<body>
+  <article class="article">
+    <h5 id="pierreindexmd--core-data-hlmindexmd--socle-normatif"><a href="../../index.html">PIERRE</a> ∕ <a href="../../02-core-data-hlm/index.html">CORE DATA HLM</a> ∕ SOCLE NORMATIF</h5>
+<h1 id="socle-normatif">Socle normatif</h1>
+<p>Le <strong>socle normatif partagé</strong> est l’ensemble des colonnes <strong>communes et obligatoires</strong> répétées dans chaque export des cinq fichiers-sources. C’est ce socle qui rend les jointures inter-fichiers prévisibles pour l’agent, tout en permettant des agrégations sans jointure excessive.</p>
+<p>Ce chapitre décrit le <strong>catalogue</strong> de ces colonnes partagées. Pour les conventions transverses (format d’entrée, dates, règles de nommage, snapshot…), se référer aux <a href="../../02-core-data-hlm/01-conventions.html">conventions</a>.</p>
+<h2 id="snapshot-temporel">Snapshot temporel</h2>
+<div class="typeset-scroll"><table>
+<thead>
+<tr><th>Clé</th><th>Rôle ou définition</th><th>Cardinalité</th></tr>
+</thead>
+<tbody>
+<tr><td><code>date_extraction</code></td><td>Date de l’export ; même valeur sur toutes les lignes d’un export quotidien</td><td>N/A</td></tr>
+</tbody>
+</table></div>
+<p><strong>Modèle snapshot</strong> — Chaque export est une <strong>photographie</strong> datée par <code>date_extraction</code>. L'historique des changements (turnover locataires, baux successifs, impayés) se reconstitue par analyse chronologique des fichiers complets successifs, pas par versionnage ou historique de changements ligne par ligne.</p>
+<h2 id="hiérarchie-spatiale-et-organisationnelle">Hiérarchie spatiale et organisationnelle</h2>
+<p>Le patrimoine se décline en clés <code>id_*</code> hiérarchiques, <strong>répétées sur chaque export</strong> (dénormalisées) — chaque fichier porte l'intégralité de la hiérarchie. Valeur <code>null</code> si un niveau n'existe pas dans l'organigramme du bailleur.</p>
+<p>La numérotation des niveaux organisationnels démarre à <code>_6</code> : elle se situe <strong>au-dessus</strong> des cinq niveaux spatiaux (du lot au site) et suit les conventions relatives à <code>id_*</code> et à la segmentation hiérarchique (le chiffre le plus élevé désigne le niveau le plus agrégé).</p>
+<div class="typeset-scroll"><table>
+<thead>
+<tr><th>Clé</th><th>Rôle ou définition</th><th>Cardinalité</th></tr>
+</thead>
+<tbody>
+<tr><td><code>id_rpls</code></td><td>Identifiant RPLS du logement lorsque applicable (<code>null</code> hors RPLS)</td><td>—</td></tr>
+<tr><td><code>id_lot</code></td><td>Unité de gestion la plus fine (logement, garage, commerce…)</td><td>—</td></tr>
+<tr><td><code>id_etage</code></td><td>Niveau dans le bâtiment</td><td>1 Étage → N Lots</td></tr>
+<tr><td><code>id_entree</code></td><td>Cage d’escalier, hall</td><td>1 Entrée → N Étages</td></tr>
+<tr><td><code>id_batiment</code></td><td>Immeuble, résidence</td><td>1 Bâtiment → N Entrées</td></tr>
+<tr><td><code>id_site</code></td><td>Ensemble immobilier, groupe de résidences</td><td>1 Site → N Bâtiments</td></tr>
+<tr><td><code>id_organisation_6</code></td><td>Secteur ou premier niveau organisationnel</td><td>1 <code>id_organisation_6</code> → N Sites</td></tr>
+<tr><td><code>id_organisation_7</code></td><td>Agence ou niveau intermédiaire</td><td>1 <code>id_organisation_7</code> → N <code>id_organisation_6</code></td></tr>
+<tr><td><code>id_organisation_8</code></td><td>Filiale ou niveau intermédiaire</td><td>1 <code>id_organisation_8</code> → N <code>id_organisation_7</code></td></tr>
+<tr><td><code>id_organisation_9</code></td><td>Groupe ou niveau le plus agrégé</td><td>1 <code>id_organisation_9</code> → N <code>id_organisation_8</code></td></tr>
+<tr><td><code>code_postal</code></td><td>Code postal du lot (<strong>pas</strong> le code INSEE)</td><td>1 <code>code_postal</code> → N entités précédentes</td></tr>
+</tbody>
+</table></div>
+<blockquote>
+<p><strong>Note</strong></p>
+<p><strong>Localisation avec PIERRE</strong> — Lorsque les exports alimentent PIERRE, ne <strong>JAMAIS</strong> exposer la commune, le département, la région, le zonage ABC/123, les coordonnées GPS, etc. — seuls <code>code_postal</code> (socle) et <code>id_rpls</code> (si applicable) suffisent. Dès qu'une colonne <code>code_postal</code> est présente, PIERRE importe à côté une table de référence <code>communes_par_code_postal</code> (code INSEE, commune, EPCI, département, région, zonages ABC et 123). Ajouter commune / département / région / zonage dans l'export créerait une redondance avec des valeurs possiblement incohérentes. <strong>Hors PIERRE</strong>, les bailleurs sont libres d'ajouter toutes données/colonnes de localisation supplémentaires.</p>
+</blockquote>
+<h2 id="entités-locatives">Entités locatives</h2>
+<p>Au sommet de la hiérarchie : les clés qui portent l'état actuel du locataire et du client.</p>
+<div class="typeset-scroll"><table>
+<thead>
+<tr><th>Clé</th><th>Rôle ou définition</th><th>Cardinalité</th></tr>
+</thead>
+<tbody>
+<tr><td><code>id_locataire</code></td><td>Dossier de facturation du locataire <strong>en place</strong> ; <code>null</code> si lot vacant</td><td>—</td></tr>
+<tr><td><code>id_client</code></td><td>Identifiant unique de la personne physique ou morale ; <code>null</code> si lot vacant</td><td>1 Client → N <code>id_locataire</code></td></tr>
+</tbody>
+</table></div>
+<div style="display: flex; justify-content: space-between; margin-top:50px"><p>←<a href="../../02-core-data-hlm/01-conventions.html">Convention</a></p><p><a href="../../02-core-data-hlm/03-lots-locatifs.html">core.lots_locatifs.csv</a>→</p></div>
+
+  </article>
+  
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+  <script>
+    const zoom = mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
+    zoom.on('open', () => document.body.classList.add('is-zooming'))
+    zoom.on('closed', () => document.body.classList.remove('is-zooming'))
+  </script>
+</body>
 </html>

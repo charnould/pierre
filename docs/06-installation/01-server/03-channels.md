@@ -68,13 +68,26 @@ Compléter `.env` (voir `.env.example`) :
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `CM_PRODUCT_TOKEN`  | Product token UUID (avec tirets), dans _Channels → API Access and Settings → Authentication → Product Tokens_. Ce n’est ni l’Account ID, ni l’API Key. |
 | `CM_FROM`           | Nom d’expéditeur RCS, identique à celui de l’agent enregistré chez `CM.com` (souvent 11 caractères alphanumériques au plus).                           |
-| `CM_WEBHOOK_SECRET` | Secret partagé. Le coller dans `.env` et dans la console `CM.com` (étape suivante).                                                                    |
+| `CM_WEBHOOK_SECRET` | Secret partagé. Utiliser `AUTO` à l'installation pour le générer, puis récupérer sa valeur avec `pierre env`.                                          |
 
-Générer `CM_WEBHOOK_SECRET` avec :
+Pour une configuration manuelle hors de l'assistant, générer `CM_WEBHOOK_SECRET` avec :
 
 ```bash
 openssl rand -hex 16
 ```
+
+Sur un serveur déjà installé, exporter le bloc actuel, modifier les trois lignes CM puis le réappliquer :
+
+```bash
+pierre env > pierre.env
+# Modifier CM_PRODUCT_TOKEN, CM_FROM et CM_WEBHOOK_SECRET
+pierre configure < pierre.env
+rm -f pierre.env
+```
+
+Les dix variables doivent rester présentes. Pour désactiver CM.com, vider les trois valeurs. Pour changer le secret webhook, saisir une nouvelle valeur générée par `openssl rand -hex 16`, puis la recopier dans CM.com.
+
+PIERRE redémarre automatiquement après validation. Si la nouvelle configuration ne fonctionne pas, les valeurs précédentes sont restaurées.
 
 #### 3. Brancher les webhooks
 
