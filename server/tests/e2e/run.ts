@@ -29,7 +29,7 @@ let server: ReturnType<typeof Bun.spawn> | null = null
 try {
   if (!(await serverIsReady())) {
     server = Bun.spawn({
-      cmd: [process.execPath, '--env-file=../.env', 'run', 'start.ts'],
+      cmd: [process.execPath, '--env-file=../.env', 'run', 'serve.ts'],
       cwd: SERVER_ROOT,
       env: {
         ...process.env,

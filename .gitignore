@@ -11,6 +11,8 @@ server/temp/
 
 docs/node_modules/
 
+cli/dist/
+
 .env
 
 .cursor/

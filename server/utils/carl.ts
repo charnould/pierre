@@ -1,6 +1,6 @@
-import { SERVER_ROOT } from './paths'
+import { CARL_DIR } from './paths'
 
-export const CARL_DIR = `${SERVER_ROOT}/models/carl`
+export { CARL_DIR }
 export const SEQUENCE_LENGTH = 128
 
 export const HEADS = [

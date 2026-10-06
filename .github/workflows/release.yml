@@ -10,6 +10,7 @@ concurrency:
 
 jobs:
   release-windows:
+    if: ${{ !contains(github.event.release.tag_name, '-') && github.event.release.tag_name != 'microvm' }}
     runs-on: windows-latest
     permissions:
       contents: write
@@ -26,6 +27,10 @@ jobs:
         shell: bash
         run: |
           TAG="${{ github.event.release.tag_name }}"
+          if ! [[ "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Desktop release tag must be an exact semantic version"
+            exit 1
+          fi
           PKG_VERSION=$(node -p "require('./desktop/package.json').version")
           if [ "$TAG" != "$PKG_VERSION" ]; then
             echo "Release tag $TAG does not match desktop/package.json version $PKG_VERSION"
@@ -45,7 +50,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release view "${{ github.event.release.tag_name }}" --json isDraft | jq -e '.isDraft == false'
+          TAG="${{ github.event.release.tag_name }}"
+          gh release view "$TAG" --json isDraft | jq -e '.isDraft == false'
+          gh release edit "$TAG" --title "desktop-$TAG" --prerelease=false
 
       - uses: oven-sh/setup-bun@v2
         if: steps.check.outputs.desktop_changed == 'true'
@@ -78,3 +85,124 @@ jobs:
         run: |
           bun install --frozen-lockfile
           bun --filter "@pierre/desktop" publish -- --platform=darwin --arch=arm64
+
+  # The executable needs glibc 2.17 and libonnxruntime.so.1 needs 2.28,
+  # both older than Debian 12, so ubuntu-latest is enough.
+  # microvm is a fixed tag. carl-* carries the model, not a PIERRE version.
+  release-server:
+    if: ${{ startsWith(github.event.release.tag_name, 'server-') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Verify version
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="${TAG#server-}"
+          PKG=$(node -p "require('./server/package.json').version")
+          if [ "$VERSION" != "$PKG" ]; then
+            echo "Release tag $TAG does not match server/package.json version $PKG"
+            exit 1
+          fi
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Build the server executable
+        run: |
+          bun install --frozen-lockfile --filter @pierre/server
+          cd server
+          # oxfmt mentions optional Prettier plugins it never loads for Markdown.
+          stub() {
+            local name="$1"
+            local dir="../node_modules/$name"
+            mkdir -p "$dir"
+            printf '%s\n' '{"type":"module"}' > "$dir/package.json"
+            printf '%s\n' 'export default {}' > "$dir/index.js"
+          }
+          stub @prettier/plugin-oxc
+          stub @prettier/plugin-hermes
+          stub prettier-plugin-astro
+          stub prettier-plugin-marko
+          stub @zackad/prettier-plugin-twig
+          stub @prettier/plugin-pug
+          stub @shopify/prettier-plugin-liquid
+          bun build --compile --target=bun \
+            --no-compile-autoload-dotenv \
+            --asset ./assets \
+            --asset ./knowledge \
+            --asset ./utils/automations \
+            ./serve.ts --outfile ../pierre
+          find ../node_modules -path '*/napi-v6/linux/x64/libonnxruntime.so.1' -exec cp {} ../libonnxruntime.so.1 \;
+          test -s ../pierre
+          test -s ../libonnxruntime.so.1
+
+      - name: Verify server release bundle
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          test -s pierre
+          test -s libonnxruntime.so.1
+          test "$(./pierre --version)" = "$TAG"
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" \
+            pierre libonnxruntime.so.1 \
+            --clobber
+
+  release-cli:
+    if: ${{ startsWith(github.event.release.tag_name, 'cli-') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Verify version
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="${TAG#cli-}"
+          PKG=$(node -p "require('./cli/package.json').version")
+          if [ "$VERSION" != "$PKG" ]; then
+            echo "Release tag $TAG does not match cli/package.json version $PKG"
+            exit 1
+          fi
+          grep -q "TAG=$TAG" cli/scripts/install.sh
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Test and build the CLI
+        run: |
+          bun install --frozen-lockfile
+          bun --filter @pierre/cli typecheck
+          bun test cli/tests
+          mkdir -p cli/dist
+          bun build --compile --target=bun-linux-x64 --no-compile-autoload-dotenv \
+            cli/src/main.ts --outfile cli/dist/pierre-cli-linux-x64
+          cp cli/scripts/install.sh cli/dist/install.sh
+          chmod 755 cli/dist/pierre-cli-linux-x64 cli/dist/install.sh
+          VERSION=$(node -p "require('./cli/package.json').version")
+          test "$(./cli/dist/pierre-cli-linux-x64 --version)" = "cli-$VERSION"
+          cd cli/dist
+          sha256sum pierre-cli-linux-x64 install.sh > checksums.txt
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DESCRIPTION: Interface en ligne de commande (cli) pour l’installation, la configuration et la mise à jour de PIERRE (serveur)
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          gh release edit "$TAG" \
+            --title "$TAG" \
+            --notes "$DESCRIPTION" \
+            --prerelease=false
+          gh release upload "$TAG" \
+            cli/dist/pierre-cli-linux-x64 cli/dist/install.sh cli/dist/checksums.txt \
+            --clobber

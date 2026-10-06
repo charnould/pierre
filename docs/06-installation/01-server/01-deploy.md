@@ -40,7 +40,7 @@ Le DNS du nom choisi doit pointer vers le serveur, **sans proxy**. Les ports `80
 Connecté en root :
 
 ```bash
-curl -fsSL https://github.com/charnould/pierre/releases/download/CLI-0.9.1/install.sh | sh
+curl -fsSL https://github.com/charnould/pierre/releases/download/cli-0.9.4/install.sh | sh
 ```
 
 L'installation s'arrête tout de suite si la machine n'est pas `x86_64` ou si `/dev/kvm` est absent. Sinon elle demande de coller un bloc `dotenv` complet, terminé par `END` :
@@ -93,10 +93,10 @@ Le dossier `uploads/` est créé au premier envoi de pièce jointe ; il peut don
 
 `pierre` sans argument ouvre le tableau de bord. Il vérifie :
 
-- **RÉSEAU** : Caddy et l'adresse publique `https://HOST/up` ;
-- **PIERRE** : le service et son endpoint local ;
-- **CARL** : un véritable classement local ;
-- **LLM** : la connexion authentifiée à Anthropic ou OpenAI.
+- **réseau** : Caddy et l'adresse publique `https://HOST/up` ;
+- **serveur** : le service PIERRE et son endpoint local ;
+- **carl** : un véritable classement local ;
+- **llm** : la connexion authentifiée à Anthropic ou OpenAI.
 
 Il affiche aussi les versions installées et publiées ainsi que les liens du projet. Les flèches `↑/↓` déplacent la sélection, `Entrée` valide, `←` ou `Échap` revient en arrière et `q` quitte. Dans un script ou un pipe, `pierre` imprime le même état sans ouvrir l'interface et rend immédiatement la main.
 
@@ -109,7 +109,7 @@ pierre help
 | `pierre install`    | Installe PIERRE. Relancée, elle garde les secrets déjà en place. |
 | `pierre update`     | Met à jour le serveur PIERRE et sa bibliothèque ONNX.            |
 | `pierre update-cli` | Met à jour seulement le programme `pierre`.                      |
-| `pierre carl`       | Met à jour CARL (classification), puis redémarre le serveur.     |
+| `pierre carl`       | Met à jour carl (classification), puis redémarre le serveur.     |
 | `pierre restart`    | Redémarre PIERRE (serveur) et attend qu'il soit opérationnel.    |
 | `pierre backup`     | Sauvegarde les données et affiche la commande `scp`.             |
 | `pierre logs`       | Consulte en direct les journaux de PIERRE et Caddy.              |
@@ -124,11 +124,11 @@ pierre env > pierre.env
 pierre configure < pierre.env
 ```
 
-`pierre configure` exige le bloc complet. `HOST`, les variables LLM et CM.com sont modifiables sans retélécharger le serveur, CARL ou les micro-VM. `AUTH_PASSWORD`, `AUTH_SECRET` et `AUTH_BEARER` doivent rester identiques : le mot de passe est un secret de bootstrap et les deux secrets techniques ont leur propre cycle. La nouvelle configuration est testée avant publication ; en cas d'échec, l'environnement et Caddy précédents sont restaurés.
+`pierre configure` exige le bloc complet. `HOST`, les variables llm et CM.com sont modifiables sans retélécharger le serveur, carl ou les micro-VM. `AUTH_PASSWORD`, `AUTH_SECRET` et `AUTH_BEARER` doivent rester identiques : le mot de passe est un secret de bootstrap et les deux secrets techniques ont leur propre cycle. La nouvelle configuration est testée avant publication ; en cas d'échec, l'environnement et Caddy précédents sont restaurés.
 
-`pierre carl` ouvre la liste des versions publiées : les flèches choisissent, `Entrée` installe et `←` revient sans rien changer. `pierre carl CARL-1.2.0` installe cette version directement. Choisir la version déjà en place ne télécharge rien et ne redémarre pas.
+`pierre carl` ouvre la liste des versions publiées : les flèches choisissent, `Entrée` installe et `←` revient sans rien changer. `pierre carl carl-1.2.0` installe cette version directement. Choisir la version déjà en place ne télécharge rien et ne redémarre pas.
 
-Changer de version de CARL peut déplacer la taxonomie et les motifs : le même message sera qualifié autrement. Les réclamations déjà enregistrées gardent leur ancienne qualification. Les automatisations qui filtrent sur un motif sont à relire. Revenir à la version précédente se fait avec la même commande. La base n'est pas réécrite.
+Changer de version de carl peut déplacer la taxonomie et les motifs : le même message sera qualifié autrement. Les réclamations déjà enregistrées gardent leur ancienne qualification. Les automatisations qui filtrent sur un motif sont à relire. Revenir à la version précédente se fait avec la même commande. La base n'est pas réécrite.
 
 `pierre restart` est la commande après une modification de `/etc/pierre.env`. Elle ne touche ni Caddy ni la machine. Le premier classement qui suit recharge le modèle.
 
@@ -170,18 +170,18 @@ Depuis le tableau de bord, l'écran de sauvegarde indique le fichier créé, la 
 
 ### Mettre à jour
 
-Le tableau de bord vérifie les dernières versions publiées, séparément pour le serveur, le CLI et CARL. Lorsqu'une version plus récente du serveur existe, il affiche la version cible et remplace l'action du menu par `Mettre à jour PIERRE vers SERVER-x.y.z`. La mise à jour ne démarre qu'après confirmation.
+Le tableau de bord vérifie les dernières versions publiées, séparément pour le serveur, le cli et carl. Lorsqu'une version plus récente du serveur existe, il affiche la version cible et remplace l'action du menu par `Mettre à jour PIERRE vers server-x.y.z`. La mise à jour ne démarre qu'après confirmation.
 
 ```bash
 pierre update
 pierre update-cli
 ```
 
-`pierre update` télécharge le serveur et la bibliothèque ONNX depuis une même release stable `SERVER-x.y.z`. Les deux fichiers sont vérifiés avant toute modification. Le serveur est installé et testé ; s'il ne redémarre pas, la version précédente de ces deux fichiers est restaurée. Le CLI n'est pas modifié.
+`pierre update` télécharge le serveur et la bibliothèque ONNX depuis une même release stable `server-x.y.z`. Les deux fichiers sont vérifiés avant toute modification. Le serveur est installé et testé ; s'il ne redémarre pas, la version précédente de ces deux fichiers est restaurée. Le cli n'est pas modifié.
 
 `pierre update-cli` remplace seulement `/usr/local/bin/pierre`, après vérification de l'empreinte et de la version. Aucun service ni donnée n'est touché.
 
-La base, `files/`, `knowledge/`, `uploads/`, `backups/`, CARL et les micro-VM restent en place. CARL conserve son propre cycle de mise à jour avec `pierre carl`. Le CLI a son propre cycle, publié sous les tags `CLI-x.y.z`.
+La base, `files/`, `knowledge/`, `uploads/`, `backups/`, carl et les micro-VM restent en place. carl conserve son propre cycle de mise à jour avec `pierre carl`. Le cli a son propre cycle, publié sous les tags `cli-x.y.z`.
 
 ### Déploiement
 
@@ -196,11 +196,11 @@ Navigateur                          VPS
                                        v
                                     pierre  127.0.0.1:3000
                                        |-- SQLite   /var/lib/pierre
-                                       |-- CARL     en mémoire
+                                       |-- carl     en mémoire
                                        |-- smolvm   /dev/kvm
 ```
 
-CARL est chargé par le serveur au premier classement. Sans modèle, le site démarre et le classement répond 503.
+carl est chargé par le serveur au premier classement. Sans modèle, le site démarre et le classement répond 503.
 
 L'application Electron Desktop n'est pas installée sur le VPS. Le serveur contient le binaire PIERRE dans `/usr/local/lib/pierre`, sa bibliothèque ONNX et ses données. Le programme d'administration est distinct : `/usr/local/bin/pierre`. Les assets web nécessaires au serveur sont intégrés au binaire lors de la compilation.
 
@@ -217,7 +217,7 @@ Les instructions ci-après sont valables pour **macOS** ; elles doivent être co
 5. Lancer `bun install` dans votre terminal pour installer les dépendances.
 6. Renommer le fichier `.env.example` en `.env` et le compléter.
 7. Dans votre terminal, lancer `bun dev:server` pour démarrer PIERRE Serveur (`http://localhost:3000` affiche une icône de verrou).
-8. Déposer les fichiers de [CARL](../../../03-core-models-hlm/CARL.md) (`model.onnx`, `labels.json`, `tokenizer.json`, `tokenizer_config.json`) dans `server/models/carl`. Ils sont dans `model.zip`, sur la release `CARL-*`. Sans ces fichiers, le serveur démarre et le classement répond 503.
+8. Déposer les fichiers de [carl](../../../03-core-models-hlm/CARL.md) (`model.onnx`, `labels.json`, `tokenizer.json`, `tokenizer_config.json`) dans `server/models/carl`. Ils sont dans `model.zip`, sur la release `carl-*`. Sans ces fichiers, le serveur démarre et le classement répond 503.
 9. Dans un autre terminal, lancer `bun dev:desktop` pour monter l'application desktop (elle se lance automatiquement).
 10. Renseigner dans l'application :
 

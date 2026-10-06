@@ -25,6 +25,7 @@
   },
   "include": [
     "app.ts",
+    "serve.ts",
     "controllers/**/*",
     "datastores/**/*",
     "knowledge/**/*",

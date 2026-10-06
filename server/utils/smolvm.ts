@@ -2,6 +2,7 @@ import { $ } from 'bun'
 import type { Subprocess } from 'bun'
 
 import { assertCanonicalConversationId } from './ai-attachments'
+import { AI_MODEL } from './ai-model'
 import { datastorePaths, resolvePathWithin } from './paths'
 import { getSmolmachinePath, returnPoolVm } from './vm-pool'
 
@@ -45,6 +46,7 @@ function buildPiEnvArgs(): string[] {
       if (baseUrl) envArgs.push('-e', `OPENAI_BASE_URL=${baseUrl}`)
     } else {
       envArgs.push('-e', `ANTHROPIC_API_KEY=${apiKey}`)
+      if (baseUrl) envArgs.push('-e', `ANTHROPIC_BASE_URL=${baseUrl}`)
     }
   }
   return envArgs
@@ -56,7 +58,7 @@ const ASK_USER_EXTENSION_PATH = '/opt/pierre/extensions/ask-user.ts'
 
 function spawnPiProcess(name: string): Subprocess<'pipe', 'pipe', 'inherit'> {
   const providerType = (Bun.env['AI_TYPE'] ?? 'anthropic').toLowerCase()
-  const model = Bun.env['AI_MODEL'] ?? 'claude-sonnet-4-5'
+  const model = AI_MODEL
 
   const piProcess = Bun.spawn(
     [

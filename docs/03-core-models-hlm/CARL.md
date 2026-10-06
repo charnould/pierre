@@ -1,14 +1,14 @@
-##### [PIERRE](../index.md) ∕ [CORE MODELS HLM](index.md) ∕ CARL
+##### [PIERRE](../index.md) ∕ [CORE MODELS HLM](index.md) ∕ carl
 
-# CARL
+# carl
 
-CARL qualifie en 50 millisecondes le message d’un locataire ou candidat HLM parmi près de 300 motifs possibles. Il ne répond pas : il qualifie, pour simplifier les traitements ultérieurs, humains, automatisés et agentiques.
+carl qualifie en 50 millisecondes le message d’un locataire ou candidat HLM parmi près de 300 motifs possibles. Il ne répond pas : il qualifie, pour simplifier les traitements ultérieurs, humains, automatisés et agentiques.
 
-CARL est le premier né de « **Core Models HLM** » : une [famille](index.md) de modèles de langage open-weight, auto-hébergeables, hyper-spécialisés, frugaux et souverains, conçus pour les besoins opérationnels des bailleurs sociaux et du mouvement HLM.
+carl est le premier né de « **Core Models HLM** » : une [famille](index.md) de modèles de langage open-weight, auto-hébergeables, hyper-spécialisés, frugaux et souverains, conçus pour les besoins opérationnels des bailleurs sociaux et du mouvement HLM.
 
-La taxonomie et les données d’entraînement ont été enrichies grâce à la contribution de [Grand Dijon Habitat](http://granddijonhabitat.fr/). CARL est un hommage à [Carl von Linné](https://fr.wikipedia.org/wiki/Carl_von_Linn%C3%A9), le « grand nomenclateur », qui a posé les bases de la nomenclature binominale moderne.
+La taxonomie et les données d’entraînement ont été enrichies grâce à la contribution de [Grand Dijon Habitat](http://granddijonhabitat.fr/). carl est un hommage à [Carl von Linné](https://fr.wikipedia.org/wiki/Carl_von_Linn%C3%A9), le « grand nomenclateur », qui a posé les bases de la nomenclature binominale moderne.
 
-Vous souhaitez proposer une amélioration à la taxonomie, ou mettre à disposition des messages de locataires ou candidats pour améliorer CARL ? [charnould@pierre-ia.org](mailto:charnould@pierre-ia.org)
+Vous souhaitez proposer une amélioration à la taxonomie, ou mettre à disposition des messages de locataires ou candidats pour améliorer carl ? [charnould@pierre-ia.org](mailto:charnould@pierre-ia.org)
 
 <!-- carl -->
 
@@ -16,7 +16,7 @@ Vous souhaitez proposer une amélioration à la taxonomie, ou mettre à disposit
 
 ### Synthèse
 
-| Version      | CARL-1.0.0 (2026-10-10)                              |
+| Version      | carl-1.0.0 (2026-10-10)                              |
 | ------------ | ---------------------------------------------------- |
 | Architecture | ModernBERT / typed-decisions                         |
 | Weights      | ONNX · FP32 · ~550 Mb (approx. 136M parameters)      |
@@ -36,15 +36,15 @@ Vous souhaitez proposer une amélioration à la taxonomie, ou mettre à disposit
 }
 ```
 
-## Comment utiliser CARL ?
+## Comment utiliser carl ?
 
-1. **En utilisant PIERRE :** CARL est utilisé pour qualifier automatiquement, en quasi-temps réel, les messages des locataires et candidats HLM chargés dans le module « Réclamations ». Cette qualification « nouvelle génération » autorise de nombreux usages, humains, automatisés et agentiques (_présentation à venir_).
-2. **En expérimentant :** [télécharger CARL](https://github.com/charnould/pierre/releases) (`model.zip` de la dernière release `CARL-*`), dézipper le dossier et suivre les instructions.
-3. **En l'intégrant dans un applicatif :** les poids de CARL sont disponibles sous license [AGPL-3.0](https://github.com/charnould/pierre/blob/master/LICENSE.md) pour l'expérimentation, l’évaluation et l’usage exclusivement et uniquement interne des bailleurs sociaux. Toute utilisation commerciale – par API ou intégration dans un logiciel commercial notamment dans un ERP – nécessite une licence commerciale accordée par [charnould@pierre-ia.org](mailto:charnould@pierre-ia.org).
+1. **En utilisant PIERRE :** carl est utilisé pour qualifier automatiquement, en quasi-temps réel, les messages des locataires et candidats HLM chargés dans le module « Réclamations ». Cette qualification « nouvelle génération » autorise de nombreux usages, humains, automatisés et agentiques (_présentation à venir_).
+2. **En expérimentant :** [télécharger carl](https://github.com/charnould/pierre/releases) (`model.zip` de la dernière release `carl-*`), dézipper le dossier et suivre les instructions.
+3. **En l'intégrant dans un applicatif :** les poids de carl sont disponibles sous license [AGPL-3.0](https://github.com/charnould/pierre/blob/master/LICENSE.md) pour l'expérimentation, l’évaluation et l’usage exclusivement et uniquement interne des bailleurs sociaux. Toute utilisation commerciale – par API ou intégration dans un logiciel commercial notamment dans un ERP – nécessite une licence commerciale accordée par [charnould@pierre-ia.org](mailto:charnould@pierre-ia.org).
 
 ## Taxonomie
 
-CARL couvre l’ensemble des principales sollicitations adressées par les locataires et candidats aux bailleurs sociaux : **incidents et demandes techniques dans le logement et les parties communes, démarches administratives et liées au bail, troubles de voisinage et tranquillité résidentielle, situations d’assistance ou de vulnérabilité**. Il les qualifie selon **leur nature et leur niveau de précision**, et ajoute des dimensions transversales relatives à **l’intégrité physique, au lieu concerné, à l’obligation du bailleur ou du locataire et au ton du message**.
+carl couvre l’ensemble des principales sollicitations adressées par les locataires et candidats aux bailleurs sociaux : **incidents et demandes techniques dans le logement et les parties communes, démarches administratives et liées au bail, troubles de voisinage et tranquillité résidentielle, situations d’assistance ou de vulnérabilité**. Il les qualifie selon **leur nature et leur niveau de précision**, et ajoute des dimensions transversales relatives à **l’intégrité physique, au lieu concerné, à l’obligation du bailleur ou du locataire et au ton du message**.
 
 Un message produit une seule qualification. Si le message contient plusieurs demandes distinctes, c'est la plus aiguë qui est retenue.
 
@@ -409,10 +409,10 @@ domaine:
 
 ## Licence
 
-CARL est un modèle fine-tuné à partir de [alphaedge-ai/mmBERT-base-fra-32768](https://huggingface.co/alphaedge-ai/mmBERT-base-fra-32768) (MIT).
+carl est un modèle fine-tuné à partir de [alphaedge-ai/mmBERT-base-fra-32768](https://huggingface.co/alphaedge-ai/mmBERT-base-fra-32768) (MIT).
 
-La taxonomie de CARL est distribuée sous [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+La taxonomie de carl est distribuée sous [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
-Les poids de CARL sont disponibles sous [AGPL-3.0](https://github.com/charnould/pierre/blob/master/LICENSE.md) pour l'expérimentation, l'évaluation et l'usage interne des bailleurs sociaux. **Toute utilisation commerciale ou intégration dans un logiciel commercial, notamment dans un ERP ou via une API, nécessite une licence commerciale distincte accordée par [charnould@pierre-ia.org](mailto:charnould@pierre-ia.org).**
+Les poids de carl sont disponibles sous [AGPL-3.0](https://github.com/charnould/pierre/blob/master/LICENSE.md) pour l'expérimentation, l'évaluation et l’usage interne des bailleurs sociaux. **Toute utilisation commerciale ou intégration dans un logiciel commercial, notamment dans un ERP ou via une API, nécessite une licence commerciale distincte accordée par [charnould@pierre-ia.org](mailto:charnould@pierre-ia.org).**
 
 Copyright (c) 2026-aujourd'hui, Charles-Henri Arnould/BECKREL et les contributeurs.

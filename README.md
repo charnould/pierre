@@ -20,7 +20,7 @@
 ## Core Models HLM
 
 - [CORE MODELS HLM](./docs/03-core-models-hlm/index.md)
-- [CARL](./docs/03-core-models-hlm/CARL.md)
+- [carl](./docs/03-core-models-hlm/CARL.md)
 
 ## Core Intelligence HLM
 
@@ -46,7 +46,7 @@
 
 ### Server
 
-- [Comment déployer PIERRE ?](./docs/06-installation/01-server/01-deploy.md)
+- [Héberger & déployer PIERRE](./docs/06-installation/01-server/01-deploy.md)
 - [Architecture et fonctionnement technique](./docs/06-installation/01-server/02-tech.md)
 - [Canaux de communication](./docs/06-installation/01-server/03-channels.md)
 - [Télémétrie](./docs/06-installation/01-server/04-telemetry.md)
@@ -66,50 +66,6 @@
 
 - [2026-05-27 — One SQLite File and One Harness Is Enough for French Social Housing (EN)](./docs/07-articles/2026-05-27-rag-sqlite.md)
 - [2026-08-19 — (NOTE) Estimation du coût annuel des applications-métiers du mouvement HLM](./docs/07-articles/2026-08-19-300M€Y-for-IT.md)
-
-## Manuel utilisateur
-
-- [Manuel utilisateur](./docs/07-user-manual/index.md)
-- [Accueil](./docs/07-user-manual/01-accueil.md)
-- [Paramètres](./docs/07-user-manual/02-parametres.md)
-- [Discuter](./docs/07-user-manual/10-discuter.md)
-- [Traiter les réclamations](./docs/07-user-manual/11-reclamations.md)
-- [Piloter les impayés](./docs/07-user-manual/12-impayes.md)
-- [Créer des automatisations](./docs/07-user-manual/13-automatisations.md)
-- [Contacter par lots](./docs/07-user-manual/14-contacter-par-lots.md)
-- [Obtenir une synthèse](./docs/07-user-manual/15-synthese.md)
-- [Administration · Encyclopédie](./docs/07-user-manual/20-admin-encyclopedie.md)
-- [Administration · Utilisateurs](./docs/07-user-manual/21-admin-utilisateurs.md)
-
-## Bases de connaissances
-
-- [Les bases de connaissances de PIERRE](./docs/04-knowledge/00-knowledge.md)
-- [Préparer vos documents pour `PIERRE`](./docs/04-knowledge/01-preparer-vos-documents.md)
-
-## Installation & Paramétrage
-
-- [Accueil](./docs/05-install/index.md)
-
-### Server
-
-- [Comment déployer PIERRE ?](./docs/05-install/01-server/01-deploy.md)
-- [Architecture et fonctionnement technique](./docs/05-install/01-server/02-tech.md)
-- [Personnalisation](./docs/05-install/01-server/03-customize.md)
-- [Canaux de communication](./docs/05-install/01-server/04-channels.md)
-- [Signature électronique](./docs/05-install/01-server/04-signature.md)
-- [Administrer PIERRE avec une interface graphique](./docs/05-install/01-server/05-admin.md)
-- [Télémétrie](./docs/05-install/01-server/06-telemetry.md)
-- [Costs](./docs/05-install/01-server/07-costs.md)
-- [Data Protection Officer](./docs/05-install/01-server/08-dpo.md)
-
-### Desktop
-
-- [Application desktop Windows et macOS](./docs/05-install/02-desktop/01-parametrage.md)
-
-## Articles
-
-- [2026-05-27 — One SQLite File and One Harness Is Enough for French Social Housing (EN)](./docs/06-articles/2026-05-27-rag-sqlite.md)
-- [2026-08-19 — (NOTE) Estimation du coût annuel des applications-métiers du mouvement HLM](./docs/06-articles/2026-08-19-300M€Y-for-IT.md)
 
 <!-- docs-tocstop -->
 

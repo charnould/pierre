@@ -3,6 +3,7 @@ import { join } from 'node:path'
 
 import { isPromptId } from '../../../shared/prompts'
 import { chatbotInstructions } from '../chatbot-config'
+import { SERVER_ROOT } from '../paths'
 import { skillPrompt } from '../setup-store'
 import { getKnowledgePath } from '../smolvm'
 
@@ -24,6 +25,6 @@ export async function writeProfileFiles(profileId: string): Promise<void> {
   }
   await Bun.write(join(dir, 'AGENTS.md'), raw)
   if (profileId !== 'report') return
-  const example = Bun.file(join(import.meta.dir, '../automations/report-example.html'))
+  const example = Bun.file(join(SERVER_ROOT, 'utils/automations/report-example.html'))
   if (await example.exists()) await Bun.write(join(dir, 'example.html'), example)
 }

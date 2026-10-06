@@ -55,7 +55,7 @@ Chaque export est **systématiquement et impérativement complet** : il contient
 
 ## Pourquoi des fichiers plats ?
 
-Les SI HLM savent déjà produire des exports tabulaires. Les `API`, `MCP` et `CLI` sont des interfaces parfaitement valables (et souhaitables), mais les éditeurs historiques ne les généraliseront pas — ni à court ni à moyen terme — à l’échelle du mouvement qui accuse déjà des retards d'innovation.
+Les SI HLM savent déjà produire des exports tabulaires. Les `API`, `MCP` et `cli` sont des interfaces parfaitement valables (et souhaitables), mais les éditeurs historiques ne les généraliseront pas — ni à court ni à moyen terme — à l’échelle du mouvement qui accuse déjà des retards d'innovation.
 
 D’où le choix du **plus petit dénominateur commun** : un fichier plat que chaque bailleur peut livrer ; le référentiel garantit un vocabulaire commun, quelle que soit la singularité de chaque système d’information. Les règles concrètes (CSV, structure tabulaire, noms de fichiers…) sont décrites dans [Conventions](docs/02-data-primitives/01-conventions/index.md).
 

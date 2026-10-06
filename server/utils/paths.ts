@@ -1,8 +1,20 @@
 import { existsSync } from 'node:fs'
 import { isAbsolute, join, relative, resolve } from 'node:path'
 
-export const SERVER_ROOT = resolve(import.meta.dir, '..')
-const DATASTORES_ROOT = join(SERVER_ROOT, 'datastores')
+// In the compiled executable every module shares the entry directory, and --asset
+// lands next to it. In the repo, this file lives in server/utils.
+const moduleDir = import.meta.dir
+export const SERVER_ROOT = existsSync(join(moduleDir, 'assets/dist/.vite/manifest.json'))
+  ? moduleDir
+  : resolve(moduleDir, '..')
+
+// Set by systemd on the VPS. Absent on the Mac, where everything stays in the repo.
+const PIERRE_HOME = Bun.env['PIERRE_HOME'] || undefined
+const DATASTORES_ROOT = PIERRE_HOME ?? join(SERVER_ROOT, 'datastores')
+
+export const CARL_DIR = PIERRE_HOME
+  ? join(PIERRE_HOME, 'models', 'carl')
+  : join(SERVER_ROOT, 'models', 'carl')
 
 let datastoreRoot = DATASTORES_ROOT
 
@@ -44,7 +56,8 @@ export function resolvePathWithin(root: string, ...segments: string[]): string {
   throw new Error('Resolved path escapes its root')
 }
 
-/** Monorepo local: config/smolvm at repo root. Docker: under /app/config/smolvm/. */
-export const SMOLVM_DIR = existsSync(join(SERVER_ROOT, 'config', 'smolvm'))
-  ? join(SERVER_ROOT, 'config', 'smolvm')
-  : join(resolve(SERVER_ROOT, '..'), 'config', 'smolvm')
+export const SMOLVM_DIR = PIERRE_HOME
+  ? join(PIERRE_HOME, 'smolvm')
+  : existsSync(join(SERVER_ROOT, 'config', 'smolvm'))
+    ? join(SERVER_ROOT, 'config', 'smolvm')
+    : join(resolve(SERVER_ROOT, '..'), 'config', 'smolvm')

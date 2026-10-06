@@ -23,7 +23,7 @@ describe('forge config release invariants', () => {
     expect(zip?.platforms).not.toContain('win32')
   })
 
-  it('publishes to the pierre GitHub repository', () => {
+  it('keeps the semver tag required by update.electronjs.org', () => {
     const publisher = forgeConfig.publishers?.[0]
 
     expect(publisher?.name).toBe('@electron-forge/publisher-github')
