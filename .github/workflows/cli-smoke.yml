@@ -26,6 +26,21 @@ jobs:
           test -n "$TAG"
           echo "TAG=$TAG" >> "$GITHUB_ENV"
 
+      - name: Wait for published assets
+        run: |
+          for attempt in $(seq 1 60); do
+            COUNT=$(gh release view "$TAG" \
+              --repo "$REPO" \
+              --json assets \
+              --jq '[.assets[].name | select(. == "install.sh" or . == "checksums.txt" or . == "pierre-cli-linux-x64")] | length')
+            if [ "$COUNT" = 3 ]; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Published cli assets did not become available"
+          exit 1
+
       - name: Run the published installer
         run: |
           mkdir -p "$RUNNER_TEMP/pierre-bin"
