@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+import { createReadStream } from 'node:fs'
 import { appendFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
 
@@ -6,6 +8,7 @@ export type Product = 'cli' | 'desktop' | 'server'
 type ReleaseAsset = { name: string; digest?: string }
 type ReleaseInfo = {
   assets: ReleaseAsset[]
+  body: string
   isDraft: boolean
   isPrerelease: boolean
   name: string
@@ -15,6 +18,7 @@ type ReleasePolicy = {
   notes: string
   packagePath: string
   prefix: string
+  sourcePaths: string[]
   title: (tag: string) => string
 }
 type CommandResult = {
@@ -31,6 +35,7 @@ const POLICIES: Record<Product, ReleasePolicy> = {
       'Interface en ligne de commande (cli) pour l’installation, la configuration et la mise à jour de PIERRE (serveur)',
     packagePath: 'cli/package.json',
     prefix: 'cli-',
+    sourcePaths: ['cli/package.json', 'server/microvm/versions.json'],
     title: (tag) => tag
   },
   desktop: {
@@ -45,13 +50,15 @@ const POLICIES: Record<Product, ReleasePolicy> = {
     packagePath: 'desktop/package.json',
     // update.electronjs.org ignores prefixed tags.
     prefix: '',
+    sourcePaths: ['desktop/package.json'],
     title: (tag) => `desktop-${tag}`
   },
   server: {
-    assets: () => ['libonnxruntime.so.1', 'pierre'],
+    assets: () => ['libonnxruntime.so.1', 'pierre', 'pierre-linux-amd64.smolmachine'],
     notes: 'Serveur PIERRE et bibliothèque ONNX Runtime',
     packagePath: 'server/package.json',
     prefix: 'server-',
+    sourcePaths: ['server/package.json', 'server/microvm'],
     title: (tag) => tag
   }
 }
@@ -65,7 +72,12 @@ function packageVersion(value: unknown): string {
 }
 
 function parseReleaseInfo(value: unknown): ReleaseInfo {
-  if (!isRecord(value) || !Array.isArray(value['assets']) || typeof value['name'] !== 'string') {
+  if (
+    !isRecord(value) ||
+    !Array.isArray(value['assets']) ||
+    typeof value['body'] !== 'string' ||
+    typeof value['name'] !== 'string'
+  ) {
     throw new Error('Invalid GitHub release response')
   }
   const assets = value['assets'].map((asset): ReleaseAsset => {
@@ -82,6 +94,7 @@ function parseReleaseInfo(value: unknown): ReleaseInfo {
   }
   return {
     assets,
+    body: value['body'],
     isDraft: value['isDraft'],
     isPrerelease: value['isPrerelease'],
     name: value['name']
@@ -162,7 +175,7 @@ function releaseInfo(tag: string): ReleaseInfo | null {
     'view',
     tag,
     '--json',
-    'assets,isDraft,isPrerelease,name'
+    'assets,body,isDraft,isPrerelease,name'
   ])
   if (result.exitCode !== 0) {
     if (result.stderr.trim() === 'release not found') return null
@@ -185,6 +198,28 @@ function assertRelease(release: ReleaseInfo, expectedAssets: string[], expectedT
   }
 }
 
+const ATTESTATION_START = '<!-- pierre-release-digests\n'
+const ATTESTATION_END = '\n-->'
+
+function attestationNotes(notes: string, digests: Record<string, string>): string {
+  const prefix = notes ? `${notes}\n\n` : ''
+  return `${prefix}${ATTESTATION_START}${JSON.stringify(digests)}${ATTESTATION_END}`
+}
+
+function assertAttestation(release: ReleaseInfo, assetNames: string[]) {
+  const start = release.body.indexOf(ATTESTATION_START)
+  const end = release.body.indexOf(ATTESTATION_END, start)
+  if (start < 0 || end < 0) throw new Error('Release digest attestation is missing')
+  const encoded = release.body.slice(start + ATTESTATION_START.length, end)
+  const expected = JSON.parse(encoded) as Record<string, unknown>
+  for (const name of assetNames) {
+    const actual = release.assets.find((asset) => asset.name === name)?.digest
+    if (typeof expected[name] !== 'string' || actual !== expected[name]) {
+      throw new Error(`Release digest attestation mismatch for ${name}`)
+    }
+  }
+}
+
 function output(name: string, value: string) {
   const path = process.env['GITHUB_OUTPUT']
   if (!path) throw new Error('GITHUB_OUTPUT is missing')
@@ -199,24 +234,6 @@ async function currentVersion(policy: ReleasePolicy): Promise<string> {
   return version
 }
 
-function findVersionCommit(
-  policy: ReleasePolicy,
-  version: string
-): {
-  previous: string
-  ref: string
-} {
-  const commits = must(['git', 'log', '--format=%H', '--', policy.packagePath]).split('\n')
-  for (const ref of commits) {
-    if (versionAt(ref, policy.packagePath) !== version) continue
-    const parent = command(['git', 'rev-parse', `${ref}^`])
-    const previous =
-      parent.exitCode === 0 ? versionAt(parent.stdout.trim(), policy.packagePath) : '0.0.0'
-    if (previous !== version) return { previous: previous || '0.0.0', ref }
-  }
-  throw new Error(`Unable to find the commit that introduced ${version}`)
-}
-
 async function prepare(product: Product) {
   const policy = POLICIES[product]
   const version = await currentVersion(policy)
@@ -225,6 +242,12 @@ async function prepare(product: Product) {
   const tagRef = tagResult.exitCode === 0 ? must(['git', 'rev-list', '-n', '1', tag]) : ''
   if (tagRef && versionAt(tagRef, policy.packagePath) !== version) {
     throw new Error(`${tag} does not contain ${policy.packagePath} version ${version}`)
+  }
+  if (
+    tagRef &&
+    command(['git', 'diff', '--quiet', tagRef, 'HEAD', '--', ...policy.sourcePaths]).exitCode !== 0
+  ) {
+    throw new Error(`${product} release inputs changed without a version bump`)
   }
 
   const versions = productVersions(policy)
@@ -237,14 +260,22 @@ async function prepare(product: Product) {
 
   let ref = tagRef
   if (!ref) {
-    const introduced = findVersionCommit(policy, version)
-    if (compareVersions(version, introduced.previous) <= 0) {
-      throw new Error(`${version} must be greater than ${introduced.previous}`)
+    const head = process.env['GITHUB_SHA'] ?? must(['git', 'rev-parse', 'HEAD'])
+    if (versionAt(head, policy.packagePath) !== version) {
+      throw new Error(`${head} does not contain ${policy.packagePath} version ${version}`)
+    }
+    const parentResult = command(['git', 'rev-parse', `${head}^`])
+    const previousAtHead =
+      parentResult.exitCode === 0
+        ? versionAt(parentResult.stdout.trim(), policy.packagePath) || '0.0.0'
+        : '0.0.0'
+    if (compareVersions(version, previousAtHead) <= 0) {
+      throw new Error(`${version} must be greater than ${previousAtHead} in the release commit`)
     }
     if (latest && compareVersions(version, latest) <= 0) {
       throw new Error(`${version} must be greater than the latest ${product} tag ${latest}`)
     }
-    ref = introduced.ref
+    ref = head
   }
 
   const release = releaseInfo(tag)
@@ -276,12 +307,16 @@ function tagRelease(tag: string, ref: string) {
 }
 
 async function sha256(path: string): Promise<string> {
-  const hasher = new Bun.CryptoHasher('sha256')
-  hasher.update(await Bun.file(path).arrayBuffer())
-  return hasher.digest('hex')
+  return new Promise((resolve, reject) => {
+    const hash = createHash('sha256')
+    const stream = createReadStream(path)
+    stream.on('data', (chunk) => hash.update(chunk))
+    stream.on('error', reject)
+    stream.on('end', () => resolve(hash.digest('hex')))
+  })
 }
 
-async function publish(product: Product, ref: string, assetDirectory: string) {
+async function stage(product: Product, ref: string, assetDirectory: string) {
   const policy = POLICIES[product]
   const version = versionAt(ref, policy.packagePath)
   if (!isExactSemver(version)) throw new Error(`${ref} has no valid ${product} version`)
@@ -328,13 +363,32 @@ async function publish(product: Product, ref: string, assetDirectory: string) {
   if (!release) throw new Error(`Unable to read draft release ${tag}`)
   assertAssets(release, assetNames)
 
+  const digests: Record<string, string> = {}
   for (const path of assets) {
     const name = basename(path)
     const remote = release.assets.find((asset) => asset.name === name)?.digest
     const local = `sha256:${await sha256(path)}`
     if (remote !== local) throw new Error(`Digest mismatch for ${name}`)
+    digests[name] = remote
   }
+  must(['gh', 'release', 'edit', tag, '--notes', attestationNotes(policy.notes, digests)])
+}
 
+async function promote(product: Product) {
+  const policy = POLICIES[product]
+  const version = await currentVersion(policy)
+  const tag = `${policy.prefix}${version}`
+  const title = policy.title(tag)
+  const assetNames = policy.assets(version).sort()
+  let release = releaseInfo(tag)
+  if (!release) throw new Error(`Draft release ${tag} does not exist`)
+  if (!release.isDraft) {
+    if (release.isPrerelease) throw new Error(`${tag} is unexpectedly a prerelease`)
+    assertRelease(release, assetNames, title)
+    return
+  }
+  assertAssets(release, assetNames)
+  assertAttestation(release, assetNames)
   must([
     'gh',
     'release',
@@ -354,6 +408,11 @@ async function publish(product: Product, ref: string, assetDirectory: string) {
   assertRelease(release, assetNames, title)
 }
 
+async function publish(product: Product, ref: string, assetDirectory: string) {
+  await stage(product, ref, assetDirectory)
+  await promote(product)
+}
+
 async function main() {
   const [action, productName, ...args] = Bun.argv.slice(2)
   const product = productFor(productName ?? '')
@@ -370,7 +429,20 @@ async function main() {
     await publish(product, ref, assetDirectory)
     return
   }
-  throw new Error('usage: release.ts <prepare|publish> <product> ...')
+  if (action === 'stage') {
+    const [ref, assetDirectory] = args
+    if (!ref || !assetDirectory || args.length !== 2) {
+      throw new Error('usage: release.ts stage <product> <ref> <asset-directory>')
+    }
+    await stage(product, ref, assetDirectory)
+    return
+  }
+  if (action === 'promote') {
+    if (args.length !== 0) throw new Error('usage: release.ts promote <product>')
+    await promote(product)
+    return
+  }
+  throw new Error('usage: release.ts <prepare|stage|promote|publish> <product> ...')
 }
 
 if (import.meta.main) await main()

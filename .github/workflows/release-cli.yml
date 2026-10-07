@@ -5,8 +5,6 @@ on:
     branches: [master]
     paths:
       - cli/package.json
-      - config/release.ts
-      - .github/workflows/release-cli.yml
   workflow_dispatch:
 
 concurrency:

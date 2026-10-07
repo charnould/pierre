@@ -2,9 +2,9 @@ import { createHash } from 'node:crypto'
 import {
   chmodSync,
   copyFileSync,
+  createReadStream,
   existsSync,
   mkdirSync,
-  readFileSync,
   renameSync,
   rmSync
 } from 'node:fs'
@@ -168,37 +168,64 @@ export async function fetchTo(ctx: Context, name: string, dest: string, release:
   }
 }
 
-function sha256(file: string): string {
-  return createHash('sha256').update(readFileSync(file)).digest('hex')
+export function fileSha256(file: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const hash = createHash('sha256')
+    const stream = createReadStream(file)
+    stream.on('data', (chunk) => hash.update(chunk))
+    stream.on('error', reject)
+    stream.on('end', () => resolve(hash.digest('hex')))
+  })
 }
 
-export async function verifyReleaseDigest(ctx: Context, tag: string, name: string, file: string) {
-  if (ctx.runtime.env['PIERRE_ASSET_DIR']) return
+export async function releaseAssetDigests(
+  ctx: Context,
+  tag: string,
+  expectedNames: string[]
+): Promise<Record<string, string>> {
+  if (ctx.runtime.env['PIERRE_ASSET_DIR']) return {}
   const response = await ctx.runtime.request(`${API}/releases/tags/${tag}`, {
     headers: { accept: 'application/vnd.github+json', 'user-agent': 'pierre-cli' },
     timeoutMs: 10_000
   })
-  if (response.status !== 200) return
-  let digest = ''
+  if (response.status !== 200) {
+    throw new CommandFailed(1, `Impossible de vérifier les assets de ${tag}.`)
+  }
+  let assets: ReleaseAsset[]
   try {
     const parsed = JSON.parse(response.body) as { assets?: unknown }
-    digest = parseAssets(parsed.assets).find((asset) => asset.name === name)?.digest ?? ''
+    assets = parseAssets(parsed.assets)
   } catch {
-    return
+    throw new CommandFailed(1, `Les assets de ${tag} sont invalides.`)
   }
-  if (!digest) return
-  if (!digest.startsWith('sha256:')) throw new CommandFailed(1, `Empreinte invalide pour ${name}.`)
-  if (sha256(file) !== digest.slice('sha256:'.length)) {
+  const actualNames = assets.map((asset) => asset.name).sort()
+  const expected = [...expectedNames].sort()
+  if (actualNames.join('\n') !== expected.join('\n')) {
+    throw new CommandFailed(1, `La release ${tag} est incomplète.`)
+  }
+  const digests: Record<string, string> = {}
+  for (const name of expected) {
+    const digest = assets.find((asset) => asset.name === name)?.digest ?? ''
+    if (!digest.startsWith('sha256:') || digest.length !== 'sha256:'.length + 64) {
+      throw new CommandFailed(1, `Empreinte invalide pour ${name}.`)
+    }
+    digests[name] = digest
+  }
+  return digests
+}
+
+export async function verifyFileDigest(name: string, file: string, digest: string) {
+  if ((await fileSha256(file)) !== digest.slice('sha256:'.length)) {
     throw new CommandFailed(1, `Empreinte incorrecte pour ${name}.`)
   }
 }
 
-export function verifyChecksum(checksums: string, name: string, file: string) {
+export async function verifyChecksum(checksums: string, name: string, file: string) {
   const expected = checksums
     .split('\n')
     .map((line) => line.trim().split(/\s+/))
     .find((fields) => fields[1] === name || fields[1] === `*${name}`)?.[0]
-  if (!expected || sha256(file) !== expected) {
+  if (!expected || (await fileSha256(file)) !== expected) {
     throw new CommandFailed(1, `L'empreinte de ${name} est invalide.`)
   }
 }

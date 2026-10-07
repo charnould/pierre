@@ -5,8 +5,9 @@
   "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
-    "vm:build:osx": "bash ../config/build-smolvm.sh",
-    "vm:build:linux": "bash ../config/build-smolvm-linux.sh",
+    "microvm:build:macos": "bash microvm/scripts/build.sh darwin-arm64",
+    "microvm:build:linux": "bash microvm/scripts/build.sh linux-amd64",
+    "microvm:update": "bun microvm/update.ts",
     "server:build": "cd .. && bun --env-file=.env run config/build-server.ts",
     "release:build": "bash utils/build-release.sh",
     "dev": "DEBUG=true bun --env-file=../.env --watch run serve.ts",

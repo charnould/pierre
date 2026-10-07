@@ -56,8 +56,13 @@ export function resolvePathWithin(root: string, ...segments: string[]): string {
   throw new Error('Resolved path escapes its root')
 }
 
-export const SMOLVM_DIR = PIERRE_HOME
-  ? join(PIERRE_HOME, 'smolvm')
-  : existsSync(join(SERVER_ROOT, 'config', 'smolvm'))
-    ? join(SERVER_ROOT, 'config', 'smolvm')
-    : join(resolve(SERVER_ROOT, '..'), 'config', 'smolvm')
+export const SMOLMACHINE_PATH = PIERRE_HOME
+  ? join(PIERRE_HOME, 'server', 'current', 'pierre-linux-amd64.smolmachine')
+  : join(
+      SERVER_ROOT,
+      'microvm',
+      'build',
+      process.platform === 'darwin'
+        ? 'pierre-darwin-arm64.smolmachine'
+        : 'pierre-linux-amd64.smolmachine'
+    )

@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 
 import { $ } from 'bun'
 
-import { SMOLVM_DIR } from './paths'
+import { SMOLMACHINE_PATH } from './paths'
 
 const POOL_PREFIX = 'pierre-pool-'
 const DEFAULT_POOL_SIZE = 4
@@ -19,11 +19,10 @@ function poolSize(): number {
 }
 
 export function getSmolmachinePath(): string {
-  const arch = process.arch === 'x64' ? 'amd64' : 'arm64'
-  const smolmachinePath = resolve(SMOLVM_DIR, `pierre-${arch}.smolmachine`)
+  const smolmachinePath = resolve(SMOLMACHINE_PATH)
   if (!existsSync(smolmachinePath)) {
     throw new Error(
-      `Smolmachine not found: ${smolmachinePath}. Run \`bun vm:build:osx\` or download artifacts to config/smolvm/.`
+      `Smolmachine not found: ${smolmachinePath}. Run \`bun --filter @pierre/server microvm:build:macos\` for local development.`
     )
   }
   return smolmachinePath

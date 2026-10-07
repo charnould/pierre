@@ -15,7 +15,6 @@
         "config/build-updates.ts!",
         "config/release.ts!",
         "config/release.test.ts",
-        "config/smolvm/extensions/ask-user.ts!",
         "config/checks/*.test.ts",
         "shared/**/*.test.ts"
       ],
@@ -26,7 +25,7 @@
         "typebox"
       ]
     },
-    "config/smolvm/document-extract": {
+    "server/microvm/guest/document-extract": {
       "entry": ["extract-spreadsheet.mjs!"]
     },
     "desktop": {
@@ -74,6 +73,8 @@
         "serve.ts!",
         "assets/embed/pierre-embed.ts!",
         "assets/host/pierre.ts!",
+        "microvm/update.ts!",
+        "microvm/guest/extensions/ask-user.ts!",
         "utils/knowledge/scrape-wikipedia.ts!",
         "utils/update-pierre.ts!",
         "tests/**/*.test.ts"

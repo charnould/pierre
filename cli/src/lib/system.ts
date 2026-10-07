@@ -40,7 +40,13 @@ type Paths = {
   previousEnvFile: string
   installLog: string
   assetSourceFile: string
+  legacyBin: string
+  legacySo: string
+  serverRoot: string
+  serverReleases: string
+  serverCurrent: string
   bin: string
+  image: string
   cmd: string
   so: string
   unitFile: string
@@ -49,6 +55,9 @@ type Paths = {
   previousCaddyFile: string
   smolvmBin: string
   smolvmHome: string
+  smolvmReleases: string
+  smolvmRoot: string
+  smolvmRuntime: string
 }
 
 export type CommandResult = { code: number; stdout: string; stderr: string }
@@ -124,22 +133,35 @@ const envOr = (env: Env, key: string, fallback: string) => {
 function resolvePaths(env: Env): Paths {
   const envFile = envOr(env, 'PIERRE_ENV_FILE', '/etc/pierre.env')
   const caddyFile = envOr(env, 'PIERRE_CADDY_FILE', '/etc/caddy/Caddyfile')
+  const home = envOr(env, 'PIERRE_HOME_DIR', '/var/lib/pierre')
+  const serverRoot = envOr(env, 'PIERRE_SERVER_ROOT', `${home}/server`)
+  const serverCurrent = envOr(env, 'PIERRE_SERVER_CURRENT', `${serverRoot}/current`)
+  const smolvmRoot = envOr(env, 'PIERRE_SMOLVM_ROOT', '/usr/local/lib/smolvm')
   return {
-    home: envOr(env, 'PIERRE_HOME_DIR', '/var/lib/pierre'),
+    home,
     envFile,
     pendingEnvFile: envOr(env, 'PIERRE_PENDING_ENV_FILE', `${envFile}.pending`),
     previousEnvFile: envOr(env, 'PIERRE_PREVIOUS_ENV_FILE', `${envFile}.previous`),
     installLog: envOr(env, 'PIERRE_INSTALL_LOG', '/var/log/pierre-install.log'),
     assetSourceFile: envOr(env, 'PIERRE_ASSET_SOURCE_FILE', '/etc/pierre-install-source'),
-    bin: envOr(env, 'PIERRE_BIN', '/usr/local/lib/pierre'),
+    legacyBin: envOr(env, 'PIERRE_LEGACY_BIN', '/usr/local/lib/pierre'),
+    legacySo: envOr(env, 'PIERRE_LEGACY_SO', '/usr/local/lib/libonnxruntime.so.1'),
+    serverRoot,
+    serverReleases: envOr(env, 'PIERRE_SERVER_RELEASES', `${serverRoot}/releases`),
+    serverCurrent,
+    bin: envOr(env, 'PIERRE_BIN', `${serverCurrent}/pierre`),
+    image: envOr(env, 'PIERRE_MICROVM_IMAGE', `${serverCurrent}/pierre-linux-amd64.smolmachine`),
     cmd: envOr(env, 'PIERRE_CMD', '/usr/local/bin/pierre'),
-    so: envOr(env, 'PIERRE_SO', '/usr/local/lib/libonnxruntime.so.1'),
+    so: envOr(env, 'PIERRE_SO', `${serverCurrent}/libonnxruntime.so.1`),
     unitFile: envOr(env, 'PIERRE_UNIT_FILE', '/etc/systemd/system/pierre.service'),
     carlUnit: envOr(env, 'PIERRE_CARL_UNIT', '/etc/systemd/system/carl.service'),
     caddyFile,
     previousCaddyFile: envOr(env, 'PIERRE_PREVIOUS_CADDY_FILE', `${caddyFile}.previous`),
     smolvmBin: envOr(env, 'PIERRE_SMOLVM_BIN', '/usr/local/bin/smolvm'),
-    smolvmHome: envOr(env, 'PIERRE_SMOLVM_HOME', '/root/.smolvm')
+    smolvmHome: envOr(env, 'PIERRE_SMOLVM_HOME', '/root/.smolvm'),
+    smolvmRoot,
+    smolvmReleases: envOr(env, 'PIERRE_SMOLVM_RELEASES', `${smolvmRoot}/releases`),
+    smolvmRuntime: envOr(env, 'PIERRE_SMOLVM_RUNTIME', `${smolvmRoot}/current`)
   }
 }
 

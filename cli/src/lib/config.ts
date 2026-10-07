@@ -189,7 +189,11 @@ export function installationComplete(runtime: Runtime): boolean {
   try {
     accessSync(runtime.paths.bin, constants.X_OK)
   } catch {
-    return false
+    try {
+      accessSync(runtime.paths.legacyBin, constants.X_OK)
+    } catch {
+      return false
+    }
   }
   return existsSync(runtime.paths.envFile) && existsSync(runtime.paths.unitFile)
 }

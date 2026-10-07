@@ -1,0 +1,60 @@
+name: Check MicroVM
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - server/microvm/**
+      - .github/workflows/check-microvm.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux-amd64:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Require Server version bump
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          BEFORE=$(git show "$BASE:server/package.json" | jq -r .version)
+          AFTER=$(jq -r .version server/package.json)
+          if ! [[ "$AFTER" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Server version must be an exact semantic version."
+            exit 1
+          fi
+          if [ "$BEFORE" = "$AFTER" ] || \
+            [ "$(printf '%s\n' "$BEFORE" "$AFTER" | sort -V | awk 'NR == 2')" != "$AFTER" ]; then
+            echo "Changes under server/microvm require a greater server/package.json version."
+            exit 1
+          fi
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          test -r /dev/kvm
+          test -w /dev/kvm
+
+      - name: Install host dependency
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libvirglrenderer1
+
+      - name: Build and smoke Linux image
+        run: bash server/microvm/scripts/build.sh linux-amd64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: microvm-linux-amd64
+          path: server/microvm/build/pierre-linux-amd64.smolmachine
+          if-no-files-found: error
+          retention-days: 7

@@ -264,7 +264,6 @@ describe('versions indépendantes', () => {
     release('cli-0.9.0'),
     release('cli-0.9.1'),
     release('cli-2.0.0', { prerelease: true }),
-    release('microvm'),
     release('SERVER-9.9.9'),
     release('CLI-9.9.9'),
     release('CARL-9.9.9'),

@@ -8,6 +8,8 @@ desktop/perf/out/
 server/node_modules/
 server/datastores/
 server/temp/
+server/microvm/.tools/
+server/microvm/build/
 
 docs/node_modules/
 

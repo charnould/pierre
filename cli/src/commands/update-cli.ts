@@ -61,7 +61,7 @@ export async function installCliRelease(ctx: Context, tag: string): Promise<numb
       return 1
     }
     try {
-      verifyChecksum(readFileSync(join(stage, 'checksums.txt'), 'utf8'), CLI_ASSET, binary)
+      await verifyChecksum(readFileSync(join(stage, 'checksums.txt'), 'utf8'), CLI_ASSET, binary)
       if ((await commandVersion(ctx, binary)) !== tag) {
         throw new Error('version')
       }

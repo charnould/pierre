@@ -1,0 +1,26 @@
+{
+  "smolvm": {
+    "version": "1.24.0",
+    "darwin-arm64": {
+      "url": "https://github.com/smol-machines/smolvm/releases/download/v1.24.0/smolvm-1.24.0-darwin-arm64.tar.gz",
+      "sha256": "117f73e4af7481f3c185483323d12136a8d5e1acc5933885a9caa9567ae35f00"
+    },
+    "linux-amd64": {
+      "url": "https://github.com/smol-machines/smolvm/releases/download/v1.24.0/smolvm-1.24.0-linux-x86_64.tar.gz",
+      "sha256": "df4cf6efcac4cff61238b98d30fe589e3ccfc5d57ade3c04401c808a54050b73"
+    }
+  },
+  "node": {
+    "version": "24.21.0",
+    "linux-arm64": {
+      "url": "https://nodejs.org/dist/v24.21.0/node-v24.21.0-linux-arm64.tar.xz",
+      "sha256": "6ad1325edbdb5649c379b75a237147a666c95d4f9ae8d340fef2d1575d289ad2"
+    },
+    "linux-amd64": {
+      "url": "https://nodejs.org/dist/v24.21.0/node-v24.21.0-linux-x64.tar.xz",
+      "sha256": "fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6"
+    }
+  },
+  "ubuntuImage": "docker.io/library/ubuntu@sha256:f144425ff09be612d6d9ad965196e9cdc23dae1f42110a8a11a3e9a8198759f7",
+  "ubuntuSnapshot": "http://snapshot.ubuntu.com/ubuntu/20261007T000000Z"
+}

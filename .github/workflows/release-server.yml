@@ -5,10 +5,13 @@ on:
     branches: [master]
     paths:
       - server/package.json
-      - server/utils/build-release.sh
-      - config/release.ts
-      - .github/workflows/release-server.yml
   workflow_dispatch:
+    inputs:
+      action:
+        description: Stage artifacts again or promote the verified draft
+        type: choice
+        options: [promote, stage]
+        default: promote
 
 concurrency:
   group: release-server
@@ -19,7 +22,8 @@ permissions:
 
 jobs:
   prepare:
-    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || inputs.action == 'stage'
+    runs-on: ubuntu-24.04
     outputs:
       publish: ${{ steps.release.outputs.publish }}
       ref: ${{ steps.release.outputs.ref }}
@@ -37,14 +41,72 @@ jobs:
         id: release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          bun config/release.ts prepare server
+        run: bun config/release.ts prepare server
 
-  release:
+  build-server:
     needs: prepare
     if: needs.prepare.outputs.publish == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Build Server and ONNX
+        run: |
+          bun install --frozen-lockfile --filter @pierre/server
+          bash server/utils/build-release.sh .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: server-runtime
+          path: |
+            release-assets/pierre
+            release-assets/libonnxruntime.so.1
+          if-no-files-found: error
+          retention-days: 1
+
+  build-microvm:
+    needs: prepare
+    if: needs.prepare.outputs.publish == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          test -r /dev/kvm
+          test -w /dev/kvm
+
+      - name: Install host dependency
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libvirglrenderer1
+
+      - name: Build and smoke Linux microVM
+        run: bash server/microvm/scripts/build.sh linux-amd64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: server-microvm
+          path: server/microvm/build/pierre-linux-amd64.smolmachine
+          if-no-files-found: error
+          retention-days: 1
+
+  stage:
+    needs: [prepare, build-server, build-microvm]
+    if: needs.prepare.outputs.publish == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       REF: ${{ needs.prepare.outputs.ref }}
@@ -52,35 +114,48 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-
-      - uses: actions/checkout@v4
-        with:
           ref: ${{ env.REF }}
-          path: source
+          fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.2
 
-      - name: Build server artifacts
-        run: |
-          cd source
-          bun install --frozen-lockfile --filter @pierre/server
-          cd ..
-          bash server/utils/build-release.sh source
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: server-*
+          path: release-assets
+          merge-multiple: true
 
-      - name: Publish
+      - name: Verify assembled bundle
         run: |
-          bun config/release.ts publish server "$REF" source/release-assets
+          test -s release-assets/pierre
+          test -s release-assets/libonnxruntime.so.1
+          test -s release-assets/pierre-linux-amd64.smolmachine
+          BUNDLE="$RUNNER_TEMP/server/releases/$TAG"
+          mkdir -p "$BUNDLE"
+          cp release-assets/* "$BUNDLE/"
+          chmod 755 "$BUNDLE/pierre"
+          ln -s "$BUNDLE" "$RUNNER_TEMP/server/current"
+          test "$(LD_LIBRARY_PATH="$RUNNER_TEMP/server/current" \
+            "$RUNNER_TEMP/server/current/pierre" --version)" = "$TAG"
 
-      - name: Smoke test published server
-        run: |
-          mkdir -p "$RUNNER_TEMP/server-release"
-          gh release download "$TAG" \
-            --pattern pierre \
-            --pattern libonnxruntime.so.1 \
-            --dir "$RUNNER_TEMP/server-release"
-          chmod 755 "$RUNNER_TEMP/server-release/pierre"
-          test "$(LD_LIBRARY_PATH="$RUNNER_TEMP/server-release" \
-            "$RUNNER_TEMP/server-release/pierre" --version)" = "$TAG"
+      - name: Stage verified draft
+        run: bun config/release.ts stage server "$REF" release-assets
+
+  promote:
+    if: github.event_name == 'workflow_dispatch' && inputs.action == 'promote'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Publish verified Server draft
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bun config/release.ts promote server

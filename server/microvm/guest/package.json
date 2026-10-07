@@ -1,0 +1,7 @@
+{
+  "name": "pierre-microvm-guest",
+  "private": true,
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "1.0.4"
+  }
+}

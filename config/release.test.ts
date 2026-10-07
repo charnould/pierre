@@ -30,7 +30,8 @@ if (args[1] === 'view') {
 }
 if (args[1] === 'create') {
   const title = args[args.indexOf('--title') + 1]
-  state.release = { assets: [], isDraft: true, isPrerelease: false, name: title }
+  const body = args[args.indexOf('--notes') + 1]
+  state.release = { assets: [], body, isDraft: true, isPrerelease: false, name: title }
 }
 if (args[1] === 'delete-asset') {
   const name = args[3]
@@ -48,9 +49,10 @@ if (args[1] === 'upload') {
   }
 }
 if (args[1] === 'edit') {
-  state.release.isDraft = false
-  state.release.isPrerelease = false
-  state.release.name = args[args.indexOf('--title') + 1]
+  if (args.includes('--draft=false')) state.release.isDraft = false
+  if (args.includes('--prerelease=false')) state.release.isPrerelease = false
+  if (args.includes('--title')) state.release.name = args[args.indexOf('--title') + 1]
+  if (args.includes('--notes')) state.release.body = args[args.indexOf('--notes') + 1]
 }
 await Bun.write(statePath, JSON.stringify(state))
 `
@@ -176,7 +178,12 @@ describe('release reconciliation', () => {
       repo.state,
       JSON.stringify({
         release: {
-          assets: [{ name: 'libonnxruntime.so.1' }, { name: 'pierre' }],
+          assets: [
+            { name: 'libonnxruntime.so.1' },
+            { name: 'pierre' },
+            { name: 'pierre-linux-amd64.smolmachine' }
+          ],
+          body: '',
           isDraft: false,
           isPrerelease: false,
           name: 'server-1.1.0'
@@ -216,6 +223,52 @@ describe('release reconciliation', () => {
     expect(result.stderr).toContain('0.9.0 must be greater than 1.0.0')
   })
 
+  it('rejects release inputs changed without a version bump', async () => {
+    const repo = await repository()
+    await must(['git', 'tag', 'server-1.1.0'], repo.root)
+    await mkdir(join(repo.root, 'server/microvm'), { recursive: true })
+    await writeFile(join(repo.root, 'server/microvm/versions.json'), '{}\n')
+    await must(['git', 'add', '.'], repo.root)
+    await must(['git', 'commit', '-m', 'change microvm'], repo.root)
+    await writeFile(
+      repo.state,
+      JSON.stringify({
+        release: {
+          assets: [
+            { name: 'libonnxruntime.so.1' },
+            { name: 'pierre' },
+            { name: 'pierre-linux-amd64.smolmachine' }
+          ],
+          body: '',
+          isDraft: false,
+          isPrerelease: false,
+          name: 'server-1.1.0'
+        }
+      })
+    )
+    const result = await run(
+      ['bun', RELEASE_SCRIPT, 'prepare', 'server'],
+      repo.root,
+      releaseEnv(repo)
+    )
+    expect(result.exitCode).toBe(1)
+    expect(result.stderr).toContain('release inputs changed without a version bump')
+  })
+
+  it('requires the version bump to be the final release commit', async () => {
+    const repo = await repository()
+    await writeFile(join(repo.root, 'README.md'), 'later fix\n')
+    await must(['git', 'add', '.'], repo.root)
+    await must(['git', 'commit', '-m', 'later fix'], repo.root)
+    const result = await run(
+      ['bun', RELEASE_SCRIPT, 'prepare', 'server'],
+      repo.root,
+      releaseEnv(repo)
+    )
+    expect(result.exitCode).toBe(1)
+    expect(result.stderr).toContain('in the release commit')
+  })
+
   it('removes stale draft assets before publishing the complete contract', async () => {
     const repo = await repository()
     await must(['git', 'tag', 'server-1.1.0'], repo.root)
@@ -224,6 +277,7 @@ describe('release reconciliation', () => {
       JSON.stringify({
         release: {
           assets: [{ name: 'stale.txt' }],
+          body: '',
           isDraft: true,
           isPrerelease: false,
           name: 'wrong title'
@@ -234,6 +288,7 @@ describe('release reconciliation', () => {
     await mkdir(assets)
     await writeFile(join(assets, 'libonnxruntime.so.1'), 'library')
     await writeFile(join(assets, 'pierre'), 'binary')
+    await writeFile(join(assets, 'pierre-linux-amd64.smolmachine'), 'microvm')
 
     const result = await run(
       ['bun', RELEASE_SCRIPT, 'publish', 'server', repo.head, assets],
@@ -246,10 +301,39 @@ describe('release reconciliation', () => {
     expect(state.release.name).toBe('server-1.1.0')
     expect(state.release.assets.map((asset) => asset.name).sort()).toEqual([
       'libonnxruntime.so.1',
-      'pierre'
+      'pierre',
+      'pierre-linux-amd64.smolmachine'
     ])
     expect(await readFile(repo.log, 'utf8')).toContain(
       'release delete-asset server-1.1.0 stale.txt --yes'
     )
+  })
+
+  it('refuses to promote draft assets changed after staging', async () => {
+    const repo = await repository()
+    await must(['git', 'tag', 'server-1.1.0'], repo.root)
+    const assets = join(repo.root, 'assets')
+    await mkdir(assets)
+    await writeFile(join(assets, 'libonnxruntime.so.1'), 'library')
+    await writeFile(join(assets, 'pierre'), 'binary')
+    await writeFile(join(assets, 'pierre-linux-amd64.smolmachine'), 'microvm')
+
+    const staged = await run(
+      ['bun', RELEASE_SCRIPT, 'stage', 'server', repo.head, assets],
+      repo.root,
+      releaseEnv(repo)
+    )
+    expect(staged.exitCode).toBe(0)
+    const state = JSON.parse(await readFile(repo.state, 'utf8'))
+    state.release.assets[0].digest = 'sha256:tampered'
+    await writeFile(repo.state, JSON.stringify(state))
+
+    const promoted = await run(
+      ['bun', RELEASE_SCRIPT, 'promote', 'server'],
+      repo.root,
+      releaseEnv(repo)
+    )
+    expect(promoted.exitCode).toBe(1)
+    expect(promoted.stderr).toContain('attestation mismatch')
   })
 })

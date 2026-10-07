@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { createHash } from 'node:crypto'
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, rm, symlink, unlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -21,12 +21,23 @@ import { restart } from '../src/commands/restart.ts'
 import { installCliRelease, updateCli } from '../src/commands/update-cli.ts'
 import { updateServer } from '../src/commands/update-server.ts'
 import { formatEnv, parseDotenv, type ParsedEnv } from '../src/lib/config.ts'
-import { block, tempRoot, testContext, writeExe } from './support.ts'
+import { block, tempRoot, testContext, writeExe, writeServerBundle } from './support.ts'
 
 const sampleEnv = (): ParsedEnv => {
   const parsed = parseDotenv(block(), 'install', {}, (bytes) => 'ab'.repeat(bytes))
   if (!parsed.ok) throw new Error(parsed.error)
   return parsed.env
+}
+
+async function writeServerChecksums(directory: string) {
+  const names = ['pierre', 'libonnxruntime.so.1', 'pierre-linux-amd64.smolmachine']
+  const lines = names.map((name) => {
+    const digest = createHash('sha256')
+      .update(readFileSync(join(directory, name)))
+      .digest('hex')
+    return `${digest}  ${name}`
+  })
+  await writeFile(join(directory, 'checksums.txt'), `${lines.join('\n')}\n`)
 }
 
 describe('environnement et santé', () => {
@@ -161,6 +172,12 @@ describe('installation atomique', () => {
     const ctx = testContext(root, {
       start: (command, args) => {
         const name = command.split('/').pop()
+        if (name === 'smolvm' && args[0] === '--version') {
+          return {
+            finished: Promise.resolve({ code: 0, stdout: 'smolvm 1.24.0\n', stderr: '' }),
+            kill: () => undefined
+          }
+        }
         if (name === 'apt-get' && args.includes('caddy')) {
           aptCaddy = true
           return {
@@ -190,15 +207,6 @@ describe('installation atomique', () => {
       stdinTTY: false,
       readStdin: async () => block(),
       request: async (url) => {
-        if (url.includes('/releases/tags/microvm')) {
-          return {
-            status: 200,
-            body: JSON.stringify({
-              assets: [{ name: 'pierre-amd64.smolmachine', digest: 'sha256:abc' }]
-            }),
-            url
-          }
-        }
         if (url.includes('api.github.com')) {
           return {
             status: 200,
@@ -217,6 +225,12 @@ describe('installation atomique', () => {
         return { status: 200, body: url.includes('api.anthropic.com') ? '' : 'ok', url }
       },
       start: (command, args) => {
+        if (command.endsWith('/smolvm') && args[0] === '--version') {
+          return {
+            finished: Promise.resolve({ code: 0, stdout: 'smolvm 1.24.0\n', stderr: '' }),
+            kill: () => undefined
+          }
+        }
         if (args[0] === '--version' && command.endsWith('/pierre')) {
           return {
             finished: Promise.resolve({ code: 0, stdout: 'server-0.41.0\n', stderr: '' }),
@@ -236,7 +250,8 @@ describe('installation atomique', () => {
     ctx.ctx.runtime.env['PIERRE_ASSET_DIR'] = root
     await writeExe(join(root, 'pierre'), '#!/bin/sh\necho server-0.41.0\n')
     await writeFile(join(root, 'libonnxruntime.so.1'), 'library')
-    await writeFile(join(root, 'pierre-amd64.smolmachine'), 'image')
+    await writeFile(join(root, 'pierre-linux-amd64.smolmachine'), 'image')
+    await writeServerChecksums(root)
     await writeFile(join(root, 'model.zip'), 'zip')
     const code = await installCommand(ctx.ctx)
     expect(code).toBe(0)
@@ -249,7 +264,7 @@ describe('installation atomique', () => {
 describe('mises à jour séparées', () => {
   it('does not download when the server is current and never touches the cli', async () => {
     const root = await tempRoot('pierre-update-')
-    await writeExe(join(root, 'pierre-server'), '#!/bin/sh\necho server-0.40.6\n')
+    await writeServerBundle(root, 'server-0.40.6')
     await writeFile(join(root, 'pierre.env'), 'HOST=example.org\n')
     await writeFile(join(root, 'pierre'), 'old cli')
     const ctx = testContext(root, { env: { PIERRE_UPDATE_TAG: 'server-0.40.6' } })
@@ -258,14 +273,74 @@ describe('mises à jour séparées', () => {
     expect(readFileSync(join(root, 'pierre'), 'utf8')).toBe('old cli')
   })
 
+  it('migrates the legacy unit to an immutable bundle before validating health', async () => {
+    const root = await tempRoot('pierre-migrate-')
+    const assets = join(root, 'assets')
+    await mkdir(assets)
+    await writeExe(join(root, 'legacy-pierre'), '#!/bin/sh\necho server-0.40.6\n')
+    await writeFile(join(root, 'legacy-libonnxruntime.so.1'), 'old library')
+    await writeFile(join(root, 'pierre.service'), 'ExecStart=/usr/local/lib/pierre\n')
+    await writeFile(join(root, 'pierre.env'), 'HOST=example.org\n')
+    await writeExe(join(assets, 'pierre'), '#!/bin/sh\necho server-0.41.0\n')
+    await writeFile(join(assets, 'libonnxruntime.so.1'), 'new library')
+    await writeFile(join(assets, 'pierre-linux-amd64.smolmachine'), 'new microvm')
+    await writeServerChecksums(assets)
+    const ctx = testContext(root, {
+      env: { PIERRE_UPDATE_TAG: 'server-0.41.0', PIERRE_ASSET_DIR: assets }
+    })
+
+    expect(await updateServer(ctx.ctx)).toBe(0)
+    expect(await Bun.$`${join(root, 'home', 'server', 'current', 'pierre')} --version`.text()).toBe(
+      'server-0.41.0\n'
+    )
+    expect(readFileSync(join(root, 'pierre.service'), 'utf8')).toContain(
+      join(root, 'home', 'server', 'current', 'pierre')
+    )
+    const stop = ctx.calls.findIndex(
+      (call) => call.command === 'systemctl' && call.args[0] === 'stop'
+    )
+    const start = ctx.calls.findIndex(
+      (call) => call.command === 'systemctl' && call.args[0] === 'start'
+    )
+    expect(stop).toBeGreaterThanOrEqual(0)
+    expect(start).toBeGreaterThan(stop)
+    expect(existsSync(join(root, 'legacy-pierre'))).toBe(false)
+    expect(existsSync(join(root, 'legacy-libonnxruntime.so.1'))).toBe(false)
+  })
+
+  it('never executes a Server binary before its checksum is verified', async () => {
+    const root = await tempRoot('pierre-server-checksum-')
+    const assets = join(root, 'assets')
+    const executed = join(root, 'executed')
+    await mkdir(assets)
+    await writeServerBundle(root, 'server-0.40.6')
+    await writeFile(join(root, 'pierre.env'), 'HOST=example.org\n')
+    await writeExe(join(assets, 'pierre'), `#!/bin/sh\ntouch "${executed}"\necho server-0.41.0\n`)
+    await writeFile(join(assets, 'libonnxruntime.so.1'), 'new library')
+    await writeFile(join(assets, 'pierre-linux-amd64.smolmachine'), 'new microvm')
+    await writeFile(
+      join(assets, 'checksums.txt'),
+      [`0000  pierre`, `0000  libonnxruntime.so.1`, `0000  pierre-linux-amd64.smolmachine`].join(
+        '\n'
+      )
+    )
+    const ctx = testContext(root, {
+      env: { PIERRE_UPDATE_TAG: 'server-0.41.0', PIERRE_ASSET_DIR: assets }
+    })
+
+    expect(await updateServer(ctx.ctx)).toBe(1)
+    expect(existsSync(executed)).toBe(false)
+  })
+
   it('replaces the server and ONNX, then restores both when the new server stays down', async () => {
     const root = await tempRoot('pierre-update-')
     const assets = join(root, 'assets')
     await mkdir(assets)
-    await writeExe(join(root, 'pierre-server'), '#!/bin/sh\necho server-0.40.6\n')
+    await writeServerBundle(root, 'server-0.40.6')
     await writeExe(join(assets, 'pierre'), '#!/bin/sh\necho server-0.41.0\n')
-    await writeFile(join(root, 'libonnxruntime.so.1'), 'old library')
     await writeFile(join(assets, 'libonnxruntime.so.1'), 'new library')
+    await writeFile(join(assets, 'pierre-linux-amd64.smolmachine'), 'new microvm')
+    await writeServerChecksums(assets)
     await writeFile(join(root, 'pierre.env'), 'HOST=example.org\n')
     await writeFile(join(root, 'pierre'), 'cli stays')
     await writeFile(join(root, 'home', 'datastore.sqlite'), 'database')
@@ -281,7 +356,9 @@ describe('mises à jour séparées', () => {
     })
     expect(await updateServer(ctx.ctx)).toBe(1)
     expect(ctx.err()).toContain('version précédente a été restaurée')
-    expect(readFileSync(join(root, 'libonnxruntime.so.1'), 'utf8')).toBe('old library')
+    expect(
+      readFileSync(join(root, 'home', 'server', 'current', 'libonnxruntime.so.1'), 'utf8')
+    ).toBe('library')
     expect(readFileSync(join(root, 'pierre'), 'utf8')).toBe('cli stays')
     expect(readFileSync(join(root, 'home', 'datastore.sqlite'), 'utf8')).toBe('database')
   })
@@ -295,12 +372,14 @@ describe('mises à jour séparées', () => {
     chmodSync(binary, 0o755)
     const hash = createHash('sha256').update(readFileSync(binary)).digest('hex')
     await writeFile(join(assets, 'checksums.txt'), `${hash}  pierre-cli-linux-x64\n`)
-    await writeExe(join(root, 'pierre-server'), '#!/bin/sh\necho server-0.40.6\n')
+    await writeServerBundle(root, 'server-0.40.6')
     await writeFile(join(root, 'pierre'), 'old cli')
     const ctx = testContext(root, { env: { PIERRE_ASSET_DIR: assets } })
     expect(await installCliRelease(ctx.ctx, 'cli-0.9.1')).toBe(0)
     expect(ctx.out()).toContain('cli-0.9.1 est installé')
-    expect(readFileSync(join(root, 'pierre-server'), 'utf8')).toContain('server-0.40.6')
+    expect(readFileSync(join(root, 'home', 'server', 'current', 'pierre'), 'utf8')).toContain(
+      'server-0.40.6'
+    )
     const installed = await Bun.$`${join(root, 'pierre')} --version`.text()
     expect(installed).toBe('cli-0.9.1\n')
   })
@@ -330,18 +409,25 @@ describe('mises à jour séparées', () => {
 
   it('recovers an interrupted server update before checking for a new release', async () => {
     const root = await tempRoot('pierre-server-recover-')
-    const previous = join(root, 'pierre-server.previous')
-    await mkdir(previous)
-    await writeExe(join(root, 'pierre-server'), '#!/bin/sh\necho server-9.9.9\n')
-    await writeFile(join(root, 'libonnxruntime.so.1'), 'new library')
-    await writeExe(join(previous, 'pierre'), '#!/bin/sh\necho server-0.40.6\n')
-    await writeFile(join(previous, 'libonnxruntime.so.1'), 'old library')
+    const previous = await writeServerBundle(root, 'server-0.40.6')
+    const broken = join(root, 'home', 'server', 'releases', 'server-9.9.9')
+    await mkdir(broken)
+    await writeExe(join(broken, 'pierre'), '#!/bin/sh\necho server-9.9.9\n')
+    await writeFile(join(broken, 'libonnxruntime.so.1'), 'new library')
+    await writeFile(join(broken, 'pierre-linux-amd64.smolmachine'), 'new microvm')
+    const current = join(root, 'home', 'server', 'current')
+    await unlink(current)
+    await symlink(broken, current)
+    await writeFile(
+      join(root, 'home', 'server', 'update.json'),
+      `${JSON.stringify({ previous })}\n`
+    )
     await writeFile(join(root, 'pierre.env'), 'HOST=example.org\n')
     const ctx = testContext(root, { env: { PIERRE_UPDATE_TAG: 'server-0.40.6' } })
     expect(await updateServer(ctx.ctx)).toBe(0)
-    expect(await Bun.$`${join(root, 'pierre-server')} --version`.text()).toBe('server-0.40.6\n')
-    expect(readFileSync(join(root, 'libonnxruntime.so.1'), 'utf8')).toBe('old library')
-    expect(existsSync(previous)).toBe(false)
+    expect(await Bun.$`${join(current, 'pierre')} --version`.text()).toBe('server-0.40.6\n')
+    expect(readFileSync(join(current, 'libonnxruntime.so.1'), 'utf8')).toBe('library')
+    expect(existsSync(join(root, 'home', 'server', 'update.json'))).toBe(false)
     expect(ctx.out()).toContain('Restauration de la mise à jour serveur interrompue')
   })
 })
@@ -435,8 +521,9 @@ describe('maintenance', () => {
 
   it('explains how to copy a backup', async () => {
     const root = await tempRoot('pierre-backup-')
+    await writeServerBundle(root, 'server-0.40.6')
     await writeExe(
-      join(root, 'pierre-server'),
+      join(root, 'home', 'server', 'current', 'pierre'),
       "#!/bin/sh\nprintf '/var/lib/pierre/backups/datastore.sqlite\\n'\n"
     )
     await writeFile(join(root, 'pierre.env'), 'HOST=gx.pierre-ia.org\n')

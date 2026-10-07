@@ -1,4 +1,4 @@
-import { chmod, mkdir, mkdtemp, writeFile } from 'node:fs/promises'
+import { chmod, mkdir, mkdtemp, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -33,7 +33,26 @@ export const writeExe = async (path: string, body: string) => {
 export async function tempRoot(prefix: string) {
   const root = await mkdtemp(join(tmpdir(), prefix))
   await mkdir(join(root, 'home'), { recursive: true })
+  const smolvmRelease = join(root, 'smolvm-runtime', 'releases', '1.24.0')
+  await mkdir(smolvmRelease, { recursive: true })
+  await writeExe(join(smolvmRelease, 'smolvm'), '#!/bin/sh\necho "smolvm 1.24.0"\n')
+  const smolvm = await Bun.file(join(smolvmRelease, 'smolvm')).arrayBuffer()
+  const digest = new Bun.CryptoHasher('sha256').update(smolvm).digest('hex')
+  await writeFile(join(smolvmRelease, 'checksums.txt'), `${digest}  smolvm\n`)
+  await symlink(smolvmRelease, join(root, 'smolvm-runtime', 'current'))
+  await symlink(join(root, 'smolvm-runtime', 'current', 'smolvm'), join(root, 'smolvm'))
   return root
+}
+
+export async function writeServerBundle(root: string, tag: string, version = tag): Promise<string> {
+  const serverRoot = join(root, 'home', 'server')
+  const release = join(serverRoot, 'releases', tag)
+  await mkdir(release, { recursive: true })
+  await writeExe(join(release, 'pierre'), `#!/bin/sh\necho ${version}\n`)
+  await writeFile(join(release, 'libonnxruntime.so.1'), 'library')
+  await writeFile(join(release, 'pierre-linux-amd64.smolmachine'), 'microvm')
+  await symlink(release, join(serverRoot, 'current'))
+  return release
 }
 
 export function testContext(root: string, overrides: RuntimeOverrides = {}) {
@@ -49,15 +68,17 @@ export function testContext(root: string, overrides: RuntimeOverrides = {}) {
     PIERRE_PREVIOUS_ENV_FILE: join(root, 'pierre.env.previous'),
     PIERRE_INSTALL_LOG: join(root, 'install.log'),
     PIERRE_ASSET_SOURCE_FILE: join(root, 'asset-source'),
-    PIERRE_BIN: join(root, 'pierre-server'),
+    PIERRE_LEGACY_BIN: join(root, 'legacy-pierre'),
+    PIERRE_LEGACY_SO: join(root, 'legacy-libonnxruntime.so.1'),
+    PIERRE_SERVER_ROOT: join(root, 'home', 'server'),
     PIERRE_CMD: join(root, 'pierre'),
-    PIERRE_SO: join(root, 'libonnxruntime.so.1'),
     PIERRE_UNIT_FILE: join(root, 'pierre.service'),
     PIERRE_CARL_UNIT: join(root, 'carl.service'),
     PIERRE_CADDY_FILE: join(root, 'Caddyfile'),
     PIERRE_PREVIOUS_CADDY_FILE: join(root, 'Caddyfile.previous'),
     PIERRE_SMOLVM_BIN: join(root, 'smolvm'),
     PIERRE_SMOLVM_HOME: join(root, 'smolvm-home'),
+    PIERRE_SMOLVM_ROOT: join(root, 'smolvm-runtime'),
     ...overrides.env
   }
   const runtime = createRuntime({

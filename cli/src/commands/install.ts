@@ -32,7 +32,14 @@ import {
   renderDetailLine,
   renderHintLine
 } from '../lib/output.ts'
-import { prepareServerFiles, stageServerBundle } from '../lib/server-bundle.ts'
+import {
+  activateServerRelease,
+  commitServerBundle,
+  createServerStage,
+  stageServerBundle
+} from '../lib/server-bundle.ts'
+import { writeServerUnit } from '../lib/server-service.ts'
+import { ensureSmolvm } from '../lib/smolvm-runtime.ts'
 import {
   CommandFailed,
   must,
@@ -120,15 +127,6 @@ async function installPackages(ctx: Context) {
   await must(ctx.runtime, 'apt-get', ['install', '-y', ...PACKAGES], { env: aptEnv })
 }
 
-async function installSmolvm(ctx: Context) {
-  if (existsSync(ctx.runtime.paths.smolvmBin)) return
-  await must(ctx.runtime, 'bash', [
-    '-c',
-    'curl -fsSL https://smolmachines.com/install.sh | bash -s -- --version 1.0.4'
-  ])
-  await must(ctx.runtime, 'ln', ['-sfn', '/root/.smolvm/smolvm', ctx.runtime.paths.smolvmBin])
-}
-
 async function installCaddy(ctx: Context) {
   if (!existsSync('/usr/share/keyrings/caddy-stable-archive-keyring.gpg')) {
     await must(ctx.runtime, 'bash', [
@@ -145,45 +143,16 @@ async function installCaddy(ctx: Context) {
 }
 
 async function installServerBinaries(ctx: Context, tag: string) {
-  const stage = mkdtempSync(join(tmpdir(), 'pierre-server-install-'))
-  const { bin, so } = ctx.runtime.paths
+  const stage = createServerStage(ctx)
+  let staged = stage
   try {
     await stageServerBundle(ctx, tag, stage)
-    prepareServerFiles(ctx, stage)
-    renameSync(`${so}.new`, so)
-    renameSync(`${bin}.new`, bin)
-    await must(ctx.runtime, 'ldconfig', [])
+    const release = await commitServerBundle(ctx, tag, stage)
+    staged = ''
+    activateServerRelease(ctx, release)
   } finally {
-    rmSync(`${bin}.new`, { force: true })
-    rmSync(`${so}.new`, { force: true })
-    rmSync(stage, { recursive: true, force: true })
+    if (staged) rmSync(staged, { recursive: true, force: true })
   }
-}
-
-async function installImage(ctx: Context) {
-  const dest = join(ctx.runtime.paths.home, 'smolvm', 'pierre-amd64.smolmachine')
-  const stamp = `${dest}.sha256`
-  mkdirSync(dirname(dest), { recursive: true })
-  let digest = ''
-  try {
-    const response = await ctx.runtime.request(
-      'https://api.github.com/repos/charnould/pierre/releases/tags/microvm',
-      {
-        headers: { accept: 'application/vnd.github+json', 'user-agent': 'pierre-cli' },
-        timeoutMs: 10_000
-      }
-    )
-    const parsed = JSON.parse(response.body) as {
-      assets?: Array<{ name?: string; digest?: string }>
-    }
-    digest = parsed.assets?.find((asset) => asset.name === 'pierre-amd64.smolmachine')?.digest ?? ''
-  } catch {
-    digest = ''
-  }
-  if (!digest) throw new CommandFailed(1, "L'image smolVM est introuvable.")
-  if (existsSync(dest) && existsSync(stamp) && readFileSync(stamp, 'utf8').trim() === digest) return
-  await fetchTo(ctx, 'pierre-amd64.smolmachine', dest, 'microvm')
-  writeFileSync(stamp, `${digest}\n`)
 }
 
 export async function installModel(ctx: Context, tag: string) {
@@ -224,31 +193,12 @@ async function installLatestModel(ctx: Context) {
 }
 
 async function writeUnits(ctx: Context) {
-  const { home, envFile, bin, unitFile, carlUnit } = ctx.runtime.paths
-  writeFileSync(
-    unitFile,
-    `[Unit]
-Description=PIERRE
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Environment=NODE_ENV=production
-Environment=PIERRE_HOME=${home}
-EnvironmentFile=${envFile}
-ExecStart=${bin}
-Restart=on-failure
-RestartSec=2
-
-[Install]
-WantedBy=multi-user.target
-`
-  )
+  const { carlUnit } = ctx.runtime.paths
+  await writeServerUnit(ctx)
   if (existsSync(carlUnit)) {
     await runCommand(ctx.runtime, 'systemctl', ['disable', '--now', 'carl'])
     rmSync(carlUnit, { force: true })
   }
-  await must(ctx.runtime, 'systemctl', ['daemon-reload'])
   await must(ctx.runtime, 'systemctl', ['enable', 'pierre'])
   await must(ctx.runtime, 'systemctl', ['restart', 'pierre'])
 }
@@ -374,6 +324,10 @@ async function installSuccess(ctx: Context, env: ParsedEnv) {
 }
 
 export async function runInstallation(ctx: Context, env: ParsedEnv): Promise<number> {
+  if (installationComplete(ctx.runtime)) {
+    sayError(ctx, 'PIERRE est déjà installé. Utilisez `pierre update`.')
+    return 1
+  }
   const logFile = ctx.runtime.paths.installLog
   mkdirSync(dirname(logFile), { recursive: true })
   writeFileSync(logFile, '', { mode: 0o600 })
@@ -384,10 +338,14 @@ export async function runInstallation(ctx: Context, env: ParsedEnv): Promise<num
   const steps: Array<[string, () => Promise<void>]> = [
     ['Prérequis du serveur', () => verifyInstallMachine(ctx)],
     ['Paquets système', () => installPackages(ctx)],
-    ['Moteur de micro-VM', () => installSmolvm(ctx)],
+    [
+      'Moteur de micro-VM',
+      async () => {
+        await ensureSmolvm(ctx)
+      }
+    ],
     ['Serveur web Caddy', () => installCaddy(ctx)],
     ['Serveur PIERRE', async () => installServerBinaries(ctx, await serverTag(ctx))],
-    ['Image des micro-VM', () => installImage(ctx)],
     ['Modèle carl', () => installLatestModel(ctx)]
   ]
   for (const [label, action] of steps) {

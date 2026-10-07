@@ -15,8 +15,6 @@ export async function remove(ctx: Context): Promise<number> {
   await runCommand(ctx.runtime, 'systemctl', ['disable', '--now', 'carl'])
   await deleteMachines(ctx)
   for (const file of [
-    paths.bin,
-    paths.so,
     paths.envFile,
     paths.pendingEnvFile,
     paths.previousEnvFile,
@@ -31,6 +29,12 @@ export async function remove(ctx: Context): Promise<number> {
     rmSync(file, { force: true })
   }
   rmSync(paths.smolvmHome, { recursive: true, force: true })
+  rmSync(paths.smolvmRoot, { recursive: true, force: true })
+  rmSync('/root/.local/share/smolvm', { recursive: true, force: true })
+  rmSync('/root/.local/bin/smolvm', { force: true })
+  rmSync('/root/.cache/smolvm', { recursive: true, force: true })
+  rmSync('/root/.cache/smolvm-pack', { recursive: true, force: true })
+  rmSync('/root/.cache/smolvm-libs', { recursive: true, force: true })
   rmSync(paths.home, { recursive: true, force: true })
   await runCommand(ctx.runtime, 'systemctl', ['daemon-reload'])
   await runCommand(ctx.runtime, 'ldconfig', [])

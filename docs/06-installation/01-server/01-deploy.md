@@ -174,11 +174,11 @@ pierre update
 pierre update-cli
 ```
 
-`pierre update` télécharge le serveur et la bibliothèque ONNX depuis une même release stable `server-x.y.z`. Les deux fichiers sont vérifiés avant toute modification. Le serveur est installé et testé ; s'il ne redémarre pas, la version précédente de ces deux fichiers est restaurée. Le cli n'est pas modifié.
+`pierre update` télécharge le serveur, la bibliothèque ONNX et l'image microVM depuis une même release stable `server-x.y.z`. Le bundle complet est vérifié avant toute modification, puis activé atomiquement. S'il ne redémarre pas, le lien vers la version précédente est restauré. Le cli n'est pas modifié.
 
 `pierre update-cli` remplace seulement `/usr/local/bin/pierre`, après vérification de l'empreinte et de la version. Aucun service ni donnée n'est touché.
 
-La base, `files/`, `knowledge/`, `uploads/`, `backups/`, carl et les micro-VM restent en place. carl conserve son propre cycle de mise à jour avec `pierre carl`. Le cli a son propre cycle, publié sous les tags `cli-x.y.z`.
+La base, `files/`, `knowledge`, `uploads`, `backups` et carl restent en place. L'image microVM suit désormais exactement la version du serveur. carl conserve son propre cycle de mise à jour avec `pierre carl`. Le cli a son propre cycle, publié sous les tags `cli-x.y.z`.
 
 ### Déploiement
 
@@ -199,7 +199,7 @@ Navigateur                          VPS
 
 carl est chargé par le serveur au premier classement. Sans modèle, le site démarre et le classement répond 503.
 
-L'application Electron Desktop n'est pas installée sur le VPS. Le serveur contient le binaire PIERRE dans `/usr/local/lib/pierre`, sa bibliothèque ONNX et ses données. Le programme d'administration est distinct : `/usr/local/bin/pierre`. Les assets web nécessaires au serveur sont intégrés au binaire lors de la compilation.
+L'application Electron Desktop n'est pas installée sur le VPS. Le bundle actif vit sous `/var/lib/pierre/server/current` et contient le binaire PIERRE, sa bibliothèque ONNX et l'image microVM. Les versions précédentes sont des répertoires immuables sous `/var/lib/pierre/server/releases`. Le programme d'administration reste distinct : `/usr/local/bin/pierre`.
 
 ## Faire fonctionner PIERRE en local
 
@@ -209,9 +209,9 @@ Les instructions ci-après sont valables pour **macOS** ; elles doivent être co
 
 1. Installer `Bun` (≥ `1.4.x`) et vérifier sa bonne installation ([instructions](https://bun.sh/docs/installation)).
 2. Installer `SQLite3` et vérifier sa bonne installation ([instructions](https://www.sqlite.org/download.html)).
-3. Installer `smol` (microVM isolées) et vérifier sa bonne installation ([instructions](https://smolmachines.com/)).
-4. Forker/cloner le présent dépôt.
-5. Lancer `bun install` dans votre terminal pour installer les dépendances.
+3. Forker/cloner le présent dépôt.
+4. Lancer `bun install` dans votre terminal pour installer les dépendances.
+5. Construire l'image locale avec `bun --filter @pierre/server microvm:build:macos`. La commande télécharge et vérifie la version smolvm épinglée.
 6. Renommer le fichier `.env.example` en `.env` et le compléter.
 7. Dans votre terminal, lancer `bun dev:server` pour démarrer PIERRE Serveur (`http://localhost:3000` affiche une icône de verrou).
 8. Déposer les fichiers de [carl](../../../03-core-models-hlm/CARL.md) (`model.onnx`, `labels.json`, `tokenizer.json`, `tokenizer_config.json`) dans `server/models/carl`. Ils sont dans `model.zip`, sur la release `carl-*`. Sans ces fichiers, le serveur démarre et le classement répond 503.
