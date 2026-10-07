@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>`lots_locatifs` · PIERRE</title>
+  <link rel="icon" href="../../assets/favicon.ico" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Knewave&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" />
+  <style>
+    html, body { margin: 0; }
+    body { background: #fff; }
+    .article {
+      box-sizing: border-box;
+      max-width: 850px;
+      margin: 0;
+      padding: 2rem 2rem 3rem 4rem;
+      font-family: Merriweather, Georgia, serif;
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 24px;
+      letter-spacing: 0;
+      color: rgb(17, 17, 17);
+      text-align: left;
+      -webkit-font-smoothing: antialiased;
+    }
+    @media (max-width: 39.99rem) {
+      .article {
+        padding: 1.25rem 1.25rem 2rem;
+      }
+    }
+    .article h1,
+    .article h2,
+    .article h3,
+    .article h4,
+    .article h5,
+    .article h6 {
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-weight: 700;
+      letter-spacing: 0;
+      color: rgb(17, 17, 17);
+      text-wrap: balance;
+      -webkit-font-smoothing: antialiased;
+    }
+    .article h1 {
+      font-size: 36px;
+      line-height: 40.32px;
+      margin: 0 0 16px;
+    }
+    .article h2 {
+      font-size: 36px;
+      line-height: 40.32px;
+      margin: 80px 0 40px;
+    }
+    .article h3 {
+      font-size: 24px;
+      line-height: 28px;
+      margin: 40px 0 20px;
+    }
+    .article p {
+      margin: 0 0 16px;
+      text-wrap: pretty;
+    }
+    .article ul,
+    .article ol {
+      margin: 0 0 16px;
+      padding-inline-start: 1.5em;
+    }
+    .article ul {
+      list-style-type: disc;
+    }
+    .article ol {
+      list-style-type: decimal;
+    }
+    .article li {
+      display: list-item;
+      margin: 0 0 8px;
+      padding-inline-start: 0.25em;
+    }
+    .article li:last-child {
+      margin-bottom: 0;
+    }
+    .article ul ul {
+      list-style-type: circle;
+      margin: 8px 0 0;
+    }
+    .article a {
+      color: #0000ee;
+      text-underline-offset: 0.15em;
+    }
+    .article a:hover {
+      text-decoration-thickness: 2px;
+    }
+    .article strong {
+      font-weight: 600;
+    }
+    .article pre:not(.cadre) {
+      padding: 1em;
+    }
+    .article :not(pre) > code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.875em;
+    }
+    .article p:has(> .shot) {
+      --shot-gap: 0.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--shot-gap);
+      justify-content: flex-start;
+      width: min(calc(32rem * 3 + var(--shot-gap) * 2), calc(100vw - 4rem));
+      max-width: none;
+      margin-block-start: 30px;
+      margin-inline: 0;
+    }
+    @media (max-width: 39.99rem) {
+      .article p:has(> .shot) {
+        width: calc(100vw - 2.5rem);
+      }
+    }
+    .article .shot {
+      position: relative;
+      isolation: isolate;
+      overflow: visible;
+      flex: 0 1 100%;
+      width: 100%;
+      max-width: 100%;
+    }
+    @media (min-width: 40rem) {
+      .article .shot {
+        flex: 0 1 calc((100% - var(--shot-gap) * 2) / 3);
+        width: calc((100% - var(--shot-gap) * 2) / 3);
+        max-width: calc((100% - var(--shot-gap) * 2) / 3);
+      }
+      .article p:has(> .shot:only-child) .shot:has(img[data-zoomable]),
+      .article p:has(> .shot:nth-child(even):last-child) .shot:has(img[data-zoomable]) {
+        flex-basis: calc((100% - var(--shot-gap)) / 2);
+        width: calc((100% - var(--shot-gap)) / 2);
+        max-width: calc((100% - var(--shot-gap)) / 2);
+      }
+      .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) {
+        flex-basis: 90%;
+        width: 90%;
+        max-width: 90%;
+      }
+    }
+    .article .shot img {
+      display: block;
+      width: 100%;
+      margin: 0;
+      transform: translateX(-4.01%);
+    }
+    .article .shot img[data-zoomable] {
+      cursor: zoom-in;
+    }
+    .article .shot-title {
+      position: absolute;
+      top: 0.45rem;
+      left: -0.65rem;
+      z-index: 1;
+      max-width: calc(100% - 1rem);
+      padding: 0.15rem 0.55rem 0.08rem;
+      background: #ffe500;
+      color: #111;
+      font-family: Knewave, cursive;
+      font-size: 1.05rem;
+      font-weight: 400;
+      font-synthesis: none;
+      letter-spacing: 0.01em;
+      line-height: 1.15;
+      text-transform: uppercase;
+      text-wrap: balance;
+      transform: rotate(-2deg);
+      transform-origin: left center;
+      pointer-events: none;
+    }
+    .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) .shot-title {
+      top: 1.5rem;
+      left: -0.65rem;
+    }
+    body.is-zooming .shot-title {
+      opacity: 0;
+    }
+    
+    /*
+ Solarized Color Schemes originally by Ethan Schoonover
+ http://ethanschoonover.com/solarized
+
+ Ported for PrismJS by Hector Matos
+ Website: https://krakendev.io
+ Twitter Handle: https://twitter.com/allonsykraken)
+*/
+
+/*
+SOLARIZED HEX
+--------- -------
+base03    #002b36
+base02    #073642
+base01    #586e75
+base00    #657b83
+base0     #839496
+base1     #93a1a1
+base2     #eee8d5
+base3     #fdf6e3
+yellow    #b58900
+orange    #cb4b16
+red       #dc322f
+magenta   #d33682
+violet    #6c71c4
+blue      #268bd2
+cyan      #2aa198
+green     #859900
+*/
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: #657b83; /* base00 */
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	font-size: 1em;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
+code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
+	background: #073642; /* base02 */
+}
+
+pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
+code[class*="language-"]::selection, code[class*="language-"] ::selection {
+	background: #073642; /* base02 */
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+	border-radius: 0.3em;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background-color: #fdf6e3; /* base3 */
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: #93a1a1; /* base1 */
+}
+
+.token.punctuation {
+	color: #586e75; /* base01 */
+}
+
+.token.namespace {
+	opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #268bd2; /* blue */
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.url,
+.token.inserted {
+	color: #2aa198; /* cyan */
+}
+
+.token.entity {
+	color: #657b83; /* base00 */
+	background: #eee8d5; /* base2 */
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+	color: #859900; /* green */
+}
+
+.token.function,
+.token.class-name {
+	color: #b58900; /* yellow */
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+	color: #cb4b16; /* orange */
+}
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
+}
+
+  </style>
+</head>
+<body>
+  <article class="article">
+    <h5 id="pierreindexmd--core-data-hlmindexmd--lotslocatifs"><a href="../../index.html">PIERRE</a> ∕ <a href="../../02-core-data-hlm/index.html">CORE DATA HLM</a> ∕ LOTS_LOCATIFS</h5>
+<h1 id="lotslocatifs"><code>lots_locatifs</code></h1>
+<h2 id="objectif">Objectif</h2>
+<p>Décrire le patrimoine locatif <strong>et</strong> l’état courant d’occupation de chaque lot (vacance, assurance habitation, coordonnées du locataire en place) à l’instant T. La table logique est <code>lots_locatifs</code> ; le fichier transmis à PIERRE est <code>core.lots_locatifs.csv</code>.</p>
+<h2 id="un-rôle-dual--patrimoine--occupation">Un rôle dual : patrimoine + occupation</h2>
+<p><code>lots_locatifs</code> fusionne <strong>patrimoine + occupation</strong> en un seul export : chaque lot porte ses caractéristiques statiques et son état dynamique, ce qui élimine les jointures pour la plupart des cas d'usage.</p>
+<p><strong>Fraîcheur des données</strong> : une <strong>mise à jour quotidienne</strong> de ce fichier est recommandée pour que la vacance, les coordonnées locataire et les échéances d'assurance reflètent la réalité opérationnelle. Le champ <code>date_extraction</code> (socle partagé) ancre l'instant T de cette photographie.</p>
+<h2 id="entité-logique">Entité logique</h2>
+<p>Une ligne = un <strong>lot</strong> (logement, garage, commerce…) — la granularité de gestion locative. Le bailleur choisit son périmètre : tout le parc ou un sous-ensemble (par type, localisation, statut, etc.).</p>
+<h2 id="colonnes-normatives">Colonnes normatives</h2>
+<p><code>lots_locatifs</code> reprend l'intégralité du <strong>socle normatif partagé</strong> et y ajoute les colonnes obligatoires ci-dessous. Toutes doivent figurer dans l'export (<a href="../../02-core-data-hlm/01-conventions.html#colonnes-requises-et-d%C3%A9finitions-canoniques">présence obligatoire</a>) ; leurs valeurs peuvent être <code>null</code> (ex. lot vacant, RGPD, etc.).</p>
+<div class="typeset-scroll"><table>
+<thead>
+<tr><th>Champ</th><th>Définition canonique</th></tr>
+</thead>
+<tbody>
+<tr><td><code>statut</code></td><td>Valeurs autorisées : <code>null</code>, <code>a_vendre</code>, <code>a_demolir</code> <code>a_livrer</code></td></tr>
+<tr><td><code>nom_locataire</code></td><td>Nom du locataire en place (ex. <code>Becquerel</code>) ; <code>null</code> si vacant</td></tr>
+<tr><td><code>email_locataire</code></td><td>Courriel du locataire en place (ex. <code>henri.becquerel@gmail.com</code>) ; <code>null</code> si vacant</td></tr>
+<tr><td><code>telephone_locataire</code></td><td>Téléphone du locataire en place, de préférence mobile (ex. <code>06 11 56 39 59</code>) ; <code>null</code> si vacant</td></tr>
+<tr><td><code>allocataire_caf</code></td><td>384838849030493 ou <code>null</code></td></tr>
+<tr><td><code>demande_sne</code></td><td>939492939399 ou <code>null</code></td></tr>
+<tr><td><code>expiration_assurance_habitation</code></td><td>Date d’échéance ou de renouvellement de l’assurance habitation (ex. <code>2026-12-12</code>) ; <code>null</code> si vacant</td></tr>
+<tr><td><code>adresse</code></td><td>Adresse du lot hors commune et code postal (ex. <code>21, rue des Pyramides</code>)</td></tr>
+<tr><td><code>debut_bail</code></td><td>Date de début du quittancement (ex. <code>2026-12-12</code>) ; <code>null</code> si vacant</td></tr>
+<tr><td><code>etat_des_lieux_entrant</code></td><td>Date de l'état des lieux entrant du locataire (ex. <code>2026-12-12</code>) ; <code>null</code> si vacant</td></tr>
+<tr><td><code>pre_etat_des_lieux_sortant</code></td><td>Date de la visite-conseil du locataire (ex. <code>2026-12-12</code>) ; <code>null</code> si vacant</td></tr>
+<tr><td><code>etat_des_lieux_sortant</code></td><td>Date de l'état des lieux sortant du locataire (ex. <code>2026-12-12</code>) ; <code>null</code> si vacant</td></tr>
+<tr><td><code>fin_bail</code></td><td>Date de fin du quittancement (ex. <code>2026-12-12</code>) ; <code>null</code> si vacant</td></tr>
+<tr><td><code>surface_en_m2</code></td><td>Surface du lot en m² ; renseignée pour tous les lots (y compris vacants)</td></tr>
+<tr><td><code>loyer_mensuel_en_euros</code></td><td>Loyer mensuel en vigueur en euros (avec ou sans charges, au choix du bailleur) ; renseigné pour tous les lots (y compris vacants)</td></tr>
+</tbody>
+</table></div>
+<h2 id="règles-doccupation-et-vacance">Règles d’occupation et vacance</h2>
+<p><strong>Définition de la vacance</strong></p>
+<p>Seul <code>id_locataire</code> et <code>id_client</code> font foi (<code>null</code> ou vide). Ne pas créer de colonne redondante du type <code>est_loue</code> ou <code>vacant</code> : c'est une redondance qui risque de confondre PIERRE.</p>
+<p><strong>Conséquences (champs null lors de vacance)</strong></p>
+<p>Lot vacant : les colonnes suivantes doivent être <code>null</code> : <code>id_client</code>, <code>id_locataire</code>, <code>nom_locataire</code>, <code>email_locataire</code>, <code>telephone_locataire</code>, <code>allocataire_caf</code>, <code>demande_sne</code>, <code>expiration_assurance_habitation</code>, <code>debut_bail</code>, <code>etat_des_lieux_entrant</code>, <code>pre_etat_des_lieux_sortant</code>, <code>etat_des_lieux_sortant</code>, <code>fin_bail</code> (ou plus généralement, toute colonne pour laquelle les données sont obsolètes ou inapplicables).</p>
+<p><strong>Exception (caractéristiques du lot restent renseignées)</strong></p>
+<p><code>surface_en_m2</code> et <code>loyer_mensuel_en_euros</code> restent renseignés même si le lot est vacant : ce sont les propriétés du lot lui-même, pas de l'occupant actuel.</p>
+<h2 id="exemples-de-colonnes-libres">Exemples de colonnes libres</h2>
+<p><strong>Gestion patrimoniale</strong></p>
+<ul>
+<li><code>nature_du_lot</code> : logement, commerce, garage</li>
+<li><code>typologie</code> : T1, T2, T3, T3bis</li>
+<li><code>financement</code> : PLAI, PLUS, PLS, Libre</li>
+<li><code>adaptation_handicap</code> : logement labellisable HSS, logement labellisé HSS</li>
+<li><code>chauffage</code> : collectif ou individuel</li>
+<li><code>ascenseur</code> : oui, non</li>
+<li><code>prestataire_de_chauffage</code> : Iserba, X, Y</li>
+</ul>
+<p><strong>Gestion locative</strong></p>
+<ul>
+<li><code>charge_gestion_locative</code> : email du chargé de gestion locative</li>
+<li><code>charge_de_commercialisation</code> : email du chargé de commercialisation</li>
+<li><code>charge_de_proximite</code> : email du chargé de proximité</li>
+<li><code>prise_en_gestion</code> : date (ex. <code>1984-12-12</code>)</li>
+</ul>
+<p><strong>Caractéristiques énergétiques et environnementales</strong></p>
+<ul>
+<li><code>classe_consommation_energetique</code> : A, B, C, D, E, F</li>
+<li><code>classe_emission_gaz</code> : A, B, C, D, E, F</li>
+</ul>
+<p><strong>Localisation et zones</strong></p>
+<ul>
+<li><code>quartier_prioritaire_de_la_ville_(QPV)</code> : Résidence A, Résidence X…</li>
+<li><code>zone_anru</code> : oui, non</li>
+<li><code>incivilite</code> : oui, non</li>
+</ul>
+<div style="display: flex; justify-content: space-between; margin-top:50px"><p>←<a href="../../02-core-data-hlm/02-socle.html">Socle</a></p><p><a href="../../02-core-data-hlm/04-reclamations.html">core.reclamations.csv</a>→</p></div>
+
+  </article>
+  
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+  <script>
+    const zoom = mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
+    zoom.on('open', () => document.body.classList.add('is-zooming'))
+    zoom.on('closed', () => document.body.classList.remove('is-zooming'))
+  </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "channel": "rcs",
+  "id": "locataire_rcs_rappel_echeance_plan",
+  "group": "RCS/SMS au (ex-)client",
+  "action": "Relancer une échéance de plan",
+  "label": "Rappel échéance plan",
+  "body": "Bonjour 👋\n\nRappel : une échéance de votre plan d’apurement arrive. Merci d’effectuer le règlement prévu pour garder l’accord en place.\n\nUn souci ce mois-ci ? Prévenez-nous avant l’incident, on trouvera une solution 💪",
+  "sms_fallback": "👋 Rappel d’échéance de votre plan. Merci de régler comme convenu — ou prévenez-nous si c’est compliqué 💪",
+  "choices": [
+    { "type": "reply", "label": "✅ Échéance versée" },
+    { "type": "reply", "label": "⏳ Je paie sous 48 h" },
+    { "type": "reply", "label": "🆘 Impossible ce mois" }
+  ]
+}

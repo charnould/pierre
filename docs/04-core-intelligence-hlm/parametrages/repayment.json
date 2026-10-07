@@ -1,0 +1,130 @@
+{
+  "buckets": [
+    {
+      "id": "non_traites",
+      "label": "Non traités"
+    },
+    {
+      "id": "amiable",
+      "label": "Recouvrement amiable"
+    },
+    {
+      "id": "plan_apurement_en_cours",
+      "label": "Plan amiable / EV en cours"
+    },
+    {
+      "id": "pre_contentieux",
+      "label": "Précontentieux"
+    },
+    {
+      "id": "commandement_de_payer",
+      "label": "Commandement de payer"
+    },
+    {
+      "id": "plan_suite_cdp_en_cours",
+      "label": "Plan suite CDP"
+    },
+    {
+      "id": "contentieux",
+      "label": "Contentieux"
+    },
+    {
+      "id": "post_jugement",
+      "label": "Post-jugement"
+    },
+    {
+      "id": "surendettement_instruction",
+      "label": "Surendettement en instruction"
+    },
+    {
+      "id": "plan_bdf_en_cours",
+      "label": "Plan / mesures BDF en cours"
+    },
+    {
+      "id": "moratoire",
+      "label": "Moratoire Banque de France"
+    },
+    {
+      "id": "prp",
+      "label": "Rétablissement personnel"
+    },
+    {
+      "id": "clos",
+      "label": "Clos / soldé"
+    },
+    {
+      "id": "clients_partis",
+      "label": "Clients partis"
+    }
+  ],
+  "actions": {
+    "dossier": [
+      "Analyser le dossier",
+      "Joindre le locataire",
+      "Constater un appel sans réponse",
+      "Réaliser une visite",
+      "Demander des pièces",
+      "Analyser un rejet de prélèvement",
+      "Modifier l’échéance de prélèvement",
+      "Proposer un plan",
+      "Préparer un projet de plan",
+      "Relancer une échéance de plan",
+      "Constater un incident de plan",
+      "Modifier un plan",
+      "Contacter la CAF",
+      "Transmettre une saisine CAF",
+      "Transmettre une mainlevée CAF",
+      "Contacter un travailleur social",
+      "Transmettre un dossier FSL",
+      "Solliciter un partenaire",
+      "Saisir la CCAPEX",
+      "Demander un commandement de payer",
+      "Enregistrer la signification du commandement de payer",
+      "Transférer le dossier au contentieux",
+      "Enregistrer une démarche Banque de France",
+      "Dénoncer un plan Banque de France",
+      "Contacter les héritiers ou le notaire",
+      "Enregistrer un paiement",
+      "Clôturer le dossier"
+    ],
+    "bulk_operations": [
+      "Envoyer un RCS de relance",
+      "Envoyer un SMS de relance",
+      "Envoyer un e-mail de relance",
+      "Envoyer un courrier",
+      "Envoyer une relance après rejet de prélèvement",
+      "Envoyer l’e-mail de pré-relance R0",
+      "Envoyer le courrier R1",
+      "Envoyer la mise en demeure R2",
+      "Envoyer une relance pour plan non respecté",
+      "Envoyer une mise en demeure Banque de France"
+    ]
+  },
+  "tags": ["décès", "+65 ans", "Redémarrage APL"],
+  "template_groups": ["RCS/SMS au (ex-)client", "Email au (ex-)client", "Email à la CAF"],
+  "create_plan": {
+    "signed_bucket_id": "plan_apurement_en_cours",
+    "close": {
+      "execution_complete": {
+        "bucket_id": "clos"
+      },
+      "non_respect": {
+        "bucket_id": "pre_contentieux"
+      },
+      "remplacement_par_nouveau_plan": {
+        "bucket_id": "amiable"
+      },
+      "effacement_de_dette": {
+        "bucket_id": "clos"
+      }
+    }
+  },
+  "templates": [
+    "locataire-rcs-relance-impaye.json",
+    "locataire-rcs-rappel-echeance-plan.json",
+    "locataire-email-relance-impaye.md",
+    "caf-email-retablir-versement-apl.md",
+    "caf-email-renvoyer-des-quittances.md",
+    "caf-email-informer-signature-plan-apurement.md"
+  ]
+}
