@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>`candidats` · PIERRE</title>
+  <link rel="icon" href="../../assets/favicon.ico" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Knewave&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" />
+  <style>
+    html, body { margin: 0; }
+    body { background: #fff; }
+    .article {
+      box-sizing: border-box;
+      max-width: 850px;
+      margin: 0;
+      padding: 2rem 2rem 3rem 4rem;
+      font-family: Merriweather, Georgia, serif;
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 24px;
+      letter-spacing: 0;
+      color: rgb(17, 17, 17);
+      text-align: left;
+      -webkit-font-smoothing: antialiased;
+    }
+    @media (max-width: 39.99rem) {
+      .article {
+        padding: 1.25rem 1.25rem 2rem;
+      }
+    }
+    .article h1,
+    .article h2,
+    .article h3,
+    .article h4,
+    .article h5,
+    .article h6 {
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-weight: 700;
+      letter-spacing: 0;
+      color: rgb(17, 17, 17);
+      text-wrap: balance;
+      -webkit-font-smoothing: antialiased;
+    }
+    .article h1 {
+      font-size: 36px;
+      line-height: 40.32px;
+      margin: 0 0 16px;
+    }
+    .article h2 {
+      font-size: 36px;
+      line-height: 40.32px;
+      margin: 80px 0 40px;
+    }
+    .article h3 {
+      font-size: 24px;
+      line-height: 28px;
+      margin: 40px 0 20px;
+    }
+    .article p {
+      margin: 0 0 16px;
+      text-wrap: pretty;
+    }
+    .article ul,
+    .article ol {
+      margin: 0 0 16px;
+      padding-inline-start: 1.5em;
+    }
+    .article ul {
+      list-style-type: disc;
+    }
+    .article ol {
+      list-style-type: decimal;
+    }
+    .article li {
+      display: list-item;
+      margin: 0 0 8px;
+      padding-inline-start: 0.25em;
+    }
+    .article li:last-child {
+      margin-bottom: 0;
+    }
+    .article ul ul {
+      list-style-type: circle;
+      margin: 8px 0 0;
+    }
+    .article a {
+      color: #0000ee;
+      text-underline-offset: 0.15em;
+    }
+    .article a:hover {
+      text-decoration-thickness: 2px;
+    }
+    .article strong {
+      font-weight: 600;
+    }
+    .article pre:not(.cadre) {
+      padding: 1em;
+    }
+    .article :not(pre) > code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.875em;
+    }
+    .article p:has(> .shot) {
+      --shot-gap: 0.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--shot-gap);
+      justify-content: flex-start;
+      width: min(calc(32rem * 3 + var(--shot-gap) * 2), calc(100vw - 4rem));
+      max-width: none;
+      margin-block-start: 30px;
+      margin-inline: 0;
+    }
+    @media (max-width: 39.99rem) {
+      .article p:has(> .shot) {
+        width: calc(100vw - 2.5rem);
+      }
+    }
+    .article .shot {
+      position: relative;
+      isolation: isolate;
+      overflow: visible;
+      flex: 0 1 100%;
+      width: 100%;
+      max-width: 100%;
+    }
+    @media (min-width: 40rem) {
+      .article .shot {
+        flex: 0 1 calc((100% - var(--shot-gap) * 2) / 3);
+        width: calc((100% - var(--shot-gap) * 2) / 3);
+        max-width: calc((100% - var(--shot-gap) * 2) / 3);
+      }
+      .article p:has(> .shot:only-child) .shot:has(img[data-zoomable]),
+      .article p:has(> .shot:nth-child(even):last-child) .shot:has(img[data-zoomable]) {
+        flex-basis: calc((100% - var(--shot-gap)) / 2);
+        width: calc((100% - var(--shot-gap)) / 2);
+        max-width: calc((100% - var(--shot-gap)) / 2);
+      }
+      .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) {
+        flex-basis: 90%;
+        width: 90%;
+        max-width: 90%;
+      }
+    }
+    .article .shot img {
+      display: block;
+      width: 100%;
+      margin: 0;
+      transform: translateX(-4.01%);
+    }
+    .article .shot img[data-zoomable] {
+      cursor: zoom-in;
+    }
+    .article .shot-title {
+      position: absolute;
+      top: 0.45rem;
+      left: -0.65rem;
+      z-index: 1;
+      max-width: calc(100% - 1rem);
+      padding: 0.15rem 0.55rem 0.08rem;
+      background: #ffe500;
+      color: #111;
+      font-family: Knewave, cursive;
+      font-size: 1.05rem;
+      font-weight: 400;
+      font-synthesis: none;
+      letter-spacing: 0.01em;
+      line-height: 1.15;
+      text-transform: uppercase;
+      text-wrap: balance;
+      transform: rotate(-2deg);
+      transform-origin: left center;
+      pointer-events: none;
+    }
+    .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) .shot-title {
+      top: 1.5rem;
+      left: -0.65rem;
+    }
+    body.is-zooming .shot-title {
+      opacity: 0;
+    }
+    
+    /*
+ Solarized Color Schemes originally by Ethan Schoonover
+ http://ethanschoonover.com/solarized
+
+ Ported for PrismJS by Hector Matos
+ Website: https://krakendev.io
+ Twitter Handle: https://twitter.com/allonsykraken)
+*/
+
+/*
+SOLARIZED HEX
+--------- -------
+base03    #002b36
+base02    #073642
+base01    #586e75
+base00    #657b83
+base0     #839496
+base1     #93a1a1
+base2     #eee8d5
+base3     #fdf6e3
+yellow    #b58900
+orange    #cb4b16
+red       #dc322f
+magenta   #d33682
+violet    #6c71c4
+blue      #268bd2
+cyan      #2aa198
+green     #859900
+*/
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: #657b83; /* base00 */
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	font-size: 1em;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
+code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
+	background: #073642; /* base02 */
+}
+
+pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
+code[class*="language-"]::selection, code[class*="language-"] ::selection {
+	background: #073642; /* base02 */
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+	border-radius: 0.3em;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background-color: #fdf6e3; /* base3 */
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: #93a1a1; /* base1 */
+}
+
+.token.punctuation {
+	color: #586e75; /* base01 */
+}
+
+.token.namespace {
+	opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #268bd2; /* blue */
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.url,
+.token.inserted {
+	color: #2aa198; /* cyan */
+}
+
+.token.entity {
+	color: #657b83; /* base00 */
+	background: #eee8d5; /* base2 */
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+	color: #859900; /* green */
+}
+
+.token.function,
+.token.class-name {
+	color: #b58900; /* yellow */
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+	color: #cb4b16; /* orange */
+}
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
+}
+
+  </style>
+</head>
+<body>
+  <article class="article">
+    <h5 id="pierreindexmd--core-data-hlmindexmd--candidats"><a href="../../index.html">PIERRE</a> ∕ <a href="../../02-core-data-hlm/index.html">CORE DATA HLM</a> ∕ CANDIDATS</h5>
+<h1 id="candidats"><code>candidats</code></h1>
+<blockquote>
+<p><strong>Note</strong></p>
+<p>Chapitre en <strong>préfiguration</strong> : l'intégration du réservataire (en flux et en stock) reste à préciser.</p>
+</blockquote>
+<h2 id="objectif">Objectif</h2>
+<p>Exposer <strong>tous les candidats à un logement social</strong> depuis les 800 derniers jours sur les lots actuellement en gestion. Cas d'usage : suivi de l'attribution, gestion des réservataires, jointure avec les rotations de lots.</p>
+<p>La table logique est <code>candidats</code> ; le fichier transmis à PIERRE est <code>core.candidats.csv</code>.</p>
+<h2 id="nature-du-fichier--photographie-du-portefeuille-candidats">Nature du fichier : photographie du portefeuille candidats</h2>
+<p>Chaque export est une photographie datée par <code>date_extraction</code> portant l'<strong>état courant du portefeuille candidats</strong> sur la période considérée (800 derniers jours recommandés). Le fichier inclut candidats en cours, acceptés et refusés — l'état est porté par les colonnes <code>date_acceptation</code> / <code>date_refus</code> / <code>date_caleol</code>.</p>
+<h2 id="entité-logique">Entité logique</h2>
+<p>Une ligne = un <strong>candidat</strong>, identifié de façon unique et stable par <code>id_candidat</code>.</p>
+<h2 id="colonnes-normatives">Colonnes normatives</h2>
+<p><code>candidats</code> reprend l'intégralité du <strong><a href="../../02-core-data-hlm/02-socle.html">socle normatif partagé</a></strong> et y ajoute les colonnes spécifiques ci-dessous. Toutes doivent figurer dans l'export (<a href="../../02-core-data-hlm/01-conventions.html#colonnes-requises-et-d%C3%A9finitions-canoniques">présence obligatoire</a>) ; leurs valeurs peuvent être <code>null</code> lorsque le champ n'est pas applicable.</p>
+<div class="typeset-scroll"><table>
+<thead>
+<tr><th>Champ</th><th>Définition canonique</th></tr>
+</thead>
+<tbody>
+<tr><td><code>id_candidat</code></td><td>Identifiant unique et stable du candidat</td></tr>
+<tr><td><code>nom_candidat</code></td><td>Nom du candidat (ex. <code>Becquerel</code>)</td></tr>
+<tr><td><code>email_candidat</code></td><td>Email du candidat (ex. <code>henri.becquerel@gmail.com</code>)</td></tr>
+<tr><td><code>telephone_candidat</code></td><td>Téléphone du candidat, de préférence mobile (ex. <code>06 21 80 49 69</code>)</td></tr>
+<tr><td><code>date_creation</code></td><td>Date d'enregistrement de la candidature (ex. <code>12/12/2025</code>)</td></tr>
+<tr><td><code>date_expiration</code></td><td>Date d'expiration de la candidature (ex. <code>18/12/2025</code>) ; <code>null</code> si non applicable</td></tr>
+<tr><td><code>date_visite</code></td><td>Date de la visite du candidat (ex. <code>16/12/2025</code>) ; <code>null</code> si non effectuée</td></tr>
+<tr><td><code>date_acceptation</code></td><td>Date d'acceptation du logement par le candidat (ex. <code>17/12/2025</code>) ; <code>null</code> si non accepté</td></tr>
+<tr><td><code>date_refus</code></td><td>Date de refus du logement ou de la candidature (ex. <code>19/12/2025</code>) ; <code>null</code> si non refusé</td></tr>
+<tr><td><code>date_caleol</code></td><td>Date d'enregistrement au CALEOL (ex. <code>20/12/2025</code>) ; <code>null</code> si non applicable</td></tr>
+</tbody>
+</table></div>
+<h2 id="exemples-de-colonnes-libres">Exemples de colonnes libres</h2>
+<p><strong>Profil et situation</strong></p>
+<ul>
+<li><code>sne_candidat</code> : numéro d'enregistrement unique (ex. <code>SNE-12345</code>)</li>
+<li><code>situation_familiale</code> : ex. <code>seul(e)</code>, <code>couple</code>, <code>monoparental</code>, <code>famille</code></li>
+<li><code>nombre_enfants</code> : nombre d'enfants à charge</li>
+<li><code>revenus_mensuels_euros</code> : revenus déclarés en euros</li>
+</ul>
+<p><strong>Critères d'attribution</strong></p>
+<ul>
+<li><code>priorite_attribution</code> : ex. <code>prioritaire</code>, <code>normal</code>, <code>liste_attente</code></li>
+<li><code>motif_priorite</code> : ex. <code>mal_loge</code>, <code>suroccupation</code>, <code>accident_sinistre</code></li>
+<li><code>mobilite_professionnelle</code> : ex. <code>oui</code>, <code>non</code></li>
+</ul>
+<div style="display: flex; justify-content: space-between; margin-top:50px"><p>←<a href="../../02-core-data-hlm/05-travaux.html">core.travaux.csv</a></p><p><a href="../../02-core-data-hlm/07-comptes-locataires.html">core.comptes_locataires.csv</a>→</p></div>
+
+  </article>
+  
+  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+  <script>
+    const zoom = mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
+    zoom.on('open', () => document.body.classList.add('is-zooming'))
+    zoom.on('closed', () => document.body.classList.remove('is-zooming'))
+  </script>
+</body>
+</html>

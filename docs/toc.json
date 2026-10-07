@@ -1,0 +1,40 @@
+[
+  {
+    "folder": "01-changelog",
+    "title": "Changelog",
+    "entries": [
+      {
+        "slug": "2026-10-10-desktop-alpha",
+        "title": "Lancement de l’alpha de l'application Desktop",
+        "date": "2026-10-10"
+      }
+    ]
+  },
+  {
+    "folder": "02-core-data-hlm",
+    "title": "Core Data HLM"
+  },
+  {
+    "folder": "03-core-models-hlm",
+    "title": "Core Models HLM"
+  },
+  {
+    "folder": "04-core-intelligence-hlm",
+    "title": "Core Intelligence HLM"
+  },
+  {
+    "folder": "05-user-manual",
+    "title": "Manuel utilisateur",
+    "html": false
+  },
+  {
+    "folder": "06-installation",
+    "title": "Installation & Paramétrage",
+    "html": false
+  },
+  {
+    "folder": "07-articles",
+    "title": "Articles",
+    "html": false
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "channel": "rcs",
+  "id": "locataire_rcs_relance_impaye",
+  "group": "RCS/SMS au (ex-)client",
+  "action": "Envoyer un RCS de relance",
+  "label": "Relance impayé",
+  "body": "Bonjour 👋\n\nVotre compte locataire présente un impayé. Merci de régulariser dès que possible, ou de nous dire si vous préférez convenir d’un plan d’apurement.\n\nUn bouton ci-dessous suffit pour nous répondre 😊",
+  "sms_fallback": "👋 Impayé sur votre compte locataire. Merci de régulariser ou de nous recontacter pour un plan. On est là 😊",
+  "choices": [
+    { "type": "reply", "label": "✅ Je régularise" },
+    { "type": "reply", "label": "🤝 Je veux un plan" },
+    { "type": "reply", "label": "💬 J’ai déjà payé" }
+  ]
+}

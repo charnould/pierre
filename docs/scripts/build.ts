@@ -1,12 +1,33 @@
 import { watch } from 'node:fs'
-import { readdir, stat } from 'node:fs/promises'
-import { join, relative } from 'node:path'
+import { mkdir, readdir, realpath, rm, stat } from 'node:fs/promises'
+import { createRequire } from 'node:module'
+import { dirname, join, relative, sep } from 'node:path'
+
+import { benchHtml, CARL_CSS } from './carl-page'
+
+import prismCss from 'prismjs/themes/prism-solarizedlight.css' with { type: 'text' }
+
+const require = createRequire(import.meta.url)
+
+type PrismGrammar = object
+type PrismApi = {
+  highlight: (text: string, grammar: PrismGrammar, language: string) => string
+  languages: Record<string, PrismGrammar | undefined>
+}
+
+const Prism = require('prismjs/components/prism-core.js') as PrismApi
+require('prismjs/components/prism-json.js')
+require('prismjs/components/prism-yaml.js')
+require('prismjs/components/prism-bash.js')
 
 const ROOT = join(import.meta.dir, '..')
 const REPO = join(ROOT, '..')
 const README = join(REPO, 'README.md')
 const TOC_JSON = join(ROOT, 'toc.json')
-const WATCH = process.argv.includes('--watch')
+const OFF = ['08-user-manual']
+const INDEX_ONLY = ['04-core-intelligence-hlm']
+const SITE = join(ROOT, 'site')
+const PORT = 4173
 
 const README_TOC_START = '<!-- docs-toc -->'
 const README_TOC_STOP = '<!-- docs-tocstop -->'
@@ -14,10 +35,26 @@ const TOC_MARKER_RE = /<!--\s*toc(?:\s+maxdepth:(\d+))?\s*-->/
 const TOC_MARKER_GLOBAL_RE = /<!--\s*toc(?:\s+maxdepth:\d+)?\s*-->/g
 const TOC_STOP_RE = /<!--\s*tocstop\s*-->/
 const TOC_STOP_GLOBAL_RE = /<!--\s*tocstop\s*-->/g
+const DOCS_PAGES_RE = /<!--\s*docs-pages\s*-->/
+const DOCS_PAGES_GLOBAL_RE = /<!--\s*docs-pages\s*-->/g
+const DOCS_PAGES_STOP_RE = /<!--\s*docs-pagesstop\s*-->/
+const DOCS_PAGES_STOP_GLOBAL_RE = /<!--\s*docs-pagesstop\s*-->/g
 const DEFAULT_TOC_MAXDEPTH = 3
 
+export function pageGroupTitle(filename: string): string {
+  const n = Number(/^(\d+)/.exec(filename)?.[1] ?? 99)
+  if (n < 10) return 'Prendre en main'
+  if (n < 20) return 'Modules métier'
+  return 'Administration'
+}
+
 type TocChangelogEntry = { slug: string; title: string; date: string }
-export type TocEntry = { folder: string; title: string; entries?: TocChangelogEntry[] }
+export type TocEntry = {
+  folder: string
+  title: string
+  html?: false
+  entries?: TocChangelogEntry[]
+}
 
 export type DocPage = {
   mdPath: string
@@ -26,7 +63,7 @@ export type DocPage = {
   title: string
 }
 
-export type UpdateDocsTocOptions = { docsDir: string; dryRun?: boolean }
+export type UpdateDocsTocOptions = { docsDir: string; dryRun?: boolean; skip?: string[] }
 export type UpdateDocsTocResult = { updated: string[]; skipped: string[] }
 
 function prepare(raw: string) {
@@ -53,6 +90,76 @@ function githubSlug(text: string) {
     .replace(/ /g, '-')
 }
 
+function uniqueSlug(text: string, used: Map<string, number>) {
+  let slug = githubSlug(text) || 'heading'
+  const n = used.get(slug) ?? 0
+  used.set(slug, n + 1)
+  if (n > 0) slug = `${slug}-${n}`
+  return slug
+}
+
+function isOff(rel: string, folders: readonly string[] = OFF) {
+  return folders.some((folder) => rel === folder || rel.startsWith(`${folder}/`))
+}
+
+function tocEntry(e: TocEntry): TocEntry {
+  return e.html === false
+    ? { folder: e.folder, title: e.title, html: false }
+    : { folder: e.folder, title: e.title }
+}
+
+function isUnpublished(rel: string, folders: readonly string[]) {
+  return folders.some((folder) => rel === folder || rel.startsWith(`${folder}/`))
+}
+
+function indexOnlyFolder(rel: string) {
+  return INDEX_ONLY.find((folder) => rel === folder || rel.startsWith(`${folder}/`))
+}
+
+function notItsIndex(rel: string) {
+  const folder = indexOnlyFolder(rel)
+  return folder !== undefined && rel !== `${folder}/index.md`
+}
+
+const GITHUB_BLOB = 'https://github.com/charnould/pierre/blob/master'
+
+function decodePath(path: string) {
+  return path
+    .split('/')
+    .map((part) => {
+      try {
+        return decodeURIComponent(part)
+      } catch {
+        return part
+      }
+    })
+    .join('/')
+}
+
+/** Relative .md links that are not emitted as HTML become a GitHub blob URL. */
+export function rewriteUnpublishedLinks(
+  html: string,
+  fromDir: string,
+  unpublished: readonly string[]
+) {
+  return html.replace(/\bhref="([^"]+)"/g, (match, url: string) => {
+    if (/^(?:[a-z]+:|#|\/\/)/i.test(url) || url.startsWith('/')) return match
+    const hashAt = url.indexOf('#')
+    const path = hashAt === -1 ? url : url.slice(0, hashAt)
+    const hash = hashAt === -1 ? '' : url.slice(hashAt)
+    if (!path.endsWith('.md')) return match
+    const repoRel = relative(REPO, join(fromDir, decodePath(path))).replaceAll('\\', '/')
+    if (repoRel.startsWith('..') || !repoRel.startsWith('docs/')) return match
+    const docsRel = repoRel.slice('docs/'.length)
+    if (!isUnpublished(docsRel, unpublished) && !notItsIndex(docsRel)) return match
+    const encoded = repoRel
+      .split('/')
+      .map((part) => encodeURIComponent(part))
+      .join('/')
+    return `href="${GITHUB_BLOB}/${encoded}${hash}"`
+  })
+}
+
 function isDecorativeHeading(text: string) {
   return /^[―—–-]+$/.test(text.trim())
 }
@@ -61,6 +168,20 @@ function firstH1(raw: string, fallback: string) {
   const text = raw.match(/^#\s+(.+)$/m)?.[1]?.trim()
   if (text && !isDecorativeHeading(text)) return text
   return fallback
+}
+
+/** First prose paragraph after the H1, stripped of light markdown. */
+export function firstParagraphPlain(raw: string): string | null {
+  const afterH1 = raw.replace(/^#\s+.+$/m, '').trim()
+  const para = afterH1.split(/\n\n/)[0]?.trim()
+  if (!para || para.startsWith('#') || para.startsWith('<!--')) return null
+  const plain = para
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return plain || null
 }
 
 function fileDate(name: string): string | null {
@@ -92,6 +213,16 @@ function subdirOf(mdPath: string, folder: string): string | null {
 
 function isSkippedPath(abs: string) {
   return abs.includes('/node_modules/') || abs.includes('/assets/')
+}
+
+async function isOutsideDocs(abs: string) {
+  const root = await realpath(ROOT)
+  try {
+    const real = await realpath(abs)
+    return real !== root && !real.startsWith(root + sep)
+  } catch {
+    return true
+  }
 }
 
 async function isMarkdownFile(abs: string) {
@@ -126,11 +257,7 @@ export function insertToc(content: string): string {
     if (level > maxdepth) continue
     const text = heading[2]!.trim()
     if (isDecorativeHeading(text)) continue
-    let slug = githubSlug(text) || 'heading'
-    const n = used.get(slug) ?? 0
-    used.set(slug, n + 1)
-    if (n > 0) slug = `${slug}-${n}`
-    items.push({ level, text, slug })
+    items.push({ level, text, slug: uniqueSlug(text, used) })
   }
 
   const min = items.length ? Math.min(...items.map((i) => i.level)) : 0
@@ -142,9 +269,54 @@ export function insertToc(content: string): string {
   return `${content.slice(0, openMatch.index)}${block}${after}`
 }
 
+export async function insertDocsPages(content: string, folderAbs: string): Promise<string> {
+  const openMatch = content.match(DOCS_PAGES_RE)
+  const closeMatch = DOCS_PAGES_STOP_RE.exec(content)
+  if (!openMatch || !closeMatch) return content
+
+  const names = (await readdir(folderAbs))
+    .filter((name) => name.endsWith('.md') && name !== 'index.md')
+    .sort((a, b) => a.localeCompare(b, 'en', { numeric: true }))
+
+  const groups = new Map<string, string[]>()
+  const groupOrder: string[] = []
+  for (const name of names) {
+    const raw = prepare(await Bun.file(join(folderAbs, name)).text())
+    if (!raw.trim()) continue
+    const title = firstH1(raw, humanize(name.replace(/^\d+-/, '').replace(/\.md$/, '')))
+    const blurb = firstParagraphPlain(raw)
+    const group = pageGroupTitle(name)
+    if (!groups.has(group)) {
+      groups.set(group, [])
+      groupOrder.push(group)
+    }
+    groups
+      .get(group)!
+      .push(blurb ? `- [${title}](./${name}) — ${blurb}` : `- [${title}](./${name})`)
+  }
+
+  const list = groupOrder
+    .map((group) => `### ${group}\n\n${groups.get(group)!.join('\n')}`)
+    .join('\n\n')
+  const after = content.slice(closeMatch.index + closeMatch[0].length)
+  const block = list
+    ? `${openMatch[0]}\n\n${list}\n\n<!-- docs-pagesstop -->`
+    : `${openMatch[0]}\n\n<!-- docs-pagesstop -->`
+
+  return `${content.slice(0, openMatch.index)}${block}${after}`
+}
+
+function markerPairCount(content: string, open: RegExp, close: RegExp) {
+  return {
+    open: content.match(open)?.length ?? 0,
+    close: content.match(close)?.length ?? 0
+  }
+}
+
 export async function updateDocsToc({
   docsDir,
-  dryRun = false
+  dryRun = false,
+  skip = []
 }: UpdateDocsTocOptions): Promise<UpdateDocsTocResult> {
   const updated: string[] = []
   const skipped: string[] = []
@@ -153,17 +325,26 @@ export async function updateDocsToc({
     const path = join(docsDir, String(file))
     const rel = relative(docsDir, path).replaceAll('\\', '/')
     if (!(await isMarkdownFile(path)) || isSkippedPath(path) || rel.startsWith('scripts/')) continue
+    if (isOff(rel, skip)) continue
 
     const content = await Bun.file(path).text()
-    if (!TOC_MARKER_RE.test(content)) continue
-    const tocCount = content.match(TOC_MARKER_GLOBAL_RE)?.length ?? 0
-    const tocStopCount = content.match(TOC_STOP_GLOBAL_RE)?.length ?? 0
-    if (tocCount > 1 || tocStopCount > 1) {
+    const hasToc = TOC_MARKER_RE.test(content)
+    const hasPages = DOCS_PAGES_RE.test(content)
+    if (!hasToc && !hasPages) continue
+
+    const toc = markerPairCount(content, TOC_MARKER_GLOBAL_RE, TOC_STOP_GLOBAL_RE)
+    const pages = markerPairCount(content, DOCS_PAGES_GLOBAL_RE, DOCS_PAGES_STOP_GLOBAL_RE)
+    if (
+      (hasToc && (toc.open > 1 || toc.close > 1)) ||
+      (hasPages && (pages.open > 1 || pages.close > 1))
+    ) {
       skipped.push(path)
       continue
     }
 
-    const next = insertToc(content)
+    let next = content
+    if (hasToc) next = insertToc(next)
+    if (hasPages) next = await insertDocsPages(next, dirname(path))
     if (next === content) continue
     if (!dryRun) await Bun.write(path, next)
     updated.push(path)
@@ -179,12 +360,12 @@ async function loadTocConfig(): Promise<TocEntry[]> {
     if (!e || typeof e.folder !== 'string' || typeof e.title !== 'string') {
       throw new Error(`docs/toc.json[${i}] must have { folder, title } strings`)
     }
-    return { folder: e.folder, title: e.title }
+    return tocEntry(e)
   })
 }
 
 async function syncChangelogEntries(toc: TocEntry[]): Promise<TocEntry[]> {
-  const next = toc.map((e) => ({ folder: e.folder, title: e.title }))
+  const next = toc.map(tocEntry)
   const changelog = next.find((e) => stripOrder(e.folder) === 'changelog')
   if (!changelog) return next
 
@@ -222,7 +403,7 @@ async function collectDocs(folders: string[]): Promise<DocPage[]> {
     if (mdPath === 'index.md' || mdPath.startsWith('scripts/')) continue
 
     const section = matchTocFolder(mdPath, folders)
-    if (!section) continue
+    if (!section || notItsIndex(mdPath)) continue
     const base = mdPath.split('/').pop()!.replace(/\.md$/, '')
     const raw = prepare(await Bun.file(abs).text())
     if (!raw.trim()) continue
@@ -324,14 +505,19 @@ async function updateRootReadme(pages: DocPage[], toc: TocEntry[]) {
   console.log('✓ README.md (docs toc)')
 }
 
-function pageHtml(title: string, body: string) {
+function pageHtml(
+  title: string,
+  body: string,
+  extra?: { css: string; html: string; bodyClass: string },
+  assets = './'
+) {
   return `<!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${Bun.escapeHTML(title)} · PIERRE</title>
-  <link rel="icon" href="./assets/favicon.ico" />
+  <link rel="icon" href="${assets}assets/favicon.ico" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Knewave&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" />
   <style>
     html, body { margin: 0; }
@@ -420,7 +606,10 @@ function pageHtml(title: string, body: string) {
     .article strong {
       font-weight: 600;
     }
-    .article code {
+    .article pre:not(.cadre) {
+      padding: 1em;
+    }
+    .article :not(pre) > code {
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 0.875em;
     }
@@ -503,12 +692,15 @@ function pageHtml(title: string, body: string) {
     body.is-zooming .shot-title {
       opacity: 0;
     }
+    ${extra?.css ?? ''}
+    ${prismCss}
   </style>
 </head>
-<body>
+<body${extra ? ` class="${extra.bodyClass}"` : ''}>
   <article class="article">
     ${body}
   </article>
+  ${extra?.html ?? ''}
   <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
   <script>
     const zoom = mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
@@ -520,60 +712,200 @@ function pageHtml(title: string, body: string) {
 `
 }
 
-async function renderMarkdown(raw: string) {
-  const [{ default: MarkdownIt }, { default: MarkdownItGitHubAlerts }, { default: Shiki }] =
-    await Promise.all([
-      import('markdown-it'),
-      import('markdown-it-github-alerts'),
-      import('@shikijs/markdown-it')
-    ])
-  const md = new MarkdownIt({ html: true, linkify: true, typographer: true })
-  md.use(MarkdownItGitHubAlerts)
-  md.use(await Shiki({ theme: 'github-light' }))
-  const tableOpen = md.renderer.rules.table_open
-  md.renderer.rules.table_open = (...args) =>
-    `<div class="typeset-scroll">${tableOpen?.(...args) ?? '<table>'}`
-  md.renderer.rules.table_close = () => '</table></div>'
-
-  const headingOpen = md.renderer.rules.heading_open
-  md.renderer.rules.heading_open = (tokens, idx, options, env, self) => {
-    const token = tokens[idx]!
-    let text = ''
-    for (let i = idx + 1; i < tokens.length && tokens[i]!.type !== 'heading_close'; i++) {
-      if (tokens[i]!.type === 'inline') text += tokens[i]!.content
-    }
-    const slug = githubSlug(text)
-    if (slug) token.attrSet('id', slug)
-    return headingOpen?.(tokens, idx, options, env, self) ?? self.renderToken(tokens, idx, options)
-  }
-
-  const image = md.renderer.rules.image
-  md.renderer.rules.image = (tokens, idx, options, env, self) => {
-    const token = tokens[idx]!
-    const src = token.attrGet('src')
-    const zoom = src?.endsWith('#zoom')
-    if (zoom && src) {
-      token.attrSet('src', src.slice(0, -'#zoom'.length))
-      token.attrSet('data-zoomable', '')
-    }
-    const img = image?.(tokens, idx, options, env, self) ?? self.renderToken(tokens, idx, options)
-    const title = token.content.trim()
-    if (!title) return img
-    return `<span class="shot"><span class="shot-title" aria-hidden="true">${Bun.escapeHTML(title)}</span>${img}</span>`
-  }
-
-  return md.render(raw)
+const ALERT_LABEL: Record<string, string> = {
+  NOTE: 'Note',
+  TIP: 'Tip',
+  IMPORTANT: 'Important',
+  WARNING: 'Warning',
+  CAUTION: 'Caution'
 }
 
-async function buildLanding() {
-  const raw = prepare(await Bun.file(join(ROOT, 'index.md')).text())
-  const title = firstH1(raw, 'PIERRE')
-  await Bun.write(join(ROOT, 'index.html'), pageHtml(title, await renderMarkdown(raw)))
-  console.log('✓ index.html')
+function headingIds(raw: string) {
+  const open = raw.match(TOC_MARKER_RE)
+  const close = TOC_STOP_RE.exec(raw)
+  const maxdepth = open?.[1] ? Number(open[1]) : DEFAULT_TOC_MAXDEPTH
+  const tocStart = open && close ? close.index + close[0].length : -1
+  const tocUsed = new Map<string, number>()
+  const otherUsed = new Map<string, number>()
+  const ids: string[] = []
+  let inFence = false
+  let rest = raw
+  let pos = 0
+  while (rest.length) {
+    const nl = rest.indexOf('\n')
+    const line = (nl === -1 ? rest : rest.slice(0, nl)).replace(/\r$/, '')
+    const lineStart = pos
+    pos += nl === -1 ? rest.length : nl + 1
+    rest = nl === -1 ? '' : rest.slice(nl + 1)
+    if (line.startsWith('```')) {
+      inFence = !inFence
+      continue
+    }
+    if (inFence) continue
+    const heading = /^(#{1,6})\s+(.+)$/.exec(line)
+    if (!heading) continue
+    const text = heading[2]!.trim()
+    if (isDecorativeHeading(text)) {
+      ids.push(uniqueSlug(text, otherUsed))
+      continue
+    }
+    const level = heading[1]!.length
+    const inToc = tocStart >= 0 && lineStart >= tocStart && level <= maxdepth
+    ids.push(uniqueSlug(text, inToc ? tocUsed : otherUsed))
+  }
+  return ids
+}
+
+function attr(attrs: string, name: string) {
+  return new RegExp(`\\b${name}="([^"]*)"`).exec(attrs)?.[1] ?? ''
+}
+
+function decodeAttr(value: string) {
+  return value
+    .replaceAll('&quot;', '"')
+    .replaceAll('&#39;', "'")
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&amp;', '&')
+}
+
+function applyHeadingIds(html: string, ids: string[]) {
+  let i = 0
+  return html.replace(/<h([1-6])>/g, (_, level: string) => {
+    const id = ids[i++]
+    return id ? `<h${level} id="${id}">` : `<h${level}>`
+  })
+}
+
+function applyImages(html: string) {
+  return html.replace(/<img\b([^>]*?)\/?>/g, (_, attrs: string) => {
+    const src = attr(attrs, 'src')
+    const alt = attr(attrs, 'alt')
+    const zoom = src.endsWith('#zoom')
+    const nextSrc = zoom ? src.slice(0, -'#zoom'.length) : src
+    let img = `<img src="${nextSrc}" alt="${alt}"`
+    if (zoom) img += ' data-zoomable=""'
+    img += ' />'
+    const title = decodeAttr(alt).trim()
+    if (!title) return img
+    return `<span class="shot"><span class="shot-title" aria-hidden="true">${Bun.escapeHTML(title)}</span>${img}</span>`
+  })
+}
+
+function applyTables(html: string) {
+  return html.replace(
+    /<table>[\s\S]*?<\/table>/g,
+    (table) => `<div class="typeset-scroll">${table}</div>`
+  )
+}
+
+function applyAlerts(html: string) {
+  return html.replace(
+    /<blockquote>\n<p>\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\n/g,
+    (_, kind: string) => `<blockquote>\n<p><strong>${ALERT_LABEL[kind]}</strong></p>\n<p>`
+  )
+}
+
+function retargetMdLinks(html: string) {
+  return html.replace(/\bhref="([^"]+)"/g, (match, url: string) => {
+    if (/^(?:[a-z]+:|#|\/\/)/i.test(url) || url.startsWith('/')) return match
+    const hashAt = url.indexOf('#')
+    const path = hashAt === -1 ? url : url.slice(0, hashAt)
+    const hash = hashAt === -1 ? '' : url.slice(hashAt)
+    if (!path.endsWith('.md')) return match
+    return `href="${path.slice(0, -3)}.html${hash}"`
+  })
+}
+
+function assetPrefix(outDir: string) {
+  const rel = relative(ROOT, outDir)
+  if (!rel || rel === '.') return './'
+  return '../'.repeat(rel.split('/').filter(Boolean).length)
+}
+
+const FENCE_RE = /<pre><code class="language-(json|yaml|bash)">([\s\S]*?)<\/code><\/pre>/g
+
+export function highlightFences(html: string) {
+  return html.replace(FENCE_RE, (full, lang: string, body: string) => {
+    const grammar = Prism.languages[lang]
+    if (!grammar) return full
+    const highlighted = Prism.highlight(decodeAttr(body), grammar, lang)
+    return `<pre class="language-${lang}"><code class="language-${lang}">${highlighted}</code></pre>`
+  })
+}
+
+function renderHtml(
+  raw: string,
+  fromDir: string,
+  outDir: string,
+  label: string,
+  unpublished: readonly string[]
+) {
+  let html = highlightFences(Bun.markdown.html(raw, { autolinks: true }))
+  const ids = headingIds(raw)
+  const found = html.match(/<h[1-6]>/g)?.length ?? 0
+  if (found !== ids.length) console.warn(`${label}: ${found} titres, ${ids.length} ancres`)
+  html = applyHeadingIds(html, ids)
+  html = applyImages(html)
+  html = applyTables(html)
+  html = applyAlerts(html)
+  if (raw.includes('<!-- carl -->')) html = html.replaceAll('<!-- carl -->', benchHtml())
+  return retargetMdLinks(
+    rebaseLinks(rewriteUnpublishedLinks(html, fromDir, unpublished), fromDir, outDir)
+  )
+}
+
+function prefixSiteLinks(html: string) {
+  return html.replace(/\bhref="(\.\/[^"]+)"/g, (match, url: string) => {
+    const hashAt = url.indexOf('#')
+    const path = hashAt === -1 ? url : url.slice(0, hashAt)
+    if (!path.endsWith('.html') || path.startsWith('./site/') || path.startsWith('./assets/'))
+      return match
+    return `href="./site/${url.slice(2)}"`
+  })
+}
+
+async function renderPage(
+  mdAbs: string,
+  outAbs: string,
+  unpublished: readonly string[],
+  home = false
+) {
+  const raw = prepare(await Bun.file(mdAbs).text())
+  if (!raw.trim()) return false
+  const rel = relative(ROOT, mdAbs).replaceAll('\\', '/')
+  const base = rel.split('/').pop()!.replace(/\.md$/, '')
+  const title = firstH1(raw, humanize(base.replace(/^\d{4}-\d{2}-\d{2}-/, '')))
+  const hasBench = raw.includes('<!-- carl -->')
+  const body = renderHtml(raw, dirname(mdAbs), dirname(outAbs), rel, unpublished)
+  await mkdir(dirname(outAbs), { recursive: true })
+  await Bun.write(
+    outAbs,
+    pageHtml(
+      title,
+      home ? prefixSiteLinks(body) : body,
+      hasBench ? { css: CARL_CSS, html: '', bodyClass: 'has-bench' } : undefined,
+      assetPrefix(dirname(outAbs))
+    )
+  )
+  return true
+}
+
+function rebaseLinks(html: string, fromDir: string, toDir: string) {
+  return html.replace(/\b(href|src)="([^"]+)"/g, (match, attr: string, url: string) => {
+    if (/^(?:[a-z]+:|#|\/\/)/i.test(url) || url.startsWith('/')) return match
+    const hashAt = url.indexOf('#')
+    const path = hashAt === -1 ? url : url.slice(0, hashAt)
+    const hash = hashAt === -1 ? '' : url.slice(hashAt)
+    if (!path) return match
+    let rel = relative(toDir, join(fromDir, path)).replaceAll('\\', '/')
+    if (!rel.startsWith('.')) rel = `./${rel}`
+    return `${attr}="${rel}${hash}"`
+  })
 }
 
 async function build() {
-  const { updated, skipped } = await updateDocsToc({ docsDir: ROOT })
+  const { updated, skipped } = await updateDocsToc({ docsDir: ROOT, skip: OFF })
   if (updated.length) {
     console.log(`✓ intra-file toc (${updated.length})`)
     for (const file of updated) console.log(`  - ${relative(ROOT, file)}`)
@@ -583,10 +915,31 @@ async function build() {
   }
 
   const toc = await syncChangelogEntries(await loadTocConfig())
+  const unpublished = toc.filter((e) => e.html === false).map((e) => e.folder)
   const pages = await collectDocs(toc.map((e) => e.folder))
   await updateRootReadme(pages, toc)
-  await buildLanding()
-  console.log(`\n→ docs/index.html · README toc (${pages.length} pages)`)
+
+  await rm(SITE, { recursive: true, force: true })
+  let written = 0
+  for (const file of await readdir(ROOT, { recursive: true })) {
+    const abs = join(ROOT, String(file))
+    if (!(await isMarkdownFile(abs)) || isSkippedPath(abs)) continue
+    const rel = relative(ROOT, abs).replaceAll('\\', '/')
+    if (
+      rel.startsWith('scripts/') ||
+      rel.startsWith('site/') ||
+      isOff(rel) ||
+      isUnpublished(rel, unpublished) ||
+      notItsIndex(rel)
+    )
+      continue
+    if (await isOutsideDocs(abs)) continue
+    const home = rel === 'index.md'
+    const out = home ? join(ROOT, 'index.html') : join(SITE, `${rel.slice(0, -3)}.html`)
+    if (await renderPage(abs, out, unpublished, home)) written++
+  }
+  console.log(`✓ html (${written})`)
+  console.log(`✓ README toc (${pages.length} pages)`)
 }
 
 function toRel(filename: string) {
@@ -596,25 +949,101 @@ function toRel(filename: string) {
 
 function shouldIgnore(rel: string) {
   return (
+    !rel ||
     rel.startsWith('..') ||
-    rel === 'index.html' ||
+    rel.endsWith('.html') ||
     rel === 'node_modules' ||
     rel.startsWith('node_modules/') ||
     rel.startsWith('scripts/') ||
-    rel.startsWith('.')
+    rel === 'site' ||
+    rel.startsWith('site/') ||
+    rel.startsWith('.') ||
+    rel.includes('/.') ||
+    isOff(rel)
   )
 }
 
-if (import.meta.path === Bun.main) {
-  await build()
-  if (!WATCH) process.exit(0)
+function notFound() {
+  return new Response('Introuvable', { status: 404 })
+}
 
-  const server = Bun.spawn(['bunx', 'serve', '.'], {
-    cwd: ROOT,
-    stdout: 'inherit',
-    stderr: 'inherit'
+async function isFile(abs: string) {
+  try {
+    return (await stat(abs)).isFile()
+  } catch {
+    return false
+  }
+}
+
+function withReload(html: string) {
+  const script = '<script>new EventSource("/__reload").onmessage=()=>location.reload()</script>'
+  return html.includes('</body>') ? html.replace('</body>', `${script}</body>`) : html + script
+}
+
+function serve(notify: { clients: Set<ReadableStreamDefaultController<Uint8Array>> }) {
+  const encoder = new TextEncoder()
+  return Bun.serve({
+    port: PORT,
+    hostname: '127.0.0.1',
+    async fetch(req) {
+      const url = new URL(req.url)
+      if (url.pathname === '/__reload') {
+        let current: ReadableStreamDefaultController<Uint8Array> | undefined
+        const stream = new ReadableStream<Uint8Array>({
+          start(controller) {
+            current = controller
+            notify.clients.add(controller)
+            controller.enqueue(encoder.encode(': ok\n\n'))
+          },
+          cancel() {
+            if (current) notify.clients.delete(current)
+          }
+        })
+        return new Response(stream, {
+          headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' }
+        })
+      }
+
+      let rel: string
+      try {
+        rel = decodeURIComponent(url.pathname)
+      } catch {
+        return notFound()
+      }
+      rel = (rel === '/' ? 'index.html' : rel.replace(/^\/+/, '')).replaceAll('\\', '/')
+      if (rel.includes('..') || isOff(rel)) return notFound()
+
+      if (rel.startsWith('site/')) {
+        const rest = rel.slice('site/'.length)
+        if (!rest || isOff(rest)) return notFound()
+        const location = `/${rest.split('/').map(encodeURIComponent).join('/')}`
+        return Response.redirect(new URL(location, req.url), 302)
+      }
+
+      if (rel.endsWith('.md')) {
+        const htmlRel = `${rel.slice(0, -3)}.html`
+        if (!(await Bun.file(join(SITE, htmlRel)).exists())) return notFound()
+        const location = `/${htmlRel.split('/').map(encodeURIComponent).join('/')}`
+        return Response.redirect(new URL(location, req.url), 302)
+      }
+
+      let fileAbs =
+        rel.endsWith('.html') && rel !== 'index.html' ? join(SITE, rel) : join(ROOT, rel)
+      if (!(await isFile(fileAbs))) {
+        if (!rel.endsWith('.html') || rel === 'index.html') return notFound()
+        fileAbs = join(ROOT, rel)
+        if (!(await isFile(fileAbs))) return notFound()
+      }
+      const file = Bun.file(fileAbs)
+      if (!rel.endsWith('.html')) return new Response(file)
+      return new Response(withReload(await file.text()), {
+        headers: { 'content-type': 'text/html; charset=utf-8' }
+      })
+    }
   })
+}
 
+function watchDocs(notify: (ok: boolean) => void) {
   let timer: ReturnType<typeof setTimeout> | undefined
   let building = false
   let pending: string | undefined
@@ -626,37 +1055,58 @@ if (import.meta.path === Bun.main) {
       return
     }
     building = true
+    coolUntil = Date.now() + 60_000
     console.log(`\n↻ ${reason}`)
+    let ok = false
     try {
       await build()
+      ok = true
     } catch (err) {
       console.error('build failed:', err)
-    } finally {
-      coolUntil = Date.now() + 400
-      building = false
-      if (pending) {
-        const next = pending
-        pending = undefined
-        await rebuild(next)
-      }
     }
+    coolUntil = Date.now() + 400
+    building = false
+    if (pending) {
+      const next = pending
+      pending = undefined
+      await rebuild(next)
+      return
+    }
+    notify(ok)
   }
 
-  const watcher = watch(ROOT, { recursive: true }, (_event, filename) => {
+  return watch(ROOT, { recursive: true }, (_event, filename) => {
     if (!filename || Date.now() < coolUntil) return
     const rel = toRel(String(filename))
-    if (shouldIgnore(rel) || !/\.(md|css|json)$/i.test(rel)) return
+    if (shouldIgnore(rel)) return
     clearTimeout(timer)
     timer = setTimeout(() => rebuild(rel), 150)
   })
+}
 
+if (import.meta.path === Bun.main) {
+  await build()
+  const encoder = new TextEncoder()
+  const clients = new Set<ReadableStreamDefaultController<Uint8Array>>()
+  const server = serve({ clients })
+  const watcher = watchDocs((ok) => {
+    if (!ok) return
+    const data = encoder.encode('data: 1\n\n')
+    for (const client of clients) {
+      try {
+        client.enqueue(data)
+      } catch {
+        clients.delete(client)
+      }
+    }
+  })
   const shutdown = () => {
     watcher.close()
-    server.kill()
+    server.stop(true)
     process.exit(0)
   }
   process.on('SIGINT', shutdown)
   process.on('SIGTERM', shutdown)
-
-  console.log('\nwatching docs/ …')
+  console.log(`\n→ http://127.0.0.1:${server.port}/`)
+  await new Promise(() => {})
 }
