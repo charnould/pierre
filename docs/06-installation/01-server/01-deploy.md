@@ -25,13 +25,10 @@ Avant de déployer PIERRE, vérifier que vous disposez de :
 | **Accès SSH**     | Clef ou mot de passe, en root                               |
 | **Clé API LLM**   | Anthropic, OpenAI ou un fournisseur compatible avec son API |
 
-> Recommandation de serveur
+>
 
 > [!IMPORTANT]
-> `/dev/kvm` est la seule contrainte matérielle **(nul besoin de GPU)**. Les micro-VM tournent sur le KVM de la machine. Un serveur sans KVM, ou un conteneur qui ne l'expose pas, ne convient pas.
-
-> [!IMPORTANT]
-> Une seule instance de PIERRE est déployable par serveur.
+> Recommandation de serveur : `/dev/kvm` est la seule contrainte matérielle **(nul besoin de GPU)**. Nous recommandons un serveur d'une configuration équivalnte ou supérieure à [EX44](https://www.hetzner.com/dedicated-rootserver/ex44) (minimum 64 GB de RAM). Une seule instance de PIERRE est déployable par serveur.
 
 ### Déployer PIERRE sur un serveur
 
