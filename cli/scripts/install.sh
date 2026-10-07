@@ -1,9 +1,9 @@
 #!/bin/sh
 # Télécharge le cli, vérifie son empreinte, puis lance pierre install.
-# curl -fsSL https://github.com/charnould/pierre/releases/download/cli-0.9.4/install.sh | sh
+# curl -fsSL https://github.com/charnould/pierre/releases/download/__CLI_TAG__/install.sh | sh
 set -eu
 
-TAG=cli-0.9.4
+TAG=__CLI_TAG__
 REPO=https://github.com/charnould/pierre/releases/download/${TAG}
 ASSET=pierre-cli-linux-x64
 

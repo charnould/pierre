@@ -1,0 +1,130 @@
+name: Release CLI
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - cli/package.json
+
+concurrency:
+  group: release-cli
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect and verify version
+        id: version
+        run: |
+          CURRENT=$(jq -r .version cli/package.json)
+          PREVIOUS=$(git show "${{ github.event.before }}:cli/package.json" | jq -r .version)
+          if ! [[ "$CURRENT" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "CLI version must be an exact semantic version"
+            exit 1
+          fi
+          if [ "$CURRENT" = "$PREVIOUS" ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$(printf '%s\n' "$PREVIOUS" "$CURRENT" | sort -V | awk 'NR == 2')" != "$CURRENT" ]; then
+            echo "CLI version must be greater than $PREVIOUS"
+            exit 1
+          fi
+          TAG="cli-$CURRENT"
+          echo "publish=true" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - uses: oven-sh/setup-bun@v2
+        if: steps.version.outputs.publish == 'true'
+        with:
+          bun-version: 1.4.2
+
+      - name: Test and build
+        if: steps.version.outputs.publish == 'true'
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          bun install --frozen-lockfile --filter @pierre/cli
+          bun --filter @pierre/cli typecheck
+          bun test cli/tests
+          mkdir -p cli/dist
+          bun build --compile --target=bun-linux-x64 --no-compile-autoload-dotenv \
+            cli/src/main.ts --outfile cli/dist/pierre-cli-linux-x64
+          sed "s/__CLI_TAG__/$TAG/g" cli/scripts/install.sh > cli/dist/install.sh
+          grep -qx "TAG=$TAG" cli/dist/install.sh
+          chmod 755 cli/dist/pierre-cli-linux-x64 cli/dist/install.sh
+          test "$(./cli/dist/pierre-cli-linux-x64 --version)" = "$TAG"
+          cd cli/dist
+          sha256sum pierre-cli-linux-x64 install.sh > checksums.txt
+
+      - name: Tag
+        if: steps.version.outputs.publish == 'true'
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null; then
+            test "$(git rev-list -n 1 "$TAG")" = "$GITHUB_SHA"
+          else
+            git tag "$TAG" "$GITHUB_SHA"
+            git push origin "$TAG"
+          fi
+
+      - name: Publish
+        if: steps.version.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+          DESCRIPTION: Interface en ligne de commande (cli) pour l’installation, la configuration et la mise à jour de PIERRE (serveur)
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            IS_DRAFT=$(gh release view "$TAG" --json isDraft --jq .isDraft)
+          else
+            gh release create "$TAG" \
+              --draft \
+              --verify-tag \
+              --title "$TAG" \
+              --notes "$DESCRIPTION"
+            IS_DRAFT=true
+          fi
+          if [ "$IS_DRAFT" = "true" ]; then
+            gh release upload "$TAG" \
+              cli/dist/pierre-cli-linux-x64 cli/dist/install.sh cli/dist/checksums.txt \
+              --clobber
+          fi
+          ASSETS=$(gh release view "$TAG" --json assets \
+            --jq '[.assets[].name] | sort | join(" ")')
+          test "$ASSETS" = "checksums.txt install.sh pierre-cli-linux-x64"
+          for ASSET in checksums.txt install.sh pierre-cli-linux-x64; do
+            LOCAL="sha256:$(sha256sum "cli/dist/$ASSET" | awk '{print $1}')"
+            REMOTE=$(gh release view "$TAG" --json assets \
+              --jq ".assets[] | select(.name == \"$ASSET\") | .digest")
+            test "$REMOTE" = "$LOCAL"
+          done
+          if [ "$IS_DRAFT" = "true" ]; then
+            gh release edit "$TAG" \
+              --title "$TAG" \
+              --notes "$DESCRIPTION" \
+              --draft=false \
+              --prerelease=false
+          fi
+
+      - name: Smoke test published installer
+        if: steps.version.outputs.publish == 'true'
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/pierre-bin"
+          sudo env \
+            PIERRE_BOOTSTRAP_ONLY=1 \
+            PIERRE_CLI_DEST="$RUNNER_TEMP/pierre-bin/pierre" \
+            TAG="$TAG" \
+            bash -c 'curl -fsSL --retry 12 --retry-delay 5 "https://github.com/charnould/pierre/releases/download/$TAG/install.sh" | sh'
+          test "$("$RUNNER_TEMP/pierre-bin/pierre" --version)" = "$TAG"

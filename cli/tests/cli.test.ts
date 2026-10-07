@@ -24,6 +24,7 @@ import {
 import { decodeKey } from '../src/lib/system.ts'
 import { MAIN_MENU, menuAction, moveSelection } from '../src/lib/tui.ts'
 import { run } from '../src/main.ts'
+import { CLI_VERSION } from '../src/version.ts'
 import { block, tempRoot, testContext } from './support.ts'
 
 const release = (tag: string, extra: Partial<Release> = {}): Release => ({
@@ -72,7 +73,12 @@ describe('commandes et droits', () => {
     const root = await tempRoot('pierre-version-')
     const ctx = testContext(root, { uid: () => 1000 })
     expect(await run(['--version'], ctx.ctx)).toBe(0)
-    expect(ctx.out()).toBe('cli-0.9.4\n')
+    expect(ctx.out()).toBe(`${CLI_VERSION}\n`)
+  })
+
+  it('keeps the installer tag injectable at release time', async () => {
+    const script = await Bun.file(join(import.meta.dir, '../scripts/install.sh')).text()
+    expect(script).toContain('\nTAG=__CLI_TAG__\n')
   })
 
   it('requires root for maintenance and a KVM machine only for install', async () => {
