@@ -11,10 +11,12 @@ case "$TARGET" in
   darwin-arm64)
     HOST_ARCH=arm64
     NODE_TARGET=linux-arm64
+    SMOLVM_ARCHIVE_TARGET=darwin-arm64
     ;;
   linux-amd64)
     HOST_ARCH=x86_64
     NODE_TARGET=linux-amd64
+    SMOLVM_ARCHIVE_TARGET=linux-x86_64
     ;;
   *)
     echo "usage: build.sh <darwin-arm64|linux-amd64>" >&2
@@ -59,7 +61,7 @@ PI_VERSION=$(node -p "require('$GUEST/package.json').dependencies['@earendil-wor
 
 TOOLS="$ROOT/.tools/$TARGET"
 ARCHIVE="$TOOLS/smolvm.tar.gz"
-SMOLVM_HOME="$TOOLS/smolvm-$SMOLVM_VERSION-$TARGET"
+SMOLVM_HOME="$TOOLS/smolvm-$SMOLVM_VERSION-$SMOLVM_ARCHIVE_TARGET"
 SMOLVM="$SMOLVM_HOME/smolvm"
 mkdir -p "$TOOLS" "$BUILD"
 
