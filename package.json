@@ -8,7 +8,8 @@
     "packages": [
       "docs",
       "server",
-      "desktop"
+      "desktop",
+      "cli"
     ],
     "catalog": {
       "@types/bun": "^1.4.2",
@@ -41,14 +42,10 @@
     "knip": "knip --config ./config/knip.jsonc --no-config-hints",
     "knip:production": "knip --config ./config/knip.jsonc --no-config-hints --production --include files,dependencies",
     "pierre:config": "bun test config/checks/",
+    "test:cli": "bun test cli/tests",
     "docs": "bun --filter @pierre/docs build",
     "release": "bash config/release.sh",
-    "pierre:version": "bun run server/utils/update-pierre.ts",
-    "------------------ DEPLOY ------------------": "------------------",
-    "deploy:logs": "bun --env-file=.env run kamal app logs -c config/deploy.yml",
-    "deploy:setup": "bun --env-file=.env run kamal setup -c config/deploy.yml",
-    "deploy": "bun --env-file=.env run kamal deploy -c config/deploy.yml",
-    "deploy:console": "bun --env-file=.env run kamal app exec -i bash -c config/deploy.yml"
+    "pierre:version": "bun run server/utils/update-pierre.ts"
   },
   "devDependencies": {
     "@shadcn/lint": "^0.1.5",

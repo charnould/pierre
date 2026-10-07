@@ -63,9 +63,14 @@
     "docs": {
       "entry": ["scripts/build.ts!", "scripts/**/*.test.ts"]
     },
+    "cli": {
+      "entry": ["src/main.ts!", "tests/**/*.test.ts"],
+      "project": ["src/**/*.ts!", "tests/**/*.ts!"]
+    },
     "server": {
       "entry": [
         "app.ts!",
+        "serve.ts!",
         "assets/embed/pierre-embed.ts!",
         "assets/host/pierre.ts!",
         "utils/knowledge/scrape-wikipedia.ts!",

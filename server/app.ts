@@ -428,7 +428,7 @@ app.post('/ai/answer', aiMultipartBodyLimit, authenticateOptional, post_ai_answe
 app.post('/ai/ui-response', aiUiResponseBodyLimit, post_ai_ui_response)
 app.post('/ai/vm/release', authenticateOptional, post_ai_vm_release)
 
-// Health check route for Kamal proxy + Telemetry endpoint
+// Caddy calls /up. Telemetry is posted by the desktop app.
 app.get('/up', (c) => c.text('ok'))
 app.post('/telemetry', post_telemetry)
 

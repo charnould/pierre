@@ -1,38 +1,23 @@
 {
   "compilerOptions": {
-    "lib": ["ESNext", "DOM"],
+    "lib": ["ESNext"],
     "target": "ESNext",
     "module": "Preserve",
     "moduleDetection": "force",
-    "jsx": "react-jsx",
-    "allowJs": true,
     "types": ["bun"],
-
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
     "noEmit": true,
-
     "strict": true,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noPropertyAccessFromIndexSignature": true
+    "noPropertyAccessFromIndexSignature": true,
+    "resolveJsonModule": true
   },
-  "include": [
-    "app.ts",
-    "serve.ts",
-    "controllers/**/*",
-    "datastores/**/*",
-    "knowledge/**/*",
-    "tests/**/*",
-    "utils/**/*",
-    "views/**/*",
-    "../shared/**/*"
-  ],
-  "exclude": ["node_modules", "dist", "build"]
+  "include": ["src/**/*.ts", "tests/**/*.ts"]
 }

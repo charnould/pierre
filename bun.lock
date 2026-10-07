@@ -12,6 +12,14 @@
         "typescript": "catalog:",
       },
     },
+    "cli": {
+      "name": "@pierre/cli",
+      "version": "0.9.4",
+      "devDependencies": {
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "desktop": {
       "name": "@pierre/desktop",
       "version": "0.40.6",
@@ -706,6 +714,8 @@
     "@oxlint/binding-win32-ia32-msvc": ["@oxlint/binding-win32-ia32-msvc@1.84.0", "", { "os": "win32", "cpu": "ia32" }, "sha512-6kkPlkoEycdtEUad+4FErlH4ibVgRW5UPzUt+t6wQTPxYv38CFglJdNk+aIZ8HgGuERU9MRBsx8WvM0Uulh67A=="],
 
     "@oxlint/binding-win32-x64-msvc": ["@oxlint/binding-win32-x64-msvc@1.84.0", "", { "os": "win32", "cpu": "x64" }, "sha512-wNdyY2qDCXiDBLb8bIfHTWO7JX1V0O552USHFhFx3ZitC44wkkKHZk0Q7+tv9NLNLR+wRSvaAm5aQBKE6O7qRg=="],
+
+    "@pierre/cli": ["@pierre/cli@workspace:cli"],
 
     "@pierre/desktop": ["@pierre/desktop@workspace:desktop"],
 

@@ -24,6 +24,7 @@ import {
 } from '../../shared/ai-stream-events'
 import { isPromptId } from '../../shared/prompts'
 import type { PiImageContent } from './ai-attachments'
+import { AI_MODEL } from './ai-model'
 import { chatbotInstructions } from './chatbot-config'
 import { datastorePaths } from './paths'
 import { skillPrompt, timezone } from './setup-store'
@@ -288,7 +289,7 @@ export async function* streamCopilot(
   convId: string,
   configId: string,
   prompt: string,
-  model = Bun.env['AI_MODEL'],
+  model = AI_MODEL,
   signal?: AbortSignal,
   images?: PiImageContent[],
   reasoningEffort: 'low' | 'medium' | 'high' = 'medium',

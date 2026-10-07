@@ -52,6 +52,7 @@ jobs:
       - run: bun install
       - run: bun --filter "@pierre/desktop" typecheck
       - run: bun --filter "@pierre/server" typecheck
+      - run: bun --filter "@pierre/cli" typecheck
   test_unit:
     name: Test (unit)
     runs-on: ubuntu-latest
@@ -68,6 +69,7 @@ jobs:
       - run: bun --filter "@pierre/server" test:unit
       - run: bun --filter "@pierre/desktop" test
       - run: bun --filter "@pierre/docs" test
+      - run: bun --filter "@pierre/cli" test
   package:
     name: Package
     runs-on: macos-latest

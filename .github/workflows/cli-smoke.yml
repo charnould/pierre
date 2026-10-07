@@ -1,0 +1,37 @@
+name: cli smoke
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  published-cli:
+    if: ${{ github.event_name != 'release' || startsWith(github.event.release.tag_name, 'cli-') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+    steps:
+      - name: Resolve latest stable cli release
+        run: |
+          TAG=$(gh api "repos/$REPO/releases?per_page=100" \
+            --jq '[.[] | select(.draft == false and .prerelease == false and (.tag_name | startswith("cli-")))][0].tag_name')
+          test -n "$TAG"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+
+      - name: Run the published installer
+        run: |
+          mkdir -p "$RUNNER_TEMP/pierre-bin"
+          sudo env \
+            PIERRE_BOOTSTRAP_ONLY=1 \
+            PIERRE_CLI_DEST="$RUNNER_TEMP/pierre-bin/pierre" \
+            TAG="$TAG" \
+            bash -c 'curl -fsSL "https://github.com/charnould/pierre/releases/download/$TAG/install.sh" | sh'
+          test "$("$RUNNER_TEMP/pierre-bin/pierre" --version)" = "$TAG"

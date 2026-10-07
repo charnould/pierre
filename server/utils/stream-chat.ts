@@ -6,6 +6,7 @@ export function modelPrompt(context: AIContext): string {
   return prefix === '' ? context.content : `${prefix}\n\n${context.content}`
 }
 import type { PiImageContent, ProcessedPiAttachments } from './ai-attachments'
+import { AI_MODEL } from './ai-model'
 import { streamCopilot } from './copilot-agent'
 import { save_reply } from './handle-conversation'
 import { send_telemetry } from './send-telemetry'
@@ -50,7 +51,7 @@ export function streamChatAnswer(
         context.conv_id,
         context.config.id,
         modelPrompt(context),
-        Bun.env['AI_MODEL'],
+        AI_MODEL,
         signal,
         attachments,
         context.config.reasoning_effort,
