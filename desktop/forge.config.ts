@@ -61,20 +61,6 @@ export default {
       }
     }
   ],
-  publishers: [
-    {
-      name: '@electron-forge/publisher-github',
-      config: {
-        repository: {
-          owner: 'charnould',
-          name: 'pierre'
-        },
-        tagPrefix: '',
-        draft: false,
-        prerelease: false
-      }
-    }
-  ],
   hooks: {
     postMake: async (_forgeConfig: unknown, makeResults: MakeResult[]) =>
       renameReleaseArtifacts(makeResults)

@@ -1,0 +1,86 @@
+name: Release Server
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - server/package.json
+      - server/utils/build-release.sh
+      - config/release.ts
+      - .github/workflows/release-server.yml
+  workflow_dispatch:
+
+concurrency:
+  group: release-server
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.release.outputs.publish }}
+      ref: ${{ steps.release.outputs.ref }}
+      tag: ${{ steps.release.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Reconcile release state
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          bun config/release.ts prepare server
+
+  release:
+    needs: prepare
+    if: needs.prepare.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REF: ${{ needs.prepare.outputs.ref }}
+      TAG: ${{ needs.prepare.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.REF }}
+          path: source
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Build server artifacts
+        run: |
+          cd source
+          bun install --frozen-lockfile --filter @pierre/server
+          cd ..
+          bash server/utils/build-release.sh source
+
+      - name: Publish
+        run: |
+          bun config/release.ts publish server "$REF" source/release-assets
+
+      - name: Smoke test published server
+        run: |
+          mkdir -p "$RUNNER_TEMP/server-release"
+          gh release download "$TAG" \
+            --pattern pierre \
+            --pattern libonnxruntime.so.1 \
+            --dir "$RUNNER_TEMP/server-release"
+          chmod 755 "$RUNNER_TEMP/server-release/pierre"
+          test "$(LD_LIBRARY_PATH="$RUNNER_TEMP/server-release" \
+            "$RUNNER_TEMP/server-release/pierre" --version)" = "$TAG"

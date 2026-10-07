@@ -23,19 +23,6 @@ describe('forge config release invariants', () => {
     expect(zip?.platforms).not.toContain('win32')
   })
 
-  it('keeps the semver tag required by update.electronjs.org', () => {
-    const publisher = forgeConfig.publishers?.[0]
-
-    expect(publisher?.name).toBe('@electron-forge/publisher-github')
-    expect(publisher?.config?.repository).toEqual({
-      owner: 'charnould',
-      name: 'pierre'
-    })
-    expect(publisher?.config?.tagPrefix).toBe('')
-    expect(publisher?.config?.draft).toBe(false)
-    expect(publisher?.config?.prerelease).toBe(false)
-  })
-
   it('externalises only what the packaged app can still resolve', async () => {
     // Forge ships no node_modules, so anything left external in the main bundle
     // is a MODULE_NOT_FOUND at startup. Only electron survives, being supplied

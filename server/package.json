@@ -8,6 +8,7 @@
     "vm:build:osx": "bash ../config/build-smolvm.sh",
     "vm:build:linux": "bash ../config/build-smolvm-linux.sh",
     "server:build": "cd .. && bun --env-file=.env run config/build-server.ts",
+    "release:build": "bash utils/build-release.sh",
     "dev": "DEBUG=true bun --env-file=../.env --watch run serve.ts",
     "embed": "BUN_PORT=3001 bun --watch tests/e2e/host-demo.html",
     "wikipedia": "bun --env-file=../.env run ./utils/knowledge/scrape-wikipedia.ts",

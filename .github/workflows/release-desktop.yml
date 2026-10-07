@@ -1,0 +1,164 @@
+name: Release Desktop
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - desktop/package.json
+      - config/release.ts
+      - .github/workflows/release-desktop.yml
+  workflow_dispatch:
+
+concurrency:
+  group: release-desktop
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      previous: ${{ steps.release.outputs.previous }}
+      publish: ${{ steps.release.outputs.publish }}
+      ref: ${{ steps.release.outputs.ref }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Reconcile release state
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          bun config/release.ts prepare desktop
+
+  build-windows:
+    needs: prepare
+    if: needs.prepare.outputs.publish == 'true'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Build Windows artifacts
+        run: |
+          bun install --frozen-lockfile
+          bun --filter "@pierre/desktop" make -- --platform=win32 --arch=x64
+
+      - name: Stage Windows artifacts
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          New-Item -ItemType Directory -Force -Path desktop/release-assets
+          Copy-Item desktop/out/make/squirrel.windows/x64/RELEASES desktop/release-assets/
+          Copy-Item "desktop/out/make/squirrel.windows/x64/pierre-$env:VERSION-full.nupkg" desktop/release-assets/
+          Copy-Item desktop/out/make/squirrel.windows/x64/pierre-win32-setup.exe desktop/release-assets/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-windows
+          path: desktop/release-assets/*
+          if-no-files-found: error
+          retention-days: 1
+
+  build-macos:
+    needs: prepare
+    if: needs.prepare.outputs.publish == 'true'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Build macOS artifacts
+        run: |
+          bun install --frozen-lockfile
+          bun --filter "@pierre/desktop" make -- --platform=darwin --arch=arm64
+
+      - name: Stage macOS artifacts
+        run: |
+          mkdir -p desktop/release-assets
+          cp desktop/out/make/pierre-macos.dmg desktop/release-assets/
+          cp desktop/out/make/zip/darwin/arm64/pierre-macos-arm64.zip desktop/release-assets/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-macos
+          path: desktop/release-assets/*
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    needs: [prepare, build-windows, build-macos]
+    if: needs.prepare.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REF: ${{ needs.prepare.outputs.ref }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: desktop-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Publish
+        run: |
+          bun config/release.ts publish desktop "$REF" release-assets
+
+  smoke:
+    needs: [prepare, publish]
+    if: needs.prepare.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    env:
+      PREVIOUS: ${{ needs.prepare.outputs.previous }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - name: Smoke test Windows auto-update
+        run: |
+          EXPECTED_NAME="desktop-$VERSION"
+          EXPECTED_URL="https://github.com/charnould/pierre/releases/download/$VERSION/pierre-win32-setup.exe"
+          for attempt in $(seq 1 60); do
+            RESPONSE=$(curl -fsSL \
+              --connect-timeout 5 \
+              --max-time 10 \
+              -H 'User-Agent: pierre-desktop-release-smoke' \
+              "https://update.electronjs.org/charnould/pierre/win32-x64/$PREVIOUS" || true)
+            if jq -e \
+              --arg name "$EXPECTED_NAME" \
+              --arg url "$EXPECTED_URL" \
+              '.name == $name and .url == $url' <<< "$RESPONSE" >/dev/null; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Desktop release did not become available through update.electronjs.org"
+          exit 1

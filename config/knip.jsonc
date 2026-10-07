@@ -13,6 +13,8 @@
       "entry": [
         "config/build-server.ts!",
         "config/build-updates.ts!",
+        "config/release.ts!",
+        "config/release.test.ts",
         "config/smolvm/extensions/ask-user.ts!",
         "config/checks/*.test.ts",
         "shared/**/*.test.ts"
@@ -50,14 +52,13 @@
         "!test/**!",
         "!src/features/repayment/lib/repayment-test-fixtures.ts!"
       ],
-      // Electron Forge resolves maker and publisher packages from string names in its config.
+      // Electron Forge resolves maker packages from string names in its config.
       "ignoreDependencies": [
         // typeset.css loads the font files directly through CSS url() declarations.
         "@fontsource-variable/source-serif-4",
         "@electron-forge/maker-dmg",
         "@electron-forge/maker-squirrel",
-        "@electron-forge/maker-zip",
-        "@electron-forge/publisher-github"
+        "@electron-forge/maker-zip"
       ]
     },
     "docs": {
