@@ -38,13 +38,15 @@
       // Runtime geometry and motion values are data, not reusable visual tokens.
       "files": [
         "**/src/features/chat/ChatPanel.tsx",
+        "**/src/features/chat/ChatWindow.tsx",
         "**/src/features/home/HomeView.tsx",
         "**/src/features/outreach/components/BulkReports.tsx",
         "**/src/features/settings/components/IdentityField.tsx",
         "**/src/features/tickets/components/TicketsTableSkeleton.tsx",
         "**/src/shared/components/table/VirtualizedTableBody.tsx",
         "**/src/shared/components/table/board-dual-table.tsx",
-        "**/src/shared/components/ui/badge.tsx"
+        "**/src/shared/components/ui/badge.tsx",
+        "**/src/shared/components/ui/code-block.tsx"
       ],
       "rules": {
         "shadcn/no-inline-styles": "off"
@@ -55,10 +57,13 @@
       "files": [
         "**/src/features/activity/components/ActivityNotificationRow.tsx",
         "**/src/features/activity/components/ActivityNotificationsTrigger.tsx",
+        "**/src/features/administration/AdministrationView.tsx",
         "**/src/features/administration/components/UsersPanel.tsx",
         "**/src/features/automations/components/AutomationsList.tsx",
         "**/src/features/chat/ChatPanel.tsx",
+        "**/src/features/chat/ChatWindow.tsx",
         "**/src/features/chat/components/ChatMessages.tsx",
+        "**/src/features/home/HomeDoor.tsx",
         "**/src/features/home/HomeView.tsx",
         "**/src/features/outreach/components/BulkEditor.tsx",
         "**/src/features/outreach/components/BulkOperationsList.tsx",
@@ -347,6 +352,24 @@
       }
     },
     {
+      "files": ["**/src/features/settings/components/LoginPanel.tsx"],
+      "rules": {
+        "shadcn/no-arbitrary-values": "off",
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^FieldDescription$",
+                "allow": ["layout", "[font-size:12px]", "leading-4"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["**/src/features/outreach/components/BulkEditor.tsx"],
       "rules": {
         "shadcn/no-restyle": [
@@ -592,10 +615,15 @@
                   "has-[[data-slot=input-group-control]:focus-visible]:ring-0",
                   "border-ring",
                   "ring-1",
+                  "ring-2",
+                  "ring-ring/20",
                   "ring-ring/30"
                 ]
               },
-              { "pattern": "^InputGroupAddon$", "allow": ["layout", "px-2", "py-1", "pb-1.5"] },
+              {
+                "pattern": "^InputGroupAddon$",
+                "allow": ["layout", "px-2", "px-1.5", "py-1", "pb-1.5", "h-10"]
+              },
               {
                 "pattern": "^InputGroupTextarea$",
                 "allow": ["layout", "px-3", "pt-2.5", "pb-1", "leading-5"]
@@ -651,10 +679,7 @@
       }
     },
     {
-      "files": [
-        "**/src/features/administration/components/ProvidersPanel.tsx",
-        "**/src/features/administration/components/SetupPanel.tsx"
-      ],
+      "files": ["**/src/features/administration/components/ProvidersPanel.tsx"],
       "rules": {
         "shadcn/no-restyle": [
           "error",

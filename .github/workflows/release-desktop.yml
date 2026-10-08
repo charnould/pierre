@@ -96,7 +96,7 @@ jobs:
       - name: Stage macOS artifacts
         run: |
           mkdir -p desktop/release-assets
-          cp desktop/out/make/pierre-macos.dmg desktop/release-assets/
+          cp desktop/out/make/dmg/arm64/pierre-macos.dmg desktop/release-assets/
           cp desktop/out/make/zip/darwin/arm64/pierre-macos-arm64.zip desktop/release-assets/
 
       - uses: actions/upload-artifact@v4
