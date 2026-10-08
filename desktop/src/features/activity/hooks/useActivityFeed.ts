@@ -83,9 +83,9 @@ export function useActivityFeed({
         const result = await window.api.syncActivityFeed({
           url: settings.url!,
           auteurs: activityAuthors,
-          unread_only: !showRead,
-          inbox_limit: inboxLimit,
-          authored_limit: authoredLimit,
+          unreadOnly: !showRead,
+          inboxLimit,
+          authoredLimit,
           etag: feedEtag.current || undefined
         })
         if (disposed || !result) return

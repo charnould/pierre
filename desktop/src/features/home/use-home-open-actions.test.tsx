@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
-import type { ActiviteListItem, GetActivitiesParams } from '@/shared/types/activites'
+import type { ActivityListItem, GetActivitiesParams } from '@/shared/types/activites'
 
 import { useHomeOpenActions } from './use-home-open-actions'
 
@@ -29,10 +29,10 @@ afterAll(() => {
   delete globals.getComputedStyle
 })
 
-function openTaskRow(id: number, title: string): ActiviteListItem {
+function openTaskRow(id: number, title: string): ActivityListItem {
   return {
     id,
-    date_creation: '2026-09-17T08:00:00.000Z',
+    createdAt: '2026-09-17T08:00:00.000Z',
     rattachement: 'repayment:LOC-1',
     auteur: 'user:alice@exemple.fr',
     id_client: null,
@@ -50,7 +50,7 @@ function openTaskRow(id: number, title: string): ActiviteListItem {
         due_date: '2026-09-18'
       }
     }),
-    thread_id: `thread-${id}`,
+    threadId: `thread-${id}`,
     revision: 1,
     my: null,
     read: false,
@@ -60,7 +60,7 @@ function openTaskRow(id: number, title: string): ActiviteListItem {
 
 type ActionsApi = ReturnType<typeof useHomeOpenActions>
 
-async function renderActions(mineRows: ActiviteListItem[], delegatedRows: ActiviteListItem[]) {
+async function renderActions(mineRows: ActivityListItem[], delegatedRows: ActivityListItem[]) {
   const { act } = await import('react')
   const { createRoot } = await import('react-dom/client')
   const requests: GetActivitiesParams[] = []

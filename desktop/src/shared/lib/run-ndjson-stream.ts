@@ -1,4 +1,4 @@
-import { parseAiStreamLine, type AiStreamEvent } from '@/features/workflow/lib/parse-workflow-chunk'
+import { type AiStreamEvent, parseAiStreamLine } from '@/features/workflow/lib/parse-workflow-chunk'
 
 import { createNdjsonLineBuffer } from './ndjson-buffer'
 import { warnRenderer } from './renderer-log'
@@ -23,7 +23,7 @@ export function cancelNdjsonStream(requestId: string): void {
 }
 
 /**
- * Shared transport for `/ai` and `/ai/answer`: buffer chunks → NDJSON lines → `onEvent`.
+ * Shared transport for `/chat` and `/workflows`: buffer chunks → NDJSON lines → `onEvent`.
  */
 export async function runNdjsonStream({
   requestId,

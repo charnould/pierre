@@ -1,6 +1,6 @@
 import { actionTimelineDate } from '@/shared/lib/activities/action-activity'
 import { projectTimelineItems } from '@/shared/lib/timeline/project-timeline'
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 import type { LedgerMovementRow } from '@/shared/types/ledger'
 
 import {
@@ -98,7 +98,7 @@ export type RepaymentTimelineItem =
       soldeAfter: number
       soldeDelta: number | null
     }
-  | { source: 'activity'; id: string; date: string; row: Activite; statuses: Activite[] }
+  | { source: 'activity'; id: string; date: string; row: Activity; statuses: Activity[] }
 
 const CATEGORY_LABELS: Record<string, string> = {
   loyer_principal: 'Loyer principal',
@@ -167,8 +167,8 @@ export function mapLedgerMovementToEntry(row: LedgerMovementRow): {
 }
 
 export function mapNotificationToEntry(
-  row: Activite,
-  statuses: Activite[] = []
+  row: Activity,
+  statuses: Activity[] = []
 ): Extract<RepaymentTimelineItem, { source: 'activity' }> {
   return {
     source: 'activity',
@@ -200,7 +200,7 @@ export type BuildRepaymentTimelineOptions = {
  */
 export function buildRepaymentTimeline(
   movements: LedgerMovementRow[],
-  notifications: Activite[],
+  notifications: Activity[],
   options?: BuildRepaymentTimelineOptions
 ): RepaymentTimelineItem[] {
   const records = movementRecords(movements)

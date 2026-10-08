@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
+import { type KeyboardEvent, useCallback, useEffect, useId, useRef, useState } from 'react'
 
 import { useAgentIdentity } from '@/contexts/AgentIdentityContext'
 import { OrgUserListItem } from '@/shared/components/OrgUserListItem'
@@ -167,7 +167,6 @@ export function MentionTextarea({
         />
       </div>
       <PopoverContent
-        variant="command"
         side="bottom"
         align="start"
         sideOffset={6}

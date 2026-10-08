@@ -11,23 +11,16 @@ mock.module('@/contexts/UiSettingsContext', () => ({
   })
 }))
 
-mock.module('@/features/repayment/lib/outbound-email-templates.bundle', () => ({
-  listOutboundTemplateGroups: () => [],
-  listOutboundTemplates: () => [],
-  resolveOutboundEmail: () => null,
-  resolveOutboundRcs: () => null
-}))
-
 import { ContextTimeline } from '@/shared/components/timeline/context-timeline'
 import { parseActivityAuthor } from '@/shared/lib/timeline/parse-activity-author'
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 
 import { RepaymentActivityTimelineEvent } from './RepaymentActivityTimelineEvent'
 
-function row(overrides: Partial<Activite> = {}): Activite {
+function row(overrides: Partial<Activity> = {}): Activity {
   return {
     id: 1,
-    date_creation: '2026-08-21T10:00:00',
+    createdAt: '2026-08-21T10:00:00',
     rattachement: 'repayment:LOC-1',
     auteur: 'user:alice@example.test',
     id_client: 'CLI-1',
@@ -41,14 +34,14 @@ function row(overrides: Partial<Activite> = {}): Activite {
   }
 }
 
-function renderEvent(activity: Activite) {
+function renderEvent(activity: Activity) {
   return renderToStaticMarkup(
     <ContextTimeline>
       <RepaymentActivityTimelineEvent
         row={activity}
         actor={parseActivityAuthor(activity.auteur)}
         step={1}
-        dateTime={activity.date_creation}
+        dateTime={activity.createdAt}
         dateLabel="21/08/2026 · 10h00"
       />
     </ContextTimeline>
@@ -76,7 +69,7 @@ describe('ActivityTimelineEvent', () => {
         })
       })
     )
-    expect(html).toContain('a déplacé le dossier de groupe')
+    expect(html).toContain('a changé la phase')
     expect(html).toContain('amiable')
     expect(html).toContain('pre_contentieux')
     expect(html).toContain('Échec des relances amiables.')
@@ -86,7 +79,7 @@ describe('ActivityTimelineEvent', () => {
     const html = renderEvent(
       row({
         type: 'task.created',
-        thread_id: 'todo-1',
+        threadId: 'todo-1',
         revision: 1,
         contenu: JSON.stringify({
           version: 2,

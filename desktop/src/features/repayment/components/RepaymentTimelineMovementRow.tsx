@@ -48,9 +48,7 @@ export function RepaymentTimelineMovementRow({ row, soldeAfter, soldeDelta, clas
           </span>
         ) : null}
       </p>
-      {label ? (
-        <p className="text-muted-foreground pierre-type-table-header mt-0.5">{label}</p>
-      ) : null}
+      {label ? <p className="text-muted-foreground mt-0.5 text-xs font-semibold">{label}</p> : null}
     </div>
   )
 }

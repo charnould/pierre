@@ -256,6 +256,36 @@ describe('TicketComposeBlock', () => {
     }
   })
 
+  test('préfère la feuille de qualification_hierarchie au motif CARL', async () => {
+    const { act } = await import('react')
+    const { createRoot } = await import('react-dom/client')
+    const { TicketSummaryCard } = await import('./TicketComposeBlock')
+    const container = document.createElement('div')
+    document.body.append(container)
+    const root = createRoot(container)
+    await act(async () => {
+      root.render(
+        <TicketSummaryCard
+          ticket={{
+            id_reclamation: 'REC-1',
+            qualification_hierarchie: 'technique > plomberie > fuite_de_lavabo',
+            motif: 'Fuite',
+            email_collaborateur_en_charge: 'alice@bailleur.fr'
+          }}
+          referent={null}
+        />
+      )
+    })
+    try {
+      expect(container.textContent).toContain('fuite_de_lavabo')
+      expect(container.textContent).not.toContain('Fuite')
+      expect(container.textContent).toContain('Alice')
+    } finally {
+      await act(async () => root.unmount())
+      container.remove()
+    }
+  })
+
   test('ordonne lot, site, état de la réclamation et avancement dans le contexte', async () => {
     const { act } = await import('react')
     const { createRoot } = await import('react-dom/client')
@@ -448,7 +478,6 @@ describe('TicketComposeBlock', () => {
         ;[...document.querySelectorAll('button')]
           .find((button) => button.textContent === 'Répondre au locataire')
           ?.click()
-        await new Promise((resolve) => setTimeout(resolve, 300))
       })
       expect(document.body.textContent).toContain('Ouvrir TextEdit')
       expect(document.body.textContent).not.toContain('Objet')
@@ -519,7 +548,6 @@ describe('TicketComposeBlock', () => {
       )
       await act(async () => {
         cancel?.click()
-        await new Promise((resolve) => setTimeout(resolve, 300))
       })
       expect(buttonLabels()).toContain('Ajouter une note')
       expect(document.querySelector('[data-inspector-compose-shell]')).toBeNull()

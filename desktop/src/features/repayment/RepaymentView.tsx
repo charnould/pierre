@@ -1,39 +1,40 @@
-import { LoaderCircle } from 'lucide-react'
-import type { ComponentType } from 'react'
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useRegisterNavigationHandlers } from '@/contexts/NavigationHistoryContext'
 import { useActivityRail } from '@/features/activity/lib/ActivityRailContext'
-import { CartoonErrorObject } from '@/shared/components/icons/koboyo-empty'
+import { BoardSelectionProvider } from '@/shared/components/board/board-selection'
+import {
+  BoardCanvas,
+  BoardRefreshButton,
+  BoardSelectionToolbar,
+  BoardStatusLine
+} from '@/shared/components/board/board-surface'
 import { ModuleGate } from '@/shared/components/ModuleGate'
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/shared/components/ui/empty'
+import { toast } from '@/shared/components/ui/toast'
 import { useDatastoreTables } from '@/shared/hooks/useDatastoreTables'
 import { moduleReady, useCustomizationStatus } from '@/shared/lib/instance-customization'
 import { cn } from '@/shared/lib/utils'
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 
-import {
-  RepaymentPlanWorkspace,
-  type PlanClosedPayload,
-  type PlanDeletedPayload,
-  type PlanSavedPayload
-} from './components/create-plan/RepaymentPlanWorkspace'
 import { RepaymentBucketTableBlock } from './components/RepaymentBucketTableBlock'
+import { RepaymentBulkActionDialog } from './components/RepaymentBulkActionDialog'
 import { RepaymentMissingTableEmpty } from './components/RepaymentMissingTableEmpty'
 import { RepaymentTenantDrawer } from './components/RepaymentTenantDrawer'
+import { useRepaymentBulkActions } from './hooks/use-repayment-bulk-actions'
 import type { TenantRepaymentRow } from './lib/classify-tenants'
 import { isComptesLocatairesMissing } from './lib/comptes-locataires-table'
 import { groupRepaymentRowsByBucket } from './lib/group-repayment-rows-by-bucket'
-import { parseRepaymentPlanForm, parseRepaymentPlanProposal } from './lib/repayment-activity-text'
-import { repaymentCreatePlanConfig } from './lib/repayment-create-plan-config'
+import { parseRepaymentPlanForm } from './lib/repayment-activity-text'
+import type { RepaymentBulkAction } from './lib/repayment-bulk-action'
 import {
-  subscribeRepaymentPlanEditor,
-  type RepaymentPlanEditorRequest
+  blankPlanEditorRequest,
+  type RepaymentPlanEditorRequest,
+  subscribeRepaymentPlanEditor
 } from './lib/repayment-plan-editor-intent'
-import { createExportOnlyPlanEditorRequest } from './lib/repayment-plan-export-only'
 import { prefetchRepaymentTimeline } from './lib/repayment-timeline-cache'
 import { useRepaymentColumnValues } from './lib/use-repayment-table-preferences'
 import { type RepaymentViewDataDeps, useRepaymentViewData } from './lib/use-repayment-view-data'
+import { type PlanSavedPayload, PlanScreen } from './plan/PlanScreen'
 
 interface Props {
   hidden: boolean
@@ -42,27 +43,25 @@ interface Props {
 }
 
 function RepaymentBoardStatus({
-  icon: Icon,
-  title
+  title,
+  loading,
+  onReload,
+  alert = false
 }: {
-  icon: ComponentType<{ className?: string }>
   title: string
+  loading: boolean
+  onReload: () => void
+  alert?: boolean
 }) {
   return (
-    <Empty className="min-h-40 flex-1">
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <Icon />
-        </EmptyMedia>
-        <EmptyTitle size="sm">{title}</EmptyTitle>
-      </EmptyHeader>
-    </Empty>
+    <BoardCanvas toolbar={<BoardRefreshButton loading={loading} onRefresh={onReload} />}>
+      {() => <BoardStatusLine alert={alert}>{title}</BoardStatusLine>}
+    </BoardCanvas>
   )
 }
 
 export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
   const customizationStatus = useCustomizationStatus()
-  const scrollRef = useRef<HTMLDivElement>(null)
   const {
     snapshotDate,
     gestionnaireAssignable,
@@ -75,6 +74,8 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
     setSheetOpen,
     sheetOpenToken,
     getBucketForRow,
+    setBucket,
+    clearBucket,
     getLastAction,
     getRowSignal,
     handleAddNote,
@@ -94,19 +95,111 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
   )
   const comptesLocatairesMissing = isComptesLocatairesMissing(datastoreTables)
   const [planEditor, setPlanEditor] = useState<RepaymentPlanEditorRequest | null>(null)
+  const hoverTimerRef = useRef<number | null>(null)
   const { contextTarget } = useActivityRail()
+
+  useEffect(
+    () => () => {
+      if (hoverTimerRef.current != null) window.clearTimeout(hoverTimerRef.current)
+    },
+    []
+  )
 
   const handleRowHover = useCallback(
     (row: TenantRepaymentRow) => {
       if (!url) return
-      void prefetchRepaymentTimeline({
-        url,
-        id_client: row.id_client,
-        id_locataire: row.id_locataire
-      })
+      if (hoverTimerRef.current != null) window.clearTimeout(hoverTimerRef.current)
+      hoverTimerRef.current = window.setTimeout(() => {
+        hoverTimerRef.current = null
+        void prefetchRepaymentTimeline({
+          url,
+          id_client: row.id_client,
+          id_locataire: row.id_locataire
+        })
+      }, 120)
     },
     [url]
   )
+
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
+  const [seenUrl, setSeenUrl] = useState(url)
+  const [bulkOpen, setBulkOpen] = useState(false)
+  const [timelineRefreshToken, setTimelineRefreshToken] = useState(0)
+  if (url !== seenUrl) {
+    setSeenUrl(url)
+    setSelectedIds(new Set())
+    setBulkOpen(false)
+  }
+  const checkedIds = useMemo(() => {
+    if (selectedIds.size === 0) return selectedIds
+    const live = new Set(allRows.map((row) => row.id_locataire))
+    let changed = false
+    const next = new Set<string>()
+    for (const id of selectedIds) {
+      if (live.has(id)) next.add(id)
+      else changed = true
+    }
+    return changed ? next : selectedIds
+  }, [allRows, selectedIds])
+  const bulk = useRepaymentBulkActions({
+    url,
+    userLogin: repaymentDeps.userLogin,
+    rows: allRows,
+    getBucket: getBucketForRow,
+    setBucket,
+    clearBucket,
+    refreshNotifications: () => repaymentDeps.notifications.refresh(),
+    reloadLedger: reload,
+    onInspectorRefresh: () => setTimelineRefreshToken((token) => token + 1)
+  })
+
+  const toggleChecked = useCallback((id: string, checked: boolean) => {
+    setSelectedIds((current) => {
+      const next = new Set(current)
+      if (checked) next.add(id)
+      else next.delete(id)
+      return next
+    })
+  }, [])
+
+  const submitBulk = useCallback(
+    async (action: RepaymentBulkAction) => {
+      const result = await bulk.run([...checkedIds], action)
+      setSelectedIds(new Set(result.failed))
+      setBulkOpen(false)
+      const done = result.succeeded.length
+      const missed = result.failed.length
+      if (result.stopped) {
+        toast.add({
+          title:
+            done === 0
+              ? 'Action interrompue'
+              : `Interrompu après ${done} dossier${done > 1 ? 's' : ''}`,
+          type: 'error'
+        })
+        return
+      }
+      if (missed === 0) {
+        toast.add({
+          title: `${done} dossier${done > 1 ? 's' : ''} traité${done > 1 ? 's' : ''}`,
+          type: 'success'
+        })
+        return
+      }
+      toast.add({
+        title:
+          done === 0
+            ? `${missed} dossier${missed > 1 ? 's' : ''} en échec`
+            : `${done} traité${done > 1 ? 's' : ''}, ${missed} en échec`,
+        type: 'error'
+      })
+    },
+    [bulk, checkedIds]
+  )
+
+  const handleCreateBlankPlan = useCallback(() => {
+    setPlanEditor(blankPlanEditorRequest())
+  }, [])
 
   const handleCreatePlan = useCallback(
     (tenant: TenantRepaymentRow) => {
@@ -116,26 +209,12 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
     [setSheetOpen]
   )
 
-  const handleCreateExportOnlyPlan = useCallback(() => {
-    setPlanEditor(createExportOnlyPlanEditorRequest())
-  }, [])
-
   const handleEditPlan = useCallback(
-    (tenant: TenantRepaymentRow, row: Activite) => {
-      const form = parseRepaymentPlanForm(row)
-      if (!form) return
-      const display = parseRepaymentPlanProposal(row)
+    (tenant: TenantRepaymentRow, row: Activity) => {
+      const dossier = parseRepaymentPlanForm(row)
+      if (!dossier) return
       setSheetOpen(false)
-      setPlanEditor({
-        tenant,
-        activityId: row.id,
-        form: {
-          ...form,
-          idLocataire: form.idLocataire.trim() || tenant.id_locataire,
-          idClient: form.idClient.trim() || tenant.id_client
-        },
-        comment: display?.note ?? ''
-      })
+      setPlanEditor({ tenant, activityId: row.id, dossier })
     },
     [setSheetOpen]
   )
@@ -145,38 +224,9 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
   }, [])
 
   const handlePlanSaved = useCallback(
-    ({ id_locataire, activityId, signed, applyAdvancement }: PlanSavedPayload) => {
-      void (async () => {
-        if (applyAdvancement) {
-          if (signed) {
-            await handleAdvancementChange(repaymentCreatePlanConfig().signedBucketId, '', {
-              id_locataire
-            })
-          }
-        }
-        setPlanEditor(null)
-        openTenantSheet(id_locataire, { activityId })
-      })()
-    },
-    [handleAdvancementChange, openTenantSheet]
-  )
-
-  const handlePlanClosed = useCallback(
-    ({ id_locataire, activityId, motif }: PlanClosedPayload) => {
-      void (async () => {
-        const entry = repaymentCreatePlanConfig().close[motif]
-        await handleAdvancementChange(entry.bucketId, '', { id_locataire })
-        setPlanEditor(null)
-        openTenantSheet(id_locataire, { activityId })
-      })()
-    },
-    [handleAdvancementChange, openTenantSheet]
-  )
-
-  const handlePlanDeleted = useCallback(
-    ({ id_locataire }: PlanDeletedPayload) => {
+    ({ id_locataire, activityId }: PlanSavedPayload) => {
       setPlanEditor(null)
-      openTenantSheet(id_locataire)
+      openTenantSheet(id_locataire, { activityId })
     },
     [openTenantSheet]
   )
@@ -187,6 +237,14 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
         ? groupRepaymentRowsByBucket(allRows, getBucketForRow)
         : [],
     [allRows, getBucketForRow, customizationStatus]
+  )
+  const selection = useMemo(
+    () => ({
+      checkedIds,
+      disabled: bulk.running,
+      onCheckedChange: toggleChecked
+    }),
+    [bulk.running, checkedIds, toggleChecked]
   )
 
   useEffect(() => {
@@ -217,7 +275,7 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
       <div
         data-tab-panel
         className={cn(
-          'relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
+          'bg-background relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
           hidden ? 'hidden' : 'flex'
         )}
       >
@@ -231,26 +289,18 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
       <div
         data-tab-panel
         className={cn(
-          'relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
+          'bg-background relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
           hidden ? 'hidden' : 'flex'
         )}
       >
-        <RepaymentPlanWorkspace
-          key={
-            planEditor.exportOnly
-              ? `export:${planEditor.tenant.id_client}:${planEditor.tenant.id_locataire}`
-              : `${planEditor.activityId ?? 'new'}:${planEditor.tenant.id_locataire}`
-          }
+        <PlanScreen
+          key={`${planEditor.activityId ?? 'new'}:${planEditor.tenant.id_locataire}`}
           url={url}
           tenant={planEditor.tenant}
-          initialForm={planEditor.form}
+          initialDossier={planEditor.dossier}
           existingActivityId={planEditor.activityId}
-          initialComment={planEditor.comment}
-          exportOnly={planEditor.exportOnly}
           onClose={handleClosePlan}
           onSaved={handlePlanSaved}
-          onPlanClosed={handlePlanClosed}
-          onPlanDeleted={handlePlanDeleted}
         />
       </div>
     )
@@ -260,47 +310,58 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
     <div
       data-tab-panel
       className={cn(
-        'relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
+        'bg-background relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
         hidden ? 'hidden' : 'flex'
       )}
     >
-      <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
-        {datastoreTablesLoading && datastoreTables === null ? (
-          <RepaymentBoardStatus icon={LoaderCircle} title="Chargement des soldes…" />
-        ) : comptesLocatairesMissing ? (
-          <RepaymentMissingTableEmpty onCreatePlan={handleCreateExportOnlyPlan} />
-        ) : loading && allRows.length === 0 ? (
-          <RepaymentBoardStatus icon={LoaderCircle} title="Chargement des soldes…" />
-        ) : error && allRows.length === 0 ? (
-          <RepaymentBoardStatus icon={CartoonErrorObject} title={error} />
-        ) : (
-          <div
-            ref={scrollRef}
-            className="flex min-h-0 w-full min-w-0 flex-1 scroll-pb-4 flex-col overflow-x-hidden overflow-y-auto overscroll-contain pb-6"
+      {datastoreTablesLoading && datastoreTables === null ? (
+        <RepaymentBoardStatus title="Chargement des soldes…" loading onReload={reload} />
+      ) : comptesLocatairesMissing ? (
+        <RepaymentMissingTableEmpty onCreatePlan={handleCreateBlankPlan} />
+      ) : loading && allRows.length === 0 ? (
+        <RepaymentBoardStatus title="Chargement des soldes…" loading onReload={reload} />
+      ) : error && allRows.length === 0 ? (
+        <RepaymentBoardStatus title={error} loading={false} onReload={reload} alert />
+      ) : (
+        <BoardSelectionProvider value={selection}>
+          <BoardCanvas
+            toolbar={
+              checkedIds.size > 0 ? (
+                <BoardSelectionToolbar
+                  count={checkedIds.size}
+                  noun="dossier"
+                  disabled={bulk.running}
+                  onClear={() => setSelectedIds(new Set())}
+                  onAct={() => setBulkOpen(true)}
+                />
+              ) : (
+                <BoardRefreshButton loading={loading} onRefresh={reload} />
+              )
+            }
           >
-            {bucketSections.map((section) => (
-              <RepaymentBucketTableBlock
-                key={section.bucket}
-                bucket={section.bucket}
-                bucketRows={section.rows}
-                ledgerColumnIds={ledgerColumnIds}
-                selectedId={selected?.id_locataire ?? null}
-                loading={loading}
-                snapshotDate={snapshotDate}
-                columnValues={columnValues}
-                onColumnValuesChange={setColumnValues}
-                onRowClick={handleRowClick}
-                onRowHover={handleRowHover}
-                getBucket={getBucketForRow}
-                getLastAction={getLastAction}
-                getRowSignal={getRowSignal}
-                onReload={reload}
-                scrollRef={scrollRef}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+            {(scrollRef) =>
+              bucketSections.map((section) => (
+                <RepaymentBucketTableBlock
+                  key={section.bucket}
+                  bucket={section.bucket}
+                  bucketRows={section.rows}
+                  ledgerColumnIds={ledgerColumnIds}
+                  selectedId={selected?.id_locataire ?? null}
+                  snapshotDate={snapshotDate}
+                  columnValues={columnValues}
+                  onColumnValuesChange={setColumnValues}
+                  onRowClick={handleRowClick}
+                  onRowHover={handleRowHover}
+                  getBucket={getBucketForRow}
+                  getLastAction={getLastAction}
+                  getRowSignal={getRowSignal}
+                  scrollRef={scrollRef}
+                />
+              ))
+            }
+          </BoardCanvas>
+        </BoardSelectionProvider>
+      )}
 
       <RepaymentTenantDrawer
         url={url}
@@ -308,6 +369,7 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         sheetOpenToken={sheetOpenToken}
+        timelineRefreshToken={timelineRefreshToken}
         tenant={selected}
         columnValues={columnValues}
         highlightActivityId={activityNoteId}
@@ -318,6 +380,14 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
         gestionnaireAssignable={gestionnaireAssignable}
         onCreatePlan={handleCreatePlan}
         onEditPlan={handleEditPlan}
+      />
+      <RepaymentBulkActionDialog
+        open={bulkOpen}
+        count={checkedIds.size}
+        progress={bulk.progress}
+        onClose={() => setBulkOpen(false)}
+        onStop={bulk.stop}
+        onSubmit={submitBulk}
       />
     </div>
   )

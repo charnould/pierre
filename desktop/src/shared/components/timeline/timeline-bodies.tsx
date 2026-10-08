@@ -22,7 +22,7 @@ export function TimelineQuote({ children }: { children: string }) {
   const paragraphs = communicationBodyParagraphs(children)
   if (paragraphs.length === 0) return null
   return (
-    <blockquote className="border-border/60 text-foreground mt-2 flex flex-col gap-1 border-l ps-2 text-xs leading-4">
+    <blockquote className="border-border/60 text-foreground mt-2 flex flex-col gap-1 border-l ps-2 text-base leading-6">
       {paragraphs.map((paragraph) => (
         <p key={paragraph} className="text-pretty">
           <MentionText text={paragraph} inline />
@@ -34,7 +34,7 @@ export function TimelineQuote({ children }: { children: string }) {
 
 export function TimelineObject({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div className="border-border/60 mt-2 rounded-md border p-2 text-xs leading-4">
+    <div className="border-border/60 mt-2 rounded-md border p-2 text-base leading-6">
       <p className="truncate font-medium" title={title}>
         {title}
       </p>
@@ -58,7 +58,7 @@ export function TimelineDelta({
   return (
     <div className="mt-2 flex flex-col gap-2">
       {collection ? (
-        <div className="grid grid-cols-2 gap-2 text-xs leading-4">
+        <div className="grid grid-cols-2 gap-2 text-base leading-6">
           <div>
             <p className="text-muted-foreground">Avant</p>
             <p className="text-pretty break-words">{formatActivityValue(before)}</p>
@@ -71,7 +71,7 @@ export function TimelineDelta({
           </div>
         </div>
       ) : (
-        <p className="text-xs leading-4">
+        <p className="text-base leading-6">
           <span className="text-muted-foreground">{formatActivityValue(before)}</span>
           <span className="text-muted-foreground"> → </span>
           <span className={cn(failed && 'text-destructive')}>{formatActivityValue(after)}</span>
@@ -92,7 +92,7 @@ export function TimelineFact({
   failed?: boolean
 }) {
   return (
-    <p className="mt-2 text-xs leading-4">
+    <p className="mt-2 text-base leading-6">
       <span className="text-muted-foreground">{label} </span>
       <span className={cn('text-foreground tabular-nums', failed && 'text-destructive')}>
         {value}
@@ -108,12 +108,7 @@ export function TimelineChips({ values }: { values: string[] }) {
   return (
     <span className="flex flex-wrap gap-1">
       {values.map((value) => (
-        <Badge
-          key={value}
-          variant="outline"
-          size="compact"
-          className="pierre-type-table-header font-normal"
-        >
+        <Badge key={value} variant="outline">
           {value}
         </Badge>
       ))}

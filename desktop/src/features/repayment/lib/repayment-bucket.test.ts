@@ -3,10 +3,11 @@ import { beforeEach, describe, expect, test } from 'bun:test'
 import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 
 import {
-  CLIENTS_PARTIS_BUCKET_ID,
+  defaultRepaymentPhase,
+  departedRepaymentPhase,
   getRepaymentBucketMeta,
   isDepartedTenantRow,
-  NON_TRAITES_BUCKET_ID,
+  RECLASSIFY_PHASE,
   repaymentBucketIds,
   resolveBucketForTenantRow,
   resolveRepaymentBucket
@@ -19,37 +20,39 @@ describe('repayment-bucket', () => {
 
   test('lit les phases depuis le store, dans l’ordre', () => {
     expect(repaymentBucketIds()).toEqual([
-      NON_TRAITES_BUCKET_ID,
-      'amiable',
-      'contentieux',
-      CLIENTS_PARTIS_BUCKET_ID
+      'Non traités',
+      'Recouvrement amiable',
+      'Contentieux',
+      'Clients partis'
     ])
     expect(new Set(repaymentBucketIds()).size).toBe(repaymentBucketIds().length)
   })
 
-  test('resolveRepaymentBucket retombe sur non_traites par défaut', () => {
-    expect(resolveRepaymentBucket(undefined)).toBe(NON_TRAITES_BUCKET_ID)
-    expect(resolveRepaymentBucket('plan_soumis')).toBe(NON_TRAITES_BUCKET_ID)
-    expect(resolveRepaymentBucket('prise_contact')).toBe(NON_TRAITES_BUCKET_ID)
+  test('une phase absente va dans À reclasser, une phase manquante dans la première', () => {
+    expect(resolveRepaymentBucket(undefined)).toBe(defaultRepaymentPhase())
+    expect(resolveRepaymentBucket('plan_soumis')).toBe(RECLASSIFY_PHASE)
+    expect(resolveRepaymentBucket('prise_contact')).toBe(RECLASSIFY_PHASE)
   })
 
   test('resolveRepaymentBucket conserve une phase valide stockée', () => {
-    expect(resolveRepaymentBucket('amiable')).toBe('amiable')
-    expect(resolveRepaymentBucket('contentieux')).toBe('contentieux')
-    expect(resolveRepaymentBucket(CLIENTS_PARTIS_BUCKET_ID)).toBe(CLIENTS_PARTIS_BUCKET_ID)
+    expect(resolveRepaymentBucket('Recouvrement amiable')).toBe('Recouvrement amiable')
+    expect(resolveRepaymentBucket('Contentieux')).toBe('Contentieux')
+    expect(resolveRepaymentBucket(departedRepaymentPhase())).toBe('Clients partis')
   })
 
-  test('getRepaymentBucketMeta expose le label depuis le store', () => {
-    expect(getRepaymentBucketMeta('amiable').label).toBe('Recouvrement amiable')
-    expect(getRepaymentBucketMeta(NON_TRAITES_BUCKET_ID).label).not.toBe(NON_TRAITES_BUCKET_ID)
+  test('getRepaymentBucketMeta expose le libellé', () => {
+    expect(getRepaymentBucketMeta('Recouvrement amiable').label).toBe('Recouvrement amiable')
+    expect(getRepaymentBucketMeta(RECLASSIFY_PHASE).label).toBe(RECLASSIFY_PHASE)
   })
 
-  test('ex-client est forcé en clients_partis', () => {
+  test('ex-client est forcé dans la dernière phase', () => {
     expect(isDepartedTenantRow({ statut: 'ex-client' })).toBe(true)
     expect(isDepartedTenantRow({ statut: 'client' })).toBe(false)
-    expect(resolveBucketForTenantRow({ statut: 'ex-client' }, 'amiable')).toBe(
-      CLIENTS_PARTIS_BUCKET_ID
+    expect(resolveBucketForTenantRow({ statut: 'ex-client' }, 'Recouvrement amiable')).toBe(
+      departedRepaymentPhase()
     )
-    expect(resolveBucketForTenantRow({ statut: 'client' }, 'amiable')).toBe('amiable')
+    expect(resolveBucketForTenantRow({ statut: 'client' }, 'Recouvrement amiable')).toBe(
+      'Recouvrement amiable'
+    )
   })
 })

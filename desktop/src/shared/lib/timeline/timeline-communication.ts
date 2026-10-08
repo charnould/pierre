@@ -1,10 +1,10 @@
 import { parseActivityAuthor } from '@/shared/lib/timeline/parse-activity-author'
 import {
-  is_communication_opened_type,
-  parse_communication_opened_content,
-  parse_communication_status_content,
-  type Activite,
-  type CommunicationChannel
+  type Activity,
+  type CommunicationChannel,
+  isCommunicationOpenedType,
+  parseCommunicationOpenedContent,
+  parseCommunicationStatusContent
 } from '@/shared/types/activites'
 
 import {
@@ -33,24 +33,31 @@ export type TimelineCommunication = {
 }
 
 export function isTimelineCommunicationType(type: string): boolean {
-  return is_communication_opened_type(type)
+  return isCommunicationOpenedType(type)
 }
 
 export function parseTimelineCommunication(
-  row: Activite,
-  statuses: Activite[] = []
+  row: Activity,
+  statuses: Activity[] = []
 ): TimelineCommunication | null {
-  if (!is_communication_opened_type(row.type) || !row.channel) return null
-  const payload = parse_communication_opened_content(row.contenu)
+  if (!isCommunicationOpenedType(row.type) || !row.channel) return null
+  const payload = parseCommunicationOpenedContent(row.contenu)
   if (!payload) return null
   const imported = row.type === 'communication.imported'
   const inbound = /^(tenant|candidate|external):/.test(row.auteur)
   const latest = statuses.at(-1)
-  const status = latest ? parse_communication_status_content(latest.contenu) : null
+  const status = latest ? parseCommunicationStatusContent(latest.contenu) : null
   let statusLine: string | null = null
   let statusFailed = false
   if (latest?.type === 'communication.ok') {
-    statusLine = status?.result === 'read' ? 'Réussi · Lu' : 'Réussi · Livré'
+    statusLine =
+      status?.result === 'sent'
+        ? 'Envoyé'
+        : status?.result === 'opened'
+          ? 'Réussi · Ouvert'
+          : status?.result === 'read'
+            ? 'Réussi · Lu'
+            : 'Réussi · Livré'
   } else if (latest?.type === 'communication.failed') {
     statusLine =
       status?.reason && isNotificationDeliveryStatus(status.reason)
@@ -76,7 +83,7 @@ export function parseTimelineCommunication(
   }
 }
 
-export function formatTimelineCommunicationPlain(row: Activite): string | null {
+export function formatTimelineCommunicationPlain(row: Activity): string | null {
   const parsed = parseTimelineCommunication(row)
   if (!parsed) return null
   if (parsed.subject) return `Objet : ${parsed.subject}\n\n${parsed.body}`

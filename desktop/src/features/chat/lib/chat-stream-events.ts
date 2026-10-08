@@ -2,9 +2,9 @@ import type { ChatMessagePart, ChatToolPart, Message } from '@/features/chat/lib
 import type { AiStreamEvent } from '@/features/workflow/lib/parse-workflow-chunk'
 
 import {
+  type AiMessageContent,
   createAiStreamState,
-  reduceAiStreamState,
-  type AiMessageContent
+  reduceAiStreamState
 } from '../../../../../shared/ai-stream-events'
 
 function updateLastAssistantMessage(

@@ -13,7 +13,6 @@ describe('KnowledgeSourceDialog', () => {
       title: 'Premier',
       sheet: 0,
       sheetName: 'Premier',
-      headerRow: 0,
       profileIds: [],
       moduleIds: []
     }

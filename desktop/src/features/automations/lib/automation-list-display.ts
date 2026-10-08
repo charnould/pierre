@@ -1,7 +1,7 @@
 import {
+  type Automation,
   AUTOMATION_TYPE_LABELS,
-  sameAutomationLogin,
-  type Automation
+  sameAutomationLogin
 } from '@/features/automations/lib/automation-types'
 import { COLUMN_VALUE_COLOR_GROUPS } from '@/shared/lib/ui-settings/column-value-palette'
 import {

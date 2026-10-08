@@ -1,8 +1,8 @@
 import {
-  normalizeColumnValueKey,
-  parseHexColor,
+  type ColumnValuesConfig,
   type ColumnValueStyle,
-  type ColumnValuesConfig
+  normalizeColumnValueKey,
+  parseHexColor
 } from './tickets-table'
 
 export const COLUMN_VALUE_VARIANTS_PER_FAMILY = 18

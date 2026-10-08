@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
-import type { ActiviteListItem, GetActivitiesParams } from '@/shared/types/activites'
+import type { ActivityListItem, GetActivitiesParams } from '@/shared/types/activites'
 
 import { useNotifications } from './use-notifications'
 
@@ -32,10 +32,10 @@ afterAll(() => {
   delete globals.getComputedStyle
 })
 
-function activityRow(id: number): ActiviteListItem {
+function activityRow(id: number): ActivityListItem {
   return {
     id,
-    date_creation: '2026-07-26T10:00:00.000Z',
+    createdAt: '2026-07-26T10:00:00.000Z',
     rattachement: 'tickets:REC-1',
     auteur: 'agent:alice',
     id_client: null,
@@ -57,7 +57,7 @@ type NotificationsApi = ReturnType<typeof useNotifications>
  * Renders `useNotifications` and records the object it returns on every render,
  * so a test can compare references across renders.
  */
-async function renderNotifications(rows: ActiviteListItem[], unreadOnly = false) {
+async function renderNotifications(rows: ActivityListItem[], unreadOnly = false) {
   const { act } = await import('react')
   const { createRoot } = await import('react-dom/client')
   const requests: GetActivitiesParams[] = []
@@ -145,13 +145,13 @@ describe('useNotifications referential identity', () => {
 })
 
 describe('useNotifications inbox paging', () => {
-  test('sends unread_only and the first page of 50', async () => {
+  test('sends unreadOnly and the first page of 50', async () => {
     const harness = await renderNotifications([activityRow(1)], true)
 
     expect(harness.requests[0]).toEqual({
       url: 'https://pierre.test',
       inbox: true,
-      unread_only: true,
+      unreadOnly: true,
       limit: 50,
       offset: 0
     })

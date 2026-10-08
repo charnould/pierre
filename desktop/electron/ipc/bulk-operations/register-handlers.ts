@@ -2,17 +2,17 @@ import { ipcMain, session } from 'electron'
 
 import type {
   BulkOperationExecuteResponse,
-  BulkOperationReportsResponse,
   BulkOperationPreviewMessageResponse,
   BulkOperationPreviewQueryResponse,
+  BulkOperationReportsResponse,
   BulkOperationResponse,
   BulkOperationsListResponse,
   CreateBulkOperationPayload,
   DeleteBulkOperationPayload,
   ExecuteBulkOperationPayload,
   GetBulkOperationParams,
-  ListBulkOperationsParams,
   ListBulkOperationReportsParams,
+  ListBulkOperationsParams,
   PatchBulkOperationPayload,
   PreviewBulkOperationMessagePayload,
   PreviewBulkOperationQueryPayload
@@ -24,7 +24,7 @@ import { IpcChannel } from '../channels'
 export function registerBulkOperationsHandlers(partition: string): void {
   ipcMain.handle(IpcChannel.bulkOperations.list, async (_, params: ListBulkOperationsParams) => {
     try {
-      const response = await netFetch(`${params.url}/desktop/bulk-operations`, {
+      const response = await netFetch(`${params.url}/bulk`, {
         session: session.fromPartition(partition)
       })
       if (!response.ok) throw new Error(`${response.status} ${await response.text()}`)
@@ -37,10 +37,9 @@ export function registerBulkOperationsHandlers(partition: string): void {
 
   ipcMain.handle(IpcChannel.bulkOperations.get, async (_, params: GetBulkOperationParams) => {
     try {
-      const response = await netFetch(
-        `${params.url}/desktop/bulk-operations/${encodeURIComponent(params.id)}`,
-        { session: session.fromPartition(partition) }
-      )
+      const response = await netFetch(`${params.url}/bulk/${encodeURIComponent(params.id)}`, {
+        session: session.fromPartition(partition)
+      })
       if (!response.ok) throw new Error(`${response.status} ${await response.text()}`)
       return (await response.json()) as BulkOperationResponse
     } catch (error) {
@@ -53,19 +52,14 @@ export function registerBulkOperationsHandlers(partition: string): void {
     IpcChannel.bulkOperations.create,
     async (_, params: CreateBulkOperationPayload) => {
       const { url, ...body } = params
-      return request<BulkOperationResponse>(
-        partition,
-        `${url}/desktop/bulk-operations`,
-        'POST',
-        body
-      )
+      return request<BulkOperationResponse>(partition, `${url}/bulk`, 'POST', body)
     }
   )
 
   ipcMain.handle(IpcChannel.bulkOperations.patch, async (_, params: PatchBulkOperationPayload) => {
     return request<BulkOperationResponse>(
       partition,
-      `${params.url}/desktop/bulk-operations/${encodeURIComponent(params.id)}`,
+      `${params.url}/bulk/${encodeURIComponent(params.id)}`,
       'PATCH',
       params.patch
     )
@@ -76,7 +70,7 @@ export function registerBulkOperationsHandlers(partition: string): void {
     async (_, params: DeleteBulkOperationPayload) => {
       return request<BulkOperationResponse>(
         partition,
-        `${params.url}/desktop/bulk-operations/${encodeURIComponent(params.id)}`,
+        `${params.url}/bulk/${encodeURIComponent(params.id)}`,
         'DELETE'
       )
     }
@@ -87,7 +81,7 @@ export function registerBulkOperationsHandlers(partition: string): void {
     async (_, params: ExecuteBulkOperationPayload) => {
       return request<BulkOperationExecuteResponse>(
         partition,
-        `${params.url}/desktop/bulk-operations/${encodeURIComponent(params.id)}/execute`,
+        `${params.url}/bulk/${encodeURIComponent(params.id)}/execute`,
         'POST',
         { mode: params.mode, clientCommandId: params.clientCommandId }
       )
@@ -99,7 +93,7 @@ export function registerBulkOperationsHandlers(partition: string): void {
     async (_, params: ListBulkOperationReportsParams) => {
       try {
         const response = await netFetch(
-          `${params.url}/desktop/bulk-operations/${encodeURIComponent(params.id)}/reports`,
+          `${params.url}/bulk/${encodeURIComponent(params.id)}/reports`,
           { session: session.fromPartition(partition) }
         )
         if (!response.ok) throw new Error(`${response.status} ${await response.text()}`)
@@ -117,7 +111,7 @@ export function registerBulkOperationsHandlers(partition: string): void {
       const { url, ...body } = params
       return request<BulkOperationPreviewQueryResponse>(
         partition,
-        `${url}/desktop/bulk-operations/preview-query`,
+        `${url}/bulk/preview/query`,
         'POST',
         body
       )
@@ -130,7 +124,7 @@ export function registerBulkOperationsHandlers(partition: string): void {
       const { url, ...body } = params
       return request<BulkOperationPreviewMessageResponse>(
         partition,
-        `${url}/desktop/bulk-operations/preview-message`,
+        `${url}/bulk/preview/message`,
         'POST',
         body
       )

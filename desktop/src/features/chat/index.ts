@@ -1,1 +1,1 @@
-export { ChatView } from './ChatView'
+export { ChatWindow } from './ChatWindow'

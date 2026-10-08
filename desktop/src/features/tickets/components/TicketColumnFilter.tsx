@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { type ReactNode, useEffect, useMemo, useState } from 'react'
 
 import { useUiSettings } from '@/contexts/UiSettingsContext'
 import {
+  type AnyPierreColumn,
+  type AnyPierreTable,
   ColumnHeaderColorMenuItems,
   ColumnHeaderLayoutMenuItems,
-  ColumnHeaderOptionsTrigger,
-  type AnyPierreColumn,
-  type AnyPierreTable
+  ColumnHeaderOptionsTrigger
 } from '@/shared/components/table/column-header-options-menu'
 import {
   DropdownMenu,
@@ -273,15 +273,14 @@ export function TicketColumnFilter({
   return (
     <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
       <DropdownMenuTrigger
-        render={(triggerProps) => (
+        render={
           <ColumnHeaderOptionsTrigger
-            {...triggerProps}
             columnLabel={columnLabel}
             compact={compact}
             highlighted={showMenuHighlight}
             badgeCount={hasActiveFilter ? selected.length : 0}
           />
-        )}
+        }
       />
       <DropdownMenuContent align="end" className="w-auto min-w-56">
         <DropdownMenuGroup>

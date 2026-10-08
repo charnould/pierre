@@ -12,13 +12,19 @@ export interface SelectOption<T extends string | null = string | null> {
   label: ReactNode
   value: T
   disabled?: boolean
+  description?: string
 }
 
 export function SelectItems<T extends string | null>({ items }: { items: SelectOption<T>[] }) {
   return (
     <SelectGroup>
       {items.map((item) => (
-        <SelectItem key={item.value ?? 'none'} value={item.value} disabled={item.disabled}>
+        <SelectItem
+          key={item.value ?? 'none'}
+          value={item.value}
+          disabled={item.disabled}
+          description={item.description}
+        >
           {item.label}
         </SelectItem>
       ))}

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'bun:test'
 
-import { DEFAULT_WINDOW_BOUNDS, WINDOW_MIN_SIZE } from '../../src/shared/lib/ui-settings/schema'
+import {
+  DEFAULT_WINDOW_BOUNDS,
+  SESSION_WINDOW_MIN_SIZE
+} from '../../src/shared/lib/ui-settings/schema'
 import {
   boundsToPartial,
   computeCenteredPosition,
@@ -33,8 +36,8 @@ describe('parseWindowBoundsFromSettings', () => {
         window: { width: 100, height: 200 }
       })
     ).toEqual({
-      width: WINDOW_MIN_SIZE.width,
-      height: WINDOW_MIN_SIZE.height
+      width: SESSION_WINDOW_MIN_SIZE.width,
+      height: SESSION_WINDOW_MIN_SIZE.height
     })
   })
 })

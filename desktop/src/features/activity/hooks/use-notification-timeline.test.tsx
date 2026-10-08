@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 
 import { useNotificationTimeline } from './use-notification-timeline'
 
@@ -27,10 +27,10 @@ afterAll(() => {
   delete globals.HTMLElement
 })
 
-function activity(id: number): Activite {
+function activity(id: number): Activity {
   return {
     id,
-    date_creation: '2026-08-17T10:00:00',
+    createdAt: '2026-08-17T10:00:00',
     rattachement: 'tickets:REC-1',
     auteur: 'user:alice@pierre.test',
     id_client: null,
@@ -47,7 +47,7 @@ describe('useNotificationTimeline', () => {
   test('keeps previous rows when a later refresh returns null', async () => {
     const { act } = await import('react')
     const { createRoot } = await import('react-dom/client')
-    let payload: { data: Activite[] } | null = { data: [activity(1)] }
+    let payload: { data: Activity[] } | null = { data: [activity(1)] }
     window.api = {
       getActivities: async () => payload
     } as unknown as typeof window.api

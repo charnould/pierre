@@ -2,21 +2,15 @@ import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
-import type { Activite } from '@/shared/types/activites'
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
+import type { Activity } from '@/shared/types/activites'
 
-import { createDefaultApurementPlanForm } from '../lib/apurement-plan/defaults'
-import { repaymentPlanFormToSnapshot } from '../lib/repayment-plan-persist'
-
-mock.module('../lib/outbound-email-templates.bundle', () => ({
-  listOutboundTemplateGroups: () => [],
-  listOutboundTemplates: () => [],
-  resolveOutboundEmail: () => null,
-  resolveOutboundRcs: () => null
-}))
+import { emptyRepaymentForms } from '../../../../../shared/repayment-plan'
 
 const originalGlobals = new Map<string, unknown>()
 
 beforeAll(() => {
+  loadCustomizationFixture()
   const globals = globalThis as Record<string, unknown>
   const existingWindow = globals.window as { setTimeout?: unknown; Element?: unknown } | undefined
   const hasWorkingDom =
@@ -168,7 +162,7 @@ async function verifyClose(embedded: boolean) {
   container.remove()
 }
 
-function gestionnaireActivity(login: string, email: string): Activite {
+function gestionnaireActivity(login: string, email: string): Activity {
   return {
     id: 1,
     rattachement: 'repayment:LOC-GESTIONNAIRE',
@@ -176,7 +170,7 @@ function gestionnaireActivity(login: string, email: string): Activite {
     id_client: null,
     id_locataire: 'LOC-GESTIONNAIRE',
     id_lot: null,
-    date_creation: '2026-08-08 18:00',
+    createdAt: '2026-08-08 18:00',
     type: 'case.assignee_changed',
     channel: null,
     contenu: JSON.stringify({
@@ -188,7 +182,7 @@ function gestionnaireActivity(login: string, email: string): Activite {
   }
 }
 
-function tagActivity(tags: string[]): Activite {
+function tagActivity(tags: string[]): Activity {
   return {
     id: 3,
     rattachement: 'repayment:LOC-GESTIONNAIRE',
@@ -196,7 +190,7 @@ function tagActivity(tags: string[]): Activite {
     id_client: null,
     id_locataire: 'LOC-GESTIONNAIRE',
     id_lot: null,
-    date_creation: '2026-08-09 18:00',
+    createdAt: '2026-08-09 18:00',
     type: 'case.tags_changed',
     channel: null,
     contenu: JSON.stringify({ version: 2, before: [], after: tags }),
@@ -205,7 +199,7 @@ function tagActivity(tags: string[]): Activite {
 }
 
 async function verifyGestionnaire(
-  activities: Activite[],
+  activities: Activity[],
   expectedDisplay: string,
   expectedTitle?: string
 ) {
@@ -344,10 +338,14 @@ describe('RepaymentTenantDrawer shell', () => {
       const popup = document.querySelector<HTMLElement>('[data-slot="drawer-popup"]')
       expect(popup).not.toBeNull()
       expect(popup?.classList.contains('[--drawer-bleed-background:transparent]')).toBe(true)
-      expect(popup?.classList.contains('[--drawer-inset:0.75rem]')).toBe(true)
+      expect(popup?.classList.contains('[--drawer-inset:1rem]')).toBe(true)
       expect(popup?.classList.contains('rounded-md')).toBe(true)
+      expect(popup?.classList.contains('rounded-l-xl')).toBe(false)
       expect(popup?.classList.contains('border')).toBe(true)
+      expect(popup?.classList.contains('bg-background')).toBe(true)
       expect(popup?.classList.contains('shadow-md')).toBe(true)
+      expect(popup?.classList.contains('transition-[transform,opacity]')).toBe(true)
+      expect(popup?.classList.contains('transition-[transform,height,opacity,filter]')).toBe(false)
       expect(popup?.dataset.drawerVariant).toBe('inspector')
       expect(popup?.className).toContain('top-(--titlebar-height)')
       expect(document.querySelector('[data-slot="drawer-viewport"]')?.className).toContain(
@@ -357,8 +355,8 @@ describe('RepaymentTenantDrawer shell', () => {
         popup?.classList.contains('data-[swipe-axis=x]:sm:[--drawer-content-width:60rem]')
       ).toBe(true)
       const header = popup?.querySelector('[data-slot="drawer-header"]')
-      expect(header?.getAttribute('data-inspector-motion')).toBe('header')
-      expect(popup?.querySelector('[data-inspector-motion="body"]')).not.toBeNull()
+      expect(header?.hasAttribute('data-inspector-motion')).toBe(false)
+      expect(popup?.querySelector('[data-inspector-motion]')).toBeNull()
       const title = header?.querySelector('[data-slot="drawer-title"]')
       expect(title?.textContent).toBe('CLI-SHELL · LOC-SHELL')
       expect(title?.getAttribute('data-variant')).toBe('inspector-id')
@@ -407,7 +405,7 @@ describe('RepaymentTenantDrawer top card', () => {
         'Courriel',
         'Téléphone',
         'Référent',
-        'Groupe',
+        'Phase',
         'Dernière tâche',
         'Tags'
       ])
@@ -470,7 +468,7 @@ describe('RepaymentTenantDrawer top card', () => {
     try {
       const body = document.body.textContent ?? ''
       expect(body).toContain('Contexte')
-      expect(body).toContain('Groupe')
+      expect(body).toContain('Phase')
       expect(body).toContain('Référent')
       expect(body).toContain('Courriel')
       expect(body).toContain('Téléphone')
@@ -499,7 +497,9 @@ describe('RepaymentTenantDrawer top card', () => {
       expect(panes).toHaveLength(2)
       expect(panes[0]?.classList.contains('w-2/5')).toBe(true)
       expect(panes[1]?.classList.contains('w-3/5')).toBe(true)
-      expect(panes[0]?.textContent).toContain('Groupe')
+      expect(panes[0]?.classList.contains('px-4')).toBe(true)
+      expect(panes[1]?.classList.contains('px-4')).toBe(false)
+      expect(panes[0]?.textContent).toContain('Phase')
       expect(panes[0]?.textContent).toContain('Laisser une note')
       expect(panes[0]?.textContent).toContain('Créer un plan d’apurement')
       expect(panes[1]?.textContent).toContain('Mon commentaire')
@@ -509,11 +509,38 @@ describe('RepaymentTenantDrawer top card', () => {
       await cleanup()
     }
   })
+
+  test('monte l’historique par tranche au lieu de tout afficher', async () => {
+    const previousObserver = globalThis.IntersectionObserver
+    class SilentObserver {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    globalThis.IntersectionObserver = SilentObserver as unknown as typeof IntersectionObserver
+    const notes = Array.from({ length: 40 }, (_, index) =>
+      noteActivity(index + 1, 'user:bob@exemple.fr', `Note ${index + 1}`)
+    )
+    const { cleanup } = await renderNotesDrawer('alice@exemple.fr', notes)
+    try {
+      const text = document.body.textContent ?? ''
+      const visibleNotes = Array.from({ length: 40 }, (_, index) => index + 1).filter((id) =>
+        new RegExp(`Note ${id}(?!\\d)`).test(text)
+      )
+      expect(document.querySelectorAll('[data-activity-id]')).toHaveLength(30)
+      expect(visibleNotes).toHaveLength(30)
+    } finally {
+      await cleanup()
+      if (previousObserver === undefined) {
+        delete (globalThis as { IntersectionObserver?: unknown }).IntersectionObserver
+      } else {
+        globalThis.IntersectionObserver = previousObserver
+      }
+    }
+  })
 })
 
-function planActivity(id: number, auteur: string, commentaire: string): Activite {
-  const form = createDefaultApurementPlanForm()
-  form.signed = false
+function planActivity(id: number, auteur: string): Activity {
   return {
     id,
     rattachement: 'repayment:LOC-NOTES',
@@ -521,21 +548,16 @@ function planActivity(id: number, auteur: string, commentaire: string): Activite
     id_client: 'CLI-NOTES',
     id_locataire: 'LOC-NOTES',
     id_lot: null,
-    date_creation: '2026-08-19 20:00',
+    createdAt: '2026-08-19 20:00',
     type: 'repayment_plan.updated',
     channel: null,
-    contenu: JSON.stringify({
-      version: 2,
-      title: "Plan d'apurement",
-      plan: repaymentPlanFormToSnapshot(form),
-      note: commentaire
-    }),
+    contenu: JSON.stringify(emptyRepaymentForms()),
     mentions: [],
-    thread_id: `plan-${id}`
+    threadId: `plan-${id}`
   }
 }
 
-function noteActivity(id: number, auteur: string, contenu: string): Activite {
+function noteActivity(id: number, auteur: string, contenu: string): Activity {
   return {
     id,
     rattachement: 'repayment:LOC-NOTES',
@@ -543,7 +565,7 @@ function noteActivity(id: number, auteur: string, contenu: string): Activite {
     id_client: 'CLI-NOTES',
     id_locataire: 'LOC-NOTES',
     id_lot: null,
-    date_creation: '2026-08-09 12:00',
+    createdAt: '2026-08-09 12:00',
     type: 'note.published',
     channel: null,
     contenu: JSON.stringify({ version: 2, text: contenu }),
@@ -551,7 +573,7 @@ function noteActivity(id: number, auteur: string, contenu: string): Activite {
   }
 }
 
-function openActionActivity(id: number): Activite {
+function openActionActivity(id: number): Activity {
   return {
     id,
     rattachement: 'repayment:LOC-NOTES',
@@ -559,7 +581,7 @@ function openActionActivity(id: number): Activite {
     id_client: 'CLI-NOTES',
     id_locataire: 'LOC-NOTES',
     id_lot: null,
-    date_creation: '2026-08-20 12:00',
+    createdAt: '2026-08-20 12:00',
     type: 'task.created',
     channel: null,
     contenu: JSON.stringify({
@@ -572,12 +594,12 @@ function openActionActivity(id: number): Activite {
       }
     }),
     mentions: [],
-    thread_id: `todo-${id}`,
+    threadId: `todo-${id}`,
     revision: 1
   }
 }
 
-function completedActionActivity(id: number): Activite {
+function completedActionActivity(id: number): Activity {
   return {
     ...openActionActivity(id),
     type: 'task.completed',
@@ -590,7 +612,7 @@ function completedActionActivity(id: number): Activite {
         due_date: '2026-08-25'
       }
     }),
-    date_creation: '2026-08-22T20:00:00',
+    createdAt: '2026-08-22T20:00:00',
     revision: 2
   }
 }
@@ -611,7 +633,7 @@ const openDebtMovements = [
 
 async function renderNotesDrawer(
   userLogin: string,
-  activities: Activite[],
+  activities: Activity[],
   tenant: {
     id_client: string
     id_locataire: string
@@ -721,14 +743,14 @@ async function renderNotesDrawer(
 
 describe('RepaymentTenantDrawer courriel', () => {
   test('affiche l’action en L2 et replie le corps', async () => {
-    const email: Activite = {
+    const email: Activity = {
       id: 21,
       rattachement: 'repayment:LOC-NOTES',
       auteur: 'user:gregoire@exemple.fr',
       id_client: 'CLI-NOTES',
       id_locataire: 'LOC-NOTES',
       id_lot: null,
-      date_creation: '2026-06-28 17:45',
+      createdAt: '2026-06-28 17:45',
       type: 'communication.sent',
       channel: 'email',
       destinataire: 'caf@example.fr',
@@ -764,14 +786,14 @@ describe('RepaymentTenantDrawer courriel', () => {
   })
 
   test('affiche un courriel importé avec son expéditeur', async () => {
-    const imported: Activite = {
+    const imported: Activity = {
       id: 22,
       rattachement: 'repayment:LOC-NOTES',
       auteur: 'user:alice@exemple.fr',
       id_client: 'CLI-NOTES',
       id_locataire: 'LOC-NOTES',
       id_lot: null,
-      date_creation: '2026-08-27T12:00:00Z',
+      createdAt: '2026-08-27T12:00:00Z',
       type: 'communication.imported',
       channel: 'email',
       destinataire: 'Bob <bob@locataire.fr>',
@@ -898,14 +920,14 @@ describe('RepaymentTenantDrawer note edit/delete', () => {
   })
 
   test('affiche Répondre sous un plan, sans Supprimer', async () => {
-    const plan = planActivity(12, 'user:alice@exemple.fr', 'tu l’as vu ?')
+    const plan = planActivity(12, 'user:alice@exemple.fr')
     const { cleanup } = await renderNotesDrawer('bob@exemple.fr', [plan])
 
     try {
-      expect(document.body.textContent).toContain('tu l’as vu ?')
+      expect(document.body.textContent).toContain('Plan d’apurement')
 
       const planEvent = [...document.querySelectorAll('[data-slot="timeline-content"]')].find(
-        (element) => element.textContent?.includes("Plan d'apurement")
+        (element) => element.textContent?.includes('Plan d’apurement')
       )
       expect(planEvent?.textContent).toContain('Ouvrir')
 
@@ -934,7 +956,6 @@ describe('RepaymentTenantDrawer note edit/delete', () => {
 
       await act(async () => {
         modifier?.click()
-        await new Promise((resolve) => window.setTimeout(resolve, 300))
       })
 
       expect(document.querySelector('[data-inspector-compose-shell]')?.textContent).toContain(
@@ -1106,8 +1127,8 @@ describe('RepaymentTenantDrawer actions', () => {
           id: 10,
           patch: {
             operation: 'reopen_action',
-            assigne_a: 'user:alice@exemple.fr',
-            date_echeance: '2026-08-25'
+            assigneA: 'user:alice@exemple.fr',
+            dateEcheance: '2026-08-25'
           }
         })
       )
@@ -1197,7 +1218,7 @@ describe('RepaymentTenantDrawer actions', () => {
       })
 
       const checkbox = document.querySelector('[aria-label="Action à faire"]')
-      expect(checkbox?.closest('[aria-hidden="true"]')).not.toBeNull()
+      expect(checkbox).toBeNull()
       expect(document.querySelector('input[placeholder="Action"]')).toBeNull()
       expect(document.querySelector('input[type="date"]')).toBeNull()
       expect(document.querySelector('[aria-label="Changer l’assigné"]')).not.toBeNull()
@@ -1230,8 +1251,8 @@ describe('RepaymentTenantDrawer actions', () => {
           patch: {
             operation: 'update_action',
             action: 'Appeler le locataire',
-            assigne_a: 'user:alice@exemple.fr',
-            date_echeance: '2026-08-25',
+            assigneA: 'user:alice@exemple.fr',
+            dateEcheance: '2026-08-25',
             note: 'Vérifier la promesse de paiement'
           }
         })
@@ -1368,7 +1389,7 @@ describe('RepaymentTenantDrawer actions', () => {
   })
 })
 
-function statusChangeActivity(id: number, auteur: string): Activite {
+function statusChangeActivity(id: number, auteur: string): Activity {
   return {
     id,
     rattachement: 'repayment:LOC-NOTES',
@@ -1376,7 +1397,7 @@ function statusChangeActivity(id: number, auteur: string): Activite {
     id_client: 'CLI-NOTES',
     id_locataire: 'LOC-NOTES',
     id_lot: null,
-    date_creation: '2026-08-09 11:00',
+    createdAt: '2026-08-09 11:00',
     type: 'case.group_changed',
     channel: null,
     contenu: JSON.stringify({
@@ -1401,7 +1422,7 @@ describe('RepaymentTenantDrawer boosts', () => {
       )
       expect(boostButtons.length).toBeGreaterThanOrEqual(2)
       expect(document.body.textContent).toContain('Commentaire de Bob')
-      expect(document.body.textContent).toContain('a déplacé le dossier de groupe')
+      expect(document.body.textContent).toContain('a changé la phase')
     } finally {
       await cleanup()
     }

@@ -60,41 +60,7 @@ function FlipRow({
   front: ReactNode
   back: ReactNode
 }) {
-  return (
-    <div className="[perspective:1000px]">
-      <div
-        className={cn(
-          'grid [transform-style:preserve-3d] transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none',
-          flipped && '[transform:rotateY(180deg)]'
-        )}
-      >
-        <div
-          className={cn(
-            'col-start-1 row-start-1 grid min-w-0 [backface-visibility:hidden] transition-[grid-template-rows] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none',
-            flipped ? 'pointer-events-none grid-rows-[0fr]' : 'grid-rows-[1fr]'
-          )}
-          aria-hidden={flipped}
-          inert={flipped || undefined}
-        >
-          <div className={cn('min-h-0 p-px', flipped ? 'overflow-hidden' : 'overflow-visible')}>
-            {front}
-          </div>
-        </div>
-        <div
-          className={cn(
-            'col-start-1 row-start-1 grid min-w-0 [backface-visibility:hidden] [transform:rotateY(180deg)_translateZ(1px)] transition-[grid-template-rows] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none',
-            flipped ? 'grid-rows-[1fr]' : 'pointer-events-none grid-rows-[0fr]'
-          )}
-          aria-hidden={!flipped}
-          inert={!flipped || undefined}
-        >
-          <div className={cn('min-h-0 p-px', flipped ? 'overflow-visible' : 'overflow-hidden')}>
-            {back}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+  return <div className="min-w-0 p-px">{flipped ? back : front}</div>
 }
 
 function OpenActionIconButton({
@@ -118,7 +84,7 @@ function OpenActionIconButton({
             type="button"
             variant="ghost"
             size="icon-xs"
-            className="mt-0.5 size-4"
+            className="mt-1 size-4"
             disabled={disabled}
             aria-label={label}
             onClick={onClick}
@@ -150,11 +116,11 @@ export function OpenActionMeta({
   const comment = note?.trim() ?? ''
 
   return (
-    <div className="text-muted-foreground mt-1 grid grid-cols-[max-content_minmax(0,1fr)] items-center gap-x-1.5 gap-y-1 text-xs leading-4">
+    <div className="text-muted-foreground mt-2 grid grid-cols-[max-content_minmax(0,1fr)] items-center gap-x-2 gap-y-2 text-sm leading-5">
       {dueLabel ? (
         <>
           <span>Échéance</span>
-          <Badge variant="secondary" size="compact" className="w-fit">
+          <Badge variant="secondary" className="w-fit">
             <Calendar data-icon="inline-start" aria-hidden className="size-3" />
             {dueLabel}
           </Badge>
@@ -179,7 +145,7 @@ export function OpenActionMeta({
             text={comment}
             mentionVariant="activity"
             compact
-            className="text-foreground m-0 self-start text-xs leading-4 whitespace-pre-wrap"
+            className="text-foreground m-0 self-start text-sm leading-5 whitespace-pre-wrap"
           />
         </>
       ) : null}
@@ -327,7 +293,7 @@ export function OpenActionRow({
           type="button"
           disabled={saving || !onComplete}
           aria-label="Action à faire"
-          className="text-muted-foreground mt-0.5 inline-flex size-4 shrink-0 items-center justify-center disabled:opacity-50"
+          className="text-muted-foreground mt-1 inline-flex size-4 shrink-0 items-center justify-center disabled:opacity-50"
           onClick={() => onComplete?.()}
         >
           {square}
@@ -335,14 +301,14 @@ export function OpenActionRow({
       ) : (
         <span
           aria-hidden
-          className="text-muted-foreground mt-0.5 inline-flex size-4 shrink-0 items-center justify-center"
+          className="text-muted-foreground mt-1 inline-flex size-4 shrink-0 items-center justify-center"
         >
           {square}
         </span>
       )}
       <div className="min-w-0 flex-1">
         <div className="flex items-start gap-1">
-          <p className="text-foreground m-0 min-w-0 flex-1 text-sm leading-5 font-medium break-words whitespace-pre-wrap">
+          <p className="text-foreground m-0 min-w-0 flex-1 text-base leading-6 font-medium break-words whitespace-pre-wrap">
             {title}
           </p>
           {trailing}

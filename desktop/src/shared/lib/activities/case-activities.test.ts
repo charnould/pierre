@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 
 import {
   buildCaseAssignmentActivity,
@@ -13,13 +13,13 @@ import {
 } from './case-activities'
 
 function activity(
-  type: Activite['type'],
+  type: Activity['type'],
   contenu: object,
   date = '2026-09-03T10:00:00Z'
-): Activite {
+): Activity {
   return {
     id: 1,
-    date_creation: date,
+    createdAt: date,
     rattachement: 'tickets:REC-1',
     auteur: 'user:alice',
     id_client: null,

@@ -10,7 +10,7 @@ export async function fetchInboxUnreadCount(
   url: string
 ): Promise<number | null> {
   try {
-    const response = await netFetch(`${url}/desktop/activities?inbox=true&unread_only=true`, {
+    const response = await netFetch(`${url}/activities?inbox=true&unreadOnly=true`, {
       session: session.fromPartition(partition)
     })
     if (!response.ok) throw new Error(`${response.status} ${await response.text()}`)

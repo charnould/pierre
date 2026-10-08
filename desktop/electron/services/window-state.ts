@@ -1,10 +1,11 @@
-import { screen, type BrowserWindow } from 'electron'
+import { type BrowserWindow, screen } from 'electron'
 
 import { SURFACE_BASE_HEX } from '../../src/shared/lib/surface-colors'
 import {
-  clampWindowSize,
+  clampSessionWindowSize,
   DEFAULT_WINDOW_BOUNDS,
-  LOGIN_WINDOW_BOUNDS
+  LOGIN_WINDOW_BOUNDS,
+  SESSION_WINDOW_MIN_SIZE
 } from '../../src/shared/lib/ui-settings/schema'
 import { easeOutCubic } from './ease-out-cubic'
 import type { SettingsStore } from './settings-store'
@@ -15,7 +16,7 @@ import {
 } from './window-bounds'
 
 export function centerWindowBounds(size: { width: number; height: number }): WindowBounds {
-  const { width, height } = clampWindowSize(size.width, size.height)
+  const { width, height } = size
   const area = screen.getPrimaryDisplay().workArea
   const { x, y } = computeCenteredPosition(area, width, height)
   return { width, height, x, y }
@@ -51,7 +52,7 @@ function windowIsWithinWorkArea(
 }
 
 export function ensureBoundsOnScreen(bounds: WindowBounds): WindowBounds {
-  const { width, height } = clampWindowSize(bounds.width, bounds.height)
+  const { width, height } = clampSessionWindowSize(bounds.width, bounds.height)
   if (bounds.x === undefined || bounds.y === undefined) {
     return { width, height }
   }
@@ -73,8 +74,8 @@ export function ensureBoundsOnScreen(bounds: WindowBounds): WindowBounds {
   return { x, y, width, height }
 }
 
-function toRect(win: BrowserWindow, bounds: WindowBounds): Rect {
-  const adjusted = ensureBoundsOnScreen(bounds)
+function toRect(win: BrowserWindow, bounds: WindowBounds, clampSession = true): Rect {
+  const adjusted = clampSession ? ensureBoundsOnScreen(bounds) : bounds
   const current = win.getBounds()
   return {
     x: adjusted.x ?? current.x,
@@ -217,14 +218,22 @@ export async function applyAuthWindowLayout(
   const { loggedIn, uiSettingsRaw, handle, beforeAnimate } = options
   const bounds = loggedIn
     ? resolveInitialWindowBoundsOnScreen(uiSettingsRaw)
-    : ensureBoundsOnScreen(centerWindowBounds(LOGIN_WINDOW_BOUNDS))
-  const target = toRect(win, bounds)
+    : centerWindowBounds(LOGIN_WINDOW_BOUNDS)
+  const target = toRect(win, bounds, loggedIn)
 
   // Keep mid-animation sizes out of ui-settings; re-enable only for session.
   handle?.setPersistEnabled(false)
+  if (!loggedIn) {
+    win.setMinimumSize(LOGIN_WINDOW_BOUNDS.width, LOGIN_WINDOW_BOUNDS.height)
+  }
 
   if (rectsNearlyEqual(win.getBounds(), target)) {
-    if (!win.isDestroyed()) win.setResizable(loggedIn)
+    if (!win.isDestroyed()) {
+      if (loggedIn) {
+        win.setMinimumSize(SESSION_WINDOW_MIN_SIZE.width, SESSION_WINDOW_MIN_SIZE.height)
+      }
+      win.setResizable(loggedIn)
+    }
     if (loggedIn) handle?.setPersistEnabled(true)
     return
   }
@@ -237,7 +246,12 @@ export async function applyAuthWindowLayout(
     await animateBoundsTo(win, target)
   } finally {
     await unfreezeWindowContents(win)
-    if (!win.isDestroyed()) win.setResizable(loggedIn)
+    if (!win.isDestroyed()) {
+      if (loggedIn) {
+        win.setMinimumSize(SESSION_WINDOW_MIN_SIZE.width, SESSION_WINDOW_MIN_SIZE.height)
+      }
+      win.setResizable(loggedIn)
+    }
   }
 
   if (loggedIn && !win.isDestroyed()) {

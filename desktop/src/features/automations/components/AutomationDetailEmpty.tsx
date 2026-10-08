@@ -1,7 +1,6 @@
-import { MousePointerClick } from 'lucide-react'
+import { Lock, MousePointerClick } from 'lucide-react'
 import type { ComponentType } from 'react'
 
-import { ClosedPadlock } from '@/shared/components/icons/koboyo-empty'
 import {
   Empty,
   EmptyDescription,
@@ -35,7 +34,7 @@ const COPY: Record<
         : 'Sélectionnez une automatisation dans la liste pour la modifier.'
   },
   collaborator: {
-    icon: ClosedPadlock,
+    icon: Lock,
     title: 'Modification non autorisée',
     description: (name) =>
       name

@@ -93,7 +93,7 @@ export async function fetchOrgUsers(url: string): Promise<OrgUser[]> {
         if (!window.api?.getUsers) return []
         const res = await window.api.getUsers({ url })
         if (!res) return []
-        const users = res.users ?? []
+        const users = res.data ?? []
         cache.set(url, users)
         return users
       } finally {

@@ -1,13 +1,13 @@
 import {
+  type ClipboardEvent,
+  type FormEvent,
+  type KeyboardEvent,
   useCallback,
   useEffect,
   useId,
   useLayoutEffect,
   useRef,
-  useState,
-  type ClipboardEvent,
-  type FormEvent,
-  type KeyboardEvent
+  useState
 } from 'react'
 
 import {
@@ -263,7 +263,7 @@ export function BulkTemplateField({
           contentEditable
           suppressContentEditableWarning
           className={cn(
-            'w-full rounded-lg border border-input bg-transparent px-2.5 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
+            'border-input focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-lg border bg-transparent px-2.5 text-sm transition-colors outline-none focus-visible:ring-3',
             multiline
               ? 'min-h-24 py-2 whitespace-pre-wrap'
               : 'h-8 overflow-hidden py-1 whitespace-nowrap'
@@ -284,7 +284,6 @@ export function BulkTemplateField({
         />
       </div>
       <PopoverContent
-        variant="command"
         side="bottom"
         align="start"
         sideOffset={6}

@@ -1,6 +1,6 @@
 import PostalMime, { type Address, type Mailbox } from 'postal-mime'
 
-import { activity_timestamp } from '@/shared/types/activites'
+import { activityTimestamp } from '@/shared/types/activites'
 
 export const MAX_EML_BYTES = 2 * 1024 * 1024
 
@@ -83,7 +83,7 @@ function parseSentAt(raw: string | undefined): string | null {
   if (!raw?.trim()) return null
   const date = new Date(raw)
   if (Number.isNaN(date.getTime())) return null
-  return activity_timestamp(date)
+  return activityTimestamp(date)
 }
 
 function looksLikeEmlFile(file: File): boolean {

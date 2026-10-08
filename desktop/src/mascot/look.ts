@@ -1,4 +1,4 @@
-import { parseAvatarHex, type AvatarHex } from '../../../shared/avatar'
+import { type AvatarHex, parseAvatarHex } from '../../../shared/avatar'
 import { createRng } from './profiles'
 
 export const MASCOT_SHAPES = [

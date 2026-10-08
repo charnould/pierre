@@ -37,9 +37,10 @@ import {
   $getSelection,
   $isRangeSelection,
   COMMAND_PRIORITY_HIGH,
+  type EditorThemeClasses,
   FORMAT_TEXT_COMMAND,
-  PASTE_COMMAND,
-  type EditorThemeClasses
+  type LexicalEditor,
+  PASTE_COMMAND
 } from 'lexical'
 import {
   Bold,
@@ -53,7 +54,7 @@ import {
   Quote,
   Table
 } from 'lucide-react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import { Button } from '@/shared/components/ui/button'
 import { ButtonGroup } from '@/shared/components/ui/button-group'
@@ -329,18 +330,37 @@ function MarkdownSyncPlugin({ onChange }: { onChange: (markdown: string) => void
   )
 }
 
+export type MarkdownReader = { read: () => string }
+
+function markdownNow(editor: LexicalEditor): string {
+  return editor.getEditorState().read(() => $convertToMarkdownString(PROMPT_TRANSFORMERS))
+}
+
+function MarkdownReaderPlugin({ readerRef }: { readerRef: RefObject<MarkdownReader | null> }) {
+  const [editor] = useLexicalComposerContext()
+  useLayoutEffect(() => {
+    readerRef.current = { read: () => markdownNow(editor) }
+    return () => {
+      readerRef.current = null
+    }
+  }, [editor, readerRef])
+  return null
+}
+
 export function PromptMarkdownEditor({
   id,
   value,
   onChange,
   placeholder,
-  className
+  className,
+  readerRef
 }: {
   id: string
   value: string
-  onChange: (markdown: string) => void
+  onChange?: (markdown: string) => void
   placeholder: string
   className?: string
+  readerRef?: RefObject<MarkdownReader | null>
 }) {
   const initialMarkdown = useRef(value).current
 
@@ -360,8 +380,8 @@ export function PromptMarkdownEditor({
     >
       <div
         className={cn(
-          'flex h-full min-h-78 w-full flex-col overflow-hidden rounded-lg border border-input bg-transparent transition-colors',
-          'has-[:focus-visible]:border-ring has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/50',
+          'border-input flex h-full min-h-78 w-full flex-col overflow-hidden rounded-lg border bg-transparent transition-colors',
+          'has-[:focus-visible]:border-ring has-[:focus-visible]:ring-ring/50 has-[:focus-visible]:ring-3',
           'dark:bg-input/30',
           className
         )}
@@ -391,7 +411,8 @@ export function PromptMarkdownEditor({
       <TablePlugin hasCellMerge={false} hasCellBackgroundColor={false} hasHorizontalScroll />
       <MarkdownShortcutPlugin transformers={PROMPT_TRANSFORMERS} />
       <MarkdownPastePlugin />
-      <MarkdownSyncPlugin onChange={onChange} />
+      {onChange ? <MarkdownSyncPlugin onChange={onChange} /> : null}
+      {readerRef ? <MarkdownReaderPlugin readerRef={readerRef} /> : null}
     </LexicalComposer>
   )
 }

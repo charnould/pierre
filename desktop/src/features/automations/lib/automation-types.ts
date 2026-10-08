@@ -1,12 +1,10 @@
 import {
-  decodeCronToSchedule,
   type AutomationFrequency,
   type AutomationLifecycleStatus,
   type AutomationRecord,
   type AutomationRunStatus,
   type AutomationType,
-  type TicketAutomationFilters,
-  type TicketFilterRule
+  decodeCronToSchedule
 } from '@/shared/types/automations'
 
 /** Automation ownership uses the canonical account email. */
@@ -16,12 +14,9 @@ export function sameAutomationLogin(a: string, b: string): boolean {
   return Boolean(left) && left === right
 }
 
-export type { AutomationType, TicketFilterRule }
-export type { TicketAutomationFilters }
+export type { AutomationType }
 
 type AutomationStatus = AutomationLifecycleStatus
-
-export type TicketReplyChannel = 'email' | 'letter'
 
 type AutomationBase = {
   id: string
@@ -56,29 +51,14 @@ export type ReportAutomation = AutomationBase & {
   runs: ReportRun[]
 }
 
-export type TicketReplyAutomation = AutomationBase & {
-  type: 'replies'
-  skillId: 'replies'
-  channel: TicketReplyChannel
-  ticketFilters: TicketAutomationFilters
-  maxItems: number
-}
-
-export type Automation = ReportAutomation | TicketReplyAutomation
+export type Automation = ReportAutomation
 
 export const AUTOMATION_TYPE_LABELS: Record<AutomationType, string> = {
-  report: "Rapport d'analyse",
-  replies: 'Pré-génération'
+  report: "Rapport d'analyse"
 }
 
 export function isReportAutomation(automation: Automation): automation is ReportAutomation {
   return automation.type === 'report'
-}
-
-export function isTicketReplyAutomation(
-  automation: Automation
-): automation is TicketReplyAutomation {
-  return automation.type === 'replies'
 }
 
 export function automationMaxReports(automation: ReportAutomation): number {
@@ -92,9 +72,9 @@ export function recordToAutomation(record: AutomationRecord, viewerLogin: string
     name: record.name,
     description: record.description,
     status: record.status,
-    lastRunStatus: record.last_run_status,
-    lastRunDate: record.last_run_at ?? undefined,
-    nextRunDate: record.next_run_at ?? undefined,
+    lastRunStatus: record.lastRunStatus,
+    lastRunDate: record.lastRunAt ?? undefined,
+    nextRunDate: record.nextRunAt ?? undefined,
     owner: record.owner,
     mentions: record.mentions,
     isCreator: sameAutomationLogin(record.owner, viewerLogin),
@@ -104,21 +84,11 @@ export function recordToAutomation(record: AutomationRecord, viewerLogin: string
     frequencyTime: schedule.frequencyTime,
     cron: record.cron
   }
-  if (record.type === 'report') {
-    return {
-      ...base,
-      type: 'report',
-      prompt: record.config.prompt,
-      maxReports: record.config.maxReports,
-      runs: []
-    }
-  }
   return {
     ...base,
-    type: 'replies',
-    skillId: record.config.skillId,
-    channel: record.config.channel,
-    ticketFilters: record.config.ticketFilters,
-    maxItems: record.config.maxItems
+    type: 'report',
+    prompt: record.config.prompt,
+    maxReports: record.config.maxReports,
+    runs: []
   }
 }

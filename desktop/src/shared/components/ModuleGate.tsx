@@ -1,14 +1,21 @@
-import { LoaderCircle } from 'lucide-react'
-import { useSyncExternalStore, type ReactNode } from 'react'
+import { CircleAlert, Settings } from 'lucide-react'
+import { type ReactNode, useSyncExternalStore } from 'react'
 
-import { BlockprintWormGear, CartoonErrorObject } from '@/shared/components/icons/koboyo-empty'
 import { Button } from '@/shared/components/ui/button'
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/shared/components/ui/empty'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle
+} from '@/shared/components/ui/empty'
+import { Spinner } from '@/shared/components/ui/spinner'
 import {
   moduleReady,
+  repaymentGapNames,
+  type SetupEntry,
   subscribeCustomization,
-  useCustomizationStatus,
-  type SetupEntry
+  useCustomizationStatus
 } from '@/shared/lib/instance-customization'
 import { requestSetup, useSetupAdministrator } from '@/shared/lib/open-setup'
 import { cn } from '@/shared/lib/utils'
@@ -25,12 +32,13 @@ export function ModuleGate({
   const status = useCustomizationStatus()
   const administrator = useSetupAdministrator()
   const ready = useSyncExternalStore(subscribeCustomization, () => moduleReady(entry))
+  const gaps = useSyncExternalStore(subscribeCustomization, repaymentGapNames)
   if (status === 'ready' && ready) return children
   return (
     <div
       data-tab-panel
       className={cn(
-        'relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
+        'bg-background relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
         hidden ? 'hidden' : 'flex'
       )}
     >
@@ -38,7 +46,7 @@ export function ModuleGate({
         <Empty className="min-h-40 flex-1">
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <CartoonErrorObject />
+              <CircleAlert />
             </EmptyMedia>
             <EmptyTitle size="sm">Impossible de lire le paramétrage du serveur.</EmptyTitle>
           </EmptyHeader>
@@ -47,7 +55,7 @@ export function ModuleGate({
         <Empty className="min-h-40 flex-1">
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <LoaderCircle className="animate-spin" />
+              <Spinner />
             </EmptyMedia>
             <EmptyTitle size="sm">Chargement du paramétrage…</EmptyTitle>
           </EmptyHeader>
@@ -56,9 +64,12 @@ export function ModuleGate({
         <Empty className="min-h-40 flex-1">
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <BlockprintWormGear />
+              <Settings />
             </EmptyMedia>
             <EmptyTitle size="sm">Module non paramétré</EmptyTitle>
+            {entry === 'repayment' && gaps.length > 0 ? (
+              <EmptyDescription size="sm">{gaps.join(' · ')}</EmptyDescription>
+            ) : null}
           </EmptyHeader>
           {administrator ? (
             <Button type="button" variant="outline" onClick={() => requestSetup(entry)}>

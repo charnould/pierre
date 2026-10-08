@@ -1,7 +1,8 @@
-import { useEffect, useId, useRef, useState, type PointerEvent } from 'react'
+import { type PointerEvent, useEffect, useId, useRef, useState } from 'react'
 
 import { loginFromEmail } from '@/features/activity/lib/notification-types'
 import { Button } from '@/shared/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -12,12 +13,14 @@ import {
 } from '@/shared/components/ui/dialog'
 import {
   Field,
+  FieldContent,
   FieldDescription,
   FieldError,
-  FieldLabel,
-  FieldTitle
+  FieldGroup,
+  FieldLabel
 } from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
+import { Kbd } from '@/shared/components/ui/kbd'
 import { Slider } from '@/shared/components/ui/slider'
 import { toast } from '@/shared/components/ui/toast'
 import { UserAvatar } from '@/shared/components/UserAvatar'
@@ -33,7 +36,11 @@ import { applyLocalAvatar, fetchOrgUsers } from '@/shared/lib/org-users-cache'
 import { cn } from '@/shared/lib/utils'
 import type { PickedAvatarImage } from '@/shared/types/users'
 
-import { isReservedDisplayName, normalizeDisplayName } from '../../../../../shared/automations'
+import {
+  isReservedDisplayName,
+  normalizeDisplayName,
+  normalizePreferredName
+} from '../../../../../shared/user-preferences'
 
 const PREVIEW = 144
 const SAVE_ERROR = 'Impossible d’enregistrer l’identité.'
@@ -51,12 +58,20 @@ interface Props {
   url: string
   email: string
   agentName: string
+  preferredName: string | null
+  onPreferredNameChange: (preferredName: string | null) => void
 }
 
-export function IdentityField({ url, email, agentName }: Props) {
-  const headingId = useId()
+export function IdentityField({
+  url,
+  email,
+  agentName,
+  preferredName: initialPreferredName,
+  onPreferredNameChange
+}: Props) {
   const nameId = useId()
   const nameErrorId = useId()
+  const preferredNameId = useId()
   const zoomId = useId()
   const login = loginFromEmail(email)
   const photoUrl = useUserAvatar(email)
@@ -64,6 +79,8 @@ export function IdentityField({ url, email, agentName }: Props) {
   const [displayName, setDisplayName] = useState(login)
   const [displayNameDraft, setDisplayNameDraft] = useState(login)
   const [displayNameError, setDisplayNameError] = useState('')
+  const [preferredName, setPreferredName] = useState(initialPreferredName)
+  const [preferredNameDraft, setPreferredNameDraft] = useState(initialPreferredName ?? '')
   const [saving, setSaving] = useState(false)
   const [editorOpen, setEditorOpen] = useState(false)
   const [draft, setDraft] = useState<EditorDraft>({ kind: 'none' })
@@ -96,7 +113,7 @@ export function IdentityField({ url, email, agentName }: Props) {
     }
     setSaving(true)
     try {
-      const res = await window.api.patchMyPreferences({ url, display_name: next })
+      const res = await window.api.patchMyPreferences({ url, displayName: next })
       if (!res?.data) {
         toast.add({ title: SAVE_ERROR, type: 'error' })
         return false
@@ -129,6 +146,42 @@ export function IdentityField({ url, email, agentName }: Props) {
     if (!ok) {
       setDisplayName(previous)
       setDisplayNameDraft(previous)
+    }
+  }
+
+  async function commitPreferredName() {
+    const normalized = normalizePreferredName(preferredNameDraft)
+    setPreferredNameDraft(normalized ?? '')
+    if (normalized === preferredName || saving) return
+    if (!window.api?.patchMyPreferences) {
+      toast.add({ title: API_ERROR, type: 'error' })
+      setPreferredNameDraft(preferredName ?? '')
+      return
+    }
+
+    const previous = preferredName
+    setPreferredName(normalized)
+    setSaving(true)
+    try {
+      const res = await window.api.patchMyPreferences({
+        url,
+        preferredName: normalized
+      })
+      if (!res?.data) {
+        toast.add({ title: SAVE_ERROR, type: 'error' })
+        setPreferredName(previous)
+        setPreferredNameDraft(previous ?? '')
+        return
+      }
+      setPreferredName(res.data.preferredName)
+      setPreferredNameDraft(res.data.preferredName ?? '')
+      onPreferredNameChange(res.data.preferredName)
+    } catch {
+      toast.add({ title: SAVE_ERROR, type: 'error' })
+      setPreferredName(previous)
+      setPreferredNameDraft(previous ?? '')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -253,49 +306,95 @@ export function IdentityField({ url, email, agentName }: Props) {
   const cover = photo ? (PREVIEW / Math.min(photo.width, photo.height)) * zoom : 1
 
   return (
-    <Field variant="document-setting" aria-labelledby={headingId}>
-      <div className="flex flex-col gap-0.5">
-        <FieldTitle id={headingId}>Identité</FieldTitle>
-        <FieldDescription>
-          Nom et avatar affichés dans les timelines et les mentions. Sans nom personnalisé, c’est la
-          partie avant @ de votre email.
-        </FieldDescription>
-      </div>
-      <FieldLabel htmlFor={nameId} className="sr-only">
-        Nom d’affichage
-      </FieldLabel>
-      <div className="flex min-w-0 items-center gap-3">
-        <UserAvatar photoUrl={photoUrl} name={displayName} login={login} />
-        <Input
-          id={nameId}
-          aria-label="Nom d’affichage"
-          value={displayNameDraft}
-          disabled={saving}
-          aria-invalid={!!displayNameError}
-          aria-describedby={displayNameError ? nameErrorId : undefined}
-          aria-errormessage={displayNameError ? nameErrorId : undefined}
-          spellCheck={false}
-          autoComplete="nickname"
-          maxLength={80}
-          placeholder={login}
-          className="min-w-0 flex-1"
-          onChange={(e) => {
-            setDisplayNameDraft(e.target.value)
-            setDisplayNameError('')
-          }}
-          onBlur={() => void commitDisplayName()}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              void commitDisplayName()
-            }
-          }}
-        />
-        <Button type="button" variant="outline" size="sm" disabled={saving} onClick={openEditor}>
-          Modifier votre avatar
-        </Button>
-      </div>
-      {displayNameError ? <FieldError id={nameErrorId}>{displayNameError}</FieldError> : null}
+    <Card>
+      <CardHeader>
+        <CardTitle>Identité</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <FieldGroup variant="rows">
+          <Field orientation="horizontal">
+            <FieldContent>
+              <FieldLabel>Avatar</FieldLabel>
+              <FieldDescription>
+                Photo affichée dans les timelines et les mentions.
+              </FieldDescription>
+            </FieldContent>
+            <Button
+              type="button"
+              variant="outline"
+              className="justify-self-end"
+              disabled={saving}
+              onClick={openEditor}
+            >
+              Modifier votre avatar
+            </Button>
+          </Field>
+          <Field orientation="horizontal">
+            <FieldContent>
+              <FieldLabel htmlFor={nameId}>Nom d’affichage</FieldLabel>
+              <FieldDescription>
+                Jusqu’à 80 caractères. Sans nom personnalisé, c’est la partie avant @ de votre
+                email.
+              </FieldDescription>
+            </FieldContent>
+            <div className="flex min-w-0 flex-col gap-2">
+              <Input
+                id={nameId}
+                value={displayNameDraft}
+                disabled={saving}
+                aria-invalid={!!displayNameError}
+                aria-describedby={displayNameError ? nameErrorId : undefined}
+                aria-errormessage={displayNameError ? nameErrorId : undefined}
+                spellCheck={false}
+                autoComplete="nickname"
+                maxLength={80}
+                placeholder={login}
+                onChange={(e) => {
+                  setDisplayNameDraft(e.target.value)
+                  setDisplayNameError('')
+                }}
+                onBlur={() => void commitDisplayName()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    void commitDisplayName()
+                  }
+                }}
+              />
+              {displayNameError ? (
+                <FieldError id={nameErrorId}>{displayNameError}</FieldError>
+              ) : null}
+            </div>
+          </Field>
+          <Field orientation="horizontal">
+            <FieldContent>
+              <FieldLabel htmlFor={preferredNameId}>
+                Comment souhaitez-vous que <Kbd>{agentName}</Kbd> vous appelle ?
+              </FieldLabel>
+              <FieldDescription>
+                Utilisé lorsque l’application s’adresse directement à vous.
+              </FieldDescription>
+            </FieldContent>
+            <Input
+              id={preferredNameId}
+              value={preferredNameDraft}
+              disabled={saving}
+              spellCheck={false}
+              autoComplete="given-name"
+              maxLength={40}
+              placeholder="Camille"
+              onChange={(event) => setPreferredNameDraft(event.target.value)}
+              onBlur={() => void commitPreferredName()}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  void commitPreferredName()
+                }
+              }}
+            />
+          </Field>
+        </FieldGroup>
+      </CardContent>
 
       <Dialog
         disablePointerDismissal
@@ -314,10 +413,10 @@ export function IdentityField({ url, email, agentName }: Props) {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col gap-4">
             <div
               className={cn(
-                'border-border relative size-36 overflow-hidden rounded-full border',
+                'border-border relative size-36 self-center overflow-hidden rounded-full border',
                 photo && 'cursor-grab active:cursor-grabbing'
               )}
               onPointerDown={onPointerDown}
@@ -374,7 +473,7 @@ export function IdentityField({ url, email, agentName }: Props) {
                 />
               </Field>
             ) : null}
-            <div className="flex flex-wrap justify-center gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -411,6 +510,6 @@ export function IdentityField({ url, email, agentName }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Field>
+    </Card>
   )
 }

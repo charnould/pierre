@@ -29,7 +29,7 @@ describe('nextVisitedTabs', () => {
   })
 
   test('logout drops métier tabs and keeps guest settings', () => {
-    const visited = tabs('settings', 'home', 'tickets', 'chat')
+    const visited = tabs('settings', 'home', 'tickets')
     const next = nextVisitedTabs(visited, 'settings', false)
     expect([...next]).toEqual(['settings'])
   })

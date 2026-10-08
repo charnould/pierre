@@ -8,7 +8,6 @@ import {
 import type {
   BulkExecutionMode,
   BulkItemReportStatus,
-  BulkMedium,
   BulkReportItem,
   BulkReportSummary,
   BulkRunReportStatus
@@ -60,8 +59,8 @@ export function bulkReportRunMeta(report: BulkReportSummary): string[] {
     `${report.counts.ok} réussi${report.counts.ok === 1 ? '' : 's'}`,
     `${report.counts.ko} échoué${report.counts.ko === 1 ? '' : 's'}`
   ]
-  if (report.counts.in_progress > 0) {
-    parts.push(`${report.counts.in_progress} en cours`)
+  if (report.counts.inProgress > 0) {
+    parts.push(`${report.counts.inProgress} en cours`)
   }
   return parts
 }
@@ -84,47 +83,37 @@ const OUTCOME_LABELS: Record<string, string> = {
 
 export function reportItemChannel(item: BulkReportItem): string {
   if (item.mode === 'apply_without_send') return BULK_MODE_LABELS[item.mode]
-  const row = item.payload['row']
-  if (item.payload['kind'] === 'rich_rcs') return MEDIUM_LABELS.rcs
-  if (row && typeof row === 'object') {
-    const route = (row as Record<string, unknown>)['route']
-    if (route && typeof route === 'object') {
-      const medium = (route as Record<string, unknown>)['medium']
-      if (typeof medium === 'string' && medium in MEDIUM_LABELS) {
-        return MEDIUM_LABELS[medium as BulkMedium]
-      }
-    }
-  }
+  if (item.payload.kind === 'rich_rcs') return MEDIUM_LABELS.rcs
+  const medium = item.payload.row.route?.medium
+  if (medium && medium in MEDIUM_LABELS) return MEDIUM_LABELS[medium]
   return BULK_MODE_LABELS[item.mode]
 }
 
 export function reportItemOutcome(item: BulkReportItem): string {
-  if (item.reportStatus === 'in_progress' && item.payload['stage'] === 'rich_wait_reply') {
+  if (
+    item.reportStatus === 'in_progress' &&
+    item.payload.kind === 'rich_rcs' &&
+    item.payload.stage === 'rich_wait_reply'
+  ) {
     return 'En attente d’une réponse'
   }
-  const code = item.outcome?.['code']
+  const code = item.outcome?.code
   if (typeof code !== 'string') return item.reportStatus === 'in_progress' ? 'En attente' : '—'
   return OUTCOME_LABELS[code] ?? code
 }
 
 export function reportItemDetail(item: BulkReportItem): string {
   if (item.lastError) return item.lastError
-  const responseHistory = item.payload['responseHistory']
-  if (Array.isArray(responseHistory) && responseHistory.length > 0) {
-    const response = responseHistory.at(-1)
-    if (response && typeof response === 'object') {
-      const label = (response as Record<string, unknown>)['label']
-      const postback = (response as Record<string, unknown>)['postback']
-      const choice =
-        typeof label === 'string' ? label : typeof postback === 'string' ? postback : null
+  if (item.payload.kind === 'rich_rcs') {
+    const response = item.payload.responseHistory.at(-1)
+    if (response) {
+      const choice = response.label ?? response.postback
       if (choice) return `A choisi « ${choice} »`
     }
+    return `Message ${item.payload.nodeId}`
   }
-  if (item.payload['kind'] === 'rich_rcs' && typeof item.payload['nodeId'] === 'string') {
-    return `Message ${item.payload['nodeId']}`
-  }
-  const skipped = item.outcome?.['skipped_steps']
-  if (Array.isArray(skipped) && skipped.length > 0) {
+  const skipped = item.outcome && 'skippedSteps' in item.outcome ? item.outcome.skippedSteps : []
+  if (skipped.length > 0) {
     return `${skipped.length} ${skipped.length === 1 ? 'canal écarté' : 'canaux écartés'}`
   }
   return item.attempts > 0 ? `${item.attempts} tentative${item.attempts === 1 ? '' : 's'}` : '—'

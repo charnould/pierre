@@ -30,7 +30,7 @@ function attachmentStem(name: string): string {
   return name.slice(0, lastDot)
 }
 
-const CHIP_META = 'text-muted-foreground pierre-type-micro shrink-0'
+const CHIP_META = 'text-muted-foreground text-xs shrink-0'
 
 function AttachmentMedia({ previewUrl }: { previewUrl?: string }) {
   return previewUrl ? (

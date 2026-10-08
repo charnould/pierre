@@ -9,13 +9,6 @@ import { repaymentTagOptions } from '../lib/repayment-tags'
 import { sampleRepaymentRow } from '../lib/repayment-test-fixtures'
 import type { RepaymentComposeMode } from './RepaymentComposeBlock'
 
-mock.module('../lib/outbound-email-templates.bundle', () => ({
-  listOutboundTemplateGroups: () => [],
-  listOutboundTemplates: () => [],
-  resolveOutboundEmail: () => null,
-  resolveOutboundRcs: () => null
-}))
-
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
 
@@ -108,7 +101,7 @@ async function renderCompose(
     gestionnaireAssignable?: boolean
     gestionnaireEmail?: string | null
     currentTags?: string[]
-    activePlan?: { row: import('@/shared/types/activites').Activite; signed: boolean } | null
+    activePlan?: { row: import('@/shared/types/activites').Activity } | null
     rcsCompose?: {
       destinataire: string
       body: string
@@ -291,7 +284,7 @@ describe('RepaymentComposeBlock', () => {
       expect(labels).toContain('Contacter un tiers')
       expect(labels).toContain('Créer un plan d’apurement')
       expect(labels).toContain('Importer un email')
-      expect(labels).toContain('Changer le groupe')
+      expect(labels).toContain('Changer la phase')
       expect(labels).toContain('Changer les tags')
       expect(labels.indexOf('Contacter un tiers')).toBeLessThan(
         labels.indexOf('Créer un plan d’apurement')
@@ -299,8 +292,8 @@ describe('RepaymentComposeBlock', () => {
       expect(labels.indexOf('Créer un plan d’apurement')).toBeLessThan(
         labels.indexOf('Importer un email')
       )
-      expect(labels.indexOf('Importer un email')).toBeLessThan(labels.indexOf('Changer le groupe'))
-      expect(labels.indexOf('Changer le groupe')).toBeLessThan(labels.indexOf('Changer les tags'))
+      expect(labels.indexOf('Importer un email')).toBeLessThan(labels.indexOf('Changer la phase'))
+      expect(labels.indexOf('Changer la phase')).toBeLessThan(labels.indexOf('Changer les tags'))
       expect(labels).not.toContain('Enregistrer une action')
       expect(labels).not.toContain('Ajouter un tag')
       expect(labels).not.toContain('Modifier les tags')
@@ -328,7 +321,7 @@ describe('RepaymentComposeBlock', () => {
           (button) =>
             button.classList.contains('w-full') &&
             button.classList.contains('border-border/60') &&
-            button.classList.contains('hover:bg-muted')
+            button.classList.contains('hover:bg-accent')
         )
       ).toBe(true)
     } finally {
@@ -411,7 +404,7 @@ describe('RepaymentComposeBlock', () => {
   test('le rang Plan est exclusif selon l’état du dossier', async () => {
     const unsigned = {
       id: 4,
-      date_creation: '2026-08-22T10:00:00',
+      createdAt: '2026-08-22T10:00:00',
       rattachement: 'repayment:LOC-1',
       auteur: 'user:alice@example.org',
       id_client: 'CLI-1',
@@ -422,19 +415,12 @@ describe('RepaymentComposeBlock', () => {
       mentions: [],
       contenu: JSON.stringify({ version: 2, title: "Plan d'apurement" })
     }
-    const draft = await renderCompose(null, { activePlan: { row: unsigned, signed: false } })
+    const draft = await renderCompose(null, { activePlan: { row: unsigned } })
     try {
       expect(buttonLabels()).toContain('Modifier le plan d’apurement')
       expect(buttonLabels()).not.toContain('Créer un plan d’apurement')
     } finally {
       await draft.cleanup()
-    }
-
-    const signed = await renderCompose(null, { activePlan: { row: unsigned, signed: true } })
-    try {
-      expect(buttonLabels()).toContain('Clôturer le plan d’apurement')
-    } finally {
-      await signed.cleanup()
     }
   })
 
@@ -579,7 +565,6 @@ describe('RepaymentComposeBlock', () => {
       )
       await act(async () => {
         cancel?.click()
-        await new Promise((resolve) => setTimeout(resolve, 300))
       })
       expect(document.querySelector('[data-inspector-compose-shell]')).toBeNull()
       expect(buttonLabels()).toContain('Laisser une note')

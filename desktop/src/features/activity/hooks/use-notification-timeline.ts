@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import type { Activite, ActivityContext } from '@/shared/types/activites'
+import type { Activity, ActivityContext } from '@/shared/types/activites'
 
 type TimelineState = {
   key: string | null
-  rows: Activite[]
+  rows: Activity[]
   status: 'idle' | 'loading' | 'refreshing' | 'ready'
 }
 

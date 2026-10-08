@@ -10,8 +10,7 @@ export type LoginErrorCode =
   | 'api_unavailable'
 
 export type LoginResult =
-  | { ok: true; user: UserPrincipal }
-  | { ok: false; message?: LoginErrorCode | string }
+  { ok: true; user: UserPrincipal } | { ok: false; message?: LoginErrorCode | string }
 
 export type LoginField = 'url' | 'email' | 'password'
 export type LoginFieldErrors = Partial<Record<LoginField, string>>

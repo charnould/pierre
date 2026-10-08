@@ -66,6 +66,7 @@ export type PreviewBulkOperationQueryPayload = {
   url: string
   definition: BulkOperationDefinition
   bulkOperationId?: string
+  offset?: number
 }
 export type PreviewBulkOperationMessagePayload = PreviewBulkOperationQueryPayload & {
   id_locataire: string

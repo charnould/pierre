@@ -1,9 +1,10 @@
-import { Download, FileText, Pencil, Table2, Trash2, Unlink } from 'lucide-react'
+import { FileText, Pencil, Table2, Trash2, Unlink } from 'lucide-react'
 import type { MouseEvent, ReactNode } from 'react'
 
 import { DirectoryRow } from '@/shared/components/DirectoryList'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
+import { FieldDescription } from '@/shared/components/ui/field'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import type { KnowledgeBuild, KnowledgeProfile } from '@/shared/types/knowledge'
@@ -13,11 +14,11 @@ import {
   knowledgeAssignmentSummary,
   knowledgeDeleteKind,
   knowledgeFileKind,
+  type KnowledgeItem,
+  type KnowledgeItemState,
   knowledgeItemState,
   knowledgeRowDescription,
-  knowledgeRowTitle,
-  type KnowledgeItem,
-  type KnowledgeItemState
+  knowledgeRowTitle
 } from './knowledge-model'
 
 const stateLabel: Record<KnowledgeItemState, string> = {
@@ -170,7 +171,6 @@ export function KnowledgeRow({
   lastBuild,
   needsRebuild,
   profiles,
-  url,
   onOpen,
   onUnassign,
   onDelete
@@ -180,7 +180,6 @@ export function KnowledgeRow({
   lastBuild: KnowledgeBuild | null
   needsRebuild: boolean
   profiles: KnowledgeProfile[]
-  url: string
   onOpen: (item: KnowledgeItem) => void
   onUnassign: (item: KnowledgeItem) => void
   onDelete: (item: KnowledgeItem) => void
@@ -198,33 +197,19 @@ export function KnowledgeRow({
         <KindIcon kind={knowledgeFileKind(item?.source.fileType)} state={state} />
         <div className="flex min-w-0 flex-1 flex-col items-start overflow-hidden">
           <div className="block w-full min-w-0 truncate text-sm leading-5 font-medium">{title}</div>
-          <div className="text-muted-foreground w-full min-w-0 truncate text-xs">{description}</div>
+          <FieldDescription>{description}</FieldDescription>
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2 text-start">
         <Badge variant={stateBadgeVariant[state]}>{stateLabel[state]}</Badge>
         <KnowledgeAssignmentMeta profiles={assignment.profiles} modules={assignment.modules} />
       </div>
-      <div className="text-muted-foreground pierre-type-data text-start tabular-nums">
+      <div className="text-muted-foreground text-start text-xs tabular-nums">
         {item ? formatDate(item.source.updatedAt) : '—'}
       </div>
       <div className="flex items-center gap-1 text-start">
         {item ? (
           <>
-            <IconAction
-              label="Télécharger"
-              aria-label={`Télécharger ${item.source.originalName}`}
-              onClick={(event) => {
-                event.stopPropagation()
-                void window.api?.downloadKnowledgeSource({
-                  url,
-                  id: item.source.id,
-                  originalName: item.source.originalName
-                })
-              }}
-            >
-              <Download />
-            </IconAction>
             <IconAction
               label="Modifier"
               aria-label={`Modifier ${title}`}
