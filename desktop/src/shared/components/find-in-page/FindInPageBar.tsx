@@ -41,7 +41,9 @@ export function FindInPageBar() {
           className="h-7"
         />
       </InputGroup>
-      <span className="pierre-meta min-w-10 px-1 text-center tabular-nums">{matchLabel}</span>
+      <span className="text-muted-foreground min-w-10 px-1 text-center text-xs tabular-nums">
+        {matchLabel}
+      </span>
       <ButtonGroup>
         <Button
           type="button"

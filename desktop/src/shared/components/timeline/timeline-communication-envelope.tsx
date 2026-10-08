@@ -6,12 +6,12 @@ import {
   CircleCheck,
   Clock,
   FileText,
+  type LucideIcon,
   Reply,
   TextQuote,
-  UserRound,
-  type LucideIcon
+  UserRound
 } from 'lucide-react'
-import { Fragment, useId, useState, type KeyboardEvent, type MouseEvent } from 'react'
+import { Fragment, type KeyboardEvent, type MouseEvent, useId, useState } from 'react'
 
 import { MentionText } from '@/shared/components/inspector/mention-text'
 import { Badge } from '@/shared/components/ui/badge'
@@ -24,9 +24,9 @@ import {
   previewTimelineCommunicationParagraphs
 } from '@/shared/lib/timeline/timeline-communication'
 import { cn } from '@/shared/lib/utils'
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 
-const VALUE = 'text-foreground m-0 min-w-0 text-xs leading-4'
+const VALUE = 'text-foreground m-0 min-w-0 text-base leading-6'
 
 const META_ICONS: Record<string, LucideIcon> = {
   De: UserRound,
@@ -44,8 +44,8 @@ export function TimelineCommunicationEnvelope({
   statuses = [],
   expandable
 }: {
-  row: Activite
-  statuses?: Activite[]
+  row: Activity
+  statuses?: Activity[]
   expandable: boolean
 }) {
   const parsed = parseTimelineCommunication(row, statuses)
@@ -75,7 +75,7 @@ export function TimelineCommunicationEnvelope({
 
   return (
     <div data-slot="timeline-communication" className="border-border/60 rounded-md border p-2.5">
-      <dl className="m-0 grid grid-cols-[max-content_minmax(0,1fr)] items-start gap-x-2 gap-y-1">
+      <dl className="m-0 grid grid-cols-[max-content_minmax(0,1fr)] items-start gap-x-2 gap-y-2">
         {metas.map((meta) => (
           <Fragment key={meta.label}>
             <MetaLabel label={meta.label} />
@@ -121,9 +121,7 @@ export function TimelineCommunicationEnvelope({
               <ul className="m-0 flex list-none flex-wrap gap-1 p-0">
                 {parsed.choices.map((choice) => (
                   <li key={choice} className="m-0 min-w-0">
-                    <Badge variant="secondary" size="compact">
-                      {choice}
-                    </Badge>
+                    <Badge variant="secondary">{choice}</Badge>
                   </li>
                 ))}
               </ul>
@@ -138,14 +136,14 @@ export function TimelineCommunicationEnvelope({
 function MetaLabel({ label }: { label: string }) {
   const Icon = META_ICONS[label] ?? AlignLeft
   return (
-    <dt className="text-muted-foreground m-0 flex h-4 w-4 items-center justify-center">
+    <dt className="text-muted-foreground m-0 flex h-6 w-6 items-center justify-center">
       <Tooltip>
         <TooltipTrigger
           render={
             <span className="focus-visible:ring-ring/40 inline-flex size-4 items-center justify-center rounded-sm outline-none focus-visible:ring-1" />
           }
         >
-          <Icon aria-hidden className="size-3.5" strokeWidth={1.5} />
+          <Icon aria-hidden className="size-4" strokeWidth={1.5} />
           <span className="sr-only">{label}</span>
         </TooltipTrigger>
         <TooltipContent>{label}</TooltipContent>

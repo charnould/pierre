@@ -2,7 +2,24 @@ import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
-import type { BulkReportDetail, BulkReportItem } from '@/shared/types/bulk-operations'
+import type { BulkReportDetail, BulkReportItem, PreviewRow } from '@/shared/types/bulk-operations'
+
+function previewRow(route: PreviewRow['route']): PreviewRow {
+  return {
+    id_locataire: 'LOC-42',
+    id_client: null,
+    nom: null,
+    email: null,
+    telephone: null,
+    adresse: null,
+    gestionnaire: null,
+    gestionnaire_email: null,
+    values: {},
+    status: 'no_usable_route',
+    route,
+    skippedSteps: []
+  }
+}
 
 mock.module('@/features/activity/components/RepaymentActivityDrawer', () => ({
   RepaymentActivityDrawer: () => null
@@ -15,16 +32,23 @@ const item = (overrides: Partial<BulkReportItem> = {}): BulkReportItem => ({
   source: 'comptes_locataires',
   mode: 'send',
   reportStatus: 'ko',
-  outcome: { code: 'no_usable_route', skipped_steps: [{}, {}] },
+  outcome: {
+    code: 'no_usable_route',
+    skippedSteps: [
+      { medium: 'rcs', stepIndex: 0, reasons: [{ code: 'missing_destination' }] },
+      { medium: 'email', stepIndex: 1, reasons: [{ code: 'missing_destination' }] }
+    ]
+  },
   currentActivityId: 7,
   completedAt: '2026-08-28T12:00:00Z',
   runAt: null,
   attempts: 2,
   lastError: null,
   payload: {
-    row: {
-      route: { kind: 'fallback', medium: 'rcs', stepIndex: 0 }
-    }
+    kind: 'fallback',
+    row: previewRow({ kind: 'fallback', medium: 'rcs', stepIndex: 0 }),
+    stage: 'attempt',
+    stepIndex: 0
   },
   ...overrides
 })
@@ -36,13 +60,13 @@ const detail = (overrides: Partial<BulkReportDetail> = {}): BulkReportDetail => 
     source: 'comptes_locataires',
     mode: 'send',
     status: 'partial',
-    counts: { total: 1, in_progress: 0, ok: 0, ko: 1 },
+    counts: { total: 1, inProgress: 0, ok: 0, ko: 1 },
     confirmedAt: '2026-08-28T12:00:00Z',
     completedAt: '2026-08-28T12:05:00Z',
     actor: 'alice',
     result: {
-      execution_id: 'run-1',
-      totals: { total: 1, queued: 0, no_usable_route: 1, applied: 0 }
+      executionId: 'run-1',
+      totals: { total: 1, queued: 0, noUsableRoute: 1, applied: 0 }
     }
   },
   items: [item()],
@@ -153,7 +177,7 @@ describe('pile des exécutions', () => {
         executionId: 'run-0',
         confirmedAt: '2026-08-27T09:00:00Z',
         actor: 'bob',
-        counts: { total: 1, in_progress: 0, ok: 1, ko: 0 }
+        counts: { total: 1, inProgress: 0, ok: 1, ko: 0 }
       },
       items: [item({ id: 'job-2', executionId: 'run-0', itemId: 'LOC-7', reportStatus: 'ok' })]
     })

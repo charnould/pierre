@@ -2,12 +2,12 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSy
 import { dirname } from 'path'
 
 import {
+  type AutomationsSettings,
   buildFactoryUiSettingsDocument,
   formatUiSettingsFileContent,
+  type MascotSettings,
   parseUiSettings,
   resolveUiSettingsFromRaw,
-  type AutomationsSettings,
-  type MascotSettings,
   type TicketsTableSettings,
   type UiSettings,
   type UpdatesSettings,

@@ -1,8 +1,10 @@
 import type { ColumnSizingState } from '@tanstack/react-table'
 
+import { resolveFieldLabel } from '@/shared/lib/field-label'
 import type { LedgerColumnMeta } from '@/shared/types/ledger'
 
 const REPAYMENT_UI_COLUMN_IDS = [
+  'selection',
   'alertes',
   'bucket',
   'derniere_action_realisee',
@@ -15,15 +17,43 @@ export type RepaymentUiColumnId = (typeof REPAYMENT_UI_COLUMN_IDS)[number]
 export type RepaymentColumnId = RepaymentUiColumnId | (string & {})
 
 export const LOCKED_REPAYMENT_COLUMN_IDS = [
+  'selection',
   'alertes'
 ] as const satisfies readonly RepaymentUiColumnId[]
 
 /** Never shown in tables or the Colonnes menu. */
 const ALWAYS_HIDDEN_REPAYMENT_COLUMN_IDS = ['bucket', 'statut', 'evolution_solde'] as const
 
+const CORE_REPAYMENT_LEDGER_COLUMN_IDS = [
+  'id_locataire',
+  'id_client',
+  'solde_locataire',
+  'ratio_dette_loyer',
+  'email_status',
+  'telephone_status',
+  'gestionnaire'
+] as const
+
+const REPAYMENT_COLUMN_LABELS: Readonly<Record<string, string>> = {
+  alertes: 'Alertes',
+  bucket: 'Phase',
+  derniere_action_realisee: 'Dernière action',
+  date_derniere_action_realisee: 'Date dernière action',
+  id_locataire: 'Locataire',
+  id_client: 'Client',
+  solde_locataire: 'Dette',
+  ratio_dette_loyer: 'Dette / loyer',
+  email_status: 'Courriel',
+  telephone_status: 'Téléphone',
+  gestionnaire: 'Référent',
+  categorie: 'Catégorie',
+  montant_en_euros: 'Montant'
+}
+
 export const DEFAULT_LEDGER_COLUMN_WIDTH = 120
 
 export const DEFAULT_REPAYMENT_COLUMN_SIZING: ColumnSizingState = {
+  selection: 40,
   alertes: 40,
   bucket: 160,
   derniere_action_realisee: 200,
@@ -62,8 +92,15 @@ export function ledgerColumnIdsFromMeta(meta: LedgerColumnMeta[] | undefined): s
   return meta?.map((column) => column.name) ?? []
 }
 
+export function resolveRepaymentColumnLabel(id: string): string {
+  return resolveFieldLabel(id, REPAYMENT_COLUMN_LABELS)
+}
+
 export function resolveRepaymentTableColumnIds(ledgerColumnIds: readonly string[]): string[] {
   const ordered: string[] = [...LOCKED_REPAYMENT_COLUMN_IDS]
+  for (const id of CORE_REPAYMENT_LEDGER_COLUMN_IDS) {
+    if (ledgerColumnIds.includes(id) && !ordered.includes(id)) ordered.push(id)
+  }
   for (const id of REPAYMENT_UI_COLUMN_IDS) {
     if (LOCKED_COLUMN_ID_SET.has(id)) continue
     if (ALWAYS_HIDDEN_COLUMN_ID_SET.has(id)) continue

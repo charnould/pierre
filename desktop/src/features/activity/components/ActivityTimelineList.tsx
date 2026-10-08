@@ -1,8 +1,8 @@
+import { Activity } from 'lucide-react'
 import type { ReactNode, RefObject } from 'react'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 import type { ActivityNotificationItem } from '@/features/activity/lib/notification-types'
-import { CartoonNotificationGrouped } from '@/shared/components/icons/koboyo-empty'
 import { ActivityTimelineEvent } from '@/shared/components/timeline/activity-timeline-event'
 import { ContextTimeline } from '@/shared/components/timeline/context-timeline'
 import {
@@ -79,16 +79,18 @@ export function ActivityTimelineList({
       className={fit ? 'overflow-visible' : 'scroll-fade min-h-0 flex-1 overflow-y-auto'}
     >
       {items.length === 0 ? (
-        <Empty className={fit ? 'flex-none' : undefined}>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">{emptyIcon ?? <CartoonNotificationGrouped />}</EmptyMedia>
-            <EmptyTitle>{emptyCopy.title}</EmptyTitle>
-            <EmptyDescription>{emptyCopy.description}</EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <div className={fit ? undefined : 'flex min-h-0 flex-1 px-6'}>
+          <Empty className={fit ? 'flex-none' : undefined}>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">{emptyIcon ?? <Activity />}</EmptyMedia>
+              <EmptyTitle size={fit ? 'sm' : 'default'}>{emptyCopy.title}</EmptyTitle>
+              <EmptyDescription>{emptyCopy.description}</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        </div>
       ) : (
         <>
-          <ContextTimeline defaultValue={items.length} className="activity-motion-list">
+          <ContextTimeline defaultValue={items.length} className={fit ? 'px-0' : 'px-6 pb-4'}>
             {items.map((item, index) => {
               if (!item.row) return null
               return (
@@ -97,8 +99,8 @@ export function ActivityTimelineList({
                   row={item.row}
                   actor={parseActivityAuthor(item.row.auteur)}
                   step={index + 1}
-                  dateTime={item.row.date_creation}
-                  dateLabel={formatInspectorTimelineDateline(item.row.date_creation)}
+                  dateTime={item.row.createdAt}
+                  dateLabel={formatInspectorTimelineDateline(item.row.createdAt)}
                   revisions={revisions}
                   dataTimelineId={`${item.source}:${item.id}`}
                   dataActivityId={item.row.id}

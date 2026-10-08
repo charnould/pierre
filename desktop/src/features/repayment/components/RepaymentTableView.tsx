@@ -1,16 +1,18 @@
 import {
-  flexRender,
-  useTable,
   type ColumnSizingState,
+  type ColumnVisibilityState,
   type OnChangeFn,
   type SortingState,
-  type ColumnVisibilityState
+  useTable
 } from '@tanstack/react-table'
-import { memo, useMemo, type RefObject } from 'react'
+import { memo, type RefObject, useMemo } from 'react'
 
-import { BoardDualTable } from '@/shared/components/table/board-dual-table'
+import {
+  BOARD_DATA_COLUMN_MIN_WIDTH,
+  BoardDualTable
+} from '@/shared/components/table/board-dual-table'
+import { BoardTableDataRow } from '@/shared/components/table/board-table-data-row'
 import { pierreTableFeatures } from '@/shared/components/table/table-features'
-import { TableCell, TableRow } from '@/shared/components/ui/table'
 import { useOrgUsersVersion } from '@/shared/hooks/useUserAvatar'
 import type { ColumnFilters, ColumnValuesConfig } from '@/shared/lib/ui-settings/tickets-table'
 
@@ -92,7 +94,6 @@ export const RepaymentTableView = memo(function RepaymentTableView({
     // Rebuild when org-users cache updates so gestionnaire accessor labels refresh.
     void orgUsersVersion
     return buildRepaymentColumns({
-      rows,
       allRows,
       activeColumnIds,
       columnFilters,
@@ -105,7 +106,6 @@ export const RepaymentTableView = memo(function RepaymentTableView({
       snapshotDate
     })
   }, [
-    rows,
     allRows,
     activeColumnIds,
     columnFilters,
@@ -139,6 +139,7 @@ export const RepaymentTableView = memo(function RepaymentTableView({
       data: rows,
       columns,
       getRowId: (row: TenantRepaymentRow) => row.id_locataire,
+      defaultColumn: { minSize: BOARD_DATA_COLUMN_MIN_WIDTH },
       enableColumnResizing: true,
       columnResizeMode: 'onEnd' as const,
       onSortingChange: onColumnSortingChange,
@@ -178,29 +179,17 @@ export const RepaymentTableView = memo(function RepaymentTableView({
       rows={tableRows}
       scrollRef={scrollRef}
       emptyMessage={emptyMessage}
-      renderRow={(row, { index, measureRef }) => {
-        const original = row.original as TenantRepaymentRow
-        return (
-          <TableRow
-            key={row.id}
-            data-index={index}
-            ref={measureRef}
-            className="cursor-pointer"
-            data-state={original.id_locataire === selectedId ? 'selected' : undefined}
-            onClick={() => onRowClick(original)}
-            onPointerEnter={onRowHover ? () => onRowHover(original) : undefined}
-            onFocus={onRowHover ? () => onRowHover(original) : undefined}
-          >
-            {row.getVisibleCells().map((cell) => (
-              <TableCell key={cell.id} className="max-w-0 overflow-hidden text-start">
-                <div className="truncate">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </div>
-              </TableCell>
-            ))}
-          </TableRow>
-        )
-      }}
+      renderRow={(row, { index, measureRef }) => (
+        <BoardTableDataRow
+          row={row}
+          index={index}
+          measureRef={measureRef}
+          rowId={row.original.id_locataire}
+          selected={row.original.id_locataire === selectedId}
+          onActivate={onRowClick}
+          onHover={onRowHover}
+        />
+      )}
     />
   )
 })

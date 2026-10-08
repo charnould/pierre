@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 
 import {
   buildRepaymentTimeline,
@@ -13,10 +13,10 @@ import {
   movementOnOrAfterPeriod
 } from './build-repayment-timeline'
 
-function sampleActivity(overrides: Partial<Activite> = {}): Activite {
+function sampleActivity(overrides: Partial<Activity> = {}): Activity {
   return {
     id: 1,
-    date_creation: '2026-06-10T14:00:00',
+    createdAt: '2026-06-10T14:00:00',
     rattachement: 'repayment:LOC-1',
     auteur: 'user:cdubois@exemple.fr',
     id_client: 'CLI-1',
@@ -124,16 +124,18 @@ describe('buildRepaymentTimeline', () => {
       id: 10,
       type: 'communication.sent',
       channel: 'email',
-      thread_id: 'mail-1',
-      date_creation: '2026-06-10T10:00:00',
+      threadId: 'mail-1',
+      revision: 1,
+      createdAt: '2026-06-10T10:00:00',
       contenu: JSON.stringify({ version: 2, sender: 'Alice', body: 'Bonjour' })
     })
     const failed = sampleActivity({
       id: 20,
       type: 'communication.sent',
       channel: 'rcs',
-      thread_id: 'rcs-1',
-      date_creation: '2026-06-09T10:00:00',
+      threadId: 'rcs-1',
+      revision: 1,
+      createdAt: '2026-06-09T10:00:00',
       contenu: JSON.stringify({ version: 2, sender: 'Alice', body: 'Bonjour' })
     })
     const items = buildRepaymentTimeline(
@@ -142,29 +144,32 @@ describe('buildRepaymentTimeline', () => {
         sampleActivity({
           id: 12,
           type: 'communication.ok',
-          thread_id: 'mail-1',
-          date_creation: '2026-06-10T12:00:00',
+          threadId: 'mail-1',
+          revision: 3,
+          createdAt: '2026-06-10T12:00:00',
           contenu: JSON.stringify({ version: 2, result: 'read' })
         }),
         sampleActivity({
           id: 11,
           type: 'communication.ok',
-          thread_id: 'mail-1',
-          date_creation: '2026-06-10T11:00:00',
+          threadId: 'mail-1',
+          revision: 2,
+          createdAt: '2026-06-10T11:00:00',
           contenu: JSON.stringify({ version: 2, result: 'delivered' })
         }),
         sampleActivity({
           id: 21,
           type: 'communication.failed',
-          thread_id: 'rcs-1',
-          date_creation: '2026-06-09T11:00:00',
+          threadId: 'rcs-1',
+          revision: 2,
+          createdAt: '2026-06-09T11:00:00',
           contenu: JSON.stringify({ version: 2, reason: 'Destinataire inconnu' })
         }),
         sampleActivity({
           id: 30,
           type: 'communication.failed',
-          thread_id: 'orphan',
-          date_creation: '2026-06-11T11:00:00',
+          threadId: 'orphan',
+          createdAt: '2026-06-11T11:00:00',
           contenu: JSON.stringify({ version: 2, reason: 'Sans origine' })
         }),
         failed,
@@ -183,7 +188,7 @@ describe('buildRepaymentTimeline', () => {
 
   test('merges and sorts DESC by date within the unpaid episode', () => {
     const items = buildRepaymentTimeline(openDebtMovements, [
-      sampleActivity({ id: 10, date_creation: '2026-06-13T10:00:00' })
+      sampleActivity({ id: 10, createdAt: '2026-06-13T10:00:00' })
     ])
 
     expect(items[0]?.source).toBe('activity')
@@ -192,10 +197,10 @@ describe('buildRepaymentTimeline', () => {
 
   test('keeps every note as its own L1 entry by date', () => {
     const items = buildRepaymentTimeline(openDebtMovements, [
-      sampleActivity({ id: 10, date_creation: '2026-06-13T10:00:00' }),
+      sampleActivity({ id: 10, createdAt: '2026-06-13T10:00:00' }),
       sampleActivity({
         id: 11,
-        date_creation: '2026-06-13T11:00:00',
+        createdAt: '2026-06-13T11:00:00',
         contenu: JSON.stringify({ version: 2, text: 'Réponse @amartin' })
       })
     ])
@@ -220,8 +225,8 @@ describe('buildRepaymentTimeline', () => {
       ...openDebtMovements
     ]
     const items = buildRepaymentTimeline(priorSettled, [
-      sampleActivity({ id: 1, date_creation: '2025-01-10T10:00:00' }),
-      sampleActivity({ id: 2, date_creation: '2026-06-10T10:00:00' })
+      sampleActivity({ id: 1, createdAt: '2025-01-10T10:00:00' }),
+      sampleActivity({ id: 2, createdAt: '2026-06-10T10:00:00' })
     ])
 
     expect(items.some((item) => item.id === 'movement:2025-01-05T09:00:00:100')).toBe(false)
@@ -263,7 +268,7 @@ describe('buildRepaymentTimeline', () => {
         id: 9,
         type: 'communication.imported',
         channel: 'email',
-        date_creation: '2026-08-27T12:00:00Z',
+        createdAt: '2026-08-27T12:00:00Z',
         contenu: JSON.stringify({
           version: 2,
           sender: 'Alice',
@@ -406,7 +411,7 @@ describe('buildRepaymentTimeline — ordre chronologique', () => {
 
   test('entrelace une notification ISO et des mouvements à barres obliques', () => {
     const items = buildRepaymentTimeline(movements, [
-      sampleActivity({ id: 10, date_creation: '2024-02-14T10:00:00' })
+      sampleActivity({ id: 10, createdAt: '2024-02-14T10:00:00' })
     ])
 
     expect(items.map((item) => item.id)).toEqual([
@@ -424,7 +429,7 @@ describe('buildRepaymentTimeline open actions', () => {
       sampleActivity({
         id: 20,
         type: 'task.created',
-        thread_id: 'todo-20',
+        threadId: 'todo-20',
         revision: 1,
         contenu: JSON.stringify({
           version: 2,
@@ -439,7 +444,7 @@ describe('buildRepaymentTimeline open actions', () => {
       sampleActivity({
         id: 21,
         type: 'task.completed',
-        thread_id: 'todo-21',
+        threadId: 'todo-21',
         revision: 1,
         contenu: JSON.stringify({
           version: 2,
@@ -458,11 +463,11 @@ describe('buildRepaymentTimeline open actions', () => {
 describe('buildRepaymentTimeline reaction notifications', () => {
   test('hides reaction events from the métier timeline', () => {
     const items = buildRepaymentTimeline(openDebtMovements, [
-      sampleActivity({ id: 10, date_creation: '2026-06-13T10:00:00' }),
+      sampleActivity({ id: 10, createdAt: '2026-06-13T10:00:00' }),
       sampleActivity({
         id: 11,
         type: 'activity.reaction_changed',
-        date_creation: '2026-06-13T11:00:00',
+        createdAt: '2026-06-13T11:00:00',
         contenu: JSON.stringify({
           version: 2,
           source_activity_id: 10,

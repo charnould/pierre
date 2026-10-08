@@ -1,5 +1,5 @@
 import type { ColumnVisibilityState } from '@tanstack/react-table'
-import { ArrowDownUp, FilterX, RefreshCw } from 'lucide-react'
+import { ArrowDownUp, FilterX } from 'lucide-react'
 
 import { Button } from '@/shared/components/ui/button'
 
@@ -10,27 +10,23 @@ interface Props {
   activeColumnIds: RepaymentColumnId[]
   columnVisibility: ColumnVisibilityState
   onToggleColumn: (columnId: RepaymentColumnId, visible: boolean) => void
-  loading: boolean
   hasActiveColumnFilters: boolean
   hasActiveColumnSorting: boolean
   onClearColumnFilters: () => void
   onClearColumnSorting: () => void
-  onReload: () => void
 }
 
 export function RepaymentBucketSectionActions({
   activeColumnIds,
   columnVisibility,
   onToggleColumn,
-  loading,
   hasActiveColumnFilters,
   hasActiveColumnSorting,
   onClearColumnFilters,
-  onClearColumnSorting,
-  onReload
+  onClearColumnSorting
 }: Props) {
   return (
-    <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+    <>
       <RepaymentColumnVisibilityMenu
         activeColumnIds={activeColumnIds}
         columnVisibility={columnVisibility}
@@ -58,11 +54,6 @@ export function RepaymentBucketSectionActions({
         <ArrowDownUp data-icon="inline-start" />
         Effacer les tris
       </Button>
-
-      <Button type="button" variant="outline" size="sm" disabled={loading} onClick={onReload}>
-        <RefreshCw data-icon="inline-start" className={loading ? 'animate-spin' : undefined} />
-        Actualiser
-      </Button>
-    </div>
+    </>
   )
 }

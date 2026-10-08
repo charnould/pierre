@@ -34,6 +34,12 @@ describe('session-tab', () => {
     expect(readStoredTab(s)).toBeNull()
   })
 
+  test('readStoredTab keeps the chat tab', () => {
+    const s = mockStorage()
+    s.setItem(ACTIVE_TAB_STORAGE_KEY, 'chat')
+    expect(readStoredTab(s)).toBe('chat')
+  })
+
   test('writeStoredTab persists workflow tab', () => {
     const s = mockStorage()
     writeStoredTab('tickets', s)

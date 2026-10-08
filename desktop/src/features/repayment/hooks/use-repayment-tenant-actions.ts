@@ -2,22 +2,15 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { ActivityBoostEmoji } from '@/features/activity/lib/activity-boosts'
 import { toast } from '@/shared/components/ui/toast'
-import { buildActionActivity, type ActionDraft } from '@/shared/lib/activities/action-activity'
+import { type ActionDraft, buildActionActivity } from '@/shared/lib/activities/action-activity'
 import { parseEmlFile } from '@/shared/lib/activities/parse-eml'
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
 import type { TimelineRefreshResult } from './use-repayment-tenant-timeline'
 
 export type RepaymentSubmissionKind =
-  | 'note'
-  | 'advancement'
-  | 'action'
-  | 'assignment'
-  | 'email'
-  | 'rcs'
-  | 'eml'
-  | 'tags'
+  'note' | 'advancement' | 'action' | 'assignment' | 'email' | 'rcs' | 'eml' | 'tags'
 
 export type RepaymentDeleteTarget = {
   tenantKey: string
@@ -36,7 +29,7 @@ export function useRepaymentTenantActions(params: {
   tenant: TenantRepaymentRow | null
   userLogin: string
   refreshTimeline: (options?: { force?: boolean }) => Promise<TimelineRefreshResult>
-  applyActivityPatch: (activity: Activite) => void
+  applyActivityPatch: (activity: Activity) => void
 }) {
   const { url, tenant, refreshTimeline, applyActivityPatch } = params
   const tenantKey = tenantKeyOf(tenant)
@@ -237,8 +230,8 @@ export function useRepaymentTenantActions(params: {
           id,
           patch: {
             operation: 'reopen_action',
-            assigne_a: assigneA,
-            date_echeance: dateEcheance
+            assigneA,
+            dateEcheance
           }
         })
         if (!response?.data?.id) return false
@@ -301,8 +294,8 @@ export function useRepaymentTenantActions(params: {
           patch: {
             operation: 'update_action',
             action: values.action,
-            assigne_a: values.assigneA,
-            date_echeance: values.dateEcheance,
+            assigneA: values.assigneA,
+            dateEcheance: values.dateEcheance,
             ...(values.note.trim() ? { note: values.note.trim() } : {})
           }
         })

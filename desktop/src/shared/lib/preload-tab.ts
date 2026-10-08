@@ -3,7 +3,7 @@ import type { Tab } from '@/shared/lib/tabs'
 export function preloadTab(tab: Tab): void {
   switch (tab) {
     case 'chat':
-      void import('@/features/chat')
+      void import('@/features/chat/ChatView')
       return
     case 'tickets':
       void import('@/features/tickets')

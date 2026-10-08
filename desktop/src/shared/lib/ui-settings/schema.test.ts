@@ -15,11 +15,11 @@ import {
   resolveHomeSettings,
   resolveTicketColumnLabel,
   resolveUiSettingsFromRaw,
+  SESSION_WINDOW_MIN_SIZE,
   TICKET_COLUMN_VALUES_DEFAULTS,
   UI_SETTINGS_DEFAULTS,
   UI_SETTINGS_EXAMPLE,
   UPDATES_SPLIT_DEFAULT_LIST,
-  WINDOW_MIN_SIZE,
   WORKFLOW_SPLIT_DEFAULT_CONTEXTE
 } from './schema'
 
@@ -144,8 +144,8 @@ describe('parseUiSettings', () => {
       })
     ).toEqual({
       window: {
-        width: WINDOW_MIN_SIZE.width,
-        height: WINDOW_MIN_SIZE.height,
+        width: SESSION_WINDOW_MIN_SIZE.width,
+        height: SESSION_WINDOW_MIN_SIZE.height,
         x: 11,
         y: -5
       }
@@ -405,8 +405,9 @@ describe('ticket columnValues defaults', () => {
 })
 
 describe('resolveTicketColumnLabel', () => {
-  it('falls back to the SQL column name', () => {
-    expect(resolveTicketColumnLabel('motif')).toBe('motif')
+  it('uses the business dictionary then humanizes an unknown field', () => {
+    expect(resolveTicketColumnLabel('motif')).toBe('Motif')
+    expect(resolveTicketColumnLabel('champ_personnalise')).toBe('Champ personnalise')
   })
 
   it('returns a custom label when configured', () => {
@@ -425,10 +426,11 @@ describe('resolveTicketColumnLabel', () => {
 })
 
 describe('LOGIN_WINDOW_BOUNDS', () => {
-  it('is a compact shell above the window minimum and below the session default', () => {
+  it('stays compact and independent from the connected session minimum', () => {
     expect(LOGIN_WINDOW_BOUNDS.width).toBe(400)
-    expect(LOGIN_WINDOW_BOUNDS.height).toBeGreaterThanOrEqual(WINDOW_MIN_SIZE.height)
+    expect(LOGIN_WINDOW_BOUNDS.width).toBeLessThan(SESSION_WINDOW_MIN_SIZE.width)
+    expect(LOGIN_WINDOW_BOUNDS.height).toBeLessThan(SESSION_WINDOW_MIN_SIZE.height)
     expect(LOGIN_WINDOW_BOUNDS.height).toBeLessThan(DEFAULT_WINDOW_BOUNDS.height)
-    expect(LOGIN_WINDOW_BOUNDS.height).toBe(560)
+    expect(LOGIN_WINDOW_BOUNDS.height).toBe(543)
   })
 })

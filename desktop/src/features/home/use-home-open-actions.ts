@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { pageIsFull } from '@/features/activity/hooks/activity-page'
-import { parseActionActivity, type ActionActivity } from '@/shared/lib/activities/action-activity'
+import { type ActionActivity, parseActionActivity } from '@/shared/lib/activities/action-activity'
 import { createRequestSequencer } from '@/shared/lib/request-sequencer'
-import type { ActiviteListItem, GetActivitiesParams } from '@/shared/types/activites'
+import type { ActivityListItem, GetActivitiesParams } from '@/shared/types/activites'
 
 export const HOME_ACTIONS_POLL_MS = 30_000
 
-function toOpenActions(rows: ActiviteListItem[] | undefined): ActionActivity[] {
+function toOpenActions(rows: ActivityListItem[] | undefined): ActionActivity[] {
   return (rows ?? []).flatMap((row) => {
     const parsed = parseActionActivity(row)
     return parsed?.state === 'open' ? [parsed] : []
@@ -74,7 +74,7 @@ export function useHomeOpenActions({
         lane === 'mine'
           ? {
               url,
-              current_threads: true,
+              currentThreads: true,
               state: 'open',
               assignee: 'me',
               order: 'due_asc',
@@ -83,9 +83,9 @@ export function useHomeOpenActions({
             }
           : {
               url,
-              current_threads: true,
+              currentThreads: true,
               state: 'open',
-              created_by: 'me',
+              createdBy: 'me',
               assignee: 'other',
               order: 'due_asc',
               limit,

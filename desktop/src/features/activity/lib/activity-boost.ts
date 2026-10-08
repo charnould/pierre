@@ -1,6 +1,6 @@
 import type { ActivityBoostEmoji } from '@/features/activity/lib/activity-boosts'
 import { parseActivityAuthor } from '@/shared/lib/timeline/parse-activity-author'
-import { is_activity_meta_type, type Activite, type ActivityPatch } from '@/shared/types/activites'
+import { type Activity, type ActivityPatch, isActivityMetaType } from '@/shared/types/activites'
 
 export function activityActorDestinataire(userLogin: string): string {
   const raw = userLogin.trim().toLowerCase()
@@ -9,10 +9,10 @@ export function activityActorDestinataire(userLogin: string): string {
 }
 
 export function canBoostActivity(
-  activity: Pick<Activite, 'auteur' | 'type'>,
+  activity: Pick<Activity, 'auteur' | 'type'>,
   currentUser: string
 ): boolean {
-  if (is_activity_meta_type(activity.type)) {
+  if (isActivityMetaType(activity.type)) {
     return false
   }
   const author = parseActivityAuthor(activity.auteur)

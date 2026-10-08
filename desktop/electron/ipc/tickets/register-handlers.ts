@@ -1,9 +1,8 @@
 import { ipcMain, session } from 'electron'
 
-import type { Activite } from '../../../src/shared/types/activites'
-import { parse_contenu_json } from '../../../src/shared/types/activites'
+import type { Activity } from '../../../src/shared/types/activites'
+import { parseContentJson } from '../../../src/shared/types/activites'
 import type { GetTicketDraftResult, TicketDraft } from '../../../src/shared/types/ticket-draft'
-import type { PutTicketPayload } from '../../../src/shared/types/tickets'
 import type { TicketsQueryParams } from '../../../src/shared/types/tickets'
 import { netFetch } from '../../lib/net-fetch'
 import { logMainError } from '../../services/logging'
@@ -31,8 +30,8 @@ function ticketSearch(params: TicketsQueryParams): string {
   return search.toString()
 }
 
-const activityToDraft = (activity: Activite): TicketDraft => {
-  const metadata = parse_contenu_json(activity.contenu)
+const activityToDraft = (activity: Activity): TicketDraft => {
+  const metadata = parseContentJson(activity.contenu)
   const edition =
     metadata['edition'] && typeof metadata['edition'] === 'object'
       ? (metadata['edition'] as Record<string, unknown>)
@@ -53,7 +52,7 @@ const activityToDraft = (activity: Activite): TicketDraft => {
     generated_output: stringValue(metadata['contenu_original']),
     generated_reasoning: stringValue(metadata['raisonnement']),
     generated_duration_ms: numberValue(metadata['duree_ms']),
-    generated_at: activity.date_creation,
+    generated_at: activity.createdAt,
     generated_by: stringValue(metadata['genere_par']) ?? activity.auteur,
     automation_id: stringValue(metadata['automation_id']),
     edited_output: edition['par'] == null ? null : stringValue(metadata['contenu']),
@@ -70,17 +69,17 @@ async function fetchTicketDraftActivities(
   partition: string,
   url: string,
   idReclamation: string
-): Promise<Activite[]> {
+): Promise<Activity[]> {
   const search = new URLSearchParams({
     contexte: 'tickets',
     ref: idReclamation,
     limit: '100'
   })
-  const response = await netFetch(`${url}/desktop/activities?${search}`, {
+  const response = await netFetch(`${url}/activities?${search}`, {
     session: session.fromPartition(partition)
   })
   if (!response.ok) return []
-  const body = (await response.json()) as { data?: Activite[] }
+  const body = (await response.json()) as { data?: Activity[] }
   return body.data ?? []
 }
 
@@ -93,7 +92,7 @@ export function registerTicketsHandlers(partition: string): void {
     const ses = session.fromPartition(partition)
     const qs = ticketSearch(params)
     try {
-      const resp = await netFetch(`${url}/desktop/tickets${qs ? `?${qs}` : ''}`, {
+      const resp = await netFetch(`${url}/tickets${qs ? `?${qs}` : ''}`, {
         session: ses
       })
       if (!resp.ok) return null
@@ -108,7 +107,7 @@ export function registerTicketsHandlers(partition: string): void {
     const ses = session.fromPartition(partition)
     const qs = ticketSearch(params)
     try {
-      const resp = await netFetch(`${params.url}/desktop/tickets/meta${qs ? `?${qs}` : ''}`, {
+      const resp = await netFetch(`${params.url}/tickets/meta${qs ? `?${qs}` : ''}`, {
         session: ses
       })
       if (!resp.ok) return null
@@ -124,7 +123,7 @@ export function registerTicketsHandlers(partition: string): void {
     const search = new URLSearchParams({ column })
     if (q) search.set('q', q)
     try {
-      const resp = await netFetch(`${url}/desktop/tickets/facets?${search.toString()}`, {
+      const resp = await netFetch(`${url}/tickets/facets?${search.toString()}`, {
         session: ses
       })
       if (!resp.ok) return null
@@ -134,27 +133,6 @@ export function registerTicketsHandlers(partition: string): void {
       return null
     }
   })
-
-  ipcMain.handle(
-    IpcChannel.tickets.putTicket,
-    async (_, params: { url: string } & PutTicketPayload) => {
-      const { url, ...body } = params
-      const ses = session.fromPartition(partition)
-      try {
-        const resp = await netFetch(`${url}/desktop/tickets`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-          session: ses
-        })
-        if (!resp.ok) return null
-        return await resp.json()
-      } catch (error) {
-        logMainError('put-ticket', error)
-        return null
-      }
-    }
-  )
 
   ipcMain.handle(
     IpcChannel.tickets.getDraft,

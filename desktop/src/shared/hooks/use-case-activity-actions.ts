@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 
 import { toast } from '@/shared/components/ui/toast'
-import { buildActionActivity, type ActionDraft } from '@/shared/lib/activities/action-activity'
+import { type ActionDraft, buildActionActivity } from '@/shared/lib/activities/action-activity'
 import {
   buildCaseAssignmentActivity,
   buildCaseBucketChangeActivity,
@@ -71,14 +71,14 @@ export function useCaseActivityActions(params: {
         | {
             operation: 'update_action'
             action: string
-            assigne_a: string
-            date_echeance: string
+            assigneA: string
+            dateEcheance: string
             note?: string
           }
         | {
             operation: 'reopen_action'
-            assigne_a: string
-            date_echeance: string
+            assigneA: string
+            dateEcheance: string
             note?: string
           }
     ) =>

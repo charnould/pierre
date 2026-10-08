@@ -3,9 +3,9 @@ import { useMemo, useState } from 'react'
 import { matchesAutomationSearch } from '@/features/automations/lib/automation-list-display'
 import type { Automation } from '@/features/automations/lib/automation-types'
 import {
+  type AutomationSortKey,
   DEFAULT_AUTOMATION_SORT,
-  sortAutomations,
-  type AutomationSortKey
+  sortAutomations
 } from '@/features/automations/lib/sort-automations'
 
 export function useAutomationsListFilters(automations: Automation[]) {

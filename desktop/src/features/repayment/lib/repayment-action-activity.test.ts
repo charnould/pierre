@@ -10,7 +10,7 @@ import {
   parseActionActivity,
   previousTodoContent
 } from '@/shared/lib/activities/action-activity'
-import { parse_task_content, type Activite, type ActivityType } from '@/shared/types/activites'
+import { type Activity, type ActivityType, parseTaskContent } from '@/shared/types/activites'
 
 function taskRow({
   id,
@@ -30,10 +30,10 @@ function taskRow({
   revision: number
   dueDate?: string
   assignee?: string
-}): Activite {
+}): Activity {
   return {
     id,
-    date_creation: `2026-08-${String(20 + id).padStart(2, '0')}T10:00:00`,
+    createdAt: `2026-08-${String(20 + id).padStart(2, '0')}T10:00:00`,
     rattachement: 'repayment:LOC-1',
     auteur: 'user:charles@example.org',
     id_client: 'CLI-1',
@@ -51,7 +51,7 @@ function taskRow({
         ...(dueDate ? { due_date: dueDate } : {})
       }
     }),
-    thread_id: threadId,
+    threadId: threadId,
     revision
   }
 }
@@ -98,7 +98,7 @@ describe('action-activity v2', () => {
     })
 
     expect(activity.type).toBe('task.created')
-    expect(parse_task_content(activity.contenu ?? '')).toEqual({
+    expect(parseTaskContent(activity.contenu ?? '')).toEqual({
       version: 2,
       task: {
         title: 'Contacter le garant',
@@ -117,7 +117,7 @@ describe('action-activity v2', () => {
       resultat: 'Garant joint'
     })
     expect(activity.type).toBe('task.completed')
-    expect(parse_task_content(activity.contenu ?? '')).toEqual({
+    expect(parseTaskContent(activity.contenu ?? '')).toEqual({
       version: 2,
       task: { title: 'Contacter le garant', state: 'completed' },
       result: 'Garant joint'
@@ -198,7 +198,7 @@ describe('action-activity v2', () => {
     })
     const index = indexTodoRevisions([created, updated])
 
-    expect(previousTodoContent(index, 'task-5', 2)).toEqual(parse_task_content(created.contenu))
+    expect(previousTodoContent(index, 'task-5', 2)).toEqual(parseTaskContent(created.contenu))
     expect(previousTodoContent(index, 'task-5', 1)).toBeNull()
   })
 
@@ -211,6 +211,6 @@ describe('action-activity v2', () => {
       threadId: 'task-7',
       revision: 2
     })
-    expect(actionTimelineDate(row)).toBe(row.date_creation)
+    expect(actionTimelineDate(row)).toBe(row.createdAt)
   })
 })

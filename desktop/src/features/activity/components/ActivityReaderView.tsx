@@ -81,7 +81,7 @@ export function ActivityReaderView({ target }: Props) {
                 <UpdatesEntryMeta date={target.date} />
                 {readerActions}
               </div>
-              <h1 className="pierre-display m-0 text-balance">{target.title}</h1>
+              <h1 className="m-0 text-xl leading-6 font-medium text-balance">{target.title}</h1>
             </div>
           </header>
 

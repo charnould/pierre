@@ -42,9 +42,8 @@ export function previewChannelTotals(rows: PreviewRow[]): Partial<Record<BulkMed
   return totals
 }
 
-export function formatPreviewChannelTotals(rows: PreviewRow[]): string {
-  const totals = previewChannelTotals(rows)
-  return Object.entries(totals)
+export function formatPreviewChannelTotals(channels: Partial<Record<BulkMedium, number>>): string {
+  return Object.entries(channels)
     .map(([medium, total]) => `${MEDIUM_LABELS[medium as BulkMedium]} : ${total}`)
     .join(' · ')
 }

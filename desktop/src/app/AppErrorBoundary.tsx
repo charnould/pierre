@@ -1,6 +1,6 @@
+import { CircleAlert } from 'lucide-react'
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 
-import { CartoonTerminalErrorLine } from '@/shared/components/icons/koboyo-empty'
 import { Button } from '@/shared/components/ui/button'
 import {
   Empty,
@@ -41,12 +41,12 @@ export class AppErrorBoundary extends Component<Props, State> {
         <Empty className="min-h-60">
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <CartoonTerminalErrorLine />
+              <CircleAlert />
             </EmptyMedia>
             <EmptyTitle>Une erreur est survenue</EmptyTitle>
             <EmptyDescription>
-              L’affichage s’est interrompu. Réessayez, ou relancez l’application si le problème
-              persiste.
+              {this.state.error.message ||
+                'L’affichage s’est interrompu. Réessayez, ou relancez l’application si le problème persiste.'}
             </EmptyDescription>
           </EmptyHeader>
           <Button type="button" variant="outline" onClick={this.resetErrorBoundary}>

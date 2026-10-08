@@ -1,4 +1,4 @@
-import type { ActiviteListItem } from './activites'
+import type { ActivityListItem } from './activites'
 
 export type LedgerRow = Record<string, unknown>
 
@@ -16,7 +16,7 @@ export type LedgerQueryParams = {
   limit?: number
   offset?: number
   sort?: string
-  /** Forwarded as repeated query params to `GET /desktop/ledger`. */
+  /** Forwarded as repeated query params to `GET /ledger`. */
   filters?: Record<string, string[]>
 }
 
@@ -44,8 +44,8 @@ export type RepaymentTimelineQueryParams = {
 export type RepaymentTimelineResponse = {
   data: {
     movements: LedgerMovementRow[]
-    notifications: ActiviteListItem[]
-    openActionEvents: ActiviteListItem[]
+    notifications: ActivityListItem[]
+    openActionEvents: ActivityListItem[]
   }
   errors: {
     movements: boolean

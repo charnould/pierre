@@ -1,4 +1,13 @@
-import { useState, useEffect, useCallback, useRef, useMemo, startTransition } from 'react'
+import {
+  lazy,
+  startTransition,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react'
 
 import { AgentIdentityProvider, DEFAULT_AGENT_NAME } from '@/contexts/AgentIdentityContext'
 import {
@@ -13,6 +22,7 @@ import { ActivityTasksTrigger } from '@/features/activity/components/ActivityTas
 import { useActivityFeed } from '@/features/activity/hooks/useActivityFeed'
 import { ActivityRailProvider, useActivityRail } from '@/features/activity/lib/ActivityRailContext'
 import { restoreSession } from '@/features/auth'
+import { ChatWindowTrigger } from '@/features/chat/components/ChatWindowTrigger'
 import { TasksPanel } from '@/features/home/TasksPanel'
 import { useHomeOpenActions } from '@/features/home/use-home-open-actions'
 import { FindInPageBar } from '@/shared/components/find-in-page/FindInPageBar'
@@ -35,6 +45,10 @@ import type { Settings } from '@/shared/types'
 import type { UserPrincipal } from '@/shared/types/users'
 
 import { TabWorkspace } from './TabWorkspace'
+
+const ChatWindow = lazy(() =>
+  import('@/features/chat').then((module) => ({ default: module.ChatWindow }))
+)
 
 interface AppContentProps {
   activeTab: Tab
@@ -62,6 +76,7 @@ function AppContent({
   setUser
 }: AppContentProps) {
   const { navigate } = useNavigationHistory()
+  const [chatOpen, setChatOpen] = useState(false)
 
   const handleTabChange = useCallback(
     (tab: Tab) => {
@@ -102,6 +117,7 @@ function AppContent({
   )
 
   const endSession = useCallback(async () => {
+    setChatOpen(false)
     resetCustomization()
     setAgentName(DEFAULT_AGENT_NAME)
     setUser(null)
@@ -116,6 +132,7 @@ function AppContent({
         onTabChange('home')
         navigate({ tab: 'home' }, { replace: true })
       } else {
+        setChatOpen(false)
         resetCustomization()
         setAgentName(DEFAULT_AGENT_NAME)
         setIsLoggedIn(false)
@@ -208,7 +225,20 @@ function AppContent({
         onTabChange={handleTabChange}
         notifications={<ActivityNotificationsTrigger unreadCount={feed.unreadCount} />}
         tasks={<ActivityTasksTrigger />}
+        chat={
+          <ChatWindowTrigger open={chatOpen} onToggle={() => setChatOpen((current) => !current)} />
+        }
       />
+      {user ? (
+        <Suspense fallback={null}>
+          <ChatWindow
+            open={chatOpen}
+            agentName={agentName}
+            url={settings.url}
+            onClose={() => setChatOpen(false)}
+          />
+        </Suspense>
+      ) : null}
       <ActivityPanel feed={feed} url={settings.url} userLogin={userLogin} />
       <TasksPanel
         mine={mine}
@@ -234,7 +264,6 @@ function AppContent({
           onCurrentUserPasswordChange={endSession}
           onUserChange={setUser}
           onLogout={() => void endSession()}
-          onSettingsChange={handleSettingsChange}
           user={user}
           mine={mine}
           delegated={delegated}

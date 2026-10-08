@@ -1,5 +1,7 @@
 import type { TicketRow } from '@/shared/types'
 
+import { hierarchyLeaf } from '../../../../shared/hierarchy'
+
 /** Scalar values commonly stored in SQLite ticket cells. */
 export type TicketCellValue = string | number | boolean | null
 
@@ -24,6 +26,11 @@ export function getTicketCellText(row: TicketRow, column: string): string {
   const value = getTicketCell(row, column)
   if (value === null) return ''
   return String(value).trim()
+}
+
+/** Most specific stored segment of a `_hierarchie` column. */
+export function getTicketHierarchyLabel(row: TicketRow, column: string): string {
+  return hierarchyLeaf(getTicketCellText(row, column)) ?? ''
 }
 
 /**

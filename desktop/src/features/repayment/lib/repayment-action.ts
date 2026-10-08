@@ -1,22 +1,9 @@
 import { repaymentSetup } from '@/shared/lib/instance-customization'
 import { generateColumnValueStyles } from '@/shared/lib/ui-settings/column-value-palette'
 import {
-  normalizeColumnValueKey,
-  parseHexColor,
-  type ColumnValueStyle
+  type ColumnValueStyle,
+  normalizeColumnValueKey
 } from '@/shared/lib/ui-settings/tickets-table'
-
-type RawRepaymentAction =
-  | string
-  | {
-      label: string
-      color?: { bgColor: string; textColor: string }
-    }
-
-type RawRepaymentActions = {
-  dossier: readonly RawRepaymentAction[]
-  bulk_operations: readonly RawRepaymentAction[]
-}
 
 export type RepaymentActionOption = {
   id: string
@@ -24,54 +11,27 @@ export type RepaymentActionOption = {
   color: ColumnValueStyle
 }
 
-function parseConfigColor(
-  raw: { bgColor: string; textColor: string } | undefined
-): ColumnValueStyle | undefined {
-  if (!raw) return undefined
-  const bgColor = parseHexColor(raw.bgColor)
-  const textColor = parseHexColor(raw.textColor)
-  if (!bgColor || !textColor) return undefined
-  return { bgColor, textColor }
-}
+function buildActionOptions(labels: readonly string[]): RepaymentActionOption[] {
+  const names = [...labels]
+  const autoColors = generateColumnValueStyles(names, { random: () => 0.42 })
 
-function normalizeRawAction(entry: RawRepaymentAction): {
-  label: string
-  color?: { bgColor: string; textColor: string }
-} {
-  return typeof entry === 'string' ? { label: entry } : entry
-}
-
-function buildActionOptions(raw: readonly RawRepaymentAction[]): RepaymentActionOption[] {
-  const entries = raw.map(normalizeRawAction)
-  const autoColors = generateColumnValueStyles(
-    entries.map((entry) => entry.label),
-    { random: () => 0.42 }
-  )
-
-  return entries.map((entry) => {
-    const colorKey = normalizeColumnValueKey(entry.label)
-    const color = parseConfigColor(entry.color) ??
-      autoColors[colorKey] ??
-      autoColors[entry.label] ?? { bgColor: '#E8E8E8', textColor: '#333333' }
-
+  return labels.map((label) => {
+    const colorKey = normalizeColumnValueKey(label)
     return {
-      id: entry.label,
-      label: entry.label,
-      color
+      id: label,
+      label,
+      color: autoColors[colorKey] ??
+        autoColors[label] ?? { bgColor: '#E8E8E8', textColor: '#333333' }
     }
   })
 }
 
-function rawActions(): RawRepaymentActions {
-  return repaymentSetup().actions as RawRepaymentActions
-}
-
 export function repaymentDossierActionOptions(): RepaymentActionOption[] {
-  return buildActionOptions(rawActions().dossier)
+  return buildActionOptions(repaymentSetup().caseActions)
 }
 
 export function repaymentBulkActionOptions(): RepaymentActionOption[] {
-  return buildActionOptions(rawActions().bulk_operations)
+  return buildActionOptions(repaymentSetup().batchActions)
 }
 
 export function repaymentActionOptions(): RepaymentActionOption[] {

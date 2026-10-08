@@ -2,13 +2,14 @@ import { beforeEach, describe, expect, test } from 'bun:test'
 
 import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 
+import { RECLASSIFY_PHASE } from '../../../../../shared/repayment-phases'
 import type { TenantRepaymentRow } from './classify-tenants'
 import { groupRepaymentRowsByBucket } from './group-repayment-rows-by-bucket'
 import {
-  CLIENTS_PARTIS_BUCKET_ID,
+  departedRepaymentPhase,
+  type RepaymentBucketId,
   repaymentBucketIds,
-  resolveBucketForTenantRow,
-  type RepaymentBucketId
+  resolveBucketForTenantRow
 } from './repayment-bucket'
 
 function row(id: string, overrides: Partial<TenantRepaymentRow> = {}): TenantRepaymentRow {
@@ -29,23 +30,32 @@ describe('groupRepaymentRowsByBucket', () => {
     const getBucket = (r: TenantRepaymentRow): RepaymentBucketId =>
       resolveBucketForTenantRow(
         r,
-        r.id_locataire === 'a' ? 'amiable' : r.id_locataire === 'c' ? 'contentieux' : 'non_traites'
+        r.id_locataire === 'a'
+          ? 'Recouvrement amiable'
+          : r.id_locataire === 'c'
+            ? 'Contentieux'
+            : r.id_locataire === 'x'
+              ? 'ancienne phase'
+              : 'Non traités'
       )
 
     const sections = groupRepaymentRowsByBucket(
-      [row('a'), row('b'), row('c'), row('d', { statut: 'ex-client' })],
+      [row('a'), row('b'), row('c'), row('d', { statut: 'ex-client' }), row('x')],
       getBucket
     )
 
-    expect(sections.map((s) => s.bucket)).toEqual(repaymentBucketIds())
-    expect(sections.find((s) => s.bucket === 'amiable')?.rows.map((r) => r.id_locataire)).toEqual([
-      'a'
-    ])
+    expect(sections.map((s) => s.bucket)).toEqual([...repaymentBucketIds(), RECLASSIFY_PHASE])
     expect(
-      sections.find((s) => s.bucket === 'non_traites')?.rows.map((r) => r.id_locataire)
+      sections.find((s) => s.bucket === 'Recouvrement amiable')?.rows.map((r) => r.id_locataire)
+    ).toEqual(['a'])
+    expect(
+      sections.find((s) => s.bucket === 'Non traités')?.rows.map((r) => r.id_locataire)
     ).toEqual(['b'])
     expect(
-      sections.find((s) => s.bucket === CLIENTS_PARTIS_BUCKET_ID)?.rows.map((r) => r.id_locataire)
+      sections.find((s) => s.bucket === departedRepaymentPhase())?.rows.map((r) => r.id_locataire)
     ).toEqual(['d'])
+    expect(
+      sections.find((s) => s.bucket === RECLASSIFY_PHASE)?.rows.map((r) => r.id_locataire)
+    ).toEqual(['x'])
   })
 })

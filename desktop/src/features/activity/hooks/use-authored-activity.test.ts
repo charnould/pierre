@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'bun:test'
 
-import type { ActiviteListItem } from '@/shared/types/activites'
+import type { ActivityListItem } from '@/shared/types/activites'
 
 import { mapAuthoredActivityRows } from './use-authored-activity'
 
-function row(overrides: Partial<ActiviteListItem> = {}): ActiviteListItem {
+function row(overrides: Partial<ActivityListItem> = {}): ActivityListItem {
   return {
     id: 1,
-    date_creation: '2026-08-21T10:00:00',
+    createdAt: '2026-08-21T10:00:00',
     rattachement: 'tickets:REC-1',
     auteur: 'user:alice@example.test',
     id_client: null,

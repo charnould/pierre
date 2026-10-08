@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 
 import { isTypingInField } from '@/features/workflow/lib/workflow-keyboard'
 import {
+  hasOpenChatWindow,
   hasOpenDialog,
   hasOpenFindInPage,
   shouldNavigateHomeOnEscape
@@ -26,7 +27,8 @@ export function useAppEscapeHome(options: {
           isLoggedIn,
           isTypingInField: typing,
           hasOpenDialog: hasOpenDialog(),
-          hasOpenFindInPage: hasOpenFindInPage()
+          hasOpenFindInPage: hasOpenFindInPage(),
+          hasOpenChatWindow: hasOpenChatWindow()
         })
       ) {
         return

@@ -29,7 +29,7 @@ describe('UserIdentity', () => {
       avatarVersion: 0
     }
     globalThis.window = {
-      api: { getUsers: async () => ({ users: [orgUser] }) }
+      api: { getUsers: async () => ({ data: [orgUser] }) }
     } as unknown as Window & typeof globalThis
     await fetchOrgUsers('https://pierre.test')
 

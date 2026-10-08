@@ -9,10 +9,7 @@ import { MentionText } from '@/shared/components/inspector/mention-text'
 import { TimelineActorAvatar } from '@/shared/components/timeline/timeline-actor-avatar'
 import { Button } from '@/shared/components/ui/button'
 import { useOrgUsersVersion } from '@/shared/hooks/useUserAvatar'
-import {
-  formatActivityNotificationDateline,
-  formatActivityNotificationTime
-} from '@/shared/lib/timeline/activity-notification-date'
+import { formatActivityNotificationDateline } from '@/shared/lib/timeline/activity-notification-date'
 import type { ParsedActivityAuthor } from '@/shared/lib/timeline/parse-activity-author'
 import { cn } from '@/shared/lib/utils'
 
@@ -20,7 +17,6 @@ interface Props {
   item: ActivityNotificationItem
   routineName?: string
   showContext?: boolean
-  timeline?: boolean
   onOpen: (item: ActivityNotificationItem) => void
   onMarkUnread: (item: ActivityNotificationItem) => void
 }
@@ -39,7 +35,6 @@ export function ActivityNotificationRow({
   item,
   routineName,
   showContext = true,
-  timeline = false,
   onOpen,
   onMarkUnread
 }: Props) {
@@ -52,13 +47,7 @@ export function ActivityNotificationRow({
   const context = activityRowContextLabel(item, routineName)
   const title = isActivity ? item.body : showContext ? context : sender
   const preview = (isActivity ? (item.detail ?? '') : item.body).trim()
-  const meta = isActivity
-    ? [item.moduleLabel, item.ref].filter(Boolean).join(' · ')
-    : timeline
-      ? item.moduleLabel
-      : showContext
-        ? sender
-        : item.moduleLabel
+  const avatar = <TimelineActorAvatar actor={actorForItem(item, sender)} className="size-5" />
 
   function handleKeyDown(event: KeyboardEvent<HTMLLIElement>) {
     if (!isOpenable || (event.key !== 'Enter' && event.key !== ' ')) return
@@ -76,90 +65,65 @@ export function ActivityNotificationRow({
       role={isOpenable ? 'button' : undefined}
       tabIndex={isOpenable ? 0 : undefined}
       className={cn(
-        'group relative min-w-0',
-        !timeline && 'border-b border-border/60',
+        'group border-border/80 min-w-0 rounded-md border',
         isOpenable &&
-          'hover:bg-muted focus-visible:bg-muted cursor-pointer focus-visible:ring-1 focus-visible:ring-ring/40 focus-visible:outline-none'
+          'hover:bg-muted focus-visible:bg-muted focus-visible:ring-ring/20 cursor-pointer focus-visible:ring-2 focus-visible:outline-none'
       )}
       onClick={() => {
         if (isOpenable) onOpen(item)
       }}
       onKeyDown={handleKeyDown}
     >
-      <div
-        className={cn(
-          'min-w-0 items-start gap-4 px-4 py-2',
-          timeline ? 'grid grid-cols-[3.5rem_2.5rem_minmax(0,1fr)]' : 'flex'
-        )}
-      >
-        {timeline ? (
-          <time
-            className="text-muted-foreground pt-1 text-start text-xs leading-4 tabular-nums"
-            dateTime={item.createdAt}
-          >
-            {formatActivityNotificationTime(item.createdAt)}
-          </time>
-        ) : null}
-        <TimelineActorAvatar
-          actor={actorForItem(item, sender)}
-          className={timeline ? 'relative z-10' : undefined}
-        />
-        <div className="min-w-0 flex-1 text-start">
+      <div className="flex min-w-0 items-start gap-2 px-3 py-2">
+        <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1 text-start">
           {isNotification ? <span className="sr-only">{isUnread ? 'Non lue' : 'Lue'}</span> : null}
-          <p
-            className={
-              isActivity
-                ? 'text-foreground min-w-0 text-sm leading-5 font-medium whitespace-pre-wrap'
-                : 'text-foreground min-w-0 truncate text-sm leading-5 font-medium'
-            }
-          >
-            {title}
-          </p>
+          <div className="min-w-0">
+            <p
+              className={cn(
+                'min-w-0 text-sm leading-4 font-medium',
+                isNotification && item.isRead ? 'text-muted-foreground' : 'text-foreground',
+                isActivity ? 'whitespace-pre-wrap' : 'truncate'
+              )}
+            >
+              {title}
+            </p>
+            <p className="text-muted-foreground flex min-w-0 items-baseline text-xs leading-4">
+              <span className="min-w-0 truncate tabular-nums">
+                <time dateTime={item.createdAt}>
+                  {formatActivityNotificationDateline(item.createdAt)}
+                </time>
+                <span className="whitespace-pre"> · </span>
+                {sender}
+              </span>
+              {item.boostEmoji ? (
+                <span className="shrink-0 whitespace-pre" aria-label="Boosté">
+                  {` ${item.boostEmoji}`}
+                </span>
+              ) : null}
+            </p>
+          </div>
+          {isNotification && item.isRead ? (
+            <span className="ease-pierre-out col-start-2 row-start-1 opacity-0 transition-opacity duration-160 focus-within:opacity-100 [@media(hover:hover)_and_(pointer:fine)]:group-hover:opacity-100">
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                aria-label="Marquer comme non lue"
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={handleMarkUnread}
+              >
+                Non lu
+              </Button>
+            </span>
+          ) : null}
           {preview ? (
-            <p className="text-foreground mt-1 text-xs leading-4 whitespace-pre-wrap">
+            <p className="text-muted-foreground col-span-2 line-clamp-2 font-serif text-sm leading-4.75 font-[350]">
               <MentionText compact inline text={preview} mentionVariant="activityRecipient" />
             </p>
           ) : null}
-          <p className="text-muted-foreground mt-1 flex min-w-0 items-baseline text-xs leading-4">
-            {timeline ? null : (
-              <>
-                <time className="shrink-0 whitespace-nowrap tabular-nums" dateTime={item.createdAt}>
-                  {formatActivityNotificationDateline(item.createdAt)}
-                </time>
-                <span className="shrink-0 whitespace-pre"> · </span>
-              </>
-            )}
-            <span className="min-w-0 truncate">{meta}</span>
-            {item.boostEmoji ? (
-              <span className="shrink-0 whitespace-pre" aria-label="Boosté">
-                {` ${item.boostEmoji}`}
-              </span>
-            ) : null}
-          </p>
         </div>
+        {avatar}
       </div>
-
-      {isNotification && item.isRead ? (
-        <div
-          aria-hidden
-          data-read-veil
-          className="activity-read-veil bg-background/70 pointer-events-none absolute inset-0"
-        />
-      ) : null}
-
-      {isNotification && item.isRead ? (
-        <Button
-          type="button"
-          variant="ghost"
-          size="xs"
-          className="absolute top-2 right-4 z-10 opacity-0 transition-opacity duration-160 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:opacity-100 focus-visible:opacity-100"
-          aria-label="Marquer comme non lue"
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={handleMarkUnread}
-        >
-          Non lu
-        </Button>
-      ) : null}
     </li>
   )
 }

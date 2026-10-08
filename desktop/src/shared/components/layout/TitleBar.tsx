@@ -1,4 +1,4 @@
-import { FileQuestionMark } from 'lucide-react'
+import { CircleQuestionMark, CircleUserRound, LayoutDashboard, Settings } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { Button } from '@/shared/components/ui/button'
@@ -14,11 +14,18 @@ const USER_MANUAL_URL =
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPod|iPad/i.test(navigator.platform)
 
+const TITLE_BAR_ICONS = {
+  home: LayoutDashboard,
+  administration: Settings,
+  settings: CircleUserRound
+} as const
+
 interface Props {
   activeTab: Tab
   user: UserPrincipal | null
   notifications: ReactNode
   tasks: ReactNode
+  chat: ReactNode
   onTabChange: (tab: Tab) => void
 }
 
@@ -32,7 +39,7 @@ function TitleBarTabButton({
   onTabChange: (tab: Tab) => void
 }) {
   const identity = PANEL_IDENTITY[tab]
-  const Icon = identity.icon
+  const Icon = TITLE_BAR_ICONS[tab]
 
   return (
     <Tooltip>
@@ -60,46 +67,51 @@ function TitleBarTabButton({
 /**
  * One cluster, opposite native window controls (trailing on mac, leading elsewhere).
  */
-export function TitleBar({ activeTab, user, notifications, tasks, onTabChange }: Props) {
+export function TitleBar({ activeTab, user, notifications, tasks, chat, onTabChange }: Props) {
   return (
     <header
       className="drag bg-background border-border relative z-20 flex h-(--titlebar-height) w-full shrink-0 items-center border-b"
       data-pierre-titlebar=""
     >
       {user ? (
-        <div className={cn('flex shrink-0 items-center', isMac && 'ms-auto')}>
-          <TitleBarTabButton tab="home" active={activeTab === 'home'} onTabChange={onTabChange} />
-          {tasks}
-          {notifications}
-          <TitleBarTabButton
-            tab="settings"
-            active={activeTab === 'settings'}
-            onTabChange={onTabChange}
-          />
-          {user.isAdministrator ? (
+        <div className={cn('flex shrink-0 items-center gap-2', isMac && 'ms-auto')}>
+          <div className="flex items-center">
+            <TitleBarTabButton tab="home" active={activeTab === 'home'} onTabChange={onTabChange} />
+            {tasks}
+            {notifications}
+            {chat}
+          </div>
+          <div className="flex items-center">
             <TitleBarTabButton
-              tab="administration"
-              active={activeTab === 'administration'}
+              tab="settings"
+              active={activeTab === 'settings'}
               onTabChange={onTabChange}
             />
-          ) : null}
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  className="no-drag"
-                  aria-label="Manuel-utilisateur"
-                  onClick={() => void window.api.openExternal(USER_MANUAL_URL)}
-                />
-              }
-            >
-              <FileQuestionMark />
-            </TooltipTrigger>
-            <TooltipContent side="bottom">Manuel-utilisateur</TooltipContent>
-          </Tooltip>
+            {user.isAdministrator ? (
+              <TitleBarTabButton
+                tab="administration"
+                active={activeTab === 'administration'}
+                onTabChange={onTabChange}
+              />
+            ) : null}
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="no-drag"
+                    aria-label="Manuel"
+                    onClick={() => void window.api.openExternal(USER_MANUAL_URL)}
+                  />
+                }
+              >
+                <CircleQuestionMark />
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Manuel</TooltipContent>
+            </Tooltip>
+          </div>
         </div>
       ) : null}
     </header>

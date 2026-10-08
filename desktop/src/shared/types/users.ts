@@ -11,7 +11,7 @@ export type OrgUser = {
 }
 
 export type UsersListResponse = {
-  users: OrgUser[]
+  data: OrgUser[]
 }
 
 export type UserPrincipal = {
@@ -19,6 +19,7 @@ export type UserPrincipal = {
   isAdministrator: boolean
   moduleIds: BusinessModuleId[]
   chatbotIds: string[]
+  preferredName: string | null
 }
 
 export type AdminUserProfile = {
@@ -28,7 +29,7 @@ export type AdminUserProfile = {
   chatbotIds: string[]
 }
 
-export type AdminUser = UserPrincipal & { profileId: string | null }
+export type AdminUser = Omit<UserPrincipal, 'preferredName'> & { profileId: string | null }
 
 export type AdminUsersData = {
   users: AdminUser[]
@@ -73,8 +74,7 @@ export type AdminUserMutationResponse =
 export type DeleteAdminUserResponse = { data: { email: string } } | AdminApiError
 
 export type ImportAdminUsersResponse =
-  | { data: { created: number; updated: number } }
-  | AdminApiError
+  { data: { created: number; updated: number } } | AdminApiError
 
 export type SaveAdminUserProfilePayload = {
   url: string
@@ -89,21 +89,22 @@ export type PatchAdminUserProfilePayload = Partial<Omit<SaveAdminUserProfilePayl
 }
 
 export type AdminUserProfileMutationResponse =
-  | { data: { profile: AdminUserProfile } }
-  | AdminApiError
+  { data: { profile: AdminUserProfile } } | AdminApiError
 
 export type DeleteAdminUserProfileResponse = { data: { id: string } } | AdminApiError
 
 export type PatchMyPreferencesPayload = {
   url: string
   avatar?: null
-  display_name?: string | null
+  displayName?: string | null
+  preferredName?: string | null
 }
 
 export type PatchMyPreferencesResponse = {
   data: {
     hasAvatar: boolean
     displayName: string
+    preferredName: string | null
   }
 }
 

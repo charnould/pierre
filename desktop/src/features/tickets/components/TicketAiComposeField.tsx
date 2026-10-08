@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react'
 
 import {
+  type AgentWorkPart,
   AgentWorkTrace,
-  GeneratedMarkdown,
-  type AgentWorkPart
+  GeneratedMarkdown
 } from '@/shared/components/AgentWorkTrace'
 import { MentionTextarea } from '@/shared/components/inspector/mention-textarea'
 import { cn } from '@/shared/lib/utils'

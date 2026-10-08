@@ -23,18 +23,14 @@ describe('forge config release invariants', () => {
     expect(zip?.platforms).not.toContain('win32')
   })
 
-  it('externalises only what the packaged app can still resolve', async () => {
+  it('prunes node_modules from the packaged app', () => {
     // Forge ships no node_modules, so anything left external in the main bundle
     // is a MODULE_NOT_FOUND at startup. Only electron survives, being supplied
-    // by the runtime itself.
+    // by the runtime itself. The bundle test checks that external.
     const prunesNodeModules = forgeConfig.packagerConfig.ignore.some((pattern) =>
-      pattern.test('/node_modules/oxfmt/index.js')
+      pattern.test('/node_modules/electron/index.js')
     )
     expect(prunesNodeModules).toBe(true)
-
-    const viteConfig = (await import('../electron.vite.config.ts')).default
-
-    expect(viteConfig.main?.build?.rollupOptions?.external).toEqual(['electron'])
   })
 
   it('declares the desktop package directory for update.electronjs.org', () => {

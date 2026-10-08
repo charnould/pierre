@@ -3,15 +3,14 @@ import {
   ClipboardList,
   FolderKanban,
   ListTodo,
+  type LucideIcon,
   MessageSquare,
   Send,
   Tag,
   Upload,
-  UserPlus,
-  type LucideIcon
+  UserPlus
 } from 'lucide-react'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 
 import type { AgentWorkPart } from '@/shared/components/AgentWorkTrace'
 import { ActionPicker } from '@/shared/components/inspector/action-picker'
@@ -32,18 +31,17 @@ import { toLocalIsoDate } from '@/shared/components/ui/date-picker'
 import type { ActionDraft } from '@/shared/lib/activities/action-activity'
 import { readExternalApplication } from '@/shared/lib/external-application'
 import { ticketsSetup } from '@/shared/lib/instance-customization'
-import { getTicketCellText } from '@/shared/lib/ticket-row'
-import { composePresenceProps } from '@/shared/lib/timeline/compose-motion'
+import { getTicketCellText, getTicketHierarchyLabel } from '@/shared/lib/ticket-row'
 import { cn } from '@/shared/lib/utils'
 import type { TicketRow } from '@/shared/types'
 import type { OrgUser } from '@/shared/types/users'
 
 import type { RcsComposeValue } from '../../../../../shared/rcs-message'
-import { getTicketBucketMeta, ticketBucketOptions, type TicketBucketId } from '../lib/ticket-bucket'
+import { getTicketBucketMeta, type TicketBucketId, ticketBucketOptions } from '../lib/ticket-bucket'
 import { ticketTagOptions } from '../lib/ticket-tags'
 import type { TicketComposeMode } from '../lib/use-tickets-view-data'
 import { TicketCellValue } from './TicketCellValue'
-import { TicketTenantReplyDraft, type TicketReplyFormat } from './TicketTenantReplyDraft'
+import { type TicketReplyFormat, TicketTenantReplyDraft } from './TicketTenantReplyDraft'
 import { TicketTimelineCommentDraft } from './TicketTimelineCommentDraft'
 import { TicketTimelineSummarizeDraft } from './TicketTimelineSummarizeDraft'
 
@@ -160,7 +158,7 @@ export function TicketSummaryCard({
   const created = getTicketCellText(ticket, 'cree_le') || getTicketCellText(ticket, 'date_creation')
   const channel = getTicketCellText(ticket, 'canal_contact')
   const qualification =
-    getTicketCellText(ticket, 'qualification_1') ||
+    getTicketHierarchyLabel(ticket, 'qualification_hierarchie') ||
     getTicketCellText(ticket, 'motif') ||
     getTicketCellText(ticket, 'type_affaire')
   const state =
@@ -169,7 +167,7 @@ export function TicketSummaryCard({
     getTicketCellText(ticket, 'dernier_evenement_type')
   const claimState = getTicketCellText(ticket, 'etat_de_la_reclamation')
   const progress = getTicketCellText(ticket, 'avancement')
-  const effectiveReferent = referent || getTicketCellText(ticket, 'affectation_1')
+  const effectiveReferent = referent || getTicketCellText(ticket, 'email_collaborateur_en_charge')
 
   return (
     <InspectorSnapshotCard className="mb-3">
@@ -213,19 +211,13 @@ export function TicketSummaryCard({
           <TicketCellValue
             column="etat_de_la_reclamation"
             value={claimState}
-            size="compact"
             className="max-w-full"
           />
         </InspectorSnapshotFact>
       ) : null}
       {progress ? (
         <InspectorSnapshotFact label="Avancement">
-          <TicketCellValue
-            column="avancement"
-            value={progress}
-            size="compact"
-            className="max-w-full"
-          />
+          <TicketCellValue column="avancement" value={progress} className="max-w-full" />
         </InspectorSnapshotFact>
       ) : null}
       {bucket ? (
@@ -241,7 +233,7 @@ export function TicketSummaryCard({
       {tags.length > 0 ? (
         <InspectorSnapshotFact label="Tags">
           {tags.map((tag) => (
-            <Badge key={tag} variant="outline" size="compact" className="max-w-full">
+            <Badge key={tag} variant="outline" className="max-w-full">
               {tag}
             </Badge>
           ))}
@@ -306,6 +298,7 @@ function ComposeDraft({
   composeMode: Exclude<TicketComposeMode, null>
   props: Props
 }) {
+  const [todayIso] = useState(() => toLocalIsoDate(new Date()))
   if (composeMode === 'comment') {
     return (
       <TicketTimelineCommentDraft
@@ -325,7 +318,7 @@ function ComposeDraft({
         intent={composeMode === 'todo' ? 'todo' : 'done'}
         actionLabels={ticketDossierActionLabels()}
         url={props.url}
-        todayIso={toLocalIsoDate(new Date())}
+        todayIso={todayIso}
         saving={props.submitting}
         onCancel={props.onCancelCompose}
         onSave={props.onSubmitAction}
@@ -436,85 +429,70 @@ function ComposeDraft({
 export function TicketComposeBlock(props: Props) {
   const { composeMode } = props
   const emlInputRef = useRef<HTMLInputElement>(null)
-  const reduceMotion = useReducedMotion()
   const draftRef = useInspectorComposeFocus(composeMode != null)
-  const zoneMotion = composePresenceProps(reduceMotion)
-  const insertMotion = composePresenceProps(reduceMotion, true)
   const meta = composeMode != null ? composeMeta(composeMode) : null
   const isTenantReply =
     composeMode === 'rcs' ||
     composeMode === 'email' ||
     composeMode === 'letter' ||
     composeMode === 'external'
-  const composeKey = isTenantReply ? 'tenant-reply' : composeMode
 
   return (
     <div
       className={cn('relative overflow-hidden', isTenantReply && 'flex min-h-0 flex-1 flex-col')}
     >
-      <AnimatePresence mode="wait" initial={false}>
-        {composeMode != null && meta ? (
-          <motion.div
-            key={composeKey}
-            ref={draftRef}
-            className={cn(isTenantReply && 'min-h-0 flex-1')}
-            {...insertMotion}
+      {composeMode != null && meta ? (
+        <div
+          ref={draftRef}
+          data-inspector-compose-presence=""
+          className={cn(isTenantReply && 'min-h-0 flex-1')}
+        >
+          <InspectorComposeShell
+            icon={meta.icon}
+            title={meta.title}
+            pending={props.submitting || props.aiBusy}
+            className={cn(isTenantReply && 'flex h-full min-h-0 flex-col')}
+            contentClassName={cn(isTenantReply && 'min-h-0 flex-1')}
           >
-            <InspectorComposeShell
-              icon={meta.icon}
-              title={meta.title}
-              pending={props.submitting || props.aiBusy}
-              className={cn(isTenantReply && 'flex h-full min-h-0 flex-col')}
-              contentClassName={cn(isTenantReply && 'min-h-0 flex-1')}
-            >
-              <ComposeDraft composeMode={composeMode} props={props} />
-            </InspectorComposeShell>
-          </motion.div>
-        ) : (
-          <motion.ul
-            key="actions"
-            className="m-0 inline-grid w-fit max-w-full list-none gap-1 p-0"
-            {...zoneMotion}
-          >
-            <TimelineActionRow
-              icon={Send}
-              label="Répondre au locataire"
-              onClick={props.onStartReply}
-            />
-            <TimelineActionRow
-              icon={MessageSquare}
-              label="Ajouter une note"
-              onClick={props.onStartComment}
-            />
-            <TimelineActionRow
-              icon={ListTodo}
-              label="Créer une tâche"
-              onClick={props.onStartTodo}
-            />
-            <TimelineActionRow
-              icon={Check}
-              label="Consigner une action réalisée"
-              onClick={props.onStartAction}
-            />
-            <TimelineActionRow
-              icon={FolderKanban}
-              label="Changer de panier"
-              onClick={props.onStartBucket}
-            />
-            <TimelineActionRow
-              icon={Upload}
-              label="Importer un email"
-              onClick={() => emlInputRef.current?.click()}
-            />
-            <TimelineActionRow icon={Tag} label="Changer les tags" onClick={props.onStartTags} />
-            <TimelineActionRow
-              icon={UserPlus}
-              label="Affecter à un référent"
-              onClick={props.onStartAssignment}
-            />
-          </motion.ul>
-        )}
-      </AnimatePresence>
+            <ComposeDraft composeMode={composeMode} props={props} />
+          </InspectorComposeShell>
+        </div>
+      ) : (
+        <ul className="m-0 inline-grid w-fit max-w-full list-none gap-1 p-0">
+          <TimelineActionRow
+            icon={Send}
+            label="Répondre au locataire"
+            onClick={props.onStartReply}
+          />
+          <TimelineActionRow
+            icon={MessageSquare}
+            label="Ajouter une note"
+            onClick={props.onStartComment}
+          />
+          <TimelineActionRow icon={ListTodo} label="Créer une tâche" onClick={props.onStartTodo} />
+          <TimelineActionRow
+            icon={Check}
+            label="Consigner une action réalisée"
+            onClick={props.onStartAction}
+          />
+          <TimelineActionRow
+            icon={FolderKanban}
+            label="Changer de panier"
+            onClick={props.onStartBucket}
+          />
+          <TimelineActionRow
+            icon={Upload}
+            label="Importer un email"
+            onClick={() => emlInputRef.current?.click()}
+          />
+          <TimelineActionRow icon={Tag} label="Changer les tags" onClick={props.onStartTags} />
+          <TimelineActionRow
+            icon={UserPlus}
+            label="Affecter à un référent"
+            onClick={props.onStartAssignment}
+          />
+        </ul>
+      )}
       <input
         ref={emlInputRef}
         type="file"

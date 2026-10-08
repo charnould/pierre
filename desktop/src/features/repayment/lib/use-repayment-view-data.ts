@@ -13,14 +13,15 @@ import {
   buildRepaymentTagChangeOperations,
   executeRepaymentAdvancementOperations,
   executeRepaymentTagChangeOperations,
-  resolveAdvancementTenant,
-  type RepaymentAdvancementContext
+  type RepaymentAdvancementContext,
+  resolveAdvancementTenant
 } from './repayment-activity-mutations'
 import type { RepaymentBucketId } from './repayment-bucket'
 import { isDepartedTenantRow, resolveBucketForTenantRow } from './repayment-bucket'
 import type { TenantLastAction } from './repayment-last-action'
+import { unreadRepaymentTenantKey } from './repayment-row-signal'
 import { ledgerColumnIdsFromMeta } from './repayment-table-columns'
-import { sendRepaymentNote, type RepaymentMessageResult } from './send-repayment-message'
+import { type RepaymentMessageResult, sendRepaymentNote } from './send-repayment-message'
 import { useRepaymentTenantBucket } from './use-repayment-tenant-bucket'
 
 const LEDGER_FETCH_LIMIT = 10_000
@@ -166,11 +167,19 @@ export function useRepaymentViewData(
     return { action, date }
   }, [])
 
+  const unreadTenantKey = useMemo(
+    () => unreadRepaymentTenantKey(deps.notifications.rows),
+    [deps.notifications.rows]
+  )
+  const unreadTenants = useMemo(
+    () => new Set(unreadTenantKey === '' ? [] : unreadTenantKey.split('\0')),
+    [unreadTenantKey]
+  )
   const getRowSignal = useCallback(
     (row: TenantRepaymentRow) => ({
-      hasUnread: deps.notifications.hasUnreadFor('repayment', row.id_locataire)
+      hasUnread: unreadTenants.has(row.id_locataire)
     }),
-    [deps.notifications]
+    [unreadTenants]
   )
 
   const openTenantSheet = useCallback(
@@ -179,7 +188,11 @@ export function useRepaymentViewData(
       if (!row) return
 
       if (options?.markRead !== false) {
-        void deps.notifications.markAllReadForRef('repayment', tenantId)
+        const markRead = () => {
+          void deps.notifications.markAllReadForRef('repayment', tenantId)
+        }
+        if (typeof requestAnimationFrame === 'function') requestAnimationFrame(markRead)
+        else queueMicrotask(markRead)
       }
 
       if (!url) return
@@ -317,6 +330,8 @@ export function useRepaymentViewData(
     setSheetOpen,
     sheetOpenToken,
     getBucketForRow,
+    setBucket,
+    clearBucket,
     getLastAction,
     getRowSignal,
     handleAddNote,

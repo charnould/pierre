@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'bun:test'
 
-import { getTicketCell, getTicketCellText, getTicketId } from './ticket-row'
+import {
+  getTicketCell,
+  getTicketCellText,
+  getTicketHierarchyLabel,
+  getTicketId
+} from './ticket-row'
 
 describe('getTicketCell', () => {
   it('returns null for missing values', () => {
@@ -17,6 +22,30 @@ describe('getTicketCell', () => {
 describe('getTicketCellText', () => {
   it('trims string values', () => {
     expect(getTicketCellText({ motif: ' fuite ' }, 'motif')).toBe('fuite')
+  })
+})
+
+describe('getTicketHierarchyLabel', () => {
+  it('shows the most specific segment', () => {
+    expect(
+      getTicketHierarchyLabel(
+        { qualification_hierarchie: 'technique > plomberie > fuite_de_lavabo' },
+        'qualification_hierarchie'
+      )
+    ).toBe('fuite_de_lavabo')
+    expect(
+      getTicketHierarchyLabel({ qualification_hierarchie: 'technique' }, 'qualification_hierarchie')
+    ).toBe('technique')
+    expect(
+      getTicketHierarchyLabel(
+        { qualification_hierarchie: 'technique > fuite_de_lavabo' },
+        'qualification_hierarchie'
+      )
+    ).toBe('fuite_de_lavabo')
+    expect(
+      getTicketHierarchyLabel({ qualification_hierarchie: null }, 'qualification_hierarchie')
+    ).toBe('')
+    expect(getTicketHierarchyLabel({}, 'qualification_hierarchie')).toBe('')
   })
 })
 

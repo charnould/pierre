@@ -4,10 +4,10 @@ import { BulkEditor } from '@/features/outreach/components/BulkEditor'
 import { BulkOperationsList } from '@/features/outreach/components/BulkOperationsList'
 import { BulkReports } from '@/features/outreach/components/BulkReports'
 import {
+  type BulkOperationSortKey,
   DEFAULT_BULK_OPERATION_SORT,
   matchesBulkOperationSearch,
-  sortBulkOperations,
-  type BulkOperationSortKey
+  sortBulkOperations
 } from '@/features/outreach/lib/sort-bulk-operations'
 import { ModuleGate } from '@/shared/components/ModuleGate'
 import { Spinner } from '@/shared/components/ui/spinner'
@@ -139,7 +139,7 @@ export function BulkOperationsView({ hidden, settings, userLogin }: Props) {
     <div
       data-tab-panel
       className={cn(
-        'relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
+        'bg-background relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
         hidden ? 'hidden' : 'flex'
       )}
     >

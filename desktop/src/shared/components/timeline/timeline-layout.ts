@@ -7,7 +7,7 @@ export const TIMELINE_ITEM_OFFSET_CLASS = 'group-data-[orientation=vertical]/tim
  * No radius, no `px-*`.
  */
 export const TIMELINE_HIGHLIGHT_CLASS =
-  'isolate before:pointer-events-none before:absolute before:-start-17 before:-end-4 before:-top-2 before:z-0 before:bg-muted before:content-[""] before:animate-inspector-highlight not-last:before:bottom-2 last:before:-bottom-2 [&_[data-slot=timeline-content]]:relative [&_[data-slot=timeline-content]]:z-10 [&_[data-slot=timeline-indicator]]:z-10 [&_[data-slot=timeline-separator]]:z-10'
+  'isolate before:pointer-events-none before:absolute before:-start-17 before:-end-4 before:-top-2 before:z-0 before:bg-muted before:content-[""] not-last:before:bottom-2 last:before:-bottom-2 [&_[data-slot=timeline-content]]:relative [&_[data-slot=timeline-content]]:z-10 [&_[data-slot=timeline-indicator]]:z-10 [&_[data-slot=timeline-separator]]:z-10'
 
 /** Sibling inset matching item content (day separators, empty states). */
 export const TIMELINE_CONTENT_INSET_CLASS = 'ms-10'

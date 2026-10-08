@@ -2,12 +2,13 @@ import { describe, expect, test } from 'bun:test'
 
 import type { KnowledgeBuild, KnowledgeSource } from '@/shared/types/knowledge'
 
+import { BUSINESS_MODULES } from '../../../../../shared/modules'
 import {
   buildKnowledgeBuckets,
+  isKnowledgeEntryAssigned,
   knowledgeAssignmentSummary,
   knowledgeDeleteKind,
   knowledgeFileKind,
-  isKnowledgeEntryAssigned,
   knowledgeItemState,
   knowledgeRowDescription,
   knowledgeRowTitle
@@ -41,7 +42,6 @@ const entry = (
   title,
   sheet: sheetName === null ? null : 0,
   sheetName,
-  headerRow: sheetName === null ? null : 0,
   profileIds,
   moduleIds
 })
@@ -57,7 +57,7 @@ const build = (
   catalogFingerprint: status === 'succeeded' ? 'published' : null,
   startedAt: '2026-09-10T12:00:00.000Z',
   finishedAt: '2026-09-10T12:00:01.000Z',
-  mirrorTables: [],
+  coreFingerprint: null,
   ownerId: 'test',
   heartbeatAt: '2026-09-10T12:00:01.000Z',
   items,
@@ -184,7 +184,7 @@ describe('knowledge assignment summary', () => {
       ])
     ).toEqual({
       profiles: ['Assistant', 'Réclamations'],
-      modules: ['Traiter les réclamations']
+      modules: [BUSINESS_MODULES.find((module) => module.id === 'tickets')?.label]
     })
     expect(knowledgeAssignmentSummary(entry('Guide', 'Guide', [], []), [])).toEqual({
       profiles: [],

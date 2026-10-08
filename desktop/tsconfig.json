@@ -20,7 +20,11 @@
     "preload",
     "forge",
     "forge.config.ts",
-    "electron.vite.config.ts",
+    "build.ts",
+    "build-plugin.ts",
+    "build.test.ts",
+    "dev.ts",
+    "dev.test.ts",
     "../shared"
   ]
 }

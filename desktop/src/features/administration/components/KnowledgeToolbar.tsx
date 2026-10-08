@@ -1,4 +1,4 @@
-import { Plus, RefreshCw, Search } from 'lucide-react'
+import { ArrowLeft, Plus, RefreshCw, Search } from 'lucide-react'
 
 import { Button } from '@/shared/components/ui/button'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/shared/components/ui/input-group'
@@ -18,6 +18,7 @@ export function KnowledgeToolbar({
   needsRebuild,
   buildActive,
   uploading,
+  onBack,
   onQueryChange,
   onRebuild,
   onUpload
@@ -27,12 +28,16 @@ export function KnowledgeToolbar({
   needsRebuild: boolean
   buildActive: boolean
   uploading: boolean
+  onBack: () => void
   onQueryChange: (query: string) => void
   onRebuild: () => void
   onUpload: () => void
 }) {
   return (
     <header className="border-border bg-background flex shrink-0 items-center gap-2 border-b px-4 py-2">
+      <Button type="button" variant="outline" size="icon-sm" aria-label="Retour" onClick={onBack}>
+        <ArrowLeft />
+      </Button>
       <InputGroup className="w-56">
         <InputGroupInput
           value={query}

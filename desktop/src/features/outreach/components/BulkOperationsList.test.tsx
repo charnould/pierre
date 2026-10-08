@@ -4,8 +4,8 @@ import { JSDOM } from 'jsdom'
 
 import { BulkOperationsList } from '@/features/outreach/components/BulkOperationsList'
 import {
-  emptyBulkOperationDefinition,
-  type BulkOperationRecord
+  type BulkOperationRecord,
+  emptyBulkOperationDefinition
 } from '@/shared/types/bulk-operations'
 
 const dom = new JSDOM('<!doctype html><html><body></body></html>')

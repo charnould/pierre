@@ -1,8 +1,8 @@
 import { formatActivityBoostBody } from '@/features/activity/lib/activity-boost-copy'
 import { extractReportTitle } from '@/features/automations/lib/extract-report-title'
 import type { ActivityTarget } from '@/shared/lib/navigation-snapshot'
-import type { ActiviteListItem, ActivityType, Mention } from '@/shared/types/activites'
-import { activity_payload, activity_texte } from '@/shared/types/activites'
+import type { ActivityListItem, ActivityType, Mention } from '@/shared/types/activites'
+import { activityPayload, activityText } from '@/shared/types/activites'
 
 type ActivityModule = 'tickets' | 'repayment' | 'automations' | 'bulk' | 'updates'
 
@@ -18,7 +18,7 @@ export type ActivityNotificationItem = {
   /** L2 for authored rows; omit or empty when the headline is enough. */
   detail?: string
   /** Raw activity for Inspector-identical timeline rows. */
-  row?: ActiviteListItem
+  row?: ActivityListItem
   createdAt: string
   isRead: boolean
   boosts: Record<string, string>
@@ -50,14 +50,14 @@ const splitRattachement = (rattachement: string): { type: ActivityModule; ref: s
   return { type: type as ActivityModule, ref }
 }
 
-function sourceActivityId(row: ActiviteListItem): number {
+function sourceActivityId(row: ActivityListItem): number {
   if (row.type !== 'activity.reaction_changed') return row.id
-  const payload = activity_payload(row.type, row.contenu)
+  const payload = activityPayload(row.type, row.contenu)
   const sourceId = Number(payload['source_activity_id'])
   return Number.isInteger(sourceId) && sourceId > 0 ? sourceId : row.id
 }
 
-export function activityToTarget(row: ActiviteListItem): ActivityTarget | null {
+export function activityToTarget(row: ActivityListItem): ActivityTarget | null {
   const parsed = splitRattachement(row.rattachement)
   if (!parsed) return null
   const activityId = sourceActivityId(row)
@@ -77,15 +77,15 @@ export function activityToTarget(row: ActiviteListItem): ActivityTarget | null {
 }
 
 export function mapActivityRow(
-  row: ActiviteListItem,
+  row: ActivityListItem,
   contextLabel: string,
   moduleLabel: string
 ): ActivityNotificationItem {
   const parsed = splitRattachement(row.rattachement)
   const target = activityToTarget(row)
 
-  const payload = activity_payload(row.type, row.contenu)
-  const contenu = activity_texte(row.type, row.contenu)
+  const payload = activityPayload(row.type, row.contenu)
+  const contenu = activityText(row.type, row.contenu)
   const boostEmoji = typeof payload['emoji'] === 'string' ? payload['emoji'].trim() : ''
   const sourceType =
     typeof payload['type_activite_source'] === 'string'
@@ -107,7 +107,7 @@ export function mapActivityRow(
     ref: parsed?.ref ?? row.rattachement,
     sender: row.auteur.includes(':') ? row.auteur.slice(row.auteur.indexOf(':') + 1) : row.auteur,
     body,
-    createdAt: row.date_creation,
+    createdAt: row.createdAt,
     isRead: row.read,
     boosts: mentionsToBoosts(row.mentions, row.reaction),
     target,

@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
+  formatDaysSinceLastAction,
   formatDebtRentRatioMonths,
   formatDebtRentRatioMonthsOneDecimal,
-  formatDaysSinceLastAction,
   formatRepaymentDateIso,
   quantizeDebtRentRatioMonths
 } from './format-repayment'

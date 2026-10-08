@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 
+import { SESSION_WINDOW_MIN_SIZE } from '../../src/shared/lib/ui-settings/schema'
 import {
   mergeSectionPatch,
   mergeTicketsTablePatch,
@@ -143,7 +144,7 @@ describe('parseAndPatchWindow', () => {
 
     expect(result.window).toEqual({
       width: 1280,
-      height: 400,
+      height: SESSION_WINDOW_MIN_SIZE.height,
       x: 10,
       y: 20
     })

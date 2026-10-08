@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 
-import { UPDATER_REPO, shouldEnableAutoUpdater, updaterOptions } from './auto-updater'
+import { shouldEnableAutoUpdater, UPDATER_REPO, updaterOptions } from './auto-updater'
 
 describe('shouldEnableAutoUpdater', () => {
   it('enables on packaged Windows builds', () => {

@@ -6,7 +6,8 @@ const user = {
   email: 'a@b.c',
   isAdministrator: false,
   moduleIds: [],
-  chatbotIds: []
+  chatbotIds: [],
+  preferredName: null
 }
 
 describe('loginWithTypedCredentials', () => {
