@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'bun:test'
 
-import type { ActiviteListItem } from '@/shared/types/activites'
+import type { ActivityListItem } from '@/shared/types/activities'
 
 import { mapAuthoredActivityRows } from './use-authored-activity'
 
-function row(overrides: Partial<ActiviteListItem> = {}): ActiviteListItem {
+function row(overrides: Partial<ActivityListItem> = {}): ActivityListItem {
   return {
     id: 1,
-    date_creation: '2026-08-21T10:00:00',
+    createdAt: '2026-08-21T10:00:00',
     rattachement: 'tickets:REC-1',
     auteur: 'user:alice@example.test',
     id_client: null,
@@ -17,7 +17,7 @@ function row(overrides: Partial<ActiviteListItem> = {}): ActiviteListItem {
     channel: null,
     mentions: [],
     contenu: JSON.stringify({
-      version: 2,
+      version: 1,
       field: 'statut',
       before: 'ouvert',
       after: 'clos'
@@ -50,7 +50,7 @@ describe('mapAuthoredActivityRows', () => {
         rattachement: 'repayment:LOC-1',
         type: 'case.group_changed',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           before: 'amiable',
           after: 'pre_contentieux',
           note: 'Échec des relances amiables.'
@@ -68,7 +68,7 @@ describe('mapAuthoredActivityRows', () => {
       row({
         rattachement: 'bulk:TRAITEMENT-1',
         type: 'bulk.ran',
-        contenu: JSON.stringify({ version: 2, title: 'Traitement 1' })
+        contenu: JSON.stringify({ version: 1, title: 'Traitement 1' })
       })
     ])
 

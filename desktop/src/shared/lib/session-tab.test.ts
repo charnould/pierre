@@ -34,6 +34,12 @@ describe('session-tab', () => {
     expect(readStoredTab(s)).toBeNull()
   })
 
+  test('readStoredTab keeps the chat tab', () => {
+    const s = mockStorage()
+    s.setItem(ACTIVE_TAB_STORAGE_KEY, 'chat')
+    expect(readStoredTab(s)).toBe('chat')
+  })
+
   test('writeStoredTab persists workflow tab', () => {
     const s = mockStorage()
     writeStoredTab('tickets', s)
@@ -67,9 +73,9 @@ describe('session-tab', () => {
     expect(readStoredTab(s)).toBe('repayment')
   })
 
-  test('readStoredTab migrates retired outreach tab to automations', () => {
+  test('readStoredTab rejects the retired outreach id', () => {
     const s = mockStorage()
     s.setItem(ACTIVE_TAB_STORAGE_KEY, 'outreach')
-    expect(readStoredTab(s)).toBe('automations')
+    expect(readStoredTab(s)).toBeNull()
   })
 })

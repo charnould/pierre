@@ -37,11 +37,11 @@ export function AboutDatastoreTables({ url }: Props) {
         <ul aria-label="Tables de données importées" className="flex min-w-0 flex-col">
           {sorted.map(({ name, exists }) => (
             <li key={name} className="flex h-8 min-w-0 items-center justify-between gap-2">
-              <span className="pierre-type-data truncate tabular-nums">{name}</span>
+              <span className="truncate text-xs tabular-nums">{name}</span>
               {exists ? (
                 <span className="sr-only">disponible</span>
               ) : (
-                <span className="pierre-meta">absente</span>
+                <span className="text-muted-foreground text-xs">absente</span>
               )}
             </li>
           ))}

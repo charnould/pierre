@@ -67,15 +67,18 @@ describe('LoginPanel', () => {
     const heading = host.querySelector('h1')
     expect(heading?.textContent).toBe('Connexion')
     expect(heading?.className.split(/\s+/)).toContain('sr-only')
-    expect(heading?.className).not.toContain('pierre-display')
-    expect(host.querySelector('p.pierre-meta')).toBeNull()
+    expect(heading?.className).not.toContain('text-xl leading-6 font-medium')
+    expect(host.querySelector('p.text-xs.text-muted-foreground')).toBeNull()
 
     const mark = host.querySelector('[data-slot="login-mark"]')
-    expect(mark).toBeTruthy()
     expect(mark?.getAttribute('aria-hidden')).toBe('true')
-    const markClasses = (mark?.getAttribute('class') ?? '').split(/\s+/)
-    expect(markClasses).toContain('h-16')
-    expect(markClasses).toContain('w-auto')
+    expect(mark?.textContent).toContain('×')
+    expect(mark?.textContent).toContain('=')
+    const icons = [...(mark?.querySelectorAll('svg') ?? [])]
+    expect(icons).toHaveLength(6)
+    expect(icons.every((icon) => icon.getAttribute('class')?.split(/\s+/).includes('size-8'))).toBe(
+      true
+    )
 
     const form = host.querySelector('form')
     expect(form).toBeTruthy()
@@ -84,27 +87,35 @@ describe('LoginPanel', () => {
     expect(form?.className.split(/\s+/)).not.toContain('overflow-y-auto')
     expect(form?.className.split(/\s+/)).not.toContain('max-w-2xl')
 
-    expect(host.querySelectorAll('[data-slot="checkbox"]').length).toBe(2)
-    const legalCopy = [...host.querySelectorAll('[data-slot="field-description"]')]
-    expect(legalCopy).toHaveLength(2)
+    const checks = [...host.querySelectorAll('[data-slot="checkbox"]')]
+    expect(checks).toHaveLength(1)
+    expect((checks[0]?.getAttribute('class') ?? '').includes('rounded-[4px]')).toBe(true)
+    const labelText = [...host.querySelectorAll('[data-slot="field-label"]')].map(
+      (el) => el.textContent ?? ''
+    )
+    expect(labelText).toContain("J'accepte les conditions d'utilisation")
+    const descriptions = [...host.querySelectorAll('[data-slot="field-description"]')]
+    expect(descriptions).toHaveLength(2)
     expect(
-      legalCopy.every((el) => {
+      descriptions.every((el) => {
         const classes = el.className.split(/\s+/)
         return (
-          classes.includes('text-xs') &&
-          classes.includes('leading-4') &&
+          classes.includes('font-serif') &&
           classes.includes('text-balance') &&
-          !classes.includes('text-sm')
+          classes.includes('[font-size:12px]') &&
+          classes.includes('leading-4')
         )
       })
     ).toBe(true)
+    const descriptionText = descriptions.map((el) => el.textContent ?? '')
+    expect(descriptionText.some((text) => text.includes('charte'))).toBe(true)
+    expect(descriptionText.some((text) => text.includes('générées'))).toBe(true)
 
     expect(host.querySelector('#login-form-error')).toBeNull()
     expect(host.querySelectorAll('[data-slot="field-error"]').length).toBe(0)
 
     const fieldGroups = [...host.querySelectorAll('[data-slot="field-group"]')]
     expect(fieldGroups).toHaveLength(2)
-    expect(fieldGroups[1]?.getAttribute('data-spacing')).toBe('compact')
 
     const submit = host.querySelector('button[type="submit"]')
     expect(submit?.textContent).toContain('Se connecter')

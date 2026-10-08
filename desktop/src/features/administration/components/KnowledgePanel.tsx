@@ -1,9 +1,10 @@
+import { BookOpen, CircleAlert } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { DirectoryList } from '@/shared/components/DirectoryList'
-import { Docket } from '@/shared/components/icons/koboyo-empty'
 import { Button } from '@/shared/components/ui/button'
+import { CardTitle } from '@/shared/components/ui/card'
 import {
   Empty,
   EmptyContent,
@@ -23,13 +24,13 @@ import { useKnowledgeCatalog } from './useKnowledgeCatalog'
 
 interface Props {
   url: string
+  onBack: () => void
 }
 
 type PendingDelete =
-  | { kind: 'file'; source: KnowledgeSource }
-  | { kind: 'sheet'; item: KnowledgeItem }
+  { kind: 'file'; source: KnowledgeSource } | { kind: 'sheet'; item: KnowledgeItem }
 
-export function KnowledgePanel({ url }: Props) {
+export function KnowledgePanel({ url, onBack }: Props) {
   const catalog = useKnowledgeCatalog(url)
   const [query, setQuery] = useState('')
   const [editing, setEditing] = useState<{
@@ -91,6 +92,7 @@ export function KnowledgePanel({ url }: Props) {
         needsRebuild={catalog.data?.needsRebuild ?? false}
         buildActive={buildActive}
         uploading={catalog.uploading}
+        onBack={onBack}
         onQueryChange={setQuery}
         onRebuild={() => void catalog.rebuild()}
         onUpload={() => void upload()}
@@ -105,7 +107,7 @@ export function KnowledgePanel({ url }: Props) {
           <Empty>
             <EmptyHeader>
               <EmptyMedia variant="icon">
-                <Docket />
+                <CircleAlert />
               </EmptyMedia>
               <EmptyTitle>Encyclopédie indisponible</EmptyTitle>
               <EmptyDescription>{catalog.loadError}</EmptyDescription>
@@ -120,13 +122,9 @@ export function KnowledgePanel({ url }: Props) {
           <div className="flex min-w-0 flex-col">
             <section>
               <header className="border-border bg-background flex items-baseline gap-2 border-b px-4 py-2">
-                <h2 className="m-0 font-sans text-xl leading-6 font-semibold tracking-tight text-balance">
-                  Core Data HLM
-                </h2>
-                <span className="text-muted-foreground font-sans text-xl leading-6 font-medium">
-                  ·
-                </span>
-                <span className="text-muted-foreground font-sans text-xl leading-6 font-medium tabular-nums">
+                <CardTitle className="m-0">Core Data HLM</CardTitle>
+                <span className="text-muted-foreground text-sm leading-5">·</span>
+                <span className="text-muted-foreground text-sm leading-5 tabular-nums">
                   {buckets.coreData.length}
                 </span>
               </header>
@@ -139,7 +137,6 @@ export function KnowledgePanel({ url }: Props) {
                     lastBuild={catalog.data?.lastBuild ?? null}
                     needsRebuild={catalog.data?.needsRebuild ?? false}
                     profiles={catalog.data?.profiles ?? []}
-                    url={url}
                     onOpen={openEntry}
                     onUnassign={(row) => void catalog.unassign(row)}
                     onDelete={requestDelete}
@@ -150,13 +147,9 @@ export function KnowledgePanel({ url }: Props) {
 
             <section>
               <header className="border-border bg-background flex items-baseline gap-2 border-b px-4 py-2">
-                <h2 className="m-0 font-sans text-xl leading-6 font-semibold tracking-tight text-balance">
-                  Autres sources
-                </h2>
-                <span className="text-muted-foreground font-sans text-xl leading-6 font-medium">
-                  ·
-                </span>
-                <span className="text-muted-foreground font-sans text-xl leading-6 font-medium tabular-nums">
+                <CardTitle className="m-0">Autres sources</CardTitle>
+                <span className="text-muted-foreground text-sm leading-5">·</span>
+                <span className="text-muted-foreground text-sm leading-5 tabular-nums">
                   {buckets.other.length}
                 </span>
               </header>
@@ -169,7 +162,6 @@ export function KnowledgePanel({ url }: Props) {
                       lastBuild={catalog.data?.lastBuild ?? null}
                       needsRebuild={catalog.data?.needsRebuild ?? false}
                       profiles={catalog.data?.profiles ?? []}
-                      url={url}
                       onOpen={openEntry}
                       onUnassign={(row) => void catalog.unassign(row)}
                       onDelete={requestDelete}
@@ -180,7 +172,7 @@ export function KnowledgePanel({ url }: Props) {
                 <Empty>
                   <EmptyHeader>
                     <EmptyMedia variant="icon">
-                      <Docket />
+                      <BookOpen />
                     </EmptyMedia>
                     <EmptyTitle>Aucune autre source</EmptyTitle>
                     <EmptyDescription>

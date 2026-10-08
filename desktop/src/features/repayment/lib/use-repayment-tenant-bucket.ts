@@ -1,21 +1,25 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import type { TenantRepaymentRow } from './classify-tenants'
-import { resolveRepaymentBucket, type RepaymentBucketId } from './repayment-bucket'
+import { type RepaymentBucketId, resolveRepaymentBucket } from './repayment-bucket'
 
 type OptimisticBuckets = Partial<Record<string, string>>
 
 export function useRepaymentTenantBucket(rows: TenantRepaymentRow[]) {
   const [optimistic, setOptimistic] = useState<OptimisticBuckets>({})
+  const persisted = useMemo(() => {
+    const buckets = new Map<string, string>()
+    for (const row of rows) {
+      const value = row['bucket']
+      if (typeof value === 'string') buckets.set(row.id_locataire, value)
+    }
+    return buckets
+  }, [rows])
 
   const getBucket = useCallback(
-    (id_locataire: string): RepaymentBucketId => {
-      const persisted = rows.find((row) => row.id_locataire === id_locataire)?.['bucket']
-      return resolveRepaymentBucket(
-        optimistic[id_locataire] ?? (typeof persisted === 'string' ? persisted : undefined)
-      )
-    },
-    [optimistic, rows]
+    (id_locataire: string): RepaymentBucketId =>
+      resolveRepaymentBucket(optimistic[id_locataire] ?? persisted.get(id_locataire)),
+    [optimistic, persisted]
   )
 
   const setBucket = useCallback((id_locataire: string, bucket: RepaymentBucketId) => {

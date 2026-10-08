@@ -3,10 +3,10 @@ import type { ComponentType } from 'react'
 import { useId } from 'react'
 
 import { isValidAboutSubject } from '@/features/about/lib/about-form'
-import { ABOUT_SUBJECTS, type AboutSubject } from '@/features/tickets/lib/knowledge-skills'
 import { ChoiceTile } from '@/shared/components/ChoiceTile'
 import { Field, FieldDescription, FieldLabel } from '@/shared/components/ui/field'
 import { RadioGroup, RadioGroupItem } from '@/shared/components/ui/radio-group'
+import { ABOUT_SUBJECTS, type AboutSubject } from '@/shared/lib/navigation-model'
 
 const SUBJECT_OPTIONS: {
   value: AboutSubject

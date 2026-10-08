@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { toast } from '@/shared/components/ui/toast'
+import { warnRenderer } from '@/shared/lib/renderer-log'
 import type { KnowledgeData, KnowledgeSource } from '@/shared/types/knowledge'
 
 import type { KnowledgeItem } from './knowledge-model'
@@ -10,7 +11,9 @@ export function useKnowledgeCatalog(url: string) {
   const [data, setData] = useState<KnowledgeData | null>(null)
   const [loadError, setLoadError] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [buildStatus, setBuildStatus] = useState<string | null>(null)
   const seenBuild = useRef<{ id?: string; status?: string }>({})
+  const pollInFlight = useRef(false)
 
   const applyResponse = (
     response: Awaited<ReturnType<NonNullable<typeof window.api>['getAdminKnowledge']>>
@@ -25,7 +28,9 @@ export function useKnowledgeCatalog(url: string) {
     }
     setData(response.data)
     setLoadError('')
-    seenBuild.current = { id: response.data.lastBuild?.id, status: response.data.lastBuild?.status }
+    const status = response.data.lastBuild?.status ?? null
+    setBuildStatus(status)
+    seenBuild.current = { id: response.data.lastBuild?.id, status: status ?? undefined }
   }
 
   const load = useCallback(async () => {
@@ -46,21 +51,35 @@ export function useKnowledgeCatalog(url: string) {
   }, [url])
 
   useEffect(() => {
+    let cancelled = false
+    const delay = buildStatus === 'queued' || buildStatus === 'running' ? 1_500 : 30_000
     const timer = window.setInterval(() => {
-      void window.api?.getKnowledgeBuilds({ url }).then((response) => {
-        if (!response || 'error' in response) return
-        const lastBuild = response.data.builds[0] ?? null
-        if (
-          lastBuild?.id === seenBuild.current.id &&
-          lastBuild?.status === seenBuild.current.status
-        ) {
-          return
+      if (pollInFlight.current) return
+      pollInFlight.current = true
+      void (async () => {
+        try {
+          const response = await window.api?.getKnowledgeBuilds({ url })
+          if (cancelled || !response || 'error' in response) return
+          const lastBuild = response.data.builds[0] ?? null
+          if (
+            lastBuild?.id === seenBuild.current.id &&
+            lastBuild?.status === seenBuild.current.status
+          ) {
+            return
+          }
+          await load()
+        } catch (error) {
+          warnRenderer('useKnowledgeCatalog.poll', error)
+        } finally {
+          pollInFlight.current = false
         }
-        void load()
-      })
-    }, 1500)
-    return () => window.clearInterval(timer)
-  }, [load, url])
+      })()
+    }, delay)
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
+    }
+  }, [buildStatus, load, url])
 
   const replaceSource = (source: KnowledgeSource) => {
     setData((current) =>

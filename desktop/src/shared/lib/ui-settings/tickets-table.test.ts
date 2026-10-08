@@ -3,34 +3,37 @@ import { describe, expect, it } from 'bun:test'
 import {
   areColumnFiltersEqual,
   clearAllColumnFilters,
+  colorizeBadgeBorder,
+  columnValueStyleToBadge,
+  facetFilterUnavailableMessage,
   filtersToQueryParams,
   formatFacetLabel,
-  facetFilterUnavailableMessage,
   hasActiveColumnFilters,
   isTicketTableSystemColumn,
+  parseBadgeFontWeight,
   parseColumnFilters,
+  parseColumnValueBadgeDefaults,
   parseColumnValues,
   parseColumnWidths,
   parseHexColor,
   parseHiddenColumns,
   parsePinnedColumns,
   resolveColumnOrder,
+  resolveColumnValueBadgeDefaults,
   resolveColumnWidth,
   resolvePinnedColumns,
-  columnValueStyleToBadge,
-  colorizeBadgeBorder,
-  parseBadgeFontWeight,
-  parseColumnValueBadgeDefaults,
-  resolveColumnValueBadgeDefaults,
   resolveTicketValueDisplay,
   resolveUnpinnedColumnOrder,
   resolveVisibleColumnNames,
   sanitizeColumnFilters,
   stripTicketTableSystemColumns,
   stripTicketTableSystemColumnWidths,
-  ticketTableSystemColumnSizing,
   TICKET_TABLE_ALERT_COLUMN_ID,
-  TICKET_TABLE_ALERT_COLUMN_WIDTH
+  TICKET_TABLE_ALERT_COLUMN_WIDTH,
+  TICKET_TABLE_SELECTION_COLUMN_ID,
+  TICKET_TABLE_SELECTION_COLUMN_WIDTH,
+  ticketServerSort,
+  ticketTableSystemColumnSizing
 } from './tickets-table'
 
 const DEFAULT_BADGE_STYLE = {
@@ -274,14 +277,16 @@ describe('tickets-table settings helpers', () => {
     expect(clearAllColumnFilters()).toEqual({})
   })
 
-  it('isTicketTableSystemColumn identifies the alert column', () => {
+  it('isTicketTableSystemColumn identifies the locked columns', () => {
+    expect(isTicketTableSystemColumn(TICKET_TABLE_SELECTION_COLUMN_ID)).toBe(true)
     expect(isTicketTableSystemColumn(TICKET_TABLE_ALERT_COLUMN_ID)).toBe(true)
     expect(isTicketTableSystemColumn('id_reclamation')).toBe(false)
   })
 
-  it('stripTicketTableSystemColumns removes the alert column from order arrays', () => {
+  it('stripTicketTableSystemColumns removes the locked columns from order arrays', () => {
     expect(
       stripTicketTableSystemColumns([
+        TICKET_TABLE_SELECTION_COLUMN_ID,
         TICKET_TABLE_ALERT_COLUMN_ID,
         'id_reclamation',
         TICKET_TABLE_ALERT_COLUMN_ID
@@ -289,15 +294,24 @@ describe('tickets-table settings helpers', () => {
     ).toEqual(['id_reclamation'])
   })
 
-  it('ticketTableSystemColumnSizing fixes width for the alert column', () => {
+  it('ticketServerSort ignore les colonnes système et préfixe le tri descendant', () => {
+    expect(ticketServerSort(undefined)).toBeUndefined()
+    expect(ticketServerSort({ id: TICKET_TABLE_ALERT_COLUMN_ID, desc: false })).toBeUndefined()
+    expect(ticketServerSort({ id: 'motif', desc: false })).toBe('motif')
+    expect(ticketServerSort({ id: 'motif', desc: true })).toBe('-motif')
+  })
+
+  it('ticketTableSystemColumnSizing fixes width for the locked columns', () => {
     expect(ticketTableSystemColumnSizing()).toEqual({
+      [TICKET_TABLE_SELECTION_COLUMN_ID]: TICKET_TABLE_SELECTION_COLUMN_WIDTH,
       [TICKET_TABLE_ALERT_COLUMN_ID]: TICKET_TABLE_ALERT_COLUMN_WIDTH
     })
   })
 
-  it('stripTicketTableSystemColumnWidths removes the alert column from persisted widths', () => {
+  it('stripTicketTableSystemColumnWidths removes the locked columns from persisted widths', () => {
     expect(
       stripTicketTableSystemColumnWidths({
+        __selection__: 40,
         __alertes__: 40,
         id_reclamation: 160
       })

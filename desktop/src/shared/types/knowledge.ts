@@ -9,4 +9,4 @@ export type {
   KnowledgeSource,
   KnowledgeSourceResponse,
   KnowledgeUploadResponse
-} from '../../../../shared/knowledge'
+} from '@pierre/shared/knowledge'

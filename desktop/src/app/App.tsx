@@ -1,4 +1,13 @@
-import { useState, useEffect, useCallback, useRef, useMemo, startTransition } from 'react'
+import {
+  lazy,
+  startTransition,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react'
 
 import { AgentIdentityProvider, DEFAULT_AGENT_NAME } from '@/contexts/AgentIdentityContext'
 import {
@@ -7,14 +16,14 @@ import {
 } from '@/contexts/NavigationHistoryContext'
 import { ThemeProvider } from '@/contexts/ThemeProvider'
 import { UiSettingsProvider, useResolvedUiSettings } from '@/contexts/UiSettingsContext'
-import { ActivityPanel } from '@/features/activity'
 import { ActivityNotificationsTrigger } from '@/features/activity/components/ActivityNotificationsTrigger'
 import { ActivityTasksTrigger } from '@/features/activity/components/ActivityTasksTrigger'
 import { useActivityFeed } from '@/features/activity/hooks/useActivityFeed'
 import { ActivityRailProvider, useActivityRail } from '@/features/activity/lib/ActivityRailContext'
-import { restoreSession } from '@/features/auth'
-import { TasksPanel } from '@/features/home/TasksPanel'
+import { ChatWindowTrigger } from '@/features/chat/components/ChatWindowTrigger'
+import { VoiceDictationProvider } from '@/features/dictation/VoiceDictationContext'
 import { useHomeOpenActions } from '@/features/home/use-home-open-actions'
+import { clearRepaymentTimelineCache } from '@/features/repayment/lib/repayment-timeline-cache'
 import { FindInPageBar } from '@/shared/components/find-in-page/FindInPageBar'
 import { TitleBar } from '@/shared/components/layout/TitleBar'
 import { toast, Toaster } from '@/shared/components/ui/toast'
@@ -26,15 +35,28 @@ import {
 import { setSetupAdministrator, useSetupRequest } from '@/shared/lib/open-setup'
 import { fetchOrgUsers } from '@/shared/lib/org-users-cache'
 import { releaseHiddenPanelFocus } from '@/shared/lib/release-hidden-panel-focus'
-import { readStoredTab, tabAfterAutoLogin, writeStoredTab } from '@/shared/lib/session-tab'
-import { isSettingsConfigured } from '@/shared/lib/settings-configured'
+import { warnRenderer } from '@/shared/lib/renderer-log'
+import { writeStoredTab } from '@/shared/lib/session-tab'
 import { canAccessTab, type Tab } from '@/shared/lib/tab-registry'
 import { resolveHomeSettings } from '@/shared/lib/ui-settings/schema'
 import { useAppEscapeHome } from '@/shared/lib/use-app-escape-home'
 import type { Settings } from '@/shared/types'
 import type { UserPrincipal } from '@/shared/types/users'
 
+import { loadDesktopStartup } from './startup'
 import { TabWorkspace } from './TabWorkspace'
+
+const ActivityPanel = lazy(() =>
+  import('@/features/activity/ActivityPanel').then((module) => ({
+    default: module.ActivityPanel
+  }))
+)
+const TasksPanel = lazy(() =>
+  import('@/features/home/TasksPanel').then((module) => ({ default: module.TasksPanel }))
+)
+const ChatWindow = lazy(() =>
+  import('@/features/chat').then((module) => ({ default: module.ChatWindow }))
+)
 
 interface AppContentProps {
   activeTab: Tab
@@ -62,6 +84,7 @@ function AppContent({
   setUser
 }: AppContentProps) {
   const { navigate } = useNavigationHistory()
+  const [chatOpen, setChatOpen] = useState(false)
 
   const handleTabChange = useCallback(
     (tab: Tab) => {
@@ -102,6 +125,7 @@ function AppContent({
   )
 
   const endSession = useCallback(async () => {
+    setChatOpen(false)
     resetCustomization()
     setAgentName(DEFAULT_AGENT_NAME)
     setUser(null)
@@ -116,7 +140,9 @@ function AppContent({
         onTabChange('home')
         navigate({ tab: 'home' }, { replace: true })
       } else {
+        setChatOpen(false)
         resetCustomization()
+        clearRepaymentTimelineCache()
         setAgentName(DEFAULT_AGENT_NAME)
         setIsLoggedIn(false)
         navigate({ tab: 'settings' }, { replace: true })
@@ -201,47 +227,70 @@ function AppContent({
   useAppEscapeHome({ activeTab, isLoggedIn, onGoHome: goHome })
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
-      <TitleBar
-        activeTab={activeTab}
-        user={user}
-        onTabChange={handleTabChange}
-        notifications={<ActivityNotificationsTrigger unreadCount={feed.unreadCount} />}
-        tasks={<ActivityTasksTrigger />}
-      />
-      <ActivityPanel feed={feed} url={settings.url} userLogin={userLogin} />
-      <TasksPanel
-        mine={mine}
-        delegated={delegated}
-        hasMoreMine={hasMoreMine}
-        hasMoreDelegated={hasMoreDelegated}
-        onLoadMoreMine={() => void loadMoreMine()}
-        onLoadMoreDelegated={() => void loadMoreDelegated()}
-      />
-      <main className="bg-background relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <TabWorkspace
+    <VoiceDictationProvider settings={settings}>
+      <div className="flex h-full flex-col overflow-hidden">
+        <TitleBar
           activeTab={activeTab}
-          isLoggedIn={isLoggedIn}
-          settings={settings}
-          agentName={agentName}
-          userLogin={userLogin}
-          feed={feed}
-          notifications={notifications}
-          repaymentDeps={repaymentDeps}
-          readerTarget={readerTarget}
-          onTabChange={handleTabChange}
-          onLogin={handleLogin}
-          onCurrentUserPasswordChange={endSession}
-          onUserChange={setUser}
-          onLogout={() => void endSession()}
-          onSettingsChange={handleSettingsChange}
           user={user}
-          mine={mine}
-          delegated={delegated}
-          refreshOpenActions={refresh}
+          onTabChange={handleTabChange}
+          notifications={<ActivityNotificationsTrigger unreadCount={feed.unreadCount} />}
+          tasks={<ActivityTasksTrigger />}
+          chat={
+            <ChatWindowTrigger
+              open={chatOpen}
+              onToggle={() => setChatOpen((current) => !current)}
+            />
+          }
         />
-      </main>
-    </div>
+        {user ? (
+          <Suspense fallback={null}>
+            <ChatWindow
+              open={chatOpen}
+              agentName={agentName}
+              url={settings.url}
+              chatbotIds={user.chatbotIds}
+              onClose={() => setChatOpen(false)}
+            />
+          </Suspense>
+        ) : null}
+        {user ? (
+          <Suspense fallback={null}>
+            <ActivityPanel feed={feed} url={settings.url} userLogin={userLogin} />
+            <TasksPanel
+              mine={mine}
+              delegated={delegated}
+              hasMoreMine={hasMoreMine}
+              hasMoreDelegated={hasMoreDelegated}
+              onLoadMoreMine={() => void loadMoreMine()}
+              onLoadMoreDelegated={() => void loadMoreDelegated()}
+            />
+          </Suspense>
+        ) : null}
+        <main className="bg-background relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <TabWorkspace
+            activeTab={activeTab}
+            isLoggedIn={isLoggedIn}
+            settings={settings}
+            agentName={agentName}
+            userLogin={userLogin}
+            feed={feed}
+            notifications={notifications}
+            repaymentDeps={repaymentDeps}
+            readerTarget={readerTarget}
+            onTabChange={handleTabChange}
+            onLogin={handleLogin}
+            onCurrentUserPasswordChange={endSession}
+            onUserChange={setUser}
+            onSettingsChange={setSettings}
+            onLogout={() => void endSession()}
+            user={user}
+            mine={mine}
+            delegated={delegated}
+            refreshOpenActions={refresh}
+          />
+        </main>
+      </div>
+    </VoiceDictationProvider>
   )
 }
 
@@ -258,31 +307,29 @@ export function App() {
   }, [])
 
   useEffect(() => {
-    void (async () => {
-      const s = await window.api?.getSettings()
-      if (!s) return
-      setSettings(s)
-      if (isSettingsConfigured(s)) {
-        const result = await restoreSession()
-        if (result.ok) {
-          setUser(result.user)
-          setIsLoggedIn(true)
-          void window.api?.setAuthWindowLayout?.({ loggedIn: true })
-          const stored = readStoredTab()
-          const restored = tabAfterAutoLogin(stored)
-          const tab = canAccessTab(restored, result.user) ? restored : 'home'
-          setActiveTab(tab)
-          writeStoredTab(tab)
-          void hydrateCustomizationFromServer(s.url!).then((name) => {
-            if (name) setAgentName(name)
-          })
-        } else {
+    let cancelled = false
+    void loadDesktopStartup()
+      .then((startup) => {
+        if (cancelled || startup.status === 'missing-settings') return
+        setSettings(startup.settings)
+        if (startup.status === 'logged-out') {
           void window.api?.setAuthWindowLayout?.({ loggedIn: false })
+          return
         }
-      } else {
-        void window.api?.setAuthWindowLayout?.({ loggedIn: false })
-      }
-    })()
+        setUser(startup.user)
+        setIsLoggedIn(true)
+        setActiveTab(startup.tab)
+        writeStoredTab(startup.tab)
+        if (startup.agentName) setAgentName(startup.agentName)
+        void window.api?.setAuthWindowLayout?.({ loggedIn: true })
+      })
+      .catch((error) => {
+        warnRenderer('App.bootstrap', error)
+        if (!cancelled) void window.api?.setAuthWindowLayout?.({ loggedIn: false })
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   return (

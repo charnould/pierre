@@ -1,10 +1,8 @@
 import { Badge } from '@/shared/components/ui/badge'
 import {
-  columnValueStyleToBadge,
+  type ColumnValuesConfig,
   findColumnValueStyle,
-  normalizeColumnValueKey,
-  resolveColumnValueBadgeDefaults,
-  type ColumnValuesConfig
+  normalizeColumnValueKey
 } from '@/shared/lib/ui-settings/tickets-table'
 
 import { getRepaymentBucketMeta, type RepaymentBucketId } from '../lib/repayment-bucket'
@@ -25,11 +23,7 @@ function BucketLabelBadge({
 
   if (columnStyle) {
     return (
-      <Badge
-        variant="secondary"
-        className="max-w-full min-w-0"
-        appearance={columnValueStyleToBadge(columnStyle, resolveColumnValueBadgeDefaults())}
-      >
+      <Badge variant="secondary" className="max-w-full min-w-0">
         <span className="truncate">{label}</span>
       </Badge>
     )

@@ -3,8 +3,8 @@ import { formatFacetLabel } from '@/shared/lib/ui-settings/tickets-table'
 
 import type { TenantRepaymentRow } from './classify-tenants'
 import {
-  formatDebtRentRatioMonths,
   formatDaysSinceLastAction,
+  formatDebtRentRatioMonths,
   formatEuro
 } from './format-repayment'
 import type { RepaymentBucketId } from './repayment-bucket'

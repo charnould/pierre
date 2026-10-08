@@ -1,4 +1,4 @@
-import type { KeyboardEvent, ReactNode } from 'react'
+import { type KeyboardEvent, type ReactNode, useId } from 'react'
 
 import {
   TimelineContent,
@@ -44,10 +44,12 @@ export function ContextTimelineItem({
   'data-activity-id': dataActivityId,
   onActivate
 }: Props) {
-  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (!onActivate || (event.key !== 'Enter' && event.key !== ' ')) return
+  const labelId = useId()
+
+  function handleKeyDown(event: KeyboardEvent<HTMLSpanElement>) {
+    if (event.key !== 'Enter' && event.key !== ' ') return
     event.preventDefault()
-    onActivate()
+    onActivate?.()
   }
 
   return (
@@ -58,17 +60,23 @@ export function ContextTimelineItem({
         // Kill ReUI `gap-0.5`: header is out-of-flow (absolute avatar), so the gap
         // alone pushed the date 2px below the avatar center line.
         'gap-0 group-data-[orientation=vertical]/timeline:not-last:pb-4',
-        onActivate &&
-          'cursor-pointer focus-visible:ring-1 focus-visible:ring-ring/40 focus-visible:outline-none',
+        onActivate && 'cursor-pointer',
         className
       )}
       data-timeline-id={dataTimelineId}
       data-activity-id={dataActivityId}
-      role={onActivate ? 'button' : undefined}
-      tabIndex={onActivate ? 0 : undefined}
       onClick={onActivate}
-      onKeyDown={onActivate ? handleKeyDown : undefined}
     >
+      {onActivate ? (
+        <span
+          role="button"
+          tabIndex={0}
+          aria-labelledby={header != null ? labelId : undefined}
+          aria-label={header == null ? 'Ouvrir' : undefined}
+          className="focus-visible:ring-ring/20 pointer-events-none absolute inset-0 focus-visible:ring-2 focus-visible:outline-none"
+          onKeyDown={handleKeyDown}
+        />
+      ) : null}
       <TimelineHeader className="contents">
         <TimelineSeparator className={TIMELINE_SEPARATOR_CLASS} />
         <TimelineIndicator aria-hidden={false} className={TIMELINE_INDICATOR_CLASS}>
@@ -77,7 +85,7 @@ export function ContextTimelineItem({
       </TimelineHeader>
       {(header != null || children != null) && (
         <TimelineContent className={cn('text-foreground mt-0 p-0', contentClassName)}>
-          {header}
+          {header != null ? <div id={onActivate ? labelId : undefined}>{header}</div> : null}
           {children != null && header != null ? <div className="mt-2">{children}</div> : children}
         </TimelineContent>
       )}

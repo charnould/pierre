@@ -20,11 +20,12 @@ describe('repayment table preferences', () => {
   test('colonne alertes reste toujours visible', () => {
     const prefs = resolveTablePrefs(
       {
-        columnVisibility: { alertes: false }
+        columnVisibility: { selection: false, alertes: false }
       },
       ['id_client']
     )
 
+    expect(prefs.columnVisibility.selection).toBe(true)
     expect(prefs.columnVisibility.alertes).toBe(true)
     expect(prefs.columnVisibility.bucket).toBeUndefined()
   })
@@ -35,15 +36,18 @@ describe('repayment table preferences', () => {
       'categorie'
     ])
 
-    expect(prefs.columnOrder[0]).toBe('alertes')
+    expect(prefs.columnOrder[0]).toBe('selection')
+    expect(prefs.columnOrder[1]).toBe('alertes')
     expect(prefs.columnOrder).not.toContain('bucket')
   })
 
-  test('defaultColumnVisibility inclut les colonnes ledger dynamiques', () => {
+  test('defaultColumnVisibility montre les colonnes de travail et masque le reste', () => {
     const ledger = ['id_client', 'categorie', 'ratio_dette_loyer']
     const visibility = resolveTablePrefs(undefined, ledger).columnVisibility
+    expect(visibility.id_client).toBe(true)
     expect(visibility.ratio_dette_loyer).toBe(true)
-    expect(visibility.categorie).toBe(true)
+    expect(visibility.categorie).toBe(false)
+    expect(visibility.derniere_action_realisee).toBe(true)
     expect(visibility.evolution_solde).toBeUndefined()
   })
 

@@ -84,7 +84,7 @@ export function buildReportInjectScript(html: string): string {
       border: 'none',
       borderRadius: '8px',
       fontSize: '13px',
-      fontFamily: 'system-ui, sans-serif',
+      fontFamily: '"Geist Sans", system-ui, sans-serif',
       fontWeight: '500',
       cursor: 'pointer',
       boxShadow: '0 2px 8px rgba(0,0,0,0.25)',

@@ -1,10 +1,10 @@
 import {
-  loginFromEmail,
-  type ActivityNotificationItem
+  type ActivityNotificationItem,
+  loginFromEmail
 } from '@/features/activity/lib/notification-types'
 import { ACTIVITY_MODULE_LABELS, type ActivityModuleView } from '@/features/home/home-ui'
 import { formatMentionDisplay } from '@/shared/lib/activities/mentions'
-import type { ActivityContext } from '@/shared/types/activites'
+import type { ActivityContext } from '@/shared/types/activities'
 
 export function moduleLabelForType(type: ActivityContext): string {
   if (type === 'automations') return 'Routines'

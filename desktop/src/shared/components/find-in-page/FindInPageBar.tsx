@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, X } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
 import { ButtonGroup } from '@/shared/components/ui/button-group'
 import { InputGroup, InputGroupInput } from '@/shared/components/ui/input-group'
+import { isComposingEnter } from '@/shared/lib/ime-enter'
 
 import { useFindInPage } from './use-find-in-page'
 
@@ -25,7 +26,7 @@ export function FindInPageBar() {
           close()
           return
         }
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && !isComposingEnter(e)) {
           e.preventDefault()
           findNext(!e.shiftKey)
         }
@@ -41,7 +42,9 @@ export function FindInPageBar() {
           className="h-7"
         />
       </InputGroup>
-      <span className="pierre-meta min-w-10 px-1 text-center tabular-nums">{matchLabel}</span>
+      <span className="text-muted-foreground min-w-10 px-1 text-center text-xs tabular-nums">
+        {matchLabel}
+      </span>
       <ButtonGroup>
         <Button
           type="button"

@@ -25,7 +25,7 @@ function Avatar({
       data-slot="avatar"
       data-size={size}
       className={cn(
-        'group/avatar relative flex size-8 shrink-0 overflow-hidden rounded-full select-none after:pointer-events-none after:absolute after:inset-0 after:rounded-full after:border after:border-border data-[size=lg]:size-10 data-[size=sm]:size-6 data-[size=xs]:size-4',
+        'group/avatar after:border-border relative flex size-8 shrink-0 overflow-hidden rounded-full select-none after:pointer-events-none after:absolute after:inset-0 after:rounded-full after:border data-[size=lg]:size-10 data-[size=sm]:size-6 data-[size=xs]:size-4',
         className
       )}
       {...props}
@@ -53,7 +53,7 @@ function AvatarFallback({
       data-slot="avatar-fallback"
       data-tone={tone}
       className={cn(
-        'flex size-full items-center justify-center rounded-full bg-muted text-sm text-muted-foreground group-data-[size=sm]/avatar:text-xs group-data-[size=xs]/avatar:text-[0.5rem] data-[tone=user-initials]:text-[38cqmin] data-[tone=user-initials]:font-medium data-[tone=user-initials]:tracking-tight data-[tone=user-initials]:uppercase data-[tone=timeline-bot]:bg-timeline-bot data-[tone=timeline-bot]:text-timeline-bot-foreground data-[tone=timeline-database]:bg-timeline-database data-[tone=timeline-database]:text-timeline-database-foreground data-[tone=timeline-user]:bg-timeline-user data-[tone=timeline-user]:text-timeline-user-foreground data-[tone=timeline-tenant]:bg-timeline-tenant data-[tone=timeline-tenant]:text-timeline-tenant-foreground data-[tone=timeline-external]:bg-timeline-external data-[tone=timeline-external]:text-timeline-external-foreground data-[tone=timeline-candidate]:bg-timeline-candidate data-[tone=timeline-candidate]:text-timeline-candidate-foreground',
+        'bg-muted text-muted-foreground flex size-full items-center justify-center rounded-full text-sm group-data-[size=sm]/avatar:text-xs group-data-[size=xs]/avatar:text-xs data-[tone=user-initials]:text-[38cqmin] data-[tone=user-initials]:font-medium data-[tone=user-initials]:tracking-tight data-[tone=user-initials]:uppercase',
         className
       )}
       {...props}
@@ -66,7 +66,7 @@ function AvatarGroup({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="avatar-group"
       className={cn(
-        'group/avatar-group flex -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:ring-background',
+        'group/avatar-group *:data-[slot=avatar]:ring-background flex -space-x-2 *:data-[slot=avatar]:ring-2',
         className
       )}
       {...props}
@@ -79,7 +79,7 @@ function AvatarGroupCount({ className, ...props }: React.ComponentProps<'div'>) 
     <div
       data-slot="avatar-group-count"
       className={cn(
-        'relative flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-sm text-muted-foreground ring-2 ring-background group-has-data-[size=lg]/avatar-group:size-10 group-has-data-[size=sm]/avatar-group:size-6 [&>svg]:size-4 group-has-data-[size=lg]/avatar-group:[&>svg]:size-5 group-has-data-[size=sm]/avatar-group:[&>svg]:size-3',
+        'bg-muted text-muted-foreground ring-background relative flex size-8 shrink-0 items-center justify-center rounded-full text-sm ring-2 group-has-data-[size=lg]/avatar-group:size-10 group-has-data-[size=sm]/avatar-group:size-6 group-has-data-[size=sm]/avatar-group:text-xs [&>svg]:size-4 group-has-data-[size=lg]/avatar-group:[&>svg]:size-5 group-has-data-[size=sm]/avatar-group:[&>svg]:size-3',
         className
       )}
       {...props}

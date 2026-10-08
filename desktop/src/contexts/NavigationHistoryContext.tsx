@@ -1,25 +1,25 @@
 import {
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useEffect,
   useEffectEvent,
   useMemo,
   useRef,
-  useState,
-  type ReactNode
+  useState
 } from 'react'
 
 import {
   createNavigationStack,
+  type NavigationStack,
   pushNavigationEntry,
-  replaceNavigationEntry,
-  type NavigationStack
+  replaceNavigationEntry
 } from '@/shared/lib/navigation-history'
 import {
   mergeSnapshot,
-  snapshotsEqual,
-  type NavigationSnapshot
+  type NavigationSnapshot,
+  snapshotsEqual
 } from '@/shared/lib/navigation-snapshot'
 import type { Tab } from '@/shared/lib/tabs'
 

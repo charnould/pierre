@@ -1,4 +1,4 @@
-import { ChevronDown, Pin, Plus } from 'lucide-react'
+import { ChevronDown, Pin, Plus, Search, Workflow } from 'lucide-react'
 
 import type { ReaderTarget } from '@/features/activity/lib/reader-target'
 import { AutomationAccessAvatars } from '@/features/automations/components/AutomationAccessAvatars'
@@ -7,7 +7,6 @@ import { AutomationsListChrome } from '@/features/automations/components/Automat
 import type { Automation } from '@/features/automations/lib/automation-types'
 import type { AutomationSortKey } from '@/features/automations/lib/sort-automations'
 import { DirectoryList, DirectoryRow } from '@/shared/components/DirectoryList'
-import { BetaAutomation, CartoonBulkSelectFiles } from '@/shared/components/icons/koboyo-empty'
 import { TableCellValue } from '@/shared/components/table/TableCellValue'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -48,7 +47,7 @@ function AutomationItem({
     <DirectoryRow selected={selected} onSelect={() => onSelectAutomation(automation)}>
       <div className="min-w-0">
         <p className="truncate text-sm font-medium">{automation.name}</p>
-        <p className="pierre-meta max-h-[2lh] overflow-hidden text-balance">
+        <p className="text-muted-foreground max-h-[2lh] overflow-hidden text-xs text-balance">
           {automation.description || '—'}
         </p>
       </div>
@@ -150,7 +149,7 @@ export function AutomationsList({
           <Empty className="min-h-60">
             <EmptyHeader>
               <EmptyMedia variant="icon">
-                <CartoonBulkSelectFiles />
+                <Search />
               </EmptyMedia>
               <EmptyTitle>Aucun résultat</EmptyTitle>
               <EmptyDescription>
@@ -162,7 +161,7 @@ export function AutomationsList({
           <Empty className="min-h-60">
             <EmptyHeader>
               <EmptyMedia variant="icon">
-                <BetaAutomation />
+                <Workflow />
               </EmptyMedia>
               <EmptyTitle>Commencez à automatiser vos tâches</EmptyTitle>
               <EmptyDescription>

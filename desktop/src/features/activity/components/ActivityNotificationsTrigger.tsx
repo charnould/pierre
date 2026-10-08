@@ -1,11 +1,11 @@
-import { Bell } from 'lucide-react'
-import { motion, useAnimationControls } from 'motion/react'
-import { useEffect, useRef, type CSSProperties } from 'react'
+import { Inbox } from 'lucide-react'
+import { type CSSProperties, useEffect, useRef } from 'react'
 
 import { useResolvedUiSettings } from '@/contexts/UiSettingsContext'
 import { useActivityRail } from '@/features/activity/lib/ActivityRailContext'
 import { Button } from '@/shared/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
+import { prefersReducedMotion } from '@/shared/lib/prefers-reduced-motion'
 import { resolveMascotSettings } from '@/shared/lib/ui-settings/schema'
 
 interface Props {
@@ -13,13 +13,25 @@ interface Props {
 }
 
 /** Burst fini — signale une arrivée sans maintenir la navigation en mouvement. */
-const RING_ROTATE = [0, -20, 18, -12, 8, -4, 0] as const
-const RING_SCALE = [1, 1.08, 1.03, 1.06, 1.02, 1.01, 1] as const
-const RING_EASE = [0.77, 0, 0.175, 1] as const
+const RING_KEYFRAMES = [
+  { transform: 'rotate(0deg) scale(1)' },
+  { transform: 'rotate(-20deg) scale(1.08)' },
+  { transform: 'rotate(18deg) scale(1.03)' },
+  { transform: 'rotate(-12deg) scale(1.06)' },
+  { transform: 'rotate(8deg) scale(1.02)' },
+  { transform: 'rotate(-4deg) scale(1.01)' },
+  { transform: 'rotate(0deg) scale(1)' }
+] satisfies Keyframe[]
+
+const RING_TIMING = {
+  duration: 300,
+  easing: 'cubic-bezier(0.77, 0, 0.175, 1)'
+} satisfies KeyframeAnimationOptions
 
 export function ActivityNotificationsTrigger({ unreadCount }: Props) {
   const { open, setOpen, openRail } = useActivityRail()
-  const ringControls = useAnimationControls()
+  const ringRef = useRef<HTMLSpanElement>(null)
+  const ringAnimationRef = useRef<Animation | null>(null)
   const previousUnreadCount = useRef(unreadCount)
   const hasUnread = unreadCount > 0
   const badgeColor = resolveMascotSettings(useResolvedUiSettings()).badgeColor
@@ -31,14 +43,18 @@ export function ActivityNotificationsTrigger({ unreadCount }: Props) {
   useEffect(() => {
     const previous = previousUnreadCount.current
     previousUnreadCount.current = unreadCount
-    if (unreadCount <= previous) return
+    if (unreadCount <= previous || prefersReducedMotion()) return
 
-    void ringControls.start({
-      rotate: [...RING_ROTATE],
-      scale: [...RING_SCALE],
-      transition: { duration: 0.46, ease: RING_EASE }
-    })
-  }, [ringControls, unreadCount])
+    ringAnimationRef.current?.cancel()
+    ringAnimationRef.current = ringRef.current?.animate(RING_KEYFRAMES, RING_TIMING) ?? null
+  }, [unreadCount])
+
+  useEffect(
+    () => () => {
+      ringAnimationRef.current?.cancel()
+    },
+    []
+  )
 
   return (
     <Tooltip>
@@ -55,13 +71,12 @@ export function ActivityNotificationsTrigger({ unreadCount }: Props) {
           />
         }
       >
-        <motion.span
+        <span
+          ref={ringRef}
           aria-hidden
-          className="relative flex size-4 shrink-0 origin-[50%_10%] items-center justify-center will-change-transform"
-          initial={false}
-          animate={ringControls}
+          className="relative flex size-4 shrink-0 origin-[50%_10%] items-center justify-center"
         >
-          <Bell className="size-4" />
+          <Inbox />
           {hasUnread ? (
             <span
               data-unread-dot=""
@@ -69,7 +84,7 @@ export function ActivityNotificationsTrigger({ unreadCount }: Props) {
               style={{ '--mascot-badge': badgeColor } as CSSProperties}
             />
           ) : null}
-        </motion.span>
+        </span>
       </TooltipTrigger>
       <TooltipContent side="bottom">Notifications</TooltipContent>
     </Tooltip>

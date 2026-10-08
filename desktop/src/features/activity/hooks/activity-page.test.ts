@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import type { ActiviteListItem } from '@/shared/types/activites'
+import type { ActivityListItem } from '@/shared/types/activities'
 
 import {
   ACTIVITY_PAGE_SIZE,
@@ -9,10 +9,10 @@ import {
   refreshWindowLimit
 } from './activity-page'
 
-function row(id: number): ActiviteListItem {
+function row(id: number): ActivityListItem {
   return {
     id,
-    date_creation: '2026-07-26T10:00:00.000Z',
+    createdAt: '2026-07-26T10:00:00.000Z',
     rattachement: 'tickets:REC-1',
     auteur: 'agent:alice',
     id_client: null,
@@ -21,7 +21,7 @@ function row(id: number): ActiviteListItem {
     type: 'note.published',
     channel: null,
     mentions: [],
-    contenu: JSON.stringify({ version: 2, text: '' }),
+    contenu: JSON.stringify({ version: 1, text: '' }),
     my: null,
     read: true,
     reaction: null

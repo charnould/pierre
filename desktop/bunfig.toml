@@ -3,3 +3,6 @@
 # Without this, those copies are collected as real test files.
 pathIgnorePatterns = ["out/**"]
 preload = ["./test/dom-preload.ts"]
+
+[serve.static]
+plugins = ["./build-plugin.ts"]

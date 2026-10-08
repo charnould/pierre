@@ -7,7 +7,7 @@ describe('isTab', () => {
     expect(isTab('home')).toBe(true)
     expect(isTab('tickets')).toBe(true)
     expect(isTab('repayment')).toBe(true)
-    expect(isTab('insurance-attestation')).toBe(true)
+    expect(isTab('insurance')).toBe(true)
     expect(isTab('relocation')).toBe(true)
     expect(isTab('attributions')).toBe(true)
     expect(isTab('ventes')).toBe(true)
@@ -16,6 +16,7 @@ describe('isTab', () => {
   })
 
   test('rejects unknown ids', () => {
+    expect(isTab('insurance-attestation')).toBe(false)
     expect(isTab('agent')).toBe(false)
     expect(isTab('clearance')).toBe(false)
     expect(isTab('request')).toBe(false)

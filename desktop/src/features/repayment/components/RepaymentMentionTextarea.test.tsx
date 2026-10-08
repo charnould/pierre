@@ -16,14 +16,12 @@ const originalGlobals = new Map<string, unknown>()
 beforeAll(() => {
   const globals = globalThis as Record<string, unknown>
   const currentWindow = globals.window as
-    | { setTimeout?: unknown; Element?: unknown; HTMLElement?: unknown }
-    | undefined
+    { setTimeout?: unknown; Element?: unknown; HTMLElement?: unknown } | undefined
   const documentWindow =
     typeof globals.document === 'undefined'
       ? undefined
       : (globalThis.document.defaultView as
-          | { Element?: unknown; HTMLElement?: unknown }
-          | undefined)
+          { Element?: unknown; HTMLElement?: unknown } | undefined)
   const hasWorkingDom =
     typeof globals.document !== 'undefined' &&
     typeof currentWindow?.setTimeout === 'function' &&

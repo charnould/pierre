@@ -1,14 +1,17 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import type { DocumentChronologyRow } from '@pierre/shared/repayment-document-fields'
+import type { RepaymentMessage } from '@pierre/shared/repayment-messages'
+import { contextBridge, ipcRenderer, webUtils } from 'electron'
 
 import {
+  aiChunkEventChannel,
   AuthWindowLayoutSwapEvent,
   FoundInPageEvent,
   IpcChannel,
-  aiChunkEventChannel,
   MascotLookEvent,
   MascotOpenNotificationsEvent,
   MascotUnreadCountEvent
 } from '../electron/ipc/channels'
+import { readMascotUnreadCount } from '../src/mascot/unread-count'
 import type { LoginResult } from '../src/shared/lib/login-errors'
 import type {
   TicketsTableSettings,
@@ -28,8 +31,23 @@ import type {
   RecordExternalCommunicationPayload,
   SendCommunicationPayload,
   SendCommunicationResponse
-} from '../src/shared/types/activites'
+} from '../src/shared/types/activities'
 import type {
+  AdminError,
+  ConversationDetailResponse,
+  ConversationListResponse,
+  GetAdminConversationParams,
+  GetLlmRunParams,
+  GetLlmUsageParams,
+  ListAdminConversationsParams,
+  ListLlmRunsParams,
+  LlmRunListResponse,
+  LlmRunResponse,
+  LlmUsageResponse,
+  SaveAdminConversationReviewParams
+} from '../src/shared/types/admin-insights'
+import type {
+  AutomationApiFailure,
   AutomationResponse,
   AutomationsListResponse,
   CreateAutomationPayload,
@@ -42,17 +60,17 @@ import type {
 } from '../src/shared/types/automations'
 import type {
   BulkOperationExecuteResponse,
-  BulkOperationReportsResponse,
   BulkOperationPreviewMessageResponse,
   BulkOperationPreviewQueryResponse,
+  BulkOperationReportsResponse,
   BulkOperationResponse,
   BulkOperationsListResponse,
   CreateBulkOperationPayload,
   DeleteBulkOperationPayload,
   ExecuteBulkOperationPayload,
   GetBulkOperationParams,
-  ListBulkOperationsParams,
   ListBulkOperationReportsParams,
+  ListBulkOperationsParams,
   PatchBulkOperationPayload,
   PreviewBulkOperationMessagePayload,
   PreviewBulkOperationQueryPayload
@@ -77,8 +95,6 @@ import type {
 import type { Settings } from '../src/shared/types/settings'
 import type { GetTicketDraftResult } from '../src/shared/types/ticket-draft'
 import type {
-  PutTicketPayload,
-  PutTicketResult,
   TicketsFacetsResponse,
   TicketsListResponse,
   TicketsMetaResponse,
@@ -103,13 +119,27 @@ import type {
   UploadMyAvatarResponse,
   UsersListResponse
 } from '../src/shared/types/users'
+import type { DesktopApi } from '../src/shared/types/window-api'
 
 const aiChunkSubscriptions = new Map<
   string,
   { channel: string; listener: (_event: unknown, chunk: string) => void }
 >()
 
-contextBridge.exposeInMainWorld('api', {
+function nativeFiles(files: readonly File[] | undefined) {
+  return (files ?? []).map((file) => {
+    let path = ''
+    try {
+      path = webUtils.getPathForFile(file)
+    } catch {
+      path = ''
+    }
+    if (!path) throw new Error("Impossible de lire l'une des pièces jointes.")
+    return { name: file.name, type: file.type, path }
+  })
+}
+
+const desktopApi = {
   getSettings: () => ipcRenderer.invoke(IpcChannel.settings.get) as Promise<Settings>,
   saveSettings: (data: Settings) =>
     ipcRenderer.invoke(IpcChannel.settings.save, data) as Promise<boolean>,
@@ -121,6 +151,16 @@ contextBridge.exposeInMainWorld('api', {
   getUiSettingsPath: () => ipcRenderer.invoke(IpcChannel.uiSettings.getPath) as Promise<string>,
   writeClipboard: (text: string) =>
     ipcRenderer.invoke(IpcChannel.system.writeClipboard, text) as Promise<boolean>,
+  transcribeDictation: (params: { url: string; pcm: Uint8Array }) =>
+    ipcRenderer.invoke(IpcChannel.dictation.transcribe, params) as Promise<{ text: string }>,
+  getMicrophoneAccessStatus: () =>
+    ipcRenderer.invoke(IpcChannel.dictation.microphoneStatus) as Promise<
+      'granted' | 'denied' | 'restricted' | 'not-determined' | 'unknown'
+    >,
+  requestMicrophoneAccess: () =>
+    ipcRenderer.invoke(IpcChannel.dictation.requestMicrophone) as Promise<boolean>,
+  openMicrophoneSettings: () =>
+    ipcRenderer.invoke(IpcChannel.dictation.openMicrophoneSettings) as Promise<boolean>,
   openExternal: (url: string) =>
     ipcRenderer.invoke(IpcChannel.system.openExternal, url) as Promise<boolean>,
   openAutomationReport: (params: { html: string }) =>
@@ -194,8 +234,12 @@ contextBridge.exposeInMainWorld('api', {
     message: string
     conv_id: string
     data?: string
-    files?: Array<{ name: string; type: string; buffer: ArrayBuffer }>
-  }) => ipcRenderer.invoke(IpcChannel.stream.start, params) as Promise<boolean>,
+    files?: File[]
+  }) =>
+    ipcRenderer.invoke(IpcChannel.stream.start, {
+      ...params,
+      files: nativeFiles(params.files)
+    }) as Promise<boolean>,
   logout: () => ipcRenderer.invoke(IpcChannel.auth.logout) as Promise<boolean>,
   cancelStream: (requestId: string) =>
     ipcRenderer.invoke(IpcChannel.stream.cancel, requestId) as Promise<void>,
@@ -222,8 +266,12 @@ contextBridge.exposeInMainWorld('api', {
     conv_id: string
     payload: string
     id_skill: string
-    files: Array<{ name: string; type: string; buffer: ArrayBuffer }>
-  }) => ipcRenderer.invoke(IpcChannel.stream.generateAnswer, params) as Promise<boolean>,
+    files: File[]
+  }) =>
+    ipcRenderer.invoke(IpcChannel.stream.generateAnswer, {
+      ...params,
+      files: nativeFiles(params.files)
+    }) as Promise<boolean>,
   postAiUiResponse: (params: {
     url: string
     conv_id: string
@@ -250,15 +298,54 @@ contextBridge.exposeInMainWorld('api', {
       IpcChannel.ledger.repaymentTimeline,
       params
     ) as Promise<RepaymentTimelineResponse | null>,
+  exportRepaymentDocument: (params: {
+    url: string
+    document: 'diagnostic' | 'plan' | 'protocole'
+    format: 'docx' | 'pdf'
+    dossier: unknown
+    chronologie?: DocumentChronologyRow[]
+  }) =>
+    ipcRenderer.invoke(IpcChannel.ledger.exportRepaymentDocument, params) as Promise<
+      { saved: true } | { canceled: true } | { error?: { message?: string } } | null
+    >,
   getTicketFacets: (params: { url: string; column: string; q?: string }) =>
     ipcRenderer.invoke(IpcChannel.tickets.facets, params) as Promise<TicketsFacetsResponse | null>,
-  putTicket: (params: { url: string } & PutTicketPayload) =>
-    ipcRenderer.invoke(IpcChannel.tickets.putTicket, params) as Promise<PutTicketResult | null>,
   getTicketDraft: (params: { url: string; id_reclamation: string; id_skill?: string }) =>
     ipcRenderer.invoke(IpcChannel.tickets.getDraft, params) as Promise<GetTicketDraftResult | null>,
   getSetup: (params: { url: string }) => ipcRenderer.invoke(IpcChannel.setup.get, params),
   getSetupFile: (params: { url: string; id: string }) =>
     ipcRenderer.invoke(IpcChannel.setup.file, params) as Promise<ArrayBuffer | null>,
+  getAdminProviders: (params: { url: string }) =>
+    ipcRenderer.invoke(IpcChannel.setup.providersGet, params) as Promise<{
+      data: {
+        ai: {
+          configured: boolean
+          type: string
+          baseUrl: string
+          model: string
+          effort: string
+        }
+        rcs: { configured: boolean; from: string; secret: string }
+        email: { configured: boolean; domain: string; account: string }
+        maileva: {
+          configured: boolean
+          clientId: string
+          username: string
+          senderId: string
+          address: string
+          target: '' | 'sandbox' | 'production'
+          postalReady: boolean
+          electronicReady: boolean
+          secretsReadable: boolean
+        }
+        webhooks: { rcs: string; email: string }
+      }
+    } | null>,
+  putAdminProviders: (params: { url: string; body: Record<string, unknown> }) =>
+    ipcRenderer.invoke(IpcChannel.setup.providersPut, params) as Promise<{
+      data?: { rcsSecret?: string; warning?: string }
+      error?: { message: string }
+    } | null>,
   getAdminSetup: (params: { url: string }) =>
     ipcRenderer.invoke(IpcChannel.setup.adminGet, params) as Promise<{
       texts: Record<string, string | null>
@@ -267,7 +354,18 @@ contextBridge.exposeInMainWorld('api', {
     } | null>,
   putAdminSetup: (params: { url: string; id: string; body?: string; bytes?: Uint8Array }) =>
     ipcRenderer.invoke(IpcChannel.setup.adminPut, params) as Promise<{
-      data: { id: string }
+      data?: { id: string }
+      error?: { message: string }
+    } | null>,
+  postEmailTest: (params: { url: string }) =>
+    ipcRenderer.invoke(IpcChannel.setup.emailTest, params) as Promise<{
+      data?: { sent: true }
+      error?: { message: string }
+    } | null>,
+  verifyRepaymentMessage: (params: { url: string; text: string }) =>
+    ipcRenderer.invoke(IpcChannel.setup.verifyRepaymentMessage, params) as Promise<{
+      data?: RepaymentMessage
+      error?: { message: string }
     } | null>,
   deleteAdminChatbot: (params: { url: string; id: string }) =>
     ipcRenderer.invoke(IpcChannel.setup.adminDelete, params) as Promise<{
@@ -282,6 +380,30 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke(IpcChannel.users.list, params) as Promise<UsersListResponse | null>,
   getAdminUsers: (params: { url: string }) =>
     ipcRenderer.invoke(IpcChannel.users.adminList, params) as Promise<AdminUsersResponse | null>,
+  getAdminConversations: (params: ListAdminConversationsParams) =>
+    ipcRenderer.invoke(IpcChannel.admin.conversations, params) as Promise<
+      ConversationListResponse | AdminError | null
+    >,
+  getAdminConversation: (params: GetAdminConversationParams) =>
+    ipcRenderer.invoke(IpcChannel.admin.conversation, params) as Promise<
+      ConversationDetailResponse | AdminError | null
+    >,
+  saveAdminConversationReview: (params: SaveAdminConversationReviewParams) =>
+    ipcRenderer.invoke(IpcChannel.admin.review, params) as Promise<
+      ConversationDetailResponse | AdminError | null
+    >,
+  getAdminLlmUsage: (params: GetLlmUsageParams) =>
+    ipcRenderer.invoke(IpcChannel.admin.llmUsage, params) as Promise<
+      LlmUsageResponse | AdminError | null
+    >,
+  getAdminLlmRuns: (params: ListLlmRunsParams) =>
+    ipcRenderer.invoke(IpcChannel.admin.llmRuns, params) as Promise<
+      LlmRunListResponse | AdminError | null
+    >,
+  getAdminLlmRun: (params: GetLlmRunParams) =>
+    ipcRenderer.invoke(IpcChannel.admin.llmRun, params) as Promise<
+      LlmRunResponse | AdminError | null
+    >,
   createAdminUser: (params: SaveAdminUserPayload) =>
     ipcRenderer.invoke(
       IpcChannel.users.adminCreate,
@@ -336,8 +458,6 @@ contextBridge.exposeInMainWorld('api', {
     ) as Promise<KnowledgeSourceResponse | null>,
   deleteKnowledgeSource: (params: { url: string; id: string }) =>
     ipcRenderer.invoke(IpcChannel.knowledge.delete, params) as Promise<boolean>,
-  downloadKnowledgeSource: (params: { url: string; id: string; originalName: string }) =>
-    ipcRenderer.invoke(IpcChannel.knowledge.download, params) as Promise<boolean>,
   getKnowledgeBuilds: (params: { url: string }) =>
     ipcRenderer.invoke(
       IpcChannel.knowledge.builds,
@@ -397,20 +517,29 @@ contextBridge.exposeInMainWorld('api', {
       params
     ) as Promise<AutomationsListResponse | null>,
   createAutomation: (params: CreateAutomationPayload) =>
-    ipcRenderer.invoke(IpcChannel.automations.create, params) as Promise<AutomationResponse | null>,
+    ipcRenderer.invoke(IpcChannel.automations.create, params) as Promise<
+      AutomationResponse | AutomationApiFailure | null
+    >,
   patchAutomation: (params: PatchAutomationPayload) =>
-    ipcRenderer.invoke(IpcChannel.automations.patch, params) as Promise<AutomationResponse | null>,
+    ipcRenderer.invoke(IpcChannel.automations.patch, params) as Promise<
+      AutomationResponse | AutomationApiFailure | null
+    >,
   deleteAutomation: (params: DeleteAutomationPayload) =>
-    ipcRenderer.invoke(
-      IpcChannel.automations.delete,
-      params
-    ) as Promise<DeleteAutomationResponse | null>,
+    ipcRenderer.invoke(IpcChannel.automations.delete, params) as Promise<
+      DeleteAutomationResponse | AutomationApiFailure | null
+    >,
   runAutomation: (params: RunAutomationPayload) =>
-    ipcRenderer.invoke(IpcChannel.automations.run, params) as Promise<AutomationResponse | null>,
+    ipcRenderer.invoke(IpcChannel.automations.run, params) as Promise<
+      AutomationResponse | AutomationApiFailure | null
+    >,
   pinAutomation: (params: PinAutomationPayload) =>
-    ipcRenderer.invoke(IpcChannel.automations.pin, params) as Promise<AutomationResponse | null>,
+    ipcRenderer.invoke(IpcChannel.automations.pin, params) as Promise<
+      AutomationResponse | AutomationApiFailure | null
+    >,
   unpinAutomation: (params: PinAutomationPayload) =>
-    ipcRenderer.invoke(IpcChannel.automations.unpin, params) as Promise<AutomationResponse | null>,
+    ipcRenderer.invoke(IpcChannel.automations.unpin, params) as Promise<
+      AutomationResponse | AutomationApiFailure | null
+    >,
   getBulkOperations: (params: ListBulkOperationsParams) =>
     ipcRenderer.invoke(
       IpcChannel.bulkOperations.list,
@@ -479,8 +608,11 @@ contextBridge.exposeInMainWorld('api', {
   showMascotMenu: () => ipcRenderer.invoke(IpcChannel.mascot.showMenu) as Promise<boolean>,
   syncMascotVisibility: (loggedIn: boolean) =>
     ipcRenderer.invoke(IpcChannel.mascot.syncVisibility, loggedIn) as Promise<boolean>,
-  onMascotUnreadCount: (cb: (count: number) => void) => {
-    const listener = (_: unknown, count: number) => cb(count)
+  onMascotUnreadCount: (cb: (payload: { count: number; orbit: boolean }) => void) => {
+    const listener = (_: unknown, payload: unknown) => {
+      const next = readMascotUnreadCount(payload)
+      if (next) cb(next)
+    }
     ipcRenderer.on(MascotUnreadCountEvent, listener)
     return () => {
       ipcRenderer.removeListener(MascotUnreadCountEvent, listener)
@@ -501,4 +633,6 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.removeListener(MascotOpenNotificationsEvent, listener)
     }
   }
-})
+} satisfies DesktopApi
+
+contextBridge.exposeInMainWorld('api', desktopApi)

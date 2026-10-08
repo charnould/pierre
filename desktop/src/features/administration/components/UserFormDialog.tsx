@@ -13,6 +13,7 @@ import {
 } from '@/shared/components/ui/dialog'
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -200,6 +201,10 @@ export function UserFormDialog({
 
           <FieldSet>
             <FieldLegend>Profil</FieldLegend>
+            <FieldDescription>
+              Un profil recopie ses modules et ses assistants sur le compte. Personnalisé laisse
+              cocher au cas par cas.
+            </FieldDescription>
             <Field>
               <FieldLabel htmlFor={`${fieldId}-profile`}>Affectation</FieldLabel>
               <Select items={profileItems} value={profileId} onValueChange={applyProfile}>
@@ -215,6 +220,7 @@ export function UserFormDialog({
 
           <FieldSet>
             <FieldLegend>Modules</FieldLegend>
+            <FieldDescription>Écrans métier ouverts à ce compte.</FieldDescription>
             <div data-slot="checkbox-group" className="grid grid-cols-2 gap-2">
               {catalogues.modules.map((module) => (
                 <Field key={module.id} orientation="horizontal">
@@ -232,6 +238,10 @@ export function UserFormDialog({
 
           <FieldSet>
             <FieldLegend>Chatbots</FieldLegend>
+            <FieldDescription>
+              Assistants que cette personne peut choisir dans Discuter. Le chatbot public est déjà
+              ouvert à tous.
+            </FieldDescription>
             <div data-slot="checkbox-group" className="grid grid-cols-2 gap-2">
               {catalogues.chatbots.map((chatbot) => (
                 <Field key={chatbot.id} orientation="horizontal">
@@ -251,6 +261,9 @@ export function UserFormDialog({
 
           <FieldSet>
             <FieldLegend>Administration</FieldLegend>
+            <FieldDescription>
+              Ouvre cet écran. Le statut administrateur ne dépend pas du profil.
+            </FieldDescription>
             <Field orientation="horizontal">
               <Switch
                 id={`${fieldId}-administrator`}

@@ -5,10 +5,11 @@ import {
   moduleLabelForType
 } from '@/features/activity/lib/notification-labels'
 import {
-  mapActivityRow,
-  type ActivityNotificationItem
+  type ActivityNotificationItem,
+  mapActivityRow
 } from '@/features/activity/lib/notification-types'
-import type { ActiviteListItem, ActivityContext } from '@/shared/types/activites'
+import { warnRenderer } from '@/shared/lib/renderer-log'
+import type { ActivityContext, ActivityListItem } from '@/shared/types/activities'
 
 import {
   ACTIVITY_PAGE_SIZE,
@@ -26,7 +27,7 @@ function splitAttachment(rattachement: string): { context: ActivityContext; ref:
   return { context: context as ActivityContext, ref }
 }
 
-export function mapAuthoredActivityRows(rows: ActiviteListItem[]): ActivityNotificationItem[] {
+export function mapAuthoredActivityRows(rows: ActivityListItem[]): ActivityNotificationItem[] {
   return rows.flatMap((row) => {
     const attachment = splitAttachment(row.rattachement)
     if (!attachment) return []
@@ -47,7 +48,7 @@ export function mapAuthoredActivityRows(rows: ActiviteListItem[]): ActivityNotif
 }
 
 export function useAuthoredActivity(url: string | undefined, authors: string[], enabled = true) {
-  const [rows, setRows] = useState<ActiviteListItem[]>([])
+  const [rows, setRows] = useState<ActivityListItem[]>([])
   const [hasMore, setHasMore] = useState(false)
   const authorsKey = useMemo(() => [...new Set(authors)].sort().join('\n'), [authors])
   const rowsRef = useRef(rows)
@@ -76,15 +77,20 @@ export function useAuthoredActivity(url: string | undefined, authors: string[], 
     }
     const generation = ++requestGeneration.current
     const limit = refreshWindowLimit(rowsRef.current.length)
-    const response = await window.api.getActivities({
-      url,
-      auteurs,
-      limit,
-      offset: 0
-    })
-    if (!response || generation !== requestGeneration.current) return
-    setRows(response.data)
-    setHasMore(pageIsFull(response.data.length, limit))
+    try {
+      const response = await window.api.getActivities({
+        url,
+        auteurs,
+        limit,
+        offset: 0
+      })
+      if (!response || generation !== requestGeneration.current) return
+      setRows(response.data)
+      setHasMore(pageIsFull(response.data.length, limit))
+    } catch (error) {
+      if (generation !== requestGeneration.current) return
+      warnRenderer('useAuthoredActivity.refresh', error)
+    }
   }, [authorsKey, enabled, url])
 
   const loadMore = useCallback(async () => {
@@ -134,12 +140,16 @@ export function useAuthoredActivity(url: string | undefined, authors: string[], 
         setRows(response.data)
         setHasMore(pageIsFull(response.data.length, limit))
       })
+      .catch((error) => {
+        if (generation !== requestGeneration.current) return
+        warnRenderer('useAuthoredActivity.load', error)
+      })
     return () => {
       requestGeneration.current += 1
     }
   }, [authorsKey, enabled, url])
 
-  const replaceRows = useCallback((nextRows: ActiviteListItem[], limit: number) => {
+  const replaceRows = useCallback((nextRows: ActivityListItem[], limit: number) => {
     rowsRef.current = nextRows
     setRows(nextRows)
     setHasMore(pageIsFull(nextRows.length, limit))

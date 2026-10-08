@@ -1,12 +1,12 @@
+import { isKnowledgeEntryAssigned } from '@pierre/shared/knowledge'
+import { BUSINESS_MODULES } from '@pierre/shared/modules'
+
 import type {
   KnowledgeBuild,
   KnowledgeData,
   KnowledgeEntry,
   KnowledgeSource
 } from '@/shared/types/knowledge'
-
-import { isKnowledgeEntryAssigned } from '../../../../../shared/knowledge'
-import { BUSINESS_MODULES } from '../../../../../shared/modules'
 
 export { isKnowledgeEntryAssigned }
 
@@ -27,12 +27,7 @@ export type KnowledgeBuckets = {
 }
 
 export type KnowledgeItemState =
-  | 'absent'
-  | 'unassigned'
-  | 'pending'
-  | 'running'
-  | 'succeeded'
-  | 'failed'
+  'absent' | 'unassigned' | 'pending' | 'running' | 'succeeded' | 'failed'
 
 export const buildKnowledgeBuckets = (
   sources: readonly KnowledgeSource[],

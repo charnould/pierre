@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import type { Activite, CommunicationChannel } from '@/shared/types/activites'
+import type { Activity, CommunicationChannel } from '@/shared/types/activities'
 
 import {
   communicationBodyParagraphs,
@@ -22,10 +22,10 @@ const CHANNELS: CommunicationChannel[] = [
   'electronic_registered_letter'
 ]
 
-function activity(partial: Partial<Activite> = {}): Activite {
+function activity(partial: Partial<Activity> = {}): Activity {
   return {
     id: 1,
-    date_creation: '2026-06-10T10:00:00Z',
+    createdAt: '2026-06-10T10:00:00Z',
     rattachement: 'repayment:LOC-1',
     auteur: 'user:alice@exemple.fr',
     id_client: null,
@@ -35,8 +35,8 @@ function activity(partial: Partial<Activite> = {}): Activite {
     channel: 'email',
     mentions: [],
     destinataire: 'bob@locataire.fr',
-    contenu: JSON.stringify({ version: 2, sender: 'alice@exemple.fr', body: 'Bonjour' }),
-    thread_id: 'mail-1',
+    contenu: JSON.stringify({ version: 1, sender: 'alice@exemple.fr', body: 'Bonjour' }),
+    threadId: 'mail-1',
     revision: 1,
     ...partial
   }
@@ -59,7 +59,7 @@ describe('parseTimelineCommunication', () => {
         activity({
           channel,
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             sender: 'alice@exemple.fr',
             subject: 'Titre',
             body: 'Corps'
@@ -81,7 +81,7 @@ describe('parseTimelineCommunication', () => {
       activity({
         channel: 'rcs',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           sender: 'alice@exemple.fr',
           subject: 'Objet interdit',
           body: 'Bonjour'
@@ -99,7 +99,7 @@ describe('parseTimelineCommunication', () => {
         auteur: 'external:+33612345678',
         destinataire: null,
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           sender: '+33612345678',
           body: 'Oui',
           choices: [
@@ -124,7 +124,7 @@ describe('parseTimelineCommunication', () => {
         type: 'communication.imported',
         channel: 'email',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           sender: 'Alice <alice@bailleur.fr>',
           subject: 'Relance loyer',
           body: 'Merci de régulariser.'
@@ -150,20 +150,36 @@ describe('parseTimelineCommunication', () => {
   })
 
   test('attache le statut réussi ou échoué du thread', () => {
-    const opened = activity({ thread_id: 'mail-1' })
+    const opened = activity({ threadId: 'mail-1' })
     expect(
       parseTimelineCommunication(opened, [
         activity({
           type: 'communication.ok',
-          contenu: JSON.stringify({ version: 2, result: 'read' })
+          contenu: JSON.stringify({ version: 1, result: 'sent' })
+        })
+      ])?.statusLine
+    ).toBe('Envoyé')
+    expect(
+      parseTimelineCommunication(opened, [
+        activity({
+          type: 'communication.ok',
+          contenu: JSON.stringify({ version: 1, result: 'read' })
         })
       ])?.statusLine
     ).toBe('Réussi · Lu')
     expect(
       parseTimelineCommunication(opened, [
         activity({
+          type: 'communication.ok',
+          contenu: JSON.stringify({ version: 1, result: 'opened' })
+        })
+      ])?.statusLine
+    ).toBe('Réussi · Ouvert')
+    expect(
+      parseTimelineCommunication(opened, [
+        activity({
           type: 'communication.failed',
-          contenu: JSON.stringify({ version: 2, reason: 'bounced' })
+          contenu: JSON.stringify({ version: 1, reason: 'bounced' })
         })
       ])
     ).toMatchObject({
@@ -174,7 +190,7 @@ describe('parseTimelineCommunication', () => {
       parseTimelineCommunication(opened, [
         activity({
           type: 'communication.failed',
-          contenu: JSON.stringify({ version: 2, reason: 'undelivered' })
+          contenu: JSON.stringify({ version: 1, reason: 'undelivered' })
         })
       ])?.statusLine
     ).toBe('Échoué · Non délivré')
@@ -184,7 +200,7 @@ describe('parseTimelineCommunication', () => {
     const parsed = parseTimelineCommunication(activity(), [
       activity({
         type: 'communication.failed',
-        contenu: JSON.stringify({ version: 2, reason: 'smtp_550 mailbox unavailable' })
+        contenu: JSON.stringify({ version: 1, reason: 'smtp_550 mailbox unavailable' })
       })
     ])
 
@@ -270,7 +286,7 @@ describe('formatTimelineCommunicationPlain', () => {
     expect(
       formatTimelineCommunicationPlain(
         activity({
-          contenu: JSON.stringify({ version: 2, sender: 'Alice', subject: 'Sujet', body: 'Corps' })
+          contenu: JSON.stringify({ version: 1, sender: 'Alice', subject: 'Sujet', body: 'Corps' })
         })
       )
     ).toBe('Objet : Sujet\n\nCorps')

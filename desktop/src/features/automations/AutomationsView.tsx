@@ -9,17 +9,19 @@ import { AutomationFormDialog } from '@/features/automations/components/Automati
 import { AutomationsList } from '@/features/automations/components/AutomationsList'
 import { useAutomationsListFilters } from '@/features/automations/hooks/useAutomationsListFilters'
 import {
-  isTicketReplyAutomation,
-  recordToAutomation,
   type Automation,
-  type ReportAutomation,
-  type TicketReplyAutomation
+  recordToAutomation,
+  type ReportAutomation
 } from '@/features/automations/lib/automation-types'
 import { openAutomationRun } from '@/features/automations/lib/open-automation-run'
 import { ModuleGate } from '@/shared/components/ModuleGate'
 import { toast } from '@/shared/components/ui/toast'
 import { cn } from '@/shared/lib/utils'
-import type { CreateAutomationBody, PatchAutomationBody } from '@/shared/types/automations'
+import type {
+  AutomationApiFailure,
+  CreateAutomationBody,
+  PatchAutomationBody
+} from '@/shared/types/automations'
 import type { Settings } from '@/shared/types/settings'
 
 interface Props {
@@ -32,6 +34,15 @@ interface Props {
 
 function automationsSheetTitle(isCreatingNew: boolean): string {
   return isCreatingNew ? 'Créer une automatisation' : "Modifier l'automatisation"
+}
+
+function automationRefusal(
+  res: { data?: unknown; error?: { message?: string } } | AutomationApiFailure | null,
+  fallback: string
+): string | null {
+  if (res && 'data' in res && res.data) return null
+  const message = res && 'error' in res ? res.error?.message?.trim() : ''
+  return message || fallback
 }
 
 export function AutomationsView({
@@ -129,22 +140,16 @@ export function AutomationsView({
         frequencyDay: data.frequencyDay,
         frequencyTime: data.frequencyTime
       }
-      if (data.type === 'report' || (!data.type && selectedAutomation?.type === 'report')) {
-        if ('prompt' in data) patch.prompt = (data as Partial<ReportAutomation>).prompt
-        if ('maxReports' in data) patch.maxReports = (data as Partial<ReportAutomation>).maxReports
-      } else {
-        const reply = data as Partial<TicketReplyAutomation>
-        if (reply.channel) patch.channel = reply.channel
-        if (reply.ticketFilters) patch.ticketFilters = reply.ticketFilters
-        if (reply.maxItems !== undefined) patch.maxItems = reply.maxItems
-      }
+      if ('prompt' in data) patch.prompt = (data as Partial<ReportAutomation>).prompt
+      if ('maxReports' in data) patch.maxReports = (data as Partial<ReportAutomation>).maxReports
       const res = await window.api.patchAutomation({
         url: settings.url,
         id: selectedAutomationId,
         patch
       })
-      if (!res) {
-        toast.add({ title: 'Enregistrement impossible', type: 'error' })
+      const refused = automationRefusal(res, 'Enregistrement impossible')
+      if (refused) {
+        toast.add({ title: refused, type: 'error' })
         return
       }
       await refresh()
@@ -153,37 +158,22 @@ export function AutomationsView({
       return
     }
 
-    const body: CreateAutomationBody =
-      data.type === 'replies'
-        ? {
-            type: 'replies',
-            name: data.name ?? 'Nouvelle automatisation',
-            description: data.description ?? '',
-            mentions: data.mentions ?? [],
-            frequency: data.frequency ?? 'weekly',
-            frequencyDay: data.frequencyDay,
-            frequencyTime: data.frequencyTime ?? '08:00',
-            channel: (data as Partial<TicketReplyAutomation>).channel ?? 'email',
-            ticketFilters: (data as Partial<TicketReplyAutomation>).ticketFilters ?? {
-              rules: []
-            },
-            maxItems: (data as Partial<TicketReplyAutomation>).maxItems ?? 20
-          }
-        : {
-            type: 'report',
-            name: data.name ?? 'Nouvelle automatisation',
-            description: data.description ?? '',
-            mentions: data.mentions ?? [],
-            frequency: data.frequency ?? 'weekly',
-            frequencyDay: data.frequencyDay,
-            frequencyTime: data.frequencyTime ?? '08:00',
-            prompt: (data as Partial<ReportAutomation>).prompt ?? '',
-            maxReports: (data as Partial<ReportAutomation>).maxReports ?? 6
-          }
+    const body: CreateAutomationBody = {
+      type: 'report',
+      name: data.name ?? 'Nouvelle automatisation',
+      description: data.description ?? '',
+      mentions: data.mentions ?? [],
+      frequency: data.frequency ?? 'weekly',
+      frequencyDay: data.frequencyDay,
+      frequencyTime: data.frequencyTime ?? '08:00',
+      prompt: (data as Partial<ReportAutomation>).prompt ?? '',
+      maxReports: (data as Partial<ReportAutomation>).maxReports ?? 6
+    }
 
     const res = await window.api.createAutomation({ url: settings.url, ...body })
-    if (!res) {
-      toast.add({ title: 'Création impossible', type: 'error' })
+    const refused = automationRefusal(res, 'Création impossible')
+    if (refused) {
+      toast.add({ title: refused, type: 'error' })
       return
     }
     await refresh()
@@ -200,8 +190,9 @@ export function AutomationsView({
       id: automationId,
       patch: { status: current.status === 'paused' ? 'scheduled' : 'paused' }
     })
-    if (!res) {
-      toast.add({ title: 'Mise en pause impossible', type: 'error' })
+    const refused = automationRefusal(res, 'Mise en pause impossible')
+    if (refused) {
+      toast.add({ title: refused, type: 'error' })
       return
     }
     await refresh()
@@ -214,8 +205,9 @@ export function AutomationsView({
       url: settings.url,
       id: selectedAutomationId
     })
-    if (!res) {
-      toast.add({ title: 'Suppression impossible', type: 'error' })
+    const refused = automationRefusal(res, 'Suppression impossible')
+    if (refused) {
+      toast.add({ title: refused, type: 'error' })
       return
     }
     closeSheet()
@@ -228,8 +220,9 @@ export function AutomationsView({
     const res = automation.pinned
       ? await window.api.unpinAutomation({ url: settings.url, id: automation.id })
       : await window.api.pinAutomation({ url: settings.url, id: automation.id })
-    if (!res) {
-      toast.add({ title: 'Épinglage impossible', type: 'error' })
+    const refused = automationRefusal(res, 'Épinglage impossible')
+    if (refused) {
+      toast.add({ title: refused, type: 'error' })
       return
     }
     await refresh()
@@ -241,16 +234,19 @@ export function AutomationsView({
       url: settings.url,
       id: selectedAutomationId
     })
-    if (!res) {
-      toast.add({ title: 'Exécution impossible', type: 'error' })
+    if (!res || !('data' in res) || !res.data) {
+      const message = res && 'error' in res ? res.error?.message?.trim() : ''
+      toast.add({ title: message || 'Exécution impossible', type: 'error' })
       return
     }
     await refresh()
     closeSheet()
+    if (res.data.lastRunStatus === 'error') {
+      toast.add({ title: 'Exécution impossible', type: 'error' })
+      return
+    }
     toast.add({
-      title: isTicketReplyAutomation(recordToAutomation(res.data, userLogin))
-        ? 'Brouillons disponibles dans les notifications'
-        : 'Rapport disponible dans les notifications',
+      title: 'Rapport disponible dans les notifications',
       type: 'success'
     })
   }
@@ -289,7 +285,7 @@ export function AutomationsView({
       <div
         data-tab-panel
         className={cn(
-          'relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
+          'bg-background relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
           hidden ? 'hidden' : 'flex'
         )}
       >

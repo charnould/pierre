@@ -129,19 +129,12 @@ describe('TimelineActorAvatar', () => {
     await unmount()
   })
 
-  test('non-user actors use their timeline token classes', async () => {
-    const cases: Array<[TimelineActorKind, string]> = [
-      ['database', 'bg-timeline-database'],
-      ['tenant', 'bg-timeline-tenant'],
-      ['external', 'bg-timeline-external'],
-      ['candidate', 'bg-timeline-candidate']
-    ]
+  test('non-user actors use the muted surface', async () => {
+    const kinds = ['database', 'tenant', 'external', 'candidate'] as const
 
-    for (const [kind, expectedClass] of cases) {
+    for (const kind of kinds) {
       const { host, unmount } = await renderActor(kind)
-      expect(host.querySelector('[data-slot="avatar-fallback"]')?.className).toContain(
-        expectedClass
-      )
+      expect(host.querySelector('[data-slot="avatar-fallback"]')?.className).toContain('bg-muted')
       await unmount()
     }
   })

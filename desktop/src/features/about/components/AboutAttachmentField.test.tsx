@@ -20,6 +20,8 @@ describe('AboutAttachmentField', () => {
     expect(markup).toContain('Pièces jointes')
     expect(markup).toContain('contexte.pdf')
     expect(markup).toContain('data-slot="input-group"')
+    expect(markup).toContain('data-align="inline-end"')
+    expect(markup).not.toContain('data-align="block-end"')
     expect(markup).toContain('aria-label="Retirer contexte.pdf"')
     expect(markup).toContain('role="alert"')
   })

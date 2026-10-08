@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { JSDOM } from 'jsdom'
 import type { ReactNode } from 'react'
 
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
@@ -53,10 +53,10 @@ afterAll(() => {
   }
 })
 
-function activity(partial: Pick<Activite, 'type' | 'contenu'> & Partial<Activite>): Activite {
+function activity(partial: Pick<Activity, 'type' | 'contenu'> & Partial<Activity>): Activity {
   return {
     id: 1,
-    date_creation: '2026-06-10T10:00:00Z',
+    createdAt: '2026-06-10T10:00:00Z',
     rattachement: 'tickets:REC-1',
     auteur: 'user:alice@exemple.fr',
     id_client: null,
@@ -70,10 +70,10 @@ function activity(partial: Pick<Activite, 'type' | 'contenu'> & Partial<Activite
 }
 
 async function renderEnvelope(
-  row: Activite,
+  row: Activity,
   expandable = true,
   wrap?: (node: ReactNode) => ReactNode,
-  statuses: Activite[] = []
+  statuses: Activity[] = []
 ) {
   const { act } = await import('react')
   const { createRoot } = await import('react-dom/client')
@@ -108,7 +108,7 @@ describe('TimelineCommunicationEnvelope', () => {
       activity({
         type: 'communication.sent',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           sender: 'alice@exemple.fr',
           subject: 'Relance loyer',
           body: 'Merci de régulariser.'
@@ -119,7 +119,7 @@ describe('TimelineCommunicationEnvelope', () => {
       [
         activity({
           type: 'communication.ok',
-          contenu: JSON.stringify({ version: 2, result: 'delivered' })
+          contenu: JSON.stringify({ version: 1, result: 'delivered' })
         })
       ]
     )
@@ -158,7 +158,7 @@ describe('TimelineCommunicationEnvelope', () => {
         type: 'communication.sent',
         destinataire: long,
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           sender: 'alice@exemple.fr',
           subject: 'APL',
           body: 'Bonjour'
@@ -180,7 +180,7 @@ describe('TimelineCommunicationEnvelope', () => {
       type: 'communication.sent',
       channel: 'sms',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         sender: 'alice@exemple.fr',
         body: `${'bonjour '.repeat(40)}fin`
       })
@@ -218,7 +218,7 @@ describe('TimelineCommunicationEnvelope', () => {
       type: 'communication.sent',
       channel: 'sms',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         sender: 'alice@exemple.fr',
         body: `${'bonjour '.repeat(40)}fin`
       })
@@ -266,7 +266,7 @@ describe('TimelineCommunicationEnvelope', () => {
         type: 'communication.sent',
         channel: 'rcs',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           sender: 'alice@exemple.fr',
           body: 'Pouvez-vous confirmer ?',
           choices: [
@@ -294,13 +294,13 @@ describe('TimelineCommunicationEnvelope', () => {
       activity({
         type: 'communication.imported',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           sender: 'Alice <alice@bailleur.fr>',
           subject: 'Relance loyer',
           body: 'Merci de régulariser.'
         }),
         destinataire: 'Bob <bob@locataire.fr>',
-        date_creation: '2026-08-12T08:00:00Z'
+        createdAt: '2026-08-12T08:00:00Z'
       })
     )
     try {
@@ -320,7 +320,7 @@ describe('TimelineCommunicationEnvelope', () => {
       activity({
         type: 'communication.sent',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           sender: 'alice@exemple.fr',
           subject: 'Visite',
           body: 'Bonjour,\n\nJe vous fais suite.\n\nLe couple était présent.'
@@ -348,7 +348,7 @@ describe('TimelineCommunicationEnvelope', () => {
       activity({
         type: 'communication.sent',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           sender: 'alice@exemple.fr',
           subject: 'Dossier APL',
           body: 'Objet :\n\nMadame, Monsieur,\nEn réponse à votre demande.'
@@ -359,7 +359,7 @@ describe('TimelineCommunicationEnvelope', () => {
       [
         activity({
           type: 'communication.ok',
-          contenu: JSON.stringify({ version: 2, result: 'delivered' })
+          contenu: JSON.stringify({ version: 1, result: 'delivered' })
         })
       ]
     )
@@ -385,14 +385,14 @@ describe('TimelineCommunicationEnvelope', () => {
     const { container, cleanup } = await renderEnvelope(
       activity({
         type: 'communication.sent',
-        contenu: JSON.stringify({ version: 2, sender: 'alice@exemple.fr', body: 'Relance' })
+        contenu: JSON.stringify({ version: 1, sender: 'alice@exemple.fr', body: 'Relance' })
       }),
       true,
       undefined,
       [
         activity({
           type: 'communication.failed',
-          contenu: JSON.stringify({ version: 2, reason: 'bounced' })
+          contenu: JSON.stringify({ version: 1, reason: 'bounced' })
         })
       ]
     )

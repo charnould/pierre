@@ -1,14 +1,10 @@
-import { ListTodo, UserRound, XIcon } from 'lucide-react'
+import { SquareCheck, UserRound, XIcon } from 'lucide-react'
 import type { MouseEvent } from 'react'
 import { useCallback } from 'react'
 
-import { useActivityRail, type TasksRailTab } from '@/features/activity/lib/ActivityRailContext'
+import { type TasksRailTab, useActivityRail } from '@/features/activity/lib/ActivityRailContext'
 import { activityToTarget } from '@/features/activity/lib/notification-types'
 import { HomeActionBuckets } from '@/features/home/HomeActionBuckets'
-import {
-  BlockprintDelegationArrow,
-  BlockprintSuccessStateForTask
-} from '@/shared/components/icons/koboyo-empty'
 import { Button } from '@/shared/components/ui/button'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/shared/components/ui/drawer'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
@@ -66,28 +62,14 @@ export function TasksPanel({
           onValueChange={(value) => setTasksTab(value as TasksRailTab)}
           className="min-h-0 min-w-0 flex-1 gap-0"
         >
-          <DrawerHeader
-            variant="chrome"
-            data-activity-motion="header"
-            onPointerDown={(event) => event.stopPropagation()}
-          >
+          <DrawerHeader onPointerDown={(event) => event.stopPropagation()}>
             <DrawerTitle className="sr-only">Tâches</DrawerTitle>
-            <TabsList
-              aria-label="Mes tâches et tâches assignées"
-              className="relative grid grid-cols-2"
-            >
-              <span aria-hidden data-active-tab={tasksTab} className="activity-tab-indicator" />
-              <TabsTrigger
-                value="mine"
-                className="z-10 data-active:bg-transparent data-active:shadow-none"
-              >
-                <ListTodo />
+            <TabsList aria-label="Mes tâches et tâches assignées" className="flex-1">
+              <TabsTrigger value="mine">
+                <SquareCheck />
                 Mes tâches
               </TabsTrigger>
-              <TabsTrigger
-                value="delegated"
-                className="z-10 data-active:bg-transparent data-active:shadow-none"
-              >
+              <TabsTrigger value="delegated">
                 <UserRound />
                 Tâches assignées
               </TabsTrigger>
@@ -104,32 +86,24 @@ export function TasksPanel({
               <XIcon aria-hidden />
             </Button>
           </DrawerHeader>
-          <TabsContent
-            value="mine"
-            data-activity-motion="content"
-            className="flex min-h-0 flex-col overflow-hidden"
-          >
+          <TabsContent value="mine" className="flex min-h-0 flex-col overflow-hidden">
             <HomeActionBuckets
               actions={mine}
               emptyTitle="Aucune tâche"
               emptyDescription="Rien d’ouvert."
-              emptyIcon={<BlockprintSuccessStateForTask />}
+              emptyIcon={<SquareCheck />}
               onOpen={openAction}
               onLoadMore={onLoadMoreMine}
               hasMore={hasMoreMine}
               loadMoreEnabled={tasksOpen && tasksTab === 'mine'}
             />
           </TabsContent>
-          <TabsContent
-            value="delegated"
-            data-activity-motion="content"
-            className="flex min-h-0 flex-col overflow-hidden"
-          >
+          <TabsContent value="delegated" className="flex min-h-0 flex-col overflow-hidden">
             <HomeActionBuckets
               actions={delegated}
               emptyTitle="Aucune tâche assignée"
               emptyDescription="Rien de délégué."
-              emptyIcon={<BlockprintDelegationArrow />}
+              emptyIcon={<UserRound />}
               onOpen={openAction}
               onLoadMore={onLoadMoreDelegated}
               hasMore={hasMoreDelegated}

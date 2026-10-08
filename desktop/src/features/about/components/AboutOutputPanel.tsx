@@ -1,4 +1,4 @@
-import { Check, Copy } from 'lucide-react'
+import { Activity, Check, Copy } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import { AboutDatastoreTables } from '@/features/about/components/AboutDatastoreTables'
@@ -8,11 +8,10 @@ import { DockToolbarPortal } from '@/features/workflow/components/DockToolbarPor
 import { WorkflowOutputDock } from '@/features/workflow/components/WorkflowOutputDock'
 import { WorkflowStreamStatusPill } from '@/features/workflow/components/WorkflowStreamStatusPill'
 import {
+  type AgentWorkPart,
   AgentWorkTrace,
-  GeneratedMarkdown,
-  type AgentWorkPart
+  GeneratedMarkdown
 } from '@/shared/components/AgentWorkTrace'
-import { Docket } from '@/shared/components/icons/koboyo-empty'
 import { Button } from '@/shared/components/ui/button'
 import {
   Empty,
@@ -112,7 +111,7 @@ export function AboutOutputPanel({
             <Empty className="flex-none">
               <EmptyHeader>
                 <EmptyMedia variant="icon">
-                  <Docket />
+                  <Activity />
                 </EmptyMedia>
                 <EmptyTitle>{ABOUT_OUTPUT_EMPTY.title}</EmptyTitle>
                 <EmptyDescription>{ABOUT_OUTPUT_EMPTY.description}</EmptyDescription>
@@ -124,7 +123,7 @@ export function AboutOutputPanel({
           <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
             <div className="flex min-w-0 flex-col gap-1">
               <h2 className="text-sm leading-5 font-medium">{title}</h2>
-              {meta ? <p className="pierre-meta tabular-nums">{meta}</p> : null}
+              {meta ? <p className="text-muted-foreground text-xs tabular-nums">{meta}</p> : null}
             </div>
             <AgentWorkTrace
               parts={workParts}

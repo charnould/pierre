@@ -1,15 +1,10 @@
 import {
-  AUTOMATION_TYPE_LABELS,
-  type Automation
+  type Automation,
+  AUTOMATION_TYPE_LABELS
 } from '@/features/automations/lib/automation-types'
 
 export type AutomationSortKey =
-  | 'last_run_desc'
-  | 'last_run_asc'
-  | 'owner_asc'
-  | 'name_asc'
-  | 'next_run_asc'
-  | 'type_asc'
+  'last_run_desc' | 'last_run_asc' | 'owner_asc' | 'name_asc' | 'next_run_asc' | 'type_asc'
 
 export const AUTOMATION_SORT_OPTIONS: { value: AutomationSortKey; label: string }[] = [
   { value: 'last_run_desc', label: 'Dernière génération (récent)' },

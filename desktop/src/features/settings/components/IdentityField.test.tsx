@@ -95,7 +95,7 @@ describe('IdentityField', () => {
     const patchMyPreferences = mock(() =>
       Promise.resolve({ data: { hasAvatar: true, displayName: 'alice.martin' } })
     )
-    const getUsers = mock(() => Promise.resolve({ users: [ME] }))
+    const getUsers = mock(() => Promise.resolve({ data: [ME] }))
     // @ts-expect-error test stub
     globalThis.window.api = { getUsers, patchMyPreferences }
 
@@ -109,6 +109,8 @@ describe('IdentityField', () => {
           url="https://pierre.test"
           email="alice.martin@exemple.fr"
           agentName="Pierre"
+          preferredName={null}
+          onPreferredNameChange={() => {}}
         />
       )
     })
@@ -117,8 +119,7 @@ describe('IdentityField', () => {
     })
 
     expect(host.textContent).toContain('Identité')
-    expect(host.querySelector('[data-slot="avatar"]')).toBeTruthy()
-    expect(host.querySelector('[data-slot="avatar-fallback"]')?.textContent).toContain('AM')
+    expect(host.querySelector('[data-slot="avatar"]')).toBeNull()
 
     const open = [...host.querySelectorAll('button')].find((button) =>
       (button.textContent ?? '').includes('Modifier votre avatar')
@@ -128,6 +129,10 @@ describe('IdentityField', () => {
       open!.click()
     })
 
+    expect(
+      document.querySelector('[data-slot="dialog-content"] [data-slot="avatar-fallback"]')
+        ?.textContent
+    ).toContain('AM')
     expect(
       [...document.querySelectorAll('button')].some((button) => button.textContent === 'Aléatoire')
     ).toBe(false)
@@ -162,7 +167,7 @@ describe('IdentityField', () => {
     const patchMyPreferences = mock(() =>
       Promise.resolve({ data: { hasAvatar: true, displayName: 'alice.martin' } })
     )
-    const getUsers = mock(() => Promise.resolve({ users: [ME] }))
+    const getUsers = mock(() => Promise.resolve({ data: [ME] }))
     // @ts-expect-error test stub
     globalThis.window.api = { getUsers, patchMyPreferences }
 
@@ -176,6 +181,8 @@ describe('IdentityField', () => {
           url="https://pierre.test"
           email="alice.martin@exemple.fr"
           agentName="Pierre"
+          preferredName={null}
+          onPreferredNameChange={() => {}}
         />
       )
     })
@@ -183,7 +190,12 @@ describe('IdentityField', () => {
       await Promise.resolve()
     })
 
-    const input = host.querySelector<HTMLInputElement>('input[aria-label="Nom d’affichage"]')
+    const nameLabel = [...host.querySelectorAll('label')].find((node) =>
+      node.textContent?.includes('Nom d’affichage')
+    )
+    const input = nameLabel?.htmlFor
+      ? host.querySelector<HTMLInputElement>(`[id="${nameLabel.htmlFor}"]`)
+      : null
     expect(input).toBeTruthy()
     await act(async () => {
       const native = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')
@@ -196,6 +208,75 @@ describe('IdentityField', () => {
     expect(patchMyPreferences).not.toHaveBeenCalled()
     expect(input?.getAttribute('aria-invalid')).toBe('true')
     expect(host.textContent).toContain('Ce nom est réservé à Pierre.')
+
+    await act(async () => {
+      root.unmount()
+    })
+  })
+
+  test('saves how the configured agent should address the current user', async () => {
+    const { act } = await import('react')
+    const { createRoot } = await import('react-dom/client')
+    const { IdentityField } = await import('./IdentityField')
+
+    const patchMyPreferences = mock((body: { preferredName?: string | null }) =>
+      Promise.resolve({
+        data: {
+          hasAvatar: true,
+          displayName: 'alice.martin',
+          preferredName: body.preferredName ?? null
+        }
+      })
+    )
+    const onPreferredNameChange = mock()
+    const getUsers = mock(() => Promise.resolve({ data: [ME] }))
+    // @ts-expect-error test stub
+    globalThis.window.api = { getUsers, patchMyPreferences }
+
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const root = createRoot(host)
+
+    await act(async () => {
+      root.render(
+        <IdentityField
+          url="https://pierre.test"
+          email="alice.martin@exemple.fr"
+          agentName="Gustave"
+          preferredName={null}
+          onPreferredNameChange={onPreferredNameChange}
+        />
+      )
+    })
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    const label = [...host.querySelectorAll('label')].find((node) =>
+      node.textContent?.includes('Comment souhaitez-vous que Gustave vous appelle ?')
+    )
+    expect(label?.querySelector('[data-slot="kbd"]')?.textContent).toBe('Gustave')
+    const input = label?.htmlFor
+      ? host.querySelector<HTMLInputElement>(`[id="${label.htmlFor}"]`)
+      : null
+    expect(input).toBeTruthy()
+
+    await act(async () => {
+      const native = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')
+      native?.set?.call(input, '  Alice  ')
+      input?.dispatchEvent(new Event('input', { bubbles: true }))
+      input?.focus()
+      input?.blur()
+    })
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    expect(patchMyPreferences).toHaveBeenCalledWith({
+      url: 'https://pierre.test',
+      preferredName: 'Alice'
+    })
+    expect(onPreferredNameChange).toHaveBeenCalledWith('Alice')
 
     await act(async () => {
       root.unmount()
@@ -217,7 +298,7 @@ describe('IdentityField', () => {
         height: 640
       })
     )
-    const getUsers = mock(() => Promise.resolve({ users: [ME] }))
+    const getUsers = mock(() => Promise.resolve({ data: [ME] }))
     // @ts-expect-error test stub
     globalThis.window.api = { getUsers, pickAvatarImage }
 
@@ -231,6 +312,8 @@ describe('IdentityField', () => {
           url="https://pierre.test"
           email="alice.martin@exemple.fr"
           agentName="Pierre"
+          preferredName={null}
+          onPreferredNameChange={() => {}}
         />
       )
     })
@@ -277,7 +360,7 @@ describe('IdentityField', () => {
         data: { hasAvatar: body.avatar === null ? false : true, displayName: 'alice.martin' }
       })
     )
-    const getUsers = mock(() => Promise.resolve({ users: [ME] }))
+    const getUsers = mock(() => Promise.resolve({ data: [ME] }))
     // @ts-expect-error test stub
     globalThis.window.api = { getUsers, patchMyPreferences }
 
@@ -291,6 +374,8 @@ describe('IdentityField', () => {
           url="https://pierre.test"
           email="alice.martin@exemple.fr"
           agentName="Pierre"
+          preferredName={null}
+          onPreferredNameChange={() => {}}
         />
       )
     })
@@ -351,7 +436,7 @@ describe('IdentityField', () => {
     const uploadMyAvatar = mock(() =>
       Promise.resolve({ data: { hasAvatar: true, displayName: 'alice.martin' } })
     )
-    const getUsers = mock(() => Promise.resolve({ users: [ME] }))
+    const getUsers = mock(() => Promise.resolve({ data: [ME] }))
     // @ts-expect-error test stub
     globalThis.window.api = { getUsers, pickAvatarImage, uploadMyAvatar }
 
@@ -375,6 +460,8 @@ describe('IdentityField', () => {
             url="https://pierre.test"
             email="alice.martin@exemple.fr"
             agentName="Pierre"
+            preferredName={null}
+            onPreferredNameChange={() => {}}
           />
         )
       })
@@ -446,7 +533,7 @@ describe('IdentityField', () => {
       toast.add = add as typeof toast.add
 
       const pickAvatarImage = mock(() => Promise.reject(new Error(message)))
-      const getUsers = mock(() => Promise.resolve({ users: [ME] }))
+      const getUsers = mock(() => Promise.resolve({ data: [ME] }))
       // @ts-expect-error test stub
       globalThis.window.api = { getUsers, pickAvatarImage }
 
@@ -461,6 +548,8 @@ describe('IdentityField', () => {
               url="https://pierre.test"
               email="alice.martin@exemple.fr"
               agentName="Pierre"
+              preferredName={null}
+              onPreferredNameChange={() => {}}
             />
           )
         })

@@ -7,8 +7,8 @@ import {
   resetChangelogFolder,
   setChangelogFolder,
   updateMarkdownUrl,
-  updatesIndexUrl,
-  UPDATES_CHANGELOG_FOLDER
+  UPDATES_CHANGELOG_FOLDER,
+  updatesIndexUrl
 } from './updates-urls'
 
 const indexCache = {

@@ -70,8 +70,7 @@ describe('UnreadPingIndicator', () => {
     })
 
     const ping = host.querySelector('[aria-hidden]')
-    expect(ping?.className).toContain('bg-unread')
-    expect(ping?.className).not.toContain('bg-foreground')
+    expect(ping?.className).toContain('bg-foreground')
 
     await act(async () => {
       root.unmount()

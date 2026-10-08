@@ -1,5 +1,4 @@
-import type { AboutSubject } from '@/features/tickets/lib/knowledge-skills'
-import type { WorkflowStep } from '@/features/workflow/hooks/useWorkflowPanel'
+import type { AboutSubject, WorkflowStep } from '@/shared/lib/navigation-model'
 import type { Tab } from '@/shared/lib/tabs'
 
 export type ActivityTarget =

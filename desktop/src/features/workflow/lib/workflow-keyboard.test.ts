@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 
-import { isTypingInField, shouldEscapeNavigateHome } from './workflow-keyboard'
+import { isTypingInField } from '@/shared/lib/typing-target'
+
+import { shouldEscapeNavigateHome } from './workflow-keyboard'
 
 describe('shouldEscapeNavigateHome', () => {
   test('form step navigates home', () => {

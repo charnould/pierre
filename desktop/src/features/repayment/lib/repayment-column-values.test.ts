@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 
-import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
+import { loadCustomizationFixture } from '@test/instance-customization-fixture'
 
 import { getRepaymentBucketMeta } from './repayment-bucket'
 import {
@@ -50,8 +50,8 @@ describe('repayment-column-values', () => {
   test('collectDistinctColumnValues résout les libellés de phase', () => {
     const row = rows[0]!
     const values = collectDistinctColumnValues('bucket', [row], {
-      getBucket: () => 'amiable'
+      getBucket: () => 'Recouvrement amiable'
     })
-    expect(values).toEqual([getRepaymentBucketMeta('amiable').label])
+    expect(values).toEqual([getRepaymentBucketMeta('Recouvrement amiable').label])
   })
 })

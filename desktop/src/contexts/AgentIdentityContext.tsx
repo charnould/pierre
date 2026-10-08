@@ -1,6 +1,5 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react'
-
-import { desktopAgentMentionHandle } from '../../../shared/agent-identity'
+import { desktopAgentMentionHandle } from '@pierre/shared/agent-identity'
+import { createContext, type ReactNode, useContext, useMemo } from 'react'
 
 export type AgentIdentity = {
   name: string

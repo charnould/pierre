@@ -1,11 +1,11 @@
-import type { ChatMessagePart, ChatToolPart, Message } from '@/features/chat/lib/chat-session-types'
-import type { AiStreamEvent } from '@/features/workflow/lib/parse-workflow-chunk'
-
 import {
+  type AiMessageContent,
+  type AiStreamEvent,
   createAiStreamState,
-  reduceAiStreamState,
-  type AiMessageContent
-} from '../../../../../shared/ai-stream-events'
+  reduceAiStreamState
+} from '@pierre/shared/ai-stream-events'
+
+import type { ChatMessagePart, ChatToolPart, Message } from '@/features/chat/lib/chat-session-types'
 
 function updateLastAssistantMessage(
   messages: Message[],

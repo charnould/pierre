@@ -1,7 +1,7 @@
 import { TableCellValue } from '@/shared/components/table/TableCellValue'
 import {
-  resolveTicketValueDisplay,
-  type ColumnValuesConfig
+  type ColumnValuesConfig,
+  resolveTicketValueDisplay
 } from '@/shared/lib/ui-settings/tickets-table'
 
 import { formatDebtRentRatioMonths } from '../lib/format-repayment'

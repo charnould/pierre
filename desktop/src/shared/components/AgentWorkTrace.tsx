@@ -1,14 +1,23 @@
-import { CheckCircle2Icon, ChevronDownIcon, CircleXIcon, LoaderCircleIcon } from 'lucide-react'
-import { memo, useLayoutEffect, useRef, useState, type ComponentProps } from 'react'
+import { CheckCircle2Icon, CircleXIcon, LoaderCircleIcon } from 'lucide-react'
+import { type ComponentProps, memo, useLayoutEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
-import { Reasoning, ReasoningTrigger } from '@/shared/components/reasoning/reasoning'
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger
-} from '@/shared/components/ui/collapsible'
+  CodeBlock,
+  CodeBlockActions,
+  CodeBlockContent,
+  CodeBlockCopyButton
+} from '@/shared/components/ui/code-block'
+import {
+  Trace,
+  TraceCollapsible,
+  TraceCollapsibleContent,
+  TraceCollapsibleTrigger,
+  TraceIcon,
+  TraceLine,
+  TraceTitle
+} from '@/shared/components/ui/trace'
 import { readAskUserAnswers } from '@/shared/lib/read-ask-user-answers'
 import { createStreamingWordsPlugin } from '@/shared/lib/rehype-streaming-words'
 import { cn } from '@/shared/lib/utils'
@@ -142,68 +151,57 @@ function AskUserResult({ output }: { output: unknown }) {
   )
 }
 
-function ToolPart({ part }: { part: AgentToolPart }) {
-  if (part.name === 'ask_user' && part.status === 'success') {
-    const result = <AskUserResult output={part.output} />
-    if (readAskUserAnswers(part.output)) return result
-  }
-
-  const output = part.output === undefined ? '' : serializeToolOutput(part.output)
-  const expanded =
-    output.length > TOOL_OUTPUT_LIMIT ? `${output.slice(0, TOOL_OUTPUT_LIMIT)}\n…` : output
-  const running = part.status === 'running' || part.status === 'input-streaming'
+function toolTitle(part: AgentToolPart): string {
   const toolName = part.name ? part.name.replaceAll('_', ' ') : 'Outil'
   const argument = toolArgumentLabel(part.arguments)
   const failed = part.status === 'error'
+  return [failed ? 'Échec' : '', toolName, argument].filter(Boolean).join(' · ')
+}
 
-  const statusIcon = running ? (
-    <LoaderCircleIcon className="size-3.5 shrink-0 animate-spin" />
-  ) : failed ? (
-    <CircleXIcon className="size-3.5 shrink-0" />
-  ) : (
-    <CheckCircle2Icon className="size-3.5 shrink-0" />
+function ToolStatusIcon({ part }: { part: AgentToolPart }) {
+  const running = part.status === 'running' || part.status === 'input-streaming'
+  if (running) return <LoaderCircleIcon className="animate-spin" />
+  if (part.status === 'error') return <CircleXIcon />
+  return <CheckCircle2Icon />
+}
+
+function ToolPart({ part }: { part: AgentToolPart }) {
+  if (part.name === 'ask_user' && part.status === 'success' && readAskUserAnswers(part.output)) {
+    return <AskUserResult output={part.output} />
+  }
+
+  const running = part.status === 'running' || part.status === 'input-streaming'
+  const failed = part.status === 'error'
+  const output = part.output === undefined ? undefined : serializeToolOutput(part.output)
+  const shown =
+    output === undefined
+      ? undefined
+      : output.length > TOOL_OUTPUT_LIMIT
+        ? `${output.slice(0, TOOL_OUTPUT_LIMIT)}\n…`
+        : output
+  const line = (
+    <TraceLine status={running ? 'running' : failed ? 'error' : undefined}>
+      <TraceIcon>
+        <ToolStatusIcon part={part} />
+      </TraceIcon>
+      <TraceTitle>{toolTitle(part)}</TraceTitle>
+    </TraceLine>
   )
 
+  if (!shown) return line
+
   return (
-    <div className="min-w-0">
-      <div
-        className={cn(
-          'pierre-type-table-header flex min-w-0 items-center gap-1.5',
-          failed ? 'text-destructive' : 'text-muted-foreground'
-        )}
-      >
-        {statusIcon}
-        {failed ? (
-          <>
-            <span className="shrink-0 font-medium">Échec</span>
-            <span aria-hidden="true">·</span>
-          </>
-        ) : null}
-        <span className="shrink-0 font-medium">{toolName}</span>
-        {argument ? (
-          <>
-            <span aria-hidden="true">·</span>
-            <span className="truncate">{argument}</span>
-          </>
-        ) : null}
-      </div>
-      {expanded ? (
-        <Collapsible className="min-w-0">
-          <CollapsibleTrigger type="button" className="mt-1 flex items-center">
-            <span className="pierre-type-table-header text-muted-foreground flex items-center gap-1">
-              <span className="in-data-[panel-open]:hidden">Afficher le résultat</span>
-              <span className="hidden in-data-[panel-open]:inline">Masquer le résultat</span>
-              <ChevronDownIcon className="size-3 transition-transform in-data-[panel-open]:rotate-180" />
-            </span>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <pre className="border-border pierre-type-table-header text-muted-foreground mt-1 max-h-32 overflow-auto rounded-md border p-2 font-mono whitespace-pre">
-              {expanded}
-            </pre>
-          </CollapsibleContent>
-        </Collapsible>
-      ) : null}
-    </div>
+    <TraceCollapsible>
+      <TraceCollapsibleTrigger>{line}</TraceCollapsibleTrigger>
+      <TraceCollapsibleContent>
+        <CodeBlock size="sm" variant={failed ? 'destructive' : 'default'}>
+          <CodeBlockActions>
+            <CodeBlockCopyButton value={shown} />
+          </CodeBlockActions>
+          <CodeBlockContent className="max-h-64">{shown}</CodeBlockContent>
+        </CodeBlock>
+      </TraceCollapsibleContent>
+    </TraceCollapsible>
   )
 }
 
@@ -230,6 +228,17 @@ function workSummary({
       : 'Réflexion terminée'
     : ''
   return [reasoningLabel, toolLabel].filter(Boolean).join(' · ')
+}
+
+function RunningLine({ label }: { label: string }) {
+  return (
+    <TraceLine status="running">
+      <TraceIcon>
+        <LoaderCircleIcon className="animate-spin" />
+      </TraceIcon>
+      <TraceTitle>{label}</TraceTitle>
+    </TraceLine>
+  )
 }
 
 export function AgentWorkTrace({
@@ -259,33 +268,26 @@ export function AgentWorkTrace({
   if (visibleParts.length === 0) {
     if (!active || !hold) return null
     return (
-      <div className="pierre-type-table-header text-muted-foreground flex items-center gap-1.5">
-        <LoaderCircleIcon className="size-3.5 shrink-0 animate-spin" />
-        Réflexion
-      </div>
+      <Trace>
+        <RunningLine label="Réflexion" />
+      </Trace>
     )
   }
+
   const label = workSummary({ parts: visibleParts, active, duration })
   return (
-    <Reasoning
-      className="mb-0"
-      displayMode={display === 'expanded' ? 'full' : 'partial'}
-      duration={duration}
-      isReasoningActive={active}
-      isStreaming={active}
-      open={open}
-      onOpenChange={setOpen}
-    >
-      <ReasoningTrigger
-        getThinkingMessage={() => (
-          <span className="flex min-w-0 items-center gap-1.5">
-            {active ? <LoaderCircleIcon className="size-3.5 shrink-0 animate-spin" /> : null}
-            <span className="truncate">{label}</span>
-          </span>
+    <TraceCollapsible open={open} onOpenChange={setOpen}>
+      <TraceCollapsibleTrigger>
+        {active ? (
+          <RunningLine label={label} />
+        ) : (
+          <TraceLine>
+            <TraceTitle>{label}</TraceTitle>
+          </TraceLine>
         )}
-      />
-      <CollapsibleContent variant="animated">
-        <div className="border-border/60 mt-2 flex min-w-0 flex-col gap-2 border-s ps-3">
+      </TraceCollapsibleTrigger>
+      <TraceCollapsibleContent>
+        <Trace>
           {visibleParts.map((part) =>
             part.type === 'thinking' ? (
               <GeneratedMarkdown key={part.contentIndex} muted reasoning animated={active}>
@@ -295,8 +297,8 @@ export function AgentWorkTrace({
               <ToolPart key={`${part.contentIndex}-${part.toolCallId ?? 'pending'}`} part={part} />
             )
           )}
-        </div>
-      </CollapsibleContent>
-    </Reasoning>
+        </Trace>
+      </TraceCollapsibleContent>
+    </TraceCollapsible>
   )
 }

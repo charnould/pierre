@@ -1,11 +1,12 @@
 import {
+  type Activity,
   ACTIVITY_CONTENT_VERSION,
-  parse_task_content,
-  type Activite,
+  completedTaskContent,
   type CreateActivityBody,
+  parseTaskContent,
   type TaskContent,
   type TaskState
-} from '@/shared/types/activites'
+} from '@/shared/types/activities'
 
 export type ActionDraft =
   | {
@@ -48,23 +49,23 @@ export function mapDoneActionForm(form: {
 }
 
 export type ActionActivity = {
-  row: Activite
+  row: Activity
   contenu: TaskContent
-  event: Activite['type']
+  event: Activity['type']
   state: TaskState
   threadId: string
   revision: number
   createdBy: string
 }
 
-export function listOpenActions(rows: Activite[]): ActionActivity[] {
+export function listOpenActions(rows: Activity[]): ActionActivity[] {
   const creators = new Map<string, string>()
   for (const row of rows) {
-    if (row.type === 'task.created' && row.thread_id) creators.set(row.thread_id, row.auteur)
+    if (row.type === 'task.created' && row.threadId) creators.set(row.threadId, row.auteur)
   }
   const latest = new Map<string, ActionActivity>()
   for (const row of rows) {
-    const parsed = parseActionActivity(row, creators.get(row.thread_id ?? ''))
+    const parsed = parseActionActivity(row, creators.get(row.threadId ?? ''))
     if (!parsed) continue
     const current = latest.get(parsed.threadId)
     if (!current || parsed.revision >= current.revision) latest.set(parsed.threadId, parsed)
@@ -74,31 +75,31 @@ export function listOpenActions(rows: Activite[]): ActionActivity[] {
     .sort((a, b) => {
       const due = (a.contenu.task.due_date ?? '').localeCompare(b.contenu.task.due_date ?? '')
       if (due !== 0) return due
-      return a.row.date_creation.localeCompare(b.row.date_creation)
+      return a.row.createdAt.localeCompare(b.row.createdAt)
     })
 }
 
-export function parseActionActivity(row: Activite, createdBy?: string): ActionActivity | null {
-  if (!row.type.startsWith('task.') || !row.thread_id || row.revision == null) return null
-  const contenu = parse_task_content(row.contenu)
+export function parseActionActivity(row: Activity, createdBy?: string): ActionActivity | null {
+  if (!row.type.startsWith('task.') || !row.threadId || row.revision == null) return null
+  const contenu = parseTaskContent(row.contenu)
   return contenu
     ? {
         row,
         contenu,
         event: row.type,
         state: contenu.task.state,
-        threadId: row.thread_id,
+        threadId: row.threadId,
         revision: row.revision,
         createdBy: createdBy ?? row.auteur
       }
     : null
 }
 
-export function actionTimelineDate(row: Activite): string {
-  return row.date_creation
+export function actionTimelineDate(row: Activity): string {
+  return row.createdAt
 }
 
-export function indexTodoRevisions(rows: Activite[]): Map<string, ActionActivity> {
+export function indexTodoRevisions(rows: Activity[]): Map<string, ActionActivity> {
   const index = new Map<string, ActionActivity>()
   for (const row of rows) {
     const parsed = parseActionActivity(row)
@@ -133,14 +134,10 @@ export function buildActionActivity(
           },
           ...(draft.note.trim() ? { note: draft.note.trim() } : {})
         }
-      : {
-          version: ACTIVITY_CONTENT_VERSION,
-          task: {
-            title: draft.action.trim(),
-            state: 'completed' as const
-          },
+      : completedTaskContent({
+          title: draft.action.trim(),
           ...(draft.resultat.trim() ? { result: draft.resultat.trim() } : {})
-        }
+        })
 
   return {
     contexte,

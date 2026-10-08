@@ -15,8 +15,7 @@ export function extractMentionsFromText(text: string): string[] {
 }
 
 export type MentionSuggestion =
-  | { kind: 'agent'; handle: string; name: string }
-  | { kind: 'user'; user: OrgUser }
+  { kind: 'agent'; handle: string; name: string } | { kind: 'user'; user: OrgUser }
 
 export function filterMentionSuggestions(
   users: OrgUser[],

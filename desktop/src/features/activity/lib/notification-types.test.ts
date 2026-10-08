@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'bun:test'
 
-import type { ActiviteListItem } from '@/shared/types/activites'
+import type { ActivityListItem } from '@/shared/types/activities'
 
 import { activityToTarget, mapActivityRow } from './notification-types'
 
-function sampleRow(overrides: Partial<ActiviteListItem> = {}): ActiviteListItem {
+function sampleRow(overrides: Partial<ActivityListItem> = {}): ActivityListItem {
   return {
     id: 10,
-    date_creation: '2026-08-17T10:00:00',
+    createdAt: '2026-08-17T10:00:00',
     rattachement: 'repayment:LOC-9',
     auteur: 'user:bob@exemple.fr',
     id_client: 'CLI-1',
@@ -16,7 +16,7 @@ function sampleRow(overrides: Partial<ActiviteListItem> = {}): ActiviteListItem 
     type: 'note.published',
     channel: null,
     mentions: [{ destinataire: 'user:alice@exemple.fr' }],
-    contenu: JSON.stringify({ version: 2, text: 'Relance' }),
+    contenu: JSON.stringify({ version: 1, text: 'Relance' }),
     my: { destinataire: 'user:alice@exemple.fr' },
     read: false,
     reaction: null,
@@ -30,7 +30,7 @@ describe('mapActivityRow', () => {
       id: 99,
       type: 'activity.reaction_changed',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         source_activity_id: 10,
         emoji: '👍'
       }),

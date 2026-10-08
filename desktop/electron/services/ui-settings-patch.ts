@@ -1,7 +1,7 @@
 import {
-  parseUiSettings,
   type AutomationsSettings,
   type MascotSettings,
+  parseUiSettings,
   type TicketsTableSettings,
   type UpdatesSettings,
   type WindowSettings,

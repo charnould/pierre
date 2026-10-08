@@ -1,3 +1,4 @@
+import type { RepaymentMessage } from '@pierre/shared/repayment-messages'
 import { useSyncExternalStore } from 'react'
 
 import { warnRenderer } from '@/shared/lib/renderer-log'
@@ -14,15 +15,27 @@ export type InstanceCustomization = {
     prompt?: string
   } | null
   repayments: {
-    buckets: readonly { id: string; label: string }[]
-    actions: { dossier: readonly unknown[]; bulk_operations: readonly unknown[] }
+    phases: readonly string[]
+    caseActions: readonly string[]
+    batchActions: readonly string[]
     tags: readonly string[]
-    template_groups?: unknown
-    create_plan: unknown
-    templates: Record<string, string>
+    senderEmail?: string
+    messages: RepaymentMessage[]
+    schedule: {
+      defaultInstallments: number
+      maxEffortPercent: number
+      minDailyRemainderEuros: number
+      confirmAfterInstallments: Readonly<Record<string, string>>
+    }
+    documentTags: {
+      diagnostic: string[] | null
+      plan: string[] | null
+      protocole: string[] | null
+    }
     prompt?: string
   } | null
   docxSkillIds: string[]
+  repaymentGaps?: string[]
   about: { prompt: string } | null
   automations: { prompt: string; timezone: string } | null
   chatbot: boolean
@@ -98,6 +111,13 @@ export function moduleReady(entry: SetupEntry): boolean {
   return data.chatbot
 }
 
+const NO_REPAYMENT_GAPS: readonly string[] = []
+
+export function repaymentGapNames(): readonly string[] {
+  if (!data || data.repayments != null) return NO_REPAYMENT_GAPS
+  return data.repaymentGaps ?? NO_REPAYMENT_GAPS
+}
+
 export function useCustomizationStatus(): CustomizationStatus {
   return useSyncExternalStore(subscribeCustomization, customizationStatus)
 }
@@ -105,7 +125,11 @@ export function useCustomizationStatus(): CustomizationStatus {
 export async function hydrateCustomizationFromServer(url: string): Promise<string | null> {
   beginCustomizationLoad()
   try {
-    const payload = await window.api?.getSetup?.({ url })
+    const body = await window.api?.getSetup?.({ url })
+    const payload =
+      body != null && typeof body === 'object' && !Array.isArray(body) && 'data' in body
+        ? body.data
+        : undefined
     if (!isCustomizationPayload(payload)) {
       failCustomization()
       return null
@@ -117,6 +141,15 @@ export async function hydrateCustomizationFromServer(url: string): Promise<strin
     failCustomization()
     return null
   }
+}
+
+function isDocumentTags(value: unknown): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const tags = value as Record<string, unknown>
+  return (['diagnostic', 'plan', 'protocole'] as const).every((kind) => {
+    const entry = tags[kind]
+    return entry === null || (Array.isArray(entry) && entry.every((tag) => typeof tag === 'string'))
+  })
 }
 
 export function isCustomizationPayload(value: unknown): value is InstanceCustomization {
@@ -134,13 +167,14 @@ export function isCustomizationPayload(value: unknown): value is InstanceCustomi
   }
   if (row.repayments != null) {
     const repayments = row.repayments as Record<string, unknown>
-    if (
-      repayments.templates == null ||
-      typeof repayments.templates !== 'object' ||
-      Array.isArray(repayments.templates)
-    ) {
-      return false
-    }
+    if (!Array.isArray(repayments.messages)) return false
+    if (!isDocumentTags(repayments.documentTags)) return false
+  }
+  if (
+    row.repaymentGaps != null &&
+    (!Array.isArray(row.repaymentGaps) || row.repaymentGaps.some((gap) => typeof gap !== 'string'))
+  ) {
+    return false
   }
   return Array.isArray(row.docxSkillIds) && typeof row.chatbot === 'boolean'
 }

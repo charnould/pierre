@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test'
 
 import {
   buildColumnValueColorGroups,
+  clearColumnValueStyles,
   COLUMN_VALUE_COLOR_GROUPS,
   COLUMN_VALUE_COLOR_PALETTE,
   COLUMN_VALUE_FAMILY_COUNT,
@@ -10,7 +11,6 @@ import {
   columnColorizeButtonLabel,
   columnDecolorizeButtonLabel,
   ColumnValuePaletteExhaustedError,
-  clearColumnValueStyles,
   familyIdForStyle,
   findColumnValueStylesMap,
   generateColumnValueStyles,

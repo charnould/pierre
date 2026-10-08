@@ -31,9 +31,9 @@
   --warn: #a86b00;
   --danger: #c23b3b;
 
-  --sans: Manrope, system-ui, -apple-system, sans-serif;
-  --serif: Lora, 'Iowan Old Style', Georgia, serif;
-  --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --sans: 'Geist Sans', system-ui, -apple-system, sans-serif;
+  --serif: 'Geist Serif', 'Iowan Old Style', Georgia, serif;
+  --mono: 'Geist Mono', ui-monospace, Menlo, monospace;
 
   --measure: 64rem;
   --prose: 44em;

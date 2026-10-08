@@ -17,9 +17,6 @@ interface Props {
   table: AnyPierreTable
   title: string
   columnId: RepaymentColumnId
-  align?: 'left' | 'right'
-  /** Accessible name for the options trigger when `title` is empty. */
-  menuAriaLabel?: string
   allRows?: TenantRepaymentRow[]
   columnFilters?: ColumnFilters
   onColumnFiltersChange?: (filters: ColumnFilters) => void
@@ -39,8 +36,6 @@ export function RepaymentColumnHeader({
   table,
   title,
   columnId,
-  align = 'left',
-  menuAriaLabel,
   allRows = [],
   columnFilters,
   onColumnFiltersChange,
@@ -52,13 +47,12 @@ export function RepaymentColumnHeader({
 }: Props) {
   const selectedFilters = columnFilters?.[columnId] ?? []
   const canFilter = isRepaymentFilterableColumn(columnId) && Boolean(onColumnFiltersChange)
-  const columnLabel = title || menuAriaLabel || 'Options colonne'
+  const columnLabel = title || 'Options colonne'
 
   return (
     <DataColumnHeader
       title={title}
-      align={align}
-      titleClassName="truncate font-normal text-muted-foreground"
+      column={column}
       optionsMenu={
         <RepaymentColumnFilter
           column={column}

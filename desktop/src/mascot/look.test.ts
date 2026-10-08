@@ -29,10 +29,10 @@ describe('parseMascotShape', () => {
     }
   })
 
-  it('migrates the previous four ids', () => {
-    expect(parseMascotShape('circle')).toBe('cercle')
-    expect(parseMascotShape('square')).toBe('squircle')
-    expect(parseMascotShape('blob')).toBe('galet')
+  it('rejects retired shape ids', () => {
+    expect(parseMascotShape('circle')).toBeUndefined()
+    expect(parseMascotShape('square')).toBeUndefined()
+    expect(parseMascotShape('blob')).toBeUndefined()
     expect(parseMascotShape('capsule')).toBe('capsule')
   })
 })

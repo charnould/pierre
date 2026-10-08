@@ -62,10 +62,10 @@ export function DatePicker({
   'aria-label': ariaLabel
 }: Props) {
   const [open, setOpen] = useState(false)
+  const [year] = useState(() => new Date().getFullYear())
   const selected = parseLocalIsoDate(value)
-  const now = new Date()
-  const startMonth = new Date(now.getFullYear() - 100, 0)
-  const endMonth = new Date(now.getFullYear() + 10, 11)
+  const startMonth = new Date(year - 100, 0)
+  const endMonth = new Date(year + 10, 11)
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

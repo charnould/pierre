@@ -1,4 +1,4 @@
-import { snapshotsEqual, type NavigationSnapshot } from '@/shared/lib/navigation-snapshot'
+import { type NavigationSnapshot, snapshotsEqual } from '@/shared/lib/navigation-snapshot'
 
 export type NavigationStack = {
   entries: NavigationSnapshot[]
