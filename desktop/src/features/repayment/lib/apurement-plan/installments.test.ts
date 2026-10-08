@@ -98,14 +98,15 @@ describe('installments', () => {
     expect(installments[23].yearMonth).toBe('2028-07')
   })
 
-  test('buildInstallments accepts more than 24 months', () => {
+  test('buildInstallments plafonne à 36 mensualités', () => {
     const installments = buildInstallments({
       debt: 4800,
       count: 48,
       firstYearMonth: '2026-08'
     })
-    expect(installments).toHaveLength(48)
+    expect(installments).toHaveLength(36)
     expect(sumInstallments(installments)).toBeCloseTo(4800)
+    expect(buildInstallments({ debt: 3600, count: 36, firstYearMonth: '2026-08' })).toHaveLength(36)
   })
 
   test('typicalMonthlyAmount uses first installment', () => {

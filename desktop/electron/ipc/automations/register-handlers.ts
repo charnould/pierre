@@ -1,6 +1,7 @@
 import { ipcMain, session } from 'electron'
 
 import type {
+  AutomationApiFailure,
   AutomationResponse,
   AutomationsListResponse,
   CreateAutomationPayload,
@@ -76,12 +77,22 @@ export function registerAutomationsHandlers(partition: string): void {
   })
 }
 
+function apiFailure(payload: string): AutomationApiFailure | null {
+  try {
+    const parsed = JSON.parse(payload) as { error?: { message?: unknown } }
+    const message = typeof parsed.error?.message === 'string' ? parsed.error.message.trim() : ''
+    return message ? { error: { message } } : null
+  } catch {
+    return null
+  }
+}
+
 async function request<T>(
   partition: string,
   url: string,
   method: 'POST' | 'PATCH' | 'DELETE',
   body?: unknown
-): Promise<T | null> {
+): Promise<T | AutomationApiFailure | null> {
   try {
     const response = await netFetch(url, {
       method,
@@ -89,8 +100,12 @@ async function request<T>(
       body: body === undefined ? undefined : JSON.stringify(body),
       session: session.fromPartition(partition)
     })
-    if (!response.ok) throw new Error(`${response.status} ${await response.text()}`)
-    return (await response.json()) as T
+    const payload = await response.text()
+    if (!response.ok) {
+      logMainError(`${method.toLowerCase()}-automation`, new Error(`${response.status} ${payload}`))
+      return apiFailure(payload)
+    }
+    return JSON.parse(payload) as T
   } catch (error) {
     logMainError(`${method.toLowerCase()}-automation`, error)
     return null

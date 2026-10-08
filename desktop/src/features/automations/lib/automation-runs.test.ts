@@ -68,8 +68,10 @@ describe('buildAutomationRunEntries', () => {
       6
     )
 
-    expect(entry?.target.title).toBe('Veille locative')
-    expect(entry?.target.content).not.toMatch(/<article\b/i)
-    expect(entry?.target.content).not.toBe(REPORT_HTML)
+    const target = entry?.target
+    if (!target || target.kind !== 'automation') throw new Error('expected an automation run')
+    expect(target.title).toBe('Veille locative')
+    expect(target.content ?? '').not.toMatch(/<article\b/i)
+    expect(target.content).not.toBe(REPORT_HTML)
   })
 })

@@ -55,19 +55,30 @@ export function registerSetupHandlers(partition: string): void {
       { url, id, body, bytes }: { url: string; id: string; body?: string; bytes?: Uint8Array }
     ) => {
       try {
-        const payload = bytes ?? new TextEncoder().encode(body ?? '')
+        const binary = bytes != null && bytes.byteLength > 0
         const path = id
           .split('/')
           .map((part) => encodeURIComponent(part))
           .join('/')
-        const copy = new ArrayBuffer(payload.byteLength)
-        new Uint8Array(copy).set(payload)
         const resp = await netFetch(`${root(url)}/desktop/admin/setup/${path}`, {
           session: ses(),
           method: 'PUT',
-          body: new Blob([copy])
+          headers: {
+            'Content-Type': binary ? 'application/octet-stream' : 'text/plain; charset=utf-8'
+          },
+          body: binary ? Buffer.from(bytes) : (body ?? '')
         })
-        if (!resp.ok) return null
+        if (!resp.ok) {
+          let message = 'Enregistrement refusé'
+          try {
+            const payload = (await resp.json()) as { error?: { message?: string } }
+            const detail = payload.error?.message?.trim()
+            if (detail) message = detail
+          } catch {
+            // Le corps n’est pas du JSON : le message générique suffit.
+          }
+          return { error: { message } }
+        }
         return await resp.json()
       } catch (error) {
         logMainError('put-admin-setup', error)
@@ -75,6 +86,24 @@ export function registerSetupHandlers(partition: string): void {
       }
     }
   )
+
+  ipcMain.handle(IpcChannel.setup.emailTest, async (_, { url }: { url: string }) => {
+    try {
+      const resp = await netFetch(`${root(url)}/email/test`, {
+        session: ses(),
+        method: 'POST'
+      })
+      const body = (await resp.json()) as {
+        data?: { sent: true }
+        error?: { message: string }
+      }
+      if (!resp.ok) return body.error ? body : { error: { message: 'Envoi impossible' } }
+      return body
+    } catch (error) {
+      logMainError('post-email-test', error)
+      return null
+    }
+  })
 
   ipcMain.handle(
     IpcChannel.setup.adminDelete,

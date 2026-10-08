@@ -40,7 +40,8 @@ export function repaymentPlanFormToSnapshot(form: ApurementPlanFormData): Repaym
     address: {
       line: form.address,
       postal_code: form.postalCode,
-      city: form.city
+      city: form.city,
+      id_lot: form.idLot
     },
     debt: {
       amount: form.rentalDebt,
@@ -57,7 +58,11 @@ export function repaymentPlanFormToSnapshot(form: ApurementPlanFormData): Repaym
       ccapex_opened: form.ccapexOpened
     },
     social_worker: form.hasSocialWorker
-      ? { name: form.socialWorkerName, organization: form.socialWorkerOrganization }
+      ? {
+          name: form.socialWorkerName,
+          organization: form.socialWorkerOrganization,
+          contact: form.socialWorkerContact
+        }
       : null,
     household: {
       adults: form.household.adults.map((adult) => ({
@@ -66,7 +71,6 @@ export function repaymentPlanFormToSnapshot(form: ApurementPlanFormData): Repaym
         first_name: adult.firstName,
         birth_date: adult.birthDate,
         employment_status: adult.employmentStatus,
-        pension_fund: adult.pensionFund,
         caf_number: adult.cafNumber,
         lease_holder: adult.isLeaseHolder
       })),
@@ -114,7 +118,7 @@ export function repaymentPlanSnapshotToForm(
     createAmountLine({
       label: line.label,
       amount: line.amount,
-      custom: isCustom(line.label, EXPENSE_PRESETS)
+      custom: isCustom(line.label, EXPENSE_PRESETS) && line.label !== TOTAL_RENT_PRESET
     })
   )
   const requestedAids = snapshot.requested_aids.map((label) =>
@@ -128,6 +132,7 @@ export function repaymentPlanSnapshotToForm(
     signed,
     idLocataire: snapshot.tenant_reference,
     idClient: snapshot.client_reference,
+    idLot: snapshot.address.id_lot,
     address: snapshot.address.line,
     postalCode: snapshot.address.postal_code,
     city: snapshot.address.city,
@@ -138,6 +143,7 @@ export function repaymentPlanSnapshotToForm(
     hasSocialWorker: snapshot.social_worker != null,
     socialWorkerName: snapshot.social_worker?.name ?? '',
     socialWorkerOrganization: snapshot.social_worker?.organization ?? '',
+    socialWorkerContact: snapshot.social_worker?.contact ?? '',
     income: income.length > 0 ? income : [createAmountLine()],
     expenses:
       expenses.length > 0
@@ -150,7 +156,6 @@ export function repaymentPlanSnapshotToForm(
         firstName: adult.first_name,
         birthDate: adult.birth_date,
         employmentStatus: adult.employment_status,
-        pensionFund: adult.pension_fund,
         cafNumber: adult.caf_number,
         isLeaseHolder: adult.lease_holder
       })),

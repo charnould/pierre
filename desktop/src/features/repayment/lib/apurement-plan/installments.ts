@@ -1,5 +1,9 @@
-import type { ApurementPlanFormData, Installment } from './types'
-import { DEFAULT_PLAN_DURATION_MONTHS } from './types'
+import {
+  DEFAULT_PLAN_DURATION_MONTHS,
+  MAX_PLAN_DURATION_MONTHS,
+  type ApurementPlanFormData,
+  type Installment
+} from './types'
 
 function newInstallmentId(): string {
   return `inst-${Math.random().toString(36).slice(2, 8)}`
@@ -63,7 +67,7 @@ export function firstInstallmentYearMonth(
 }
 
 export function clampInstallmentCount(count: number): number {
-  return Math.max(1, Math.floor(count) || 1)
+  return Math.min(MAX_PLAN_DURATION_MONTHS, Math.max(1, Math.floor(count) || 1))
 }
 
 function splitCents(totalCents: number, count: number): number[] {

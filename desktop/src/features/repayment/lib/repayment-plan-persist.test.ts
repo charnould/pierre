@@ -63,9 +63,19 @@ describe('repayment plan persist routing', () => {
     form.hasSocialWorker = true
     form.socialWorkerName = ''
     form.socialWorkerOrganization = ''
+    form.socialWorkerContact = '06 00 00 00 00'
+    form.idLot = 'LOT-1'
+    form.household.adults[0]!.employmentStatus = 'student'
 
     const snapshot = repaymentPlanFormToSnapshot(form)
-    expect(snapshot.social_worker).toEqual({ name: '', organization: '' })
+    expect(snapshot.address.id_lot).toBe('LOT-1')
+    expect(snapshot.social_worker).toEqual({
+      name: '',
+      organization: '',
+      contact: '06 00 00 00 00'
+    })
+    expect(snapshot.household.adults[0]?.employment_status).toBe('student')
+    expect(snapshot.household.adults[0]).not.toHaveProperty('pension_fund')
     expect(snapshot.budget.income[0]).toEqual({
       label: 'Revenu personnalisé',
       amount: 1_250,
@@ -76,6 +86,9 @@ describe('repayment plan persist routing', () => {
 
     const restored = repaymentPlanSnapshotToForm(snapshot, false)
     expect(restored.hasSocialWorker).toBe(true)
+    expect(restored.idLot).toBe('LOT-1')
+    expect(restored.socialWorkerContact).toBe('06 00 00 00 00')
+    expect(restored.household.adults[0]?.employmentStatus).toBe('student')
     expect(restored.income[0]).toMatchObject({
       label: 'Revenu personnalisé',
       amount: 1_250,
@@ -83,6 +96,15 @@ describe('repayment plan persist routing', () => {
       personId: adult.id
     })
     expect(restored.household.adults[0]?.id).toBe(adult.id)
+  })
+
+  test('rejette un snapshot sans identifiant de patrimoine', () => {
+    const contenu = buildPlanContenu(createDefaultApurementPlanForm(), '')
+    const parsed = JSON.parse(contenu) as { plan: { address: { id_lot?: string } } }
+    delete parsed.plan.address.id_lot
+    expect(
+      parse_repayment_plan_content('repayment_plan.created', JSON.stringify(parsed))
+    ).toBeNull()
   })
 
   test('createActivity vs patchActivity selon le mode', async () => {

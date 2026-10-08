@@ -3,7 +3,6 @@ import { ipcMain, session } from 'electron'
 import type { Activite } from '../../../src/shared/types/activites'
 import { parse_contenu_json } from '../../../src/shared/types/activites'
 import type { GetTicketDraftResult, TicketDraft } from '../../../src/shared/types/ticket-draft'
-import type { PutTicketPayload } from '../../../src/shared/types/tickets'
 import type { TicketsQueryParams } from '../../../src/shared/types/tickets'
 import { netFetch } from '../../lib/net-fetch'
 import { logMainError } from '../../services/logging'
@@ -134,27 +133,6 @@ export function registerTicketsHandlers(partition: string): void {
       return null
     }
   })
-
-  ipcMain.handle(
-    IpcChannel.tickets.putTicket,
-    async (_, params: { url: string } & PutTicketPayload) => {
-      const { url, ...body } = params
-      const ses = session.fromPartition(partition)
-      try {
-        const resp = await netFetch(`${url}/desktop/tickets`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-          session: ses
-        })
-        if (!resp.ok) return null
-        return await resp.json()
-      } catch (error) {
-        logMainError('put-ticket', error)
-        return null
-      }
-    }
-  )
 
   ipcMain.handle(
     IpcChannel.tickets.getDraft,

@@ -38,6 +38,7 @@ describe('buildPlanDocxData', () => {
       'ENFANTS',
       'ID_CLIENT',
       'ID_LOCATAIRE',
+      'ID_LOT',
       'PREMIER_IMPAYE',
       'RESSOURCES',
       'RESTE_A_VIVRE',
@@ -108,7 +109,7 @@ describe('buildPlanDocxData', () => {
         personId: form.household.adults[0].id
       })
     ]
-    form.expenses = [createAmountLine({ label: 'Loyer total', amount: 400 })]
+    form.expenses = [createAmountLine({ label: 'Loyer + Charges - Aide au logement', amount: 400 })]
     form.requestedAids = [
       createAidItem({ label: 'FSL' }),
       createAidItem({ label: 'Action Logement' })
@@ -120,10 +121,10 @@ describe('buildPlanDocxData', () => {
 
     const data = buildPlanDocxData(form, CTX, now)
     expect(data.ADULTES).toHaveLength(2)
-    expect(data.ADULTES[0]?.CAISSE_RETRAITE).toBe('')
-    form.household.adults[0]!.pensionFund = 'CARSAT'
-    form.household.adults[0]!.employmentStatus = 'retired'
-    expect(buildPlanDocxData(form, CTX, now).ADULTES[0]?.CAISSE_RETRAITE).toBe('CARSAT')
+    expect(data.ADULTES[0]).not.toHaveProperty('CAISSE_RETRAITE')
+    expect(data.ADULTES[0]?.STATUT_PRO).toBe('CDI')
+    form.household.adults[0]!.employmentStatus = 'student'
+    expect(buildPlanDocxData(form, CTX, now).ADULTES[0]?.STATUT_PRO).toBe('Étudiant')
     expect(data.ENFANTS).toHaveLength(1)
     expect(data.RESSOURCES).toHaveLength(1)
     expect(data.CHARGES).toHaveLength(1)
@@ -146,6 +147,10 @@ describe('buildPlanDocxData', () => {
     expect(data.BANQUE_DE_FRANCE).toContain('31/12/2026')
     expect(data).not.toHaveProperty('prp')
     expect(data).not.toHaveProperty('moratoire_ligne')
+    form.banqueDeFranceStatus = 'prp'
+    expect(buildPlanDocxData(form, CTX, now).BANQUE_DE_FRANCE).toBe(
+      'Plan de redressement personnel (PRP)'
+    )
   })
 
   test('expose la date du document', () => {
@@ -154,5 +159,17 @@ describe('buildPlanDocxData', () => {
     expect(data.DATE).toContain('2026')
     expect(data.ID_LOCATAIRE).toBe('LOC-9')
     expect(data.TYPE_PLAN).toBe("Plan d'apurement")
+  })
+
+  test('expose l’identifiant du patrimoine et les coordonnées du travailleur social', () => {
+    const form = createDefaultApurementPlanForm()
+    form.idLot = 'LOT-9'
+    form.hasSocialWorker = true
+    form.socialWorkerName = 'Ada'
+    form.socialWorkerOrganization = 'CCAS'
+    form.socialWorkerContact = 'ada@exemple.fr'
+    const data = buildPlanDocxData(form, CTX, now)
+    expect(data.ID_LOT).toBe('LOT-9')
+    expect(data.TRAVAILLEUR_SOCIAL).toBe('Ada — CCAS — ada@exemple.fr')
   })
 })

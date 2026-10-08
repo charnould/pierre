@@ -1,4 +1,4 @@
-import { FileUpIcon } from 'lucide-react'
+import { Circle, CircleCheck, FileUpIcon } from 'lucide-react'
 import {
   useEffect,
   useId,
@@ -6,17 +6,22 @@ import {
   useRef,
   useState,
   type ChangeEvent,
-  type DragEvent
+  type DragEvent,
+  type ReactNode,
+  type RefObject
 } from 'react'
 
-import { PromptMarkdownEditor } from '@/features/automations/components/PromptMarkdownEditor'
+import {
+  PromptMarkdownEditor,
+  type MarkdownReader
+} from '@/features/automations/components/PromptMarkdownEditor'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import {
   BlockprintSuccessStateForTask,
   BlockprintWormGear
 } from '@/shared/components/icons/koboyo-empty'
 import { Button } from '@/shared/components/ui/button'
-import { Field, FieldDescription, FieldLabel } from '@/shared/components/ui/field'
+import { Field, FieldDescription, FieldError, FieldLabel } from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
 import { InputGroup, InputGroupAddon, InputGroupButton } from '@/shared/components/ui/input-group'
 import {
@@ -32,7 +37,8 @@ import { filesFromDataTransfer, hasDraggedFiles } from '@/shared/lib/attachment-
 import { consumeSetupRequest, useSetupRequest } from '@/shared/lib/open-setup'
 import { cn } from '@/shared/lib/utils'
 
-import { defaultSetupText, internalChatbotText } from './setup-defaults'
+import { jsonSyntaxError, TICKETS_JSON_EXAMPLE, ticketsConfigOrExample } from './setup-json'
+import { setupPieces } from './setup-pieces'
 
 const ENTRIES = [
   {
@@ -92,9 +98,11 @@ const REQUEST_ENTRY: Record<string, EntryId> = {
   automations: 'automations/AGENTS.md'
 }
 
-function storedOrDefault(texts: Record<string, string | null>, id: string): string {
+const CHATBOT_ID = /^[a-z0-9][a-z0-9_-]{0,63}$/
+
+function storedText(texts: Record<string, string | null>, id: string): string {
   const stored = texts[id]
-  return stored && stored.trim() ? stored : defaultSetupText(id)
+  return stored && stored.trim() ? stored : ''
 }
 
 function templateBody(texts: Record<string, string | null>, name: string): string {
@@ -118,23 +126,27 @@ function JsonField({
   label,
   description,
   value,
+  error,
   onChange
 }: {
   label: string
-  description: string
+  description: ReactNode
   value: string
+  error?: string
   onChange: (value: string) => void
 }) {
   return (
-    <Field className="shrink-0">
+    <Field className="shrink-0" data-invalid={error ? true : undefined}>
       <FieldLabel>{label}</FieldLabel>
       <FieldDescription>{description}</FieldDescription>
       <textarea
         className="border-input field-sizing-content min-h-40 w-full rounded-lg border p-3 font-mono text-sm"
         value={value}
         spellCheck={false}
+        aria-invalid={error ? true : undefined}
         onChange={(event) => onChange(event.target.value)}
       />
+      {error ? <FieldError errors={[{ message: error }]} /> : null}
     </Field>
   )
 }
@@ -144,16 +156,18 @@ function ConsigneField({
   label,
   description,
   value,
-  onChange
+  error,
+  readerRef
 }: {
   id: string
   label: string
   description: string
   value: string
-  onChange: (value: string) => void
+  error?: string
+  readerRef: RefObject<MarkdownReader | null>
 }) {
   return (
-    <Field className="shrink-0">
+    <Field className="shrink-0" data-invalid={error ? true : undefined}>
       <FieldLabel>{label}</FieldLabel>
       <FieldDescription>{description}</FieldDescription>
       <PromptMarkdownEditor
@@ -162,8 +176,9 @@ function ConsigneField({
         id={id}
         value={value}
         placeholder="AGENTS.md"
-        onChange={onChange}
+        readerRef={readerRef}
       />
+      {error ? <FieldError errors={[{ message: error }]} /> : null}
     </Field>
   )
 }
@@ -291,14 +306,30 @@ export function SetupPanel({ url }: { url: string }) {
   const [chatbotId, setChatbotId] = useState('default')
   const [newAgentId, setNewAgentId] = useState('')
   const [jsonDraft, setJsonDraft] = useState('')
-  const [proseDraft, setProseDraft] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const proseReader = useRef<MarkdownReader | null>(null)
+  const jsonDirty = useRef(false)
+  function editJson(value: string) {
+    jsonDirty.current = true
+    setJsonDraft(value)
+  }
   const [rawDraft, setRawDraft] = useState('')
   const [templateName, setTemplateName] = useState<string | null>(null)
   const [templateDraft, setTemplateDraft] = useState('')
   const [saving, setSaving] = useState(false)
+  const [sendingTest, setSendingTest] = useState(false)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [iconUrl, setIconUrl] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [appliedRequest, setAppliedRequest] = useState<typeof request>(null)
+  const [draftSource, setDraftSource] = useState<{
+    key: string
+    texts: typeof texts
+  } | null>(null)
+  const [templateSource, setTemplateSource] = useState<{
+    name: string
+    texts: typeof texts
+  } | null>(null)
 
   const entry = ENTRIES.find((item) => item.id === selected) ?? ENTRIES[0]
   const jsonId = selected === 'chatbots/default' ? `chatbots/${chatbotId}` : entry.json
@@ -308,8 +339,10 @@ export function SetupPanel({ url }: { url: string }) {
   const chatbots = useMemo(() => {
     const ids = Object.keys(texts).filter((id) => /^chatbots\/[a-z0-9][a-z0-9_-]{0,63}$/.test(id))
     if (!ids.includes('chatbots/default')) ids.unshift('chatbots/default')
-    return ids.map((id) => id.slice('chatbots/'.length))
-  }, [texts])
+    const names = ids.map((id) => id.slice('chatbots/'.length))
+    if (CHATBOT_ID.test(chatbotId) && !names.includes(chatbotId)) names.push(chatbotId)
+    return names
+  }, [chatbotId, texts])
 
   const templateNames = useMemo(() => {
     if (selected !== 'repayment') return []
@@ -323,6 +356,38 @@ export function SetupPanel({ url }: { url: string }) {
     }
   }, [jsonDraft, selected])
 
+  const sourceKey = `${jsonId ?? ''}\n${proseId ?? ''}\n${rawId ?? ''}`
+  if (!draftSource || draftSource.key !== sourceKey || draftSource.texts !== texts) {
+    const entryChanged = draftSource?.key !== sourceKey
+    if (entryChanged) jsonDirty.current = false
+    setDraftSource({ key: sourceKey, texts })
+    if (jsonId && (entryChanged || !jsonDirty.current)) {
+      const stored = storedText(texts, jsonId)
+      setJsonDraft(jsonId === 'tickets' ? ticketsConfigOrExample(stored) : stored)
+    }
+    if (rawId) setRawDraft(storedText(texts, rawId))
+  }
+
+  if (request && request !== appliedRequest) {
+    setAppliedRequest(request)
+    const next = REQUEST_ENTRY[request]
+    if (next) setSelected(next)
+  }
+
+  if (
+    templateName &&
+    (!templateSource || templateSource.name !== templateName || templateSource.texts !== texts)
+  ) {
+    setTemplateSource({ name: templateName, texts })
+    setTemplateDraft(templateBody(texts, templateName))
+  }
+
+  const showLogo = selected === 'email' && Boolean(url) && binaries.includes('email/logo.png')
+  const showIcon =
+    selected === 'chatbots/default' && Boolean(url) && binaries.includes('chatbots/icons/icon.svg')
+  if (!showLogo && logoUrl) setLogoUrl(null)
+  if (!showIcon && iconUrl) setIconUrl(null)
+
   async function load() {
     const response = await window.api?.getAdminSetup?.({ url })
     if (!response) return
@@ -333,28 +398,25 @@ export function SetupPanel({ url }: { url: string }) {
 
   useEffect(() => {
     if (!url) return
-    void load()
-  }, [url, load])
+    let cancelled = false
+    void (window.api?.getAdminSetup?.({ url }) ?? Promise.resolve(null)).then((response) => {
+      if (cancelled || !response) return
+      setTexts(response.texts)
+      setBinaries(response.binaries)
+      setReady(response.ready ?? {})
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [url])
 
   useEffect(() => {
-    if (!request) return
-    const next = REQUEST_ENTRY[request]
-    if (next) setSelected(next)
-    consumeSetupRequest()
+    if (request) consumeSetupRequest()
   }, [request])
 
   useEffect(() => {
-    if (jsonId) setJsonDraft(storedOrDefault(texts, jsonId))
-    if (proseId) setProseDraft(storedOrDefault(texts, proseId))
-    if (rawId) setRawDraft(storedOrDefault(texts, rawId))
-  }, [jsonId, proseId, rawId, texts])
-
-  useEffect(() => {
     const read = window.api?.getSetupFile
-    if (selected !== 'email' || !url || !read || !binaries.includes('email/logo.png')) {
-      setLogoUrl(null)
-      return
-    }
+    if (!showLogo || !read) return
     let active = true
     let objectUrl: string | null = null
     void read({ url, id: 'email/logo.png' }).then((buffer) => {
@@ -366,19 +428,11 @@ export function SetupPanel({ url }: { url: string }) {
       active = false
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }, [binaries, selected, url])
+  }, [binaries, showLogo, url])
 
   useEffect(() => {
     const read = window.api?.getSetupFile
-    if (
-      selected !== 'chatbots/default' ||
-      !url ||
-      !read ||
-      !binaries.includes('chatbots/icons/icon.svg')
-    ) {
-      setIconUrl(null)
-      return
-    }
+    if (!showIcon || !read) return
     let active = true
     let objectUrl: string | null = null
     void read({ url, id: 'chatbots/icons/icon.svg' }).then((buffer) => {
@@ -390,72 +444,95 @@ export function SetupPanel({ url }: { url: string }) {
       active = false
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }, [binaries, selected, url])
+  }, [binaries, showIcon, url])
 
-  useEffect(() => {
-    if (!templateName) return
-    const stored = texts[`repayment/templates/${templateName}`]
-    setTemplateDraft(stored && stored.trim() ? stored : '')
-  }, [templateName, texts])
-
-  async function putText(id: string, body: string) {
+  async function putText(id: string, body: string): Promise<string | null> {
     const response = await window.api?.putAdminSetup?.({ url, id, body })
-    if (!response) {
-      toast.add({ title: 'Enregistrement refusé', type: 'error' })
-      return false
+    if (!response?.data) return response?.error?.message ?? 'Enregistrement refusé'
+    return null
+  }
+
+  const emailPiecesReady = setupPieces('email', texts, binaries).every((item) => item.done)
+
+  async function sendTestEmail() {
+    setSendingTest(true)
+    const response = await window.api?.postEmailTest?.({ url })
+    setSendingTest(false)
+    if (!response || response.error) {
+      toast.add({ title: response?.error?.message ?? 'Envoi impossible', type: 'error' })
+      return
     }
-    return true
+    toast.add({ title: 'Email de test envoyé', type: 'success' })
   }
 
   async function save() {
     setSaving(true)
-    const ok =
-      (jsonId
-        ? await putText(jsonId, jsonDraft || (jsonId ? storedOrDefault(texts, jsonId) : ''))
-        : true) &&
-      (proseId ? await putText(proseId, proseDraft || storedOrDefault(texts, proseId)) : true) &&
-      (rawId ? await putText(rawId, rawDraft || storedOrDefault(texts, rawId)) : true)
+    const errors: Record<string, string> = {}
+    const written: Record<string, string> = {}
+    const jobs: Array<[string, string]> = []
+    if (jsonId === 'tickets') {
+      const next = ticketsConfigOrExample(jsonDraft)
+      if (next !== jsonDraft) {
+        jsonDirty.current = false
+        setJsonDraft(next)
+      }
+      jobs.push([jsonId, next])
+    } else if (jsonId) {
+      const syntax = jsonSyntaxError(jsonDraft)
+      if (syntax) errors[jsonId] = syntax
+      else jobs.push([jsonId, jsonDraft])
+    }
+    if (proseId) jobs.push([proseId, proseReader.current?.read() ?? ''])
+    if (rawId) jobs.push([rawId, rawDraft])
+    for (const [id, body] of jobs) {
+      const message = await putText(id, body)
+      if (message) errors[id] = message
+      else written[id] = body
+    }
+    setFieldErrors(errors)
     setSaving(false)
-    if (!ok) return
-    toast.add({ title: 'Enregistré', type: 'success' })
-    await load()
+    const messages = Object.values(errors)
+    if (messages.length === 0) {
+      jsonDirty.current = false
+      toast.add({ title: 'Enregistré', type: 'success' })
+      await load()
+      return
+    }
+    for (const message of messages) toast.add({ title: message, type: 'error' })
+    if (Object.keys(written).length > 0) setTexts((current) => ({ ...current, ...written }))
   }
 
   async function saveTemplate() {
     if (!templateName) return
-    if (await putText(`repayment/templates/${templateName}`, templateDraft)) {
-      toast.add({ title: 'Modèle enregistré', type: 'success' })
-      await load()
+    const message = await putText(`repayment/templates/${templateName}`, templateDraft)
+    if (message) {
+      toast.add({ title: message, type: 'error' })
+      return
     }
+    toast.add({ title: 'Modèle enregistré', type: 'success' })
+    await load()
   }
 
   async function upload(file: File, id: string) {
     const bytes = new Uint8Array(await file.arrayBuffer())
     const response = await window.api?.putAdminSetup?.({ url, id, bytes })
-    if (!response) {
-      toast.add({ title: 'Téléversement refusé', type: 'error' })
+    if (!response?.data) {
+      toast.add({ title: response?.error?.message ?? 'Téléversement refusé', type: 'error' })
       return
     }
     toast.add({ title: 'Téléversé', type: 'success' })
     await load()
   }
 
-  async function addAgent() {
-    const body = internalChatbotText(newAgentId)
-    if (!body) {
+  function addAgent() {
+    const id = newAgentId.trim()
+    if (!CHATBOT_ID.test(id) || id === 'default') {
       toast.add({ title: 'Identifiant invalide', type: 'error' })
       return
     }
-    const id = newAgentId.trim()
-    if (!(await putText(`chatbots/${id}`, body))) return
-    if (
-      !(await putText(`chatbots/${id}/AGENTS.md`, defaultSetupText('chatbots/default/AGENTS.md')))
-    )
-      return
     setChatbotId(id)
+    setJsonDraft('')
     setNewAgentId('')
-    toast.add({ title: 'Agent ajouté', type: 'success' })
-    await load()
   }
 
   async function removeAgent() {
@@ -469,6 +546,8 @@ export function SetupPanel({ url }: { url: string }) {
     toast.add({ title: 'Agent supprimé', type: 'success' })
     await load()
   }
+
+  const pieces = setupPieces(selected, texts, binaries, chatbotId)
 
   return (
     <div className="flex min-h-0 flex-1">
@@ -495,6 +574,26 @@ export function SetupPanel({ url }: { url: string }) {
       </ul>
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
         <div className="flex flex-col gap-3 p-4">
+          <ul aria-label="Pièces" className="flex flex-col gap-2 rounded-md border p-3">
+            {pieces.map((item) => (
+              <li key={item.id} className="flex items-center gap-2 text-sm">
+                {item.done ? (
+                  <CircleCheck
+                    aria-hidden
+                    className="text-pierre-debt-down size-4 shrink-0"
+                    strokeWidth={1.5}
+                  />
+                ) : (
+                  <Circle
+                    aria-hidden
+                    className="text-foreground size-4 shrink-0"
+                    strokeWidth={1.5}
+                  />
+                )}
+                {item.label}
+              </li>
+            ))}
+          </ul>
           {selected === 'chatbots/default' ? (
             <>
               <Field>
@@ -533,7 +632,7 @@ export function SetupPanel({ url }: { url: string }) {
                     placeholder="cadre-astreinte"
                     onChange={(event) => setNewAgentId(event.target.value)}
                   />
-                  <Button type="button" variant="outline" onClick={() => void addAgent()}>
+                  <Button type="button" variant="outline" onClick={addAgent}>
                     Ajouter
                   </Button>
                   {chatbotId !== 'default' ? (
@@ -555,8 +654,11 @@ export function SetupPanel({ url }: { url: string }) {
                   className="border-input field-sizing-content min-h-40 w-full rounded-lg border p-3 font-mono text-sm"
                   value={jsonDraft}
                   spellCheck={false}
-                  onChange={(event) => setJsonDraft(event.target.value)}
+                  onChange={(event) => editJson(event.target.value)}
                 />
+                {jsonId && fieldErrors[jsonId] ? (
+                  <FieldError errors={[{ message: fieldErrors[jsonId] }]} />
+                ) : null}
               </Field>
               <Field className="shrink-0">
                 <FieldLabel>Consigne de {chatbotId}</FieldLabel>
@@ -564,13 +666,16 @@ export function SetupPanel({ url }: { url: string }) {
                 <div>
                   <PromptMarkdownEditor
                     className="h-250 min-h-250"
-                    key={`${proseId}:${storedOrDefault(texts, proseId ?? '').length}`}
+                    key={`${proseId}:${storedText(texts, proseId ?? '').length}`}
                     id={proseId ?? 'chatbots/default/AGENTS.md'}
-                    value={storedOrDefault(texts, proseId ?? '')}
+                    value={storedText(texts, proseId ?? '')}
                     placeholder="AGENTS.md"
-                    onChange={setProseDraft}
+                    readerRef={proseReader}
                   />
                 </div>
+                {proseId && fieldErrors[proseId] ? (
+                  <FieldError errors={[{ message: fieldErrors[proseId] }]} />
+                ) : null}
               </Field>
               {chatbotId === 'default' ? (
                 <Field className="shrink-0">
@@ -605,23 +710,34 @@ export function SetupPanel({ url }: { url: string }) {
               label="Configuration"
               description="Nom de l’agent et fuseau horaire de l’instance. Le fuseau s’applique à toute l’instance."
               value={jsonDraft}
-              onChange={setJsonDraft}
+              error={jsonId ? fieldErrors[jsonId] : undefined}
+              onChange={editJson}
             />
           ) : null}
           {selected === 'tickets' ? (
             <>
               <JsonField
                 label="Configuration"
-                description="Paniers, actions et étiquettes. La consigne n’y figure pas."
+                description={
+                  <>
+                    Paniers, actions et étiquettes. La consigne n’y figure pas. Le JSON doit
+                    contenir buckets (id non_traitees), actions.dossier et tags.
+                    <pre className="mt-2 font-mono text-xs whitespace-pre-wrap">
+                      {TICKETS_JSON_EXAMPLE}
+                    </pre>
+                  </>
+                }
                 value={jsonDraft}
-                onChange={setJsonDraft}
+                error={jsonId ? fieldErrors[jsonId] : undefined}
+                onChange={editJson}
               />
               <ConsigneField
                 id="tickets/AGENTS.md"
                 label="Consigne"
                 description="Fichier lu par Pi au démarrage."
-                value={storedOrDefault(texts, 'tickets/AGENTS.md')}
-                onChange={setProseDraft}
+                value={storedText(texts, 'tickets/AGENTS.md')}
+                error={proseId ? fieldErrors[proseId] : undefined}
+                readerRef={proseReader}
               />
               <DocxField
                 label="Courrier Word"
@@ -637,14 +753,16 @@ export function SetupPanel({ url }: { url: string }) {
                 label="Configuration"
                 description="Paniers, actions, étiquettes et plans. La consigne n’y figure pas. templates liste les modèles à éditer."
                 value={jsonDraft}
-                onChange={setJsonDraft}
+                error={jsonId ? fieldErrors[jsonId] : undefined}
+                onChange={editJson}
               />
               <ConsigneField
                 id="repayment/AGENTS.md"
                 label="Consigne"
                 description="Fichier lu par Pi au démarrage."
-                value={storedOrDefault(texts, 'repayment/AGENTS.md')}
-                onChange={setProseDraft}
+                value={storedText(texts, 'repayment/AGENTS.md')}
+                error={proseId ? fieldErrors[proseId] : undefined}
+                readerRef={proseReader}
               />
               <DocxField
                 label="Courrier du plan"
@@ -711,8 +829,9 @@ export function SetupPanel({ url }: { url: string }) {
               id="about/AGENTS.md"
               label="Consigne"
               description="Fichier lu par Pi au démarrage pour réaliser une synthèse."
-              value={storedOrDefault(texts, 'about/AGENTS.md')}
-              onChange={setProseDraft}
+              value={storedText(texts, 'about/AGENTS.md')}
+              error={proseId ? fieldErrors[proseId] : undefined}
+              readerRef={proseReader}
             />
           ) : null}
           {selected === 'automations/AGENTS.md' ? (
@@ -720,8 +839,9 @@ export function SetupPanel({ url }: { url: string }) {
               id="automations/AGENTS.md"
               label="Consigne"
               description="Fichier lu par Pi au démarrage pour générer un rapport."
-              value={storedOrDefault(texts, 'automations/AGENTS.md')}
-              onChange={setProseDraft}
+              value={storedText(texts, 'automations/AGENTS.md')}
+              error={proseId ? fieldErrors[proseId] : undefined}
+              readerRef={proseReader}
             />
           ) : null}
           {rawId ? (
@@ -775,7 +895,8 @@ export function SetupPanel({ url }: { url: string }) {
               <Button
                 type="button"
                 variant="outline"
-                disabled={!texts['email/html']?.trim() || !binaries.includes('email/logo.png')}
+                disabled={!emailPiecesReady || sendingTest}
+                onClick={() => void sendTestEmail()}
               >
                 Envoyer un email de test
               </Button>

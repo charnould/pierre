@@ -9,11 +9,13 @@ import {
   PauseCircle,
   Plus,
   RotateCcw,
+  Scale,
   Trash2
 } from 'lucide-react'
-import { useId, type ReactNode } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 
 import { ChoiceTile } from '@/shared/components/ChoiceTile'
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { Button } from '@/shared/components/ui/button'
 import {
   Field,
@@ -28,9 +30,7 @@ import { RadioGroup, RadioGroupItem } from '@/shared/components/ui/radio-group'
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue
 } from '@/shared/components/ui/select'
@@ -57,19 +57,17 @@ import {
   EMPLOYMENT_STATUS_ORDER,
   EXPENSE_PRESETS,
   INCOME_PRESETS,
+  MAX_PLAN_DURATION_MONTHS,
   OCCUPANCY_TYPE_LABELS,
-  PENSION_FUND_OPTIONS,
   PLAN_TYPE_LABELS,
-  buildEmploymentSelectItems,
-  decodeEmploymentSelectValue,
-  encodeEmploymentSelectValue,
-  employmentStatusNeedsPensionFund,
+  TOTAL_RENT_PRESET,
   type AdultMember,
   type AidItem,
   type AmountLine,
   type ApurementPlanFormData,
   type BanqueDeFranceStatus,
   type ChildMember,
+  type EmploymentStatus,
   type OccupancyType,
   type PlanType
 } from '../../lib/apurement-plan/types'
@@ -84,36 +82,10 @@ import { YearMonthInput } from './YearMonthInput'
 type FormUpdater = (patch: Partial<ApurementPlanFormData>) => void
 type SectionUpdater<T> = (patch: Partial<T>) => void
 
-const EMPLOYMENT_SELECT_ITEMS = buildEmploymentSelectItems()
-
-function EmploymentSelectGroupedItems() {
-  return (
-    <>
-      {EMPLOYMENT_STATUS_ORDER.map((status) => {
-        if (!employmentStatusNeedsPensionFund(status)) {
-          return (
-            <SelectGroup key={status}>
-              <SelectItem value={status}>{EMPLOYMENT_STATUS_LABELS[status]}</SelectItem>
-            </SelectGroup>
-          )
-        }
-        return (
-          <SelectGroup key={status}>
-            <SelectLabel>{EMPLOYMENT_STATUS_LABELS[status]}</SelectLabel>
-            {PENSION_FUND_OPTIONS.map((fund) => {
-              const value = encodeEmploymentSelectValue(status, fund)!
-              return (
-                <SelectItem key={value} value={value}>
-                  {fund}
-                </SelectItem>
-              )
-            })}
-          </SelectGroup>
-        )
-      })}
-    </>
-  )
-}
+const EMPLOYMENT_SELECT_ITEMS = EMPLOYMENT_STATUS_ORDER.map((status) => ({
+  value: status,
+  label: EMPLOYMENT_STATUS_LABELS[status]
+}))
 
 function PlanSection({
   title,
@@ -269,12 +241,22 @@ export function SectionLogement({
   onChange: FormUpdater
 }) {
   const addressId = useId()
+  const idLotId = useId()
   const postalCodeId = useId()
   const cityId = useId()
 
   return (
     <PlanSection title="Logement" description="Adresse du logement concerné.">
       <div className="flex flex-wrap items-end gap-3">
+        <Field className="w-auto min-w-52 flex-1">
+          <FieldLabel htmlFor={idLotId}>Identifiant du patrimoine</FieldLabel>
+          <Input
+            id={idLotId}
+            aria-label="Identifiant du patrimoine"
+            value={form.idLot}
+            onChange={(e) => onChange({ idLot: e.target.value })}
+          />
+        </Field>
         <Field className="w-auto min-w-48 flex-2">
           <FieldLabel htmlFor={addressId}>Adresse du logement</FieldLabel>
           <Input
@@ -320,6 +302,7 @@ export function SectionSituationLocative({
   const paymentOrderId = useId()
   const socialWorkerNameId = useId()
   const socialWorkerOrganizationId = useId()
+  const socialWorkerContactId = useId()
   const moratoriumEndId = useId()
 
   return (
@@ -384,6 +367,15 @@ export function SectionSituationLocative({
               onChange={(e) => onChange({ socialWorkerOrganization: e.target.value })}
             />
           </Field>
+          <Field className="w-auto min-w-0 flex-1">
+            <FieldLabel htmlFor={socialWorkerContactId}>Coordonnées</FieldLabel>
+            <Input
+              id={socialWorkerContactId}
+              aria-label="Coordonnées du travailleur social"
+              value={form.socialWorkerContact}
+              onChange={(e) => onChange({ socialWorkerContact: e.target.value })}
+            />
+          </Field>
         </div>
       ) : null}
       <ChoiceCards
@@ -411,6 +403,11 @@ export function SectionSituationLocative({
             value: 'repayment_plan_active' as BanqueDeFranceStatus,
             title: BANQUE_DE_FRANCE_STATUS_LABELS.repayment_plan_active,
             icon: ListChecks
+          },
+          {
+            value: 'prp' as BanqueDeFranceStatus,
+            title: BANQUE_DE_FRANCE_STATUS_LABELS.prp,
+            icon: Scale
           },
           {
             value: 'moratorium' as BanqueDeFranceStatus,
@@ -503,6 +500,7 @@ export function SectionBudget({
         <AmountLineList
           items={form.expenses}
           presets={EXPENSE_PRESETS}
+          lockedLabel={TOTAL_RENT_PRESET}
           placeholderLabel="Type de charge"
           customPlaceholder="Libellé de la charge"
           onChange={onExpensesChange}
@@ -533,10 +531,6 @@ function AdultRow({
   const employmentStatusId = useId()
   const cafNumberId = useId()
   const leaseHolderId = useId()
-  const employmentSelectValue = encodeEmploymentSelectValue(
-    adult.employmentStatus,
-    adult.pensionFund
-  )
 
   return (
     <div className="contents">
@@ -574,12 +568,10 @@ function AdultRow({
         ) : null}
         <Select
           items={EMPLOYMENT_SELECT_ITEMS}
-          value={employmentSelectValue}
-          onValueChange={(v) => {
-            if (v == null) return
-            const decoded = decodeEmploymentSelectValue(v)
-            if (!decoded) return
-            onChange(decoded)
+          value={adult.employmentStatus}
+          onValueChange={(value) => {
+            if (value == null) return
+            onChange({ employmentStatus: value as EmploymentStatus })
           }}
         >
           <SelectTrigger
@@ -591,7 +583,11 @@ function AdultRow({
             <SelectValue placeholder="Statut professionnel" />
           </SelectTrigger>
           <SelectContent className="min-w-56">
-            <EmploymentSelectGroupedItems />
+            {EMPLOYMENT_STATUS_ORDER.map((status) => (
+              <SelectItem key={status} value={status}>
+                {EMPLOYMENT_STATUS_LABELS[status]}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </Field>
@@ -762,7 +758,7 @@ export function SectionFamille({
             Ajouter
           </Button>
         </div>
-        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_11rem_minmax(0,1.25fr)_minmax(0,1fr)_auto_2rem] items-start gap-x-3 gap-y-4">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_11rem_minmax(0,1fr)_minmax(0,1fr)_auto_2rem] items-start gap-x-3 gap-y-4">
           {household.adults.map((adult, index) => (
             <AdultRow
               key={adult.id}
@@ -873,6 +869,7 @@ export function SectionEcheancier({
 }) {
   const count = form.installments.length
   const canRemove = count > 1
+  const [longPlanOpen, setLongPlanOpen] = useState(false)
 
   const firstYearMonth = form.installments[0]?.yearMonth ?? firstInstallmentYearMonth(form)
 
@@ -887,6 +884,15 @@ export function SectionEcheancier({
     })
   }
 
+  const addInstallment = () => {
+    if (count >= MAX_PLAN_DURATION_MONTHS) return
+    if (count === DEFAULT_PLAN_DURATION_MONTHS) {
+      setLongPlanOpen(true)
+      return
+    }
+    setInstallmentCount(count + 1)
+  }
+
   return (
     <PlanSection
       title="Échéancier"
@@ -897,7 +903,8 @@ export function SectionEcheancier({
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => setInstallmentCount(count + 1)}
+          disabled={count >= MAX_PLAN_DURATION_MONTHS}
+          onClick={addInstallment}
         >
           <Plus data-icon="inline-start" />
           Ajouter une échéance
@@ -994,6 +1001,17 @@ export function SectionEcheancier({
           </div>
         ))}
       </div>
+      <ConfirmDialog
+        open={longPlanOpen}
+        title="Plus de 24 mensualités !"
+        description="Un plan d’apurement de plus de 24 mensualités est réservé à des cas spéciaux documentés au sein de votre organisme."
+        confirmLabel="J’ai compris"
+        onConfirm={() => {
+          setLongPlanOpen(false)
+          setInstallmentCount(count + 1)
+        }}
+        onCancel={() => setLongPlanOpen(false)}
+      />
     </PlanSection>
   )
 }

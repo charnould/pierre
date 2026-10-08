@@ -51,7 +51,6 @@ export function createAdultMember(partial?: Partial<Omit<AdultMember, 'id'>>): A
     firstName: '',
     birthDate: '',
     employmentStatus: 'permanent',
-    pensionFund: '',
     cafNumber: '',
     isLeaseHolder: true,
     ...partial
@@ -99,6 +98,7 @@ export function createDefaultApurementPlanForm(tenant?: TenantRepaymentRow): Apu
     signed: false,
     idLocataire: tenant?.id_locataire ?? '',
     idClient: tenant?.id_client ?? '',
+    idLot: tenantField(tenant, 'id_lot'),
     address: tenantField(tenant, 'adresse'),
     postalCode: tenantField(tenant, 'code_postal'),
     city: tenantField(tenant, 'commune', 'ville', 'nom_commune'),
@@ -109,6 +109,7 @@ export function createDefaultApurementPlanForm(tenant?: TenantRepaymentRow): Apu
     hasSocialWorker: false,
     socialWorkerName: '',
     socialWorkerOrganization: '',
+    socialWorkerContact: '',
     income: [createAmountLine()],
     expenses: [
       createAmountLine({

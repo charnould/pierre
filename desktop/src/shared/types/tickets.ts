@@ -44,15 +44,3 @@ export type TicketsListResponse = {
 }
 
 export type TicketsMetaResponse = Pick<TicketsListResponse, 'meta'>
-
-export type PutTicketPayload = {
-  id_reclamation: string
-  id_locataire: string
-  message?: string
-}
-
-export type PutTicketResult = {
-  ok: boolean
-  id_reclamation?: string
-  id_locataire?: string
-}

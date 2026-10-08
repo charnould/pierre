@@ -110,7 +110,11 @@ Administrateur reste hors profil. Libellé **Chatbots**. Identité profil = Avat
 nom. Les lignes utilisateurs portent une checkbox ; dès qu’une case est cochée, un CTA outline
 **Affecter un profil** ouvre le menu des profils. Pas de tout sélectionner. Les sections non
 implémentées utilisent l’Empty canonique. Aucun chrome ou mouvement propre n’est ajouté aux
-onglets.
+onglets. Paramétrage : en haut du formulaire, un filet `rounded-md border` autour de la liste
+des pièces de l’entrée sélectionnée. Lucide 16, trait 1.5 : `CircleCheck` en vert existant
+`text-pierre-debt-down` si la pièce est enregistrée, `Circle` en encre `text-foreground` sinon.
+Le verbe reste encre. Pas de Card, pas de Badge, pas de bannière, pas de nouvelle couleur.
+L’ordre est stable. Le texte proposé dans un champ vide ne compte pas comme fait.
 
 Encyclopédie est l’exception Directory à deux buckets : `Core Data HLM` puis `Autres sources`,
 sans fusion. Core Data affiche toujours le catalogue théorique complet, y compris les tables
@@ -147,12 +151,9 @@ Deux empty states, un `ChatPanel`. Rien qui n’est pas un message n’entre dan
 Discuter et public : un `ChatPanel`. Greeting, exemples et disclaimer viennent de la config
 (`greetings` / `examples` / `disclaimer`). Absents ou vides : rien. Greeting serif, une
 salutation tirée au hasard — pas une question (l’invitation est le placeholder du composer).
-Public (`arrival` depuis ChatWebApp, page et embed) : marque Lucide fermée (`Hand` / `Bot` /
-`BotMessageSquare` / `Rocket`) sur la même ligne que le greeting, première ligne,
-même index que la salutation, emoji de fin retiré. Greeting `text-4xl` / 450 + marque `size-8`
-(embed : `text-2xl` + `size-6`). Exemples : liste quiet
-(Inter 14 muted, `px-3`, pas de filet). Discuter : greeting `text-2xl` + emoji de config, sans
-marque ; exemples liste filetée `rounded-xl` `divide-y`. Clic = envoi. Survol ou focus d’un
+Public (`arrival` depuis ChatWebApp) : greeting `text-4xl` / 450 (embed : `text-2xl`).
+Discuter : greeting `text-2xl` / 450. Emoji de config conservé. Exemples : liste filetée
+`rounded-xl` `divide-y`, Inter 14, des deux côtés. Clic = envoi. Survol ou focus d’un
 exemple : le placeholder du composer reprend le texte (pas le draft). Encre alignée (`px-3`).
 Tant qu’il n’y a pas de message, l’invitation (greeting + composer + exemples) est
 centrée dans le canvas — deux spacers `flex-1`. Au premier message greeting et exemples
@@ -163,7 +164,7 @@ MessageScroller). Scroll interne sur `/embed` et Discuter. Chrome public : `publ
 `globals.css` taupe.
 `data-chat-chrome` libelle le document (`public`) ou le panneau (`desktop`) ; ce n’est pas un
 sélecteur. ChatPanel ne porte aucune couleur.
-Pas d’icône dans le chat, **sauf** la marque Lucide de l’empty public. Composer : filet au focus,
+Pas d’icône dans le chat. Composer : filet au focus,
 pas de halo `ring-3`. Curseur dans le champ
 sur `/` et Discuter, pas sur `/embed`.
 
@@ -173,11 +174,10 @@ preuve secondaire. Le Questionnaire prend la priorité dans le dock sans recouvr
 
 Réponses assistant (`typeset-reply`) : Source Serif 4, 16/23, graisse 450, optical size, tracking 0,
 flow 14. Listes : 0.5em, marqueurs encre, `ol` tabular-nums. Greeting empty : même voix, `px-3`,
-salutation issue de `greetings[]`. Public : `text-4xl` / 450 + marque Lucide `size-8` en ligne
-(embed : `text-2xl` + `size-6`). Discuter : `text-2xl` / 450, sans marque. Chrome,
-exemples,
-bulle user, composer et traces : Inter 11/16. `<pre>` d’outil : mono UI. Exemples public : liste
-quiet Inter 14 muted, pas de pastille. Exemples Discuter : liste filetée Inter 14. Méta
+salutation issue de `greetings[]`. Public : `text-4xl` / 450 (embed : `text-2xl`). Discuter :
+`text-2xl` / 450. Chrome, exemples,
+bulle user, composer et traces : Inter 11/16. `<pre>` d’outil : mono UI. Exemples : liste
+filetée Inter 14, pas de pastille. Méta
 12/16.
 
 ### Login
@@ -566,7 +566,7 @@ réponses `ask_user` restent inline. Erreur ou interruption reste visible sous u
 partielle, sans seconde alerte.
 
 Le dock contient le Questionnaire prioritaire, puis le greeting empty, le composer, puis les
-exemples (liste quiet sur public, filetée sur Discuter). Empty : l’invitation est centrée
+exemples (liste filetée). Empty : l’invitation est centrée
 (spacers `flex-1`), sans disclaimer. `/` :
 `min-h-dvh`, scroll fenêtre si l’invitation dépasse. `/embed` et Discuter : le stage empty scrolle.
 Au premier message, plus de spacers : fil + dock bas (fixe sur `/`) ; disclaimer sous le composer

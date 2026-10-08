@@ -21,6 +21,8 @@ function AmountLineRow({
   customPlaceholder,
   personItems,
   canRemove,
+  reserveRemoveSlot,
+  locked,
   showLabels,
   onChange,
   onRemove
@@ -31,6 +33,8 @@ function AmountLineRow({
   customPlaceholder: string
   personItems: SelectOption[] | null
   canRemove: boolean
+  reserveRemoveSlot: boolean
+  locked: boolean
   showLabels: boolean
   onChange: (patch: Partial<AmountLine>) => void
   onRemove: () => void
@@ -39,7 +43,14 @@ function AmountLineRow({
   const personId = useId()
   const amountId = useId()
 
-  const typeControl = item.custom ? (
+  const typeControl = locked ? (
+    <Input
+      id={typeId}
+      aria-label={showLabels ? undefined : typeLabel}
+      value={item.label}
+      disabled
+    />
+  ) : item.custom ? (
     <Input
       id={typeId}
       aria-label={typeLabel}
@@ -104,6 +115,8 @@ function AmountLineRow({
         <Button type="button" variant="ghost" size="icon" aria-label="Retirer" onClick={onRemove}>
           <Trash2 />
         </Button>
+      ) : reserveRemoveSlot ? (
+        <span className="size-8" aria-hidden />
       ) : null}
     </div>
   )
@@ -115,6 +128,8 @@ interface Props {
   placeholderLabel: string
   customPlaceholder: string
   people?: HouseholdPersonOption[]
+  /** Libellé de preset qui ne peut ni être retiré ni être retypé. */
+  lockedLabel?: string
   onChange: (items: AmountLine[]) => void
 }
 
@@ -124,6 +139,7 @@ export function AmountLineList({
   placeholderLabel,
   customPlaceholder,
   people,
+  lockedLabel,
   onChange
 }: Props) {
   const typeItems = useMemo<SelectOption[]>(
@@ -149,22 +165,29 @@ export function AmountLineList({
     onChange(items.map((item) => (item.id === id ? { ...item, ...patch } : item)))
   }
 
+  const removable = items.length > 1
+
   return (
     <div className="flex flex-col gap-4">
-      {items.map((item, index) => (
-        <AmountLineRow
-          key={item.id}
-          item={item}
-          typeItems={typeItems}
-          typeLabel={placeholderLabel}
-          customPlaceholder={customPlaceholder}
-          personItems={personItems}
-          canRemove={items.length > 1}
-          showLabels={index === 0}
-          onChange={(patch) => updateItem(item.id, patch)}
-          onRemove={() => onChange(items.filter((entry) => entry.id !== item.id))}
-        />
-      ))}
+      {items.map((item, index) => {
+        const locked = Boolean(lockedLabel) && !item.custom && item.label === lockedLabel
+        return (
+          <AmountLineRow
+            key={item.id}
+            item={item}
+            typeItems={typeItems}
+            typeLabel={placeholderLabel}
+            customPlaceholder={customPlaceholder}
+            personItems={personItems}
+            canRemove={!locked && removable}
+            reserveRemoveSlot={locked && removable}
+            locked={locked}
+            showLabels={index === 0}
+            onChange={(patch) => updateItem(item.id, patch)}
+            onRemove={() => onChange(items.filter((entry) => entry.id !== item.id))}
+          />
+        )
+      })}
     </div>
   )
 }

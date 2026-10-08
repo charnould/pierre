@@ -23,7 +23,11 @@ export function useWorkflowExport(url: string | undefined) {
   }, [])
 
   const downloadDocx = useCallback(
-    async (body: string, skillId: string, subject = ''): Promise<boolean> => {
+    async (
+      body: string,
+      skillId: string,
+      fields: { subject?: string; adresse?: string; codePostal?: string; ville?: string } = {}
+    ): Promise<boolean> => {
       if (!url || !window.api?.getSetupFile) return false
       if (!skillHasDocxTemplate(skillId)) {
         console.error(`[export] No DOCX template for skill: ${skillId}`)
@@ -34,7 +38,13 @@ export function useWorkflowExport(url: string | undefined) {
         console.error(`[export] Failed to load template: ${skillId}`)
         return false
       }
-      const bytes = await generateDocxFromTemplate(buf, { subject, body })
+      const bytes = await generateDocxFromTemplate(buf, {
+        SUBJECT: fields.subject ?? '',
+        BODY: body,
+        ADRESSE: fields.adresse ?? '',
+        CODE_POSTAL: fields.codePostal ?? '',
+        VILLE: fields.ville ?? ''
+      })
       const blob = new Blob([new Uint8Array(bytes)], {
         type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
       })
