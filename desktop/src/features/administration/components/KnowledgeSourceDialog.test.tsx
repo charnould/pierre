@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 
-import { normalize_knowledge_name } from '../../../../../shared/knowledge'
+import { normalize_knowledge_name } from '@pierre/shared/knowledge'
+
 import {
   encyclopediaTitleForSave,
   officialEncyclopediaTitle,
@@ -13,7 +14,6 @@ describe('KnowledgeSourceDialog', () => {
       title: 'Premier',
       sheet: 0,
       sheetName: 'Premier',
-      headerRow: 0,
       profileIds: [],
       moduleIds: []
     }

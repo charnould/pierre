@@ -13,14 +13,15 @@ import {
   buildRepaymentTagChangeOperations,
   executeRepaymentAdvancementOperations,
   executeRepaymentTagChangeOperations,
-  resolveAdvancementTenant,
-  type RepaymentAdvancementContext
+  type RepaymentAdvancementContext,
+  resolveAdvancementTenant
 } from './repayment-activity-mutations'
 import type { RepaymentBucketId } from './repayment-bucket'
 import { isDepartedTenantRow, resolveBucketForTenantRow } from './repayment-bucket'
 import type { TenantLastAction } from './repayment-last-action'
+import { unreadRepaymentTenantKey } from './repayment-row-signal'
 import { ledgerColumnIdsFromMeta } from './repayment-table-columns'
-import { sendRepaymentNote, type RepaymentMessageResult } from './send-repayment-message'
+import { type RepaymentMessageResult, sendRepaymentNote } from './send-repayment-message'
 import { useRepaymentTenantBucket } from './use-repayment-tenant-bucket'
 
 const LEDGER_FETCH_LIMIT = 10_000
@@ -69,14 +70,29 @@ export function useRepaymentViewData(
   hidden: boolean,
   deps: RepaymentViewDataDeps
 ) {
-  const [selection, setSelection] = useState<{ tenantId: string; url: string } | null>(null)
-  const [sheetOpen, setSheetOpen] = useState(false)
-  const [activityNoteId, setActivityNoteId] = useState<number | undefined>()
+  const [inspector, setInspector] = useState<{
+    url: string
+    tenantId: string
+    activityId?: number
+    fallbackTenant?: TenantRepaymentRow
+    composeMode?: 'note'
+  } | null>(null)
   const [sheetOpenToken, setSheetOpenToken] = useState(0)
-  const [snapshot, setSnapshot] = useState<LedgerSnapshot>(() => emptyLedgerSnapshot(''))
-  const [refreshing, setRefreshing] = useState(false)
   const ledgerRequestIdRef = useRef(0)
   const ledgerKey = url ?? ''
+  const visibleInspector = inspector?.url === url ? inspector : null
+  const sheetOpen = visibleInspector !== null
+  const activityNoteId = visibleInspector?.activityId
+  const setSheetOpen = useCallback((open: boolean) => {
+    if (!open) setInspector(null)
+  }, [])
+  const [inspectorUrl, setInspectorUrl] = useState(url)
+  if (inspectorUrl !== url) {
+    setInspectorUrl(url)
+    setInspector(null)
+  }
+  const [snapshot, setSnapshot] = useState<LedgerSnapshot>(() => emptyLedgerSnapshot(''))
+  const [refreshing, setRefreshing] = useState(false)
 
   const apiRows = snapshot.key === ledgerKey ? snapshot.rows : EMPTY_TENANT_ROWS
   const ledgerColumnIds =
@@ -144,9 +160,13 @@ export function useRepaymentViewData(
 
   const allRows = apiRows
   const selected = useMemo(() => {
-    if (!selection || selection.url !== url) return null
-    return allRows.find((row) => row.id_locataire === selection.tenantId) ?? null
-  }, [allRows, selection, url])
+    if (!visibleInspector) return null
+    return (
+      allRows.find((row) => row.id_locataire === visibleInspector.tenantId) ??
+      visibleInspector.fallbackTenant ??
+      null
+    )
+  }, [allRows, visibleInspector])
 
   const getBucketForRow = useCallback(
     (row: TenantRepaymentRow) => resolveBucketForTenantRow(row, getBucket(row.id_locataire)),
@@ -166,26 +186,52 @@ export function useRepaymentViewData(
     return { action, date }
   }, [])
 
+  const unreadTenantKey = useMemo(
+    () => unreadRepaymentTenantKey(deps.notifications.rows),
+    [deps.notifications.rows]
+  )
+  const unreadTenants = useMemo(
+    () => new Set(unreadTenantKey === '' ? [] : unreadTenantKey.split('\0')),
+    [unreadTenantKey]
+  )
   const getRowSignal = useCallback(
     (row: TenantRepaymentRow) => ({
-      hasUnread: deps.notifications.hasUnreadFor('repayment', row.id_locataire)
+      hasUnread: unreadTenants.has(row.id_locataire)
     }),
-    [deps.notifications]
+    [unreadTenants]
   )
 
   const openTenantSheet = useCallback(
-    (tenantId: string, options?: { activityId?: number; markRead?: boolean }) => {
-      const row = allRows.find((entry) => entry.id_locataire === tenantId)
+    (
+      tenantId: string,
+      options?: {
+        activityId?: number
+        markRead?: boolean
+        fallbackTenant?: TenantRepaymentRow
+        composeMode?: 'note'
+      }
+    ) => {
+      const row =
+        allRows.find((entry) => entry.id_locataire === tenantId) ??
+        (options?.fallbackTenant?.id_locataire === tenantId ? options.fallbackTenant : undefined)
       if (!row) return
 
       if (options?.markRead !== false) {
-        void deps.notifications.markAllReadForRef('repayment', tenantId)
+        const markRead = () => {
+          void deps.notifications.markAllReadForRef('repayment', tenantId)
+        }
+        if (typeof requestAnimationFrame === 'function') requestAnimationFrame(markRead)
+        else queueMicrotask(markRead)
       }
 
       if (!url) return
-      setSelection({ tenantId: row.id_locataire, url })
-      setSheetOpen(true)
-      setActivityNoteId(options?.activityId)
+      setInspector({
+        url,
+        tenantId: row.id_locataire,
+        activityId: options?.activityId,
+        fallbackTenant: options?.fallbackTenant,
+        composeMode: options?.composeMode
+      })
       setSheetOpenToken((token) => token + 1)
     },
     [allRows, deps.notifications, url]
@@ -291,19 +337,13 @@ export function useRepaymentViewData(
   )
 
   const activityTarget = useMemo(() => {
-    if (!sheetOpen || !selected) return undefined
+    if (!visibleInspector || !selected) return undefined
     return {
       view: 'repayment' as const,
       tenantId: selected.id_locataire,
-      activityId: activityNoteId
+      activityId: visibleInspector.activityId
     }
-  }, [activityNoteId, selected, sheetOpen])
-
-  if (selection !== null && selection.url !== url) {
-    setSelection(null)
-    setSheetOpen(false)
-    setActivityNoteId(undefined)
-  }
+  }, [selected, visibleInspector])
 
   return {
     snapshotDate,
@@ -317,6 +357,8 @@ export function useRepaymentViewData(
     setSheetOpen,
     sheetOpenToken,
     getBucketForRow,
+    setBucket,
+    clearBucket,
     getLastAction,
     getRowSignal,
     handleAddNote,
@@ -327,6 +369,7 @@ export function useRepaymentViewData(
     openTenantSheet,
     activityTarget,
     activityNoteId,
+    composeMode: visibleInspector?.composeMode,
     reload
   }
 }

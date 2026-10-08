@@ -1,4 +1,4 @@
-import { useCallback, useRef, type UIEvent } from 'react'
+import { type UIEvent, useCallback, useRef } from 'react'
 
 export function useSyncedHorizontalScroll() {
   const headerScrollRef = useRef<HTMLDivElement>(null)

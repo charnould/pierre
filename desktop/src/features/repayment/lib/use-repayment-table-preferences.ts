@@ -1,17 +1,17 @@
 import type {
   ColumnSizingState,
+  ColumnVisibilityState,
   OnChangeFn,
-  SortingState,
-  ColumnVisibilityState
+  SortingState
 } from '@tanstack/react-table'
 import { useCallback, useMemo, useState } from 'react'
 
 import {
   clearAllColumnFilters,
-  hasActiveColumnFilters,
-  parseColumnValues,
   type ColumnFilters,
-  type ColumnValuesConfig
+  type ColumnValuesConfig,
+  hasActiveColumnFilters,
+  parseColumnValues
 } from '@/shared/lib/ui-settings/tickets-table'
 
 import type { RepaymentBucketId } from './repayment-bucket'
@@ -22,8 +22,8 @@ import {
   isRepaymentColumnId,
   isRepaymentUiColumnId,
   pinLockedRepaymentColumns,
-  resolveRepaymentTableColumnIds,
-  type RepaymentColumnId
+  type RepaymentColumnId,
+  resolveRepaymentTableColumnIds
 } from './repayment-table-columns'
 
 const STORAGE_KEY = 'pierre.repayment-table-prefs'
@@ -40,15 +40,14 @@ type BucketTablePrefs = {
   columnSorting?: SortingState
 }
 
-type StoredPrefsV8 = {
-  version: 8
+type StoredPrefs = {
+  version: 10
   columnValues?: ColumnValuesConfig
   buckets?: Partial<Record<RepaymentBucketId, BucketTablePrefs>>
 }
 
 export type ColumnValuesUpdater =
-  | ColumnValuesConfig
-  | ((prev: ColumnValuesConfig | undefined) => ColumnValuesConfig)
+  ColumnValuesConfig | ((prev: ColumnValuesConfig | undefined) => ColumnValuesConfig)
 
 function sanitizeColumnValues(
   values: ColumnValuesConfig | undefined
@@ -75,15 +74,26 @@ function sanitizeOrder(
   return pinLockedRepaymentColumns([...valid, ...missing], activeColumnIds)
 }
 
+const DEFAULT_VISIBLE_LEDGER_COLUMNS = new Set([
+  'id_locataire',
+  'id_client',
+  'solde_locataire',
+  'ratio_dette_loyer',
+  'email_status',
+  'telephone_status',
+  'gestionnaire'
+])
+
 function defaultColumnVisibility(ledgerColumnIds: readonly string[] = []): ColumnVisibilityState {
   const visibility: ColumnVisibilityState = {
+    selection: true,
     alertes: true,
-    derniere_action_realisee: false,
+    derniere_action_realisee: true,
     date_derniere_action_realisee: false
   }
 
   for (const id of ledgerColumnIds) {
-    visibility[id] = true
+    visibility[id] = DEFAULT_VISIBLE_LEDGER_COLUMNS.has(id)
   }
 
   return visibility
@@ -102,6 +112,7 @@ function sanitizeVisibility(
   for (const id of activeColumnIds) {
     if (id in visibility) next[id] = visibility[id]
   }
+  next.selection = true
   next.alertes = true
   for (const key of Object.keys(next)) {
     if (!activeSet.has(key as RepaymentColumnId)) delete next[key]
@@ -136,25 +147,25 @@ function emptyBucketPrefs(): BucketTablePrefs {
   return {}
 }
 
-function readStoredPrefs(): StoredPrefsV8 {
+function readStoredPrefs(): StoredPrefs {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { version: 8 }
+    if (!raw) return { version: 10 }
 
-    const parsed = JSON.parse(raw) as StoredPrefsV8
-    if (parsed.version !== 8) return { version: 8 }
+    const parsed = JSON.parse(raw) as StoredPrefs
+    if (parsed.version !== 10) return { version: 10 }
 
     return {
-      version: 8,
+      version: 10,
       columnValues: sanitizeColumnValues(parsed.columnValues),
       buckets: parsed.buckets
     }
   } catch {
-    return { version: 8 }
+    return { version: 10 }
   }
 }
 
-function writeStoredPrefs(prefs: StoredPrefsV8): void {
+function writeStoredPrefs(prefs: StoredPrefs): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs))
 }
 
@@ -167,8 +178,8 @@ function updateStoredColumnValues(
 ): ColumnValuesConfig | undefined {
   const stored = readStoredPrefs()
   const sanitized = sanitizeColumnValues(columnValues) ?? columnValues
-  const next: StoredPrefsV8 = {
-    version: 8,
+  const next: StoredPrefs = {
+    version: 10,
     ...(stored.buckets ? { buckets: stored.buckets } : {}),
     ...(sanitized ? { columnValues: sanitized } : {})
   }
@@ -193,7 +204,7 @@ function updateBucketPrefs(bucket: RepaymentBucketId, patch: BucketTablePrefs): 
   if (Object.keys(nextBucketPrefs).length === 0) delete buckets[bucket]
 
   writeStoredPrefs({
-    version: 8,
+    version: 10,
     ...(stored.columnValues ? { columnValues: stored.columnValues } : {}),
     ...(Object.keys(buckets).length ? { buckets } : {})
   })
@@ -367,7 +378,7 @@ export function useRepaymentTablePreferences(
 
   const toggleColumnVisibility = useCallback(
     (columnId: RepaymentColumnId, visible: boolean) => {
-      if (columnId === 'alertes') return
+      if (columnId === 'alertes' || columnId === 'selection') return
       setColumnVisibility((prev) => ({ ...prev, [columnId]: visible }))
     },
     [setColumnVisibility]

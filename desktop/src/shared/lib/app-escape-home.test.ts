@@ -3,10 +3,22 @@ import { describe, expect, test } from 'bun:test'
 import { shouldNavigateHomeOnEscape } from './app-escape-home'
 
 describe('shouldNavigateHomeOnEscape', () => {
-  test('navigates from chat when logged in', () => {
+  test('navigates from the chat page when the quick chat is closed', () => {
     expect(
       shouldNavigateHomeOnEscape({
         activeTab: 'chat',
+        isLoggedIn: true,
+        isTypingInField: false,
+        hasOpenDialog: false,
+        hasOpenChatWindow: false
+      })
+    ).toBe(true)
+  })
+
+  test('navigates from a métier when logged in', () => {
+    expect(
+      shouldNavigateHomeOnEscape({
+        activeTab: 'repayment',
         isLoggedIn: true,
         isTypingInField: false,
         hasOpenDialog: false
@@ -50,7 +62,7 @@ describe('shouldNavigateHomeOnEscape', () => {
   test('blocked while typing', () => {
     expect(
       shouldNavigateHomeOnEscape({
-        activeTab: 'chat',
+        activeTab: 'repayment',
         isLoggedIn: true,
         isTypingInField: true,
         hasOpenDialog: false
@@ -61,7 +73,7 @@ describe('shouldNavigateHomeOnEscape', () => {
   test('blocked when dialog is open', () => {
     expect(
       shouldNavigateHomeOnEscape({
-        activeTab: 'chat',
+        activeTab: 'repayment',
         isLoggedIn: true,
         isTypingInField: false,
         hasOpenDialog: true
@@ -72,7 +84,7 @@ describe('shouldNavigateHomeOnEscape', () => {
   test('blocked when find-in-page is open', () => {
     expect(
       shouldNavigateHomeOnEscape({
-        activeTab: 'chat',
+        activeTab: 'repayment',
         isLoggedIn: true,
         isTypingInField: false,
         hasOpenDialog: false,
@@ -81,10 +93,22 @@ describe('shouldNavigateHomeOnEscape', () => {
     ).toBe(false)
   })
 
+  test('blocked while the chat window is open', () => {
+    expect(
+      shouldNavigateHomeOnEscape({
+        activeTab: 'repayment',
+        isLoggedIn: true,
+        isTypingInField: false,
+        hasOpenDialog: false,
+        hasOpenChatWindow: true
+      })
+    ).toBe(false)
+  })
+
   test('blocked when logged out', () => {
     expect(
       shouldNavigateHomeOnEscape({
-        activeTab: 'chat',
+        activeTab: 'repayment',
         isLoggedIn: false,
         isTypingInField: false,
         hasOpenDialog: false

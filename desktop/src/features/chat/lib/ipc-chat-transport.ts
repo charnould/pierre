@@ -13,13 +13,7 @@ export function createIpcChatTransport(url: string): ChatTransport {
         const { ok, cancelled } = await runNdjsonStream({
           requestId,
           start: async (activeRequestId) => {
-            const files = await Promise.all(
-              request.files.map(async (file) => ({
-                name: file.name,
-                type: file.type,
-                buffer: await file.arrayBuffer()
-              }))
-            )
+            const files = request.files
             return window.api.startStream({
               requestId: activeRequestId,
               url,

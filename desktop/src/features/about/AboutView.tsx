@@ -19,7 +19,6 @@ import {
   shouldAutoOpenAboutOutputStep,
   shouldClearAboutOutputOnSubjectChange
 } from '@/features/about/lib/about-form'
-import type { AboutSubject } from '@/features/tickets/lib/knowledge-skills'
 import { useWorkflowPanel } from '@/features/workflow/hooks/useWorkflowPanel'
 import { useWorkflowKeyboard } from '@/features/workflow/lib/workflow-keyboard'
 import {
@@ -35,16 +34,17 @@ import {
 } from '@/shared/components/ui/resizable'
 import { useDebouncedWorkflowPatch } from '@/shared/hooks/useDebouncedWorkflowPatch'
 import { mergeAttachmentFiles } from '@/shared/lib/attachment-files'
+import type { AboutSubject } from '@/shared/lib/navigation-model'
 import type { AboutNavigationState, NavigationSnapshot } from '@/shared/lib/navigation-snapshot'
 import { releaseConversationVm } from '@/shared/lib/release-conversation-vm'
 import type { Tab } from '@/shared/lib/tabs'
 import {
-  WORKFLOW_PANEL_CONTEXTE,
-  WORKFLOW_PANEL_OUTPUT,
-  WORKFLOW_SPLIT_DEFAULT_CONTEXTE,
   defaultWorkflowPanelLayout,
   resolveWorkflowOutputSplit,
   splitFromLayout,
+  WORKFLOW_PANEL_CONTEXTE,
+  WORKFLOW_PANEL_OUTPUT,
+  WORKFLOW_SPLIT_DEFAULT_CONTEXTE,
   type WorkflowOutputSplitKey
 } from '@/shared/lib/ui-settings/schema'
 import { cn } from '@/shared/lib/utils'
@@ -236,20 +236,6 @@ export function AboutView({ hidden, settings, onNavigate, agentName }: Props) {
       year_to: to,
       context
     })
-    let files: Array<{ name: string; type: string; buffer: ArrayBuffer }> = []
-    try {
-      files = await Promise.all(
-        pendingFiles.map(async (file) => ({
-          name: file.name,
-          type: file.type,
-          buffer: await file.arrayBuffer()
-        }))
-      )
-    } catch {
-      setFileErrors(["Impossible de lire l'une des pièces jointes."])
-      return
-    }
-
     setSubmittedIdentity({
       subject: aboutSubject,
       entityId: id,
@@ -261,7 +247,7 @@ export function AboutView({ hidden, settings, onNavigate, agentName }: Props) {
       conv_id: convId.current,
       payload: serializeWorkflowPayload(payload),
       id_skill,
-      files,
+      files: pendingFiles,
       captureReasoning: true
     })
   }, [
@@ -314,7 +300,7 @@ export function AboutView({ hidden, settings, onNavigate, agentName }: Props) {
       <div
         data-tab-panel
         className={cn(
-          'relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
+          'bg-background relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
           hidden ? 'hidden' : 'flex'
         )}
       >

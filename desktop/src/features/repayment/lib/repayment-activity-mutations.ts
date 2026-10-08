@@ -3,8 +3,8 @@ import {
   buildCaseBucketChangeActivity,
   buildCaseTagChangeActivity
 } from '@/shared/lib/activities/case-activities'
-import type { CreateActivityBody } from '@/shared/types/activites'
-import { ACTIVITY_CONTENT_VERSION } from '@/shared/types/activites'
+import type { CreateActivityBody } from '@/shared/types/activities'
+import { ACTIVITY_CONTENT_VERSION } from '@/shared/types/activities'
 import type { RepaymentNotificationChannel } from '@/shared/types/notification-repayment'
 
 import type { RepaymentBucketId } from './repayment-bucket'

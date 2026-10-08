@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 
-import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
+import { loadCustomizationFixture } from '@test/instance-customization-fixture'
 
 import {
   getTicketBucketMeta,

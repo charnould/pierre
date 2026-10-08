@@ -4,7 +4,7 @@ import type { NotificationsApi } from '@/features/activity/hooks/use-notificatio
 import type { ActivityTarget } from '@/shared/lib/navigation-snapshot'
 import { getTicketCellText } from '@/shared/lib/ticket-row'
 import type { TicketRow } from '@/shared/types'
-import type { ActivityType } from '@/shared/types/activites'
+import type { ActivityType } from '@/shared/types/activities'
 
 export type TicketComposeMode =
   | 'comment'

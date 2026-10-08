@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 
-import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
+import {
+  CUSTOMIZATION_FIXTURE,
+  loadCustomizationFixture
+} from '@test/instance-customization-fixture'
 
 import {
   getRepaymentActionByLabel,
@@ -20,9 +23,12 @@ describe('repayment-action', () => {
     expect(repaymentActionOptions().map((o) => o.label)).toEqual([
       'Analyser le dossier',
       'Joindre le locataire',
+      'Visiter à domicile',
+      'Saisir la CTESI',
+      'Saisir la CCPAPEX',
       'Envoyer un RCS de relance'
     ])
-    expect(repaymentDossierActionOptions()).toHaveLength(2)
+    expect(repaymentDossierActionOptions()).toHaveLength(5)
     expect(repaymentBulkActionOptions()).toHaveLength(1)
   })
 
@@ -42,5 +48,22 @@ describe('repayment-action', () => {
   test('accepte aussi une action libre absente de la configuration', () => {
     expect(isRepaymentActionId('Contacter le garant')).toBe(true)
     expect(getRepaymentActionMeta('Contacter le garant').label).toBe('Contacter le garant')
+  })
+
+  test('dédoublonne dossier puis audience, la première occurrence gagne', () => {
+    const repayments = CUSTOMIZATION_FIXTURE.repayments
+    if (repayments == null) throw new Error('Configuration impayés absente')
+    loadCustomizationFixture({
+      repayments: {
+        ...repayments,
+        caseActions: ['Visiter à domicile', 'Joindre le locataire'],
+        batchActions: ['Visiter à domicile', 'Envoyer un RCS de relance']
+      }
+    })
+    expect(repaymentActionOptions().map((option) => option.label)).toEqual([
+      'Visiter à domicile',
+      'Joindre le locataire',
+      'Envoyer un RCS de relance'
+    ])
   })
 })

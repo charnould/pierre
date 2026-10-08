@@ -1,14 +1,14 @@
 import { useCallback, useRef, useState } from 'react'
 
 import { toast } from '@/shared/components/ui/toast'
-import { buildActionActivity, type ActionDraft } from '@/shared/lib/activities/action-activity'
+import { type ActionDraft, buildActionActivity } from '@/shared/lib/activities/action-activity'
 import {
   buildCaseAssignmentActivity,
   buildCaseBucketChangeActivity,
   buildCaseTagChangeActivity
 } from '@/shared/lib/activities/case-activities'
 import { parseEmlFile } from '@/shared/lib/activities/parse-eml'
-import { ACTIVITY_CONTENT_VERSION, type ActivityContext } from '@/shared/types/activites'
+import { ACTIVITY_CONTENT_VERSION, type ActivityContext } from '@/shared/types/activities'
 import type { OrgUser } from '@/shared/types/users'
 
 export type CaseSubmissionKind = 'note' | 'action' | 'assignment' | 'bucket' | 'eml' | 'tags'
@@ -71,14 +71,14 @@ export function useCaseActivityActions(params: {
         | {
             operation: 'update_action'
             action: string
-            assigne_a: string
-            date_echeance: string
+            assigneA: string
+            dateEcheance: string
             note?: string
           }
         | {
             operation: 'reopen_action'
-            assigne_a: string
-            date_echeance: string
+            assigneA: string
+            dateEcheance: string
             note?: string
           }
     ) =>

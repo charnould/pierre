@@ -3,7 +3,7 @@ import { Fragment, memo } from 'react'
 import { ChatAttachmentItems } from '@/features/chat/components/ChatAttachmentItems'
 import { resolveAssistantPhase } from '@/features/chat/lib/chat-assistant-phase'
 import type { ChatStatus, Message as ChatMessage } from '@/features/chat/lib/chat-session-types'
-import { groupChatParts, type ChatRenderGroup } from '@/features/chat/lib/group-chat-parts'
+import { type ChatRenderGroup, groupChatParts } from '@/features/chat/lib/group-chat-parts'
 import { AgentWorkTrace, GeneratedMarkdown } from '@/shared/components/AgentWorkTrace'
 import { Bubble, BubbleContent } from '@/shared/components/ui/bubble'
 import { Button } from '@/shared/components/ui/button'
@@ -154,11 +154,7 @@ const ChatUserRow = memo(function ChatUserRow({ message }: { message: ChatMessag
           </Bubble>
         ) : null}
         {message.attachments ? (
-          <ChatAttachmentItems
-            layout="chip"
-            attachments={message.attachments}
-            className="max-w-[80%]"
-          />
+          <ChatAttachmentItems attachments={message.attachments} className="max-w-[80%]" />
         ) : null}
       </MessageContent>
     </Message>

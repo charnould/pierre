@@ -2,10 +2,10 @@ import { describe, expect, test } from 'bun:test'
 
 import {
   connectionFieldInvalid,
-  loginErrorLabel,
-  loginFieldErrorsFromCode,
   LOGIN_INVALID_URL_LABEL,
   LOGIN_REQUIRED_LABEL,
+  loginErrorLabel,
+  loginFieldErrorsFromCode,
   validateLoginFields
 } from './login-errors'
 

@@ -2,7 +2,7 @@ import { existsSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, session, shell } from 'electron'
 import log from 'electron-log'
 import squirrelStartup from 'electron-squirrel-startup'
 import { updateElectronApp } from 'update-electron-app'
@@ -13,10 +13,7 @@ if (process.platform === 'win32') {
   if (squirrelStartup) app.quit()
 }
 
-if (
-  !process.env['PIERRE_PERF_OUTPUT'] &&
-  shouldEnableAutoUpdater(process.platform, app.isPackaged)
-) {
+if (shouldEnableAutoUpdater(process.platform, app.isPackaged)) {
   updateElectronApp({
     ...updaterOptions(),
     logger: log
@@ -24,13 +21,15 @@ if (
 }
 
 import { isSettingsConfigured } from '../src/shared/lib/settings-configured'
-import { LOGIN_WINDOW_BOUNDS, WINDOW_MIN_SIZE } from '../src/shared/lib/ui-settings/schema'
+import { LOGIN_WINDOW_BOUNDS, SESSION_WINDOW_MIN_SIZE } from '../src/shared/lib/ui-settings/schema'
 import { registerActivitiesHandlers } from './ipc/activities/register-handlers'
+import { registerAdminHandlers } from './ipc/admin/register-handlers'
 import { registerAuthHandlers } from './ipc/auth/register-handlers'
 import { registerAutomationsHandlers } from './ipc/automations/register-handlers'
 import { registerBulkOperationsHandlers } from './ipc/bulk-operations/register-handlers'
 import { FoundInPageEvent } from './ipc/channels'
 import { registerDatastoreHandlers } from './ipc/datastore/register-handlers'
+import { registerDictationHandlers } from './ipc/dictation/register-handlers'
 import { registerKnowledgeHandlers } from './ipc/knowledge/register-handlers'
 import { registerLedgerHandlers } from './ipc/ledger/register-handlers'
 import { registerMascotHandlers } from './ipc/mascot/register-handlers'
@@ -43,20 +42,18 @@ import { registerTicketsHandlers } from './ipc/tickets/register-handlers'
 import { registerUsersHandlers } from './ipc/users/register-handlers'
 import { appWindowAllowedOrigins, attachWindowGuards } from './lib/window-guards'
 import { createMascotController, type MascotController } from './mascot-window'
-import { attachPerformanceBenchmark } from './perf-benchmark'
 import { fetchInboxUnreadCount } from './services/fetch-inbox-unread-count'
 import { logMainError } from './services/logging'
 import {
   createNotificationBadgePoller,
-  readSettingsUrl,
-  type NotificationBadgePoller
+  type NotificationBadgePoller,
+  readSettingsUrl
 } from './services/notification-badge-poller'
 import { seedMissingUiSettingsDefaults } from './services/seed-ui-settings-defaults'
 import { createSettingsStore } from './services/settings-store'
 import {
   attachWindowStatePersistence,
   centerWindowBounds,
-  ensureBoundsOnScreen,
   resolveInitialWindowBoundsOnScreen,
   type WindowStateHandle
 } from './services/window-state'
@@ -92,7 +89,7 @@ function createWindow() {
   if (!existsSync(preloadPath)) {
     logMainError(
       'preload-missing',
-      new Error(`Preload not found at ${preloadPath}. Run: cd desktop && bun run dev`)
+      new Error(`Preload not found at ${preloadPath}. Run: bun desktop:dev`)
     )
   }
 
@@ -105,16 +102,15 @@ function createWindow() {
   }
 
   const canAutoLogin = isSettingsConfigured(store?.readSettings() ?? null)
-  const bounds = canAutoLogin
-    ? sessionBounds
-    : ensureBoundsOnScreen(centerWindowBounds(LOGIN_WINDOW_BOUNDS))
+  const bounds = canAutoLogin ? sessionBounds : centerWindowBounds(LOGIN_WINDOW_BOUNDS)
+  const minimumSize = canAutoLogin ? SESSION_WINDOW_MIN_SIZE : LOGIN_WINDOW_BOUNDS
 
   win = new BrowserWindow({
     width: bounds.width,
     height: bounds.height,
     ...(bounds.x !== undefined && bounds.y !== undefined ? { x: bounds.x, y: bounds.y } : {}),
-    minWidth: WINDOW_MIN_SIZE.width,
-    minHeight: WINDOW_MIN_SIZE.height,
+    minWidth: minimumSize.width,
+    minHeight: minimumSize.height,
     title: '',
     ...(iconPath ? { icon: iconPath } : {}),
     ...WINDOW_CHROME,
@@ -127,7 +123,6 @@ function createWindow() {
     },
     show: false
   })
-  attachPerformanceBenchmark(win)
 
   attachWindowGuards(win.webContents, {
     allowedOrigins: appWindowAllowedOrigins(),
@@ -175,6 +170,13 @@ app.whenReady().then(() => {
 
   const mascotPreloadPath = join(__dirname, '../preload/mascot.js')
 
+  const ses = session.fromPartition(PARTITION)
+  ses.setPermissionRequestHandler((_webContents, permission, callback, details) => {
+    const types = 'mediaTypes' in details ? details.mediaTypes : undefined
+    const audio = !types || types.every((type) => type === 'audio')
+    callback(permission === 'media' && audio)
+  })
+  registerDictationHandlers(PARTITION)
   registerSettingsHandlers(store, uiSettingsPath, {
     getWindow: () => win,
     getWindowStateHandle: () => windowStateHandle
@@ -190,6 +192,7 @@ app.whenReady().then(() => {
   registerDatastoreHandlers(PARTITION)
   registerSetupHandlers(PARTITION)
   registerUsersHandlers(PARTITION)
+  registerAdminHandlers(PARTITION)
   registerSystemHandlers({
     getWindow: () => win,
     getStore: () => store,
@@ -239,7 +242,7 @@ app.on('window-all-closed', () => {
 app.on('before-quit', (event) => {
   // In packaged builds, Cmd+Q only closes windows: the mascot stays available,
   // and its context menu remains the explicit exit (`quitApp`). Development
-  // restarts must quit fully or electron-vite leaves stale windows behind.
+  // restarts must quit fully or the dev watcher leaves stale windows behind.
   const mascotWin = mascot?.getWindow()
   if (
     app.isPackaged &&

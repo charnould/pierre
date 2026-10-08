@@ -1,17 +1,22 @@
+import { ATTACHMENT_SUPPORTED_EXTENSIONS } from '@pierre/shared/attachment-extensions'
 import { ArrowUpIcon, PaperclipIcon, SquareIcon } from 'lucide-react'
 import {
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-  useState,
   type ChangeEvent,
   type FormEvent,
+  forwardRef,
   type KeyboardEvent,
-  type ReactNode
+  type ReactNode,
+  useCallback,
+  useImperativeHandle,
+  useRef,
+  useState
 } from 'react'
 
 import { ChatAttachmentItems } from '@/features/chat/components/ChatAttachmentItems'
-import { isChatGenerating, type ChatStatus } from '@/features/chat/lib/chat-session-types'
+import { type ChatStatus, isChatGenerating } from '@/features/chat/lib/chat-session-types'
+import { DictationLive } from '@/features/dictation/DictationLive'
+import { DictationMark } from '@/features/dictation/DictationMark'
+import { useVoiceDictationOptional } from '@/features/dictation/VoiceDictationContext'
 import { FieldError } from '@/shared/components/ui/field'
 import {
   InputGroup,
@@ -20,8 +25,6 @@ import {
   InputGroupTextarea
 } from '@/shared/components/ui/input-group'
 import { cn } from '@/shared/lib/utils'
-
-import { ATTACHMENT_SUPPORTED_EXTENSIONS } from '../../../../../shared/attachment-extensions'
 
 const ACCEPT = [...ATTACHMENT_SUPPORTED_EXTENSIONS].map((extension) => `.${extension}`).join(',')
 
@@ -39,6 +42,7 @@ interface Props {
   dropActive: boolean
   allowAttachments?: boolean
   autoFocus?: boolean
+  appearance?: 'paper' | 'form'
   composerAccessory?: ReactNode
   placeholder?: string
   onSend: (text: string, files?: File[]) => void
@@ -57,6 +61,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
     dropActive,
     allowAttachments = false,
     autoFocus = false,
+    appearance = 'paper',
     composerAccessory,
     placeholder = CHAT_COMPOSER_PLACEHOLDER,
     onSend,
@@ -71,6 +76,13 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
   const [isComposing, setIsComposing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [composerField, setComposerField] = useState<HTMLTextAreaElement | null>(null)
+  const voice = useVoiceDictationOptional()
+  const dictating = voice !== null && voice.phase !== 'idle' && voice.target === composerField
+  const bindField = useCallback((node: HTMLTextAreaElement | null) => {
+    textareaRef.current = node
+    setComposerField((current) => (current === node ? current : node))
+  }, [])
 
   useImperativeHandle(ref, () => ({
     focus: () => textareaRef.current?.focus()
@@ -112,16 +124,20 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
       <InputGroup
         data-drop-active={dropActive}
         className={cn(
-          'h-auto flex-col items-stretch rounded-xl shadow-sm has-disabled:bg-transparent has-disabled:opacity-100',
-          'has-[[data-slot=input-group-control]:focus-visible]:border-foreground/30',
-          'has-[[data-slot=input-group-control]:focus-visible]:ring-0',
-          dropActive && 'border-ring ring-1 ring-ring/30'
+          'h-auto flex-col items-stretch has-disabled:bg-transparent has-disabled:opacity-100',
+          appearance === 'form'
+            ? dropActive && 'border-ring ring-ring/20 ring-2'
+            : [
+                'rounded-xl shadow-sm',
+                'has-[[data-slot=input-group-control]:focus-visible]:border-foreground/30',
+                'has-[[data-slot=input-group-control]:focus-visible]:ring-0',
+                dropActive && 'border-ring ring-ring/30 ring-1'
+              ]
         )}
       >
         {files.length > 0 || fileErrors.length > 0 ? (
           <InputGroupAddon align="block-start" className="flex-col items-stretch px-2">
             <ChatAttachmentItems
-              layout="chip"
               attachments={files}
               previewUrls={previewUrls}
               onRemove={onRemoveFile}
@@ -143,7 +159,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
           />
         ) : null}
         <InputGroupTextarea
-          ref={textareaRef}
+          ref={bindField}
           autoFocus={autoFocus}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
@@ -157,11 +173,9 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
           rows={3}
           className="block max-h-36 min-h-0 w-full flex-none px-3 pt-2.5 pb-1 text-start leading-5"
         />
-        <div
-          className={cn(
-            'flex h-10 w-full shrink-0 items-center gap-1 px-1.5',
-            composerAccessory ? 'justify-between' : 'justify-end'
-          )}
+        <InputGroupAddon
+          align="block-end"
+          className={cn('px-1.5', appearance === 'paper' && 'h-10')}
         >
           {composerAccessory ? (
             <div
@@ -173,7 +187,23 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
               {composerAccessory}
             </div>
           ) : null}
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="ml-auto flex shrink-0 items-center gap-1">
+            {voice?.enabled && dictating && voice.phase === 'recording' ? (
+              <DictationLive level={voice.level} onStop={() => voice.toggle(composerField)} />
+            ) : voice?.enabled ? (
+              <InputGroupButton
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                aria-label={dictating ? 'Transcription' : 'Dicter'}
+                className="text-muted-foreground"
+                disabled={generating || voice.phase === 'transcribing'}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => voice.toggle(composerField)}
+              >
+                <DictationMark phase={dictating ? voice.phase : 'idle'} />
+              </InputGroupButton>
+            ) : null}
             {allowAttachments ? (
               <InputGroupButton
                 type="button"
@@ -202,9 +232,10 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
             ) : (
               <InputGroupButton
                 type="submit"
-                variant={canSend ? 'default' : 'ghost'}
+                variant={canSend ? 'default' : 'outline'}
                 size="icon-sm"
                 aria-label="Envoyer"
+                className={canSend ? undefined : 'text-muted-foreground disabled:opacity-100'}
                 disabled={!canSend}
               >
                 <ArrowUpIcon />
@@ -212,7 +243,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
               </InputGroupButton>
             )}
           </div>
-        </div>
+        </InputGroupAddon>
       </InputGroup>
     </form>
   )

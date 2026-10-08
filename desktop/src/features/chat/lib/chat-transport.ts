@@ -1,4 +1,4 @@
-import type { AiStreamEvent } from '../../../../../shared/ai-stream-events'
+import type { AiStreamEvent } from '@pierre/shared/ai-stream-events'
 
 export type ChatStreamRequest = {
   configId: string

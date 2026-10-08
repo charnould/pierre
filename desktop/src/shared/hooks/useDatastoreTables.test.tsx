@@ -42,7 +42,7 @@ describe('useDatastoreTables', () => {
     window.api = {
       getDatastoreTables: async () => {
         calls += 1
-        return { tables: TABLES }
+        return { data: { tables: TABLES } }
       }
     } as unknown as typeof window.api
 

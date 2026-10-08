@@ -24,12 +24,31 @@ export async function renderDocxTemplate(
   return doc.getZip().generate({ type: 'uint8array' })
 }
 
+export function postalLetterDate(now = new Date()): string {
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'Europe/Paris'
+  }).format(now)
+}
+
 export async function generateDocxFromTemplate(
   templateBuffer: ArrayBuffer,
-  data: { subject: string; body: string }
+  data: {
+    SUBJECT: string
+    BODY: string
+    ADRESSE: string
+    CODE_POSTAL: string
+    VILLE: string
+  }
 ): Promise<Uint8Array> {
   return renderDocxTemplate(templateBuffer, {
-    subject: data.subject,
-    body: data.body
+    SUBJECT: data.SUBJECT,
+    BODY: data.BODY,
+    ADRESSE: data.ADRESSE,
+    CODE_POSTAL: data.CODE_POSTAL,
+    VILLE: data.VILLE,
+    DATE: postalLetterDate()
   })
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
+import { type KeyboardEvent, useCallback, useEffect, useId, useRef, useState } from 'react'
 
 import { useAgentIdentity } from '@/contexts/AgentIdentityContext'
 import { OrgUserListItem } from '@/shared/components/OrgUserListItem'
@@ -13,6 +13,7 @@ import {
   insertMentionAt,
   type MentionTrigger
 } from '@/shared/lib/activities/mentions'
+import { isComposingEnter } from '@/shared/lib/ime-enter'
 import { cn } from '@/shared/lib/utils'
 
 interface Props {
@@ -102,6 +103,7 @@ export function MentionTextarea({
     }
 
     if (event.key === 'Enter' || event.key === 'Tab') {
+      if (isComposingEnter(event)) return
       event.preventDefault()
       const suggestion = suggestions[activeIndex]
       if (suggestion) {
@@ -167,7 +169,6 @@ export function MentionTextarea({
         />
       </div>
       <PopoverContent
-        variant="command"
         side="bottom"
         align="start"
         sideOffset={6}

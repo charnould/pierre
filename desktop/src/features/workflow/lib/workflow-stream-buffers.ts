@@ -1,9 +1,9 @@
 import {
-  createAiStreamState,
-  reduceAiStreamState,
   type AiStreamEvent,
-  type AiStreamState
-} from '../../../../../shared/ai-stream-events'
+  type AiStreamState,
+  createAiStreamState,
+  reduceAiStreamState
+} from '@pierre/shared/ai-stream-events'
 
 export type WorkflowStreamSession = AiStreamState
 

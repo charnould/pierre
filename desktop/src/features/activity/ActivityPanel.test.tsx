@@ -1,11 +1,17 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
 
+import { loadCustomizationFixture } from '@test/instance-customization-fixture'
 import { JSDOM } from 'jsdom'
+import { type ReactNode } from 'react'
 
-import type { ActiviteListItem, ActivityType } from '@/shared/types/activites'
+import type { ReaderTarget } from '@/features/activity/lib/reader-target'
+import { resetCustomization } from '@/shared/lib/instance-customization'
+import type { ActivityListItem, ActivityType } from '@/shared/types/activities'
 
 mock.module('@/contexts/NavigationHistoryContext', () => ({
-  useNavigationHistory: () => ({ navigate: mock(() => {}) })
+  NavigationHistoryProvider: ({ children }: { children: ReactNode }) => children,
+  useNavigationHistory: () => ({ navigate: mock(() => {}) }),
+  useRegisterNavigationHandlers: () => {}
 }))
 
 mock.module('@/contexts/UiSettingsContext', () => ({
@@ -17,12 +23,11 @@ mock.module('@/contexts/UiSettingsContext', () => ({
   })
 }))
 
-mock.module('@/features/repayment/lib/outbound-email-templates.bundle', () => ({
-  listOutboundTemplateGroups: () => [],
-  listOutboundTemplates: () => [],
-  resolveOutboundEmail: () => null,
-  resolveOutboundRcs: () => null
-}))
+function openableRows(): HTMLElement[] {
+  return [...document.querySelectorAll<HTMLElement>('li')].filter(
+    (row) => row.querySelector('[role="button"]') != null
+  )
+}
 
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
@@ -107,13 +112,13 @@ function activityRow(
     auteur?: string
     type?: ActivityType
     contenu?: string
-    date_creation?: string
-    channel?: ActiviteListItem['channel']
+    createdAt?: string
+    channel?: ActivityListItem['channel']
   } = {}
-): ActiviteListItem {
+): ActivityListItem {
   return {
     id,
-    date_creation: overrides.date_creation ?? '2026-08-21T09:00:00',
+    createdAt: overrides.createdAt ?? '2026-08-21T09:00:00',
     rattachement: overrides.rattachement ?? 'tickets:REC-1',
     auteur: overrides.auteur ?? 'user:alice@example.test',
     id_client: null,
@@ -124,7 +129,7 @@ function activityRow(
     mentions: [],
     contenu:
       overrides.contenu ??
-      JSON.stringify({ version: 2, field: 'statut', before: 'ouvert', after: 'clos' }),
+      JSON.stringify({ version: 1, field: 'statut', before: 'ouvert', after: 'clos' }),
     my: null,
     read: true,
     reaction: null
@@ -181,8 +186,8 @@ const items = [
       rattachement: 'tickets:REC-2',
       auteur: 'user:bob@example.test',
       type: 'note.published',
-      contenu: JSON.stringify({ version: 2, text: 'Bob a ajouté une note' }),
-      date_creation: '2026-08-21T08:00:00'
+      contenu: JSON.stringify({ version: 1, text: 'Bob a ajouté une note' }),
+      createdAt: '2026-08-21T08:00:00'
     })
   },
   {
@@ -212,18 +217,22 @@ function orgUser(login: string, email: string, displayName: string) {
   }
 }
 
-async function renderPanel(feed: Record<string, unknown>) {
+async function renderPanel(
+  feed: Record<string, unknown>,
+  options?: { getTickets?: () => Promise<unknown> }
+) {
   const { act, useEffect, useState } = await import('react')
   const { createRoot } = await import('react-dom/client')
   const { ActivityPanel } = await import('./ActivityPanel')
   const { ActivityRailProvider, useActivityRail } =
     await import('@/features/activity/lib/ActivityRailContext')
 
+  loadCustomizationFixture()
   window.api = {
     getActivities: () => new Promise(() => {}),
-    getTickets: () => new Promise(() => {}),
+    getTickets: options?.getTickets ?? (() => new Promise(() => {})),
     getUsers: async () => ({
-      users: [
+      data: [
         orgUser('alice', 'alice@example.test', 'Alice'),
         orgUser('bob', 'bob@example.test', 'Bob')
       ]
@@ -233,6 +242,19 @@ async function renderPanel(feed: Record<string, unknown>) {
   function OpenPanel() {
     const { setOpen } = useActivityRail()
     useEffect(() => setOpen(true), [setOpen])
+    return null
+  }
+
+  const rail: { open: boolean; readerTarget: ReaderTarget | null } = {
+    open: false,
+    readerTarget: null
+  }
+  function Probe() {
+    const { open, readerTarget } = useActivityRail()
+    useEffect(() => {
+      rail.open = open
+      rail.readerTarget = readerTarget
+    }, [open, readerTarget])
     return null
   }
 
@@ -264,6 +286,7 @@ async function renderPanel(feed: Record<string, unknown>) {
     root.render(
       <ActivityRailProvider>
         <OpenPanel />
+        <Probe />
         <PanelWithReadToggle />
       </ActivityRailProvider>
     )
@@ -272,9 +295,11 @@ async function renderPanel(feed: Record<string, unknown>) {
 
   return {
     act,
+    rail,
     async cleanup() {
       await act(async () => root.unmount())
       container.remove()
+      resetCustomization()
     }
   }
 }
@@ -299,47 +324,87 @@ describe('ActivityPanel', () => {
     })
 
     try {
-      expect([...document.querySelectorAll('[role="tab"]')].map((tab) => tab.textContent)).toEqual([
-        'Notifications',
-        'Activités'
-      ])
-      expect(document.querySelector('[data-active-tab]')?.getAttribute('data-active-tab')).toBe(
-        'notifications'
-      )
+      const tabs = [...document.querySelectorAll<HTMLElement>('[role="tab"]')]
+      expect(tabs.map((tab) => tab.textContent)).toEqual(['Notifications', 'Activités'])
+      expect(tabs[0]?.getAttribute('aria-selected')).toBe('true')
+      expect(document.querySelector('.activity-tab-indicator')).toBeNull()
+      expect(tabs[0]?.className.split(' ')).not.toContain('data-active:bg-transparent')
+      expect(tabs[0]?.className.split(' ')).not.toContain('z-10')
       expect(document.body.textContent).toContain('Message reçu')
+      const drawerMessage = [...document.querySelectorAll('p')].find(
+        (node) => node.textContent === 'Message reçu'
+      )
+      expect(drawerMessage?.className).toContain('font-serif')
+      expect(drawerMessage?.className).toContain('leading-4.75')
+      expect(drawerMessage?.className).toContain('line-clamp-2')
+      expect(drawerMessage?.className).not.toContain('text-base')
+      const drawerRow = drawerMessage?.closest('li')
+      expect(drawerRow?.className).toContain('rounded-md')
+      expect(drawerRow?.className).toContain('border-border/80')
+      expect(drawerRow?.closest('ul')?.className).toContain('px-6')
+      expect(drawerRow?.closest('ul')?.className).toContain('gap-2')
+      expect(drawerRow?.querySelector('div')?.className).toContain('px-3')
+      const drawerTime = drawerRow?.querySelector('time')
+      expect(drawerTime?.closest('p')?.className).toContain('text-xs')
+      expect(drawerTime?.closest('p')?.className).toContain('leading-4')
+      expect(drawerTime?.closest('p')?.className).not.toContain('font-mono')
+      expect(drawerTime?.parentElement?.className).toContain('tabular-nums')
+      expect(drawerTime?.textContent).not.toContain('Bob')
+      expect(drawerTime?.parentElement?.textContent).toContain('Bob')
+      expect(drawerMessage?.textContent).not.toContain(drawerTime?.textContent ?? '—')
+      expect(drawerTime && drawerMessage && drawerTime.compareDocumentPosition(drawerMessage)).toBe(
+        Node.DOCUMENT_POSITION_FOLLOWING
+      )
+      const drawerAvatar = drawerRow?.querySelector('[data-slot="avatar"]')
+      expect(drawerAvatar?.className).toContain('size-5')
+      expect(
+        drawerMessage &&
+          drawerAvatar &&
+          drawerMessage.compareDocumentPosition(drawerAvatar) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy()
       expect(document.body.textContent).not.toContain('Ancien message')
       expect(document.body.textContent).not.toContain('a modifié statut')
       expect(document.body.textContent).not.toContain('Bob a ajouté une note')
       expect(document.body.textContent).toContain('Tout lu')
-      const showAll = [...document.querySelectorAll<HTMLButtonElement>('button')].find(
-        (button) => button.textContent === 'Afficher les lues et non-lues'
-      )
+      const showRead = document.querySelector<HTMLElement>('[data-slot="checkbox"]')
       const markAllReadButton = [...document.querySelectorAll<HTMLButtonElement>('button')].find(
         (button) => button.textContent === 'Tout lu'
       )
-      expect(showAll).not.toBeNull()
-      expect(showAll?.className).toContain('border-border')
+      expect(showRead).not.toBeNull()
+      expect(document.body.textContent).toContain('Afficher les notifications lues')
       expect(markAllReadButton?.className).toContain('border-border')
       expect(document.querySelector('[data-slot="drawer-header"]')?.textContent).not.toContain(
-        'Afficher les lues et non-lues'
+        'Afficher les notifications lues'
       )
       expect(document.querySelector('[data-slot="drawer-header"]')?.textContent).not.toContain(
         'Tout lu'
       )
 
       await act(async () => {
-        showAll?.click()
+        showRead?.click()
       })
       expect(document.body.textContent).toContain('Ancien message')
-      expect(document.body.textContent).toContain('Afficher uniquement les non-lues')
-      expect(document.body.textContent).not.toContain('Afficher les lues et non-lues')
+      expect(showRead?.getAttribute('data-checked')).not.toBeNull()
       expect(document.body.textContent).not.toContain('Inclure mes actions')
       expect(document.body.textContent).not.toContain('Mon activité')
 
       const sheet = document.querySelector<HTMLElement>('[data-slot="drawer-popup"]')
       expect(sheet?.className).toContain('rounded-md')
-      expect(sheet?.className).toContain('[--drawer-inset:0.75rem]')
+      expect(sheet?.className).toContain('bg-background')
+      expect(sheet?.className).toContain('shadow-md')
+      expect(sheet?.className).not.toContain('rounded-r-xl')
+      expect(sheet?.className).toContain('transition-[transform,opacity]')
+      expect(sheet?.className).not.toContain('transition-[transform,height,opacity,filter]')
+      expect(sheet?.className).toContain('[--drawer-inset:1rem]')
       expect(sheet?.className).toContain('[--drawer-content-width:24rem]')
+      expect(document.querySelector('[role="tablist"]')?.className).toContain('flex-1')
+      expect(document.querySelector('[role="tablist"]')?.className).toContain('bg-border')
+      expect(document.querySelector('[data-slot="drawer-overlay"]')?.className).toContain(
+        'bg-foreground/8'
+      )
+      expect(document.querySelector('[data-slot="drawer-overlay"]')?.className).toContain(
+        'backdrop-blur-none'
+      )
       expect(sheet?.className).toContain('top-(--titlebar-height)')
       expect(sheet?.className).not.toContain('90dvh')
       expect(document.querySelector('[data-slot="drawer-overlay"]')?.className).toContain(
@@ -357,7 +422,7 @@ describe('ActivityPanel', () => {
         )
       ).toBe(false)
 
-      const rows = [...document.querySelectorAll<HTMLElement>('li[role="button"]')]
+      const rows = openableRows()
       const notificationRow = rows.find((row) => row.textContent?.includes('Message reçu'))
       const readRow = rows.find((row) => row.textContent?.includes('Ancien message'))
       expect(notificationRow).not.toBeNull()
@@ -367,7 +432,27 @@ describe('ActivityPanel', () => {
       expect(readRow?.textContent).toContain('Réclamations · #REC-3')
       expect(notificationRow?.textContent).toContain('Non lue')
       expect(readRow?.textContent).toContain('Lue')
-      expect(readRow?.querySelector('[data-read-veil]')).not.toBeNull()
+      const unreadContext = [...(notificationRow?.querySelectorAll('p') ?? [])].find(
+        (node) => node.textContent === 'Réclamations · #REC-1'
+      )
+      const readContext = [...(readRow?.querySelectorAll('p') ?? [])].find(
+        (node) => node.textContent === 'Réclamations · #REC-3'
+      )
+      expect(unreadContext?.className).toContain('text-foreground')
+      expect(unreadContext?.className).not.toContain('text-muted-foreground')
+      expect(readContext?.className).toContain('text-muted-foreground')
+      expect(readContext?.parentElement?.className).not.toContain('pe-16')
+      expect(notificationRow?.getAttribute('role')).toBeNull()
+      const markUnreadButton = readRow?.querySelector<HTMLButtonElement>(
+        '[aria-label="Marquer comme non lue"]'
+      )
+      expect(readRow?.querySelector('[role="button"]')?.contains(markUnreadButton ?? null)).toBe(
+        false
+      )
+      expect(markUnreadButton?.parentElement?.className).toContain('col-start-2')
+      expect(markUnreadButton?.parentElement?.className).toContain('focus-within:opacity-100')
+      expect(markUnreadButton?.className).not.toContain('absolute')
+      expect(readRow?.querySelector('[data-read-veil]')).toBeNull()
 
       await act(async () => {
         notificationRow?.click()
@@ -381,14 +466,17 @@ describe('ActivityPanel', () => {
       expect(drawers[0]?.dataset.drawerVariant).toBe('activity')
       expect(drawers[1]?.dataset.drawerVariant).toBe('inspector')
       expect(drawers[1]?.classList.contains('shadow-md')).toBe(true)
+      expect(drawers[1]?.classList.contains('bg-background')).toBe(true)
+      expect(document.querySelectorAll('[data-slot="drawer-overlay"]')).toHaveLength(1)
+      const viewports = document.querySelectorAll<HTMLElement>('[data-slot="drawer-viewport"]')
+      expect(viewports[1]?.dataset.modal).toBe('false')
+      expect(document.querySelectorAll('[aria-label="Chargement du dossier"]')).toHaveLength(2)
 
       const activitiesTab = [...document.querySelectorAll<HTMLElement>('[role="tab"]')].find(
         (tab) => tab.textContent === 'Activités'
       )
       await act(async () => activitiesTab?.click())
-      expect(document.querySelector('[data-active-tab]')?.getAttribute('data-active-tab')).toBe(
-        'activities'
-      )
+      expect(activitiesTab?.getAttribute('aria-selected')).toBe('true')
       expect(document.querySelector('[data-slot="timeline"]')).not.toBeNull()
       expect(document.querySelector('[data-slot="timeline-separator"]')).not.toBeNull()
       expect(document.querySelector('[id^="activity-activities-date-"]')).toBeNull()
@@ -400,7 +488,7 @@ describe('ActivityPanel', () => {
       expect(document.body.textContent).not.toContain('Bob a ajouté une note')
       expect(document.body.textContent).not.toContain('{"avant"')
       const activityRowEl = document.querySelector<HTMLElement>(
-        '[data-slot="timeline-item"][role="button"]'
+        '[data-slot="timeline-item"] [role="button"]'
       )
       expect(activityRowEl).not.toBeNull()
       expect(activityRowEl?.className).not.toContain('hover:bg-muted')
@@ -411,8 +499,7 @@ describe('ActivityPanel', () => {
         2
       )
       expect(document.body.textContent).not.toContain('Tout lu')
-      expect(document.body.textContent).not.toContain('Afficher uniquement les non-lues')
-      expect(document.body.textContent).not.toContain('Afficher les lues et non-lues')
+      expect(document.body.textContent).not.toContain('Afficher les notifications lues')
       expect(document.body.textContent).toContain('Suivre des collaborateurs · 1')
       expect(document.querySelector('[data-slot="drawer-header"]')?.textContent).not.toContain(
         'Suivre'
@@ -433,6 +520,151 @@ describe('ActivityPanel', () => {
       expect(setShowOwnActivity).toHaveBeenCalledWith(false)
       await act(async () => followBob?.click())
       expect(setFollowedActivityAuthors).toHaveBeenCalledWith(['user:bob@example.test'])
+    } finally {
+      await cleanup()
+    }
+  })
+
+  test('shows a canonical missing state after the ticket skeleton settles', async () => {
+    const { act, cleanup } = await renderPanel(
+      {
+        items: [items[0]],
+        unreadCount: 1,
+        markItemRead: mock(async () => {}),
+        markUnread: mock(async () => {}),
+        markAllRead: mock(async () => {}),
+        showOwnActivity: false,
+        followedActivityAuthors: [],
+        setShowOwnActivity: mock(async () => {}),
+        setFollowedActivityAuthors: mock(async () => {})
+      },
+      { getTickets: async () => ({ data: [] }) }
+    )
+
+    try {
+      const row = openableRows().find((entry) => entry.textContent?.includes('Message reçu'))
+      await act(async () => {
+        row?.click()
+        await new Promise((resolve) => window.setTimeout(resolve, 20))
+      })
+      expect(document.body.textContent).toContain('Dossier introuvable')
+      expect(document.body.textContent).toContain('REC-1')
+      expect(document.querySelector('[aria-label="Chargement du dossier"]')).toBeNull()
+    } finally {
+      await cleanup()
+    }
+  })
+
+  test('leaves the ticket loading state when the dossier is found', async () => {
+    const { act, cleanup } = await renderPanel(
+      {
+        items: [items[0]],
+        unreadCount: 1,
+        markItemRead: mock(async () => {}),
+        markUnread: mock(async () => {}),
+        markAllRead: mock(async () => {}),
+        showOwnActivity: false,
+        followedActivityAuthors: [],
+        setShowOwnActivity: mock(async () => {}),
+        setFollowedActivityAuthors: mock(async () => {})
+      },
+      {
+        getTickets: async () => ({
+          data: [{ id_reclamation: 'REC-1', id_locataire: 'LOC-1', message: 'Fuite' }]
+        })
+      }
+    )
+
+    try {
+      const row = openableRows().find((entry) => entry.textContent?.includes('Message reçu'))
+      await act(async () => {
+        await import('@/features/activity/components/ActivityInspectorContent')
+        row?.click()
+        await new Promise((resolve) => window.setTimeout(resolve, 20))
+      })
+      const inspector = document.querySelector('[data-drawer-variant="inspector"]')
+      expect(inspector?.textContent).toContain('REC-1')
+      expect(inspector?.textContent).not.toContain('Dossier introuvable')
+      expect(inspector?.querySelector('[aria-label="Fermer le dossier"]')).not.toBeNull()
+    } finally {
+      await cleanup()
+    }
+  })
+
+  test('routes updates to ActivityReader instead of the Inspector', async () => {
+    const markItemRead = mock(async () => {})
+    const update = {
+      id: 'update-1',
+      type: 'updates' as const,
+      source: 'update' as const,
+      ref: 'desktop-alpha',
+      sender: 'Pierre',
+      body: 'Nouvelle version',
+      createdAt: '2026-10-10T10:00:00.000Z',
+      isRead: false,
+      boosts: {},
+      target: {
+        view: 'updates' as const,
+        slug: 'desktop-alpha',
+        title: 'Nouvelle version',
+        date: '2026-10-10'
+      },
+      contextLabel: 'Mises à jour',
+      moduleLabel: 'Mises à jour',
+      notificationId: 'update-1'
+    }
+    const { act, cleanup, rail } = await renderPanel({
+      items: [update],
+      unreadCount: 1,
+      markItemRead,
+      markUnread: mock(async () => {}),
+      markAllRead: mock(async () => {}),
+      showOwnActivity: false,
+      followedActivityAuthors: [],
+      setShowOwnActivity: mock(async () => {}),
+      setFollowedActivityAuthors: mock(async () => {})
+    })
+
+    try {
+      const row = openableRows()[0]
+      await act(async () => {
+        row?.click()
+      })
+      expect(rail.open).toBe(false)
+      expect(rail.readerTarget).toEqual({
+        kind: 'update',
+        slug: 'desktop-alpha',
+        title: 'Nouvelle version',
+        date: '2026-10-10'
+      })
+      expect(markItemRead).toHaveBeenCalledWith('update-1')
+      expect(document.querySelector('[data-drawer-variant="inspector"]')).toBeNull()
+    } finally {
+      await cleanup()
+    }
+  })
+
+  test('uses the canonical serif voice for drawer Empty descriptions', async () => {
+    const { cleanup } = await renderPanel({
+      items: [],
+      unreadCount: 0,
+      markItemRead: mock(async () => {}),
+      markUnread: mock(async () => {}),
+      markAllRead: mock(async () => {}),
+      showOwnActivity: false,
+      followedActivityAuthors: [],
+      setShowOwnActivity: mock(async () => {}),
+      setFollowedActivityAuthors: mock(async () => {})
+    })
+
+    try {
+      const description = [
+        ...document.querySelectorAll<HTMLElement>('[data-slot="empty-description"]')
+      ].find((node) => node.textContent === 'Vous êtes à jour.')
+      expect(description?.className).toContain('font-serif')
+      expect(description?.className).toContain('font-[350]')
+      expect(description?.className).toContain('text-base')
+      expect(description?.className).toContain('leading-6')
     } finally {
       await cleanup()
     }
@@ -534,7 +766,7 @@ describe('ActivityPanel', () => {
       channel: 'email',
       auteur: 'user:alice@example.test',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         sender: 'alice@example.test',
         action: 'Contacter la CAF',
         subject: 'Dossier APL',
@@ -585,7 +817,7 @@ describe('ActivityPanel', () => {
       expect(document.body.textContent).toContain('caf@example.fr')
       expect(document.querySelector('[data-slot="timeline-communication"] button')).toBeNull()
       const activityRowEl = document.querySelector<HTMLElement>(
-        '[data-slot="timeline-item"][role="button"]'
+        '[data-slot="timeline-item"] [role="button"]'
       )
       expect(activityRowEl).not.toBeNull()
       await act(async () => {

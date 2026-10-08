@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 
 import { buildAutomationRunEntries } from '@/features/automations/lib/automation-runs'
 import { recordToAutomation } from '@/features/automations/lib/automation-types'
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 import type { AutomationRecord } from '@/shared/types/automations'
 
 type ReportAutomationRecord = Extract<AutomationRecord, { type: 'report' }>
@@ -19,17 +19,17 @@ function record(): ReportAutomationRecord {
     owner: 'admin@pierre.test',
     mentions: ['bob'],
     cron: '0 8 * * 1',
-    next_run_at: null,
-    last_run_at: null,
-    last_run_status: null,
+    nextRunAt: null,
+    lastRunAt: null,
+    lastRunStatus: null,
     config: { prompt: '', maxReports: 6 }
   }
 }
 
-function activity(contenu: Record<string, unknown>): Activite {
+function activity(contenu: Record<string, unknown>): Activity {
   return {
     id: 42,
-    date_creation: '2026-06-10T14:00:00Z',
+    createdAt: '2026-06-10T14:00:00Z',
     rattachement: 'automations:a1',
     auteur: 'automation:a1',
     id_client: null,
@@ -47,7 +47,7 @@ describe('buildAutomationRunEntries', () => {
     const automation = recordToAutomation(record(), 'admin@pierre.test')
     const [entry] = buildAutomationRunEntries(
       automation,
-      [activity({ version: 2, title: 'Veille locative', note: REPORT_HTML })],
+      [activity({ version: 1, title: 'Veille locative', note: REPORT_HTML })],
       6
     )
 
@@ -64,12 +64,14 @@ describe('buildAutomationRunEntries', () => {
     const automation = recordToAutomation(record(), 'admin@pierre.test')
     const [entry] = buildAutomationRunEntries(
       automation,
-      [activity({ version: 2, title: 'Veille locative' })],
+      [activity({ version: 1, title: 'Veille locative' })],
       6
     )
 
-    expect(entry?.target.title).toBe('Veille locative')
-    expect(entry?.target.content).not.toMatch(/<article\b/i)
-    expect(entry?.target.content).not.toBe(REPORT_HTML)
+    const target = entry?.target
+    if (!target || target.kind !== 'automation') throw new Error('expected an automation run')
+    expect(target.title).toBe('Veille locative')
+    expect(target.content ?? '').not.toMatch(/<article\b/i)
+    expect(target.content).not.toBe(REPORT_HTML)
   })
 })

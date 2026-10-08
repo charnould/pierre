@@ -1,4 +1,4 @@
-import type { GetActivitiesParams } from '../../../src/shared/types/activites'
+import type { GetActivitiesParams } from '../../../src/shared/types/activities'
 
 export function activityQueryString(params: GetActivitiesParams): string {
   const search = new URLSearchParams()

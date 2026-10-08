@@ -2,8 +2,8 @@ import { UnreadPingIndicator } from '@/shared/components/table/UnreadPingIndicat
 
 import {
   EMPTY_REPAYMENT_ROW_SIGNAL,
-  repaymentRowSignalAriaLabel,
-  type RepaymentRowSignal
+  type RepaymentRowSignal,
+  repaymentRowSignalAriaLabel
 } from '../lib/repayment-row-signal'
 
 type Props = {

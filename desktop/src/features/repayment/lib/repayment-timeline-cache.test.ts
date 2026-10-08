@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, test } from 'bun:test'
 
-import type { Activite, ActiviteListItem } from '@/shared/types/activites'
+import type { Activity, ActivityListItem } from '@/shared/types/activities'
 
 import {
+  clearRepaymentTimelineCache,
   getRepaymentTimelineCache,
   invalidateRepaymentTimelineCache,
   patchRepaymentTimelineActivity,
@@ -28,10 +29,10 @@ afterEach(() => {
   windowBeforeStub = undefined
 })
 
-function activity(id: number, text = String(id)): ActiviteListItem {
+function activity(id: number, text = String(id)): ActivityListItem {
   return {
     id,
-    date_creation: '2026-06-10T14:00:00',
+    createdAt: '2026-06-10T14:00:00',
     rattachement: 'repayment:LOC-1',
     auteur: 'user:test@exemple.fr',
     id_client: 'CLI-1',
@@ -40,7 +41,7 @@ function activity(id: number, text = String(id)): ActiviteListItem {
     type: 'note.published',
     channel: null,
     mentions: [],
-    contenu: JSON.stringify({ version: 2, text }),
+    contenu: JSON.stringify({ version: 1, text }),
     my: null,
     read: true,
     reaction: null
@@ -64,8 +65,8 @@ function timelineResponse({
   openActionsError = false
 }: {
   movements?: Record<string, unknown>[]
-  notifications?: ActiviteListItem[]
-  openActionEvents?: ActiviteListItem[]
+  notifications?: ActivityListItem[]
+  openActionEvents?: ActivityListItem[]
   movementsError?: boolean
   notificationsError?: boolean
   openActionsError?: boolean
@@ -81,6 +82,42 @@ function timelineResponse({
 }
 
 describe('repayment-timeline-cache', () => {
+  test('keeps the sixteen newest timelines', () => {
+    clearRepaymentTimelineCache()
+    const entry = {
+      movements: [],
+      notifications: [],
+      openActionEvents: [],
+      movementsError: false,
+      notificationsError: false,
+      openActionsError: false
+    }
+    for (let index = 0; index < 16; index += 1) {
+      setRepaymentTimelineCache(
+        repaymentTimelineCacheKey('https://cache.test', 'CLI', `LOC-${index}`),
+        entry
+      )
+    }
+    setRepaymentTimelineCache(
+      repaymentTimelineCacheKey('https://cache.test', 'CLI', 'LOC-0'),
+      entry
+    )
+    setRepaymentTimelineCache(
+      repaymentTimelineCacheKey('https://cache.test', 'CLI', 'LOC-16'),
+      entry
+    )
+
+    expect(
+      getRepaymentTimelineCache(repaymentTimelineCacheKey('https://cache.test', 'CLI', 'LOC-0'))
+    ).toEqual(entry)
+    expect(
+      getRepaymentTimelineCache(repaymentTimelineCacheKey('https://cache.test', 'CLI', 'LOC-1'))
+    ).toBeNull()
+    expect(
+      getRepaymentTimelineCache(repaymentTimelineCacheKey('https://cache.test', 'CLI', 'LOC-16'))
+    ).toEqual(entry)
+  })
+
   test('stores and returns entries by key', () => {
     const key = repaymentTimelineCacheKey('https://example.test', 'CLI-1', 'LOC-1')
     setRepaymentTimelineCache(key, {
@@ -297,9 +334,9 @@ describe('repayment-timeline-cache', () => {
       id_locataire: 'LOC-1',
       force: true
     })
-    const reaction: Activite = {
+    const reaction: Activity = {
       id: 10,
-      date_creation: '2026-06-10T14:01:00',
+      createdAt: '2026-06-10T14:01:00',
       rattachement: 'repayment:LOC-1',
       auteur: 'user:test@exemple.fr',
       id_client: 'CLI-1',
@@ -308,7 +345,7 @@ describe('repayment-timeline-cache', () => {
       type: 'activity.reaction_changed',
       channel: null,
       mentions: [],
-      contenu: JSON.stringify({ version: 2, source_activity_id: 9, emoji: '👍' })
+      contenu: JSON.stringify({ version: 1, source_activity_id: 9, emoji: '👍' })
     }
     patchRepaymentTimelineActivity(key, reaction)
     pending.resolve(timelineResponse({ notifications: [activity(9, 'stale')] }))
@@ -316,7 +353,7 @@ describe('repayment-timeline-cache', () => {
 
     expect(getRepaymentTimelineCache(key)?.notifications[0]).toMatchObject({
       id: 9,
-      contenu: JSON.stringify({ version: 2, text: 'before' }),
+      contenu: JSON.stringify({ version: 1, text: 'before' }),
       reaction: '👍'
     })
   })

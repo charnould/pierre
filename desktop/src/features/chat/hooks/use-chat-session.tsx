@@ -1,3 +1,4 @@
+import type { AiStreamEvent } from '@pierre/shared/ai-stream-events'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
@@ -13,7 +14,6 @@ import type {
 } from '@/features/chat/lib/chat-session-types'
 import { applyChatStreamEvent, sealReasoningDuration } from '@/features/chat/lib/chat-stream-events'
 import type { ChatTransport } from '@/features/chat/lib/chat-transport'
-import type { AiStreamEvent } from '@/features/workflow/lib/parse-workflow-chunk'
 import { createRafThrottle } from '@/shared/lib/raf-throttle'
 
 export type { ChatConfig, ChatStatus, Message } from '@/features/chat/lib/chat-session-types'

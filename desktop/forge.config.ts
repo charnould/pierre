@@ -13,6 +13,10 @@ export default {
     name: 'pierre',
     executableName: 'pierre',
     appBundleId: 'com.pierre.hlm',
+    extendInfo: {
+      NSMicrophoneUsageDescription:
+        'Pierre utilise le microphone uniquement lors de la dictée vocale.'
+    },
     appCategoryType: 'public.app-category.productivity',
     icon: platformIcon,
     // Ad-hoc signing on macOS: transforms the "damaged app" Gatekeeper hard-block

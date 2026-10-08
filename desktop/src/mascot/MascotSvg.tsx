@@ -7,20 +7,20 @@ import {
   DEFAULT_MASCOT_COLOR,
   DEFAULT_MASCOT_SHAPE,
   MASCOT_REST_GAZE,
-  mascotBodyPaint,
   type MascotBodyPaint,
+  mascotBodyPaint,
   type MascotColor,
   type MascotShape
 } from './look'
 import {
+  type ArcRender,
   NOTIF_ANGLE,
   NOTIF_DIST,
   NOTIF_MARGIN,
   NOTIF_R,
   orbitArcs,
   orbitGaze,
-  orbitIdleBlend,
-  type ArcRender
+  orbitIdleBlend
 } from './orbit'
 import {
   blinkScale,
@@ -28,14 +28,14 @@ import {
   capsulePath,
   clamp,
   eyePoses,
-  mascotBodyPath,
-  mascotRadii,
-  mascotViewBox,
   MASCOT_VIEWBOX_MIN,
   MASCOT_VIEWBOX_SIZE,
-  radiusAtAngle,
+  mascotBodyPath,
+  type MascotFit,
+  mascotRadii,
+  mascotViewBox,
   r2,
-  type MascotFit
+  radiusAtAngle
 } from './profiles'
 
 const GAZE_TRAVEL_X = 14

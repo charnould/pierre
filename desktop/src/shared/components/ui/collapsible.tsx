@@ -25,7 +25,7 @@ function CollapsibleContent({
       data-slot="collapsible-content"
       data-variant={variant}
       className={cn(
-        'outline-none data-[variant=animated]:data-open:animate-in data-[variant=animated]:data-closed:animate-out',
+        'data-[variant=animated]:data-open:animate-in data-[variant=animated]:data-closed:animate-out outline-none',
         className
       )}
       {...props}

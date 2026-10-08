@@ -4,6 +4,7 @@ import { bytesToDataUri } from '../lib/avatar/data-uri'
 import {
   applyLocalAvatar,
   clearOrgUsersCache,
+  ensureUserAvatar,
   fetchOrgUsers,
   formatOrgCollaboratorLabel,
   resolveOrgUser,
@@ -42,7 +43,7 @@ function stubWindowApi(api: Record<string, unknown>) {
   didStubApi = true
   if (globalThis.window) {
     apiBeforeStub = globalThis.window.api
-    globalThis.window.api = api as typeof window.api
+    globalThis.window.api = api as unknown as typeof window.api
     return
   }
   createdWindow = true
@@ -56,7 +57,7 @@ afterEach(() => {
   if (createdWindow) delete (globalThis as { window?: Window }).window
   else if (globalThis.window) {
     if (apiBeforeStub === undefined) delete (globalThis.window as { api?: unknown }).api
-    else globalThis.window.api = apiBeforeStub as typeof window.api
+    else globalThis.window.api = apiBeforeStub as unknown as typeof window.api
   }
   didStubApi = false
   createdWindow = false
@@ -65,7 +66,7 @@ afterEach(() => {
 
 describe('org-users-cache', () => {
   test('fetchOrgUsers charge via getUsers et met en cache', async () => {
-    const getUsers = mock(() => Promise.resolve({ users: USERS }))
+    const getUsers = mock(() => Promise.resolve({ data: USERS }))
     stubWindowApi({ getUsers })
 
     await expect(fetchOrgUsers('https://pierre.test')).resolves.toEqual(USERS)
@@ -77,8 +78,8 @@ describe('org-users-cache', () => {
   test('fetchOrgUsers déduplique les appels en vol', async () => {
     const getUsers = mock(
       () =>
-        new Promise<{ users: typeof USERS }>((resolve) => {
-          setTimeout(() => resolve({ users: USERS }), 20)
+        new Promise<{ data: typeof USERS }>((resolve) => {
+          setTimeout(() => resolve({ data: USERS }), 20)
         })
     )
     stubWindowApi({ getUsers })
@@ -93,11 +94,11 @@ describe('org-users-cache', () => {
   })
 
   test('conserve le dernier serveur demandé malgré une réponse plus ancienne', async () => {
-    const resolvers = new Map<string, (value: { users: typeof USERS }) => void>()
+    const resolvers = new Map<string, (value: { data: typeof USERS }) => void>()
     stubWindowApi({
       getUsers: mock(
         ({ url }: { url: string }) =>
-          new Promise<{ users: typeof USERS }>((resolve) => {
+          new Promise<{ data: typeof USERS }>((resolve) => {
             resolvers.set(url, resolve)
           })
       )
@@ -106,11 +107,11 @@ describe('org-users-cache', () => {
     const second = fetchOrgUsers('https://two.test')
 
     resolvers.get('https://two.test')?.({
-      users: [{ ...USERS[0]!, displayName: 'Serveur deux' }, USERS[1]!]
+      data: [{ ...USERS[0]!, displayName: 'Serveur deux' }, USERS[1]!]
     })
     await second
     resolvers.get('https://one.test')?.({
-      users: [{ ...USERS[0]!, displayName: 'Serveur un' }, USERS[1]!]
+      data: [{ ...USERS[0]!, displayName: 'Serveur un' }, USERS[1]!]
     })
     await first
 
@@ -147,7 +148,7 @@ describe('org-users-cache', () => {
   })
 
   test('formatOrgCollaboratorLabel : displayName custom → login → email brut', async () => {
-    const getUsers = mock(() => Promise.resolve({ users: USERS }))
+    const getUsers = mock(() => Promise.resolve({ data: USERS }))
     stubWindowApi({ getUsers })
     await fetchOrgUsers('https://pierre.test')
 
@@ -162,12 +163,46 @@ describe('org-users-cache', () => {
     expect(formatOrgCollaboratorLabel('')).toBe('')
   })
 
+  test('fetchOrgUsers ne télécharge aucun avatar', async () => {
+    const getAvatar = mock(() => Promise.resolve(new Uint8Array([1]).buffer))
+    stubWindowApi({
+      getUsers: mock(() => Promise.resolve({ data: USERS })),
+      getAvatar
+    })
+    await fetchOrgUsers('https://pierre.test')
+    await Promise.resolve()
+    expect(getAvatar).not.toHaveBeenCalled()
+  })
+
+  test('ensureUserAvatar charge une photo, la déduplique et ignore un compte sans photo', async () => {
+    const bytes = new Uint8Array([1, 2, 3])
+    const getAvatar = mock(() => Promise.resolve(bytes.buffer))
+    stubWindowApi({
+      getUsers: mock(() => Promise.resolve({ data: USERS })),
+      getAvatar
+    })
+    await fetchOrgUsers('https://pierre.test')
+
+    ensureUserAvatar('cdubois')
+    ensureUserAvatar('cdubois@exemple.fr')
+    ensureUserAvatar('amartin')
+    await Promise.resolve()
+
+    expect(getAvatar).toHaveBeenCalledTimes(1)
+    expect(getAvatar).toHaveBeenCalledWith({
+      url: 'https://pierre.test',
+      email: 'cdubois@exemple.fr'
+    })
+    expect(resolveUserAvatar('cdubois')).toBe(bytesToDataUri(bytes, 'image/webp'))
+  })
+
   test('hydrate les photos via getAvatar et applique une mise à jour locale', async () => {
     const bytes = new Uint8Array([1, 2, 3])
-    const getUsers = mock(() => Promise.resolve({ users: USERS }))
+    const getUsers = mock(() => Promise.resolve({ data: USERS }))
     const getAvatar = mock(() => Promise.resolve(bytes.buffer))
     stubWindowApi({ getUsers, getAvatar })
     await fetchOrgUsers('https://pierre.test')
+    ensureUserAvatar('cdubois')
     await Promise.resolve()
     expect(getAvatar).toHaveBeenCalledWith({
       url: 'https://pierre.test',
@@ -182,6 +217,30 @@ describe('org-users-cache', () => {
     expect(resolveOrgUser('cdubois')?.displayName).toBe('Camille')
   })
 
+  test('ensureUserAvatar recharge la photo quand sa version change', async () => {
+    let version = 1
+    const getAvatar = mock(() => Promise.resolve(new Uint8Array([version]).buffer))
+    stubWindowApi({
+      getUsers: mock(() =>
+        Promise.resolve({
+          data: [{ ...USERS[1]!, avatarVersion: version }]
+        })
+      ),
+      getAvatar
+    })
+
+    await fetchOrgUsers('https://pierre.test')
+    ensureUserAvatar('cdubois')
+    await Promise.resolve()
+    clearOrgUsersCache()
+    version = 2
+    await fetchOrgUsers('https://pierre.test')
+    ensureUserAvatar('cdubois')
+    await Promise.resolve()
+
+    expect(getAvatar).toHaveBeenCalledTimes(2)
+  })
+
   test('isole les comptes qui partagent le même local-part', async () => {
     const users = [
       { ...USERS[1]!, login: 'alice', email: 'alice@one.test', avatarVersion: 1 },
@@ -191,10 +250,12 @@ describe('org-users-cache', () => {
       Promise.resolve(new TextEncoder().encode(email).buffer)
     )
     stubWindowApi({
-      getUsers: mock(() => Promise.resolve({ users })),
+      getUsers: mock(() => Promise.resolve({ data: users })),
       getAvatar
     })
     await fetchOrgUsers('https://pierre.test')
+    ensureUserAvatar('alice@one.test')
+    ensureUserAvatar('alice@two.test')
     await Promise.resolve()
 
     expect(resolveOrgUser('alice')).toBeNull()
@@ -207,14 +268,16 @@ describe('org-users-cache', () => {
       Promise.resolve(new TextEncoder().encode(url).buffer)
     )
     stubWindowApi({
-      getUsers: mock(() => Promise.resolve({ users: USERS })),
+      getUsers: mock(() => Promise.resolve({ data: USERS })),
       getAvatar
     })
 
     await fetchOrgUsers('https://pierre.test/Org')
+    ensureUserAvatar('cdubois@exemple.fr')
     await Promise.resolve()
     const first = resolveUserAvatar('cdubois@exemple.fr')
     await fetchOrgUsers('https://pierre.test/org')
+    ensureUserAvatar('cdubois@exemple.fr')
     await Promise.resolve()
 
     expect(resolveUserAvatar('cdubois@exemple.fr')).not.toBe(first)
@@ -222,7 +285,7 @@ describe('org-users-cache', () => {
   })
 
   test('résout avatar, user et displayName par email comme par login', async () => {
-    const getUsers = mock(() => Promise.resolve({ users: USERS }))
+    const getUsers = mock(() => Promise.resolve({ data: USERS }))
     stubWindowApi({ getUsers })
     await fetchOrgUsers('https://pierre.test')
 
@@ -239,7 +302,7 @@ describe('org-users-cache', () => {
   })
 
   test('applyLocalAvatar reste visible via l’email d’activité (user:email)', async () => {
-    const getUsers = mock(() => Promise.resolve({ users: USERS }))
+    const getUsers = mock(() => Promise.resolve({ data: USERS }))
     stubWindowApi({ getUsers })
     await fetchOrgUsers('https://pierre.test')
 

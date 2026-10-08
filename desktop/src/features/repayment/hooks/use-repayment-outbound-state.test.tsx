@@ -35,14 +35,14 @@ afterAll(() => {
 })
 
 const first = {
-  templateId: 'locataire_rcs_relance_impaye',
+  action: 'Envoyer un RCS de relance',
   body: 'Relance',
   sms_fallback: 'SMS Relance',
   choices: []
 }
 
 const second = {
-  templateId: 'locataire_rcs_rappel_echeance_plan',
+  action: 'Rappeler une échéance',
   body: 'Rappel',
   sms_fallback: 'SMS Rappel',
   choices: [{ type: 'reply' as const, label: 'OK' }]
@@ -75,7 +75,7 @@ describe('useRepaymentOutboundState', () => {
       sms_fallback: 'SMS Relance',
       choices: []
     })
-    expect(renders.at(-1)?.pendingRcsTemplateId).toBe('locataire_rcs_relance_impaye')
+    expect(renders.at(-1)?.pendingRcsAction).toBe('Envoyer un RCS de relance')
 
     await act(async () => {
       renders.at(-1)?.setRcsCompose({
@@ -94,7 +94,7 @@ describe('useRepaymentOutboundState', () => {
       sms_fallback: 'SMS Rappel',
       choices: [{ type: 'reply', label: 'OK' }]
     })
-    expect(renders.at(-1)?.pendingRcsTemplateId).toBe('locataire_rcs_rappel_echeance_plan')
+    expect(renders.at(-1)?.pendingRcsAction).toBe('Rappeler une échéance')
 
     await act(async () => {
       root.unmount()

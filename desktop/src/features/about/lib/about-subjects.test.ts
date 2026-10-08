@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import { ABOUT_SUBJECTS } from '@/features/tickets/lib/knowledge-skills'
+import { ABOUT_SUBJECTS } from '@/shared/lib/navigation-model'
 
 import { ABOUT_SUBJECT_ENTITY, aboutIdSkill } from './about-form'
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import { mergeSnapshot, snapshotsEqual, type NavigationSnapshot } from './navigation-snapshot'
+import { mergeSnapshot, type NavigationSnapshot, snapshotsEqual } from './navigation-snapshot'
 
 const ticketsA: NavigationSnapshot = {
   tab: 'tickets',

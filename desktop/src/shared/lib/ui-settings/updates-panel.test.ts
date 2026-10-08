@@ -3,8 +3,8 @@ import { describe, expect, it } from 'bun:test'
 import {
   defaultUpdatesPanelLayout,
   listPercentFromUpdatesLayout,
-  parseUpdatesPanelSplit,
   parseUpdatesListPercent,
+  parseUpdatesPanelSplit,
   splitFromUpdatesLayout
 } from './updates-panel'
 

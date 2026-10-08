@@ -1,14 +1,12 @@
 import { describe, expect, test } from 'bun:test'
 
-import { automationRunLimit } from '@/features/automations/lib/automation-runs'
 import {
   recordToAutomation,
   sameAutomationLogin
 } from '@/features/automations/lib/automation-types'
 import type { AutomationRecord } from '@/shared/types/automations'
 
-type ReportAutomationRecord = Extract<AutomationRecord, { type: 'report' }>
-type TicketReplyAutomationRecord = Extract<AutomationRecord, { type: 'replies' }>
+type ReportAutomationRecord = AutomationRecord
 
 function record(overrides: Partial<ReportAutomationRecord> = {}): ReportAutomationRecord {
   return {
@@ -20,9 +18,9 @@ function record(overrides: Partial<ReportAutomationRecord> = {}): ReportAutomati
     owner: 'admin@pierre.test',
     mentions: ['bob'],
     cron: '0 8 * * 1',
-    next_run_at: null,
-    last_run_at: null,
-    last_run_status: null,
+    nextRunAt: null,
+    lastRunAt: null,
+    lastRunStatus: null,
     config: { prompt: '', maxReports: 6 },
     ...overrides
   }
@@ -43,19 +41,5 @@ describe('recordToAutomation', () => {
   test('treats only the canonical owner email as creator', () => {
     expect(recordToAutomation(record(), 'admin@pierre.test').isCreator).toBe(true)
     expect(recordToAutomation(record(), 'bob@pierre.test').isCreator).toBe(false)
-  })
-
-  test('keeps ticket-reply run history visible', () => {
-    const ticketRecord: TicketReplyAutomationRecord = {
-      ...record(),
-      type: 'replies',
-      config: {
-        skillId: 'replies',
-        channel: 'email',
-        ticketFilters: { rules: [] },
-        maxItems: 20
-      }
-    }
-    expect(automationRunLimit(recordToAutomation(ticketRecord, ticketRecord.owner))).toBe(20)
   })
 })

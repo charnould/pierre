@@ -1,4 +1,4 @@
-import type { AskUserQuestion } from '../../../../../shared/ai-stream-events'
+import type { AskUserQuestion } from '@pierre/shared/ai-stream-events'
 
 export type ChatTextPart = {
   type: 'text'

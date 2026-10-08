@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 
-import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
+import { loadCustomizationFixture } from '@test/instance-customization-fixture'
 
 import {
   buildRepaymentAdvancementOperations,
@@ -60,7 +60,7 @@ describe('buildRepaymentEmailImportActivity', () => {
     expect(activity?.channel).toBe('email')
     expect(activity?.destinataire).toBe('Bob <bob@locataire.fr>')
     expect(JSON.parse(activity?.contenu ?? '{}')).toEqual({
-      version: 2,
+      version: 1,
       sender: 'Alice <alice@bailleur.fr>',
       subject: 'Relance loyer',
       body: 'Merci de régulariser.'
@@ -113,7 +113,7 @@ describe('buildRepaymentAdvancementOperations', () => {
 
     expect(operations).toHaveLength(1)
     expect(JSON.parse(operations[0]?.activity.contenu ?? '{}')).toMatchObject({
-      version: 2,
+      version: 1,
       before: 'amiable',
       after: 'pre_contentieux',
       note: 'Échec des relances amiables.'
@@ -133,7 +133,7 @@ describe('buildRepaymentTagChangeOperations', () => {
     expect(operations[0]?.kind).toBe('tags')
     expect(operations[0]?.activity.recipients).toEqual(['bob'])
     expect(JSON.parse(operations[0]?.activity.contenu ?? '{}')).toEqual({
-      version: 2,
+      version: 1,
       before: ['décès'],
       after: ['décès', '+65 ans'],
       note: 'Relance avec @bob'
@@ -169,7 +169,7 @@ describe('buildRepaymentTagChangeOperations', () => {
       comment: ''
     })
     expect(JSON.parse(operations[0]?.activity.contenu ?? '{}')).toEqual({
-      version: 2,
+      version: 1,
       before: [],
       after: ['décès']
     })
@@ -183,7 +183,7 @@ describe('buildRepaymentTagChangeOperations', () => {
       comment: ''
     })
     expect(JSON.parse(operations[0]?.activity.contenu ?? '{}')).toEqual({
-      version: 2,
+      version: 1,
       before: ['décès'],
       after: []
     })
@@ -200,7 +200,7 @@ describe('buildRepaymentAssignmentActivity', () => {
     )
     expect(activity?.recipients).toEqual(['alice'])
     expect(JSON.parse(activity?.contenu ?? '{}')).toEqual({
-      version: 2,
+      version: 1,
       before: { id: 'bob@bailleur.fr', label: 'bob@bailleur.fr' },
       after: { id: 'alice@bailleur.fr', label: 'alice' }
     })
@@ -213,7 +213,7 @@ describe('buildRepaymentAssignmentActivity', () => {
       null
     )
     expect(JSON.parse(activity?.contenu ?? '{}')).toEqual({
-      version: 2,
+      version: 1,
       before: null,
       after: { id: 'alice@bailleur.fr', label: 'alice' }
     })
@@ -229,7 +229,7 @@ describe('buildRepaymentAssignmentActivity', () => {
     )
     expect(activity?.recipients).toEqual(['alice', 'bob'])
     expect(JSON.parse(activity?.contenu ?? '{}')).toEqual({
-      version: 2,
+      version: 1,
       before: null,
       after: { id: 'alice@bailleur.fr', label: 'alice' },
       note: 'Relance avec @bob'
@@ -245,7 +245,7 @@ describe('buildRepaymentAssignmentActivity', () => {
       '   '
     )
     expect(JSON.parse(activity?.contenu ?? '{}')).toEqual({
-      version: 2,
+      version: 1,
       before: null,
       after: { id: 'alice@bailleur.fr', label: 'alice' }
     })

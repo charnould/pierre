@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, type ReactNode, type RefObject } from 'react'
+import { type ReactNode, type RefObject, useCallback, useEffect, useRef } from 'react'
 
 import { localTodayIso, partitionHomeActions } from '@/features/home/home-open-action-buckets'
 import { formatDebutBailDisplay } from '@/features/repayment/lib/format-debut-bail'
@@ -11,6 +11,7 @@ import {
   EmptyTitle
 } from '@/shared/components/ui/empty'
 import type { ActionActivity } from '@/shared/lib/activities/action-activity'
+import { cn } from '@/shared/lib/utils'
 
 function formatHomeDue(value: string): string {
   return formatDebutBailDisplay(value) ?? value
@@ -55,7 +56,7 @@ function HomeActionButton({
   return (
     <button
       type="button"
-      className="hover:bg-muted focus-visible:bg-muted focus-visible:ring-ring/40 w-full min-w-0 rounded-md px-4 py-2 text-start outline-none focus-visible:ring-1"
+      className="hover:bg-muted focus-visible:bg-muted focus-visible:ring-ring/20 border-border/80 w-full min-w-0 rounded-md border px-3 py-2 text-start outline-none focus-visible:ring-2"
       onClick={() => onOpen(action)}
     >
       <OpenActionRow
@@ -82,8 +83,8 @@ function HomeActionBucketList({
   if (actions.length === 0) return null
   return (
     <section>
-      <h3 className="text-muted-foreground px-4 pt-2 text-xs leading-4 font-medium">{title}</h3>
-      <ul className="flex flex-col">
+      <h3 className="text-muted-foreground pt-2 text-sm leading-5 font-medium">{title}</h3>
+      <ul className="flex flex-col gap-2">
         {actions.map((action) => (
           <li key={action.row.id}>
             <HomeActionButton action={action} onOpen={onOpen} />
@@ -122,16 +123,23 @@ export function HomeActionBuckets({
   const { overdue, upcoming } = partitionHomeActions(actions, localTodayIso())
   if (overdue.length === 0 && upcoming.length === 0) {
     const empty = (
-      <EmptyHeader>
-        <EmptyMedia variant="icon">{emptyIcon}</EmptyMedia>
-        <EmptyTitle>{emptyTitle}</EmptyTitle>
-        <EmptyDescription>{emptyDescription}</EmptyDescription>
-      </EmptyHeader>
+      <Empty className={fit ? 'flex-none' : undefined}>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">{emptyIcon}</EmptyMedia>
+          <EmptyTitle size={fit ? 'sm' : 'default'}>{emptyTitle}</EmptyTitle>
+          <EmptyDescription>{emptyDescription}</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     )
-    return fit ? <Empty className="flex-none">{empty}</Empty> : <Empty>{empty}</Empty>
+    return fit ? empty : <div className="flex min-h-0 flex-1 px-6">{empty}</div>
   }
   return (
-    <div ref={scrollRef} className={fit ? 'overflow-visible' : 'min-h-0 flex-1 overflow-y-auto'}>
+    <div
+      ref={scrollRef}
+      className={cn(
+        fit ? 'overflow-visible' : 'scroll-fade min-h-0 flex-1 overflow-y-auto px-6 pb-4'
+      )}
+    >
       <HomeActionBucketList title="En retard" actions={overdue} onOpen={onOpen} />
       <HomeActionBucketList title="Prochaines" actions={upcoming} onOpen={onOpen} />
       {onLoadMore ? (

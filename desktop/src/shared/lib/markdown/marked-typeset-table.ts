@@ -1,4 +1,4 @@
-import { Renderer, type MarkedExtension, type Tokens } from 'marked'
+import { type MarkedExtension, Renderer, type Tokens } from 'marked'
 
 /** Wide GFM tables scroll instead of compressing — Typeset `.typeset-scroll`. */
 export const markedTypesetTableRenderer: MarkedExtension = {

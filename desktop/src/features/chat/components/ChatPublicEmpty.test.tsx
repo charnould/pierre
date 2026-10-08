@@ -18,23 +18,10 @@ describe('ChatPublicEmpty', () => {
     expect(markup).not.toContain('min-h-11')
     expect(markup).not.toContain('Bonjour')
     expect(markup).not.toContain('Exemples')
-    expect(markup).not.toContain('pierre-display')
+    expect(markup).not.toContain('text-xl leading-6 font-medium')
     expect(markup).not.toContain('typeset-reply')
     expect(markup).not.toContain('data-slot="bubble"')
     expect(markup).not.toContain('<img')
-  })
-
-  test('quiet examples drop the filleted box', () => {
-    const markup = renderToStaticMarkup(
-      <ChatPublicEmpty quiet examples={['Comment déposer mon préavis ?']} onExample={() => {}} />
-    )
-    expect(markup).toContain('Comment déposer mon préavis ?')
-    expect(markup).toContain('Questions proposées')
-    expect(markup).toContain('text-muted-foreground')
-    expect(markup).not.toContain('rounded-xl')
-    expect(markup).not.toContain('divide-y')
-    expect(markup).not.toContain('bg-popover')
-    expect(markup).not.toContain('shadow-sm')
   })
 
   test('renders nothing without examples', () => {

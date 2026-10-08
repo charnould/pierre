@@ -1,4 +1,4 @@
-import type { AboutSubject } from '@/features/tickets/lib/knowledge-skills'
+import type { AboutSubject } from '@/shared/lib/navigation-model'
 
 type SyntheseBase = {
   year_from: number

@@ -6,7 +6,12 @@ import {
   fetchUpdatesIndex,
   parseUpdatesToc
 } from './github-updates'
-import { getChangelogFolder, UPDATES_CHANGELOG_FOLDER, updatesIndexUrl } from './updates-urls'
+import {
+  getChangelogFolder,
+  updateMarkdownUrl,
+  UPDATES_CHANGELOG_FOLDER,
+  updatesIndexUrl
+} from './updates-urls'
 
 describe('parseUpdatesToc', () => {
   test('reads changelog folder + entries from toc.json', () => {
@@ -50,6 +55,15 @@ describe('updatesIndexUrl', () => {
       'api.github.com/repos/charnould/pierre/contents/docs/toc.json'
     )
     expect(updatesIndexUrl()).toContain('ref=master')
+  })
+})
+
+describe('updateMarkdownUrl', () => {
+  test('reads the article from docs/src on master', () => {
+    expect(updateMarkdownUrl('2026-11-01-desktop-alpha')).toContain(
+      'api.github.com/repos/charnould/pierre/contents/docs/src/01-changelog/2026-11-01-desktop-alpha.md'
+    )
+    expect(updateMarkdownUrl('2026-11-01-desktop-alpha')).toContain('ref=master')
   })
 })
 

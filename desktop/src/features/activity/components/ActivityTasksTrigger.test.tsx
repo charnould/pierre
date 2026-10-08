@@ -2,6 +2,8 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
+import type { TasksRailTab } from '@/features/activity/lib/ActivityRailContext'
+
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
 
@@ -81,7 +83,10 @@ async function renderTrigger() {
   const { ActivityTasksTrigger } =
     await import('@/features/activity/components/ActivityTasksTrigger')
 
-  const rail = { tasksOpen: false, tasksTab: 'mine' as const }
+  const rail: { tasksOpen: boolean; tasksTab: TasksRailTab } = {
+    tasksOpen: false,
+    tasksTab: 'mine'
+  }
   function Probe() {
     const { tasksOpen, tasksTab } = useActivityRail()
     useEffect(() => {
@@ -130,6 +135,7 @@ describe('ActivityTasksTrigger', () => {
     expect(trigger.rail.tasksOpen).toBe(true)
     expect(trigger.rail.tasksTab).toBe('mine')
     expect(button?.getAttribute('aria-pressed')).toBe('true')
+    expect(button?.className).toContain('aria-pressed:bg-muted')
     await trigger.act(async () => button?.click())
     expect(trigger.rail.tasksOpen).toBe(false)
     expect(button?.getAttribute('aria-pressed')).toBe('false')

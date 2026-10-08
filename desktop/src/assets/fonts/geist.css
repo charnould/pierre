@@ -1,0 +1,25 @@
+/* Geist 1.9.0 — https://vercel.com/font — SIL Open Font License 1.1. */
+
+@font-face {
+  font-family: 'Geist Sans';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('./geist-sans.woff2') format('woff2-variations');
+}
+
+@font-face {
+  font-family: 'Geist Serif';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./geist-serif.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('./geist-mono.woff2') format('woff2-variations');
+}

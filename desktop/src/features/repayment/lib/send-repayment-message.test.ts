@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 
-import type { RcsContenu } from '../../../../../shared/rcs-message'
+import type { RcsContenu } from '@pierre/shared/rcs-message'
+
 import {
   recordRepaymentEmail,
   repaymentFallbackDestinataire,
@@ -228,7 +229,7 @@ describe('sendRepaymentNote', () => {
     expect(created).toMatchObject({
       type: 'note.published',
       ref: 'LOC-1',
-      contenu: JSON.stringify({ version: 2, text: 'Vu' })
+      contenu: JSON.stringify({ version: 1, text: 'Vu' })
     })
   })
 })

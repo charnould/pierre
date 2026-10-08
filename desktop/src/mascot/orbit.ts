@@ -3,7 +3,7 @@
  * https://github.com/jeremy-prt/bloub
  */
 
-import { BODY_R, clamp, createRng, r2, REST_HEAD_GAZE, TAU, type HeadGaze } from './profiles'
+import { BODY_R, clamp, createRng, type HeadGaze, r2, REST_HEAD_GAZE, TAU } from './profiles'
 
 export const ORBIT_DURATION = 3.6
 /** La pastille apparaît pendant l’extinction des anneaux. */

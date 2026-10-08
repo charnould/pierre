@@ -13,10 +13,10 @@ function stubFetch(handler: (input: RequestInfo | URL, init?: RequestInit) => Pr
 }
 
 describe('createHttpChatTransport', () => {
-  test('POSTs FormData to /ai and forwards NDJSON events', async () => {
+  test('POSTs FormData to /chat and forwards NDJSON events', async () => {
     const bodies: FormData[] = []
     stubFetch(async (input, init) => {
-      expect(String(input)).toBe('/ai')
+      expect(String(input)).toBe('/chat')
       expect(init?.method).toBe('POST')
       bodies.push(init?.body as FormData)
       return new Response(
@@ -43,7 +43,8 @@ describe('createHttpChatTransport', () => {
       new AbortController().signal
     )
 
-    expect(bodies[0]?.get('config')).toBe('default')
+    expect(bodies[0]?.get('configId')).toBe('default')
+    expect(bodies[0]?.get('conversationId')).toBe('00000000-0000-4000-8000-000000000001')
     expect(bodies[0]?.get('message')).toBe('bonjour')
     expect(events).toEqual(['text_delta', 'stream_end'])
   })
@@ -71,14 +72,14 @@ describe('createHttpChatTransport', () => {
     ).rejects.toMatchObject({ name: 'AbortError' })
   })
 
-  test('posts questionnaire answers to /ai/ui-response', async () => {
+  test('posts questionnaire answers to /chat/responses', async () => {
     stubFetch(async (input, init) => {
-      expect(String(input)).toBe('/ai/ui-response')
+      expect(String(input)).toBe('/chat/responses')
       expect(init?.method).toBe('POST')
       expect(JSON.parse(String(init?.body))).toEqual({
-        conv_id: 'conv',
-        request_id: 'req',
-        response_secret: 'secret',
+        conversationId: 'conv',
+        requestId: 'req',
+        responseSecret: 'secret',
         answers: [{ question: 'Q', answer: 'A' }]
       })
       return new Response(null, { status: 204 })

@@ -1,11 +1,11 @@
-import { IdCard, Pencil, Plus, Trash2, Upload } from 'lucide-react'
+import { ArrowLeft, CircleAlert, IdCard, Pencil, Plus, Trash2, Upload, Users } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { DirectoryList, DirectoryRow } from '@/shared/components/DirectoryList'
-import { Docket } from '@/shared/components/icons/koboyo-empty'
 import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar'
 import { Button } from '@/shared/components/ui/button'
+import { CardTitle } from '@/shared/components/ui/card'
 import { Checkbox } from '@/shared/components/ui/checkbox'
 import {
   DropdownMenu,
@@ -22,6 +22,7 @@ import {
   EmptyMedia,
   EmptyTitle
 } from '@/shared/components/ui/empty'
+import { FieldDescription } from '@/shared/components/ui/field'
 import { Spinner } from '@/shared/components/ui/spinner'
 import { toast } from '@/shared/components/ui/toast'
 import { UserAvatar } from '@/shared/components/UserAvatar'
@@ -40,6 +41,7 @@ import { UserFormDialog } from './UserFormDialog'
 interface Props {
   url: string
   user: UserPrincipal
+  onBack: () => void
   onCurrentUserPasswordChange: () => Promise<void>
   onUserChange: (user: UserPrincipal) => void
 }
@@ -67,14 +69,20 @@ export function UserIdentity({ email }: { email: string }) {
     <div className="flex min-w-0 items-center gap-2">
       <UserAvatar photoUrl={photoUrl} name={name} login={login} />
       <div className="flex min-w-0 flex-col items-start">
-        <div className="truncate text-sm font-medium">{name}</div>
-        <div className="text-muted-foreground truncate text-xs">{email}</div>
+        <div className="truncate text-sm leading-5 font-medium">{name}</div>
+        <FieldDescription>{email}</FieldDescription>
       </div>
     </div>
   )
 }
 
-export function UsersPanel({ url, user, onCurrentUserPasswordChange, onUserChange }: Props) {
+export function UsersPanel({
+  url,
+  user,
+  onBack,
+  onCurrentUserPasswordChange,
+  onUserChange
+}: Props) {
   const [data, setData] = useState<AdminUsersData | null>(null)
   const [loadError, setLoadError] = useState('')
   const [formOpen, setFormOpen] = useState(false)
@@ -148,7 +156,9 @@ export function UsersPanel({ url, user, onCurrentUserPasswordChange, onUserChang
         : [...current.users, saved]
       return { ...current, users: users.sort((a, b) => a.email.localeCompare(b.email)) }
     })
-    if (saved.email === user.email) onUserChange(saved)
+    if (saved.email === user.email) {
+      onUserChange({ ...saved, preferredName: user.preferredName })
+    }
   }
 
   function handleProfileSaved(saved: AdminUserProfile) {
@@ -173,7 +183,8 @@ export function UsersPanel({ url, user, onCurrentUserPasswordChange, onUserChang
         email: user.email,
         isAdministrator: mine.isAdministrator,
         moduleIds: saved.moduleIds,
-        chatbotIds: saved.chatbotIds
+        chatbotIds: saved.chatbotIds,
+        preferredName: user.preferredName
       })
     }
   }
@@ -292,12 +303,21 @@ export function UsersPanel({ url, user, onCurrentUserPasswordChange, onUserChang
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <Docket />
+              <CircleAlert />
             </EmptyMedia>
             <EmptyTitle>Utilisateurs indisponibles</EmptyTitle>
             <EmptyDescription>{loadError}</EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              aria-label="Retour"
+              onClick={onBack}
+            >
+              <ArrowLeft />
+            </Button>
             <Button type="button" variant="outline" onClick={() => void load()}>
               Réessayer
             </Button>
@@ -307,14 +327,19 @@ export function UsersPanel({ url, user, onCurrentUserPasswordChange, onUserChang
         <div className="min-h-0 flex-1 overflow-auto">
           <section>
             <header className="border-border bg-background flex shrink-0 items-center gap-2 border-b px-4 py-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                aria-label="Retour"
+                onClick={onBack}
+              >
+                <ArrowLeft />
+              </Button>
               <div className="flex min-w-0 flex-1 items-baseline gap-2">
-                <h2 className="m-0 font-sans text-xl leading-6 font-semibold tracking-tight text-balance">
-                  Profils
-                </h2>
-                <span className="text-muted-foreground font-sans text-xl leading-6 font-medium tracking-tight">
-                  ·
-                </span>
-                <span className="text-muted-foreground font-sans text-xl leading-6 font-medium tracking-tight tabular-nums">
+                <CardTitle className="m-0">Profils</CardTitle>
+                <span className="text-muted-foreground text-sm leading-5">·</span>
+                <span className="text-muted-foreground text-sm leading-5 tabular-nums">
                   {countLabel(profileCount, 'profil', 'profils')}
                 </span>
               </div>
@@ -327,7 +352,7 @@ export function UsersPanel({ url, user, onCurrentUserPasswordChange, onUserChang
               <Empty>
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
-                    <Docket />
+                    <IdCard />
                   </EmptyMedia>
                   <EmptyTitle>Aucun profil</EmptyTitle>
                   <EmptyDescription>
@@ -351,10 +376,10 @@ export function UsersPanel({ url, user, onCurrentUserPasswordChange, onUserChang
                       </Avatar>
                       <div className="truncate text-sm font-medium">{entry.name}</div>
                     </div>
-                    <div className="text-muted-foreground pierre-type-data text-start">
+                    <div className="text-muted-foreground text-start text-xs">
                       {countLabel(entry.moduleIds.length, 'module', 'modules')}
                     </div>
-                    <div className="text-muted-foreground pierre-type-data text-start">
+                    <div className="text-muted-foreground text-start text-xs">
                       {countLabel(entry.chatbotIds.length, 'chatbot', 'chatbots')}
                     </div>
                     <div className="flex items-center gap-1 text-start">
@@ -392,13 +417,9 @@ export function UsersPanel({ url, user, onCurrentUserPasswordChange, onUserChang
           <section>
             <header className="border-border bg-background flex shrink-0 items-center gap-2 border-b px-4 py-2">
               <div className="flex min-w-0 flex-1 items-baseline gap-2">
-                <h2 className="m-0 font-sans text-xl leading-6 font-semibold tracking-tight text-balance">
-                  Utilisateurs
-                </h2>
-                <span className="text-muted-foreground font-sans text-xl leading-6 font-medium tracking-tight">
-                  ·
-                </span>
-                <span className="text-muted-foreground font-sans text-xl leading-6 font-medium tracking-tight tabular-nums">
+                <CardTitle className="m-0">Utilisateurs</CardTitle>
+                <span className="text-muted-foreground text-sm leading-5">·</span>
+                <span className="text-muted-foreground text-sm leading-5 tabular-nums">
                   {countLabel(userCount, 'utilisateur', 'utilisateurs')}
                 </span>
               </div>
@@ -447,7 +468,7 @@ export function UsersPanel({ url, user, onCurrentUserPasswordChange, onUserChang
               <Empty>
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
-                    <Docket />
+                    <Users />
                   </EmptyMedia>
                   <EmptyTitle>Aucun utilisateur</EmptyTitle>
                   <EmptyDescription>
@@ -472,10 +493,10 @@ export function UsersPanel({ url, user, onCurrentUserPasswordChange, onUserChang
                       />
                     </div>
                     <UserIdentity email={entry.email} />
-                    <div className="text-muted-foreground pierre-type-data text-start">
+                    <div className="text-muted-foreground text-start text-xs">
                       {profileName(entry, data.profiles)}
                     </div>
-                    <div className="pierre-type-data text-start">
+                    <div className="text-start text-xs">
                       {entry.isAdministrator ? 'Administrateur' : 'Utilisateur'}
                     </div>
                     <div className="flex items-center gap-1 text-start">

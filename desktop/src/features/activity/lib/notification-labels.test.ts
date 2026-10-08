@@ -26,7 +26,7 @@ describe('activitySenderLabel', () => {
       api: {
         getUsers: mock(() =>
           Promise.resolve({
-            users: [
+            data: [
               {
                 login: 'cdubois',
                 email: 'cdubois@exemple.fr',

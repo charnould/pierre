@@ -1,4 +1,5 @@
-import { CartoonErrorObject } from '@/shared/components/icons/koboyo-empty'
+import { PiggyBank } from 'lucide-react'
+
 import { Button } from '@/shared/components/ui/button'
 import {
   Empty,
@@ -8,29 +9,32 @@ import {
   EmptyMedia,
   EmptyTitle
 } from '@/shared/components/ui/empty'
+import { Kbd } from '@/shared/components/ui/kbd'
 import { cn } from '@/shared/lib/utils'
 
 interface Props {
   className?: string
-  onCreatePlan: () => void
+  onCreateCaseFile: () => void
 }
 
-export function RepaymentMissingTableEmpty({ className, onCreatePlan }: Props) {
+export function RepaymentMissingTableEmpty({ className, onCreateCaseFile }: Props) {
   return (
     <Empty className={cn('min-h-40 flex-1', className)}>
       <EmptyHeader>
         <EmptyMedia variant="icon">
-          <CartoonErrorObject />
+          <PiggyBank />
         </EmptyMedia>
-        <EmptyTitle size="sm">comptes_locataires n’est pas défini</EmptyTitle>
+        <EmptyTitle size="sm">
+          <Kbd>core.comptes_locataires.csv</Kbd> n’est pas disponible.
+        </EmptyTitle>
         <EmptyDescription>
-          La table SQLite comptes_locataires est absente du datastore. Les soldes locataires ne
-          peuvent pas être calculés.
+          Les écritures comptables ne sont pas disponibles. Les dossiers peuvent tout de même être
+          créés et suivis ici.
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button type="button" variant="outline" onClick={onCreatePlan}>
-          Créer un plan d&apos;apurement
+        <Button type="button" variant="outline" onClick={onCreateCaseFile}>
+          Créer un dossier
         </Button>
       </EmptyContent>
     </Empty>

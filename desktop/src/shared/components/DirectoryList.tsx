@@ -1,4 +1,4 @@
-import type { KeyboardEvent, ReactNode } from 'react'
+import { type KeyboardEvent, type ReactNode, useId } from 'react'
 
 import { cn } from '@/shared/lib/utils'
 
@@ -27,30 +27,42 @@ export function DirectoryRow({
   children,
   className
 }: DirectoryRowProps) {
-  function handleKeyDown(event: KeyboardEvent<HTMLLIElement>) {
-    if (!onSelect) return
-    if (event.target !== event.currentTarget) return
+  const labelId = useId()
+
+  function handleKeyDown(event: KeyboardEvent<HTMLSpanElement>) {
     if (event.key !== 'Enter' && event.key !== ' ') return
     event.preventDefault()
-    onSelect()
+    onSelect?.()
   }
 
   return (
     <li
-      role={onSelect ? 'button' : undefined}
-      tabIndex={onSelect ? 0 : undefined}
-      aria-current={selected ? 'true' : undefined}
       className={cn(
-        'group grid min-w-0 items-center gap-15 border-b border-border/60 px-4 py-2',
+        'group border-border/60 relative grid min-w-0 items-center gap-15 border-b px-4 py-2',
         DIRECTORY_ROW_COLUMNS,
-        onSelect && 'cursor-pointer hover:bg-muted',
+        onSelect && 'hover:bg-muted cursor-pointer',
         selected && 'bg-muted',
         className
       )}
       onClick={onSelect}
-      onKeyDown={onSelect ? handleKeyDown : undefined}
     >
-      {children}
+      {onSelect ? (
+        <span
+          role="button"
+          tabIndex={0}
+          aria-labelledby={labelId}
+          aria-current={selected ? 'true' : undefined}
+          className="pointer-events-none absolute inset-0"
+          onKeyDown={handleKeyDown}
+        />
+      ) : null}
+      {onSelect ? (
+        <div id={labelId} className="col-span-full grid min-w-0 grid-cols-subgrid items-center">
+          {children}
+        </div>
+      ) : (
+        children
+      )}
     </li>
   )
 }

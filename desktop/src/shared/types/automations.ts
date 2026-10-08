@@ -5,22 +5,21 @@ export type {
   AutomationRunStatus,
   AutomationType,
   CreateAutomationBody,
-  PatchAutomationBody,
-  TicketAutomationFilters,
-  TicketFilterRule
-} from '../../../../shared/automations'
+  PatchAutomationBody
+} from '@pierre/shared/automations'
 
-export { decodeCronToSchedule } from '../../../../shared/automations'
+export { decodeCronToSchedule } from '@pierre/shared/automations'
 
 import type {
   AutomationRecord,
   CreateAutomationBody,
   PatchAutomationBody
-} from '../../../../shared/automations'
+} from '@pierre/shared/automations'
 
 export type AutomationsListResponse = { data: AutomationRecord[] }
 export type AutomationResponse = { data: AutomationRecord }
 export type DeleteAutomationResponse = { data: { deleted: true } }
+export type AutomationApiFailure = { error: { message: string } }
 
 export type ListAutomationsParams = { url: string }
 export type CreateAutomationPayload = { url: string } & CreateAutomationBody

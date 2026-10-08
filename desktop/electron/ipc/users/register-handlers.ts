@@ -11,10 +11,10 @@ import type {
   DeleteAdminUserResponse,
   GetAvatarPayload,
   ImportAdminUsersResponse,
-  PatchMyPreferencesPayload,
-  PatchMyPreferencesResponse,
   PatchAdminUserPayload,
   PatchAdminUserProfilePayload,
+  PatchMyPreferencesPayload,
+  PatchMyPreferencesResponse,
   SaveAdminUserPayload,
   SaveAdminUserProfilePayload,
   UploadMyAvatarPayload,
@@ -33,7 +33,7 @@ export function registerUsersHandlers(partition: string): void {
   ipcMain.handle(IpcChannel.users.list, async (_, { url }: { url: string }) => {
     const ses = session.fromPartition(partition)
     try {
-      const resp = await netFetch(`${url}/desktop/users`, {
+      const resp = await netFetch(`${url}/users`, {
         session: ses
       })
       if (!resp.ok) return null
@@ -47,7 +47,7 @@ export function registerUsersHandlers(partition: string): void {
   ipcMain.handle(IpcChannel.users.adminList, async (_, { url }: { url: string }) => {
     const ses = session.fromPartition(partition)
     try {
-      const resp = await netFetch(`${url.replace(/\/$/, '')}/desktop/admin/users`, {
+      const resp = await netFetch(`${url.replace(/\/$/, '')}/admin/users`, {
         session: ses
       })
       return (await resp.json()) as AdminUsersResponse
@@ -61,7 +61,7 @@ export function registerUsersHandlers(partition: string): void {
     const { url, ...body } = params
     const ses = session.fromPartition(partition)
     try {
-      const resp = await netFetch(`${url.replace(/\/$/, '')}/desktop/admin/users`, {
+      const resp = await netFetch(`${url.replace(/\/$/, '')}/admin/users`, {
         session: ses,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -79,7 +79,7 @@ export function registerUsersHandlers(partition: string): void {
     const ses = session.fromPartition(partition)
     try {
       const resp = await netFetch(
-        `${url.replace(/\/$/, '')}/desktop/admin/users/${encodeURIComponent(email)}`,
+        `${url.replace(/\/$/, '')}/admin/users/${encodeURIComponent(email)}`,
         {
           session: ses,
           method: 'PATCH',
@@ -100,7 +100,7 @@ export function registerUsersHandlers(partition: string): void {
       const ses = session.fromPartition(partition)
       try {
         const resp = await netFetch(
-          `${url.replace(/\/$/, '')}/desktop/admin/users/${encodeURIComponent(email)}`,
+          `${url.replace(/\/$/, '')}/admin/users/${encodeURIComponent(email)}`,
           { session: ses, method: 'DELETE' }
         )
         return (await resp.json()) as DeleteAdminUserResponse
@@ -117,7 +117,7 @@ export function registerUsersHandlers(partition: string): void {
       const { url, ...body } = params
       const ses = session.fromPartition(partition)
       try {
-        const resp = await netFetch(`${url.replace(/\/$/, '')}/desktop/admin/users/profiles`, {
+        const resp = await netFetch(`${url.replace(/\/$/, '')}/admin/users/profiles`, {
           session: ses,
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -138,7 +138,7 @@ export function registerUsersHandlers(partition: string): void {
       const ses = session.fromPartition(partition)
       try {
         const resp = await netFetch(
-          `${url.replace(/\/$/, '')}/desktop/admin/users/profiles/${encodeURIComponent(id)}`,
+          `${url.replace(/\/$/, '')}/admin/users/profiles/${encodeURIComponent(id)}`,
           {
             session: ses,
             method: 'PATCH',
@@ -160,7 +160,7 @@ export function registerUsersHandlers(partition: string): void {
       const ses = session.fromPartition(partition)
       try {
         const resp = await netFetch(
-          `${url.replace(/\/$/, '')}/desktop/admin/users/profiles/${encodeURIComponent(id)}`,
+          `${url.replace(/\/$/, '')}/admin/users/profiles/${encodeURIComponent(id)}`,
           { session: ses, method: 'DELETE' }
         )
         return (await resp.json()) as DeleteAdminUserProfileResponse
@@ -192,7 +192,7 @@ export function registerUsersHandlers(partition: string): void {
       const bytes = await readFile(path)
       const form = new FormData()
       form.set('file', new File([bytes], basename(path), { type: 'text/csv' }))
-      const resp = await netFetch(`${url.replace(/\/$/, '')}/desktop/admin/users/import`, {
+      const resp = await netFetch(`${url.replace(/\/$/, '')}/admin/users/import`, {
         session: ses,
         method: 'POST',
         body: form
@@ -210,7 +210,7 @@ export function registerUsersHandlers(partition: string): void {
       const { url, ...body } = params
       const ses = session.fromPartition(partition)
       try {
-        const resp = await netFetch(`${url.replace(/\/$/, '')}/desktop/me/preferences`, {
+        const resp = await netFetch(`${url.replace(/\/$/, '')}/me/preferences`, {
           session: ses,
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -232,7 +232,7 @@ export function registerUsersHandlers(partition: string): void {
     const ses = session.fromPartition(partition)
     try {
       const resp = await netFetch(
-        `${params.url.replace(/\/$/, '')}/desktop/avatars/${encodeURIComponent(params.email)}`,
+        `${params.url.replace(/\/$/, '')}/avatars/${encodeURIComponent(params.email)}`,
         { session: ses }
       )
       if (!resp.ok) return null
@@ -273,7 +273,7 @@ export function registerUsersHandlers(partition: string): void {
           type: params.type || 'image/webp'
         })
       )
-      const resp = await netFetch(`${params.url.replace(/\/$/, '')}/desktop/me/avatar`, {
+      const resp = await netFetch(`${params.url.replace(/\/$/, '')}/me/avatar`, {
         session: ses,
         method: 'POST',
         body: formData

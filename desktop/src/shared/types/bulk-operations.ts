@@ -16,7 +16,7 @@ export type {
   PreviewRow,
   PreviewStepReason,
   SimpleDeliveryStep
-} from '../../../../shared/bulk-operations'
+} from '@pierre/shared/bulk-operations'
 
 export {
   BULK_MEDIA,
@@ -24,8 +24,8 @@ export {
   collectBulkPlaceholders,
   emptyBulkOperationDefinition,
   lastBulkOperationEdit
-} from '../../../../shared/bulk-operations'
-export { collect_rich_rcs_replies, rich_rcs_graph_issues } from '../../../../shared/bulk-rich-rcs'
+} from '@pierre/shared/bulk-operations'
+export { collect_rich_rcs_replies, rich_rcs_graph_issues } from '@pierre/shared/bulk-rich-rcs'
 
 import type {
   BulkOperationDefinition,
@@ -37,7 +37,7 @@ import type {
   PatchBulkOperationBody,
   PreviewMessageResult,
   PreviewQueryResult
-} from '../../../../shared/bulk-operations'
+} from '@pierre/shared/bulk-operations'
 
 export type BulkOperationsListResponse = { data: BulkOperationSummary[] }
 export type BulkOperationResponse = { data: BulkOperationRecord }
@@ -66,6 +66,7 @@ export type PreviewBulkOperationQueryPayload = {
   url: string
   definition: BulkOperationDefinition
   bulkOperationId?: string
+  offset?: number
 }
 export type PreviewBulkOperationMessagePayload = PreviewBulkOperationQueryPayload & {
   id_locataire: string

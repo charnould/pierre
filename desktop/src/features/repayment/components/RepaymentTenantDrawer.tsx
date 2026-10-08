@@ -1,6 +1,7 @@
+import { rcs_compose_payload } from '@pierre/shared/rcs-message'
 import { X } from 'lucide-react'
 import type { MouseEvent } from 'react'
-import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { InspectorSplit } from '@/shared/components/inspector/inspector-split'
 import { InspectorTimelineSkeleton } from '@/shared/components/inspector/inspector-timeline-skeleton'
@@ -22,33 +23,33 @@ import { listOpenActions } from '@/shared/lib/activities/action-activity'
 import { replyAuthorMentionSeed } from '@/shared/lib/activities/mentions'
 import { scrollBehavior } from '@/shared/lib/prefers-reduced-motion'
 import type { ColumnValuesConfig } from '@/shared/lib/ui-settings/tickets-table'
-import { activity_texte, type Activite } from '@/shared/types/activites'
+import { type Activity, activityText } from '@/shared/types/activities'
 import type { OrgUser } from '@/shared/types/users'
 
-import { rcs_compose_payload } from '../../../../../shared/rcs-message'
 import { useRepaymentComposeState } from '../hooks/use-repayment-compose-state'
 import { useRepaymentOutboundState } from '../hooks/use-repayment-outbound-state'
 import { useRepaymentTenantActions } from '../hooks/use-repayment-tenant-actions'
 import { useRepaymentTenantTimeline } from '../hooks/use-repayment-tenant-timeline'
 import { debtEpisodeTrend } from '../lib/build-tenant-balance-series'
+import type { ChronologyEntry } from '../lib/case-file-chronology'
+import { chronologyFromActivities } from '../lib/case-file-chronology'
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
 import { formatDebutBailDisplay } from '../lib/format-debut-bail'
-import type { OutboundEmailResolved, OutboundRcsResolved } from '../lib/outbound-email-templates'
 import type { RepaymentAdvancementContext } from '../lib/repayment-activity-mutations'
 import { sortRepaymentActivitiesDesc } from '../lib/repayment-activity-order'
-import { latestActiveRepaymentPlan } from '../lib/repayment-activity-text'
+import { latestCaseFileActivity } from '../lib/repayment-activity-text'
 import {
   deriveRepaymentAdvancementFromSorted,
   deriveRepaymentGestionnaireFromSorted
 } from '../lib/repayment-advancement'
 import type { RepaymentBucketId } from '../lib/repayment-bucket'
+import type { ResolvedRepaymentEmail, ResolvedRepaymentRcs } from '../lib/repayment-messages'
 import { deriveRepaymentTagsFromSorted } from '../lib/repayment-tags'
-import { actionForTemplate } from '../lib/repayment-template-actions'
 import {
   recordRepaymentEmail,
   repaymentFallbackDestinataire,
-  sendRepaymentRcs,
-  type RepaymentMessageResult
+  type RepaymentMessageResult,
+  sendRepaymentRcs
 } from '../lib/send-repayment-message'
 import { RepaymentComposeBlock } from './RepaymentComposeBlock'
 import { RepaymentTenantTimeline } from './RepaymentTenantTimeline'
@@ -62,6 +63,7 @@ interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   sheetOpenToken: number
+  timelineRefreshToken?: number
   /**
    * Corps seul — le parent fournit déjà le Drawer / DrawerContent
    * (ex. nested dans le centre de notifications).
@@ -70,6 +72,7 @@ interface Props {
   tenant: TenantRepaymentRow | null
   columnValues?: ColumnValuesConfig
   highlightActivityId?: number
+  initialComposeMode?: 'note'
   onAddNote: (comment: string) => RepaymentMessageResult | Promise<RepaymentMessageResult>
   onAdvancementChange: (
     bucket: RepaymentBucketId | null,
@@ -87,8 +90,12 @@ interface Props {
     comment?: string
   ) => boolean | Promise<boolean>
   gestionnaireAssignable?: boolean
-  onCreatePlan: (tenant: TenantRepaymentRow) => void
-  onEditPlan?: (tenant: TenantRepaymentRow, row: Activite) => void
+  onCreateCaseFile: (tenant: TenantRepaymentRow, chronology: ChronologyEntry[]) => void
+  onEditCaseFile?: (
+    tenant: TenantRepaymentRow,
+    row: Activity,
+    chronology: ChronologyEntry[]
+  ) => void
 }
 
 export function RepaymentTenantDrawer({
@@ -97,24 +104,28 @@ export function RepaymentTenantDrawer({
   open,
   onOpenChange,
   sheetOpenToken,
+  timelineRefreshToken = 0,
   embedded = false,
   tenant,
   columnValues,
   highlightActivityId,
+  initialComposeMode,
   onAddNote,
   onAdvancementChange,
   onTagsChange,
   onAssignGestionnaire,
   gestionnaireAssignable = false,
-  onCreatePlan,
-  onEditPlan
+  onCreateCaseFile,
+  onEditCaseFile
 }: Props) {
   const [assigningGestionnaire, setAssigningGestionnaire] = useState(false)
-  const [contentReady, setContentReady] = useState(false)
+  const [presented, setPresented] = useState(false)
   const [timelineVisibleCount, setTimelineVisibleCount] = useState(INITIAL_TIMELINE_VISIBLE)
   const [nowIso, setNowIso] = useState(() => new Date().toISOString())
   const bodyScrollElRef = useRef<HTMLDivElement | null>(null)
   const historyScrollElRef = useRef<HTMLDivElement | null>(null)
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+  const seenTenantIdRef = useRef(tenant?.id_locataire)
 
   const {
     entries: timelineEntries,
@@ -146,7 +157,7 @@ export function RepaymentTenantDrawer({
     }),
     [sortedActivities]
   )
-  const activePlan = useMemo(() => latestActiveRepaymentPlan(notifications), [notifications])
+  const caseFileActivity = useMemo(() => latestCaseFileActivity(notifications), [notifications])
   const {
     mode: composeMode,
     bucket: draftBucket,
@@ -181,7 +192,7 @@ export function RepaymentTenantDrawer({
     emailConfirmOpen,
     emailSubject,
     pendingMailto,
-    pendingRcsTemplateId,
+    pendingRcsAction,
     reset: resetOutbound,
     selectEmailTemplate,
     selectMailtoTemplate,
@@ -216,10 +227,17 @@ export function RepaymentTenantDrawer({
     applyActivityPatch
   })
 
-  const visibleTimelineEntries = useMemo(
-    () => timelineEntries.slice(0, timelineVisibleCount),
-    [timelineEntries, timelineVisibleCount]
-  )
+  const highlightedIndex = useMemo(() => {
+    if (highlightActivityId == null) return -1
+    return timelineEntries.findIndex(
+      (entry) => entry.source === 'activity' && entry.row.id === highlightActivityId
+    )
+  }, [highlightActivityId, timelineEntries])
+  const visibleTimelineEntries = useMemo(() => {
+    const required = highlightedIndex >= 0 ? highlightedIndex + 1 : 0
+    const count = Math.min(timelineEntries.length, Math.max(timelineVisibleCount, required))
+    return timelineEntries.slice(0, count)
+  }, [highlightedIndex, timelineEntries, timelineVisibleCount])
   const openActions = useMemo(() => listOpenActions(openActionEvents), [openActionEvents])
 
   const scrollComposeIntoView = useCallback(() => {
@@ -227,66 +245,68 @@ export function RepaymentTenantDrawer({
     if (el) el.scrollTop = 0
   }, [])
 
-  const [seenTenantId, setSeenTenantId] = useState(tenant?.id_locataire)
-  const tenantId = tenant?.id_locataire
-  if (tenantId !== seenTenantId) {
-    setSeenTenantId(tenantId)
+  const showDossierLoader = Boolean(tenant) && ((!embedded && !presented) || timelineInitialLoading)
+
+  useEffect(() => {
+    const tenantId = tenant?.id_locataire
+    if (seenTenantIdRef.current === tenantId) return
+    seenTenantIdRef.current = tenantId
     setAssigningGestionnaire(false)
-    setContentReady(false)
     setTimelineVisibleCount(INITIAL_TIMELINE_VISIBLE)
     resetCompose()
     resetOutbound()
-  }
+  }, [resetCompose, resetOutbound, tenant?.id_locataire])
 
-  const [seenOpenToken, setSeenOpenToken] = useState(sheetOpenToken)
-  if (!open && contentReady) {
-    setContentReady(false)
-  } else if (open && seenOpenToken !== sheetOpenToken) {
-    setSeenOpenToken(sheetOpenToken)
-    setContentReady(true)
-  } else if (open && !contentReady) {
-    setContentReady(true)
-  }
+  useEffect(() => {
+    if (!open || initialComposeMode !== 'note') return
+    startNote()
+    scrollComposeIntoView()
+  }, [initialComposeMode, open, scrollComposeIntoView, sheetOpenToken, startNote])
+
+  const seenTimelineRefreshRef = useRef(timelineRefreshToken)
+  useEffect(() => {
+    if (seenTimelineRefreshRef.current === timelineRefreshToken) return
+    seenTimelineRefreshRef.current = timelineRefreshToken
+    if (!open || !tenant) return
+    void refreshTimeline({ force: true })
+  }, [open, refreshTimeline, tenant, timelineRefreshToken])
 
   const handleDrawerOpenChangeComplete = useCallback((nextOpen: boolean) => {
-    if (!nextOpen) {
-      setContentReady(false)
-      setTimelineVisibleCount(INITIAL_TIMELINE_VISIBLE)
-      return
-    }
-
-    startTransition(() => {
-      setNowIso(new Date().toISOString())
-      setContentReady(true)
-    })
+    setPresented(nextOpen)
+    if (nextOpen) setNowIso(new Date().toISOString())
+    else setTimelineVisibleCount(INITIAL_TIMELINE_VISIBLE)
   }, [])
 
   useEffect(() => {
-    if (!contentReady || timelineInitialLoading) return
-    if (timelineVisibleCount >= timelineEntries.length) return
-
-    const expand = () => {
-      startTransition(() => setTimelineVisibleCount(timelineEntries.length))
+    const root = historyScrollElRef.current
+    const sentinel = sentinelRef.current
+    if (!root || !sentinel || showDossierLoader || typeof IntersectionObserver !== 'function') {
+      return
     }
-
-    if (typeof window.requestIdleCallback === 'function') {
-      const idleId = window.requestIdleCallback(expand, { timeout: 400 })
-      return () => window.cancelIdleCallback(idleId)
-    }
-
-    const timeoutId = window.setTimeout(expand, 0)
-    return () => window.clearTimeout(timeoutId)
-  }, [contentReady, timelineEntries.length, timelineInitialLoading, timelineVisibleCount])
+    const total = timelineEntries.length
+    const floor = visibleTimelineEntries.length
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return
+        setTimelineVisibleCount((count) =>
+          Math.min(total, Math.max(count, floor) + INITIAL_TIMELINE_VISIBLE)
+        )
+      },
+      { root, rootMargin: '128px' }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [showDossierLoader, timelineEntries.length, visibleTimelineEntries.length])
 
   useEffect(() => {
-    if (!highlightActivityId || !contentReady || timelineInitialLoading) return
+    if (!highlightActivityId || showDossierLoader) return
     const frame = window.requestAnimationFrame(() => {
       historyScrollElRef.current
         ?.querySelector(`[data-activity-id="${CSS.escape(String(highlightActivityId))}"]`)
         ?.scrollIntoView({ block: 'nearest', behavior: scrollBehavior() })
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [contentReady, highlightActivityId, timelineInitialLoading, timelineVisibleCount])
+  }, [highlightActivityId, showDossierLoader, timelineVisibleCount])
 
   const handleStartNote = useCallback(() => {
     startNote()
@@ -302,10 +322,10 @@ export function RepaymentTenantDrawer({
   )
 
   const handleStartEditNote = useCallback(
-    (row: Activite) => {
+    (row: Activity) => {
       clearRcsReview()
       clearEmailReview()
-      startEditNote(row.id, activity_texte(row.type, row.contenu))
+      startEditNote(row.id, activityText(row.type, row.contenu))
       scrollComposeIntoView()
     },
     [clearEmailReview, clearRcsReview, scrollComposeIntoView, startEditNote]
@@ -349,8 +369,7 @@ export function RepaymentTenantDrawer({
     const email = pendingMailto
     if (!tenant || !email) return
     void runSubmission('email', async (isCurrent) => {
-      const { templateId, subject, body } = email
-      const action = actionForTemplate(templateId)
+      const { action, subject, body } = email
       if (!action) return false
       const result = await recordRepaymentEmail({
         url,
@@ -469,7 +488,7 @@ export function RepaymentTenantDrawer({
   const handleSubmitRcs = useCallback(() => {
     const payload = tenant ? rcs_compose_payload(rcsCompose) : null
     if (!tenant || !payload) return
-    const action = pendingRcsTemplateId ? actionForTemplate(pendingRcsTemplateId) : null
+    const action = pendingRcsAction
     if (!action) {
       toast.add({ title: 'Modèle de message invalide', type: 'error' })
       return
@@ -501,7 +520,7 @@ export function RepaymentTenantDrawer({
   }, [
     afterSuccessfulWrite,
     clearRcsReview,
-    pendingRcsTemplateId,
+    pendingRcsAction,
     resetCompose,
     revalidateTimeline,
     rcsCompose,
@@ -519,17 +538,17 @@ export function RepaymentTenantDrawer({
     })
   }, [emailBody])
 
-  const handleCreatePlan = () => {
+  const handleCreateCaseFile = () => {
     if (!tenant) return
-    onCreatePlan(tenant)
+    onCreateCaseFile(tenant, chronologyFromActivities('', notifications))
   }
 
-  const handleEditPlan = useCallback(
-    (row: Activite) => {
-      if (!tenant || !onEditPlan) return
-      onEditPlan(tenant, row)
+  const handleEditCaseFile = useCallback(
+    (row: Activity) => {
+      if (!tenant || !onEditCaseFile) return
+      onEditCaseFile(tenant, row, chronologyFromActivities(row.threadId ?? '', notifications))
     },
-    [onEditPlan, tenant]
+    [notifications, onEditCaseFile, tenant]
   )
   const handleClose = useCallback(
     (event: MouseEvent<HTMLButtonElement>) => {
@@ -573,7 +592,7 @@ export function RepaymentTenantDrawer({
   }, [clearRcsReview, scrollComposeIntoView, startAction])
 
   const handleSelectRcsTemplate = useCallback(
-    (resolved: OutboundRcsResolved) => {
+    (resolved: ResolvedRepaymentRcs) => {
       if (!tenant) return
       startRcs()
       selectRcsTemplate(resolved, repaymentFallbackDestinataire(tenant, 'rcs'))
@@ -583,7 +602,7 @@ export function RepaymentTenantDrawer({
   )
 
   const handleSelectEmailTemplate = useCallback(
-    (resolved: OutboundEmailResolved) => {
+    (resolved: ResolvedRepaymentEmail) => {
       startEmail()
       selectEmailTemplate(resolved)
       scrollComposeIntoView()
@@ -608,11 +627,10 @@ export function RepaymentTenantDrawer({
     )
   }
 
-  const showDossierLoader = !contentReady || timelineInitialLoading
   const drawerTitle = `${tenant.id_client} · ${tenant.id_locataire}`
 
   const drawerHeader = (
-    <DrawerHeader variant="chrome" data-inspector-motion="header" className="justify-between">
+    <DrawerHeader variant="chrome" className="justify-between">
       <div className="min-w-0 flex-1">
         <DrawerTitle variant="inspector-id" title={drawerTitle}>
           {drawerTitle}
@@ -724,9 +742,9 @@ export function RepaymentTenantDrawer({
               onSelectRcsTemplate={handleSelectRcsTemplate}
               onSelectEmailTemplate={handleSelectEmailTemplate}
               onSelectMailtoTemplate={selectMailtoTemplate}
-              onCreatePlan={handleCreatePlan}
-              activePlan={activePlan}
-              onEditPlan={onEditPlan ? handleEditPlan : undefined}
+              onCreateCaseFile={handleCreateCaseFile}
+              caseFileActivity={caseFileActivity}
+              onEditCaseFile={onEditCaseFile ? handleEditCaseFile : undefined}
               onCancelCompose={handleCancelCompose}
               onSubmitNote={handleSubmitNote}
               onSubmitAdvancement={handleSubmitAdvancement}
@@ -764,21 +782,26 @@ export function RepaymentTenantDrawer({
         showDossierLoader ? (
           <InspectorTimelineSkeleton variant="repayment" pane="history" />
         ) : (
-          <ContextTimeline>
-            <RepaymentTenantTimeline
-              items={visibleTimelineEntries}
-              journal={notifications}
-              highlightId={highlightActivityId}
-              userLogin={userLogin}
-              onEditPlan={onEditPlan ? handleEditPlan : undefined}
-              savingAction={submitting === 'action'}
-              onReopenAction={handleReopenAction}
-              onStartReply={handleStartReply}
-              onStartEditNote={handleStartEditNote}
-              onDeleteNote={handleRequestDeleteNote}
-              onBoost={handleBoost}
-            />
-          </ContextTimeline>
+          <>
+            <ContextTimeline>
+              <RepaymentTenantTimeline
+                items={visibleTimelineEntries}
+                journal={notifications}
+                highlightId={highlightActivityId}
+                userLogin={userLogin}
+                onEditCaseFile={onEditCaseFile ? handleEditCaseFile : undefined}
+                savingAction={submitting === 'action'}
+                onReopenAction={handleReopenAction}
+                onStartReply={handleStartReply}
+                onStartEditNote={handleStartEditNote}
+                onDeleteNote={handleRequestDeleteNote}
+                onBoost={handleBoost}
+              />
+            </ContextTimeline>
+            {visibleTimelineEntries.length < timelineEntries.length ? (
+              <div ref={sentinelRef} aria-hidden className="h-px" />
+            ) : null}
+          </>
         )
       }
     />

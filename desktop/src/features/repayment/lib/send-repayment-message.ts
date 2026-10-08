@@ -1,12 +1,12 @@
-import type { Activite, CreateActivityBody } from '@/shared/types/activites'
+import type { RcsContenu } from '@pierre/shared/rcs-message'
+
+import type { Activity, CreateActivityBody } from '@/shared/types/activities'
 import type { RepaymentNotificationChannel } from '@/shared/types/notification-repayment'
 
-import type { RcsContenu } from '../../../../../shared/rcs-message'
 import { buildRepaymentMessageActivity } from './repayment-activity-mutations'
 
 export type RepaymentMessageResult =
-  | { ok: true }
-  | { ok: false; message?: string; activity?: Activite }
+  { ok: true } | { ok: false; message?: string; activity?: Activity }
 
 export function repaymentFallbackDestinataire(
   tenant: Record<string, unknown>,

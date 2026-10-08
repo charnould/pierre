@@ -1,3 +1,5 @@
+import { boardTableClassName } from '@/shared/components/table/board-dual-table'
+import { useSyncedHorizontalScroll } from '@/shared/components/table/use-synced-horizontal-scroll'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { TableCell, TableHead, TableHeader, TableRow } from '@/shared/components/ui/table'
 import { resolveTicketColumnLabel, type UiSettings } from '@/shared/lib/ui-settings/schema'
@@ -12,6 +14,8 @@ interface Props {
 }
 
 export function TicketsTableSkeleton({ columns, settings }: Props) {
+  const { headerScrollRef, bodyScrollRef, onHeaderScroll, onBodyScroll } =
+    useSyncedHorizontalScroll()
   const tableWidth = Math.max(columns.length, 1) * COLUMN_WIDTH
 
   const colgroup = () => (
@@ -28,16 +32,17 @@ export function TicketsTableSkeleton({ columns, settings }: Props) {
       aria-busy="true"
       aria-label="Chargement des réclamations"
     >
-      <div className="bg-background overflow-x-auto">
-        <table
-          className="pierre-type-data table-fixed caption-bottom font-sans tabular-nums"
-          style={{ width: tableWidth }}
-        >
+      <div
+        ref={headerScrollRef}
+        onScroll={onHeaderScroll}
+        className="bg-background sticky top-0 z-10 w-full min-w-0 scrollbar-none overflow-x-auto"
+      >
+        <table className={boardTableClassName} style={{ width: tableWidth }}>
           {colgroup()}
           <TableHeader>
-            <TableRow hover={false}>
+            <TableRow>
               {columns.map((col) => (
-                <TableHead key={col.name} variant="board" className="relative h-8 text-start">
+                <TableHead key={col.name} variant="board" className="relative text-start">
                   <Skeleton className="h-3 w-3/4" aria-hidden />
                   <span className="sr-only">{resolveTicketColumnLabel(col.name, settings)}</span>
                 </TableHead>
@@ -47,17 +52,18 @@ export function TicketsTableSkeleton({ columns, settings }: Props) {
         </table>
       </div>
 
-      <div className="overflow-x-auto">
-        <table
-          className="pierre-type-data table-fixed caption-bottom font-sans tabular-nums"
-          style={{ width: tableWidth }}
-        >
+      <div ref={bodyScrollRef} onScroll={onBodyScroll} className="w-full min-w-0 overflow-x-auto">
+        <table className={boardTableClassName} style={{ width: tableWidth }}>
           {colgroup()}
           <tbody>
             {Array.from({ length: SKELETON_ROW_COUNT }, (_, rowIndex) => (
               <TableRow key={rowIndex}>
                 {columns.map((col) => (
-                  <TableCell key={col.name} className="max-w-0 overflow-hidden text-start">
+                  <TableCell
+                    key={col.name}
+                    variant="board"
+                    className="max-w-0 overflow-hidden text-start"
+                  >
                     <Skeleton className="h-4 w-full" />
                   </TableCell>
                 ))}

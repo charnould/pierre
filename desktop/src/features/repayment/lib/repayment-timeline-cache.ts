@@ -1,14 +1,14 @@
 import {
-  parse_activity_meta_content,
-  type Activite,
-  type ActiviteListItem
-} from '@/shared/types/activites'
+  type Activity,
+  type ActivityListItem,
+  parseActivityMetaContent
+} from '@/shared/types/activities'
 import type { LedgerMovementRow } from '@/shared/types/ledger'
 
 export type RepaymentTimelineCacheEntry = {
   movements: LedgerMovementRow[]
-  notifications: ActiviteListItem[]
-  openActionEvents: ActiviteListItem[]
+  notifications: ActivityListItem[]
+  openActionEvents: ActivityListItem[]
   movementsError: boolean
   notificationsError: boolean
   openActionsError: boolean
@@ -19,8 +19,25 @@ type CacheRecord = RepaymentTimelineCacheEntry & {
   promise?: Promise<RepaymentTimelineCacheEntry>
 }
 
+const MAX_REPAYMENT_TIMELINES = 16
 const cache = new Map<string, CacheRecord>()
 const generations = new Map<string, number>()
+
+function retainTimeline(key: string, record: CacheRecord): void {
+  cache.delete(key)
+  cache.set(key, record)
+  while (cache.size > MAX_REPAYMENT_TIMELINES) {
+    const oldest = cache.keys().next().value
+    if (oldest === undefined) return
+    cache.delete(oldest)
+    generations.delete(oldest)
+  }
+}
+
+export function clearRepaymentTimelineCache(): void {
+  cache.clear()
+  generations.clear()
+}
 
 export function repaymentTimelineCacheKey(
   url: string,
@@ -46,7 +63,7 @@ export function getRepaymentTimelineCache(key: string): RepaymentTimelineCacheEn
 export function setRepaymentTimelineCache(key: string, entry: RepaymentTimelineCacheEntry): void {
   const generation = (generations.get(key) ?? 0) + 1
   generations.set(key, generation)
-  cache.set(key, {
+  retainTimeline(key, {
     ...entry,
     generation,
     promise: undefined
@@ -64,11 +81,11 @@ export function invalidateRepaymentTimelineCache(
 }
 
 function replaceActivityById(
-  rows: ActiviteListItem[],
-  activity: Activite | ActiviteListItem
-): ActiviteListItem[] {
+  rows: ActivityListItem[],
+  activity: Activity | ActivityListItem
+): ActivityListItem[] {
   if (activity.type === 'activity.reaction_changed') {
-    const reaction = parse_activity_meta_content(activity.contenu)
+    const reaction = parseActivityMetaContent(activity.contenu)
     if (!reaction) return rows
     return rows.map((row) =>
       row.id === reaction.source_activity_id ? { ...row, reaction: reaction.emoji ?? null } : row
@@ -79,8 +96,8 @@ function replaceActivityById(
     const sameActivity = row.id === activity.id
     const sameNoteThread =
       activity.type === 'note.updated' &&
-      activity.thread_id != null &&
-      row.thread_id === activity.thread_id
+      activity.threadId != null &&
+      row.threadId === activity.threadId
     if (!sameActivity && !sameNoteThread) return row
     found = true
     return { ...row, ...activity }
@@ -91,13 +108,13 @@ function replaceActivityById(
 /** Applies a confirmed PATCH locally and invalidates any in-flight prefetch. */
 export function patchRepaymentTimelineActivity(
   key: string,
-  activity: Activite | ActiviteListItem
+  activity: Activity | ActivityListItem
 ): void {
   const existing = cache.get(key)
   const generation = (generations.get(key) ?? 0) + 1
   generations.set(key, generation)
   if (!existing) return
-  cache.set(key, {
+  retainTimeline(key, {
     ...existing,
     notifications: replaceActivityById(existing.notifications, activity),
     openActionEvents: replaceActivityById(existing.openActionEvents, activity),
@@ -128,12 +145,12 @@ export function prefetchRepaymentTimeline(params: {
   }
   const promise = fetchRepaymentTimeline(params, fallback).then((entry) => {
     if (cache.get(key)?.generation === generation) {
-      cache.set(key, { ...entry, generation, promise: undefined })
+      retainTimeline(key, { ...entry, generation, promise: undefined })
     }
     return entry
   })
 
-  cache.set(key, {
+  retainTimeline(key, {
     ...fallback,
     generation,
     promise

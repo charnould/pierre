@@ -1,4 +1,4 @@
-import { memo, useMemo, type ReactNode } from 'react'
+import { memo, type ReactNode, useMemo } from 'react'
 
 import { ActivityBoostControl } from '@/features/activity/components/ActivityBoostControl'
 import type { ActivityBoostEmoji } from '@/features/activity/lib/activity-boosts'
@@ -13,7 +13,7 @@ import {
   parseActivityAuthor
 } from '@/shared/lib/timeline/parse-activity-author'
 import { TIMELINE_MOVEMENT_TITLE } from '@/shared/lib/timeline/timeline-action-label'
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 
 import type { RepaymentTimelineItem } from '../lib/build-repayment-timeline'
 import { RepaymentActivityTimelineEvent } from './RepaymentActivityTimelineEvent'
@@ -21,14 +21,14 @@ import { RepaymentTimelineMovementRow } from './RepaymentTimelineMovementRow'
 
 interface Props {
   items: RepaymentTimelineItem[]
-  journal?: Activite[]
+  journal?: Activity[]
   highlightId?: number
   userLogin?: string
-  onEditPlan?: (row: Activite) => void
+  onEditCaseFile?: (row: Activity) => void
   savingAction?: boolean
   onReopenAction?: (id: number, assigneA: string, dateEcheance: string) => void
   onStartReply?: (activityId: number, auteur: string) => void
-  onStartEditNote?: (row: Activite) => void
+  onStartEditNote?: (row: Activity) => void
   onDeleteNote?: (id: number) => void
   onBoost?: (id: number, emoji: ActivityBoostEmoji | null) => void | Promise<void>
 }
@@ -60,7 +60,7 @@ function ActivityActionsRow({ boost, actions }: { boost: ReactNode; actions?: Re
 }
 
 function activityBoostControl(
-  row: Activite,
+  row: Activity,
   userLogin: string | undefined,
   onBoost: ((id: number, emoji: ActivityBoostEmoji | null) => void | Promise<void>) | undefined
 ) {
@@ -109,7 +109,7 @@ function TimelineItems({
   journal,
   highlightId,
   userLogin,
-  onEditPlan,
+  onEditCaseFile,
   savingAction,
   onReopenAction,
   stepOffset = 0,
@@ -119,15 +119,15 @@ function TimelineItems({
   onBoost
 }: {
   items: RepaymentTimelineItem[]
-  journal?: Activite[]
+  journal?: Activity[]
   highlightId?: number
   userLogin?: string
-  onEditPlan?: (row: Activite) => void
+  onEditCaseFile?: (row: Activity) => void
   savingAction?: boolean
   onReopenAction?: (id: number, assigneA: string, dateEcheance: string) => void
   stepOffset?: number
   onStartReply?: (activityId: number, auteur: string) => void
-  onStartEditNote?: (row: Activite) => void
+  onStartEditNote?: (row: Activity) => void
   onDeleteNote?: (id: number) => void
   onBoost?: (id: number, emoji: ActivityBoostEmoji | null) => void | Promise<void>
 }) {
@@ -146,14 +146,14 @@ function TimelineItems({
       if (
         item.source !== 'activity' ||
         !item.row.type.startsWith('task.') ||
-        !item.row.thread_id ||
+        !item.row.threadId ||
         item.row.revision == null
       ) {
         continue
       }
-      const current = latest.get(item.row.thread_id)
+      const current = latest.get(item.row.threadId)
       if (!current || item.row.revision > current.revision) {
-        latest.set(item.row.thread_id, { id: item.row.id, revision: item.row.revision })
+        latest.set(item.row.threadId, { id: item.row.id, revision: item.row.revision })
       }
     }
     return new Set([...latest.values()].map((entry) => entry.id))
@@ -173,6 +173,7 @@ function TimelineItems({
         const todo = item.source === 'activity' ? parseActionActivity(item.row) : null
         const isTodoCreator =
           todo != null && userLogin != null && todo.createdBy === `user:${userLogin}`
+        const chronologyTask = Boolean(todo?.contenu.completed_on)
 
         if (item.source === 'movement') {
           return (
@@ -207,7 +208,7 @@ function TimelineItems({
             dataTimelineId={item.id}
             dataActivityId={item.row.id}
             expandable
-            onEditPlan={onEditPlan}
+            onEditCaseFile={onEditCaseFile}
             userLogin={userLogin}
             savingAction={savingAction}
             onReopenAction={onReopenAction}
@@ -228,7 +229,7 @@ function TimelineItems({
               <ActivityActionsRow
                 boost={activityBoostControl(item.row, userLogin, onBoost)}
                 actions={
-                  isTodoCreator && onDeleteNote ? (
+                  isTodoCreator && onDeleteNote && !chronologyTask ? (
                     <Button
                       type="button"
                       variant="outline"
@@ -254,7 +255,7 @@ export const RepaymentTenantTimeline = memo(function RepaymentTenantTimeline({
   journal,
   highlightId,
   userLogin,
-  onEditPlan,
+  onEditCaseFile,
   savingAction,
   onReopenAction,
   onStartReply,
@@ -270,7 +271,7 @@ export const RepaymentTenantTimeline = memo(function RepaymentTenantTimeline({
       journal={journal}
       highlightId={highlightId}
       userLogin={userLogin}
-      onEditPlan={onEditPlan}
+      onEditCaseFile={onEditCaseFile}
       savingAction={savingAction}
       onReopenAction={onReopenAction}
       onStartReply={onStartReply}

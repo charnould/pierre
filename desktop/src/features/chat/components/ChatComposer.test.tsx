@@ -23,9 +23,9 @@ describe('ChatComposer attachments', () => {
 
     expect(markup).toContain('data-drop-active="true"')
     expect(markup).toContain('data-slot="input-group"')
-    expect(markup).toContain('data-slot="item-group"')
+    expect(markup).toContain('data-slot="attachment"')
     expect(markup).toContain('title="rapport.pdf"')
-    expect(markup).toContain('>rapport<')
+    expect(markup).toContain('rapport.pdf')
     expect(markup).toContain('PDF')
     expect(markup).toContain('role="alert"')
     expect(markup).toContain('aria-label="Retirer rapport.pdf"')
@@ -126,5 +126,29 @@ describe('ChatComposer attachments', () => {
     expect(previewed).toContain('Comment déposer mon préavis ?')
     expect(previewed).toContain('data-example-preview')
     expect(previewed).not.toContain('Comment puis-je vous aider aujourd&#x27;hui ?')
+  })
+
+  test('desktop form keeps the control geometry', () => {
+    const markup = renderToStaticMarkup(
+      <ChatComposer
+        appearance="form"
+        status="ready"
+        files={[]}
+        previewUrls={[]}
+        fileErrors={[]}
+        dropActive
+        onSend={() => {}}
+        onRemoveFile={() => {}}
+        onFilesSent={() => {}}
+        onStop={() => {}}
+      />
+    )
+    expect(markup).toContain('bg-control')
+    expect(markup).toContain('ring-2')
+    expect(markup).toContain('ring-ring/20')
+    expect(markup).not.toContain('rounded-xl')
+    expect(markup).not.toContain('shadow-sm')
+    expect(markup).not.toContain('focus-visible]:ring-0')
+    expect(markup).not.toContain('h-10')
   })
 })

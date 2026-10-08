@@ -1,8 +1,7 @@
+import { empty_rcs_compose, type RcsComposeValue } from '@pierre/shared/rcs-message'
 import { useCallback, useState } from 'react'
 
 import type { TicketRow } from '@/shared/types'
-
-import { empty_rcs_compose, type RcsComposeValue } from '../../../../../shared/rcs-message'
 
 function ticketField(ticket: TicketRow | null, ...keys: string[]): string {
   if (!ticket) return ''

@@ -1,6 +1,8 @@
-import { describe, expect, test } from 'bun:test'
+import { beforeEach, describe, expect, test } from 'bun:test'
 
-import type { Activite } from '@/shared/types/activites'
+import { loadCustomizationFixture } from '@test/instance-customization-fixture'
+
+import type { Activity } from '@/shared/types/activities'
 
 import { sortRepaymentActivitiesDesc } from './repayment-activity-order'
 import {
@@ -11,8 +13,8 @@ import {
 } from './repayment-advancement'
 
 function activity(
-  partial: Pick<Activite, 'id' | 'date_creation' | 'type' | 'contenu'> & Partial<Activite>
-): Activite {
+  partial: Pick<Activity, 'id' | 'createdAt' | 'type' | 'contenu'> & Partial<Activity>
+): Activity {
   return {
     rattachement: 'repayment:LOC-1',
     auteur: 'user:alice@exemple.fr',
@@ -26,14 +28,18 @@ function activity(
 }
 
 describe('deriveRepaymentAdvancement', () => {
+  beforeEach(() => {
+    loadCustomizationFixture()
+  })
+
   test('ignore les champs ressemblants portés par une note', () => {
     expect(
       deriveRepaymentAdvancement([
         activity({
           id: 1,
-          date_creation: '2026-06-12 12:00',
+          createdAt: '2026-06-12 12:00',
           type: 'note.published',
-          contenu: JSON.stringify({ version: 2, text: 'action: relance, phase: amiable' })
+          contenu: JSON.stringify({ version: 1, text: 'action: relance, phase: amiable' })
         })
       ])
     ).toEqual({ bucket: null, action: null })
@@ -44,70 +50,70 @@ describe('deriveRepaymentAdvancement', () => {
       deriveRepaymentAdvancement([
         activity({
           id: 1,
-          date_creation: '2026-06-10 10:00',
+          createdAt: '2026-06-10 10:00',
           type: 'case.group_changed',
           contenu: JSON.stringify({
-            version: 2,
-            before: 'non_traites',
-            after: 'amiable'
+            version: 1,
+            before: 'Non traités',
+            after: 'Recouvrement amiable'
           })
         }),
         activity({
           id: 2,
-          date_creation: '2026-06-11 11:00',
+          createdAt: '2026-06-11 11:00',
           type: 'task.completed',
-          thread_id: 'todo-1',
+          threadId: 'todo-1',
           revision: 2,
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             task: { title: 'Joindre le locataire', state: 'completed' }
           })
         }),
         activity({
           id: 3,
-          date_creation: '2026-06-09 09:00',
+          createdAt: '2026-06-09 09:00',
           type: 'case.group_changed',
           contenu: JSON.stringify({
-            version: 2,
-            before: 'amiable',
-            after: 'contentieux'
+            version: 1,
+            before: 'Recouvrement amiable',
+            after: 'Contentieux'
           })
         })
       ])
-    ).toEqual({ bucket: 'amiable', action: 'Joindre le locataire' })
+    ).toEqual({ bucket: 'Recouvrement amiable', action: 'Joindre le locataire' })
   })
 
   test('FromSorted égale le wrapper après tri canonique', () => {
     const unsorted = [
       activity({
         id: 1,
-        date_creation: '2026-06-10 10:00',
+        createdAt: '2026-06-10 10:00',
         type: 'case.group_changed',
         contenu: JSON.stringify({
-          version: 2,
-          before: 'non_traites',
-          after: 'amiable'
+          version: 1,
+          before: 'Non traités',
+          after: 'Recouvrement amiable'
         })
       }),
       activity({
         id: 2,
-        date_creation: '2026-06-11 11:00',
+        createdAt: '2026-06-11 11:00',
         type: 'task.completed',
-        thread_id: 'todo-1',
+        threadId: 'todo-1',
         revision: 2,
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           task: { title: 'Joindre le locataire', state: 'completed' }
         })
       }),
       activity({
         id: 3,
-        date_creation: '2026-06-09 09:00',
+        createdAt: '2026-06-09 09:00',
         type: 'case.group_changed',
         contenu: JSON.stringify({
-          version: 2,
-          before: 'amiable',
-          after: 'contentieux'
+          version: 1,
+          before: 'Recouvrement amiable',
+          after: 'Contentieux'
         })
       })
     ]
@@ -122,15 +128,15 @@ describe('deriveRepaymentAdvancement', () => {
       deriveRepaymentAdvancement([
         activity({
           id: 1,
-          date_creation: '2026-06-10 10:00',
+          createdAt: '2026-06-10 10:00',
           type: 'case.group_changed',
-          contenu: JSON.stringify({ version: 2, before: null, after: 'inconnu' })
+          contenu: JSON.stringify({ version: 1, before: null, after: 'inconnu' })
         }),
         activity({
           id: 2,
-          date_creation: '2026-06-11 11:00',
+          createdAt: '2026-06-11 11:00',
           type: 'task.completed',
-          contenu: JSON.stringify({ version: 2, task: { title: '', state: 'completed' } })
+          contenu: JSON.stringify({ version: 1, task: { title: '', state: 'completed' } })
         })
       ])
     ).toEqual({ bucket: null, action: null })
@@ -147,20 +153,20 @@ describe('deriveRepaymentGestionnaire', () => {
       deriveRepaymentGestionnaire([
         activity({
           id: 1,
-          date_creation: '2026-06-10 10:00',
+          createdAt: '2026-06-10 10:00',
           type: 'case.assignee_changed',
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             before: null,
             after: { id: 'old@example.org', label: 'old' }
           })
         }),
         activity({
           id: 2,
-          date_creation: '2026-06-11 11:00',
+          createdAt: '2026-06-11 11:00',
           type: 'case.assignee_changed',
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             before: { id: 'old@example.org', label: 'old' },
             after: { id: 'cdubois@example.org', label: 'cdubois' }
           })
@@ -173,20 +179,20 @@ describe('deriveRepaymentGestionnaire', () => {
     const unsorted = [
       activity({
         id: 1,
-        date_creation: '2026-06-10 10:00',
+        createdAt: '2026-06-10 10:00',
         type: 'case.assignee_changed',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           before: null,
           after: { id: 'old@example.org', label: 'old' }
         })
       }),
       activity({
         id: 2,
-        date_creation: '2026-06-11 11:00',
+        createdAt: '2026-06-11 11:00',
         type: 'case.assignee_changed',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           before: { id: 'old@example.org', label: 'old' },
           after: { id: 'cdubois@example.org', label: 'cdubois' }
         })
@@ -203,21 +209,21 @@ describe('sortRepaymentActivitiesDesc', () => {
   test('ordonne par date puis id, les plus récents d’abord', () => {
     const older = activity({
       id: 2,
-      date_creation: '2026-06-10 10:00',
+      createdAt: '2026-06-10 10:00',
       type: 'note.published',
-      contenu: JSON.stringify({ version: 2, text: '' })
+      contenu: JSON.stringify({ version: 1, text: '' })
     })
     const newerLowId = activity({
       id: 1,
-      date_creation: '2026-06-11 11:00',
+      createdAt: '2026-06-11 11:00',
       type: 'note.published',
-      contenu: JSON.stringify({ version: 2, text: '' })
+      contenu: JSON.stringify({ version: 1, text: '' })
     })
     const newerHighId = activity({
       id: 3,
-      date_creation: '2026-06-11 11:00',
+      createdAt: '2026-06-11 11:00',
       type: 'note.published',
-      contenu: JSON.stringify({ version: 2, text: '' })
+      contenu: JSON.stringify({ version: 1, text: '' })
     })
 
     expect(
@@ -228,15 +234,15 @@ describe('sortRepaymentActivitiesDesc', () => {
   test('ne mute pas le tableau d’entrée', () => {
     const first = activity({
       id: 1,
-      date_creation: '2026-06-10 10:00',
+      createdAt: '2026-06-10 10:00',
       type: 'note.published',
-      contenu: JSON.stringify({ version: 2, text: '' })
+      contenu: JSON.stringify({ version: 1, text: '' })
     })
     const second = activity({
       id: 2,
-      date_creation: '2026-06-11 11:00',
+      createdAt: '2026-06-11 11:00',
       type: 'note.published',
-      contenu: JSON.stringify({ version: 2, text: '' })
+      contenu: JSON.stringify({ version: 1, text: '' })
     })
     const input = [first, second]
 

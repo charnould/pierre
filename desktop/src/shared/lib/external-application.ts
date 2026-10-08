@@ -2,4 +2,4 @@ export {
   readExternalApplication,
   resolveExternalApplicationTarget,
   type ExternalApplication
-} from '../../../../shared/external-application'
+} from '@pierre/shared/external-application'

@@ -1,4 +1,4 @@
-import type { AskUserAnswer } from '../../../../shared/ai-stream-events'
+import type { AskUserAnswer } from '@pierre/shared/ai-stream-events'
 
 function isAskUserAnswer(value: unknown): value is AskUserAnswer {
   return (

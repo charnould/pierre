@@ -1,9 +1,9 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useCallback, useRef, useState } from 'react'
 
-import { ActivityReaderOverlay } from '@/features/activity/components/ActivityReaderOverlay'
 import type { NotificationsApi } from '@/features/activity/hooks/use-notifications'
 import type { ActivityFeedApi } from '@/features/activity/hooks/useActivityFeed'
 import type { ReaderTarget } from '@/features/activity/lib/reader-target'
+import type { PendingChatPrompt } from '@/features/chat/DesktopChatBody'
 import { HomeView } from '@/features/home'
 import { PLACEHOLDER_TABS, PlaceholderFeatureView } from '@/features/placeholder'
 import { SettingsView } from '@/features/settings'
@@ -13,7 +13,14 @@ import { useVisitedTabs } from '@/shared/lib/use-visited-tabs'
 import type { Settings } from '@/shared/types'
 import type { UserPrincipal } from '@/shared/types/users'
 
-const ChatView = lazy(() => import('@/features/chat').then((m) => ({ default: m.ChatView })))
+const ActivityReaderOverlay = lazy(() =>
+  import('@/features/activity/components/ActivityReaderOverlay').then((module) => ({
+    default: module.ActivityReaderOverlay
+  }))
+)
+const ChatView = lazy(() =>
+  import('@/features/chat/ChatView').then((m) => ({ default: m.ChatView }))
+)
 const TicketsView = lazy(() =>
   import('@/features/tickets').then((m) => ({ default: m.TicketsView }))
 )
@@ -24,7 +31,7 @@ const AutomationsView = lazy(() =>
   import('@/features/automations').then((m) => ({ default: m.AutomationsView }))
 )
 const BulkOperationsView = lazy(() =>
-  import('@/features/outreach/BulkOperationsView').then((m) => ({ default: m.BulkOperationsView }))
+  import('@/features/bulk/BulkOperationsView').then((m) => ({ default: m.BulkOperationsView }))
 )
 const AboutView = lazy(() => import('@/features/about').then((m) => ({ default: m.AboutView })))
 const AdministrationView = lazy(() =>
@@ -53,8 +60,8 @@ interface Props {
   onLogin: (s: Settings, meta: { user: UserPrincipal }) => void
   onCurrentUserPasswordChange: () => Promise<void>
   onUserChange: (user: UserPrincipal) => void
-  onLogout: () => void
   onSettingsChange: (settings: Settings) => void
+  onLogout: () => void
 }
 
 export function TabWorkspace({
@@ -75,10 +82,26 @@ export function TabWorkspace({
   onLogin,
   onCurrentUserPasswordChange,
   onUserChange,
-  onLogout,
-  onSettingsChange
+  onSettingsChange,
+  onLogout
 }: Props) {
   const visited = useVisitedTabs(activeTab, isLoggedIn)
+  const promptIdRef = useRef(0)
+  const [chatConfigId, setChatConfigId] = useState<string | null>(null)
+  const [pendingChatPrompt, setPendingChatPrompt] = useState<PendingChatPrompt | null>(null)
+
+  const handleSubmitHomePrompt = useCallback(
+    (text: string) => {
+      promptIdRef.current += 1
+      setPendingChatPrompt({ id: promptIdRef.current, text, configId: chatConfigId })
+      onTabChange('chat')
+    },
+    [chatConfigId, onTabChange]
+  )
+
+  const handleConsumePrompt = useCallback((id: number) => {
+    setPendingChatPrompt((current) => (current?.id === id ? null : current))
+  }, [])
 
   return (
     <>
@@ -86,6 +109,10 @@ export function TabWorkspace({
         <HomeView
           hidden={activeTab !== 'home'}
           onNavigate={onTabChange}
+          onSubmitPrompt={handleSubmitHomePrompt}
+          url={settings.url}
+          configId={chatConfigId}
+          onConfigId={setChatConfigId}
           agentName={agentName}
           user={user}
           feed={feed}
@@ -95,23 +122,32 @@ export function TabWorkspace({
         />
       ) : null}
 
-      <SettingsView
-        hidden={activeTab !== 'settings'}
-        settings={settings}
-        isLoggedIn={isLoggedIn}
-        agentName={agentName}
-        onLogin={onLogin}
-        onLogout={onLogout}
-        onSettingsChange={onSettingsChange}
-      />
+      {!isLoggedIn || activeTab === 'settings' ? (
+        <SettingsView
+          hidden={activeTab !== 'settings'}
+          settings={settings}
+          isLoggedIn={isLoggedIn}
+          user={user}
+          agentName={agentName}
+          onHome={() => onTabChange('home')}
+          onLogin={onLogin}
+          onUserChange={onUserChange}
+          onSettingsChange={onSettingsChange}
+          onLogout={onLogout}
+        />
+      ) : null}
 
       <Suspense fallback={<LazyTabFallback />}>
         {visited.has('chat') ? (
           <ChatView
             hidden={activeTab !== 'chat'}
-            isLoggedIn={isLoggedIn}
             agentName={agentName}
             url={settings.url}
+            chatbotIds={user?.chatbotIds}
+            configId={chatConfigId}
+            onConfigId={setChatConfigId}
+            pendingPrompt={pendingChatPrompt}
+            onConsumePrompt={handleConsumePrompt}
           />
         ) : null}
 
@@ -158,6 +194,7 @@ export function TabWorkspace({
             hidden={activeTab !== 'bulk'}
             settings={settings}
             userLogin={userLogin}
+            notifications={notifications}
           />
         ) : null}
 
@@ -166,6 +203,7 @@ export function TabWorkspace({
             hidden={activeTab !== 'administration'}
             url={settings.url ?? ''}
             user={user}
+            onHome={() => onTabChange('home')}
             onCurrentUserPasswordChange={onCurrentUserPasswordChange}
             onUserChange={onUserChange}
           />
@@ -178,7 +216,11 @@ export function TabWorkspace({
         ) : null
       )}
 
-      {readerTarget ? <ActivityReaderOverlay target={readerTarget} /> : null}
+      {readerTarget ? (
+        <Suspense fallback={null}>
+          <ActivityReaderOverlay target={readerTarget} />
+        </Suspense>
+      ) : null}
     </>
   )
 }

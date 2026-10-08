@@ -11,7 +11,7 @@ export function registerDatastoreHandlers(partition: string): void {
   ipcMain.handle(IpcChannel.datastore.tables, async (_, { url }: { url: string }) => {
     const ses = session.fromPartition(partition)
     try {
-      const resp = await netFetch(`${url}/desktop/datastore/tables`, {
+      const resp = await netFetch(`${url}/datastore`, {
         session: ses
       })
       if (!resp.ok) return null

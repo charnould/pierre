@@ -87,19 +87,25 @@ async function renderTrigger(unreadCount: number) {
   const host = document.createElement('div')
   document.body.append(host)
   const root = createRoot(host)
+  const view = (count: number) => (
+    <TooltipProvider>
+      <ActivityRailProvider>
+        <ActivityNotificationsTrigger unreadCount={count} />
+      </ActivityRailProvider>
+    </TooltipProvider>
+  )
   await act(async () => {
-    root.render(
-      <TooltipProvider>
-        <ActivityRailProvider>
-          <ActivityNotificationsTrigger unreadCount={unreadCount} />
-        </ActivityRailProvider>
-      </TooltipProvider>
-    )
+    root.render(view(unreadCount))
   })
 
   return {
     act,
     host,
+    async rerender(count: number) {
+      await act(async () => {
+        root.render(view(count))
+      })
+    },
     async unmount() {
       await act(async () => {
         root.unmount()
@@ -110,6 +116,72 @@ async function renderTrigger(unreadCount: number) {
 }
 
 describe('ActivityNotificationsTrigger', () => {
+  test('bursts only when unread increases and cancels before retriggering', async () => {
+    const originalAnimate = HTMLElement.prototype.animate
+    const cancel = mock(() => {})
+    const animate = mock(
+      (_keyframes: Keyframe[], _options?: number | KeyframeAnimationOptions) =>
+        ({ cancel }) as unknown as Animation
+    )
+    HTMLElement.prototype.animate = animate
+
+    try {
+      const trigger = await renderTrigger(0)
+      expect(animate).not.toHaveBeenCalled()
+
+      await trigger.rerender(1)
+      expect(animate).toHaveBeenCalledTimes(1)
+      expect(animate.mock.calls[0]?.[1]).toEqual({
+        duration: 300,
+        easing: 'cubic-bezier(0.77, 0, 0.175, 1)'
+      })
+
+      await trigger.rerender(2)
+      expect(cancel).toHaveBeenCalledTimes(1)
+      expect(animate).toHaveBeenCalledTimes(2)
+
+      await trigger.rerender(1)
+      expect(animate).toHaveBeenCalledTimes(2)
+
+      await trigger.act(async () =>
+        trigger.host.querySelector<HTMLButtonElement>('button')?.click()
+      )
+      expect(animate).toHaveBeenCalledTimes(2)
+      await trigger.unmount()
+    } finally {
+      HTMLElement.prototype.animate = originalAnimate
+    }
+  })
+
+  test('does not burst when reduced motion is requested', async () => {
+    const originalAnimate = HTMLElement.prototype.animate
+    const originalMatchMedia = window.matchMedia
+    const animate = mock(() => ({ cancel() {} }) as unknown as Animation)
+    HTMLElement.prototype.animate = animate
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes('prefers-reduced-motion'),
+      media: query,
+      onchange: null,
+      addEventListener() {},
+      removeEventListener() {},
+      addListener() {},
+      removeListener() {},
+      dispatchEvent() {
+        return false
+      }
+    })) as typeof window.matchMedia
+
+    try {
+      const trigger = await renderTrigger(0)
+      await trigger.rerender(1)
+      expect(animate).not.toHaveBeenCalled()
+      await trigger.unmount()
+    } finally {
+      HTMLElement.prototype.animate = originalAnimate
+      window.matchMedia = originalMatchMedia
+    }
+  })
+
   test('toggles the notification center from the bell', async () => {
     const trigger = await renderTrigger(0)
     const button = trigger.host.querySelector<HTMLButtonElement>('button')
@@ -117,6 +189,7 @@ describe('ActivityNotificationsTrigger', () => {
     expect(button?.getAttribute('aria-pressed')).toBe('false')
     await trigger.act(async () => button?.click())
     expect(button?.getAttribute('aria-pressed')).toBe('true')
+    expect(button?.className).toContain('aria-pressed:bg-muted')
     await trigger.act(async () => button?.click())
     expect(button?.getAttribute('aria-pressed')).toBe('false')
 

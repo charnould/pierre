@@ -1,4 +1,4 @@
-import type { ActivitiesListResponse } from '../../src/shared/types/activites'
+import type { ActivitiesListResponse } from '../../src/shared/types/activities'
 import type { SettingsStore } from './settings-store'
 
 /** Same cadence as the renderer inbox poll (`useNotifications`). */
@@ -91,7 +91,7 @@ export function createNotificationBadgePoller(
   }
 }
 
-/** Inbox rows already filtered to unread when `unread_only=true`. */
+/** Inbox rows already filtered to unread when `unreadOnly=true`. */
 export function countUnreadRows(data: ActivitiesListResponse['data']): number {
   return data.filter((row) => row.read === false).length
 }

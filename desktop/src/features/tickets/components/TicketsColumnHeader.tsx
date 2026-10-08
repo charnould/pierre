@@ -12,7 +12,6 @@ interface Props {
   table: AnyPierreTable
   title: string
   columnName: string
-  align?: 'left' | 'right'
   url?: string
   columnFilters?: ColumnFilters
   onColumnFiltersChange?: (filters: ColumnFilters) => void
@@ -25,7 +24,6 @@ export function TicketsColumnHeader({
   table,
   title,
   columnName,
-  align = 'left',
   url,
   columnFilters,
   onColumnFiltersChange
@@ -36,8 +34,7 @@ export function TicketsColumnHeader({
   return (
     <DataColumnHeader
       title={title}
-      align={align}
-      titleClassName="truncate font-normal text-muted-foreground"
+      column={column}
       optionsMenu={
         <TicketColumnFilter
           column={column}

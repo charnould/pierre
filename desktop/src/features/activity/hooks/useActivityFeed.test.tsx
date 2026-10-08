@@ -5,7 +5,7 @@ import { relative, resolve } from 'node:path'
 import { JSDOM } from 'jsdom'
 
 import { clearUpdatesCache } from '@/features/updates/lib/github-updates'
-import type { ActiviteListItem, GetActivitiesParams } from '@/shared/types/activites'
+import type { ActivityListItem, GetActivitiesParams } from '@/shared/types/activities'
 import type { Settings } from '@/shared/types/settings'
 
 import { useActivityFeed } from './useActivityFeed'
@@ -55,10 +55,10 @@ afterAll(() => {
   savedGlobals = null
 })
 
-function activityRow(id: number, read: boolean): ActiviteListItem {
+function activityRow(id: number, read: boolean): ActivityListItem {
   return {
     id,
-    date_creation: '2026-07-26T10:00:00.000Z',
+    createdAt: '2026-07-26T10:00:00.000Z',
     rattachement: 'tickets:REC-1',
     auteur: 'agent:alice',
     id_client: null,
@@ -67,7 +67,7 @@ function activityRow(id: number, read: boolean): ActiviteListItem {
     type: 'note.published',
     channel: null,
     mentions: [{ destinataire: 'user:alice@pierre.test' }],
-    contenu: JSON.stringify({ version: 2, text: 'coucou' }),
+    contenu: JSON.stringify({ version: 1, text: 'coucou' }),
     my: { destinataire: 'user:alice@pierre.test' },
     read,
     reaction: null
@@ -372,7 +372,7 @@ describe('inbox paging and the Lues toggle', () => {
     expect(harness.state.activityRequests[0]).toEqual({
       url: 'https://pierre.test',
       inbox: true,
-      unread_only: true,
+      unreadOnly: true,
       limit: 50,
       offset: 0
     })
@@ -382,7 +382,7 @@ describe('inbox paging and the Lues toggle', () => {
     await harness.cleanup()
   })
 
-  test('revealing reads refetches the first page without unread_only', async () => {
+  test('revealing reads refetches the first page without unreadOnly', async () => {
     const harness = await renderFeed()
 
     await harness.settle(async () => {
@@ -393,7 +393,7 @@ describe('inbox paging and the Lues toggle', () => {
     expect(harness.state.activityRequests).toContainEqual({
       url: 'https://pierre.test',
       inbox: true,
-      unread_only: false,
+      unreadOnly: false,
       limit: 50,
       offset: 0
     })
@@ -415,7 +415,7 @@ describe('inbox paging and the Lues toggle', () => {
     expect(harness.state.activityRequests.at(-1)).toEqual({
       url: 'https://pierre.test',
       inbox: true,
-      unread_only: true,
+      unreadOnly: true,
       limit: 50,
       offset: 50
     })
@@ -455,14 +455,10 @@ describe('inbox paging and the Lues toggle', () => {
 })
 
 /**
- * Every `useNotifications` call is a separate copy of the activity list, with its
- * own fetch and its own `refresh`. The app-wide one belongs to `useActivityFeed`;
- * the other two are deliberately narrow, context-scoped fetches. If this list
- * grows, the app has more than one badge source again.
+ * The app-wide store belongs to `useActivityFeed`. A second call would fetch and
+ * refresh a copy the badge cannot see.
  */
 const ALLOWED_CALLERS = [
-  'features/activity/components/ActivityContextNested.tsx',
-  'features/activity/components/RepaymentActivityDrawer.tsx',
   'features/activity/hooks/use-notifications.test.tsx',
   'features/activity/hooks/useActivityFeed.ts'
 ]

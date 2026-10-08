@@ -1,4 +1,10 @@
-import { ipcMain, session } from 'electron'
+import { createWriteStream } from 'node:fs'
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
+import type { ReadableStream as NodeReadableStream } from 'node:stream/web'
+
+import type { DocumentChronologyRow } from '@pierre/shared/repayment-document-fields'
+import { BrowserWindow, dialog, ipcMain, session } from 'electron'
 
 import type {
   LedgerQueryParams,
@@ -34,7 +40,7 @@ export function registerLedgerHandlers(partition: string): void {
     const ses = session.fromPartition(partition)
     const qs = ledgerSearch(params)
     try {
-      const resp = await netFetch(`${url}/desktop/ledger${qs ? `?${qs}` : ''}`, {
+      const resp = await netFetch(`${url}/ledger${qs ? `?${qs}` : ''}`, {
         session: ses
       })
       if (!resp.ok) return null
@@ -49,7 +55,7 @@ export function registerLedgerHandlers(partition: string): void {
     const ses = session.fromPartition(partition)
     const qs = ledgerSearch(params)
     try {
-      const resp = await netFetch(`${params.url}/desktop/ledger/meta${qs ? `?${qs}` : ''}`, {
+      const resp = await netFetch(`${params.url}/ledger/meta${qs ? `?${qs}` : ''}`, {
         session: ses
       })
       if (!resp.ok) return null
@@ -65,14 +71,76 @@ export function registerLedgerHandlers(partition: string): void {
     async (_, params: RepaymentTimelineQueryParams) => {
       const search = new URLSearchParams({ id_locataire: params.id_locataire })
       try {
-        const response = await netFetch(
-          `${params.url}/desktop/repayment/timeline?${search.toString()}`,
-          { session: session.fromPartition(partition) }
-        )
+        const response = await netFetch(`${params.url}/repayment?${search.toString()}`, {
+          session: session.fromPartition(partition)
+        })
         if (!response.ok) return null
         return await response.json()
       } catch (error) {
         logMainError('get-repayment-timeline', error)
+        return null
+      }
+    }
+  )
+
+  ipcMain.handle(
+    IpcChannel.ledger.exportRepaymentDocument,
+    async (
+      _,
+      params: {
+        url: string
+        document: 'diagnostic' | 'plan' | 'protocole'
+        format: 'docx' | 'pdf'
+        dossier: unknown
+        chronologie?: DocumentChronologyRow[]
+      }
+    ) => {
+      try {
+        const response = await netFetch(`${params.url.replace(/\/$/, '')}/repayment/documents`, {
+          session: session.fromPartition(partition),
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            document: params.document,
+            format: params.format,
+            dossier: params.dossier,
+            ...(params.chronologie ? { chronologie: params.chronologie } : {})
+          })
+        })
+        const type = response.headers.get('content-type') ?? ''
+        if (type.includes('application/json') || !response.ok) {
+          return (await response.json()) as { error?: { message?: string } }
+        }
+        const body = response.body
+        if (!body) return { error: { message: 'Export impossible' } }
+        const encoded = /filename\*=UTF-8''([^;]+)/i.exec(
+          response.headers.get('content-disposition') ?? ''
+        )?.[1]
+        const filename = encoded ? decodeURIComponent(encoded) : `document.${params.format}`
+        const parent = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
+        const options = {
+          defaultPath: filename,
+          filters: [
+            {
+              name: params.format === 'pdf' ? 'PDF' : 'Word',
+              extensions: [params.format]
+            }
+          ]
+        }
+        const picked = parent
+          ? await dialog.showSaveDialog(parent, options)
+          : await dialog.showSaveDialog(options)
+        if (picked.canceled || !picked.filePath) {
+          await body.cancel()
+          return { canceled: true as const }
+        }
+        await pipeline(
+          Readable.fromWeb(body as unknown as NodeReadableStream<Uint8Array>),
+          createWriteStream(picked.filePath)
+        )
+        return { saved: true as const }
+      } catch (error) {
+        logMainError('export-repayment-document', error)
         return null
       }
     }

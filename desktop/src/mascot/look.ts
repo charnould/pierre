@@ -1,4 +1,5 @@
-import { parseAvatarHex, type AvatarHex } from '../../../shared/avatar'
+import { type AvatarHex, parseAvatarHex } from '@pierre/shared/avatar'
+
 import { createRng } from './profiles'
 
 export const MASCOT_SHAPES = [
@@ -15,12 +16,6 @@ export const MASCOT_SHAPES = [
 export type MascotShape = (typeof MASCOT_SHAPES)[number]
 
 export const DEFAULT_MASCOT_SHAPE: MascotShape = 'galet'
-
-const LEGACY_SHAPES: Record<string, MascotShape> = {
-  circle: 'cercle',
-  square: 'squircle',
-  blob: 'galet'
-}
 
 /** Bleu acier — lisible sur un bureau Windows clair ou sombre. */
 export const DEFAULT_MASCOT_COLOR: AvatarHex = '#5a7eb5'
@@ -46,9 +41,7 @@ function isMascotShape(value: unknown): value is MascotShape {
 }
 
 export function parseMascotShape(value: unknown): MascotShape | undefined {
-  if (typeof value !== 'string') return undefined
-  if (isMascotShape(value)) return value
-  return LEGACY_SHAPES[value]
+  return isMascotShape(value) ? value : undefined
 }
 
 export function parseMascotColor(value: unknown): MascotColor | undefined {

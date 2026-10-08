@@ -12,9 +12,8 @@ export function readStoredTab(storage: Storage = sessionStorage): Tab | null {
   try {
     const raw = storage.getItem(ACTIVE_TAB_STORAGE_KEY)
     if (!raw) return null
-    const tab = raw === 'outreach' ? 'automations' : raw
-    if (!isTab(tab)) return null
-    return tab
+    if (!isTab(raw)) return null
+    return raw
   } catch (error) {
     warnRenderer('session-tab.readStoredTab', error)
     return null

@@ -6,16 +6,17 @@ import {
   moduleLabelForType
 } from '@/features/activity/lib/notification-labels'
 import {
-  mapActivityRow,
-  type ActivityNotificationItem
+  type ActivityNotificationItem,
+  mapActivityRow
 } from '@/features/activity/lib/notification-types'
 import { toast } from '@/shared/components/ui/toast'
+import { warnRenderer } from '@/shared/lib/renderer-log'
 import type {
-  ActiviteListItem,
-  CreateActivityBody,
-  ActivityContext
-} from '@/shared/types/activites'
-import { mention_of } from '@/shared/types/activites'
+  ActivityContext,
+  ActivityListItem,
+  CreateActivityBody
+} from '@/shared/types/activities'
+import { mentionOf } from '@/shared/types/activities'
 
 import {
   ACTIVITY_PAGE_SIZE,
@@ -37,7 +38,7 @@ export function useNotifications(
   enabled = true,
   unreadOnly = false
 ) {
-  const [rows, setRows] = useState<ActiviteListItem[]>([])
+  const [rows, setRows] = useState<ActivityListItem[]>([])
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(false)
   const rowsRef = useRef(rows)
@@ -71,13 +72,16 @@ export function useNotifications(
       const res = await window.api.getActivities({
         url,
         inbox: true,
-        unread_only: unreadOnly,
+        unreadOnly,
         limit,
         offset: 0
       })
       if (!res || generation !== requestGeneration.current) return
       setRows(res.data)
       setHasMore(pageIsFull(res.data.length, limit))
+    } catch (error) {
+      if (generation !== requestGeneration.current) return
+      warnRenderer('useNotifications.refresh', error)
     } finally {
       if (initial && generation === requestGeneration.current) setLoading(false)
     }
@@ -100,7 +104,7 @@ export function useNotifications(
       const res = await window.api.getActivities({
         url,
         inbox: true,
-        unread_only: unreadOnly,
+        unreadOnly,
         limit: ACTIVITY_PAGE_SIZE,
         offset
       })
@@ -120,7 +124,7 @@ export function useNotifications(
       .getActivities({
         url,
         inbox: true,
-        unread_only: unreadOnly,
+        unreadOnly,
         limit,
         offset: 0
       })
@@ -130,12 +134,17 @@ export function useNotifications(
         setHasMore(pageIsFull(res.data.length, limit))
         setLoading(false)
       })
+      .catch((error) => {
+        if (generation !== requestGeneration.current) return
+        warnRenderer('useNotifications.load', error)
+        setLoading(false)
+      })
     return () => {
       requestGeneration.current += 1
     }
   }, [enabled, unreadOnly, url])
 
-  const replaceRows = useCallback((nextRows: ActiviteListItem[], limit: number) => {
+  const replaceRows = useCallback((nextRows: ActivityListItem[], limit: number) => {
     rowsRef.current = nextRows
     setRows(nextRows)
     setHasMore(pageIsFull(nextRows.length, limit))
@@ -173,8 +182,8 @@ export function useNotifications(
   const destinataire = userLogin.includes(':') ? userLogin : `user:${userLogin}`
 
   const patchMention = useCallback(
-    async (row: ActiviteListItem, patch: { lu?: boolean }, options?: { refresh?: boolean }) => {
-      if (!url || !window.api?.patchActivity || !mention_of(row.mentions, destinataire)) return null
+    async (row: ActivityListItem, patch: { lu?: boolean }, options?: { refresh?: boolean }) => {
+      if (!url || !window.api?.patchActivity || !mentionOf(row.mentions, destinataire)) return null
       const res = await window.api.patchActivity({
         url,
         id: row.id,

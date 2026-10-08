@@ -1,9 +1,9 @@
+import { isDesktopAgentIdentity } from '@pierre/shared/agent-identity'
+
 import { useAgentIdentity } from '@/contexts/AgentIdentityContext'
 import { CollaboratorChip } from '@/shared/components/inspector/collaborator-chip'
 import { formatMentionDisplay, splitTextWithMentions } from '@/shared/lib/activities/mentions'
 import { cn } from '@/shared/lib/utils'
-
-import { isDesktopAgentIdentity } from '../../../../../shared/agent-identity'
 
 function loginKey(raw: string): string {
   const lower = raw.trim().toLowerCase()

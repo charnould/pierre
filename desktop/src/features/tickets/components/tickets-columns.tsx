@@ -1,15 +1,21 @@
 import type { ColumnDef } from '@tanstack/react-table'
 
+import { BoardSelectionCell } from '@/shared/components/board/board-selection'
 import type {
   AnyPierreColumn,
   AnyPierreTable
 } from '@/shared/components/table/column-header-options-menu'
 import type { PierreTableFeatures } from '@/shared/components/table/table-features'
 import { UnreadPingIndicator } from '@/shared/components/table/UnreadPingIndicator'
-import { getTicketCell } from '@/shared/lib/ticket-row'
+import { getTicketCell, getTicketId } from '@/shared/lib/ticket-row'
 import { resolveTicketColumnLabel, type UiSettings } from '@/shared/lib/ui-settings/schema'
 import type { ColumnFilters } from '@/shared/lib/ui-settings/tickets-table'
-import { TICKET_TABLE_ALERT_COLUMN_ID } from '@/shared/lib/ui-settings/tickets-table'
+import {
+  TICKET_TABLE_ALERT_COLUMN_ID,
+  TICKET_TABLE_ALERT_COLUMN_WIDTH,
+  TICKET_TABLE_SELECTION_COLUMN_ID,
+  TICKET_TABLE_SELECTION_COLUMN_WIDTH
+} from '@/shared/lib/ui-settings/tickets-table'
 import type { TicketRow, TicketsColumnMeta } from '@/shared/types'
 
 import { TicketCellValue } from './TicketCellValue'
@@ -50,6 +56,24 @@ export type BuildTicketsColumnsOptions = {
   hasUnread?: (row: TicketRow) => boolean
 }
 
+function buildSelectionColumn(): ColumnDef<PierreTableFeatures, TicketRow> {
+  return {
+    id: TICKET_TABLE_SELECTION_COLUMN_ID,
+    enableHiding: false,
+    enableSorting: false,
+    enableResizing: false,
+    minSize: TICKET_TABLE_SELECTION_COLUMN_WIDTH,
+    maxSize: TICKET_TABLE_SELECTION_COLUMN_WIDTH,
+    size: TICKET_TABLE_SELECTION_COLUMN_WIDTH,
+    header: () => <span className="sr-only">Sélection</span>,
+    cell: ({ row }) => {
+      const id = getTicketId(row.original)
+      if (!id) return null
+      return <BoardSelectionCell id={id} label={`Sélectionner la réclamation ${id}`} />
+    }
+  }
+}
+
 function buildAlertColumn(
   hasUnread: NonNullable<BuildTicketsColumnsOptions['hasUnread']>
 ): ColumnDef<PierreTableFeatures, TicketRow> {
@@ -57,9 +81,11 @@ function buildAlertColumn(
     id: TICKET_TABLE_ALERT_COLUMN_ID,
     accessorFn: (row) => (hasUnread(row) ? 1 : 0),
     enableHiding: false,
-    enableSorting: true,
+    enableSorting: false,
     enableResizing: false,
-    size: 40,
+    minSize: TICKET_TABLE_ALERT_COLUMN_WIDTH,
+    maxSize: TICKET_TABLE_ALERT_COLUMN_WIDTH,
+    size: TICKET_TABLE_ALERT_COLUMN_WIDTH,
     header: () => <span className="sr-only">Notifications non lues</span>,
     cell: ({ row }) => {
       const unread = hasUnread(row.original)
@@ -117,5 +143,9 @@ export function buildTicketsColumns(
     }
   })
 
-  return [buildAlertColumn(options.hasUnread ?? (() => false)), ...dataColumns]
+  return [
+    buildSelectionColumn(),
+    buildAlertColumn(options.hasUnread ?? (() => false)),
+    ...dataColumns
+  ]
 }

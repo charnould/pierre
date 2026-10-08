@@ -2,6 +2,15 @@ export type UpdatesNotifyScope = 'off' | 'all'
 
 export const DEFAULT_UPDATES_NOTIFY_SCOPE: UpdatesNotifyScope = 'all'
 
+export interface DictationSettings {
+  enabled?: boolean
+  /** `default` or a `MediaDeviceInfo.deviceId`. */
+  deviceId?: string
+  /** Chord such as `Alt+Space`, stored from `KeyboardEvent.code`. */
+  shortcut?: string
+  pushToTalk?: boolean
+}
+
 export interface Settings {
   url?: string
   email?: string
@@ -12,6 +21,7 @@ export interface Settings {
   showOwnActivity?: boolean
   /** Canonical `user:email` authors followed in the activity center. */
   followedActivityAuthors?: string[]
+  dictation?: DictationSettings
 }
 
 /** Changelog notifications are always on: they cannot be turned off. */

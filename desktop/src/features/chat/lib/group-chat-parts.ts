@@ -1,3 +1,5 @@
+import { dropTextBeforeLastTool } from '@pierre/shared/ai-stream-events'
+
 import type {
   ChatMessagePart,
   ChatTextPart,
@@ -5,13 +7,10 @@ import type {
   ChatToolPart
 } from '@/features/chat/lib/chat-session-types'
 
-import { dropTextBeforeLastTool } from '../../../../../shared/ai-stream-events'
-
 type ChatWorkPart = ChatThinkingPart | ChatToolPart
 
 export type ChatRenderGroup =
-  | { type: 'text'; part: ChatTextPart }
-  | { type: 'work'; parts: ChatWorkPart[] }
+  { type: 'text'; part: ChatTextPart } | { type: 'work'; parts: ChatWorkPart[] }
 
 export function groupChatParts(parts: ChatMessagePart[]): ChatRenderGroup[] {
   const groups: ChatRenderGroup[] = []

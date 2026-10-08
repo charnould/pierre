@@ -2,9 +2,9 @@ import type { ColumnVisibilityState } from '@/shared/lib/ui-settings/tickets-tab
 
 import type { TicketsTableSettings } from './schema'
 import {
-  DEFAULT_PINNED_COLUMNS,
+  type ColumnFilters,
   columnVisibilityToHiddenColumns,
-  type ColumnFilters
+  DEFAULT_PINNED_COLUMNS
 } from './tickets-table'
 
 /** Local table preference state mirrored optimistically before persistence. */
