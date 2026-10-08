@@ -112,15 +112,15 @@ Un RCS s’envoie depuis PIERRE (`Envoyer` → `Message envoyé`). Un e-mail CAF
 
 Le formulaire couvre notamment :
 
-| Rubrique             | Points à renseigner                                                                        |
-| -------------------- | ------------------------------------------------------------------------------------------ |
-| `Dispositif`         | `Plan d'apurement` ou `Protocole de cohésion sociale` ; `Bail` ou `Accession`.             |
-| `Logement`           | Adresse, code postal, ville.                                                               |
-| `Situation locative` | Dette, date du premier impayé, commandement, CCAPEX, travailleur social, Banque de France. |
-| `Foyer`              | Identifiants, adultes, enfants.                                                            |
-| `Budget du foyer`    | Ressources, charges ; PIERRE calcule reste à vivre et UC.                                  |
-| `Aides`              | FSL, Action Logement, etc.                                                                 |
-| `Échéancier`         | Ajouter ou retirer des échéances (n°, date, montant).                                      |
+| Rubrique             | Points à renseigner                                                                                                                      |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `Dispositif`         | `Plan d'apurement` ou `Protocole de cohésion sociale` ; `Bail` ou `Accession`.                                                           |
+| `Logement`           | Adresse, identifiant du patrimoine, code postal, ville.                                                                                  |
+| `Situation locative` | Dette, date du premier impayé, commandement, CCAPEX, travailleur social, Banque de France.                                               |
+| `Foyer`              | Identifiants, adultes, enfants.                                                                                                          |
+| `Budget du foyer`    | Ressources, charges ; PIERRE calcule reste à vivre et UC.                                                                                |
+| `Aides`              | FSL, Action Logement, etc.                                                                                                               |
+| `Échéancier`         | Ajouter ou retirer des échéances (n°, date, montant). Au-delà de 24 mensualités, confirmation : réservé aux minima sociaux (maximum 36). |
 
 En bas : interrupteur `Plan ou protocole signé`, `Retirer` (brouillon), `Clôturer` (motifs : `Exécution terminée`, `Non-respect`, `Remplacé par un nouveau plan`, `Effacement de dette`), `Exporter en .docx`, `Enregistrer` ou `Enregistrer avec une note`.
 

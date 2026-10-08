@@ -37,26 +37,58 @@ Le DNS du nom choisi doit pointer vers le serveur, **sans proxy**. Les ports `80
 Connecté en root :
 
 ```bash
-curl -fsSL https://github.com/charnould/pierre/releases/download/cli-0.9.4/install.sh | sh
+curl -fsSL https://github.com/charnould/pierre/releases/download/cli-0.9.6/install.sh | sh
 ```
 
 L'installation s'arrête tout de suite si la machine n'est pas `x86_64` ou si `/dev/kvm` est absent. Sinon elle demande de coller un bloc `dotenv` complet, terminé par `END` :
 
+Préparer quatre secrets distincts avec la même commande, lancée une fois pour chacun :
+
+```bash
+openssl rand -hex 32
+```
+
 ```dotenv
 HOST=assistant.exemple.org
-AUTH_PASSWORD=mot-de-passe-initial
-AUTH_SECRET=AUTO
-AUTH_BEARER=AUTO
+AUTH_PASSWORD=<openssl rand -hex 32>
+AUTH_SECRET=<openssl rand -hex 32>
+AUTH_BEARER=<openssl rand -hex 32>
 AI_TYPE=anthropic
 AI_BASE_URL=https://api.anthropic.com
 AI_API_KEY=cle-api
-CM_PRODUCT_TOKEN=
-CM_FROM=
-CM_WEBHOOK_SECRET=AUTO
+CM_RCS_PRODUCT_TOKEN=
+CM_RCS_FROM=
+CM_RCS_WEBHOOK_SECRET=
+CM_EMAIL_PRODUCT_TOKEN=
+CM_EMAIL_WEBHOOK_SECRET=
 END
 ```
 
-Les dix clés sont obligatoires. `AUTO` génère les secrets techniques lors de la première installation. Laisser les trois variables CM vides — `AUTO` est accepté pour le secret — désactive CM.com ; renseigner CM nécessite un Product Token UUID, un expéditeur et un secret ou `AUTO`.
+# LARGE LANGUAGE MODEL + API KEY
+
+#
+
+# Le type de modèle de langage à utiliser.
+
+# "openai" fonctionne avec tous les modèles de langage compatibles avec l'API d'OpenAI,
+
+# y compris ceux d'autres fournisseurs compatibles avec cette API.
+
+#
+
+# "anthropic" fonctionne avec les modèles de langage d'Anthropic.
+
+AI_TYPE=openai
+
+# L'url de base de l'API du modèle de langage référencé ci-dessus.
+
+# Si vous utilisez Anthropic : https://api.anthropic.com
+
+# Si vous utilisez OpenAI : https://api.openai.com/v1
+
+# Si vous utilisez un fournisseur compatible avec l'API d'OpenAI : renseignez ici l'url de base de l'API de ce fournisseur.
+
+Les douze clés sont obligatoires. `AUTO` n’existe pas. Laisser un groupe CM entièrement vide le désactive. Le groupe RCS est `CM_RCS_PRODUCT_TOKEN`, `CM_RCS_FROM` et `CM_RCS_WEBHOOK_SECRET`. Le groupe email est `CM_EMAIL_PRODUCT_TOKEN` et `CM_EMAIL_WEBHOOK_SECRET`. Un groupe entamé doit être complet. Les Product Tokens et le secret webhook email se copient depuis CM.com. `CM_RCS_WEBHOOK_SECRET` se recolle dans CM.com.
 
 Le collage est masqué. PIERRE parse le texte sans l'exécuter, teste le fournisseur LLM puis affiche un récapitulatif sans secret avant l'installation.
 

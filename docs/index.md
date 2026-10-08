@@ -1,14 +1,14 @@
 # PIERRE
 
-## Une application agentique, open source et gratuite au service du mouvement HLM
+## Une application agentique, open code et gratuite au service du mouvement HLM
 
 1. **Un outil pour tous les métiers** : réclamations, impayés, relocation, assurance-habitation… PIERRE réunit les équipes dans une interface cohérente et nativement collaborative, avec les mêmes repères d’un processus à l’autre. Une **application « User-First »** conçue pour simplifier le quotidien des collaborateurs et renforcer la performance opérationnelle.
 
 2. **Une application également « AI-First »** : l’intelligence artificielle de votre choix comprend les dossiers, prépare les actions et les communications, automatise les tâches répétitives et attire l’attention de la bonne personne au bon moment au bon endroit. **Nativement agentique**, PIERRE ne se contente pas de répondre : il contribue et fluidifie la mise en oeuvre **de vos processus** aux côtés des équipes, et accompagne les locataires 24/7/365.
 
-3. **Un triple socle mutualisé pour accélérer tout le mouvement HLM** : [Core Data HLM](./02-core-data-hlm/index.md) donne aux IA un langage commun pour lire et comprendre les données-métier, sans multiplier les exports SI. [Core Models HLM](./03-core-models-hlm/index.md), une famille de modèles de langage open source, ultra-compacts et hyper-spécialisés, conçus pour accélérer et améliorer certaines tâches concrètes et chronophages du mouvement HLM. [Core Intelligence HLM](./04-core-intelligence-hlm/index.md) réunit les connaissances et les instructions qui leur permettent de raisonner et d’agir dans les processus. Évolutifs et enrichis en continu par les organismes, ces deux socles transforment chaque contribution locale en progrès collectif.
+3. **Un triple socle mutualisé pour accélérer tout le mouvement HLM** : [Core Data HLM](./02-core-data-hlm/index.md) donne aux IA un langage commun pour lire et comprendre les données-métier, sans multiplier les exports SI. [Core Models HLM](./03-core-models-hlm/index.md), une famille de modèles de langage open weight, ultra-compacts et hyper-spécialisés, conçus pour accélérer et améliorer certaines tâches concrètes et chronophages du mouvement HLM. [Core Intelligence HLM](./04-core-intelligence-hlm/index.md) réunit les connaissances et les instructions qui leur permettent de raisonner et d’agir dans les processus. Évolutifs et enrichis en continu par les organismes, ces deux socles transforment chaque contribution locale en progrès collectif.
 
-4. **Un « multiple commun numérique HLM », libre, souverain et gratuit** : code open source, auditable et adaptable, auto-hébergement, maîtrise des données, libre choix du modèle d’IA, compatible RGPD et conforme aux exigences de l'IA act de l'UE. Aucun bailleur n’est captif d’un éditeur. **Chaque euro disponible est mobilisé pour financer l'activité patrimoniale et améliorer la qualité de service rendue au locataire.**
+4. **Un « multiple commun numérique HLM », libre, souverain et gratuit** : open code, auditable et adaptable, auto-hébergement, maîtrise des données, libre choix du modèle d’IA, compatible RGPD et conforme aux exigences de l'IA act de l'UE. Aucun bailleur n’est captif d’un éditeur. **Chaque euro disponible est mobilisé pour financer l'activité patrimoniale et améliorer la qualité de service rendue au locataire.**
 
 ![L'écran d'accueil de PIERRE depuis lequel on accède aux différents modules](./assets/index/accueil.png)
 
@@ -28,7 +28,7 @@ Depuis plus d'un siècle, le mouvement HLM bâtit un patrimoine commun, et des m
 
 Les bailleurs sociaux — davantage confrères que concurrents — **partagent les mêmes métiers et les mêmes défis quotidiens**. Un plan d'apurement, une procédure d'astreinte, un état des lieux ou un parcours-locataire peuvent comporter des spécificités locales, mais reposent partout sur un même socle-métier. Pendant des décennies, chacun a pourtant financé (et souvent plusieurs fois) des logiciels répondant imparfaitement aux mêmes besoins. Les dettes technniques se sont accumulées, **et les évolutions sont devenues toujours plus longues, coûteuses et complexes**. À l'image d'un directeur général d’organisme HLM qui oublierait ce qu’est le métier réel d'un gardien, les éditeurs logiciels ont oublié le terrain.
 
-Le mouvement HLM a inventé les « _communs immobiliers_ », il peut désormais inventer et mutualiser ses « _communs numériques open source_ » que chacun est libre d'utiliser, d'améliorer et d'adapter à ses besoins. **PIERRE constitue _la première pierre_ de cette ambition**.
+Le mouvement HLM a inventé les « _communs immobiliers_ », il peut désormais inventer et mutualiser ses « _communs numériques open code_ » que chacun est libre d'utiliser, d'améliorer et d'adapter à ses besoins. **PIERRE constitue _la première pierre_ de cette ambition**.
 
 ### Pas de données. Pas d’innovation technologique.
 
@@ -58,7 +58,7 @@ Le mouvement HLM n'a pas les contraintes de Wall Street : pas de trading haute f
 
 Le modèle historique des logiciels HLM repose sur des licences, des projets d'intégration coûteux, une forte dépendance à l'éditeur et une innovation très lente.
 
-PIERRE prend le contre-pied : **le logiciel est librement accessible en open source (gratuit)**, il peut être téléchargé, installé, modifié, et amélioré librement par n'importe quel bailleur social. Pour que chaque euro serve d'abord à financer l'activité patrimoniale et améliorer la qualité de service rendue au locataire. Quant à la **gouvernance** : n'y aurait-il pas là quelque chose d'innovant à inventer au croisement de l'USH, des fédérations, des acteurs et de ses besoins ?
+PIERRE prend le contre-pied : **le logiciel est librement accessible en open code (gratuit)**, il peut être téléchargé, installé, modifié, et amélioré librement par n'importe quel bailleur social. Pour que chaque euro serve d'abord à financer l'activité patrimoniale et améliorer la qualité de service rendue au locataire. Quant à la **gouvernance** : n'y aurait-il pas là quelque chose d'innovant à inventer au croisement de l'USH, des fédérations, des acteurs et de ses besoins ?
 
 ### Souveraineté, sécurité et protection des données. By design
 
@@ -86,12 +86,10 @@ _Bientôt avec Grand Dijon Habitat._
 
 ## Licence
 
-Les différents composants de PIERRE — code source, modèles, données, taxonomies, prompts et ressources associées — sont distribués sous des licences adaptées à leur nature et à leurs usages.
+Un bailleur social peut utiliser PIERRE gratuitement pour son activité. Pour les autres cas d’usage, les conditions sont exposées dans la [licence](../LICENSE.md).
 
-La philosophie de PIERRE repose sur des licences ouvertes, notamment l’`AGPLv3` et les licences `Creative Commons`. La licence applicable est précisée individuellement pour chaque composant.
+« Core Data HLM », « Core Intelligence HLM », la taxonomie de CARL et la documentation sont sous licence [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.fr). Les bibliothèques tierces restent sous leur licence propre.
 
-Les usages commerciaux par des tiers qui ne sont pas des bailleurs sociaux peuvent être soumis à une licence commerciale spécifique.
+PIERRE s'appuie sur de nombreuses bibliothèques open source ; elles sont toutes listées dans les `package.json` du dépôt GitHub. Merci à leurs créateurs et _mainteneurs_ qui [soutiennent l'infrastructure logicielle mondiale](https://xkcd.com/2347).
 
-PIERRE s'appuie sur de nombreuses bibliothèques open source ; elles sont toutes listées dans les `package.json` du dépôt. Merci à leurs créateurs et _mainteneurs_ qui [soutiennent l'infrastructure logicielle mondiale](https://xkcd.com/2347/).
-
-Copyright © 2024-aujourd'hui · Charles-Henri Arnould/BECKREL SAS et les contributeurs.
+Copyright © 2024-aujourd’hui · Charles-Henri Arnould/BECKREL SAS et les contributeurs.

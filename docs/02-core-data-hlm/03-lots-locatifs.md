@@ -1,48 +1,53 @@
 ##### [PIERRE](../index.md) ∕ [CORE DATA HLM](index.md) ∕ LOTS_LOCATIFS
 
-# `lots_locatifs`
+# `core.lots_locatifs.csv`
+
+> v1.0.0 (2026-10-10)
 
 ## Objectif
 
-Décrire le patrimoine locatif **et** l’état courant d’occupation de chaque lot (vacance, assurance habitation, coordonnées du locataire en place) à l’instant T. La table logique est `lots_locatifs` ; le fichier transmis à PIERRE est `core.lots_locatifs.csv`.
+Décrire le patrimoine locatif **et** l’état courant d’occupation de chaque lot (vacance, assurance habitation, coordonnées du locataire en place) à l’instant T.
+
+Le fichier doit être nommé `core.lots_locatifs.csv`.
 
 ## Un rôle dual : patrimoine + occupation
 
 `lots_locatifs` fusionne **patrimoine + occupation** en un seul export : chaque lot porte ses caractéristiques statiques et son état dynamique, ce qui élimine les jointures pour la plupart des cas d'usage.
 
-**Fraîcheur des données** : une **mise à jour quotidienne** de ce fichier est recommandée pour que la vacance, les coordonnées locataire et les échéances d'assurance reflètent la réalité opérationnelle. Le champ `date_extraction` (socle partagé) ancre l'instant T de cette photographie.
+**Fraîcheur des données** : un **export quotidien** de ce fichier est recommandé pour que la vacance, les coordonnées du locataire et les échéances d'assurance habitation reflètent la réalité opérationnelle. Le champ `date_extraction` (socle partagé) ancre l'instant T de cette photographie.
 
 ## Entité logique
 
-Une ligne = un **lot** (logement, garage, commerce…) — la granularité de gestion locative. Le bailleur choisit son périmètre : tout le parc ou un sous-ensemble (par type, localisation, statut, etc.).
+Une ligne = un **lot** (logement, garage, commerce…) — la granularité de gestion locative.  
+Le bailleur choisit son périmètre : tout le parc ou un sous-ensemble (par type, localisation, statut, etc.).
 
 ## Colonnes normatives
 
 `lots_locatifs` reprend l'intégralité du **socle normatif partagé** et y ajoute les colonnes obligatoires ci-dessous. Toutes doivent figurer dans l'export ([présence obligatoire](01-conventions.md#colonnes-requises-et-définitions-canoniques)) ; leurs valeurs peuvent être `null` (ex. lot vacant, RGPD, etc.).
 
-| Champ                             | Définition canonique                                                                                                              |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `statut`                          | Valeurs autorisées : `null`, `a_vendre`, `a_demolir` `a_livrer`                                                                   |
-| `nom_locataire`                   | Nom du locataire en place (ex. `Becquerel`) ; `null` si vacant                                                                    |
-| `email_locataire`                 | Courriel du locataire en place (ex. `henri.becquerel@gmail.com`) ; `null` si vacant                                               |
-| `telephone_locataire`             | Téléphone du locataire en place, de préférence mobile (ex. `06 11 56 39 59`) ; `null` si vacant                                   |
-| `allocataire_caf`                 | 384838849030493 ou `null`                                                                                                         |
-| `demande_sne`                     | 939492939399 ou `null`                                                                                                            |
-| `expiration_assurance_habitation` | Date d’échéance ou de renouvellement de l’assurance habitation (ex. `2026-12-12`) ; `null` si vacant                              |
-| `adresse`                         | Adresse du lot hors commune et code postal (ex. `21, rue des Pyramides`)                                                          |
-| `debut_bail`                      | Date de début du quittancement (ex. `2026-12-12`) ; `null` si vacant                                                              |
-| `etat_des_lieux_entrant`          | Date de l'état des lieux entrant du locataire (ex. `2026-12-12`) ; `null` si vacant                                               |
-| `pre_etat_des_lieux_sortant`      | Date de la visite-conseil du locataire (ex. `2026-12-12`) ; `null` si vacant                                                      |
-| `etat_des_lieux_sortant`          | Date de l'état des lieux sortant du locataire (ex. `2026-12-12`) ; `null` si vacant                                               |
-| `fin_bail`                        | Date de fin du quittancement (ex. `2026-12-12`) ; `null` si vacant                                                                |
-| `surface_en_m2`                   | Surface du lot en m² ; renseignée pour tous les lots (y compris vacants)                                                          |
-| `loyer_mensuel_en_euros`          | Loyer mensuel en vigueur en euros (avec ou sans charges, au choix du bailleur) ; renseigné pour tous les lots (y compris vacants) |
+| Champ                                 | Définition canonique                                                                                 |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `statut`                              | Valeurs autorisées : `null`, `a_vendre`, `a_demolir` `a_livrer`                                      |
+| `nom_locataire`                       | Nom du locataire en place (ex. `Becquerel`) ; `null` si vacant                                       |
+| `email_locataire`                     | Courriel du locataire en place (ex. `henri.becquerel@gmail.com`) ; `null` si vacant                  |
+| `telephone_locataire`                 | Téléphone du locataire en place, de préférence mobile (ex. `+33611563959`) ; `null` si vacant        |
+| `allocataire_caf`                     | 384838849030493 ou `null` ; `null` si vacant                                                         |
+| `demande_sne`                         | 939492939399 ou `null` ; `null` si vacant                                                            |
+| `expiration_assurance_habitation`     | Date d’échéance ou de renouvellement de l’assurance habitation (ex. `2026-12-12`) ; `null` si vacant |
+| `adresse`                             | Adresse du lot hors commune et code postal (ex. `20, rue des Pyramides`)                             |
+| `debut_bail`                          | Date de début du quittancement (ex. `2026-12-12`) ; `null` si vacant                                 |
+| `etat_des_lieux_entrant`              | Date de l'état des lieux entrant du locataire (ex. `2026-12-12`) ; `null` si vacant                  |
+| `pre_etat_des_lieux_sortant`          | Date de la visite-conseil du locataire (ex. `2026-12-12`) ; `null` si vacant                         |
+| `etat_des_lieux_sortant`              | Date de l'état des lieux sortant du locataire (ex. `2026-12-12`) ; `null` si vacant                  |
+| `fin_bail`                            | Date de fin du quittancement (ex. `2026-12-12`) ; `null` si vacant                                   |
+| `surface_en_m2`                       | Surface du lot en m² ; renseignée pour tous les lots (y compris vacants)                             |
+| `loyer_mensuel_avec_charges_en_euros` | Loyer mensuel en vigueur avec charges en euros ; renseigné pour tous les lots (y compris vacants)    |
 
 ## Règles d’occupation et vacance
 
 **Définition de la vacance**
 
-Seul `id_locataire` et `id_client` font foi (`null` ou vide). Ne pas créer de colonne redondante du type `est_loue` ou `vacant` : c'est une redondance qui risque de confondre PIERRE.
+Seul `id_locataire` et `id_client` font foi (`null` ou vide). Ne pas créer de colonne redondante du type `est_loue` ou `vacant` : c'est une redondance qui risque de confondre un agent IA.
 
 **Conséquences (champs null lors de vacance)**
 
@@ -50,9 +55,11 @@ Lot vacant : les colonnes suivantes doivent être `null` : `id_client`, `id_loca
 
 **Exception (caractéristiques du lot restent renseignées)**
 
-`surface_en_m2` et `loyer_mensuel_en_euros` restent renseignés même si le lot est vacant : ce sont les propriétés du lot lui-même, pas de l'occupant actuel.
+`surface_en_m2` et `loyer_mensuel_avec_charges_en_euros` restent renseignés même si le lot est vacant : ce sont les propriétés du lot lui-même, pas de l'occupant actuel.
 
 ## Exemples de colonnes libres
+
+> Ces colonnes ne sont pas obligatoires, il s'agit de suggestions pour enrichir `core.lots_locatifs.csv`.
 
 **Gestion patrimoniale**
 
@@ -60,7 +67,7 @@ Lot vacant : les colonnes suivantes doivent être `null` : `id_client`, `id_loca
 - `typologie` : T1, T2, T3, T3bis
 - `financement` : PLAI, PLUS, PLS, Libre
 - `adaptation_handicap` : logement labellisable HSS, logement labellisé HSS
-- `chauffage` : collectif ou individuel
+- `chauffage` : collectif, individuel
 - `ascenseur` : oui, non
 - `prestataire_de_chauffage` : Iserba, X, Y
 
@@ -78,7 +85,7 @@ Lot vacant : les colonnes suivantes doivent être `null` : `id_client`, `id_loca
 
 **Localisation et zones**
 
-- `quartier_prioritaire_de_la_ville_(QPV)` : Résidence A, Résidence X…
+- `quartier_prioritaire_de_la_ville_(QPV)` : oui, non
 - `zone_anru` : oui, non
 - `incivilite` : oui, non
 

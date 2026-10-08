@@ -1,0 +1,1 @@
+- [ ] J'accepte les conditions de [CONTRIBUTING.md](../blob/master/CONTRIBUTING.md).

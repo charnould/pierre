@@ -50,11 +50,11 @@
     "Attente prestataire",
     "Attente locataire"
   ],
+  "email_from": "reclamation@mail.dribble.football",
   "external_application": {
     "name": "Ouvrir TextEdit",
     "transport": "external",
     "clipboard": true,
     "url": "/System/Applications/TextEdit.app"
-  },
-  "prompt": "Consigne du skill replies."
+  }
 }

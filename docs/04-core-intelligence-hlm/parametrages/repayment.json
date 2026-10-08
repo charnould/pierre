@@ -101,6 +101,7 @@
     ]
   },
   "tags": ["décès", "+65 ans", "Redémarrage APL"],
+  "email_from": "loyer@mail.dribble.football",
   "template_groups": ["RCS/SMS au (ex-)client", "Email au (ex-)client", "Email à la CAF"],
   "create_plan": {
     "signed_bucket_id": "plan_apurement_en_cours",

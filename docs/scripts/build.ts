@@ -1017,14 +1017,14 @@ function serve(notify: { clients: Set<ReadableStreamDefaultController<Uint8Array
         const rest = rel.slice('site/'.length)
         if (!rest || isOff(rest)) return notFound()
         const location = `/${rest.split('/').map(encodeURIComponent).join('/')}`
-        return Response.redirect(new URL(location, req.url), 302)
+        return Response.redirect(new URL(location, req.url).href, 302)
       }
 
       if (rel.endsWith('.md')) {
         const htmlRel = `${rel.slice(0, -3)}.html`
         if (!(await Bun.file(join(SITE, htmlRel)).exists())) return notFound()
         const location = `/${htmlRel.split('/').map(encodeURIComponent).join('/')}`
-        return Response.redirect(new URL(location, req.url), 302)
+        return Response.redirect(new URL(location, req.url).href, 302)
       }
 
       let fileAbs =

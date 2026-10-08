@@ -1,10 +1,14 @@
 ##### [PIERRE](../index.md) ∕ [CORE DATA HLM](index.md) ∕ RECLAMATIONS
 
-# `reclamations`
+# `core.reclamations.csv`
+
+> v1.0.0-alpha (2026-10-10) - Réflexion en cours
 
 ## Objectif
 
-Exposer **toutes les affaires relation-client** (réclamations, demandes, tickets…) pour une **vue intégrale** de la relation locataire. La table logique est `reclamations` ; le fichier transmis à PIERRE est `core.reclamations.csv`.
+Exposer **toutes les affaires relation-client** (réclamations, demandes, tickets…) pour une **vue intégrale** de la relation locataire. L
+
+Le fichier est nommé `core.reclamations.csv`.
 
 **Périmètre recommandé** :
 
@@ -52,6 +56,8 @@ TODO: quid de normaliser affectation (comme gestionnaire pour le recouvrement) p
 > **Pourquoi c'est stratégique** : ce mécanisme (automatique, sans action du bailleur) rend ce fichier unique dans PIERRE et permet de constuire le « cycle de vie » d'une réclamation.
 
 ## Exemples de colonnes libres
+
+> Ces colonnes ne sont pas obligatoires, il s'agit de suggestions pour enrichir `core.reclamations.csv`.
 
 **Taxonomie / Qualification**
 
