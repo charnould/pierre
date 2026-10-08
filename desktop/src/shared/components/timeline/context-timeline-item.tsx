@@ -59,7 +59,7 @@ export function ContextTimelineItem({
         // alone pushed the date 2px below the avatar center line.
         'gap-0 group-data-[orientation=vertical]/timeline:not-last:pb-4',
         onActivate &&
-          'cursor-pointer focus-visible:ring-1 focus-visible:ring-ring/40 focus-visible:outline-none',
+          'focus-visible:ring-ring/20 cursor-pointer focus-visible:ring-2 focus-visible:outline-none',
         className
       )}
       data-timeline-id={dataTimelineId}

@@ -91,7 +91,7 @@ export function createNotificationBadgePoller(
   }
 }
 
-/** Inbox rows already filtered to unread when `unread_only=true`. */
+/** Inbox rows already filtered to unread when `unreadOnly=true`. */
 export function countUnreadRows(data: ActivitiesListResponse['data']): number {
   return data.filter((row) => row.read === false).length
 }

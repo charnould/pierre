@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import { basename } from 'node:path'
 
 import { BrowserWindow, dialog, ipcMain, session } from 'electron'
@@ -16,7 +16,7 @@ import { logMainError } from '../../services/logging'
 import { IpcChannel } from '../channels'
 
 const windowForDialog = () => BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
-const endpoint = (url: string, path = '') => `${url.replace(/\/$/, '')}/api/admin/knowledge${path}`
+const endpoint = (url: string, path = '') => `${url.replace(/\/$/, '')}/knowledge${path}`
 
 export function registerKnowledgeHandlers(partition: string): void {
   ipcMain.handle(IpcChannel.knowledge.get, async (_, { url }: { url: string }) => {
@@ -103,29 +103,6 @@ export function registerKnowledgeHandlers(partition: string): void {
         return response.ok
       } catch (error) {
         logMainError('delete-knowledge-source', error)
-        return false
-      }
-    }
-  )
-
-  ipcMain.handle(
-    IpcChannel.knowledge.download,
-    async (_, { url, id, originalName }: { url: string; id: string; originalName: string }) => {
-      const win = windowForDialog()
-      const target = win
-        ? await dialog.showSaveDialog(win, { defaultPath: originalName })
-        : await dialog.showSaveDialog({ defaultPath: originalName })
-      if (target.canceled || !target.filePath) return false
-      try {
-        const response = await netFetch(
-          endpoint(url, `/sources/${encodeURIComponent(id)}/download`),
-          { session: session.fromPartition(partition) }
-        )
-        if (!response.ok) return false
-        await writeFile(target.filePath, new Uint8Array(await response.arrayBuffer()))
-        return true
-      } catch (error) {
-        logMainError('download-knowledge-source', error)
         return false
       }
     }

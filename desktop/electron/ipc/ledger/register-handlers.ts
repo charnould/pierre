@@ -34,7 +34,7 @@ export function registerLedgerHandlers(partition: string): void {
     const ses = session.fromPartition(partition)
     const qs = ledgerSearch(params)
     try {
-      const resp = await netFetch(`${url}/desktop/ledger${qs ? `?${qs}` : ''}`, {
+      const resp = await netFetch(`${url}/ledger${qs ? `?${qs}` : ''}`, {
         session: ses
       })
       if (!resp.ok) return null
@@ -49,7 +49,7 @@ export function registerLedgerHandlers(partition: string): void {
     const ses = session.fromPartition(partition)
     const qs = ledgerSearch(params)
     try {
-      const resp = await netFetch(`${params.url}/desktop/ledger/meta${qs ? `?${qs}` : ''}`, {
+      const resp = await netFetch(`${params.url}/ledger/meta${qs ? `?${qs}` : ''}`, {
         session: ses
       })
       if (!resp.ok) return null
@@ -65,10 +65,9 @@ export function registerLedgerHandlers(partition: string): void {
     async (_, params: RepaymentTimelineQueryParams) => {
       const search = new URLSearchParams({ id_locataire: params.id_locataire })
       try {
-        const response = await netFetch(
-          `${params.url}/desktop/repayment/timeline?${search.toString()}`,
-          { session: session.fromPartition(partition) }
-        )
+        const response = await netFetch(`${params.url}/repayment?${search.toString()}`, {
+          session: session.fromPartition(partition)
+        })
         if (!response.ok) return null
         return await response.json()
       } catch (error) {

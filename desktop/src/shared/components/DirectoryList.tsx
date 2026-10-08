@@ -41,9 +41,9 @@ export function DirectoryRow({
       tabIndex={onSelect ? 0 : undefined}
       aria-current={selected ? 'true' : undefined}
       className={cn(
-        'group grid min-w-0 items-center gap-15 border-b border-border/60 px-4 py-2',
+        'group border-border/60 grid min-w-0 items-center gap-15 border-b px-4 py-2',
         DIRECTORY_ROW_COLUMNS,
-        onSelect && 'cursor-pointer hover:bg-muted',
+        onSelect && 'hover:bg-muted cursor-pointer',
         selected && 'bg-muted',
         className
       )}

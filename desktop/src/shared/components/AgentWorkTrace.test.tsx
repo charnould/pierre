@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 
 import { renderToStaticMarkup } from 'react-dom/server'
 
-import { AgentWorkTrace, type AgentWorkPart } from './AgentWorkTrace'
+import { type AgentWorkPart, AgentWorkTrace } from './AgentWorkTrace'
 
 const parts: AgentWorkPart[] = [
   { type: 'thinking', contentIndex: 0, thinking: 'Analyse du dossier.' },
@@ -78,7 +78,9 @@ describe('AgentWorkTrace', () => {
     expect(markup).toContain('sqlite3')
     expect(markup).toContain('lucide-')
     expect(markup).toContain('typeset-reasoning')
-    expect(markup).toContain('Afficher le résultat')
+    expect(markup).toContain('data-slot="trace-collapsible-trigger"')
+    expect(markup).toContain('sqlite3')
+    expect(markup).not.toContain('Afficher le résultat')
     expect(markup).not.toContain('Terminé')
   })
 })

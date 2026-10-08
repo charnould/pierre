@@ -39,12 +39,12 @@ import type { AboutNavigationState, NavigationSnapshot } from '@/shared/lib/navi
 import { releaseConversationVm } from '@/shared/lib/release-conversation-vm'
 import type { Tab } from '@/shared/lib/tabs'
 import {
-  WORKFLOW_PANEL_CONTEXTE,
-  WORKFLOW_PANEL_OUTPUT,
-  WORKFLOW_SPLIT_DEFAULT_CONTEXTE,
   defaultWorkflowPanelLayout,
   resolveWorkflowOutputSplit,
   splitFromLayout,
+  WORKFLOW_PANEL_CONTEXTE,
+  WORKFLOW_PANEL_OUTPUT,
+  WORKFLOW_SPLIT_DEFAULT_CONTEXTE,
   type WorkflowOutputSplitKey
 } from '@/shared/lib/ui-settings/schema'
 import { cn } from '@/shared/lib/utils'
@@ -314,7 +314,7 @@ export function AboutView({ hidden, settings, onNavigate, agentName }: Props) {
       <div
         data-tab-panel
         className={cn(
-          'relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
+          'bg-background relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
           hidden ? 'hidden' : 'flex'
         )}
       >

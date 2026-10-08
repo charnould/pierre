@@ -1,5 +1,5 @@
 import { Pause, Play, Plus, RotateCcw, Trash2 } from 'lucide-react'
-import { Fragment, useMemo, useState, type ReactNode } from 'react'
+import { Fragment, type ReactNode, useMemo, useState } from 'react'
 
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { OrgUserListItem } from '@/shared/components/OrgUserListItem'
@@ -32,21 +32,9 @@ import { collaboratorSearchLabel, orgUserListName } from '@/shared/lib/org-user-
 import { formatOrgCollaboratorLabel } from '@/shared/lib/org-users-cache'
 import type { UiSettings } from '@/shared/lib/ui-settings/schema'
 
-import {
-  isReportAutomation,
-  isTicketReplyAutomation,
-  type Automation,
-  type AutomationType,
-  type TicketAutomationFilters,
-  type TicketReplyChannel
-} from '../lib/automation-types'
+import { type Automation, isReportAutomation } from '../lib/automation-types'
 import { AutomationFormScheduleFields, normalizeFrequencyDay } from './AutomationFormScheduleFields'
-import { AutomationReplyFormatCards } from './AutomationReplyFormatCards'
-import { AutomationTicketFilters } from './AutomationTicketFilters'
-import { AutomationTypeCards } from './AutomationTypeCards'
 import { PromptMarkdownEditor } from './PromptMarkdownEditor'
-
-const DEFAULT_MAX_ITEMS = 20
 
 function CollaboratorChipAvatar({ login, name }: { login: string; name: string }) {
   const photoUrl = useUserAvatar(login)
@@ -173,7 +161,6 @@ function CollaboratorsCombobox({
 export function AutomationForm({
   agentName,
   url,
-  uiSettings,
   automation,
   onCancel,
   onSave,
@@ -183,7 +170,6 @@ export function AutomationForm({
 }: AutomationFormProps) {
   const isEdit = !!automation
 
-  const [automationType, setAutomationType] = useState<AutomationType>(automation?.type ?? 'report')
   const [name, setName] = useState(automation?.name ?? '')
   const [description, setDescription] = useState(automation?.description ?? '')
   const [frequency, setFrequency] = useState<string>(automation?.frequency ?? 'weekly')
@@ -198,15 +184,6 @@ export function AutomationForm({
   const [maxReports, setMaxReports] = useState(
     automation && isReportAutomation(automation) ? automation.maxReports : 6
   )
-  const [maxItems, setMaxItems] = useState(
-    automation && isTicketReplyAutomation(automation) ? automation.maxItems : DEFAULT_MAX_ITEMS
-  )
-  const [channel, setChannel] = useState<TicketReplyChannel>(
-    automation && isTicketReplyAutomation(automation) ? automation.channel : 'email'
-  )
-  const [ticketFilters, setTicketFilters] = useState<TicketAutomationFilters>(
-    automation && isTicketReplyAutomation(automation) ? automation.ticketFilters : { rules: [] }
-  )
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [formSource, setFormSource] = useState(automation)
   if (formSource !== automation) {
@@ -218,22 +195,11 @@ export function AutomationForm({
     setFrequencyDay(normalizeFrequencyDay(nextFrequency, automation?.frequencyDay))
     setFrequencyTime(automation?.frequencyTime ?? '08:00')
     setCollaborators(automation?.mentions ?? [])
-    if (automation) {
-      setAutomationType(automation.type)
-      if (isReportAutomation(automation)) {
-        setPrompt(automation.prompt)
-        setMaxReports(automation.maxReports)
-      }
-      if (isTicketReplyAutomation(automation)) {
-        setTicketFilters(automation.ticketFilters)
-        setMaxItems(automation.maxItems)
-        setChannel(automation.channel)
-      }
+    if (automation && isReportAutomation(automation)) {
+      setPrompt(automation.prompt)
+      setMaxReports(automation.maxReports)
     }
   }
-
-  const resolvedType = automation?.type ?? automationType
-  const isReport = resolvedType === 'report'
 
   const isPaused = automation?.status === 'paused'
   const ownerLogin = automation?.owner ?? 'gensel'
@@ -248,28 +214,13 @@ export function AutomationForm({
       frequencyTime,
       mentions: collaborators
     }
-    if (isReport) {
-      onSave({ ...base, type: 'report', prompt, maxReports })
-    } else {
-      onSave({
-        ...base,
-        type: 'replies',
-        skillId: 'replies',
-        channel,
-        ticketFilters,
-        maxItems
-      })
-    }
+    onSave({ ...base, type: 'report', prompt, maxReports })
   }
 
   return (
     <>
       <FieldSet className="w-full">
         <FieldGroup>
-          {!isEdit ? (
-            <AutomationTypeCards value={automationType} onValueChange={setAutomationType} />
-          ) : null}
-
           <AutomationField
             id="auto-name"
             label="Nom"
@@ -279,11 +230,7 @@ export function AutomationForm({
               id="auto-name"
               aria-label="Nom"
               className="w-full"
-              placeholder={
-                isReport
-                  ? 'Ex. : Points d’attention — prise d’astreinte'
-                  : 'Ex. : Brouillons litiges locatifs'
-              }
+              placeholder="Ex. : Points d’attention — prise d’astreinte"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -304,44 +251,25 @@ export function AutomationForm({
             />
           </AutomationField>
 
-          {isReport ? (
-            <AutomationField
+          <AutomationField
+            id="auto-max-reports"
+            label="Rapports conservés"
+            description="Nombre maximum de rapports gardés dans l’historique. Les plus anciens sont supprimés à la prochaine génération."
+          >
+            <Input
               id="auto-max-reports"
-              label="Rapports conservés"
-              description="Nombre maximum de rapports gardés dans l’historique. Les plus anciens sont supprimés à la prochaine génération."
-            >
-              <Input
-                id="auto-max-reports"
-                aria-label="Rapports conservés"
-                type="number"
-                min={1}
-                numeric
-                value={maxReports}
-                onChange={(e) => setMaxReports(Math.max(1, Number(e.target.value) || 1))}
-              />
-            </AutomationField>
-          ) : (
-            <AutomationReplyFormatCards value={channel} onValueChange={setChannel} />
-          )}
+              aria-label="Rapports conservés"
+              type="number"
+              min={1}
+              className="tabular-nums"
+              value={maxReports}
+              onChange={(e) => setMaxReports(Math.max(1, Number(e.target.value) || 1))}
+            />
+          </AutomationField>
 
           <AutomationField
             label="Fréquence"
-            description={
-              isReport ? (
-                <>
-                  La génération démarre approximativement à l’horaire indiqué. Selon la complexité,
-                  elle peut prendre plusieurs minutes. Anticipez ce délai si vous avez besoin du
-                  résultat à une heure précise.
-                </>
-              ) : (
-                <>
-                  La génération démarre approximativement à l’horaire indiqué. Selon la complexité,
-                  elle peut prendre plusieurs minutes. Anticipez ce délai si vous avez besoin du
-                  résultat à une heure précise. Recommandation&nbsp;: programmez l’exécution la
-                  nuit, quand le volume de réclamations est plus faible.
-                </>
-              )
-            }
+            description="La génération démarre approximativement à l’horaire indiqué. Selon la complexité, elle peut prendre plusieurs minutes. Anticipez ce délai si vous avez besoin du résultat à une heure précise."
           >
             <AutomationFormScheduleFields
               frequency={frequency}
@@ -366,44 +294,18 @@ export function AutomationForm({
             />
           </AutomationField>
 
-          {isReport ? (
-            <AutomationField
+          <AutomationField
+            id="auto-prompt"
+            label="Instructions"
+            description={`Consignes envoyées à ${agentName} pour produire le rapport. Plus elles sont précises, plus le résultat est pertinent.`}
+          >
+            <PromptMarkdownEditor
               id="auto-prompt"
-              label="Instructions"
-              description={`Consignes envoyées à ${agentName} pour produire le rapport. Plus elles sont précises, plus le résultat est pertinent.`}
-            >
-              <PromptMarkdownEditor
-                id="auto-prompt"
-                value={prompt}
-                onChange={setPrompt}
-                placeholder="Décrivez le périmètre, les sources à consulter et le format attendu…"
-              />
-            </AutomationField>
-          ) : (
-            <>
-              <AutomationTicketFilters
-                url={url}
-                uiSettings={uiSettings}
-                value={ticketFilters}
-                onChange={setTicketFilters}
-              />
-              <AutomationField
-                id="auto-max-items"
-                label="Limite"
-                description="Nombre maximum de réclamations traitées à chaque exécution."
-              >
-                <Input
-                  id="auto-max-items"
-                  aria-label="Limite"
-                  type="number"
-                  min={1}
-                  numeric
-                  value={maxItems}
-                  onChange={(e) => setMaxItems(Math.max(1, Number(e.target.value) || 1))}
-                />
-              </AutomationField>
-            </>
-          )}
+              value={prompt}
+              onChange={setPrompt}
+              placeholder="Décrivez le périmètre, les sources à consulter et le format attendu…"
+            />
+          </AutomationField>
         </FieldGroup>
       </FieldSet>
 

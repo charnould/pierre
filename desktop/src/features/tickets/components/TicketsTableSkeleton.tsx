@@ -30,14 +30,14 @@ export function TicketsTableSkeleton({ columns, settings }: Props) {
     >
       <div className="bg-background overflow-x-auto">
         <table
-          className="pierre-type-data table-fixed caption-bottom font-sans tabular-nums"
+          className="table-fixed caption-bottom font-sans text-xs tabular-nums"
           style={{ width: tableWidth }}
         >
           {colgroup()}
           <TableHeader>
-            <TableRow hover={false}>
+            <TableRow>
               {columns.map((col) => (
-                <TableHead key={col.name} variant="board" className="relative h-8 text-start">
+                <TableHead key={col.name} className="relative h-8 text-start">
                   <Skeleton className="h-3 w-3/4" aria-hidden />
                   <span className="sr-only">{resolveTicketColumnLabel(col.name, settings)}</span>
                 </TableHead>
@@ -49,7 +49,7 @@ export function TicketsTableSkeleton({ columns, settings }: Props) {
 
       <div className="overflow-x-auto">
         <table
-          className="pierre-type-data table-fixed caption-bottom font-sans tabular-nums"
+          className="table-fixed caption-bottom font-sans text-xs tabular-nums"
           style={{ width: tableWidth }}
         >
           {colgroup()}

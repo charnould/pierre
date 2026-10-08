@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 import type { LedgerMovementRow } from '@/shared/types/ledger'
 
 import { invalidateRepaymentTimelineCache } from '../lib/repayment-timeline-cache'
@@ -128,7 +128,7 @@ describe('useRepaymentTenantTimeline', () => {
       notifications: [
         {
           id: 7,
-          date_creation: '2026-08-17T10:00:00',
+          createdAt: '2026-08-17T10:00:00',
           rattachement: 'repayment:LOC-1',
           auteur: 'user:bob@exemple.fr',
           id_client: 'CLI-1',
@@ -198,7 +198,7 @@ describe('useRepaymentTenantTimeline', () => {
     invalidateRepaymentTimelineCache(url, 'CLI-1', 'LOC-1')
     const note = {
       id: 8,
-      date_creation: '2026-08-17T10:00:00',
+      createdAt: '2026-08-17T10:00:00',
       rattachement: 'repayment:LOC-1',
       auteur: 'user:bob@exemple.fr',
       id_client: 'CLI-1',
@@ -208,7 +208,7 @@ describe('useRepaymentTenantTimeline', () => {
       channel: null,
       mentions: [],
       contenu: JSON.stringify({ version: 2, text: 'Relance' }),
-      thread_id: 'note-thread',
+      threadId: 'note-thread',
       revision: 1,
       my: null,
       read: true,
@@ -242,9 +242,9 @@ describe('useRepaymentTenantTimeline', () => {
     })
 
     await act(async () => {
-      const reaction: Activite = {
+      const reaction: Activity = {
         id: 2,
-        date_creation: '2026-09-14T10:01:00Z',
+        createdAt: '2026-09-14T10:01:00Z',
         rattachement: note.rattachement,
         auteur: 'user:alice@exemple.fr',
         id_client: note.id_client,
@@ -261,9 +261,9 @@ describe('useRepaymentTenantTimeline', () => {
     expect(renders.at(-1)!.notifications[0]?.reaction).toBe('👏')
 
     await act(async () => {
-      const update: Activite = {
+      const update: Activity = {
         id: 3,
-        date_creation: '2026-09-14T10:02:00Z',
+        createdAt: '2026-09-14T10:02:00Z',
         rattachement: note.rattachement,
         auteur: 'user:bob@exemple.fr',
         id_client: note.id_client,
@@ -273,7 +273,7 @@ describe('useRepaymentTenantTimeline', () => {
         channel: null,
         mentions: [],
         contenu: JSON.stringify({ version: 2, text: 'Relance corrigée' }),
-        thread_id: note.thread_id,
+        threadId: note.threadId,
         revision: 2
       }
       renders.at(-1)!.applyActivityPatch(update)

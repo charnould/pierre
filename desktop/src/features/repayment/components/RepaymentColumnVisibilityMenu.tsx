@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger
 } from '@/shared/components/ui/dropdown-menu'
 
-import { togglableRepaymentColumnIds, type RepaymentColumnId } from '../lib/repayment-table-columns'
+import { type RepaymentColumnId, togglableRepaymentColumnIds } from '../lib/repayment-table-columns'
 
 interface Props {
   activeColumnIds: RepaymentColumnId[]

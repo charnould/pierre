@@ -1,8 +1,8 @@
-import { ipcMain, session, type IpcMainInvokeEvent } from 'electron'
+import { ipcMain, type IpcMainInvokeEvent, session } from 'electron'
 
 import { netFetch } from '../../lib/net-fetch'
 import { logMainError } from '../../services/logging'
-import { IpcChannel, aiChunkEventChannel } from '../channels'
+import { aiChunkEventChannel, IpcChannel } from '../channels'
 import { createStreamBatcher } from './batcher'
 import { beginStream, cancelStream, endStream } from './lifecycle'
 
@@ -97,9 +97,9 @@ export function registerStreamHandlers(partition: string): void {
 
     try {
       const formData = new FormData()
-      formData.set('config', params.config)
+      formData.set('configId', params.config)
       formData.set('message', params.message)
-      formData.set('conv_id', params.conv_id)
+      formData.set('conversationId', params.conv_id)
       formData.set('data', params.data ?? '')
       for (const file of params.files ?? []) {
         formData.append('files', new Blob([file.buffer], { type: file.type }), file.name)
@@ -108,7 +108,7 @@ export function registerStreamHandlers(partition: string): void {
       return await streamResponseToRenderer(
         event,
         params.requestId,
-        netFetch(`${params.url}/ai`, {
+        netFetch(`${params.url}/chat`, {
           method: 'POST',
           body: formData,
           signal: controller.signal,
@@ -125,9 +125,9 @@ export function registerStreamHandlers(partition: string): void {
     const controller = beginStream(activeStreams, params.requestId)
     const ses = session.fromPartition(partition)
     const formData = new FormData()
-    formData.set('conv_id', params.conv_id)
+    formData.set('conversationId', params.conv_id)
     formData.set('payload', params.payload)
-    formData.set('id_skill', params.id_skill ?? 'answer')
+    formData.set('skillId', params.id_skill ?? 'answer')
 
     if (Array.isArray(params.files)) {
       for (const file of params.files) {
@@ -139,7 +139,7 @@ export function registerStreamHandlers(partition: string): void {
       return await streamResponseToRenderer(
         event,
         params.requestId,
-        netFetch(`${params.url}/ai/answer`, {
+        netFetch(`${params.url}/workflows`, {
           method: 'POST',
           body: formData,
           signal: controller.signal,
@@ -155,13 +155,13 @@ export function registerStreamHandlers(partition: string): void {
   ipcMain.handle(IpcChannel.stream.postUiResponse, async (_, params: UiResponseParams) => {
     const ses = session.fromPartition(partition)
     try {
-      const response = await netFetch(`${params.url}/ai/ui-response`, {
+      const response = await netFetch(`${params.url}/chat/responses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          conv_id: params.conv_id,
-          request_id: params.request_id,
-          response_secret: params.response_secret,
+          conversationId: params.conv_id,
+          requestId: params.request_id,
+          responseSecret: params.response_secret,
           answers: params.answers
         }),
         session: ses
@@ -182,12 +182,13 @@ export function registerStreamHandlers(partition: string): void {
     async (_, params: { url: string; conv_id: string }) => {
       const ses = session.fromPartition(partition)
       try {
-        const response = await netFetch(`${params.url}/ai/vm/release`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ conv_id: params.conv_id }),
-          session: ses
-        })
+        const response = await netFetch(
+          `${params.url}/chat/sessions/${encodeURIComponent(params.conv_id)}`,
+          {
+            method: 'DELETE',
+            session: ses
+          }
+        )
         return response.ok || response.status === 204
       } catch (error) {
         logMainError('release-conversation-vm', error)

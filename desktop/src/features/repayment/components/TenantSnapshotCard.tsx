@@ -20,7 +20,7 @@ import {
 import { formatDebtRentRatioMonthsOneDecimal, formatEuro } from '../lib/format-repayment'
 import { isRepaymentActionId, type RepaymentActionId } from '../lib/repayment-action'
 import type { RepaymentGestionnaireAssignment } from '../lib/repayment-advancement'
-import { resolveBucketForTenantRow, type RepaymentBucketId } from '../lib/repayment-bucket'
+import { type RepaymentBucketId, resolveBucketForTenantRow } from '../lib/repayment-bucket'
 import { InspectorFactText } from './InspectorFactLine'
 import { RepaymentActionBadge } from './RepaymentActionBadge'
 import { RepaymentBucketBadge } from './RepaymentBucketBadge'
@@ -79,7 +79,7 @@ function ContactValue({
     <>
       <InspectorFactText title={present ? display : undefined}>{display}</InspectorFactText>
       {badge ? (
-        <Badge variant={badge.variant} size="compact" className="max-w-full shrink-0">
+        <Badge variant={badge.variant} className="max-w-full shrink-0">
           {badge.label}
         </Badge>
       ) : null}
@@ -93,8 +93,8 @@ function DebtTrendIcon({ trend }: { trend: DebtEpisodeTrend }) {
     <span
       className={cn(
         'inline-flex size-4 shrink-0 items-center justify-center rounded-md',
-        trend === 'up' && 'bg-pierre-debt-up/10 text-pierre-debt-up',
-        trend === 'down' && 'bg-pierre-debt-down/10 text-pierre-debt-down',
+        trend === 'up' && 'bg-muted text-foreground',
+        trend === 'down' && 'bg-muted text-muted-foreground',
         trend === 'flat' && 'bg-muted text-muted-foreground'
       )}
       aria-label={TREND_ARIA[trend]}
@@ -158,7 +158,6 @@ export const TenantSnapshotCard = memo(function TenantSnapshotCard({
         <RepaymentBucketBadge
           bucket={displayBucket}
           columnValues={columnValues}
-          size="compact"
           className="max-w-full"
         />
       </SnapshotFact>
@@ -168,7 +167,6 @@ export const TenantSnapshotCard = memo(function TenantSnapshotCard({
           <RepaymentActionBadge
             action={displayAction}
             columnValues={columnValues}
-            size="compact"
             className="max-w-full"
           />
         </SnapshotFact>
@@ -177,7 +175,7 @@ export const TenantSnapshotCard = memo(function TenantSnapshotCard({
       {tags.length > 0 ? (
         <SnapshotFact label="Tags">
           {tags.map((tag) => (
-            <RepaymentTagBadge key={tag} tag={tag} size="compact" className="max-w-full" />
+            <RepaymentTagBadge key={tag} tag={tag} className="max-w-full" />
           ))}
         </SnapshotFact>
       ) : null}

@@ -7,9 +7,9 @@ import {
   DEFAULT_MASCOT_BADGE_COLOR,
   DEFAULT_MASCOT_COLOR,
   DEFAULT_MASCOT_SHAPE,
+  type MascotLook,
   parseMascotColor,
-  parseMascotShape,
-  type MascotLook
+  parseMascotShape
 } from '../src/mascot/look'
 import {
   clampMascotSize,

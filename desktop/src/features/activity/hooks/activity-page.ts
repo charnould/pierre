@@ -1,4 +1,4 @@
-import type { ActiviteListItem } from '@/shared/types/activites'
+import type { ActivityListItem } from '@/shared/types/activites'
 
 export const ACTIVITY_PAGE_SIZE = 50
 
@@ -7,9 +7,9 @@ export function refreshWindowLimit(loadedCount: number): number {
 }
 
 export function appendUniqueActivityRows(
-  previous: ActiviteListItem[],
-  incoming: ActiviteListItem[]
-): ActiviteListItem[] {
+  previous: ActivityListItem[],
+  incoming: ActivityListItem[]
+): ActivityListItem[] {
   if (incoming.length === 0) return previous
   const seen = new Set(previous.map((row) => row.id))
   const extra = incoming.filter((row) => !seen.has(row.id))

@@ -1,7 +1,7 @@
 import {
   parse_rcs_contenu,
-  with_sms_fallback,
-  type RcsChoice
+  type RcsChoice,
+  with_sms_fallback
 } from '../../../../../shared/rcs-message'
 import type { TenantRepaymentRow } from './classify-tenants'
 

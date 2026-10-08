@@ -1,9 +1,9 @@
 import { repaymentSetup } from '@/shared/lib/instance-customization'
 import { generateColumnValueStyles } from '@/shared/lib/ui-settings/column-value-palette'
 import {
+  type ColumnValueStyle,
   normalizeColumnValueKey,
-  parseHexColor,
-  type ColumnValueStyle
+  parseHexColor
 } from '@/shared/lib/ui-settings/tickets-table'
 
 type RawRepaymentAction =

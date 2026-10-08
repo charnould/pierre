@@ -1,20 +1,20 @@
 import {
+  type ColumnSizingState,
   flexRender,
-  useTable,
   type SortingState,
   type Updater,
-  type ColumnSizingState
+  useTable
 } from '@tanstack/react-table'
 import { FilterX, RefreshCw } from 'lucide-react'
 import {
   memo,
+  type RefObject,
   useCallback,
   useEffect,
   useMemo,
   useReducer,
   useRef,
-  useState,
-  type RefObject
+  useState
 } from 'react'
 
 import { BoardDualTable } from '@/shared/components/table/board-dual-table'
@@ -30,14 +30,14 @@ import type { ColumnVisibilityState } from '@/shared/lib/ui-settings/tickets-tab
 import {
   areColumnFiltersEqual,
   clearAllColumnFilters,
+  type ColumnFilters,
   hasActiveColumnFilters,
   hiddenColumnsToColumnVisibility,
   resolveColumnOrder,
   sanitizeColumnFilters,
   stripTicketTableSystemColumns,
-  ticketTableSystemColumnSizing,
   TICKET_TABLE_ALERT_COLUMN_ID,
-  type ColumnFilters
+  ticketTableSystemColumnSizing
 } from '@/shared/lib/ui-settings/tickets-table'
 import {
   buildHiddenColumnsPatch,

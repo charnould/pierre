@@ -11,7 +11,7 @@ export function registerSetupHandlers(partition: string): void {
 
   ipcMain.handle(IpcChannel.setup.get, async (_, { url }: { url: string }) => {
     try {
-      const resp = await netFetch(`${root(url)}/desktop/setup`, { session: ses() })
+      const resp = await netFetch(`${root(url)}/setup`, { session: ses() })
       if (!resp.ok) return null
       return await resp.json()
     } catch (error) {
@@ -23,7 +23,7 @@ export function registerSetupHandlers(partition: string): void {
   ipcMain.handle(IpcChannel.setup.file, async (_, { url, id }: { url: string; id: string }) => {
     try {
       const resp = await netFetch(
-        `${root(url)}/desktop/setup/${id
+        `${root(url)}/setup/${id
           .split('/')
           .map((part) => encodeURIComponent(part))
           .join('/')}`,
@@ -37,9 +37,45 @@ export function registerSetupHandlers(partition: string): void {
     }
   })
 
+  ipcMain.handle(IpcChannel.setup.providersGet, async (_, { url }: { url: string }) => {
+    try {
+      const resp = await netFetch(`${root(url)}/admin/providers`, { session: ses() })
+      if (!resp.ok) return null
+      return await resp.json()
+    } catch (error) {
+      logMainError('get-admin-providers', error)
+      return null
+    }
+  })
+
+  ipcMain.handle(
+    IpcChannel.setup.providersPut,
+    async (_, { url, body }: { url: string; body: unknown }) => {
+      try {
+        const resp = await netFetch(`${root(url)}/admin/providers`, {
+          session: ses(),
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        })
+        const payload = (await resp.json()) as {
+          data?: { rcsSecret?: string }
+          error?: { message?: string }
+        }
+        if (!resp.ok) {
+          return { error: { message: payload.error?.message?.trim() || 'Enregistrement refusé' } }
+        }
+        return payload
+      } catch (error) {
+        logMainError('put-admin-providers', error)
+        return null
+      }
+    }
+  )
+
   ipcMain.handle(IpcChannel.setup.adminGet, async (_, { url }: { url: string }) => {
     try {
-      const resp = await netFetch(`${root(url)}/desktop/admin/setup`, { session: ses() })
+      const resp = await netFetch(`${root(url)}/admin/setup`, { session: ses() })
       if (!resp.ok) return null
       return await resp.json()
     } catch (error) {
@@ -55,19 +91,30 @@ export function registerSetupHandlers(partition: string): void {
       { url, id, body, bytes }: { url: string; id: string; body?: string; bytes?: Uint8Array }
     ) => {
       try {
-        const payload = bytes ?? new TextEncoder().encode(body ?? '')
+        const binary = bytes != null && bytes.byteLength > 0
         const path = id
           .split('/')
           .map((part) => encodeURIComponent(part))
           .join('/')
-        const copy = new ArrayBuffer(payload.byteLength)
-        new Uint8Array(copy).set(payload)
-        const resp = await netFetch(`${root(url)}/desktop/admin/setup/${path}`, {
+        const resp = await netFetch(`${root(url)}/admin/setup/${path}`, {
           session: ses(),
           method: 'PUT',
-          body: new Blob([copy])
+          headers: {
+            'Content-Type': binary ? 'application/octet-stream' : 'text/plain; charset=utf-8'
+          },
+          body: binary ? Buffer.from(bytes) : (body ?? '')
         })
-        if (!resp.ok) return null
+        if (!resp.ok) {
+          let message = 'Enregistrement refusé'
+          try {
+            const payload = (await resp.json()) as { error?: { message?: string } }
+            const detail = payload.error?.message?.trim()
+            if (detail) message = detail
+          } catch {
+            // Le corps n’est pas du JSON : le message générique suffit.
+          }
+          return { error: { message } }
+        }
         return await resp.json()
       } catch (error) {
         logMainError('put-admin-setup', error)
@@ -76,14 +123,32 @@ export function registerSetupHandlers(partition: string): void {
     }
   )
 
+  ipcMain.handle(IpcChannel.setup.emailTest, async (_, { url }: { url: string }) => {
+    try {
+      const resp = await netFetch(`${root(url)}/admin/providers/email/test`, {
+        session: ses(),
+        method: 'POST'
+      })
+      const body = (await resp.json()) as {
+        data?: { sent: true }
+        error?: { message: string }
+      }
+      if (!resp.ok) return body.error ? body : { error: { message: 'Envoi impossible' } }
+      return body
+    } catch (error) {
+      logMainError('post-email-test', error)
+      return null
+    }
+  })
+
   ipcMain.handle(
     IpcChannel.setup.adminDelete,
     async (_, { url, id }: { url: string; id: string }) => {
       try {
-        const resp = await netFetch(
-          `${root(url)}/desktop/admin/setup/chatbots/${encodeURIComponent(id)}`,
-          { session: ses(), method: 'DELETE' }
-        )
+        const resp = await netFetch(`${root(url)}/admin/setup/chatbots/${encodeURIComponent(id)}`, {
+          session: ses(),
+          method: 'DELETE'
+        })
         if (!resp.ok) return null
         return await resp.json()
       } catch (error) {

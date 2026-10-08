@@ -6,7 +6,7 @@ import type {
 } from '@/shared/components/table/column-header-options-menu'
 import type { PierreTableFeatures } from '@/shared/components/table/table-features'
 import { formatOrgCollaboratorLabel } from '@/shared/lib/org-users-cache'
-import type { ColumnValuesConfig, ColumnFilters } from '@/shared/lib/ui-settings/tickets-table'
+import type { ColumnFilters, ColumnValuesConfig } from '@/shared/lib/ui-settings/tickets-table'
 
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
 import { formatRepaymentDateIso } from '../lib/format-repayment'
@@ -202,16 +202,10 @@ export function buildRepaymentColumns(
           },
           header: ({ column, table }) =>
             header(column as AnyPierreColumn, table as AnyPierreTable, columnId),
-          cell: ({ row, getValue }) => {
+          cell: ({ row }) => {
             const raw = row.original['gestionnaire']
             const identity = raw == null || raw === '' ? '' : String(raw)
-            return (
-              <RepaymentGestionnaireCell
-                identity={identity}
-                label={String(getValue() ?? '')}
-                columnValues={columnValues}
-              />
-            )
+            return <RepaymentGestionnaireCell identity={identity} />
           },
           enableSorting: true,
           sortFn: 'alphanumeric',

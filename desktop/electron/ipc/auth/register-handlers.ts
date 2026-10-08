@@ -1,4 +1,4 @@
-import { ipcMain, session, type Session } from 'electron'
+import { ipcMain, type Session, session } from 'electron'
 
 import type { LoginResult } from '../../../src/shared/lib/login-errors'
 import type { UserPrincipal } from '../../../src/shared/types/users'
@@ -15,10 +15,10 @@ import {
 
 async function readPrincipal(ses: Session, baseUrl: string): Promise<LoginResult> {
   try {
-    const response = await netFetch(`${baseUrl}/desktop/me`, { session: ses })
+    const response = await netFetch(`${baseUrl}/me`, { session: ses })
     if (!response.ok) return { ok: false, message: principalFailureFromStatus(response.status) }
-    const body = (await response.json()) as { user?: UserPrincipal }
-    return body.user ? { ok: true, user: body.user } : { ok: false, message: 'invalid_response' }
+    const body = (await response.json()) as { data?: UserPrincipal }
+    return body.data ? { ok: true, user: body.data } : { ok: false, message: 'invalid_response' }
   } catch (error) {
     logMainError('auth.principal', error)
     return { ok: false, message: 'network_error' }
@@ -89,14 +89,15 @@ export function registerAuthHandlers(partition: string, store: SettingsStore): v
 
   ipcMain.handle(IpcChannel.auth.getChatBoot, async (_, { url, config }) => {
     const params = new URLSearchParams()
-    if (config) params.set('config', config)
+    if (config) params.set('configId', config)
     const qs = params.toString()
     try {
-      const response = await netFetch(`${url}/ai/boot${qs ? `?${qs}` : ''}`, {
+      const response = await netFetch(`${url}/chat/config${qs ? `?${qs}` : ''}`, {
         session: session.fromPartition(partition)
       })
       if (!response.ok) return null
-      return await response.json()
+      const body = (await response.json()) as { data?: unknown }
+      return body.data ?? null
     } catch (error) {
       logMainError('get-chat-boot', error)
       return null

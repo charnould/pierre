@@ -1,5 +1,5 @@
 import { Plus, Trash2 } from 'lucide-react'
-import { useId, type ReactNode } from 'react'
+import { type ReactNode, useId } from 'react'
 
 import { SelectItems } from '@/shared/components/SelectItems'
 import { Button } from '@/shared/components/ui/button'

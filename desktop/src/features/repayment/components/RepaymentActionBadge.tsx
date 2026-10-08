@@ -1,10 +1,8 @@
-import { Badge, type BadgeSize } from '@/shared/components/ui/badge'
+import { Badge } from '@/shared/components/ui/badge'
 import {
-  columnValueStyleToBadge,
+  type ColumnValuesConfig,
   findColumnValueStyle,
-  normalizeColumnValueKey,
-  resolveColumnValueBadgeDefaults,
-  type ColumnValuesConfig
+  normalizeColumnValueKey
 } from '@/shared/lib/ui-settings/tickets-table'
 import { cn } from '@/shared/lib/utils'
 
@@ -13,28 +11,21 @@ import { getRepaymentActionMeta, type RepaymentActionId } from '../lib/repayment
 interface Props {
   action: RepaymentActionId
   columnValues?: ColumnValuesConfig
-  size?: BadgeSize
   className?: string
 }
 
-export function RepaymentActionBadge({ action, columnValues, size = 'data', className }: Props) {
+export function RepaymentActionBadge({ action, columnValues, className }: Props) {
   const meta = getRepaymentActionMeta(action)
   const columnStyle = findColumnValueStyle(
     columnValues,
     'derniere_action_realisee',
     normalizeColumnValueKey(meta.label)
   )
-  const badge = columnValueStyleToBadge(
-    columnStyle ?? meta.color,
-    resolveColumnValueBadgeDefaults()
-  )
 
   return (
     <Badge
-      variant="secondary"
-      size={size}
-      appearance={badge}
-      className={cn('min-w-0 max-w-full', className)}
+      variant={columnStyle ? 'secondary' : 'outline'}
+      className={cn('max-w-full min-w-0', className)}
     >
       <span className="truncate">{meta.label}</span>
     </Badge>

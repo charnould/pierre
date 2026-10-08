@@ -8,11 +8,11 @@ import {
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
 import {
   listOutboundTemplateGroups,
-  resolveOutboundEmail,
-  resolveOutboundRcs,
   type OutboundEmailResolved,
   type OutboundRcsResolved,
-  type OutboundTemplate
+  type OutboundTemplate,
+  resolveOutboundEmail,
+  resolveOutboundRcs
 } from '../lib/outbound-email-templates.bundle'
 
 interface Props {

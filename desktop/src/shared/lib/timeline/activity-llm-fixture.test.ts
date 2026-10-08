@@ -1,15 +1,15 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
-  parse_case_change_content,
-  parse_communication_opened_content,
-  parse_communication_status_content,
-  parse_signature_content,
-  parse_task_content,
-  parse_titled_content,
-  type Activite,
+  type Activity,
   type ActivityType,
-  type CommunicationChannel
+  type CommunicationChannel,
+  parseCaseChangeContent,
+  parseCommunicationOpenedContent,
+  parseCommunicationStatusContent,
+  parseSignatureContent,
+  parseTaskContent,
+  parseTitledContent
 } from '@/shared/types/activites'
 
 import { projectTimelineItems } from './project-timeline'
@@ -18,11 +18,11 @@ function row(
   id: number,
   type: ActivityType,
   contenu: Record<string, unknown>,
-  extra: Partial<Activite> = {}
-): Activite {
+  extra: Partial<Activity> = {}
+): Activity {
   return {
     id,
-    date_creation: `2026-06-10T1${id}:00:00Z`,
+    createdAt: `2026-06-10T1${id}:00:00Z`,
     rattachement: 'repayment:LOC-1',
     auteur: 'user:alice@exemple.fr',
     id_client: 'CLI-1',
@@ -32,13 +32,13 @@ function row(
     channel: extra.channel ?? null,
     mentions: [],
     contenu: JSON.stringify(contenu),
-    thread_id: extra.thread_id ?? null,
+    threadId: extra.threadId ?? null,
     revision: extra.revision ?? null,
     ...extra
   }
 }
 
-const fixture: Activite[] = [
+const fixture: Activity[] = [
   row(1, 'case.group_changed', { version: 2, before: 'non_traites', after: 'amiable' }),
   row(2, 'case.assignee_changed', {
     version: 2,
@@ -57,25 +57,25 @@ const fixture: Activite[] = [
         assignee: { id: 'user:bob@exemple.fr', label: 'Bob' }
       }
     },
-    { thread_id: 'task-1', revision: 1 }
+    { threadId: 'task-1', revision: 1 }
   ),
   row(
     5,
     'task.completed',
     { version: 2, task: { title: 'Vérifier le solde', state: 'completed' } },
-    { thread_id: 'task-2', revision: 1 }
+    { threadId: 'task-2', revision: 1 }
   ),
   row(
     6,
     'communication.sent',
     { version: 2, sender: 'Alice', subject: 'Relance', body: 'Merci de régulariser.' },
-    { thread_id: 'mail-1', revision: 1, channel: 'email' as CommunicationChannel }
+    { threadId: 'mail-1', revision: 1, channel: 'email' as CommunicationChannel }
   ),
   row(
     7,
     'communication.ok',
     { version: 2, result: 'read' },
-    { thread_id: 'mail-1', revision: 2, channel: 'email' as CommunicationChannel }
+    { threadId: 'mail-1', revision: 2, channel: 'email' as CommunicationChannel }
   ),
   row(8, 'repayment_plan.finalized', { version: 2, title: 'Plan d’apurement' }),
   row(
@@ -89,7 +89,7 @@ const fixture: Activite[] = [
         { id: 'lea', label: 'Léa', status: 'pending' }
       ]
     },
-    { thread_id: 'sign-1', revision: 1, channel: 'email' as CommunicationChannel }
+    { threadId: 'sign-1', revision: 1, channel: 'email' as CommunicationChannel }
   ),
   row(
     10,
@@ -103,7 +103,7 @@ const fixture: Activite[] = [
       ],
       signer: { id: 'jean', label: 'Jean' }
     },
-    { thread_id: 'sign-1', revision: 2 }
+    { threadId: 'sign-1', revision: 2 }
   )
 ]
 
@@ -114,37 +114,36 @@ describe('LLM fixture', () => {
       return found ? parse(found.contenu) : null
     }
 
-    expect(latest('case.group_changed', parse_case_change_content)?.after).toBe('amiable')
-    expect(latest('case.assignee_changed', parse_case_change_content)?.after).toEqual({
+    expect(latest('case.group_changed', parseCaseChangeContent)?.after).toBe('amiable')
+    expect(latest('case.assignee_changed', parseCaseChangeContent)?.after).toEqual({
       id: 'user:bob@exemple.fr',
       label: 'Bob'
     })
-    expect(latest('case.tags_changed', parse_case_change_content)?.after).toEqual([
-      'relance',
-      'plan'
-    ])
+    expect(latest('case.tags_changed', parseCaseChangeContent)?.after).toEqual(['relance', 'plan'])
 
     const tasks = fixture
       .filter((item) => item.type.startsWith('task.'))
-      .map((item) => parse_task_content(item.contenu))
+      .map((item) => parseTaskContent(item.contenu))
     expect(tasks.map((task) => task?.task.state)).toEqual(['open', 'completed'])
 
     const sent = fixture.find((item) => item.type === 'communication.sent')!
     expect(sent.channel).toBe('email')
-    expect(parse_communication_opened_content(sent.contenu)?.body).toBe('Merci de régulariser.')
+    expect(parseCommunicationOpenedContent(sent.contenu)?.body).toBe('Merci de régulariser.')
     const status = fixture.find((item) => item.type === 'communication.ok')!
-    expect(parse_communication_status_content(status.contenu)?.result).toBe('read')
+    expect(parseCommunicationStatusContent(status.contenu)?.result).toBe('read')
 
-    expect(latest('repayment_plan.finalized', parse_titled_content)?.title).toBe('Plan d’apurement')
+    expect(latest('repayment_plan.finalized', parseTitledContent)?.title).toBe('Plan d’apurement')
 
     const sentDoc = fixture.find((item) => item.type === 'document.sent_for_signature')!
     const signed = fixture.find((item) => item.type === 'document.signed')!
-    expect(
-      parse_signature_content(sentDoc.contenu)?.signers.map((signer) => signer.status)
-    ).toEqual(['pending', 'pending'])
-    expect(parse_signature_content(signed.contenu)?.signers.map((signer) => signer.status)).toEqual(
-      ['signed', 'pending']
-    )
+    expect(parseSignatureContent(sentDoc.contenu)?.signers.map((signer) => signer.status)).toEqual([
+      'pending',
+      'pending'
+    ])
+    expect(parseSignatureContent(signed.contenu)?.signers.map((signer) => signer.status)).toEqual([
+      'signed',
+      'pending'
+    ])
   })
 
   test('regroupe seulement les statuts de communication', () => {
@@ -161,25 +160,25 @@ describe('LLM fixture', () => {
         20,
         'communication.sent',
         { version: 2, sender: 'Alice', body: 'Question' },
-        { thread_id: 'shared-thread', revision: 1, channel: 'rcs' }
+        { threadId: 'shared-thread', revision: 1, channel: 'rcs' }
       ),
       row(
         21,
         'communication.received',
         { version: 2, sender: 'Locataire', body: 'Réponse' },
-        { thread_id: 'shared-thread', revision: 2, channel: 'rcs' }
+        { threadId: 'shared-thread', revision: 2, channel: 'rcs' }
       ),
       row(
         23,
         'communication.imported',
         { version: 2, sender: 'Locataire', body: 'Historique importé' },
-        { thread_id: 'shared-thread', revision: 2, channel: 'email' }
+        { threadId: 'shared-thread', revision: 2, channel: 'email' }
       ),
       row(
         22,
         'communication.ok',
         { version: 2, result: 'delivered' },
-        { thread_id: 'shared-thread', revision: 3, channel: 'rcs' }
+        { threadId: 'shared-thread', revision: 3, channel: 'rcs' }
       )
     ])
 
@@ -198,16 +197,16 @@ describe('LLM fixture', () => {
         30,
         'communication.sent',
         { version: 2, sender: 'Alice', body: 'Relance' },
-        { thread_id: 'mail-order', revision: 1, channel: 'email' }
+        { threadId: 'mail-order', revision: 1, channel: 'email' }
       ),
       row(
         33,
         'communication.ok',
         { version: 2, result: 'delivered' },
         {
-          thread_id: 'mail-order',
+          threadId: 'mail-order',
           revision: 2,
-          date_creation: '2026-06-10T12:00:00Z',
+          createdAt: '2026-06-10T12:00:00Z',
           channel: 'email'
         }
       ),
@@ -216,9 +215,9 @@ describe('LLM fixture', () => {
         'communication.ok',
         { version: 2, result: 'delivered' },
         {
-          thread_id: 'mail-order',
+          threadId: 'mail-order',
           revision: 2,
-          date_creation: '2026-06-10T12:00:00Z',
+          createdAt: '2026-06-10T12:00:00Z',
           channel: 'email'
         }
       ),
@@ -227,9 +226,9 @@ describe('LLM fixture', () => {
         'communication.ok',
         { version: 2, result: 'read' },
         {
-          thread_id: 'mail-order',
+          threadId: 'mail-order',
           revision: 3,
-          date_creation: '2026-06-10T11:00:00Z',
+          createdAt: '2026-06-10T11:00:00Z',
           channel: 'email'
         }
       )
@@ -239,7 +238,45 @@ describe('LLM fixture', () => {
     expect(sent?.kind).toBe('communication')
     if (sent?.kind === 'communication') {
       expect(sent.statuses.map((status) => status.id)).toEqual([32, 33, 31])
-      expect(parse_communication_status_content(sent.statuses.at(-1)!.contenu)?.result).toBe('read')
+      expect(parseCommunicationStatusContent(sent.statuses.at(-1)!.contenu)?.result).toBe('read')
+    }
+  })
+
+  test('sépare les statuts du RCS et de son repli SMS dans le même fil', () => {
+    const projected = projectTimelineItems([
+      row(
+        40,
+        'communication.sent',
+        { version: 2, sender: 'Alice', body: 'RCS' },
+        { threadId: 'mobile-fallback', revision: 1, channel: 'rcs' }
+      ),
+      row(
+        41,
+        'communication.failed',
+        { version: 2, reason: 'failed' },
+        { threadId: 'mobile-fallback', revision: 2, channel: 'rcs' }
+      ),
+      row(
+        42,
+        'communication.sent',
+        { version: 2, sender: 'Alice', body: 'SMS' },
+        { threadId: 'mobile-fallback', revision: 3, channel: 'sms' }
+      ),
+      row(
+        43,
+        'communication.ok',
+        { version: 2, result: 'delivered' },
+        { threadId: 'mobile-fallback', revision: 4, channel: 'sms' }
+      )
+    ])
+
+    const rcs = projected.find((item) => item.row.id === 40)
+    const sms = projected.find((item) => item.row.id === 42)
+    expect(rcs?.kind).toBe('communication')
+    expect(sms?.kind).toBe('communication')
+    if (rcs?.kind === 'communication' && sms?.kind === 'communication') {
+      expect(rcs.statuses.map((status) => status.id)).toEqual([41])
+      expect(sms.statuses.map((status) => status.id)).toEqual([43])
     }
   })
 })

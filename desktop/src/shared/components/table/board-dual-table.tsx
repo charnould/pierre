@@ -29,7 +29,7 @@ interface Props<TData extends RowData> {
   renderRow: (row: Row<PierreTableFeatures, TData>, meta: RowMeta) => ReactNode
 }
 
-const tableClassName = 'pierre-type-data table-fixed caption-bottom font-sans tabular-nums'
+const tableClassName = 'text-xs table-fixed caption-bottom font-sans tabular-nums'
 
 export function BoardDualTable<TData extends RowData>({
   headerGroups,
@@ -62,9 +62,9 @@ export function BoardDualTable<TData extends RowData>({
           {colgroup}
           <TableHeader>
             {headerGroups.map((headerGroup) => (
-              <TableRow key={headerGroup.id} hover={false}>
+              <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} variant="board" className="relative h-8 text-start">
+                  <TableHead key={header.id} className="relative h-8 text-start">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}

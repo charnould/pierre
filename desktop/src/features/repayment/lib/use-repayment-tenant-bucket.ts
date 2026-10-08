@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 
 import type { TenantRepaymentRow } from './classify-tenants'
-import { resolveRepaymentBucket, type RepaymentBucketId } from './repayment-bucket'
+import { type RepaymentBucketId, resolveRepaymentBucket } from './repayment-bucket'
 
 type OptimisticBuckets = Partial<Record<string, string>>
 

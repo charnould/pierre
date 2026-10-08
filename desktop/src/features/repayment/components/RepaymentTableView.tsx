@@ -1,12 +1,12 @@
 import {
-  flexRender,
-  useTable,
   type ColumnSizingState,
+  type ColumnVisibilityState,
+  flexRender,
   type OnChangeFn,
   type SortingState,
-  type ColumnVisibilityState
+  useTable
 } from '@tanstack/react-table'
-import { memo, useMemo, type RefObject } from 'react'
+import { memo, type RefObject, useMemo } from 'react'
 
 import { BoardDualTable } from '@/shared/components/table/board-dual-table'
 import { pierreTableFeatures } from '@/shared/components/table/table-features'

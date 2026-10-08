@@ -1,4 +1,5 @@
-import { EmptyFolder } from '@/shared/components/icons/koboyo-empty'
+import { FolderOpen, ListFilter } from 'lucide-react'
+
 import {
   Empty,
   EmptyDescription,
@@ -35,7 +36,7 @@ export function RepaymentBucketEmpty({ bucketEmpty, className }: Props) {
     <Empty className={cn('min-h-40', className)}>
       <EmptyHeader>
         <EmptyMedia variant="icon" size="sm">
-          <EmptyFolder />
+          {bucketEmpty ? <FolderOpen /> : <ListFilter />}
         </EmptyMedia>
         <EmptyTitle size="sm">{title}</EmptyTitle>
         <EmptyDescription>{description}</EmptyDescription>

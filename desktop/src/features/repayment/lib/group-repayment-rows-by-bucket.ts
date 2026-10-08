@@ -1,5 +1,5 @@
 import type { TenantRepaymentRow } from './classify-tenants'
-import { repaymentBucketIds, type RepaymentBucketId } from './repayment-bucket'
+import { type RepaymentBucketId, repaymentBucketIds } from './repayment-bucket'
 
 export type RepaymentBucketSectionRows = {
   bucket: RepaymentBucketId

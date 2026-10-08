@@ -1,10 +1,11 @@
 import { deriveCaseAssignment } from '@/shared/lib/activities/case-activities'
 import {
-  activity_payload,
-  parse_case_change_content,
-  parse_communication_opened_content,
-  parse_task_content,
-  type Activite
+  type Activity,
+  activityPayload,
+  parseActivityContent,
+  parseCaseChangeContent,
+  parseCommunicationOpenedContent,
+  parseTaskContent
 } from '@/shared/types/activites'
 
 import type { RepaymentActionId } from './repayment-action'
@@ -22,15 +23,16 @@ export type RepaymentGestionnaireAssignment = {
 }
 
 export function deriveRepaymentAdvancementFromSorted(
-  activities: readonly Activite[]
+  activities: readonly Activity[]
 ): RepaymentAdvancement {
   let bucket: RepaymentBucketId | null = null
   let action: RepaymentActionId | null = null
 
   for (const row of activities) {
-    const payload = activity_payload(row.type, row.contenu)
+    if (parseActivityContent(row.type, row.contenu) == null) continue
+    const payload = activityPayload(row.type, row.contenu)
     if (bucket === null && row.type === 'case.group_changed') {
-      const change = parse_case_change_content(row.contenu)
+      const change = parseCaseChangeContent(row.contenu)
       const value = typeof change?.after === 'string' ? change.after : null
       if (value && isRepaymentBucketId(value)) bucket = value
     }
@@ -41,7 +43,7 @@ export function deriveRepaymentAdvancementFromSorted(
           : payload['phase']
       if (typeof phase === 'string' && isRepaymentBucketId(phase)) bucket = phase
     }
-    const task = parse_task_content(row.contenu)
+    const task = parseTaskContent(row.contenu)
     if (action === null && row.type === 'task.completed' && task) {
       action = task.task.title
     } else if (
@@ -51,7 +53,7 @@ export function deriveRepaymentAdvancementFromSorted(
     ) {
       action = payload['title']
     } else if (action === null && row.type === 'communication.sent') {
-      const opened = parse_communication_opened_content(row.contenu)
+      const opened = parseCommunicationOpenedContent(row.contenu)
       if (opened?.action) action = opened.action
     }
     if (bucket !== null && action !== null) break
@@ -60,19 +62,19 @@ export function deriveRepaymentAdvancementFromSorted(
   return { bucket, action }
 }
 
-export function deriveRepaymentAdvancement(activities: Activite[]): RepaymentAdvancement {
+export function deriveRepaymentAdvancement(activities: Activity[]): RepaymentAdvancement {
   return deriveRepaymentAdvancementFromSorted(sortRepaymentActivitiesDesc(activities))
 }
 
 /** Latest Pierre referent assignment from shared case activities. */
 export function deriveRepaymentGestionnaireFromSorted(
-  activities: readonly Activite[]
+  activities: readonly Activity[]
 ): RepaymentGestionnaireAssignment {
   return deriveCaseAssignment(activities)
 }
 
 export function deriveRepaymentGestionnaire(
-  activities: Activite[]
+  activities: Activity[]
 ): RepaymentGestionnaireAssignment {
   return deriveRepaymentGestionnaireFromSorted(sortRepaymentActivitiesDesc(activities))
 }

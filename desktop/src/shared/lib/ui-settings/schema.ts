@@ -2,18 +2,20 @@ import {
   DEFAULT_MASCOT_BADGE_COLOR,
   DEFAULT_MASCOT_COLOR,
   DEFAULT_MASCOT_SHAPE,
-  parseMascotColor,
-  parseMascotShape,
   type MascotColor,
-  type MascotShape
+  type MascotShape,
+  parseMascotColor,
+  parseMascotShape
 } from '../../../mascot/look'
 import { MASCOT_VIEWBOX_SIZE } from '../../../mascot/profiles'
 import {
   AUTOMATIONS_SPLIT_DEFAULT_LIST,
-  parseAutomationsPanelSplit,
-  type AutomationsPanelSplit
+  type AutomationsPanelSplit,
+  parseAutomationsPanelSplit
 } from './automations-panel'
 import {
+  type ColumnValueBadgeDefaults,
+  type ColumnValuesConfig,
   parseColumnFilters,
   parseColumnOrder,
   parseColumnValueBadgeDefaults,
@@ -21,9 +23,7 @@ import {
   parseColumnWidths,
   parseHiddenColumns,
   parsePinnedColumns,
-  resolveColumnValueBadgeDefaults,
-  type ColumnValueBadgeDefaults,
-  type ColumnValuesConfig
+  resolveColumnValueBadgeDefaults
 } from './tickets-table'
 import {
   parseUpdatesPanelSplit,
@@ -110,12 +110,13 @@ export type HomeExcerptCounts = {
 
 export const DEFAULT_WINDOW_BOUNDS = { width: 1190, height: 840 } as const
 /**
- * Compact centered shell fitted to the login stack (titlebar + px-6 py-6 +
- * 64px mark + legal checkboxes at 12/16). FieldError sits under the field or
- * the legal block — not reserved. Do not stretch the form with flex-1.
+ * Compact centered shell fitted to the resting login stack: titlebar, px-6 py-6,
+ * icon equation, fields, conditions, button, plus 16px so the Windows frame
+ * does not clip the page. FieldError is not reserved.
+ * Do not stretch the form with flex-1.
  */
-export const LOGIN_WINDOW_BOUNDS = { width: 400, height: 560 } as const
-export const WINDOW_MIN_SIZE = { width: 360, height: 400 } as const
+export const LOGIN_WINDOW_BOUNDS = { width: 400, height: 543 } as const
+export const SESSION_WINDOW_MIN_SIZE = { width: 1100, height: 720 } as const
 export const MASCOT_SIZE_RANGE = { min: 80, max: 240, step: 10 } as const
 /** Items shown on each Accueil rail. */
 export const HOME_EXCERPT_RANGE = { min: 2, max: 20, default: 10 } as const
@@ -348,10 +349,13 @@ export function mascotWindowExtent(size: number): number {
   return Math.round((clampMascotSize(size) * MASCOT_VIEWBOX_SIZE) / MASCOT_BODY_DIAMETER)
 }
 
-export function clampWindowSize(width: number, height: number): { width: number; height: number } {
+export function clampSessionWindowSize(
+  width: number,
+  height: number
+): { width: number; height: number } {
   return {
-    width: Math.max(WINDOW_MIN_SIZE.width, width),
-    height: Math.max(WINDOW_MIN_SIZE.height, height)
+    width: Math.max(SESSION_WINDOW_MIN_SIZE.width, width),
+    height: Math.max(SESSION_WINDOW_MIN_SIZE.height, height)
   }
 }
 
@@ -370,7 +374,7 @@ export function parseWindowSettings(value: unknown): WindowSettings | undefined 
   if (y !== undefined) result.y = y
 
   if (result.width !== undefined && result.height !== undefined) {
-    const clamped = clampWindowSize(result.width, result.height)
+    const clamped = clampSessionWindowSize(result.width, result.height)
     result.width = clamped.width
     result.height = clamped.height
   }

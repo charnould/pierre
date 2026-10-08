@@ -2,15 +2,14 @@ import {
   Check,
   FolderKanban,
   ListTodo,
+  type LucideIcon,
   MessageSquare,
   PiggyBank,
   Send,
   Tag,
   Upload,
-  UserPlus,
-  type LucideIcon
+  UserPlus
 } from 'lucide-react'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { type ReactNode, useRef } from 'react'
 
 import { ActionPicker } from '@/shared/components/inspector/action-picker'
@@ -28,9 +27,8 @@ import {
   DropdownMenuTrigger
 } from '@/shared/components/ui/dropdown-menu'
 import type { ActionDraft } from '@/shared/lib/activities/action-activity'
-import { composePresenceProps } from '@/shared/lib/timeline/compose-motion'
 import type { ColumnValuesConfig } from '@/shared/lib/ui-settings/tickets-table'
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 import type { OrgUser } from '@/shared/types/users'
 
 import type { RcsComposeValue } from '../../../../../shared/rcs-message'
@@ -39,7 +37,7 @@ import type { OutboundEmailResolved, OutboundRcsResolved } from '../lib/outbound
 import { repaymentDossierActionOptions } from '../lib/repayment-action'
 import type { ActiveRepaymentPlan } from '../lib/repayment-activity-text'
 import type { RepaymentGestionnaireAssignment } from '../lib/repayment-advancement'
-import { repaymentBucketOptions, type RepaymentBucketId } from '../lib/repayment-bucket'
+import { type RepaymentBucketId, repaymentBucketOptions } from '../lib/repayment-bucket'
 import { repaymentTagOptions } from '../lib/repayment-tags'
 import { RepaymentEmailReviewForm } from './RepaymentEmailReviewForm'
 import { RepaymentInlineNoteForm } from './RepaymentInlineNoteForm'
@@ -92,7 +90,7 @@ interface Props {
   onSelectEmailTemplate: (resolved: OutboundEmailResolved) => void
   onSelectMailtoTemplate: (resolved: OutboundEmailResolved) => void
   onCreatePlan: () => void
-  onEditPlan?: (row: Activite) => void
+  onEditPlan?: (row: Activity) => void
   onCancelCompose: () => void
   onSubmitNote: (comment?: string) => void
   onSubmitAdvancement: () => void
@@ -113,7 +111,6 @@ interface Props {
 
 function planVerbLabel(plan: ActiveRepaymentPlan | null | undefined): string {
   if (plan == null) return 'Créer un plan d’apurement'
-  if (plan.signed) return 'Clôturer le plan d’apurement'
   return 'Modifier le plan d’apurement'
 }
 
@@ -289,94 +286,83 @@ export function RepaymentComposeBlock(props: Props) {
   const activePlan = props.activePlan ?? null
   const canOpenPlan = activePlan == null || props.onEditPlan != null
   const emlInputRef = useRef<HTMLInputElement>(null)
-  const reduceMotion = useReducedMotion()
   const draftRef = useInspectorComposeFocus(composeMode != null)
-  const zoneMotion = composePresenceProps(reduceMotion)
-  const insertMotion = composePresenceProps(reduceMotion, true)
   const meta = composeMode != null ? composeMeta(composeMode, hasReferent) : null
 
   return (
     <div className="relative overflow-hidden">
-      <AnimatePresence mode="wait" initial={false}>
-        {composeMode != null && meta ? (
-          <motion.div key={composeMode} ref={draftRef} {...insertMotion}>
-            <InspectorComposeShell
-              icon={meta.icon}
-              title={meta.title}
-              pending={props.submitting || props.assigningGestionnaire}
-            >
-              <ComposeDraft composeMode={composeMode} props={props} />
-            </InspectorComposeShell>
-          </motion.div>
-        ) : (
-          <motion.ul
-            key="verbs"
-            data-inspector-compose-verbs=""
-            className="m-0 inline-grid w-fit max-w-full list-none gap-1 p-0"
-            {...zoneMotion}
+      {composeMode != null && meta ? (
+        <div ref={draftRef} data-inspector-compose-presence="">
+          <InspectorComposeShell
+            icon={meta.icon}
+            title={meta.title}
+            pending={props.submitting || props.assigningGestionnaire}
           >
-            <TimelineActionRow
-              icon={MessageSquare}
-              label="Laisser une note"
-              onClick={props.onStartNote}
+            <ComposeDraft composeMode={composeMode} props={props} />
+          </InspectorComposeShell>
+        </div>
+      ) : (
+        <ul
+          data-inspector-compose-verbs=""
+          className="m-0 inline-grid w-fit max-w-full list-none gap-1 p-0"
+        >
+          <TimelineActionRow
+            icon={MessageSquare}
+            label="Laisser une note"
+            onClick={props.onStartNote}
+          />
+          <TimelineActionRow icon={ListTodo} label="Créer une tâche" onClick={props.onStartTodo} />
+          <TimelineActionRow
+            icon={Check}
+            label="Consigner une action réalisée"
+            onClick={props.onStartAction}
+          />
+          <VerbMenu icon={Send} label="Contacter un tiers">
+            <RepaymentOutboundTemplateItems
+              tenant={props.tenant}
+              onSelectRcs={props.onSelectRcsTemplate}
+              onSelectEmail={props.onSelectEmailTemplate}
+              onSelectMailto={props.onSelectMailtoTemplate}
             />
+          </VerbMenu>
+          {canOpenPlan ? (
             <TimelineActionRow
-              icon={ListTodo}
-              label="Créer une tâche"
-              onClick={props.onStartTodo}
+              icon={PiggyBank}
+              label={planVerbLabel(activePlan)}
+              onClick={() => {
+                if (activePlan == null) props.onCreatePlan()
+                else props.onEditPlan?.(activePlan.row)
+              }}
             />
+          ) : null}
+          {props.onImportEml ? (
             <TimelineActionRow
-              icon={Check}
-              label="Consigner une action réalisée"
-              onClick={props.onStartAction}
+              icon={Upload}
+              label="Importer un email"
+              onClick={() => emlInputRef.current?.click()}
             />
-            <VerbMenu icon={Send} label="Contacter un tiers">
-              <RepaymentOutboundTemplateItems
-                tenant={props.tenant}
-                onSelectRcs={props.onSelectRcsTemplate}
-                onSelectEmail={props.onSelectEmailTemplate}
-                onSelectMailto={props.onSelectMailtoTemplate}
-              />
-            </VerbMenu>
-            {canOpenPlan ? (
-              <TimelineActionRow
-                icon={PiggyBank}
-                label={planVerbLabel(activePlan)}
-                onClick={() => {
-                  if (activePlan == null) props.onCreatePlan()
-                  else props.onEditPlan?.(activePlan.row)
-                }}
-              />
-            ) : null}
-            {props.onImportEml ? (
-              <TimelineActionRow
-                icon={Upload}
-                label="Importer un email"
-                onClick={() => emlInputRef.current?.click()}
-              />
-            ) : null}
+          ) : null}
+          <TimelineActionRow
+            icon={FolderKanban}
+            label="Changer le groupe"
+            onClick={props.onStartAdvancement}
+          />
+          {canEditTags ? (
             <TimelineActionRow
-              icon={FolderKanban}
-              label="Changer le groupe"
-              onClick={props.onStartAdvancement}
+              icon={Tag}
+              label="Changer les tags"
+              onClick={() => props.onStartTags?.()}
             />
-            {canEditTags ? (
-              <TimelineActionRow
-                icon={Tag}
-                label="Changer les tags"
-                onClick={() => props.onStartTags?.()}
-              />
-            ) : null}
-            {props.gestionnaireAssignable && props.onStartAssignGestionnaire ? (
-              <TimelineActionRow
-                icon={UserPlus}
-                label={hasReferent ? 'Réaffecter à un référent' : 'Affecter à un référent'}
-                onClick={props.onStartAssignGestionnaire}
-              />
-            ) : null}
-          </motion.ul>
-        )}
-      </AnimatePresence>
+          ) : null}
+          {props.gestionnaireAssignable && props.onStartAssignGestionnaire ? (
+            <TimelineActionRow
+              icon={UserPlus}
+              label={hasReferent ? 'Réaffecter à un référent' : 'Affecter à un référent'}
+              onClick={props.onStartAssignGestionnaire}
+            />
+          ) : null}
+        </ul>
+      )}
       {props.onImportEml ? (
         <input
           ref={emlInputRef}

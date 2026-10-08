@@ -18,8 +18,15 @@ export type InstanceCustomization = {
     actions: { dossier: readonly unknown[]; bulk_operations: readonly unknown[] }
     tags: readonly string[]
     template_groups?: unknown
-    create_plan: unknown
     templates: Record<string, string>
+    create_plan: {
+      schedule: {
+        defaultMonths: number
+        maxEffortRate: number
+        minDailyRemainder: number
+        thresholds: readonly { months: number; message: string }[]
+      }
+    }
     prompt?: string
   } | null
   docxSkillIds: string[]
@@ -105,7 +112,11 @@ export function useCustomizationStatus(): CustomizationStatus {
 export async function hydrateCustomizationFromServer(url: string): Promise<string | null> {
   beginCustomizationLoad()
   try {
-    const payload = await window.api?.getSetup?.({ url })
+    const body = await window.api?.getSetup?.({ url })
+    const payload =
+      body != null && typeof body === 'object' && !Array.isArray(body) && 'data' in body
+        ? body.data
+        : undefined
     if (!isCustomizationPayload(payload)) {
       failCustomization()
       return null

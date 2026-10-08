@@ -3,9 +3,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { warnRenderer } from '@/shared/lib/renderer-log'
 import { createRequestSequencer } from '@/shared/lib/request-sequencer'
 import {
-  RECLAMATIONS_PAGE_SIZE,
+  type ColumnFilters,
   filtersToQueryParams,
-  type ColumnFilters
+  RECLAMATIONS_PAGE_SIZE
 } from '@/shared/lib/ui-settings/tickets-table'
 import type { TicketRow, TicketsColumnMeta, TicketsListResponse } from '@/shared/types'
 

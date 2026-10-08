@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'bun:test'
 
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 
 import { buildTicketTimeline } from './build-ticket-timeline'
 
-function sampleActivity(overrides: Partial<Activite> = {}): Activite {
+function sampleActivity(overrides: Partial<Activity> = {}): Activity {
   return {
     id: 1,
-    date_creation: '2026-06-10T14:00:00',
+    createdAt: '2026-06-10T14:00:00',
     rattachement: 'tickets:REC-1',
     auteur: 'user:cdubois@exemple.fr',
     id_client: 'CLI-1',
@@ -24,8 +24,8 @@ function sampleActivity(overrides: Partial<Activite> = {}): Activite {
 describe('buildTicketTimeline', () => {
   test('sorts activities descending by date', () => {
     const items = buildTicketTimeline([
-      sampleActivity({ id: 1, date_creation: '2026-06-01T10:00:00' }),
-      sampleActivity({ id: 2, date_creation: '2026-06-10T14:00:00' })
+      sampleActivity({ id: 1, createdAt: '2026-06-01T10:00:00' }),
+      sampleActivity({ id: 2, createdAt: '2026-06-10T14:00:00' })
     ])
     expect(items[0]?.row.id).toBe(2)
     expect(items[1]?.row.id).toBe(1)
@@ -33,15 +33,15 @@ describe('buildTicketTimeline', () => {
 
   test('keeps every note as its own L1 entry by date', () => {
     const items = buildTicketTimeline([
-      sampleActivity({ id: 10, date_creation: '2026-06-10T14:00:00' }),
+      sampleActivity({ id: 10, createdAt: '2026-06-10T14:00:00' }),
       sampleActivity({
         id: 11,
-        date_creation: '2026-06-10T15:00:00',
+        createdAt: '2026-06-10T15:00:00',
         contenu: JSON.stringify({ version: 2, text: 'Réponse @cdubois' })
       }),
       sampleActivity({
         id: 9,
-        date_creation: '2026-06-09T10:00:00',
+        createdAt: '2026-06-09T10:00:00',
         type: 'communication.received',
         channel: 'rcs',
         contenu: JSON.stringify({ version: 2, sender: 'Locataire', body: 'SMS' })
@@ -55,45 +55,50 @@ describe('buildTicketTimeline', () => {
       id: 10,
       type: 'communication.sent',
       channel: 'email',
-      thread_id: 'mail-1',
-      date_creation: '2026-06-10T10:00:00',
+      threadId: 'mail-1',
+      revision: 1,
+      createdAt: '2026-06-10T10:00:00',
       contenu: JSON.stringify({ version: 2, sender: 'Alice', body: 'Bonjour' })
     })
     const failed = sampleActivity({
       id: 20,
       type: 'communication.sent',
       channel: 'rcs',
-      thread_id: 'rcs-1',
-      date_creation: '2026-06-09T10:00:00',
+      threadId: 'rcs-1',
+      revision: 1,
+      createdAt: '2026-06-09T10:00:00',
       contenu: JSON.stringify({ version: 2, sender: 'Alice', body: 'Bonjour' })
     })
     const items = buildTicketTimeline([
       sampleActivity({
         id: 12,
         type: 'communication.ok',
-        thread_id: 'mail-1',
-        date_creation: '2026-06-10T12:00:00',
+        threadId: 'mail-1',
+        revision: 3,
+        createdAt: '2026-06-10T12:00:00',
         contenu: JSON.stringify({ version: 2, result: 'read' })
       }),
       sampleActivity({
         id: 11,
         type: 'communication.ok',
-        thread_id: 'mail-1',
-        date_creation: '2026-06-10T11:00:00',
+        threadId: 'mail-1',
+        revision: 2,
+        createdAt: '2026-06-10T11:00:00',
         contenu: JSON.stringify({ version: 2, result: 'delivered' })
       }),
       sampleActivity({
         id: 21,
         type: 'communication.failed',
-        thread_id: 'rcs-1',
-        date_creation: '2026-06-09T11:00:00',
+        threadId: 'rcs-1',
+        revision: 2,
+        createdAt: '2026-06-09T11:00:00',
         contenu: JSON.stringify({ version: 2, reason: 'Destinataire inconnu' })
       }),
       sampleActivity({
         id: 30,
         type: 'communication.failed',
-        thread_id: 'orphan',
-        date_creation: '2026-06-11T11:00:00',
+        threadId: 'orphan',
+        createdAt: '2026-06-11T11:00:00',
         contenu: JSON.stringify({ version: 2, reason: 'Sans origine' })
       }),
       failed,

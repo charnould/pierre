@@ -1,5 +1,5 @@
 import { FileUpIcon } from 'lucide-react'
-import { useId, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
+import { type ChangeEvent, type DragEvent, useId, useRef, useState } from 'react'
 
 import { AttachmentItems } from '@/shared/components/AttachmentItems'
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/shared/components/ui/field'

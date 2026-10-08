@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'bun:test'
 
 import type { ActionActivity } from '@/shared/lib/activities/action-activity'
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 
 import { homeActionBucket, partitionHomeActions } from './home-open-action-buckets'
 
 function action(dueDate: string): ActionActivity {
   return {
-    row: { id: 1, date_creation: '2026-09-01T00:00:00.000Z' } as Activite,
+    row: { id: 1, createdAt: '2026-09-01T00:00:00.000Z' } as Activity,
     contenu: {
       version: 2,
       task: { title: 'Tâche', state: 'open', due_date: dueDate }

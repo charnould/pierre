@@ -4,14 +4,14 @@ import {
   Bot,
   ClipboardList,
   Handshake,
-  LayoutGrid,
+  House,
   Mails,
   MessageSquareReply,
   PiggyBank,
-  Settings,
   ShieldCheck,
-  Workflow,
-  Wrench
+  SlidersHorizontal,
+  SquareTerminal,
+  Workflow
 } from 'lucide-react'
 import type { ComponentType } from 'react'
 
@@ -20,8 +20,6 @@ import type { BusinessModuleId } from '../../../../shared/modules'
 interface TabIdentity {
   icon: ComponentType<{ className?: string; size?: number; strokeWidth?: number }>
   label: string
-  /** When true, the home door label becomes `Discuter avec ${agentName}`. */
-  labelUsesAgentName?: boolean
 }
 
 type TabNavGroup = 'home' | 'panel' | 'footer'
@@ -40,21 +38,17 @@ export const TAB_REGISTRY = [
   {
     id: 'home',
     navGroup: 'home',
-    identity: { icon: LayoutGrid, label: 'Accueil' }
+    identity: { icon: House, label: 'Accueil' }
   },
   {
     id: 'chat',
     navGroup: 'panel',
-    identity: {
-      icon: Bot,
-      label: 'Obtenir des informations',
-      labelUsesAgentName: true
-    }
+    identity: { icon: Bot, label: 'Discuter' }
   },
   {
     id: 'tickets',
     navGroup: 'panel',
-    identity: { icon: MessageSquareReply, label: 'Traiter les réclamations' },
+    identity: { icon: MessageSquareReply, label: 'Répondre aux réclamations' },
     moduleId: 'tickets'
   },
   {
@@ -82,10 +76,10 @@ export const TAB_REGISTRY = [
     moduleId: 'repayment'
   },
   {
-    id: 'insurance-attestation',
+    id: 'insurance',
     navGroup: 'panel',
     identity: { icon: ShieldCheck, label: 'Renouveler les assurances' },
-    moduleId: 'insurance-attestation'
+    moduleId: 'insurance'
   },
   {
     id: 'relocation',
@@ -108,13 +102,13 @@ export const TAB_REGISTRY = [
   {
     id: 'administration',
     navGroup: 'footer',
-    identity: { icon: Wrench, label: 'Administration' },
+    identity: { icon: SquareTerminal, label: 'Administration' },
     administratorOnly: true
   },
   {
     id: 'settings',
     navGroup: 'footer',
-    identity: { icon: Settings, label: 'Paramètres' },
+    identity: { icon: SlidersHorizontal, label: 'Paramètres' },
     guestAccessible: true
   }
 ] as const satisfies readonly TabDefinition[]
@@ -128,22 +122,24 @@ const registryById = Object.fromEntries(TAB_REGISTRY.map((entry) => [entry.id, e
   (typeof TAB_REGISTRY)[number]
 >
 
-/** Empty feature panels temporarily hidden from home navigation. */
-export const HIDDEN_PANEL_TABS = [
-  'insurance-attestation',
-  'relocation',
-  'attributions',
-  'ventes'
-] as const satisfies readonly Tab[]
+/** Placeholder métiers. Set a value to false to hide its door. */
+export const PANEL_FLAGS = {
+  insurance: true,
+  relocation: true,
+  attributions: false,
+  ventes: false
+} as const satisfies Partial<Record<Tab, boolean>>
 
-const HIDDEN_PANEL_TAB_SET = new Set<Tab>(HIDDEN_PANEL_TABS)
+export function isPanelTabVisible(tab: Tab): boolean {
+  return (PANEL_FLAGS as Partial<Record<Tab, boolean>>)[tab] ?? true
+}
 
 /** All valid navigation tab ids. */
 export const TABS = TAB_REGISTRY.map((entry) => entry.id)
 
 /** Visible feature panels in home tiles (excluding home and settings). */
 export const PANEL_NAV_TABS = TAB_REGISTRY.filter(
-  (entry) => entry.navGroup === 'panel' && !HIDDEN_PANEL_TAB_SET.has(entry.id)
+  (entry) => entry.navGroup === 'panel' && isPanelTabVisible(entry.id)
 ).map((entry) => entry.id) as Tab[]
 
 /** Tabs reachable without logging in. */
@@ -174,10 +170,6 @@ export function isGuestAccessibleTab(tab: Tab): boolean {
   return entry != null && 'guestAccessible' in entry && entry.guestAccessible === true
 }
 
-export function isPanelTabVisible(tab: Tab): boolean {
-  return !HIDDEN_PANEL_TAB_SET.has(tab)
-}
-
 export function moduleIdForTab(tab: Tab): BusinessModuleId | null {
   const entry = registryById[tab]
   return entry && 'moduleId' in entry ? entry.moduleId : null
@@ -188,24 +180,13 @@ export function canAccessTab(
   user: {
     isAdministrator: boolean
     moduleIds: readonly BusinessModuleId[]
-    chatbotIds: readonly string[]
   } | null
 ): boolean {
   if (isGuestAccessibleTab(tab)) return true
   if (!user) return false
-  if (tab === 'chat') return true
   const entry = registryById[tab]
   if ('administratorOnly' in entry && entry.administratorOnly) return user.isAdministrator
   const moduleId = moduleIdForTab(tab)
   if (!moduleId) return true
   return isPanelTabVisible(tab) && user.moduleIds.includes(moduleId)
-}
-
-export function tabNavLabel(tab: Tab, agentName: string): string {
-  const entry = registryById[tab]
-  if (!entry) return tab
-  if ('labelUsesAgentName' in entry.identity && entry.identity.labelUsesAgentName) {
-    return `Discuter avec ${agentName}`
-  }
-  return entry.identity.label
 }

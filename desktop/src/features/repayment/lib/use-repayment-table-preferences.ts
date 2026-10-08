@@ -1,17 +1,17 @@
 import type {
   ColumnSizingState,
+  ColumnVisibilityState,
   OnChangeFn,
-  SortingState,
-  ColumnVisibilityState
+  SortingState
 } from '@tanstack/react-table'
 import { useCallback, useMemo, useState } from 'react'
 
 import {
   clearAllColumnFilters,
-  hasActiveColumnFilters,
-  parseColumnValues,
   type ColumnFilters,
-  type ColumnValuesConfig
+  type ColumnValuesConfig,
+  hasActiveColumnFilters,
+  parseColumnValues
 } from '@/shared/lib/ui-settings/tickets-table'
 
 import type { RepaymentBucketId } from './repayment-bucket'
@@ -22,8 +22,8 @@ import {
   isRepaymentColumnId,
   isRepaymentUiColumnId,
   pinLockedRepaymentColumns,
-  resolveRepaymentTableColumnIds,
-  type RepaymentColumnId
+  type RepaymentColumnId,
+  resolveRepaymentTableColumnIds
 } from './repayment-table-columns'
 
 const STORAGE_KEY = 'pierre.repayment-table-prefs'
@@ -47,8 +47,7 @@ type StoredPrefsV8 = {
 }
 
 export type ColumnValuesUpdater =
-  | ColumnValuesConfig
-  | ((prev: ColumnValuesConfig | undefined) => ColumnValuesConfig)
+  ColumnValuesConfig | ((prev: ColumnValuesConfig | undefined) => ColumnValuesConfig)
 
 function sanitizeColumnValues(
   values: ColumnValuesConfig | undefined

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import type { Activite, CommunicationChannel } from '@/shared/types/activites'
+import type { Activity, CommunicationChannel } from '@/shared/types/activites'
 
 import {
   communicationBodyParagraphs,
@@ -22,10 +22,10 @@ const CHANNELS: CommunicationChannel[] = [
   'electronic_registered_letter'
 ]
 
-function activity(partial: Partial<Activite> = {}): Activite {
+function activity(partial: Partial<Activity> = {}): Activity {
   return {
     id: 1,
-    date_creation: '2026-06-10T10:00:00Z',
+    createdAt: '2026-06-10T10:00:00Z',
     rattachement: 'repayment:LOC-1',
     auteur: 'user:alice@exemple.fr',
     id_client: null,
@@ -36,7 +36,7 @@ function activity(partial: Partial<Activite> = {}): Activite {
     mentions: [],
     destinataire: 'bob@locataire.fr',
     contenu: JSON.stringify({ version: 2, sender: 'alice@exemple.fr', body: 'Bonjour' }),
-    thread_id: 'mail-1',
+    threadId: 'mail-1',
     revision: 1,
     ...partial
   }
@@ -150,7 +150,15 @@ describe('parseTimelineCommunication', () => {
   })
 
   test('attache le statut réussi ou échoué du thread', () => {
-    const opened = activity({ thread_id: 'mail-1' })
+    const opened = activity({ threadId: 'mail-1' })
+    expect(
+      parseTimelineCommunication(opened, [
+        activity({
+          type: 'communication.ok',
+          contenu: JSON.stringify({ version: 2, result: 'sent' })
+        })
+      ])?.statusLine
+    ).toBe('Envoyé')
     expect(
       parseTimelineCommunication(opened, [
         activity({
@@ -159,6 +167,14 @@ describe('parseTimelineCommunication', () => {
         })
       ])?.statusLine
     ).toBe('Réussi · Lu')
+    expect(
+      parseTimelineCommunication(opened, [
+        activity({
+          type: 'communication.ok',
+          contenu: JSON.stringify({ version: 2, result: 'opened' })
+        })
+      ])?.statusLine
+    ).toBe('Réussi · Ouvert')
     expect(
       parseTimelineCommunication(opened, [
         activity({

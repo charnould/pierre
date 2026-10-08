@@ -11,6 +11,6 @@ test('keeps a visible keyboard focus ring inside option labels', () => {
     </RadioGroup>
   )
 
-  expect(markup).toContain('focus-visible:ring-3')
+  expect(markup).toContain('focus-visible:ring-1')
   expect(markup).not.toContain('group-has-[:focus-visible]/field-label:ring-0')
 })

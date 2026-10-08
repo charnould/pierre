@@ -1,12 +1,12 @@
-import { LoaderCircle } from 'lucide-react'
+import { History } from 'lucide-react'
 import { memo, useMemo } from 'react'
 
-import { EmptyFolder } from '@/shared/components/icons/koboyo-empty'
 import { ActivityTimelineEvent } from '@/shared/components/timeline/activity-timeline-event'
 import { ContextTimeline } from '@/shared/components/timeline/context-timeline'
 import { TimelineEventActions } from '@/shared/components/timeline/timeline-event-actions'
 import { TIMELINE_CONTENT_INSET_CLASS } from '@/shared/components/timeline/timeline-layout'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/shared/components/ui/empty'
+import { Spinner } from '@/shared/components/ui/spinner'
 import { indexTodoRevisions } from '@/shared/lib/activities/action-activity'
 import { formatInspectorTimelineDateline } from '@/shared/lib/timeline/activity-notification-date'
 import { parseActivityAuthor } from '@/shared/lib/timeline/parse-activity-author'
@@ -50,11 +50,11 @@ function TimelineItems({
     const latestByThread = new Map<string, { id: number; revision: number }>()
     for (const item of items) {
       const row = item.row
-      if (!row.type.startsWith('task.') || !row.thread_id) continue
+      if (!row.type.startsWith('task.') || !row.threadId) continue
       const revision = row.revision ?? 0
-      const current = latestByThread.get(row.thread_id)
+      const current = latestByThread.get(row.threadId)
       if (!current || revision > current.revision) {
-        latestByThread.set(row.thread_id, { id: row.id, revision })
+        latestByThread.set(row.threadId, { id: row.id, revision })
       }
     }
     return new Set([...latestByThread.values()].map((entry) => entry.id))
@@ -81,8 +81,8 @@ function TimelineItems({
             row={item.row}
             actor={actor}
             step={stepOffset + index + 1}
-            dateTime={item.row.date_creation}
-            dateLabel={formatInspectorTimelineDateline(item.row.date_creation)}
+            dateTime={item.row.createdAt}
+            dateLabel={formatInspectorTimelineDateline(item.row.createdAt)}
             statuses={item.statuses}
             revisions={revisions}
             highlight={highlightId === item.row.id}
@@ -152,7 +152,7 @@ export const TicketReclamationTimeline = memo(function TicketReclamationTimeline
       <Empty className="min-h-40">
         <EmptyHeader>
           <EmptyMedia variant="icon">
-            <LoaderCircle />
+            <Spinner />
           </EmptyMedia>
           <EmptyTitle size="sm">Chargement…</EmptyTitle>
         </EmptyHeader>
@@ -165,7 +165,7 @@ export const TicketReclamationTimeline = memo(function TicketReclamationTimeline
       <Empty className="min-h-40">
         <EmptyHeader>
           <EmptyMedia variant="icon">
-            <EmptyFolder />
+            <History />
           </EmptyMedia>
           <EmptyTitle size="sm">Aucun historique pour ce dossier.</EmptyTitle>
         </EmptyHeader>

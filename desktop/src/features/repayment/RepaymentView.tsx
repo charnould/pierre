@@ -1,39 +1,33 @@
-import { LoaderCircle } from 'lucide-react'
+import { CircleAlert } from 'lucide-react'
 import type { ComponentType } from 'react'
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useRegisterNavigationHandlers } from '@/contexts/NavigationHistoryContext'
 import { useActivityRail } from '@/features/activity/lib/ActivityRailContext'
-import { CartoonErrorObject } from '@/shared/components/icons/koboyo-empty'
 import { ModuleGate } from '@/shared/components/ModuleGate'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/shared/components/ui/empty'
+import { Spinner } from '@/shared/components/ui/spinner'
 import { useDatastoreTables } from '@/shared/hooks/useDatastoreTables'
 import { moduleReady, useCustomizationStatus } from '@/shared/lib/instance-customization'
 import { cn } from '@/shared/lib/utils'
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 
-import {
-  RepaymentPlanWorkspace,
-  type PlanClosedPayload,
-  type PlanDeletedPayload,
-  type PlanSavedPayload
-} from './components/create-plan/RepaymentPlanWorkspace'
 import { RepaymentBucketTableBlock } from './components/RepaymentBucketTableBlock'
 import { RepaymentMissingTableEmpty } from './components/RepaymentMissingTableEmpty'
 import { RepaymentTenantDrawer } from './components/RepaymentTenantDrawer'
 import type { TenantRepaymentRow } from './lib/classify-tenants'
 import { isComptesLocatairesMissing } from './lib/comptes-locataires-table'
 import { groupRepaymentRowsByBucket } from './lib/group-repayment-rows-by-bucket'
-import { parseRepaymentPlanForm, parseRepaymentPlanProposal } from './lib/repayment-activity-text'
-import { repaymentCreatePlanConfig } from './lib/repayment-create-plan-config'
+import { parseRepaymentPlanForm } from './lib/repayment-activity-text'
 import {
-  subscribeRepaymentPlanEditor,
-  type RepaymentPlanEditorRequest
+  blankPlanEditorRequest,
+  type RepaymentPlanEditorRequest,
+  subscribeRepaymentPlanEditor
 } from './lib/repayment-plan-editor-intent'
-import { createExportOnlyPlanEditorRequest } from './lib/repayment-plan-export-only'
 import { prefetchRepaymentTimeline } from './lib/repayment-timeline-cache'
 import { useRepaymentColumnValues } from './lib/use-repayment-table-preferences'
 import { type RepaymentViewDataDeps, useRepaymentViewData } from './lib/use-repayment-view-data'
+import { type PlanSavedPayload, PlanScreen } from './plan/PlanScreen'
 
 interface Props {
   hidden: boolean
@@ -108,6 +102,10 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
     [url]
   )
 
+  const handleCreateBlankPlan = useCallback(() => {
+    setPlanEditor(blankPlanEditorRequest())
+  }, [])
+
   const handleCreatePlan = useCallback(
     (tenant: TenantRepaymentRow) => {
       setSheetOpen(false)
@@ -116,26 +114,12 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
     [setSheetOpen]
   )
 
-  const handleCreateExportOnlyPlan = useCallback(() => {
-    setPlanEditor(createExportOnlyPlanEditorRequest())
-  }, [])
-
   const handleEditPlan = useCallback(
-    (tenant: TenantRepaymentRow, row: Activite) => {
-      const form = parseRepaymentPlanForm(row)
-      if (!form) return
-      const display = parseRepaymentPlanProposal(row)
+    (tenant: TenantRepaymentRow, row: Activity) => {
+      const dossier = parseRepaymentPlanForm(row)
+      if (!dossier) return
       setSheetOpen(false)
-      setPlanEditor({
-        tenant,
-        activityId: row.id,
-        form: {
-          ...form,
-          idLocataire: form.idLocataire.trim() || tenant.id_locataire,
-          idClient: form.idClient.trim() || tenant.id_client
-        },
-        comment: display?.note ?? ''
-      })
+      setPlanEditor({ tenant, activityId: row.id, dossier })
     },
     [setSheetOpen]
   )
@@ -145,38 +129,9 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
   }, [])
 
   const handlePlanSaved = useCallback(
-    ({ id_locataire, activityId, signed, applyAdvancement }: PlanSavedPayload) => {
-      void (async () => {
-        if (applyAdvancement) {
-          if (signed) {
-            await handleAdvancementChange(repaymentCreatePlanConfig().signedBucketId, '', {
-              id_locataire
-            })
-          }
-        }
-        setPlanEditor(null)
-        openTenantSheet(id_locataire, { activityId })
-      })()
-    },
-    [handleAdvancementChange, openTenantSheet]
-  )
-
-  const handlePlanClosed = useCallback(
-    ({ id_locataire, activityId, motif }: PlanClosedPayload) => {
-      void (async () => {
-        const entry = repaymentCreatePlanConfig().close[motif]
-        await handleAdvancementChange(entry.bucketId, '', { id_locataire })
-        setPlanEditor(null)
-        openTenantSheet(id_locataire, { activityId })
-      })()
-    },
-    [handleAdvancementChange, openTenantSheet]
-  )
-
-  const handlePlanDeleted = useCallback(
-    ({ id_locataire }: PlanDeletedPayload) => {
+    ({ id_locataire, activityId }: PlanSavedPayload) => {
       setPlanEditor(null)
-      openTenantSheet(id_locataire)
+      openTenantSheet(id_locataire, { activityId })
     },
     [openTenantSheet]
   )
@@ -217,7 +172,7 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
       <div
         data-tab-panel
         className={cn(
-          'relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
+          'bg-background relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
           hidden ? 'hidden' : 'flex'
         )}
       >
@@ -231,26 +186,18 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
       <div
         data-tab-panel
         className={cn(
-          'relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
+          'bg-background relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
           hidden ? 'hidden' : 'flex'
         )}
       >
-        <RepaymentPlanWorkspace
-          key={
-            planEditor.exportOnly
-              ? `export:${planEditor.tenant.id_client}:${planEditor.tenant.id_locataire}`
-              : `${planEditor.activityId ?? 'new'}:${planEditor.tenant.id_locataire}`
-          }
+        <PlanScreen
+          key={`${planEditor.activityId ?? 'new'}:${planEditor.tenant.id_locataire}`}
           url={url}
           tenant={planEditor.tenant}
-          initialForm={planEditor.form}
+          initialDossier={planEditor.dossier}
           existingActivityId={planEditor.activityId}
-          initialComment={planEditor.comment}
-          exportOnly={planEditor.exportOnly}
           onClose={handleClosePlan}
           onSaved={handlePlanSaved}
-          onPlanClosed={handlePlanClosed}
-          onPlanDeleted={handlePlanDeleted}
         />
       </div>
     )
@@ -260,19 +207,19 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
     <div
       data-tab-panel
       className={cn(
-        'relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
+        'bg-background relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
         hidden ? 'hidden' : 'flex'
       )}
     >
       <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
         {datastoreTablesLoading && datastoreTables === null ? (
-          <RepaymentBoardStatus icon={LoaderCircle} title="Chargement des soldes…" />
+          <RepaymentBoardStatus icon={Spinner} title="Chargement des soldes…" />
         ) : comptesLocatairesMissing ? (
-          <RepaymentMissingTableEmpty onCreatePlan={handleCreateExportOnlyPlan} />
+          <RepaymentMissingTableEmpty onCreatePlan={handleCreateBlankPlan} />
         ) : loading && allRows.length === 0 ? (
-          <RepaymentBoardStatus icon={LoaderCircle} title="Chargement des soldes…" />
+          <RepaymentBoardStatus icon={Spinner} title="Chargement des soldes…" />
         ) : error && allRows.length === 0 ? (
-          <RepaymentBoardStatus icon={CartoonErrorObject} title={error} />
+          <RepaymentBoardStatus icon={CircleAlert} title={error} />
         ) : (
           <div
             ref={scrollRef}

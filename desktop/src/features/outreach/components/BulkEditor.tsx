@@ -32,7 +32,6 @@ import { repaymentBucketOptions } from '@/features/repayment/lib/repayment-bucke
 import { repaymentTagOptions } from '@/features/repayment/lib/repayment-tags'
 import { ChoiceTile } from '@/shared/components/ChoiceTile'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
-import { CartoonBulkSelectFiles } from '@/shared/components/icons/koboyo-empty'
 import { SelectItems } from '@/shared/components/SelectItems'
 import { VirtualizedTableBody } from '@/shared/components/table/VirtualizedTableBody'
 import { Badge } from '@/shared/components/ui/badge'
@@ -71,18 +70,18 @@ import { toast } from '@/shared/components/ui/toast'
 import {
   BULK_MEDIA,
   bulkDeliveryError,
-  collectBulkPlaceholders,
-  collect_rich_rcs_replies,
-  emptyBulkOperationDefinition,
-  rich_rcs_graph_issues,
   type BulkMedium,
   type BulkOperationDefinition,
   type BulkOperationRecord,
   type BulkRichRcsNode,
   type BulkSource,
+  collect_rich_rcs_replies,
+  collectBulkPlaceholders,
+  emptyBulkOperationDefinition,
   type PreviewMessageResult,
   type PreviewQueryResult,
   type PreviewRow,
+  rich_rcs_graph_issues,
   type SimpleDeliveryStep
 } from '@/shared/types/bulk-operations'
 import type { LedgerColumnMeta } from '@/shared/types/ledger'
@@ -333,8 +332,8 @@ function JsonObjectField({
     <Field data-invalid={error ? '' : undefined}>
       <FieldLabel htmlFor={id}>Contenu RCS enrichi (JSON)</FieldLabel>
       <Textarea
-        variant="code"
         id={id}
+        className="font-mono text-xs leading-normal"
         rows={8}
         value={draft}
         aria-invalid={error ? true : undefined}
@@ -373,16 +372,14 @@ export function BulkMessagePreview({ preview }: { preview: PreviewMessageResult 
     return (
       <div className="space-y-4">
         <p className="whitespace-pre-wrap">{preview.body}</p>
-        <pre className="pierre-type-code-sm overflow-x-auto font-mono whitespace-pre-wrap">
+        <pre className="overflow-x-auto font-mono text-xs whitespace-pre-wrap">
           {JSON.stringify(preview.richContent, null, 2)}
         </pre>
       </div>
     )
   }
   return (
-    <pre className="pierre-type-code-sm overflow-x-auto font-mono whitespace-pre-wrap">
-      {preview.rendered}
-    </pre>
+    <pre className="overflow-x-auto font-mono text-xs whitespace-pre-wrap">{preview.rendered}</pre>
   )
 }
 
@@ -586,6 +583,7 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
   const [draft, setDraft] = useState<Draft>(() => draftFrom(record))
   const [savedId, setSavedId] = useState(record?.id ?? null)
   const [preview, setPreview] = useState<PreviewQueryResult | null>(null)
+  const [previewOffset, setPreviewOffset] = useState(0)
   const [previewing, setPreviewing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [sending, setSending] = useState(false)
@@ -790,7 +788,7 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
   }, [draft, onSaved, retentionError, savedId, url])
 
   const runPreview = useCallback(
-    async (definition: BulkOperationDefinition = draft.definition) => {
+    async (definition: BulkOperationDefinition = draft.definition, offset = 0) => {
       if (
         definition.source !== 'comptes_locataires' ||
         !window.api?.previewBulkOperationQuery ||
@@ -803,7 +801,8 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
         const res = await window.api.previewBulkOperationQuery({
           url,
           definition,
-          bulkOperationId: savedId ?? undefined
+          bulkOperationId: savedId ?? undefined,
+          offset
         })
         if (gen !== previewGen.current) return
         if (!res) {
@@ -811,6 +810,7 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
           return
         }
         setPreview(res.data)
+        setPreviewOffset(res.data.offset)
       } finally {
         if (gen === previewGen.current) setPreviewing(false)
       }
@@ -826,7 +826,7 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
     )
       return
     const timer = window.setTimeout(() => {
-      void runPreview(draft.definition)
+      void runPreview(draft.definition, 0)
     }, 250)
     return () => window.clearTimeout(timer)
   }, [draft.definition, placeholderColumnsUnavailable, runPreview, sourceSupported])
@@ -925,13 +925,19 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
   const eligible = preview?.totals.eligible ?? 0
   const concerned = preview?.totals.total ?? 0
   const applyWithoutSendCount = preview?.totals.eligible ?? 0
-  const channelTotals = preview ? formatPreviewChannelTotals(preview.rows) : ''
+  const channelTotals = preview ? formatPreviewChannelTotals(preview.totals.channels) : ''
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <header className="border-border bg-background sticky top-0 z-20 flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b py-2 ps-2 pe-2">
         <div className="flex min-w-0 items-center gap-2">
-          <Button type="button" variant="ghost" size="icon-sm" aria-label="Retour" onClick={onBack}>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            aria-label="Retour"
+            onClick={onBack}
+          >
             <ArrowLeft />
           </Button>
           <h2 className="m-0 truncate font-sans text-xl leading-6 font-semibold tracking-tight">
@@ -982,7 +988,7 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-4xl px-6 py-6">
-          <FieldGroup spacing="loose">
+          <FieldGroup>
             <FieldSet>
               <FieldLegend>Traitement</FieldLegend>
               <FieldGroup>
@@ -1354,7 +1360,7 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
                                         }}
                                       />
                                       {step.filename ? (
-                                        <p className="pierre-meta">
+                                        <p className="text-muted-foreground text-xs">
                                           <FileUp className="me-1 inline size-4" />
                                           {step.filename} · {step.placeholders.length} placeholder
                                           {step.placeholders.length === 1 ? '' : 's'}
@@ -1637,7 +1643,7 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
                       <Empty className="min-h-60">
                         <EmptyHeader>
                           <EmptyMedia variant="icon">
-                            <CartoonBulkSelectFiles />
+                            <MessageSquare />
                           </EmptyMedia>
                           <EmptyTitle>RCS enrichi bientôt disponible</EmptyTitle>
                           <EmptyDescription>
@@ -1741,7 +1747,7 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
               <Empty className="min-h-60">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
-                    <CartoonBulkSelectFiles />
+                    <Database />
                   </EmptyMedia>
                   <EmptyTitle>Source bientôt disponible</EmptyTitle>
                   <EmptyDescription>
@@ -1753,20 +1759,44 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
           </FieldGroup>
 
           {previewing && !preview ? (
-            <p className="pierre-meta mt-8">Chargement de l’aperçu…</p>
+            <p className="text-muted-foreground mt-8 text-xs">Chargement de l’aperçu…</p>
           ) : null}
           {preview ? (
             <>
-              <p className="pierre-meta mt-8">
+              <p className="text-muted-foreground mt-8 text-xs">
                 {preview.totals.total} ligne{preview.totals.total === 1 ? '' : 's'} ·{' '}
                 {preview.totals.eligible} éligible{preview.totals.eligible === 1 ? '' : 's'} ·{' '}
-                {preview.totals.no_usable_route} sans route exploitable
+                {preview.totals.noUsableRoute} sans route exploitable
                 {channelTotals ? ` · ${channelTotals}` : ''}
                 {previewing ? ' · Mise à jour…' : ''}
               </p>
+              {preview.totals.total > preview.rows.length ? (
+                <div className="mt-2 flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={previewOffset === 0 || previewing}
+                    onClick={() =>
+                      void runPreview(draft.definition, Math.max(0, previewOffset - preview.limit))
+                    }
+                  >
+                    Précédent
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={
+                      previewOffset + preview.rows.length >= preview.totals.total || previewing
+                    }
+                    onClick={() => void runPreview(draft.definition, previewOffset + preview.limit)}
+                  >
+                    Suivant
+                  </Button>
+                </div>
+              ) : null}
               <div ref={resultsScrollRef} className="mt-4 max-h-128 overflow-auto">
-                <table className="pierre-type-data w-max min-w-full table-fixed font-sans tabular-nums">
-                  <thead className="bg-background text-muted-foreground pierre-type-table-header sticky top-0 z-10">
+                <table className="w-max min-w-full table-fixed font-sans text-xs tabular-nums">
+                  <thead className="bg-background text-muted-foreground sticky top-0 z-10 text-xs font-semibold">
                     <tr className="border-border/60 border-b">
                       <th className="w-28 p-2 text-start font-medium">Locataire</th>
                       <th className="w-28 p-2 text-start font-medium">Dette</th>

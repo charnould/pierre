@@ -118,7 +118,7 @@ export function TicketsView({
     <div
       data-tab-panel
       className={cn(
-        'relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background',
+        'bg-background relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
         hidden ? 'hidden' : 'flex'
       )}
     >

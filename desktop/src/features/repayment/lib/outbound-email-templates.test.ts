@@ -6,11 +6,11 @@ import {
   filterOutboundRcsTemplates,
   findOutboundTemplateById,
   groupOutboundTemplates,
+  type OutboundRcsTemplate,
   parseOutboundTemplate,
   resolveOutboundEmail,
   resolveOutboundRcs,
-  templatesFromRawModules,
-  type OutboundRcsTemplate
+  templatesFromRawModules
 } from './outbound-email-templates'
 
 const tenant = {

@@ -2,11 +2,11 @@ import { instanceCustomization } from '@/shared/lib/instance-customization'
 
 import {
   groupOutboundTemplates,
+  type OutboundTemplate,
+  type OutboundTemplateGroup,
   resolveOutboundEmail,
   resolveOutboundRcs,
-  templatesFromRawModules,
-  type OutboundTemplate,
-  type OutboundTemplateGroup
+  templatesFromRawModules
 } from './outbound-email-templates'
 
 function templateGroupOrder(): readonly string[] | undefined {

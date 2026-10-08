@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 
 import {
   activityActorDestinataire,
@@ -9,10 +9,10 @@ import {
   currentActivityBoost
 } from './activity-boost'
 
-function sampleActivity(overrides: Partial<Activite> = {}): Activite {
+function sampleActivity(overrides: Partial<Activity> = {}): Activity {
   return {
     id: 1,
-    date_creation: '2026-08-17T10:00:00',
+    createdAt: '2026-08-17T10:00:00',
     rattachement: 'repayment:LOC-1',
     auteur: 'user:bob@exemple.fr',
     id_client: 'CLI-1',
@@ -43,7 +43,7 @@ describe('canBoostActivity', () => {
       true
     )
     expect(
-      canBoostActivity(sampleActivity({ type: 'bulk.ran', bulk_id: 'bulk-r1' }), 'alice@exemple.fr')
+      canBoostActivity(sampleActivity({ type: 'bulk.ran', bulkId: 'bulk-r1' }), 'alice@exemple.fr')
     ).toBe(true)
   })
 

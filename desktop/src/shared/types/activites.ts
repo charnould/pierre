@@ -1,10 +1,10 @@
 export type {
-  Activite,
-  ActiviteListItem,
   ActivitiesListResponse,
+  Activity,
   ActivityContext,
   ActivityFeedSyncData,
   ActivityFeedSyncResult,
+  ActivityListItem,
   ActivityPatch,
   ActivityResponse,
   ActivityType,
@@ -19,39 +19,43 @@ export type {
   Mention,
   PatchActivityPayload,
   RecordExternalCommunicationPayload,
-  RepaymentPlanEventContent,
-  RepaymentPlanSnapshot,
   SendCommunicationPayload,
   SendCommunicationResponse,
-  TaskContent,
   TaskState
-} from '../../../../shared/activites'
+} from '../../../../shared/activities'
+
+export type { TaskContent } from '../../../../shared/activity-content'
+export type { RepaymentPlanCase } from '../../../../shared/repayment-plan'
 
 export {
   ACTIVITY_CONTENT_VERSION,
-  activity_payload,
-  activity_texte,
-  activity_timestamp,
-  communication_channel_label,
-  is_activity_meta_type,
-  is_case_change_type,
-  is_communication_opened_type,
-  is_communication_status_type,
-  is_hidden_timeline_type,
-  is_note_type,
-  is_signature_type,
-  is_task_type,
-  medium_to_channel,
-  mention_of,
-  parse_activity_content,
-  parse_activity_meta_content,
-  parse_case_change_content,
-  parse_communication_opened_content,
-  parse_communication_status_content,
-  parse_contenu_json,
-  parse_note_content,
-  parse_repayment_plan_content,
-  parse_signature_content,
-  parse_task_content,
-  parse_titled_content
-} from '../../../../shared/activites'
+  activityTimestamp,
+  communicationChannelLabel,
+  isActivityMetaType,
+  isCaseChangeType,
+  isCommunicationOpenedType,
+  isCommunicationStatusType,
+  isHiddenTimelineType,
+  isNoteType,
+  isSignatureType,
+  isTaskType,
+  mediumToChannel,
+  mentionOf
+} from '../../../../shared/activities'
+
+export {
+  activityPayload,
+  activityText,
+  parseActivityContent,
+  parseActivityMetaContent,
+  parseCaseChangeContent,
+  parseCommunicationOpenedContent,
+  parseCommunicationStatusContent,
+  parseContentJson,
+  parseNoteContent,
+  parseSignatureContent,
+  parseTaskContent,
+  parseTitledContent
+} from '../../../../shared/activity-content'
+
+export { parseRepaymentPlanContent } from '../../../../shared/repayment-plan'

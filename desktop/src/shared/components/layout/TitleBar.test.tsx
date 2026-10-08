@@ -79,17 +79,21 @@ const user: UserPrincipal = {
   email: 'a@b.c',
   isAdministrator: false,
   moduleIds: [],
-  chatbotIds: []
+  chatbotIds: [],
+  preferredName: null
 }
 
 async function renderTitleBar(options: {
   user: UserPrincipal | null
   activeTab?: Tab
   onTabChange?: (tab: Tab) => void
+  chatOpen?: boolean
+  onChatToggle?: () => void
 }) {
   const { act } = await import('react')
   const { createRoot } = await import('react-dom/client')
   const { TooltipProvider } = await import('@/shared/components/ui/tooltip')
+  const { ChatWindowTrigger } = await import('@/features/chat/components/ChatWindowTrigger')
   const { TitleBar } = await import('./TitleBar')
 
   const host = document.createElement('div')
@@ -105,6 +109,12 @@ async function renderTitleBar(options: {
           onTabChange={onTabChange}
           notifications={<button type="button" aria-label="Notifications" />}
           tasks={<button type="button" aria-label="Tâches" />}
+          chat={
+            <ChatWindowTrigger
+              open={options.chatOpen ?? false}
+              onToggle={options.onChatToggle ?? (() => {})}
+            />
+          }
         />
       </TooltipProvider>
     )
@@ -134,10 +144,17 @@ describe('TitleBar', () => {
     const labels = [...view.host.querySelectorAll('button')].map((button) =>
       button.getAttribute('aria-label')
     )
-    expect(labels).toEqual(['Accueil', 'Tâches', 'Notifications', 'Paramètres', 'Manuel'])
-    expect(view.host.querySelector('[aria-label="Accueil"]')?.getAttribute('aria-current')).toBe(
-      'page'
-    )
+    expect(labels).toEqual([
+      'Accueil',
+      'Tâches',
+      'Notifications',
+      'Discussion rapide',
+      'Paramètres',
+      'Manuel'
+    ])
+    const home = view.host.querySelector('[aria-label="Accueil"]')
+    expect(home?.getAttribute('aria-current')).toBe('page')
+    expect(home?.className).toContain('aria-[current=page]:bg-muted')
     await view.unmount()
   })
 
@@ -152,6 +169,7 @@ describe('TitleBar', () => {
       'Accueil',
       'Tâches',
       'Notifications',
+      'Discussion rapide',
       'Paramètres',
       'Administration',
       'Manuel'
@@ -169,6 +187,22 @@ describe('TitleBar', () => {
     const home = view.host.querySelector<HTMLButtonElement>('[aria-label="Accueil"]')
     await view.act(async () => home?.click())
     expect(tabs).toEqual(['home'])
+    await view.unmount()
+  })
+
+  test('toggles the persistent chat window', async () => {
+    let toggles = 0
+    const view = await renderTitleBar({
+      user,
+      chatOpen: true,
+      onChatToggle: () => {
+        toggles += 1
+      }
+    })
+    const chat = view.host.querySelector<HTMLButtonElement>('[aria-label="Discussion rapide"]')
+    expect(chat?.getAttribute('aria-expanded')).toBe('true')
+    await view.act(async () => chat?.click())
+    expect(toggles).toBe(1)
     await view.unmount()
   })
 

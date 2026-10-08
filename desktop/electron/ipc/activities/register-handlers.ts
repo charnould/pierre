@@ -25,10 +25,9 @@ export function registerActivitiesHandlers(partition: string): void {
     const ses = session.fromPartition(partition)
     const search = activityQueryString(params)
     try {
-      const response = await netFetch(
-        `${params.url}/desktop/activities${search ? `?${search}` : ''}`,
-        { session: ses }
-      )
+      const response = await netFetch(`${params.url}/activities${search ? `?${search}` : ''}`, {
+        session: ses
+      })
       if (!response.ok) throw new Error(`${response.status} ${await response.text()}`)
       return (await response.json()) as ActivitiesListResponse
     } catch (error) {
@@ -42,12 +41,12 @@ export function registerActivitiesHandlers(partition: string): void {
     async (_, params: GetActivityFeedSyncParams): Promise<ActivityFeedSyncResult | null> => {
       const query = new URLSearchParams({
         auteurs: params.auteurs.join(','),
-        unread_only: String(params.unread_only),
-        inbox_limit: String(params.inbox_limit),
-        authored_limit: String(params.authored_limit)
+        unreadOnly: String(params.unreadOnly),
+        inboxLimit: String(params.inboxLimit),
+        authoredLimit: String(params.authoredLimit)
       })
       try {
-        const response = await netFetch(`${params.url}/desktop/activity-feed/sync?${query}`, {
+        const response = await netFetch(`${params.url}/activities/feed?${query}`, {
           session: session.fromPartition(partition),
           headers: params.etag ? { 'If-None-Match': params.etag } : undefined
         })
@@ -65,7 +64,7 @@ export function registerActivitiesHandlers(partition: string): void {
 
   ipcMain.handle(IpcChannel.activities.create, async (_, params: CreateActivityPayload) => {
     const { url, ...body } = params
-    return request<ActivityResponse>(partition, `${url}/desktop/activities`, 'POST', body)
+    return request<ActivityResponse>(partition, `${url}/activities`, 'POST', body)
   })
 
   ipcMain.handle(
@@ -110,7 +109,7 @@ export function registerActivitiesHandlers(partition: string): void {
               ? 'lre'
               : channel
       try {
-        const response = await netFetch(`${url}/${route}`, {
+        const response = await netFetch(`${url}/communications/${route}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -120,7 +119,9 @@ export function registerActivitiesHandlers(partition: string): void {
           session: session.fromPartition(partition)
         })
         if (!response.headers.get('content-type')?.toLowerCase().includes('application/json')) {
-          throw new Error(`${response.status} Serveur incompatible : réponse non JSON de /${route}`)
+          throw new Error(
+            `${response.status} Serveur incompatible : réponse non JSON de /communications/${route}`
+          )
         }
         return (await response.json()) as SendCommunicationResponse
       } catch (error) {
@@ -133,7 +134,7 @@ export function registerActivitiesHandlers(partition: string): void {
   ipcMain.handle(IpcChannel.activities.patch, async (_, params: PatchActivityPayload) => {
     return request<ActivityResponse>(
       partition,
-      `${params.url}/desktop/activities/${encodeURIComponent(params.id)}`,
+      `${params.url}/activities/${encodeURIComponent(params.id)}`,
       'PATCH',
       params.patch
     )
@@ -142,7 +143,7 @@ export function registerActivitiesHandlers(partition: string): void {
   ipcMain.handle(IpcChannel.activities.delete, async (_, params: DeleteActivityPayload) => {
     return request<DeleteActivityResponse>(
       partition,
-      `${params.url}/desktop/activities/${encodeURIComponent(params.id)}`,
+      `${params.url}/activities/${encodeURIComponent(params.id)}`,
       'DELETE'
     )
   })

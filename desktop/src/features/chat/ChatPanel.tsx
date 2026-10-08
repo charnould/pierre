@@ -1,14 +1,13 @@
-import { Bot, BotMessageSquare, Hand, Rocket } from 'lucide-react'
 import {
+  type DragEvent,
   forwardRef,
+  type ReactNode,
   useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
-  useState,
-  type DragEvent,
-  type ReactNode
+  useState
 } from 'react'
 
 import {
@@ -37,6 +36,7 @@ import { cn } from '@/shared/lib/utils'
 import type { ChatBoot } from '@/shared/types'
 
 export type ChatPanelHandle = {
+  focus: () => void
   stop: () => void
   clearMessages: () => void
   resetAfterAbortedStop: () => void
@@ -46,17 +46,13 @@ interface Props {
   boot: ChatBoot
   transport: ChatTransport
   composerAccessory?: ReactNode
+  composerAppearance?: 'paper' | 'form'
+  minimal?: boolean
   scroll?: 'panel' | 'window'
   arrival?: boolean
 }
 
 const CHAT_MEASURE = 'w-full max-w-3xl'
-
-const GREETING_MARKS = [Hand, Bot, BotMessageSquare, Rocket] as const
-
-function stripTrailingEmoji(line: string) {
-  return line.replace(/\s*\p{Extended_Pictographic}\uFE0F?$/u, '').trimEnd()
-}
 
 function EmptyGreeting({
   greetings,
@@ -67,35 +63,21 @@ function EmptyGreeting({
   arrival?: boolean
   compact?: boolean
 }) {
-  const [pick] = useState(() => {
+  const [line] = useState(() => {
     const index = Math.min(greetings.length - 1, Math.floor(Math.random() * greetings.length))
-    return { index, line: greetings[index]! }
+    return greetings[index]!
   })
 
-  if (!arrival) {
-    return (
-      <p
-        data-slot="chat-empty-greeting"
-        className="px-3 font-serif text-2xl leading-8 font-[450] tracking-normal [font-optical-sizing:auto]"
-      >
-        {pick.line}
-      </p>
-    )
-  }
-
-  const Mark = GREETING_MARKS[pick.index % GREETING_MARKS.length]!
   return (
-    <div data-slot="chat-empty-greeting" className="flex items-start gap-3 px-3">
-      <Mark className={cn('shrink-0', compact ? 'mt-0.5 size-6' : 'mt-1 size-8')} aria-hidden />
-      <p
-        className={cn(
-          'min-w-0 font-serif font-[450] tracking-normal [font-optical-sizing:auto]',
-          compact ? 'text-2xl leading-8' : 'text-4xl leading-tight'
-        )}
-      >
-        {stripTrailingEmoji(pick.line)}
-      </p>
-    </div>
+    <p
+      data-slot="chat-empty-greeting"
+      className={cn(
+        'px-3 font-serif font-[450] tracking-normal [font-optical-sizing:auto]',
+        arrival && !compact ? 'text-4xl leading-tight' : 'text-2xl leading-8'
+      )}
+    >
+      {line}
+    </p>
   )
 }
 
@@ -111,7 +93,15 @@ function ChatDisclaimer({ text }: { text: string }) {
 }
 
 export const ChatPanel = forwardRef<ChatPanelHandle, Props>(function ChatPanel(
-  { boot, transport, composerAccessory, scroll = 'panel', arrival = false },
+  {
+    boot,
+    transport,
+    composerAccessory,
+    composerAppearance = 'paper',
+    minimal = false,
+    scroll = 'panel',
+    arrival = false
+  },
   ref
 ) {
   const windowScroll = scroll === 'window'
@@ -153,16 +143,22 @@ export const ChatPanel = forwardRef<ChatPanelHandle, Props>(function ChatPanel(
     resetAfterAbortedStop
   } = useChatSession(chatConfig, transport)
 
-  useImperativeHandle(ref, () => ({ stop, clearMessages, resetAfterAbortedStop }), [
-    stop,
-    clearMessages,
-    resetAfterAbortedStop
-  ])
+  useImperativeHandle(
+    ref,
+    () => ({
+      focus: () => composerFocusRef.current?.focus(),
+      stop,
+      clearMessages,
+      resetAfterAbortedStop
+    }),
+    [stop, clearMessages, resetAfterAbortedStop]
+  )
 
   const generating = isChatGenerating(status)
   const allowAttachments = boot.attachments
   const isEmptyThread = messages.length === 0
-  const showExamples = isEmptyThread && boot.examples.length > 0 && !pendingQuestionnaire
+  const showExamples =
+    !minimal && isEmptyThread && boot.examples.length > 0 && !pendingQuestionnaire
   const showEmptyGreeting = isEmptyThread && boot.greetings.length > 0 && !pendingQuestionnaire
   const previewedExample = showExamples ? examplePreview : null
 
@@ -415,6 +411,7 @@ export const ChatPanel = forwardRef<ChatPanelHandle, Props>(function ChatPanel(
                   fileErrors={allowAttachments ? fileErrors : []}
                   dropActive={allowAttachments && dropActive}
                   allowAttachments={allowAttachments}
+                  appearance={composerAppearance}
                   autoFocus={!boot.embed}
                   composerAccessory={composerAccessory}
                   placeholder={previewedExample ?? CHAT_COMPOSER_PLACEHOLDER}
@@ -428,13 +425,14 @@ export const ChatPanel = forwardRef<ChatPanelHandle, Props>(function ChatPanel(
               {showExamples ? (
                 <ChatPublicEmpty
                   examples={boot.examples}
-                  quiet={arrival}
                   onExample={(text) => handleSend(text)}
                   onPreview={setExamplePreview}
                 />
               ) : null}
             </div>
-            {!isEmptyThread && boot.disclaimer ? <ChatDisclaimer text={boot.disclaimer} /> : null}
+            {!minimal && !isEmptyThread && boot.disclaimer ? (
+              <ChatDisclaimer text={boot.disclaimer} />
+            ) : null}
           </div>
         </div>
         {isEmptyThread ? (

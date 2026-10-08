@@ -6,15 +6,15 @@ import type { PierreTableFeatures } from '@/shared/components/table/table-featur
 import { getTicketId } from '@/shared/lib/ticket-row'
 import { resolveTicketColumnLabel } from '@/shared/lib/ui-settings/schema'
 import {
-  DEFAULT_PINNED_COLUMNS,
-  TICKET_TABLE_ALERT_COLUMN_ID,
   columnVisibilityToHiddenColumns,
+  DEFAULT_PINNED_COLUMNS,
   hiddenColumnsToColumnVisibility,
   mergeFullColumnOrder,
   resolveColumnOrder,
   resolvePinnedColumns,
   resolveUnpinnedColumnOrder,
-  resolveVisibleColumnNames
+  resolveVisibleColumnNames,
+  TICKET_TABLE_ALERT_COLUMN_ID
 } from '@/shared/lib/ui-settings/tickets-table'
 import type { TicketRow, TicketsColumnMeta } from '@/shared/types'
 

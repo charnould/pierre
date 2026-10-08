@@ -1,4 +1,4 @@
-import { useMemo, type RefObject } from 'react'
+import { type RefObject, useMemo } from 'react'
 
 import { BoardTableSection } from '@/shared/components/table/board-table-section'
 import type { ColumnValuesConfig } from '@/shared/lib/ui-settings/tickets-table'
@@ -10,9 +10,9 @@ import { filterRepaymentRows } from '../lib/repayment-column-filters'
 import type { TenantLastAction } from '../lib/repayment-last-action'
 import type { RepaymentRowSignal } from '../lib/repayment-row-signal'
 import {
+  type ColumnValuesUpdater,
   useRepaymentTableFilters,
-  useRepaymentTablePreferences,
-  type ColumnValuesUpdater
+  useRepaymentTablePreferences
 } from '../lib/use-repayment-table-preferences'
 import { RepaymentBucketEmpty } from './RepaymentBucketEmpty'
 import { RepaymentBucketSectionActions } from './RepaymentBucketSectionActions'

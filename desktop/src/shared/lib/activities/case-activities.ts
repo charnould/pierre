@@ -1,9 +1,9 @@
 import {
+  type Activity,
   ACTIVITY_CONTENT_VERSION,
-  parse_case_change_content,
-  type Activite,
   type ActivityContext,
-  type CreateActivityBody
+  type CreateActivityBody,
+  parseCaseChangeContent
 } from '@/shared/types/activites'
 
 import { canonicalizeCaseTags } from './case-workflow-config'
@@ -61,12 +61,12 @@ export function buildCaseAssignmentActivity(params: {
 }
 
 export function deriveCaseAssignment(
-  activities: readonly Activite[],
+  activities: readonly Activity[],
   fallback?: string | null
 ): CaseAssignment {
   for (const row of activities) {
     if (row.type !== 'case.assignee_changed') continue
-    const parsed = parse_case_change_content(row.contenu)
+    const parsed = parseCaseChangeContent(row.contenu)
     if (!parsed) continue
     const email = entity_email(parsed.after)
     return {
@@ -116,10 +116,10 @@ export function buildCaseTagChangeActivity(params: {
   }
 }
 
-export function deriveCaseTags(activities: readonly Activite[]): string[] {
+export function deriveCaseTags(activities: readonly Activity[]): string[] {
   for (const row of activities) {
     if (row.type !== 'case.tags_changed') continue
-    const parsed = parse_case_change_content(row.contenu)
+    const parsed = parseCaseChangeContent(row.contenu)
     if (!parsed || !Array.isArray(parsed.after)) continue
     return parsed.after.map((entry) => (typeof entry === 'string' ? entry : entry.label))
   }
@@ -152,13 +152,13 @@ export function buildCaseBucketChangeActivity(params: {
 }
 
 export function deriveCaseBucket(
-  activities: readonly Activite[],
+  activities: readonly Activity[],
   fallbackBucket: string,
   isValid: (bucket: string) => boolean = () => true
 ): string {
   for (const row of activities) {
     if (row.type !== 'case.bucket_changed' && row.type !== 'case.group_changed') continue
-    const parsed = parse_case_change_content(row.contenu)
+    const parsed = parseCaseChangeContent(row.contenu)
     const bucket = typeof parsed?.after === 'string' ? parsed.after : null
     if (bucket && isValid(bucket)) return bucket
   }

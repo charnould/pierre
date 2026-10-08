@@ -1,5 +1,3 @@
-import type { BadgeAppearance } from '@/shared/components/ui/badge'
-
 export const RECLAMATIONS_PAGE_SIZE = 150
 
 /** Must match `MAX_COLUMN_FILTER_DISTINCT_VALUES` in `utils/tickets-query.ts`. */
@@ -219,7 +217,12 @@ export type ColumnValuesConfig = Record<string, Record<string, ColumnValueStyle>
 
 export type TicketValueDisplay = {
   text: string
-  badgeStyle?: BadgeAppearance
+  badgeStyle?: {
+    background: string
+    color: string
+    border: string
+    fontWeight?: number
+  }
 }
 
 const DEFAULT_COLUMN_VALUE_BADGE: Required<ColumnValueBadgeDefaults> = {
@@ -261,7 +264,7 @@ export const colorizeBadgeBorder = (background: string, color: string): string =
 export const columnValueStyleToBadge = (
   style: ColumnValueStyle,
   defaults: Required<ColumnValueBadgeDefaults>
-): BadgeAppearance => ({
+): NonNullable<TicketValueDisplay['badgeStyle']> => ({
   background: style.bgColor,
   color: style.textColor,
   border: colorizeBadgeBorder(style.bgColor, style.textColor),

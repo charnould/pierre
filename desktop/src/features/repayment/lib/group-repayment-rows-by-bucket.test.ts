@@ -6,9 +6,9 @@ import type { TenantRepaymentRow } from './classify-tenants'
 import { groupRepaymentRowsByBucket } from './group-repayment-rows-by-bucket'
 import {
   CLIENTS_PARTIS_BUCKET_ID,
+  type RepaymentBucketId,
   repaymentBucketIds,
-  resolveBucketForTenantRow,
-  type RepaymentBucketId
+  resolveBucketForTenantRow
 } from './repayment-bucket'
 
 function row(id: string, overrides: Partial<TenantRepaymentRow> = {}): TenantRepaymentRow {

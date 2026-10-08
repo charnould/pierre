@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 
 import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 
 import { sortRepaymentActivitiesDesc } from './repayment-activity-order'
 import {
@@ -15,8 +15,8 @@ import {
 } from './repayment-tags'
 
 function activity(
-  partial: Pick<Activite, 'id' | 'date_creation' | 'type' | 'contenu'> & Partial<Activite>
-): Activite {
+  partial: Pick<Activity, 'id' | 'createdAt' | 'type' | 'contenu'> & Partial<Activity>
+): Activity {
   return {
     rattachement: 'repayment:LOC-1',
     auteur: 'user:alice@exemple.fr',
@@ -62,7 +62,7 @@ describe('repayment-tags', () => {
       deriveRepaymentTags([
         activity({
           id: 1,
-          date_creation: '2026-06-10 10:00',
+          createdAt: '2026-06-10 10:00',
           type: 'case.tags_changed',
           contenu: JSON.stringify({
             version: 2,
@@ -72,7 +72,7 @@ describe('repayment-tags', () => {
         }),
         activity({
           id: 2,
-          date_creation: '2026-06-11 11:00',
+          createdAt: '2026-06-11 11:00',
           type: 'case.tags_changed',
           contenu: JSON.stringify({
             version: 2,
@@ -89,7 +89,7 @@ describe('repayment-tags', () => {
       deriveRepaymentTags([
         activity({
           id: 1,
-          date_creation: '2026-06-10 10:00',
+          createdAt: '2026-06-10 10:00',
           type: 'case.tags_changed',
           contenu: JSON.stringify({
             version: 2,
@@ -99,7 +99,7 @@ describe('repayment-tags', () => {
         }),
         activity({
           id: 2,
-          date_creation: '2026-06-11 11:00',
+          createdAt: '2026-06-11 11:00',
           type: 'case.tags_changed',
           contenu: JSON.stringify({
             version: 2,
@@ -115,7 +115,7 @@ describe('repayment-tags', () => {
     const unsorted = [
       activity({
         id: 1,
-        date_creation: '2026-06-10 10:00',
+        createdAt: '2026-06-10 10:00',
         type: 'case.tags_changed',
         contenu: JSON.stringify({
           version: 2,
@@ -125,7 +125,7 @@ describe('repayment-tags', () => {
       }),
       activity({
         id: 2,
-        date_creation: '2026-06-11 11:00',
+        createdAt: '2026-06-11 11:00',
         type: 'case.tags_changed',
         contenu: JSON.stringify({
           version: 2,
@@ -145,7 +145,7 @@ describe('repayment-tags', () => {
       deriveRepaymentTags([
         activity({
           id: 1,
-          date_creation: '2026-06-11 11:00',
+          createdAt: '2026-06-11 11:00',
           type: 'case.tags_changed',
           contenu: JSON.stringify({
             version: 2,

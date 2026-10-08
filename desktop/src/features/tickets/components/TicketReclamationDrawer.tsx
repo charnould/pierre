@@ -1,12 +1,12 @@
 import { X } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
+import { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useNotificationTimeline } from '@/features/activity/hooks/use-notification-timeline'
 import { useTicketOutboundState } from '@/features/tickets/hooks/use-ticket-outbound-state'
 import { buildTicketTimeline } from '@/features/tickets/lib/build-ticket-timeline'
 import {
-  NON_TRAITEES_TICKET_BUCKET_ID,
   isTicketBucketId,
+  NON_TRAITEES_TICKET_BUCKET_ID,
   resolveTicketBucket,
   type TicketBucketId
 } from '@/features/tickets/lib/ticket-bucket'
@@ -23,7 +23,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/shared/compo
 import { toast } from '@/shared/components/ui/toast'
 import { useCaseActivityActions } from '@/shared/hooks/use-case-activity-actions'
 import { useScrollToTopOnOpen } from '@/shared/hooks/use-scroll-to-top-on-open'
-import { listOpenActions, type ActionDraft } from '@/shared/lib/activities/action-activity'
+import { type ActionDraft, listOpenActions } from '@/shared/lib/activities/action-activity'
 import {
   deriveCaseAssignment,
   deriveCaseBucket,
@@ -38,14 +38,14 @@ import { ticketsSetup } from '@/shared/lib/instance-customization'
 import { scrollBehavior } from '@/shared/lib/prefers-reduced-motion'
 import { getTicketCellText } from '@/shared/lib/ticket-row'
 import type { TicketRow } from '@/shared/types'
-import { activity_texte, type Activite } from '@/shared/types/activites'
+import { type Activity, activityText } from '@/shared/types/activites'
 import type { OrgUser } from '@/shared/types/users'
 
 import { rcs_compose_payload, type RcsContenu } from '../../../../../shared/rcs-message'
 import {
+  type TicketAiGenerationProps,
   TicketComposeBlock,
-  TicketSummaryCard,
-  type TicketAiGenerationProps
+  TicketSummaryCard
 } from './TicketComposeBlock'
 import { TicketReclamationTimeline } from './TicketReclamationTimeline'
 import type { TicketReplyFormat } from './TicketTenantReplyDraft'
@@ -62,7 +62,7 @@ interface Props {
   sheetOpenToken: number
   /**
    * Corps seul — le parent fournit déjà le Drawer / DrawerContent
-   * (ex. nested dans le centre de notifications).
+   * (ex. Inspector frère du centre de notifications).
    */
   embedded?: boolean
   ticket: TicketRow | null
@@ -135,7 +135,7 @@ export function TicketReclamationDrawer({
   const timelineItems = useMemo(() => buildTicketTimeline(rows, ticket), [rows, ticket])
   const hasTimelineHistory = timelineItems.length > 0
   const sortedActivities = useMemo(
-    () => [...rows].sort((a, b) => b.date_creation.localeCompare(a.date_creation)),
+    () => [...rows].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     [rows]
   )
   const currentTags = useMemo(
@@ -158,16 +158,20 @@ export function TicketReclamationDrawer({
     [sortedActivities, ticket]
   )
   const currentReferent = useMemo(
-    () => deriveCaseAssignment(sortedActivities, getTicketCellText(ticket ?? {}, 'affectation_1')),
+    () =>
+      deriveCaseAssignment(
+        sortedActivities,
+        getTicketCellText(ticket ?? {}, 'email_collaborateur_en_charge')
+      ),
     [sortedActivities, ticket]
   )
   const currentActionRows = useMemo(() => {
-    const latestRevision = new Map<string, Activite>()
+    const latestRevision = new Map<string, Activity>()
     for (const row of rows) {
-      if (!row.type.startsWith('task.') || !row.thread_id) continue
-      const previous = latestRevision.get(row.thread_id)
+      if (!row.type.startsWith('task.') || !row.threadId) continue
+      const previous = latestRevision.get(row.threadId)
       if (!previous || (row.revision ?? 0) > (previous.revision ?? 0)) {
-        latestRevision.set(row.thread_id, row)
+        latestRevision.set(row.threadId, row)
       }
     }
     return [...latestRevision.values()]
@@ -341,7 +345,7 @@ export function TicketReclamationDrawer({
         contenu: {
           ...(subject ? { subject } : {}),
           body: message,
-          external_application: { name: applicationName }
+          externalApplication: { name: applicationName }
         }
       })
       if (!response?.data?.id) {
@@ -443,8 +447,8 @@ export function TicketReclamationDrawer({
               void caseActions.patchAction(id, {
                 operation: 'update_action',
                 action: values.action,
-                assigne_a: values.assigneA,
-                date_echeance: values.dateEcheance,
+                assigneA: values.assigneA,
+                dateEcheance: values.dateEcheance,
                 ...(values.note.trim() ? { note: values.note.trim() } : {})
               })
             }
@@ -606,7 +610,12 @@ export function TicketReclamationDrawer({
               onLetterExportWord={() => {
                 const trimmed = letterBody.trim()
                 if (!trimmed) return
-                void downloadDocx(trimmed, 'replies', letterSubject)
+                void downloadDocx(trimmed, 'replies', {
+                  subject: letterSubject,
+                  adresse: ticket ? getTicketCellText(ticket, 'pierre_adresse') : '',
+                  codePostal: ticket ? getTicketCellText(ticket, 'pierre_code_postal') : '',
+                  ville: ticket ? getTicketCellText(ticket, 'pierre_ville') : ''
+                })
               }}
               onLetterSend={() => {
                 const trimmed = letterBody.trim()
@@ -643,7 +652,7 @@ export function TicketReclamationDrawer({
               }}
               onStartEditNote={(row) => {
                 setEditingNoteId(row.id)
-                setComment(activity_texte(row.type, row.contenu))
+                setComment(activityText(row.type, row.contenu))
                 setComposeMode('comment')
                 scrollComposeIntoView()
               }}
@@ -651,8 +660,8 @@ export function TicketReclamationDrawer({
               onReopenAction={(id, assigneA, dateEcheance) =>
                 void caseActions.patchAction(id, {
                   operation: 'reopen_action',
-                  assigne_a: assigneA,
-                  date_echeance: dateEcheance
+                  assigneA,
+                  dateEcheance
                 })
               }
             />
@@ -667,7 +676,7 @@ export function TicketReclamationDrawer({
     onOpenChange(false)
   }
   const drawerHeader = (
-    <DrawerHeader variant="chrome" data-inspector-motion="header" className="justify-between">
+    <DrawerHeader variant="chrome" className="justify-between">
       <div className="min-w-0 flex-1">
         <DrawerTitle variant="inspector-id" title={idReclamation}>
           {idReclamation}

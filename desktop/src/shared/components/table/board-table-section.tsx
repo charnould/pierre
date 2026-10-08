@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { type CSSProperties, type ReactNode, useLayoutEffect, useRef, useState } from 'react'
 
 import { cn } from '@/shared/lib/utils'
 
@@ -37,7 +37,7 @@ export function BoardTableSection({ title, metadata, actions, children, classNam
   return (
     <section
       className={cn(
-        'flex w-full min-w-0 flex-col bg-background [&:first-child>header]:border-t-0',
+        'bg-background flex w-full min-w-0 flex-col [&:first-child>header]:border-t-0',
         className
       )}
       style={

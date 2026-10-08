@@ -1,10 +1,3 @@
-import type { ComponentType, SVGProps } from 'react'
-
-import {
-  CartoonPersonLabellingContract,
-  Docket,
-  TenantBox
-} from '@/shared/components/icons/koboyo-empty'
 import {
   Empty,
   EmptyDescription,
@@ -12,37 +5,26 @@ import {
   EmptyMedia,
   EmptyTitle
 } from '@/shared/components/ui/empty'
-import type { Tab } from '@/shared/lib/tabs'
+import { PANEL_IDENTITY } from '@/shared/lib/panel-identity'
+import { PANEL_FLAGS } from '@/shared/lib/tab-registry'
 import { cn } from '@/shared/lib/utils'
 
-export const PLACEHOLDER_TABS = [
-  'insurance-attestation',
-  'relocation',
-  'attributions',
-  'ventes'
-] as const satisfies readonly Tab[]
+export const PLACEHOLDER_TABS = Object.keys(PANEL_FLAGS) as (keyof typeof PANEL_FLAGS)[]
 
 type PlaceholderTab = (typeof PLACEHOLDER_TABS)[number]
 
-const PLACEHOLDER_COPY: Record<
-  PlaceholderTab,
-  { description: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }
-> = {
-  'insurance-attestation': {
-    description: 'Les attestations d’assurance seront disponibles ici.',
-    Icon: CartoonPersonLabellingContract
+const PLACEHOLDER_COPY: Record<PlaceholderTab, { description: string }> = {
+  insurance: {
+    description: 'Les attestations d’assurance seront disponibles ici.'
   },
   relocation: {
-    description: 'La relocation sera disponible ici.',
-    Icon: TenantBox
+    description: 'La relocation sera disponible ici.'
   },
   attributions: {
-    description: 'Les attributions seront disponibles ici.',
-    Icon: Docket
+    description: 'Les attributions seront disponibles ici.'
   },
   ventes: {
-    description: 'Les ventes seront disponibles ici.',
-    Icon: CartoonPersonLabellingContract
+    description: 'Les ventes seront disponibles ici.'
   }
 }
 
@@ -53,12 +35,13 @@ interface Props {
 
 /** Placeholder until the workflow is implemented. */
 export function PlaceholderFeatureView({ hidden, tab }: Props) {
-  const { description, Icon } = PLACEHOLDER_COPY[tab]
+  const { description } = PLACEHOLDER_COPY[tab]
+  const Icon = PANEL_IDENTITY[tab].icon
 
   return (
     <div
       data-tab-panel
-      className={cn('relative min-h-0 flex-1 flex-col bg-background', hidden ? 'hidden' : 'flex')}
+      className={cn('bg-background relative min-h-0 flex-1 flex-col', hidden ? 'hidden' : 'flex')}
     >
       <Empty>
         <EmptyHeader>

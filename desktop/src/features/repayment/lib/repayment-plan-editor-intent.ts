@@ -1,13 +1,10 @@
-import type { ApurementPlanFormData } from './apurement-plan/types'
+import { type CaseFile, emptyCase } from '../plan/document'
 import type { TenantRepaymentRow } from './classify-tenants'
 
 export type RepaymentPlanEditorRequest = {
   tenant: TenantRepaymentRow
   activityId?: number
-  form?: ApurementPlanFormData
-  comment?: string
-  /** Form + .docx export only — no activity persist. */
-  exportOnly?: boolean
+  dossier?: CaseFile
 }
 
 type Listener = (request: RepaymentPlanEditorRequest) => void
@@ -21,8 +18,14 @@ export function subscribeRepaymentPlanEditor(listener: Listener): () => void {
   }
 }
 
-export function requestRepaymentPlanEditor(request: RepaymentPlanEditorRequest): void {
-  for (const listener of listeners) {
-    listener(request)
+/** Plan form with nothing prefilled from the ledger. */
+export function blankPlanEditorRequest(): RepaymentPlanEditorRequest {
+  return {
+    tenant: { id_locataire: '', id_client: '', solde_locataire: 0 },
+    dossier: emptyCase()
   }
+}
+
+export function requestRepaymentPlanEditor(request: RepaymentPlanEditorRequest): void {
+  for (const listener of listeners) listener(request)
 }

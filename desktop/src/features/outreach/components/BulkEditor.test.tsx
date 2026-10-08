@@ -3,13 +3,13 @@ import { describe, expect, mock, test } from 'bun:test'
 import { renderToStaticMarkup } from 'react-dom/server'
 
 import {
+  bulkDeliveryError,
+  BulkEditor,
+  BulkMessagePreview,
   bulkOperationCreatePayload,
   bulkOperationExecutePayload,
   bulkOperationPatchPayload,
   bulkOperationWriteBody,
-  bulkDeliveryError,
-  BulkEditor,
-  BulkMessagePreview,
   collectBulkPlaceholders,
   loadPlaceholderColumnItems,
   nextBulkOperationCommandId,
@@ -22,8 +22,8 @@ import {
   previewStepReasonLabel
 } from '@/features/outreach/lib/labels'
 import {
-  emptyBulkOperationDefinition,
   type BulkOperationRecord,
+  emptyBulkOperationDefinition,
   type PreviewRow
 } from '@/shared/types/bulk-operations'
 
@@ -242,7 +242,7 @@ describe('libellés de résultat', () => {
     ]
 
     expect(previewChannelTotals(rows)).toEqual({ email: 1, sms: 1 })
-    expect(formatPreviewChannelTotals(rows)).toBe('Courriel : 1 · SMS : 1')
+    expect(formatPreviewChannelTotals(previewChannelTotals(rows))).toBe('Courriel : 1 · SMS : 1')
     expect(previewStepReasonLabel({ code: 'missing_destination' })).toBe('coordonnée absente')
     expect(
       previewStepReasonLabel({ code: 'missing_placeholders', placeholders: ['nom', 'solde'] })

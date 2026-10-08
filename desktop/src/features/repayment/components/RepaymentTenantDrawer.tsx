@@ -22,7 +22,7 @@ import { listOpenActions } from '@/shared/lib/activities/action-activity'
 import { replyAuthorMentionSeed } from '@/shared/lib/activities/mentions'
 import { scrollBehavior } from '@/shared/lib/prefers-reduced-motion'
 import type { ColumnValuesConfig } from '@/shared/lib/ui-settings/tickets-table'
-import { activity_texte, type Activite } from '@/shared/types/activites'
+import { type Activity, activityText } from '@/shared/types/activites'
 import type { OrgUser } from '@/shared/types/users'
 
 import { rcs_compose_payload } from '../../../../../shared/rcs-message'
@@ -47,8 +47,8 @@ import { actionForTemplate } from '../lib/repayment-template-actions'
 import {
   recordRepaymentEmail,
   repaymentFallbackDestinataire,
-  sendRepaymentRcs,
-  type RepaymentMessageResult
+  type RepaymentMessageResult,
+  sendRepaymentRcs
 } from '../lib/send-repayment-message'
 import { RepaymentComposeBlock } from './RepaymentComposeBlock'
 import { RepaymentTenantTimeline } from './RepaymentTenantTimeline'
@@ -88,7 +88,7 @@ interface Props {
   ) => boolean | Promise<boolean>
   gestionnaireAssignable?: boolean
   onCreatePlan: (tenant: TenantRepaymentRow) => void
-  onEditPlan?: (tenant: TenantRepaymentRow, row: Activite) => void
+  onEditPlan?: (tenant: TenantRepaymentRow, row: Activity) => void
 }
 
 export function RepaymentTenantDrawer({
@@ -302,10 +302,10 @@ export function RepaymentTenantDrawer({
   )
 
   const handleStartEditNote = useCallback(
-    (row: Activite) => {
+    (row: Activity) => {
       clearRcsReview()
       clearEmailReview()
-      startEditNote(row.id, activity_texte(row.type, row.contenu))
+      startEditNote(row.id, activityText(row.type, row.contenu))
       scrollComposeIntoView()
     },
     [clearEmailReview, clearRcsReview, scrollComposeIntoView, startEditNote]
@@ -525,7 +525,7 @@ export function RepaymentTenantDrawer({
   }
 
   const handleEditPlan = useCallback(
-    (row: Activite) => {
+    (row: Activity) => {
       if (!tenant || !onEditPlan) return
       onEditPlan(tenant, row)
     },
@@ -612,7 +612,7 @@ export function RepaymentTenantDrawer({
   const drawerTitle = `${tenant.id_client} · ${tenant.id_locataire}`
 
   const drawerHeader = (
-    <DrawerHeader variant="chrome" data-inspector-motion="header" className="justify-between">
+    <DrawerHeader variant="chrome" className="justify-between">
       <div className="min-w-0 flex-1">
         <DrawerTitle variant="inspector-id" title={drawerTitle}>
           {drawerTitle}

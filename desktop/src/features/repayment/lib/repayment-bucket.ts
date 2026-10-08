@@ -1,6 +1,6 @@
 import {
-  normalizeCaseBucketOptions,
-  type CaseBucketOption
+  type CaseBucketOption,
+  normalizeCaseBucketOptions
 } from '@/shared/lib/activities/case-workflow-config'
 import { repaymentSetup } from '@/shared/lib/instance-customization'
 

@@ -4,5 +4,7 @@ export type DatastoreTableStatus = {
 }
 
 export type DatastoreTablesResponse = {
-  tables: DatastoreTableStatus[]
+  data: {
+    tables: DatastoreTableStatus[]
+  }
 }

@@ -1,12 +1,12 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { type ReactNode, useMemo, useState } from 'react'
 
 import { OrgUserListItem } from '@/shared/components/OrgUserListItem'
 import {
+  type AnyPierreColumn,
+  type AnyPierreTable,
   ColumnHeaderColorMenuItems,
   ColumnHeaderLayoutMenuItems,
-  ColumnHeaderOptionsTrigger,
-  type AnyPierreColumn,
-  type AnyPierreTable
+  ColumnHeaderOptionsTrigger
 } from '@/shared/components/table/column-header-options-menu'
 import {
   DropdownMenu,
@@ -31,8 +31,8 @@ import {
   hasColumnValueStyles
 } from '@/shared/lib/ui-settings/column-value-palette'
 import {
-  normalizeColumnValueKey,
-  type ColumnValuesConfig
+  type ColumnValuesConfig,
+  normalizeColumnValueKey
 } from '@/shared/lib/ui-settings/tickets-table'
 
 import type { TenantRepaymentRow } from '../lib/classify-tenants'

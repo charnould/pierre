@@ -30,7 +30,6 @@ export const IpcChannel = {
     list: 'get-tickets',
     meta: 'get-tickets-meta',
     facets: 'get-ticket-facets',
-    putTicket: 'put-ticket',
     getDraft: 'get-ticket-draft'
   },
   ledger: {
@@ -46,7 +45,18 @@ export const IpcChannel = {
     file: 'get-setup-file',
     adminGet: 'get-admin-setup',
     adminPut: 'put-admin-setup',
-    adminDelete: 'delete-admin-chatbot'
+    providersGet: 'get-admin-providers',
+    providersPut: 'put-admin-providers',
+    adminDelete: 'delete-admin-chatbot',
+    emailTest: 'post-email-test'
+  },
+  admin: {
+    conversations: 'get-admin-conversations',
+    conversation: 'get-admin-conversation',
+    review: 'put-admin-conversation-review',
+    llmUsage: 'get-admin-llm-usage',
+    llmRuns: 'get-admin-llm-runs',
+    llmRun: 'get-admin-llm-run'
   },
   users: {
     list: 'get-users',
@@ -68,7 +78,6 @@ export const IpcChannel = {
     upload: 'upload-knowledge-sources',
     patch: 'patch-knowledge-source',
     delete: 'delete-knowledge-source',
-    download: 'download-knowledge-source',
     builds: 'get-knowledge-builds',
     rebuild: 'rebuild-knowledge'
   },

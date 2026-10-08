@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test'
 
-import type { Activite, ActiviteListItem } from '@/shared/types/activites'
+import type { Activity, ActivityListItem } from '@/shared/types/activites'
 
 import {
   getRepaymentTimelineCache,
@@ -28,10 +28,10 @@ afterEach(() => {
   windowBeforeStub = undefined
 })
 
-function activity(id: number, text = String(id)): ActiviteListItem {
+function activity(id: number, text = String(id)): ActivityListItem {
   return {
     id,
-    date_creation: '2026-06-10T14:00:00',
+    createdAt: '2026-06-10T14:00:00',
     rattachement: 'repayment:LOC-1',
     auteur: 'user:test@exemple.fr',
     id_client: 'CLI-1',
@@ -64,8 +64,8 @@ function timelineResponse({
   openActionsError = false
 }: {
   movements?: Record<string, unknown>[]
-  notifications?: ActiviteListItem[]
-  openActionEvents?: ActiviteListItem[]
+  notifications?: ActivityListItem[]
+  openActionEvents?: ActivityListItem[]
   movementsError?: boolean
   notificationsError?: boolean
   openActionsError?: boolean
@@ -297,9 +297,9 @@ describe('repayment-timeline-cache', () => {
       id_locataire: 'LOC-1',
       force: true
     })
-    const reaction: Activite = {
+    const reaction: Activity = {
       id: 10,
-      date_creation: '2026-06-10T14:01:00',
+      createdAt: '2026-06-10T14:01:00',
       rattachement: 'repayment:LOC-1',
       auteur: 'user:test@exemple.fr',
       id_client: 'CLI-1',

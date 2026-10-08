@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { type ReactNode, useEffect, useMemo, useState } from 'react'
 
 import { useUiSettings } from '@/contexts/UiSettingsContext'
 import {
+  type AnyPierreColumn,
+  type AnyPierreTable,
   ColumnHeaderColorMenuItems,
   ColumnHeaderLayoutMenuItems,
-  ColumnHeaderOptionsTrigger,
-  type AnyPierreColumn,
-  type AnyPierreTable
+  ColumnHeaderOptionsTrigger
 } from '@/shared/components/table/column-header-options-menu'
 import {
   DropdownMenu,

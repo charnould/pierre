@@ -1,5 +1,5 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
+import { type ReactNode, type RefObject, useLayoutEffect, useRef, useState } from 'react'
 
 import { TableBody, TableCell, TableRow } from '@/shared/components/ui/table'
 
@@ -110,7 +110,7 @@ export function VirtualizedTableBody<Row>({
   return (
     <TableBody ref={bindTbody}>
       {paddingTop > 0 ? (
-        <TableRow aria-hidden hover={false}>
+        <TableRow aria-hidden>
           <TableCell colSpan={columnCount} className="p-0" style={{ height: paddingTop }} />
         </TableRow>
       ) : null}
@@ -125,7 +125,7 @@ export function VirtualizedTableBody<Row>({
         })
       })}
       {paddingBottom > 0 ? (
-        <TableRow aria-hidden hover={false}>
+        <TableRow aria-hidden>
           <TableCell colSpan={columnCount} className="p-0" style={{ height: paddingBottom }} />
         </TableRow>
       ) : null}

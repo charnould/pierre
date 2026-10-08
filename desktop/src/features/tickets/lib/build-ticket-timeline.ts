@@ -1,21 +1,21 @@
 import { getTicketCellText } from '@/shared/lib/ticket-row'
 import { projectTimelineItems } from '@/shared/lib/timeline/project-timeline'
 import type { TicketRow } from '@/shared/types'
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 
 export type TicketTimelineItem = {
   source: 'activity' | 'initial-reception'
   id: string
   date: string
-  row: Activite
-  statuses: Activite[]
+  row: Activity
+  statuses: Activity[]
 }
 
-function mapActivityToEntry(row: Activite, statuses: Activite[]): TicketTimelineItem {
+function mapActivityToEntry(row: Activity, statuses: Activity[]): TicketTimelineItem {
   return {
     source: 'activity',
     id: `activity:${row.id}`,
-    date: row.date_creation,
+    date: row.createdAt,
     row,
     statuses
   }
@@ -34,9 +34,9 @@ function initialReception(ticket: TicketRow): TicketTimelineItem {
     getTicketCellText(ticket, 'date_reclamation') ||
     getTicketCellText(ticket, 'dernier_evenement_le') ||
     '1970-01-01T00:00:00Z'
-  const row: Activite = {
+  const row: Activity = {
     id: -1,
-    date_creation: date,
+    createdAt: date,
     rattachement: `tickets:${id}`,
     auteur: 'tenant:Locataire',
     id_client: null,
@@ -62,7 +62,7 @@ function initialReception(ticket: TicketRow): TicketTimelineItem {
 }
 
 export function buildTicketTimeline(
-  activities: Activite[],
+  activities: Activity[],
   ticket?: TicketRow | null
 ): TicketTimelineItem[] {
   const items = projectTimelineItems(activities).map((item) =>
