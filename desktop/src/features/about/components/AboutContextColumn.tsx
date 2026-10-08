@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from 'react'
+import { type ReactNode, useId } from 'react'
 
 import { AboutAttachmentField } from '@/features/about/components/AboutAttachmentField'
 import { AboutSubjectCards } from '@/features/about/components/AboutSubjectCards'
@@ -108,11 +108,13 @@ export function AboutContextColumn({
                 aria-label="Période incluse dans la synthèse"
               />
               <div className="flex items-center justify-between">
-                <span className="pierre-meta tabular-nums">{ABOUT_YEAR_START}</span>
+                <span className="text-muted-foreground text-xs tabular-nums">
+                  {ABOUT_YEAR_START}
+                </span>
                 <span className="text-xs tabular-nums">
                   {formatNumericRangeLabel(rangeFrom, rangeTo)}
                 </span>
-                <span className="pierre-meta tabular-nums">{ABOUT_YEAR_END}</span>
+                <span className="text-muted-foreground text-xs tabular-nums">{ABOUT_YEAR_END}</span>
               </div>
             </div>
           </Field>

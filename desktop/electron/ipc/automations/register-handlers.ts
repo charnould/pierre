@@ -1,6 +1,7 @@
 import { ipcMain, session } from 'electron'
 
 import type {
+  AutomationApiFailure,
   AutomationResponse,
   AutomationsListResponse,
   CreateAutomationPayload,
@@ -18,7 +19,7 @@ import { IpcChannel } from '../channels'
 export function registerAutomationsHandlers(partition: string): void {
   ipcMain.handle(IpcChannel.automations.list, async (_, params: ListAutomationsParams) => {
     try {
-      const response = await netFetch(`${params.url}/desktop/automations`, {
+      const response = await netFetch(`${params.url}/automations`, {
         session: session.fromPartition(partition)
       })
       if (!response.ok) throw new Error(`${response.status} ${await response.text()}`)
@@ -31,13 +32,13 @@ export function registerAutomationsHandlers(partition: string): void {
 
   ipcMain.handle(IpcChannel.automations.create, async (_, params: CreateAutomationPayload) => {
     const { url, ...body } = params
-    return request<AutomationResponse>(partition, `${url}/desktop/automations`, 'POST', body)
+    return request<AutomationResponse>(partition, `${url}/automations`, 'POST', body)
   })
 
   ipcMain.handle(IpcChannel.automations.patch, async (_, params: PatchAutomationPayload) => {
     return request<AutomationResponse>(
       partition,
-      `${params.url}/desktop/automations/${encodeURIComponent(params.id)}`,
+      `${params.url}/automations/${encodeURIComponent(params.id)}`,
       'PATCH',
       params.patch
     )
@@ -46,7 +47,7 @@ export function registerAutomationsHandlers(partition: string): void {
   ipcMain.handle(IpcChannel.automations.delete, async (_, params: DeleteAutomationPayload) => {
     return request<DeleteAutomationResponse>(
       partition,
-      `${params.url}/desktop/automations/${encodeURIComponent(params.id)}`,
+      `${params.url}/automations/${encodeURIComponent(params.id)}`,
       'DELETE'
     )
   })
@@ -54,7 +55,7 @@ export function registerAutomationsHandlers(partition: string): void {
   ipcMain.handle(IpcChannel.automations.run, async (_, params: RunAutomationPayload) => {
     return request<AutomationResponse>(
       partition,
-      `${params.url}/desktop/automations/${encodeURIComponent(params.id)}/run`,
+      `${params.url}/automations/${encodeURIComponent(params.id)}/run`,
       'POST'
     )
   })
@@ -62,7 +63,7 @@ export function registerAutomationsHandlers(partition: string): void {
   ipcMain.handle(IpcChannel.automations.pin, async (_, params: PinAutomationPayload) => {
     return request<AutomationResponse>(
       partition,
-      `${params.url}/desktop/automations/${encodeURIComponent(params.id)}/pin`,
+      `${params.url}/automations/${encodeURIComponent(params.id)}/pin`,
       'POST'
     )
   })
@@ -70,10 +71,20 @@ export function registerAutomationsHandlers(partition: string): void {
   ipcMain.handle(IpcChannel.automations.unpin, async (_, params: PinAutomationPayload) => {
     return request<AutomationResponse>(
       partition,
-      `${params.url}/desktop/automations/${encodeURIComponent(params.id)}/pin`,
+      `${params.url}/automations/${encodeURIComponent(params.id)}/pin`,
       'DELETE'
     )
   })
+}
+
+function apiFailure(payload: string): AutomationApiFailure | null {
+  try {
+    const parsed = JSON.parse(payload) as { error?: { message?: unknown } }
+    const message = typeof parsed.error?.message === 'string' ? parsed.error.message.trim() : ''
+    return message ? { error: { message } } : null
+  } catch {
+    return null
+  }
 }
 
 async function request<T>(
@@ -81,7 +92,7 @@ async function request<T>(
   url: string,
   method: 'POST' | 'PATCH' | 'DELETE',
   body?: unknown
-): Promise<T | null> {
+): Promise<T | AutomationApiFailure | null> {
   try {
     const response = await netFetch(url, {
       method,
@@ -89,8 +100,12 @@ async function request<T>(
       body: body === undefined ? undefined : JSON.stringify(body),
       session: session.fromPartition(partition)
     })
-    if (!response.ok) throw new Error(`${response.status} ${await response.text()}`)
-    return (await response.json()) as T
+    const payload = await response.text()
+    if (!response.ok) {
+      logMainError(`${method.toLowerCase()}-automation`, new Error(`${response.status} ${payload}`))
+      return apiFailure(payload)
+    }
+    return JSON.parse(payload) as T
   } catch (error) {
     logMainError(`${method.toLowerCase()}-automation`, error)
     return null

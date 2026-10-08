@@ -5,10 +5,10 @@ import {
   moduleLabelForType
 } from '@/features/activity/lib/notification-labels'
 import {
-  mapActivityRow,
-  type ActivityNotificationItem
+  type ActivityNotificationItem,
+  mapActivityRow
 } from '@/features/activity/lib/notification-types'
-import type { ActiviteListItem, ActivityContext } from '@/shared/types/activites'
+import type { ActivityContext, ActivityListItem } from '@/shared/types/activites'
 
 import {
   ACTIVITY_PAGE_SIZE,
@@ -26,7 +26,7 @@ function splitAttachment(rattachement: string): { context: ActivityContext; ref:
   return { context: context as ActivityContext, ref }
 }
 
-export function mapAuthoredActivityRows(rows: ActiviteListItem[]): ActivityNotificationItem[] {
+export function mapAuthoredActivityRows(rows: ActivityListItem[]): ActivityNotificationItem[] {
   return rows.flatMap((row) => {
     const attachment = splitAttachment(row.rattachement)
     if (!attachment) return []
@@ -47,7 +47,7 @@ export function mapAuthoredActivityRows(rows: ActiviteListItem[]): ActivityNotif
 }
 
 export function useAuthoredActivity(url: string | undefined, authors: string[], enabled = true) {
-  const [rows, setRows] = useState<ActiviteListItem[]>([])
+  const [rows, setRows] = useState<ActivityListItem[]>([])
   const [hasMore, setHasMore] = useState(false)
   const authorsKey = useMemo(() => [...new Set(authors)].sort().join('\n'), [authors])
   const rowsRef = useRef(rows)
@@ -139,7 +139,7 @@ export function useAuthoredActivity(url: string | undefined, authors: string[], 
     }
   }, [authorsKey, enabled, url])
 
-  const replaceRows = useCallback((nextRows: ActiviteListItem[], limit: number) => {
+  const replaceRows = useCallback((nextRows: ActivityListItem[], limit: number) => {
     rowsRef.current = nextRows
     setRows(nextRows)
     setHasMore(pageIsFull(nextRows.length, limit))

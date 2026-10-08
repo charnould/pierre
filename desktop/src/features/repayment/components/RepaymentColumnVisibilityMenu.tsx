@@ -11,7 +11,11 @@ import {
   DropdownMenuTrigger
 } from '@/shared/components/ui/dropdown-menu'
 
-import { togglableRepaymentColumnIds, type RepaymentColumnId } from '../lib/repayment-table-columns'
+import {
+  type RepaymentColumnId,
+  resolveRepaymentColumnLabel,
+  togglableRepaymentColumnIds
+} from '../lib/repayment-table-columns'
 
 interface Props {
   activeColumnIds: RepaymentColumnId[]
@@ -42,7 +46,7 @@ export function RepaymentColumnVisibilityMenu({
               checked={columnVisibility[columnId] !== false}
               onCheckedChange={(checked) => onToggleColumn(columnId, checked)}
             >
-              {columnId}
+              {resolveRepaymentColumnLabel(columnId)}
             </DropdownMenuCheckboxItem>
           ))}
         </DropdownMenuGroup>

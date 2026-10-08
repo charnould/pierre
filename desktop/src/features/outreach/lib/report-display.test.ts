@@ -10,7 +10,24 @@ import {
   reportItemOutcome,
   reportItemStatusDisplay
 } from '@/features/outreach/lib/report-display'
-import type { BulkReportItem, BulkReportSummary } from '@/shared/types/bulk-operations'
+import type { BulkReportItem, BulkReportSummary, PreviewRow } from '@/shared/types/bulk-operations'
+
+function previewRow(route: PreviewRow['route']): PreviewRow {
+  return {
+    id_locataire: 'LOC-1',
+    id_client: null,
+    nom: null,
+    email: null,
+    telephone: null,
+    adresse: null,
+    gestionnaire: null,
+    gestionnaire_email: null,
+    values: {},
+    status: 'eligible',
+    route,
+    skippedSteps: []
+  }
+}
 
 function item(overrides: Partial<BulkReportItem> = {}): BulkReportItem {
   return {
@@ -20,16 +37,17 @@ function item(overrides: Partial<BulkReportItem> = {}): BulkReportItem {
     source: 'comptes_locataires',
     mode: 'send',
     reportStatus: 'ok',
-    outcome: { code: 'delivered' },
+    outcome: { code: 'delivered', medium: 'email', activityId: 42 },
     currentActivityId: 42,
     completedAt: '2026-08-28T12:00:00Z',
     runAt: null,
     attempts: 1,
     lastError: null,
     payload: {
-      row: {
-        route: { kind: 'fallback', medium: 'email', stepIndex: 0 }
-      }
+      kind: 'fallback',
+      row: previewRow({ kind: 'fallback', medium: 'email', stepIndex: 0 }),
+      stage: 'attempt',
+      stepIndex: 0
     },
     ...overrides
   }
@@ -57,14 +75,23 @@ describe('affichage des rapports de traitements de masse', () => {
 
     const failed = item({
       reportStatus: 'ko',
-      outcome: { code: 'no_usable_route', skipped_steps: [{}, {}] },
+      outcome: {
+        code: 'no_usable_route',
+        skippedSteps: [
+          { medium: 'email', stepIndex: 0, reasons: [{ code: 'missing_destination' }] },
+          { medium: 'rcs', stepIndex: 1, reasons: [{ code: 'missing_destination' }] }
+        ]
+      },
       attempts: 2,
       lastError: 'Transport indisponible'
     })
     expect(reportItemOutcome(failed)).toBe('Sans route exploitable')
     expect(reportItemDetail(failed)).toBe('Transport indisponible')
 
-    const withoutSend = item({ mode: 'apply_without_send', outcome: { code: 'applied' } })
+    const withoutSend = item({
+      mode: 'apply_without_send',
+      outcome: { code: 'applied', activityId: 1, created: true }
+    })
     expect(reportItemChannel(withoutSend)).toBe('Sans envoi')
     expect(reportItemOutcome(withoutSend)).toBe('Appliqué')
   })
@@ -82,13 +109,13 @@ describe('affichage des rapports de traitements de masse', () => {
       source: 'comptes_locataires',
       mode: 'send',
       status: 'partial',
-      counts: { total: 3, in_progress: 1, ok: 1, ko: 1 },
+      counts: { total: 3, inProgress: 1, ok: 1, ko: 1 },
       confirmedAt: '2026-08-28T12:00:00Z',
       completedAt: null,
       actor: 'alice',
       result: {
-        execution_id: 'run-1',
-        totals: { total: 3, queued: 1, no_usable_route: 1, applied: 1 }
+        executionId: 'run-1',
+        totals: { total: 3, queued: 1, noUsableRoute: 1, applied: 1 }
       }
     }
     expect(formatBulkReportRunSummary(report)).toContain('alice')

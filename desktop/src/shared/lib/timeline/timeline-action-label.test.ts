@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import type { Activite, CommunicationChannel } from '@/shared/types/activites'
+import type { Activity, CommunicationChannel } from '@/shared/types/activites'
 
 import {
   formatTimelineActivityTitle,
@@ -8,10 +8,10 @@ import {
   timelineActivityActionVerb
 } from './timeline-action-label'
 
-function sampleActivity(overrides: Partial<Activite> = {}): Activite {
+function sampleActivity(overrides: Partial<Activity> = {}): Activity {
   return {
     id: 1,
-    date_creation: '2026-06-10T14:00:00',
+    createdAt: '2026-06-10T14:00:00',
     rattachement: 'repayment:LOC-1',
     auteur: 'user:cdubois@exemple.fr',
     id_client: 'CLI-1',
@@ -25,7 +25,7 @@ function sampleActivity(overrides: Partial<Activite> = {}): Activite {
   }
 }
 
-function sent(channel: CommunicationChannel, extras: Partial<Activite> = {}): Activite {
+function sent(channel: CommunicationChannel, extras: Partial<Activity> = {}): Activity {
   return sampleActivity({
     type: 'communication.sent',
     channel,
@@ -69,7 +69,7 @@ describe('timelineActivityActionVerb', () => {
 
   test('maps case changes and task states', () => {
     expect(timelineActivityActionVerb(sampleActivity({ type: 'case.group_changed' }))).toBe(
-      'a déplacé le dossier de groupe'
+      'a changé la phase'
     )
     expect(timelineActivityActionVerb(sampleActivity({ type: 'case.assignee_changed' }))).toBe(
       'a affecté le dossier'

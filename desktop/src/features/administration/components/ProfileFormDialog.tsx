@@ -11,6 +11,7 @@ import {
 } from '@/shared/components/ui/dialog'
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -90,6 +91,9 @@ export function ProfileFormDialog({ url, profile, catalogues, onClose, onSaved }
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor={`${fieldId}-name`}>Nom</FieldLabel>
+            <FieldDescription>
+              Nom du gabarit recopié sur les comptes auxquels on l’affecte.
+            </FieldDescription>
             <Input
               id={`${fieldId}-name`}
               value={name}
@@ -99,6 +103,7 @@ export function ProfileFormDialog({ url, profile, catalogues, onClose, onSaved }
 
           <FieldSet>
             <FieldLegend>Modules</FieldLegend>
+            <FieldDescription>Écrans métier ouverts aux comptes de ce profil.</FieldDescription>
             <div data-slot="checkbox-group" className="grid grid-cols-2 gap-2">
               {catalogues.modules.map((module) => (
                 <Field key={module.id} orientation="horizontal">
@@ -115,6 +120,9 @@ export function ProfileFormDialog({ url, profile, catalogues, onClose, onSaved }
 
           <FieldSet>
             <FieldLegend>Chatbots</FieldLegend>
+            <FieldDescription>
+              Assistants proposés dans Discuter aux comptes de ce profil.
+            </FieldDescription>
             <div data-slot="checkbox-group" className="grid grid-cols-2 gap-2">
               {catalogues.chatbots.map((chatbot) => (
                 <Field key={chatbot.id} orientation="horizontal">

@@ -1,47 +1,56 @@
-import { RotateCcw } from 'lucide-react'
-import { motion } from 'motion/react'
+import { ArrowLeft } from 'lucide-react'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 
 import { useUiSettings } from '@/contexts/UiSettingsContext'
-import { HistoricalAppsConnectionField } from '@/features/settings/components/HistoricalAppsConnectionField'
 import { HomeExcerptField } from '@/features/settings/components/HomeExcerptField'
 import { IdentityField } from '@/features/settings/components/IdentityField'
-import { MascotField, type MascotAppearance } from '@/features/settings/components/MascotField'
+import { type MascotAppearance, MascotField } from '@/features/settings/components/MascotField'
 import { useAppVersion } from '@/features/settings/hooks/useAppVersion'
 import { runAppUpdateCheck } from '@/features/settings/lib/app-version-check'
-import { panelScreen } from '@/features/workflow/components/WorkflowPanelChrome'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
-import { PageHeader } from '@/shared/components/PageHeader'
 import { Button } from '@/shared/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import {
   Field,
+  FieldContent,
   FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel
 } from '@/shared/components/ui/field'
+import { Spinner } from '@/shared/components/ui/spinner'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { toast } from '@/shared/components/ui/toast'
 import {
   DEFAULT_MASCOT_SETTINGS,
   FACTORY_UI_SETTINGS_FILE_CONTENT,
+  type HomeSettings,
   isUiSettingsFileObject,
   listDroppedUiSettingsKeys,
   resolveHomeSettings,
-  type HomeSettings,
   UI_SETTINGS_EXAMPLE
 } from '@/shared/lib/ui-settings/schema'
 import type { Settings } from '@/shared/types'
 import { DEFAULT_UPDATES_NOTIFY_SCOPE } from '@/shared/types/settings'
+import type { UserPrincipal } from '@/shared/types/users'
 
 interface Props {
   settings: Settings
+  user: UserPrincipal
   agentName: string
+  onHome: () => void
+  onUserChange: (user: UserPrincipal) => void
   onLogout: () => void
-  onSettingsChange: (settings: Settings) => void
 }
 
-export function LoggedInSettingsPage({ settings, agentName, onLogout }: Props) {
+export function LoggedInSettingsPage({
+  settings,
+  user,
+  agentName,
+  onHome,
+  onUserChange,
+  onLogout
+}: Props) {
   const jsonFieldId = useId()
   const { resetToFactory, save, settings: uiSettings, reload } = useUiSettings()
   const [text, setText] = useState(FACTORY_UI_SETTINGS_FILE_CONTENT)
@@ -200,117 +209,151 @@ export function LoggedInSettingsPage({ settings, agentName, onLogout }: Props) {
     onLogout()
   }
 
-  const accountMeta = [settings.email, settings.url, appVersion].filter(Boolean).join(' · ')
+  const session = [settings.email, settings.url].filter(Boolean).join(' · ')
 
   return (
-    <motion.div
-      className="bg-background h-full min-h-0 w-full flex-1 overflow-x-hidden overflow-y-auto overscroll-contain"
-      initial="hidden"
-      animate="visible"
-      exit="hidden"
-      variants={panelScreen}
-    >
-      <div className="mx-auto w-full max-w-4xl px-6 py-6">
-        <PageHeader
-          title="Paramètres"
-          meta={accountMeta || undefined}
-          actions={
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={checkingUpdates}
-                onClick={() => void handleCheckUpdates()}
-              >
-                {checkingUpdates ? 'Recherche…' : 'Rechercher des mises à jour'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (jsonDirty) setConfirm('logout')
-                  else void handleLogout()
-                }}
-              >
-                Se déconnecter
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setConfirm('reset')}
-                disabled={saving}
-              >
-                <RotateCcw data-icon="inline-start" />
-                Réinitialiser
-              </Button>
-            </>
-          }
+    <div className="bg-background h-full min-h-0 w-full flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-4 py-8">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            aria-label="Retour"
+            onClick={onHome}
+          >
+            <ArrowLeft />
+          </Button>
+          <h1 className="font-serif text-4xl leading-tight font-normal">Paramètres</h1>
+        </div>
+        {settings.url && settings.email ? (
+          <IdentityField
+            url={settings.url}
+            email={settings.email}
+            agentName={agentName}
+            preferredName={user.preferredName}
+            onPreferredNameChange={(preferredName) => onUserChange({ ...user, preferredName })}
+          />
+        ) : null}
+
+        <MascotField
+          enabled={mascotEnabled}
+          onEnabledChange={(enabled) => void handleMascotEnabledChange(enabled)}
+          size={mascotSize}
+          shape={mascotShape}
+          color={mascotColor}
+          badgeColor={mascotBadgeColor}
+          onAppearanceChange={(next, options) => void handleMascotAppearanceChange(next, options)}
+          disabled={mascotToggling}
         />
 
-        <FieldGroup className="mt-6">
-          {settings.url && settings.email ? (
-            <IdentityField url={settings.url} email={settings.email} agentName={agentName} />
-          ) : null}
+        <HomeExcerptField value={homeExcerpts} onPersist={persistHome} />
 
-          <MascotField
-            enabled={mascotEnabled}
-            onEnabledChange={(enabled) => void handleMascotEnabledChange(enabled)}
-            size={mascotSize}
-            shape={mascotShape}
-            color={mascotColor}
-            badgeColor={mascotBadgeColor}
-            onAppearanceChange={(next, options) => void handleMascotAppearanceChange(next, options)}
-            disabled={mascotToggling}
-          />
+        <Card>
+          <CardHeader>
+            <CardTitle>Application</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FieldGroup variant="rows">
+              <Field orientation="horizontal">
+                <FieldContent>
+                  <FieldLabel>Rechercher des mises à jour</FieldLabel>
+                  {appVersion ? <FieldDescription>{appVersion}</FieldDescription> : null}
+                </FieldContent>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="justify-self-end"
+                  disabled={checkingUpdates}
+                  onClick={() => void handleCheckUpdates()}
+                >
+                  {checkingUpdates ? <Spinner data-icon="inline-start" aria-hidden /> : null}
+                  Rechercher des mises à jour
+                </Button>
+              </Field>
+              <Field orientation="horizontal">
+                <FieldContent>
+                  <FieldLabel>Se déconnecter</FieldLabel>
+                  {session ? <FieldDescription>{session}</FieldDescription> : null}
+                </FieldContent>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="justify-self-end"
+                  onClick={() => {
+                    if (jsonDirty) setConfirm('logout')
+                    else void handleLogout()
+                  }}
+                >
+                  Se déconnecter
+                </Button>
+              </Field>
+              <Field orientation="horizontal">
+                <FieldContent>
+                  <FieldLabel>Réinitialiser</FieldLabel>
+                  <FieldDescription>
+                    Remet l’affichage d’usine, vous déconnecte, et recharge l’application.
+                  </FieldDescription>
+                </FieldContent>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="justify-self-end"
+                  disabled={saving}
+                  onClick={() => setConfirm('reset')}
+                >
+                  Réinitialiser
+                </Button>
+              </Field>
+            </FieldGroup>
+          </CardContent>
+        </Card>
 
-          <HistoricalAppsConnectionField agentName={agentName} />
-
-          <HomeExcerptField value={homeExcerpts} onPersist={persistHome} />
-
-          <Field variant="document-setting">
-            <div className="flex flex-col gap-0.5">
-              <FieldLabel htmlFor={jsonFieldId}>Fichier d’interface</FieldLabel>
+        <Card>
+          <CardHeader>
+            <CardTitle>Fichier d’interface</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Field data-invalid={error ? true : undefined}>
+              <FieldLabel htmlFor={jsonFieldId} className="sr-only">
+                Fichier d’interface
+              </FieldLabel>
               <FieldDescription>
                 JSON local : fenêtre, compagnon, accueil, tableau et panneaux. Enregistrer remplace
                 le fichier entier. Partagez-le pour aligner l’affichage de l’équipe.
               </FieldDescription>
-            </div>
-            <Textarea
-              id={jsonFieldId}
-              aria-label="Fichier d’interface"
-              value={text}
-              onChange={(e) => {
-                setText(e.target.value)
-                setJsonDirty(true)
-                setError('')
-              }}
-              spellCheck={false}
-              aria-invalid={!!error}
-              aria-describedby="ui-settings-json-error"
-              aria-errormessage="ui-settings-json-error"
-              placeholder={UI_SETTINGS_EXAMPLE}
-              variant="code"
-              className="field-sizing-fixed min-h-52 resize-y"
-            />
-            {error ? (
-              <FieldError id="ui-settings-json-error">{error}</FieldError>
-            ) : (
-              <span id="ui-settings-json-error" className="sr-only" />
-            )}
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                onClick={() => void handleSave()}
-                disabled={saving || !jsonDirty}
-              >
-                {saving ? 'Enregistrement…' : 'Enregistrer'}
-              </Button>
-            </div>
-          </Field>
-        </FieldGroup>
+              <Textarea
+                id={jsonFieldId}
+                value={text}
+                onChange={(e) => {
+                  setText(e.target.value)
+                  setJsonDirty(true)
+                  setError('')
+                }}
+                spellCheck={false}
+                aria-invalid={!!error}
+                aria-describedby={error ? 'ui-settings-json-error' : undefined}
+                aria-errormessage={error ? 'ui-settings-json-error' : undefined}
+                placeholder={UI_SETTINGS_EXAMPLE}
+                className="max-h-96"
+              />
+              {error ? <FieldError id="ui-settings-json-error">{error}</FieldError> : null}
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  onClick={() => void handleSave()}
+                  disabled={saving || !jsonDirty}
+                >
+                  {saving ? <Spinner data-icon="inline-start" aria-hidden /> : null}
+                  Enregistrer
+                </Button>
+                <p className="text-muted-foreground text-xs leading-4" aria-live="polite">
+                  {jsonDirty ? 'Modifications à enregistrer' : 'Aucune modification'}
+                </p>
+              </div>
+            </Field>
+          </CardContent>
+        </Card>
       </div>
 
       <ConfirmDialog
@@ -336,6 +379,6 @@ export function LoggedInSettingsPage({ settings, agentName, onLogout }: Props) {
           void handleLogout()
         }}
       />
-    </motion.div>
+    </div>
   )
 }

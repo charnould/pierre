@@ -1,4 +1,4 @@
-import { loadCustomization, type InstanceCustomization } from '@/shared/lib/instance-customization'
+import { type InstanceCustomization, loadCustomization } from '@/shared/lib/instance-customization'
 
 export const CUSTOMIZATION_FIXTURE: InstanceCustomization = {
   name: 'Pierre',
@@ -16,28 +16,20 @@ export const CUSTOMIZATION_FIXTURE: InstanceCustomization = {
     }
   },
   repayments: {
-    buckets: [
-      { id: 'non_traites', label: 'Non traités' },
-      { id: 'amiable', label: 'Recouvrement amiable' },
-      { id: 'contentieux', label: 'Contentieux' },
-      { id: 'clients_partis', label: 'Clients partis' }
-    ],
-    actions: {
-      dossier: ['Analyser le dossier', 'Joindre le locataire'],
-      bulk_operations: ['Envoyer un RCS de relance']
-    },
+    phases: ['Non traités', 'Recouvrement amiable', 'Contentieux', 'Clients partis'],
+    caseActions: ['Analyser le dossier', 'Joindre le locataire'],
+    batchActions: ['Envoyer un RCS de relance'],
     tags: ['décès', '+65 ans'],
-    template_groups: ['RCS/SMS au (ex-)client'],
-    create_plan: {
-      signed_bucket_id: 'amiable',
-      close: {
-        execution_complete: { bucket_id: 'non_traites' },
-        non_respect: { bucket_id: 'contentieux' },
-        remplacement_par_nouveau_plan: { bucket_id: 'amiable' },
-        effacement_de_dette: { bucket_id: 'non_traites' }
+    messages: [],
+    schedule: {
+      defaultInstallments: 6,
+      maxEffortPercent: 35,
+      minDailyRemainderEuros: 15,
+      confirmAfterInstallments: {
+        '12': 'Un échéancier de plus de 12 mensualités doit être confirmé.',
+        '24': 'Un plan d’apurement de plus de 24 mensualités est réservé à des cas spéciaux documentés au sein de votre organisme.'
       }
-    },
-    templates: {}
+    }
   },
   docxSkillIds: ['replies'],
   about: { prompt: 'synthèse' },

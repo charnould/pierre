@@ -1,11 +1,11 @@
 import type { ReaderTarget } from '@/features/activity/lib/reader-target'
-import type { Activite } from '@/shared/types/activites'
-import { activity_payload, activity_texte } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
+import { activityPayload, activityText } from '@/shared/types/activites'
 
 import {
+  type Automation,
   automationMaxReports,
   isReportAutomation,
-  type Automation,
   type ReportAutomation,
   type ReportRun
 } from './automation-types'
@@ -34,10 +34,10 @@ function formatRunMenuDate(dateStr: string): string {
   })
 }
 
-function activityRowToReaderTarget(row: Activite, automation: Automation): ReaderTarget {
-  const payload = activity_payload(row.type, row.contenu)
+function activityRowToReaderTarget(row: Activity, automation: Automation): ReaderTarget {
+  const payload = activityPayload(row.type, row.contenu)
   const title = typeof payload['title'] === 'string' ? payload['title'] : automation.name
-  const content = activity_texte(row.type, row.contenu) || undefined
+  const content = activityText(row.type, row.contenu) || undefined
 
   return {
     kind: 'automation',
@@ -45,7 +45,7 @@ function activityRowToReaderTarget(row: Activite, automation: Automation): Reade
     automationId: automation.id,
     title,
     content,
-    date: row.date_creation
+    date: row.createdAt
   }
 }
 
@@ -60,10 +60,10 @@ function mockRunToReaderTarget(run: ReportRun, automation: ReportAutomation): Re
   }
 }
 
-function activityRunSubtitle(row: Activite, automation: Automation): string {
+function activityRunSubtitle(row: Activity, automation: Automation): string {
   if (isReportAutomation(automation)) return 'Rapport'
 
-  const summary = activity_payload(row.type, row.contenu)['summary']
+  const summary = activityPayload(row.type, row.contenu)['summary']
   if (summary && typeof summary === 'object' && summary !== null) {
     const generated = (summary as { generated?: unknown }).generated
     const total = (summary as { total?: unknown }).total
@@ -77,37 +77,32 @@ function activityRunSubtitle(row: Activite, automation: Automation): string {
 
 export function buildAutomationRunEntries(
   automation: Automation,
-  activityRows: Activite[],
+  activityRows: Activity[],
   limit: number
 ): AutomationRunMenuEntry[] {
   if (activityRows.length > 0) {
     return [...activityRows]
-      .sort((a, b) => new Date(b.date_creation).getTime() - new Date(a.date_creation).getTime())
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, limit)
       .map((row) => ({
         id: row.id,
-        date: row.date_creation,
-        label: formatRunMenuDate(row.date_creation),
+        date: row.createdAt,
+        label: formatRunMenuDate(row.createdAt),
         subtitle: activityRunSubtitle(row, automation),
         target: activityRowToReaderTarget(row, automation)
       }))
   }
 
-  if (isReportAutomation(automation)) {
-    const runs = trimRunsToLimit(automation.runs, limit)
-    return runs.map((run) => ({
-      id: run.id,
-      date: run.date,
-      label: formatRunMenuDate(run.date),
-      subtitle: 'Rapport',
-      target: mockRunToReaderTarget(run, automation)
-    }))
-  }
-
-  return []
+  const runs = trimRunsToLimit(automation.runs, limit)
+  return runs.map((run) => ({
+    id: run.id,
+    date: run.date,
+    label: formatRunMenuDate(run.date),
+    subtitle: 'Rapport',
+    target: mockRunToReaderTarget(run, automation)
+  }))
 }
 
 export function automationRunLimit(automation: Automation): number {
-  if (isReportAutomation(automation)) return automationMaxReports(automation)
-  return automation.maxItems
+  return automationMaxReports(automation)
 }

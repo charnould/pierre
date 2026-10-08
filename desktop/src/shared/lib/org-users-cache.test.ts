@@ -65,7 +65,7 @@ afterEach(() => {
 
 describe('org-users-cache', () => {
   test('fetchOrgUsers charge via getUsers et met en cache', async () => {
-    const getUsers = mock(() => Promise.resolve({ users: USERS }))
+    const getUsers = mock(() => Promise.resolve({ data: USERS }))
     stubWindowApi({ getUsers })
 
     await expect(fetchOrgUsers('https://pierre.test')).resolves.toEqual(USERS)
@@ -77,8 +77,8 @@ describe('org-users-cache', () => {
   test('fetchOrgUsers déduplique les appels en vol', async () => {
     const getUsers = mock(
       () =>
-        new Promise<{ users: typeof USERS }>((resolve) => {
-          setTimeout(() => resolve({ users: USERS }), 20)
+        new Promise<{ data: typeof USERS }>((resolve) => {
+          setTimeout(() => resolve({ data: USERS }), 20)
         })
     )
     stubWindowApi({ getUsers })
@@ -93,11 +93,11 @@ describe('org-users-cache', () => {
   })
 
   test('conserve le dernier serveur demandé malgré une réponse plus ancienne', async () => {
-    const resolvers = new Map<string, (value: { users: typeof USERS }) => void>()
+    const resolvers = new Map<string, (value: { data: typeof USERS }) => void>()
     stubWindowApi({
       getUsers: mock(
         ({ url }: { url: string }) =>
-          new Promise<{ users: typeof USERS }>((resolve) => {
+          new Promise<{ data: typeof USERS }>((resolve) => {
             resolvers.set(url, resolve)
           })
       )
@@ -106,11 +106,11 @@ describe('org-users-cache', () => {
     const second = fetchOrgUsers('https://two.test')
 
     resolvers.get('https://two.test')?.({
-      users: [{ ...USERS[0]!, displayName: 'Serveur deux' }, USERS[1]!]
+      data: [{ ...USERS[0]!, displayName: 'Serveur deux' }, USERS[1]!]
     })
     await second
     resolvers.get('https://one.test')?.({
-      users: [{ ...USERS[0]!, displayName: 'Serveur un' }, USERS[1]!]
+      data: [{ ...USERS[0]!, displayName: 'Serveur un' }, USERS[1]!]
     })
     await first
 
@@ -147,7 +147,7 @@ describe('org-users-cache', () => {
   })
 
   test('formatOrgCollaboratorLabel : displayName custom → login → email brut', async () => {
-    const getUsers = mock(() => Promise.resolve({ users: USERS }))
+    const getUsers = mock(() => Promise.resolve({ data: USERS }))
     stubWindowApi({ getUsers })
     await fetchOrgUsers('https://pierre.test')
 
@@ -164,7 +164,7 @@ describe('org-users-cache', () => {
 
   test('hydrate les photos via getAvatar et applique une mise à jour locale', async () => {
     const bytes = new Uint8Array([1, 2, 3])
-    const getUsers = mock(() => Promise.resolve({ users: USERS }))
+    const getUsers = mock(() => Promise.resolve({ data: USERS }))
     const getAvatar = mock(() => Promise.resolve(bytes.buffer))
     stubWindowApi({ getUsers, getAvatar })
     await fetchOrgUsers('https://pierre.test')
@@ -191,7 +191,7 @@ describe('org-users-cache', () => {
       Promise.resolve(new TextEncoder().encode(email).buffer)
     )
     stubWindowApi({
-      getUsers: mock(() => Promise.resolve({ users })),
+      getUsers: mock(() => Promise.resolve({ data: users })),
       getAvatar
     })
     await fetchOrgUsers('https://pierre.test')
@@ -207,7 +207,7 @@ describe('org-users-cache', () => {
       Promise.resolve(new TextEncoder().encode(url).buffer)
     )
     stubWindowApi({
-      getUsers: mock(() => Promise.resolve({ users: USERS })),
+      getUsers: mock(() => Promise.resolve({ data: USERS })),
       getAvatar
     })
 
@@ -222,7 +222,7 @@ describe('org-users-cache', () => {
   })
 
   test('résout avatar, user et displayName par email comme par login', async () => {
-    const getUsers = mock(() => Promise.resolve({ users: USERS }))
+    const getUsers = mock(() => Promise.resolve({ data: USERS }))
     stubWindowApi({ getUsers })
     await fetchOrgUsers('https://pierre.test')
 
@@ -239,7 +239,7 @@ describe('org-users-cache', () => {
   })
 
   test('applyLocalAvatar reste visible via l’email d’activité (user:email)', async () => {
-    const getUsers = mock(() => Promise.resolve({ users: USERS }))
+    const getUsers = mock(() => Promise.resolve({ data: USERS }))
     stubWindowApi({ getUsers })
     await fetchOrgUsers('https://pierre.test')
 

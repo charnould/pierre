@@ -111,7 +111,9 @@ export function ActivityFollowList({ feed, url, userLogin }: Props) {
         )
       })}
       {!loading && collaborators.length === 0 ? (
-        <p className="text-muted-foreground px-2 py-2 text-xs">Aucun collaborateur disponible.</p>
+        <p className="text-muted-foreground px-2 py-2 text-sm leading-5">
+          Aucun collaborateur disponible.
+        </p>
       ) : null}
     </div>
   )

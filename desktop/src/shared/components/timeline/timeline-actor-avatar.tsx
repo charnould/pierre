@@ -103,7 +103,8 @@ export function TimelineActorAvatar({ actor, className, size = 'default' }: Prop
           <span
             className={cn(
               'focus-visible:ring-ring/40 inline-flex shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-1',
-              hitSize
+              hitSize,
+              className
             )}
           />
         }

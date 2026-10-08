@@ -9,6 +9,7 @@ import {
   ledgerColumnIdsFromMeta,
   LOCKED_REPAYMENT_COLUMN_IDS,
   pinLockedRepaymentColumns,
+  resolveRepaymentColumnLabel,
   resolveRepaymentTableColumnIds
 } from './repayment-table-columns'
 
@@ -42,6 +43,7 @@ describe('repayment-table-columns', () => {
 
   test('pinLockedRepaymentColumns place les colonnes verrouillées en tête', () => {
     expect(pinLockedRepaymentColumns(['id_site', 'bucket', 'id_locataire'])).toEqual([
+      'selection',
       'alertes',
       'id_site',
       'bucket',
@@ -49,20 +51,45 @@ describe('repayment-table-columns', () => {
     ])
   })
 
-  test('resolveRepaymentTableColumnIds fusionne UI et ledger sans colonnes always-hidden', () => {
+  test('resolveRepaymentTableColumnIds place les colonnes métier avant le reste du ledger', () => {
     expect(
-      resolveRepaymentTableColumnIds(['id_client', 'statut', 'categorie', 'evolution_solde'])
+      resolveRepaymentTableColumnIds([
+        'categorie',
+        'telephone_status',
+        'id_client',
+        'statut',
+        'solde_locataire',
+        'id_locataire',
+        'gestionnaire',
+        'email_status',
+        'ratio_dette_loyer',
+        'evolution_solde'
+      ])
     ).toEqual([
+      'selection',
       'alertes',
+      'id_locataire',
+      'id_client',
+      'solde_locataire',
+      'ratio_dette_loyer',
+      'email_status',
+      'telephone_status',
+      'gestionnaire',
       'derniere_action_realisee',
       'date_derniere_action_realisee',
-      'id_client',
       'categorie'
     ])
   })
 
+  test('resolveRepaymentColumnLabel expose des libellés métier et humanise le reste', () => {
+    expect(resolveRepaymentColumnLabel('solde_locataire')).toBe('Dette')
+    expect(resolveRepaymentColumnLabel('ratio_dette_loyer')).toBe('Dette / loyer')
+    expect(resolveRepaymentColumnLabel('id_site')).toBe('Site')
+    expect(resolveRepaymentColumnLabel('champ_personnalise')).toBe('Champ personnalise')
+  })
+
   test('colonnes verrouillées restent verrouillées', () => {
-    expect([...LOCKED_REPAYMENT_COLUMN_IDS]).toEqual(['alertes'])
+    expect([...LOCKED_REPAYMENT_COLUMN_IDS]).toEqual(['selection', 'alertes'])
   })
 
   test('defaultRepaymentColumnSizing donne 160 px à gestionnaire', () => {

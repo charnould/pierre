@@ -13,18 +13,15 @@ import {
   executeRepaymentTagChangeOperations,
   type RepaymentAdvancementContext
 } from '@/features/repayment/lib/repayment-activity-mutations'
-import {
-  parseRepaymentPlanForm,
-  parseRepaymentPlanProposal
-} from '@/features/repayment/lib/repayment-activity-text'
+import { parseRepaymentPlanForm } from '@/features/repayment/lib/repayment-activity-text'
 import type { RepaymentBucketId } from '@/features/repayment/lib/repayment-bucket'
 import { requestRepaymentPlanEditor } from '@/features/repayment/lib/repayment-plan-editor-intent'
 import {
-  sendRepaymentNote,
-  type RepaymentMessageResult
+  type RepaymentMessageResult,
+  sendRepaymentNote
 } from '@/features/repayment/lib/send-repayment-message'
 import { useRepaymentColumnValues } from '@/features/repayment/lib/use-repayment-table-preferences'
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 
 interface Props {
   url: string | undefined
@@ -219,16 +216,14 @@ export function RepaymentActivityDrawer({
   )
 
   const onEditPlan = useCallback(
-    (row: TenantRepaymentRow, activity: Activite) => {
-      const form = parseRepaymentPlanForm(activity)
-      if (!form) return
-      const display = parseRepaymentPlanProposal(activity)
+    (row: TenantRepaymentRow, activity: Activity) => {
+      const dossier = parseRepaymentPlanForm(activity)
+      if (!dossier) return
       onClose()
       requestRepaymentPlanEditor({
         tenant: row,
         activityId: activity.id,
-        form,
-        comment: display?.note ?? ''
+        dossier
       })
       navigate({ tab: 'repayment' })
     },

@@ -1,4 +1,4 @@
-import { useId, useMemo, useState, type FormEvent } from 'react'
+import { type FormEvent, useId, useMemo, useState } from 'react'
 
 import { CollaboratorPopoverPicker } from '@/shared/components/CollaboratorPopoverPicker'
 import { InspectorComposeField } from '@/shared/components/inspector/inspector-compose-field'
@@ -16,9 +16,9 @@ import {
 import { DatePicker } from '@/shared/components/ui/date-picker'
 import { useOrgUsers } from '@/shared/hooks/useOrgUsers'
 import {
+  type ActionDraft,
   mapDoneActionForm,
-  mapTodoForm,
-  type ActionDraft
+  mapTodoForm
 } from '@/shared/lib/activities/action-activity'
 import type { OrgUser } from '@/shared/types/users'
 

@@ -1,6 +1,6 @@
 import {
-  loginFromEmail,
-  type ActivityNotificationItem
+  type ActivityNotificationItem,
+  loginFromEmail
 } from '@/features/activity/lib/notification-types'
 import { ACTIVITY_MODULE_LABELS, type ActivityModuleView } from '@/features/home/home-ui'
 import { formatMentionDisplay } from '@/shared/lib/activities/mentions'

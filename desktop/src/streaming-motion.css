@@ -1,0 +1,42 @@
+@layer components {
+  @keyframes pierre-stream-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(2px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pierre-stream-caret {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  [data-pierre-stream-animate] {
+    animation: pierre-stream-reveal 200ms var(--ease-pierre-out) var(--pierre-stream-delay, 0ms)
+      backwards;
+  }
+
+  .generated-stream-caret > .typeset:last-child > :last-child::after {
+    display: inline;
+    vertical-align: baseline;
+    content: ' ▋';
+    animation: pierre-stream-caret 1s step-end infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-pierre-stream-animate] {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+
+    .generated-stream-caret > .typeset:last-child > :last-child::after {
+      animation: none;
+    }
+  }
+}

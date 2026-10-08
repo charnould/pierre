@@ -23,7 +23,7 @@ import { Spinner } from '@/shared/components/ui/spinner'
 import type { KnowledgeEntry, KnowledgeProfile, KnowledgeSource } from '@/shared/types/knowledge'
 
 import { normalize_knowledge_name } from '../../../../../shared/knowledge'
-import { knowledgePublishModules, type BusinessModuleId } from '../../../../../shared/modules'
+import { type BusinessModuleId, knowledgePublishModules } from '../../../../../shared/modules'
 
 interface Props {
   url: string
@@ -68,7 +68,6 @@ export function KnowledgeSourceDialog({
   const fieldId = useId()
   const entry = source.entries[entryIndex]!
   const [title, setTitle] = useState(entry.title)
-  const [headerRow, setHeaderRow] = useState(entry.headerRow)
   const [profileIds, setProfileIds] = useState(entry.profileIds)
   const [moduleIds, setModuleIds] = useState(entry.moduleIds)
   const [saving, setSaving] = useState(false)
@@ -92,7 +91,6 @@ export function KnowledgeSourceDialog({
     const entries = replaceKnowledgeEntry(source.entries, entryIndex, {
       ...entry,
       title: encyclopediaTitleForSave(title, source, entry),
-      headerRow,
       profileIds,
       moduleIds
     })
@@ -145,27 +143,20 @@ export function KnowledgeSourceDialog({
                   disabled={coreDataTable !== null}
                   onChange={(event) => setTitle(event.target.value)}
                 />
-                {tableName ? (
-                  <FieldDescription>Table pour l’agent : {tableName}</FieldDescription>
-                ) : null}
+                <FieldDescription>
+                  Nom sous lequel les assistants citent cette source.
+                  {tableName ? ` Table pour l’agent : ${tableName}.` : null}
+                </FieldDescription>
               </Field>
-              {source.fileType === 'xlsx' ? (
-                <Field>
-                  <FieldLabel htmlFor={`${fieldId}-header`}>Ligne des en-têtes</FieldLabel>
-                  <Input
-                    id={`${fieldId}-header`}
-                    type="number"
-                    min={1}
-                    value={(headerRow ?? 0) + 1}
-                    onChange={(event) => setHeaderRow(Math.max(0, Number(event.target.value) - 1))}
-                  />
-                </Field>
-              ) : null}
             </FieldGroup>
           </FieldSet>
 
           <FieldSet>
             <FieldLegend>Profils autorisés</FieldLegend>
+            <FieldDescription>
+              Assistants qui ont le droit de lire cette source. Sans profil, elle n’est transmise à
+              aucun assistant.
+            </FieldDescription>
             <div className="grid grid-cols-2 gap-2">
               {profiles.map((profile) => (
                 <Field key={profile.id} orientation="horizontal">
@@ -182,6 +173,7 @@ export function KnowledgeSourceDialog({
 
           <FieldSet>
             <FieldLegend>Modules autorisés</FieldLegend>
+            <FieldDescription>Métiers qui peuvent s’en servir.</FieldDescription>
             <div className="grid grid-cols-2 gap-2">
               {knowledgePublishModules().map((module) => (
                 <Field key={module.id} orientation="horizontal">

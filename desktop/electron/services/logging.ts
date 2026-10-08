@@ -9,7 +9,7 @@ export function logMainError(scope: string, error: unknown): void {
   console.error(`[main:${scope}] ${detail}`)
 }
 
-/** Non-fatal diagnostic log for auth and IPC flows (visible in `bun run dev` terminal). */
+/** Non-fatal diagnostic log for auth and IPC flows (visible in the `bun desktop:dev` terminal). */
 export function logMainInfo(scope: string, detail: string): void {
   console.log(`[main:${scope}] ${detail}`)
 }

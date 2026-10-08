@@ -1,22 +1,19 @@
 import { formatTimelineCommunicationPlain } from '@/shared/lib/timeline/timeline-communication'
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 import {
-  activity_payload,
-  activity_texte,
-  parse_case_change_content,
-  parse_repayment_plan_content
+  activityPayload,
+  activityText,
+  parseCaseChangeContent,
+  parseRepaymentPlanContent
 } from '@/shared/types/activites'
 
-import { typicalMonthlyAmount } from './apurement-plan/installments'
-import { formatMoneyDisplay } from './apurement-plan/money'
-import type { ApurementPlanFormData } from './apurement-plan/types'
+import type { CaseFile } from '../plan/document'
 import type { RepaymentBucketId } from './repayment-bucket'
 import {
   getRepaymentBucketMeta,
   isRepaymentBucketId,
   resolveRepaymentBucket
 } from './repayment-bucket'
-import { repaymentPlanSnapshotToForm } from './repayment-plan-persist'
 import { canonicalizeRepaymentTags } from './repayment-tags'
 
 export type RepaymentStatusChangeDisplay =
@@ -36,10 +33,6 @@ export type RepaymentStatusChangeDisplay =
 
 export type RepaymentPlanProposalDisplay = {
   titre: string
-  signed: boolean | null
-  planValide: boolean
-  note: string | null
-  resume: string | null
 }
 
 function formatStatusChangeValue(champ: string, value: unknown): string {
@@ -55,7 +48,7 @@ function formatStatusChangeValue(champ: string, value: unknown): string {
   return value
 }
 
-export function parseRepaymentStatusChange(row: Activite): RepaymentStatusChangeDisplay | null {
+export function parseRepaymentStatusChange(row: Activity): RepaymentStatusChangeDisplay | null {
   if (
     (row.type !== 'case.group_changed' && row.type !== 'case.assignee_changed') ||
     !row.rattachement.startsWith('repayment:')
@@ -64,7 +57,7 @@ export function parseRepaymentStatusChange(row: Activite): RepaymentStatusChange
   }
 
   if (row.type === 'case.group_changed') {
-    const change = parse_case_change_content(row.contenu)
+    const change = parseCaseChangeContent(row.contenu)
     const apresRaw = typeof change?.after === 'string' ? change.after : null
     if (typeof apresRaw !== 'string' || !isRepaymentBucketId(apresRaw)) return null
     const avantRaw = change?.before
@@ -75,7 +68,7 @@ export function parseRepaymentStatusChange(row: Activite): RepaymentStatusChange
     return { champ: 'bucket', avant, apres: apresRaw, avantUnset: false }
   }
 
-  const change = parse_case_change_content(row.contenu)
+  const change = parseCaseChangeContent(row.contenu)
   const apresRaw =
     change?.after && typeof change.after === 'object' && !Array.isArray(change.after)
       ? change.after
@@ -136,16 +129,16 @@ export function statusChangeTimelineSentence(
     ]
   }
   return [
-    { type: 'text', text: 'a déplacé le dossier du groupe' },
+    { type: 'text', text: 'a changé la phase de' },
     { type: 'bucket', id: change.avant },
     { type: 'text', text: 'vers' },
     { type: 'bucket', id: change.apres }
   ]
 }
 
-export function parseRepaymentStatusChangeComment(row: Activite): string | null {
+export function parseRepaymentStatusChangeComment(row: Activity): string | null {
   if (parseRepaymentStatusChange(row) == null) return null
-  const payload = activity_payload(row.type, row.contenu)
+  const payload = activityPayload(row.type, row.contenu)
   const comment = payload['note']
   if (typeof comment !== 'string') return null
   const trimmed = comment.trim()
@@ -169,7 +162,7 @@ function quote(value: string): string {
   return `« ${trimmed} »`
 }
 
-export function formatRepaymentStatusChangeText(row: Activite): string | null {
+export function formatRepaymentStatusChangeText(row: Activity): string | null {
   const change = parseRepaymentStatusChange(row)
   if (!change) return null
 
@@ -180,72 +173,41 @@ export function formatRepaymentStatusChangeText(row: Activite): string | null {
   return `${quote(avant)} → ${quote(apres)}`
 }
 
-function repaymentPlanSigned(row: Activite): boolean {
-  if (row.type === 'repayment_plan.finalized') return true
-  if (row.type !== 'repayment_plan.closed') return false
-  const content = parse_repayment_plan_content(row.type, row.contenu)
-  return content != null && 'reason' in content && content.reason !== 'withdrawn'
-}
-
-/** Newest `repayment_plan` that still carries an editable form, or null. */
-export function latestEditableRepaymentPlan(rows: Activite[]): Activite | null {
-  let latest: Activite | null = null
+/** Newest repayment plan that still carries a dossier, or null. */
+export function latestEditableRepaymentPlan(rows: Activity[]): Activity | null {
+  let latest: Activity | null = null
   for (const row of rows) {
     if (!parseRepaymentPlanForm(row)) continue
-    if (latest == null || row.id > latest.id) {
-      latest = row
-    }
+    if (latest == null || row.id > latest.id) latest = row
   }
   return latest
 }
 
 export type ActiveRepaymentPlan = {
-  row: Activite
-  signed: boolean
+  row: Activity
 }
 
-/** Latest plan that is not closed. `null` → the pile verb is « Créer ». */
-export function latestActiveRepaymentPlan(rows: Activite[]): ActiveRepaymentPlan | null {
+/** Latest dossier. `null` → the pile verb is « Créer ». */
+export function latestActiveRepaymentPlan(rows: Activity[]): ActiveRepaymentPlan | null {
   const latest = latestEditableRepaymentPlan(rows)
   if (!latest) return null
-  if (latest.type === 'repayment_plan.closed') return null
-  return { row: latest, signed: parseRepaymentPlanProposal(latest)?.signed === true }
+  return { row: latest }
 }
 
-/** Full editable form restored from the current plan snapshot, or null on a light milestone. */
-export function parseRepaymentPlanForm(row: Activite): ApurementPlanFormData | null {
+/** Dossier restored from the activity, or null when the row does not carry one. */
+export function parseRepaymentPlanForm(row: Activity): CaseFile | null {
   if (!row.type.startsWith('repayment_plan.')) return null
-  const content = parse_repayment_plan_content(row.type, row.contenu)
-  return content?.plan ? repaymentPlanSnapshotToForm(content.plan, repaymentPlanSigned(row)) : null
+  const content = parseRepaymentPlanContent(row.type, row.contenu)
+  return content ? (content as unknown as CaseFile) : null
 }
 
-export function parseRepaymentPlanProposal(row: Activite): RepaymentPlanProposalDisplay | null {
-  if (!row.type.startsWith('repayment_plan.')) return null
-
-  const content = parse_repayment_plan_content(row.type, row.contenu)
-  if (!content) return null
-  const signed = repaymentPlanSigned(row)
-  let resume: string | null = null
-  if (content.plan?.installments.length) {
-    const installments = content.plan.installments.map((installment, index) => ({
-      id: String(index),
-      yearMonth: installment.year_month,
-      amount: installment.amount
-    }))
-    resume = `${formatMoneyDisplay(typicalMonthlyAmount(installments))} × ${installments.length} mois`
-  }
-
-  return {
-    titre: content.title,
-    signed,
-    planValide: signed,
-    note: content.note ?? null,
-    resume
-  }
+export function parseRepaymentPlanProposal(row: Activity): RepaymentPlanProposalDisplay | null {
+  if (!parseRepaymentPlanForm(row)) return null
+  return { titre: 'Plan d’apurement' }
 }
 
-export function formatRepaymentActivityBody(row: Activite): string {
-  const bulkPayload = activity_payload(row.type, row.contenu)
+export function formatRepaymentActivityBody(row: Activity): string {
+  const bulkPayload = activityPayload(row.type, row.contenu)
   if (row.type === 'bulk.applied') {
     const action =
       typeof bulkPayload['action'] === 'string' ? bulkPayload['action'] : 'Action de masse'
@@ -276,7 +238,7 @@ export function formatRepaymentActivityBody(row: Activite): string {
   const statusChange = formatRepaymentStatusChangeText(row)
   if (statusChange) return statusChange
 
-  const tagChange = row.type === 'case.tags_changed' ? parse_case_change_content(row.contenu) : null
+  const tagChange = row.type === 'case.tags_changed' ? parseCaseChangeContent(row.contenu) : null
   if (tagChange && Array.isArray(tagChange.after)) {
     const tags = canonicalizeRepaymentTags(
       tagChange.after.map((entry) => (typeof entry === 'string' ? entry : entry.label))
@@ -286,16 +248,14 @@ export function formatRepaymentActivityBody(row: Activite): string {
   }
 
   const plan = parseRepaymentPlanProposal(row)
-  if (plan) {
-    return [plan.titre, plan.resume, plan.note].filter(Boolean).join('\n')
-  }
+  if (plan) return plan.titre
 
   const message = formatTimelineCommunicationPlain(row)
   if (message) return message
 
-  const text = activity_texte(row.type, row.contenu)
+  const text = activityText(row.type, row.contenu)
   if (text) return text
-  const payload = activity_payload(row.type, row.contenu)
+  const payload = activityPayload(row.type, row.contenu)
   if (typeof payload['titre'] === 'string') return payload['titre']
   return row.type
 }

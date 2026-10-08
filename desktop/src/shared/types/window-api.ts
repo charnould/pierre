@@ -4,7 +4,22 @@ import type {
   UiSettings,
   WorkflowSettings
 } from '@/shared/lib/ui-settings/schema'
+import type {
+  AdminError,
+  ConversationDetailResponse,
+  ConversationListResponse,
+  GetAdminConversationParams,
+  GetLlmRunParams,
+  GetLlmUsageParams,
+  ListAdminConversationsParams,
+  ListLlmRunsParams,
+  LlmRunListResponse,
+  LlmRunResponse,
+  LlmUsageResponse,
+  SaveAdminConversationReviewParams
+} from '@/shared/types/admin-insights'
 
+import type { RepaymentMessage } from '../../../../shared/repayment-messages'
 import type {
   ActivitiesListResponse,
   ActivityFeedSyncResult,
@@ -20,6 +35,7 @@ import type {
   SendCommunicationResponse
 } from './activites'
 import type {
+  AutomationApiFailure,
   AutomationResponse,
   AutomationsListResponse,
   CreateAutomationPayload,
@@ -32,17 +48,17 @@ import type {
 } from './automations'
 import type {
   BulkOperationExecuteResponse,
-  BulkOperationReportsResponse,
   BulkOperationPreviewMessageResponse,
   BulkOperationPreviewQueryResponse,
+  BulkOperationReportsResponse,
   BulkOperationResponse,
   BulkOperationsListResponse,
   CreateBulkOperationPayload,
   DeleteBulkOperationPayload,
   ExecuteBulkOperationPayload,
   GetBulkOperationParams,
-  ListBulkOperationsParams,
   ListBulkOperationReportsParams,
+  ListBulkOperationsParams,
   PatchBulkOperationPayload,
   PreviewBulkOperationMessagePayload,
   PreviewBulkOperationQueryPayload
@@ -70,9 +86,7 @@ import type {
   TicketsFacetsResponse,
   TicketsListResponse,
   TicketsMetaResponse,
-  TicketsQueryParams,
-  PutTicketPayload,
-  PutTicketResult
+  TicketsQueryParams
 } from './tickets'
 import type {
   AdminUserMutationResponse,
@@ -157,9 +171,9 @@ declare global {
           finalUpdate: boolean
         }) => void
       ) => () => void
-      /** `GET /ai/boot` — chat session metadata. */
+      /** `GET /chat/config` — chat session metadata. */
       getChatBoot: (params: { url: string; config?: string }) => Promise<ChatBoot | null>
-      /** `POST /ai` canonical structured NDJSON stream; chunks via `onAiChunk`. */
+      /** `POST /chat` canonical structured NDJSON stream; chunks via `onAiChunk`. */
       startStream: (params: {
         requestId: string
         url: string
@@ -178,7 +192,7 @@ declare global {
        * Returns an unsubscribe callback to avoid leaked renderer listeners.
        */
       onAiChunk: (requestId: string, cb: (chunk: string) => void) => () => void
-      /** `POST /ai/answer` — same NDJSON protocol as `/ai`. */
+      /** `POST /workflows` — same NDJSON protocol as `/chat`. */
       generateAnswer: (params: {
         requestId: string
         url: string
@@ -187,7 +201,7 @@ declare global {
         id_skill: string
         files: Array<{ name: string; type: string; buffer: ArrayBuffer }>
       }) => Promise<boolean>
-      /** `POST /ai/ui-response` — resume a pending native Pi questionnaire. */
+      /** `POST /chat/responses` — resume a pending native Pi questionnaire. */
       postAiUiResponse: (params: {
         url: string
         conv_id: string
@@ -195,7 +209,7 @@ declare global {
         response_secret: string
         answers: Array<{ question: string; answer: string }>
       }) => Promise<boolean>
-      /** `POST /ai/vm/release` — destroy the VM for a conversation immediately. */
+      /** `DELETE /chat/sessions/:conversationId` — destroy the VM for a conversation immediately. */
       releaseConversationVm: (params: { url: string; conv_id: string }) => Promise<boolean>
       getTicketDraft: (params: {
         url: string
@@ -206,54 +220,115 @@ declare global {
       patchUiSettingsTicketsTable: (partial: Partial<TicketsTableSettings>) => Promise<UiSettings>
       /** Atomically patch only `workflow` settings in main process. */
       patchUiSettingsWorkflow: (partial: Partial<WorkflowSettings>) => Promise<UiSettings>
-      /** `GET /desktop/admin/setup` */
+      /** `GET /admin/providers` */
+      getAdminProviders: (params: { url: string }) => Promise<{
+        data: {
+          ai: {
+            configured: boolean
+            type: string
+            baseUrl: string
+            model: string
+            effort: string
+          }
+          rcs: { configured: boolean; from: string; secret: string }
+          email: { configured: boolean; domain: string; account: string }
+          maileva: {
+            configured: boolean
+            clientId: string
+            username: string
+            senderId: string
+            address: string
+            target: '' | 'sandbox' | 'production'
+            postalReady: boolean
+            electronicReady: boolean
+            secretsReadable: boolean
+          }
+          webhooks: { rcs: string; email: string }
+        }
+      } | null>
+      /** `PUT /admin/providers` */
+      putAdminProviders: (params: { url: string; body: Record<string, unknown> }) => Promise<{
+        data?: { rcsSecret?: string; warning?: string }
+        error?: { message: string }
+      } | null>
+      /** `GET /admin/setup` */
       getAdminSetup: (params: { url: string }) => Promise<{
         texts: Record<string, string | null>
         binaries: string[]
         ready: Record<string, boolean>
       } | null>
-      /** `PUT /desktop/admin/setup/*` */
+      /** `PUT /admin/setup/*` */
       putAdminSetup: (params: {
         url: string
         id: string
         body?: string
         bytes?: Uint8Array
-      }) => Promise<{ data: { id: string } } | null>
-      /** `DELETE /desktop/admin/setup/chatbots/:id` */
+      }) => Promise<{ data?: { id: string }; error?: { message: string } } | null>
+      /** `POST /admin/providers/email/test` */
+      postEmailTest: (params: { url: string }) => Promise<{
+        data?: { sent: true }
+        error?: { message: string }
+      } | null>
+      verifyRepaymentMessage: (params: { url: string; text: string }) => Promise<{
+        data?: RepaymentMessage
+        error?: { message: string }
+      } | null>
+      /** `DELETE /admin/setup/chatbots/:id` */
       deleteAdminChatbot: (params: {
         url: string
         id: string
       }) => Promise<{ data: { id: string } } | null>
-      /** `GET /desktop/tickets` — paginated tickets from datastore.sqlite. */
+      /** `GET /tickets` — paginated tickets from datastore.sqlite. */
       getTickets: (params: TicketsQueryParams) => Promise<TicketsListResponse | null>
-      /** `GET /desktop/tickets/meta` — ticket schema/count without row data. */
+      /** `GET /tickets/meta` — ticket schema/count without row data. */
       getTicketsMeta: (params: TicketsQueryParams) => Promise<TicketsMetaResponse | null>
-      /** `GET /desktop/ledger` — paginated tenant balances from datastore.sqlite. */
+      /** `GET /ledger` — paginated tenant balances from datastore.sqlite. */
       getLedger: (params: LedgerQueryParams) => Promise<LedgerListResponse | null>
-      /** `GET /desktop/ledger/meta` — ledger schema without row data. */
+      /** `GET /ledger/meta` — ledger schema without row data. */
       getLedgerMeta: (params: LedgerQueryParams) => Promise<LedgerMetaResponse | null>
       /** One repayment tenant timeline payload: movements, activities and open actions. */
       getRepaymentTimeline: (
         params: RepaymentTimelineQueryParams
       ) => Promise<RepaymentTimelineResponse | null>
-      /** `GET /desktop/tickets/facets` — distinct column values from full table. */
+      exportRepaymentDocument: (params: {
+        url: string
+        document: 'diagnostic' | 'plan' | 'protocole'
+        format: 'docx' | 'pdf'
+        dossier: unknown
+      }) => Promise<
+        | { bytes: ArrayBuffer; filename: string; mimeType: string }
+        | { error?: { message?: string } }
+        | null
+      >
+      /** `GET /tickets/facets` — distinct column values from full table. */
       getTicketFacets: (params: {
         url: string
         column: string
         q?: string
       }) => Promise<TicketsFacetsResponse | null>
-      /** `PUT /desktop/tickets` — upsert reclamation row in datastore.sqlite. */
-      putTicket: (params: { url: string } & PutTicketPayload) => Promise<PutTicketResult | null>
-      /** `GET /desktop/customization` — instance name, module configs, templates. */
-      /** `GET /desktop/setup` */
+      /** `GET /setup` — instance name, module configs, templates. */
       getSetup: (params: { url: string }) => Promise<unknown>
-      /** `GET /desktop/setup/*` */
+      /** `GET /setup/*` */
       getSetupFile: (params: { url: string; id: string }) => Promise<ArrayBuffer | null>
-      /** `GET /desktop/datastore/tables` — datastore table presence in datastore.sqlite. */
+      /** `GET /datastore` — datastore table presence in datastore.sqlite. */
       getDatastoreTables: (params: { url: string }) => Promise<DatastoreTablesResponse | null>
-      /** `GET /desktop/users` — org users for mentions / collaborator pickers. */
+      /** `GET /users` — org users for mentions / collaborator pickers. */
       getUsers: (params: { url: string }) => Promise<UsersListResponse | null>
       getAdminUsers: (params: { url: string }) => Promise<AdminUsersResponse | null>
+      getAdminConversations: (
+        params: ListAdminConversationsParams
+      ) => Promise<ConversationListResponse | AdminError | null>
+      getAdminConversation: (
+        params: GetAdminConversationParams
+      ) => Promise<ConversationDetailResponse | AdminError | null>
+      saveAdminConversationReview: (
+        params: SaveAdminConversationReviewParams
+      ) => Promise<ConversationDetailResponse | AdminError | null>
+      getAdminLlmUsage: (params: GetLlmUsageParams) => Promise<LlmUsageResponse | AdminError | null>
+      getAdminLlmRuns: (
+        params: ListLlmRunsParams
+      ) => Promise<LlmRunListResponse | AdminError | null>
+      getAdminLlmRun: (params: GetLlmRunParams) => Promise<LlmRunResponse | AdminError | null>
       createAdminUser: (params: SaveAdminUserPayload) => Promise<AdminUserMutationResponse | null>
       patchAdminUser: (params: PatchAdminUserPayload) => Promise<AdminUserMutationResponse | null>
       deleteAdminUser: (params: {
@@ -280,22 +355,17 @@ declare global {
         updatedAt: string
       }) => Promise<KnowledgeSourceResponse | null>
       deleteKnowledgeSource: (params: { url: string; id: string }) => Promise<boolean>
-      downloadKnowledgeSource: (params: {
-        url: string
-        id: string
-        originalName: string
-      }) => Promise<boolean>
       getKnowledgeBuilds: (params: { url: string }) => Promise<KnowledgeBuildsResponse | null>
       rebuildKnowledge: (params: { url: string }) => Promise<KnowledgeBuildResponse | null>
-      /** `PATCH /desktop/me/preferences` — display name, or `{ avatar: null }` to reset photo. */
+      /** `PATCH /me/preferences` — display name, or `{ avatar: null }` to reset photo. */
       patchMyPreferences: (
         params: PatchMyPreferencesPayload
       ) => Promise<PatchMyPreferencesResponse | null>
-      /** `GET /desktop/avatars/:email` — stored WebP bytes, or null. */
+      /** `GET /avatars/:email` — stored WebP bytes, or null. */
       getAvatar: (params: GetAvatarPayload) => Promise<ArrayBuffer | null>
       /** Native photo picker; main process reads and re-encodes the file. */
       pickAvatarImage: () => Promise<PickedAvatarImage | null>
-      /** `POST /desktop/me/avatar` — upload cropped WebP. */
+      /** `POST /me/avatar` — upload cropped WebP. */
       uploadMyAvatar: (params: UploadMyAvatarPayload) => Promise<UploadMyAvatarResponse | null>
       getActivities: (params: GetActivitiesParams) => Promise<ActivitiesListResponse | null>
       syncActivityFeed: (
@@ -311,14 +381,24 @@ declare global {
       patchActivity: (params: PatchActivityPayload) => Promise<ActivityResponse | null>
       deleteActivity: (params: DeleteActivityPayload) => Promise<DeleteActivityResponse | null>
       getAutomations: (params: ListAutomationsParams) => Promise<AutomationsListResponse | null>
-      createAutomation: (params: CreateAutomationPayload) => Promise<AutomationResponse | null>
-      patchAutomation: (params: PatchAutomationPayload) => Promise<AutomationResponse | null>
+      createAutomation: (
+        params: CreateAutomationPayload
+      ) => Promise<AutomationResponse | AutomationApiFailure | null>
+      patchAutomation: (
+        params: PatchAutomationPayload
+      ) => Promise<AutomationResponse | AutomationApiFailure | null>
       deleteAutomation: (
         params: DeleteAutomationPayload
-      ) => Promise<DeleteAutomationResponse | null>
-      runAutomation: (params: RunAutomationPayload) => Promise<AutomationResponse | null>
-      pinAutomation: (params: PinAutomationPayload) => Promise<AutomationResponse | null>
-      unpinAutomation: (params: PinAutomationPayload) => Promise<AutomationResponse | null>
+      ) => Promise<DeleteAutomationResponse | AutomationApiFailure | null>
+      runAutomation: (
+        params: RunAutomationPayload
+      ) => Promise<AutomationResponse | AutomationApiFailure | null>
+      pinAutomation: (
+        params: PinAutomationPayload
+      ) => Promise<AutomationResponse | AutomationApiFailure | null>
+      unpinAutomation: (
+        params: PinAutomationPayload
+      ) => Promise<AutomationResponse | AutomationApiFailure | null>
       getBulkOperations: (
         params: ListBulkOperationsParams
       ) => Promise<BulkOperationsListResponse | null>

@@ -3,17 +3,30 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { warnRenderer } from '@/shared/lib/renderer-log'
 import { createRequestSequencer } from '@/shared/lib/request-sequencer'
 import {
-  RECLAMATIONS_PAGE_SIZE,
+  type ColumnFilters,
   filtersToQueryParams,
-  type ColumnFilters
+  RECLAMATIONS_PAGE_SIZE
 } from '@/shared/lib/ui-settings/tickets-table'
 import type { TicketRow, TicketsColumnMeta, TicketsListResponse } from '@/shared/types'
 
 export type UseTicketsOptions = {
   bucket?: string
   columnFilters?: ColumnFilters
+  sort?: string
   /** Increment to refetch the current page (e.g. after saving a draft). */
   refreshNonce?: number
+}
+
+export function ticketsListScopeChanged(
+  page: { filtersKey: string; url?: string; bucket?: string; sort?: string },
+  next: { filtersKey: string; url?: string; bucket?: string; sort?: string }
+): boolean {
+  return (
+    page.filtersKey !== next.filtersKey ||
+    page.url !== next.url ||
+    page.bucket !== next.bucket ||
+    page.sort !== next.sort
+  )
 }
 
 type TicketsSnapshot = {
@@ -32,15 +45,16 @@ export function useTickets(
   const columnFilters = options.columnFilters
   const bucket = options.bucket
   const refreshNonce = options.refreshNonce
+  const sort = options.sort
   const filtersKey = useMemo(() => JSON.stringify(columnFilters ?? {}), [columnFilters])
 
-  const [page, setPage] = useState({ filtersKey, url, offset: 0 })
-  const filtersOrUrlChanged = page.filtersKey !== filtersKey || page.url !== url
-  if (filtersOrUrlChanged) {
-    setPage({ filtersKey, url, offset: 0 })
+  const [page, setPage] = useState({ filtersKey, url, bucket, sort, offset: 0 })
+  const scopeChanged = ticketsListScopeChanged(page, { filtersKey, url, bucket, sort })
+  if (scopeChanged) {
+    setPage({ filtersKey, url, bucket, sort, offset: 0 })
   }
-  const offset = filtersOrUrlChanged ? 0 : page.offset
-  const queryKey = `${url ?? ''}\0${bucket ?? ''}\0${filtersKey}\0${offset}\0${refreshNonce ?? 0}`
+  const offset = scopeChanged ? 0 : page.offset
+  const queryKey = `${url ?? ''}\0${bucket ?? ''}\0${filtersKey}\0${sort ?? ''}\0${offset}\0${refreshNonce ?? 0}`
 
   const [snapshot, setSnapshot] = useState<TicketsSnapshot>({
     queryKey: '',
@@ -78,6 +92,7 @@ export function useTickets(
         limit: RECLAMATIONS_PAGE_SIZE,
         offset: capturedOffset,
         bucket,
+        sort,
         filters
       })
       if (
@@ -89,6 +104,7 @@ export function useTickets(
           limit: RECLAMATIONS_PAGE_SIZE,
           offset: capturedOffset,
           bucket,
+          sort,
           filters: {}
         })
       }
@@ -115,7 +131,7 @@ export function useTickets(
         error: 'Impossible de charger les réclamations.'
       })
     }
-  }, [bucket, columnFilters, offset, queryKey, redirectOutOfRangePage, url])
+  }, [bucket, columnFilters, offset, queryKey, redirectOutOfRangePage, sort, url])
 
   useEffect(() => {
     if (hidden || !url || !window.api?.getTickets) return
@@ -130,6 +146,7 @@ export function useTickets(
         limit: RECLAMATIONS_PAGE_SIZE,
         offset: capturedOffset,
         bucket,
+        sort,
         filters
       })
       .then(async (first) => {
@@ -143,6 +160,7 @@ export function useTickets(
             limit: RECLAMATIONS_PAGE_SIZE,
             offset: capturedOffset,
             bucket,
+            sort,
             filters: {}
           })
         }
@@ -173,7 +191,7 @@ export function useTickets(
           error: 'Impossible de charger les réclamations.'
         })
       })
-  }, [bucket, columnFilters, hidden, offset, queryKey, redirectOutOfRangePage, url])
+  }, [bucket, columnFilters, hidden, offset, queryKey, redirectOutOfRangePage, sort, url])
 
   const reload = useCallback(async () => {
     setRefreshing(true)

@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
-import type { ActiviteListItem } from '@/shared/types/activites'
+import type { ActivityListItem } from '@/shared/types/activites'
 
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
@@ -58,10 +58,10 @@ afterAll(() => {
   }
 })
 
-function sampleActivity(overrides: Partial<ActiviteListItem> = {}): ActiviteListItem {
+function sampleActivity(overrides: Partial<ActivityListItem> = {}): ActivityListItem {
   return {
     id: 7,
-    date_creation: '2026-08-17T10:00:00',
+    createdAt: '2026-08-17T10:00:00',
     rattachement: 'repayment:LOC-1',
     auteur: 'user:bob@exemple.fr',
     id_client: 'CLI-1',
@@ -78,7 +78,7 @@ function sampleActivity(overrides: Partial<ActiviteListItem> = {}): ActiviteList
   }
 }
 
-async function renderControl(activity: ActiviteListItem, currentUser: string) {
+async function renderControl(activity: ActivityListItem, currentUser: string) {
   const { act } = await import('react')
   const { createRoot } = await import('react-dom/client')
   const { ActivityBoostControl } = await import('./ActivityBoostControl')
@@ -128,7 +128,7 @@ describe('ActivityBoostControl', () => {
     const { cleanup } = await renderControl(
       sampleActivity({
         type: 'bulk.ran',
-        bulk_id: 'bulk-r1',
+        bulkId: 'bulk-r1',
         contenu: JSON.stringify({ version: 2, title: 'Courrier locataires' })
       }),
       'alice@exemple.fr'
@@ -164,7 +164,7 @@ describe('ActivityBoostControl', () => {
         button.getAttribute('aria-label')?.startsWith('Boost ')
       )
       expect(cells.length).toBeGreaterThan(0)
-      expect(cells[0]?.className).toContain('size-9')
+      expect(cells[0]?.className).toContain('size-8')
       expect(cells[0]?.className).toContain('text-xl')
 
       const remove = [...document.querySelectorAll('button')].find(

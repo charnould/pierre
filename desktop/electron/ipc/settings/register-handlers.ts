@@ -1,4 +1,4 @@
-import { ipcMain, type BrowserWindow } from 'electron'
+import { type BrowserWindow, ipcMain } from 'electron'
 
 import type {
   TicketsTableSettings,

@@ -1,18 +1,22 @@
 import { X } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
+import { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useNotificationTimeline } from '@/features/activity/hooks/use-notification-timeline'
 import { useTicketOutboundState } from '@/features/tickets/hooks/use-ticket-outbound-state'
 import { buildTicketTimeline } from '@/features/tickets/lib/build-ticket-timeline'
 import {
-  NON_TRAITEES_TICKET_BUCKET_ID,
   isTicketBucketId,
+  NON_TRAITEES_TICKET_BUCKET_ID,
   resolveTicketBucket,
   type TicketBucketId
 } from '@/features/tickets/lib/ticket-bucket'
 import { canonicalizeTicketTags, ticketTagOptions } from '@/features/tickets/lib/ticket-tags'
 import type { TicketComposeMode } from '@/features/tickets/lib/use-tickets-view-data'
 import { useWorkflowExport } from '@/features/workflow/hooks/useWorkflowExport'
+import {
+  generateDocxFilename,
+  generateDocxFromTemplate
+} from '@/features/workflow/lib/generate-docx'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { InspectorSplit } from '@/shared/components/inspector/inspector-split'
 import { InspectorTimelineSkeleton } from '@/shared/components/inspector/inspector-timeline-skeleton'
@@ -23,7 +27,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/shared/compo
 import { toast } from '@/shared/components/ui/toast'
 import { useCaseActivityActions } from '@/shared/hooks/use-case-activity-actions'
 import { useScrollToTopOnOpen } from '@/shared/hooks/use-scroll-to-top-on-open'
-import { listOpenActions, type ActionDraft } from '@/shared/lib/activities/action-activity'
+import { type ActionDraft, listOpenActions } from '@/shared/lib/activities/action-activity'
 import {
   deriveCaseAssignment,
   deriveCaseBucket,
@@ -38,20 +42,54 @@ import { ticketsSetup } from '@/shared/lib/instance-customization'
 import { scrollBehavior } from '@/shared/lib/prefers-reduced-motion'
 import { getTicketCellText } from '@/shared/lib/ticket-row'
 import type { TicketRow } from '@/shared/types'
-import { activity_texte, type Activite } from '@/shared/types/activites'
+import {
+  type Activity,
+  activityText,
+  type MailDocument,
+  type PostalAddress,
+  type SendCommunicationPayload
+} from '@/shared/types/activites'
 import type { OrgUser } from '@/shared/types/users'
 
 import { rcs_compose_payload, type RcsContenu } from '../../../../../shared/rcs-message'
 import {
+  type TicketAiGenerationProps,
   TicketComposeBlock,
-  TicketSummaryCard,
-  type TicketAiGenerationProps
+  TicketSummaryCard
 } from './TicketComposeBlock'
 import { TicketReclamationTimeline } from './TicketReclamationTimeline'
 import type { TicketReplyFormat } from './TicketTenantReplyDraft'
 
 function externalApplication() {
   return readExternalApplication(ticketsSetup())
+}
+
+function postalAddress(ticket: TicketRow, fallback: string): PostalAddress | null {
+  const street = getTicketCellText(ticket, 'pierre_adresse').trim()
+  const blob = fallback.trim()
+  let postalCode = getTicketCellText(ticket, 'pierre_code_postal').trim()
+  let city = getTicketCellText(ticket, 'pierre_ville').trim()
+  const source = street || blob
+  if ((!postalCode || !city) && source) {
+    const match = source.match(/(\d{5})\s+(.+)$/)
+    if (match?.[1] && match[2]) {
+      postalCode = postalCode || match[1]
+      city = city || match[2].trim()
+    }
+  }
+  const line6 = `${postalCode} ${city}`.replace(/\s+/g, ' ').trim()
+  if (!source || !/^\d{5}\s+\S/.test(line6) || line6.length > 38) return null
+  const line2 = (blob && blob !== source ? blob : source).slice(0, 38)
+  const line4 = street && street !== line2 ? street.slice(0, 38) : undefined
+  return { line2, ...(line4 ? { line4 } : {}), line6, country: 'FR' }
+}
+
+function encodeBase64(bytes: Uint8Array): string {
+  let binary = ''
+  for (let index = 0; index < bytes.length; index += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000))
+  }
+  return btoa(binary)
 }
 
 interface Props {
@@ -62,7 +100,7 @@ interface Props {
   sheetOpenToken: number
   /**
    * Corps seul — le parent fournit déjà le Drawer / DrawerContent
-   * (ex. nested dans le centre de notifications).
+   * (ex. Inspector frère du centre de notifications).
    */
   embedded?: boolean
   ticket: TicketRow | null
@@ -135,7 +173,7 @@ export function TicketReclamationDrawer({
   const timelineItems = useMemo(() => buildTicketTimeline(rows, ticket), [rows, ticket])
   const hasTimelineHistory = timelineItems.length > 0
   const sortedActivities = useMemo(
-    () => [...rows].sort((a, b) => b.date_creation.localeCompare(a.date_creation)),
+    () => [...rows].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     [rows]
   )
   const currentTags = useMemo(
@@ -158,16 +196,20 @@ export function TicketReclamationDrawer({
     [sortedActivities, ticket]
   )
   const currentReferent = useMemo(
-    () => deriveCaseAssignment(sortedActivities, getTicketCellText(ticket ?? {}, 'affectation_1')),
+    () =>
+      deriveCaseAssignment(
+        sortedActivities,
+        getTicketCellText(ticket ?? {}, 'email_collaborateur_en_charge')
+      ),
     [sortedActivities, ticket]
   )
   const currentActionRows = useMemo(() => {
-    const latestRevision = new Map<string, Activite>()
+    const latestRevision = new Map<string, Activity>()
     for (const row of rows) {
-      if (!row.type.startsWith('task.') || !row.thread_id) continue
-      const previous = latestRevision.get(row.thread_id)
+      if (!row.type.startsWith('task.') || !row.threadId) continue
+      const previous = latestRevision.get(row.threadId)
       if (!previous || (row.revision ?? 0) > (previous.revision ?? 0)) {
-        latestRevision.set(row.thread_id, row)
+        latestRevision.set(row.threadId, row)
       }
     }
     return [...latestRevision.values()]
@@ -285,28 +327,38 @@ export function TicketReclamationDrawer({
     })
   }
 
+  const letterKey = useRef({ fingerprint: '', value: '' })
   const sendAndRefresh = async (
-    params:
+    params: { idempotencyKey?: string } & (
       | { channel: 'rcs'; destinataire: string; contenu: RcsContenu }
+      | { channel: 'email'; destinataire: string; contenu: { subject?: string; body: string } }
       | {
-          channel: 'email' | 'postal_letter'
-          destinataire: string
+          channel: 'postal_letter'
+          destinataire: PostalAddress
+          document: MailDocument
           contenu: { subject?: string; body: string }
         }
+    )
   ) => {
     return runTicketSubmission(async () => {
-      if (!url || !window.api?.sendCommunication || !params.destinataire.trim()) {
+      if (!url || !window.api?.sendCommunication) {
         toast.add({ title: 'Coordonnée du destinataire indisponible', type: 'error' })
         return false
       }
+      if (typeof params.destinataire === 'string' && !params.destinataire.trim()) {
+        toast.add({ title: 'Coordonnée du destinataire indisponible', type: 'error' })
+        return false
+      }
+      const { idempotencyKey, ...body } = params
       const response = await window.api.sendCommunication({
         url,
-        idempotencyKey: crypto.randomUUID(),
+        idempotencyKey: idempotencyKey ?? crypto.randomUUID(),
         contexte: 'tickets',
         ref: idReclamation,
-        ...params,
-        destinataire: params.destinataire.trim()
-      })
+        ...body,
+        destinataire:
+          typeof params.destinataire === 'string' ? params.destinataire.trim() : params.destinataire
+      } as SendCommunicationPayload)
       if (!response) {
         toast.add({ title: 'Impossible d’envoyer le message', type: 'error' })
         return false
@@ -341,7 +393,7 @@ export function TicketReclamationDrawer({
         contenu: {
           ...(subject ? { subject } : {}),
           body: message,
-          external_application: { name: applicationName }
+          externalApplication: { name: applicationName }
         }
       })
       if (!response?.data?.id) {
@@ -443,8 +495,8 @@ export function TicketReclamationDrawer({
               void caseActions.patchAction(id, {
                 operation: 'update_action',
                 action: values.action,
-                assigne_a: values.assigneA,
-                date_echeance: values.dateEcheance,
+                assigneA: values.assigneA,
+                dateEcheance: values.dateEcheance,
                 ...(values.note.trim() ? { note: values.note.trim() } : {})
               })
             }
@@ -606,19 +658,56 @@ export function TicketReclamationDrawer({
               onLetterExportWord={() => {
                 const trimmed = letterBody.trim()
                 if (!trimmed) return
-                void downloadDocx(trimmed, 'replies', letterSubject)
+                void downloadDocx(trimmed, 'replies', {
+                  subject: letterSubject,
+                  adresse: ticket ? getTicketCellText(ticket, 'pierre_adresse') : '',
+                  codePostal: ticket ? getTicketCellText(ticket, 'pierre_code_postal') : '',
+                  ville: ticket ? getTicketCellText(ticket, 'pierre_ville') : ''
+                })
               }}
               onLetterSend={() => {
                 const trimmed = letterBody.trim()
-                if (!trimmed) return
-                void sendAndRefresh({
-                  channel: 'postal_letter',
-                  destinataire: destinataireAddress,
-                  contenu: {
-                    ...(letterSubject.trim() ? { subject: letterSubject.trim() } : {}),
-                    body: trimmed
+                const readFile = window.api?.getSetupFile
+                if (!trimmed || !ticket || !url || !readFile) return
+                const address = postalAddress(ticket, destinataireAddress)
+                if (!address) {
+                  toast.add({ title: 'Adresse postale incomplète', type: 'error' })
+                  return
+                }
+                void (async () => {
+                  const template = await readFile({ url, id: 'tickets/letter.docx' })
+                  if (!template) {
+                    toast.add({ title: 'Modèle de courrier absent', type: 'error' })
+                    return
                   }
-                })
+                  const bytes = await generateDocxFromTemplate(template, {
+                    SUBJECT: letterSubject,
+                    BODY: trimmed,
+                    ADRESSE: getTicketCellText(ticket, 'pierre_adresse'),
+                    CODE_POSTAL: getTicketCellText(ticket, 'pierre_code_postal'),
+                    VILLE: getTicketCellText(ticket, 'pierre_ville')
+                  })
+                  const fingerprint = `${letterSubject}\n${trimmed}\n${address.line6}`
+                  if (letterKey.current.fingerprint !== fingerprint) {
+                    letterKey.current = { fingerprint, value: crypto.randomUUID() }
+                  }
+                  const sent = await sendAndRefresh({
+                    channel: 'postal_letter',
+                    idempotencyKey: letterKey.current.value,
+                    destinataire: address,
+                    document: {
+                      name: `${generateDocxFilename()}.docx`,
+                      mediaType:
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                      contentBase64: encodeBase64(bytes)
+                    },
+                    contenu: {
+                      ...(letterSubject.trim() ? { subject: letterSubject.trim() } : {}),
+                      body: trimmed
+                    }
+                  })
+                  if (sent) letterKey.current = { fingerprint: '', value: '' }
+                })()
               }}
               onExternalInject={() => void handleExternalInjection()}
             />
@@ -643,7 +732,7 @@ export function TicketReclamationDrawer({
               }}
               onStartEditNote={(row) => {
                 setEditingNoteId(row.id)
-                setComment(activity_texte(row.type, row.contenu))
+                setComment(activityText(row.type, row.contenu))
                 setComposeMode('comment')
                 scrollComposeIntoView()
               }}
@@ -651,8 +740,8 @@ export function TicketReclamationDrawer({
               onReopenAction={(id, assigneA, dateEcheance) =>
                 void caseActions.patchAction(id, {
                   operation: 'reopen_action',
-                  assigne_a: assigneA,
-                  date_echeance: dateEcheance
+                  assigneA,
+                  dateEcheance
                 })
               }
             />
@@ -667,7 +756,7 @@ export function TicketReclamationDrawer({
     onOpenChange(false)
   }
   const drawerHeader = (
-    <DrawerHeader variant="chrome" data-inspector-motion="header" className="justify-between">
+    <DrawerHeader variant="chrome" className="justify-between">
       <div className="min-w-0 flex-1">
         <DrawerTitle variant="inspector-id" title={idReclamation}>
           {idReclamation}

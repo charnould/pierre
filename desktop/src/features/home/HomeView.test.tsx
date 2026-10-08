@@ -4,8 +4,9 @@ import { JSDOM } from 'jsdom'
 
 import type { ActivityFeedApi } from '@/features/activity/hooks/useActivityFeed'
 import type { ActivityNotificationItem } from '@/features/activity/lib/notification-types'
-import { parseActionActivity, type ActionActivity } from '@/shared/lib/activities/action-activity'
-import type { ActiviteListItem } from '@/shared/types/activites'
+import type { ReaderTarget } from '@/features/activity/lib/reader-target'
+import { type ActionActivity, parseActionActivity } from '@/shared/lib/activities/action-activity'
+import type { ActivityListItem } from '@/shared/types/activites'
 import type { UserPrincipal } from '@/shared/types/users'
 
 const resolvedUiSettings: {
@@ -103,10 +104,10 @@ function addDaysIso(days: number): string {
   return `${date.getFullYear()}-${month}-${day}`
 }
 
-function openTask(title: string, dueDate = todayIso(), id = 11): ActiviteListItem {
+function openTask(title: string, dueDate = todayIso(), id = 11): ActivityListItem {
   return {
     id,
-    date_creation: '2026-09-17T08:00:00.000Z',
+    createdAt: '2026-09-17T08:00:00.000Z',
     rattachement: 'repayment:LOC-1',
     auteur: 'user:alice@exemple.fr',
     id_client: null,
@@ -124,7 +125,7 @@ function openTask(title: string, dueDate = todayIso(), id = 11): ActiviteListIte
         due_date: dueDate
       }
     }),
-    thread_id: 'thread-1',
+    threadId: 'thread-1',
     revision: 1,
     my: null,
     read: false,
@@ -136,13 +137,14 @@ const user: UserPrincipal = {
   email: 'alice@exemple.fr',
   isAdministrator: false,
   moduleIds: ['tickets', 'repayment'],
-  chatbotIds: ['default']
+  chatbotIds: ['default'],
+  preferredName: null
 }
 
 function followedActivity(): ActivityNotificationItem {
-  const row: ActiviteListItem = {
+  const row: ActivityListItem = {
     id: 42,
-    date_creation: '2026-09-17T10:00:00.000Z',
+    createdAt: '2026-09-17T10:00:00.000Z',
     rattachement: 'repayment:LOC-1',
     auteur: 'user:bob@exemple.fr',
     id_client: null,
@@ -152,7 +154,7 @@ function followedActivity(): ActivityNotificationItem {
     channel: null,
     mentions: [],
     contenu: JSON.stringify({ version: 2, text: 'A noté un appel' }),
-    thread_id: null,
+    threadId: null,
     revision: null,
     my: null,
     read: true,
@@ -165,7 +167,7 @@ function followedActivity(): ActivityNotificationItem {
     ref: 'LOC-1',
     sender: 'bob@exemple.fr',
     body: 'A noté un appel',
-    createdAt: row.date_creation,
+    createdAt: row.createdAt,
     isRead: true,
     boosts: {},
     target: { view: 'repayment', tenantId: 'LOC-1' },
@@ -176,7 +178,7 @@ function followedActivity(): ActivityNotificationItem {
   }
 }
 
-function asOpenAction(row: ActiviteListItem): ActionActivity {
+function asOpenAction(row: ActivityListItem): ActionActivity {
   const parsed = parseActionActivity(row)
   if (!parsed) throw new Error('expected open action')
   return parsed
@@ -209,20 +211,30 @@ function feedStub(overrides?: Partial<ActivityFeedApi>): ActivityFeedApi {
   }
 }
 
-async function renderHome(options?: { mine?: ActiviteListItem[]; feed?: ActivityFeedApi }) {
+async function renderHome(options?: {
+  mine?: ActivityListItem[]
+  feed?: ActivityFeedApi
+  user?: UserPrincipal
+  onNavigate?: (tab: string) => void
+}) {
   const { act, useEffect } = await import('react')
   const { createRoot } = await import('react-dom/client')
   const { HomeView } = await import('./HomeView')
   const { ActivityRailProvider, useActivityRail } =
     await import('@/features/activity/lib/ActivityRailContext')
 
-  const rail = { tasksOpen: false, tasksTab: 'mine' }
+  const rail: {
+    tasksOpen: boolean
+    tasksTab: string
+    readerTarget: ReaderTarget | null
+  } = { tasksOpen: false, tasksTab: 'mine', readerTarget: null }
   function Probe() {
-    const { tasksOpen, tasksTab } = useActivityRail()
+    const { tasksOpen, tasksTab, readerTarget } = useActivityRail()
     useEffect(() => {
       rail.tasksOpen = tasksOpen
       rail.tasksTab = tasksTab
-    })
+      rail.readerTarget = readerTarget
+    }, [readerTarget, tasksOpen, tasksTab])
     return null
   }
 
@@ -235,9 +247,9 @@ async function renderHome(options?: { mine?: ActiviteListItem[]; feed?: Activity
         <Probe />
         <HomeView
           hidden={false}
-          onNavigate={() => {}}
+          onNavigate={options?.onNavigate ?? (() => {})}
           agentName="Pierre"
-          user={user}
+          user={options?.user ?? user}
           feed={options?.feed ?? feedStub()}
           mine={(options?.mine ?? []).map(asOpenAction)}
           delegated={[]}
@@ -262,51 +274,152 @@ async function renderHome(options?: { mine?: ActiviteListItem[]; feed?: Activity
 }
 
 describe('HomeView', () => {
-  test('shows the four rails and métier doors, not a greeting', async () => {
+  test('shows the four rails, the question, and the métier doors', async () => {
+    const { homeGreetings } = await import('./HomeView')
+    const { doorHint } = await import('./HomeDoor')
     const { cleanup } = await renderHome()
     try {
-      expect(document.body.textContent).toContain('Mes notifications')
-      expect(document.body.textContent).toContain('Mes tâches')
-      expect(document.body.textContent).toContain('Tâches que j’ai assignées')
+      const panel = document.querySelector<HTMLElement>('[data-tab-panel][aria-label="Accueil"]')
+      expect(panel?.className.split(/\s+/)).toContain('flex')
+      expect(panel?.className).not.toContain('transition-')
+      expect(panel?.className).not.toContain('opacity-')
+      expect(document.body.textContent).toContain('Notifications')
+      expect(document.body.textContent).toContain('Tâches')
+      expect(document.body.textContent).toContain('Tâches assignées')
       expect(document.body.textContent).toContain('Activités')
       expect(document.body.textContent).toContain('Discuter avec Pierre')
-      expect(document.body.textContent).toContain('Traiter les réclamations')
+      expect(document.body.textContent).toContain('Répondre aux réclamations')
       expect(document.body.textContent).toContain('Piloter les impayés')
       expect(document.body.textContent).toContain('Tout voir')
+      const question = document.querySelector('header')
+      const lines = [...(question?.querySelectorAll('p') ?? [])]
+      expect(lines).toHaveLength(2)
+      const greetings = homeGreetings('Pierre')
+      expect(greetings).toContain('Pierre est prêt à vous aider,')
+      expect(greetings).toContain('Pierre, à votre service,')
+      expect(greetings).toContain('C’est Pierre,')
+      expect(greetings).toContain('Ici Pierre,')
+      expect(greetings).toContain(lines[0]?.textContent)
+      expect(homeGreetings('Pierre', 'Alice')).toContain('Bonjour Alice,')
+      expect(homeGreetings('Pierre')).not.toContain('Bonjour Alice,')
+      expect(lines[0]?.textContent).not.toBe('Salut')
+      expect(lines[0]?.textContent).not.toBe('Bonsoir')
+      expect(lines[0]?.textContent).not.toBe('Bon après-midi')
+      expect(lines[0]?.className).toContain('font-serif')
+      expect(lines[0]?.className).toContain('text-5xl')
+      expect(lines[0]?.className).toContain('leading-tight')
+      expect(
+        ['aujourd’hui', 'à présent', 'maintenant', 'à cet instant', 'en ce moment'].some(
+          (moment) => lines[1]?.textContent === `Que souhaitez-vous faire ${moment} ?`
+        )
+      ).toBe(true)
+      expect(lines[1]?.className).toContain('font-serif')
+      expect(lines[1]?.className).toContain('text-4xl')
+      const chatHint = doorHint('chat', 'Pierre')
+      const automationsHint = doorHint('automations', 'Gustave')
+      expect(chatHint).toBe(
+        'Poser à Pierre une question sur vos pratiques, vos processus ou vos données.'
+      )
+      expect(automationsHint).toBe(
+        'Définir quand et comment Gustave intervient sur vos dossiers et vos données.'
+      )
+      expect(chatHint).not.toContain('PIERRE')
+      expect(automationsHint).not.toContain('PIERRE')
+      expect(document.body.textContent).toContain(chatHint!)
+      const hint = [...document.querySelectorAll('[data-door="chat"] span')].find(
+        (node) => node.textContent === chatHint
+      )
+      expect(hint?.className).toContain('font-serif')
+      expect(hint?.className).toContain('leading-4.75')
+      expect(hint?.className).toContain('font-[350]')
+      expect(document.body.textContent).toContain(
+        'Répondre aux candidats et aux locataires, puis coordonner le suivi avec votre équipe.'
+      )
       expect(document.querySelector('.home-tile')).toBeNull()
-      expect(document.body.textContent).not.toContain('Bonjour')
-      expect(document.body.textContent).not.toContain('Bon après-midi')
       expect(document.body.textContent).not.toContain('Rien de neuf')
       expect(document.querySelector('.size-28')).toBeNull()
-      expect(document.querySelector('.font-serif')).toBeNull()
+      expect(document.querySelector('.size-40')).toBeNull()
       const nav = document.querySelector('[aria-label="Métiers"]')
-      expect(nav?.className).toContain('grid-cols-3')
-      const door = nav?.querySelector('[data-door="repayment"]')
-      expect(door).not.toBeNull()
-      expect(door?.querySelector('.size-5')).not.toBeNull()
-      expect(nav?.className).not.toContain('grid-cols-4')
-      const board = nav?.parentElement
-      expect(board?.className).toContain('max-w-[calc(76rem+1.5rem)]')
-      const rails = nav?.nextElementSibling
-      expect(rails?.parentElement).toBe(board)
-      expect(rails?.className).toContain('grid-cols-4')
-      expect(rails?.className).toContain('gap-2')
-      expect(rails?.className).toContain('items-start')
-      for (const title of [
-        'Mes notifications',
-        'Mes tâches',
-        'Tâches que j’ai assignées',
+      expect(nav?.className).toContain('grid-cols-4')
+      expect(nav?.className).not.toContain('lg:grid-cols-3')
+      const door = nav?.querySelector<HTMLElement>('[data-door="repayment"]')
+      expect(door?.tagName).toBe('BUTTON')
+      expect(door?.className).toContain('bg-home-repayment')
+      expect(door?.className).toContain('text-home-ink')
+      expect(door?.className).toContain('aspect-[1.618]')
+      expect(door?.className).toContain('px-4')
+      expect(door?.className).toContain('py-3')
+      expect(nav?.className).toContain('items-start')
+      const repaymentHintText =
+        'Suivre les impayés, organiser les relances et piloter les plans d’apurement.'
+      expect(door?.textContent).toContain(repaymentHintText)
+      const repaymentHint = [...(door?.querySelectorAll('span') ?? [])].find(
+        (node) => node.textContent === repaymentHintText
+      )
+      expect(repaymentHint?.className).toContain('font-serif')
+      expect(repaymentHint?.className).toContain('line-clamp-3')
+      const repaymentTitle = [...(door?.querySelectorAll('span') ?? [])].find(
+        (node) => node.textContent === 'Piloter les impayés' && node.className.includes('text-lg')
+      )
+      expect(repaymentTitle?.className).toContain('text-lg')
+      expect(repaymentTitle?.className).not.toContain('font-serif')
+      expect(nav?.querySelector('[data-door="chat"]')?.className).toContain('bg-home-chat')
+      expect(nav?.querySelector('[data-door="tickets"]')?.className).toContain('bg-home-tickets')
+      expect(door?.querySelector('.size-5')?.parentElement).toBe(door)
+      const board = nav?.parentElement?.parentElement
+      expect(board?.className).toContain('max-w-7xl')
+      const band = nav?.parentElement
+      expect(band?.className).toContain('gap-4')
+      const work = nav?.nextElementSibling
+      expect(work?.parentElement).toBe(band)
+      expect(work?.tagName).toBe('SECTION')
+      expect(work?.getAttribute('aria-label')).toBe('Travail personnel')
+      expect(work?.className).toContain('grid-cols-4')
+      expect(work?.className).toContain('gap-4')
+      expect(work?.className).toContain('items-start')
+      expect(work?.className).not.toContain('lg:grid-cols-4')
+      const cards = [...(work?.querySelectorAll('[data-slot="card"]') ?? [])]
+      expect(cards).toHaveLength(4)
+      expect(cards.map((card) => card.querySelector('h2')?.textContent)).toEqual([
+        'Notifications',
+        'Tâches',
+        'Tâches assignées',
         'Activités'
-      ]) {
-        const heading = [...document.querySelectorAll('h2')].find(
-          (node) => node.textContent === title
+      ])
+      for (const card of cards) {
+        expect(card.className).toContain('px-4')
+        expect(card.className).toContain('py-3')
+        expect(card.className).toContain('gap-1')
+        expect(card.className).toContain('aspect-[1.618]')
+        expect(card.className).not.toContain('h-full')
+        expect(card.textContent).toContain('Tout voir')
+        const seeAll = [...card.querySelectorAll('button')].find(
+          (button) => button.textContent === 'Tout voir'
         )
-        const section = heading?.closest('section.rounded-md.border')
-        expect(section).not.toBeNull()
-        expect(section?.className).toContain('h-fit')
-        expect(section?.className).toContain('self-start')
-        expect(section?.textContent).toContain('Tout voir')
+        expect(seeAll?.className).toContain('h-7')
+        expect(seeAll?.parentElement?.querySelector('svg.size-5')).not.toBeNull()
+        expect(card.querySelector('svg.size-5')).not.toBeNull()
+        const description = card.querySelector('[data-slot="empty-description"]')
+        expect(description?.getAttribute('data-size')).toBe('sm')
+        expect(description?.className).toContain('font-serif')
+        expect(description?.className).toContain('[font-size:14px]')
+        expect(description?.className).toContain('leading-4.75')
+        expect(description?.className).toContain('font-[350]')
       }
+    } finally {
+      await cleanup()
+    }
+  })
+
+  test('opens Discuter as the chat tab', async () => {
+    const navigated: string[] = []
+    const { act, cleanup } = await renderHome({
+      onNavigate: (tab) => navigated.push(tab)
+    })
+    try {
+      const chat = document.querySelector<HTMLButtonElement>('[data-door="chat"]')
+      await act(async () => chat?.click())
+      expect(navigated).toEqual(['chat'])
     } finally {
       await cleanup()
     }
@@ -318,6 +431,19 @@ describe('HomeView', () => {
       expect(document.body.textContent).toContain('Relancer le locataire')
       expect(document.body.textContent).toContain('Prochaines')
       expect(document.querySelector('button[aria-label="Action à faire"]')).toBeNull()
+      const work = document.querySelector('[aria-label="Métiers"]')?.nextElementSibling
+      expect(work?.className).toContain('items-start')
+      const tasks = [...(work?.querySelectorAll('[data-slot="card"]') ?? [])].find(
+        (card) => card.querySelector('h2')?.textContent === 'Tâches'
+      )
+      expect(tasks?.className).not.toContain('aspect-[1.618]')
+      expect(tasks?.textContent).toContain('Relancer le locataire')
+      const taskButton = [...(tasks?.querySelectorAll('button') ?? [])].find((button) =>
+        button.textContent?.includes('Relancer le locataire')
+      )
+      expect(taskButton?.className).toContain('rounded-md')
+      expect(taskButton?.className).toContain('border-border/80')
+      expect(taskButton?.className).toContain('px-3')
     } finally {
       await cleanup()
     }
@@ -357,17 +483,138 @@ describe('HomeView', () => {
     const { act, cleanup, rail } = await renderHome()
     try {
       const heading = [...document.querySelectorAll('h2')].find(
-        (node) => node.textContent === 'Mes tâches'
+        (node) => node.textContent === 'Tâches'
       )
-      const button = [...(heading?.closest('section')?.querySelectorAll('button') ?? [])].find(
-        (node) => node.textContent === 'Tout voir'
-      )
+      const button = [
+        ...(heading?.closest('[data-slot="card"]')?.querySelectorAll('button') ?? [])
+      ].find((node) => node.textContent === 'Tout voir')
+      expect(heading?.textContent).toBe('Tâches')
+      expect(button?.textContent).toBe('Tout voir')
       expect(rail.tasksOpen).toBe(false)
       await act(async () => {
         button?.click()
       })
       expect(rail.tasksOpen).toBe(true)
       expect(rail.tasksTab).toBe('mine')
+    } finally {
+      await cleanup()
+    }
+  })
+
+  test('shows a flagged door with its pigment only when the module is granted', async () => {
+    const { PANEL_FLAGS } = await import('@/shared/lib/tab-registry')
+    const tones = {
+      insurance: 'bg-home-insurance',
+      relocation: 'bg-home-relocation',
+      attributions: 'bg-home-attributions',
+      ventes: 'bg-home-ventes'
+    } as const satisfies Record<keyof typeof PANEL_FLAGS, string>
+
+    const hidden = await renderHome()
+    try {
+      for (const tab of Object.keys(tones)) {
+        expect(document.querySelector(`[data-door="${tab}"]`)).toBeNull()
+      }
+    } finally {
+      await hidden.cleanup()
+    }
+
+    const shown = await renderHome({
+      user: { ...user, moduleIds: Object.keys(PANEL_FLAGS) as UserPrincipal['moduleIds'] }
+    })
+    try {
+      for (const [tab, tone] of Object.entries(tones)) {
+        const door = document.querySelector(`[data-door="${tab}"]`)
+        if (!PANEL_FLAGS[tab as keyof typeof PANEL_FLAGS]) {
+          expect(door).toBeNull()
+          continue
+        }
+        expect(door?.className).toContain(tone)
+        expect(door?.className).toContain('text-home-ink')
+      }
+    } finally {
+      await shown.cleanup()
+    }
+  })
+
+  test('shows an update notice in the tile voice', async () => {
+    const markItemRead = mock(async () => {})
+    const { act, cleanup, rail } = await renderHome({
+      feed: feedStub({
+        markItemRead,
+        items: [
+          {
+            id: 'upd-1',
+            type: 'updates',
+            source: 'update',
+            ref: 'desktop-alpha',
+            sender: 'Pierre',
+            body: "Lancement de l'alpha de l'application Desktop",
+            createdAt: '2026-10-10T10:00:00.000Z',
+            isRead: false,
+            boosts: {},
+            target: {
+              view: 'updates',
+              slug: 'desktop-alpha',
+              title: "Lancement de l'alpha de l'application Desktop",
+              date: '2026-10-10'
+            },
+            contextLabel: 'Mises à jour',
+            moduleLabel: 'Mises à jour',
+            notificationId: 'upd-1'
+          }
+        ]
+      })
+    })
+    try {
+      const card = [...document.querySelectorAll('[data-slot="card"]')].find(
+        (node) => node.querySelector('h2')?.textContent === 'Notifications'
+      )
+      const message = [...(card?.querySelectorAll('p') ?? [])].find((node) =>
+        node.textContent?.includes("Lancement de l'alpha")
+      )
+      expect(message?.className).toContain('font-serif')
+      expect(message?.className).toContain('leading-4.75')
+      expect(message?.className).toContain('line-clamp-2')
+      expect(message?.className).toContain('text-muted-foreground')
+      expect(message?.className).not.toContain('text-base')
+      const time = card?.querySelector('time')
+      expect(time?.closest('p')?.className).toContain('text-xs')
+      expect(time?.closest('p')?.className).toContain('leading-4')
+      expect(time?.closest('p')?.className).not.toContain('font-mono')
+      expect(time?.parentElement?.className).toContain('tabular-nums')
+      expect(time?.textContent).not.toContain('Pierre')
+      expect(time?.parentElement?.textContent).toContain('Pierre')
+      expect(message?.textContent).not.toContain(time?.textContent ?? '—')
+      expect(time && message && time.compareDocumentPosition(message)).toBe(
+        Node.DOCUMENT_POSITION_FOLLOWING
+      )
+      expect(message?.closest('li')?.className).toContain('rounded-md')
+      expect(message?.closest('li')?.querySelector('div')?.className).toContain('px-3')
+      expect(message?.closest('ul')?.className).toContain('gap-2')
+      const avatar = card?.querySelector('[data-slot="avatar"]')
+      expect(avatar?.className).toContain('size-5')
+      expect(message && avatar && message.compareDocumentPosition(avatar)).toBe(
+        Node.DOCUMENT_POSITION_FOLLOWING
+      )
+      expect(card?.className).not.toContain('aspect-[1.618]')
+      const tasks = [...document.querySelectorAll('[data-slot="card"]')].find(
+        (node) => node.querySelector('h2')?.textContent === 'Tâches'
+      )
+      expect(tasks?.querySelector('[data-slot="empty-description"]')?.className).toContain(
+        'font-serif'
+      )
+      expect(tasks?.className).toContain('aspect-[1.618]')
+      await act(async () => {
+        message?.closest<HTMLElement>('li[role="button"]')?.click()
+      })
+      expect(rail.readerTarget).toEqual({
+        kind: 'update',
+        slug: 'desktop-alpha',
+        title: "Lancement de l'alpha de l'application Desktop",
+        date: '2026-10-10'
+      })
+      expect(markItemRead).toHaveBeenCalledWith('upd-1')
     } finally {
       await cleanup()
     }
@@ -382,7 +629,7 @@ describe('HomeView', () => {
     })
     try {
       expect(document.body.textContent).toContain('A noté un appel')
-      expect(document.querySelector('.activity-motion-list')).not.toBeNull()
+      expect(document.querySelector('.activity-motion-list')).toBeNull()
     } finally {
       await cleanup()
     }

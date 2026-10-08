@@ -27,12 +27,7 @@ export type KnowledgeBuckets = {
 }
 
 export type KnowledgeItemState =
-  | 'absent'
-  | 'unassigned'
-  | 'pending'
-  | 'running'
-  | 'succeeded'
-  | 'failed'
+  'absent' | 'unassigned' | 'pending' | 'running' | 'succeeded' | 'failed'
 
 export const buildKnowledgeBuckets = (
   sources: readonly KnowledgeSource[],

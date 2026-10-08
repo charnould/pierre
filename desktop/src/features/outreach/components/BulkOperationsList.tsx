@@ -1,10 +1,9 @@
-import { Plus } from 'lucide-react'
+import { Mails, Plus, Search } from 'lucide-react'
 
 import { BulkOperationsListChrome } from '@/features/outreach/components/BulkOperationsListChrome'
 import { formatBulkOperationDate } from '@/features/outreach/lib/labels'
 import type { BulkOperationSortKey } from '@/features/outreach/lib/sort-bulk-operations'
 import { DirectoryList, DirectoryRow } from '@/shared/components/DirectoryList'
-import { CartoonBulkSelectFiles } from '@/shared/components/icons/koboyo-empty'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -18,7 +17,7 @@ import { UserAvatar } from '@/shared/components/UserAvatar'
 import { useOrgUsers } from '@/shared/hooks/useOrgUsers'
 import { useUserAvatar } from '@/shared/hooks/useUserAvatar'
 import { formatOrgCollaboratorLabel } from '@/shared/lib/org-users-cache'
-import { lastBulkOperationEdit, type BulkOperationSummary } from '@/shared/types/bulk-operations'
+import { type BulkOperationSummary, lastBulkOperationEdit } from '@/shared/types/bulk-operations'
 
 interface Props {
   url: string
@@ -39,7 +38,7 @@ function LastEditor({ login, at }: { login: string; at: string }) {
   const name = formatOrgCollaboratorLabel(login)
   return (
     <div className="flex min-w-0 items-center gap-2">
-      <Badge variant="outline" size="data" className="min-w-0">
+      <Badge variant="outline" className="min-w-0">
         <UserAvatar photoUrl={avatar} name={name} login={login} size="sm" className="size-3.5!" />
         <span className="truncate">{name}</span>
       </Badge>
@@ -78,7 +77,7 @@ export function BulkOperationsList({
           <Empty className="min-h-60">
             <EmptyHeader>
               <EmptyMedia variant="icon">
-                <CartoonBulkSelectFiles />
+                <Search />
               </EmptyMedia>
               <EmptyTitle>Aucun résultat</EmptyTitle>
               <EmptyDescription>
@@ -90,7 +89,7 @@ export function BulkOperationsList({
           <Empty className="min-h-60">
             <EmptyHeader>
               <EmptyMedia variant="icon">
-                <CartoonBulkSelectFiles />
+                <Mails />
               </EmptyMedia>
               <EmptyTitle>Traitez des locataires en lot</EmptyTitle>
               <EmptyDescription>
@@ -116,14 +115,14 @@ export function BulkOperationsList({
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{bulkOperation.name}</p>
-                    <p className="pierre-meta max-h-[2lh] overflow-hidden text-balance">
+                    <p className="text-muted-foreground max-h-[2lh] overflow-hidden text-xs text-balance">
                       {bulkOperation.description || '—'}
                     </p>
                   </div>
                   {last ? (
                     <LastEditor login={last.by} at={last.at} />
                   ) : (
-                    <span className="pierre-meta">—</span>
+                    <span className="text-muted-foreground text-xs">—</span>
                   )}
                   <span className="text-xs whitespace-nowrap tabular-nums">
                     {bulkOperation.lastRunAt

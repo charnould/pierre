@@ -1,5 +1,5 @@
-import { ArrowLeft } from 'lucide-react'
-import { useCallback, useLayoutEffect, useRef, useState, type RefObject } from 'react'
+import { ArrowLeft, Mails } from 'lucide-react'
+import { type RefObject, useCallback, useLayoutEffect, useRef, useState } from 'react'
 
 import { RepaymentActivityDrawer } from '@/features/activity/components/RepaymentActivityDrawer'
 import { useConditionalPolling } from '@/features/outreach/hooks/useConditionalPolling'
@@ -11,7 +11,6 @@ import {
   reportItemOutcome,
   reportItemStatusDisplay
 } from '@/features/outreach/lib/report-display'
-import { CartoonBulkSelectFiles } from '@/shared/components/icons/koboyo-empty'
 import { TableCellValue } from '@/shared/components/table/TableCellValue'
 import { VirtualizedTableBody } from '@/shared/components/table/VirtualizedTableBody'
 import { Button } from '@/shared/components/ui/button'
@@ -122,15 +121,15 @@ export function BulkReportRunSection({
           <Empty className="min-h-40">
             <EmptyHeader>
               <EmptyMedia variant="icon" size="sm">
-                <CartoonBulkSelectFiles />
+                <Mails />
               </EmptyMedia>
               <EmptyTitle size="sm">Aucun élément dans cette exécution.</EmptyTitle>
             </EmptyHeader>
           </Empty>
         ) : (
-          <table className="pierre-type-data w-full table-fixed font-sans tabular-nums">
+          <table className="w-full table-fixed font-sans text-xs tabular-nums">
             <thead
-              className="bg-background text-muted-foreground pierre-type-table-header sticky z-10"
+              className="bg-background text-muted-foreground sticky z-10 text-xs font-semibold"
               style={{ top: chromeHeight }}
             >
               <tr className="border-border border-b">
@@ -210,7 +209,7 @@ export function BulkReports({ url, operation, userLogin, onBack }: Props) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <header className="border-border bg-background flex shrink-0 items-center gap-2 border-b py-2 ps-2 pe-2">
-        <Button type="button" variant="ghost" size="icon-sm" aria-label="Retour" onClick={onBack}>
+        <Button type="button" variant="outline" size="icon-sm" aria-label="Retour" onClick={onBack}>
           <ArrowLeft />
         </Button>
         <div className="flex min-w-0 flex-1 items-baseline gap-2">
@@ -233,7 +232,7 @@ export function BulkReports({ url, operation, userLogin, onBack }: Props) {
           <Empty className="min-h-60">
             <EmptyHeader>
               <EmptyMedia variant="icon">
-                <CartoonBulkSelectFiles />
+                <Mails />
               </EmptyMedia>
               <EmptyTitle>Aucune exécution</EmptyTitle>
               <EmptyDescription>

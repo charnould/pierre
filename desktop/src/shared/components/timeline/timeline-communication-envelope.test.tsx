@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { JSDOM } from 'jsdom'
 import type { ReactNode } from 'react'
 
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
@@ -53,10 +53,10 @@ afterAll(() => {
   }
 })
 
-function activity(partial: Pick<Activite, 'type' | 'contenu'> & Partial<Activite>): Activite {
+function activity(partial: Pick<Activity, 'type' | 'contenu'> & Partial<Activity>): Activity {
   return {
     id: 1,
-    date_creation: '2026-06-10T10:00:00Z',
+    createdAt: '2026-06-10T10:00:00Z',
     rattachement: 'tickets:REC-1',
     auteur: 'user:alice@exemple.fr',
     id_client: null,
@@ -70,10 +70,10 @@ function activity(partial: Pick<Activite, 'type' | 'contenu'> & Partial<Activite
 }
 
 async function renderEnvelope(
-  row: Activite,
+  row: Activity,
   expandable = true,
   wrap?: (node: ReactNode) => ReactNode,
-  statuses: Activite[] = []
+  statuses: Activity[] = []
 ) {
   const { act } = await import('react')
   const { createRoot } = await import('react-dom/client')
@@ -300,7 +300,7 @@ describe('TimelineCommunicationEnvelope', () => {
           body: 'Merci de régulariser.'
         }),
         destinataire: 'Bob <bob@locataire.fr>',
-        date_creation: '2026-08-12T08:00:00Z'
+        createdAt: '2026-08-12T08:00:00Z'
       })
     )
     try {

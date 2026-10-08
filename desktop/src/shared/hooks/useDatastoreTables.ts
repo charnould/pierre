@@ -23,7 +23,7 @@ export function useDatastoreTables(
       .getDatastoreTables({ url: requestKey })
       .then((response) => {
         if (cancelled) return
-        setSnapshot({ key: requestKey, tables: response?.tables ?? null })
+        setSnapshot({ key: requestKey, tables: response?.data.tables ?? null })
       })
       .catch(() => {
         if (cancelled) return

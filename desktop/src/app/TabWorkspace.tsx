@@ -13,7 +13,9 @@ import { useVisitedTabs } from '@/shared/lib/use-visited-tabs'
 import type { Settings } from '@/shared/types'
 import type { UserPrincipal } from '@/shared/types/users'
 
-const ChatView = lazy(() => import('@/features/chat').then((m) => ({ default: m.ChatView })))
+const ChatView = lazy(() =>
+  import('@/features/chat/ChatView').then((m) => ({ default: m.ChatView }))
+)
 const TicketsView = lazy(() =>
   import('@/features/tickets').then((m) => ({ default: m.TicketsView }))
 )
@@ -54,7 +56,6 @@ interface Props {
   onCurrentUserPasswordChange: () => Promise<void>
   onUserChange: (user: UserPrincipal) => void
   onLogout: () => void
-  onSettingsChange: (settings: Settings) => void
 }
 
 export function TabWorkspace({
@@ -75,8 +76,7 @@ export function TabWorkspace({
   onLogin,
   onCurrentUserPasswordChange,
   onUserChange,
-  onLogout,
-  onSettingsChange
+  onLogout
 }: Props) {
   const visited = useVisitedTabs(activeTab, isLoggedIn)
 
@@ -99,20 +99,17 @@ export function TabWorkspace({
         hidden={activeTab !== 'settings'}
         settings={settings}
         isLoggedIn={isLoggedIn}
+        user={user}
         agentName={agentName}
+        onHome={() => onTabChange('home')}
         onLogin={onLogin}
+        onUserChange={onUserChange}
         onLogout={onLogout}
-        onSettingsChange={onSettingsChange}
       />
 
       <Suspense fallback={<LazyTabFallback />}>
         {visited.has('chat') ? (
-          <ChatView
-            hidden={activeTab !== 'chat'}
-            isLoggedIn={isLoggedIn}
-            agentName={agentName}
-            url={settings.url}
-          />
+          <ChatView hidden={activeTab !== 'chat'} agentName={agentName} url={settings.url} />
         ) : null}
 
         {visited.has('tickets') ? (
@@ -166,6 +163,7 @@ export function TabWorkspace({
             hidden={activeTab !== 'administration'}
             url={settings.url ?? ''}
             user={user}
+            onHome={() => onTabChange('home')}
             onCurrentUserPasswordChange={onCurrentUserPasswordChange}
             onUserChange={onUserChange}
           />

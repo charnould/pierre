@@ -1,11 +1,7 @@
-import { lastBulkOperationEdit, type BulkOperationSummary } from '@/shared/types/bulk-operations'
+import { type BulkOperationSummary, lastBulkOperationEdit } from '@/shared/types/bulk-operations'
 
 export type BulkOperationSortKey =
-  | 'modified_desc'
-  | 'modified_asc'
-  | 'last_run_desc'
-  | 'last_run_asc'
-  | 'name_asc'
+  'modified_desc' | 'modified_asc' | 'last_run_desc' | 'last_run_asc' | 'name_asc'
 
 export const BULK_OPERATION_SORT_OPTIONS: { value: BulkOperationSortKey; label: string }[] = [
   { value: 'modified_desc', label: 'Modification (récent)' },

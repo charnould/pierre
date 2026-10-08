@@ -1,20 +1,21 @@
-import { useReducedMotion } from 'motion/react'
 import {
+  type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
   useRef,
-  useState,
-  type PointerEvent as ReactPointerEvent
+  useState
 } from 'react'
+
+import { usePrefersReducedMotion } from '@/shared/lib/prefers-reduced-motion'
 
 import {
   DEFAULT_MASCOT_BADGE_COLOR,
   DEFAULT_MASCOT_COLOR,
   DEFAULT_MASCOT_SHAPE,
-  parseMascotColor,
-  parseMascotShape,
   type MascotColor,
-  type MascotShape
+  type MascotShape,
+  parseMascotColor,
+  parseMascotShape
 } from './look'
 import { MascotSvg } from './MascotSvg'
 import { useMascotLife } from './useMascotLife'
@@ -25,7 +26,7 @@ const DRAG_THRESHOLD_PX = 4
  * Compagnon SVG : forme + couleurs poussées par le main, vie idle / orbit / pop locale.
  */
 export function MascotApp() {
-  const reduceMotion = useReducedMotion()
+  const reduceMotion = usePrefersReducedMotion()
   const [unreadCount, setUnreadCount] = useState(0)
   const [allowOrbit, setAllowOrbit] = useState(true)
   const [shape, setShape] = useState<MascotShape>(DEFAULT_MASCOT_SHAPE)

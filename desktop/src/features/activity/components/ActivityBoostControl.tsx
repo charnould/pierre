@@ -10,10 +10,10 @@ import {
 import { mentionsToBoosts } from '@/features/activity/lib/notification-types'
 import { Button } from '@/shared/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
-import type { Activite, ActiviteListItem } from '@/shared/types/activites'
+import type { Activity, ActivityListItem } from '@/shared/types/activites'
 
 interface Props {
-  activity: Activite | ActiviteListItem
+  activity: Activity | ActivityListItem
   currentUser: string
   onBoost: (emoji: ActivityBoostEmoji | null) => void | Promise<void>
   disabled?: boolean
@@ -72,7 +72,7 @@ export function ActivityBoostControl({ activity, currentUser, onBoost, disabled 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       {others.length > 0 ? (
-        <p className="pierre-meta leading-4" aria-label="Boosts">
+        <p className="text-muted-foreground text-xs leading-4" aria-label="Boosts">
           {others.join(' ')}
         </p>
       ) : null}
@@ -121,7 +121,7 @@ export function ActivityBoostControl({ activity, currentUser, onBoost, disabled 
           </PopoverContent>
         </Popover>
       ) : mine ? (
-        <p className="pierre-meta leading-4">{mine}</p>
+        <p className="text-muted-foreground text-xs leading-4">{mine}</p>
       ) : null}
     </div>
   )

@@ -31,17 +31,23 @@ export function ContextTimelineEntryHeader({
 }: Props) {
   const TitleTag = wrap ? 'div' : 'p'
   return (
-    <div className={cn('flex min-w-0 flex-col gap-0', className)}>
+    <div className={cn('flex min-w-0 flex-col gap-2', className)}>
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-        <time className="pierre-meta tabular-nums" dateTime={dateTime} title={dateTitle}>
+        <time
+          className="text-muted-foreground text-sm leading-5 tabular-nums"
+          dateTime={dateTime}
+          title={dateTitle}
+        >
           {dateLabel}
         </time>
         {children}
       </div>
-      {context != null ? <p className="pierre-meta min-w-0">{context}</p> : null}
+      {context != null ? (
+        <p className="text-muted-foreground min-w-0 text-sm leading-5">{context}</p>
+      ) : null}
       <TitleTag
         className={cn(
-          'text-foreground flex min-h-4 text-xs leading-4 font-medium',
+          'text-foreground flex text-base leading-6 font-medium',
           wrap ? 'min-w-0 flex-wrap items-center gap-x-1 gap-y-1' : 'items-center truncate'
         )}
       >

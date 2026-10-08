@@ -43,6 +43,7 @@ export function useSetupRequest(): SetupEntry | null {
       listeners.add(listener)
       return () => listeners.delete(listener)
     },
+    () => entry,
     () => entry
   )
 }

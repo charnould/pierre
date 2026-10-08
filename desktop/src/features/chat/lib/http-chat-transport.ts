@@ -34,15 +34,15 @@ export function createHttpChatTransport(): ChatTransport {
   return {
     async stream(request: ChatStreamRequest, onEvent, signal) {
       const form = new FormData()
-      form.set('config', request.configId)
+      form.set('configId', request.configId)
       form.set('message', request.message)
-      form.set('conv_id', request.convId)
+      form.set('conversationId', request.convId)
       form.set('data', request.dataParam)
       for (const file of request.files) {
         form.append('files', file)
       }
 
-      const response = await fetch('/ai', { method: 'POST', body: form, signal })
+      const response = await fetch('/chat', { method: 'POST', body: form, signal })
       if (!response.ok || !response.body) {
         throw new Error('Chat stream failed')
       }
@@ -50,13 +50,13 @@ export function createHttpChatTransport(): ChatTransport {
     },
 
     async submitQuestionnaire(request: ChatQuestionnaireRequest) {
-      const response = await fetch('/ai/ui-response', {
+      const response = await fetch('/chat/responses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          conv_id: request.convId,
-          request_id: request.requestId,
-          response_secret: request.responseSecret,
+          conversationId: request.convId,
+          requestId: request.requestId,
+          responseSecret: request.responseSecret,
           answers: request.answers
         })
       })

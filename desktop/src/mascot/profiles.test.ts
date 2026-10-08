@@ -3,13 +3,13 @@ import { describe, expect, it } from 'bun:test'
 import { MASCOT_SHAPES } from './look'
 import {
   BODY_R,
-  mascotBodyPath,
-  mascotRadii,
-  mascotViewBox,
   MASCOT_BODY_VIEWBOX,
   MASCOT_VIEWBOX,
   MASCOT_VIEWBOX_MIN,
   MASCOT_VIEWBOX_SIZE,
+  mascotBodyPath,
+  mascotRadii,
+  mascotViewBox,
   PROFILE_SAMPLES,
   radiusAtAngle,
   SHAPE_BY_ID,

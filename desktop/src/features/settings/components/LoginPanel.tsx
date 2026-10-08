@@ -1,13 +1,21 @@
-import { Eye, EyeOff } from 'lucide-react'
-import { motion } from 'motion/react'
+import {
+  Eye,
+  EyeOff,
+  KeyRound,
+  LockKeyholeOpen,
+  MailCheck,
+  ServerNas,
+  ShieldCheck,
+  SquareCheck
+} from 'lucide-react'
 import { useId, useState } from 'react'
 
 import { loginWithTypedCredentials } from '@/features/auth'
-import { panelScreen } from '@/features/workflow/components/WorkflowPanelChrome'
 import { Button } from '@/shared/components/ui/button'
 import { Checkbox } from '@/shared/components/ui/checkbox'
 import {
   Field,
+  FieldContent,
   FieldDescription,
   FieldError,
   FieldGroup,
@@ -23,18 +31,16 @@ import {
 import { Spinner } from '@/shared/components/ui/spinner'
 import {
   connectionFieldInvalid,
-  loginFieldErrorsFromCode,
-  validateLoginFields,
   type LoginField,
-  type LoginFieldErrors
+  type LoginFieldErrors,
+  loginFieldErrorsFromCode,
+  validateLoginFields
 } from '@/shared/lib/login-errors'
 import { warnRenderer } from '@/shared/lib/renderer-log'
 import type { Settings } from '@/shared/types'
 import type { UserPrincipal } from '@/shared/types/users'
 
-import { LoginMark } from './LoginMark'
-
-const LOGIN_LEGAL_REQUIRED = 'Acceptez les deux conditions pour continuer.'
+const LOGIN_LEGAL_REQUIRED = 'Acceptez les conditions pour continuer.'
 
 interface Props {
   settings: Settings
@@ -48,8 +54,7 @@ export function LoginPanel({ settings, onLogin }: Props) {
   const [showPw, setShowPw] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({})
   const [loading, setLoading] = useState(false)
-  const [charterAccepted, setCharterAccepted] = useState(false)
-  const [aiDisclaimerAccepted, setAiDisclaimerAccepted] = useState(false)
+  const [conditionsAccepted, setConditionsAccepted] = useState(false)
   const [legalError, setLegalError] = useState('')
   const [appliedSettings, setAppliedSettings] = useState(settings)
   const urlId = useId()
@@ -58,8 +63,7 @@ export function LoginPanel({ settings, onLogin }: Props) {
   const urlErrorId = useId()
   const emailErrorId = useId()
   const passwordErrorId = useId()
-  const charterId = useId()
-  const aiDisclaimerId = useId()
+  const conditionsId = useId()
   const legalErrorId = useId()
 
   if (appliedSettings !== settings) {
@@ -80,7 +84,7 @@ export function LoginPanel({ settings, onLogin }: Props) {
 
   async function handleSubmit() {
     const validation = validateLoginFields({ url, email, password })
-    const legalOk = charterAccepted && aiDisclaimerAccepted
+    const legalOk = conditionsAccepted
     if (Object.keys(validation).length > 0 || !legalOk) {
       setFieldErrors(validation)
       setLegalError(legalOk ? '' : LOGIN_LEGAL_REQUIRED)
@@ -116,13 +120,7 @@ export function LoginPanel({ settings, onLogin }: Props) {
   const passwordInvalid = connectionFieldInvalid('password', fieldErrors)
 
   return (
-    <motion.div
-      className="bg-background flex min-h-0 flex-1 flex-col overflow-hidden"
-      initial="hidden"
-      animate="visible"
-      exit="hidden"
-      variants={panelScreen}
-    >
+    <div className="bg-background flex min-h-0 flex-1 flex-col overflow-hidden">
       <form
         className="flex w-full flex-col gap-4 overflow-hidden px-6 py-6"
         onSubmit={(e) => {
@@ -131,7 +129,23 @@ export function LoginPanel({ settings, onLogin }: Props) {
         }}
       >
         <h1 className="sr-only">Connexion</h1>
-        <LoginMark />
+        <div
+          data-slot="login-mark"
+          aria-hidden
+          className="text-foreground flex w-full items-center justify-between"
+        >
+          <ServerNas className="size-8" strokeWidth={1.5} />
+          <span className="text-2xl leading-none">×</span>
+          <MailCheck className="size-8" strokeWidth={1.5} />
+          <span className="text-2xl leading-none">×</span>
+          <KeyRound className="size-8" strokeWidth={1.5} />
+          <span className="text-2xl leading-none">×</span>
+          <SquareCheck className="size-8" strokeWidth={1.5} />
+          <span className="text-2xl leading-none">=</span>
+          <LockKeyholeOpen className="size-8" strokeWidth={1.5} />
+          <span className="text-2xl leading-none">×</span>
+          <ShieldCheck className="size-8" strokeWidth={1.5} />
+        </div>
 
         <FieldGroup>
           <Field>
@@ -145,7 +159,7 @@ export function LoginPanel({ settings, onLogin }: Props) {
                 setUrl(e.target.value)
                 clearFieldError('url')
               }}
-              placeholder="https://exemple.pierre-ia.org"
+              placeholder="https://pierre.parishabitat.fr"
               autoComplete="url"
               aria-invalid={urlInvalid}
               aria-describedby={urlInvalid ? urlErrorId : undefined}
@@ -165,7 +179,7 @@ export function LoginPanel({ settings, onLogin }: Props) {
                 setEmail(e.target.value)
                 clearFieldError('email')
               }}
-              placeholder="votre@email.com"
+              placeholder="jules.siegfried@parishabitat.fr"
               autoComplete="email"
               aria-invalid={emailInvalid}
               aria-describedby={emailInvalid ? emailErrorId : undefined}
@@ -211,39 +225,28 @@ export function LoginPanel({ settings, onLogin }: Props) {
           </Field>
         </FieldGroup>
 
-        <FieldGroup spacing="compact" aria-describedby={legalError ? legalErrorId : undefined}>
-          <Field orientation="horizontal" className="items-start">
+        <FieldGroup aria-describedby={legalError ? legalErrorId : undefined}>
+          <Field orientation="horizontal">
             <Checkbox
-              id={charterId}
-              checked={charterAccepted}
+              id={conditionsId}
+              checked={conditionsAccepted}
               onCheckedChange={(checked) => {
-                setCharterAccepted(checked === true)
+                setConditionsAccepted(checked === true)
                 setLegalError('')
               }}
             />
-            <FieldLabel htmlFor={charterId} className="min-w-0">
-              <FieldDescription>
-                J’ai pris connaissance et j’accepte la charte et/ou les consignes IA de mon
-                organisme.
+            <FieldContent>
+              <FieldLabel htmlFor={conditionsId}>J'accepte les conditions d'utilisation</FieldLabel>
+              <FieldDescription className="[font-size:12px] leading-4">
+                Je confirme avoir pris connaissance et accepter la charte ou les consignes
+                d’utilisation de l’IA de mon organisme.
               </FieldDescription>
-            </FieldLabel>
-          </Field>
-
-          <Field orientation="horizontal" className="items-start">
-            <Checkbox
-              id={aiDisclaimerId}
-              checked={aiDisclaimerAccepted}
-              onCheckedChange={(checked) => {
-                setAiDisclaimerAccepted(checked === true)
-                setLegalError('')
-              }}
-            />
-            <FieldLabel htmlFor={aiDisclaimerId} className="min-w-0">
-              <FieldDescription>
-                Je reconnais que les réponses générées par IA peuvent contenir des erreurs et
-                m’engage à vérifier toute information importante avant utilisation.
+              <FieldDescription className="[font-size:12px] leading-4">
+                Je reconnais que les réponses générées par l'IA peuvent contenir des erreurs, des
+                omissions ou des informations inexactes. Je m’engage à vérifier leur exactitude et
+                leur pertinence avant toute utilisation ou transmission.{' '}
               </FieldDescription>
-            </FieldLabel>
+            </FieldContent>
           </Field>
           {legalError ? <FieldError id={legalErrorId}>{legalError}</FieldError> : null}
         </FieldGroup>
@@ -253,6 +256,6 @@ export function LoginPanel({ settings, onLogin }: Props) {
           Se connecter
         </Button>
       </form>
-    </motion.div>
+    </div>
   )
 }

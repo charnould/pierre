@@ -1,9 +1,9 @@
 import { beforeAll, describe, expect, test } from 'bun:test'
 
 import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
-import type { Activite } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activites'
 
-import { createDefaultApurementPlanForm } from './apurement-plan/defaults'
+import { emptyCase } from '../plan/document'
 import {
   formatRepaymentActivityBody,
   formatRepaymentStatusChangeText,
@@ -16,12 +16,10 @@ import {
   parseRepaymentStatusChangeComment,
   statusChangeTimelineSentence
 } from './repayment-activity-text'
-import { repaymentPlanFormToSnapshot } from './repayment-plan-persist'
-
-function activity(overrides: Partial<Activite>): Activite {
+function activity(overrides: Partial<Activity>): Activity {
   return {
     id: 1,
-    date_creation: '2026-08-22T10:00:00',
+    createdAt: '2026-08-22T10:00:00',
     rattachement: 'repayment:LOC-1',
     auteur: 'user:alice@example.org',
     id_client: 'CLI-1',
@@ -45,20 +43,20 @@ describe('repayment phase and assignment activities', () => {
       type: 'case.group_changed',
       contenu: JSON.stringify({
         version: 2,
-        before: 'amiable',
-        after: 'contentieux'
+        before: 'Recouvrement amiable',
+        after: 'Contentieux'
       })
     })
 
     expect(parseRepaymentStatusChange(row)).toEqual({
       champ: 'bucket',
-      avant: 'amiable',
-      apres: 'contentieux',
+      avant: 'Recouvrement amiable',
+      apres: 'Contentieux',
       avantUnset: false
     })
     expect(formatRepaymentStatusChangeText(row)).toContain('→')
     expect(formatStatusChangeTimelineSentence(parseRepaymentStatusChange(row)!)).toBe(
-      'a déplacé le dossier du groupe Recouvrement amiable vers Contentieux'
+      'a changé la phase de Recouvrement amiable vers Contentieux'
     )
     expect(parseRepaymentStatusChangeComment(row)).toBeNull()
   })
@@ -70,8 +68,8 @@ describe('repayment phase and assignment activities', () => {
           type: 'case.group_changed',
           contenu: JSON.stringify({
             version: 2,
-            before: 'amiable',
-            after: 'contentieux',
+            before: 'Recouvrement amiable',
+            after: 'Contentieux',
             note: '  Échec des relances amiables.  '
           })
         })
@@ -165,82 +163,42 @@ describe('repayment phase and assignment activities', () => {
 })
 
 describe('repayment plan payload', () => {
-  test('lit le formulaire, le statut et le résumé structurés', () => {
-    const formulaire = createDefaultApurementPlanForm()
-    formulaire.idLocataire = 'LOC-1'
-    formulaire.idClient = 'CLI-1'
-    formulaire.rentalDebt = 1_200
-    formulaire.installments = formulaire.installments.slice(0, 12).map((installment) => ({
-      ...installment,
-      amount: 100
-    }))
-    const row = activity({
-      type: 'repayment_plan.finalized',
-      contenu: JSON.stringify({
-        version: 2,
-        title: "Plan d'apurement",
-        note: 'Accord confirmé.',
-        plan: repaymentPlanFormToSnapshot(formulaire)
-      })
-    })
-
-    expect(parseRepaymentPlanForm(row)).toMatchObject({
-      idLocataire: 'LOC-1',
-      idClient: 'CLI-1',
-      rentalDebt: 1_200
-    })
-    expect(parseRepaymentPlanProposal(row)).toMatchObject({
-      signed: true,
-      planValide: true,
-      note: 'Accord confirmé.',
-      resume: '100 € × 12 mois'
-    })
-    expect(latestEditableRepaymentPlan([activity({}), row])?.id).toBe(row.id)
-    expect(latestActiveRepaymentPlan([activity({}), row])).toEqual({
-      row,
-      signed: true
-    })
+  beforeAll(() => {
+    loadCustomizationFixture()
   })
 
-  test('un plan clôturé n’est plus actif', () => {
-    const formulaire = createDefaultApurementPlanForm()
-    const plan = activity({
-      id: 10,
-      type: 'repayment_plan.finalized',
-      thread_id: 'plan-1',
-      contenu: JSON.stringify({
-        version: 2,
-        title: "Plan d'apurement",
-        plan: repaymentPlanFormToSnapshot(formulaire)
-      })
+  test('lit le dossier enregistré', () => {
+    const dossier = emptyCase()
+    dossier.identification.identifiant_locataire = 'LOC-1'
+    dossier.identification.identifiant_client = 'CLI-1'
+    dossier.dette.montant_restant_du_euros = 1_200
+    dossier.foyer.adultes.push({ ...dossier.foyer.adultes[0]! })
+    dossier.foyer.enfants.push({
+      prenom: 'Lina',
+      nom: 'Martin',
+      date_naissance: null,
+      a_charge: true
     })
+    const row = activity({
+      type: 'repayment_plan.created',
+      contenu: JSON.stringify(dossier)
+    })
+
+    expect(parseRepaymentPlanForm(row)?.foyer.adultes).toHaveLength(2)
+    expect(parseRepaymentPlanForm(row)?.foyer.enfants).toHaveLength(2)
+    expect(parseRepaymentPlanForm(row)?.dette.montant_restant_du_euros).toBe(1_200)
+    expect(parseRepaymentPlanProposal(row)).toEqual({ titre: 'Plan d’apurement' })
+    expect(latestEditableRepaymentPlan([activity({}), row])?.id).toBe(row.id)
+    expect(latestActiveRepaymentPlan([activity({}), row])).toEqual({ row })
+  })
+
+  test('une ligne sans dossier n’est pas un plan actif', () => {
     const closed = activity({
       id: 11,
-      date_creation: '2026-08-23T10:00:00',
       type: 'repayment_plan.closed',
-      thread_id: 'plan-1',
-      contenu: JSON.stringify({
-        version: 2,
-        title: "Plan d'apurement",
-        plan: repaymentPlanFormToSnapshot(formulaire),
-        reason: 'execution_complete'
-      })
+      contenu: JSON.stringify({ version: 2, title: "Plan d'apurement" })
     })
-    expect(latestActiveRepaymentPlan([plan, closed])).toBeNull()
-  })
-
-  test('un brouillon non signé reste modifiable', () => {
-    const formulaire = createDefaultApurementPlanForm()
-    formulaire.rentalDebt = 200
-    const plan = activity({
-      id: 4,
-      type: 'repayment_plan.updated',
-      contenu: JSON.stringify({
-        version: 2,
-        title: "Plan d'apurement",
-        plan: repaymentPlanFormToSnapshot(formulaire)
-      })
-    })
-    expect(latestActiveRepaymentPlan([plan])).toEqual({ row: plan, signed: false })
+    expect(parseRepaymentPlanForm(closed)).toBeNull()
+    expect(latestActiveRepaymentPlan([closed])).toBeNull()
   })
 })

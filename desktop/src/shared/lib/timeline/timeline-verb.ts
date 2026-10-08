@@ -1,12 +1,12 @@
 import {
-  communication_channel_label,
-  is_communication_opened_type,
-  parse_activity_content,
-  parse_case_change_content,
-  parse_communication_opened_content,
-  parse_signature_content,
-  type Activite,
-  type CommunicationChannel
+  type Activity,
+  type CommunicationChannel,
+  communicationChannelLabel,
+  isCommunicationOpenedType,
+  parseActivityContent,
+  parseCaseChangeContent,
+  parseCommunicationOpenedContent,
+  parseSignatureContent
 } from '@/shared/types/activites'
 
 function channelNoun(channel: CommunicationChannel): string {
@@ -28,23 +28,23 @@ function channelNoun(channel: CommunicationChannel): string {
   }
 }
 
-function communicationVerb(row: Activite): string {
-  const content = parse_communication_opened_content(row.contenu)
+function communicationVerb(row: Activity): string {
+  const content = parseCommunicationOpenedContent(row.contenu)
   const channel = row.channel
   if (!channel) return 'a publié une communication'
   if (row.type === 'communication.imported') return 'a importé un courriel'
   const inbound = /^(tenant|candidate|external):/.test(row.auteur)
   const verb = inbound
-    ? `a répondu par ${communication_channel_label(channel)}`
+    ? `a répondu par ${communicationChannelLabel(channel)}`
     : `a envoyé ${channelNoun(channel)}`
-  const extras = [content?.action, row.bulk_id ? 'Traitement de masse' : null].filter(
+  const extras = [content?.action, row.bulkId ? 'Traitement de masse' : null].filter(
     (value): value is string => Boolean(value)
   )
   return extras.length > 0 ? `${verb} · ${extras.join(' · ')}` : verb
 }
 
-export function timelineActivityVerb(row: Activite): string {
-  if (is_communication_opened_type(row.type)) return communicationVerb(row)
+export function timelineActivityVerb(row: Activity): string {
+  if (isCommunicationOpenedType(row.type)) return communicationVerb(row)
 
   switch (row.type) {
     case 'note.published':
@@ -66,17 +66,17 @@ export function timelineActivityVerb(row: Activite): string {
     case 'task.deleted':
       return 'a supprimé une tâche'
     case 'case.group_changed':
-      return 'a déplacé le dossier de groupe'
+      return 'a changé la phase'
     case 'case.bucket_changed':
       return 'a déplacé le dossier de panier'
     case 'case.assignee_changed': {
-      const change = parse_case_change_content(row.contenu)
+      const change = parseCaseChangeContent(row.contenu)
       return change?.before ? 'a réaffecté le dossier' : 'a affecté le dossier'
     }
     case 'case.tags_changed':
       return 'a mis à jour les tags'
     case 'ticket.field_changed': {
-      const content = parse_activity_content(row.type, row.contenu)
+      const content = parseActivityContent(row.type, row.contenu)
       const field =
         content && 'field' in content && typeof content.field === 'string'
           ? content.field
@@ -114,12 +114,12 @@ export function timelineActivityVerb(row: Activite): string {
     case 'document.generated':
       return 'a généré un document'
     case 'document.sent_for_signature': {
-      const content = parse_signature_content(row.contenu)
+      const content = parseSignatureContent(row.contenu)
       const title = content?.document.title ?? 'un document'
       return `a envoyé ${title} pour signature électronique`
     }
     case 'document.signed': {
-      const content = parse_signature_content(row.contenu)
+      const content = parseSignatureContent(row.contenu)
       return `a signé ${content?.document.title ?? 'le document'}`
     }
     case 'document.signature_refused':
@@ -129,7 +129,7 @@ export function timelineActivityVerb(row: Activite): string {
     case 'document.signature_cancelled':
       return 'a annulé une demande de signature'
     case 'document.signature_recorded': {
-      const content = parse_signature_content(row.contenu)
+      const content = parseSignatureContent(row.contenu)
       return `a consigné la signature de ${content?.document.title ?? 'un document'}`
     }
     case 'communication.ok':

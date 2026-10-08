@@ -1,14 +1,15 @@
 import { existsSync } from 'fs'
-import { join } from 'path'
+import { dirname, join } from 'path'
+import { fileURLToPath } from 'url'
 
 import {
   app,
   autoUpdater,
+  type BrowserWindow as BW,
   BrowserWindow,
   clipboard,
   ipcMain,
   shell,
-  type BrowserWindow as BW,
   type WebContents
 } from 'electron'
 
@@ -35,6 +36,8 @@ import {
   EXTERNAL_APPLICATION_PARTITION
 } from './external-application-inject'
 import { isAllowedExternalUrl } from './external-url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 type SystemHandlersContext = {
   getWindow: () => BW | null
@@ -125,6 +128,7 @@ export function registerSystemHandlers(ctx: SystemHandlersContext): void {
     handle?.setPersistEnabled(false)
     const loginBounds = centerWindowBounds(LOGIN_WINDOW_BOUNDS)
     const applyLogin = () => {
+      win.setMinimumSize(LOGIN_WINDOW_BOUNDS.width, LOGIN_WINDOW_BOUNDS.height)
       win.setResizable(false)
       win.setBounds({
         x: loginBounds.x ?? 0,

@@ -6,42 +6,42 @@ import type { ParsedActivityAuthor } from '@/shared/lib/timeline/parse-activity-
 import { timelineActivityVerb } from '@/shared/lib/timeline/timeline-verb'
 import { cn } from '@/shared/lib/utils'
 import {
-  communication_channel_label,
-  is_case_change_type,
-  is_communication_opened_type,
-  is_note_type,
-  is_signature_type,
-  is_task_type,
-  parse_case_change_content,
-  parse_note_content,
-  parse_repayment_plan_content,
-  parse_signature_content,
-  parse_task_content,
-  parse_titled_content,
-  type Activite
+  type Activity,
+  communicationChannelLabel,
+  isCaseChangeType,
+  isCommunicationOpenedType,
+  isNoteType,
+  isSignatureType,
+  isTaskType,
+  parseCaseChangeContent,
+  parseNoteContent,
+  parseRepaymentPlanContent,
+  parseSignatureContent,
+  parseTaskContent,
+  parseTitledContent
 } from '@/shared/types/activites'
 
 import { ContextTimelineEntryHeader } from './context-timeline-entry-header'
 import { ContextTimelineItem } from './context-timeline-item'
 import { actorDisplayName } from './timeline-actor-avatar'
 import {
+  formatActivityValue,
   TimelineChips,
   TimelineDelta,
   TimelineFact,
   TimelineObject,
-  TimelineQuote,
-  formatActivityValue
+  TimelineQuote
 } from './timeline-bodies'
 import { TimelineCommunicationEnvelope } from './timeline-communication-envelope'
 import { TIMELINE_HIGHLIGHT_CLASS } from './timeline-layout'
 
 export interface ActivityTimelineEventProps {
-  row: Activite
+  row: Activity
   actor: ParsedActivityAuthor
   step: number
   dateTime: string
   dateLabel: string
-  statuses?: Activite[]
+  statuses?: Activity[]
   revisions?: Map<string, ActionActivity>
   headerExtra?: ReactNode
   highlight?: boolean
@@ -51,7 +51,7 @@ export interface ActivityTimelineEventProps {
   onActivate?: () => void
   body?: ReactNode
   header?: ReactNode
-  onEditPlan?: (row: Activite) => void
+  onEditPlan?: (row: Activity) => void
   userLogin?: string
   savingAction?: boolean
   onReopenAction?: (id: number, assigneA: string, dateEcheance: string) => void
@@ -68,7 +68,7 @@ function EventHeader({
   dateLabel,
   headerExtra
 }: {
-  row: Activite
+  row: Activity
   actorName: string
   dateTime: string
   dateLabel: string
@@ -110,7 +110,7 @@ function EventBody({
   | 'currentActionEvent'
   | 'onEditPlan'
 >) {
-  if (is_communication_opened_type(row.type)) {
+  if (isCommunicationOpenedType(row.type)) {
     return (
       <TimelineCommunicationEnvelope
         row={row}
@@ -120,13 +120,13 @@ function EventBody({
     )
   }
 
-  if (is_note_type(row.type)) {
-    const note = parse_note_content(row.contenu)
+  if (isNoteType(row.type)) {
+    const note = parseNoteContent(row.contenu)
     return note?.text ? <TimelineQuote>{note.text}</TimelineQuote> : null
   }
 
-  if (is_task_type(row.type)) {
-    const task = parse_task_content(row.contenu)
+  if (isTaskType(row.type)) {
+    const task = parseTaskContent(row.contenu)
     if (!task) return null
     const canReopen =
       row.type === 'task.completed' &&
@@ -168,8 +168,8 @@ function EventBody({
     )
   }
 
-  if (is_case_change_type(row.type) || row.type === 'ticket.field_changed') {
-    const change = parse_case_change_content(row.contenu)
+  if (isCaseChangeType(row.type) || row.type === 'ticket.field_changed') {
+    const change = parseCaseChangeContent(row.contenu)
     if (!change) return null
     if (row.type === 'case.tags_changed') {
       const after = Array.isArray(change.after)
@@ -187,8 +187,8 @@ function EventBody({
     return <TimelineDelta before={change.before} after={change.after} note={change.note} />
   }
 
-  if (is_signature_type(row.type)) {
-    const signature = parse_signature_content(row.contenu)
+  if (isSignatureType(row.type)) {
+    const signature = parseSignatureContent(row.contenu)
     if (!signature) return null
     const pending = signature.signers.filter((signer) => signer.status === 'pending').length
     const failed =
@@ -204,7 +204,7 @@ function EventBody({
         ) : null}
         {row.channel ? (
           <p className="text-muted-foreground mt-1">
-            Canal {communication_channel_label(row.channel)}
+            Canal {communicationChannelLabel(row.channel)}
             {signature.provider ? ` · ${signature.provider}` : ''}
           </p>
         ) : signature.provider ? (
@@ -219,13 +219,12 @@ function EventBody({
   }
 
   if (row.type.startsWith('repayment_plan.')) {
-    const plan = parse_repayment_plan_content(row.type, row.contenu)
+    const plan = parseRepaymentPlanContent(row.type, row.contenu)
     if (!plan) return null
     return (
       <>
-        <TimelineObject title={plan.title} />
-        {plan.note ? <TimelineQuote>{plan.note}</TimelineQuote> : null}
-        {onEditPlan && plan.plan && row.type !== 'repayment_plan.closed' ? (
+        <TimelineObject title="Plan d’apurement" />
+        {onEditPlan && row.type !== 'repayment_plan.closed' ? (
           <Button
             type="button"
             variant="outline"
@@ -240,7 +239,7 @@ function EventBody({
     )
   }
 
-  const titled = parse_titled_content(row.contenu)
+  const titled = parseTitledContent(row.contenu)
   if (titled) {
     const values = titled.values ?? {}
     return (

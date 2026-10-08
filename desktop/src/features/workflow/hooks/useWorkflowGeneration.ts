@@ -54,7 +54,7 @@ type Options = {
 }
 
 /**
- * Shared `/ai/answer` streaming for Answer and Synthèse panels.
+ * Shared `/workflows` streaming for Answer and Synthèse panels.
  */
 export function useWorkflowGeneration(options: Options = {}) {
   const { url, captureReasoning = true, onErrorReturnToForm } = options

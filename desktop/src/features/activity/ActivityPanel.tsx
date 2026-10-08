@@ -1,6 +1,6 @@
-import { Activity, Bell, XIcon } from 'lucide-react'
+import { Activity, Inbox, XIcon } from 'lucide-react'
 import type { MouseEvent, RefObject } from 'react'
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 
 import { ActivityNotificationRow } from '@/features/activity/components/ActivityNotificationRow'
 import {
@@ -10,10 +10,10 @@ import {
   selectAuthoredActivityItems
 } from '@/features/activity/components/ActivityScopeControls'
 import type { ActivityFeedApi } from '@/features/activity/hooks/useActivityFeed'
-import { useActivityRail, type ActivityRailTab } from '@/features/activity/lib/ActivityRailContext'
+import { type ActivityRailTab, useActivityRail } from '@/features/activity/lib/ActivityRailContext'
 import type { ActivityNotificationItem } from '@/features/activity/lib/notification-types'
-import { CartoonNotificationGrouped } from '@/shared/components/icons/koboyo-empty'
 import { Button } from '@/shared/components/ui/button'
+import { Checkbox } from '@/shared/components/ui/checkbox'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/shared/components/ui/drawer'
 import {
   Empty,
@@ -22,11 +22,18 @@ import {
   EmptyMedia,
   EmptyTitle
 } from '@/shared/components/ui/empty'
+import {
+  Field,
+  FieldDescription,
+  FieldLabel,
+  FieldLegend,
+  FieldSet
+} from '@/shared/components/ui/field'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
 
-const ActivityContextNested = lazy(() =>
-  import('@/features/activity/components/ActivityContextNested').then((module) => ({
-    default: module.ActivityContextNested
+const ActivityInspectorContent = lazy(() =>
+  import('@/features/activity/components/ActivityInspectorContent').then((module) => ({
+    default: module.ActivityInspectorContent
   }))
 )
 const ActivityTimelineList = lazy(() =>
@@ -109,18 +116,20 @@ function ActivityList({
   return (
     <div ref={scrollRef} className="scroll-fade min-h-0 flex-1 overflow-y-auto">
       {items.length === 0 ? (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <CartoonNotificationGrouped />
-            </EmptyMedia>
-            <EmptyTitle>{emptyCopy.title}</EmptyTitle>
-            <EmptyDescription>{emptyCopy.description}</EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <div className="flex min-h-0 flex-1 px-6">
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Inbox />
+              </EmptyMedia>
+              <EmptyTitle>{emptyCopy.title}</EmptyTitle>
+              <EmptyDescription>{emptyCopy.description}</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        </div>
       ) : (
         <div className="flex min-w-0 flex-col">
-          <ul className="activity-motion-list flex min-w-0 flex-col">
+          <ul className="flex min-w-0 flex-col gap-2 px-6 pb-4">
             {items.map((item) => (
               <ActivityNotificationRow
                 key={`${item.source}:${item.id}`}
@@ -150,17 +159,18 @@ function ActivityList({
 
 function ActivityFollowEmpty({ feed, url, userLogin }: Props) {
   return (
-    <div className="scroll-fade min-h-0 flex-1 overflow-y-auto">
-      <div className="flex flex-col gap-1 px-4 py-2">
-        <h2 className="text-foreground text-sm leading-5 font-medium">Qui suivre</h2>
-        <p className="text-muted-foreground text-xs leading-4">Leurs actions apparaissent ici.</p>
-      </div>
-      <ActivityFollowList feed={feed} url={url} userLogin={userLogin} />
+    <div className="scroll-fade min-h-0 flex-1 overflow-y-auto px-6 pb-4">
+      <FieldSet>
+        <FieldLegend>Qui suivre</FieldLegend>
+        <FieldDescription>Leurs actions apparaissent ici.</FieldDescription>
+        <ActivityFollowList feed={feed} url={url} userLogin={userLogin} />
+      </FieldSet>
     </div>
   )
 }
 
 export function ActivityPanel({ feed, url, userLogin }: Props) {
+  const showReadId = useId()
   const {
     items,
     unreadCount,
@@ -179,9 +189,11 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
     setOpen,
     railTab,
     setRailTab,
+    tasksOpen,
     contextTarget,
     closeContextTarget,
-    openContextTarget
+    openContextTarget,
+    openReader
   } = useActivityRail()
   const contextOpen = contextTarget != null
   const [routineNames, setRoutineNames] = useState<Record<string, string>>({})
@@ -274,18 +286,26 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
       }
 
       if (!item.target) return
-      if (
-        item.target.view !== 'tickets' &&
-        item.target.view !== 'repayment' &&
-        item.target.view !== 'updates'
-      ) {
+      if (item.target.view === 'updates') {
+        setOpen(false)
+        closeContextTarget()
+        openReader({
+          kind: 'update',
+          slug: item.target.slug,
+          title: item.target.title,
+          date: item.target.date
+        })
+        if (!item.isRead) void markItemRead(item.id)
+        return
+      }
+      if (item.target.view !== 'tickets' && item.target.view !== 'repayment') {
         return
       }
 
       openContextTarget(item.target)
       if (!item.isRead) void markItemRead(item.id)
     },
-    [markItemRead, openContextTarget, setOpen]
+    [closeContextTarget, markItemRead, openContextTarget, openReader, setOpen]
   )
 
   const handleMarkUnread = useCallback(
@@ -304,28 +324,14 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
             onValueChange={(value) => setRailTab(value as ActivityRailTab)}
             className="min-h-0 min-w-0 flex-1 gap-0"
           >
-            <DrawerHeader
-              variant="chrome"
-              data-activity-motion="header"
-              onPointerDown={(event) => event.stopPropagation()}
-            >
-              <DrawerTitle className="sr-only">Notifications</DrawerTitle>
-              <TabsList
-                aria-label="Notifications et activités"
-                className="relative grid grid-cols-2"
-              >
-                <span aria-hidden data-active-tab={railTab} className="activity-tab-indicator" />
-                <TabsTrigger
-                  value="notifications"
-                  className="z-10 data-active:bg-transparent data-active:shadow-none"
-                >
-                  <Bell />
+            <DrawerHeader onPointerDown={(event) => event.stopPropagation()}>
+              <DrawerTitle className="sr-only">Notifications et activités</DrawerTitle>
+              <TabsList aria-label="Notifications et activités" className="flex-1">
+                <TabsTrigger value="notifications">
+                  <Inbox />
                   Notifications
                 </TabsTrigger>
-                <TabsTrigger
-                  value="activities"
-                  className="z-10 data-active:bg-transparent data-active:shadow-none"
-                >
+                <TabsTrigger value="activities">
                   <Activity />
                   Activités
                 </TabsTrigger>
@@ -344,22 +350,19 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
             </DrawerHeader>
             {railTab === 'notifications' || (railTab === 'activities' && hasFollowedAnyone) ? (
               <div
-                data-activity-motion="actions"
-                className="no-drag flex shrink-0 items-center gap-1 px-4 py-1.5"
+                className="no-drag flex shrink-0 items-center gap-1 px-6 pb-4"
                 onPointerDown={(event) => event.stopPropagation()}
               >
                 {railTab === 'notifications' ? (
                   <>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowRead(!showRead)}
-                    >
-                      {showRead
-                        ? 'Afficher uniquement les non-lues'
-                        : 'Afficher les lues et non-lues'}
-                    </Button>
+                    <Field orientation="horizontal" className="w-fit">
+                      <Checkbox
+                        id={showReadId}
+                        checked={showRead}
+                        onCheckedChange={(checked) => setShowRead(checked === true)}
+                      />
+                      <FieldLabel htmlFor={showReadId}>Afficher les notifications lues</FieldLabel>
+                    </Field>
                     {unreadCount > 0 ? (
                       <Button
                         type="button"
@@ -378,11 +381,7 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
               </div>
             ) : null}
 
-            <TabsContent
-              value="notifications"
-              data-activity-motion="content"
-              className="flex min-h-0 flex-col overflow-hidden"
-            >
+            <TabsContent value="notifications" className="flex min-h-0 flex-col overflow-hidden">
               <ActivityList
                 items={notificationItems}
                 emptyCopy={{
@@ -397,11 +396,7 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
                 loadMoreEnabled={open && railTab === 'notifications'}
               />
             </TabsContent>
-            <TabsContent
-              value="activities"
-              data-activity-motion="content"
-              className="flex min-h-0 flex-col overflow-hidden"
-            >
+            <TabsContent value="activities" className="flex min-h-0 flex-col overflow-hidden">
               {hasFollowedAnyone ? (
                 <Suspense fallback={null}>
                   <ActivityTimelineList
@@ -424,11 +419,16 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
         </DrawerContent>
       </Drawer>
 
-      <Drawer open={contextOpen} onOpenChange={handleContextOpenChange} swipeDirection="right">
+      <Drawer
+        open={contextOpen}
+        onOpenChange={handleContextOpenChange}
+        modal={!open && !tasksOpen}
+        swipeDirection="right"
+      >
         <DrawerContent variant="inspector">
           {contextOpen ? (
             <Suspense fallback={null}>
-              <ActivityContextNested url={url} userLogin={userLogin} />
+              <ActivityInspectorContent url={url} userLogin={userLogin} />
             </Suspense>
           ) : null}
         </DrawerContent>
