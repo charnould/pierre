@@ -2,6 +2,8 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
+import type { TasksRailTab } from '@/features/activity/lib/ActivityRailContext'
+
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
 
@@ -81,7 +83,10 @@ async function renderTrigger() {
   const { ActivityTasksTrigger } =
     await import('@/features/activity/components/ActivityTasksTrigger')
 
-  const rail = { tasksOpen: false, tasksTab: 'mine' as const }
+  const rail: { tasksOpen: boolean; tasksTab: TasksRailTab } = {
+    tasksOpen: false,
+    tasksTab: 'mine'
+  }
   function Probe() {
     const { tasksOpen, tasksTab } = useActivityRail()
     useEffect(() => {

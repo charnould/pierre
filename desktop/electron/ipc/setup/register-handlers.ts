@@ -67,7 +67,17 @@ export function registerSetupHandlers(partition: string): void {
           method: 'PUT',
           body: new Blob([copy])
         })
-        if (!resp.ok) return null
+        if (!resp.ok) {
+          let message = 'Enregistrement refusé'
+          try {
+            const payload = (await resp.json()) as { error?: { message?: string } }
+            const detail = payload.error?.message?.trim()
+            if (detail) message = detail
+          } catch {
+            // Le corps n’est pas du JSON : le message générique suffit.
+          }
+          return { error: { message } }
+        }
         return await resp.json()
       } catch (error) {
         logMainError('put-admin-setup', error)
@@ -75,6 +85,24 @@ export function registerSetupHandlers(partition: string): void {
       }
     }
   )
+
+  ipcMain.handle(IpcChannel.setup.emailTest, async (_, { url }: { url: string }) => {
+    try {
+      const resp = await netFetch(`${root(url)}/email/test`, {
+        session: ses(),
+        method: 'POST'
+      })
+      const body = (await resp.json()) as {
+        data?: { sent: true }
+        error?: { message: string }
+      }
+      if (!resp.ok) return body.error ? body : { error: { message: 'Envoi impossible' } }
+      return body
+    } catch (error) {
+      logMainError('post-email-test', error)
+      return null
+    }
+  })
 
   ipcMain.handle(
     IpcChannel.setup.adminDelete,

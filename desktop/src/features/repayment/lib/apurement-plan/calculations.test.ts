@@ -60,7 +60,7 @@ describe('apurement-plan calculations', () => {
   test('sums all expenses including total rent', () => {
     const form = createDefaultApurementPlanForm()
     form.expenses = [
-      createAmountLine({ label: 'Loyer total', amount: 500, custom: false }),
+      createAmountLine({ label: 'Loyer + Charges - Aide au logement', amount: 500, custom: false }),
       createAmountLine({ label: 'Mutuelle santé', amount: 50, custom: false })
     ]
     form.income = [

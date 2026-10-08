@@ -11,7 +11,7 @@ import {
   type LucideIcon
 } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 
 import type { AgentWorkPart } from '@/shared/components/AgentWorkTrace'
 import { ActionPicker } from '@/shared/components/inspector/action-picker'
@@ -306,6 +306,7 @@ function ComposeDraft({
   composeMode: Exclude<TicketComposeMode, null>
   props: Props
 }) {
+  const [todayIso] = useState(() => toLocalIsoDate(new Date()))
   if (composeMode === 'comment') {
     return (
       <TicketTimelineCommentDraft
@@ -325,7 +326,7 @@ function ComposeDraft({
         intent={composeMode === 'todo' ? 'todo' : 'done'}
         actionLabels={ticketDossierActionLabels()}
         url={props.url}
-        todayIso={toLocalIsoDate(new Date())}
+        todayIso={todayIso}
         saving={props.submitting}
         onCancel={props.onCancelCompose}
         onSave={props.onSubmitAction}

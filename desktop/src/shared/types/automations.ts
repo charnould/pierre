@@ -21,6 +21,7 @@ import type {
 export type AutomationsListResponse = { data: AutomationRecord[] }
 export type AutomationResponse = { data: AutomationRecord }
 export type DeleteAutomationResponse = { data: { deleted: true } }
+export type AutomationApiFailure = { error: { message: string } }
 
 export type ListAutomationsParams = { url: string }
 export type CreateAutomationPayload = { url: string } & CreateAutomationBody

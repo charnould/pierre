@@ -111,7 +111,9 @@ describe('export plan docx template', () => {
         personId: form.household.adults[0].id
       })
     ]
-    form.expenses = [createAmountLine({ label: 'Loyer total', amount: 699.45 })]
+    form.expenses = [
+      createAmountLine({ label: 'Loyer + Charges - Aide au logement', amount: 699.45 })
+    ]
     form.requestedAids = [
       createAidItem({ label: 'FSL' }),
       createAidItem({ label: 'Action Logement' })

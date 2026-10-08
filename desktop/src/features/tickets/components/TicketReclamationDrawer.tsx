@@ -606,7 +606,12 @@ export function TicketReclamationDrawer({
               onLetterExportWord={() => {
                 const trimmed = letterBody.trim()
                 if (!trimmed) return
-                void downloadDocx(trimmed, 'replies', letterSubject)
+                void downloadDocx(trimmed, 'replies', {
+                  subject: letterSubject,
+                  adresse: ticket ? getTicketCellText(ticket, 'pierre_adresse') : '',
+                  codePostal: ticket ? getTicketCellText(ticket, 'pierre_code_postal') : '',
+                  ville: ticket ? getTicketCellText(ticket, 'pierre_ville') : ''
+                })
               }}
               onLetterSend={() => {
                 const trimmed = letterBody.trim()

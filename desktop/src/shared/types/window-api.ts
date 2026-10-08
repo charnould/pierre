@@ -20,6 +20,7 @@ import type {
   SendCommunicationResponse
 } from './activites'
 import type {
+  AutomationApiFailure,
   AutomationResponse,
   AutomationsListResponse,
   CreateAutomationPayload,
@@ -218,7 +219,12 @@ declare global {
         id: string
         body?: string
         bytes?: Uint8Array
-      }) => Promise<{ data: { id: string } } | null>
+      }) => Promise<{ data?: { id: string }; error?: { message: string } } | null>
+      /** `POST /email/test` */
+      postEmailTest: (params: { url: string }) => Promise<{
+        data?: { sent: true }
+        error?: { message: string }
+      } | null>
       /** `DELETE /desktop/admin/setup/chatbots/:id` */
       deleteAdminChatbot: (params: {
         url: string
@@ -311,14 +317,24 @@ declare global {
       patchActivity: (params: PatchActivityPayload) => Promise<ActivityResponse | null>
       deleteActivity: (params: DeleteActivityPayload) => Promise<DeleteActivityResponse | null>
       getAutomations: (params: ListAutomationsParams) => Promise<AutomationsListResponse | null>
-      createAutomation: (params: CreateAutomationPayload) => Promise<AutomationResponse | null>
-      patchAutomation: (params: PatchAutomationPayload) => Promise<AutomationResponse | null>
+      createAutomation: (
+        params: CreateAutomationPayload
+      ) => Promise<AutomationResponse | AutomationApiFailure | null>
+      patchAutomation: (
+        params: PatchAutomationPayload
+      ) => Promise<AutomationResponse | AutomationApiFailure | null>
       deleteAutomation: (
         params: DeleteAutomationPayload
-      ) => Promise<DeleteAutomationResponse | null>
-      runAutomation: (params: RunAutomationPayload) => Promise<AutomationResponse | null>
-      pinAutomation: (params: PinAutomationPayload) => Promise<AutomationResponse | null>
-      unpinAutomation: (params: PinAutomationPayload) => Promise<AutomationResponse | null>
+      ) => Promise<DeleteAutomationResponse | AutomationApiFailure | null>
+      runAutomation: (
+        params: RunAutomationPayload
+      ) => Promise<AutomationResponse | AutomationApiFailure | null>
+      pinAutomation: (
+        params: PinAutomationPayload
+      ) => Promise<AutomationResponse | AutomationApiFailure | null>
+      unpinAutomation: (
+        params: PinAutomationPayload
+      ) => Promise<AutomationResponse | AutomationApiFailure | null>
       getBulkOperations: (
         params: ListBulkOperationsParams
       ) => Promise<BulkOperationsListResponse | null>

@@ -30,6 +30,7 @@ import type {
   SendCommunicationResponse
 } from '../src/shared/types/activites'
 import type {
+  AutomationApiFailure,
   AutomationResponse,
   AutomationsListResponse,
   CreateAutomationPayload,
@@ -267,7 +268,13 @@ contextBridge.exposeInMainWorld('api', {
     } | null>,
   putAdminSetup: (params: { url: string; id: string; body?: string; bytes?: Uint8Array }) =>
     ipcRenderer.invoke(IpcChannel.setup.adminPut, params) as Promise<{
-      data: { id: string }
+      data?: { id: string }
+      error?: { message: string }
+    } | null>,
+  postEmailTest: (params: { url: string }) =>
+    ipcRenderer.invoke(IpcChannel.setup.emailTest, params) as Promise<{
+      data?: { sent: true }
+      error?: { message: string }
     } | null>,
   deleteAdminChatbot: (params: { url: string; id: string }) =>
     ipcRenderer.invoke(IpcChannel.setup.adminDelete, params) as Promise<{
@@ -397,20 +404,29 @@ contextBridge.exposeInMainWorld('api', {
       params
     ) as Promise<AutomationsListResponse | null>,
   createAutomation: (params: CreateAutomationPayload) =>
-    ipcRenderer.invoke(IpcChannel.automations.create, params) as Promise<AutomationResponse | null>,
+    ipcRenderer.invoke(IpcChannel.automations.create, params) as Promise<
+      AutomationResponse | AutomationApiFailure | null
+    >,
   patchAutomation: (params: PatchAutomationPayload) =>
-    ipcRenderer.invoke(IpcChannel.automations.patch, params) as Promise<AutomationResponse | null>,
+    ipcRenderer.invoke(IpcChannel.automations.patch, params) as Promise<
+      AutomationResponse | AutomationApiFailure | null
+    >,
   deleteAutomation: (params: DeleteAutomationPayload) =>
-    ipcRenderer.invoke(
-      IpcChannel.automations.delete,
-      params
-    ) as Promise<DeleteAutomationResponse | null>,
+    ipcRenderer.invoke(IpcChannel.automations.delete, params) as Promise<
+      DeleteAutomationResponse | AutomationApiFailure | null
+    >,
   runAutomation: (params: RunAutomationPayload) =>
-    ipcRenderer.invoke(IpcChannel.automations.run, params) as Promise<AutomationResponse | null>,
+    ipcRenderer.invoke(IpcChannel.automations.run, params) as Promise<
+      AutomationResponse | AutomationApiFailure | null
+    >,
   pinAutomation: (params: PinAutomationPayload) =>
-    ipcRenderer.invoke(IpcChannel.automations.pin, params) as Promise<AutomationResponse | null>,
+    ipcRenderer.invoke(IpcChannel.automations.pin, params) as Promise<
+      AutomationResponse | AutomationApiFailure | null
+    >,
   unpinAutomation: (params: PinAutomationPayload) =>
-    ipcRenderer.invoke(IpcChannel.automations.unpin, params) as Promise<AutomationResponse | null>,
+    ipcRenderer.invoke(IpcChannel.automations.unpin, params) as Promise<
+      AutomationResponse | AutomationApiFailure | null
+    >,
   getBulkOperations: (params: ListBulkOperationsParams) =>
     ipcRenderer.invoke(
       IpcChannel.bulkOperations.list,

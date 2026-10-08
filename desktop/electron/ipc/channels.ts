@@ -46,7 +46,8 @@ export const IpcChannel = {
     file: 'get-setup-file',
     adminGet: 'get-admin-setup',
     adminPut: 'put-admin-setup',
-    adminDelete: 'delete-admin-chatbot'
+    adminDelete: 'delete-admin-chatbot',
+    emailTest: 'post-email-test'
   },
   users: {
     list: 'get-users',

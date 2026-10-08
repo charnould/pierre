@@ -98,6 +98,7 @@ export type PlanDocxData = {
   VILLE: string
   ID_CLIENT: string
   ID_LOCATAIRE: string
+  ID_LOT: string
   TOTAL_PLAN: string
   PREMIER_IMPAYE: string
   COMMANDEMENT: string
@@ -116,7 +117,6 @@ export type PlanDocxData = {
     NOM: string
     DATE_NAISSANCE: string
     STATUT_PRO: string
-    CAISSE_RETRAITE: string
     CAF: string
     TITULAIRE: string
   }>
@@ -139,7 +139,11 @@ export function buildPlanDocxData(
   const calc = computeApurementPlanCalculations(form)
 
   const socialWorker = form.hasSocialWorker
-    ? [form.socialWorkerName.trim(), form.socialWorkerOrganization.trim()]
+    ? [
+        form.socialWorkerName.trim(),
+        form.socialWorkerOrganization.trim(),
+        form.socialWorkerContact.trim()
+      ]
         .filter(Boolean)
         .join(' — ') || 'oui'
     : 'non'
@@ -154,6 +158,7 @@ export function buildPlanDocxData(
     VILLE: form.city.trim(),
     ID_CLIENT: ctx.id_client.trim(),
     ID_LOCATAIRE: ctx.id_locataire.trim(),
+    ID_LOT: form.idLot.trim(),
     TOTAL_PLAN: calc.planTotal != null ? formatMoneyPlain(calc.planTotal) : '—',
     PREMIER_IMPAYE: form.firstMissedPaymentDate
       ? formatDateIsoFr(form.firstMissedPaymentDate)
@@ -182,7 +187,6 @@ export function buildPlanDocxData(
       NOM: adult.lastName.trim(),
       DATE_NAISSANCE: formatDateIsoFr(adult.birthDate),
       STATUT_PRO: EMPLOYMENT_STATUS_LABELS[adult.employmentStatus],
-      CAISSE_RETRAITE: adult.pensionFund.trim(),
       CAF: adult.cafNumber.trim() || '—',
       TITULAIRE: yesNo(adult.isLeaseHolder, 'title')
     })),

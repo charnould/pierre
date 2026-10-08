@@ -7,9 +7,10 @@ import { generateDocxFilename, generateDocxFromTemplate } from './generate-docx'
 const TEMPLATE_PATH = join(
   import.meta.dir,
   '../../../../..',
-  'customization',
-  'tickets',
-  'letter.docx'
+  'docs',
+  '04-core-intelligence-hlm',
+  'templates',
+  'Courrier postal.docx'
 )
 
 describe('generateDocxFilename', () => {
@@ -31,8 +32,11 @@ describe('generateDocxFromTemplate', () => {
   it('génère un fichier docx valide à partir du template', async () => {
     const buffer = readFileSync(TEMPLATE_PATH).buffer as ArrayBuffer
     const result = await generateDocxFromTemplate(buffer, {
-      subject: 'Objet test',
-      body: 'Bonjour, voici le courrier.'
+      SUBJECT: 'Objet test',
+      BODY: 'Bonjour, voici le courrier.',
+      ADRESSE: '20, rue des Pyramides',
+      CODE_POSTAL: '21000',
+      VILLE: 'Dijon'
     })
     expect(result).toBeInstanceOf(Uint8Array)
     expect(result.length).toBeGreaterThan(0)
@@ -44,6 +48,9 @@ describe('generateDocxFromTemplate', () => {
     const xml = zip.file('word/document.xml')?.asText() ?? ''
     expect(xml).toContain('Objet test')
     expect(xml).toContain('Bonjour, voici le courrier.')
+    expect(xml).toContain('20, rue des Pyramides')
+    expect(xml).toContain('21000')
+    expect(xml).toContain('Dijon')
     const text = xml.replace(/<[^>]*>/g, '')
     expect(text).not.toMatch(/\{\{[^{}]+}}/)
   })
@@ -51,7 +58,13 @@ describe('generateDocxFromTemplate', () => {
   it('gère un contenu multi-lignes', async () => {
     const body = 'Ligne 1\nLigne 2\nLigne 3'
     const buffer = readFileSync(TEMPLATE_PATH).buffer as ArrayBuffer
-    const result = await generateDocxFromTemplate(buffer, { subject: 'Objet', body })
+    const result = await generateDocxFromTemplate(buffer, {
+      SUBJECT: 'Objet',
+      BODY: body,
+      ADRESSE: '',
+      CODE_POSTAL: '',
+      VILLE: ''
+    })
     expect(result).toBeInstanceOf(Uint8Array)
     expect(result.length).toBeGreaterThan(0)
   })

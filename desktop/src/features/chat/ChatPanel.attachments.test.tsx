@@ -58,22 +58,19 @@ describe('ChatPanel attachments', () => {
     expect(markup).not.toMatch(/lucide-(hand|bot|rocket|handshake)/)
   })
 
-  test('arrival greeting shows a Lucide mark and strips the trailing emoji', () => {
+  test('arrival greeting keeps the emoji and uses text-4xl', () => {
     const markup = renderToStaticMarkup(
       <ChatPanel arrival boot={{ ...boot, greetings: ['Bonjour ! 👋'] }} transport={transport} />
     )
     expect(markup).toContain('data-slot="chat-empty-greeting"')
-    expect(markup).toContain('lucide-hand')
-    expect(markup).toContain('Bonjour !')
+    expect(markup).toContain('Bonjour ! 👋')
     expect(markup).toContain('text-4xl')
-    expect(markup).toContain('items-start')
-    expect(markup).toContain('mt-1 size-8')
-    expect(markup).not.toContain('👋')
-    expect(markup).not.toContain('Bonjour ! 👋')
+    expect(markup).not.toMatch(/lucide-(hand|bot|rocket|handshake)/)
     expect(markup).not.toContain('text-3xl')
+    expect(markup).not.toContain('items-start')
   })
 
-  test('arrival embed keeps text-2xl with the mark', () => {
+  test('arrival embed keeps text-2xl without a mark', () => {
     const markup = renderToStaticMarkup(
       <ChatPanel
         arrival
@@ -81,16 +78,14 @@ describe('ChatPanel attachments', () => {
         transport={transport}
       />
     )
-    expect(markup).toContain('lucide-hand')
+    expect(markup).toContain('Bonjour ! 👋')
     expect(markup).toContain('text-2xl')
-    expect(markup).toContain('items-start')
-    expect(markup).toContain('mt-0.5 size-6')
     expect(markup).not.toContain('text-4xl')
     expect(markup).not.toContain('text-3xl')
-    expect(markup).not.toContain('👋')
+    expect(markup).not.toMatch(/lucide-(hand|bot|rocket|handshake)/)
   })
 
-  test('arrival examples are a quiet list, not a filleted box', () => {
+  test('arrival examples are a filleted box', () => {
     const markup = renderToStaticMarkup(
       <ChatPanel
         arrival
@@ -100,8 +95,9 @@ describe('ChatPanel attachments', () => {
     )
     expect(markup).toContain('Questions proposées')
     expect(markup).toContain('Comment déposer mon préavis ?')
-    expect(markup).not.toContain('divide-y')
-    expect(markup).not.toContain('bg-popover')
+    expect(markup).toContain('rounded-xl')
+    expect(markup).toContain('divide-y')
+    expect(markup).toContain('bg-popover')
     expect(markup).toContain('Comment puis-je vous aider aujourd&#x27;hui ?')
     expect(markup).not.toContain('data-example-preview')
   })
