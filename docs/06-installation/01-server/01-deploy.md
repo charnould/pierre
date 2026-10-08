@@ -18,188 +18,92 @@ Adresser un email à charnould@pierre-ia.org pour en savoir plus.
 
 Avant de déployer PIERRE, vérifier que vous disposez de :
 
-| Prérequis         | Détail                                                      |
-| ----------------- | ----------------------------------------------------------- |
-| **Serveur**       | Ubuntu ou Debian, `x86_64`, avec `/dev/kvm`                 |
-| **Ports ouverts** | `80` (HTTP) et `443` (HTTPS)                                |
-| **Accès SSH**     | Clef ou mot de passe, en root                               |
-| **Clé API LLM**   | Anthropic, OpenAI ou un fournisseur compatible avec son API |
+| Prérequis         | Détail                                                             |
+| ----------------- | ------------------------------------------------------------------ |
+| **Serveur**       | Ubuntu ou Debian, `x86_64`, avec `/dev/kvm`                        |
+| **Ports ouverts** | `80` (HTTP) et `443` (HTTPS)                                       |
+| **Accès SSH**     | Clef ou mot de passe, en root                                      |
+| **Clé API LLM**   | Anthropic, OpenAI ou un fournisseur compatible avec son API        |
+| **DNS**           | Le DNS du nom choisi doit pointer vers le serveur, **sans proxy**. |
 
 >
 
 > [!IMPORTANT]
-> Recommandation de serveur : `/dev/kvm` est la seule contrainte matérielle **(nul besoin de GPU)**. Nous recommandons un serveur d'une configuration équivalnte ou supérieure à [EX44](https://www.hetzner.com/dedicated-rootserver/ex44) (minimum 64 GB de RAM). Une seule instance de PIERRE est déployable par serveur.
+> Recommandation de serveur : `/dev/kvm` est la seule contrainte matérielle **(nul besoin de GPU)**. Nous recommandons un serveur d'une configuration équivalente ou supérieure à [EX44](https://www.hetzner.com/dedicated-rootserver/ex44) (minimum 64 GB de RAM). Une seule instance de PIERRE est déployable par serveur.
+
+> Certains hébergeurs n'ouvrent pas le `22` : `ssh` prend alors `-p` et `scp` prend `-P`, par exemple `ssh -p 2234 root@le-serveur`.
 
 ### Déployer PIERRE sur un serveur
 
-Le DNS du nom choisi doit pointer vers le serveur, **sans proxy**. Les ports `80` et `443` sont ouverts. Certains hébergeurs n'ouvrent pas le `22` : les commandes prennent alors `-p` pour `ssh` et `-P` pour `scp`, par exemple `ssh -p 2234 root@le-serveur`.
-
-Connecté en root :
+Connecté en root, une seule commande installe PIERRE. Elle ne demande aucune configuration et ne démarre pas encore PIERRE :
 
 ```bash
-curl -fsSL https://github.com/charnould/pierre/releases/download/cli-0.9.4/install.sh | sh
+curl -fsSL https://github.com/charnould/pierre/releases/download/cli-0.9.6/install.sh | sh
 ```
 
-L'installation s'arrête tout de suite si la machine n'est pas `x86_64` ou si `/dev/kvm` est absent. Sinon elle demande de coller un bloc `dotenv` complet, terminé par `END` :
+L'installation s'arrête tout de suite si la machine n'est pas `x86_64` ou si `/dev/kvm` est absent. Elle peut être relancée avec `pierre install`.
 
-```dotenv
-HOST=assistant.exemple.org
-AUTH_PASSWORD=mot-de-passe-initial
-AUTH_SECRET=AUTO
-AUTH_BEARER=AUTO
-AI_TYPE=anthropic
-AI_BASE_URL=https://api.anthropic.com
-AI_API_KEY=cle-api
-CM_PRODUCT_TOKEN=
-CM_FROM=
-CM_WEBHOOK_SECRET=AUTO
-END
-```
-
-Les dix clés sont obligatoires. `AUTO` génère les secrets techniques lors de la première installation. Laisser les trois variables CM vides — `AUTO` est accepté pour le secret — désactive CM.com ; renseigner CM nécessite un Product Token UUID, un expéditeur et un secret ou `AUTO`.
-
-Le collage est masqué. PIERRE parse le texte sans l'exécuter, teste le fournisseur LLM puis affiche un récapitulatif sans secret avant l'installation.
-
-L'installation affiche seulement les étapes et leur état. Les détails techniques sont écrits dans `/var/log/pierre-install.log`. Les réponses restent dans `/etc/pierre.env.pending` pendant l'opération ; `/etc/pierre.env` n'est publié qu'une fois le serveur prêt. Après une erreur, relancer simplement :
+La configuration se fait ensuite avec une commande. Le domaine, le fournisseur et son URL sont toujours écrits explicitement. PIERRE génère le mot de passe administrateur et les secrets techniques, puis les affiche une seule fois si le démarrage réussit :
 
 ```bash
-pierre install
+pierre configure --host assistant.exemple.org --provider openai --url https://api.openai.com/v1 --api-key CLE
 ```
 
-Pour automatiser l'installation, enregistrer le bloc sans la ligne `END`, puis utiliser `pierre install < pierre.env`.
+`--provider` vaut `openai` ou `anthropic`. Aucune URL n'est déduite du fournisseur. Pour Anthropic, l'URL habituelle est `https://api.anthropic.com`.
 
-La base, les fichiers et l'image vivent dans `/var/lib/pierre`. Remplacer l'exécutable ne les touche pas.
+La clé d'API figure dans la commande : elle peut rester dans l'historique du shell et apparaître brièvement dans la liste des processus. Elle n'est ni réaffichée ni écrite dans le journal d'installation.
 
-Pour reprendre une base qui vivait dans Docker : copier `datastore.sqlite` à la racine de `/var/lib/pierre`, et les dossiers `files/`, `knowledge/` et `uploads/` à côté. Rien d'autre ne migre.
-
-### Données sur le serveur
-
-Toutes les données de PIERRE sont regroupées sous `/var/lib/pierre` :
-
-| Chemin                                                    | Contenu                                                                                                        |
-| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `/var/lib/pierre/datastore.sqlite`                        | Base SQLite principale : utilisateurs, activités, réclamations et configuration.                               |
-| `/var/lib/pierre/files/`                                  | Sources persistantes importées dans le catalogue de connaissances et Core Data.                                |
-| `/var/lib/pierre/uploads/{configuration}/{conversation}/` | Pièces jointes temporaires d'une conversation, supprimées avec son environnement d'exécution.                  |
-| `/var/lib/pierre/knowledge/`                              | Index de connaissances générés ; ils sont reconstruisibles depuis la configuration et les sources de `files/`. |
-| `/var/lib/pierre/backups/datastore.sqlite`                | Dernière sauvegarde cohérente créée par `pierre backup`.                                                       |
-
-Le dossier `uploads/` est créé au premier envoi de pièce jointe ; il peut donc être absent sur une nouvelle installation. Copier un document directement dans `files/` ne l'ajoute pas au catalogue. Pour automatiser un dépôt, utiliser l'[API d'import par cURL](../index.md#automatiser-lupload-des-connaissances-via-curl).
-
-### Les commandes
-
-`pierre` sans argument ouvre le tableau de bord. Il vérifie :
-
-- **réseau** : Caddy et l'adresse publique `https://HOST/up` ;
-- **serveur** : le service PIERRE et son endpoint local ;
-- **carl** : un véritable classement local ;
-- **llm** : la connexion authentifiée à Anthropic ou OpenAI.
-
-Il affiche aussi les versions installées et publiées ainsi que les liens du projet. Les flèches `↑/↓` déplacent la sélection, `Entrée` valide, `←` ou `Échap` revient en arrière et `q` quitte. Dans un script ou un pipe, `pierre` imprime le même état sans ouvrir l'interface et rend immédiatement la main.
+Le RCS et l'email sont facultatifs. Tant qu'ils ne sont pas paramétrés, `pierre` les affiche `non paramétré`. Il n'existe pas de commande pour les retirer.
 
 ```bash
-pierre help
+pierre configure --rcs-token UUID --rcs-from NOM
+pierre configure --cm-email-domain dribble.football --cm-email-token UUID --cm-email-account UUID --cm-email-webhook-secret CLE
 ```
 
-| Commande            | Effet                                                            |
-| ------------------- | ---------------------------------------------------------------- |
-| `pierre install`    | Installe PIERRE. Relancée, elle garde les secrets déjà en place. |
-| `pierre update`     | Met à jour le serveur PIERRE et sa bibliothèque ONNX.            |
-| `pierre update-cli` | Met à jour seulement le programme `pierre`.                      |
-| `pierre carl`       | Met à jour carl (classification), puis redémarre le serveur.     |
-| `pierre restart`    | Redémarre PIERRE (serveur) et attend qu'il soit opérationnel.    |
-| `pierre backup`     | Sauvegarde les données et affiche la commande `scp`.             |
-| `pierre logs`       | Consulte en direct les journaux de PIERRE et Caddy.              |
-| `pierre configure`  | Modifie le domaine, le fournisseur LLM et CM.com.                |
-| `pierre env`        | Affiche le bloc dotenv complet de l'instance.                    |
-| `pierre remove`     | Désinstalle tout après confirmation.                             |
+Le secret RCS est généré au premier paramétrage s'il n'est pas fourni avec `--rcs-secret`. Il est affiché pour être recopié dans CM.com. Un groupe incomplet est refusé et ne modifie aucun fichier.
 
-`pierre env` affiche volontairement toutes les valeurs, secrets inclus. La commande est réservée à root et sa sortie peut être sauvegardée ou transmise directement à `pierre configure` :
-
-```bash
-pierre env > pierre.env
-pierre configure < pierre.env
-```
-
-`pierre configure` exige le bloc complet. `HOST`, les variables llm et CM.com sont modifiables sans retélécharger le serveur, carl ou les micro-VM. `AUTH_PASSWORD`, `AUTH_SECRET` et `AUTH_BEARER` doivent rester identiques : le mot de passe est un secret de bootstrap et les deux secrets techniques ont leur propre cycle. La nouvelle configuration est testée avant publication ; en cas d'échec, l'environnement et Caddy précédents sont restaurés.
-
-`pierre carl` ouvre la liste des versions publiées : les flèches choisissent, `Entrée` installe et `←` revient sans rien changer. `pierre carl carl-1.2.0` installe cette version directement. Choisir la version déjà en place ne télécharge rien et ne redémarre pas.
-
-Changer de version de carl peut déplacer la taxonomie et les motifs : le même message sera qualifié autrement. Les réclamations déjà enregistrées gardent leur ancienne qualification. Les automatisations qui filtrent sur un motif sont à relire. Revenir à la version précédente se fait avec la même commande. La base n'est pas réécrite.
-
-`pierre restart` est la commande après une modification de `/etc/pierre.env`. Elle ne touche ni Caddy ni la machine. Le premier classement qui suit recharge le modèle.
-
-`pierre logs` ouvre les 200 dernières lignes de PIERRE et Caddy, en couleur, puis suit les nouvelles. `Ctrl+C` suspend le direct, `↑/↓` et `PageUp/PageDown` font défiler, `/` recherche, `n` poursuit la recherche, `F` reprend le direct et `q` revient au menu.
-
-`pierre remove` retire les services, l'exécutable, `/etc/pierre.env`, le site Caddy, les micro-VM, smolvm et `/var/lib/pierre`. Les paquets du système restent. Pour les retirer aussi :
-
-```bash
-apt purge caddy imagemagick ghostscript libvirglrenderer1 unzip jq
-```
+Si le domaine public ne répond pas, la configuration précédente est restaurée. La tentative reste enregistrée : relancer la même commande réutilise les mêmes secrets.
 
 ### Vérifier
 
 ```bash
 pierre
-systemctl is-active pierre caddy
-curl -fsS http://127.0.0.1:3000/up
-curl -fsS https://le-nom-choisi/up
 ```
 
-Le classement, avec une phrase courte, répond `200` et un objet `output`. Le premier appel après un démarrage charge le modèle ; les suivants répondent dans la foulée.
+La commande affiche l'état puis rend la main. Le code de sortie vaut `0` lorsque le site, le serveur, le classement et le fournisseur répondent. Un RCS ou un email non paramétré ne change pas ce code. Elle affiche aussi les liens du projet, du dépôt et de la documentation.
 
-```bash
-curl -fsS -X POST https://le-nom-choisi/api/models/carl \
-  -H 'content-type: application/json' \
-  -d '{"texte":"la chaudière est en panne"}'
-```
+Les autres codes sont `1` pour un échec ou un élément obligatoire indisponible, et `2` pour une commande mal écrite.
 
-### Sauvegarder la base
+`pierre env` affiche les quatorze variables, secrets compris, sans couleur ni commentaire. La commande est réservée à root. Ne partagez pas sa sortie.
 
-```bash
-pierre backup
-scp root@le-serveur:/var/lib/pierre/backups/datastore.sqlite .
-```
+La base, les fichiers et l'image vivent dans `/var/lib/pierre`. Remplacer l'exécutable ne les touche pas.
 
-La commande écrit une copie cohérente pendant que le serveur tourne. Chaque sauvegarde remplace la précédente. `files/`, `knowledge/` et `uploads/` n'y sont pas. Si le SSH n'écoute pas sur le port `22`, `scp` prend `-P`.
+Pour reprendre une base qui vivait dans Docker : copier `datastore.sqlite` à la racine de `/var/lib/pierre`, et les dossiers `files/`, `knowledge/` et `uploads/` à côté. Rien d'autre ne migre.
 
-Depuis le tableau de bord, l'écran de sauvegarde indique le fichier créé, la commande exacte à exécuter sur l'ordinateur qui recevra la copie et un exemple avec un port SSH différent.
+Toutes les données de PIERRE sont regroupées sous `/var/lib/pierre` :
 
-### Mettre à jour
+### Les commandes
 
-Le tableau de bord vérifie les dernières versions publiées, séparément pour le serveur, le cli et carl. Lorsqu'une version plus récente du serveur existe, il affiche la version cible et remplace l'action du menu par `Mettre à jour PIERRE vers server-x.y.z`. La mise à jour ne démarre qu'après confirmation.
+| Commande           | Effet                                                                        |
+| ------------------ | ---------------------------------------------------------------------------- |
+| `pierre`           | Affiche l'état, les versions et les liens utiles.                            |
+| `pierre install`   | Installe PIERRE, sans configuration et sans démarrer PIERRE.                 |
+| `pierre configure` | Paramètre le domaine, le fournisseur d'IA, le RCS ou l'email transactionnel. |
+| `pierre update`    | Met à jour le CLI, puis le serveur, smolvm et CARL.                          |
+| `pierre restart`   | Redémarre PIERRE et attend qu'il réponde.                                    |
+| `pierre backup`    | Sauvegarde la base et affiche la commande `scp`.                             |
+| `pierre logs`      | Affiche les journaux de PIERRE.                                              |
+| `pierre env`       | Affiche les variables d'environnement, secrets compris.                      |
+| `pierre remove`    | Désinstalle PIERRE et **supprime les données** après confirmation.           |
+| `pierre help`      | Affiche l'aide.                                                              |
 
-```bash
-pierre update
-pierre update-cli
-```
+Une option s'écrit `--option valeur`. `--option=valeur` est refusé.
 
-`pierre update` télécharge le serveur, la bibliothèque ONNX et l'image microVM depuis une même release stable `server-x.y.z`. Le bundle complet est vérifié avant toute modification, puis activé atomiquement. S'il ne redémarre pas, le lien vers la version précédente est restauré. Le cli n'est pas modifié.
+Les groupes sont indépendants. Une commande ne modifie que les groupes dont les options sont présentes. Le premier paramétrage exige `--host`, `--provider`, `--url` et `--api-key`.
 
-`pierre update-cli` remplace seulement `/usr/local/bin/pierre`, après vérification de l'empreinte et de la version. Aucun service ni donnée n'est touché.
+`pierre logs` ouvre les 200 dernières lignes puis suit les nouvelles. Dans un terminal, `Ctrl+C` quitte, les flèches défilent, `/` recherche, `n` poursuit la recherche et `F` reprend le direct.
 
-La base, `files/`, `knowledge`, `uploads`, `backups` et carl restent en place. L'image microVM suit désormais exactement la version du serveur. carl conserve son propre cycle de mise à jour avec `pierre carl`. Le cli a son propre cycle, publié sous les tags `cli-x.y.z`.
-
-### Déploiement
-
-Sur un serveur, PIERRE est un exécutable. [Caddy](https://caddyserver.com) termine le TLS et transmet vers `127.0.0.1:3000`, sans bufferiser le flux NDJSON. Les temps de lecture, d'écriture et d'en-têtes sont de 30 minutes, le temps d'une réponse longue.
-
-```
-Navigateur                          VPS
-----------                          --------------------------------
-
-                                    Caddy :443
-                                       |
-                                       v
-                                    pierre  127.0.0.1:3000
-                                       |-- SQLite   /var/lib/pierre
-                                       |-- carl     en mémoire
-                                       |-- smolvm   /dev/kvm
-```
-
-carl est chargé par le serveur au premier classement. Sans modèle, le site démarre et le classement répond 503.
-
-L'application Electron Desktop n'est pas installée sur le VPS. Le bundle actif vit sous `/var/lib/pierre/server/current` et contient le binaire PIERRE, sa bibliothèque ONNX et l'image microVM. Les versions précédentes sont des répertoires immuables sous `/var/lib/pierre/server/releases`. Le programme d'administration reste distinct : `/usr/local/bin/pierre`.
+`pierre remove` retire les services, l'exécutable, `/etc/pierre.env`, le site Caddy, les micro-VM, smolvm et `/var/lib/pierre`.
 
 ## Faire fonctionner PIERRE en local
 
@@ -213,13 +117,12 @@ Les instructions ci-après sont valables pour **macOS** ; elles doivent être co
 4. Lancer `bun install` dans votre terminal pour installer les dépendances.
 5. Construire l'image locale avec `bun --filter @pierre/server microvm:build:macos`. La commande télécharge et vérifie la version smolvm épinglée.
 6. Renommer le fichier `.env.example` en `.env` et le compléter.
-7. Dans votre terminal, lancer `bun dev:server` pour démarrer PIERRE Serveur (`http://localhost:3000` affiche une icône de verrou).
-8. Déposer les fichiers de [carl](../../../03-core-models-hlm/CARL.md) (`model.onnx`, `labels.json`, `tokenizer.json`, `tokenizer_config.json`) dans `server/models/carl`. Ils sont dans `model.zip`, sur la release `carl-*`. Sans ces fichiers, le serveur démarre et le classement répond 503.
-9. Dans un autre terminal, lancer `bun dev:desktop` pour monter l'application desktop (elle se lance automatiquement).
-10. Renseigner dans l'application :
+7. Dans votre terminal, lancer `bun dev:server` pour démarrer PIERRE Serveur (`http://localhost:3000` affiche une icône de verrou). La commande installe la dernière release [carl](../../../03-core-models-hlm/CARL.md) dans `server/models/carl` lorsque le modèle est absent, incomplet ou plus ancien. Le premier lancement télécharge l'archive. Si ce téléchargement échoue, le serveur ne démarre pas.
+8. Dans un autre terminal, lancer `bun dev:desktop` pour monter l'application desktop (elle se lance automatiquement).
+9. Renseigner dans l'application :
 
 - serveur : `http://localhost:3000`
 - Email : `admin@pierre-ia.org`
 - Mot de passe : la valeur de `AUTH_PASSWORD` dans `.env`
 
-11. Et voilà, PIERRE fonctionne — ne reste plus qu'à [le paramétrer](docs/05-user-manual) !
+10. Et voilà, PIERRE fonctionne — ne reste plus qu'à [le paramétrer](docs/05-user-manual) !

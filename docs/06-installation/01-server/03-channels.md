@@ -36,6 +36,8 @@ Le **SMS** (Short Message Service) est le message texte classique, disponible su
 
 PIERRE tente d’abord le RCS. Si l’envoi échoue immédiatement ou si `CM.com` signale ensuite un échec de livraison (imcompatibilité du téléphone contacté), PIERRE lance automatiquement une tentative par SMS.
 
+> Dire dans la doc qu'il faut indiquer qu'on ne peut pas répondre au SMS (mono-directionnel)
+
 ### Compatibilité
 
 Les clients `CM.com` constatent plus de 85 % de compatibilité RCS en France (août 2026).
@@ -48,46 +50,26 @@ Les clients `CM.com` constatent plus de 85 % de compatibilité RCS en France (ao
 
 Ordres de grandeur, à confirmer avec `CM.com` lors de vos échanges.
 
-| Canal | Paramétrage       | Usage                                | Temps DSI |
-| ----- | ----------------- | ------------------------------------ | --------- |
-| RCS   | ~500 € (une fois) | à l’unité (message ou conversation)  | ~2 h      |
-| SMS   | inclus            | à l’unité (160 caractères)           | n/a       |
-| EMAIL | inclus            | à partir de 50€/mois pour 100K email | 1h        |
+| Canal | Paramétrage       | Usage                                 | Temps DSI |
+| ----- | ----------------- | ------------------------------------- | --------- |
+| RCS   | ~500 € (une fois) | à l’unité (message ou conversation)   | ~2 h      |
+| SMS   | inclus            | à l’unité (160 caractères)            | n/a       |
+| EMAIL | inclus            | à partir de 50€/mois pour 100K emails | 1h        |
 
 ### Paramétrage
 
 #### 1. Ouvrir les canaux chez `CM.com`
 
-Contacter **Elodia Esteve (Partner manager — `elodia.esteve@cm.com`)** et indiquer vouloir ouvrir les services nécessaires au projet `BECKREL/PIERRE` pour ouvrir un canal **RCS (+ fallback SMS)** et un canal **email transactionnel** . Ne pas hésiter à mettre [charnould@pierre-ia.org](mailto:charnould@pierre-ia.org) en copie.
+Contacter **Elodia Esteve (Partner manager — `elodia.esteve@cm.com`)** et indiquer vouloir ouvrir les services nécessaires au projet `BECKREL/PIERRE` pour ouvrir un canal **RCS (+ fallback SMS)** et un canal **email transactionnel** .
+
+Indiquer également :
+
+- Les SMS doivent être en notification sans le STOP. En effet, par défaut, `CM.com` ajoute une mention de type "STOP 00xxxxxxxxxxx" à la fin des SMS ; il est néanmoins possible de retirer cette mention.
+- Messages entrants RCS : l'url vers https://assistant.pierre-ia.org/webhook/rcs toujours en POST.
+
+Ne pas hésiter à mettre [charnould@pierre-ia.org](mailto:charnould@pierre-ia.org) en copie.
 
 #### 2. Paramétrer PIERRE et `CM.com`
-
-Compléter `.env` (voir `.env.example`) :
-
-| Variable            | Valeur                                                                                                                                                 |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `CM_PRODUCT_TOKEN`  | Product token UUID (avec tirets), dans _Channels → API Access and Settings → Authentication → Product Tokens_. Ce n’est ni l’Account ID, ni l’API Key. |
-| `CM_FROM`           | Nom d’expéditeur RCS, identique à celui de l’agent enregistré chez `CM.com` (souvent 11 caractères alphanumériques au plus).                           |
-| `CM_WEBHOOK_SECRET` | Secret partagé. Utiliser `AUTO` à l'installation pour le générer, puis récupérer sa valeur avec `pierre env`.                                          |
-
-Pour une configuration manuelle hors de l'assistant, générer `CM_WEBHOOK_SECRET` avec :
-
-```bash
-openssl rand -hex 16
-```
-
-Sur un serveur déjà installé, exporter le bloc actuel, modifier les trois lignes CM puis le réappliquer :
-
-```bash
-pierre env > pierre.env
-# Modifier CM_PRODUCT_TOKEN, CM_FROM et CM_WEBHOOK_SECRET
-pierre configure < pierre.env
-rm -f pierre.env
-```
-
-Les dix variables doivent rester présentes. Pour désactiver CM.com, vider les trois valeurs. Pour changer le secret webhook, saisir une nouvelle valeur générée par `openssl rand -hex 16`, puis la recopier dans CM.com.
-
-PIERRE redémarre automatiquement après validation. Si la nouvelle configuration ne fonctionne pas, les valeurs précédentes sont restaurées.
 
 #### 3. Brancher les webhooks
 
@@ -96,17 +78,34 @@ Sur votre interface d'administration sur `CM.com`, dans _Channels → API Access
 1. Activer _Enable Delivery Status Reports_.
 2. Saisir :
 
-| Champ         | Valeur                                                                   |
-| ------------- | ------------------------------------------------------------------------ |
-| HTTP endpoint | `{HOST}/webhook/rcs` — ex. `https://assistant.pierre-ia.org/webhook/rcs` |
-| HTTP method   | `POST`                                                                   |
-| Encoding      | `json`                                                                   |
-| HTTP Header   | clé `Webhook-Secret`, valeur = `CM_WEBHOOK_SECRET`.                      |
+| Champ         | Valeur                                                            |
+| ------------- | ----------------------------------------------------------------- |
+| HTTP endpoint | `{HOST}/webhook/rcs` — ex. `https://gx.pierre-ia.org/webhook/rcs` |
+| HTTP method   | `POST`                                                            |
+| Encoding      | `json`                                                            |
+| HTTP Header   | clé `Webhook-Secret`, valeur = `CM_RCS_WEBHOOK_SECRET`.           |
 
-Transmettre **cette même URL** à votre chargé d’affaires `CM.com` pour la réception des messages locataires.
+Dans _Channels_, profil RCS, section _Incoming messages_, enregistrer `{HOST}/webhook/rcs?webhook_secret={CM_RCS_WEBHOOK_SECRET}`. Cette console n’accepte pas de header : le secret est le paramètre `webhook_secret`.
 
 > [!IMPORTANT]
-> Sans le header `Webhook-Secret`, PIERRE répond `401`. Le secret ne doit figurer nulle part hors des fichiers `.env` et de la console `CM.com`.
+> Sans le header `Webhook-Secret` ou le paramètre `webhook_secret`, PIERRE répond `401`. Le secret ne doit figurer nulle part hors des fichiers `.env` et de la console `CM.com`.
+
+### Paramétrages des emails
+
+Dans l’app Email Gateway de CM.com :
+
+1. Ajouter le domaine d’envoi, par exemple `dribble.football`. Publier les trois CNAME d’envoi.
+2. Activer la réception et publier le MX vers `mx.email.cm.com`. Ce MX reçoit tout le courrier du domaine.
+3. Activer le suivi d’ouverture. Le suivi des clics reste désactivé.
+4. Dans Settings → Integration, copier le Product Token, l’identifiant de compte, et créer le Webhook Secret.
+5. Enregistrer `https://{HOST}/webhook/email` comme webhook d’événements et, si le champ est distinct, comme webhook de réception.
+6. Paramétrer PIERRE :
+
+```bash
+pierre configure --cm-email-domain dribble.football --cm-email-token UUID --cm-email-account UUID --cm-email-webhook-secret CLE
+```
+
+Les variables enregistrées sont `CM_EMAIL_DOMAIN`, `CM_EMAIL_PRODUCT_TOKEN`, `CM_EMAIL_ACCOUNT_ID` et `CM_EMAIL_WEBHOOK_SECRET`. Dans le JSON du module (`tickets` ou `repayment`), `email_from` doit être une adresse de ce domaine, par exemple `loyer@dribble.football`. Les réponses suivent cette adresse. Les bounces restent gérés par CM.com et arrivent par le webhook.
 
 ## Courrier postal et électronique
 

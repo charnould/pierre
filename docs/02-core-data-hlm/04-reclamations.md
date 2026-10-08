@@ -1,10 +1,14 @@
 ##### [PIERRE](../index.md) ∕ [CORE DATA HLM](index.md) ∕ RECLAMATIONS
 
-# `reclamations`
+# `core.reclamations.csv`
+
+> v1.0.0-alpha (2026-10-10) - Réflexion en cours
 
 ## Objectif
 
-Exposer **toutes les affaires relation-client** (réclamations, demandes, tickets…) pour une **vue intégrale** de la relation locataire. La table logique est `reclamations` ; le fichier transmis à PIERRE est `core.reclamations.csv`.
+Exposer **toutes les affaires relation-client** (réclamations, demandes, tickets…) pour une **vue intégrale** de la relation locataire. L
+
+Le fichier est nommé `core.reclamations.csv`.
 
 **Périmètre recommandé** :
 
@@ -24,7 +28,7 @@ Une ligne = une **réclamation** (affaire, dossier, ticket…), identifiée de f
 | Champ                       | Historisation auto. | Définition canonique                                                                                                                                                                                |
 | --------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id_reclamation`            | non                 | Identifiant unique et stable de l’affaire dans le SI bailleur (ex. `677885`)                                                                                                                        |
-| `message_initial`           | non                 | Contenu intégral du message initial de l’affaire                                                                                                                                                    |
+| `message`                   | non                 | Contenu intégral du message initial de l’affaire                                                                                                                                                    |
 | `ids_locataires_concernes`  | non                 | Liste des `id_locataire` ayant eu un lien avec l’affaire sur le lot, séparés par des virgules (ex. `00021048207, 00021048412`) ; `null` si non applicable                                           |
 | `dernier_evenement_le`      | oui                 | Date du dernier événement enregistré sur l’affaire ; idéalement une date ISO 8601 avec l'horaire précise                                                                                            |
 | `dernier_evenement_type`    | oui                 | Type du dernier événement (ex. `Pièce jointe`)                                                                                                                                                      |
@@ -53,12 +57,16 @@ TODO: quid de normaliser affectation (comme gestionnaire pour le recouvrement) p
 
 ## Exemples de colonnes libres
 
+> Ces colonnes ne sont pas obligatoires, il s'agit de suggestions pour enrichir `core.reclamations.csv`.
+
 **Taxonomie / Qualification**
 
 - `qualification_1` : Qualification la plus fine de l'affaire (ex. `punaise de lit`, `infiltration d'eau`)
 - `qualification_2` : Qualification intermédiaire supérieure (niveau 2)
 - `qualification_3` : Qualification intermédiaire supérieure (niveau 3)
 - `qualification_4` : Qualification la plus agrégée de la taxonomie (ex. `technique`, `administratif`, `autres`)
+
+> Lorsque vous utilisez PIERRE, nous ne recommandons pas d'ajouter ces notions de `qualification`. En effet, PIERRE utilise [CARL](docs/03-core-models-hlm/CARL.md) pour qualifier finement les réclamations. Dans ce cas, **aucune colonne** ne peut être nommée `domaine`, `sous_domaine`, `motif`, `integrite_physique`, `lieu`, `obligation_reglementaire` et `ton`.
 
 **État et traitement**
 

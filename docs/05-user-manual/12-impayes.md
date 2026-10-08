@@ -15,6 +15,7 @@ Cette page décrit uniquement l’écran `Piloter les impayés`. Les soldes vien
 - [Agir sur un dossier](#agir-sur-un-dossier)
   - [Contacter un tiers](#contacter-un-tiers)
 - [Créer un plan d’apurement](#créer-un-plan-dapurement)
+  - [Durée de l’échéancier](#durée-de-léchéancier)
 - [Bonnes pratiques](#bonnes-pratiques)
 - [Si quelque chose ne va pas](#si-quelque-chose-ne-va-pas)
 
@@ -112,15 +113,42 @@ Un RCS s’envoie depuis PIERRE (`Envoyer` → `Message envoyé`). Un e-mail CAF
 
 Le formulaire couvre notamment :
 
-| Rubrique             | Points à renseigner                                                                        |
-| -------------------- | ------------------------------------------------------------------------------------------ |
-| `Dispositif`         | `Plan d'apurement` ou `Protocole de cohésion sociale` ; `Bail` ou `Accession`.             |
-| `Logement`           | Adresse, code postal, ville.                                                               |
-| `Situation locative` | Dette, date du premier impayé, commandement, CCAPEX, travailleur social, Banque de France. |
-| `Foyer`              | Identifiants, adultes, enfants.                                                            |
-| `Budget du foyer`    | Ressources, charges ; PIERRE calcule reste à vivre et UC.                                  |
-| `Aides`              | FSL, Action Logement, etc.                                                                 |
-| `Échéancier`         | Ajouter ou retirer des échéances (n°, date, montant).                                      |
+| Rubrique             | Points à renseigner                                                                                                                                                          |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Dispositif`         | `Plan d'apurement` ou `Protocole de cohésion sociale` ; `Bail` ou `Accession`.                                                                                               |
+| `Logement`           | Adresse, identifiant du patrimoine, code postal, ville.                                                                                                                      |
+| `Situation locative` | Dette, date du premier impayé, stade de la procédure, CCAPEX, travailleur social, Banque de France.                                                                          |
+| `Foyer`              | Identifiants, adultes, enfants.                                                                                                                                              |
+| `Budget du foyer`    | Ressources et charges, mensuelles ou rattachées à un mois (`MM/AAAA`).                                                                                                       |
+| `Aides`              | FSL, Action Logement, etc.                                                                                                                                                   |
+| `Échéancier`         | Échéances (n°, date, mensualité). Pour chaque mois : ressources, charges, UC, puis complet et simplifié (reste à vivre journalier par UC, taux d’effort). Maximum 36 lignes. |
+
+### Durée de l’échéancier
+
+La durée se règle dans `Administration` → `Impayés` → `Configuration`, dans `create_plan.schedule`.
+
+| Clé                    | Rôle                                                                                                                                                                 |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `defaultMonths`        | Nombre de lignes à la création du plan et au clic sur `Réinitialiser`. Entier de 1 à 36.                                                                             |
+| `maxEffortRate`        | Taux d’effort, en pourcent, au-delà duquel le chiffre est signalé si le reste à vivre journalier est aussi sous `minDailyRemainder`. Nombre > 0 et ≤ 100.            |
+| `minDailyRemainder`    | Reste à vivre journalier par UC, en euros, en dessous duquel le chiffre est signalé si le taux d’effort dépasse aussi `maxEffortRate`. Nombre ≥ 0.                   |
+| `thresholds`           | Confirmations demandées quand on allonge l’échéancier. Tableau, éventuellement vide : aucune confirmation.                                                           |
+| `thresholds[].months`  | Nombre de lignes déjà présentes au moment où `Ajouter une échéance` demande confirmation avant d’en ajouter une. Entier unique, compris entre `defaultMonths` et 35. |
+| `thresholds[].message` | Texte du dialogue. Le titre est `Plus de N mensualités !`, avec N = `months`.                                                                                        |
+
+`J’ai compris` ajoute la ligne. `Annuler` laisse l’échéancier tel quel. Avec les seuils 12 puis 24, le premier dialogue apparaît en passant de 12 à 13 lignes, le second de 24 à 25. Le bouton `Ajouter une échéance` s’arrête à 36 lignes.
+
+```json
+"schedule": {
+  "defaultMonths": 6,
+  "maxEffortRate": 35,
+  "minDailyRemainder": 15,
+  "thresholds": [
+    { "months": 12, "message": "Un échéancier de plus de 12 mensualités doit être confirmé." },
+    { "months": 24, "message": "Un plan d’apurement de plus de 24 mensualités est réservé à des cas spéciaux documentés au sein de votre organisme." }
+  ]
+}
+```
 
 En bas : interrupteur `Plan ou protocole signé`, `Retirer` (brouillon), `Clôturer` (motifs : `Exécution terminée`, `Non-respect`, `Remplacé par un nouveau plan`, `Effacement de dette`), `Exporter en .docx`, `Enregistrer` ou `Enregistrer avec une note`.
 

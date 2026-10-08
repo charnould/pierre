@@ -2,7 +2,7 @@
   "name": "@pierre/server",
   "version": "0.40.7",
   "private": true,
-  "license": "AGPL-3.0-only",
+  "license": "SEE LICENSE IN ../LICENSE.md",
   "type": "module",
   "scripts": {
     "microvm:build:macos": "bash microvm/scripts/build.sh darwin-arm64",
