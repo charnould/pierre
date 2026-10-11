@@ -5,11 +5,10 @@
   "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bun check",
     "test": "bun test"
   },
   "devDependencies": {
-    "@types/bun": "catalog:",
-    "typescript": "catalog:"
+    "@types/bun": "catalog:"
   }
 }

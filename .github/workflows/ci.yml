@@ -16,6 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
@@ -31,6 +33,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
@@ -44,21 +48,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install
-      - run: bun --filter "@pierre/desktop" typecheck
-      - run: bun --filter "@pierre/server" typecheck
-      - run: bun --filter "@pierre/cli" typecheck
+      - run: bun typecheck
   test_unit:
     name: Test (unit)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
@@ -76,6 +82,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache

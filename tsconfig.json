@@ -1,0 +1,10 @@
+{
+  "files": [],
+  "references": [
+    { "path": "cli" },
+    { "path": "config" },
+    { "path": "desktop" },
+    { "path": "docs" },
+    { "path": "server" }
+  ]
+}

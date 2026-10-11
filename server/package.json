@@ -15,7 +15,7 @@
     "wikipedia": "bun --env-file=../.env run ./utils/knowledge/scrape-wikipedia.ts",
     "test:e2e": "bun run tests/e2e/run.ts",
     "test:unit": "bun test unit --env-file=../.env",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bun check",
     "bench:schema": "bun run tests/bench/schema.ts"
   },
   "dependencies": {
@@ -39,7 +39,6 @@
   "devDependencies": {
     "@types/bun": "catalog:",
     "@types/jsdom": "catalog:",
-    "@types/turndown": "^5.0.6",
-    "typescript": "catalog:"
+    "@types/turndown": "^5.0.6"
   }
 }
