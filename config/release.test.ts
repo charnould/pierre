@@ -299,7 +299,7 @@ describe('release reconciliation', () => {
     const state = JSON.parse(await readFile(repo.state, 'utf8'))
     expect(state.release.isDraft).toBe(false)
     expect(state.release.name).toBe('server-1.1.0')
-    expect(state.release.assets.map((asset) => asset.name).sort()).toEqual([
+    expect(state.release.assets.map((asset: { name: string }) => asset.name).sort()).toEqual([
       'libonnxruntime.so.1',
       'pierre',
       'pierre-linux-amd64.smolmachine'

@@ -18,15 +18,14 @@
       "date-fns": "^4.4.0",
       "docxtemplater": "^3.71.0",
       "jsdom": "^30.1.2",
-      "lucide-react": "^1.52.0",
+      "lucide-react": "^1.55.0",
       "marked": "^18.1.0",
       "oxfmt": "^0.72.0",
       "oxlint": "^1.87.0",
       "pizzip": "^3.3.0",
       "react": "^19.3.0",
       "react-dom": "^19.3.0",
-      "tailwindcss": "^4.3.3",
-      "typescript": "^7.0.2"
+      "tailwindcss": "^4.3.3"
     }
   },
   "scripts": {
@@ -38,6 +37,7 @@
     "lint:check": "bun run oxlint -c ./config/oxlint.jsonc --ignore-path=\"$PWD/config/oxlint.ignore\" .",
     "format": "bun run oxfmt -c ./config/oxfmt.jsonc --ignore-path=\"$PWD/config/oxfmt.ignore\"",
     "format:check": "bun run oxfmt -c ./config/oxfmt.jsonc --ignore-path=\"$PWD/config/oxfmt.ignore\" --check",
+    "typecheck": "bun check",
     "knip": "knip --config ./config/knip.jsonc --no-config-hints",
     "knip:production": "knip --config ./config/knip.jsonc --no-config-hints --production --include files,dependencies",
     "pierre:config": "bun test config/checks/",
@@ -46,10 +46,10 @@
     "pierre:version": "bun run server/utils/update-pierre.ts"
   },
   "devDependencies": {
-    "@shadcn/lint": "^0.2.0",
-    "knip": "^6.40.0",
+    "@shadcn/lint": "^0.2.1",
+    "@types/bun": "catalog:",
+    "knip": "^6.41.0",
     "oxfmt": "catalog:",
-    "oxlint": "catalog:",
-    "typescript": "catalog:"
+    "oxlint": "catalog:"
   }
 }
