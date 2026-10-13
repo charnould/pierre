@@ -92,7 +92,7 @@
     },
     "server": {
       "name": "@pierre/server",
-      "version": "0.40.7",
+      "version": "0.40.8",
       "dependencies": {
         "@date-fns/tz": "^1.5.0",
         "@huggingface/tokenizers": "^0.2.0",

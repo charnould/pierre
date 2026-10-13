@@ -123,12 +123,14 @@ export const putAdminSetup = async (c: Context) => {
   try {
     await writeSetup(id, new Uint8Array(await c.req.arrayBuffer()))
   } catch (error) {
-    const message = error instanceof SetupError ? error.message : 'Enregistrement impossible.'
+    console.error('[setup]', id, error)
+    const message = error instanceof Error ? error.message : 'Enregistrement impossible.'
     return c.json({ error: { code: 'invalid', message } }, 400)
   }
   try {
     if (chatbotId) await syncChatbotKnowledge(chatbotId, id, before)
   } catch (error) {
+    console.error('[setup]', id, error)
     const message = error instanceof Error ? error.message : 'Enregistrement impossible.'
     return c.json({ error: { code: 'invalid', message } }, 400)
   }

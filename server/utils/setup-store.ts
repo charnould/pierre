@@ -75,15 +75,28 @@ function listIds(prefix: string): string[] {
 }
 
 async function formatText(filename: string, source: string): Promise<string> {
-  const formatted = await format(filename, source)
-  if (formatted.errors.length > 0) {
-    throw new SetupError(formatted.errors.map((error) => error.message).join('\n'))
+  try {
+    const formatted = await format(filename, source)
+    if (formatted.errors.length > 0) {
+      throw new SetupError(formatted.errors.map((error) => error.message).join('\n'))
+    }
+    return formatted.code
+  } catch (error) {
+    if (error instanceof SetupError) throw error
+    const message = error instanceof Error ? error.message : 'Enregistrement impossible.'
+    if (filename.endsWith('.md')) return source
+    throw new SetupError(message)
   }
-  return formatted.code
 }
 
 function objectOf(text: string): any {
-  const value = JSON.parse(text) as unknown
+  let value: unknown
+  try {
+    value = JSON.parse(text) as unknown
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'JSON invalide.'
+    throw new SetupError(message)
+  }
   if (value == null || typeof value !== 'object' || Array.isArray(value)) {
     throw new SetupError('JSON objet requis.')
   }
