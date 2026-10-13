@@ -1,13 +1,4 @@
-import { randomBytes } from 'node:crypto'
-import {
-  accessSync,
-  chmodSync,
-  constants,
-  existsSync,
-  readFileSync,
-  renameSync,
-  writeFileSync
-} from 'node:fs'
+import { chmodSync, existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 
 import type { Runtime } from './system.ts'
 
@@ -16,12 +7,11 @@ export const ENV_KEYS = [
   'AUTH_PASSWORD',
   'AUTH_SECRET',
   'AUTH_BEARER',
-  'AI_TYPE',
-  'AI_BASE_URL',
-  'AI_API_KEY',
-  'CM_PRODUCT_TOKEN',
-  'CM_FROM',
-  'CM_WEBHOOK_SECRET'
+  'PUBLIC_CHAT_PER_MINUTE',
+  'SMOLVM_MAX_ACTIVE',
+  'SMOLVM_POOL_SIZE',
+  'SMOLVM_CPUS',
+  'SMOLVM_MEMORY_MIB'
 ] as const
 
 export type EnvKey = (typeof ENV_KEYS)[number]
@@ -32,18 +22,22 @@ export type ParsedEnv = {
   password: string
   authSecret: string
   authBearer: string
-  aiType: 'anthropic' | 'openai'
-  aiBaseUrl: string
-  aiApiKey: string
-  cmProductToken: string
-  cmFrom: string
-  cmWebhookSecret: string
-  cmMode: 'now' | 'later'
+  publicChatPerMinute: string
+  smolvmMaxActive: string
+  smolvmPoolSize: string
+  smolvmCpus: string
+  smolvmMemoryMib: string
 }
 
-export type ParseResult = { ok: true; env: ParsedEnv } | { ok: false; error: string }
+export type ConfigureFlags = {
+  host?: string
+}
 
-const CM_TOKEN = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
+export type MergeResult = { ok: true; env: ParsedEnv } | { ok: false; error: string }
+
+export const INSTALL_USAGE = ['Usage :', '  pierre install --host assistant.exemple.org', ''].join(
+  '\n'
+)
 
 export function cleanHost(host: string): string {
   return host.replace(/^https?:\/\//, '').split('/')[0] ?? ''
@@ -73,100 +67,74 @@ export function formatEnv(env: ParsedEnv): string {
     `AUTH_PASSWORD=${env.password}`,
     `AUTH_SECRET=${env.authSecret}`,
     `AUTH_BEARER=${env.authBearer}`,
-    `AI_TYPE=${env.aiType}`,
-    `AI_BASE_URL=${env.aiBaseUrl}`,
-    `AI_API_KEY=${env.aiApiKey}`,
-    `CM_PRODUCT_TOKEN=${env.cmProductToken}`,
-    `CM_FROM=${env.cmFrom}`,
-    `CM_WEBHOOK_SECRET=${env.cmWebhookSecret}`,
+    `PUBLIC_CHAT_PER_MINUTE=${env.publicChatPerMinute}`,
+    `SMOLVM_MAX_ACTIVE=${env.smolvmMaxActive}`,
+    `SMOLVM_POOL_SIZE=${env.smolvmPoolSize}`,
+    `SMOLVM_CPUS=${env.smolvmCpus}`,
+    `SMOLVM_MEMORY_MIB=${env.smolvmMemoryMib}`,
     ''
   ].join('\n')
 }
 
 export function writePrivate(file: string, content: string) {
-  const temporary = `${file}.${process.pid}.${randomBytes(4).toString('hex')}.tmp`
+  const temporary = `${file}.${process.pid}.${randomHex(4)}.tmp`
   writeFileSync(temporary, content, { mode: 0o600 })
   chmodSync(temporary, 0o600)
   renameSync(temporary, file)
 }
 
-export function validCmToken(value: string): boolean {
-  return CM_TOKEN.test(value)
+export function isConfigured(runtime: Runtime): boolean {
+  return requiredReady(readEnvMap(runtime.paths.envFile))
 }
 
-const fail = (error: string): ParseResult => ({ ok: false, error })
-
-export function parseDotenv(
-  text: string,
-  mode: 'install' | 'configure',
-  current: EnvMap,
-  randomHex: (bytes: number) => string
-): ParseResult {
-  const seen = new Set<string>()
-  const values: Record<string, string> = {}
-  for (const raw of text.split('\n')) {
-    const line = raw.replace(/\r$/, '')
-    if (/^\s*$/.test(line) || /^\s*#/.test(line)) continue
-    const index = line.indexOf('=')
-    if (index === -1) return fail(`Ligne invalide : ${line}`)
-    const key = line.slice(0, index)
-    const value = line.slice(index + 1)
-    if (!ENV_KEYS.includes(key as EnvKey)) return fail(`Variable inconnue : ${key}`)
-    if (seen.has(key)) return fail(`Variable dupliquée : ${key}`)
-    seen.add(key)
-    values[key] = key === 'AI_TYPE' ? value.toLowerCase() : value
+export function parseHostArgs(
+  argv: string[]
+): { ok: true; flags: ConfigureFlags } | { ok: false; error: string } {
+  if (argv.length === 0 || argv[0] === '--help' || argv[0] === '-h') {
+    return { ok: false, error: '' }
   }
-  if (seen.size !== ENV_KEYS.length)
-    return fail('Le bloc doit contenir les 10 variables attendues.')
+  let host: string | undefined
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index] ?? ''
+    if (token.includes('=')) return { ok: false, error: `Écrivez ${token.split('=')[0]} VALEUR.` }
+    if (token !== '--host') return { ok: false, error: `Option inconnue : ${token}` }
+    if (host !== undefined) return { ok: false, error: 'Option dupliquée : --host' }
+    const value = argv[index + 1]
+    if (value === undefined || value.startsWith('--') || value.length === 0) {
+      return { ok: false, error: '--host attend une valeur.' }
+    }
+    host = value
+    index += 1
+  }
+  return { ok: true, flags: { host } }
+}
 
-  const host = cleanHost(values['HOST'] ?? '')
-  if (!host) return fail('HOST est obligatoire.')
-  const password = values['AUTH_PASSWORD'] ?? ''
+export function mergeConfiguration(current: EnvMap, flags: ConfigureFlags): MergeResult {
+  const host = cleanHost(flags.host ?? current.HOST ?? '')
+  if (!host) return { ok: false, error: 'Le premier paramétrage exige --host.' }
+  if (/\s/.test(host)) return { ok: false, error: 'Le domaine est invalide.' }
+  const password = current.AUTH_PASSWORD || readablePassword()
   if (password.length < 8 || password.length > 128) {
-    return fail('AUTH_PASSWORD doit contenir entre 8 et 128 caractères.')
+    return { ok: false, error: 'AUTH_PASSWORD doit contenir entre 8 et 128 caractères.' }
   }
-
-  let authSecret = values['AUTH_SECRET'] ?? ''
-  let authBearer = values['AUTH_BEARER'] ?? ''
-  if (mode === 'install') {
-    if (authSecret === 'AUTO') authSecret = randomHex(32)
-    if (authBearer === 'AUTO') authBearer = randomHex(16)
-  } else {
-    if (password !== (current['AUTH_PASSWORD'] ?? '')) {
-      return fail('AUTH_PASSWORD est un secret de bootstrap et doit rester inchangé.')
-    }
-    if (authSecret !== (current['AUTH_SECRET'] ?? ''))
-      return fail('AUTH_SECRET doit rester inchangé.')
-    if (authBearer !== (current['AUTH_BEARER'] ?? ''))
-      return fail('AUTH_BEARER doit rester inchangé.')
+  const authSecret = current.AUTH_SECRET || randomHex(32)
+  const authBearer = current.AUTH_BEARER || randomHex(32)
+  if (authSecret.length < 32) {
+    return { ok: false, error: 'AUTH_SECRET doit contenir au moins 32 caractères.' }
   }
-  if (authSecret.length < 32) return fail('AUTH_SECRET doit contenir au moins 32 caractères.')
-  if (!authBearer) return fail('AUTH_BEARER est obligatoire.')
-
-  const aiType = values['AI_TYPE'] ?? ''
-  if (aiType !== 'anthropic' && aiType !== 'openai')
-    return fail('AI_TYPE vaut anthropic ou openai.')
-  const aiBaseUrl = values['AI_BASE_URL'] ?? ''
-  const aiApiKey = values['AI_API_KEY'] ?? ''
-  if (!aiBaseUrl || !aiApiKey) return fail('AI_BASE_URL et AI_API_KEY sont obligatoires.')
-
-  let cmProductToken = values['CM_PRODUCT_TOKEN'] ?? ''
-  let cmFrom = values['CM_FROM'] ?? ''
-  let cmWebhookSecret = values['CM_WEBHOOK_SECRET'] ?? ''
-  let cmMode: 'now' | 'later' = 'now'
-  if (!cmProductToken && !cmFrom && (!cmWebhookSecret || cmWebhookSecret === 'AUTO')) {
-    cmWebhookSecret = ''
-    cmMode = 'later'
-  } else {
-    if (!validCmToken(cmProductToken))
-      return fail('CM_PRODUCT_TOKEN doit être un UUID avec ses tirets.')
-    if (!cmFrom) return fail('CM_FROM est obligatoire lorsque CM.com est activé.')
-    if (cmWebhookSecret === 'AUTO' && mode === 'install') cmWebhookSecret = randomHex(16)
-    if (!cmWebhookSecret || cmWebhookSecret === 'AUTO') {
-      return fail('CM_WEBHOOK_SECRET est obligatoire lorsque CM.com est activé.')
-    }
+  if (!authBearer) return { ok: false, error: 'AUTH_BEARER est obligatoire.' }
+  const publicChatPerMinute = current.PUBLIC_CHAT_PER_MINUTE || '600'
+  const smolvmMaxActive = current.SMOLVM_MAX_ACTIVE || '96'
+  const smolvmPoolSize = current.SMOLVM_POOL_SIZE || '4'
+  const smolvmCpus = current.SMOLVM_CPUS || '1'
+  const smolvmMemoryMib = current.SMOLVM_MEMORY_MIB || '512'
+  const positive = [publicChatPerMinute, smolvmMaxActive, smolvmCpus, smolvmMemoryMib]
+  if (!positive.every((value) => /^\d+$/.test(value) && Number(value) > 0)) {
+    return { ok: false, error: 'Les capacités du serveur doivent être des entiers positifs.' }
   }
-
+  if (!/^\d+$/.test(smolvmPoolSize)) {
+    return { ok: false, error: 'SMOLVM_POOL_SIZE doit être un entier positif ou nul.' }
+  }
   return {
     ok: true,
     env: {
@@ -174,55 +142,37 @@ export function parseDotenv(
       password,
       authSecret,
       authBearer,
-      aiType,
-      aiBaseUrl,
-      aiApiKey,
-      cmProductToken,
-      cmFrom,
-      cmWebhookSecret,
-      cmMode
+      publicChatPerMinute,
+      smolvmMaxActive,
+      smolvmPoolSize,
+      smolvmCpus,
+      smolvmMemoryMib
     }
   }
 }
 
-export function installationComplete(runtime: Runtime): boolean {
-  try {
-    accessSync(runtime.paths.bin, constants.X_OK)
-  } catch {
-    try {
-      accessSync(runtime.paths.legacyBin, constants.X_OK)
-    } catch {
-      return false
-    }
-  }
-  return existsSync(runtime.paths.envFile) && existsSync(runtime.paths.unitFile)
+const PASSWORD_ALPHABET = 'abcdefghijkmnpqrstuvwxyz23456789'
+
+function randomHex(size: number): string {
+  const bytes = new Uint8Array(size)
+  crypto.getRandomValues(bytes)
+  return bytes.toHex()
 }
 
-export function dotenvTemplate(mode: 'install' | 'configure'): string {
-  if (mode === 'install') {
-    return [
-      'HOST=',
-      'AUTH_PASSWORD=',
-      'AUTH_SECRET=AUTO',
-      'AUTH_BEARER=AUTO',
-      'AI_TYPE=anthropic',
-      'AI_BASE_URL=https://api.anthropic.com',
-      'AI_API_KEY=',
-      'CM_PRODUCT_TOKEN=',
-      'CM_FROM=',
-      'CM_WEBHOOK_SECRET=AUTO'
-    ].join('\n')
-  }
-  return [
-    'HOST=<valeur actuelle>',
-    'AUTH_PASSWORD=<valeur actuelle>',
-    'AUTH_SECRET=<valeur actuelle>',
-    'AUTH_BEARER=<valeur actuelle>',
-    'AI_TYPE=<valeur actuelle>',
-    'AI_BASE_URL=<valeur actuelle>',
-    'AI_API_KEY=<valeur actuelle>',
-    'CM_PRODUCT_TOKEN=<valeur actuelle ou vide>',
-    'CM_FROM=<valeur actuelle ou vide>',
-    'CM_WEBHOOK_SECRET=<valeur actuelle ou vide>'
-  ].join('\n')
+function readablePassword(): string {
+  const bytes = new Uint8Array(16)
+  crypto.getRandomValues(bytes)
+  const chars = [...bytes].map((byte) => PASSWORD_ALPHABET[byte % 32] ?? 'a')
+  return [0, 4, 8, 12].map((start) => chars.slice(start, start + 4).join('')).join('-')
+}
+
+function requiredReady(map: EnvMap): boolean {
+  const password = map.AUTH_PASSWORD ?? ''
+  return Boolean(
+    cleanHost(map.HOST ?? '') &&
+    password.length >= 8 &&
+    password.length <= 128 &&
+    (map.AUTH_SECRET ?? '').length >= 32 &&
+    map.AUTH_BEARER
+  )
 }

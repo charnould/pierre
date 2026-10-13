@@ -1,17 +1,5 @@
-import { randomBytes } from 'node:crypto'
-import { closeSync, existsSync, openSync, readFileSync } from 'node:fs'
-import { ReadStream } from 'node:tty'
-
-export type Key = 'up' | 'down' | 'back' | 'enter' | 'quit' | 'other'
-
-export function decodeKey(raw: string): Key {
-  if (raw === '\u001b[A') return 'up'
-  if (raw === '\u001b[B') return 'down'
-  if (raw === '\u001b[D' || raw === '\u001b') return 'back'
-  if (raw === '') return 'enter'
-  if (raw === 'q' || raw === 'Q') return 'quit'
-  return 'other'
-}
+import { closeSync, existsSync, openSync, readSync } from 'node:fs'
+import { join } from 'node:path'
 
 export class Exit extends Error {
   constructor(
@@ -31,29 +19,29 @@ export class CommandFailed extends Error {
   }
 }
 
+export class Interrupted extends Error {}
+
 type Env = Record<string, string | undefined>
 
 type Paths = {
   home: string
+  lockFile: string
   envFile: string
-  pendingEnvFile: string
-  previousEnvFile: string
   installLog: string
   assetSourceFile: string
-  legacyBin: string
-  legacySo: string
   serverRoot: string
   serverReleases: string
   serverCurrent: string
   bin: string
-  image: string
   cmd: string
-  so: string
   unitFile: string
-  carlUnit: string
   caddyFile: string
-  previousCaddyFile: string
+  caddyKeyFile: string
+  caddyOwnerFile: string
+  caddySourceFile: string
   smolvmBin: string
+  smolvmCache: string
+  smolvmData: string
   smolvmHome: string
   smolvmReleases: string
   smolvmRoot: string
@@ -99,10 +87,8 @@ export type Runtime = {
   paths: Paths
   palette: Palette
   tty: boolean
-  stdinTTY: boolean
   canPrompt: boolean
   columns: number
-  uiActive: boolean
   uid: () => number
   arch: () => string
   kvm: () => boolean
@@ -112,11 +98,10 @@ export type Runtime = {
   request: (url: string, options?: RequestOptions) => Promise<HttpResult>
   download: (url: string, dest: string) => Promise<void>
   sleep: (ms: number) => Promise<void>
-  randomHex: (bytes: number) => string
-  readKey: () => Promise<Key | null>
   readLine: () => Promise<string | null>
-  readStdin: () => Promise<string>
   commandExists: (name: string) => boolean
+  interrupt: () => void
+  consumeInterrupt: () => boolean
   onInterrupt?: () => void
 }
 
@@ -134,42 +119,43 @@ function resolvePaths(env: Env): Paths {
   const envFile = envOr(env, 'PIERRE_ENV_FILE', '/etc/pierre.env')
   const caddyFile = envOr(env, 'PIERRE_CADDY_FILE', '/etc/caddy/Caddyfile')
   const home = envOr(env, 'PIERRE_HOME_DIR', '/var/lib/pierre')
-  const serverRoot = envOr(env, 'PIERRE_SERVER_ROOT', `${home}/server`)
-  const serverCurrent = envOr(env, 'PIERRE_SERVER_CURRENT', `${serverRoot}/current`)
+  const serverRoot = join(home, 'server')
+  const serverCurrent = join(serverRoot, 'current')
   const smolvmRoot = envOr(env, 'PIERRE_SMOLVM_ROOT', '/usr/local/lib/smolvm')
+  const smolvmHome = envOr(env, 'PIERRE_SMOLVM_HOME', join(home, 'smolvm'))
+  const unitDir = envOr(env, 'PIERRE_UNIT_DIR', '/etc/systemd/system')
   return {
     home,
+    lockFile: envOr(env, 'PIERRE_LOCK_FILE', '/run/lock/pierre.lock'),
     envFile,
-    pendingEnvFile: envOr(env, 'PIERRE_PENDING_ENV_FILE', `${envFile}.pending`),
-    previousEnvFile: envOr(env, 'PIERRE_PREVIOUS_ENV_FILE', `${envFile}.previous`),
     installLog: envOr(env, 'PIERRE_INSTALL_LOG', '/var/log/pierre-install.log'),
     assetSourceFile: envOr(env, 'PIERRE_ASSET_SOURCE_FILE', '/etc/pierre-install-source'),
-    legacyBin: envOr(env, 'PIERRE_LEGACY_BIN', '/usr/local/lib/pierre'),
-    legacySo: envOr(env, 'PIERRE_LEGACY_SO', '/usr/local/lib/libonnxruntime.so.1'),
     serverRoot,
-    serverReleases: envOr(env, 'PIERRE_SERVER_RELEASES', `${serverRoot}/releases`),
+    serverReleases: join(serverRoot, 'releases'),
     serverCurrent,
-    bin: envOr(env, 'PIERRE_BIN', `${serverCurrent}/pierre`),
-    image: envOr(env, 'PIERRE_MICROVM_IMAGE', `${serverCurrent}/pierre-linux-amd64.smolmachine`),
+    bin: join(serverCurrent, 'pierre'),
     cmd: envOr(env, 'PIERRE_CMD', '/usr/local/bin/pierre'),
-    so: envOr(env, 'PIERRE_SO', `${serverCurrent}/libonnxruntime.so.1`),
-    unitFile: envOr(env, 'PIERRE_UNIT_FILE', '/etc/systemd/system/pierre.service'),
-    carlUnit: envOr(env, 'PIERRE_CARL_UNIT', '/etc/systemd/system/carl.service'),
+    unitFile: join(unitDir, 'pierre.service'),
     caddyFile,
-    previousCaddyFile: envOr(env, 'PIERRE_PREVIOUS_CADDY_FILE', `${caddyFile}.previous`),
+    caddyKeyFile: envOr(
+      env,
+      'PIERRE_CADDY_KEY_FILE',
+      '/usr/share/keyrings/caddy-stable-archive-keyring.gpg'
+    ),
+    caddyOwnerFile: envOr(env, 'PIERRE_CADDY_OWNER_FILE', join(home, 'caddy-owned')),
+    caddySourceFile: envOr(
+      env,
+      'PIERRE_CADDY_SOURCE_FILE',
+      '/etc/apt/sources.list.d/caddy-stable.list'
+    ),
     smolvmBin: envOr(env, 'PIERRE_SMOLVM_BIN', '/usr/local/bin/smolvm'),
-    smolvmHome: envOr(env, 'PIERRE_SMOLVM_HOME', '/root/.smolvm'),
+    smolvmCache: join(smolvmHome, '.cache'),
+    smolvmData: join(smolvmHome, '.local/share'),
+    smolvmHome,
     smolvmRoot,
-    smolvmReleases: envOr(env, 'PIERRE_SMOLVM_RELEASES', `${smolvmRoot}/releases`),
-    smolvmRuntime: envOr(env, 'PIERRE_SMOLVM_RUNTIME', `${smolvmRoot}/current`)
+    smolvmReleases: join(smolvmRoot, 'releases'),
+    smolvmRuntime: join(smolvmRoot, 'current')
   }
-}
-
-function hydrateAssetDir(env: Env, paths: Paths): Env {
-  if (env['PIERRE_ASSET_DIR'] || !existsSync(paths.assetSourceFile)) return env
-  const value = readFileSync(paths.assetSourceFile, 'utf8').split('\n')[0]?.trim() ?? ''
-  if (!value) return env
-  return { ...env, PIERRE_ASSET_DIR: value }
 }
 
 const paletteFor = (enabled: boolean): Palette =>
@@ -239,17 +225,25 @@ const defaultStart = (command: string, args: string[], options?: SpawnOptions): 
     env
   })
   const finished = (async () => {
-    const stdout = await new Response(proc.stdout).text()
-    const stderr = await new Response(proc.stderr).text()
-    const code = await proc.exited
+    const [stdout, stderr, code] = await Promise.all([
+      new Response(proc.stdout).text(),
+      new Response(proc.stderr).text(),
+      proc.exited
+    ])
     return { code, stdout, stderr }
   })()
   return { finished, kill: () => proc.kill() }
 }
 
-const defaultRequest = async (url: string, options?: RequestOptions): Promise<HttpResult> => {
+const defaultRequest = async (
+  url: string,
+  options?: RequestOptions,
+  signal?: AbortSignal
+): Promise<HttpResult> => {
   const controller = new AbortController()
+  const abort = () => controller.abort()
   const timeout = setTimeout(() => controller.abort(), options?.timeoutMs ?? 10_000)
+  signal?.addEventListener('abort', abort, { once: true })
   try {
     const response = await fetch(url, {
       method: options?.method ?? 'GET',
@@ -263,37 +257,13 @@ const defaultRequest = async (url: string, options?: RequestOptions): Promise<Ht
     return { status: 0, body: '', url }
   } finally {
     clearTimeout(timeout)
-  }
-}
-
-const readRawKey = async (): Promise<string | null> => {
-  if (!existsSync('/dev/tty')) return null
-  const fd = openSync('/dev/tty', 'r')
-  const stream = new ReadStream(fd)
-  try {
-    if (typeof stream.setRawMode === 'function') stream.setRawMode(true)
-    const chunk = await new Promise<Buffer | null>((resolve) => {
-      const timer = setTimeout(() => resolve(null), 120_000)
-      stream.once('data', (data: Buffer) => {
-        clearTimeout(timer)
-        resolve(data)
-      })
-    })
-    if (!chunk || chunk.length === 0) return null
-    const text = chunk.toString('utf8')
-    if (text === '\u0003') return 'q'
-    if (text === '\r' || text === '\n') return ''
-    return text
-  } finally {
-    if (typeof stream.setRawMode === 'function') stream.setRawMode(false)
-    stream.destroy()
+    signal?.removeEventListener('abort', abort)
   }
 }
 
 export type RuntimeOverrides = {
   env?: Env
   tty?: boolean
-  stdinTTY?: boolean
   canPrompt?: boolean
   columns?: number
   uid?: () => number
@@ -305,75 +275,93 @@ export type RuntimeOverrides = {
   request?: Runtime['request']
   download?: Runtime['download']
   sleep?: Runtime['sleep']
-  randomHex?: Runtime['randomHex']
-  readKey?: Runtime['readKey']
   readLine?: Runtime['readLine']
-  readStdin?: Runtime['readStdin']
   commandExists?: Runtime['commandExists']
 }
 
 export function createRuntime(overrides: RuntimeOverrides = {}): Runtime {
-  const baseEnv = overrides.env ?? bunEnv()
-  const paths = resolvePaths(baseEnv)
-  const env = hydrateAssetDir(baseEnv, paths)
+  const env = overrides.env ?? bunEnv()
+  const paths = resolvePaths(env)
   const tty = overrides.tty ?? process.stdout.isTTY === true
   const columns = overrides.columns ?? Number(env['COLUMNS'] || process.stdout.columns || 80)
-  return {
+  let interrupted = false
+  let runtime: Runtime
+  runtime = {
     env,
     paths,
     palette: paletteFor(tty && !env['NO_COLOR']),
     tty,
-    stdinTTY: overrides.stdinTTY ?? process.stdin.isTTY === true,
     canPrompt: overrides.canPrompt ?? hasControllingTty(),
     columns: Number.isFinite(columns) && columns > 0 ? columns : 80,
-    uiActive: false,
     uid: overrides.uid ?? (() => (typeof process.getuid === 'function' ? process.getuid() : 0)),
     arch: overrides.arch ?? (() => (process.arch === 'x64' ? 'x86_64' : process.arch)),
     kvm: overrides.kvm ?? (() => existsSync('/dev/kvm')),
     writeOut: overrides.writeOut ?? ((text) => process.stdout.write(text)),
     writeErr: overrides.writeErr ?? ((text) => process.stderr.write(text)),
     start: overrides.start ?? defaultStart,
-    request: overrides.request ?? defaultRequest,
+    request:
+      overrides.request ??
+      ((url, options) => {
+        const controller = new AbortController()
+        return withInterrupt(
+          runtime,
+          () => controller.abort(),
+          () => defaultRequest(url, options, controller.signal)
+        )
+      }),
     download:
       overrides.download ??
       (async (url, dest) => {
-        const response = await fetch(url)
-        if (!response.ok)
-          throw new CommandFailed(1, `Téléchargement impossible (${response.status}).`)
-        await Bun.write(dest, response)
+        const controller = new AbortController()
+        await withInterrupt(
+          runtime,
+          () => controller.abort(),
+          async () => {
+            const response = await fetch(url, { signal: controller.signal })
+            if (!response.ok)
+              throw new CommandFailed(1, `Téléchargement impossible (${response.status}).`)
+            await Bun.write(dest, response)
+          }
+        )
       }),
     sleep: overrides.sleep ?? ((ms) => Bun.sleep(ms)),
-    randomHex: overrides.randomHex ?? ((bytes) => randomBytes(bytes).toString('hex')),
-    readKey:
-      overrides.readKey ??
-      (async () => {
-        const raw = await readRawKey()
-        return raw === null ? null : decodeKey(raw)
-      }),
     readLine:
       overrides.readLine ??
       (async () => {
         if (!existsSync('/dev/tty')) return null
         const fd = openSync('/dev/tty', 'r')
-        const stream = new ReadStream(fd)
-        const line = await new Promise<string | null>((resolve) => {
-          let buffer = ''
-          const onData = (data: Buffer) => {
-            buffer += data.toString('utf8')
-            const end = buffer.indexOf('\n')
-            if (end === -1) return
-            stream.off('data', onData)
-            resolve(buffer.slice(0, end).replace(/\r$/, ''))
+        const chunks: Buffer[] = []
+        const buffer = Buffer.alloc(256)
+        try {
+          for (;;) {
+            const count = readSync(fd, buffer, 0, buffer.length, null)
+            if (count <= 0) return null
+            chunks.push(Buffer.from(buffer.subarray(0, count)))
+            const text = Buffer.concat(chunks).toString('utf8')
+            const end = text.indexOf('\n')
+            if (end === -1) continue
+            return text.slice(0, end).replace(/\r$/, '')
           }
-          stream.on('data', onData)
-        })
-        stream.destroy()
-        return line
+        } finally {
+          closeSync(fd)
+        }
       }),
-    readStdin: overrides.readStdin ?? (() => new Response(Bun.stdin.stream()).text()),
     commandExists: overrides.commandExists ?? ((name) => Bun.which(name) !== null),
+    interrupt: () => {
+      if (interrupted) return
+      interrupted = true
+      try {
+        runtime.onInterrupt?.()
+      } catch {}
+    },
+    consumeInterrupt: () => {
+      const value = interrupted
+      interrupted = false
+      return value
+    },
     onInterrupt: undefined
   }
+  return runtime
 }
 
 export async function runCommand(
@@ -382,7 +370,12 @@ export async function runCommand(
   args: string[],
   options?: SpawnOptions
 ): Promise<CommandResult> {
-  return runtime.start(command, args, options).finished
+  const child = runtime.start(command, args, options)
+  return withInterrupt(
+    runtime,
+    () => child.kill(),
+    () => child.finished
+  )
 }
 
 export async function must(
@@ -410,37 +403,27 @@ export function requireMachine(runtime: Runtime) {
   }
 }
 
-export async function waitForBody(
+export async function withInterrupt<T>(
   runtime: Runtime,
-  url: string,
-  attempts: number,
-  timeoutMs = 2000
-): Promise<boolean> {
-  for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    const response = await runtime.request(url, { timeoutMs })
-    if (response.status >= 200 && response.status < 300 && response.body.trim() === 'ok')
-      return true
-    if (attempt < attempts) await runtime.sleep(1000)
+  handler: () => void,
+  action: () => Promise<T>
+): Promise<T> {
+  const previous = runtime.onInterrupt
+  runtime.onInterrupt = handler
+  try {
+    if (runtime.consumeInterrupt()) {
+      handler()
+      throw new Interrupted()
+    }
+    try {
+      const value = await action()
+      if (runtime.consumeInterrupt()) throw new Interrupted()
+      return value
+    } catch (error) {
+      if (runtime.consumeInterrupt()) throw new Interrupted()
+      throw error
+    }
+  } finally {
+    runtime.onInterrupt = previous
   }
-  return false
-}
-
-export async function providerHttpCode(
-  runtime: Runtime,
-  type: string,
-  base: string,
-  key: string
-): Promise<number> {
-  const root = base.replace(/\/+$/, '')
-  const response =
-    type === 'anthropic'
-      ? await runtime.request(`${root}/v1/models`, {
-          headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-          timeoutMs: 10_000
-        })
-      : await runtime.request(`${root}/models`, {
-          headers: { authorization: `Bearer ${key}` },
-          timeoutMs: 10_000
-        })
-  return response.status
 }

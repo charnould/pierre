@@ -1,5 +1,9 @@
 import { dlopen, FFIType } from 'bun:ffi'
-import { closeSync, constants, openSync } from 'node:fs'
+import { closeSync, constants, mkdirSync, openSync } from 'node:fs'
+import { dirname } from 'node:path'
+
+import type { Context } from './system.ts'
+import { failed } from './text.ts'
 
 const LOCK_EX = 2
 const LOCK_NB = 4
@@ -25,5 +29,20 @@ export function acquireFileLock(path: string): (() => void) | null {
     library.symbols.flock(fd, LOCK_UN)
     library.close()
     closeSync(fd)
+  }
+}
+
+export async function withPierreLock<T>(ctx: Context, action: () => Promise<T>): Promise<T | null> {
+  const path = ctx.runtime.paths.lockFile
+  mkdirSync(dirname(path), { recursive: true, mode: 0o700 })
+  const release = acquireFileLock(path)
+  if (!release) {
+    failed(ctx, 'Une autre opération est déjà en cours.')
+    return null
+  }
+  try {
+    return await action()
+  } finally {
+    release()
   }
 }

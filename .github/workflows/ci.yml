@@ -74,7 +74,7 @@ jobs:
       - run: bun test config/checks shared/*.test.ts
       - run: bun --filter "@pierre/server" test:unit
       - run: bun --filter "@pierre/desktop" test
-      - run: bun --filter "@pierre/docs" test
+      - run: bun test docs/scripts
       - run: bun --filter "@pierre/cli" test
   package:
     name: Package

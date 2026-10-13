@@ -1,51 +1,66 @@
-import { rmSync } from 'node:fs'
+import { existsSync, rmSync } from 'node:fs'
 
-import { runCommand, type Context } from '../lib/system.ts'
-import { confirm, say } from '../lib/tui.ts'
+import { CommandFailed, type Context, must, runCommand } from '../lib/system.ts'
+import { confirm, say, spin } from '../lib/text.ts'
+
+const aptEnv = { DEBIAN_FRONTEND: 'noninteractive' }
 
 export async function remove(ctx: Context): Promise<number> {
-  const answer = await confirm(ctx, 'Continuer et supprimer toutes les données ?')
+  const answer = await confirm(ctx, 'Continuer et supprimer PIERRE, Caddy et toutes les données ?')
   if (answer === 2) return 1
   if (answer !== 0) {
     say(ctx, "Désinstallation annulée. Rien n'a été supprimé.")
     return 0
   }
-  const { paths } = ctx.runtime
-  await runCommand(ctx.runtime, 'systemctl', ['disable', '--now', 'pierre', 'caddy'])
-  await runCommand(ctx.runtime, 'systemctl', ['disable', '--now', 'carl'])
-  await deleteMachines(ctx)
-  for (const file of [
-    paths.envFile,
-    paths.pendingEnvFile,
-    paths.previousEnvFile,
-    paths.installLog,
-    paths.previousCaddyFile,
-    paths.assetSourceFile,
-    paths.smolvmBin,
-    paths.unitFile,
-    paths.carlUnit,
-    paths.caddyFile
-  ]) {
-    rmSync(file, { force: true })
+  try {
+    await spin(ctx, 'Suppression', async () => {
+      const { paths } = ctx.runtime
+      if (existsSync(paths.unitFile)) {
+        await must(ctx.runtime, 'systemctl', ['disable', '--now', 'pierre'])
+      }
+      if (ctx.runtime.commandExists('caddy')) {
+        await runCommand(ctx.runtime, 'systemctl', ['disable', '--now', 'caddy'])
+      }
+      await deleteMachines(ctx)
+      await must(ctx.runtime, 'apt-get', ['purge', '-y', 'caddy'], { env: aptEnv })
+      for (const file of [
+        paths.envFile,
+        paths.installLog,
+        paths.assetSourceFile,
+        paths.smolvmBin,
+        paths.unitFile,
+        paths.caddyFile,
+        paths.caddyKeyFile,
+        paths.caddyOwnerFile,
+        paths.caddySourceFile
+      ]) {
+        rmSync(file, { force: true })
+      }
+      rmSync(paths.smolvmHome, { recursive: true, force: true })
+      rmSync(paths.smolvmRoot, { recursive: true, force: true })
+      rmSync(paths.home, { recursive: true, force: true })
+      await must(ctx.runtime, 'systemctl', ['daemon-reload'])
+      await must(ctx.runtime, 'ldconfig', [])
+      rmSync(paths.cmd, { force: true })
+    })
+  } catch (error) {
+    const output =
+      error instanceof CommandFailed ? error.output : error instanceof Error ? error.message : ''
+    if (output) ctx.runtime.writeErr(output.endsWith('\n') ? output : `${output}\n`)
+    return 1
   }
-  rmSync(paths.smolvmHome, { recursive: true, force: true })
-  rmSync(paths.smolvmRoot, { recursive: true, force: true })
-  rmSync('/root/.local/share/smolvm', { recursive: true, force: true })
-  rmSync('/root/.local/bin/smolvm', { force: true })
-  rmSync('/root/.cache/smolvm', { recursive: true, force: true })
-  rmSync('/root/.cache/smolvm-pack', { recursive: true, force: true })
-  rmSync('/root/.cache/smolvm-libs', { recursive: true, force: true })
-  rmSync(paths.home, { recursive: true, force: true })
-  await runCommand(ctx.runtime, 'systemctl', ['daemon-reload'])
-  await runCommand(ctx.runtime, 'ldconfig', [])
-  say(ctx, 'PIERRE et ses données ont été supprimés.')
-  rmSync(paths.cmd, { force: true })
   return 0
 }
 
 async function deleteMachines(ctx: Context) {
   if (!ctx.runtime.commandExists('smolvm')) return
-  const listed = await runCommand(ctx.runtime, 'smolvm', ['machine', 'ls', '--json'])
+  const { smolvmCache, smolvmData, smolvmHome } = ctx.runtime.paths
+  const env = {
+    HOME: smolvmHome,
+    XDG_CACHE_HOME: smolvmCache,
+    XDG_DATA_HOME: smolvmData
+  }
+  const listed = await must(ctx.runtime, 'smolvm', ['machine', 'ls', '--json'], { env })
   let names: string[] = []
   try {
     const parsed = JSON.parse(listed.stdout || '[]') as unknown
@@ -62,10 +77,10 @@ async function deleteMachines(ctx: Context) {
         (name): name is string => typeof name === 'string' && name.length > 0 && name !== 'null'
       )
   } catch {
-    names = []
+    throw new CommandFailed(1, 'Liste des micro-VM illisible.')
   }
   for (const name of names) {
-    await runCommand(ctx.runtime, 'smolvm', ['machine', 'stop', '--name', name])
-    await runCommand(ctx.runtime, 'smolvm', ['machine', 'delete', '--name', name, '-f'])
+    await runCommand(ctx.runtime, 'smolvm', ['machine', 'stop', '--name', name], { env })
+    await must(ctx.runtime, 'smolvm', ['machine', 'delete', '--name', name, '-f'], { env })
   }
 }
