@@ -15,6 +15,7 @@ const PLAN_CLOSE = [
   'effacement_de_dette'
 ] as const
 const EMAIL_FIELDS = ['logo_inline_cid', 'message'] as const
+const EMAIL_ADDRESS = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export class SetupError extends Error {
   constructor(message: string) {
@@ -83,7 +84,12 @@ async function formatText(filename: string, source: string): Promise<string> {
 }
 
 function objectOf(text: string): any {
-  const value = JSON.parse(text) as unknown
+  let value: unknown
+  try {
+    value = JSON.parse(text) as unknown
+  } catch {
+    throw new SetupError('JSON invalide.')
+  }
   if (value == null || typeof value !== 'object' || Array.isArray(value)) {
     throw new SetupError('JSON objet requis.')
   }
@@ -161,6 +167,13 @@ function chatbotFields(root: any, id: string): any {
   return root
 }
 
+function optionalEmail(root: any, label: string) {
+  if (!('email_from' in root) || root.email_from == null || root.email_from === '') return
+  if (typeof root.email_from !== 'string' || !EMAIL_ADDRESS.test(root.email_from.trim())) {
+    throw new SetupError(`${label}.email_from invalide.`)
+  }
+}
+
 function parseTickets(root: any): any {
   buckets(root.buckets, ['non_traitees'], 'tickets')
   const actions = root.actions
@@ -177,6 +190,7 @@ function parseTickets(root: any): any {
     )
     if (errors.length > 0) throw new SetupError(errors.join('\n'))
   }
+  optionalEmail(root, 'tickets')
   return root
 }
 
@@ -197,6 +211,7 @@ function parseRepayment(root: any): any {
     if (!TEMPLATE_NAME.test(name)) throw new SetupError(`modèle « ${name} » invalide.`)
   }
   if ('prompt' in root) throw new SetupError('consigne hors du JSON.')
+  optionalEmail(root, 'repayment')
   const plan = root.create_plan
   if (plan == null || typeof plan !== 'object' || Array.isArray(plan)) {
     throw new SetupError('repayment.create_plan requis.')
@@ -268,6 +283,20 @@ export function repaymentTemplateIds(root: any): string[] {
   return Array.isArray(root.templates)
     ? root.templates.filter((name: unknown) => typeof name === 'string')
     : []
+}
+
+export function moduleEmailFrom(context: 'tickets' | 'repayment'): string | null {
+  const root = jsonText(context)
+  if (!root) return null
+  try {
+    if (context === 'tickets') parseTickets(root)
+    else parseRepayment(root)
+  } catch {
+    return null
+  }
+  return typeof root.email_from === 'string' && root.email_from.trim()
+    ? root.email_from.trim()
+    : null
 }
 
 export function ticketsReady(): any | null {
@@ -381,7 +410,7 @@ export function listInternalChatbots(): Array<{ id: string; display: string }> {
 
 export function skillPrompt(id: string): string | null {
   if (id === 'about') return aboutReady()?.prompt ?? null
-  if (id === 'report') return automationsReady()?.prompt ?? null
+  if (id === 'report') return agentsText('automations/AGENTS.md')
   if (id === 'replies') return ticketsReady() ? agentsText('tickets/AGENTS.md') : null
   if (id === 'repayment') return repaymentReady() ? agentsText('repayment/AGENTS.md') : null
   return null

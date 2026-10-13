@@ -9,6 +9,18 @@ import { compute_next_run_at } from '../../../../utils/automations/schedule'
 import { CreateAutomationBodySchema } from '../../../../utils/automations/schemas'
 
 describe('encodeScheduleToCron / decodeCronToSchedule', () => {
+  it('normalizes a time that includes seconds', () => {
+    const parsed = CreateAutomationBodySchema.safeParse({
+      type: 'report',
+      name: 'Heure',
+      frequency: 'daily',
+      frequencyTime: '08:30:00',
+      prompt: ''
+    })
+    expect(parsed.success).toBe(true)
+    if (parsed.success) expect(parsed.data.frequencyTime).toBe('08:30')
+  })
+
   it('rejects invalid days instead of silently defaulting them', () => {
     expect(
       CreateAutomationBodySchema.safeParse({

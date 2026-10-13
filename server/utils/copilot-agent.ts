@@ -62,7 +62,19 @@ const locks = new Map<string, Promise<void>>()
  * Pi reads this file from its working directory (`/knowledge`) at startup.
  * Content: current date + AGENTS.md sections + SQLite schema.
  */
-async function buildAgentsFile(configId: string, workflowPayload?: WorkflowPayload): Promise<void> {
+const AUTOMATION_PROMPT_SLOT = '<!-- AUTOMATION_PROMPT_HERE -->'
+
+/** Replaces the slot. Does not insert the slot when the consigne has none. */
+export function insertAutomationPrompt(markdown: string, prompt: string | undefined): string {
+  if (prompt === undefined || !markdown.includes(AUTOMATION_PROMPT_SLOT)) return markdown
+  return markdown.replace(AUTOMATION_PROMPT_SLOT, prompt)
+}
+
+async function buildAgentsFile(
+  configId: string,
+  workflowPayload?: WorkflowPayload,
+  automationPrompt?: string
+): Promise<void> {
   const knowledgePath = knowledgePathOnHost(configId)
   const dbPath = join(knowledgePath, 'db.sqlite')
 
@@ -94,6 +106,8 @@ async function buildAgentsFile(configId: string, workflowPayload?: WorkflowPaylo
       )
       raw = raw.replace('<!-- WORKFLOW_PAYLOAD_HERE -->', JSON.stringify(compact, null, 2))
     }
+
+    raw = insertAutomationPrompt(raw, automationPrompt)
 
     if (raw) parts.push(raw)
   }
@@ -293,7 +307,11 @@ export async function* streamCopilot(
   signal?: AbortSignal,
   images?: PiImageContent[],
   reasoningEffort: 'low' | 'medium' | 'high' = 'medium',
-  options?: { workflowPayload?: WorkflowPayload; onVmAcquired?: () => void }
+  options?: {
+    workflowPayload?: WorkflowPayload
+    automationPrompt?: string
+    onVmAcquired?: () => void
+  }
 ): AsyncGenerator<CopilotChunk> {
   const t0 = Date.now()
   console.log(`\n${'='.repeat(60)}`)
@@ -324,7 +342,9 @@ export async function* streamCopilot(
     console.log(`[AGENT] Step 1/2 — Getting VM...`)
     const t1 = Date.now()
     // Refresh AGENTS.md with the current date/time before creating a new VM
-    if (!hasVm(convId)) await buildAgentsFile(configId, options?.workflowPayload)
+    if (!hasVm(convId)) {
+      await buildAgentsFile(configId, options?.workflowPayload, options?.automationPrompt)
+    }
     if (signal?.aborted) throw new DOMException('Request aborted', 'AbortError')
     const { piClient } = await acquireVm(convId, configId)
     options?.onVmAcquired?.()
@@ -369,7 +389,7 @@ export async function* streamCopilot(
     const toolStartTimes = new Map<string, number>()
     const askUserQuestions = new Map<string, AskUserQuestion[]>()
 
-    const generationTimeoutMs = 180_000
+    const generationTimeoutMs = 600_000
     let timeoutRemainingMs = generationTimeoutMs
     let timeoutStartedAt = Date.now()
     let timeoutId: ReturnType<typeof setTimeout> | null = null

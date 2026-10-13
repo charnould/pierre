@@ -281,7 +281,7 @@ export const claim_outbound_dispatch = (activity_id: number): DispatchClaim => {
 export type CreateInboundInput = {
   contexte: ActivityContext
   ref: string
-  type: 'rcs' | 'email'
+  type: 'rcs' | 'sms' | 'email'
   auteur: string
   contenu: string
   occurred_at: string

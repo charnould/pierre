@@ -6,11 +6,9 @@ import {
   type Activite
 } from '../../../shared/activites'
 import { parse_rattachement } from '../activities/rows'
-import { communication_reference, next_status_timestamp } from './parsing'
-import { project_communication_status_with_db } from './status'
+import { mark_sms_compatible } from '../contacts'
+import { communication_reference } from './parsing'
 import { create_outbound_with_db } from './storage'
-
-const FALLBACK_REASON = 'provider_not_configured'
 
 export function create_sms_fallback_with_db(db: Database, rcsActivity: Activite): Activite | null {
   if (
@@ -27,8 +25,14 @@ export function create_sms_fallback_with_db(db: Database, rcsActivity: Activite)
   if (!attachment || !content) return null
   const sms_body = content.sms_fallback ?? content.body
   if (!sms_body) return null
+  mark_sms_compatible(db, rcsActivity.destinataire)
+  const idempotency_key = `fallback:rcs:${rcsActivity.id}:sms`
+  const existing = db
+    .query<{ id: number }, [string]>('SELECT id FROM activites WHERE idempotency_key = ? LIMIT 1')
+    .get(idempotency_key)
+  if (existing) return null
 
-  const sms = create_outbound_with_db(db, {
+  return create_outbound_with_db(db, {
     actor: rcsActivity.auteur.slice('user:'.length),
     contexte: attachment.contexte,
     ref: attachment.ref,
@@ -40,16 +44,6 @@ export function create_sms_fallback_with_db(db: Database, rcsActivity: Activite)
       ...(content.action ? { action: content.action } : {}),
       fallback_from: communication_reference(rcsActivity.id)
     }),
-    idempotency_key: `fallback:rcs:${rcsActivity.id}:sms`
+    idempotency_key
   })
-
-  project_communication_status_with_db(db, {
-    activity_id: sms.id,
-    type: 'sms',
-    statut: 'failed',
-    reason: FALLBACK_REASON,
-    occurred_at: next_status_timestamp(sms)
-  })
-
-  return sms
 }

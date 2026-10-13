@@ -41,7 +41,7 @@ beforeEach(async () => {
   `)
   db.run(
     `INSERT INTO comptes_locataires VALUES
-      ('RCS', 'C1', 'L1', '2026-01-01', 100, 'Ada', 'ada@example.org', '0611111111', '1 rue A'),
+      ('RCS', 'C1', 'L1', '2026-01-01', 100, 'Ada', 'ada@example.org', '+33611111111', '1 rue A'),
       ('EMAIL', 'C2', 'L2', '2026-01-01', 50, 'Bob', 'bob@example.org', NULL, '2 rue B'),
       ('NONE', 'C3', 'L3', '2026-01-01', 20, 'Eve', NULL, NULL, NULL)`
   )

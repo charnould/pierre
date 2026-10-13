@@ -77,13 +77,13 @@ describe('wrap', () => {
 })
 
 describe('send_rcs_message (fetch mocked, no live send)', () => {
-  const originalToken = Bun.env['CM_PRODUCT_TOKEN']
-  const originalFrom = Bun.env['CM_FROM']
+  const originalToken = Bun.env['CM_RCS_PRODUCT_TOKEN']
+  const originalFrom = Bun.env['CM_RCS_FROM']
   let fetchSpy: ReturnType<typeof spyOn>
 
   beforeEach(() => {
-    Bun.env['CM_PRODUCT_TOKEN'] = 'test-token'
-    Bun.env['CM_FROM'] = 'PIERRE'
+    Bun.env['CM_RCS_PRODUCT_TOKEN'] = 'test-token'
+    Bun.env['CM_RCS_FROM'] = 'PIERRE'
     fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(
       Object.assign(
         () => {
@@ -96,14 +96,14 @@ describe('send_rcs_message (fetch mocked, no live send)', () => {
 
   afterEach(() => {
     fetchSpy.mockRestore()
-    if (originalToken === undefined) delete Bun.env['CM_PRODUCT_TOKEN']
-    else Bun.env['CM_PRODUCT_TOKEN'] = originalToken
-    if (originalFrom === undefined) delete Bun.env['CM_FROM']
-    else Bun.env['CM_FROM'] = originalFrom
+    if (originalToken === undefined) delete Bun.env['CM_RCS_PRODUCT_TOKEN']
+    else Bun.env['CM_RCS_PRODUCT_TOKEN'] = originalToken
+    if (originalFrom === undefined) delete Bun.env['CM_RCS_FROM']
+    else Bun.env['CM_RCS_FROM'] = originalFrom
   })
 
   it('throws not_configured when the product token is empty', async () => {
-    Bun.env['CM_PRODUCT_TOKEN'] = ''
+    Bun.env['CM_RCS_PRODUCT_TOKEN'] = ''
     await expect(
       send_rcs_message({
         phone: PHONE_CM,

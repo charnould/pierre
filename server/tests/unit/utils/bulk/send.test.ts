@@ -57,7 +57,7 @@ beforeEach(async () => {
   `)
   db.run(
     `INSERT INTO comptes_locataires VALUES
-      ('LOC-1', 'CLI-1', 40, 'Ada', 'ada@example.org', '0612345678')`
+      ('LOC-1', 'CLI-1', 40, 'Ada', 'ada@example.org', '+33612345678')`
   )
   insert_contact_if_absent(db, 'ada@example.org', 'ok')
   insert_contact_if_absent(db, '+33612345678', 'rcs_compatible')
@@ -71,7 +71,7 @@ afterEach(async () => {
   set_bulk_transport_for_tests(null)
   set_bulk_clock_for_tests(null)
   globalThis.fetch = ORIGINAL_FETCH
-  delete Bun.env['CM_PRODUCT_TOKEN']
+  delete Bun.env['CM_RCS_PRODUCT_TOKEN']
   await rm(paths.root, { recursive: true, force: true })
 })
 
@@ -230,7 +230,7 @@ describe('bulk execution', () => {
   })
 
   it('sends rich RCS, follows an exact postback, and applies effects once', async () => {
-    Bun.env['CM_PRODUCT_TOKEN'] = 'token'
+    Bun.env['CM_RCS_PRODUCT_TOKEN'] = 'token'
     globalThis.fetch = Object.assign(
       async (url: URL | RequestInfo, init?: BunFetchRequestInit | RequestInit) => {
         if (String(url) === TELEMETRY_URL) return new Response(null, { status: 204 })
@@ -300,7 +300,7 @@ describe('bulk execution', () => {
     })
     const replyPayload = {
       event: { custom: { label: 'Suite', postbackdata: 'suite' } },
-      messageContext: `p${first.id}`
+      messageContext: `${first.id}`
     }
     expect(handle_rich_rcs_reply(first, inbound, replyPayload)).toBe(true)
     expect(handle_rich_rcs_reply(first, inbound, replyPayload)).toBe(false)
@@ -372,7 +372,7 @@ describe('bulk execution', () => {
   })
 
   it('expires an unanswered interactive node at the configured deadline', async () => {
-    Bun.env['CM_PRODUCT_TOKEN'] = 'token'
+    Bun.env['CM_RCS_PRODUCT_TOKEN'] = 'token'
     globalThis.fetch = Object.assign(
       async (url: URL | RequestInfo, init?: BunFetchRequestInit | RequestInit) => {
         if (String(url) === TELEMETRY_URL) return new Response(null, { status: 204 })

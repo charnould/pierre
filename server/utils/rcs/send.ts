@@ -1,5 +1,3 @@
-import { wrap_rcs_message } from './wrap'
-
 const CM_GATEWAY = 'https://gw.messaging.cm.com/v1.0/message'
 
 export class RcsSendError extends Error {
@@ -18,19 +16,56 @@ export async function send_rcs_message(input: {
   richContent: object
   body?: { content: string }
   reference: string
+  channels?: Array<'RCS' | 'SMS'>
 }): Promise<{ status: number; body: unknown; payload: unknown }> {
-  const token = Bun.env['CM_PRODUCT_TOKEN']?.trim() ?? ''
-  if (!token) {
-    throw new RcsSendError(503, 'not_configured', 'CM_PRODUCT_TOKEN manquant')
-  }
-  const from = Bun.env['CM_FROM']?.trim() || 'PIERRE'
-  const payload = wrap_rcs_message({
-    from,
+  return send_cm_message({
+    channels: input.channels ?? ['RCS'],
     phone: input.phone,
+    body: input.body?.content ?? '',
     richContent: input.richContent,
+    reference: input.reference
+  })
+}
+
+export async function send_sms_message(input: {
+  phone: string
+  body: string
+  reference: string
+}): Promise<{ status: number; body: unknown; payload: unknown }> {
+  return send_cm_message({
+    channels: ['SMS'],
+    phone: input.phone,
     body: input.body,
     reference: input.reference
   })
+}
+
+async function send_cm_message(input: {
+  channels: Array<'RCS' | 'SMS'>
+  phone: string
+  body: string
+  richContent?: object
+  reference: string
+}): Promise<{ status: number; body: unknown; payload: unknown }> {
+  const token = Bun.env['CM_RCS_PRODUCT_TOKEN']?.trim() ?? ''
+  if (!token) {
+    throw new RcsSendError(503, 'not_configured', 'CM_RCS_PRODUCT_TOKEN manquant')
+  }
+  const from = Bun.env['CM_RCS_FROM']?.trim() || 'PIERRE'
+  const payload = {
+    messages: {
+      msg: [
+        {
+          from,
+          to: [{ number: input.phone }],
+          allowedChannels: input.channels,
+          body: { type: 'auto', content: input.body },
+          ...(input.richContent ? { richContent: input.richContent } : {}),
+          reference: input.reference
+        }
+      ]
+    }
+  }
 
   let response: Response
   try {

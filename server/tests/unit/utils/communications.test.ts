@@ -66,7 +66,7 @@ describe('communications', () => {
     expect(first.thread_id).not.toBe(second.thread_id)
     expect(rcs.thread_id).not.toBe(first.thread_id)
     expect(rcs.destinataire).toBe('+33612345678')
-    expect(communication_reference(first.id)).toBe(`p${first.id}`)
+    expect(communication_reference(first.id)).toBe(String(first.id))
   })
 
   it('rend un retry identique sans doublon et refuse un conflit', () => {
@@ -266,7 +266,7 @@ describe('communications', () => {
     expect(unmatched.id_lot).toBeNull()
   })
 
-  it('ne rattache implicitement que le dossier récent et non ambigu', () => {
+  it('rattache une réponse au fil le plus récent du correspondant', () => {
     create_outbound({
       actor: 'alice@example.org',
       contexte: 'automations',
@@ -289,7 +289,7 @@ describe('communications', () => {
         idempotency_key: Bun.randomUUIDv7()
       })
     }
-    expect(find_recent_thread('email', 'shared@example.org')).toBeNull()
+    expect(find_recent_thread('email', 'shared@example.org')?.ref).toBe('AMBIGUOUS-2')
   })
 
   it('expose une ligne autosuffisante et sans payload prestataire pour le LLM', () => {
@@ -321,19 +321,19 @@ describe('communications', () => {
 })
 
 describe('cm_webhook_authorized', () => {
-  const original = Bun.env['CM_WEBHOOK_SECRET']
+  const original = Bun.env['CM_RCS_WEBHOOK_SECRET']
 
   afterAll(() => {
-    if (original === undefined) delete Bun.env['CM_WEBHOOK_SECRET']
-    else Bun.env['CM_WEBHOOK_SECRET'] = original
+    if (original === undefined) delete Bun.env['CM_RCS_WEBHOOK_SECRET']
+    else Bun.env['CM_RCS_WEBHOOK_SECRET'] = original
   })
 
   it('exige un secret non vide et identique au header', () => {
-    delete Bun.env['CM_WEBHOOK_SECRET']
+    delete Bun.env['CM_RCS_WEBHOOK_SECRET']
     expect(cm_webhook_authorized('anything')).toBe(false)
-    Bun.env['CM_WEBHOOK_SECRET'] = '  '
+    Bun.env['CM_RCS_WEBHOOK_SECRET'] = '  '
     expect(cm_webhook_authorized('  ')).toBe(false)
-    Bun.env['CM_WEBHOOK_SECRET'] = 'secret'
+    Bun.env['CM_RCS_WEBHOOK_SECRET'] = 'secret'
     expect(cm_webhook_authorized(undefined)).toBe(false)
     expect(cm_webhook_authorized('wrong')).toBe(false)
     expect(cm_webhook_authorized('secret')).toBe(true)

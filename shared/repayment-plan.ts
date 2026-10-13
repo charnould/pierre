@@ -24,6 +24,7 @@ const REPAYMENT_PLAN_EMPLOYMENT_STATUSES = [
   'fixed_term_trial',
   'temporary',
   'unemployed',
+  'student',
   'retired'
 ] as const
 
@@ -38,6 +39,7 @@ export type RepaymentPlanSnapshot = {
     line: string
     postal_code: string
     city: string
+    id_lot: string
   }
   debt: {
     amount: number
@@ -46,12 +48,12 @@ export type RepaymentPlanSnapshot = {
   }
   procedures: {
     banque_de_france: {
-      status: 'none' | 'admissible_pending' | 'repayment_plan_active' | 'moratorium'
+      status: 'none' | 'admissible_pending' | 'repayment_plan_active' | 'prp' | 'moratorium'
       moratorium_end_date?: string
     }
     ccapex_opened: boolean
   }
-  social_worker: { name: string; organization: string } | null
+  social_worker: { name: string; organization: string; contact: string } | null
   household: {
     adults: Array<{
       id: string
@@ -59,7 +61,6 @@ export type RepaymentPlanSnapshot = {
       first_name: string
       birth_date: string
       employment_status: RepaymentPlanEmploymentStatus
-      pension_fund: string
       caf_number: string
       lease_holder: boolean
     }>
@@ -148,6 +149,7 @@ const parse_repayment_plan_snapshot = (value: unknown): RepaymentPlanSnapshot | 
   const addressLine = as_string(address?.['line'])
   const postalCode = as_string(address?.['postal_code'])
   const city = as_string(address?.['city'])
+  const idLot = as_string(address?.['id_lot'])
   const debt = as_record(plan['debt'])
   const debtAmount = as_finite_number(debt?.['amount'])
   const firstMissedPaymentDate = as_optional_date(debt?.['first_missed_payment_date'])
@@ -159,6 +161,7 @@ const parse_repayment_plan_snapshot = (value: unknown): RepaymentPlanSnapshot | 
     addressLine === null ||
     postalCode === null ||
     city === null ||
+    idLot === null ||
     !debt ||
     debtAmount === null ||
     firstMissedPaymentDate === null ||
@@ -174,7 +177,7 @@ const parse_repayment_plan_snapshot = (value: unknown): RepaymentPlanSnapshot | 
   if (
     !procedures ||
     !banqueDeFrance ||
-    !['none', 'admissible_pending', 'repayment_plan_active', 'moratorium'].includes(
+    !['none', 'admissible_pending', 'repayment_plan_active', 'prp', 'moratorium'].includes(
       String(banqueDeFranceStatus)
     ) ||
     moratoriumEndDate === null ||
@@ -187,9 +190,13 @@ const parse_repayment_plan_snapshot = (value: unknown): RepaymentPlanSnapshot | 
   const socialWorker = socialWorkerValue === null ? null : as_record(socialWorkerValue)
   const socialWorkerName = socialWorker ? as_string(socialWorker['name']) : null
   const socialWorkerOrganization = socialWorker ? as_string(socialWorker['organization']) : null
+  const socialWorkerContact = socialWorker ? as_string(socialWorker['contact']) : null
   if (
     socialWorkerValue !== null &&
-    (!socialWorker || socialWorkerName === null || socialWorkerOrganization === null)
+    (!socialWorker ||
+      socialWorkerName === null ||
+      socialWorkerOrganization === null ||
+      socialWorkerContact === null)
   ) {
     return null
   }
@@ -206,7 +213,6 @@ const parse_repayment_plan_snapshot = (value: unknown): RepaymentPlanSnapshot | 
     const firstName = as_string(adult?.['first_name'])
     const birthDate = as_string(adult?.['birth_date'])
     const employmentStatus = adult?.['employment_status']
-    const pensionFund = as_string(adult?.['pension_fund'])
     const cafNumber = as_string(adult?.['caf_number'])
     if (
       !adult ||
@@ -216,7 +222,6 @@ const parse_repayment_plan_snapshot = (value: unknown): RepaymentPlanSnapshot | 
       birthDate === null ||
       (birthDate !== '' && !DATE_PATTERN.test(birthDate)) ||
       !(REPAYMENT_PLAN_EMPLOYMENT_STATUSES as readonly unknown[]).includes(employmentStatus) ||
-      pensionFund === null ||
       cafNumber === null ||
       typeof adult['lease_holder'] !== 'boolean'
     ) {
@@ -228,7 +233,6 @@ const parse_repayment_plan_snapshot = (value: unknown): RepaymentPlanSnapshot | 
       first_name: firstName,
       birth_date: birthDate,
       employment_status: employmentStatus as RepaymentPlanEmploymentStatus,
-      pension_fund: pensionFund,
       caf_number: cafNumber,
       lease_holder: adult['lease_holder']
     })
@@ -287,7 +291,7 @@ const parse_repayment_plan_snapshot = (value: unknown): RepaymentPlanSnapshot | 
     tenant_reference: tenantReference,
     client_reference: clientReference,
     occupancy: plan['occupancy'],
-    address: { line: addressLine, postal_code: postalCode, city },
+    address: { line: addressLine, postal_code: postalCode, city, id_lot: idLot },
     debt: {
       amount: debtAmount,
       ...(firstMissedPaymentDate ? { first_missed_payment_date: firstMissedPaymentDate } : {}),
@@ -302,7 +306,11 @@ const parse_repayment_plan_snapshot = (value: unknown): RepaymentPlanSnapshot | 
       ccapex_opened: procedures['ccapex_opened']
     },
     social_worker: socialWorker
-      ? { name: socialWorkerName!, organization: socialWorkerOrganization! }
+      ? {
+          name: socialWorkerName!,
+          organization: socialWorkerOrganization!,
+          contact: socialWorkerContact!
+        }
       : null,
     household: { adults, children },
     budget: { income, expenses },

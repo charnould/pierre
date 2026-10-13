@@ -1,26 +1,26 @@
 {
-  "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.0/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-ext-opsz-italic.woff2": {
+  "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.1/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-ext-opsz-italic.woff2": {
     "file": "assets/source-serif-4-latin-ext-opsz-italic-BhUEwDRF.woff2",
-    "src": "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.0/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-ext-opsz-italic.woff2"
+    "src": "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.1/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-ext-opsz-italic.woff2"
   },
-  "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.0/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-ext-opsz-normal.woff2": {
+  "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.1/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-ext-opsz-normal.woff2": {
     "file": "assets/source-serif-4-latin-ext-opsz-normal-HoL-AExg.woff2",
-    "src": "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.0/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-ext-opsz-normal.woff2"
+    "src": "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.1/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-ext-opsz-normal.woff2"
   },
-  "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.0/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-italic.woff2": {
+  "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.1/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-italic.woff2": {
     "file": "assets/source-serif-4-latin-opsz-italic-BOLXpvkj.woff2",
-    "src": "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.0/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-italic.woff2"
+    "src": "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.1/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-italic.woff2"
   },
-  "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.0/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-normal.woff2": {
+  "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.1/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-normal.woff2": {
     "file": "assets/source-serif-4-latin-opsz-normal-BpEBLj1O.woff2",
-    "src": "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.0/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-normal.woff2"
+    "src": "../node_modules/.bun/@fontsource-variable+source-serif-4@5.3.1/node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-normal.woff2"
   },
   "src/assets/fonts/InterVariable.woff2": {
     "file": "assets/InterVariable-DiVDrmQJ.woff2",
     "src": "src/assets/fonts/InterVariable.woff2"
   },
   "src/chat-web/main.tsx": {
-    "file": "js/ai-COEU1jQl.js",
+    "file": "js/ai-tYU7pyb7.js",
     "name": "ai",
     "src": "src/chat-web/main.tsx",
     "isEntry": true,
@@ -33,7 +33,7 @@
     ]
   },
   "style.css": {
-    "file": "css/style-CqN5Yu3X.css",
+    "file": "css/style-DzDNPwFq.css",
     "src": "style.css"
   }
 }

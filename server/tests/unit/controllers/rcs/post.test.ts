@@ -1,3 +1,4 @@
+import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, spyOn } from 'bun:test'
 import { rm } from 'node:fs/promises'
 
@@ -6,13 +7,14 @@ import { Hono } from 'hono'
 import { controller } from '../../../../controllers/rcs/post'
 import type { User } from '../../../../utils/_schema'
 import { list_activities } from '../../../../utils/activities/query'
+import { insert_contact_if_absent } from '../../../../utils/contacts'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { TELEMETRY_URL } from '../../../../utils/send-telemetry'
 import { setup } from '../../../../utils/setup'
 
 const paths = testDatastorePaths('rcs_post')
-const originalToken = Bun.env['CM_PRODUCT_TOKEN']
-const originalFrom = Bun.env['CM_FROM']
+const originalToken = Bun.env['CM_RCS_PRODUCT_TOKEN']
+const originalFrom = Bun.env['CM_RCS_FROM']
 
 const app = new Hono<{ Variables: { user: User } }>()
 app.use('*', async (c, next) => {
@@ -73,8 +75,8 @@ const provider_calls = (calls: ReadonlyArray<readonly unknown[]>) =>
 
 beforeAll(() => {
   setDatastoreRoot(paths.root)
-  Bun.env['CM_PRODUCT_TOKEN'] = 'product-token-test'
-  Bun.env['CM_FROM'] = 'PIERRE-TEST'
+  Bun.env['CM_RCS_PRODUCT_TOKEN'] = 'product-token-test'
+  Bun.env['CM_RCS_FROM'] = 'PIERRE-TEST'
 })
 
 beforeEach(async () => {
@@ -85,10 +87,10 @@ beforeEach(async () => {
 afterAll(async () => {
   await rm(paths.root, { recursive: true, force: true })
   setDatastoreRoot(null)
-  if (originalToken === undefined) delete Bun.env['CM_PRODUCT_TOKEN']
-  else Bun.env['CM_PRODUCT_TOKEN'] = originalToken
-  if (originalFrom === undefined) delete Bun.env['CM_FROM']
-  else Bun.env['CM_FROM'] = originalFrom
+  if (originalToken === undefined) delete Bun.env['CM_RCS_PRODUCT_TOKEN']
+  else Bun.env['CM_RCS_PRODUCT_TOKEN'] = originalToken
+  if (originalFrom === undefined) delete Bun.env['CM_RCS_FROM']
+  else Bun.env['CM_RCS_FROM'] = originalFrom
 })
 
 describe('POST /rcs provider boundary', () => {
@@ -160,16 +162,12 @@ describe('POST /rcs provider boundary', () => {
             {
               from: 'PIERRE-TEST',
               to: [{ number: '0033611563959' }],
-              reference: expect.stringMatching(/^p\d+$/),
+              reference: expect.stringMatching(/^\d+$/),
+              allowedChannels: ['RCS', 'SMS'],
+              body: { type: 'auto', content: 'Votre dossier est prêt.' },
               richContent: {
-                conversation: [
-                  {
-                    text: 'Votre dossier est prêt.',
-                    suggestions: [
-                      { action: 'Reply', label: 'Confirmer', postbackdata: 'Confirmer' }
-                    ]
-                  }
-                ]
+                conversation: [{ text: 'Votre dossier est prêt.' }],
+                suggestions: [{ action: 'Reply', label: 'Confirmer', postbackdata: 'Confirmer' }]
               }
             }
           ]
@@ -191,8 +189,11 @@ describe('POST /rcs provider boundary', () => {
   })
 
   it('contains provider rejection at the boundary and records failure', async () => {
-    const fetchSpy = spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ message: 'Rejected by provider' }), { status: 422 })
+    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(
+      (async () =>
+        new Response(JSON.stringify({ message: 'Rejected by provider' }), {
+          status: 422
+        })) as unknown as typeof fetch
     )
     try {
       const response = await postRcs()
@@ -205,21 +206,34 @@ describe('POST /rcs provider boundary', () => {
         rattachement: 'tickets:REQ-RCS',
         limit: 10
       })
-      const sms = rows.find((row) => row.type === 'communication.sent' && row.channel === 'sms')
-      expect(sms).toBeDefined()
-      expect(JSON.parse(sms!.contenu)).toMatchObject({
-        body: 'Votre dossier est prêt.',
-        action: 'Répondre au locataire',
-        fallback_from: expect.stringMatching(/^p\d+$/)
-      })
+      expect(rows.some((row) => row.channel === 'sms')).toBe(false)
       expect(
         rows.find(
           (row) =>
-            row.thread_id === sms!.thread_id &&
-            row.type === 'communication.failed' &&
-            JSON.parse(row.contenu).reason === 'provider_not_configured'
+            row.type === 'communication.failed' && JSON.parse(row.contenu).reason === 'failed'
         )
       ).toBeDefined()
+    } finally {
+      fetchSpy.mockRestore()
+    }
+  })
+
+  it('laisse CM choisir RCS ou SMS même si le contact est sms_compatible', async () => {
+    const db = new Database(paths.database)
+    insert_contact_if_absent(db, '+33611563959', 'sms_compatible')
+    db.close()
+    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(acceptProviderRequest)
+    try {
+      const response = await postRcs()
+      expect(response.status).toBe(201)
+      expect((await response.json()) as unknown).toMatchObject({
+        data: { channel: 'rcs', type: 'communication.sent' }
+      })
+      const calls = provider_calls(fetchSpy.mock.calls)
+      expect(calls).toHaveLength(1)
+      expect(JSON.parse(String((calls[0] as [string, RequestInit])[1].body))).toMatchObject({
+        messages: { msg: [{ allowedChannels: ['RCS', 'SMS'] }] }
+      })
     } finally {
       fetchSpy.mockRestore()
     }

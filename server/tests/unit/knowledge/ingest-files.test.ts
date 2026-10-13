@@ -121,6 +121,15 @@ describe('normalize_sheet_value', () => {
     expect(normalize_sheet_value('1 234,56')).toBe(1234.56)
   })
 
+  it('normalizes contact phone columns before numeric parsing', () => {
+    expect(normalize_sheet_value('06 11 56 39 59', 'telephone_locataire')).toBe('+33611563959')
+    expect(normalize_sheet_value('+33611563959', 'telephone_client')).toBe('+33611563959')
+    expect(normalize_sheet_value(611563959, 'telephone_candidat')).toBe('+33611563959')
+    expect(normalize_sheet_value(142000000, 'telephone_client')).toBe('+33142000000')
+    expect(normalize_sheet_value('', 'telephone_client')).toBeNull()
+    expect(normalize_sheet_value('06abc11563959', 'telephone_client')).toBe('06abc11563959')
+  })
+
   it('keeps code_postal as a five-digit string', () => {
     expect(normalize_sheet_value('01000', 'code_postal')).toBe('01000')
     expect(typeof normalize_sheet_value('01000', 'code_postal')).toBe('string')

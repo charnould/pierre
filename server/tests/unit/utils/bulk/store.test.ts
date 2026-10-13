@@ -31,7 +31,7 @@ function seed_mouvements() {
     )
   `)
   db.run(
-    `INSERT INTO comptes_locataires VALUES ('LOC-1', 'CLI-1', 120, 'ada@exemple.fr', '0612345678')`
+    `INSERT INTO comptes_locataires VALUES ('LOC-1', 'CLI-1', 120, 'ada@exemple.fr', '+33612345678')`
   )
   db.close()
 }

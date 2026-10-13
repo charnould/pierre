@@ -1,3 +1,4 @@
+import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
 import { rm } from 'node:fs/promises'
 
@@ -188,6 +189,39 @@ describe('automation route classes', () => {
       expect(response.status).toBe(404)
       expect(await response.json()).toMatchObject({ error: { code: 'not_found' } })
     }
+  })
+
+  it('refuses to create when the instance has no timezone', async () => {
+    const db = new Database(paths.database)
+    db.run("DELETE FROM setup WHERE id = 'global'")
+    db.close()
+    const response = await app.request('/desktop/automations', request('POST', reportBody))
+    expect(response.status).toBe(400)
+    expect(await response.json()).toMatchObject({
+      error: { code: 'invalid', message: 'Automatisations non paramétrées.' }
+    })
+  })
+
+  it('refuses to run a reply automation', async () => {
+    const created = await app.request(
+      '/desktop/automations',
+      request('POST', {
+        type: 'replies',
+        name: 'Brouillons',
+        frequency: 'daily',
+        frequencyTime: '08:30',
+        channel: 'email',
+        ticketFilters: { rules: [] },
+        maxItems: 5
+      })
+    )
+    expect(created.status).toBe(201)
+    const id = ((await created.json()) as { data: { id: string } }).data.id
+    const response = await app.request(`/desktop/automations/${id}/run`, request('POST'))
+    expect(response.status).toBe(503)
+    expect(await response.json()).toMatchObject({
+      error: { message: 'Pré-génération de réponses non disponible.' }
+    })
   })
 
   it('refuses to run when no real executor is configured', async () => {

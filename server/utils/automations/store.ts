@@ -246,7 +246,7 @@ export async function create_automation(
   const canonicalOwner = owner.includes('@') ? owner.trim().toLowerCase() : owner
   const id = Bun.randomUUIDv7()
   const zone = timezone()
-  if (!zone) throw new Error('Automatisations non paramétrées.')
+  if (!zone) throw new AutomationsError('Automatisations non paramétrées.')
   const next_run_at = compute_next_run_at(cron, zone)
   const db = open_db()
   try {
@@ -314,7 +314,7 @@ export async function update_automation(
     next_run_at = null
   } else if (status === 'scheduled' && (scheduleChanged || patch.status === 'scheduled')) {
     const zone = timezone()
-    if (!zone) throw new Error('Automatisations non paramétrées.')
+    if (!zone) throw new AutomationsError('Automatisations non paramétrées.')
     next_run_at = compute_next_run_at(cron, zone)
   }
 

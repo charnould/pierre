@@ -8,19 +8,9 @@ const COMMUNICATION_MEDIA = ['rcs', 'sms', 'email', 'courrier', 'lrar', 'lre'] a
 type CommunicationMedium = (typeof COMMUNICATION_MEDIA)[number]
 import type { User } from '../utils/_schema'
 import { userCanAccessModule } from '../utils/authorize-role'
-import {
-  cm_webhook_authorized,
-  find_recent_thread,
-  next_status_timestamp
-} from '../utils/communications/parsing'
+import { next_status_timestamp } from '../utils/communications/parsing'
 import { is_communication_status } from '../utils/communications/status'
-import {
-  CommunicationsError,
-  create_inbound,
-  create_outbound,
-  create_unmatched_inbound
-} from '../utils/communications/storage'
-import { normalize_email } from '../utils/contacts'
+import { CommunicationsError, create_outbound } from '../utils/communications/storage'
 import { update_status } from '../utils/delivery-status'
 
 const Body = z
@@ -42,14 +32,6 @@ const StatusWebhook = z
   .object({
     activityId: z.number().int().positive(),
     status: z.string().trim().min(1),
-    occurredAt: z.iso.datetime()
-  })
-  .strict()
-
-const MessageWebhook = z
-  .object({
-    from: z.string().trim().min(1),
-    content: z.string().trim().min(1),
     occurredAt: z.iso.datetime()
   })
   .strict()
@@ -140,16 +122,14 @@ export const fake_communication_controller =
     }
   }
 
-const authorized = (c: Context, type: CommunicationMedium): boolean => {
-  if (type === 'email') return cm_webhook_authorized(c.req.header('Webhook-Secret'))
+const authorized = (c: Context): boolean => {
   const expected = Bun.env['FAKE_WEBHOOK_KEY']?.trim()
   return Boolean(expected && c.req.header('Webhook-Secret') === expected)
 }
 
 export const fake_webhook_controller =
-  (type: Exclude<CommunicationMedium, 'rcs' | 'sms'>, allowMessage = false) =>
-  async (c: Context) => {
-    if (!authorized(c, type)) {
+  (type: Exclude<CommunicationMedium, 'rcs' | 'sms' | 'email'>) => async (c: Context) => {
+    if (!authorized(c)) {
       return c.json({ error: { code: 'unauthorized', message: 'Webhook key invalide' } }, 401)
     }
     let body: unknown
@@ -175,45 +155,6 @@ export const fake_webhook_controller =
           occurred_at: status.data.occurredAt
         })
         return c.json({ data: activity })
-      }
-      if (allowMessage && type === 'email') {
-        const message = MessageWebhook.safeParse(body)
-        if (message.success) {
-          const sender = normalize_email(message.data.from)
-          if (sender.status === 'invalid') {
-            return c.json({ error: { code: 'invalid_body', message: 'Expéditeur invalide' } }, 400)
-          }
-          const recent = find_recent_thread(
-            'email',
-            sender.value,
-            new Date(message.data.occurredAt)
-          )
-          const activity = recent
-            ? create_inbound({
-                contexte: recent.contexte,
-                ref: recent.ref,
-                type: 'email',
-                auteur: recent.id_locataire
-                  ? `tenant:${recent.id_locataire}`
-                  : `external:${sender.value}`,
-                contenu: JSON.stringify({
-                  version: ACTIVITY_CONTENT_VERSION,
-                  body: message.data.content
-                }),
-                occurred_at: message.data.occurredAt,
-                thread_id: recent.thread_id
-              })
-            : create_unmatched_inbound({
-                type: 'email',
-                auteur: `external:${sender.value}`,
-                contenu: JSON.stringify({
-                  version: ACTIVITY_CONTENT_VERSION,
-                  body: message.data.content
-                }),
-                occurred_at: message.data.occurredAt
-              })
-          return c.json({ data: activity }, 201)
-        }
       }
       return c.json({ error: { code: 'invalid_body', message: 'Webhook invalide' } }, 400)
     } catch (error) {

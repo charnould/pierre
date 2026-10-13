@@ -34,6 +34,7 @@ export type UpdateStatusInput = {
   statut: string
   reason?: string
   occurred_at: string
+  idempotency_key?: string
 }
 
 const latest_thread_event = (db: Database, thread_id: string): ActivityDbRow | null =>
@@ -91,7 +92,8 @@ export const project_communication_status_with_db = (
       ? { reason: input.reason?.trim() || input.statut }
       : { result: input.statut === 'read' ? 'read' : 'delivered' })
   })
-  const idempotency_key = `${existing.thread_id}:${type}:${input.statut}:${occurredAt}`
+  const idempotency_key =
+    input.idempotency_key ?? `${existing.thread_id}:${type}:${input.statut}:${occurredAt}`
   const duplicate = db
     .query<{ id: number }, [string]>('SELECT id FROM activites WHERE idempotency_key = ? LIMIT 1')
     .get(idempotency_key)

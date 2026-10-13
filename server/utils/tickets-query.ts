@@ -96,12 +96,52 @@ const empty_meta = (
   default_sort: DEFAULT_TICKETS_SORT
 })
 
-const table_exists = (db: Database): boolean =>
+const table_exists = (db: Database): boolean => sqlite_table_exists(db, 'reclamations')
+
+const sqlite_table_exists = (db: Database, name: string): boolean =>
   db
-    .query<{ n: number }, []>(
-      "SELECT COUNT(*) as n FROM sqlite_master WHERE type='table' AND name='reclamations'"
+    .query<{ n: number }, [string]>(
+      "SELECT COUNT(*) as n FROM sqlite_master WHERE type='table' AND name=?"
     )
-    .get()!.n > 0
+    .get(name)!.n > 0
+
+const sqlite_column_names = (db: Database, table: string): Set<string> =>
+  new Set(
+    db
+      .query<{ name: string }, []>(`PRAGMA table_info("${table}")`)
+      .all()
+      .map((row) => row.name)
+  )
+
+/** Lot address rides on the row. It is not a reclamations column. */
+const lot_address_sql = (db: Database): { select: string; join: string } => {
+  const empty = `'' AS pierre_adresse, '' AS pierre_code_postal, '' AS pierre_ville`
+  if (!sqlite_table_exists(db, 'lots_locatifs')) return { select: empty, join: '' }
+  const lots = sqlite_column_names(db, 'lots_locatifs')
+  if (!lots.has('id_lot') || !lots.has('adresse') || !lots.has('code_postal')) {
+    return { select: empty, join: '' }
+  }
+  const communes = sqlite_table_exists(db, 'communes_par_code_postal')
+    ? sqlite_column_names(db, 'communes_par_code_postal')
+    : new Set<string>()
+  const ville =
+    communes.has('nom_commune') && communes.has('code_postal')
+      ? `(SELECT c.nom_commune FROM communes_par_code_postal c
+          WHERE c.code_postal = lot.code_postal
+          ORDER BY c.nom_commune
+          LIMIT 1)`
+      : `''`
+  return {
+    select: `COALESCE(lot.adresse, '') AS pierre_adresse,
+      COALESCE(lot.code_postal, '') AS pierre_code_postal,
+      COALESCE(${ville}, '') AS pierre_ville`,
+    join: `LEFT JOIN (
+        SELECT id_lot, adresse, code_postal
+        FROM lots_locatifs
+        WHERE rowid IN (SELECT MIN(rowid) FROM lots_locatifs GROUP BY id_lot)
+      ) lot ON CAST(lot.id_lot AS TEXT) = CAST(reclamations.id_lot AS TEXT)`
+  }
+}
 
 const activities_table_exists = (db: Database): boolean =>
   db
@@ -244,6 +284,15 @@ export const list_tickets = (input: TicketsListInput): TicketsListResult => {
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
     const params = [...merged.params, ...(input.bucket ? [input.bucket] : [])]
     const { column, direction } = parse_sort(sort)
+    const address = lot_address_sql(db)
+    const ticketRows = (bucketSql: string, bucketJoin: string) => `ticket_rows AS (
+           SELECT reclamations.*,
+             ${bucketSql} AS pierre_bucket,
+             ${address.select}
+           FROM reclamations
+           ${address.join}
+           ${bucketJoin}
+         )`
     const source = activities_table_exists(db)
       ? `WITH ranked_ticket_buckets AS (
            SELECT
@@ -262,21 +311,16 @@ export const list_tickets = (input: TicketsListInput): TicketsListResult => {
              AND trim(json_extract(contenu, '$.bucket')) <> ''
              AND json_extract(contenu, '$.bucket') IN (${buckets.sql})
          ),
-         ticket_rows AS (
-           SELECT reclamations.*,
-             CASE
+         ${ticketRows(
+           `CASE
                WHEN latest.bucket IN (${buckets.sql}) THEN latest.bucket
                ELSE '${DEFAULT_TICKET_BUCKET}'
-             END AS pierre_bucket
-           FROM reclamations
-           LEFT JOIN ranked_ticket_buckets latest
+             END`,
+           `LEFT JOIN ranked_ticket_buckets latest
              ON latest.id_reclamation = CAST(reclamations.id_reclamation AS TEXT)
-            AND latest.row_number = 1
-         )`
-      : `WITH ticket_rows AS (
-           SELECT reclamations.*, '${DEFAULT_TICKET_BUCKET}' AS pierre_bucket
-           FROM reclamations
-         )`
+            AND latest.row_number = 1`
+         )}`
+      : `WITH ${ticketRows(`'${DEFAULT_TICKET_BUCKET}'`, '')}`
 
     const total = db
       .query<{ n: number }, string[]>(`${source} SELECT COUNT(*) as n FROM ticket_rows ${where}`)

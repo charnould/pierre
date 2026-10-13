@@ -13,6 +13,7 @@ import * as cpexcel from 'xlsx/dist/cpexcel.full.mjs'
 
 import { coreDataContractForFilename } from '../../../shared/core-data'
 import { normalize_knowledge_name } from '../../../shared/knowledge'
+import { is_contact_phone_column, normalize_telephone } from '../contacts'
 import { datastorePaths } from '../paths'
 import type { KnowledgeCatalogSnapshot, KnowledgeIngestionEntry } from './catalog'
 import {
@@ -143,6 +144,10 @@ export const parse_numeric_string = (s: string): number | null => {
  */
 export const normalize_sheet_value = (value: unknown, column_key?: string): unknown => {
   const key = column_key ?? ''
+  if (is_contact_phone_column(key)) {
+    const { value: telephone } = normalize_telephone(value)
+    return telephone || null
+  }
   if (is_keep_as_text_column(key)) {
     return is_code_postal_column(key) ? normalize_code_postal(value) : stringify_identifier(value)
   }

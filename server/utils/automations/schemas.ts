@@ -30,7 +30,10 @@ const TicketReplyConfigSchema = z.object({
 
 export const AutomationConfigSchema = z.union([ReportConfigSchema, TicketReplyConfigSchema])
 
-const HHMM = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+const HHMM = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/)
+  .transform((value) => value.slice(0, 5))
 const DAYS = new Set(['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'])
 
 export const automation_schedule_error = (

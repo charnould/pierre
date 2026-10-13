@@ -1,7 +1,7 @@
 import type { AutomationRecord } from '../../../shared/automations'
 import { create_trusted_activity } from '../activities/write'
 import { timezone } from '../setup-store'
-import { DEMO_AUTOMATION_REPORT_HTML } from './demo-report'
+import { execute_automation } from './execute'
 import {
   AutomationsError,
   claim_automation,
@@ -34,10 +34,7 @@ export type AutomationExecutor = (
   context: { runToken: string; signal: AbortSignal }
 ) => Promise<ExecutorResult>
 
-let active_executor: AutomationExecutor | null = async () => ({
-  kind: 'report',
-  contenu: DEMO_AUTOMATION_REPORT_HTML
-})
+let active_executor: AutomationExecutor | null = execute_automation
 
 /** Test / future agent hook. */
 export function set_automation_executor(executor: AutomationExecutor): void {
@@ -98,7 +95,8 @@ async function execute_claimed(
     }
     notify_run(automation, result, run_id)
     finalize_automation_run(id, run_token, 'success', options)
-  } catch {
+  } catch (error) {
+    console.error('[automations.run]', error)
     finalize_automation_run(id, run_token, 'error', options)
   } finally {
     clearInterval(heartbeat)
@@ -146,6 +144,9 @@ export async function run_automation_now(id: string, owner: string): Promise<Aut
     throw new AutomationsError('Forbidden', 'forbidden')
   }
   const restorePaused = automation.status === 'paused'
+  if (automation.type !== 'report') {
+    throw new AutomationsError('Pré-génération de réponses non disponible.', 'unavailable')
+  }
   if (automation.status === 'running') {
     throw new AutomationsError('Automation already running', 'conflict')
   }

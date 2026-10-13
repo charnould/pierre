@@ -163,16 +163,7 @@ export const build_ledger_view_sql = (
   }
   if (join_contacts && has_phone) {
     joins += `
-  LEFT JOIN "${CONTACTS_TABLE}" tel_c ON tel_c.value = lm."telephone_client"
-    OR tel_c.value = CASE
-      WHEN replace(replace(replace(replace(lm."telephone_client", ' ', ''), '.', ''), '-', ''), '/', '')
-        LIKE '0%'
-      THEN '+33' || substr(
-        replace(replace(replace(replace(lm."telephone_client", ' ', ''), '.', ''), '-', ''), '/', ''),
-        2
-      )
-      ELSE replace(replace(replace(replace(lm."telephone_client", ' ', ''), '.', ''), '-', ''), '/', '')
-    END`
+  LEFT JOIN "${CONTACTS_TABLE}" tel_c ON tel_c.value = lm."telephone_client"`
   }
 
   return `

@@ -124,12 +124,12 @@ describe('compile_query', () => {
   it('conserve solde positif, dernier mouvement, lot, coordonnées et ratio arrondi', () => {
     const db = database()
     db.run(`INSERT INTO comptes_locataires VALUES
-      ('LOC-1', 'CLI-1', 'LOT-1', '2026-01-01', 300, 'old@example.org', '0600000000', 'Ancienne'),
-      ('LOC-1', 'CLI-1', 'LOT-1', '2026-02-01', 155, 'new@example.org', '0612345678', '1 rue Neuve'),
+      ('LOC-1', 'CLI-1', 'LOT-1', '2026-01-01', 300, 'old@example.org', '+33600000000', 'Ancienne'),
+      ('LOC-1', 'CLI-1', 'LOT-1', '2026-02-01', 155, 'new@example.org', '+33612345678', '1 rue Neuve'),
       ('LOC-0', 'CLI-0', 'LOT-0', '2026-01-01', 0, NULL, NULL, NULL)`)
     db.run(`INSERT INTO lots_locatifs VALUES ('LOC-1', 'LOT-1', 300, '2025-01-01', NULL)`)
     db.run(`INSERT INTO contacts VALUES
-      ('new@example.org', 'ok', ''), ('0612345678', 'rcs_compatible', '')`)
+      ('new@example.org', 'ok', ''), ('+33612345678', 'rcs_compatible', '')`)
 
     const rows = run(db, base())
     expect(rows).toEqual([
@@ -139,7 +139,7 @@ describe('compile_query', () => {
         ratio_dette_loyer: 1.5,
         id_client: 'CLI-1',
         email_client: 'new@example.org',
-        telephone_client: '0612345678',
+        telephone_client: '+33612345678',
         adresse: '1 rue Neuve',
         email_status: 'ok',
         telephone_status: 'rcs_compatible'
