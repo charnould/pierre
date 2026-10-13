@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { acquireFileLock } from '../src/lib/file-lock'
 import { tempRoot } from './support'
 
-describe('kernel update lock', () => {
+describe('file lock', () => {
   it('is exclusive and released with its file descriptor', async () => {
     const root = await tempRoot('pierre-lock-')
     const path = join(root, 'update.lock')
