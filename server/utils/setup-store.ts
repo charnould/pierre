@@ -1,7 +1,5 @@
 import { Database } from 'bun:sqlite'
 
-import { format } from 'oxfmt'
-
 import { TRACE_MODES } from '../../shared/chat'
 import { validateExternalApplication } from '../../shared/external-application'
 import { datastorePaths } from './paths'
@@ -71,21 +69,6 @@ function listIds(prefix: string): string[] {
       .map((row) => row.id)
   } finally {
     db.close()
-  }
-}
-
-async function formatText(filename: string, source: string): Promise<string> {
-  try {
-    const formatted = await format(filename, source)
-    if (formatted.errors.length > 0) {
-      throw new SetupError(formatted.errors.map((error) => error.message).join('\n'))
-    }
-    return formatted.code
-  } catch (error) {
-    if (error instanceof SetupError) throw error
-    const message = error instanceof Error ? error.message : 'Enregistrement impossible.'
-    if (filename.endsWith('.md')) return source
-    throw new SetupError(message)
   }
 }
 
@@ -469,9 +452,9 @@ export async function writeSetup(id: string, content: Uint8Array): Promise<void>
     return
   }
   if (AGENTS_MD.test(id)) {
-    const formatted = await formatText('AGENTS.md', textOf(content))
-    if (!formatted.trim()) throw new SetupError('AGENTS.md vide.')
-    writeRow(id, bytesOf(formatted))
+    const text = textOf(content)
+    if (!text.trim()) throw new SetupError('AGENTS.md vide.')
+    writeRow(id, bytesOf(text))
     return
   }
   const template = id.match(/^repayment\/templates\/(.+)$/)
@@ -482,17 +465,14 @@ export async function writeSetup(id: string, content: Uint8Array): Promise<void>
     if (declared && !repaymentTemplateIds(declared).includes(name)) {
       throw new SetupError('modèle non déclaré.')
     }
-    const formatted = await formatText(
-      name.endsWith('.json') ? 'template.json' : 'template.md',
-      textOf(content)
-    )
-    if (!formatted.trim()) throw new SetupError('modèle vide.')
-    writeRow(id, bytesOf(formatted))
+    const text = textOf(content)
+    if (!text.trim()) throw new SetupError('modèle vide.')
+    writeRow(id, bytesOf(text))
     return
   }
   if (id === 'global' || id === 'tickets' || id === 'repayment' || id.startsWith('chatbots/')) {
-    const formatted = await formatText('setup.json', textOf(content))
-    const root = objectOf(formatted)
+    const text = textOf(content)
+    const root = objectOf(text)
     if (id === 'global') parseGlobal(root)
     else if (id === 'tickets') parseTickets(root)
     else if (id === 'repayment') parseRepayment(root)
@@ -504,7 +484,7 @@ export async function writeSetup(id: string, content: Uint8Array): Promise<void>
       }
       parseInternalChatbot(root, chatbotId)
     }
-    writeRow(id, bytesOf(formatted))
+    writeRow(id, bytesOf(text))
     return
   }
   throw new SetupError('pièce inconnue.')
