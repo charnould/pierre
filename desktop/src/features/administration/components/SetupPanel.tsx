@@ -361,7 +361,10 @@ export function SetupPanel({ url }: { url: string }) {
     const entryChanged = draftSource?.key !== sourceKey
     if (entryChanged) jsonDirty.current = false
     setDraftSource({ key: sourceKey, texts })
-    if (jsonId && (entryChanged || !jsonDirty.current)) setJsonDraft(storedText(texts, jsonId))
+    if (jsonId && (entryChanged || !jsonDirty.current)) {
+      const stored = storedText(texts, jsonId)
+      setJsonDraft(jsonId === 'tickets' && !stored ? TICKETS_JSON_EXAMPLE : stored)
+    }
     if (rawId) setRawDraft(storedText(texts, rawId))
   }
 

@@ -55,17 +55,18 @@ export function registerSetupHandlers(partition: string): void {
       { url, id, body, bytes }: { url: string; id: string; body?: string; bytes?: Uint8Array }
     ) => {
       try {
-        const payload = bytes ?? new TextEncoder().encode(body ?? '')
+        const binary = bytes != null && bytes.byteLength > 0
         const path = id
           .split('/')
           .map((part) => encodeURIComponent(part))
           .join('/')
-        const copy = new ArrayBuffer(payload.byteLength)
-        new Uint8Array(copy).set(payload)
         const resp = await netFetch(`${root(url)}/desktop/admin/setup/${path}`, {
           session: ses(),
           method: 'PUT',
-          body: new Blob([copy])
+          headers: {
+            'Content-Type': binary ? 'application/octet-stream' : 'text/plain; charset=utf-8'
+          },
+          body: binary ? Buffer.from(bytes) : (body ?? '')
         })
         if (!resp.ok) {
           let message = 'Enregistrement refusé'
