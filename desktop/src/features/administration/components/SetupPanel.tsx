@@ -37,7 +37,7 @@ import { filesFromDataTransfer, hasDraggedFiles } from '@/shared/lib/attachment-
 import { consumeSetupRequest, useSetupRequest } from '@/shared/lib/open-setup'
 import { cn } from '@/shared/lib/utils'
 
-import { jsonSyntaxError, TICKETS_JSON_EXAMPLE } from './setup-json'
+import { jsonSyntaxError, TICKETS_JSON_EXAMPLE, ticketsConfigOrExample } from './setup-json'
 import { setupPieces } from './setup-pieces'
 
 const ENTRIES = [
@@ -363,7 +363,7 @@ export function SetupPanel({ url }: { url: string }) {
     setDraftSource({ key: sourceKey, texts })
     if (jsonId && (entryChanged || !jsonDirty.current)) {
       const stored = storedText(texts, jsonId)
-      setJsonDraft(jsonId === 'tickets' && !stored ? TICKETS_JSON_EXAMPLE : stored)
+      setJsonDraft(jsonId === 'tickets' ? ticketsConfigOrExample(stored) : stored)
     }
     if (rawId) setRawDraft(storedText(texts, rawId))
   }
@@ -470,7 +470,14 @@ export function SetupPanel({ url }: { url: string }) {
     const errors: Record<string, string> = {}
     const written: Record<string, string> = {}
     const jobs: Array<[string, string]> = []
-    if (jsonId) {
+    if (jsonId === 'tickets') {
+      const next = ticketsConfigOrExample(jsonDraft)
+      if (next !== jsonDraft) {
+        jsonDirty.current = false
+        setJsonDraft(next)
+      }
+      jobs.push([jsonId, next])
+    } else if (jsonId) {
       const syntax = jsonSyntaxError(jsonDraft)
       if (syntax) errors[jsonId] = syntax
       else jobs.push([jsonId, jsonDraft])
