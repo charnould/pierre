@@ -1,4 +1,3 @@
-import { randomBytes } from 'node:crypto'
 import { closeSync, existsSync, openSync, readFileSync } from 'node:fs'
 import { ReadStream } from 'node:tty'
 
@@ -112,7 +111,6 @@ export type Runtime = {
   request: (url: string, options?: RequestOptions) => Promise<HttpResult>
   download: (url: string, dest: string) => Promise<void>
   sleep: (ms: number) => Promise<void>
-  randomHex: (bytes: number) => string
   readKey: () => Promise<Key | null>
   readLine: () => Promise<string | null>
   readStdin: () => Promise<string>
@@ -305,7 +303,6 @@ export type RuntimeOverrides = {
   request?: Runtime['request']
   download?: Runtime['download']
   sleep?: Runtime['sleep']
-  randomHex?: Runtime['randomHex']
   readKey?: Runtime['readKey']
   readLine?: Runtime['readLine']
   readStdin?: Runtime['readStdin']
@@ -343,7 +340,6 @@ export function createRuntime(overrides: RuntimeOverrides = {}): Runtime {
         await Bun.write(dest, response)
       }),
     sleep: overrides.sleep ?? ((ms) => Bun.sleep(ms)),
-    randomHex: overrides.randomHex ?? ((bytes) => randomBytes(bytes).toString('hex')),
     readKey:
       overrides.readKey ??
       (async () => {

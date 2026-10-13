@@ -64,7 +64,7 @@ export function renderLogo(ctx: Context): string {
   return [
     ...mark.map((line) => (line ? `${cyan}${line}${reset}` : line)),
     '',
-    `  ${dim}Application agentique et open source${reset}`,
+    `  ${dim}Application agentique et open code${reset}`,
     `  ${dim}au service du mouvement HLM${reset}`,
     '',
     ''

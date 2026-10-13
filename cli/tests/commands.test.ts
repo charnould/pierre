@@ -24,7 +24,7 @@ import { formatEnv, parseDotenv, type ParsedEnv } from '../src/lib/config.ts'
 import { block, tempRoot, testContext, writeExe, writeServerBundle } from './support.ts'
 
 const sampleEnv = (): ParsedEnv => {
-  const parsed = parseDotenv(block(), 'install', {}, (bytes) => 'ab'.repeat(bytes))
+  const parsed = parseDotenv(block(), 'install', {})
   if (!parsed.ok) throw new Error(parsed.error)
   return parsed.env
 }
@@ -47,7 +47,7 @@ describe('environnement et santé', () => {
     await writeFile(
       file,
       [
-        'CM_FROM=PIERRE',
+        'CM_RCS_FROM=PIERRE',
         'AI_API_KEY=sk=value',
         'HOST=example.org',
         'AUTH_PASSWORD=password1',
@@ -55,8 +55,10 @@ describe('environnement et santé', () => {
         'AUTH_BEARER=bearer',
         'AI_TYPE=anthropic',
         'AI_BASE_URL=https://api.anthropic.com',
-        'CM_PRODUCT_TOKEN=00000000-0000-0000-0000-000000000000',
-        'CM_WEBHOOK_SECRET=webhook',
+        'CM_RCS_PRODUCT_TOKEN=00000000-0000-0000-0000-000000000000',
+        'CM_RCS_WEBHOOK_SECRET=webhook',
+        'CM_EMAIL_PRODUCT_TOKEN=',
+        'CM_EMAIL_WEBHOOK_SECRET=',
         ''
       ].join('\n')
     )
@@ -71,9 +73,11 @@ describe('environnement et santé', () => {
         'AI_TYPE=anthropic',
         'AI_BASE_URL=https://api.anthropic.com',
         'AI_API_KEY=sk=value',
-        'CM_PRODUCT_TOKEN=00000000-0000-0000-0000-000000000000',
-        'CM_FROM=PIERRE',
-        'CM_WEBHOOK_SECRET=webhook',
+        'CM_RCS_PRODUCT_TOKEN=00000000-0000-0000-0000-000000000000',
+        'CM_RCS_FROM=PIERRE',
+        'CM_RCS_WEBHOOK_SECRET=webhook',
+        'CM_EMAIL_PRODUCT_TOKEN=',
+        'CM_EMAIL_WEBHOOK_SECRET=',
         ''
       ].join('\n')
     )

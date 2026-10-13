@@ -19,9 +19,11 @@ export const ENV_KEYS = [
   'AI_TYPE',
   'AI_BASE_URL',
   'AI_API_KEY',
-  'CM_PRODUCT_TOKEN',
-  'CM_FROM',
-  'CM_WEBHOOK_SECRET'
+  'CM_RCS_PRODUCT_TOKEN',
+  'CM_RCS_FROM',
+  'CM_RCS_WEBHOOK_SECRET',
+  'CM_EMAIL_PRODUCT_TOKEN',
+  'CM_EMAIL_WEBHOOK_SECRET'
 ] as const
 
 export type EnvKey = (typeof ENV_KEYS)[number]
@@ -35,10 +37,11 @@ export type ParsedEnv = {
   aiType: 'anthropic' | 'openai'
   aiBaseUrl: string
   aiApiKey: string
-  cmProductToken: string
-  cmFrom: string
-  cmWebhookSecret: string
-  cmMode: 'now' | 'later'
+  cmRcsProductToken: string
+  cmRcsFrom: string
+  cmRcsWebhookSecret: string
+  cmEmailProductToken: string
+  cmEmailWebhookSecret: string
 }
 
 export type ParseResult = { ok: true; env: ParsedEnv } | { ok: false; error: string }
@@ -76,9 +79,11 @@ export function formatEnv(env: ParsedEnv): string {
     `AI_TYPE=${env.aiType}`,
     `AI_BASE_URL=${env.aiBaseUrl}`,
     `AI_API_KEY=${env.aiApiKey}`,
-    `CM_PRODUCT_TOKEN=${env.cmProductToken}`,
-    `CM_FROM=${env.cmFrom}`,
-    `CM_WEBHOOK_SECRET=${env.cmWebhookSecret}`,
+    `CM_RCS_PRODUCT_TOKEN=${env.cmRcsProductToken}`,
+    `CM_RCS_FROM=${env.cmRcsFrom}`,
+    `CM_RCS_WEBHOOK_SECRET=${env.cmRcsWebhookSecret}`,
+    `CM_EMAIL_PRODUCT_TOKEN=${env.cmEmailProductToken}`,
+    `CM_EMAIL_WEBHOOK_SECRET=${env.cmEmailWebhookSecret}`,
     ''
   ].join('\n')
 }
@@ -96,11 +101,17 @@ export function validCmToken(value: string): boolean {
 
 const fail = (error: string): ParseResult => ({ ok: false, error })
 
+function completeGroup(label: string, pairs: Array<[string, string]>): string | null {
+  const missing = pairs.find(([, value]) => !value)
+  const filled = pairs.some(([, value]) => value)
+  if (!filled || !missing) return null
+  return `${missing[0]} est obligatoire lorsque ${label} est activé.`
+}
+
 export function parseDotenv(
   text: string,
   mode: 'install' | 'configure',
-  current: EnvMap,
-  randomHex: (bytes: number) => string
+  current: EnvMap
 ): ParseResult {
   const seen = new Set<string>()
   const values: Record<string, string> = {}
@@ -113,11 +124,12 @@ export function parseDotenv(
     const value = line.slice(index + 1)
     if (!ENV_KEYS.includes(key as EnvKey)) return fail(`Variable inconnue : ${key}`)
     if (seen.has(key)) return fail(`Variable dupliquée : ${key}`)
+    if (value === 'AUTO') return fail(`${key} : AUTO n’existe plus.`)
     seen.add(key)
     values[key] = key === 'AI_TYPE' ? value.toLowerCase() : value
   }
   if (seen.size !== ENV_KEYS.length)
-    return fail('Le bloc doit contenir les 10 variables attendues.')
+    return fail(`Le bloc doit contenir les ${ENV_KEYS.length} variables attendues.`)
 
   const host = cleanHost(values['HOST'] ?? '')
   if (!host) return fail('HOST est obligatoire.')
@@ -126,12 +138,9 @@ export function parseDotenv(
     return fail('AUTH_PASSWORD doit contenir entre 8 et 128 caractères.')
   }
 
-  let authSecret = values['AUTH_SECRET'] ?? ''
-  let authBearer = values['AUTH_BEARER'] ?? ''
-  if (mode === 'install') {
-    if (authSecret === 'AUTO') authSecret = randomHex(32)
-    if (authBearer === 'AUTO') authBearer = randomHex(16)
-  } else {
+  const authSecret = values['AUTH_SECRET'] ?? ''
+  const authBearer = values['AUTH_BEARER'] ?? ''
+  if (mode === 'configure') {
     if (password !== (current['AUTH_PASSWORD'] ?? '')) {
       return fail('AUTH_PASSWORD est un secret de bootstrap et doit rester inchangé.')
     }
@@ -150,21 +159,28 @@ export function parseDotenv(
   const aiApiKey = values['AI_API_KEY'] ?? ''
   if (!aiBaseUrl || !aiApiKey) return fail('AI_BASE_URL et AI_API_KEY sont obligatoires.')
 
-  let cmProductToken = values['CM_PRODUCT_TOKEN'] ?? ''
-  let cmFrom = values['CM_FROM'] ?? ''
-  let cmWebhookSecret = values['CM_WEBHOOK_SECRET'] ?? ''
-  let cmMode: 'now' | 'later' = 'now'
-  if (!cmProductToken && !cmFrom && (!cmWebhookSecret || cmWebhookSecret === 'AUTO')) {
-    cmWebhookSecret = ''
-    cmMode = 'later'
-  } else {
-    if (!validCmToken(cmProductToken))
-      return fail('CM_PRODUCT_TOKEN doit être un UUID avec ses tirets.')
-    if (!cmFrom) return fail('CM_FROM est obligatoire lorsque CM.com est activé.')
-    if (cmWebhookSecret === 'AUTO' && mode === 'install') cmWebhookSecret = randomHex(16)
-    if (!cmWebhookSecret || cmWebhookSecret === 'AUTO') {
-      return fail('CM_WEBHOOK_SECRET est obligatoire lorsque CM.com est activé.')
-    }
+  const cmRcsProductToken = values['CM_RCS_PRODUCT_TOKEN'] ?? ''
+  const cmRcsFrom = values['CM_RCS_FROM'] ?? ''
+  const cmRcsWebhookSecret = values['CM_RCS_WEBHOOK_SECRET'] ?? ''
+  const rcsError = completeGroup('le RCS', [
+    ['CM_RCS_PRODUCT_TOKEN', cmRcsProductToken],
+    ['CM_RCS_FROM', cmRcsFrom],
+    ['CM_RCS_WEBHOOK_SECRET', cmRcsWebhookSecret]
+  ])
+  if (rcsError) return fail(rcsError)
+  if (cmRcsProductToken && !validCmToken(cmRcsProductToken)) {
+    return fail('CM_RCS_PRODUCT_TOKEN doit être un UUID avec ses tirets.')
+  }
+
+  const cmEmailProductToken = values['CM_EMAIL_PRODUCT_TOKEN'] ?? ''
+  const cmEmailWebhookSecret = values['CM_EMAIL_WEBHOOK_SECRET'] ?? ''
+  const emailError = completeGroup("l'email", [
+    ['CM_EMAIL_PRODUCT_TOKEN', cmEmailProductToken],
+    ['CM_EMAIL_WEBHOOK_SECRET', cmEmailWebhookSecret]
+  ])
+  if (emailError) return fail(emailError)
+  if (cmEmailProductToken && !validCmToken(cmEmailProductToken)) {
+    return fail('CM_EMAIL_PRODUCT_TOKEN doit être un UUID avec ses tirets.')
   }
 
   return {
@@ -177,10 +193,11 @@ export function parseDotenv(
       aiType,
       aiBaseUrl,
       aiApiKey,
-      cmProductToken,
-      cmFrom,
-      cmWebhookSecret,
-      cmMode
+      cmRcsProductToken,
+      cmRcsFrom,
+      cmRcsWebhookSecret,
+      cmEmailProductToken,
+      cmEmailWebhookSecret
     }
   }
 }
@@ -203,14 +220,16 @@ export function dotenvTemplate(mode: 'install' | 'configure'): string {
     return [
       'HOST=',
       'AUTH_PASSWORD=',
-      'AUTH_SECRET=AUTO',
-      'AUTH_BEARER=AUTO',
+      'AUTH_SECRET=',
+      'AUTH_BEARER=',
       'AI_TYPE=anthropic',
       'AI_BASE_URL=https://api.anthropic.com',
       'AI_API_KEY=',
-      'CM_PRODUCT_TOKEN=',
-      'CM_FROM=',
-      'CM_WEBHOOK_SECRET=AUTO'
+      'CM_RCS_PRODUCT_TOKEN=',
+      'CM_RCS_FROM=',
+      'CM_RCS_WEBHOOK_SECRET=',
+      'CM_EMAIL_PRODUCT_TOKEN=',
+      'CM_EMAIL_WEBHOOK_SECRET='
     ].join('\n')
   }
   return [
@@ -221,8 +240,10 @@ export function dotenvTemplate(mode: 'install' | 'configure'): string {
     'AI_TYPE=<valeur actuelle>',
     'AI_BASE_URL=<valeur actuelle>',
     'AI_API_KEY=<valeur actuelle>',
-    'CM_PRODUCT_TOKEN=<valeur actuelle ou vide>',
-    'CM_FROM=<valeur actuelle ou vide>',
-    'CM_WEBHOOK_SECRET=<valeur actuelle ou vide>'
+    'CM_RCS_PRODUCT_TOKEN=<valeur actuelle ou vide>',
+    'CM_RCS_FROM=<valeur actuelle ou vide>',
+    'CM_RCS_WEBHOOK_SECRET=<valeur actuelle ou vide>',
+    'CM_EMAIL_PRODUCT_TOKEN=<valeur actuelle ou vide>',
+    'CM_EMAIL_WEBHOOK_SECRET=<valeur actuelle ou vide>'
   ].join('\n')
 }

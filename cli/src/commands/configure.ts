@@ -66,16 +66,19 @@ async function configurationSuccess(ctx: Context, env: ParsedEnv, secretChanged:
   screen(ctx, 'Configuration appliquée')
   ctx.runtime.writeOut(`  PIERRE a redémarré et répond sur ${cyan}https://${env.host}${reset}\n\n`)
   if (secretChanged) {
-    ctx.runtime.writeOut(`  ${yellow}Le secret webhook CM.com a changé.${reset}\n\n`)
+    ctx.runtime.writeOut(`  ${yellow}Le secret webhook RCS a changé.${reset}\n\n`)
     ctx.runtime.writeOut('  Header : Webhook-Secret\n')
-    ctx.runtime.writeOut(`  Nouvelle valeur : ${env.cmWebhookSecret}\n\n`)
-    ctx.runtime.writeOut('  Mettez à jour cette valeur dans CM.com avant de quitter cet écran.\n')
-  } else if (!env.cmProductToken) {
-    ctx.runtime.writeOut(
-      `  ${yellow}CM.com est désactivé : RCS et SMS sont indisponibles.${reset}\n`
-    )
+    ctx.runtime.writeOut(`  Nouvelle valeur : ${env.cmRcsWebhookSecret}\n\n`)
+    ctx.runtime.writeOut('  Recopiez cette valeur dans CM.com avant de quitter cet écran.\n')
+  } else if (env.cmRcsProductToken) {
+    ctx.runtime.writeOut(`  RCS reste configuré avec l’expéditeur ${env.cmRcsFrom}.\n`)
   } else {
-    ctx.runtime.writeOut(`  CM.com reste configuré avec l’expéditeur ${env.cmFrom}.\n`)
+    ctx.runtime.writeOut(`  ${yellow}RCS désactivé.${reset}\n`)
+  }
+  if (env.cmEmailProductToken) {
+    ctx.runtime.writeOut(`  Email : https://${env.host}/webhook/email\n`)
+  } else {
+    ctx.runtime.writeOut(`  ${yellow}Email désactivé.${reset}\n`)
   }
   await pauseDashboard(ctx)
 }
@@ -96,14 +99,14 @@ export async function configure(ctx: Context): Promise<number> {
     return 1
   }
   const originalHost = readEnvValue(ctx.runtime.paths.envFile, 'HOST')
-  const previousSecret = readEnvValue(ctx.runtime.paths.envFile, 'CM_WEBHOOK_SECRET')
+  const previousSecret = readEnvValue(ctx.runtime.paths.envFile, 'CM_RCS_WEBHOOK_SECRET')
   const ownUi = interactiveInput(ctx) && !ctx.runtime.uiActive
   if (ownUi) enterUi(ctx.runtime)
   try {
     const collected = await collectDotenv(ctx, 'configure')
     if (collected.action !== 'apply' || !collected.env) return 1
     const secretChanged =
-      collected.env.cmWebhookSecret !== '' && collected.env.cmWebhookSecret !== previousSecret
+      collected.env.cmRcsWebhookSecret !== '' && collected.env.cmRcsWebhookSecret !== previousSecret
     writePrivate(ctx.runtime.paths.pendingEnvFile, formatEnv(collected.env))
     if (await applyConfiguration(ctx, collected.env, originalHost)) {
       if (interactiveInput(ctx)) await configurationSuccess(ctx, collected.env, secretChanged)

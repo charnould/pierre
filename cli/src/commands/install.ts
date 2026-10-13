@@ -305,20 +305,21 @@ async function installSuccess(ctx: Context, env: ParsedEnv) {
   screen(ctx, 'PIERRE est opérationnel')
   ctx.runtime.writeOut(`  Adresse : ${cyan}https://${env.host}${reset}\n`)
   ctx.runtime.writeOut('  Compte : admin@pierre-ia.org\n\n')
-  if (env.cmMode === 'now') {
-    ctx.runtime.writeOut(`  ${bold}Terminez maintenant la configuration dans CM.com :${reset}\n\n`)
+  if (env.cmRcsProductToken) {
+    ctx.runtime.writeOut(`  ${bold}RCS : recopiez le secret dans CM.com.${reset}\n\n`)
     ctx.runtime.writeOut(`  Endpoint : https://${env.host}/webhook/rcs\n`)
     ctx.runtime.writeOut('  Méthode : POST\n')
     ctx.runtime.writeOut('  Encodage : JSON\n')
     ctx.runtime.writeOut('  Header : Webhook-Secret\n')
-    ctx.runtime.writeOut(`  Valeur : ${env.cmWebhookSecret}\n\n`)
-    ctx.runtime.writeOut(
-      `  ${yellow}Copiez cette valeur dans CM.com avant de quitter cet écran.${reset}\n`
-    )
+    ctx.runtime.writeOut(`  Valeur : ${env.cmRcsWebhookSecret}\n\n`)
   } else {
-    ctx.runtime.writeOut(`  ${yellow}CM.com n’est pas encore configuré.${reset}\n`)
-    ctx.runtime.writeOut('  RCS et SMS resteront indisponibles jusqu’à sa configuration.\n')
-    ctx.runtime.writeOut('  Guide : docs/06-installation/01-server/03-channels.md\n')
+    ctx.runtime.writeOut(`  ${yellow}RCS désactivé.${reset}\n`)
+  }
+  if (env.cmEmailProductToken) {
+    ctx.runtime.writeOut(`  Email : https://${env.host}/webhook/email\n`)
+    ctx.runtime.writeOut('  Le secret est celui copié depuis CM.com.\n')
+  } else {
+    ctx.runtime.writeOut(`  ${yellow}Email désactivé.${reset}\n`)
   }
   await pauseDashboard(ctx)
 }
@@ -395,7 +396,7 @@ async function captureBlock(ctx: Context, mode: 'install' | 'configure'): Promis
   if (!interactiveInput(ctx)) return ctx.runtime.readStdin()
   const { bold, dim, reset } = ctx.runtime.palette
   screen(ctx, mode === 'install' ? 'Installer PIERRE' : 'Configurer PIERRE')
-  ctx.runtime.writeOut('  Collez les 10 variables au format dotenv.\n')
+  ctx.runtime.writeOut('  Collez les 12 variables au format dotenv.\n')
   ctx.runtime.writeOut(`  Terminez par une ligne contenant uniquement ${bold}END${reset}.\n`)
   ctx.runtime.writeOut('  Le collage reste masqué et n’est jamais journalisé.\n\n')
   ctx.runtime.writeOut(`  ${dim}Modèle attendu :${reset}\n`)
@@ -439,7 +440,10 @@ async function confirmBlock(ctx: Context, mode: 'install' | 'configure', env: Pa
       renderDetailLine(ctx, 'llm', `${providerName(env.aiType)} · connexion validée`, 12)
     )
     ctx.runtime.writeOut(
-      renderDetailLine(ctx, 'CM.com', env.cmMode === 'now' ? 'configuré' : 'désactivé', 12)
+      renderDetailLine(ctx, 'RCS', env.cmRcsProductToken ? 'configuré' : 'désactivé', 12)
+    )
+    ctx.runtime.writeOut(
+      renderDetailLine(ctx, 'Email', env.cmEmailProductToken ? 'configuré' : 'désactivé', 12)
     )
     ctx.runtime.writeOut(
       `\n  ${ctx.runtime.palette.dim}Aucun secret n’est affiché.${ctx.runtime.palette.reset}\n\n`
@@ -463,12 +467,7 @@ export async function collectDotenv(
   while (true) {
     const text = await captureBlock(ctx, mode)
     if (text === null) return { action: 'cancel', env: null }
-    const parsed = parseDotenv(
-      text,
-      mode,
-      readEnvMap(ctx.runtime.paths.envFile),
-      ctx.runtime.randomHex
-    )
+    const parsed = parseDotenv(text, mode, readEnvMap(ctx.runtime.paths.envFile))
     if (!parsed.ok) {
       if (interactive) {
         screen(ctx, 'Bloc invalide')

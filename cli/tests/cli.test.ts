@@ -137,9 +137,7 @@ describe('terminal', () => {
     const ctx = testContext(root)
     const logo = renderLogo(ctx.ctx)
     expect(logo).toContain('██████╗ ██╗███████╗')
-    expect(logo).toContain(
-      '  Application agentique et open source\n  au service du mouvement HLM\n'
-    )
+    expect(logo).toContain('  Application agentique et open code\n  au service du mouvement HLM\n')
     expect(logo).not.toContain('\u001b[')
     ctx.ctx.runtime.columns = 40
     expect(renderLogo(ctx.ctx)).toContain('◆  PIERRE')
@@ -213,7 +211,7 @@ describe('terminal', () => {
     )
     expect(menu).toContain('· ↑ server-0.41.0')
     expect(menu).toContain('██████╗')
-    expect(menu).toContain('Application agentique et open source')
+    expect(menu).toContain('Application agentique et open code')
     expect(menu).toContain('au service du mouvement HLM')
     expect(menu).not.toContain('https://')
     expect(menu).toContain('Tout désinstaller')
@@ -293,39 +291,44 @@ describe('dotenv', () => {
     expect(readEnvMap(join(root, 'absent.env'))['HOST']).toBeUndefined()
   })
 
-  it('accepts a complete install block and generates AUTO secrets without executing values', () => {
+  it('accepts a complete install block without executing values', () => {
     const marker = '$(touch /tmp/pierre-should-not-exist)'
-    const parsed = parseDotenv(
-      block({ AI_API_KEY: `sk=value=${marker}` }),
-      'install',
-      {},
-      (bytes) => 'ab'.repeat(bytes)
-    )
+    const parsed = parseDotenv(block({ AI_API_KEY: `sk=value=${marker}` }), 'install', {})
     expect(parsed.ok).toBe(true)
     if (!parsed.ok) return
     expect(parsed.env.host).toBe('example.org')
-    expect(parsed.env.authSecret).toHaveLength(64)
-    expect(parsed.env.authBearer).toHaveLength(32)
-    expect(parsed.env.cmMode).toBe('later')
+    expect(parsed.env.authSecret).toBe('ab'.repeat(32))
+    expect(parsed.env.authBearer).toBe('cd'.repeat(32))
+    expect(parsed.env.cmRcsProductToken).toBe('')
+    expect(parsed.env.cmEmailProductToken).toBe('')
     expect(parsed.env.aiApiKey).toBe(`sk=value=${marker}`)
   })
 
-  it('rejects missing, unknown, duplicate and partial CM values', () => {
-    expect(parseDotenv(block().replace('CM_FROM=\n', ''), 'install', {}, () => 'x').ok).toBe(false)
-    const unknown = parseDotenv(`${block()}UNKNOWN=value\n`, 'install', {}, () => 'x')
-    const duplicate = parseDotenv(`${block()}HOST=other\n`, 'install', {}, () => 'x')
+  it('rejects AUTO, unknown, duplicate and partial CM values', () => {
+    const auto = parseDotenv(block({ AUTH_SECRET: 'AUTO' }), 'install', {})
+    expect(auto.ok).toBe(false)
+    if (!auto.ok) expect(auto.error).toContain('AUTO')
+    expect(parseDotenv(block().replace('CM_RCS_FROM=\n', ''), 'install', {}).ok).toBe(false)
+    const unknown = parseDotenv(`${block()}UNKNOWN=value\n`, 'install', {})
+    const duplicate = parseDotenv(`${block()}HOST=other\n`, 'install', {})
     expect(unknown.ok).toBe(false)
     expect(duplicate.ok).toBe(false)
     if (!unknown.ok) expect(unknown.error).toContain('UNKNOWN')
     if (!duplicate.ok) expect(duplicate.error).toContain('dupliquée')
     const partial = parseDotenv(
-      block({ CM_PRODUCT_TOKEN: '00000000-0000-0000-0000-000000000000' }),
+      block({ CM_RCS_PRODUCT_TOKEN: '00000000-0000-0000-0000-000000000000' }),
       'install',
-      {},
-      (bytes) => 'ab'.repeat(bytes)
+      {}
     )
     expect(partial.ok).toBe(false)
-    if (!partial.ok) expect(partial.error).toContain('CM_FROM')
+    if (!partial.ok) expect(partial.error).toContain('CM_RCS_FROM')
+    const emailPartial = parseDotenv(
+      block({ CM_EMAIL_WEBHOOK_SECRET: 'ews.secret' }),
+      'install',
+      {}
+    )
+    expect(emailPartial.ok).toBe(false)
+    if (!emailPartial.ok) expect(emailPartial.error).toContain('CM_EMAIL_PRODUCT_TOKEN')
     expect(validCmToken('00000000-0000-0000-0000-000000000000')).toBe(true)
     expect(validCmToken('account-id')).toBe(false)
   })
@@ -334,15 +337,10 @@ describe('dotenv', () => {
     const current = {
       HOST: 'example.org',
       AUTH_PASSWORD: 'password1',
-      AUTH_SECRET: 's'.repeat(32),
-      AUTH_BEARER: 'current-bearer'
+      AUTH_SECRET: 'ab'.repeat(32),
+      AUTH_BEARER: 'cd'.repeat(32)
     }
-    const changed = parseDotenv(
-      block({ AUTH_SECRET: 'x'.repeat(32), AUTH_BEARER: 'current-bearer' }),
-      'configure',
-      current,
-      () => 'x'
-    )
+    const changed = parseDotenv(block({ AUTH_SECRET: 'x'.repeat(32) }), 'configure', current)
     expect(changed.ok).toBe(false)
     if (!changed.ok) expect(changed.error).toContain('AUTH_SECRET doit rester inchangé')
   })

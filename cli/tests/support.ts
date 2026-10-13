@@ -14,14 +14,16 @@ export const block = (changes: Record<string, string> = {}) =>
   [
     `HOST=${changes['HOST'] ?? 'example.org'}`,
     `AUTH_PASSWORD=${changes['AUTH_PASSWORD'] ?? 'password1'}`,
-    `AUTH_SECRET=${changes['AUTH_SECRET'] ?? 'AUTO'}`,
-    `AUTH_BEARER=${changes['AUTH_BEARER'] ?? 'AUTO'}`,
+    `AUTH_SECRET=${changes['AUTH_SECRET'] ?? 'ab'.repeat(32)}`,
+    `AUTH_BEARER=${changes['AUTH_BEARER'] ?? 'cd'.repeat(32)}`,
     `AI_TYPE=${changes['AI_TYPE'] ?? 'anthropic'}`,
     `AI_BASE_URL=${changes['AI_BASE_URL'] ?? 'https://api.anthropic.com'}`,
     `AI_API_KEY=${changes['AI_API_KEY'] ?? 'sk-test'}`,
-    `CM_PRODUCT_TOKEN=${changes['CM_PRODUCT_TOKEN'] ?? ''}`,
-    `CM_FROM=${changes['CM_FROM'] ?? ''}`,
-    `CM_WEBHOOK_SECRET=${changes['CM_WEBHOOK_SECRET'] ?? 'AUTO'}`,
+    `CM_RCS_PRODUCT_TOKEN=${changes['CM_RCS_PRODUCT_TOKEN'] ?? ''}`,
+    `CM_RCS_FROM=${changes['CM_RCS_FROM'] ?? ''}`,
+    `CM_RCS_WEBHOOK_SECRET=${changes['CM_RCS_WEBHOOK_SECRET'] ?? ''}`,
+    `CM_EMAIL_PRODUCT_TOKEN=${changes['CM_EMAIL_PRODUCT_TOKEN'] ?? ''}`,
+    `CM_EMAIL_WEBHOOK_SECRET=${changes['CM_EMAIL_WEBHOOK_SECRET'] ?? ''}`,
     ''
   ].join('\n')
 
@@ -96,7 +98,6 @@ export function testContext(root: string, overrides: RuntimeOverrides = {}) {
       err += text
     },
     sleep: async () => undefined,
-    randomHex: (bytes) => 'ab'.repeat(bytes),
     readStdin: async () => '',
     readLine: async () => null,
     readKey: async () => null,
