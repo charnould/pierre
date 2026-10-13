@@ -53,7 +53,4 @@ if [ "${PIERRE_BOOTSTRAP_ONLY:-0}" = "1" ]; then
   exit 0
 fi
 
-if [ -p /dev/stdin ] && [ -r /dev/tty ]; then
-  exec "$dest" install </dev/tty
-fi
 exec "$dest" install

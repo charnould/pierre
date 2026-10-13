@@ -1,7 +1,7 @@
 import { rmSync } from 'node:fs'
 
 import { runCommand, type Context } from '../lib/system.ts'
-import { confirm, say } from '../lib/tui.ts'
+import { confirm, say } from '../lib/text.ts'
 
 export async function remove(ctx: Context): Promise<number> {
   const answer = await confirm(ctx, 'Continuer et supprimer toutes les données ?')

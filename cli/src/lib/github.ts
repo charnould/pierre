@@ -10,6 +10,7 @@ import {
 } from 'node:fs'
 import { dirname, join } from 'node:path'
 
+import { latestCarlTag } from '../../../shared/carl-model.ts'
 import type { Context } from './system.ts'
 import { CommandFailed } from './system.ts'
 
@@ -85,7 +86,11 @@ export function selectServerRelease(releases: Release[]): Release | null {
 }
 
 export function selectCarlRelease(releases: Release[]): Release | null {
-  return maxRelease(releases.filter((release) => !release.draft && CARL_TAG.test(release.tag)))
+  const tag = latestCarlTag(
+    releases.filter((release) => !release.draft).map((release) => release.tag)
+  )
+  if (!tag) return null
+  return releases.find((release) => release.tag === tag && !release.draft) ?? null
 }
 
 export function selectCliRelease(releases: Release[]): Release | null {

@@ -3,7 +3,6 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { runCommand, type Context } from '../lib/system.ts'
-import { enterUi, leaveUi } from '../lib/tui.ts'
 
 const JOURNAL_ARGS = [
   '-n',
@@ -18,22 +17,41 @@ const JOURNAL_ARGS = [
   '--no-pager'
 ]
 
-const HEADER = [
-  '\u001b[1;36mJournaux PIERRE + Caddy\u001b[0m',
-  '\u001b[2mCtrl+C suspend le direct · ↑↓/PageUp/PageDown défilent · / recherche',
-  'n poursuit la recherche · F reprend le direct · q revient au menu\u001b[0m',
-  '',
-  ''
-].join('\n')
+export async function logs(ctx: Context): Promise<number> {
+  const pager = ctx.runtime.tty && ctx.runtime.canPrompt && ctx.runtime.commandExists('less')
+  if (!pager) {
+    const child = ctx.runtime.start('journalctl', JOURNAL_ARGS, {
+      inherit: true,
+      env: { SYSTEMD_COLORS: ctx.runtime.tty ? '1' : '0' }
+    })
+    const previous = ctx.runtime.onInterrupt
+    ctx.runtime.onInterrupt = () => child.kill()
+    try {
+      return (await child.finished).code
+    } finally {
+      ctx.runtime.onInterrupt = previous
+    }
+  }
+  return viewWithPager(ctx)
+}
 
 async function viewWithPager(ctx: Context): Promise<number> {
+  const { bold, cyan, dim, reset } = ctx.runtime.palette
   const directory = mkdtempSync(join(tmpdir(), 'pierre-logs-'))
   const file = join(directory, 'journal')
-  writeFileSync(file, HEADER)
+  writeFileSync(
+    file,
+    [
+      `${cyan}${bold}Journaux PIERRE et Caddy${reset}`,
+      `${dim}Ctrl+C quitte · ↑↓ défilent · / recherche · n poursuit · F reprend le direct${reset}`,
+      '',
+      ''
+    ].join('\n')
+  )
   const journal = ctx.runtime.start('journalctl', JOURNAL_ARGS, {
     stdoutFile: file,
     append: true,
-    env: { SYSTEMD_COLORS: '1', SYSTEMD_COLORS_256: '1' }
+    env: { SYSTEMD_COLORS: '1' }
   })
   let code = 0
   try {
@@ -44,27 +62,5 @@ async function viewWithPager(ctx: Context): Promise<number> {
     await journal.finished.catch(() => undefined)
     rmSync(directory, { recursive: true, force: true })
   }
-  return code
-}
-
-export async function logs(ctx: Context, interactive = false): Promise<number> {
-  const pager =
-    interactive || (ctx.runtime.tty && ctx.runtime.canPrompt && ctx.runtime.commandExists('less'))
-  if (!pager) {
-    const child = ctx.runtime.start('journalctl', JOURNAL_ARGS, {
-      inherit: true,
-      env: { SYSTEMD_COLORS: '1', SYSTEMD_COLORS_256: '1' }
-    })
-    const previous = ctx.runtime.onInterrupt
-    ctx.runtime.onInterrupt = () => child.kill()
-    try {
-      return (await child.finished).code
-    } finally {
-      ctx.runtime.onInterrupt = previous
-    }
-  }
-  if (interactive) leaveUi(ctx.runtime)
-  const code = await viewWithPager(ctx)
-  if (interactive) enterUi(ctx.runtime)
   return code === 0 || code === 130 ? 0 : code
 }

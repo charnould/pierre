@@ -18,11 +18,11 @@ import {
   versionGreater
 } from '../lib/github.ts'
 import type { Context } from '../lib/system.ts'
-import { say, sayError } from '../lib/tui.ts'
+import { say, sayError } from '../lib/text.ts'
 
 const CLI_ASSET = 'pierre-cli-linux-x64'
 
-export async function updateCli(ctx: Context): Promise<number> {
+export async function stageCliUpdate(ctx: Context): Promise<'current' | 'updated' | 'failed'> {
   recoverInterruptedCliUpdate(ctx)
   const current = ctx.version
   const forced = ctx.runtime.env['PIERRE_CLI_UPDATE_TAG']
@@ -30,13 +30,18 @@ export async function updateCli(ctx: Context): Promise<number> {
   if (!tag) {
     sayError(ctx, 'Impossible de connaître la dernière version du cli.')
     sayError(ctx, 'Vérifiez la connexion réseau, puis réessayez.')
-    return 1
+    return 'failed'
   }
   if (!versionGreater(tag, current)) {
-    say(ctx, `${current} est déjà à jour.`)
-    return 0
+    say(ctx, `Le programme ${current} est déjà à jour.`)
+    return 'current'
   }
-  return installCliRelease(ctx, tag)
+  return (await installCliRelease(ctx, tag)) === 0 ? 'updated' : 'failed'
+}
+
+export async function updateCli(ctx: Context): Promise<number> {
+  const staged = await stageCliUpdate(ctx)
+  return staged === 'failed' ? 1 : 0
 }
 
 export async function installCliRelease(ctx: Context, tag: string): Promise<number> {

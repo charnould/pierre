@@ -10,18 +10,21 @@ import {
 } from '../src/lib/system.ts'
 import { CLI_VERSION } from '../src/version.ts'
 
-export const block = (changes: Record<string, string> = {}) =>
+export const configuredText = (changes: Record<string, string> = {}) =>
   [
     `HOST=${changes['HOST'] ?? 'example.org'}`,
-    `AUTH_PASSWORD=${changes['AUTH_PASSWORD'] ?? 'password1'}`,
-    `AUTH_SECRET=${changes['AUTH_SECRET'] ?? 'AUTO'}`,
-    `AUTH_BEARER=${changes['AUTH_BEARER'] ?? 'AUTO'}`,
+    `AUTH_PASSWORD=${changes['AUTH_PASSWORD'] ?? 'password-1234'}`,
+    `AUTH_SECRET=${changes['AUTH_SECRET'] ?? 'ab'.repeat(32)}`,
+    `AUTH_BEARER=${changes['AUTH_BEARER'] ?? 'cd'.repeat(32)}`,
     `AI_TYPE=${changes['AI_TYPE'] ?? 'anthropic'}`,
     `AI_BASE_URL=${changes['AI_BASE_URL'] ?? 'https://api.anthropic.com'}`,
     `AI_API_KEY=${changes['AI_API_KEY'] ?? 'sk-test'}`,
-    `CM_PRODUCT_TOKEN=${changes['CM_PRODUCT_TOKEN'] ?? ''}`,
-    `CM_FROM=${changes['CM_FROM'] ?? ''}`,
-    `CM_WEBHOOK_SECRET=${changes['CM_WEBHOOK_SECRET'] ?? 'AUTO'}`,
+    `CM_RCS_PRODUCT_TOKEN=${changes['CM_RCS_PRODUCT_TOKEN'] ?? ''}`,
+    `CM_RCS_FROM=${changes['CM_RCS_FROM'] ?? ''}`,
+    `CM_RCS_WEBHOOK_SECRET=${changes['CM_RCS_WEBHOOK_SECRET'] ?? ''}`,
+    `SINCH_DOMAIN=${changes['SINCH_DOMAIN'] ?? ''}`,
+    `SINCH_API_KEY=${changes['SINCH_API_KEY'] ?? ''}`,
+    `SINCH_WEBHOOK_SIGNING_KEY=${changes['SINCH_WEBHOOK_SIGNING_KEY'] ?? ''}`,
     ''
   ].join('\n')
 
@@ -68,8 +71,6 @@ export function testContext(root: string, overrides: RuntimeOverrides = {}) {
     PIERRE_PREVIOUS_ENV_FILE: join(root, 'pierre.env.previous'),
     PIERRE_INSTALL_LOG: join(root, 'install.log'),
     PIERRE_ASSET_SOURCE_FILE: join(root, 'asset-source'),
-    PIERRE_LEGACY_BIN: join(root, 'legacy-pierre'),
-    PIERRE_LEGACY_SO: join(root, 'legacy-libonnxruntime.so.1'),
     PIERRE_SERVER_ROOT: join(root, 'home', 'server'),
     PIERRE_CMD: join(root, 'pierre'),
     PIERRE_UNIT_FILE: join(root, 'pierre.service'),
@@ -83,7 +84,6 @@ export function testContext(root: string, overrides: RuntimeOverrides = {}) {
   }
   const runtime = createRuntime({
     tty: false,
-    stdinTTY: false,
     canPrompt: false,
     columns: 100,
     uid: () => 0,
@@ -96,10 +96,7 @@ export function testContext(root: string, overrides: RuntimeOverrides = {}) {
       err += text
     },
     sleep: async () => undefined,
-    randomHex: (bytes) => 'ab'.repeat(bytes),
-    readStdin: async () => '',
     readLine: async () => null,
-    readKey: async () => null,
     commandExists: () => false,
     request: async () => ({ status: 200, body: 'ok', url: '' }),
     start: (command, args) => {

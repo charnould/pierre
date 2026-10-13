@@ -1,17 +1,5 @@
-import { randomBytes } from 'node:crypto'
 import { closeSync, existsSync, openSync, readFileSync } from 'node:fs'
 import { ReadStream } from 'node:tty'
-
-export type Key = 'up' | 'down' | 'back' | 'enter' | 'quit' | 'other'
-
-export function decodeKey(raw: string): Key {
-  if (raw === '\u001b[A') return 'up'
-  if (raw === '\u001b[B') return 'down'
-  if (raw === '\u001b[D' || raw === '\u001b') return 'back'
-  if (raw === '') return 'enter'
-  if (raw === 'q' || raw === 'Q') return 'quit'
-  return 'other'
-}
 
 export class Exit extends Error {
   constructor(
@@ -40,8 +28,6 @@ type Paths = {
   previousEnvFile: string
   installLog: string
   assetSourceFile: string
-  legacyBin: string
-  legacySo: string
   serverRoot: string
   serverReleases: string
   serverCurrent: string
@@ -99,10 +85,8 @@ export type Runtime = {
   paths: Paths
   palette: Palette
   tty: boolean
-  stdinTTY: boolean
   canPrompt: boolean
   columns: number
-  uiActive: boolean
   uid: () => number
   arch: () => string
   kvm: () => boolean
@@ -112,10 +96,7 @@ export type Runtime = {
   request: (url: string, options?: RequestOptions) => Promise<HttpResult>
   download: (url: string, dest: string) => Promise<void>
   sleep: (ms: number) => Promise<void>
-  randomHex: (bytes: number) => string
-  readKey: () => Promise<Key | null>
   readLine: () => Promise<string | null>
-  readStdin: () => Promise<string>
   commandExists: (name: string) => boolean
   onInterrupt?: () => void
 }
@@ -144,8 +125,6 @@ function resolvePaths(env: Env): Paths {
     previousEnvFile: envOr(env, 'PIERRE_PREVIOUS_ENV_FILE', `${envFile}.previous`),
     installLog: envOr(env, 'PIERRE_INSTALL_LOG', '/var/log/pierre-install.log'),
     assetSourceFile: envOr(env, 'PIERRE_ASSET_SOURCE_FILE', '/etc/pierre-install-source'),
-    legacyBin: envOr(env, 'PIERRE_LEGACY_BIN', '/usr/local/lib/pierre'),
-    legacySo: envOr(env, 'PIERRE_LEGACY_SO', '/usr/local/lib/libonnxruntime.so.1'),
     serverRoot,
     serverReleases: envOr(env, 'PIERRE_SERVER_RELEASES', `${serverRoot}/releases`),
     serverCurrent,
@@ -266,34 +245,9 @@ const defaultRequest = async (url: string, options?: RequestOptions): Promise<Ht
   }
 }
 
-const readRawKey = async (): Promise<string | null> => {
-  if (!existsSync('/dev/tty')) return null
-  const fd = openSync('/dev/tty', 'r')
-  const stream = new ReadStream(fd)
-  try {
-    if (typeof stream.setRawMode === 'function') stream.setRawMode(true)
-    const chunk = await new Promise<Buffer | null>((resolve) => {
-      const timer = setTimeout(() => resolve(null), 120_000)
-      stream.once('data', (data: Buffer) => {
-        clearTimeout(timer)
-        resolve(data)
-      })
-    })
-    if (!chunk || chunk.length === 0) return null
-    const text = chunk.toString('utf8')
-    if (text === '\u0003') return 'q'
-    if (text === '\r' || text === '\n') return ''
-    return text
-  } finally {
-    if (typeof stream.setRawMode === 'function') stream.setRawMode(false)
-    stream.destroy()
-  }
-}
-
 export type RuntimeOverrides = {
   env?: Env
   tty?: boolean
-  stdinTTY?: boolean
   canPrompt?: boolean
   columns?: number
   uid?: () => number
@@ -305,10 +259,7 @@ export type RuntimeOverrides = {
   request?: Runtime['request']
   download?: Runtime['download']
   sleep?: Runtime['sleep']
-  randomHex?: Runtime['randomHex']
-  readKey?: Runtime['readKey']
   readLine?: Runtime['readLine']
-  readStdin?: Runtime['readStdin']
   commandExists?: Runtime['commandExists']
 }
 
@@ -323,10 +274,8 @@ export function createRuntime(overrides: RuntimeOverrides = {}): Runtime {
     paths,
     palette: paletteFor(tty && !env['NO_COLOR']),
     tty,
-    stdinTTY: overrides.stdinTTY ?? process.stdin.isTTY === true,
     canPrompt: overrides.canPrompt ?? hasControllingTty(),
     columns: Number.isFinite(columns) && columns > 0 ? columns : 80,
-    uiActive: false,
     uid: overrides.uid ?? (() => (typeof process.getuid === 'function' ? process.getuid() : 0)),
     arch: overrides.arch ?? (() => (process.arch === 'x64' ? 'x86_64' : process.arch)),
     kvm: overrides.kvm ?? (() => existsSync('/dev/kvm')),
@@ -343,13 +292,6 @@ export function createRuntime(overrides: RuntimeOverrides = {}): Runtime {
         await Bun.write(dest, response)
       }),
     sleep: overrides.sleep ?? ((ms) => Bun.sleep(ms)),
-    randomHex: overrides.randomHex ?? ((bytes) => randomBytes(bytes).toString('hex')),
-    readKey:
-      overrides.readKey ??
-      (async () => {
-        const raw = await readRawKey()
-        return raw === null ? null : decodeKey(raw)
-      }),
     readLine:
       overrides.readLine ??
       (async () => {
@@ -370,7 +312,6 @@ export function createRuntime(overrides: RuntimeOverrides = {}): Runtime {
         stream.destroy()
         return line
       }),
-    readStdin: overrides.readStdin ?? (() => new Response(Bun.stdin.stream()).text()),
     commandExists: overrides.commandExists ?? ((name) => Bun.which(name) !== null),
     onInterrupt: undefined
   }

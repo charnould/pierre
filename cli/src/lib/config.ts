@@ -19,9 +19,12 @@ export const ENV_KEYS = [
   'AI_TYPE',
   'AI_BASE_URL',
   'AI_API_KEY',
-  'CM_PRODUCT_TOKEN',
-  'CM_FROM',
-  'CM_WEBHOOK_SECRET'
+  'CM_RCS_PRODUCT_TOKEN',
+  'CM_RCS_FROM',
+  'CM_RCS_WEBHOOK_SECRET',
+  'SINCH_DOMAIN',
+  'SINCH_API_KEY',
+  'SINCH_WEBHOOK_SIGNING_KEY'
 ] as const
 
 export type EnvKey = (typeof ENV_KEYS)[number]
@@ -35,15 +38,61 @@ export type ParsedEnv = {
   aiType: 'anthropic' | 'openai'
   aiBaseUrl: string
   aiApiKey: string
-  cmProductToken: string
-  cmFrom: string
-  cmWebhookSecret: string
-  cmMode: 'now' | 'later'
+  cmRcsProductToken: string
+  cmRcsFrom: string
+  cmRcsWebhookSecret: string
+  sinchDomain: string
+  sinchApiKey: string
+  sinchWebhookSigningKey: string
 }
 
-export type ParseResult = { ok: true; env: ParsedEnv } | { ok: false; error: string }
+export type ConfigureFlags = {
+  host?: string
+  provider?: string
+  url?: string
+  apiKey?: string
+  rcsToken?: string
+  rcsFrom?: string
+  rcsSecret?: string
+  sinchDomain?: string
+  sinchApiKey?: string
+  sinchSigningKey?: string
+}
+
+export type MergeResult =
+  | {
+      ok: true
+      env: ParsedEnv
+      providerChanged: boolean
+      passwordGenerated: boolean
+      rcsSecretGenerated: boolean
+    }
+  | { ok: false; error: string }
 
 const CM_TOKEN = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
+const DOMAIN = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i
+const FLAG_NAMES = {
+  host: 'host',
+  provider: 'provider',
+  url: 'url',
+  'api-key': 'apiKey',
+  'rcs-token': 'rcsToken',
+  'rcs-from': 'rcsFrom',
+  'rcs-secret': 'rcsSecret',
+  'sinch-domain': 'sinchDomain',
+  'sinch-api-key': 'sinchApiKey',
+  'sinch-webhook-signing-key': 'sinchSigningKey'
+} as const
+
+type FlagName = keyof typeof FLAG_NAMES
+
+export const CONFIGURE_USAGE = [
+  'Usage :',
+  '  pierre configure --host assistant.exemple.org --provider openai --url https://api.openai.com/v1 --api-key CLE',
+  '  pierre configure --rcs-token UUID --rcs-from NOM',
+  '  pierre configure --sinch-domain mail.exemple.org --sinch-api-key CLE --sinch-webhook-signing-key CLE',
+  ''
+].join('\n')
 
 export function cleanHost(host: string): string {
   return host.replace(/^https?:\/\//, '').split('/')[0] ?? ''
@@ -76,9 +125,12 @@ export function formatEnv(env: ParsedEnv): string {
     `AI_TYPE=${env.aiType}`,
     `AI_BASE_URL=${env.aiBaseUrl}`,
     `AI_API_KEY=${env.aiApiKey}`,
-    `CM_PRODUCT_TOKEN=${env.cmProductToken}`,
-    `CM_FROM=${env.cmFrom}`,
-    `CM_WEBHOOK_SECRET=${env.cmWebhookSecret}`,
+    `CM_RCS_PRODUCT_TOKEN=${env.cmRcsProductToken}`,
+    `CM_RCS_FROM=${env.cmRcsFrom}`,
+    `CM_RCS_WEBHOOK_SECRET=${env.cmRcsWebhookSecret}`,
+    `SINCH_DOMAIN=${env.sinchDomain}`,
+    `SINCH_API_KEY=${env.sinchApiKey}`,
+    `SINCH_WEBHOOK_SIGNING_KEY=${env.sinchWebhookSigningKey}`,
     ''
   ].join('\n')
 }
@@ -94,135 +146,194 @@ export function validCmToken(value: string): boolean {
   return CM_TOKEN.test(value)
 }
 
-const fail = (error: string): ParseResult => ({ ok: false, error })
+export function isInstalled(runtime: Runtime): boolean {
+  try {
+    accessSync(runtime.paths.bin, constants.X_OK)
+    return true
+  } catch {
+    return false
+  }
+}
 
-export function parseDotenv(
-  text: string,
-  mode: 'install' | 'configure',
+export function isConfigured(runtime: Runtime): boolean {
+  return requiredReady(readEnvMap(runtime.paths.envFile))
+}
+
+export function parseConfigureArgs(
+  argv: string[]
+): { ok: true; flags: ConfigureFlags } | { ok: false; error: string } {
+  if (argv.length === 0 || argv[0] === '--help' || argv[0] === '-h') {
+    return { ok: false, error: '' }
+  }
+  const flags: ConfigureFlags = {}
+  const seen = new Set<FlagName>()
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index] ?? ''
+    if (token.includes('=')) return { ok: false, error: `Écrivez ${token.split('=')[0]} VALEUR.` }
+    if (!token.startsWith('--') || token === '--') {
+      return { ok: false, error: `Option inconnue : ${token}` }
+    }
+    const name = token.slice(2)
+    if (!isFlagName(name)) return { ok: false, error: `Option inconnue : --${name}` }
+    if (seen.has(name)) return { ok: false, error: `Option dupliquée : --${name}` }
+    const value = argv[index + 1]
+    if (value === undefined || value.startsWith('--') || value.length === 0) {
+      return { ok: false, error: `--${name} attend une valeur.` }
+    }
+    seen.add(name)
+    flags[FLAG_NAMES[name]] = value
+    index += 1
+  }
+  return { ok: true, flags }
+}
+
+export function mergeConfiguration(
   current: EnvMap,
-  randomHex: (bytes: number) => string
-): ParseResult {
-  const seen = new Set<string>()
-  const values: Record<string, string> = {}
-  for (const raw of text.split('\n')) {
-    const line = raw.replace(/\r$/, '')
-    if (/^\s*$/.test(line) || /^\s*#/.test(line)) continue
-    const index = line.indexOf('=')
-    if (index === -1) return fail(`Ligne invalide : ${line}`)
-    const key = line.slice(0, index)
-    const value = line.slice(index + 1)
-    if (!ENV_KEYS.includes(key as EnvKey)) return fail(`Variable inconnue : ${key}`)
-    if (seen.has(key)) return fail(`Variable dupliquée : ${key}`)
-    seen.add(key)
-    values[key] = key === 'AI_TYPE' ? value.toLowerCase() : value
+  flags: ConfigureFlags,
+  first: boolean
+): MergeResult {
+  if (first && (!flags.host || !flags.provider || !flags.url || !flags.apiKey)) {
+    return {
+      ok: false,
+      error: 'Le premier paramétrage exige --host, --provider, --url et --api-key.'
+    }
   }
-  if (seen.size !== ENV_KEYS.length)
-    return fail('Le bloc doit contenir les 10 variables attendues.')
+  const providerError = completeFlags('le fournisseur', [
+    ['--provider', flags.provider],
+    ['--url', flags.url],
+    ['--api-key', flags.apiKey]
+  ])
+  if (providerError) return { ok: false, error: providerError }
+  const rcsTouched =
+    flags.rcsToken !== undefined || flags.rcsFrom !== undefined || flags.rcsSecret !== undefined
+  if (rcsTouched && (!flags.rcsToken || !flags.rcsFrom)) {
+    return { ok: false, error: 'Le RCS exige --rcs-token et --rcs-from ensemble.' }
+  }
+  const sinchError = completeFlags("l'email", [
+    ['--sinch-domain', flags.sinchDomain],
+    ['--sinch-api-key', flags.sinchApiKey],
+    ['--sinch-webhook-signing-key', flags.sinchSigningKey]
+  ])
+  if (sinchError) return { ok: false, error: sinchError }
 
-  const host = cleanHost(values['HOST'] ?? '')
-  if (!host) return fail('HOST est obligatoire.')
-  const password = values['AUTH_PASSWORD'] ?? ''
+  const host = cleanHost(flags.host ?? current.HOST ?? '')
+  if (!host || /\s/.test(host)) return { ok: false, error: 'Le domaine est invalide.' }
+  const password = current.AUTH_PASSWORD || randomBytes(32).toString('hex')
   if (password.length < 8 || password.length > 128) {
-    return fail('AUTH_PASSWORD doit contenir entre 8 et 128 caractères.')
+    return { ok: false, error: 'AUTH_PASSWORD doit contenir entre 8 et 128 caractères.' }
+  }
+  const authSecret = current.AUTH_SECRET || randomBytes(32).toString('hex')
+  const authBearer = current.AUTH_BEARER || randomBytes(32).toString('hex')
+  if (authSecret.length < 32)
+    return { ok: false, error: 'AUTH_SECRET doit contenir au moins 32 caractères.' }
+  if (!authBearer) return { ok: false, error: 'AUTH_BEARER est obligatoire.' }
+
+  const provider = (flags.provider ?? current.AI_TYPE ?? '').toLowerCase()
+  if (provider !== 'anthropic' && provider !== 'openai') {
+    return { ok: false, error: '--provider vaut openai ou anthropic.' }
+  }
+  const aiBaseUrl = flags.url ?? current.AI_BASE_URL ?? ''
+  const aiApiKey = flags.apiKey ?? current.AI_API_KEY ?? ''
+  if (!validHttpsUrl(aiBaseUrl) || !aiApiKey) {
+    return { ok: false, error: '--url doit être une adresse https et --api-key est obligatoire.' }
   }
 
-  let authSecret = values['AUTH_SECRET'] ?? ''
-  let authBearer = values['AUTH_BEARER'] ?? ''
-  if (mode === 'install') {
-    if (authSecret === 'AUTO') authSecret = randomHex(32)
-    if (authBearer === 'AUTO') authBearer = randomHex(16)
-  } else {
-    if (password !== (current['AUTH_PASSWORD'] ?? '')) {
-      return fail('AUTH_PASSWORD est un secret de bootstrap et doit rester inchangé.')
+  const rcsToken = flags.rcsToken ?? current.CM_RCS_PRODUCT_TOKEN ?? ''
+  const rcsFrom = flags.rcsFrom ?? current.CM_RCS_FROM ?? ''
+  let rcsSecret = flags.rcsSecret ?? current.CM_RCS_WEBHOOK_SECRET ?? ''
+  let rcsSecretGenerated = false
+  if (rcsToken || rcsFrom || rcsSecret) {
+    if (!rcsTouched && (!rcsToken || !rcsFrom || !rcsSecret)) {
+      return { ok: false, error: 'Le RCS enregistré est incomplet.' }
     }
-    if (authSecret !== (current['AUTH_SECRET'] ?? ''))
-      return fail('AUTH_SECRET doit rester inchangé.')
-    if (authBearer !== (current['AUTH_BEARER'] ?? ''))
-      return fail('AUTH_BEARER doit rester inchangé.')
+    if (!rcsToken || !rcsFrom) {
+      return { ok: false, error: 'Le RCS exige --rcs-token et --rcs-from ensemble.' }
+    }
+    if (!validCmToken(rcsToken)) {
+      return { ok: false, error: '--rcs-token doit être un UUID avec ses tirets.' }
+    }
+    if (!rcsSecret) {
+      rcsSecret = randomBytes(32).toString('hex')
+      rcsSecretGenerated = true
+    }
   }
-  if (authSecret.length < 32) return fail('AUTH_SECRET doit contenir au moins 32 caractères.')
-  if (!authBearer) return fail('AUTH_BEARER est obligatoire.')
 
-  const aiType = values['AI_TYPE'] ?? ''
-  if (aiType !== 'anthropic' && aiType !== 'openai')
-    return fail('AI_TYPE vaut anthropic ou openai.')
-  const aiBaseUrl = values['AI_BASE_URL'] ?? ''
-  const aiApiKey = values['AI_API_KEY'] ?? ''
-  if (!aiBaseUrl || !aiApiKey) return fail('AI_BASE_URL et AI_API_KEY sont obligatoires.')
-
-  let cmProductToken = values['CM_PRODUCT_TOKEN'] ?? ''
-  let cmFrom = values['CM_FROM'] ?? ''
-  let cmWebhookSecret = values['CM_WEBHOOK_SECRET'] ?? ''
-  let cmMode: 'now' | 'later' = 'now'
-  if (!cmProductToken && !cmFrom && (!cmWebhookSecret || cmWebhookSecret === 'AUTO')) {
-    cmWebhookSecret = ''
-    cmMode = 'later'
-  } else {
-    if (!validCmToken(cmProductToken))
-      return fail('CM_PRODUCT_TOKEN doit être un UUID avec ses tirets.')
-    if (!cmFrom) return fail('CM_FROM est obligatoire lorsque CM.com est activé.')
-    if (cmWebhookSecret === 'AUTO' && mode === 'install') cmWebhookSecret = randomHex(16)
-    if (!cmWebhookSecret || cmWebhookSecret === 'AUTO') {
-      return fail('CM_WEBHOOK_SECRET est obligatoire lorsque CM.com est activé.')
+  const sinchTouched =
+    flags.sinchDomain !== undefined ||
+    flags.sinchApiKey !== undefined ||
+    flags.sinchSigningKey !== undefined
+  const sinchDomain = (flags.sinchDomain ?? current.SINCH_DOMAIN ?? '').toLowerCase()
+  const sinchApiKey = flags.sinchApiKey ?? current.SINCH_API_KEY ?? ''
+  const sinchSigningKey = flags.sinchSigningKey ?? current.SINCH_WEBHOOK_SIGNING_KEY ?? ''
+  if (sinchDomain || sinchApiKey || sinchSigningKey) {
+    if (!sinchTouched && (!sinchDomain || !sinchApiKey || !sinchSigningKey)) {
+      return { ok: false, error: "L'email enregistré est incomplet." }
     }
+    if (!sinchDomain || !sinchApiKey || !sinchSigningKey) {
+      return {
+        ok: false,
+        error:
+          "L'email exige --sinch-domain, --sinch-api-key et --sinch-webhook-signing-key ensemble."
+      }
+    }
+    if (!DOMAIN.test(sinchDomain)) return { ok: false, error: '--sinch-domain est invalide.' }
   }
 
   return {
     ok: true,
+    providerChanged:
+      flags.provider !== undefined || flags.url !== undefined || flags.apiKey !== undefined,
+    passwordGenerated: !current.AUTH_PASSWORD,
+    rcsSecretGenerated,
     env: {
       host,
       password,
       authSecret,
       authBearer,
-      aiType,
+      aiType: provider,
       aiBaseUrl,
       aiApiKey,
-      cmProductToken,
-      cmFrom,
-      cmWebhookSecret,
-      cmMode
+      cmRcsProductToken: rcsToken,
+      cmRcsFrom: rcsFrom,
+      cmRcsWebhookSecret: rcsSecret,
+      sinchDomain,
+      sinchApiKey,
+      sinchWebhookSigningKey: sinchSigningKey
     }
   }
 }
 
-export function installationComplete(runtime: Runtime): boolean {
+function requiredReady(map: EnvMap): boolean {
+  const password = map.AUTH_PASSWORD ?? ''
+  const provider = (map.AI_TYPE ?? '').toLowerCase()
+  return Boolean(
+    cleanHost(map.HOST ?? '') &&
+    password.length >= 8 &&
+    password.length <= 128 &&
+    (map.AUTH_SECRET ?? '').length >= 32 &&
+    map.AUTH_BEARER &&
+    (provider === 'anthropic' || provider === 'openai') &&
+    map.AI_BASE_URL &&
+    map.AI_API_KEY
+  )
+}
+
+function isFlagName(value: string): value is FlagName {
+  return Object.hasOwn(FLAG_NAMES, value)
+}
+
+function completeFlags(label: string, pairs: Array<[string, string | undefined]>): string | null {
+  const present = pairs.some(([, value]) => value !== undefined)
+  const missing = pairs.find(([, value]) => value === undefined)
+  if (!present || !missing) return null
+  return `${missing[0]} est obligatoire lorsque ${label} est modifié.`
+}
+
+function validHttpsUrl(value: string): boolean {
   try {
-    accessSync(runtime.paths.bin, constants.X_OK)
+    const url = new URL(value)
+    return url.protocol === 'https:' && url.hostname.length > 0
   } catch {
-    try {
-      accessSync(runtime.paths.legacyBin, constants.X_OK)
-    } catch {
-      return false
-    }
+    return false
   }
-  return existsSync(runtime.paths.envFile) && existsSync(runtime.paths.unitFile)
-}
-
-export function dotenvTemplate(mode: 'install' | 'configure'): string {
-  if (mode === 'install') {
-    return [
-      'HOST=',
-      'AUTH_PASSWORD=',
-      'AUTH_SECRET=AUTO',
-      'AUTH_BEARER=AUTO',
-      'AI_TYPE=anthropic',
-      'AI_BASE_URL=https://api.anthropic.com',
-      'AI_API_KEY=',
-      'CM_PRODUCT_TOKEN=',
-      'CM_FROM=',
-      'CM_WEBHOOK_SECRET=AUTO'
-    ].join('\n')
-  }
-  return [
-    'HOST=<valeur actuelle>',
-    'AUTH_PASSWORD=<valeur actuelle>',
-    'AUTH_SECRET=<valeur actuelle>',
-    'AUTH_BEARER=<valeur actuelle>',
-    'AI_TYPE=<valeur actuelle>',
-    'AI_BASE_URL=<valeur actuelle>',
-    'AI_API_KEY=<valeur actuelle>',
-    'CM_PRODUCT_TOKEN=<valeur actuelle ou vide>',
-    'CM_FROM=<valeur actuelle ou vide>',
-    'CM_WEBHOOK_SECRET=<valeur actuelle ou vide>'
-  ].join('\n')
 }

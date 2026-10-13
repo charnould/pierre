@@ -3,8 +3,7 @@ import { runCommand, waitForBody, type Context } from '../lib/system.ts'
 export async function restart(ctx: Context): Promise<number> {
   const timeout = Number(ctx.runtime.env['PIERRE_RESTART_TIMEOUT'] || 90)
   await runCommand(ctx.runtime, 'systemctl', ['restart', 'pierre'])
-  const margin = ctx.runtime.uiActive ? '  ' : ''
-  ctx.runtime.writeOut(`${margin}Redémarrage en cours`)
+  ctx.runtime.writeOut('Redémarrage en cours')
   for (let attempt = 1; attempt <= timeout; attempt += 1) {
     const active = await runCommand(ctx.runtime, 'systemctl', ['is-active', 'pierre'])
     if (active.stdout.trim() !== 'active') break
