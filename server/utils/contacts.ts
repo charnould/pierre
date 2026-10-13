@@ -18,6 +18,9 @@ const CONTACT_PHONE_COLUMNS = new Set([
   'telephone_candidat'
 ])
 
+export const is_contact_phone_column = (column: string): boolean =>
+  CONTACT_PHONE_COLUMNS.has(column)
+
 /** Contact email columns (tenant / client / candidate) — not staff. */
 const CONTACT_EMAIL_COLUMNS = new Set(['email_locataire', 'email_client', 'email_candidat'])
 
@@ -53,7 +56,7 @@ export const phone_raw_from_cell = (value: unknown): string | null => {
   if (typeof value === 'number') {
     if (!Number.isFinite(value)) return null
     const digits = String(Math.trunc(Math.abs(value)))
-    if (/^[67]\d{8}$/.test(digits)) return `0${digits}`
+    if (/^[1-9]\d{8}$/.test(digits)) return `0${digits}`
     return digits
   }
   const s = String(value).trim()
@@ -62,15 +65,13 @@ export const phone_raw_from_cell = (value: unknown): string | null => {
 
 /**
  * Deterministic phone cleanup before libphonenumber-js:
- * trim → `00`→`+` → strip spaces/./-/()/letters → keep leading `+` and digits only.
+ * trim → `00`→`+` → strip common separators. Unexpected characters are preserved
+ * so malformed values cannot become valid through cleanup.
  */
 export const clean_phone_digits = (raw: string): string => {
   let s = raw.trim()
   if (s.startsWith('00')) s = `+${s.slice(2)}`
-  s = s.replace(/[\s.\-()]/g, '').replace(/[a-zA-ZÀ-ÿ]/g, '')
-  const has_plus = s.startsWith('+')
-  const digits = s.replace(/\D/g, '')
-  return has_plus ? `+${digits}` : digits
+  return s.replace(/[\s.\-()/]/g, '')
 }
 
 /** Normalize + classify a phone for snapshot rewrite and registry insert. */
@@ -80,6 +81,7 @@ export const normalize_telephone = (raw: unknown): { value: string; status: Tele
 
   const cleaned = clean_phone_digits(as_str)
   if (cleaned === '' || cleaned === '+') return { value: cleaned, status: 'invalid' }
+  if (!/^\+?\d+$/.test(cleaned)) return { value: cleaned, status: 'invalid' }
 
   const phone = parsePhoneNumberFromString(cleaned, 'FR')
   if (!phone?.isValid()) return { value: cleaned, status: 'invalid' }
@@ -116,6 +118,31 @@ export const parse_contact_row = (row: { value: string; status: string }): Conta
  * (ingest defaults mobiles to rcs_compatible; API may downgrade to sms_compatible
  * or set email bounce — re-ingest must not overwrite).
  */
+/** `sms_compatible` skips RCS. Absent or `rcs_compatible` still tries RCS. */
+export const mobile_channel = (e164: string): 'rcs' | 'sms' => {
+  if (!e164) return 'rcs'
+  const db = new Database(datastore_path(), { readonly: true })
+  try {
+    const row = db
+      .query<{ status: string }, [string]>('SELECT status FROM contacts WHERE value = ?')
+      .get(e164)
+    return row?.status === 'sms_compatible' ? 'sms' : 'rcs'
+  } finally {
+    db.close()
+  }
+}
+
+/** Remember that RCS failed for this phone. Re-ingest must not overwrite it. */
+export const mark_sms_compatible = (db: Database, value: string, now: Date = new Date()): void => {
+  if (!value || value.includes('@')) return
+  const checked_at = activity_timestamp(now)
+  db.run(
+    `INSERT INTO contacts (value, status, checked_at) VALUES (?, 'sms_compatible', ?)
+     ON CONFLICT(value) DO UPDATE SET status = 'sms_compatible', checked_at = excluded.checked_at`,
+    [value, checked_at]
+  )
+}
+
 export const insert_contact_if_absent = (
   db: Database,
   value: string,
@@ -124,6 +151,14 @@ export const insert_contact_if_absent = (
 ): void => {
   if (value === '') return
   const row = parse_contact_row({ value, status })
+  insert_parsed_contact_if_absent(db, row, checked_at)
+}
+
+const insert_parsed_contact_if_absent = (
+  db: Database,
+  row: ContactRow,
+  checked_at: string = activity_timestamp()
+): void => {
   db.run(
     `INSERT INTO contacts (value, status, checked_at) VALUES (?, ?, ?) ON CONFLICT(value) DO NOTHING`,
     [row.value, row.status, checked_at]
@@ -140,7 +175,9 @@ export const insert_contacts_from_rows = (
       const cell = row[col]
       if (cell === null || cell === undefined || cell === '') continue
       const { value, status } = normalize_telephone(cell)
-      insert_contact_if_absent(db, value, status)
+      if (value !== '') {
+        insert_parsed_contact_if_absent(db, TelephoneRowSchema.parse({ value, status }))
+      }
     }
     for (const col of CONTACT_EMAIL_COLUMNS) {
       const cell = row[col]

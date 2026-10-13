@@ -3,7 +3,7 @@ import { mkdir, rm } from 'node:fs/promises'
 
 import { migrate_datastore } from '../../../utils/datastore-migrations'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
-import { SetupError, ticketsReady, writeSetup } from '../../../utils/setup-store'
+import { automationsReady, SetupError, ticketsReady, writeSetup } from '../../../utils/setup-store'
 
 const paths = testDatastorePaths('setup_store')
 
@@ -28,6 +28,18 @@ describe('setup store', () => {
     })
     await writeSetup('tickets', new TextEncoder().encode(body))
     expect(ticketsReady()).toBeNull()
+  })
+
+  it('opens automations when the report prompt is set', async () => {
+    expect(automationsReady()).toBeNull()
+    await writeSetup('automations/AGENTS.md', new TextEncoder().encode('Rapport.'))
+    expect(automationsReady()?.prompt).toContain('Rapport')
+  })
+
+  it('rejects an empty tickets document as invalid JSON', async () => {
+    await expect(writeSetup('tickets', new TextEncoder().encode(''))).rejects.toThrow(
+      'JSON invalide.'
+    )
   })
 
   it('rejects a tickets document without the system bucket', async () => {

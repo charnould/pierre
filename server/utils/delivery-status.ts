@@ -1,6 +1,6 @@
 import { Database } from 'bun:sqlite'
 
-import type { Activite } from '../../shared/activites'
+import { type Activite } from '../../shared/activites'
 import { get_activity_with_db } from './activities/rows'
 import {
   apply_sent_bucket_effect_with_db,
@@ -10,7 +10,6 @@ import {
 } from './bulk/jobs'
 import { handle_rich_rcs_status_with_db } from './bulk/rich-rcs'
 import { arm_bulk_scheduler } from './bulk/scheduler/queue'
-import { create_sms_fallback_with_db } from './communications/rcs-sms-fallback'
 import {
   project_communication_status_with_db,
   type UpdateStatusInput
@@ -32,10 +31,11 @@ const fallback_status = (type: string | undefined, status: string): boolean =>
 export const update_status_with_db = (
   db: Database,
   input: UpdateStatusInput
-): { activity: Activite; fallbackScheduled: boolean } => {
+): { activity: Activite; fallbackScheduled: boolean; smsFallback: Activite | null } => {
   const source = get_activity_with_db(db, input.activity_id)
   const result = project_communication_status_with_db(db, input)
-  if (!result.transition) return { activity: result.activity, fallbackScheduled: false }
+  if (!result.transition)
+    return { activity: result.activity, fallbackScheduled: false, smsFallback: null }
 
   transitionHook?.()
   const { activity, status, occurredAt } = result.transition
@@ -56,13 +56,12 @@ export const update_status_with_db = (
     !richConsumed && failed
       ? schedule_bulk_fallback_with_db(db, trackedActivity, occurredAt)
       : false
-  if (failed && !trackedActivity.bulk_id && trackedActivity.channel === 'rcs') {
-    create_sms_fallback_with_db(db, trackedActivity)
-  }
-  return { activity, fallbackScheduled }
+  return { activity, fallbackScheduled, smsFallback: null }
 }
 
-export const update_status = (input: UpdateStatusInput): Activite => {
+export const settle_delivery = (
+  input: UpdateStatusInput
+): { activity: Activite; smsFallback: Activite | null } => {
   const db = new Database(datastore_path())
   let result: ReturnType<typeof update_status_with_db>
   try {
@@ -76,5 +75,7 @@ export const update_status = (input: UpdateStatusInput): Activite => {
     db.close()
   }
   if (result!.fallbackScheduled) queueMicrotask(arm_bulk_scheduler)
-  return result!.activity
+  return { activity: result!.activity, smsFallback: result!.smsFallback }
 }
+
+export const update_status = (input: UpdateStatusInput): Activite => settle_delivery(input).activity

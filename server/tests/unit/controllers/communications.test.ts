@@ -1,29 +1,26 @@
-import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
+import { afterAll, beforeAll, describe, expect, it, spyOn } from 'bun:test'
 import { rm } from 'node:fs/promises'
 
 import { Hono } from 'hono'
 
 import { controller as courrierWebhook } from '../../../controllers/courrier/post.webhook'
-import { controller as emailSend } from '../../../controllers/email/post'
 import { controller as emailWebhook } from '../../../controllers/email/post.webhook'
 import { controller as externalCommunication } from '../../../controllers/external-communication/post'
 import { controller as rcsWebhook } from '../../../controllers/rcs/post.webhook'
-import { controller as smsSend } from '../../../controllers/sms/post'
 import type { User } from '../../../utils/_schema'
 import { list_activities } from '../../../utils/activities/query'
-import { get_activity } from '../../../utils/activities/rows'
 import { create_outbound } from '../../../utils/communications/storage'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 
 const paths = testDatastorePaths('communication_controllers')
 const SECRET = 'secret-test-key'
-const originalSecret = Bun.env['CM_WEBHOOK_SECRET']
+const originalSecret = Bun.env['CM_RCS_WEBHOOK_SECRET']
 const originalFakeSecret = Bun.env['FAKE_WEBHOOK_KEY']
 
 beforeAll(async () => {
   setDatastoreRoot(paths.root)
-  Bun.env['CM_WEBHOOK_SECRET'] = SECRET
+  Bun.env['CM_RCS_WEBHOOK_SECRET'] = SECRET
   Bun.env['FAKE_WEBHOOK_KEY'] = SECRET
   await rm(paths.root, { recursive: true, force: true })
   await setup()
@@ -32,79 +29,21 @@ beforeAll(async () => {
 afterAll(async () => {
   await rm(paths.root, { recursive: true, force: true })
   setDatastoreRoot(null)
-  if (originalSecret === undefined) delete Bun.env['CM_WEBHOOK_SECRET']
-  else Bun.env['CM_WEBHOOK_SECRET'] = originalSecret
+  if (originalSecret === undefined) delete Bun.env['CM_RCS_WEBHOOK_SECRET']
+  else Bun.env['CM_RCS_WEBHOOK_SECRET'] = originalSecret
   if (originalFakeSecret === undefined) delete Bun.env['FAKE_WEBHOOK_KEY']
   else Bun.env['FAKE_WEBHOOK_KEY'] = originalFakeSecret
 })
 
 describe('webhooks de communication', () => {
-  it('reports email and SMS providers as unavailable in every environment', async () => {
-    const app = new Hono<{ Variables: { user: User } }>()
-    app.use('*', async (c, next) => {
-      c.set('user', {
-        email: 'alice@example.org',
-        isAdministrator: false,
-        moduleIds: ['automations'],
-        chatbotIds: []
-      })
-      await next()
-    })
-    app.post('/email', emailSend)
-    app.post('/sms', smsSend)
-    for (const route of ['/email', '/sms']) {
-      const response = await app.request(route, { method: 'POST' })
-      expect(response.status).toBe(501)
-      expect(await response.json()).toMatchObject({
-        error: { code: 'provider_not_configured' }
-      })
-    }
-  })
-
-  it('protège et valide les webhooks simulés', async () => {
-    const activity = create_outbound({
-      actor: 'alice@example.org',
-      contexte: 'automations',
-      ref: 'EMAIL-1',
-      type: 'email',
-      destinataire: 'tenant@example.org',
-      contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Bonjour' }),
-      idempotency_key: Bun.randomUUIDv7()
-    })
+  it('refuse un webhook email sans signature', async () => {
     const app = new Hono().post('/webhook/email', emailWebhook)
-    const body = {
-      activityId: activity.id,
-      status: 'delivered',
-      occurredAt: '2030-08-26T20:00:00Z'
-    }
-
-    expect(
-      (await app.request('/webhook/email', { method: 'POST', body: JSON.stringify(body) })).status
-    ).toBe(401)
     const response = await app.request('/webhook/email', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Webhook-Secret': SECRET },
-      body: JSON.stringify(body)
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}'
     })
-    expect(response.status).toBe(200)
-    expect(
-      list_activities('alice@example.org', {
-        rattachement: activity.rattachement,
-        limit: 10
-      }).some(
-        (row) =>
-          row.thread_id === activity.thread_id &&
-          row.type === 'communication.ok' &&
-          JSON.parse(row.contenu).result === 'delivered'
-      )
-    ).toBe(true)
-    const invalid = await app.request('/webhook/email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Webhook-Secret': SECRET },
-      body: JSON.stringify({ ...body, status: 'signed', occurredAt: '2030-08-26T20:01:00Z' })
-    })
-    expect(invalid.status).toBe(400)
-    expect(get_activity(activity.id)?.type).toBe('communication.sent')
+    expect(response.status).toBe(401)
   })
 
   it('uses Webhook-Secret consistently for simulated providers', async () => {
@@ -147,7 +86,22 @@ describe('webhooks de communication', () => {
     })
   })
 
-  it('creates one failed SMS fallback for duplicate asynchronous RCS failures', async () => {
+  it('enregistre un échec RCS une seule fois, CM envoie le SMS', async () => {
+    Bun.env['CM_RCS_PRODUCT_TOKEN'] = 'token'
+    Bun.env['CM_RCS_FROM'] = 'PIERRE'
+    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation((async (
+      _url: unknown,
+      init?: { body?: unknown }
+    ) => {
+      const reference = JSON.parse(String(init?.body)).messages.msg[0].reference
+      return new Response(
+        JSON.stringify({
+          errorCode: 0,
+          messages: { msg: [{ reference, status: 'Accepted', messageErrorCode: 0 }] }
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      )
+    }) as typeof fetch)
     const rcs = create_outbound({
       actor: 'alice@example.org',
       contexte: 'automations',
@@ -168,7 +122,7 @@ describe('webhooks de communication', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Webhook-Secret': SECRET },
         body: JSON.stringify({
-          reference: `p${rcs.id}`,
+          reference: `${rcs.id}`,
           status: { code: 1 },
           received: '2030-08-26T20:00:00Z'
         })
@@ -181,17 +135,14 @@ describe('webhooks de communication', () => {
       rattachement: 'automations:RCS-FALLBACK',
       limit: 10
     })
-    const sms = rows.filter((row) => row.type === 'communication.sent' && row.channel === 'sms')
-    expect(sms).toHaveLength(1)
-    expect(JSON.parse(sms[0]!.contenu)).toMatchObject({
-      body: 'Relance',
-      fallback_from: `p${rcs.id}`
-    })
+    expect(rows.filter((row) => row.channel === 'sms')).toHaveLength(0)
     expect(
-      rows.filter(
-        (row) => row.type === 'communication.failed' && row.thread_id === sms[0]!.thread_id
-      )
+      rows.filter((row) => row.type === 'communication.failed' && row.thread_id === rcs.thread_id)
     ).toHaveLength(1)
+    expect(
+      fetchSpy.mock.calls.filter((call) => String(call[0]).includes('gw.messaging.cm.com'))
+    ).toHaveLength(0)
+    fetchSpy.mockRestore()
   })
 
   it('mappe les statuts CM et rattache une réponse au thread référencé', async () => {
@@ -217,7 +168,7 @@ describe('webhooks de communication', () => {
         await app.request('/webhook/rcs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ reference: `p${activity.id}`, status: { code: 2 } })
+          body: JSON.stringify({ reference: `${activity.id}`, status: { code: 2 } })
         })
       ).status
     ).toBe(401)
@@ -226,16 +177,29 @@ describe('webhooks de communication', () => {
         await app.request('/webhook/rcs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Webhook-Secret': 'wrong' },
-          body: JSON.stringify({ reference: `p${activity.id}`, status: { code: 2 } })
+          body: JSON.stringify({ reference: `${activity.id}`, status: { code: 2 } })
         })
       ).status
     ).toBe(401)
+    expect(
+      (
+        await app.request(`/webhook/rcs?webhook_secret=${SECRET}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reference: `${activity.id}`,
+            status: { code: 2 },
+            received: '2030-08-26T19:59:00Z'
+          })
+        })
+      ).status
+    ).toBe(200)
 
     const status = await app.request('/webhook/rcs', {
       method: 'POST',
       headers,
       body: JSON.stringify({
-        reference: `p${activity.id}`,
+        reference: `${activity.id}`,
         status: { code: 2 },
         received: '2030-08-26T20:00:00Z'
       })
@@ -250,7 +214,7 @@ describe('webhooks de communication', () => {
 
     const inboundPayload = {
       reference: Bun.randomUUIDv7(),
-      messageContext: `p${activity.id}`,
+      messageContext: `${activity.id}`,
       from: { number: '+33612345678' },
       timeUtc: '2030-08-26T20:01:00Z',
       event: { custom: { postbackdata: 'Être rappelé' } }
@@ -295,6 +259,74 @@ describe('webhooks de communication', () => {
     expect(received.some((row) => row.contenu.includes('confirmer'))).toBe(true)
     expect(received).toHaveLength(2)
   })
+
+  it('rattache un texte RCS au fil cité, sinon au plus récent', async () => {
+    const first = create_outbound({
+      actor: 'alice@example.org',
+      contexte: 'automations',
+      ref: 'RCS-LINK-1',
+      type: 'rcs',
+      destinataire: '+33698765432',
+      contenu: JSON.stringify({ version: 2, body: 'Premier' }),
+      idempotency_key: Bun.randomUUIDv7()
+    })
+    const second = create_outbound({
+      actor: 'alice@example.org',
+      contexte: 'automations',
+      ref: 'RCS-LINK-2',
+      type: 'rcs',
+      destinataire: '+33698765432',
+      contenu: JSON.stringify({ version: 2, body: 'Second' }),
+      idempotency_key: Bun.randomUUIDv7()
+    })
+    const app = new Hono().post('/webhook/rcs', rcsWebhook)
+    const headers = { 'Content-Type': 'application/json', 'Webhook-Secret': SECRET }
+    const timeUtc = new Date().toISOString().replace(/\.\d{3}Z$/, '')
+    expect(
+      (
+        await app.request('/webhook/rcs', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            from: { number: '+33698765432' },
+            message: { text: 'Bien reçu' },
+            timeUtc
+          })
+        })
+      ).status
+    ).toBe(200)
+    expect(
+      list_activities('alice@example.org', {
+        rattachement: 'automations:RCS-LINK-2',
+        limit: 10
+      }).some((row) => row.type === 'communication.received' && row.thread_id === second.thread_id)
+    ).toBe(true)
+    expect(
+      (
+        await app.request('/webhook/rcs', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            reference: `${first.id}`,
+            from: { number: '+33698765432' },
+            message: { text: 'Sur le premier' },
+            timeUtc
+          })
+        })
+      ).status
+    ).toBe(200)
+    expect(
+      list_activities('alice@example.org', {
+        rattachement: 'automations:RCS-LINK-1',
+        limit: 10
+      }).some(
+        (row) =>
+          row.type === 'communication.received' &&
+          row.thread_id === first.thread_id &&
+          row.contenu.includes('premier')
+      )
+    ).toBe(true)
+  })
 })
 
 describe('POST /communications/external et action', () => {
@@ -309,7 +341,6 @@ describe('POST /communications/external et action', () => {
     await next()
   })
   app.post('/communications/external', externalCommunication)
-  app.post('/email', emailSend)
 
   it('journalise un courriel déjà envoyé (communication.sent) avec action', async () => {
     const response = await app.request('/communications/external', {

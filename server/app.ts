@@ -77,6 +77,8 @@ import { controller as get_desktop_tickets_facets } from './controllers/desktop/
 import { controller as put_desktop_tickets } from './controllers/desktop/tickets/put'
 import { controller as get_desktop_users } from './controllers/desktop/users/get'
 import { controller as post_email } from './controllers/email/post'
+import { controller as post_email_inbound } from './controllers/email/post.inbound'
+import { controller as post_email_test } from './controllers/email/post.test'
 import { controller as post_email_webhook } from './controllers/email/post.webhook'
 import { controller as get_embed } from './controllers/embed/get'
 import { controller as post_external_communication } from './controllers/external-communication/post'
@@ -89,7 +91,6 @@ import { controller as post_rcs } from './controllers/rcs/post'
 import { controller as post_rcs_webhook } from './controllers/rcs/post.webhook'
 import { controller as post_signature } from './controllers/signature/post'
 import { controller as post_signature_webhook } from './controllers/signature/post.webhook'
-import { controller as post_sms } from './controllers/sms/post'
 import { controller as post_telemetry } from './controllers/telemetry/post'
 import { MAX_MULTIPART_REQUEST_BYTES } from './utils/ai-attachments'
 import { getAuth } from './utils/auth'
@@ -103,6 +104,7 @@ import { run_due_automations } from './utils/automations/run'
 import { AVATAR_MAX_UPLOAD_BYTES } from './utils/avatar-image'
 import { start_bulk_scheduler } from './utils/bulk/scheduler/queue'
 import { refresh_stale_sms_contacts } from './utils/contacts'
+import { configure_mailgun } from './utils/email/configure'
 import { ensureEnvAdmin } from './utils/ensure-env-admin'
 import { initializeKnowledgeBuildCoordinator } from './utils/knowledge/build-coordinator'
 import { SERVER_ROOT } from './utils/paths'
@@ -124,6 +126,13 @@ await start_bulk_scheduler()
 await initializeKnowledgeBuildCoordinator()
 await cleanupOrphanedVms()
 await initVmPool()
+if (Bun.env['NODE_ENV'] !== 'test') {
+  try {
+    await configure_mailgun()
+  } catch (error) {
+    console.error('[mailgun]', error instanceof Error ? error.message : error)
+  }
+}
 
 const app = new Hono()
 const authorizeTickets = authorizeModule('tickets')
@@ -411,8 +420,8 @@ app.patch('/desktop/me/preferences', authenticate, patch_desktop_me_preferences)
 app.post('/desktop/me/avatar', authenticate, avatarBodyLimit, post_desktop_me_avatar)
 app.get('/desktop/avatars/:email', authenticate, get_desktop_avatars)
 app.post('/rcs', authenticate, post_rcs)
-app.post('/sms', authenticate, post_sms)
 app.post('/email', authenticate, post_email)
+app.post('/email/test', authenticate, authorizeAdministrator, post_email_test)
 app.post('/communications/external', authenticate, post_external_communication)
 app.post('/courrier', authenticate, post_courrier)
 app.post('/lrar', authenticate, post_lrar)
@@ -420,6 +429,7 @@ app.post('/lre', authenticate, post_lre)
 app.post('/signature', authenticate, post_signature)
 app.post('/webhook/rcs', post_rcs_webhook)
 app.post('/webhook/email', post_email_webhook)
+app.post('/webhook/email/inbound', post_email_inbound)
 app.post('/webhook/courrier', post_courrier_webhook)
 app.post('/webhook/lrar', post_lrar_webhook)
 app.post('/webhook/lre', post_lre_webhook)

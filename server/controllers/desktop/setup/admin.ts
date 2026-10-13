@@ -128,6 +128,7 @@ export const putAdminSetup = async (c: Context) => {
   }
   try {
     if (chatbotId) await syncChatbotKnowledge(chatbotId, id, before)
+    if (id === 'automations/AGENTS.md') await writeProfileFiles('report')
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Enregistrement impossible.'
     return c.json({ error: { code: 'invalid', message } }, 400)

@@ -25,7 +25,7 @@ const plan_content = (amount = 1_200, note?: string): string =>
       tenant_reference: 'LOC-1',
       client_reference: 'CLI-1',
       occupancy: 'lease',
-      address: { line: '1 rue Pierre', postal_code: '75001', city: 'Paris' },
+      address: { line: '1 rue Pierre', postal_code: '75001', city: 'Paris', id_lot: 'LOT-1' },
       debt: { amount },
       procedures: {
         banque_de_france: { status: 'none' },
@@ -40,7 +40,6 @@ const plan_content = (amount = 1_200, note?: string): string =>
             first_name: 'Alice',
             birth_date: '',
             employment_status: 'permanent',
-            pension_fund: '',
             caf_number: '',
             lease_holder: true
           }

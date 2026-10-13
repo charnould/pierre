@@ -14,7 +14,7 @@ import {
   create_unmatched_inbound
 } from '../../utils/communications/storage'
 import { normalize_telephone } from '../../utils/contacts'
-import { update_status } from '../../utils/delivery-status'
+import { settle_delivery } from '../../utils/delivery-status'
 
 class WebhookValidationError extends Error {}
 
@@ -94,26 +94,37 @@ const status_from_cm = (code: number): 'sent' | 'delivered' | 'read' | 'failed' 
   return null
 }
 
-const handle_status = (payload: Record<string, unknown>): void => {
+const mobile_channel = (payload: Record<string, unknown>): 'rcs' | 'sms' =>
+  string_at(payload, 'channel')?.toLowerCase() === 'sms' ? 'sms' : 'rcs'
+
+const handle_status = async (payload: Record<string, unknown>): Promise<void> => {
   const reference = string_at(payload, 'reference')
   const code = number_at(payload, 'status', 'code')
   if (!reference || code == null) throw new WebhookValidationError('Statut webhook incomplet')
   const activity = communication_from_reference(reference)
   const statut = status_from_cm(code)
   if (!statut) throw new WebhookValidationError('Statut webhook inconnu')
-  if (!activity || activity.channel !== 'rcs') {
+  if (!activity || (activity.channel !== 'rcs' && activity.channel !== 'sms')) {
     throw new WebhookValidationError('Référence de communication invalide')
   }
   const occurredAt = string_at(payload, 'received') ?? string_at(payload, 'timeUtc')
   if (!occurredAt || Number.isNaN(new Date(occurredAt).getTime())) {
     throw new WebhookValidationError('Horodatage webhook invalide')
   }
-  update_status({
+  settle_delivery({
     activity_id: activity.id,
-    type: 'rcs',
+    type: activity.channel,
     statut,
     occurred_at: occurredAt
   })
+}
+
+/** CM envoie `timeUtc` en UTC, sans `Z`. */
+const cm_instant = (value: string): string | null => {
+  const trimmed = value.trim()
+  const withZone = /(?:Z|[+-]\d{2}:?\d{2})$/.test(trimmed) ? trimmed : `${trimmed}Z`
+  const date = new Date(withZone)
+  return Number.isNaN(date.getTime()) ? null : date.toISOString()
 }
 
 const handle_inbound = (payload: Record<string, unknown>): void => {
@@ -121,11 +132,10 @@ const handle_inbound = (payload: Record<string, unknown>): void => {
   if (!rawPhone) throw new WebhookValidationError('Expéditeur manquant')
   const phone = normalize_telephone(rawPhone)
   if (phone.status === 'invalid') throw new WebhookValidationError('Expéditeur invalide')
-  const occurredAt = string_at(payload, 'timeUtc')
-  if (!occurredAt || Number.isNaN(new Date(occurredAt).getTime())) {
-    throw new WebhookValidationError('Horodatage webhook invalide')
-  }
-  const contextReference = string_at(payload, 'messageContext')
+  const rawTime = string_at(payload, 'timeUtc')
+  const occurredAt = rawTime ? cm_instant(rawTime) : null
+  if (!occurredAt) throw new WebhookValidationError('Horodatage webhook invalide')
+  const contextReference = string_at(payload, 'messageContext') ?? string_at(payload, 'reference')
   const source = contextReference ? communication_from_reference(contextReference) : null
   const content = content_from(payload)
   if (!content) throw new WebhookValidationError('Contenu webhook manquant')
@@ -136,8 +146,9 @@ const handle_inbound = (payload: Record<string, unknown>): void => {
     content,
     contextReference
   )
+  const channel = mobile_channel(payload)
   const exact =
-    source?.channel === 'rcs' &&
+    (source?.channel === 'rcs' || source?.channel === 'sms') &&
     source.destinataire === phone.value &&
     parse_rattachement(source.rattachement)
       ? source
@@ -148,7 +159,7 @@ const handle_inbound = (payload: Record<string, unknown>): void => {
     const inbound = create_inbound({
       contexte: attachment.contexte,
       ref: attachment.ref,
-      type: 'rcs',
+      type: channel,
       auteur: exact.id_locataire ? `tenant:${exact.id_locataire}` : `external:${phone.value}`,
       contenu: JSON.stringify({ version: ACTIVITY_CONTENT_VERSION, body: content }),
       occurred_at: occurredAt,
@@ -161,12 +172,12 @@ const handle_inbound = (payload: Record<string, unknown>): void => {
     return
   }
 
-  const recent = find_recent_thread('rcs', phone.value, new Date(occurredAt))
+  const recent = find_recent_thread('mobile', phone.value, new Date(occurredAt))
   if (recent) {
     create_inbound({
       contexte: recent.contexte,
       ref: recent.ref,
-      type: 'rcs',
+      type: channel,
       auteur: recent.id_locataire ? `tenant:${recent.id_locataire}` : `external:${phone.value}`,
       contenu: JSON.stringify({ version: ACTIVITY_CONTENT_VERSION, body: content }),
       occurred_at: occurredAt,
@@ -177,7 +188,7 @@ const handle_inbound = (payload: Record<string, unknown>): void => {
   }
 
   create_unmatched_inbound({
-    type: 'rcs',
+    type: channel,
     auteur: `external:${phone.value}`,
     contenu: JSON.stringify({ version: ACTIVITY_CONTENT_VERSION, body: content }),
     occurred_at: occurredAt,
@@ -186,7 +197,9 @@ const handle_inbound = (payload: Record<string, unknown>): void => {
 }
 
 export const controller = async (c: Context) => {
-  if (!cm_webhook_authorized(c.req.header('Webhook-Secret'))) {
+  // Channels n’a pas de champ header : le secret y voyage dans l’URL.
+  const secret = c.req.header('Webhook-Secret') ?? c.req.query('webhook_secret')
+  if (!cm_webhook_authorized(secret)) {
     return c.json({ error: { code: 'unauthorized', message: 'Webhook key invalide' } }, 401)
   }
   const declaredLength = Number(c.req.header('content-length') ?? '0')
@@ -209,7 +222,7 @@ export const controller = async (c: Context) => {
       throw new WebhookValidationError('Webhook vide')
     }
     for (const payload of parsedPayloads) {
-      if (number_at(payload, 'status', 'code') != null) handle_status(payload)
+      if (number_at(payload, 'status', 'code') != null) await handle_status(payload)
       else handle_inbound(payload)
     }
   } catch (error) {

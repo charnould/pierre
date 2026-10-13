@@ -39,8 +39,8 @@ describe('clean_phone_digits', () => {
     expect(clean_phone_digits('0033611563959')).toBe('+33611563959')
   })
 
-  it('strips letters', () => {
-    expect(clean_phone_digits('06abc11563959')).toBe('0611563959')
+  it('preserves unexpected characters', () => {
+    expect(clean_phone_digits('06abc11563959')).toBe('06abc11563959')
   })
 })
 
@@ -51,7 +51,8 @@ describe('phone_raw_from_cell', () => {
     expect(phone_raw_from_cell('   ')).toBeNull()
   })
 
-  it('restores leading 0 when Excel stored mobile as 9-digit number', () => {
+  it('restores leading 0 when Excel stored a phone as a 9-digit number', () => {
+    expect(phone_raw_from_cell(142000000)).toBe('0142000000')
     expect(phone_raw_from_cell(611563959)).toBe('0611563959')
     expect(phone_raw_from_cell(711563959)).toBe('0711563959')
   })
@@ -94,9 +95,13 @@ describe('normalize_telephone', () => {
     })
   })
 
-  it('marks garbage as invalid with cleaned value', () => {
+  it('keeps malformed values invalid across repeated normalization', () => {
     expect(normalize_telephone('06abc')).toEqual({
-      value: '06',
+      value: '06abc',
+      status: 'invalid'
+    })
+    expect(normalize_telephone(normalize_telephone('06abc11563959').value)).toEqual({
+      value: '06abc11563959',
       status: 'invalid'
     })
   })
@@ -216,7 +221,7 @@ describe('contacts registry insert-only', () => {
     const db = open_contacts_db()
     insert_contacts_from_rows(db, [{ telephone_candidat: '06xx', email_candidat: 'bad' }])
     expect(read(db, 'bad')?.status).toBe('invalid')
-    expect(read(db, '06')?.status).toBe('invalid')
+    expect(read(db, '06xx')?.status).toBe('invalid')
   })
 })
 

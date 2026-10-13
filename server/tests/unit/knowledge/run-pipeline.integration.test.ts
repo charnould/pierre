@@ -74,7 +74,9 @@ describe('knowledge pipeline', () => {
 
   it('publishes Core CSV PII only to the datastore', async () => {
     const contract = CORE_DATA_CONTRACT.find(({ table }) => table === 'lots_locatifs')!
-    const csv = 'id_lot;email_locataire;demande_sne\nLOT-1;locataire@example.org;SNE-1'
+    const csv =
+      'id_lot;email_locataire;telephone_locataire;demande_sne\n' +
+      'LOT-1;locataire@example.org;06 11 56 39 59;SNE-1'
     await Bun.write(`${paths.files}/core_lots_locatifs.csv`, csv)
     insertKnowledgeSource({
       storageName: 'core_lots_locatifs.csv',
@@ -99,9 +101,21 @@ describe('knowledge pipeline', () => {
     const datastore = new Database(paths.database, { readonly: true })
     expect(
       datastore
-        .query<{ email_locataire: string }, []>('SELECT email_locataire FROM lots_locatifs')
+        .query<{ email_locataire: string; telephone_locataire: string }, []>(
+          'SELECT email_locataire, telephone_locataire FROM lots_locatifs'
+        )
         .get()
-    ).toEqual({ email_locataire: 'locataire@example.org' })
+    ).toEqual({
+      email_locataire: 'locataire@example.org',
+      telephone_locataire: '+33611563959'
+    })
+    expect(
+      datastore
+        .query<{ value: string; status: string }, [string]>(
+          'SELECT value, status FROM contacts WHERE value = ?'
+        )
+        .get('+33611563959')
+    ).toEqual({ value: '+33611563959', status: 'rcs_compatible' })
     datastore.close()
     const knowledge = new Database(knowledgeDatabase(), { readonly: true })
     const columns = knowledge
@@ -110,6 +124,7 @@ describe('knowledge pipeline', () => {
       .map(({ name }) => name)
     knowledge.close()
     expect(columns).not.toContain('email_locataire')
+    expect(columns).not.toContain('telephone_locataire')
     expect(columns).not.toContain('demande_sne')
   }, 20_000)
 

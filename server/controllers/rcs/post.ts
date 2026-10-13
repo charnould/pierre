@@ -14,7 +14,7 @@ import {
   create_outbound
 } from '../../utils/communications/storage'
 import { normalize_telephone } from '../../utils/contacts'
-import { update_status } from '../../utils/delivery-status'
+import { settle_delivery } from '../../utils/delivery-status'
 import { RcsSendError, send_rcs_message } from '../../utils/rcs/send'
 import { to_cm_number, to_cm_suggestions } from '../../utils/rcs/wrap'
 
@@ -91,28 +91,27 @@ export const controller = async (c: Context) => {
     const dispatch = claim_outbound_dispatch(activity.id)
     if (dispatch !== 'claimed') return c.json({ data: get_activity(activity.id) ?? activity }, 201)
 
+    const suggestions = to_cm_suggestions(contenu.choices)
     const richContent = {
-      conversation: [
-        {
-          text: contenu.body,
-          ...(contenu.choices.length ? { suggestions: to_cm_suggestions(contenu.choices) } : {})
-        }
-      ]
+      conversation: [{ text: contenu.body }],
+      ...(suggestions.length ? { suggestions } : {})
     }
     try {
       await send_rcs_message({
         phone: to_cm_number(normalized.value),
         richContent,
-        body: { content: contenu.body },
-        reference: communication_reference(activity.id)
+        body: { content: contenu.sms_fallback ?? contenu.body },
+        reference: communication_reference(activity.id),
+        channels: ['RCS', 'SMS']
       })
     } catch (error) {
-      activity = update_status({
+      const settled = settle_delivery({
         activity_id: activity.id,
         type: 'rcs',
         statut: 'failed',
         occurred_at: next_status_timestamp(activity)
       })
+      activity = settled.activity
       if (!(error instanceof RcsSendError)) console.error('[post.rcs]', error)
       const status = error instanceof RcsSendError && error.status === 503 ? 503 : 502
       return c.json(
