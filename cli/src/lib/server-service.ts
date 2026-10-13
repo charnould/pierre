@@ -1,10 +1,12 @@
-import { closeSync, fsyncSync, openSync, renameSync, writeFileSync } from 'node:fs'
+import { renameSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 
-import { must, type Context } from './system.ts'
+import { fsyncPath } from './fs.ts'
+import { type Context, must, type Runtime } from './system.ts'
 
 export function serverUnit(ctx: Context): string {
-  const { bin, envFile, home, serverCurrent } = ctx.runtime.paths
+  const { bin, envFile, home, serverCurrent, smolvmCache, smolvmData, smolvmHome } =
+    ctx.runtime.paths
   return `[Unit]
 Description=PIERRE
 After=network-online.target
@@ -13,6 +15,9 @@ Wants=network-online.target
 [Service]
 Environment=NODE_ENV=production
 Environment=PIERRE_HOME=${home}
+Environment=HOME=${smolvmHome}
+Environment=XDG_CACHE_HOME=${smolvmCache}
+Environment=XDG_DATA_HOME=${smolvmData}
 Environment=LD_LIBRARY_PATH=${serverCurrent}
 EnvironmentFile=${envFile}
 ExecStart=${bin}
@@ -28,16 +33,30 @@ export async function writeUnit(ctx: Context, content: string) {
   const path = ctx.runtime.paths.unitFile
   const temporary = `${path}.new`
   writeFileSync(temporary, content)
-  const file = openSync(temporary, 'r')
-  fsyncSync(file)
-  closeSync(file)
+  fsyncPath(temporary)
   renameSync(temporary, path)
-  const directory = openSync(dirname(path), 'r')
-  fsyncSync(directory)
-  closeSync(directory)
+  fsyncPath(dirname(path))
   await must(ctx.runtime, 'systemctl', ['daemon-reload'])
 }
 
 export async function writeServerUnit(ctx: Context) {
   await writeUnit(ctx, serverUnit(ctx))
+}
+
+export function isHealthyResponse(status: number, body: string): boolean {
+  return status >= 200 && status < 300 && body.trim() === 'ok'
+}
+
+export async function waitForBody(
+  runtime: Runtime,
+  url: string,
+  attempts: number,
+  timeoutMs = 2000
+): Promise<boolean> {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const response = await runtime.request(url, { timeoutMs })
+    if (isHealthyResponse(response.status, response.body)) return true
+    if (attempt < attempts) await runtime.sleep(1000)
+  }
+  return false
 }

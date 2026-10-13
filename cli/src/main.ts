@@ -1,65 +1,64 @@
 import { backup } from './commands/backup.ts'
-import { carl } from './commands/carl.ts'
-import { configure } from './commands/configure.ts'
-import { interactiveDashboard, showStatus } from './commands/dashboard.ts'
-import { printEnv } from './commands/env.ts'
+import { initEnv, printEnv } from './commands/env.ts'
 import { installCommand } from './commands/install.ts'
 import { logs } from './commands/logs.ts'
 import { remove } from './commands/remove.ts'
 import { restart } from './commands/restart.ts'
-import { updateCli } from './commands/update-cli.ts'
-import { updateServer } from './commands/update-server.ts'
-import { installationComplete } from './lib/config.ts'
-import { renderHelp } from './lib/output.ts'
-import { createRuntime, Exit, requireMachine, requireRoot, type Context } from './lib/system.ts'
+import { showStatus } from './commands/status.ts'
+import { update } from './commands/update.ts'
+import { withPierreLock } from './lib/file-lock.ts'
+import { type Context, createRuntime, Exit, Interrupted, requireRoot } from './lib/system.ts'
+import { sayError } from './lib/text.ts'
 import { CLI_VERSION } from './version.ts'
 
 export async function run(argv: string[], ctx: Context): Promise<number> {
-  const [command = '', argument = ''] = argv
+  const [command = '', ...rest] = argv
   if (command === '--version') {
     ctx.runtime.writeOut(`${ctx.version}\n`)
     return 0
   }
-  if (command === 'help' || command === '-h' || command === '--help') {
-    ctx.runtime.writeOut(renderHelp(ctx))
-    return 0
-  }
-  if (command === '') {
-    if (!installationComplete(ctx.runtime)) {
-      requireMachine(ctx.runtime)
-      return installCommand(ctx)
-    }
-    requireRoot(ctx.runtime)
-    if (ctx.runtime.tty && ctx.runtime.canPrompt) return interactiveDashboard(ctx)
-    return showStatus(ctx)
-  }
   if (command === 'install') {
-    requireMachine(ctx.runtime)
-    return installCommand(ctx)
+    return breathe(ctx, () => installCommand(ctx, rest))
+  }
+  if (command === 'env' && rest[0] === '--init') {
+    if (rest.length !== 1) {
+      sayError(ctx, 'Commande inconnue.')
+      return 2
+    }
+    return initEnv(ctx)
   }
   requireRoot(ctx.runtime)
   switch (command) {
+    case '':
+      return showStatus(ctx)
     case 'update':
-      return updateServer(ctx)
-    case 'update-cli':
-      return updateCli(ctx)
-    case 'carl':
-      return carl(ctx, argument)
+      return breathe(ctx, () => update(ctx, rest))
     case 'restart':
-      return restart(ctx)
+      return breathe(ctx, () => locked(ctx, () => restart(ctx)))
     case 'backup':
-      return backup(ctx)
+      return breathe(ctx, () => locked(ctx, () => backup(ctx)))
     case 'logs':
-      return logs(ctx)
-    case 'configure':
-      return configure(ctx)
+      return breathe(ctx, () => logs(ctx))
     case 'env':
       return printEnv(ctx)
     case 'remove':
-      return remove(ctx)
+      return breathe(ctx, () => locked(ctx, () => remove(ctx)))
     default:
-      ctx.runtime.writeOut(renderHelp(ctx))
-      return 1
+      sayError(ctx, 'Commande inconnue.')
+      return 2
+  }
+}
+
+async function locked(ctx: Context, command: () => Promise<number>): Promise<number> {
+  return (await withPierreLock(ctx, command)) ?? 1
+}
+
+async function breathe(ctx: Context, command: () => Promise<number>): Promise<number> {
+  ctx.runtime.writeOut('\n')
+  try {
+    return await command()
+  } finally {
+    ctx.runtime.writeOut('\n')
   }
 }
 
@@ -68,16 +67,22 @@ const entrypoint = import.meta.main
 if (entrypoint) {
   const runtime = createRuntime()
   const ctx: Context = { runtime, version: CLI_VERSION }
-  process.on('SIGINT', () => {
-    runtime.onInterrupt?.()
-    if (runtime.uiActive) runtime.writeOut('\u001b[?25h\u001b[?1049l')
-    process.exit(130)
-  })
+  let interruptedCode: number | undefined
+  const stop = (code: number) => {
+    interruptedCode ??= code
+    runtime.interrupt()
+  }
+  process.on('SIGINT', () => stop(130))
+  process.on('SIGTERM', () => stop(143))
   run(process.argv.slice(2), ctx)
     .then((code) => {
-      process.exitCode = code
+      process.exitCode = interruptedCode ?? code
     })
     .catch((error: unknown) => {
+      if (error instanceof Interrupted) {
+        process.exitCode = interruptedCode ?? 1
+        return
+      }
       if (error instanceof Exit) {
         if (error.message) runtime.writeErr(`${error.message}\n`)
         process.exitCode = error.code
