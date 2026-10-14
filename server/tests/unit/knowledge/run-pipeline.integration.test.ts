@@ -2,6 +2,7 @@ import { Database } from 'bun:sqlite'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
 import { mkdir, rm } from 'node:fs/promises'
 
+import { FIELDS } from '../../../utils/carl'
 import { migrate_datastore } from '../../../utils/datastore-migrations'
 import { CORE_DATA_CONTRACT } from '../../../utils/datastore-tables'
 import {
@@ -308,5 +309,180 @@ describe('knowledge pipeline', () => {
     const row = db.query<{ content: string }, []>('SELECT content FROM documents').get()
     db.close()
     expect(row?.content).toContain('Version valide')
+  }, 20_000)
+
+  it('publishes cached CARL columns for an unassigned reclamations file', async () => {
+    const db = new Database(paths.database)
+    db.run('CREATE TABLE reclamations (id_reclamation TEXT, message TEXT)')
+    db.run("INSERT INTO reclamations VALUES ('req-1', 'fuite')")
+    db.run(
+      `INSERT INTO carl_qualifications (
+         id_reclamation, domaine, sous_domaine, motif, integrite_physique, lieu,
+         obligation_reglementaire, ton
+       ) VALUES ('req-1', 'cache-preuve', 'sous', 'motif', 'intacte', 'logement', 'bailleur', 'neutre')`
+    )
+    db.close()
+    const csv = 'id_reclamation;message;domaine\nreq-1;fuite;source'
+    await Bun.write(`${paths.files}/core_reclamations.csv`, csv)
+    insertKnowledgeSource({
+      storageName: 'core_reclamations.csv',
+      originalName: 'core.reclamations.csv',
+      fileType: 'csv',
+      sizeBytes: csv.length,
+      contentHash: 'b'.repeat(64),
+      origin: 'ui',
+      entries: [
+        {
+          title: 'reclamations',
+          sheet: null,
+          sheetName: null,
+          headerRow: null,
+          profileIds: []
+        }
+      ]
+    })
+
+    await runKnowledgePipeline(Bun.randomUUIDv7())
+
+    const datastore = new Database(paths.database, { readonly: true })
+    const columns = datastore
+      .query<{ name: string }, []>('PRAGMA table_info("reclamations")')
+      .all()
+      .map(({ name }) => name)
+    const row = datastore.query<{ domaine: string }, []>('SELECT domaine FROM reclamations').get()
+    const activities = datastore
+      .query<{ n: number }, []>(
+        "SELECT COUNT(*) AS n FROM activites WHERE type = 'ticket.field_changed'"
+      )
+      .get()?.n
+    datastore.close()
+    expect(columns).toEqual(['id_reclamation', 'message', ...FIELDS])
+    expect(row).toEqual({ domaine: 'cache-preuve' })
+    expect(activities).toBe(0)
+    const knowledge = new Database(knowledgeDatabase(), { readonly: true })
+    const tables = knowledge
+      .query<{ n: number }, []>(
+        "SELECT COUNT(*) AS n FROM sqlite_master WHERE type = 'table' AND name = 'reclamations'"
+      )
+      .get()?.n
+    knowledge.close()
+    expect(tables).toBe(0)
+  }, 20_000)
+
+  it('publishes the same CARL columns to an assigned knowledge profile', async () => {
+    const db = new Database(paths.database)
+    db.run(
+      `INSERT INTO carl_qualifications (
+         id_reclamation, domaine, sous_domaine, motif, integrite_physique, lieu,
+         obligation_reglementaire, ton
+       ) VALUES ('req-1', 'cache-preuve', 'sous', 'motif', 'intacte', 'logement', 'bailleur', 'neutre')`
+    )
+    db.close()
+    const csv = 'id_reclamation;message;domaine\nreq-1;fuite;source'
+    await Bun.write(`${paths.files}/core_reclamations.csv`, csv)
+    insertKnowledgeSource({
+      storageName: 'core_reclamations.csv',
+      originalName: 'core.reclamations.csv',
+      fileType: 'csv',
+      sizeBytes: csv.length,
+      contentHash: 'e'.repeat(64),
+      origin: 'ui',
+      entries: [
+        {
+          title: 'reclamations',
+          sheet: null,
+          sheetName: null,
+          headerRow: null,
+          profileIds: [TEST_PROFILE]
+        }
+      ]
+    })
+
+    await runKnowledgePipeline(Bun.randomUUIDv7())
+
+    const knowledge = new Database(knowledgeDatabase(), { readonly: true })
+    const columns = knowledge
+      .query<{ name: string }, []>('PRAGMA table_info("reclamations")')
+      .all()
+      .map(({ name }) => name)
+    const row = knowledge.query<{ domaine: string }, []>('SELECT domaine FROM reclamations').get()
+    knowledge.close()
+    expect(columns).toEqual(['id_reclamation', 'message', ...FIELDS])
+    expect(row).toEqual({ domaine: 'cache-preuve' })
+  }, 20_000)
+
+  it('creates CARL columns for a header-only reclamations file', async () => {
+    const csv = 'id_reclamation;message\n'
+    await Bun.write(`${paths.files}/core_reclamations.csv`, csv)
+    insertKnowledgeSource({
+      storageName: 'core_reclamations.csv',
+      originalName: 'core.reclamations.csv',
+      fileType: 'csv',
+      sizeBytes: csv.length,
+      contentHash: 'f'.repeat(64),
+      origin: 'ui',
+      entries: [
+        {
+          title: 'reclamations',
+          sheet: null,
+          sheetName: null,
+          headerRow: null,
+          profileIds: []
+        }
+      ]
+    })
+
+    await runKnowledgePipeline(Bun.randomUUIDv7())
+
+    const datastore = new Database(paths.database, { readonly: true })
+    const columns = datastore
+      .query<{ name: string }, []>('PRAGMA table_info("reclamations")')
+      .all()
+      .map(({ name }) => name)
+    const count = datastore.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM reclamations').get()
+    datastore.close()
+    expect(columns).toEqual(['id_reclamation', 'message', ...FIELDS])
+    expect(count?.n).toBe(0)
+  }, 20_000)
+
+  it('does not publish reclamations when the message column is missing', async () => {
+    const db = new Database(paths.database)
+    db.run('CREATE TABLE reclamations (id_reclamation TEXT PRIMARY KEY)')
+    db.run("INSERT INTO reclamations VALUES ('REQ-EXISTING')")
+    db.close()
+    const csv = 'id_reclamation;canal\nreq-1;appel'
+    await Bun.write(`${paths.files}/core_reclamations.csv`, csv)
+    insertKnowledgeSource({
+      storageName: 'core_reclamations.csv',
+      originalName: 'core.reclamations.csv',
+      fileType: 'csv',
+      sizeBytes: csv.length,
+      contentHash: '9'.repeat(64),
+      origin: 'ui',
+      entries: [
+        {
+          title: 'reclamations',
+          sheet: null,
+          sheetName: null,
+          headerRow: null,
+          profileIds: []
+        }
+      ]
+    })
+
+    await expect(runKnowledgePipeline(Bun.randomUUIDv7())).rejects.toThrow(
+      'La colonne message est absente.'
+    )
+
+    const datastore = new Database(paths.database, { readonly: true })
+    const row = datastore
+      .query<{ id_reclamation: string }, []>('SELECT id_reclamation FROM reclamations')
+      .get()
+    const cached = datastore
+      .query<{ n: number }, []>('SELECT COUNT(*) AS n FROM carl_qualifications')
+      .get()?.n
+    datastore.close()
+    expect(row).toEqual({ id_reclamation: 'REQ-EXISTING' })
+    expect(cached).toBe(0)
   }, 20_000)
 })

@@ -15,41 +15,32 @@ export type MailgunFormResult = {
   text: string
 }
 
-const region_base = (region: string): string | null => {
-  if (region === 'eu') return 'https://api.eu.mailgun.net'
-  if (region === 'us') return 'https://api.mailgun.net'
-  return null
-}
+const API_BASE = 'https://api.eu.mailgun.net'
 
 /** API d’envoi. Le secret de signature des webhooks est distinct. */
 export const mailgun_api = (): { ok: true; api: MailgunApi } | { ok: false; message: string } => {
-  const apiKey = Bun.env['MAILGUN_API_KEY']?.trim() ?? ''
-  const domain = Bun.env['MAILGUN_DOMAIN']?.trim().toLowerCase() ?? ''
-  if (!apiKey) return { ok: false, message: 'MAILGUN_API_KEY manquant' }
-  if (!domain) return { ok: false, message: 'MAILGUN_DOMAIN manquant' }
-  if (!DOMAIN.test(domain)) return { ok: false, message: 'MAILGUN_DOMAIN invalide' }
-  const region = (Bun.env['MAILGUN_REGION']?.trim() || 'eu').toLowerCase()
-  const apiBase = region_base(region)
-  if (!apiBase) return { ok: false, message: 'MAILGUN_REGION vaut eu ou us' }
+  const apiKey = Bun.env['SINCH_API_KEY']?.trim() ?? ''
+  const domain = Bun.env['SINCH_DOMAIN']?.trim().toLowerCase() ?? ''
+  if (!apiKey) return { ok: false, message: 'SINCH_API_KEY manquant' }
+  if (!domain) return { ok: false, message: 'SINCH_DOMAIN manquant' }
+  if (!DOMAIN.test(domain)) return { ok: false, message: 'SINCH_DOMAIN invalide' }
   return {
     ok: true,
     api: {
       domain,
-      apiBase,
+      apiBase: API_BASE,
       authorization: `Basic ${btoa(`api:${apiKey}`)}`
     }
   }
 }
 
-export const mailgun_signing_key = (): string =>
-  Bun.env['MAILGUN_WEBHOOK_SIGNING_KEY']?.trim() ?? ''
+export const mailgun_signing_key = (): string => Bun.env['SINCH_WEBHOOK_SIGNING_KEY']?.trim() ?? ''
 
 export const mailgun_env_started = (): boolean =>
   Boolean(
-    Bun.env['MAILGUN_API_KEY']?.trim() ||
-    Bun.env['MAILGUN_DOMAIN']?.trim() ||
-    Bun.env['MAILGUN_WEBHOOK_SIGNING_KEY']?.trim() ||
-    Bun.env['MAILGUN_REGION']?.trim()
+    Bun.env['SINCH_API_KEY']?.trim() ||
+    Bun.env['SINCH_DOMAIN']?.trim() ||
+    Bun.env['SINCH_WEBHOOK_SIGNING_KEY']?.trim()
   )
 
 /** Origine HTTPS publique, à partir de HOST. */

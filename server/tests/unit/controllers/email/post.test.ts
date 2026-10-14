@@ -19,10 +19,9 @@ const paths = testDatastorePaths('email_post')
 const SECRET = 'email-webhook-secret'
 const encoder = new TextEncoder()
 const originalEnv = {
-  api: Bun.env['MAILGUN_API_KEY'],
-  domain: Bun.env['MAILGUN_DOMAIN'],
-  signing: Bun.env['MAILGUN_WEBHOOK_SIGNING_KEY'],
-  region: Bun.env['MAILGUN_REGION']
+  api: Bun.env['SINCH_API_KEY'],
+  domain: Bun.env['SINCH_DOMAIN'],
+  signing: Bun.env['SINCH_WEBHOOK_SIGNING_KEY']
 }
 
 const restoreEnv = (key: string, value: string | undefined): void => {
@@ -115,10 +114,9 @@ beforeAll(() => {
 })
 
 beforeEach(async () => {
-  Bun.env['MAILGUN_API_KEY'] = 'key-test'
-  Bun.env['MAILGUN_DOMAIN'] = 'dribble.football'
-  Bun.env['MAILGUN_WEBHOOK_SIGNING_KEY'] = SECRET
-  Bun.env['MAILGUN_REGION'] = 'eu'
+  Bun.env['SINCH_API_KEY'] = 'key-test'
+  Bun.env['SINCH_DOMAIN'] = 'dribble.football'
+  Bun.env['SINCH_WEBHOOK_SIGNING_KEY'] = SECRET
   await rm(paths.root, { recursive: true, force: true })
   await setup()
   const text = (value: unknown) => new TextEncoder().encode(JSON.stringify(value))
@@ -154,10 +152,9 @@ beforeEach(async () => {
 afterAll(async () => {
   await rm(paths.root, { recursive: true, force: true })
   setDatastoreRoot(null)
-  restoreEnv('MAILGUN_API_KEY', originalEnv.api)
-  restoreEnv('MAILGUN_DOMAIN', originalEnv.domain)
-  restoreEnv('MAILGUN_WEBHOOK_SIGNING_KEY', originalEnv.signing)
-  restoreEnv('MAILGUN_REGION', originalEnv.region)
+  restoreEnv('SINCH_API_KEY', originalEnv.api)
+  restoreEnv('SINCH_DOMAIN', originalEnv.domain)
+  restoreEnv('SINCH_WEBHOOK_SIGNING_KEY', originalEnv.signing)
 })
 
 describe('email transactionnel', () => {

@@ -10,10 +10,9 @@ const paths = testDatastorePaths('email_mailgun')
 const SECRET = 'mailgun-signing-key'
 const encoder = new TextEncoder()
 const originalEnv = {
-  api: Bun.env['MAILGUN_API_KEY'],
-  domain: Bun.env['MAILGUN_DOMAIN'],
-  signing: Bun.env['MAILGUN_WEBHOOK_SIGNING_KEY'],
-  region: Bun.env['MAILGUN_REGION'],
+  api: Bun.env['SINCH_API_KEY'],
+  domain: Bun.env['SINCH_DOMAIN'],
+  signing: Bun.env['SINCH_WEBHOOK_SIGNING_KEY'],
   host: Bun.env['HOST']
 }
 
@@ -41,10 +40,9 @@ beforeAll(() => {
 })
 
 beforeEach(async () => {
-  Bun.env['MAILGUN_API_KEY'] = 'key-test'
-  Bun.env['MAILGUN_DOMAIN'] = 'dribble.football'
-  Bun.env['MAILGUN_WEBHOOK_SIGNING_KEY'] = SECRET
-  Bun.env['MAILGUN_REGION'] = 'eu'
+  Bun.env['SINCH_API_KEY'] = 'key-test'
+  Bun.env['SINCH_DOMAIN'] = 'dribble.football'
+  Bun.env['SINCH_WEBHOOK_SIGNING_KEY'] = SECRET
   Bun.env['HOST'] = 'gx.pierre-ia.org'
   await rm(paths.root, { recursive: true, force: true })
   await setup()
@@ -53,10 +51,9 @@ beforeEach(async () => {
 afterAll(async () => {
   await rm(paths.root, { recursive: true, force: true })
   setDatastoreRoot(null)
-  restoreEnv('MAILGUN_API_KEY', originalEnv.api)
-  restoreEnv('MAILGUN_DOMAIN', originalEnv.domain)
-  restoreEnv('MAILGUN_WEBHOOK_SIGNING_KEY', originalEnv.signing)
-  restoreEnv('MAILGUN_REGION', originalEnv.region)
+  restoreEnv('SINCH_API_KEY', originalEnv.api)
+  restoreEnv('SINCH_DOMAIN', originalEnv.domain)
+  restoreEnv('SINCH_WEBHOOK_SIGNING_KEY', originalEnv.signing)
   restoreEnv('HOST', originalEnv.host)
 })
 
@@ -79,10 +76,9 @@ describe('mailgun', () => {
   })
 
   it('n’appelle pas Mailgun tant que le canal est vide', async () => {
-    delete Bun.env['MAILGUN_API_KEY']
-    delete Bun.env['MAILGUN_DOMAIN']
-    delete Bun.env['MAILGUN_WEBHOOK_SIGNING_KEY']
-    delete Bun.env['MAILGUN_REGION']
+    delete Bun.env['SINCH_API_KEY']
+    delete Bun.env['SINCH_DOMAIN']
+    delete Bun.env['SINCH_WEBHOOK_SIGNING_KEY']
     const fetchSpy = spyOn(globalThis, 'fetch')
     try {
       await configure_mailgun()

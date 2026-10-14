@@ -74,7 +74,6 @@ import {
 import { controller as get_desktop_setup } from './controllers/desktop/setup/get'
 import { controller as get_desktop_tickets } from './controllers/desktop/tickets/get'
 import { controller as get_desktop_tickets_facets } from './controllers/desktop/tickets/get.facets'
-import { controller as put_desktop_tickets } from './controllers/desktop/tickets/put'
 import { controller as get_desktop_users } from './controllers/desktop/users/get'
 import { controller as post_email } from './controllers/email/post'
 import { controller as post_email_inbound } from './controllers/email/post.inbound'
@@ -130,7 +129,7 @@ if (Bun.env['NODE_ENV'] !== 'test') {
   try {
     await configure_mailgun()
   } catch (error) {
-    console.error('[mailgun]', error instanceof Error ? error.message : error)
+    console.error('[sinch]', error instanceof Error ? error.message : error)
   }
 }
 
@@ -314,7 +313,6 @@ app.post(
   post_desktop_bulk_operation_execute
 )
 app.get('/desktop/tickets/facets', authenticate, authorizeTickets, get_desktop_tickets_facets)
-app.put('/desktop/tickets', authenticate, authorizeTickets, put_desktop_tickets)
 app.get('/desktop/tickets/meta', authenticate, authorizeTicketsData, get_desktop_tickets)
 app.get('/desktop/tickets', authenticate, authorizeTickets, get_desktop_tickets)
 app.get('/desktop/ledger/facets', authenticate, authorizeRepayment, get_desktop_ledger_facets)

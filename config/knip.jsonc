@@ -77,6 +77,7 @@
         "microvm/guest/extensions/ask-user.ts!",
         "utils/knowledge/scrape-wikipedia.ts!",
         "utils/update-pierre.ts!",
+        "utils/ensure-carl.ts!",
         "tests/**/*.test.ts"
       ],
       "project": ["**/*.{ts,tsx,css}!", "!tests/**!"]

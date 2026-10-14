@@ -31,7 +31,7 @@ export async function send_transactional_email(input: {
   if (!read.ok) throw new EmailSendError(503, 'not_configured', read.message)
   const fromDomain = input.from.slice(input.from.lastIndexOf('@') + 1).toLowerCase()
   if (fromDomain !== read.api.domain) {
-    throw new EmailSendError(503, 'not_configured', 'MAILGUN_DOMAIN ne correspond pas à email_from')
+    throw new EmailSendError(503, 'not_configured', 'SINCH_DOMAIN ne correspond pas à email_from')
   }
   if (!emailReady()) throw new EmailSendError(503, 'not_configured', 'Gabarit email incomplet')
   const html = new TextDecoder().decode(readSetupBytes('email/html') ?? new Uint8Array())

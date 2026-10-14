@@ -2,6 +2,7 @@ import { Database } from 'bun:sqlite'
 
 import { normalize_knowledge_name } from '../../../shared/knowledge'
 import { insert_activity_row } from '../activities/rows'
+import { FIELDS } from '../carl'
 import { insert_contacts_from_rows } from '../contacts'
 import {
   COMMUNES_PAR_CODE_POSTAL_TABLE,
@@ -69,7 +70,7 @@ const emit_reclamation_changes = (
   rows: readonly JsonRow[]
 ): void => {
   if (previous.size === 0 || !table_exists(db, 'activites')) return
-  const ignored = new Set(['id_reclamation', 'id_locataire', 'id_lot'])
+  const ignored = new Set(['id_reclamation', 'id_locataire', 'id_lot', ...FIELDS])
   const now = new Date().toISOString()
   for (const row of rows) {
     const id = row['id_reclamation']

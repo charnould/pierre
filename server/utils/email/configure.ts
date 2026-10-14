@@ -133,13 +133,13 @@ export async function configure_mailgun(): Promise<void> {
   const signingKey = mailgun_signing_key()
   if (!read.ok || !signingKey) {
     if (mailgun_env_started()) {
-      console.error(`[mailgun] ${!read.ok ? read.message : 'MAILGUN_WEBHOOK_SIGNING_KEY manquant'}`)
+      console.error(`[sinch] ${!read.ok ? read.message : 'SINCH_WEBHOOK_SIGNING_KEY manquant'}`)
     }
     return
   }
   const origin = mailgun_callback_origin()
   if (!origin) {
-    console.error('[mailgun] HOST https public manquant, webhooks non enregistrés')
+    console.error('[sinch] HOST https public manquant, webhooks non enregistrés')
     return
   }
   const changed = [
@@ -147,5 +147,5 @@ export async function configure_mailgun(): Promise<void> {
     await ensure_inbound_route(read.api, `${origin}/webhook/email/inbound`),
     await ensure_open_tracking(read.api)
   ].some(Boolean)
-  if (changed) console.log(`[mailgun] webhooks enregistrés sur ${origin}`)
+  if (changed) console.log(`[sinch] webhooks enregistrés sur ${origin}`)
 }

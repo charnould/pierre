@@ -1,3 +1,4 @@
+import { CARL_MODEL_FILES } from '../../shared/carl-model'
 import { CARL_DIR } from './paths'
 
 export { CARL_DIR }
@@ -31,8 +32,9 @@ const SIDE = ['integrite_physique', 'lieu', 'obligation_reglementaire', 'ton'] a
 const SPECIAL = new Set(['hors_perimetre', 'inexploitable'])
 
 export async function modelFilesPresent(): Promise<boolean> {
-  const names = ['model.onnx', 'labels.json', 'tokenizer.json', 'tokenizer_config.json']
-  const present = await Promise.all(names.map((name) => Bun.file(`${CARL_DIR}/${name}`).exists()))
+  const present = await Promise.all(
+    CARL_MODEL_FILES.map((name) => Bun.file(`${CARL_DIR}/${name}`).exists())
+  )
   return present.every(Boolean)
 }
 

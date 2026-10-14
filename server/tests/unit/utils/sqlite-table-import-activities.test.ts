@@ -101,4 +101,50 @@ describe('reclamations import activity history', () => {
     expect(db.query('SELECT * FROM activites').all()).toHaveLength(0)
     db.close()
   })
+
+  test('does not record derived qualification columns', async () => {
+    const db = new Database(':memory:')
+    db.run(`
+      CREATE TABLE activites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date_creation TEXT NOT NULL,
+        rattachement TEXT NOT NULL,
+        auteur TEXT NOT NULL,
+        destinataire TEXT,
+        id_client TEXT,
+        id_locataire TEXT,
+        id_lot TEXT,
+        type TEXT NOT NULL,
+        channel TEXT,
+        mentions TEXT NOT NULL DEFAULT '[]',
+        contenu TEXT NOT NULL,
+        thread_id TEXT,
+        revision INTEGER,
+        bulk_id TEXT,
+        execution_id TEXT,
+        idempotency_key TEXT
+      )
+    `)
+    await import_json_rows(db, 'reclamations', [
+      { id_reclamation: 'REQ-1', id_locataire: 'LOC-1', id_lot: 'LOT-1', message: 'fuite' }
+    ])
+    await import_json_rows(db, 'reclamations', [
+      {
+        id_reclamation: 'REQ-1',
+        id_locataire: 'LOC-1',
+        id_lot: 'LOT-1',
+        message: 'fuite',
+        domaine: 'technique',
+        sous_domaine: 'chauffage',
+        motif: 'panne',
+        integrite_physique: 'intacte',
+        lieu: 'logement',
+        obligation_reglementaire: 'bailleur',
+        ton: 'neutre'
+      }
+    ])
+
+    expect(db.query('SELECT * FROM activites').all()).toHaveLength(0)
+    db.close()
+  })
 })

@@ -2,6 +2,7 @@ import { Database } from 'bun:sqlite'
 import { link, mkdir, rename, rm } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 
+import { qualifyReclamations } from '../carl-reclamations'
 import type { DatastoreTable } from '../datastore-tables'
 import { datastorePaths } from '../paths'
 import {
@@ -145,6 +146,24 @@ export const runKnowledgePipeline = async (
     }
     if (diagnostics.some((diagnostic) => diagnostic.level === 'error')) {
       throw new KnowledgePipelineError('Knowledge source validation failed', diagnostics, itemKeys)
+    }
+
+    const reclamations = coreMirrors.get('reclamations')
+    if (reclamations) {
+      const qualified = await qualifyReclamations(reclamations)
+      coreMirrors.set('reclamations', qualified)
+      const profileIds = [
+        ...new Set(
+          entries
+            .filter((entry) => entry.coreDataTable === 'reclamations')
+            .map((entry) => entry.access)
+        )
+      ]
+      await Promise.all(
+        profileIds.map((profileId) =>
+          Bun.write(join(stagingRoot, profileId, 'reclamations.json'), JSON.stringify(qualified))
+        )
+      )
     }
 
     const artifacts = await build_knowledge_databases(stagingRoot)
