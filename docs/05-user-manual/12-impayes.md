@@ -24,7 +24,7 @@ Cette page décrit uniquement l’écran `Piloter les impayés`. Les soldes vien
 
 Le module sert à **voir où en est chaque situation d’impayé** et à agir sans perdre le fil : relance, plan, passage de phase, mention à un collègue.
 
-Les dossiers sont classés automatiquement dans des phases (amiable, contentieux, Banque de France…). Vous pouvez aussi **changer le groupe** à la main, avec une note.
+Les dossiers sont classés dans des phases (amiable, contentieux, Banque de France…). Vous pouvez aussi **changer la phase** à la main, avec une note. Une phase retirée du paramétrage n’est pas oubliée : ses dossiers apparaissent dans `À reclasser`, le temps de les ranger dans une phase actuelle.
 
 ## Qui peut y accéder
 
@@ -32,7 +32,7 @@ Les personnes connectées dont le compte inclut le module `Piloter les impayés`
 
 ## Lire l’écran
 
-Pas d’onglets internes : **une section par phase**, empilées. L’en-tête indique le nom de la phase, le **nombre de dossiers** et le **total des soldes**.
+Les phases sont empilées. Une phase remplie indique son nom, le **nombre de dossiers** et le **total des soldes**. Une phase vide tient sur une ligne avec son nom et `0 dossier`. Une seule barre, au-dessus du scroll, porte `Actualiser`. Dès qu’un dossier est coché, elle devient `Désélectionner` et `Agir sur N dossiers`. Les réglages du tableau restent accessibles. Le bouton à côté du nom d’une colonne trie toute la phase. Le menu de la colonne permet aussi de la déplacer ou de la masquer. `Colonnes` la réaffiche. Le bord droit d’une colonne la redimensionne.
 
 Phases habituellement affichées :
 
@@ -51,13 +51,17 @@ Phases habituellement affichées :
 13. `Clos / soldé`
 14. `Clients partis`
 
-Au-dessus de chaque tableau : `Colonnes`, `Effacer les filtres`, `Effacer les tris`, `Actualiser`. Il n’y a pas de pagination : toute la phase est chargée ; les filtres s’appliquent **dans** la section.
+`À reclasser` apparaît dans la pile uniquement lorsqu’un dossier porte une phase qui n’existe plus. Ce n’est pas une phase du paramétrage et on ne peut pas l’y écrire. Depuis le dossier, `Changer la phase` le range dans une phase actuelle.
 
-La colonne `Alertes` signale une notification. Les autres colonnes décrivent surtout la dernière action, sa date, le solde, le ratio dette/loyer et le gestionnaire, plus les colonnes de vos exports.
+Sur chaque phase qui contient des dossiers : `Colonnes`, `Effacer les filtres`, `Effacer les tris`. Il n’y a pas de pagination : toute la phase est chargée. Une phase vide n’a pas de tableau.
+
+La première colonne coche un ou plusieurs dossiers. La sélection reste d’une phase à l’autre. La colonne `Alertes` signale une notification. Le tableau montre d’abord `Locataire`, `Client`, `Dette`, `Dette / loyer`, `Courriel`, `Téléphone`, `Référent` et `Dernière action`. Les autres colonnes s’affichent depuis `Colonnes`. Les noms techniques des exports sont convertis en libellés lisibles.
+
+`Agir sur N dossiers` peut changer la phase, ajouter ou retirer un tag, ou demander à Pierre une réponse possible, une synthèse ou une autre consigne. Pierre traite les dossiers l’un après l’autre, n’envoie rien, et enregistre chaque résultat dans l’historique du dossier.
 
 | Situation                           | Message                                                                          |
 | ----------------------------------- | -------------------------------------------------------------------------------- |
-| Phase sans dossier                  | `Aucun dossier dans cette phase`                                                 |
+| Phase sans dossier                  | Une rubrique compacte `Nom de la phase · 0 dossier`                              |
 | Phase remplie, filtres trop étroits | `Aucun dossier correspondant`                                                    |
 | Chargement                          | `Chargement des soldes…`                                                         |
 | Export manquant                     | `comptes_locataires n’est pas défini` — les soldes ne peuvent pas être calculés. |
@@ -75,10 +79,10 @@ Cliquez une ligne. L’en-tête montre `id client · id locataire`. `Fermer le d
 | `Courriel`                | Adresse ou `Non renseigné`, plus un badge (`OK`, `Invalide`, `Soft bounce`, `Hard bounce`).  |
 | `Téléphone`               | Numéro ou `Non renseigné`, plus `SMS` / `RCS` / `Invalide`.                                  |
 | `Référent`                | Collaborateur ou `Non affecté`.                                                              |
-| `Groupe`                  | Phase actuelle.                                                                              |
+| `Phase`                   | Phase actuelle.                                                                              |
 | `Dernière tâche` / `Tags` | Dernière action connue et étiquettes (`décès`, `+65 ans`, `Redémarrage APL`…).               |
 
-Les tâches ouvertes se gèrent comme dans les réclamations (faire, ignorer, modifier). L’historique à droite mélange notes, actions, changements de groupe et **mouvements comptables**.
+Les tâches ouvertes se gèrent comme dans les réclamations (faire, ignorer, modifier). L’historique à droite mélange notes, actions, changements de phase et **mouvements comptables**.
 
 ## Agir sur un dossier
 
@@ -89,7 +93,7 @@ Les tâches ouvertes se gèrent comme dans les réclamations (faire, ignorer, mo
 | `Contacter un tiers`                                | Choisir un modèle (locataire ou CAF), puis envoyer ou ouvrir le mail.      |
 | `Créer un plan d’apurement`                         | Ouvre le formulaire de plan (ou `Modifier` / `Clôturer` s’il existe déjà). |
 | `Importer un email`                                 | Ajouter un `.eml`.                                                         |
-| `Changer le groupe`                                 | Changer de phase + note → `Avancement enregistré`.                         |
+| `Changer la phase`                                  | Changer de phase + note → `Avancement enregistré`.                         |
 | `Changer les tags`                                  | → `Tags enregistrés`.                                                      |
 | `Affecter à un référent`                            | → `Référent affecté`.                                                      |
 
@@ -110,30 +114,15 @@ Un RCS s’envoie depuis PIERRE (`Envoyer` → `Message envoyé`). Un e-mail CAF
 
 `Créer un plan d’apurement` remplace temporairement le tableau. `Retour` ramène à la liste.
 
-Le formulaire couvre notamment :
+Le formulaire est un seul dossier : identification, dette, procédure, accompagnement, bail, membres du foyer, budget et échéancier. `Ajouter un adulte`, `Ajouter un enfant`, les lignes de budget et `Ajouter une échéance` allongent ce dossier. `Enregistrer` le conserve tel quel.
 
-| Rubrique             | Points à renseigner                                                                        |
-| -------------------- | ------------------------------------------------------------------------------------------ |
-| `Dispositif`         | `Plan d'apurement` ou `Protocole de cohésion sociale` ; `Bail` ou `Accession`.             |
-| `Logement`           | Adresse, code postal, ville.                                                               |
-| `Situation locative` | Dette, date du premier impayé, commandement, CCAPEX, travailleur social, Banque de France. |
-| `Foyer`              | Identifiants, adultes, enfants.                                                            |
-| `Budget du foyer`    | Ressources, charges ; PIERRE calcule reste à vivre et UC.                                  |
-| `Aides`              | FSL, Action Logement, etc.                                                                 |
-| `Échéancier`         | Ajouter ou retirer des échéances (n°, date, montant).                                      |
-
-En bas : interrupteur `Plan ou protocole signé`, `Retirer` (brouillon), `Clôturer` (motifs : `Exécution terminée`, `Non-respect`, `Remplacé par un nouveau plan`, `Effacement de dette`), `Exporter en .docx`, `Enregistrer` ou `Enregistrer avec une note`.
-
-Un plan **signé** bascule le dossier en `Plan amiable / EV en cours` et passe le formulaire en lecture seule : seule la clôture reste possible.
-
-Si la table des comptes locataires est absente, vous pouvez encore ouvrir `Créer un plan d'apurement` en mode export, **sans** le rattacher à un dossier du tableau.
+`Retour` ferme l’écran sans écrire. `Modifier le plan d’apurement` rouvre le dernier dossier enregistré.
 
 ## Bonnes pratiques
 
 - **Lisez la tendance de dette avant de relancer.** Une dette en baisse n’appelle pas le même geste qu’une dette qui file.
-- **Notez le changement de phase.** Le groupe seul ne raconte pas pourquoi.
-- **Exportez le plan en Word** pour la signature ; gardez PIERRE comme mémoire du dossier.
-- **Un plan signé n’est plus un brouillon.** Relisez avant de cocher `Plan ou protocole signé`.
+- **Notez le changement de phase.** La phase seule ne raconte pas pourquoi. Renommer une phase dans le paramétrage ne réécrit pas l’historique : les dossiers concernés passent dans `À reclasser`.
+- **Enregistrez le dossier** avant de quitter l’écran : c’est la mémoire du plan.
 
 ## Si quelque chose ne va pas
 

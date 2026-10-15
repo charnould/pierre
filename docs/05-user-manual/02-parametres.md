@@ -15,9 +15,8 @@ Cette page décrit uniquement l’écran `Paramètres`. Les mots de passe des au
 - [Identité](#identité)
 - [Compagnon](#compagnon)
 - [Accueil (nombre de lignes)](#accueil-nombre-de-lignes)
-- [Applicatifs historiques](#applicatifs-historiques)
+- [Application](#application)
 - [Fichier d’interface](#fichier-dinterface)
-- [Se déconnecter et réinitialiser](#se-déconnecter-et-réinitialiser)
 - [Bonnes pratiques](#bonnes-pratiques)
 - [Si quelque chose ne va pas](#si-quelque-chose-ne-va-pas)
 
@@ -44,10 +43,10 @@ Au premier lancement, et chaque fois que la session n’est plus valable, l’é
 | `Email`        | Votre adresse professionnelle. Conservée d’une fois sur l’autre. |
 | `Mot de passe` | Jamais mémorisé. Icône œil pour l’afficher.                      |
 
-Deux cases sont **obligatoires** à chaque connexion (elles se décochent si vous changez de serveur) :
+Une case **Utilisation responsable de l’IA** est obligatoire à chaque connexion :
 
-1. `J’ai pris connaissance et j’accepte la charte et/ou les consignes IA de mon organisme.`
-2. `Je reconnais que les réponses générées par IA peuvent contenir des erreurs et m’engage à vérifier toute information importante avant utilisation.`
+- Je confirme avoir pris connaissance et accepter la charte ou les consignes d’utilisation de l’IA de mon organisme.
+- Je reconnais que les réponses générées par l’IA peuvent contenir des erreurs, des omissions ou des informations inexactes. Je m’engage à vérifier leur exactitude et leur pertinence avant toute utilisation ou transmission.
 
 Puis `Se connecter`. En cas de succès : message `Connexion réussie`, et vous arrivez sur l’[accueil](./01-accueil.md).
 
@@ -55,7 +54,7 @@ Puis `Se connecter`. En cas de succès : message `Connexion réussie`, et vous a
 | ------------------------------------------------------- | ------------------------------------------ |
 | `Champ obligatoire.`                                    | Un champ est vide.                         |
 | `URL invalide. Exemple : http://localhost:3000`         | L’adresse du serveur n’est pas une URL.    |
-| `Acceptez les deux conditions pour continuer.`          | Les deux cases ne sont pas cochées.        |
+| `Acceptez les conditions pour continuer.`               | La case n’est pas cochée.                  |
 | `Email ou mot de passe incorrect.`                      | Identifiants refusés.                      |
 | `Trop de tentatives. Réessayez dans quelques instants.` | Attendez avant de réessayer.               |
 | `Impossible de joindre ce serveur.`                     | Réseau, adresse, ou instance indisponible. |
@@ -68,61 +67,48 @@ Il n’y a pas de « mot de passe oublié » ni de création de compte ici. Un a
 
 ## Lire l’écran une fois connecté
 
-Le titre est `Paramètres`. En sous-titre, quand c’est disponible : `e-mail · adresse du serveur · version de l’application`.
-
-Trois boutons en haut à droite :
-
-| Bouton                        | Effet                                                                                                       |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `Rechercher des mises à jour` | Dans l’application installée : lance une vérification. En développement, ouvre plutôt la page des versions. |
-| `Se déconnecter`              | Ferme la session et ramène au formulaire. Le serveur et l’e-mail restent remplis.                           |
-| `Réinitialiser`               | Remet l’affichage d’usine, vous déconnecte, et recharge l’application.                                      |
-
 Changer de serveur se fait **après déconnexion**, dans le champ `Serveur` du formulaire. Une fois connecté, l’adresse n’est plus modifiable ici.
 
 ## Identité
 
-Section `Identité` — `Nom et avatar affichés dans les timelines et les mentions. Sans nom personnalisé, c’est la partie avant @ de votre email.`
+Section `Identité`. Deux rangées.
 
-- **Nom d’affichage** : jusqu’à 80 caractères. Il s’enregistre quand vous quittez le champ ou appuyez sur Entrée. Vider le champ (ou y remettre la partie avant `@`) revient au nom par défaut.
-- Vous ne pouvez pas prendre le nom de l’assistant de l’instance : `Ce nom est réservé à {agent}.`
-- **Modifier votre avatar** : choisissez une photo, cadrez-la dans le cercle (`Zoom`), puis `Enregistrer`. `Réinitialiser` dans cette fenêtre retire le cadrage en cours, pas votre compte.
+- `Avatar` — photo affichée dans les timelines et les mentions. `Modifier votre avatar` ouvre le cadrage : choisissez une photo, cadrez-la dans le cercle (`Zoom`), puis `Enregistrer`. `Réinitialiser` dans cette fenêtre retire le cadrage en cours, pas votre compte.
+- `Nom d’affichage` — jusqu’à 80 caractères. Il s’enregistre quand vous quittez le champ ou appuyez sur Entrée. Vider le champ (ou y remettre la partie avant `@`) revient au nom par défaut. Vous ne pouvez pas prendre le nom de l’assistant de l’instance : `Ce nom est réservé à {agent}.`
 
 Le mot de passe **ne se change pas** dans `Paramètres`. Un administrateur le change dans votre fiche, ou vous le changez vous-même si vous êtes administrateur.
 
 ## Compagnon
 
-Section `Compagnon` — `Icône flottante. Une pastille signale ce qui n’a pas été lu. Un clic ramène Pierre.`
+Section `Compagnon`. Deux rangées.
 
-- Un interrupteur active ou coupe l’icône sur le bureau.
-- `Modifier l’apparence` : forme (`Cercle`, `Galet`, `Squircle`, `Capsule`, `Triangle`, `Hexagone`, `Nuage`, `Goutte`), `Couleur` du corps, `Pastille` des non-lues, `Taille` (80 à 240 px). `Aléatoire` propose un autre look. `Réinitialiser` revient à l’apparence d’origine. `Enregistrer` applique ; `Annuler` ignore les essais.
+- `Afficher sur le bureau` — interrupteur. Icône flottante. Une pastille signale ce qui n’a pas été lu. Un clic ramène Pierre.
+- `Modifier le compagnon`, une fois l’icône affichée : `Modifier l’apparence` ouvre la forme (`Cercle`, `Galet`, `Squircle`, `Capsule`, `Triangle`, `Hexagone`, `Nuage`, `Goutte`), la `Couleur` du corps, la `Pastille` des non-lues et la `Taille` (80 à 240 px). `Aléatoire` propose un autre look. `Réinitialiser` revient à l’apparence d’origine. `Enregistrer` applique ; `Annuler` ignore les essais.
 
 ## Accueil (nombre de lignes)
 
 Section `Accueil` — `Nombre d’éléments sur chaque colonne. Tout voir ouvre le tiroir paginé.`
 
-Quatre curseurs, entre 5 et 20, enregistrés tout de suite :
+Quatre nombres, de 2 à 20, enregistrés tout de suite :
 
-- `Mes notifications`
-- `Mes tâches`
-- `Tâches que j’ai assignées`
+- `Notifications`
+- `Tâches`
+- `Tâches assignées`
 - `Activités`
 
-## Applicatifs historiques
+## Application
 
-Section `Applicatifs historiques (inactifs à ce stade)`. Trois pastilles (ACG Aravis, Sopra Steria, Aaereon) rappellent le lien prévu avec les logiciels existants. **Rien n’est branché pour l’instant** : aucun identifiant à saisir.
+Section `Application`. Trois rangées.
+
+- `Rechercher des mises à jour` — la version installée s’affiche sous le libellé. Dans l’application installée, le bouton lance une vérification. En développement, il ouvre plutôt la page des versions.
+- `Se déconnecter` — l’e-mail et l’adresse du serveur s’affichent sous le libellé. Le bouton ferme la session et ramène au formulaire. Le serveur et l’e-mail restent remplis. Si le fichier d’interface a été modifié sans être enregistré, une confirmation prévient : `Les modifications non enregistrées seront perdues.`
+- `Réinitialiser` — remet l’affichage d’usine, vous déconnecte, et recharge l’application. Confirmation : `Vous serez déconnecté et l’application va recharger. Cette action est immédiate.` Les comptes sur le serveur ne sont pas touchés.
 
 ## Fichier d’interface
 
 Section `Fichier d’interface`. C’est le fichier local qui mémorise la fenêtre, le compagnon, l’accueil et quelques largeurs de tableaux. Les équipes peuvent le **partager** pour aligner l’affichage.
 
 Dans l’usage courant, les sections ci-dessus suffisent. N’éditez ce fichier que si on vous a transmis un modèle, puis `Enregistrer`. Une syntaxe incorrecte affiche `JSON invalide` ou `Le fichier d’interface doit être un objet JSON.`
-
-## Se déconnecter et réinitialiser
-
-Si le fichier d’interface a été modifié sans être enregistré, `Se déconnecter` demande confirmation : `Les modifications non enregistrées seront perdues.`
-
-`Réinitialiser` demande : `Vous serez déconnecté et l’application va recharger. Cette action est immédiate.` Tout l’affichage local revient à l’état d’usine. Les comptes sur le serveur ne sont pas touchés.
 
 ## Bonnes pratiques
 

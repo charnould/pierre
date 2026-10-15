@@ -1,0 +1,23 @@
+name: Contributing
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  conditions:
+    name: Conditions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Case cochée
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          printf '%s\n' "$BODY" | grep -Eq -- "- \[[xX]\] J'accepte les conditions de" \
+            || {
+              echo "Cochez « J'accepte les conditions de CONTRIBUTING.md »."
+              exit 1
+            }

@@ -49,11 +49,12 @@ En haut, une rangée de portes. Chaque porte porte le verbe de l’application. 
 | `Créer des automatisations` | Les routines programmées         |
 | `Contacter par lots`        | Les traitements de masse         |
 | `Obtenir une synthèse`      | Le formulaire de synthèse        |
+| `Renouveler les assurances` | Un écran encore vide             |
+| `Piloter la relocation`     | Un écran encore vide             |
+| `Piloter les attributions`  | Un écran encore vide             |
+| `Piloter les ventes`        | Un écran encore vide             |
 
 `{agent}` est le nom de l’assistant de l’instance (souvent Pierre).
-
-> [!NOTE]
-> D’autres métiers existent déjà dans les droits (`Renouveler les assurances`, `Piloter la relocation`, `Piloter les attributions`, `Piloter les ventes`) mais leurs écrans ne sont pas encore ouverts. Ils n’apparaissent pas sur l’accueil.
 
 ### Les quatre colonnes
 
@@ -61,7 +62,7 @@ Sous les métiers, quatre colonnes côte à côte. Chacune montre un **extrait**
 
 | Colonne                     | Contenu                                                                       | Vide                                         |
 | --------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------- |
-| `Mes notifications`         | Ce qui vous a été signalé (dossiers, routines, traitements).                  | `Aucune notification` — `Vous êtes à jour.`  |
+| `Notifications`             | Ce qui vous a été signalé (dossiers, routines, traitements).                  | `Aucune notification` — `Vous êtes à jour.`  |
 | `Mes tâches`                | Actions ouvertes **qui vous sont assignées**, regroupées en retard / à venir. | `Aucune tâche` — `Rien d’ouvert.`            |
 | `Tâches que j’ai assignées` | Actions que **vous** avez déléguées à un collègue.                            | `Aucune tâche assignée` — `Rien de délégué.` |
 | `Activités`                 | Chronologie des personnes que vous suivez.                                    | `Aucune activité`                            |

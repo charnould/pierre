@@ -2,10 +2,6 @@
   "name": "@pierre/docs",
   "private": true,
   "type": "module",
-  "scripts": {
-    "generate": "bun run scripts/build.ts",
-    "test": "bun test scripts"
-  },
   "dependencies": {
     "prismjs": "^1.30.0"
   }

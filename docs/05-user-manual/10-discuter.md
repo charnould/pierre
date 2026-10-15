@@ -27,18 +27,18 @@ Ce n’est pas le lieu pour traiter une réclamation ou un impayé : pour cela, 
 
 ## Qui peut y accéder
 
-Toute personne connectée. L’agent public (`default`) est disponible dès qu’il est allumé dans `config.ts`. Les autres assistants n’apparaissent que s’ils ont été attribués. Sans agent public et sans attribution, l’écran peut rester vide.
+Toute personne connectée. L’agent public (`default`) est disponible dès qu’il est prêt et que `enabled` vaut `true` dans [Administration · Chatbot](./23-admin-chatbot.md). Les autres assistants n’apparaissent que s’ils ont été attribués. Sans agent public et sans attribution, l’écran peut rester vide.
 
 ## Lire l’écran
 
 Deux zones :
 
-| Zone              | Rôle                                                                                                                      |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Fil de discussion | Vos messages à droite, les réponses de l’assistant en dessous.                                                            |
-| Zone de saisie    | Sélecteur de profil (s’il y en a plusieurs), zone `Comment puis-je vous aider aujourd'hui ?`, trombone, bouton `Envoyer`. |
+| Zone              | Rôle                                                                                                                       |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Fil de discussion | Vos messages à droite, les réponses de l’assistant en dessous.                                                             |
+| Zone de saisie    | Menu `Profil de {nom}`, zone `Comment puis-je vous aider aujourd'hui ?`, trombone si l’agent l’autorise, bouton `Envoyer`. |
 
-Tant que vous n’avez rien envoyé, la zone de saisie est centrée dans l’écran, avec la phrase d’accueil et les questions proposées si l’agent en a. Après le premier message, seule la saisie reste en bas, avec la mention si l’agent en a une.
+Tant que vous n’avez rien envoyé, la zone de saisie est centrée dans l’écran, avec la phrase d’accueil de l’agent. Après le premier message, la saisie reste en bas. Les questions proposées et la mention sous la saisie s’affichent sur le site public. Elles se règlent dans le même JSON, décrit dans [Administration · Chatbot](./23-admin-chatbot.md).
 
 Pendant que l’assistant prépare sa réponse, un indicateur `Réflexion` peut apparaître, parfois suivi du détail des outils utilisés (`Travail en cours`, `N outil(s) utilisé(s)`). Vous pouvez `Arrêter` la génération, puis `Regénérer` ou `Réessayer` si elle a échoué ou a été interrompue.
 
@@ -46,9 +46,7 @@ Pendant que l’assistant prépare sa réponse, un indicateur `Réflexion` peut 
 
 ## Changer de profil
 
-Si plusieurs assistants vous sont ouverts, une liste `Profil de {agent}` apparaît à gauche de la zone de saisie. En changer **arrête** la génération en cours et **efface** la conversation : une nouvelle discussion commence.
-
-S’il n’y a qu’un seul profil, la liste est masquée.
+Le menu `Profil de {nom}` est à gauche de la zone de saisie, dès qu’un assistant vous est ouvert, y compris s’il n’y en a qu’un. Il affiche le nom `display` réglé dans [Administration · Chatbot](./23-admin-chatbot.md). En choisir un autre **arrête** la génération en cours et **efface** la conversation : une nouvelle discussion commence.
 
 ## Joindre un fichier
 

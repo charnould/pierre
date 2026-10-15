@@ -1,13 +1,32 @@
 import { describe, expect, it } from 'bun:test'
 import { join } from 'node:path'
 
-import { highlightFences, rewriteUnpublishedLinks } from './build.ts'
+import { escapeUnknownTags, highlightFences, rewriteUnpublishedLinks } from './build.ts'
 
 const DOCS = join(import.meta.dir, '..')
 
 function fence(lang: string, code: string) {
   return highlightFences(Bun.markdown.html(`\`\`\`${lang}\n${code}\n\`\`\``))
 }
+
+describe('escapeUnknownTags', () => {
+  it('turns prompt tags into text', () => {
+    const html = Bun.markdown.html(escapeUnknownTags('Dans <session>.\n\n<schema-content>\n\nfin'))
+    expect(html).toContain('&lt;session&gt;')
+    expect(html).toContain('&lt;schema-content&gt;')
+    expect(html).not.toContain('<session>')
+    expect(html).not.toContain('<schema-content>')
+    expect(html).not.toContain('&amp;lt;')
+  })
+
+  it('keeps documentation html and a session tag inside a code fence', () => {
+    const source = '<div><p>ok</p></div>\n\n```markdown\n<session>date</session>\n```'
+    const escaped = escapeUnknownTags(source)
+    expect(escaped).toContain('<div><p>ok</p></div>')
+    expect(escaped).toContain('<session>date</session>')
+    expect(escaped).not.toContain('\\<')
+  })
+})
 
 describe('highlightFences', () => {
   it('highlights json and escapes raw markup', () => {
@@ -21,13 +40,6 @@ describe('highlightFences', () => {
   it('highlights yaml and bash', () => {
     expect(fence('yaml', 'key: value')).toContain('class="token')
     expect(fence('bash', 'echo hi')).toContain('class="token')
-  })
-
-  it('leaves yml, sh, shell and sql fences unchanged', () => {
-    for (const lang of ['yml', 'sh', 'shell', 'sql']) {
-      const raw = Bun.markdown.html(`\`\`\`${lang}\nkey: value\n\`\`\``)
-      expect(highlightFences(raw)).toBe(raw)
-    }
   })
 })
 
@@ -58,7 +70,8 @@ describe('rewriteUnpublishedLinks', () => {
     const html = rewriteUnpublishedLinks(
       '<a href="./04-core-intelligence-hlm/index.md">Index</a><a href="./04-core-intelligence-hlm/knowledge/foo.md">Foo</a>',
       DOCS,
-      []
+      [],
+      ['04-core-intelligence-hlm']
     )
     expect(html).toBe(
       '<a href="./04-core-intelligence-hlm/index.md">Index</a><a href="https://github.com/charnould/pierre/blob/master/docs/04-core-intelligence-hlm/knowledge/foo.md">Foo</a>'

@@ -1,4 +1,4 @@
-# Agent — Synthèses HLM
+# Synthétiser une dossier
 
 ## 1. MISSION
 
@@ -81,7 +81,7 @@ Les autres entités liées peuvent être utilisées pour contextualiser l'entit�
 
 ## 5. SOURCES DE DONNÉES
 
-La source principale est `db.sqlite`
+La source principale est `/knowledge/db.sqlite`
 
 La base est accessible en lecture seule.
 
