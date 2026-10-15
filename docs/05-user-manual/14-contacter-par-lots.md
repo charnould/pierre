@@ -29,10 +29,10 @@ Le module sert à **dire la même chose à beaucoup de monde**, avec le bon cana
 
 Deux façons d’exécuter :
 
-| Bouton                    | Effet                                                            |
-| ------------------------- | ---------------------------------------------------------------- |
-| `Traiter sans envoyer`    | Avance les dossiers (panier, tags…) **sans** envoyer de message. |
-| `Appliquer le traitement` | Envoie réellement, dans la limite des canaux configurés.         |
+| Bouton                    | Effet                                                           |
+| ------------------------- | --------------------------------------------------------------- |
+| `Traiter sans envoyer`    | Avance les dossiers (phase, tags…) **sans** envoyer de message. |
+| `Appliquer le traitement` | Envoie réellement, dans la limite des canaux configurés.        |
 
 ## Qui peut y accéder
 
@@ -78,11 +78,11 @@ Canaux possibles : `RCS`, `SMS`, `Courriel`, `Lettre postale simple`, `Lettre av
 
 **Variables** : `Indiquez quelle colonne alimente chaque variable`. Dans le texte, `/` ouvre `Insérer un champ` (colonnes de l’export, plus `Date du jour`).
 
-`Panier d’arrivée` : où vont les dossiers après le traitement.
+`Phase d’arrivée` : où vont les dossiers après le traitement. Elle doit être une phase actuelle du paramétrage Impayés.
 
 ### Audience
 
-Restreignez qui est visé : `Paniers`, `Actions`, `Tags requis`, `Tags exclus`, fourchette de `Dette`, `Mois d’impayés`.
+Restreignez qui est visé : `Phases`, `Actions`, `Tags requis`, `Tags exclus`, fourchette de `Dette`, `Mois d’impayés`. Une phase, une action ou un tag retiré du paramétrage empêche d’enregistrer et d’exécuter le traitement tant qu’il y figure encore.
 
 ## Lire l’aperçu
 
@@ -116,7 +116,7 @@ Vide : `Aucune exécution` — `Les rapports apparaîtront après la première a
 ## Bonnes pratiques
 
 - **Relisez l’aperçu avant d’appliquer.** Une coordonnée absente se voit ici, pas après l’envoi.
-- **Testez d’abord `Traiter sans envoyer`** sur un petit filtre, pour vérifier le panier d’arrivée.
+- **Testez d’abord `Traiter sans envoyer`** sur un petit filtre, pour vérifier la phase d’arrivée.
 - **Un fallback n’est pas un doublon.** C’est le canal suivant si le premier ne peut pas partir.
 - **Gardez un modèle Word simple** pour les courriers : les champs doivent correspondre aux colonnes liées.
 

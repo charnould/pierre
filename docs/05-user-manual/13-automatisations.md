@@ -1,8 +1,8 @@
 # Créer des automatisations
 
-`Créer des automatisations` permet de faire travailler PIERRE **à heure fixe** : un rapport d’analyse pour l’équipe, ou des brouillons de réponses sur des réclamations qui correspondent à vos critères.
+`Créer des automatisations` permet de faire travailler PIERRE **à heure fixe** pour produire un rapport d’analyse destiné à l’équipe.
 
-Cette page décrit uniquement l’écran `Automatisations`. Les rapports aboutissent dans les [notifications](./01-accueil.md). Les brouillons de réponses s’appuient sur [Traiter les réclamations](./11-reclamations.md).
+Cette page décrit uniquement l’écran `Automatisations`. Les rapports aboutissent dans les [notifications](./01-accueil.md).
 
 ## Sommaire
 
@@ -14,7 +14,6 @@ Cette page décrit uniquement l’écran `Automatisations`. Les rapports aboutis
 - [Créer ou modifier](#créer-ou-modifier)
   - [Champs communs](#champs-communs)
   - [Rapport d’analyse](#rapport-danalyse)
-  - [Pré-génération de réponses](#pré-génération-de-réponses)
   - [Actions du propriétaire](#actions-du-propriétaire)
 - [Historique et rapports](#historique-et-rapports)
 - [Bonnes pratiques](#bonnes-pratiques)
@@ -26,12 +25,7 @@ Cette page décrit uniquement l’écran `Automatisations`. Les rapports aboutis
 
 Une automatisation est une **routine** : un nom, une fréquence, des collaborateurs à prévenir, et un travail que PIERRE recommence tout seul.
 
-Deux types, choisis **à la création** et ensuite figés :
-
-| Type                         | Résultat                                                                                                                                                                                     |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Rapport d'analyse`          | Un contenu rédigé par PIERRE (points d’attention, revue de dossiers…).                                                                                                                       |
-| `Pré-génération de réponses` | Des brouillons de courrier ou d’e-mail sur les réclamations qui matchent vos filtres. Les brouillons déjà produits ne sont pas régénérés. Dans la liste, le type s’affiche `Pré-génération`. |
+Une automatisation produit un `Rapport d'analyse` : un contenu rédigé par PIERRE (points d’attention, revue de dossiers…).
 
 ## Qui peut y accéder
 
@@ -71,12 +65,6 @@ Chaque ligne montre le nom, la description, les avatars des collaborateurs prév
 - `Rapports conservés` : combien d’éditions garder.
 - `Instructions` : ce que PIERRE doit produire (texte mis en forme : titres, listes, tableaux).
 
-### Pré-génération de réponses
-
-- `Format de réponse` : `Réponse numérique (email)` ou `Réponse postale (courrier)`.
-- `Filtres réclamations` : `Ajouter un filtre`, puis `Aperçu` pour voir `N réclamation(s) éligible(s)`.
-- `Limite` : maximum de réclamations traitées à chaque exécution.
-
 ### Actions du propriétaire
 
 | Bouton                        | Effet                                                       |
@@ -88,15 +76,13 @@ Chaque ligne montre le nom, la description, les avatars des collaborateurs prév
 | `Supprimer`                   | Confirmation `Supprimer cette automatisation ?`             |
 | `Annuler`                     | Ferme sans enregistrer.                                     |
 
-Messages habituels : `Automatisation créée`, `Automatisation mise à jour`, `Automatisation supprimée`, `Rapport disponible dans les notifications`, `Brouillons disponibles dans les notifications`.
+Messages habituels : `Automatisation créée`, `Automatisation mise à jour`, `Automatisation supprimée`, `Rapport disponible dans les notifications`.
 
 ## Historique et rapports
 
-Sur une automatisation de type rapport, `Historique` ouvre `Historique des rapports` : dates, mention `Rapport` ou `N brouillons générés sur N`. Un clic ouvre le rapport (fenêtre dédiée ou notification).
+`Historique` ouvre `Historique des rapports` : dates et mention `Rapport`. Un clic ouvre le rapport (fenêtre dédiée ou notification).
 
 S’il n’y a encore rien : `Aucun élément généré`.
-
-Les pré-générations n’ont pas ce menu dans la liste : leurs brouillons se retrouvent dans les notifications.
 
 ## Bonnes pratiques
 
@@ -109,8 +95,7 @@ Les pré-générations n’ont pas ce menu dans la liste : leurs brouillons se r
 
 | Situation                                           | Que faire                                                                                      |
 | --------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `Création impossible` / `Enregistrement impossible` | Vérifiez le nom, la fréquence et — pour une pré-génération — les filtres.                      |
-| `Filtre obsolète`                                   | Une colonne de réclamation a changé : rouvrez les filtres et l’aperçu.                         |
+| `Création impossible` / `Enregistrement impossible` | Vérifiez le nom et la fréquence.                                                               |
 | `Modification non autorisée`                        | Demandez au propriétaire, ou dupliquez l’idée dans une nouvelle routine.                       |
 | Statut `En échec`                                   | Rouvrez l’automatisation, `Lancer maintenant`, puis lisez le message d’erreur en notification. |
 | Personne n’a reçu le rapport                        | Vérifiez la liste `Collaborateurs` et vos notifications.                                       |

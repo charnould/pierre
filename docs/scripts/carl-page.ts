@@ -10,7 +10,7 @@ export type Bench = {
 
 const CARL: Bench = {
   name: 'Sélectionner un exemple ou saisir un message',
-  api: 'http://localhost:3000/api/models/carl',
+  api: 'https://agent.pierre-ia.org/carl',
   placeholder: 'Écrire un message…',
   groupes: [
     {
@@ -58,38 +58,9 @@ export const CARL_CSS = `
     body.has-bench .article {
       overflow-wrap: break-word;
     }
-    body.has-bench .article .typeset-scroll {
-      max-width: 100%;
-      overflow-x: auto;
-      margin: 0 0 16px;
-    }
-    body.has-bench .article table {
-      width: 100%;
-      border-collapse: collapse;
-      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-      font-size: 14px;
-      line-height: 20px;
-    }
-    body.has-bench .article th,
-    body.has-bench .article td {
-      font-weight: 400;
-      text-align: left;
-      vertical-align: top;
-      padding: 8px 16px 8px 0;
-      border-bottom: 1px solid #ececec;
-    }
     body.has-bench .article tr > :first-child {
       font-weight: 700;
       width: 11rem;
-    }
-    body.has-bench .article :not(pre) > code {
-      position: relative;
-      top: -0.05em;
-    }
-    body.has-bench .article blockquote {
-      margin: 0 0 16px;
-      padding-left: 14px;
-      border-left: 2px solid #111;
     }
     .banc {
       position: relative;
@@ -318,8 +289,8 @@ export function benchHtml(bench: Bench = CARL): string {
         erreur.hidden = true
         attente.hidden = true
         resultat.hidden = false
-        resultat.textContent = JSON.stringify(payload.output, null, 2)
-        const ms = payload.milliseconds
+        resultat.textContent = JSON.stringify(payload.data.output, null, 2)
+        const ms = payload.data.milliseconds
         duree.textContent = ms < 1000 ? ms + ' ms' : (ms / 1000).toFixed(1).replace('.', ',') + ' s'
       }
 

@@ -32,25 +32,26 @@ Les personnes connectées dont le compte inclut le module `Traiter les réclamat
 
 ## Lire l’écran
 
-Le tableau est organisé en **paniers** empilés. Aujourd’hui, un panier est généralement affiché : `Réclamations` (les demandes non encore abouties). D’autres paniers peuvent exister selon le paramétrage de l’organisme.
+Les paniers sont empilés. Un panier rempli indique son nom et le compte, par exemple `1–150 sur 420`. Un panier vide tient sur une ligne avec son nom et `0 réclamation`. Une seule barre, au-dessus du scroll, porte `Actualiser`. Dès qu’une réclamation est cochée, elle devient `Désélectionner` et `Agir sur N réclamations`. Les réglages du tableau restent accessibles. Le bouton à côté du nom d’une colonne trie toutes les pages du panier. Le menu de la colonne permet aussi de la déplacer ou de la masquer. `Colonnes` la réaffiche. Le bord droit d’une colonne la redimensionne.
 
-Au-dessus de chaque tableau :
+Au-dessus de chaque panier qui contient des réclamations :
 
-| Commande                | Rôle                                                             |
-| ----------------------- | ---------------------------------------------------------------- |
-| `Colonnes`              | Afficher ou masquer des colonnes.                                |
-| `Effacer les filtres`   | Retirer tous les filtres du tableau.                             |
-| `Actualiser`            | Recharger les lignes.                                            |
-| `Précédent` / `Suivant` | Pages suivantes (le compteur indique par exemple `1–10 sur 42`). |
+| Commande                | Rôle                                                       |
+| ----------------------- | ---------------------------------------------------------- |
+| `Colonnes`              | Afficher ou masquer des colonnes.                          |
+| `Effacer les filtres`   | Retirer tous les filtres du tableau.                       |
+| `Précédent` / `Suivant` | Pages suivantes, seulement quand le panier en a plusieurs. |
 
-La première colonne signale une **notification non lue** sur la ligne. Les autres colonnes viennent de vos données (numéro d’affaire, locataire, motif, avancement…). Un menu sur chaque en-tête permet de filtrer. L’ordre et la largeur des colonnes sont mémorisés.
+La première colonne coche une ou plusieurs réclamations. La sélection reste d’une page à l’autre et d’un panier à l’autre. La colonne suivante signale une **notification non lue**. Les autres colonnes viennent de vos données (`Réclamation`, `Locataire`, `Lot`, `Message`, `Dernier événement`, `Référent`…). Un menu sur chaque en-tête permet de filtrer. Les noms techniques des exports sont convertis en libellés lisibles ; les libellés paramétrés par l’organisme restent prioritaires. L’ordre et la largeur des colonnes sont mémorisés. Un panier vide n’a pas de tableau.
+
+`Agir sur N réclamations` peut changer le panier, ajouter ou retirer un tag, ou demander à Pierre une réponse possible, une synthèse ou une autre consigne. Pierre traite les réclamations l’une après l’autre, n’envoie rien, et enregistre chaque résultat dans l’historique.
 
 Cliquez une ligne pour ouvrir le dossier. Les notifications de cette réclamation passent alors à l’état lu.
 
-| Situation                | Message                                   |
-| ------------------------ | ----------------------------------------- |
-| Aucune donnée importée   | `Aucune réclamation importée.`            |
-| Le tableau ne charge pas | `Impossible de charger les réclamations.` |
+| Situation                | Message                                               |
+| ------------------------ | ----------------------------------------------------- |
+| Panier vide              | Une rubrique compacte `Nom du panier · 0 réclamation` |
+| Le tableau ne charge pas | `Impossible de charger les réclamations.`             |
 
 ## Lire un dossier
 
@@ -116,7 +117,7 @@ Sur une note de l’historique dont vous êtes l’auteur : `Répondre`, `Modifi
 
 | Situation                                      | Que faire                                                                              |
 | ---------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `Aucune réclamation importée.`                 | Un administrateur doit déposer `core.reclamations.csv` et reconstruire l’encyclopédie. |
+| `Aucune réclamation dans ce panier.`           | Un administrateur doit déposer `core.reclamations.csv` et reconstruire l’encyclopédie. |
 | `Message locataire requis pour la génération.` | Saisissez ou importez d’abord le message du locataire.                                 |
 | `Coordonnée du destinataire indisponible`      | Complétez téléphone ou e-mail dans vos données, ou changez de canal.                   |
 | `Impossible d’envoyer le message`              | Vérifiez le canal et réessayez ; à défaut, passez par le courrier ou Aravis.           |
