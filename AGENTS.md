@@ -27,6 +27,16 @@ Before implementing:
 
 Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
 
+### Proportional architecture
+
+This is a French social-housing application, not a hyperscale platform.
+
+- Assume SQLite and one server process unless the deployment model explicitly changes.
+- Provider calls time out after 15 seconds; dispatch leases last 30 seconds.
+- Do not add distributed ownership, coordination, or Netflix-scale machinery for hypothetical
+  multi-worker races.
+- Add architectural complexity only for a concrete requirement or an observed failure.
+
 ## 3. Surgical Changes
 
 **Touch only what you must. Clean up only your own mess.**
