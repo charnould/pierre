@@ -26,6 +26,7 @@ export type ActivityDbRow = Omit<Activite, 'mentions' | 'type' | 'channel'> & {
   bulk_id?: string | null
   execution_id?: string | null
   idempotency_key?: string | null
+  id_externe?: string | null
 }
 
 export type ActivityFacets = Pick<Activite, 'id_client' | 'id_locataire' | 'id_lot'>
@@ -72,7 +73,8 @@ export const row_to_activity = (row: ActivityDbRow): Activite => {
     revision: row.revision == null ? null : Number(row.revision),
     bulk_id: row.bulk_id ?? null,
     execution_id: row.execution_id ?? null,
-    idempotency_key: row.idempotency_key ?? null
+    idempotency_key: row.idempotency_key ?? null,
+    id_externe: row.id_externe ?? null
   }
 }
 
@@ -91,6 +93,7 @@ export type InsertActivityValues = {
   bulk_id?: string | null
   execution_id?: string | null
   idempotency_key?: string | null
+  id_externe?: string | null
 }
 
 export const insert_activity_row = (db: Database, values: InsertActivityValues): Activite => {
@@ -106,8 +109,8 @@ export const insert_activity_row = (db: Database, values: InsertActivityValues):
       `INSERT INTO activites (
          date_creation, rattachement, auteur, destinataire,
          id_client, id_locataire, id_lot, type, channel, mentions, contenu,
-         thread_id, revision, bulk_id, execution_id, idempotency_key
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         thread_id, revision, bulk_id, execution_id, idempotency_key, id_externe
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        RETURNING *`
     )
     .get(
@@ -126,7 +129,8 @@ export const insert_activity_row = (db: Database, values: InsertActivityValues):
       row_shape.revision,
       values.bulk_id ?? null,
       values.execution_id ?? null,
-      values.idempotency_key ?? null
+      values.idempotency_key ?? null,
+      values.id_externe ?? null
     )
   if (!row) throw new Error('Failed to append activity')
   send_telemetry(values.type, db)

@@ -175,7 +175,7 @@ export type CommunicationOpenedContent = {
 
 export type CommunicationStatusContent = {
   version: 2
-  result?: 'delivered' | 'read'
+  result?: 'sent' | 'delivered' | 'read' | 'opened'
   reason?: string
   provider_event_id?: string
 }
@@ -468,7 +468,15 @@ export const parse_communication_status_content = (
   const value = parse_contenu_json(raw)
   if (value['version'] !== 2) return null
   const result = value['result']
-  if (result !== undefined && result !== 'delivered' && result !== 'read') return null
+  if (
+    result !== undefined &&
+    result !== 'sent' &&
+    result !== 'delivered' &&
+    result !== 'read' &&
+    result !== 'opened'
+  ) {
+    return null
+  }
   return {
     version: 2,
     ...(result ? { result } : {}),
@@ -652,6 +660,7 @@ export type Activite = {
   bulk_id?: string | null
   execution_id?: string | null
   idempotency_key?: string | null
+  id_externe?: string | null
 }
 
 export type ActiviteListItem = Activite & {

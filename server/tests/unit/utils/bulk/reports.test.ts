@@ -301,6 +301,7 @@ describe('bulk reports', () => {
     db.close()
     expect(queuedRows.map((row) => row.type)).toEqual([
       'communication.sent',
+      'communication.ok',
       'communication.failed'
     ])
     expect(cancelledRows.map((row) => row.type)).toEqual([

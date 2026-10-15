@@ -5,6 +5,7 @@ const NOTIFICATION_DELIVERY_STATUSES = [
   'sent',
   'delivered',
   'read',
+  'opened',
   'received',
   'failed',
   'undelivered',
@@ -30,6 +31,7 @@ const STATUS_LABELS: Record<NotificationDeliveryStatus, string> = {
   sent: 'Envoyé',
   delivered: 'Délivré',
   read: 'Lu',
+  opened: 'Ouvert',
   received: 'Reçu',
   failed: 'Échec',
   undelivered: 'Non délivré',
@@ -54,6 +56,7 @@ export function notificationDeliveryStatusBadgeVariant(
   if (
     status === 'delivered' ||
     status === 'read' ||
+    status === 'opened' ||
     status === 'sent' ||
     status === 'received' ||
     status === 'signed'

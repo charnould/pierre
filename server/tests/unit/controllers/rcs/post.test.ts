@@ -7,6 +7,7 @@ import { Hono } from 'hono'
 import { controller } from '../../../../controllers/rcs/post'
 import type { User } from '../../../../utils/_schema'
 import { list_activities } from '../../../../utils/activities/query'
+import { claim_outbound_dispatch, create_outbound } from '../../../../utils/communications/storage'
 import { insert_contact_if_absent } from '../../../../utils/contacts'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { TELEMETRY_URL } from '../../../../utils/send-telemetry'
@@ -35,7 +36,7 @@ const validBody = {
   contenu: {
     action: 'Répondre au locataire',
     body: 'Votre dossier est prêt.',
-    sms_fallback: 'Votre dossier est prêt.',
+    sms_fallback: 'Texte SMS',
     choices: [{ type: 'reply', label: 'Confirmer' }]
   }
 }
@@ -163,8 +164,8 @@ describe('POST /rcs provider boundary', () => {
               from: 'PIERRE-TEST',
               to: [{ number: '0033611563959' }],
               reference: expect.stringMatching(/^\d+$/),
-              allowedChannels: ['RCS', 'SMS'],
-              body: { type: 'auto', content: 'Votre dossier est prêt.' },
+              allowedChannels: ['RCS'],
+              body: { type: 'auto', content: 'Texte SMS' },
               richContent: {
                 conversation: [{ text: 'Votre dossier est prêt.' }],
                 suggestions: [{ action: 'Reply', label: 'Confirmer', postbackdata: 'Confirmer' }]
@@ -180,21 +181,49 @@ describe('POST /rcs provider boundary', () => {
       expect(rows.some((row) => row.channel === 'sms')).toBe(false)
       const sent = rows.find((row) => row.type === 'communication.sent' && row.channel === 'rcs')
       expect(JSON.parse(sent!.contenu).choices).toEqual([{ type: 'reply', label: 'Confirmer' }])
-      expect(JSON.parse(sent!.contenu).sms_fallback).toBe('Votre dossier est prêt.')
+      expect(JSON.parse(sent!.contenu).sms_fallback).toBe('Texte SMS')
       expect((await postRcs(idempotencyKey)).status).toBe(201)
-      expect(provider_calls(fetchSpy.mock.calls)).toHaveLength(2)
+      expect(provider_calls(fetchSpy.mock.calls)).toHaveLength(1)
     } finally {
       fetchSpy.mockRestore()
     }
   })
 
-  it('contains provider rejection at the boundary and records failure', async () => {
-    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(
-      (async () =>
-        new Response(JSON.stringify({ message: 'Rejected by provider' }), {
-          status: 422
-        })) as unknown as typeof fetch
-    )
+  it('retourne une erreur rejouable quand le dispatch est déjà réservé', async () => {
+    const idempotencyKey = Bun.randomUUIDv7()
+    const activity = create_outbound({
+      actor: 'alice@example.org',
+      contexte: 'tickets',
+      ref: validBody.ref,
+      type: 'rcs',
+      destinataire: validBody.destinataire,
+      contenu: JSON.stringify(validBody.contenu),
+      idempotency_key: idempotencyKey
+    })
+    expect(claim_outbound_dispatch(activity.id)).toBe('claimed')
+    const fetchSpy = spyOn(globalThis, 'fetch')
+    try {
+      const response = await postRcs(idempotencyKey)
+      expect(response.status).toBe(503)
+      expect(response.headers.get('retry-after')).toBe('30')
+      expect(await response.json()).toMatchObject({
+        error: { code: 'dispatch_pending' },
+        data: { id: activity.id }
+      })
+      expect(fetchSpy).not.toHaveBeenCalled()
+    } finally {
+      fetchSpy.mockRestore()
+    }
+  })
+
+  it('ne déclasse pas le numéro sur un rejet synchrone du gateway', async () => {
+    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation((async (
+      url: Parameters<typeof fetch>[0],
+      _init?: Parameters<typeof fetch>[1]
+    ) => {
+      if (String(url) === TELEMETRY_URL) return new Response(null, { status: 204 })
+      return new Response(JSON.stringify({ message: 'Rejected by provider' }), { status: 422 })
+    }) as typeof fetch)
     try {
       const response = await postRcs()
       expect(response.status).toBe(502)
@@ -213,12 +242,53 @@ describe('POST /rcs provider boundary', () => {
             row.type === 'communication.failed' && JSON.parse(row.contenu).reason === 'failed'
         )
       ).toBeDefined()
+      expect(provider_calls(fetchSpy.mock.calls)).toHaveLength(1)
+      const db = new Database(paths.database, { readonly: true })
+      const contact = db
+        .query<{ status: string }, [string]>('SELECT status FROM contacts WHERE value = ?')
+        .get('+33611563959')
+      db.close()
+      expect(contact?.status).not.toBe('sms_compatible')
     } finally {
       fetchSpy.mockRestore()
     }
   })
 
-  it('laisse CM choisir RCS ou SMS même si le contact est sms_compatible', async () => {
+  it('rejoue une indisponibilité transitoire sans terminaliser la communication', async () => {
+    let attempts = 0
+    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation((async (
+      url: Parameters<typeof fetch>[0],
+      init?: Parameters<typeof fetch>[1]
+    ) => {
+      if (String(url) === TELEMETRY_URL) return new Response(null, { status: 204 })
+      attempts += 1
+      if (attempts === 1) throw new TypeError('network unavailable')
+      return acceptProviderRequest(url, init)
+    }) as typeof fetch)
+    try {
+      const idempotencyKey = Bun.randomUUIDv7()
+      const failed = await postRcs(idempotencyKey)
+      expect(failed.status).toBe(503)
+      expect(failed.headers.get('retry-after')).toBe('30')
+      expect(await failed.json()).toMatchObject({
+        error: { code: 'cm_unavailable' },
+        data: { type: 'communication.sent', channel: 'rcs' }
+      })
+      expect(
+        list_activities('alice@example.org', {
+          rattachement: 'tickets:REQ-RCS',
+          limit: 10
+        }).some((row) => row.type === 'communication.failed')
+      ).toBe(false)
+
+      expect((await postRcs(idempotencyKey)).status).toBe(201)
+      expect(provider_calls(fetchSpy.mock.calls)).toHaveLength(2)
+    } finally {
+      fetchSpy.mockRestore()
+    }
+  })
+
+  it('envoie un SMS quand le numéro est déjà sms_compatible', async () => {
     const db = new Database(paths.database)
     insert_contact_if_absent(db, '+33611563959', 'sms_compatible')
     db.close()
@@ -227,13 +297,21 @@ describe('POST /rcs provider boundary', () => {
       const response = await postRcs()
       expect(response.status).toBe(201)
       expect((await response.json()) as unknown).toMatchObject({
-        data: { channel: 'rcs', type: 'communication.sent' }
+        data: { channel: 'sms', type: 'communication.sent' }
       })
       const calls = provider_calls(fetchSpy.mock.calls)
       expect(calls).toHaveLength(1)
-      expect(JSON.parse(String((calls[0] as [string, RequestInit])[1].body))).toMatchObject({
-        messages: { msg: [{ allowedChannels: ['RCS', 'SMS'] }] }
+      const message = JSON.parse(String((calls[0] as [string, RequestInit])[1].body)).messages
+        .msg[0]
+      expect(message.allowedChannels).toEqual(['SMS'])
+      expect(message.body).toEqual({ type: 'auto', content: 'Texte SMS' })
+      expect(message.richContent).toBeUndefined()
+      const rows = list_activities('alice@example.org', {
+        rattachement: 'tickets:REQ-RCS',
+        limit: 10
       })
+      const sent = rows.find((row) => row.type === 'communication.sent')
+      expect(JSON.parse(sent!.contenu).choices).toBeUndefined()
     } finally {
       fetchSpy.mockRestore()
     }

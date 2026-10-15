@@ -6,28 +6,35 @@ import {
   activity_timestamp,
   is_communication_type
 } from '../../../shared/activites'
-import { get_activity, parse_rattachement } from '../activities/rows'
+import { get_activity, get_activity_with_db, parse_rattachement } from '../activities/rows'
 import { datastore_path } from './storage'
 
 export const communication_from_reference = (reference: string): Activite | null => {
-  if (!/^[1-9]\d*$/.test(reference)) return null
-  const id = Number(reference)
-  if (!Number.isSafeInteger(id)) return null
-  const activity = get_activity(id)
-  return activity && is_communication_type(activity.type) ? activity : null
+  const value = reference.trim()
+  if (!value) return null
+  if (/^[1-9]\d*$/.test(value)) {
+    const id = Number(value)
+    if (Number.isSafeInteger(id)) {
+      const activity = get_activity(id)
+      if (activity && is_communication_type(activity.type)) return activity
+    }
+  }
+  const db = new Database(datastore_path(), { readonly: true })
+  try {
+    const row = db
+      .query<{ id: number }, [string]>(
+        `SELECT id FROM activites
+         WHERE id_externe = ? AND type LIKE 'communication.%'
+         ORDER BY id DESC LIMIT 1`
+      )
+      .get(value)
+    return row ? get_activity_with_db(db, row.id) : null
+  } finally {
+    db.close()
+  }
 }
 
 export const communication_reference = (activityId: number): string => String(activityId)
-
-/** Ids d’activité présents dans Message-Id, In-Reply-To ou References. */
-export const activity_references_in = (header: string): string[] => {
-  const ids: string[] = []
-  for (const token of header.split(/\s+/)) {
-    const bare = token.replace(/^<|>$/g, '')
-    if (/^[1-9]\d*$/.test(bare) && !ids.includes(bare)) ids.push(bare)
-  }
-  return ids
-}
 
 export const next_status_timestamp = (activity: Activite, now: Date = new Date()): string => {
   const current = new Date(activity.date_creation).getTime()

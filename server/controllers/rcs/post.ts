@@ -11,11 +11,13 @@ import { communication_reference, next_status_timestamp } from '../../utils/comm
 import {
   claim_outbound_dispatch,
   CommunicationsError,
-  create_outbound
+  create_outbound,
+  DISPATCH_RETRY_AFTER_SECONDS,
+  release_outbound_dispatch
 } from '../../utils/communications/storage'
-import { normalize_telephone } from '../../utils/contacts'
+import { mobile_channel, normalize_telephone } from '../../utils/contacts'
 import { settle_delivery } from '../../utils/delivery-status'
-import { RcsSendError, send_rcs_message } from '../../utils/rcs/send'
+import { RcsSendError, send_rcs_message, send_sms_message } from '../../utils/rcs/send'
 import { to_cm_number, to_cm_suggestions } from '../../utils/rcs/wrap'
 
 const Body = z
@@ -78,53 +80,90 @@ export const controller = async (c: Context) => {
     return c.json({ error: { code: 'invalid_body', message: 'Contenu RCS invalide' } }, 400)
   }
 
+  const channel = mobile_channel(normalized.value)
+  const smsBody = contenu.sms_fallback ?? contenu.body
   try {
     let activity = create_outbound({
       actor: user.email,
       contexte: parsed.data.contexte,
       ref: parsed.data.ref,
-      type: 'rcs',
+      type: channel,
       destinataire: normalized.value,
-      contenu: JSON.stringify(with_sms_fallback(contenu)),
+      contenu: JSON.stringify(channel === 'sms' ? { body: smsBody } : with_sms_fallback(contenu)),
       idempotency_key: idempotencyKey
     })
     const dispatch = claim_outbound_dispatch(activity.id)
-    if (dispatch !== 'claimed') return c.json({ data: get_activity(activity.id) ?? activity }, 201)
-
-    const suggestions = to_cm_suggestions(contenu.choices)
-    const richContent = {
-      conversation: [{ text: contenu.body }],
-      ...(suggestions.length ? { suggestions } : {})
+    const current = get_activity(activity.id) ?? activity
+    if (dispatch === 'pending') {
+      c.header('Retry-After', String(DISPATCH_RETRY_AFTER_SECONDS))
+      return c.json(
+        {
+          error: { code: 'dispatch_pending', message: 'Envoi déjà en cours, réessayez plus tard' },
+          data: current
+        },
+        503
+      )
     }
+    if (dispatch === 'not_queued') return c.json({ data: current }, 201)
+
     try {
-      await send_rcs_message({
-        phone: to_cm_number(normalized.value),
-        richContent,
-        body: { content: contenu.sms_fallback ?? contenu.body },
-        reference: communication_reference(activity.id),
-        channels: ['RCS', 'SMS']
-      })
+      if (channel === 'sms') {
+        await send_sms_message({
+          phone: to_cm_number(normalized.value),
+          body: smsBody,
+          reference: communication_reference(activity.id)
+        })
+      } else {
+        const suggestions = to_cm_suggestions(contenu.choices)
+        await send_rcs_message({
+          phone: to_cm_number(normalized.value),
+          richContent: {
+            conversation: [{ text: contenu.body }],
+            ...(suggestions.length ? { suggestions } : {})
+          },
+          body: { content: smsBody },
+          reference: communication_reference(activity.id)
+        })
+      }
     } catch (error) {
-      const settled = settle_delivery({
+      if (!(error instanceof RcsSendError) || error.retryable) {
+        release_outbound_dispatch(activity.id)
+        if (!(error instanceof RcsSendError)) console.error('[post.rcs]', error)
+        c.header('Retry-After', String(DISPATCH_RETRY_AFTER_SECONDS))
+        return c.json(
+          {
+            error: {
+              code: error instanceof RcsSendError ? error.code : 'provider_unavailable',
+              message: error instanceof Error ? error.message : 'Échec temporaire de l’envoi'
+            },
+            data: activity
+          },
+          503
+        )
+      }
+      activity = settle_delivery({
         activity_id: activity.id,
-        type: 'rcs',
+        type: channel,
         statut: 'failed',
         occurred_at: next_status_timestamp(activity)
-      })
-      activity = settled.activity
-      if (!(error instanceof RcsSendError)) console.error('[post.rcs]', error)
-      const status = error instanceof RcsSendError && error.status === 503 ? 503 : 502
+      }).activity
       return c.json(
         {
           error: {
-            code: error instanceof RcsSendError ? error.code : 'provider_unavailable',
-            message: error instanceof Error ? error.message : 'Échec de l’envoi RCS'
+            code: error.code,
+            message: error.message
           },
           data: activity
         },
-        status
+        502
       )
     }
+    settle_delivery({
+      activity_id: activity.id,
+      type: channel,
+      statut: 'sent',
+      occurred_at: next_status_timestamp(activity)
+    })
     return c.json({ data: activity }, 201)
   } catch (error) {
     if (error instanceof CommunicationsError) {

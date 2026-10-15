@@ -6,6 +6,8 @@ import synthesePayloadSql from './003-synthese-payload.sql' with { type: 'text' 
 import dropArtifactTagsSql from './004-drop-artifact-tags.sql' with { type: 'text' }
 import setupSql from './005-setup.sql' with { type: 'text' }
 import carlQualificationsSql from './006-carl-qualifications.sql' with { type: 'text' }
+import emailMessageIdSql from './007-email-message-id.sql' with { type: 'text' }
+import communicationDispatchClaimsSql from './008-communication-dispatch-claims.sql' with { type: 'text' }
 
 export type DatastoreMigration = {
   version: number
@@ -19,7 +21,9 @@ export const APP_MIGRATIONS: readonly DatastoreMigration[] = [
   { version: 3, name: 'synthese-payload', sql: synthesePayloadSql },
   { version: 4, name: 'drop-artifact-tags', sql: dropArtifactTagsSql },
   { version: 5, name: 'setup', sql: setupSql },
-  { version: 6, name: 'carl-qualifications', sql: carlQualificationsSql }
+  { version: 6, name: 'carl-qualifications', sql: carlQualificationsSql },
+  { version: 7, name: 'email-message-id', sql: emailMessageIdSql },
+  { version: 8, name: 'communication-dispatch-claims', sql: communicationDispatchClaimsSql }
 ]
 
 const SCHEMA_MIGRATIONS_SQL = `

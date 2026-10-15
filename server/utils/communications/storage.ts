@@ -90,6 +90,7 @@ type CreateOutboundInputBase = {
   idempotency_key: string
   bulk_id?: string | null
   execution_id?: string | null
+  thread_id?: string
   recipients?: string[]
   notify_current_manager?: boolean
   require_bulk_run?: { bulk_operation_id: string; execution_id: string }
@@ -164,10 +165,11 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
         channel: string | null
         destinataire: string | null
         contenu: string
+        thread_id: string | null
       },
       [string]
     >(
-      `SELECT id, rattachement, auteur, type, channel, destinataire, contenu
+      `SELECT id, rattachement, auteur, type, channel, destinataire, contenu, thread_id
          FROM activites WHERE idempotency_key = ? LIMIT 1`
     )
     .get(input.idempotency_key)
@@ -178,7 +180,8 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
       existing.type !== openedType ||
       existing.channel !== channel ||
       existing.destinataire !== destinationValue ||
-      existing.contenu !== contenu
+      existing.contenu !== contenu ||
+      (input.thread_id != null && existing.thread_id !== input.thread_id)
     ) {
       throw new CommunicationsError(
         'Idempotency-Key déjà utilisée pour une autre communication',
@@ -211,7 +214,7 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
       )
     }
   }
-  const threadId = Bun.randomUUIDv7()
+  const threadId = input.thread_id ?? Bun.randomUUIDv7()
   return insert_activity_row(db, {
     date_creation: now,
     rattachement,
@@ -227,7 +230,7 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
     })),
     contenu,
     thread_id: threadId,
-    revision: 1,
+    revision: input.thread_id ? thread_revision(db, threadId) : 1,
     bulk_id: input.bulk_id ?? null,
     execution_id: input.execution_id ?? null,
     idempotency_key: input.idempotency_key
@@ -250,15 +253,47 @@ export const create_outbound = (input: CreateOutboundInput): Activite => {
   }
 }
 
-export type DispatchClaim = 'claimed' | 'pending' | 'abandoned' | 'not_queued'
+export type DispatchClaim = 'claimed' | 'pending' | 'not_queued'
 
-/** Read-only: a send is claimable when its thread has no result yet. */
+export const DISPATCH_RETRY_AFTER_SECONDS = 30
+const DISPATCH_LEASE_MS = DISPATCH_RETRY_AFTER_SECONDS * 1000
+
+export const complete_outbound_dispatch_with_db = (db: Database, activity_id: number): void => {
+  db.run('DELETE FROM communication_dispatch_claims WHERE activity_id = ?', [activity_id])
+}
+
+export const release_outbound_dispatch = (activity_id: number): void => {
+  const db = new Database(datastore_path())
+  db.run('PRAGMA busy_timeout = 5000')
+  try {
+    complete_outbound_dispatch_with_db(db, activity_id)
+  } finally {
+    db.close()
+  }
+}
+
 export const claim_outbound_dispatch = (activity_id: number): DispatchClaim => {
   const db = new Database(datastore_path())
   db.run('PRAGMA busy_timeout = 5000')
   try {
+    db.run('BEGIN IMMEDIATE')
     const activity = get_activity_with_db(db, activity_id)
     if (!activity || activity.type !== 'communication.sent' || !activity.thread_id) {
+      complete_outbound_dispatch_with_db(db, activity_id)
+      db.run('COMMIT')
+      return 'not_queued'
+    }
+    const sourceRevision = activity.revision ?? 1
+    const superseded = db
+      .query<{ id: number }, [string, number]>(
+        `SELECT id FROM activites
+         WHERE thread_id = ? AND type = 'communication.sent' AND revision > ?
+         LIMIT 1`
+      )
+      .get(activity.thread_id, sourceRevision)
+    if (superseded) {
+      complete_outbound_dispatch_with_db(db, activity_id)
+      db.run('COMMIT')
       return 'not_queued'
     }
     const latest = db
@@ -268,11 +303,33 @@ export const claim_outbound_dispatch = (activity_id: number): DispatchClaim => {
          ORDER BY revision DESC LIMIT 1`
       )
       .get(activity.thread_id)
-    if (!latest) return 'not_queued'
-    if (latest.type === 'communication.ok' || latest.type === 'communication.failed') {
+    if (!latest) {
+      complete_outbound_dispatch_with_db(db, activity_id)
+      db.run('COMMIT')
       return 'not_queued'
     }
-    return 'claimed'
+    if (latest.type === 'communication.ok' || latest.type === 'communication.failed') {
+      complete_outbound_dispatch_with_db(db, activity_id)
+      db.run('COMMIT')
+      return 'not_queued'
+    }
+    const now = new Date()
+    const claimed = db.run(
+      `INSERT INTO communication_dispatch_claims (activity_id, claimed_at)
+       VALUES (?, ?)
+       ON CONFLICT(activity_id) DO UPDATE SET claimed_at = excluded.claimed_at
+       WHERE communication_dispatch_claims.claimed_at <= ?`,
+      [
+        activity_id,
+        activity_timestamp(now),
+        activity_timestamp(new Date(now.getTime() - DISPATCH_LEASE_MS))
+      ]
+    )
+    db.run('COMMIT')
+    return claimed.changes > 0 ? 'claimed' : 'pending'
+  } catch (error) {
+    db.run('ROLLBACK')
+    throw error
   } finally {
     db.close()
   }
@@ -287,6 +344,7 @@ export type CreateInboundInput = {
   occurred_at: string
   thread_id?: string
   idempotency_key?: string
+  id_externe?: string
 }
 
 export const create_inbound = (input: CreateInboundInput): Activite => {
@@ -358,7 +416,8 @@ export const create_inbound = (input: CreateInboundInput): Activite => {
       contenu: opened_contenu(input.contenu, input.auteur),
       thread_id: threadId,
       revision: thread_revision(db, threadId),
-      idempotency_key: input.idempotency_key ?? null
+      idempotency_key: input.idempotency_key ?? null,
+      id_externe: input.id_externe ?? null
     })
     db.run('COMMIT')
     return activity

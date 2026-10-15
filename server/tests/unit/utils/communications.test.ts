@@ -9,6 +9,7 @@ import {
   communication_reference,
   find_recent_thread
 } from '../../../utils/communications/parsing'
+import { settle_definitive_rcs_failure } from '../../../utils/communications/rcs-sms-fallback'
 import {
   claim_outbound_dispatch,
   CommunicationsError,
@@ -103,7 +104,7 @@ describe('communications', () => {
     expect(count).toBe(1)
   })
 
-  it('laisse le dispatch réclamable jusqu’à un événement terminal', () => {
+  it('réserve le dispatch jusqu’à un événement terminal', () => {
     const activity = create_outbound({
       actor: 'alice@example.org',
       contexte: 'tickets',
@@ -114,7 +115,7 @@ describe('communications', () => {
       idempotency_key: Bun.randomUUIDv7()
     })
     expect(claim_outbound_dispatch(activity.id)).toBe('claimed')
-    expect(claim_outbound_dispatch(activity.id)).toBe('claimed')
+    expect(claim_outbound_dispatch(activity.id)).toBe('pending')
     update_status({
       activity_id: activity.id,
       type: 'rcs',
@@ -122,6 +123,67 @@ describe('communications', () => {
       occurred_at: '2030-08-26T20:00:00Z'
     })
     expect(claim_outbound_dispatch(activity.id)).toBe('not_queued')
+  })
+
+  it('retrouve le SMS de fallback après une interruption', () => {
+    const rcs = create_outbound({
+      actor: 'alice@example.org',
+      contexte: 'tickets',
+      ref: 'DISPATCH-FALLBACK',
+      type: 'rcs',
+      destinataire: '+33612345678',
+      contenu: JSON.stringify({
+        version: 2,
+        sender: 'user:alice@example.org',
+        body: 'RCS',
+        sms_fallback: 'SMS'
+      }),
+      idempotency_key: Bun.randomUUIDv7()
+    })
+    const first = settle_definitive_rcs_failure(rcs.id, '2030-08-26T20:00:00Z').smsFallback
+    const replay = settle_definitive_rcs_failure(rcs.id, '2030-08-26T20:00:00Z').smsFallback
+
+    expect(first?.channel).toBe('sms')
+    expect(replay?.id).toBe(first?.id)
+    expect(claim_outbound_dispatch(first!.id)).toBe('claimed')
+    update_status({
+      activity_id: first!.id,
+      type: 'sms',
+      statut: 'sent',
+      occurred_at: '2030-08-26T20:01:00Z'
+    })
+  })
+
+  it('ignore un échec RCS tardif après livraison', () => {
+    const rcs = create_outbound({
+      actor: 'alice@example.org',
+      contexte: 'tickets',
+      ref: 'RCS-LATE-FAILURE',
+      type: 'rcs',
+      destinataire: '+33687654321',
+      contenu: JSON.stringify({
+        version: 2,
+        sender: 'user:alice@example.org',
+        body: 'RCS',
+        sms_fallback: 'SMS'
+      }),
+      idempotency_key: Bun.randomUUIDv7()
+    })
+    update_status({
+      activity_id: rcs.id,
+      type: 'rcs',
+      statut: 'delivered',
+      occurred_at: '2030-08-26T20:00:00Z'
+    })
+
+    const late = settle_definitive_rcs_failure(rcs.id, '2030-08-26T20:01:00Z')
+    expect(late.smsFallback).toBeNull()
+    const db = new Database(paths.database, { readonly: true })
+    const contact = db
+      .query<{ status: string }, [string]>('SELECT status FROM contacts WHERE value = ?')
+      .get('+33687654321')
+    db.close()
+    expect(contact?.status).not.toBe('sms_compatible')
   })
 
   it('ignore un statut retardé et bloque les écritures génériques', () => {
@@ -155,7 +217,8 @@ describe('communications', () => {
       statut: 'failed',
       occurred_at: '2031-08-26T20:00:00Z'
     })
-    expect(laterFailure.id).toBe(activity.id)
+    expect(laterFailure.type).toBe('communication.failed')
+    expect(laterFailure.id).not.toBe(activity.id)
     const duplicate = update_status({
       activity_id: activity.id,
       type: 'email',

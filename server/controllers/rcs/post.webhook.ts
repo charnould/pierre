@@ -1,20 +1,31 @@
 import type { Context } from 'hono'
 
-import { ACTIVITY_CONTENT_VERSION } from '../../../shared/activites'
+import {
+  ACTIVITY_CONTENT_VERSION,
+  parse_communication_opened_content,
+  type Activite
+} from '../../../shared/activites'
 import { parse_rattachement } from '../../utils/activities/rows'
 import { handle_rich_rcs_reply } from '../../utils/bulk/rich-rcs'
 import {
   cm_webhook_authorized,
   communication_from_reference,
-  find_recent_thread
+  communication_reference,
+  find_recent_thread,
+  next_status_timestamp
 } from '../../utils/communications/parsing'
+import { settle_definitive_rcs_failure } from '../../utils/communications/rcs-sms-fallback'
 import {
+  claim_outbound_dispatch,
   CommunicationsError,
   create_inbound,
-  create_unmatched_inbound
+  create_unmatched_inbound,
+  release_outbound_dispatch
 } from '../../utils/communications/storage'
 import { normalize_telephone } from '../../utils/contacts'
 import { settle_delivery } from '../../utils/delivery-status'
+import { RcsSendError, send_sms_message } from '../../utils/rcs/send'
+import { to_cm_number } from '../../utils/rcs/wrap'
 
 class WebhookValidationError extends Error {}
 
@@ -66,16 +77,19 @@ const inbound_idempotency_key = (
   content: string,
   context_reference: string | null
 ): string => {
-  const providerEventId =
-    string_at(payload, 'messageId') ??
-    string_at(payload, 'message', 'id') ??
-    string_at(payload, 'event', 'id') ??
-    string_at(payload, 'id')
+  const providerEventId = provider_event_id(payload)
   const identity = providerEventId
     ? `event:${providerEventId}`
     : `fingerprint:${phone}\0${occurred_at}\0${content}\0${context_reference ?? ''}`
   return `cm:inbound:${new Bun.CryptoHasher('sha256').update(identity).digest('hex')}`
 }
+
+const provider_event_id = (payload: Record<string, unknown>): string | null =>
+  string_at(payload, 'messageId') ??
+  string_at(payload, 'message', 'id') ??
+  string_at(payload, 'event', 'id') ??
+  string_at(payload, 'id') ??
+  (string_at(payload, 'messageContext') ? string_at(payload, 'reference') : null)
 
 const content_from = (payload: Record<string, unknown>): string | null => {
   const text = string_at(payload, 'message', 'text')
@@ -111,11 +125,51 @@ const handle_status = async (payload: Record<string, unknown>): Promise<void> =>
   if (!occurredAt || Number.isNaN(new Date(occurredAt).getTime())) {
     throw new WebhookValidationError('Horodatage webhook invalide')
   }
+  if (activity.channel === 'rcs' && statut === 'failed') {
+    const { smsFallback } = settle_definitive_rcs_failure(activity.id, occurredAt)
+    if (smsFallback) await dispatch_sms_fallback(smsFallback)
+    return
+  }
   settle_delivery({
     activity_id: activity.id,
     type: activity.channel,
     statut,
     occurred_at: occurredAt
+  })
+}
+
+const dispatch_sms_fallback = async (sms: Activite): Promise<void> => {
+  if (!sms.destinataire) return
+  const content = parse_communication_opened_content(sms.contenu)
+  const phone = to_cm_number(sms.destinataire)
+  if (!content?.body || !phone) return
+  const dispatch = claim_outbound_dispatch(sms.id)
+  if (dispatch === 'pending') throw new Error('SMS fallback dispatch pending')
+  if (dispatch === 'not_queued') return
+  try {
+    await send_sms_message({
+      phone,
+      body: content.body,
+      reference: communication_reference(sms.id)
+    })
+  } catch (error) {
+    if (!(error instanceof RcsSendError) || error.retryable) {
+      release_outbound_dispatch(sms.id)
+      throw error
+    }
+    settle_delivery({
+      activity_id: sms.id,
+      type: 'sms',
+      statut: 'failed',
+      occurred_at: next_status_timestamp(sms)
+    })
+    return
+  }
+  settle_delivery({
+    activity_id: sms.id,
+    type: 'sms',
+    statut: 'sent',
+    occurred_at: next_status_timestamp(sms)
   })
 }
 
@@ -135,7 +189,10 @@ const handle_inbound = (payload: Record<string, unknown>): void => {
   const rawTime = string_at(payload, 'timeUtc')
   const occurredAt = rawTime ? cm_instant(rawTime) : null
   if (!occurredAt) throw new WebhookValidationError('Horodatage webhook invalide')
-  const contextReference = string_at(payload, 'messageContext') ?? string_at(payload, 'reference')
+  const channel = mobile_channel(payload)
+  const contextReference =
+    string_at(payload, 'messageContext') ??
+    (channel === 'sms' ? string_at(payload, 'reference') : null)
   const source = contextReference ? communication_from_reference(contextReference) : null
   const content = content_from(payload)
   if (!content) throw new WebhookValidationError('Contenu webhook manquant')
@@ -146,10 +203,13 @@ const handle_inbound = (payload: Record<string, unknown>): void => {
     content,
     contextReference
   )
-  const channel = mobile_channel(payload)
+  const sourceContent = source ? parse_communication_opened_content(source.contenu) : null
   const exact =
     (source?.channel === 'rcs' || source?.channel === 'sms') &&
-    source.destinataire === phone.value &&
+    (source.destinataire === phone.value ||
+      source.auteur === `external:${phone.value}` ||
+      sourceContent?.sender === `external:${phone.value}` ||
+      source.type === 'communication.received') &&
     parse_rattachement(source.rattachement)
       ? source
       : null
@@ -164,11 +224,24 @@ const handle_inbound = (payload: Record<string, unknown>): void => {
       contenu: JSON.stringify({ version: ACTIVITY_CONTENT_VERSION, body: content }),
       occurred_at: occurredAt,
       thread_id: exact.thread_id ?? undefined,
-      idempotency_key: idempotencyKey
+      idempotency_key: idempotencyKey,
+      id_externe: provider_event_id(payload) ?? undefined
     })
     if (exact.bulk_id && exact.execution_id) {
       handle_rich_rcs_reply(exact, inbound, payload)
     }
+    return
+  }
+
+  if (contextReference) {
+    create_unmatched_inbound({
+      type: channel,
+      auteur: `external:${phone.value}`,
+      contenu: JSON.stringify({ version: ACTIVITY_CONTENT_VERSION, body: content }),
+      occurred_at: occurredAt,
+      idempotency_key: idempotencyKey,
+      id_externe: provider_event_id(payload) ?? undefined
+    })
     return
   }
 
@@ -182,7 +255,8 @@ const handle_inbound = (payload: Record<string, unknown>): void => {
       contenu: JSON.stringify({ version: ACTIVITY_CONTENT_VERSION, body: content }),
       occurred_at: occurredAt,
       thread_id: recent.thread_id,
-      idempotency_key: idempotencyKey
+      idempotency_key: idempotencyKey,
+      id_externe: provider_event_id(payload) ?? undefined
     })
     return
   }
@@ -192,7 +266,8 @@ const handle_inbound = (payload: Record<string, unknown>): void => {
     auteur: `external:${phone.value}`,
     contenu: JSON.stringify({ version: ACTIVITY_CONTENT_VERSION, body: content }),
     occurred_at: occurredAt,
-    idempotency_key: idempotencyKey
+    idempotency_key: idempotencyKey,
+    id_externe: provider_event_id(payload) ?? undefined
   })
 }
 
@@ -233,7 +308,7 @@ export const controller = async (c: Context) => {
       const status = error.code === 'not_found' ? 404 : error.code === 'forbidden' ? 403 : 400
       return c.json({ error: { code: error.code, message: error.message } }, status)
     }
-    console.error('[post.webhook.rcs]', error)
+    if (!(error instanceof RcsSendError)) console.error('[post.webhook.rcs]', error)
     return c.json(
       { error: { code: 'processing_failed', message: 'Webhook processing failed' } },
       500

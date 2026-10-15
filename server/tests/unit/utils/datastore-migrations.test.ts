@@ -21,7 +21,7 @@ const versions = (db: Database): number[] =>
     .map((row) => row.version)
 
 const future_migration: DatastoreMigration = {
-  version: 7,
+  version: 9,
   name: 'future-example',
   sql: 'CREATE TABLE future_records (id TEXT PRIMARY KEY, value TEXT NOT NULL)'
 }
@@ -39,7 +39,7 @@ describe('datastore migrations', () => {
     await migrate_datastore(PATH)
 
     using db = open()
-    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
     expect(
       db
         .query<{ n: number }, []>("SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'prompts'")
@@ -67,6 +67,7 @@ describe('datastore migrations', () => {
            'automations',
            'bulk_operations',
            'bulk_jobs',
+           'communication_dispatch_claims',
            'contacts',
            'conversations',
            'knowledge_records',
@@ -90,6 +91,7 @@ describe('datastore migrations', () => {
       'automations',
       'bulk_jobs',
       'bulk_operations',
+      'communication_dispatch_claims',
       'contacts',
       'conversations',
       'idx_activites_case_group',
@@ -160,7 +162,7 @@ describe('datastore migrations', () => {
         )
         .get()?.n
     ).toBe(0)
-    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
   })
 
   it('fails without rewriting a file that is not SQLite', async () => {
@@ -195,7 +197,7 @@ describe('datastore migrations', () => {
         )
         .get()?.n
     ).toBe(1)
-    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
   })
 
   it('applies ordered pending migrations to the baseline database', async () => {
@@ -203,14 +205,14 @@ describe('datastore migrations', () => {
     await migrate_datastore(PATH, [...APP_MIGRATIONS, future_migration])
 
     using db = open()
-    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6, 7])
+    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9])
     db.run("INSERT INTO future_records VALUES ('future-1', 'ok')")
   })
 
   it('rolls back both schema and ledger writes when a migration fails', async () => {
     await migrate_datastore(PATH)
     const failing: DatastoreMigration = {
-      version: 7,
+      version: 9,
       name: 'failing-example',
       sql: `
         CREATE TABLE half_created (id TEXT PRIMARY KEY);
@@ -221,7 +223,7 @@ describe('datastore migrations', () => {
     await expect(migrate_datastore(PATH, [...APP_MIGRATIONS, failing])).rejects.toThrow()
 
     using db = open()
-    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
     expect(
       db
         .query<{ n: number }, []>(
@@ -237,7 +239,7 @@ describe('datastore migrations', () => {
     await expect(migrate_datastore(PATH)).rejects.toBeInstanceOf(DatastoreVersionError)
 
     using db = open()
-    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6, 7])
+    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9])
     expect(
       db
         .query<{ n: number }, []>(

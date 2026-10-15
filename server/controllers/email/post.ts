@@ -9,7 +9,9 @@ import { communication_reference, next_status_timestamp } from '../../utils/comm
 import {
   claim_outbound_dispatch,
   CommunicationsError,
-  create_outbound
+  create_outbound,
+  DISPATCH_RETRY_AFTER_SECONDS,
+  release_outbound_dispatch
 } from '../../utils/communications/storage'
 import { normalize_email } from '../../utils/contacts'
 import { settle_delivery } from '../../utils/delivery-status'
@@ -100,11 +102,22 @@ export const controller = async (c: Context) => {
       }),
       idempotency_key: idempotencyKey
     })
-    if (claim_outbound_dispatch(activity.id) !== 'claimed') {
-      return c.json({ data: get_activity(activity.id) ?? activity }, 201)
+    const dispatch = claim_outbound_dispatch(activity.id)
+    const current = get_activity(activity.id) ?? activity
+    if (dispatch === 'pending') {
+      c.header('Retry-After', String(DISPATCH_RETRY_AFTER_SECONDS))
+      return c.json(
+        {
+          error: { code: 'dispatch_pending', message: 'Envoi déjà en cours, réessayez plus tard' },
+          data: current
+        },
+        503
+      )
     }
+    if (dispatch === 'not_queued') return c.json({ data: current }, 201)
+    let messageId: string
     try {
-      await send_transactional_email({
+      messageId = await send_transactional_email({
         from,
         to: destinataire.value,
         subject: parsed.data.contenu.subject,
@@ -112,26 +125,47 @@ export const controller = async (c: Context) => {
         reference: communication_reference(activity.id)
       })
     } catch (error) {
+      if (!(error instanceof EmailSendError) || error.retryable) {
+        release_outbound_dispatch(activity.id)
+        if (!(error instanceof EmailSendError)) console.error('[post.email]', error)
+        c.header('Retry-After', String(DISPATCH_RETRY_AFTER_SECONDS))
+        return c.json(
+          {
+            error: {
+              code: error instanceof EmailSendError ? error.code : 'provider_unavailable',
+              message: error instanceof Error ? error.message : 'Échec temporaire de l’envoi email'
+            },
+            data: activity
+          },
+          503
+        )
+      }
       const failed = settle_delivery({
         activity_id: activity.id,
         type: 'email',
         statut: 'failed',
         occurred_at: next_status_timestamp(activity)
       }).activity
-      if (!(error instanceof EmailSendError)) console.error('[post.email]', error)
-      const status = error instanceof EmailSendError && error.status === 503 ? 503 : 502
       return c.json(
         {
           error: {
-            code: error instanceof EmailSendError ? error.code : 'provider_unavailable',
-            message: error instanceof Error ? error.message : 'Échec de l’envoi email'
+            code: error.code,
+            message: error.message
           },
           data: failed
         },
-        status
+        502
       )
     }
-    return c.json({ data: activity }, 201)
+    settle_delivery({
+      activity_id: activity.id,
+      type: 'email',
+      statut: 'sent',
+      occurred_at: next_status_timestamp(activity),
+      idempotency_key: `cm:email:${messageId}:sent`,
+      id_externe: messageId.toLowerCase()
+    })
+    return c.json({ data: get_activity(activity.id) ?? activity }, 201)
   } catch (error) {
     if (error instanceof CommunicationsError) {
       return c.json({ error: { code: error.code, message: error.message } }, error_status(error))

@@ -1,6 +1,6 @@
 import { emailReady, name, readSetupBytes } from '../setup-store'
+import { cm_email, CM_EMAIL_URL } from './cm'
 import { EmailSendError } from './errors'
-import { mailgun_api } from './mailgun'
 
 export { EmailSendError }
 
@@ -12,13 +12,8 @@ const escape_html = (value: string): string =>
     .replaceAll('"', '&quot;')
     .replaceAll('\n', '<br>')
 
-const format_mailbox = (display: string, email: string): string => {
-  const clean = display
-    .replace(/[\r\n<>"]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-  return clean ? `${clean} <${email}>` : email
-}
+const invalid_response = (): EmailSendError =>
+  new EmailSendError(502, 'cm_invalid_response', 'Réponse CM.com invalide', true)
 
 export async function send_transactional_email(input: {
   from: string
@@ -26,47 +21,88 @@ export async function send_transactional_email(input: {
   subject: string
   text: string
   reference?: string
-}): Promise<void> {
-  const read = mailgun_api()
-  if (!read.ok) throw new EmailSendError(503, 'not_configured', read.message)
+}): Promise<string> {
+  const read = cm_email()
+  if (!read.ok) throw new EmailSendError(503, 'not_configured', read.message, true)
   const fromDomain = input.from.slice(input.from.lastIndexOf('@') + 1).toLowerCase()
-  if (fromDomain !== read.api.domain) {
-    throw new EmailSendError(503, 'not_configured', 'SINCH_DOMAIN ne correspond pas à email_from')
+  if (fromDomain !== read.domain) {
+    throw new EmailSendError(
+      503,
+      'not_configured',
+      'CM_EMAIL_DOMAIN ne correspond pas à email_from',
+      true
+    )
   }
-  if (!emailReady()) throw new EmailSendError(503, 'not_configured', 'Gabarit email incomplet')
+  if (!emailReady()) {
+    throw new EmailSendError(503, 'not_configured', 'Gabarit email incomplet', true)
+  }
   const html = new TextDecoder().decode(readSetupBytes('email/html') ?? new Uint8Array())
   const logo = readSetupBytes('email/logo.png')
-  if (!logo) throw new EmailSendError(503, 'not_configured', 'Gabarit email incomplet')
-  const form = new FormData()
-  form.append('from', format_mailbox(name(), input.from))
-  if (input.reference) form.append('h:Message-Id', input.reference)
-  form.append('to', input.to)
-  form.append('subject', input.subject)
-  form.append('text', input.text)
-  form.append(
-    'html',
-    html
-      .replaceAll('{{ message }}', escape_html(input.text))
-      .replaceAll('{{ logo_inline_cid }}', 'cid:logo.png')
-  )
-  form.append('o:tracking-opens', 'yes')
-  const inline = new Uint8Array(logo.byteLength)
-  inline.set(logo)
-  form.append('inline', new File([inline], 'logo.png', { type: 'image/png' }))
-  const response = await fetch(
-    `${read.api.apiBase}/v3/${encodeURIComponent(read.api.domain)}/messages`,
-    {
+  if (!logo) throw new EmailSendError(503, 'not_configured', 'Gabarit email incomplet', true)
+  let response: Response
+  try {
+    response = await fetch(CM_EMAIL_URL, {
       method: 'POST',
-      headers: { authorization: read.api.authorization },
-      body: form,
+      headers: {
+        'content-type': 'application/json',
+        'x-cm-producttoken': read.token
+      },
+      body: JSON.stringify({
+        from: { email: input.from, name: name() || input.from },
+        to: [{ email: input.to }],
+        subject: input.subject,
+        text: input.text,
+        html: html
+          .replaceAll('{{ message }}', escape_html(input.text))
+          .replaceAll('{{ logo_inline_cid }}', 'cid:logo.png'),
+        attachments: [
+          {
+            fileName: 'logo.png',
+            content: new Uint8Array(logo).toBase64(),
+            contentType: 'image/png',
+            contentId: 'logo.png'
+          }
+        ],
+        ...(input.reference ? { customerReference: input.reference } : {})
+      }),
       signal: AbortSignal.timeout(15_000)
-    }
-  )
-  if (response.ok) return
-  const detail = (await response.text()).trim().slice(0, 300)
-  throw new EmailSendError(
-    response.status || 502,
-    'mailgun_rejected',
-    detail || `Mailgun HTTP ${response.status}`
-  )
+    })
+  } catch (error) {
+    throw new EmailSendError(
+      502,
+      'cm_unavailable',
+      error instanceof Error ? error.message : 'CM.com indisponible',
+      true
+    )
+  }
+  if (!response.ok) {
+    const detail = (await response.text()).trim().slice(0, 300)
+    const retryable =
+      response.status === 401 ||
+      response.status === 403 ||
+      response.status === 408 ||
+      response.status === 429 ||
+      response.status >= 500
+    throw new EmailSendError(
+      response.status || 502,
+      'cm_rejected',
+      detail || `CM.com HTTP ${response.status}`,
+      retryable
+    )
+  }
+  let payload: unknown
+  try {
+    payload = await response.json()
+  } catch {
+    throw invalid_response()
+  }
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw invalid_response()
+  }
+  const result = payload as Record<string, unknown>
+  const messageId = typeof result['messageId'] === 'string' ? result['messageId'].trim() : ''
+  if (result['success'] !== true || !messageId) {
+    throw invalid_response()
+  }
+  return messageId
 }

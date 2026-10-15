@@ -14,7 +14,7 @@ import {
   project_communication_status_with_db,
   type UpdateStatusInput
 } from './communications/status'
-import { datastore_path } from './communications/storage'
+import { complete_outbound_dispatch_with_db, datastore_path } from './communications/storage'
 
 let transitionHook: (() => void) | null = null
 
@@ -31,11 +31,13 @@ const fallback_status = (type: string | undefined, status: string): boolean =>
 export const update_status_with_db = (
   db: Database,
   input: UpdateStatusInput
-): { activity: Activite; fallbackScheduled: boolean; smsFallback: Activite | null } => {
+): { activity: Activite; fallbackScheduled: boolean; projected: boolean } => {
   const source = get_activity_with_db(db, input.activity_id)
   const result = project_communication_status_with_db(db, input)
-  if (!result.transition)
-    return { activity: result.activity, fallbackScheduled: false, smsFallback: null }
+  complete_outbound_dispatch_with_db(db, input.activity_id)
+  if (!result.transition) {
+    return { activity: result.activity, fallbackScheduled: false, projected: false }
+  }
 
   transitionHook?.()
   const { activity, status, occurredAt } = result.transition
@@ -56,12 +58,10 @@ export const update_status_with_db = (
     !richConsumed && failed
       ? schedule_bulk_fallback_with_db(db, trackedActivity, occurredAt)
       : false
-  return { activity, fallbackScheduled, smsFallback: null }
+  return { activity, fallbackScheduled, projected: true }
 }
 
-export const settle_delivery = (
-  input: UpdateStatusInput
-): { activity: Activite; smsFallback: Activite | null } => {
+export const settle_delivery = (input: UpdateStatusInput): { activity: Activite } => {
   const db = new Database(datastore_path())
   let result: ReturnType<typeof update_status_with_db>
   try {
@@ -75,7 +75,7 @@ export const settle_delivery = (
     db.close()
   }
   if (result!.fallbackScheduled) queueMicrotask(arm_bulk_scheduler)
-  return { activity: result!.activity, smsFallback: result!.smsFallback }
+  return { activity: result!.activity }
 }
 
 export const update_status = (input: UpdateStatusInput): Activite => settle_delivery(input).activity

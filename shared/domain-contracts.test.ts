@@ -33,6 +33,7 @@ describe('notification delivery contracts', () => {
       sent: 'Envoyé',
       delivered: 'Délivré',
       read: 'Lu',
+      opened: 'Ouvert',
       received: 'Reçu',
       failed: 'Échec',
       undelivered: 'Non délivré',

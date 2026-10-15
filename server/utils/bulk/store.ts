@@ -248,7 +248,13 @@ export const delete_bulk_operation = (id: string): BulkOperationRecord => {
            AND NOT EXISTS (
              SELECT 1 FROM activites status
              WHERE status.thread_id = activites.thread_id
-               AND status.type IN ('communication.ok', 'communication.failed')
+               AND (
+                 status.type = 'communication.failed'
+                 OR (
+                   status.type = 'communication.ok'
+                   AND json_extract(status.contenu, '$.result') IS NOT 'sent'
+                 )
+               )
            )`
       )
       .all(id)

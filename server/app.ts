@@ -76,7 +76,6 @@ import { controller as get_desktop_tickets } from './controllers/desktop/tickets
 import { controller as get_desktop_tickets_facets } from './controllers/desktop/tickets/get.facets'
 import { controller as get_desktop_users } from './controllers/desktop/users/get'
 import { controller as post_email } from './controllers/email/post'
-import { controller as post_email_inbound } from './controllers/email/post.inbound'
 import { controller as post_email_test } from './controllers/email/post.test'
 import { controller as post_email_webhook } from './controllers/email/post.webhook'
 import { controller as get_embed } from './controllers/embed/get'
@@ -103,7 +102,6 @@ import { run_due_automations } from './utils/automations/run'
 import { AVATAR_MAX_UPLOAD_BYTES } from './utils/avatar-image'
 import { start_bulk_scheduler } from './utils/bulk/scheduler/queue'
 import { refresh_stale_sms_contacts } from './utils/contacts'
-import { configure_mailgun } from './utils/email/configure'
 import { ensureEnvAdmin } from './utils/ensure-env-admin'
 import { initializeKnowledgeBuildCoordinator } from './utils/knowledge/build-coordinator'
 import { SERVER_ROOT } from './utils/paths'
@@ -125,13 +123,6 @@ await start_bulk_scheduler()
 await initializeKnowledgeBuildCoordinator()
 await cleanupOrphanedVms()
 await initVmPool()
-if (Bun.env['NODE_ENV'] !== 'test') {
-  try {
-    await configure_mailgun()
-  } catch (error) {
-    console.error('[sinch]', error instanceof Error ? error.message : error)
-  }
-}
 
 const app = new Hono()
 const authorizeTickets = authorizeModule('tickets')
@@ -427,7 +418,6 @@ app.post('/lre', authenticate, post_lre)
 app.post('/signature', authenticate, post_signature)
 app.post('/webhook/rcs', post_rcs_webhook)
 app.post('/webhook/email', post_email_webhook)
-app.post('/webhook/email/inbound', post_email_inbound)
 app.post('/webhook/courrier', post_courrier_webhook)
 app.post('/webhook/lrar', post_lrar_webhook)
 app.post('/webhook/lre', post_lre_webhook)

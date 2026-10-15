@@ -25,6 +25,7 @@ describe('reclamations import activity history', () => {
         bulk_id TEXT,
         execution_id TEXT,
         idempotency_key TEXT,
+        id_externe TEXT,
         CHECK (json_valid(mentions) AND json_type(mentions) = 'array')
       )
     `)
@@ -84,7 +85,8 @@ describe('reclamations import activity history', () => {
         revision INTEGER,
         bulk_id TEXT,
         execution_id TEXT,
-        idempotency_key TEXT
+        idempotency_key TEXT,
+        id_externe TEXT
       )
     `)
     const rows = [
@@ -122,7 +124,8 @@ describe('reclamations import activity history', () => {
         revision INTEGER,
         bulk_id TEXT,
         execution_id TEXT,
-        idempotency_key TEXT
+        idempotency_key TEXT,
+        id_externe TEXT
       )
     `)
     await import_json_rows(db, 'reclamations', [

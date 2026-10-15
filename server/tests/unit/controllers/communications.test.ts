@@ -1,3 +1,4 @@
+import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, describe, expect, it, spyOn } from 'bun:test'
 import { rm } from 'node:fs/promises'
 
@@ -86,13 +87,17 @@ describe('webhooks de communication', () => {
     })
   })
 
-  it('enregistre un échec RCS une seule fois, CM envoie le SMS', async () => {
+  it('rejoue un SMS de secours transitoirement indisponible sans le dupliquer', async () => {
     Bun.env['CM_RCS_PRODUCT_TOKEN'] = 'token'
     Bun.env['CM_RCS_FROM'] = 'PIERRE'
+    let sendAttempts = 0
     const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation((async (
-      _url: unknown,
+      url: unknown,
       init?: { body?: unknown }
     ) => {
+      if (!String(url).includes('gw.messaging.cm.com')) return new Response(null, { status: 204 })
+      sendAttempts += 1
+      if (sendAttempts === 1) throw new TypeError('network unavailable')
       const reference = JSON.parse(String(init?.body)).messages.msg[0].reference
       return new Response(
         JSON.stringify({
@@ -111,8 +116,8 @@ describe('webhooks de communication', () => {
       contenu: JSON.stringify({
         version: 2,
         sender: 'user:alice@example.org',
-        body: 'Relance',
-        sms_fallback: 'Relance'
+        body: 'Relance RCS',
+        sms_fallback: 'Relance SMS'
       }),
       idempotency_key: Bun.randomUUIDv7()
     })
@@ -128,20 +133,53 @@ describe('webhooks de communication', () => {
         })
       })
 
+    expect((await request()).status).toBe(500)
     expect((await request()).status).toBe(200)
     expect((await request()).status).toBe(200)
+    expect(
+      (
+        await app.request('/webhook/rcs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Webhook-Secret': SECRET },
+          body: JSON.stringify({
+            reference: `${rcs.id}`,
+            status: { code: 2 },
+            received: '2030-08-26T20:01:00Z'
+          })
+        })
+      ).status
+    ).toBe(200)
 
     const rows = list_activities('alice@example.org', {
       rattachement: 'automations:RCS-FALLBACK',
       limit: 10
     })
-    expect(rows.filter((row) => row.channel === 'sms')).toHaveLength(0)
+    const sms = rows.filter((row) => row.channel === 'sms' && row.type === 'communication.sent')
+    expect(sms).toHaveLength(1)
+    expect(sms[0]?.type).toBe('communication.sent')
+    expect(JSON.parse(sms[0]!.contenu).body).toBe('Relance SMS')
     expect(
       rows.filter((row) => row.type === 'communication.failed' && row.thread_id === rcs.thread_id)
     ).toHaveLength(1)
     expect(
-      fetchSpy.mock.calls.filter((call) => String(call[0]).includes('gw.messaging.cm.com'))
+      rows.filter((row) => row.type === 'communication.failed' && row.channel === 'sms')
     ).toHaveLength(0)
+    expect(sms[0]?.thread_id).toBe(rcs.thread_id)
+    expect(rows.some((row) => row.type === 'communication.ok' && row.channel === 'rcs')).toBe(false)
+    const calls = fetchSpy.mock.calls.filter((call) =>
+      String(call[0]).includes('gw.messaging.cm.com')
+    )
+    expect(calls).toHaveLength(2)
+    const message = JSON.parse(String((calls[1] as [string, RequestInit])[1].body)).messages.msg[0]
+    expect(message.allowedChannels).toEqual(['SMS'])
+    expect(message.body).toEqual({ type: 'auto', content: 'Relance SMS' })
+    expect(message.richContent).toBeUndefined()
+    const db = new Database(paths.database, { readonly: true })
+    const contact = db
+      .query<{ status: string }, [string]>('SELECT status FROM contacts WHERE value = ?')
+      .get('+33612345678')
+    db.close()
+    expect(contact?.status).toBe('sms_compatible')
     fetchSpy.mockRestore()
   })
 
@@ -242,6 +280,7 @@ describe('webhooks de communication', () => {
           body: JSON.stringify({
             ...inboundPayload,
             reference: Bun.randomUUIDv7(),
+            messageContext: inboundPayload.reference,
             timeUtc: '2030-08-26T20:02:00Z',
             event: { custom: { postbackdata: 'confirmer' } }
           })
@@ -258,6 +297,7 @@ describe('webhooks de communication', () => {
     expect(received.some((row) => row.contenu.includes('Être rappelé'))).toBe(true)
     expect(received.some((row) => row.contenu.includes('confirmer'))).toBe(true)
     expect(received).toHaveLength(2)
+    expect(received.some((row) => row.id_externe === inboundPayload.reference)).toBe(true)
   })
 
   it('rattache un texte RCS au fil cité, sinon au plus récent', async () => {
@@ -307,7 +347,8 @@ describe('webhooks de communication', () => {
           method: 'POST',
           headers,
           body: JSON.stringify({
-            reference: `${first.id}`,
+            reference: '2f2d42ac-3809-40fb-bce5-dc720e400000',
+            messageContext: `${first.id}`,
             from: { number: '+33698765432' },
             message: { text: 'Sur le premier' },
             timeUtc
@@ -326,6 +367,74 @@ describe('webhooks de communication', () => {
           row.contenu.includes('premier')
       )
     ).toBe(true)
+    expect(
+      (
+        await app.request('/webhook/rcs', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            reference: '2f2d42ac-3809-40fb-bce5-dc720e400000',
+            from: { number: '+33698765432' },
+            message: { text: 'Texte libre' },
+            timeUtc
+          })
+        })
+      ).status
+    ).toBe(200)
+    const free = list_activities('alice@example.org', { limit: 20 }).find((row) =>
+      row.contenu.includes('Texte libre')
+    )
+    expect(free?.thread_id === first.thread_id || free?.thread_id === second.thread_id).toBe(true)
+    expect(
+      (
+        await app.request('/webhook/rcs', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            messageContext: '999999',
+            from: { number: '+33698765432' },
+            message: { text: 'Contexte inconnu' },
+            timeUtc
+          })
+        })
+      ).status
+    ).toBe(200)
+    const unmatched = list_activities('alice@example.org', { limit: 20 }).find((row) =>
+      row.contenu.includes('Contexte inconnu')
+    )
+    expect(unmatched?.rattachement.startsWith('a_qualifier:')).toBe(true)
+    expect(unmatched?.thread_id).not.toBe(first.thread_id)
+    expect(unmatched?.thread_id).not.toBe(second.thread_id)
+  })
+
+  it('rattache une réponse SMS avec reference quand messageContext manque', async () => {
+    const sms = create_outbound({
+      actor: 'alice@example.org',
+      contexte: 'automations',
+      ref: 'SMS-REPLY',
+      type: 'sms',
+      destinataire: '+33611112222',
+      contenu: JSON.stringify({ version: 2, body: 'Répondez à ce SMS' }),
+      idempotency_key: Bun.randomUUIDv7()
+    })
+    const app = new Hono().post('/webhook/rcs', rcsWebhook)
+    const response = await app.request('/webhook/rcs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Webhook-Secret': SECRET },
+      body: JSON.stringify({
+        reference: String(sms.id),
+        from: { number: '+33611112222' },
+        message: { text: 'Réponse SMS' },
+        timeUtc: '2030-08-26T20:00:00',
+        channel: 'SMS'
+      })
+    })
+    expect(response.status).toBe(200)
+    const received = list_activities('alice@example.org', {
+      rattachement: 'automations:SMS-REPLY',
+      limit: 10
+    }).find((row) => row.type === 'communication.received')
+    expect(received?.thread_id).toBe(sms.thread_id)
   })
 })
 

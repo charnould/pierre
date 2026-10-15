@@ -5,12 +5,13 @@ import { rm } from 'node:fs/promises'
 import { Hono } from 'hono'
 
 import { controller as postEmail } from '../../../../controllers/email/post'
-import { controller as emailInbound } from '../../../../controllers/email/post.inbound'
 import { controller as postEmailTest } from '../../../../controllers/email/post.test'
 import { controller as emailWebhook } from '../../../../controllers/email/post.webhook'
 import type { User } from '../../../../utils/_schema'
 import { list_activities } from '../../../../utils/activities/query'
 import { authorizeAdministrator } from '../../../../utils/authorize-role'
+import { claim_outbound_dispatch, create_outbound } from '../../../../utils/communications/storage'
+import { CM_EMAIL_URL } from '../../../../utils/email/cm'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { setup } from '../../../../utils/setup'
 import { writeSetup } from '../../../../utils/setup-store'
@@ -19,14 +20,25 @@ const paths = testDatastorePaths('email_post')
 const SECRET = 'email-webhook-secret'
 const encoder = new TextEncoder()
 const originalEnv = {
-  api: Bun.env['SINCH_API_KEY'],
-  domain: Bun.env['SINCH_DOMAIN'],
-  signing: Bun.env['SINCH_WEBHOOK_SIGNING_KEY']
+  token: Bun.env['CM_EMAIL_PRODUCT_TOKEN'],
+  domain: Bun.env['CM_EMAIL_DOMAIN'],
+  signing: Bun.env['CM_EMAIL_WEBHOOK_SECRET']
 }
 
 const restoreEnv = (key: string, value: string | undefined): void => {
   if (value === undefined) delete Bun.env[key]
   else Bun.env[key] = value
+}
+
+let messageSeq = 0
+const sentMessage = () => {
+  messageSeq += 1
+  return Response.json({
+    status: 202,
+    message: 'Accepted',
+    success: true,
+    messageId: `00000000-0000-4000-8000-${String(messageSeq).padStart(12, '0')}`
+  })
 }
 
 const app = new Hono<{ Variables: { user: User } }>()
@@ -41,7 +53,6 @@ app.use('*', async (c, next) => {
 })
 app.post('/email', postEmail)
 app.post('/webhook/email', emailWebhook)
-app.post('/webhook/email/inbound', emailInbound)
 
 const administrator = new Hono<{ Variables: { user: User } }>()
 administrator.use('*', async (c, next) => {
@@ -67,56 +78,58 @@ member.use('*', async (c, next) => {
 })
 member.post('/email/test', authorizeAdministrator, postEmailTest)
 
-async function sign(timestamp: string, token: string): Promise<string> {
+const sign = async (id: string, timestamp: string, body: string): Promise<string> => {
   const key = await crypto.subtle.importKey(
     'raw',
     encoder.encode(SECRET),
-    { name: 'HMAC', hash: 'SHA-256' },
+    { name: 'HMAC', hash: 'SHA-512' },
     false,
     ['sign']
   )
-  const digest = new Uint8Array(
-    await crypto.subtle.sign('HMAC', key, encoder.encode(`${timestamp}${token}`))
-  )
-  return digest.toHex()
+  const prefix = encoder.encode(`${id}.${timestamp}.`)
+  const bytes = encoder.encode(body)
+  const data = new Uint8Array(prefix.length + bytes.length)
+  data.set(prefix)
+  data.set(bytes, prefix.length)
+  return new Uint8Array(await crypto.subtle.sign('HMAC', key, data)).toBase64()
 }
 
-async function signedEvent(
-  event: string,
-  id: string,
-  reference: string,
-  extra: Record<string, unknown> = {}
-): Promise<string> {
-  const timestamp = String(Math.floor(Date.now() / 1000))
-  const token = `token-${id}`
-  return JSON.stringify({
-    signature: { timestamp, token, signature: await sign(timestamp, token) },
-    'event-data': {
-      event,
-      timestamp: Number(timestamp),
-      id,
-      message: { headers: { 'message-id': `<${reference}>` } },
-      ...extra
-    }
+const postWebhook = async (payload: unknown, id: string) => {
+  const body = JSON.stringify(payload)
+  const timestamp = String(Date.now())
+  return app.request('/webhook/email', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'svix-id': id,
+      'svix-timestamp': timestamp,
+      'svix-signature': await sign(id, timestamp, body)
+    },
+    body
   })
 }
 
-async function signedInbound(fields: Record<string, string>): Promise<URLSearchParams> {
-  const timestamp = String(Math.floor(Date.now() / 1000))
-  const token = `token-${fields['Message-Id'] ?? 'inbound'}`
-  const params = new URLSearchParams({ ...fields, timestamp, token })
-  params.set('signature', await sign(timestamp, token))
-  return params
-}
+const event = (
+  type: string,
+  eventId: string,
+  reference: string,
+  extra: Record<string, unknown> = {},
+  messageId?: string
+) => ({
+  type,
+  createdAt: new Date().toISOString(),
+  ...(messageId ? { messageId } : {}),
+  data: { id: eventId, customerReference: reference, ...extra }
+})
 
 beforeAll(() => {
   setDatastoreRoot(paths.root)
 })
 
 beforeEach(async () => {
-  Bun.env['SINCH_API_KEY'] = 'key-test'
-  Bun.env['SINCH_DOMAIN'] = 'dribble.football'
-  Bun.env['SINCH_WEBHOOK_SIGNING_KEY'] = SECRET
+  Bun.env['CM_EMAIL_PRODUCT_TOKEN'] = '00000000-0000-0000-0000-000000000001'
+  Bun.env['CM_EMAIL_DOMAIN'] = 'dribble.football'
+  Bun.env['CM_EMAIL_WEBHOOK_SECRET'] = SECRET
   await rm(paths.root, { recursive: true, force: true })
   await setup()
   const text = (value: unknown) => new TextEncoder().encode(JSON.stringify(value))
@@ -152,9 +165,9 @@ beforeEach(async () => {
 afterAll(async () => {
   await rm(paths.root, { recursive: true, force: true })
   setDatastoreRoot(null)
-  restoreEnv('SINCH_API_KEY', originalEnv.api)
-  restoreEnv('SINCH_DOMAIN', originalEnv.domain)
-  restoreEnv('SINCH_WEBHOOK_SIGNING_KEY', originalEnv.signing)
+  restoreEnv('CM_EMAIL_PRODUCT_TOKEN', originalEnv.token)
+  restoreEnv('CM_EMAIL_DOMAIN', originalEnv.domain)
+  restoreEnv('CM_EMAIL_WEBHOOK_SECRET', originalEnv.signing)
 })
 
 describe('email transactionnel', () => {
@@ -198,9 +211,8 @@ describe('email transactionnel', () => {
   })
 
   it('envoie le gabarit et rattache l’accusé au même fil', async () => {
-    const fetchSpy = spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(null, { status: 202 })
-    )
+    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation((async () =>
+      sentMessage()) as unknown as typeof fetch)
     try {
       const response = await app.request('/email', {
         method: 'POST',
@@ -214,74 +226,75 @@ describe('email transactionnel', () => {
       })
       expect(response.status).toBe(201)
       const sent = (await response.json()) as { data: { id: number; thread_id: string } }
-      const call = fetchSpy.mock.calls.find((entry) =>
-        String(entry[0]).includes('api.eu.mailgun.net')
-      )
+      const call = fetchSpy.mock.calls.find((entry) => String(entry[0]) === CM_EMAIL_URL)
       const [url, init] = call as [string, RequestInit]
-      expect(url).toBe('https://api.eu.mailgun.net/v3/dribble.football/messages')
-      expect((init.headers as Record<string, string>)['authorization']).toStartWith('Basic ')
-      const form = init.body as FormData
-      expect(form.get('from')).toBe('PIERRE <loyer@dribble.football>')
-      expect(form.get('h:Reply-To')).toBeNull()
-      expect(form.get('h:Message-Id')).toBe(String(sent.data.id))
-      expect(form.get('o:tracking-opens')).toBe('yes')
-      expect(String(form.get('html'))).toContain('cid:logo.png')
-      expect(String(form.get('html'))).toContain('Bonjour<br>Ada')
-      expect(form.get('inline')).toBeInstanceOf(File)
-      expect((form.get('inline') as File).name).toBe('logo.png')
-
-      const event = await signedEvent('delivered', 'evt-delivered', String(sent.data.id))
-      expect(
-        (
-          await app.request('/webhook/email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: event
-          })
-        ).status
-      ).toBe(200)
-      expect(
-        (
-          await app.request('/webhook/email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: event
-          })
-        ).status
-      ).toBe(200)
-      const rows = list_activities('alice@example.org', {
-        rattachement: 'repayment:LOC-1',
-        limit: 10
-      })
-      const statuses = rows.filter(
-        (row) => row.type === 'communication.ok' && row.thread_id === sent.data.thread_id
+      expect(url).toBe(CM_EMAIL_URL)
+      expect((init.headers as Record<string, string>)['x-cm-producttoken']).toBe(
+        '00000000-0000-0000-0000-000000000001'
       )
-      expect(statuses).toHaveLength(1)
-      const opened = await signedEvent('opened', 'evt-opened', String(sent.data.id))
-      expect(
-        (
-          await app.request('/webhook/email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: opened
-          })
-        ).status
-      ).toBe(200)
-      const read = list_activities('alice@example.org', {
+      const payload = JSON.parse(String(init.body)) as {
+        from: { email: string; name: string }
+        replyTo?: unknown
+        html: string
+        customerReference: string
+        references?: string
+        attachments: Array<{ contentId: string; content: string }>
+      }
+      expect(payload.from).toEqual({ email: 'loyer@dribble.football', name: 'PIERRE' })
+      expect(payload.replyTo).toBeUndefined()
+      expect(payload.customerReference).toBe(String(sent.data.id))
+      expect(payload.references).toBeUndefined()
+      expect(payload.html).toContain('cid:logo.png')
+      expect(payload.html).toContain('Bonjour<br>Ada')
+      expect(payload.attachments[0]?.contentId).toBe('logo.png')
+      expect(payload.attachments[0]?.content).toBe(
+        new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0, 0, 0, 0]).toBase64()
+      )
+
+      const messageId = list_activities('alice@example.org', {
         rattachement: 'repayment:LOC-1',
         limit: 10
-      }).find((row) => row.thread_id === sent.data.thread_id && row.contenu.includes('"read"'))
-      expect(read?.type).toBe('communication.ok')
-      const timestamp = String(Math.floor(Date.now() / 1000))
+      }).find((row) => row.id_externe)?.id_externe
+      expect(messageId).toMatch(/^[0-9a-f-]{36}$/)
+      const db = new Database(paths.database)
+      expect(() =>
+        db.run('UPDATE activites SET id_externe = ? WHERE id = ?', ['forbidden', sent.data.id])
+      ).toThrow('activites is append-only')
+      db.close()
+      const delivered = event(
+        'delivered',
+        'evt-delivered',
+        String(sent.data.id),
+        {},
+        messageId ?? undefined
+      )
+      expect((await postWebhook(delivered, 'svix-delivered')).status).toBe(200)
+      expect((await postWebhook(delivered, 'svix-delivered-again')).status).toBe(200)
+      const statuses = list_activities('alice@example.org', {
+        rattachement: 'repayment:LOC-1',
+        limit: 10
+      }).filter((row) => row.type === 'communication.ok' && row.thread_id === sent.data.thread_id)
+      expect(statuses).toHaveLength(2)
+      expect(statuses.every((row) => row.id_externe === messageId)).toBe(true)
+      expect(
+        (
+          await postWebhook(
+            event('opened', 'evt-opened', String(sent.data.id), {}, messageId ?? undefined),
+            'svix-opened'
+          )
+        ).status
+      ).toBe(200)
+      const opened = list_activities('alice@example.org', {
+        rattachement: 'repayment:LOC-1',
+        limit: 10
+      }).find((row) => row.thread_id === sent.data.thread_id && row.contenu.includes('"opened"'))
+      expect(opened?.type).toBe('communication.ok')
       expect(
         (
           await app.request('/webhook/email', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              signature: { timestamp, token: 'non', signature: 'ab'.repeat(32) },
-              'event-data': { event: 'delivered', id: 'evt-bad' }
-            })
+            headers: { 'content-type': 'application/json' },
+            body: '{}'
           })
         ).status
       ).toBe(401)
@@ -290,10 +303,45 @@ describe('email transactionnel', () => {
     }
   })
 
-  it('marque l’échec définitif', async () => {
-    const fetchSpy = spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(null, { status: 200 })
-    )
+  it('retourne une erreur rejouable quand le dispatch est déjà réservé', async () => {
+    const idempotencyKey = Bun.randomUUIDv7()
+    const activity = create_outbound({
+      actor: 'alice@example.org',
+      contexte: 'repayment',
+      ref: 'LOC-PENDING',
+      type: 'email',
+      destinataire: 'ada@example.org',
+      contenu: JSON.stringify({ subject: 'Loyer', body: 'Bonjour' }),
+      idempotency_key: idempotencyKey
+    })
+    expect(claim_outbound_dispatch(activity.id)).toBe('claimed')
+    const fetchSpy = spyOn(globalThis, 'fetch')
+    try {
+      const response = await app.request('/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
+        body: JSON.stringify({
+          contexte: 'repayment',
+          ref: 'LOC-PENDING',
+          destinataire: 'ada@example.org',
+          contenu: { subject: 'Loyer', body: 'Bonjour' }
+        })
+      })
+      expect(response.status).toBe(503)
+      expect(response.headers.get('retry-after')).toBe('30')
+      expect(await response.json()).toMatchObject({
+        error: { code: 'dispatch_pending' },
+        data: { id: activity.id }
+      })
+      expect(fetchSpy).not.toHaveBeenCalled()
+    } finally {
+      fetchSpy.mockRestore()
+    }
+  })
+
+  it('ignore un soft bounce et enregistre l’échec après délivrance', async () => {
+    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation((async () =>
+      sentMessage()) as unknown as typeof fetch)
     try {
       const response = await app.request('/email', {
         method: 'POST',
@@ -306,32 +354,65 @@ describe('email transactionnel', () => {
         })
       })
       const sent = (await response.json()) as { data: { id: number; thread_id: string } }
-      const failed = await signedEvent('permanent_fail', 'evt-fail', String(sent.data.id), {
-        'delivery-status': { message: 'boîte pleine' }
-      })
-      expect(
-        (
-          await app.request('/webhook/email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: failed
-          })
-        ).status
-      ).toBe(200)
-      const row = list_activities('alice@example.org', {
+      const reference = String(sent.data.id)
+      const messageId = list_activities('alice@example.org', {
         rattachement: 'repayment:LOC-2',
         limit: 10
-      }).find((item) => item.type === 'communication.failed')
-      expect(JSON.parse(row?.contenu ?? '{}')).toMatchObject({ version: 2, reason: 'boîte pleine' })
+      }).find((row) => row.id_externe)?.id_externe
+      expect(
+        (
+          await postWebhook(
+            event(
+              'bounced',
+              'evt-soft',
+              reference,
+              { bounce: { type: 'Soft Bounce', message: 'plus tard' } },
+              messageId ?? undefined
+            ),
+            'svix-soft'
+          )
+        ).status
+      ).toBe(200)
+      expect(
+        (
+          await postWebhook(
+            event('delivered', 'evt-delivered-2', reference, {}, messageId ?? undefined),
+            'svix-delivered-2'
+          )
+        ).status
+      ).toBe(200)
+      expect(
+        (
+          await postWebhook(
+            event(
+              'bounced',
+              'evt-hard',
+              reference,
+              { bounce: { type: 'Hard Bounce', message: 'boîte pleine' } },
+              messageId ?? undefined
+            ),
+            'svix-hard'
+          )
+        ).status
+      ).toBe(200)
+      const rows = list_activities('alice@example.org', {
+        rattachement: 'repayment:LOC-2',
+        limit: 10
+      })
+      expect(rows.some((row) => row.contenu.includes('plus tard'))).toBe(false)
+      const failed = rows.find((item) => item.type === 'communication.failed')
+      expect(JSON.parse(failed?.contenu ?? '{}')).toMatchObject({
+        version: 2,
+        reason: 'boîte pleine'
+      })
     } finally {
       fetchSpy.mockRestore()
     }
   })
 
   it('range la réponse dans le fil de l’activité citée', async () => {
-    const fetchSpy = spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(null, { status: 200 })
-    )
+    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation((async () =>
+      sentMessage()) as unknown as typeof fetch)
     try {
       const response = await app.request('/email', {
         method: 'POST',
@@ -344,32 +425,24 @@ describe('email transactionnel', () => {
         })
       })
       const sent = (await response.json()) as { data: { id: number; thread_id: string } }
-      const inbound = await signedInbound({
-        sender: 'ada@example.org',
-        recipient: 'loyer@dribble.football',
+      const messageId = list_activities('alice@example.org', {
+        rattachement: 'repayment:LOC-3',
+        limit: 10
+      }).find((row) => row.id_externe)?.id_externe
+      expect(messageId).toBeDefined()
+      const cited = `<20261015184000.${messageId}@dribble.football>`
+      const inbound = {
+        type: 'Inbound',
+        from: 'ada@example.org',
+        originalRecipient: 'loyer@dribble.football',
         subject: 'Re: Loyer',
-        'stripped-text': 'Bien reçu',
-        'Message-Id': '<reply-1@example.org>',
-        'message-headers': JSON.stringify([['In-Reply-To', String(sent.data.id)]])
-      })
-      expect(
-        (
-          await app.request('/webhook/email/inbound', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: inbound
-          })
-        ).status
-      ).toBe(200)
-      expect(
-        (
-          await app.request('/webhook/email/inbound', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: inbound
-          })
-        ).status
-      ).toBe(200)
+        messageId: '<reply-1@example.org>',
+        textBody: 'Bien reçu',
+        inReplyTo: cited,
+        references: []
+      }
+      expect((await postWebhook(inbound, 'svix-reply-1')).status).toBe(200)
+      expect((await postWebhook(inbound, 'svix-reply-1')).status).toBe(200)
       const received = list_activities('alice@example.org', {
         rattachement: 'repayment:LOC-3',
         limit: 10
@@ -381,37 +454,48 @@ describe('email transactionnel', () => {
         body: 'Bien reçu',
         sender: 'ada@example.org'
       })
-      const viaReferences = await signedInbound({
-        sender: 'ada@example.org',
-        recipient: 'loyer@dribble.football',
-        subject: 'Re: Loyer',
-        'stripped-text': 'Via References',
-        'Message-Id': '<reply-2@example.org>',
-        'message-headers': JSON.stringify([['References', `999999 ${sent.data.id}`]])
-      })
+      expect(received[0]?.id_externe).toBe('reply-1@example.org')
       expect(
         (
-          await app.request('/webhook/email/inbound', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: viaReferences
-          })
+          await postWebhook(
+            {
+              ...inbound,
+              textBody: 'Via references',
+              messageId: '<reply-2@example.org>',
+              inReplyTo: '<reply-1@example.org>',
+              references: []
+            },
+            'svix-reply-2'
+          )
+        ).status
+      ).toBe(200)
+      expect(
+        (
+          await postWebhook(
+            {
+              ...inbound,
+              textBody: 'Via en-tête',
+              inReplyTo: '',
+              references: [],
+              headers: [{ Name: 'References', Value: cited }]
+            },
+            'svix-reply-3'
+          )
         ).status
       ).toBe(200)
       const both = list_activities('alice@example.org', {
         rattachement: 'repayment:LOC-3',
         limit: 10
       }).filter((row) => row.type === 'communication.received')
-      expect(both).toHaveLength(2)
+      expect(both).toHaveLength(3)
     } finally {
       fetchSpy.mockRestore()
     }
   })
 
   it('laisse à qualifier une réponse qui ne cite pas l’activité', async () => {
-    const fetchSpy = spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(null, { status: 200 })
-    )
+    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation((async () =>
+      sentMessage()) as unknown as typeof fetch)
     try {
       const response = await app.request('/email', {
         method: 'POST',
@@ -424,21 +508,18 @@ describe('email transactionnel', () => {
         })
       })
       expect(response.status).toBe(201)
-      const sent = (await response.json()) as { data: { thread_id: string } }
-      const inbound = await signedInbound({
-        sender: 'ada@example.org',
-        recipient: 'loyer@dribble.football',
-        subject: 'Autre sujet',
-        'stripped-text': 'Sans citation',
-        'Message-Id': '<unlinked@example.org>'
-      })
       expect(
         (
-          await app.request('/webhook/email/inbound', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: inbound
-          })
+          await postWebhook(
+            {
+              type: 'Inbound',
+              from: 'ada@example.org',
+              originalRecipient: 'loyer@dribble.football',
+              subject: 'Autre sujet',
+              textBody: 'Sans citation'
+            },
+            'svix-unlinked'
+          )
         ).status
       ).toBe(200)
       const onThread = list_activities('alice@example.org', {
@@ -446,7 +527,6 @@ describe('email transactionnel', () => {
         limit: 10
       }).filter((row) => row.type === 'communication.received')
       expect(onThread).toHaveLength(0)
-      expect(sent.data.thread_id).toBeTruthy()
       const received = list_activities('alice@example.org', {
         contexts: ['a_qualifier'],
         type: 'communication.received',
@@ -479,70 +559,158 @@ describe('email transactionnel', () => {
       expect(await response.json()).toMatchObject({
         error: { code: 'not_configured', message: 'Gabarit email incomplet' }
       })
-      expect(
-        fetchSpy.mock.calls.some((call) => String(call[0]).includes('api.eu.mailgun.net'))
-      ).toBe(false)
+      expect(fetchSpy.mock.calls.some((call) => String(call[0]).includes('api.cm.com'))).toBe(false)
     } finally {
       fetchSpy.mockRestore()
     }
   })
 
   it('envoie l’email de test à l’administrateur sans créer d’activité', async () => {
-    expect(
-      (
-        await member.request('/email/test', {
-          method: 'POST'
-        })
-      ).status
-    ).toBe(403)
-    const fetchSpy = spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(null, { status: 200 })
-    )
+    expect((await member.request('/email/test', { method: 'POST' })).status).toBe(403)
+    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation((async () =>
+      sentMessage()) as unknown as typeof fetch)
     try {
       const response = await administrator.request('/email/test', { method: 'POST' })
       expect(response.status).toBe(200)
-      const call = fetchSpy.mock.calls.find((entry) =>
-        String(entry[0]).includes('api.eu.mailgun.net')
-      )
-      const [, init] = call as [string, RequestInit]
-      const form = init.body as FormData
-      expect(form.get('to')).toBe('alice@example.org')
-      expect(form.get('from')).toBe('PIERRE <loyer@dribble.football>')
-      expect(form.get('subject')).toBe('Email de test')
-      expect(form.get('text')).toBe('Ceci est un email de test.')
-      expect(form.get('h:Message-Id')).toBeNull()
-      expect(String(form.get('html'))).toContain('cid:logo.png')
-      expect(String(form.get('html'))).toContain('Ceci est un email de test.')
-      expect(form.get('inline')).toBeInstanceOf(File)
+      const call = fetchSpy.mock.calls.find((entry) => String(entry[0]) === CM_EMAIL_URL)
+      const payload = JSON.parse(String((call as [string, RequestInit])[1].body)) as {
+        to: Array<{ email: string }>
+        from: { email: string; name: string }
+        subject: string
+        text: string
+        customerReference?: string
+        html: string
+      }
+      expect(payload.to).toEqual([{ email: 'alice@example.org' }])
+      expect(payload.from).toEqual({ email: 'loyer@dribble.football', name: 'PIERRE' })
+      expect(payload.subject).toBe('Email de test')
+      expect(payload.text).toBe('Ceci est un email de test.')
+      expect(payload.customerReference).toBeUndefined()
+      expect(payload.html).toContain('cid:logo.png')
+      expect(payload.html).toContain('Ceci est un email de test.')
       expect(list_activities('alice@example.org', { limit: 10 })).toHaveLength(0)
     } finally {
       fetchSpy.mockRestore()
     }
   })
 
-  it('laisse à qualifier une réponse sans fil', async () => {
-    const inbound = await signedInbound({
-      sender: 'inconnu@example.org',
-      recipient: 'loyer@dribble.football',
-      subject: 'Question',
-      'body-plain': 'Qui est-ce ?',
-      'Message-Id': '<unknown@example.org>'
-    })
+  it('ignore un entrant hors domaine', async () => {
     expect(
       (
-        await app.request('/webhook/email/inbound', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: inbound
-        })
+        await postWebhook(
+          {
+            type: 'Inbound',
+            from: 'ada@example.org',
+            originalRecipient: 'ada@example.org',
+            textBody: 'Ailleurs'
+          },
+          'svix-foreign'
+        )
       ).status
     ).toBe(200)
-    const received = list_activities('alice@example.org', {
-      contexts: ['a_qualifier'],
-      type: 'communication.received',
-      limit: 10
-    })
-    expect(received).toHaveLength(1)
-    expect(JSON.parse(received[0]?.contenu ?? '{}').body).toBe('Qui est-ce ?')
+    expect(
+      list_activities('alice@example.org', {
+        contexts: ['a_qualifier'],
+        type: 'communication.received',
+        limit: 10
+      })
+    ).toHaveLength(0)
+  })
+
+  it('demande un rejeu si le domaine entrant manque', async () => {
+    delete Bun.env['CM_EMAIL_DOMAIN']
+    const response = await postWebhook(
+      {
+        type: 'Inbound',
+        from: 'ada@example.org',
+        originalRecipient: 'loyer@dribble.football',
+        textBody: 'À rejouer'
+      },
+      'svix-no-domain'
+    )
+    expect(response.status).toBe(503)
+    expect(await response.json()).toMatchObject({ error: { code: 'not_configured' } })
+  })
+
+  it('rejoue un succès CM ambigu sans terminaliser la communication', async () => {
+    let attempts = 0
+    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation((async (url: unknown) => {
+      if (String(url) !== CM_EMAIL_URL) return new Response(null, { status: 204 })
+      attempts += 1
+      return attempts === 1 ? new Response('Accepted', { status: 202 }) : sentMessage()
+    }) as typeof fetch)
+    try {
+      const idempotencyKey = Bun.randomUUIDv7()
+      const request = () =>
+        app.request('/email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
+          body: JSON.stringify({
+            contexte: 'repayment',
+            ref: 'LOC-NO-ID',
+            destinataire: 'ada@example.org',
+            contenu: { subject: 'Loyer', body: 'Bonjour' }
+          })
+        })
+      const response = await request()
+      expect(response.status).toBe(503)
+      expect(response.headers.get('retry-after')).toBe('30')
+      expect(await response.json()).toMatchObject({
+        error: { code: 'cm_invalid_response', message: 'Réponse CM.com invalide' },
+        data: { type: 'communication.sent' }
+      })
+      let rows = list_activities('alice@example.org', {
+        rattachement: 'repayment:LOC-NO-ID',
+        limit: 10
+      })
+      expect(rows.some((row) => row.type === 'communication.failed')).toBe(false)
+      expect(rows.some((row) => row.type === 'communication.ok')).toBe(false)
+
+      expect((await request()).status).toBe(201)
+      rows = list_activities('alice@example.org', {
+        rattachement: 'repayment:LOC-NO-ID',
+        limit: 10
+      })
+      expect(rows.some((row) => row.type === 'communication.ok' && row.id_externe)).toBe(true)
+      expect(attempts).toBe(2)
+    } finally {
+      fetchSpy.mockRestore()
+    }
+  })
+
+  it('terminalise uniquement un rejet CM explicite', async () => {
+    let attempts = 0
+    const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation((async (url: unknown) => {
+      if (String(url) !== CM_EMAIL_URL) return new Response(null, { status: 204 })
+      attempts += 1
+      return new Response('Recipient rejected', { status: 422 })
+    }) as typeof fetch)
+    try {
+      const idempotencyKey = Bun.randomUUIDv7()
+      const response = await app.request('/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
+        body: JSON.stringify({
+          contexte: 'repayment',
+          ref: 'LOC-REJECTED',
+          destinataire: 'ada@example.org',
+          contenu: { subject: 'Loyer', body: 'Bonjour' }
+        })
+      })
+      expect(response.status).toBe(502)
+      expect(await response.json()).toMatchObject({
+        error: { code: 'cm_rejected', message: 'Recipient rejected' },
+        data: { type: 'communication.failed' }
+      })
+      const rows = list_activities('alice@example.org', {
+        rattachement: 'repayment:LOC-REJECTED',
+        limit: 10
+      })
+      expect(rows.some((row) => row.type === 'communication.failed')).toBe(true)
+      expect(rows.some((row) => row.type === 'communication.ok')).toBe(false)
+      expect(attempts).toBe(1)
+    } finally {
+      fetchSpy.mockRestore()
+    }
   })
 })

@@ -1,13 +1,17 @@
 const CM_GATEWAY = 'https://gw.messaging.cm.com/v1.0/message'
 
+type RcsSendErrorCode = 'not_configured' | 'cm_unavailable' | 'cm_rejected' | 'cm_invalid_response'
+
 export class RcsSendError extends Error {
   readonly status: number
-  readonly code: string
+  readonly code: RcsSendErrorCode
+  readonly retryable: boolean
 
-  constructor(status: number, code: string, message: string) {
+  constructor(status: number, code: RcsSendErrorCode, message: string, retryable: boolean) {
     super(message)
     this.status = status
     this.code = code
+    this.retryable = retryable
   }
 }
 
@@ -16,10 +20,9 @@ export async function send_rcs_message(input: {
   richContent: object
   body?: { content: string }
   reference: string
-  channels?: Array<'RCS' | 'SMS'>
 }): Promise<{ status: number; body: unknown; payload: unknown }> {
   return send_cm_message({
-    channels: input.channels ?? ['RCS'],
+    channels: ['RCS'],
     phone: input.phone,
     body: input.body?.content ?? '',
     richContent: input.richContent,
@@ -49,7 +52,7 @@ async function send_cm_message(input: {
 }): Promise<{ status: number; body: unknown; payload: unknown }> {
   const token = Bun.env['CM_RCS_PRODUCT_TOKEN']?.trim() ?? ''
   if (!token) {
-    throw new RcsSendError(503, 'not_configured', 'CM_RCS_PRODUCT_TOKEN manquant')
+    throw new RcsSendError(503, 'not_configured', 'CM_RCS_PRODUCT_TOKEN manquant', true)
   }
   const from = Bun.env['CM_RCS_FROM']?.trim() || 'PIERRE'
   const payload = {
@@ -83,7 +86,8 @@ async function send_cm_message(input: {
     throw new RcsSendError(
       502,
       'cm_unavailable',
-      error instanceof Error ? error.message : 'CM.com indisponible'
+      error instanceof Error ? error.message : 'CM.com indisponible',
+      true
     )
   }
 
@@ -95,9 +99,24 @@ async function send_cm_message(input: {
     body = text
   }
 
-  if (!response.ok || !cm_body_accepted(body, input.reference)) {
+  if (!response.ok) {
     const status = response.status >= 400 && response.status <= 599 ? response.status : 502
-    throw new RcsSendError(status, 'cm_rejected', cm_error_message(body, status))
+    const retryable =
+      response.status === 401 ||
+      response.status === 403 ||
+      response.status === 408 ||
+      response.status === 429 ||
+      response.status >= 500
+    throw new RcsSendError(status, 'cm_rejected', cm_error_message(body, status), retryable)
+  }
+  const acceptance = cm_acceptance(body, input.reference)
+  if (acceptance !== 'accepted') {
+    throw new RcsSendError(
+      502,
+      acceptance === 'rejected' ? 'cm_rejected' : 'cm_invalid_response',
+      acceptance === 'rejected' ? cm_error_message(body, 502) : 'Réponse CM.com invalide',
+      acceptance === 'invalid'
+    )
   }
 
   return { status: response.status, body, payload }
@@ -106,10 +125,22 @@ async function send_cm_message(input: {
 const is_zero_code = (value: unknown): boolean =>
   value === 0 || (typeof value === 'string' && value.trim() === '0')
 
-const cm_body_accepted = (body: unknown, reference: string): boolean => {
-  if (body == null || typeof body !== 'object') return false
+type CmAcceptance = 'accepted' | 'rejected' | 'invalid'
+type CmCode = 'ok' | 'error' | 'invalid'
+
+const cm_code = (value: unknown): CmCode => {
+  if (is_zero_code(value)) return 'ok'
+  if (typeof value === 'number' && Number.isFinite(value)) return 'error'
+  if (typeof value === 'string' && value.trim()) return 'error'
+  return 'invalid'
+}
+
+const cm_acceptance = (body: unknown, reference: string): CmAcceptance => {
+  if (body == null || typeof body !== 'object') return 'invalid'
   const record = body as Record<string, unknown>
-  if (!is_zero_code(record['errorCode'])) return false
+  const rootCode = cm_code(record['errorCode'])
+  if (rootCode === 'error') return 'rejected'
+  if (rootCode === 'invalid') return 'invalid'
   const raw_messages = record['messages']
   const messages = Array.isArray(raw_messages)
     ? raw_messages
@@ -118,17 +149,20 @@ const cm_body_accepted = (body: unknown, reference: string): boolean => {
         Array.isArray((raw_messages as Record<string, unknown>)['msg'])
       ? ((raw_messages as Record<string, unknown>)['msg'] as unknown[])
       : []
-  return messages.some((message) => {
-    if (message == null || typeof message !== 'object') return false
-    const item = message as Record<string, unknown>
-    const status = typeof item['status'] === 'string' ? item['status'].toLowerCase() : ''
-    return (
-      item['reference'] === reference &&
-      status === 'accepted' &&
-      is_zero_code(item['messageErrorCode']) &&
-      (!('errorCode' in item) || is_zero_code(item['errorCode']))
-    )
-  })
+  const message = messages.find(
+    (item) =>
+      item != null &&
+      typeof item === 'object' &&
+      !Array.isArray(item) &&
+      (item as Record<string, unknown>)['reference'] === reference
+  )
+  if (!message || Array.isArray(message)) return 'invalid'
+  const item = message as Record<string, unknown>
+  const status = typeof item['status'] === 'string' ? item['status'].toLowerCase() : ''
+  const messageCode = cm_code(item['messageErrorCode'])
+  const itemCode = 'errorCode' in item ? cm_code(item['errorCode']) : 'ok'
+  if (status === 'rejected' || messageCode === 'error' || itemCode === 'error') return 'rejected'
+  return status === 'accepted' && messageCode === 'ok' && itemCode === 'ok' ? 'accepted' : 'invalid'
 }
 
 function cm_error_message(body: unknown, status: number): string {

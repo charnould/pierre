@@ -110,8 +110,19 @@ describe('send_rcs_message (fetch mocked, no live send)', () => {
         richContent: { conversation: [{ text: 'hello' }] },
         reference: 'jtest'
       })
-    ).rejects.toMatchObject({ code: 'not_configured', status: 503 })
+    ).rejects.toMatchObject({ code: 'not_configured', status: 503, retryable: true })
     expect(fetchSpy).not.toHaveBeenCalled()
+  })
+
+  it('marks network failures as retryable', async () => {
+    fetchSpy.mockRejectedValue(new TypeError('network unavailable'))
+    await expect(
+      send_rcs_message({
+        phone: PHONE_CM,
+        richContent: { conversation: [{ text: 'hello' }] },
+        reference: 'jtest'
+      })
+    ).rejects.toMatchObject({ code: 'cm_unavailable', status: 502, retryable: true })
   })
 
   it('posts the wrapped payload to the CM gateway', async () => {
@@ -159,6 +170,7 @@ describe('send_rcs_message (fetch mocked, no live send)', () => {
       expect(error).toMatchObject({
         code: 'cm_rejected',
         status: 400,
+        retryable: false,
         message: 'Unknown recipient'
       })
     }
@@ -169,7 +181,9 @@ describe('send_rcs_message (fetch mocked, no live send)', () => {
       new Response(
         JSON.stringify({
           errorCode: 0,
-          messages: { msg: [{ status: 'Rejected', messageErrorCode: 201 }] }
+          messages: {
+            msg: [{ reference: 'jtest', status: 'Rejected', messageErrorCode: 201 }]
+          }
         }),
         { status: 200 }
       )
@@ -180,7 +194,7 @@ describe('send_rcs_message (fetch mocked, no live send)', () => {
         richContent: { conversation: [{ text: 'hello' }] },
         reference: 'jtest'
       })
-    ).rejects.toMatchObject({ code: 'cm_rejected', status: 502 })
+    ).rejects.toMatchObject({ code: 'cm_rejected', status: 502, retryable: false })
   })
 
   it('rejects an accepted label without explicit zero result codes', async () => {
@@ -201,6 +215,6 @@ describe('send_rcs_message (fetch mocked, no live send)', () => {
         richContent: { conversation: [{ text: 'hello' }] },
         reference: 'jtest'
       })
-    ).rejects.toMatchObject({ code: 'cm_rejected', status: 502 })
+    ).rejects.toMatchObject({ code: 'cm_invalid_response', status: 502, retryable: true })
   })
 })
