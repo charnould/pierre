@@ -110,30 +110,15 @@ Un RCS s’envoie depuis PIERRE (`Envoyer` → `Message envoyé`). Un e-mail CAF
 
 `Créer un plan d’apurement` remplace temporairement le tableau. `Retour` ramène à la liste.
 
-Le formulaire couvre notamment :
+Le formulaire est un seul dossier : identification, dette, procédure, accompagnement, bail, membres du foyer, budget et échéancier. `Ajouter un adulte`, `Ajouter un enfant`, les lignes de budget et `Ajouter une échéance` allongent ce dossier. `Enregistrer` le conserve tel quel.
 
-| Rubrique             | Points à renseigner                                                                        |
-| -------------------- | ------------------------------------------------------------------------------------------ |
-| `Dispositif`         | `Plan d'apurement` ou `Protocole de cohésion sociale` ; `Bail` ou `Accession`.             |
-| `Logement`           | Adresse, code postal, ville.                                                               |
-| `Situation locative` | Dette, date du premier impayé, commandement, CCAPEX, travailleur social, Banque de France. |
-| `Foyer`              | Identifiants, adultes, enfants.                                                            |
-| `Budget du foyer`    | Ressources, charges ; PIERRE calcule reste à vivre et UC.                                  |
-| `Aides`              | FSL, Action Logement, etc.                                                                 |
-| `Échéancier`         | Ajouter ou retirer des échéances (n°, date, montant).                                      |
-
-En bas : interrupteur `Plan ou protocole signé`, `Retirer` (brouillon), `Clôturer` (motifs : `Exécution terminée`, `Non-respect`, `Remplacé par un nouveau plan`, `Effacement de dette`), `Exporter en .docx`, `Enregistrer` ou `Enregistrer avec une note`.
-
-Un plan **signé** bascule le dossier en `Plan amiable / EV en cours` et passe le formulaire en lecture seule : seule la clôture reste possible.
-
-Si la table des comptes locataires est absente, vous pouvez encore ouvrir `Créer un plan d'apurement` en mode export, **sans** le rattacher à un dossier du tableau.
+`Retour` ferme l’écran sans écrire. `Modifier le plan d’apurement` rouvre le dernier dossier enregistré.
 
 ## Bonnes pratiques
 
 - **Lisez la tendance de dette avant de relancer.** Une dette en baisse n’appelle pas le même geste qu’une dette qui file.
 - **Notez le changement de phase.** Le groupe seul ne raconte pas pourquoi.
-- **Exportez le plan en Word** pour la signature ; gardez PIERRE comme mémoire du dossier.
-- **Un plan signé n’est plus un brouillon.** Relisez avant de cocher `Plan ou protocole signé`.
+- **Enregistrez le dossier** avant de quitter l’écran : c’est la mémoire du plan.
 
 ## Si quelque chose ne va pas
 

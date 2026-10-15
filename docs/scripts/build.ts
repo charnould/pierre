@@ -1,4 +1,4 @@
-import { watch } from 'node:fs'
+import { statSync, watch } from 'node:fs'
 import { mkdir, readdir, realpath, rm, stat } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { dirname, join, relative, sep } from 'node:path'
@@ -22,23 +22,14 @@ require('prismjs/components/prism-bash.js')
 
 const ROOT = join(import.meta.dir, '..')
 const REPO = join(ROOT, '..')
-const README = join(REPO, 'README.md')
 const TOC_JSON = join(ROOT, 'toc.json')
-const OFF = ['08-user-manual']
-const INDEX_ONLY = ['04-core-intelligence-hlm']
 const SITE = join(ROOT, 'site')
 const PORT = 4173
 
-const README_TOC_START = '<!-- docs-toc -->'
-const README_TOC_STOP = '<!-- docs-tocstop -->'
 const TOC_MARKER_RE = /<!--\s*toc(?:\s+maxdepth:(\d+))?\s*-->/
-const TOC_MARKER_GLOBAL_RE = /<!--\s*toc(?:\s+maxdepth:\d+)?\s*-->/g
 const TOC_STOP_RE = /<!--\s*tocstop\s*-->/
-const TOC_STOP_GLOBAL_RE = /<!--\s*tocstop\s*-->/g
 const DOCS_PAGES_RE = /<!--\s*docs-pages\s*-->/
-const DOCS_PAGES_GLOBAL_RE = /<!--\s*docs-pages\s*-->/g
 const DOCS_PAGES_STOP_RE = /<!--\s*docs-pagesstop\s*-->/
-const DOCS_PAGES_STOP_GLOBAL_RE = /<!--\s*docs-pagesstop\s*-->/g
 const DEFAULT_TOC_MAXDEPTH = 3
 
 export function pageGroupTitle(filename: string): string {
@@ -52,19 +43,12 @@ type TocChangelogEntry = { slug: string; title: string; date: string }
 export type TocEntry = {
   folder: string
   title: string
-  html?: false
+  html?: false | 'index'
   entries?: TocChangelogEntry[]
 }
 
-export type DocPage = {
-  mdPath: string
-  section: string
-  date: string | null
-  title: string
-}
-
-export type UpdateDocsTocOptions = { docsDir: string; dryRun?: boolean; skip?: string[] }
-export type UpdateDocsTocResult = { updated: string[]; skipped: string[] }
+export type UpdateDocsTocOptions = { docsDir: string }
+export type UpdateDocsTocResult = { updated: string[] }
 
 function prepare(raw: string) {
   return raw.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '').replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
@@ -98,26 +82,17 @@ function uniqueSlug(text: string, used: Map<string, number>) {
   return slug
 }
 
-function isOff(rel: string, folders: readonly string[] = OFF) {
-  return folders.some((folder) => rel === folder || rel.startsWith(`${folder}/`))
-}
-
 function tocEntry(e: TocEntry): TocEntry {
-  return e.html === false
-    ? { folder: e.folder, title: e.title, html: false }
-    : { folder: e.folder, title: e.title }
+  const base = { folder: e.folder, title: e.title }
+  return e.html === false || e.html === 'index' ? { ...base, html: e.html } : base
 }
 
-function isUnpublished(rel: string, folders: readonly string[]) {
+function inFolder(rel: string, folders: readonly string[]) {
   return folders.some((folder) => rel === folder || rel.startsWith(`${folder}/`))
 }
 
-function indexOnlyFolder(rel: string) {
-  return INDEX_ONLY.find((folder) => rel === folder || rel.startsWith(`${folder}/`))
-}
-
-function notItsIndex(rel: string) {
-  const folder = indexOnlyFolder(rel)
+function notItsIndex(rel: string, indexOnly: readonly string[]) {
+  const folder = indexOnly.find((name) => rel === name || rel.startsWith(`${name}/`))
   return folder !== undefined && rel !== `${folder}/index.md`
 }
 
@@ -140,7 +115,8 @@ function decodePath(path: string) {
 export function rewriteUnpublishedLinks(
   html: string,
   fromDir: string,
-  unpublished: readonly string[]
+  unpublished: readonly string[],
+  indexOnly: readonly string[] = []
 ) {
   return html.replace(/\bhref="([^"]+)"/g, (match, url: string) => {
     if (/^(?:[a-z]+:|#|\/\/)/i.test(url) || url.startsWith('/')) return match
@@ -151,7 +127,7 @@ export function rewriteUnpublishedLinks(
     const repoRel = relative(REPO, join(fromDir, decodePath(path))).replaceAll('\\', '/')
     if (repoRel.startsWith('..') || !repoRel.startsWith('docs/')) return match
     const docsRel = repoRel.slice('docs/'.length)
-    if (!isUnpublished(docsRel, unpublished) && !notItsIndex(docsRel)) return match
+    if (!inFolder(docsRel, unpublished) && !notItsIndex(docsRel, indexOnly)) return match
     const encoded = repoRel
       .split('/')
       .map((part) => encodeURIComponent(part))
@@ -188,29 +164,6 @@ function fileDate(name: string): string | null {
   return /^(\d{4}-\d{2}-\d{2})(?:-|$)/.exec(name)?.[1] ?? null
 }
 
-/** Longest toc.json folder that contains this page (`03-install/01-server` beats `03-install`). */
-export function matchTocFolder(mdPath: string, folders: string[]): string | null {
-  let best: string | null = null
-  for (const folder of folders) {
-    if (mdPath !== `${folder}.md` && !mdPath.startsWith(`${folder}/`)) continue
-    if (best === null || folder.length > best.length) best = folder
-  }
-  return best
-}
-
-function compareDocPages(a: DocPage, b: DocPage) {
-  const aIndex = a.mdPath.split('/').pop() === 'index.md' ? 0 : 1
-  const bIndex = b.mdPath.split('/').pop() === 'index.md' ? 0 : 1
-  if (aIndex !== bIndex) return aIndex - bIndex
-  return a.mdPath.localeCompare(b.mdPath, 'en', { numeric: true })
-}
-
-function subdirOf(mdPath: string, folder: string): string | null {
-  const rest = mdPath.startsWith(`${folder}/`) ? mdPath.slice(folder.length + 1) : mdPath
-  const slash = rest.indexOf('/')
-  return slash === -1 ? null : rest.slice(0, slash)
-}
-
 function isSkippedPath(abs: string) {
   return abs.includes('/node_modules/') || abs.includes('/assets/')
 }
@@ -234,18 +187,60 @@ async function isMarkdownFile(abs: string) {
   }
 }
 
-export function insertToc(content: string): string {
-  const openMatch = content.match(TOC_MARKER_RE)
-  const closeMatch = TOC_STOP_RE.exec(content)
-  if (!openMatch || !closeMatch) return content
+type TocPair = {
+  openStart: number
+  openText: string
+  maxdepth: number
+  closeEnd: number
+  regionEnd: number
+}
 
-  const maxdepth = openMatch[1] ? Number(openMatch[1]) : DEFAULT_TOC_MAXDEPTH
-  const after = content.slice(closeMatch.index + closeMatch[0].length)
-  const used = new Map<string, number>()
+function tocPairs(content: string): TocPair[] {
+  const pairs: TocPair[] = []
+  let cursor = 0
+  while (cursor < content.length) {
+    const open = content.slice(cursor).match(TOC_MARKER_RE)
+    if (open?.index === undefined) break
+    const openStart = cursor + open.index
+    const afterOpen = openStart + open[0].length
+    const close = content.slice(afterOpen).match(TOC_STOP_RE)
+    if (close?.index === undefined) break
+    const closeEnd = afterOpen + close.index + close[0].length
+    const regionEnd = tocRegionEnd(content, closeEnd)
+    pairs.push({
+      openStart,
+      openText: open[0],
+      maxdepth: open[1] ? Number(open[1]) : DEFAULT_TOC_MAXDEPTH,
+      closeEnd,
+      regionEnd
+    })
+    cursor = regionEnd
+  }
+  return pairs
+}
+
+/** Headings run until the next toc marker or the next document title. */
+function tocRegionEnd(content: string, closeEnd: number) {
+  const nextOpen = content.slice(closeEnd).match(TOC_MARKER_RE)
+  const limit = nextOpen?.index === undefined ? content.length : closeEnd + nextOpen.index
+  let inFence = false
+  let pos = closeEnd
+  while (pos < limit) {
+    const nl = content.indexOf('\n', pos)
+    const lineEnd = nl === -1 || nl > limit ? limit : nl
+    const line = content.slice(pos, lineEnd).replace(/\r$/, '')
+    if (line.startsWith('```')) inFence = !inFence
+    else if (!inFence && line.startsWith('# ')) return pos
+    if (nl === -1 || nl >= limit) break
+    pos = nl + 1
+  }
+  return limit
+}
+
+function tocItems(region: string, maxdepth: number, used: Map<string, number>) {
   const items: { level: number; text: string; slug: string }[] = []
   let inFence = false
-
-  for (const line of after.split(/\r?\n/)) {
+  for (const line of region.split(/\r?\n/)) {
     if (line.startsWith('```')) {
       inFence = !inFence
       continue
@@ -259,21 +254,30 @@ export function insertToc(content: string): string {
     if (isDecorativeHeading(text)) continue
     items.push({ level, text, slug: uniqueSlug(text, used) })
   }
-
-  const min = items.length ? Math.min(...items.map((i) => i.level)) : 0
-  const list = items.map((i) => `${'  '.repeat(i.level - min)}- [${i.text}](#${i.slug})`).join('\n')
-  const block = list
-    ? `${openMatch[0]}\n\n${list}\n\n<!-- tocstop -->`
-    : `${openMatch[0]}\n\n<!-- tocstop -->`
-
-  return `${content.slice(0, openMatch.index)}${block}${after}`
+  return items
 }
 
-export async function insertDocsPages(content: string, folderAbs: string): Promise<string> {
-  const openMatch = content.match(DOCS_PAGES_RE)
-  const closeMatch = DOCS_PAGES_STOP_RE.exec(content)
-  if (!openMatch || !closeMatch) return content
+function tocBlock(openText: string, items: { level: number; text: string; slug: string }[]) {
+  const min = items.length ? Math.min(...items.map((i) => i.level)) : 0
+  const list = items.map((i) => `${'  '.repeat(i.level - min)}- [${i.text}](#${i.slug})`).join('\n')
+  return list ? `${openText}\n\n${list}\n\n<!-- tocstop -->` : `${openText}\n\n<!-- tocstop -->`
+}
 
+export function insertToc(content: string): string {
+  const pairs = tocPairs(content)
+  if (!pairs.length) return content
+  const used = new Map<string, number>()
+  let cursor = 0
+  let out = ''
+  for (const pair of pairs) {
+    const items = tocItems(content.slice(pair.closeEnd, pair.regionEnd), pair.maxdepth, used)
+    out += content.slice(cursor, pair.openStart) + tocBlock(pair.openText, items)
+    cursor = pair.closeEnd
+  }
+  return out + content.slice(cursor)
+}
+
+async function docsPagesList(folderAbs: string) {
   const names = (await readdir(folderAbs))
     .filter((name) => name.endsWith('.md') && name !== 'index.md')
     .sort((a, b) => a.localeCompare(b, 'en', { numeric: true }))
@@ -295,62 +299,62 @@ export async function insertDocsPages(content: string, folderAbs: string): Promi
       .push(blurb ? `- [${title}](./${name}) — ${blurb}` : `- [${title}](./${name})`)
   }
 
-  const list = groupOrder
-    .map((group) => `### ${group}\n\n${groups.get(group)!.join('\n')}`)
-    .join('\n\n')
-  const after = content.slice(closeMatch.index + closeMatch[0].length)
-  const block = list
-    ? `${openMatch[0]}\n\n${list}\n\n<!-- docs-pagesstop -->`
-    : `${openMatch[0]}\n\n<!-- docs-pagesstop -->`
-
-  return `${content.slice(0, openMatch.index)}${block}${after}`
+  return groupOrder.map((group) => `### ${group}\n\n${groups.get(group)!.join('\n')}`).join('\n\n')
 }
 
-function markerPairCount(content: string, open: RegExp, close: RegExp) {
-  return {
-    open: content.match(open)?.length ?? 0,
-    close: content.match(close)?.length ?? 0
+export async function insertDocsPages(content: string, folderAbs: string): Promise<string> {
+  if (!DOCS_PAGES_RE.test(content)) return content
+  const list = await docsPagesList(folderAbs)
+  let cursor = 0
+  let out = ''
+  while (cursor < content.length) {
+    const open = content.slice(cursor).match(DOCS_PAGES_RE)
+    if (open?.index === undefined) break
+    const openStart = cursor + open.index
+    const afterOpen = openStart + open[0].length
+    const close = content.slice(afterOpen).match(DOCS_PAGES_STOP_RE)
+    if (close?.index === undefined) break
+    const closeEnd = afterOpen + close.index + close[0].length
+    const block = list
+      ? `${open[0]}\n\n${list}\n\n<!-- docs-pagesstop -->`
+      : `${open[0]}\n\n<!-- docs-pagesstop -->`
+    out += content.slice(cursor, openStart) + block
+    cursor = closeEnd
   }
+  return out + content.slice(cursor)
 }
 
 export async function updateDocsToc({
-  docsDir,
-  dryRun = false,
-  skip = []
+  docsDir
 }: UpdateDocsTocOptions): Promise<UpdateDocsTocResult> {
   const updated: string[] = []
-  const skipped: string[] = []
 
   for (const file of await readdir(docsDir, { recursive: true })) {
     const path = join(docsDir, String(file))
     const rel = relative(docsDir, path).replaceAll('\\', '/')
     if (!(await isMarkdownFile(path)) || isSkippedPath(path) || rel.startsWith('scripts/')) continue
-    if (isOff(rel, skip)) continue
 
     const content = await Bun.file(path).text()
     const hasToc = TOC_MARKER_RE.test(content)
     const hasPages = DOCS_PAGES_RE.test(content)
     if (!hasToc && !hasPages) continue
 
-    const toc = markerPairCount(content, TOC_MARKER_GLOBAL_RE, TOC_STOP_GLOBAL_RE)
-    const pages = markerPairCount(content, DOCS_PAGES_GLOBAL_RE, DOCS_PAGES_STOP_GLOBAL_RE)
-    if (
-      (hasToc && (toc.open > 1 || toc.close > 1)) ||
-      (hasPages && (pages.open > 1 || pages.close > 1))
-    ) {
-      skipped.push(path)
-      continue
-    }
-
     let next = content
     if (hasToc) next = insertToc(next)
     if (hasPages) next = await insertDocsPages(next, dirname(path))
     if (next === content) continue
-    if (!dryRun) await Bun.write(path, next)
+    let current: string
+    try {
+      current = await Bun.file(path).text()
+    } catch {
+      continue
+    }
+    if (current !== content) continue
+    await Bun.write(path, next)
     updated.push(path)
   }
 
-  return { updated, skipped }
+  return { updated }
 }
 
 async function loadTocConfig(): Promise<TocEntry[]> {
@@ -359,6 +363,9 @@ async function loadTocConfig(): Promise<TocEntry[]> {
   return raw.map((e, i) => {
     if (!e || typeof e.folder !== 'string' || typeof e.title !== 'string') {
       throw new Error(`docs/toc.json[${i}] must have { folder, title } strings`)
+    }
+    if (e.html !== undefined && e.html !== false && e.html !== 'index') {
+      throw new Error(`docs/toc.json[${i}].html must be false or "index"`)
     }
     return tocEntry(e)
   })
@@ -388,127 +395,21 @@ async function syncChangelogEntries(toc: TocEntry[]): Promise<TocEntry[]> {
 
   entries.sort((a, b) => b.date.localeCompare(a.date))
   changelog.entries = entries
-  await Bun.write(TOC_JSON, `${JSON.stringify(next, null, 2)}\n`)
-  console.log(`✓ toc.json (${entries.length} changelog entries)`)
+  const text = `${JSON.stringify(next, null, 2)}\n`
+  const current = await Bun.file(TOC_JSON)
+    .text()
+    .catch(() => '')
+  if (current !== text) {
+    await Bun.write(TOC_JSON, text)
+    console.log(`✓ toc.json (${entries.length} changelog entries)`)
+  }
   return next
-}
-
-async function collectDocs(folders: string[]): Promise<DocPage[]> {
-  const pages: DocPage[] = []
-
-  for (const file of await readdir(ROOT, { recursive: true })) {
-    const abs = join(ROOT, String(file))
-    if (!(await isMarkdownFile(abs)) || isSkippedPath(abs)) continue
-    const mdPath = relative(ROOT, abs).replaceAll('\\', '/')
-    if (mdPath === 'index.md' || mdPath.startsWith('scripts/')) continue
-
-    const section = matchTocFolder(mdPath, folders)
-    if (!section || notItsIndex(mdPath)) continue
-    const base = mdPath.split('/').pop()!.replace(/\.md$/, '')
-    const raw = prepare(await Bun.file(abs).text())
-    if (!raw.trim()) continue
-    pages.push({
-      mdPath,
-      section,
-      date: fileDate(base),
-      title: firstH1(raw, humanize(base.replace(/^\d{4}-\d{2}-\d{2}-/, '')))
-    })
-  }
-
-  pages.sort(compareDocPages)
-  return pages
-}
-
-function pageLink(page: DocPage, showDate: boolean) {
-  const label = showDate && page.date ? `${page.date} — ${page.title}` : page.title
-  return `- [${label}](./docs/${page.mdPath})`
-}
-
-function renderSectionPages(pages: DocPage[], folder: string, showDate: boolean): string[] {
-  const root: DocPage[] = []
-  const nested = new Map<string, DocPage[]>()
-
-  for (const page of pages) {
-    const sub = subdirOf(page.mdPath, folder)
-    if (!sub) {
-      root.push(page)
-      continue
-    }
-    const list = nested.get(sub) ?? []
-    list.push(page)
-    nested.set(sub, list)
-  }
-
-  const lines: string[] = []
-  for (const page of root.sort(compareDocPages)) lines.push(pageLink(page, showDate))
-
-  const subs = [...nested.keys()].sort((a, b) => a.localeCompare(b, 'en', { numeric: true }))
-  for (const sub of subs) {
-    if (lines.length) lines.push('')
-    lines.push(`### ${humanize(sub)}`, '')
-    for (const page of nested.get(sub)!.sort(compareDocPages)) {
-      lines.push(pageLink(page, showDate))
-    }
-  }
-
-  return lines
-}
-
-export function renderDocsToc(pages: DocPage[], toc: TocEntry[]): string {
-  const bySection = new Map<string, DocPage[]>()
-  for (const p of pages) {
-    const list = bySection.get(p.section) ?? []
-    list.push(p)
-    bySection.set(p.section, list)
-  }
-
-  const lines: string[] = []
-  for (const entry of toc) {
-    const sectionPages = bySection.get(entry.folder)
-    if (!sectionPages?.length) {
-      console.warn(`toc.json: folder "${entry.folder}" not found or empty — skipped`)
-      continue
-    }
-    const leaf = stripOrder(entry.folder.split('/').pop()!)
-    const showDate = leaf === 'changelog' || leaf === 'articles'
-    lines.push(`## ${entry.title}`, '')
-    lines.push(...renderSectionPages(sectionPages, entry.folder, showDate))
-    lines.push('')
-  }
-
-  return `${README_TOC_START}\n\n${lines.join('\n').trimEnd()}\n\n${README_TOC_STOP}`
-}
-
-async function updateRootReadme(pages: DocPage[], toc: TocEntry[]) {
-  const block = renderDocsToc(pages, toc)
-  let readme = await Bun.file(README).text()
-  readme = readme.replace(
-    new RegExp(`${README_TOC_START}[\\s\\S]*?${README_TOC_STOP}\\n*`, 'g'),
-    ''
-  )
-  readme = readme.replaceAll(`${README_TOC_START}\n`, '').replaceAll(`${README_TOC_STOP}\n`, '')
-  readme = readme.replaceAll(README_TOC_START, '').replaceAll(README_TOC_STOP, '')
-
-  const titleMatch = readme.match(/^#\s+[^\n]+\n+/)
-  if (titleMatch) {
-    const afterTitle = readme.slice(titleMatch[0].length)
-    const licenceIdx = afterTitle.search(/^## Licence\b/m)
-    readme =
-      licenceIdx >= 0
-        ? `${titleMatch[0]}${block}\n\n${afterTitle.slice(licenceIdx)}`
-        : `${titleMatch[0]}${block}\n\n${afterTitle}`
-  } else {
-    readme = `${block}\n\n${readme}`
-  }
-
-  await Bun.write(README, readme)
-  console.log('✓ README.md (docs toc)')
 }
 
 function pageHtml(
   title: string,
   body: string,
-  extra?: { css: string; html: string; bodyClass: string },
+  extra?: { css: string; bodyClass: string },
   assets = './'
 ) {
   return `<!doctype html>
@@ -560,14 +461,24 @@ function pageHtml(
       margin: 0 0 16px;
     }
     .article h2 {
-      font-size: 36px;
-      line-height: 40.32px;
-      margin: 80px 0 40px;
+      font-size: 24px;
+      line-height: 32px;
+      margin: 48px 0 16px;
     }
     .article h3 {
-      font-size: 24px;
+      font-size: 20px;
       line-height: 28px;
-      margin: 40px 0 20px;
+      margin: 32px 0 12px;
+    }
+    .article h4 {
+      font-size: 16px;
+      line-height: 24px;
+      margin: 24px 0 8px;
+    }
+    .article h5 {
+      font-size: 14px;
+      line-height: 20px;
+      margin: 0 0 24px;
     }
     .article p {
       margin: 0 0 16px;
@@ -577,6 +488,7 @@ function pageHtml(
     .article ol {
       margin: 0 0 16px;
       padding-inline-start: 1.5em;
+      text-wrap: pretty;
     }
     .article ul {
       list-style-type: disc;
@@ -596,7 +508,8 @@ function pageHtml(
       list-style-type: circle;
       margin: 8px 0 0;
     }
-    .article a {
+    .article a,
+    .article a:visited {
       color: #0000ee;
       text-underline-offset: 0.15em;
     }
@@ -604,14 +517,75 @@ function pageHtml(
       text-decoration-thickness: 2px;
     }
     .article strong {
-      font-weight: 600;
+      font-weight: 700;
     }
     .article pre:not(.cadre) {
       padding: 1em;
     }
+    .article pre[class*='language-'] {
+      margin: 0 0 16px;
+      border-radius: 0;
+    }
+    .article blockquote {
+      margin: 0 0 16px;
+    }
+    .article blockquote > p:last-child {
+      margin-bottom: 0;
+    }
     .article :not(pre) > code {
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 0.875em;
+    }
+    .article .typeset-scroll {
+      max-width: 100%;
+      overflow-x: auto;
+      margin: 0 0 16px;
+    }
+    .article table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 20px;
+      text-wrap: balance;
+    }
+    .article th,
+    .article td {
+      text-align: left;
+      vertical-align: top;
+      padding: 10px 24px 10px 0;
+    }
+    .article th {
+      font-weight: 700;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #d4d4d4;
+    }
+    .article td {
+      font-weight: 400;
+      border-bottom: 1px solid #ececec;
+    }
+    .article th:last-child,
+    .article td:last-child {
+      padding-right: 0;
+    }
+    .article :is(th, td) code {
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    .article blockquote.alert {
+      margin: 0 0 16px;
+      padding: 2px 0 2px 16px;
+      border-left: 2px solid #111;
+    }
+    .article blockquote.alert > p:first-child {
+      margin: 0 0 4px;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 20px;
+    }
+    .article blockquote.alert > p:first-child strong {
+      font-weight: 700;
     }
     .article p:has(> .shot) {
       --shot-gap: 0.5rem;
@@ -666,7 +640,7 @@ function pageHtml(
     }
     .article .shot-title {
       position: absolute;
-      top: 0.45rem;
+      top: calc(0.45rem + 6px);
       left: -0.65rem;
       z-index: 1;
       max-width: calc(100% - 1rem);
@@ -686,7 +660,7 @@ function pageHtml(
       pointer-events: none;
     }
     .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) .shot-title {
-      top: 1.5rem;
+      top: calc(1.5rem + 6px);
       left: -0.65rem;
     }
     body.is-zooming .shot-title {
@@ -700,7 +674,6 @@ function pageHtml(
   <article class="article">
     ${body}
   </article>
-  ${extra?.html ?? ''}
   <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
   <script>
     const zoom = mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
@@ -720,11 +693,8 @@ const ALERT_LABEL: Record<string, string> = {
   CAUTION: 'Caution'
 }
 
-function headingIds(raw: string) {
-  const open = raw.match(TOC_MARKER_RE)
-  const close = TOC_STOP_RE.exec(raw)
-  const maxdepth = open?.[1] ? Number(open[1]) : DEFAULT_TOC_MAXDEPTH
-  const tocStart = open && close ? close.index + close[0].length : -1
+export function headingIds(raw: string) {
+  const pairs = tocPairs(raw)
   const tocUsed = new Map<string, number>()
   const otherUsed = new Map<string, number>()
   const ids: string[] = []
@@ -750,7 +720,9 @@ function headingIds(raw: string) {
       continue
     }
     const level = heading[1]!.length
-    const inToc = tocStart >= 0 && lineStart >= tocStart && level <= maxdepth
+    const inToc = pairs.some(
+      (pair) => lineStart >= pair.closeEnd && lineStart < pair.regionEnd && level <= pair.maxdepth
+    )
     ids.push(uniqueSlug(text, inToc ? tocUsed : otherUsed))
   }
   return ids
@@ -802,7 +774,8 @@ function applyTables(html: string) {
 function applyAlerts(html: string) {
   return html.replace(
     /<blockquote>\n<p>\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\n/g,
-    (_, kind: string) => `<blockquote>\n<p><strong>${ALERT_LABEL[kind]}</strong></p>\n<p>`
+    (_, kind: string) =>
+      `<blockquote class="alert">\n<p><strong>${ALERT_LABEL[kind]}</strong></p>\n<p>`
   )
 }
 
@@ -825,6 +798,57 @@ function assetPrefix(outDir: string) {
 
 const FENCE_RE = /<pre><code class="language-(json|yaml|bash)">([\s\S]*?)<\/code><\/pre>/g
 
+const DOC_HTML_TAGS = new Set([
+  'a',
+  'blockquote',
+  'br',
+  'code',
+  'del',
+  'div',
+  'em',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'hr',
+  'img',
+  'li',
+  'ol',
+  'p',
+  'pre',
+  'span',
+  'strong',
+  'sub',
+  'sup',
+  'table',
+  'tbody',
+  'td',
+  'th',
+  'thead',
+  'tr',
+  'ul'
+])
+
+// A leading backslash makes Bun emit one `&lt;`. An entity here would be escaped twice.
+export function escapeUnknownTags(markdown: string) {
+  return markdown
+    .split(/(```[\s\S]*?```|~~~[\s\S]*?~~~)/g)
+    .map((part, index) => (index % 2 === 1 ? part : escapeUnknownTagsInProse(part)))
+    .join('')
+}
+
+function escapeUnknownTagsInProse(prose: string) {
+  return prose.replace(
+    /`[^`\n]*`|<\/?([A-Za-z][A-Za-z0-9-]*)\b[^>\n]*>/g,
+    (full, name?: string) => {
+      if (!name || DOC_HTML_TAGS.has(name.toLowerCase())) return full
+      return full.replace('<', '\\<')
+    }
+  )
+}
+
 export function highlightFences(html: string) {
   return html.replace(FENCE_RE, (full, lang: string, body: string) => {
     const grammar = Prism.languages[lang]
@@ -839,9 +863,10 @@ function renderHtml(
   fromDir: string,
   outDir: string,
   label: string,
-  unpublished: readonly string[]
+  unpublished: readonly string[],
+  indexOnly: readonly string[]
 ) {
-  let html = highlightFences(Bun.markdown.html(raw, { autolinks: true }))
+  let html = highlightFences(Bun.markdown.html(escapeUnknownTags(raw), { autolinks: true }))
   const ids = headingIds(raw)
   const found = html.match(/<h[1-6]>/g)?.length ?? 0
   if (found !== ids.length) console.warn(`${label}: ${found} titres, ${ids.length} ancres`)
@@ -851,7 +876,7 @@ function renderHtml(
   html = applyAlerts(html)
   if (raw.includes('<!-- carl -->')) html = html.replaceAll('<!-- carl -->', benchHtml())
   return retargetMdLinks(
-    rebaseLinks(rewriteUnpublishedLinks(html, fromDir, unpublished), fromDir, outDir)
+    rebaseLinks(rewriteUnpublishedLinks(html, fromDir, unpublished, indexOnly), fromDir, outDir)
   )
 }
 
@@ -869,6 +894,7 @@ async function renderPage(
   mdAbs: string,
   outAbs: string,
   unpublished: readonly string[],
+  indexOnly: readonly string[],
   home = false
 ) {
   const raw = prepare(await Bun.file(mdAbs).text())
@@ -877,14 +903,14 @@ async function renderPage(
   const base = rel.split('/').pop()!.replace(/\.md$/, '')
   const title = firstH1(raw, humanize(base.replace(/^\d{4}-\d{2}-\d{2}-/, '')))
   const hasBench = raw.includes('<!-- carl -->')
-  const body = renderHtml(raw, dirname(mdAbs), dirname(outAbs), rel, unpublished)
+  const body = renderHtml(raw, dirname(mdAbs), dirname(outAbs), rel, unpublished, indexOnly)
   await mkdir(dirname(outAbs), { recursive: true })
   await Bun.write(
     outAbs,
     pageHtml(
       title,
       home ? prefixSiteLinks(body) : body,
-      hasBench ? { css: CARL_CSS, html: '', bodyClass: 'has-bench' } : undefined,
+      hasBench ? { css: CARL_CSS, bodyClass: 'has-bench' } : undefined,
       assetPrefix(dirname(outAbs))
     )
   )
@@ -904,22 +930,64 @@ function rebaseLinks(html: string, fromDir: string, toDir: string) {
   })
 }
 
-async function build() {
-  const { updated, skipped } = await updateDocsToc({ docsDir: ROOT, skip: OFF })
+function isExistingFile(abs: string) {
+  try {
+    return statSync(abs).isFile()
+  } catch {
+    return false
+  }
+}
+
+/** Relative `.md` links whose target file is absent. Fenced code is ignored. */
+export function missingRelativeMdLinks(
+  raw: string,
+  fromDir: string,
+  exists: (abs: string) => boolean
+): string[] {
+  const prose = raw
+    .split(/(```[\s\S]*?```|~~~[\s\S]*?~~~)/g)
+    .filter((_, index) => index % 2 === 0)
+    .join('')
+  const missing: string[] = []
+  const seen = new Set<string>()
+  for (const match of prose.matchAll(/\[[^\]]*\]\(([^)\s]+)/g)) {
+    const url = match[1]!
+    if (/^(?:[a-z]+:|#|\/\/)/i.test(url) || url.startsWith('/')) continue
+    const hashAt = url.indexOf('#')
+    const target = hashAt === -1 ? url : url.slice(0, hashAt)
+    if (!target.endsWith('.md') || seen.has(target)) continue
+    seen.add(target)
+    if (!exists(join(fromDir, decodePath(target)))) missing.push(target)
+  }
+  return missing
+}
+
+async function warnMissingMdLinks() {
+  for (const file of await readdir(ROOT, { recursive: true })) {
+    const abs = join(ROOT, String(file))
+    const rel = relative(ROOT, abs).replaceAll('\\', '/')
+    if (!(await isMarkdownFile(abs)) || isSkippedPath(abs) || rel.startsWith('scripts/')) continue
+    if (await isOutsideDocs(abs)) continue
+    const raw = await Bun.file(abs).text()
+    for (const target of missingRelativeMdLinks(raw, dirname(abs), isExistingFile)) {
+      console.warn(`${rel} → ${target}`)
+    }
+  }
+}
+
+export async function build() {
+  const { updated } = await updateDocsToc({ docsDir: ROOT })
   if (updated.length) {
     console.log(`✓ intra-file toc (${updated.length})`)
     for (const file of updated) console.log(`  - ${relative(ROOT, file)}`)
   }
-  if (skipped.length) {
-    console.warn(`intra-file toc: skipped ${skipped.length} file(s) with multiple markers`)
-  }
 
   const toc = await syncChangelogEntries(await loadTocConfig())
   const unpublished = toc.filter((e) => e.html === false).map((e) => e.folder)
-  const pages = await collectDocs(toc.map((e) => e.folder))
-  await updateRootReadme(pages, toc)
+  const indexOnly = toc.filter((e) => e.html === 'index').map((e) => e.folder)
 
   await rm(SITE, { recursive: true, force: true })
+  await rm(join(ROOT, 'index.html'), { force: true })
   let written = 0
   for (const file of await readdir(ROOT, { recursive: true })) {
     const abs = join(ROOT, String(file))
@@ -928,18 +996,17 @@ async function build() {
     if (
       rel.startsWith('scripts/') ||
       rel.startsWith('site/') ||
-      isOff(rel) ||
-      isUnpublished(rel, unpublished) ||
-      notItsIndex(rel)
+      inFolder(rel, unpublished) ||
+      notItsIndex(rel, indexOnly)
     )
       continue
     if (await isOutsideDocs(abs)) continue
     const home = rel === 'index.md'
     const out = home ? join(ROOT, 'index.html') : join(SITE, `${rel.slice(0, -3)}.html`)
-    if (await renderPage(abs, out, unpublished, home)) written++
+    if (await renderPage(abs, out, unpublished, indexOnly, home)) written++
   }
   console.log(`✓ html (${written})`)
-  console.log(`✓ README toc (${pages.length} pages)`)
+  await warnMissingMdLinks()
 }
 
 function toRel(filename: string) {
@@ -958,8 +1025,7 @@ function shouldIgnore(rel: string) {
     rel === 'site' ||
     rel.startsWith('site/') ||
     rel.startsWith('.') ||
-    rel.includes('/.') ||
-    isOff(rel)
+    rel.includes('/.')
   )
 }
 
@@ -1011,20 +1077,20 @@ function serve(notify: { clients: Set<ReadableStreamDefaultController<Uint8Array
         return notFound()
       }
       rel = (rel === '/' ? 'index.html' : rel.replace(/^\/+/, '')).replaceAll('\\', '/')
-      if (rel.includes('..') || isOff(rel)) return notFound()
+      if (rel.includes('..')) return notFound()
 
       if (rel.startsWith('site/')) {
         const rest = rel.slice('site/'.length)
-        if (!rest || isOff(rest)) return notFound()
+        if (!rest) return notFound()
         const location = `/${rest.split('/').map(encodeURIComponent).join('/')}`
-        return Response.redirect(new URL(location, req.url), 302)
+        return Response.redirect(new URL(location, req.url).href, 302)
       }
 
       if (rel.endsWith('.md')) {
         const htmlRel = `${rel.slice(0, -3)}.html`
         if (!(await Bun.file(join(SITE, htmlRel)).exists())) return notFound()
         const location = `/${htmlRel.split('/').map(encodeURIComponent).join('/')}`
-        return Response.redirect(new URL(location, req.url), 302)
+        return Response.redirect(new URL(location, req.url).href, 302)
       }
 
       let fileAbs =
@@ -1046,41 +1112,51 @@ function serve(notify: { clients: Set<ReadableStreamDefaultController<Uint8Array
 function watchDocs(notify: (ok: boolean) => void) {
   let timer: ReturnType<typeof setTimeout> | undefined
   let building = false
-  let pending: string | undefined
-  let coolUntil = 0
+  let again = false
+  let quietUntil = 0
 
   async function rebuild(reason: string) {
     if (building) {
-      pending = reason
+      again = true
       return
     }
     building = true
-    coolUntil = Date.now() + 60_000
-    console.log(`\n↻ ${reason}`)
     let ok = false
-    try {
-      await build()
-      ok = true
-    } catch (err) {
-      console.error('build failed:', err)
-    }
-    coolUntil = Date.now() + 400
+    do {
+      again = false
+      console.log(`\n↻ ${reason}`)
+      ok = false
+      try {
+        await build()
+        ok = true
+      } catch (err) {
+        console.error('build failed:', err)
+      }
+      quietUntil = Date.now() + 300
+    } while (again)
     building = false
-    if (pending) {
-      const next = pending
-      pending = undefined
-      await rebuild(next)
+    if (again) {
+      void rebuild(reason)
       return
     }
     notify(ok)
   }
 
   return watch(ROOT, { recursive: true }, (_event, filename) => {
-    if (!filename || Date.now() < coolUntil) return
+    if (!filename) {
+      if (building || Date.now() < quietUntil) return
+      clearTimeout(timer)
+      timer = setTimeout(() => void rebuild('docs'), 150)
+      return
+    }
     const rel = toRel(String(filename))
     if (shouldIgnore(rel)) return
+    if (building) {
+      again = true
+      return
+    }
     clearTimeout(timer)
-    timer = setTimeout(() => rebuild(rel), 150)
+    timer = setTimeout(() => void rebuild(rel), 150)
   })
 }
 

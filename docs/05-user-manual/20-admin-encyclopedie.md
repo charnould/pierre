@@ -2,7 +2,7 @@
 
 L’`Encyclopédie` est le catalogue des documents et données que vous confiez à PIERRE. C’est à partir de ce catalogue que l’agent répond « comme un collègue de l’organisme » : procédures internes, coordonnées, consignes, exports métier.
 
-Cette page décrit uniquement l’écran `Administration` → `Encyclopédie`. Pour préparer les fichiers avant de les déposer, voir [Préparer vos documents pour PIERRE](../04-knowledge/01-preparer-vos-documents.md). Pour le contenu attendu des cinq exports patrimoniaux, voir [Core Data HLM](../02-core-data-hlm/index.md). Les comptes et les droits d’accès sont dans [Administration · Utilisateurs](./21-admin-utilisateurs.md).
+Cette page décrit uniquement l’écran `Administration` → `Encyclopédie`. Pour préparer les fichiers avant de les déposer, voir [Préparer vos documents pour PIERRE](#préparer-vos-documents-pour-pierre). Pour le contenu attendu des cinq exports patrimoniaux, voir [Core Data HLM](../02-core-data-hlm/index.md). Les comptes et les droits d’accès sont dans [Administration · Utilisateurs](./21-admin-utilisateurs.md).
 
 ## Sommaire
 
@@ -107,12 +107,12 @@ Les affectations (assistants, modules) ne figurent pas dans le titre : elles app
 
 Formats acceptés :
 
-| Format                                    | Usage typique                          | Comment PIERRE le lit                          |
-| ----------------------------------------- | -------------------------------------- | ---------------------------------------------- |
-| Word (`.docx`)                            | Notes, procédures, modèles de courrier | Comme un texte suivi                           |
-| Markdown (`.md`)                          | Même usage, en texte structuré         | Comme un texte suivi                           |
-| CSV (`.csv`)                              | Listes et exports tabulaires           | Un tableau ; la première ligne sert d’en-têtes |
-| Excel (`.xlsx`, `.xls`, `.xlsm`, `.xlsb`) | Tableaux à plusieurs onglets           | **Un onglet = une ligne** dans l’encyclopédie  |
+| Format                                    | Usage typique                          | Comment PIERRE le lit                                                              |
+| ----------------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------- |
+| Word (`.docx`)                            | Notes, procédures, modèles de courrier | Comme un texte suivi                                                               |
+| Markdown (`.md`)                          | Même usage, en texte structuré         | Comme un texte suivi                                                               |
+| CSV (`.csv`)                              | Listes et exports tabulaires           | Un tableau ; la première ligne sert d’en-têtes                                     |
+| Excel (`.xlsx`, `.xls`, `.xlsm`, `.xlsb`) | Tableaux à plusieurs onglets           | **Un onglet = une ligne**. Les en-têtes sont obligatoirement sur la première ligne |
 
 Les PDF, images et autres formats sont refusés.
 
@@ -133,7 +133,7 @@ Cliquez sur la ligne, ou sur l’icône crayon. La fenêtre s’intitule `Config
 
 Sous le titre, PIERRE affiche le nom interne qu’utilisera l’agent. Il est calculé automatiquement : vous n’avez pas à le saisir.
 
-**Ligne des en-têtes** — uniquement pour Excel. Indiquez le numéro de la ligne qui contient les noms de colonnes (souvent `1`). Les CSV utilisent toujours leur première ligne.
+Les CSV et les classeurs Excel utilisent toujours leur première ligne comme en-têtes. PIERRE refuse un classeur dont une colonne n’a pas de nom, dont deux colonnes portent le même nom, ou qui contient une cellule fusionnée.
 
 ### Profils autorisés
 
@@ -196,7 +196,6 @@ Les actions sont à droite de chaque ligne déposée. Un libellé s’affiche au
 
 | Action      | Effet                                                                                                                               |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Télécharger | Récupère le fichier tel qu’il a été déposé, sous son nom d’origine.                                                                 |
 | Modifier    | Ouvre la fenêtre de configuration.                                                                                                  |
 | Désaffecter | Retire tous les profils et tous les modules. La ligne reste, à l’état `Non affecté`. Visible seulement si le contenu était affecté. |
 | Supprimer   | Pour un fichier Word, Markdown, CSV, ou un Excel à un seul onglet : **supprime le fichier définitivement**.                         |
@@ -228,3 +227,94 @@ Désaffecter n’efface pas le fichier. Supprimer, si.
 | Le statut demande de reconstruire | Cliquez sur `Reconstruire`, puis attendez `Réussie`.                                                   |
 | Badge `KO`                        | La version précédente est toujours en service. Rouvrez le fichier, corrigez, redéposez, reconstruisez. |
 | Un format est refusé              | Seuls Word, Markdown, CSV (point-virgule, UTF-8) et Excel sont acceptés.                               |
+
+# Préparer vos documents pour `PIERRE`
+
+Ce guide explique quels formats de fichiers `PIERRE` accepte, comment les préparer pour maximiser la qualité de ses réponses et comment les configurer dans l’interface d’administration.
+
+## Sommaire
+
+<!-- toc maxdepth:3 -->
+
+- [Quels fichiers sont acceptés par `PIERRE` pour enrichir sa base de connaissances](#quels-fichiers-sont-acceptés-par-pierre-pour-enrichir-sa-base-de-connaissances)
+- [Comment bien préparer vos documents ?](#comment-bien-préparer-vos-documents-)
+  - [Préparer vos documents `.docx` et `.md`](#préparer-vos-documents-docx-et-md)
+  - [Préparer vos fichiers `.csv`](#préparer-vos-fichiers-csv)
+  - [Préparer vos fichiers `.xls`/`.xlsx`/`.xlsm`/`.xlsb`](#préparer-vos-fichiers-xlsxlsxxlsmxlsb)
+- [Configurer les sources dans PIERRE](#configurer-les-sources-dans-pierre)
+
+<!-- tocstop -->
+
+## Quels fichiers sont acceptés par `PIERRE` pour enrichir sa base de connaissances
+
+Les organismes de logement social (OLS) peuvent alimenter `PIERRE` avec leurs propres données pour obtenir des réponses précisément adaptées à leur contexte — par exemple, les coordonnées du service-client ou les procédures internes d'attribution.
+
+`PIERRE` reconnaît quatre formats :
+
+- `.csv` (UTF-8, séparateur `;`)
+- `.xls`/`.xlsx`/`.xlsm`/`.xlsb` (Microsoft Excel)
+- `.docx` (Microsoft Word)
+- `.md` (Markdown)
+
+> [!CAUTION]
+> Tout autre format (`.pdf`, `.jpeg`, `.png`, etc.) est ignoré par `PIERRE`.
+
+**Qu'est-ce que le Markdown ?**
+
+Le Markdown est un format texte léger (« LLM-native ») conçu pour être lisible brut et facile à écrire. Sa syntaxe intuitive structure un document sans balises complexes. Quelques exemples courants :
+
+- Titre de niveau 1 : `# Titre 1`
+- Titre de niveau 2 : `## Titre 2`
+- Texte en gras : `**texte en gras**`
+- Texte en italique : `_italique_`
+
+## Comment bien préparer vos documents ?
+
+### Préparer vos documents `.docx` et `.md`
+
+Qu'il s'agisse d'un modèle de courrier, d'une note de service sur le déroulé d'une CALEOL ou de la description du processus d'attribution d'un OLS, ces fichiers sont tous traités comme du texte brut par `PIERRE`.
+
+Rédigez-les comme vous le feriez pour un nouveau collègue qui ne connaît rien du contexte :
+
+- Utilisez des titres et sous-titres clairs
+- Limitez chaque section à un seul sujet
+- Regroupez les informations similaires au même endroit
+- Définissez les acronymes — ou mieux, évitez-les
+- Soignez l'orthographe et la grammaire
+- En Markdown, respectez le balisage : titres, listes, gras, italique
+
+> [!CAUTION]
+> Les images intégrées dans vos fichiers `.docx` et `.md` **ne sont pas interprétées** par `PIERRE`.
+
+### Préparer vos fichiers `.csv`
+
+Utilisez UTF-8, un point-virgule (`;`) comme séparateur et une première ligne contenant des noms de colonnes uniques. Les cinq exports `Core Data HLM` portent les noms réservés documentés dans le référentiel ; les autres CSV restent des sources ordinaires.
+
+### Préparer vos fichiers `.xls`/`.xlsx`/`.xlsm`/`.xlsb`
+
+1. **Structurez vos données en tableau**, pas en mise en page visuelle. Chaque ligne doit correspondre à une entrée autonome et lisible ligne par ligne — à l'opposé d'un texte mis en forme à coups de cellules fusionnées.
+   - À gauche : un vrai tableau, chaque ligne est une donnée exploitable.
+   - À droite : une mise en forme visuelle, illisible automatiquement.
+
+<p float="left">
+  <img src="./ok.png" width="350" />
+  <img src="./ko.png" width="350" />
+</p>
+
+2. **Donnez des noms de colonnes explicites**, compréhensibles sans contexte. `49_3` est une référence opaque ; `Solde locataire` est immédiatement lisible.
+
+3. **Soyez cohérent** dans les majuscules/minuscules et évitez les acronymes ambigus.
+
+4. **Ne fusionnez pas les cellules** — ou seulement en dernier recours.
+
+5. **Ajoutez une colonne de regroupement** si nécessaire. Par exemple, une colonne `type` avec les valeurs `scientifique`, `écrivain`, `philosophe`, `politique` permet à `PIERRE` de retrouver d'un coup tous les écrivains quand vous l'interrogez sur ce sujet.
+
+## Configurer les sources dans PIERRE
+
+1. Ouvrez `Administration` puis `Encyclopédie` dans l'application desktop.
+2. Cliquez sur `Ajouter des fichiers` et sélectionnez vos documents.
+3. Donnez à chaque contenu un titre explicite et choisissez les profils autorisés.
+4. Pour un classeur, la première ligne de chaque onglet doit contenir les en-têtes. Un CSV suit la même règle.
+5. L’original n’est pas conservé : corrigez le fichier puis redéposez-le s’il doit changer.
+
+Un document sans profil reste visible comme `Non affecté`, mais son contenu n'est transmis à aucun agent. Après une modification, cliquez sur `Reconstruire` pour publier. Le détail de l’écran est dans [Administration · Encyclopédie](./20-admin-encyclopedie.md).

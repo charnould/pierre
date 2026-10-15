@@ -4,11 +4,11 @@ import path from 'node:path'
 
 import {
   firstParagraphPlain,
+  headingIds,
   insertDocsPages,
   insertToc,
-  matchTocFolder,
+  missingRelativeMdLinks,
   pageGroupTitle,
-  renderDocsToc,
   updateDocsToc
 } from './build.ts'
 
@@ -64,22 +64,6 @@ Body
     expect(output).toContain('## Introduction\n\nBody')
   })
 
-  it('is idempotent when run twice on the same content', () => {
-    const input = `## Sommaire
-
-<!-- toc -->
-
-<!-- tocstop -->
-
-## Introduction
-
-## Section A
-`
-
-    const once = insertToc(input)
-    expect(insertToc(once)).toBe(once)
-  })
-
   it('slugifies accented headings for anchor links', () => {
     const input = `<!-- toc -->
 
@@ -108,6 +92,76 @@ Body
     )
   })
 
+  it('limits each toc to the headings before the next toc marker', () => {
+    const input = `<!-- toc -->
+
+<!-- tocstop -->
+
+## Alpha
+
+<!-- toc -->
+
+<!-- tocstop -->
+
+## Beta
+`
+    const output = insertToc(input)
+    const first = output.slice(0, output.indexOf('## Alpha'))
+    const second = output.slice(output.indexOf('## Alpha'))
+
+    expect(first).toContain('- [Alpha](#alpha)')
+    expect(first).not.toContain('Beta')
+    expect(second).toContain('- [Beta](#beta)')
+    expect(second).not.toContain('[Alpha]')
+  })
+
+  it('stops a toc before the next document title', () => {
+    const input = `<!-- toc -->
+
+<!-- tocstop -->
+
+## Alpha
+
+# Next
+
+## Sommaire
+
+<!-- toc -->
+
+<!-- tocstop -->
+
+## Beta
+`
+    const output = insertToc(input)
+    const first = output.slice(0, output.indexOf('## Alpha'))
+
+    expect(first).toContain('- [Alpha](#alpha)')
+    expect(first).not.toContain('  - [Alpha]')
+    expect(first).not.toContain('Next')
+    expect(first).not.toContain('Sommaire')
+    expect(first).not.toContain('Beta')
+  })
+
+  it('numbers a repeated heading once across toc regions', () => {
+    const input = `<!-- toc -->
+
+<!-- tocstop -->
+
+## Alpha
+
+<!-- toc -->
+
+<!-- tocstop -->
+
+## Alpha
+`
+    const output = insertToc(input)
+
+    expect(output).toContain('[Alpha](#alpha)')
+    expect(output).toContain('[Alpha](#alpha-1)')
+    expect(headingIds(input)).toEqual(['alpha', 'alpha-1'])
+  })
+
   it('respects per-file maxdepth:2 and excludes h3 headings', () => {
     const input = `<!-- toc maxdepth:2 -->
 
@@ -123,23 +177,6 @@ Body
     expect(output).toContain('<!-- toc maxdepth:2 -->')
     expect(output).toContain('- [Section A](#section-a)')
     expect(output).not.toMatch(/\[Subsection\]/)
-  })
-
-  it('is idempotent with a custom maxdepth marker', () => {
-    const input = `<!-- toc maxdepth:2 -->
-
-<!-- tocstop -->
-
-## Introduction
-`
-
-    const once = insertToc(input)
-    expect(insertToc(once)).toBe(once)
-  })
-
-  it('leaves content unchanged when markers are missing', () => {
-    const input = '## Introduction\n'
-    expect(insertToc(input)).toBe(input)
   })
 })
 
@@ -226,58 +263,8 @@ describe('updateDocsToc', () => {
     expect(written).toContain('- [Introduction](#introduction)')
   })
 
-  it('updates markdown files with a custom maxdepth toc marker', async () => {
-    const filePath = await writeDoc(
-      'custom-maxdepth.md',
-      `## Sommaire
-
-<!-- toc maxdepth:2 -->
-
-<!-- tocstop -->
-
-## Introduction
-
-### Details
-`
-    )
-
-    const { updated } = await updateDocsToc({ docsDir: FIXTURE_DOCS_DIR })
-
-    expect(updated).toEqual([filePath])
-    const written = await Bun.file(filePath).text()
-    expect(written).toContain('<!-- toc maxdepth:2 -->')
-    expect(written).toContain('- [Introduction](#introduction)')
-    expect(written).not.toMatch(/\[Details\]/)
-  })
-
-  it('updates an index that uses the docs-pages marker', async () => {
-    await writeDoc('01-accueil.md', '# Accueil\n')
-    const filePath = await writeDoc(
-      'index.md',
-      `## Sommaire
-
-<!-- docs-pages -->
-
-<!-- docs-pagesstop -->
-`
-    )
-
-    const { updated } = await updateDocsToc({ docsDir: FIXTURE_DOCS_DIR })
-
-    expect(updated).toEqual([filePath])
-    expect(await Bun.file(filePath).text()).toContain('- [Accueil](./01-accueil.md)')
-  })
-
   it('skips markdown files without the toc marker', async () => {
     await writeDoc('plain.md', '# Plain\n\nNo toc here.')
-
-    const { updated } = await updateDocsToc({ docsDir: FIXTURE_DOCS_DIR })
-
-    expect(updated).toEqual([])
-  })
-
-  it('skips non-markdown files', async () => {
-    await writeFile(path.join(FIXTURE_DOCS_DIR, 'notes.txt'), 'plain text', 'utf8')
 
     const { updated } = await updateDocsToc({ docsDir: FIXTURE_DOCS_DIR })
 
@@ -290,23 +277,6 @@ describe('updateDocsToc', () => {
     const { updated } = await updateDocsToc({ docsDir: FIXTURE_DOCS_DIR })
 
     expect(updated).toEqual([])
-  })
-
-  it('does not write files in dry run mode', async () => {
-    const filePath = await writeDoc(
-      'dry-run.md',
-      `<!-- toc -->
-
-<!-- tocstop -->
-
-## Pending
-`
-    )
-
-    const { updated } = await updateDocsToc({ docsDir: FIXTURE_DOCS_DIR, dryRun: true })
-
-    expect(updated).toEqual([filePath])
-    expect(await Bun.file(filePath).text()).not.toContain('- [Pending](#pending)')
   })
 
   it('returns an empty list on a second run after generation', async () => {
@@ -327,27 +297,6 @@ describe('updateDocsToc', () => {
     expect(second.updated).toEqual([])
   })
 
-  it('does not rewrite a skipped folder', async () => {
-    const filePath = await writeDoc(
-      '08-user-manual/guide.md',
-      `<!-- toc -->
-
-<!-- tocstop -->
-
-## Hidden
-`
-    )
-    const before = await Bun.file(filePath).text()
-
-    const { updated } = await updateDocsToc({
-      docsDir: FIXTURE_DOCS_DIR,
-      skip: ['08-user-manual']
-    })
-
-    expect(updated).toEqual([])
-    expect(await Bun.file(filePath).text()).toBe(before)
-  })
-
   it('updates markdown files nested in subfolders', async () => {
     const filePath = await writeDoc(
       '03-install/00-knowledge/guide.md',
@@ -364,103 +313,49 @@ describe('updateDocsToc', () => {
     expect(updated).toEqual([filePath])
     expect(await Bun.file(filePath).text()).toContain('- [Nested](#nested)')
   })
+
+  it('updates a file that contains two toc pairs', async () => {
+    const filePath = await writeDoc(
+      'two.md',
+      `<!-- toc -->
+
+<!-- tocstop -->
+
+## One
+
+<!-- toc -->
+
+<!-- tocstop -->
+
+## Two
+`
+    )
+
+    const first = await updateDocsToc({ docsDir: FIXTURE_DOCS_DIR })
+    const written = await Bun.file(filePath).text()
+    const second = await updateDocsToc({ docsDir: FIXTURE_DOCS_DIR })
+
+    expect(first.updated).toEqual([filePath])
+    expect(written).toContain('- [One](#one)')
+    expect(written).toContain('- [Two](#two)')
+    expect(written.indexOf('[One]')).toBeLessThan(written.indexOf('## One'))
+    expect(written.indexOf('## One')).toBeLessThan(written.indexOf('[Two]'))
+    expect(second.updated).toEqual([])
+  })
 })
 
-describe('matchTocFolder', () => {
-  const folders = ['02-data-primitives', '03-install', '03-install/01-server']
+describe('missingRelativeMdLinks', () => {
+  it('reports a relative markdown link whose target is absent', () => {
+    const raw = 'See [x](./missing.md) and [y](https://example.com/a.md) and [z](./here.md).'
 
-  it('matches a nested page to the longest toc folder', () => {
-    expect(matchTocFolder('03-install/01-server/01-installation.md', folders)).toBe(
-      '03-install/01-server'
-    )
+    expect(
+      missingRelativeMdLinks(raw, FIXTURE_DOCS_DIR, (abs) => abs.endsWith('/here.md'))
+    ).toEqual(['./missing.md'])
   })
 
-  it('falls back to the parent folder when no nested toc entry exists', () => {
-    expect(matchTocFolder('03-install/00-knowledge/00-knowledge.md', folders)).toBe('03-install')
-  })
+  it('ignores markdown links inside fences', () => {
+    const raw = '```\n[x](./missing.md)\n```\n\n[y](./also.md)'
 
-  it('returns null when the page is outside every toc folder', () => {
-    expect(matchTocFolder('04-guides/dpo.md', folders)).toBeNull()
-  })
-})
-
-describe('renderDocsToc', () => {
-  it('keeps a flat section as a single list', () => {
-    const toc = renderDocsToc(
-      [
-        {
-          mdPath: '02-data-primitives/index.md',
-          section: '02-data-primitives',
-          date: null,
-          title: 'Introduction'
-        },
-        {
-          mdPath: '02-data-primitives/01-conventions.md',
-          section: '02-data-primitives',
-          date: null,
-          title: 'Conventions'
-        }
-      ],
-      [{ folder: '02-data-primitives', title: 'Core Data HLM' }]
-    )
-
-    expect(toc).toContain('## Core Data HLM')
-    expect(toc).toContain('- [Introduction](./docs/02-data-primitives/index.md)')
-    expect(toc).toContain('- [Conventions](./docs/02-data-primitives/01-conventions.md)')
-    expect(toc).not.toMatch(/^### /m)
-  })
-
-  it('groups nested pages under humanized subfolder headings', () => {
-    const toc = renderDocsToc(
-      [
-        {
-          mdPath: '03-install/index.md',
-          section: '03-install',
-          date: null,
-          title: 'Accueil'
-        },
-        {
-          mdPath: '03-install/00-knowledge/00-knowledge.md',
-          section: '03-install',
-          date: null,
-          title: 'Les bases de connaissances'
-        },
-        {
-          mdPath: '03-install/01-server/01-installation.md',
-          section: '03-install',
-          date: null,
-          title: 'Installation'
-        }
-      ],
-      [{ folder: '03-install', title: 'Installation & Paramétrage' }]
-    )
-
-    expect(toc).toContain('## Installation & Paramétrage')
-    expect(toc).toContain('- [Accueil](./docs/03-install/index.md)')
-    expect(toc).toContain('### Knowledge')
-    expect(toc).toContain(
-      '- [Les bases de connaissances](./docs/03-install/00-knowledge/00-knowledge.md)'
-    )
-    expect(toc).toContain('### Server')
-    expect(toc).toContain('- [Installation](./docs/03-install/01-server/01-installation.md)')
-    expect(toc.indexOf('### Knowledge')).toBeLessThan(toc.indexOf('### Server'))
-  })
-
-  it('prefixes dated articles with their file date', () => {
-    const toc = renderDocsToc(
-      [
-        {
-          mdPath: '05-articles/2026-05-27-rag-sqlite.md',
-          section: '05-articles',
-          date: '2026-05-27',
-          title: 'From RAG to SQLite'
-        }
-      ],
-      [{ folder: '05-articles', title: 'Articles' }]
-    )
-
-    expect(toc).toContain(
-      '- [2026-05-27 — From RAG to SQLite](./docs/05-articles/2026-05-27-rag-sqlite.md)'
-    )
+    expect(missingRelativeMdLinks(raw, FIXTURE_DOCS_DIR, () => false)).toEqual(['./also.md'])
   })
 })

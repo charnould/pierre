@@ -292,7 +292,7 @@ Same turn-budget logic as injecting table names — but the agent also sees valu
 The same logic applies to the date. Many questions are time-sensitive ("Am I allowed to intervene tonight in this sensitive building?"). Without help, the agent calls a date tool — and doesn't even know the 2026 French public holidays. So `today_is()` is written into `AGENTS.md` at every session start:
 
 ```markdown
-<session>Current date and time (Europe/Paris): Sunday, May 24, 2026 (Week 21) at 14:56 (french public holiday: Whit Sunday).</session>
+<session>Current date and time (Europe/Paris): Monday, May 25, 2026 (Week 22) at 14:56 – today is a French public holiday (Lundi de Pentecôte).</session>
 ```
 
 Free. No tool call.
