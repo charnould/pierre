@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Impayés — contenu des quatre formulaires · PIERRE</title>
+    <link rel="icon" href="../../assets/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Knewave&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap"
+    />
+    <style>
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        background: #fff;
+      }
+      .article {
+        box-sizing: border-box;
+        max-width: 850px;
+        margin: 0;
+        padding: 2rem 2rem 3rem 4rem;
+        font-family: Merriweather, Georgia, serif;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 24px;
+        letter-spacing: 0;
+        color: rgb(17, 17, 17);
+        text-align: left;
+        -webkit-font-smoothing: antialiased;
+      }
+      @media (max-width: 39.99rem) {
+        .article {
+          padding: 1.25rem 1.25rem 2rem;
+        }
+      }
+      .article h1,
+      .article h2,
+      .article h3,
+      .article h4,
+      .article h5,
+      .article h6 {
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        font-weight: 700;
+        letter-spacing: 0;
+        color: rgb(17, 17, 17);
+        text-wrap: balance;
+        -webkit-font-smoothing: antialiased;
+      }
+      .article h1 {
+        font-size: 36px;
+        line-height: 40.32px;
+        margin: 0 0 16px;
+      }
+      .article h2 {
+        font-size: 24px;
+        line-height: 32px;
+        margin: 48px 0 16px;
+      }
+      .article h3 {
+        font-size: 20px;
+        line-height: 28px;
+        margin: 32px 0 12px;
+      }
+      .article h4 {
+        font-size: 16px;
+        line-height: 24px;
+        margin: 24px 0 8px;
+      }
+      .article h5 {
+        font-size: 14px;
+        line-height: 20px;
+        margin: 0 0 24px;
+      }
+      .article p {
+        margin: 0 0 16px;
+        text-wrap: pretty;
+      }
+      .article ul,
+      .article ol {
+        margin: 0 0 16px;
+        padding-inline-start: 1.5em;
+        text-wrap: pretty;
+      }
+      .article ul {
+        list-style-type: disc;
+      }
+      .article ol {
+        list-style-type: decimal;
+      }
+      .article li {
+        display: list-item;
+        margin: 0 0 8px;
+        padding-inline-start: 0.25em;
+      }
+      .article li:last-child {
+        margin-bottom: 0;
+      }
+      .article ul ul {
+        list-style-type: circle;
+        margin: 8px 0 0;
+      }
+      .article a,
+      .article a:visited {
+        color: #0000ee;
+        text-underline-offset: 0.15em;
+      }
+      .article a:hover {
+        text-decoration-thickness: 2px;
+      }
+      .article strong {
+        font-weight: 700;
+      }
+      .article pre:not(.cadre) {
+        padding: 1em;
+      }
+      .article pre[class*='language-'] {
+        margin: 0 0 16px;
+        border-radius: 0;
+      }
+      .article blockquote {
+        margin: 0 0 16px;
+      }
+      .article blockquote > p:last-child {
+        margin-bottom: 0;
+      }
+      .article :not(pre) > code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.875em;
+      }
+      .article .typeset-scroll {
+        max-width: 100%;
+        overflow-x: auto;
+        margin: 0 0 16px;
+      }
+      .article table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        font-size: 14px;
+        line-height: 20px;
+        text-wrap: balance;
+      }
+      .article th,
+      .article td {
+        text-align: left;
+        vertical-align: top;
+        padding: 10px 24px 10px 0;
+      }
+      .article th {
+        font-weight: 700;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #d4d4d4;
+      }
+      .article td {
+        font-weight: 400;
+        border-bottom: 1px solid #ececec;
+      }
+      .article th:last-child,
+      .article td:last-child {
+        padding-right: 0;
+      }
+      .article :is(th, td) code {
+        font-size: 14px;
+        white-space: nowrap;
+      }
+      .article blockquote.alert {
+        margin: 0 0 16px;
+        padding: 2px 0 2px 16px;
+        border-left: 2px solid #111;
+      }
+      .article blockquote.alert > p:first-child {
+        margin: 0 0 4px;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 20px;
+      }
+      .article blockquote.alert > p:first-child strong {
+        font-weight: 700;
+      }
+      .article p:has(> .shot) {
+        --shot-gap: 0.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--shot-gap);
+        justify-content: flex-start;
+        width: min(calc(32rem * 3 + var(--shot-gap) * 2), calc(100vw - 4rem));
+        max-width: none;
+        margin-block-start: 30px;
+        margin-inline: 0;
+      }
+      @media (max-width: 39.99rem) {
+        .article p:has(> .shot) {
+          width: calc(100vw - 2.5rem);
+        }
+      }
+      .article .shot {
+        position: relative;
+        isolation: isolate;
+        overflow: visible;
+        flex: 0 1 100%;
+        width: 100%;
+        max-width: 100%;
+      }
+      @media (min-width: 40rem) {
+        .article .shot {
+          flex: 0 1 calc((100% - var(--shot-gap) * 2) / 3);
+          width: calc((100% - var(--shot-gap) * 2) / 3);
+          max-width: calc((100% - var(--shot-gap) * 2) / 3);
+        }
+        .article p:has(> .shot:only-child) .shot:has(img[data-zoomable]),
+        .article p:has(> .shot:nth-child(even):last-child) .shot:has(img[data-zoomable]) {
+          flex-basis: calc((100% - var(--shot-gap)) / 2);
+          width: calc((100% - var(--shot-gap)) / 2);
+          max-width: calc((100% - var(--shot-gap)) / 2);
+        }
+        .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) {
+          flex-basis: 90%;
+          width: 90%;
+          max-width: 90%;
+        }
+      }
+      .article .shot img {
+        display: block;
+        width: 100%;
+        margin: 0;
+        transform: translateX(-4.01%);
+      }
+      .article .shot img[data-zoomable] {
+        cursor: zoom-in;
+      }
+      .article .shot-title {
+        position: absolute;
+        top: calc(0.45rem + 6px);
+        left: -0.65rem;
+        z-index: 1;
+        max-width: calc(100% - 1rem);
+        padding: 0.15rem 0.55rem 0.08rem;
+        background: #ffe500;
+        color: #111;
+        font-family: Knewave, cursive;
+        font-size: 1.05rem;
+        font-weight: 400;
+        font-synthesis: none;
+        letter-spacing: 0.01em;
+        line-height: 1.15;
+        text-transform: uppercase;
+        text-wrap: balance;
+        transform: rotate(-2deg);
+        transform-origin: left center;
+        pointer-events: none;
+      }
+      .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) .shot-title {
+        top: calc(1.5rem + 6px);
+        left: -0.65rem;
+      }
+      body.is-zooming .shot-title {
+        opacity: 0;
+      }
+
+      /*
+ Solarized Color Schemes originally by Ethan Schoonover
+ http://ethanschoonover.com/solarized
+
+ Ported for PrismJS by Hector Matos
+ Website: https://krakendev.io
+ Twitter Handle: https://twitter.com/allonsykraken)
+*/
+
+      /*
+SOLARIZED HEX
+--------- -------
+base03    #002b36
+base02    #073642
+base01    #586e75
+base00    #657b83
+base0     #839496
+base1     #93a1a1
+base2     #eee8d5
+base3     #fdf6e3
+yellow    #b58900
+orange    #cb4b16
+red       #dc322f
+magenta   #d33682
+violet    #6c71c4
+blue      #268bd2
+cyan      #2aa198
+green     #859900
+*/
+
+      code[class*='language-'],
+      pre[class*='language-'] {
+        color: #657b83; /* base00 */
+        font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+        font-size: 1em;
+        text-align: left;
+        white-space: pre;
+        word-spacing: normal;
+        word-break: normal;
+        word-wrap: normal;
+
+        line-height: 1.5;
+
+        -moz-tab-size: 4;
+        -o-tab-size: 4;
+        tab-size: 4;
+
+        -webkit-hyphens: none;
+        -moz-hyphens: none;
+        -ms-hyphens: none;
+        hyphens: none;
+      }
+
+      pre[class*='language-']::-moz-selection,
+      pre[class*='language-'] ::-moz-selection,
+      code[class*='language-']::-moz-selection,
+      code[class*='language-'] ::-moz-selection {
+        background: #073642; /* base02 */
+      }
+
+      pre[class*='language-']::selection,
+      pre[class*='language-'] ::selection,
+      code[class*='language-']::selection,
+      code[class*='language-'] ::selection {
+        background: #073642; /* base02 */
+      }
+
+      /* Code blocks */
+      pre[class*='language-'] {
+        padding: 1em;
+        margin: 0.5em 0;
+        overflow: auto;
+        border-radius: 0.3em;
+      }
+
+      :not(pre) > code[class*='language-'],
+      pre[class*='language-'] {
+        background-color: #fdf6e3; /* base3 */
+      }
+
+      /* Inline code */
+      :not(pre) > code[class*='language-'] {
+        padding: 0.1em;
+        border-radius: 0.3em;
+      }
+
+      .token.comment,
+      .token.prolog,
+      .token.doctype,
+      .token.cdata {
+        color: #93a1a1; /* base1 */
+      }
+
+      .token.punctuation {
+        color: #586e75; /* base01 */
+      }
+
+      .token.namespace {
+        opacity: 0.7;
+      }
+
+      .token.property,
+      .token.tag,
+      .token.boolean,
+      .token.number,
+      .token.constant,
+      .token.symbol,
+      .token.deleted {
+        color: #268bd2; /* blue */
+      }
+
+      .token.selector,
+      .token.attr-name,
+      .token.string,
+      .token.char,
+      .token.builtin,
+      .token.url,
+      .token.inserted {
+        color: #2aa198; /* cyan */
+      }
+
+      .token.entity {
+        color: #657b83; /* base00 */
+        background: #eee8d5; /* base2 */
+      }
+
+      .token.atrule,
+      .token.attr-value,
+      .token.keyword {
+        color: #859900; /* green */
+      }
+
+      .token.function,
+      .token.class-name {
+        color: #b58900; /* yellow */
+      }
+
+      .token.regex,
+      .token.important,
+      .token.variable {
+        color: #cb4b16; /* orange */
+      }
+
+      .token.important,
+      .token.bold {
+        font-weight: bold;
+      }
+      .token.italic {
+        font-style: italic;
+      }
+
+      .token.entity {
+        cursor: help;
+      }
+    </style>
+  </head>
+  <body>
+    <article class="article">
+      <h1 id="impayés--contenu-des-quatre-formulaires">Impayés — contenu des quatre formulaires</h1>
+      <p>Ce document définit uniquement le contenu JSON de quatre formulaires :</p>
+      <ol>
+        <li>données communes ;</li>
+        <li>diagnostic social et financier ;</li>
+        <li>plan d’apurement ;</li>
+        <li>protocole de cohésion sociale minimal.</li>
+      </ol>
+      <p>Il ne décrit ni activités, ni drawer, ni stockage SQLite, ni routes, ni documents Word.</p>
+      <h2 id="conventions">Conventions</h2>
+      <ul>
+        <li>Quatre objets JSON distincts.</li>
+        <li>Clés françaises en <code>snake_case</code> sans accent.</li>
+        <li>Noms Core Data HLM conservés lorsque le concept est identique.</li>
+        <li>Date : <code>YYYY-MM-DD</code>.</li>
+        <li>Mois : <code>YYYY-MM</code>.</li>
+        <li>Montant saisi : <code>number | null</code>.</li>
+        <li><code>null</code> = inconnu ; <code>0</code> = zéro confirmé.</li>
+        <li>Chaîne ou date absente = <code>null</code>.</li>
+        <li>Liste absente = <code>[]</code>.</li>
+        <li>Unité précisée dans le nom de la clé.</li>
+        <li>Aucune donnée commune recopiée dans DSF, plan ou protocole.</li>
+        <li>Le snapshot enregistré réunit ces quatre objets et un seul échéancier racine.</li>
+      </ul>
+      <h2 id="objet-1--donneescommunes">Objet 1 — <code>donnees_communes</code></h2>
+      <pre
+        class="language-json"
+      ><code class="language-json"><span class="token punctuation">{</span>
+  <span class="token property">"version"</span><span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span>
+  <span class="token property">"identification"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token property">"id_client"</span><span class="token operator">:</span> <span class="token string">"CL-1042"</span><span class="token punctuation">,</span>
+    <span class="token property">"id_locataire"</span><span class="token operator">:</span> <span class="token string">"LOC-8831"</span><span class="token punctuation">,</span>
+    <span class="token property">"id_lot"</span><span class="token operator">:</span> <span class="token string">"LOT-218"</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token property">"logement"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token property">"adresse"</span><span class="token operator">:</span> <span class="token string">"12 rue des Tilleuls"</span><span class="token punctuation">,</span>
+    <span class="token property">"code_postal"</span><span class="token operator">:</span> <span class="token string">"21000"</span><span class="token punctuation">,</span>
+    <span class="token property">"commune"</span><span class="token operator">:</span> <span class="token string">"Dijon"</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token property">"bail"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token property">"debut_bail"</span><span class="token operator">:</span> <span class="token string">"2021-03-01"</span><span class="token punctuation">,</span>
+    <span class="token property">"garant"</span><span class="token operator">:</span> <span class="token null keyword">null</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token property">"foyer"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token property">"adultes"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+      <span class="token punctuation">{</span>
+        <span class="token property">"id_personne"</span><span class="token operator">:</span> <span class="token string">"personne_1"</span><span class="token punctuation">,</span>
+        <span class="token property">"prenom"</span><span class="token operator">:</span> <span class="token string">"Camille"</span><span class="token punctuation">,</span>
+        <span class="token property">"nom"</span><span class="token operator">:</span> <span class="token string">"Martin"</span><span class="token punctuation">,</span>
+        <span class="token property">"date_naissance"</span><span class="token operator">:</span> <span class="token string">"1988-05-14"</span><span class="token punctuation">,</span>
+        <span class="token property">"type_emploi"</span><span class="token operator">:</span> <span class="token string">"Salarié en CDI"</span><span class="token punctuation">,</span>
+        <span class="token property">"employeur"</span><span class="token operator">:</span> <span class="token string">"Entreprise Exemple"</span><span class="token punctuation">,</span>
+        <span class="token property">"allocataire_caf"</span><span class="token operator">:</span> <span class="token string">"1234567"</span><span class="token punctuation">,</span>
+        <span class="token property">"adresse_correspondance"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+        <span class="token property">"statut_bail"</span><span class="token operator">:</span> <span class="token string">"titulaire_origine_et_actuel"</span><span class="token punctuation">,</span>
+        <span class="token property">"mode_residence"</span><span class="token operator">:</span> <span class="token string">"permanente"</span><span class="token punctuation">,</span>
+        <span class="token property">"date_effet_conge"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+        <span class="token property">"remplacement_cotitulaire"</span><span class="token operator">:</span> <span class="token string">"non_concerne"</span><span class="token punctuation">,</span>
+        <span class="token property">"date_entree_nouveau_cotitulaire"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+        <span class="token property">"date_fin_solidarite"</span><span class="token operator">:</span> <span class="token null keyword">null</span>
+      <span class="token punctuation">}</span>
+    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token property">"enfants"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token property">"compte_locataire"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token property">"solde_compte_en_euros"</span><span class="token operator">:</span> <span class="token number">153.54</span><span class="token punctuation">,</span>
+    <span class="token property">"date_arrete_compte"</span><span class="token operator">:</span> <span class="token string">"2026-11-06"</span><span class="token punctuation">,</span>
+    <span class="token property">"date_premier_loyer_impaye"</span><span class="token operator">:</span> <span class="token string">"2026-07-01"</span><span class="token punctuation">,</span>
+    <span class="token property">"statut_contestation"</span><span class="token operator">:</span> <span class="token string">"non_conteste"</span><span class="token punctuation">,</span>
+    <span class="token property">"montant_conteste_en_euros"</span><span class="token operator">:</span> <span class="token number">0</span><span class="token punctuation">,</span>
+    <span class="token property">"motif_contestation"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+    <span class="token property">"motifs_impaye"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token string">"Baisse d’activité ou de revenus"</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token property">"ancienne_dette_hors_solde_en_euros"</span><span class="token operator">:</span> <span class="token number">0</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token property">"budget"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token property">"ressources_mensuelles"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+      <span class="token punctuation">{</span>
+        <span class="token property">"type"</span><span class="token operator">:</span> <span class="token string">"salaire_net"</span><span class="token punctuation">,</span>
+        <span class="token property">"id_personne"</span><span class="token operator">:</span> <span class="token string">"personne_1"</span><span class="token punctuation">,</span>
+        <span class="token property">"montant_en_euros"</span><span class="token operator">:</span> <span class="token number">1480</span><span class="token punctuation">,</span>
+        <span class="token property">"date_debut"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+        <span class="token property">"date_fin"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+        <span class="token property">"niveau_preuve"</span><span class="token operator">:</span> <span class="token string">"justifie"</span><span class="token punctuation">,</span>
+        <span class="token property">"date_niveau_preuve"</span><span class="token operator">:</span> <span class="token string">"2026-11-06"</span>
+      <span class="token punctuation">}</span>
+    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token property">"ressources_ponctuelles"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token property">"charges_mensuelles"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+      <span class="token punctuation">{</span>
+        <span class="token property">"type"</span><span class="token operator">:</span> <span class="token string">"cout_logement_net"</span><span class="token punctuation">,</span>
+        <span class="token property">"id_personne"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+        <span class="token property">"montant_en_euros"</span><span class="token operator">:</span> <span class="token number">512.4</span><span class="token punctuation">,</span>
+        <span class="token property">"date_debut"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+        <span class="token property">"date_fin"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+        <span class="token property">"niveau_preuve"</span><span class="token operator">:</span> <span class="token string">"justifie"</span><span class="token punctuation">,</span>
+        <span class="token property">"date_niveau_preuve"</span><span class="token operator">:</span> <span class="token string">"2026-11-06"</span>
+      <span class="token punctuation">}</span><span class="token punctuation">,</span>
+      <span class="token punctuation">{</span>
+        <span class="token property">"type"</span><span class="token operator">:</span> <span class="token string">"energie_eau"</span><span class="token punctuation">,</span>
+        <span class="token property">"id_personne"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+        <span class="token property">"montant_en_euros"</span><span class="token operator">:</span> <span class="token number">120</span><span class="token punctuation">,</span>
+        <span class="token property">"date_debut"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+        <span class="token property">"date_fin"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+        <span class="token property">"niveau_preuve"</span><span class="token operator">:</span> <span class="token string">"declare"</span><span class="token punctuation">,</span>
+        <span class="token property">"date_niveau_preuve"</span><span class="token operator">:</span> <span class="token string">"2026-11-06"</span>
+      <span class="token punctuation">}</span>
+    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+    <span class="token property">"charges_ponctuelles"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token property">"travailleur_social"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+  <span class="token property">"aides_mobilisables"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+<span class="token punctuation">}</span>
+</code></pre>
+      <h3 id="structures-imbriquées">Structures imbriquées</h3>
+      <div class="typeset-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Objet</th>
+              <th>Clés</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Garant</td>
+              <td><code>prenom</code>, <code>nom</code></td>
+            </tr>
+            <tr>
+              <td>Adresse de correspondance</td>
+              <td><code>adresse</code>, <code>code_postal</code>, <code>commune</code></td>
+            </tr>
+            <tr>
+              <td>Enfant</td>
+              <td>
+                <code>id_personne</code>, <code>prenom</code>, <code>nom</code>,
+                <code>date_naissance</code>, <code>a_charge</code>, <code>mode_residence</code>
+              </td>
+            </tr>
+            <tr>
+              <td>Ressource mensuelle</td>
+              <td>
+                <code>type</code>, <code>id_personne</code>, <code>montant_en_euros</code>,
+                <code>date_debut</code>, <code>date_fin</code>, <code>niveau_preuve</code>,
+                <code>date_niveau_preuve</code>
+              </td>
+            </tr>
+            <tr>
+              <td>Ressource ponctuelle</td>
+              <td>
+                <code>type</code>, <code>id_personne</code>, <code>montant_en_euros</code>,
+                <code>mois_imputation</code>, <code>niveau_preuve</code>,
+                <code>date_niveau_preuve</code>
+              </td>
+            </tr>
+            <tr>
+              <td>Charge mensuelle</td>
+              <td>
+                <code>type</code>, <code>id_personne</code>, <code>montant_en_euros</code>,
+                <code>date_debut</code>, <code>date_fin</code>, <code>niveau_preuve</code>,
+                <code>date_niveau_preuve</code>
+              </td>
+            </tr>
+            <tr>
+              <td>Charge ponctuelle</td>
+              <td>
+                <code>type</code>, <code>id_personne</code>, <code>montant_en_euros</code>,
+                <code>mois_imputation</code>, <code>niveau_preuve</code>,
+                <code>date_niveau_preuve</code>
+              </td>
+            </tr>
+            <tr>
+              <td>Travailleur social</td>
+              <td><code>prenom_et_nom</code>, <code>organisme</code>, <code>coordonnees</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h3 id="règles-communes">Règles communes</h3>
+      <ul>
+        <li>
+          Les identifiants, l’adresse, le début du bail et le solde sont préremplis depuis Core Data
+          HLM.
+        </li>
+        <li>
+          <code>solde_compte_en_euros</code> positif = dette envers le bailleur ; négatif = crédit
+          du locataire.
+        </li>
+        <li>Chaque adulte peut porter une adresse de correspondance.</li>
+        <li>Le niveau de preuve est choisi par ligne ; sa date est automatique.</li>
+        <li>
+          <code>Période limitée</code> révèle <code>date_debut</code> et <code>date_fin</code>.
+        </li>
+        <li>Le coût net du logement est une charge mensuelle.</li>
+        <li>Les catégories emploi et motifs restent des libellés français.</li>
+        <li>
+          Les types budgétaires utilisent des codes français stables ;
+          <code>id_personne: null</code> signifie que la ligne concerne le foyer.
+        </li>
+      </ul>
+      <p>Contestation :</p>
+      <ul>
+        <li><code>non_conteste</code> : montant <code>0</code>, motif <code>null</code> ;</li>
+        <li><code>conteste</code> : montant strictement positif et motif non vide ;</li>
+        <li><code>inconnu</code> : montant et motif <code>null</code>.</li>
+      </ul>
+      <h3 id="solidarité">Solidarité</h3>
+      <p>Par adulte titulaire :</p>
+      <ul>
+        <li><code>date_effet_conge</code></li>
+        <li><code>remplacement_cotitulaire</code></li>
+        <li><code>date_entree_nouveau_cotitulaire</code></li>
+        <li><code>date_fin_solidarite</code></li>
+      </ul>
+      <p>Calcul :</p>
+      <ul>
+        <li>
+          remplacement cotitulaire = <code>oui</code> : plus tardive entre son entrée et l’effet du
+          congé ;
+        </li>
+        <li>
+          remplacement cotitulaire = <code>non</code> : six mois calendaires après l’effet du congé
+          ;
+        </li>
+        <li>jour impossible dans le mois cible : dernier jour de ce mois ;</li>
+        <li>information inconnue : aucune date calculée ;</li>
+        <li>la date calculée préremplit <code>date_fin_solidarite</code> et reste modifiable.</li>
+      </ul>
+      <h2 id="échéancier-unique--echeancier">Échéancier unique — <code>echeancier</code></h2>
+      <pre
+        class="language-json"
+      ><code class="language-json"><span class="token punctuation">{</span>
+  <span class="token property">"traitement_montant_conteste"</span><span class="token operator">:</span> <span class="token string">"non_concerne"</span><span class="token punctuation">,</span>
+  <span class="token property">"inclure_ancienne_dette_locative"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+  <span class="token property">"montant_a_apurer_en_euros"</span><span class="token operator">:</span> <span class="token number">153.54</span><span class="token punctuation">,</span>
+  <span class="token property">"echeances"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+    <span class="token punctuation">{</span>
+      <span class="token property">"date_echeance"</span><span class="token operator">:</span> <span class="token string">"2026-12-01"</span><span class="token punctuation">,</span>
+      <span class="token property">"montant_en_euros"</span><span class="token operator">:</span> <span class="token number">153.54</span><span class="token punctuation">,</span>
+      <span class="token property">"ressources_totales_du_mois_en_euros"</span><span class="token operator">:</span> <span class="token number">1480</span><span class="token punctuation">,</span>
+      <span class="token property">"charges_totales_du_mois_en_euros"</span><span class="token operator">:</span> <span class="token number">632.4</span><span class="token punctuation">,</span>
+      <span class="token property">"unites_de_consommation"</span><span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span>
+      <span class="token property">"taux_effort_loyer_net"</span><span class="token operator">:</span> <span class="token number">0.449959</span><span class="token punctuation">,</span>
+      <span class="token property">"reste_a_vivre_loyer_net_par_unite_consommation_et_par_jour_en_euros"</span><span class="token operator">:</span> <span class="token number">27.14</span><span class="token punctuation">,</span>
+      <span class="token property">"taux_effort_global"</span><span class="token operator">:</span> <span class="token number">0.531041</span><span class="token punctuation">,</span>
+      <span class="token property">"reste_a_vivre_global_par_unite_consommation_et_par_jour_en_euros"</span><span class="token operator">:</span> <span class="token number">23.14</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">]</span>
+<span class="token punctuation">}</span>
+</code></pre>
+      <p>Les dates et montants des échéances sont saisis. Les autres valeurs sont calculées.</p>
+      <p>
+        <code>echeances[].montant_en_euros</code> rembourse uniquement la dette ; le loyer courant
+        reste hors échéancier.
+      </p>
+      <p>
+        Le total de l’échéancier et l’écart avec <code>montant_a_apurer_en_euros</code> sont
+        calculés pour l’affichage, mais ne sont pas stockés.
+      </p>
+      <h2 id="objet-2--diagnosticsocialfinancier">
+        Objet 2 — <code>diagnostic_social_financier</code>
+      </h2>
+      <pre
+        class="language-json"
+      ><code class="language-json"><span class="token punctuation">{</span>
+  <span class="token property">"version"</span><span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span>
+  <span class="token property">"menage_informe_du_dsf"</span><span class="token operator">:</span> <span class="token string">"oui"</span><span class="token punctuation">,</span>
+  <span class="token property">"consentement_recherche_pour_dsf"</span><span class="token operator">:</span> <span class="token string">"accorde"</span><span class="token punctuation">,</span>
+  <span class="token property">"signature_diagnostic_par_menage"</span><span class="token operator">:</span> <span class="token string">"non_renseignee"</span><span class="token punctuation">,</span>
+  <span class="token property">"position_et_solutions_proposees_par_menage"</span><span class="token operator">:</span> <span class="token string">"Le ménage souhaite rester dans le logement et propose un échéancier."</span><span class="token punctuation">,</span>
+  <span class="token property">"observations_bailleur"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+  <span class="token property">"vulnerabilites"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+  <span class="token property">"impact_vulnerabilites"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+  <span class="token property">"orientation_logement"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token property">"orientation"</span><span class="token operator">:</span> <span class="token string">"maintien"</span><span class="token punctuation">,</span>
+    <span class="token property">"motifs"</span><span class="token operator">:</span> <span class="token string">"Le logement reste adapté au foyer."</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token property">"appreciation_echeancier"</span><span class="token operator">:</span> <span class="token string">"soutenable"</span><span class="token punctuation">,</span>
+  <span class="token property">"motif_non_soutenabilite"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+  <span class="token property">"synthese_professionnelle"</span><span class="token operator">:</span> <span class="token string">"La proposition paraît soutenable sous réserve du maintien des ressources."</span>
+<span class="token punctuation">}</span>
+</code></pre>
+      <p><code>appreciation_echeancier</code> vaut :</p>
+      <ul>
+        <li><code>soutenable</code></li>
+        <li><code>non_soutenable</code></li>
+        <li><code>non_evalue</code></li>
+      </ul>
+      <p>
+        <code>motif_non_soutenabilite</code> est obligatoire si l’appréciation vaut
+        <code>non_soutenable</code>.
+      </p>
+      <p>
+        Le DSF ne recopie ni foyer, ni compte locataire, ni budget, ni échéancier. Il apprécie
+        l’échéancier racine.
+      </p>
+      <h2 id="objet-3--planapurement">Objet 3 — <code>plan_apurement</code></h2>
+      <pre
+        class="language-json"
+      ><code class="language-json"><span class="token punctuation">{</span>
+  <span class="token property">"version"</span><span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span>
+  <span class="token property">"accord_bailleur"</span><span class="token operator">:</span> <span class="token string">"inconnu"</span><span class="token punctuation">,</span>
+  <span class="token property">"accord_menage"</span><span class="token operator">:</span> <span class="token string">"inconnu"</span><span class="token punctuation">,</span>
+  <span class="token property">"date_accord"</span><span class="token operator">:</span> <span class="token null keyword">null</span><span class="token punctuation">,</span>
+  <span class="token property">"mode_de_paiement_echeances"</span><span class="token operator">:</span> <span class="token string">"virement"</span>
+<span class="token punctuation">}</span>
+</code></pre>
+      <p>
+        <code>date_accord</code> est obligatoire lorsque <code>accord_bailleur</code> et
+        <code>accord_menage</code> valent <code>oui</code>, et vaut <code>null</code> dans tous les
+        autres cas.
+      </p>
+      <p>Le plan ne contient aucun autre champ propre en v1. Il porte sur l’échéancier racine.</p>
+      <h2 id="objet-4--protocolecohesionsociale">
+        Objet 4 — <code>protocole_cohesion_sociale</code>
+      </h2>
+      <pre
+        class="language-json"
+      ><code class="language-json"><span class="token punctuation">{</span>
+  <span class="token property">"version"</span><span class="token operator">:</span> <span class="token number">1</span>
+<span class="token punctuation">}</span>
+</code></pre>
+      <p>Le PCS reste volontairement minimal. Son contenu juridique sera travaillé séparément.</p>
+      <h2 id="calculs-de-léchéancier">Calculs de l’échéancier</h2>
+      <p>DSF, plan et protocole lisent le même échéancier.</p>
+      <ul>
+        <li>
+          Montant à apurer = partie débitrice du solde, diminuée du montant contesté s’il est exclu,
+          plus l’ancienne dette si elle est incluse.
+        </li>
+        <li>Montant contesté à décider = montant à apurer <code>null</code>.</li>
+        <li>Ligne mensuelle active entre ses bornes incluses.</li>
+        <li>Borne absente = période ouverte.</li>
+        <li>Ligne ponctuelle active pendant son mois d’imputation.</li>
+        <li>Aucun prorata journalier.</li>
+        <li>
+          UC : 1 pour le premier adulte, 0,5 pour toute autre personne de 14 ans ou plus, 0,3 en
+          dessous.
+        </li>
+        <li>Résidents permanents et alternés inclus.</li>
+        <li>Donnée nécessaire inconnue = métrique <code>null</code>.</li>
+        <li>Ressources à zéro = taux d’effort <code>null</code>.</li>
+        <li>UC à zéro = reste à vivre <code>null</code>.</li>
+      </ul>
+      <p>
+        Avec <code>R</code> les ressources, <code>L</code> la charge nette de logement,
+        <code>C</code> toutes les charges, <code>M</code> la mensualité et <code>UC</code> les
+        unités de consommation :
+      </p>
+      <ul>
+        <li><code>TE·LN = (L + M) / R</code></li>
+        <li><code>RAV·LN = (R - L - M) / (UC × 30)</code></li>
+        <li><code>TE·G = (C + M) / R</code></li>
+        <li><code>RAV·G = (R - C - M) / (UC × 30)</code></li>
+      </ul>
+      <h2 id="valeurs-contrôlées">Valeurs contrôlées</h2>
+      <ul>
+        <li>
+          Oui/non : <code>oui</code>, <code>non</code>, <code>inconnu</code>,
+          <code>non_concerne</code>
+        </li>
+        <li>
+          Statut au regard du bail : <code>titulaire_origine_et_actuel</code>,
+          <code>titulaire_actuel_ajoute</code>, <code>ancien_titulaire</code>,
+          <code>non_titulaire</code>, <code>inconnu</code>
+        </li>
+        <li>
+          Mode de résidence : <code>permanente</code>, <code>alternee</code>,
+          <code>occasionnelle</code>, <code>non_occupante</code>
+        </li>
+        <li>
+          Contestation : <code>conteste</code>, <code>non_conteste</code>, <code>inconnu</code>
+        </li>
+        <li>Niveau de preuve : <code>declare</code>, <code>justifie</code></li>
+        <li>
+          Consentement : <code>accorde</code>, <code>refuse</code>, <code>non_recueilli</code>,
+          <code>non_renseigne</code>
+        </li>
+        <li>
+          Signature DSF : <code>signe</code>, <code>refuse</code>, <code>impossible</code>,
+          <code>non_renseignee</code>
+        </li>
+        <li>
+          Orientation : <code>maintien</code>, <code>mutation</code>, <code>relogement</code>,
+          <code>depart</code>, <code>a_evaluer</code>
+        </li>
+        <li>
+          Appréciation : <code>soutenable</code>, <code>non_soutenable</code>,
+          <code>non_evalue</code>
+        </li>
+        <li>
+          Mode de paiement : <code>prelevement</code>, <code>virement</code>, <code>cheque</code>,
+          <code>especes</code>, <code>autre</code>
+        </li>
+        <li>
+          Traitement du montant contesté : <code>non_concerne</code>, <code>inclus</code>,
+          <code>exclu</code>, <code>a_decider</code>
+        </li>
+      </ul>
+      <h2 id="critères-dacceptation">Critères d’acceptation</h2>
+      <ol>
+        <li>Quatre objets JSON distincts.</li>
+        <li>Aucune donnée commune recopiée.</li>
+        <li>Un seul échéancier, à la racine du snapshot.</li>
+        <li>PCS volontairement minimal.</li>
+        <li><code>null</code> distinct de zéro.</li>
+        <li>Adresse de correspondance par adulte.</li>
+        <li>Niveau de preuve par ligne budgétaire.</li>
+        <li>Coût net du logement dans les charges.</li>
+        <li>Solidarité calculable et modifiable.</li>
+        <li>JSON compréhensible sans connaître le code.</li>
+      </ol>
+    </article>
+    <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+    <script>
+      const zoom = mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
+      zoom.on('open', () => document.body.classList.add('is-zooming'))
+      zoom.on('closed', () => document.body.classList.remove('is-zooming'))
+    </script>
+  </body>
+</html>
