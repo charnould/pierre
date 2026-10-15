@@ -190,11 +190,16 @@ describe('paramétrage', () => {
       AI_TYPE: 'openai',
       AI_BASE_URL: 'https://api.openai.com/v1',
       AI_API_KEY: 'sk-test',
-      SINCH_DOMAIN: 'mail.exemple.org',
-      SINCH_API_KEY: 'key-mail',
-      SINCH_WEBHOOK_SIGNING_KEY: 'signing-key'
+      CM_EMAIL_DOMAIN: 'dribble.football',
+      CM_EMAIL_PRODUCT_TOKEN: '00000000-0000-0000-0000-000000000001',
+      CM_EMAIL_ACCOUNT_ID: '00000000-0000-0000-0000-000000000002',
+      CM_EMAIL_WEBHOOK_SECRET: 'signing-key'
     }
-    const partial = mergeConfiguration(current, { sinchApiKey: 'key' }, false)
+    const partial = mergeConfiguration(
+      current,
+      { cmEmailToken: '00000000-0000-0000-0000-000000000003' },
+      false
+    )
     expect(partial.ok).toBe(false)
     const rcs = mergeConfiguration(
       current,
@@ -204,7 +209,7 @@ describe('paramétrage', () => {
     expect(rcs.ok).toBe(true)
     if (!rcs.ok) return
     expect(rcs.env.aiBaseUrl).toBe('https://api.openai.com/v1')
-    expect(rcs.env.sinchDomain).toBe('mail.exemple.org')
+    expect(rcs.env.cmEmailDomain).toBe('dribble.football')
     expect(rcs.env.cmRcsWebhookSecret.length).toBeGreaterThanOrEqual(32)
     expect(rcs.rcsSecretGenerated).toBe(true)
     expect(rcs.passwordGenerated).toBe(false)

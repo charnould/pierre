@@ -22,9 +22,10 @@ export const configuredText = (changes: Record<string, string> = {}) =>
     `CM_RCS_PRODUCT_TOKEN=${changes['CM_RCS_PRODUCT_TOKEN'] ?? ''}`,
     `CM_RCS_FROM=${changes['CM_RCS_FROM'] ?? ''}`,
     `CM_RCS_WEBHOOK_SECRET=${changes['CM_RCS_WEBHOOK_SECRET'] ?? ''}`,
-    `SINCH_DOMAIN=${changes['SINCH_DOMAIN'] ?? ''}`,
-    `SINCH_API_KEY=${changes['SINCH_API_KEY'] ?? ''}`,
-    `SINCH_WEBHOOK_SIGNING_KEY=${changes['SINCH_WEBHOOK_SIGNING_KEY'] ?? ''}`,
+    `CM_EMAIL_DOMAIN=${changes['CM_EMAIL_DOMAIN'] ?? ''}`,
+    `CM_EMAIL_PRODUCT_TOKEN=${changes['CM_EMAIL_PRODUCT_TOKEN'] ?? ''}`,
+    `CM_EMAIL_ACCOUNT_ID=${changes['CM_EMAIL_ACCOUNT_ID'] ?? ''}`,
+    `CM_EMAIL_WEBHOOK_SECRET=${changes['CM_EMAIL_WEBHOOK_SECRET'] ?? ''}`,
     ''
   ].join('\n')
 

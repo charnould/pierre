@@ -68,9 +68,10 @@ describe('environnement et santé', () => {
         'AI_BASE_URL=https://api.anthropic.com',
         'CM_RCS_PRODUCT_TOKEN=00000000-0000-0000-0000-000000000000',
         'CM_RCS_WEBHOOK_SECRET=webhook',
-        'SINCH_DOMAIN=',
-        'SINCH_API_KEY=',
-        'SINCH_WEBHOOK_SIGNING_KEY=',
+        'CM_EMAIL_DOMAIN=',
+        'CM_EMAIL_PRODUCT_TOKEN=',
+        'CM_EMAIL_ACCOUNT_ID=',
+        'CM_EMAIL_WEBHOOK_SECRET=',
         ''
       ].join('\n')
     )
@@ -88,9 +89,10 @@ describe('environnement et santé', () => {
         'CM_RCS_PRODUCT_TOKEN=00000000-0000-0000-0000-000000000000',
         'CM_RCS_FROM=PIERRE',
         'CM_RCS_WEBHOOK_SECRET=webhook',
-        'SINCH_DOMAIN=',
-        'SINCH_API_KEY=',
-        'SINCH_WEBHOOK_SIGNING_KEY=',
+        'CM_EMAIL_DOMAIN=',
+        'CM_EMAIL_PRODUCT_TOKEN=',
+        'CM_EMAIL_ACCOUNT_ID=',
+        'CM_EMAIL_WEBHOOK_SECRET=',
         ''
       ].join('\n')
     )
@@ -336,7 +338,7 @@ describe('configuration', () => {
     expect(await configure(ctx.ctx, args)).toBe(0)
     const env = readFileSync(join(root, 'pierre.env'), 'utf8')
     expect(env).toContain('HOST=example.org')
-    expect(env).toContain('SINCH_DOMAIN=')
+    expect(env).toContain('CM_EMAIL_DOMAIN=')
     expect(existsSync(join(root, 'pierre.env.pending'))).toBe(false)
     expect(ctx.out()).toContain('admin@pierre-ia.org')
     const password = env.match(/^AUTH_PASSWORD=(.*)$/m)?.[1] ?? ''

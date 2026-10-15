@@ -84,7 +84,13 @@ export async function collectStatus(ctx: Context): Promise<StatusLine[]> {
     channelLine('RCS', map.CM_RCS_PRODUCT_TOKEN, map.CM_RCS_FROM, map.CM_RCS_WEBHOOK_SECRET)
   )
   lines.push(
-    channelLine('Email', map.SINCH_DOMAIN, map.SINCH_API_KEY, map.SINCH_WEBHOOK_SIGNING_KEY)
+    channelLine(
+      'Email',
+      map.CM_EMAIL_DOMAIN,
+      map.CM_EMAIL_PRODUCT_TOKEN,
+      map.CM_EMAIL_ACCOUNT_ID,
+      map.CM_EMAIL_WEBHOOK_SECRET
+    )
   )
   const update = updateHint(
     ctx.version,

@@ -22,9 +22,10 @@ export const ENV_KEYS = [
   'CM_RCS_PRODUCT_TOKEN',
   'CM_RCS_FROM',
   'CM_RCS_WEBHOOK_SECRET',
-  'SINCH_DOMAIN',
-  'SINCH_API_KEY',
-  'SINCH_WEBHOOK_SIGNING_KEY'
+  'CM_EMAIL_DOMAIN',
+  'CM_EMAIL_PRODUCT_TOKEN',
+  'CM_EMAIL_ACCOUNT_ID',
+  'CM_EMAIL_WEBHOOK_SECRET'
 ] as const
 
 export type EnvKey = (typeof ENV_KEYS)[number]
@@ -41,9 +42,10 @@ export type ParsedEnv = {
   cmRcsProductToken: string
   cmRcsFrom: string
   cmRcsWebhookSecret: string
-  sinchDomain: string
-  sinchApiKey: string
-  sinchWebhookSigningKey: string
+  cmEmailDomain: string
+  cmEmailProductToken: string
+  cmEmailAccountId: string
+  cmEmailWebhookSecret: string
 }
 
 export type ConfigureFlags = {
@@ -54,9 +56,10 @@ export type ConfigureFlags = {
   rcsToken?: string
   rcsFrom?: string
   rcsSecret?: string
-  sinchDomain?: string
-  sinchApiKey?: string
-  sinchSigningKey?: string
+  cmEmailDomain?: string
+  cmEmailToken?: string
+  cmEmailAccount?: string
+  cmEmailSecret?: string
 }
 
 export type MergeResult =
@@ -79,9 +82,10 @@ const FLAG_NAMES = {
   'rcs-token': 'rcsToken',
   'rcs-from': 'rcsFrom',
   'rcs-secret': 'rcsSecret',
-  'sinch-domain': 'sinchDomain',
-  'sinch-api-key': 'sinchApiKey',
-  'sinch-webhook-signing-key': 'sinchSigningKey'
+  'cm-email-domain': 'cmEmailDomain',
+  'cm-email-token': 'cmEmailToken',
+  'cm-email-account': 'cmEmailAccount',
+  'cm-email-webhook-secret': 'cmEmailSecret'
 } as const
 
 type FlagName = keyof typeof FLAG_NAMES
@@ -90,7 +94,7 @@ export const CONFIGURE_USAGE = [
   'Usage :',
   '  pierre configure --host assistant.exemple.org --provider openai --url https://api.openai.com/v1 --api-key CLE',
   '  pierre configure --rcs-token UUID --rcs-from NOM',
-  '  pierre configure --sinch-domain mail.exemple.org --sinch-api-key CLE --sinch-webhook-signing-key CLE',
+  '  pierre configure --cm-email-domain dribble.football --cm-email-token UUID --cm-email-account UUID --cm-email-webhook-secret CLE',
   ''
 ].join('\n')
 
@@ -128,9 +132,10 @@ export function formatEnv(env: ParsedEnv): string {
     `CM_RCS_PRODUCT_TOKEN=${env.cmRcsProductToken}`,
     `CM_RCS_FROM=${env.cmRcsFrom}`,
     `CM_RCS_WEBHOOK_SECRET=${env.cmRcsWebhookSecret}`,
-    `SINCH_DOMAIN=${env.sinchDomain}`,
-    `SINCH_API_KEY=${env.sinchApiKey}`,
-    `SINCH_WEBHOOK_SIGNING_KEY=${env.sinchWebhookSigningKey}`,
+    `CM_EMAIL_DOMAIN=${env.cmEmailDomain}`,
+    `CM_EMAIL_PRODUCT_TOKEN=${env.cmEmailProductToken}`,
+    `CM_EMAIL_ACCOUNT_ID=${env.cmEmailAccountId}`,
+    `CM_EMAIL_WEBHOOK_SECRET=${env.cmEmailWebhookSecret}`,
     ''
   ].join('\n')
 }
@@ -209,12 +214,13 @@ export function mergeConfiguration(
   if (rcsTouched && (!flags.rcsToken || !flags.rcsFrom)) {
     return { ok: false, error: 'Le RCS exige --rcs-token et --rcs-from ensemble.' }
   }
-  const sinchError = completeFlags("l'email", [
-    ['--sinch-domain', flags.sinchDomain],
-    ['--sinch-api-key', flags.sinchApiKey],
-    ['--sinch-webhook-signing-key', flags.sinchSigningKey]
+  const emailError = completeFlags("l'email", [
+    ['--cm-email-domain', flags.cmEmailDomain],
+    ['--cm-email-token', flags.cmEmailToken],
+    ['--cm-email-account', flags.cmEmailAccount],
+    ['--cm-email-webhook-secret', flags.cmEmailSecret]
   ])
-  if (sinchError) return { ok: false, error: sinchError }
+  if (emailError) return { ok: false, error: emailError }
 
   const host = cleanHost(flags.host ?? current.HOST ?? '')
   if (!host || /\s/.test(host)) return { ok: false, error: 'Le domaine est invalide.' }
@@ -258,25 +264,36 @@ export function mergeConfiguration(
     }
   }
 
-  const sinchTouched =
-    flags.sinchDomain !== undefined ||
-    flags.sinchApiKey !== undefined ||
-    flags.sinchSigningKey !== undefined
-  const sinchDomain = (flags.sinchDomain ?? current.SINCH_DOMAIN ?? '').toLowerCase()
-  const sinchApiKey = flags.sinchApiKey ?? current.SINCH_API_KEY ?? ''
-  const sinchSigningKey = flags.sinchSigningKey ?? current.SINCH_WEBHOOK_SIGNING_KEY ?? ''
-  if (sinchDomain || sinchApiKey || sinchSigningKey) {
-    if (!sinchTouched && (!sinchDomain || !sinchApiKey || !sinchSigningKey)) {
+  const emailTouched =
+    flags.cmEmailDomain !== undefined ||
+    flags.cmEmailToken !== undefined ||
+    flags.cmEmailAccount !== undefined ||
+    flags.cmEmailSecret !== undefined
+  const cmEmailDomain = (flags.cmEmailDomain ?? current.CM_EMAIL_DOMAIN ?? '').toLowerCase()
+  const cmEmailProductToken = flags.cmEmailToken ?? current.CM_EMAIL_PRODUCT_TOKEN ?? ''
+  const cmEmailAccountId = flags.cmEmailAccount ?? current.CM_EMAIL_ACCOUNT_ID ?? ''
+  const cmEmailWebhookSecret = flags.cmEmailSecret ?? current.CM_EMAIL_WEBHOOK_SECRET ?? ''
+  if (cmEmailDomain || cmEmailProductToken || cmEmailAccountId || cmEmailWebhookSecret) {
+    if (
+      !emailTouched &&
+      (!cmEmailDomain || !cmEmailProductToken || !cmEmailAccountId || !cmEmailWebhookSecret)
+    ) {
       return { ok: false, error: "L'email enregistré est incomplet." }
     }
-    if (!sinchDomain || !sinchApiKey || !sinchSigningKey) {
+    if (!cmEmailDomain || !cmEmailProductToken || !cmEmailAccountId || !cmEmailWebhookSecret) {
       return {
         ok: false,
         error:
-          "L'email exige --sinch-domain, --sinch-api-key et --sinch-webhook-signing-key ensemble."
+          "L'email exige --cm-email-domain, --cm-email-token, --cm-email-account et --cm-email-webhook-secret ensemble."
       }
     }
-    if (!DOMAIN.test(sinchDomain)) return { ok: false, error: '--sinch-domain est invalide.' }
+    if (!DOMAIN.test(cmEmailDomain)) return { ok: false, error: '--cm-email-domain est invalide.' }
+    if (!validCmToken(cmEmailProductToken)) {
+      return { ok: false, error: '--cm-email-token doit être un UUID avec ses tirets.' }
+    }
+    if (!validCmToken(cmEmailAccountId)) {
+      return { ok: false, error: '--cm-email-account doit être un UUID avec ses tirets.' }
+    }
   }
 
   return {
@@ -296,9 +313,10 @@ export function mergeConfiguration(
       cmRcsProductToken: rcsToken,
       cmRcsFrom: rcsFrom,
       cmRcsWebhookSecret: rcsSecret,
-      sinchDomain,
-      sinchApiKey,
-      sinchWebhookSigningKey: sinchSigningKey
+      cmEmailDomain,
+      cmEmailProductToken,
+      cmEmailAccountId,
+      cmEmailWebhookSecret
     }
   }
 }
