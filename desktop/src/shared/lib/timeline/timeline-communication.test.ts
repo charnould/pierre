@@ -155,10 +155,26 @@ describe('parseTimelineCommunication', () => {
       parseTimelineCommunication(opened, [
         activity({
           type: 'communication.ok',
+          contenu: JSON.stringify({ version: 2, result: 'sent' })
+        })
+      ])?.statusLine
+    ).toBe('Envoyé')
+    expect(
+      parseTimelineCommunication(opened, [
+        activity({
+          type: 'communication.ok',
           contenu: JSON.stringify({ version: 2, result: 'read' })
         })
       ])?.statusLine
     ).toBe('Réussi · Lu')
+    expect(
+      parseTimelineCommunication(opened, [
+        activity({
+          type: 'communication.ok',
+          contenu: JSON.stringify({ version: 2, result: 'opened' })
+        })
+      ])?.statusLine
+    ).toBe('Réussi · Ouvert')
     expect(
       parseTimelineCommunication(opened, [
         activity({

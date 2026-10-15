@@ -50,7 +50,14 @@ export function parseTimelineCommunication(
   let statusLine: string | null = null
   let statusFailed = false
   if (latest?.type === 'communication.ok') {
-    statusLine = status?.result === 'read' ? 'Réussi · Lu' : 'Réussi · Livré'
+    statusLine =
+      status?.result === 'sent'
+        ? 'Envoyé'
+        : status?.result === 'opened'
+          ? 'Réussi · Ouvert'
+          : status?.result === 'read'
+            ? 'Réussi · Lu'
+            : 'Réussi · Livré'
   } else if (latest?.type === 'communication.failed') {
     statusLine =
       status?.reason && isNotificationDeliveryStatus(status.reason)

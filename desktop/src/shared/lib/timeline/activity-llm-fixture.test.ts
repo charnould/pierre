@@ -242,4 +242,42 @@ describe('LLM fixture', () => {
       expect(parse_communication_status_content(sent.statuses.at(-1)!.contenu)?.result).toBe('read')
     }
   })
+
+  test('sépare les statuts du RCS et de son repli SMS dans le même fil', () => {
+    const projected = projectTimelineItems([
+      row(
+        40,
+        'communication.sent',
+        { version: 2, sender: 'Alice', body: 'RCS' },
+        { thread_id: 'mobile-fallback', revision: 1, channel: 'rcs' }
+      ),
+      row(
+        41,
+        'communication.failed',
+        { version: 2, reason: 'failed' },
+        { thread_id: 'mobile-fallback', revision: 2, channel: 'rcs' }
+      ),
+      row(
+        42,
+        'communication.sent',
+        { version: 2, sender: 'Alice', body: 'SMS' },
+        { thread_id: 'mobile-fallback', revision: 3, channel: 'sms' }
+      ),
+      row(
+        43,
+        'communication.ok',
+        { version: 2, result: 'delivered' },
+        { thread_id: 'mobile-fallback', revision: 4, channel: 'sms' }
+      )
+    ])
+
+    const rcs = projected.find((item) => item.row.id === 40)
+    const sms = projected.find((item) => item.row.id === 42)
+    expect(rcs?.kind).toBe('communication')
+    expect(sms?.kind).toBe('communication')
+    if (rcs?.kind === 'communication' && sms?.kind === 'communication') {
+      expect(rcs.statuses.map((status) => status.id)).toEqual([41])
+      expect(sms.statuses.map((status) => status.id)).toEqual([43])
+    }
+  })
 })

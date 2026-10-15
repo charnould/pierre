@@ -11,6 +11,7 @@ export type ProjectedTimelineItem =
 
 export function projectTimelineItems(rows: readonly Activite[]): ProjectedTimelineItem[] {
   const statuses = new Map<string, Activite[]>()
+  const sends = new Map<string, Activite[]>()
   const reactions = new Map<number, string>()
   for (const row of rows) {
     if (row.type === 'activity.reaction_changed') {
@@ -23,19 +24,37 @@ export function projectTimelineItems(rows: readonly Activite[]): ProjectedTimeli
       list.push(row)
       statuses.set(row.thread_id, list)
     }
+    if (row.type === 'communication.sent' && row.thread_id) {
+      const list = sends.get(row.thread_id) ?? []
+      list.push(row)
+      sends.set(row.thread_id, list)
+    }
+  }
+  for (const list of sends.values()) {
+    list.sort((left, right) => (left.revision ?? 0) - (right.revision ?? 0))
   }
 
   return rows
     .filter((row) => !is_hidden_timeline_type(row.type))
     .map((row) => {
       if (row.type === 'communication.sent' && row.thread_id) {
-        const threadStatuses = (statuses.get(row.thread_id) ?? []).sort((left, right) => {
-          const revision = (left.revision ?? 0) - (right.revision ?? 0)
-          if (revision !== 0) return revision
-          const id = left.id - right.id
-          if (id !== 0) return id
-          return left.date_creation.localeCompare(right.date_creation)
-        })
+        const revision = row.revision ?? 0
+        const nextRevision = sends
+          .get(row.thread_id)
+          ?.find((candidate) => (candidate.revision ?? 0) > revision)?.revision
+        const threadStatuses = (statuses.get(row.thread_id) ?? [])
+          .filter(
+            (status) =>
+              (status.revision ?? 0) > revision &&
+              (nextRevision == null || (status.revision ?? 0) < nextRevision)
+          )
+          .sort((left, right) => {
+            const revisionOrder = (left.revision ?? 0) - (right.revision ?? 0)
+            if (revisionOrder !== 0) return revisionOrder
+            const id = left.id - right.id
+            if (id !== 0) return id
+            return left.date_creation.localeCompare(right.date_creation)
+          })
         return { kind: 'communication' as const, row, statuses: threadStatuses }
       }
       return { kind: 'event' as const, row }
