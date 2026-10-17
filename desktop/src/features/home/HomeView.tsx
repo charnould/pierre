@@ -248,7 +248,7 @@ export function HomeView({
             items={notificationItems}
             emptyTitle="Aucune notification"
             emptyDescription="Vous êtes à jour."
-            emptyIcon={<BlockprintCompactViewNotifications />}
+            emptyIcon={<BlockprintCompactViewNotifications className="size-40" />}
             onSeeAll={() => openRail('notifications')}
             onOpen={openNotification}
             onMarkUnread={(item) => void feed.markUnread(item.id)}
@@ -271,7 +271,7 @@ export function HomeView({
               actions={visibleMine}
               emptyTitle="Aucune tâche"
               emptyDescription="Rien d’ouvert."
-              emptyIcon={<BlockprintSuccessStateForTask />}
+              emptyIcon={<BlockprintSuccessStateForTask className="size-40" />}
               fit
               onOpen={openAction}
             />
@@ -296,7 +296,7 @@ export function HomeView({
               actions={visibleDelegated}
               emptyTitle="Aucune tâche assignée"
               emptyDescription="Rien de délégué."
-              emptyIcon={<BlockprintDelegationArrow />}
+              emptyIcon={<BlockprintDelegationArrow className="size-40" />}
               fit
               onOpen={openAction}
             />
@@ -321,7 +321,7 @@ export function HomeView({
                 title: 'Aucune activité',
                 description: 'Aucune activité récente pour les personnes suivies.'
               }}
-              emptyIcon={<BlockprintCardActivity />}
+              emptyIcon={<BlockprintCardActivity className="size-40" />}
               fit
               onOpen={openNotification}
             />

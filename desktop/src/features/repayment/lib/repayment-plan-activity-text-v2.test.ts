@@ -1,8 +1,9 @@
-import { describe, expect, test } from 'bun:test'
+import { beforeAll, describe, expect, test } from 'bun:test'
 
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 import type { Activite, RepaymentPlanEventContent } from '@/shared/types/activites'
 
-import { createDefaultApurementPlanForm } from './apurement-plan/defaults'
+import { createDefaultRepaymentPlanForm } from './apurement-plan/defaults'
 import {
   latestActiveRepaymentPlan,
   latestEditableRepaymentPlan,
@@ -33,11 +34,17 @@ const activity = (
 })
 
 describe('repayment plan v2 timeline projection', () => {
+  beforeAll(() => {
+    loadCustomizationFixture()
+  })
+
   test('opens only the milestone carrying the current snapshot', () => {
-    const form = createDefaultApurementPlanForm()
+    const form = createDefaultRepaymentPlanForm()
     form.rentalDebt = 1_200
-    form.installments = form.installments.slice(0, 12).map((installment) => ({
-      ...installment,
+    const first = form.installments[0]!
+    form.installments = Array.from({ length: 12 }, (_, index) => ({
+      ...first,
+      id: `inst-${index}`,
       amount: 100
     }))
     const snapshot = repaymentPlanFormToSnapshot(form)
@@ -71,7 +78,7 @@ describe('repayment plan v2 timeline projection', () => {
   })
 
   test('projects finalized and closed states from event types', () => {
-    const snapshot = repaymentPlanFormToSnapshot(createDefaultApurementPlanForm())
+    const snapshot = repaymentPlanFormToSnapshot(createDefaultRepaymentPlanForm())
     const finalized = activity(3, 'repayment_plan.finalized', {
       version: 2,
       title: "Plan d'apurement",
@@ -91,7 +98,7 @@ describe('repayment plan v2 timeline projection', () => {
   })
 
   test('keeps a withdrawn draft unsigned', () => {
-    const snapshot = repaymentPlanFormToSnapshot(createDefaultApurementPlanForm())
+    const snapshot = repaymentPlanFormToSnapshot(createDefaultRepaymentPlanForm())
     const withdrawn = activity(2, 'repayment_plan.closed', {
       version: 2,
       title: "Plan d'apurement",

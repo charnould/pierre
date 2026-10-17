@@ -1,4 +1,4 @@
-import { CartoonErrorObject } from '@/shared/components/icons/koboyo-empty'
+import { BlockprintPiggyBank } from '@/shared/components/icons/koboyo-empty'
 import { Button } from '@/shared/components/ui/button'
 import {
   Empty,
@@ -8,6 +8,7 @@ import {
   EmptyMedia,
   EmptyTitle
 } from '@/shared/components/ui/empty'
+import { Kbd } from '@/shared/components/ui/kbd'
 import { cn } from '@/shared/lib/utils'
 
 interface Props {
@@ -20,12 +21,14 @@ export function RepaymentMissingTableEmpty({ className, onCreatePlan }: Props) {
     <Empty className={cn('min-h-40 flex-1', className)}>
       <EmptyHeader>
         <EmptyMedia variant="icon">
-          <CartoonErrorObject />
+          <BlockprintPiggyBank />
         </EmptyMedia>
-        <EmptyTitle size="sm">comptes_locataires n’est pas défini</EmptyTitle>
+        <EmptyTitle size="sm">
+          <Kbd>core.comptes_locataires.csv</Kbd> n’est pas disponible.
+        </EmptyTitle>
         <EmptyDescription>
-          La table SQLite comptes_locataires est absente du datastore. Les soldes locataires ne
-          peuvent pas être calculés.
+          En conséquence, le suivi des dossiers d’impayés, des situations locatives et des
+          procédures de recouvrement n’est pas disponible.
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>

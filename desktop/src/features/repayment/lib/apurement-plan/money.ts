@@ -44,3 +44,39 @@ export function formatMoneyDisplay(value: number): string {
     maximumFractionDigits: 2
   }).format(value)
 }
+
+/** Total affiché, puis le mensuel et le ponctuel entre parenthèses. */
+export function formatAmountSplit(
+  recurring: number,
+  punctual: number
+): {
+  total: string
+  detail: string
+} {
+  const detail = new Intl.NumberFormat('fr-FR', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  })
+  return {
+    total: formatMoneyDisplay(recurring + punctual),
+    detail: `(${detail.format(recurring)} + ${detail.format(punctual)})`
+  }
+}
+
+export function formatUnits(value: number): string {
+  return value.toFixed(1).replace('.', ',')
+}
+
+export function formatEffortRate(rate: number | null): string {
+  if (rate == null) return '—'
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'percent',
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1
+  }).format(rate)
+}
+
+/** Mois de 30 jours, convention du reste à vivre journalier. */
+export function dailyAmount(monthly: number): number {
+  return monthly / 30
+}

@@ -1,73 +1,84 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
-  addMonthsYearMonth,
+  addMonths,
   buildInstallments,
-  firstInstallmentYearMonth,
-  formatYearMonthDisplay,
-  parseYearMonthInput,
+  firstInstallmentDate,
+  formatInstallmentDate,
+  formatMonthDisplay,
+  parseMonthInput,
+  parseInstallmentDate,
   sumInstallments,
   typicalMonthlyAmount,
   updateInstallmentAmount,
-  updateInstallmentYearMonth
+  updateInstallmentDate
 } from './installments'
 
 describe('installments', () => {
-  test('addMonthsYearMonth crosses years', () => {
-    expect(addMonthsYearMonth('2026-11', 1)).toBe('2026-12')
-    expect(addMonthsYearMonth('2026-12', 1)).toBe('2027-01')
-    expect(addMonthsYearMonth('2026-01', 24)).toBe('2028-01')
+  test('addMonths keeps the day and clamps short months', () => {
+    expect(addMonths('2026-11-05', 1)).toBe('2026-12-05')
+    expect(addMonths('2026-12-05', 1)).toBe('2027-01-05')
+    expect(addMonths('2026-01-05', 24)).toBe('2028-01-05')
+    expect(addMonths('2026-01-31', 1)).toBe('2026-02-28')
+    expect(addMonths('2024-01-31', 1)).toBe('2024-02-29')
+    expect(addMonths('2026-01-31', 2)).toBe('2026-03-31')
   })
 
-  test('formatYearMonthDisplay', () => {
-    expect(formatYearMonthDisplay('2026-08')).toBe('08/2026')
+  test('formatInstallmentDate', () => {
+    expect(formatInstallmentDate('2026-08-01')).toBe('01/08/2026')
   })
 
-  test('parseYearMonthInput accepts MM/YYYY', () => {
-    expect(parseYearMonthInput('08/2026')).toBe('2026-08')
-    expect(parseYearMonthInput('8/2026')).toBe('2026-08')
-    expect(parseYearMonthInput('13/2026')).toBeNull()
-    expect(parseYearMonthInput('abc')).toBeNull()
+  test('parseInstallmentDate accepts DD/MM/YYYY', () => {
+    expect(parseInstallmentDate('01/08/2026')).toBe('2026-08-01')
+    expect(parseInstallmentDate('1/8/2026')).toBe('2026-08-01')
+    expect(parseInstallmentDate('31/02/2026')).toBe('2026-02-28')
+    expect(parseInstallmentDate('32/01/2026')).toBeNull()
+    expect(parseInstallmentDate('08/2026')).toBeNull()
+    expect(parseInstallmentDate('abc')).toBeNull()
+    expect(parseMonthInput('08/2026')).toBe('2026-08')
+    expect(parseMonthInput('8/2026')).toBe('2026-08')
+    expect(parseMonthInput('13/2026')).toBeNull()
+    expect(formatMonthDisplay('2026-08')).toBe('08/2026')
   })
 
-  test('firstInstallmentYearMonth: month after today without moratorium', () => {
+  test('firstInstallmentDate: month after today without moratorium', () => {
     expect(
-      firstInstallmentYearMonth(
+      firstInstallmentDate(
         { banqueDeFranceStatus: 'none', moratoriumEndDate: '' },
         new Date('2026-07-29T12:00:00')
       )
-    ).toBe('2026-08')
+    ).toBe('2026-08-01')
   })
 
-  test('firstInstallmentYearMonth: month after moratorium end', () => {
+  test('firstInstallmentDate: month after moratorium end', () => {
     expect(
-      firstInstallmentYearMonth(
+      firstInstallmentDate(
         {
           banqueDeFranceStatus: 'moratorium',
           moratoriumEndDate: '2026-03-15'
         },
         new Date('2026-01-01T12:00:00')
       )
-    ).toBe('2026-04')
+    ).toBe('2026-04-01')
   })
 
-  test('firstInstallmentYearMonth: moratorium without date → month after today', () => {
+  test('firstInstallmentDate: moratorium without date → month after today', () => {
     expect(
-      firstInstallmentYearMonth(
+      firstInstallmentDate(
         { banqueDeFranceStatus: 'moratorium', moratoriumEndDate: '' },
         new Date('2026-07-29T12:00:00')
       )
-    ).toBe('2026-08')
+    ).toBe('2026-08-01')
   })
 
   test('buildInstallments splits debt with remainder on last', () => {
     const installments = buildInstallments({
       debt: 1000,
       count: 3,
-      firstYearMonth: '2026-08'
+      firstDate: '2026-08-01'
     })
     expect(installments).toHaveLength(3)
-    expect(installments.map((e) => e.yearMonth)).toEqual(['2026-08', '2026-09', '2026-10'])
+    expect(installments.map((e) => e.date)).toEqual(['2026-08-01', '2026-09-01', '2026-10-01'])
     expect(installments[0].amount).toBe(333.33)
     expect(installments[1].amount).toBe(333.33)
     expect(installments[2].amount).toBe(333.34)
@@ -75,11 +86,11 @@ describe('installments', () => {
   })
 
   test('buildInstallments reuses existing ids', () => {
-    const first = buildInstallments({ debt: 100, count: 2, firstYearMonth: '2026-08' })
+    const first = buildInstallments({ debt: 100, count: 2, firstDate: '2026-08-01' })
     const second = buildInstallments({
       debt: 200,
       count: 2,
-      firstYearMonth: '2026-08',
+      firstDate: '2026-08-01',
       existing: first
     })
     expect(second[0].id).toBe(first[0].id)
@@ -91,31 +102,31 @@ describe('installments', () => {
     const installments = buildInstallments({
       debt: 1234.56,
       count: 24,
-      firstYearMonth: '2026-08'
+      firstDate: '2026-08-01'
     })
     expect(installments).toHaveLength(24)
     expect(sumInstallments(installments)).toBeCloseTo(1234.56)
-    expect(installments[23].yearMonth).toBe('2028-07')
+    expect(installments[23].date).toBe('2028-07-01')
   })
 
   test('buildInstallments plafonne à 36 mensualités', () => {
     const installments = buildInstallments({
       debt: 4800,
       count: 48,
-      firstYearMonth: '2026-08'
+      firstDate: '2026-08-01'
     })
     expect(installments).toHaveLength(36)
     expect(sumInstallments(installments)).toBeCloseTo(4800)
-    expect(buildInstallments({ debt: 3600, count: 36, firstYearMonth: '2026-08' })).toHaveLength(36)
+    expect(buildInstallments({ debt: 3600, count: 36, firstDate: '2026-08-01' })).toHaveLength(36)
   })
 
   test('typicalMonthlyAmount uses first installment', () => {
-    const installments = buildInstallments({ debt: 1000, count: 3, firstYearMonth: '2026-08' })
+    const installments = buildInstallments({ debt: 1000, count: 3, firstDate: '2026-08-01' })
     expect(typicalMonthlyAmount(installments)).toBe(333.33)
   })
 
   test('updateInstallmentAmount redistributes remaining debt', () => {
-    const base = buildInstallments({ debt: 1000, count: 4, firstYearMonth: '2026-08' })
+    const base = buildInstallments({ debt: 1000, count: 4, firstDate: '2026-08-01' })
     const next = updateInstallmentAmount(base, 0, 400, 1000)
     expect(next[0].amount).toBe(400)
     expect(next[1].amount).toBe(200)
@@ -125,9 +136,9 @@ describe('installments', () => {
     expect(next[0].id).toBe(base[0].id)
   })
 
-  test('updateInstallmentYearMonth cascades following months', () => {
-    const base = buildInstallments({ debt: 300, count: 3, firstYearMonth: '2026-08' })
-    const next = updateInstallmentYearMonth(base, 1, '2027-01')
-    expect(next.map((e) => e.yearMonth)).toEqual(['2026-08', '2027-01', '2027-02'])
+  test('updateInstallmentDate cascades following months', () => {
+    const base = buildInstallments({ debt: 300, count: 3, firstDate: '2026-08-01' })
+    const next = updateInstallmentDate(base, 1, '2027-01-31')
+    expect(next.map((e) => e.date)).toEqual(['2026-08-01', '2027-01-31', '2027-02-28'])
   })
 })

@@ -1,4 +1,4 @@
-import type { ApurementPlanFormData } from './types'
+import type { RepaymentPlanForm } from './types'
 
 export type HouseholdPersonOption = {
   id: string
@@ -12,7 +12,7 @@ function displayName(firstName: string, lastName: string, fallback: string): str
 }
 
 export function listHouseholdPeople(
-  household: ApurementPlanFormData['household']
+  household: RepaymentPlanForm['household']
 ): HouseholdPersonOption[] {
   const adults = household.adults.map((member, index) => ({
     id: member.id,

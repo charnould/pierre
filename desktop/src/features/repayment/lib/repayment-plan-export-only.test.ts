@@ -1,6 +1,8 @@
-import { describe, expect, test } from 'bun:test'
+import { beforeAll, describe, expect, test } from 'bun:test'
 
-import { createDefaultApurementPlanForm } from './apurement-plan/defaults'
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
+
+import { createDefaultRepaymentPlanForm } from './apurement-plan/defaults'
 import {
   createExportOnlyPlanEditorRequest,
   createExportOnlyPlanTenant,
@@ -8,6 +10,10 @@ import {
 } from './repayment-plan-export-only'
 
 describe('createExportOnlyPlanEditorRequest', () => {
+  beforeAll(() => {
+    loadCustomizationFixture()
+  })
+
   test('ouvre un plan export-only avec un tenant synthétique vide', () => {
     expect(createExportOnlyPlanEditorRequest()).toEqual({
       tenant: { id_locataire: '', id_client: '', solde_locataire: 0 },
@@ -16,7 +22,7 @@ describe('createExportOnlyPlanEditorRequest', () => {
   })
 
   test('le formulaire par défaut accepte le tenant synthétique', () => {
-    const form = createDefaultApurementPlanForm(createExportOnlyPlanTenant())
+    const form = createDefaultRepaymentPlanForm(createExportOnlyPlanTenant())
     expect(form.rentalDebt).toBe(0)
     expect(form.address).toBe('')
     expect(form.idLocataire).toBe('')

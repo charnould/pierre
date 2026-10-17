@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, test } from 'bun:test'
 import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 import type { Activite } from '@/shared/types/activites'
 
-import { createDefaultApurementPlanForm } from './apurement-plan/defaults'
+import { createDefaultRepaymentPlanForm } from './apurement-plan/defaults'
 import {
   formatRepaymentActivityBody,
   formatRepaymentStatusChangeText,
@@ -165,13 +165,19 @@ describe('repayment phase and assignment activities', () => {
 })
 
 describe('repayment plan payload', () => {
+  beforeAll(() => {
+    loadCustomizationFixture()
+  })
+
   test('lit le formulaire, le statut et le résumé structurés', () => {
-    const formulaire = createDefaultApurementPlanForm()
+    const formulaire = createDefaultRepaymentPlanForm()
     formulaire.idLocataire = 'LOC-1'
     formulaire.idClient = 'CLI-1'
     formulaire.rentalDebt = 1_200
-    formulaire.installments = formulaire.installments.slice(0, 12).map((installment) => ({
-      ...installment,
+    const first = formulaire.installments[0]!
+    formulaire.installments = Array.from({ length: 12 }, (_, index) => ({
+      ...first,
+      id: `inst-${index}`,
       amount: 100
     }))
     const row = activity({
@@ -203,7 +209,7 @@ describe('repayment plan payload', () => {
   })
 
   test('un plan clôturé n’est plus actif', () => {
-    const formulaire = createDefaultApurementPlanForm()
+    const formulaire = createDefaultRepaymentPlanForm()
     const plan = activity({
       id: 10,
       type: 'repayment_plan.finalized',
@@ -230,7 +236,7 @@ describe('repayment plan payload', () => {
   })
 
   test('un brouillon non signé reste modifiable', () => {
-    const formulaire = createDefaultApurementPlanForm()
+    const formulaire = createDefaultRepaymentPlanForm()
     formulaire.rentalDebt = 200
     const plan = activity({
       id: 4,

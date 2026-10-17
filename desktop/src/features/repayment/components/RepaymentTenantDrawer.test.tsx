@@ -2,9 +2,10 @@ import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 import type { Activite } from '@/shared/types/activites'
 
-import { createDefaultApurementPlanForm } from '../lib/apurement-plan/defaults'
+import { createDefaultRepaymentPlanForm } from '../lib/apurement-plan/defaults'
 import { repaymentPlanFormToSnapshot } from '../lib/repayment-plan-persist'
 
 mock.module('../lib/outbound-email-templates.bundle', () => ({
@@ -17,6 +18,7 @@ mock.module('../lib/outbound-email-templates.bundle', () => ({
 const originalGlobals = new Map<string, unknown>()
 
 beforeAll(() => {
+  loadCustomizationFixture()
   const globals = globalThis as Record<string, unknown>
   const existingWindow = globals.window as { setTimeout?: unknown; Element?: unknown } | undefined
   const hasWorkingDom =
@@ -512,7 +514,7 @@ describe('RepaymentTenantDrawer top card', () => {
 })
 
 function planActivity(id: number, auteur: string, commentaire: string): Activite {
-  const form = createDefaultApurementPlanForm()
+  const form = createDefaultRepaymentPlanForm()
   form.signed = false
   return {
     id,

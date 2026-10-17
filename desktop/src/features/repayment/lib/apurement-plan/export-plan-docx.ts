@@ -1,10 +1,10 @@
 import { renderDocxTemplate } from '@/features/workflow/lib/generate-docx'
 
 import { buildPlanDocxData, resolveLeaseHolders } from './build-plan-docx-data'
-import { PLAN_TYPE_LABELS, type ApurementPlanFormData } from './types'
+import { PLAN_TYPE_LABELS, type RepaymentPlanForm } from './types'
 
 export function generatePlanDocxFilename(
-  form: ApurementPlanFormData,
+  form: RepaymentPlanForm,
   idClient: string,
   now: Date = new Date()
 ): string {
@@ -28,7 +28,7 @@ export type ExportPlanDocxContext = {
 
 /** Prefers form ids; falls back to the dossier tenant context. */
 export function resolvePlanExportIds(
-  form: Pick<ApurementPlanFormData, 'idLocataire' | 'idClient'>,
+  form: Pick<RepaymentPlanForm, 'idLocataire' | 'idClient'>,
   ctx: Pick<ExportPlanDocxContext, 'id_locataire' | 'id_client'>
 ): { id_locataire: string; id_client: string } {
   return {
@@ -37,8 +37,8 @@ export function resolvePlanExportIds(
   }
 }
 
-export async function exportApurementPlanDocx(
-  form: ApurementPlanFormData,
+export async function exportRepaymentPlanDocx(
+  form: RepaymentPlanForm,
   ctx: ExportPlanDocxContext
 ): Promise<boolean> {
   const settings = await window.api?.getSettings?.()

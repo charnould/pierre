@@ -1,11 +1,12 @@
-import { describe, expect, mock, test } from 'bun:test'
+import { beforeAll, describe, expect, mock, test } from 'bun:test'
 
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 import { parse_repayment_plan_content } from '@/shared/types/activites'
 
 import {
   createAdultMember,
   createAmountLine,
-  createDefaultApurementPlanForm
+  createDefaultRepaymentPlanForm
 } from './apurement-plan/defaults'
 import { PLAN_TYPE_LABELS } from './apurement-plan/types'
 import {
@@ -18,6 +19,10 @@ import {
 } from './repayment-plan-persist'
 
 describe('repayment plan persist routing', () => {
+  beforeAll(() => {
+    loadCustomizationFixture()
+  })
+
   test('create sans activityId, patch avec activityId', () => {
     expect(resolvePlanPersistMode(undefined)).toBe('create')
     expect(resolvePlanPersistMode(1)).toBe('patch')
@@ -31,7 +36,7 @@ describe('repayment plan persist routing', () => {
   })
 
   test('conserve le commentaire sur réenregistrement sans dialog', () => {
-    const form = createDefaultApurementPlanForm()
+    const form = createDefaultRepaymentPlanForm()
     form.rentalDebt = 200
     const savedComment = 'Commentaire existant'
     const commentaireFromSaveButton: string | undefined = undefined
@@ -49,7 +54,7 @@ describe('repayment plan persist routing', () => {
   })
 
   test('convertit le formulaire sans perte métier ni ids de lignes UI', () => {
-    const form = createDefaultApurementPlanForm()
+    const form = createDefaultRepaymentPlanForm()
     const adult = createAdultMember({ firstName: 'Alice' })
     form.household.adults = [adult]
     form.income = [
@@ -57,7 +62,8 @@ describe('repayment plan persist routing', () => {
         label: 'Revenu personnalisé',
         amount: 1_250,
         custom: true,
-        personId: adult.id
+        personId: adult.id,
+        month: '2026-11'
       })
     ]
     form.hasSocialWorker = true
@@ -66,20 +72,26 @@ describe('repayment plan persist routing', () => {
     form.socialWorkerContact = '06 00 00 00 00'
     form.idLot = 'LOT-1'
     form.household.adults[0]!.employmentStatus = 'student'
+    form.household.adults[0]!.employer = 'Grand Dijon Habitat'
+    form.household.adults[0]!.isOccupant = false
 
     const snapshot = repaymentPlanFormToSnapshot(form)
-    expect(snapshot.address.id_lot).toBe('LOT-1')
-    expect(snapshot.social_worker).toEqual({
+    expect(snapshot.address.idLot).toBe('LOT-1')
+    expect(snapshot.socialWorker).toEqual({
       name: '',
       organization: '',
-      contact: '06 00 00 00 00'
+      contact: '06 00 00 00 00',
+      lastContactDate: ''
     })
-    expect(snapshot.household.adults[0]?.employment_status).toBe('student')
+    expect(snapshot.household.adults[0]?.employmentStatus).toBe('student')
+    expect(snapshot.household.adults[0]?.employer).toBe('Grand Dijon Habitat')
+    expect(snapshot.household.adults[0]?.occupant).toBe(false)
     expect(snapshot.household.adults[0]).not.toHaveProperty('pension_fund')
     expect(snapshot.budget.income[0]).toEqual({
       label: 'Revenu personnalisé',
       amount: 1_250,
-      person_id: adult.id
+      personId: adult.id,
+      month: '2026-11'
     })
     expect(snapshot.budget.income[0]).not.toHaveProperty('id')
     expect(snapshot.budget.income[0]).not.toHaveProperty('custom')
@@ -89,19 +101,34 @@ describe('repayment plan persist routing', () => {
     expect(restored.idLot).toBe('LOT-1')
     expect(restored.socialWorkerContact).toBe('06 00 00 00 00')
     expect(restored.household.adults[0]?.employmentStatus).toBe('student')
+    expect(restored.household.adults[0]?.employer).toBe('Grand Dijon Habitat')
+    expect(restored.household.adults[0]?.isOccupant).toBe(false)
     expect(restored.income[0]).toMatchObject({
       label: 'Revenu personnalisé',
       amount: 1_250,
       custom: true,
-      personId: adult.id
+      personId: adult.id,
+      month: '2026-11'
     })
     expect(restored.household.adults[0]?.id).toBe(adult.id)
   })
 
+  test('rejette un mois de ressource invalide', () => {
+    const form = createDefaultRepaymentPlanForm()
+    form.income = [createAmountLine({ label: 'Salaire(s) net(s)', amount: 1000, month: '2026-08' })]
+    const parsed = JSON.parse(buildPlanContenu(form, '')) as {
+      plan: { budget: { income: Array<{ month?: string }> } }
+    }
+    parsed.plan.budget.income[0]!.month = '2026-13'
+    expect(
+      parse_repayment_plan_content('repayment_plan.created', JSON.stringify(parsed))
+    ).toBeNull()
+  })
+
   test('rejette un snapshot sans identifiant de patrimoine', () => {
-    const contenu = buildPlanContenu(createDefaultApurementPlanForm(), '')
-    const parsed = JSON.parse(contenu) as { plan: { address: { id_lot?: string } } }
-    delete parsed.plan.address.id_lot
+    const contenu = buildPlanContenu(createDefaultRepaymentPlanForm(), '')
+    const parsed = JSON.parse(contenu) as { plan: { address: { idLot?: string } } }
+    delete parsed.plan.address.idLot
     expect(
       parse_repayment_plan_content('repayment_plan.created', JSON.stringify(parsed))
     ).toBeNull()

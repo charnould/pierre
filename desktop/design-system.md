@@ -18,7 +18,7 @@ Une page n’invente ni couleur, ni radius, ni hauteur de contrôle. Si ça manq
 la version du registre est la base ; aucun ancien fichier n’est restauré en bloc.
 
 Le delta Pierre autorisé est limité à : light-only, contrôles `h-8` et chrome `h-7`, géométrie
-Electron sous la TitleBar, Drawers Inspector/Activity, Empty Koboyo 160/32 sans wash, Field
+Electron sous la TitleBar, Drawers Inspector/Activity, Empty Koboyo 384 plein écran, 160 accueil, 32 in-table, sans wash, Field
 12/16, avatars Inspector `xs`, labels accessibles des Sliders et DatePicker local
 `YYYY-MM-DD`, et surfaces d’export limitées aux usages réels de l’application. Toute autre
 divergence doit être justifiée dans ce document ou supprimée.
@@ -615,11 +615,11 @@ fill saturé. Les rapports HTML restent hors React et utilisent ECharts.
 
 **Empty** — toujours la primitive `Empty`, sauf Inspector historique vide (le présent suffit).
 
-| Contexte                    | Titre                                              | Icône                         |
-| --------------------------- | -------------------------------------------------- | ----------------------------- |
-| Page / liste / drawer       | `.pierre-display` (20/24) — défaut de `EmptyTitle` | Koboyo 160, fill, pas de wash |
-| In-table (bucket DualTable) | `className="text-sm leading-5 font-medium"`        | Koboyo 32, fill, pas de wash  |
-| Inspector, historique vide  | _(pas d’Empty — le présent suffit)_                | —                             |
+| Contexte                    | Titre                                                          | Icône                         |
+| --------------------------- | -------------------------------------------------------------- | ----------------------------- |
+| Page / liste / drawer       | `EmptyTitle` 24/32 (`text-2xl`), `sm` 18/28, description 16/24 | Koboyo 384, fill, pas de wash |
+| In-table (bucket DualTable) | `className="text-sm leading-5 font-medium"`                    | Koboyo 32, fill, pas de wash  |
+| Inspector, historique vide  | _(pas d’Empty — le présent suffit)_                            | —                             |
 
 Description : 12/16 muted. CTA outline. Pas de dashed. Pas de nouvelle famille Empty.
 
@@ -667,7 +667,9 @@ Inter + JetBrains Mono. Pas de Lora. Inter pour toute donnée d’interface (IDs
 
 | Rôle                  | Taille            | Poids               | Classe / primitive                                       |
 | --------------------- | ----------------- | ------------------- | -------------------------------------------------------- |
-| Page / Empty title    | 20/24             | medium              | `.pierre-display`                                        |
+| Page title            | 20/24             | medium              | `.pierre-display`                                        |
+| Empty title           | 24/32             | medium              | `EmptyTitle` `text-2xl` ; `sm` 18/28 (`text-lg`)         |
+| Empty description     | 16/24             | regular muted       | `EmptyDescription` `text-base`                           |
 | Board section         | 20/24             | semibold            | rubrique Inter `text-xl`                                 |
 | Form section          | 16/24             | medium              | `FieldLegend` `variant="legend"`                         |
 | Encre / label / nom   | 14/20             | medium              | `FieldLabel`, `FieldTitle`, `CardTitle`, titre ID        |
@@ -710,18 +712,18 @@ Ne pas empiler App + vue + enfant.
 
 ### Heights
 
-| Surface                                                 | Hauteur                                  |
-| ------------------------------------------------------- | ---------------------------------------- |
-| Contrôles                                               | 32 (`h-8`)                               |
-| Chrome compact / toolbar / table header / drawer chrome | 28 (`h-7`)                               |
-| Lignes DualTable                                        | ~32                                      |
-| Lignes Directory                                        | ~48–56                                   |
-| TitleBar                                                | 32                                       |
-| Empty icon                                              | 160 (`size-40`) ; 32 in-table (`size-8`) |
-| Login marque                                            | 64 (`h-16`)                              |
-| Avatar Inspector cards (euro / checkbox)                | 16 (`xs`)                                |
-| Avatar Inspector rail                                   | 32 (défaut)                              |
-| Avatar Activity                                         | 32 (défaut)                              |
+| Surface                                                 | Hauteur                                                                        |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Contrôles                                               | 32 (`h-8`)                                                                     |
+| Chrome compact / toolbar / table header / drawer chrome | 28 (`h-7`)                                                                     |
+| Lignes DualTable                                        | ~32                                                                            |
+| Lignes Directory                                        | ~48–56                                                                         |
+| TitleBar                                                | 32                                                                             |
+| Empty icon                                              | 384 (`size-96`) plein écran ; 160 (`size-40`) accueil ; 32 in-table (`size-8`) |
+| Login marque                                            | 64 (`h-16`)                                                                    |
+| Avatar Inspector cards (euro / checkbox)                | 16 (`xs`)                                                                      |
+| Avatar Inspector rail                                   | 32 (défaut)                                                                    |
+| Avatar Activity                                         | 32 (défaut)                                                                    |
 
 `h-7` uniquement dans les patterns nommés « sm » : toolbar / table / drawer / chrome.
 
@@ -778,7 +780,7 @@ Interdit : `rounded-lg` / `xl` / `2xl` sur le canvas.
 
 ### Icons
 
-Lucide pour toute l’interface (canvas / nav / métiers : 16. Chrome sm : 14. Autres : stroke 1.5). Cloche Notifications : stroke only, jamais `fill-unread`. Empty : Koboyo 160, fill, `currentColor`, pas de wash — pas Lucide. In-table (bucket DualTable) : Koboyo 32. Exception Login : marque Koboyo 64.
+Lucide pour toute l’interface (canvas / nav / métiers : 16. Chrome sm : 14. Autres : stroke 1.5). Cloche Notifications : stroke only, jamais `fill-unread`. Empty : Koboyo 384 plein écran, 160 accueil, fill, `currentColor`, pas de wash — pas Lucide. In-table (bucket DualTable) : Koboyo 32. Exception Login : marque Koboyo 64.
 
 ---
 
@@ -892,21 +894,21 @@ Ne pas introduire / supprimer :
 
 ## 11. Exceptions volontairement conservées
 
-| Exception               | Pourquoi                                                                    |
-| ----------------------- | --------------------------------------------------------------------------- |
-| Hex des statuts         | Données métier, pas chrome                                                  |
-| `--pierre-debt`         | Montants uniquement                                                         |
-| `--door-*-mark`         | Liseret 1 px + icône + verbe des portes ; encres, pas aplats                |
-| `--unread`              | Alias `--foreground` pour dots / badges ; pastille compagnon = `badgeColor` |
-| Reports HTML            | Hors React                                                                  |
-| Mascotte                | Hors React                                                                  |
-| DualTable               | Boards uniquement                                                           |
-| Conversation            | Famille propre (largeur interne `max-w-3xl`)                                |
-| Workspace               | Famille propre                                                              |
-| ActivityReader          | Overlay lecteur : `max-w-3xl`, `rounded-t-xl`                               |
-| Empty icon              | Koboyo 160 (`size-40`), fill, pas de wash ; 32 in-table                     |
-| Login coquille compacte | Première surface : fenêtre calée sur la pile                                |
-| Login marque Koboyo 64  | Première surface, `currentColor`, pas Lucide                                |
+| Exception               | Pourquoi                                                                                     |
+| ----------------------- | -------------------------------------------------------------------------------------------- |
+| Hex des statuts         | Données métier, pas chrome                                                                   |
+| `--pierre-debt`         | Montants uniquement                                                                          |
+| `--door-*-mark`         | Liseret 1 px + icône + verbe des portes ; encres, pas aplats                                 |
+| `--unread`              | Alias `--foreground` pour dots / badges ; pastille compagnon = `badgeColor`                  |
+| Reports HTML            | Hors React                                                                                   |
+| Mascotte                | Hors React                                                                                   |
+| DualTable               | Boards uniquement                                                                            |
+| Conversation            | Famille propre (largeur interne `max-w-3xl`)                                                 |
+| Workspace               | Famille propre                                                                               |
+| ActivityReader          | Overlay lecteur : `max-w-3xl`, `rounded-t-xl`                                                |
+| Empty icon              | Koboyo 384 (`size-96`) plein écran, 160 (`size-40`) accueil, fill, pas de wash ; 32 in-table |
+| Login coquille compacte | Première surface : fenêtre calée sur la pile                                                 |
+| Login marque Koboyo 64  | Première surface, `currentColor`, pas Lucide                                                 |
 
 ---
 

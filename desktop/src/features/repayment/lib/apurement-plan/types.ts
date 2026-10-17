@@ -1,6 +1,8 @@
-export type PlanType = 'repayment_plan' | 'social_cohesion_protocol'
+import type { ProcedureStage } from '../../../../../../shared/repayment-plan'
 
-export type OccupancyType = 'lease' | 'accession'
+export type { ProcedureStage }
+
+export type PlanType = 'repayment_plan' | 'social_cohesion_protocol'
 
 export type BanqueDeFranceStatus =
   | 'none'
@@ -9,15 +11,18 @@ export type BanqueDeFranceStatus =
   | 'prp'
   | 'moratorium'
 
-export type EmploymentStatus =
-  | 'permanent'
-  | 'permanent_trial'
-  | 'fixed_term'
-  | 'fixed_term_trial'
-  | 'temporary'
-  | 'unemployed'
-  | 'student'
-  | 'retired'
+export const PROCEDURE_STAGE_LABELS: Record<ProcedureStage, string> = {
+  amiable: 'Recouvrement amiable',
+  cdp: 'Commandement de payer',
+  assignation: 'Assignation au tribunal',
+  audience: 'Audience au tribunal',
+  delibere: 'Décision en attente',
+  jugement: 'Décision du juge rendue',
+  signification: 'Décision de justice signifiée',
+  cql: 'Commandement de quitter les lieux'
+}
+
+export type EmploymentStatus = keyof typeof EMPLOYMENT_STATUS_LABELS
 
 export interface AdultMember {
   id: string
@@ -25,8 +30,10 @@ export interface AdultMember {
   firstName: string
   birthDate: string
   employmentStatus: EmploymentStatus
+  employer: string
   cafNumber: string
   isLeaseHolder: boolean
+  isOccupant: boolean
 }
 
 export interface ChildMember {
@@ -43,6 +50,10 @@ export interface AmountLine {
   amount: number
   custom: boolean
   personId: string | null
+  /** Fin d’un crédit en cours, `YYYY-MM`. Vide sinon. */
+  endMonth: string
+  /** Vide : mensuelle. `YYYY-MM` : ne compte que pour ce mois. */
+  month: string
 }
 
 export interface AidItem {
@@ -58,30 +69,75 @@ export const AID_PRESETS = [
   'Ligue contre le cancer'
 ] as const
 
-const RETIREMENT_PENSION_PRESET = 'Pension de retraite' as const
-
-const APL_THIRD_PARTY_PRESET = 'APL / ALF / ALS (tiers payant)' as const
-const APL_DIRECT_PRESET = 'APL / ALF / ALS (direct locataire)' as const
-
-export const INCOME_PRESETS = [
-  'Salaire(s) net(s)',
-  'RSA',
-  APL_THIRD_PARTY_PRESET,
-  APL_DIRECT_PRESET,
-  'Prestations familiales',
-  "Prime d'activité",
-  'ARE',
-  'AAH',
-  RETIREMENT_PENSION_PRESET,
-  "Pension d'invalidité",
-  'Pensions alimentaires reçues'
+export const INCOME_GROUPS = [
+  {
+    label: "Ressources d'activité",
+    presets: [
+      'Salaire(s) net(s)',
+      "Revenus d'activité indépendante",
+      'Indemnités journalières',
+      'ARE / Allocation chômage'
+    ]
+  },
+  {
+    label: 'Prestations sociales',
+    presets: [
+      'AAH',
+      'RSA',
+      "Prime d'activité",
+      'Prestations familiales',
+      'APL / ALF / ALS (direct locataire)',
+      'APL / ALF / ALS (tiers payant)',
+      "Bourse d'études"
+    ]
+  },
+  {
+    label: 'Pensions / rentes',
+    presets: [
+      "Pension d'invalidité",
+      'Pension de retraite',
+      "Rente d'accident du travail / maladie professionnelle",
+      'Pensions alimentaires reçues'
+    ]
+  },
+  {
+    label: 'Autres revenus',
+    presets: ['Revenus fonciers', 'Autres revenus réguliers']
+  },
+  {
+    label: 'Ressources ponctuelles',
+    presets: [
+      'Prime exceptionnelle',
+      'Rappel de salaire',
+      'Rappel de prestations sociales',
+      'Indemnité de licenciement',
+      'Indemnité de rupture conventionnelle',
+      'Aide financière ponctuelle',
+      'Don familial',
+      'Succession et héritage',
+      "Produit de la vente d'un bien",
+      'Autre ressource ponctuelle'
+    ]
+  }
 ] as const
+
+export const INCOME_PRESETS: readonly string[] = INCOME_GROUPS.flatMap((group) => group.presets)
+
+export const RECURRING_INCOME_GROUPS = INCOME_GROUPS.filter(
+  (group) => group.label !== 'Ressources ponctuelles'
+)
+
+export const PUNCTUAL_INCOME_PRESETS = INCOME_GROUPS.flatMap((group) =>
+  group.label === 'Ressources ponctuelles' ? group.presets : []
+)
 
 export const TOTAL_RENT_PRESET = 'Loyer + Charges - Aide au logement'
 
+export const CREDIT_EXPENSE_PRESET = 'Crédit en cours'
+
 /** Types proposés dans le menu. Le loyer net n’y figure pas : il est une ligne fixe. */
 export const EXPENSE_PRESETS = [
-  'Crédits en cours (cumulé)',
+  CREDIT_EXPENSE_PRESET,
   'Assurance habitation',
   'Mutuelle santé',
   'Energie (électricité, gaz, autre)',
@@ -94,22 +150,17 @@ export const EXPENSE_PRESETS = [
   'Abonnements'
 ] as const
 
-export const DEFAULT_PLAN_DURATION_MONTHS = 24
-
-export const MAX_PLAN_DURATION_MONTHS = 36
-
 export interface Installment {
   id: string
-  /** Format `YYYY-MM`. */
-  yearMonth: string
+  /** Format `YYYY-MM-DD`. */
+  date: string
   amount: number
 }
 
-export interface ApurementPlanFormData {
+export interface RepaymentPlanForm {
   banqueDeFranceStatus: BanqueDeFranceStatus
   moratoriumEndDate: string
   planType: PlanType
-  occupancyType: OccupancyType
   /** Plan signé par le locataire — piloté à l’enregistrement (phase / dernière action). */
   signed: boolean
   /** Identifiants dossier — éditables dans le formulaire (export) ; le rattachement activité reste sur le tenant. */
@@ -122,13 +173,21 @@ export interface ApurementPlanFormData {
   city: string
   rentalDebt: number
   firstMissedPaymentDate: string
-  paymentOrderDate: string
-  ccapexOpened: boolean
+  procedureStage: ProcedureStage | ''
+  procedureStageDate: string
+  ccapexDate: string
+  ctesiDate: string
+  tenantVisitedAtHome: boolean
   hasSocialWorker: boolean
   socialWorkerName: string
   socialWorkerOrganization: string
   /** E-mail et/ou téléphone. Vide si non saisi. */
   socialWorkerContact: string
+  /** Dernier contact du bailleur (`YYYY-MM-DD`), vide s’il n’est pas renseigné. */
+  socialWorkerLastContactDate: string
+  amendmentSigned: boolean
+  /** Date de dépôt du préavis (`YYYY-MM-DD`), vide s’il n’y en a pas. */
+  noticeDate: string
   income: AmountLine[]
   expenses: AmountLine[]
   household: {
@@ -139,38 +198,9 @@ export interface ApurementPlanFormData {
   installments: Installment[]
 }
 
-export interface ApurementPlanCalculations {
-  totalDebt: number
-  totalIncome: number
-  totalExpenses: number
-  disposableIncome: number
-  consumptionUnits: number
-  disposableIncomePerCu: number
-  /** Sum of installments ; `null` if none. */
-  planTotal: number | null
-}
-
-export interface ApurementPlanOutput {
-  tenantId: string
-  generatedAt: string
-  form: ApurementPlanFormData
-  calculations: ApurementPlanCalculations
-  summary: {
-    monthlyAmount: number
-    durationMonths: number
-    totalDebt: number
-    coversDebt: boolean
-  }
-}
-
 export const PLAN_TYPE_LABELS: Record<PlanType, string> = {
   repayment_plan: "Plan d'apurement",
   social_cohesion_protocol: 'Protocole de cohésion sociale'
-}
-
-export const OCCUPANCY_TYPE_LABELS: Record<OccupancyType, string> = {
-  lease: 'Bail',
-  accession: 'Accession'
 }
 
 export const BANQUE_DE_FRANCE_STATUS_LABELS: Record<BanqueDeFranceStatus, string> = {
@@ -181,25 +211,18 @@ export const BANQUE_DE_FRANCE_STATUS_LABELS: Record<BanqueDeFranceStatus, string
   moratorium: 'Moratoire'
 }
 
-export const EMPLOYMENT_STATUS_LABELS: Record<EmploymentStatus, string> = {
-  permanent: 'CDI',
-  permanent_trial: "CDI (période d'essai)",
-  fixed_term: 'CDD',
-  fixed_term_trial: "CDD (période d'essai)",
-  temporary: 'Intérim',
+export const EMPLOYMENT_STATUS_LABELS = {
+  permanent: 'Salarié en CDI',
+  permanent_trial: "Salarié en CDI (période d'essai)",
+  fixed_term: 'Salarié en CDD',
+  fixed_term_trial: "Salarié en CDD (période d'essai)",
+  temporary: 'Intérimaire',
+  self_employed: 'Indépendant / Auto-entrepreneur',
+  business_owner: "Chef d'entreprise",
+  civil_servant: 'Fonctionnaire / Agent public',
   unemployed: 'Sans emploi',
   student: 'Étudiant',
-  retired: 'Retraité'
-}
-
-/** Ordre UI : peu de champs en plus d’abord, essai en dernier. */
-export const EMPLOYMENT_STATUS_ORDER: readonly EmploymentStatus[] = [
-  'unemployed',
-  'student',
-  'temporary',
-  'retired',
-  'permanent',
-  'fixed_term',
-  'permanent_trial',
-  'fixed_term_trial'
-] as const
+  retired: 'Retraité',
+  inactive: 'Sans activité professionnelle',
+  other: 'Autre'
+} as const

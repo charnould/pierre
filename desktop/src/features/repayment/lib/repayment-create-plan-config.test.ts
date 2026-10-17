@@ -13,6 +13,22 @@ describe('repayment-create-plan-config', () => {
     expect(repaymentCreatePlanConfig().signedBucketId).toBe('amiable')
   })
 
+  test('lit la durée et les seuils de l’échéancier', () => {
+    expect(repaymentCreatePlanConfig().schedule).toEqual({
+      defaultMonths: 6,
+      maxEffortRate: 35,
+      minDailyRemainder: 15,
+      thresholds: [
+        { months: 12, message: 'Un échéancier de plus de 12 mensualités doit être confirmé.' },
+        {
+          months: 24,
+          message:
+            'Un plan d’apurement de plus de 24 mensualités est réservé à des cas spéciaux documentés au sein de votre organisme.'
+        }
+      ]
+    })
+  })
+
   test('chaque motif de clôture a une phase', () => {
     const close = repaymentCreatePlanConfig().close
     expect(close.execution_complete).toEqual({ bucketId: 'non_traites' })

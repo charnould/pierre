@@ -29,12 +29,25 @@ export const CUSTOMIZATION_FIXTURE: InstanceCustomization = {
     tags: ['décès', '+65 ans'],
     template_groups: ['RCS/SMS au (ex-)client'],
     create_plan: {
-      signed_bucket_id: 'amiable',
+      signedBucketId: 'amiable',
+      schedule: {
+        defaultMonths: 6,
+        maxEffortRate: 35,
+        minDailyRemainder: 15,
+        thresholds: [
+          { months: 12, message: 'Un échéancier de plus de 12 mensualités doit être confirmé.' },
+          {
+            months: 24,
+            message:
+              'Un plan d’apurement de plus de 24 mensualités est réservé à des cas spéciaux documentés au sein de votre organisme.'
+          }
+        ]
+      },
       close: {
-        execution_complete: { bucket_id: 'non_traites' },
-        non_respect: { bucket_id: 'contentieux' },
-        remplacement_par_nouveau_plan: { bucket_id: 'amiable' },
-        effacement_de_dette: { bucket_id: 'non_traites' }
+        execution_complete: { bucketId: 'non_traites' },
+        non_respect: { bucketId: 'contentieux' },
+        remplacement_par_nouveau_plan: { bucketId: 'amiable' },
+        effacement_de_dette: { bucketId: 'non_traites' }
       }
     },
     templates: {}

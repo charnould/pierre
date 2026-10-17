@@ -6,7 +6,7 @@ function Empty({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="empty"
       className={cn(
-        'flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-4 p-6 text-center text-balance',
+        'flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-6 p-8 text-center text-balance',
         className
       )}
       {...props}
@@ -18,7 +18,7 @@ function EmptyHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="empty-header"
-      className={cn('flex max-w-sm flex-col items-center gap-2', className)}
+      className={cn('flex max-w-lg flex-col items-center gap-4', className)}
       {...props}
     />
   )
@@ -41,7 +41,7 @@ const emptyMediaVariants = cva(
       {
         variant: 'icon',
         size: 'default',
-        class: "[&_svg:not([class*='size-'])]:size-40"
+        class: "[&_svg:not([class*='size-'])]:size-96"
       },
       {
         variant: 'icon',
@@ -76,8 +76,8 @@ function EmptyMedia({
 const emptyTitleVariants = cva('font-heading font-medium tracking-tight', {
   variants: {
     size: {
-      default: 'pierre-display',
-      sm: 'text-sm leading-5'
+      default: 'text-2xl leading-8',
+      sm: 'text-lg leading-7'
     }
   },
   defaultVariants: {
@@ -105,7 +105,7 @@ function EmptyDescription({ className, ...props }: React.ComponentProps<'p'>) {
     <p
       data-slot="empty-description"
       className={cn(
-        'text-xs leading-4 text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary',
+        'text-base leading-6 text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary',
         className
       )}
       {...props}
@@ -118,7 +118,7 @@ function EmptyContent({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="empty-content"
       className={cn(
-        'flex w-full max-w-sm min-w-0 flex-col items-center gap-2.5 text-sm text-balance',
+        'flex w-full max-w-lg min-w-0 flex-col items-center gap-2.5 text-base text-balance',
         className
       )}
       {...props}

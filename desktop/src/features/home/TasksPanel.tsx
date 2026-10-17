@@ -113,7 +113,7 @@ export function TasksPanel({
               actions={mine}
               emptyTitle="Aucune tâche"
               emptyDescription="Rien d’ouvert."
-              emptyIcon={<BlockprintSuccessStateForTask />}
+              emptyIcon={<BlockprintSuccessStateForTask className="size-40" />}
               onOpen={openAction}
               onLoadMore={onLoadMoreMine}
               hasMore={hasMoreMine}
@@ -129,7 +129,7 @@ export function TasksPanel({
               actions={delegated}
               emptyTitle="Aucune tâche assignée"
               emptyDescription="Rien de délégué."
-              emptyIcon={<BlockprintDelegationArrow />}
+              emptyIcon={<BlockprintDelegationArrow className="size-40" />}
               onOpen={openAction}
               onLoadMore={onLoadMoreDelegated}
               hasMore={hasMoreDelegated}

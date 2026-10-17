@@ -1,8 +1,9 @@
-import { describe, expect, test } from 'bun:test'
+import { beforeAll, describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { renderDocxTemplate } from '@/features/workflow/lib/generate-docx'
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 
 import { createExportOnlyPlanTenant } from '../repayment-plan-export-only'
 import { buildPlanDocxData } from './build-plan-docx-data'
@@ -11,7 +12,7 @@ import {
   createAidItem,
   createAmountLine,
   createChildMember,
-  createDefaultApurementPlanForm
+  createDefaultRepaymentPlanForm
 } from './defaults'
 import { generatePlanDocxFilename, resolvePlanExportIds } from './export-plan-docx'
 
@@ -24,11 +25,15 @@ const TEMPLATE_PATH = join(
   'template.docx'
 )
 
+beforeAll(() => {
+  loadCustomizationFixture()
+})
+
 describe('generatePlanDocxFilename', () => {
   const now = new Date('2026-07-31T12:00:00')
 
   test('inclut date, id_client, CAF et type de plan', () => {
-    const form = createDefaultApurementPlanForm()
+    const form = createDefaultRepaymentPlanForm()
     form.planType = 'repayment_plan'
     form.household.adults = [
       createAdultMember({
@@ -44,7 +49,7 @@ describe('generatePlanDocxFilename', () => {
   })
 
   test('utilise le libellé protocole de cohésion sociale', () => {
-    const form = createDefaultApurementPlanForm()
+    const form = createDefaultRepaymentPlanForm()
     form.planType = 'social_cohesion_protocol'
     form.household.adults = [createAdultMember({ cafNumber: 'CAF-1', isLeaseHolder: true })]
     expect(generatePlanDocxFilename(form, 'CLI-1', now)).toBe(
@@ -55,7 +60,7 @@ describe('generatePlanDocxFilename', () => {
 
 describe('resolvePlanExportIds', () => {
   test('préfère les ids du formulaire', () => {
-    const form = createDefaultApurementPlanForm({
+    const form = createDefaultRepaymentPlanForm({
       id_locataire: 'FORM-LOC',
       id_client: 'FORM-CLI',
       solde_locataire: 0
@@ -69,7 +74,7 @@ describe('resolvePlanExportIds', () => {
   })
 
   test('repli sur le tenant si le formulaire est vide', () => {
-    const form = createDefaultApurementPlanForm(createExportOnlyPlanTenant())
+    const form = createDefaultRepaymentPlanForm(createExportOnlyPlanTenant())
     expect(
       resolvePlanExportIds(form, { id_locataire: 'TENANT-LOC', id_client: 'TENANT-CLI' })
     ).toEqual({
@@ -81,7 +86,7 @@ describe('resolvePlanExportIds', () => {
 
 describe('export plan docx template', () => {
   test('rend le template GDH sans erreur ni TODO restant', async () => {
-    const form = createDefaultApurementPlanForm()
+    const form = createDefaultRepaymentPlanForm()
     form.address = '12 rue Test'
     form.postalCode = '21000'
     form.city = 'Dijon'
@@ -119,8 +124,8 @@ describe('export plan docx template', () => {
       createAidItem({ label: 'Action Logement' })
     ]
     form.installments = [
-      { id: 'i1', yearMonth: '2026-08', amount: 100 },
-      { id: 'i2', yearMonth: '2026-09', amount: 100 }
+      { id: 'i1', date: '2026-08-01', amount: 100 },
+      { id: 'i2', date: '2026-09-01', amount: 100 }
     ]
     form.banqueDeFranceStatus = 'moratorium'
     form.moratoriumEndDate = '2026-12-31'
@@ -152,7 +157,7 @@ describe('export plan docx template', () => {
     expect(xml).toContain('Moratoire')
     expect(xml).toContain('12 rue Test')
     expect(xml).toContain('FSL')
-    expect(xml).toContain('08/2026')
+    expect(xml).toContain('01/08/2026')
     expect(xml).not.toContain('TODO')
     const text = xml.replace(/<[^>]*>/g, '')
     expect(text).not.toMatch(/\{\{[^{}]+}}/)

@@ -47,7 +47,7 @@ export function ModuleGate({
         <Empty className="min-h-40 flex-1">
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <LoaderCircle className="animate-spin" />
+              <LoaderCircle className="size-40 animate-spin" />
             </EmptyMedia>
             <EmptyTitle size="sm">Chargement du paramétrage…</EmptyTitle>
           </EmptyHeader>

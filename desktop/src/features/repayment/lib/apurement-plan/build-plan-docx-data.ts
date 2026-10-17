@@ -1,11 +1,19 @@
-import { computeApurementPlanCalculations } from './calculations'
-import { formatYearMonthDisplay } from './installments'
+import { computeInstallmentBudget } from './calculations'
+import {
+  addMonths,
+  formatInstallmentDate,
+  formatMonthDisplay,
+  sumInstallments
+} from './installments'
+import { formatAmountSplit, formatEffortRate, formatMoneyDisplay, formatUnits } from './money'
 import {
   BANQUE_DE_FRANCE_STATUS_LABELS,
+  CREDIT_EXPENSE_PRESET,
   EMPLOYMENT_STATUS_LABELS,
   PLAN_TYPE_LABELS,
+  PROCEDURE_STAGE_LABELS,
   type AdultMember,
-  type ApurementPlanFormData
+  type RepaymentPlanForm
 } from './types'
 
 /** Montant FR sans symbole monétaire (`1 234,56`) — le template ajoute parfois `€`. */
@@ -58,7 +66,7 @@ export function resolveLeaseHolders(adults: AdultMember[]): AdultMember[] {
 
 function resolvePersonLabel(
   personId: string | null,
-  form: ApurementPlanFormData,
+  form: RepaymentPlanForm,
   fallbackIndex: number
 ): string {
   if (!personId) return 'Foyer'
@@ -75,7 +83,7 @@ function resolvePersonLabel(
   return `Personne ${fallbackIndex + 1}`
 }
 
-function formatBanqueDeFrance(form: ApurementPlanFormData): string {
+function formatBanqueDeFrance(form: RepaymentPlanForm): string {
   const label = BANQUE_DE_FRANCE_STATUS_LABELS[form.banqueDeFranceStatus]
   if (form.banqueDeFranceStatus !== 'moratorium') return label
   if (!form.moratoriumEndDate) return label
@@ -101,24 +109,38 @@ export type PlanDocxData = {
   ID_LOT: string
   TOTAL_PLAN: string
   PREMIER_IMPAYE: string
-  COMMANDEMENT: string
+  STADE: string
   CCAPEX: string
+  CTESI: string
   TRAVAILLEUR_SOCIAL: string
   BANQUE_DE_FRANCE: string
-  RESTE_A_VIVRE: string
-  UC: string
-  RESTE_A_VIVRE_UC: string
   TOTAL_RESSOURCES: string
   TOTAL_CHARGES: string
+  AVENANT: string
+  CONGE: string
+  CLAUSE_SOLIDARITE: string
   TITULAIRES: Array<{ PRENOM: string; NOM: string; CAF: string }>
-  ECHEANCES: Array<{ NUMERO: string; ECHEANCE: string; MONTANT: string }>
+  ECHEANCES: Array<{
+    NUMERO: string
+    ECHEANCE: string
+    MONTANT: string
+    RESSOURCES_MOIS: string
+    CHARGES_MOIS: string
+    UC: string
+    RESTE_COMPLET: string
+    TAUX_COMPLET: string
+    RESTE_SIMPLIFIE: string
+    TAUX_SIMPLIFIE: string
+  }>
   ADULTES: Array<{
     PRENOM: string
     NOM: string
     DATE_NAISSANCE: string
     STATUT_PRO: string
+    EMPLOYEUR: string
     CAF: string
     TITULAIRE: string
+    OCCUPANT: string
   }>
   ENFANTS: Array<{
     PRENOM: string
@@ -132,17 +154,23 @@ export type PlanDocxData = {
 }
 
 export function buildPlanDocxData(
-  form: ApurementPlanFormData,
+  form: RepaymentPlanForm,
   ctx: PlanDocxContext,
   now: Date = new Date()
 ): PlanDocxData {
-  const calc = computeApurementPlanCalculations(form)
+  const planTotal =
+    form.installments.length > 0 ? formatMoneyPlain(sumInstallments(form.installments)) : '—'
+  const totalIncome = form.income.reduce((sum, line) => sum + line.amount, 0)
+  const totalExpenses = form.expenses.reduce((sum, line) => sum + line.amount, 0)
 
   const socialWorker = form.hasSocialWorker
     ? [
         form.socialWorkerName.trim(),
         form.socialWorkerOrganization.trim(),
-        form.socialWorkerContact.trim()
+        form.socialWorkerContact.trim(),
+        form.socialWorkerLastContactDate
+          ? `dernier contact le ${formatDateIsoFr(form.socialWorkerLastContactDate)}`
+          : ''
       ]
         .filter(Boolean)
         .join(' — ') || 'oui'
@@ -159,36 +187,55 @@ export function buildPlanDocxData(
     ID_CLIENT: ctx.id_client.trim(),
     ID_LOCATAIRE: ctx.id_locataire.trim(),
     ID_LOT: form.idLot.trim(),
-    TOTAL_PLAN: calc.planTotal != null ? formatMoneyPlain(calc.planTotal) : '—',
+    TOTAL_PLAN: planTotal,
     PREMIER_IMPAYE: form.firstMissedPaymentDate
       ? formatDateIsoFr(form.firstMissedPaymentDate)
       : 'non renseignée',
-    COMMANDEMENT: form.paymentOrderDate ? formatDateIsoFr(form.paymentOrderDate) : 'non signifié',
-    CCAPEX: yesNo(form.ccapexOpened),
+    STADE: form.procedureStage
+      ? form.procedureStageDate
+        ? `${PROCEDURE_STAGE_LABELS[form.procedureStage]} le ${formatDateIsoFr(form.procedureStageDate)}`
+        : PROCEDURE_STAGE_LABELS[form.procedureStage]
+      : '',
+    CCAPEX: form.ccapexDate ? formatDateIsoFr(form.ccapexDate) : 'non',
+    CTESI: form.ctesiDate ? formatDateIsoFr(form.ctesiDate) : 'non',
     TRAVAILLEUR_SOCIAL: socialWorker,
     BANQUE_DE_FRANCE: formatBanqueDeFrance(form),
-    RESTE_A_VIVRE: formatMoneyPlain(calc.disposableIncome),
-    UC: calc.consumptionUnits.toFixed(1).replace('.', ','),
-    RESTE_A_VIVRE_UC: formatMoneyPlain(calc.disposableIncomePerCu),
-    TOTAL_RESSOURCES: formatMoneyPlain(calc.totalIncome),
-    TOTAL_CHARGES: formatMoneyPlain(calc.totalExpenses),
+    TOTAL_RESSOURCES: formatMoneyPlain(totalIncome),
+    TOTAL_CHARGES: formatMoneyPlain(totalExpenses),
+    AVENANT: yesNo(form.amendmentSigned),
+    CONGE: form.noticeDate ? formatDateIsoFr(form.noticeDate) : '',
+    CLAUSE_SOLIDARITE: form.noticeDate ? formatDateIsoFr(addMonths(form.noticeDate, 6)) : '',
     TITULAIRES: resolveLeaseHolders(form.household.adults).map((adult) => ({
       PRENOM: adult.firstName.trim(),
       NOM: adult.lastName.trim(),
       CAF: adult.cafNumber.trim()
     })),
-    ECHEANCES: form.installments.map((item, index) => ({
-      NUMERO: String(index + 1),
-      ECHEANCE: formatYearMonthDisplay(item.yearMonth),
-      MONTANT: formatMoneyPlain(item.amount)
-    })),
+    ECHEANCES: form.installments.map((item, index) => {
+      const month = computeInstallmentBudget(form, item.date, item.amount)
+      const resources = formatAmountSplit(month.recurringIncome, month.punctualIncome)
+      const charges = formatAmountSplit(month.recurringExpenses, month.punctualExpenses)
+      return {
+        NUMERO: String(index + 1),
+        ECHEANCE: formatInstallmentDate(item.date),
+        MONTANT: formatMoneyPlain(item.amount),
+        RESSOURCES_MOIS: `${resources.total} ${resources.detail}`,
+        CHARGES_MOIS: `${charges.total} ${charges.detail}`,
+        UC: formatUnits(month.consumptionUnits),
+        RESTE_COMPLET: formatMoneyDisplay(month.dailyRemainder),
+        TAUX_COMPLET: formatEffortRate(month.effortRate),
+        RESTE_SIMPLIFIE: formatMoneyDisplay(month.simplifiedDailyRemainder),
+        TAUX_SIMPLIFIE: formatEffortRate(month.simplifiedEffortRate)
+      }
+    }),
     ADULTES: form.household.adults.map((adult) => ({
       PRENOM: adult.firstName.trim(),
       NOM: adult.lastName.trim(),
       DATE_NAISSANCE: formatDateIsoFr(adult.birthDate),
       STATUT_PRO: EMPLOYMENT_STATUS_LABELS[adult.employmentStatus],
+      EMPLOYEUR: adult.employer.trim(),
       CAF: adult.cafNumber.trim() || '—',
-      TITULAIRE: yesNo(adult.isLeaseHolder, 'title')
+      TITULAIRE: yesNo(adult.isLeaseHolder, 'title'),
+      OCCUPANT: yesNo(adult.isOccupant, 'title')
     })),
     ENFANTS: form.household.children.map((child) => ({
       PRENOM: child.firstName.trim(),
@@ -206,7 +253,10 @@ export function buildPlanDocxData(
     CHARGES: form.expenses
       .filter((item) => item.label.trim() || item.amount > 0)
       .map((item) => ({
-        TYPE: item.label.trim() || 'Charge',
+        TYPE:
+          item.label.trim() === CREDIT_EXPENSE_PRESET && item.endMonth
+            ? `${CREDIT_EXPENSE_PRESET} (jusqu'au ${formatMonthDisplay(item.endMonth.slice(0, 7))})`
+            : item.label.trim() || 'Charge',
         MONTANT: formatMoneyPlain(item.amount)
       })),
     AIDES: form.requestedAids

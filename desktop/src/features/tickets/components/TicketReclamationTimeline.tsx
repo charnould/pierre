@@ -152,7 +152,7 @@ export const TicketReclamationTimeline = memo(function TicketReclamationTimeline
       <Empty className="min-h-40">
         <EmptyHeader>
           <EmptyMedia variant="icon">
-            <LoaderCircle />
+            <LoaderCircle className="size-40" />
           </EmptyMedia>
           <EmptyTitle size="sm">Chargement…</EmptyTitle>
         </EmptyHeader>

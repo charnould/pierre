@@ -4,20 +4,20 @@ import type { ReactNode } from 'react'
 import { Button } from '@/shared/components/ui/button'
 import { FieldSeparator } from '@/shared/components/ui/field'
 
-import type { ApurementPlanFormData } from '../../lib/apurement-plan/types'
+import type { RepaymentPlanForm } from '../../lib/apurement-plan/types'
 import {
   SectionAides,
-  SectionBudget,
   SectionDispositif,
   SectionEcheancier,
   SectionFamille,
   SectionLogement,
   SectionSituationLocative
 } from './PlanFormSections'
+import { SectionBudget } from './SectionBudget'
 
 interface Props {
-  form: ApurementPlanFormData
-  onPatch: (patch: Partial<ApurementPlanFormData>) => void
+  form: RepaymentPlanForm
+  onPatch: (patch: Partial<RepaymentPlanForm>) => void
   onClose: () => void
   footerAction: ReactNode
   readOnly?: boolean
@@ -34,7 +34,7 @@ export function PlanFormColumn({ form, onPatch, onClose, footerAction, readOnly 
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-4">
-        <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
           <fieldset disabled={readOnly} className="m-0 flex min-w-0 flex-col gap-4 border-0 p-0">
             <legend className="sr-only">Formulaire du plan d’apurement</legend>
             <SectionDispositif form={form} onChange={onPatch} />

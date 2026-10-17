@@ -23,10 +23,10 @@ import { Switch } from '@/shared/components/ui/switch'
 import { toast } from '@/shared/components/ui/toast'
 import { extractMentionsFromText } from '@/shared/lib/activities/mentions'
 
-import { createDefaultApurementPlanForm } from '../../lib/apurement-plan/defaults'
-import { exportApurementPlanDocx } from '../../lib/apurement-plan/export-plan-docx'
+import { createDefaultRepaymentPlanForm } from '../../lib/apurement-plan/defaults'
+import { exportRepaymentPlanDocx } from '../../lib/apurement-plan/export-plan-docx'
 import { rebuildInstallments } from '../../lib/apurement-plan/installments'
-import type { ApurementPlanFormData } from '../../lib/apurement-plan/types'
+import type { RepaymentPlanForm } from '../../lib/apurement-plan/types'
 import type { TenantRepaymentRow } from '../../lib/classify-tenants'
 import {
   PLAN_CLOSE_MOTIF_LABELS,
@@ -63,7 +63,7 @@ export type PlanDeletedPayload = {
 interface Props {
   url?: string
   tenant: TenantRepaymentRow
-  initialForm?: ApurementPlanFormData
+  initialForm?: RepaymentPlanForm
   existingActivityId?: number
   initialComment?: string
   /** Form + .docx export only — hide persist/close/delete actions. */
@@ -86,7 +86,7 @@ export function RepaymentPlanWorkspace({
   onPlanClosed,
   onPlanDeleted
 }: Props) {
-  const [form, setForm] = useState(() => initialForm ?? createDefaultApurementPlanForm(tenant))
+  const [form, setForm] = useState(() => initialForm ?? createDefaultRepaymentPlanForm(tenant))
   const [savedComment, setSavedComment] = useState(() => initialComment.trim())
   const [saving, setSaving] = useState(false)
   const [commentOpen, setCommentOpen] = useState(false)
@@ -100,7 +100,7 @@ export function RepaymentPlanWorkspace({
   const hasActivity = existingActivityId != null
 
   const patchForm = useCallback(
-    (patch: Partial<ApurementPlanFormData>) => {
+    (patch: Partial<RepaymentPlanForm>) => {
       if (readOnly) return
       setForm((prev) => {
         const next = { ...prev, ...patch }
@@ -209,7 +209,7 @@ export function RepaymentPlanWorkspace({
 
   const handleExport = () => {
     setExporting(true)
-    void exportApurementPlanDocx(form, {
+    void exportRepaymentPlanDocx(form, {
       id_locataire: tenant.id_locataire,
       id_client: tenant.id_client
     })

@@ -9,7 +9,7 @@ import {
 
 import { typicalMonthlyAmount } from './apurement-plan/installments'
 import { formatMoneyDisplay } from './apurement-plan/money'
-import type { ApurementPlanFormData } from './apurement-plan/types'
+import type { RepaymentPlanForm } from './apurement-plan/types'
 import type { RepaymentBucketId } from './repayment-bucket'
 import {
   getRepaymentBucketMeta,
@@ -213,7 +213,7 @@ export function latestActiveRepaymentPlan(rows: Activite[]): ActiveRepaymentPlan
 }
 
 /** Full editable form restored from the current plan snapshot, or null on a light milestone. */
-export function parseRepaymentPlanForm(row: Activite): ApurementPlanFormData | null {
+export function parseRepaymentPlanForm(row: Activite): RepaymentPlanForm | null {
   if (!row.type.startsWith('repayment_plan.')) return null
   const content = parse_repayment_plan_content(row.type, row.contenu)
   return content?.plan ? repaymentPlanSnapshotToForm(content.plan, repaymentPlanSigned(row)) : null
@@ -229,7 +229,7 @@ export function parseRepaymentPlanProposal(row: Activite): RepaymentPlanProposal
   if (content.plan?.installments.length) {
     const installments = content.plan.installments.map((installment, index) => ({
       id: String(index),
-      yearMonth: installment.year_month,
+      date: installment.date,
       amount: installment.amount
     }))
     resume = `${formatMoneyDisplay(typicalMonthlyAmount(installments))} × ${installments.length} mois`

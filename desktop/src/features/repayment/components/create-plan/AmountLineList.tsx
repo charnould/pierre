@@ -5,18 +5,36 @@ import { SelectItems, type SelectOption } from '@/shared/components/SelectItems'
 import { Button } from '@/shared/components/ui/button'
 import { Field, FieldLabel } from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
-import { Select, SelectContent, SelectTrigger, SelectValue } from '@/shared/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue
+} from '@/shared/components/ui/select'
 
 import type { HouseholdPersonOption } from '../../lib/apurement-plan/household'
 import { sortSelectOptions } from '../../lib/apurement-plan/sort-select-options'
-import type { AmountLine } from '../../lib/apurement-plan/types'
+import { CREDIT_EXPENSE_PRESET, type AmountLine } from '../../lib/apurement-plan/types'
 import { MoneyInput } from './MoneyInput'
+import { MonthInput } from './MonthInput'
 
 const TYPE_OTHER = '__other__'
+
+type PresetGroup = { label: string; presets: readonly string[] }
+
+function isPresetGroups(
+  presets: readonly string[] | readonly PresetGroup[]
+): presets is readonly PresetGroup[] {
+  return typeof presets[0] === 'object'
+}
 
 function AmountLineRow({
   item,
   typeItems,
+  groups,
   typeLabel,
   customPlaceholder,
   personItems,
@@ -24,11 +42,13 @@ function AmountLineRow({
   reserveRemoveSlot,
   locked,
   showLabels,
+  showMonth,
   onChange,
   onRemove
 }: {
   item: AmountLine
   typeItems: SelectOption[]
+  groups: readonly PresetGroup[] | null
   typeLabel: string
   customPlaceholder: string
   personItems: SelectOption[] | null
@@ -36,11 +56,14 @@ function AmountLineRow({
   reserveRemoveSlot: boolean
   locked: boolean
   showLabels: boolean
+  showMonth: boolean
   onChange: (patch: Partial<AmountLine>) => void
   onRemove: () => void
 }) {
   const typeId = useId()
   const personId = useId()
+  const endMonthId = useId()
+  const monthId = useId()
   const amountId = useId()
 
   const typeControl = locked ? (
@@ -56,7 +79,7 @@ function AmountLineRow({
       aria-label={typeLabel}
       placeholder={customPlaceholder}
       value={item.label}
-      onChange={(e) => onChange({ label: e.target.value })}
+      onChange={(e) => onChange({ label: e.target.value, endMonth: '' })}
     />
   ) : (
     <Select
@@ -64,17 +87,40 @@ function AmountLineRow({
       value={item.label || null}
       onValueChange={(value) => {
         if (value === TYPE_OTHER) {
-          onChange({ label: '', custom: true })
+          onChange({ label: '', custom: true, endMonth: '' })
           return
         }
-        onChange({ label: String(value), custom: false })
+        const label = String(value)
+        onChange({
+          label,
+          custom: false,
+          ...(label === CREDIT_EXPENSE_PRESET ? {} : { endMonth: '' })
+        })
       }}
     >
       <SelectTrigger id={typeId} size="sm" aria-label={showLabels ? undefined : typeLabel}>
         <SelectValue placeholder={typeLabel} />
       </SelectTrigger>
       <SelectContent align="start">
-        <SelectItems items={typeItems} />
+        {groups ? (
+          <>
+            {groups.map((group) => (
+              <SelectGroup key={group.label}>
+                <SelectLabel>{group.label}</SelectLabel>
+                {group.presets.map((preset) => (
+                  <SelectItem key={preset} value={preset}>
+                    {preset}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            ))}
+            <SelectGroup>
+              <SelectItem value={TYPE_OTHER}>Autre…</SelectItem>
+            </SelectGroup>
+          </>
+        ) : (
+          <SelectItems items={typeItems} />
+        )}
       </SelectContent>
     </Select>
   )
@@ -102,6 +148,31 @@ function AmountLineRow({
           </Select>
         </Field>
       ) : null}
+      {showMonth ? (
+        <Field className="w-32">
+          {showLabels ? <FieldLabel htmlFor={monthId}>Mois</FieldLabel> : null}
+          <MonthInput
+            id={monthId}
+            aria-label={showLabels ? undefined : 'Mois'}
+            className="w-full"
+            value={item.month}
+            onChange={(month) => onChange({ month })}
+          />
+        </Field>
+      ) : null}
+      {item.label === CREDIT_EXPENSE_PRESET && !showMonth ? (
+        <Field className="w-28">
+          {showLabels ? <FieldLabel htmlFor={endMonthId}>fin</FieldLabel> : null}
+          <MonthInput
+            id={endMonthId}
+            aria-label={showLabels ? undefined : 'fin'}
+            placeholder="fin"
+            className="w-full"
+            value={item.endMonth.slice(0, 7)}
+            onChange={(endMonth) => onChange({ endMonth })}
+          />
+        </Field>
+      ) : null}
       <Field className="w-36">
         {showLabels ? <FieldLabel htmlFor={amountId}>Montant</FieldLabel> : null}
         <MoneyInput
@@ -124,12 +195,14 @@ function AmountLineRow({
 
 interface Props {
   items: AmountLine[]
-  presets: readonly string[]
+  presets: readonly string[] | readonly PresetGroup[]
   placeholderLabel: string
   customPlaceholder: string
   people?: HouseholdPersonOption[]
   /** Libellé de preset qui ne peut ni être retiré ni être retypé. */
   lockedLabel?: string
+  /** Affiche le mois `MM/AAAA` et autorise de retirer la dernière ligne. */
+  showMonth?: boolean
   onChange: (items: AmountLine[]) => void
 }
 
@@ -140,15 +213,19 @@ export function AmountLineList({
   customPlaceholder,
   people,
   lockedLabel,
+  showMonth = false,
   onChange
 }: Props) {
-  const typeItems = useMemo<SelectOption[]>(
-    () => [
-      ...sortSelectOptions(presets).map((preset) => ({ label: preset, value: preset })),
+  const groups = isPresetGroups(presets) ? presets : null
+  const typeItems = useMemo<SelectOption[]>(() => {
+    const labels = isPresetGroups(presets)
+      ? presets.flatMap((group) => group.presets)
+      : sortSelectOptions(presets)
+    return [
+      ...labels.map((preset) => ({ label: preset, value: preset })),
       { label: 'Autre…', value: TYPE_OTHER }
-    ],
-    [presets]
-  )
+    ]
+  }, [presets])
 
   const personItems = useMemo<SelectOption[] | null>(
     () =>
@@ -165,7 +242,7 @@ export function AmountLineList({
     onChange(items.map((item) => (item.id === id ? { ...item, ...patch } : item)))
   }
 
-  const removable = items.length > 1
+  const removable = showMonth || items.length > 1
 
   return (
     <div className="flex flex-col gap-4">
@@ -176,6 +253,7 @@ export function AmountLineList({
             key={item.id}
             item={item}
             typeItems={typeItems}
+            groups={groups}
             typeLabel={placeholderLabel}
             customPlaceholder={customPlaceholder}
             personItems={personItems}
@@ -183,6 +261,7 @@ export function AmountLineList({
             reserveRemoveSlot={locked && removable}
             locked={locked}
             showLabels={index === 0}
+            showMonth={showMonth}
             onChange={(patch) => updateItem(item.id, patch)}
             onRemove={() => onChange(items.filter((entry) => entry.id !== item.id))}
           />

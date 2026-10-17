@@ -751,7 +751,7 @@ export function SetupPanel({ url }: { url: string }) {
             <>
               <JsonField
                 label="Configuration"
-                description="Paniers, actions, étiquettes et plans. La consigne n’y figure pas. templates liste les modèles à éditer."
+                description="Paniers, actions, étiquettes et plans. create_plan.schedule fixe la durée de l’échéancier (defaultMonths) et les confirmations (thresholds). La consigne n’y figure pas. templates liste les modèles à éditer."
                 value={jsonDraft}
                 error={jsonId ? fieldErrors[jsonId] : undefined}
                 onChange={editJson}

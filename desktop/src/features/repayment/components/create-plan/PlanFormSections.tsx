@@ -2,17 +2,20 @@ import {
   CircleOff,
   FileSearch,
   FileText,
+  Gavel,
   Handshake,
-  Home,
-  KeyRound,
+  Hourglass,
+  Landmark,
   ListChecks,
+  LogOut,
+  Mail,
   PauseCircle,
   Plus,
   RotateCcw,
   Scale,
   Trash2
 } from 'lucide-react'
-import { useId, useState, type ReactNode } from 'react'
+import { useId, useState } from 'react'
 
 import { ChoiceTile } from '@/shared/components/ChoiceTile'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
@@ -20,7 +23,6 @@ import { Button } from '@/shared/components/ui/button'
 import {
   Field,
   FieldDescription,
-  FieldGroup,
   FieldLabel,
   FieldLegend,
   FieldSet
@@ -36,81 +38,46 @@ import {
 } from '@/shared/components/ui/select'
 import { Switch } from '@/shared/components/ui/switch'
 
+import { MAX_SCHEDULE_MONTHS } from '../../../../../../shared/repayment-plan'
 import {
   createAdultMember,
   createAidItem,
-  createAmountLine,
   createChildMember
 } from '../../lib/apurement-plan/defaults'
-import { listHouseholdPeople } from '../../lib/apurement-plan/household'
 import {
   buildInstallments,
   clampInstallmentCount,
-  firstInstallmentYearMonth,
-  updateInstallmentAmount,
-  updateInstallmentYearMonth
+  firstInstallmentDate
 } from '../../lib/apurement-plan/installments'
 import {
   BANQUE_DE_FRANCE_STATUS_LABELS,
-  DEFAULT_PLAN_DURATION_MONTHS,
   EMPLOYMENT_STATUS_LABELS,
-  EMPLOYMENT_STATUS_ORDER,
-  EXPENSE_PRESETS,
-  INCOME_PRESETS,
-  MAX_PLAN_DURATION_MONTHS,
-  OCCUPANCY_TYPE_LABELS,
   PLAN_TYPE_LABELS,
-  TOTAL_RENT_PRESET,
+  PROCEDURE_STAGE_LABELS,
   type AdultMember,
   type AidItem,
-  type AmountLine,
-  type ApurementPlanFormData,
+  type RepaymentPlanForm,
   type BanqueDeFranceStatus,
   type ChildMember,
   type EmploymentStatus,
-  type OccupancyType,
-  type PlanType
+  type PlanType,
+  type ProcedureStage
 } from '../../lib/apurement-plan/types'
+import { repaymentCreatePlanConfig } from '../../lib/repayment-create-plan-config'
 import { AidList } from './AidList'
-import { AmountLineList } from './AmountLineList'
 import { BooleanField } from './BooleanField'
 import { DatePicker } from './DatePicker'
+import { InstallmentSchedule } from './InstallmentSchedule'
 import { MoneyInput } from './MoneyInput'
-import { PlanCalculationsPanel } from './PlanCalculationsPanel'
-import { YearMonthInput } from './YearMonthInput'
+import { PlanSection } from './PlanSection'
 
-type FormUpdater = (patch: Partial<ApurementPlanFormData>) => void
+type FormUpdater = (patch: Partial<RepaymentPlanForm>) => void
 type SectionUpdater<T> = (patch: Partial<T>) => void
 
-const EMPLOYMENT_SELECT_ITEMS = EMPLOYMENT_STATUS_ORDER.map((status) => ({
-  value: status,
-  label: EMPLOYMENT_STATUS_LABELS[status]
+const employmentStatusItems = Object.entries(EMPLOYMENT_STATUS_LABELS).map(([value, label]) => ({
+  value: value as EmploymentStatus,
+  label
 }))
-
-function PlanSection({
-  title,
-  description,
-  action,
-  children
-}: {
-  title: string
-  description: string
-  action?: ReactNode
-  children: ReactNode
-}) {
-  return (
-    <FieldSet>
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex min-w-0 flex-col">
-          <FieldLegend variant="legend">{title}</FieldLegend>
-          <FieldDescription>{description}</FieldDescription>
-        </div>
-        {action}
-      </div>
-      <FieldGroup>{children}</FieldGroup>
-    </FieldSet>
-  )
-}
 
 function MoneyField({
   id,
@@ -143,7 +110,7 @@ function ChoiceCards<T extends string>({
 }: {
   label: string
   description: string
-  value: T
+  value: T | ''
   options: {
     value: T
     title: string
@@ -189,14 +156,11 @@ export function SectionDispositif({
   form,
   onChange
 }: {
-  form: ApurementPlanFormData
+  form: RepaymentPlanForm
   onChange: FormUpdater
 }) {
   return (
-    <PlanSection
-      title="Dispositif"
-      description="Type de plan et nature de l’occupation du logement."
-    >
+    <PlanSection title="Dispositif" description="Type de plan.">
       <ChoiceCards
         label="Type de plan"
         description="Quel dispositif rédigez-vous&nbsp;?"
@@ -215,20 +179,6 @@ export function SectionDispositif({
           }
         ]}
       />
-      <ChoiceCards
-        label="Type d’occupation"
-        description="Bail ou accession."
-        value={form.occupancyType}
-        onChange={(occupancyType) => onChange({ occupancyType })}
-        options={[
-          { value: 'lease' as OccupancyType, title: OCCUPANCY_TYPE_LABELS.lease, icon: Home },
-          {
-            value: 'accession' as OccupancyType,
-            title: OCCUPANCY_TYPE_LABELS.accession,
-            icon: KeyRound
-          }
-        ]}
-      />
     </PlanSection>
   )
 }
@@ -237,7 +187,7 @@ export function SectionLogement({
   form,
   onChange
 }: {
-  form: ApurementPlanFormData
+  form: RepaymentPlanForm
   onChange: FormUpdater
 }) {
   const addressId = useId()
@@ -294,15 +244,18 @@ export function SectionSituationLocative({
   form,
   onChange
 }: {
-  form: ApurementPlanFormData
+  form: RepaymentPlanForm
   onChange: FormUpdater
 }) {
   const debtId = useId()
   const firstMissedPaymentId = useId()
-  const paymentOrderId = useId()
+  const procedureStageDateId = useId()
+  const ccapexDateId = useId()
+  const ctesiDateId = useId()
   const socialWorkerNameId = useId()
   const socialWorkerOrganizationId = useId()
   const socialWorkerContactId = useId()
+  const socialWorkerLastContactDateId = useId()
   const moratoriumEndId = useId()
 
   return (
@@ -325,21 +278,63 @@ export function SectionSituationLocative({
             onChange={(firstMissedPaymentDate) => onChange({ firstMissedPaymentDate })}
           />
         </Field>
-        <Field className="w-auto min-w-40 flex-1">
-          <FieldLabel htmlFor={paymentOrderId}>Commandement de payer signifié</FieldLabel>
+      </div>
+      <ChoiceCards<ProcedureStage>
+        label="Stade actuel de la procédure"
+        description="Où en est le recouvrement de ce dossier ?"
+        value={form.procedureStage}
+        onChange={(procedureStage) => onChange({ procedureStage })}
+        options={[
+          { value: 'amiable', title: PROCEDURE_STAGE_LABELS.amiable, icon: Handshake },
+          { value: 'cdp', title: PROCEDURE_STAGE_LABELS.cdp, icon: FileText },
+          { value: 'assignation', title: PROCEDURE_STAGE_LABELS.assignation, icon: Landmark },
+          { value: 'audience', title: PROCEDURE_STAGE_LABELS.audience, icon: Gavel },
+          { value: 'delibere', title: PROCEDURE_STAGE_LABELS.delibere, icon: Hourglass },
+          { value: 'jugement', title: PROCEDURE_STAGE_LABELS.jugement, icon: Scale },
+          { value: 'signification', title: PROCEDURE_STAGE_LABELS.signification, icon: Mail },
+          { value: 'cql', title: PROCEDURE_STAGE_LABELS.cql, icon: LogOut }
+        ]}
+      />
+      {form.procedureStage ? (
+        <Field className="w-auto max-w-xs min-w-40">
+          <FieldLabel htmlFor={procedureStageDateId}>Date</FieldLabel>
           <DatePicker
-            id={paymentOrderId}
-            value={form.paymentOrderDate}
-            onChange={(paymentOrderDate) => onChange({ paymentOrderDate })}
-            placeholder="Non signifié"
+            id={procedureStageDateId}
+            value={form.procedureStageDate}
+            onChange={(procedureStageDate) => onChange({ procedureStageDate })}
+          />
+        </Field>
+      ) : null}
+      <div className="flex flex-wrap items-end gap-3">
+        <Field className="w-auto min-w-40 flex-1">
+          <FieldLabel htmlFor={ccapexDateId}>CCAPEX saisie ?</FieldLabel>
+          <FieldDescription>
+            Commission de coordination des actions de prévention des expulsions
+          </FieldDescription>
+          <DatePicker
+            id={ccapexDateId}
+            value={form.ccapexDate}
+            onChange={(ccapexDate) => onChange({ ccapexDate })}
+            placeholder="Non saisie"
+          />
+        </Field>
+        <Field className="w-auto min-w-40 flex-1">
+          <FieldLabel htmlFor={ctesiDateId}>CTESI saisie ?</FieldLabel>
+          <FieldDescription>
+            Commission technique d'examens de situations individuelles
+          </FieldDescription>
+          <DatePicker
+            id={ctesiDateId}
+            value={form.ctesiDate}
+            onChange={(ctesiDate) => onChange({ ctesiDate })}
+            placeholder="Non saisie"
           />
         </Field>
       </div>
       <BooleanField
-        label="CCAPEX saisie ?"
-        description="Commission de coordination des actions de prévention des expulsions"
-        value={form.ccapexOpened}
-        onChange={(ccapexOpened) => onChange({ ccapexOpened })}
+        label="Le locataire a été rencontré à son domicile ?"
+        value={form.tenantVisitedAtHome}
+        onChange={(tenantVisitedAtHome) => onChange({ tenantVisitedAtHome })}
       />
       <BooleanField
         label="Travailleur social référent ?"
@@ -374,6 +369,17 @@ export function SectionSituationLocative({
               aria-label="Coordonnées du travailleur social"
               value={form.socialWorkerContact}
               onChange={(e) => onChange({ socialWorkerContact: e.target.value })}
+            />
+          </Field>
+          <Field className="w-auto min-w-44">
+            <FieldLabel htmlFor={socialWorkerLastContactDateId}>
+              Dernier contact du bailleur
+            </FieldLabel>
+            <DatePicker
+              id={socialWorkerLastContactDateId}
+              className="w-full"
+              value={form.socialWorkerLastContactDate}
+              onChange={(socialWorkerLastContactDate) => onChange({ socialWorkerLastContactDate })}
             />
           </Field>
         </div>
@@ -430,88 +436,6 @@ export function SectionSituationLocative({
   )
 }
 
-export function SectionBudget({
-  form,
-  onIncomeChange,
-  onExpensesChange
-}: {
-  form: ApurementPlanFormData
-  onIncomeChange: (income: AmountLine[]) => void
-  onExpensesChange: (expenses: AmountLine[]) => void
-}) {
-  const people = listHouseholdPeople(form.household)
-
-  return (
-    <PlanSection
-      title="Budget du foyer"
-      description="Ressources, charges et reste à vivre du ménage."
-    >
-      <FieldSet>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex min-w-0 flex-col">
-            <FieldLegend variant="label">Ressources</FieldLegend>
-            <FieldDescription>
-              Revenus déclarés, assignables à chaque personne du foyer.
-            </FieldDescription>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => onIncomeChange([...form.income, createAmountLine()])}
-          >
-            <Plus data-icon="inline-start" />
-            Ajouter
-          </Button>
-        </div>
-        {people.length === 0 ? (
-          <FieldDescription>
-            Renseignez d’abord le foyer pour assigner les ressources.
-          </FieldDescription>
-        ) : null}
-        <AmountLineList
-          items={form.income}
-          presets={INCOME_PRESETS}
-          placeholderLabel="Type de ressource"
-          customPlaceholder="Libellé de la ressource"
-          people={people}
-          onChange={onIncomeChange}
-        />
-      </FieldSet>
-
-      <FieldSet>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex min-w-0 flex-col">
-            <FieldLegend variant="label">Charges</FieldLegend>
-            <FieldDescription>
-              Dépenses mensuelles récurrentes prises en compte dans le reste à vivre.
-            </FieldDescription>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => onExpensesChange([...form.expenses, createAmountLine()])}
-          >
-            <Plus data-icon="inline-start" />
-            Ajouter
-          </Button>
-        </div>
-        <AmountLineList
-          items={form.expenses}
-          presets={EXPENSE_PRESETS}
-          lockedLabel={TOTAL_RENT_PRESET}
-          placeholderLabel="Type de charge"
-          customPlaceholder="Libellé de la charge"
-          onChange={onExpensesChange}
-        />
-      </FieldSet>
-
-      <PlanCalculationsPanel form={form} />
-    </PlanSection>
-  )
-}
-
 function AdultRow({
   adult,
   canRemove,
@@ -529,8 +453,10 @@ function AdultRow({
   const lastNameId = useId()
   const birthDateId = useId()
   const employmentStatusId = useId()
+  const employerId = useId()
   const cafNumberId = useId()
   const leaseHolderId = useId()
+  const occupantId = useId()
 
   return (
     <div className="contents">
@@ -567,7 +493,7 @@ function AdultRow({
           <FieldLabel htmlFor={employmentStatusId}>Statut professionnel</FieldLabel>
         ) : null}
         <Select
-          items={EMPLOYMENT_SELECT_ITEMS}
+          items={employmentStatusItems}
           value={adult.employmentStatus}
           onValueChange={(value) => {
             if (value == null) return
@@ -583,13 +509,22 @@ function AdultRow({
             <SelectValue placeholder="Statut professionnel" />
           </SelectTrigger>
           <SelectContent className="min-w-56">
-            {EMPLOYMENT_STATUS_ORDER.map((status) => (
-              <SelectItem key={status} value={status}>
-                {EMPLOYMENT_STATUS_LABELS[status]}
+            {employmentStatusItems.map(({ value, label }) => (
+              <SelectItem key={value} value={value}>
+                {label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
+      </Field>
+      <Field className="min-w-0">
+        {showLabels ? <FieldLabel htmlFor={employerId}>Employeur</FieldLabel> : null}
+        <Input
+          id={employerId}
+          aria-label="Employeur"
+          value={adult.employer}
+          onChange={(e) => onChange({ employer: e.target.value })}
+        />
       </Field>
       <Field className="min-w-0">
         {showLabels ? <FieldLabel htmlFor={cafNumberId}>N° allocataire CAF</FieldLabel> : null}
@@ -608,6 +543,17 @@ function AdultRow({
             checked={adult.isLeaseHolder}
             onCheckedChange={(checked) => onChange({ isLeaseHolder: checked })}
             aria-label={showLabels ? undefined : 'Titulaire du bail'}
+          />
+        </div>
+      </Field>
+      <Field className="min-w-0">
+        {showLabels ? <FieldLabel htmlFor={occupantId}>Occupant</FieldLabel> : null}
+        <div className="flex h-8 items-center">
+          <Switch
+            id={occupantId}
+            checked={adult.isOccupant}
+            onCheckedChange={(checked) => onChange({ isOccupant: checked })}
+            aria-label={showLabels ? undefined : 'Occupant'}
           />
         </div>
       </Field>
@@ -705,13 +651,18 @@ export function SectionFamille({
   onHouseholdChange,
   onIdsChange
 }: {
-  form: ApurementPlanFormData
-  onHouseholdChange: SectionUpdater<ApurementPlanFormData['household']>
-  onIdsChange: (patch: Partial<Pick<ApurementPlanFormData, 'idLocataire' | 'idClient'>>) => void
+  form: RepaymentPlanForm
+  onHouseholdChange: SectionUpdater<RepaymentPlanForm['household']>
+  onIdsChange: (
+    patch: Partial<
+      Pick<RepaymentPlanForm, 'idLocataire' | 'idClient' | 'amendmentSigned' | 'noticeDate'>
+    >
+  ) => void
 }) {
   const household = form.household
   const idLocataireId = useId()
   const idClientId = useId()
+  const noticeDateId = useId()
 
   return (
     <PlanSection title="Foyer" description="Personnes occupant le logement et titulaires du bail.">
@@ -758,7 +709,7 @@ export function SectionFamille({
             Ajouter
           </Button>
         </div>
-        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_11rem_minmax(0,1fr)_minmax(0,1fr)_auto_2rem] items-start gap-x-3 gap-y-4">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_11rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto_2rem] items-start gap-x-3 gap-y-4">
           {household.adults.map((adult, index) => (
             <AdultRow
               key={adult.id}
@@ -781,6 +732,23 @@ export function SectionFamille({
           ))}
         </div>
       </FieldSet>
+
+      <BooleanField
+        label="Y a-t-il un avenant signé dans Aravis ?"
+        value={form.amendmentSigned}
+        onChange={(amendmentSigned) => onIdsChange({ amendmentSigned })}
+      />
+      <Field className="max-w-xs">
+        <FieldLabel htmlFor={noticeDateId}>Date de dépôt du préavis</FieldLabel>
+        <FieldDescription>
+          Le cas échéant, à quelle date le congé a-t-il été déposé ?
+        </FieldDescription>
+        <DatePicker
+          id={noticeDateId}
+          value={form.noticeDate}
+          onChange={(noticeDate) => onIdsChange({ noticeDate })}
+        />
+      </Field>
 
       <FieldSet>
         <div className="flex items-start justify-between gap-4">
@@ -864,30 +832,34 @@ export function SectionEcheancier({
   form,
   onChange
 }: {
-  form: ApurementPlanFormData
+  form: RepaymentPlanForm
   onChange: FormUpdater
 }) {
   const count = form.installments.length
   const canRemove = count > 1
-  const [longPlanOpen, setLongPlanOpen] = useState(false)
+  const { schedule } = repaymentCreatePlanConfig()
+  const [pendingThreshold, setPendingThreshold] = useState<
+    (typeof schedule.thresholds)[number] | null
+  >(null)
 
-  const firstYearMonth = form.installments[0]?.yearMonth ?? firstInstallmentYearMonth(form)
+  const firstDate = form.installments[0]?.date ?? firstInstallmentDate(form)
 
   const setInstallmentCount = (nextCount: number) => {
     onChange({
       installments: buildInstallments({
         debt: form.rentalDebt,
         count: clampInstallmentCount(nextCount),
-        firstYearMonth,
+        firstDate,
         existing: form.installments
       })
     })
   }
 
   const addInstallment = () => {
-    if (count >= MAX_PLAN_DURATION_MONTHS) return
-    if (count === DEFAULT_PLAN_DURATION_MONTHS) {
-      setLongPlanOpen(true)
+    if (count >= MAX_SCHEDULE_MONTHS) return
+    const threshold = schedule.thresholds.find((item) => item.months === count)
+    if (threshold) {
+      setPendingThreshold(threshold)
       return
     }
     setInstallmentCount(count + 1)
@@ -896,14 +868,14 @@ export function SectionEcheancier({
   return (
     <PlanSection
       title="Échéancier"
-      description="Échéances mensuelles pour rembourser la dette (24 par défaut)."
+      description={`Échéances mensuelles pour rembourser la dette (${schedule.defaultMonths} par défaut).`}
     >
       <div className="flex flex-wrap items-center gap-2">
         <Button
           type="button"
           variant="outline"
           size="sm"
-          disabled={count >= MAX_PLAN_DURATION_MONTHS}
+          disabled={count >= MAX_SCHEDULE_MONTHS}
           onClick={addInstallment}
         >
           <Plus data-icon="inline-start" />
@@ -927,8 +899,8 @@ export function SectionEcheancier({
             onChange({
               installments: buildInstallments({
                 debt: form.rentalDebt,
-                count: DEFAULT_PLAN_DURATION_MONTHS,
-                firstYearMonth: firstInstallmentYearMonth(form)
+                count: schedule.defaultMonths,
+                firstDate: firstInstallmentDate(form)
               })
             })
           }
@@ -937,80 +909,17 @@ export function SectionEcheancier({
           Réinitialiser
         </Button>
       </div>
-      <div className="grid max-w-lg grid-cols-[3.5rem_7rem_minmax(0,1fr)_2rem] items-start gap-x-3 gap-y-2">
-        <span className="text-muted-foreground text-sm font-medium">N°</span>
-        <span className="text-muted-foreground text-sm font-medium">Échéance</span>
-        <span className="text-muted-foreground text-sm font-medium">Montant</span>
-        <span className="size-8" aria-hidden />
-        {form.installments.map((installment, index) => (
-          <div key={installment.id} className="contents">
-            <span className="text-muted-foreground flex h-8 items-center text-sm tabular-nums">
-              {index + 1}/{count}
-            </span>
-            <Field className="min-w-0">
-              <YearMonthInput
-                aria-label={`Échéance ${index + 1}`}
-                value={installment.yearMonth}
-                onChange={(yearMonth) =>
-                  onChange({
-                    installments: updateInstallmentYearMonth(form.installments, index, yearMonth)
-                  })
-                }
-              />
-            </Field>
-            <Field className="min-w-0">
-              <MoneyInput
-                aria-label={`Montant ${index + 1}`}
-                value={installment.amount}
-                onChange={(amount) =>
-                  onChange({
-                    installments: updateInstallmentAmount(
-                      form.installments,
-                      index,
-                      amount,
-                      form.rentalDebt
-                    )
-                  })
-                }
-              />
-            </Field>
-            {canRemove ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="self-center"
-                aria-label={`Retirer l’échéance ${index + 1}`}
-                onClick={() => {
-                  const remaining = form.installments.filter((_, i) => i !== index)
-                  onChange({
-                    installments: buildInstallments({
-                      debt: form.rentalDebt,
-                      count: remaining.length,
-                      firstYearMonth: remaining[0]?.yearMonth ?? firstYearMonth,
-                      existing: remaining
-                    })
-                  })
-                }}
-              >
-                <Trash2 />
-              </Button>
-            ) : (
-              <span className="size-8 self-center" aria-hidden />
-            )}
-          </div>
-        ))}
-      </div>
+      <InstallmentSchedule form={form} onChange={onChange} />
       <ConfirmDialog
-        open={longPlanOpen}
-        title="Plus de 24 mensualités !"
-        description="Un plan d’apurement de plus de 24 mensualités est réservé à des cas spéciaux documentés au sein de votre organisme."
+        open={pendingThreshold != null}
+        title={pendingThreshold ? `Plus de ${pendingThreshold.months} mensualités !` : ''}
+        description={pendingThreshold?.message ?? ''}
         confirmLabel="J’ai compris"
         onConfirm={() => {
-          setLongPlanOpen(false)
+          setPendingThreshold(null)
           setInstallmentCount(count + 1)
         }}
-        onCancel={() => setLongPlanOpen(false)}
+        onCancel={() => setPendingThreshold(null)}
       />
     </PlanSection>
   )

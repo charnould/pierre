@@ -1,10 +1,10 @@
-import type { ApurementPlanFormData } from './apurement-plan/types'
+import type { RepaymentPlanForm } from './apurement-plan/types'
 import type { TenantRepaymentRow } from './classify-tenants'
 
 export type RepaymentPlanEditorRequest = {
   tenant: TenantRepaymentRow
   activityId?: number
-  form?: ApurementPlanFormData
+  form?: RepaymentPlanForm
   comment?: string
   /** Form + .docx export only — no activity persist. */
   exportOnly?: boolean

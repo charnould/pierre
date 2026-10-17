@@ -1,73 +1,94 @@
-import {
-  DEFAULT_PLAN_DURATION_MONTHS,
-  MAX_PLAN_DURATION_MONTHS,
-  type ApurementPlanFormData,
-  type Installment
-} from './types'
+import { MAX_SCHEDULE_MONTHS } from '../../../../../../shared/repayment-plan'
+import type { RepaymentPlanForm, Installment } from './types'
 
 function newInstallmentId(): string {
   return `inst-${Math.random().toString(36).slice(2, 8)}`
 }
 
-/** Adds `delta` months to a `YYYY-MM`. */
-export function addMonthsYearMonth(yearMonth: string, delta: number): string {
-  const [yearStr, monthStr] = yearMonth.split('-')
+function pad2(value: number): string {
+  return String(value).padStart(2, '0')
+}
+
+function daysInMonth(year: number, month: number): number {
+  return new Date(year, month, 0).getDate()
+}
+
+/** Adds `delta` months to a `YYYY-MM-DD`, keeping the day when the month has it. */
+export function addMonths(date: string, delta: number): string {
+  const [yearStr, monthStr, dayStr] = date.split('-')
   const year = Number(yearStr)
   const month = Number(monthStr)
+  const day = Number(dayStr)
   const absolute = year * 12 + (month - 1) + delta
   const nextYear = Math.floor(absolute / 12)
   const nextMonth = (absolute % 12) + 1
-  return `${nextYear}-${String(nextMonth).padStart(2, '0')}`
+  const nextDay = Math.min(day, daysInMonth(nextYear, nextMonth))
+  return `${nextYear}-${pad2(nextMonth)}-${pad2(nextDay)}`
+}
+
+/** Formats `YYYY-MM-DD` as `DD/MM/YYYY`. */
+export function formatInstallmentDate(date: string): string {
+  const [year, month, day] = date.split('-')
+  if (!year || !month || !day) return date
+  return `${day}/${month}/${year}`
+}
+
+/** Parses `DD/MM/YYYY` to `YYYY-MM-DD`, or `null`. */
+export function parseInstallmentDate(raw: string): string | null {
+  const match = raw.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if (!match) return null
+  const day = Number(match[1])
+  const month = Number(match[2])
+  const year = Number(match[3])
+  if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) return null
+  return `${year}-${pad2(month)}-${pad2(Math.min(day, daysInMonth(year, month)))}`
 }
 
 /** Formats `YYYY-MM` as `MM/YYYY`. */
-export function formatYearMonthDisplay(yearMonth: string): string {
-  const [year, month] = yearMonth.split('-')
-  if (!year || !month) return yearMonth
-  return `${month}/${year}`
+export function formatMonthDisplay(month: string): string {
+  const match = /^(\d{4})-(\d{2})$/.exec(month)
+  return match ? `${match[2]}/${match[1]}` : ''
 }
 
-/** Parses `MM/YYYY` (tolerant) to `YYYY-MM`, or `null`. */
-export function parseYearMonthInput(raw: string): string | null {
-  const trimmed = raw.trim()
-  const match = trimmed.match(/^(\d{1,2})\s*[/\-.\s]\s*(\d{4})$/)
+/** Parses `MM/YYYY` to `YYYY-MM`, or `null`. */
+export function parseMonthInput(raw: string): string | null {
+  const match = raw.trim().match(/^(\d{1,2})\/(\d{4})$/)
   if (!match) return null
   const month = Number(match[1])
   const year = Number(match[2])
-  if (!Number.isFinite(month) || !Number.isFinite(year)) return null
   if (month < 1 || month > 12 || year < 1900 || year > 2100) return null
-  return `${year}-${String(month).padStart(2, '0')}`
+  return `${year}-${pad2(month)}`
 }
 
-function yearMonthFromDate(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+function firstOfMonth(date: Date): string {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-01`
 }
 
 function nextMonthAfterIsoDate(iso: string): string | null {
   if (!iso) return null
   const date = new Date(`${iso}T12:00:00`)
   if (Number.isNaN(date.getTime())) return null
-  return addMonthsYearMonth(yearMonthFromDate(date), 1)
+  return addMonths(firstOfMonth(date), 1)
 }
 
 /**
- * First installment month (YYYY-MM):
+ * First installment date (`YYYY-MM-DD`, day 01):
  * - moratorium with end date → month after moratorium end ;
  * - otherwise → month after today.
  */
-export function firstInstallmentYearMonth(
-  form: Pick<ApurementPlanFormData, 'banqueDeFranceStatus' | 'moratoriumEndDate'>,
+export function firstInstallmentDate(
+  form: Pick<RepaymentPlanForm, 'banqueDeFranceStatus' | 'moratoriumEndDate'>,
   today = new Date()
 ): string {
   if (form.banqueDeFranceStatus === 'moratorium' && form.moratoriumEndDate) {
     const after = nextMonthAfterIsoDate(form.moratoriumEndDate)
     if (after) return after
   }
-  return addMonthsYearMonth(yearMonthFromDate(today), 1)
+  return addMonths(firstOfMonth(today), 1)
 }
 
 export function clampInstallmentCount(count: number): number {
-  return Math.min(MAX_PLAN_DURATION_MONTHS, Math.max(1, Math.floor(count) || 1))
+  return Math.min(MAX_SCHEDULE_MONTHS, Math.max(1, Math.floor(count) || 1))
 }
 
 function splitCents(totalCents: number, count: number): number[] {
@@ -87,7 +108,7 @@ function splitCents(totalCents: number, count: number): number[] {
 export function buildInstallments(params: {
   debt: number
   count: number
-  firstYearMonth: string
+  firstDate: string
   existing?: Installment[]
 }): Installment[] {
   const count = clampInstallmentCount(params.count)
@@ -97,7 +118,7 @@ export function buildInstallments(params: {
 
   return parts.map((cents, index) => ({
     id: existing[index]?.id ?? newInstallmentId(),
-    yearMonth: addMonthsYearMonth(params.firstYearMonth, index),
+    date: addMonths(params.firstDate, index),
     amount: cents / 100
   }))
 }
@@ -132,21 +153,21 @@ export function updateInstallmentAmount(
   })
 }
 
-/** Updates one month then cascades consecutive months after it. */
-export function updateInstallmentYearMonth(
+/** Updates one date then cascades that day onto the following months. */
+export function updateInstallmentDate(
   installments: Installment[],
   index: number,
-  yearMonth: string
+  date: string
 ): Installment[] {
   if (installments.length === 0) return installments
-  if (!/^\d{4}-\d{2}$/.test(yearMonth)) return installments
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return installments
   const clampedIndex = Math.max(0, Math.min(index, installments.length - 1))
 
   return installments.map((item, i) => {
     if (i < clampedIndex) return item
     return {
       ...item,
-      yearMonth: addMonthsYearMonth(yearMonth, i - clampedIndex)
+      date: addMonths(date, i - clampedIndex)
     }
   })
 }
@@ -163,21 +184,21 @@ export function sumInstallments(installments: Installment[]): number {
 /** Rebuilds installments keeping count and stable ids. */
 export function rebuildInstallments(
   form: Pick<
-    ApurementPlanFormData,
+    RepaymentPlanForm,
     'rentalDebt' | 'banqueDeFranceStatus' | 'moratoriumEndDate' | 'installments'
   >,
   today = new Date(),
   options?: { resetFirstMonth?: boolean }
 ): Installment[] {
-  const firstYearMonth =
-    !options?.resetFirstMonth && form.installments[0]?.yearMonth
-      ? form.installments[0].yearMonth
-      : firstInstallmentYearMonth(form, today)
+  const firstDate =
+    !options?.resetFirstMonth && form.installments[0]?.date
+      ? form.installments[0].date
+      : firstInstallmentDate(form, today)
 
   return buildInstallments({
     debt: form.rentalDebt,
-    count: form.installments.length || DEFAULT_PLAN_DURATION_MONTHS,
-    firstYearMonth,
+    count: Math.max(form.installments.length, 1),
+    firstDate,
     existing: form.installments
   })
 }

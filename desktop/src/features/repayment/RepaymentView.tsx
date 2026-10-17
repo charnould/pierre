@@ -43,16 +43,18 @@ interface Props {
 
 function RepaymentBoardStatus({
   icon: Icon,
+  iconClassName,
   title
 }: {
   icon: ComponentType<{ className?: string }>
+  iconClassName?: string
   title: string
 }) {
   return (
     <Empty className="min-h-40 flex-1">
       <EmptyHeader>
         <EmptyMedia variant="icon">
-          <Icon />
+          <Icon className={iconClassName} />
         </EmptyMedia>
         <EmptyTitle size="sm">{title}</EmptyTitle>
       </EmptyHeader>
@@ -266,11 +268,19 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
     >
       <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
         {datastoreTablesLoading && datastoreTables === null ? (
-          <RepaymentBoardStatus icon={LoaderCircle} title="Chargement des soldes…" />
+          <RepaymentBoardStatus
+            icon={LoaderCircle}
+            iconClassName="size-40"
+            title="Chargement des soldes…"
+          />
         ) : comptesLocatairesMissing ? (
           <RepaymentMissingTableEmpty onCreatePlan={handleCreateExportOnlyPlan} />
         ) : loading && allRows.length === 0 ? (
-          <RepaymentBoardStatus icon={LoaderCircle} title="Chargement des soldes…" />
+          <RepaymentBoardStatus
+            icon={LoaderCircle}
+            iconClassName="size-40"
+            title="Chargement des soldes…"
+          />
         ) : error && allRows.length === 0 ? (
           <RepaymentBoardStatus icon={CartoonErrorObject} title={error} />
         ) : (
