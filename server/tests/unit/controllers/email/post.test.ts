@@ -150,12 +150,18 @@ beforeEach(async () => {
       templates: ['note.md'],
       email_from: 'loyer@dribble.football',
       create_plan: {
-        signed_bucket_id: 'amiable',
+        signedBucketId: 'amiable',
+        schedule: {
+          defaultMonths: 6,
+          maxEffortRate: 35,
+          minDailyRemainder: 15,
+          thresholds: [{ months: 12, message: 'Confirmer.' }]
+        },
         close: {
-          execution_complete: { bucket_id: 'non_traites' },
-          non_respect: { bucket_id: 'amiable' },
-          remplacement_par_nouveau_plan: { bucket_id: 'amiable' },
-          effacement_de_dette: { bucket_id: 'non_traites' }
+          execution_complete: { bucketId: 'non_traites' },
+          non_respect: { bucketId: 'amiable' },
+          remplacement_par_nouveau_plan: { bucketId: 'amiable' },
+          effacement_de_dette: { bucketId: 'non_traites' }
         }
       }
     })
@@ -186,12 +192,18 @@ describe('email transactionnel', () => {
           template_groups: ['RCS'],
           templates: ['note.md'],
           create_plan: {
-            signed_bucket_id: 'amiable',
+            signedBucketId: 'amiable',
+            schedule: {
+              defaultMonths: 6,
+              maxEffortRate: 35,
+              minDailyRemainder: 15,
+              thresholds: [{ months: 12, message: 'Confirmer.' }]
+            },
             close: {
-              execution_complete: { bucket_id: 'non_traites' },
-              non_respect: { bucket_id: 'amiable' },
-              remplacement_par_nouveau_plan: { bucket_id: 'amiable' },
-              effacement_de_dette: { bucket_id: 'non_traites' }
+              execution_complete: { bucketId: 'non_traites' },
+              non_respect: { bucketId: 'amiable' },
+              remplacement_par_nouveau_plan: { bucketId: 'amiable' },
+              effacement_de_dette: { bucketId: 'non_traites' }
             }
           }
         })

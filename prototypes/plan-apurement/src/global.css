@@ -1,0 +1,93 @@
+@import 'tailwindcss';
+
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2')
+    format('woff2');
+}
+
+@font-face {
+  font-family: 'Source Serif 4 Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 900;
+  src: url('../node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2')
+    format('woff2');
+}
+
+@theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Source Serif 4 Variable', ui-serif, Georgia, serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-field: var(--field);
+  --color-field-hover: var(--field-hover);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-destructive: var(--destructive);
+  --color-alert: var(--alert);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+}
+
+/*
+  Même matière que le thème clair de cursor.com : une encre, des fonds très proches, des filets
+  qui sont cette encre en faible mélange oklab — pas un second gris plus foncé.
+  Sol oklch(0.975 0.004 106). Le champ garde la même teinte et la même chroma, clarté 0.992.
+  Filet du cadre et bord des champs : encre 10 %. Piste : encre 6 % dans le sol.
+  Encre oklch(0.263 0.013 100). Meta 7:1 sur le sol.
+  oklch(0.48 0.14 28) danger. oklch(0.75 0.18 25) anomalie, encre à 6,3:1.
+*/
+:root {
+  --ref-ground: oklch(0.975 0.004 106);
+  --ref-field: oklch(from var(--ref-ground) 0.992 c h);
+  --ref-ink: oklch(0.263 0.013 100);
+  --ref-meta: oklch(0.45 0.012 100);
+  --ref-danger: oklch(0.48 0.14 28);
+
+  --background: var(--ref-ground);
+  --foreground: var(--ref-ink);
+  --muted: color-mix(in oklab, var(--ref-ink) 6%, var(--ref-ground));
+  --muted-foreground: var(--ref-meta);
+  --border: color-mix(in oklab, var(--ref-ink) 10%, transparent);
+  --input: var(--border);
+  --field: var(--ref-field);
+  --field-hover: oklch(from var(--ref-ground) 0.984 c h);
+  --ring: var(--ref-ink);
+  --primary: var(--ref-ink);
+  --primary-foreground: var(--ref-field);
+  --destructive: var(--ref-danger);
+  --ref-alert: oklch(0.75 0.18 25);
+  --alert: var(--ref-alert);
+  --popover: var(--ref-field);
+  --popover-foreground: var(--ref-ink);
+  --accent: var(--muted);
+  --accent-foreground: var(--ref-ink);
+  color-scheme: light;
+}
+
+@layer base {
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+  }
+}

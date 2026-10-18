@@ -4,6 +4,7 @@ import { format } from 'oxfmt'
 
 import { TRACE_MODES } from '../../shared/chat'
 import { validateExternalApplication } from '../../shared/external-application'
+import { MAX_SCHEDULE_MONTHS } from '../../shared/repayment-plan'
 import { datastorePaths } from './paths'
 
 const CHATBOT_ID = /^[a-z0-9][a-z0-9_-]{0,63}$/
@@ -217,10 +218,10 @@ function parseRepayment(root: any): any {
     throw new SetupError('repayment.create_plan requis.')
   }
   const signed = requireString(
-    (plan as { signed_bucket_id?: unknown }).signed_bucket_id,
-    'signed_bucket_id'
+    (plan as { signedBucketId?: unknown }).signedBucketId,
+    'signedBucketId'
   )
-  if (!ids.has(signed)) throw new SetupError('signed_bucket_id inconnu.')
+  if (!ids.has(signed)) throw new SetupError('signedBucketId inconnu.')
   const close = (plan as { close?: unknown }).close
   if (close == null || typeof close !== 'object' || Array.isArray(close)) {
     throw new SetupError('repayment.create_plan.close requis.')
@@ -231,14 +232,75 @@ function parseRepayment(root: any): any {
     if (entry == null || typeof entry !== 'object' || Array.isArray(entry)) {
       throw new SetupError(`close.${motif} requis.`)
     }
-    const bucketId = requireString((entry as { bucket_id?: unknown }).bucket_id, `close.${motif}`)
+    const bucketId = requireString(
+      (entry as { bucketId?: unknown }).bucketId,
+      `close.${motif}.bucketId`
+    )
     if (!ids.has(bucketId)) throw new SetupError(`close.${motif} inconnu.`)
   }
   for (const key of Object.keys(closeRows)) {
     if (!(PLAN_CLOSE as readonly string[]).includes(key))
       throw new SetupError(`motif « ${key} » inconnu.`)
   }
+  parseSchedule(plan as { schedule?: unknown })
   return root
+}
+
+function parseSchedule(plan: { schedule?: unknown }): void {
+  const schedule = plan.schedule
+  if (schedule == null || typeof schedule !== 'object' || Array.isArray(schedule)) {
+    throw new SetupError('create_plan.schedule requis.')
+  }
+  const row = schedule as { defaultMonths?: unknown; thresholds?: unknown }
+  const defaultMonths = row.defaultMonths
+  if (
+    typeof defaultMonths !== 'number' ||
+    !Number.isInteger(defaultMonths) ||
+    defaultMonths < 1 ||
+    defaultMonths > MAX_SCHEDULE_MONTHS
+  ) {
+    throw new SetupError(
+      `schedule.defaultMonths doit être un entier de 1 à ${MAX_SCHEDULE_MONTHS}.`
+    )
+  }
+  if (!Array.isArray(row.thresholds)) throw new SetupError('schedule.thresholds requis.')
+  const seen = new Set<number>()
+  for (const [index, item] of row.thresholds.entries()) {
+    if (item == null || typeof item !== 'object' || Array.isArray(item)) {
+      throw new SetupError(`schedule.thresholds[${index}] requis.`)
+    }
+    const months = (item as { months?: unknown }).months
+    if (
+      typeof months !== 'number' ||
+      !Number.isInteger(months) ||
+      months < defaultMonths ||
+      months >= MAX_SCHEDULE_MONTHS
+    ) {
+      throw new SetupError(
+        `schedule.thresholds[${index}].months doit être un entier de ${defaultMonths} à ${MAX_SCHEDULE_MONTHS - 1}.`
+      )
+    }
+    requireString((item as { message?: unknown }).message, `schedule.thresholds[${index}].message`)
+    if (seen.has(months)) throw new SetupError(`schedule.thresholds[${index}].months en double.`)
+    seen.add(months)
+  }
+  const maxEffortRate = (row as { maxEffortRate?: unknown }).maxEffortRate
+  if (
+    typeof maxEffortRate !== 'number' ||
+    !Number.isFinite(maxEffortRate) ||
+    maxEffortRate <= 0 ||
+    maxEffortRate > 100
+  ) {
+    throw new SetupError('schedule.maxEffortRate doit être un nombre > 0 et ≤ 100.')
+  }
+  const minDailyRemainder = (row as { minDailyRemainder?: unknown }).minDailyRemainder
+  if (
+    typeof minDailyRemainder !== 'number' ||
+    !Number.isFinite(minDailyRemainder) ||
+    minDailyRemainder < 0
+  ) {
+    throw new SetupError('schedule.minDailyRemainder doit être un nombre ≥ 0.')
+  }
 }
 
 function parseGlobal(root: any): { name: string; timezone: string } {

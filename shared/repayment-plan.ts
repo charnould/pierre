@@ -17,67 +17,99 @@ export const REPAYMENT_PLAN_CLOSE_REASONS = [
 
 export type RepaymentPlanCloseReason = (typeof REPAYMENT_PLAN_CLOSE_REASONS)[number]
 
+export const PROCEDURE_STAGES = [
+  'amiable',
+  'cdp',
+  'assignation',
+  'audience',
+  'delibere',
+  'jugement',
+  'signification',
+  'cql'
+] as const
+
+export type ProcedureStage = (typeof PROCEDURE_STAGES)[number]
+
+/** Plus longue durée d’échéancier saisissable. Les seuils de confirmation s’arrêtent avant. */
+export const MAX_SCHEDULE_MONTHS = 36
+
 const REPAYMENT_PLAN_EMPLOYMENT_STATUSES = [
   'permanent',
   'permanent_trial',
   'fixed_term',
   'fixed_term_trial',
   'temporary',
+  'self_employed',
+  'business_owner',
+  'civil_servant',
   'unemployed',
   'student',
-  'retired'
+  'retired',
+  'inactive',
+  'other'
 ] as const
 
 type RepaymentPlanEmploymentStatus = (typeof REPAYMENT_PLAN_EMPLOYMENT_STATUSES)[number]
 
 export type RepaymentPlanSnapshot = {
   kind: 'repayment_plan' | 'social_cohesion_protocol'
-  tenant_reference: string
-  client_reference: string
-  occupancy: 'lease' | 'accession'
+  tenantReference: string
+  clientReference: string
   address: {
     line: string
-    postal_code: string
+    postalCode: string
     city: string
-    id_lot: string
+    idLot: string
   }
   debt: {
     amount: number
-    first_missed_payment_date?: string
-    payment_order_date?: string
+    firstMissedPaymentDate?: string
+    procedureStage: ProcedureStage | ''
+    procedureStageDate: string
   }
   procedures: {
-    banque_de_france: {
+    banqueDeFrance: {
       status: 'none' | 'admissible_pending' | 'repayment_plan_active' | 'prp' | 'moratorium'
-      moratorium_end_date?: string
+      moratoriumEndDate?: string
     }
-    ccapex_opened: boolean
+    ccapexDate: string
+    ctesiDate: string
   }
-  social_worker: { name: string; organization: string; contact: string } | null
+  tenantVisitedAtHome: boolean
+  socialWorker: {
+    name: string
+    organization: string
+    contact: string
+    lastContactDate: string
+  } | null
+  amendmentSigned: boolean
+  noticeDate: string
   household: {
     adults: Array<{
       id: string
-      last_name: string
-      first_name: string
-      birth_date: string
-      employment_status: RepaymentPlanEmploymentStatus
-      caf_number: string
-      lease_holder: boolean
+      lastName: string
+      firstName: string
+      birthDate: string
+      employmentStatus: RepaymentPlanEmploymentStatus
+      employer: string
+      cafNumber: string
+      leaseHolder: boolean
+      occupant: boolean
     }>
     children: Array<{
       id: string
-      last_name: string
-      first_name: string
-      birth_date: string
+      lastName: string
+      firstName: string
+      birthDate: string
       dependent: boolean
     }>
   }
   budget: {
-    income: Array<{ label: string; amount: number; person_id?: string | null }>
-    expenses: Array<{ label: string; amount: number }>
+    income: Array<{ label: string; amount: number; personId?: string | null; month?: string }>
+    expenses: Array<{ label: string; amount: number; endMonth?: string; month?: string }>
   }
-  requested_aids: string[]
-  installments: Array<{ year_month: string; amount: number }>
+  requestedAids: string[]
+  installments: Array<{ date: string; amount: number }>
 }
 
 export type RepaymentPlanEventContent = {
@@ -92,7 +124,7 @@ export type RepaymentPlanClosedContent = RepaymentPlanEventContent & {
 }
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
-const YEAR_MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/
+const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/
 
 const as_record = (value: unknown): Record<string, unknown> | null =>
   value && typeof value === 'object' && !Array.isArray(value)
@@ -114,25 +146,48 @@ const as_optional_date = (value: unknown): string | undefined | null => {
   return typeof value === 'string' && DATE_PATTERN.test(value) ? value : null
 }
 
+const as_optional_month = (value: unknown): string | undefined | null => {
+  if (value === undefined) return undefined
+  return typeof value === 'string' && MONTH_PATTERN.test(value) ? value : null
+}
+
 const parse_amount_lines = (
   value: unknown,
   withPerson: boolean
-): Array<{ label: string; amount: number; person_id?: string | null }> | null => {
+): Array<{
+  label: string
+  amount: number
+  personId?: string | null
+  endMonth?: string
+  month?: string
+}> | null => {
   if (!Array.isArray(value)) return null
-  const lines: Array<{ label: string; amount: number; person_id?: string | null }> = []
+  const lines: Array<{
+    label: string
+    amount: number
+    personId?: string | null
+    endMonth?: string
+    month?: string
+  }> = []
   for (const item of value) {
     const record = as_record(item)
     const label = as_string(record?.['label'])
     const amount = as_finite_number(record?.['amount'])
-    if (!record || label === null || amount === null) return null
-    const personId = record['person_id']
+    const endMonth = as_optional_month(record?.['endMonth'])
+    const month = as_optional_month(record?.['month'])
+    if (!record || label === null || amount === null || endMonth === null || month === null) {
+      return null
+    }
+    const personId = record['personId']
     if (withPerson && personId !== undefined && personId !== null && typeof personId !== 'string') {
       return null
     }
     lines.push({
       label,
       amount,
-      ...(withPerson && personId !== undefined ? { person_id: personId as string | null } : {})
+      ...(withPerson && personId !== undefined ? { personId: personId as string | null } : {}),
+      ...(!withPerson && endMonth ? { endMonth } : {}),
+      ...(month ? { month } : {})
     })
   }
   return lines
@@ -142,18 +197,18 @@ const parse_repayment_plan_snapshot = (value: unknown): RepaymentPlanSnapshot | 
   const plan = as_record(value)
   if (!plan) return null
   if (plan['kind'] !== 'repayment_plan' && plan['kind'] !== 'social_cohesion_protocol') return null
-  if (plan['occupancy'] !== 'lease' && plan['occupancy'] !== 'accession') return null
-  const tenantReference = as_string(plan['tenant_reference'])
-  const clientReference = as_string(plan['client_reference'])
+  const tenantReference = as_string(plan['tenantReference'])
+  const clientReference = as_string(plan['clientReference'])
   const address = as_record(plan['address'])
   const addressLine = as_string(address?.['line'])
-  const postalCode = as_string(address?.['postal_code'])
+  const postalCode = as_string(address?.['postalCode'])
   const city = as_string(address?.['city'])
-  const idLot = as_string(address?.['id_lot'])
+  const idLot = as_string(address?.['idLot'])
   const debt = as_record(plan['debt'])
   const debtAmount = as_finite_number(debt?.['amount'])
-  const firstMissedPaymentDate = as_optional_date(debt?.['first_missed_payment_date'])
-  const paymentOrderDate = as_optional_date(debt?.['payment_order_date'])
+  const firstMissedPaymentDate = as_optional_date(debt?.['firstMissedPaymentDate'])
+  const procedureStage = as_string(debt?.['procedureStage'])
+  const procedureStageDate = as_string(debt?.['procedureStageDate'])
   if (
     tenantReference === null ||
     clientReference === null ||
@@ -165,15 +220,20 @@ const parse_repayment_plan_snapshot = (value: unknown): RepaymentPlanSnapshot | 
     !debt ||
     debtAmount === null ||
     firstMissedPaymentDate === null ||
-    paymentOrderDate === null
+    procedureStage === null ||
+    (procedureStage !== '' && !(PROCEDURE_STAGES as readonly string[]).includes(procedureStage)) ||
+    procedureStageDate === null ||
+    (procedureStageDate !== '' && !DATE_PATTERN.test(procedureStageDate))
   ) {
     return null
   }
 
   const procedures = as_record(plan['procedures'])
-  const banqueDeFrance = as_record(procedures?.['banque_de_france'])
+  const banqueDeFrance = as_record(procedures?.['banqueDeFrance'])
   const banqueDeFranceStatus = banqueDeFrance?.['status']
-  const moratoriumEndDate = as_optional_date(banqueDeFrance?.['moratorium_end_date'])
+  const moratoriumEndDate = as_optional_date(banqueDeFrance?.['moratoriumEndDate'])
+  const ccapexDate = as_string(procedures?.['ccapexDate'])
+  const ctesiDate = as_string(procedures?.['ctesiDate'])
   if (
     !procedures ||
     !banqueDeFrance ||
@@ -181,39 +241,59 @@ const parse_repayment_plan_snapshot = (value: unknown): RepaymentPlanSnapshot | 
       String(banqueDeFranceStatus)
     ) ||
     moratoriumEndDate === null ||
-    typeof procedures['ccapex_opened'] !== 'boolean'
+    ccapexDate === null ||
+    (ccapexDate !== '' && !DATE_PATTERN.test(ccapexDate)) ||
+    ctesiDate === null ||
+    (ctesiDate !== '' && !DATE_PATTERN.test(ctesiDate))
   ) {
     return null
   }
 
-  const socialWorkerValue = plan['social_worker']
+  const socialWorkerValue = plan['socialWorker']
   const socialWorker = socialWorkerValue === null ? null : as_record(socialWorkerValue)
   const socialWorkerName = socialWorker ? as_string(socialWorker['name']) : null
   const socialWorkerOrganization = socialWorker ? as_string(socialWorker['organization']) : null
   const socialWorkerContact = socialWorker ? as_string(socialWorker['contact']) : null
+  const socialWorkerLastContactDate = socialWorker
+    ? as_string(socialWorker['lastContactDate'])
+    : null
   if (
     socialWorkerValue !== null &&
     (!socialWorker ||
       socialWorkerName === null ||
       socialWorkerOrganization === null ||
-      socialWorkerContact === null)
+      socialWorkerContact === null ||
+      socialWorkerLastContactDate === null ||
+      (socialWorkerLastContactDate !== '' && !DATE_PATTERN.test(socialWorkerLastContactDate)))
   ) {
     return null
   }
 
   const household = as_record(plan['household'])
-  if (!household || !Array.isArray(household['adults']) || !Array.isArray(household['children'])) {
+  const amendmentSigned = plan['amendmentSigned']
+  const tenantVisitedAtHome = plan['tenantVisitedAtHome']
+  const noticeDate = as_string(plan['noticeDate'])
+  if (
+    !household ||
+    !Array.isArray(household['adults']) ||
+    !Array.isArray(household['children']) ||
+    typeof amendmentSigned !== 'boolean' ||
+    typeof tenantVisitedAtHome !== 'boolean' ||
+    noticeDate === null ||
+    (noticeDate !== '' && !DATE_PATTERN.test(noticeDate))
+  ) {
     return null
   }
   const adults: RepaymentPlanSnapshot['household']['adults'] = []
   for (const item of household['adults']) {
     const adult = as_record(item)
     const id = as_non_empty_string(adult?.['id'])
-    const lastName = as_string(adult?.['last_name'])
-    const firstName = as_string(adult?.['first_name'])
-    const birthDate = as_string(adult?.['birth_date'])
-    const employmentStatus = adult?.['employment_status']
-    const cafNumber = as_string(adult?.['caf_number'])
+    const lastName = as_string(adult?.['lastName'])
+    const firstName = as_string(adult?.['firstName'])
+    const birthDate = as_string(adult?.['birthDate'])
+    const employmentStatus = adult?.['employmentStatus']
+    const employer = as_string(adult?.['employer'])
+    const cafNumber = as_string(adult?.['cafNumber'])
     if (
       !adult ||
       !id ||
@@ -222,28 +302,32 @@ const parse_repayment_plan_snapshot = (value: unknown): RepaymentPlanSnapshot | 
       birthDate === null ||
       (birthDate !== '' && !DATE_PATTERN.test(birthDate)) ||
       !(REPAYMENT_PLAN_EMPLOYMENT_STATUSES as readonly unknown[]).includes(employmentStatus) ||
+      employer === null ||
       cafNumber === null ||
-      typeof adult['lease_holder'] !== 'boolean'
+      typeof adult['leaseHolder'] !== 'boolean' ||
+      typeof adult['occupant'] !== 'boolean'
     ) {
       return null
     }
     adults.push({
       id,
-      last_name: lastName,
-      first_name: firstName,
-      birth_date: birthDate,
-      employment_status: employmentStatus as RepaymentPlanEmploymentStatus,
-      caf_number: cafNumber,
-      lease_holder: adult['lease_holder']
+      lastName: lastName,
+      firstName: firstName,
+      birthDate: birthDate,
+      employmentStatus: employmentStatus as RepaymentPlanEmploymentStatus,
+      employer,
+      cafNumber: cafNumber,
+      leaseHolder: adult['leaseHolder'],
+      occupant: adult['occupant']
     })
   }
   const children: RepaymentPlanSnapshot['household']['children'] = []
   for (const item of household['children']) {
     const child = as_record(item)
     const id = as_non_empty_string(child?.['id'])
-    const lastName = as_string(child?.['last_name'])
-    const firstName = as_string(child?.['first_name'])
-    const birthDate = as_string(child?.['birth_date'])
+    const lastName = as_string(child?.['lastName'])
+    const firstName = as_string(child?.['firstName'])
+    const birthDate = as_string(child?.['birthDate'])
     if (
       !child ||
       !id ||
@@ -257,9 +341,9 @@ const parse_repayment_plan_snapshot = (value: unknown): RepaymentPlanSnapshot | 
     }
     children.push({
       id,
-      last_name: lastName,
-      first_name: firstName,
-      birth_date: birthDate,
+      lastName: lastName,
+      firstName: firstName,
+      birthDate: birthDate,
       dependent: child['dependent']
     })
   }
@@ -269,8 +353,8 @@ const parse_repayment_plan_snapshot = (value: unknown): RepaymentPlanSnapshot | 
   const expenses = parse_amount_lines(budget?.['expenses'], false)
   if (!budget || !income || !expenses) return null
   if (
-    !Array.isArray(plan['requested_aids']) ||
-    !plan['requested_aids'].every((item) => typeof item === 'string')
+    !Array.isArray(plan['requestedAids']) ||
+    !plan['requestedAids'].every((item) => typeof item === 'string')
   ) {
     return null
   }
@@ -278,43 +362,48 @@ const parse_repayment_plan_snapshot = (value: unknown): RepaymentPlanSnapshot | 
   const installments: RepaymentPlanSnapshot['installments'] = []
   for (const item of plan['installments']) {
     const installment = as_record(item)
-    const yearMonth = as_string(installment?.['year_month'])
+    const date = as_string(installment?.['date'])
     const amount = as_finite_number(installment?.['amount'])
-    if (!installment || !yearMonth || !YEAR_MONTH_PATTERN.test(yearMonth) || amount === null) {
+    if (!installment || !date || !DATE_PATTERN.test(date) || amount === null) {
       return null
     }
-    installments.push({ year_month: yearMonth, amount })
+    installments.push({ date, amount })
   }
 
   return {
     kind: plan['kind'],
-    tenant_reference: tenantReference,
-    client_reference: clientReference,
-    occupancy: plan['occupancy'],
-    address: { line: addressLine, postal_code: postalCode, city, id_lot: idLot },
+    tenantReference: tenantReference,
+    clientReference: clientReference,
+    address: { line: addressLine, postalCode: postalCode, city, idLot: idLot },
     debt: {
       amount: debtAmount,
-      ...(firstMissedPaymentDate ? { first_missed_payment_date: firstMissedPaymentDate } : {}),
-      ...(paymentOrderDate ? { payment_order_date: paymentOrderDate } : {})
+      ...(firstMissedPaymentDate ? { firstMissedPaymentDate: firstMissedPaymentDate } : {}),
+      procedureStage: procedureStage as ProcedureStage | '',
+      procedureStageDate: procedureStageDate
     },
     procedures: {
-      banque_de_france: {
+      banqueDeFrance: {
         status:
-          banqueDeFranceStatus as RepaymentPlanSnapshot['procedures']['banque_de_france']['status'],
-        ...(moratoriumEndDate ? { moratorium_end_date: moratoriumEndDate } : {})
+          banqueDeFranceStatus as RepaymentPlanSnapshot['procedures']['banqueDeFrance']['status'],
+        ...(moratoriumEndDate ? { moratoriumEndDate: moratoriumEndDate } : {})
       },
-      ccapex_opened: procedures['ccapex_opened']
+      ccapexDate: ccapexDate,
+      ctesiDate: ctesiDate
     },
-    social_worker: socialWorker
+    socialWorker: socialWorker
       ? {
           name: socialWorkerName!,
           organization: socialWorkerOrganization!,
-          contact: socialWorkerContact!
+          contact: socialWorkerContact!,
+          lastContactDate: socialWorkerLastContactDate!
         }
       : null,
+    amendmentSigned: amendmentSigned,
+    noticeDate: noticeDate,
+    tenantVisitedAtHome: tenantVisitedAtHome,
     household: { adults, children },
     budget: { income, expenses },
-    requested_aids: [...plan['requested_aids']],
+    requestedAids: [...plan['requestedAids']],
     installments
   }
 }

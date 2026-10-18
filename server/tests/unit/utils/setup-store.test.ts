@@ -42,6 +42,48 @@ describe('setup store', () => {
     )
   })
 
+  it('rejects a repayment schedule that cannot be confirmed', async () => {
+    const body = (schedule: unknown) =>
+      JSON.stringify({
+        buckets: [
+          { id: 'non_traites', label: 'Non traités' },
+          { id: 'clients_partis', label: 'Partis' }
+        ],
+        actions: { dossier: ['Analyser'], bulk_operations: ['Relancer'] },
+        tags: ['décès'],
+        template_groups: ['RCS'],
+        templates: ['note.md'],
+        create_plan: {
+          signedBucketId: 'non_traites',
+          schedule,
+          close: {
+            execution_complete: { bucketId: 'non_traites' },
+            non_respect: { bucketId: 'non_traites' },
+            remplacement_par_nouveau_plan: { bucketId: 'non_traites' },
+            effacement_de_dette: { bucketId: 'non_traites' }
+          }
+        }
+      })
+
+    await expect(
+      writeSetup('repayment', new TextEncoder().encode(body(undefined)))
+    ).rejects.toThrow('create_plan.schedule requis.')
+    await expect(
+      writeSetup(
+        'repayment',
+        new TextEncoder().encode(
+          body({ defaultMonths: 6, thresholds: [{ months: 3, message: 'Trop tôt.' }] })
+        )
+      )
+    ).rejects.toThrow('schedule.thresholds[0].months')
+    await writeSetup(
+      'repayment',
+      new TextEncoder().encode(
+        body({ defaultMonths: 6, maxEffortRate: 35, minDailyRemainder: 15, thresholds: [] })
+      )
+    )
+  })
+
   it('rejects a tickets document without the system bucket', async () => {
     const body = JSON.stringify({
       buckets: [{ id: 'autre', label: 'Autre' }],

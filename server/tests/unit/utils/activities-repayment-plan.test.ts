@@ -22,36 +22,41 @@ const plan_content = (amount = 1_200, note?: string): string =>
     title: "Plan d'apurement",
     plan: {
       kind: 'repayment_plan',
-      tenant_reference: 'LOC-1',
-      client_reference: 'CLI-1',
-      occupancy: 'lease',
-      address: { line: '1 rue Pierre', postal_code: '75001', city: 'Paris', id_lot: 'LOT-1' },
-      debt: { amount },
+      tenantReference: 'LOC-1',
+      clientReference: 'CLI-1',
+      address: { line: '1 rue Pierre', postalCode: '75001', city: 'Paris', idLot: 'LOT-1' },
+      debt: { amount, procedureStage: '', procedureStageDate: '' },
       procedures: {
-        banque_de_france: { status: 'none' },
-        ccapex_opened: false
+        banqueDeFrance: { status: 'none' },
+        ccapexDate: '',
+        ctesiDate: ''
       },
-      social_worker: null,
+      socialWorker: null,
       household: {
         adults: [
           {
             id: 'adult-1',
-            last_name: 'Martin',
-            first_name: 'Alice',
-            birth_date: '',
-            employment_status: 'permanent',
-            caf_number: '',
-            lease_holder: true
+            lastName: 'Martin',
+            firstName: 'Alice',
+            birthDate: '',
+            employmentStatus: 'permanent',
+            employer: '',
+            cafNumber: '',
+            leaseHolder: true,
+            occupant: true
           }
         ],
         children: []
       },
+      amendmentSigned: false,
+      noticeDate: '',
+      tenantVisitedAtHome: false,
       budget: {
-        income: [{ label: 'Salaire', amount: 2_000, person_id: 'adult-1' }],
+        income: [{ label: 'Salaire', amount: 2_000, personId: 'adult-1' }],
         expenses: [{ label: 'Loyer', amount: 600 }]
       },
-      requested_aids: [],
-      installments: [{ year_month: '2026-10', amount }]
+      requestedAids: [],
+      installments: [{ date: '2026-10-01', amount }]
     },
     ...(note ? { note } : {})
   })
