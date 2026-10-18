@@ -71,6 +71,8 @@ Ne pas hésiter à mettre [charnould@pierre-ia.org](mailto:charnould@pierre-ia.o
 
 #### 2. Paramétrer PIERRE et `CM.com`
 
+Dans le bureau, `Administration` → `Prestataires`. L’écran donne les adresses à recopier chez CM.com, et le secret RCS une seule fois.
+
 #### 3. Brancher les webhooks
 
 Sur votre interface d'administration sur `CM.com`, dans _Channels → API Access and Settings → Delivery Status Report_ :
@@ -78,17 +80,17 @@ Sur votre interface d'administration sur `CM.com`, dans _Channels → API Access
 1. Activer _Enable Delivery Status Reports_.
 2. Saisir :
 
-| Champ         | Valeur                                                            |
-| ------------- | ----------------------------------------------------------------- |
-| HTTP endpoint | `{HOST}/webhook/rcs` — ex. `https://gx.pierre-ia.org/webhook/rcs` |
-| HTTP method   | `POST`                                                            |
-| Encoding      | `json`                                                            |
-| HTTP Header   | clé `Webhook-Secret`, valeur = `CM_RCS_WEBHOOK_SECRET`.           |
+| Champ         | Valeur                                                                |
+| ------------- | --------------------------------------------------------------------- |
+| HTTP endpoint | `{HOST}/webhook/rcs` — ex. `https://gx.pierre-ia.org/webhook/rcs`     |
+| HTTP method   | `POST`                                                                |
+| Encoding      | `json`                                                                |
+| HTTP Header   | clé `Webhook-Secret`, valeur = le secret affiché une fois par PIERRE. |
 
-Dans _Channels_, profil RCS, section _Incoming messages_, enregistrer `{HOST}/webhook/rcs?webhook_secret={CM_RCS_WEBHOOK_SECRET}`. Cette console n’accepte pas de header : le secret est le paramètre `webhook_secret`.
+Dans _Channels_, profil RCS, section _Incoming messages_, enregistrer l’adresse `Webhook RCS` affichée par PIERRE, suivie de `?webhook_secret=` et du secret. Cette console n’accepte pas de header : le secret est le paramètre `webhook_secret`.
 
 > [!IMPORTANT]
-> Sans le header `Webhook-Secret` ou le paramètre `webhook_secret`, PIERRE répond `401`. Le secret ne doit figurer nulle part hors des fichiers `.env` et de la console `CM.com`.
+> Sans le header `Webhook-Secret` ou le paramètre `webhook_secret`, PIERRE répond `401`. Le secret est affiché une seule fois dans le bureau, puis il reste sur le serveur.
 
 ### Paramétrages des emails
 
@@ -98,14 +100,10 @@ Dans l’app Email Gateway de CM.com :
 2. Activer la réception et publier le MX vers `mx.email.cm.com`. Ce MX reçoit tout le courrier du domaine.
 3. Activer le suivi d’ouverture. Le suivi des clics reste désactivé.
 4. Dans Settings → Integration, copier le Product Token, l’identifiant de compte, et créer le Webhook Secret.
-5. Enregistrer `https://{HOST}/webhook/email` comme webhook d’événements et, si le champ est distinct, comme webhook de réception.
-6. Paramétrer PIERRE :
+5. Enregistrer l’adresse `Webhook email` affichée par PIERRE comme webhook d’événements et, si le champ est distinct, comme webhook de réception.
+6. Dans le bureau, `Administration` → `Prestataires`, enregistrer le domaine, le jeton, l’identifiant de compte et le secret du webhook.
 
-```bash
-pierre configure --cm-email-domain dribble.football --cm-email-token UUID --cm-email-account UUID --cm-email-webhook-secret CLE
-```
-
-Les variables enregistrées sont `CM_EMAIL_DOMAIN`, `CM_EMAIL_PRODUCT_TOKEN`, `CM_EMAIL_ACCOUNT_ID` et `CM_EMAIL_WEBHOOK_SECRET`. Dans le JSON du module (`tickets` ou `repayment`), `email_from` doit être une adresse de ce domaine, par exemple `loyer@dribble.football`. Les réponses suivent cette adresse. Les bounces restent gérés par CM.com et arrivent par le webhook.
+Dans le JSON du module (`tickets` ou `repayment`), `email_from` doit être une adresse de ce domaine, par exemple `loyer@dribble.football`. Les réponses suivent cette adresse. Les bounces restent gérés par CM.com et arrivent par le webhook.
 
 ## Courrier postal et électronique
 

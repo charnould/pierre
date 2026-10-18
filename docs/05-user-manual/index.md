@@ -68,5 +68,6 @@ Cocher l’une de ces cases dans un profil d’accès prépare le droit pour plu
 
 - [Administration · Encyclopédie](./20-admin-encyclopedie.md) — L’Encyclopédie est le catalogue des documents et données que vous confiez à PIERRE. C’est à partir de ce catalogue que l’agent répond « comme un collègue de l’organisme » : procédures internes, coordonnées, consignes, exports métier.
 - [Administration · Utilisateurs](./21-admin-utilisateurs.md) — L’écran Utilisateurs sert à ouvrir PIERRE aux collaborateurs de l’organisme : qui peut se connecter, quels modules il voit, quels assistants il peut interroger, et qui a le droit d’administrer.
+- [Administration · Prestataires](./22-admin-prestataires.md) — L’écran Prestataires relie PIERRE au contrat d’intelligence et aux canaux RCS et email. Il ne montre jamais une clé déjà enregistrée.
 
 <!-- docs-pagesstop -->

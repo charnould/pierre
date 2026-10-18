@@ -2,7 +2,7 @@
 
 L'API permet de programmer le dépôt de documents ou de fichiers Core Data sans écrire directement sur le disque du serveur.
 
-Préparer l'adresse de l'instance et le secret `AUTH_BEARER`. Root peut le récupérer avec `pierre env`, qui affiche tous les secrets. Le placer dans le gestionnaire de secrets de l'automatisation, jamais dans un script versionné :
+Préparer l'adresse de l'instance et le secret `AUTH_BEARER`. Root peut le récupérer avec `pierre env`. Le placer dans le gestionnaire de secrets de l'automatisation, jamais dans un script versionné :
 
 ```bash
 PIERRE_TOKEN=$(pierre env | awk -F= '$1 == "AUTH_BEARER" { print substr($0, index($0, "=") + 1) }')
