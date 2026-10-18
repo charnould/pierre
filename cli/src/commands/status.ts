@@ -9,20 +9,18 @@ import {
   selectServerRelease,
   versionGreater
 } from '../lib/github.ts'
-import { renderStatus, type StatusLine, type StatusUpdate } from '../lib/output.ts'
+import { renderStatus, type StatusLine } from '../lib/output.ts'
 import { runCommand, type Context } from '../lib/system.ts'
 
 const CONFIGURE_HINT = 'Configurer : pierre configure --host DOMAINE'
 
 export async function showStatus(ctx: Context): Promise<number> {
-  const { lines, updates } = await collectStatus(ctx)
-  ctx.runtime.writeOut(renderStatus(ctx, lines, updates))
+  const { lines } = await collectStatus(ctx)
+  ctx.runtime.writeOut(renderStatus(ctx, lines))
   return lines.some((line) => line.level === 'bad') ? 1 : 0
 }
 
-export async function collectStatus(
-  ctx: Context
-): Promise<{ lines: StatusLine[]; updates: StatusUpdate[] }> {
+export async function collectStatus(ctx: Context): Promise<{ lines: StatusLine[] }> {
   if (!isInstalled(ctx.runtime)) {
     return {
       lines: [
@@ -32,8 +30,7 @@ export async function collectStatus(
           value: 'absente',
           hint: 'Installer : pierre install'
         }
-      ],
-      updates: []
+      ]
     }
   }
   const configured = isConfigured(ctx.runtime)
@@ -43,7 +40,7 @@ export async function collectStatus(
   const carlVersion = installedCarl(ctx)
   const carlLatest = selectCarlRelease(releases)?.tag ?? ''
   const cliLatest = selectCliRelease(releases)?.tag ?? ''
-  const lines: StatusLine[] = [versionLine('cli', ctx.version, true)]
+  const lines: StatusLine[] = [versionLine('cli', ctx.version, cliLatest, true)]
   if (!configured) {
     lines.unshift({
       level: 'bad',
@@ -51,8 +48,8 @@ export async function collectStatus(
       value: existsSync(ctx.runtime.paths.pendingEnvFile) ? 'en attente' : 'absente',
       hint: CONFIGURE_HINT
     })
-    lines.push(versionLine('server', serverVersion, null))
-    lines.push(versionLine('carl', carlVersion, null))
+    lines.push(versionLine('server', serverVersion, serverLatest, null))
+    lines.push(versionLine('carl', carlVersion, carlLatest, null))
   } else {
     const host = readEnvValue(ctx.runtime.paths.envFile, 'HOST')
     const local = await serviceUp(ctx)
@@ -64,51 +61,28 @@ export async function collectStatus(
       value: host ? `https://${host}` : 'absent',
       hint: publicUp ? undefined : 'Vérifiez le DNS, les ports 80 et 443, puis relancez pierre.'
     })
-    lines.push(versionLine('server', serverVersion, local))
-    lines.push(versionLine('carl', carlVersion, carlUp))
+    lines.push(versionLine('server', serverVersion, serverLatest, local))
+    lines.push(versionLine('carl', carlVersion, carlLatest, carlUp))
   }
-  return {
-    lines,
-    updates: listUpdates(
-      ctx.version,
-      cliLatest,
-      serverVersion,
-      serverLatest,
-      carlVersion,
-      carlLatest
-    )
-  }
+  return { lines }
 }
 
-function listUpdates(
-  cli: string,
-  cliLatest: string,
-  server: string,
-  serverLatest: string,
-  carl: string,
-  carlLatest: string
-): StatusUpdate[] {
-  const updates: StatusUpdate[] = []
-  if (cliLatest && versionGreater(cliLatest, cli)) {
-    updates.push({ label: 'cli', from: cli, to: cliLatest })
-  }
-  if (serverLatest && server !== 'absent' && versionGreater(serverLatest, server)) {
-    updates.push({ label: 'server', from: server, to: serverLatest })
-  }
-  if (carlLatest && carl !== 'absent' && versionGreater(carlLatest, carl)) {
-    updates.push({ label: 'carl', from: carl, to: carlLatest })
-  }
-  return updates
-}
-
-function versionLine(label: string, installed: string, up: boolean | null): StatusLine {
+function versionLine(
+  label: string,
+  installed: string,
+  latest: string,
+  up: boolean | null
+): StatusLine {
   const value = !installed || installed === 'absent' ? 'absent' : installed
-  if (up === null) return { level: installed === 'absent' ? 'warn' : 'ok', label, value }
-  if (up) return { level: 'ok', label, value }
+  const next =
+    value !== 'absent' && latest && versionGreater(latest, installed) ? latest : undefined
+  if (up === null) return { level: installed === 'absent' ? 'warn' : 'ok', label, value, next }
+  if (up) return { level: 'ok', label, value, next }
   return {
     level: 'bad',
     label,
     value: installed === 'absent' ? 'indisponible' : value,
+    next,
     hint: label === 'carl' ? 'Relancer : pierre update' : 'Voir les journaux : pierre logs'
   }
 }

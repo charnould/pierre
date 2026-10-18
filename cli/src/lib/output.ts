@@ -27,13 +27,8 @@ export type StatusLine = {
   level: StatusLevel
   label: string
   value: string
+  next?: string
   hint?: string
-}
-
-export type StatusUpdate = {
-  label: string
-  from: string
-  to: string
 }
 
 const COLUMN = 12
@@ -72,12 +67,8 @@ export function renderHelp(ctx: Context): string {
   return `${renderBrand(ctx)}\n${renderCommands(ctx)}`
 }
 
-export function renderStatus(
-  ctx: Context,
-  lines: StatusLine[],
-  updates: StatusUpdate[] = []
-): string {
-  const { dim, green, red, reset, yellow } = ctx.runtime.palette
+export function renderStatus(ctx: Context, lines: StatusLine[]): string {
+  const { bold, dim, green, red, reset, yellow } = ctx.runtime.palette
   const mark = {
     ok: `${green}✓${reset}`,
     warn: `${yellow}!${reset}`,
@@ -86,36 +77,15 @@ export function renderStatus(
   const rendered = lines.flatMap((line) => {
     const prefix = 6 + COLUMN
     const room = Math.max(8, ctx.runtime.columns - prefix)
-    const text = truncate(line.value, room)
-    const row = `  ${mark[line.level]}  ${dim}${pad(line.label, COLUMN)}${reset}${text}\n`
+    const next = line.next ? ` → ${line.next}` : ''
+    const text = truncate(line.value, Math.max(1, room - [...next].length))
+    const value = line.next ? `${text}${bold} → ${line.next}${reset}` : text
+    const row = `  ${mark[line.level]}  ${dim}${pad(line.label, COLUMN)}${reset}${value}\n`
     if (!line.hint) return [row]
     return [
       row,
       `     ${dim}${truncate(line.hint, Math.max(8, ctx.runtime.columns - 5))}${reset}\n`
     ]
   })
-  const notice = updates.length === 0 ? '' : `\n${renderUpdates(ctx, updates)}`
-  return [renderLogo(ctx), '\n\n', ...rendered, notice, '\n', renderCommands(ctx), '\n'].join('')
-}
-
-function renderUpdates(ctx: Context, updates: StatusUpdate[]): string {
-  const { bold, dim, reset } = ctx.runtime.palette
-  const rows = updates.map((update) => `${pad(update.label, COLUMN)}${update.from} → ${update.to}`)
-  const command = 'pierre update'
-  const inner = Math.max(command.length, ...rows.map((row) => [...row].length)) + 4
-  const rule = '─'.repeat(inner)
-  const row = (text: string, strong = false) => {
-    const gap = inner - [...text].length - 2
-    const shown = strong ? `${bold}${text}${reset}` : text
-    return `  ${dim}│${reset} ${shown}${' '.repeat(Math.max(0, gap))} ${dim}│${reset}\n`
-  }
-  return [
-    `  ${dim}┌${rule}┐${reset}\n`,
-    row(''),
-    ...rows.map((text) => row(text)),
-    row(''),
-    row(command, true),
-    row(''),
-    `  ${dim}└${rule}┘${reset}\n`
-  ].join('')
+  return [renderLogo(ctx), '\n\n', ...rendered, '\n', renderCommands(ctx), '\n'].join('')
 }
