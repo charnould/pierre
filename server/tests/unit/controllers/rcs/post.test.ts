@@ -10,12 +10,11 @@ import { list_activities } from '../../../../utils/activities/query'
 import { claim_outbound_dispatch, create_outbound } from '../../../../utils/communications/storage'
 import { insert_contact_if_absent } from '../../../../utils/contacts'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
+import { emptyProviders, writeProviders } from '../../../../utils/providers'
 import { TELEMETRY_URL } from '../../../../utils/send-telemetry'
 import { setup } from '../../../../utils/setup'
 
 const paths = testDatastorePaths('rcs_post')
-const originalToken = Bun.env['CM_RCS_PRODUCT_TOKEN']
-const originalFrom = Bun.env['CM_RCS_FROM']
 
 const app = new Hono<{ Variables: { user: User } }>()
 app.use('*', async (c, next) => {
@@ -76,22 +75,22 @@ const provider_calls = (calls: ReadonlyArray<readonly unknown[]>) =>
 
 beforeAll(() => {
   setDatastoreRoot(paths.root)
-  Bun.env['CM_RCS_PRODUCT_TOKEN'] = 'product-token-test'
-  Bun.env['CM_RCS_FROM'] = 'PIERRE-TEST'
 })
 
 beforeEach(async () => {
   await rm(paths.root, { recursive: true, force: true })
   await setup()
+  writeProviders({
+    ...emptyProviders(),
+    rcsToken: 'product-token-test',
+    rcsFrom: 'PIERRE-TEST',
+    rcsSecret: 'rcs-secret'
+  })
 })
 
 afterAll(async () => {
   await rm(paths.root, { recursive: true, force: true })
   setDatastoreRoot(null)
-  if (originalToken === undefined) delete Bun.env['CM_RCS_PRODUCT_TOKEN']
-  else Bun.env['CM_RCS_PRODUCT_TOKEN'] = originalToken
-  if (originalFrom === undefined) delete Bun.env['CM_RCS_FROM']
-  else Bun.env['CM_RCS_FROM'] = originalFrom
 })
 
 describe('POST /rcs provider boundary', () => {

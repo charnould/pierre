@@ -7,6 +7,7 @@ import {
   is_communication_type
 } from '../../../shared/activites'
 import { get_activity, get_activity_with_db, parse_rattachement } from '../activities/rows'
+import { readProviders } from '../providers'
 import { datastore_path } from './storage'
 
 export const communication_from_reference = (reference: string): Activite | null => {
@@ -98,6 +99,6 @@ export const find_recent_thread = (
 
 /** Header CM.com `Webhook-Secret` — obligatoire (secret vide ou mismatch → rejet). */
 export const cm_webhook_authorized = (header: string | undefined): boolean => {
-  const expected = Bun.env['CM_RCS_WEBHOOK_SECRET']?.trim()
+  const expected = readProviders().rcsSecret
   return Boolean(expected && header === expected)
 }

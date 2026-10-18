@@ -12,26 +12,24 @@ import type { User } from '../../../utils/_schema'
 import { list_activities } from '../../../utils/activities/query'
 import { create_outbound } from '../../../utils/communications/storage'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
+import { emptyProviders, writeProviders } from '../../../utils/providers'
 import { setup } from '../../../utils/setup'
 
 const paths = testDatastorePaths('communication_controllers')
 const SECRET = 'secret-test-key'
-const originalSecret = Bun.env['CM_RCS_WEBHOOK_SECRET']
 const originalFakeSecret = Bun.env['FAKE_WEBHOOK_KEY']
 
 beforeAll(async () => {
   setDatastoreRoot(paths.root)
-  Bun.env['CM_RCS_WEBHOOK_SECRET'] = SECRET
   Bun.env['FAKE_WEBHOOK_KEY'] = SECRET
   await rm(paths.root, { recursive: true, force: true })
   await setup()
+  writeProviders({ ...emptyProviders(), rcsToken: 'token', rcsFrom: 'PIERRE', rcsSecret: SECRET })
 })
 
 afterAll(async () => {
   await rm(paths.root, { recursive: true, force: true })
   setDatastoreRoot(null)
-  if (originalSecret === undefined) delete Bun.env['CM_RCS_WEBHOOK_SECRET']
-  else Bun.env['CM_RCS_WEBHOOK_SECRET'] = originalSecret
   if (originalFakeSecret === undefined) delete Bun.env['FAKE_WEBHOOK_KEY']
   else Bun.env['FAKE_WEBHOOK_KEY'] = originalFakeSecret
 })
@@ -88,8 +86,6 @@ describe('webhooks de communication', () => {
   })
 
   it('rejoue un SMS de secours transitoirement indisponible sans le dupliquer', async () => {
-    Bun.env['CM_RCS_PRODUCT_TOKEN'] = 'token'
-    Bun.env['CM_RCS_FROM'] = 'PIERRE'
     let sendAttempts = 0
     const fetchSpy = spyOn(globalThis, 'fetch').mockImplementation((async (
       url: unknown,

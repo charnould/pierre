@@ -13,22 +13,22 @@ import { authorizeAdministrator } from '../../../../utils/authorize-role'
 import { claim_outbound_dispatch, create_outbound } from '../../../../utils/communications/storage'
 import { CM_EMAIL_URL } from '../../../../utils/email/cm'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
+import { emptyProviders, writeProviders } from '../../../../utils/providers'
 import { setup } from '../../../../utils/setup'
 import { writeSetup } from '../../../../utils/setup-store'
 
 const paths = testDatastorePaths('email_post')
 const SECRET = 'email-webhook-secret'
 const encoder = new TextEncoder()
-const originalEnv = {
-  token: Bun.env['CM_EMAIL_PRODUCT_TOKEN'],
-  domain: Bun.env['CM_EMAIL_DOMAIN'],
-  signing: Bun.env['CM_EMAIL_WEBHOOK_SECRET']
-}
 
-const restoreEnv = (key: string, value: string | undefined): void => {
-  if (value === undefined) delete Bun.env[key]
-  else Bun.env[key] = value
-}
+const emailProviders = (domain = 'dribble.football') =>
+  writeProviders({
+    ...emptyProviders(),
+    emailDomain: domain,
+    emailToken: '00000000-0000-0000-0000-000000000001',
+    emailAccount: '00000000-0000-0000-0000-000000000002',
+    emailSecret: SECRET
+  })
 
 let messageSeq = 0
 const sentMessage = () => {
@@ -127,15 +127,13 @@ beforeAll(() => {
 })
 
 beforeEach(async () => {
-  Bun.env['CM_EMAIL_PRODUCT_TOKEN'] = '00000000-0000-0000-0000-000000000001'
-  Bun.env['CM_EMAIL_DOMAIN'] = 'dribble.football'
-  Bun.env['CM_EMAIL_WEBHOOK_SECRET'] = SECRET
   await rm(paths.root, { recursive: true, force: true })
   await setup()
   const text = (value: unknown) => new TextEncoder().encode(JSON.stringify(value))
   await writeSetup('global', text({ name: 'PIERRE', timezone: 'Europe/Paris' }))
   await writeSetup('email/html', new TextEncoder().encode('{{ logo_inline_cid }} {{ message }}'))
   await writeSetup('email/logo.png', new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0, 0, 0, 0]))
+  emailProviders()
   await writeSetup(
     'repayment',
     text({
@@ -171,9 +169,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await rm(paths.root, { recursive: true, force: true })
   setDatastoreRoot(null)
-  restoreEnv('CM_EMAIL_PRODUCT_TOKEN', originalEnv.token)
-  restoreEnv('CM_EMAIL_DOMAIN', originalEnv.domain)
-  restoreEnv('CM_EMAIL_WEBHOOK_SECRET', originalEnv.signing)
 })
 
 describe('email transactionnel', () => {
@@ -630,7 +625,7 @@ describe('email transactionnel', () => {
   })
 
   it('demande un rejeu si le domaine entrant manque', async () => {
-    delete Bun.env['CM_EMAIL_DOMAIN']
+    emailProviders('')
     const response = await postWebhook(
       {
         type: 'Inbound',

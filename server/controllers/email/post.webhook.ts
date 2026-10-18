@@ -10,6 +10,7 @@ import { create_inbound, create_unmatched_inbound } from '../../utils/communicat
 import { normalize_email } from '../../utils/contacts'
 import { update_status } from '../../utils/delivery-status'
 import { cm_signature_valid } from '../../utils/email/cm'
+import { readProviders } from '../../utils/providers'
 
 const MAX_BYTES = 32_000_000
 
@@ -104,7 +105,7 @@ const receive = (
   idempotencyKey: string,
   messageId: string
 ): boolean => {
-  const domain = Bun.env['CM_EMAIL_DOMAIN']?.trim().toLowerCase() ?? ''
+  const domain = readProviders().emailDomain
   if (!domain) return false
   const recipient = as_string(body['originalRecipient']) || as_string(body['to'])
   if (domain_of(recipient) !== domain) return true
@@ -221,7 +222,7 @@ export const controller = async (c: Context) => {
     const messageId =
       as_string(c.req.header('cm-message-id')) || as_string(body['messageId']).replace(/^<|>$/g, '')
     if (!receive(body, occurredAt, `cm:inbound:${id}`, messageId)) {
-      return c.json({ error: { code: 'not_configured', message: 'CM_EMAIL_DOMAIN manquant' } }, 503)
+      return c.json({ error: { code: 'not_configured', message: 'Domaine email manquant' } }, 503)
     }
   } else {
     track(body, occurredAt)

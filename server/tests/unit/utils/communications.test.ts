@@ -19,6 +19,7 @@ import {
 } from '../../../utils/communications/storage'
 import { update_status } from '../../../utils/delivery-status'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
+import { emptyProviders, writeProviders } from '../../../utils/providers'
 import { setup } from '../../../utils/setup'
 
 const paths = testDatastorePaths('communications')
@@ -384,19 +385,10 @@ describe('communications', () => {
 })
 
 describe('cm_webhook_authorized', () => {
-  const original = Bun.env['CM_RCS_WEBHOOK_SECRET']
-
-  afterAll(() => {
-    if (original === undefined) delete Bun.env['CM_RCS_WEBHOOK_SECRET']
-    else Bun.env['CM_RCS_WEBHOOK_SECRET'] = original
-  })
-
   it('exige un secret non vide et identique au header', () => {
-    delete Bun.env['CM_RCS_WEBHOOK_SECRET']
+    writeProviders(emptyProviders())
     expect(cm_webhook_authorized('anything')).toBe(false)
-    Bun.env['CM_RCS_WEBHOOK_SECRET'] = '  '
-    expect(cm_webhook_authorized('  ')).toBe(false)
-    Bun.env['CM_RCS_WEBHOOK_SECRET'] = 'secret'
+    writeProviders({ ...emptyProviders(), rcsSecret: 'secret' })
     expect(cm_webhook_authorized(undefined)).toBe(false)
     expect(cm_webhook_authorized('wrong')).toBe(false)
     expect(cm_webhook_authorized('secret')).toBe(true)

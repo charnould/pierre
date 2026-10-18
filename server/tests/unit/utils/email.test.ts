@@ -1,10 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
+import { rm } from 'node:fs/promises'
 
 import { cm_signature_valid } from '../../../utils/email/cm'
+import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
+import { emptyProviders, writeProviders } from '../../../utils/providers'
 
 const SECRET = 'email-webhook-secret'
 const encoder = new TextEncoder()
-const original = Bun.env['CM_EMAIL_WEBHOOK_SECRET']
+const paths = testDatastorePaths('email_signature')
 
 const sign = async (id: string, timestamp: string, body: Uint8Array): Promise<string> => {
   const key = await crypto.subtle.importKey(
@@ -22,12 +25,13 @@ const sign = async (id: string, timestamp: string, body: Uint8Array): Promise<st
 }
 
 beforeAll(() => {
-  Bun.env['CM_EMAIL_WEBHOOK_SECRET'] = SECRET
+  setDatastoreRoot(paths.root)
+  writeProviders({ ...emptyProviders(), emailSecret: SECRET })
 })
 
-afterAll(() => {
-  if (original === undefined) delete Bun.env['CM_EMAIL_WEBHOOK_SECRET']
-  else Bun.env['CM_EMAIL_WEBHOOK_SECRET'] = original
+afterAll(async () => {
+  setDatastoreRoot(null)
+  await rm(paths.root, { recursive: true, force: true })
 })
 
 describe('signature email CM.com', () => {

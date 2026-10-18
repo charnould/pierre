@@ -64,6 +64,10 @@ import { controller as get_desktop_ledger_facets } from './controllers/desktop/l
 import { controller as post_desktop_me_avatar } from './controllers/desktop/me/avatar/post'
 import { controller as get_desktop_me } from './controllers/desktop/me/get'
 import { controller as patch_desktop_me_preferences } from './controllers/desktop/me/preferences/patch'
+import {
+  getProviders as get_desktop_providers,
+  putProviders as put_desktop_providers
+} from './controllers/desktop/providers'
 import { controller as get_desktop_repayment_timeline } from './controllers/desktop/repayment/get.timeline'
 import {
   deleteAdminChatbot as delete_desktop_admin_chatbot,
@@ -320,6 +324,8 @@ app.get('/desktop/users', authenticate, get_desktop_users)
 app.get('/desktop/me', authenticate, get_desktop_me)
 app.get('/desktop/setup', authenticate, get_desktop_setup)
 app.get('/desktop/setup/*', authenticate, get_desktop_setup_file)
+app.get('/desktop/admin/providers', authenticate, authorizeAdministrator, get_desktop_providers)
+app.put('/desktop/admin/providers', authenticate, authorizeAdministrator, put_desktop_providers)
 app.get('/desktop/admin/setup', authenticate, authorizeAdministrator, get_desktop_admin_setup)
 app.put('/desktop/admin/setup/*', authenticate, authorizeAdministrator, put_desktop_admin_setup)
 app.delete(

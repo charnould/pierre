@@ -29,7 +29,7 @@ export async function send_transactional_email(input: {
     throw new EmailSendError(
       503,
       'not_configured',
-      'CM_EMAIL_DOMAIN ne correspond pas à email_from',
+      'Le domaine de l’expéditeur ne correspond pas au canal email.',
       true
     )
   }

@@ -1,5 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it, spyOn } from 'bun:test'
+import { afterAll, afterEach, beforeEach, describe, expect, it, spyOn } from 'bun:test'
+import { rm } from 'node:fs/promises'
 
+import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
+import { emptyProviders, writeProviders } from '../../../utils/providers'
 import { RcsSendError, send_rcs_message } from '../../../utils/rcs/send'
 import {
   new_rcs_reference,
@@ -77,13 +80,17 @@ describe('wrap', () => {
 })
 
 describe('send_rcs_message (fetch mocked, no live send)', () => {
-  const originalToken = Bun.env['CM_RCS_PRODUCT_TOKEN']
-  const originalFrom = Bun.env['CM_RCS_FROM']
+  const paths = testDatastorePaths('rcs_send')
   let fetchSpy: ReturnType<typeof spyOn>
 
   beforeEach(() => {
-    Bun.env['CM_RCS_PRODUCT_TOKEN'] = 'test-token'
-    Bun.env['CM_RCS_FROM'] = 'PIERRE'
+    setDatastoreRoot(paths.root)
+    writeProviders({
+      ...emptyProviders(),
+      rcsToken: 'test-token',
+      rcsFrom: 'PIERRE',
+      rcsSecret: 's'
+    })
     fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(
       Object.assign(
         () => {
@@ -96,14 +103,15 @@ describe('send_rcs_message (fetch mocked, no live send)', () => {
 
   afterEach(() => {
     fetchSpy.mockRestore()
-    if (originalToken === undefined) delete Bun.env['CM_RCS_PRODUCT_TOKEN']
-    else Bun.env['CM_RCS_PRODUCT_TOKEN'] = originalToken
-    if (originalFrom === undefined) delete Bun.env['CM_RCS_FROM']
-    else Bun.env['CM_RCS_FROM'] = originalFrom
+  })
+
+  afterAll(async () => {
+    setDatastoreRoot(null)
+    await rm(paths.root, { recursive: true, force: true })
   })
 
   it('throws not_configured when the product token is empty', async () => {
-    Bun.env['CM_RCS_PRODUCT_TOKEN'] = ''
+    writeProviders(emptyProviders())
     await expect(
       send_rcs_message({
         phone: PHONE_CM,

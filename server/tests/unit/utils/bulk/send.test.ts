@@ -24,6 +24,7 @@ import {
   update_status
 } from '../../../../utils/delivery-status'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
+import { emptyProviders, writeProviders } from '../../../../utils/providers'
 import { TELEMETRY_URL } from '../../../../utils/send-telemetry'
 import { setup } from '../../../../utils/setup'
 import { seedInstanceSetup } from '../../../seed-setup'
@@ -48,6 +49,7 @@ beforeEach(async () => {
   await mkdir(paths.root, { recursive: true })
   await setup()
   await seedInstanceSetup()
+  writeProviders(emptyProviders())
   const db = new Database(`${paths.root}/datastore.sqlite`)
   db.run(`
     CREATE TABLE comptes_locataires (
@@ -71,7 +73,6 @@ afterEach(async () => {
   set_bulk_transport_for_tests(null)
   set_bulk_clock_for_tests(null)
   globalThis.fetch = ORIGINAL_FETCH
-  delete Bun.env['CM_RCS_PRODUCT_TOKEN']
   await rm(paths.root, { recursive: true, force: true })
 })
 
@@ -230,7 +231,7 @@ describe('bulk execution', () => {
   })
 
   it('sends rich RCS, follows an exact postback, and applies effects once', async () => {
-    Bun.env['CM_RCS_PRODUCT_TOKEN'] = 'token'
+    writeProviders({ ...emptyProviders(), rcsToken: 'token', rcsFrom: 'PIERRE', rcsSecret: 's' })
     globalThis.fetch = Object.assign(
       async (url: URL | RequestInfo, init?: BunFetchRequestInit | RequestInit) => {
         if (String(url) === TELEMETRY_URL) return new Response(null, { status: 204 })
@@ -372,7 +373,7 @@ describe('bulk execution', () => {
   })
 
   it('expires an unanswered interactive node at the configured deadline', async () => {
-    Bun.env['CM_RCS_PRODUCT_TOKEN'] = 'token'
+    writeProviders({ ...emptyProviders(), rcsToken: 'token', rcsFrom: 'PIERRE', rcsSecret: 's' })
     globalThis.fetch = Object.assign(
       async (url: URL | RequestInfo, init?: BunFetchRequestInit | RequestInit) => {
         if (String(url) === TELEMETRY_URL) return new Response(null, { status: 204 })

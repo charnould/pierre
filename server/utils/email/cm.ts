@@ -1,3 +1,5 @@
+import { readProviders } from '../providers'
+
 const DOMAIN = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i
 const SKEW_MS = 5 * 60 * 1000
 const encoder = new TextEncoder()
@@ -7,11 +9,12 @@ export const CM_EMAIL_URL = 'https://api.cm.com/email/gateway/v1/transactional?p
 export const cm_email = ():
   | { ok: true; token: string; domain: string }
   | { ok: false; message: string } => {
-  const token = Bun.env['CM_EMAIL_PRODUCT_TOKEN']?.trim() ?? ''
-  const domain = Bun.env['CM_EMAIL_DOMAIN']?.trim().toLowerCase() ?? ''
-  if (!token) return { ok: false, message: 'CM_EMAIL_PRODUCT_TOKEN manquant' }
-  if (!domain) return { ok: false, message: 'CM_EMAIL_DOMAIN manquant' }
-  if (!DOMAIN.test(domain)) return { ok: false, message: 'CM_EMAIL_DOMAIN invalide' }
+  const providers = readProviders()
+  const token = providers.emailToken
+  const domain = providers.emailDomain
+  if (!token) return { ok: false, message: 'Jeton email manquant' }
+  if (!domain) return { ok: false, message: 'Domaine email manquant' }
+  if (!DOMAIN.test(domain)) return { ok: false, message: 'Domaine email invalide' }
   return { ok: true, token, domain }
 }
 
@@ -29,7 +32,7 @@ export async function cm_signature_valid(
   signature: string,
   body: Uint8Array
 ): Promise<boolean> {
-  const secret = Bun.env['CM_EMAIL_WEBHOOK_SECRET']?.trim() ?? ''
+  const secret = readProviders().emailSecret
   if (!secret || !id || !/^\d+$/.test(timestamp) || !signature) return false
   const at = Number(timestamp)
   if (!Number.isSafeInteger(at) || Math.abs(Date.now() - at) > SKEW_MS) return false

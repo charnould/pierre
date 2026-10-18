@@ -4,6 +4,7 @@ import type { Subprocess } from 'bun'
 import { assertCanonicalConversationId } from './ai-attachments'
 import { AI_MODEL } from './ai-model'
 import { datastorePaths, resolvePathWithin } from './paths'
+import { readProviders } from './providers'
 import { getSmolmachinePath, returnPoolVm } from './vm-pool'
 
 export type PierreInstance = {
@@ -35,13 +36,14 @@ export function getConversationUploadsMountPath(convId: string): string {
 }
 
 function buildPiEnvArgs(): string[] {
-  const providerType = (Bun.env['AI_TYPE'] ?? 'anthropic').toLowerCase()
-  const apiKey = Bun.env['AI_API_KEY'] ?? ''
-  const baseUrl = Bun.env['AI_BASE_URL'] ?? ''
+  const providers = readProviders()
+  const providerType = providers.aiType || 'anthropic'
+  const apiKey = providers.aiApiKey
+  const baseUrl = providers.aiBaseUrl
 
   const envArgs: string[] = []
   if (apiKey) {
-    if (providerType === 'openai' || providerType === 'azure') {
+    if (providerType === 'openai') {
       envArgs.push('-e', `OPENAI_API_KEY=${apiKey}`)
       if (baseUrl) envArgs.push('-e', `OPENAI_BASE_URL=${baseUrl}`)
     } else {
@@ -57,7 +59,7 @@ const PI_LEAN_ARGS = ['--no-extensions', '-ns', '-np', '--no-themes', '--offline
 const ASK_USER_EXTENSION_PATH = '/opt/pierre/extensions/ask-user.ts'
 
 function spawnPiProcess(name: string): Subprocess<'pipe', 'pipe', 'inherit'> {
-  const providerType = (Bun.env['AI_TYPE'] ?? 'anthropic').toLowerCase()
+  const providerType = readProviders().aiType || 'anthropic'
   const model = AI_MODEL
 
   const piProcess = Bun.spawn(
