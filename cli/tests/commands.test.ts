@@ -103,11 +103,13 @@ describe('environnement et santé', () => {
       }
     })
     const { lines } = await collectStatus(healthy.ctx)
-    expect(lines.find((line) => line.label === 'SITE')?.level).toBe('ok')
-    expect(lines.find((line) => line.label === 'SERVEUR')?.level).toBe('ok')
-    expect(lines.find((line) => line.label === 'CLASSEMENT')?.level).toBe('ok')
-    expect(lines.find((line) => line.label === 'LLM')?.value).toContain('Anthropic')
-    expect(lines.find((line) => line.label === 'RCS')?.value).toBe('non paramétré')
+    expect(lines.find((line) => line.label === 'www')?.level).toBe('ok')
+    expect(lines.find((line) => line.label === 'server')?.level).toBe('ok')
+    expect(lines.find((line) => line.label === 'server')?.value).toBe('server-0.40.6')
+    expect(lines.find((line) => line.label === 'carl')?.level).toBe('ok')
+    expect(lines.find((line) => line.label === 'llm')?.value).toContain('Anthropic')
+    expect(lines.find((line) => line.label === 'rcs')?.level).toBe('gap')
+    expect(lines.find((line) => line.label === 'email')?.value).toBe('non paramétré')
     expect(healthy.calls.some((call) => call.args.join(' ').includes('api.anthropic.com'))).toBe(
       false
     )
@@ -126,9 +128,9 @@ describe('environnement et santé', () => {
       }
     })
     const { lines: failed } = await collectStatus(down.ctx)
-    expect(failed.find((line) => line.label === 'SERVEUR')?.level).toBe('bad')
-    expect(failed.find((line) => line.label === 'CLASSEMENT')?.level).toBe('bad')
-    expect(failed.find((line) => line.label === 'SITE')?.level).toBe('ok')
+    expect(failed.find((line) => line.label === 'server')?.level).toBe('bad')
+    expect(failed.find((line) => line.label === 'carl')?.level).toBe('bad')
+    expect(failed.find((line) => line.label === 'www')?.level).toBe('ok')
   })
 })
 
