@@ -25,7 +25,6 @@ import { toast } from '@/shared/components/ui/toast'
 const OPENAI_URL = 'https://api.openai.com/v1'
 const ANTHROPIC_URL = 'https://api.anthropic.com'
 
-type AiKind = 'openai' | 'anthropic' | 'custom'
 type AiType = 'openai' | 'anthropic'
 
 type ProvidersView = {
@@ -35,16 +34,14 @@ type ProvidersView = {
   webhooks: { rcs: string; email: string }
 }
 
-const KINDS: SelectOption<AiKind>[] = [
-  { value: 'openai', label: 'OpenAI' },
-  { value: 'anthropic', label: 'Anthropic' },
-  { value: 'custom', label: 'Autre' }
-]
-
-const PROTOCOLS: SelectOption<AiType>[] = [
+const PROVIDERS: SelectOption<AiType>[] = [
   { value: 'openai', label: 'OpenAI' },
   { value: 'anthropic', label: 'Anthropic' }
 ]
+
+function defaultUrl(type: AiType): string {
+  return type === 'anthropic' ? ANTHROPIC_URL : OPENAI_URL
+}
 
 function desktopApi() {
   if (typeof window === 'undefined') return undefined
@@ -85,7 +82,6 @@ function CopyField({ label, value }: { label: string; value: string }) {
 export function ProvidersPanel({ url }: { url: string }) {
   const fieldId = useId()
   const [view, setView] = useState<ProvidersView | null>(null)
-  const [kind, setKind] = useState<AiKind>('openai')
   const [aiType, setAiType] = useState<AiType>('openai')
   const [aiBaseUrl, setAiBaseUrl] = useState(OPENAI_URL)
   const [aiApiKey, setAiApiKey] = useState('')
@@ -96,7 +92,8 @@ export function ProvidersPanel({ url }: { url: string }) {
   const [emailToken, setEmailToken] = useState('')
   const [emailAccount, setEmailAccount] = useState('')
   const [emailSecret, setEmailSecret] = useState('')
-  const [error, setError] = useState('')
+  const [aiError, setAiError] = useState('')
+  const [channelsError, setChannelsError] = useState('')
   const [pending, setPending] = useState(false)
 
   useEffect(() => {
@@ -106,46 +103,30 @@ export function ProvidersPanel({ url }: { url: string }) {
         if (!response?.data) return
         const next = response.data
         setView(next)
-        if (next.ai.type === 'anthropic' && next.ai.baseUrl === ANTHROPIC_URL) {
-          setKind('anthropic')
-          setAiType('anthropic')
-          setAiBaseUrl(ANTHROPIC_URL)
-        } else if (next.ai.type === 'openai' && next.ai.baseUrl === OPENAI_URL) {
-          setKind('openai')
-          setAiType('openai')
-          setAiBaseUrl(OPENAI_URL)
-        } else if (
-          next.ai.configured &&
-          (next.ai.type === 'openai' || next.ai.type === 'anthropic')
-        ) {
-          setKind('custom')
-          setAiType(next.ai.type)
-          setAiBaseUrl(next.ai.baseUrl)
-        }
+        const type = next.ai.type === 'anthropic' ? 'anthropic' : 'openai'
+        setAiType(type)
+        setAiBaseUrl(next.ai.baseUrl || defaultUrl(type))
         if (next.rcs.from) setRcsFrom(next.rcs.from)
       })
   }, [url])
 
-  function applyKind(next: AiKind) {
-    setKind(next)
-    if (next === 'openai') {
-      setAiType('openai')
-      setAiBaseUrl(OPENAI_URL)
-    } else if (next === 'anthropic') {
-      setAiType('anthropic')
-      setAiBaseUrl(ANTHROPIC_URL)
-    } else {
-      setAiBaseUrl('')
-    }
+  function applyType(next: AiType) {
+    setAiType(next)
+    setAiBaseUrl(defaultUrl(next))
   }
 
-  async function save(body: Record<string, unknown>, empty: () => void) {
+  async function save(
+    section: 'ai' | 'channels',
+    body: Record<string, unknown>,
+    empty: () => void
+  ) {
+    const report = section === 'ai' ? setAiError : setChannelsError
     setPending(true)
-    setError('')
+    report('')
     const response = await desktopApi()?.putAdminProviders?.({ url, body })
     setPending(false)
     if (!response || response.error) {
-      setError(response?.error?.message ?? 'Enregistrement impossible')
+      report(response?.error?.message ?? 'Enregistrement impossible')
       return
     }
     if (response.data?.rcsSecret) setRcsSecret(response.data.rcsSecret)
@@ -178,39 +159,20 @@ export function ProvidersPanel({ url }: { url: string }) {
           <Field>
             <FieldLabel htmlFor={`${fieldId}-kind`}>Prestataire</FieldLabel>
             <Select
-              items={KINDS}
-              value={kind}
+              items={PROVIDERS}
+              value={aiType}
               onValueChange={(next) => {
-                if (next === 'openai' || next === 'anthropic' || next === 'custom') applyKind(next)
+                if (next === 'openai' || next === 'anthropic') applyType(next)
               }}
             >
               <SelectTrigger id={`${fieldId}-kind`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItems items={KINDS} />
+                <SelectItems items={PROVIDERS} />
               </SelectContent>
             </Select>
           </Field>
-          {kind === 'custom' ? (
-            <Field>
-              <FieldLabel htmlFor={`${fieldId}-protocol`}>Protocole</FieldLabel>
-              <Select
-                items={PROTOCOLS}
-                value={aiType}
-                onValueChange={(next) => {
-                  if (next === 'openai' || next === 'anthropic') setAiType(next)
-                }}
-              >
-                <SelectTrigger id={`${fieldId}-protocol`}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItems items={PROTOCOLS} />
-                </SelectContent>
-              </Select>
-            </Field>
-          ) : null}
           <Field>
             <FieldLabel htmlFor={`${fieldId}-url`}>Adresse</FieldLabel>
             <Input
@@ -235,11 +197,12 @@ export function ProvidersPanel({ url }: { url: string }) {
             type="button"
             disabled={pending}
             onClick={() =>
-              void save({ group: 'ai', aiType, aiBaseUrl, aiApiKey }, () => setAiApiKey(''))
+              void save('ai', { group: 'ai', aiType, aiBaseUrl, aiApiKey }, () => setAiApiKey(''))
             }
           >
             Enregistrer
           </Button>
+          {aiError ? <FieldError>{aiError}</FieldError> : null}
         </FieldGroup>
       </FieldSet>
 
@@ -278,7 +241,9 @@ export function ProvidersPanel({ url }: { url: string }) {
             <Button
               type="button"
               disabled={pending}
-              onClick={() => void save({ group: 'rcs', rcsToken, rcsFrom }, () => setRcsToken(''))}
+              onClick={() =>
+                void save('channels', { group: 'rcs', rcsToken, rcsFrom }, () => setRcsToken(''))
+              }
             >
               Enregistrer le RCS
             </Button>
@@ -287,7 +252,9 @@ export function ProvidersPanel({ url }: { url: string }) {
                 type="button"
                 variant="outline"
                 disabled={pending}
-                onClick={() => void save({ group: 'rcs', regenerateSecret: true }, () => undefined)}
+                onClick={() =>
+                  void save('channels', { group: 'rcs', regenerateSecret: true }, () => undefined)
+                }
               >
                 Nouveau secret
               </Button>
@@ -338,6 +305,7 @@ export function ProvidersPanel({ url }: { url: string }) {
             disabled={pending}
             onClick={() =>
               void save(
+                'channels',
                 { group: 'email', emailDomain, emailToken, emailAccount, emailSecret },
                 () => {
                   setEmailToken('')
@@ -349,7 +317,7 @@ export function ProvidersPanel({ url }: { url: string }) {
           >
             Enregistrer l’email
           </Button>
-          {error ? <FieldError>{error}</FieldError> : null}
+          {channelsError ? <FieldError>{channelsError}</FieldError> : null}
         </FieldGroup>
       </FieldSet>
     </div>
