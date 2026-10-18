@@ -258,12 +258,12 @@ function Switch({ className, ...props }: ComponentProps<typeof SwitchPrimitive.R
   return (
     <SwitchPrimitive.Root
       className={cn(
-        'relative h-[18px] w-8 shrink-0 rounded-full bg-input outline-none focus-visible:ring-2 focus-visible:ring-ring/40 data-checked:bg-primary',
+        'relative h-4.5 w-8 shrink-0 rounded-full bg-input outline-none focus-visible:ring-2 focus-visible:ring-ring/40 data-checked:bg-primary',
         className
       )}
       {...props}
     >
-      <SwitchPrimitive.Thumb className="bg-field block size-4 translate-x-px rounded-full transition-transform data-checked:translate-x-[14px]" />
+      <SwitchPrimitive.Thumb className="bg-field block size-4 translate-x-px rounded-full transition-transform data-checked:translate-x-3.5" />
     </SwitchPrimitive.Root>
   )
 }
@@ -331,7 +331,7 @@ function TooltipContent({
           {...props}
         >
           {children}
-          <TooltipPrimitive.Arrow className="bg-foreground fill-foreground z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-[2px] data-[side=bottom]:top-1 data-[side=left]:top-1/2! data-[side=left]:-right-1 data-[side=left]:-translate-y-1/2 data-[side=right]:top-1/2! data-[side=right]:-left-1 data-[side=right]:-translate-y-1/2 data-[side=top]:-bottom-2.5" />
+          <TooltipPrimitive.Arrow className="bg-foreground fill-foreground z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-xs data-[side=bottom]:top-1 data-[side=left]:top-1/2! data-[side=left]:-right-1 data-[side=left]:-translate-y-1/2 data-[side=right]:top-1/2! data-[side=right]:-left-1 data-[side=right]:-translate-y-1/2 data-[side=top]:-bottom-2.5" />
         </TooltipPrimitive.Popup>
       </TooltipPrimitive.Positioner>
     </TooltipPrimitive.Portal>
