@@ -41,7 +41,7 @@ describe('commandes et droits', () => {
         .out()
         .split('\n')
         .map((line) => line.trim().split(/\s+/)[0])
-        .filter((verb) => verb && verb !== '◆')
+        .filter((verb) => verb && verb !== 'PIERRE')
     ).toEqual([
       'install',
       'configure',
@@ -126,7 +126,8 @@ describe('présentation', () => {
         value: 'Anthropic · https://api.anthropic.com/very/long'
       }
     ])
-    expect(narrow).toContain('◆  PIERRE')
+    expect(narrow).toContain('PIERRE')
+    expect(narrow).not.toContain('◆')
     expect(narrow).toContain('…')
     expect(narrow).not.toContain('Documentation')
   })

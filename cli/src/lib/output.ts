@@ -47,19 +47,19 @@ function truncate(text: string, width: number): string {
 
 export function renderBrand(ctx: Context): string {
   const { bold, dim, reset } = ctx.runtime.palette
-  return `\n  ${bold}◆  PIERRE${reset}  ${dim}${ctx.version}${reset}\n`
+  return `\n  ${bold}PIERRE${reset}  ${dim}${ctx.version}${reset}\n`
 }
 
 export function renderLogo(ctx: Context): string {
   const { bold, reset } = ctx.runtime.palette
-  const mark = ctx.runtime.columns < 56 ? ['  ◆  PIERRE'] : WORDMARK
+  const mark = ctx.runtime.columns < 56 ? ['  PIERRE'] : WORDMARK
   return ['', ...mark.map((line) => `${bold}${line}${reset}`), ''].join('\n')
 }
 
 function renderCommands(ctx: Context): string {
   const { bold, dim, reset } = ctx.runtime.palette
   return HELP.map(
-    ([verb, text]) => `     ${bold}${pad(verb, COLUMN)}${reset}${dim}${text}${reset}\n`
+    ([verb, text]) => `  ${bold}${pad(verb, COLUMN)}${reset}${dim}${text}${reset}\n`
   ).join('')
 }
 
@@ -68,23 +68,28 @@ export function renderHelp(ctx: Context): string {
 }
 
 export function renderStatus(ctx: Context, lines: StatusLine[]): string {
-  const { bold, dim, green, red, reset, yellow } = ctx.runtime.palette
+  const { dim, green, inverse, red, reset, yellow } = ctx.runtime.palette
   const mark = {
-    ok: `${green}✓${reset}`,
-    warn: `${yellow}!${reset}`,
-    bad: `${red}×${reset}`
+    ok: `${green}■${reset}`,
+    warn: `${yellow}□${reset}`,
+    bad: `${red}■${reset}`
   }
+  const plain = (line: StatusLine) => (line.next ? `${line.value} → ${line.next}` : line.value)
+  const room = Math.max(8, ctx.runtime.columns - (2 + COLUMN + 3))
+  const width = Math.min(room, Math.max(8, ...lines.map((line) => [...plain(line)].length)))
   const rendered = lines.flatMap((line) => {
-    const prefix = 6 + COLUMN
-    const room = Math.max(8, ctx.runtime.columns - prefix)
     const next = line.next ? ` → ${line.next}` : ''
-    const text = truncate(line.value, Math.max(1, room - [...next].length))
-    const value = line.next ? `${text}${bold} → ${line.next}${reset}` : text
-    const row = `  ${mark[line.level]}  ${dim}${pad(line.label, COLUMN)}${reset}${value}\n`
+    const valueRoom = Math.max(1, width - [...next].length)
+    const text = truncate(line.value, valueRoom)
+    const gap = Math.max(0, width - [...text].length - [...next].length)
+    const value = line.next
+      ? `${dim}${text}${reset} → ${inverse}${line.next}${reset}${' '.repeat(gap)}`
+      : `${text}${' '.repeat(gap)}`
+    const row = `  ${dim}${pad(line.label, COLUMN)}${reset}${value}  ${mark[line.level]}\n`
     if (!line.hint) return [row]
     return [
       row,
-      `     ${dim}${truncate(line.hint, Math.max(8, ctx.runtime.columns - 5))}${reset}\n`
+      `  ${pad('', COLUMN)}${dim}${truncate(line.hint, Math.max(8, ctx.runtime.columns - COLUMN - 2))}${reset}\n`
     ]
   })
   return [renderLogo(ctx), '\n\n', ...rendered, '\n', renderCommands(ctx), '\n'].join('')

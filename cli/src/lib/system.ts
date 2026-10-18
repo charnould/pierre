@@ -77,6 +77,7 @@ type Palette = {
   red: string
   bold: string
   dim: string
+  inverse: string
   reset: string
 }
 
@@ -160,9 +161,10 @@ const paletteFor = (enabled: boolean): Palette =>
         red: '\u001b[31m',
         bold: '\u001b[1m',
         dim: '\u001b[2m',
+        inverse: '\u001b[7m',
         reset: '\u001b[0m'
       }
-    : { cyan: '', green: '', yellow: '', red: '', bold: '', dim: '', reset: '' }
+    : { cyan: '', green: '', yellow: '', red: '', bold: '', dim: '', inverse: '', reset: '' }
 
 const bunEnv = (): Env => {
   const env: Env = {}
