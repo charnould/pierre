@@ -205,6 +205,20 @@ declare global {
       patchUiSettingsTicketsTable: (partial: Partial<TicketsTableSettings>) => Promise<UiSettings>
       /** Atomically patch only `workflow` settings in main process. */
       patchUiSettingsWorkflow: (partial: Partial<WorkflowSettings>) => Promise<UiSettings>
+      /** `GET /desktop/admin/providers` */
+      getAdminProviders: (params: { url: string }) => Promise<{
+        data: {
+          ai: { configured: boolean; type: string; baseUrl: string }
+          rcs: { configured: boolean; from: string }
+          email: { configured: boolean; domain: string }
+          webhooks: { rcs: string; email: string }
+        }
+      } | null>
+      /** `PUT /desktop/admin/providers` */
+      putAdminProviders: (params: {
+        url: string
+        body: Record<string, unknown>
+      }) => Promise<{ data?: { rcsSecret?: string }; error?: { message: string } } | null>
       /** `GET /desktop/admin/setup` */
       getAdminSetup: (params: { url: string }) => Promise<{
         texts: Record<string, string | null>

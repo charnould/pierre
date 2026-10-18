@@ -14,7 +14,7 @@ const user: UserPrincipal = {
 }
 
 describe('AdministrationView', () => {
-  test('exposes the five requested sections and starts on users', () => {
+  test('exposes the administration sections and starts on users', () => {
     const html = renderToStaticMarkup(
       <AdministrationView
         hidden={false}
@@ -30,6 +30,7 @@ describe('AdministrationView', () => {
     expect(html).toContain('Conversations')
     expect(html).toContain('Statistiques')
     expect(html).toContain('Paramétrage')
+    expect(html).toContain('Prestataires')
     expect(html).toContain('Importer un CSV')
     expect(html).toContain('Créer')
     expect(html).not.toContain('Affecter un profil')

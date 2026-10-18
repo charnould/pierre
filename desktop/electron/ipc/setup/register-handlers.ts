@@ -37,6 +37,42 @@ export function registerSetupHandlers(partition: string): void {
     }
   })
 
+  ipcMain.handle(IpcChannel.setup.providersGet, async (_, { url }: { url: string }) => {
+    try {
+      const resp = await netFetch(`${root(url)}/desktop/admin/providers`, { session: ses() })
+      if (!resp.ok) return null
+      return await resp.json()
+    } catch (error) {
+      logMainError('get-admin-providers', error)
+      return null
+    }
+  })
+
+  ipcMain.handle(
+    IpcChannel.setup.providersPut,
+    async (_, { url, body }: { url: string; body: unknown }) => {
+      try {
+        const resp = await netFetch(`${root(url)}/desktop/admin/providers`, {
+          session: ses(),
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        })
+        const payload = (await resp.json()) as {
+          data?: { rcsSecret?: string }
+          error?: { message?: string }
+        }
+        if (!resp.ok) {
+          return { error: { message: payload.error?.message?.trim() || 'Enregistrement refusé' } }
+        }
+        return payload
+      } catch (error) {
+        logMainError('put-admin-providers', error)
+        return null
+      }
+    }
+  )
+
   ipcMain.handle(IpcChannel.setup.adminGet, async (_, { url }: { url: string }) => {
     try {
       const resp = await netFetch(`${root(url)}/desktop/admin/setup`, { session: ses() })

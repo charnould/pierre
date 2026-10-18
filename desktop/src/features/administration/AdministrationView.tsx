@@ -1,4 +1,11 @@
-import { BarChart3, BookOpen, MessagesSquare, SlidersHorizontal, Users } from 'lucide-react'
+import {
+  BarChart3,
+  BookOpen,
+  KeyRound,
+  MessagesSquare,
+  SlidersHorizontal,
+  Users
+} from 'lucide-react'
 import { useState } from 'react'
 
 import { Docket } from '@/shared/components/icons/koboyo-empty'
@@ -14,10 +21,17 @@ import { cn } from '@/shared/lib/utils'
 import type { UserPrincipal } from '@/shared/types/users'
 
 import { KnowledgePanel } from './components/KnowledgePanel'
+import { ProvidersPanel } from './components/ProvidersPanel'
 import { SetupPanel } from './components/SetupPanel'
 import { UsersPanel } from './components/UsersPanel'
 
-type AdministrationTab = 'users' | 'knowledge' | 'conversations' | 'statistics' | 'modules'
+type AdministrationTab =
+  | 'users'
+  | 'knowledge'
+  | 'conversations'
+  | 'statistics'
+  | 'modules'
+  | 'providers'
 
 interface Props {
   hidden: boolean
@@ -85,6 +99,10 @@ export function AdministrationView({
               <SlidersHorizontal />
               Paramétrage
             </TabsTrigger>
+            <TabsTrigger value="providers">
+              <KeyRound />
+              Prestataires
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -107,6 +125,9 @@ export function AdministrationView({
         </TabsContent>
         <TabsContent value="modules" className="flex min-h-0">
           <SetupPanel url={url} />
+        </TabsContent>
+        <TabsContent value="providers" className="flex min-h-0 flex-col overflow-hidden">
+          <ProvidersPanel url={url} />
         </TabsContent>
       </Tabs>
     </div>

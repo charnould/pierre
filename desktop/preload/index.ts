@@ -256,6 +256,20 @@ contextBridge.exposeInMainWorld('api', {
   getSetup: (params: { url: string }) => ipcRenderer.invoke(IpcChannel.setup.get, params),
   getSetupFile: (params: { url: string; id: string }) =>
     ipcRenderer.invoke(IpcChannel.setup.file, params) as Promise<ArrayBuffer | null>,
+  getAdminProviders: (params: { url: string }) =>
+    ipcRenderer.invoke(IpcChannel.setup.providersGet, params) as Promise<{
+      data: {
+        ai: { configured: boolean; type: string; baseUrl: string }
+        rcs: { configured: boolean; from: string }
+        email: { configured: boolean; domain: string }
+        webhooks: { rcs: string; email: string }
+      }
+    } | null>,
+  putAdminProviders: (params: { url: string; body: Record<string, unknown> }) =>
+    ipcRenderer.invoke(IpcChannel.setup.providersPut, params) as Promise<{
+      data?: { rcsSecret?: string }
+      error?: { message: string }
+    } | null>,
   getAdminSetup: (params: { url: string }) =>
     ipcRenderer.invoke(IpcChannel.setup.adminGet, params) as Promise<{
       texts: Record<string, string | null>
