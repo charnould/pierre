@@ -35,23 +35,17 @@ export function getConversationUploadsMountPath(convId: string): string {
   return `/knowledge/_uploads/${assertCanonicalConversationId(convId)}`
 }
 
-function buildPiEnvArgs(): string[] {
-  const providers = readProviders()
-  const providerType = providers.aiType || 'anthropic'
-  const apiKey = providers.aiApiKey
-  const baseUrl = providers.aiBaseUrl
-
+function piLaunch(): { aiType: string; envArgs: string[] } {
+  const { aiType, aiApiKey, aiBaseUrl } = readProviders()
   const envArgs: string[] = []
-  if (apiKey) {
-    if (providerType === 'openai') {
-      envArgs.push('-e', `OPENAI_API_KEY=${apiKey}`)
-      if (baseUrl) envArgs.push('-e', `OPENAI_BASE_URL=${baseUrl}`)
-    } else {
-      envArgs.push('-e', `ANTHROPIC_API_KEY=${apiKey}`)
-      if (baseUrl) envArgs.push('-e', `ANTHROPIC_BASE_URL=${baseUrl}`)
-    }
+  if (aiType === 'openai' && aiApiKey) {
+    envArgs.push('-e', `OPENAI_API_KEY=${aiApiKey}`)
+    if (aiBaseUrl) envArgs.push('-e', `OPENAI_BASE_URL=${aiBaseUrl}`)
+  } else if (aiType === 'anthropic' && aiApiKey) {
+    envArgs.push('-e', `ANTHROPIC_API_KEY=${aiApiKey}`)
+    if (aiBaseUrl) envArgs.push('-e', `ANTHROPIC_BASE_URL=${aiBaseUrl}`)
   }
-  return envArgs
+  return { aiType, envArgs }
 }
 
 /** Faster Pi RPC boot: skip extension/skill/template discovery and startup network I/O. */
@@ -59,7 +53,7 @@ const PI_LEAN_ARGS = ['--no-extensions', '-ns', '-np', '--no-themes', '--offline
 const ASK_USER_EXTENSION_PATH = '/opt/pierre/extensions/ask-user.ts'
 
 function spawnPiProcess(name: string): Subprocess<'pipe', 'pipe', 'inherit'> {
-  const providerType = readProviders().aiType || 'anthropic'
+  const { aiType, envArgs } = piLaunch()
   const model = AI_MODEL
 
   const piProcess = Bun.spawn(
@@ -72,14 +66,13 @@ function spawnPiProcess(name: string): Subprocess<'pipe', 'pipe', 'inherit'> {
       '-i',
       '-w',
       '/knowledge',
-      ...buildPiEnvArgs(),
+      ...envArgs,
       '--',
       'pi',
       '--mode',
       'rpc',
       '--no-session',
-      '--provider',
-      providerType,
+      ...(aiType ? ['--provider', aiType] : []),
       '--model',
       model,
       ...PI_LEAN_ARGS,

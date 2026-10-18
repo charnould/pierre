@@ -1,5 +1,6 @@
 import type { Context } from 'hono'
 
+import { serverBaseUrl } from '../../utils/auth'
 import {
   aiConfigured,
   emailConfigured,
@@ -35,18 +36,8 @@ function secret(): string {
   return bytes.toHex()
 }
 
-/** Same origin as the session cookie: localhost in development, HOST in production. */
-export function publicOrigin(): string {
-  if (Bun.env['NODE_ENV'] !== 'production') {
-    return `http://localhost:${Bun.env['BUN_PORT'] ?? '3000'}`
-  }
-  const host = Bun.env['HOST']?.trim() ?? ''
-  if (!host) return ''
-  return host.startsWith('http://') || host.startsWith('https://') ? host : `https://${host}`
-}
-
 function view(providers: Providers) {
-  const origin = publicOrigin().replace(/\/$/, '')
+  const origin = serverBaseUrl().replace(/\/$/, '')
   return {
     ai: {
       configured: aiConfigured(providers),

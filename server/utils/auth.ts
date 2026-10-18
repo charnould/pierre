@@ -7,7 +7,7 @@ import { datastorePaths } from './paths'
 const THIRTY_DAYS = 60 * 60 * 24 * 30
 const ONE_DAY = 60 * 60 * 24
 
-function serverBaseUrl(): string {
+export function serverBaseUrl(): string {
   if (Bun.env['NODE_ENV'] !== 'production') {
     return `http://localhost:${Bun.env['BUN_PORT'] ?? '3000'}`
   }

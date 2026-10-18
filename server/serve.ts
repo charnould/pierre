@@ -50,7 +50,7 @@ if (command) {
   const { default: application } = await import('./app')
   Bun.serve({
     hostname: '127.0.0.1',
-    port: 3000,
+    port: Number(Bun.env['BUN_PORT'] ?? 3000) || 3000,
     idleTimeout: 255,
     fetch(request, server) {
       server.timeout(request, MINUTES_30)
