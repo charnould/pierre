@@ -18,7 +18,7 @@ import {
   versionGreater,
   type Release
 } from '../src/lib/github.ts'
-import { DOCS_URL, renderHelp, renderStatus } from '../src/lib/output.ts'
+import { renderHelp, renderStatus } from '../src/lib/output.ts'
 import { run } from '../src/main.ts'
 import { CLI_VERSION } from '../src/version.ts'
 import { tempRoot, testContext } from './support.ts'
@@ -104,19 +104,31 @@ describe('présentation', () => {
       },
       { level: 'warn', label: 'RCS', value: 'non paramétré' }
     ])
-    expect(text).toContain('◆  PIERRE')
-    expect(text).toContain(DOCS_URL)
+    expect(text).toContain('██████')
+    expect(text).not.toContain('Documentation')
     expect(text).not.toContain('\u001b[')
+    const updates = renderStatus(
+      ctx.ctx,
+      [],
+      [
+        { label: 'CLI', from: 'cli-0.9.6', to: 'cli-0.9.7' },
+        { label: 'SERVEUR', from: 'server-0.40.7', to: 'server-0.40.8' }
+      ]
+    )
+    expect(updates).toContain('MISE À JOUR')
+    expect(updates).toContain('cli-0.9.6 → cli-0.9.7')
+    expect(updates).toContain('pierre update')
     ctx.ctx.runtime.columns = 48
     const narrow = renderStatus(ctx.ctx, [
       {
         level: 'ok',
-        label: 'Intelligence',
+        label: 'LLM',
         value: 'Anthropic · https://api.anthropic.com/very/long'
       }
     ])
+    expect(narrow).toContain('◆  PIERRE')
     expect(narrow).toContain('…')
-    expect(narrow).toContain(DOCS_URL)
+    expect(narrow).not.toContain('Documentation')
   })
 
   it('colors a terminal and honors NO_COLOR', async () => {

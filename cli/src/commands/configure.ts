@@ -61,7 +61,6 @@ export async function configure(ctx: Context, argv: string[]): Promise<number> {
     say(ctx, `${bold}Compte : admin@pierre-ia.org${reset}`)
     say(ctx, `${bold}Mot de passe : ${merged.env.password}${reset}`)
     say(ctx, 'Notez-le maintenant. Il ne sera plus affiché.')
-    say(ctx, 'Ensuite, dans le bureau : Administration → Prestataires.')
   }
   return 0
 }

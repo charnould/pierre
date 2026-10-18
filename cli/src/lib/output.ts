@@ -2,8 +2,15 @@ import type { Context } from './system.ts'
 
 export const PROJECT_URL = 'https://pierre-ia.org'
 export const CODE_URL = 'https://github.com/charnould/pierre'
-export const DOCS_URL =
-  'https://github.com/charnould/pierre/blob/master/docs/06-installation/01-server/01-deploy.md'
+
+const WORDMARK = [
+  '  ██████╗ ██╗███████╗██████╗ ██████╗ ███████╗',
+  '  ██╔══██╗██║██╔════╝██╔══██╗██╔══██╗██╔════╝',
+  '  ██████╔╝██║█████╗  ██████╔╝██████╔╝█████╗',
+  '  ██╔═══╝ ██║██╔══╝  ██╔══██╗██╔══██╗██╔══╝',
+  '  ██║     ██║███████╗██║  ██║██║  ██║███████╗',
+  '  ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝'
+]
 
 const HELP: Array<[string, string]> = [
   ['install', 'Installe PIERRE sans le configurer'],
@@ -26,6 +33,12 @@ export type StatusLine = {
   hint?: string
 }
 
+export type StatusUpdate = {
+  label: string
+  from: string
+  to: string
+}
+
 function pad(text: string, width: number): string {
   const measured = [...text].length
   return `${text}${' '.repeat(Math.max(0, width - measured))}`
@@ -43,6 +56,17 @@ export function renderBrand(ctx: Context): string {
   return `\n  ${cyan}◆  PIERRE${reset}  ${dim}${ctx.version}${reset}\n`
 }
 
+export function renderLogo(ctx: Context): string {
+  const { cyan, dim, reset } = ctx.runtime.palette
+  const mark = ctx.runtime.columns < 56 ? ['  ◆  PIERRE'] : WORDMARK
+  return [
+    '',
+    ...mark.map((line) => `${cyan}${line}${reset}`),
+    `  ${dim}${ctx.version}${reset}`,
+    ''
+  ].join('\n')
+}
+
 export function renderHelp(ctx: Context): string {
   const { cyan, dim, reset } = ctx.runtime.palette
   return `${renderBrand(ctx)}\n${HELP.map(
@@ -50,7 +74,11 @@ export function renderHelp(ctx: Context): string {
   ).join('')}`
 }
 
-export function renderStatus(ctx: Context, lines: StatusLine[]): string {
+export function renderStatus(
+  ctx: Context,
+  lines: StatusLine[],
+  updates: StatusUpdate[] = []
+): string {
   const { cyan, dim, green, red, reset, yellow } = ctx.runtime.palette
   const mark = { ok: `${green}✓${reset}`, warn: `${yellow}!${reset}`, bad: `${red}×${reset}` }
   const labelWidth = 16
@@ -67,10 +95,23 @@ export function renderStatus(ctx: Context, lines: StatusLine[]): string {
   })
   const links = [
     ['Projet', PROJECT_URL],
-    ['Code', CODE_URL],
-    ['Documentation', DOCS_URL]
+    ['Code', CODE_URL]
   ].map(([label, url]) => `  ${dim}${pad(label ?? '', labelWidth)}${reset}${cyan}${url}${reset}\n`)
-  return [renderBrand(ctx), '\n', ...rendered, '\n', ...links].join('')
+  return [renderLogo(ctx), '\n', ...rendered, renderUpdates(ctx, updates), '\n', ...links].join('')
+}
+
+function renderUpdates(ctx: Context, updates: StatusUpdate[]): string {
+  if (updates.length === 0) return ''
+  const { dim, reset, yellow } = ctx.runtime.palette
+  const width = Math.max(...updates.map((update) => [...update.label].length))
+  const rows = updates.map(
+    (update) => `     ${dim}${pad(update.label, width)}${reset}  ${update.from} → ${update.to}\n`
+  )
+  return [
+    `\n  ${yellow}↑${reset}  ${dim}MISE À JOUR${reset}\n`,
+    ...rows,
+    `     ${dim}pierre update${reset}\n`
+  ].join('')
 }
 
 export function providerLabel(type: string): string {

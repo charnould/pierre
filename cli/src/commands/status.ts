@@ -9,28 +9,32 @@ import {
   selectServerRelease,
   versionGreater
 } from '../lib/github.ts'
-import { providerLabel, renderStatus, type StatusLine } from '../lib/output.ts'
+import { providerLabel, renderStatus, type StatusLine, type StatusUpdate } from '../lib/output.ts'
 import { runCommand, type Context } from '../lib/system.ts'
 
 const CONFIGURE_HINT = 'Configurer : pierre configure --host DOMAINE'
-const PROVIDERS_HINT = 'Dans le bureau : Administration → Prestataires.'
 
 export async function showStatus(ctx: Context): Promise<number> {
-  const lines = await collectStatus(ctx)
-  ctx.runtime.writeOut(renderStatus(ctx, lines))
+  const { lines, updates } = await collectStatus(ctx)
+  ctx.runtime.writeOut(renderStatus(ctx, lines, updates))
   return lines.some((line) => line.level === 'bad') ? 1 : 0
 }
 
-export async function collectStatus(ctx: Context): Promise<StatusLine[]> {
+export async function collectStatus(
+  ctx: Context
+): Promise<{ lines: StatusLine[]; updates: StatusUpdate[] }> {
   if (!isInstalled(ctx.runtime)) {
-    return [
-      {
-        level: 'bad',
-        label: 'Installation',
-        value: 'absente',
-        hint: 'Installer : pierre install'
-      }
-    ]
+    return {
+      lines: [
+        {
+          level: 'bad',
+          label: 'INSTALLATION',
+          value: 'absente',
+          hint: 'Installer : pierre install'
+        }
+      ],
+      updates: []
+    }
   }
   const configured = isConfigured(ctx.runtime)
   const providers = readProviderStatus(ctx.runtime.paths.home)
@@ -40,16 +44,16 @@ export async function collectStatus(ctx: Context): Promise<StatusLine[]> {
   const carlVersion = installedCarl(ctx)
   const carlLatest = selectCarlRelease(releases)?.tag ?? ''
   const cliLatest = selectCliRelease(releases)?.tag ?? ''
-  const lines: StatusLine[] = [{ level: 'ok', label: 'Installation', value: 'complète' }]
+  const lines: StatusLine[] = [{ level: 'ok', label: 'INSTALLATION', value: 'complète' }]
   if (!configured) {
     lines.push({
       level: 'bad',
-      label: 'Configuration',
+      label: 'CONFIGURATION',
       value: existsSync(ctx.runtime.paths.pendingEnvFile) ? 'en attente' : 'absente',
       hint: CONFIGURE_HINT
     })
-    lines.push(installedLine('Serveur', serverVersion, serverLatest))
-    lines.push(installedLine('Classement', carlVersion, carlLatest))
+    lines.push(installedLine('SERVEUR', serverVersion, serverLatest))
+    lines.push(installedLine('CLASSEMENT', carlVersion, carlLatest))
   } else {
     const host = readEnvValue(ctx.runtime.paths.envFile, 'HOST')
     const local = await serviceUp(ctx)
@@ -57,36 +61,37 @@ export async function collectStatus(ctx: Context): Promise<StatusLine[]> {
     const carlUp = local ? await carlUpNow(ctx) : false
     lines.push({
       level: publicUp ? 'ok' : 'bad',
-      label: 'Site',
+      label: 'SITE',
       value: host ? `https://${host}` : 'absent',
       hint: publicUp ? undefined : 'Vérifiez le DNS, les ports 80 et 443, puis relancez pierre.'
     })
     lines.push({
       level: local ? 'ok' : 'bad',
-      label: 'Serveur',
+      label: 'SERVEUR',
       value: local ? `opérationnel · ${serverVersion}` : 'indisponible',
       hint: local ? undefined : 'Voir les journaux : pierre logs'
     })
     lines.push({
       level: carlUp ? 'ok' : 'bad',
-      label: 'Classement',
+      label: 'CLASSEMENT',
       value: carlUp ? `opérationnel · ${carlVersion}` : 'indisponible',
       hint: carlUp ? undefined : 'Relancer : pierre update'
     })
     lines.push(providerLine(providers))
   }
   lines.push(channelLine('RCS', providers.rcs))
-  lines.push(channelLine('Email', providers.email))
-  const update = updateHint(
-    ctx.version,
-    cliLatest,
-    serverVersion,
-    serverLatest,
-    carlVersion,
-    carlLatest
-  )
-  if (update) lines.push(update)
-  return lines
+  lines.push(channelLine('EMAIL', providers.email))
+  return {
+    lines,
+    updates: listUpdates(
+      ctx.version,
+      cliLatest,
+      serverVersion,
+      serverLatest,
+      carlVersion,
+      carlLatest
+    )
+  }
 }
 
 function installedLine(label: string, installed: string, latest: string): StatusLine {
@@ -98,26 +103,25 @@ function installedLine(label: string, installed: string, latest: string): Status
   }
 }
 
-function updateHint(
+function listUpdates(
   cli: string,
   cliLatest: string,
   server: string,
   serverLatest: string,
   carl: string,
   carlLatest: string
-): StatusLine | null {
-  const available = [
-    cliLatest && versionGreater(cliLatest, cli) ? cliLatest : '',
-    serverLatest && server !== 'absent' && versionGreater(serverLatest, server) ? serverLatest : '',
-    carlLatest && carl !== 'absent' && versionGreater(carlLatest, carl) ? carlLatest : ''
-  ].filter(Boolean)
-  if (available.length === 0) return null
-  return {
-    level: 'warn',
-    label: 'Mise à jour',
-    value: available.join(' · '),
-    hint: 'Mettre à jour : pierre update'
+): StatusUpdate[] {
+  const updates: StatusUpdate[] = []
+  if (cliLatest && versionGreater(cliLatest, cli)) {
+    updates.push({ label: 'CLI', from: cli, to: cliLatest })
   }
+  if (serverLatest && server !== 'absent' && versionGreater(serverLatest, server)) {
+    updates.push({ label: 'SERVEUR', from: server, to: serverLatest })
+  }
+  if (carlLatest && carl !== 'absent' && versionGreater(carlLatest, carl)) {
+    updates.push({ label: 'CLASSEMENT', from: carl, to: carlLatest })
+  }
+  return updates
 }
 
 type ProviderStatus = {
@@ -162,16 +166,11 @@ function channelLine(label: string, ready: boolean): StatusLine {
 
 function providerLine(providers: ProviderStatus): StatusLine {
   if (!providers.aiType || !providers.aiBaseUrl) {
-    return {
-      level: 'warn',
-      label: 'Intelligence',
-      value: 'non paramétrée',
-      hint: PROVIDERS_HINT
-    }
+    return { level: 'warn', label: 'LLM', value: 'non paramétré' }
   }
   return {
     level: 'ok',
-    label: 'Intelligence',
+    label: 'LLM',
     value: `${providerLabel(providers.aiType)} · ${providers.aiBaseUrl}`
   }
 }
