@@ -82,17 +82,9 @@ describe('environnement et santé', () => {
     expect(missing.err()).toContain('PIERRE n’est pas configuré.')
   })
 
-  it('requires the services and the public endpoint, and reads providers without calling them', async () => {
+  it('requires the services and the public endpoint', async () => {
     const root = await tempRoot('pierre-health-')
     await writeFile(join(root, 'pierre.env'), configuredText({ HOST: 'gx.pierre-ia.org' }))
-    await writeFile(
-      join(root, 'home', 'providers.json'),
-      JSON.stringify({
-        aiType: 'anthropic',
-        aiBaseUrl: 'https://api.anthropic.com',
-        aiApiKey: 'sk-test'
-      })
-    )
     await writeServerBundle(root, 'server-0.40.6')
     const healthy = testContext(root, {
       request: async (url) => {
@@ -107,9 +99,9 @@ describe('environnement et santé', () => {
     expect(lines.find((line) => line.label === 'server')?.level).toBe('ok')
     expect(lines.find((line) => line.label === 'server')?.value).toBe('server-0.40.6')
     expect(lines.find((line) => line.label === 'carl')?.level).toBe('ok')
-    expect(lines.find((line) => line.label === 'llm')?.value).toContain('Anthropic')
-    expect(lines.find((line) => line.label === 'rcs')?.level).toBe('gap')
-    expect(lines.find((line) => line.label === 'email')?.value).toBe('non paramétré')
+    expect(
+      lines.some((line) => line.label === 'llm' || line.label === 'rcs' || line.label === 'email')
+    ).toBe(false)
     expect(healthy.calls.some((call) => call.args.join(' ').includes('api.anthropic.com'))).toBe(
       false
     )

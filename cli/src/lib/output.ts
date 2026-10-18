@@ -21,7 +21,7 @@ const HELP: Array<[string, string]> = [
   ['help', 'Affiche cette aide']
 ]
 
-export type StatusLevel = 'ok' | 'gap' | 'warn' | 'bad'
+export type StatusLevel = 'ok' | 'warn' | 'bad'
 
 export type StatusLine = {
   level: StatusLevel
@@ -29,6 +29,14 @@ export type StatusLine = {
   value: string
   hint?: string
 }
+
+export type StatusUpdate = {
+  label: string
+  from: string
+  to: string
+}
+
+const COLUMN = 12
 
 function pad(text: string, width: number): string {
   const measured = [...text].length
@@ -43,20 +51,20 @@ function truncate(text: string, width: number): string {
 }
 
 export function renderBrand(ctx: Context): string {
-  const { cyan, dim, reset } = ctx.runtime.palette
-  return `\n  ${cyan}◆  PIERRE${reset}  ${dim}${ctx.version}${reset}\n`
+  const { bold, dim, reset } = ctx.runtime.palette
+  return `\n  ${bold}◆  PIERRE${reset}  ${dim}${ctx.version}${reset}\n`
 }
 
 export function renderLogo(ctx: Context): string {
-  const { cyan, reset } = ctx.runtime.palette
+  const { bold, reset } = ctx.runtime.palette
   const mark = ctx.runtime.columns < 56 ? ['  ◆  PIERRE'] : WORDMARK
-  return ['', ...mark.map((line) => `${cyan}${line}${reset}`), ''].join('\n')
+  return ['', ...mark.map((line) => `${bold}${line}${reset}`), ''].join('\n')
 }
 
 function renderCommands(ctx: Context): string {
-  const { cyan, dim, reset } = ctx.runtime.palette
+  const { bold, dim, reset } = ctx.runtime.palette
   return HELP.map(
-    ([verb, text]) => `  ${cyan}${verb.padEnd(12)}${reset}  ${dim}${text}${reset}\n`
+    ([verb, text]) => `     ${bold}${pad(verb, COLUMN)}${reset}${dim}${text}${reset}\n`
   ).join('')
 }
 
@@ -64,29 +72,50 @@ export function renderHelp(ctx: Context): string {
   return `${renderBrand(ctx)}\n${renderCommands(ctx)}`
 }
 
-export function renderStatus(ctx: Context, lines: StatusLine[]): string {
+export function renderStatus(
+  ctx: Context,
+  lines: StatusLine[],
+  updates: StatusUpdate[] = []
+): string {
   const { dim, green, red, reset, yellow } = ctx.runtime.palette
   const mark = {
     ok: `${green}✓${reset}`,
-    gap: `${red}×${reset}`,
     warn: `${yellow}!${reset}`,
     bad: `${red}×${reset}`
   }
-  const labelWidth = 8
   const rendered = lines.flatMap((line) => {
-    const prefix = 6 + labelWidth
+    const prefix = 6 + COLUMN
     const room = Math.max(8, ctx.runtime.columns - prefix)
     const text = truncate(line.value, room)
-    const row = `  ${mark[line.level]}  ${dim}${pad(line.label, labelWidth)}${reset}${text}\n`
+    const row = `  ${mark[line.level]}  ${dim}${pad(line.label, COLUMN)}${reset}${text}\n`
     if (!line.hint) return [row]
     return [
       row,
       `     ${dim}${truncate(line.hint, Math.max(8, ctx.runtime.columns - 5))}${reset}\n`
     ]
   })
-  return [renderLogo(ctx), '\n\n', ...rendered, '\n', renderCommands(ctx)].join('')
+  const notice = updates.length === 0 ? '' : `\n${renderUpdates(ctx, updates)}`
+  return [renderLogo(ctx), '\n\n', ...rendered, notice, '\n', renderCommands(ctx), '\n'].join('')
 }
 
-export function providerLabel(type: string): string {
-  return type === 'openai' ? 'OpenAI' : type === 'anthropic' ? 'Anthropic' : type
+function renderUpdates(ctx: Context, updates: StatusUpdate[]): string {
+  const { bold, dim, reset } = ctx.runtime.palette
+  const rows = updates.map((update) => `${pad(update.label, COLUMN)}${update.from} → ${update.to}`)
+  const command = 'pierre update'
+  const inner = Math.max(command.length, ...rows.map((row) => [...row].length)) + 4
+  const rule = '─'.repeat(inner)
+  const row = (text: string, strong = false) => {
+    const gap = inner - [...text].length - 2
+    const shown = strong ? `${bold}${text}${reset}` : text
+    return `  ${dim}│${reset} ${shown}${' '.repeat(Math.max(0, gap))} ${dim}│${reset}\n`
+  }
+  return [
+    `  ${dim}┌${rule}┐${reset}\n`,
+    row(''),
+    ...rows.map((text) => row(text)),
+    row(''),
+    row(command, true),
+    row(''),
+    `  ${dim}└${rule}┘${reset}\n`
+  ].join('')
 }

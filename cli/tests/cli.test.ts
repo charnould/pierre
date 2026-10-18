@@ -112,11 +112,15 @@ describe('présentation', () => {
     expect(text).not.toContain('Documentation')
     expect(text).not.toContain('pierre-ia.org')
     expect(text).not.toContain('\u001b[')
-    const updates = renderStatus(ctx.ctx, [
-      { level: 'ok', label: 'cli', value: 'cli-0.9.6 → cli-0.9.7' }
-    ])
+    const updates = renderStatus(
+      ctx.ctx,
+      [{ level: 'ok', label: 'cli', value: 'cli-0.9.6' }],
+      [{ label: 'cli', from: 'cli-0.9.6', to: 'cli-0.9.7' }]
+    )
+    expect(updates).toContain('┌')
     expect(updates).toContain('cli-0.9.6 → cli-0.9.7')
-    expect(updates).not.toContain('MISE À JOUR')
+    expect(updates).toContain('pierre update')
+    expect(updates.endsWith('\n\n')).toBe(true)
     ctx.ctx.runtime.columns = 48
     const narrow = renderStatus(ctx.ctx, [
       {
