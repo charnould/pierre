@@ -105,6 +105,10 @@ describe('présentation', () => {
       { level: 'warn', label: 'RCS', value: 'non paramétré' }
     ])
     expect(text).toContain('██████')
+    expect(text).toContain('\n\n\n')
+    expect(text).toContain('install')
+    expect(text).toContain('update')
+    expect(text).toContain('Installe PIERRE sans le configurer')
     expect(text).not.toContain('Documentation')
     expect(text).not.toContain('pierre-ia.org')
     expect(text).not.toContain('\u001b[')

@@ -53,11 +53,15 @@ export function renderLogo(ctx: Context): string {
   return ['', ...mark.map((line) => `${cyan}${line}${reset}`), ''].join('\n')
 }
 
-export function renderHelp(ctx: Context): string {
+function renderCommands(ctx: Context): string {
   const { cyan, dim, reset } = ctx.runtime.palette
-  return `${renderBrand(ctx)}\n${HELP.map(
+  return HELP.map(
     ([verb, text]) => `  ${cyan}${verb.padEnd(12)}${reset}  ${dim}${text}${reset}\n`
-  ).join('')}`
+  ).join('')
+}
+
+export function renderHelp(ctx: Context): string {
+  return `${renderBrand(ctx)}\n${renderCommands(ctx)}`
 }
 
 export function renderStatus(ctx: Context, lines: StatusLine[]): string {
@@ -80,7 +84,7 @@ export function renderStatus(ctx: Context, lines: StatusLine[]): string {
       `     ${dim}${truncate(line.hint, Math.max(8, ctx.runtime.columns - 5))}${reset}\n`
     ]
   })
-  return [renderLogo(ctx), '\n', ...rendered].join('')
+  return [renderLogo(ctx), '\n\n', ...rendered, '\n', renderCommands(ctx)].join('')
 }
 
 export function providerLabel(type: string): string {
