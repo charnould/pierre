@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { isConfigured, isInstalled, readEnvMap, readEnvValue } from '../lib/config.ts'
+import { isConfigured, isInstalled, readEnvValue } from '../lib/config.ts'
 import {
   fetchReleases,
   selectCarlRelease,
@@ -10,10 +10,10 @@ import {
   versionGreater
 } from '../lib/github.ts'
 import { providerLabel, renderStatus, type StatusLine } from '../lib/output.ts'
-import { providerHttpCode, runCommand, type Context } from '../lib/system.ts'
+import { runCommand, type Context } from '../lib/system.ts'
 
-const CONFIGURE_HINT =
-  'Configurer : pierre configure --host DOMAINE --provider openai --url https://api.openai.com/v1 --api-key CLE'
+const CONFIGURE_HINT = 'Configurer : pierre configure --host DOMAINE'
+const PROVIDERS_HINT = 'Dans le bureau : Administration → Prestataires.'
 
 export async function showStatus(ctx: Context): Promise<number> {
   const lines = await collectStatus(ctx)
@@ -33,12 +33,7 @@ export async function collectStatus(ctx: Context): Promise<StatusLine[]> {
     ]
   }
   const configured = isConfigured(ctx.runtime)
-  const source = configured
-    ? ctx.runtime.paths.envFile
-    : existsSync(ctx.runtime.paths.pendingEnvFile)
-      ? ctx.runtime.paths.pendingEnvFile
-      : ctx.runtime.paths.envFile
-  const map = readEnvMap(source)
+  const providers = readProviderStatus(ctx.runtime.paths.home)
   const releases = await fetchReleases(ctx)
   const serverVersion = await installedServer(ctx)
   const serverLatest = selectServerRelease(releases)?.tag ?? ''
@@ -78,20 +73,10 @@ export async function collectStatus(ctx: Context): Promise<StatusLine[]> {
       value: carlUp ? `opérationnel · ${carlVersion}` : 'indisponible',
       hint: carlUp ? undefined : 'Relancer : pierre update'
     })
-    lines.push(await providerLine(ctx))
+    lines.push(providerLine(providers))
   }
-  lines.push(
-    channelLine('RCS', map.CM_RCS_PRODUCT_TOKEN, map.CM_RCS_FROM, map.CM_RCS_WEBHOOK_SECRET)
-  )
-  lines.push(
-    channelLine(
-      'Email',
-      map.CM_EMAIL_DOMAIN,
-      map.CM_EMAIL_PRODUCT_TOKEN,
-      map.CM_EMAIL_ACCOUNT_ID,
-      map.CM_EMAIL_WEBHOOK_SECRET
-    )
-  )
+  lines.push(channelLine('RCS', providers.rcs))
+  lines.push(channelLine('Email', providers.email))
   const update = updateHint(
     ctx.version,
     cliLatest,
@@ -135,29 +120,59 @@ function updateHint(
   }
 }
 
-function channelLine(label: string, ...values: Array<string | undefined>): StatusLine {
-  const present = values.filter((value) => value)
-  if (present.length === 0) return { level: 'warn', label, value: 'non paramétré' }
-  if (present.length === values.length) return { level: 'ok', label, value: 'paramétré' }
-  return { level: 'bad', label, value: 'incomplet' }
+type ProviderStatus = {
+  aiType: string
+  aiBaseUrl: string
+  rcs: boolean
+  email: boolean
 }
 
-async function providerLine(ctx: Context): Promise<StatusLine> {
-  const file = ctx.runtime.paths.envFile
-  const type = readEnvValue(file, 'AI_TYPE')
-  const base = readEnvValue(file, 'AI_BASE_URL')
-  const key = readEnvValue(file, 'AI_API_KEY')
-  if (!type || !base || !key) {
-    return { level: 'bad', label: 'Intelligence', value: 'non paramétrée', hint: CONFIGURE_HINT }
+function readProviderStatus(home: string): ProviderStatus {
+  const empty: ProviderStatus = { aiType: '', aiBaseUrl: '', rcs: false, email: false }
+  const path = join(home, 'providers.json')
+  if (!existsSync(path)) return empty
+  try {
+    const parsed = JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>
+    const text = (key: string) => {
+      const value = parsed[key]
+      return typeof value === 'string' ? value.trim() : ''
+    }
+    const aiType = text('aiType').toLowerCase()
+    const aiBaseUrl = text('aiBaseUrl')
+    const ai =
+      (aiType === 'openai' || aiType === 'anthropic') && Boolean(aiBaseUrl && text('aiApiKey'))
+    return {
+      aiType: ai ? aiType : '',
+      aiBaseUrl: ai ? aiBaseUrl : '',
+      rcs: Boolean(text('rcsToken') && text('rcsFrom') && text('rcsSecret')),
+      email: Boolean(
+        text('emailDomain') && text('emailToken') && text('emailAccount') && text('emailSecret')
+      )
+    }
+  } catch {
+    return empty
   }
-  const code = await providerHttpCode(ctx.runtime, type, base, key)
-  const name = `${providerLabel(type)} · ${base}`
-  if (code === 200) return { level: 'ok', label: 'Intelligence', value: name }
+}
+
+function channelLine(label: string, ready: boolean): StatusLine {
+  return ready
+    ? { level: 'ok', label, value: 'paramétré' }
+    : { level: 'warn', label, value: 'non paramétré' }
+}
+
+function providerLine(providers: ProviderStatus): StatusLine {
+  if (!providers.aiType || !providers.aiBaseUrl) {
+    return {
+      level: 'warn',
+      label: 'Intelligence',
+      value: 'non paramétrée',
+      hint: PROVIDERS_HINT
+    }
+  }
   return {
-    level: 'bad',
+    level: 'ok',
     label: 'Intelligence',
-    value: code === 401 || code === 403 ? 'clé refusée' : 'indisponible',
-    hint: 'Corriger : pierre configure --provider … --url … --api-key …'
+    value: `${providerLabel(providers.aiType)} · ${providers.aiBaseUrl}`
   }
 }
 

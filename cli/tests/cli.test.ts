@@ -169,50 +169,28 @@ describe('paramétrage', () => {
     expect(cleanHost('https://gx.pierre-ia.org/admin')).toBe('gx.pierre-ia.org')
   })
 
-  it('requires the provider group and never guesses its url', () => {
-    const missing = parseConfigureArgs(['--provider', 'openai', '--api-key', 'sk-test'])
-    expect(missing.ok).toBe(true)
-    if (!missing.ok) return
-    const merged = mergeConfiguration({}, missing.flags, true)
-    expect(merged.ok).toBe(false)
-    const equals = parseConfigureArgs(['--host=example.org'])
-    expect(equals.ok).toBe(false)
-    const unknown = parseConfigureArgs(['--off', 'rcs'])
-    expect(unknown.ok).toBe(false)
+  it('requires the host and rejects anything else', () => {
+    expect(parseConfigureArgs(['--provider', 'openai']).ok).toBe(false)
+    expect(parseConfigureArgs(['--host=example.org']).ok).toBe(false)
+    const merged = mergeConfiguration({}, { host: 'https://example.org/admin' }, true)
+    expect(merged.ok).toBe(true)
+    if (!merged.ok) return
+    expect(merged.env.host).toBe('example.org')
+    expect(merged.passwordGenerated).toBe(true)
   })
 
-  it('keeps absent channels unchanged and completes a new RCS group', () => {
+  it('keeps the password when only the host changes', () => {
     const current: EnvMap = {
       HOST: 'example.org',
       AUTH_PASSWORD: 'password-1234',
       AUTH_SECRET: 'ab'.repeat(32),
-      AUTH_BEARER: 'bearer',
-      AI_TYPE: 'openai',
-      AI_BASE_URL: 'https://api.openai.com/v1',
-      AI_API_KEY: 'sk-test',
-      CM_EMAIL_DOMAIN: 'dribble.football',
-      CM_EMAIL_PRODUCT_TOKEN: '00000000-0000-0000-0000-000000000001',
-      CM_EMAIL_ACCOUNT_ID: '00000000-0000-0000-0000-000000000002',
-      CM_EMAIL_WEBHOOK_SECRET: 'signing-key'
+      AUTH_BEARER: 'bearer'
     }
-    const partial = mergeConfiguration(
-      current,
-      { cmEmailToken: '00000000-0000-0000-0000-000000000003' },
-      false
-    )
-    expect(partial.ok).toBe(false)
-    const rcs = mergeConfiguration(
-      current,
-      { rcsToken: '00000000-0000-0000-0000-000000000000', rcsFrom: 'BAILLEUR' },
-      false
-    )
-    expect(rcs.ok).toBe(true)
-    if (!rcs.ok) return
-    expect(rcs.env.aiBaseUrl).toBe('https://api.openai.com/v1')
-    expect(rcs.env.cmEmailDomain).toBe('dribble.football')
-    expect(rcs.env.cmRcsWebhookSecret.length).toBeGreaterThanOrEqual(32)
-    expect(rcs.rcsSecretGenerated).toBe(true)
-    expect(rcs.passwordGenerated).toBe(false)
+    const next = mergeConfiguration(current, { host: 'autre.exemple.org' }, false)
+    expect(next.ok).toBe(true)
+    if (!next.ok) return
+    expect(next.env.password).toBe('password-1234')
+    expect(next.passwordGenerated).toBe(false)
   })
 })
 

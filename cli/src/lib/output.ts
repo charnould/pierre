@@ -7,12 +7,12 @@ export const DOCS_URL =
 
 const HELP: Array<[string, string]> = [
   ['install', 'Installe PIERRE sans le configurer'],
-  ['configure', 'Paramètre le domaine, l’intelligence, le RCS ou l’email'],
+  ['configure', 'Paramètre le domaine'],
   ['update', 'Met à jour le programme, le serveur et le classement'],
   ['restart', 'Redémarre PIERRE'],
   ['backup', 'Sauvegarde la base'],
   ['logs', 'Affiche les journaux'],
-  ['env', 'Affiche la configuration complète'],
+  ['env', 'Affiche le domaine et les secrets d’authentification'],
   ['remove', 'Désinstalle PIERRE et ses données'],
   ['help', 'Affiche cette aide']
 ]

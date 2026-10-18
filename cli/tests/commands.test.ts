@@ -26,16 +26,7 @@ import { formatEnv, mergeConfiguration, type ParsedEnv } from '../src/lib/config
 import { configuredText, tempRoot, testContext, writeExe, writeServerBundle } from './support.ts'
 
 const sampleEnv = (): ParsedEnv => {
-  const merged = mergeConfiguration(
-    {},
-    {
-      host: 'example.org',
-      provider: 'anthropic',
-      url: 'https://api.anthropic.com',
-      apiKey: 'sk-test'
-    },
-    true
-  )
+  const merged = mergeConfiguration({}, { host: 'example.org' }, true)
   if (!merged.ok) throw new Error(merged.error)
   return merged.env
 }
@@ -83,16 +74,6 @@ describe('environnement et santé', () => {
         'AUTH_PASSWORD=password1',
         `AUTH_SECRET=${'s'.repeat(32)}`,
         'AUTH_BEARER=bearer',
-        'AI_TYPE=anthropic',
-        'AI_BASE_URL=https://api.anthropic.com',
-        'AI_API_KEY=sk=value',
-        'CM_RCS_PRODUCT_TOKEN=00000000-0000-0000-0000-000000000000',
-        'CM_RCS_FROM=PIERRE',
-        'CM_RCS_WEBHOOK_SECRET=webhook',
-        'CM_EMAIL_DOMAIN=',
-        'CM_EMAIL_PRODUCT_TOKEN=',
-        'CM_EMAIL_ACCOUNT_ID=',
-        'CM_EMAIL_WEBHOOK_SECRET=',
         ''
       ].join('\n')
     )
@@ -101,9 +82,17 @@ describe('environnement et santé', () => {
     expect(missing.err()).toContain('PIERRE n’est pas configuré.')
   })
 
-  it('requires the services and the public endpoint, and distinguishes a refused key', async () => {
+  it('requires the services and the public endpoint, and reads providers without calling them', async () => {
     const root = await tempRoot('pierre-health-')
     await writeFile(join(root, 'pierre.env'), configuredText({ HOST: 'gx.pierre-ia.org' }))
+    await writeFile(
+      join(root, 'home', 'providers.json'),
+      JSON.stringify({
+        aiType: 'anthropic',
+        aiBaseUrl: 'https://api.anthropic.com',
+        aiApiKey: 'sk-test'
+      })
+    )
     await writeServerBundle(root, 'server-0.40.6')
     const healthy = testContext(root, {
       request: async (url) => {
@@ -122,16 +111,6 @@ describe('environnement et santé', () => {
     expect(healthy.calls.some((call) => call.args.join(' ').includes('api.anthropic.com'))).toBe(
       false
     )
-    const refused = testContext(root, {
-      request: async (url) => {
-        if (url.includes('api.github.com')) return { status: 200, body: '[]', url }
-        if (url.includes('api.anthropic.com')) return { status: 401, body: '', url }
-        return { status: 200, body: 'ok', url }
-      }
-    })
-    expect(
-      (await collectStatus(refused.ctx)).find((line) => line.label === 'Intelligence')?.value
-    ).toBe('clé refusée')
     const down = testContext(root, {
       start: (_command, args) => ({
         finished: Promise.resolve({
@@ -292,16 +271,7 @@ describe('installation atomique', () => {
 })
 
 describe('configuration', () => {
-  const args = [
-    '--host',
-    'example.org',
-    '--provider',
-    'anthropic',
-    '--url',
-    'https://api.anthropic.com',
-    '--api-key',
-    'sk-test'
-  ]
+  const args = ['--host', 'example.org']
 
   it('rejects an incomplete command without writing a file', async () => {
     const root = await tempRoot('pierre-configure-invalid-')
@@ -338,13 +308,14 @@ describe('configuration', () => {
     expect(await configure(ctx.ctx, args)).toBe(0)
     const env = readFileSync(join(root, 'pierre.env'), 'utf8')
     expect(env).toContain('HOST=example.org')
-    expect(env).toContain('CM_EMAIL_DOMAIN=')
+    expect(env).not.toContain('AI_')
+    expect(env).not.toContain('CM_')
     expect(existsSync(join(root, 'pierre.env.pending'))).toBe(false)
     expect(ctx.out()).toContain('admin@pierre-ia.org')
     const password = env.match(/^AUTH_PASSWORD=(.*)$/m)?.[1] ?? ''
     expect(ctx.out()).toContain(password)
     const again = testContext(root)
-    expect(await configure(again.ctx, ['--host', 'autre.exemple.org', ...args.slice(2)])).toBe(0)
+    expect(await configure(again.ctx, ['--host', 'autre.exemple.org'])).toBe(0)
     expect(again.out()).not.toContain(password)
     expect(readFileSync(join(root, 'pierre.env'), 'utf8')).toContain(`AUTH_PASSWORD=${password}`)
   })

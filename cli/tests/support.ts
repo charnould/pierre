@@ -16,16 +16,6 @@ export const configuredText = (changes: Record<string, string> = {}) =>
     `AUTH_PASSWORD=${changes['AUTH_PASSWORD'] ?? 'password-1234'}`,
     `AUTH_SECRET=${changes['AUTH_SECRET'] ?? 'ab'.repeat(32)}`,
     `AUTH_BEARER=${changes['AUTH_BEARER'] ?? 'cd'.repeat(32)}`,
-    `AI_TYPE=${changes['AI_TYPE'] ?? 'anthropic'}`,
-    `AI_BASE_URL=${changes['AI_BASE_URL'] ?? 'https://api.anthropic.com'}`,
-    `AI_API_KEY=${changes['AI_API_KEY'] ?? 'sk-test'}`,
-    `CM_RCS_PRODUCT_TOKEN=${changes['CM_RCS_PRODUCT_TOKEN'] ?? ''}`,
-    `CM_RCS_FROM=${changes['CM_RCS_FROM'] ?? ''}`,
-    `CM_RCS_WEBHOOK_SECRET=${changes['CM_RCS_WEBHOOK_SECRET'] ?? ''}`,
-    `CM_EMAIL_DOMAIN=${changes['CM_EMAIL_DOMAIN'] ?? ''}`,
-    `CM_EMAIL_PRODUCT_TOKEN=${changes['CM_EMAIL_PRODUCT_TOKEN'] ?? ''}`,
-    `CM_EMAIL_ACCOUNT_ID=${changes['CM_EMAIL_ACCOUNT_ID'] ?? ''}`,
-    `CM_EMAIL_WEBHOOK_SECRET=${changes['CM_EMAIL_WEBHOOK_SECRET'] ?? ''}`,
     ''
   ].join('\n')
 

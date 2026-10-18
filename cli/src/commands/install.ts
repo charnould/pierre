@@ -258,10 +258,7 @@ function installReady(ctx: Context) {
   say(ctx, 'PIERRE ne démarre pas tant qu’il n’est pas configuré.')
   say(ctx, '')
   say(ctx, 'Étape suivante :')
-  say(
-    ctx,
-    `${cyan}pierre configure --host VOTRE-DOMAINE --provider openai --url https://api.openai.com/v1 --api-key VOTRE-CLE${reset}`
-  )
+  say(ctx, `${cyan}pierre configure --host VOTRE-DOMAINE${reset}`)
 }
 
 export async function runInstallation(ctx: Context): Promise<number> {

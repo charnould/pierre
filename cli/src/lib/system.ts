@@ -365,23 +365,3 @@ export async function waitForBody(
   }
   return false
 }
-
-export async function providerHttpCode(
-  runtime: Runtime,
-  type: string,
-  base: string,
-  key: string
-): Promise<number> {
-  const root = base.replace(/\/+$/, '')
-  const response =
-    type === 'anthropic'
-      ? await runtime.request(`${root}/v1/models`, {
-          headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-          timeoutMs: 10_000
-        })
-      : await runtime.request(`${root}/models`, {
-          headers: { authorization: `Bearer ${key}` },
-          timeoutMs: 10_000
-        })
-  return response.status
-}

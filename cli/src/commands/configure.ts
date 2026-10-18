@@ -10,7 +10,7 @@ import {
   readEnvMap,
   writePrivate
 } from '../lib/config.ts'
-import { providerHttpCode, waitForBody, type Context } from '../lib/system.ts'
+import { waitForBody, type Context } from '../lib/system.ts'
 import { say, sayError } from '../lib/text.ts'
 import { activateInstallation, finalizeConfiguration, rollbackInstallation } from './install.ts'
 
@@ -34,23 +34,6 @@ export async function configure(ctx: Context, argv: string[]): Promise<number> {
     sayError(ctx, merged.error)
     ctx.runtime.writeOut(`${CONFIGURE_USAGE}\n`)
     return 2
-  }
-  if (merged.providerChanged || first) {
-    const code = await providerHttpCode(
-      ctx.runtime,
-      merged.env.aiType,
-      merged.env.aiBaseUrl,
-      merged.env.aiApiKey
-    )
-    if (code !== 200) {
-      sayError(
-        ctx,
-        code === 401 || code === 403
-          ? 'La clé du fournisseur a été refusée.'
-          : 'Le fournisseur est injoignable.'
-      )
-      return 1
-    }
   }
   writePrivate(ctx.runtime.paths.pendingEnvFile, formatEnv(merged.env))
   try {
@@ -78,14 +61,7 @@ export async function configure(ctx: Context, argv: string[]): Promise<number> {
     say(ctx, `${bold}Compte : admin@pierre-ia.org${reset}`)
     say(ctx, `${bold}Mot de passe : ${merged.env.password}${reset}`)
     say(ctx, 'Notez-le maintenant. Il ne sera plus affiché.')
-  }
-  if (
-    merged.env.cmRcsWebhookSecret &&
-    merged.env.cmRcsWebhookSecret !== (published.CM_RCS_WEBHOOK_SECRET ?? '')
-  ) {
-    say(ctx, '')
-    say(ctx, `${bold}Secret RCS à recopier dans CM.com${reset}`)
-    say(ctx, merged.env.cmRcsWebhookSecret)
+    say(ctx, 'Ensuite, dans le bureau : Administration → Prestataires.')
   }
   return 0
 }
