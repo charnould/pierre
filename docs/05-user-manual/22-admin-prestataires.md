@@ -36,7 +36,7 @@ Une case de secret reste vide. `Enregistré` ne réaffiche pas la valeur.
 
 ## Intelligence
 
-Choisissez `OpenAI`, `Anthropic`, ou `Autre`. Les deux premiers remplissent l’adresse. `Autre` demande le protocole et l’adresse de votre contrat.
+Choisissez `OpenAI` ou `Anthropic`. L’adresse se remplit. Pour un autre contrat, remplacez-la.
 
 Collez la clé, puis `Enregistrer`. PIERRE interroge le prestataire avant d’écrire. Une clé refusée ne remplace pas la précédente.
 
