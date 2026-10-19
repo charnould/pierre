@@ -51,9 +51,15 @@ export async function installCliRelease(ctx: Context, tag: string): Promise<numb
   const previous = `${cmd}.previous`
   let backedUp = false
   let replaced = false
-  const onSignal = () => {
+  const cleanup = () => {
+    rmSync(`${previous}.new`, { force: true })
+    rmSync(`${cmd}.new`, { force: true })
+    rmSync(stage, { recursive: true, force: true })
+  }
+  const previousInterrupt = ctx.runtime.onInterrupt
+  ctx.runtime.onInterrupt = () => {
     restoreCli(cmd, previous, replaced)
-    process.exit(130)
+    cleanup()
   }
   try {
     try {
@@ -67,8 +73,6 @@ export async function installCliRelease(ctx: Context, tag: string): Promise<numb
       failed(ctx, 'Le cli téléchargé est invalide. Le cli installé est inchangé.')
       return 1
     }
-    process.on('SIGINT', onSignal)
-    process.on('SIGTERM', onSignal)
     try {
       if (existsSync(cmd)) {
         copyFileSync(cmd, `${previous}.new`)
@@ -92,13 +96,11 @@ export async function installCliRelease(ctx: Context, tag: string): Promise<numb
       return 1
     }
     rmSync(previous, { force: true })
+    replaced = false
     return 0
   } finally {
-    process.off('SIGINT', onSignal)
-    process.off('SIGTERM', onSignal)
-    rmSync(`${previous}.new`, { force: true })
-    rmSync(`${cmd}.new`, { force: true })
-    rmSync(stage, { recursive: true, force: true })
+    ctx.runtime.onInterrupt = previousInterrupt
+    cleanup()
   }
 }
 

@@ -17,7 +17,6 @@ import { CommandFailed } from './system.ts'
 const REPO = 'https://github.com/charnould/pierre'
 const API = 'https://api.github.com/repos/charnould/pierre'
 const SERVER_TAG = /^server-\d+\.\d+\.\d+$/
-export const CARL_TAG = /^carl-\d+\.\d+\.\d+$/
 const CLI_TAG = /^cli-\d+\.\d+\.\d+$/
 
 export type ReleaseAsset = { name: string; digest: string }
@@ -52,21 +51,6 @@ export function versionGreater(left: string, right: string): boolean {
     if (x < y) return false
   }
   return false
-}
-
-export function latestMatching(tags: string[], pattern: RegExp): string {
-  let best = ''
-  for (const tag of tags) {
-    if (!pattern.test(tag)) continue
-    if (!best || versionGreater(tag, best)) best = tag
-  }
-  return best
-}
-
-export function tagsDescending(tags: string[], pattern: RegExp): string[] {
-  return tags
-    .filter((tag) => pattern.test(tag))
-    .sort((left, right) => (versionGreater(left, right) ? -1 : versionGreater(right, left) ? 1 : 0))
 }
 
 const maxRelease = (releases: Release[]): Release | null => {

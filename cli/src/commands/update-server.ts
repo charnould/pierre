@@ -11,6 +11,7 @@ import {
 } from 'node:fs'
 import { join } from 'node:path'
 
+import { ensureLatestCarl } from '../lib/carl.ts'
 import { isConfigured, isInstalled } from '../lib/config.ts'
 import { acquireFileLock } from '../lib/file-lock.ts'
 import {
@@ -35,7 +36,6 @@ import {
 } from '../lib/smolvm-runtime.ts'
 import { CommandFailed, must, runCommand, waitForBody, type Context } from '../lib/system.ts'
 import { done, failed, spin } from '../lib/text.ts'
-import { ensureLatestCarl } from './install.ts'
 import { restart } from './restart.ts'
 
 type UpdateState = {

@@ -5,8 +5,6 @@ import { join } from 'node:path'
 
 import { cleanHost, mergeConfiguration, parseHostArgs, type EnvMap } from '../src/lib/config.ts'
 import {
-  CARL_TAG,
-  latestMatching,
   selectCarlRelease,
   selectCliRelease,
   selectServerRelease,
@@ -159,12 +157,6 @@ describe('versions indépendantes', () => {
     expect(selectServerRelease(releases)?.tag).toBe('server-0.41.0')
     expect(selectCarlRelease(releases)?.tag).toBe('carl-2.0.0')
     expect(selectCliRelease(releases)?.tag).toBe('cli-0.9.1')
-    expect(
-      latestMatching(
-        releases.map((item) => item.tag),
-        CARL_TAG
-      )
-    ).toBe('carl-2.0.0')
     expect(versionGreater('cli-0.9.2', 'CLI-0.9.1')).toBe(false)
   })
 })
@@ -177,11 +169,11 @@ describe('paramétrage', () => {
   it('requires the host and rejects anything else', () => {
     expect(parseHostArgs(['--provider', 'openai']).ok).toBe(false)
     expect(parseHostArgs(['--host=example.org']).ok).toBe(false)
-    const merged = mergeConfiguration({}, { host: 'https://example.org/admin' }, true)
+    const merged = mergeConfiguration({}, { host: 'https://example.org/admin' })
     expect(merged.ok).toBe(true)
     if (!merged.ok) return
     expect(merged.env.host).toBe('example.org')
-    expect(merged.passwordGenerated).toBe(true)
+    expect(merged.env.password).toMatch(/^[a-kmnp-z2-9]{4}(?:-[a-kmnp-z2-9]{4}){3}$/)
   })
 
   it('keeps the password when only the host changes', () => {
@@ -191,11 +183,10 @@ describe('paramétrage', () => {
       AUTH_SECRET: 'ab'.repeat(32),
       AUTH_BEARER: 'bearer'
     }
-    const next = mergeConfiguration(current, { host: 'autre.exemple.org' }, false)
+    const next = mergeConfiguration(current, { host: 'autre.exemple.org' })
     expect(next.ok).toBe(true)
     if (!next.ok) return
     expect(next.env.password).toBe('password-1234')
-    expect(next.passwordGenerated).toBe(false)
   })
 })
 

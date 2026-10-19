@@ -9,27 +9,13 @@ import { crc32 } from 'node:zlib'
 import { CARL_MODEL_FILES } from '../../shared/carl-model.ts'
 import { installCliRelease, updateCli } from '../src/commands/cli-release.ts'
 import { printEnv } from '../src/commands/env.ts'
-import {
-  activateInstallation,
-  finalizeConfiguration,
-  installCommand,
-  rememberAssetSource,
-  rollbackInstallation,
-  runInstallation
-} from '../src/commands/install.ts'
+import { installCommand } from '../src/commands/install.ts'
 import { logs } from '../src/commands/logs.ts'
 import { restart } from '../src/commands/restart.ts'
 import { collectStatus } from '../src/commands/status.ts'
 import { updateServer } from '../src/commands/update-server.ts'
 import { update } from '../src/commands/update.ts'
-import { formatEnv, mergeConfiguration, type ParsedEnv } from '../src/lib/config.ts'
 import { configuredText, tempRoot, testContext, writeExe, writeServerBundle } from './support.ts'
-
-const sampleEnv = (): ParsedEnv => {
-  const merged = mergeConfiguration({}, { host: 'example.org' }, true)
-  if (!merged.ok) throw new Error(merged.error)
-  return merged.env
-}
 
 async function writeServerChecksums(directory: string) {
   const names = ['pierre', 'libonnxruntime.so.1', 'pierre-linux-amd64.smolmachine']
@@ -130,33 +116,52 @@ describe('installation atomique', () => {
   it('remembers the asset directory without touching an existing configuration', async () => {
     const root = await tempRoot('pierre-atomic-')
     await writeFile(join(root, 'pierre.env'), configuredText())
-    const ctx = testContext(root, { env: { PIERRE_ASSET_DIR: '/tmp/pierre-assets' } })
-    rememberAssetSource(ctx.ctx)
+    const ctx = testContext(root, {
+      env: { PIERRE_ASSET_DIR: '/tmp/pierre-assets' },
+      start: () => ({
+        finished: Promise.resolve({ code: 1, stdout: '', stderr: 'apt failed\n' }),
+        kill: () => undefined
+      })
+    })
+    expect(await installCommand(ctx.ctx, ['--host', 'example.org'])).toBe(1)
     expect(readFileSync(join(root, 'pierre.env'), 'utf8')).toContain('HOST=example.org')
     expect(readFileSync(join(root, 'asset-source'), 'utf8')).toBe('/tmp/pierre-assets\n')
   })
 
-  it('publishes the draft only after activation and rolls back a failed one', async () => {
+  it('publishes the host and keeps the attempt when the unit cannot start', async () => {
     const root = await tempRoot('pierre-atomic-')
-    const env = sampleEnv()
-    await writeFile(join(root, 'pierre.env.pending'), formatEnv(env))
-    const ctx = testContext(root)
-    await activateInstallation(ctx.ctx, env)
-    finalizeConfiguration(ctx.ctx)
+    await readyInstallation(root)
+    const ctx = testContext(root, { commandExists: (name) => name === 'caddy' })
+    expect(await installCommand(ctx.ctx, ['--host', 'example.org'])).toBe(0)
     expect(readFileSync(join(root, 'pierre.env'), 'utf8')).toContain('HOST=example.org')
     expect(existsSync(join(root, 'pierre.env.pending'))).toBe(false)
     expect(readFileSync(join(root, 'Caddyfile'), 'utf8')).toContain('example.org')
 
     const failed = await tempRoot('pierre-atomic-fail-')
-    await writeFile(join(failed, 'pierre.env.pending'), 'HOST=example.org\n')
+    await readyInstallation(failed)
     const broken = testContext(failed, {
-      start: () => ({
-        finished: Promise.resolve({ code: 1, stdout: '', stderr: 'unit failed\n' }),
-        kill: () => undefined
-      })
+      commandExists: (name) => name === 'caddy',
+      start: (command, args) => {
+        const name = command.split('/').pop()
+        if (name === 'systemctl' && args[0] === 'daemon-reload') {
+          return {
+            finished: Promise.resolve({ code: 1, stdout: '', stderr: 'unit failed\n' }),
+            kill: () => undefined
+          }
+        }
+        if (name === 'smolvm' && args[0] === '--version') {
+          return {
+            finished: Promise.resolve({ code: 0, stdout: 'smolvm 1.24.0\n', stderr: '' }),
+            kill: () => undefined
+          }
+        }
+        return {
+          finished: Promise.resolve({ code: 0, stdout: '', stderr: '' }),
+          kill: () => undefined
+        }
+      }
     })
-    await expect(activateInstallation(broken.ctx, env)).rejects.toThrow('unit failed')
-    await rollbackInstallation(broken.ctx)
+    expect(await installCommand(broken.ctx, ['--host', 'example.org'])).toBe(1)
     expect(existsSync(join(failed, 'pierre.env'))).toBe(false)
     expect(existsSync(join(failed, 'pierre.env.pending'))).toBe(true)
   })
@@ -186,7 +191,7 @@ describe('installation atomique', () => {
         }
       }
     })
-    const code = await runInstallation(ctx.ctx)
+    const code = await installCommand(ctx.ctx, ['--host', 'example.org'])
     expect(code).toBe(1)
     expect(aptCaddy).toBe(true)
     expect(ctx.out()).toContain('Caddy')
@@ -269,6 +274,7 @@ async function readyInstallation(root: string) {
   const carl = join(root, 'home', 'models', 'carl')
   await mkdir(carl, { recursive: true })
   for (const name of CARL_MODEL_FILES) await writeFile(join(carl, name), name)
+  await writeFile(join(carl, 'version'), 'carl-1.0.0\n')
 }
 
 describe('configuration', () => {
@@ -316,13 +322,42 @@ describe('configuration', () => {
     expect(existsSync(join(root, 'pierre.env.pending'))).toBe(false)
     expect(ctx.out()).toContain('admin@pierre-ia.org')
     const password = env.match(/^AUTH_PASSWORD=(.*)$/m)?.[1] ?? ''
-    expect(password).toMatch(/^[a-hjkmnp-z2-9]{4}(?:-[a-hjkmnp-z2-9]{4}){3}$/)
+    expect(password).toMatch(/^[a-kmnp-z2-9]{4}(?:-[a-kmnp-z2-9]{4}){3}$/)
     expect(ctx.out()).toContain(password)
     expect(ctx.out()).not.toContain('Notez-le')
     const again = testContext(root)
     expect(await installCommand(again.ctx, ['--host', 'autre.exemple.org'])).toBe(0)
     expect(again.out()).not.toContain(password)
     expect(readFileSync(join(root, 'pierre.env'), 'utf8')).toContain(`AUTH_PASSWORD=${password}`)
+  })
+
+  it('does not install packages again once the machine is provisioned', async () => {
+    const root = await tempRoot('pierre-provisioned-')
+    await readyInstallation(root)
+    const seen: string[][] = []
+    const ctx = testContext(root, {
+      commandExists: (name) => name === 'caddy',
+      start: (command, args) => {
+        const name = command.split('/').pop() ?? command
+        seen.push([name, ...args])
+        if (name === 'smolvm') {
+          return {
+            finished: Promise.resolve({ code: 0, stdout: 'smolvm 1.24.0\n', stderr: '' }),
+            kill: () => undefined
+          }
+        }
+        return {
+          finished: Promise.resolve({ code: 0, stdout: 'active\n', stderr: '' }),
+          kill: () => undefined
+        }
+      }
+    })
+    expect(await installCommand(ctx.ctx, args)).toBe(0)
+    expect(seen.some((call) => call[0] === 'apt-get')).toBe(true)
+    seen.length = 0
+    expect(await installCommand(ctx.ctx, ['--host', 'autre.exemple.org'])).toBe(0)
+    expect(seen.some((call) => call[0] === 'apt-get')).toBe(false)
+    expect(readFileSync(join(root, 'pierre.env'), 'utf8')).toContain('HOST=autre.exemple.org')
   })
 })
 

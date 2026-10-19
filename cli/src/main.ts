@@ -56,10 +56,15 @@ const entrypoint = import.meta.main
 if (entrypoint) {
   const runtime = createRuntime()
   const ctx: Context = { runtime, version: CLI_VERSION }
-  process.on('SIGINT', () => {
-    runtime.onInterrupt?.()
-    process.exit(130)
-  })
+  const stop = (code: number) => {
+    try {
+      runtime.onInterrupt?.()
+    } finally {
+      process.exit(code)
+    }
+  }
+  process.on('SIGINT', () => stop(130))
+  process.on('SIGTERM', () => stop(143))
   run(process.argv.slice(2), ctx)
     .then((code) => {
       process.exit(code)

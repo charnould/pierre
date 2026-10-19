@@ -2,24 +2,19 @@ import {
   appendFileSync,
   chmodSync,
   copyFileSync,
-  cpSync,
   existsSync,
   mkdirSync,
-  mkdtempSync,
-  readdirSync,
   readFileSync,
   renameSync,
   rmSync,
   writeFileSync
 } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 
-import { CARL_MODEL_FILES } from '../../../shared/carl-model.ts'
+import { ensureLatestCarl } from '../lib/carl.ts'
 import {
   formatEnv,
   INSTALL_USAGE,
-  isConfigured,
   isInstalled,
   mergeConfiguration,
   parseHostArgs,
@@ -28,7 +23,7 @@ import {
   type ConfigureFlags,
   type ParsedEnv
 } from '../lib/config.ts'
-import { fetchReleases, fetchTo, selectCarlRelease, selectServerRelease } from '../lib/github.ts'
+import { fetchReleases, selectServerRelease } from '../lib/github.ts'
 import {
   activateServerRelease,
   commitServerBundle,
@@ -59,11 +54,17 @@ const PACKAGES = [
 ]
 
 const aptEnv = { DEBIAN_FRONTEND: 'noninteractive' }
+const PACKAGE_STAMP = PACKAGES.join('\n')
 
-export function rememberAssetSource(ctx: Context) {
+function rememberAssetSource(ctx: Context) {
   const directory = ctx.runtime.env['PIERRE_ASSET_DIR']
   if (!directory) return
   writePrivate(ctx.runtime.paths.assetSourceFile, `${directory}\n`)
+}
+
+function packagesReady(ctx: Context): boolean {
+  const file = join(ctx.runtime.paths.home, 'packages')
+  return existsSync(file) && readFileSync(file, 'utf8') === PACKAGE_STAMP
 }
 
 async function runInstallStep(ctx: Context, label: string, action: () => Promise<void>) {
@@ -81,18 +82,16 @@ async function runInstallStep(ctx: Context, label: string, action: () => Promise
   }
 }
 
-async function verifyInstallMachine(ctx: Context) {
-  if (ctx.runtime.uid() !== 0 || ctx.runtime.arch() !== 'x86_64' || !ctx.runtime.kvm()) {
-    throw new CommandFailed(1, 'Machine incompatible.')
-  }
-}
-
 async function installPackages(ctx: Context) {
+  if (packagesReady(ctx)) return
   await must(ctx.runtime, 'apt-get', ['update', '-qq'], { env: aptEnv })
   await must(ctx.runtime, 'apt-get', ['install', '-y', ...PACKAGES], { env: aptEnv })
+  mkdirSync(ctx.runtime.paths.home, { recursive: true })
+  writeFileSync(join(ctx.runtime.paths.home, 'packages'), PACKAGE_STAMP)
 }
 
 async function installCaddy(ctx: Context) {
+  if (ctx.runtime.commandExists('caddy')) return
   if (!existsSync('/usr/share/keyrings/caddy-stable-archive-keyring.gpg')) {
     await must(ctx.runtime, 'bash', [
       '-c',
@@ -107,7 +106,9 @@ async function installCaddy(ctx: Context) {
   await must(ctx.runtime, 'apt-get', ['install', '-y', 'caddy'], { env: aptEnv })
 }
 
-async function installServerBinaries(ctx: Context, tag: string) {
+async function installServerBinaries(ctx: Context) {
+  if (isInstalled(ctx.runtime)) return
+  const tag = await serverTag(ctx)
   const stage = createServerStage(ctx)
   let staged = stage
   try {
@@ -118,51 +119,6 @@ async function installServerBinaries(ctx: Context, tag: string) {
   } finally {
     if (staged) rmSync(staged, { recursive: true, force: true })
   }
-}
-
-function carlReady(dir: string, tag: string): boolean {
-  const stamp = join(dir, 'version')
-  if (!existsSync(stamp) || readFileSync(stamp, 'utf8').trim() !== tag) return false
-  return CARL_MODEL_FILES.every((name) => existsSync(join(dir, name)))
-}
-
-export async function installModel(ctx: Context, tag: string) {
-  const dir = join(ctx.runtime.paths.home, 'models', 'carl')
-  mkdirSync(dir, { recursive: true })
-  if (carlReady(dir, tag)) return
-  const temp = mkdtempSync(join(tmpdir(), 'pierre-carl-'))
-  try {
-    await fetchTo(ctx, 'model.zip', join(temp, 'model.zip'), tag)
-    await must(ctx.runtime, 'unzip', ['-oq', join(temp, 'model.zip'), '-d', temp])
-    rmSync(join(temp, 'model.zip'), { force: true })
-    for (const name of CARL_MODEL_FILES) {
-      if (!existsSync(join(temp, name))) {
-        throw new CommandFailed(1, `L'archive ne contient pas ${name}.`)
-      }
-    }
-    for (const entry of readdirSync(temp)) {
-      cpSync(join(temp, entry), join(dir, entry), { recursive: true })
-    }
-    const stamp = join(dir, 'version')
-    writeFileSync(stamp, `${tag}\n`)
-    chmodSync(stamp, 0o644)
-    rmSync(join(dir, 'model.sha256'), { force: true })
-  } finally {
-    rmSync(temp, { recursive: true, force: true })
-  }
-}
-
-export async function ensureLatestCarl(
-  ctx: Context,
-  visible = false
-): Promise<'current' | 'installed' | 'unavailable'> {
-  const tag = selectCarlRelease(await fetchReleases(ctx))?.tag
-  if (!tag) return 'unavailable'
-  const dir = join(ctx.runtime.paths.home, 'models', 'carl')
-  if (carlReady(dir, tag)) return 'current'
-  if (visible) await spin(ctx, 'Classement', () => installModel(ctx, tag))
-  else await installModel(ctx, tag)
-  return 'installed'
 }
 
 async function installLatestModel(ctx: Context) {
@@ -180,7 +136,7 @@ async function publishUnit(ctx: Context) {
   }
 }
 
-export async function writeCaddy(ctx: Context, host: string) {
+async function writeCaddy(ctx: Context, host: string) {
   const file = ctx.runtime.paths.caddyFile
   mkdirSync(dirname(file), { recursive: true })
   writeFileSync(
@@ -202,7 +158,7 @@ export async function writeCaddy(ctx: Context, host: string) {
   await must(ctx.runtime, 'systemctl', [active.code === 0 ? 'reload' : 'start', 'caddy'])
 }
 
-export async function activateInstallation(ctx: Context, env: ParsedEnv) {
+async function activateInstallation(ctx: Context, env: ParsedEnv) {
   const { envFile, pendingEnvFile, previousEnvFile, caddyFile, previousCaddyFile } =
     ctx.runtime.paths
   rmSync(previousEnvFile, { force: true })
@@ -220,7 +176,7 @@ export async function activateInstallation(ctx: Context, env: ParsedEnv) {
   await writeCaddy(ctx, env.host)
 }
 
-export async function rollbackInstallation(ctx: Context) {
+async function rollbackInstallation(ctx: Context) {
   const { envFile, previousEnvFile, caddyFile, previousCaddyFile } = ctx.runtime.paths
   if (existsSync(previousEnvFile)) {
     renameSync(previousEnvFile, envFile)
@@ -234,7 +190,7 @@ export async function rollbackInstallation(ctx: Context) {
   await runCommand(ctx.runtime, 'systemctl', ['reload', 'caddy'])
 }
 
-export function finalizeConfiguration(ctx: Context) {
+function finalizeConfiguration(ctx: Context) {
   const { pendingEnvFile, previousEnvFile, previousCaddyFile } = ctx.runtime.paths
   rmSync(pendingEnvFile, { force: true })
   rmSync(previousEnvFile, { force: true })
@@ -248,27 +204,16 @@ async function installFailed(ctx: Context, step: string) {
   ctx.runtime.writeOut(`  ${dim}Journal : ${ctx.runtime.paths.installLog}${reset}\n`)
 }
 
-function servicesReady(ctx: Context): boolean {
-  const carl = join(ctx.runtime.paths.home, 'models', 'carl')
-  return (
-    isInstalled(ctx.runtime) &&
-    existsSync(ctx.runtime.paths.unitFile) &&
-    CARL_MODEL_FILES.every((name) => existsSync(join(carl, name)))
-  )
-}
-
-export async function runInstallation(ctx: Context): Promise<number> {
+async function runInstallation(ctx: Context): Promise<number> {
   const logFile = ctx.runtime.paths.installLog
   mkdirSync(dirname(logFile), { recursive: true })
   writeFileSync(logFile, '', { mode: 0o600 })
   const steps: Array<[string, () => Promise<void>]> = [
-    ['Prérequis', () => verifyInstallMachine(ctx)],
     ['Paquets', () => installPackages(ctx)],
     ['Micro-VM', () => ensureSmolvm(ctx)],
     ['Caddy', () => installCaddy(ctx)],
-    ['Server', async () => installServerBinaries(ctx, await serverTag(ctx))],
-    ['Carl', () => installLatestModel(ctx)],
-    ['Service', () => publishUnit(ctx)]
+    ['Server', () => installServerBinaries(ctx)],
+    ['Carl', () => installLatestModel(ctx)]
   ]
   for (const [label, action] of steps) {
     try {
@@ -293,7 +238,7 @@ async function activateHost(ctx: Context, flags: ConfigureFlags): Promise<number
   const pending = existsSync(ctx.runtime.paths.pendingEnvFile)
   const current = readEnvMap(pending ? ctx.runtime.paths.pendingEnvFile : ctx.runtime.paths.envFile)
   const published = readEnvMap(ctx.runtime.paths.envFile)
-  const merged = mergeConfiguration(current, flags, !isConfigured(ctx.runtime) && !pending)
+  const merged = mergeConfiguration(current, flags)
   if (!merged.ok) {
     sayError(ctx, merged.error)
     ctx.runtime.writeOut(`${INSTALL_USAGE}\n`)
@@ -337,9 +282,7 @@ export async function installCommand(ctx: Context, argv: string[]): Promise<numb
     return 2
   }
   rememberAssetSource(ctx)
-  if (!servicesReady(ctx)) {
-    const code = await runInstallation(ctx)
-    if (code !== 0) return code
-  }
+  const code = await runInstallation(ctx)
+  if (code !== 0) return code
   return activateHost(ctx, parsed.flags)
 }

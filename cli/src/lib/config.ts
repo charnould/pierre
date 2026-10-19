@@ -27,13 +27,7 @@ export type ConfigureFlags = {
   host?: string
 }
 
-export type MergeResult =
-  | { ok: true; env: ParsedEnv; passwordGenerated: boolean }
-  | { ok: false; error: string }
-
-const FLAG_NAMES = { host: 'host' } as const
-
-type FlagName = keyof typeof FLAG_NAMES
+export type MergeResult = { ok: true; env: ParsedEnv } | { ok: false; error: string }
 
 export const INSTALL_USAGE = ['Usage :', '  pierre install --host assistant.exemple.org', ''].join(
   '\n'
@@ -97,38 +91,26 @@ export function parseHostArgs(
   if (argv.length === 0 || argv[0] === '--help' || argv[0] === '-h') {
     return { ok: false, error: '' }
   }
-  const flags: ConfigureFlags = {}
-  const seen = new Set<FlagName>()
+  let host: string | undefined
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index] ?? ''
     if (token.includes('=')) return { ok: false, error: `Écrivez ${token.split('=')[0]} VALEUR.` }
-    if (!token.startsWith('--') || token === '--') {
-      return { ok: false, error: `Option inconnue : ${token}` }
-    }
-    const name = token.slice(2)
-    if (!isFlagName(name)) return { ok: false, error: `Option inconnue : --${name}` }
-    if (seen.has(name)) return { ok: false, error: `Option dupliquée : --${name}` }
+    if (token !== '--host') return { ok: false, error: `Option inconnue : ${token}` }
+    if (host !== undefined) return { ok: false, error: 'Option dupliquée : --host' }
     const value = argv[index + 1]
     if (value === undefined || value.startsWith('--') || value.length === 0) {
-      return { ok: false, error: `--${name} attend une valeur.` }
+      return { ok: false, error: '--host attend une valeur.' }
     }
-    seen.add(name)
-    flags[FLAG_NAMES[name]] = value
+    host = value
     index += 1
   }
-  return { ok: true, flags }
+  return { ok: true, flags: { host } }
 }
 
-export function mergeConfiguration(
-  current: EnvMap,
-  flags: ConfigureFlags,
-  first: boolean
-): MergeResult {
-  if (first && !flags.host) {
-    return { ok: false, error: 'Le premier paramétrage exige --host.' }
-  }
+export function mergeConfiguration(current: EnvMap, flags: ConfigureFlags): MergeResult {
   const host = cleanHost(flags.host ?? current.HOST ?? '')
-  if (!host || /\s/.test(host)) return { ok: false, error: 'Le domaine est invalide.' }
+  if (!host) return { ok: false, error: 'Le premier paramétrage exige --host.' }
+  if (/\s/.test(host)) return { ok: false, error: 'Le domaine est invalide.' }
   const password = current.AUTH_PASSWORD || readablePassword()
   if (password.length < 8 || password.length > 128) {
     return { ok: false, error: 'AUTH_PASSWORD doit contenir entre 8 et 128 caractères.' }
@@ -139,11 +121,7 @@ export function mergeConfiguration(
     return { ok: false, error: 'AUTH_SECRET doit contenir au moins 32 caractères.' }
   }
   if (!authBearer) return { ok: false, error: 'AUTH_BEARER est obligatoire.' }
-  return {
-    ok: true,
-    passwordGenerated: !current.AUTH_PASSWORD,
-    env: { host, password, authSecret, authBearer }
-  }
+  return { ok: true, env: { host, password, authSecret, authBearer } }
 }
 
 const PASSWORD_ALPHABET = 'abcdefghijkmnpqrstuvwxyz23456789'
@@ -162,8 +140,4 @@ function requiredReady(map: EnvMap): boolean {
     (map.AUTH_SECRET ?? '').length >= 32 &&
     map.AUTH_BEARER
   )
-}
-
-function isFlagName(value: string): value is FlagName {
-  return Object.hasOwn(FLAG_NAMES, value)
 }
