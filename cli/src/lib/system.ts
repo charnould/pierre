@@ -1,5 +1,4 @@
-import { closeSync, existsSync, openSync, readFileSync } from 'node:fs'
-import { ReadStream } from 'node:tty'
+import { closeSync, existsSync, openSync, readFileSync, readSync } from 'node:fs'
 
 export class Exit extends Error {
   constructor(
@@ -297,20 +296,21 @@ export function createRuntime(overrides: RuntimeOverrides = {}): Runtime {
       (async () => {
         if (!existsSync('/dev/tty')) return null
         const fd = openSync('/dev/tty', 'r')
-        const stream = new ReadStream(fd)
-        const line = await new Promise<string | null>((resolve) => {
-          let buffer = ''
-          const onData = (data: Buffer) => {
-            buffer += data.toString('utf8')
-            const end = buffer.indexOf('\n')
-            if (end === -1) return
-            stream.off('data', onData)
-            resolve(buffer.slice(0, end).replace(/\r$/, ''))
+        const chunks: Buffer[] = []
+        const buffer = Buffer.alloc(256)
+        try {
+          for (;;) {
+            const count = readSync(fd, buffer, 0, buffer.length, null)
+            if (count <= 0) return null
+            chunks.push(Buffer.from(buffer.subarray(0, count)))
+            const text = Buffer.concat(chunks).toString('utf8')
+            const end = text.indexOf('\n')
+            if (end === -1) continue
+            return text.slice(0, end).replace(/\r$/, '')
           }
-          stream.on('data', onData)
-        })
-        stream.destroy()
-        return line
+        } finally {
+          closeSync(fd)
+        }
       }),
     commandExists: overrides.commandExists ?? ((name) => Bun.which(name) !== null),
     onInterrupt: undefined

@@ -23,7 +23,6 @@ Avant de déployer PIERRE, vérifier que vous disposez de :
 | **Serveur**       | Ubuntu ou Debian, `x86_64`, avec `/dev/kvm`                        |
 | **Ports ouverts** | `80` (HTTP) et `443` (HTTPS)                                       |
 | **Accès SSH**     | Clef ou mot de passe, en root                                      |
-| **Clé API LLM**   | Anthropic, OpenAI ou un fournisseur compatible avec son API        |
 | **DNS**           | Le DNS du nom choisi doit pointer vers le serveur, **sans proxy**. |
 
 >
@@ -35,13 +34,13 @@ Avant de déployer PIERRE, vérifier que vous disposez de :
 
 ### Déployer PIERRE sur un serveur
 
-Connecté en root, une commande installe les services et démarre PIERRE sur le domaine. Le DNS doit déjà pointer vers le serveur.
+Connecté en root, cette commande installe le CLI et affiche l'état :
 
 ```bash
-curl -fsSL https://github.com/charnould/pierre/releases/download/cli-0.9.14/install.sh | sh -s -- --host assistant.exemple.org
+curl -fsSL https://github.com/charnould/pierre/releases/download/cli-0.9.15/install.sh | sh
 ```
 
-Si le CLI est déjà en place :
+L'installation des services se fait ensuite. Le DNS doit déjà pointer vers le serveur.
 
 ```bash
 pierre install --host assistant.exemple.org
@@ -79,12 +78,12 @@ Toutes les données de PIERRE sont regroupées sous `/var/lib/pierre` :
 | ------------------------------- | --------------------------------------------------------- |
 | `pierre`                        | Affiche l'état et les commandes.                          |
 | `pierre install --host DOMAINE` | Installe les services.                                    |
-| `pierre update`                 | Met à jour l'ensemble des services.                       |
-| `pierre restart`                | Redémarre l'ensemble des services.                        |
+| `pierre update`                 | Met à jour les services.                                  |
+| `pierre restart`                | Redémarre les services.                                   |
 | `pierre backup`                 | Sauvegarde la base de données.                            |
 | `pierre logs`                   | Affiche les journaux.                                     |
-| `pierre env`                    | Affiche le domaine et les secrets d'authentification.     |
-| `pierre remove`                 | Supprime l'ensemble des services et des données.          |
+| `pierre env`                    | Affiche le domaine et les secrets.                        |
+| `pierre remove`                 | Supprime les services et les données.                     |
 
 Une option s'écrit `--option valeur`. `--option=valeur` est refusé.
 

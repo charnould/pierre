@@ -53,16 +53,15 @@ if (entrypoint) {
   })
   run(process.argv.slice(2), ctx)
     .then((code) => {
-      process.exitCode = code
+      process.exit(code)
     })
     .catch((error: unknown) => {
       if (error instanceof Exit) {
         if (error.message) runtime.writeErr(`${error.message}\n`)
-        process.exitCode = error.code
-        return
+        process.exit(error.code)
       }
       const message = error instanceof Error ? error.message : 'Erreur inattendue.'
       runtime.writeErr(`${message}\n`)
-      process.exitCode = 1
+      process.exit(1)
     })
 }

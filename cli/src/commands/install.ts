@@ -73,21 +73,27 @@ async function runInstallStep(ctx: Context, label: string, action: () => Promise
   chmodSync(logFile, 0o600)
   const { cyan, green, red, reset } = ctx.runtime.palette
   let timer: ReturnType<typeof setInterval> | undefined
+  let live = true
   if (ctx.runtime.tty) {
     const frames = ['◐', '◓', '◑', '◒']
     let frame = 0
     timer = setInterval(() => {
+      if (!live) return
       const glyph = frames[frame % frames.length] ?? '◐'
       frame += 1
       ctx.runtime.writeOut(`\r\u001b[2K  ${cyan}${glyph}${reset}  ${label}`)
     }, 120)
   }
+  const stop = () => {
+    live = false
+    if (timer) clearInterval(timer)
+  }
   try {
     await action()
-    if (timer) clearInterval(timer)
+    stop()
     ctx.runtime.writeOut(`${ctx.runtime.tty ? '\r\u001b[2K' : ''}  ${green}✓${reset}  ${label}\n`)
   } catch (error) {
-    if (timer) clearInterval(timer)
+    stop()
     const output =
       error instanceof CommandFailed ? error.output : error instanceof Error ? error.message : ''
     if (output) appendFileSync(logFile, output.endsWith('\n') ? output : `${output}\n`)
@@ -174,7 +180,7 @@ export async function ensureLatestCarl(
   if (!tag) return 'unavailable'
   const dir = join(ctx.runtime.paths.home, 'models', 'carl')
   if (carlReady(dir, tag)) return 'current'
-  say(ctx, `Téléchargement de carl ${tag}…`)
+  say(ctx, `Téléchargement de CARL ${tag}…`)
   await installModel(ctx, tag)
   return 'installed'
 }

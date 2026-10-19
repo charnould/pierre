@@ -832,7 +832,7 @@ describe('bootstrap', () => {
     }
   })
 
-  it('installs a checked local binary and runs pierre install', async () => {
+  it('installs a checked local binary and shows the status', async () => {
     const root = await mkdtemp(join(tmpdir(), 'pierre-boot-'))
     try {
       const assets = join(root, 'assets')
@@ -851,7 +851,7 @@ describe('bootstrap', () => {
       )
       await writeExe(join(bin, 'id'), '#!/bin/sh\necho 0\n')
       const dest = join(destDir, 'pierre')
-      const proc = Bun.spawn(['sh', script, '--host', 'example.org'], {
+      const proc = Bun.spawn(['sh', script], {
         env: {
           PATH: `${bin}:/usr/bin:/bin:/usr/sbin`,
           HOME: root,
@@ -869,8 +869,7 @@ describe('bootstrap', () => {
       ])
       expect(code).toBe(0)
       expect(stderr).toBe('')
-      expect(stdout).toContain('install --host example.org')
-      expect(stdout).toContain('installed')
+      expect(stdout).toBe('\ninstalled\n')
       expect(existsSync(dest)).toBe(true)
     } finally {
       await rm(root, { recursive: true, force: true })

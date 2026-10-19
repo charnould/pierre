@@ -11,12 +11,12 @@ const WORDMARK = [
 
 const HELP: Array<[string, string]> = [
   ['install', 'Installe les services'],
-  ['update', "Met à jour l'ensemble des services"],
-  ['restart', "Redémarre l'ensemble des services"],
+  ['update', "Met à jour les services"],
+  ['restart', "Redémarre les services"],
   ['backup', 'Sauvegarde la base de données'],
   ['logs', 'Affiche les journaux'],
-  ['env', 'Affiche le domaine et les secrets d’authentification'],
-  ['remove', "Supprime l'ensemble des services et des données"]
+  ['env', 'Affiche le domaine et les secrets'],
+  ['remove', "Supprime les services et les données"]
 ]
 
 export type StatusLevel = 'ok' | 'warn' | 'bad'
