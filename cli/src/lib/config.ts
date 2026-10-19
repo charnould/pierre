@@ -35,11 +35,9 @@ const FLAG_NAMES = { host: 'host' } as const
 
 type FlagName = keyof typeof FLAG_NAMES
 
-export const CONFIGURE_USAGE = [
-  'Usage :',
-  '  pierre configure --host assistant.exemple.org',
-  ''
-].join('\n')
+export const INSTALL_USAGE = ['Usage :', '  pierre install --host assistant.exemple.org', ''].join(
+  '\n'
+)
 
 export function cleanHost(host: string): string {
   return host.replace(/^https?:\/\//, '').split('/')[0] ?? ''
@@ -93,7 +91,7 @@ export function isConfigured(runtime: Runtime): boolean {
   return requiredReady(readEnvMap(runtime.paths.envFile))
 }
 
-export function parseConfigureArgs(
+export function parseHostArgs(
   argv: string[]
 ): { ok: true; flags: ConfigureFlags } | { ok: false; error: string } {
   if (argv.length === 0 || argv[0] === '--help' || argv[0] === '-h') {

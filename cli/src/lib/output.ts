@@ -10,15 +10,13 @@ const WORDMARK = [
 ]
 
 const HELP: Array<[string, string]> = [
-  ['install', 'Installe PIERRE sans le configurer'],
-  ['configure', 'Paramètre le domaine'],
-  ['update', 'Met à jour le programme, le serveur et le classement'],
-  ['restart', 'Redémarre PIERRE'],
-  ['backup', 'Sauvegarde la base'],
+  ['install', 'Installe les services'],
+  ['update', "Met à jour l'ensemble des services"],
+  ['restart', "Redémarre l'ensemble des services"],
+  ['backup', 'Sauvegarde la base de données'],
   ['logs', 'Affiche les journaux'],
   ['env', 'Affiche le domaine et les secrets d’authentification'],
-  ['remove', 'Désinstalle PIERRE et ses données'],
-  ['help', 'Affiche cette aide']
+  ['remove', "Supprime l'ensemble des services et des données"]
 ]
 
 export type StatusLevel = 'ok' | 'warn' | 'bad'
@@ -45,11 +43,6 @@ function truncate(text: string, width: number): string {
   return `${characters.slice(0, width - 1).join('')}…`
 }
 
-export function renderBrand(ctx: Context): string {
-  const { bold, dim, reset } = ctx.runtime.palette
-  return `\n  ${bold}PIERRE${reset}  ${dim}${ctx.version}${reset}\n`
-}
-
 export function renderLogo(ctx: Context): string {
   const { bold, reset } = ctx.runtime.palette
   const mark = ctx.runtime.columns < 56 ? ['  PIERRE'] : WORDMARK
@@ -63,12 +56,8 @@ function renderCommands(ctx: Context): string {
   ).join('')
 }
 
-export function renderHelp(ctx: Context): string {
-  return `${renderBrand(ctx)}\n${renderCommands(ctx)}`
-}
-
 export function renderStatus(ctx: Context, lines: StatusLine[]): string {
-  const { dim, green, inverse, red, reset, yellow } = ctx.runtime.palette
+  const { dim, green, red, reset, yellow } = ctx.runtime.palette
   const mark = {
     ok: `${green}■${reset}`,
     warn: `${yellow}□${reset}`,
@@ -83,7 +72,7 @@ export function renderStatus(ctx: Context, lines: StatusLine[]): string {
     const text = truncate(line.value, valueRoom)
     const gap = Math.max(0, width - [...text].length - [...next].length)
     const value = line.next
-      ? `${dim}${text}${reset} → ${inverse}${line.next}${reset}${' '.repeat(gap)}`
+      ? `${text}${dim} → ${reset}${yellow}${line.next}${reset}${' '.repeat(gap)}`
       : `${text}${' '.repeat(gap)}`
     const row = `  ${dim}${pad(line.label, COLUMN)}${reset}${value}  ${mark[line.level]}\n`
     if (!line.hint) return [row]

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Télécharge le cli, vérifie son empreinte, puis lance pierre install.
+# Télécharge le cli, vérifie son empreinte, puis lance pierre install avec les arguments reçus.
 # curl -fsSL https://github.com/charnould/pierre/releases/download/__CLI_TAG__/install.sh | sh
 set -eu
 
@@ -53,4 +53,4 @@ if [ "${PIERRE_BOOTSTRAP_ONLY:-0}" = "1" ]; then
   exit 0
 fi
 
-exec "$dest" install
+exec "$dest" install "$@"

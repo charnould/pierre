@@ -6,8 +6,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { crc32 } from 'node:zlib'
 
+import { CARL_MODEL_FILES } from '../../shared/carl-model.ts'
 import { installCliRelease, updateCli } from '../src/commands/cli-release.ts'
-import { configure } from '../src/commands/configure.ts'
 import { printEnv } from '../src/commands/env.ts'
 import {
   activateInstallation,
@@ -194,7 +194,7 @@ describe('installation atomique', () => {
     expect(existsSync(join(root, 'pierre.env'))).toBe(false)
   })
 
-  it('installs the software without creating or publishing a configuration', async () => {
+  it('installs the software and publishes the host', async () => {
     const root = await tempRoot('pierre-stdin-')
     const ctx = testContext(root, {
       request: async (url) => {
@@ -253,16 +253,23 @@ describe('installation atomique', () => {
     await writeFile(join(root, 'pierre-linux-amd64.smolmachine'), 'image')
     await writeServerChecksums(root)
     await writeFile(join(root, 'model.zip'), 'zip')
-    const code = await installCommand(ctx.ctx)
+    const code = await installCommand(ctx.ctx, ['--host', 'example.org'])
     expect(code).toBe(0)
-    expect(ctx.out()).toContain('pierre configure --host')
-    expect(existsSync(join(root, 'pierre.env'))).toBe(false)
+    expect(ctx.out()).toContain('admin@pierre-ia.org')
+    expect(ctx.out()).not.toContain('configure')
+    expect(existsSync(join(root, 'pierre.env'))).toBe(true)
     expect(existsSync(join(root, 'pierre.service'))).toBe(true)
-    expect(
-      ctx.calls.some((call) => call.args[0] === 'restart' && call.args.includes('pierre'))
-    ).toBe(false)
+    expect(readFileSync(join(root, 'pierre.env'), 'utf8')).toContain('HOST=example.org')
   })
 })
+
+async function readyInstallation(root: string) {
+  await writeServerBundle(root, 'server-0.40.6')
+  await writeFile(join(root, 'pierre.service'), 'unit\n')
+  const carl = join(root, 'home', 'models', 'carl')
+  await mkdir(carl, { recursive: true })
+  for (const name of CARL_MODEL_FILES) await writeFile(join(carl, name), name)
+}
 
 describe('configuration', () => {
   const args = ['--host', 'example.org']
@@ -271,14 +278,16 @@ describe('configuration', () => {
     const root = await tempRoot('pierre-configure-invalid-')
     await writeServerBundle(root, 'server-0.40.6')
     const ctx = testContext(root)
-    expect(await configure(ctx.ctx, ['--provider', 'openai'])).toBe(2)
+    expect(await installCommand(ctx.ctx, [])).toBe(2)
+    expect(await installCommand(ctx.ctx, ['--provider', 'openai'])).toBe(2)
+    expect(ctx.out()).toContain('pierre install --host')
     expect(existsSync(join(root, 'pierre.env'))).toBe(false)
     expect(existsSync(join(root, 'pierre.env.pending'))).toBe(false)
   })
 
   it('keeps the generated secrets when the public address does not answer', async () => {
     const root = await tempRoot('pierre-configure-rollback-')
-    await writeServerBundle(root, 'server-0.40.6')
+    await readyInstallation(root)
     const ctx = testContext(root, {
       request: async (url) => {
         if (url.includes('api.anthropic.com')) return { status: 200, body: '', url }
@@ -286,20 +295,20 @@ describe('configuration', () => {
         return { status: 200, body: 'ok', url }
       }
     })
-    expect(await configure(ctx.ctx, args)).toBe(1)
+    expect(await installCommand(ctx.ctx, args)).toBe(1)
     const pending = readFileSync(join(root, 'pierre.env.pending'), 'utf8')
     expect(existsSync(join(root, 'pierre.env'))).toBe(false)
     expect(pending).toContain('AUTH_PASSWORD=')
-    expect(await configure(ctx.ctx, args)).toBe(1)
+    expect(await installCommand(ctx.ctx, args)).toBe(1)
     expect(readFileSync(join(root, 'pierre.env.pending'), 'utf8')).toBe(pending)
     expect(ctx.out()).not.toContain('sk-test')
   })
 
   it('publishes the configuration and shows the first password once', async () => {
     const root = await tempRoot('pierre-configure-ok-')
-    await writeServerBundle(root, 'server-0.40.6')
+    await readyInstallation(root)
     const ctx = testContext(root)
-    expect(await configure(ctx.ctx, args)).toBe(0)
+    expect(await installCommand(ctx.ctx, args)).toBe(0)
     const env = readFileSync(join(root, 'pierre.env'), 'utf8')
     expect(env).toContain('HOST=example.org')
     expect(env).not.toContain('AI_')
@@ -309,7 +318,7 @@ describe('configuration', () => {
     const password = env.match(/^AUTH_PASSWORD=(.*)$/m)?.[1] ?? ''
     expect(ctx.out()).toContain(password)
     const again = testContext(root)
-    expect(await configure(again.ctx, ['--host', 'autre.exemple.org'])).toBe(0)
+    expect(await installCommand(again.ctx, ['--host', 'autre.exemple.org'])).toBe(0)
     expect(again.out()).not.toContain(password)
     expect(readFileSync(join(root, 'pierre.env'), 'utf8')).toContain(`AUTH_PASSWORD=${password}`)
   })
@@ -842,7 +851,7 @@ describe('bootstrap', () => {
       )
       await writeExe(join(bin, 'id'), '#!/bin/sh\necho 0\n')
       const dest = join(destDir, 'pierre')
-      const proc = Bun.spawn(['sh', script], {
+      const proc = Bun.spawn(['sh', script, '--host', 'example.org'], {
         env: {
           PATH: `${bin}:/usr/bin:/bin:/usr/sbin`,
           HOME: root,
@@ -860,7 +869,7 @@ describe('bootstrap', () => {
       ])
       expect(code).toBe(0)
       expect(stderr).toBe('')
-      expect(stdout).toContain('install')
+      expect(stdout).toContain('install --host example.org')
       expect(stdout).toContain('installed')
       expect(existsSync(dest)).toBe(true)
     } finally {

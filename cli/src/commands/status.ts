@@ -12,7 +12,7 @@ import {
 import { renderStatus, type StatusLine } from '../lib/output.ts'
 import { runCommand, type Context } from '../lib/system.ts'
 
-const CONFIGURE_HINT = 'Configurer : pierre configure --host DOMAINE'
+const INSTALL_HINT = 'Installer : pierre install --host DOMAINE'
 
 export async function showStatus(ctx: Context): Promise<number> {
   const { lines } = await collectStatus(ctx)
@@ -28,7 +28,7 @@ export async function collectStatus(ctx: Context): Promise<{ lines: StatusLine[]
           level: 'bad',
           label: 'installation',
           value: 'absente',
-          hint: 'Installer : pierre install'
+          hint: INSTALL_HINT
         }
       ]
     }
@@ -46,7 +46,7 @@ export async function collectStatus(ctx: Context): Promise<{ lines: StatusLine[]
       level: 'bad',
       label: 'configuration',
       value: existsSync(ctx.runtime.paths.pendingEnvFile) ? 'en attente' : 'absente',
-      hint: CONFIGURE_HINT
+      hint: INSTALL_HINT
     })
     lines.push(versionLine('server', serverVersion, serverLatest, null))
     lines.push(versionLine('carl', carlVersion, carlLatest, null))

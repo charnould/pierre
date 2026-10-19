@@ -161,12 +161,12 @@ async function installedVersion(ctx: Context): Promise<string> {
 export async function updateServer(ctx: Context): Promise<number> {
   return withUpdateLock(ctx, async () => {
     if (!isInstalled(ctx.runtime) && !existsSync(marker(ctx))) {
-      sayError(ctx, 'PIERRE n’est pas installé. Lancez d’abord pierre install.')
+      sayError(ctx, 'PIERRE n’est pas installé. Lancez d’abord pierre install --host DOMAINE.')
       return 1
     }
     if (!(await recoverInterruptedServerUpdate(ctx))) return 1
     if (!isInstalled(ctx.runtime)) {
-      sayError(ctx, 'PIERRE n’est pas installé. Lancez d’abord pierre install.')
+      sayError(ctx, 'PIERRE n’est pas installé. Lancez d’abord pierre install --host DOMAINE.')
       return 1
     }
     const current = await installedVersion(ctx)

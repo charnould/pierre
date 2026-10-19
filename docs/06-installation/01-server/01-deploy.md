@@ -35,23 +35,25 @@ Avant de déployer PIERRE, vérifier que vous disposez de :
 
 ### Déployer PIERRE sur un serveur
 
-Connecté en root, une seule commande installe PIERRE. Elle ne demande aucune configuration et ne démarre pas encore PIERRE :
+Connecté en root, une commande installe les services et démarre PIERRE sur le domaine. Le DNS doit déjà pointer vers le serveur.
 
 ```bash
-curl -fsSL https://github.com/charnould/pierre/releases/download/cli-0.9.6/install.sh | sh
+curl -fsSL https://github.com/charnould/pierre/releases/download/cli-0.9.14/install.sh | sh -s -- --host assistant.exemple.org
 ```
 
-L'installation s'arrête tout de suite si la machine n'est pas `x86_64` ou si `/dev/kvm` est absent. Elle peut être relancée avec `pierre install`.
-
-La configuration du domaine se fait ensuite avec une commande. PIERRE génère le mot de passe administrateur et les secrets d'authentification, puis les affiche une seule fois si le démarrage réussit :
+Si le CLI est déjà en place :
 
 ```bash
-pierre configure --host assistant.exemple.org
+pierre install --host assistant.exemple.org
 ```
+
+L'installation s'arrête tout de suite si la machine n'est pas `x86_64` ou si `/dev/kvm` est absent. La même commande la reprend.
+
+PIERRE génère le mot de passe administrateur et les secrets d'authentification, puis les affiche une seule fois si le démarrage réussit. Pour changer le domaine d'une instance déjà en service, la même commande conserve les secrets et n'affiche plus le mot de passe.
 
 Si le domaine public ne répond pas, la configuration précédente est restaurée. La tentative reste enregistrée : relancer la même commande réutilise les mêmes secrets.
 
-L'intelligence et les canaux se règlent ensuite dans le bureau, `Administration` → `Prestataires`. Tant qu'ils ne sont pas enregistrés, `pierre` les affiche `non paramétré`. Une instance déjà en service n'utilise plus les anciennes variables `AI_*` et `CM_*` : un administrateur les saisit dans cet écran. Si ces valeurs sont encore dans `/etc/pierre.env`, elles ne sont plus lues. Recopiez-les avant un prochain `pierre configure`, qui réécrit le fichier sans elles.
+L'intelligence et les canaux se règlent ensuite dans le bureau, `Administration` → `Prestataires`. Le CLI ne les affiche pas. Une instance déjà en service n'utilise plus les anciennes variables `AI_*` et `CM_*`. Si ces valeurs sont encore dans `/etc/pierre.env`, recopiez-les dans le bureau avant un prochain `pierre install --host`, qui réécrit le fichier sans elles.
 
 ### Vérifier
 
@@ -59,11 +61,11 @@ L'intelligence et les canaux se règlent ensuite dans le bureau, `Administration
 pierre
 ```
 
-La commande affiche l'état puis rend la main. Le code de sortie vaut `0` lorsque le site, le serveur et le classement répondent. Une intelligence ou un canal non paramétré ne change pas ce code. Elle affiche aussi les liens du projet, du dépôt et de la documentation.
+La commande affiche l'état et les commandes, puis rend la main. Le code de sortie vaut `0` lorsque le site, le serveur et le classement répondent.
 
 Les autres codes sont `1` pour un échec ou un élément obligatoire indisponible, et `2` pour une commande mal écrite.
 
-`pierre env` affiche `HOST`, `AUTH_PASSWORD`, `AUTH_SECRET` et `AUTH_BEARER`, sans couleur ni commentaire. La commande est réservée à root. Ne partagez pas sa sortie.
+`pierre env` affiche `HOST`, `AUTH_PASSWORD`, `AUTH_SECRET` et `AUTH_BEARER`, sans couleur ni commentaire. La commande est réservée à root. Elle sert à relire le mot de passe administrateur, affiché une seule fois, et le jeton `AUTH_BEARER` des dépôts automatisés. Ne partagez pas sa sortie.
 
 La base, les fichiers et l'image vivent dans `/var/lib/pierre`. Remplacer l'exécutable ne les touche pas.
 
@@ -73,22 +75,20 @@ Toutes les données de PIERRE sont regroupées sous `/var/lib/pierre` :
 
 ### Les commandes
 
-| Commande           | Effet                                                              |
-| ------------------ | ------------------------------------------------------------------ |
-| `pierre`           | Affiche l'état, les versions et les liens utiles.                  |
-| `pierre install`   | Installe PIERRE, sans configuration et sans démarrer PIERRE.       |
-| `pierre configure` | Paramètre le domaine.                                              |
-| `pierre update`    | Met à jour le CLI, puis le serveur, smolvm et CARL.                |
-| `pierre restart`   | Redémarre PIERRE et attend qu'il réponde.                          |
-| `pierre backup`    | Sauvegarde la base et affiche la commande `scp`.                   |
-| `pierre logs`      | Affiche les journaux de PIERRE.                                    |
-| `pierre env`       | Affiche le domaine et les secrets d'authentification.              |
-| `pierre remove`    | Désinstalle PIERRE et **supprime les données** après confirmation. |
-| `pierre help`      | Affiche l'aide.                                                    |
+| Commande                        | Effet                                                     |
+| ------------------------------- | --------------------------------------------------------- |
+| `pierre`                        | Affiche l'état et les commandes.                          |
+| `pierre install --host DOMAINE` | Installe les services.                                    |
+| `pierre update`                 | Met à jour l'ensemble des services.                       |
+| `pierre restart`                | Redémarre l'ensemble des services.                        |
+| `pierre backup`                 | Sauvegarde la base de données.                            |
+| `pierre logs`                   | Affiche les journaux.                                     |
+| `pierre env`                    | Affiche le domaine et les secrets d'authentification.     |
+| `pierre remove`                 | Supprime l'ensemble des services et des données.          |
 
 Une option s'écrit `--option valeur`. `--option=valeur` est refusé.
 
-Le premier paramétrage exige `--host`.
+`pierre install` exige `--host`.
 
 `pierre logs` ouvre les 200 dernières lignes puis suit les nouvelles. Dans un terminal, `Ctrl+C` quitte, les flèches défilent, `/` recherche, `n` poursuit la recherche et `F` reprend le direct.
 

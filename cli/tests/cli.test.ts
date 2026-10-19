@@ -3,12 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import {
-  cleanHost,
-  mergeConfiguration,
-  parseConfigureArgs,
-  type EnvMap
-} from '../src/lib/config.ts'
+import { cleanHost, mergeConfiguration, parseHostArgs, type EnvMap } from '../src/lib/config.ts'
 import {
   CARL_TAG,
   latestMatching,
@@ -18,7 +13,7 @@ import {
   versionGreater,
   type Release
 } from '../src/lib/github.ts'
-import { renderHelp, renderStatus } from '../src/lib/output.ts'
+import { renderStatus } from '../src/lib/output.ts'
 import { run } from '../src/main.ts'
 import { CLI_VERSION } from '../src/version.ts'
 import { tempRoot, testContext } from './support.ts'
@@ -34,35 +29,27 @@ const release = (tag: string, extra: Partial<Release> = {}): Release => ({
 describe('commandes et droits', () => {
   it('lists the commands', async () => {
     const root = await tempRoot('pierre-help-')
-    const ctx = testContext(root, { uid: () => 1000 })
-    expect(await run(['help'], ctx.ctx)).toBe(0)
+    const ctx = testContext(root)
+    const verbs = ['install', 'update', 'restart', 'backup', 'logs', 'env', 'remove']
+    expect(await run([], ctx.ctx)).toBe(1)
     expect(
       ctx
         .out()
         .split('\n')
         .map((line) => line.trim().split(/\s+/)[0])
-        .filter((verb) => verb && verb !== 'PIERRE')
-    ).toEqual([
-      'install',
-      'configure',
-      'update',
-      'restart',
-      'backup',
-      'logs',
-      'env',
-      'remove',
-      'help'
-    ])
-    expect(renderHelp(ctx.ctx)).toBe(ctx.out())
+        .filter((verb) => verbs.includes(verb ?? ''))
+    ).toEqual(verbs)
+    expect(ctx.out()).toContain('Installe les services')
+    expect(ctx.out()).not.toContain('configure')
   })
 
-  it('rejects an unknown command after printing help', async () => {
+  it('rejects an unknown command', async () => {
     const root = await tempRoot('pierre-help-')
     const ctx = testContext(root)
-    expect(await run(['update-cli'], ctx.ctx)).toBe(2)
-    expect(await run(['carl'], ctx.ctx)).toBe(2)
-    expect(ctx.out()).toContain('configure')
-    expect(ctx.out()).not.toContain('update-cli')
+    expect(await run(['help'], ctx.ctx)).toBe(2)
+    expect(await run(['configure'], ctx.ctx)).toBe(2)
+    expect(ctx.err()).toContain('Commande inconnue.')
+    expect(ctx.out()).toBe('')
   })
 
   it('prints only the cli release tag without root', async () => {
@@ -86,7 +73,6 @@ describe('commandes et droits', () => {
     await expect(run(['install'], arm.ctx)).rejects.toThrow('x86_64')
     const noKvm = testContext(root, { kvm: () => false })
     await expect(run(['install'], noKvm.ctx)).rejects.toThrow('/dev/kvm')
-    expect(await run(['help'], user.ctx)).toBe(0)
   })
 })
 
@@ -100,7 +86,7 @@ describe('présentation', () => {
         level: 'bad',
         label: 'Configuration',
         value: 'absente',
-        hint: 'Configurer : pierre configure'
+        hint: 'Installer : pierre install --host DOMAINE'
       },
       { level: 'warn', label: 'RCS', value: 'non paramétré' }
     ])
@@ -108,7 +94,7 @@ describe('présentation', () => {
     expect(text).toContain('\n\n\n')
     expect(text).toContain('install')
     expect(text).toContain('update')
-    expect(text).toContain('Installe PIERRE sans le configurer')
+    expect(text).toContain('Installe les services')
     expect(text).not.toContain('Documentation')
     expect(text).not.toContain('pierre-ia.org')
     expect(text).not.toContain('\u001b[')
@@ -118,6 +104,7 @@ describe('présentation', () => {
     expect(updates).not.toContain('┌')
     expect(updates).toContain('carl-1.0.0')
     expect(updates).toContain('→ carl-1.0.1')
+    expect(updates).not.toContain('\u001b[7m')
     ctx.ctx.runtime.columns = 48
     const narrow = renderStatus(ctx.ctx, [
       {
@@ -135,9 +122,13 @@ describe('présentation', () => {
   it('colors a terminal and honors NO_COLOR', async () => {
     const root = await tempRoot('pierre-color-')
     const colored = testContext(root, { tty: true, env: { NO_COLOR: '' } })
-    expect(
-      renderStatus(colored.ctx, [{ level: 'ok', label: 'Site', value: 'https://exemple.org' }])
-    ).toContain('\u001b[')
+    const coloredStatus = renderStatus(colored.ctx, [
+      { level: 'ok', label: 'server', value: 'server-0.40.7', next: 'server-0.40.9' }
+    ])
+    expect(coloredStatus).toContain('\u001b[')
+    expect(coloredStatus).toContain('server-0.40.7\u001b[2m → \u001b[0m\u001b[33mserver-0.40.9')
+    expect(coloredStatus).not.toContain('\u001b[2mserver-0.40.7')
+    expect(coloredStatus).not.toContain('\u001b[7m')
     const plain = testContext(root, { tty: true, env: { NO_COLOR: '1' } })
     expect(
       renderStatus(plain.ctx, [{ level: 'ok', label: 'Site', value: 'https://exemple.org' }])
@@ -183,8 +174,8 @@ describe('paramétrage', () => {
   })
 
   it('requires the host and rejects anything else', () => {
-    expect(parseConfigureArgs(['--provider', 'openai']).ok).toBe(false)
-    expect(parseConfigureArgs(['--host=example.org']).ok).toBe(false)
+    expect(parseHostArgs(['--provider', 'openai']).ok).toBe(false)
+    expect(parseHostArgs(['--host=example.org']).ok).toBe(false)
     const merged = mergeConfiguration({}, { host: 'https://example.org/admin' }, true)
     expect(merged.ok).toBe(true)
     if (!merged.ok) return

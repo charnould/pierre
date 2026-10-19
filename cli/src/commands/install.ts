@@ -16,7 +16,18 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 
 import { CARL_MODEL_FILES } from '../../../shared/carl-model.ts'
-import { writePrivate, type ParsedEnv } from '../lib/config.ts'
+import {
+  formatEnv,
+  INSTALL_USAGE,
+  isConfigured,
+  isInstalled,
+  mergeConfiguration,
+  parseHostArgs,
+  readEnvMap,
+  writePrivate,
+  type ConfigureFlags,
+  type ParsedEnv
+} from '../lib/config.ts'
 import { fetchReleases, fetchTo, selectCarlRelease, selectServerRelease } from '../lib/github.ts'
 import {
   activateServerRelease,
@@ -26,8 +37,8 @@ import {
 } from '../lib/server-bundle.ts'
 import { writeServerUnit } from '../lib/server-service.ts'
 import { ensureSmolvm } from '../lib/smolvm-runtime.ts'
-import { CommandFailed, must, runCommand, type Context } from '../lib/system.ts'
-import { say } from '../lib/text.ts'
+import { CommandFailed, must, runCommand, waitForBody, type Context } from '../lib/system.ts'
+import { say, sayError } from '../lib/text.ts'
 
 const PACKAGES = [
   'imagemagick',
@@ -245,20 +256,19 @@ export function finalizeConfiguration(ctx: Context) {
 }
 
 async function installFailed(ctx: Context, step: string) {
-  const { cyan, dim, reset } = ctx.runtime.palette
+  const { dim, reset } = ctx.runtime.palette
   ctx.runtime.writeOut(`\n  L’étape « ${step} » n’a pas abouti.\n`)
-  ctx.runtime.writeOut(`  Relancez : ${cyan}pierre install${reset}\n\n`)
+  ctx.runtime.writeOut(`  Relancez la même commande.\n\n`)
   ctx.runtime.writeOut(`  ${dim}Journal : ${ctx.runtime.paths.installLog}${reset}\n`)
 }
 
-function installReady(ctx: Context) {
-  const { bold, cyan, reset } = ctx.runtime.palette
-  say(ctx, '')
-  say(ctx, `${bold}Les logiciels sont installés.${reset}`)
-  say(ctx, 'PIERRE ne démarre pas tant qu’il n’est pas configuré.')
-  say(ctx, '')
-  say(ctx, 'Étape suivante :')
-  say(ctx, `${cyan}pierre configure --host VOTRE-DOMAINE${reset}`)
+function servicesReady(ctx: Context): boolean {
+  const carl = join(ctx.runtime.paths.home, 'models', 'carl')
+  return (
+    isInstalled(ctx.runtime) &&
+    existsSync(ctx.runtime.paths.unitFile) &&
+    CARL_MODEL_FILES.every((name) => existsSync(join(carl, name)))
+  )
 }
 
 export async function runInstallation(ctx: Context): Promise<number> {
@@ -283,7 +293,6 @@ export async function runInstallation(ctx: Context): Promise<number> {
       return 1
     }
   }
-  installReady(ctx)
   return 0
 }
 
@@ -295,7 +304,57 @@ async function serverTag(ctx: Context): Promise<string> {
   return selected.tag
 }
 
-export async function installCommand(ctx: Context): Promise<number> {
+async function activateHost(ctx: Context, flags: ConfigureFlags): Promise<number> {
+  const pending = existsSync(ctx.runtime.paths.pendingEnvFile)
+  const current = readEnvMap(pending ? ctx.runtime.paths.pendingEnvFile : ctx.runtime.paths.envFile)
+  const published = readEnvMap(ctx.runtime.paths.envFile)
+  const merged = mergeConfiguration(current, flags, !isConfigured(ctx.runtime) && !pending)
+  if (!merged.ok) {
+    sayError(ctx, merged.error)
+    ctx.runtime.writeOut(`${INSTALL_USAGE}\n`)
+    return 2
+  }
+  writePrivate(ctx.runtime.paths.pendingEnvFile, formatEnv(merged.env))
+  try {
+    await activateInstallation(ctx, merged.env)
+    if (!(await waitForBody(ctx.runtime, 'http://127.0.0.1:3000/up', 120))) {
+      throw new Error('local')
+    }
+    if (!(await waitForBody(ctx.runtime, `https://${merged.env.host}/up`, 120))) {
+      throw new Error('public')
+    }
+  } catch {
+    await rollbackInstallation(ctx)
+    sayError(
+      ctx,
+      'La configuration n’a pas pu être activée. Les valeurs précédentes sont en place.'
+    )
+    say(ctx, 'La tentative est conservée. Relancez la même commande.')
+    return 1
+  }
+  finalizeConfiguration(ctx)
+  const { bold, cyan, green, reset } = ctx.runtime.palette
+  say(ctx, `${green}✓${reset}  PIERRE répond sur ${cyan}https://${merged.env.host}${reset}`)
+  if (!published.AUTH_PASSWORD) {
+    say(ctx, '')
+    say(ctx, `${bold}Compte : admin@pierre-ia.org${reset}`)
+    say(ctx, `${bold}Mot de passe : ${merged.env.password}${reset}`)
+    say(ctx, 'Notez-le maintenant. Il ne sera plus affiché.')
+  }
+  return 0
+}
+
+export async function installCommand(ctx: Context, argv: string[]): Promise<number> {
+  const parsed = parseHostArgs(argv)
+  if (!parsed.ok) {
+    if (parsed.error) sayError(ctx, parsed.error)
+    ctx.runtime.writeOut(`${INSTALL_USAGE}\n`)
+    return 2
+  }
   rememberAssetSource(ctx)
-  return runInstallation(ctx)
+  if (!servicesReady(ctx)) {
+    const code = await runInstallation(ctx)
+    if (code !== 0) return code
+  }
+  return activateHost(ctx, parsed.flags)
 }

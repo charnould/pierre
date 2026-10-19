@@ -1,5 +1,4 @@
 import { backup } from './commands/backup.ts'
-import { configure } from './commands/configure.ts'
 import { printEnv } from './commands/env.ts'
 import { installCommand } from './commands/install.ts'
 import { logs } from './commands/logs.ts'
@@ -7,8 +6,8 @@ import { remove } from './commands/remove.ts'
 import { restart } from './commands/restart.ts'
 import { showStatus } from './commands/status.ts'
 import { update } from './commands/update.ts'
-import { renderHelp } from './lib/output.ts'
 import { createRuntime, Exit, requireMachine, requireRoot, type Context } from './lib/system.ts'
+import { sayError } from './lib/text.ts'
 import { CLI_VERSION } from './version.ts'
 
 export async function run(argv: string[], ctx: Context): Promise<number> {
@@ -17,13 +16,9 @@ export async function run(argv: string[], ctx: Context): Promise<number> {
     ctx.runtime.writeOut(`${ctx.version}\n`)
     return 0
   }
-  if (command === 'help' || command === '-h' || command === '--help') {
-    ctx.runtime.writeOut(renderHelp(ctx))
-    return 0
-  }
   if (command === 'install') {
     requireMachine(ctx.runtime)
-    return installCommand(ctx)
+    return installCommand(ctx, rest)
   }
   requireRoot(ctx.runtime)
   switch (command) {
@@ -37,14 +32,12 @@ export async function run(argv: string[], ctx: Context): Promise<number> {
       return backup(ctx)
     case 'logs':
       return logs(ctx)
-    case 'configure':
-      return configure(ctx, rest)
     case 'env':
       return printEnv(ctx)
     case 'remove':
       return remove(ctx)
     default:
-      ctx.runtime.writeOut(renderHelp(ctx))
+      sayError(ctx, 'Commande inconnue.')
       return 2
   }
 }
