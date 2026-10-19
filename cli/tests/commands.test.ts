@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import { existsSync, readFileSync } from 'node:fs'
-import { mkdir, symlink, unlink, writeFile } from 'node:fs/promises'
+import { mkdir, unlink, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { CARL_MODEL_FILES } from '../../shared/carl-model.ts'
-import { installCliRelease, updateCli } from '../src/commands/cli-release.ts'
+import { installCliRelease } from '../src/commands/cli-release.ts'
 import { printEnv } from '../src/commands/env.ts'
 import { installCommand } from '../src/commands/install.ts'
 import { logs } from '../src/commands/logs.ts'
@@ -135,7 +135,6 @@ describe('installation atomique', () => {
     const ctx = testContext(root, { commandExists: (name) => name === 'caddy' })
     expect(await installCommand(ctx.ctx, ['--host', 'example.org'])).toBe(0)
     expect(readFileSync(join(root, 'pierre.env'), 'utf8')).toContain('HOST=example.org')
-    expect(existsSync(join(root, 'pierre.env.pending'))).toBe(false)
     expect(readFileSync(join(root, 'Caddyfile'), 'utf8')).toContain('example.org')
 
     const failed = await tempRoot('pierre-atomic-fail-')
@@ -163,8 +162,7 @@ describe('installation atomique', () => {
       }
     })
     expect(await installCommand(broken.ctx, ['--host', 'example.org'])).toBe(1)
-    expect(existsSync(join(failed, 'pierre.env'))).toBe(false)
-    expect(existsSync(join(failed, 'pierre.env.pending'))).toBe(true)
+    expect(readFileSync(join(failed, 'pierre.env'), 'utf8')).toContain('HOST=example.org')
   })
 
   it('stops at the first failing step without publishing a configuration', async () => {
@@ -258,7 +256,6 @@ describe('configuration', () => {
     expect(await installCommand(ctx.ctx, ['--provider', 'openai'])).toBe(2)
     expect(ctx.out()).toContain('pierre install --host')
     expect(existsSync(join(root, 'pierre.env'))).toBe(false)
-    expect(existsSync(join(root, 'pierre.env.pending'))).toBe(false)
   })
 
   it('keeps the generated secrets when the public address does not answer', async () => {
@@ -273,11 +270,12 @@ describe('configuration', () => {
       }
     })
     expect(await installCommand(ctx.ctx, args)).toBe(1)
-    const pending = readFileSync(join(root, 'pierre.env.pending'), 'utf8')
-    expect(existsSync(join(root, 'pierre.env'))).toBe(false)
-    expect(pending).toContain('AUTH_PASSWORD=')
+    const env = readFileSync(join(root, 'pierre.env'), 'utf8')
+    const password = env.match(/^AUTH_PASSWORD=(.*)$/m)?.[1] ?? ''
+    expect(password.length).toBeGreaterThan(0)
+    expect(ctx.out()).toContain(password)
     expect(await installCommand(ctx.ctx, args)).toBe(1)
-    expect(readFileSync(join(root, 'pierre.env.pending'), 'utf8')).toBe(pending)
+    expect(readFileSync(join(root, 'pierre.env'), 'utf8')).toBe(env)
     expect(ctx.out()).not.toContain('sk-test')
   })
 
@@ -290,7 +288,6 @@ describe('configuration', () => {
     expect(env).toContain('HOST=example.org')
     expect(env).not.toContain('AI_')
     expect(env).not.toContain('CM_')
-    expect(existsSync(join(root, 'pierre.env.pending'))).toBe(false)
     expect(ctx.out()).toContain('admin@pierre-ia.org')
     const password = env.match(/^AUTH_PASSWORD=(.*)$/m)?.[1] ?? ''
     expect(password).toMatch(/^[a-kmnp-z2-9]{4}(?:-[a-kmnp-z2-9]{4}){3}$/)
@@ -569,7 +566,7 @@ describe('mises à jour séparées', () => {
     expect(existsSync(executed)).toBe(false)
   })
 
-  it('replaces the server and ONNX, then restores both when the new server stays down', async () => {
+  it('leaves the new server in place when it stays down', async () => {
     const root = await tempRoot('pierre-update-')
     const assets = join(root, 'assets')
     await mkdir(assets)
@@ -593,10 +590,10 @@ describe('mises à jour séparées', () => {
       }
     })
     expect(await updateServer(ctx.ctx)).toBe(1)
-    expect(ctx.err()).toContain('version précédente a été restaurée')
+    expect(ctx.err()).toContain('Le serveur ne répond pas.')
     expect(
       readFileSync(join(root, 'home', 'server', 'current', 'libonnxruntime.so.1'), 'utf8')
-    ).toBe('library')
+    ).toBe('new library')
     expect(readFileSync(join(root, 'pierre'), 'utf8')).toBe('cli stays')
     expect(readFileSync(join(root, 'home', 'datastore.sqlite'), 'utf8')).toBe('database')
   })
@@ -631,9 +628,9 @@ describe('mises à jour séparées', () => {
     let handoff = false
     const ctx = testContext(root, {
       env: { PIERRE_ASSET_DIR: assets, PIERRE_CLI_TAG: 'cli-9.9.9' },
-      start: (command, args, options) => {
+      start: (command, args) => {
         if (args[0] === 'update') {
-          handoff = options?.env?.['PIERRE_UPDATE_HANDOFF'] === '1'
+          handoff = args[1] === '--server'
           return {
             finished: Promise.resolve({ code: 0, stdout: '', stderr: '' }),
             kill: () => undefined
@@ -665,41 +662,6 @@ describe('mises à jour séparées', () => {
     const ctx = testContext(root, { env: { PIERRE_ASSET_DIR: assets } })
     expect(await installCliRelease(ctx.ctx, 'cli-0.9.1')).toBe(1)
     expect(readFileSync(join(root, 'pierre'), 'utf8')).toBe('old cli')
-  })
-
-  it('recovers an interrupted cli update before checking for a new release', async () => {
-    const root = await tempRoot('pierre-cli-recover-')
-    await writeExe(join(root, 'pierre'), '#!/bin/sh\necho broken\n')
-    await writeExe(join(root, 'pierre.previous'), '#!/bin/sh\necho cli-0.9.1\n')
-    const ctx = testContext(root, { env: { PIERRE_CLI_TAG: 'cli-0.9.1' } })
-    expect(await updateCli(ctx.ctx)).toBe(0)
-    expect(await Bun.$`${join(root, 'pierre')} --version`.text()).toBe('cli-0.9.1\n')
-    expect(existsSync(join(root, 'pierre.previous'))).toBe(false)
-    expect(ctx.out()).toContain('Restauration du cli interrompue.')
-  })
-
-  it('recovers an interrupted server update before checking for a new release', async () => {
-    const root = await tempRoot('pierre-server-recover-')
-    const previous = await writeServerBundle(root, 'server-0.40.6')
-    const broken = join(root, 'home', 'server', 'releases', 'server-9.9.9')
-    await mkdir(broken)
-    await writeExe(join(broken, 'pierre'), '#!/bin/sh\necho server-9.9.9\n')
-    await writeFile(join(broken, 'libonnxruntime.so.1'), 'new library')
-    await writeFile(join(broken, 'pierre-linux-amd64.smolmachine'), 'new microvm')
-    const current = join(root, 'home', 'server', 'current')
-    await unlink(current)
-    await symlink(broken, current)
-    await writeFile(
-      join(root, 'home', 'server', 'update.json'),
-      `${JSON.stringify({ previous })}\n`
-    )
-    await writeFile(join(root, 'pierre.env'), configuredText())
-    const ctx = testContext(root, { env: { PIERRE_SERVER_TAG: 'server-0.40.6' } })
-    expect(await updateServer(ctx.ctx)).toBe(0)
-    expect(await Bun.$`${join(current, 'pierre')} --version`.text()).toBe('server-0.40.6\n')
-    expect(readFileSync(join(current, 'libonnxruntime.so.1'), 'utf8')).toBe('library')
-    expect(existsSync(join(root, 'home', 'server', 'update.json'))).toBe(false)
-    expect(ctx.out()).toContain('Restauration')
   })
 
   it('does not treat an unreadable server version as up to date', async () => {

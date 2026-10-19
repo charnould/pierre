@@ -24,8 +24,6 @@ type Env = Record<string, string | undefined>
 type Paths = {
   home: string
   envFile: string
-  pendingEnvFile: string
-  previousEnvFile: string
   installLog: string
   assetSourceFile: string
   serverRoot: string
@@ -36,7 +34,6 @@ type Paths = {
   unitFile: string
   carlUnit: string
   caddyFile: string
-  previousCaddyFile: string
   smolvmBin: string
   smolvmHome: string
   smolvmReleases: string
@@ -120,8 +117,6 @@ function resolvePaths(env: Env): Paths {
   return {
     home,
     envFile,
-    pendingEnvFile: `${envFile}.pending`,
-    previousEnvFile: `${envFile}.previous`,
     installLog: envOr(env, 'PIERRE_INSTALL_LOG', '/var/log/pierre-install.log'),
     assetSourceFile: envOr(env, 'PIERRE_ASSET_SOURCE_FILE', '/etc/pierre-install-source'),
     serverRoot,
@@ -132,7 +127,6 @@ function resolvePaths(env: Env): Paths {
     unitFile: join(unitDir, 'pierre.service'),
     carlUnit: join(unitDir, 'carl.service'),
     caddyFile,
-    previousCaddyFile: `${caddyFile}.previous`,
     smolvmBin: envOr(env, 'PIERRE_SMOLVM_BIN', '/usr/local/bin/smolvm'),
     smolvmHome: envOr(env, 'PIERRE_SMOLVM_HOME', '/root/.smolvm'),
     smolvmRoot,
@@ -341,10 +335,6 @@ export function requireMachine(runtime: Runtime) {
   }
 }
 
-export function isHealthyResponse(status: number, body: string): boolean {
-  return status >= 200 && status < 300 && body.trim() === 'ok'
-}
-
 export async function withInterrupt<T>(
   runtime: Runtime,
   handler: () => void,
@@ -357,18 +347,4 @@ export async function withInterrupt<T>(
   } finally {
     runtime.onInterrupt = previous
   }
-}
-
-export async function waitForBody(
-  runtime: Runtime,
-  url: string,
-  attempts: number,
-  timeoutMs = 2000
-): Promise<boolean> {
-  for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    const response = await runtime.request(url, { timeoutMs })
-    if (isHealthyResponse(response.status, response.body)) return true
-    if (attempt < attempts) await runtime.sleep(1000)
-  }
-  return false
 }

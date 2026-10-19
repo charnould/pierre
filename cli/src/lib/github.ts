@@ -1,13 +1,4 @@
-import { createHash } from 'node:crypto'
-import {
-  copyFileSync,
-  createReadStream,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  renameSync,
-  rmSync
-} from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 import { latestCarlTag } from '../../../shared/carl-model.ts'
@@ -84,22 +75,19 @@ export async function fetchRelease(ctx: Context, tag: string): Promise<Release> 
   return release
 }
 
-export function requireAssetSha256(
-  release: Release,
-  names: readonly string[]
-): Map<string, string> {
-  const actual = release.assets.map((asset) => asset.name).sort()
-  const expected = [...names].sort()
-  if (actual.join('\n') !== expected.join('\n')) {
-    throw new CommandFailed(1, `La release ${release.tag} est incomplète.`)
-  }
-  const digests = new Map<string, string>()
-  for (const name of expected) {
-    const sha256 = release.assets.find((asset) => asset.name === name)?.sha256 ?? ''
-    if (!SHA256.test(sha256)) throw new CommandFailed(1, `Empreinte absente pour ${name}.`)
-    digests.set(name, sha256)
-  }
-  return digests
+export async function assetSha256(
+  ctx: Context,
+  tag: string,
+  name: string,
+  release?: Release
+): Promise<string> {
+  const local = assetDirectory(ctx)
+  if (local) return checksumFor(await Bun.file(join(local, 'checksums.txt')).text(), name)
+  const listed = sha256Of(release, name)
+  if (listed) return listed
+  const fetched = sha256Of(await fetchRelease(ctx, tag), name)
+  if (!fetched) throw new CommandFailed(1, `Empreinte absente pour ${name}.`)
+  return fetched
 }
 
 export async function fetchTo(ctx: Context, name: string, dest: string, release: string) {
@@ -108,7 +96,7 @@ export async function fetchTo(ctx: Context, name: string, dest: string, release:
   if (directory) {
     const source = join(directory, name)
     if (existsSync(source)) {
-      copyFileSync(source, dest)
+      await Bun.write(dest, Bun.file(source))
       return
     }
   }
@@ -124,26 +112,16 @@ export async function fetchTo(ctx: Context, name: string, dest: string, release:
   }
 }
 
-export function fileSha256(file: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const hash = createHash('sha256')
-    const stream = createReadStream(file)
-    stream.on('data', (chunk) => hash.update(chunk))
-    stream.on('error', reject)
-    stream.on('end', () => resolve(hash.digest('hex')))
-  })
+export async function fileSha256(file: string): Promise<string> {
+  const hasher = new Bun.CryptoHasher('sha256')
+  for await (const chunk of Bun.file(file).stream()) hasher.update(chunk)
+  return hasher.digest('hex')
 }
 
 export function checksumFor(checksums: string, name: string): string {
-  for (const raw of checksums.split('\n')) {
-    const fields = raw.trim().split(/\s+/)
-    const fileName = fields[1]?.replace(/^\*/, '')
-    if (fileName !== name) continue
-    const sha256 = fields[0] ?? ''
-    if (!SHA256.test(sha256)) throw new CommandFailed(1, `Empreinte absente pour ${name}.`)
-    return sha256
-  }
-  throw new CommandFailed(1, `Empreinte absente pour ${name}.`)
+  const sha256 = checksumEntries(checksums).find((entry) => entry.name === name)?.sha256
+  if (!sha256) throw new CommandFailed(1, `Empreinte absente pour ${name}.`)
+  return sha256
 }
 
 export async function expectSha256(name: string, file: string, expected: string) {
@@ -163,6 +141,11 @@ export async function commandVersion(ctx: Context, file: string): Promise<string
   const result = await ctx.runtime.start(file, ['--version']).finished
   if (result.code !== 0) throw new CommandFailed(result.code, 'Version illisible.')
   return result.stdout.trim().split(/\s+/)[0] ?? ''
+}
+
+function sha256Of(release: Release | undefined, name: string): string {
+  const sha256 = release?.assets.find((asset) => asset.name === name)?.sha256 ?? ''
+  return SHA256.test(sha256) ? sha256 : ''
 }
 
 function request(ctx: Context, url: string) {

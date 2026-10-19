@@ -1,4 +1,5 @@
-import { runCommand, waitForBody, type Context } from '../lib/system.ts'
+import { waitForBody } from '../lib/server-service.ts'
+import { runCommand, type Context } from '../lib/system.ts'
 import { spin } from '../lib/text.ts'
 
 export async function restart(ctx: Context): Promise<number> {

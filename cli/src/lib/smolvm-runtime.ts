@@ -4,39 +4,15 @@ import {
   mkdirSync,
   mkdtempSync,
   readdirSync,
-  readFileSync,
-  readlinkSync,
   renameSync,
   rmSync
 } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { join } from 'node:path'
 
 import microvmVersions from '../../../server/microvm/versions.json' with { type: 'json' }
 import { fsyncPath, replaceSymlink } from './fs.ts'
 import { expectSha256, verifyChecksumFile } from './github.ts'
 import { CommandFailed, must, runCommand, type Context } from './system.ts'
-
-export type SmolvmState =
-  | { kind: 'absent' }
-  | { kind: 'legacy'; target: string }
-  | { kind: 'versioned'; target: string }
-
-export type PreparedSmolvm = {
-  previous: SmolvmState
-  release: string
-}
-
-export function currentSmolvmState(ctx: Context): SmolvmState {
-  try {
-    return { kind: 'versioned', target: readlinkSync(ctx.runtime.paths.smolvmRuntime) }
-  } catch {
-    try {
-      return { kind: 'legacy', target: readlinkSync(ctx.runtime.paths.smolvmBin) }
-    } catch {
-      return { kind: 'absent' }
-    }
-  }
-}
 
 function fsyncTree(path: string) {
   const stat = lstatSync(path)
@@ -47,23 +23,9 @@ function fsyncTree(path: string) {
   fsyncPath(path)
 }
 
-export function activateSmolvm(ctx: Context, release: string) {
+function activateSmolvm(ctx: Context, release: string) {
   replaceSymlink(ctx.runtime.paths.smolvmRuntime, release)
   replaceSymlink(ctx.runtime.paths.smolvmBin, join(ctx.runtime.paths.smolvmRuntime, 'smolvm'))
-}
-
-export function restoreSmolvm(ctx: Context, state: SmolvmState) {
-  if (state.kind === 'versioned') {
-    activateSmolvm(ctx, state.target)
-    return
-  }
-  rmSync(ctx.runtime.paths.smolvmRuntime, { force: true })
-  fsyncPath(dirname(ctx.runtime.paths.smolvmRuntime))
-  if (state.kind === 'legacy') replaceSymlink(ctx.runtime.paths.smolvmBin, state.target)
-  else {
-    rmSync(ctx.runtime.paths.smolvmBin, { force: true })
-    fsyncPath(dirname(ctx.runtime.paths.smolvmBin))
-  }
 }
 
 async function assertSmolvmTree(ctx: Context, directory: string, expected: string) {
@@ -76,13 +38,12 @@ async function assertSmolvmTree(ctx: Context, directory: string, expected: strin
   }
   const checksumFile = join(directory, 'checksums.txt')
   if (!existsSync(checksumFile)) throw new CommandFailed(1, `Runtime smolvm ${version} invalide.`)
-  await verifyChecksumFile(directory, readFileSync(checksumFile, 'utf8'))
+  await verifyChecksumFile(directory, await Bun.file(checksumFile).text())
 }
 
-export async function prepareSmolvm(ctx: Context): Promise<PreparedSmolvm> {
+export async function ensureSmolvm(ctx: Context) {
   const version = microvmVersions.smolvm.version
   const expected = `smolvm ${version}`
-  const previous = currentSmolvmState(ctx)
   const release = join(ctx.runtime.paths.smolvmReleases, version)
   mkdirSync(ctx.runtime.paths.smolvmReleases, { recursive: true, mode: 0o755 })
 
@@ -106,10 +67,5 @@ export async function prepareSmolvm(ctx: Context): Promise<PreparedSmolvm> {
     await assertSmolvmTree(ctx, release, expected)
   }
 
-  return { previous, release }
-}
-
-export async function ensureSmolvm(ctx: Context) {
-  const prepared = await prepareSmolvm(ctx)
-  activateSmolvm(ctx, prepared.release)
+  activateSmolvm(ctx, release)
 }

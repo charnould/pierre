@@ -13,7 +13,8 @@ import {
 } from '../lib/github.ts'
 import { renderStatus, type StatusLine } from '../lib/output.ts'
 import { serverInstalled } from '../lib/server-bundle.ts'
-import { isHealthyResponse, runCommand, type Context } from '../lib/system.ts'
+import { isHealthyResponse } from '../lib/server-service.ts'
+import { runCommand, type Context } from '../lib/system.ts'
 
 export async function showStatus(ctx: Context): Promise<number> {
   const lines = await collectStatus(ctx)
@@ -35,7 +36,7 @@ export async function collectStatus(ctx: Context): Promise<StatusLine[]> {
     lines.unshift({
       level: 'bad',
       label: 'configuration',
-      value: existsSync(ctx.runtime.paths.pendingEnvFile) ? 'en attente' : 'absente'
+      value: 'absente'
     })
     lines.push(versionLine('server', serverVersion, serverLatest, null))
     lines.push(versionLine('carl', carlVersion, carlLatest, null))

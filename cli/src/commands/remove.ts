@@ -18,10 +18,7 @@ export async function remove(ctx: Context): Promise<number> {
     await deleteMachines(ctx)
     for (const file of [
       paths.envFile,
-      paths.pendingEnvFile,
-      paths.previousEnvFile,
       paths.installLog,
-      paths.previousCaddyFile,
       paths.assetSourceFile,
       paths.smolvmBin,
       paths.unitFile,

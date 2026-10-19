@@ -25,7 +25,7 @@ export async function run(argv: string[], ctx: Context): Promise<number> {
     case '':
       return showStatus(ctx)
     case 'update':
-      return breathe(ctx, () => update(ctx))
+      return breathe(ctx, () => update(ctx, rest))
     case 'restart':
       return breathe(ctx, () => restart(ctx))
     case 'backup':

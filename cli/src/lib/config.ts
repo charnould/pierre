@@ -1,4 +1,3 @@
-import { randomBytes } from 'node:crypto'
 import { chmodSync, existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 
 import type { Runtime } from './system.ts'
@@ -58,7 +57,7 @@ export function formatEnv(env: ParsedEnv): string {
 }
 
 export function writePrivate(file: string, content: string) {
-  const temporary = `${file}.${process.pid}.${randomBytes(4).toString('hex')}.tmp`
+  const temporary = `${file}.${process.pid}.${randomHex(4)}.tmp`
   writeFileSync(temporary, content, { mode: 0o600 })
   chmodSync(temporary, 0o600)
   renameSync(temporary, file)
@@ -98,8 +97,8 @@ export function mergeConfiguration(current: EnvMap, flags: ConfigureFlags): Merg
   if (password.length < 8 || password.length > 128) {
     return { ok: false, error: 'AUTH_PASSWORD doit contenir entre 8 et 128 caractères.' }
   }
-  const authSecret = current.AUTH_SECRET || randomBytes(32).toString('hex')
-  const authBearer = current.AUTH_BEARER || randomBytes(32).toString('hex')
+  const authSecret = current.AUTH_SECRET || randomHex(32)
+  const authBearer = current.AUTH_BEARER || randomHex(32)
   if (authSecret.length < 32) {
     return { ok: false, error: 'AUTH_SECRET doit contenir au moins 32 caractères.' }
   }
@@ -109,8 +108,16 @@ export function mergeConfiguration(current: EnvMap, flags: ConfigureFlags): Merg
 
 const PASSWORD_ALPHABET = 'abcdefghijkmnpqrstuvwxyz23456789'
 
+function randomHex(size: number): string {
+  const bytes = new Uint8Array(size)
+  crypto.getRandomValues(bytes)
+  return bytes.toHex()
+}
+
 function readablePassword(): string {
-  const chars = [...randomBytes(16)].map((byte) => PASSWORD_ALPHABET[byte % 32] ?? 'a')
+  const bytes = new Uint8Array(16)
+  crypto.getRandomValues(bytes)
+  const chars = [...bytes].map((byte) => PASSWORD_ALPHABET[byte % 32] ?? 'a')
   return [0, 4, 8, 12].map((start) => chars.slice(start, start + 4).join('')).join('-')
 }
 
