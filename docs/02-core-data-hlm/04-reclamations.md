@@ -6,7 +6,7 @@
 
 ## Objectif
 
-Exposer **toutes les affaires relation-client** (réclamations, demandes, tickets…) pour une **vue intégrale** de la relation locataire. L
+Exposer **toutes les affaires relation-client** (réclamations, demandes, tickets…) pour une **vue intégrale** de la relation locataire.
 
 Le fichier est nommé `core.reclamations.csv`.
 

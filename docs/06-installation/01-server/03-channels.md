@@ -46,15 +46,7 @@ Les clients `CM.com` constatent plus de 85 % de compatibilité RCS en France (ao
 
 - **iPhone** — En principe, le RCS est activé par défaut à partir d’iOS 18. Les iPhone plus anciens peuvent recevoir le SMS de secours.
 
-### Coûts et charge de travail
-
-Ordres de grandeur, à confirmer avec `CM.com` lors de vos échanges.
-
-| Canal | Paramétrage       | Usage                                 | Temps DSI |
-| ----- | ----------------- | ------------------------------------- | --------- |
-| RCS   | ~500 € (une fois) | à l’unité (message ou conversation)   | ~2 h      |
-| SMS   | inclus            | à l’unité (160 caractères)            | n/a       |
-| EMAIL | inclus            | à partir de 50€/mois pour 100K emails | 1h        |
+Les tarifs et le temps DSI sont dans [Les coûts](./05-costs.md).
 
 ### Paramétrage
 
