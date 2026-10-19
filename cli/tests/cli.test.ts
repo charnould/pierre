@@ -14,7 +14,7 @@ import {
   type Release
 } from '../src/lib/github.ts'
 import { renderStatus } from '../src/lib/output.ts'
-import { createRuntime, runCommand } from '../src/lib/system.ts'
+import { createRuntime, Interrupted, runCommand } from '../src/lib/system.ts'
 import { run } from '../src/main.ts'
 import { CLI_VERSION } from '../src/version.ts'
 import { tempRoot, testContext } from './support.ts'
@@ -103,6 +103,46 @@ describe('processus', () => {
     expect(result.code).toBe(0)
     expect(result.stdout).toBe('ok')
     expect(result.stderr).toHaveLength(256 * 1024)
+  })
+
+  it('interrupts the current child and leaves rollback commands available', async () => {
+    let started = 0
+    let killed = 0
+    let finish: (result: { code: number; stdout: string; stderr: string }) => void = () => undefined
+    const runtime = createRuntime({
+      start: () => {
+        started += 1
+        if (started > 1) {
+          return {
+            finished: Promise.resolve({ code: 0, stdout: 'restored', stderr: '' }),
+            kill: () => undefined
+          }
+        }
+        const finished = new Promise<{ code: number; stdout: string; stderr: string }>(
+          (resolve) => {
+            finish = resolve
+          }
+        )
+        return {
+          finished,
+          kill: () => {
+            killed += 1
+            finish({ code: 143, stdout: '', stderr: '' })
+          }
+        }
+      }
+    })
+
+    const running = runCommand(runtime, 'activate', [])
+    runtime.interrupt()
+
+    await expect(running).rejects.toBeInstanceOf(Interrupted)
+    expect(killed).toBe(1)
+    expect(await runCommand(runtime, 'restore', [])).toEqual({
+      code: 0,
+      stdout: 'restored',
+      stderr: ''
+    })
   })
 })
 

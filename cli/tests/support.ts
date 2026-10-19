@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { chmod, mkdir, mkdtemp, readFile, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -10,7 +10,8 @@ import {
   createRuntime,
   type CommandResult,
   type Context,
-  type RuntimeOverrides
+  type RuntimeOverrides,
+  type SpawnOptions
 } from '../src/lib/system.ts'
 import { CLI_VERSION } from '../src/version.ts'
 
@@ -118,7 +119,7 @@ export async function writeCarlZip(directory: string) {
 export function testContext(root: string, overrides: RuntimeOverrides = {}) {
   let out = ''
   let err = ''
-  const calls: Array<{ command: string; args: string[] }> = []
+  const calls: Array<{ command: string; args: string[]; options?: SpawnOptions }> = []
   const env = {
     NO_COLOR: '1',
     COLUMNS: '100',
@@ -130,6 +131,9 @@ export function testContext(root: string, overrides: RuntimeOverrides = {}) {
     PIERRE_CMD: join(root, 'pierre'),
     PIERRE_UNIT_DIR: root,
     PIERRE_CADDY_FILE: join(root, 'Caddyfile'),
+    PIERRE_CADDY_KEY_FILE: join(root, 'caddy-key.gpg'),
+    PIERRE_CADDY_OWNER_FILE: join(root, 'caddy-owned'),
+    PIERRE_CADDY_SOURCE_FILE: join(root, 'caddy-source.list'),
     PIERRE_SMOLVM_BIN: join(root, 'smolvm'),
     PIERRE_SMOLVM_HOME: join(root, 'smolvm-home'),
     PIERRE_SMOLVM_ROOT: join(root, 'smolvm-runtime'),
@@ -151,16 +155,24 @@ export function testContext(root: string, overrides: RuntimeOverrides = {}) {
     sleep: async () => undefined,
     readLine: async () => null,
     commandExists: () => false,
+    download: async (url, dest) => {
+      await writeFile(dest, url)
+    },
     request: async (url) => {
       if (url.includes('api.github.com')) return { status: 200, body: '[]', url }
       return { status: 200, body: 'ok', url }
     },
-    start: (command, args) => {
-      calls.push({ command, args })
+    start: (command, args, options) => {
+      calls.push({ command, args, options })
       const name = command.split('/').pop() ?? command
       if (name === 'dpkg-query') return child({ code: 1, stdout: '', stderr: '' })
       if (name === 'systemctl' && args[0] === 'is-active' && args[1] !== '--quiet') {
         return child({ code: 0, stdout: 'active\n', stderr: '' })
+      }
+      if (name === 'gpg') {
+        const output = args[args.indexOf('--output') + 1]
+        if (output) writeFileSync(output, 'key')
+        return child({ code: 0, stdout: '', stderr: '' })
       }
       if (STUBBED.has(name)) return child({ code: 0, stdout: '', stderr: '' })
       const proc = Bun.spawn([command, ...args], { stdout: 'pipe', stderr: 'pipe' })

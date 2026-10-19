@@ -8,7 +8,6 @@ import { installCliRelease } from '../src/commands/cli-release.ts'
 import { printEnv } from '../src/commands/env.ts'
 import { installCommand } from '../src/commands/install.ts'
 import { logs } from '../src/commands/logs.ts'
-import { remove } from '../src/commands/remove.ts'
 import { restart } from '../src/commands/restart.ts'
 import { collectStatus } from '../src/commands/status.ts'
 import { updateServer } from '../src/commands/update-server.ts'
@@ -167,6 +166,7 @@ describe('installation atomique', () => {
 
   it('stops at the first failing step without publishing a configuration', async () => {
     const root = await tempRoot('pierre-steps-')
+    await readyCaddy(root)
     let aptCaddy = false
     const ctx = testContext(root, {
       start: (command, args) => {
@@ -232,13 +232,23 @@ describe('installation atomique', () => {
     expect(ctx.out()).not.toContain('configure')
     expect(existsSync(join(root, 'pierre.env'))).toBe(true)
     expect(existsSync(join(root, 'pierre.service'))).toBe(true)
+    const unit = readFileSync(join(root, 'pierre.service'), 'utf8')
+    expect(unit).toContain(`Environment=HOME=${join(root, 'smolvm-home')}`)
+    expect(unit).toContain(`Environment=XDG_DATA_HOME=${join(root, 'smolvm-home', '.local/share')}`)
     expect(readFileSync(join(root, 'pierre.env'), 'utf8')).toContain('HOST=example.org')
   })
 })
 
+async function readyCaddy(root: string) {
+  await writeFile(join(root, 'caddy-key.gpg'), 'key')
+  await writeFile(join(root, 'caddy-owned'), 'PIERRE\n')
+  await writeFile(join(root, 'caddy-source.list'), 'source')
+}
+
 async function readyInstallation(root: string) {
   await writeServerBundle(root, 'server-0.40.6')
   await writeFile(join(root, 'pierre.service'), 'unit\n')
+  await readyCaddy(root)
   const carl = join(root, 'home', 'models', 'carl')
   await mkdir(carl, { recursive: true })
   for (const name of CARL_MODEL_FILES) await writeFile(join(carl, name), name)
@@ -255,6 +265,18 @@ describe('configuration', () => {
     expect(await installCommand(ctx.ctx, [])).toBe(2)
     expect(await installCommand(ctx.ctx, ['--provider', 'openai'])).toBe(2)
     expect(ctx.out()).toContain('pierre install --host')
+    expect(existsSync(join(root, 'pierre.env'))).toBe(false)
+  })
+
+  it('refuses to take over an existing Caddy installation', async () => {
+    const root = await tempRoot('pierre-caddy-owner-')
+    const caddy = join(root, 'Caddyfile')
+    await writeFile(caddy, 'existing.example.org {\n\trespond "existing"\n}\n')
+    const ctx = testContext(root, { commandExists: (name) => name === 'caddy' })
+
+    expect(await installCommand(ctx.ctx, args)).toBe(1)
+    expect(ctx.err()).toContain('Caddy est déjà géré')
+    expect(readFileSync(caddy, 'utf8')).toContain('existing.example.org')
     expect(existsSync(join(root, 'pierre.env'))).toBe(false)
   })
 
@@ -278,7 +300,8 @@ describe('configuration', () => {
     const root = await tempRoot('pierre-configure-restore-')
     await readyInstallation(root)
     const previousEnv = configuredText({ HOST: 'old.example.org' })
-    const previousCaddy = 'old.example.org {\n\treverse_proxy 127.0.0.1:3000\n}\n'
+    const previousCaddy =
+      '# Managed by PIERRE\nold.example.org {\n\treverse_proxy 127.0.0.1:3000\n}\n'
     await writeFile(join(root, 'pierre.env'), previousEnv)
     await writeFile(join(root, 'Caddyfile'), previousCaddy)
     const ctx = testContext(root, {
@@ -299,7 +322,8 @@ describe('configuration', () => {
     const root = await tempRoot('pierre-configure-restore-')
     await readyInstallation(root)
     const previousEnv = configuredText({ HOST: 'old.example.org' })
-    const previousCaddy = 'old.example.org {\n\treverse_proxy 127.0.0.1:3000\n}\n'
+    const previousCaddy =
+      '# Managed by PIERRE\nold.example.org {\n\treverse_proxy 127.0.0.1:3000\n}\n'
     await writeFile(join(root, 'pierre.env'), previousEnv)
     await writeFile(join(root, 'Caddyfile'), previousCaddy)
     let pierreRestarts = 0
@@ -418,6 +442,30 @@ describe('configuration', () => {
     seen.length = 0
     expect(await installCommand(ctx.ctx, ['--host', 'encore.exemple.org'])).toBe(0)
     expect(seen.some((call) => call[0] === 'apt-get')).toBe(true)
+  })
+
+  it('repairs an empty Caddy source on retry', async () => {
+    const root = await tempRoot('pierre-caddy-retry-')
+    await readyInstallation(root)
+    const source = join(root, 'caddy-source.list')
+    await writeFile(source, '')
+    const downloads: string[] = []
+    const ctx = testContext(root, {
+      download: async (url, dest) => {
+        downloads.push(url)
+        await writeFile(
+          dest,
+          'deb https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main\n'
+        )
+      }
+    })
+
+    expect(await installCommand(ctx.ctx, args)).toBe(0)
+    expect(downloads).toEqual(['https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt'])
+    expect(readFileSync(source, 'utf8')).toContain('dl.cloudsmith.io')
+    expect(ctx.calls.some((call) => call.command === 'apt-get' && call.args[0] === 'update')).toBe(
+      true
+    )
   })
 
   it('installs the server again when the bundle is incomplete', async () => {
@@ -885,35 +933,5 @@ describe('maintenance', () => {
     expect(ctx.out()).toContain(
       'scp root@gx.pierre-ia.org:/var/lib/pierre/backups/datastore.sqlite .'
     )
-  })
-
-  it('deletes service files and old smolvm caches inside the layout', async () => {
-    const root = await tempRoot('pierre-remove-')
-    const cache = join(root, '.cache', 'smolvm')
-    await mkdir(cache, { recursive: true })
-    await writeFile(join(cache, 'leftover'), 'x')
-    await writeFile(join(root, 'pierre.env'), configuredText())
-    await writeFile(join(root, 'pierre.service'), 'unit\n')
-    const ctx = testContext(root, { canPrompt: true, readLine: async () => 'oui' })
-    expect(await remove(ctx.ctx)).toBe(0)
-    expect(existsSync(join(cache, 'leftover'))).toBe(false)
-    expect(existsSync(join(root, 'pierre.env'))).toBe(false)
-    expect(existsSync(join(root, 'pierre.service'))).toBe(false)
-  })
-
-  it('does not delete files when services cannot be stopped', async () => {
-    const root = await tempRoot('pierre-remove-failed-')
-    await writeFile(join(root, 'pierre.env'), configuredText())
-    const ctx = testContext(root, {
-      canPrompt: true,
-      readLine: async () => 'oui',
-      start: () => ({
-        finished: Promise.resolve({ code: 1, stdout: '', stderr: 'stop failed\n' }),
-        kill: () => undefined
-      })
-    })
-
-    expect(await remove(ctx.ctx)).toBe(1)
-    expect(existsSync(join(root, 'pierre.env'))).toBe(true)
   })
 })

@@ -10,10 +10,15 @@ export function fsyncPath(path: string) {
   }
 }
 
+export function publishFile(temporary: string, path: string) {
+  fsyncPath(temporary)
+  renameSync(temporary, path)
+  fsyncPath(dirname(path))
+}
+
 export function replaceSymlink(path: string, target: string) {
   const next = `${path}.new`
   rmSync(next, { force: true })
   symlinkSync(target, next)
-  renameSync(next, path)
-  fsyncPath(dirname(path))
+  publishFile(next, path)
 }

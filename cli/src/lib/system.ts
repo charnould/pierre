@@ -19,6 +19,8 @@ export class CommandFailed extends Error {
   }
 }
 
+export class Interrupted extends Error {}
+
 type Env = Record<string, string | undefined>
 
 type Paths = {
@@ -34,7 +36,12 @@ type Paths = {
   cmd: string
   unitFile: string
   caddyFile: string
+  caddyKeyFile: string
+  caddyOwnerFile: string
+  caddySourceFile: string
   smolvmBin: string
+  smolvmCache: string
+  smolvmData: string
   smolvmHome: string
   smolvmReleases: string
   smolvmRoot: string
@@ -93,6 +100,8 @@ export type Runtime = {
   sleep: (ms: number) => Promise<void>
   readLine: () => Promise<string | null>
   commandExists: (name: string) => boolean
+  interrupt: () => void
+  consumeInterrupt: () => boolean
   onInterrupt?: () => void
 }
 
@@ -113,6 +122,7 @@ function resolvePaths(env: Env): Paths {
   const serverRoot = join(home, 'server')
   const serverCurrent = join(serverRoot, 'current')
   const smolvmRoot = envOr(env, 'PIERRE_SMOLVM_ROOT', '/usr/local/lib/smolvm')
+  const smolvmHome = envOr(env, 'PIERRE_SMOLVM_HOME', join(home, 'smolvm'))
   const unitDir = envOr(env, 'PIERRE_UNIT_DIR', '/etc/systemd/system')
   return {
     home,
@@ -127,8 +137,21 @@ function resolvePaths(env: Env): Paths {
     cmd: envOr(env, 'PIERRE_CMD', '/usr/local/bin/pierre'),
     unitFile: join(unitDir, 'pierre.service'),
     caddyFile,
+    caddyKeyFile: envOr(
+      env,
+      'PIERRE_CADDY_KEY_FILE',
+      '/usr/share/keyrings/caddy-stable-archive-keyring.gpg'
+    ),
+    caddyOwnerFile: envOr(env, 'PIERRE_CADDY_OWNER_FILE', join(home, 'caddy-owned')),
+    caddySourceFile: envOr(
+      env,
+      'PIERRE_CADDY_SOURCE_FILE',
+      '/etc/apt/sources.list.d/caddy-stable.list'
+    ),
     smolvmBin: envOr(env, 'PIERRE_SMOLVM_BIN', '/usr/local/bin/smolvm'),
-    smolvmHome: envOr(env, 'PIERRE_SMOLVM_HOME', '/root/.smolvm'),
+    smolvmCache: join(smolvmHome, '.cache'),
+    smolvmData: join(smolvmHome, '.local/share'),
+    smolvmHome,
     smolvmRoot,
     smolvmReleases: join(smolvmRoot, 'releases'),
     smolvmRuntime: join(smolvmRoot, 'current')
@@ -212,9 +235,15 @@ const defaultStart = (command: string, args: string[], options?: SpawnOptions): 
   return { finished, kill: () => proc.kill() }
 }
 
-const defaultRequest = async (url: string, options?: RequestOptions): Promise<HttpResult> => {
+const defaultRequest = async (
+  url: string,
+  options?: RequestOptions,
+  signal?: AbortSignal
+): Promise<HttpResult> => {
   const controller = new AbortController()
+  const abort = () => controller.abort()
   const timeout = setTimeout(() => controller.abort(), options?.timeoutMs ?? 10_000)
+  signal?.addEventListener('abort', abort, { once: true })
   try {
     const response = await fetch(url, {
       method: options?.method ?? 'GET',
@@ -228,6 +257,7 @@ const defaultRequest = async (url: string, options?: RequestOptions): Promise<Ht
     return { status: 0, body: '', url }
   } finally {
     clearTimeout(timeout)
+    signal?.removeEventListener('abort', abort)
   }
 }
 
@@ -254,7 +284,9 @@ export function createRuntime(overrides: RuntimeOverrides = {}): Runtime {
   const paths = resolvePaths(env)
   const tty = overrides.tty ?? process.stdout.isTTY === true
   const columns = overrides.columns ?? Number(env['COLUMNS'] || process.stdout.columns || 80)
-  return {
+  let interrupted = false
+  let runtime: Runtime
+  runtime = {
     env,
     paths,
     palette: paletteFor(tty && !env['NO_COLOR']),
@@ -267,14 +299,30 @@ export function createRuntime(overrides: RuntimeOverrides = {}): Runtime {
     writeOut: overrides.writeOut ?? ((text) => process.stdout.write(text)),
     writeErr: overrides.writeErr ?? ((text) => process.stderr.write(text)),
     start: overrides.start ?? defaultStart,
-    request: overrides.request ?? defaultRequest,
+    request:
+      overrides.request ??
+      ((url, options) => {
+        const controller = new AbortController()
+        return withInterrupt(
+          runtime,
+          () => controller.abort(),
+          () => defaultRequest(url, options, controller.signal)
+        )
+      }),
     download:
       overrides.download ??
       (async (url, dest) => {
-        const response = await fetch(url)
-        if (!response.ok)
-          throw new CommandFailed(1, `Téléchargement impossible (${response.status}).`)
-        await Bun.write(dest, response)
+        const controller = new AbortController()
+        await withInterrupt(
+          runtime,
+          () => controller.abort(),
+          async () => {
+            const response = await fetch(url, { signal: controller.signal })
+            if (!response.ok)
+              throw new CommandFailed(1, `Téléchargement impossible (${response.status}).`)
+            await Bun.write(dest, response)
+          }
+        )
       }),
     sleep: overrides.sleep ?? ((ms) => Bun.sleep(ms)),
     readLine:
@@ -299,8 +347,21 @@ export function createRuntime(overrides: RuntimeOverrides = {}): Runtime {
         }
       }),
     commandExists: overrides.commandExists ?? ((name) => Bun.which(name) !== null),
+    interrupt: () => {
+      if (interrupted) return
+      interrupted = true
+      try {
+        runtime.onInterrupt?.()
+      } catch {}
+    },
+    consumeInterrupt: () => {
+      const value = interrupted
+      interrupted = false
+      return value
+    },
     onInterrupt: undefined
   }
+  return runtime
 }
 
 export async function runCommand(
@@ -309,7 +370,12 @@ export async function runCommand(
   args: string[],
   options?: SpawnOptions
 ): Promise<CommandResult> {
-  return runtime.start(command, args, options).finished
+  const child = runtime.start(command, args, options)
+  return withInterrupt(
+    runtime,
+    () => child.kill(),
+    () => child.finished
+  )
 }
 
 export async function must(
@@ -345,7 +411,18 @@ export async function withInterrupt<T>(
   const previous = runtime.onInterrupt
   runtime.onInterrupt = handler
   try {
-    return await action()
+    if (runtime.consumeInterrupt()) {
+      handler()
+      throw new Interrupted()
+    }
+    try {
+      const value = await action()
+      if (runtime.consumeInterrupt()) throw new Interrupted()
+      return value
+    } catch (error) {
+      if (runtime.consumeInterrupt()) throw new Interrupted()
+      throw error
+    }
   } finally {
     runtime.onInterrupt = previous
   }

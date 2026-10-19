@@ -4,8 +4,8 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
-  renameSync,
   rmSync,
+  statSync,
   writeFileSync
 } from 'node:fs'
 import { dirname } from 'node:path'
@@ -23,7 +23,7 @@ import {
   type ParsedEnv
 } from '../lib/config.ts'
 import { withPierreLock } from '../lib/file-lock.ts'
-import { fsyncPath } from '../lib/fs.ts'
+import { publishFile } from '../lib/fs.ts'
 import {
   activateServerRelease,
   findServerRelease,
@@ -54,6 +54,26 @@ const PACKAGES = [
 ]
 
 const aptEnv = { DEBIAN_FRONTEND: 'noninteractive' }
+const CADDY_HEADER = '# Managed by PIERRE\n'
+const CADDY_KEY_URL = 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key'
+const CADDY_SOURCE_URL = 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt'
+
+function claimCaddy(ctx: Context): boolean {
+  const { caddyFile, caddyKeyFile, caddyOwnerFile, caddySourceFile } = ctx.runtime.paths
+  if (existsSync(caddyOwnerFile)) return true
+  if (
+    existsSync(caddyFile) ||
+    existsSync(caddyKeyFile) ||
+    existsSync(caddySourceFile) ||
+    ctx.runtime.commandExists('caddy')
+  ) {
+    sayError(ctx, 'Caddy est déjà géré par une autre installation.')
+    return false
+  }
+  mkdirSync(dirname(caddyOwnerFile), { recursive: true })
+  writePrivate(caddyOwnerFile, 'PIERRE\n')
+  return true
+}
 
 function rememberAssetSource(ctx: Context) {
   const directory = ctx.runtime.env['PIERRE_ASSET_DIR']
@@ -99,19 +119,52 @@ async function ensurePackages(ctx: Context) {
   await must(ctx.runtime, 'apt-get', ['install', '-y', ...PACKAGES], { env: aptEnv })
 }
 
+function fileReady(path: string): boolean {
+  try {
+    return statSync(path).size > 0
+  } catch {
+    return false
+  }
+}
+
+async function ensureCaddyRepository(ctx: Context) {
+  const { caddyKeyFile, caddySourceFile } = ctx.runtime.paths
+  if (!fileReady(caddyKeyFile)) {
+    const downloaded = `${caddyKeyFile}.download`
+    const temporary = `${caddyKeyFile}.new`
+    mkdirSync(dirname(caddyKeyFile), { recursive: true })
+    try {
+      await ctx.runtime.download(CADDY_KEY_URL, downloaded)
+      await must(ctx.runtime, 'gpg', [
+        '--batch',
+        '--yes',
+        '--dearmor',
+        '--output',
+        temporary,
+        downloaded
+      ])
+      if (!fileReady(temporary)) throw new CommandFailed(1, 'Clé Caddy invalide.')
+      publishFile(temporary, caddyKeyFile)
+    } finally {
+      rmSync(downloaded, { force: true })
+      rmSync(temporary, { force: true })
+    }
+  }
+  const temporary = `${caddySourceFile}.new`
+  mkdirSync(dirname(caddySourceFile), { recursive: true })
+  try {
+    await ctx.runtime.download(CADDY_SOURCE_URL, temporary)
+    if (!fileReady(temporary)) throw new CommandFailed(1, 'Source Caddy invalide.')
+    publishFile(temporary, caddySourceFile)
+  } finally {
+    rmSync(temporary, { force: true })
+  }
+}
+
 async function ensureCaddy(ctx: Context) {
   if (ctx.runtime.commandExists('caddy')) return
-  if (!existsSync('/usr/share/keyrings/caddy-stable-archive-keyring.gpg')) {
-    await must(ctx.runtime, 'bash', [
-      '-c',
-      "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg"
-    ])
-    await must(ctx.runtime, 'bash', [
-      '-c',
-      "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list >/dev/null"
-    ])
-    await must(ctx.runtime, 'apt-get', ['update', '-qq'], { env: aptEnv })
-  }
+  await ensureCaddyRepository(ctx)
+  await must(ctx.runtime, 'apt-get', ['update', '-qq'], { env: aptEnv })
   await must(ctx.runtime, 'apt-get', ['install', '-y', 'caddy'], { env: aptEnv })
 }
 
@@ -131,7 +184,7 @@ async function ensureCarl(ctx: Context) {
 async function writeCaddy(ctx: Context, host: string) {
   writeCaddyFile(
     ctx,
-    `${host} {
+    `${CADDY_HEADER}${host} {
 	reverse_proxy 127.0.0.1:3000 {
 		flush_interval -1
 		transport http {
@@ -152,9 +205,7 @@ function writeCaddyFile(ctx: Context, content: string) {
   mkdirSync(dirname(file), { recursive: true })
   try {
     writeFileSync(temporary, content)
-    fsyncPath(temporary)
-    renameSync(temporary, file)
-    fsyncPath(dirname(file))
+    publishFile(temporary, file)
   } catch (error) {
     rmSync(temporary, { force: true })
     throw error
@@ -301,6 +352,7 @@ export async function installCommand(ctx: Context, argv: string[]): Promise<numb
   }
   return (
     (await withPierreLock(ctx, async () => {
+      if (!claimCaddy(ctx)) return 1
       rememberAssetSource(ctx)
       const code = await runInstallation(ctx)
       if (code !== 0) return code

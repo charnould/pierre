@@ -7,7 +7,14 @@ import { restart } from './commands/restart.ts'
 import { showStatus } from './commands/status.ts'
 import { update } from './commands/update.ts'
 import { withPierreLock } from './lib/file-lock.ts'
-import { createRuntime, Exit, requireMachine, requireRoot, type Context } from './lib/system.ts'
+import {
+  createRuntime,
+  Exit,
+  Interrupted,
+  requireMachine,
+  requireRoot,
+  type Context
+} from './lib/system.ts'
 import { sayError } from './lib/text.ts'
 import { CLI_VERSION } from './version.ts'
 
@@ -61,26 +68,29 @@ const entrypoint = import.meta.main
 if (entrypoint) {
   const runtime = createRuntime()
   const ctx: Context = { runtime, version: CLI_VERSION }
+  let interruptedCode: number | undefined
   const stop = (code: number) => {
-    try {
-      runtime.onInterrupt?.()
-    } finally {
-      process.exit(code)
-    }
+    interruptedCode ??= code
+    runtime.interrupt()
   }
   process.on('SIGINT', () => stop(130))
   process.on('SIGTERM', () => stop(143))
   run(process.argv.slice(2), ctx)
     .then((code) => {
-      process.exit(code)
+      process.exitCode = interruptedCode ?? code
     })
     .catch((error: unknown) => {
+      if (error instanceof Interrupted) {
+        process.exitCode = interruptedCode ?? 1
+        return
+      }
       if (error instanceof Exit) {
         if (error.message) runtime.writeErr(`${error.message}\n`)
-        process.exit(error.code)
+        process.exitCode = error.code
+        return
       }
       const message = error instanceof Error ? error.message : 'Erreur inattendue.'
       runtime.writeErr(`${message}\n`)
-      process.exit(1)
+      process.exitCode = 1
     })
 }

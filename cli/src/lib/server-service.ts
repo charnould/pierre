@@ -5,7 +5,8 @@ import { fsyncPath } from './fs.ts'
 import { must, type Context, type Runtime } from './system.ts'
 
 export function serverUnit(ctx: Context): string {
-  const { bin, envFile, home, serverCurrent } = ctx.runtime.paths
+  const { bin, envFile, home, serverCurrent, smolvmCache, smolvmData, smolvmHome } =
+    ctx.runtime.paths
   return `[Unit]
 Description=PIERRE
 After=network-online.target
@@ -14,6 +15,9 @@ Wants=network-online.target
 [Service]
 Environment=NODE_ENV=production
 Environment=PIERRE_HOME=${home}
+Environment=HOME=${smolvmHome}
+Environment=XDG_CACHE_HOME=${smolvmCache}
+Environment=XDG_DATA_HOME=${smolvmData}
 Environment=LD_LIBRARY_PATH=${serverCurrent}
 EnvironmentFile=${envFile}
 ExecStart=${bin}

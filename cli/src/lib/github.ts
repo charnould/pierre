@@ -8,7 +8,7 @@ import {
   type Release
 } from '../../../shared/github-releases.ts'
 import { releaseParts, versionGreater } from '../../../shared/release-tag.ts'
-import { CommandFailed, type Context } from './system.ts'
+import { CommandFailed, runCommand, type Context } from './system.ts'
 
 const REPO = 'https://github.com/charnould/pierre'
 const API = 'https://api.github.com/repos/charnould/pierre'
@@ -138,7 +138,7 @@ export async function verifyChecksumFile(directory: string, checksums: string) {
 }
 
 export async function commandVersion(ctx: Context, file: string): Promise<string> {
-  const result = await ctx.runtime.start(file, ['--version']).finished
+  const result = await runCommand(ctx.runtime, file, ['--version'])
   if (result.code !== 0) throw new CommandFailed(result.code, 'Version illisible.')
   return result.stdout.trim().split(/\s+/)[0] ?? ''
 }
