@@ -1,7 +1,11 @@
-import { chmod, mkdir, mkdtemp, symlink, writeFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
+import { existsSync, readFileSync } from 'node:fs'
+import { chmod, mkdir, mkdtemp, readFile, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { crc32 } from 'node:zlib'
 
+import { CARL_MODEL_FILES } from '../../shared/carl-model.ts'
 import {
   createRuntime,
   type CommandResult,
@@ -49,6 +53,68 @@ export async function writeServerBundle(root: string, tag: string, version = tag
   return release
 }
 
+export async function recordChecksum(directory: string, name: string) {
+  const digest = createHash('sha256')
+    .update(await readFile(join(directory, name)))
+    .digest('hex')
+  const file = join(directory, 'checksums.txt')
+  const kept = existsSync(file)
+    ? readFileSync(file, 'utf8')
+        .split('\n')
+        .filter((line) => {
+          const label = line.trim().split(/\s+/)[1]?.replace(/^\*/, '')
+          return label && label !== name
+        })
+    : []
+  kept.push(`${digest}  ${name}`)
+  await writeFile(file, `${kept.join('\n')}\n`)
+}
+
+export function storedZip(files: Array<{ name: string; data: Buffer }>): Buffer {
+  const locals: Buffer[] = []
+  const centrals: Buffer[] = []
+  let offset = 0
+  for (const file of files) {
+    const name = Buffer.from(file.name)
+    const checksum = crc32(file.data)
+    const local = Buffer.alloc(30 + name.length)
+    local.writeUInt32LE(0x04034b50, 0)
+    local.writeUInt16LE(20, 4)
+    local.writeUInt32LE(checksum, 14)
+    local.writeUInt32LE(file.data.length, 18)
+    local.writeUInt32LE(file.data.length, 22)
+    local.writeUInt16LE(name.length, 26)
+    name.copy(local, 30)
+    locals.push(local, file.data)
+    const central = Buffer.alloc(46 + name.length)
+    central.writeUInt32LE(0x02014b50, 0)
+    central.writeUInt16LE(20, 4)
+    central.writeUInt16LE(20, 6)
+    central.writeUInt32LE(checksum, 16)
+    central.writeUInt32LE(file.data.length, 20)
+    central.writeUInt32LE(file.data.length, 24)
+    central.writeUInt16LE(name.length, 28)
+    central.writeUInt32LE(offset, 42)
+    name.copy(central, 46)
+    centrals.push(central)
+    offset += local.length + file.data.length
+  }
+  const directory = Buffer.concat(centrals)
+  const end = Buffer.alloc(22)
+  end.writeUInt32LE(0x06054b50, 0)
+  end.writeUInt16LE(files.length, 8)
+  end.writeUInt16LE(files.length, 10)
+  end.writeUInt32LE(directory.length, 12)
+  end.writeUInt32LE(offset, 16)
+  return Buffer.concat([...locals, directory, end])
+}
+
+export async function writeCarlZip(directory: string) {
+  const files = CARL_MODEL_FILES.map((name) => ({ name, data: Buffer.from(name) }))
+  await writeFile(join(directory, 'model.zip'), storedZip(files))
+  await recordChecksum(directory, 'model.zip')
+}
+
 export function testContext(root: string, overrides: RuntimeOverrides = {}) {
   let out = ''
   let err = ''
@@ -58,16 +124,11 @@ export function testContext(root: string, overrides: RuntimeOverrides = {}) {
     COLUMNS: '100',
     PIERRE_HOME_DIR: join(root, 'home'),
     PIERRE_ENV_FILE: join(root, 'pierre.env'),
-    PIERRE_PENDING_ENV_FILE: join(root, 'pierre.env.pending'),
-    PIERRE_PREVIOUS_ENV_FILE: join(root, 'pierre.env.previous'),
     PIERRE_INSTALL_LOG: join(root, 'install.log'),
     PIERRE_ASSET_SOURCE_FILE: join(root, 'asset-source'),
-    PIERRE_SERVER_ROOT: join(root, 'home', 'server'),
     PIERRE_CMD: join(root, 'pierre'),
-    PIERRE_UNIT_FILE: join(root, 'pierre.service'),
-    PIERRE_CARL_UNIT: join(root, 'carl.service'),
+    PIERRE_UNIT_DIR: root,
     PIERRE_CADDY_FILE: join(root, 'Caddyfile'),
-    PIERRE_PREVIOUS_CADDY_FILE: join(root, 'Caddyfile.previous'),
     PIERRE_SMOLVM_BIN: join(root, 'smolvm'),
     PIERRE_SMOLVM_HOME: join(root, 'smolvm-home'),
     PIERRE_SMOLVM_ROOT: join(root, 'smolvm-runtime'),
@@ -89,7 +150,10 @@ export function testContext(root: string, overrides: RuntimeOverrides = {}) {
     sleep: async () => undefined,
     readLine: async () => null,
     commandExists: () => false,
-    request: async () => ({ status: 200, body: 'ok', url: '' }),
+    request: async (url) => {
+      if (url.includes('api.github.com')) return { status: 200, body: '[]', url }
+      return { status: 200, body: 'ok', url }
+    },
     start: (command, args) => {
       calls.push({ command, args })
       const name = command.split('/').pop() ?? command

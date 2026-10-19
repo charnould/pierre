@@ -1,4 +1,5 @@
-import { closeSync, existsSync, openSync, readFileSync, readSync } from 'node:fs'
+import { closeSync, existsSync, openSync, readSync } from 'node:fs'
+import { join } from 'node:path'
 
 export class Exit extends Error {
   constructor(
@@ -31,9 +32,7 @@ type Paths = {
   serverReleases: string
   serverCurrent: string
   bin: string
-  image: string
   cmd: string
-  so: string
   unitFile: string
   carlUnit: string
   caddyFile: string
@@ -114,40 +113,32 @@ function resolvePaths(env: Env): Paths {
   const envFile = envOr(env, 'PIERRE_ENV_FILE', '/etc/pierre.env')
   const caddyFile = envOr(env, 'PIERRE_CADDY_FILE', '/etc/caddy/Caddyfile')
   const home = envOr(env, 'PIERRE_HOME_DIR', '/var/lib/pierre')
-  const serverRoot = envOr(env, 'PIERRE_SERVER_ROOT', `${home}/server`)
-  const serverCurrent = envOr(env, 'PIERRE_SERVER_CURRENT', `${serverRoot}/current`)
+  const serverRoot = join(home, 'server')
+  const serverCurrent = join(serverRoot, 'current')
   const smolvmRoot = envOr(env, 'PIERRE_SMOLVM_ROOT', '/usr/local/lib/smolvm')
+  const unitDir = envOr(env, 'PIERRE_UNIT_DIR', '/etc/systemd/system')
   return {
     home,
     envFile,
-    pendingEnvFile: envOr(env, 'PIERRE_PENDING_ENV_FILE', `${envFile}.pending`),
-    previousEnvFile: envOr(env, 'PIERRE_PREVIOUS_ENV_FILE', `${envFile}.previous`),
+    pendingEnvFile: `${envFile}.pending`,
+    previousEnvFile: `${envFile}.previous`,
     installLog: envOr(env, 'PIERRE_INSTALL_LOG', '/var/log/pierre-install.log'),
     assetSourceFile: envOr(env, 'PIERRE_ASSET_SOURCE_FILE', '/etc/pierre-install-source'),
     serverRoot,
-    serverReleases: envOr(env, 'PIERRE_SERVER_RELEASES', `${serverRoot}/releases`),
+    serverReleases: join(serverRoot, 'releases'),
     serverCurrent,
-    bin: envOr(env, 'PIERRE_BIN', `${serverCurrent}/pierre`),
-    image: envOr(env, 'PIERRE_MICROVM_IMAGE', `${serverCurrent}/pierre-linux-amd64.smolmachine`),
+    bin: join(serverCurrent, 'pierre'),
     cmd: envOr(env, 'PIERRE_CMD', '/usr/local/bin/pierre'),
-    so: envOr(env, 'PIERRE_SO', `${serverCurrent}/libonnxruntime.so.1`),
-    unitFile: envOr(env, 'PIERRE_UNIT_FILE', '/etc/systemd/system/pierre.service'),
-    carlUnit: envOr(env, 'PIERRE_CARL_UNIT', '/etc/systemd/system/carl.service'),
+    unitFile: join(unitDir, 'pierre.service'),
+    carlUnit: join(unitDir, 'carl.service'),
     caddyFile,
-    previousCaddyFile: envOr(env, 'PIERRE_PREVIOUS_CADDY_FILE', `${caddyFile}.previous`),
+    previousCaddyFile: `${caddyFile}.previous`,
     smolvmBin: envOr(env, 'PIERRE_SMOLVM_BIN', '/usr/local/bin/smolvm'),
     smolvmHome: envOr(env, 'PIERRE_SMOLVM_HOME', '/root/.smolvm'),
     smolvmRoot,
-    smolvmReleases: envOr(env, 'PIERRE_SMOLVM_RELEASES', `${smolvmRoot}/releases`),
-    smolvmRuntime: envOr(env, 'PIERRE_SMOLVM_RUNTIME', `${smolvmRoot}/current`)
+    smolvmReleases: join(smolvmRoot, 'releases'),
+    smolvmRuntime: join(smolvmRoot, 'current')
   }
-}
-
-function hydrateAssetDir(env: Env, paths: Paths): Env {
-  if (env['PIERRE_ASSET_DIR'] || !existsSync(paths.assetSourceFile)) return env
-  const value = readFileSync(paths.assetSourceFile, 'utf8').split('\n')[0]?.trim() ?? ''
-  if (!value) return env
-  return { ...env, PIERRE_ASSET_DIR: value }
 }
 
 const paletteFor = (enabled: boolean): Palette =>
@@ -263,9 +254,8 @@ export type RuntimeOverrides = {
 }
 
 export function createRuntime(overrides: RuntimeOverrides = {}): Runtime {
-  const baseEnv = overrides.env ?? bunEnv()
-  const paths = resolvePaths(baseEnv)
-  const env = hydrateAssetDir(baseEnv, paths)
+  const env = overrides.env ?? bunEnv()
+  const paths = resolvePaths(env)
   const tty = overrides.tty ?? process.stdout.isTTY === true
   const columns = overrides.columns ?? Number(env['COLUMNS'] || process.stdout.columns || 80)
   return {
@@ -351,6 +341,24 @@ export function requireMachine(runtime: Runtime) {
   }
 }
 
+export function isHealthyResponse(status: number, body: string): boolean {
+  return status >= 200 && status < 300 && body.trim() === 'ok'
+}
+
+export async function withInterrupt<T>(
+  runtime: Runtime,
+  handler: () => void,
+  action: () => Promise<T>
+): Promise<T> {
+  const previous = runtime.onInterrupt
+  runtime.onInterrupt = handler
+  try {
+    return await action()
+  } finally {
+    runtime.onInterrupt = previous
+  }
+}
+
 export async function waitForBody(
   runtime: Runtime,
   url: string,
@@ -359,8 +367,7 @@ export async function waitForBody(
 ): Promise<boolean> {
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const response = await runtime.request(url, { timeoutMs })
-    if (response.status >= 200 && response.status < 300 && response.body.trim() === 'ok')
-      return true
+    if (isHealthyResponse(response.status, response.body)) return true
     if (attempt < attempts) await runtime.sleep(1000)
   }
   return false

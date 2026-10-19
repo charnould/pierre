@@ -6,16 +6,14 @@ import {
   mkdirSync,
   renameSync,
   rmSync,
-  statSync,
   writeFileSync
 } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { dirname } from 'node:path'
 
 import { ensureLatestCarl } from '../lib/carl.ts'
 import {
   formatEnv,
   INSTALL_USAGE,
-  isInstalled,
   mergeConfiguration,
   parseHostArgs,
   readEnvMap,
@@ -23,14 +21,11 @@ import {
   type ConfigureFlags,
   type ParsedEnv
 } from '../lib/config.ts'
-import { fetchReleases, selectServerRelease } from '../lib/github.ts'
 import {
   activateServerRelease,
-  commitServerBundle,
-  createServerStage,
-  currentServerRelease,
-  SERVER_ASSETS,
-  stageServerBundle
+  findServerRelease,
+  publishServerBundle,
+  serverInstalled
 } from '../lib/server-bundle.ts'
 import { writeServerUnit } from '../lib/server-service.ts'
 import { ensureSmolvm } from '../lib/smolvm-runtime.ts'
@@ -117,32 +112,11 @@ async function ensureCaddy(ctx: Context) {
   await must(ctx.runtime, 'apt-get', ['install', '-y', 'caddy'], { env: aptEnv })
 }
 
-function serverReady(ctx: Context): boolean {
-  if (!isInstalled(ctx.runtime)) return false
-  const release = currentServerRelease(ctx)
-  if (!release) return false
-  return SERVER_ASSETS.every((name) => {
-    try {
-      return statSync(join(release, name)).size > 0
-    } catch {
-      return false
-    }
-  })
-}
-
 async function ensureServer(ctx: Context) {
-  if (serverReady(ctx)) return
-  const tag = await serverTag(ctx)
-  const stage = createServerStage(ctx)
-  let staged = stage
-  try {
-    await stageServerBundle(ctx, tag, stage)
-    const release = await commitServerBundle(ctx, tag, stage)
-    staged = ''
-    activateServerRelease(ctx, release)
-  } finally {
-    if (staged) rmSync(staged, { recursive: true, force: true })
-  }
+  if (serverInstalled(ctx)) return
+  const release = await findServerRelease(ctx)
+  if (!release) throw new CommandFailed(1, 'Aucune version stable du serveur n’est disponible.')
+  activateServerRelease(ctx, await publishServerBundle(ctx, release))
 }
 
 async function ensureCarl(ctx: Context) {
@@ -248,14 +222,6 @@ async function runInstallation(ctx: Context): Promise<number> {
     }
   }
   return 0
-}
-
-async function serverTag(ctx: Context): Promise<string> {
-  const forced = ctx.runtime.env['PIERRE_RELEASE']
-  if (forced && forced !== 'latest') return forced
-  const selected = selectServerRelease(await fetchReleases(ctx))
-  if (!selected) throw new CommandFailed(1, 'Aucune version stable du serveur n’est disponible.')
-  return selected.tag
 }
 
 async function activateHost(ctx: Context, flags: ConfigureFlags): Promise<number> {

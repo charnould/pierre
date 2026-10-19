@@ -1,6 +1,7 @@
-import { closeSync, fsyncSync, openSync, renameSync, writeFileSync } from 'node:fs'
+import { renameSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 
+import { fsyncPath } from './fs.ts'
 import { must, type Context } from './system.ts'
 
 export function serverUnit(ctx: Context): string {
@@ -28,13 +29,9 @@ export async function writeUnit(ctx: Context, content: string) {
   const path = ctx.runtime.paths.unitFile
   const temporary = `${path}.new`
   writeFileSync(temporary, content)
-  const file = openSync(temporary, 'r')
-  fsyncSync(file)
-  closeSync(file)
+  fsyncPath(temporary)
   renameSync(temporary, path)
-  const directory = openSync(dirname(path), 'r')
-  fsyncSync(directory)
-  closeSync(directory)
+  fsyncPath(dirname(path))
   await must(ctx.runtime, 'systemctl', ['daemon-reload'])
 }
 

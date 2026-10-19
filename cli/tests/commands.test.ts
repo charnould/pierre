@@ -1,31 +1,32 @@
 import { describe, expect, it } from 'bun:test'
-import { createHash } from 'node:crypto'
-import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { mkdtemp, mkdir, rm, symlink, unlink, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { existsSync, readFileSync } from 'node:fs'
+import { mkdir, symlink, unlink, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { crc32 } from 'node:zlib'
 
 import { CARL_MODEL_FILES } from '../../shared/carl-model.ts'
 import { installCliRelease, updateCli } from '../src/commands/cli-release.ts'
 import { printEnv } from '../src/commands/env.ts'
 import { installCommand } from '../src/commands/install.ts'
 import { logs } from '../src/commands/logs.ts'
+import { remove } from '../src/commands/remove.ts'
 import { restart } from '../src/commands/restart.ts'
 import { collectStatus } from '../src/commands/status.ts'
 import { updateServer } from '../src/commands/update-server.ts'
 import { update } from '../src/commands/update.ts'
-import { configuredText, tempRoot, testContext, writeExe, writeServerBundle } from './support.ts'
+import {
+  configuredText,
+  recordChecksum,
+  tempRoot,
+  testContext,
+  writeCarlZip,
+  writeExe,
+  writeServerBundle
+} from './support.ts'
 
 async function writeServerChecksums(directory: string) {
-  const names = ['pierre', 'libonnxruntime.so.1', 'pierre-linux-amd64.smolmachine']
-  const lines = names.map((name) => {
-    const digest = createHash('sha256')
-      .update(readFileSync(join(directory, name)))
-      .digest('hex')
-    return `${digest}  ${name}`
-  })
-  await writeFile(join(directory, 'checksums.txt'), `${lines.join('\n')}\n`)
+  for (const name of ['pierre', 'libonnxruntime.so.1', 'pierre-linux-amd64.smolmachine']) {
+    await recordChecksum(directory, name)
+  }
 }
 
 describe('environnement et santé', () => {
@@ -80,7 +81,7 @@ describe('environnement et santé', () => {
         return { status: 200, body: 'ok', url }
       }
     })
-    const { lines } = await collectStatus(healthy.ctx)
+    const lines = await collectStatus(healthy.ctx)
     expect(lines.find((line) => line.label === 'www')?.level).toBe('ok')
     expect(lines.find((line) => line.label === 'server')?.level).toBe('ok')
     expect(lines.find((line) => line.label === 'server')?.value).toBe('server-0.40.6')
@@ -105,7 +106,7 @@ describe('environnement et santé', () => {
         return { status: 200, body: 'ok', url }
       }
     })
-    const { lines: failed } = await collectStatus(down.ctx)
+    const failed = await collectStatus(down.ctx)
     expect(failed.find((line) => line.label === 'server')?.level).toBe('bad')
     expect(failed.find((line) => line.label === 'carl')?.level).toBe('bad')
     expect(failed.find((line) => line.label === 'www')?.level).toBe('ok')
@@ -219,45 +220,14 @@ describe('installation atomique', () => {
           }
         }
         return { status: 200, body: url.includes('api.anthropic.com') ? '' : 'ok', url }
-      },
-      start: (command, args) => {
-        if (command.endsWith('/smolvm') && args[0] === '--version') {
-          return {
-            finished: Promise.resolve({ code: 0, stdout: 'smolvm 1.24.0\n', stderr: '' }),
-            kill: () => undefined
-          }
-        }
-        if (args[0] === '--version' && command.endsWith('/pierre')) {
-          return {
-            finished: Promise.resolve({ code: 0, stdout: 'server-0.41.0\n', stderr: '' }),
-            kill: () => undefined
-          }
-        }
-        if ((command.split('/').pop() ?? '') === 'unzip') {
-          const dest = args[args.indexOf('-d') + 1]
-          if (dest) {
-            for (const name of [
-              'model.onnx',
-              'labels.json',
-              'tokenizer.json',
-              'tokenizer_config.json'
-            ]) {
-              writeFileSync(join(dest, name), name)
-            }
-          }
-        }
-        return {
-          finished: Promise.resolve({ code: 0, stdout: '', stderr: '' }),
-          kill: () => undefined
-        }
       }
     })
     ctx.ctx.runtime.env['PIERRE_ASSET_DIR'] = root
     await writeExe(join(root, 'pierre'), '#!/bin/sh\necho server-0.41.0\n')
     await writeFile(join(root, 'libonnxruntime.so.1'), 'library')
     await writeFile(join(root, 'pierre-linux-amd64.smolmachine'), 'image')
+    await writeCarlZip(root)
     await writeServerChecksums(root)
-    await writeFile(join(root, 'model.zip'), 'zip')
     const code = await installCommand(ctx.ctx, ['--host', 'example.org'])
     expect(code).toBe(0)
     expect(ctx.out()).toContain('admin@pierre-ia.org')
@@ -296,6 +266,7 @@ describe('configuration', () => {
     await readyInstallation(root)
     const ctx = testContext(root, {
       request: async (url) => {
+        if (url.includes('api.github.com')) return { status: 200, body: '[]', url }
         if (url.includes('api.anthropic.com')) return { status: 200, body: '', url }
         if (url.startsWith('https://')) return { status: 0, body: '', url }
         return { status: 200, body: 'ok', url }
@@ -395,56 +366,10 @@ describe('configuration', () => {
   })
 })
 
-const CARL_FILES = ['model.onnx', 'labels.json', 'tokenizer.json', 'tokenizer_config.json'] as const
-
-function storedZip(files: Array<{ name: string; data: Buffer }>): Buffer {
-  const locals: Buffer[] = []
-  const centrals: Buffer[] = []
-  let offset = 0
-  for (const file of files) {
-    const name = Buffer.from(file.name)
-    const checksum = crc32(file.data)
-    const local = Buffer.alloc(30 + name.length)
-    local.writeUInt32LE(0x04034b50, 0)
-    local.writeUInt16LE(20, 4)
-    local.writeUInt32LE(checksum, 14)
-    local.writeUInt32LE(file.data.length, 18)
-    local.writeUInt32LE(file.data.length, 22)
-    local.writeUInt16LE(name.length, 26)
-    name.copy(local, 30)
-    locals.push(local, file.data)
-    const central = Buffer.alloc(46 + name.length)
-    central.writeUInt32LE(0x02014b50, 0)
-    central.writeUInt16LE(20, 4)
-    central.writeUInt16LE(20, 6)
-    central.writeUInt32LE(checksum, 16)
-    central.writeUInt32LE(file.data.length, 20)
-    central.writeUInt32LE(file.data.length, 24)
-    central.writeUInt16LE(name.length, 28)
-    central.writeUInt32LE(offset, 42)
-    name.copy(central, 46)
-    centrals.push(central)
-    offset += local.length + file.data.length
-  }
-  const directory = Buffer.concat(centrals)
-  const end = Buffer.alloc(22)
-  end.writeUInt32LE(0x06054b50, 0)
-  end.writeUInt16LE(files.length, 8)
-  end.writeUInt16LE(files.length, 10)
-  end.writeUInt32LE(directory.length, 12)
-  end.writeUInt32LE(offset, 16)
-  return Buffer.concat([...locals, directory, end])
-}
-
-async function writeCarlZip(directory: string) {
-  const files = CARL_FILES.map((name) => ({ name, data: Buffer.from(name) }))
-  await writeFile(join(directory, 'model.zip'), storedZip(files))
-}
-
 async function writeInstalledCarl(root: string, tag: string) {
   const dir = join(root, 'home', 'models', 'carl')
   await mkdir(dir, { recursive: true })
-  for (const name of CARL_FILES) await writeFile(join(dir, name), name)
+  for (const name of CARL_MODEL_FILES) await writeFile(join(dir, name), name)
   await writeFile(join(dir, 'version'), `${tag}\n`)
 }
 
@@ -453,7 +378,14 @@ function carlReleases(tag: string) {
     if (url.includes('api.github.com')) {
       return {
         status: 200,
-        body: JSON.stringify([{ tag_name: tag, draft: false, prerelease: false, assets: [] }]),
+        body: JSON.stringify([
+          {
+            tag_name: tag,
+            draft: false,
+            prerelease: false,
+            assets: [{ name: 'model.zip', digest: `sha256:${'ab'.repeat(32)}` }]
+          }
+        ]),
         url
       }
     }
@@ -467,7 +399,7 @@ describe('mises à jour séparées', () => {
     await writeServerBundle(root, 'server-0.40.6')
     await writeFile(join(root, 'pierre.env'), configuredText())
     await writeFile(join(root, 'pierre'), 'old cli')
-    const ctx = testContext(root, { env: { PIERRE_UPDATE_TAG: 'server-0.40.6' } })
+    const ctx = testContext(root, { env: { PIERRE_SERVER_TAG: 'server-0.40.6' } })
     expect(await updateServer(ctx.ctx)).toBe(0)
     expect(ctx.out()).toContain('server-0.40.6 est déjà à jour.')
     expect(readFileSync(join(root, 'pierre'), 'utf8')).toBe('old cli')
@@ -482,7 +414,7 @@ describe('mises à jour séparées', () => {
     await writeFile(join(root, 'pierre.env'), configuredText())
     await writeInstalledCarl(root, 'carl-1.0.0')
     const ctx = testContext(root, {
-      env: { PIERRE_UPDATE_TAG: 'server-0.40.6' },
+      env: { PIERRE_SERVER_TAG: 'server-0.40.6' },
       request: carlReleases('carl-1.0.0')
     })
     expect(await updateServer(ctx.ctx)).toBe(0)
@@ -501,7 +433,7 @@ describe('mises à jour séparées', () => {
     await writeServerBundle(root, 'server-0.40.6')
     await writeFile(join(root, 'pierre.env'), configuredText())
     const ctx = testContext(root, {
-      env: { PIERRE_UPDATE_TAG: 'server-0.40.6', PIERRE_ASSET_DIR: assets },
+      env: { PIERRE_SERVER_TAG: 'server-0.40.6', PIERRE_ASSET_DIR: assets },
       request: carlReleases('carl-1.2.0')
     })
     expect(await updateServer(ctx.ctx)).toBe(0)
@@ -528,7 +460,7 @@ describe('mises à jour séparées', () => {
     await writeFile(join(dir, 'version'), 'carl-1.0.0\n')
     await writeFile(join(dir, 'stale.bin'), 'old')
     const ctx = testContext(root, {
-      env: { PIERRE_UPDATE_TAG: 'server-0.40.6', PIERRE_ASSET_DIR: assets },
+      env: { PIERRE_SERVER_TAG: 'server-0.40.6', PIERRE_ASSET_DIR: assets },
       request: carlReleases('carl-1.0.0')
     })
     expect(await updateServer(ctx.ctx)).toBe(0)
@@ -551,7 +483,7 @@ describe('mises à jour séparées', () => {
     await writeServerChecksums(assets)
     await writeFile(join(root, 'pierre.env'), configuredText())
     const ctx = testContext(root, {
-      env: { PIERRE_UPDATE_TAG: 'server-0.41.0', PIERRE_ASSET_DIR: assets },
+      env: { PIERRE_SERVER_TAG: 'server-0.41.0', PIERRE_ASSET_DIR: assets },
       request: carlReleases('carl-1.2.0')
     })
     expect(await updateServer(ctx.ctx)).toBe(0)
@@ -579,7 +511,7 @@ describe('mises à jour séparées', () => {
     await writeServerBundle(root, 'server-0.40.6')
     await writeFile(join(root, 'pierre.env'), configuredText())
     const ctx = testContext(root, {
-      env: { PIERRE_UPDATE_TAG: 'server-0.41.0' },
+      env: { PIERRE_SERVER_TAG: 'server-0.41.0' },
       request: carlReleases('carl-1.2.0'),
       download: async () => {
         throw new Error('réseau coupé')
@@ -602,7 +534,7 @@ describe('mises à jour séparées', () => {
     await writeFile(join(assets, 'pierre-linux-amd64.smolmachine'), 'new microvm')
     await writeServerChecksums(assets)
     const ctx = testContext(root, {
-      env: { PIERRE_UPDATE_TAG: 'server-0.41.0', PIERRE_ASSET_DIR: assets }
+      env: { PIERRE_SERVER_TAG: 'server-0.41.0', PIERRE_ASSET_DIR: assets }
     })
     expect(await updateServer(ctx.ctx)).toBe(0)
     expect(await Bun.$`${join(root, 'home', 'server', 'current', 'pierre')} --version`.text()).toBe(
@@ -630,7 +562,7 @@ describe('mises à jour séparées', () => {
       )
     )
     const ctx = testContext(root, {
-      env: { PIERRE_UPDATE_TAG: 'server-0.41.0', PIERRE_ASSET_DIR: assets }
+      env: { PIERRE_SERVER_TAG: 'server-0.41.0', PIERRE_ASSET_DIR: assets }
     })
 
     expect(await updateServer(ctx.ctx)).toBe(1)
@@ -651,7 +583,7 @@ describe('mises à jour séparées', () => {
     await writeFile(join(root, 'home', 'datastore.sqlite'), 'database')
     let healthRequests = 0
     const ctx = testContext(root, {
-      env: { PIERRE_UPDATE_TAG: 'server-0.41.0', PIERRE_ASSET_DIR: assets },
+      env: { PIERRE_SERVER_TAG: 'server-0.41.0', PIERRE_ASSET_DIR: assets },
       request: async (url) => {
         if (url.includes('api.github.com')) return { status: 200, body: '[]', url }
         healthRequests += 1
@@ -675,9 +607,7 @@ describe('mises à jour séparées', () => {
     await mkdir(assets)
     const binary = join(assets, 'pierre-cli-linux-x64')
     await writeExe(binary, '#!/bin/sh\necho cli-0.9.1\n')
-    chmodSync(binary, 0o755)
-    const hash = createHash('sha256').update(readFileSync(binary)).digest('hex')
-    await writeFile(join(assets, 'checksums.txt'), `${hash}  pierre-cli-linux-x64\n`)
+    await recordChecksum(assets, 'pierre-cli-linux-x64')
     await writeServerBundle(root, 'server-0.40.6')
     await writeFile(join(root, 'pierre'), 'old cli')
     const ctx = testContext(root, { env: { PIERRE_ASSET_DIR: assets } })
@@ -696,12 +626,11 @@ describe('mises à jour séparées', () => {
     await mkdir(assets)
     const binary = join(assets, 'pierre-cli-linux-x64')
     await writeExe(binary, '#!/bin/sh\necho cli-9.9.9\n')
-    const hash = createHash('sha256').update(readFileSync(binary)).digest('hex')
-    await writeFile(join(assets, 'checksums.txt'), `${hash}  pierre-cli-linux-x64\n`)
+    await recordChecksum(assets, 'pierre-cli-linux-x64')
     await writeServerBundle(root, 'server-0.40.6')
     let handoff = false
     const ctx = testContext(root, {
-      env: { PIERRE_ASSET_DIR: assets, PIERRE_CLI_UPDATE_TAG: 'cli-9.9.9' },
+      env: { PIERRE_ASSET_DIR: assets, PIERRE_CLI_TAG: 'cli-9.9.9' },
       start: (command, args, options) => {
         if (args[0] === 'update') {
           handoff = options?.env?.['PIERRE_UPDATE_HANDOFF'] === '1'
@@ -742,7 +671,7 @@ describe('mises à jour séparées', () => {
     const root = await tempRoot('pierre-cli-recover-')
     await writeExe(join(root, 'pierre'), '#!/bin/sh\necho broken\n')
     await writeExe(join(root, 'pierre.previous'), '#!/bin/sh\necho cli-0.9.1\n')
-    const ctx = testContext(root, { env: { PIERRE_CLI_UPDATE_TAG: 'cli-0.9.1' } })
+    const ctx = testContext(root, { env: { PIERRE_CLI_TAG: 'cli-0.9.1' } })
     expect(await updateCli(ctx.ctx)).toBe(0)
     expect(await Bun.$`${join(root, 'pierre')} --version`.text()).toBe('cli-0.9.1\n')
     expect(existsSync(join(root, 'pierre.previous'))).toBe(false)
@@ -765,12 +694,21 @@ describe('mises à jour séparées', () => {
       `${JSON.stringify({ previous })}\n`
     )
     await writeFile(join(root, 'pierre.env'), configuredText())
-    const ctx = testContext(root, { env: { PIERRE_UPDATE_TAG: 'server-0.40.6' } })
+    const ctx = testContext(root, { env: { PIERRE_SERVER_TAG: 'server-0.40.6' } })
     expect(await updateServer(ctx.ctx)).toBe(0)
     expect(await Bun.$`${join(current, 'pierre')} --version`.text()).toBe('server-0.40.6\n')
     expect(readFileSync(join(current, 'libonnxruntime.so.1'), 'utf8')).toBe('library')
     expect(existsSync(join(root, 'home', 'server', 'update.json'))).toBe(false)
     expect(ctx.out()).toContain('Restauration')
+  })
+
+  it('does not treat an unreadable server version as up to date', async () => {
+    const root = await tempRoot('pierre-bad-version-')
+    await writeServerBundle(root, 'server-0.40.6', 'nope')
+    await writeFile(join(root, 'pierre.env'), configuredText())
+    const ctx = testContext(root, { env: { PIERRE_SERVER_TAG: 'server-0.40.6' } })
+    expect(await updateServer(ctx.ctx)).toBe(1)
+    expect(ctx.err()).toContain('illisible')
   })
 })
 
@@ -877,121 +815,18 @@ describe('maintenance', () => {
       'scp root@gx.pierre-ia.org:/var/lib/pierre/backups/datastore.sqlite .'
     )
   })
-})
 
-describe('bootstrap', () => {
-  const script = join(import.meta.dir, '../scripts/install.sh')
-
-  it('refuses a non-root or non-linux machine before downloading', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'pierre-boot-'))
-    try {
-      const bin = join(root, 'bin')
-      await mkdir(bin)
-      await writeExe(
-        join(bin, 'uname'),
-        '#!/bin/sh\nif [ "$1" = "-s" ]; then echo Linux; else echo x86_64; fi\n'
-      )
-      await writeExe(join(bin, 'id'), '#!/bin/sh\necho 1000\n')
-      const proc = Bun.spawn(['sh', script], {
-        env: { PATH: `${bin}:/usr/bin:/bin`, HOME: root, TMPDIR: root },
-        stdout: 'pipe',
-        stderr: 'pipe'
-      })
-      const stderr = await new Response(proc.stderr).text()
-      expect(await proc.exited).toBe(1)
-      expect(stderr).toContain('Il faut être root.')
-    } finally {
-      await rm(root, { recursive: true, force: true })
-    }
-  })
-
-  it('installs a checked local binary and shows the status', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'pierre-boot-'))
-    try {
-      const assets = join(root, 'assets')
-      const destDir = join(root, 'dest')
-      await mkdir(assets)
-      await mkdir(destDir)
-      const binary = join(assets, 'pierre-cli-linux-x64')
-      await writeExe(binary, '#!/bin/sh\necho "$@"; echo installed\n')
-      const hash = createHash('sha256').update(readFileSync(binary)).digest('hex')
-      await writeFile(join(assets, 'checksums.txt'), `${hash}  pierre-cli-linux-x64\n`)
-      const bin = join(root, 'bin')
-      await mkdir(bin)
-      await writeExe(
-        join(bin, 'uname'),
-        '#!/bin/sh\nif [ "$1" = "-s" ]; then echo Linux; else echo x86_64; fi\n'
-      )
-      await writeExe(join(bin, 'id'), '#!/bin/sh\necho 0\n')
-      const dest = join(destDir, 'pierre')
-      const proc = Bun.spawn(['sh', script], {
-        env: {
-          PATH: `${bin}:/usr/bin:/bin:/usr/sbin`,
-          HOME: root,
-          TMPDIR: root,
-          PIERRE_CLI_ASSET_DIR: assets,
-          PIERRE_CLI_DEST: dest
-        },
-        stdout: 'pipe',
-        stderr: 'pipe'
-      })
-      const [stdout, stderr, code] = await Promise.all([
-        new Response(proc.stdout).text(),
-        new Response(proc.stderr).text(),
-        proc.exited
-      ])
-      expect(code).toBe(0)
-      expect(stderr).toBe('')
-      expect(stdout).toBe('\ninstalled\n')
-      expect(existsSync(dest)).toBe(true)
-    } finally {
-      await rm(root, { recursive: true, force: true })
-    }
-  })
-
-  it('can verify the published cli without starting the server installation', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'pierre-boot-'))
-    try {
-      const assets = join(root, 'assets')
-      const destDir = join(root, 'dest')
-      const bin = join(root, 'bin')
-      await Promise.all([mkdir(assets), mkdir(destDir), mkdir(bin)])
-      const binary = join(assets, 'pierre-cli-linux-x64')
-      await writeExe(
-        binary,
-        '#!/bin/sh\n[ "$1" = "--version" ] || exit 99\nprintf "cli-0.9.1\\n"\n'
-      )
-      const hash = createHash('sha256').update(readFileSync(binary)).digest('hex')
-      await writeFile(join(assets, 'checksums.txt'), `${hash}  pierre-cli-linux-x64\n`)
-      await writeExe(
-        join(bin, 'uname'),
-        '#!/bin/sh\nif [ "$1" = "-s" ]; then echo Linux; else echo x86_64; fi\n'
-      )
-      await writeExe(join(bin, 'id'), '#!/bin/sh\necho 0\n')
-      const dest = join(destDir, 'pierre')
-      const proc = Bun.spawn(['sh', script], {
-        env: {
-          PATH: `${bin}:/usr/bin:/bin:/usr/sbin`,
-          HOME: root,
-          TMPDIR: root,
-          PIERRE_BOOTSTRAP_ONLY: '1',
-          PIERRE_CLI_ASSET_DIR: assets,
-          PIERRE_CLI_DEST: dest
-        },
-        stdout: 'pipe',
-        stderr: 'pipe'
-      })
-      const [stdout, stderr, code] = await Promise.all([
-        new Response(proc.stdout).text(),
-        new Response(proc.stderr).text(),
-        proc.exited
-      ])
-      expect(code).toBe(0)
-      expect(stderr).toBe('')
-      expect(stdout).toBe('cli-0.9.1\n')
-      expect(existsSync(dest)).toBe(true)
-    } finally {
-      await rm(root, { recursive: true, force: true })
-    }
+  it('deletes service files and old smolvm caches inside the layout', async () => {
+    const root = await tempRoot('pierre-remove-')
+    const cache = join(root, '.cache', 'smolvm')
+    await mkdir(cache, { recursive: true })
+    await writeFile(join(cache, 'leftover'), 'x')
+    await writeFile(join(root, 'pierre.env'), configuredText())
+    await writeFile(join(root, 'pierre.service'), 'unit\n')
+    const ctx = testContext(root, { canPrompt: true, readLine: async () => 'oui' })
+    expect(await remove(ctx.ctx)).toBe(0)
+    expect(existsSync(join(cache, 'leftover'))).toBe(false)
+    expect(existsSync(join(root, 'pierre.env'))).toBe(false)
+    expect(existsSync(join(root, 'pierre.service'))).toBe(false)
   })
 })

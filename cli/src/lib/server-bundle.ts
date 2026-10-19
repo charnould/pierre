@@ -1,27 +1,30 @@
 import {
   chmodSync,
-  closeSync,
   existsSync,
-  fsyncSync,
   mkdirSync,
   mkdtempSync,
-  openSync,
   readFileSync,
   readlinkSync,
   renameSync,
   rmSync,
-  statSync,
-  symlinkSync
+  statSync
 } from 'node:fs'
 import { join } from 'node:path'
 
+import type { Release } from '../../../shared/github-releases.ts'
+import { fsyncPath, replaceSymlink } from './fs.ts'
 import {
+  assetDirectory,
+  checksumFor,
   commandVersion,
+  expectSha256,
+  fetchRelease,
+  fetchReleases,
   fetchTo,
   fileSha256,
-  releaseAssetDigests,
-  verifyChecksum,
-  verifyFileDigest
+  releaseParts,
+  requireAssetSha256,
+  selectServerRelease
 } from './github.ts'
 import { CommandFailed, type Context } from './system.ts'
 
@@ -36,44 +39,49 @@ function requireFile(path: string, label: string) {
   }
 }
 
-function fsyncDirectory(path: string) {
-  const directory = openSync(path, 'r')
-  fsyncSync(directory)
-  closeSync(directory)
-}
-
 export function createServerStage(ctx: Context): string {
   mkdirSync(ctx.runtime.paths.serverReleases, { recursive: true, mode: 0o700 })
   return mkdtempSync(join(ctx.runtime.paths.serverRoot, '.stage-'))
 }
 
-export async function stageServerBundle(ctx: Context, tag: string, directory: string) {
-  const local = ctx.runtime.env['PIERRE_ASSET_DIR']
-  let localChecksums = ''
-  if (local) {
-    for (const name of SERVER_ASSETS) requireFile(join(local, name), name)
-    const checksumFile = join(local, 'checksums.txt')
-    requireFile(checksumFile, 'checksums.txt')
-    localChecksums = readFileSync(checksumFile, 'utf8')
+export async function findServerRelease(ctx: Context): Promise<Release | null> {
+  const forced = ctx.runtime.env['PIERRE_SERVER_TAG'] ?? ''
+  if (forced) {
+    if (!releaseParts(forced)) throw new CommandFailed(1, 'La version demandée est illisible.')
+    return { tag: forced, draft: false, prerelease: false, assets: [] }
   }
-  const digests = await releaseAssetDigests(ctx, tag, [...SERVER_ASSETS])
-  await Promise.all(SERVER_ASSETS.map((name) => fetchTo(ctx, name, join(directory, name), tag)))
+  return selectServerRelease(await fetchReleases(ctx))
+}
 
+export async function stageServerBundle(ctx: Context, release: Release, directory: string) {
+  const digests = await serverDigests(ctx, release)
+  await Promise.all(
+    SERVER_ASSETS.map((name) => fetchTo(ctx, name, join(directory, name), release.tag))
+  )
   const binary = join(directory, SERVER_BINARY)
-  const library = join(directory, ONNX_LIBRARY)
-  const image = join(directory, MICROVM_IMAGE)
   chmodSync(binary, 0o755)
-  chmodSync(library, 0o644)
-  chmodSync(image, 0o644)
-  requireFile(library, 'La bibliothèque ONNX')
-  requireFile(image, "L'image microVM")
-
+  chmodSync(join(directory, ONNX_LIBRARY), 0o644)
+  chmodSync(join(directory, MICROVM_IMAGE), 0o644)
   for (const name of SERVER_ASSETS) {
-    if (local) await verifyChecksum(localChecksums, name, join(directory, name))
-    else await verifyFileDigest(name, join(directory, name), digests[name]!)
+    const file = join(directory, name)
+    requireFile(file, name)
+    const expected = digests.get(name)
+    if (!expected) throw new CommandFailed(1, `Empreinte absente pour ${name}.`)
+    await expectSha256(name, file, expected)
   }
-  if ((await commandVersion(ctx, binary)) !== tag) {
-    throw new CommandFailed(1, `Le binaire serveur n’annonce pas ${tag}.`)
+  if ((await commandVersion(ctx, binary)) !== release.tag) {
+    throw new CommandFailed(1, `Le binaire serveur n’annonce pas ${release.tag}.`)
+  }
+}
+
+export async function publishServerBundle(ctx: Context, release: Release): Promise<string> {
+  const stage = createServerStage(ctx)
+  try {
+    await stageServerBundle(ctx, release, stage)
+    return await commitServerBundle(ctx, release.tag, stage)
+  } catch (error) {
+    rmSync(stage, { recursive: true, force: true })
+    throw error
   }
 }
 
@@ -94,14 +102,10 @@ export async function commitServerBundle(
     rmSync(stage, { recursive: true, force: true })
     return release
   }
-  for (const name of SERVER_ASSETS) {
-    const file = openSync(join(stage, name), 'r')
-    fsyncSync(file)
-    closeSync(file)
-  }
-  fsyncDirectory(stage)
+  for (const name of SERVER_ASSETS) fsyncPath(join(stage, name))
+  fsyncPath(stage)
   renameSync(stage, release)
-  fsyncDirectory(ctx.runtime.paths.serverReleases)
+  fsyncPath(ctx.runtime.paths.serverReleases)
   return release
 }
 
@@ -113,11 +117,42 @@ export function currentServerRelease(ctx: Context): string | null {
   }
 }
 
+export function serverInstalled(ctx: Context): boolean {
+  const release = currentServerRelease(ctx)
+  if (!release) return false
+  return SERVER_ASSETS.every((name) => {
+    try {
+      return statSync(join(release, name)).size > 0
+    } catch {
+      return false
+    }
+  })
+}
+
 export function activateServerRelease(ctx: Context, release: string) {
   mkdirSync(ctx.runtime.paths.serverRoot, { recursive: true, mode: 0o700 })
-  const next = `${ctx.runtime.paths.serverCurrent}.new`
-  rmSync(next, { force: true })
-  symlinkSync(release, next)
-  renameSync(next, ctx.runtime.paths.serverCurrent)
-  fsyncDirectory(ctx.runtime.paths.serverRoot)
+  replaceSymlink(ctx.runtime.paths.serverCurrent, release)
+}
+
+async function serverDigests(ctx: Context, release: Release): Promise<Map<string, string>> {
+  const local = assetDirectory(ctx)
+  if (local) {
+    const checksumFile = join(local, 'checksums.txt')
+    requireFile(checksumFile, 'checksums.txt')
+    const checksums = readFileSync(checksumFile, 'utf8')
+    const digests = new Map<string, string>()
+    for (const name of SERVER_ASSETS) {
+      requireFile(join(local, name), name)
+      digests.set(name, checksumFor(checksums, name))
+    }
+    return digests
+  }
+  const resolved = listedServerDigests(release) ? release : await fetchRelease(ctx, release.tag)
+  return requireAssetSha256(resolved, SERVER_ASSETS)
+}
+
+function listedServerDigests(release: Release): boolean {
+  const names = release.assets.map((asset) => asset.name).sort()
+  if (names.join('\n') !== [...SERVER_ASSETS].sort().join('\n')) return false
+  return release.assets.every((asset) => /^[a-f0-9]{64}$/.test(asset.sha256))
 }

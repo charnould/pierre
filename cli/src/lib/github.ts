@@ -1,65 +1,33 @@
 import { createHash } from 'node:crypto'
 import {
-  chmodSync,
   copyFileSync,
   createReadStream,
   existsSync,
   mkdirSync,
+  readFileSync,
   renameSync,
   rmSync
 } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 import { latestCarlTag } from '../../../shared/carl-model.ts'
-import type { Context } from './system.ts'
-import { CommandFailed } from './system.ts'
+import {
+  listGitHubReleases,
+  parseGitHubRelease,
+  type Release
+} from '../../../shared/github-releases.ts'
+import { releaseParts, versionGreater } from '../../../shared/release-tag.ts'
+import { CommandFailed, type Context } from './system.ts'
 
 const REPO = 'https://github.com/charnould/pierre'
 const API = 'https://api.github.com/repos/charnould/pierre'
+const HEADERS = { accept: 'application/vnd.github+json', 'user-agent': 'pierre-cli' }
+const SHA256 = /^[a-f0-9]{64}$/
 const SERVER_TAG = /^server-\d+\.\d+\.\d+$/
 const CLI_TAG = /^cli-\d+\.\d+\.\d+$/
 
-export type ReleaseAsset = { name: string; digest: string }
-export type Release = {
-  tag: string
-  draft: boolean
-  prerelease: boolean
-  assets: ReleaseAsset[]
-}
-
-const numericPart = (value: string | undefined): number | null => {
-  if (value === undefined || value === '') return 0
-  if (!/^\d+$/.test(value)) return null
-  return Number.parseInt(value, 10)
-}
-
-const pieces = (value: string): Array<number | null> => {
-  const normalized = value.replace(/^(?:carl|cli|server)-/, '')
-  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(normalized)
-  if (!match) return [null, null, null]
-  return [numericPart(match[1]), numericPart(match[2]), numericPart(match[3])]
-}
-
-export function versionGreater(left: string, right: string): boolean {
-  const a = pieces(left)
-  const b = pieces(right)
-  for (let index = 0; index < 3; index += 1) {
-    const x = a[index] ?? null
-    const y = b[index] ?? null
-    if (x === null || y === null) return false
-    if (x > y) return true
-    if (x < y) return false
-  }
-  return false
-}
-
-const maxRelease = (releases: Release[]): Release | null => {
-  let best: Release | null = null
-  for (const release of releases) {
-    if (!best || versionGreater(release.tag, best.tag)) best = release
-  }
-  return best
-}
+export type { Release }
+export { releaseParts, versionGreater }
 
 export function selectServerRelease(releases: Release[]): Release | null {
   return maxRelease(
@@ -83,60 +51,59 @@ export function selectCliRelease(releases: Release[]): Release | null {
   )
 }
 
-const parseAssets = (value: unknown): ReleaseAsset[] => {
-  if (!Array.isArray(value)) return []
-  const assets: ReleaseAsset[] = []
-  for (const item of value) {
-    if (!item || typeof item !== 'object') continue
-    const record = item as Record<string, unknown>
-    const name = typeof record['name'] === 'string' ? record['name'] : ''
-    const digest = typeof record['digest'] === 'string' ? record['digest'] : ''
-    if (name) assets.push({ name, digest })
-  }
-  return assets
+export function assetDirectory(ctx: Context): string {
+  const fromEnv = ctx.runtime.env['PIERRE_ASSET_DIR']
+  if (fromEnv) return fromEnv
+  const file = ctx.runtime.paths.assetSourceFile
+  if (!existsSync(file)) return ''
+  return readFileSync(file, 'utf8').split('\n')[0]?.trim() ?? ''
 }
 
 export async function fetchReleases(ctx: Context): Promise<Release[]> {
-  const releases: Release[] = []
-  for (let page = 1; page <= 5; page += 1) {
-    const response = await ctx.runtime.request(`${API}/releases?per_page=100&page=${page}`, {
-      headers: {
-        accept: 'application/vnd.github+json',
-        'user-agent': 'pierre-cli'
-      },
-      timeoutMs: 10_000
-    })
-    if (response.status !== 200) break
-    let parsed: unknown
-    try {
-      parsed = JSON.parse(response.body)
-    } catch {
-      break
-    }
-    if (!Array.isArray(parsed) || parsed.length === 0) break
-    for (const item of parsed) {
-      if (!item || typeof item !== 'object') continue
-      const record = item as Record<string, unknown>
-      const tag = typeof record['tag_name'] === 'string' ? record['tag_name'] : ''
-      if (!tag) continue
-      releases.push({
-        tag,
-        draft: record['draft'] === true,
-        prerelease: record['prerelease'] === true,
-        assets: parseAssets(record['assets'])
-      })
-    }
-    if (parsed.length < 100) break
+  try {
+    return await listGitHubReleases((url) => request(ctx, url))
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Impossible de lire les releases GitHub.'
+    throw new CommandFailed(1, message)
   }
-  return releases
 }
 
-function assetUrl(name: string, release: string): string {
-  return `${REPO}/releases/download/${release}/${name}`
+export async function fetchRelease(ctx: Context, tag: string): Promise<Release> {
+  const response = await request(ctx, `${API}/releases/tags/${tag}`)
+  if (response.status !== 200) throw new CommandFailed(1, `Impossible de lire la release ${tag}.`)
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(response.body)
+  } catch {
+    throw new CommandFailed(1, `La release ${tag} est illisible.`)
+  }
+  const release = parseGitHubRelease(parsed)
+  if (!release || release.tag !== tag)
+    throw new CommandFailed(1, `La release ${tag} est illisible.`)
+  return release
+}
+
+export function requireAssetSha256(
+  release: Release,
+  names: readonly string[]
+): Map<string, string> {
+  const actual = release.assets.map((asset) => asset.name).sort()
+  const expected = [...names].sort()
+  if (actual.join('\n') !== expected.join('\n')) {
+    throw new CommandFailed(1, `La release ${release.tag} est incomplète.`)
+  }
+  const digests = new Map<string, string>()
+  for (const name of expected) {
+    const sha256 = release.assets.find((asset) => asset.name === name)?.sha256 ?? ''
+    if (!SHA256.test(sha256)) throw new CommandFailed(1, `Empreinte absente pour ${name}.`)
+    digests.set(name, sha256)
+  }
+  return digests
 }
 
 export async function fetchTo(ctx: Context, name: string, dest: string, release: string) {
-  const directory = ctx.runtime.env['PIERRE_ASSET_DIR']
+  const directory = assetDirectory(ctx)
   mkdirSync(dirname(dest), { recursive: true })
   if (directory) {
     const source = join(directory, name)
@@ -148,7 +115,7 @@ export async function fetchTo(ctx: Context, name: string, dest: string, release:
   const partial = `${dest}.partial`
   rmSync(partial, { force: true })
   try {
-    await ctx.runtime.download(assetUrl(name, release), partial)
+    await ctx.runtime.download(`${REPO}/releases/download/${release}/${name}`, partial)
     renameSync(partial, dest)
   } catch (error) {
     rmSync(partial, { force: true })
@@ -167,64 +134,60 @@ export function fileSha256(file: string): Promise<string> {
   })
 }
 
-export async function releaseAssetDigests(
-  ctx: Context,
-  tag: string,
-  expectedNames: string[]
-): Promise<Record<string, string>> {
-  if (ctx.runtime.env['PIERRE_ASSET_DIR']) return {}
-  const response = await ctx.runtime.request(`${API}/releases/tags/${tag}`, {
-    headers: { accept: 'application/vnd.github+json', 'user-agent': 'pierre-cli' },
-    timeoutMs: 10_000
-  })
-  if (response.status !== 200) {
-    throw new CommandFailed(1, `Impossible de vérifier les assets de ${tag}.`)
+export function checksumFor(checksums: string, name: string): string {
+  for (const raw of checksums.split('\n')) {
+    const fields = raw.trim().split(/\s+/)
+    const fileName = fields[1]?.replace(/^\*/, '')
+    if (fileName !== name) continue
+    const sha256 = fields[0] ?? ''
+    if (!SHA256.test(sha256)) throw new CommandFailed(1, `Empreinte absente pour ${name}.`)
+    return sha256
   }
-  let assets: ReleaseAsset[]
-  try {
-    const parsed = JSON.parse(response.body) as { assets?: unknown }
-    assets = parseAssets(parsed.assets)
-  } catch {
-    throw new CommandFailed(1, `Les assets de ${tag} sont invalides.`)
-  }
-  const actualNames = assets.map((asset) => asset.name).sort()
-  const expected = [...expectedNames].sort()
-  if (actualNames.join('\n') !== expected.join('\n')) {
-    throw new CommandFailed(1, `La release ${tag} est incomplète.`)
-  }
-  const digests: Record<string, string> = {}
-  for (const name of expected) {
-    const digest = assets.find((asset) => asset.name === name)?.digest ?? ''
-    if (!digest.startsWith('sha256:') || digest.length !== 'sha256:'.length + 64) {
-      throw new CommandFailed(1, `Empreinte invalide pour ${name}.`)
-    }
-    digests[name] = digest
-  }
-  return digests
+  throw new CommandFailed(1, `Empreinte absente pour ${name}.`)
 }
 
-export async function verifyFileDigest(name: string, file: string, digest: string) {
-  if ((await fileSha256(file)) !== digest.slice('sha256:'.length)) {
+export async function expectSha256(name: string, file: string, expected: string) {
+  if ((await fileSha256(file)) !== expected) {
     throw new CommandFailed(1, `Empreinte incorrecte pour ${name}.`)
   }
 }
 
-export async function verifyChecksum(checksums: string, name: string, file: string) {
-  const expected = checksums
-    .split('\n')
-    .map((line) => line.trim().split(/\s+/))
-    .find((fields) => fields[1] === name || fields[1] === `*${name}`)?.[0]
-  if (!expected || (await fileSha256(file)) !== expected) {
-    throw new CommandFailed(1, `L'empreinte de ${name} est invalide.`)
+export async function verifyChecksumFile(directory: string, checksums: string) {
+  const entries = checksumEntries(checksums)
+  for (const entry of entries) {
+    await expectSha256(entry.name, join(directory, entry.name), entry.sha256)
   }
 }
 
-function versionToken(output: string): string {
-  return output.trim().split(/\s+/)[0] ?? ''
+export async function commandVersion(ctx: Context, file: string): Promise<string> {
+  const result = await ctx.runtime.start(file, ['--version']).finished
+  if (result.code !== 0) throw new CommandFailed(result.code, 'Version illisible.')
+  return result.stdout.trim().split(/\s+/)[0] ?? ''
 }
 
-export async function commandVersion(ctx: Context, file: string): Promise<string> {
-  chmodSync(file, 0o755)
-  const result = await ctx.runtime.start(file, ['--version']).finished
-  return versionToken(result.stdout)
+function request(ctx: Context, url: string) {
+  return ctx.runtime.request(url, { headers: HEADERS, timeoutMs: 10_000 })
+}
+
+function maxRelease(releases: Release[]): Release | null {
+  let best: Release | null = null
+  for (const release of releases) {
+    if (!best || versionGreater(release.tag, best.tag)) best = release
+  }
+  return best
+}
+
+function checksumEntries(checksums: string): Array<{ name: string; sha256: string }> {
+  const entries: Array<{ name: string; sha256: string }> = []
+  for (const raw of checksums.split('\n')) {
+    const line = raw.trim()
+    if (!line) continue
+    const fields = line.split(/\s+/)
+    const sha256 = fields[0] ?? ''
+    const name = fields[1]?.replace(/^\*/, '') ?? ''
+    if (!SHA256.test(sha256) || !name) throw new CommandFailed(1, 'Somme de contrôle illisible.')
+    entries.push({ name, sha256 })
+  }
+  if (entries.length === 0) throw new CommandFailed(1, 'Somme de contrôle illisible.')
+  return entries
 }

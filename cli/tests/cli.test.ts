@@ -5,6 +5,7 @@ import { join } from 'node:path'
 
 import { cleanHost, mergeConfiguration, parseHostArgs, type EnvMap } from '../src/lib/config.ts'
 import {
+  fetchReleases,
   selectCarlRelease,
   selectCliRelease,
   selectServerRelease,
@@ -157,7 +158,26 @@ describe('versions indépendantes', () => {
     expect(selectServerRelease(releases)?.tag).toBe('server-0.41.0')
     expect(selectCarlRelease(releases)?.tag).toBe('carl-2.0.0')
     expect(selectCliRelease(releases)?.tag).toBe('cli-0.9.1')
-    expect(versionGreater('cli-0.9.2', 'CLI-0.9.1')).toBe(false)
+    expect(versionGreater('cli-0.9.2', 'cli-0.9.1')).toBe(true)
+    expect(() => versionGreater('cli-0.9.2', 'CLI-0.9.1')).toThrow('Version illisible.')
+  })
+
+  it('rejects an incomplete GitHub catalog', async () => {
+    const root = await tempRoot('pierre-catalog-')
+    const failed = testContext(root, {
+      request: async () => ({ status: 500, body: '', url: '' })
+    })
+    await expect(fetchReleases(failed.ctx)).rejects.toThrow(
+      'Impossible de lire les releases GitHub.'
+    )
+    const empty = testContext(root, {
+      request: async () => ({ status: 200, body: '[]', url: '' })
+    })
+    expect(await fetchReleases(empty.ctx)).toEqual([])
+    const broken = testContext(root, {
+      request: async () => ({ status: 200, body: 'ok', url: '' })
+    })
+    await expect(fetchReleases(broken.ctx)).rejects.toThrow('illisibles')
   })
 })
 

@@ -1,4 +1,5 @@
 import { rmSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 
 import { runCommand, type Context } from '../lib/system.ts'
 import { confirm, say, spin } from '../lib/text.ts'
@@ -31,17 +32,26 @@ export async function remove(ctx: Context): Promise<number> {
     }
     rmSync(paths.smolvmHome, { recursive: true, force: true })
     rmSync(paths.smolvmRoot, { recursive: true, force: true })
-    rmSync('/root/.local/share/smolvm', { recursive: true, force: true })
-    rmSync('/root/.local/bin/smolvm', { force: true })
-    rmSync('/root/.cache/smolvm', { recursive: true, force: true })
-    rmSync('/root/.cache/smolvm-pack', { recursive: true, force: true })
-    rmSync('/root/.cache/smolvm-libs', { recursive: true, force: true })
     rmSync(paths.home, { recursive: true, force: true })
+    for (const leftover of smolvmResidue(paths.smolvmHome)) {
+      rmSync(leftover, { recursive: true, force: true })
+    }
     await runCommand(ctx.runtime, 'systemctl', ['daemon-reload'])
     await runCommand(ctx.runtime, 'ldconfig', [])
     rmSync(paths.cmd, { force: true })
   })
   return 0
+}
+
+function smolvmResidue(home: string): string[] {
+  const root = dirname(home)
+  return [
+    join(root, '.local/share/smolvm'),
+    join(root, '.local/bin/smolvm'),
+    join(root, '.cache/smolvm'),
+    join(root, '.cache/smolvm-pack'),
+    join(root, '.cache/smolvm-libs')
+  ]
 }
 
 async function deleteMachines(ctx: Context) {

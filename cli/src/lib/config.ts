@@ -1,13 +1,5 @@
 import { randomBytes } from 'node:crypto'
-import {
-  accessSync,
-  chmodSync,
-  constants,
-  existsSync,
-  readFileSync,
-  renameSync,
-  writeFileSync
-} from 'node:fs'
+import { chmodSync, existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 
 import type { Runtime } from './system.ts'
 
@@ -70,15 +62,6 @@ export function writePrivate(file: string, content: string) {
   writeFileSync(temporary, content, { mode: 0o600 })
   chmodSync(temporary, 0o600)
   renameSync(temporary, file)
-}
-
-export function isInstalled(runtime: Runtime): boolean {
-  try {
-    accessSync(runtime.paths.bin, constants.X_OK)
-    return true
-  } catch {
-    return false
-  }
 }
 
 export function isConfigured(runtime: Runtime): boolean {

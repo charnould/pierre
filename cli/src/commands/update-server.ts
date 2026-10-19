@@ -1,37 +1,25 @@
-import {
-  closeSync,
-  existsSync,
-  fsyncSync,
-  mkdirSync,
-  openSync,
-  readFileSync,
-  renameSync,
-  rmSync,
-  writeFileSync
-} from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
+import type { Release } from '../../../shared/github-releases.ts'
 import { ensureLatestCarl } from '../lib/carl.ts'
-import { isConfigured, isInstalled } from '../lib/config.ts'
+import { isConfigured } from '../lib/config.ts'
 import { acquireFileLock } from '../lib/file-lock.ts'
-import {
-  commandVersion,
-  fetchReleases,
-  selectServerRelease,
-  versionGreater
-} from '../lib/github.ts'
+import { fsyncPath } from '../lib/fs.ts'
+import { commandVersion, releaseParts, versionGreater } from '../lib/github.ts'
 import {
   activateServerRelease,
-  commitServerBundle,
-  createServerStage,
   currentServerRelease,
-  stageServerBundle
+  findServerRelease,
+  publishServerBundle,
+  serverInstalled
 } from '../lib/server-bundle.ts'
 import { writeServerUnit } from '../lib/server-service.ts'
 import {
   activateSmolvm,
   prepareSmolvm,
   restoreSmolvm,
+  type PreparedSmolvm,
   type SmolvmState
 } from '../lib/smolvm-runtime.ts'
 import { CommandFailed, must, runCommand, waitForBody, type Context } from '../lib/system.ts'
@@ -77,20 +65,14 @@ function writeMarker(ctx: Context, state: UpdateState) {
   const path = marker(ctx)
   const temporary = `${path}.new`
   writeFileSync(temporary, `${JSON.stringify(state)}\n`, { mode: 0o600 })
-  const file = openSync(temporary, 'r')
-  fsyncSync(file)
-  closeSync(file)
+  fsyncPath(temporary)
   renameSync(temporary, path)
-  const directory = openSync(ctx.runtime.paths.serverRoot, 'r')
-  fsyncSync(directory)
-  closeSync(directory)
+  fsyncPath(ctx.runtime.paths.serverRoot)
 }
 
 function removeMarker(ctx: Context) {
   rmSync(marker(ctx), { force: true })
-  const directory = openSync(ctx.runtime.paths.serverRoot, 'r')
-  fsyncSync(directory)
-  closeSync(directory)
+  fsyncPath(ctx.runtime.paths.serverRoot)
 }
 
 async function waitForStableServer(ctx: Context) {
@@ -159,99 +141,101 @@ async function installedVersion(ctx: Context): Promise<string> {
   return commandVersion(ctx, ctx.runtime.paths.bin)
 }
 
+async function finishCurrent(ctx: Context, current: string): Promise<number> {
+  const carl = await refreshCarl(ctx)
+  if (carl === 'failed') return 1
+  if (carl === 'installed' && isConfigured(ctx.runtime)) return restart(ctx)
+  if (carl === 'installed') {
+    done(ctx, 'Le classement est installé.')
+    return 0
+  }
+  done(ctx, `${current} est déjà à jour.`)
+  return 0
+}
+
 export async function updateServer(ctx: Context): Promise<number> {
   return withUpdateLock(ctx, async () => {
-    if (!isInstalled(ctx.runtime) && !existsSync(marker(ctx))) {
+    if (!serverInstalled(ctx) && !existsSync(marker(ctx))) {
       failed(ctx, 'Les services ne sont pas installés.')
       return 1
     }
     if (!(await recoverInterruptedServerUpdate(ctx))) return 1
-    if (!isInstalled(ctx.runtime)) {
+    if (!serverInstalled(ctx)) {
       failed(ctx, 'Les services ne sont pas installés.')
       return 1
     }
     const current = await installedVersion(ctx)
-    const forced = ctx.runtime.env['PIERRE_UPDATE_TAG']
-    const latest = forced || selectServerRelease(await fetchReleases(ctx))?.tag || ''
-    if (!latest) {
+    if (!releaseParts(current)) {
+      failed(ctx, 'La version installée est illisible.')
+      return 1
+    }
+    let release: Release | null
+    try {
+      release = await findServerRelease(ctx)
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Impossible de connaître la dernière version stable.'
+      failed(ctx, message)
+      return 1
+    }
+    if (!release) {
       failed(ctx, 'Impossible de connaître la dernière version stable.')
       return 1
     }
-    if (!versionGreater(latest, current)) {
-      const carl = await refreshCarl(ctx)
-      if (carl === 'failed') return 1
-      if (carl === 'installed' && isConfigured(ctx.runtime)) return restart(ctx)
-      if (carl === 'installed') {
-        done(ctx, 'Le classement est installé.')
-        return 0
-      }
-      done(ctx, `${current} est déjà à jour.`)
-      return 0
-    }
-    return installServerReleaseUnlocked(ctx, latest)
+    if (!versionGreater(release.tag, current)) return finishCurrent(ctx, current)
+    return installServerRelease(ctx, release)
   })
 }
 
-export async function installServerRelease(ctx: Context, tag: string): Promise<number> {
-  return withUpdateLock(ctx, () => installServerReleaseUnlocked(ctx, tag))
-}
-
-async function installServerReleaseUnlocked(ctx: Context, tag: string): Promise<number> {
-  if (!(await recoverInterruptedServerUpdate(ctx))) return 1
+async function installServerRelease(ctx: Context, release: Release): Promise<number> {
   if ((await refreshCarl(ctx)) === 'failed') return 1
-  let preparedSmolvm: Awaited<ReturnType<typeof prepareSmolvm>>
+  let prepared: PreparedSmolvm
   try {
-    preparedSmolvm = await prepareSmolvm(ctx)
+    prepared = await prepareSmolvm(ctx)
   } catch {
     failed(ctx, 'La mise à jour du moteur a échoué. Le serveur est inchangé.')
     return 1
   }
-  const stage = createServerStage(ctx)
-  let staged = stage
-  const previous = currentServerRelease(ctx)
   const state: UpdateState = {
-    previous,
-    smolvmPrevious: preparedSmolvm.previous
+    previous: currentServerRelease(ctx),
+    smolvmPrevious: prepared.previous
   }
   const configured = isConfigured(ctx.runtime)
+  let published = ''
   try {
-    let release = ''
-    try {
-      release = await spin(ctx, tag, async () => {
-        await stageServerBundle(ctx, tag, stage)
-        return commitServerBundle(ctx, tag, stage)
-      })
-    } catch {
-      failed(ctx, 'La release est incomplète ou invalide. Aucun fichier n’a été remplacé.')
-      return 1
-    }
-    staged = ''
-    writeMarker(ctx, state)
-    try {
-      await spin(ctx, 'Activation', async () => {
-        if (configured) await must(ctx.runtime, 'systemctl', ['stop', 'pierre'])
-        activateSmolvm(ctx, preparedSmolvm.release)
-        activateServerRelease(ctx, release)
-        await writeServerUnit(ctx)
-        if (configured) {
-          const started = await runCommand(ctx.runtime, 'systemctl', ['start', 'pierre'])
-          const healthy = started.code === 0 && (await waitForStableServer(ctx))
-          if (!healthy) throw new CommandFailed(1, 'unhealthy')
-        }
-      })
-    } catch {
-      try {
-        await restoreRelease(ctx, state)
-        failed(ctx, 'Le nouveau serveur n’a pas démarré. La version précédente a été restaurée.')
-      } catch {
-        failed(ctx, 'La restauration a échoué.')
-      }
-      return 1
-    }
-    removeMarker(ctx)
-    done(ctx, configured ? `${tag} est installé et opérationnel.` : `${tag} est installé.`)
-    return 0
-  } finally {
-    if (staged) rmSync(staged, { recursive: true, force: true })
+    published = await spin(ctx, release.tag, () => publishServerBundle(ctx, release))
+  } catch {
+    failed(ctx, 'La release est incomplète ou invalide. Aucun fichier n’a été remplacé.')
+    return 1
   }
+  writeMarker(ctx, state)
+  try {
+    await spin(ctx, 'Activation', async () => {
+      if (configured) await must(ctx.runtime, 'systemctl', ['stop', 'pierre'])
+      activateSmolvm(ctx, prepared.release)
+      activateServerRelease(ctx, published)
+      await writeServerUnit(ctx)
+      if (!configured) return
+      const started = await runCommand(ctx.runtime, 'systemctl', ['start', 'pierre'])
+      if (started.code !== 0 || !(await waitForStableServer(ctx))) {
+        throw new CommandFailed(1, 'unhealthy')
+      }
+    })
+  } catch {
+    try {
+      await restoreRelease(ctx, state)
+      failed(ctx, 'Le nouveau serveur n’a pas démarré. La version précédente a été restaurée.')
+    } catch {
+      failed(ctx, 'La restauration a échoué.')
+    }
+    return 1
+  }
+  removeMarker(ctx)
+  done(
+    ctx,
+    configured ? `${release.tag} est installé et opérationnel.` : `${release.tag} est installé.`
+  )
+  return 0
 }

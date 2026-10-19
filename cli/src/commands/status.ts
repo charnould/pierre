@@ -1,32 +1,35 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { isConfigured, isInstalled, readEnvValue } from '../lib/config.ts'
+import { isConfigured, readEnvValue } from '../lib/config.ts'
 import {
+  commandVersion,
   fetchReleases,
+  releaseParts,
   selectCarlRelease,
   selectCliRelease,
   selectServerRelease,
   versionGreater
 } from '../lib/github.ts'
 import { renderStatus, type StatusLine } from '../lib/output.ts'
-import { runCommand, type Context } from '../lib/system.ts'
+import { serverInstalled } from '../lib/server-bundle.ts'
+import { isHealthyResponse, runCommand, type Context } from '../lib/system.ts'
 
 export async function showStatus(ctx: Context): Promise<number> {
-  const { lines } = await collectStatus(ctx)
+  const lines = await collectStatus(ctx)
   ctx.runtime.writeOut(renderStatus(ctx, lines))
   return lines.some((line) => line.level === 'bad') ? 1 : 0
 }
 
-export async function collectStatus(ctx: Context): Promise<{ lines: StatusLine[] }> {
-  if (!isInstalled(ctx.runtime)) return { lines: [] }
+export async function collectStatus(ctx: Context): Promise<StatusLine[]> {
+  if (!serverInstalled(ctx)) return []
   const configured = isConfigured(ctx.runtime)
-  const releases = await fetchReleases(ctx)
+  const releases = await fetchReleases(ctx).catch(() => null)
   const serverVersion = await installedServer(ctx)
-  const serverLatest = selectServerRelease(releases)?.tag ?? ''
+  const serverLatest = releases ? (selectServerRelease(releases)?.tag ?? '') : ''
   const carlVersion = installedCarl(ctx)
-  const carlLatest = selectCarlRelease(releases)?.tag ?? ''
-  const cliLatest = selectCliRelease(releases)?.tag ?? ''
+  const carlLatest = releases ? (selectCarlRelease(releases)?.tag ?? '') : ''
+  const cliLatest = releases ? (selectCliRelease(releases)?.tag ?? '') : ''
   const lines: StatusLine[] = [versionLine('cli', ctx.version, cliLatest, true)]
   if (!configured) {
     lines.unshift({
@@ -50,7 +53,7 @@ export async function collectStatus(ctx: Context): Promise<{ lines: StatusLine[]
     lines.push(versionLine('server', serverVersion, serverLatest, local))
     lines.push(versionLine('carl', carlVersion, carlLatest, carlUp))
   }
-  return { lines }
+  return lines
 }
 
 function versionLine(
@@ -61,7 +64,9 @@ function versionLine(
 ): StatusLine {
   const value = !installed || installed === 'absent' ? 'absent' : installed
   const next =
-    value !== 'absent' && latest && versionGreater(latest, installed) ? latest : undefined
+    releaseParts(value) && releaseParts(latest) && versionGreater(latest, installed)
+      ? latest
+      : undefined
   if (up === null) return { level: installed === 'absent' ? 'warn' : 'ok', label, value, next }
   if (up) return { level: 'ok', label, value, next }
   return {
@@ -74,8 +79,12 @@ function versionLine(
 }
 
 async function installedServer(ctx: Context): Promise<string> {
-  const result = await runCommand(ctx.runtime, ctx.runtime.paths.bin, ['--version'])
-  return result.stdout.trim().split(/\s+/)[0] || 'absent'
+  try {
+    const version = await commandVersion(ctx, ctx.runtime.paths.bin)
+    return version || 'absent'
+  } catch {
+    return 'absent'
+  }
 }
 
 function installedCarl(ctx: Context): string {
@@ -92,7 +101,7 @@ async function serviceUp(ctx: Context): Promise<boolean> {
 
 async function endpointUp(ctx: Context, url: string): Promise<boolean> {
   const response = await ctx.runtime.request(url, { timeoutMs: 5000 })
-  return response.status >= 200 && response.status < 300 && response.body.trim() === 'ok'
+  return isHealthyResponse(response.status, response.body)
 }
 
 async function carlUpNow(ctx: Context): Promise<boolean> {

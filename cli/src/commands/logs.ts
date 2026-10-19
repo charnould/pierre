@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { runCommand, type Context } from '../lib/system.ts'
+import { runCommand, withInterrupt, type Context } from '../lib/system.ts'
 
 const JOURNAL_ARGS = [
   '-n',
@@ -24,13 +24,11 @@ export async function logs(ctx: Context): Promise<number> {
       inherit: true,
       env: { SYSTEMD_COLORS: ctx.runtime.tty ? '1' : '0' }
     })
-    const previous = ctx.runtime.onInterrupt
-    ctx.runtime.onInterrupt = () => child.kill()
-    try {
-      return (await child.finished).code
-    } finally {
-      ctx.runtime.onInterrupt = previous
-    }
+    return withInterrupt(
+      ctx.runtime,
+      () => child.kill(),
+      async () => (await child.finished).code
+    )
   }
   return viewWithPager(ctx)
 }
