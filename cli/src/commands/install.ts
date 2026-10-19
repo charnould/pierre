@@ -38,7 +38,7 @@ import {
 import { writeServerUnit } from '../lib/server-service.ts'
 import { ensureSmolvm } from '../lib/smolvm-runtime.ts'
 import { CommandFailed, must, runCommand, waitForBody, type Context } from '../lib/system.ts'
-import { say, sayError } from '../lib/text.ts'
+import { say, sayError, spin } from '../lib/text.ts'
 
 const PACKAGES = [
   'imagemagick',
@@ -71,33 +71,12 @@ async function runInstallStep(ctx: Context, label: string, action: () => Promise
   mkdirSync(dirname(logFile), { recursive: true })
   appendFileSync(logFile, `\n=== ${label} ===\n`)
   chmodSync(logFile, 0o600)
-  const { cyan, green, red, reset } = ctx.runtime.palette
-  let timer: ReturnType<typeof setInterval> | undefined
-  let live = true
-  if (ctx.runtime.tty) {
-    const frames = ['◐', '◓', '◑', '◒']
-    let frame = 0
-    timer = setInterval(() => {
-      if (!live) return
-      const glyph = frames[frame % frames.length] ?? '◐'
-      frame += 1
-      ctx.runtime.writeOut(`\r\u001b[2K  ${cyan}${glyph}${reset}  ${label}`)
-    }, 120)
-  }
-  const stop = () => {
-    live = false
-    if (timer) clearInterval(timer)
-  }
   try {
-    await action()
-    stop()
-    ctx.runtime.writeOut(`${ctx.runtime.tty ? '\r\u001b[2K' : ''}  ${green}✓${reset}  ${label}\n`)
+    await spin(ctx, label, action)
   } catch (error) {
-    stop()
     const output =
       error instanceof CommandFailed ? error.output : error instanceof Error ? error.message : ''
     if (output) appendFileSync(logFile, output.endsWith('\n') ? output : `${output}\n`)
-    ctx.runtime.writeOut(`${ctx.runtime.tty ? '\r\u001b[2K' : ''}  ${red}×${reset}  ${label}\n`)
     throw error
   }
 }
@@ -174,14 +153,15 @@ export async function installModel(ctx: Context, tag: string) {
 }
 
 export async function ensureLatestCarl(
-  ctx: Context
+  ctx: Context,
+  visible = false
 ): Promise<'current' | 'installed' | 'unavailable'> {
   const tag = selectCarlRelease(await fetchReleases(ctx))?.tag
   if (!tag) return 'unavailable'
   const dir = join(ctx.runtime.paths.home, 'models', 'carl')
   if (carlReady(dir, tag)) return 'current'
-  say(ctx, `Téléchargement de CARL ${tag}…`)
-  await installModel(ctx, tag)
+  if (visible) await spin(ctx, 'Classement', () => installModel(ctx, tag))
+  else await installModel(ctx, tag)
   return 'installed'
 }
 
@@ -281,15 +261,14 @@ export async function runInstallation(ctx: Context): Promise<number> {
   const logFile = ctx.runtime.paths.installLog
   mkdirSync(dirname(logFile), { recursive: true })
   writeFileSync(logFile, '', { mode: 0o600 })
-  say(ctx, 'Installation des logiciels. Cette opération peut prendre plusieurs minutes.')
   const steps: Array<[string, () => Promise<void>]> = [
-    ['Prérequis du serveur', () => verifyInstallMachine(ctx)],
-    ['Paquets système', () => installPackages(ctx)],
-    ['Moteur de micro-VM', () => ensureSmolvm(ctx)],
-    ['Serveur web Caddy', () => installCaddy(ctx)],
-    ['Serveur PIERRE', async () => installServerBinaries(ctx, await serverTag(ctx))],
-    ['Classement carl', () => installLatestModel(ctx)],
-    ['Service PIERRE', () => publishUnit(ctx)]
+    ['Prérequis', () => verifyInstallMachine(ctx)],
+    ['Paquets', () => installPackages(ctx)],
+    ['Micro-VM', () => ensureSmolvm(ctx)],
+    ['Caddy', () => installCaddy(ctx)],
+    ['Serveur', async () => installServerBinaries(ctx, await serverTag(ctx))],
+    ['Classement', () => installLatestModel(ctx)],
+    ['Service', () => publishUnit(ctx)]
   ]
   for (const [label, action] of steps) {
     try {
@@ -339,13 +318,13 @@ async function activateHost(ctx: Context, flags: ConfigureFlags): Promise<number
     return 1
   }
   finalizeConfiguration(ctx)
-  const { bold, cyan, green, reset } = ctx.runtime.palette
-  say(ctx, `${green}✓${reset}  PIERRE répond sur ${cyan}https://${merged.env.host}${reset}`)
+  const { bold, reset } = ctx.runtime.palette
+  say(ctx, '')
+  say(ctx, `  https://${merged.env.host}`)
   if (!published.AUTH_PASSWORD) {
     say(ctx, '')
-    say(ctx, `${bold}Compte : admin@pierre-ia.org${reset}`)
-    say(ctx, `${bold}Mot de passe : ${merged.env.password}${reset}`)
-    say(ctx, 'Notez-le maintenant. Il ne sera plus affiché.')
+    say(ctx, '  admin@pierre-ia.org')
+    say(ctx, `  ${bold}${merged.env.password}${reset}`)
   }
   return 0
 }

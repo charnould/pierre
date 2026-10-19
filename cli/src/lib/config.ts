@@ -129,7 +129,7 @@ export function mergeConfiguration(
   }
   const host = cleanHost(flags.host ?? current.HOST ?? '')
   if (!host || /\s/.test(host)) return { ok: false, error: 'Le domaine est invalide.' }
-  const password = current.AUTH_PASSWORD || randomBytes(32).toString('hex')
+  const password = current.AUTH_PASSWORD || readablePassword()
   if (password.length < 8 || password.length > 128) {
     return { ok: false, error: 'AUTH_PASSWORD doit contenir entre 8 et 128 caractères.' }
   }
@@ -144,6 +144,13 @@ export function mergeConfiguration(
     passwordGenerated: !current.AUTH_PASSWORD,
     env: { host, password, authSecret, authBearer }
   }
+}
+
+const PASSWORD_ALPHABET = 'abcdefghijkmnpqrstuvwxyz23456789'
+
+function readablePassword(): string {
+  const chars = [...randomBytes(16)].map((byte) => PASSWORD_ALPHABET[byte % 32] ?? 'a')
+  return [0, 4, 8, 12].map((start) => chars.slice(start, start + 4).join('')).join('-')
 }
 
 function requiredReady(map: EnvMap): boolean {

@@ -34,7 +34,7 @@ import {
   type SmolvmState
 } from '../lib/smolvm-runtime.ts'
 import { CommandFailed, must, runCommand, waitForBody, type Context } from '../lib/system.ts'
-import { say, sayError } from '../lib/text.ts'
+import { done, failed, spin } from '../lib/text.ts'
 import { ensureLatestCarl } from './install.ts'
 import { restart } from './restart.ts'
 
@@ -51,7 +51,7 @@ async function withUpdateLock(ctx: Context, action: () => Promise<number>): Prom
   mkdirSync(ctx.runtime.paths.serverRoot, { recursive: true, mode: 0o700 })
   const release = acquireFileLock(join(ctx.runtime.paths.serverRoot, 'update.lock'))
   if (!release) {
-    sayError(ctx, 'Une autre mise à jour de PIERRE est déjà en cours.')
+    failed(ctx, 'Une autre mise à jour est déjà en cours.')
     return 1
   }
   try {
@@ -123,20 +123,21 @@ async function restoreRelease(ctx: Context, state: UpdateState) {
 
 async function recoverInterruptedServerUpdate(ctx: Context): Promise<boolean> {
   if (!existsSync(marker(ctx))) return true
-  say(ctx, 'Restauration de la mise à jour serveur interrompue…')
   try {
-    const parsed = JSON.parse(readFileSync(marker(ctx), 'utf8')) as {
-      previous?: unknown
-      smolvmPrevious?: unknown
-    }
-    const state: UpdateState = {
-      previous: typeof parsed.previous === 'string' ? parsed.previous : null,
-      smolvmPrevious: parseSmolvmState(parsed.smolvmPrevious)
-    }
-    await restoreRelease(ctx, state)
+    await spin(ctx, 'Restauration', async () => {
+      const parsed = JSON.parse(readFileSync(marker(ctx), 'utf8')) as {
+        previous?: unknown
+        smolvmPrevious?: unknown
+      }
+      const state: UpdateState = {
+        previous: typeof parsed.previous === 'string' ? parsed.previous : null,
+        smolvmPrevious: parseSmolvmState(parsed.smolvmPrevious)
+      }
+      await restoreRelease(ctx, state)
+    })
     return true
   } catch {
-    sayError(ctx, 'La restauration automatique du bundle serveur a échoué.')
+    failed(ctx, 'La restauration automatique a échoué.')
     return false
   }
 }
@@ -145,10 +146,10 @@ async function refreshCarl(
   ctx: Context
 ): Promise<'current' | 'installed' | 'unavailable' | 'failed'> {
   try {
-    return await ensureLatestCarl(ctx)
+    return await ensureLatestCarl(ctx, true)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'L’installation de carl a échoué.'
-    sayError(ctx, message)
+    failed(ctx, message)
     return 'failed'
   }
 }
@@ -161,20 +162,19 @@ async function installedVersion(ctx: Context): Promise<string> {
 export async function updateServer(ctx: Context): Promise<number> {
   return withUpdateLock(ctx, async () => {
     if (!isInstalled(ctx.runtime) && !existsSync(marker(ctx))) {
-      sayError(ctx, 'PIERRE n’est pas installé. Lancez d’abord pierre install --host DOMAINE.')
+      failed(ctx, 'Les services ne sont pas installés.')
       return 1
     }
     if (!(await recoverInterruptedServerUpdate(ctx))) return 1
     if (!isInstalled(ctx.runtime)) {
-      sayError(ctx, 'PIERRE n’est pas installé. Lancez d’abord pierre install --host DOMAINE.')
+      failed(ctx, 'Les services ne sont pas installés.')
       return 1
     }
     const current = await installedVersion(ctx)
     const forced = ctx.runtime.env['PIERRE_UPDATE_TAG']
     const latest = forced || selectServerRelease(await fetchReleases(ctx))?.tag || ''
     if (!latest) {
-      sayError(ctx, 'Impossible de connaître la dernière version stable.')
-      sayError(ctx, 'Vérifiez la connexion réseau, puis réessayez.')
+      failed(ctx, 'Impossible de connaître la dernière version stable.')
       return 1
     }
     if (!versionGreater(latest, current)) {
@@ -182,10 +182,10 @@ export async function updateServer(ctx: Context): Promise<number> {
       if (carl === 'failed') return 1
       if (carl === 'installed' && isConfigured(ctx.runtime)) return restart(ctx)
       if (carl === 'installed') {
-        say(ctx, 'Le classement est installé. Il sera chargé au démarrage.')
+        done(ctx, 'Le classement est installé.')
         return 0
       }
-      say(ctx, `${current} est déjà à jour.`)
+      done(ctx, `${current} est déjà à jour.`)
       return 0
     }
     return installServerReleaseUnlocked(ctx, latest)
@@ -203,7 +203,7 @@ async function installServerReleaseUnlocked(ctx: Context, tag: string): Promise<
   try {
     preparedSmolvm = await prepareSmolvm(ctx)
   } catch {
-    sayError(ctx, 'La mise à jour du moteur microVM a échoué. Le serveur est inchangé.')
+    failed(ctx, 'La mise à jour du moteur a échoué. Le serveur est inchangé.')
     return 1
   }
   const stage = createServerStage(ctx)
@@ -215,39 +215,41 @@ async function installServerReleaseUnlocked(ctx: Context, tag: string): Promise<
   }
   const configured = isConfigured(ctx.runtime)
   try {
-    say(ctx, `Téléchargement de PIERRE ${tag}…`)
+    let release = ''
     try {
-      await stageServerBundle(ctx, tag, stage)
+      release = await spin(ctx, tag, async () => {
+        await stageServerBundle(ctx, tag, stage)
+        return commitServerBundle(ctx, tag, stage)
+      })
     } catch {
-      sayError(ctx, 'La release est incomplète ou invalide. Aucun fichier n’a été remplacé.')
+      failed(ctx, 'La release est incomplète ou invalide. Aucun fichier n’a été remplacé.')
       return 1
     }
-    say(ctx, 'Serveur, bibliothèque et image microVM vérifiés.')
-    const release = await commitServerBundle(ctx, tag, stage)
     staged = ''
     writeMarker(ctx, state)
-    say(ctx, 'Activation du bundle serveur…')
     try {
-      if (configured) await must(ctx.runtime, 'systemctl', ['stop', 'pierre'])
-      activateSmolvm(ctx, preparedSmolvm.release)
-      activateServerRelease(ctx, release)
-      await writeServerUnit(ctx)
-      if (configured) {
-        const started = await runCommand(ctx.runtime, 'systemctl', ['start', 'pierre'])
-        const healthy = started.code === 0 && (await waitForStableServer(ctx))
-        if (!healthy) throw new CommandFailed(1, 'unhealthy')
-      }
+      await spin(ctx, 'Activation', async () => {
+        if (configured) await must(ctx.runtime, 'systemctl', ['stop', 'pierre'])
+        activateSmolvm(ctx, preparedSmolvm.release)
+        activateServerRelease(ctx, release)
+        await writeServerUnit(ctx)
+        if (configured) {
+          const started = await runCommand(ctx.runtime, 'systemctl', ['start', 'pierre'])
+          const healthy = started.code === 0 && (await waitForStableServer(ctx))
+          if (!healthy) throw new CommandFailed(1, 'unhealthy')
+        }
+      })
     } catch {
       try {
         await restoreRelease(ctx, state)
-        sayError(ctx, 'Le nouveau serveur n’a pas démarré. La version précédente a été restaurée.')
+        failed(ctx, 'Le nouveau serveur n’a pas démarré. La version précédente a été restaurée.')
       } catch {
-        sayError(ctx, 'Le rollback atomique du serveur a échoué.')
+        failed(ctx, 'La restauration a échoué.')
       }
       return 1
     }
     removeMarker(ctx)
-    say(ctx, configured ? `${tag} est installé et opérationnel.` : `${tag} est installé.`)
+    done(ctx, configured ? `${tag} est installé et opérationnel.` : `${tag} est installé.`)
     return 0
   } finally {
     if (staged) rmSync(staged, { recursive: true, force: true })

@@ -31,7 +31,7 @@ describe('commandes et droits', () => {
     const root = await tempRoot('pierre-help-')
     const ctx = testContext(root)
     const verbs = ['install', 'update', 'restart', 'backup', 'logs', 'env', 'remove']
-    expect(await run([], ctx.ctx)).toBe(1)
+    expect(await run([], ctx.ctx)).toBe(0)
     expect(
       ctx
         .out()
@@ -41,6 +41,7 @@ describe('commandes et droits', () => {
     ).toEqual(verbs)
     expect(ctx.out()).toContain('Installe les services')
     expect(ctx.out()).not.toContain('configure')
+    expect(ctx.out()).not.toContain('Installer :')
   })
 
   it('rejects an unknown command', async () => {

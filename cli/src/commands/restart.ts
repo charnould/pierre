@@ -1,29 +1,30 @@
 import { runCommand, waitForBody, type Context } from '../lib/system.ts'
+import { spin } from '../lib/text.ts'
 
 export async function restart(ctx: Context): Promise<number> {
   const timeout = Number(ctx.runtime.env['PIERRE_RESTART_TIMEOUT'] || 90)
-  await runCommand(ctx.runtime, 'systemctl', ['restart', 'pierre'])
-  ctx.runtime.writeOut('Redémarrage en cours')
-  for (let attempt = 1; attempt <= timeout; attempt += 1) {
-    const active = await runCommand(ctx.runtime, 'systemctl', ['is-active', 'pierre'])
-    if (active.stdout.trim() !== 'active') break
-    const ready = await waitForBody(ctx.runtime, 'http://127.0.0.1:3000/up', 1)
-    if (ready) {
-      ctx.runtime.writeOut(' terminé.\n')
-      return 0
-    }
-    if (attempt % 5 === 0) ctx.runtime.writeOut('.')
-    await ctx.runtime.sleep(1000)
+  try {
+    await spin(ctx, 'Redémarrage', async () => {
+      await runCommand(ctx.runtime, 'systemctl', ['restart', 'pierre'])
+      for (let attempt = 1; attempt <= timeout; attempt += 1) {
+        const active = await runCommand(ctx.runtime, 'systemctl', ['is-active', 'pierre'])
+        if (active.stdout.trim() !== 'active') break
+        if (await waitForBody(ctx.runtime, 'http://127.0.0.1:3000/up', 1)) return
+        await ctx.runtime.sleep(1000)
+      }
+      throw new Error('down')
+    })
+    return 0
+  } catch {
+    const journal = await runCommand(ctx.runtime, 'journalctl', [
+      '-u',
+      'pierre',
+      '-n',
+      '30',
+      '--no-pager'
+    ])
+    if (journal.stdout) ctx.runtime.writeErr(journal.stdout)
+    if (journal.stderr) ctx.runtime.writeErr(journal.stderr)
+    return 1
   }
-  ctx.runtime.writeOut(' échec.\n')
-  const journal = await runCommand(ctx.runtime, 'journalctl', [
-    '-u',
-    'pierre',
-    '-n',
-    '30',
-    '--no-pager'
-  ])
-  if (journal.stdout) ctx.runtime.writeErr(journal.stdout)
-  if (journal.stderr) ctx.runtime.writeErr(journal.stderr)
-  return 1
 }

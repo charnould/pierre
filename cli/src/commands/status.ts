@@ -12,8 +12,6 @@ import {
 import { renderStatus, type StatusLine } from '../lib/output.ts'
 import { runCommand, type Context } from '../lib/system.ts'
 
-const INSTALL_HINT = 'Installer : pierre install --host DOMAINE'
-
 export async function showStatus(ctx: Context): Promise<number> {
   const { lines } = await collectStatus(ctx)
   ctx.runtime.writeOut(renderStatus(ctx, lines))
@@ -21,18 +19,7 @@ export async function showStatus(ctx: Context): Promise<number> {
 }
 
 export async function collectStatus(ctx: Context): Promise<{ lines: StatusLine[] }> {
-  if (!isInstalled(ctx.runtime)) {
-    return {
-      lines: [
-        {
-          level: 'bad',
-          label: 'installation',
-          value: 'absente',
-          hint: INSTALL_HINT
-        }
-      ]
-    }
-  }
+  if (!isInstalled(ctx.runtime)) return { lines: [] }
   const configured = isConfigured(ctx.runtime)
   const releases = await fetchReleases(ctx)
   const serverVersion = await installedServer(ctx)
@@ -45,8 +32,7 @@ export async function collectStatus(ctx: Context): Promise<{ lines: StatusLine[]
     lines.unshift({
       level: 'bad',
       label: 'configuration',
-      value: existsSync(ctx.runtime.paths.pendingEnvFile) ? 'en attente' : 'absente',
-      hint: INSTALL_HINT
+      value: existsSync(ctx.runtime.paths.pendingEnvFile) ? 'en attente' : 'absente'
     })
     lines.push(versionLine('server', serverVersion, serverLatest, null))
     lines.push(versionLine('carl', carlVersion, carlLatest, null))

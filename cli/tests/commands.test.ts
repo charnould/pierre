@@ -189,7 +189,7 @@ describe('installation atomique', () => {
     const code = await runInstallation(ctx.ctx)
     expect(code).toBe(1)
     expect(aptCaddy).toBe(true)
-    expect(ctx.out()).toContain('Serveur web Caddy')
+    expect(ctx.out()).toContain('Caddy')
     expect(readFileSync(join(root, 'install.log'), 'utf8')).toContain('caddy failed clearly')
     expect(existsSync(join(root, 'pierre.env'))).toBe(false)
   })
@@ -316,7 +316,9 @@ describe('configuration', () => {
     expect(existsSync(join(root, 'pierre.env.pending'))).toBe(false)
     expect(ctx.out()).toContain('admin@pierre-ia.org')
     const password = env.match(/^AUTH_PASSWORD=(.*)$/m)?.[1] ?? ''
+    expect(password).toMatch(/^[a-hjkmnp-z2-9]{4}(?:-[a-hjkmnp-z2-9]{4}){3}$/)
     expect(ctx.out()).toContain(password)
+    expect(ctx.out()).not.toContain('Notez-le')
     const again = testContext(root)
     expect(await installCommand(again.ctx, ['--host', 'autre.exemple.org'])).toBe(0)
     expect(again.out()).not.toContain(password)
@@ -609,7 +611,7 @@ describe('mises à jour séparées', () => {
     await writeFile(join(root, 'pierre'), 'old cli')
     const ctx = testContext(root, { env: { PIERRE_ASSET_DIR: assets } })
     expect(await installCliRelease(ctx.ctx, 'cli-0.9.1')).toBe(0)
-    expect(ctx.out()).toContain('cli-0.9.1 est installé')
+    expect(ctx.out()).toContain('cli-0.9.1')
     expect(readFileSync(join(root, 'home', 'server', 'current', 'pierre'), 'utf8')).toContain(
       'server-0.40.6'
     )
@@ -673,7 +675,7 @@ describe('mises à jour séparées', () => {
     expect(await updateCli(ctx.ctx)).toBe(0)
     expect(await Bun.$`${join(root, 'pierre')} --version`.text()).toBe('cli-0.9.1\n')
     expect(existsSync(join(root, 'pierre.previous'))).toBe(false)
-    expect(ctx.out()).toContain('Restauration de la mise à jour cli interrompue')
+    expect(ctx.out()).toContain('Restauration du cli interrompue.')
   })
 
   it('recovers an interrupted server update before checking for a new release', async () => {
@@ -697,7 +699,7 @@ describe('mises à jour séparées', () => {
     expect(await Bun.$`${join(current, 'pierre')} --version`.text()).toBe('server-0.40.6\n')
     expect(readFileSync(join(current, 'libonnxruntime.so.1'), 'utf8')).toBe('library')
     expect(existsSync(join(root, 'home', 'server', 'update.json'))).toBe(false)
-    expect(ctx.out()).toContain('Restauration de la mise à jour serveur interrompue')
+    expect(ctx.out()).toContain('Restauration')
   })
 })
 
@@ -706,7 +708,7 @@ describe('maintenance', () => {
     const root = await tempRoot('pierre-restart-')
     const ready = testContext(root)
     expect(await restart(ready.ctx)).toBe(0)
-    expect(ready.out()).toContain('Redémarrage en cours terminé.')
+    expect(ready.out()).toContain('Redémarrage')
     const stuck = testContext(root, {
       start: (_command, args) => ({
         finished: Promise.resolve({
@@ -799,7 +801,7 @@ describe('maintenance', () => {
     const ctx = testContext(root, { tty: true })
     const { backup } = await import('../src/commands/backup.ts')
     expect(await backup(ctx.ctx)).toBe(0)
-    expect(ctx.out()).toContain('La sauvegarde est terminée.')
+    expect(ctx.out()).toContain('Sauvegarde')
     expect(ctx.out()).toContain(
       'scp root@gx.pierre-ia.org:/var/lib/pierre/backups/datastore.sqlite .'
     )

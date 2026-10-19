@@ -1,7 +1,7 @@
 import { rmSync } from 'node:fs'
 
 import { runCommand, type Context } from '../lib/system.ts'
-import { confirm, say } from '../lib/text.ts'
+import { confirm, say, spin } from '../lib/text.ts'
 
 export async function remove(ctx: Context): Promise<number> {
   const answer = await confirm(ctx, 'Continuer et supprimer toutes les données ?')
@@ -10,36 +10,37 @@ export async function remove(ctx: Context): Promise<number> {
     say(ctx, "Désinstallation annulée. Rien n'a été supprimé.")
     return 0
   }
-  const { paths } = ctx.runtime
-  await runCommand(ctx.runtime, 'systemctl', ['disable', '--now', 'pierre', 'caddy'])
-  await runCommand(ctx.runtime, 'systemctl', ['disable', '--now', 'carl'])
-  await deleteMachines(ctx)
-  for (const file of [
-    paths.envFile,
-    paths.pendingEnvFile,
-    paths.previousEnvFile,
-    paths.installLog,
-    paths.previousCaddyFile,
-    paths.assetSourceFile,
-    paths.smolvmBin,
-    paths.unitFile,
-    paths.carlUnit,
-    paths.caddyFile
-  ]) {
-    rmSync(file, { force: true })
-  }
-  rmSync(paths.smolvmHome, { recursive: true, force: true })
-  rmSync(paths.smolvmRoot, { recursive: true, force: true })
-  rmSync('/root/.local/share/smolvm', { recursive: true, force: true })
-  rmSync('/root/.local/bin/smolvm', { force: true })
-  rmSync('/root/.cache/smolvm', { recursive: true, force: true })
-  rmSync('/root/.cache/smolvm-pack', { recursive: true, force: true })
-  rmSync('/root/.cache/smolvm-libs', { recursive: true, force: true })
-  rmSync(paths.home, { recursive: true, force: true })
-  await runCommand(ctx.runtime, 'systemctl', ['daemon-reload'])
-  await runCommand(ctx.runtime, 'ldconfig', [])
-  say(ctx, 'PIERRE et ses données ont été supprimés.')
-  rmSync(paths.cmd, { force: true })
+  await spin(ctx, 'Suppression', async () => {
+    const { paths } = ctx.runtime
+    await runCommand(ctx.runtime, 'systemctl', ['disable', '--now', 'pierre', 'caddy'])
+    await runCommand(ctx.runtime, 'systemctl', ['disable', '--now', 'carl'])
+    await deleteMachines(ctx)
+    for (const file of [
+      paths.envFile,
+      paths.pendingEnvFile,
+      paths.previousEnvFile,
+      paths.installLog,
+      paths.previousCaddyFile,
+      paths.assetSourceFile,
+      paths.smolvmBin,
+      paths.unitFile,
+      paths.carlUnit,
+      paths.caddyFile
+    ]) {
+      rmSync(file, { force: true })
+    }
+    rmSync(paths.smolvmHome, { recursive: true, force: true })
+    rmSync(paths.smolvmRoot, { recursive: true, force: true })
+    rmSync('/root/.local/share/smolvm', { recursive: true, force: true })
+    rmSync('/root/.local/bin/smolvm', { force: true })
+    rmSync('/root/.cache/smolvm', { recursive: true, force: true })
+    rmSync('/root/.cache/smolvm-pack', { recursive: true, force: true })
+    rmSync('/root/.cache/smolvm-libs', { recursive: true, force: true })
+    rmSync(paths.home, { recursive: true, force: true })
+    await runCommand(ctx.runtime, 'systemctl', ['daemon-reload'])
+    await runCommand(ctx.runtime, 'ldconfig', [])
+    rmSync(paths.cmd, { force: true })
+  })
   return 0
 }
 

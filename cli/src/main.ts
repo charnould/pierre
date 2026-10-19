@@ -18,27 +18,36 @@ export async function run(argv: string[], ctx: Context): Promise<number> {
   }
   if (command === 'install') {
     requireMachine(ctx.runtime)
-    return installCommand(ctx, rest)
+    return breathe(ctx, () => installCommand(ctx, rest))
   }
   requireRoot(ctx.runtime)
   switch (command) {
     case '':
       return showStatus(ctx)
     case 'update':
-      return update(ctx)
+      return breathe(ctx, () => update(ctx))
     case 'restart':
-      return restart(ctx)
+      return breathe(ctx, () => restart(ctx))
     case 'backup':
-      return backup(ctx)
+      return breathe(ctx, () => backup(ctx))
     case 'logs':
-      return logs(ctx)
+      return breathe(ctx, () => logs(ctx))
     case 'env':
       return printEnv(ctx)
     case 'remove':
-      return remove(ctx)
+      return breathe(ctx, () => remove(ctx))
     default:
       sayError(ctx, 'Commande inconnue.')
       return 2
+  }
+}
+
+async function breathe(ctx: Context, command: () => Promise<number>): Promise<number> {
+  ctx.runtime.writeOut('\n')
+  try {
+    return await command()
+  } finally {
+    ctx.runtime.writeOut('\n')
   }
 }
 

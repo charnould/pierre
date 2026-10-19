@@ -18,7 +18,7 @@ import {
   versionGreater
 } from '../lib/github.ts'
 import type { Context } from '../lib/system.ts'
-import { say, sayError } from '../lib/text.ts'
+import { done, failed, say, spin } from '../lib/text.ts'
 
 const CLI_ASSET = 'pierre-cli-linux-x64'
 
@@ -28,12 +28,11 @@ export async function stageCliUpdate(ctx: Context): Promise<'current' | 'updated
   const forced = ctx.runtime.env['PIERRE_CLI_UPDATE_TAG']
   const tag = forced || selectCliRelease(await fetchReleases(ctx))?.tag || ''
   if (!tag) {
-    sayError(ctx, 'Impossible de connaître la dernière version du cli.')
-    sayError(ctx, 'Vérifiez la connexion réseau, puis réessayez.')
+    failed(ctx, 'Impossible de connaître la dernière version du cli.')
     return 'failed'
   }
   if (!versionGreater(tag, current)) {
-    say(ctx, `Le programme ${current} est déjà à jour.`)
+    done(ctx, `${current} est déjà à jour.`)
     return 'current'
   }
   return (await installCliRelease(ctx, tag)) === 0 ? 'updated' : 'failed'
@@ -57,21 +56,15 @@ export async function installCliRelease(ctx: Context, tag: string): Promise<numb
     process.exit(130)
   }
   try {
-    say(ctx, `Téléchargement du cli ${tag}…`)
     try {
-      await fetchTo(ctx, CLI_ASSET, binary, tag)
-      await fetchTo(ctx, 'checksums.txt', join(stage, 'checksums.txt'), tag)
+      await spin(ctx, `cli ${tag}`, async () => {
+        await fetchTo(ctx, CLI_ASSET, binary, tag)
+        await fetchTo(ctx, 'checksums.txt', join(stage, 'checksums.txt'), tag)
+        await verifyChecksum(readFileSync(join(stage, 'checksums.txt'), 'utf8'), CLI_ASSET, binary)
+        if ((await commandVersion(ctx, binary)) !== tag) throw new Error('version')
+      })
     } catch {
-      sayError(ctx, 'Le téléchargement a échoué. Le cli installé est inchangé.')
-      return 1
-    }
-    try {
-      await verifyChecksum(readFileSync(join(stage, 'checksums.txt'), 'utf8'), CLI_ASSET, binary)
-      if ((await commandVersion(ctx, binary)) !== tag) {
-        throw new Error('version')
-      }
-    } catch {
-      sayError(ctx, 'Le cli téléchargé est invalide. Le cli installé est inchangé.')
+      failed(ctx, 'Le cli téléchargé est invalide. Le cli installé est inchangé.')
       return 1
     }
     process.on('SIGINT', onSignal)
@@ -90,7 +83,7 @@ export async function installCliRelease(ctx: Context, tag: string): Promise<numb
       if ((await commandVersion(ctx, cmd)) !== tag) throw new Error('confirm')
     } catch {
       restoreCli(cmd, previous, replaced)
-      sayError(
+      failed(
         ctx,
         backedUp
           ? 'Le cli n’a pas pu être remplacé. La version précédente est en place.'
@@ -99,7 +92,6 @@ export async function installCliRelease(ctx: Context, tag: string): Promise<numb
       return 1
     }
     rmSync(previous, { force: true })
-    say(ctx, `${tag} est installé et opérationnel.`)
     return 0
   } finally {
     process.off('SIGINT', onSignal)
@@ -114,7 +106,7 @@ function recoverInterruptedCliUpdate(ctx: Context) {
   const cmd = ctx.runtime.paths.cmd
   const previous = `${cmd}.previous`
   if (!existsSync(previous)) return
-  say(ctx, 'Restauration de la mise à jour cli interrompue…')
+  say(ctx, '  Restauration du cli interrompue.')
   restoreCli(cmd, previous, true)
 }
 
