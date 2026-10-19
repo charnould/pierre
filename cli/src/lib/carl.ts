@@ -46,8 +46,16 @@ async function installModel(ctx: Context, release: Release) {
     const stamp = join(stage, 'version')
     writeFileSync(stamp, `${release.tag}\n`)
     chmodSync(stamp, 0o644)
-    rmSync(dir, { recursive: true, force: true })
-    renameSync(stage, dir)
+    const previous = join(parent, `.carl-previous-${crypto.randomUUID()}`)
+    const hadCurrent = existsSync(dir)
+    if (hadCurrent) renameSync(dir, previous)
+    try {
+      renameSync(stage, dir)
+    } catch (error) {
+      if (hadCurrent) renameSync(previous, dir)
+      throw error
+    }
+    if (hadCurrent) rmSync(previous, { recursive: true, force: true })
   } catch (error) {
     rmSync(stage, { recursive: true, force: true })
     throw error

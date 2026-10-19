@@ -23,6 +23,7 @@ type Env = Record<string, string | undefined>
 
 type Paths = {
   home: string
+  lockFile: string
   envFile: string
   installLog: string
   assetSourceFile: string
@@ -32,7 +33,6 @@ type Paths = {
   bin: string
   cmd: string
   unitFile: string
-  carlUnit: string
   caddyFile: string
   smolvmBin: string
   smolvmHome: string
@@ -116,6 +116,7 @@ function resolvePaths(env: Env): Paths {
   const unitDir = envOr(env, 'PIERRE_UNIT_DIR', '/etc/systemd/system')
   return {
     home,
+    lockFile: envOr(env, 'PIERRE_LOCK_FILE', '/run/lock/pierre.lock'),
     envFile,
     installLog: envOr(env, 'PIERRE_INSTALL_LOG', '/var/log/pierre-install.log'),
     assetSourceFile: envOr(env, 'PIERRE_ASSET_SOURCE_FILE', '/etc/pierre-install-source'),
@@ -125,7 +126,6 @@ function resolvePaths(env: Env): Paths {
     bin: join(serverCurrent, 'pierre'),
     cmd: envOr(env, 'PIERRE_CMD', '/usr/local/bin/pierre'),
     unitFile: join(unitDir, 'pierre.service'),
-    carlUnit: join(unitDir, 'carl.service'),
     caddyFile,
     smolvmBin: envOr(env, 'PIERRE_SMOLVM_BIN', '/usr/local/bin/smolvm'),
     smolvmHome: envOr(env, 'PIERRE_SMOLVM_HOME', '/root/.smolvm'),
@@ -202,9 +202,11 @@ const defaultStart = (command: string, args: string[], options?: SpawnOptions): 
     env
   })
   const finished = (async () => {
-    const stdout = await new Response(proc.stdout).text()
-    const stderr = await new Response(proc.stderr).text()
-    const code = await proc.exited
+    const [stdout, stderr, code] = await Promise.all([
+      new Response(proc.stdout).text(),
+      new Response(proc.stderr).text(),
+      proc.exited
+    ])
     return { code, stdout, stderr }
   })()
   return { finished, kill: () => proc.kill() }

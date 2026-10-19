@@ -1,6 +1,6 @@
 import { dlopen, FFIType } from 'bun:ffi'
 import { closeSync, constants, mkdirSync, openSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname } from 'node:path'
 
 import type { Context } from './system.ts'
 import { failed } from './text.ts'
@@ -33,10 +33,11 @@ export function acquireFileLock(path: string): (() => void) | null {
 }
 
 export async function withPierreLock<T>(ctx: Context, action: () => Promise<T>): Promise<T | null> {
-  mkdirSync(ctx.runtime.paths.serverRoot, { recursive: true, mode: 0o700 })
-  const release = acquireFileLock(join(ctx.runtime.paths.serverRoot, 'update.lock'))
+  const path = ctx.runtime.paths.lockFile
+  mkdirSync(dirname(path), { recursive: true, mode: 0o700 })
+  const release = acquireFileLock(path)
   if (!release) {
-    failed(ctx, 'Une autre mise à jour est déjà en cours.')
+    failed(ctx, 'Une autre opération est déjà en cours.')
     return null
   }
   try {

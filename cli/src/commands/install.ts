@@ -1,10 +1,20 @@
-import { appendFileSync, chmodSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  appendFileSync,
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync
+} from 'node:fs'
 import { dirname } from 'node:path'
 
 import { ensureLatestCarl } from '../lib/carl.ts'
 import {
   formatEnv,
   INSTALL_USAGE,
+  isConfigured,
   mergeConfiguration,
   parseHostArgs,
   readEnvMap,
@@ -13,6 +23,7 @@ import {
   type ParsedEnv
 } from '../lib/config.ts'
 import { withPierreLock } from '../lib/file-lock.ts'
+import { fsyncPath } from '../lib/fs.ts'
 import {
   activateServerRelease,
   findServerRelease,
@@ -117,20 +128,9 @@ async function ensureCarl(ctx: Context) {
   }
 }
 
-async function publishUnit(ctx: Context) {
-  const { carlUnit } = ctx.runtime.paths
-  await writeServerUnit(ctx)
-  if (existsSync(carlUnit)) {
-    await runCommand(ctx.runtime, 'systemctl', ['disable', '--now', 'carl'])
-    rmSync(carlUnit, { force: true })
-  }
-}
-
 async function writeCaddy(ctx: Context, host: string) {
-  const file = ctx.runtime.paths.caddyFile
-  mkdirSync(dirname(file), { recursive: true })
-  writeFileSync(
-    file,
+  writeCaddyFile(
+    ctx,
     `${host} {
 	reverse_proxy 127.0.0.1:3000 {
 		flush_interval -1
@@ -143,13 +143,32 @@ async function writeCaddy(ctx: Context, host: string) {
 }
 `
   )
+  await reloadCaddy(ctx)
+}
+
+function writeCaddyFile(ctx: Context, content: string) {
+  const file = ctx.runtime.paths.caddyFile
+  const temporary = `${file}.new`
+  mkdirSync(dirname(file), { recursive: true })
+  try {
+    writeFileSync(temporary, content)
+    fsyncPath(temporary)
+    renameSync(temporary, file)
+    fsyncPath(dirname(file))
+  } catch (error) {
+    rmSync(temporary, { force: true })
+    throw error
+  }
+}
+
+async function reloadCaddy(ctx: Context) {
   await must(ctx.runtime, 'systemctl', ['enable', 'caddy'])
   const active = await runCommand(ctx.runtime, 'systemctl', ['is-active', '--quiet', 'caddy'])
   await must(ctx.runtime, 'systemctl', [active.code === 0 ? 'reload' : 'start', 'caddy'])
 }
 
 async function activateInstallation(ctx: Context, env: ParsedEnv) {
-  await publishUnit(ctx)
+  await writeServerUnit(ctx)
   await must(ctx.runtime, 'systemctl', ['enable', 'pierre'])
   await must(ctx.runtime, 'systemctl', ['restart', 'pierre'])
   await writeCaddy(ctx, env.host)
@@ -186,6 +205,11 @@ async function runInstallation(ctx: Context): Promise<number> {
 
 async function activateHost(ctx: Context, flags: ConfigureFlags): Promise<number> {
   const current = readEnvMap(ctx.runtime.paths.envFile)
+  const snapshot = {
+    configured: isConfigured(ctx.runtime),
+    env: readOptional(ctx.runtime.paths.envFile),
+    caddy: readOptional(ctx.runtime.paths.caddyFile)
+  }
   const merged = mergeConfiguration(current, flags)
   if (!merged.ok) {
     sayError(ctx, merged.error)
@@ -193,30 +217,79 @@ async function activateHost(ctx: Context, flags: ConfigureFlags): Promise<number
     return 2
   }
   writePrivate(ctx.runtime.paths.envFile, formatEnv(merged.env))
-  let activated = false
   try {
     await activateInstallation(ctx, merged.env)
     const local = await waitForBody(ctx.runtime, 'http://127.0.0.1:3000/up', 120)
     const remote = local && (await waitForBody(ctx.runtime, `https://${merged.env.host}/up`, 120))
-    activated = Boolean(local && remote)
+    if (!local || !remote) throw new Error('unhealthy')
   } catch {
-    activated = false
+    const restored = await restoreConfiguration(ctx, snapshot)
+    sayError(
+      ctx,
+      restored
+        ? 'La configuration n’a pas pu être activée.'
+        : 'La configuration n’a pas pu être activée ni restaurée.'
+    )
+    return 1
   }
-  if (activated) {
-    say(ctx, '')
-    say(ctx, `  https://${merged.env.host}`)
-  }
+  say(ctx, '')
+  say(ctx, `  https://${merged.env.host}`)
   if (!current.AUTH_PASSWORD) {
     const { bold, reset } = ctx.runtime.palette
     say(ctx, '')
     say(ctx, '  admin@pierre-ia.org')
     say(ctx, `  ${bold}${merged.env.password}${reset}`)
   }
-  if (!activated) {
-    sayError(ctx, 'La configuration n’a pas pu être activée.')
-    return 1
-  }
   return 0
+}
+
+function readOptional(path: string): string | null {
+  return existsSync(path) ? readFileSync(path, 'utf8') : null
+}
+
+async function restoreConfiguration(
+  ctx: Context,
+  snapshot: { configured: boolean; env: string | null; caddy: string | null }
+): Promise<boolean> {
+  let envRestored = false
+  try {
+    if (snapshot.env === null) rmSync(ctx.runtime.paths.envFile, { force: true })
+    else writePrivate(ctx.runtime.paths.envFile, snapshot.env)
+    envRestored = true
+  } catch {}
+
+  let caddyFileRestored = false
+  try {
+    if (snapshot.caddy === null) rmSync(ctx.runtime.paths.caddyFile, { force: true })
+    else writeCaddyFile(ctx, snapshot.caddy)
+    caddyFileRestored = true
+  } catch {}
+
+  let pierreRestored = false
+  if (envRestored) {
+    try {
+      await must(ctx.runtime, 'systemctl', [
+        snapshot.configured ? 'restart' : 'disable',
+        ...(snapshot.configured ? [] : ['--now']),
+        'pierre'
+      ])
+      pierreRestored = true
+    } catch {}
+  }
+
+  let caddyRestored = false
+  if (caddyFileRestored) {
+    try {
+      if (snapshot.caddy === null) {
+        await must(ctx.runtime, 'systemctl', ['disable', '--now', 'caddy'])
+      } else {
+        await reloadCaddy(ctx)
+      }
+      caddyRestored = true
+    } catch {}
+  }
+
+  return envRestored && caddyFileRestored && pierreRestored && caddyRestored
 }
 
 export async function installCommand(ctx: Context, argv: string[]): Promise<number> {

@@ -6,6 +6,7 @@ import { remove } from './commands/remove.ts'
 import { restart } from './commands/restart.ts'
 import { showStatus } from './commands/status.ts'
 import { update } from './commands/update.ts'
+import { withPierreLock } from './lib/file-lock.ts'
 import { createRuntime, Exit, requireMachine, requireRoot, type Context } from './lib/system.ts'
 import { sayError } from './lib/text.ts'
 import { CLI_VERSION } from './version.ts'
@@ -27,19 +28,23 @@ export async function run(argv: string[], ctx: Context): Promise<number> {
     case 'update':
       return breathe(ctx, () => update(ctx, rest))
     case 'restart':
-      return breathe(ctx, () => restart(ctx))
+      return breathe(ctx, () => locked(ctx, () => restart(ctx)))
     case 'backup':
-      return breathe(ctx, () => backup(ctx))
+      return breathe(ctx, () => locked(ctx, () => backup(ctx)))
     case 'logs':
       return breathe(ctx, () => logs(ctx))
     case 'env':
       return printEnv(ctx)
     case 'remove':
-      return breathe(ctx, () => remove(ctx))
+      return breathe(ctx, () => locked(ctx, () => remove(ctx)))
     default:
       sayError(ctx, 'Commande inconnue.')
       return 2
   }
+}
+
+async function locked(ctx: Context, command: () => Promise<number>): Promise<number> {
+  return (await withPierreLock(ctx, command)) ?? 1
 }
 
 async function breathe(ctx: Context, command: () => Promise<number>): Promise<number> {

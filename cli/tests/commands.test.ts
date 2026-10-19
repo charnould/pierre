@@ -129,7 +129,7 @@ describe('installation atomique', () => {
     expect(readFileSync(join(root, 'asset-source'), 'utf8')).toBe('/tmp/pierre-assets\n')
   })
 
-  it('publishes the host and keeps the attempt when the unit cannot start', async () => {
+  it('publishes the host and removes a failed first configuration', async () => {
     const root = await tempRoot('pierre-atomic-')
     await readyInstallation(root)
     const ctx = testContext(root, { commandExists: (name) => name === 'caddy' })
@@ -162,7 +162,7 @@ describe('installation atomique', () => {
       }
     })
     expect(await installCommand(broken.ctx, ['--host', 'example.org'])).toBe(1)
-    expect(readFileSync(join(failed, 'pierre.env'), 'utf8')).toContain('HOST=example.org')
+    expect(existsSync(join(failed, 'pierre.env'))).toBe(false)
   })
 
   it('stops at the first failing step without publishing a configuration', async () => {
@@ -258,7 +258,7 @@ describe('configuration', () => {
     expect(existsSync(join(root, 'pierre.env'))).toBe(false)
   })
 
-  it('keeps the generated secrets when the public address does not answer', async () => {
+  it('removes generated secrets when the public address does not answer', async () => {
     const root = await tempRoot('pierre-configure-rollback-')
     await readyInstallation(root)
     const ctx = testContext(root, {
@@ -270,13 +270,82 @@ describe('configuration', () => {
       }
     })
     expect(await installCommand(ctx.ctx, args)).toBe(1)
-    const env = readFileSync(join(root, 'pierre.env'), 'utf8')
-    const password = env.match(/^AUTH_PASSWORD=(.*)$/m)?.[1] ?? ''
-    expect(password.length).toBeGreaterThan(0)
-    expect(ctx.out()).toContain(password)
-    expect(await installCommand(ctx.ctx, args)).toBe(1)
-    expect(readFileSync(join(root, 'pierre.env'), 'utf8')).toBe(env)
-    expect(ctx.out()).not.toContain('sk-test')
+    expect(existsSync(join(root, 'pierre.env'))).toBe(false)
+    expect(ctx.out()).not.toContain('admin@pierre-ia.org')
+  })
+
+  it('restores a working configuration when a new host does not answer', async () => {
+    const root = await tempRoot('pierre-configure-restore-')
+    await readyInstallation(root)
+    const previousEnv = configuredText({ HOST: 'old.example.org' })
+    const previousCaddy = 'old.example.org {\n\treverse_proxy 127.0.0.1:3000\n}\n'
+    await writeFile(join(root, 'pierre.env'), previousEnv)
+    await writeFile(join(root, 'Caddyfile'), previousCaddy)
+    const ctx = testContext(root, {
+      commandExists: (name) => name === 'caddy',
+      request: async (url) => {
+        if (url.includes('api.github.com')) return { status: 200, body: '[]', url }
+        if (url === 'https://new.example.org/up') return { status: 0, body: '', url }
+        return { status: 200, body: 'ok', url }
+      }
+    })
+
+    expect(await installCommand(ctx.ctx, ['--host', 'new.example.org'])).toBe(1)
+    expect(readFileSync(join(root, 'pierre.env'), 'utf8')).toBe(previousEnv)
+    expect(readFileSync(join(root, 'Caddyfile'), 'utf8')).toBe(previousCaddy)
+  })
+
+  it('restores Caddy even when restarting Pierre fails during rollback', async () => {
+    const root = await tempRoot('pierre-configure-restore-')
+    await readyInstallation(root)
+    const previousEnv = configuredText({ HOST: 'old.example.org' })
+    const previousCaddy = 'old.example.org {\n\treverse_proxy 127.0.0.1:3000\n}\n'
+    await writeFile(join(root, 'pierre.env'), previousEnv)
+    await writeFile(join(root, 'Caddyfile'), previousCaddy)
+    let pierreRestarts = 0
+    let caddyReloads = 0
+    const ctx = testContext(root, {
+      commandExists: (name) => name === 'caddy',
+      request: async (url) => {
+        if (url.includes('api.github.com')) return { status: 200, body: '[]', url }
+        if (url === 'https://new.example.org/up') return { status: 0, body: '', url }
+        return { status: 200, body: 'ok', url }
+      },
+      start: (command, args) => {
+        const name = command.split('/').pop()
+        if (name === 'smolvm') {
+          return {
+            finished: Promise.resolve({ code: 0, stdout: 'smolvm 1.24.0\n', stderr: '' }),
+            kill: () => undefined
+          }
+        }
+        if (name === 'systemctl' && args[0] === 'restart' && args[1] === 'pierre') {
+          pierreRestarts += 1
+          return {
+            finished: Promise.resolve({
+              code: pierreRestarts === 2 ? 1 : 0,
+              stdout: '',
+              stderr: ''
+            }),
+            kill: () => undefined
+          }
+        }
+        if (name === 'systemctl' && args[0] === 'reload' && args[1] === 'caddy') {
+          caddyReloads += 1
+        }
+        return {
+          finished: Promise.resolve({ code: 0, stdout: 'active\n', stderr: '' }),
+          kill: () => undefined
+        }
+      }
+    })
+
+    expect(await installCommand(ctx.ctx, ['--host', 'new.example.org'])).toBe(1)
+    expect(pierreRestarts).toBe(2)
+    expect(caddyReloads).toBe(2)
+    expect(readFileSync(join(root, 'pierre.env'), 'utf8')).toBe(previousEnv)
+    expect(readFileSync(join(root, 'Caddyfile'), 'utf8')).toBe(previousCaddy)
+    expect(existsSync(join(root, 'Caddyfile.new'))).toBe(false)
   })
 
   it('publishes the configuration and shows the first password once', async () => {
@@ -566,7 +635,7 @@ describe('mises à jour séparées', () => {
     expect(existsSync(executed)).toBe(false)
   })
 
-  it('leaves the new server in place when it stays down', async () => {
+  it('restores the previous server when the new one stays down', async () => {
     const root = await tempRoot('pierre-update-')
     const assets = join(root, 'assets')
     await mkdir(assets)
@@ -590,12 +659,40 @@ describe('mises à jour séparées', () => {
       }
     })
     expect(await updateServer(ctx.ctx)).toBe(1)
-    expect(ctx.err()).toContain('Le serveur ne répond pas.')
+    expect(ctx.err()).toContain('La mise à jour du serveur a échoué.')
     expect(
       readFileSync(join(root, 'home', 'server', 'current', 'libonnxruntime.so.1'), 'utf8')
-    ).toBe('new library')
+    ).toBe('library')
     expect(readFileSync(join(root, 'pierre'), 'utf8')).toBe('cli stays')
     expect(readFileSync(join(root, 'home', 'datastore.sqlite'), 'utf8')).toBe('database')
+  })
+
+  it('restarts the previous server when activation fails before the switch', async () => {
+    const root = await tempRoot('pierre-update-activation-')
+    const assets = join(root, 'assets')
+    await mkdir(assets)
+    await writeServerBundle(root, 'server-0.40.6')
+    await writeExe(join(assets, 'pierre'), '#!/bin/sh\necho server-0.41.0\n')
+    await writeFile(join(assets, 'libonnxruntime.so.1'), 'new library')
+    await writeFile(join(assets, 'pierre-linux-amd64.smolmachine'), 'new microvm')
+    await writeServerChecksums(assets)
+    await writeFile(join(root, 'pierre.env'), configuredText())
+    await mkdir(join(root, 'home', 'server', 'current.new'))
+    const ctx = testContext(root, {
+      env: { PIERRE_SERVER_TAG: 'server-0.41.0', PIERRE_ASSET_DIR: assets }
+    })
+
+    expect(await updateServer(ctx.ctx)).toBe(1)
+    expect(ctx.err()).toContain('La version précédente a été restaurée.')
+    expect(
+      ctx.calls.some(
+        (call) =>
+          call.command === 'systemctl' && call.args[0] === 'restart' && call.args[1] === 'pierre'
+      )
+    ).toBe(true)
+    expect(await Bun.$`${join(root, 'home', 'server', 'current', 'pierre')} --version`.text()).toBe(
+      'server-0.40.6\n'
+    )
   })
 
   it('installs a checked cli binary without touching the server', async () => {
@@ -693,6 +790,18 @@ describe('maintenance', () => {
     })
     expect(await restart(stuck.ctx)).toBe(1)
     expect(stuck.err()).toContain('échec du démarrage')
+
+    const rejected = testContext(root, {
+      start: (_command, args) => ({
+        finished: Promise.resolve({
+          code: args[0] === 'restart' ? 1 : 0,
+          stdout: args[0] === 'is-active' ? 'active\n' : '',
+          stderr: ''
+        }),
+        kill: () => undefined
+      })
+    })
+    expect(await restart(rejected.ctx)).toBe(1)
   })
 
   it('opens less -R +F and removes the temporary journal', async () => {
@@ -790,5 +899,21 @@ describe('maintenance', () => {
     expect(existsSync(join(cache, 'leftover'))).toBe(false)
     expect(existsSync(join(root, 'pierre.env'))).toBe(false)
     expect(existsSync(join(root, 'pierre.service'))).toBe(false)
+  })
+
+  it('does not delete files when services cannot be stopped', async () => {
+    const root = await tempRoot('pierre-remove-failed-')
+    await writeFile(join(root, 'pierre.env'), configuredText())
+    const ctx = testContext(root, {
+      canPrompt: true,
+      readLine: async () => 'oui',
+      start: () => ({
+        finished: Promise.resolve({ code: 1, stdout: '', stderr: 'stop failed\n' }),
+        kill: () => undefined
+      })
+    })
+
+    expect(await remove(ctx.ctx)).toBe(1)
+    expect(existsSync(join(root, 'pierre.env'))).toBe(true)
   })
 })

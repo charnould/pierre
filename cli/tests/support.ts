@@ -123,6 +123,7 @@ export function testContext(root: string, overrides: RuntimeOverrides = {}) {
     NO_COLOR: '1',
     COLUMNS: '100',
     PIERRE_HOME_DIR: join(root, 'home'),
+    PIERRE_LOCK_FILE: join(root, 'pierre.lock'),
     PIERRE_ENV_FILE: join(root, 'pierre.env'),
     PIERRE_INSTALL_LOG: join(root, 'install.log'),
     PIERRE_ASSET_SOURCE_FILE: join(root, 'asset-source'),

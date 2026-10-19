@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { cleanHost, mergeConfiguration, parseHostArgs, type EnvMap } from '../src/lib/config.ts'
+import { acquireFileLock } from '../src/lib/file-lock.ts'
 import {
   fetchReleases,
   selectCarlRelease,
@@ -13,6 +14,7 @@ import {
   type Release
 } from '../src/lib/github.ts'
 import { renderStatus } from '../src/lib/output.ts'
+import { createRuntime, runCommand } from '../src/lib/system.ts'
 import { run } from '../src/main.ts'
 import { CLI_VERSION } from '../src/version.ts'
 import { tempRoot, testContext } from './support.ts'
@@ -73,6 +75,34 @@ describe('commandes et droits', () => {
     await expect(run(['install'], arm.ctx)).rejects.toThrow('x86_64')
     const noKvm = testContext(root, { kvm: () => false })
     await expect(run(['install'], noKvm.ctx)).rejects.toThrow('/dev/kvm')
+  })
+
+  it('serializes removal with other lifecycle commands', async () => {
+    const root = await tempRoot('pierre-lock-remove-')
+    const ctx = testContext(root, { canPrompt: true, readLine: async () => 'oui' })
+    await Bun.write(ctx.ctx.runtime.paths.envFile, 'HOST=example.org\n')
+    const release = acquireFileLock(ctx.ctx.runtime.paths.lockFile)
+    expect(release).toBeFunction()
+    try {
+      expect(await run(['remove'], ctx.ctx)).toBe(1)
+      expect(await Bun.file(ctx.ctx.runtime.paths.envFile).exists()).toBe(true)
+    } finally {
+      release?.()
+    }
+  })
+})
+
+describe('processus', () => {
+  it('drains stdout and stderr concurrently', async () => {
+    const runtime = createRuntime()
+    const result = await runCommand(runtime, process.execPath, [
+      '-e',
+      "await Bun.write(Bun.stderr, 'e'.repeat(256 * 1024)); await Bun.write(Bun.stdout, 'ok')"
+    ])
+
+    expect(result.code).toBe(0)
+    expect(result.stdout).toBe('ok')
+    expect(result.stderr).toHaveLength(256 * 1024)
   })
 })
 
