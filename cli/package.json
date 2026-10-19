@@ -1,6 +1,6 @@
 {
   "name": "@pierre/cli",
-  "version": "0.9.17",
+  "version": "0.9.18",
   "private": true,
   "license": "SEE LICENSE IN ../LICENSE.md",
   "type": "module",

@@ -532,6 +532,8 @@ describe('mises à jour séparées', () => {
       request: carlReleases('carl-1.0.0')
     })
     expect(await updateServer(ctx.ctx)).toBe(0)
+    expect(ctx.out()).toContain('carl-1.0.0 est déjà à jour.')
+    expect(ctx.out()).not.toContain('Classement')
     expect(ctx.out()).toContain('server-0.40.6 est déjà à jour.')
     expect(ctx.out()).not.toContain('Téléchargement de carl')
     expect(
@@ -554,6 +556,7 @@ describe('mises à jour séparées', () => {
     expect(readFileSync(join(root, 'home', 'models', 'carl', 'version'), 'utf8')).toBe(
       'carl-1.2.0\n'
     )
+    expect(ctx.out()).toContain('carl-1.2.0 est installé.')
     expect(existsSync(join(root, 'home', 'models', 'carl', 'labels.json'))).toBe(true)
     const restarts = ctx.calls.filter(
       (call) => call.command === 'systemctl' && call.args[0] === 'restart'

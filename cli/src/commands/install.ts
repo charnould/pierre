@@ -176,7 +176,7 @@ async function ensureServer(ctx: Context) {
 }
 
 async function ensureCarl(ctx: Context) {
-  if ((await ensureLatestCarl(ctx)) === 'unavailable') {
+  if ((await ensureLatestCarl(ctx)).status === 'unavailable') {
     throw new CommandFailed(1, "Aucune version de carl n'est disponible.")
   }
 }

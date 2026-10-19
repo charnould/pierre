@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs'
 
-import { ensureLatestCarl } from '../lib/carl.ts'
+import { ensureLatestCarl, type CarlInstall } from '../lib/carl.ts'
 import { isConfigured } from '../lib/config.ts'
 import { commandVersion, releaseParts, versionGreater } from '../lib/github.ts'
 import {
@@ -20,12 +20,20 @@ async function refreshCarl(
   ctx: Context
 ): Promise<'current' | 'installed' | 'unchanged' | 'unavailable' | 'failed'> {
   try {
-    return await spin(ctx, 'Classement', () => ensureLatestCarl(ctx))
+    const result = await spin(ctx, 'Classement', () => ensureLatestCarl(ctx), carlLabel)
+    return result.status
   } catch (error) {
     const message = error instanceof Error ? error.message : 'L’installation de carl a échoué.'
     failed(ctx, message)
     return 'failed'
   }
+}
+
+function carlLabel(result: CarlInstall): string {
+  if (!result.tag) return 'Classement'
+  return result.status === 'current'
+    ? `${result.tag} est déjà à jour.`
+    : `${result.tag} est installé.`
 }
 
 async function installedVersion(ctx: Context): Promise<string> {

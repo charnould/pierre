@@ -15,7 +15,10 @@ import type { Release } from '../../../shared/github-releases.ts'
 import { assetSha256, expectSha256, fetchReleases, fetchTo, selectCarlRelease } from './github.ts'
 import { CommandFailed, must, type Context } from './system.ts'
 
-export type CarlInstall = 'current' | 'installed' | 'unchanged' | 'unavailable'
+export type CarlInstall = {
+  status: 'current' | 'installed' | 'unchanged' | 'unavailable'
+  tag: string
+}
 
 function installedTag(dir: string): string {
   const stamp = join(dir, 'version')
@@ -65,8 +68,11 @@ async function installModel(ctx: Context, release: Release) {
 export async function ensureLatestCarl(ctx: Context): Promise<CarlInstall> {
   const dir = join(ctx.runtime.paths.home, 'models', 'carl')
   const release = selectCarlRelease(await fetchReleases(ctx))
-  if (!release) return installedTag(dir) ? 'unchanged' : 'unavailable'
-  if (carlInstalled(dir, release.tag)) return 'current'
+  if (!release) {
+    const tag = installedTag(dir)
+    return { status: tag ? 'unchanged' : 'unavailable', tag }
+  }
+  if (carlInstalled(dir, release.tag)) return { status: 'current', tag: release.tag }
   await installModel(ctx, release)
-  return 'installed'
+  return { status: 'installed', tag: release.tag }
 }

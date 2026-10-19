@@ -18,7 +18,12 @@ export function failed(ctx: Context, text: string) {
   sayError(ctx, `  ${red}■${reset}  ${text}`)
 }
 
-export async function spin<T>(ctx: Context, label: string, action: () => Promise<T>): Promise<T> {
+export async function spin<T>(
+  ctx: Context,
+  label: string,
+  action: () => Promise<T>,
+  completedLabel?: (value: T) => string
+): Promise<T> {
   const { cyan, green, red, reset } = ctx.runtime.palette
   let timer: ReturnType<typeof setInterval> | undefined
   let live = true
@@ -39,7 +44,10 @@ export async function spin<T>(ctx: Context, label: string, action: () => Promise
   try {
     const value = await action()
     stop()
-    ctx.runtime.writeOut(`${ctx.runtime.tty ? '\r\u001b[2K' : ''}  ${green}■${reset}  ${label}\n`)
+    const completed = completedLabel?.(value) ?? label
+    ctx.runtime.writeOut(
+      `${ctx.runtime.tty ? '\r\u001b[2K' : ''}  ${green}■${reset}  ${completed}\n`
+    )
     return value
   } catch (error) {
     stop()
