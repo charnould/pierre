@@ -266,8 +266,8 @@ export async function runInstallation(ctx: Context): Promise<number> {
     ['Paquets', () => installPackages(ctx)],
     ['Micro-VM', () => ensureSmolvm(ctx)],
     ['Caddy', () => installCaddy(ctx)],
-    ['Serveur', async () => installServerBinaries(ctx, await serverTag(ctx))],
-    ['Classement', () => installLatestModel(ctx)],
+    ['Server', async () => installServerBinaries(ctx, await serverTag(ctx))],
+    ['Carl', () => installLatestModel(ctx)],
     ['Service', () => publishUnit(ctx)]
   ]
   for (const [label, action] of steps) {
