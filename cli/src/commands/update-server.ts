@@ -144,9 +144,9 @@ async function recoverInterruptedServerUpdate(ctx: Context): Promise<boolean> {
 
 async function refreshCarl(
   ctx: Context
-): Promise<'current' | 'installed' | 'unavailable' | 'failed'> {
+): Promise<'current' | 'installed' | 'unchanged' | 'unavailable' | 'failed'> {
   try {
-    return await ensureLatestCarl(ctx, true)
+    return await spin(ctx, 'Classement', () => ensureLatestCarl(ctx))
   } catch (error) {
     const message = error instanceof Error ? error.message : 'L’installation de carl a échoué.'
     failed(ctx, message)

@@ -1,21 +1,20 @@
 import {
   chmodSync,
-  cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
-  readdirSync,
   readFileSync,
+  renameSync,
   rmSync,
   writeFileSync
 } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { CARL_MODEL_FILES, carlInstalled } from '../../../shared/carl-model.ts'
 import { fetchReleases, fetchTo, selectCarlRelease } from './github.ts'
 import { CommandFailed, must, type Context } from './system.ts'
-import { spin } from './text.ts'
+
+export type CarlInstall = 'current' | 'installed' | 'unchanged' | 'unavailable'
 
 function installedTag(dir: string): string {
   const stamp = join(dir, 'version')
@@ -26,39 +25,46 @@ function installedTag(dir: string): string {
 
 async function installModel(ctx: Context, tag: string) {
   const dir = join(ctx.runtime.paths.home, 'models', 'carl')
-  mkdirSync(dir, { recursive: true })
   if (carlInstalled(dir, tag)) return
-  const temp = mkdtempSync(join(tmpdir(), 'pierre-carl-'))
+  const parent = join(ctx.runtime.paths.home, 'models')
+  mkdirSync(parent, { recursive: true })
+  const stage = mkdtempSync(join(parent, '.carl-'))
+  const previous = `${dir}.previous`
+  let staged = stage
+  let moved = false
   try {
-    await fetchTo(ctx, 'model.zip', join(temp, 'model.zip'), tag)
-    await must(ctx.runtime, 'unzip', ['-oq', join(temp, 'model.zip'), '-d', temp])
-    rmSync(join(temp, 'model.zip'), { force: true })
+    await fetchTo(ctx, 'model.zip', join(stage, 'model.zip'), tag)
+    await must(ctx.runtime, 'unzip', ['-oq', join(stage, 'model.zip'), '-d', stage])
+    rmSync(join(stage, 'model.zip'), { force: true })
     for (const name of CARL_MODEL_FILES) {
-      if (!existsSync(join(temp, name))) {
+      if (!existsSync(join(stage, name))) {
         throw new CommandFailed(1, `L'archive ne contient pas ${name}.`)
       }
     }
-    for (const entry of readdirSync(temp)) {
-      cpSync(join(temp, entry), join(dir, entry), { recursive: true })
-    }
-    const stamp = join(dir, 'version')
+    rmSync(join(stage, 'model.sha256'), { force: true })
+    const stamp = join(stage, 'version')
     writeFileSync(stamp, `${tag}\n`)
     chmodSync(stamp, 0o644)
-    rmSync(join(dir, 'model.sha256'), { force: true })
-  } finally {
-    rmSync(temp, { recursive: true, force: true })
+    rmSync(previous, { recursive: true, force: true })
+    if (existsSync(dir)) {
+      renameSync(dir, previous)
+      moved = true
+    }
+    renameSync(stage, dir)
+    staged = ''
+  } catch (error) {
+    if (staged) rmSync(staged, { recursive: true, force: true })
+    if (moved && !existsSync(dir) && existsSync(previous)) renameSync(previous, dir)
+    throw error
   }
+  rmSync(previous, { recursive: true, force: true })
 }
 
-export async function ensureLatestCarl(
-  ctx: Context,
-  visible = false
-): Promise<'current' | 'installed' | 'unavailable'> {
+export async function ensureLatestCarl(ctx: Context): Promise<CarlInstall> {
   const dir = join(ctx.runtime.paths.home, 'models', 'carl')
   const tag = selectCarlRelease(await fetchReleases(ctx))?.tag
-  if (!tag) return installedTag(dir) ? 'current' : 'unavailable'
+  if (!tag) return installedTag(dir) ? 'unchanged' : 'unavailable'
   if (carlInstalled(dir, tag)) return 'current'
-  if (visible) await spin(ctx, 'Classement', () => installModel(ctx, tag))
-  else await installModel(ctx, tag)
+  await installModel(ctx, tag)
   return 'installed'
 }

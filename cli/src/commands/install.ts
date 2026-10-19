@@ -4,9 +4,9 @@ import {
   copyFileSync,
   existsSync,
   mkdirSync,
-  readFileSync,
   renameSync,
   rmSync,
+  statSync,
   writeFileSync
 } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -28,6 +28,8 @@ import {
   activateServerRelease,
   commitServerBundle,
   createServerStage,
+  currentServerRelease,
+  SERVER_ASSETS,
   stageServerBundle
 } from '../lib/server-bundle.ts'
 import { writeServerUnit } from '../lib/server-service.ts'
@@ -54,7 +56,6 @@ const PACKAGES = [
 ]
 
 const aptEnv = { DEBIAN_FRONTEND: 'noninteractive' }
-const PACKAGE_STAMP = PACKAGES.join('\n')
 
 function rememberAssetSource(ctx: Context) {
   const directory = ctx.runtime.env['PIERRE_ASSET_DIR']
@@ -62,9 +63,21 @@ function rememberAssetSource(ctx: Context) {
   writePrivate(ctx.runtime.paths.assetSourceFile, `${directory}\n`)
 }
 
-function packagesReady(ctx: Context): boolean {
-  const file = join(ctx.runtime.paths.home, 'packages')
-  return existsSync(file) && readFileSync(file, 'utf8') === PACKAGE_STAMP
+async function packagesInstalled(ctx: Context): Promise<boolean> {
+  const result = await runCommand(ctx.runtime, 'dpkg-query', [
+    '-W',
+    '-f',
+    '${Package} ${db:Status-Status}\n',
+    ...PACKAGES
+  ])
+  const installed = new Set(
+    result.stdout
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.endsWith(' installed'))
+      .map((line) => line.slice(0, line.lastIndexOf(' ')))
+  )
+  return PACKAGES.every((name) => installed.has(name))
 }
 
 async function runInstallStep(ctx: Context, label: string, action: () => Promise<void>) {
@@ -82,15 +95,13 @@ async function runInstallStep(ctx: Context, label: string, action: () => Promise
   }
 }
 
-async function installPackages(ctx: Context) {
-  if (packagesReady(ctx)) return
+async function ensurePackages(ctx: Context) {
+  if (await packagesInstalled(ctx)) return
   await must(ctx.runtime, 'apt-get', ['update', '-qq'], { env: aptEnv })
   await must(ctx.runtime, 'apt-get', ['install', '-y', ...PACKAGES], { env: aptEnv })
-  mkdirSync(ctx.runtime.paths.home, { recursive: true })
-  writeFileSync(join(ctx.runtime.paths.home, 'packages'), PACKAGE_STAMP)
 }
 
-async function installCaddy(ctx: Context) {
+async function ensureCaddy(ctx: Context) {
   if (ctx.runtime.commandExists('caddy')) return
   if (!existsSync('/usr/share/keyrings/caddy-stable-archive-keyring.gpg')) {
     await must(ctx.runtime, 'bash', [
@@ -106,8 +117,21 @@ async function installCaddy(ctx: Context) {
   await must(ctx.runtime, 'apt-get', ['install', '-y', 'caddy'], { env: aptEnv })
 }
 
-async function installServerBinaries(ctx: Context) {
-  if (isInstalled(ctx.runtime)) return
+function serverReady(ctx: Context): boolean {
+  if (!isInstalled(ctx.runtime)) return false
+  const release = currentServerRelease(ctx)
+  if (!release) return false
+  return SERVER_ASSETS.every((name) => {
+    try {
+      return statSync(join(release, name)).size > 0
+    } catch {
+      return false
+    }
+  })
+}
+
+async function ensureServer(ctx: Context) {
+  if (serverReady(ctx)) return
   const tag = await serverTag(ctx)
   const stage = createServerStage(ctx)
   let staged = stage
@@ -121,7 +145,7 @@ async function installServerBinaries(ctx: Context) {
   }
 }
 
-async function installLatestModel(ctx: Context) {
+async function ensureCarl(ctx: Context) {
   if ((await ensureLatestCarl(ctx)) === 'unavailable') {
     throw new CommandFailed(1, "Aucune version de carl n'est disponible.")
   }
@@ -209,11 +233,11 @@ async function runInstallation(ctx: Context): Promise<number> {
   mkdirSync(dirname(logFile), { recursive: true })
   writeFileSync(logFile, '', { mode: 0o600 })
   const steps: Array<[string, () => Promise<void>]> = [
-    ['Paquets', () => installPackages(ctx)],
+    ['Paquets', () => ensurePackages(ctx)],
     ['Micro-VM', () => ensureSmolvm(ctx)],
-    ['Caddy', () => installCaddy(ctx)],
-    ['Server', () => installServerBinaries(ctx)],
-    ['Carl', () => installLatestModel(ctx)]
+    ['Caddy', () => ensureCaddy(ctx)],
+    ['Server', () => ensureServer(ctx)],
+    ['Carl', () => ensureCarl(ctx)]
   ]
   for (const [label, action] of steps) {
     try {

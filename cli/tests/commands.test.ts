@@ -331,15 +331,33 @@ describe('configuration', () => {
     expect(readFileSync(join(root, 'pierre.env'), 'utf8')).toContain(`AUTH_PASSWORD=${password}`)
   })
 
-  it('does not install packages again once the machine is provisioned', async () => {
+  it('installs packages only while dpkg does not already have them', async () => {
     const root = await tempRoot('pierre-provisioned-')
     await readyInstallation(root)
     const seen: string[][] = []
+    let present = false
     const ctx = testContext(root, {
       commandExists: (name) => name === 'caddy',
       start: (command, args) => {
         const name = command.split('/').pop() ?? command
         seen.push([name, ...args])
+        if (name === 'dpkg-query') {
+          if (!present) {
+            return {
+              finished: Promise.resolve({ code: 1, stdout: '', stderr: '' }),
+              kill: () => undefined
+            }
+          }
+          const stdout = args
+            .filter((arg) => !arg.startsWith('-') && !arg.includes('$'))
+            .map((pkg) => `${pkg} installed\n`)
+            .join('')
+          return {
+            finished: Promise.resolve({ code: 0, stdout, stderr: '' }),
+            kill: () => undefined
+          }
+        }
+        if (name === 'apt-get' && args[0] === 'install') present = true
         if (name === 'smolvm') {
           return {
             finished: Promise.resolve({ code: 0, stdout: 'smolvm 1.24.0\n', stderr: '' }),
@@ -354,10 +372,26 @@ describe('configuration', () => {
     })
     expect(await installCommand(ctx.ctx, args)).toBe(0)
     expect(seen.some((call) => call[0] === 'apt-get')).toBe(true)
+    expect(existsSync(join(root, 'home', 'packages'))).toBe(false)
     seen.length = 0
     expect(await installCommand(ctx.ctx, ['--host', 'autre.exemple.org'])).toBe(0)
     expect(seen.some((call) => call[0] === 'apt-get')).toBe(false)
     expect(readFileSync(join(root, 'pierre.env'), 'utf8')).toContain('HOST=autre.exemple.org')
+    present = false
+    seen.length = 0
+    expect(await installCommand(ctx.ctx, ['--host', 'encore.exemple.org'])).toBe(0)
+    expect(seen.some((call) => call[0] === 'apt-get')).toBe(true)
+  })
+
+  it('installs the server again when the bundle is incomplete', async () => {
+    const root = await tempRoot('pierre-incomplete-server-')
+    await readyInstallation(root)
+    await unlink(
+      join(root, 'home', 'server', 'releases', 'server-0.40.6', 'pierre-linux-amd64.smolmachine')
+    )
+    const ctx = testContext(root, { commandExists: (name) => name === 'caddy' })
+    expect(await installCommand(ctx.ctx, ['--host', 'example.org'])).toBe(1)
+    expect(ctx.out()).toContain('« Server »')
   })
 })
 
@@ -492,12 +526,14 @@ describe('mises à jour séparées', () => {
     await mkdir(dir, { recursive: true })
     await writeFile(join(dir, 'model.onnx'), 'model')
     await writeFile(join(dir, 'version'), 'carl-1.0.0\n')
+    await writeFile(join(dir, 'stale.bin'), 'old')
     const ctx = testContext(root, {
       env: { PIERRE_UPDATE_TAG: 'server-0.40.6', PIERRE_ASSET_DIR: assets },
       request: carlReleases('carl-1.0.0')
     })
     expect(await updateServer(ctx.ctx)).toBe(0)
     expect(existsSync(join(dir, 'tokenizer.json'))).toBe(true)
+    expect(existsSync(join(dir, 'stale.bin'))).toBe(false)
     expect(
       ctx.calls.filter((call) => call.command === 'systemctl' && call.args[0] === 'restart')
     ).toHaveLength(1)

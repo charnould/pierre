@@ -5,7 +5,8 @@ import {
   mkdtempSync,
   readFileSync,
   renameSync,
-  rmSync
+  rmSync,
+  writeFileSync
 } from 'node:fs'
 import { dirname, join } from 'node:path'
 
@@ -21,9 +22,10 @@ import type { Context } from '../lib/system.ts'
 import { done, failed, say, spin } from '../lib/text.ts'
 
 const CLI_ASSET = 'pierre-cli-linux-x64'
+const CLI_TAG = /^cli-\d+\.\d+\.\d+$/
 
 export async function stageCliUpdate(ctx: Context): Promise<'current' | 'updated' | 'failed'> {
-  recoverInterruptedCliUpdate(ctx)
+  await recoverInterruptedCliUpdate(ctx)
   const current = ctx.version
   const forced = ctx.runtime.env['PIERRE_CLI_UPDATE_TAG']
   const tag = forced || selectCliRelease(await fetchReleases(ctx))?.tag || ''
@@ -45,20 +47,23 @@ export async function updateCli(ctx: Context): Promise<number> {
 
 export async function installCliRelease(ctx: Context, tag: string): Promise<number> {
   const cmd = ctx.runtime.paths.cmd
-  recoverInterruptedCliUpdate(ctx)
+  await recoverInterruptedCliUpdate(ctx)
   const stage = mkdtempSync(join(dirname(cmd), '.pierre-cli-stage-'))
   const binary = join(stage, CLI_ASSET)
   const previous = `${cmd}.previous`
+  const target = `${cmd}.target`
   let backedUp = false
   let replaced = false
+  let committed = false
   const cleanup = () => {
     rmSync(`${previous}.new`, { force: true })
     rmSync(`${cmd}.new`, { force: true })
+    rmSync(target, { force: true })
     rmSync(stage, { recursive: true, force: true })
   }
   const previousInterrupt = ctx.runtime.onInterrupt
   ctx.runtime.onInterrupt = () => {
-    restoreCli(cmd, previous, replaced)
+    if (!committed) restoreCli(cmd, previous, replaced)
     cleanup()
   }
   try {
@@ -73,6 +78,7 @@ export async function installCliRelease(ctx: Context, tag: string): Promise<numb
       failed(ctx, 'Le cli téléchargé est invalide. Le cli installé est inchangé.')
       return 1
     }
+    writeFileSync(target, `${tag}\n`)
     try {
       if (existsSync(cmd)) {
         copyFileSync(cmd, `${previous}.new`)
@@ -95,8 +101,8 @@ export async function installCliRelease(ctx: Context, tag: string): Promise<numb
       )
       return 1
     }
+    committed = true
     rmSync(previous, { force: true })
-    replaced = false
     return 0
   } finally {
     ctx.runtime.onInterrupt = previousInterrupt
@@ -104,12 +110,35 @@ export async function installCliRelease(ctx: Context, tag: string): Promise<numb
   }
 }
 
-function recoverInterruptedCliUpdate(ctx: Context) {
+async function cliTag(ctx: Context, cmd: string): Promise<string> {
+  if (!existsSync(cmd)) return ''
+  try {
+    const tag = await commandVersion(ctx, cmd)
+    return CLI_TAG.test(tag) ? tag : ''
+  } catch {
+    return ''
+  }
+}
+
+async function recoverInterruptedCliUpdate(ctx: Context) {
   const cmd = ctx.runtime.paths.cmd
   const previous = `${cmd}.previous`
-  if (!existsSync(previous)) return
+  const target = `${cmd}.target`
+  if (!existsSync(previous)) {
+    rmSync(target, { force: true })
+    return
+  }
+  const expected = existsSync(target) ? readFileSync(target, 'utf8').trim() : ''
+  const current = await cliTag(ctx, cmd)
+  const confirmed = expected ? current === expected : current !== ''
+  if (confirmed) {
+    rmSync(previous, { force: true })
+    rmSync(target, { force: true })
+    return
+  }
   say(ctx, '  Restauration du cli interrompue.')
   restoreCli(cmd, previous, true)
+  rmSync(target, { force: true })
 }
 
 function restoreCli(cmd: string, previous: string, replaced: boolean) {

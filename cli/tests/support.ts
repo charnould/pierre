@@ -93,6 +93,7 @@ export function testContext(root: string, overrides: RuntimeOverrides = {}) {
     start: (command, args) => {
       calls.push({ command, args })
       const name = command.split('/').pop() ?? command
+      if (name === 'dpkg-query') return child({ code: 1, stdout: '', stderr: '' })
       if (name === 'systemctl' && args[0] === 'is-active' && args[1] !== '--quiet') {
         return child({ code: 0, stdout: 'active\n', stderr: '' })
       }
