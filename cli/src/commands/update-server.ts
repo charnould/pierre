@@ -20,7 +20,7 @@ async function refreshCarl(
   ctx: Context
 ): Promise<'current' | 'installed' | 'unchanged' | 'unavailable' | 'failed'> {
   try {
-    const result = await spin(ctx, 'Classement', () => ensureLatestCarl(ctx), carlLabel)
+    const result = await spin(ctx, 'Carl', () => ensureLatestCarl(ctx), carlLabel)
     return result.status
   } catch (error) {
     const message = error instanceof Error ? error.message : 'L’installation de carl a échoué.'
@@ -30,7 +30,7 @@ async function refreshCarl(
 }
 
 function carlLabel(result: CarlInstall): string {
-  if (!result.tag) return 'Classement'
+  if (!result.tag) return 'Carl'
   return result.status === 'current'
     ? `${result.tag} est déjà à jour.`
     : `${result.tag} est installé.`
@@ -46,7 +46,7 @@ async function finishCurrent(ctx: Context, current: string): Promise<number> {
   if (carl === 'failed') return 1
   if (carl === 'installed' && isConfigured(ctx.runtime)) return restart(ctx)
   if (carl === 'installed') {
-    done(ctx, 'Le classement est installé.')
+    done(ctx, 'Carl est installé.')
     return 0
   }
   done(ctx, `${current} est déjà à jour.`)

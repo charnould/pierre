@@ -533,7 +533,7 @@ describe('mises à jour séparées', () => {
     })
     expect(await updateServer(ctx.ctx)).toBe(0)
     expect(ctx.out()).toContain('carl-1.0.0 est déjà à jour.')
-    expect(ctx.out()).not.toContain('Classement')
+    expect(ctx.out()).not.toContain('Carl')
     expect(ctx.out()).toContain('server-0.40.6 est déjà à jour.')
     expect(ctx.out()).not.toContain('Téléchargement de carl')
     expect(
