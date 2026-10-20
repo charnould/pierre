@@ -32,7 +32,7 @@ import {
 } from '../lib/server-bundle.ts'
 import { waitForBody, writeServerUnit } from '../lib/server-service.ts'
 import { ensureSmolvm } from '../lib/smolvm-runtime.ts'
-import { CommandFailed, must, runCommand, type Context } from '../lib/system.ts'
+import { CommandFailed, must, requireMachine, runCommand, type Context } from '../lib/system.ts'
 import { say, sayError, spin } from '../lib/text.ts'
 
 const PACKAGES = [
@@ -347,9 +347,11 @@ export async function installCommand(ctx: Context, argv: string[]): Promise<numb
   const parsed = parseHostArgs(argv)
   if (!parsed.ok) {
     if (parsed.error) sayError(ctx, parsed.error)
+    else if (argv.length === 0) sayError(ctx, 'Indiquez le domaine avec --host.')
     ctx.runtime.writeOut(`${INSTALL_USAGE}\n`)
     return 2
   }
+  requireMachine(ctx.runtime)
   return (
     (await withPierreLock(ctx, async () => {
       if (!claimCaddy(ctx)) return 1

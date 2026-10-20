@@ -7,14 +7,7 @@ import { restart } from './commands/restart.ts'
 import { showStatus } from './commands/status.ts'
 import { update } from './commands/update.ts'
 import { withPierreLock } from './lib/file-lock.ts'
-import {
-  createRuntime,
-  Exit,
-  Interrupted,
-  requireMachine,
-  requireRoot,
-  type Context
-} from './lib/system.ts'
+import { createRuntime, Exit, Interrupted, requireRoot, type Context } from './lib/system.ts'
 import { sayError } from './lib/text.ts'
 import { CLI_VERSION } from './version.ts'
 
@@ -25,7 +18,6 @@ export async function run(argv: string[], ctx: Context): Promise<number> {
     return 0
   }
   if (command === 'install') {
-    requireMachine(ctx.runtime)
     return breathe(ctx, () => installCommand(ctx, rest))
   }
   requireRoot(ctx.runtime)

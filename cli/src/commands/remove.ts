@@ -3,8 +3,10 @@ import { existsSync, rmSync } from 'node:fs'
 import { CommandFailed, must, runCommand, type Context } from '../lib/system.ts'
 import { confirm, say, spin } from '../lib/text.ts'
 
+const aptEnv = { DEBIAN_FRONTEND: 'noninteractive' }
+
 export async function remove(ctx: Context): Promise<number> {
-  const answer = await confirm(ctx, 'Continuer et supprimer toutes les données ?')
+  const answer = await confirm(ctx, 'Continuer et supprimer PIERRE, Caddy et toutes les données ?')
   if (answer === 2) return 1
   if (answer !== 0) {
     say(ctx, "Désinstallation annulée. Rien n'a été supprimé.")
@@ -13,28 +15,26 @@ export async function remove(ctx: Context): Promise<number> {
   try {
     await spin(ctx, 'Suppression', async () => {
       const { paths } = ctx.runtime
-      const ownsCaddy = existsSync(paths.caddyOwnerFile)
-      await must(ctx.runtime, 'systemctl', ['disable', '--now', 'pierre'])
-      if (ownsCaddy) await must(ctx.runtime, 'systemctl', ['disable', '--now', 'caddy'])
+      if (existsSync(paths.unitFile)) {
+        await must(ctx.runtime, 'systemctl', ['disable', '--now', 'pierre'])
+      }
+      if (ctx.runtime.commandExists('caddy')) {
+        await runCommand(ctx.runtime, 'systemctl', ['disable', '--now', 'caddy'])
+      }
       await deleteMachines(ctx)
+      await must(ctx.runtime, 'apt-get', ['purge', '-y', 'caddy'], { env: aptEnv })
       for (const file of [
         paths.envFile,
         paths.installLog,
         paths.assetSourceFile,
         paths.smolvmBin,
-        paths.unitFile
+        paths.unitFile,
+        paths.caddyFile,
+        paths.caddyKeyFile,
+        paths.caddyOwnerFile,
+        paths.caddySourceFile
       ]) {
         rmSync(file, { force: true })
-      }
-      if (ownsCaddy) {
-        for (const file of [
-          paths.caddyFile,
-          paths.caddyKeyFile,
-          paths.caddyOwnerFile,
-          paths.caddySourceFile
-        ]) {
-          rmSync(file, { force: true })
-        }
       }
       rmSync(paths.smolvmHome, { recursive: true, force: true })
       rmSync(paths.smolvmRoot, { recursive: true, force: true })

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
@@ -73,23 +73,33 @@ describe('désinstallation', () => {
     ])
   })
 
-  it('leaves an unowned Caddy installation untouched', async () => {
+  it('removes an unowned Caddy installation without purging generic packages', async () => {
     const root = await tempRoot('pierre-remove-caddy-')
     const caddy = join(root, 'Caddyfile')
     await writeFile(caddy, 'existing.example.org {\n\trespond "existing"\n}\n')
     await writeFile(join(root, 'pierre.env'), configuredText())
-    const ctx = testContext(root, { canPrompt: true, readLine: async () => 'oui' })
+    const ctx = testContext(root, {
+      canPrompt: true,
+      readLine: async () => 'oui',
+      commandExists: (name) => name === 'caddy'
+    })
 
     expect(await remove(ctx.ctx)).toBe(0)
-    expect(readFileSync(caddy, 'utf8')).toContain('existing.example.org')
+    expect(existsSync(caddy)).toBe(false)
     expect(
       ctx.calls.some((call) => call.command === 'systemctl' && call.args.includes('caddy'))
+    ).toBe(true)
+    expect(
+      ctx.calls.some((call) => call.command === 'systemctl' && call.args.includes('pierre'))
     ).toBe(false)
+    const purge = ctx.calls.find((call) => call.command === 'apt-get' && call.args[0] === 'purge')
+    expect(purge?.args).toEqual(['purge', '-y', 'caddy'])
   })
 
   it('does not delete files when services cannot be stopped', async () => {
     const root = await tempRoot('pierre-remove-failed-')
     await writeFile(join(root, 'pierre.env'), configuredText())
+    await writeFile(join(root, 'pierre.service'), 'unit\n')
     const ctx = testContext(root, {
       canPrompt: true,
       readLine: async () => 'oui',

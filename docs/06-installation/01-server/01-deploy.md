@@ -53,7 +53,7 @@ Chez votre registrar, dans vos `DNS`, créer un enregistrement `A` faisant point
 Connecté sur le serveur en root, saisissez cette commande pour installer le `CLI` :
 
 ```bash
-curl -fsSL https://github.com/charnould/pierre/releases/download/cli-0.9.16/install.sh | sh
+curl -fsSL https://github.com/charnould/pierre/releases/download/cli-0.9.20/install.sh | sh
 ```
 
 > Certains hébergeurs n'ouvrent pas le `22` : `ssh` prend alors `-p` et `scp` prend `-P`, par exemple `ssh -p 2234 root@le-serveur`.
@@ -92,5 +92,7 @@ pierre
 | `pierre logs`                   | Affiche les journaux.                 |
 | `pierre env`                    | Affiche le domaine et les secrets.    |
 | `pierre remove`                 | Supprime les services et les données. |
+
+> `pierre remove` désinstalle également Caddy et supprime sa configuration.
 
 > Toutes les données de PIERRE sont regroupées sous `/var/lib/pierre`.

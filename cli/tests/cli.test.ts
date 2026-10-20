@@ -66,15 +66,25 @@ describe('commandes et droits', () => {
     expect(script).toContain('\nTAG=__CLI_TAG__\n')
   })
 
+  it('shows the install usage before checking the machine', async () => {
+    const root = await tempRoot('pierre-install-usage-')
+    const ctx = testContext(root, { uid: () => 1000, arch: () => 'arm64', kvm: () => false })
+    expect(await run(['install'], ctx.ctx)).toBe(2)
+    expect(ctx.err()).toContain('Indiquez le domaine avec --host.')
+    expect(ctx.out()).toContain('pierre install --host assistant.exemple.org')
+  })
+
   it('requires root for maintenance and a KVM machine only for install', async () => {
     const root = await tempRoot('pierre-root-')
     const user = testContext(root, { uid: () => 1000 })
     await expect(run(['env'], user.ctx)).rejects.toThrow('Il faut être root.')
-    await expect(run(['install'], user.ctx)).rejects.toThrow('Il faut être root.')
+    await expect(run(['install', '--host', 'example.org'], user.ctx)).rejects.toThrow(
+      'Il faut être root.'
+    )
     const arm = testContext(root, { arch: () => 'arm64' })
-    await expect(run(['install'], arm.ctx)).rejects.toThrow('x86_64')
+    await expect(run(['install', '--host', 'example.org'], arm.ctx)).rejects.toThrow('x86_64')
     const noKvm = testContext(root, { kvm: () => false })
-    await expect(run(['install'], noKvm.ctx)).rejects.toThrow('/dev/kvm')
+    await expect(run(['install', '--host', 'example.org'], noKvm.ctx)).rejects.toThrow('/dev/kvm')
   })
 
   it('serializes removal with other lifecycle commands', async () => {
