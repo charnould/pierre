@@ -2,7 +2,11 @@ import { Database } from 'bun:sqlite'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
 import { mkdir, rm } from 'node:fs/promises'
 
-import { insert_activity_row, user_destinataire } from '../../../utils/activities/rows'
+import {
+  get_activity,
+  insert_activity_row,
+  user_destinataire
+} from '../../../utils/activities/rows'
 import { create_activity } from '../../../utils/activities/write'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
@@ -41,10 +45,10 @@ describe('activites schema', () => {
     expect(typeof created.id).toBe('number')
     expect(Number.isInteger(created.id)).toBe(true)
     expect(created.id).toBeGreaterThan(0)
-    expect(created.date_creation).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)
+    expect(created.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)
     expect(created.auteur).toBe(user(ALICE))
     expect(created.mentions).toEqual([])
-    expect(created.thread_id).toBeTruthy()
+    expect(created.threadId).toBeTruthy()
     expect(created.revision).toBe(1)
   })
 
@@ -81,5 +85,23 @@ describe('activites schema', () => {
     expect(indexes).toContain('idx_activites_idempotency')
     expect(indexes).toContain('idx_activites_repayment_plan_thread')
     expect(indexes).toContain('idx_activites_repayment_plan_snapshot')
+  })
+
+  it('refuse explicitement un contenu stocké hors contrat', () => {
+    using db = new Database(DATASTORE_PATH)
+    db.run(
+      `INSERT INTO activites (
+         date_creation, rattachement, auteur, type, mentions, contenu, thread_id, revision
+       ) VALUES (?, ?, ?, ?, '[]', ?, ?, 1)`,
+      [
+        '2026-01-01T00:00:00Z',
+        'tickets:REQ-1',
+        user(ALICE),
+        'note.published',
+        JSON.stringify({ version: 2, legacyText: 'Bonjour' }),
+        'thread-legacy'
+      ]
+    )
+    expect(() => get_activity(1)).toThrow('Invalid stored note.published content')
   })
 })

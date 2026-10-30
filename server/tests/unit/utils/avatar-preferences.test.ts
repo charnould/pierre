@@ -3,8 +3,8 @@ import { describe, expect, test } from 'bun:test'
 import {
   isReservedDisplayName,
   normalizeDisplayName,
-  parseUserPreferences
-} from '../../../../shared/automations'
+  normalizePreferredName
+} from '../../../../shared/user-preferences'
 import { get_user_preferences } from '../../../utils/automations/store'
 import {
   patch_me_preferences,
@@ -12,27 +12,31 @@ import {
   set_display_name
 } from '../../../utils/avatar-preferences'
 import { user_has_avatar } from '../../../utils/user-avatars'
+import { parseStoredUserPreferences } from '../../../utils/user-preferences-stored'
 import { createTestUser } from '../../test-user'
 import { use_identity_test_env } from './identity-test-env'
 
 use_identity_test_env('_test_avatar_preferences')
 
-describe('parseUserPreferences', () => {
+describe('parseStoredUserPreferences', () => {
   test('parses display_name and pinned automation ids', () => {
-    expect(parseUserPreferences(null)).toEqual({
-      pinned_automation_ids: [],
-      display_name: null
+    expect(parseStoredUserPreferences(null)).toEqual({
+      pinnedAutomationIds: [],
+      displayName: null,
+      preferredName: null
     })
     expect(
-      parseUserPreferences(
+      parseStoredUserPreferences(
         JSON.stringify({
           pinned_automation_ids: ['a'],
-          display_name: '  Alice Martin  '
+          display_name: '  Alice Martin  ',
+          preferred_name: '  Alice  '
         })
       )
     ).toEqual({
-      pinned_automation_ids: ['a'],
-      display_name: 'Alice Martin'
+      pinnedAutomationIds: ['a'],
+      displayName: 'Alice Martin',
+      preferredName: 'Alice'
     })
   })
 })
@@ -52,6 +56,14 @@ describe('normalizeDisplayName', () => {
   })
 })
 
+describe('normalizePreferredName', () => {
+  test('trims, collapses spaces and limits the direct form of address', () => {
+    expect(normalizePreferredName('  Alice   Martin  ')).toBe('Alice Martin')
+    expect(normalizePreferredName('   ')).toBeNull()
+    expect(normalizePreferredName('x'.repeat(60))?.length).toBe(40)
+  })
+})
+
 describe('display_name', () => {
   test('defaults to email local-part; custom overrides; clear restores default', async () => {
     await createTestUser({
@@ -65,15 +77,15 @@ describe('display_name', () => {
     expect(user_has_avatar('alice.martin@exemple.fr')).toBe(false)
 
     expect(set_display_name('alice.martin@exemple.fr', 'Alice Martin')).toBe('Alice Martin')
-    expect(get_user_preferences('alice.martin@exemple.fr').display_name).toBe('Alice Martin')
+    expect(get_user_preferences('alice.martin@exemple.fr').displayName).toBe('Alice Martin')
     expect(resolve_display_name('alice.martin@exemple.fr')).toBe('Alice Martin')
 
     expect(set_display_name('alice.martin@exemple.fr', 'alice.martin')).toBe('alice.martin')
-    expect(get_user_preferences('alice.martin@exemple.fr').display_name).toBeNull()
+    expect(get_user_preferences('alice.martin@exemple.fr').displayName).toBeNull()
 
     expect(set_display_name('alice.martin@exemple.fr', 'Bob')).toBe('Bob')
     expect(set_display_name('alice.martin@exemple.fr', null)).toBe('alice.martin')
-    expect(get_user_preferences('alice.martin@exemple.fr').display_name).toBeNull()
+    expect(get_user_preferences('alice.martin@exemple.fr').displayName).toBeNull()
 
     await createTestUser({
       email: 'pierre@exemple.fr',
@@ -83,8 +95,9 @@ describe('display_name', () => {
     })
     expect(patch_me_preferences('pierre@exemple.fr', { display_name: 'PIERRE' })).toEqual({
       hasAvatar: false,
-      displayName: 'pierre'
+      displayName: 'pierre',
+      preferredName: null
     })
-    expect(get_user_preferences('pierre@exemple.fr').display_name).toBeNull()
+    expect(get_user_preferences('pierre@exemple.fr').displayName).toBeNull()
   })
 })

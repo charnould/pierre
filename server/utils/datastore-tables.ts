@@ -1,7 +1,7 @@
-import { Database } from 'bun:sqlite'
 import { existsSync } from 'node:fs'
 
 import { DATASTORE_TABLES, type DatastoreTable } from '../../shared/core-data'
+import { openDatastore } from './datastore-db'
 import { datastorePaths } from './paths'
 
 export { CORE_DATA_CONTRACT, DATASTORE_TABLES, type DatastoreTable } from '../../shared/core-data'
@@ -27,7 +27,7 @@ const toResult = (existing: ReadonlySet<DatastoreTable>): DatastoreTablesResult 
 export function get_datastore_tables(): DatastoreTablesResult {
   const path = datastorePaths().database
   if (!existsSync(path)) return toResult(new Set())
-  const db = new Database(path, { readonly: true })
+  const db = openDatastore({ path, readonly: true })
 
   try {
     const placeholders = DATASTORE_TABLES.map(() => '?').join(', ')

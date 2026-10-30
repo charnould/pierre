@@ -1,13 +1,12 @@
 import { Database } from 'bun:sqlite'
 
-import type { Activite } from '../../../shared/activites'
-import type { BulkRichRcsResponse, BulkRichRcsNode } from '../../../shared/bulk-operations'
-import { datastorePaths } from '../paths'
+import type { Activity } from '../../../shared/activities'
+import type { BulkRichRcsNode, BulkRichRcsResponse } from '../../../shared/bulk-operations'
+import { openDatastore } from '../datastore-db'
 import type { DeliveryStatus } from './jobs'
-import { load_bulk_run_context_with_db, type BulkItemPayload } from './jobs'
+import { type BulkItemPayload, load_bulk_run_context_with_db } from './jobs'
 import { finalize_bulk_item_with_db } from './reports'
-
-const datastore_path = (): string => datastorePaths().database
+import { parseStoredPayload, stringifyStoredPayload } from './stored-job'
 
 const string_at = (value: unknown, ...path: string[]): string | null => {
   let current = value
@@ -20,11 +19,11 @@ const string_at = (value: unknown, ...path: string[]): string | null => {
 
 export const handle_rich_rcs_status_with_db = (
   db: Database,
-  activity: Activite,
+  activity: Activity,
   status: DeliveryStatus,
   occurredAt: string
 ): boolean => {
-  if (!activity.bulk_id || !activity.execution_id || !activity.id_locataire) return false
+  if (!activity.bulkId || !activity.executionId || !activity.id_locataire) return false
   const item = db
     .query<{ id: string; payload: string }, [string, string, number]>(
       `SELECT id, payload FROM bulk_jobs
@@ -32,10 +31,10 @@ export const handle_rich_rcs_status_with_db = (
          AND report_status = 'in_progress'
        LIMIT 1`
     )
-    .get(activity.execution_id, activity.id_locataire, activity.id)
+    .get(activity.executionId, activity.id_locataire, activity.id)
   if (!item) return false
-  const context = load_bulk_run_context_with_db(db, activity.execution_id, activity.bulk_id)
-  const payload = JSON.parse(item.payload) as BulkItemPayload
+  const context = load_bulk_run_context_with_db(db, activity.executionId, activity.bulkId)
+  const payload = parseStoredPayload(JSON.parse(item.payload))
   if (
     !context ||
     context.operation.definition.delivery.kind !== 'rich_rcs' ||
@@ -50,8 +49,8 @@ export const handle_rich_rcs_status_with_db = (
       status: 'ko',
       outcome: {
         code: 'send_failed',
-        node_id: payload.nodeId,
-        activity_id: activity.id
+        nodeId: payload.nodeId,
+        activityId: activity.id
       },
       currentActivityId: activity.id,
       completedAt: occurredAt,
@@ -66,9 +65,9 @@ export const handle_rich_rcs_status_with_db = (
       status: 'ok',
       outcome: {
         code: 'completed',
-        delivery_status: status,
-        node_id: payload.nodeId,
-        activity_id: activity.id
+        deliveryStatus: status,
+        nodeId: payload.nodeId,
+        activityId: activity.id
       },
       currentActivityId: activity.id,
       completedAt: occurredAt,
@@ -82,12 +81,12 @@ const node_for = (nodes: readonly BulkRichRcsNode[], nodeId: string): BulkRichRc
   nodes.find((node) => node.id === nodeId) ?? null
 
 export const handle_rich_rcs_reply = (
-  source: Activite,
-  inbound: Activite,
+  source: Activity,
+  inbound: Activity,
   rawPayload: Record<string, unknown>
 ): boolean => {
-  if (!source.bulk_id || !source.execution_id || !source.id_locataire) return false
-  const db = new Database(datastore_path())
+  if (!source.bulkId || !source.executionId || !source.id_locataire) return false
+  const db = openDatastore()
   let advanced = false
   db.run('BEGIN IMMEDIATE')
   try {
@@ -98,13 +97,13 @@ export const handle_rich_rcs_reply = (
            AND report_status = 'in_progress'
          LIMIT 1`
       )
-      .get(source.execution_id, source.id_locataire, source.id)
-    const context = load_bulk_run_context_with_db(db, source.execution_id, source.bulk_id)
+      .get(source.executionId, source.id_locataire, source.id)
+    const context = load_bulk_run_context_with_db(db, source.executionId, source.bulkId)
     if (!item || !context || context.operation.definition.delivery.kind !== 'rich_rcs') {
       db.run('COMMIT')
       return false
     }
-    const payload = JSON.parse(item.payload) as BulkItemPayload
+    const payload = parseStoredPayload(JSON.parse(item.payload))
     if (payload.kind !== 'rich_rcs' || payload.stage !== 'rich_wait_reply') {
       db.run('COMMIT')
       return false
@@ -132,7 +131,7 @@ export const handle_rich_rcs_reply = (
         string_at(rawPayload, 'event', 'custom', 'label') ??
         postback,
       activityId: inbound.id,
-      occurredAt: inbound.date_creation
+      occurredAt: inbound.createdAt
     }
     const nextPayload: BulkItemPayload = {
       ...payload,
@@ -145,12 +144,12 @@ export const handle_rich_rcs_reply = (
         status: 'ok',
         outcome: {
           code: 'completed',
-          last_postback: response.postback,
-          last_label: response.label,
-          activity_id: source.id
+          lastPostback: response.postback,
+          lastLabel: response.label,
+          activityId: source.id
         },
         currentActivityId: source.id,
-        completedAt: inbound.date_creation,
+        completedAt: inbound.createdAt,
         payload: nextPayload
       })
     } else if (target) {
@@ -163,7 +162,7 @@ export const handle_rich_rcs_reply = (
         `UPDATE bulk_jobs
          SET current_activity_id = NULL, run_at = ?, payload = ?, last_error = NULL
          WHERE id = ?`,
-        [inbound.date_creation, JSON.stringify(scheduled), item.id]
+        [inbound.createdAt, stringifyStoredPayload(scheduled), item.id]
       )
       advanced = true
     } else {

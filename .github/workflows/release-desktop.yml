@@ -31,7 +31,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
+          bun-version: 1.4.4
 
       - name: Reconcile release state
         id: release
@@ -51,12 +51,12 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
+          bun-version: 1.4.4
 
       - name: Build Windows artifacts
         run: |
           bun install --frozen-lockfile
-          bun --filter "@pierre/desktop" make -- --platform=win32 --arch=x64
+          bun desktop:make -- --platform=win32 --arch=x64
 
       - name: Stage Windows artifacts
         shell: pwsh
@@ -86,12 +86,12 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
+          bun-version: 1.4.4
 
       - name: Build macOS artifacts
         run: |
           bun install --frozen-lockfile
-          bun --filter "@pierre/desktop" make -- --platform=darwin --arch=arm64
+          bun desktop:make -- --platform=darwin --arch=arm64
 
       - name: Stage macOS artifacts
         run: |
@@ -121,7 +121,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
+          bun-version: 1.4.4
 
       - uses: actions/download-artifact@v4
         with:

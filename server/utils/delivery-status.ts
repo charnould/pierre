@@ -1,21 +1,21 @@
 import { Database } from 'bun:sqlite'
 
-import type { Activite } from '../../shared/activites'
+import { type Activity } from '../../shared/activities'
 import { get_activity_with_db } from './activities/rows'
 import {
   apply_sent_bucket_effect_with_db,
+  type DeliveryStatus,
   schedule_bulk_fallback_with_db,
-  settle_bulk_item_for_status_with_db,
-  type DeliveryStatus
+  settle_bulk_item_for_status_with_db
 } from './bulk/jobs'
 import { handle_rich_rcs_status_with_db } from './bulk/rich-rcs'
 import { arm_bulk_scheduler } from './bulk/scheduler/queue'
-import { create_sms_fallback_with_db } from './communications/rcs-sms-fallback'
 import {
   project_communication_status_with_db,
   type UpdateStatusInput
 } from './communications/status'
-import { datastore_path } from './communications/storage'
+import { complete_outbound_dispatch_with_db } from './communications/storage'
+import { openDatastore } from './datastore-db'
 
 let transitionHook: (() => void) | null = null
 
@@ -32,10 +32,13 @@ const fallback_status = (type: string | undefined, status: string): boolean =>
 export const update_status_with_db = (
   db: Database,
   input: UpdateStatusInput
-): { activity: Activite; fallbackScheduled: boolean } => {
+): { activity: Activity; fallbackScheduled: boolean; projected: boolean } => {
   const source = get_activity_with_db(db, input.activity_id)
   const result = project_communication_status_with_db(db, input)
-  if (!result.transition) return { activity: result.activity, fallbackScheduled: false }
+  complete_outbound_dispatch_with_db(db, input.activity_id)
+  if (!result.transition) {
+    return { activity: result.activity, fallbackScheduled: false, projected: false }
+  }
 
   transitionHook?.()
   const { activity, status, occurredAt } = result.transition
@@ -56,14 +59,11 @@ export const update_status_with_db = (
     !richConsumed && failed
       ? schedule_bulk_fallback_with_db(db, trackedActivity, occurredAt)
       : false
-  if (failed && !trackedActivity.bulk_id && trackedActivity.channel === 'rcs') {
-    create_sms_fallback_with_db(db, trackedActivity)
-  }
-  return { activity, fallbackScheduled }
+  return { activity, fallbackScheduled, projected: true }
 }
 
-export const update_status = (input: UpdateStatusInput): Activite => {
-  const db = new Database(datastore_path())
+export const settle_delivery = (input: UpdateStatusInput): { activity: Activity } => {
+  const db = openDatastore()
   let result: ReturnType<typeof update_status_with_db>
   try {
     db.run('BEGIN IMMEDIATE')
@@ -76,5 +76,7 @@ export const update_status = (input: UpdateStatusInput): Activite => {
     db.close()
   }
   if (result!.fallbackScheduled) queueMicrotask(arm_bulk_scheduler)
-  return result!.activity
+  return { activity: result!.activity }
 }
+
+export const update_status = (input: UpdateStatusInput): Activity => settle_delivery(input).activity

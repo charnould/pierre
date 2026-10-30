@@ -3,14 +3,13 @@ import { z } from 'zod'
 import {
   ACTIVITY_CONTEXTS,
   ACTIVITY_TYPES,
-  COMMUNICATION_CHANNELS,
-  REPAYMENT_PLAN_CLOSE_REASONS,
-  is_communication_type,
-  is_repayment_plan_event_type,
   type ActivityContext,
+  COMMUNICATION_CHANNELS,
+  isCommunicationType,
   type Mention,
   type TaskState
-} from '../../../shared/activites'
+} from '../../../shared/activities'
+import { isRepaymentPlanEventType } from '../../../shared/repayment-plan'
 
 export const MENTION_RE = /@([a-z0-9._-]+)/gi
 export const AUTHOR_RE = /^(user|agent|tenant|candidate|automation|system|external):.+$/
@@ -31,8 +30,8 @@ export const CreateActivityInput = z
     destinataire: z.string().trim().min(1).nullable().optional(),
     recipients: z.array(z.string().trim().min(1)).optional(),
     contenu: z.string().default(''),
-    thread_id: z.string().trim().min(1).nullable().optional(),
-    idempotency_key: z.string().trim().min(1).nullable().optional()
+    threadId: z.string().trim().min(1).nullable().optional(),
+    idempotencyKey: z.string().trim().min(1).nullable().optional()
   })
   .strict()
 
@@ -41,16 +40,16 @@ export const TrustedCreateActivityInput = CreateActivityInput.extend({
     .string()
     .regex(/^(agent|automation|system):.+$/)
     .optional(),
-  bulk_id: z.string().trim().min(1).nullable().optional(),
-  execution_id: z.string().trim().min(1).nullable().optional(),
-  date_creation: z.iso.datetime().optional()
+  bulkId: z.string().trim().min(1).nullable().optional(),
+  executionId: z.string().trim().min(1).nullable().optional(),
+  dateCreation: z.iso.datetime().optional()
 }).strict()
 
 export type CreateActivityInput = z.infer<typeof CreateActivityInput>
 export type TrustedCreateActivityInput = z.infer<typeof TrustedCreateActivityInput>
 
 const requires_channel = (type: string): boolean =>
-  is_communication_type(type) || type === 'document.sent_for_signature'
+  isCommunicationType(type) || type === 'document.sent_for_signature'
 
 export const ActivityRowSchema = z
   .object({
@@ -60,7 +59,7 @@ export const ActivityRowSchema = z
     revision: z.number().int().positive().nullable()
   })
   .superRefine((row, ctx) => {
-    if (is_repayment_plan_event_type(row.type)) {
+    if (isRepaymentPlanEventType(row.type)) {
       if (row.thread_id == null) {
         ctx.addIssue({
           code: 'custom',
@@ -111,8 +110,8 @@ export const ActivityPatchInput = z.discriminatedUnion('operation', [
   z.object({
     operation: z.literal('update_action'),
     action: z.string().trim().min(1),
-    assigne_a: z.string().trim().min(1),
-    date_echeance: z.string().trim().min(1),
+    assigneA: z.string().trim().min(1),
+    dateEcheance: z.string().trim().min(1),
     note: z.string().optional()
   }),
   z.object({
@@ -121,8 +120,8 @@ export const ActivityPatchInput = z.discriminatedUnion('operation', [
   }),
   z.object({
     operation: z.literal('reopen_action'),
-    assigne_a: z.string().trim().min(1),
-    date_echeance: z.string().trim().min(1),
+    assigneA: z.string().trim().min(1),
+    dateEcheance: z.string().trim().min(1),
     note: z.string().optional()
   }),
   z.object({
@@ -141,14 +140,6 @@ export const ActivityPatchInput = z.discriminatedUnion('operation', [
   z.object({
     operation: z.literal('save_repayment_plan'),
     contenu: z.string()
-  }),
-  z.object({
-    operation: z.literal('finalize_repayment_plan'),
-    contenu: z.string()
-  }),
-  z.object({
-    operation: z.literal('close_repayment_plan'),
-    reason: z.enum(REPAYMENT_PLAN_CLOSE_REASONS)
   })
 ])
 
@@ -156,19 +147,20 @@ export type ListActivitiesOptions = {
   contexts?: ActivityContext[]
   rattachement?: string
   inbox?: boolean
-  unread_only?: boolean
+  unreadOnly?: boolean
   auteurs?: string[]
   id_client?: string
   id_locataire?: string
   id_lot?: string
   type?: string
-  current_threads?: boolean
+  currentThreads?: boolean
   state?: TaskState
   assignee?: 'me' | 'other'
-  created_by?: 'me'
+  createdBy?: 'me'
   order?: 'due_asc'
   limit?: number
   offset?: number
+  all?: boolean
 }
 
 export class ActivitiesError extends Error {
@@ -181,11 +173,4 @@ export class ActivitiesError extends Error {
   }
 }
 
-export const parse_mentions = (raw: string): Mention[] => {
-  try {
-    const result = MentionsSchema.safeParse(JSON.parse(raw))
-    return result.success ? result.data : []
-  } catch {
-    return []
-  }
-}
+export const parse_mentions = (raw: string): Mention[] => MentionsSchema.parse(JSON.parse(raw))

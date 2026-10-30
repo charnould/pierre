@@ -19,7 +19,7 @@
         "shared/**/*.test.ts"
       ],
       "ignoreDependencies": [
-        // Oxlint loads JavaScript plugins from config strings that Knip cannot trace.
+        // oxlint loads this plugin from a config string that Knip cannot trace.
         "@shadcn/lint",
         // The Pi extension runtime provides TypeBox inside the guest VM.
         "typebox"
@@ -29,9 +29,10 @@
       "entry": ["extract-spreadsheet.mjs!"]
     },
     "desktop": {
-      "electron-vite": false,
       "entry": [
-        "electron.vite.config.ts!",
+        "build.ts!",
+        "build-plugin.ts!",
+        "dev.ts!",
         "forge.config.ts!",
         "forge/rename-release-artifacts.ts!",
         "electron/main.ts!",
@@ -40,8 +41,6 @@
         "src/app/main.tsx!",
         "src/chat-web/main.tsx!",
         "src/mascot/main.tsx!",
-        "vite.chat-web.config.ts!",
-        "perf/cli.ts!",
         "**/*.test.ts",
         "**/*.test.tsx"
       ],
@@ -53,11 +52,11 @@
       ],
       // Electron Forge resolves maker packages from string names in its config.
       "ignoreDependencies": [
-        // typeset.css loads the font files directly through CSS url() declarations.
-        "@fontsource-variable/source-serif-4",
         "@electron-forge/maker-dmg",
         "@electron-forge/maker-squirrel",
-        "@electron-forge/maker-zip"
+        "@electron-forge/maker-zip",
+        // desktop/build-plugin.ts spawns this binary. Knip cannot see the name.
+        "@tailwindcss/cli"
       ]
     },
     "docs": {
@@ -77,6 +76,8 @@
         "microvm/guest/extensions/ask-user.ts!",
         "utils/knowledge/scrape-wikipedia.ts!",
         "utils/update-pierre.ts!",
+        "utils/ensure-carl.ts!",
+        "tests/live/cm-channels.ts!",
         "tests/**/*.test.ts"
       ],
       "project": ["**/*.{ts,tsx,css}!", "!tests/**!"]

@@ -1,12 +1,12 @@
 import { PROMPTS } from './prompts'
 
 export const BUSINESS_MODULES = [
-  { id: 'tickets', label: 'Traiter les réclamations' },
+  { id: 'tickets', label: 'Répondre aux réclamations' },
   { id: 'automations', label: 'Créer des automatisations' },
-  { id: 'bulk', label: 'Contacter par lots' },
+  { id: 'bulk', label: 'Communiquer à grande échelle' },
   { id: 'about', label: 'Obtenir une synthèse' },
   { id: 'repayment', label: 'Piloter les impayés' },
-  { id: 'insurance-attestation', label: 'Renouveler les assurances' },
+  { id: 'insurance', label: 'Renouveler les assurances' },
   { id: 'relocation', label: 'Piloter la relocation' },
   { id: 'attributions', label: 'Piloter les attributions' },
   { id: 'ventes', label: 'Piloter les ventes' }

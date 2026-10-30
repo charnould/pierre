@@ -15,7 +15,6 @@ const publicOn: ChatbotConfig = {
   display: 'Public',
   enabled: true,
   community_knowledge: true,
-  reasoning_effort: 'medium',
   trace: 'none',
   attachments: true,
   examples: [],
@@ -28,7 +27,6 @@ const interne: ChatbotConfig = {
   id: 'interne',
   display: 'Interne',
   community_knowledge: false,
-  reasoning_effort: 'low',
   trace: 'none',
   attachments: false
 }

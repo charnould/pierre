@@ -2,27 +2,25 @@ import { Database } from 'bun:sqlite'
 
 import { z } from 'zod'
 
-import { activity_timestamp } from '../../../shared/activites'
+import { activityTimestamp } from '../../../shared/activities'
 import {
-  lastBulkOperationEdit,
-  type BulkOperationDefinition,
   type BulkOperationEdit,
   type BulkOperationRecord,
   type BulkOperationSummary,
   type CreateBulkOperationBody,
+  lastBulkOperationEdit,
   type PatchBulkOperationBody
 } from '../../../shared/bulk-operations'
 import { project_communication_status_with_db } from '../communications/status'
-import { datastorePaths } from '../paths'
+import { openDatastore } from '../datastore-db'
 import { BulkOperationDefinitionSchema, BulkQueryError } from './query'
 import { purge_completed_runs_with_db } from './reports'
-
-const datastore_path = (): string => datastorePaths().database
+import { parseStoredDefinition, stringifyStoredDefinition } from './stored-definition'
 
 export class BulkOperationsError extends Error {
   constructor(
     message: string,
-    readonly code: 'not_found' | 'forbidden' | 'invalid' = 'invalid'
+    readonly code: 'not_found' | 'forbidden' | 'invalid' | 'conflict' = 'invalid'
   ) {
     super(message)
     this.name = 'BulkOperationsError'
@@ -58,25 +56,19 @@ type DbRow = {
 
 type SummaryDbRow = Omit<DbRow, 'definition'>
 
-const parse_edits = (raw: string): BulkOperationEdit[] => {
-  try {
-    const parsed = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-    return parsed.filter(
-      (item): item is BulkOperationEdit =>
-        item != null &&
-        typeof item === 'object' &&
-        typeof item.by === 'string' &&
-        typeof item.at === 'string'
-    )
-  } catch {
-    return []
-  }
-}
+const BulkEditSchema = z
+  .object({
+    by: z.string().min(1),
+    at: z.iso.datetime()
+  })
+  .strict()
+
+const parse_edits = (raw: string): BulkOperationEdit[] =>
+  z.array(BulkEditSchema).parse(JSON.parse(raw))
 
 const append_edit = (edits: BulkOperationEdit[], by: string): BulkOperationEdit[] => [
   ...edits,
-  { by, at: activity_timestamp() }
+  { by, at: activityTimestamp() }
 ]
 
 const last_run_by_id = (db: Database, ids: string[]): Map<string, string> => {
@@ -99,9 +91,7 @@ const row_to_record = (row: DbRow, lastRunAt: string | null): BulkOperationRecor
   id: row.id,
   name: row.name,
   description: row.description,
-  definition: BulkOperationDefinitionSchema.parse(
-    JSON.parse(row.definition)
-  ) as BulkOperationDefinition,
+  definition: parseStoredDefinition(JSON.parse(row.definition)),
   reportsToKeep: row.reports_to_keep,
   edits: parse_edits(row.edits),
   lastRunAt
@@ -116,7 +106,10 @@ const row_to_summary = (row: SummaryDbRow, lastRunAt: string | null): BulkOperat
   lastRunAt
 })
 
-const get_with_db = (db: Database, id: string): BulkOperationRecord | null => {
+export const get_bulk_operation_with_db = (
+  db: Database,
+  id: string
+): BulkOperationRecord | null => {
   const row = db
     .query<DbRow, [string]>('SELECT * FROM bulk_operations WHERE id = ? LIMIT 1')
     .get(id)
@@ -125,7 +118,7 @@ const get_with_db = (db: Database, id: string): BulkOperationRecord | null => {
 }
 
 export const list_bulk_operations = (): BulkOperationSummary[] => {
-  const db = new Database(datastore_path(), { readonly: true })
+  const db = openDatastore({ readonly: true })
   try {
     const rows = db
       .query<SummaryDbRow, []>(
@@ -150,9 +143,9 @@ export const list_bulk_operations = (): BulkOperationSummary[] => {
 }
 
 export const get_bulk_operation = (id: string): BulkOperationRecord | null => {
-  const db = new Database(datastore_path(), { readonly: true })
+  const db = openDatastore({ readonly: true })
   try {
-    return get_with_db(db, id)
+    return get_bulk_operation_with_db(db, id)
   } finally {
     db.close()
   }
@@ -164,7 +157,7 @@ export const create_bulk_operation = (
 ): BulkOperationRecord => {
   const parsed = CreateBulkOperationBodySchema.parse(body)
   const id = Bun.randomUUIDv7()
-  const db = new Database(datastore_path())
+  const db = openDatastore()
   try {
     db.run(
       `INSERT INTO bulk_operations
@@ -174,12 +167,12 @@ export const create_bulk_operation = (
         id,
         parsed.name,
         parsed.description,
-        JSON.stringify(parsed.definition),
+        stringifyStoredDefinition(parsed.definition),
         parsed.reportsToKeep,
         JSON.stringify(append_edit([], actor))
       ]
     )
-    return get_with_db(db, id)!
+    return get_bulk_operation_with_db(db, id)!
   } catch (error) {
     if (error instanceof BulkQueryError) {
       throw new BulkOperationsError(error.message, 'invalid')
@@ -196,12 +189,32 @@ export const update_bulk_operation = (
   patch: PatchBulkOperationBody
 ): BulkOperationRecord => {
   const parsed = PatchBulkOperationBodySchema.parse(patch)
-  const db = new Database(datastore_path())
+  const db = openDatastore()
   try {
     db.run('BEGIN IMMEDIATE')
-    const existing = get_with_db(db, id)
+    const existing = get_bulk_operation_with_db(db, id)
     if (!existing) throw new BulkOperationsError('Bulk operation not found', 'not_found')
     const definition = parsed.definition ?? existing.definition
+    const storedDefinition = stringifyStoredDefinition(definition)
+    const definitionChanged =
+      parsed.definition !== undefined &&
+      storedDefinition !== stringifyStoredDefinition(existing.definition)
+    if (
+      definitionChanged &&
+      db
+        .query<{ present: number }, [string]>(
+          `SELECT 1 AS present
+           FROM bulk_jobs
+           WHERE bulk_operation_id = ? AND report_status = 'in_progress'
+           LIMIT 1`
+        )
+        .get(id)
+    ) {
+      throw new BulkOperationsError(
+        'Definition cannot be changed while a run is in progress',
+        'conflict'
+      )
+    }
     db.run(
       `UPDATE bulk_operations
        SET name = ?, description = ?, definition = ?, reports_to_keep = ?, edits = ?
@@ -209,7 +222,7 @@ export const update_bulk_operation = (
       [
         parsed.name ?? existing.name,
         parsed.description ?? existing.description,
-        JSON.stringify(definition),
+        storedDefinition,
         parsed.reportsToKeep ?? existing.reportsToKeep,
         JSON.stringify(append_edit(existing.edits, actor)),
         id
@@ -218,7 +231,7 @@ export const update_bulk_operation = (
     if (parsed.reportsToKeep != null && parsed.reportsToKeep < existing.reportsToKeep) {
       purge_completed_runs_with_db(db, id, parsed.reportsToKeep)
     }
-    const updated = get_with_db(db, id)!
+    const updated = get_bulk_operation_with_db(db, id)!
     db.run('COMMIT')
     return updated
   } catch (error) {
@@ -233,12 +246,12 @@ export const update_bulk_operation = (
 }
 
 export const delete_bulk_operation = (id: string): BulkOperationRecord => {
-  const db = new Database(datastore_path())
+  const db = openDatastore()
   try {
     db.run('BEGIN IMMEDIATE')
-    const existing = get_with_db(db, id)
+    const existing = get_bulk_operation_with_db(db, id)
     if (!existing) throw new BulkOperationsError('Bulk operation not found', 'not_found')
-    const now = activity_timestamp()
+    const now = activityTimestamp()
     const pendingCommunications = db
       .query<{ id: number }, [string]>(
         `SELECT id FROM activites
@@ -248,7 +261,13 @@ export const delete_bulk_operation = (id: string): BulkOperationRecord => {
            AND NOT EXISTS (
              SELECT 1 FROM activites status
              WHERE status.thread_id = activites.thread_id
-               AND status.type IN ('communication.ok', 'communication.failed')
+               AND (
+                 status.type = 'communication.failed'
+                 OR (
+                   status.type = 'communication.ok'
+                   AND json_extract(status.contenu, '$.result') IS NOT 'sent'
+                 )
+               )
            )`
       )
       .all(id)

@@ -1,9 +1,9 @@
-import { dropTextBeforeLastTool, type AiStreamEvent } from '../../shared/ai-stream-events'
+import { type AiStreamEvent, dropTextBeforeLastTool } from '../../shared/ai-stream-events'
 import type { TraceMode } from '../../shared/chat'
 import { showsThinking, showsTools } from '../../shared/chat'
 import type { CopilotChunk } from './copilot-agent'
 
-/** Canonical NDJSON wire events for `/ai` and `/ai/answer`. */
+/** Canonical NDJSON wire events for `/chat` and `/workflows`. */
 export type NdjsonStreamEvent = AiStreamEvent
 
 const THINKING_EVENTS = new Set(['thinking_start', 'thinking_delta', 'thinking_end'])
