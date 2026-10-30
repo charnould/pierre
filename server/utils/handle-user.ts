@@ -1,8 +1,8 @@
 import { Database } from 'bun:sqlite'
 
-import { User as UserSchema, type User } from './_schema'
+import { type User, User as UserSchema } from './_schema'
 import { hashPassword } from './auth'
-import { datastorePaths } from './paths'
+import { openDatastore } from './datastore-db'
 
 type UserRow = {
   id: string
@@ -36,8 +36,7 @@ export type StoredUser = AdminUser & { id: string }
 export type UserWrite = User & { password: string; profileId: string | null }
 
 type UserAccess =
-  | { profileId: string }
-  | { profileId: null; moduleIds: User['moduleIds']; chatbotIds: string[] }
+  { profileId: string } | { profileId: null; moduleIds: User['moduleIds']; chatbotIds: string[] }
 
 const USER_SELECT = `SELECT users.id, users.email, users.role, users.profile_id,
        users.module_ids AS user_module_ids,
@@ -46,13 +45,6 @@ const USER_SELECT = `SELECT users.id, users.email, users.role, users.profile_id,
        user_profiles.chatbot_ids AS profile_chatbot_ids
 FROM users
 LEFT JOIN user_profiles ON users.profile_id = user_profiles.id`
-
-function openDatabase(): Database {
-  const db = new Database(datastorePaths().database)
-  db.run('PRAGMA busy_timeout = 5000')
-  db.run('PRAGMA foreign_keys = ON')
-  return db
-}
 
 const normalizeAccess = (access: Pick<User, 'moduleIds' | 'chatbotIds'>) => {
   const parsed = {
@@ -216,7 +208,7 @@ function setPassword(db: Database, userId: string, passwordHash: string): void {
 }
 
 export const getStoredUser = async (email: string): Promise<StoredUser | undefined> => {
-  using db = openDatabase()
+  using db = openDatastore()
   return getStoredUserFromDatabase(db, email)
 }
 
@@ -226,7 +218,7 @@ export const getUser = async (email: string): Promise<User | undefined> => {
 }
 
 export const getUsers = async (): Promise<User[]> => {
-  using db = openDatabase()
+  using db = openDatastore()
   return db
     .query<UserRow, []>(`${USER_SELECT} ORDER BY users.email`)
     .all()
@@ -234,7 +226,7 @@ export const getUsers = async (): Promise<User[]> => {
 }
 
 export const getAdminUsers = async (): Promise<AdminUser[]> => {
-  using db = openDatabase()
+  using db = openDatastore()
   return db
     .query<UserRow, []>(`${USER_SELECT} ORDER BY users.email`)
     .all()
@@ -242,7 +234,7 @@ export const getAdminUsers = async (): Promise<AdminUser[]> => {
 }
 
 export const getUserProfiles = async (): Promise<UserProfile[]> => {
-  using db = openDatabase()
+  using db = openDatastore()
   return db
     .query<ProfileRow, []>(
       `SELECT id, name, module_ids, chatbot_ids FROM user_profiles ORDER BY name`
@@ -252,13 +244,12 @@ export const getUserProfiles = async (): Promise<UserProfile[]> => {
 }
 
 type CreateUserResult =
-  | { ok: true; user: AdminUser }
-  | { ok: false; code: 'user_exists' | 'profile_not_found' }
+  { ok: true; user: AdminUser } | { ok: false; code: 'user_exists' | 'profile_not_found' }
 
 export const createUser = async (input: UserWrite): Promise<CreateUserResult> => {
   const user = normalizeUser(input)
   const passwordHash = await hashPassword(input.password)
-  using db = openDatabase()
+  using db = openDatastore()
   const create = db.transaction((): CreateUserResult => {
     if (getStoredUserFromDatabase(db, user.email)) return { ok: false, code: 'user_exists' }
     if (input.profileId) {
@@ -282,14 +273,10 @@ export const createUser = async (input: UserWrite): Promise<CreateUserResult> =>
 }
 
 type UserGuardCode =
-  | 'user_not_found'
-  | 'cannot_demote_self'
-  | 'cannot_delete_self'
-  | 'last_administrator'
+  'user_not_found' | 'cannot_demote_self' | 'cannot_delete_self' | 'last_administrator'
 
 type SaveUserResult =
-  | { ok: true; user: AdminUser }
-  | { ok: false; code: UserGuardCode | 'profile_not_found' }
+  { ok: true; user: AdminUser } | { ok: false; code: UserGuardCode | 'profile_not_found' }
 
 type DeleteUserResult = { ok: true; user: AdminUser } | { ok: false; code: UserGuardCode }
 
@@ -316,7 +303,7 @@ export const saveUserAsAdministrator = async (
 ): Promise<SaveUserResult> => {
   const normalizedEmail = email.trim().toLowerCase()
   const passwordHash = patch.password === undefined ? undefined : await hashPassword(patch.password)
-  using db = openDatabase()
+  using db = openDatastore()
   const save = db.transaction((): SaveUserResult => {
     const existing = getStoredUserFromDatabase(db, normalizedEmail)
     if (!existing) return { ok: false, code: 'user_not_found' }
@@ -380,7 +367,7 @@ export const deleteUserAsAdministrator = async (
   if (normalizedEmail === actorEmail.trim().toLowerCase()) {
     return { ok: false, code: 'cannot_delete_self' }
   }
-  using db = openDatabase()
+  using db = openDatastore()
   const remove = db.transaction((): DeleteUserResult => {
     const existing = getStoredUserFromDatabase(db, normalizedEmail)
     if (!existing) return { ok: false, code: 'user_not_found' }
@@ -397,7 +384,7 @@ export const createUserProfile = async (
   input: Omit<UserProfile, 'id'>
 ): Promise<ProfileMutationResult> => {
   const name = input.name.trim()
-  using db = openDatabase()
+  using db = openDatastore()
   const create = db.transaction((): ProfileMutationResult => {
     if (findProfileIdByName(db, name)) return { ok: false, code: 'profile_name_taken' }
     const profile = normalizeProfile({
@@ -421,7 +408,7 @@ export const saveUserProfile = async (
   id: string,
   patch: Partial<Omit<UserProfile, 'id'>>
 ): Promise<ProfileMutationResult> => {
-  using db = openDatabase()
+  using db = openDatastore()
   const save = db.transaction((): ProfileMutationResult => {
     const existing = getProfileFromDatabase(db, id)
     if (!existing) return { ok: false, code: 'profile_not_found' }
@@ -446,7 +433,7 @@ export const saveUserProfile = async (
 }
 
 export const deleteUserProfile = async (id: string): Promise<ProfileMutationResult> => {
-  using db = openDatabase()
+  using db = openDatastore()
   const remove = db.transaction((): ProfileMutationResult => {
     const existing = getProfileFromDatabase(db, id)
     if (!existing) return { ok: false, code: 'profile_not_found' }
@@ -472,7 +459,7 @@ export const importUserPasswords = async (
       passwordHash: await hashPassword(user.password)
     })
   }
-  using db = openDatabase()
+  using db = openDatastore()
   const importUsers = db.transaction(() => {
     let created = 0
     let updated = 0
@@ -502,7 +489,7 @@ export const importUserPasswords = async (
 }
 
 export const deleteAllUsers = async (): Promise<void> => {
-  using db = openDatabase()
+  using db = openDatastore()
   const remove = db.transaction(() => {
     db.run('DELETE FROM session')
     db.run('DELETE FROM account')

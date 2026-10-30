@@ -17,14 +17,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
+          bun-version: 1.4.4
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install
-      - run: bun lint:check
+      - run: bun oxlint
       - run: bun knip
       - run: bun knip:production
   format:
@@ -34,14 +34,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
+          bun-version: 1.4.4
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install
-      - run: bun format:check
+      - run: bun fmt --check
   typecheck:
     name: Typecheck
     runs-on: ubuntu-latest
@@ -49,14 +49,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
+          bun-version: 1.4.4
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install
-      - run: bun typecheck
+      - run: bun check
   test_unit:
     name: Test (unit)
     runs-on: ubuntu-latest
@@ -64,7 +64,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
+          bun-version: 1.4.4
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
@@ -72,10 +72,29 @@ jobs:
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install
       - run: bun test config/checks shared/*.test.ts
-      - run: bun --filter "@pierre/server" test:unit
-      - run: bun --filter "@pierre/desktop" test
+      - run: bun test --cwd server --max-concurrency 1 unit
+      - run: TZ=Europe/Paris bun test --cwd desktop
       - run: bun test docs/scripts
-      - run: bun --filter "@pierre/cli" test
+      - run: bun test cli/tests
+  server_e2e:
+    name: Server browser
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - uses: browser-actions/setup-chrome@v1
+        id: chrome
+      - run: bun install
+      - run: bun server:e2e
+        env:
+          BUN_CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
   package:
     name: Package
     runs-on: macos-latest
@@ -83,13 +102,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
+          bun-version: 1.4.4
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install
-      - run: bun --filter "@pierre/desktop" build
-      - run: bun --filter "@pierre/desktop" perf:check
-      - run: cd desktop && bun run package
+      - run: bun desktop:build
+      - run: bun desktop:package

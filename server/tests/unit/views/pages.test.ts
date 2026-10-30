@@ -11,7 +11,6 @@ const defaultConfig: ChatbotConfig = {
   display: 'PIERRE',
   enabled: true,
   community_knowledge: true,
-  reasoning_effort: 'medium',
   trace: 'none',
   attachments: false,
   greetings: ['Bonjour'],
@@ -19,8 +18,8 @@ const defaultConfig: ChatbotConfig = {
   disclaimer: 'Vérifier.'
 }
 
-const HASHED_JS = /^\/assets\/dist\/js\/ai-[a-zA-Z0-9_-]+\.js$/
-const HASHED_CSS = /^\/assets\/dist\/css\/style-[a-zA-Z0-9_-]+\.css$/
+const HASHED_JS = /^\/assets\/dist\/js\/.+-[A-Za-z0-9_-]{8,}\.js$/
+const HASHED_CSS = /^\/assets\/dist\/css\/.+-[A-Za-z0-9_-]{8,}\.css$/
 const STAMPED_ASSET = /\.\d{13}\.(?:js|css)/
 
 async function render(page: ReturnType<typeof chatPage> | ReturnType<typeof emptyPage>) {
@@ -28,7 +27,7 @@ async function render(page: ReturnType<typeof chatPage> | ReturnType<typeof empt
 }
 
 describe('chat web assets', () => {
-  it('resolves content-hashed files from the Vite manifest', () => {
+  it('resolves content-hashed files from the chat manifest', () => {
     const entry = readChatWebEntry()
     expect(entry.jsHref).toMatch(HASHED_JS)
     expect(entry.cssHref).toMatch(HASHED_CSS)

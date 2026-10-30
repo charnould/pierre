@@ -1,72 +1,70 @@
 import { describe, expect, it } from 'bun:test'
 
+import { ACTIVITY_TYPES, activityTimestamp, mentionOf } from '../../../../shared/activities'
 import {
-  ACTIVITY_TYPES,
-  activity_payload,
-  activity_texte,
-  activity_timestamp,
-  mention_of,
-  parse_case_change_content,
-  parse_contenu_json
-} from '../../../../shared/activites'
+  activityPayload,
+  activityText,
+  parseCaseChangeContent,
+  parseContentJson
+} from '../../../../shared/activity-content'
 
-describe('shared/activites helpers', () => {
-  it('activity_payload exige un payload canonique version 2', () => {
-    expect(activity_payload('note.published', 'Bonjour')).toEqual({})
+describe('shared/activities helpers', () => {
+  it('activityPayload exige un payload canonique version 2', () => {
+    expect(() => activityPayload('note.published', 'Bonjour')).toThrow()
+    expect(() =>
+      activityPayload('note.published', JSON.stringify({ version: 1, text: 'Bonjour' }))
+    ).toThrow()
     expect(
-      activity_payload('note.published', JSON.stringify({ version: 1, text: 'Bonjour' }))
-    ).toEqual({})
-    expect(
-      activity_payload(
+      activityPayload(
         'communication.sent',
         JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Corps' })
       )
     ).toEqual({ version: 2, sender: 'user:alice@example.org', body: 'Corps' })
   })
 
-  it('activity_texte lit uniquement les payloads canoniques', () => {
-    expect(activity_texte('note.published', JSON.stringify({ version: 2, text: 'Texte' }))).toBe(
+  it('activityText lit uniquement les payloads canoniques', () => {
+    expect(activityText('note.published', JSON.stringify({ version: 2, text: 'Texte' }))).toBe(
       'Texte'
     )
     expect(
-      activity_texte(
+      activityText(
         'task.created',
         JSON.stringify({ version: 2, task: { title: 'Relancer', state: 'open' } })
       )
     ).toBe('Relancer')
     expect(
-      activity_texte(
+      activityText(
         'communication.sent',
         JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Corps' })
       )
     ).toBe('Corps')
-    expect(activity_texte('note.published', JSON.stringify({ version: 1, text: 'Ancien' }))).toBe(
-      ''
-    )
+    expect(() =>
+      activityText('note.published', JSON.stringify({ version: 1, text: 'Ancien' }))
+    ).toThrow()
   })
 
-  it('parse_contenu_json ignore les tableaux et le JSON invalide', () => {
-    expect(parse_contenu_json('[]')).toEqual({})
-    expect(parse_contenu_json('null')).toEqual({})
-    expect(parse_contenu_json('{')).toEqual({})
-    expect(parse_contenu_json('{"before":null,"after":"amiable"}')).toEqual({
+  it('parseContentJson rejette les tableaux et le JSON invalide', () => {
+    expect(() => parseContentJson('[]')).toThrow()
+    expect(() => parseContentJson('null')).toThrow()
+    expect(() => parseContentJson('{')).toThrow()
+    expect(parseContentJson('{"before":null,"after":"amiable"}')).toEqual({
       before: null,
       after: 'amiable'
     })
   })
 
-  it('mention_of retrouve le destinataire exact', () => {
+  it('mentionOf retrouve le destinataire exact', () => {
     const mentions = [
       { destinataire: 'user:alice@exemple.fr', motif: 'mention' as const },
       { destinataire: 'user:bob@exemple.fr', motif: 'assignation' as const }
     ]
-    expect(mention_of(mentions, 'user:alice@exemple.fr')).toEqual(mentions[0]!)
-    expect(mention_of(mentions, 'alice@exemple.fr')).toBeNull()
+    expect(mentionOf(mentions, 'user:alice@exemple.fr')).toEqual(mentions[0]!)
+    expect(mentionOf(mentions, 'alice@exemple.fr')).toBeNull()
   })
 
-  it('parse_case_change_content conserve before/after et normalise la note', () => {
+  it('parseCaseChangeContent conserve before/after et normalise la note', () => {
     expect(
-      parse_case_change_content(
+      parseCaseChangeContent(
         JSON.stringify({
           version: 2,
           before: ['décès'],
@@ -81,12 +79,12 @@ describe('shared/activites helpers', () => {
       note: 'Suivi'
     })
     expect(
-      parse_case_change_content(JSON.stringify({ version: 1, before: null, after: [] }))
+      parseCaseChangeContent(JSON.stringify({ version: 1, before: null, after: [] }))
     ).toBeNull()
   })
 
-  it('activity_timestamp strippe les millisecondes et conserve UTC', () => {
-    expect(activity_timestamp(new Date('2026-08-15T09:17:00.123Z'))).toBe('2026-08-15T09:17:00Z')
+  it('activityTimestamp strippe les millisecondes et conserve UTC', () => {
+    expect(activityTimestamp(new Date('2026-08-15T09:17:00.123Z'))).toBe('2026-08-15T09:17:00Z')
   })
 
   it('expose uniquement les types v2', () => {

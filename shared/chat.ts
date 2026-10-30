@@ -9,11 +9,13 @@ export type ChatBoot = {
   greetings: string[]
   disclaimer: string | null
   examples: string[]
-  displayableConfigs: { id: string; display: string; is_active: boolean }[]
+  displayableConfigs: { id: string; display: string; isActive: boolean }[]
   trace: TraceMode
   attachments: boolean
   embed?: boolean
 }
+
+export type ChatBootResponse = { data: ChatBoot }
 
 export function isTraceMode(value: unknown): value is TraceMode {
   return typeof value === 'string' && (TRACE_MODES as readonly string[]).includes(value)

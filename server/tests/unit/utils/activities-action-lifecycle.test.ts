@@ -1,7 +1,7 @@
 import { Database } from 'bun:sqlite'
 import { describe, expect, it } from 'bun:test'
 
-import { parse_contenu_json } from '../../../../shared/activites'
+import { parseContentJson } from '../../../../shared/activity-content'
 import { list_activities } from '../../../utils/activities/query'
 import { get_activity } from '../../../utils/activities/rows'
 import { create_activity, delete_activity, patch_activity } from '../../../utils/activities/write'
@@ -44,7 +44,7 @@ describe('action lifecycle', () => {
     expect(
       list_activities(ALICE, {
         rattachement: 'repayment:LOC-ACTION',
-        current_threads: true,
+        currentThreads: true,
         state: 'open'
       }).map((row) => row.id)
     ).toEqual([created.id])
@@ -54,7 +54,7 @@ describe('action lifecycle', () => {
       operation: 'complete_action',
       resultat: 'Garant joint.'
     })
-    expect(parse_contenu_json(completed.contenu)).toMatchObject({
+    expect(parseContentJson(completed.contenu)).toMatchObject({
       version: 2,
       task: { state: 'completed' },
       result: 'Garant joint.'
@@ -62,7 +62,7 @@ describe('action lifecycle', () => {
     expect(completed).toMatchObject({
       auteur: user(CLAIRE),
       type: 'task.completed',
-      thread_id: created.thread_id,
+      threadId: created.threadId,
       revision: 2
     })
     expect(get_activity(created.id)?.contenu).toBe(createdContent)
@@ -70,17 +70,17 @@ describe('action lifecycle', () => {
     expect(() =>
       patch_activity(ALICE, created.id, {
         operation: 'reopen_action',
-        assigne_a: BOB,
-        date_echeance: '2026-09-02'
+        assigneA: BOB,
+        dateEcheance: '2026-09-02'
       })
     ).toThrow(/changed since it was loaded/)
 
     const reopened = patch_activity(ALICE, completed.id, {
       operation: 'reopen_action',
-      assigne_a: BOB,
-      date_echeance: '2026-09-02'
+      assigneA: BOB,
+      dateEcheance: '2026-09-02'
     })
-    expect(parse_contenu_json(reopened.contenu)).toMatchObject({
+    expect(parseContentJson(reopened.contenu)).toMatchObject({
       version: 2,
       task: {
         state: 'open',
@@ -93,7 +93,7 @@ describe('action lifecycle', () => {
       operation: 'ignore_action',
       motif: 'Sans objet.'
     })
-    expect(parse_contenu_json(ignored.contenu)).toMatchObject({
+    expect(parseContentJson(ignored.contenu)).toMatchObject({
       version: 2,
       task: { state: 'ignored' },
       reason: 'Sans objet.'
@@ -106,18 +106,18 @@ describe('action lifecycle', () => {
     expect(
       list_activities(ALICE, {
         rattachement: 'repayment:LOC-ACTION',
-        current_threads: true
+        currentThreads: true
       }).map((row) => row.id)
     ).toEqual([ignored.id])
 
     delete_activity(ALICE, ignored.id)
     const rows = list_activities(ALICE, {
       rattachement: 'repayment:LOC-ACTION',
-      current_threads: true
+      currentThreads: true
     })
     expect(rows).toHaveLength(1)
     expect(rows[0]).toMatchObject({ type: 'task.deleted', revision: 5 })
-    expect(parse_contenu_json(rows[0]!.contenu)).toMatchObject({
+    expect(parseContentJson(rows[0]!.contenu)).toMatchObject({
       version: 2,
       task: { state: 'deleted' }
     })
@@ -134,10 +134,10 @@ describe('action lifecycle', () => {
     const withdrawn = patch_activity(ALICE, message.id, { operation: 'withdraw_note' })
     expect(withdrawn).toMatchObject({
       type: 'note.withdrawn',
-      thread_id: message.thread_id,
+      threadId: message.threadId,
       revision: 2
     })
-    expect(parse_contenu_json(withdrawn.contenu)).toEqual({ version: 2 })
+    expect(parseContentJson(withdrawn.contenu)).toEqual({ version: 2 })
     expect(get_activity(message.id)).not.toBeNull()
   })
 
@@ -221,7 +221,7 @@ describe('action lifecycle', () => {
 
     expect(
       list_activities(ALICE, {
-        current_threads: true,
+        currentThreads: true,
         state: 'open',
         assignee: 'me',
         order: 'due_asc'
@@ -230,9 +230,9 @@ describe('action lifecycle', () => {
 
     expect(
       list_activities(ALICE, {
-        current_threads: true,
+        currentThreads: true,
         state: 'open',
-        created_by: 'me',
+        createdBy: 'me',
         assignee: 'other',
         order: 'due_asc'
       }).map((row) => row.id)
@@ -258,7 +258,7 @@ describe('action lifecycle', () => {
       type: 'task.ignored',
       revision: 2
     })
-    expect(parse_contenu_json(ignored.contenu)['reason']).toBe('Plus nécessaire.')
+    expect(parseContentJson(ignored.contenu)['reason']).toBe('Plus nécessaire.')
   })
 
   it('produit une enveloppe JSON autosuffisante pour un LLM', async () => {
@@ -297,13 +297,13 @@ describe('action lifecycle', () => {
     expect(rows[0]).toMatchObject({
       actor: user(ALICE),
       type: 'task.created',
-      thread_id: created.thread_id,
+      thread_id: created.threadId,
       revision: 1
     })
     expect(rows[1]).toMatchObject({
       actor: user(BOB),
       type: 'task.completed',
-      thread_id: created.thread_id,
+      thread_id: created.threadId,
       revision: 2,
       content: {
         version: 2,

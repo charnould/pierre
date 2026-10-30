@@ -4,6 +4,20 @@ const text = (value: unknown) => new TextEncoder().encode(JSON.stringify(value))
 const docx = new Uint8Array([0x50, 0x4b, 0x03, 0x04])
 const agents = (body: string) => new TextEncoder().encode(body)
 
+export const repaymentSchedule = {
+  defaultMonths: 6,
+  maxEffortRate: 35,
+  minDailyRemainder: 15,
+  thresholds: [
+    { months: 12, message: 'Un échéancier de plus de 12 mensualités doit être confirmé.' },
+    {
+      months: 24,
+      message:
+        'Un plan d’apurement de plus de 24 mensualités est réservé à des cas spéciaux documentés au sein de votre organisme.'
+    }
+  ]
+}
+
 /** Lignes minimales pour les tests qui exercent un module déjà paramétré. */
 export async function seedInstanceSetup(): Promise<void> {
   await writeSetup('global', text({ name: 'PIERRE', timezone: 'Europe/Paris' }))
@@ -36,15 +50,7 @@ export async function seedInstanceSetup(): Promise<void> {
       tags: ['décès', '+65 ans', 'Redémarrage APL'],
       template_groups: ['RCS'],
       templates: ['note.md'],
-      create_plan: {
-        signed_bucket_id: 'amiable',
-        close: {
-          execution_complete: { bucket_id: 'non_traites' },
-          non_respect: { bucket_id: 'amiable' },
-          remplacement_par_nouveau_plan: { bucket_id: 'amiable' },
-          effacement_de_dette: { bucket_id: 'non_traites' }
-        }
-      }
+      create_plan: { schedule: repaymentSchedule }
     })
   )
   await writeSetup('repayment/AGENTS.md', agents('Impayés.'))
@@ -57,7 +63,6 @@ export async function seedInstanceSetup(): Promise<void> {
       display: 'PIERRE',
       enabled: true,
       community_knowledge: true,
-      reasoning_effort: 'medium',
       trace: 'none',
       attachments: false,
       greetings: ['Bonjour'],

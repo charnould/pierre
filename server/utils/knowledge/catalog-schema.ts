@@ -3,14 +3,13 @@ import { basename } from 'node:path'
 import { z } from 'zod/v4'
 
 import { DATASTORE_TABLES, type DatastoreTable } from '../../../shared/core-data'
-import { isBusinessModuleId, type BusinessModuleId } from '../../../shared/modules'
+import { type BusinessModuleId, isBusinessModuleId } from '../../../shared/modules'
 
 export const KnowledgeEntrySchema = z
   .object({
     title: z.string().trim().min(1),
     sheet: z.number().int().nonnegative().nullable(),
     sheetName: z.string().trim().min(1).nullable().default(null),
-    headerRow: z.number().int().nonnegative().nullable(),
     url: z.unknown().optional(),
     profileIds: z
       .array(z.string().trim().min(1))
@@ -57,13 +56,12 @@ export const KnowledgeSourceDocumentSchema = z
     const sheets = new Set<number>()
     const sheetNames = new Set<string>()
     for (const [index, entry] of source.entries.entries()) {
-      const hasSpreadsheetCoordinates =
-        entry.sheet !== null && entry.sheetName !== null && entry.headerRow !== null
+      const hasSpreadsheetCoordinates = entry.sheet !== null && entry.sheetName !== null
       if (source.fileType === 'xlsx' && !hasSpreadsheetCoordinates) {
         context.addIssue({
           code: 'custom',
           path: ['entries', index],
-          message: 'Spreadsheet entries require sheet and headerRow'
+          message: 'Spreadsheet entries require sheet'
         })
       }
       if (source.fileType === 'xlsx' && entry.sheet !== null) {
@@ -87,10 +85,7 @@ export const KnowledgeSourceDocumentSchema = z
         }
         sheetNames.add(normalized)
       }
-      if (
-        source.fileType !== 'xlsx' &&
-        (entry.sheet !== null || entry.sheetName !== null || entry.headerRow !== null)
-      ) {
+      if (source.fileType !== 'xlsx' && (entry.sheet !== null || entry.sheetName !== null)) {
         context.addIssue({
           code: 'custom',
           path: ['entries', index],
@@ -109,9 +104,6 @@ const KnowledgeDiagnosticSchema = z
   })
   .strict()
 
-const isDatastoreTable = (value: unknown): value is DatastoreTable =>
-  (DATASTORE_TABLES as readonly string[]).includes(String(value))
-
 export const KnowledgeBuildDocumentSchema = z
   .object({
     status: z.enum(['queued', 'running', 'succeeded', 'failed']),
@@ -120,7 +112,7 @@ export const KnowledgeBuildDocumentSchema = z
     catalogFingerprint: z.string().nullable().default(null),
     startedAt: z.iso.datetime().nullable(),
     finishedAt: z.iso.datetime().nullable(),
-    mirrorTables: z.array(z.custom<DatastoreTable>(isDatastoreTable)),
+    coreFingerprint: z.string().nullable().default(null),
     ownerId: z.string().trim().min(1),
     heartbeatAt: z.iso.datetime(),
     items: z
@@ -157,14 +149,13 @@ export type KnowledgeBuild = KnowledgeBuildDocument & {
   updatedAt: string
 }
 
-export type KnowledgeIngestionEntry = {
-  filepath: string
+export type KnowledgeProjection = {
+  sourceId: string
   access: string
-  sheet: number
-  headers: number
-  filename: string
-  agent_filename: string
-  type: 'csv' | 'md' | 'docx' | 'xlsx'
+  title: string
+  sheet: number | null
+  fileType: 'csv' | 'md' | 'docx' | 'xlsx'
+  contentHash: string | null
   coreDataTable: DatastoreTable | null
 }
 

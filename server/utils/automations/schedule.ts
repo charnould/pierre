@@ -1,12 +1,11 @@
-import { TZDate } from '@date-fns/tz'
-
 import { parseCronExpression, type ParsedCron } from '../../../shared/automations'
+import { type ZonedDateParts, zonedDateParts } from '../../../shared/zoned-date'
 
-function matchesCron(local: TZDate, cron: ParsedCron): boolean {
-  if (local.getMinutes() !== cron.minute || local.getHours() !== cron.hour) return false
-  if (cron.month !== null && local.getMonth() + 1 !== cron.month) return false
-  if (cron.dom !== null && local.getDate() !== cron.dom) return false
-  if (cron.dows !== null && !cron.dows.includes(local.getDay())) return false
+function matchesCron(local: ZonedDateParts, cron: ParsedCron): boolean {
+  if (local.minute !== cron.minute || local.hour !== cron.hour) return false
+  if (cron.month !== null && local.month !== cron.month) return false
+  if (cron.dom !== null && local.day !== cron.dom) return false
+  if (cron.dows !== null && !cron.dows.includes(local.weekday)) return false
   return true
 }
 
@@ -20,24 +19,14 @@ export function compute_next_run_at(
   after: Date = new Date()
 ): string {
   const parsed = parseCronExpression(cron)
-  let cursor = new TZDate(after.getTime(), timezone)
-  cursor = new TZDate(
-    cursor.getFullYear(),
-    cursor.getMonth(),
-    cursor.getDate(),
-    cursor.getHours(),
-    cursor.getMinutes(),
-    0,
-    0,
-    timezone
-  )
+  let cursor = Math.floor(after.getTime() / 60_000) * 60_000
   const afterMs = after.getTime()
 
   for (let i = 0; i < 60 * 24 * 370 * 2; i++) {
-    if (matchesCron(cursor, parsed) && cursor.getTime() >= afterMs) {
-      return new Date(cursor.getTime()).toISOString()
+    if (matchesCron(zonedDateParts(new Date(cursor), timezone), parsed) && cursor >= afterMs) {
+      return new Date(cursor).toISOString()
     }
-    cursor = new TZDate(cursor.getTime() + 60_000, timezone)
+    cursor += 60_000
   }
   throw new Error(`No next run found for cron=${cron} tz=${timezone}`)
 }

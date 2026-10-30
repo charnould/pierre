@@ -5,13 +5,16 @@ export {
   type KnowledgeCatalogSnapshot,
   type KnowledgeDiagnostic,
   type KnowledgeEntry,
-  type KnowledgeIngestionEntry,
+  type KnowledgeProjection,
   type KnowledgeSource
 } from './catalog-schema'
 export {
   assignedKnowledgeItemKeys,
   assertNoOutputCollisions,
-  flattenKnowledgeEntries,
+  coreDataFingerprint,
+  knowledgeProjections,
+  PROFILE_BUILD_EPOCH,
+  profileBuildFingerprint,
   isKnowledgeEntryAssigned,
   knowledgeItemKey,
   knowledgePublishTargets
@@ -32,7 +35,9 @@ export {
   getKnowledgeCatalogSnapshot,
   getKnowledgeSource,
   insertKnowledgeSource,
+  insertKnowledgeSourceInDb,
+  listKnowledgeSourceContents,
   listKnowledgeSources,
   replaceKnowledgeSourceEntries,
-  updateKnowledgeSourceFile
+  updateKnowledgeSourceFileInDb
 } from './knowledge-sources'

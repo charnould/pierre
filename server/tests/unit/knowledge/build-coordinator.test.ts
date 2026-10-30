@@ -1,4 +1,5 @@
-import { afterAll, beforeAll, expect, it } from 'bun:test'
+import { Database } from 'bun:sqlite'
+import { afterAll, beforeAll, expect, it, spyOn } from 'bun:test'
 import { mkdir, readdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 
@@ -13,10 +14,10 @@ import {
   failInterruptedKnowledgeBuilds,
   getKnowledgeBuild,
   getKnowledgeCatalogSnapshot,
-  insertKnowledgeSource,
   listKnowledgeBuilds,
   replaceKnowledgeSourceEntries
 } from '../../../utils/knowledge/catalog'
+import { importKnowledgeFiles } from '../../../utils/knowledge/import-files'
 import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { seedInstanceSetup } from '../../seed-setup'
 
@@ -24,7 +25,6 @@ const paths = testDatastorePaths('knowledge_coordinator')
 
 beforeAll(async () => {
   setDatastoreRoot(paths.root)
-  await mkdir(paths.files, { recursive: true })
   await mkdir(paths.knowledge, { recursive: true })
   await migrate_datastore(paths.database)
   await seedInstanceSetup()
@@ -62,17 +62,8 @@ it('coalesces concurrent rebuild requests into one persisted build', async () =>
 })
 
 it('persists success and failure per assigned item', async () => {
-  const paths = datastorePaths()
-  await Bun.write(`${paths.files}/guide.md`, '# Guide')
-  const source = insertKnowledgeSource({
-    storageName: 'guide.md',
-    originalName: 'Guide.md',
-    fileType: 'md',
-    sizeBytes: 7,
-    contentHash: 'a'.repeat(64),
-    origin: 'ui',
-    entries: []
-  })
+  const imported = await importKnowledgeFiles([new File(['# Guide'], 'Guide.md')], 'ui')
+  const source = imported.sources[0]!.source
   replaceKnowledgeSourceEntries(
     source.id,
     [
@@ -80,7 +71,6 @@ it('persists success and failure per assigned item', async () => {
         title: 'Guide',
         sheet: null,
         sheetName: null,
-        headerRow: null,
         profileIds: ['default']
       }
     ],
@@ -91,10 +81,23 @@ it('persists success and failure per assigned item', async () => {
   expect(successful.items).toEqual([{ key: `${source.id}:document`, status: 'succeeded' }])
   expect(successful.catalogFingerprint).toBe(getKnowledgeCatalogSnapshot().fingerprint)
 
-  await Bun.file(`${paths.files}/guide.md`).delete()
-  const failed = await waitForBuild(requestKnowledgeBuild('upload', null).id)
-  expect(failed.status).toBe('failed')
-  expect(failed.items).toEqual([{ key: `${source.id}:document`, status: 'failed' }])
+  const db = new Database(`${datastorePaths().root}/datastore.sqlite`)
+  db.run(
+    `UPDATE knowledge_records
+     SET content = NULL, document = json_set(document, '$.content_hash', ?)
+     WHERE id = ?`,
+    ['b'.repeat(64), source.id]
+  )
+  db.close()
+  const errorSpy = spyOn(console, 'error').mockImplementation(() => {})
+  try {
+    const failed = await waitForBuild(requestKnowledgeBuild('upload', null).id)
+    expect(failed.status).toBe('failed')
+    expect(failed.items).toEqual([{ key: `${source.id}:document`, status: 'failed' }])
+    expect(errorSpy).toHaveBeenCalledTimes(1)
+  } finally {
+    errorSpy.mockRestore()
+  }
 })
 
 it('cleans abandoned staging directories without touching an active build', async () => {
@@ -113,10 +116,16 @@ it('cleans abandoned staging directories without touching an active build', asyn
 
 it('replaces an active build inherited from the previous process', async () => {
   const inherited = createKnowledgeBuild('manual', null)
+  const errorSpy = spyOn(console, 'error').mockImplementation(() => {})
+  try {
+    const startup = await initializeKnowledgeBuildCoordinator()
 
-  const startup = await initializeKnowledgeBuildCoordinator()
-
-  expect(startup.id).not.toBe(inherited.id)
-  expect(getKnowledgeBuild(inherited.id)?.status).toBe('failed')
-  expect(['succeeded', 'failed']).toContain((await waitForBuild(startup.id)).status)
+    expect(startup.id).not.toBe(inherited.id)
+    expect(getKnowledgeBuild(inherited.id)?.status).toBe('failed')
+    const status = (await waitForBuild(startup.id)).status
+    expect(['succeeded', 'failed']).toContain(status)
+    if (status === 'failed') expect(errorSpy).toHaveBeenCalled()
+  } finally {
+    errorSpy.mockRestore()
+  }
 })

@@ -1,0 +1,24 @@
+{
+  "ignorePatterns": ["**/*.js", "**/dist/**", "docs/assets/**", "**/plans/**"],
+  "extends": ["./config/shadcn-lint.jsonc"],
+  "jsPlugins": ["@shadcn/lint"],
+  "plugins": ["typescript", "unicorn", "oxc", "react"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    // Neither is in the correctness category, so the plugin alone does not
+    // enable them.
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "error"
+  },
+  "settings": {
+    "shadcn": {
+      "ui": "@/shared/components/ui",
+      "note": "See desktop/DESIGN.md for design rules and approved exceptions."
+    }
+  },
+  "env": {
+    "builtin": true
+  }
+}

@@ -26,7 +26,7 @@ export function printEnv(ctx: Context): number {
 export function initEnv(ctx: Context): number {
   const file = ctx.runtime.paths.envFile
   if (file === SERVER_ENV) {
-    ctx.runtime.writeErr('bun run env n’écrit pas /etc/pierre.env.\n')
+    ctx.runtime.writeErr('bun server:env n’écrit pas /etc/pierre.env.\n')
     return 1
   }
   if (!existsSync(file)) {

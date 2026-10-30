@@ -1,0 +1,315 @@
+import type { Context } from 'hono'
+
+import { type Activity, ACTIVITY_CONTENT_VERSION } from '../../../shared/activities'
+import { parseCommunicationOpenedContent } from '../../../shared/activity-content'
+import { parse_rattachement } from '../../utils/activities/rows'
+import { handle_rich_rcs_reply } from '../../utils/bulk/rich-rcs'
+import {
+  cm_webhook_authorized,
+  communication_from_reference,
+  communication_reference,
+  find_recent_thread,
+  next_status_timestamp
+} from '../../utils/communications/parsing'
+import { settle_definitive_rcs_failure } from '../../utils/communications/rcs-sms-fallback'
+import {
+  claim_outbound_dispatch,
+  CommunicationsError,
+  create_inbound,
+  create_unmatched_inbound,
+  release_outbound_dispatch
+} from '../../utils/communications/storage'
+import { normalize_telephone } from '../../utils/contacts'
+import { settle_delivery } from '../../utils/delivery-status'
+import { RcsSendError, send_sms_message } from '../../utils/rcs/send'
+import { to_cm_number } from '../../utils/rcs/wrap'
+
+class WebhookValidationError extends Error {}
+
+const objects = (value: unknown): Record<string, unknown>[] => {
+  if (Array.isArray(value)) {
+    return value.filter(
+      (item): item is Record<string, unknown> =>
+        item != null && typeof item === 'object' && !Array.isArray(item)
+    )
+  }
+  return value != null && typeof value === 'object' && !Array.isArray(value)
+    ? [value as Record<string, unknown>]
+    : []
+}
+
+const payloads = (raw: unknown): Record<string, unknown>[] => {
+  const root = objects(raw)
+  if (root.length !== 1) return root
+  const messages = root[0]?.['messages']
+  if (messages && typeof messages === 'object' && !Array.isArray(messages)) {
+    return objects((messages as Record<string, unknown>)['msg'])
+  }
+  return root
+}
+
+const string_at = (value: unknown, ...path: string[]): string | null => {
+  let current = value
+  for (const key of path) {
+    if (current == null || typeof current !== 'object' || Array.isArray(current)) return null
+    current = (current as Record<string, unknown>)[key]
+  }
+  return typeof current === 'string' && current.trim() ? current.trim() : null
+}
+
+const number_at = (value: unknown, ...path: string[]): number | null => {
+  let current = value
+  for (const key of path) {
+    if (current == null || typeof current !== 'object' || Array.isArray(current)) return null
+    current = (current as Record<string, unknown>)[key]
+  }
+  const number = typeof current === 'number' ? current : Number(current)
+  return Number.isFinite(number) ? number : null
+}
+
+const inbound_idempotency_key = (
+  payload: Record<string, unknown>,
+  phone: string,
+  occurred_at: string,
+  content: string,
+  context_reference: string | null
+): string => {
+  const providerEventId = provider_event_id(payload)
+  const identity = providerEventId
+    ? `event:${providerEventId}`
+    : `fingerprint:${phone}\0${occurred_at}\0${content}\0${context_reference ?? ''}`
+  return `cm:inbound:${new Bun.CryptoHasher('sha256').update(identity).digest('hex')}`
+}
+
+const provider_event_id = (payload: Record<string, unknown>): string | null =>
+  string_at(payload, 'messageId') ??
+  string_at(payload, 'message', 'id') ??
+  string_at(payload, 'event', 'id') ??
+  string_at(payload, 'id') ??
+  (string_at(payload, 'messageContext') ? string_at(payload, 'reference') : null)
+
+const content_from = (payload: Record<string, unknown>): string | null => {
+  const text = string_at(payload, 'message', 'text')
+  if (text) return text
+  const choice =
+    string_at(payload, 'event', 'custom', 'label') ??
+    string_at(payload, 'event', 'custom', 'postbackdata')
+  return choice ? `Le locataire a choisi « ${choice} ».` : null
+}
+
+const status_from_cm = (code: number): 'sent' | 'delivered' | 'read' | 'failed' | null => {
+  if (code === 0) return 'sent'
+  if (code === 1 || code === 3) return 'failed'
+  if (code === 2) return 'delivered'
+  if (code === 4) return 'read'
+  return null
+}
+
+const mobile_channel = (payload: Record<string, unknown>): 'rcs' | 'sms' =>
+  string_at(payload, 'channel')?.toLowerCase() === 'sms' ? 'sms' : 'rcs'
+
+const handle_status = async (payload: Record<string, unknown>): Promise<void> => {
+  const reference = string_at(payload, 'reference')
+  const code = number_at(payload, 'status', 'code')
+  if (!reference || code == null) throw new WebhookValidationError('Statut webhook incomplet')
+  const activity = communication_from_reference(reference)
+  const statut = status_from_cm(code)
+  if (!statut) throw new WebhookValidationError('Statut webhook inconnu')
+  if (!activity || (activity.channel !== 'rcs' && activity.channel !== 'sms')) {
+    throw new WebhookValidationError('Référence de communication invalide')
+  }
+  const occurredAt = string_at(payload, 'received') ?? string_at(payload, 'timeUtc')
+  if (!occurredAt || Number.isNaN(new Date(occurredAt).getTime())) {
+    throw new WebhookValidationError('Horodatage webhook invalide')
+  }
+  if (activity.channel === 'rcs' && statut === 'failed') {
+    const { smsFallback } = settle_definitive_rcs_failure(activity.id, occurredAt)
+    if (smsFallback) await dispatch_sms_fallback(smsFallback)
+    return
+  }
+  settle_delivery({
+    activity_id: activity.id,
+    type: activity.channel,
+    statut,
+    occurred_at: occurredAt
+  })
+}
+
+const dispatch_sms_fallback = async (sms: Activity): Promise<void> => {
+  if (!sms.destinataire) return
+  const content = parseCommunicationOpenedContent(sms.contenu)
+  const phone = to_cm_number(sms.destinataire)
+  if (!content?.body || !phone) return
+  const dispatch = claim_outbound_dispatch(sms.id)
+  if (dispatch === 'pending') throw new Error('SMS fallback dispatch pending')
+  if (dispatch === 'not_queued') return
+  try {
+    await send_sms_message({
+      phone,
+      body: content.body,
+      reference: communication_reference(sms.id)
+    })
+  } catch (error) {
+    if (!(error instanceof RcsSendError) || error.retryable) {
+      release_outbound_dispatch(sms.id)
+      throw error
+    }
+    settle_delivery({
+      activity_id: sms.id,
+      type: 'sms',
+      statut: 'failed',
+      occurred_at: next_status_timestamp(sms)
+    })
+    return
+  }
+  settle_delivery({
+    activity_id: sms.id,
+    type: 'sms',
+    statut: 'sent',
+    occurred_at: next_status_timestamp(sms)
+  })
+}
+
+/** CM envoie `timeUtc` en UTC, sans `Z`. */
+const cm_instant = (value: string): string | null => {
+  const trimmed = value.trim()
+  const withZone = /(?:Z|[+-]\d{2}:?\d{2})$/.test(trimmed) ? trimmed : `${trimmed}Z`
+  const date = new Date(withZone)
+  return Number.isNaN(date.getTime()) ? null : date.toISOString()
+}
+
+const handle_inbound = (payload: Record<string, unknown>): void => {
+  const rawPhone = string_at(payload, 'from', 'number')
+  if (!rawPhone) throw new WebhookValidationError('Expéditeur manquant')
+  const phone = normalize_telephone(rawPhone)
+  if (phone.status === 'invalid') throw new WebhookValidationError('Expéditeur invalide')
+  const rawTime = string_at(payload, 'timeUtc')
+  const occurredAt = rawTime ? cm_instant(rawTime) : null
+  if (!occurredAt) throw new WebhookValidationError('Horodatage webhook invalide')
+  const channel = mobile_channel(payload)
+  const contextReference =
+    string_at(payload, 'messageContext') ??
+    (channel === 'sms' ? string_at(payload, 'reference') : null)
+  const source = contextReference ? communication_from_reference(contextReference) : null
+  const content = content_from(payload)
+  if (!content) throw new WebhookValidationError('Contenu webhook manquant')
+  const idempotencyKey = inbound_idempotency_key(
+    payload,
+    phone.value,
+    occurredAt,
+    content,
+    contextReference
+  )
+  const sourceContent = source ? parseCommunicationOpenedContent(source.contenu) : null
+  const exact =
+    (source?.channel === 'rcs' || source?.channel === 'sms') &&
+    (source.destinataire === phone.value ||
+      source.auteur === `external:${phone.value}` ||
+      sourceContent?.sender === `external:${phone.value}` ||
+      source.type === 'communication.received') &&
+    parse_rattachement(source.rattachement)
+      ? source
+      : null
+
+  if (exact) {
+    const attachment = parse_rattachement(exact.rattachement)!
+    const inbound = create_inbound({
+      contexte: attachment.contexte,
+      ref: attachment.ref,
+      type: channel,
+      auteur: exact.id_locataire ? `tenant:${exact.id_locataire}` : `external:${phone.value}`,
+      contenu: JSON.stringify({ version: ACTIVITY_CONTENT_VERSION, body: content }),
+      occurred_at: occurredAt,
+      thread_id: exact.threadId ?? undefined,
+      idempotency_key: idempotencyKey,
+      id_externe: provider_event_id(payload) ?? undefined
+    })
+    if (exact.bulkId && exact.executionId) {
+      handle_rich_rcs_reply(exact, inbound, payload)
+    }
+    return
+  }
+
+  if (contextReference) {
+    create_unmatched_inbound({
+      type: channel,
+      auteur: `external:${phone.value}`,
+      contenu: JSON.stringify({ version: ACTIVITY_CONTENT_VERSION, body: content }),
+      occurred_at: occurredAt,
+      idempotency_key: idempotencyKey,
+      id_externe: provider_event_id(payload) ?? undefined
+    })
+    return
+  }
+
+  const recent = find_recent_thread('mobile', phone.value, new Date(occurredAt))
+  if (recent) {
+    create_inbound({
+      contexte: recent.contexte,
+      ref: recent.ref,
+      type: channel,
+      auteur: recent.id_locataire ? `tenant:${recent.id_locataire}` : `external:${phone.value}`,
+      contenu: JSON.stringify({ version: ACTIVITY_CONTENT_VERSION, body: content }),
+      occurred_at: occurredAt,
+      thread_id: recent.thread_id,
+      idempotency_key: idempotencyKey,
+      id_externe: provider_event_id(payload) ?? undefined
+    })
+    return
+  }
+
+  create_unmatched_inbound({
+    type: channel,
+    auteur: `external:${phone.value}`,
+    contenu: JSON.stringify({ version: ACTIVITY_CONTENT_VERSION, body: content }),
+    occurred_at: occurredAt,
+    idempotency_key: idempotencyKey,
+    id_externe: provider_event_id(payload) ?? undefined
+  })
+}
+
+export const receiveRcsWebhook = async (c: Context) => {
+  // Channels n’a pas de champ header : le secret y voyage dans l’URL.
+  const secret = c.req.header('Webhook-Secret') ?? c.req.query('webhook_secret')
+  if (!cm_webhook_authorized(secret)) {
+    return c.json({ error: { code: 'unauthorized', message: 'Webhook key invalide' } }, 401)
+  }
+  const declaredLength = Number(c.req.header('content-length') ?? '0')
+  if (Number.isFinite(declaredLength) && declaredLength > 256_000) {
+    return c.json({ error: { code: 'payload_too_large', message: 'Webhook trop volumineux' } }, 413)
+  }
+  const text = await c.req.text()
+  if (text.length > 256_000) {
+    return c.json({ error: { code: 'payload_too_large', message: 'Webhook trop volumineux' } }, 413)
+  }
+  let raw: unknown
+  try {
+    raw = text ? JSON.parse(text) : null
+  } catch {
+    return c.json({ error: { code: 'invalid_body', message: 'JSON requis' } }, 400)
+  }
+  try {
+    const parsedPayloads = payloads(raw)
+    if (parsedPayloads.length === 0) {
+      throw new WebhookValidationError('Webhook vide')
+    }
+    for (const payload of parsedPayloads) {
+      if (number_at(payload, 'status', 'code') != null) await handle_status(payload)
+      else handle_inbound(payload)
+    }
+  } catch (error) {
+    if (error instanceof WebhookValidationError) {
+      return c.json({ error: { code: 'invalid_webhook', message: error.message } }, 400)
+    }
+    if (error instanceof CommunicationsError) {
+      const status = error.code === 'not_found' ? 404 : error.code === 'forbidden' ? 403 : 400
+      return c.json({ error: { code: error.code, message: error.message } }, status)
+    }
+    if (!(error instanceof RcsSendError)) console.error('[post.webhook.rcs]', error)
+    return c.json(
+      { error: { code: 'processing_failed', message: 'Webhook processing failed' } },
+      500
+    )
+  }
+  return c.body(null, 200)
+}

@@ -1,18 +1,18 @@
 import type { Database } from 'bun:sqlite'
 
-import type { Activite } from '../../../shared/activites'
+import type { Activity } from '../../../shared/activities'
 import type {
   BulkDelivery,
   BulkOperationRecord,
   PreviewRow,
-  SimpleDeliveryStep,
-  SkippedDeliveryStep
+  SimpleDeliveryStep
 } from '../../../shared/bulk-operations'
 import { create_outbound_with_db } from '../communications/storage'
 import { insert_bulk_visible_activity } from './activities'
 import { apply_sent_bucket_effect_with_db } from './jobs'
 import { render_content, step_placeholders, validate_bindings } from './placeholders'
 import { finalize_bulk_item_with_db } from './reports'
+import { parseStoredPayload } from './stored-job'
 
 export const bulk_step_destination = (row: PreviewRow, step: SimpleDeliveryStep): string =>
   step.medium === 'email' || step.medium === 'lre'
@@ -50,16 +50,14 @@ export const render_fallback_step = (
 
 export const fallback_outbound_contenu = (
   step: SimpleDeliveryStep,
-  rendered: { subject?: string; body: string },
-  skipped: SkippedDeliveryStep[]
+  rendered: { subject?: string; body: string }
 ): string =>
   JSON.stringify({
     version: 2,
     action: step.action,
     body: 'fileBase64' in step ? step.summary : rendered.body,
     ...(rendered.subject ? { subject: rendered.subject } : {}),
-    purpose: 'bulk',
-    skipped_steps: skipped
+    purpose: 'bulk'
   })
 
 export const rich_rcs_outbound_contenu = (
@@ -86,7 +84,7 @@ export const record_applied_outbound_with_db = (
     row: PreviewRow
     confirmedAt: string
   }
-): Activite => {
+): Activity => {
   const delivery = input.operation.definition.delivery
   const common = {
     actor: input.actor,
@@ -101,7 +99,7 @@ export const record_applied_outbound_with_db = (
     }
   }
 
-  let activity: Activite
+  let activity: Activity
   let type: SimpleDeliveryStep['medium']
   if (delivery.kind === 'rich_rcs') {
     const node = delivery.nodes[0]!
@@ -128,7 +126,7 @@ export const record_applied_outbound_with_db = (
       ...common,
       type: step.medium,
       destinataire: bulk_step_destination(input.row, step),
-      contenu: fallback_outbound_contenu(step, rendered, input.row.skippedSteps),
+      contenu: fallback_outbound_contenu(step, rendered),
       idempotency_key: `bulk:${input.executionId}:recipient:${input.row.id_locataire}:attempt:${stepIndex}`
     })
   }
@@ -159,10 +157,10 @@ export const record_applied_outbound_with_db = (
   finalize_bulk_item_with_db(db, {
     jobId: input.jobId,
     status: 'ok',
-    outcome: { code: 'applied', activity_id: activity.id, created: true },
+    outcome: { code: 'applied', activityId: activity.id, created: true },
     currentActivityId: activity.id,
-    payload: JSON.parse(item.payload) as Record<string, unknown>,
-    completedAt: activity.date_creation
+    payload: parseStoredPayload(JSON.parse(item.payload)),
+    completedAt: activity.createdAt
   })
   return activity
 }

@@ -27,7 +27,7 @@ describe('streamChatRequest attachment ownership', () => {
     const transaction = lifecycle()
     const app = new Hono()
     app.onError(() => new Response('failed', { status: 500 }))
-    app.post('/ai', (c) =>
+    app.post('/chat', (c) =>
       streamChatRequest(c, {} as AIContext, [], transaction.value, {
         saveReply: async () => {
           throw new Error('database unavailable')
@@ -36,7 +36,7 @@ describe('streamChatRequest attachment ownership', () => {
       })
     )
 
-    expect((await app.request('/ai', { method: 'POST' })).status).toBe(500)
+    expect((await app.request('/chat', { method: 'POST' })).status).toBe(500)
     expect(transaction.rollbacks()).toBe(1)
     expect(transaction.claimed()).toBe(false)
   })
@@ -45,7 +45,7 @@ describe('streamChatRequest attachment ownership', () => {
     const errorSpy = spyOn(console, 'error').mockImplementation(() => {})
     const failed = lifecycle()
     const failingApp = new Hono()
-    failingApp.post('/ai', (c) =>
+    failingApp.post('/chat', (c) =>
       streamChatRequest(c, {} as AIContext, [], failed.value, {
         saveReply: async () => {},
         streamAnswer: () => ({
@@ -57,13 +57,13 @@ describe('streamChatRequest attachment ownership', () => {
       })
     )
 
-    const failedResponse = await failingApp.request('/ai', { method: 'POST' })
+    const failedResponse = await failingApp.request('/chat', { method: 'POST' })
     expect(await failedResponse.text()).toContain('{"type":"error"}')
     expect(failed.rollbacks()).toBe(1)
 
     const claimed = lifecycle()
     const successfulApp = new Hono()
-    successfulApp.post('/ai', (c) =>
+    successfulApp.post('/chat', (c) =>
       streamChatRequest(c, {} as AIContext, [], claimed.value, {
         saveReply: async () => {},
         streamAnswer: () => {
@@ -77,7 +77,7 @@ describe('streamChatRequest attachment ownership', () => {
       })
     )
 
-    expect(await (await successfulApp.request('/ai', { method: 'POST' })).text()).toContain(
+    expect(await (await successfulApp.request('/chat', { method: 'POST' })).text()).toContain(
       'stream_end'
     )
     expect(claimed.claimed()).toBe(true)

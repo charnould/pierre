@@ -1,6 +1,7 @@
 import { JSDOM } from 'jsdom'
-import { format } from 'oxfmt'
 import TurndownService from 'turndown'
+
+import { formatText } from '../format-text'
 
 // ── Wikipedia pages to scrape ────────────────────────────────────────────────
 // Add or uncomment entries to expand the knowledge base.
@@ -94,6 +95,7 @@ const NOISE_SELECTORS = [
   '.reflist',
   '.references',
   'sup.reference',
+  'sup.need_ref_tag',
   '.navbox',
   '.catlinks',
   '.sister-wikipedia',
@@ -203,22 +205,7 @@ export const html_to_markdown = (html: string): string => {
 
   td.addRule('table', {
     filter: 'table',
-    replacement(_content, node) {
-      const rows = Array.from((node as HTMLTableElement).querySelectorAll('tr'))
-      if (rows.length === 0) return ''
-
-      const to_row = (cells: Element[]) =>
-        `| ${cells.map((c) => c.textContent?.trim().replace(/\|/g, '\\|') ?? '').join(' | ')} |`
-
-      const header_cells = Array.from(rows[0]!.querySelectorAll('th, td'))
-      const separator = `| ${header_cells.map(() => '---').join(' | ')} |`
-      const body_rows = rows
-        .slice(1)
-        .map((r) => to_row(Array.from(r.querySelectorAll('th, td'))))
-        .join('\n')
-
-      return `\n\n${to_row(header_cells)}\n${separator}\n${body_rows}\n\n`
-    }
+    replacement: (_content, node) => markdownTable(node as HTMLTableElement)
   })
 
   td.addRule('links', {
@@ -230,6 +217,40 @@ export const html_to_markdown = (html: string): string => {
     .turndown(html)
     .replace(/\u00A0/g, ' ')
     .replace(/\u200B|\u200C|\u200D|\u200E|\u200F|\uFEFF/g, '')
+}
+
+function markdownTable(table: HTMLTableElement) {
+  const rows = Array.from(table.rows)
+  if (rows.length === 0) return ''
+
+  const grid: string[][] = []
+  for (const [r, row] of rows.entries()) {
+    grid[r] ??= []
+    let c = 0
+    for (const cell of Array.from(row.cells)) {
+      while (grid[r]![c] !== undefined) c++
+      const text = (cell.textContent ?? '').replace(/\s+/g, ' ').trim().replaceAll('|', '\\|')
+      const rowSpan = Math.max(cell.rowSpan, 1)
+      const colSpan = Math.max(cell.colSpan, 1)
+      for (let dr = 0; dr < rowSpan; dr++) {
+        grid[r + dr] ??= []
+        for (let dc = 0; dc < colSpan; dc++) {
+          grid[r + dr]![c + dc] = dc === 0 ? text : ''
+        }
+      }
+      c += colSpan
+    }
+  }
+
+  const width = Math.max(...grid.map((row) => row.length))
+  const line = (row: string[]) =>
+    `| ${Array.from({ length: width }, (_, i) => row[i] ?? '').join(' | ')} |`
+  const separator = `| ${Array.from({ length: width }, () => '---').join(' | ')} |`
+  const captionEl = table.querySelector('caption')
+  const caption =
+    captionEl?.parentElement === table ? captionEl.textContent?.replace(/\s+/g, ' ').trim() : ''
+  const tableMd = [line(grid[0]!), separator, ...grid.slice(1).map(line)].join('\n')
+  return caption ? `\n\n${caption}\n\n${tableMd}\n\n` : `\n\n${tableMd}\n\n`
 }
 
 // ── Page processor ───────────────────────────────────────────────────────────
@@ -244,8 +265,7 @@ export const html_to_markdown = (html: string): string => {
 const process_wikipedia_page = async (title: string, html: string): Promise<void> => {
   const cleaned = clean_html(html, title)
   const markdown = html_to_markdown(cleaned)
-  const { code } = await format('a.md', markdown)
-  await Bun.write(`${WIKI_OUTPUT_DIR}/${title}.md`, code)
+  await Bun.write(`${WIKI_OUTPUT_DIR}/${title}.md`, await formatText('a.md', markdown))
 }
 
 // ── Main entry point ─────────────────────────────────────────────────────────
