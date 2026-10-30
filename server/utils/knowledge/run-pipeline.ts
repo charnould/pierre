@@ -1,24 +1,36 @@
-import { Database } from 'bun:sqlite'
-import { link, mkdir, rename, rm } from 'node:fs/promises'
+import { link, mkdir, readdir, rename, rm } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 
-import type { DatastoreTable } from '../datastore-tables'
+import { coreDataContractForFilename } from '../../../shared/core-data'
+import { normalize_knowledge_name } from '../../../shared/knowledge'
+import { qualifyReclamations } from '../carl-reclamations'
+import { openDatastore } from '../datastore-db'
 import { datastorePaths } from '../paths'
+import { coreTablesMatch, ensurePostalReference, publishCoreTables } from './build-knowledge'
 import {
-  build_knowledge_databases,
-  publishKnowledgeMirrors,
-  type KnowledgeBuildArtifacts
-} from './build-knowledge'
-import {
-  assignedKnowledgeItemKeys,
   assertNoOutputCollisions,
-  flattenKnowledgeEntries,
+  assignedKnowledgeItemKeys,
+  coreDataFingerprint,
   getKnowledgeCatalogSnapshot,
-  type KnowledgeDiagnostic
+  type KnowledgeDiagnostic,
+  type KnowledgeProjection,
+  knowledgeProjections,
+  listKnowledgeBuilds,
+  listKnowledgeSourceContents,
+  profileBuildFingerprint
 } from './catalog'
-import { ingest_files, loadCoreDataMirrors, setup_knowledge_directories } from './ingest-files'
 import { writeProfileFiles } from './profile-files'
 import { listKnowledgeProfiles } from './profiles'
+import {
+  assertProfileDatabase,
+  buildProfileDatabase,
+  communityDocuments,
+  documentParts,
+  type ProfileDocument,
+  publishedProfileFingerprint
+} from './project-profile'
+import { readDataTable, sourceTableName } from './source-tables'
+import type { DataRow } from './sqlite-table-import'
 
 export class KnowledgeCatalogChangedError extends Error {
   constructor() {
@@ -40,44 +52,24 @@ export class KnowledgePipelineError extends Error {
 
 export type KnowledgePipelineResult = {
   catalogFingerprint: string
+  coreFingerprint: string
   diagnostics: KnowledgeDiagnostic[]
   itemKeys: string[]
-  mirrorTables: DatastoreTable[]
-}
-
-const validateDatabase = (path: string): void => {
-  const db = new Database(path, { readonly: true })
-  try {
-    const quickCheck = db.query<{ quick_check: string }, []>('PRAGMA quick_check').get()
-    if (quickCheck?.quick_check !== 'ok') throw new Error(`Invalid knowledge database: ${path}`)
-    const readme = db
-      .query<{ n: number }, []>(
-        "SELECT COUNT(*) AS n FROM sqlite_master WHERE type = 'table' AND name = '_readme'"
-      )
-      .get()
-    if (readme?.n !== 1) throw new Error(`Knowledge database has no _readme: ${path}`)
-  } finally {
-    db.close()
-  }
 }
 
 const publishDatabases = async (
-  artifacts: KnowledgeBuildArtifacts,
+  databases: ReadonlyArray<{ profileId: string; path: string }>,
   knowledgeRoot: string
 ): Promise<{ commit: () => Promise<void>; rollback: () => Promise<void> }> => {
   const published: Array<{ livePath: string; backupPath: string | null }> = []
   const rollback = async () => {
     for (const publication of published.reverse()) {
-      if (publication.backupPath) {
-        await rename(publication.backupPath, publication.livePath)
-      } else {
-        await rm(publication.livePath, { force: true })
-      }
+      if (publication.backupPath) await rename(publication.backupPath, publication.livePath)
+      else await rm(publication.livePath, { force: true })
     }
   }
-
   try {
-    for (const candidate of artifacts.databases) {
+    for (const candidate of databases) {
       const livePath = join(knowledgeRoot, candidate.profileId, 'db.sqlite')
       await mkdir(dirname(livePath), { recursive: true })
       const backupPath = (await Bun.file(livePath).exists())
@@ -91,7 +83,6 @@ const publishDatabases = async (
     await rollback()
     throw error
   }
-
   return {
     rollback,
     commit: async () => {
@@ -104,15 +95,27 @@ const publishDatabases = async (
   }
 }
 
-export const runKnowledgePipeline = async (
-  buildId: string,
-  previouslyManagedMirrors: readonly string[] = []
-): Promise<KnowledgePipelineResult> => {
+const documentsFor = (
+  projections: readonly KnowledgeProjection[],
+  community: readonly ProfileDocument[]
+): ProfileDocument[] => {
+  const documents = projections.flatMap((projection) => {
+    if (projection.fileType !== 'md' && projection.fileType !== 'docx') return []
+    const source = listKnowledgeSourceContents().find((item) => item.id === projection.sourceId)
+    if (!source?.content) {
+      throw new Error(`Contenu introuvable : ${projection.title}`)
+    }
+    const filename = normalize_knowledge_name(projection.title)
+    return filename ? [{ filename, ...documentParts(source.content) }] : []
+  })
+  return [...documents, ...community]
+}
+
+export const runKnowledgePipeline = async (buildId: string): Promise<KnowledgePipelineResult> => {
   const paths = datastorePaths()
   const stagingRoot = join(paths.knowledge, '.staging', buildId)
   const diagnostics: KnowledgeDiagnostic[] = []
   let itemKeys: string[] = []
-
   await rm(stagingRoot, { recursive: true, force: true })
   await mkdir(stagingRoot, { recursive: true })
 
@@ -122,57 +125,112 @@ export const runKnowledgePipeline = async (
     const profiles = await listKnowledgeProfiles()
     const knownIds = profiles.map((profile) => profile.id)
     assertNoOutputCollisions(snapshot.sources, new Set(knownIds))
-    await setup_knowledge_directories(stagingRoot, profiles)
-    const entries = flattenKnowledgeEntries(snapshot, knownIds)
-    const [{ anomalies }, { mirrors: coreMirrors, anomalies: coreAnomalies }] = await Promise.all([
-      ingest_files(entries, stagingRoot, profiles),
-      loadCoreDataMirrors(snapshot)
-    ])
-    const seenAnomalies = new Set<string>()
-    for (const anomaly of [...anomalies, ...coreAnomalies]) {
-      const key = `${anomaly.code}:${anomaly.subject}`
-      if (seenAnomalies.has(key)) continue
-      seenAnomalies.add(key)
-      diagnostics.push({
-        level: anomaly.code === 'SOURCE_FILE_MISSING' ? 'error' : 'warning',
-        code: anomaly.code,
-        message:
-          anomaly.code === 'SOURCE_FILE_MISSING'
-            ? 'Le fichier source est introuvable.'
-            : 'Le profil de connaissance est introuvable.',
-        subject: anomaly.subject
-      })
-    }
-    if (diagnostics.some((diagnostic) => diagnostic.level === 'error')) {
-      throw new KnowledgePipelineError('Knowledge source validation failed', diagnostics, itemKeys)
+    const projections = knowledgeProjections(snapshot, knownIds)
+    const nextCore = coreDataFingerprint(snapshot.sources)
+    const previous = listKnowledgeBuilds().find((build) => build.status === 'succeeded')
+    const expectedCore = [
+      ...new Set(
+        snapshot.sources.flatMap((source) => {
+          const contract = coreDataContractForFilename(source.originalName)
+          return contract && source.fileType === 'csv' ? [contract.table] : []
+        })
+      )
+    ]
+    const coreReady = previous?.coreFingerprint === nextCore && coreTablesMatch(expectedCore)
+    let corePayloads: Map<string, { columns: string[]; rows: DataRow[] }> | null = null
+    if (!coreReady) {
+      corePayloads = new Map()
+      const db = openDatastore({ readonly: true })
+      try {
+        for (const source of snapshot.sources) {
+          const contract = coreDataContractForFilename(source.originalName)
+          if (!contract || source.fileType !== 'csv') continue
+          corePayloads.set(contract.table, readDataTable(db, sourceTableName(source.id, 0)))
+        }
+      } finally {
+        db.close()
+      }
+      const reclamations = corePayloads.get('reclamations')
+      if (reclamations) {
+        corePayloads.set('reclamations', await qualifyReclamations(reclamations))
+      }
     }
 
-    const artifacts = await build_knowledge_databases(stagingRoot)
-    for (const [table, payload] of coreMirrors) {
-      artifacts.mirrorTables.set(table, payload)
+    await ensurePostalReference()
+    const needsCommunity = profiles.some((profile) => profile.communityKnowledge)
+    const community = needsCommunity ? await communityDocuments() : []
+    const candidates: Array<{ profileId: string; path: string }> = []
+    for (const profile of profiles) {
+      const assigned = projections.filter((projection) => projection.access === profile.id)
+      const fingerprint = profileBuildFingerprint(profile, assigned)
+      const livePath = join(paths.knowledge, profile.id, 'db.sqlite')
+      if (publishedProfileFingerprint(livePath) === fingerprint) continue
+      const candidate = join(stagingRoot, profile.id, 'db.sqlite')
+      await mkdir(dirname(candidate), { recursive: true })
+      const sqlTables = assigned.flatMap((projection) => {
+        if (projection.fileType === 'md' || projection.fileType === 'docx') return []
+        if (projection.coreDataTable && corePayloads) return []
+        const source = projection.coreDataTable
+          ? projection.coreDataTable
+          : sourceTableName(projection.sourceId, projection.sheet ?? 0)
+        return [{ source, target: normalize_knowledge_name(projection.title) }]
+      })
+      const rowTables = assigned.flatMap((projection) => {
+        if (!projection.coreDataTable || !corePayloads) return []
+        const payload = corePayloads.get(projection.coreDataTable)
+        if (!payload) return []
+        return [
+          {
+            target: normalize_knowledge_name(projection.title),
+            columns: payload.columns,
+            rows: payload.rows
+          }
+        ]
+      })
+      buildProfileDatabase({
+        path: candidate,
+        datastorePath: paths.database,
+        sqlTables,
+        rowTables,
+        documents: documentsFor(assigned, profile.communityKnowledge ? community : []),
+        fingerprint
+      })
+      assertProfileDatabase(candidate)
+      candidates.push({ profileId: profile.id, path: candidate })
     }
-    for (const candidate of artifacts.databases) validateDatabase(candidate.path)
 
     if (getKnowledgeCatalogSnapshot().fingerprint !== snapshot.fingerprint) {
       throw new KnowledgeCatalogChangedError()
     }
-
-    const publication = await publishDatabases(artifacts, paths.knowledge)
+    const publication = await publishDatabases(candidates, paths.knowledge)
     try {
-      await publishKnowledgeMirrors(artifacts, previouslyManagedMirrors)
+      if (corePayloads) publishCoreTables(corePayloads)
       await publication.commit()
     } catch (error) {
       await publication.rollback()
       throw error
     }
-    await Promise.all(
-      artifacts.databases.map((candidate) => writeProfileFiles(candidate.profileId))
+    const publishedIds = new Set(profiles.map((profile) => profile.id))
+    const liveEntries = await readdir(paths.knowledge, { withFileTypes: true }).catch(
+      (error: NodeJS.ErrnoException) => {
+        if (error.code === 'ENOENT') return []
+        throw error
+      }
     )
+    await Promise.all(
+      liveEntries
+        .filter(
+          (entry) =>
+            entry.isDirectory() && !entry.name.startsWith('.') && !publishedIds.has(entry.name)
+        )
+        .map((entry) => rm(join(paths.knowledge, entry.name), { recursive: true, force: true }))
+    )
+    await Promise.all(profiles.map((profile) => writeProfileFiles(profile.id)))
     return {
       catalogFingerprint: snapshot.fingerprint,
+      coreFingerprint: nextCore,
       diagnostics,
-      itemKeys,
-      mirrorTables: [...artifacts.mirrorTables.keys()] as DatastoreTable[]
+      itemKeys
     }
   } catch (error) {
     if (error instanceof KnowledgeCatalogChangedError || error instanceof KnowledgePipelineError) {

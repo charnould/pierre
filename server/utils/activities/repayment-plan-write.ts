@@ -1,15 +1,11 @@
 import { Database } from 'bun:sqlite'
 
+import { type Activity, activityTimestamp, type Mention } from '../../../shared/activities'
 import {
-  type Activite,
-  type Mention,
-  type RepaymentPlanCloseReason,
-  type RepaymentPlanEventContent,
-  type RepaymentPlanEventType,
-  activity_timestamp,
-  parse_repayment_plan_content
-} from '../../../shared/activites'
-import { get_activity_with_db, insert_activity_row, type ActivityFacets } from './rows'
+  parseRepaymentPlanContent,
+  type RepaymentPlanEventType
+} from '../../../shared/repayment-plan'
+import { type ActivityFacets, get_activity_with_db, insert_activity_row } from './rows'
 import { ActivitiesError } from './schema'
 
 type PlanRowValues = {
@@ -24,10 +20,10 @@ type PlanRowValues = {
   idempotency_key?: string | null
 }
 
-const append_plan_event = (db: Database, values: PlanRowValues): Activite => {
+const append_plan_event = (db: Database, values: PlanRowValues): Activity => {
   try {
     return insert_activity_row(db, {
-      date_creation: values.date_creation ?? activity_timestamp(),
+      date_creation: values.date_creation ?? activityTimestamp(),
       rattachement: values.rattachement,
       auteur: values.auteur,
       facets: values.facets,
@@ -50,14 +46,7 @@ const append_plan_event = (db: Database, values: PlanRowValues): Activite => {
   }
 }
 
-const without_plan = (content: RepaymentPlanEventContent): string =>
-  JSON.stringify({
-    version: 2,
-    title: content.title,
-    ...(content.note ? { note: content.note } : {})
-  })
-
-const latest_plan_event = (db: Database, threadId: string): Activite | null => {
+const latest_plan_event = (db: Database, threadId: string): Activity | null => {
   const row = db
     .query<{ id: number }, [string]>(
       `SELECT id FROM activites
@@ -74,34 +63,20 @@ const latest_plan_event = (db: Database, threadId: string): Activite | null => {
   return row ? (get_activity_with_db(db, Number(row.id)) ?? null) : null
 }
 
-const assert_current_plan_event = (db: Database, existing: Activite): RepaymentPlanEventContent => {
-  if (!existing.thread_id || !existing.type.startsWith('repayment_plan.')) {
-    throw new ActivitiesError('Invalid repayment plan', 'invalid_body')
-  }
-  const latest = latest_plan_event(db, existing.thread_id)
-  if (!latest || latest.id !== existing.id) {
-    throw new ActivitiesError('Repayment plan has changed', 'conflict')
-  }
-  const content = parse_repayment_plan_content(existing.type, existing.contenu)
-  if (!content?.plan) throw new ActivitiesError('Repayment plan snapshot is missing', 'conflict')
-  const snapshots = db
+const dossier_count = (db: Database, threadId: string): number =>
+  db
     .query<{ count: number }, [string]>(
       `SELECT COUNT(*) AS count FROM activites
-       WHERE thread_id = ? AND json_type(contenu, '$.plan') = 'object'`
+       WHERE thread_id = ? AND json_type(contenu, '$.foyer') = 'object'`
     )
-    .get(existing.thread_id)?.count
-  if (snapshots !== 1) {
-    throw new ActivitiesError('Invalid repayment plan snapshot state', 'conflict')
-  }
-  return content
-}
+    .get(threadId)?.count ?? 0
 
-const strip_plan_snapshot = (db: Database, existing: Activite): void => {
+const clear_dossier = (db: Database, existing: Activity): void => {
   const result = db
     .query<never, [number]>(
       `UPDATE activites
-       SET contenu = json_remove(contenu, '$.plan')
-       WHERE id = ? AND json_type(contenu, '$.plan') = 'object'`
+       SET contenu = '{}'
+       WHERE id = ? AND json_type(contenu, '$.foyer') = 'object'`
     )
     .run(existing.id)
   if (result.changes !== 1) {
@@ -112,81 +87,44 @@ const strip_plan_snapshot = (db: Database, existing: Activite): void => {
 export const create_repayment_plan = (
   db: Database,
   values: Omit<PlanRowValues, 'thread_id' | 'type'> & {
-    type: 'repayment_plan.created' | 'repayment_plan.finalized'
+    type: 'repayment_plan.created'
   }
-): Activite => {
-  const content = parse_repayment_plan_content(values.type, values.contenu)
-  if (!content?.plan) throw new ActivitiesError('Invalid repayment plan content')
-  const threadId = Bun.randomUUIDv7()
-  if (values.type === 'repayment_plan.created') {
-    return append_plan_event(db, {
-      ...values,
-      type: 'repayment_plan.created',
-      thread_id: threadId,
-      contenu: JSON.stringify(content)
-    })
+): Activity => {
+  if (!parseRepaymentPlanContent(values.type, values.contenu)) {
+    throw new ActivitiesError('Invalid repayment plan content')
   }
-  append_plan_event(db, {
-    ...values,
-    type: 'repayment_plan.created',
-    thread_id: threadId,
-    mentions: [],
-    contenu: without_plan(content),
-    idempotency_key: null
-  })
   return append_plan_event(db, {
     ...values,
-    type: 'repayment_plan.finalized',
-    thread_id: threadId,
-    contenu: JSON.stringify(content)
+    type: 'repayment_plan.created',
+    thread_id: Bun.randomUUIDv7()
   })
 }
 
-export const transition_repayment_plan = (
+export const save_repayment_plan = (
   db: Database,
-  values: {
-    existing: Activite
-    auteur: string
-    operation: 'save' | 'finalize' | 'close' | 'withdraw'
-    contenu?: string
-    reason?: RepaymentPlanCloseReason
+  values: { existing: Activity; auteur: string; contenu: string }
+): Activity => {
+  if (!values.existing.threadId || !values.existing.type.startsWith('repayment_plan.')) {
+    throw new ActivitiesError('Invalid repayment plan', 'invalid_body')
   }
-): Activite => {
-  const current = assert_current_plan_event(db, values.existing)
+  const latest = latest_plan_event(db, values.existing.threadId)
+  if (!latest || latest.id !== values.existing.id) {
+    throw new ActivitiesError('Repayment plan has changed', 'conflict')
+  }
   const draft =
     values.existing.type === 'repayment_plan.created' ||
     values.existing.type === 'repayment_plan.updated'
-  if ((values.operation === 'save' || values.operation === 'finalize') && !draft) {
-    throw new ActivitiesError('Repayment plan is no longer editable', 'conflict')
+  if (!draft) throw new ActivitiesError('Repayment plan is no longer editable', 'conflict')
+  if (!parseRepaymentPlanContent(values.existing.type, values.existing.contenu)) {
+    throw new ActivitiesError('Repayment plan snapshot is missing', 'conflict')
   }
-  if (values.operation === 'close' && values.existing.type !== 'repayment_plan.finalized') {
-    throw new ActivitiesError('Only a finalized plan can be closed', 'conflict')
+  if (dossier_count(db, values.existing.threadId) !== 1) {
+    throw new ActivitiesError('Invalid repayment plan snapshot state', 'conflict')
   }
-  if (values.operation === 'withdraw' && !draft) {
-    throw new ActivitiesError('Only a draft plan can be withdrawn', 'conflict')
+  if (!parseRepaymentPlanContent('repayment_plan.updated', values.contenu)) {
+    throw new ActivitiesError('Invalid repayment plan content')
   }
-
-  let type: RepaymentPlanEventType
-  let content: RepaymentPlanEventContent
-  if (values.operation === 'save' || values.operation === 'finalize') {
-    type = values.operation === 'save' ? 'repayment_plan.updated' : 'repayment_plan.finalized'
-    const parsed = parse_repayment_plan_content(type, values.contenu ?? '')
-    if (!parsed?.plan) throw new ActivitiesError('Invalid repayment plan content')
-    content = parsed
-  } else {
-    if (values.operation === 'close' && !values.reason) {
-      throw new ActivitiesError('Repayment plan close reason is required')
-    }
-    type = 'repayment_plan.closed'
-    content = {
-      version: 2,
-      title: current.title,
-      plan: current.plan,
-      ...(current.note ? { note: current.note } : {})
-    }
-  }
-
-  strip_plan_snapshot(db, values.existing)
+  clear_dossier(db, values.existing)
   return append_plan_event(db, {
     rattachement: values.existing.rattachement,
     auteur: values.auteur,
@@ -196,15 +134,9 @@ export const transition_repayment_plan = (
       id_lot: values.existing.id_lot
     },
     mentions: values.existing.mentions,
-    thread_id: values.existing.thread_id!,
-    type,
-    contenu:
-      type === 'repayment_plan.closed'
-        ? JSON.stringify({
-            ...content,
-            reason: values.operation === 'withdraw' ? 'withdrawn' : values.reason
-          })
-        : JSON.stringify(content)
+    thread_id: values.existing.threadId,
+    type: 'repayment_plan.updated',
+    contenu: values.contenu
   })
 }
 

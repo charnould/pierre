@@ -1,67 +1,67 @@
 import { Database } from 'bun:sqlite'
 
 import {
-  type Activite,
+  type Activity,
   type ActivityContext,
+  activityTimestamp,
   type CommunicationChannel,
-  activity_timestamp,
-  medium_to_channel,
-  parse_communication_opened_content,
-  parse_contenu_json
-} from '../../../shared/activites'
+  mediumToChannel
+} from '../../../shared/activities'
+import { parseCommunicationOpenedContent, parseContentJson } from '../../../shared/activity-content'
 import { latest_repayment_states } from '../activities/repayment'
 import {
+  type ActivityDbRow,
   build_rattachement,
   get_activity_with_db,
   insert_activity_row,
   login_from_email,
   resolve_activity_facets,
-  type ActivityDbRow,
   user_destinataire
 } from '../activities/rows'
 import { normalize_email, normalize_telephone } from '../contacts'
-import { datastorePaths } from '../paths'
+import { openDatastore } from '../datastore-db'
 import { name } from '../setup-store'
-
-export const datastore_path = (): string => datastorePaths().database
 
 export class CommunicationsError extends Error {
   constructor(
     message: string,
     readonly code:
-      | 'not_found'
-      | 'forbidden'
-      | 'invalid_body'
-      | 'conflict'
-      | 'invalid_status' = 'invalid_body'
+      'not_found' | 'forbidden' | 'invalid_body' | 'conflict' | 'invalid_status' = 'invalid_body'
   ) {
     super(message)
     this.name = 'CommunicationsError'
   }
 }
 
-const require_activity_with_db = (db: Database, id: number): Activite => {
+const require_activity_with_db = (db: Database, id: number): Activity => {
   const activity = get_activity_with_db(db, id)
   if (!activity) throw new CommunicationsError('Communication introuvable', 'not_found')
   return activity
 }
 
 const require_channel = (medium: string): CommunicationChannel => {
-  const channel = medium_to_channel(medium)
+  const channel = mediumToChannel(medium)
   if (!channel) throw new CommunicationsError('Canal invalide')
   return channel
 }
 
 const opened_contenu = (raw: string, sender: string): string => {
-  const value = parse_contenu_json(raw)
+  const value = parseContentJson(raw)
   const injectedSender =
     typeof value['sender'] === 'string' && value['sender'].trim() ? value['sender'].trim() : sender
-  const content = parse_communication_opened_content(
+  const content = parseCommunicationOpenedContent(
     JSON.stringify({
-      ...value,
       version: 2,
       sender: injectedSender,
-      body: typeof value['body'] === 'string' ? value['body'] : ''
+      body: typeof value['body'] === 'string' ? value['body'] : '',
+      ...(value['subject'] !== undefined ? { subject: value['subject'] } : {}),
+      ...(value['action'] !== undefined ? { action: value['action'] } : {}),
+      ...(value['choices'] !== undefined ? { choices: value['choices'] } : {}),
+      ...(value['sms_fallback'] !== undefined ? { sms_fallback: value['sms_fallback'] } : {}),
+      ...(value['provider'] !== undefined ? { provider: value['provider'] } : {}),
+      ...(value['purpose'] !== undefined ? { purpose: value['purpose'] } : {}),
+      ...(value['related_id'] !== undefined ? { related_id: value['related_id'] } : {}),
+      ...(value['fallback_from'] !== undefined ? { fallback_from: value['fallback_from'] } : {})
     })
   )
   if (!content) throw new CommunicationsError('Contenu de communication invalide')
@@ -90,6 +90,7 @@ type CreateOutboundInputBase = {
   idempotency_key: string
   bulk_id?: string | null
   execution_id?: string | null
+  thread_id?: string
   recipients?: string[]
   notify_current_manager?: boolean
   require_bulk_run?: { bulk_operation_id: string; execution_id: string }
@@ -102,7 +103,7 @@ export type CreateOutboundInput = CreateOutboundInputBase &
     | { destinataire?: string; allow_missing_destination: true }
   )
 
-export const create_outbound_with_db = (db: Database, input: CreateOutboundInput): Activite => {
+export const create_outbound_with_db = (db: Database, input: CreateOutboundInput): Activity => {
   const rawDestination = input.destinataire ?? ''
   const destination = input.imported
     ? { value: rawDestination.trim(), status: 'ok' as const }
@@ -164,10 +165,11 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
         channel: string | null
         destinataire: string | null
         contenu: string
+        thread_id: string | null
       },
       [string]
     >(
-      `SELECT id, rattachement, auteur, type, channel, destinataire, contenu
+      `SELECT id, rattachement, auteur, type, channel, destinataire, contenu, thread_id
          FROM activites WHERE idempotency_key = ? LIMIT 1`
     )
     .get(input.idempotency_key)
@@ -178,7 +180,8 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
       existing.type !== openedType ||
       existing.channel !== channel ||
       existing.destinataire !== destinationValue ||
-      existing.contenu !== contenu
+      existing.contenu !== contenu ||
+      (input.thread_id != null && existing.thread_id !== input.thread_id)
     ) {
       throw new CommunicationsError(
         'Idempotency-Key déjà utilisée pour une autre communication',
@@ -188,7 +191,7 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
     return require_activity_with_db(db, Number(existing.id))
   }
 
-  const now = activity_timestamp()
+  const now = activityTimestamp()
   if (
     input.type === 'rcs' &&
     input.contexte === 'repayment' &&
@@ -211,7 +214,7 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
       )
     }
   }
-  const threadId = Bun.randomUUIDv7()
+  const threadId = input.thread_id ?? Bun.randomUUIDv7()
   return insert_activity_row(db, {
     date_creation: now,
     rattachement,
@@ -227,16 +230,15 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
     })),
     contenu,
     thread_id: threadId,
-    revision: 1,
+    revision: input.thread_id ? thread_revision(db, threadId) : 1,
     bulk_id: input.bulk_id ?? null,
     execution_id: input.execution_id ?? null,
     idempotency_key: input.idempotency_key
   })
 }
 
-export const create_outbound = (input: CreateOutboundInput): Activite => {
-  const db = new Database(datastore_path())
-  db.run('PRAGMA busy_timeout = 5000')
+export const create_outbound = (input: CreateOutboundInput): Activity => {
+  const db = openDatastore()
   try {
     db.run('BEGIN IMMEDIATE')
     const activity = create_outbound_with_db(db, input)
@@ -250,15 +252,45 @@ export const create_outbound = (input: CreateOutboundInput): Activite => {
   }
 }
 
-export type DispatchClaim = 'claimed' | 'pending' | 'abandoned' | 'not_queued'
+export type DispatchClaim = 'claimed' | 'pending' | 'not_queued'
 
-/** Read-only: a send is claimable when its thread has no result yet. */
-export const claim_outbound_dispatch = (activity_id: number): DispatchClaim => {
-  const db = new Database(datastore_path())
-  db.run('PRAGMA busy_timeout = 5000')
+export const DISPATCH_RETRY_AFTER_SECONDS = 30
+const DISPATCH_LEASE_MS = DISPATCH_RETRY_AFTER_SECONDS * 1000
+
+export const complete_outbound_dispatch_with_db = (db: Database, activity_id: number): void => {
+  db.run('DELETE FROM communication_dispatch_claims WHERE activity_id = ?', [activity_id])
+}
+
+export const release_outbound_dispatch = (activity_id: number): void => {
+  const db = openDatastore()
   try {
+    complete_outbound_dispatch_with_db(db, activity_id)
+  } finally {
+    db.close()
+  }
+}
+
+export const claim_outbound_dispatch = (activity_id: number): DispatchClaim => {
+  const db = openDatastore()
+  try {
+    db.run('BEGIN IMMEDIATE')
     const activity = get_activity_with_db(db, activity_id)
-    if (!activity || activity.type !== 'communication.sent' || !activity.thread_id) {
+    if (!activity || activity.type !== 'communication.sent' || !activity.threadId) {
+      complete_outbound_dispatch_with_db(db, activity_id)
+      db.run('COMMIT')
+      return 'not_queued'
+    }
+    const sourceRevision = activity.revision ?? 1
+    const superseded = db
+      .query<{ id: number }, [string, number]>(
+        `SELECT id FROM activites
+         WHERE thread_id = ? AND type = 'communication.sent' AND revision > ?
+         LIMIT 1`
+      )
+      .get(activity.threadId, sourceRevision)
+    if (superseded) {
+      complete_outbound_dispatch_with_db(db, activity_id)
+      db.run('COMMIT')
       return 'not_queued'
     }
     const latest = db
@@ -267,12 +299,34 @@ export const claim_outbound_dispatch = (activity_id: number): DispatchClaim => {
          WHERE thread_id = ? AND type LIKE 'communication.%'
          ORDER BY revision DESC LIMIT 1`
       )
-      .get(activity.thread_id)
-    if (!latest) return 'not_queued'
-    if (latest.type === 'communication.ok' || latest.type === 'communication.failed') {
+      .get(activity.threadId)
+    if (!latest) {
+      complete_outbound_dispatch_with_db(db, activity_id)
+      db.run('COMMIT')
       return 'not_queued'
     }
-    return 'claimed'
+    if (latest.type === 'communication.ok' || latest.type === 'communication.failed') {
+      complete_outbound_dispatch_with_db(db, activity_id)
+      db.run('COMMIT')
+      return 'not_queued'
+    }
+    const now = new Date()
+    const claimed = db.run(
+      `INSERT INTO communication_dispatch_claims (activity_id, claimed_at)
+       VALUES (?, ?)
+       ON CONFLICT(activity_id) DO UPDATE SET claimed_at = excluded.claimed_at
+       WHERE communication_dispatch_claims.claimed_at <= ?`,
+      [
+        activity_id,
+        activityTimestamp(now),
+        activityTimestamp(new Date(now.getTime() - DISPATCH_LEASE_MS))
+      ]
+    )
+    db.run('COMMIT')
+    return claimed.changes > 0 ? 'claimed' : 'pending'
+  } catch (error) {
+    db.run('ROLLBACK')
+    throw error
   } finally {
     db.close()
   }
@@ -281,22 +335,22 @@ export const claim_outbound_dispatch = (activity_id: number): DispatchClaim => {
 export type CreateInboundInput = {
   contexte: ActivityContext
   ref: string
-  type: 'rcs' | 'email'
+  type: 'rcs' | 'sms' | 'email'
   auteur: string
   contenu: string
   occurred_at: string
   thread_id?: string
   idempotency_key?: string
+  id_externe?: string
 }
 
-export const create_inbound = (input: CreateInboundInput): Activite => {
+export const create_inbound = (input: CreateInboundInput): Activity => {
   const occurred = new Date(input.occurred_at)
   if (Number.isNaN(occurred.getTime())) {
     throw new CommunicationsError('occurredAt invalide')
   }
   const occurredAt = occurred.toISOString()
-  const db = new Database(datastore_path())
-  db.run('PRAGMA busy_timeout = 5000')
+  const db = openDatastore()
   db.run('BEGIN IMMEDIATE')
   try {
     if (input.idempotency_key) {
@@ -358,7 +412,8 @@ export const create_inbound = (input: CreateInboundInput): Activite => {
       contenu: opened_contenu(input.contenu, input.auteur),
       thread_id: threadId,
       revision: thread_revision(db, threadId),
-      idempotency_key: input.idempotency_key ?? null
+      idempotency_key: input.idempotency_key ?? null,
+      id_externe: input.id_externe ?? null
     })
     db.run('COMMIT')
     return activity
@@ -372,7 +427,7 @@ export const create_inbound = (input: CreateInboundInput): Activite => {
 
 export const create_unmatched_inbound = (
   input: Omit<CreateInboundInput, 'contexte' | 'ref' | 'thread_id'>
-): Activite => {
+): Activity => {
   const id = Bun.randomUUIDv7()
   return create_inbound({
     ...input,

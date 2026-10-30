@@ -1,0 +1,250 @@
+import { Database } from 'bun:sqlite'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
+import { mkdir, rm } from 'node:fs/promises'
+
+import { Hono } from 'hono'
+
+import { listTickets as get_app_tickets } from '../../../../../routes/tickets'
+import { import_rows } from '../../../../../utils/knowledge/sqlite-table-import'
+import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
+import { setup } from '../../../../../utils/setup'
+import { DEFAULT_TICKETS_SORT } from '../../../../../utils/tickets-query'
+import { seedInstanceSetup } from '../../../../seed-setup'
+
+const FIXTURE_ROWS = [
+  {
+    id_reclamation: 'REQ-1',
+    id_locataire: 'LOC-A',
+    id_lot: 'LOT-1',
+    motif: 'fuite',
+    type_affaire: 'sinistre'
+  },
+  {
+    id_reclamation: 'REQ-2',
+    id_locataire: 'LOC-A',
+    id_lot: 'LOT-2',
+    motif: 'chauffage',
+    type_affaire: 'technique'
+  },
+  {
+    id_reclamation: 'REQ-3',
+    id_locataire: 'LOC-B',
+    id_lot: 'LOT-1',
+    motif: 'fuite',
+    type_affaire: 'sinistre'
+  },
+  {
+    id_reclamation: 'REQ-4',
+    id_locataire: 'LOC-B',
+    id_lot: 'LOT-3',
+    motif: 'ascenseur',
+    type_affaire: 'technique'
+  }
+]
+
+const paths = testDatastorePaths('tickets_api')
+const DATASTORE_SQLITE = paths.database
+
+const app = new Hono()
+app.get('/tickets', get_app_tickets)
+app.get('/tickets/meta', get_app_tickets)
+
+const seed_tickets = async (): Promise<void> => {
+  const db = new Database(DATASTORE_SQLITE)
+  try {
+    await import_rows(db, 'reclamations', FIXTURE_ROWS)
+  } finally {
+    db.close()
+  }
+}
+
+const fetch_tickets = (query = ''): Promise<Response> =>
+  Promise.resolve(app.fetch(new Request(`http://localhost/tickets${query}`)))
+
+beforeAll(() => {
+  setDatastoreRoot(paths.root)
+})
+
+afterAll(async () => {
+  setDatastoreRoot(null)
+  await rm(paths.root, { recursive: true, force: true })
+})
+
+beforeEach(async () => {
+  await mkdir(paths.root, { recursive: true })
+  await setup()
+  await seedInstanceSetup()
+})
+
+afterEach(async () => {
+  await rm(paths.root, { recursive: true, force: true })
+})
+
+describe('GET /tickets', () => {
+  it('returns 200 with data, schema meta and defaultSort', async () => {
+    await seed_tickets()
+    const res = await fetch_tickets()
+    expect(res.status).toBe(200)
+
+    const body = (await res.json()) as {
+      data: { id_reclamation: string }[]
+      meta: {
+        total: number
+        limit: number
+        offset: number
+        columns: { name: string; type: string }[]
+        defaultSort: string
+      }
+    }
+    expect(body.data).toHaveLength(4)
+    expect(body.meta.total).toBe(4)
+    expect(body.meta.defaultSort).toBe(DEFAULT_TICKETS_SORT)
+    expect(body.meta.columns.map((c) => c.name)).toEqual([
+      'id_reclamation',
+      'id_locataire',
+      'id_lot',
+      'motif',
+      'type_affaire'
+    ])
+  })
+
+  it('returns metadata without ticket rows on the metadata route', async () => {
+    const response = await app.request('/tickets/meta?limit=1')
+    expect(response.status).toBe(200)
+    const body = (await response.json()) as Record<string, unknown>
+    expect(body).not.toHaveProperty('data')
+    expect(body).toHaveProperty('meta')
+  })
+
+  it('paginates with limit query param', async () => {
+    await seed_tickets()
+    const res = await fetch_tickets('?limit=2')
+    const body = (await res.json()) as { data: unknown[]; meta: { total: number } }
+    expect(body.data).toHaveLength(2)
+    expect(body.meta.total).toBe(4)
+  })
+
+  it('paginates inside the configured default bucket', async () => {
+    await seed_tickets()
+    const res = await fetch_tickets('?bucket=non_traitees&limit=1')
+    const body = (await res.json()) as {
+      data: { id_reclamation: string; pierre_bucket: string }[]
+      meta: { total: number }
+    }
+
+    expect(res.status).toBe(200)
+    expect(body.meta.total).toBe(4)
+    expect(body.data).toHaveLength(1)
+    expect(body.data[0]?.pierre_bucket).toBe('non_traitees')
+  })
+
+  it('rejects an unknown bucket', async () => {
+    await seed_tickets()
+    const res = await fetch_tickets('?bucket=inconnu')
+    expect(res.status).toBe(400)
+  })
+
+  it('filters by id_reclamation', async () => {
+    await seed_tickets()
+    const res = await fetch_tickets('?id_reclamation=REQ-2')
+    const body = (await res.json()) as { data: { id_reclamation: string }[] }
+    expect(body.data).toHaveLength(1)
+    expect(body.data[0]?.id_reclamation).toBe('REQ-2')
+  })
+
+  it('filters by schema column motif', async () => {
+    await seed_tickets()
+    const res = await fetch_tickets('?id_locataire=LOC-B&motif=fuite')
+    const body = (await res.json()) as { data: { id_reclamation: string }[] }
+    expect(body.data).toHaveLength(1)
+    expect(body.data[0]?.id_reclamation).toBe('REQ-3')
+  })
+
+  it('returns 400 for limit above max', async () => {
+    await seed_tickets()
+    const res = await fetch_tickets('?limit=1001')
+    expect(res.status).toBe(400)
+    const body = (await res.json()) as { error: { code: string } }
+    expect(body.error.code).toBe('invalid_query')
+  })
+
+  it('accepts custom limit 378', async () => {
+    await seed_tickets()
+    const res = await fetch_tickets('?limit=378')
+    expect(res.status).toBe(200)
+  })
+
+  it('filters with repeated query params (IN)', async () => {
+    await seed_tickets()
+    const res = await fetch_tickets('?motif=fuite&motif=chauffage')
+    const body = (await res.json()) as { data: unknown[] }
+    expect(body.data).toHaveLength(3)
+  })
+
+  it('applies structured rules sent by the app', async () => {
+    await seed_tickets()
+    const rules = encodeURIComponent(
+      JSON.stringify([{ kind: 'values', column: 'type_affaire', values: ['sinistre'] }])
+    )
+    const res = await fetch_tickets(`?rules=${rules}`)
+    const body = (await res.json()) as { data: { id_reclamation: string }[] }
+    expect(res.status).toBe(200)
+    expect(body.data.map((row) => row.id_reclamation)).toEqual(['REQ-3', 'REQ-1'])
+  })
+
+  it('rejects malformed structured rules', async () => {
+    await seed_tickets()
+    const res = await fetch_tickets('?rules=not-json')
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({
+      error: { code: 'invalid_query', message: 'rules must be a valid JSON array' }
+    })
+  })
+
+  it('returns 400 for invalid sort column', async () => {
+    await seed_tickets()
+    const res = await fetch_tickets('?sort=bad')
+    expect(res.status).toBe(400)
+    const body = (await res.json()) as { error: { code: string } }
+    expect(body.error.code).toBe('invalid_query')
+  })
+
+  it('returns 400 for unknown filter column', async () => {
+    await seed_tickets()
+    const res = await fetch_tickets('?unknown_col=x')
+    expect(res.status).toBe(400)
+    const body = (await res.json()) as { error: { code: string } }
+    expect(body.error.code).toBe('invalid_query')
+  })
+
+  it('returns empty list when table is missing', async () => {
+    new Database(DATASTORE_SQLITE).close()
+    const res = await fetch_tickets()
+    expect(res.status).toBe(200)
+    const body = (await res.json()) as {
+      data: unknown[]
+      meta: { total: number; columns: unknown[]; defaultSort: string }
+    }
+    expect(body.data).toEqual([])
+    expect(body.meta.total).toBe(0)
+    expect(body.meta.columns).toEqual([])
+    expect(body.meta.defaultSort).toBe(DEFAULT_TICKETS_SORT)
+  })
+
+  it('returns last row with offset beyond first page', async () => {
+    await seed_tickets()
+    const res = await fetch_tickets('?offset=3&limit=10&sort=id_reclamation')
+    const body = (await res.json()) as { data: { id_reclamation: string }[] }
+    expect(body.data).toHaveLength(1)
+    expect(body.data[0]?.id_reclamation).toBe('REQ-4')
+  })
+
+  it('does not expose draft markers as table columns', async () => {
+    await seed_tickets()
+    const res = await fetch_tickets('?id_reclamation=REQ-1')
+    const body = (await res.json()) as {
+      data: { id_reclamation: string; draft_id_skills?: string[] }[]
+    }
+    expect(body.data[0]?.draft_id_skills).toBeUndefined()
+  })
+})

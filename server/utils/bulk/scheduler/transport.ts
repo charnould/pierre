@@ -1,21 +1,21 @@
 import { Database } from 'bun:sqlite'
 
-import type { Activite } from '../../../../shared/activites'
+import type { Activity } from '../../../../shared/activities'
 import type { SimpleDeliveryStep } from '../../../../shared/bulk-operations'
 import { collect_rich_rcs_replies } from '../../../../shared/bulk-rich-rcs'
 import { communication_reference, next_status_timestamp } from '../../communications/parsing'
 import { create_outbound_with_db } from '../../communications/storage'
+import { openDatastore } from '../../datastore-db'
 import { update_status, update_status_with_db } from '../../delivery-status'
-import { datastorePaths } from '../../paths'
 import { send_rcs_message } from '../../rcs/send'
 import { to_cm_number } from '../../rcs/wrap'
 import { insert_bulk_visible_activity } from '../activities'
 import type { DeliveryStatus } from '../jobs'
 import {
-  enrich_final_failure,
-  load_bulk_run_context_with_db,
   type BulkItemPayload,
-  type BulkRunContext
+  type BulkRunContext,
+  enrich_final_failure,
+  load_bulk_run_context_with_db
 } from '../jobs'
 import {
   bulk_step_destination,
@@ -26,6 +26,7 @@ import {
 import { render_content } from '../placeholders'
 import { finalize_bulk_item_with_db } from '../reports'
 import { select_fallback_route } from '../route-policy'
+import { parseStoredPayload, stringifyStoredPayload } from '../stored-job'
 
 export type Job = {
   id: string
@@ -39,7 +40,7 @@ export type Job = {
 
 type SimulationDecision = 'accepted' | 'failed'
 export type SimulationOverride = (input: {
-  activity: Activite
+  activity: Activity
   key: string
   step: SimpleDeliveryStep
   rendered: unknown
@@ -47,9 +48,7 @@ export type SimulationOverride = (input: {
 }) => Promise<SimulationDecision>
 export type Clock = { now: () => Date }
 
-export const datastore_path = (): string => datastorePaths().database
-
-let simulationOverride: SimulationOverride | null = null
+export let simulationOverride: SimulationOverride | null = null
 let clock: Clock = { now: () => new Date() }
 let clockOverridden = false
 let transactionHook: ((point: 'fallback_created' | 'rich_created') => void) | null = null
@@ -114,9 +113,9 @@ const process_fallback_attempt = async (
         rendered: ReturnType<typeof render_fallback_step>
       }
     | undefined
-  let activity: Activite | null = null
+  let activity: Activity | null = null
   let attemptKey = ''
-  const prepare = new Database(datastore_path())
+  const prepare = openDatastore()
   prepare.run('BEGIN IMMEDIATE')
   try {
     context = guarded_context(prepare, job)
@@ -125,7 +124,7 @@ const process_fallback_attempt = async (
         'SELECT payload, report_status FROM bulk_jobs WHERE id = ?'
       )
       .get(job.id)
-    const currentPayload = current ? (JSON.parse(current.payload) as BulkItemPayload) : null
+    const currentPayload = current ? parseStoredPayload(JSON.parse(current.payload)) : null
     if (
       !context ||
       context.operation.definition.delivery.kind !== 'fallback' ||
@@ -178,7 +177,7 @@ const process_fallback_attempt = async (
         status: 'ko',
         outcome: {
           code: activePayload.previousActivityId ? 'final_failure' : 'no_usable_route',
-          skipped_steps: skipped
+          skippedSteps: skipped
         },
         currentActivityId: activePayload.previousActivityId ?? null,
         payload: activePayload
@@ -199,7 +198,7 @@ const process_fallback_attempt = async (
       ref: activePayload.row.id_locataire,
       type: resolved.step.medium,
       destinataire: bulk_step_destination(activePayload.row, resolved.step),
-      contenu: fallback_outbound_contenu(resolved.step, resolved.rendered, skipped),
+      contenu: fallback_outbound_contenu(resolved.step, resolved.rendered),
       bulk_id: context.operation.id,
       execution_id: job.execution_id,
       idempotency_key: attemptKey,
@@ -235,7 +234,7 @@ const process_fallback_attempt = async (
     : Bun.env['NODE_ENV'] === 'test'
       ? 'accepted'
       : 'failed'
-  const db = new Database(datastore_path())
+  const db = openDatastore()
   db.run('BEGIN IMMEDIATE')
   try {
     if (!guarded_context(db, job)) {
@@ -248,7 +247,7 @@ const process_fallback_attempt = async (
         [string]
       >('SELECT report_status, current_activity_id, payload FROM bulk_jobs WHERE id = ?')
       .get(job.id)
-    const currentPayload = current ? (JSON.parse(current.payload) as BulkItemPayload) : null
+    const currentPayload = current ? parseStoredPayload(JSON.parse(current.payload)) : null
     if (
       current?.report_status !== 'in_progress' ||
       current.current_activity_id !== activity.id ||
@@ -278,7 +277,7 @@ const process_fallback_attempt = async (
       [
         activity.id,
         new Date(clock.now().getTime() + transition_delay(attemptKey, 'sent')).toISOString(),
-        JSON.stringify(nextPayload),
+        stringifyStoredPayload(nextPayload),
         job.id
       ]
     )
@@ -292,7 +291,7 @@ const process_fallback_attempt = async (
 }
 
 const process_fallback_status = (job: Job): void => {
-  const db = new Database(datastore_path())
+  const db = openDatastore()
   db.run('BEGIN IMMEDIATE')
   try {
     const current = db
@@ -309,7 +308,7 @@ const process_fallback_status = (job: Job): void => {
       db.run('COMMIT')
       return
     }
-    const payload = JSON.parse(current.payload) as BulkItemPayload
+    const payload = parseStoredPayload(JSON.parse(current.payload))
     const status = payload.kind === 'fallback' ? payload.remainingStatuses?.[0] : undefined
     const context = guarded_context(db, job)
     if (
@@ -332,10 +331,7 @@ const process_fallback_status = (job: Job): void => {
       activity_id: current.current_activity_id,
       type: context.operation.definition.delivery.steps[payload.stepIndex]!.medium,
       statut: status,
-      occurred_at: next_status_timestamp(
-        { date_creation: activity.date_creation } as Activite,
-        clock.now()
-      )
+      occurred_at: next_status_timestamp({ createdAt: activity.date_creation }, clock.now())
     })
     const after = db
       .query<{ payload: string; report_status: string }, [string]>(
@@ -343,7 +339,7 @@ const process_fallback_status = (job: Job): void => {
       )
       .get(job.id)
     if (after?.report_status === 'in_progress') {
-      const afterPayload = JSON.parse(after.payload) as BulkItemPayload
+      const afterPayload = parseStoredPayload(JSON.parse(after.payload))
       if (afterPayload.kind === 'fallback' && afterPayload.stage === 'status') {
         const remaining = afterPayload.remainingStatuses?.slice(1) ?? []
         if (remaining.length > 0) {
@@ -355,7 +351,7 @@ const process_fallback_status = (job: Job): void => {
                   remaining[0]!
                 )
             ).toISOString(),
-            JSON.stringify({ ...afterPayload, remainingStatuses: remaining }),
+            stringifyStoredPayload({ ...afterPayload, remainingStatuses: remaining }),
             job.id
           ])
         }
@@ -374,9 +370,9 @@ const process_rich_send = async (
   job: Job,
   payload: Extract<BulkItemPayload, { kind: 'rich_rcs' }>
 ): Promise<void> => {
-  let activity: Activite | null = null
+  let activity: Activity | null = null
   let rendered: { body: string; richContent: Record<string, unknown> } | null = null
-  const db = new Database(datastore_path())
+  const db = openDatastore()
   db.run('BEGIN IMMEDIATE')
   try {
     const context = guarded_context(db, job)
@@ -385,7 +381,7 @@ const process_rich_send = async (
         'SELECT payload, report_status FROM bulk_jobs WHERE id = ?'
       )
       .get(job.id)
-    const currentPayload = current ? (JSON.parse(current.payload) as BulkItemPayload) : null
+    const currentPayload = current ? parseStoredPayload(JSON.parse(current.payload)) : null
     if (
       !context ||
       context.operation.definition.delivery.kind !== 'rich_rcs' ||
@@ -438,7 +434,7 @@ const process_rich_send = async (
       [
         activity.id,
         new Date(clock.now().getTime() + deadlineHours * 60 * 60 * 1000).toISOString(),
-        JSON.stringify(nextPayload),
+        stringifyStoredPayload(nextPayload),
         job.id
       ]
     )
@@ -478,7 +474,7 @@ const process_rich_timeout = (
   job: Job,
   payload: Extract<BulkItemPayload, { kind: 'rich_rcs' }>
 ): void => {
-  const db = new Database(datastore_path())
+  const db = openDatastore()
   db.run('BEGIN IMMEDIATE')
   try {
     const current = db
@@ -487,7 +483,7 @@ const process_rich_timeout = (
         [string]
       >(`SELECT payload, report_status, current_activity_id FROM bulk_jobs WHERE id = ?`)
       .get(job.id)
-    const currentPayload = current ? (JSON.parse(current.payload) as BulkItemPayload) : null
+    const currentPayload = current ? parseStoredPayload(JSON.parse(current.payload)) : null
     if (
       current?.report_status === 'in_progress' &&
       currentPayload?.kind === 'rich_rcs' &&
@@ -498,7 +494,7 @@ const process_rich_timeout = (
       finalize_bulk_item_with_db(db, {
         jobId: job.id,
         status: 'ko',
-        outcome: { code, node_id: payload.nodeId },
+        outcome: { code, nodeId: payload.nodeId },
         currentActivityId: current.current_activity_id,
         completedAt: clock.now().toISOString(),
         payload: currentPayload
@@ -515,7 +511,7 @@ const process_rich_timeout = (
 
 export const process_job = async (job: Job): Promise<void> => {
   try {
-    const payload = JSON.parse(job.payload) as BulkItemPayload
+    const payload = parseStoredPayload(JSON.parse(job.payload))
     if (payload.kind === 'fallback') {
       if (payload.stage === 'attempt') await process_fallback_attempt(job, payload)
       else process_fallback_status(job)
@@ -525,11 +521,11 @@ export const process_job = async (job: Job): Promise<void> => {
       process_rich_timeout(job, payload)
     }
   } catch (error) {
-    const db = new Database(datastore_path())
+    const db = openDatastore()
     const current = db
       .query<{ payload: string }, [string]>('SELECT payload FROM bulk_jobs WHERE id = ?')
       .get(job.id)
-    const payload = current ? (JSON.parse(current.payload) as BulkItemPayload) : null
+    const payload = current ? parseStoredPayload(JSON.parse(current.payload)) : null
     if (
       payload?.kind === 'rich_rcs' &&
       (payload.stage === 'rich_wait_delivery' || payload.stage === 'rich_wait_reply')

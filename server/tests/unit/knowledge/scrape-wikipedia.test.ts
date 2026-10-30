@@ -43,6 +43,15 @@ describe('clean_html', () => {
       expect(result).not.toContain('Voir aussi')
     })
 
+    it('removes footnote markers without touching the sentence', () => {
+      const html = `<div class="mw-parser-output"><p>Phrase.<sup class="reference"><a href="#cite_note-1">[1]</a></sup> <sup class="need_ref_tag"><a href="/wiki/Aide:Référence_nécessaire">[réf. nécessaire]</a></sup> Suite.</p></div>`
+      const result = clean_html(html, 'Page')
+      expect(result).not.toContain('[1]')
+      expect(result).not.toContain('réf. nécessaire')
+      expect(result).toContain('Phrase.')
+      expect(result).toContain('Suite.')
+    })
+
     it('removes figure elements', () => {
       const html =
         '<div class="mw-parser-output"><figure><img src="x.png"/><figcaption>Légende</figcaption></figure><p>Corps.</p></div>'
@@ -181,6 +190,41 @@ describe('html_to_markdown', () => {
     it('returns empty string for an empty table', () => {
       const md = html_to_markdown('<table></table>')
       expect(md.trim()).toBe('')
+    })
+
+    it('repeats a rowspan down the rows and leaves the other colspan cells empty', () => {
+      const html = `
+        <table>
+          <caption>Plafond <sup class="reference"><a href="#cite_note-7">[7]</a></sup></caption>
+          <tr>
+            <td rowspan="2">Arthur Levasseur</td>
+            <td>Logement</td>
+            <td rowspan="2" colspan="2">Plein exercice</td>
+            <td>Painlevé II</td>
+            <td>17 avril 1925</td>
+            <td>29 octobre 1925</td>
+          </tr>
+          <tr>
+            <td>Habitation</td>
+            <td>Painlevé III</td>
+            <td>29 octobre 1925</td>
+            <td>19 juillet 1926</td>
+          </tr>
+        </table>`
+      const md = html_to_markdown(clean_html(html, 'Page'))
+      const rows = md.split('\n').filter((line) => line.startsWith('|'))
+      const widths = new Set(rows.map((line) => line.split('|').length))
+
+      expect(md).toContain('Plafond')
+      expect(md).not.toContain('[7]')
+      expect(widths.size).toBe(1)
+      expect(md.match(/Arthur Levasseur/g)).toHaveLength(2)
+      expect(md).toContain(
+        '| Arthur Levasseur | Logement | Plein exercice |  | Painlevé II | 17 avril 1925 | 29 octobre 1925 |'
+      )
+      expect(md).toContain(
+        '| Arthur Levasseur | Habitation | Plein exercice |  | Painlevé III | 29 octobre 1925 | 19 juillet 1926 |'
+      )
     })
   })
 })

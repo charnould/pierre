@@ -1,5 +1,4 @@
 {
-  "$schema": "../node_modules/oxlint/configuration_schema.json",
   "rules": {
     "shadcn/no-arbitrary-values": "error",
     "shadcn/no-inline-styles": "error",
@@ -20,6 +19,12 @@
         "shadcn/no-arbitrary-values": "off",
         "shadcn/no-restyle": "off",
         "shadcn/require-static-classes": "off"
+      }
+    },
+    {
+      "files": ["**/src/features/repayment/plan/**"],
+      "rules": {
+        "shadcn/no-restyle": "off"
       }
     },
     {
@@ -58,8 +63,6 @@
         "**/src/features/outreach/components/BulkEditor.tsx",
         "**/src/features/outreach/components/BulkOperationsList.tsx",
         "**/src/features/repayment/components/create-plan/PlanFormSections.tsx",
-        "**/src/features/settings/components/HistoricalAppsConnectionField.tsx",
-        "**/src/features/settings/components/MascotField.tsx",
         "**/src/features/tickets/components/TicketsTableSkeleton.tsx",
         "**/src/features/updates/components/UpdateArticleBody.tsx",
         "**/src/shared/components/DirectoryList.tsx",
@@ -116,6 +119,26 @@
           {
             "allow": ["layout"],
             "contracts": [{ "pattern": "^Tabs$", "allow": ["layout", "gap-0"] }]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/home/HomeView.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^Card$",
+                "allow": ["layout", "gap-1", "px-4", "py-3", "aspect-[1.618]"]
+              },
+              { "pattern": "^CardHeader$", "allow": ["layout", "px-0"] },
+              { "pattern": "^CardContent$", "allow": ["layout", "px-0"] },
+              { "pattern": "^Button$", "allow": ["layout", "h-5", "text-xs"] }
+            ]
           }
         ]
       }
@@ -623,6 +646,28 @@
           {
             "allow": ["layout"],
             "contracts": [{ "pattern": "^InputGroupInput$", "allow": ["layout", "tabular-nums"] }]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "**/src/features/administration/components/ProvidersPanel.tsx",
+        "**/src/features/administration/components/SetupPanel.tsx"
+      ],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              { "pattern": "^Input$", "allow": ["layout", "font-mono", "py-0", "leading-8"] },
+              {
+                "pattern": "^InputGroupInput$",
+                "allow": ["layout", "font-mono", "py-0", "leading-8"]
+              },
+              { "pattern": "^Textarea$", "allow": ["layout", "font-mono"] }
+            ]
           }
         ]
       }

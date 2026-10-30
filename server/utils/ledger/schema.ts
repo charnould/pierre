@@ -51,11 +51,11 @@ export type LedgerListResult = {
     total: number
     limit: number
     offset: number
-    snapshot_date: string | null
+    snapshotDate: string | null
     columns: LedgerColumnMeta[]
-    default_sort: string
+    defaultSort: string
     /** True when CSV `gestionnaire` is unused (missing column or 100% null/empty). */
-    gestionnaire_assignable: boolean
+    gestionnaireAssignable: boolean
   }
 }
 
@@ -63,7 +63,7 @@ export type LedgerMovementsResult = {
   data: Record<string, unknown>[]
   meta: {
     total: number
-    snapshot_date: string | null
+    snapshotDate: string | null
   }
 }
 

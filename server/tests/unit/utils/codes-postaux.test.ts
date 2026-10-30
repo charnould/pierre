@@ -12,7 +12,7 @@ import {
   parse_codes_postaux_csv,
   parse_csv_line
 } from '../../../utils/knowledge/codes-postaux'
-import { import_json_rows } from '../../../utils/knowledge/sqlite-table-import'
+import { import_rows } from '../../../utils/knowledge/sqlite-table-import'
 
 const TEST_CSV = 'datastores/_test_codes_postaux.csv'
 
@@ -52,9 +52,7 @@ describe('postal identifier columns', () => {
 
   it('keeps identifiers as TEXT and imports the reference for a direct consumer', async () => {
     const db = new Database(':memory:')
-    await import_json_rows(db, 'lots', [
-      { code_postal: 1000, code_insee: 1053, code_departement: 1 }
-    ])
+    await import_rows(db, 'lots', [{ code_postal: 1000, code_insee: 1053, code_departement: 1 }])
 
     const types = Object.fromEntries(
       db

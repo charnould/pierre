@@ -1,5 +1,5 @@
 import { Database } from 'bun:sqlite'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, spyOn } from 'bun:test'
 import { mkdir, rm } from 'node:fs/promises'
 
 import { build_rattachement } from '../../../../utils/activities/rows'
@@ -75,7 +75,7 @@ describe('automations store', () => {
     })
     expect(auto.owner).toBe('alice')
     expect(auto.status).toBe('scheduled')
-    expect(auto.next_run_at).toBeTruthy()
+    expect(auto.nextRunAt).toBeTruthy()
     expect(auto.cron).toBe('0 8 * * 1')
     expect(list_automations('alice', 'alice@example.com')).toHaveLength(1)
     expect(list_automations('bob@example.com', 'bob@example.com')).toHaveLength(1)
@@ -126,13 +126,13 @@ describe('automations store', () => {
     })
     const paused = await update_automation(auto.id, 'alice', { status: 'paused' })
     expect(paused.status).toBe('paused')
-    expect(paused.next_run_at).toBeNull()
+    expect(paused.nextRunAt).toBeNull()
     const resumed = await update_automation(auto.id, 'alice', { status: 'scheduled' })
     expect(resumed.status).toBe('scheduled')
-    expect(resumed.next_run_at).toBeTruthy()
+    expect(resumed.nextRunAt).toBeTruthy()
   })
 
-  it('persists oxfmt-formatted report prompt', async () => {
+  it('persists a formatted report prompt', async () => {
     const messy = '-  item1\n-   item2'
     const auto = await create_automation('alice', {
       type: 'report',
@@ -164,9 +164,9 @@ describe('automations worker', () => {
       mentions: ['bob']
     })
     const after = await run_automation_now(auto.id, 'alice')
-    expect(after.last_run_status).toBe('success')
+    expect(after.lastRunStatus).toBe('success')
     expect(after.status).toBe('scheduled')
-    expect(after.next_run_at).toBeTruthy()
+    expect(after.nextRunAt).toBeTruthy()
 
     const db = new Database(paths.database)
     const row = db
@@ -226,6 +226,7 @@ describe('automations worker', () => {
   })
 
   it('executor error still replanifies', async () => {
+    const errorSpy = spyOn(console, 'error').mockImplementation(() => {})
     set_automation_executor(async () => {
       throw new Error('boom')
     })
@@ -236,10 +237,15 @@ describe('automations worker', () => {
       frequencyTime: '08:00',
       prompt: 'p'
     })
-    const after = await run_automation_now(auto.id, 'alice')
-    expect(after.last_run_status).toBe('error')
-    expect(after.status).toBe('scheduled')
-    expect(after.next_run_at).toBeTruthy()
+    try {
+      const after = await run_automation_now(auto.id, 'alice')
+      expect(after.lastRunStatus).toBe('error')
+      expect(after.status).toBe('scheduled')
+      expect(after.nextRunAt).toBeTruthy()
+      expect(errorSpy).toHaveBeenCalledTimes(1)
+    } finally {
+      errorSpy.mockRestore()
+    }
   })
 
   it('trim preserves append-only report activities', async () => {
@@ -283,8 +289,8 @@ describe('automations worker', () => {
     await update_automation(auto.id, 'alice', { status: 'paused' })
     const after = await run_automation_now(auto.id, 'alice')
     expect(after.status).toBe('paused')
-    expect(after.next_run_at).toBeNull()
-    expect(after.last_run_status).toBe('success')
+    expect(after.nextRunAt).toBeNull()
+    expect(after.lastRunStatus).toBe('success')
   })
 
   it('due poll reclaim stuck running then runs due', async () => {
@@ -312,7 +318,7 @@ describe('automations worker', () => {
     await run_due_automations()
     const afterReclaim = get_automation(auto.id, 'alice')!
     // stuck was reclaimed to error + scheduled with future next — make it due and poll again
-    expect(afterReclaim.last_run_status).toBe('error')
+    expect(afterReclaim.lastRunStatus).toBe('error')
     expect(afterReclaim.status).toBe('scheduled')
 
     const db2 = new Database(paths.database)
@@ -323,6 +329,6 @@ describe('automations worker', () => {
     db2.close()
     await run_due_automations()
     const afterRun = get_automation(auto.id, 'alice')!
-    expect(afterRun.last_run_status).toBe('success')
+    expect(afterRun.lastRunStatus).toBe('success')
   })
 })

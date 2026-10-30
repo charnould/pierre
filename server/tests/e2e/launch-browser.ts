@@ -2,6 +2,9 @@ const DEFAULT_TIMEOUT = 60_000
 const POLL_INTERVAL = 25
 const initializedViews = new WeakSet<Bun.WebView>()
 
+export const e2eUrl = (path = '/'): string =>
+  new URL(path, Bun.env['E2E_BASE_URL'] ?? 'http://127.0.0.1:3000').toString()
+
 export function createE2EView(
   dimensions: { width: number; height: number } = { width: 1080, height: 1024 }
 ): Bun.WebView {
@@ -52,11 +55,6 @@ export async function navigate(view: Bun.WebView, url: string): Promise<void> {
   await view.navigate(url)
 }
 
-export async function fillInput(view: Bun.WebView, selector: string, value: string): Promise<void> {
-  await view.click(selector, { timeout: DEFAULT_TIMEOUT })
-  await view.type(value)
-}
-
 export async function waitForDom(
   view: Bun.WebView,
   condition: string,
@@ -67,76 +65,4 @@ export async function waitForDom(
     () => evaluate<boolean>(view, `Boolean(${condition})`),
     timeout
   )
-}
-
-export async function clickAndWait(
-  view: Bun.WebView,
-  selector: string,
-  expectation: { url: string | RegExp } | { dom: string },
-  timeout = DEFAULT_TIMEOUT
-): Promise<void> {
-  const before = await currentUrl(view)
-  let didNavigate = false
-  const previousOnNavigated = view.onNavigated
-
-  view.onNavigated = (...args) => {
-    previousOnNavigated?.(...args)
-    didNavigate = true
-  }
-
-  const expected = 'url' in expectation ? expectation.url : undefined
-  try {
-    if ('url' in expectation && typeof expectation.url === 'string' && expectation.url === before) {
-      const turboMarker = `__e2eTurbo${Bun.randomUUIDv7().replaceAll('-', '')}`
-      await evaluate(
-        view,
-        `(() => {
-          document.addEventListener(
-            "turbo:load",
-            () => { window[${JSON.stringify(turboMarker)}] = true },
-            { once: true }
-          )
-          return true
-        })()`
-      )
-      await view.click(selector, { timeout })
-      await waitFor(
-        `navigation or Turbo update to ${expectation.url}`,
-        async () => {
-          const href = await currentUrl(view)
-          if (href !== expectation.url) return false
-          if (didNavigate) return true
-          return evaluate<boolean>(view, `window[${JSON.stringify(turboMarker)}] === true`)
-        },
-        timeout
-      )
-    } else {
-      const observed = waitFor(
-        'url or DOM change after click',
-        async () => {
-          if ('dom' in expectation) {
-            return evaluate<boolean>(view, `Boolean(${expectation.dom})`)
-          }
-
-          const href = await currentUrl(view)
-          if (typeof expected === 'string') return href === expected
-          if (!expected) return false
-          expected.lastIndex = 0
-          return expected.test(href)
-        },
-        timeout
-      )
-      await view.click(selector, { timeout })
-      await observed
-    }
-  } finally {
-    view.onNavigated = previousOnNavigated
-  }
-}
-
-export async function getCookies(view: Bun.WebView): Promise<Array<{ name: string }>> {
-  const result = (await view.cdp('Network.getAllCookies')) as {
-    cookies: Array<{ name: string }>
-  }
-  return result.cookies
 }

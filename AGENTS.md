@@ -71,26 +71,54 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ---
 
-## Formatting
+## Formatting and lint
 
-Format from the **repo root**, never from `desktop/`:
+Run these from the **repo root**. `bun fmt` and oxlint rewrite files when asked to fix: check first, then fix only the files you touched. Do not format or lint-fix the whole repository.
 
 ```bash
-bun run format:check                            # whole repo, read-only
-bun run oxfmt -c ./config/oxfmt.jsonc <files>   # specific files
+bun fmt --check
+bun fmt <files>
+bun oxlint
+bun oxlint --fix <files>
+bun check
 ```
 
-`bun run format` and `bun run lint` end in `--fix`/`--fix-dangerously` and rewrite every matching file in the repo, not just yours — including uncommitted work you did not touch. Use `format:check` and `lint:check` to find problems, and fix your own files by passing them explicitly.
+Style (single quotes, no semicolons, `printWidth` 100, `sortImports`, `sortTailwindcss`, `sortPackageJson`) lives in `bunfig.toml`. Lint rules and ignore patterns live in `.oxlintrc.jsonc` at the repo root: Oxlint anchors those patterns on the config file's directory, so the file cannot live under `config/`. Bun 1.4.4 ships `bun fmt` only: `bun lint` is still canary, so this repo keeps oxlint. Do not add a `fmt` or `lint` script — a `fmt` script hides `bun fmt`, and a `lint` script would hide `bun lint` once a stable release includes it.
 
-The config (single quotes, no semicolons, `printWidth` 100, `sortImports`, `sortTailwindcss`) lives at `config/oxfmt.jsonc`. Running `oxfmt` without `-c` silently falls back to its defaults — double quotes and semicolons, the opposite of this project — and reports only an easily-missed `No config found` line, printed last.
+```bash
+bun test config/checks
+bun test cli/tests
+TZ=Europe/Paris bun test --cwd desktop
+TZ=Europe/Paris bun test --cwd desktop --watch
+bun test --cwd server --max-concurrency 1 unit
+bun server/utils/update-pierre.ts
+bun server/tests/live/cm-channels.ts
+```
 
 ---
 
-## Design System
+## Design system
 
-Lire intégralement `desktop/design-system.md` avant toute création, modification ou revue
-d’interface.
+Avant toute création, modification ou revue d’interface, lire `desktop/DESIGN.md` en entier. C’est la loi visuelle. Elle gagne sur un skill, un exemple shadcn, ou une habitude du code.
 
-Ce document est l’unique source de vérité des règles UI et visuelles et prévaut en cas de conflit.
+Pas de couleur, de radius, de typographie ou de composition inventés dans un composant. `className` place un élément. Il ne redessine pas une primitive.
 
-Toute nouvelle règle visuelle doit être validée puis documentée dans `desktop/design-system.md`, jamais dans `AGENTS.md`.
+Un écart s’arrête avant le code. Il devient une ligne de « Exceptions volontairement conservées » dans `desktop/DESIGN.md` : ce qui s’écarte, pourquoi le contrat ne suffit pas, ce qui a été refusé. Pas de `className` silencieux. Aucune règle visuelle ne s’écrit dans `AGENTS.md`.
+
+## shadcn
+
+Avant d’ajouter, composer ou revoir une interface, lire les skills `shadcn/ui` et `shadcn/improve`. S’ils sont absents, les installer depuis la racine :
+
+```bash
+bunx --bun skills add shadcn/ui
+bunx --bun skills add shadcn/improve
+bunx --bun skills add meodai/skill.color-expert
+```
+
+`shadcn/ui` fixe la composition. `shadcn/improve` ramène une interface existante vers ces règles. Les deux s’appliquent. Les primitives déjà du dépôt vivent dans `desktop/src/shared/components/ui`. Le CLI qui les ajoute est `bunx --bun shadcn@latest`.
+
+Si un skill et `desktop/DESIGN.md` divergent, le design system gagne. La divergence est l’exception documentée plus haut.
+
+## Serveur
+
+Le code serveur prend d’abord les API de <https://bun.com/docs> : `Bun.file`, `Bun.spawn`, `Bun.randomUUIDv7()`, `Bun.password`, Web Crypto, encodages de `Uint8Array`. Pas de `node:crypto` ni de `Buffer` quand Bun couvre le besoin. Les exceptions déjà réelles sont dans `server/AGENTS.md`.

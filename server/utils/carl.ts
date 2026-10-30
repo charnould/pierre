@@ -1,7 +1,8 @@
+import { CARL_MODEL_FILES } from '../../shared/carl-model'
 import { CARL_DIR } from './paths'
 
 export { CARL_DIR }
-export const SEQUENCE_LENGTH = 128
+const SEQUENCE_LENGTH = 128
 
 export const HEADS = [
   'code',
@@ -21,9 +22,9 @@ export const FIELDS = [
   'ton'
 ] as const
 
-export type Field = (typeof FIELDS)[number]
+type Field = (typeof FIELDS)[number]
 export type Mention = Record<Field, string>
-export type Head = (typeof HEADS)[number]
+type Head = (typeof HEADS)[number]
 
 export type CarlLabels = Record<Head, string[]>
 
@@ -31,8 +32,9 @@ const SIDE = ['integrite_physique', 'lieu', 'obligation_reglementaire', 'ton'] a
 const SPECIAL = new Set(['hors_perimetre', 'inexploitable'])
 
 export async function modelFilesPresent(): Promise<boolean> {
-  const names = ['model.onnx', 'labels.json', 'tokenizer.json', 'tokenizer_config.json']
-  const present = await Promise.all(names.map((name) => Bun.file(`${CARL_DIR}/${name}`).exists()))
+  const present = await Promise.all(
+    CARL_MODEL_FILES.map((name) => Bun.file(`${CARL_DIR}/${name}`).exists())
+  )
   return present.every(Boolean)
 }
 

@@ -1,21 +1,23 @@
 import { expect, it } from 'bun:test'
 
-import { createE2EView, currentUrl, evaluate, navigate, waitForDom } from './launch-browser'
+import { createE2EView, currentUrl, e2eUrl, evaluate, navigate, waitForDom } from './launch-browser'
 
 it('serves the public chatbot on / and embeds ?data= in the boot payload', async () => {
   await using view = createE2EView()
 
-  await navigate(view, 'http://localhost:3000/')
-  expect(await currentUrl(view)).toBe('http://localhost:3000/')
-  await waitForDom(view, 'document.body.innerText.includes("préavis")')
-  expect(await evaluate<string>(view, 'document.body.innerText')).toContain('préavis')
-  expect(await evaluate<string>(view, 'document.body.innerText')).not.toContain('Exemples')
-  expect(
-    await evaluate<string>(view, 'document.getElementById("pierre-data")?.textContent ?? ""')
-  ).toContain('"dataParam":""')
+  await navigate(view, e2eUrl('/'))
+  expect(await currentUrl(view)).toBe(e2eUrl('/'))
+  await waitForDom(view, '(document.querySelector("#root")?.childElementCount ?? 0) > 0')
+  expect(await evaluate<string>(view, 'document.body.innerText')).toContain('Bonjour')
+  const initialBoot = await evaluate<string>(
+    view,
+    'document.getElementById("pierre-data")?.textContent ?? ""'
+  )
+  expect(initialBoot).toContain('"dataParam":""')
+  expect(initialBoot).toContain('"Question"')
 
-  await navigate(view, 'http://localhost:3000/?data=L-42')
-  expect(await currentUrl(view)).toBe('http://localhost:3000/?data=L-42')
+  await navigate(view, e2eUrl('/?data=L-42'))
+  expect(await currentUrl(view)).toBe(e2eUrl('/?data=L-42'))
   await waitForDom(view, 'document.getElementById("pierre-data")')
   const boot = await evaluate<string>(
     view,

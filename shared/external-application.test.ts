@@ -2,11 +2,11 @@ import { describe, expect, test } from 'bun:test'
 
 import {
   classifyLaunchTarget,
+  type ExternalApplication,
   isCssSelector,
   readExternalApplication,
   resolveExternalApplicationTarget,
-  validateExternalApplication,
-  type ExternalApplication
+  validateExternalApplication
 } from './external-application'
 
 const browser = {

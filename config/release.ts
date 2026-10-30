@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto'
-import { createReadStream } from 'node:fs'
-import { appendFileSync } from 'node:fs'
+import { appendFileSync, createReadStream } from 'node:fs'
 import { basename, join } from 'node:path'
 
 export type Product = 'cli' | 'desktop' | 'server'
@@ -32,7 +31,7 @@ const POLICIES: Record<Product, ReleasePolicy> = {
   cli: {
     assets: () => ['checksums.txt', 'install.sh', 'pierre-cli-linux-x64'],
     notes:
-      'Interface en ligne de commande (cli) pour l’installation, la configuration et la mise à jour de PIERRE (serveur)',
+      'Binaire de l’interface en ligne de commande (CLI) nécessaire à l’installation, la configuration et la mise à jour de PIERRE (serveur) et des modèles de langage issus de « Core Models HLM ».',
     packagePath: 'cli/package.json',
     prefix: 'cli-',
     sourcePaths: ['cli/package.json', 'server/microvm/versions.json'],

@@ -1,10 +1,10 @@
 import { Database } from 'bun:sqlite'
 
 import {
-  parse_case_change_content,
-  parse_contenu_json,
-  parse_task_content
-} from '../../../shared/activites'
+  parseCaseChangeContent,
+  parseContentJson,
+  parseTaskContent
+} from '../../../shared/activity-content'
 import { chronological_date_key, sql_date_key } from '../sql-normalization'
 
 export type RepaymentActivityState = {
@@ -52,7 +52,12 @@ export const latest_repayment_states = (
              'case.group_changed', 'case.assignee_changed',
              'task.completed', 'bulk.applied'
            )
-           OR type LIKE 'communication.%'
+           OR (
+             type LIKE 'communication.%'
+             AND json_valid(contenu)
+             AND json_type(contenu, '$.action') = 'text'
+             AND trim(json_extract(contenu, '$.action')) <> ''
+           )
          )
        ORDER BY ${sql_date_key('date_creation')} DESC, id DESC`
     )
@@ -68,9 +73,9 @@ export const latest_repayment_states = (
       gestionnaire: null,
       gestionnaire_email: null
     }
-    const metadata = parse_contenu_json(row.contenu)
+    const metadata = parseContentJson(row.contenu)
     if (!bucketResolved.has(row.id_locataire) && row.type === 'case.group_changed') {
-      const change = parse_case_change_content(row.contenu)
+      const change = parseCaseChangeContent(row.contenu)
       const bucket = value_label(change?.after)
       if (bucket) {
         state.bucket = bucket
@@ -87,7 +92,7 @@ export const latest_repayment_states = (
         bucketResolved.add(row.id_locataire)
       }
     }
-    const task = row.type === 'task.completed' ? parse_task_content(row.contenu) : null
+    const task = row.type === 'task.completed' ? parseTaskContent(row.contenu) : null
     const actionLabel =
       task?.task.title ??
       (row.type === 'bulk.applied' && typeof metadata['title'] === 'string'
@@ -109,7 +114,7 @@ export const latest_repayment_states = (
       actionDates.set(row.id_locataire, actionDateKey)
     }
     if (!gestionnaireResolved.has(row.id_locataire) && row.type === 'case.assignee_changed') {
-      const change = parse_case_change_content(row.contenu)
+      const change = parseCaseChangeContent(row.contenu)
       const email = value_label(change?.after)
       if (email) {
         state.gestionnaire = email
@@ -132,30 +137,41 @@ export const repayment_action_history = (
   if (ids.length === 0) return result
   const placeholders = ids.map(() => '?').join(', ')
   const rows = db
-    .query<{ id_locataire: string; type: string; contenu: string }, string[]>(
-      `SELECT id_locataire, type, contenu
-       FROM activites
-       WHERE id_locataire IN (${placeholders})
-         AND rattachement = 'repayment:' || id_locataire
-         AND (
-           type IN ('task.completed', 'bulk.applied')
-           OR type LIKE 'communication.%'
-         )`
+    .query<{ id_locataire: string; label: string }, string[]>(
+      `SELECT DISTINCT id_locataire, label
+       FROM (
+         SELECT id_locataire,
+           CASE
+             WHEN type = 'task.completed'
+               AND json_valid(contenu)
+               AND json_type(contenu, '$.task.title') = 'text'
+               AND trim(json_extract(contenu, '$.task.title')) <> ''
+             THEN trim(json_extract(contenu, '$.task.title'))
+             WHEN type = 'bulk.applied'
+               AND json_valid(contenu)
+               AND json_type(contenu, '$.title') = 'text'
+               AND trim(json_extract(contenu, '$.title')) <> ''
+             THEN trim(json_extract(contenu, '$.title'))
+             WHEN json_valid(contenu)
+               AND json_type(contenu, '$.action') = 'text'
+               AND trim(json_extract(contenu, '$.action')) <> ''
+             THEN trim(json_extract(contenu, '$.action'))
+             ELSE NULL
+           END AS label
+         FROM activites
+         WHERE id_locataire IN (${placeholders})
+           AND rattachement = 'repayment:' || id_locataire
+           AND (
+             type IN ('task.completed', 'bulk.applied')
+             OR type LIKE 'communication.%'
+           )
+       )
+       WHERE label IS NOT NULL`
     )
     .all(...ids)
   for (const row of rows) {
-    const metadata = parse_contenu_json(row.contenu)
-    const task = row.type === 'task.completed' ? parse_task_content(row.contenu) : null
-    const label =
-      task?.task.title ??
-      (row.type === 'bulk.applied' && typeof metadata['title'] === 'string'
-        ? metadata['title']
-        : typeof metadata['action'] === 'string'
-          ? metadata['action']
-          : null)
-    if (!label?.trim()) continue
     const set = result.get(row.id_locataire) ?? new Set<string>()
-    set.add(label)
+    set.add(row.label)
     result.set(row.id_locataire, set)
   }
   return result

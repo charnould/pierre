@@ -1,36 +1,48 @@
 import { Database } from 'bun:sqlite'
 
 import {
+  type Activity,
   ACTIVITY_CONTEXTS,
-  type Activite,
   type ActivityContext,
   type ActivityType,
   type CommunicationChannel,
-  type Mention,
-  is_activity_type,
-  parse_activity_content
-} from '../../../shared/activites'
+  isActivityType,
+  type Mention
+} from '../../../shared/activities'
+import { parseActivityContent } from '../../../shared/activity-content'
 import {
   DESKTOP_AGENT_DESTINATAIRE,
   desktopAgentMentionHandle
 } from '../../../shared/agent-identity'
-import { datastorePaths } from '../paths'
+import { isRepaymentPlanEventType } from '../../../shared/repayment-plan'
+import { openDatastore } from '../datastore-db'
 import { send_telemetry } from '../send-telemetry'
 import { name } from '../setup-store'
 import { ActivitiesError, ActivityRowSchema, AUTHOR_RE, MENTION_RE, parse_mentions } from './schema'
 
-export type ActivityDbRow = Omit<Activite, 'mentions' | 'type' | 'channel'> & {
-  mentions: string
+export type ActivityDbRow = {
+  id: number
+  date_creation: string
+  rattachement: string
+  auteur: string
+  destinataire: string | null
+  id_client: string | null
+  id_locataire: string | null
+  id_lot: string | null
   type: string
   channel: string | null
-  bulk_id?: string | null
-  execution_id?: string | null
-  idempotency_key?: string | null
+  mentions: string
+  contenu: string
+  thread_id: string | null
+  revision: number | null
+  bulk_id: string | null
+  execution_id: string | null
+  idempotency_key: string | null
+  id_externe: string | null
 }
 
-export type ActivityFacets = Pick<Activite, 'id_client' | 'id_locataire' | 'id_lot'>
+export type ActivityFacets = Pick<Activity, 'id_client' | 'id_locataire' | 'id_lot'>
 
-export const datastore_path = (): string => datastorePaths().database
 export const login_from_email = (email: string): string => {
   const at = email.indexOf('@')
   return (at === -1 ? email : email.slice(0, at)).trim().toLowerCase()
@@ -53,26 +65,36 @@ export const parse_rattachement = (
 }
 
 export const normalize_activity_content = (type: ActivityType, raw: string): string => {
-  const parsed = parse_activity_content(type, raw)
+  const parsed = parseActivityContent(type, raw)
   if (!parsed) throw new ActivitiesError(`Invalid ${type} content`)
   return JSON.stringify(parsed)
 }
 
-export const row_to_activity = (row: ActivityDbRow): Activite => {
-  if (!is_activity_type(row.type)) throw new Error(`Unknown activity type ${row.type}`)
+export const row_to_activity = (row: ActivityDbRow): Activity => {
+  if (!isActivityType(row.type)) throw new Error(`Unknown activity type ${row.type}`)
+  const isRepaymentPlanTombstone = isRepaymentPlanEventType(row.type) && row.contenu === '{}'
+  if (!isRepaymentPlanTombstone && !parseActivityContent(row.type, row.contenu)) {
+    throw new Error(`Invalid stored ${row.type} content for activity ${row.id}`)
+  }
   return {
-    ...row,
     id: Number(row.id),
+    createdAt: row.date_creation,
+    rattachement: row.rattachement,
+    auteur: row.auteur,
     destinataire: row.destinataire ?? null,
+    id_client: row.id_client,
+    id_locataire: row.id_locataire,
+    id_lot: row.id_lot,
     type: row.type,
     channel: (row.channel as CommunicationChannel | null) ?? null,
     mentions: parse_mentions(row.mentions),
     contenu: row.contenu,
-    thread_id: row.thread_id ?? null,
+    threadId: row.thread_id ?? null,
     revision: row.revision == null ? null : Number(row.revision),
-    bulk_id: row.bulk_id ?? null,
-    execution_id: row.execution_id ?? null,
-    idempotency_key: row.idempotency_key ?? null
+    bulkId: row.bulk_id ?? null,
+    executionId: row.execution_id ?? null,
+    idempotencyKey: row.idempotency_key ?? null,
+    externalId: row.id_externe ?? null
   }
 }
 
@@ -91,9 +113,10 @@ export type InsertActivityValues = {
   bulk_id?: string | null
   execution_id?: string | null
   idempotency_key?: string | null
+  id_externe?: string | null
 }
 
-export const insert_activity_row = (db: Database, values: InsertActivityValues): Activite => {
+export const insert_activity_row = (db: Database, values: InsertActivityValues): Activity => {
   const row_shape = ActivityRowSchema.parse({
     type: values.type,
     channel: values.channel ?? null,
@@ -106,8 +129,8 @@ export const insert_activity_row = (db: Database, values: InsertActivityValues):
       `INSERT INTO activites (
          date_creation, rattachement, auteur, destinataire,
          id_client, id_locataire, id_lot, type, channel, mentions, contenu,
-         thread_id, revision, bulk_id, execution_id, idempotency_key
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         thread_id, revision, bulk_id, execution_id, idempotency_key, id_externe
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        RETURNING *`
     )
     .get(
@@ -126,7 +149,8 @@ export const insert_activity_row = (db: Database, values: InsertActivityValues):
       row_shape.revision,
       values.bulk_id ?? null,
       values.execution_id ?? null,
-      values.idempotency_key ?? null
+      values.idempotency_key ?? null,
+      values.id_externe ?? null
     )
   if (!row) throw new Error('Failed to append activity')
   send_telemetry(values.type, db)
@@ -283,15 +307,15 @@ export const merge_mentions_from_content = (
   return build_mentions(db, contenu).map((fresh) => previous.get(fresh.destinataire) ?? fresh)
 }
 
-export const get_activity_with_db = (db: Database, id: number): Activite | null => {
+export const get_activity_with_db = (db: Database, id: number): Activity | null => {
   const row = db
     .query<ActivityDbRow, [number]>('SELECT * FROM activites WHERE id = ? LIMIT 1')
     .get(id)
   return row ? row_to_activity(row) : null
 }
 
-export const get_activity = (id: number): Activite | null => {
-  const db = new Database(datastore_path(), { readonly: true })
+export const get_activity = (id: number): Activity | null => {
+  const db = openDatastore({ readonly: true })
   try {
     return get_activity_with_db(db, id)
   } finally {
@@ -299,8 +323,8 @@ export const get_activity = (id: number): Activite | null => {
   }
 }
 
-export const get_activity_by_idempotency_key = (key: string): Activite | null => {
-  const db = new Database(datastore_path(), { readonly: true })
+export const get_activity_by_idempotency_key = (key: string): Activity | null => {
+  const db = openDatastore({ readonly: true })
   try {
     const row = db
       .query<ActivityDbRow, [string]>('SELECT * FROM activites WHERE idempotency_key = ? LIMIT 1')

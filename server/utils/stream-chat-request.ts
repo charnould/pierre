@@ -17,13 +17,14 @@ const defaultDependencies: StreamChatRequestDependencies = {
   streamAnswer: streamChatAnswer
 }
 
-/** Saves a chat turn and streams its canonical NDJSON response for GET and POST /ai. */
+/** Saves a chat turn and streams its canonical NDJSON response for POST /chat. */
 export async function streamChatRequest(
   c: Context,
   context: AIContext,
   attachments?: PiImageContent[],
   attachmentLifecycle?: Pick<ProcessedPiAttachments, 'claim' | 'rollback'>,
-  dependencies: StreamChatRequestDependencies = defaultDependencies
+  dependencies: StreamChatRequestDependencies = defaultDependencies,
+  onFinished?: () => void
 ) {
   c.header('Content-Type', 'application/x-ndjson; charset=utf-8')
   try {
@@ -36,26 +37,31 @@ export async function streamChatRequest(
   return stream(
     c,
     async (output) => {
-      const abortController = new AbortController()
-      output.onAbort(() => {
-        console.log('[STREAM] Client disconnected — aborting')
-        abortController.abort()
-      })
+      try {
+        const abortController = new AbortController()
+        output.onAbort(() => {
+          console.log('[STREAM] Client disconnected — aborting')
+          abortController.abort()
+        })
 
-      const { textStream } = dependencies.streamAnswer(
-        context,
-        abortController.signal,
-        attachments,
-        attachmentLifecycle
-      )
-      for await (const chunk of textStream) {
-        if (chunk) await output.write(chunk)
+        const { textStream } = dependencies.streamAnswer(
+          context,
+          abortController.signal,
+          attachments,
+          attachmentLifecycle
+        )
+        for await (const chunk of textStream) {
+          if (chunk) await output.write(chunk)
+        }
+      } finally {
+        onFinished?.()
       }
     },
     async (error, output) => {
       console.error('[STREAM_ERROR]', error)
       await attachmentLifecycle?.rollback()
       await output.write(ndjsonLine({ type: 'error' }))
+      onFinished?.()
     }
   )
 }

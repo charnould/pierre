@@ -1,17 +1,20 @@
+import { rm } from 'node:fs/promises'
+
 import type { FileSink, Subprocess } from 'bun'
 import { $ } from 'bun'
 
-import { cleanupConversationUploads } from './ai-attachments'
+import { cleanupConversationWorkspace } from './ai-attachments'
+import { datastorePaths } from './paths'
 import type { PierreInstance } from './smolvm'
 import {
   createPierreInstance,
   destroyPierreInstance,
-  getConversationUploadsPath,
+  getConversationWorkspacePath,
   getKnowledgePath,
-  getUploadsPath,
+  getWorkspacesPath,
   startPierreOnPoolVm
 } from './smolvm'
-import { takePoolVm } from './vm-pool'
+import { takePoolVm, withVmCreationSlot } from './vm-pool'
 
 // How long a VM lives without any activity before being destroyed
 const INACTIVITY_TIMEOUT_MS = Number(Bun.env['VM_INACTIVITY_TIMEOUT_MS'] ?? 10 * 60 * 1000)
@@ -40,6 +43,7 @@ class PiRpcClient {
   private readonly process: Subprocess<'pipe', 'pipe', 'inherit'>
   private readonly pendingCommands = new Map<string, PendingCommand>()
   private readonly eventListeners = new Set<(event: Record<string, unknown>) => void>()
+  private readonly closeListeners = new Set<() => void>()
   private disposed = false
 
   constructor(process: Subprocess<'pipe', 'pipe', 'inherit'>) {
@@ -83,6 +87,9 @@ class PiRpcClient {
       pending.reject(new Error('Pi process stdout closed'))
     }
     this.pendingCommands.clear()
+    if (!this.disposed) {
+      for (const listener of this.closeListeners) listener()
+    }
   }
 
   /** Sends a command with a unique id and waits for the matching response. */
@@ -130,6 +137,14 @@ class PiRpcClient {
     }
   }
 
+  /** Subscribes to unexpected subprocess/stdout closure. */
+  onClose(listener: () => void): () => void {
+    this.closeListeners.add(listener)
+    return () => {
+      this.closeListeners.delete(listener)
+    }
+  }
+
   /**
    * Polls Pi with `get_session_stats` until it responds, confirming RPC is ready.
    * Replaces the TCP `waitForPort` from the Copilot architecture.
@@ -155,6 +170,7 @@ class PiRpcClient {
     }
     this.pendingCommands.clear()
     this.eventListeners.clear()
+    this.closeListeners.clear()
   }
 
   private write(line: string): void {
@@ -193,6 +209,15 @@ type PendingUiRequest = UiResponseCapability & {
 const registry = new Map<string, VmEntry>()
 const conversationReservations = new Map<string, number>()
 const deferredDestructions = new Set<string>()
+const pendingCreations = new Set<string>()
+
+const maxActiveVms = (): number => {
+  const value = Number(Bun.env['SMOLVM_MAX_ACTIVE'] ?? 96)
+  return Number.isSafeInteger(value) && value > 0 ? value : 96
+}
+
+const vmCapacityUsed = (): number =>
+  new Set([...registry.keys(), ...conversationReservations.keys(), ...pendingCreations]).size
 
 export type AcquireVmDependencies = {
   createInstance: typeof createPierreInstance
@@ -265,6 +290,13 @@ export function reserveConversation(convId: string): () => void {
   }
 }
 
+export function tryReserveConversation(convId: string): (() => void) | null {
+  const known =
+    registry.has(convId) || conversationReservations.has(convId) || pendingCreations.has(convId)
+  if (!known && vmCapacityUsed() >= maxActiveVms()) return null
+  return reserveConversation(convId)
+}
+
 /** Returns true if a VM is already running for the given conversation. */
 export function hasVm(convId: string): boolean {
   return registry.has(convId)
@@ -302,23 +334,34 @@ export async function acquireVm(
     }
   }
 
+  const reserved = isConversationReserved(convId)
+  if (!reserved && !pendingCreations.has(convId) && vmCapacityUsed() >= maxActiveVms()) {
+    throw new Error('VM capacity reached')
+  }
+  pendingCreations.add(convId)
   console.log(`[VM_REGISTRY] Creating VM for conv=${convId} config=${configId}`)
   const knowledgePath = getKnowledgePath(configId)
-  const uploadsPath = getConversationUploadsPath(configId, convId)
+  const workspacePath = getConversationWorkspacePath(configId, convId)
   const poolName = dependencies.takePoolInstance()
   let instance: PierreInstance
-  if (poolName) {
-    console.log(`[VM_REGISTRY] Using pool VM ${poolName} for conv=${convId}`)
-    instance = await dependencies.startPoolInstance(poolName, knowledgePath, uploadsPath, convId)
-  } else {
-    console.log(`[VM_REGISTRY] Pool empty — creating VM from .smolmachine for conv=${convId}`)
-    instance = await dependencies.createInstance(convId, configId)
+  try {
+    if (poolName) {
+      console.log(`[VM_REGISTRY] Using pool VM ${poolName} for conv=${convId}`)
+      instance = await dependencies.startPoolInstance(poolName, knowledgePath, workspacePath)
+    } else {
+      console.log(`[VM_REGISTRY] Pool empty — creating VM from .smolmachine for conv=${convId}`)
+      instance = await dependencies.createInstance(convId, configId)
+    }
+  } catch (error) {
+    pendingCreations.delete(convId)
+    throw error
   }
 
   let piClient: PiRpcClient
   try {
     piClient = dependencies.createClient(instance)
     await piClient.waitForReady()
+    await piClient.sendCommand({ type: 'set_auto_compaction', enabled: true }, 3_000)
     console.log(`[VM_REGISTRY] PiRpcClient ready for conv=${convId}`)
   } catch (err) {
     console.error(`[VM_REGISTRY] Pi RPC init failed for conv=${convId}, cleaning up VM:`, err)
@@ -326,6 +369,8 @@ export async function acquireVm(
       .destroyInstance(instance)
       .catch((e) => console.error('[VM_REGISTRY] Cleanup error:', e))
     throw err
+  } finally {
+    pendingCreations.delete(convId)
   }
 
   entry = {
@@ -338,6 +383,16 @@ export async function acquireVm(
     pendingUiRequest: null
   }
   registry.set(convId, entry)
+  piClient.onClose(() => {
+    const current = registry.get(convId)
+    if (!current || current.piClient !== piClient) return
+    console.warn(`[VM_REGISTRY] Pi process closed unexpectedly for conv=${convId}`)
+    if (current.activeRequests > 0 || isConversationReserved(convId)) {
+      deferredDestructions.add(convId)
+      return
+    }
+    void teardownVmEntry(convId, current, { preserveUploads: false })
+  })
   return entry
 }
 
@@ -488,24 +543,27 @@ function cancelPendingUiRequestForEntry(entry: VmEntry): void {
  * Called once at startup to remove VMs orphaned by a previous server crash or restart.
  */
 export async function cleanupOrphanedVms(): Promise<void> {
-  let machines: { name: string }[]
+  let machines: { name: string }[] = []
   try {
     const raw = await $`smolvm machine ls --json`.json()
     machines = Array.isArray(raw) ? raw : (raw?.machines ?? [])
   } catch {
-    return
+    // Uploads are still safe to clear before the server accepts requests.
   }
 
-  await Promise.allSettled(
-    machines.map(async ({ name }) => {
+  for (const { name } of machines) {
+    await withVmCreationSlot(async () => {
       try {
         await $`smolvm machine stop --name ${name}`.quiet()
       } catch {
         // already stopped or unreachable — proceed to delete
       }
       await $`smolvm machine delete --name ${name} -f`.quiet()
-      console.log(`[VM_REGISTRY] Deleted orphaned VM: ${name}`)
     })
+    console.log(`[VM_REGISTRY] Deleted orphaned VM: ${name}`)
+  }
+  await rm(`${datastorePaths().root}/workspaces`, { recursive: true, force: true }).catch((error) =>
+    console.warn('[VM_REGISTRY] Failed to cleanup orphaned workspaces:', error)
   )
 }
 
@@ -531,9 +589,9 @@ async function teardownVmEntry(
 
   if (!options.preserveUploads) {
     try {
-      await cleanupConversationUploads(getUploadsPath(entry.configId), convId)
+      await cleanupConversationWorkspace(getWorkspacesPath(entry.configId), convId)
     } catch (error) {
-      console.warn(`[VM_REGISTRY] Failed to cleanup uploads for conv=${convId}:`, error)
+      console.warn(`[VM_REGISTRY] Failed to cleanup workspace for conv=${convId}:`, error)
     }
   }
 
@@ -555,4 +613,17 @@ export async function destroyVm(convId: string): Promise<void> {
   if (!entry) return
 
   await teardownVmEntry(convId, entry, { preserveUploads: false })
+}
+
+/** Applies new provider/model credentials to subsequent turns without interrupting active work. */
+export async function invalidateAllVms(): Promise<void> {
+  const idle: Array<Promise<void>> = []
+  for (const [convId, entry] of registry) {
+    if (entry.activeRequests > 0 || isConversationReserved(convId)) {
+      deferredDestructions.add(convId)
+    } else {
+      idle.push(teardownVmEntry(convId, entry, { preserveUploads: false }))
+    }
+  }
+  await Promise.allSettled(idle)
 }

@@ -114,43 +114,43 @@ describe('bulk reports', () => {
   it('conserve un rapport vide terminal sans item', async () => {
     seed(false)
     const bulk = operation()
-    const result = await execute_bulk_operation('alice@example.org', bulk, {
+    const result = await execute_bulk_operation('alice@example.org', bulk.id, {
       mode: 'send',
       clientCommandId: 'empty'
     })
     const reports = list_bulk_reports(bulk.id)
     expect(reports).toHaveLength(1)
     expect(reports[0]?.report.status).toBe('ok')
-    expect(reports[0]?.report.counts).toEqual({ total: 0, in_progress: 0, ok: 0, ko: 0 })
+    expect(reports[0]?.report.counts).toEqual({ total: 0, inProgress: 0, ok: 0, ko: 0 })
     expect(reports[0]?.items).toEqual([])
-    expect(get_bulk_report(bulk.id, result.execution_id)?.items).toEqual([])
+    expect(get_bulk_report(bulk.id, result.executionId)?.items).toEqual([])
   })
 
   it('agrège un rapport mixte et expose tous ses items', async () => {
     seed(true)
     const bulk = operation()
     set_bulk_transport_for_tests(async () => 'accepted')
-    const result = await execute_bulk_operation('alice@example.org', bulk, {
+    const result = await execute_bulk_operation('alice@example.org', bulk.id, {
       mode: 'send',
       clientCommandId: 'mixed'
     })
     stop_bulk_scheduler()
     await drainAll()
-    const detail = get_bulk_report(bulk.id, result.execution_id)
+    const detail = get_bulk_report(bulk.id, result.executionId)
     expect(detail?.report.status).toBe('partial')
-    expect(detail?.report.counts).toEqual({ total: 2, in_progress: 0, ok: 1, ko: 1 })
+    expect(detail?.report.counts).toEqual({ total: 2, inProgress: 0, ok: 1, ko: 1 })
     expect(detail?.items).toHaveLength(2)
     expect(detail?.items.every((item) => item.runAt === null)).toBe(true)
     const listed = list_bulk_reports(bulk.id)
     expect(listed).toHaveLength(1)
     expect(listed[0]?.items).toHaveLength(2)
-    expect(listed[0]?.report.executionId).toBe(result.execution_id)
+    expect(listed[0]?.report.executionId).toBe(result.executionId)
   })
 
   it('retourne tous les items sans limite fonctionnelle', async () => {
     seed(false)
     const bulk = operation()
-    const result = await execute_bulk_operation('alice@example.org', bulk, {
+    const result = await execute_bulk_operation('alice@example.org', bulk.id, {
       mode: 'send',
       clientCommandId: 'large-report'
     })
@@ -164,14 +164,16 @@ describe('bulk reports', () => {
          report_status, outcome, completed_at, run_at, payload
        )
        SELECT 'item-' || n, ?, ?, 'LOC-' || n, 'comptes_locataires',
-              'apply_without_send', 'ok', '{"code":"applied"}',
-              '2026-08-28T12:00:00Z', NULL, '{}'
+              'apply_without_send', 'ok',
+              json_object('code', 'applied', 'activity_id', n, 'created', json('true')),
+              '2026-08-28T12:00:00Z', NULL,
+              '{"kind":"fallback","row":{"id_locataire":"LOC","id_client":null,"nom":null,"email":null,"telephone":null,"adresse":null,"gestionnaire":null,"gestionnaire_email":null,"values":{},"status":"eligible","route":null,"skipped_steps":[]},"stage":"attempt","step_index":0}'
        FROM ids`,
-      [bulk.id, result.execution_id]
+      [bulk.id, result.executionId]
     )
-    aggregate_bulk_run_with_db(db, result.execution_id, '2026-08-28T12:00:00Z')
+    aggregate_bulk_run_with_db(db, result.executionId, '2026-08-28T12:00:00Z')
     db.close()
-    const detail = get_bulk_report(bulk.id, result.execution_id)
+    const detail = get_bulk_report(bulk.id, result.executionId)
     expect(detail?.items).toHaveLength(2501)
     expect(detail?.report.counts.ok).toBe(2501)
   })
@@ -179,73 +181,68 @@ describe('bulk reports', () => {
   it('conserve les runs append-only et rejoue durablement une clé idempotente', async () => {
     seed(true)
     const bulk = operation(2)
-    const first = await execute_bulk_operation('alice@example.org', bulk, {
+    const first = await execute_bulk_operation('alice@example.org', bulk.id, {
       mode: 'apply_without_send',
       clientCommandId: 'first'
     })
-    const second = await execute_bulk_operation('alice@example.org', bulk, {
+    const second = await execute_bulk_operation('alice@example.org', bulk.id, {
       mode: 'apply_without_send',
       clientCommandId: 'second'
     })
-    const third = await execute_bulk_operation('alice@example.org', bulk, {
+    const third = await execute_bulk_operation('alice@example.org', bulk.id, {
       mode: 'apply_without_send',
       clientCommandId: 'third'
     })
     expect(list_bulk_reports(bulk.id).map((detail) => detail.report.executionId)).toEqual(
-      [first.execution_id, second.execution_id, third.execution_id].sort().reverse()
+      [first.executionId, second.executionId, third.executionId].sort().reverse()
     )
-    expect(get_bulk_report(bulk.id, first.execution_id)).not.toBeNull()
+    expect(get_bulk_report(bulk.id, first.executionId)).not.toBeNull()
     const db = new Database(DB_PATH, { readonly: true })
     expect(
       db
         .query<{ n: number }, [string]>(
           'SELECT COUNT(*) AS n FROM bulk_jobs WHERE execution_id = ?'
         )
-        .get(first.execution_id)?.n
+        .get(first.executionId)?.n
     ).toBe(0)
     db.close()
 
-    const replay = await execute_bulk_operation('alice@example.org', bulk, {
+    const replay = await execute_bulk_operation('alice@example.org', bulk.id, {
       mode: 'apply_without_send',
       clientCommandId: 'first'
     })
-    expect(replay.execution_id).toBe(first.execution_id)
+    expect(replay.executionId).toBe(first.executionId)
     expect(list_bulk_reports(bulk.id)).toHaveLength(3)
   })
 
   it('ne supprime pas le journal après réduction de rétention', async () => {
     seed(true)
     const bulk = operation(3)
-    const inProgress = await execute_bulk_operation('alice@example.org', bulk, {
+    const inProgress = await execute_bulk_operation('alice@example.org', bulk.id, {
       mode: 'send',
       clientCommandId: 'in-progress'
     })
     stop_bulk_scheduler()
-    const emptyDefinition = {
-      ...bulk.definition,
-      amountRange: { from: '999', to: '999' }
-    }
-    const updated = update_bulk_operation(bulk.id, 'alice', { definition: emptyDefinition })
-    await execute_bulk_operation('alice@example.org', updated, {
-      mode: 'send',
+    await execute_bulk_operation('alice@example.org', bulk.id, {
+      mode: 'apply_without_send',
       clientCommandId: 'done-1'
     })
-    await execute_bulk_operation('alice@example.org', updated, {
-      mode: 'send',
+    await execute_bulk_operation('alice@example.org', bulk.id, {
+      mode: 'apply_without_send',
       clientCommandId: 'done-2'
     })
     update_bulk_operation(bulk.id, 'alice', { reportsToKeep: 1 })
     const reports = list_bulk_reports(bulk.id)
     expect(reports.filter((detail) => detail.report.status !== 'in_progress')).toHaveLength(2)
     expect(
-      reports.find((detail) => detail.report.executionId === inProgress.execution_id)?.report.status
+      reports.find((detail) => detail.report.executionId === inProgress.executionId)?.report.status
     ).toBe('in_progress')
   })
 
   it('supprime transactionnellement rapports et travaux mais conserve les activités visibles', async () => {
     seed(true)
     const bulk = operation()
-    const result = await execute_bulk_operation('alice@example.org', bulk, {
+    const result = await execute_bulk_operation('alice@example.org', bulk.id, {
       mode: 'send',
       clientCommandId: 'delete'
     })
@@ -254,7 +251,7 @@ describe('bulk reports', () => {
     await drain_bulk_jobs()
     stop_bulk_scheduler()
     const queued = get_activity_by_idempotency_key(
-      `bulk:${result.execution_id}:recipient:LOC-OK:attempt:0`
+      `bulk:${result.executionId}:recipient:LOC-OK:attempt:0`
     )!
     update_status({
       activity_id: queued.id,
@@ -274,8 +271,8 @@ describe('bulk reports', () => {
         body: 'queued'
       }),
       bulk_id: bulk.id,
-      execution_id: result.execution_id,
-      idempotency_key: `bulk:${result.execution_id}:manual-queued`
+      execution_id: result.executionId,
+      idempotency_key: `bulk:${result.executionId}:manual-queued`
     })
 
     delete_bulk_operation(bulk.id)
@@ -292,15 +289,16 @@ describe('bulk reports', () => {
       .query<{ type: string; contenu: string }, [string]>(
         'SELECT type, contenu FROM activites WHERE thread_id = ? ORDER BY revision'
       )
-      .all(queued.thread_id!)
+      .all(queued.threadId!)
     const cancelledRows = db
       .query<{ type: string; contenu: string }, [string]>(
         'SELECT type, contenu FROM activites WHERE thread_id = ? ORDER BY revision'
       )
-      .all(second.thread_id!)
+      .all(second.threadId!)
     db.close()
     expect(queuedRows.map((row) => row.type)).toEqual([
       'communication.sent',
+      'communication.ok',
       'communication.failed'
     ])
     expect(cancelledRows.map((row) => row.type)).toEqual([

@@ -3,7 +3,7 @@ import { join } from 'node:path'
 
 import { normalize_knowledge_name } from '../../../shared/knowledge'
 import { SERVER_ROOT } from '../paths'
-import { CsvRecordParser, type CsvRecord } from './csv-record-parser'
+import { type CsvRecord, CsvRecordParser } from './csv-record-parser'
 
 export { parse_csv_line } from './csv-record-parser'
 

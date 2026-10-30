@@ -6,7 +6,6 @@ export function modelPrompt(context: AIContext): string {
   return prefix === '' ? context.content : `${prefix}\n\n${context.content}`
 }
 import type { PiImageContent, ProcessedPiAttachments } from './ai-attachments'
-import { AI_MODEL } from './ai-model'
 import { streamCopilot } from './copilot-agent'
 import { save_reply } from './handle-conversation'
 import { send_telemetry } from './send-telemetry'
@@ -20,8 +19,16 @@ export function streamChatAnswer(
   context: AIContext,
   signal?: AbortSignal,
   attachments?: PiImageContent[],
-  attachmentLifecycle?: Pick<ProcessedPiAttachments, 'claim' | 'rollback' | 'usage'>
+  attachmentLifecycle?: Pick<ProcessedPiAttachments, 'claim' | 'rollback' | 'usage'>,
+  dependencies: {
+    streamCopilot?: typeof streamCopilot
+    saveReply?: typeof save_reply
+    sendTelemetry?: typeof send_telemetry
+  } = {}
 ) {
+  const stream = dependencies.streamCopilot ?? streamCopilot
+  const saveReply = dependencies.saveReply ?? save_reply
+  const telemetry = dependencies.sendTelemetry ?? send_telemetry
   async function* run() {
     let attachmentsReady = false
     let attachmentsReadyEmitted = false
@@ -43,27 +50,24 @@ export function streamChatAnswer(
       console.log(`[CHAT] Streaming for conv=${context.conv_id}...`)
 
       let fullContent = ''
-      let inputTokens: number | null = null
-      let outputTokens: number | null = null
       const trace = context.config.trace
 
-      for await (const chunk of streamCopilot(
+      for await (const chunk of stream(
         context.conv_id,
         context.config.id,
         modelPrompt(context),
-        AI_MODEL,
+        undefined,
         signal,
         attachments,
-        context.config.reasoning_effort,
-        attachmentLifecycle ? { onVmAcquired: claimAttachments } : undefined
+        undefined,
+        {
+          usage: { operation: 'chat', userEmail: context.user_email },
+          ...(attachmentLifecycle ? { onVmAcquired: claimAttachments } : {})
+        }
       )) {
         const attachmentEvent = readyEvent()
         if (attachmentEvent) yield attachmentEvent
-        if (chunk.type === 'done') {
-          fullContent = chunk.fullContent
-          inputTokens = chunk.inputTokens ?? null
-          outputTokens = chunk.outputTokens ?? null
-        }
+        if (chunk.type === 'done') fullContent = chunk.fullContent
 
         for (const event of copilotChunkToNdjson(chunk, trace)) {
           yield ndjsonLine(event)
@@ -77,13 +81,8 @@ export function streamChatAnswer(
 
       context.role = 'assistant'
       context.content = fullContent
-      context.metadata.tokens = {
-        completion: outputTokens,
-        prompt: inputTokens,
-        total: inputTokens != null && outputTokens != null ? inputTokens + outputTokens : null
-      }
-      await save_reply(context)
-      send_telemetry(CHAT_TELEMETRY_EVENT)
+      await saveReply(context)
+      telemetry(CHAT_TELEMETRY_EVENT)
     } catch (err) {
       const attachmentEvent = readyEvent()
       if (attachmentEvent) yield attachmentEvent
