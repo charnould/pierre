@@ -1,23 +1,6 @@
-import { afterAll, beforeAll, describe, expect, it, spyOn } from 'bun:test'
-import * as fs from 'node:fs'
-import { mkdir, rm } from 'node:fs/promises'
+import { describe, expect, it } from 'bun:test'
 
-import * as oxfmt from 'oxfmt'
-import * as XLSX from 'xlsx'
-
-import { migrate_datastore } from '../../../utils/datastore-migrations'
-import type { KnowledgeIngestionEntry } from '../../../utils/knowledge/catalog'
-import {
-  content_cache_key,
-  ingest_files,
-  normalize_sheet_value,
-  parse_numeric_string,
-  save_formatted_file
-} from '../../../utils/knowledge/ingest-files'
-import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
-import { seedInstanceSetup } from '../../seed-setup'
-
-XLSX.set_fs(fs)
+import { normalize_sheet_value, parse_numeric_string } from '../../../utils/knowledge/ingest-files'
 
 describe('parse_numeric_string', () => {
   it('parses european format with space thousands separator', () => {
@@ -121,6 +104,15 @@ describe('normalize_sheet_value', () => {
     expect(normalize_sheet_value('1 234,56')).toBe(1234.56)
   })
 
+  it('normalizes contact phone columns before numeric parsing', () => {
+    expect(normalize_sheet_value('06 11 56 39 59', 'telephone_locataire')).toBe('+33611563959')
+    expect(normalize_sheet_value('+33611563959', 'telephone_client')).toBe('+33611563959')
+    expect(normalize_sheet_value(611563959, 'telephone_candidat')).toBe('+33611563959')
+    expect(normalize_sheet_value(142000000, 'telephone_client')).toBe('+33142000000')
+    expect(normalize_sheet_value('', 'telephone_client')).toBeNull()
+    expect(normalize_sheet_value('06abc11563959', 'telephone_client')).toBe('06abc11563959')
+  })
+
   it('keeps code_postal as a five-digit string', () => {
     expect(normalize_sheet_value('01000', 'code_postal')).toBe('01000')
     expect(typeof normalize_sheet_value('01000', 'code_postal')).toBe('string')
@@ -177,214 +169,5 @@ describe('normalize_sheet_value', () => {
 
   it('trims leading and trailing whitespace from strings', () => {
     expect(normalize_sheet_value('  bonjour  ')).toBe('bonjour')
-  })
-})
-
-const paths = testDatastorePaths('ingest_files')
-const FILES_DIR = paths.files
-
-beforeAll(async () => {
-  setDatastoreRoot(paths.root)
-  await mkdir(paths.files, { recursive: true })
-  await mkdir(paths.knowledge, { recursive: true })
-  await migrate_datastore(paths.database)
-  await seedInstanceSetup()
-})
-
-afterAll(async () => {
-  setDatastoreRoot(null)
-  await rm(paths.root, { recursive: true, force: true })
-})
-
-function missingFileEntry(): KnowledgeIngestionEntry {
-  return {
-    filename: 'nonexistent_doc.md',
-    agent_filename: 'Document inexistant',
-    filepath: `${FILES_DIR}/nonexistent_doc.md`,
-    type: 'md',
-    sheet: 0,
-    headers: 0,
-    access: 'default',
-    coreDataTable: null
-  }
-}
-
-describe('ingest_files', () => {
-  describe('PROFILE_MISSING', () => {
-    it('should emit anomaly when access references a non-existent config', async () => {
-      const entry: KnowledgeIngestionEntry = {
-        filename: 'doc.md',
-        agent_filename: 'Doc',
-        filepath: `${FILES_DIR}/doc.md`,
-        type: 'md',
-        sheet: 0,
-        headers: 0,
-        access: 'ghost_profile_xyz_not_real',
-        coreDataTable: null
-      }
-
-      const { anomalies } = await ingest_files([entry])
-      const codes = anomalies.map((a) => a.code)
-      expect(codes).toContain('PROFILE_MISSING')
-      const a = anomalies.find((x) => x.code === 'PROFILE_MISSING')
-      expect(a?.subject).toBe('ghost_profile_xyz_not_real')
-    })
-  })
-
-  describe('SOURCE_FILE_MISSING', () => {
-    it('should emit anomaly when a catalog source is absent from disk', async () => {
-      const { anomalies } = await ingest_files([missingFileEntry()])
-      const codes = anomalies.map((a) => a.code)
-      expect(codes).toContain('SOURCE_FILE_MISSING')
-      const a = anomalies.find((x) => x.code === 'SOURCE_FILE_MISSING')
-      expect(a?.subject).toBe('nonexistent_doc.md')
-    })
-  })
-})
-
-describe('content_cache_key', () => {
-  it('combines filepath, type, sheet and headers', () => {
-    const entry: KnowledgeIngestionEntry = {
-      filename: 'reclamations.xlsx',
-      agent_filename: 'Réclamations',
-      filepath: '/data/reclamations.xlsx',
-      type: 'xlsx',
-      sheet: 1,
-      headers: 2,
-      access: 'default',
-      coreDataTable: null
-    }
-    expect(content_cache_key(entry)).toBe('/data/reclamations.xlsx:xlsx:1:2')
-  })
-})
-
-describe('save_formatted_file', () => {
-  it('writes JSON directly without calling oxfmt', async () => {
-    const output_path = `${FILES_DIR}/_test_save_json.json`
-    const format_spy = spyOn(oxfmt, 'format')
-
-    try {
-      await save_formatted_file(output_path, { data: '[{"a":1}]', parser: 'json' })
-      expect(format_spy).not.toHaveBeenCalled()
-      expect(await Bun.file(output_path).text()).toBe('[{"a":1}]')
-    } finally {
-      format_spy.mockRestore()
-      await Bun.file(output_path)
-        .delete()
-        .catch(() => {})
-    }
-  })
-})
-
-describe('CSV ingestion', () => {
-  it('parses semicolon records and preserves an empty schema', async () => {
-    const path = `${FILES_DIR}/_test_csv.csv`
-    const knowledgeRoot = paths.knowledge
-    await Bun.write(path, 'nom;description\nalpha;"ligne 1\nligne 2"')
-    await mkdir(`${knowledgeRoot}/default`, { recursive: true })
-    try {
-      await ingest_files([
-        {
-          filename: '_test_csv.csv',
-          agent_filename: 'Indicateurs',
-          filepath: path,
-          type: 'csv',
-          sheet: 0,
-          headers: 0,
-          access: 'default',
-          coreDataTable: null
-        }
-      ])
-      const payload = await Bun.file(`${knowledgeRoot}/default/indicateurs.json`).json()
-      expect(payload).toEqual({
-        columns: ['nom', 'description'],
-        rows: [{ nom: 'alpha', description: 'ligne 1 ligne 2' }]
-      })
-
-      await Bun.write(path, 'nom;description\n')
-      await ingest_files([
-        {
-          filename: '_test_csv.csv',
-          agent_filename: 'Indicateurs',
-          filepath: path,
-          type: 'csv',
-          sheet: 0,
-          headers: 0,
-          access: 'default',
-          coreDataTable: null
-        }
-      ])
-      expect(await Bun.file(`${knowledgeRoot}/default/indicateurs.json`).json()).toEqual({
-        columns: ['nom', 'description'],
-        rows: []
-      })
-    } finally {
-      await rm(path, { force: true })
-      await rm(`${knowledgeRoot}/default/indicateurs.json`, { force: true })
-    }
-  })
-})
-
-describe('ingest_files parse cache', () => {
-  const CACHE_XLSX = `${FILES_DIR}/_test_cache_shared.xlsx`
-  const KNOWLEDGE_ROOT = paths.knowledge
-
-  beforeAll(async () => {
-    const sheet = XLSX.utils.aoa_to_sheet([
-      ['id', 'valeur'],
-      ['A1', 1],
-      ['A2', 2]
-    ])
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, sheet, 'Feuille1')
-    XLSX.writeFile(wb, CACHE_XLSX)
-
-    await mkdir(`${KNOWLEDGE_ROOT}/about`, { recursive: true })
-    await mkdir(`${KNOWLEDGE_ROOT}/default`, { recursive: true })
-  })
-
-  afterAll(async () => {
-    await Bun.file(CACHE_XLSX)
-      .delete()
-      .catch(() => {})
-    await rm(`${KNOWLEDGE_ROOT}/about/donnees_cache_test.json`, { force: true }).catch(() => {})
-    await rm(`${KNOWLEDGE_ROOT}/default/donnees_cache_test.json`, { force: true }).catch(() => {})
-  })
-
-  it('writes the same parsed xlsx to multiple profiles without re-parsing', async () => {
-    const base: Omit<KnowledgeIngestionEntry, 'access'> = {
-      filename: '_test_cache_shared.xlsx',
-      agent_filename: 'Données cache test',
-      filepath: CACHE_XLSX,
-      type: 'xlsx',
-      sheet: 0,
-      headers: 0,
-      coreDataTable: null
-    }
-
-    const parse_logs: string[] = []
-    const original_info = console.info
-    console.info = (...args: unknown[]) => {
-      const line = args.map(String).join(' ')
-      if (line.includes('Parsed _test_cache_shared.xlsx')) parse_logs.push(line)
-      original_info(...args)
-    }
-
-    try {
-      await ingest_files([
-        { ...base, access: 'about' },
-        { ...base, access: 'default' }
-      ])
-
-      expect(parse_logs).toHaveLength(1)
-
-      const path_a = `${KNOWLEDGE_ROOT}/about/donnees_cache_test.json`
-      const path_b = `${KNOWLEDGE_ROOT}/default/donnees_cache_test.json`
-      expect(await Bun.file(path_a).exists()).toBe(true)
-      expect(await Bun.file(path_b).exists()).toBe(true)
-      expect(await Bun.file(path_a).text()).toBe(await Bun.file(path_b).text())
-    } finally {
-      console.info = original_info
-    }
   })
 })

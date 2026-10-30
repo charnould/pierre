@@ -1,24 +1,26 @@
 import { Database } from 'bun:sqlite'
 
 import {
-  type Activite,
+  type Activity,
   type ActivityPatch,
+  activityTimestamp,
   type ActivityType,
   type EntityRef,
-  type Mention,
-  type TaskChange,
-  type TaskContent,
-  activity_timestamp,
-  entity_ref,
-  parse_task_content
-} from '../../../shared/activites'
+  entityRef,
+  type Mention
+} from '../../../shared/activities'
 import {
+  parseTaskContent,
+  type TaskChange,
+  type TaskContent
+} from '../../../shared/activity-content'
+import {
+  type ActivityDbRow,
+  type ActivityFacets,
   build_mentions,
   insert_activity_row,
   org_email_index,
   resolve_destinataire,
-  type ActivityDbRow,
-  type ActivityFacets,
   row_to_activity,
   user_destinataire
 } from './rows'
@@ -27,7 +29,7 @@ import { ActivitiesError } from './schema'
 const assignee_ref = (identity: string): EntityRef => {
   const id = identity.trim()
   const label = id.startsWith('user:') ? id.slice(5) : id
-  return entity_ref(id, label)
+  return entityRef(id, label)
 }
 
 export function insert_task_event(
@@ -44,7 +46,7 @@ export function insert_task_event(
     mentions: Mention[]
     idempotency_key?: string | null
   }
-): Activite {
+): Activity {
   return insert_activity_row(db, {
     date_creation: values.date_creation,
     rattachement: values.rattachement,
@@ -62,9 +64,9 @@ export function insert_task_event(
 export const patch_action = (
   db: Database,
   actor: string,
-  existing: Activite,
+  existing: Activity,
   parsed: ActivityPatch
-): Activite | null => {
+): Activity | null => {
   if (
     parsed.operation !== 'update_action' &&
     parsed.operation !== 'complete_action' &&
@@ -73,7 +75,7 @@ export const patch_action = (
   ) {
     return null
   }
-  if (!existing.type.startsWith('task.') || !existing.thread_id || existing.revision == null) {
+  if (!existing.type.startsWith('task.') || !existing.threadId || existing.revision == null) {
     throw new ActivitiesError('Activity is not a task', 'invalid_body')
   }
 
@@ -83,13 +85,13 @@ export const patch_action = (
        WHERE thread_id = ? AND type LIKE 'task.%'
        ORDER BY revision DESC LIMIT 1`
     )
-    .get(existing.thread_id)
+    .get(existing.threadId)
   if (!latestRow) throw new ActivitiesError('Action thread not found', 'not_found')
   const latest = row_to_activity(latestRow)
   if (latest.id !== existing.id) {
     throw new ActivitiesError('Action changed since it was loaded', 'conflict')
   }
-  const action = parse_task_content(latest.contenu)
+  const action = parseTaskContent(latest.contenu)
   if (!action) throw new ActivitiesError('Invalid action content', 'invalid_body')
 
   const actorDestinataire = user_destinataire(actor)
@@ -99,9 +101,9 @@ export const patch_action = (
     .query<{ auteur: string }, [string]>(
       `SELECT auteur FROM activites WHERE thread_id = ? AND type = 'task.created' LIMIT 1`
     )
-    .get(existing.thread_id)
+    .get(existing.threadId)
   const isCreator = created?.auteur === actorDestinataire
-  const now = activity_timestamp()
+  const now = activityTimestamp()
   let type: Extract<ActivityType, `task.${string}`>
   let next: TaskContent
 
@@ -110,7 +112,7 @@ export const patch_action = (
     if (action.task.state !== 'open') {
       throw new ActivitiesError('Only open actions can be edited', 'forbidden')
     }
-    const nextAssignee = resolve_destinataire(parsed.assigne_a, org_email_index(db))
+    const nextAssignee = resolve_destinataire(parsed.assigneA, org_email_index(db))
     if (!nextAssignee) throw new ActivitiesError('Unknown assignee')
     const assignee = assignee_ref(nextAssignee)
     const changes: TaskChange[] = []
@@ -124,11 +126,11 @@ export const patch_action = (
         after: assignee
       })
     }
-    if (action.task.due_date !== parsed.date_echeance) {
+    if (action.task.due_date !== parsed.dateEcheance) {
       changes.push({
         field: 'due_date',
         before: action.task.due_date ?? null,
-        after: parsed.date_echeance
+        after: parsed.dateEcheance
       })
     }
     const note = parsed.note?.trim() || undefined
@@ -142,7 +144,7 @@ export const patch_action = (
         title: parsed.action,
         state: 'open',
         assignee,
-        due_date: parsed.date_echeance
+        due_date: parsed.dateEcheance
       },
       changes,
       ...(note ? { note } : {})
@@ -161,7 +163,7 @@ export const patch_action = (
     if (action.task.state !== 'completed') {
       throw new ActivitiesError('Only completed actions can be reopened', 'forbidden')
     }
-    const nextAssignee = resolve_destinataire(parsed.assigne_a, org_email_index(db))
+    const nextAssignee = resolve_destinataire(parsed.assigneA, org_email_index(db))
     if (!nextAssignee) throw new ActivitiesError('Unknown assignee')
     const assignee = assignee_ref(nextAssignee)
     type = 'task.reopened'
@@ -171,7 +173,7 @@ export const patch_action = (
         title: action.task.title,
         state: 'open',
         assignee,
-        due_date: parsed.date_echeance
+        due_date: parsed.dateEcheance
       },
       ...(parsed.note?.trim()
         ? { note: parsed.note.trim() }
@@ -210,7 +212,7 @@ export const patch_action = (
       id_lot: latest.id_lot
     },
     contenu: next,
-    thread_id: latest.thread_id!,
+    thread_id: latest.threadId!,
     type,
     revision: latest.revision! + 1,
     mentions

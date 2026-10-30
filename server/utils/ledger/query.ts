@@ -1,7 +1,7 @@
 import { Database } from 'bun:sqlite'
 
 import { latest_repayment_states } from '../activities/repayment'
-import { datastorePaths } from '../paths'
+import { openDatastore } from '../datastore-db'
 import { sql_date_key } from '../sql-normalization'
 import {
   build_filters,
@@ -12,22 +12,22 @@ import {
   validate_filters
 } from './filters'
 import {
+  build_ledger_output_column_meta,
   COMPTES_LOCATAIRES_TABLE,
   CONTACTS_TABLE,
   CORE_COMPTES_LOCATAIRES_COLUMNS,
   DEFAULT_LEDGER_SORT,
-  LOTS_TABLE,
-  MAX_LEDGER_FACET_DISTINCT_VALUES,
-  MAX_LEDGER_FACET_SEARCH_RESULTS,
-  LedgerQueryError,
-  LedgerSchemaError,
-  build_ledger_output_column_meta,
   type LedgerColumnMeta,
   type LedgerFacetsInput,
   type LedgerFacetsResult,
   type LedgerListInput,
   type LedgerListResult,
-  type LedgerMovementsResult
+  type LedgerMovementsResult,
+  LedgerQueryError,
+  LedgerSchemaError,
+  LOTS_TABLE,
+  MAX_LEDGER_FACET_DISTINCT_VALUES,
+  MAX_LEDGER_FACET_SEARCH_RESULTS
 } from './schema'
 import { build_ledger_view_sql, non_empty_locataire } from './view'
 
@@ -39,10 +39,10 @@ const empty_meta = (
   total: 0,
   limit,
   offset,
-  snapshot_date: null,
+  snapshotDate: null,
   columns: build_ledger_output_column_meta(movement_column_list ?? []),
-  default_sort: DEFAULT_LEDGER_SORT,
-  gestionnaire_assignable: true
+  defaultSort: DEFAULT_LEDGER_SORT,
+  gestionnaireAssignable: true
 })
 
 const table_exists = (db: Database, name: string): boolean =>
@@ -110,7 +110,7 @@ const strip_internal_columns = (rows: Record<string, unknown>[]): Record<string,
  * Occupation / bail from `lots_locatifs` on (id_lot, id_locataire); rent from id_lot.
  */
 export const list_ledger_balances = (input: LedgerListInput): LedgerListResult => {
-  const db = new Database(datastorePaths().database, { readonly: true })
+  const db = openDatastore({ readonly: true })
 
   try {
     if (!table_exists(db, COMPTES_LOCATAIRES_TABLE)) {
@@ -177,10 +177,10 @@ export const list_ledger_balances = (input: LedgerListInput): LedgerListResult =
     const metaBase = {
       limit: input.limit,
       offset: input.offset,
-      snapshot_date,
+      snapshotDate: snapshot_date,
       columns: output_column_meta,
-      default_sort: DEFAULT_LEDGER_SORT,
-      gestionnaire_assignable
+      defaultSort: DEFAULT_LEDGER_SORT,
+      gestionnaireAssignable: gestionnaire_assignable
     }
 
     if (total === undefined) {
@@ -212,7 +212,7 @@ export const list_ledger_balances = (input: LedgerListInput): LedgerListResult =
  * Returns distinct values for a ledger view column (full dataset, not paginated).
  */
 export const get_ledger_column_facets = (input: LedgerFacetsInput): LedgerFacetsResult => {
-  const db = new Database(datastorePaths().database, { readonly: true })
+  const db = openDatastore({ readonly: true })
 
   try {
     if (!table_exists(db, COMPTES_LOCATAIRES_TABLE)) {
@@ -290,11 +290,11 @@ const build_movement_order_clause = (movement_columns: Set<string>): string => {
  * Lists all financial movements for a single `id_locataire`, newest first.
  */
 export const list_ledger_movements = (id_locataire: string): LedgerMovementsResult => {
-  const db = new Database(datastorePaths().database, { readonly: true })
+  const db = openDatastore({ readonly: true })
 
   try {
     if (!table_exists(db, COMPTES_LOCATAIRES_TABLE)) {
-      return { data: [], meta: { total: 0, snapshot_date: null } }
+      return { data: [], meta: { total: 0, snapshotDate: null } }
     }
 
     const movement_column_list = get_table_columns(db, COMPTES_LOCATAIRES_TABLE)
@@ -318,7 +318,7 @@ export const list_ledger_movements = (id_locataire: string): LedgerMovementsResu
       data: rows,
       meta: {
         total: rows.length,
-        snapshot_date
+        snapshotDate: snapshot_date
       }
     }
   } finally {

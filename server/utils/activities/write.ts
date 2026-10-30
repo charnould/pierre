@@ -1,29 +1,32 @@
 import { Database } from 'bun:sqlite'
 
 import {
-  type Activite,
+  type Activity,
   type ActivityPatch,
-  type TaskContent,
-  activity_timestamp,
-  entity_ref,
-  is_activity_meta_type,
-  is_communication_type,
-  is_note_type,
-  is_task_type,
-  parse_activity_meta_content,
-  parse_note_content,
-  parse_task_content,
-  parse_titled_content
-} from '../../../shared/activites'
+  activityTimestamp,
+  entityRef,
+  isActivityMetaType,
+  isCommunicationType,
+  isNoteType,
+  isTaskType
+} from '../../../shared/activities'
+import {
+  parseActivityMetaContent,
+  parseNoteContent,
+  parseTaskContent,
+  parseTitledContent,
+  type TaskContent
+} from '../../../shared/activity-content'
+import { openDatastore } from '../datastore-db'
 import { insert_task_event, patch_action } from './action'
 import {
   create_repayment_plan,
   is_repayment_plan_row,
-  transition_repayment_plan
+  save_repayment_plan
 } from './repayment-plan-write'
 import {
+  type ActivityDbRow,
   build_mentions,
-  datastore_path,
   get_activity_with_db,
   insert_activity_row,
   merge_mentions_from_content,
@@ -31,7 +34,6 @@ import {
   org_email_index,
   resolve_activity_facets,
   resolve_destinataire,
-  type ActivityDbRow,
   user_destinataire
 } from './rows'
 import {
@@ -51,8 +53,8 @@ const latest_thread_revision = (db: Database, thread_id: string): number => {
   return row?.revision ?? 0
 }
 
-const require_current_artifact = (db: Database, activity: Activite): void => {
-  if (!activity.type.startsWith('artifact.') || !activity.thread_id) return
+const require_current_artifact = (db: Database, activity: Activity): void => {
+  if (!activity.type.startsWith('artifact.') || !activity.threadId) return
   const latest = db
     .query<{ id: number; type: string }, [string]>(
       `SELECT id, type FROM activites
@@ -60,7 +62,7 @@ const require_current_artifact = (db: Database, activity: Activite): void => {
        ORDER BY revision DESC, id DESC
        LIMIT 1`
     )
-    .get(activity.thread_id)
+    .get(activity.threadId)
   if (
     latest?.id !== activity.id ||
     latest.type === 'artifact.discarded' ||
@@ -70,7 +72,7 @@ const require_current_artifact = (db: Database, activity: Activite): void => {
   }
 }
 
-const append = (db: Database, values: Parameters<typeof insert_activity_row>[1]): Activite => {
+const append = (db: Database, values: Parameters<typeof insert_activity_row>[1]): Activity => {
   try {
     return insert_activity_row(db, values)
   } catch (error) {
@@ -85,44 +87,43 @@ const append = (db: Database, values: Parameters<typeof insert_activity_row>[1])
 const create_activity_internal = (
   actor: string,
   input: CreateActivityInput & {
-    bulk_id?: string | null
-    execution_id?: string | null
+    bulkId?: string | null
+    executionId?: string | null
   },
-  options: { trusted_author?: string; date_creation?: string } = {},
+  options: { trustedAuthor?: string; dateCreation?: string } = {},
   existing_db?: Database
-): Activite => {
+): Activity => {
   const parsed = input
-  if (is_activity_meta_type(parsed.type)) {
+  if (isActivityMetaType(parsed.type)) {
     throw new ActivitiesError('Cannot create this event directly', 'forbidden')
   }
-  if (is_communication_type(parsed.type)) {
+  if (isCommunicationType(parsed.type)) {
     throw new ActivitiesError('Communications require a dedicated endpoint', 'forbidden')
   }
   const actorEmail = actor.trim().toLowerCase()
-  const author = options.trusted_author ?? user_destinataire(actorEmail)
+  const author = options.trustedAuthor ?? user_destinataire(actorEmail)
   if (!AUTHOR_RE.test(author)) throw new ActivitiesError('Invalid author')
   if (
-    !options.trusted_author &&
+    !options.trustedAuthor &&
     author.startsWith('user:') &&
     author !== user_destinataire(actorEmail)
   ) {
     throw new ActivitiesError('Author must match authenticated user', 'forbidden')
   }
 
-  const db = existing_db ?? new Database(datastore_path())
-  db.run('PRAGMA busy_timeout = 5000')
+  const db = existing_db ?? openDatastore()
   try {
-    const perform = (): Activite => {
+    const perform = (): Activity => {
       const facets = resolve_activity_facets(db, parsed.contexte, parsed.ref)
-      const date_creation = options.date_creation ?? activity_timestamp()
+      const date_creation = options.dateCreation ?? activityTimestamp()
       const rattachement = `${parsed.contexte}:${parsed.ref.trim()}`
       const destinataire = parsed.destinataire ?? null
-      const bulk_id = parsed.bulk_id ?? null
-      const execution_id = parsed.execution_id ?? null
-      const idempotency_key = parsed.idempotency_key ?? null
+      const bulk_id = parsed.bulkId ?? null
+      const execution_id = parsed.executionId ?? null
+      const idempotency_key = parsed.idempotencyKey ?? null
 
-      if (is_task_type(parsed.type)) {
-        const creation = parse_task_content(parsed.contenu)
+      if (isTaskType(parsed.type)) {
+        const creation = parseTaskContent(parsed.contenu)
         if (!creation) throw new ActivitiesError('Invalid action content')
         if (parsed.type !== 'task.created' && parsed.type !== 'task.completed') {
           throw new ActivitiesError('Only task.created or task.completed can be created')
@@ -138,7 +139,7 @@ const create_activity_internal = (
           throw new ActivitiesError('Open actions require a due date')
         }
         const assignee = assigneeId
-          ? entity_ref(assigneeId, creation.task.assignee?.label ?? assigneeId)
+          ? entityRef(assigneeId, creation.task.assignee?.label ?? assigneeId)
           : undefined
         const content: TaskContent = {
           version: 2,
@@ -165,7 +166,7 @@ const create_activity_internal = (
           auteur: author,
           facets,
           contenu: content,
-          thread_id: parsed.thread_id ?? Bun.randomUUIDv7(),
+          thread_id: parsed.threadId ?? Bun.randomUUIDv7(),
           type: parsed.type === 'task.completed' ? 'task.completed' : 'task.created',
           revision: 1,
           mentions,
@@ -174,13 +175,10 @@ const create_activity_internal = (
       }
 
       if (parsed.type.startsWith('repayment_plan.')) {
-        if (
-          parsed.type !== 'repayment_plan.created' &&
-          parsed.type !== 'repayment_plan.finalized'
-        ) {
+        if (parsed.type !== 'repayment_plan.created') {
           throw new ActivitiesError('This repayment plan event requires an existing plan')
         }
-        if (parsed.thread_id) {
+        if (parsed.threadId) {
           throw new ActivitiesError('Repayment plan thread is assigned by the server')
         }
         const contenu = normalize_activity_content(parsed.type, parsed.contenu)
@@ -200,12 +198,12 @@ const create_activity_internal = (
       const contenu = normalize_activity_content(parsed.type, parsed.contenu)
       const mentions = build_mentions(db, contenu, parsed.recipients ?? [])
       const needsThread =
-        is_note_type(parsed.type) ||
+        isNoteType(parsed.type) ||
         parsed.type.startsWith('document.') ||
         parsed.type.startsWith('artifact.')
       const thread_id = needsThread
-        ? (parsed.thread_id ?? Bun.randomUUIDv7())
-        : (parsed.thread_id ?? null)
+        ? (parsed.threadId ?? Bun.randomUUIDv7())
+        : (parsed.threadId ?? null)
       const revision = thread_id ? latest_thread_revision(db, thread_id) + 1 : null
 
       return append(db, {
@@ -231,22 +229,22 @@ const create_activity_internal = (
   }
 }
 
-export const create_activity = (actor: string, input: CreateActivityInput): Activite =>
+export const create_activity = (actor: string, input: CreateActivityInput): Activity =>
   create_activity_internal(actor, CreateActivityInput.parse(input))
 
 export const create_trusted_activity = (
   actor: string,
   input: TrustedCreateActivityInput
-): Activite => {
+): Activity => {
   const parsed = TrustedCreateActivityInput.parse(input)
-  const { auteur, date_creation, ...activity } = parsed
+  const { auteur, dateCreation, ...activity } = parsed
   return create_activity_internal(actor, activity, {
-    ...(auteur ? { trusted_author: auteur } : {}),
-    ...(date_creation ? { date_creation } : {})
+    ...(auteur ? { trustedAuthor: auteur } : {}),
+    ...(dateCreation ? { dateCreation } : {})
   })
 }
 
-const can_edit = (activity: Activite, actor: string): boolean =>
+const can_edit = (activity: Activity, actor: string): boolean =>
   activity.auteur === user_destinataire(actor)
 
 const latest_reaction = (db: Database, sourceId: number, auteur: string): string | null => {
@@ -259,7 +257,7 @@ const latest_reaction = (db: Database, sourceId: number, auteur: string): string
     )
     .get(auteur, sourceId)
   if (!row) return null
-  return parse_activity_meta_content(row.contenu)?.emoji ?? null
+  return parseActivityMetaContent(row.contenu)?.emoji ?? null
 }
 
 const latest_receipt = (
@@ -279,13 +277,12 @@ const latest_receipt = (
   return null
 }
 
-export const patch_activity = (actor: string, id: number, patch: ActivityPatch): Activite => {
+export const patch_activity = (actor: string, id: number, patch: ActivityPatch): Activity => {
   const parsed = ActivityPatchInput.parse(patch)
   const destinataire = user_destinataire(actor)
-  const db = new Database(datastore_path())
-  db.run('PRAGMA busy_timeout = 5000')
+  const db = openDatastore()
   try {
-    const apply_patch = (): Activite => {
+    const apply_patch = (): Activity => {
       const existing = get_activity_with_db(db, id)
       if (!existing) throw new ActivitiesError('Activity not found', 'not_found')
 
@@ -301,7 +298,7 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
           return existing
         }
         return append(db, {
-          date_creation: activity_timestamp(),
+          date_creation: activityTimestamp(),
           rattachement: existing.rattachement,
           auteur: destinataire,
           facets: {
@@ -319,7 +316,7 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
         })
       }
 
-      if (is_communication_type(existing.type)) {
+      if (isCommunicationType(existing.type)) {
         throw new ActivitiesError('Communications are immutable', 'forbidden')
       }
 
@@ -330,7 +327,7 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
         const nextType = parsed.lu ? 'activity.read' : 'activity.unread'
         if (latest_receipt(db, existing.id, destinataire) === nextType) return existing
         return append(db, {
-          date_creation: activity_timestamp(),
+          date_creation: activityTimestamp(),
           rattachement: existing.rattachement,
           auteur: destinataire,
           facets: {
@@ -348,12 +345,12 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
       if (actionResult) return actionResult
 
       if (parsed.operation === 'withdraw_note') {
-        if (!is_note_type(existing.type) || existing.auteur !== destinataire) {
+        if (!isNoteType(existing.type) || existing.auteur !== destinataire) {
           throw new ActivitiesError('Forbidden', 'forbidden')
         }
-        if (!existing.thread_id) throw new ActivitiesError('Invalid note', 'invalid_body')
+        if (!existing.threadId) throw new ActivitiesError('Invalid note', 'invalid_body')
         return append(db, {
-          date_creation: activity_timestamp(),
+          date_creation: activityTimestamp(),
           rattachement: existing.rattachement,
           auteur: destinataire,
           facets: {
@@ -364,8 +361,8 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
           type: 'note.withdrawn',
           mentions: [],
           contenu: JSON.stringify({ version: 2 }),
-          thread_id: existing.thread_id,
-          revision: latest_thread_revision(db, existing.thread_id) + 1
+          thread_id: existing.threadId,
+          revision: latest_thread_revision(db, existing.threadId) + 1
         })
       }
 
@@ -376,27 +373,10 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
 
       if (is_repayment_plan_row(existing)) {
         if (parsed.operation === 'save_repayment_plan') {
-          return transition_repayment_plan(db, {
+          return save_repayment_plan(db, {
             existing,
             auteur: destinataire,
-            operation: 'save',
             contenu: parsed.contenu
-          })
-        }
-        if (parsed.operation === 'finalize_repayment_plan') {
-          return transition_repayment_plan(db, {
-            existing,
-            auteur: destinataire,
-            operation: 'finalize',
-            contenu: parsed.contenu
-          })
-        }
-        if (parsed.operation === 'close_repayment_plan') {
-          return transition_repayment_plan(db, {
-            existing,
-            auteur: destinataire,
-            operation: 'close',
-            reason: parsed.reason
           })
         }
         throw new ActivitiesError('Invalid repayment plan operation', 'forbidden')
@@ -404,13 +384,13 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
 
       if (parsed.operation === 'edit_content') {
         if (existing.type.startsWith('artifact.')) {
-          const current = parse_titled_content(existing.contenu)
+          const current = parseTitledContent(existing.contenu)
           if (!current) throw new ActivitiesError('Invalid artifact content')
           const values = current.values ?? {}
           const generatedOutput =
             typeof values['edited_by'] === 'string' ? values['generated_output'] : current.note
           return append(db, {
-            date_creation: activity_timestamp(),
+            date_creation: activityTimestamp(),
             rattachement: existing.rattachement,
             auteur: destinataire,
             facets: {
@@ -427,21 +407,21 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
                 ...values,
                 generated_output: generatedOutput ?? null,
                 edited_by: actor,
-                edited_at: activity_timestamp()
+                edited_at: activityTimestamp()
               },
               note: parsed.contenu
             }),
-            thread_id: existing.thread_id ?? Bun.randomUUIDv7(),
-            revision: existing.thread_id ? latest_thread_revision(db, existing.thread_id) + 1 : 1
+            thread_id: existing.threadId ?? Bun.randomUUIDv7(),
+            revision: existing.threadId ? latest_thread_revision(db, existing.threadId) + 1 : 1
           })
         }
-        if (is_note_type(existing.type)) {
-          const incoming = parse_note_content(parsed.contenu)
+        if (isNoteType(existing.type)) {
+          const incoming = parseNoteContent(parsed.contenu)
           if (!incoming) throw new ActivitiesError('Invalid note content')
-          if (!existing.thread_id) throw new ActivitiesError('Invalid note', 'invalid_body')
+          if (!existing.threadId) throw new ActivitiesError('Invalid note', 'invalid_body')
           const contenu = JSON.stringify({ version: 2, text: incoming.text ?? '' })
           return append(db, {
-            date_creation: activity_timestamp(),
+            date_creation: activityTimestamp(),
             rattachement: existing.rattachement,
             auteur: destinataire,
             facets: {
@@ -452,21 +432,21 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
             type: 'note.updated',
             mentions: merge_mentions_from_content(db, contenu, existing.mentions),
             contenu,
-            thread_id: existing.thread_id,
-            revision: latest_thread_revision(db, existing.thread_id) + 1
+            thread_id: existing.threadId,
+            revision: latest_thread_revision(db, existing.threadId) + 1
           })
         }
         throw new ActivitiesError('This activity cannot be edited', 'forbidden')
       }
 
       if (parsed.operation === 'set_evaluation') {
-        const current = parse_titled_content(existing.contenu)
+        const current = parseTitledContent(existing.contenu)
         if (!current || !existing.type.startsWith('artifact.')) {
           throw new ActivitiesError('This activity cannot be evaluated', 'forbidden')
         }
         const values = current.values ?? {}
         return append(db, {
-          date_creation: activity_timestamp(),
+          date_creation: activityTimestamp(),
           rattachement: existing.rattachement,
           auteur: destinataire,
           facets: {
@@ -484,12 +464,12 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
               feedback_rating: parsed.score,
               feedback_comment: parsed.commentaire ?? null,
               feedback_by: actor,
-              feedback_at: activity_timestamp()
+              feedback_at: activityTimestamp()
             },
             ...(current.note != null ? { note: current.note } : {})
           }),
-          thread_id: existing.thread_id ?? Bun.randomUUIDv7(),
-          revision: existing.thread_id ? latest_thread_revision(db, existing.thread_id) + 1 : 1
+          thread_id: existing.threadId ?? Bun.randomUUIDv7(),
+          revision: existing.threadId ? latest_thread_revision(db, existing.threadId) + 1 : 1
         })
       }
 
@@ -502,31 +482,18 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
 }
 
 export const delete_activity = (actor: string, id: number): void => {
-  const db = new Database(datastore_path())
-  db.run('PRAGMA busy_timeout = 5000')
+  const db = openDatastore()
   try {
     const remove = () => {
       const existing = get_activity_with_db(db, id)
       if (!existing) throw new ActivitiesError('Activity not found', 'not_found')
-      if (is_communication_type(existing.type)) {
+      if (isCommunicationType(existing.type)) {
         throw new ActivitiesError('Communications cannot be deleted', 'forbidden')
       }
       const destinataire = user_destinataire(actor)
-      if (
-        is_repayment_plan_row(existing) &&
-        existing.auteur === destinataire &&
-        existing.thread_id
-      ) {
-        transition_repayment_plan(db, {
-          existing,
-          auteur: destinataire,
-          operation: 'withdraw'
-        })
-        return
-      }
-      if (is_note_type(existing.type) && existing.auteur === destinataire && existing.thread_id) {
+      if (isNoteType(existing.type) && existing.auteur === destinataire && existing.threadId) {
         append(db, {
-          date_creation: activity_timestamp(),
+          date_creation: activityTimestamp(),
           rattachement: existing.rattachement,
           auteur: destinataire,
           facets: {
@@ -537,22 +504,22 @@ export const delete_activity = (actor: string, id: number): void => {
           type: 'note.withdrawn',
           mentions: [],
           contenu: JSON.stringify({ version: 2 }),
-          thread_id: existing.thread_id,
-          revision: latest_thread_revision(db, existing.thread_id) + 1
+          thread_id: existing.threadId,
+          revision: latest_thread_revision(db, existing.threadId) + 1
         })
         return
       }
-      if (is_task_type(existing.type) && existing.thread_id) {
+      if (isTaskType(existing.type) && existing.threadId) {
         const created = db
           .query<{ auteur: string }, [string]>(
             `SELECT auteur FROM activites WHERE thread_id = ? AND type = 'task.created' LIMIT 1`
           )
-          .get(existing.thread_id)
+          .get(existing.threadId)
         if (created?.auteur !== destinataire) throw new ActivitiesError('Forbidden', 'forbidden')
-        const task = parse_task_content(existing.contenu)
+        const task = parseTaskContent(existing.contenu)
         if (!task) throw new ActivitiesError('Invalid action content', 'invalid_body')
         append(db, {
-          date_creation: activity_timestamp(),
+          date_creation: activityTimestamp(),
           rattachement: existing.rattachement,
           auteur: destinataire,
           facets: {
@@ -566,18 +533,18 @@ export const delete_activity = (actor: string, id: number): void => {
             version: 2,
             task: { ...task.task, state: 'deleted' }
           }),
-          thread_id: existing.thread_id,
-          revision: latest_thread_revision(db, existing.thread_id) + 1
+          thread_id: existing.threadId,
+          revision: latest_thread_revision(db, existing.threadId) + 1
         })
         return
       }
       if (existing.type.startsWith('artifact.')) {
         require_current_artifact(db, existing)
-        const current = parse_titled_content(existing.contenu)
+        const current = parseTitledContent(existing.contenu)
         if (!current) throw new ActivitiesError('Invalid artifact content')
-        const thread_id = existing.thread_id ?? Bun.randomUUIDv7()
+        const threadId = existing.threadId ?? Bun.randomUUIDv7()
         append(db, {
-          date_creation: activity_timestamp(),
+          date_creation: activityTimestamp(),
           rattachement: existing.rattachement,
           auteur: destinataire,
           facets: {
@@ -588,8 +555,8 @@ export const delete_activity = (actor: string, id: number): void => {
           type: 'artifact.discarded',
           mentions: [],
           contenu: JSON.stringify(current),
-          thread_id,
-          revision: existing.thread_id ? latest_thread_revision(db, existing.thread_id) + 1 : 1
+          thread_id: threadId,
+          revision: existing.threadId ? latest_thread_revision(db, existing.threadId) + 1 : 1
         })
         return
       }

@@ -1,7 +1,7 @@
 import { afterAll, expect, it } from 'bun:test'
 
 import { getAuth } from '../../../utils/auth'
-import { ENV_ADMIN_EMAIL, ensureEnvAdmin } from '../../../utils/ensure-env-admin'
+import { ensureEnvAdmin, ENV_ADMIN_EMAIL } from '../../../utils/ensure-env-admin'
 import { getUser, saveUserAsAdministrator } from '../../../utils/handle-user'
 import { createTestUser } from '../../test-user'
 import { use_identity_test_env } from './identity-test-env'

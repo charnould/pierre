@@ -4,11 +4,11 @@ import { rm } from 'node:fs/promises'
 
 import { Hono } from 'hono'
 
-import { parse_repayment_plan_content } from '../../../../shared/activites'
-import { controller as postActivity } from '../../../controllers/desktop/activities/post'
+import { parseRepaymentPlanContent } from '../../../../shared/repayment-plan'
+import { createActivity as postActivity } from '../../../routes/activities'
 import type { User } from '../../../utils/_schema'
 import { list_activities } from '../../../utils/activities/query'
-import { create_activity, delete_activity, patch_activity } from '../../../utils/activities/write'
+import { create_activity, patch_activity } from '../../../utils/activities/write'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 
@@ -16,55 +16,73 @@ const paths = testDatastorePaths('repayment_plan_activities')
 const DATABASE = paths.database
 const ALICE = 'alice@example.org'
 
-const plan_content = (amount = 1_200, note?: string): string =>
+const plan_content = (adults = 1): string =>
   JSON.stringify({
-    version: 2,
-    title: "Plan d'apurement",
-    plan: {
-      kind: 'repayment_plan',
-      tenant_reference: 'LOC-1',
-      client_reference: 'CLI-1',
-      occupancy: 'lease',
-      address: { line: '1 rue Pierre', postal_code: '75001', city: 'Paris' },
-      debt: { amount },
-      procedures: {
-        banque_de_france: { status: 'none' },
-        ccapex_opened: false
-      },
-      social_worker: null,
-      household: {
-        adults: [
-          {
-            id: 'adult-1',
-            last_name: 'Martin',
-            first_name: 'Alice',
-            birth_date: '',
-            employment_status: 'permanent',
-            pension_fund: '',
-            caf_number: '',
-            lease_holder: true
-          }
-        ],
-        children: []
-      },
-      budget: {
-        income: [{ label: 'Salaire', amount: 2_000, person_id: 'adult-1' }],
-        expenses: [{ label: 'Loyer', amount: 600 }]
-      },
-      requested_aids: [],
-      installments: [{ year_month: '2026-10', amount }]
+    identification: {
+      identifiant_client: 'CLI-1',
+      identifiant_locataire: 'LOC-1',
+      identifiant_logement: null,
+      adresse: { voie: null, code_postal: null, commune: null }
     },
-    ...(note ? { note } : {})
+    dette: {
+      montant_restant_du_euros: 1200,
+      date_premier_loyer_impaye: null,
+      motifs_impaye: [],
+      ancienne_dette_locative_euros: null
+    },
+    procedure: {
+      stade: null,
+      date_du_stade: null,
+      situation_banque_de_france: null,
+      date_fin_moratoire: null
+    },
+    accompagnement: {
+      visite_a_domicile: false,
+      travailleur_social: null,
+      date_saisine_ccapex_prevention_expulsions: null,
+      date_saisine_ctesi_situations_individuelles: null,
+      aides_mobilisables: []
+    },
+    bail: {
+      avenant_signe: false,
+      date_depot_preavis_conge: null,
+      contentieux_anterieur_sur_ce_contrat: false,
+      garant: null
+    },
+    foyer: {
+      adultes: Array.from({ length: adults }, () => ({
+        prenom: 'Alice',
+        nom: 'Martin',
+        date_naissance: null,
+        type_emploi: null,
+        employeur: null,
+        numero_allocataire_caf: null,
+        titulaire_du_bail: true,
+        occupant_du_logement: true
+      })),
+      enfants: [{ prenom: 'Lina', nom: 'Martin', date_naissance: null, a_charge: true }]
+    },
+    budget: {
+      ressources_mensuelles: [],
+      ressources_ponctuelles: [],
+      loyer_charges_moins_aides_au_logement_euros: null,
+      charges_mensuelles: [],
+      charges_ponctuelles: []
+    },
+    echeancier: {
+      propose: true,
+      echeances: [{ date_echeance: '2026-11-05', mensualite_euros: 150 }]
+    }
   })
 
 const thread_rows = (threadId: string) =>
   list_activities(ALICE, { rattachement: 'repayment:LOC-1', limit: 100 })
-    .filter((row) => row.thread_id === threadId)
+    .filter((row) => row.threadId === threadId)
     .sort((a, b) => a.id - b.id)
 
 const snapshots = (threadId: string) =>
   thread_rows(threadId).filter(
-    (row) => parse_repayment_plan_content(row.type, row.contenu)?.plan != null
+    (row) => parseRepaymentPlanContent(row.type, row.contenu)?.foyer != null
   )
 
 beforeAll(() => {
@@ -82,88 +100,46 @@ beforeEach(async () => {
 })
 
 describe('repayment plan activity lifecycle', () => {
-  it('moves one snapshot through create, update, finalize and close', () => {
+  it('keeps one dossier through create and update', () => {
     const created = create_activity(ALICE, {
       contexte: 'repayment',
       ref: 'LOC-1',
       type: 'repayment_plan.created',
-      contenu: plan_content()
+      contenu: plan_content(1)
     })
     expect(created.revision).toBeNull()
-    expect(created.thread_id).toBeTruthy()
-    expect(snapshots(created.thread_id!)).toHaveLength(1)
+    expect(created.threadId).toBeTruthy()
+    expect(snapshots(created.threadId!)).toHaveLength(1)
+    expect(parseRepaymentPlanContent(created.type, created.contenu)?.foyer).toMatchObject({
+      adultes: [{ prenom: 'Alice' }],
+      enfants: [{ prenom: 'Lina' }]
+    })
 
     const updated = patch_activity(ALICE, created.id, {
       operation: 'save_repayment_plan',
-      contenu: plan_content(900, 'Mensualité ajustée')
+      contenu: plan_content(2)
     })
     expect(updated.type).toBe('repayment_plan.updated')
-    expect(updated.thread_id).toBe(created.thread_id)
-    expect(updated.revision).toBeNull()
-    expect(snapshots(created.thread_id!).map((row) => row.id)).toEqual([updated.id])
+    expect(updated.threadId).toBe(created.threadId)
+    expect(snapshots(created.threadId!).map((row) => row.id)).toEqual([updated.id])
+    const stored = parseRepaymentPlanContent(updated.type, updated.contenu)
+    expect(stored?.foyer).toMatchObject({
+      adultes: [{ prenom: 'Alice' }, { prenom: 'Alice' }],
+      enfants: [{ prenom: 'Lina' }]
+    })
+    expect(stored?.echeancier).toMatchObject({
+      echeances: [{ date_echeance: '2026-11-05', mensualite_euros: 150 }]
+    })
     expect(
-      parse_repayment_plan_content(created.type, thread_rows(created.thread_id!)[0]!.contenu)
-    ).not.toHaveProperty('plan')
+      parseRepaymentPlanContent(created.type, thread_rows(created.threadId!)[0]!.contenu)
+    ).toBeNull()
 
     expect(() =>
       patch_activity(ALICE, created.id, {
         operation: 'save_repayment_plan',
-        contenu: plan_content(800)
+        contenu: plan_content(3)
       })
     ).toThrow(/changed/)
-
-    const finalized = patch_activity(ALICE, updated.id, {
-      operation: 'finalize_repayment_plan',
-      contenu: plan_content(900, 'Accord signé')
-    })
-    expect(finalized.type).toBe('repayment_plan.finalized')
-    expect(finalized.thread_id).toBe(created.thread_id)
-    expect(snapshots(created.thread_id!).map((row) => row.id)).toEqual([finalized.id])
-
-    const closed = patch_activity(ALICE, finalized.id, {
-      operation: 'close_repayment_plan',
-      reason: 'execution_complete'
-    })
-    expect(closed.type).toBe('repayment_plan.closed')
-    expect(closed.thread_id).toBe(created.thread_id)
-    expect(snapshots(created.thread_id!).map((row) => row.id)).toEqual([closed.id])
-    expect(parse_repayment_plan_content(closed.type, closed.contenu)).toMatchObject({
-      reason: 'execution_complete',
-      plan: { debt: { amount: 900 } }
-    })
-  })
-
-  it('creates light created then full finalized when saved signed initially', () => {
-    const finalized = create_activity(ALICE, {
-      contexte: 'repayment',
-      ref: 'LOC-1',
-      type: 'repayment_plan.finalized',
-      contenu: plan_content()
-    })
-    const rows = thread_rows(finalized.thread_id!)
-    expect(rows.map((row) => row.type)).toEqual([
-      'repayment_plan.created',
-      'repayment_plan.finalized'
-    ])
-    expect(rows[0]?.revision).toBeNull()
-    expect(parse_repayment_plan_content(rows[0]!.type, rows[0]!.contenu)).not.toHaveProperty('plan')
-    expect(snapshots(finalized.thread_id!).map((row) => row.id)).toEqual([finalized.id])
-  })
-
-  it('withdraws a draft without deleting its history', () => {
-    const created = create_activity(ALICE, {
-      contexte: 'repayment',
-      ref: 'LOC-1',
-      type: 'repayment_plan.created',
-      contenu: plan_content()
-    })
-    delete_activity(ALICE, created.id)
-    const rows = thread_rows(created.thread_id!)
-    expect(rows.map((row) => row.type)).toEqual(['repayment_plan.created', 'repayment_plan.closed'])
-    expect(snapshots(created.thread_id!)).toHaveLength(1)
-    expect(parse_repayment_plan_content(rows[1]!.type, rows[1]!.contenu)).toMatchObject({
-      reason: 'withdrawn'
-    })
   })
 
   it('enforces one full snapshot per thread in SQLite', () => {
@@ -186,7 +162,7 @@ describe('repayment plan activity lifecycle', () => {
           'repayment_plan.updated',
           '[]',
           plan_content(500),
-          created.thread_id!
+          created.threadId!
         ]
       )
     ).toThrow(/UNIQUE/)
@@ -215,8 +191,8 @@ describe('repayment plan activity lifecycle', () => {
       })
       await next()
     })
-    app.post('/desktop/activities', postActivity)
-    const response = await app.request('/desktop/activities', {
+    app.post('/activities', postActivity)
+    const response = await app.request('/activities', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

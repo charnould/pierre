@@ -1,0 +1,12 @@
+[fmt]
+singleQuote = true
+semi = false
+trailingComma = "none"
+printWidth = 100
+sortPackageJson = true
+sortImports = true
+sortTailwindcss = true
+ignorePatterns = ["**/*.js", "**/dist/**", "docs/assets/**", "**/plans/**"]
+
+[serve.static]
+plugins = ["./desktop/build-plugin.ts"]

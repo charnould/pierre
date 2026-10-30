@@ -5,7 +5,6 @@ export type KnowledgeEntry = {
   title: string
   sheet: number | null
   sheetName: string | null
-  headerRow: number | null
   profileIds: string[]
   moduleIds: BusinessModuleId[]
 }
@@ -40,7 +39,7 @@ export type KnowledgeBuild = {
   catalogFingerprint: string | null
   startedAt: string | null
   finishedAt: string | null
-  mirrorTables: DatastoreTable[]
+  coreFingerprint: string | null
   ownerId: string
   heartbeatAt: string
   items: Array<{ key: string; status: 'succeeded' | 'failed' }>

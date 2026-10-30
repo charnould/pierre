@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { SERVER_ROOT } from '../utils/paths'
 
 const DIST_DIR = join(SERVER_ROOT, 'assets/dist')
-const MANIFEST_PATH = join(DIST_DIR, '.vite/manifest.json')
+const MANIFEST_PATH = join(DIST_DIR, 'manifest.json')
 const PUBLIC_BASE = '/assets/dist'
 
 export const widgetAssets = {
@@ -38,32 +38,25 @@ function publicHref(file: string): string {
 
 export function readChatWebEntry(): ChatWebEntry {
   if (!existsSync(MANIFEST_PATH)) {
-    throw new Error(
-      `Chat Vite manifest missing at ${MANIFEST_PATH}. Run: bun --filter @pierre/server server:build`
-    )
+    throw new Error(`Chat manifest missing at ${MANIFEST_PATH}. Run: bun server:build`)
   }
 
   const manifest: unknown = JSON.parse(readFileSync(MANIFEST_PATH, 'utf8'))
   if (typeof manifest !== 'object' || manifest === null) {
-    throw new Error('Chat Vite manifest is not an object')
+    throw new Error('Chat manifest is not an object')
   }
 
   const chunks = Object.values(manifest).filter(isManifestChunk)
   const entry = chunks.find((chunk) => chunk.isEntry === true)
-  // Vite 8 / Rolldown emits the stylesheet as a sibling `style.css` entry, not `entry.css`.
   const cssFile = entry?.css?.[0] ?? chunks.find((chunk) => chunk.file.endsWith('.css'))?.file
   if (!entry || !cssFile) {
-    throw new Error(
-      'Chat Vite manifest has no JS/CSS entry. Run: bun --filter @pierre/server server:build'
-    )
+    throw new Error('Chat manifest has no JS/CSS entry. Run: bun server:build')
   }
 
   const jsPath = join(DIST_DIR, entry.file)
   const cssPath = join(DIST_DIR, cssFile)
   if (!existsSync(jsPath) || !existsSync(cssPath)) {
-    throw new Error(
-      'Chat Vite assets are missing on disk. Run: bun --filter @pierre/server server:build'
-    )
+    throw new Error('Chat assets are missing on disk. Run: bun server:build')
   }
 
   return {

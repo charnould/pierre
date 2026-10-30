@@ -3,12 +3,12 @@ import type { InferenceSession } from 'onnxruntime-node'
 
 import {
   CARL_DIR,
-  HEADS,
+  type CarlLabels,
   decodeLogits,
-  normalize,
-  padTokens,
+  HEADS,
   type Mention,
-  type CarlLabels
+  normalize,
+  padTokens
 } from './carl'
 
 const THREADS = Math.min(4, navigator.hardwareConcurrency)

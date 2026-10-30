@@ -11,8 +11,8 @@ import { rich_rcs_graph_issues } from '../../../shared/bulk-rich-rcs'
 import {
   COMPTES_LOCATAIRES_TABLE,
   CONTACTS_TABLE,
-  LOTS_TABLE,
-  type LedgerColumnMeta
+  type LedgerColumnMeta,
+  LOTS_TABLE
 } from '../ledger/schema'
 import { build_ledger_view_sql } from '../ledger/view'
 import { repaymentReady } from '../setup-store'
@@ -437,7 +437,7 @@ export const execute_query = (db: Database, compiled: CompiledQuery): Record<str
   return rows
 }
 
-const compile_for_db = (
+export const compile_for_db = (
   db: Database,
   definition: BulkOperationQueryDefinition | BulkOperationDefinition
 ): CompiledQuery => {
@@ -454,14 +454,4 @@ const compile_for_db = (
     table_exists(db, LOTS_TABLE) ? table_columns(db, LOTS_TABLE) : new Set<string>(),
     table_exists(db, 'activites')
   )
-}
-
-export const compile_and_run = (
-  db: Database,
-  definition: BulkOperationQueryDefinition
-): CompiledQuery & {
-  rows: Record<string, unknown>[]
-} => {
-  const compiled = compile_for_db(db, definition)
-  return { ...compiled, rows: execute_query(db, compiled) }
 }

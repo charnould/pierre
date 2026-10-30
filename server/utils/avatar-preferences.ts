@@ -1,22 +1,21 @@
-import { Database } from 'bun:sqlite'
-
 import {
   isReservedDisplayName,
   normalizeDisplayName,
-  parseUserPreferences,
+  normalizePreferredName,
   type UserPreferences
-} from '../../shared/automations'
+} from '../../shared/user-preferences'
 import { login_from_email } from './activities/rows'
 import { get_user_preferences, patch_user_preferences } from './automations/store'
-import { datastorePaths } from './paths'
+import { openDatastore } from './datastore-db'
 import { name } from './setup-store'
+import { parseStoredUserPreferences, storedUserPreferences } from './user-preferences-stored'
 
 function default_display_name(email: string): string {
   return login_from_email(email)
 }
 
 function display_name_from_prefs(email: string, prefs: UserPreferences): string {
-  if (prefs.display_name) return prefs.display_name
+  if (prefs.displayName) return prefs.displayName
   return default_display_name(email)
 }
 
@@ -33,13 +32,14 @@ export function set_display_name(email: string, raw: string | null): string {
   const fallback = default_display_name(email)
   let next = raw === null || raw === '' ? null : normalizeDisplayName(raw)
   if (next && next.toLowerCase() === fallback.toLowerCase()) next = null
-  patch_user_preferences(email, { display_name: next })
+  patch_user_preferences(email, { displayName: next })
   return next ?? fallback
 }
 
 export type MePreferencesPatch = {
   hasAvatar: boolean
   displayName: string
+  preferredName: string | null
 }
 
 /** Apply a partial preferences patch for the current user. */
@@ -48,32 +48,37 @@ export function patch_me_preferences(
   body: {
     avatar?: unknown
     display_name?: unknown
+    preferred_name?: unknown
   }
 ): MePreferencesPatch | { error: string } {
   const hasAvatar = 'avatar' in body
   const hasDisplayName = 'display_name' in body
-  if (!hasAvatar && !hasDisplayName) {
-    return { error: 'avatar or display_name required' }
+  const hasPreferredName = 'preferred_name' in body
+  if (!hasAvatar && !hasDisplayName && !hasPreferredName) {
+    return { error: 'avatar, displayName or preferredName required' }
   }
 
   if (hasDisplayName) {
     if (body.display_name !== null && typeof body.display_name !== 'string') {
-      return { error: 'display_name must be a string or null' }
+      return { error: 'displayName must be a string or null' }
     }
     const normalized = normalizeDisplayName(body.display_name)
     const fallback = default_display_name(email)
     const isCustom = normalized !== null && normalized.toLowerCase() !== fallback.toLowerCase()
     if (isCustom && isReservedDisplayName(normalized, name())) {
-      return { error: 'display_name is reserved for the AI' }
+      return { error: 'displayName is reserved for the AI' }
     }
   }
 
-  if (hasAvatar && body.avatar !== null) {
-    return { error: 'avatar must be null (use POST /desktop/me/avatar to upload)' }
+  if (hasPreferredName && body.preferred_name !== null && typeof body.preferred_name !== 'string') {
+    return { error: 'preferredName must be a string or null' }
   }
 
-  const db = new Database(datastorePaths().database)
-  db.run('PRAGMA busy_timeout = 5000')
+  if (hasAvatar && body.avatar !== null) {
+    return { error: 'avatar must be null (use POST /me/avatar to upload)' }
+  }
+
+  const db = openDatastore()
   try {
     return db
       .transaction(() => {
@@ -84,7 +89,7 @@ export function patch_me_preferences(
           )
           .get(email.toLowerCase().trim())
         if (!row) return { error: 'user not found' }
-        const prefs = parseUserPreferences(row.preferences)
+        const prefs = parseStoredUserPreferences(row.preferences)
         const fallback = default_display_name(email)
         const normalized =
           hasDisplayName && body.display_name !== null
@@ -92,7 +97,14 @@ export function patch_me_preferences(
             : null
         const display_name =
           normalized?.toLowerCase() === fallback.toLowerCase() ? null : normalized
-        const nextPrefs = hasDisplayName ? { ...prefs, display_name } : prefs
+        const preferred_name = hasPreferredName
+          ? normalizePreferredName(body.preferred_name)
+          : prefs.preferredName
+        const nextPrefs = {
+          ...prefs,
+          ...(hasDisplayName ? { displayName: display_name } : {}),
+          ...(hasPreferredName ? { preferredName: preferred_name } : {})
+        }
         db.run(
           `UPDATE users
          SET preferences = ?,
@@ -100,7 +112,7 @@ export function patch_me_preferences(
              avatar_version = avatar_version + CASE WHEN ? THEN 1 ELSE 0 END
          WHERE lower(email) = ?`,
           [
-            JSON.stringify(nextPrefs),
+            JSON.stringify(storedUserPreferences(nextPrefs)),
             hasAvatar ? 1 : 0,
             hasAvatar ? 1 : 0,
             email.toLowerCase().trim()
@@ -108,7 +120,8 @@ export function patch_me_preferences(
         )
         return {
           hasAvatar: hasAvatar ? false : row.hasAvatar === 1,
-          displayName: nextPrefs.display_name ?? fallback
+          displayName: nextPrefs.displayName ?? fallback,
+          preferredName: nextPrefs.preferredName
         }
       })
       .immediate()

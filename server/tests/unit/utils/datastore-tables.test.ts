@@ -8,7 +8,7 @@ import {
   type DatastoreTableStatus,
   get_datastore_tables
 } from '../../../utils/datastore-tables'
-import { import_json_rows } from '../../../utils/knowledge/sqlite-table-import'
+import { import_rows } from '../../../utils/knowledge/sqlite-table-import'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 
@@ -87,10 +87,10 @@ describe('get_datastore_tables', () => {
   it('marks only imported tables as present and sorts present rows first', async () => {
     const db = new Database(DATASTORE_SQLITE)
     try {
-      await import_json_rows(db, 'reclamations', [
+      await import_rows(db, 'reclamations', [
         { id_reclamation: 'REQ-1', id_locataire: 'LOC-A', id_lot: 'LOT-1' }
       ])
-      await import_json_rows(db, 'comptes_locataires', [
+      await import_rows(db, 'comptes_locataires', [
         {
           id_locataire: 'LOC-A',
           id_client: 'CLI-A',

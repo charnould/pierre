@@ -2,15 +2,16 @@ import { join } from 'node:path'
 
 import { $ } from 'bun'
 
+import { buildChat } from '../desktop/build.ts'
+
 const ROOT = import.meta.dir.replace(/\/config$/, '')
 const SERVER = join(ROOT, 'server')
 const DIST = join(SERVER, 'assets/dist')
 const EMBED = join(SERVER, 'assets/embed')
-const DESKTOP = join(ROOT, 'desktop')
 
-await $`rm -rf ${DIST}/css ${DIST}/js ${DIST}/assets ${DIST}/.vite`
+await $`rm -rf ${DIST}/css ${DIST}/js ${DIST}/assets ${DIST}/.vite ${DIST}/manifest.json`
 
-await $`bun x --bun vite build --config ${join(DESKTOP, 'vite.chat-web.config.ts')}`.cwd(DESKTOP)
+await buildChat(DIST)
 
 await Bun.write(
   join(DIST, 'css/pierre-embed-frame.css'),

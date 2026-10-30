@@ -1,12 +1,16 @@
 import { Database } from 'bun:sqlite'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
-import { mkdirSync } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
+import { basename, join } from 'node:path'
 
-import {
-  build_knowledge_databases,
-  publishKnowledgeMirrors
-} from '../../../utils/knowledge/build-knowledge'
+import { HIERARCHY_CONVENTION } from '../../../../shared/hierarchy'
+import { normalize_knowledge_name } from '../../../../shared/knowledge'
+import { migrate_datastore } from '../../../utils/datastore-migrations'
+import { publishCoreTables } from '../../../utils/knowledge/build-knowledge'
+import { import_communes_par_code_postal_table } from '../../../utils/knowledge/codes-postaux'
+import { buildProfileDatabase, documentParts } from '../../../utils/knowledge/project-profile'
+import { import_rows } from '../../../utils/knowledge/sqlite-table-import'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 
 // ─── Isolated test environment ────────────────────────────────────────────────
@@ -39,9 +43,81 @@ const write_md = async (rel_path: string, content: string) => {
 }
 
 const open_db = () => new Database(DB_PATH)
+
+const build_knowledge_databases = async () => {
+  if (!existsSync(SOURCE_DIR)) return { databases: [], mirrorTables: new Map() }
+  mkdirSync(join(paths.root), { recursive: true })
+  await migrate_datastore(paths.database)
+  await rm(DB_PATH, { force: true })
+  const db = new Database(paths.database)
+  db.run('PRAGMA busy_timeout = 5000')
+  const mirrorTables = new Map<string, { columns: string[]; rows: Record<string, unknown>[] }>()
+  const sqlTables: Array<{ source: string; target: string }> = []
+  const coreFile = Bun.file(`${SOURCE_DIR}/_core_data.json`)
+  const core = new Set<string>(
+    (await coreFile.exists()) ? ((await coreFile.json()) as string[]) : []
+  )
+  for await (const path of new Bun.Glob('**/*.json').scan({ cwd: SOURCE_DIR, onlyFiles: true })) {
+    if (path.endsWith('_core_data.json')) continue
+    const payload = JSON.parse(await Bun.file(join(SOURCE_DIR, path)).text()) as {
+      columns?: unknown
+      rows?: unknown
+    }
+    if (!Array.isArray(payload.columns) || !Array.isArray(payload.rows)) continue
+    const target = normalize_knowledge_name(basename(path, '.json'))
+    const source = `stage_${target}`
+    await import_rows(db, source, payload.rows, {
+      columns: payload.columns.filter((column): column is string => typeof column === 'string'),
+      refreshPostalReference: false
+    })
+    if (core.has(target)) {
+      mirrorTables.set(target, {
+        columns: payload.columns.filter((column): column is string => typeof column === 'string'),
+        rows: payload.rows as Record<string, unknown>[]
+      })
+    }
+    sqlTables.push({ source, target })
+  }
+  await import_communes_par_code_postal_table(db)
+  db.close()
+  const documents = []
+  for await (const path of new Bun.Glob('**/*.md').scan({ cwd: SOURCE_DIR, onlyFiles: true })) {
+    documents.push({
+      filename: normalize_knowledge_name(basename(path, '.md')),
+      ...documentParts(await Bun.file(join(SOURCE_DIR, path)).text())
+    })
+  }
+  mkdirSync(SOURCE_DIR, { recursive: true })
+  buildProfileDatabase({
+    path: DB_PATH,
+    datastorePath: paths.database,
+    sqlTables,
+    rowTables: [],
+    documents,
+    fingerprint: 'test'
+  })
+  for await (const path of new Bun.Glob('**/*').scan({ cwd: SOURCE_DIR, onlyFiles: true })) {
+    if (path === 'db.sqlite') continue
+    await rm(join(SOURCE_DIR, path), { force: true })
+  }
+  await rm(join(SOURCE_DIR, 'donnees_universelles'), { recursive: true, force: true })
+  return { databases: [{ profileId: CONFIG_ID, path: DB_PATH }], mirrorTables }
+}
+
+const publishKnowledgeMirrors = async (
+  artifacts: {
+    mirrorTables: Map<string, { columns: string[]; rows: Record<string, unknown>[] }>
+    databases?: unknown
+    contactRows?: unknown
+  },
+  _previouslyManaged: string[] = []
+) => {
+  publishCoreTables(artifacts.mirrorTables)
+}
+
 const build_and_publish = async () => {
   const artifacts = await build_knowledge_databases()
-  await publishKnowledgeMirrors(artifacts)
+  publishKnowledgeMirrors(artifacts)
 }
 
 // ─── Lifecycle ───────────────────────────────────────────────────────────────
@@ -506,6 +582,56 @@ describe('build_knowledge_databases', () => {
       expect(row?.content).toBeTruthy()
       const schema = parse_readme(row!.content)
       expect(schema.tables.some((t: { name: string }) => t.name === 'ref')).toBe(true)
+    })
+
+    it('describes a hierarchy column and stores an executable segment filter', async () => {
+      await write_json('reclamations.json', [
+        { qualification_hierarchie: 'Technique > Plomberie > Fuite de lavabo' },
+        { qualification_hierarchie: 'Technique > Plomberie' },
+        { qualification_hierarchie: 'Administratif' },
+        { qualification_hierarchie: 'Plomberie générale' }
+      ])
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
+      const schema = parse_readme(row!.content)
+      const table = schema.tables.find((item: { name: string }) => item.name === 'reclamations')
+      const column = table?.columns.find(
+        (item: { name: string }) => item.name === 'qualification_hierarchie'
+      )
+      expect(schema.conventions.hierarchy).toEqual(HIERARCHY_CONVENTION)
+      expect(column?.nature).toBe('hierarchy')
+      expect(column?.values).toBeUndefined()
+      expect(column?.discrete_count).toBeUndefined()
+
+      const predicate = String(schema.conventions.hierarchy.exact_segment_filter_sql)
+        .replaceAll('{column}', '"qualification_hierarchie"')
+        .replaceAll(':segment', '?')
+      const count = (segment: string) =>
+        db
+          .query<{ n: number }, [string]>(
+            `SELECT COUNT(*) AS n FROM reclamations WHERE ${predicate}`
+          )
+          .get(segment)!.n
+      expect(count('plomberie')).toBe(2)
+      expect(count('technique')).toBe(2)
+      expect(count('administratif')).toBe(1)
+      expect(count('fuite')).toBe(0)
+      db.close()
+    })
+
+    it('omits the hierarchy convention when no hierarchy column exists', async () => {
+      await write_json('ref.json', [{ status: 'actif' }])
+
+      await build_knowledge_databases()
+
+      const db = open_db()
+      const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
+      db.close()
+
+      expect(parse_readme(row!.content).conventions).toBeUndefined()
     })
 
     it('marks a TEXT column with ≤ 20 distinct values as discrete and lists values', async () => {

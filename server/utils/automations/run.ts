@@ -1,7 +1,7 @@
 import type { AutomationRecord } from '../../../shared/automations'
 import { create_trusted_activity } from '../activities/write'
 import { timezone } from '../setup-store'
-import { DEMO_AUTOMATION_REPORT_HTML } from './demo-report'
+import { execute_automation } from './execute'
 import {
   AutomationsError,
   claim_automation,
@@ -13,31 +13,17 @@ import {
   renew_automation_lease
 } from './store'
 
-type ExecutorResult =
-  | {
-      kind: 'report'
-      contenu: string
-    }
-  | {
-      kind: 'replies'
-      summary: { total: number; generated: number; skipped: number; errors: number }
-      tickets: Array<{
-        id_reclamation: string
-        outcome: 'generated' | 'skipped_existing_draft' | 'error'
-        detail?: string
-      }>
-      contenu: string
-    }
+type ExecutorResult = {
+  kind: 'report'
+  contenu: string
+}
 
 export type AutomationExecutor = (
   automation: AutomationRecord,
   context: { runToken: string; signal: AbortSignal }
 ) => Promise<ExecutorResult>
 
-let active_executor: AutomationExecutor | null = async () => ({
-  kind: 'report',
-  contenu: DEMO_AUTOMATION_REPORT_HTML
-})
+let active_executor: AutomationExecutor | null = execute_automation
 
 /** Test / future agent hook. */
 export function set_automation_executor(executor: AutomationExecutor): void {
@@ -48,27 +34,14 @@ export function reset_automation_executor(): void {
   active_executor = null
 }
 
-function notify_run(automation: AutomationRecord, result: ExecutorResult, run_id: string): void {
+function notify_run(automation: AutomationRecord, result: ExecutorResult): void {
   const recipients = [...new Set([automation.owner, ...automation.mentions])]
   create_trusted_activity(automation.owner, {
     contexte: 'automations',
     ref: automation.id,
     type: 'automation.reported',
     recipients,
-    contenu:
-      result.kind === 'report'
-        ? JSON.stringify({ version: 2, title: automation.name, note: result.contenu })
-        : JSON.stringify({
-            version: 2,
-            title: automation.name,
-            values: {
-              run_id,
-              generated: result.summary.generated,
-              skipped: result.summary.skipped,
-              errors: result.summary.errors
-            },
-            note: result.contenu
-          }),
+    contenu: JSON.stringify({ version: 2, title: automation.name, note: result.contenu }),
     auteur: `automation:${automation.id}`
   })
 }
@@ -82,7 +55,6 @@ async function execute_claimed(
   if (!automation) return null
   const executor = active_executor
   if (!executor) throw new AutomationsError('Automation executor is not configured', 'unavailable')
-  const run_id = Bun.randomUUIDv7()
   const abort = new AbortController()
   const heartbeat = setInterval(() => {
     try {
@@ -96,9 +68,10 @@ async function execute_claimed(
     if (abort.signal.aborted || !renew_automation_lease(id, run_token)) {
       throw new Error('Automation lease lost')
     }
-    notify_run(automation, result, run_id)
+    notify_run(automation, result)
     finalize_automation_run(id, run_token, 'success', options)
-  } catch {
+  } catch (error) {
+    console.error('[automations.run]', error)
     finalize_automation_run(id, run_token, 'error', options)
   } finally {
     clearInterval(heartbeat)

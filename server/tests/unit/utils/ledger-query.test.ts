@@ -3,7 +3,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { mkdir, rm } from 'node:fs/promises'
 
 import { create_trusted_activity } from '../../../utils/activities/write'
-import { import_json_rows } from '../../../utils/knowledge/sqlite-table-import'
+import { import_rows } from '../../../utils/knowledge/sqlite-table-import'
 import {
   get_ledger_column_facets,
   list_ledger_balances,
@@ -20,8 +20,8 @@ const seed = (
   lots: Record<string, unknown>[] = []
 ): Promise<void> => {
   const db = new Database(datastorePaths().database)
-  return import_json_rows(db, 'comptes_locataires', movements)
-    .then(() => (lots.length > 0 ? import_json_rows(db, 'lots_locatifs', lots) : undefined))
+  return import_rows(db, 'comptes_locataires', movements)
+    .then(() => (lots.length > 0 ? import_rows(db, 'lots_locatifs', lots) : undefined))
     .finally(() => db.close())
 }
 
@@ -92,7 +92,7 @@ describe('ledger SQL queries', () => {
         debut_bail: '2029-01-01'
       })
     ])
-    expect(result.meta).toMatchObject({ total: 1, snapshot_date: '2030-01-31' })
+    expect(result.meta).toMatchObject({ total: 1, snapshotDate: '2030-01-31' })
   })
 
   it('aggregates French money exactly to cents and ignores invalid values', async () => {

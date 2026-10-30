@@ -1,8 +1,7 @@
-import { format } from 'oxfmt'
+import { formatText } from '../format-text'
 
 export async function format_automation_prompt(markdown: string): Promise<string> {
   const trimmed = markdown.trim()
   if (!trimmed) return ''
-  const { code } = await format('a.md', trimmed)
-  return code
+  return formatText('a.md', trimmed)
 }

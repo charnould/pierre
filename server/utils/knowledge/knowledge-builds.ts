@@ -1,21 +1,21 @@
 import {
-  KnowledgeBuildDocumentSchema,
   type KnowledgeBuild,
   type KnowledgeBuildDocument,
+  KnowledgeBuildDocumentSchema,
   type KnowledgeBuildTrigger
 } from './catalog-schema'
 import {
   getRecord,
+  type KnowledgeRecordRow,
   parseBuildRow,
   withKnowledgeDb,
-  writeBuild,
-  type KnowledgeRecordRow
+  writeBuild
 } from './catalog-store'
+import { stringifyStoredBuildDocument } from './stored'
 
 export const createKnowledgeBuild = (
   trigger: KnowledgeBuildTrigger,
   requestedBy: string | null,
-  mirrorTables: KnowledgeBuildDocument['mirrorTables'] = [],
   ownerId = 'local',
   items: KnowledgeBuildDocument['items'] = []
 ): KnowledgeBuild => {
@@ -27,7 +27,7 @@ export const createKnowledgeBuild = (
     catalogFingerprint: null,
     startedAt: null,
     finishedAt: null,
-    mirrorTables,
+    coreFingerprint: null,
     ownerId,
     heartbeatAt: now,
     items,
@@ -37,7 +37,7 @@ export const createKnowledgeBuild = (
   return withKnowledgeDb((db) => {
     db.run(
       "INSERT INTO knowledge_records (id, kind, document, created_at, updated_at) VALUES (?, 'build', ?, ?, ?)",
-      [id, JSON.stringify(document), now, now]
+      [id, stringifyStoredBuildDocument(document), now, now]
     )
     return { id, ...document, createdAt: now, updatedAt: now }
   })
@@ -81,7 +81,7 @@ export const completeKnowledgeBuild = (
   id: string,
   update: Pick<
     KnowledgeBuildDocument,
-    'catalogFingerprint' | 'diagnostics' | 'items' | 'mirrorTables'
+    'catalogFingerprint' | 'diagnostics' | 'items' | 'coreFingerprint'
   >
 ): KnowledgeBuild | null =>
   withKnowledgeDb((db) =>

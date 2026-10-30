@@ -1,7 +1,8 @@
 import { Database } from 'bun:sqlite'
 import { describe, expect, it } from 'bun:test'
 
-import { mention_of, parse_contenu_json } from '../../../../shared/activites'
+import { mentionOf } from '../../../../shared/activities'
+import { parseContentJson } from '../../../../shared/activity-content'
 import { DESKTOP_AGENT_DESTINATAIRE } from '../../../../shared/agent-identity'
 import { list_activities } from '../../../utils/activities/query'
 import { latest_repayment_states } from '../../../utils/activities/repayment'
@@ -57,7 +58,7 @@ describe('create_activity', () => {
       type: 'note.published',
       channel: null
     })
-    expect(parse_contenu_json(created.contenu)).toEqual({
+    expect(parseContentJson(created.contenu)).toEqual({
       version: 2,
       text: 'Point avec @claire'
     })
@@ -69,12 +70,12 @@ describe('create_activity', () => {
     const after = list_activities(JEAN, { inbox: true })[0]!
     expect(after.my).toEqual(mention(JEAN))
     expect(after.read).toBe(true)
-    expect(list_activities(JEAN, { inbox: true, unread_only: true })).toHaveLength(0)
+    expect(list_activities(JEAN, { inbox: true, unreadOnly: true })).toHaveLength(0)
 
     const unreadEvent = patch_activity(JEAN, created.id, { operation: 'set_mention', lu: false })
     expect(unreadEvent.type).toBe('activity.unread')
     expect(list_activities(JEAN, { inbox: true })[0]?.read).toBe(false)
-    expect(list_activities(JEAN, { inbox: true, unread_only: true }).map((row) => row.id)).toEqual([
+    expect(list_activities(JEAN, { inbox: true, unreadOnly: true }).map((row) => row.id)).toEqual([
       created.id
     ])
 
@@ -229,10 +230,10 @@ describe('append-only patches', () => {
     })
     expect(updated).toMatchObject({
       type: 'note.updated',
-      thread_id: created.thread_id,
+      threadId: created.threadId,
       revision: 2
     })
-    expect(parse_contenu_json(updated.contenu)).toEqual({ version: 2, text: 'Bonjour @bob' })
+    expect(parseContentJson(updated.contenu)).toEqual({ version: 2, text: 'Bonjour @bob' })
     expect(get_activity(created.id)?.contenu).toBe(created.contenu)
   })
 
@@ -248,7 +249,7 @@ describe('append-only patches', () => {
     patch_activity(BOB, created.id, { operation: 'set_mention', lu: true })
     const reaction = patch_activity(BOB, created.id, { operation: 'set_boost', emoji: '👍' })
     expect(reaction.type).toBe('activity.reaction_changed')
-    expect(parse_contenu_json(reaction.contenu)).toEqual({
+    expect(parseContentJson(reaction.contenu)).toEqual({
       version: 2,
       source_activity_id: created.id,
       emoji: '👍'
@@ -258,7 +259,7 @@ describe('append-only patches', () => {
     )!
     expect(source.read).toBe(true)
     expect(source.reaction).toBe('👍')
-    expect(mention_of(source.mentions, user(BOB))).toEqual(mention(BOB))
+    expect(mentionOf(source.mentions, user(BOB))).toEqual(mention(BOB))
   })
 
   it('retire une note par événement et refuse auteur étranger ou auto-réaction', () => {

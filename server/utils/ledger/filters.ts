@@ -1,8 +1,8 @@
 import {
   DEFAULT_LEDGER_SORT,
-  RESERVED_LEDGER_QUERY_PARAMS,
+  type LedgerColumnMeta,
   LedgerQueryError,
-  type LedgerColumnMeta
+  RESERVED_LEDGER_QUERY_PARAMS
 } from './schema'
 
 export const build_output_column_set = (columns: LedgerColumnMeta[]): Set<string> =>

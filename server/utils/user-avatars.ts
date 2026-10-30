@@ -1,10 +1,6 @@
-import { Database } from 'bun:sqlite'
-
-import { parseUserPreferences } from '../../shared/automations'
 import { login_from_email } from './activities/rows'
-import { datastorePaths } from './paths'
-
-const datastore_path = (): string => datastorePaths().database
+import { openDatastore } from './datastore-db'
+import { parseStoredUserPreferences } from './user-preferences-stored'
 
 export type AvatarMeta = {
   bytes: number
@@ -12,7 +8,7 @@ export type AvatarMeta = {
 }
 
 export function list_avatar_meta(): Map<string, AvatarMeta> {
-  const db = new Database(datastore_path(), { readonly: true })
+  const db = openDatastore({ readonly: true })
   try {
     const rows = db
       .query<{ email: string; bytes: number; version: number }, []>(
@@ -30,7 +26,7 @@ export function list_avatar_meta(): Map<string, AvatarMeta> {
 }
 
 export function user_has_avatar(email: string): boolean {
-  const db = new Database(datastore_path(), { readonly: true })
+  const db = openDatastore({ readonly: true })
   try {
     const row = db
       .query<{ present: number }, [string]>(
@@ -44,7 +40,7 @@ export function user_has_avatar(email: string): boolean {
 }
 
 export function get_user_avatar(email: string): Uint8Array | null {
-  const db = new Database(datastore_path(), { readonly: true })
+  const db = openDatastore({ readonly: true })
   try {
     const row = db
       .query<{ avatar: Uint8Array | null }, [string]>(
@@ -58,8 +54,7 @@ export function get_user_avatar(email: string): Uint8Array | null {
 }
 
 export function set_user_avatar(email: string, bytes: Uint8Array): number {
-  const db = new Database(datastore_path())
-  db.run('PRAGMA busy_timeout = 5000')
+  const db = openDatastore()
   try {
     const row = db
       .query<{ avatar_version: number }, [Uint8Array, string]>(
@@ -76,8 +71,7 @@ export function set_user_avatar(email: string, bytes: Uint8Array): number {
 }
 
 export function clear_user_avatar(email: string): number {
-  const db = new Database(datastore_path())
-  db.run('PRAGMA busy_timeout = 5000')
+  const db = openDatastore()
   try {
     const row = db
       .query<{ avatar_version: number }, [string]>(
@@ -103,7 +97,7 @@ export type UserIdentity = {
 }
 
 export function list_user_identities(): UserIdentity[] {
-  const db = new Database(datastore_path(), { readonly: true })
+  const db = openDatastore({ readonly: true })
   try {
     return db
       .query<
@@ -128,7 +122,7 @@ export function list_user_identities(): UserIdentity[] {
           hasAvatar: row.avatarBytes > 0,
           avatarBytes: row.avatarBytes,
           avatarVersion: row.avatarVersion,
-          displayName: parseUserPreferences(row.preferences).display_name ?? login
+          displayName: parseStoredUserPreferences(row.preferences).displayName ?? login
         }
       })
   } finally {

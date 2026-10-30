@@ -1,7 +1,7 @@
 import { Database } from 'bun:sqlite'
 
-import { activity_timestamp } from '../../shared/activites'
-import { datastorePaths } from './paths'
+import { activityTimestamp } from '../../shared/activities'
+import { openDatastore } from './datastore-db'
 
 export const TELEMETRY_URL = 'https://assistant.pierre-ia.org/telemetry'
 const COLLECTOR_HOST = 'assistant.pierre-ia.org'
@@ -18,7 +18,7 @@ const instance_host = (): string => {
 
 export const persist_telemetry = (db: Database, host: string, event: string): void => {
   db.run(`INSERT INTO telemetry (recorded_at, host, event) VALUES (?, ?, ?)`, [
-    activity_timestamp(),
+    activityTimestamp(),
     host,
     event
   ])
@@ -43,7 +43,7 @@ export const send_telemetry = (event: string, db?: Database): void => {
   try {
     if (db) persist_telemetry(db, host, event)
     else {
-      using opened = new Database(datastorePaths().database)
+      using opened = openDatastore()
       persist_telemetry(opened, host, event)
     }
   } catch {

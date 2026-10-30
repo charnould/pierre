@@ -1,4 +1,4 @@
-import { Type } from 'typebox'
+import { Type } from '@earendil-works/pi-ai'
 
 const ASK_USER_MARKER = 'pierre:ask_user:'
 

@@ -1,79 +1,37 @@
-import { Database } from 'bun:sqlite'
-
-import { activity_timestamp } from '../../../shared/activites'
-import {
-  bulkDeliveryError,
-  type BulkOperationExecuteResult,
-  type BulkOperationRecord
-} from '../../../shared/bulk-operations'
+import { activityTimestamp } from '../../../shared/activities'
+import { bulkDeliveryError, type BulkOperationExecuteResult } from '../../../shared/bulk-operations'
 import { insert_activity_row, user_destinataire } from '../activities/rows'
-import { datastorePaths } from '../paths'
+import { openDatastore } from '../datastore-db'
 import { insert_bulk_visible_activity } from './activities'
 import type { BulkItemPayload } from './jobs'
 import { record_applied_outbound_with_db } from './outbound'
 import { preview_query_with_db } from './preview'
 import { aggregate_bulk_run_with_db, finalize_bulk_item_with_db } from './reports'
+import { bulkRunResult, parseBulkRunContent, stringifyBulkRunContent } from './run-content'
 import { arm_bulk_scheduler } from './scheduler/queue'
+import { get_bulk_operation_with_db } from './store'
+import { parseStoredPayload, stringifyStoredPayload } from './stored-job'
 
 export type ExecuteResult = BulkOperationExecuteResult
 
 export class BulkExecutionError extends Error {
   constructor(
     message: string,
-    readonly code: 'not_implemented' | 'invalid'
+    readonly code: 'not_found' | 'not_implemented' | 'invalid'
   ) {
     super(message)
     this.name = 'BulkExecutionError'
   }
 }
 
-const datastore_path = (): string => datastorePaths().database
-
-const parse_replay = (raw: string): ExecuteResult | null => {
-  try {
-    const value = JSON.parse(raw) as {
-      result?: ExecuteResult
-      values?: {
-        execution_id?: unknown
-        total?: unknown
-        queued?: unknown
-        no_usable_route?: unknown
-        applied?: unknown
-      }
-    }
-    if (value.result) return value.result
-    const values = value.values
-    if (typeof values?.execution_id !== 'string') return null
-    return {
-      execution_id: values.execution_id,
-      totals: {
-        total: typeof values.total === 'number' ? values.total : 0,
-        queued: typeof values.queued === 'number' ? values.queued : 0,
-        no_usable_route: typeof values.no_usable_route === 'number' ? values.no_usable_route : 0,
-        applied: typeof values.applied === 'number' ? values.applied : 0
-      }
-    }
-  } catch {
-    return null
-  }
-}
-
 export const execute_bulk_operation = async (
   actor: string,
-  bulkOperation: BulkOperationRecord,
+  bulkOperationId: string,
   options: { mode: 'send' | 'apply_without_send'; clientCommandId: string }
 ): Promise<ExecuteResult> => {
-  if (bulkOperation.definition.source !== 'comptes_locataires') {
-    throw new BulkExecutionError(
-      `Source non implémentée : ${bulkOperation.definition.source}`,
-      'not_implemented'
-    )
-  }
-  const deliveryError = bulkDeliveryError(bulkOperation.definition.delivery)
-  if (deliveryError) throw new BulkExecutionError(deliveryError, 'invalid')
-  const db = new Database(datastore_path())
+  const db = openDatastore()
   const execution_id = Bun.randomUUIDv7()
-  const runKey = `bulk:${bulkOperation.id}:command:${options.clientCommandId}`
+  const runKey = `bulk:${bulkOperationId}:command:${options.clientCommandId}`
   let result: ExecuteResult
   let queued = false
   let committed = false
@@ -81,41 +39,42 @@ export const execute_bulk_operation = async (
   db.run('BEGIN IMMEDIATE')
   try {
     const replay = db
-      .query<{ contenu: string; execution_id: string | null }, [string]>(
-        `SELECT contenu, execution_id FROM activites
+      .query<{ contenu: string }, [string]>(
+        `SELECT contenu FROM activites
          WHERE type = 'bulk.ran' AND idempotency_key = ? LIMIT 1`
       )
       .get(runKey)
     if (replay) {
-      const parsed = parse_replay(replay.contenu)
-      if (parsed) {
-        db.run('COMMIT')
-        return parsed
-      }
-      if (replay.execution_id) {
-        db.run('COMMIT')
-        return {
-          execution_id: replay.execution_id,
-          totals: { total: 0, queued: 0, no_usable_route: 0, applied: 0 }
-        }
-      }
-      throw new Error('Exécution bulk idempotente illisible')
+      const result = bulkRunResult(parseBulkRunContent(replay.contenu))
+      db.run('COMMIT')
+      return result
     }
 
-    confirmedAt = activity_timestamp()
+    const bulkOperation = get_bulk_operation_with_db(db, bulkOperationId)
+    if (!bulkOperation) throw new BulkExecutionError('Bulk operation not found', 'not_found')
+    if (bulkOperation.definition.source !== 'comptes_locataires') {
+      throw new BulkExecutionError(
+        `Source non implémentée : ${bulkOperation.definition.source}`,
+        'not_implemented'
+      )
+    }
+    const deliveryError = bulkDeliveryError(bulkOperation.definition.delivery)
+    if (deliveryError) throw new BulkExecutionError(deliveryError, 'invalid')
+
+    confirmedAt = activityTimestamp()
+    const now = confirmedAt
     const preview = preview_query_with_db(db, {
       definition: bulkOperation.definition,
-      bulkOperationId: bulkOperation.id,
-      confirmedAt: new Date(confirmedAt)
+      limit: 0
     })
     const totals: ExecuteResult['totals'] = {
       total: preview.totals.total,
       queued: options.mode === 'send' ? preview.totals.eligible : 0,
-      no_usable_route: preview.totals.no_usable_route,
+      noUsableRoute: preview.totals.noUsableRoute,
       applied: options.mode === 'apply_without_send' ? preview.totals.eligible : 0
     }
-    result = { execution_id, totals }
-    const now = confirmedAt
+    queued = options.mode === 'send' && preview.totals.eligible > 0
+    result = { executionId: execution_id, totals }
     insert_activity_row(db, {
       date_creation: now,
       rattachement: `bulk:${bulkOperation.id}`,
@@ -123,7 +82,7 @@ export const execute_bulk_operation = async (
       facets: { id_client: null, id_locataire: null, id_lot: null },
       type: 'bulk.ran',
       mentions: [],
-      contenu: JSON.stringify({
+      contenu: stringifyBulkRunContent({
         version: 2,
         title: bulkOperation.name,
         values: {
@@ -133,7 +92,7 @@ export const execute_bulk_operation = async (
           mode: options.mode,
           total: result.totals.total,
           queued: result.totals.queued,
-          no_usable_route: result.totals.no_usable_route,
+          no_usable_route: result.totals.noUsableRoute,
           applied: result.totals.applied
         }
       }),
@@ -141,58 +100,63 @@ export const execute_bulk_operation = async (
       execution_id,
       idempotency_key: runKey
     })
-
-    for (const row of preview.rows) {
-      const jobId = Bun.randomUUIDv7()
-      const payload: BulkItemPayload =
-        bulkOperation.definition.delivery.kind === 'rich_rcs'
-          ? {
-              kind: 'rich_rcs',
-              row,
-              stage: 'rich_send',
-              nodeId: bulkOperation.definition.delivery.nodes[0]!.id,
-              responseHistory: []
-            }
-          : {
-              kind: 'fallback',
-              row,
-              stage: 'attempt',
-              stepIndex: row.route?.kind === 'fallback' ? row.route.stepIndex : 0
-            }
-      db.run(
-        `INSERT INTO bulk_jobs (
-           id, bulk_operation_id, execution_id, item_id, source, mode,
-           report_status, run_at, payload
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          jobId,
-          bulkOperation.id,
-          execution_id,
-          row.id_locataire,
-          bulkOperation.definition.source,
-          options.mode,
-          'in_progress',
-          options.mode === 'send' && row.status === 'eligible' ? now : null,
-          JSON.stringify(payload)
-        ]
-      )
-      if (row.status === 'eligible' && row.route != null) {
-        if (options.mode === 'send') queued = true
-        else {
-          record_applied_outbound_with_db(db, {
-            actor,
-            operation: bulkOperation,
-            executionId: execution_id,
+    preview_query_with_db(db, {
+      definition: bulkOperation.definition,
+      onRow(row) {
+        const jobId = Bun.randomUUIDv7()
+        const payload: BulkItemPayload =
+          bulkOperation.definition.delivery.kind === 'rich_rcs'
+            ? {
+                kind: 'rich_rcs',
+                row,
+                stage: 'rich_send',
+                nodeId: bulkOperation.definition.delivery.nodes[0]!.id,
+                responseHistory: []
+              }
+            : {
+                kind: 'fallback',
+                row,
+                stage: 'attempt',
+                stepIndex: row.route?.kind === 'fallback' ? row.route.stepIndex : 0
+              }
+        db.run(
+          `INSERT INTO bulk_jobs (
+             id, bulk_operation_id, execution_id, item_id, source, mode,
+             report_status, run_at, payload
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
             jobId,
-            row,
-            confirmedAt
-          })
-        }
+            bulkOperation.id,
+            execution_id,
+            row.id_locataire,
+            bulkOperation.definition.source,
+            options.mode,
+            'in_progress',
+            options.mode === 'send' && row.status === 'eligible' ? now : null,
+            stringifyStoredPayload(payload)
+          ]
+        )
       }
-    }
-
-    for (const row of preview.rows) {
-      if (row.status === 'eligible' && row.route != null) {
+    })
+    while (true) {
+      const item = db
+        .query<{ id: string; payload: string }, [string]>(
+          `SELECT id, payload FROM bulk_jobs
+           WHERE execution_id = ? AND report_status = 'in_progress' AND run_at IS NULL
+           LIMIT 1`
+        )
+        .get(execution_id)
+      if (!item) break
+      const row = parseStoredPayload(JSON.parse(item.payload)).row
+      if (options.mode !== 'send' && row.status === 'eligible' && row.route != null) {
+        record_applied_outbound_with_db(db, {
+          actor,
+          operation: bulkOperation,
+          executionId: execution_id,
+          jobId: item.id,
+          row,
+          confirmedAt
+        })
         continue
       }
       const created = insert_bulk_visible_activity(db, {
@@ -213,22 +177,17 @@ export const execute_bulk_operation = async (
           'SELECT id FROM activites WHERE idempotency_key = ? LIMIT 1'
         )
         .get(`bulk:${execution_id}:recipient:${row.id_locataire}:no-route`)
-      const item = db
-        .query<{ id: string; payload: string }, [string, string]>(
-          'SELECT id, payload FROM bulk_jobs WHERE execution_id = ? AND item_id = ?'
-        )
-        .get(execution_id, row.id_locataire)!
       finalize_bulk_item_with_db(db, {
         jobId: item.id,
         status: 'ko',
         outcome: {
           code: 'no_usable_route',
-          skipped_steps: row.skippedSteps,
-          activity_id: activity?.id ?? null,
+          skippedSteps: row.skippedSteps,
+          activityId: activity?.id ?? null,
           created
         },
         currentActivityId: activity?.id ?? null,
-        payload: JSON.parse(item.payload) as Record<string, unknown>,
+        payload: parseStoredPayload(JSON.parse(item.payload)),
         completedAt: now
       })
     }

@@ -2,7 +2,7 @@ import { Database } from 'bun:sqlite'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
 import { mkdir, rm } from 'node:fs/promises'
 
-import { import_json_rows } from '../../../utils/knowledge/sqlite-table-import'
+import { import_rows } from '../../../utils/knowledge/sqlite-table-import'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
 import {
@@ -52,7 +52,7 @@ export const FIXTURE_ROWS = [
 const seed_tickets = async (rows: Array<Record<string, string>> = FIXTURE_ROWS): Promise<void> => {
   const db = new Database(DATASTORE_SQLITE)
   try {
-    await import_json_rows(db, 'reclamations', rows)
+    await import_rows(db, 'reclamations', rows)
   } finally {
     db.close()
   }
@@ -118,7 +118,7 @@ describe('list_tickets', () => {
       limit: 50,
       offset: 0,
       columns: [],
-      default_sort: DEFAULT_TICKETS_SORT
+      defaultSort: DEFAULT_TICKETS_SORT
     })
   })
 
@@ -139,7 +139,7 @@ describe('list_tickets', () => {
       'motif',
       'type_affaire'
     ])
-    expect(result.meta.default_sort).toBe(DEFAULT_TICKETS_SORT)
+    expect(result.meta.defaultSort).toBe(DEFAULT_TICKETS_SORT)
   })
 
   it('returns all rows without filters', async () => {
@@ -267,7 +267,49 @@ describe('list_tickets', () => {
       'REQ-2',
       'REQ-1'
     ])
-    expect(result.meta.default_sort).toBe('-id_reclamation')
+    expect(result.meta.defaultSort).toBe('-id_reclamation')
+  })
+
+  it('attaches the lot address without adding table columns', async () => {
+    await seed_tickets()
+    const db = new Database(DATASTORE_SQLITE)
+    db.run(
+      `CREATE TABLE lots_locatifs (
+         id_lot TEXT, adresse TEXT, code_postal TEXT
+       )`
+    )
+    db.run(
+      `INSERT INTO lots_locatifs (id_lot, adresse, code_postal) VALUES
+         ('LOT-1', '20, rue des Pyramides', '21000'),
+         ('LOT-1', 'ancienne adresse', '75001')`
+    )
+    db.run(
+      `CREATE TABLE communes_par_code_postal (
+         code_postal TEXT, nom_commune TEXT
+       )`
+    )
+    db.run(
+      `INSERT INTO communes_par_code_postal (code_postal, nom_commune) VALUES
+         ('21000', 'Dijon'),
+         ('21000', 'Ahuy')`
+    )
+    db.close()
+
+    const result = list_tickets({ ...TicketsPaginationQuery.parse({}), filters: {} })
+    const lot1 = result.data.find((row) => row['id_reclamation'] === 'REQ-1')
+    const missing = result.data.find((row) => row['id_reclamation'] === 'REQ-4')
+    expect(lot1).toMatchObject({
+      pierre_adresse: '20, rue des Pyramides',
+      pierre_code_postal: '21000',
+      pierre_ville: 'Ahuy'
+    })
+    expect(missing).toMatchObject({
+      pierre_adresse: '',
+      pierre_code_postal: '',
+      pierre_ville: ''
+    })
+    expect(result.meta.columns.map((column) => column.name)).not.toContain('pierre_adresse')
+    expect(result.data).toHaveLength(4)
   })
 
   it('sorts by schema column motif ascending', async () => {

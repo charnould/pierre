@@ -1,10 +1,8 @@
 import { Database } from 'bun:sqlite'
 
-import baselineSql from './001-baseline.sql' with { type: 'text' }
-import promptsSql from './002-prompts.sql' with { type: 'text' }
-import synthesePayloadSql from './003-synthese-payload.sql' with { type: 'text' }
-import dropArtifactTagsSql from './004-drop-artifact-tags.sql' with { type: 'text' }
-import setupSql from './005-setup.sql' with { type: 'text' }
+import { openDatastore } from '../datastore-db'
+import baselineSql from './000.sql' with { type: 'text' }
+import dropReplyAutomationsSql from './001.sql' with { type: 'text' }
 
 export type DatastoreMigration = {
   version: number
@@ -14,10 +12,7 @@ export type DatastoreMigration = {
 
 export const APP_MIGRATIONS: readonly DatastoreMigration[] = [
   { version: 1, name: 'baseline', sql: baselineSql },
-  { version: 2, name: 'prompts', sql: promptsSql },
-  { version: 3, name: 'synthese-payload', sql: synthesePayloadSql },
-  { version: 4, name: 'drop-artifact-tags', sql: dropArtifactTagsSql },
-  { version: 5, name: 'setup', sql: setupSql }
+  { version: 2, name: 'drop-reply-automations', sql: dropReplyAutomationsSql }
 ]
 
 const SCHEMA_MIGRATIONS_SQL = `
@@ -61,11 +56,16 @@ const run_migration = (db: Database, migration: DatastoreMigration): void => {
   }
 }
 
-const bootstrap = (path: string, migrations: readonly DatastoreMigration[]): void => {
-  const db = new Database(path, { create: true })
+const apply = (db: Database, migrations: readonly DatastoreMigration[]): number[] => {
+  for (const migration of migrations) run_migration(db, migration)
+  return migrations.map((migration) => migration.version)
+}
+
+const bootstrap = (path: string, migrations: readonly DatastoreMigration[]): number[] => {
+  const db = openDatastore({ path, create: true })
   try {
     db.run(SCHEMA_MIGRATIONS_SQL)
-    for (const migration of migrations) run_migration(db, migration)
+    return apply(db, migrations)
   } finally {
     db.close()
   }
@@ -73,7 +73,7 @@ const bootstrap = (path: string, migrations: readonly DatastoreMigration[]): voi
 
 const open_existing = (path: string): Database => {
   try {
-    return new Database(path)
+    return openDatastore({ path })
   } catch (error) {
     throw new Error(`Datastore is unreadable. ${MANUAL_REPAIR}`, { cause: error })
   }
@@ -111,17 +111,14 @@ const applied_version = (db: Database, migrations: readonly DatastoreMigration[]
 export const migrate_datastore = async (
   path: string,
   migrations: readonly DatastoreMigration[] = APP_MIGRATIONS
-): Promise<void> => {
+): Promise<readonly number[]> => {
   validate_migrations(migrations)
-  if (!(await Bun.file(path).exists())) {
-    bootstrap(path, migrations)
-    return
-  }
+  if (!(await Bun.file(path).exists())) return bootstrap(path, migrations)
 
   const db = open_existing(path)
   try {
     const current = applied_version(db, migrations)
-    for (const migration of migrations.slice(current)) run_migration(db, migration)
+    return apply(db, migrations.slice(current))
   } finally {
     db.close()
   }

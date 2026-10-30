@@ -32,12 +32,12 @@ describe('authenticate', () => {
   test('accepts standard Bearer authentication for the knowledge API', async () => {
     const app = new Hono<{ Variables: { user: User } }>()
     app.use('*', authenticateAdministratorApi)
-    app.get('/api/admin/knowledge', (c) => c.json({ email: c.get('user').email }))
+    app.get('/knowledge', (c) => c.json({ email: c.get('user').email }))
 
-    const unauthorized = await app.request('/api/admin/knowledge')
+    const unauthorized = await app.request('/knowledge')
     expect(unauthorized.status).toBe(401)
 
-    const authorized = await app.request('/api/admin/knowledge', {
+    const authorized = await app.request('/knowledge', {
       headers: { Authorization: 'Bearer knowledge-test-token' }
     })
     expect(authorized.status).toBe(200)
@@ -47,11 +47,11 @@ describe('authenticate', () => {
   test('returns JSON 401 for anonymous desktop and communication requests', async () => {
     const app = new Hono()
     app.use('*', authenticate)
-    app.get('/desktop/test', (c) => c.json({ ok: true }))
+    app.get('/test', (c) => c.json({ ok: true }))
     app.post('/communications/external', (c) => c.json({ ok: true }))
 
     for (const [path, method] of [
-      ['/desktop/test', 'GET'],
+      ['/test', 'GET'],
       ['/communications/external', 'POST']
     ] as const) {
       const response = await app.request(path, { method, redirect: 'manual' })
@@ -76,8 +76,8 @@ describe('authenticate', () => {
 
     const app = new Hono<{ Variables: { user: User } }>()
     app.all('/auth/*', (c) => getAuth().handler(c.req.raw))
-    app.use('/desktop/*', authenticate)
-    app.get('/desktop/test', (c) => c.json({ email: c.get('user').email }))
+    app.use('/test', authenticate)
+    app.get('/test', (c) => c.json({ email: c.get('user').email }))
 
     const login = await app.request('/auth/sign-in/email', {
       method: 'POST',
@@ -100,7 +100,7 @@ describe('authenticate', () => {
     using db = new Database(datastorePaths().database)
     db.run('UPDATE session SET expiresAt = ?', [new Date(Date.now() + 86_400_000).toISOString()])
 
-    const response = await app.request('/desktop/test', {
+    const response = await app.request('/test', {
       headers: { cookie: setCookie!.split(';', 1)[0]! }
     })
     expect(response.status).toBe(200)

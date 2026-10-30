@@ -4,9 +4,9 @@ import { mkdir, rm } from 'node:fs/promises'
 
 import {
   APP_MIGRATIONS,
+  type DatastoreMigration,
   DatastoreVersionError,
-  migrate_datastore,
-  type DatastoreMigration
+  migrate_datastore
 } from '../../../utils/datastore-migrations'
 
 const ROOT = 'datastores/_test_datastore_migrations'
@@ -21,7 +21,7 @@ const versions = (db: Database): number[] =>
     .map((row) => row.version)
 
 const future_migration: DatastoreMigration = {
-  version: 6,
+  version: 3,
   name: 'future-example',
   sql: 'CREATE TABLE future_records (id TEXT PRIMARY KEY, value TEXT NOT NULL)'
 }
@@ -39,15 +39,17 @@ describe('datastore migrations', () => {
     await migrate_datastore(PATH)
 
     using db = open()
-    expect(versions(db)).toEqual([1, 2, 3, 4, 5])
-    expect(
-      db
-        .query<{ n: number }, []>("SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'prompts'")
-        .get()?.n
-    ).toBe(0)
+    expect(versions(db)).toEqual([1, 2])
     expect(
       db
         .query<{ n: number }, []>("SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'setup'")
+        .get()?.n
+    ).toBe(1)
+    expect(
+      db
+        .query<{ n: number }, []>(
+          "SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'carl_qualifications'"
+        )
         .get()?.n
     ).toBe(1)
 
@@ -60,9 +62,11 @@ describe('datastore migrations', () => {
            'automations',
            'bulk_operations',
            'bulk_jobs',
+           'communication_dispatch_claims',
            'contacts',
            'conversations',
            'knowledge_records',
+           'llm_runs',
            'session',
            'telemetry',
            'user_profiles',
@@ -70,6 +74,7 @@ describe('datastore migrations', () => {
            'verification',
            'idx_activites_execution',
            'idx_activites_case_group',
+           'idx_activites_id_externe',
            'idx_telemetry_recorded_at'
          )
          ORDER BY name`
@@ -83,12 +88,15 @@ describe('datastore migrations', () => {
       'automations',
       'bulk_jobs',
       'bulk_operations',
+      'communication_dispatch_claims',
       'contacts',
       'conversations',
       'idx_activites_case_group',
       'idx_activites_execution',
+      'idx_activites_id_externe',
       'idx_telemetry_recorded_at',
       'knowledge_records',
+      'llm_runs',
       'session',
       'telemetry',
       'user_profiles',
@@ -103,6 +111,26 @@ describe('datastore migrations', () => {
       .query<{ name: string }, []>('PRAGMA table_info(users)')
       .all()
       .map(({ name }) => name)
+    expect(
+      db
+        .query<{ name: string }, []>('PRAGMA table_info(conversations)')
+        .all()
+        .map(({ name }) => name)
+    ).toEqual([
+      'conv_id',
+      'config_id',
+      'user_email',
+      'started_at',
+      'updated_at',
+      'messages',
+      'review'
+    ])
+    expect(
+      db
+        .query<{ name: string }, []>('PRAGMA table_info(knowledge_records)')
+        .all()
+        .map(({ name }) => name)
+    ).toContain('content')
     expect(userColumns).toEqual([
       'id',
       'name',
@@ -122,6 +150,38 @@ describe('datastore migrations', () => {
       'avatar',
       'avatar_version'
     ])
+    expect(
+      db
+        .query<{ name: string }, []>('PRAGMA table_info(activites)')
+        .all()
+        .map(({ name }) => name)
+    ).toEqual([
+      'id',
+      'date_creation',
+      'rattachement',
+      'auteur',
+      'destinataire',
+      'id_client',
+      'id_locataire',
+      'id_lot',
+      'type',
+      'channel',
+      'mentions',
+      'contenu',
+      'thread_id',
+      'revision',
+      'bulk_id',
+      'execution_id',
+      'idempotency_key',
+      'id_externe'
+    ])
+    expect(
+      db
+        .query<{ sql: string }, []>(
+          "SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = 'activites_no_update'"
+        )
+        .get()?.sql
+    ).toContain('NEW.id_externe IS OLD.id_externe')
   })
 
   it('fails without deleting an existing database that has no schema_migrations', async () => {
@@ -153,7 +213,7 @@ describe('datastore migrations', () => {
         )
         .get()?.n
     ).toBe(0)
-    expect(versions(db)).toEqual([1, 2, 3, 4, 5])
+    expect(versions(db)).toEqual([1, 2])
   })
 
   it('fails without rewriting a file that is not SQLite', async () => {
@@ -188,7 +248,27 @@ describe('datastore migrations', () => {
         )
         .get()?.n
     ).toBe(1)
-    expect(versions(db)).toEqual([1, 2, 3, 4, 5])
+    expect(versions(db)).toEqual([1, 2])
+  })
+
+  it('deletes stored reply automations', async () => {
+    await migrate_datastore(PATH, APP_MIGRATIONS.slice(0, 1))
+    const seeded = open()
+    seeded.run(
+      `INSERT INTO automations
+         (id, type, name, status, owner, cron, config)
+       VALUES
+         ('reply', 'replies', 'Brouillons', 'scheduled', 'ada', '0 8 * * *', '{}'),
+         ('report', 'report', 'Rapport', 'scheduled', 'ada', '0 8 * * *', '{}')`
+    )
+    seeded.close()
+
+    await migrate_datastore(PATH)
+
+    using db = open()
+    expect(
+      db.query<{ type: string }, []>('SELECT type FROM automations ORDER BY type').all()
+    ).toEqual([{ type: 'report' }])
   })
 
   it('applies ordered pending migrations to the baseline database', async () => {
@@ -196,14 +276,14 @@ describe('datastore migrations', () => {
     await migrate_datastore(PATH, [...APP_MIGRATIONS, future_migration])
 
     using db = open()
-    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(versions(db)).toEqual([1, 2, 3])
     db.run("INSERT INTO future_records VALUES ('future-1', 'ok')")
   })
 
   it('rolls back both schema and ledger writes when a migration fails', async () => {
     await migrate_datastore(PATH)
     const failing: DatastoreMigration = {
-      version: 6,
+      version: 3,
       name: 'failing-example',
       sql: `
         CREATE TABLE half_created (id TEXT PRIMARY KEY);
@@ -214,7 +294,7 @@ describe('datastore migrations', () => {
     await expect(migrate_datastore(PATH, [...APP_MIGRATIONS, failing])).rejects.toThrow()
 
     using db = open()
-    expect(versions(db)).toEqual([1, 2, 3, 4, 5])
+    expect(versions(db)).toEqual([1, 2])
     expect(
       db
         .query<{ n: number }, []>(
@@ -230,7 +310,7 @@ describe('datastore migrations', () => {
     await expect(migrate_datastore(PATH)).rejects.toBeInstanceOf(DatastoreVersionError)
 
     using db = open()
-    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(versions(db)).toEqual([1, 2, 3])
     expect(
       db
         .query<{ n: number }, []>(

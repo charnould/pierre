@@ -1,16 +1,16 @@
-import { join } from 'node:path'
-
 import { coreDataContractForFilename } from '../../../shared/core-data'
 import { isKnowledgeEntryAssigned, normalize_knowledge_name } from '../../../shared/knowledge'
 import { publishModuleForPrompt } from '../../../shared/modules'
-import { datastorePaths } from '../paths'
+import { version } from '../../package.json' with { type: 'json' }
 import {
   isReservedCoreDataTitle,
   type KnowledgeCatalogSnapshot,
   type KnowledgeEntry,
-  type KnowledgeIngestionEntry,
+  type KnowledgeProjection,
   type KnowledgeSource
 } from './catalog-schema'
+
+export const PROFILE_BUILD_EPOCH = `${version}:direct-import-1`
 
 export { isKnowledgeEntryAssigned }
 
@@ -83,7 +83,6 @@ export const catalogFingerprint = (sources: readonly KnowledgeSource[]): string 
           originalName: source.originalName,
           title: entry.title,
           sheet: entry.sheet,
-          headerRow: entry.headerRow,
           profileIds: [...entry.profileIds].sort(),
           moduleIds: [...entry.moduleIds].sort()
         }))
@@ -109,24 +108,67 @@ export const assignedKnowledgeItemKeys = (snapshot: KnowledgeCatalogSnapshot): s
   )
 ]
 
-export const flattenKnowledgeEntries = (
+export const coreDataFingerprint = (sources: readonly KnowledgeSource[]): string => {
+  const inputs = sources
+    .flatMap((source) => {
+      const contract = coreDataContractForFilename(source.originalName)
+      if (!contract || source.fileType !== 'csv') return []
+      return [
+        {
+          table: contract.table,
+          originalName: source.originalName,
+          contentHash: source.contentHash
+        }
+      ]
+    })
+    .sort((left, right) => left.table.localeCompare(right.table, 'fr'))
+  return String(Bun.hash(JSON.stringify(inputs)))
+}
+
+export const knowledgeProjections = (
   snapshot: KnowledgeCatalogSnapshot,
   knownIds: Iterable<string> = []
-): KnowledgeIngestionEntry[] => {
-  const root = datastorePaths().files
-  return snapshot.sources.flatMap((source) =>
+): KnowledgeProjection[] =>
+  snapshot.sources.flatMap((source) =>
     source.entries.flatMap((entry) => {
       const coreDataTable = coreDataContractForFilename(source.originalName)?.table ?? null
       return knowledgePublishTargets(entry, knownIds).map((access) => ({
-        filepath: join(root, source.storageName),
+        sourceId: source.id,
         access,
-        sheet: entry.sheet ?? 0,
-        headers: entry.headerRow ?? 0,
-        filename: source.originalName,
-        agent_filename: entry.title,
-        type: source.fileType,
+        title: entry.title,
+        sheet: entry.sheet,
+        fileType: source.fileType,
+        contentHash: source.contentHash,
         coreDataTable
       }))
     })
+  )
+
+export const profileBuildFingerprint = (
+  profile: { id: string; communityKnowledge: boolean },
+  projections: readonly KnowledgeProjection[]
+): string => {
+  const sources = projections
+    .map((projection) => ({
+      sourceId: projection.sourceId,
+      contentHash: projection.contentHash,
+      fileType: projection.fileType,
+      title: projection.title,
+      sheet: projection.sheet
+    }))
+    .sort((left, right) => {
+      const leftValue = JSON.stringify(left)
+      const rightValue = JSON.stringify(right)
+      return leftValue < rightValue ? -1 : leftValue > rightValue ? 1 : 0
+    })
+  return String(
+    Bun.hash(
+      JSON.stringify({
+        epoch: PROFILE_BUILD_EPOCH,
+        profileId: profile.id,
+        communityKnowledge: profile.communityKnowledge,
+        sources
+      })
+    )
   )
 }

@@ -9,7 +9,6 @@ import {
 const shared = {
   display: 'X',
   community_knowledge: false,
-  reasoning_effort: 'medium' as const,
   trace: 'none' as const,
   attachments: true,
   greetings: ['Bonjour'],

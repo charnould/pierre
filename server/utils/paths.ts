@@ -4,7 +4,7 @@ import { isAbsolute, join, relative, resolve } from 'node:path'
 // In the compiled executable every module shares the entry directory, and --asset
 // lands next to it. In the repo, this file lives in server/utils.
 const moduleDir = import.meta.dir
-export const SERVER_ROOT = existsSync(join(moduleDir, 'assets/dist/.vite/manifest.json'))
+export const SERVER_ROOT = existsSync(join(moduleDir, 'assets/dist/manifest.json'))
   ? moduleDir
   : resolve(moduleDir, '..')
 
@@ -31,7 +31,6 @@ export function testDatastorePaths(label: string) {
   return {
     root,
     database: join(root, 'datastore.sqlite'),
-    files: join(root, 'files'),
     knowledge: join(root, 'knowledge')
   } as const
 }
@@ -41,7 +40,6 @@ export function datastorePaths() {
   return {
     root,
     database: join(root, 'datastore.sqlite'),
-    files: join(root, 'files'),
     knowledge: join(root, 'knowledge')
   } as const
 }

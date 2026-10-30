@@ -2,9 +2,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import { mkdir, rm } from 'node:fs/promises'
 
 import {
+  type BulkOperationDefinition,
   deliveryAction,
-  emptyBulkOperationDefinition,
-  type BulkOperationDefinition
+  emptyBulkOperationDefinition
 } from '../../../../../shared/bulk-operations'
 import { BulkOperationDefinitionSchema } from '../../../../utils/bulk/query'
 import { migrate_datastore } from '../../../../utils/datastore-migrations'

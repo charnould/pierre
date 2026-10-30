@@ -28,7 +28,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
+          bun-version: 1.4.4
 
       - name: Reconcile release state
         id: release
@@ -58,13 +58,13 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
+          bun-version: 1.4.4
 
       - name: Build CLI artifacts
         working-directory: source
         run: |
           bun install --frozen-lockfile --filter @pierre/cli
-          bun --filter @pierre/cli typecheck
+          bun --cwd cli check
           bun test cli/tests
           mkdir -p cli/dist
           bun build --compile --target=bun-linux-x64 --no-compile-autoload-dotenv \

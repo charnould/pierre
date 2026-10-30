@@ -1,26 +1,45 @@
 import { describe, expect, spyOn, test } from 'bun:test'
 
-import { processUploadedAttachments, type ProcessedPiAttachments } from '../../utils/ai-attachments'
+import { type ProcessedPiAttachments, processUploadedAttachments } from '../../utils/ai-attachments'
 import { setDatastoreRoot, testDatastoreRoot } from '../../utils/paths'
 import type { PierreInstance } from '../../utils/smolvm'
 import {
-  getConversationUploadsMountPath,
   getConversationUploadsPath,
+  getConversationWorkspacePath,
   getKnowledgePath,
-  getUploadsPath
+  getWorkspacesPath
 } from '../../utils/smolvm'
 import {
   acquireVm,
+  type AcquireVmDependencies,
   conversationReservationCount,
   destroyVm,
+  invalidateAllVms,
   releaseVm,
   reserveConversation,
-  type AcquireVmDependencies
+  tryReserveConversation
 } from '../../utils/vm-registry'
 
 const CONV_ID = '0198f1a0-7b6c-7000-8000-000000000001'
 
 describe('VM registry conversation reservations', () => {
+  test('reserves resident VM capacity before staging attachments', () => {
+    const previous = Bun.env['SMOLVM_MAX_ACTIVE']
+    Bun.env['SMOLVM_MAX_ACTIVE'] = '1'
+    const release = tryReserveConversation('capacity-1')
+    try {
+      expect(release).toBeFunction()
+      expect(tryReserveConversation('capacity-2')).toBeNull()
+    } finally {
+      release?.()
+      if (previous === undefined) delete Bun.env['SMOLVM_MAX_ACTIVE']
+      else Bun.env['SMOLVM_MAX_ACTIVE'] = previous
+    }
+    const next = tryReserveConversation('capacity-2')
+    expect(next).toBeFunction()
+    next?.()
+  })
+
   test('replaces a mismatched VM immediately without deleting reserved staging', async () => {
     const root = testDatastoreRoot(`vm-reservation-${Bun.randomUUIDv7()}`)
     setDatastoreRoot(root)
@@ -37,8 +56,7 @@ describe('VM registry conversation reservations', () => {
         return {
           name: convId,
           knowledgePath: getKnowledgePath(configId),
-          uploadsPath: getConversationUploadsPath(configId, convId),
-          uploadsTarget: getConversationUploadsMountPath(convId),
+          workspacePath: getConversationWorkspacePath(configId, convId),
           fromPool: false,
           piProcess: {} as never
         }
@@ -55,7 +73,8 @@ describe('VM registry conversation reservations', () => {
           dispose: () => disposed.push(instance.knowledgePath.split('/').at(-1) ?? ''),
           sendCommand: async () => ({}),
           sendRaw: () => {},
-          onEvent: () => () => {}
+          onEvent: () => () => {},
+          onClose: () => () => {}
         }) as never
     }
 
@@ -69,7 +88,7 @@ describe('VM registry conversation reservations', () => {
 
       staged = await processUploadedAttachments(
         [new File(['keep'], 'request.txt', { type: 'text/plain' })],
-        getUploadsPath('new-config'),
+        getWorkspacesPath('new-config'),
         'request',
         CONV_ID
       )
@@ -105,6 +124,57 @@ describe('VM registry conversation reservations', () => {
       await Bun.spawn(['rm', '-rf', root]).exited
       logSpy.mockRestore()
       warnSpy.mockRestore()
+      setDatastoreRoot(null)
+    }
+  })
+
+  test('invalidates idle VMs and defers active work', async () => {
+    const root = testDatastoreRoot(`vm-invalidation-${Bun.randomUUIDv7()}`)
+    setDatastoreRoot(root)
+    const destroyed: string[] = []
+    const dependencies: AcquireVmDependencies = {
+      takePoolInstance: () => undefined,
+      createInstance: async (convId, configId) => ({
+        name: convId,
+        knowledgePath: getKnowledgePath(configId),
+        workspacePath: getConversationWorkspacePath(configId, convId),
+        fromPool: false,
+        piProcess: {} as never
+      }),
+      startPoolInstance: async () => {
+        throw new Error('pool should not be used')
+      },
+      destroyInstance: async (instance) => {
+        destroyed.push(instance.name)
+      },
+      createClient: () =>
+        ({
+          waitForReady: async () => {},
+          dispose: () => {},
+          sendCommand: async () => ({}),
+          sendRaw: () => {},
+          onEvent: () => () => {},
+          onClose: () => () => {}
+        }) as never
+    }
+    const idle = '0198f1a0-7b6c-7000-8000-000000000002'
+    const active = '0198f1a0-7b6c-7000-8000-000000000003'
+
+    try {
+      await acquireVm(idle, 'default', dependencies)
+      releaseVm(idle)
+      await acquireVm(active, 'default', dependencies)
+
+      await invalidateAllVms()
+      expect(destroyed).toEqual([idle])
+
+      releaseVm(active)
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(destroyed).toEqual([idle, active])
+    } finally {
+      await destroyVm(idle)
+      await destroyVm(active)
+      await Bun.spawn(['rm', '-rf', root]).exited
       setDatastoreRoot(null)
     }
   })

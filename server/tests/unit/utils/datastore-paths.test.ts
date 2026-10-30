@@ -13,7 +13,6 @@ describe('datastore paths', () => {
     const paths = datastorePaths()
     expect(isAbsolute(paths.database)).toBe(true)
     expect(paths.database).toEndWith('/server/datastores/datastore.sqlite')
-    expect(paths.files).toEndWith('/server/datastores/files')
     expect(paths.knowledge).toEndWith('/server/datastores/knowledge')
   })
 

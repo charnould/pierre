@@ -45,7 +45,7 @@ if (latest_version === current_version) {
   console.log('')
 
   try {
-    await $`bun pierre:config`.quiet()
+    await $`bun test config/checks`.quiet()
   } catch {
     // config.ts validation optional
   }

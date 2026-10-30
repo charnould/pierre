@@ -8,12 +8,12 @@ import {
   failInterruptedKnowledgeBuilds,
   getActiveKnowledgeBuild,
   getKnowledgeBuild,
+  type KnowledgeBuild,
+  type KnowledgeBuildTrigger,
+  type KnowledgeDiagnostic,
   listKnowledgeBuilds,
   purgeOldKnowledgeBuilds,
-  updateKnowledgeBuild,
-  type KnowledgeBuild,
-  type KnowledgeDiagnostic,
-  type KnowledgeBuildTrigger
+  updateKnowledgeBuild
 } from './catalog'
 import {
   KnowledgeCatalogChangedError,
@@ -41,21 +41,20 @@ const executeBuild = async (build: KnowledgeBuild): Promise<void> => {
   })
 
   try {
-    let mirrorTables = build.mirrorTables
     while (true) {
       updateKnowledgeBuild(build.id, { heartbeatAt: new Date().toISOString() })
       let result: Awaited<ReturnType<typeof runKnowledgePipeline>>
       try {
-        result = await runKnowledgePipeline(build.id, mirrorTables)
+        result = await runKnowledgePipeline(build.id)
       } catch (error) {
         if (error instanceof KnowledgeCatalogChangedError) continue
         throw error
       }
       completeKnowledgeBuild(build.id, {
         catalogFingerprint: result.catalogFingerprint,
+        coreFingerprint: result.coreFingerprint,
         diagnostics: result.diagnostics,
-        items: result.itemKeys.map((key) => ({ key, status: 'succeeded' })),
-        mirrorTables: result.mirrorTables
+        items: result.itemKeys.map((key) => ({ key, status: 'succeeded' }))
       })
       return
     }
@@ -115,13 +114,7 @@ export const requestKnowledgeBuild = (
   const previous = listKnowledgeBuilds()[0]
   let build: KnowledgeBuild
   try {
-    build = createKnowledgeBuild(
-      trigger,
-      requestedBy,
-      previous?.mirrorTables ?? [],
-      PROCESS_ID,
-      previous?.items ?? []
-    )
+    build = createKnowledgeBuild(trigger, requestedBy, PROCESS_ID, previous?.items ?? [])
   } catch (error) {
     const active = getActiveKnowledgeBuild()
     if (!active) throw error

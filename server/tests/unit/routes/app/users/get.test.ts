@@ -1,0 +1,85 @@
+import { describe, expect, it } from 'bun:test'
+
+import { Hono } from 'hono'
+
+import { listUsers as get_app_users } from '../../../../../routes/account'
+import { set_user_preferences } from '../../../../../utils/automations/store'
+import { encode_user_avatar } from '../../../../../utils/avatar-image'
+import { set_user_avatar } from '../../../../../utils/user-avatars'
+import { createTestUser } from '../../../../test-user'
+import { use_identity_test_env } from '../../../utils/identity-test-env'
+
+const app = new Hono()
+app.get('/users', get_app_users)
+
+const fetch_users = (): Promise<Response> =>
+  Promise.resolve(app.fetch(new Request('http://localhost/users')))
+
+const PNG_1x1 = Uint8Array.fromBase64(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
+)
+
+use_identity_test_env('_test_app_users')
+
+describe('GET /users', () => {
+  it('returns only public identity and avatar metadata', async () => {
+    expect(await (await fetch_users()).json()).toEqual({ data: [] })
+
+    await createTestUser({
+      email: 'Alice.Martin@exemple.fr',
+      isAdministrator: false,
+      moduleIds: [],
+      chatbotIds: ['default', 'agent']
+    })
+    await createTestUser({
+      email: 'bob.leroy@exemple.fr',
+      isAdministrator: true,
+      moduleIds: [],
+      chatbotIds: ['default']
+    })
+    set_user_preferences('bob.leroy@exemple.fr', {
+      pinnedAutomationIds: [],
+      displayName: null,
+      preferredName: null
+    })
+    const encoded = await encode_user_avatar(PNG_1x1)
+    if ('error' in encoded) throw new Error(encoded.error)
+    set_user_avatar('bob.leroy@exemple.fr', encoded)
+
+    const res = await fetch_users()
+    expect(res.status).toBe(200)
+
+    const body = (await res.json()) as {
+      data: Array<{
+        login: string
+        email: string
+        hasAvatar: boolean
+        avatarBytes: number
+        avatarVersion: number
+        displayName: string
+      }>
+    }
+
+    expect(body.data).toHaveLength(2)
+    expect(body.data[0]).toMatchObject({
+      login: 'alice.martin',
+      email: 'alice.martin@exemple.fr',
+      hasAvatar: false,
+      avatarBytes: 0,
+      avatarVersion: 0,
+      displayName: 'alice.martin'
+    })
+    expect(body.data[1]).toMatchObject({
+      login: 'bob.leroy',
+      email: 'bob.leroy@exemple.fr',
+      hasAvatar: true,
+      avatarBytes: encoded.byteLength,
+      avatarVersion: 1,
+      displayName: 'bob.leroy'
+    })
+
+    const raw = JSON.stringify(body)
+    expect(raw).not.toContain('secret')
+    expect(raw).not.toContain('UklGR')
+  })
+})

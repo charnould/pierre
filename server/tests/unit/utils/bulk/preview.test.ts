@@ -3,8 +3,8 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { mkdir, rm } from 'node:fs/promises'
 
 import {
-  emptyBulkOperationDefinition,
-  type BulkOperationDefinition
+  type BulkOperationDefinition,
+  emptyBulkOperationDefinition
 } from '../../../../../shared/bulk-operations'
 import { preview_message, preview_query } from '../../../../utils/bulk/preview'
 import { select_fallback_route } from '../../../../utils/bulk/route-policy'
@@ -41,7 +41,7 @@ beforeEach(async () => {
   `)
   db.run(
     `INSERT INTO comptes_locataires VALUES
-      ('RCS', 'C1', 'L1', '2026-01-01', 100, 'Ada', 'ada@example.org', '0611111111', '1 rue A'),
+      ('RCS', 'C1', 'L1', '2026-01-01', 100, 'Ada', 'ada@example.org', '+33611111111', '1 rue A'),
       ('EMAIL', 'C2', 'L2', '2026-01-01', 50, 'Bob', 'bob@example.org', NULL, '2 rue B'),
       ('NONE', 'C3', 'L3', '2026-01-01', 20, 'Eve', NULL, NULL, NULL)`
   )
@@ -157,8 +157,13 @@ describe('bulk preview', () => {
     expect(preview_query({ definition }).totals).toEqual({
       total: 3,
       eligible: 1,
-      no_usable_route: 2
+      noUsableRoute: 2,
+      channels: { rcs: 1 }
     })
+    const page = preview_query({ definition, offset: 2 })
+    expect(page.rows).toHaveLength(1)
+    expect(page.totals.total).toBe(3)
+    expect(page.offset).toBe(2)
     const result = await preview_message({
       definition,
       id_locataire: 'RCS',

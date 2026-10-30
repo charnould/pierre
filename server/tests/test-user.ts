@@ -4,7 +4,7 @@ import type { User } from '../utils/_schema'
 import { createUser, getStoredUser } from '../utils/handle-user'
 import { datastorePaths } from '../utils/paths'
 
-export const DEFAULT_TEST_PASSWORD = 'test-password-123'
+const DEFAULT_TEST_PASSWORD = 'test-password-123'
 
 export async function createTestUser(user: User, password = DEFAULT_TEST_PASSWORD): Promise<void> {
   const existing = await getStoredUser(user.email)

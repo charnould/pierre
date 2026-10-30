@@ -1,25 +1,23 @@
-import { mkdir, rename, rm } from 'node:fs/promises'
-import { join } from 'node:path'
-
-import * as XLSX from 'xlsx'
+import { Database } from 'bun:sqlite'
 
 import {
+  type CoreDataContract,
   coreDataContractForFilename,
-  resemblesCoreDataFilename,
-  type CoreDataContract
+  resemblesCoreDataFilename
 } from '../../../shared/core-data'
 import { isKnowledgeEntryAssigned, normalize_knowledge_name } from '../../../shared/knowledge'
-import { datastorePaths } from '../paths'
+import { openDatastore } from '../datastore-db'
+import type { KnowledgeEntry, KnowledgeSource } from './catalog-schema'
+import { KnowledgeCsvError, type ParsedTable } from './ingest-files'
 import {
-  deleteKnowledgeSource,
   findKnowledgeSourceByStorageName,
-  insertKnowledgeSource,
-  updateKnowledgeSourceFile,
-  type KnowledgeEntry,
-  type KnowledgeSource
-} from './catalog'
-import { KnowledgeCsvError, loadKnowledgeCsv } from './ingest-files'
+  insertKnowledgeSourceInDb,
+  updateKnowledgeSourceFileInDb
+} from './knowledge-sources'
+import { KnowledgeSpreadsheetError, type ParsedSheet, parseKnowledgeUpload } from './parse-upload'
 import { listKnowledgeProfiles } from './profiles'
+import { dropSourceTables, sourceTableName } from './source-tables'
+import { type DataRow, import_rows } from './sqlite-table-import'
 
 export class KnowledgeImportError extends Error {
   constructor(
@@ -40,17 +38,17 @@ export type ImportedKnowledgeSource = {
 type FileType = KnowledgeSource['fileType']
 
 type PreparedUpload = {
-  file: File
   fileType: FileType
   originalName: string
   storageName: string
-  target: string
-  temporary: string
   source: KnowledgeSource | null
   contentHash: string
+  sizeBytes: number
   changed: boolean
   coreContract: CoreDataContract | null
-  sheets: Array<{ index: number; name: string }>
+  markdown: string | null
+  table: ParsedTable | null
+  sheets: ParsedSheet[]
 }
 
 const inferFileType = (name: string): FileType | null => {
@@ -64,28 +62,18 @@ const inferFileType = (name: string): FileType | null => {
   return null
 }
 
-const listWorkbookSheets = async (path: string) => {
-  const workbook = XLSX.read(await Bun.file(path).arrayBuffer(), { bookSheets: true })
-  return workbook.SheetNames.map((name, index) => ({ index, name }))
-}
-
-const hashFile = async (path: string): Promise<string> => {
-  const hasher = new Bun.CryptoHasher('sha256')
-  const reader = Bun.file(path).stream().getReader()
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    hasher.update(value)
-  }
-  return hasher.digest('hex')
-}
+const hashBytes = (bytes: Uint8Array): string =>
+  new Bun.CryptoHasher('sha256').update(bytes).digest('hex')
 
 const stemWithoutExtension = (filename: string): string => filename.replace(/\.[^.]+$/, '')
+
+const isAssigned = (source: KnowledgeSource): boolean =>
+  source.entries.some((entry) => isKnowledgeEntryAssigned(entry))
 
 const entriesForUpload = (
   fileType: FileType,
   originalName: string,
-  sheets: Awaited<ReturnType<typeof listWorkbookSheets>>,
+  sheets: ParsedSheet[],
   previous: readonly KnowledgeEntry[] = [],
   coreContract: CoreDataContract | null = null
 ): KnowledgeEntry[] => {
@@ -97,20 +85,17 @@ const entriesForUpload = (
             ...existing,
             title: coreContract?.table ?? existing.title,
             sheet: null,
-            sheetName: null,
-            headerRow: null
+            sheetName: null
           }
         : {
             title: coreContract?.table ?? stemWithoutExtension(originalName),
             sheet: null,
             sheetName: null,
-            headerRow: null,
             profileIds: [],
             moduleIds: []
           }
     ]
   }
-
   const previousByName = new Map(
     previous
       .filter((entry) => entry.sheetName !== null)
@@ -124,219 +109,215 @@ const entriesForUpload = (
           title: sheet.name,
           sheet: sheet.index,
           sheetName: sheet.name,
-          headerRow: 0,
           profileIds: [],
           moduleIds: []
         }
   })
 }
 
-const isAssigned = (source: KnowledgeSource): boolean =>
-  source.entries.some((entry) => isKnowledgeEntryAssigned(entry))
-
-const removeAll = async (paths: readonly string[]): Promise<void> => {
-  await Promise.allSettled(paths.map((path) => rm(path, { force: true })))
-}
-
-const prepareUploads = async (files: File[], filesRoot: string): Promise<PreparedUpload[]> => {
-  const prepared: PreparedUpload[] = []
-  try {
-    for (const file of files) {
-      const fileType = inferFileType(file.name)
-      if (!fileType) {
-        throw new KnowledgeImportError(
-          400,
-          'unsupported_file',
-          `Format non pris en charge : ${file.name}`
-        )
-      }
-      const originalName = file.name.normalize('NFC')
-      const coreContract = coreDataContractForFilename(originalName)
-      if (resemblesCoreDataFilename(originalName) && !coreContract) {
-        throw new KnowledgeImportError(
-          400,
-          'invalid_core_filename',
-          `Nom Core Data invalide : ${originalName}`
-        )
-      }
-      const storageName = normalize_knowledge_name(originalName.toLowerCase(), {
-        preserve_extension: true
-      })
-      const target = join(filesRoot, storageName)
-      const source = findKnowledgeSourceByStorageName(storageName)
-      if (
-        source &&
-        source.originalName.toLocaleLowerCase('fr') !== originalName.toLocaleLowerCase('fr')
-      ) {
-        throw new KnowledgeImportError(
-          409,
-          'filename_conflict',
-          `${originalName} entre en conflit avec ${source.originalName}.`
-        )
-      }
-      const temporary = join(filesRoot, `.upload-${Bun.randomUUIDv7()}`)
-      await Bun.write(temporary, file)
-      try {
-        const contentHash = await hashFile(temporary)
-        const changed = source?.contentHash !== contentHash
-        if (changed && fileType === 'csv') await loadKnowledgeCsv(temporary)
-        prepared.push({
-          file,
-          fileType,
-          originalName,
-          storageName,
-          target,
-          temporary,
-          source,
-          contentHash,
-          changed,
-          coreContract,
-          sheets: changed && fileType === 'xlsx' ? await listWorkbookSheets(temporary) : []
-        })
-      } catch (error) {
-        await rm(temporary, { force: true })
-        if (error instanceof KnowledgeImportError || error instanceof KnowledgeCsvError) throw error
-        throw fileType === 'csv'
-          ? new KnowledgeImportError(
-              400,
-              'invalid_csv',
-              error instanceof Error ? error.message : 'Le CSV est invalide.'
-            )
-          : new KnowledgeImportError(400, 'invalid_file', `${originalName} ne peut pas être lu.`)
-      }
-    }
-    return prepared
-  } catch (error) {
-    await removeAll(prepared.map((item) => item.temporary))
-    throw error
+const writeTables = (db: Database, sourceId: string, item: PreparedUpload): void => {
+  const tables =
+    item.fileType === 'csv' && item.table
+      ? [{ sheet: 0, columns: item.table.columns, rows: item.table.rows }]
+      : item.sheets.map((sheet) => ({
+          sheet: sheet.index,
+          columns: sheet.columns,
+          rows: sheet.rows
+        }))
+  for (const table of tables) {
+    void import_rows(db, sourceTableName(sourceId, table.sheet), table.rows as DataRow[], {
+      columns: table.columns,
+      transaction: false,
+      refreshPostalReference: false
+    })
   }
 }
 
-const restoreSource = (previous: KnowledgeSource, validProfileIds: ReadonlySet<string>): void => {
-  updateKnowledgeSourceFile(
-    previous.id,
-    {
-      originalName: previous.originalName,
-      fileType: previous.fileType,
-      sizeBytes: previous.sizeBytes,
-      contentHash: previous.contentHash,
-      origin: previous.origin,
-      entries: previous.entries
-    },
-    validProfileIds
-  )
+const prepareUploads = async (files: File[]): Promise<PreparedUpload[]> => {
+  const prepared: PreparedUpload[] = []
+  const seen = new Set<string>()
+  for (const file of files) {
+    const fileType = inferFileType(file.name)
+    if (!fileType) {
+      throw new KnowledgeImportError(
+        400,
+        'unsupported_file',
+        `Format non pris en charge : ${file.name}`
+      )
+    }
+    const originalName = file.name.normalize('NFC')
+    const coreContract = coreDataContractForFilename(originalName)
+    if (resemblesCoreDataFilename(originalName) && !coreContract) {
+      throw new KnowledgeImportError(
+        400,
+        'invalid_core_filename',
+        `Nom Core Data invalide : ${originalName}`
+      )
+    }
+    const storageName = normalize_knowledge_name(originalName.toLowerCase(), {
+      preserve_extension: true
+    })
+    if (seen.has(storageName)) {
+      throw new KnowledgeImportError(
+        409,
+        'filename_conflict',
+        `${originalName} est envoyé plusieurs fois.`
+      )
+    }
+    seen.add(storageName)
+    const source = findKnowledgeSourceByStorageName(storageName)
+    if (
+      source &&
+      source.originalName.toLocaleLowerCase('fr') !== originalName.toLocaleLowerCase('fr')
+    ) {
+      throw new KnowledgeImportError(
+        409,
+        'filename_conflict',
+        `${originalName} entre en conflit avec ${source.originalName}.`
+      )
+    }
+    const bytes = new Uint8Array(await file.arrayBuffer())
+    const contentHash = hashBytes(bytes)
+    const changed = source?.contentHash !== contentHash
+    if (!changed) {
+      prepared.push({
+        fileType,
+        originalName,
+        storageName,
+        source,
+        contentHash,
+        sizeBytes: bytes.byteLength,
+        changed: false,
+        coreContract,
+        markdown: null,
+        table: null,
+        sheets: []
+      })
+      continue
+    }
+    try {
+      const parsed = await parseKnowledgeUpload(fileType, bytes)
+      prepared.push({
+        fileType,
+        originalName,
+        storageName,
+        source,
+        contentHash,
+        sizeBytes: bytes.byteLength,
+        changed: true,
+        coreContract,
+        markdown: parsed.kind === 'document' ? parsed.markdown : null,
+        table: parsed.kind === 'table' ? parsed.table : null,
+        sheets: parsed.kind === 'workbook' ? parsed.sheets : []
+      })
+    } catch (error) {
+      if (error instanceof KnowledgeImportError || error instanceof KnowledgeCsvError) throw error
+      if (error instanceof KnowledgeSpreadsheetError) {
+        throw new KnowledgeImportError(400, error.code, error.message)
+      }
+      throw new KnowledgeImportError(400, 'invalid_file', `${originalName} ne peut pas être lu.`)
+    }
+  }
+  return prepared
 }
 
-const applyUploads = async (
+const conflictMessage = (error: unknown): string | null => {
+  if (!(error instanceof Error)) return null
+  if (
+    error.message.includes('globally unique') ||
+    error.message.includes('Reserved Core Data title') ||
+    error.message.includes('Knowledge title already used') ||
+    error.message.includes('Unknown knowledge profile') ||
+    error.message.includes('Invalid Core Data source') ||
+    error.message.includes('Spreadsheet structure')
+  ) {
+    return error.message
+  }
+  if (error.message.includes('UNIQUE')) return 'upload_conflict'
+  return null
+}
+
+const applyUploads = (
   prepared: PreparedUpload[],
   origin: 'ui' | 'cli',
   validProfileIds: ReadonlySet<string>
-): Promise<{ sources: ImportedKnowledgeSource[]; shouldBuild: boolean }> => {
-  const applied: Array<{
-    item: PreparedUpload
-    source: KnowledgeSource
-    backup: string | null
-  }> = []
-  const results: ImportedKnowledgeSource[] = []
-  let shouldBuild = false
-
+): { sources: ImportedKnowledgeSource[]; shouldBuild: boolean } => {
+  if (prepared.every((item) => item.source && !item.changed)) {
+    return {
+      sources: prepared.flatMap((item) =>
+        item.source ? [{ source: item.source, changed: false }] : []
+      ),
+      shouldBuild: false
+    }
+  }
+  const db = openDatastore()
   try {
-    for (const item of prepared) {
-      if (item.source && !item.changed) {
-        results.push({ source: item.source, changed: false })
-        continue
-      }
-
-      const entries = entriesForUpload(
-        item.fileType,
-        item.originalName,
-        item.sheets,
-        item.source?.entries ?? [],
-        item.coreContract
-      )
-      const metadata = {
-        originalName: item.originalName,
-        fileType: item.fileType,
-        sizeBytes: item.file.size,
-        contentHash: item.contentHash,
-        origin,
-        entries
-      }
-
-      if (item.source) {
-        const wasAssigned = isAssigned(item.source)
-        const backup = (await Bun.file(item.target).exists())
-          ? `${item.target}.rollback-${Bun.randomUUIDv7()}`
-          : null
-        if (backup) await rename(item.target, backup)
-        await rename(item.temporary, item.target)
-        try {
-          const source = updateKnowledgeSourceFile(item.source.id, metadata, validProfileIds)
-          if (!source) throw new Error('Knowledge source disappeared during upload')
-          if (origin === 'cli' && (wasAssigned || isAssigned(source))) shouldBuild = true
-          applied.push({ item, source, backup })
-          results.push({ source, changed: true })
-        } catch (error) {
-          await rm(item.target, { force: true })
-          if (backup) await rename(backup, item.target)
-          throw error
-        }
-        continue
-      }
-
-      let source: KnowledgeSource
-      try {
-        source = insertKnowledgeSource(
-          { storageName: item.storageName, ...metadata },
-          validProfileIds
-        )
-      } catch (error) {
-        if (findKnowledgeSourceByStorageName(item.storageName)) {
-          throw new KnowledgeImportError(
-            409,
-            'upload_conflict',
-            `${item.originalName} est déjà en cours d’import.`
+    return db
+      .transaction(() => {
+        const results: ImportedKnowledgeSource[] = []
+        let shouldBuild = false
+        for (const item of prepared) {
+          if (item.source && !item.changed) {
+            results.push({ source: item.source, changed: false })
+            continue
+          }
+          const entries = entriesForUpload(
+            item.fileType,
+            item.originalName,
+            item.sheets,
+            item.source?.entries ?? [],
+            item.coreContract
           )
+          const metadata = {
+            originalName: item.originalName,
+            fileType: item.fileType,
+            sizeBytes: item.sizeBytes,
+            contentHash: item.contentHash,
+            origin,
+            entries
+          }
+          if (item.source) {
+            const wasAssigned = isAssigned(item.source)
+            dropSourceTables(db, item.source.id)
+            const source = updateKnowledgeSourceFileInDb(
+              db,
+              item.source.id,
+              metadata,
+              validProfileIds,
+              item.markdown
+            )
+            if (!source) throw new Error('Knowledge source disappeared during upload')
+            writeTables(db, source.id, item)
+            if (origin === 'cli' && (wasAssigned || isAssigned(source))) shouldBuild = true
+            results.push({ source, changed: true })
+            continue
+          }
+          const source = insertKnowledgeSourceInDb(
+            db,
+            { storageName: item.storageName, ...metadata },
+            validProfileIds,
+            item.markdown
+          )
+          writeTables(db, source.id, item)
+          results.push({ source, changed: true })
         }
-        if (
-          error instanceof Error &&
-          (error.message.includes('globally unique') ||
-            error.message.includes('Reserved Core Data title') ||
-            error.message.includes('Knowledge title already used') ||
-            error.message.includes('Unknown knowledge profile') ||
-            error.message.includes('Invalid Core Data source'))
-        ) {
-          throw new KnowledgeImportError(409, 'source_conflict', error.message)
-        }
-        throw error
-      }
-      try {
-        await rename(item.temporary, item.target)
-      } catch (error) {
-        deleteKnowledgeSource(source.id)
-        throw error
-      }
-      applied.push({ item, source, backup: null })
-      results.push({ source, changed: true })
-    }
-    return { sources: results, shouldBuild }
+        return { sources: results, shouldBuild }
+      })
+      .immediate()
   } catch (error) {
-    for (const step of applied.reverse()) {
-      if (step.item.source) restoreSource(step.item.source, validProfileIds)
-      else deleteKnowledgeSource(step.source.id)
-      if (step.backup) {
-        await rm(step.item.target, { force: true })
-        await rename(step.backup, step.item.target)
-      } else if (!step.item.source) {
-        await rm(step.item.target, { force: true })
-      }
+    if (error instanceof KnowledgeImportError) throw error
+    const message = conflictMessage(error)
+    if (message === 'upload_conflict') {
+      throw new KnowledgeImportError(
+        409,
+        'upload_conflict',
+        'Un fichier est déjà en cours d’import.'
+      )
     }
+    if (message) throw new KnowledgeImportError(409, 'source_conflict', message)
     throw error
   } finally {
-    await removeAll([
-      ...prepared.map((item) => item.temporary),
-      ...applied.map((step) => step.backup).filter((path): path is string => path !== null)
-    ])
+    db.close()
   }
 }
 
@@ -347,8 +328,6 @@ export const importKnowledgeFiles = async (
   if (files.length === 0) {
     throw new KnowledgeImportError(400, 'missing_file', 'Aucun fichier fourni.')
   }
-  const paths = datastorePaths()
-  await mkdir(paths.files, { recursive: true })
   const validProfileIds = new Set((await listKnowledgeProfiles()).map((profile) => profile.id))
-  return await applyUploads(await prepareUploads(files, paths.files), origin, validProfileIds)
+  return applyUploads(await prepareUploads(files), origin, validProfileIds)
 }

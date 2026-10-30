@@ -1,7 +1,7 @@
 import { Database } from 'bun:sqlite'
 
-import type { ActivityType } from '../../../shared/activites'
-import { activity_timestamp } from '../../../shared/activites'
+import type { ActivityType } from '../../../shared/activities'
+import { activityTimestamp } from '../../../shared/activities'
 import type { PreviewRow } from '../../../shared/bulk-operations'
 import { latest_repayment_states } from '../activities/repayment'
 import { insert_activity_row, login_from_email, user_destinataire } from '../activities/rows'
@@ -25,7 +25,7 @@ export const insert_bulk_visible_activity = (
   input: BulkVisibleActivityInput
 ): boolean => {
   const manager = input.notifyManager ? current_manager(db, input.row.id_locataire) : null
-  const now = activity_timestamp()
+  const now = activityTimestamp()
   try {
     insert_activity_row(db, {
       date_creation: now,

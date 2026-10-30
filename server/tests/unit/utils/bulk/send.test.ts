@@ -6,8 +6,10 @@ import { emptyBulkOperationDefinition } from '../../../../../shared/bulk-operati
 import { get_activity_by_idempotency_key } from '../../../../utils/activities/rows'
 import { handle_rich_rcs_reply } from '../../../../utils/bulk/rich-rcs'
 import {
+  arm_bulk_scheduler,
   drain_bulk_jobs,
   set_bulk_clock_for_tests,
+  start_bulk_scheduler,
   stop_bulk_scheduler
 } from '../../../../utils/bulk/scheduler/queue'
 import {
@@ -15,7 +17,7 @@ import {
   set_bulk_transport_for_tests
 } from '../../../../utils/bulk/scheduler/transport'
 import { execute_bulk_operation } from '../../../../utils/bulk/send'
-import { create_bulk_operation } from '../../../../utils/bulk/store'
+import { create_bulk_operation, update_bulk_operation } from '../../../../utils/bulk/store'
 import { next_status_timestamp } from '../../../../utils/communications/parsing'
 import { create_inbound } from '../../../../utils/communications/storage'
 import { insert_contact_if_absent } from '../../../../utils/contacts'
@@ -24,6 +26,7 @@ import {
   update_status
 } from '../../../../utils/delivery-status'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
+import { emptyProviders, writeProviders } from '../../../../utils/providers'
 import { TELEMETRY_URL } from '../../../../utils/send-telemetry'
 import { setup } from '../../../../utils/setup'
 import { seedInstanceSetup } from '../../../seed-setup'
@@ -48,6 +51,7 @@ beforeEach(async () => {
   await mkdir(paths.root, { recursive: true })
   await setup()
   await seedInstanceSetup()
+  writeProviders(emptyProviders())
   const db = new Database(`${paths.root}/datastore.sqlite`)
   db.run(`
     CREATE TABLE comptes_locataires (
@@ -57,7 +61,7 @@ beforeEach(async () => {
   `)
   db.run(
     `INSERT INTO comptes_locataires VALUES
-      ('LOC-1', 'CLI-1', 40, 'Ada', 'ada@example.org', '0612345678')`
+      ('LOC-1', 'CLI-1', 40, 'Ada', 'ada@example.org', '+33612345678')`
   )
   insert_contact_if_absent(db, 'ada@example.org', 'ok')
   insert_contact_if_absent(db, '+33612345678', 'rcs_compatible')
@@ -71,7 +75,6 @@ afterEach(async () => {
   set_bulk_transport_for_tests(null)
   set_bulk_clock_for_tests(null)
   globalThis.fetch = ORIGINAL_FETCH
-  delete Bun.env['CM_PRODUCT_TOKEN']
   await rm(paths.root, { recursive: true, force: true })
 })
 
@@ -96,7 +99,7 @@ describe('bulk execution', () => {
       }
     })
     set_bulk_transport_for_tests(async () => 'accepted')
-    const result = await execute_bulk_operation('alice@example.org', operation, {
+    const result = await execute_bulk_operation('alice@example.org', operation.id, {
       mode: 'send',
       clientCommandId: 'fallback'
     })
@@ -107,11 +110,11 @@ describe('bulk execution', () => {
         .query<{ contenu: string }, [string]>(
           `SELECT contenu FROM activites WHERE type = 'bulk.ran' AND execution_id = ?`
         )
-        .get(result.execution_id)!.contenu
+        .get(result.executionId)!.contenu
     )
     const job = db
       .query<{ payload: string }, [string]>('SELECT payload FROM bulk_jobs WHERE execution_id = ?')
-      .get(result.execution_id)!
+      .get(result.executionId)!
     const storedOperation = JSON.parse(
       db
         .query<{ definition: string }, [string]>(
@@ -121,13 +124,64 @@ describe('bulk execution', () => {
     )
     db.close()
     expect(run.version).toBe(2)
-    expect(run.values.execution_id).toBe(result.execution_id)
+    expect(run.values.execution_id).toBe(result.executionId)
     expect(storedOperation.delivery.steps[0].body).toContain('{{nom}}')
     expect(job.payload).not.toContain('Bonjour {{nom}}')
     expect(
-      get_activity_by_idempotency_key(`bulk:${result.execution_id}:recipient:LOC-1:attempt:0`)
+      get_activity_by_idempotency_key(`bulk:${result.executionId}:recipient:LOC-1:attempt:0`)
         ?.contenu
     ).toContain('Bonjour Ada')
+  })
+
+  it('loads the current definition inside the execution transaction', async () => {
+    const stale = create_bulk_operation('alice', {
+      name: 'Relance',
+      definition: {
+        ...emptyBulkOperationDefinition(),
+        delivery: {
+          kind: 'fallback',
+          steps: [
+            {
+              medium: 'email',
+              action: 'Courriel',
+              subject: 'Relance',
+              body: 'ANCIEN',
+              placeholderBindings: {}
+            }
+          ]
+        }
+      }
+    })
+    update_bulk_operation(stale.id, 'alice', {
+      definition: {
+        ...stale.definition,
+        delivery: {
+          kind: 'fallback',
+          steps: [
+            {
+              medium: 'email',
+              action: 'Courriel',
+              subject: 'Relance',
+              body: 'NOUVEAU',
+              placeholderBindings: {}
+            }
+          ]
+        }
+      }
+    })
+    set_bulk_transport_for_tests(async () => 'accepted')
+
+    const result = await execute_bulk_operation('alice@example.org', stale.id, {
+      mode: 'send',
+      clientCommandId: 'transactional-definition'
+    })
+    await drain_bulk_jobs(now)
+
+    const activity = get_activity_by_idempotency_key(
+      `bulk:${result.executionId}:recipient:LOC-1:attempt:0`
+    )
+    expect(activity?.contenu).toContain('NOUVEAU')
+    expect(activity?.contenu).not.toContain('ANCIEN')
   })
 
   it('rolls back activity creation with its job link and retries idempotently', async () => {
@@ -153,7 +207,7 @@ describe('bulk execution', () => {
     set_bulk_transaction_hook_for_tests((point) => {
       if (point === 'fallback_created') throw new Error('injected transaction failure')
     })
-    const result = await execute_bulk_operation('alice@example.org', operation, {
+    const result = await execute_bulk_operation('alice@example.org', operation.id, {
       mode: 'send',
       clientCommandId: 'atomic-retry'
     })
@@ -166,14 +220,14 @@ describe('bulk execution', () => {
           `SELECT COUNT(*) AS n FROM activites
            WHERE execution_id = ? AND type = 'communication.sent'`
         )
-        .get(result.execution_id)?.n
+        .get(result.executionId)?.n
     ).toBe(0)
     expect(
       db
         .query<{ current_activity_id: number | null; attempts: number }, [string]>(
           'SELECT current_activity_id, attempts FROM bulk_jobs WHERE execution_id = ?'
         )
-        .get(result.execution_id)
+        .get(result.executionId)
     ).toEqual({ current_activity_id: null, attempts: 1 })
     db.close()
 
@@ -193,14 +247,14 @@ describe('bulk execution', () => {
           `SELECT type FROM activites
            WHERE execution_id = ? AND type = 'communication.sent'`
         )
-        .get(result.execution_id)?.type
+        .get(result.executionId)?.type
     ).toBe('communication.sent')
     expect(
       db
         .query<{ report_status: string }, [string]>(
           'SELECT report_status FROM bulk_jobs WHERE execution_id = ?'
         )
-        .get(result.execution_id)?.report_status
+        .get(result.executionId)?.report_status
     ).toBe('in_progress')
     db.close()
 
@@ -217,20 +271,20 @@ describe('bulk execution', () => {
           `SELECT COUNT(*) AS n FROM activites
            WHERE execution_id = ? AND type = 'communication.sent'`
         )
-        .get(result.execution_id)?.n
+        .get(result.executionId)?.n
     ).toBe(1)
     expect(
       db
         .query<{ report_status: string }, [string]>(
           'SELECT report_status FROM bulk_jobs WHERE execution_id = ?'
         )
-        .get(result.execution_id)?.report_status
+        .get(result.executionId)?.report_status
     ).toBe('ok')
     db.close()
   })
 
   it('sends rich RCS, follows an exact postback, and applies effects once', async () => {
-    Bun.env['CM_PRODUCT_TOKEN'] = 'token'
+    writeProviders({ ...emptyProviders(), rcsToken: 'token', rcsFrom: 'PIERRE', rcsSecret: 's' })
     globalThis.fetch = Object.assign(
       async (url: URL | RequestInfo, init?: BunFetchRequestInit | RequestInit) => {
         if (String(url) === TELEMETRY_URL) return new Response(null, { status: 204 })
@@ -279,13 +333,13 @@ describe('bulk execution', () => {
         }
       }
     })
-    const result = await execute_bulk_operation('alice@example.org', operation, {
+    const result = await execute_bulk_operation('alice@example.org', operation.id, {
       mode: 'send',
       clientCommandId: 'rich'
     })
     await drain_bulk_jobs(now)
     const first = get_activity_by_idempotency_key(
-      `bulk:${result.execution_id}:recipient:LOC-1:node:message_1`
+      `bulk:${result.executionId}:recipient:LOC-1:node:message_1`
     )!
     expect(first).toMatchObject({ type: 'communication.sent', channel: 'rcs' })
     const inbound = create_inbound({
@@ -295,19 +349,19 @@ describe('bulk execution', () => {
       auteur: 'tenant:LOC-1',
       contenu: JSON.stringify({ version: 2, sender: 'tenant:LOC-1', body: 'Suite' }),
       occurred_at: next_status_timestamp(first, now),
-      thread_id: first.thread_id ?? undefined,
+      thread_id: first.threadId ?? undefined,
       idempotency_key: 'cm:reply-1'
     })
     const replyPayload = {
       event: { custom: { label: 'Suite', postbackdata: 'suite' } },
-      messageContext: `p${first.id}`
+      messageContext: `${first.id}`
     }
     expect(handle_rich_rcs_reply(first, inbound, replyPayload)).toBe(true)
     expect(handle_rich_rcs_reply(first, inbound, replyPayload)).toBe(false)
     now = new Date(now.getTime() + 1_000)
     await drain_bulk_jobs(now)
     const second = get_activity_by_idempotency_key(
-      `bulk:${result.execution_id}:recipient:LOC-1:node:message_2`
+      `bulk:${result.executionId}:recipient:LOC-1:node:message_2`
     )!
     update_status({
       activity_id: second.id,
@@ -321,7 +375,7 @@ describe('bulk execution', () => {
         .query<{ report_status: string }, [string]>(
           'SELECT report_status FROM bulk_jobs WHERE execution_id = ?'
         )
-        .get(result.execution_id)?.report_status
+        .get(result.executionId)?.report_status
     ).toBe('ok')
     expect(
       db
@@ -329,7 +383,7 @@ describe('bulk execution', () => {
           `SELECT COUNT(*) AS n FROM activites
            WHERE execution_id = ? AND type = 'case.group_changed'`
         )
-        .get(result.execution_id)?.n
+        .get(result.executionId)?.n
     ).toBe(1)
     db.close()
   })
@@ -355,7 +409,7 @@ describe('bulk execution', () => {
         }
       }
     })
-    const result = await execute_bulk_operation('alice@example.org', operation, {
+    const result = await execute_bulk_operation('alice@example.org', operation.id, {
       mode: 'send',
       clientCommandId: 'rich-no-token'
     })
@@ -365,14 +419,14 @@ describe('bulk execution', () => {
       .query<{ report_status: string; outcome: string }, [string]>(
         'SELECT report_status, outcome FROM bulk_jobs WHERE execution_id = ?'
       )
-      .get(result.execution_id)!
+      .get(result.executionId)!
     db.close()
     expect(job.report_status).toBe('ko')
     expect(job.outcome).toContain('send_failed')
   })
 
   it('expires an unanswered interactive node at the configured deadline', async () => {
-    Bun.env['CM_PRODUCT_TOKEN'] = 'token'
+    writeProviders({ ...emptyProviders(), rcsToken: 'token', rcsFrom: 'PIERRE', rcsSecret: 's' })
     globalThis.fetch = Object.assign(
       async (url: URL | RequestInfo, init?: BunFetchRequestInit | RequestInit) => {
         if (String(url) === TELEMETRY_URL) return new Response(null, { status: 204 })
@@ -414,7 +468,7 @@ describe('bulk execution', () => {
         }
       }
     })
-    const result = await execute_bulk_operation('alice@example.org', operation, {
+    const result = await execute_bulk_operation('alice@example.org', operation.id, {
       mode: 'send',
       clientCommandId: 'rich-timeout'
     })
@@ -426,7 +480,7 @@ describe('bulk execution', () => {
       .query<{ report_status: string; outcome: string }, [string]>(
         'SELECT report_status, outcome FROM bulk_jobs WHERE execution_id = ?'
       )
-      .get(result.execution_id)!
+      .get(result.executionId)!
     db.close()
     expect(job.report_status).toBe('ko')
     expect(job.outcome).toContain('reply_timeout')
@@ -460,12 +514,12 @@ describe('bulk execution', () => {
         }
       }
     })
-    const result = await execute_bulk_operation('alice@example.org', operation, {
+    const result = await execute_bulk_operation('alice@example.org', operation.id, {
       mode: 'apply_without_send',
       clientCommandId: 'apply-no-send'
     })
     const activity = get_activity_by_idempotency_key(
-      `bulk:${result.execution_id}:recipient:LOC-1:attempt:0`
+      `bulk:${result.executionId}:recipient:LOC-1:attempt:0`
     )!
     expect(activity).toMatchObject({ type: 'communication.sent', channel: 'email' })
     expect(activity.contenu).toContain('Courriel')
@@ -477,7 +531,7 @@ describe('bulk execution', () => {
           `SELECT COUNT(*) AS n FROM activites
            WHERE execution_id = ? AND type = 'bulk.applied'`
         )
-        .get(result.execution_id)?.n
+        .get(result.executionId)?.n
     ).toBe(1)
     expect(
       db
@@ -485,7 +539,7 @@ describe('bulk execution', () => {
           `SELECT COUNT(*) AS n FROM activites
            WHERE execution_id = ? AND type = 'case.group_changed'`
         )
-        .get(result.execution_id)?.n
+        .get(result.executionId)?.n
     ).toBe(1)
     expect(result.totals.applied).toBe(1)
     db.close()
@@ -503,10 +557,79 @@ describe('bulk execution', () => {
       body: ''
     })
     await expect(
-      execute_bulk_operation('alice@example.org', operation, {
+      execute_bulk_operation('alice@example.org', operation.id, {
         mode: 'send',
         clientCommandId: 'incomplete'
       })
     ).rejects.toThrow('Le contenu de chaque message est requis.')
+  })
+
+  it('returns while a due job is still blocked', async () => {
+    let release!: (decision: 'accepted') => void
+    let entered!: () => void
+    const enteredGate = new Promise<void>((resolve) => {
+      entered = resolve
+    })
+    const gate = new Promise<'accepted'>((resolve) => {
+      release = resolve
+    })
+    set_bulk_transport_for_tests(async () => {
+      entered()
+      return gate
+    })
+    const operation = create_bulk_operation('alice', {
+      name: 'Relance',
+      definition: {
+        ...emptyBulkOperationDefinition(),
+        delivery: {
+          kind: 'fallback',
+          steps: [
+            {
+              medium: 'email',
+              action: 'Courriel',
+              subject: 'Relance',
+              body: 'Bonjour',
+              placeholderBindings: {}
+            }
+          ]
+        }
+      }
+    })
+    const result = await execute_bulk_operation('alice@example.org', operation.id, {
+      mode: 'send',
+      clientCommandId: 'blocked'
+    })
+    start_bulk_scheduler()
+    await enteredGate
+    const db = new Database(`${paths.root}/datastore.sqlite`, { readonly: true })
+    expect(
+      db
+        .query<{ report_status: string }, [string]>(
+          `SELECT report_status FROM bulk_jobs WHERE execution_id = ?`
+        )
+        .get(result.executionId)?.report_status
+    ).toBe('in_progress')
+    db.close()
+    release('accepted')
+    await drain_bulk_jobs(now)
+  })
+
+  it('schedules one retry when the datastore cannot be read', () => {
+    const original = globalThis.setTimeout
+    const delays: number[] = []
+    globalThis.setTimeout = ((_: TimerHandler, delay?: number) => {
+      delays.push(delay ?? 0)
+      return 1 as unknown as ReturnType<typeof setTimeout>
+    }) as unknown as typeof setTimeout
+    try {
+      set_bulk_clock_for_tests(null)
+      setDatastoreRoot(`${paths.root}/absent`)
+      arm_bulk_scheduler()
+      expect(delays).toEqual([60_000])
+    } finally {
+      globalThis.setTimeout = original
+      setDatastoreRoot(paths.root)
+      set_bulk_clock_for_tests({ now: () => now })
+    }
   })
 })

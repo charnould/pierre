@@ -118,7 +118,7 @@ async function run(command: string[], cwd = ROOT) {
 
 async function main() {
   if (process.platform !== 'darwin' || process.arch !== 'arm64') {
-    throw new Error('microvm:update requires a bare-metal macOS ARM64 host')
+    throw new Error('server:microvm:update requires a bare-metal macOS ARM64 host')
   }
   const { values } = parseArgs(Bun.argv.slice(2))
   const versions = JSON.parse(await readFile(VERSIONS_PATH, 'utf8')) as Versions

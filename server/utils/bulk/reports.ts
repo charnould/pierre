@@ -1,10 +1,11 @@
 import { Database } from 'bun:sqlite'
 
-import { activity_timestamp } from '../../../shared/activites'
+import { activityTimestamp } from '../../../shared/activities'
 import type {
   BulkExecutionMode,
   BulkItemReportStatus,
-  BulkOperationExecuteResult,
+  BulkJobPayload,
+  BulkOutcome,
   BulkReportCounts,
   BulkReportDetail,
   BulkReportItem,
@@ -12,16 +13,30 @@ import type {
   BulkRunReportStatus,
   BulkSource
 } from '../../../shared/bulk-operations'
-import { datastorePaths } from '../paths'
-
-const datastore_path = (): string => datastorePaths().database
+import { insert_activity_row } from '../activities/rows'
+import { openDatastore } from '../datastore-db'
+import {
+  bulkRunResult,
+  bulkRunSummary,
+  parseBulkRunContent,
+  parseBulkRunSummaryContent,
+  stringifyBulkRunSummaryContent
+} from './run-content'
+import {
+  parseStoredOutcome,
+  parseStoredPayload,
+  storedOutcome,
+  stringifyStoredPayload
+} from './stored-job'
 
 type RunRow = {
+  id: number
   auteur: string
   bulk_id: string
   execution_id: string
   contenu: string
   date_creation: string
+  completion_contenu: string | null
 }
 
 type ItemRow = {
@@ -40,80 +55,58 @@ type ItemRow = {
   payload: string
 }
 
-type RunContent = {
-  source: BulkSource
-  mode: BulkExecutionMode
-  result: BulkOperationExecuteResult
-  status: BulkRunReportStatus
-  counts: BulkReportCounts
-  completed_at: string | null
-  snapshot: { confirmed_at: string }
-}
-
-const parse_object = (raw: string | null): Record<string, unknown> | null => {
-  if (raw == null) return null
-  try {
-    const value = JSON.parse(raw)
-    return value != null && typeof value === 'object' && !Array.isArray(value)
-      ? (value as Record<string, unknown>)
-      : null
-  } catch {
-    return null
-  }
-}
-
 const parse_run = (row: RunRow, items: BulkReportItem[] = []): BulkReportSummary => {
-  const raw = JSON.parse(row.contenu) as RunContent & {
-    values?: {
-      source?: BulkSource
-      mode?: BulkExecutionMode
-      execution_id?: string
-      total?: number
-      queued?: number
-      no_usable_route?: number
-      applied?: number
-    }
-    snapshot?: { confirmed_at?: string }
-  }
-  const values = raw.values
-  const counts: BulkReportCounts = { total: 0, in_progress: 0, ok: 0, ko: 0 }
+  const content = parseBulkRunContent(row.contenu)
+  const values = content.values
+  const counts: BulkReportCounts = { total: 0, inProgress: 0, ok: 0, ko: 0 }
   for (const item of items) {
-    counts[item.reportStatus] += 1
+    counts[item.reportStatus === 'in_progress' ? 'inProgress' : item.reportStatus] += 1
     counts.total += 1
   }
-  const status: BulkRunReportStatus =
-    items.length === 0
-      ? values?.total === 0
-        ? 'ok'
-        : (raw.status ?? 'in_progress')
-      : counts.in_progress > 0
+  const persisted = row.completion_contenu
+    ? bulkRunSummary(parseBulkRunSummaryContent(row.completion_contenu))
+    : null
+  let status: BulkRunReportStatus
+  let reportCounts = counts
+  let completedAt: string | null
+  if (items.length > 0) {
+    status =
+      counts.inProgress > 0
         ? 'in_progress'
         : counts.ok === counts.total
           ? 'ok'
           : counts.ko === counts.total
             ? 'ko'
             : 'partial'
-  const source = values?.source ?? raw.source
-  const mode = values?.mode ?? raw.mode
+    completedAt =
+      status === 'in_progress'
+        ? null
+        : (items
+            .map((item) => item.completedAt)
+            .filter((value): value is string => value !== null)
+            .sort()
+            .at(-1) ?? row.date_creation)
+  } else if (persisted) {
+    status = persisted.status
+    reportCounts = persisted.counts
+    completedAt = persisted.completedAt
+  } else if (values.total === 0) {
+    status = 'ok'
+    completedAt = row.date_creation
+  } else {
+    throw new Error(`Bulk run ${row.execution_id} has no jobs or stored summary`)
+  }
   return {
     bulkOperationId: row.bulk_id,
     executionId: row.execution_id,
-    source,
-    mode,
+    source: values.source,
+    mode: values.mode,
     status,
-    counts: items.length > 0 ? counts : (raw.counts ?? counts),
-    confirmedAt: raw.snapshot?.confirmed_at ?? row.date_creation,
-    completedAt: status === 'in_progress' ? null : (raw.completed_at ?? row.date_creation),
+    counts: reportCounts,
+    confirmedAt: row.date_creation,
+    completedAt,
     actor: row.auteur.replace(/^[^:]+:/, ''),
-    result: raw.result ?? {
-      execution_id: row.execution_id,
-      totals: {
-        total: values?.total ?? counts.total,
-        queued: values?.queued ?? 0,
-        no_usable_route: values?.no_usable_route ?? 0,
-        applied: values?.applied ?? 0
-      }
-    }
+    result: bulkRunResult(content)
   }
 }
 
@@ -124,13 +117,13 @@ const parse_item = (row: ItemRow): BulkReportItem => ({
   source: row.source,
   mode: row.mode,
   reportStatus: row.report_status,
-  outcome: parse_object(row.outcome),
+  outcome: row.outcome ? parseStoredOutcome(JSON.parse(row.outcome)) : null,
   currentActivityId: row.current_activity_id,
   completedAt: row.completed_at,
   runAt: row.run_at,
   attempts: row.attempts,
   lastError: row.last_error,
-  payload: parse_object(row.payload) ?? {}
+  payload: parseStoredPayload(JSON.parse(row.payload))
 })
 
 const items_for_execution = (db: Database, executionId: string): BulkReportItem[] =>
@@ -152,9 +145,14 @@ const get_bulk_report_with_db = (
 ): BulkReportDetail | null => {
   const run = db
     .query<RunRow, [string, string]>(
-      `SELECT auteur, bulk_id, execution_id, contenu, date_creation
-       FROM activites
-       WHERE type = 'bulk.ran' AND bulk_id = ? AND execution_id = ?
+      `SELECT run.id, run.auteur, run.bulk_id, run.execution_id, run.contenu,
+              run.date_creation,
+              (SELECT completion.contenu FROM activites completion
+               WHERE completion.type = 'bulk.completed'
+                 AND completion.execution_id = run.execution_id
+               LIMIT 1) AS completion_contenu
+       FROM activites run
+       WHERE run.type = 'bulk.ran' AND run.bulk_id = ? AND run.execution_id = ?
        LIMIT 1`
     )
     .get(bulkOperationId, executionId)
@@ -167,7 +165,7 @@ export const get_bulk_report = (
   bulkOperationId: string,
   executionId: string
 ): BulkReportDetail | null => {
-  const db = new Database(datastore_path(), { readonly: true })
+  const db = openDatastore({ readonly: true })
   try {
     return get_bulk_report_with_db(db, bulkOperationId, executionId)
   } finally {
@@ -176,14 +174,19 @@ export const get_bulk_report = (
 }
 
 export const list_bulk_reports = (bulkOperationId: string): BulkReportDetail[] => {
-  const db = new Database(datastore_path(), { readonly: true })
+  const db = openDatastore({ readonly: true })
   try {
     return db
       .query<RunRow, [string]>(
-        `SELECT auteur, bulk_id, execution_id, contenu, date_creation
-         FROM activites
-         WHERE type = 'bulk.ran' AND bulk_id = ?
-         ORDER BY date_creation DESC, execution_id DESC`
+        `SELECT run.id, run.auteur, run.bulk_id, run.execution_id, run.contenu,
+                run.date_creation,
+                (SELECT completion.contenu FROM activites completion
+                 WHERE completion.type = 'bulk.completed'
+                   AND completion.execution_id = run.execution_id
+                 LIMIT 1) AS completion_contenu
+         FROM activites run
+         WHERE run.type = 'bulk.ran' AND run.bulk_id = ?
+         ORDER BY run.date_creation DESC, run.execution_id DESC`
       )
       .all(bulkOperationId)
       .map((run) => {
@@ -202,12 +205,22 @@ export const purge_completed_runs_with_db = (
 ): string[] => {
   const purged = db
     .query<{ execution_id: string }, [string, number]>(
-      `SELECT execution_id
-       FROM activites
-       WHERE type = 'bulk.ran'
-         AND bulk_id = ?
-         AND json_extract(contenu, '$.values.mode') IS NOT NULL
-       ORDER BY json_extract(contenu, '$.completed_at') DESC, execution_id DESC
+      `SELECT run.execution_id
+       FROM activites run
+       WHERE run.type = 'bulk.ran' AND run.bulk_id = ?
+         AND EXISTS (
+           SELECT 1 FROM activites completion
+           WHERE completion.type = 'bulk.completed'
+             AND completion.execution_id = run.execution_id
+         )
+       ORDER BY COALESCE(
+                  (SELECT completion.date_creation FROM activites completion
+                   WHERE completion.type = 'bulk.completed'
+                     AND completion.execution_id = run.execution_id
+                   LIMIT 1),
+                  run.date_creation
+                ) DESC,
+                run.execution_id DESC
        LIMIT -1 OFFSET ?`
     )
     .all(bulkOperationId, reportsToKeep)
@@ -221,13 +234,18 @@ export const purge_completed_runs_with_db = (
 export const aggregate_bulk_run_with_db = (
   db: Database,
   executionId: string,
-  terminalizedAt = activity_timestamp()
+  terminalizedAt = activityTimestamp()
 ): BulkReportSummary | null => {
   const run = db
     .query<RunRow, [string]>(
-      `SELECT auteur, bulk_id, execution_id, contenu, date_creation
-       FROM activites
-       WHERE type = 'bulk.ran' AND execution_id = ?
+      `SELECT run.id, run.auteur, run.bulk_id, run.execution_id, run.contenu,
+              run.date_creation,
+              (SELECT completion.contenu FROM activites completion
+               WHERE completion.type = 'bulk.completed'
+                 AND completion.execution_id = run.execution_id
+               LIMIT 1) AS completion_contenu
+       FROM activites run
+       WHERE run.type = 'bulk.ran' AND run.execution_id = ?
        LIMIT 1`
     )
     .get(executionId)
@@ -240,13 +258,13 @@ export const aggregate_bulk_run_with_db = (
        GROUP BY report_status`
     )
     .all(executionId)
-  const counts: BulkReportCounts = { total: 0, in_progress: 0, ok: 0, ko: 0 }
+  const counts: BulkReportCounts = { total: 0, inProgress: 0, ok: 0, ko: 0 }
   for (const row of rows) {
-    counts[row.report_status] = row.n
+    counts[row.report_status === 'in_progress' ? 'inProgress' : row.report_status] = row.n
     counts.total += row.n
   }
   const status: BulkRunReportStatus =
-    counts.in_progress > 0
+    counts.inProgress > 0
       ? 'in_progress'
       : counts.total === 0 || counts.ok === counts.total
         ? 'ok'
@@ -254,6 +272,32 @@ export const aggregate_bulk_run_with_db = (
           ? 'ko'
           : 'partial'
   if (status !== 'in_progress') {
+    if (!run.completion_contenu) {
+      run.completion_contenu = stringifyBulkRunSummaryContent({
+        version: 2,
+        title: 'Exécution bulk terminée',
+        values: {
+          execution_id: executionId,
+          report_status: status,
+          count_in_progress: 0,
+          count_ok: counts.ok,
+          count_ko: counts.ko,
+          completed_at: terminalizedAt
+        }
+      })
+      insert_activity_row(db, {
+        date_creation: terminalizedAt,
+        rattachement: `bulk:${run.bulk_id}`,
+        auteur: run.auteur,
+        facets: { id_client: null, id_locataire: null, id_lot: null },
+        type: 'bulk.completed',
+        mentions: [],
+        contenu: run.completion_contenu,
+        bulk_id: run.bulk_id,
+        execution_id: executionId,
+        idempotency_key: `bulk:${executionId}:completed`
+      })
+    }
     const reportsToKeep =
       db
         .query<{ reports_to_keep: number }, [string]>(
@@ -262,7 +306,6 @@ export const aggregate_bulk_run_with_db = (
         .get(run.bulk_id)?.reports_to_keep ?? 10
     purge_completed_runs_with_db(db, run.bulk_id, reportsToKeep)
   }
-  void terminalizedAt
   return parse_run(run, items_for_execution(db, executionId))
 }
 
@@ -271,13 +314,13 @@ export const finalize_bulk_item_with_db = (
   input: {
     jobId: string
     status: Extract<BulkItemReportStatus, 'ok' | 'ko'>
-    outcome: Record<string, unknown>
+    outcome: BulkOutcome
     currentActivityId?: number | null
-    payload?: Record<string, unknown>
+    payload?: BulkJobPayload
     completedAt?: string
   }
 ): BulkReportSummary | null => {
-  const completedAt = input.completedAt ?? activity_timestamp()
+  const completedAt = input.completedAt ?? activityTimestamp()
   const row = db
     .query<{ execution_id: string }, [string]>('SELECT execution_id FROM bulk_jobs WHERE id = ?')
     .get(input.jobId)
@@ -290,10 +333,10 @@ export const finalize_bulk_item_with_db = (
      WHERE id = ?`,
     [
       input.status,
-      JSON.stringify(input.outcome),
+      JSON.stringify(storedOutcome(input.outcome)),
       input.currentActivityId ?? null,
       completedAt,
-      input.payload ? JSON.stringify(input.payload) : null,
+      input.payload ? stringifyStoredPayload(input.payload) : null,
       input.jobId
     ]
   )

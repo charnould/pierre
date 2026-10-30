@@ -21,7 +21,7 @@ export function buildChatBoot(
     displayableConfigs: displayable.map((c) => ({
       id: c.id,
       display: c.display,
-      is_active: c.id === active_config.id
+      isActive: c.id === active_config.id
     })),
     trace: active_config.trace,
     attachments: active_config.attachments,

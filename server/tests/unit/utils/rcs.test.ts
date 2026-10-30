@@ -1,5 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it, spyOn } from 'bun:test'
+import { afterAll, afterEach, beforeEach, describe, expect, it, spyOn } from 'bun:test'
+import { rm } from 'node:fs/promises'
 
+import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
+import { emptyProviders, writeProviders } from '../../../utils/providers'
 import { RcsSendError, send_rcs_message } from '../../../utils/rcs/send'
 import {
   new_rcs_reference,
@@ -77,13 +80,17 @@ describe('wrap', () => {
 })
 
 describe('send_rcs_message (fetch mocked, no live send)', () => {
-  const originalToken = Bun.env['CM_PRODUCT_TOKEN']
-  const originalFrom = Bun.env['CM_FROM']
+  const paths = testDatastorePaths('rcs_send')
   let fetchSpy: ReturnType<typeof spyOn>
 
   beforeEach(() => {
-    Bun.env['CM_PRODUCT_TOKEN'] = 'test-token'
-    Bun.env['CM_FROM'] = 'PIERRE'
+    setDatastoreRoot(paths.root)
+    writeProviders({
+      ...emptyProviders(),
+      rcsToken: 'test-token',
+      rcsFrom: 'PIERRE',
+      rcsSecret: 's'
+    })
     fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(
       Object.assign(
         () => {
@@ -96,22 +103,34 @@ describe('send_rcs_message (fetch mocked, no live send)', () => {
 
   afterEach(() => {
     fetchSpy.mockRestore()
-    if (originalToken === undefined) delete Bun.env['CM_PRODUCT_TOKEN']
-    else Bun.env['CM_PRODUCT_TOKEN'] = originalToken
-    if (originalFrom === undefined) delete Bun.env['CM_FROM']
-    else Bun.env['CM_FROM'] = originalFrom
+  })
+
+  afterAll(async () => {
+    setDatastoreRoot(null)
+    await rm(paths.root, { recursive: true, force: true })
   })
 
   it('throws not_configured when the product token is empty', async () => {
-    Bun.env['CM_PRODUCT_TOKEN'] = ''
+    writeProviders(emptyProviders())
     await expect(
       send_rcs_message({
         phone: PHONE_CM,
         richContent: { conversation: [{ text: 'hello' }] },
         reference: 'jtest'
       })
-    ).rejects.toMatchObject({ code: 'not_configured', status: 503 })
+    ).rejects.toMatchObject({ code: 'not_configured', status: 503, retryable: true })
     expect(fetchSpy).not.toHaveBeenCalled()
+  })
+
+  it('marks network failures as retryable', async () => {
+    fetchSpy.mockRejectedValue(new TypeError('network unavailable'))
+    await expect(
+      send_rcs_message({
+        phone: PHONE_CM,
+        richContent: { conversation: [{ text: 'hello' }] },
+        reference: 'jtest'
+      })
+    ).rejects.toMatchObject({ code: 'cm_unavailable', status: 502, retryable: true })
   })
 
   it('posts the wrapped payload to the CM gateway', async () => {
@@ -159,6 +178,7 @@ describe('send_rcs_message (fetch mocked, no live send)', () => {
       expect(error).toMatchObject({
         code: 'cm_rejected',
         status: 400,
+        retryable: false,
         message: 'Unknown recipient'
       })
     }
@@ -169,7 +189,9 @@ describe('send_rcs_message (fetch mocked, no live send)', () => {
       new Response(
         JSON.stringify({
           errorCode: 0,
-          messages: { msg: [{ status: 'Rejected', messageErrorCode: 201 }] }
+          messages: {
+            msg: [{ reference: 'jtest', status: 'Rejected', messageErrorCode: 201 }]
+          }
         }),
         { status: 200 }
       )
@@ -180,7 +202,7 @@ describe('send_rcs_message (fetch mocked, no live send)', () => {
         richContent: { conversation: [{ text: 'hello' }] },
         reference: 'jtest'
       })
-    ).rejects.toMatchObject({ code: 'cm_rejected', status: 502 })
+    ).rejects.toMatchObject({ code: 'cm_rejected', status: 502, retryable: false })
   })
 
   it('rejects an accepted label without explicit zero result codes', async () => {
@@ -201,6 +223,6 @@ describe('send_rcs_message (fetch mocked, no live send)', () => {
         richContent: { conversation: [{ text: 'hello' }] },
         reference: 'jtest'
       })
-    ).rejects.toMatchObject({ code: 'cm_rejected', status: 502 })
+    ).rejects.toMatchObject({ code: 'cm_invalid_response', status: 502, retryable: true })
   })
 })

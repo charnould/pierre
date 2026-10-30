@@ -2,35 +2,10 @@ import { z } from 'zod'
 
 import { AUTOMATION_FREQUENCIES } from '../../../shared/automations'
 
-const TicketFilterRuleSchema = z.union([
-  z.object({
-    kind: z.literal('values'),
-    column: z.string().trim().min(1),
-    values: z.array(z.string())
-  }),
-  z.object({
-    kind: z.literal('compare'),
-    column: z.string().trim().min(1),
-    operator: z.enum(['gt', 'gte', 'lt', 'lte']),
-    value: z.string()
-  })
-])
-
-const ReportConfigSchema = z.object({
-  prompt: z.string(),
-  maxReports: z.number().int().positive().max(100)
-})
-
-const TicketReplyConfigSchema = z.object({
-  skillId: z.literal('replies'),
-  channel: z.enum(['email', 'letter']),
-  ticketFilters: z.object({ rules: z.array(TicketFilterRuleSchema) }),
-  maxItems: z.number().int().positive().max(500)
-})
-
-export const AutomationConfigSchema = z.union([ReportConfigSchema, TicketReplyConfigSchema])
-
-const HHMM = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+const HHMM = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/)
+  .transform((value) => value.slice(0, 5))
 const DAYS = new Set(['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'])
 
 export const automation_schedule_error = (
@@ -69,35 +44,18 @@ const validate_schedule = (
 }
 
 export const CreateAutomationBodySchema = z
-  .discriminatedUnion('type', [
-    z
-      .object({
-        type: z.literal('report'),
-        name: z.string().trim().min(1),
-        description: z.string().default(''),
-        mentions: z.array(z.string().trim().min(1)).default([]),
-        frequency: z.enum(AUTOMATION_FREQUENCIES),
-        frequencyDay: z.string().optional(),
-        frequencyTime: HHMM,
-        prompt: z.string(),
-        maxReports: z.number().int().positive().max(100).default(6)
-      })
-      .strict(),
-    z
-      .object({
-        type: z.literal('replies'),
-        name: z.string().trim().min(1),
-        description: z.string().default(''),
-        mentions: z.array(z.string().trim().min(1)).default([]),
-        frequency: z.enum(AUTOMATION_FREQUENCIES),
-        frequencyDay: z.string().optional(),
-        frequencyTime: HHMM,
-        channel: z.enum(['email', 'letter']).default('email'),
-        ticketFilters: z.object({ rules: z.array(TicketFilterRuleSchema) }).default({ rules: [] }),
-        maxItems: z.number().int().positive().max(500).default(20)
-      })
-      .strict()
-  ])
+  .object({
+    type: z.literal('report'),
+    name: z.string().trim().min(1),
+    description: z.string().default(''),
+    mentions: z.array(z.string().trim().min(1)).default([]),
+    frequency: z.enum(AUTOMATION_FREQUENCIES),
+    frequencyDay: z.string().optional(),
+    frequencyTime: HHMM,
+    prompt: z.string(),
+    maxReports: z.number().int().positive().max(100).default(6)
+  })
+  .strict()
   .superRefine(validate_schedule)
 
 export const PatchAutomationBodySchema = z
@@ -110,9 +68,6 @@ export const PatchAutomationBodySchema = z
     frequencyDay: z.string().optional(),
     frequencyTime: HHMM.optional(),
     prompt: z.string().optional(),
-    maxReports: z.number().int().positive().max(100).optional(),
-    channel: z.enum(['email', 'letter']).optional(),
-    ticketFilters: z.object({ rules: z.array(TicketFilterRuleSchema) }).optional(),
-    maxItems: z.number().int().positive().max(500).optional()
+    maxReports: z.number().int().positive().max(100).optional()
   })
   .strict()

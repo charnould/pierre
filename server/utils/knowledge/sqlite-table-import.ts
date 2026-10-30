@@ -1,5 +1,6 @@
 import { Database } from 'bun:sqlite'
 
+import { isHierarchyColumn, normalizeHierarchyValue } from '../../../shared/hierarchy'
 import { normalize_knowledge_name } from '../../../shared/knowledge'
 import { insert_activity_row } from '../activities/rows'
 import { insert_contacts_from_rows } from '../contacts'
@@ -12,8 +13,8 @@ import {
   stringify_identifier
 } from './codes-postaux'
 
-/** A single JSON object row eligible for tabular import. */
-export type JsonRow = Record<string, unknown>
+/** One tabular cell map. Objects exist only while a table is being created. */
+export type DataRow = Record<string, unknown>
 
 const quote_identifier = (identifier: string): string => `"${identifier.replaceAll('"', '""')}"`
 
@@ -38,7 +39,7 @@ const table_exists = (db: Database, table: string): boolean =>
     )
     .get(table)!.n === 1
 
-const existing_reclamations = (db: Database, table: string): Map<string, JsonRow> => {
+const existing_reclamations = (db: Database, table: string): Map<string, DataRow> => {
   if (table !== 'reclamations' || !table_exists(db, table)) return new Map()
   const columns = db
     .query<{ name: string }, []>(`PRAGMA table_info(${quote_identifier(table)})`)
@@ -47,7 +48,7 @@ const existing_reclamations = (db: Database, table: string): Map<string, JsonRow
   if (!columns.includes('id_reclamation')) return new Map()
   return new Map(
     db
-      .query<JsonRow, []>(`SELECT * FROM ${quote_identifier(table)}`)
+      .query<DataRow, []>(`SELECT * FROM ${quote_identifier(table)}`)
       .all()
       .flatMap((row) => {
         const id = row['id_reclamation']
@@ -56,7 +57,16 @@ const existing_reclamations = (db: Database, table: string): Map<string, JsonRow
   )
 }
 
+const HISTORIZED_RECLAMATION_FIELDS = [
+  'dernier_evenement_le',
+  'dernier_evenement_type',
+  'dernier_evenement_contenu',
+  'email_collaborateur_en_charge',
+  'unite_organisationnelle_en_charge_hierarchie'
+] as const
+
 const to_sql_value = (column: string, value: unknown): string | number | null => {
+  if (isHierarchyColumn(column)) return normalizeHierarchyValue(value)
   if (is_code_postal_column(column)) return normalize_code_postal(value)
   if (is_keep_as_text_column(column)) return stringify_identifier(value)
   if (value == null) return null
@@ -65,19 +75,18 @@ const to_sql_value = (column: string, value: unknown): string | number | null =>
 
 const emit_reclamation_changes = (
   db: Database,
-  previous: ReadonlyMap<string, JsonRow>,
-  rows: readonly JsonRow[]
+  previous: ReadonlyMap<string, DataRow>,
+  rows: readonly DataRow[]
 ): void => {
   if (previous.size === 0 || !table_exists(db, 'activites')) return
-  const ignored = new Set(['id_reclamation', 'id_locataire', 'id_lot'])
   const now = new Date().toISOString()
   for (const row of rows) {
     const id = row['id_reclamation']
     if (typeof id !== 'string' || !id) continue
     const before = previous.get(id)
     if (!before) continue
-    for (const field of new Set([...Object.keys(before), ...Object.keys(row)])) {
-      if (ignored.has(field) || Object.is(before[field], row[field])) continue
+    for (const field of HISTORIZED_RECLAMATION_FIELDS) {
+      if (Object.is(before[field], row[field])) continue
       const beforeValue =
         before[field] == null ||
         typeof before[field] === 'string' ||
@@ -115,17 +124,17 @@ const emit_reclamation_changes = (
 }
 
 /**
- * Atomically replaces a table with rows inferred from JSON objects.
+ * Atomically replaces a table with the supplied rows.
  *
  * The requested table replacement itself is synchronous, preserving immediate
  * SQLite errors for existing consumers. Callers importing a `code_postal` column
  * must await the returned promise, which resolves only after the postal reference
  * has also been rebuilt.
  */
-export const import_json_rows = (
+export const import_rows = (
   db: Database,
   table_name: string,
-  rows: JsonRow[],
+  rows: DataRow[],
   options: {
     columns?: string[]
     transaction?: boolean

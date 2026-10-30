@@ -1,10 +1,10 @@
 import { sql_date_key, sql_money_cents } from '../sql-normalization'
 import {
-  CONTACTS_TABLE,
   COMPTES_LOCATAIRES_TABLE,
   COMPUTED_LEDGER_COLUMNS,
-  LOTS_TABLE,
-  type LedgerColumnMeta
+  CONTACTS_TABLE,
+  type LedgerColumnMeta,
+  LOTS_TABLE
 } from './schema'
 
 export const non_empty_locataire = `"id_locataire" IS NOT NULL AND TRIM(CAST("id_locataire" AS TEXT)) != ''`
@@ -163,16 +163,7 @@ export const build_ledger_view_sql = (
   }
   if (join_contacts && has_phone) {
     joins += `
-  LEFT JOIN "${CONTACTS_TABLE}" tel_c ON tel_c.value = lm."telephone_client"
-    OR tel_c.value = CASE
-      WHEN replace(replace(replace(replace(lm."telephone_client", ' ', ''), '.', ''), '-', ''), '/', '')
-        LIKE '0%'
-      THEN '+33' || substr(
-        replace(replace(replace(replace(lm."telephone_client", ' ', ''), '.', ''), '-', ''), '/', ''),
-        2
-      )
-      ELSE replace(replace(replace(replace(lm."telephone_client", ' ', ''), '.', ''), '-', ''), '/', '')
-    END`
+  LEFT JOIN "${CONTACTS_TABLE}" tel_c ON tel_c.value = lm."telephone_client"`
   }
 
   return `

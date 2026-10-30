@@ -3,7 +3,6 @@ node_modules/
 desktop/node_modules/
 desktop/dist/
 desktop/out/
-desktop/perf/out/
 
 server/node_modules/
 server/datastores/
@@ -31,3 +30,5 @@ models/carl/checkpoints/
 server/models/carl/model.onnx
 
 server/models/carl/
+
+prototypes/

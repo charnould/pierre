@@ -3,10 +3,11 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { mkdir, rm } from 'node:fs/promises'
 
 import {
-  emptyBulkOperationDefinition,
-  type BulkOperationDefinition
+  type BulkOperationDefinition,
+  emptyBulkOperationDefinition
 } from '../../../../../shared/bulk-operations'
 import {
+  BulkOperationsError,
   create_bulk_operation,
   delete_bulk_operation,
   get_bulk_operation,
@@ -15,7 +16,8 @@ import {
 } from '../../../../utils/bulk/store'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import { setup } from '../../../../utils/setup'
-import { seedInstanceSetup } from '../../../seed-setup'
+import { writeSetup } from '../../../../utils/setup-store'
+import { repaymentSchedule, seedInstanceSetup } from '../../../seed-setup'
 
 const paths = testDatastorePaths('bulk_operations_store')
 
@@ -31,9 +33,19 @@ function seed_mouvements() {
     )
   `)
   db.run(
-    `INSERT INTO comptes_locataires VALUES ('LOC-1', 'CLI-1', 120, 'ada@exemple.fr', '0612345678')`
+    `INSERT INTO comptes_locataires VALUES ('LOC-1', 'CLI-1', 120, 'ada@exemple.fr', '+33612345678')`
   )
   db.close()
+}
+
+const insert_job = (bulkOperationId: string, status = 'in_progress') => {
+  using db = new Database(paths.database)
+  db.run(
+    `INSERT INTO bulk_jobs (
+       id, bulk_operation_id, execution_id, item_id, source, mode, report_status, payload
+     ) VALUES (?, ?, ?, ?, 'comptes_locataires', 'send', ?, '{}')`,
+    [Bun.randomUUIDv7(), bulkOperationId, Bun.randomUUIDv7(), Bun.randomUUIDv7(), status]
+  )
 }
 
 const definition = {
@@ -146,5 +158,70 @@ describe('bulk store', () => {
         }
       ]
     })
+  })
+
+  it('verrouille seulement une modification réelle de définition pendant un run actif', () => {
+    const created = create_bulk_operation('alice', body)
+    insert_job(created.id)
+
+    let conflict: unknown
+    try {
+      update_bulk_operation(created.id, 'bob', {
+        definition: { ...definition, amountRange: { from: '10' } }
+      })
+    } catch (error) {
+      conflict = error
+    }
+    expect(conflict).toBeInstanceOf(BulkOperationsError)
+    expect((conflict as BulkOperationsError).code).toBe('conflict')
+
+    expect(update_bulk_operation(created.id, 'bob', { name: 'Nouveau nom' }).name).toBe(
+      'Nouveau nom'
+    )
+    expect(update_bulk_operation(created.id, 'bob', { definition }).definition).toEqual(definition)
+
+    using db = new Database(paths.database)
+    db.run("UPDATE bulk_jobs SET report_status = 'ok' WHERE bulk_operation_id = ?", [created.id])
+    expect(
+      update_bulk_operation(created.id, 'bob', {
+        definition: { ...definition, amountRange: { from: '10' } }
+      }).definition.amountRange
+    ).toEqual({ from: '10' })
+  })
+
+  it('relit une définition valide après une évolution du catalogue', async () => {
+    const taggedDefinition = { ...definition, requiredTags: ['décès'] }
+    const created = create_bulk_operation('alice', {
+      ...body,
+      definition: taggedDefinition
+    })
+
+    await writeSetup(
+      'repayment',
+      new TextEncoder().encode(
+        JSON.stringify({
+          buckets: [
+            { id: 'non_traites', label: 'Non traités' },
+            { id: 'amiable', label: 'Amiable' },
+            { id: 'clients_partis', label: 'Partis' }
+          ],
+          actions: {
+            dossier: ['Analyser le dossier'],
+            bulk_operations: ['Envoyer un RCS de relance']
+          },
+          tags: ['+65 ans', 'Redémarrage APL'],
+          template_groups: ['RCS'],
+          templates: ['note.md'],
+          create_plan: { schedule: repaymentSchedule }
+        })
+      )
+    )
+
+    expect(get_bulk_operation(created.id)?.definition.requiredTags).toEqual(['décès'])
+    expect(() =>
+      update_bulk_operation(created.id, 'bob', {
+        definition: { ...taggedDefinition, requiredTags: ['tag_inconnu'] }
+      })
+    ).toThrow()
   })
 })

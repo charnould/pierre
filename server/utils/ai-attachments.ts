@@ -1,14 +1,13 @@
 import { existsSync, mkdirSync, readdirSync, rmSync, unlinkSync } from 'node:fs'
-import { extname, isAbsolute, relative, resolve, sep } from 'node:path'
+import { dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path'
 
 import {
   ATTACHMENT_IMAGE_EXTENSIONS,
   ATTACHMENT_TEXT_EXTENSIONS,
-  MAX_ATTACHMENT_FILES,
-  MAX_ATTACHMENT_FILE_BYTES,
-  MAX_ATTACHMENT_TOTAL_BYTES,
   isSupportedAttachment,
-  needsDocumentExtract,
+  MAX_ATTACHMENT_FILE_BYTES,
+  MAX_ATTACHMENT_FILES,
+  MAX_ATTACHMENT_TOTAL_BYTES,
   unsupportedAttachmentDescription
 } from '../../shared/attachment-extensions'
 
@@ -28,7 +27,7 @@ export type PiImageContent = {
 export type ProcessedPiAttachments = {
   images: PiImageContent[]
   content: string
-  /** Conversation id used as the staging directory name under `_uploads/`. */
+  /** Conversation id owning the workspace where files are staged. */
   uploadId: string | null
   /** Authoritative conversation quota after this request. */
   usage?: { files: number; bytes: number }
@@ -42,9 +41,10 @@ const DEFAULT_ATTACHMENT_PROMPT =
   'Analyse les pièces jointes fournies et réponds en français en t’appuyant sur leur contenu.'
 
 const STAGED_FILES_INSTRUCTION =
-  'Les fichiers suivants sont dans ton répertoire de travail (/knowledge) et restent disponibles pour toute la conversation. Pour les analyser : utilise `read` pour les images ; pour tout autre document joint, exécute `document-extract <chemin>` via bash (ex. `document-extract _uploads/…/facture.pdf`).'
+  'Les fichiers suivants sont dans ton espace de travail (/work) et restent disponibles pour toute la conversation. Utilise `read` pour les images, `document-extract <chemin>` pour les PDF et documents Office, et `rg`, `jq`, `sqlite3` ou Python pour les fichiers texte, CSV et JSON.'
 
 const MAX_INLINE_IMAGE_BYTES = 4.5 * 1024 * 1024
+const MAX_INLINE_TEXT_BYTES = 64 * 1024
 
 export const MAX_MULTIPART_REQUEST_BYTES = 22 * 1024 * 1024
 
@@ -210,7 +210,7 @@ function containedPath(root: string, ...segments: string[]): string {
 }
 
 function conversationStagingDir(uploadRoot: string, convId: string): string {
-  return containedPath(uploadRoot, assertCanonicalConversationId(convId))
+  return containedPath(uploadRoot, assertCanonicalConversationId(convId), '_uploads')
 }
 
 function uniqueStagedName(stagingDir: string, requestedName: string): string {
@@ -330,14 +330,14 @@ async function readImageForPi(inputPath: string, file: File, ext: string): Promi
 function buildAttachmentPrompt(
   userMessage: string,
   fileBlocks: string[],
-  hasStagedDocuments: boolean
+  hasStagedFiles: boolean
 ): string {
   const trimmed = userMessage.trim()
   const intro = trimmed || (fileBlocks.length > 0 ? DEFAULT_ATTACHMENT_PROMPT : '')
 
   const parts: string[] = []
   if (intro) parts.push(intro)
-  if (hasStagedDocuments) parts.push(STAGED_FILES_INSTRUCTION)
+  if (hasStagedFiles) parts.push(STAGED_FILES_INSTRUCTION)
   if (fileBlocks.length > 0) parts.push(fileBlocks.join('\n'))
 
   return parts.join('\n\n')
@@ -352,12 +352,11 @@ function buildExistingUploadsPrompt(
   const staged = listConversationUploads(uploadRoot, convKey)
   if (staged.length === 0) return null
 
-  const fileBlocks = staged.map((name) => `<file name="_uploads/${convKey}/${name}"></file>`)
-  const hasStagedDocuments = staged.some((name) => needsDocumentExtract(name))
+  const fileBlocks = staged.map((name) => `<file name="_uploads/${name}"></file>`)
 
   return {
     images: [],
-    content: buildAttachmentPrompt(userMessage, fileBlocks, hasStagedDocuments),
+    content: buildAttachmentPrompt(userMessage, fileBlocks, true),
     uploadId: convKey,
     claim() {},
     async rollback() {}
@@ -378,7 +377,7 @@ function emptyProcessedAttachments(content: string): ProcessedPiAttachments {
  * Prepares uploaded files for Pi RPC:
  * - raster images (png/jpeg/gif/webp) → `images` (base64, Pi vision format)
  * - text files → inlined in the prompt (`<file>…</file>`)
- * - PDF / Office → staged under `knowledge/_uploads/<conv_id>/` for Pi tools
+ * - PDF / Office → staged under the conversation workspace `_uploads/` for Pi tools
  *
  * Files persist for the lifetime of the conversation VM and are removed when the VM is released.
  */
@@ -441,7 +440,7 @@ export async function processUploadedAttachments(
     const images: PiImageContent[] = []
     const fileBlocks: string[] = []
     const writtenPaths: string[] = []
-    let hasStagedDocuments = false
+    let hasStagedFiles = false
 
     const removeWrittenFiles = () => {
       for (const path of writtenPaths) {
@@ -456,6 +455,12 @@ export async function processUploadedAttachments(
         try {
           rmSync(stagingDir, { recursive: true, force: true })
         } catch {}
+        const workspace = dirname(stagingDir)
+        if (existsSync(workspace) && readdirSync(workspace).length === 0) {
+          try {
+            rmSync(workspace, { recursive: true, force: true })
+          } catch {}
+        }
       }
     }
 
@@ -463,7 +468,7 @@ export async function processUploadedAttachments(
       for (const { file, buffer, requestedName, existingName } of preparedFiles) {
         const safeName = existingName ?? uniqueStagedName(stagingDir, requestedName)
         const stagedPath = containedPath(stagingDir, safeName)
-        const vmRelativePath = `_uploads/${stagingKey}/${safeName}`
+        const vmRelativePath = `_uploads/${safeName}`
 
         if (!existingName) {
           writtenPaths.push(stagedPath)
@@ -473,8 +478,13 @@ export async function processUploadedAttachments(
         const ext = fileExtension(safeName)
 
         if (ATTACHMENT_TEXT_EXTENSIONS.has(ext) || file.type.startsWith('text/')) {
-          const text = await Bun.file(stagedPath).text()
-          fileBlocks.push(`<file name="${vmRelativePath}">\n${text}\n</file>`)
+          if (file.size <= MAX_INLINE_TEXT_BYTES) {
+            const text = await Bun.file(stagedPath).text()
+            fileBlocks.push(`<file name="${vmRelativePath}">\n${text}\n</file>`)
+          } else {
+            hasStagedFiles = true
+            fileBlocks.push(`<file name="${vmRelativePath}"></file>`)
+          }
           continue
         }
 
@@ -489,7 +499,7 @@ export async function processUploadedAttachments(
           continue
         }
 
-        hasStagedDocuments = true
+        hasStagedFiles = true
         fileBlocks.push(`<file name="${vmRelativePath}"></file>`)
       }
     } catch (error) {
@@ -501,7 +511,7 @@ export async function processUploadedAttachments(
     let rolledBack = false
     return {
       images,
-      content: buildAttachmentPrompt(userMessage, fileBlocks, hasStagedDocuments),
+      content: buildAttachmentPrompt(userMessage, fileBlocks, hasStagedFiles),
       uploadId: stagingKey,
       usage,
       claim() {
@@ -517,15 +527,16 @@ export async function processUploadedAttachments(
 }
 
 /** Removes all staged uploads for a conversation. Called when the conversation VM is destroyed. */
-export async function cleanupConversationUploads(
-  uploadRoot: string,
+export async function cleanupConversationWorkspace(
+  workspacesRoot: string,
   convId: string
 ): Promise<void> {
-  const stagingDir = conversationStagingDir(uploadRoot, convId)
+  const workspace = containedPath(workspacesRoot, assertCanonicalConversationId(convId))
+  const stagingDir = conversationStagingDir(workspacesRoot, convId)
   await withStagingLock(stagingDir, async () => {
-    if (!existsSync(stagingDir)) return
+    if (!existsSync(workspace)) return
     try {
-      rmSync(stagingDir, { recursive: true, force: true })
+      rmSync(workspace, { recursive: true, force: true })
     } catch {}
   })
 }

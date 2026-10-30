@@ -7,11 +7,11 @@ import {
   completeKnowledgeBuild,
   createKnowledgeBuild,
   failInterruptedKnowledgeBuilds,
-  flattenKnowledgeEntries,
   getKnowledgeBuild,
   getKnowledgeCatalogSnapshot,
   insertKnowledgeSource,
   isKnowledgeEntryAssigned,
+  knowledgeProjections,
   knowledgePublishTargets,
   listKnowledgeBuilds,
   listKnowledgeSources,
@@ -46,6 +46,15 @@ describe('knowledge catalog', () => {
 
     expect(source.entries).toEqual([])
     expect(listKnowledgeSources()).toEqual([source])
+    const db = new Database(datastorePaths().database, { readonly: true })
+    const document = JSON.parse(
+      db.query<{ document: string }, []>('SELECT document FROM knowledge_records').get()!.document
+    )
+    db.close()
+    expect(document.storage_name).toBe('guide.md')
+    expect(document.original_name).toBe('Guide.md')
+    expect(document.file_type).toBe('md')
+    expect(document.storageName).toBeUndefined()
   })
 
   it('fingerprints only assigned build inputs and preserves the file hash on patch', () => {
@@ -69,7 +78,6 @@ describe('knowledge catalog', () => {
           title: 'Guide',
           sheet: null,
           sheetName: null,
-          headerRow: null,
           profileIds: ['default']
         }
       ],
@@ -93,7 +101,6 @@ describe('knowledge catalog', () => {
           title: 'travaux',
           sheet: null,
           sheetName: null,
-          headerRow: null,
           profileIds: []
         }
       ]
@@ -110,7 +117,7 @@ describe('knowledge catalog', () => {
         catalogFingerprint: 'built-snapshot',
         diagnostics: [],
         items: [],
-        mirrorTables: []
+        coreFingerprint: null
       })?.catalogFingerprint
     ).toBe('built-snapshot')
     expect(getKnowledgeBuild(build.id)?.catalogFingerprint).toBe('built-snapshot')
@@ -142,7 +149,6 @@ describe('knowledge catalog', () => {
           title: 'Guide CAF',
           sheet: null,
           sheetName: null,
-          headerRow: null,
           profileIds: ['default']
         }
       ],
@@ -157,7 +163,6 @@ describe('knowledge catalog', () => {
             title: 'Guide CÀF',
             sheet: null,
             sheetName: null,
-            headerRow: null,
             profileIds: ['default']
           }
         ],
@@ -184,7 +189,6 @@ describe('knowledge catalog', () => {
             title: 'Reclamations',
             sheet: 0,
             sheetName: 'Reclamations',
-            headerRow: 0,
             profileIds: ['default']
           }
         ],
@@ -210,14 +214,12 @@ describe('knowledge catalog', () => {
             title: 'Premier',
             sheet: 0,
             sheetName: 'Données',
-            headerRow: 0,
             profileIds: []
           },
           {
             title: 'Second',
             sheet: 1,
             sheetName: 'données',
-            headerRow: 0,
             profileIds: []
           }
         ],
@@ -237,8 +239,8 @@ describe('knowledge catalog', () => {
   })
 
   it('allows only one active build lease', () => {
-    createKnowledgeBuild('manual', null, [], 'process-a')
-    expect(() => createKnowledgeBuild('cron', null, [], 'process-b')).toThrow()
+    createKnowledgeBuild('manual', null, 'process-a')
+    expect(() => createKnowledgeBuild('cron', null, 'process-b')).toThrow()
   })
 
   it('purges terminal builds older than 30 days', () => {
@@ -246,7 +248,7 @@ describe('knowledge catalog', () => {
     const db = new Database(datastorePaths().database)
     db.run(
       `UPDATE knowledge_records
-       SET created_at = ?, document = json_set(document, '$.status', 'succeeded', '$.finishedAt', ?)
+       SET created_at = ?, document = json_set(document, '$.status', 'succeeded', '$.finished_at', ?)
        WHERE id = ?`,
       ['2020-01-01T00:00:00.000Z', '2020-01-01T00:00:01.000Z', build.id]
     )
@@ -256,7 +258,7 @@ describe('knowledge catalog', () => {
     expect(listKnowledgeBuilds()).toEqual([])
   })
 
-  it('reads catalog entries that still persist a leftover url', () => {
+  it('rejects a source document stored with camelCase keys', () => {
     const now = new Date().toISOString()
     const db = new Database(datastorePaths().database)
     db.run(
@@ -275,9 +277,8 @@ describe('knowledge catalog', () => {
               title: 'Guide',
               sheet: null,
               sheetName: null,
-              headerRow: null,
-              url: 'https://example.org/guide',
-              profileIds: []
+              profileIds: [],
+              moduleIds: []
             }
           ]
         }),
@@ -287,14 +288,7 @@ describe('knowledge catalog', () => {
     )
     db.close()
 
-    expect(listKnowledgeSources()[0]?.entries[0]).toEqual({
-      title: 'Guide',
-      sheet: null,
-      sheetName: null,
-      headerRow: null,
-      profileIds: [],
-      moduleIds: []
-    })
+    expect(() => listKnowledgeSources()).toThrow()
   })
 
   it('publishes a module into its prompt database and ignores modules without one', () => {
@@ -302,7 +296,6 @@ describe('knowledge catalog', () => {
       title: 'Guide',
       sheet: null,
       sheetName: null,
-      headerRow: null,
       profileIds: [] as string[],
       moduleIds: ['about' as const]
     }
@@ -348,7 +341,6 @@ describe('knowledge catalog', () => {
           title: 'Guide CAF',
           sheet: null,
           sheetName: null,
-          headerRow: null,
           profileIds: [],
           moduleIds: ['about']
         }
@@ -363,7 +355,6 @@ describe('knowledge catalog', () => {
             title: 'Guide CÀF',
             sheet: null,
             sheetName: null,
-            headerRow: null,
             profileIds: [],
             moduleIds: ['about']
           }
@@ -384,7 +375,6 @@ describe('knowledge catalog', () => {
               title: 'Guide CAF',
               sheet: null,
               sheetName: null,
-              headerRow: null,
               profileIds: [],
               moduleIds: ['about']
             }
@@ -396,12 +386,12 @@ describe('knowledge catalog', () => {
 
     const snapshot = getKnowledgeCatalogSnapshot()
     expect(
-      flattenKnowledgeEntries(snapshot, known)
+      knowledgeProjections(snapshot, known)
         .map((entry) => entry.access)
         .sort()
     ).toEqual(['about'])
     expect(
-      flattenKnowledgeEntries(
+      knowledgeProjections(
         {
           ...snapshot,
           sources: snapshot.sources.map((source) => ({
