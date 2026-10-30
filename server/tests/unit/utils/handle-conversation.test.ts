@@ -13,7 +13,6 @@ const config: ChatbotConfig = {
   display: 'PIERRE',
   enabled: true,
   community_knowledge: true,
-  reasoning_effort: 'medium',
   trace: 'none',
   attachments: false,
   greetings: ['Bonjour'],
@@ -34,50 +33,47 @@ afterAll(async () => {
 })
 
 describe('save_reply', () => {
-  it('stores a chatbot reply once with serialized metadata', async () => {
-    setSystemTime(new Date('2012-12-12T12:05:00Z'))
-    const context = await AIContext.parseAsync({
+  it('stores each turn on one conversation row', async () => {
+    setSystemTime(new Date('2012-12-12T12:05:00.000Z'))
+    const user = await AIContext.parseAsync({
+      conv_id: 'c1',
+      config,
+      role: 'user',
+      content: 'Bonjour',
+      user_email: 'alice@example.org',
+      custom_data: { raw: [] }
+    })
+    const assistant = await AIContext.parseAsync({
       conv_id: 'c1',
       config,
       role: 'assistant',
       content: 'Je suis Pierre !',
-      metadata: { user: 'alice@example.org', topics: 'présentation' },
+      user_email: 'alice@example.org',
       custom_data: { raw: ['julie', '456.56'] }
     })
 
-    await save_reply(context)
-    await save_reply(context)
+    await save_reply(user)
+    setSystemTime(new Date('2012-12-12T12:05:01.000Z'))
+    await save_reply(assistant)
+    await save_reply(assistant)
 
     using db = new Database(paths.database)
-    const rows = db
-      .query<
-        {
-          conv_id: string
-          config: string
-          role: string
-          timestamp: string
-          content: string
-          metadata: string
-        },
-        []
-      >(
-        `SELECT conv_id, config, role, timestamp, content, metadata
-         FROM conversations`
+    const row = db
+      .query<{ conv_id: string; config_id: string; user_email: string; messages: string }, []>(
+        'SELECT conv_id, config_id, user_email, messages FROM conversations'
       )
-      .all()
-
-    expect(rows).toHaveLength(1)
-    expect(rows[0]).toMatchObject({
+      .get()
+    expect(row).toMatchObject({
       conv_id: 'c1',
-      config: 'default',
-      role: 'assistant',
-      timestamp: '2012-12-12T12:05:00Z',
-      content: 'Je suis Pierre !'
+      config_id: 'default',
+      user_email: 'alice@example.org'
     })
-    expect(JSON.parse(rows[0]!.metadata)).toMatchObject({
-      user: 'alice@example.org',
-      topics: 'présentation'
-    })
+    const messages = JSON.parse(row!.messages) as Array<{ role: string; content: string }>
+    expect(messages.map(({ role, content }) => ({ role, content }))).toEqual([
+      { role: 'user', content: 'Bonjour' },
+      { role: 'assistant', content: 'Je suis Pierre !' },
+      { role: 'assistant', content: 'Je suis Pierre !' }
+    ])
   })
 
   it('ignores contexts that only carry a config id', async () => {

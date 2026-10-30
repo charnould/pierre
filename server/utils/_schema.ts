@@ -1,7 +1,7 @@
 import { z } from 'zod/v4'
 
 import { TRACE_MODES } from '../../shared/chat'
-import { isBusinessModuleId, type BusinessModuleId } from '../../shared/modules'
+import { type BusinessModuleId, isBusinessModuleId } from '../../shared/modules'
 
 const BusinessModuleIdSchema = z.custom<BusinessModuleId>(isBusinessModuleId)
 
@@ -16,7 +16,6 @@ const AgentFields = {
   id: z.string(),
   display: z.string(),
   community_knowledge: z.boolean(),
-  reasoning_effort: z.enum(['low', 'medium', 'high']),
   trace: z.enum(TRACE_MODES)
 }
 
@@ -71,49 +70,12 @@ export function chatbotSiteFields(config: ChatbotConfig): {
 
 //
 // Reflects datastore database schema
-export const Reply = z.object({
-  // Globals
+const Reply = z.object({
   conv_id: z.string(),
   config: ChatbotConfig,
   role: z.enum(['assistant', 'user', 'system']).default('user'),
-  timestamp: z.iso.datetime({ offset: true }).nullish().default(null),
   content: z.string(),
-  metadata: z
-    .object({
-      user: z.string().trim().toLowerCase().nullish().default(null),
-      topics: z.string().trim().toLowerCase().nullish().default(null),
-      evaluation: z
-        .object({
-          customer: z
-            .object({
-              score: z.coerce.number().nullish().default(null).catch(null),
-              comment: z.string().nullish().default(null)
-            })
-            .prefault({}),
-          organization: z
-            .object({
-              score: z.coerce.number().nullish().default(null).catch(null),
-              comment: z.string().nullish().default(null)
-            })
-            .prefault({}),
-          ai: z
-            .object({
-              score: z.coerce.number().nullish().default(null).catch(null),
-              comment: z.string().nullish().default(null)
-            })
-            .prefault({})
-        })
-        .prefault({}),
-      tokens: z
-        .object({
-          // cache : z.number().nullish().default(null),
-          prompt: z.number().nullish().default(null),
-          completion: z.number().nullish().default(null),
-          total: z.number().nullish().default(null)
-        })
-        .prefault({})
-    })
-    .prefault({})
+  user_email: z.string().trim().toLowerCase().nullish().default(null)
 })
 
 //
@@ -151,7 +113,6 @@ export const AIContext = z.object({
 //
 //
 export type User = z.infer<typeof User>
-export type Reply = z.infer<typeof Reply>
 export type DefaultChatbotConfig = z.infer<typeof DefaultChatbotConfig>
 export type InternalChatbotConfig = z.infer<typeof InternalChatbotConfig>
 export type ChatbotConfig = z.infer<typeof ChatbotConfig>

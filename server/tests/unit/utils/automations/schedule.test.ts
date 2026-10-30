@@ -9,6 +9,18 @@ import { compute_next_run_at } from '../../../../utils/automations/schedule'
 import { CreateAutomationBodySchema } from '../../../../utils/automations/schemas'
 
 describe('encodeScheduleToCron / decodeCronToSchedule', () => {
+  it('normalizes a time that includes seconds', () => {
+    const parsed = CreateAutomationBodySchema.safeParse({
+      type: 'report',
+      name: 'Heure',
+      frequency: 'daily',
+      frequencyTime: '08:30:00',
+      prompt: ''
+    })
+    expect(parsed.success).toBe(true)
+    if (parsed.success) expect(parsed.data.frequencyTime).toBe('08:30')
+  })
+
   it('rejects invalid days instead of silently defaulting them', () => {
     expect(
       CreateAutomationBodySchema.safeParse({
@@ -82,5 +94,19 @@ describe('compute_next_run_at', () => {
     const after = new Date('2026-07-27T11:00:00.000Z')
     const next = compute_next_run_at('0 8 * * *', 'America/Martinique', after)
     expect(next).toBe('2026-07-27T12:00:00.000Z')
+  })
+
+  it('skips the missing Paris spring-forward minute', () => {
+    const after = new Date('2026-03-29T00:00:00Z')
+    expect(compute_next_run_at('30 2 * * *', 'Europe/Paris', after)).toBe(
+      '2026-03-30T00:30:00.000Z'
+    )
+  })
+
+  it('matches the second Paris fall-back occurrence', () => {
+    const after = new Date('2026-10-25T00:31:00Z')
+    expect(compute_next_run_at('30 2 * * *', 'Europe/Paris', after)).toBe(
+      '2026-10-25T01:30:00.000Z'
+    )
   })
 })

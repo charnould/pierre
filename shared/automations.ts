@@ -6,7 +6,7 @@ export type AutomationLifecycleStatus = (typeof AUTOMATION_LIFECYCLE_STATUSES)[n
 const AUTOMATION_RUN_STATUSES = ['success', 'error'] as const
 export type AutomationRunStatus = (typeof AUTOMATION_RUN_STATUSES)[number]
 
-const AUTOMATION_TYPES = ['report', 'replies'] as const
+const AUTOMATION_TYPES = ['report'] as const
 export type AutomationType = (typeof AUTOMATION_TYPES)[number]
 
 export const AUTOMATION_FREQUENCIES = ['daily', 'weekly', 'monthly', 'yearly'] as const
@@ -44,27 +44,12 @@ const CRON_DOW_TO_DAY: Record<number, DayOfWeek> = {
   6: 'samedi'
 }
 
-type CompareOperator = 'gt' | 'gte' | 'lt' | 'lte'
-
-export type TicketFilterRule =
-  | { kind: 'values'; column: string; values: string[] }
-  | { kind: 'compare'; column: string; operator: CompareOperator; value: string }
-
-export type TicketAutomationFilters = { rules: TicketFilterRule[] }
-
 export type ReportAutomationConfig = {
   prompt: string
   maxReports: number
 }
 
-export type TicketReplyAutomationConfig = {
-  skillId: 'replies'
-  channel: 'email' | 'letter'
-  ticketFilters: TicketAutomationFilters
-  maxItems: number
-}
-
-export type AutomationConfig = ReportAutomationConfig | TicketReplyAutomationConfig
+export type AutomationConfig = ReportAutomationConfig
 
 /** Form schedule fields (UI) before encoding to cron. */
 export type AutomationScheduleForm = {
@@ -81,40 +66,28 @@ type AutomationRecordBase = {
   owner: string
   mentions: string[]
   cron: string
-  next_run_at: string | null
-  last_run_at: string | null
-  last_run_status: AutomationRunStatus | null
+  nextRunAt: string | null
+  lastRunAt: string | null
+  lastRunStatus: AutomationRunStatus | null
   pinned?: boolean
 }
 
-export type AutomationRecord =
-  | (AutomationRecordBase & { type: 'report'; config: ReportAutomationConfig })
-  | (AutomationRecordBase & { type: 'replies'; config: TicketReplyAutomationConfig })
+export type AutomationRecord = AutomationRecordBase & {
+  type: 'report'
+  config: ReportAutomationConfig
+}
 
-export type CreateAutomationBody =
-  | {
-      type: 'report'
-      name: string
-      description?: string
-      mentions?: string[]
-      frequency: AutomationFrequency
-      frequencyDay?: string
-      frequencyTime: string
-      prompt: string
-      maxReports?: number
-    }
-  | {
-      type: 'replies'
-      name: string
-      description?: string
-      mentions?: string[]
-      frequency: AutomationFrequency
-      frequencyDay?: string
-      frequencyTime: string
-      channel?: 'email' | 'letter'
-      ticketFilters?: TicketAutomationFilters
-      maxItems?: number
-    }
+export type CreateAutomationBody = {
+  type: 'report'
+  name: string
+  description?: string
+  mentions?: string[]
+  frequency: AutomationFrequency
+  frequencyDay?: string
+  frequencyTime: string
+  prompt: string
+  maxReports?: number
+}
 
 export type PatchAutomationBody = {
   name?: string
@@ -126,63 +99,6 @@ export type PatchAutomationBody = {
   frequencyTime?: string
   prompt?: string
   maxReports?: number
-  channel?: 'email' | 'letter'
-  ticketFilters?: TicketAutomationFilters
-  maxItems?: number
-}
-
-export type UserPreferences = {
-  pinned_automation_ids: string[]
-  /** Custom display name, or null to use email local-part (login). */
-  display_name: string | null
-}
-
-/** Max length for a persisted display name. */
-const DISPLAY_NAME_MAX = 80
-
-/** Trim + collapse spaces; empty → null; truncate to DISPLAY_NAME_MAX. */
-export function normalizeDisplayName(raw: unknown): string | null {
-  if (raw === null || raw === undefined) return null
-  if (typeof raw !== 'string') return null
-  const trimmed = raw.trim().replace(/\s+/g, ' ')
-  if (!trimmed) return null
-  return trimmed.slice(0, DISPLAY_NAME_MAX)
-}
-
-/** Whether a custom display name matches a reserved name, ignoring case and spacing. */
-export function isReservedDisplayName(raw: unknown, reservedName: unknown): boolean {
-  const displayName = normalizeDisplayName(raw)
-  const reserved = normalizeDisplayName(reservedName)
-  return (
-    displayName !== null &&
-    reserved !== null &&
-    displayName.toLowerCase() === reserved.toLowerCase()
-  )
-}
-
-export function parseUserPreferences(raw: unknown): UserPreferences {
-  const empty: UserPreferences = {
-    pinned_automation_ids: [],
-    display_name: null
-  }
-  if (raw == null || raw === '') return empty
-  try {
-    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
-    if (!parsed || typeof parsed !== 'object') return empty
-    const obj = parsed as {
-      pinned_automation_ids?: unknown
-      display_name?: unknown
-    }
-    const ids = Array.isArray(obj.pinned_automation_ids)
-      ? obj.pinned_automation_ids.filter((id): id is string => typeof id === 'string')
-      : []
-    return {
-      pinned_automation_ids: ids,
-      display_name: normalizeDisplayName(obj.display_name)
-    }
-  } catch {
-    return empty
-  }
 }
 
 function parseDailyDays(encoded: string | undefined): DayOfWeek[] {

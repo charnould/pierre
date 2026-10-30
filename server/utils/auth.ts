@@ -1,13 +1,12 @@
-import { Database } from 'bun:sqlite'
-
 import { betterAuth } from 'better-auth'
 
+import { openDatastore } from './datastore-db'
 import { datastorePaths } from './paths'
 
 const THIRTY_DAYS = 60 * 60 * 24 * 30
 const ONE_DAY = 60 * 60 * 24
 
-function serverBaseUrl(): string {
+export function serverBaseUrl(): string {
   if (Bun.env['NODE_ENV'] !== 'production') {
     return `http://localhost:${Bun.env['BUN_PORT'] ?? '3000'}`
   }
@@ -18,9 +17,11 @@ function serverBaseUrl(): string {
 
 function authSecret(): string {
   const secret = Bun.env['AUTH_SECRET']
-  if (!secret || secret.length < 32)
+  if (secret && secret.length >= 32) return secret
+  if (Bun.env['NODE_ENV'] === 'production') {
     throw new Error('AUTH_SECRET must contain at least 32 characters')
-  return secret
+  }
+  throw new Error('bun server:env')
 }
 
 const PASSWORD_HASH = {
@@ -31,8 +32,7 @@ const PASSWORD_HASH = {
 
 export const hashPassword = (password: string) => Bun.password.hash(password, PASSWORD_HASH)
 
-export const verifyPassword = (password: string, hash: string) =>
-  Bun.password.verify(password, hash)
+const verifyPassword = (password: string, hash: string) => Bun.password.verify(password, hash)
 
 function createAuth(databasePath: string) {
   const baseURL = serverBaseUrl()
@@ -41,7 +41,7 @@ function createAuth(databasePath: string) {
     appName: 'PIERRE',
     basePath: '/auth',
     baseURL,
-    database: new Database(databasePath),
+    database: openDatastore({ path: databasePath }),
     secret: authSecret(),
     trustedOrigins: [baseURL],
     emailAndPassword: {

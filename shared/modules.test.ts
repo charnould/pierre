@@ -11,6 +11,8 @@ describe('business module registry', () => {
   test('contains stable unique ids', () => {
     expect(new Set(BUSINESS_MODULE_IDS).size).toBe(BUSINESS_MODULE_IDS.length)
     expect(isBusinessModuleId('tickets')).toBe(true)
+    expect(isBusinessModuleId('insurance')).toBe(true)
+    expect(isBusinessModuleId('insurance-attestation')).toBe(false)
     expect(isBusinessModuleId('chat')).toBe(false)
   })
 

@@ -5,9 +5,9 @@ import { join } from 'node:path'
 import {
   activeAttachmentStagingLocks,
   assertAttachmentLimits,
-  cleanupConversationUploads,
-  MAX_ATTACHMENT_FILES,
+  cleanupConversationWorkspace,
   MAX_ATTACHMENT_FILE_BYTES,
+  MAX_ATTACHMENT_FILES,
   MAX_ATTACHMENT_TOTAL_BYTES,
   processUploadedAttachments
 } from '../../../utils/ai-attachments'
@@ -18,7 +18,7 @@ import {
 } from '../../../utils/vm-registry'
 
 const STAGED_INSTRUCTION =
-  'Les fichiers suivants sont dans ton répertoire de travail (/knowledge) et restent disponibles pour toute la conversation. Pour les analyser : utilise `read` pour les images ; pour tout autre document joint, exécute `document-extract <chemin>` via bash (ex. `document-extract _uploads/…/facture.pdf`).'
+  'Les fichiers suivants sont dans ton espace de travail (/work) et restent disponibles pour toute la conversation. Utilise `read` pour les images, `document-extract <chemin>` pour les PDF et documents Office, et `rg`, `jq`, `sqlite3` ou Python pour les fichiers texte, CSV et JSON.'
 
 const CONV_ID = '0198f1a0-7b6c-7000-8000-000000000001'
 
@@ -53,7 +53,9 @@ describe('processUploadedAttachments', () => {
       expect(result.content).toContain('Que dit le fichier ?')
       expect(result.content).toContain('ligne de test')
       expect(result.uploadId).toBe(CONV_ID)
-      expect(await Bun.file(join(knowledgePath, CONV_ID, 'note.txt')).exists()).toBe(true)
+      expect(await Bun.file(join(knowledgePath, CONV_ID, '_uploads', 'note.txt')).exists()).toBe(
+        true
+      )
     } finally {
       await removePath(knowledgePath)
     }
@@ -74,6 +76,24 @@ describe('processUploadedAttachments', () => {
     }
   })
 
+  it('stages large text instead of filling the model prompt', async () => {
+    const workspacesRoot = await createTempDir('pierre-workspaces-')
+    try {
+      const text = `secret-marker\n${'x'.repeat(70 * 1024)}`
+      const file = new File([text], 'export.csv', { type: 'text/csv' })
+      const result = await processUploadedAttachments([file], workspacesRoot, 'Analyse', CONV_ID)
+
+      expect(result.content).toContain(STAGED_INSTRUCTION)
+      expect(result.content).toContain('<file name="_uploads/export.csv"></file>')
+      expect(result.content).not.toContain('secret-marker')
+      expect(await Bun.file(join(workspacesRoot, CONV_ID, '_uploads', 'export.csv')).text()).toBe(
+        text
+      )
+    } finally {
+      await removePath(workspacesRoot)
+    }
+  })
+
   it('passes raster images through as base64 without staging instruction', async () => {
     const knowledgePath = await createTempDir('pierre-knowledge-')
     try {
@@ -88,7 +108,7 @@ describe('processUploadedAttachments', () => {
       expect(result.images[0]?.mimeType).toBe('image/png')
       expect(result.images[0]?.data.length).toBeGreaterThan(20)
       expect(result.content).toContain('Analyse les pièces jointes')
-      expect(result.content).toContain(`<file name="_uploads/${CONV_ID}/`)
+      expect(result.content).toContain(`<file name="_uploads/`)
       expect(result.content).toContain('pixel.png"></file>')
       expect(result.content).not.toContain('document-extract')
     } finally {
@@ -111,7 +131,9 @@ describe('processUploadedAttachments', () => {
       expect(result.content).toContain('Analyse ce PDF')
       expect(result.content).toContain(STAGED_INSTRUCTION)
       expect(result.content).toContain('facture.pdf"></file>')
-      expect(await Bun.file(join(knowledgePath, CONV_ID, 'facture.pdf')).exists()).toBe(true)
+      expect(await Bun.file(join(knowledgePath, CONV_ID, '_uploads', 'facture.pdf')).exists()).toBe(
+        true
+      )
     } finally {
       await removePath(knowledgePath)
     }
@@ -128,7 +150,9 @@ describe('processUploadedAttachments', () => {
       expect(result.images).toHaveLength(0)
       expect(result.content).toContain(STAGED_INSTRUCTION)
       expect(result.content).toContain('slides.pptx"></file>')
-      expect(await Bun.file(join(knowledgePath, CONV_ID, 'slides.pptx')).exists()).toBe(true)
+      expect(await Bun.file(join(knowledgePath, CONV_ID, '_uploads', 'slides.pptx')).exists()).toBe(
+        true
+      )
     } finally {
       await removePath(knowledgePath)
     }
@@ -156,9 +180,15 @@ describe('processUploadedAttachments', () => {
       expect(result.content).toContain('budget.xls"></file>')
       expect(result.content).toContain('budget.xlsm"></file>')
       expect(result.content).toContain('budget.xlsb"></file>')
-      expect(await Bun.file(join(knowledgePath, CONV_ID, 'budget.xls')).exists()).toBe(true)
-      expect(await Bun.file(join(knowledgePath, CONV_ID, 'budget.xlsm')).exists()).toBe(true)
-      expect(await Bun.file(join(knowledgePath, CONV_ID, 'budget.xlsb')).exists()).toBe(true)
+      expect(await Bun.file(join(knowledgePath, CONV_ID, '_uploads', 'budget.xls')).exists()).toBe(
+        true
+      )
+      expect(await Bun.file(join(knowledgePath, CONV_ID, '_uploads', 'budget.xlsm')).exists()).toBe(
+        true
+      )
+      expect(await Bun.file(join(knowledgePath, CONV_ID, '_uploads', 'budget.xlsb')).exists()).toBe(
+        true
+      )
     } finally {
       await removePath(knowledgePath)
     }
@@ -196,8 +226,10 @@ describe('processUploadedAttachments', () => {
 
       expect(followUp.content).toContain('Et la page 2 ?')
       expect(followUp.content).toContain(STAGED_INSTRUCTION)
-      expect(followUp.content).toContain(`<file name="_uploads/${CONV_ID}/facture.pdf"></file>`)
-      expect(await Bun.file(join(knowledgePath, CONV_ID, 'facture.pdf')).exists()).toBe(true)
+      expect(followUp.content).toContain(`<file name="_uploads/facture.pdf"></file>`)
+      expect(await Bun.file(join(knowledgePath, CONV_ID, '_uploads', 'facture.pdf')).exists()).toBe(
+        true
+      )
     } finally {
       await removePath(knowledgePath)
     }
@@ -217,7 +249,9 @@ describe('processUploadedAttachments', () => {
 
       expect(initial.usage).toEqual(retry.usage)
       expect(retry.usage?.files).toBe(MAX_ATTACHMENT_FILES)
-      expect(readdirSync(join(knowledgePath, CONV_ID))).toHaveLength(MAX_ATTACHMENT_FILES)
+      expect(readdirSync(join(knowledgePath, CONV_ID, '_uploads'))).toHaveLength(
+        MAX_ATTACHMENT_FILES
+      )
       expect(retry.content).toContain('Réessaie')
       expect(retry.content).toContain('content-0')
     } finally {
@@ -225,13 +259,13 @@ describe('processUploadedAttachments', () => {
     }
   })
 
-  it('cleanupConversationUploads removes the conversation staging directory', async () => {
+  it('cleanupConversationWorkspace removes the conversation staging directory', async () => {
     const knowledgePath = await createTempDir('pierre-knowledge-')
     try {
       const file = new File(['%PDF-1.4 fake'], 'facture.pdf', { type: 'application/pdf' })
       await processUploadedAttachments([file], knowledgePath, 'Analyse', CONV_ID)
 
-      await cleanupConversationUploads(knowledgePath, CONV_ID)
+      await cleanupConversationWorkspace(knowledgePath, CONV_ID)
 
       expect(await Bun.file(join(knowledgePath, CONV_ID)).exists()).toBe(false)
     } finally {
@@ -265,7 +299,7 @@ describe('processUploadedAttachments', () => {
       await Bun.write(victimPath, 'keep')
 
       await expect(
-        cleanupConversationUploads(uploadRoot, `../${victimDir.split('/').pop()}`)
+        cleanupConversationWorkspace(uploadRoot, `../${victimDir.split('/').pop()}`)
       ).rejects.toThrow('conv_id must be a canonical UUID')
       expect(await Bun.file(victimPath).exists()).toBe(true)
     } finally {
@@ -311,8 +345,10 @@ describe('processUploadedAttachments', () => {
         )
       ])
 
-      expect(await Bun.file(join(uploadRoot, CONV_ID, 'same.txt')).exists()).toBe(true)
-      expect(await Bun.file(join(uploadRoot, CONV_ID, 'same-2.txt')).exists()).toBe(true)
+      expect(await Bun.file(join(uploadRoot, CONV_ID, '_uploads', 'same.txt')).exists()).toBe(true)
+      expect(await Bun.file(join(uploadRoot, CONV_ID, '_uploads', 'same-2.txt')).exists()).toBe(
+        true
+      )
       expect(activeAttachmentStagingLocks()).toBe(0)
       first.claim()
       second.claim()
@@ -323,7 +359,7 @@ describe('processUploadedAttachments', () => {
 
   it('enforces cumulative count and byte quotas under concurrent requests', async () => {
     const uploadRoot = await createTempDir('pierre-uploads-')
-    const stagingDir = join(uploadRoot, CONV_ID)
+    const stagingDir = join(uploadRoot, CONV_ID, '_uploads')
     try {
       expect(await Bun.spawn(['mkdir', '-p', stagingDir]).exited).toBe(0)
       for (let index = 0; index < MAX_ATTACHMENT_FILES - 1; index++) {
@@ -392,8 +428,12 @@ describe('processUploadedAttachments', () => {
       )
       await pending.rollback()
 
-      expect(await Bun.file(join(uploadRoot, CONV_ID, 'existing.txt')).text()).toBe('keep')
-      expect(await Bun.file(join(uploadRoot, CONV_ID, 'pending.txt')).exists()).toBe(false)
+      expect(await Bun.file(join(uploadRoot, CONV_ID, '_uploads', 'existing.txt')).text()).toBe(
+        'keep'
+      )
+      expect(await Bun.file(join(uploadRoot, CONV_ID, '_uploads', 'pending.txt')).exists()).toBe(
+        false
+      )
       expect(activeAttachmentStagingLocks()).toBe(0)
     } finally {
       await removePath(uploadRoot)
@@ -411,7 +451,7 @@ describe('processUploadedAttachments', () => {
         'pending',
         CONV_ID
       )
-      const stagingPath = join(uploadRoot, CONV_ID)
+      const stagingPath = join(uploadRoot, CONV_ID, '_uploads')
       const inodeBefore = (await Bun.file(stagingPath).stat()).ino
 
       await new Promise<void>((resolve) => {

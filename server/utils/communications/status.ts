@@ -1,11 +1,12 @@
 import type { Database } from 'bun:sqlite'
 
 import {
-  type Activite,
-  activity_timestamp,
-  is_communication_opened_type
-} from '../../../shared/activites'
-import { get_activity_with_db, insert_activity_row, type ActivityDbRow } from '../activities/rows'
+  type Activity,
+  activityTimestamp,
+  isCommunicationOpenedType
+} from '../../../shared/activities'
+import { parseCommunicationStatusContent } from '../../../shared/activity-content'
+import { type ActivityDbRow, get_activity_with_db, insert_activity_row } from '../activities/rows'
 import { CommunicationsError } from './storage'
 
 const FAILURE_STATUSES = new Set([
@@ -20,7 +21,11 @@ const FAILURE_STATUSES = new Set([
 ])
 
 export const is_communication_status = (_medium: string, status: string): boolean =>
-  status === 'sent' || status === 'delivered' || status === 'read' || FAILURE_STATUSES.has(status)
+  status === 'sent' ||
+  status === 'delivered' ||
+  status === 'read' ||
+  status === 'opened' ||
+  FAILURE_STATUSES.has(status)
 
 const is_outbound_author = (author: string): boolean =>
   author.startsWith('user:') ||
@@ -34,53 +39,74 @@ export type UpdateStatusInput = {
   statut: string
   reason?: string
   occurred_at: string
+  idempotency_key?: string
+  id_externe?: string
 }
 
-const latest_thread_event = (db: Database, thread_id: string): ActivityDbRow | null =>
+const next_sent_revision = (db: Database, thread_id: string, revision: number): number | null =>
   db
-    .query<ActivityDbRow, [string]>(
+    .query<{ revision: number }, [string, number]>(
+      `SELECT revision FROM activites
+       WHERE thread_id = ? AND type = 'communication.sent' AND revision > ?
+       ORDER BY revision LIMIT 1`
+    )
+    .get(thread_id, revision)?.revision ?? null
+
+const latest_attempt_event = (
+  db: Database,
+  thread_id: string,
+  revision: number
+): ActivityDbRow | null =>
+  db
+    .query<ActivityDbRow, [string, number]>(
       `SELECT * FROM activites
-       WHERE thread_id = ? AND type LIKE 'communication.%'
+       WHERE thread_id = ? AND revision >= ? AND type LIKE 'communication.%'
        ORDER BY revision DESC LIMIT 1`
     )
-    .get(thread_id) ?? null
+    .get(thread_id, revision) ?? null
 
 export const project_communication_status_with_db = (
   db: Database,
   input: UpdateStatusInput
 ): {
-  activity: Activite
+  activity: Activity
   projected: boolean
-  transition: { activity: Activite; status: string; occurredAt: string } | null
+  transition: { activity: Activity; status: string; occurredAt: string } | null
 } => {
   const occurred = new Date(input.occurred_at)
   if (Number.isNaN(occurred.getTime())) {
     throw new CommunicationsError('occurredAt invalide')
   }
-  const occurredAt = activity_timestamp(occurred)
+  const occurredAt = activityTimestamp(occurred)
   const existing = get_activity_with_db(db, input.activity_id)
   if (!existing) throw new CommunicationsError('Communication introuvable', 'not_found')
-  if (!is_communication_opened_type(existing.type) || !existing.thread_id || !existing.channel) {
+  if (!isCommunicationOpenedType(existing.type) || !existing.threadId || !existing.channel) {
     throw new CommunicationsError('Le medium ne correspond pas', 'invalid_body')
   }
   if (!is_outbound_author(existing.auteur)) {
     throw new CommunicationsError('Une communication entrante est immuable', 'forbidden')
   }
 
-  if (input.statut === 'sent') {
-    return {
-      activity: existing,
-      projected: false,
-      transition: { activity: existing, status: 'sent', occurredAt }
-    }
+  const sourceRevision = existing.revision ?? 1
+  if (next_sent_revision(db, existing.threadId, sourceRevision) != null) {
+    return { activity: existing, projected: false, transition: null }
   }
-
-  const latest = latest_thread_event(db, existing.thread_id)
+  const latest = latest_attempt_event(db, existing.threadId, sourceRevision)
   if (latest?.type === 'communication.failed') {
     return { activity: existing, projected: false, transition: null }
   }
-  if (latest?.type === 'communication.ok' && input.statut !== 'read') {
-    return { activity: existing, projected: false, transition: null }
+  const latestResult =
+    latest?.type === 'communication.ok'
+      ? parseCommunicationStatusContent(latest.contenu)?.result
+      : undefined
+  const followsDelivery = input.statut === 'read' || input.statut === 'opened'
+  const emailFailedAfterDelivery = existing.channel === 'email' && input.statut === 'failed'
+  if (latestResult) {
+    if (input.statut === 'sent') {
+      return { activity: existing, projected: false, transition: null }
+    } else if (latestResult !== 'sent' && !followsDelivery && !emailFailedAfterDelivery) {
+      return { activity: existing, projected: false, transition: null }
+    }
   }
 
   const failed = FAILURE_STATUSES.has(input.statut)
@@ -89,9 +115,19 @@ export const project_communication_status_with_db = (
     version: 2,
     ...(failed
       ? { reason: input.reason?.trim() || input.statut }
-      : { result: input.statut === 'read' ? 'read' : 'delivered' })
+      : {
+          result:
+            input.statut === 'sent'
+              ? 'sent'
+              : input.statut === 'read'
+                ? 'read'
+                : input.statut === 'opened'
+                  ? 'opened'
+                  : 'delivered'
+        })
   })
-  const idempotency_key = `${existing.thread_id}:${type}:${input.statut}:${occurredAt}`
+  const idempotency_key =
+    input.idempotency_key ?? `${existing.id}:${type}:${input.statut}:${occurredAt}`
   const duplicate = db
     .query<{ id: number }, [string]>('SELECT id FROM activites WHERE idempotency_key = ? LIMIT 1')
     .get(idempotency_key)
@@ -113,11 +149,12 @@ export const project_communication_status_with_db = (
     channel: existing.channel,
     mentions: [],
     contenu,
-    thread_id: existing.thread_id,
+    thread_id: existing.threadId,
     revision: (latest?.revision ?? existing.revision ?? 1) + 1,
-    bulk_id: existing.bulk_id,
-    execution_id: existing.execution_id,
-    idempotency_key
+    bulk_id: existing.bulkId,
+    execution_id: existing.executionId,
+    idempotency_key,
+    id_externe: input.id_externe ?? null
   })
   return {
     activity,

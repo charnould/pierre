@@ -1,32 +1,21 @@
-import { Database } from 'bun:sqlite'
-
-import {
-  type ActiviteListItem,
-  mention_of,
-  parse_activity_meta_content
-} from '../../../shared/activites'
+import { type ActivityListItem, mentionOf } from '../../../shared/activities'
+import { parseActivityMetaContent } from '../../../shared/activity-content'
+import { openDatastore } from '../datastore-db'
 import { sql_date_key } from '../sql-normalization'
-import { datastore_path, row_to_activity, type ActivityDbRow, user_destinataire } from './rows'
+import { type ActivityDbRow, row_to_activity, user_destinataire } from './rows'
 import { type ListActivitiesOptions } from './schema'
-
-const READ_SQL = `(
-  SELECT read_event.type FROM activites read_event
-  WHERE read_event.auteur = ?
-    AND read_event.type IN ('activity.read', 'activity.unread')
-    AND json_extract(read_event.contenu, '$.source_activity_id') = a.id
-  ORDER BY read_event.date_creation DESC, read_event.id DESC
-  LIMIT 1
-) = 'activity.read'`
 
 export const list_activities = (
   actor: string,
   options: ListActivitiesOptions = {}
-): ActiviteListItem[] => {
+): ActivityListItem[] => {
   const destinataire = actor.includes(':') ? actor : user_destinataire(actor)
-  const db = new Database(datastore_path(), { readonly: true })
+  const db = openDatastore({ readonly: true })
   try {
     const conditions: string[] = []
     const params: Array<string | number> = []
+    const ctes: string[] = []
+    let from = 'activites a'
     if (options.contexts) {
       if (options.contexts.length === 0) conditions.push('0 = 1')
       else {
@@ -46,9 +35,24 @@ export const list_activities = (
          )`
       )
       params.push(destinataire)
-      if (options.unread_only) {
-        conditions.push(`NOT ${READ_SQL}`)
-        params.push(destinataire)
+      if (options.unreadOnly) {
+        ctes.push(`latest_read AS (
+          SELECT source_id, type FROM (
+            SELECT json_extract(contenu, '$.source_activity_id') AS source_id,
+                   type,
+                   ROW_NUMBER() OVER (
+                     PARTITION BY json_extract(contenu, '$.source_activity_id')
+                     ORDER BY date_creation DESC, id DESC
+                   ) AS rn
+            FROM activites
+            WHERE auteur = ?
+              AND type IN ('activity.read', 'activity.unread')
+          )
+          WHERE rn = 1
+        )`)
+        params.unshift(destinataire)
+        from += ' LEFT JOIN latest_read read_state ON read_state.source_id = a.id'
+        conditions.push(`IFNULL(read_state.type, '') <> 'activity.read'`)
       }
     }
     if (options.auteurs?.length) {
@@ -66,16 +70,16 @@ export const list_activities = (
       conditions.push(`json_extract(a.contenu, '$.task.state') = ?`)
       params.push(options.state)
     }
-    if (options.current_threads) {
-      conditions.push(
-        `a.thread_id IS NOT NULL
-         AND a.type LIKE 'task.%'
-         AND a.revision = (
-           SELECT MAX(latest.revision)
-           FROM activites latest
-           WHERE latest.thread_id = a.thread_id AND latest.type LIKE 'task.%'
-         )`
-      )
+    if (options.currentThreads) {
+      ctes.push(`latest_task AS (
+        SELECT thread_id, MAX(revision) AS revision
+        FROM activites
+        WHERE thread_id IS NOT NULL AND type LIKE 'task.%'
+        GROUP BY thread_id
+      )`)
+      from +=
+        ' JOIN latest_task ON latest_task.thread_id = a.thread_id AND latest_task.revision = a.revision'
+      conditions.push(`a.thread_id IS NOT NULL AND a.type LIKE 'task.%'`)
     }
     if (options.assignee === 'me') {
       conditions.push(`lower(json_extract(a.contenu, '$.task.assignee.id')) = lower(?)`)
@@ -88,7 +92,7 @@ export const list_activities = (
       )
       params.push(destinataire)
     }
-    if (options.created_by === 'me') {
+    if (options.createdBy === 'me') {
       conditions.push(
         `EXISTS (
            SELECT 1 FROM activites created
@@ -110,25 +114,33 @@ export const list_activities = (
            json_extract(a.contenu, '$.task.due_date') ASC,
            ${sql_date_key('a.date_creation')} ASC, a.id ASC`
         : `${sql_date_key('a.date_creation')} DESC, a.id DESC`
-    params.push(options.limit ?? 100, options.offset ?? 0)
+    const limitSql = options.all ? '' : 'LIMIT ? OFFSET ?'
+    if (!options.all) params.push(options.limit ?? 100, options.offset ?? 0)
+    const withSql = ctes.length > 0 ? `WITH ${ctes.join(',\n')}` : ''
     const rows = db
       .query<ActivityDbRow, Array<string | number>>(
-        `SELECT a.* FROM activites a ${where}
+        `${withSql} SELECT a.* FROM ${from} ${where}
          ORDER BY ${order}
-         LIMIT ? OFFSET ?`
+         ${limitSql}`
       )
       .all(...params)
-    const metaRows = db
-      .query<ActivityDbRow, [string]>(
-        `SELECT * FROM activites
-         WHERE auteur = ? AND type IN ('activity.read', 'activity.unread', 'activity.reaction_changed')
-         ORDER BY date_creation ASC, id ASC`
-      )
-      .all(destinataire)
+    const pageIds = rows.map((row) => row.id)
+    const metaRows =
+      pageIds.length === 0
+        ? []
+        : db
+            .query<ActivityDbRow, Array<string | number>>(
+              `SELECT * FROM activites
+               WHERE auteur = ?
+                 AND type IN ('activity.read', 'activity.unread', 'activity.reaction_changed')
+                 AND json_extract(contenu, '$.source_activity_id') IN (${pageIds.map(() => '?').join(', ')})
+               ORDER BY date_creation ASC, id ASC`
+            )
+            .all(destinataire, ...pageIds)
     const reads = new Set<number>()
     const reactions = new Map<number, string | null>()
     for (const meta of metaRows) {
-      const content = parse_activity_meta_content(meta.contenu)
+      const content = parseActivityMetaContent(meta.contenu)
       if (!content) continue
       if (meta.type === 'activity.read') reads.add(content.source_activity_id)
       else if (meta.type === 'activity.unread') reads.delete(content.source_activity_id)
@@ -138,7 +150,7 @@ export const list_activities = (
       const activity = row_to_activity(row)
       return {
         ...activity,
-        my: mention_of(activity.mentions, destinataire),
+        my: mentionOf(activity.mentions, destinataire),
         read: reads.has(activity.id),
         reaction: reactions.get(activity.id) ?? null
       }

@@ -1,5 +1,0 @@
-**/dist/**
-**/*.js
-server/assets/dist/**
-docs/assets/**
-**/plans/**

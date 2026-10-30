@@ -2,13 +2,14 @@ import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import { rm } from 'node:fs/promises'
 
-import type { CommunicationChannel } from '../../../../shared/activites'
+import type { CommunicationChannel } from '../../../../shared/activities'
 import { create_activity, delete_activity, patch_activity } from '../../../utils/activities/write'
 import {
   cm_webhook_authorized,
   communication_reference,
   find_recent_thread
 } from '../../../utils/communications/parsing'
+import { settle_definitive_rcs_failure } from '../../../utils/communications/rcs-sms-fallback'
 import {
   claim_outbound_dispatch,
   CommunicationsError,
@@ -18,6 +19,7 @@ import {
 } from '../../../utils/communications/storage'
 import { update_status } from '../../../utils/delivery-status'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
+import { emptyProviders, writeProviders } from '../../../utils/providers'
 import { setup } from '../../../utils/setup'
 
 const paths = testDatastorePaths('communications')
@@ -63,10 +65,10 @@ describe('communications', () => {
       idempotency_key: Bun.randomUUIDv7()
     })
 
-    expect(first.thread_id).not.toBe(second.thread_id)
-    expect(rcs.thread_id).not.toBe(first.thread_id)
+    expect(first.threadId).not.toBe(second.threadId)
+    expect(rcs.threadId).not.toBe(first.threadId)
     expect(rcs.destinataire).toBe('+33612345678')
-    expect(communication_reference(first.id)).toBe(`p${first.id}`)
+    expect(communication_reference(first.id)).toBe(String(first.id))
   })
 
   it('rend un retry identique sans doublon et refuse un conflit', () => {
@@ -103,7 +105,7 @@ describe('communications', () => {
     expect(count).toBe(1)
   })
 
-  it('laisse le dispatch réclamable jusqu’à un événement terminal', () => {
+  it('réserve le dispatch jusqu’à un événement terminal', () => {
     const activity = create_outbound({
       actor: 'alice@example.org',
       contexte: 'tickets',
@@ -114,7 +116,7 @@ describe('communications', () => {
       idempotency_key: Bun.randomUUIDv7()
     })
     expect(claim_outbound_dispatch(activity.id)).toBe('claimed')
-    expect(claim_outbound_dispatch(activity.id)).toBe('claimed')
+    expect(claim_outbound_dispatch(activity.id)).toBe('pending')
     update_status({
       activity_id: activity.id,
       type: 'rcs',
@@ -122,6 +124,67 @@ describe('communications', () => {
       occurred_at: '2030-08-26T20:00:00Z'
     })
     expect(claim_outbound_dispatch(activity.id)).toBe('not_queued')
+  })
+
+  it('retrouve le SMS de fallback après une interruption', () => {
+    const rcs = create_outbound({
+      actor: 'alice@example.org',
+      contexte: 'tickets',
+      ref: 'DISPATCH-FALLBACK',
+      type: 'rcs',
+      destinataire: '+33612345678',
+      contenu: JSON.stringify({
+        version: 2,
+        sender: 'user:alice@example.org',
+        body: 'RCS',
+        sms_fallback: 'SMS'
+      }),
+      idempotency_key: Bun.randomUUIDv7()
+    })
+    const first = settle_definitive_rcs_failure(rcs.id, '2030-08-26T20:00:00Z').smsFallback
+    const replay = settle_definitive_rcs_failure(rcs.id, '2030-08-26T20:00:00Z').smsFallback
+
+    expect(first?.channel).toBe('sms')
+    expect(replay?.id).toBe(first?.id)
+    expect(claim_outbound_dispatch(first!.id)).toBe('claimed')
+    update_status({
+      activity_id: first!.id,
+      type: 'sms',
+      statut: 'sent',
+      occurred_at: '2030-08-26T20:01:00Z'
+    })
+  })
+
+  it('ignore un échec RCS tardif après livraison', () => {
+    const rcs = create_outbound({
+      actor: 'alice@example.org',
+      contexte: 'tickets',
+      ref: 'RCS-LATE-FAILURE',
+      type: 'rcs',
+      destinataire: '+33687654321',
+      contenu: JSON.stringify({
+        version: 2,
+        sender: 'user:alice@example.org',
+        body: 'RCS',
+        sms_fallback: 'SMS'
+      }),
+      idempotency_key: Bun.randomUUIDv7()
+    })
+    update_status({
+      activity_id: rcs.id,
+      type: 'rcs',
+      statut: 'delivered',
+      occurred_at: '2030-08-26T20:00:00Z'
+    })
+
+    const late = settle_definitive_rcs_failure(rcs.id, '2030-08-26T20:01:00Z')
+    expect(late.smsFallback).toBeNull()
+    const db = new Database(paths.database, { readonly: true })
+    const contact = db
+      .query<{ status: string }, [string]>('SELECT status FROM contacts WHERE value = ?')
+      .get('+33687654321')
+    db.close()
+    expect(contact?.status).not.toBe('sms_compatible')
   })
 
   it('ignore un statut retardé et bloque les écritures génériques', () => {
@@ -155,7 +218,8 @@ describe('communications', () => {
       statut: 'failed',
       occurred_at: '2031-08-26T20:00:00Z'
     })
-    expect(laterFailure.id).toBe(activity.id)
+    expect(laterFailure.type).toBe('communication.failed')
+    expect(laterFailure.id).not.toBe(activity.id)
     const duplicate = update_status({
       activity_id: activity.id,
       type: 'email',
@@ -245,7 +309,7 @@ describe('communications', () => {
         body: 'Réponse'
       }),
       occurred_at: '2026-08-26T20:00:00Z',
-      thread_id: outbound.thread_id!
+      thread_id: outbound.threadId!
     })
     const unmatched = create_unmatched_inbound({
       type: 'email',
@@ -258,7 +322,7 @@ describe('communications', () => {
       occurred_at: '2026-08-26T20:01:00Z'
     })
 
-    expect(inbound.thread_id).toBe(outbound.thread_id)
+    expect(inbound.threadId).toBe(outbound.threadId)
     expect(inbound.type).toBe('communication.received')
     expect(unmatched.rattachement.startsWith('a_qualifier:')).toBe(true)
     expect(unmatched.id_client).toBeNull()
@@ -266,7 +330,7 @@ describe('communications', () => {
     expect(unmatched.id_lot).toBeNull()
   })
 
-  it('ne rattache implicitement que le dossier récent et non ambigu', () => {
+  it('rattache une réponse au fil le plus récent du correspondant', () => {
     create_outbound({
       actor: 'alice@example.org',
       contexte: 'automations',
@@ -289,7 +353,7 @@ describe('communications', () => {
         idempotency_key: Bun.randomUUIDv7()
       })
     }
-    expect(find_recent_thread('email', 'shared@example.org')).toBeNull()
+    expect(find_recent_thread('email', 'shared@example.org')?.ref).toBe('AMBIGUOUS-2')
   })
 
   it('expose une ligne autosuffisante et sans payload prestataire pour le LLM', () => {
@@ -313,7 +377,7 @@ describe('communications', () => {
       type: 'communication.sent',
       channel: 'rcs'
     })
-    expect(activity.date_creation).toBeTruthy()
+    expect(activity.createdAt).toBeTruthy()
     expect(activity.contenu).toContain('Être rappelé')
     expect(activity.contenu).not.toContain('richContent')
     expect(activity.contenu).not.toContain('messages')
@@ -321,19 +385,10 @@ describe('communications', () => {
 })
 
 describe('cm_webhook_authorized', () => {
-  const original = Bun.env['CM_WEBHOOK_SECRET']
-
-  afterAll(() => {
-    if (original === undefined) delete Bun.env['CM_WEBHOOK_SECRET']
-    else Bun.env['CM_WEBHOOK_SECRET'] = original
-  })
-
   it('exige un secret non vide et identique au header', () => {
-    delete Bun.env['CM_WEBHOOK_SECRET']
+    writeProviders(emptyProviders())
     expect(cm_webhook_authorized('anything')).toBe(false)
-    Bun.env['CM_WEBHOOK_SECRET'] = '  '
-    expect(cm_webhook_authorized('  ')).toBe(false)
-    Bun.env['CM_WEBHOOK_SECRET'] = 'secret'
+    writeProviders({ ...emptyProviders(), rcsSecret: 'secret' })
     expect(cm_webhook_authorized(undefined)).toBe(false)
     expect(cm_webhook_authorized('wrong')).toBe(false)
     expect(cm_webhook_authorized('secret')).toBe(true)

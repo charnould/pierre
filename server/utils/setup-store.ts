@@ -1,20 +1,13 @@
-import { Database } from 'bun:sqlite'
-
-import { format } from 'oxfmt'
-
 import { TRACE_MODES } from '../../shared/chat'
 import { validateExternalApplication } from '../../shared/external-application'
-import { datastorePaths } from './paths'
+import { MAX_SCHEDULE_MONTHS } from '../../shared/repayment-plan'
+import { openDatastore } from './datastore-db'
+import { formatText as formatWithBun } from './format-text'
 
 const CHATBOT_ID = /^[a-z0-9][a-z0-9_-]{0,63}$/
 const TEMPLATE_NAME = /^[a-z0-9][a-z0-9._-]{0,80}\.(md|json)$/
-const PLAN_CLOSE = [
-  'execution_complete',
-  'non_respect',
-  'remplacement_par_nouveau_plan',
-  'effacement_de_dette'
-] as const
 const EMAIL_FIELDS = ['logo_inline_cid', 'message'] as const
+const EMAIL_ADDRESS = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export class SetupError extends Error {
   constructor(message: string) {
@@ -25,18 +18,12 @@ export class SetupError extends Error {
 
 type Row = { id: string; content: Uint8Array }
 
-const open = (): Database => {
-  const db = new Database(datastorePaths().database)
-  db.run('PRAGMA busy_timeout = 5000')
-  return db
-}
-
 const textOf = (content: Uint8Array): string => new TextDecoder().decode(content)
 
 const bytesOf = (text: string): Uint8Array => new TextEncoder().encode(text)
 
 function readRow(id: string): Uint8Array | null {
-  const db = open()
+  const db = openDatastore()
   try {
     const row = db.query<Row, [string]>('SELECT id, content FROM setup WHERE id = ?').get(id)
     return row ? new Uint8Array(row.content) : null
@@ -51,7 +38,7 @@ function readText(id: string): string | null {
 }
 
 function writeRow(id: string, content: Uint8Array): void {
-  const db = open()
+  const db = openDatastore()
   try {
     db.run(
       'INSERT INTO setup (id, content) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET content = excluded.content',
@@ -63,7 +50,7 @@ function writeRow(id: string, content: Uint8Array): void {
 }
 
 function listIds(prefix: string): string[] {
-  const db = open()
+  const db = openDatastore()
   try {
     return db
       .query<{ id: string }, [string]>('SELECT id FROM setup WHERE id LIKE ? ORDER BY id')
@@ -75,15 +62,20 @@ function listIds(prefix: string): string[] {
 }
 
 async function formatText(filename: string, source: string): Promise<string> {
-  const formatted = await format(filename, source)
-  if (formatted.errors.length > 0) {
-    throw new SetupError(formatted.errors.map((error) => error.message).join('\n'))
+  try {
+    return await formatWithBun(filename, source)
+  } catch (error) {
+    throw new SetupError(error instanceof Error ? error.message : 'format invalide')
   }
-  return formatted.code
 }
 
 function objectOf(text: string): any {
-  const value = JSON.parse(text) as unknown
+  let value: unknown
+  try {
+    value = JSON.parse(text) as unknown
+  } catch {
+    throw new SetupError('JSON invalide.')
+  }
   if (value == null || typeof value !== 'object' || Array.isArray(value)) {
     throw new SetupError('JSON objet requis.')
   }
@@ -149,9 +141,7 @@ function chatbotFields(root: any, id: string): any {
   if (typeof root.community_knowledge !== 'boolean')
     throw new SetupError('community_knowledge requis.')
   if (typeof root.attachments !== 'boolean') throw new SetupError('attachments requis.')
-  if (!['low', 'medium', 'high'].includes(String(root.reasoning_effort))) {
-    throw new SetupError('reasoning_effort requis.')
-  }
+  delete root.reasoning_effort
   if (!(TRACE_MODES as readonly string[]).includes(String(root.trace)))
     throw new SetupError('trace requis.')
   requireStringList(root.greetings, 'greetings')
@@ -159,6 +149,13 @@ function chatbotFields(root: any, id: string): any {
   requireString(root.disclaimer, 'disclaimer')
   if ('instructions' in root || 'prompt' in root) throw new SetupError('consigne hors du JSON.')
   return root
+}
+
+function optionalEmail(root: any, label: string) {
+  if (!('email_from' in root) || root.email_from == null || root.email_from === '') return
+  if (typeof root.email_from !== 'string' || !EMAIL_ADDRESS.test(root.email_from.trim())) {
+    throw new SetupError(`${label}.email_from invalide.`)
+  }
 }
 
 function parseTickets(root: any): any {
@@ -177,12 +174,12 @@ function parseTickets(root: any): any {
     )
     if (errors.length > 0) throw new SetupError(errors.join('\n'))
   }
+  optionalEmail(root, 'tickets')
   return root
 }
 
 function parseRepayment(root: any): any {
-  const rows = buckets(root.buckets, ['non_traites', 'clients_partis'], 'repayment')
-  const ids = new Set(rows.map((row) => row.id))
+  buckets(root.buckets, ['non_traites', 'clients_partis'], 'repayment')
   const actions = root.actions
   if (actions == null || typeof actions !== 'object' || Array.isArray(actions)) {
     throw new SetupError('repayment.actions requis.')
@@ -197,33 +194,75 @@ function parseRepayment(root: any): any {
     if (!TEMPLATE_NAME.test(name)) throw new SetupError(`modèle « ${name} » invalide.`)
   }
   if ('prompt' in root) throw new SetupError('consigne hors du JSON.')
+  optionalEmail(root, 'repayment')
+  parseSchedule(root)
+  return root
+}
+
+function parseSchedule(root: { create_plan?: unknown }): void {
   const plan = root.create_plan
   if (plan == null || typeof plan !== 'object' || Array.isArray(plan)) {
-    throw new SetupError('repayment.create_plan requis.')
+    throw new SetupError('create_plan.schedule requis.')
   }
-  const signed = requireString(
-    (plan as { signed_bucket_id?: unknown }).signed_bucket_id,
-    'signed_bucket_id'
-  )
-  if (!ids.has(signed)) throw new SetupError('signed_bucket_id inconnu.')
-  const close = (plan as { close?: unknown }).close
-  if (close == null || typeof close !== 'object' || Array.isArray(close)) {
-    throw new SetupError('repayment.create_plan.close requis.')
+  const schedule = (plan as { schedule?: unknown }).schedule
+  if (schedule == null || typeof schedule !== 'object' || Array.isArray(schedule)) {
+    throw new SetupError('create_plan.schedule requis.')
   }
-  const closeRows = close as Record<string, unknown>
-  for (const motif of PLAN_CLOSE) {
-    const entry = closeRows[motif]
-    if (entry == null || typeof entry !== 'object' || Array.isArray(entry)) {
-      throw new SetupError(`close.${motif} requis.`)
+  const row = schedule as {
+    defaultMonths?: unknown
+    maxEffortRate?: unknown
+    minDailyRemainder?: unknown
+    thresholds?: unknown
+  }
+  const defaultMonths = row.defaultMonths
+  if (
+    typeof defaultMonths !== 'number' ||
+    !Number.isInteger(defaultMonths) ||
+    defaultMonths < 1 ||
+    defaultMonths > MAX_SCHEDULE_MONTHS
+  ) {
+    throw new SetupError(
+      `schedule.defaultMonths doit être un entier de 1 à ${MAX_SCHEDULE_MONTHS}.`
+    )
+  }
+  const maxEffortRate = row.maxEffortRate
+  if (
+    typeof maxEffortRate !== 'number' ||
+    !Number.isFinite(maxEffortRate) ||
+    maxEffortRate <= 0 ||
+    maxEffortRate > 100
+  ) {
+    throw new SetupError('schedule.maxEffortRate doit être un nombre > 0 et ≤ 100.')
+  }
+  const minDailyRemainder = row.minDailyRemainder
+  if (
+    typeof minDailyRemainder !== 'number' ||
+    !Number.isFinite(minDailyRemainder) ||
+    minDailyRemainder < 0
+  ) {
+    throw new SetupError('schedule.minDailyRemainder doit être un nombre ≥ 0.')
+  }
+  if (!Array.isArray(row.thresholds)) throw new SetupError('schedule.thresholds requis.')
+  const seen = new Set<number>()
+  for (const [index, item] of row.thresholds.entries()) {
+    if (item == null || typeof item !== 'object' || Array.isArray(item)) {
+      throw new SetupError(`schedule.thresholds[${index}] requis.`)
     }
-    const bucketId = requireString((entry as { bucket_id?: unknown }).bucket_id, `close.${motif}`)
-    if (!ids.has(bucketId)) throw new SetupError(`close.${motif} inconnu.`)
+    const months = (item as { months?: unknown }).months
+    if (
+      typeof months !== 'number' ||
+      !Number.isInteger(months) ||
+      months < defaultMonths ||
+      months >= MAX_SCHEDULE_MONTHS
+    ) {
+      throw new SetupError(
+        `schedule.thresholds[${index}].months doit être un entier de ${defaultMonths} à ${MAX_SCHEDULE_MONTHS - 1}.`
+      )
+    }
+    requireString((item as { message?: unknown }).message, `schedule.thresholds[${index}].message`)
+    if (seen.has(months)) throw new SetupError(`schedule.thresholds[${index}].months en double.`)
+    seen.add(months)
   }
-  for (const key of Object.keys(closeRows)) {
-    if (!(PLAN_CLOSE as readonly string[]).includes(key))
-      throw new SetupError(`motif « ${key} » inconnu.`)
-  }
-  return root
 }
 
 function parseGlobal(root: any): { name: string; timezone: string } {
@@ -264,10 +303,24 @@ function jsonText(id: string): any | null {
   }
 }
 
-export function repaymentTemplateIds(root: any): string[] {
+function repaymentTemplateIds(root: any): string[] {
   return Array.isArray(root.templates)
     ? root.templates.filter((name: unknown) => typeof name === 'string')
     : []
+}
+
+export function moduleEmailFrom(context: 'tickets' | 'repayment'): string | null {
+  const root = jsonText(context)
+  if (!root) return null
+  try {
+    if (context === 'tickets') parseTickets(root)
+    else parseRepayment(root)
+  } catch {
+    return null
+  }
+  return typeof root.email_from === 'string' && root.email_from.trim()
+    ? root.email_from.trim()
+    : null
 }
 
 export function ticketsReady(): any | null {
@@ -307,17 +360,6 @@ export function aboutReady(): { prompt: string } | null {
 export function automationsReady(): { prompt: string } | null {
   const prompt = agentsText('automations/AGENTS.md')
   return prompt ? { prompt } : null
-}
-
-export function globalReady(): boolean {
-  const root = jsonText('global')
-  if (!root) return false
-  try {
-    parseGlobal(root)
-    return true
-  } catch {
-    return false
-  }
 }
 
 export function emailReady(): boolean {
@@ -364,7 +406,7 @@ export function internalChatbot(id: string): any | null {
   }
 }
 
-export function listChatbots(): Array<{ id: string; display: string }> {
+function listChatbots(): Array<{ id: string; display: string }> {
   return listIds('chatbots/')
     .filter((rowId) => /^chatbots\/[a-z0-9][a-z0-9_-]{0,63}$/.test(rowId))
     .flatMap((rowId) => {
@@ -381,7 +423,7 @@ export function listInternalChatbots(): Array<{ id: string; display: string }> {
 
 export function skillPrompt(id: string): string | null {
   if (id === 'about') return aboutReady()?.prompt ?? null
-  if (id === 'report') return automationsReady()?.prompt ?? null
+  if (id === 'report') return agentsText('automations/AGENTS.md')
   if (id === 'replies') return ticketsReady() ? agentsText('tickets/AGENTS.md') : null
   if (id === 'repayment') return repaymentReady() ? agentsText('repayment/AGENTS.md') : null
   return null
@@ -499,7 +541,7 @@ export async function writeSetup(id: string, content: Uint8Array): Promise<void>
 
 export function deleteInternalChatbot(id: string): void {
   if (id === 'default' || !CHATBOT_ID.test(id)) throw new SetupError('chatbot inconnu.')
-  const db = open()
+  const db = openDatastore()
   try {
     db.run('DELETE FROM setup WHERE id = ? OR id = ?', [
       `chatbots/${id}`,

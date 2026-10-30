@@ -1,14 +1,19 @@
 import { Database } from 'bun:sqlite'
 
-import { datastorePaths } from '../paths'
+import { openDatastore } from '../datastore-db'
 import {
-  KnowledgeBuildDocumentSchema,
-  KnowledgeSourceDocumentSchema,
   type KnowledgeBuild,
   type KnowledgeBuildDocument,
+  KnowledgeBuildDocumentSchema,
   type KnowledgeSource,
   type KnowledgeSourceDocument
 } from './catalog-schema'
+import {
+  parseStoredBuildDocument,
+  parseStoredSourceDocument,
+  stringifyStoredBuildDocument,
+  stringifyStoredSourceDocument
+} from './stored'
 
 export type KnowledgeRecordRow = {
   id: string
@@ -19,7 +24,7 @@ export type KnowledgeRecordRow = {
 }
 
 export const withKnowledgeDb = <T>(fn: (db: Database) => T): T => {
-  const db = new Database(datastorePaths().database)
+  const db = openDatastore()
   try {
     return fn(db)
   } finally {
@@ -29,14 +34,14 @@ export const withKnowledgeDb = <T>(fn: (db: Database) => T): T => {
 
 export const parseSourceRow = (row: KnowledgeRecordRow): KnowledgeSource => ({
   id: row.id,
-  ...KnowledgeSourceDocumentSchema.parse(JSON.parse(row.document)),
+  ...parseStoredSourceDocument(JSON.parse(row.document)),
   createdAt: row.created_at,
   updatedAt: row.updated_at
 })
 
 export const parseBuildRow = (row: KnowledgeRecordRow): KnowledgeBuild => ({
   id: row.id,
-  ...KnowledgeBuildDocumentSchema.parse(JSON.parse(row.document)),
+  ...parseStoredBuildDocument(JSON.parse(row.document)),
   createdAt: row.created_at,
   updatedAt: row.updated_at
 })
@@ -72,7 +77,7 @@ export const writeBuild = (
   const document = KnowledgeBuildDocumentSchema.parse({ ...buildDocumentOf(current), ...patch })
   const now = new Date().toISOString()
   db.run('UPDATE knowledge_records SET document = ?, updated_at = ? WHERE id = ?', [
-    JSON.stringify(document),
+    stringifyStoredBuildDocument(document),
     now,
     current.id
   ])
@@ -83,13 +88,23 @@ export const writeSourceDocument = (
   db: Database,
   id: string,
   document: KnowledgeSourceDocument,
-  createdAt: string
+  createdAt: string,
+  content?: string | null
 ): KnowledgeSource => {
   const now = new Date().toISOString()
-  db.run('UPDATE knowledge_records SET document = ?, updated_at = ? WHERE id = ?', [
-    JSON.stringify(document),
-    now,
-    id
-  ])
+  if (content === undefined) {
+    db.run('UPDATE knowledge_records SET document = ?, updated_at = ? WHERE id = ?', [
+      stringifyStoredSourceDocument(document),
+      now,
+      id
+    ])
+  } else {
+    db.run('UPDATE knowledge_records SET document = ?, content = ?, updated_at = ? WHERE id = ?', [
+      stringifyStoredSourceDocument(document),
+      content,
+      now,
+      id
+    ])
+  }
   return { id, ...document, createdAt, updatedAt: now }
 }

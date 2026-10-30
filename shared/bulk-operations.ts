@@ -168,8 +168,7 @@ export type SkippedDeliveryStep = {
 }
 
 type PreviewRoute =
-  | { kind: 'fallback'; medium: BulkMedium; stepIndex: number }
-  | { kind: 'rich_rcs'; medium: 'rcs' }
+  { kind: 'fallback'; medium: BulkMedium; stepIndex: number } | { kind: 'rich_rcs'; medium: 'rcs' }
 
 export type PreviewRow = {
   id_locataire: string
@@ -192,16 +191,19 @@ export type PreviewQueryResult = {
   totals: {
     total: number
     eligible: number
-    no_usable_route: number
+    noUsableRoute: number
+    channels: Partial<Record<BulkMedium, number>>
   }
+  limit: number
+  offset: number
 }
 
 export type BulkOperationExecuteResult = {
-  execution_id: string
+  executionId: string
   totals: {
     total: number
     queued: number
-    no_usable_route: number
+    noUsableRoute: number
     applied: number
   }
 }
@@ -214,7 +216,7 @@ export type BulkRunReportStatus = (typeof BULK_RUN_REPORT_STATUSES)[number]
 
 export type BulkReportCounts = {
   total: number
-  in_progress: number
+  inProgress: number
   ok: number
   ko: number
 }
@@ -239,13 +241,13 @@ export type BulkReportItem = {
   source: BulkSource
   mode: BulkExecutionMode
   reportStatus: BulkItemReportStatus
-  outcome: Record<string, unknown> | null
+  outcome: BulkOutcome | null
   currentActivityId: number | null
   completedAt: string | null
   runAt: string | null
   attempts: number
   lastError: string | null
-  payload: Record<string, unknown>
+  payload: BulkJobPayload
 }
 
 export type BulkReportDetail = {
@@ -279,12 +281,88 @@ export type PreviewMessageResult =
 
 export type BulkRichRcsResponse = {
   nodeId: string
-  postback: string | null
+  postback: string
   label: string | null
   text: string
   activityId: number
   occurredAt: string
 }
+
+export type BulkDeliveryStatus =
+  | 'sent'
+  | 'delivered'
+  | 'read'
+  | 'failed'
+  | 'undelivered'
+  | 'expired'
+  | 'rejected'
+  | 'bounced'
+  | 'returned'
+  | 'refused'
+  | 'unclaimed'
+
+export type BulkJobPayload =
+  | {
+      kind: 'fallback'
+      row: PreviewRow
+      stage: 'attempt' | 'status'
+      stepIndex: number
+      remainingStatuses?: BulkDeliveryStatus[]
+      previousActivityId?: number
+      effectsAppliedAt?: string
+    }
+  | {
+      kind: 'rich_rcs'
+      row: PreviewRow
+      stage: 'rich_send' | 'rich_wait_delivery' | 'rich_wait_reply'
+      nodeId: string
+      responseHistory: BulkRichRcsResponse[]
+      effectsAppliedAt?: string
+    }
+
+export type BulkOutcome =
+  | {
+      code: 'all_delivery_attempts_failed'
+      status: string
+      occurredAt: string
+    }
+  | {
+      code: 'final_failure' | 'no_usable_route'
+      skippedSteps: SkippedDeliveryStep[]
+      activityId?: number | null
+      created?: boolean
+    }
+  | {
+      code: BulkDeliveryStatus
+      medium: string
+      activityId: number
+    }
+  | {
+      code: 'send_failed'
+      nodeId: string
+      activityId: number
+    }
+  | {
+      code: 'completed'
+      deliveryStatus: 'delivered' | 'read'
+      nodeId: string
+      activityId: number
+    }
+  | {
+      code: 'completed'
+      lastPostback: string
+      lastLabel: string | null
+      activityId: number
+    }
+  | {
+      code: 'delivery_timeout' | 'reply_timeout'
+      nodeId: string
+    }
+  | {
+      code: 'applied'
+      activityId: number
+      created: true
+    }
 
 export function lastBulkOperationEdit(edits: BulkOperationEdit[]): BulkOperationEdit | null {
   return edits.at(-1) ?? null

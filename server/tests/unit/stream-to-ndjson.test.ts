@@ -1,16 +1,18 @@
 import { describe, expect, test } from 'bun:test'
 
-import { parseAskUserMarker, piEventToCopilotChunks } from '../../utils/copilot-agent'
+import {
+  parseAskUserMarker,
+  piEventToCopilotChunks,
+  resolveAgentSettlement,
+  toolExecutionDuration
+} from '../../utils/copilot-agent'
 import { copilotChunkToNdjson, ndjsonLine } from '../../utils/stream-to-ndjson'
 
 describe('copilotChunkToNdjson', () => {
   test('maps internal done to the canonical terminal event', () => {
-    expect([
-      ...copilotChunkToNdjson(
-        { type: 'done', fullContent: 'final', inputTokens: 1, outputTokens: 2 },
-        'none'
-      )
-    ]).toEqual([{ type: 'stream_end' }])
+    expect([...copilotChunkToNdjson({ type: 'done', fullContent: 'final' }, 'none')]).toEqual([
+      { type: 'stream_end' }
+    ])
   })
 
   test('filters structured thinking when none', () => {
@@ -252,5 +254,25 @@ describe('copilotChunkToNdjson', () => {
     expect(parseAskUserMarker('pierre:ask_user:{"toolCallId":"call-42"}')).toBe('call-42')
     expect(parseAskUserMarker('pierre:ask_user:not-json')).toBeNull()
     expect(parseAskUserMarker('unrelated')).toBeNull()
+  })
+})
+
+describe('Pi 1.5 lifecycle', () => {
+  test('uses the native monotonic tool duration with a local fallback', () => {
+    expect(toolExecutionDuration({ durationMs: 42 }, 10, 100)).toBe(42)
+    expect(toolExecutionDuration({}, 10, 100)).toBe(90)
+    expect(toolExecutionDuration({}, undefined, 100)).toBe(0)
+  })
+
+  test('settles only after recovery has resolved', () => {
+    expect(resolveAgentSettlement({ aborted: false }, null, false)).toEqual({
+      status: 'success',
+      error: null
+    })
+    expect(resolveAgentSettlement({ aborted: true }, null, false).status).toBe('aborted')
+    expect(resolveAgentSettlement({ aborted: true }, null, true).status).toBe('timeout')
+    expect(resolveAgentSettlement({ aborted: false }, new Error('provider'), false).status).toBe(
+      'error'
+    )
   })
 })

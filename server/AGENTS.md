@@ -1,5 +1,7 @@
 # Server development
 
+API de référence : <https://bun.com/docs>. Les prendre avant toute API Node familière.
+
 ## Bun-first runtime
 
 This server runs on Bun. Prefer Bun-native and Web-standard APIs when they make the code
@@ -24,6 +26,6 @@ cannot find the executable automatically.
 
 ## Verification
 
-Run commands from the repository root. Use targeted tests while iterating, then run the
-server typecheck, unit tests, formatting check, lint check, and browser E2E suite for changes
-that affect browser flows.
+Run commands from the repository root. Use targeted tests while iterating, then run `bun check`, `bun test --cwd server --max-concurrency 1 unit`, `bun fmt --check`,
+`bun oxlint`,
+and `bun server:e2e` for browser flows. `bun test` does not start the server or seed the datastore; `server/tests/e2e/run.ts` does, then runs `bun test tests/e2e`.

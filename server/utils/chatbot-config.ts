@@ -1,16 +1,15 @@
 import {
+  type ChatbotConfig,
   DefaultChatbotConfig,
   InternalChatbotConfig,
   isDefaultChatbotConfig,
-  type ChatbotConfig,
   type User
 } from './_schema'
 import {
   chatbotAgents,
   defaultChatbotReady,
   internalChatbot,
-  listInternalChatbots,
-  readSetupBytes
+  listInternalChatbots
 } from './setup-store'
 
 const CONFIG_ID = /^[a-z0-9][a-z0-9_-]{0,63}$/
@@ -35,7 +34,7 @@ function assertCanonicalChatbotId(value: string): string {
 }
 
 function withoutInstructions(root: any): Record<string, unknown> {
-  const { instructions: _instructions, ...config } = root
+  const { instructions: _instructions, reasoning_effort: _effort, ...config } = root
   return config
 }
 
@@ -58,11 +57,6 @@ export async function listChatbotSummaries(): Promise<Array<{ id: string; label:
 
 export function chatbotInstructions(id: string): string {
   return chatbotAgents(id)
-}
-
-export function publicIcon(): Uint8Array | null {
-  if (!defaultChatbotReady()) return null
-  return readSetupBytes('chatbots/icons/icon.svg')
 }
 
 export async function listAccessibleChatbots(

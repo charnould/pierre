@@ -1,32 +1,24 @@
 import { Database } from 'bun:sqlite'
 
 import {
-  decodeCronToSchedule,
-  encodeScheduleToCron,
-  parseUserPreferences,
   type AutomationConfig,
   type AutomationLifecycleStatus,
   type AutomationRecord,
   type AutomationRunStatus,
   type CreateAutomationBody,
-  type PatchAutomationBody,
-  type ReportAutomationConfig,
-  type TicketReplyAutomationConfig,
-  type UserPreferences
+  decodeCronToSchedule,
+  encodeScheduleToCron,
+  type PatchAutomationBody
 } from '../../../shared/automations'
+import type { UserPreferences } from '../../../shared/user-preferences'
 import { login_from_email } from '../activities/rows'
-import { datastorePaths } from '../paths'
+import { openDatastore } from '../datastore-db'
 import { timezone } from '../setup-store'
+import { parseStoredUserPreferences, storedUserPreferences } from '../user-preferences-stored'
 import { format_automation_prompt } from './format-prompt'
 import { compute_next_run_at } from './schedule'
-import { automation_schedule_error, AutomationConfigSchema } from './schemas'
-
-const datastore_path = (): string => datastorePaths().database
-const open_db = (): Database => {
-  const db = new Database(datastore_path())
-  db.run('PRAGMA busy_timeout = 5000')
-  return db
-}
+import { automation_schedule_error } from './schemas'
+import { parseStoredAutomationState, storedAutomationConfig } from './stored'
 
 export class AutomationsError extends Error {
   constructor(
@@ -56,12 +48,11 @@ type AutomationDbRow = {
 }
 
 function parse_mentions_json(raw: string): string[] {
-  try {
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed.filter((x) => typeof x === 'string') : []
-  } catch {
-    return []
+  const parsed: unknown = JSON.parse(raw)
+  if (!Array.isArray(parsed) || !parsed.every((value) => typeof value === 'string')) {
+    throw new Error('Stored automation mentions must be an array of strings')
   }
+  return parsed
 }
 
 const canonical_mentions = (db: Database, values: readonly string[]): string[] => {
@@ -90,39 +81,30 @@ const canonical_mentions = (db: Database, values: readonly string[]): string[] =
 }
 
 function row_to_record(row: AutomationDbRow, pinned = false): AutomationRecord {
-  const config = AutomationConfigSchema.parse(JSON.parse(row.config))
+  const state = parseStoredAutomationState({
+    type: row.type,
+    status: row.status,
+    last_run_status: row.last_run_status,
+    config: JSON.parse(row.config)
+  })
   const record = {
     id: row.id,
     name: row.name,
     description: row.description,
-    status: row.status as AutomationLifecycleStatus,
+    status: state.status,
     owner: row.owner,
     mentions: parse_mentions_json(row.mentions),
     cron: row.cron,
-    next_run_at: row.next_run_at,
-    last_run_at: row.last_run_at,
-    last_run_status: (row.last_run_status as AutomationRunStatus | null) ?? null,
+    nextRunAt: row.next_run_at,
+    lastRunAt: row.last_run_at,
+    lastRunStatus: state.lastRunStatus,
     pinned
   }
-  if (row.type === 'report') {
-    return { ...record, type: 'report', config: config as ReportAutomationConfig }
-  }
-  if (row.type === 'replies') {
-    return { ...record, type: 'replies', config: config as TicketReplyAutomationConfig }
-  }
-  throw new AutomationsError(`Unknown automation type: ${row.type}`)
+  return { ...record, type: state.type, config: state.config }
 }
 
 async function config_from_create(body: CreateAutomationBody): Promise<AutomationConfig> {
-  if (body.type === 'report') {
-    return { prompt: await format_automation_prompt(body.prompt), maxReports: body.maxReports ?? 6 }
-  }
-  return {
-    skillId: 'replies',
-    channel: body.channel ?? 'email',
-    ticketFilters: body.ticketFilters ?? { rules: [] },
-    maxItems: body.maxItems ?? 20
-  }
+  return { prompt: await format_automation_prompt(body.prompt), maxReports: body.maxReports ?? 6 }
 }
 
 const get_user_preferences_with_db = (db: Database, email: string): UserPreferences => {
@@ -131,7 +113,7 @@ const get_user_preferences_with_db = (db: Database, email: string): UserPreferen
       'SELECT preferences FROM users WHERE lower(email) = ? LIMIT 1'
     )
     .get(email.toLowerCase().trim())
-  return parseUserPreferences(row?.preferences)
+  return parseStoredUserPreferences(row?.preferences)
 }
 
 const set_user_preferences_with_db = (
@@ -140,13 +122,13 @@ const set_user_preferences_with_db = (
   preferences: UserPreferences
 ): void => {
   db.run('UPDATE users SET preferences = ? WHERE lower(email) = ?', [
-    JSON.stringify(preferences),
+    JSON.stringify(storedUserPreferences(preferences)),
     email.toLowerCase().trim()
   ])
 }
 
 export function get_user_preferences(email: string): UserPreferences {
-  const db = open_db()
+  const db = openDatastore()
   try {
     return get_user_preferences_with_db(db, email)
   } finally {
@@ -155,7 +137,7 @@ export function get_user_preferences(email: string): UserPreferences {
 }
 
 export function set_user_preferences(email: string, preferences: UserPreferences): void {
-  const db = open_db()
+  const db = openDatastore()
   try {
     set_user_preferences_with_db(db, email, preferences)
   } finally {
@@ -167,7 +149,7 @@ export function patch_user_preferences(
   email: string,
   patch: Partial<UserPreferences>
 ): UserPreferences {
-  const db = open_db()
+  const db = openDatastore()
   try {
     return db
       .transaction(() => {
@@ -189,13 +171,16 @@ function purge_pin_from_all_users(db: Database, automation_id: string): void {
     )
     .all()
   for (const row of rows) {
-    const prefs = parseUserPreferences(row.preferences)
-    if (!prefs.pinned_automation_ids.includes(automation_id)) continue
+    const prefs = parseStoredUserPreferences(row.preferences)
+    if (!prefs.pinnedAutomationIds.includes(automation_id)) continue
     const next: UserPreferences = {
       ...prefs,
-      pinned_automation_ids: prefs.pinned_automation_ids.filter((id) => id !== automation_id)
+      pinnedAutomationIds: prefs.pinnedAutomationIds.filter((id) => id !== automation_id)
     }
-    db.run('UPDATE users SET preferences = ? WHERE email = ?', [JSON.stringify(next), row.email])
+    db.run('UPDATE users SET preferences = ? WHERE email = ?', [
+      JSON.stringify(storedUserPreferences(next)),
+      row.email
+    ])
   }
 }
 
@@ -207,8 +192,8 @@ function can_see(row: AutomationDbRow, principal: string): boolean {
 
 export function list_automations(login: string, email: string): AutomationRecord[] {
   const prefs = get_user_preferences(email)
-  const pinned = new Set(prefs.pinned_automation_ids)
-  const db = open_db()
+  const pinned = new Set(prefs.pinnedAutomationIds)
+  const db = openDatastore()
   try {
     const rows = db.query<AutomationDbRow, []>('SELECT * FROM automations').all()
     return rows
@@ -220,13 +205,13 @@ export function list_automations(login: string, email: string): AutomationRecord
 }
 
 export function get_automation(id: string, login: string, email?: string): AutomationRecord | null {
-  const db = open_db()
+  const db = openDatastore()
   try {
     const row = db
       .query<AutomationDbRow, [string]>('SELECT * FROM automations WHERE id = ? LIMIT 1')
       .get(id)
     if (!row || !can_see(row, login)) return null
-    const pinned = email ? get_user_preferences(email).pinned_automation_ids.includes(id) : false
+    const pinned = email ? get_user_preferences(email).pinnedAutomationIds.includes(id) : false
     return row_to_record(row, pinned)
   } finally {
     db.close()
@@ -246,9 +231,9 @@ export async function create_automation(
   const canonicalOwner = owner.includes('@') ? owner.trim().toLowerCase() : owner
   const id = Bun.randomUUIDv7()
   const zone = timezone()
-  if (!zone) throw new Error('Automatisations non paramétrées.')
+  if (!zone) throw new AutomationsError('Automatisations non paramétrées.')
   const next_run_at = compute_next_run_at(cron, zone)
-  const db = open_db()
+  const db = openDatastore()
   try {
     const mentions = canonical_mentions(db, body.mentions ?? [])
     db.run(
@@ -265,7 +250,7 @@ export async function create_automation(
         JSON.stringify(mentions),
         cron,
         next_run_at,
-        JSON.stringify(config)
+        JSON.stringify(storedAutomationConfig(config))
       ]
     )
   } finally {
@@ -309,49 +294,26 @@ export async function update_automation(
   if (patch.status === 'scheduled') status = 'scheduled'
   // Don't allow PATCH to set running
 
-  let next_run_at = existing.next_run_at
+  let next_run_at = existing.nextRunAt
   if (status === 'paused') {
     next_run_at = null
   } else if (status === 'scheduled' && (scheduleChanged || patch.status === 'scheduled')) {
     const zone = timezone()
-    if (!zone) throw new Error('Automatisations non paramétrées.')
+    if (!zone) throw new AutomationsError('Automatisations non paramétrées.')
     next_run_at = compute_next_run_at(cron, zone)
   }
 
-  let config = existing.config
-  let trimReportsTo: number | null = null
-  if (existing.type === 'report') {
-    if (
-      patch.channel !== undefined ||
-      patch.ticketFilters !== undefined ||
-      patch.maxItems !== undefined
-    ) {
-      throw new AutomationsError('Ticket reply fields are invalid for report automations')
-    }
-    const report = config as ReportAutomationConfig
-    const nextMax = patch.maxReports ?? report.maxReports
-    config = {
-      prompt:
-        patch.prompt !== undefined ? await format_automation_prompt(patch.prompt) : report.prompt,
-      maxReports: nextMax
-    }
-    if (patch.maxReports !== undefined && patch.maxReports < report.maxReports) {
-      trimReportsTo = patch.maxReports
-    }
-  } else {
-    if (patch.prompt !== undefined || patch.maxReports !== undefined) {
-      throw new AutomationsError('Report fields are invalid for ticket reply automations')
-    }
-    const reply = config as TicketReplyAutomationConfig
-    config = {
-      skillId: 'replies',
-      channel: patch.channel ?? reply.channel,
-      ticketFilters: patch.ticketFilters ?? reply.ticketFilters,
-      maxItems: patch.maxItems ?? reply.maxItems
-    }
+  const report = existing.config
+  const nextMax = patch.maxReports ?? report.maxReports
+  const config = {
+    prompt:
+      patch.prompt !== undefined ? await format_automation_prompt(patch.prompt) : report.prompt,
+    maxReports: nextMax
   }
+  const trimReportsTo =
+    patch.maxReports !== undefined && patch.maxReports < report.maxReports ? patch.maxReports : null
 
-  const db = open_db()
+  const db = openDatastore()
   try {
     db.transaction(() => {
       const mentions = patch.mentions ? canonical_mentions(db, patch.mentions) : existing.mentions
@@ -367,7 +329,7 @@ export async function update_automation(
           JSON.stringify(mentions),
           cron,
           next_run_at,
-          JSON.stringify(config),
+          JSON.stringify(storedAutomationConfig(config)),
           id,
           owner.trim().toLowerCase()
         ]
@@ -390,7 +352,7 @@ export function delete_automation(id: string, owner: string): void {
   if (existing.status === 'running') {
     throw new AutomationsError('Automation already running', 'conflict')
   }
-  const db = open_db()
+  const db = openDatastore()
   try {
     db.transaction(() => {
       const deleted = db.run(
@@ -412,7 +374,7 @@ export function set_automation_pin(
   email: string,
   pinned: boolean
 ): AutomationRecord {
-  const db = open_db()
+  const db = openDatastore()
   try {
     return db
       .transaction(() => {
@@ -423,10 +385,10 @@ export function set_automation_pin(
           throw new AutomationsError('Automation not found', 'not_found')
         }
         const prefs = get_user_preferences_with_db(db, email)
-        const set = new Set(prefs.pinned_automation_ids)
+        const set = new Set(prefs.pinnedAutomationIds)
         if (pinned) set.add(id)
         else set.delete(id)
-        set_user_preferences_with_db(db, email, { ...prefs, pinned_automation_ids: [...set] })
+        set_user_preferences_with_db(db, email, { ...prefs, pinnedAutomationIds: [...set] })
         return row_to_record(row, pinned)
       })
       .immediate()
@@ -444,7 +406,7 @@ export function trim_report_activities(
 }
 
 export function list_due_automation_ids(nowIso: string = new Date().toISOString()): string[] {
-  const db = open_db()
+  const db = openDatastore()
   try {
     return db
       .query<{ id: string }, [string]>(
@@ -463,7 +425,7 @@ export function list_due_automation_ids(nowIso: string = new Date().toISOString(
 export function list_stuck_running_ids(
   nowIso: string = new Date().toISOString()
 ): Array<{ id: string; run_token: string }> {
-  const db = open_db()
+  const db = openDatastore()
   try {
     return db
       .query<{ id: string; run_token: string }, [string]>(
@@ -485,7 +447,7 @@ export function claim_automation(
   id: string,
   due_before: string = new Date().toISOString()
 ): string | null {
-  const db = open_db()
+  const db = openDatastore()
   try {
     const token = Bun.randomUUIDv7()
     const result = db.run(
@@ -503,7 +465,7 @@ export function claim_automation(
 
 /** Force claim for manual run (owner): any non-running → running. */
 export function claim_automation_manual(id: string): string | null {
-  const db = open_db()
+  const db = openDatastore()
   try {
     const token = Bun.randomUUIDv7()
     const result = db.run(
@@ -519,7 +481,7 @@ export function claim_automation_manual(id: string): string | null {
 }
 
 export function renew_automation_lease(id: string, run_token: string): boolean {
-  const db = open_db()
+  const db = openDatastore()
   try {
     return (
       db.run(
@@ -539,7 +501,7 @@ export function finalize_automation_run(
   outcome: AutomationRunStatus,
   options: { restorePaused?: boolean; leaseExpiredBefore?: string } = {}
 ): boolean {
-  const db = open_db()
+  const db = openDatastore()
   try {
     return db
       .transaction(() => {
@@ -578,7 +540,7 @@ export function finalize_automation_run(
 }
 
 export function get_automation_raw(id: string): AutomationRecord | null {
-  const db = open_db()
+  const db = openDatastore()
   try {
     const row = db
       .query<AutomationDbRow, [string]>('SELECT * FROM automations WHERE id = ? LIMIT 1')
