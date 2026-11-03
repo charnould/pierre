@@ -4,7 +4,7 @@ L’**Union sociale pour l’habitat (USH)** est depuis octobre 2002 le nom de l
 
 ## Histoire
 
-L’Union sociale pour l'habitat, créée en 1929, rassemble quatre fédérations d'organismes HLM et une fédération regroupant les associations régionales :
+L’Union sociale pour l'habitat (USH), créée en 1929, rassemble quatre fédérations d'organismes HLM et une fédération regroupant les associations régionales :
 
 - la fédération nationale des Offices publics de l’habitat (OPH) ;
 - la fédération nationale des Entreprises sociales pour l’habitat (ESH) ;
@@ -12,9 +12,9 @@ L’Union sociale pour l'habitat, créée en 1929, rassemble quatre fédération
 - Procivis-UES-AP, qui représente les intérêts des 52 sociétés anonymes coopératives d'intérêt collectif pour l'accession à la propriété (SACICAP) ;
 - la fédération nationale des Associations régionales d'organismes d'habitat social (FNAR).
 
-Depuis le 4 novembre 2020, elle est présidée par Emmanuelle Cosse, ancienne ministre du Logement et de l'Habitat durable. Marianne Louis, une « ancienne élue de l’aile gauche du Parti socialiste, un temps proche de Jean-Luc Mélenchon », en est la directrice générale.
+Le 4 novembre 2020, Emmanuelle Cosse, ancienne ministre du Logement et de l'Habitat durable, est élue présidente de l'USH et réélue à cette fonction le 16 octobre 2024. Marianne Louis, une « ancienne élue de l’aile gauche du Parti socialiste, un temps proche de Jean-Luc Mélenchon », en est la directrice générale, nommée à ce poste depuis 2018.
 
-Les fédérations correspondent à des familles d’organismes Hlm différentes, chacune étant le résultat d’une histoire et d’une culture spécifiques.
+Les fédérations correspondent à des familles d’organismes HLM différentes, chacune étant le résultat d’une histoire et d’une culture spécifiques.
 
 ## Les missions
 
@@ -24,7 +24,7 @@ L’Union sociale pour l’habitat remplit trois grandes missions :
 - une mission de réflexion, d’analyse et d’étude sur tous les dossiers relatifs à l’habitat et l’élaboration de propositions pour une politique sociale de l’habitat et de contribution au débat public ;
 - une fonction d’information, de conseil et d’assistance auprès des organismes, de leurs associations et de leurs fédérations afin de faciliter, rationaliser et développer leurs activités.
 
-L’Union anime un réseau d’appui à la modernisation et à la professionnalisation des organismes Hlm.
+L’Union anime un réseau d’appui à la modernisation et à la professionnalisation des organismes HLM.
 
 ## Les types d'organismes Hlm
 
@@ -44,16 +44,18 @@ Il existe aujourd’hui 239 entreprises sociales pour l’habitat qui détiennen
 
 Les sociétés anonymes coopératives d'HLM sont des sociétés à capital variable fondées sur les principes coopératifs de démocratie et de transparence. Avec plus de 300 000 logements construits en un siècle, les coopératives d'Hlm ont toujours été des acteurs historiques de l'accession sociale à la propriété. Elles ont aujourd’hui des compétences élargies au domaine du logement locatif.
 
-Il existe aujourd’hui 173 coopératives Hlm[Quand ?].
+Il existe aujourd’hui 173 coopératives Hlm.
 
 ### Les SACICAP
 
 Les SACI, à la fois organismes Hlm et sociétés financières sont chargées par les pouvoirs publics de promouvoir l’accession à la propriété par la distribution de prêts à caractère social et l’exercice des métiers immobiliers qui lui sont liés (promotion, maison individuelle…). À la suite des décisions stratégiques d’organisation des différents métiers prises par le Conseil syndical, il a été procédé à la filiation des activités concurrentielles de crédit et immobilières. Les SACI ont désormais pour activité principale la réalisation de missions sociales.
 
-Depuis le 1er janvier 2008, et conformément aux dispositions de l'ordonnance du 25 août 2006, les SACI ont adopté le statut de Société anonyme d'intérêt collectif pour l'accession à la propriété (SACICAP). Il existe aujourd'hui[Quand ?] 52 SACICAP.
+Depuis le 1er janvier 2008, et conformément aux dispositions de l'ordonnance du 25 août 2006, les SACI ont adopté le statut de Société anonyme d'intérêt collectif pour l'accession à la propriété (SACICAP).
 
-## Les associations régionales Hlm
+En 2019, le réseau immobilier compte 52 SACICAP.
 
-Elles regroupent l’ensemble des organismes de chaque région. Elles ont notamment pour mission : la représentation du Mouvement Hlm à l’échelle territoriale, le lien entre les organismes, l’Union sociale pour l’habitat et les fédérations qui la composent, une animation technique et professionnelle, la diffusion d’informations et de pratiques territorialisées.
+## Les associations régionales HLM
 
-Il existe 12 associations régionales en métropole[Quand ?] et une association qui regroupe les organismes d’habitat social d’Outre-mer.
+Elles regroupent l’ensemble des organismes de chaque région. Elles ont notamment pour mission : la représentation du mouvement Hlm à l’échelle territoriale, le lien entre les organismes, l’Union sociale pour l’habitat et les fédérations qui la composent, une animation technique et professionnelle, la diffusion d’informations et de pratiques territorialisées.
+
+Depuis le 31 décembre 2017, il existe 12 associations régionales en métropole.

@@ -6,7 +6,7 @@ Une **entreprise sociale pour l'habitat** (**ESH**) est un organisme privé de g
 
 Les ESH étaient jusqu'en 2002 désignées sous le terme de « sociétés anonymes d'habitations à loyer modéré » (SA HLM). Le nouveau nom met en exergue la notion, émergente, d'entreprise sociale
 
-En France, 50 % des logements sociaux sont gérés par une ESH, le reste revenant à d'autres organismes tels que les OPH. En 2021, on compte 176 ESH en France, employant 30 000 salariés. Le chiffre d'affaires des ESH est de 9 milliards d'euros[réf. souhaitée] par an.
+En France, 50 % des logements sociaux sont gérés par une ESH, le reste revenant à d'autres organismes tels que les OPH. En 2021, on compte 176 ESH en France, employant 30 000 salariés. Le chiffre d'affaires des ESH est de 9 milliards d'euros par an.
 
 ## La fédération des ESH
 

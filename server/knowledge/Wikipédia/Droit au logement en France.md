@@ -41,7 +41,7 @@ Le comité de suivi de la loi DALO fusionna en 2021 avec le Haut comité pour le
 Pour pouvoir bénéficier du droit à un logement décent et indépendant garanti par l'État, il faut en premier lieu :
 
 - être de nationalité française, ou résider sur le territoire français de façon régulière (sans condition d'ancienneté de son titre de séjour ou carte de résidence) et dans les conditions de permanence définies par les articles R.300-1 et R.300-2 du code de la construction et de l'habitation ;
-- ne pas être en mesure d'accéder par ses propres moyens à un logement décent et indépendant et de s'y maintenir (différentes évaluations estiment le nombre de ménages dans cette situation de l'ordre de 600 000, soit 1 700 000 personnes[réf. nécessaire], au regard du seul critère des conditions de logement) ;
+- ne pas être en mesure d'accéder par ses propres moyens à un logement décent et indépendant et de s'y maintenir (différentes évaluations estiment le nombre de ménages dans cette situation de l'ordre de 600 000, soit 1 700 000 personnes, au regard du seul critère des conditions de logement) ;
 - remplir les conditions d'accès au logement social, notamment au regard des plafonds de ressources ;
 - avoir effectué des démarches préalables (et pour les requérants invoquant le motif du délai anormalement long, avoir déposé une demande de logement social et disposer d'une attestation d'enregistrement départementale de cette demande appelée "numéro unique") ;
 - être de « bonne foi ».
@@ -135,7 +135,7 @@ Des réunions plénières réunissant le comité de suivi ont lieu 5 à 6 fois p
 
 Le comité de suivi n’a pas pour mission de renseigner ou accompagner les particuliers. Pour des conseils ou un accompagnement dans le dépôt d’un recours ou dans son suivi, il est préférable de s’adresser à un travailleur social ou à une association spécialisée dans l’accès au droit.
 
-- liste des points d'accès au droit
+- « Liste des points d'accès au droit », sur Ministère de la justice, 1er décembre 2025
 - liste des agences départementales d'information sur le logement (ADIL)
 
 Le comité de suivi a notamment mis en place 2 cellules de veille :

@@ -94,9 +94,9 @@ L'article 97 prévoit une simplification de la délivrance des autorisations d�
 
 ## Chronologie législative
 
-| Première lecture | Commission mixte paritaire | Conseil constitutionnel | Président |
-| ---------------- | -------------------------- | ----------------------- | --------- |
-| Sénat            | Assemblée                  | Assemblée + Sénat       |
-| Dépôt            | Vote                       | Dépôt                   | Vote      | Résultat       | Contrôle | Promulgation    |
-| 12 mai 2021      | 21 juillet 2021            | 21 juillet 2021         |           | 9 février 2022 |          | 21 février 2022 |
-| TI, EI           | TA                         | TT                      |           |                |          |                 |
+| Première lecture |                 |                 |      | Commission mixte paritaire | Conseil constitutionnel | Président       |
+| ---------------- | --------------- | --------------- | ---- | -------------------------- | ----------------------- | --------------- |
+| Sénat            |                 | Assemblée       |      | Assemblée + Sénat          | Conseil constitutionnel | Président       |
+| Dépôt            | Vote            | Dépôt           | Vote | Résultat                   | Contrôle                | Promulgation    |
+| 12 mai 2021      | 21 juillet 2021 | 21 juillet 2021 |      | 9 février 2022             |                         | 21 février 2022 |
+| TI, EI           | TA              | TT              |      |                            |                         |                 |
