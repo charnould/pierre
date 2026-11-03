@@ -1,6 +1,6 @@
 # Fondation pour le logement des défavorisés
 
-La **Fondation pour le logement des défavorisés** (**FLD**), anciennement **Fondation Abbé-Pierre pour le logement des défavorisés** ou simplement **Fondation Abbé-Pierre** (**FAP**) jusqu'en 2025, est une organisation créée en 1987 et reconnue d'utilité publique le 11 février 1992, qui a pour mission de permettre à toute personne démunie d'accéder à un logement décent et à une vie digne, quels que soient le montant de ses ressources et sa situation sociale.
+La **Fondation pour le logement des défavorisés** (**FLD**) ou simplement la **Fondation pour le logement**, anciennement **Fondation Abbé-Pierre pour le logement des défavorisés** ou simplement **Fondation Abbé-Pierre** (**FAP**) jusqu'en 2025, est une organisation créée en 1987 et reconnue d'utilité publique le 11 février 1992, qui a pour mission de permettre à toute personne démunie d'accéder à un logement décent et à une vie digne, quels que soient le montant de ses ressources et sa situation sociale.
 
 L’abbé Pierre, son fondateur, en a été le président d’honneur jusqu'à sa mort le 22 janvier 2007.
 
@@ -26,7 +26,7 @@ Georges Legay devient le premier compagnon d’Emmaüs. Ensemble, ils organisent
 
 Le mouvement Emmaüs se développe partout en France avec la création des premières communautés autour du concept « d’aider à aider ».
 
-En 2021, l’association Emmaüs rassemble en France 288 structures qui interviennent dans les domaines de l’action sociale, l’insertion, etc.. Le combat contre le mal-logement est confié à la fondation dès sa création en 1992[source insuffisante].
+En 2021, l’association Emmaüs rassemble en France 288 structures qui interviennent dans les domaines de l’action sociale, l’insertion, etc.. Le combat contre le mal-logement est confié à la fondation dès sa création en 1992.
 
 ### Appel dit « L'insurrection de bonté »
 
@@ -34,7 +34,7 @@ Après la Seconde Guerre mondiale, beaucoup de maisons sont détruites. Des pers
 
 Début 1954, la France connaît une série de drames liés à la rigueur de l’hiver (il fait jusqu’à −20 °C à Paris). Dans la nuit du 30 janvier, une femme est retrouvée morte dans la rue, tenant dans la main son avis d’expulsion. Cette tragédie pousse l’abbé Pierre à attirer l'attention des politiques.
 
-Si les parlementaires refusent d’abord de l’entendre, les médias relaient son appel. RTF (Radiodiffusion Télévision Française) lui offre une tribune. Le 1er février, l’abbé Pierre rédige avec le journaliste de _La Croix_, Georges Verpraet, un texte qu’ils lisent à l’antenne de Radio-Luxembourg. Il commence son discours ainsi : « Mes amis, au secours... Une femme vient de mourir gelée, cette nuit à trois heures, sur le trottoir du boulevard Sébastopol, serrant sur elle le papier par lequel, avant-hier, on l'avait expulsée. Chaque nuit, ils sont plus de deux mille recroquevillés sous le gel, sans toit, sans pain. » Il incite tous les Français à donner des couvertures, de la nourriture et du temps afin de sauver la vie de dizaine de milliers de personnes. L’appel médiatique est entendu et suscite un vaste élan de générosité, surnommé « l’insurrection de bonté ». Il marque le début d’une lutte contre la misère sans précédent en France, et constitue l’un des plus grands élans de générosité de son histoire. Couvertures, vêtements, chèques… Les dons arrivent en masse[source insuffisante]. L’acteur Charlie Chaplin lui remet même 2 millions de francs pour la cause[source insuffisante].
+Si les parlementaires refusent d’abord de l’entendre, les médias relaient son appel. RTF (Radiodiffusion Télévision Française) lui offre une tribune. Le 1er février, l’abbé Pierre rédige avec le journaliste de _La Croix_, Georges Verpraet, un texte qu’ils lisent à l’antenne de Radio-Luxembourg. Il commence son discours ainsi : « Mes amis, au secours... Une femme vient de mourir gelée, cette nuit à trois heures, sur le trottoir du boulevard Sébastopol, serrant sur elle le papier par lequel, avant-hier, on l'avait expulsée. Chaque nuit, ils sont plus de deux mille recroquevillés sous le gel, sans toit, sans pain. » Il incite tous les Français à donner des couvertures, de la nourriture et du temps afin de sauver la vie de dizaine de milliers de personnes. L’appel médiatique est entendu et suscite un vaste élan de générosité, surnommé « l’insurrection de bonté ». Il marque le début d’une lutte contre la misère sans précédent en France, et constitue l’un des plus grands élans de générosité de son histoire. Couvertures, vêtements, chèques… Les dons arrivent en masse. L’acteur Charlie Chaplin lui remet même 2 millions de francs pour la cause.
 
 Après cet événement, l’abbé Pierre parcourt le monde et s’engage dans une lutte mondiale contre la misère. Il rencontre notamment Jawaharlal Nehru, Albert Einstein et Dwight D. Eisenhower.
 
@@ -124,8 +124,8 @@ Ainsi, en janvier 2005, au lendemain du tsunami en Asie du Sud-Est, la Fondation
 
 L'action de la fondation pour le Logement des défavorisés s'articule autour de plusieurs grandes missions liées au logement :
 
-- **Accueillir** les personnes en grande précarité via son réseau de boutiques solidarité et de pensions de famille[source insuffisante] ;
-- **Construire** des logements sociaux. Depuis 2005, la fondation apporte un important soutien financier à la création de logements très sociaux, des logements financés par le prêt locatif aidé d’intégration (PLAI) via plusieurs programmes successifs : _1 500 logements très sociaux_, _2 000 toits pour 2000 familles_ et _Toits d’abord_[source insuffisante] lancé en 2012 ;
+- **Accueillir** les personnes en grande précarité via son réseau de boutiques solidarité et de pensions de famille ;
+- **Construire** des logements sociaux. Depuis 2005, la fondation apporte un important soutien financier à la création de logements très sociaux, des logements financés par le prêt locatif aidé d’intégration (PLAI) via plusieurs programmes successifs : _1 500 logements très sociaux_, _2 000 toits pour 2000 familles_ et _Toits d’abord_ lancé en 2012 ;
 - **Réhabiliter** les logements indignes (très dégradés, insalubres, présentant un danger pour la santé ou la sécurité des habitants). En 2017, la fondation estime que 600 000 ménages vivent dans des taudis en France ;
 - **Conseiller**, accompagner et informer sur leurs droits les personnes en situation de mal-logement ou menacées d’expulsion. C’est le rôle de l’Espace Solidarité Habitat, structure ouverte par la Fondation en 2000 en Île-de-France, et d’une plate-forme téléphonique : _Allô Prévention Expulsion_.
 
@@ -135,7 +135,7 @@ En tant que fondation abritante, la fondation pour le Logement des défavorisés
 
 ### Interpeller
 
-La fondation pour le Logement des défavorisés est souvent mobilisée pour mettre en œuvre des actions symboliques destinées à sensibiliser le grand public autour d’images fortes, comme, en décembre 2008, devant l’assemblée nationale ou, le 8 juillet 2010, en déposant une statue de glace représentant un SDF devant la pyramide du Louvre, laissant la statue fondre sous l’effet de la chaleur[réf. nécessaire].
+La fondation pour le Logement des défavorisés est souvent mobilisée pour mettre en œuvre des actions symboliques destinées à sensibiliser le grand public autour d’images fortes, comme, en décembre 2008, devant l’assemblée nationale ou, le 8 juillet 2010, en déposant une statue de glace représentant un SDF devant la pyramide du Louvre, laissant la statue fondre sous l’effet de la chaleur.
 
 Lors de la présentation de son vingt-deuxième rapport annuel sur l'état du mal-logement en France le 31 janvier 2017, la Fondation « juge durement le quinquennat de François Hollande, estimant qu’il n’a pas rempli ses objectifs » pour lutter contre ce fléau. Elle reçoit à nouveau les principaux candidats à l’élection présidentielle, dont Emmanuel Macron, et réitère son interpellation face à une situation de plus en plus alarmante : quatre millions de personnes mal logées en France et douze millions de personnes souffrant par extension de la crise du logement (surpeuplement, précarité énergétique, copropriétés en difficulté…).
 
@@ -196,7 +196,7 @@ Par ses responsabilités, il est souvent interviewé dans les médias.
 
 ## Financement
 
-La fondation pour le Logement des défavorisés est financée à plus de 95 % par la générosité des particuliers et des entreprises (dons, legs, mécénat d’entreprises)[réf. nécessaire].
+La fondation pour le Logement des défavorisés est financée à plus de 95 % par la générosité des particuliers et des entreprises (dons, legs, mécénat d’entreprises).
 
 ## Abus sexuels de l'abbé Pierre et changement de nom
 
@@ -236,13 +236,13 @@ La Fondation organise régulièrement l’« Abbé Road », un concert caritatif
 
 En 2014, l’« Abbé Road » est accompagnée de la sortie du clip _Le Chemin de pierre_, interprété par Nolwenn Leroy, Renan Luce et Disiz La Peste. Un bus aménagé parcourt aussi les festivals afin de sensibiliser le grand public aux logements insalubres.
 
-Depuis cette date, la fondation participe régulièrement à des festivals en été pour sensibiliser les jeunes, parmi les premières victimes du mal-logement, et le grand public à son combat[réf. nécessaire].
+Depuis cette date, la fondation participe régulièrement à des festivals en été pour sensibiliser les jeunes, parmi les premières victimes du mal-logement, et le grand public à son combat.
 
 ## Publications
 
 ### Rapport annuel
 
-Chaque année depuis 1995, la fondation pour le Logement des défavorisés rend un rapport annuel sur « l’état du mal-logement en France » présenté le 1er février, jour de l'anniversaire de l'appel lancé par l’abbé Pierre pendant l'hiver 1954. Établi à partir d’observations, d’enquêtes et d’études sur le terrain, ce document témoigne auprès de l’opinion et des pouvoirs publics des difficultés rencontrées par des centaines de milliers de familles pour accéder à un logement digne ou s’y maintenir[source insuffisante]. Ce document alerte les pouvoirs publics sur différentes thématiques liées au mal-logement, au sans-abris, aux expulsions…
+Chaque année depuis 1995, la fondation pour le Logement des défavorisés rend un rapport annuel sur « l’état du mal-logement en France » présenté le 1er février, jour de l'anniversaire de l'appel lancé par l’abbé Pierre pendant l'hiver 1954. Établi à partir d’observations, d’enquêtes et d’études sur le terrain, ce document témoigne auprès de l’opinion et des pouvoirs publics des difficultés rencontrées par des centaines de milliers de familles pour accéder à un logement digne ou s’y maintenir. Ce document alerte les pouvoirs publics sur différentes thématiques liées au mal-logement, au sans-abris, aux expulsions…
 
 En 2014, dans son dix-neuvième rapport, la fondation tire la sonnette d’alarme sur les copropriétés en difficulté. L'association rappelle par ailleurs le poids du logement dans le pouvoir d'achat des Français. Cette charge est aujourd’hui le premier poste de dépenses, ce qui représente en moyenne plus du quart de leurs revenus.
 
@@ -256,7 +256,7 @@ En 2019, la Fondation met en avant les sorties d’institutions (prisons, HP, AS
 
 À la fin des années 2010, la Fondation souligne les difficultés d’accès au logement des personnes en situation irrégulière. Elle fait le lien entre précarité administrative et habitat indigne.
 
-En 2021, la Fondation constate que la crise du logement se superpose à la crise sanitaire[source insuffisante], faisant bondir la précarité.
+En 2021, la Fondation constate que la crise du logement se superpose à la crise sanitaire, faisant bondir la précarité.
 
 Dans son rapport de 2022, la Fondation pointe du doigt la baisse des APL, la baisse du budget des organismes HLM, la baisse du nombre de logements sociaux autorisés chaque année ainsi qu’une politique trop timide en matière d'encadrement des loyers. Elle regrette aussi que les aides publiques au logement, qui diminuent depuis dix ans, soient aussi basses (1,6 % du PIB en 2020).
 
@@ -284,7 +284,7 @@ En 2022, la Fondation commande un nouveau sondage Ipsos à l’occasion de la pr
 
 La fondation pour le Logement des défavorisés publie aussi des rapports en partenariat avec d’autres associations.
 
-En 2020, elle participe à une étude inter-associative portée par le Secours catholique. A travers une analyse des données administratives ainsi qu'une enquête qualitative, le rapport démontre que les ménages les plus pauvres ont moins de chance de se voir attribuer un logement social, en raison de leur faible niveau de ressources. La précarité croissante des familles candidates au logement social conduit à une réduction des ressources « présentables » au bailleur. L’étude inter-associative détaille 15 propositions.
+En 2020, elle participe à une étude inter-associative portée par le Secours catholique. À travers une analyse des données administratives ainsi qu'une enquête qualitative, le rapport démontre que les ménages les plus pauvres ont moins de chance de se voir attribuer un logement social, en raison de leur faible niveau de ressources. La précarité croissante des familles candidates au logement social conduit à une réduction des ressources « présentables » au bailleur. L’étude inter-associative détaille 15 propositions.
 
 En juin 2022, la fondation et la Fédération européenne des associations nationales travaillant avec les sans-abri (Feantsa) publient un rapport expliquant que 8,3 % des ménages pauvres européens ont connu un impayé de loyer ou de remboursement d'emprunt immobilier au moins une fois dans l'année depuis la pandémie, ce qui représente une augmentation de 20 %. En France, 17,5 % de ménages pauvres sont confrontés à des difficultés de paiement liées à leur logement, ce qui représente une hausse de 10 % entre 2019 et 2020.
 

@@ -1,6 +1,6 @@
 # Participation des employeurs à l'effort de construction
 
-En France, la **participation des employeurs à l’effort de construction** (**PEEC**) est un dispositif visant à aider les salariés à se loger grâce à un versement des entreprises[pas clair]. Les sommes collectées permettent soit la construction de logements, soit de verser directement des aides aux salariés, sous forme de prêts ou de cautionnements pour la location.
+En France, la **participation des employeurs à l’effort de construction** (**PEEC**) est un dispositif visant à aider les salariés à se loger grâce à un versement des entreprises. Les sommes collectées permettent soit la construction de logements, soit de verser directement des aides aux salariés, sous forme de prêts ou de cautionnements pour la location.
 
 Créé durant la Seconde Guerre mondiale (en 1943) sous le nom de « 1 % logement », le dispositif a pris le nom d’« _Action logement_ » en 2009 puis « _Action logement service_ » (ALS).
 
@@ -26,6 +26,8 @@ Depuis le 15 juillet 2020, Action Logement a mis en place sa plateforme locative
 
 Les employeurs privés non agricoles occupant au moins cinquante salariés doivent verser 0,45 % au moins du montant de leur masse salariale pour financer des d’actions dans le domaine du logement, en particulier du logement des salariés, soit via un organisme agréé, soit directement.
 
+Ressources de la PEEC en 2016, en millions d’euros
+
 | Collecte                                      | 1 581 |
 | --------------------------------------------- | ----- |
 | Retours sur les prêts aux ménage et bailleurs | 1704  |
@@ -43,6 +45,8 @@ Les fonds de la PEEC sont destinées :
 - à la mise en oeuvre du programme Action Cœur de Ville pour la revitalisation des centres des villes moyennes et l’accès au logement des salariés dans les centres anciens ;
 - à la participation à des actions de formation, d’information ou de réflexion dans le domaine du logement et de la politique de la ville menées par des organismes agréés par l'État ;
 - au versement de compensations à des organismes d’assurance qui proposent des contrats d’assurance contre les impayés de loyer.
+
+Emplois de la PEEC en 2016, en millions d’euros
 
 | Financement des bailleurs sociaux                         | 1484  |
 | --------------------------------------------------------- | ----- |

@@ -64,7 +64,8 @@ Au total, les moyens financiers consacrés à la mise en œuvre du PNRU entre 20
 - 11 mars 2004 - 9 mai 2008 : Philippe Van de Maele
 - 1er août 2008 : Pierre Sallenave
 - 22 octobre 2014 : Nicolas Grivel
-- Depuis le 15 décembre 2021 : Anne-Claire Mialot
+- 15 décembre 2021 : Anne-Claire Mialot
+- Depuis le 2 octobre 2026 par intérim : Maxance Barré
 
 ## Dossier Anru
 

@@ -35,6 +35,6 @@ Avant le vote de la loi au Sénat, Pierre Madec, économiste à l'OFCE, estime q
 
 Denis Dessus, président de l'ordre des architectes, considère que la loi « se fonde sur des calculs faux et des contre-vérités » et est « un retour en arrière vers la production de masse. »
 
-Le permis de louer ne sera pas gratuit (la FNAIM regrette que son prix puisse être fixé, éventuellement arbitrairement, par les collectivités.[réf. nécessaire]
+Le permis de louer ne sera pas gratuit (la FNAIM regrette que son prix puisse être fixé, éventuellement arbitrairement, par les collectivités.
 
 La loi Elan est critiquée par le Groupement pour l'insertion des handicapés physiques et le Collectif Luttes et handicaps pour l'égalité et l'émancipation. Il est question d'un retour sur la loi Veil de 1975 sur l'obligation d'accessibilité des bâtiments publics et d'habitation, ainsi que d'une victoire du lobby des promoteurs immobiliers.

@@ -52,7 +52,7 @@ Dans les jours qui suivent l'attaque, il commence la rédaction d'un livre retra
 
 #### Député de la septième circonscription du Val-de-Marne (2024)
 
-En juin 2024, après la dissolution de l'Assemblée nationale par le président de la République, Emmanuel Macron, Vincent Jeanbrun, ouvertement soutenu par Richard Dell'Agnola[réf. nécessaire], se porte candidat dans la 7e circonscription du Val-de-Marne lors des élections législatives anticipées. Il est élu au second tour avec 50,67 % des suffrages, en obtenant 545 voix de plus que la députée sortante Rachel Keke.
+En juin 2024, après la dissolution de l'Assemblée nationale par le président de la République, Emmanuel Macron, Vincent Jeanbrun, ouvertement soutenu par Richard Dell'Agnola, se porte candidat dans la 7e circonscription du Val-de-Marne lors des élections législatives anticipées. Il est élu au second tour avec 50,67 % des suffrages, en obtenant 545 voix de plus que la députée sortante Rachel Keke.
 
 Il s'investit sur la politique de la ville, en préparant notamment un rapport, présenté en juin 2025, dans lequel il propose la « fin du logement social à vie ».
 

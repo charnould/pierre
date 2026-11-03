@@ -8,7 +8,7 @@ L'ANCOLS répond au besoin d’unifier le contrôle et d’évaluer de manière 
 
 L'Agence a 4 missions principales
 
-- Le contrôle de manière individuelle et thématique sur l’ensemble des acteurs du secteur (les groupes HLM et les groupes constitués autour des Comités interprofessionnels du logement (CIL).
+- Le contrôle de manière individuelle et thématique sur l’ensemble des acteurs du secteur (les groupes HLM et les groupes constitués autour des Comités interprofessionnels du logement - CIL).
 - L' évaluation de l’efficacité avec laquelle s’acquittent ces acteurs de la mission d’intérêt général qui leur est confiée,
 - la gestion des suites données à ces contrôles.
 - la production annuelle de données statistiques et financières relatives à la participation des employeurs à l’effort de construction.

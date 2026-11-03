@@ -38,7 +38,7 @@ En 2017, la population des QPV reste bien plus jeune que la moyenne de France m�
 
 En 2017, le Commissariat général à l'égalité des territoires (CGET) a publié un rapport à ce sujet et annoncé souhaiter mieux identifier ce processus et ses enjeux.
 
-En août 2024, le Céreq publie une nouvelle étude montrant que les jeunes des QPV accèdent moins à l'alternance que leurs voisins (23 % vs 33 %). A partir des données de l'enquête statistique Génération 2017, cette étude souligne également que l'alternance facilite l'insertion professionnelle pour tous les jeunes, mais que son impact est encore plus marqué pour ceux des QPV. Pendant leurs trois premières années de vie active, seuls 51 % des jeunes des QPV ayant suivi la voie scolaire connaissent des trajectoires dominées par l’emploi. Cette proportion s’élève à 68 % pour les alternants des QPV soit un bond de 17 points contre seulement 8 points d’écart dans les quartiers environnants.
+En août 2024, le Céreq publie une nouvelle étude montrant que les jeunes des QPV accèdent moins à l'alternance que leurs voisins (23 % vs 33 %). À partir des données de l'enquête statistique Génération 2017, cette étude souligne également que l'alternance facilite l'insertion professionnelle pour tous les jeunes, mais que son impact est encore plus marqué pour ceux des QPV. Pendant leurs trois premières années de vie active, seuls 51 % des jeunes des QPV ayant suivi la voie scolaire connaissent des trajectoires dominées par l’emploi. Cette proportion s’élève à 68 % pour les alternants des QPV soit un bond de 17 points contre seulement 8 points d’écart dans les quartiers environnants.
 
 ## Grands quartiers d'intérêt
 

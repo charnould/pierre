@@ -84,7 +84,7 @@ En cas de dissolution du pacte civil de solidarité le locataire peut demander �
 Pour tous les contrats de location signés à partir du 27 mars 2014
 
 - Quand le locataire veut prendre congé de son propriétaire, il bénéficie du préavis réduit à un mois s’il obtient un logement social, s’il est bénéficiaire de l’Allocation aux adultes handicapés (AAH) ou pour des raisons de santé ;
-- Quand c'est le bailleur qui veut donner congé à son locataire (en cas de vente ou de reprise), il doit tenir compte de conditions d'âge et de revenus des locataires protégés, lesquelles ont été « assouplies »[Comment ?]. De même un bailleur achetant un logement occupé ne peut plus lui donner congé immédiatement pour revendre ou prendre le bien.
+- Quand c'est le bailleur qui veut donner congé à son locataire (en cas de vente ou de reprise), il doit tenir compte de conditions d'âge et de revenus des locataires protégés, lesquelles ont été « assouplies ». De même un bailleur achetant un logement occupé ne peut plus lui donner congé immédiatement pour revendre ou prendre le bien.
 - Le délai de restitution au locataire du dépôt de garantie passe à un mois si l’état des lieux de sortie est conforme à celui d’entrée, et les intérêts dus en cas de retard sont de 10 % du loyer - hors charge - par mois de retard.
 - En cas de colocation, un contrat type est créé, et les règles de solidarité des colocataires et de leurs cautions changent : au départ d’un colocataire, lui et sa caution, ne peuvent pas être solidaires des loyers plus de six mois après la délivrance du congé en bonne et due forme.
 
@@ -110,7 +110,7 @@ Dans le futur, les dépôts de garantie pourraient éventuellement être sanctua
 
 ### Lutte contre l'« habitat indigne »
 
-Alors que 450 000 logements sont classés « habitat indigne » ou « indécent » en France[précision nécessaire], la loi met en place un dispositif encourageant la rénovation des copropriétés (en contraignant plus significativement s'il le faut les bailleurs à exécuter les travaux prescrits). Le législateur affiche aussi un objectif de lutte contre des marchands de sommeil.
+Alors que 450 000 logements sont classés « habitat indigne » ou « indécent » en France, la loi met en place un dispositif encourageant la rénovation des copropriétés (en contraignant plus significativement s'il le faut les bailleurs à exécuter les travaux prescrits). Le législateur affiche aussi un objectif de lutte contre des marchands de sommeil.
 
 Par exemple, les personnes condamnées pour « hébergement contraire à la dignité humaine » pourront se voir interdire l'achat de biens immobiliers destinés à la location durant 5 ans. Et un bailleur condamné à faire réaliser des travaux dans le logement loué de manière insalubre ou indigne pourra avoir une astreinte journalière fixée à 1 000 euros par jour de retard pour les bailleurs qui n'auraient pas effectué les travaux prescrits. Ce texte veut aussi accélérer le mouvement d'installation « des détecteurs de fumée dans tous les lieux d'habitation » en renforçant la responsabilité du propriétaire. La santé des habitants est concernée par une meilleure prise en compte des risques de pollution des sols par les documents d'urbanisme ; le certificat d'urbanisme prévu à l'article L. 410-1 du code de l'urbanisme doit indiquer « si le terrain est situé sur un site répertorié sur cette carte ou sur un ancien site industriel ou de service dont le service instructeur du certificat d'urbanisme a connaissance » et « le vendeur ou le bailleur du terrain est tenu d'en informer par écrit l'acquéreur ou le locataire \[…\]. À défaut et si une pollution constatée rend le terrain impropre à la destination précisée dans le contrat, dans un délai de deux ans à compter de la découverte de la pollution, l'acquéreur ou le locataire a le choix de demander la résolution du contrat ou, selon le cas, de se faire restituer une partie du prix de vente ou d'obtenir une réduction du loyer. L'acquéreur peut aussi demander la réhabilitation du terrain aux frais du vendeur lorsque le coût de cette réhabilitation ne paraît pas disproportionné par rapport au prix de vente. » (Un décret en Conseil d'État doit définir les modalités d'application de cet article.) Dans certains cas, des « mesures de gestion de la pollution sont définies en tenant compte de l'efficacité des techniques de réhabilitation dans des conditions économiquement acceptables ainsi que du bilan des coûts, des inconvénients et avantages des mesures envisagées ».
 
@@ -149,7 +149,7 @@ L'objectif du chapitre IV de la loi est de soutenir la construction de logements
 
 ### Création des organismes de foncier solidaire
 
-Afin de transcrire dans le droit français les Community Land Trust anglo-saxons[citation nécessaire], les organismes de foncier solidaire sont créés. Ils ont pour objet d'acquérir et de gérer des terrains, bâtis ou non, en vue de réaliser des logements ou des équipements collectifs, destinés à la location ou à l'accession à la propriété, à usage d'habitation principale. Les organismes de foncier solidaire sont des organismes à but non-lucratif qui doivent permettre aux ménages modestes d'accéder à la propriété grâce à la dissociation du foncier et du bâti. Cela participe à une logique anti-spéculative.
+Afin de transcrire dans le droit français les Community Land Trust anglo-saxons, les organismes de foncier solidaire sont créés. Ils ont pour objet d'acquérir et de gérer des terrains, bâtis ou non, en vue de réaliser des logements ou des équipements collectifs, destinés à la location ou à l'accession à la propriété, à usage d'habitation principale. Les organismes de foncier solidaire sont des organismes à but non-lucratif qui doivent permettre aux ménages modestes d'accéder à la propriété grâce à la dissociation du foncier et du bâti. Cela participe à une logique anti-spéculative.
 
 ### Urbanisme
 
@@ -180,13 +180,13 @@ Olivier Babeau, en septembre 2013, reprenant l'analyse économique standard, est
 
 ### La critique des professionnels de l'immobilier
 
-La Fédération des professionnels de l'immobilier a demandé « la suppression des rigidités et des entraves diverses à la construction, y compris celles instaurées par la loi ALUR » ; un autre acteur du secteur, Guy Nafilyan, président du conseil d'administration de Kaufman & Broad, prend publiquement position contre cette loi en l'estimant « absurde » et « mauvaise »[pourquoi ?].
+La Fédération des professionnels de l'immobilier a demandé « la suppression des rigidités et des entraves diverses à la construction, y compris celles instaurées par la loi ALUR » ; un autre acteur du secteur, Guy Nafilyan, président du conseil d'administration de Kaufman & Broad, prend publiquement position contre cette loi en l'estimant « absurde » et « mauvaise ».
 
 De façon plus concrète, la suppression du coefficient d'occupation des sols (COS), inventé en 1958, puis étendu à toutes les communes dotées d'un plan d'urbanisme, pose un problème car il renvoie à des mesures qui risquent de mettre fin à des dérogations déjà accordées. Par ailleurs, la loi accroit considérablement la complexité administrative, ralentit le traitement des dossiers, sans empêcher la fuite des investisseurs.
 
 ### La réception de la presse internationale
 
-La presse britannique, notamment _The Economist_ et _The Financial Times_, critique durement la loi[pourquoi ?].
+La presse britannique, notamment _The Economist_ et _The Financial Times_, critique durement la loi.
 
 ### Remise en question par le gouvernement Valls 2
 
