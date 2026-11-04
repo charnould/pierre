@@ -1,10 +1,10 @@
 # PIERRE
 
-## Tous les métiers HLM réunis dans un applicatif IA-First et open code.
+## Tous les métiers HLM réunis dans un applicatif IA-First, open code et gratuit.
 
 PIERRE réunit les équipes HLM dans une même expérience utilisateur et met l’intelligence artificielle au cœur de leur travail. Proposé en **open code**, l'applicatif est auditable, **auto-hébergeable** et **gratuit** pour les bailleurs sociaux.
 
-1. **Une expérience commune à tous les métiers HLM** : réclamations, impayés, relocation, assurance habitation… Les mêmes repères d’un métier à l’autre et une continuité entre les processus. Moins de frictions et de ruptures, davantage de capacité d’action et de performance opérationnelle au quotidien.
+1. **Une expérience commune à tous les métiers HLM** : réclamations, impayés, relocation, assurance habitation… Les mêmes repères d’un métier à l’autre et une continuité entre les processus et les équipes. Moins de frictions et de ruptures, davantage de capacité d’action et de performance opérationnelle au quotidien.
 
 2. **L’IA au cœur du travail, pas greffée sur les logiciels historiques** : votre agent comprend les dossiers, prépare les décisions et les communications, exécute les tâches répétitives et mobilise les bonnes personnes au bon moment sur la base de vos processus. PIERRE fait travailler les humains et l’IA côte à côte.
 
@@ -30,7 +30,7 @@ Les progrès de l’intelligence artificielle rendent aujourd’hui possible une
 
 Au fil des décennies, **les applicatifs HLM historiques ont trop accumulé**. Trop d'interfaces, trop de dette technique, trop de code spaghetti, trop de roadmap qui s'étirent à l'infini. Cette accumulation frustre les utilisateurs, complexifie les processus, introduit des lenteurs et progressivement, mais sûrement, fait diverger les outils des pratiques du quotidien.
 
-À l'image d'un directeur général d’organisme HLM qui oublierait ce qu’est le métier réel d'un gardien, les éditeurs logiciels ont oublié le terrain.
+À l'image d'un directeur général d’organisme HLM qui oublierait ce qu’est le métier de gardien, les éditeurs logiciels ont oublié le terrain.
 
 Introduire l’IA dans les processus HLM ne consiste pas à superposer un chatbot à des logiciels inchangés. **Il faut réinventer le logiciel lui-même**, ainsi que la structure des données sur lesquelles il repose.
 
@@ -40,15 +40,15 @@ PIERRE est un **applicatif « User-First × IA-First »** : l’intelligence art
 
 Sans données structurées et à jour, pas de systèmes agentiques capables d'interpréter les données et les dossiers. Sans données réelles, pas de modèles de langage spécialisés. **L’IA HLM ne se décrète pas : elle s'invente et se construit**.
 
-[Core Data HLM](./02-core-data-hlm/index.md) définit un référentiel de données minimal, robuste et intelligible par les humains comme par les machines. Il permet aux systèmes d’IA d’interpréter les données et les dossiers, et démultiplie les usages utiles aux équipes.
+[Core Data HLM](./02-core-data-hlm/index.md) définit un référentiel de données minimal, robuste et intelligible par les humains comme par les machines. Il permet aux systèmes agentiques d’interpréter les données et les dossiers, et démultiplie les usages utiles aux équipes.
 
-Au sein de [Core Models HLM](./03-core-models-hlm/index.md), [CARL](./03-core-models-hlm/CARL.md) est le **premier modèle de langage entrainé spécifiquement pour le mouvement HLM** : hyper-spécialisé, compact, frugal, souverain et open-weight.
+Au sein de [Core Models HLM](./03-core-models-hlm/index.md), [CARL](./03-core-models-hlm/CARL.md) est le **premier modèle de langage entrainé spécifiquement pour le mouvement HLM** : hyper-spécialisé, compact, frugal, souverain et open-weight, il qualifie en 50 millisecondes les messages des candidats et locataires.
 
 ### Le mouvement HLM n’a pas les contraintes de Wall Street
 
-À l’échelle du mouvement, les volumes se comptent en millions (de logements, de réclamations, de bons commande et de quittances). Le « temps réel », quant à lui, s'apprécie et se mesure en minutes, non en millisecondes.
+À l’échelle du mouvement, les volumes se comptent en millions (de logements, de réclamations, de bons commande et de quittances). Le « temps réel utile », quant à lui, s'apprécie et se mesure en minutes, non en millisecondes. Divisée par le nombre de bailleurs, cette échelle est anecdotique. Quoi qu'en dise le gotha informatique.
 
-Dans ce contexte, une architecture simple n’est pas un manque d’ambition. C’est un choix d’ingénierie assumé : privilégier la robustesse, la sobriété et la maîtrise plutôt qu'une complexité inutile et datée. Ce parti pris est exposé dans « [SQLite et un harnais suffisent pour le logement social français](./07-articles/2026-05-27-rag-sqlite.md) » (article technique en anglais).
+Dans ce contexte, une architecture simple n’est pas un manque d’ambition. C’est un choix d’ingénierie assumé : privilégier la robustesse, la sobriété et la maîtrise plutôt qu'une complexité inutile et datée. Ce parti pris est exposé dans « [SQLite et un harnais suffisent pour le logement social français](./07-articles/2026-05-27-rag-sqlite.md) » (article en anglais).
 
 **La simplicité ne se fait pas au détriment de la sécurité**. PIERRE propose nativement une approche BYOK (« Bring Your Own Key ») : chaque bailleur choisit son modèle d’IA, maîtrise ses clés et détermine les conditions d’utilisation. Les traitements agentiques s’exécutent dans des environnements confinés avec une isolation matérielle stricte. Auto-hébergeable, vos données sont à Paris, Dijon ou autre part, à votre discrétion. Auditable, vous pouvez challenger l'implémentation.
 

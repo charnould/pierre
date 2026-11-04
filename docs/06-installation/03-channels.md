@@ -106,6 +106,18 @@ Le courrier postal simple, `LRAR`, `LRE AR24` et `ERE` sont proposés via le Gro
 
 Prendre attache auprès de `alexis.chiariglione@docaposte.fr` et indiquer vouloir ouvrir les services nécessaires au projet `Pierre` porté par Charles-Henri Arnould/BECKREL SAS. (Ne pas hésiter à mettre `charnould@pierre-ia.org` en copie.)
 
+##### 2. Paramétrer PIERRE
+
+Dans le bureau, `Administration` → `Prestataires` → `Courrier (via La Poste)`.
+
+Renseigner l’identifiant client, le secret, l’utilisateur et le mot de passe Maileva. Un utilisateur `sandbox.*` utilise automatiquement la sandbox. Un utilisateur réel utilise automatiquement la production : il suffit de remplacer les identifiants.
+
+L’adresse expéditeur sert au courrier simple et au LRAR. L’identifiant d’expéditeur électronique et la clé TOTP servent à l’ERE et à la LRE. Pierre conserve la clé TOTP chiffrée et génère les codes à usage unique. Tous les envois LRE partent sous cet expéditeur commun ; l’historique conserve l’utilisateur Pierre qui a déclenché l’envoi.
+
+Une LRE vers un particulier exige la référence d’une preuve de consentement déjà recueillie. Ce stockage de clé TOTP et cet expéditeur partagé s’écartent de la recommandation publique Maileva : obtenir une confirmation écrite de Maileva/AR24 avant de les utiliser en production.
+
+Le webhook affiché est enregistré chez Maileva pour le courrier simple et le LRAR lorsque le serveur est accessible publiquement. La LRE et l’ERE ne figurent pas dans le centre de notifications : Pierre les interroge, comme tout envoi non terminé, toutes les 15 minutes. Une adresse locale force ce mode pour tous les produits.
+
 ### Disclaimer
 
 En contactant les chargés d'affaire `La Poste`, vous faites deux choses :
