@@ -282,12 +282,24 @@ contextBridge.exposeInMainWorld('api', {
         }
         rcs: { configured: boolean; from: string; secret: string }
         email: { configured: boolean; domain: string; account: string }
-        webhooks: { rcs: string; email: string }
+        maileva: {
+          configured: boolean
+          clientId: string
+          username: string
+          senderId: string
+          address: string
+          target: '' | 'sandbox' | 'production'
+          postalReady: boolean
+          electronicReady: boolean
+          tracking: '' | 'webhook' | 'poll'
+          secretsReadable: boolean
+        }
+        webhooks: { rcs: string; email: string; maileva: string }
       }
     } | null>,
   putAdminProviders: (params: { url: string; body: Record<string, unknown> }) =>
     ipcRenderer.invoke(IpcChannel.setup.providersPut, params) as Promise<{
-      data?: { rcsSecret?: string }
+      data?: { rcsSecret?: string; warning?: string }
       error?: { message: string }
     } | null>,
   getAdminSetup: (params: { url: string }) =>

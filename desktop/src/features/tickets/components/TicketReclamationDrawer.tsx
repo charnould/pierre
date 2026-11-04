@@ -13,6 +13,10 @@ import {
 import { canonicalizeTicketTags, ticketTagOptions } from '@/features/tickets/lib/ticket-tags'
 import type { TicketComposeMode } from '@/features/tickets/lib/use-tickets-view-data'
 import { useWorkflowExport } from '@/features/workflow/hooks/useWorkflowExport'
+import {
+  generateDocxFilename,
+  generateDocxFromTemplate
+} from '@/features/workflow/lib/generate-docx'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { InspectorSplit } from '@/shared/components/inspector/inspector-split'
 import { InspectorTimelineSkeleton } from '@/shared/components/inspector/inspector-timeline-skeleton'
@@ -38,7 +42,13 @@ import { ticketsSetup } from '@/shared/lib/instance-customization'
 import { scrollBehavior } from '@/shared/lib/prefers-reduced-motion'
 import { getTicketCellText } from '@/shared/lib/ticket-row'
 import type { TicketRow } from '@/shared/types'
-import { type Activity, activityText } from '@/shared/types/activites'
+import {
+  type Activity,
+  activityText,
+  type MailDocument,
+  type PostalAddress,
+  type SendCommunicationPayload
+} from '@/shared/types/activites'
 import type { OrgUser } from '@/shared/types/users'
 
 import { rcs_compose_payload, type RcsContenu } from '../../../../../shared/rcs-message'
@@ -52,6 +62,34 @@ import type { TicketReplyFormat } from './TicketTenantReplyDraft'
 
 function externalApplication() {
   return readExternalApplication(ticketsSetup())
+}
+
+function postalAddress(ticket: TicketRow, fallback: string): PostalAddress | null {
+  const street = getTicketCellText(ticket, 'pierre_adresse').trim()
+  const blob = fallback.trim()
+  let postalCode = getTicketCellText(ticket, 'pierre_code_postal').trim()
+  let city = getTicketCellText(ticket, 'pierre_ville').trim()
+  const source = street || blob
+  if ((!postalCode || !city) && source) {
+    const match = source.match(/(\d{5})\s+(.+)$/)
+    if (match?.[1] && match[2]) {
+      postalCode = postalCode || match[1]
+      city = city || match[2].trim()
+    }
+  }
+  const line6 = `${postalCode} ${city}`.replace(/\s+/g, ' ').trim()
+  if (!source || !/^\d{5}\s+\S/.test(line6) || line6.length > 38) return null
+  const line2 = (blob && blob !== source ? blob : source).slice(0, 38)
+  const line4 = street && street !== line2 ? street.slice(0, 38) : undefined
+  return { line2, ...(line4 ? { line4 } : {}), line6, country: 'FR' }
+}
+
+function encodeBase64(bytes: Uint8Array): string {
+  let binary = ''
+  for (let index = 0; index < bytes.length; index += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000))
+  }
+  return btoa(binary)
 }
 
 interface Props {
@@ -289,28 +327,38 @@ export function TicketReclamationDrawer({
     })
   }
 
+  const letterKey = useRef({ fingerprint: '', value: '' })
   const sendAndRefresh = async (
-    params:
+    params: { idempotencyKey?: string } & (
       | { channel: 'rcs'; destinataire: string; contenu: RcsContenu }
+      | { channel: 'email'; destinataire: string; contenu: { subject?: string; body: string } }
       | {
-          channel: 'email' | 'postal_letter'
-          destinataire: string
+          channel: 'postal_letter'
+          destinataire: PostalAddress
+          document: MailDocument
           contenu: { subject?: string; body: string }
         }
+    )
   ) => {
     return runTicketSubmission(async () => {
-      if (!url || !window.api?.sendCommunication || !params.destinataire.trim()) {
+      if (!url || !window.api?.sendCommunication) {
         toast.add({ title: 'Coordonnée du destinataire indisponible', type: 'error' })
         return false
       }
+      if (typeof params.destinataire === 'string' && !params.destinataire.trim()) {
+        toast.add({ title: 'Coordonnée du destinataire indisponible', type: 'error' })
+        return false
+      }
+      const { idempotencyKey, ...body } = params
       const response = await window.api.sendCommunication({
         url,
-        idempotencyKey: crypto.randomUUID(),
+        idempotencyKey: idempotencyKey ?? crypto.randomUUID(),
         contexte: 'tickets',
         ref: idReclamation,
-        ...params,
-        destinataire: params.destinataire.trim()
-      })
+        ...body,
+        destinataire:
+          typeof params.destinataire === 'string' ? params.destinataire.trim() : params.destinataire
+      } as SendCommunicationPayload)
       if (!response) {
         toast.add({ title: 'Impossible d’envoyer le message', type: 'error' })
         return false
@@ -619,15 +667,47 @@ export function TicketReclamationDrawer({
               }}
               onLetterSend={() => {
                 const trimmed = letterBody.trim()
-                if (!trimmed) return
-                void sendAndRefresh({
-                  channel: 'postal_letter',
-                  destinataire: destinataireAddress,
-                  contenu: {
-                    ...(letterSubject.trim() ? { subject: letterSubject.trim() } : {}),
-                    body: trimmed
+                const readFile = window.api?.getSetupFile
+                if (!trimmed || !ticket || !url || !readFile) return
+                const address = postalAddress(ticket, destinataireAddress)
+                if (!address) {
+                  toast.add({ title: 'Adresse postale incomplète', type: 'error' })
+                  return
+                }
+                void (async () => {
+                  const template = await readFile({ url, id: 'tickets/letter.docx' })
+                  if (!template) {
+                    toast.add({ title: 'Modèle de courrier absent', type: 'error' })
+                    return
                   }
-                })
+                  const bytes = await generateDocxFromTemplate(template, {
+                    SUBJECT: letterSubject,
+                    BODY: trimmed,
+                    ADRESSE: getTicketCellText(ticket, 'pierre_adresse'),
+                    CODE_POSTAL: getTicketCellText(ticket, 'pierre_code_postal'),
+                    VILLE: getTicketCellText(ticket, 'pierre_ville')
+                  })
+                  const fingerprint = `${letterSubject}\n${trimmed}\n${address.line6}`
+                  if (letterKey.current.fingerprint !== fingerprint) {
+                    letterKey.current = { fingerprint, value: crypto.randomUUID() }
+                  }
+                  const sent = await sendAndRefresh({
+                    channel: 'postal_letter',
+                    idempotencyKey: letterKey.current.value,
+                    destinataire: address,
+                    document: {
+                      name: `${generateDocxFilename()}.docx`,
+                      mediaType:
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                      contentBase64: encodeBase64(bytes)
+                    },
+                    contenu: {
+                      ...(letterSubject.trim() ? { subject: letterSubject.trim() } : {}),
+                      body: trimmed
+                    }
+                  })
+                  if (sent) letterKey.current = { fingerprint: '', value: '' }
+                })()
               }}
               onExternalInject={() => void handleExternalInjection()}
             />

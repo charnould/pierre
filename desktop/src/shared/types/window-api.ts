@@ -231,14 +231,26 @@ declare global {
           }
           rcs: { configured: boolean; from: string; secret: string }
           email: { configured: boolean; domain: string; account: string }
-          webhooks: { rcs: string; email: string }
+          maileva: {
+            configured: boolean
+            clientId: string
+            username: string
+            senderId: string
+            address: string
+            target: '' | 'sandbox' | 'production'
+            postalReady: boolean
+            electronicReady: boolean
+            tracking: '' | 'webhook' | 'poll'
+            secretsReadable: boolean
+          }
+          webhooks: { rcs: string; email: string; maileva: string }
         }
       } | null>
       /** `PUT /admin/providers` */
-      putAdminProviders: (params: {
-        url: string
-        body: Record<string, unknown>
-      }) => Promise<{ data?: { rcsSecret?: string }; error?: { message: string } } | null>
+      putAdminProviders: (params: { url: string; body: Record<string, unknown> }) => Promise<{
+        data?: { rcsSecret?: string; warning?: string }
+        error?: { message: string }
+      } | null>
       /** `GET /admin/setup` */
       getAdminSetup: (params: { url: string }) => Promise<{
         texts: Record<string, string | null>

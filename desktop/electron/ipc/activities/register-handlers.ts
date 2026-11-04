@@ -104,10 +104,11 @@ export function registerActivitiesHandlers(partition: string): void {
           ? 'courrier'
           : channel === 'postal_registered_letter_with_acknowledgement'
             ? 'lrar'
-            : channel === 'electronic_registered_delivery' ||
-                channel === 'electronic_registered_letter'
-              ? 'lre'
-              : channel
+            : channel === 'electronic_registered_delivery'
+              ? 'ere'
+              : channel === 'electronic_registered_letter'
+                ? 'lre'
+                : channel
       try {
         const response = await netFetch(`${url}/communications/${route}`, {
           method: 'POST',

@@ -106,7 +106,19 @@ type ProvidersView = {
   ai: { configured: boolean; type: string; baseUrl: string; model: string; effort: string }
   rcs: { configured: boolean; from: string; secret: string }
   email: { configured: boolean; domain: string; account: string }
-  webhooks: { rcs: string; email: string }
+  maileva: {
+    configured: boolean
+    clientId: string
+    username: string
+    senderId: string
+    address: string
+    target: '' | 'sandbox' | 'production'
+    postalReady: boolean
+    electronicReady: boolean
+    tracking: '' | 'webhook' | 'poll'
+    secretsReadable: boolean
+  }
+  webhooks: { rcs: string; email: string; maileva: string }
 }
 
 function desktopApi() {
@@ -276,6 +288,13 @@ export function ProvidersPanel({
   const [emailToken, setEmailToken] = useState('')
   const [emailAccount, setEmailAccount] = useState('')
   const [emailSecret, setEmailSecret] = useState('')
+  const [mailevaClientId, setMailevaClientId] = useState('')
+  const [mailevaUsername, setMailevaUsername] = useState('')
+  const [mailevaClientSecret, setMailevaClientSecret] = useState('')
+  const [mailevaPassword, setMailevaPassword] = useState('')
+  const [mailevaSenderId, setMailevaSenderId] = useState('')
+  const [mailevaTotp, setMailevaTotp] = useState('')
+  const [mailevaAddress, setMailevaAddress] = useState('')
   const [emailHtml, setEmailHtml] = useState('')
   const [logoStored, setLogoStored] = useState(false)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
@@ -289,7 +308,8 @@ export function ProvidersPanel({
     organism: 'Aucune modification',
     ai: 'Aucune modification',
     rcs: 'Aucune modification',
-    email: 'Aucune modification'
+    email: 'Aucune modification',
+    maileva: 'Aucune modification'
   })
 
   useEffect(() => {
@@ -359,6 +379,10 @@ export function ProvidersPanel({
     setRcsSecret((current) => next.rcs.secret || current)
     setEmailDomain(next.email.domain)
     setEmailAccount(next.email.account)
+    setMailevaClientId(next.maileva.clientId)
+    setMailevaUsername(next.maileva.username)
+    setMailevaSenderId(next.maileva.senderId)
+    setMailevaAddress(next.maileva.address)
   }
 
   async function reload() {
@@ -462,6 +486,41 @@ export function ProvidersPanel({
     await reload()
     setPending(false)
     setStatus((current) => ({ ...current, email: 'Enregistré' }))
+    toast.add({ title: 'Enregistré', type: 'success' })
+  }
+
+  async function saveMaileva() {
+    setPending(true)
+    const maileva = await desktopApi()?.putAdminProviders?.({
+      url,
+      body: {
+        group: 'maileva',
+        clientId: mailevaClientId,
+        username: mailevaUsername,
+        clientSecret: mailevaClientSecret,
+        password: mailevaPassword,
+        senderId: mailevaSenderId,
+        totpSecret: mailevaTotp,
+        address: mailevaAddress
+      }
+    })
+    if (!maileva || maileva.error) {
+      setPending(false)
+      setStatus((current) => ({
+        ...current,
+        maileva: maileva?.error?.message ?? 'Enregistrement impossible'
+      }))
+      return
+    }
+    setMailevaClientSecret('')
+    setMailevaPassword('')
+    setMailevaTotp('')
+    await reload()
+    setPending(false)
+    setStatus((current) => ({
+      ...current,
+      maileva: maileva.data?.warning ?? 'Enregistré'
+    }))
     toast.add({ title: 'Enregistré', type: 'success' })
   }
 
@@ -1036,8 +1095,141 @@ export function ProvidersPanel({
             {saveBar('email', () => void saveEmail())}
           </Section>
 
-          <Section id="courrier" title="Courrier postal (via La Poste)">
-            <FieldDescription>Intégration en cours</FieldDescription>
+          <Section
+            id="courrier"
+            title="Courrier (via La Poste)"
+            mark={view?.maileva.configured ? 'Maileva paramétré' : undefined}
+          >
+            <Rows>
+              <Row
+                title="Environnement détecté"
+                description="Un utilisateur sandbox.* appelle la sandbox Maileva. Un utilisateur réel appelle la production. Remplacer les identifiants suffit à changer de cible."
+              >
+                <Input
+                  className="py-0 font-mono leading-8"
+                  readOnly
+                  value={
+                    mailevaUsername.trim().toLowerCase().startsWith('sandbox.')
+                      ? 'Sandbox'
+                      : mailevaUsername.trim()
+                        ? 'Production'
+                        : ''
+                  }
+                  aria-label="Environnement détecté"
+                />
+              </Row>
+              <Row title="Identifiant client" htmlFor={`${fieldId}-maileva-client`}>
+                <MarkedInput
+                  id={`${fieldId}-maileva-client`}
+                  value={mailevaClientId}
+                  marked={saved(mailevaClientId, view?.maileva.clientId)}
+                  onChange={(value) => {
+                    setMailevaClientId(value)
+                    touch('maileva')
+                  }}
+                />
+              </Row>
+              <Row
+                title="Secret client"
+                description="Un champ vide conserve le secret déjà enregistré pour le même compte."
+                htmlFor={`${fieldId}-maileva-secret`}
+              >
+                <MarkedInput
+                  id={`${fieldId}-maileva-secret`}
+                  value={mailevaClientSecret}
+                  secret
+                  marked={view?.maileva.configured === true && mailevaClientSecret === ''}
+                  onChange={(value) => {
+                    setMailevaClientSecret(value)
+                    touch('maileva')
+                  }}
+                />
+              </Row>
+              <Row title="Utilisateur" htmlFor={`${fieldId}-maileva-user`}>
+                <MarkedInput
+                  id={`${fieldId}-maileva-user`}
+                  value={mailevaUsername}
+                  marked={saved(mailevaUsername, view?.maileva.username)}
+                  onChange={(value) => {
+                    setMailevaUsername(value)
+                    touch('maileva')
+                  }}
+                />
+              </Row>
+              <Row
+                title="Mot de passe"
+                description="Un champ vide conserve le mot de passe du même compte."
+                htmlFor={`${fieldId}-maileva-password`}
+              >
+                <MarkedInput
+                  id={`${fieldId}-maileva-password`}
+                  value={mailevaPassword}
+                  secret
+                  marked={view?.maileva.configured === true && mailevaPassword === ''}
+                  onChange={(value) => {
+                    setMailevaPassword(value)
+                    touch('maileva')
+                  }}
+                />
+              </Row>
+              <Row
+                title="Adresse expéditeur"
+                description="Six lignes maximum, 38 caractères par ligne. La ligne 6 contient le code postal et la ville."
+                htmlFor={`${fieldId}-maileva-address`}
+              >
+                <Textarea
+                  id={`${fieldId}-maileva-address`}
+                  value={mailevaAddress}
+                  spellCheck={false}
+                  className="max-h-96 font-mono"
+                  onChange={(event) => {
+                    setMailevaAddress(event.target.value)
+                    touch('maileva')
+                  }}
+                />
+              </Row>
+              <Row
+                title="Expéditeur LRE/ERE"
+                description="Identifiant Maileva de l’expéditeur électronique commun."
+                htmlFor={`${fieldId}-maileva-sender`}
+              >
+                <MarkedInput
+                  id={`${fieldId}-maileva-sender`}
+                  value={mailevaSenderId}
+                  marked={saved(mailevaSenderId, view?.maileva.senderId)}
+                  onChange={(value) => {
+                    setMailevaSenderId(value)
+                    touch('maileva')
+                  }}
+                />
+              </Row>
+              <Row
+                title="Clé TOTP"
+                description="Clé permanente de l’expéditeur LRE. Pierre génère les codes à usage unique. Un champ vide conserve la clé du même compte."
+                htmlFor={`${fieldId}-maileva-totp`}
+              >
+                <MarkedInput
+                  id={`${fieldId}-maileva-totp`}
+                  value={mailevaTotp}
+                  secret
+                  marked={view?.maileva.electronicReady === true && mailevaTotp === ''}
+                  onChange={(value) => {
+                    setMailevaTotp(value)
+                    touch('maileva')
+                  }}
+                />
+              </Row>
+              <CopyField
+                label="Webhook Maileva"
+                description={
+                  view?.maileva.tracking === 'webhook'
+                    ? 'Courrier et LRAR sont notifiés ici. LRE et ERE restent interrogés toutes les 15 minutes.'
+                    : 'Adresse non publique : Pierre interroge Maileva toutes les 15 minutes.'
+                }
+                value={view?.webhooks.maileva ?? ''}
+              />
+            </Rows>
+            {saveBar('maileva', () => void saveMaileva())}
           </Section>
 
           <Section id="signature" title="Signature électronique (via La Poste)">
