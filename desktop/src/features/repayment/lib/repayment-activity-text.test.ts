@@ -43,20 +43,20 @@ describe('repayment phase and assignment activities', () => {
       type: 'case.group_changed',
       contenu: JSON.stringify({
         version: 2,
-        before: 'amiable',
-        after: 'contentieux'
+        before: 'Recouvrement amiable',
+        after: 'Contentieux'
       })
     })
 
     expect(parseRepaymentStatusChange(row)).toEqual({
       champ: 'bucket',
-      avant: 'amiable',
-      apres: 'contentieux',
+      avant: 'Recouvrement amiable',
+      apres: 'Contentieux',
       avantUnset: false
     })
     expect(formatRepaymentStatusChangeText(row)).toContain('→')
     expect(formatStatusChangeTimelineSentence(parseRepaymentStatusChange(row)!)).toBe(
-      'a déplacé le dossier du groupe Recouvrement amiable vers Contentieux'
+      'a changé la phase de Recouvrement amiable vers Contentieux'
     )
     expect(parseRepaymentStatusChangeComment(row)).toBeNull()
   })
@@ -68,8 +68,8 @@ describe('repayment phase and assignment activities', () => {
           type: 'case.group_changed',
           contenu: JSON.stringify({
             version: 2,
-            before: 'amiable',
-            after: 'contentieux',
+            before: 'Recouvrement amiable',
+            after: 'Contentieux',
             note: '  Échec des relances amiables.  '
           })
         })

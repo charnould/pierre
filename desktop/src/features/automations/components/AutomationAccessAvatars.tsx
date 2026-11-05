@@ -49,9 +49,7 @@ export function AutomationAccessAvatars({ automation }: { automation: Automation
         ))}
         {hidden.length > 0 ? (
           <Tooltip>
-            <TooltipTrigger
-              render={<AvatarGroupCount className="text-xs">+{hidden.length}</AvatarGroupCount>}
-            />
+            <TooltipTrigger render={<AvatarGroupCount>+{hidden.length}</AvatarGroupCount>} />
             <TooltipContent>
               {hidden.map((login) => formatOrgCollaboratorLabel(login)).join(', ')}
             </TooltipContent>

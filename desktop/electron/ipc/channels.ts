@@ -48,7 +48,9 @@ export const IpcChannel = {
     providersGet: 'get-admin-providers',
     providersPut: 'put-admin-providers',
     adminDelete: 'delete-admin-chatbot',
-    emailTest: 'post-email-test'
+    emailTest: 'post-email-test',
+    verifyRepaymentMessage: 'verify-repayment-message',
+    testRepaymentEmail: 'test-repayment-email'
   },
   admin: {
     conversations: 'get-admin-conversations',

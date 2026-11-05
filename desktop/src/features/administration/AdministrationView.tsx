@@ -73,9 +73,8 @@ function sectionsFor(ids: readonly SectionId[]) {
 const SETUP_HINT: Record<EntryId, string> = {
   'chatbots/default':
     "Paramétrer l'agent conversationnel public et ceux spécialisés et à l'usage unique des collaborateurs de l'organisme.",
-  tickets: 'Paramétrer le module « Impayés ».',
-  repayment:
-    'Phases du recouvrement, consigne de l’agent, courrier du plan d’apurement et modèles de relance.',
+  tickets: 'Paramétrer le module « Réclamations ».',
+  repayment: 'Phases du recouvrement, consigne de l’agent, documents Word et messages.',
   'about/AGENTS.md': 'Consigne du briefing d’un locataire, d’un client, d’un lot ou d’un bâtiment.',
   'automations/AGENTS.md': 'Consigne suivie quand une automatisation rédige un rapport.'
 }

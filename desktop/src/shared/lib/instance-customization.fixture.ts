@@ -16,32 +16,18 @@ export const CUSTOMIZATION_FIXTURE: InstanceCustomization = {
     }
   },
   repayments: {
-    buckets: [
-      { id: 'non_traites', label: 'Non traités' },
-      { id: 'amiable', label: 'Recouvrement amiable' },
-      { id: 'contentieux', label: 'Contentieux' },
-      { id: 'clients_partis', label: 'Clients partis' }
-    ],
-    actions: {
-      dossier: ['Analyser le dossier', 'Joindre le locataire'],
-      bulk_operations: ['Envoyer un RCS de relance']
-    },
+    phases: ['Non traités', 'Recouvrement amiable', 'Contentieux', 'Clients partis'],
+    caseActions: ['Analyser le dossier', 'Joindre le locataire'],
+    batchActions: ['Envoyer un RCS de relance'],
     tags: ['décès', '+65 ans'],
-    template_groups: ['RCS/SMS au (ex-)client'],
-    templates: {},
-    create_plan: {
-      schedule: {
-        defaultMonths: 6,
-        maxEffortRate: 35,
-        minDailyRemainder: 15,
-        thresholds: [
-          { months: 12, message: 'Un échéancier de plus de 12 mensualités doit être confirmé.' },
-          {
-            months: 24,
-            message:
-              'Un plan d’apurement de plus de 24 mensualités est réservé à des cas spéciaux documentés au sein de votre organisme.'
-          }
-        ]
+    messages: [],
+    schedule: {
+      defaultInstallments: 6,
+      maxEffortPercent: 35,
+      minDailyRemainderEuros: 15,
+      confirmAfterInstallments: {
+        '12': 'Un échéancier de plus de 12 mensualités doit être confirmé.',
+        '24': 'Un plan d’apurement de plus de 24 mensualités est réservé à des cas spéciaux documentés au sein de votre organisme.'
       }
     }
   },

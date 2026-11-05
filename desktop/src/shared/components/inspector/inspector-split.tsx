@@ -3,7 +3,7 @@ import type { ReactNode, Ref } from 'react'
 import { cn } from '@/shared/lib/utils'
 
 const paneClass =
-  'scroll-fade min-h-0 min-w-0 overflow-y-auto overscroll-contain pt-2 pb-4 scrollbar-none outline-none focus:outline-none focus-visible:ring-0'
+  'min-h-0 min-w-0 overflow-y-auto overscroll-contain pt-2 pb-4 scrollbar-none outline-none focus:outline-none focus-visible:ring-0'
 
 export function InspectorSplit({
   left,

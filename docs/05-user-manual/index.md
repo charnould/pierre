@@ -69,5 +69,6 @@ Ces écrans existent dans les droits ou dans l’administration. Ils n’ont pas
 - [Administration · Chatbot](./23-admin-chatbot.md) — L’écran Chatbot règle les assistants de l’organisme : le chatbot public ouvert aux locataires, et les agents internes attribués aux collaborateurs. Chaque assistant a un JSON, une consigne, et le chatbot public a aussi une icône.
 - [Administration · Conversations](./24-admin-conversations.md) — L’écran Conversations sert à relire ce que les personnes ont demandé à un assistant, puis à qualifier la qualité de l’échange pour les administrateurs qui amélioreront ensuite l’encyclopédie ou les consignes.
 - [Administration · Statistiques](./25-admin-statistiques.md) — L’écran Statistiques sert à voir combien le modèle de langage consomme, et à ouvrir le journal d’un traitement lorsque une réponse semble anormale.
+- [Paramétrer les impayés](./26-admin-repayment.md) — repayment.json règle le module « Impayés ». On le colle dans Administration → Impayés → Configuration. Les textes affichés sont en français. Les clés sont en anglais.
 
 <!-- docs-pagesstop -->

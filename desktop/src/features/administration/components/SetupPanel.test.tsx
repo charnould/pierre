@@ -2,38 +2,42 @@ import { describe, expect, test } from 'bun:test'
 
 import { renderToStaticMarkup } from 'react-dom/server'
 
-import { SetupChecklist } from './SetupPanel'
+import { RepaymentDocuments, StoredMark, TemplateOptionLabel } from './SetupPanel'
 
-describe('SetupChecklist', () => {
-  test('counts stored pieces without a separate frame', () => {
-    const html = renderToStaticMarkup(
-      <SetupChecklist
-        pieces={[
-          { id: 'configuration', done: true, label: 'Configuration' },
-          { id: 'consigne', done: false, label: 'Consigne' },
-          { id: 'icon', done: false, label: 'Icône' }
-        ]}
-      />
-    )
-    expect(html).toContain('Avancement')
-    expect(html).toContain('1 sur 3')
-    expect(html).toContain('Configuration')
-    expect(html).toContain('Consigne')
-    expect(html).toContain('Icône')
-    expect(html).toContain('enregistrée')
-    expect(html).toContain('à faire')
-    expect(html).not.toContain('Pièces')
-    expect(html).not.toContain('rounded-md border p-3')
-    expect(html.split('lucide-circle-check').length - 1).toBe(1)
-    expect(html.split('lucide-circle ').length - 1).toBe(2)
+describe('StoredMark', () => {
+  test('names the stored piece', () => {
+    const html = renderToStaticMarkup(<StoredMark name="Configuration, enregistrée" />)
+    expect(html).toContain('Configuration, enregistrée')
+    expect(html).toContain('lucide-circle-check')
+    expect(html).not.toContain('lucide-circle ')
   })
+})
 
-  test('agrees the recorded word with Courrier', () => {
+describe('TemplateOptionLabel', () => {
+  test('names a stored message template and leaves the others unmarked', () => {
+    const stored = renderToStaticMarkup(<TemplateOptionLabel name="note.md" stored />)
+    const missing = renderToStaticMarkup(<TemplateOptionLabel name="relance.md" stored={false} />)
+    expect(stored).toContain('Modèle note.md, enregistré')
+    expect(stored).toContain('lucide-circle-check')
+    expect(missing).toContain('relance.md')
+    expect(missing).not.toContain('lucide-circle-check')
+    expect(missing).not.toContain('enregistré')
+  })
+})
+
+describe('RepaymentDocuments', () => {
+  test('lists the four documents and checks only the stored row', () => {
     const html = renderToStaticMarkup(
-      <SetupChecklist pieces={[{ id: 'letter', done: true, label: 'Courrier' }]} />
+      <RepaymentDocuments stored={new Set(['repayment/plan.docx'])} onFile={() => {}} />
     )
-    expect(html).toContain('1 sur 1')
-    expect(html).toContain('enregistré')
-    expect(html).not.toContain('enregistrée')
+    expect(html).toContain('Documents')
+    expect(html).toContain('Plan d’apurement')
+    expect(html).toContain('Protocole de cohésion sociale')
+    expect(html).toContain('Diagnostic social et financier')
+    expect(html).toContain('Courrier standard')
+    expect(html).toContain('Plan d’apurement, enregistré')
+    expect(html).not.toContain('Protocole de cohésion sociale, enregistré')
+    expect(html).not.toContain('Avancement')
+    expect(html.split('lucide-circle-check').length - 1).toBe(1)
   })
 })

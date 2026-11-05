@@ -5,15 +5,27 @@ export const RECLAMATIONS_PAGE_SIZE = 150
 export const facetFilterUnavailableMessage = (totalDistinct: number): string =>
   `Cette colonne compte ${totalDistinct} valeurs distinctes. Saisissez une recherche pour filtrer.`
 
-/** Locked first column containing only the unread notification signal. */
+/** Locked first columns: selection, then the unread notification signal. */
+export const TICKET_TABLE_SELECTION_COLUMN_ID = '__selection__'
 export const TICKET_TABLE_ALERT_COLUMN_ID = '__alertes__'
 
+export const TICKET_TABLE_SELECTION_COLUMN_WIDTH = 40
 export const TICKET_TABLE_ALERT_COLUMN_WIDTH = 40
 
-const TICKET_TABLE_SYSTEM_COLUMN_IDS = new Set<string>([TICKET_TABLE_ALERT_COLUMN_ID])
+const TICKET_TABLE_SYSTEM_COLUMN_IDS = new Set<string>([
+  TICKET_TABLE_SELECTION_COLUMN_ID,
+  TICKET_TABLE_ALERT_COLUMN_ID
+])
 
 export const isTicketTableSystemColumn = (columnId: string): boolean =>
   TICKET_TABLE_SYSTEM_COLUMN_IDS.has(columnId)
+
+export function ticketServerSort(
+  sort: { id: string; desc: boolean } | undefined
+): string | undefined {
+  if (!sort || isTicketTableSystemColumn(sort.id)) return undefined
+  return sort.desc ? `-${sort.id}` : sort.id
+}
 
 export const stripTicketTableSystemColumns = (columnIds: string[]): string[] =>
   columnIds.filter((id) => !isTicketTableSystemColumn(id))
@@ -22,11 +34,12 @@ export const stripTicketTableSystemColumnWidths = (
   widths: Record<string, number>
 ): Record<string, number> => {
   const next = { ...widths }
-  delete next[TICKET_TABLE_ALERT_COLUMN_ID]
+  for (const id of TICKET_TABLE_SYSTEM_COLUMN_IDS) delete next[id]
   return next
 }
 
 export const ticketTableSystemColumnSizing = (): Record<string, number> => ({
+  [TICKET_TABLE_SELECTION_COLUMN_ID]: TICKET_TABLE_SELECTION_COLUMN_WIDTH,
   [TICKET_TABLE_ALERT_COLUMN_ID]: TICKET_TABLE_ALERT_COLUMN_WIDTH
 })
 const COLUMN_WIDTH_MIN = 60

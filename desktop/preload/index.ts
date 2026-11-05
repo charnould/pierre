@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
+import type { RepaymentMessage } from '../../shared/repayment-messages'
 import {
   aiChunkEventChannel,
   AuthWindowLayoutSwapEvent,
@@ -291,10 +292,9 @@ contextBridge.exposeInMainWorld('api', {
           target: '' | 'sandbox' | 'production'
           postalReady: boolean
           electronicReady: boolean
-          tracking: '' | 'webhook' | 'poll'
           secretsReadable: boolean
         }
-        webhooks: { rcs: string; email: string; maileva: string }
+        webhooks: { rcs: string; email: string }
       }
     } | null>,
   putAdminProviders: (params: { url: string; body: Record<string, unknown> }) =>
@@ -315,6 +315,16 @@ contextBridge.exposeInMainWorld('api', {
     } | null>,
   postEmailTest: (params: { url: string }) =>
     ipcRenderer.invoke(IpcChannel.setup.emailTest, params) as Promise<{
+      data?: { sent: true }
+      error?: { message: string }
+    } | null>,
+  verifyRepaymentMessage: (params: { url: string; text: string }) =>
+    ipcRenderer.invoke(IpcChannel.setup.verifyRepaymentMessage, params) as Promise<{
+      data?: RepaymentMessage
+      error?: { message: string }
+    } | null>,
+  testRepaymentEmail: (params: { url: string; text: string }) =>
+    ipcRenderer.invoke(IpcChannel.setup.testRepaymentEmail, params) as Promise<{
       data?: { sent: true }
       error?: { message: string }
     } | null>,

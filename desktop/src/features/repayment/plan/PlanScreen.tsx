@@ -59,7 +59,7 @@ export function PlanScreen({
   const [dossier, setDossier] = useState<CaseFile>(() => {
     const next = initialDossier ?? caseFromTenant(tenant)
     if (existingActivityId || next.echeancier.echeances.length > 0) return next
-    const count = repaymentSetup().create_plan.schedule.defaultMonths
+    const count = repaymentSetup().schedule.defaultInstallments
     const blank = { date_echeance: null, mensualite_euros: null }
     return {
       ...next,

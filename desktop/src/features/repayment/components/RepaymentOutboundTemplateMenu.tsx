@@ -4,34 +4,35 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator
 } from '@/shared/components/ui/dropdown-menu'
+import { repaymentSetup } from '@/shared/lib/instance-customization'
 
+import {
+  type RepaymentMessage,
+  repaymentMessageKey
+} from '../../../../../shared/repayment-messages'
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
 import {
-  listOutboundTemplateGroups,
-  type OutboundEmailResolved,
-  type OutboundRcsResolved,
-  type OutboundTemplate,
-  resolveOutboundEmail,
-  resolveOutboundRcs
-} from '../lib/outbound-email-templates.bundle'
+  type ResolvedRepaymentEmail,
+  type ResolvedRepaymentRcs,
+  resolveRepaymentEmail,
+  resolveRepaymentRcs
+} from '../lib/repayment-messages'
 
 interface Props {
   tenant: TenantRepaymentRow
-  onSelectRcs: (resolved: OutboundRcsResolved) => void
-  onSelectEmail: (resolved: OutboundEmailResolved) => void
-  onSelectMailto: (resolved: OutboundEmailResolved) => void
+  onSelectRcs: (resolved: ResolvedRepaymentRcs) => void
+  onSelectEmail: (resolved: ResolvedRepaymentEmail) => void
+  onSelectMailto: (resolved: ResolvedRepaymentEmail) => void
 }
 
-function selectTemplate(
-  template: OutboundTemplate,
-  tenant: TenantRepaymentRow,
-  onSelectRcs: Props['onSelectRcs'],
-  onSelectEmail: Props['onSelectEmail'],
-  onSelectMailto: Props['onSelectMailto']
-) {
-  if (template.channel === 'rcs') onSelectRcs(resolveOutboundRcs(template, tenant))
-  else if (template.channel === 'mailto') onSelectMailto(resolveOutboundEmail(template, tenant))
-  else onSelectEmail(resolveOutboundEmail(template, tenant))
+function groupsOf(messages: readonly RepaymentMessage[]) {
+  const groups: { group: string; messages: RepaymentMessage[] }[] = []
+  for (const message of messages) {
+    const last = groups.at(-1)
+    if (last?.group === message.group) last.messages.push(message)
+    else groups.push({ group: message.group, messages: [message] })
+  }
+  return groups
 }
 
 export function RepaymentOutboundTemplateItems({
@@ -40,11 +41,8 @@ export function RepaymentOutboundTemplateItems({
   onSelectEmail,
   onSelectMailto
 }: Props) {
-  const groups = listOutboundTemplateGroups()
-
-  if (groups.length === 0) {
-    return <DropdownMenuItem disabled>Aucun modèle</DropdownMenuItem>
-  }
+  const groups = groupsOf(repaymentSetup().messages)
+  if (groups.length === 0) return <DropdownMenuItem disabled>Aucun message</DropdownMenuItem>
 
   return (
     <>
@@ -53,14 +51,17 @@ export function RepaymentOutboundTemplateItems({
           {index > 0 ? <DropdownMenuSeparator /> : null}
           <DropdownMenuGroup>
             <DropdownMenuLabel>{entry.group}</DropdownMenuLabel>
-            {entry.templates.map((template) => (
+            {entry.messages.map((message) => (
               <DropdownMenuItem
-                key={template.id}
-                onClick={() =>
-                  selectTemplate(template, tenant, onSelectRcs, onSelectEmail, onSelectMailto)
-                }
+                key={repaymentMessageKey(message)}
+                onClick={() => {
+                  if (message.kind === 'rcs') onSelectRcs(resolveRepaymentRcs(message, tenant))
+                  else if (message.to === 'caf')
+                    onSelectMailto(resolveRepaymentEmail(message, tenant))
+                  else onSelectEmail(resolveRepaymentEmail(message, tenant))
+                }}
               >
-                {template.label}
+                {message.label}
               </DropdownMenuItem>
             ))}
           </DropdownMenuGroup>

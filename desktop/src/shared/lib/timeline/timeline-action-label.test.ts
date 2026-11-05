@@ -69,7 +69,7 @@ describe('timelineActivityActionVerb', () => {
 
   test('maps case changes and task states', () => {
     expect(timelineActivityActionVerb(sampleActivity({ type: 'case.group_changed' }))).toBe(
-      'a déplacé le dossier de groupe'
+      'a changé la phase'
     )
     expect(timelineActivityActionVerb(sampleActivity({ type: 'case.assignee_changed' }))).toBe(
       'a affecté le dossier'

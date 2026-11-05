@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import { setupPieces } from './setup-pieces'
+import { recordedPhrase, setupPieces } from './setup-pieces'
 
 describe('setupPieces', () => {
   test('asks for the public icon until the svg is stored', () => {
@@ -38,12 +38,25 @@ describe('setupPieces', () => {
     ).toEqual(['chatbots/cadre', 'chatbots/cadre/AGENTS.md'])
   })
 
-  test('lists declared repayment templates', () => {
-    expect(
-      setupPieces('repayment', { repayment: JSON.stringify({ templates: ['note.md'] }) }, [
-        'repayment/template.docx'
-      ]).map((item) => item.label)
-    ).toEqual(['Configuration', 'Consigne', 'Courrier', 'Modèle note.md'])
+  test('lists the four repayment documents and the messages piece', () => {
+    const pieces = setupPieces(
+      'repayment',
+      { repayment: '{ "phases": [] }', 'repayment/messages': '[]' },
+      ['repayment/plan.docx']
+    )
+    expect(pieces.map((item) => [item.done, item.label])).toEqual([
+      [true, 'Configuration'],
+      [false, 'Consigne'],
+      [true, 'Plan d’apurement'],
+      [false, 'Protocole de cohésion sociale'],
+      [false, 'Diagnostic social et financier'],
+      [false, 'Courrier standard'],
+      [true, 'Messages']
+    ])
+    expect(recordedPhrase('Messages')).toBe('Messages, enregistrés')
+    expect(recordedPhrase('Courrier')).toBe('Courrier, enregistré')
+    expect(recordedPhrase('Configuration')).toBe('Configuration, enregistrée')
+    expect(recordedPhrase('Plan d’apurement')).toBe('Plan d’apurement, enregistré')
   })
 
   test('lists the remaining entries', () => {

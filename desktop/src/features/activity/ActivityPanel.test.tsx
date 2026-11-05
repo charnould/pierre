@@ -18,13 +18,6 @@ mock.module('@/contexts/UiSettingsContext', () => ({
   })
 }))
 
-mock.module('@/features/repayment/lib/outbound-email-templates.bundle', () => ({
-  listOutboundTemplateGroups: () => [],
-  listOutboundTemplates: () => [],
-  resolveOutboundEmail: () => null,
-  resolveOutboundRcs: () => null
-}))
-
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
 

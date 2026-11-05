@@ -1,13 +1,28 @@
 import { TRACE_MODES } from '../../shared/chat'
 import { validateExternalApplication } from '../../shared/external-application'
+import { RECLASSIFY_PHASE, resolveRepaymentPhase } from '../../shared/repayment-phases'
 import { MAX_SCHEDULE_MONTHS } from '../../shared/repayment-plan'
 import { openDatastore } from './datastore-db'
 import { formatText as formatWithBun } from './format-text'
+import {
+  parseRepaymentMessages,
+  RepaymentMessageError,
+  sortRepaymentMessages
+} from './repayment-messages'
 
 const CHATBOT_ID = /^[a-z0-9][a-z0-9_-]{0,63}$/
-const TEMPLATE_NAME = /^[a-z0-9][a-z0-9._-]{0,80}\.(md|json)$/
 const EMAIL_FIELDS = ['logo_inline_cid', 'message'] as const
 const EMAIL_ADDRESS = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+export const REPAYMENT_DOCUMENT_IDS = [
+  'repayment/plan.docx',
+  'repayment/protocole.docx',
+  'repayment/diagnostic.docx',
+  'repayment/courrier.docx'
+] as const
+
+function isRepaymentDocument(id: string): boolean {
+  return (REPAYMENT_DOCUMENT_IDS as readonly string[]).includes(id)
+}
 
 export class SetupError extends Error {
   constructor(message: string) {
@@ -126,6 +141,22 @@ function labels(value: unknown, label: string): string[] {
   return requireStringList(value, label)
 }
 
+function uniqueLabels(value: unknown, label: string): string[] {
+  const rows = requireStringList(value, label)
+  const seen = new Set<string>()
+  for (const row of rows) {
+    if (seen.has(row)) throw new SetupError(`${label} « ${row} » en double.`)
+    seen.add(row)
+  }
+  return rows
+}
+
+function onlyKeys(root: object, allowed: readonly string[], label: string): void {
+  for (const key of Object.keys(root)) {
+    if (!allowed.includes(key)) throw new SetupError(`${label}.${key} : clé inconnue.`)
+  }
+}
+
 function isIana(timezone: string): boolean {
   try {
     Intl.DateTimeFormat(undefined, { timeZone: timezone })
@@ -179,89 +210,91 @@ function parseTickets(root: any): any {
 }
 
 function parseRepayment(root: any): any {
-  buckets(root.buckets, ['non_traites', 'clients_partis'], 'repayment')
-  const actions = root.actions
-  if (actions == null || typeof actions !== 'object' || Array.isArray(actions)) {
-    throw new SetupError('repayment.actions requis.')
+  onlyKeys(
+    root,
+    ['phases', 'caseActions', 'batchActions', 'tags', 'senderEmail', 'schedule'],
+    'repayment'
+  )
+  const phases = uniqueLabels(root.phases, 'repayment.phases')
+  if (phases.length < 2) throw new SetupError('repayment.phases requiert au moins deux phases.')
+  if (phases.includes(RECLASSIFY_PHASE)) {
+    throw new SetupError(`repayment.phases « ${RECLASSIFY_PHASE} » est réservé.`)
   }
-  const actionRows = actions as { dossier?: unknown; bulk_operations?: unknown }
-  labels(actionRows.dossier, 'repayment.actions.dossier')
-  labels(actionRows.bulk_operations, 'repayment.actions.bulk_operations')
-  labels(root.tags, 'repayment.tags')
-  requireStringList(root.template_groups, 'repayment.template_groups')
-  const templates = requireStringList(root.templates, 'repayment.templates')
-  for (const name of templates) {
-    if (!TEMPLATE_NAME.test(name)) throw new SetupError(`modèle « ${name} » invalide.`)
+  uniqueLabels(root.caseActions, 'repayment.caseActions')
+  uniqueLabels(root.batchActions, 'repayment.batchActions')
+  uniqueLabels(root.tags, 'repayment.tags')
+  if ('senderEmail' in root && root.senderEmail != null && root.senderEmail !== '') {
+    if (typeof root.senderEmail !== 'string' || !EMAIL_ADDRESS.test(root.senderEmail.trim())) {
+      throw new SetupError('repayment.senderEmail invalide.')
+    }
   }
-  if ('prompt' in root) throw new SetupError('consigne hors du JSON.')
-  optionalEmail(root, 'repayment')
-  parseSchedule(root)
+  parseSchedule(root.schedule)
   return root
 }
 
-function parseSchedule(root: { create_plan?: unknown }): void {
-  const plan = root.create_plan
-  if (plan == null || typeof plan !== 'object' || Array.isArray(plan)) {
-    throw new SetupError('create_plan.schedule requis.')
+function parseSchedule(value: unknown): void {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+    throw new SetupError('repayment.schedule requis.')
   }
-  const schedule = (plan as { schedule?: unknown }).schedule
-  if (schedule == null || typeof schedule !== 'object' || Array.isArray(schedule)) {
-    throw new SetupError('create_plan.schedule requis.')
+  onlyKeys(
+    value,
+    [
+      'defaultInstallments',
+      'maxEffortPercent',
+      'minDailyRemainderEuros',
+      'confirmAfterInstallments'
+    ],
+    'schedule'
+  )
+  const row = value as {
+    defaultInstallments?: unknown
+    maxEffortPercent?: unknown
+    minDailyRemainderEuros?: unknown
+    confirmAfterInstallments?: unknown
   }
-  const row = schedule as {
-    defaultMonths?: unknown
-    maxEffortRate?: unknown
-    minDailyRemainder?: unknown
-    thresholds?: unknown
-  }
-  const defaultMonths = row.defaultMonths
+  const defaultInstallments = row.defaultInstallments
   if (
-    typeof defaultMonths !== 'number' ||
-    !Number.isInteger(defaultMonths) ||
-    defaultMonths < 1 ||
-    defaultMonths > MAX_SCHEDULE_MONTHS
+    typeof defaultInstallments !== 'number' ||
+    !Number.isInteger(defaultInstallments) ||
+    defaultInstallments < 1 ||
+    defaultInstallments > MAX_SCHEDULE_MONTHS
   ) {
     throw new SetupError(
-      `schedule.defaultMonths doit être un entier de 1 à ${MAX_SCHEDULE_MONTHS}.`
+      `schedule.defaultInstallments doit être un entier de 1 à ${MAX_SCHEDULE_MONTHS}.`
     )
   }
-  const maxEffortRate = row.maxEffortRate
+  const maxEffortPercent = row.maxEffortPercent
   if (
-    typeof maxEffortRate !== 'number' ||
-    !Number.isFinite(maxEffortRate) ||
-    maxEffortRate <= 0 ||
-    maxEffortRate > 100
+    typeof maxEffortPercent !== 'number' ||
+    !Number.isFinite(maxEffortPercent) ||
+    maxEffortPercent <= 0 ||
+    maxEffortPercent > 100
   ) {
-    throw new SetupError('schedule.maxEffortRate doit être un nombre > 0 et ≤ 100.')
+    throw new SetupError('schedule.maxEffortPercent doit être un nombre > 0 et ≤ 100.')
   }
-  const minDailyRemainder = row.minDailyRemainder
+  const minDailyRemainderEuros = row.minDailyRemainderEuros
   if (
-    typeof minDailyRemainder !== 'number' ||
-    !Number.isFinite(minDailyRemainder) ||
-    minDailyRemainder < 0
+    typeof minDailyRemainderEuros !== 'number' ||
+    !Number.isFinite(minDailyRemainderEuros) ||
+    minDailyRemainderEuros < 0
   ) {
-    throw new SetupError('schedule.minDailyRemainder doit être un nombre ≥ 0.')
+    throw new SetupError('schedule.minDailyRemainderEuros doit être un nombre ≥ 0.')
   }
-  if (!Array.isArray(row.thresholds)) throw new SetupError('schedule.thresholds requis.')
-  const seen = new Set<number>()
-  for (const [index, item] of row.thresholds.entries()) {
-    if (item == null || typeof item !== 'object' || Array.isArray(item)) {
-      throw new SetupError(`schedule.thresholds[${index}] requis.`)
+  const confirmations = row.confirmAfterInstallments
+  if (confirmations == null || typeof confirmations !== 'object' || Array.isArray(confirmations)) {
+    throw new SetupError('schedule.confirmAfterInstallments requis.')
+  }
+  for (const [key, message] of Object.entries(confirmations)) {
+    if (!/^[1-9]\d*$/.test(key)) {
+      throw new SetupError(`schedule.confirmAfterInstallments.${key} : clé invalide.`)
     }
-    const months = (item as { months?: unknown }).months
-    if (
-      typeof months !== 'number' ||
-      !Number.isInteger(months) ||
-      months < defaultMonths ||
-      months >= MAX_SCHEDULE_MONTHS
-    ) {
+    const installments = Number(key)
+    if (installments < defaultInstallments || installments >= MAX_SCHEDULE_MONTHS) {
       throw new SetupError(
-        `schedule.thresholds[${index}].months doit être un entier de ${defaultMonths} à ${MAX_SCHEDULE_MONTHS - 1}.`
+        `schedule.confirmAfterInstallments.${key} doit être un entier de ${defaultInstallments} à ${MAX_SCHEDULE_MONTHS - 1}.`
       )
     }
-    requireString((item as { message?: unknown }).message, `schedule.thresholds[${index}].message`)
-    if (seen.has(months)) throw new SetupError(`schedule.thresholds[${index}].months en double.`)
-    seen.add(months)
+    requireString(message, `schedule.confirmAfterInstallments.${key}`)
   }
 }
 
@@ -303,10 +336,15 @@ function jsonText(id: string): any | null {
   }
 }
 
-function repaymentTemplateIds(root: any): string[] {
-  return Array.isArray(root.templates)
-    ? root.templates.filter((name: unknown) => typeof name === 'string')
+export function repaymentPhases(): string[] {
+  const phases = repaymentReady()?.phases
+  return Array.isArray(phases)
+    ? phases.filter((phase: unknown): phase is string => typeof phase === 'string')
     : []
+}
+
+export function resolveStoredRepaymentPhase(stored: string | null | undefined): string {
+  return resolveRepaymentPhase(stored, repaymentPhases())
 }
 
 export function moduleEmailFrom(context: 'tickets' | 'repayment'): string | null {
@@ -318,9 +356,9 @@ export function moduleEmailFrom(context: 'tickets' | 'repayment'): string | null
   } catch {
     return null
   }
-  return typeof root.email_from === 'string' && root.email_from.trim()
-    ? root.email_from.trim()
-    : null
+  const key = context === 'repayment' ? 'senderEmail' : 'email_from'
+  const value = root[key]
+  return typeof value === 'string' && value.trim() ? value.trim() : null
 }
 
 export function ticketsReady(): any | null {
@@ -344,12 +382,22 @@ export function repaymentReady(): any | null {
   } catch {
     return null
   }
-  if (!readRow('repayment/template.docx')) return null
+  if (!REPAYMENT_DOCUMENT_IDS.every((id) => readRow(id))) return null
   if (!agentsText('repayment/AGENTS.md')) return null
-  for (const name of repaymentTemplateIds(root)) {
-    if (!readText(`repayment/templates/${name}`)?.trim()) return null
+  const messages = readText('repayment/messages')
+  if (!messages) return null
+  try {
+    parseRepaymentMessages(messages)
+  } catch {
+    return null
   }
   return root
+}
+
+export function repaymentMessages() {
+  const text = readText('repayment/messages')
+  if (!text || !repaymentReady()) return []
+  return sortRepaymentMessages(parseRepaymentMessages(text))
 }
 
 export function aboutReady(): { prompt: string } | null {
@@ -437,17 +485,6 @@ export function readSetupBytes(id: string): Uint8Array | null {
   return readRow(id)
 }
 
-export function repaymentTemplates(): Record<string, string> {
-  const root = repaymentReady()
-  if (!root) return {}
-  const templates: Record<string, string> = {}
-  for (const name of repaymentTemplateIds(root)) {
-    const text = readText(`repayment/templates/${name}`)
-    if (text) templates[name] = text
-  }
-  return templates
-}
-
 const PHONE_ICONS = [
   ['chatbots/icons/apple-touch-icon.png', 180],
   ['chatbots/icons/icon-192.png', 192],
@@ -483,7 +520,7 @@ export async function writeSetup(id: string, content: Uint8Array): Promise<void>
     writeRow(id, content)
     return
   }
-  if (id === 'tickets/letter.docx' || id === 'repayment/template.docx') {
+  if (id === 'tickets/letter.docx' || isRepaymentDocument(id)) {
     if (content.byteLength < 4 || content[0] !== 0x50 || content[1] !== 0x4b) {
       throw new SetupError('docx requis.')
     }
@@ -497,25 +534,20 @@ export async function writeSetup(id: string, content: Uint8Array): Promise<void>
     await writePhoneIcons(svg)
     return
   }
-  if (AGENTS_MD.test(id)) {
-    const formatted = await formatText('AGENTS.md', textOf(content))
-    if (!formatted.trim()) throw new SetupError('AGENTS.md vide.')
+  if (id === 'repayment/messages') {
+    const formatted = await formatText('setup.json', textOf(content))
+    try {
+      parseRepaymentMessages(formatted)
+    } catch (error) {
+      const message = error instanceof RepaymentMessageError ? error.message : 'messages invalides.'
+      throw new SetupError(message)
+    }
     writeRow(id, bytesOf(formatted))
     return
   }
-  const template = id.match(/^repayment\/templates\/(.+)$/)
-  if (template) {
-    const name = template[1] ?? ''
-    if (!TEMPLATE_NAME.test(name)) throw new SetupError('nom de modèle invalide.')
-    const declared = jsonText('repayment')
-    if (declared && !repaymentTemplateIds(declared).includes(name)) {
-      throw new SetupError('modèle non déclaré.')
-    }
-    const formatted = await formatText(
-      name.endsWith('.json') ? 'template.json' : 'template.md',
-      textOf(content)
-    )
-    if (!formatted.trim()) throw new SetupError('modèle vide.')
+  if (AGENTS_MD.test(id)) {
+    const formatted = await formatText('AGENTS.md', textOf(content))
+    if (!formatted.trim()) throw new SetupError('AGENTS.md vide.')
     writeRow(id, bytesOf(formatted))
     return
   }

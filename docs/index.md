@@ -46,9 +46,9 @@ Au sein de [Core Models HLM](./03-core-models-hlm/index.md), [CARL](./03-core-mo
 
 ### Le mouvement HLM n’a pas les contraintes de Wall Street
 
-À l’échelle du mouvement, les volumes se comptent en millions (de logements, de réclamations, de bons commande et de quittances). Le « temps réel utile », quant à lui, s'apprécie et se mesure en minutes, non en millisecondes. Divisée par le nombre de bailleurs, cette échelle est anecdotique. Quoi qu'en dise le gotha informatique.
+À l’échelle du mouvement, les volumes se comptent en millions (de logements, de réclamations, de bons de commande et de quittances). Le « temps réel (utile) », quant à lui, s'apprécie et se mesure en minutes, non en millisecondes. Divisée par le nombre de bailleurs, cette échelle est — quoi qu'en dise le gotha informatique HLM — anecdotique. 
 
-Dans ce contexte, une architecture simple n’est pas un manque d’ambition. C’est un choix d’ingénierie assumé : privilégier la robustesse, la sobriété et la maîtrise plutôt qu'une complexité inutile et datée. Ce parti pris est exposé dans « [SQLite et un harnais suffisent pour le logement social français](./07-articles/2026-05-27-rag-sqlite.md) » (article en anglais).
+Dans ce contexte, une architecture simple n’est pas un manque d’ambition. C’est un choix d’ingénierie : privilégier la robustesse et la sobriété plutôt qu'une complexité inutile et datée. Ce parti pris est exposé dans « [SQLite et un harnais suffisent pour le logement social français](./07-articles/2026-05-27-rag-sqlite.md) » (article en anglais).
 
 **La simplicité ne se fait pas au détriment de la sécurité**. PIERRE propose nativement une approche BYOK (« Bring Your Own Key ») : chaque bailleur choisit son modèle d’IA, maîtrise ses clés et détermine les conditions d’utilisation. Les traitements agentiques s’exécutent dans des environnements confinés avec une isolation matérielle stricte. Auto-hébergeable, vos données sont à Paris, Dijon ou autre part, à votre discrétion. Auditable, vous pouvez challenger l'implémentation.
 

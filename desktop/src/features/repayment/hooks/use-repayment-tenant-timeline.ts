@@ -225,10 +225,6 @@ export function useRepaymentTenantTimeline(
     [requestKey]
   )
 
-  if (state.key !== requestKey) {
-    setState(readInitialState(requestKey))
-  }
-
   useEffect(() => {
     if (!requestKey || !url) return
     const requestId = ++requestIdRef.current
@@ -253,11 +249,16 @@ export function useRepaymentTenantTimeline(
   }, [id_client, id_locataire, requestKey, url])
 
   const isCurrent = state.key === requestKey
-  const initialLoading = requestKey != null && (!isCurrent || state.status === 'loading')
+  const cached = !isCurrent && requestKey ? getRepaymentTimelineCache(requestKey) : null
+  const initialLoading = requestKey != null && !cached && (!isCurrent || state.status === 'loading')
   const refreshing = isCurrent && state.status === 'refreshing'
-  const movements = isCurrent ? state.movements : NO_MOVEMENTS
-  const notifications = isCurrent ? state.notifications : NO_NOTIFICATIONS
-  const openActionEvents = isCurrent ? state.openActionEvents : NO_NOTIFICATIONS
+  const movements = isCurrent ? state.movements : (cached?.movements ?? NO_MOVEMENTS)
+  const notifications = isCurrent
+    ? state.notifications
+    : (cached?.notifications ?? NO_NOTIFICATIONS)
+  const openActionEvents = isCurrent
+    ? state.openActionEvents
+    : (cached?.openActionEvents ?? NO_NOTIFICATIONS)
   const episode = useMemo(
     (): TenantBalancePoint[] | null =>
       currentBalance == null ? null : resolveTenantDebtEpisode(movements, currentBalance),
@@ -282,9 +283,11 @@ export function useRepaymentTenantTimeline(
     initialLoading,
     refreshing,
     loadingMovements: initialLoading,
-    movementsError: isCurrent ? state.movementsError : false,
-    notificationsError: isCurrent ? state.notificationsError : false,
-    openActionsError: isCurrent ? state.openActionsError : false,
+    movementsError: isCurrent ? state.movementsError : (cached?.movementsError ?? false),
+    notificationsError: isCurrent
+      ? state.notificationsError
+      : (cached?.notificationsError ?? false),
+    openActionsError: isCurrent ? state.openActionsError : (cached?.openActionsError ?? false),
     refresh,
     applyActivityPatch
   } satisfies {

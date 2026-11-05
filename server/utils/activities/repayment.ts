@@ -13,6 +13,7 @@ export type RepaymentActivityState = {
   date_derniere_action_realisee: string | null
   gestionnaire: string | null
   gestionnaire_email: string | null
+  tags: string[]
 }
 
 const value_label = (value: unknown): string | null => {
@@ -49,7 +50,7 @@ export const latest_repayment_states = (
          AND rattachement = 'repayment:' || id_locataire
          AND (
            type IN (
-             'case.group_changed', 'case.assignee_changed',
+             'case.group_changed', 'case.assignee_changed', 'case.tags_changed',
              'task.completed', 'bulk.applied'
            )
            OR (
@@ -63,6 +64,7 @@ export const latest_repayment_states = (
     )
     .all(...ids)
   const bucketResolved = new Set<string>()
+  const tagsResolved = new Set<string>()
   const actionDates = new Map<string, string>()
   const gestionnaireResolved = new Set<string>()
   for (const row of rows) {
@@ -71,7 +73,17 @@ export const latest_repayment_states = (
       derniere_action_realisee: null,
       date_derniere_action_realisee: null,
       gestionnaire: null,
-      gestionnaire_email: null
+      gestionnaire_email: null,
+      tags: []
+    }
+    if (!tagsResolved.has(row.id_locataire) && row.type === 'case.tags_changed') {
+      const tags = parseCaseChangeContent(row.contenu)
+      if (tags && Array.isArray(tags.after)) {
+        state.tags = tags.after
+          .map((entry) => (typeof entry === 'string' ? entry : entry.label))
+          .filter((entry) => entry.trim() !== '')
+        tagsResolved.add(row.id_locataire)
+      }
     }
     const metadata = parseContentJson(row.contenu)
     if (!bucketResolved.has(row.id_locataire) && row.type === 'case.group_changed') {

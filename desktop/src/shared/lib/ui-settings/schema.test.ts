@@ -405,8 +405,9 @@ describe('ticket columnValues defaults', () => {
 })
 
 describe('resolveTicketColumnLabel', () => {
-  it('falls back to the SQL column name', () => {
-    expect(resolveTicketColumnLabel('motif')).toBe('motif')
+  it('uses the business dictionary then humanizes an unknown field', () => {
+    expect(resolveTicketColumnLabel('motif')).toBe('Motif')
+    expect(resolveTicketColumnLabel('champ_personnalise')).toBe('Champ personnalise')
   })
 
   it('returns a custom label when configured', () => {

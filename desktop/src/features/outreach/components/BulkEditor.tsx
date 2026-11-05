@@ -28,7 +28,10 @@ import {
   repaymentActionOptions,
   repaymentBulkActionOptions
 } from '@/features/repayment/lib/repayment-action'
-import { repaymentBucketOptions } from '@/features/repayment/lib/repayment-bucket'
+import {
+  defaultRepaymentPhase,
+  repaymentBucketOptions
+} from '@/features/repayment/lib/repayment-bucket'
 import { repaymentTagOptions } from '@/features/repayment/lib/repayment-tags'
 import { ChoiceTile } from '@/shared/components/ChoiceTile'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
@@ -148,7 +151,7 @@ function draftFrom(record: BulkOperationRecord | null): Draft {
     return {
       name: '',
       description: '',
-      definition: emptyBulkOperationDefinition(),
+      definition: { ...emptyBulkOperationDefinition(), bucketId: defaultRepaymentPhase() },
       reportsToKeep: '10'
     }
   }
@@ -333,7 +336,7 @@ function JsonObjectField({
       <FieldLabel htmlFor={id}>Contenu RCS enrichi (JSON)</FieldLabel>
       <Textarea
         id={id}
-        className="font-mono text-xs leading-normal"
+        mono
         rows={8}
         value={draft}
         aria-invalid={error ? true : undefined}
@@ -1653,10 +1656,10 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
                       </Empty>
                     ) : null}
                     <Field>
-                      <FieldLabel>Panier d’arrivée</FieldLabel>
+                      <FieldLabel>Phase d’arrivée</FieldLabel>
                       <FieldDescription>
                         Après le premier envoi réussi, ou si vous traitez sans envoyer, le dossier
-                        rejoint ce panier.
+                        rejoint cette phase.
                       </FieldDescription>
                       <Select
                         items={repaymentBucketOptions().map((bucket) => ({
@@ -1685,8 +1688,8 @@ export function BulkEditor({ url, record, onBack, onSaved, onArchived }: Props) 
                   <FieldLegend>Audience</FieldLegend>
                   <FieldGroup>
                     <TagSelection
-                      label="Paniers"
-                      description="Le dossier doit appartenir à l’un des paniers sélectionnés."
+                      label="Phases"
+                      description="Le dossier doit appartenir à l’une des phases sélectionnées."
                       items={repaymentBucketOptions().map((bucket) => ({
                         value: bucket.id,
                         label: bucket.label

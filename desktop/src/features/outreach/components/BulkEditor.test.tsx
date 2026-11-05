@@ -1,4 +1,4 @@
-import { describe, expect, mock, test } from 'bun:test'
+import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
 import { renderToStaticMarkup } from 'react-dom/server'
 
@@ -21,11 +21,16 @@ import {
   previewChannelTotals,
   previewStepReasonLabel
 } from '@/features/outreach/lib/labels'
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 import {
   type BulkOperationRecord,
   emptyBulkOperationDefinition,
   type PreviewRow
 } from '@/shared/types/bulk-operations'
+
+beforeEach(() => {
+  loadCustomizationFixture()
+})
 
 const props = {
   url: 'https://example.test',
@@ -68,8 +73,8 @@ describe('BulkEditor', () => {
     expect(html).toContain('Dette')
     expect(html).toContain('Mois d’impayés')
     expect(html).toContain('Notifier le référent')
-    expect(html).toContain('Panier d’arrivée')
-    expect(html).toContain('Le dossier doit appartenir à l’un des paniers')
+    expect(html).toContain('Phase d’arrivée')
+    expect(html).toContain('Le dossier doit appartenir à l’une des phases')
     expect(html).toContain('Le dossier doit déjà avoir reçu toutes les actions')
     expect(html).toContain('Canaux successifs')
     expect(html).toContain('Traiter sans envoyer')
@@ -100,7 +105,7 @@ describe('BulkEditor', () => {
     expect(html).not.toContain('>Application</legend>')
     expect(html).not.toContain('>Filtres</legend>')
     expect(html).not.toContain('Action appliquée sans envoi')
-    expect(html).not.toContain('Panier d’arrivée')
+    expect(html).not.toContain('Phase d’arrivée')
     expect(html).not.toContain('>Canaux</')
     expect(html).toContain('Traiter sans envoyer')
     expect((html.match(/disabled=""/g) ?? []).length).toBeGreaterThanOrEqual(5)

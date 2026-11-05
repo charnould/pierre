@@ -2,7 +2,7 @@
   "rules": {
     "shadcn/no-arbitrary-values": "error",
     "shadcn/no-inline-styles": "error",
-    "shadcn/no-raw-colors": "error",
+    "shadcn/no-raw-colors": ["error", { "deny": ["*-white", "*-black"] }],
     "shadcn/no-restyle": [
       "error",
       {
@@ -22,12 +22,6 @@
       }
     },
     {
-      "files": ["**/src/features/repayment/plan/**"],
-      "rules": {
-        "shadcn/no-restyle": "off"
-      }
-    },
-    {
       "files": ["**/src/mascot/**"],
       "rules": {
         "shadcn/no-inline-styles": "off",
@@ -35,50 +29,52 @@
       }
     },
     {
-      // Runtime geometry and motion values are data, not reusable visual tokens.
-      "files": [
-        "**/src/features/chat/ChatPanel.tsx",
-        "**/src/features/chat/ChatWindow.tsx",
-        "**/src/features/home/HomeView.tsx",
-        "**/src/features/outreach/components/BulkReports.tsx",
-        "**/src/features/settings/components/IdentityField.tsx",
-        "**/src/features/tickets/components/TicketsTableSkeleton.tsx",
-        "**/src/shared/components/table/VirtualizedTableBody.tsx",
-        "**/src/shared/components/table/board-dual-table.tsx",
-        "**/src/shared/components/ui/badge.tsx",
-        "**/src/shared/components/ui/code-block.tsx"
-      ],
+      // Measured runtime geometry. The property list is the whole exemption.
+      "files": ["**/src/features/chat/ChatPanel.tsx"],
       "rules": {
-        "shadcn/no-inline-styles": "off"
+        "shadcn/no-inline-styles": ["error", { "allow": ["padding-bottom"] }]
       }
     },
     {
-      // Exact local geometry is clearer than call-site aliases in globals.css.
-      "files": [
-        "**/src/features/activity/components/ActivityNotificationRow.tsx",
-        "**/src/features/activity/components/ActivityNotificationsTrigger.tsx",
-        "**/src/features/administration/AdministrationView.tsx",
-        "**/src/features/administration/components/UsersPanel.tsx",
-        "**/src/features/automations/components/AutomationsList.tsx",
-        "**/src/features/chat/ChatPanel.tsx",
-        "**/src/features/chat/ChatWindow.tsx",
-        "**/src/features/chat/components/ChatMessages.tsx",
-        "**/src/features/home/HomeDoor.tsx",
-        "**/src/features/home/HomeView.tsx",
-        "**/src/features/outreach/components/BulkEditor.tsx",
-        "**/src/features/outreach/components/BulkOperationsList.tsx",
-        "**/src/features/repayment/components/create-plan/PlanFormSections.tsx",
-        "**/src/features/tickets/components/TicketsTableSkeleton.tsx",
-        "**/src/features/updates/components/UpdateArticleBody.tsx",
-        "**/src/shared/components/DirectoryList.tsx",
-        "**/src/shared/components/UserAvatar.tsx",
-        "**/src/shared/components/inspector/inspector-snapshot-card.tsx",
-        "**/src/shared/components/inspector/open-actions-card.tsx",
-        "**/src/shared/components/reui/timeline.tsx",
-        "**/src/shared/components/timeline/timeline-communication-envelope.tsx"
-      ],
+      "files": ["**/src/features/chat/ChatWindow.tsx"],
       "rules": {
-        "shadcn/no-arbitrary-values": "off"
+        "shadcn/no-inline-styles": ["error", { "allow": ["left", "top", "width", "height"] }]
+      }
+    },
+    {
+      "files": ["**/src/features/outreach/components/BulkReports.tsx"],
+      "rules": {
+        "shadcn/no-inline-styles": ["error", { "allow": ["top"] }]
+      }
+    },
+    {
+      "files": ["**/src/features/settings/components/IdentityField.tsx"],
+      "rules": {
+        "shadcn/no-inline-styles": ["error", { "allow": ["width", "height", "transform"] }]
+      }
+    },
+    {
+      "files": ["**/src/features/tickets/components/TicketsTableSkeleton.tsx"],
+      "rules": {
+        "shadcn/no-inline-styles": ["error", { "allow": ["width"] }]
+      }
+    },
+    {
+      "files": ["**/src/shared/components/table/VirtualizedTableBody.tsx"],
+      "rules": {
+        "shadcn/no-inline-styles": ["error", { "allow": ["height"] }]
+      }
+    },
+    {
+      "files": ["**/src/shared/components/table/board-dual-table.tsx"],
+      "rules": {
+        "shadcn/no-inline-styles": ["error", { "allow": ["top", "width"] }]
+      }
+    },
+    {
+      "files": ["**/src/shared/components/ui/code-block.tsx"],
+      "rules": {
+        "shadcn/no-inline-styles": ["error", { "allow": ["counter-reset"] }]
       }
     },
     {
@@ -105,24 +101,6 @@
           "error",
           {
             "allow": ["layout"],
-            "contracts": [
-              { "pattern": "^Tabs$", "allow": ["layout", "gap-0"] },
-              {
-                "pattern": "^TabsTrigger$",
-                "allow": ["layout", "data-active:bg-transparent", "data-active:shadow-none"]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "files": ["**/src/features/administration/AdministrationView.tsx"],
-      "rules": {
-        "shadcn/no-restyle": [
-          "error",
-          {
-            "allow": ["layout"],
             "contracts": [{ "pattern": "^Tabs$", "allow": ["layout", "gap-0"] }]
           }
         ]
@@ -141,8 +119,7 @@
                 "allow": ["layout", "gap-1", "px-4", "py-3", "aspect-[1.618]"]
               },
               { "pattern": "^CardHeader$", "allow": ["layout", "px-0"] },
-              { "pattern": "^CardContent$", "allow": ["layout", "px-0"] },
-              { "pattern": "^Button$", "allow": ["layout", "h-5", "text-xs"] }
+              { "pattern": "^CardContent$", "allow": ["layout", "px-0"] }
             ]
           }
         ]
@@ -207,30 +184,6 @@
       }
     },
     {
-      "files": ["**/src/shared/components/AgentWorkTrace.tsx"],
-      "rules": {
-        "shadcn/no-restyle": [
-          "error",
-          {
-            "allow": ["layout"],
-            "contracts": [
-              {
-                "pattern": "^Button$",
-                "allow": [
-                  "layout",
-                  "pierre-type-table-header",
-                  "text-muted-foreground",
-                  "px-0",
-                  "hover:bg-transparent"
-                ]
-              },
-              { "pattern": "^CollapsibleTrigger$", "allow": ["layout", "text-xs"] }
-            ]
-          }
-        ]
-      }
-    },
-    {
       "files": ["**/src/shared/components/inspector/collaborator-chip.tsx"],
       "rules": {
         "shadcn/no-restyle": [
@@ -248,7 +201,6 @@
                   "ps-px",
                   "pe-1",
                   "leading-none",
-                  "pierre-type-data",
                   "pe-1.5"
                 ]
               }
@@ -327,34 +279,9 @@
       }
     },
     {
-      "files": ["**/src/features/activity/components/ActivityNotificationRow.tsx"],
-      "rules": {
-        "shadcn/no-restyle": [
-          "error",
-          {
-            "allow": ["layout"],
-            "contracts": [
-              {
-                "pattern": "^Button$",
-                "allow": [
-                  "layout",
-                  "opacity-0",
-                  "transition-opacity",
-                  "duration-160",
-                  "ease-[cubic-bezier(0.23,1,0.32,1)]",
-                  "group-hover:opacity-100",
-                  "focus-visible:opacity-100"
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
       "files": ["**/src/features/settings/components/LoginPanel.tsx"],
       "rules": {
-        "shadcn/no-arbitrary-values": "off",
+        "shadcn/no-arbitrary-values": ["error", { "allow": ["[font-size:12px]"] }],
         "shadcn/no-restyle": [
           "error",
           {
@@ -383,8 +310,11 @@
     },
     {
       "files": [
+        "**/src/features/activity/components/ActivityNotificationsTrigger.tsx",
+        "**/src/features/activity/components/ActivityTasksTrigger.tsx",
+        "**/src/features/repayment/components/RepaymentTenantDrawer.tsx",
         "**/src/features/tickets/components/TicketReclamationDrawer.tsx",
-        "**/src/features/repayment/components/RepaymentTenantDrawer.tsx"
+        "**/src/shared/components/layout/TitleBar.tsx"
       ],
       "rules": {
         "shadcn/no-restyle": [
@@ -445,36 +375,13 @@
       }
     },
     {
-      "files": ["**/src/shared/components/timeline/timeline-bodies.tsx"],
-      "rules": {
-        "shadcn/no-restyle": [
-          "error",
-          {
-            "allow": ["layout"],
-            "contracts": [
-              {
-                "pattern": "^Badge$",
-                "allow": ["layout", "pierre-type-table-header", "font-normal"]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
       "files": ["**/src/features/automations/components/AutomationAccessAvatars.tsx"],
       "rules": {
         "shadcn/no-restyle": [
           "error",
           {
             "allow": ["layout"],
-            "contracts": [
-              { "pattern": "^AvatarGroup$", "allow": ["layout", "-space-x-1"] },
-              {
-                "pattern": "^AvatarGroupCount$",
-                "allow": ["layout", "pierre-type-micro"]
-              }
-            ]
+            "contracts": [{ "pattern": "^AvatarGroup$", "allow": ["layout", "-space-x-1"] }]
           }
         ]
       }
@@ -509,58 +416,6 @@
                 "allow": ["layout", "gap-6", "gap-8", "px-6", "pt-8", "pb-6", "py-6"]
               }
             ]
-          }
-        ]
-      }
-    },
-    {
-      "files": ["**/src/shared/components/layout/TitleBar.tsx"],
-      "rules": {
-        "shadcn/no-restyle": [
-          "error",
-          {
-            "allow": ["layout"],
-            "contracts": [{ "pattern": "^Button$", "allow": ["layout", "no-drag"] }]
-          }
-        ]
-      }
-    },
-    {
-      "files": ["**/src/shared/components/reasoning/reasoning.tsx"],
-      "rules": {
-        "shadcn/no-restyle": [
-          "error",
-          {
-            "allow": ["layout"],
-            "contracts": [
-              {
-                "pattern": "^CollapsibleTrigger$",
-                "allow": [
-                  "layout",
-                  "gap-1.5",
-                  "text-sm",
-                  "font-normal",
-                  "text-muted-foreground",
-                  "transition-opacity",
-                  "hover:opacity-85"
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "files": [
-        "**/src/features/activity/components/ActivityNotificationsTrigger.tsx",
-        "**/src/features/activity/components/ActivityTasksTrigger.tsx"
-      ],
-      "rules": {
-        "shadcn/no-restyle": [
-          "error",
-          {
-            "allow": ["layout"],
-            "contracts": [{ "pattern": "^Button$", "allow": ["layout", "no-drag"] }]
           }
         ]
       }
@@ -667,33 +522,182 @@
       }
     },
     {
-      "files": ["**/src/features/repayment/components/create-plan/MoneyInput.tsx"],
+      "files": ["**/src/features/repayment/plan/form.tsx"],
       "rules": {
         "shadcn/no-restyle": [
           "error",
           {
             "allow": ["layout"],
-            "contracts": [{ "pattern": "^InputGroupInput$", "allow": ["layout", "tabular-nums"] }]
+            "contracts": [{ "pattern": "^PopoverContent$", "allow": ["layout", "p-0"] }]
           }
         ]
       }
     },
     {
-      "files": ["**/src/features/administration/components/ProvidersPanel.tsx"],
+      // Measured local geometry. Each file may use only the classes named here.
+      "files": ["**/src/features/activity/components/ActivityNotificationRow.tsx"],
       "rules": {
-        "shadcn/no-restyle": [
+        "shadcn/no-arbitrary-values": [
+          "error",
+          { "allow": ["font-[350]", "grid-cols-[minmax(0,1fr)_auto]"] }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/activity/components/ActivityNotificationsTrigger.tsx"],
+      "rules": {
+        "shadcn/no-arbitrary-values": ["error", { "allow": ["origin-[50%_10%]"] }]
+      }
+    },
+    {
+      "files": ["**/src/features/administration/components/UsersPanel.tsx"],
+      "rules": {
+        "shadcn/no-arbitrary-values": [
           "error",
           {
-            "allow": ["layout"],
-            "contracts": [
-              { "pattern": "^Input$", "allow": ["layout", "font-mono", "py-0", "leading-8"] },
-              {
-                "pattern": "^InputGroupInput$",
-                "allow": ["layout", "font-mono", "py-0", "leading-8"]
-              },
-              { "pattern": "^Textarea$", "allow": ["layout", "font-mono"] }
+            "allow": [
+              "grid-cols-[minmax(14rem,1.4fr)_minmax(8rem,1fr)_minmax(8rem,1fr)_4rem]",
+              "grid-cols-[2rem_minmax(14rem,1.4fr)_minmax(10rem,1fr)_8rem_4rem]"
             ]
           }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/automations/components/AutomationsList.tsx"],
+      "rules": {
+        "shadcn/no-arbitrary-values": ["error", { "allow": ["max-h-[2lh]"] }]
+      }
+    },
+    {
+      "files": ["**/src/features/chat/ChatPanel.tsx"],
+      "rules": {
+        "shadcn/no-arbitrary-values": [
+          "error",
+          { "allow": ["font-[450]", "[font-optical-sizing:auto]", "text-[0.625rem]"] }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/chat/ChatWindow.tsx"],
+      "rules": {
+        "shadcn/no-arbitrary-values": [
+          "error",
+          {
+            "allow": [
+              "z-[60]",
+              "h-[min(36rem,calc(100dvh-var(--titlebar-height)-1rem))]",
+              "top-[calc(var(--titlebar-height)+0.5rem)]"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/chat/components/ChatMessages.tsx"],
+      "rules": {
+        "shadcn/no-arbitrary-values": ["error", { "allow": ["max-w-[80%]"] }]
+      }
+    },
+    {
+      "files": ["**/src/features/home/HomeDoor.tsx"],
+      "rules": {
+        "shadcn/no-arbitrary-values": ["error", { "allow": ["aspect-[1.618]", "font-[350]"] }]
+      }
+    },
+    {
+      "files": ["**/src/features/home/HomeView.tsx"],
+      "rules": {
+        "shadcn/no-arbitrary-values": ["error", { "allow": ["aspect-[1.618]"] }]
+      }
+    },
+    {
+      "files": ["**/src/features/outreach/components/BulkEditor.tsx"],
+      "rules": {
+        "shadcn/no-arbitrary-values": ["error", { "allow": ["h-[60vh]"] }]
+      }
+    },
+    {
+      "files": ["**/src/features/outreach/components/BulkOperationsList.tsx"],
+      "rules": {
+        "shadcn/no-arbitrary-values": [
+          "error",
+          {
+            "allow": ["grid-cols-[minmax(0,1fr)_minmax(12rem,auto)_8rem_7.5rem]", "max-h-[2lh]"]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/tickets/components/TicketsTableSkeleton.tsx"],
+      "rules": {
+        "shadcn/no-arbitrary-values": ["error", { "allow": ["w-[8.75rem]"] }]
+      }
+    },
+    {
+      "files": ["**/src/features/updates/components/UpdateArticleBody.tsx"],
+      "rules": {
+        "shadcn/no-arbitrary-values": [
+          "error",
+          {
+            "allow": [
+              "[--typeset-flow:1em]",
+              "[--typeset-font-body:var(--font-sans)]",
+              "[--typeset-font-heading:var(--font-sans)]",
+              "[--typeset-leading:1.5]",
+              "[--typeset-size:1em]"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/shared/components/DirectoryList.tsx"],
+      "rules": {
+        "shadcn/no-arbitrary-values": [
+          "error",
+          { "allow": ["grid-cols-[24rem_minmax(0,1fr)_max-content_7.5rem]"] }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/shared/components/UserAvatar.tsx"],
+      "rules": {
+        "shadcn/no-arbitrary-values": ["error", { "allow": ["[container-type:size]"] }]
+      }
+    },
+    {
+      "files": [
+        "**/src/shared/components/inspector/inspector-snapshot-card.tsx",
+        "**/src/shared/components/inspector/open-actions-card.tsx"
+      ],
+      "rules": {
+        "shadcn/no-arbitrary-values": [
+          "error",
+          { "allow": ["grid-cols-[max-content_minmax(0,1fr)]"] }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/shared/components/reui/timeline.tsx"],
+      "rules": {
+        "shadcn/no-arbitrary-values": [
+          "error",
+          {
+            "allow": [
+              "group-data-[orientation=horizontal]/timeline:w-[calc(100%-1rem-0.25rem)]",
+              "group-data-[orientation=vertical]/timeline:h-[calc(100%-1rem-0.25rem)]"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/shared/components/timeline/timeline-communication-envelope.tsx"],
+      "rules": {
+        "shadcn/no-arbitrary-values": [
+          "error",
+          { "allow": ["grid-cols-[max-content_minmax(0,1fr)]", "size-[1em]"] }
         ]
       }
     }

@@ -273,15 +273,14 @@ export function TicketColumnFilter({
   return (
     <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
       <DropdownMenuTrigger
-        render={(triggerProps) => (
+        render={
           <ColumnHeaderOptionsTrigger
-            {...triggerProps}
             columnLabel={columnLabel}
             compact={compact}
             highlighted={showMenuHighlight}
             badgeCount={hasActiveFilter ? selected.length : 0}
           />
-        )}
+        }
       />
       <DropdownMenuContent align="end" className="w-auto min-w-56">
         <DropdownMenuGroup>

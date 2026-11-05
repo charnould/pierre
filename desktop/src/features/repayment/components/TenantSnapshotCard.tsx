@@ -154,7 +154,7 @@ export const TenantSnapshotCard = memo(function TenantSnapshotCard({
         <GestionnaireFact assignment={gestionnaire} />
       </SnapshotFact>
 
-      <SnapshotFact label="Groupe">
+      <SnapshotFact label="Phase">
         <RepaymentBucketBadge
           bucket={displayBucket}
           columnValues={columnValues}

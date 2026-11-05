@@ -4,6 +4,7 @@ import { bodyLimit } from 'hono/body-limit'
 import { authenticate, type AuthEnv } from '../../utils/authenticate-user'
 import { authorizeAdministrator } from '../../utils/authorize-role'
 import { deleteAdminChatbot, getAdminSetup, putAdminSetup } from '../setup/admin'
+import { testRepaymentEmail, verifyRepaymentMessage } from '../setup/messages'
 import { getConversation, listConversations, putConversationReview } from './conversations'
 import { sendTestEmail } from './email-test'
 import { getLlmUsage, getRun, listRuns } from './llm-runs'
@@ -26,6 +27,8 @@ admin.get('/providers', getProviders)
 admin.put('/providers', putProviders)
 admin.post('/providers/email/test', sendTestEmail)
 admin.get('/setup', getAdminSetup)
+admin.post('/setup/repayment/messages/verify', verifyRepaymentMessage)
+admin.post('/setup/repayment/messages/test-email', testRepaymentEmail)
 admin.delete('/setup/chatbots/:id', deleteAdminChatbot)
 admin.put('/setup/:path{.+}', putAdminSetup)
 admin.get('/conversations', listConversations)

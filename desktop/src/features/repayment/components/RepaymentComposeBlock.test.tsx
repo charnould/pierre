@@ -9,13 +9,6 @@ import { repaymentTagOptions } from '../lib/repayment-tags'
 import { sampleRepaymentRow } from '../lib/repayment-test-fixtures'
 import type { RepaymentComposeMode } from './RepaymentComposeBlock'
 
-mock.module('../lib/outbound-email-templates.bundle', () => ({
-  listOutboundTemplateGroups: () => [],
-  listOutboundTemplates: () => [],
-  resolveOutboundEmail: () => null,
-  resolveOutboundRcs: () => null
-}))
-
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
 
@@ -291,7 +284,7 @@ describe('RepaymentComposeBlock', () => {
       expect(labels).toContain('Contacter un tiers')
       expect(labels).toContain('Créer un plan d’apurement')
       expect(labels).toContain('Importer un email')
-      expect(labels).toContain('Changer le groupe')
+      expect(labels).toContain('Changer la phase')
       expect(labels).toContain('Changer les tags')
       expect(labels.indexOf('Contacter un tiers')).toBeLessThan(
         labels.indexOf('Créer un plan d’apurement')
@@ -299,8 +292,8 @@ describe('RepaymentComposeBlock', () => {
       expect(labels.indexOf('Créer un plan d’apurement')).toBeLessThan(
         labels.indexOf('Importer un email')
       )
-      expect(labels.indexOf('Importer un email')).toBeLessThan(labels.indexOf('Changer le groupe'))
-      expect(labels.indexOf('Changer le groupe')).toBeLessThan(labels.indexOf('Changer les tags'))
+      expect(labels.indexOf('Importer un email')).toBeLessThan(labels.indexOf('Changer la phase'))
+      expect(labels.indexOf('Changer la phase')).toBeLessThan(labels.indexOf('Changer les tags'))
       expect(labels).not.toContain('Enregistrer une action')
       expect(labels).not.toContain('Ajouter un tag')
       expect(labels).not.toContain('Modifier les tags')

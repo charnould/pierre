@@ -36,6 +36,10 @@ uniquement en CSS ; TypeScript ne calcule que son index déterministe.
 Les exceptions exactes de `config/shadcn-lint.jsonc` couvrent seulement une géométrie locale hors
 échelle ou une dimension calculée à l’exécution. Elles autorisent la déclaration Tailwind ou
 `style` au caller ; elles ne sont ni des tokens, ni un précédent pour étendre une primitive.
+`bun oxlint` refuse aussi les couleurs hors thème, y compris `white` et `black`.
+`config/checks/design-system-primitives.test.ts` refuse un import direct de Base UI hors de
+`shared/components/ui` et `shared/components/reui`, et un contrôle HTML brut hors des cas nommés
+à la section 12.
 
 ---
 
@@ -92,7 +96,13 @@ L’accueil ouvre les métiers et montre le travail personnel. On fait dans l’
 
 ### Board
 
-Réclamations et Impayés uniquement. Flush. DualTable protégé. Toolbar compacte. Header sticky. Lignes ~32 px. Rubrique, thead et lignes = `bg-background`. Pas de Card shell. Pas de h1 de page. Pas de KPI cards. Pas de pagination écran.
+Réclamations et Impayés uniquement. Flush. Les phases sont empilées dans un seul scroll : une rubrique, puis son tableau. Les lignes de deux phases ne se mélangent pas. Une barre `h-9` hors du scroll porte `Actualiser` ; dès qu’une ligne est cochée, elle devient le compte, `Désélectionner` et `Agir sur N`. Cette commande est exclusive du geste de sélection : les actions des phases restent disponibles. Lignes ~32 px. Checkbox toujours visible, colonne verrouillée. Ligne cochée : `data-checked` et `bg-muted/50`. Ligne ouverte dans l’Inspector : `aria-selected` et `data-state="selected"`. Thead et lignes = `bg-background`. Pas de Card shell. Pas de h1 de page. Pas de KPI cards. Pas de pagination écran sur Impayés. Réclamations pagine dans la rubrique du panier.
+
+Le Board occupe toute la largeur et toute la hauteur sous la TitleBar. Un seul scroll vertical, borné par ce canvas. La DualTable remplit au minimum cette largeur : les colonnes gardent leur largeur configurée, s’étirent quand la fenêtre est plus large, et défilent horizontalement dans la table quand elle est plus étroite. Le titre de phase défile avec sa rubrique. Le thead colle en haut du scroll le temps de sa table. Un formulaire structuré ne reprend pas cette surface : il reste dans son propre scroll, centré en `max-w-5xl`.
+
+Une phase vide est une seule ligne compacte `Nom · 0 dossier` : ni montant nul, ni description, ni boutons, ni tableau. Si des filtres vident une phase qui contient des dossiers, la rubrique développée, une phrase muted et `Effacer les filtres` restent. Les rubriques sont séparées par un filet `border-border/60`.
+
+Impayés et Réclamations ont une colonne `Checkbox` verrouillée, sans case d’en-tête. Cocher sélectionne la ligne ; cliquer le reste de la ligne ouvre l’Inspector, même pendant une sélection. La sélection est manuelle. Elle traverse les phases Impayés, et la pagination comme les paniers des Réclamations. `Agir sur N` ouvre un Dialog `max-w-2xl`. Le Dialog affiche la progression ; chaque résultat de Pierre est un artifact dans l’Inspector, sans envoi. Les noms de champs techniques ne s’affichent jamais tels quels : surcharge organisme, dictionnaire métier, puis humanisation du `snake_case`. Un écran de relecture collective resterait un canvas plein.
 
 **Ne pas étendre DualTable** à Automatisations ou à d’autres collections.
 
@@ -132,12 +142,7 @@ Ordre de l’index : trois cartes titrées Accès et suivi, Prestataires, Module
 
 `Retour` est un `Button` `outline` `icon-sm`, nom accessible « Retour ». Le filet et le fond sont ceux d’`outline` (`border-border`, `bg-control`) : le même contrôle secondaire que le reste de l’outil, pas un ghost, pas un primaire. Pas de taille nouvelle, pas de variante nouvelle, pas de `className` sur le bouton. Sur une page à `h1`, il est sur la même ligne et défile avec le titre. Sur une liste, il est à gauche du titre d’en-tête, qui ne défile pas. Pas de bandeau. Depuis le détail d’une conversation, il revient d’abord à la liste. Le plan d’apurement le garde en premier élément de la colonne. L’index Administration et Paramètres, session ouverte, ramènent à l’accueil. La connexion n’en a pas. Les Boards n’en ont pas. Utilisateurs, Encyclopédie et Conversations restent des listes. Leur titre de rubrique a la taille du `CardTitle`, le compte est muted 14, et la seconde ligne d’identité est une `FieldDescription`. Le chrome Directory `text-xl` ne s’y applique pas. Les colonnes de méta restent en 12. Le détail d’une conversation est un Document : Cards Contexte et Qualification, fil read-only centré `max-w-3xl`, sans composer. Statistiques est un Document à deux Cards, Consommation puis Journal des traitements. Les deux graphiques de Consommation sont la seule surface `chart` : encre, méta et filet existants, au plus deux séries, `prefers-reduced-motion` respecté. Prestataires : cartes Organisme, Intelligence artificielle (LLM), RCS, Email, Courrier (via La Poste), Signature électronique (via La Poste). Courrier configure Maileva : environnement détecté depuis l’utilisateur, identifiants, adresse expéditeur et clé TOTP. Signature électronique indique seulement « Intégration en cours ». La carte Email comprend le canal, le logo, puis le gabarit. Le gabarit est la même exception que le fichier d’interface : `Field` vertical, `Textarea` pleine largeur, `max-h-96`. Chaque carte active a son `Enregistrer` à gauche et son état `aria-live`. Signature électronique n’en a pas. Pas de carte Avancement.
 
-Chatbot, Réclamations, Impayés, Synthèses et Générer un rapport : la première Card est Avancement. JSON et consigne reprennent l’exception du gabarit.
-`CardAction` porte `{faites} sur {total}`, `tabular-nums`, méta 12 muted. Une ligne par pièce,
-ordre stable, le même que les cartes qui suivent. Nom fixe : Configuration, Consigne, Icône,
-Courrier, `Modèle {fichier}`. `CircleCheck` si la pièce est enregistrée, `Circle` sinon, encre,
-16 px, trait 1.5. Pas de Badge, pas de bouton. Le nom accessible est « {nom}, enregistrée »,
-« {nom}, enregistré » ou « {nom}, à faire ». Un champ vide ou blanc ne compte pas.
+Chatbot, Réclamations, Impayés, Synthèses et Générer un rapport : pas de carte Avancement. JSON et consigne reprennent l’exception du gabarit. `CircleCheck` seulement là où la pièce est enregistrée, encre, 16 px, trait 1.5. Rien sinon. Pas de `Circle`, pas de Badge, pas de compte, pas de bouton. Le nom accessible est « {nom}, enregistrée », « {nom}, enregistré » ou « Messages, enregistrés ». Un champ vide ou blanc ne compte pas. Configuration, Consigne, Icône et le Courrier des réclamations : la coche est à côté du `CardTitle`, sauf Impayés. Impayés : une seule Card, un `FieldGroup` `rows`, filet `border-border/60` entre les rangs, sans gap. Ordre : Configuration, Consigne, Plan d’apurement, Protocole de cohésion sociale, Diagnostic social et financier, Courrier standard, puis chaque message. La coche est à côté du libellé du rang. Une `Textarea` `mono` par message, hauteur du texte. `Vérifier` est sous chaque message et interroge le serveur sans écrire. `Ajouter` après le groupe. `CircleCheck` à côté de `Vérifier` quand ce texte est celui enregistré. Une vérification seule ne coche pas.
 
 Utilisateurs est l’exception à deux rubriques : `Profils` puis `Utilisateurs`, sans fusion.
 Chaque rubrique a son chrome Directory (titre · compte, CTA). Créer / éditer un profil =
@@ -426,7 +431,7 @@ Hors du rail. Pas d’acteur, pas de date, pas un événement.
 
 Une seule surface paper (`rounded-md`, filet). Même ossature que « À faire » : ancre `size-4` (`Box` muted, `mt-0.5`, inerte) sur la même colonne que `Square` ; titre **Contexte** 14 medium. La grille méta commence 8 px sous le titre. Grille indentée : labels 12 muted, colonne `max-content`, valeurs 12 encre, chips compact `h-4`. Ligne **Tags** en dernier, masquée si aucun tag ; chips **inline** (`flex-wrap`), pas un chip par ligne. Pas d’icônes Lucide en tête de ligne méta. Pas de répétition des IDs du header. Pas de grille de KPI. Colorize = fill + encre + filet 1 px `color-mix(bg 72%, text)` (hex métier ou palette algo), **pas** de swatch / carré en tête, **pas** de `border-border` stone sur un fill hex. Identité collab chip = avatar + nom (displayName org, sinon login), compact `h-4` comme « À faire » — pas `@login`, pas `h-5` Board. Liste de sélection = `OrgUserListItem` (avatar + nom + login). Voir **Identité collègue**.
 
-**Impayés** — la dette est la **première ligne méta** (label « Dette », montant · équivalent loyer `tabular-nums`, flèche de tendance dans la valeur). Ordre : Dette · Courriel · Téléphone · Référent · Groupe · Dernière action · Tags. Seuls les libellés du paramétrage Impayés s’affichent. Chips tags = une paire hex unique (`#E8E8E8` / `#333333`), pas de palette auto, pas de Coloriser DualTable. Pas de date de bail (colonne ledger).
+**Impayés** — la dette est la **première ligne méta** (label « Dette », montant · équivalent loyer `tabular-nums`, flèche de tendance dans la valeur). Ordre : Dette · Courriel · Téléphone · Référent · Phase · Dernière action · Tags. Seuls les libellés du paramétrage Impayés s’affichent. Chips tags = une paire hex unique (`#E8E8E8` / `#333333`), pas de palette auto, pas de Coloriser DualTable. Pas de date de bail (colonne ledger).
 
 **Réclamations** — même `Box` + titre Contexte. Pas de message dans le snapshot : le contenu vit dans l’historique (card courriel). Ordre : Locataire · Lot · Site · Reçue le · Canal · Qualification · État · État de la réclamation · Avancement · Panier · Référent · Tags. Lignes vides masquées. `etat_de_la_reclamation` et `avancement` = chips Colorize DualTable. Pas de répétition de `id_reclamation`.
 
@@ -442,7 +447,7 @@ Colonne gauche, sous snapshot / à faire. Pas un événement : pas d’avatar, p
 
 États : `idle` (saisie) · `submitting` (champs et actions disabled, `aria-busy`) · `success` (reset + pile) · `error` (toast existant, brouillon intact). Reset **uniquement** si la soumission renvoie `true`. Annuler = reset volontaire, pas d’appel réseau. Focus : premier champ à l’ouverture ; CTA déclencheur après Annuler / succès.
 
-**Impayés** — pile verticale `w-fit`, outline, icône 16 + label 14 medium, un rang = un métier. Ordre et libellés : `Laisser une note` · `Créer une tâche` · `Consigner une action réalisée` · `Contacter un tiers` · un rang Plan d’état (`Créer un plan d’apurement` / `Modifier le plan d’apurement` / `Clôturer le plan d’apurement`) · `Importer un email` · `Changer le groupe` · `Changer les tags` · `Affecter à un référent` ou `Réaffecter à un référent`. Pas de liste d’actes dans la pile. Tâche = Action (requis) · Qui (défaut = utilisateur courant) · Quand (défaut = aujourd’hui ; une échéance aujourd’hui est licite) · Note optionnelle · primaire `Planifier`. Action déjà réalisée = Action (requis) · Note optionnelle · primaire `Consigner`. `Contacter un tiers` = menu groupé par `group` (ordre `template_groups` ou alpha `fr`) ; `channel: rcs` = revue inline Téléphone (destinataire de cet envoi, prérempli une fois depuis le dossier, indépendant du modèle, non écrit sur le locataire) · Message RCS · Actions proposées (Réponse, Appel, Lien `https:`) · SMS de secours ; Envoyer si le composeur est prêt ; tentative RCS puis SMS de secours côté serveur au même numéro, sans sélecteur SMS ; `channel: email` = revue inline Objet + Message puis information de canal non configuré, brouillon conservé ; `channel: mailto` = client mail puis `ConfirmDialog`. `Importer un email` = sélecteur `.eml` uniquement, parse immédiat, pas de preview, pas de drag-and-drop, pas de Dialog. Plan = un verbe exclusif qui **quitte** vers Workspace (Clôturer = canvas read-only, motif inchangé). Groupe, tags et référent = brouillons dans le même shell.
+**Impayés** — pile verticale `w-fit`, outline, icône 16 + label 14 medium, un rang = un métier. Ordre et libellés : `Laisser une note` · `Créer une tâche` · `Consigner une action réalisée` · `Contacter un tiers` · un rang Plan d’état (`Créer un plan d’apurement` / `Modifier le plan d’apurement` / `Clôturer le plan d’apurement`) · `Importer un email` · `Changer la phase` · `Changer les tags` · `Affecter à un référent` ou `Réaffecter à un référent`. Pas de liste d’actes dans la pile. Tâche = Action (requis) · Qui (défaut = utilisateur courant) · Quand (défaut = aujourd’hui ; une échéance aujourd’hui est licite) · Note optionnelle · primaire `Planifier`. Action déjà réalisée = Action (requis) · Note optionnelle · primaire `Consigner`. `Contacter un tiers` = menu groupé par `group`, groupes et libellés triés en français ; `channel: rcs` = revue inline Téléphone (destinataire de cet envoi, prérempli une fois depuis le dossier, indépendant du modèle, non écrit sur le locataire) · Message RCS · Actions proposées (Réponse, Appel, Lien `https:`) · SMS de secours ; Envoyer si le composeur est prêt ; tentative RCS puis SMS de secours côté serveur au même numéro, sans sélecteur SMS ; `channel: email` = revue inline Objet + Message puis information de canal non configuré, brouillon conservé ; `channel: mailto` = client mail puis `ConfirmDialog`. `Importer un email` = sélecteur `.eml` uniquement, parse immédiat, pas de preview, pas de drag-and-drop, pas de Dialog. Plan = un verbe exclusif qui **quitte** vers Workspace (Clôturer = canvas read-only, motif inchangé). Groupe, tags et référent = brouillons dans le même shell.
 
 **Réclamations** — même pile, même shell, mêmes labels 12 / contrôles 14. Ordre : `Répondre au locataire` · `Générer un point de situation` · `Ajouter une note` · `Créer une tâche` · `Consigner une action réalisée` · `Changer de panier` · `Importer un email` · `Changer les tags` · `Affecter à un référent`. `Répondre au locataire` ouvre un composeur unique : Format (`name` de l’application configurée si sa configuration est complète · `SMS / RCS` · `Courriel` · `Via la poste`) → Objet sauf SMS / RCS et format externe → Message. Le format externe, toujours courriel-like, est sélectionné par défaut lorsqu’il est disponible, sinon le courriel. Le champ Message occupe toute la hauteur restante du présent, avec un minimum éditable ; pendant la génération, il utilise exactement `AgentWorkTrace` + `GeneratedMarkdown` comme le module Synthèse, puis redevient une textarea éditable. Footer : `Rédiger avec {agent configuré}` · `Exporter en DOCX` pour le postal · `Annuler` · une seule primaire filled : `name` pour le format externe, `Envoyer` pour les formats directs. L’application externe est configurée par module (`name`, `transport`, `clipboard`, `url`, `selector`) : `browser` ouvre une fenêtre Electron modale, `external` ouvre la cible via le système. La confirmation « Avez-vous envoyé cette réponse ? » journalise ou non la réponse au locataire, même sans coordonnée connue, sans perdre le brouillon.
 
@@ -498,7 +503,7 @@ Choix proposés     — après le corps ; pills `Badge` secondary compact
 
 Coordonnées en clair (courriel et téléphone). Le canal ne change ni le chrome ni la réduction : seule la longueur décide. Pas de Badge, pas de couleur de canal, pas d’exception « réception initiale ouverte », pas de CTA textuel. Import `.eml` : L2 « a importé un courriel » ; L1 = date d’upload. Pas de Dialog. Pas de drag-and-drop.
 
-Une transition d’état (groupe, affectation, réaffectation, tags) est aussi une phrase L2 unique : « a déplacé le dossier du groupe … vers … », « a affecté le dossier à … », « a réaffecté le dossier de … à … », « a mis à jour les tags » + chips du snapshot (ou « Aucun tag »). Le corps ne reprend pas avant → après — seulement la note si elle existe, au registre du Work feed.
+Une transition d’état (phase, affectation, réaffectation, tags) est aussi une phrase L2 unique : « a changé la phase de … vers … », « a affecté le dossier à … », « a réaffecté le dossier de … à … », « a mis à jour les tags » + chips du snapshot (ou « Aucun tag »). Le corps ne reprend pas avant → après — seulement la note si elle existe, au registre du Work feed.
 
 Statut courant (snapshot) et transition (historique) **coexistent**. Ni l’un ni l’autre ne remplace l’autre.
 
@@ -764,7 +769,8 @@ Geist Serif v1 ne fournit que la graisse Regular 400 et aucun italique. Jusqu’
 | Titre de page Document  | 36 / leading-tight | regular, Geist Serif | `h1` `font-serif text-4xl leading-tight font-normal` |
 | Empty title             | 24/32              | medium               | `EmptyTitle` `text-2xl` ; `sm` 18/28 (`text-lg`)     |
 | Empty description       | 16/24 Geist Serif  | 350, muted           | `EmptyDescription` `text-base`; `sm` 14/19           |
-| Board section           | 20/24              | semibold             | rubrique Geist Sans `text-xl`                        |
+| Board phase             | 18/24              | medium               | rubrique Geist Sans `text-lg leading-6 font-medium`  |
+| Board phase meta        | 14/20              | regular, muted       | `text-sm leading-5 tabular-nums`                     |
 | Form section            | 18/24              | medium               | `CardTitle`                                          |
 | Corps de lecture        | 16/24 Geist Sans   | regular              | frise, tâches                                        |
 | Message de notification | 14/19 Geist Serif  | 350, muted           | `ActivityNotificationRow`, deux lignes max           |
@@ -775,11 +781,13 @@ Geist Serif v1 ne fournit que la graisse Regular 400 et aucun italique. Jusqu’
 | Aide de champ           | 14/19              | 350, Geist Serif     | `FieldDescription` (`text-balance`)                  |
 | Erreur de champ         | 13/16              | regular destructive  | `FieldError`                                         |
 | Table                   | 14/20 Geist Sans   | regular              | `text-table` + `tabular-nums`                        |
-| Table header            | 12/16 Geist Sans   | semibold             | en-tête de table                                     |
+| Table header            | 12/16 Geist Sans   | semibold             | en-tête de table, hors Board                         |
+| Board column header     | 11/16 Geist Mono   | semibold             | `TableHead variant="board"`                          |
+| Board cell              | 13/20 Geist Sans   | regular              | `TableCell variant="board"`                          |
 | Méta dense              | 12/16              | regular muted        | snapshot, chrome, `text-xs`                          |
 | Dette                   | 20/24 Geist Sans   | medium               | `text-xl font-medium tabular-nums`                   |
 
-**Tables** : Geist Sans 14/20, `tabular-nums`. **En-têtes** : Geist Sans 12/16 semibold, muted. **Alignement** : `text-start` partout, y compris les montants. Geist Mono : JSON et code. Le plafond `max-h-[2lh]` de l’annuaire reste lié à `text-balance` ; la notification utilise `line-clamp-2`.
+**Tables** : Geist Sans 14/20, `tabular-nums`, hors Board. **En-têtes** : Geist Sans 12/16 semibold, muted. **Board** : en-tête de colonnes Geist Mono 11/16 semibold, cellules Geist Sans 13/20, lignes ~32. **Alignement** : `text-start` partout, y compris les montants. Geist Mono : JSON, code et cette ligne d’en-tête. Le plafond `max-h-[2lh]` de l’annuaire reste lié à `text-balance` ; la notification utilise `line-clamp-2`.
 
 Hiérarchie par poids, contraste, position, taille — pas uniquement par couleur.
 
@@ -980,14 +988,15 @@ impossible à juger dans le code se valide frame par frame ; elle n’est pas ap
 ### DualTable — Boards uniquement
 
 Paper continu. Pas de Card. Deux
-`<table className="text-table table-fixed font-sans tabular-nums">` + deux
-`colgroup`. Scroll H sync. Headers sticky `h-8`. `DataColumnHeader` : label Geist Sans 12/16
-semibold muted + menu Filter. Pas de pinning, pas de DnD.
-Lignes ~32, `hover:bg-muted/50`. Cellules = Geist Sans 13, `tabular-nums`,
-**`text-start`**. En-têtes colonnes = Geist Sans 11, aussi à gauche. Empty / loading dans
-la table. Virtualisation si nécessaire.
+`<table className="min-w-full table-fixed font-sans tabular-nums">` + deux
+`colgroup`. La largeur de table est le maximum entre la somme des colonnes et la largeur
+disponible. Scroll H sync. Headers sticky `top-0` `h-8`. `DataColumnHeader` hérite de
+`TableHead variant="board"` : Geist Mono 11/16 semibold + menu Filter. Pas de pinning, pas de DnD.
+Lignes ~32, activables au clavier, `hover:bg-muted/50`. Cellules = `TableCell variant="board"`,
+Geist Sans 13/20, `tabular-nums`, **`text-start`**. Empty / loading dans
+la table. Virtualisation si nécessaire. Le titre d’une colonne triable est accompagné d’un bouton de tri direct : aucun, croissant, décroissant, puis aucun. L’icône filtre ouvre le menu d’options : filtrer, déplacer, masquer. Le menu `Colonnes` reste le chemin pour réafficher une colonne. Une poignée verticale `border` reste visible sur le bord de chaque colonne redimensionnable. Ces contrôles de vue restent pendant une sélection.
 
-Rubrique, thead et lignes = `bg-background`. Hiérarchie par filets, typo (rubrique Geist Sans `text-xl` / colonnes Geist Sans 11 px / cellules Geist Sans 13), pas par fond. CTA rubrique = `variant="outline"` stock. Impayés = pile de rubriques (`RepaymentBucketSection`). Tickets = une rubrique. Pills colorize (`TableCellValue`) = `Badge` + label ; couleur = fill + encre + filet mix(bg, text), pas de swatch. **Interdit :** fusionner les buckets, KPI cards, DualTable hors Board, lavage de chrome, `text-end` en cellule ou en-tête.
+Onglets absents. Rubrique, thead et lignes = `bg-background`. Hiérarchie par filets, typo (rubrique Geist Sans 18/24 medium / méta 14/20 muted / colonnes Geist Mono 11 / cellules Geist Sans 13), pas par fond. La barre commune est `h-9`, hors du scroll : `Actualiser`, ou la commande de sélection. Les actions d’une phase (`Colonnes`, filtres, tris, pagination) restent sur sa rubrique, y compris pendant une sélection. CTA = `variant="outline"` stock, action principale = bouton par défaut. Impayés et Réclamations = une pile de phases. Checkbox de sélection toujours visible. Ligne cochée `data-checked:bg-muted/50`. Pills colorize (`TableCellValue`) = `Badge` + label ; couleur = fill + encre + filet mix(bg, text), pas de swatch. **Interdit :** nom de champ brut en `snake_case`, mélanger les lignes de plusieurs phases, coller chaque titre de phase au-dessus du thead, KPI cards, DualTable hors Board, lavage de chrome, `text-end` en cellule ou en-tête.
 
 ### Directory
 
@@ -995,7 +1004,7 @@ Paper. Hover / selected `bg-muted`. Séparateur `/60` ou whitespace. Jamais Card
 
 ### Toolbars
 
-`h-7`, buttons `sm`, ghost / outline, une seule barre. Search = `InputGroup`, une instance visible. Board : filtres dans le menu de colonne. Find-in-page = overlay distinct.
+`h-7`, buttons `sm`, ghost / outline, une seule barre. Search = `InputGroup`, une instance visible. Board : exception `h-9` pour donner 4 px autour des boutons `sm`, hors du scroll (`Actualiser`, ou la sélection) ; filtres dans le menu de colonne de chaque phase. Find-in-page = overlay distinct.
 
 ---
 
@@ -1053,21 +1062,22 @@ Ne pas introduire / supprimer :
 
 ## 12. Exceptions volontairement conservées
 
-| Exception                   | Pourquoi                                                                                                                                                           |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Hex des statuts             | Données métier, pas chrome                                                                                                                                         |
-| Reports HTML                | Hors React                                                                                                                                                         |
-| Mascotte                    | Hors React                                                                                                                                                         |
-| DualTable                   | Boards uniquement                                                                                                                                                  |
-| Conversation                | Famille propre (`max-w-3xl`). Composer web : `rounded-xl` sur papier blanc. Composer Discuter : contrôle du formulaire structuré.                                  |
-| Quick chat                  | Ombre neutre dédiée à trois couches (`--shadow-chat-window`) pour l’unique centre de gravité flottant ; aucune aura colorée ni glass. La page Discuter n’en a pas. |
-| Workspace                   | Famille propre                                                                                                                                                     |
-| ActivityReader              | Overlay lecteur : `max-w-3xl`, `rounded-t-xl`                                                                                                                      |
-| Drawer Base UI default      | Snap points et nested upstream conservent height/filter. Les variants Pierre les neutralisent et restent transform + opacity.                                      |
-| Burst Notifications WAAPI   | L’API `KeyframeEffect` reçoit la courbe canonique en valeur littérale ; elle ne résout pas les variables CSS du thème.                                             |
-| Login coquille compacte     | Première surface : fenêtre calée sur la pile                                                                                                                       |
-| Login, deux phrases légales | Serif 12/16 au lieu du 14/19 d’aide. La coquille ne tient pas ce corps. Refusé : une taille de `FieldDescription`, un `text-xs` sur le titre.                      |
-| Prestataires, champs        | Adresses, modèles, clés, UUID et HTML se lisent et se collent en Geist Mono. Refusé : Geist Sans sur ces champs, mono sur le reste de l’administration.            |
+| Exception                   | Pourquoi                                                                                                                                                                                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Hex des statuts             | Données métier, pas chrome                                                                                                                                                                                                                       |
+| Reports HTML                | Hors React                                                                                                                                                                                                                                       |
+| Mascotte                    | Hors React                                                                                                                                                                                                                                       |
+| DualTable                   | Boards uniquement                                                                                                                                                                                                                                |
+| Conversation                | Famille propre (`max-w-3xl`). Composer web : `rounded-xl` sur papier blanc. Composer Discuter : contrôle du formulaire structuré.                                                                                                                |
+| Quick chat                  | Ombre neutre dédiée à trois couches (`--shadow-chat-window`) pour l’unique centre de gravité flottant ; aucune aura colorée ni glass. La page Discuter n’en a pas.                                                                               |
+| Workspace                   | Famille propre                                                                                                                                                                                                                                   |
+| ActivityReader              | Overlay lecteur : `max-w-3xl`, `rounded-t-xl`                                                                                                                                                                                                    |
+| Drawer Base UI default      | Snap points et nested upstream conservent height/filter. Les variants Pierre les neutralisent et restent transform + opacity.                                                                                                                    |
+| Burst Notifications WAAPI   | L’API `KeyframeEffect` reçoit la courbe canonique en valeur littérale ; elle ne résout pas les variables CSS du thème.                                                                                                                           |
+| Login coquille compacte     | Première surface : fenêtre calée sur la pile                                                                                                                                                                                                     |
+| Login, deux phrases légales | Serif 12/16 au lieu du 14/19 d’aide. La coquille ne tient pas ce corps. Refusé : une taille de `FieldDescription`, un `text-xs` sur le titre.                                                                                                    |
+| Prestataires, champs        | Adresses, modèles, clés, UUID, HTML et JSON se lisent en Geist Mono via `mono` sur `Input`, `InputGroupInput` ou `Textarea`. Refusé : `font-mono` au caller, Geist Sans sur ces champs, mono sur le reste de l’administration.                   |
+| Contrôles HTML bruts        | HomeDoor, cadre Work feed, exemples Conversation, ancre 16 d’« À faire », cible `render={<button />}` et input fichier `sr-only`. La mascotte reste hors React. Refusé : un autre `<button>`, `<input>`, `<textarea>`, `<select>` ou `<dialog>`. |
 
 ---
 

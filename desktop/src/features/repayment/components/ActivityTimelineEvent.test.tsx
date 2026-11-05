@@ -11,13 +11,6 @@ mock.module('@/contexts/UiSettingsContext', () => ({
   })
 }))
 
-mock.module('@/features/repayment/lib/outbound-email-templates.bundle', () => ({
-  listOutboundTemplateGroups: () => [],
-  listOutboundTemplates: () => [],
-  resolveOutboundEmail: () => null,
-  resolveOutboundRcs: () => null
-}))
-
 import { ContextTimeline } from '@/shared/components/timeline/context-timeline'
 import { parseActivityAuthor } from '@/shared/lib/timeline/parse-activity-author'
 import type { Activity } from '@/shared/types/activites'
@@ -76,7 +69,7 @@ describe('ActivityTimelineEvent', () => {
         })
       })
     )
-    expect(html).toContain('a déplacé le dossier de groupe')
+    expect(html).toContain('a changé la phase')
     expect(html).toContain('amiable')
     expect(html).toContain('pre_contentieux')
     expect(html).toContain('Échec des relances amiables.')

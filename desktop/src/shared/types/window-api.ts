@@ -19,6 +19,7 @@ import type {
   SaveAdminConversationReviewParams
 } from '@/shared/types/admin-insights'
 
+import type { RepaymentMessage } from '../../../../shared/repayment-messages'
 import type {
   ActivitiesListResponse,
   ActivityFeedSyncResult,
@@ -240,10 +241,9 @@ declare global {
             target: '' | 'sandbox' | 'production'
             postalReady: boolean
             electronicReady: boolean
-            tracking: '' | 'webhook' | 'poll'
             secretsReadable: boolean
           }
-          webhooks: { rcs: string; email: string; maileva: string }
+          webhooks: { rcs: string; email: string }
         }
       } | null>
       /** `PUT /admin/providers` */
@@ -266,6 +266,14 @@ declare global {
       }) => Promise<{ data?: { id: string }; error?: { message: string } } | null>
       /** `POST /admin/providers/email/test` */
       postEmailTest: (params: { url: string }) => Promise<{
+        data?: { sent: true }
+        error?: { message: string }
+      } | null>
+      verifyRepaymentMessage: (params: { url: string; text: string }) => Promise<{
+        data?: RepaymentMessage
+        error?: { message: string }
+      } | null>
+      testRepaymentEmail: (params: { url: string; text: string }) => Promise<{
         data?: { sent: true }
         error?: { message: string }
       } | null>

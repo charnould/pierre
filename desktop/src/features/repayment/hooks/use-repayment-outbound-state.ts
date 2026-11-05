@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { empty_rcs_compose, type RcsComposeValue } from '../../../../../shared/rcs-message'
-import type { OutboundEmailResolved, OutboundRcsResolved } from '../lib/outbound-email-templates'
+import type { ResolvedRepaymentEmail, ResolvedRepaymentRcs } from '../lib/repayment-messages'
 
 const EMAIL_CONFIRM_FALLBACK_MS = 2000
 
@@ -9,8 +9,8 @@ const EMPTY_RCS = empty_rcs_compose()
 
 export function useRepaymentOutboundState(onEmailOpenError: () => void) {
   const [rcsCompose, setRcsCompose] = useState<RcsComposeValue>(EMPTY_RCS)
-  const [pendingRcsTemplateId, setPendingRcsTemplateId] = useState<string | null>(null)
-  const [pendingMailto, setPendingMailto] = useState<OutboundEmailResolved | null>(null)
+  const [pendingRcsAction, setPendingRcsAction] = useState<string | null>(null)
+  const [pendingMailto, setPendingMailto] = useState<ResolvedRepaymentEmail | null>(null)
   const [emailConfirmOpen, setEmailConfirmOpen] = useState(false)
   const [emailSubject, setEmailSubject] = useState('')
   const [emailBody, setEmailBody] = useState('')
@@ -26,7 +26,7 @@ export function useRepaymentOutboundState(onEmailOpenError: () => void) {
 
   const clearRcsReview = useCallback(() => {
     setRcsCompose(EMPTY_RCS)
-    setPendingRcsTemplateId(null)
+    setPendingRcsAction(null)
   }, [])
 
   const clearEmailReview = useCallback(() => {
@@ -40,23 +40,23 @@ export function useRepaymentOutboundState(onEmailOpenError: () => void) {
     clearEmailReview()
   }, [clearEmailReview, clearPendingMailto, clearRcsReview])
 
-  const selectRcsTemplate = useCallback((resolved: OutboundRcsResolved, phone: string) => {
+  const selectRcsTemplate = useCallback((resolved: ResolvedRepaymentRcs, phone: string) => {
     setRcsCompose((current) => ({
       destinataire: current.destinataire.trim() ? current.destinataire : phone,
       body: resolved.body,
       sms_fallback: resolved.sms_fallback,
       choices: resolved.choices
     }))
-    setPendingRcsTemplateId(resolved.templateId)
+    setPendingRcsAction(resolved.action)
   }, [])
 
-  const selectEmailTemplate = useCallback((resolved: OutboundEmailResolved) => {
+  const selectEmailTemplate = useCallback((resolved: ResolvedRepaymentEmail) => {
     setEmailSubject(resolved.subject)
     setEmailBody(resolved.body)
   }, [])
 
   const selectMailtoTemplate = useCallback(
-    (resolved: OutboundEmailResolved) => {
+    (resolved: ResolvedRepaymentEmail) => {
       const requestId = ++emailRequestIdRef.current
       emailBlurSeenRef.current = false
       setEmailConfirmOpen(false)
@@ -109,7 +109,7 @@ export function useRepaymentOutboundState(onEmailOpenError: () => void) {
     emailConfirmOpen,
     emailSubject,
     pendingMailto,
-    pendingRcsTemplateId,
+    pendingRcsAction,
     reset,
     selectEmailTemplate,
     selectMailtoTemplate,

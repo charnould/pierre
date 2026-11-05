@@ -8,6 +8,7 @@ import {
   parseMascotShape
 } from '../../../mascot/look'
 import { MASCOT_VIEWBOX_SIZE } from '../../../mascot/profiles'
+import { resolveFieldLabel } from '../field-label'
 import {
   AUTOMATIONS_SPLIT_DEFAULT_LIST,
   type AutomationsPanelSplit,
@@ -582,10 +583,30 @@ export function mergeUiSettings(user: Record<string, unknown>): UiSettings {
   }
 }
 
+const TICKET_COLUMN_LABELS: Readonly<Record<string, string>> = {
+  id_reclamation: 'Réclamation',
+  id_locataire: 'Locataire',
+  ids_locataires_concernes: 'Locataires concernés',
+  id_client: 'Client',
+  id_lot: 'Lot',
+  message: 'Message',
+  motif: 'Motif',
+  type_affaire: 'Type de réclamation',
+  date_extraction: 'Date d’extraction',
+  dernier_evenement_le: 'Dernier événement',
+  dernier_evenement_type: 'Type du dernier événement',
+  dernier_evenement_contenu: 'Contenu du dernier événement',
+  email_collaborateur_en_charge: 'Référent',
+  unite_organisationnelle_en_charge_hierarchie: 'Unité en charge',
+  etat_de_la_reclamation: 'État de la réclamation',
+  avancement: 'Avancement',
+  degre_urgence: 'Degré d’urgence'
+}
+
 export function resolveTicketColumnLabel(name: string, settings?: UiSettings): string {
   const label = settings?.tickets?.table?.columnLabels?.[name]
   if (typeof label === 'string' && label.trim()) return label.trim()
-  return name
+  return resolveFieldLabel(name, TICKET_COLUMN_LABELS)
 }
 
 /** Raw `ui-settings.json` document on a fresh install (before runtime seeding). */

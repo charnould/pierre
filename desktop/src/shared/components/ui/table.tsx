@@ -40,12 +40,21 @@ function TableFooter({ className, ...props }: React.ComponentProps<'tfoot'>) {
   )
 }
 
-function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
+function TableRow({
+  className,
+  variant = 'default',
+  ...props
+}: React.ComponentProps<'tr'> & {
+  variant?: 'default' | 'board'
+}) {
   return (
     <tr
       data-slot="table-row"
+      data-variant={variant === 'board' ? 'board' : undefined}
       className={cn(
         'hover:bg-muted/50 has-aria-expanded:bg-muted data-[state=selected]:bg-muted transition-colors',
+        variant === 'board' &&
+          'focus-visible:ring-ring/20 data-checked:bg-muted/50 cursor-pointer focus-visible:ring-2 focus-visible:outline-none',
         className
       )}
       {...props}
@@ -53,13 +62,21 @@ function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
   )
 }
 
-function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
+function TableHead({
+  className,
+  variant = 'default',
+  ...props
+}: React.ComponentProps<'th'> & {
+  variant?: 'default' | 'board'
+}) {
   return (
     <th
       scope="col"
       data-slot="table-head"
+      data-variant={variant === 'board' ? 'board' : undefined}
       className={cn(
-        'text-muted-foreground h-7 px-2 text-left align-middle text-[12px] leading-4 font-semibold whitespace-nowrap [&:has([role=checkbox])]:pr-0',
+        'text-muted-foreground px-2 text-left align-middle font-semibold whitespace-nowrap [&:has([role=checkbox])]:pr-0',
+        variant === 'board' ? 'h-8 font-mono text-[11px] leading-4' : 'h-7 text-[12px] leading-4',
         className
       )}
       {...props}
@@ -67,12 +84,22 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
   )
 }
 
-function TableCell({ className, ...props }: React.ComponentProps<'td'>) {
+function TableCell({
+  className,
+  variant = 'default',
+  ...props
+}: React.ComponentProps<'td'> & {
+  variant?: 'default' | 'board'
+}) {
   return (
     <td
       data-slot="table-cell"
+      data-variant={variant === 'board' ? 'board' : undefined}
       className={cn(
-        'h-10 px-2 py-1 align-middle whitespace-normal [&:has([role=checkbox])]:pr-0',
+        'px-2 align-middle [&:has([role=checkbox])]:pr-0',
+        variant === 'board'
+          ? 'h-8 py-0 font-sans text-[13px] leading-5 whitespace-nowrap'
+          : 'h-10 py-1 whitespace-normal',
         className
       )}
       {...props}

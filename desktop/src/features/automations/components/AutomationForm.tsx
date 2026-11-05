@@ -261,7 +261,6 @@ export function AutomationForm({
               aria-label="Rapports conservés"
               type="number"
               min={1}
-              className="tabular-nums"
               value={maxReports}
               onChange={(e) => setMaxReports(Math.max(1, Number(e.target.value) || 1))}
             />

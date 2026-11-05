@@ -117,7 +117,7 @@ export function ActivityNotificationRow({
             </span>
           ) : null}
           {preview ? (
-            <p className="text-muted-foreground col-span-2 line-clamp-2 font-serif text-[14px] leading-4.75 font-[350]">
+            <p className="text-muted-foreground col-span-2 line-clamp-2 font-serif text-sm leading-4.75 font-[350]">
               <MentionText compact inline text={preview} mentionVariant="activityRecipient" />
             </p>
           ) : null}

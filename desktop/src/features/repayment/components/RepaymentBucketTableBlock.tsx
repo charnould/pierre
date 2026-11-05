@@ -1,6 +1,6 @@
 import { type RefObject, useMemo } from 'react'
 
-import { BoardTableSection } from '@/shared/components/table/board-table-section'
+import { BoardPhaseSection } from '@/shared/components/board/board-surface'
 import type { ColumnValuesConfig } from '@/shared/lib/ui-settings/tickets-table'
 
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
@@ -14,7 +14,6 @@ import {
   useRepaymentTableFilters,
   useRepaymentTablePreferences
 } from '../lib/use-repayment-table-preferences'
-import { RepaymentBucketEmpty } from './RepaymentBucketEmpty'
 import { RepaymentBucketSectionActions } from './RepaymentBucketSectionActions'
 import { RepaymentTableView } from './RepaymentTableView'
 
@@ -23,7 +22,6 @@ interface Props {
   bucketRows: TenantRepaymentRow[]
   ledgerColumnIds: readonly string[]
   selectedId: string | null
-  loading: boolean
   snapshotDate?: string
   columnValues?: ColumnValuesConfig
   onColumnValuesChange?: (updater: ColumnValuesUpdater) => void
@@ -32,7 +30,6 @@ interface Props {
   getBucket: (row: TenantRepaymentRow) => RepaymentBucketId
   getLastAction: (row: TenantRepaymentRow) => TenantLastAction | null
   getRowSignal: (row: TenantRepaymentRow) => RepaymentRowSignal | null
-  onReload: () => void
   scrollRef: RefObject<HTMLElement | null>
 }
 
@@ -41,7 +38,6 @@ export function RepaymentBucketTableBlock({
   bucketRows,
   ledgerColumnIds,
   selectedId,
-  loading,
   snapshotDate,
   columnValues,
   onColumnValuesChange,
@@ -50,7 +46,6 @@ export function RepaymentBucketTableBlock({
   getBucket,
   getLastAction,
   getRowSignal,
-  onReload,
   scrollRef
 }: Props) {
   const {
@@ -88,34 +83,33 @@ export function RepaymentBucketTableBlock({
     () => filterRepaymentRows(bucketRows, columnFilters, filterGetters),
     [bucketRows, columnFilters, filterGetters]
   )
-
+  const countLabel = `${bucketRows.length} dossier${bucketRows.length === 1 ? '' : 's'}`
   const totalSolde = useMemo(
-    () => filteredRows.reduce((sum, row) => sum + row.solde_locataire, 0),
-    [filteredRows]
+    () => bucketRows.reduce((sum, row) => sum + row.solde_locataire, 0),
+    [bucketRows]
   )
-  const countLabel = `${filteredRows.length} dossier${filteredRows.length === 1 ? '' : 's'}`
+  const phaseEmpty = bucketRows.length === 0
+  const filteredEmpty = !phaseEmpty && filteredRows.length === 0
 
   return (
-    <BoardTableSection
+    <BoardPhaseSection
       title={getRepaymentBucketMeta(bucket).label}
-      metadata={[countLabel, formatEuro(totalSolde)]}
+      meta={phaseEmpty ? countLabel : `${countLabel} · ${formatEuro(totalSolde)}`}
+      empty={phaseEmpty}
       actions={
         <RepaymentBucketSectionActions
           activeColumnIds={activeColumnIds}
           columnVisibility={columnVisibility}
           onToggleColumn={toggleColumnVisibility}
-          loading={loading}
           hasActiveColumnFilters={hasActiveColumnFilters}
           hasActiveColumnSorting={hasActiveColumnSorting}
           onClearColumnFilters={clearColumnFilters}
           onClearColumnSorting={clearColumnSorting}
-          onReload={onReload}
         />
       }
+      note={filteredEmpty ? 'Aucun dossier ne correspond aux filtres.' : undefined}
     >
-      {filteredRows.length === 0 ? (
-        <RepaymentBucketEmpty bucketEmpty={bucketRows.length === 0} />
-      ) : (
+      {filteredEmpty ? null : (
         <RepaymentTableView
           rows={filteredRows}
           allRows={bucketRows}
@@ -142,6 +136,6 @@ export function RepaymentBucketTableBlock({
           scrollRef={scrollRef}
         />
       )}
-    </BoardTableSection>
+    </BoardPhaseSection>
   )
 }

@@ -2,6 +2,8 @@ import { useSyncExternalStore } from 'react'
 
 import { warnRenderer } from '@/shared/lib/renderer-log'
 
+import type { RepaymentMessage } from '../../../../shared/repayment-messages'
+
 export type CustomizationStatus = 'idle' | 'loading' | 'ready' | 'error'
 
 export type InstanceCustomization = {
@@ -14,18 +16,17 @@ export type InstanceCustomization = {
     prompt?: string
   } | null
   repayments: {
-    buckets: readonly { id: string; label: string }[]
-    actions: { dossier: readonly unknown[]; bulk_operations: readonly unknown[] }
+    phases: readonly string[]
+    caseActions: readonly string[]
+    batchActions: readonly string[]
     tags: readonly string[]
-    template_groups?: unknown
-    templates: Record<string, string>
-    create_plan: {
-      schedule: {
-        defaultMonths: number
-        maxEffortRate: number
-        minDailyRemainder: number
-        thresholds: readonly { months: number; message: string }[]
-      }
+    senderEmail?: string
+    messages: RepaymentMessage[]
+    schedule: {
+      defaultInstallments: number
+      maxEffortPercent: number
+      minDailyRemainderEuros: number
+      confirmAfterInstallments: Readonly<Record<string, string>>
     }
     prompt?: string
   } | null
@@ -145,13 +146,7 @@ export function isCustomizationPayload(value: unknown): value is InstanceCustomi
   }
   if (row.repayments != null) {
     const repayments = row.repayments as Record<string, unknown>
-    if (
-      repayments.templates == null ||
-      typeof repayments.templates !== 'object' ||
-      Array.isArray(repayments.templates)
-    ) {
-      return false
-    }
+    if (!Array.isArray(repayments.messages)) return false
   }
   return Array.isArray(row.docxSkillIds) && typeof row.chatbot === 'boolean'
 }

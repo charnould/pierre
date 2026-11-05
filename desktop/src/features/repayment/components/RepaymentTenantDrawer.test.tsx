@@ -7,13 +7,6 @@ import type { Activity } from '@/shared/types/activites'
 
 import { emptyCase } from '../plan/document'
 
-mock.module('../lib/outbound-email-templates.bundle', () => ({
-  listOutboundTemplateGroups: () => [],
-  listOutboundTemplates: () => [],
-  resolveOutboundEmail: () => null,
-  resolveOutboundRcs: () => null
-}))
-
 const originalGlobals = new Map<string, unknown>()
 
 beforeAll(() => {
@@ -412,7 +405,7 @@ describe('RepaymentTenantDrawer top card', () => {
         'Courriel',
         'Téléphone',
         'Référent',
-        'Groupe',
+        'Phase',
         'Dernière tâche',
         'Tags'
       ])
@@ -475,7 +468,7 @@ describe('RepaymentTenantDrawer top card', () => {
     try {
       const body = document.body.textContent ?? ''
       expect(body).toContain('Contexte')
-      expect(body).toContain('Groupe')
+      expect(body).toContain('Phase')
       expect(body).toContain('Référent')
       expect(body).toContain('Courriel')
       expect(body).toContain('Téléphone')
@@ -506,7 +499,7 @@ describe('RepaymentTenantDrawer top card', () => {
       expect(panes[1]?.classList.contains('w-3/5')).toBe(true)
       expect(panes[0]?.classList.contains('px-4')).toBe(true)
       expect(panes[1]?.classList.contains('px-4')).toBe(false)
-      expect(panes[0]?.textContent).toContain('Groupe')
+      expect(panes[0]?.textContent).toContain('Phase')
       expect(panes[0]?.textContent).toContain('Laisser une note')
       expect(panes[0]?.textContent).toContain('Créer un plan d’apurement')
       expect(panes[1]?.textContent).toContain('Mon commentaire')
@@ -514,6 +507,35 @@ describe('RepaymentTenantDrawer top card', () => {
       expect(document.querySelector('[data-slot="dialog-content"]')).toBeNull()
     } finally {
       await cleanup()
+    }
+  })
+
+  test('monte l’historique par tranche au lieu de tout afficher', async () => {
+    const previousObserver = globalThis.IntersectionObserver
+    class SilentObserver {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    globalThis.IntersectionObserver = SilentObserver as unknown as typeof IntersectionObserver
+    const notes = Array.from({ length: 40 }, (_, index) =>
+      noteActivity(index + 1, 'user:bob@exemple.fr', `Note ${index + 1}`)
+    )
+    const { cleanup } = await renderNotesDrawer('alice@exemple.fr', notes)
+    try {
+      const text = document.body.textContent ?? ''
+      const visibleNotes = Array.from({ length: 40 }, (_, index) => index + 1).filter((id) =>
+        new RegExp(`Note ${id}(?!\\d)`).test(text)
+      )
+      expect(document.querySelectorAll('[data-activity-id]')).toHaveLength(30)
+      expect(visibleNotes).toHaveLength(30)
+    } finally {
+      await cleanup()
+      if (previousObserver === undefined) {
+        delete (globalThis as { IntersectionObserver?: unknown }).IntersectionObserver
+      } else {
+        globalThis.IntersectionObserver = previousObserver
+      }
     }
   })
 })
@@ -1400,7 +1422,7 @@ describe('RepaymentTenantDrawer boosts', () => {
       )
       expect(boostButtons.length).toBeGreaterThanOrEqual(2)
       expect(document.body.textContent).toContain('Commentaire de Bob')
-      expect(document.body.textContent).toContain('a déplacé le dossier de groupe')
+      expect(document.body.textContent).toContain('a changé la phase')
     } finally {
       await cleanup()
     }

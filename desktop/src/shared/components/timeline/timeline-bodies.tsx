@@ -108,7 +108,7 @@ export function TimelineChips({ values }: { values: string[] }) {
   return (
     <span className="flex flex-wrap gap-1">
       {values.map((value) => (
-        <Badge key={value} variant="outline" className="text-xs font-normal font-semibold">
+        <Badge key={value} variant="outline">
           {value}
         </Badge>
       ))}

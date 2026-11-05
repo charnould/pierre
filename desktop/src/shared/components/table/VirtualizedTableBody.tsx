@@ -1,5 +1,5 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { type ReactNode, type RefObject, useLayoutEffect, useRef, useState } from 'react'
+import { Fragment, type ReactNode, type RefObject, useLayoutEffect, useRef, useState } from 'react'
 
 import { TableBody, TableCell, TableRow } from '@/shared/components/ui/table'
 
@@ -83,15 +83,26 @@ export function VirtualizedTableBody<Row>({
       setScrollMargin((prev) => (Math.abs(prev - next) < 1 ? prev : next))
     }
 
+    let frame = 0
+    const schedule = () => {
+      if (frame) return
+      frame = requestAnimationFrame(() => {
+        frame = 0
+        updateMargin()
+      })
+    }
+
     updateMargin()
-    const ro = new ResizeObserver(updateMargin)
+    const ro = new ResizeObserver(schedule)
     ro.observe(tbody)
+    ro.observe(scrollEl)
     const section = tbody.closest('section')
     if (section) ro.observe(section)
-    scrollEl.addEventListener('scroll', updateMargin, { passive: true })
+    scrollEl.addEventListener('scroll', schedule, { passive: true })
     return () => {
+      if (frame) cancelAnimationFrame(frame)
       ro.disconnect()
-      scrollEl.removeEventListener('scroll', updateMargin)
+      scrollEl.removeEventListener('scroll', schedule)
     }
   }, [tbodyEl, rows.length, scrollRef])
 
@@ -117,12 +128,16 @@ export function VirtualizedTableBody<Row>({
       {virtualRows.map((virtualRow) => {
         const row = rows[virtualRow.index]
         if (!row) return null
-        return renderRow(row, {
-          index: virtualRow.index,
-          measureRef: (node) => {
-            if (node) virtualizer.measureElement(node)
-          }
-        })
+        return (
+          <Fragment key={virtualRow.key}>
+            {renderRow(row, {
+              index: virtualRow.index,
+              measureRef: (node) => {
+                if (node) virtualizer.measureElement(node)
+              }
+            })}
+          </Fragment>
+        )
       })}
       {paddingBottom > 0 ? (
         <TableRow aria-hidden>

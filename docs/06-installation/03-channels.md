@@ -90,7 +90,7 @@ Dans l’app Email Gateway de CM.com :
 5. Dans Paramètre de l'email → webhooks, enregistrer l’adresse `Webhook email` affichée par PIERRE comme webhook d’événements et, si le champ est distinct, comme webhook de réception.
 6. Dans le bureau, `Administration` → `Prestataires`, enregistrer le domaine, le jeton, l’identifiant de compte et le secret du webhook.
 
-Dans le JSON du module (`tickets` ou `repayment`), `email_from` doit être une adresse de ce domaine, par exemple `loyer@dribble.football`. Les réponses suivent cette adresse. Les bounces restent gérés par CM.com et arrivent par le webhook.
+Dans le JSON des réclamations, `email_from` doit être une adresse de ce domaine. Dans le JSON des impayés, c’est `senderEmail`, par exemple `loyer@dribble.football`. Les réponses suivent cette adresse. Les bounces restent gérés par CM.com et arrivent par le webhook.
 
 ## Courrier postal et électronique
 
@@ -114,9 +114,9 @@ Renseigner l’identifiant client, le secret, l’utilisateur et le mot de passe
 
 L’adresse expéditeur sert au courrier simple et au LRAR. L’identifiant d’expéditeur électronique et la clé TOTP servent à l’ERE et à la LRE. Pierre conserve la clé TOTP chiffrée et génère les codes à usage unique. Tous les envois LRE partent sous cet expéditeur commun ; l’historique conserve l’utilisateur Pierre qui a déclenché l’envoi.
 
-Une LRE vers un particulier exige la référence d’une preuve de consentement déjà recueillie. Ce stockage de clé TOTP et cet expéditeur partagé s’écartent de la recommandation publique Maileva : obtenir une confirmation écrite de Maileva/AR24 avant de les utiliser en production.
+Une LRE vers un particulier exige la référence d’une preuve de consentement déjà recueillie. Maileva a confirmé par écrit que la clé TOTP peut rester chiffrée sur le serveur, que Pierre génère les codes, et qu’un seul expéditeur électronique couvre l’organisme.
 
-Le webhook affiché est enregistré chez Maileva pour le courrier simple et le LRAR lorsque le serveur est accessible publiquement. La LRE et l’ERE ne figurent pas dans le centre de notifications : Pierre les interroge, comme tout envoi non terminé, toutes les 15 minutes. Une adresse locale force ce mode pour tous les produits.
+Pierre interroge Maileva toutes les 6 minutes.
 
 ### Disclaimer
 

@@ -54,7 +54,7 @@ Copiez `Webhook RCS` et `Webhook email` dans CM.com.
 
 RCS : le nom d’expéditeur, le jeton produit CM.com, le webhook, puis le secret à recopier dans CM.com. Le secret reste affiché. `Nouveau secret`, sur la carte, en produit un autre. Laisser le jeton vide conserve celui déjà enregistré.
 
-Email : le domaine d’envoi, l’identifiant de compte CM.com, un UUID, le webhook, le jeton produit, puis le secret du webhook fourni par CM.com. Dans le paramétrage du module, `email_from` doit être une adresse de ce domaine. Laisser le jeton ou le secret vide conserve celui déjà enregistré.
+Email : le domaine d’envoi, l’identifiant de compte CM.com, un UUID, le webhook, le jeton produit, puis le secret du webhook fourni par CM.com. Cette adresse se nomme `email_from` dans les réclamations et `senderEmail` dans les impayés. Laisser le jeton ou le secret vide conserve celui déjà enregistré.
 
 Le gabarit HTML et le logo de l’organisme sont sur la même carte. Ne pas retirer `{{ logo_inline_cid }}` ni `{{ message }}`. Le logo est un PNG transparent, déposé tout de suite. `Enregistrer` écrit le gabarit. `Email de test`, en bas de la carte, envoie le gabarit et le logo enregistrés. `Envoyer` s’active quand le gabarit contient ces deux champs et que le logo est enregistré.
 

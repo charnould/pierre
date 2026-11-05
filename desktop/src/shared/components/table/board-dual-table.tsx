@@ -29,7 +29,8 @@ interface Props<TData extends RowData> {
   renderRow: (row: Row<PierreTableFeatures, TData>, meta: RowMeta) => ReactNode
 }
 
-const tableClassName = 'text-xs table-fixed caption-bottom font-sans tabular-nums'
+export const boardTableClassName = 'min-w-full table-fixed caption-bottom font-sans tabular-nums'
+export const BOARD_DATA_COLUMN_MIN_WIDTH = 72
 
 export function BoardDualTable<TData extends RowData>({
   headerGroups,
@@ -55,16 +56,19 @@ export function BoardDualTable<TData extends RowData>({
       <div
         ref={headerScrollRef}
         onScroll={onHeaderScroll}
-        className="bg-background sticky z-10 scrollbar-none overflow-x-auto"
-        style={{ top: 'var(--board-table-section-height, 0px)' }}
+        className="bg-background sticky top-0 z-20 w-full min-w-0 scrollbar-none overflow-x-auto"
       >
-        <table className={tableClassName} style={{ width: tableWidth }}>
+        <table className={boardTableClassName} style={{ width: tableWidth }}>
           {colgroup}
           <TableHeader>
             {headerGroups.map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="relative h-8 text-start">
+                  <TableHead
+                    key={header.id}
+                    variant="board"
+                    className="relative max-w-0 text-start"
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -77,8 +81,12 @@ export function BoardDualTable<TData extends RowData>({
         </table>
       </div>
 
-      <div ref={bodyScrollRef} onScroll={onBodyScroll} className="overflow-x-auto">
-        <table className={tableClassName} style={{ width: tableWidth }}>
+      <div
+        ref={bodyScrollRef}
+        onScroll={onBodyScroll}
+        className="relative z-0 w-full min-w-0 overflow-x-auto"
+      >
+        <table className={boardTableClassName} style={{ width: tableWidth }}>
           {colgroup}
           <VirtualizedTableBody
             rows={rows}

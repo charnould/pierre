@@ -1,5 +1,6 @@
-import { describe, expect, test } from 'bun:test'
+import { beforeEach, describe, expect, test } from 'bun:test'
 
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 import type { Activity } from '@/shared/types/activites'
 
 import { sortRepaymentActivitiesDesc } from './repayment-activity-order'
@@ -26,6 +27,10 @@ function activity(
 }
 
 describe('deriveRepaymentAdvancement', () => {
+  beforeEach(() => {
+    loadCustomizationFixture()
+  })
+
   test('ignore les champs ressemblants portés par une note', () => {
     expect(
       deriveRepaymentAdvancement([
@@ -48,8 +53,8 @@ describe('deriveRepaymentAdvancement', () => {
           type: 'case.group_changed',
           contenu: JSON.stringify({
             version: 2,
-            before: 'non_traites',
-            after: 'amiable'
+            before: 'Non traités',
+            after: 'Recouvrement amiable'
           })
         }),
         activity({
@@ -69,12 +74,12 @@ describe('deriveRepaymentAdvancement', () => {
           type: 'case.group_changed',
           contenu: JSON.stringify({
             version: 2,
-            before: 'amiable',
-            after: 'contentieux'
+            before: 'Recouvrement amiable',
+            after: 'Contentieux'
           })
         })
       ])
-    ).toEqual({ bucket: 'amiable', action: 'Joindre le locataire' })
+    ).toEqual({ bucket: 'Recouvrement amiable', action: 'Joindre le locataire' })
   })
 
   test('FromSorted égale le wrapper après tri canonique', () => {
@@ -85,8 +90,8 @@ describe('deriveRepaymentAdvancement', () => {
         type: 'case.group_changed',
         contenu: JSON.stringify({
           version: 2,
-          before: 'non_traites',
-          after: 'amiable'
+          before: 'Non traités',
+          after: 'Recouvrement amiable'
         })
       }),
       activity({
@@ -106,8 +111,8 @@ describe('deriveRepaymentAdvancement', () => {
         type: 'case.group_changed',
         contenu: JSON.stringify({
           version: 2,
-          before: 'amiable',
-          after: 'contentieux'
+          before: 'Recouvrement amiable',
+          after: 'Contentieux'
         })
       })
     ]

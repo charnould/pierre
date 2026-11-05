@@ -1,4 +1,4 @@
-import { ArrowLeft, Circle, CircleCheck, FileUpIcon } from 'lucide-react'
+import { ArrowLeft, CircleCheck, FileUpIcon } from 'lucide-react'
 import {
   type ChangeEvent,
   type DragEvent,
@@ -17,7 +17,7 @@ import {
 } from '@/features/automations/components/PromptMarkdownEditor'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { Button } from '@/shared/components/ui/button'
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import {
   Field,
   FieldContent,
@@ -40,8 +40,9 @@ import { Textarea } from '@/shared/components/ui/textarea'
 import { toast } from '@/shared/components/ui/toast'
 import { filesFromDataTransfer, hasDraggedFiles } from '@/shared/lib/attachment-files'
 
+import { RepaymentMessagesCard } from './RepaymentMessagesCard'
 import { jsonSyntaxError, TICKETS_JSON_EXAMPLE, ticketsConfigOrExample } from './setup-json'
-import { type SetupPiece, setupPieces } from './setup-pieces'
+import { recordedPhrase, REPAYMENT_DOCUMENTS, type SetupPiece, setupPieces } from './setup-pieces'
 
 export const ENTRIES = [
   {
@@ -63,7 +64,7 @@ export const ENTRIES = [
     label: 'Impayés',
     json: 'repayment',
     prose: 'repayment/AGENTS.md',
-    file: 'repayment/template.docx'
+    file: null
   },
   { id: 'about/AGENTS.md', label: 'Synthèses', json: null, prose: 'about/AGENTS.md', file: null },
   {
@@ -84,11 +85,6 @@ function storedText(texts: Record<string, string | null>, id: string): string {
   return stored && stored.trim() ? stored : ''
 }
 
-function templateBody(texts: Record<string, string | null>, name: string): string {
-  const stored = texts[`repayment/templates/${name}`]
-  return stored && stored.trim() ? stored : ''
-}
-
 function isSvg(file: File): boolean {
   return file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg')
 }
@@ -97,52 +93,48 @@ function isDocx(file: File): boolean {
   return file.name.toLowerCase().endsWith('.docx')
 }
 
-function recordedWord(label: string): string {
-  if (label === 'Courrier' || label.startsWith('Modèle')) return 'enregistré'
-  return 'enregistrée'
+export function StoredMark({ name }: { name: string }) {
+  return <CircleCheck aria-label={name} className="size-4 shrink-0" strokeWidth={1.5} />
 }
 
-export function SetupChecklist({ pieces }: { pieces: SetupPiece[] }) {
-  const done = pieces.filter((item) => item.done).length
+export function TemplateOptionLabel({ name, stored }: { name: string; stored: boolean }) {
   return (
-    <section aria-labelledby="setup-progress">
-      <Card>
-        <CardHeader>
-          <CardTitle id="setup-progress">Avancement</CardTitle>
-          <CardAction>
-            <span className="text-muted-foreground text-xs leading-4 tabular-nums">
-              {done} sur {pieces.length}
-            </span>
-          </CardAction>
-        </CardHeader>
-        <CardContent>
-          <ul className="flex flex-col gap-2">
-            {pieces.map((item) => (
-              <li key={item.id} className="flex items-center gap-2 text-sm">
-                {item.done ? (
-                  <CircleCheck aria-hidden className="size-4 shrink-0" strokeWidth={1.5} />
-                ) : (
-                  <Circle aria-hidden className="size-4 shrink-0" strokeWidth={1.5} />
-                )}
-                {item.label}
-                <span className="sr-only">
-                  , {item.done ? recordedWord(item.label) : 'à faire'}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-    </section>
+    <span className="flex items-center gap-2">
+      {stored ? <CircleCheck aria-hidden className="size-4 shrink-0" strokeWidth={1.5} /> : null}
+      {stored ? <span className="sr-only">Modèle {name}, enregistré</span> : null}
+      <span aria-hidden={stored || undefined}>{name}</span>
+    </span>
   )
 }
 
-function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
+function storedName(
+  pieces: readonly SetupPiece[],
+  id: string | null,
+  label: string
+): string | undefined {
+  if (!id || !pieces.some((item) => item.id === id && item.done)) return undefined
+  return recordedPhrase(label)
+}
+
+function Section({
+  id,
+  title,
+  mark,
+  children
+}: {
+  id: string
+  title: string
+  mark?: string
+  children: ReactNode
+}) {
   return (
     <section aria-labelledby={id}>
       <Card>
         <CardHeader>
-          <CardTitle id={id}>{title}</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle id={id}>{title}</CardTitle>
+            {mark ? <StoredMark name={mark} /> : null}
+          </div>
         </CardHeader>
         <CardContent>{children}</CardContent>
       </Card>
@@ -158,17 +150,22 @@ function Row({
   title,
   description,
   htmlFor,
+  mark,
   children
 }: {
   title: string
   description?: ReactNode
   htmlFor?: string
+  mark?: string
   children: ReactNode
 }) {
   return (
     <Field orientation="horizontal">
       <FieldContent>
-        <FieldLabel htmlFor={htmlFor}>{title}</FieldLabel>
+        <div className="flex items-center gap-2">
+          <FieldLabel htmlFor={htmlFor}>{title}</FieldLabel>
+          {mark ? <StoredMark name={mark} /> : null}
+        </div>
         {description ? <FieldDescription>{description}</FieldDescription> : null}
       </FieldContent>
       {children}
@@ -178,67 +175,97 @@ function Row({
 
 function JsonCard({
   id,
+  mark,
   description,
   example,
   value,
   error,
+  embedded = false,
   onChange
 }: {
   id: string
+  mark?: string
   description: string
   example?: string
   value: string
   error?: string
+  embedded?: boolean
   onChange: (value: string) => void
 }) {
+  const field = (
+    <Field data-invalid={error ? true : undefined}>
+      {embedded ? (
+        <div className="flex items-center gap-2">
+          <FieldLabel htmlFor={id}>Configuration</FieldLabel>
+          {mark ? <StoredMark name={mark} /> : null}
+        </div>
+      ) : null}
+      <FieldDescription>{description}</FieldDescription>
+      {example ? <pre className="font-mono text-xs whitespace-pre-wrap">{example}</pre> : null}
+      <Textarea
+        id={embedded ? id : undefined}
+        mono
+        className="max-h-96"
+        value={value}
+        spellCheck={false}
+        aria-invalid={error ? true : undefined}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      {error ? <FieldError errors={[{ message: error }]} /> : null}
+    </Field>
+  )
+  if (embedded) return field
   return (
-    <Section id={id} title="Configuration">
-      <Field data-invalid={error ? true : undefined}>
-        <FieldDescription>{description}</FieldDescription>
-        {example ? <pre className="font-mono text-xs whitespace-pre-wrap">{example}</pre> : null}
-        <Textarea
-          className="max-h-96 font-mono"
-          value={value}
-          spellCheck={false}
-          aria-invalid={error ? true : undefined}
-          onChange={(event) => onChange(event.target.value)}
-        />
-        {error ? <FieldError errors={[{ message: error }]} /> : null}
-      </Field>
+    <Section id={id} title="Configuration" mark={mark}>
+      {field}
     </Section>
   )
 }
 
 function ConsigneCard({
   id,
+  mark,
   description,
   value,
   error,
+  embedded = false,
   readerRef,
   onEdit
 }: {
   id: string
+  mark?: string
   description: string
   value: string
   error?: string
+  embedded?: boolean
   readerRef: RefObject<MarkdownReader | null>
   onEdit: () => void
 }) {
+  const field = (
+    <Field data-invalid={error ? true : undefined}>
+      {embedded ? (
+        <div className="flex items-center gap-2">
+          <FieldLabel htmlFor={id}>Consigne</FieldLabel>
+          {mark ? <StoredMark name={mark} /> : null}
+        </div>
+      ) : null}
+      <FieldDescription>{description}</FieldDescription>
+      <PromptMarkdownEditor
+        className="h-96 max-h-96"
+        key={`${id}:${value.length}`}
+        id={id}
+        value={value}
+        placeholder="AGENTS.md"
+        readerRef={readerRef}
+        onChange={onEdit}
+      />
+      {error ? <FieldError errors={[{ message: error }]} /> : null}
+    </Field>
+  )
+  if (embedded) return field
   return (
-    <Section id="setup-consigne" title="Consigne">
-      <Field data-invalid={error ? true : undefined}>
-        <FieldDescription>{description}</FieldDescription>
-        <PromptMarkdownEditor
-          className="h-96 max-h-96"
-          key={`${id}:${value.length}`}
-          id={id}
-          value={value}
-          placeholder="AGENTS.md"
-          readerRef={readerRef}
-          onChange={onEdit}
-        />
-        {error ? <FieldError errors={[{ message: error }]} /> : null}
-      </Field>
+    <Section id="setup-consigne" title="Consigne" mark={mark}>
+      {field}
     </Section>
   )
 }
@@ -246,6 +273,7 @@ function ConsigneCard({
 function FileCard({
   id,
   title,
+  mark,
   description,
   preview,
   placeholder,
@@ -256,6 +284,7 @@ function FileCard({
 }: {
   id: string
   title: string
+  mark?: string
   description: string
   preview?: ReactNode
   placeholder: string
@@ -265,7 +294,7 @@ function FileCard({
   onFile: (file: File) => void
 }) {
   return (
-    <Section id={id} title={title}>
+    <Section id={id} title={title} mark={mark}>
       <Field>
         <FieldDescription>{description}</FieldDescription>
         <div className="flex items-center gap-3">
@@ -285,6 +314,7 @@ function FileCard({
 }
 
 export function SetupFileDrop({
+  id,
   className,
   accept,
   placeholder = 'Déposez des fichiers ici',
@@ -292,6 +322,7 @@ export function SetupFileDrop({
   matches,
   onFile
 }: {
+  id?: string
   className?: string
   accept: string
   placeholder?: string
@@ -299,7 +330,8 @@ export function SetupFileDrop({
   matches: (file: File) => boolean
   onFile: (file: File) => void
 }) {
-  const inputId = useId()
+  const generatedId = useId()
+  const inputId = id ?? generatedId
   const inputRef = useRef<HTMLInputElement>(null)
   const dragDepthRef = useRef(0)
   const [dropActive, setDropActive] = useState(false)
@@ -372,6 +404,53 @@ export function SetupFileDrop({
   )
 }
 
+function RepaymentDocumentFields({
+  stored,
+  onFile
+}: {
+  stored: ReadonlySet<string>
+  onFile: (file: File, id: string) => void
+}) {
+  return (
+    <>
+      {REPAYMENT_DOCUMENTS.map((document) => (
+        <Row
+          key={document.id}
+          title={document.label}
+          description={document.description}
+          htmlFor={document.fieldId}
+          mark={stored.has(document.id) ? recordedPhrase(document.label) : undefined}
+        >
+          <SetupFileDrop
+            id={document.fieldId}
+            accept=".docx"
+            placeholder="Déposer le DOCX"
+            rejectTitle="Le document doit être un DOCX"
+            matches={isDocx}
+            onFile={(file) => onFile(file, document.id)}
+          />
+        </Row>
+      ))}
+    </>
+  )
+}
+
+export function RepaymentDocuments({
+  stored,
+  onFile
+}: {
+  stored: ReadonlySet<string>
+  onFile: (file: File, id: string) => void
+}) {
+  return (
+    <Section id="setup-documents" title="Documents">
+      <Rows>
+        <RepaymentDocumentFields stored={stored} onFile={onFile} />
+      </Rows>
+    </Section>
+  )
+}
+
 export function SetupPanel({
   url,
   entryId,
@@ -391,15 +470,13 @@ export function SetupPanel({
   const proseReader = useRef<MarkdownReader | null>(null)
   const [jsonDirty, setJsonDirty] = useState(false)
   const seenProseKey = useRef('')
-  const seenTemplateKey = useRef('')
+  const messageDrafts = useRef<string[] | null>(null)
   const [status, setStatus] = useState('Aucune modification')
   function editJson(value: string) {
     setJsonDirty(true)
     setJsonDraft(value)
     setStatus('Modifications à enregistrer')
   }
-  const [templateName, setTemplateName] = useState<string | null>(null)
-  const [templateDraft, setTemplateDraft] = useState('')
   const [saving, setSaving] = useState(false)
   const [iconUrl, setIconUrl] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -407,11 +484,6 @@ export function SetupPanel({
     key: string
     texts: typeof texts
   } | null>(null)
-  const [templateSource, setTemplateSource] = useState<{
-    name: string
-    texts: typeof texts
-  } | null>(null)
-
   const entry = ENTRIES.find((item) => item.id === entryId) ?? ENTRIES[0]
   const jsonId = entryId === 'chatbots/default' ? `chatbots/${chatbotId}` : entry.json
   const proseId = entryId === 'chatbots/default' ? `chatbots/${chatbotId}/AGENTS.md` : entry.prose
@@ -423,16 +495,6 @@ export function SetupPanel({
     }
     setStatus('Modifications à enregistrer')
   }
-  function noteTemplateEdit(value: string) {
-    setTemplateDraft(value)
-    const key = `${templateName ?? ''}:${templateName ? templateBody(texts, templateName).length : 0}`
-    if (seenTemplateKey.current !== key) {
-      seenTemplateKey.current = key
-      return
-    }
-    setStatus('Modifications à enregistrer')
-  }
-
   const chatbots = useMemo(() => {
     const ids = Object.keys(texts).filter((id) => /^chatbots\/[a-z0-9][a-z0-9_-]{0,63}$/.test(id))
     if (!ids.includes('chatbots/default')) ids.unshift('chatbots/default')
@@ -440,18 +502,6 @@ export function SetupPanel({
     if (CHATBOT_ID.test(chatbotId) && !names.includes(chatbotId)) names.push(chatbotId)
     return names
   }, [chatbotId, texts])
-
-  const templateNames = useMemo(() => {
-    if (entryId !== 'repayment') return []
-    try {
-      const parsed = JSON.parse(jsonDraft) as { templates?: unknown }
-      return Array.isArray(parsed.templates)
-        ? parsed.templates.filter((name): name is string => typeof name === 'string')
-        : []
-    } catch {
-      return []
-    }
-  }, [jsonDraft, entryId])
 
   const sourceKey = `${jsonId ?? ''}\n${proseId ?? ''}`
   if (!draftSource || draftSource.key !== sourceKey || draftSource.texts !== texts) {
@@ -462,14 +512,6 @@ export function SetupPanel({
       const stored = storedText(texts, jsonId)
       setJsonDraft(jsonId === 'tickets' ? ticketsConfigOrExample(stored) : stored)
     }
-  }
-
-  if (
-    templateName &&
-    (!templateSource || templateSource.name !== templateName || templateSource.texts !== texts)
-  ) {
-    setTemplateSource({ name: templateName, texts })
-    setTemplateDraft(templateBody(texts, templateName))
   }
 
   const showIcon =
@@ -536,6 +578,9 @@ export function SetupPanel({
       else jobs.push([jsonId, jsonDraft])
     }
     if (proseId) jobs.push([proseId, proseReader.current?.read() ?? ''])
+    if (entryId === 'repayment' && messageDrafts.current) {
+      jobs.push(['repayment/messages', JSON.stringify(messageDrafts.current)])
+    }
     for (const [id, body] of jobs) {
       const message = await putText(id, body)
       if (message) errors[id] = message
@@ -552,17 +597,6 @@ export function SetupPanel({
     }
     for (const message of messages) toast.add({ title: message, type: 'error' })
     if (Object.keys(written).length > 0) setTexts((current) => ({ ...current, ...written }))
-  }
-
-  async function saveTemplate() {
-    if (!templateName) return
-    const message = await putText(`repayment/templates/${templateName}`, templateDraft)
-    if (message) {
-      toast.add({ title: message, type: 'error' })
-      return
-    }
-    setStatus('Modèle enregistré')
-    await load()
   }
 
   async function upload(file: File, id: string) {
@@ -621,7 +655,6 @@ export function SetupPanel({
             </Button>
             <h1 className="font-serif text-4xl leading-tight font-normal">{entry.label}</h1>
           </div>
-          <SetupChecklist pieces={pieces} />
           {entryId === 'chatbots/default' ? (
             <Section id="setup-agent" title="Assistant">
               <Rows>
@@ -686,17 +719,50 @@ export function SetupPanel({
               </Rows>
             </Section>
           ) : null}
-          {jsonId ? (
+          {entryId === 'repayment' && jsonId && proseId ? (
+            <RepaymentMessagesCard
+              url={url}
+              stored={texts['repayment/messages'] ?? null}
+              onDrafts={(next) => {
+                messageDrafts.current = next
+              }}
+              onTouch={() => setStatus('Modifications à enregistrer')}
+            >
+              <JsonCard
+                embedded
+                id="setup-configuration"
+                mark={storedName(pieces, jsonId, 'Configuration')}
+                description="Phases, actes, étiquettes et règles de l’échéancier."
+                value={jsonDraft}
+                error={fieldErrors[jsonId]}
+                onChange={editJson}
+              />
+              <ConsigneCard
+                embedded
+                id={proseId}
+                mark={storedName(pieces, proseId, 'Consigne')}
+                description="Métier de l’agent : à qui il parle, quoi faire, quoi refuser. Les procédures et les exports se déposent dans l’encyclopédie."
+                value={proseValue}
+                error={proseError}
+                readerRef={proseReader}
+                onEdit={noteProseEdit}
+              />
+              <RepaymentDocumentFields
+                stored={new Set(binaries)}
+                onFile={(file, id) => void upload(file, id)}
+              />
+            </RepaymentMessagesCard>
+          ) : null}
+          {entryId !== 'repayment' && jsonId ? (
             <JsonCard
               id="setup-configuration"
+              mark={storedName(pieces, jsonId, 'Configuration')}
               description={
                 entryId === 'chatbots/default'
                   ? chatbotId === 'default'
                     ? 'Ouverture du chatbot public, nom affiché, phrase d’accueil et questions proposées. La consigne est le champ suivant.'
                     : 'Même réglage pour un agent absent du site. On l’attribue ensuite aux profils. La consigne est le champ suivant.'
-                  : entryId === 'tickets'
-                    ? 'Paniers, actions et étiquettes du tableau des réclamations. La consigne est le champ suivant.'
-                    : 'Paniers, actions et étiquettes du tableau des impayés, et la liste des modèles de messages. La consigne est le champ suivant.'
+                  : 'Paniers, actions et étiquettes du tableau des réclamations. La consigne est le champ suivant.'
               }
               example={entryId === 'tickets' ? TICKETS_JSON_EXAMPLE : undefined}
               value={jsonDraft}
@@ -704,9 +770,10 @@ export function SetupPanel({
               onChange={editJson}
             />
           ) : null}
-          {proseId ? (
+          {entryId !== 'repayment' && proseId ? (
             <ConsigneCard
               id={proseId}
+              mark={storedName(pieces, proseId, 'Consigne')}
               description={
                 entryId === 'about/AGENTS.md'
                   ? 'Texte suivi pour rédiger un briefing : quoi retenir, dans quel ordre, et quoi signaler s’il manque une donnée.'
@@ -724,6 +791,7 @@ export function SetupPanel({
             <FileCard
               id="setup-icon"
               title="Icône"
+              mark={storedName(pieces, 'chatbots/icons/icon.svg', 'Icône')}
               description="Dessin du chatbot public, sur le site et à l’installation sur téléphone. Un SVG suffit : les autres formats sont produits à l’enregistrement."
               preview={
                 iconUrl ? (
@@ -745,6 +813,7 @@ export function SetupPanel({
             <FileCard
               id="setup-letter"
               title="Courrier"
+              mark={storedName(pieces, 'tickets/letter.docx', 'Courrier')}
               description="Modèle Word des courriers de réclamation."
               placeholder="Déposer votre courrier ici"
               accept=".docx"
@@ -752,74 +821,6 @@ export function SetupPanel({
               matches={isDocx}
               onFile={(file) => void upload(file, 'tickets/letter.docx')}
             />
-          ) : null}
-          {entryId === 'repayment' ? (
-            <FileCard
-              id="setup-plan-letter"
-              title="Courrier"
-              description="Modèle Word du courrier de plan d’apurement."
-              placeholder="Déposer le courrier du plan ici"
-              accept=".docx"
-              rejectTitle="Le document doit être un DOCX"
-              matches={isDocx}
-              onFile={(file) => void upload(file, 'repayment/template.docx')}
-            />
-          ) : null}
-          {entryId === 'repayment' && templateNames.length > 0 ? (
-            <Section id="setup-templates" title="Modèles">
-              <Field>
-                <FieldDescription>
-                  Messages de relance listés dans la configuration. Un fichier .md est le texte, un
-                  .json un message structuré.
-                </FieldDescription>
-                <Select
-                  items={templateNames.map((name) => ({ label: name, value: name }))}
-                  value={templateName}
-                  onValueChange={(next) => {
-                    if (typeof next === 'string') setTemplateName(next)
-                  }}
-                >
-                  <SelectTrigger id={`${fieldId}-template`} className="w-full" aria-label="Modèle">
-                    <SelectValue placeholder="Choisir un modèle" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {templateNames.map((name) => (
-                        <SelectItem key={name} value={name}>
-                          {name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-                {templateName?.endsWith('.md') ? (
-                  <PromptMarkdownEditor
-                    className="h-96 max-h-96"
-                    key={`${templateName}:${templateBody(texts, templateName).length}`}
-                    id={`repayment/templates/${templateName}`}
-                    value={templateBody(texts, templateName)}
-                    placeholder="Modèle"
-                    onChange={noteTemplateEdit}
-                  />
-                ) : null}
-                {templateName && !templateName.endsWith('.md') ? (
-                  <Textarea
-                    className="max-h-96 font-mono"
-                    value={templateDraft}
-                    spellCheck={false}
-                    onChange={(event) => {
-                      setTemplateDraft(event.target.value)
-                      setStatus('Modifications à enregistrer')
-                    }}
-                  />
-                ) : null}
-                {templateName ? (
-                  <Button type="button" variant="outline" onClick={() => void saveTemplate()}>
-                    Enregistrer le modèle
-                  </Button>
-                ) : null}
-              </Field>
-            </Section>
           ) : null}
           <footer className="mt-2 flex items-center gap-2 py-2">
             <Button type="button" variant="outline" disabled={saving} onClick={() => void save()}>

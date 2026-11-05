@@ -1,9 +1,11 @@
 import type { ColumnDef } from '@tanstack/react-table'
 
+import { BoardSelectionCell } from '@/shared/components/board/board-selection'
 import type {
   AnyPierreColumn,
   AnyPierreTable
 } from '@/shared/components/table/column-header-options-menu'
+import { DataColumnHeader } from '@/shared/components/table/DataColumnHeader'
 import type { PierreTableFeatures } from '@/shared/components/table/table-features'
 import { formatOrgCollaboratorLabel } from '@/shared/lib/org-users-cache'
 import type { ColumnFilters, ColumnValuesConfig } from '@/shared/lib/ui-settings/tickets-table'
@@ -19,7 +21,8 @@ import {
   DEFAULT_REPAYMENT_COLUMN_SIZING,
   isRepaymentNumericColumn,
   isRepaymentUiColumnId,
-  type RepaymentColumnId
+  type RepaymentColumnId,
+  resolveRepaymentColumnLabel
 } from '../lib/repayment-table-columns'
 import { daysSinceToday } from '../lib/repayment-timeline-days'
 import { DebtAmountCell } from './DebtAmountCell'
@@ -32,8 +35,7 @@ import { RepaymentColumnHeader } from './RepaymentColumnHeader'
 import { RepaymentGestionnaireCell } from './RepaymentGestionnaireCell'
 
 type BuildOptions = {
-  rows: TenantRepaymentRow[]
-  allRows?: TenantRepaymentRow[]
+  allRows: TenantRepaymentRow[]
   activeColumnIds: RepaymentColumnId[]
   columnFilters?: ColumnFilters
   onColumnFiltersChange?: (filters: ColumnFilters) => void
@@ -50,22 +52,20 @@ type BuildOptions = {
 export function buildRepaymentColumns(
   options: BuildOptions
 ): ColumnDef<PierreTableFeatures, TenantRepaymentRow>[] {
-  const { rows, columnValues, onColumnValuesChange, allRows = rows, activeColumnIds } = options
+  const { columnValues, onColumnValuesChange, allRows, activeColumnIds } = options
   const activeSet = new Set(activeColumnIds)
 
   const header = (
     column: Parameters<typeof RepaymentColumnHeader>[0]['column'],
     table: Parameters<typeof RepaymentColumnHeader>[0]['table'],
     columnId: RepaymentColumnId,
-    title = columnId,
-    menuAriaLabel?: string
+    title = resolveRepaymentColumnLabel(columnId)
   ) => (
     <RepaymentColumnHeader
       column={column}
       table={table}
       title={title}
       columnId={columnId}
-      menuAriaLabel={menuAriaLabel}
       allRows={allRows}
       columnFilters={options.columnFilters}
       onColumnFiltersChange={options.onColumnFiltersChange}
@@ -79,22 +79,43 @@ export function buildRepaymentColumns(
 
   const uiColumns: ColumnDef<PierreTableFeatures, TenantRepaymentRow>[] = [
     {
+      id: 'selection',
+      header: () => <span className="sr-only">Sélection</span>,
+      cell: ({ row }) => {
+        const tenant = row.original
+        return (
+          <BoardSelectionCell
+            id={tenant.id_locataire}
+            label={`Sélectionner le dossier ${tenant.id_client} · ${tenant.id_locataire}`}
+          />
+        )
+      },
+      enableSorting: false,
+      enableHiding: false,
+      enableResizing: false,
+      minSize: DEFAULT_REPAYMENT_COLUMN_SIZING.selection,
+      maxSize: DEFAULT_REPAYMENT_COLUMN_SIZING.selection,
+      size: DEFAULT_REPAYMENT_COLUMN_SIZING.selection
+    },
+    {
       id: 'alertes',
       accessorFn: (row) => (options.getRowSignal?.(row)?.hasUnread ? 1 : 0),
-      header: ({ column, table }) =>
-        header(
-          column as AnyPierreColumn,
-          table as AnyPierreTable,
-          'alertes',
-          '',
-          'Trier les notifications'
-        ),
+      header: ({ column }) => (
+        <DataColumnHeader
+          title=""
+          sortLabel="les notifications"
+          column={column as AnyPierreColumn}
+        />
+      ),
       cell: ({ row }) => (
         <RepaymentAlertesCell signal={options.getRowSignal?.(row.original) ?? null} />
       ),
       enableSorting: Boolean(options.getRowSignal),
       sortFn: 'basic',
       enableHiding: false,
+      enableResizing: false,
+      minSize: DEFAULT_REPAYMENT_COLUMN_SIZING.alertes,
+      maxSize: DEFAULT_REPAYMENT_COLUMN_SIZING.alertes,
       size: DEFAULT_REPAYMENT_COLUMN_SIZING.alertes
     },
     {

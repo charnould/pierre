@@ -31,13 +31,13 @@ Ces prompts procéduraux — généralement rédigés en « français contrôlé
 - **Répondre aux réclamations** — _à venir_
 - **Analyser un dossier d'impayés** — _à venir_
 
-## [Paramétrages de PIERRE](https://github.com/charnould/pierre/tree/master/docs/04-core-intelligence-hlm/parametrages)
+## [Paramétrages de PIERRE](https://github.com/charnould/pierre/tree/master/docs/04-core-intelligence-hlm/settings)
 
 Ces paramétrages sont nécessaires au fonctionnement de PIERRE. Ceux proposés ci-dessous accélèrent la mise en route et sont parfaitement personnalisables par chaque organisme (consulter la [documentation](../06-installation/index.md) de PIERRE).
 
 - `automations.md` — consigne du module « Générer un rapport »
 - `tickets.json` — paramétrage du module « Réclamations »
-- `repayment.json` — paramétrage du module « Impayés »
+- [`repayment.json`](./settings/repayment.json) — paramétrage du module « Impayés », expliqué dans le [guide](./settings/repayment.md)
 - `icon.svg` — cette icône est celle du chatbot « grand public » lorsque l'on l'installe sur l'écran d'accueil de son smartphone.
 - `logo.png` — logo de votre organisme au format PNG, impérativement sur fond transparent sans fonds perdus (= bord à bord). C'est ce logo qui s'affichera systématiquement sur les emails transactionnels envoyés depuis PIERRE. Il conviendra d'ajuster sa taille dans `email.html`.
 - `email.html` — template d'email transactionnel

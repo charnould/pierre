@@ -66,7 +66,7 @@ export function timelineActivityVerb(row: Activity): string {
     case 'task.deleted':
       return 'a supprimé une tâche'
     case 'case.group_changed':
-      return 'a déplacé le dossier de groupe'
+      return 'a changé la phase'
     case 'case.bucket_changed':
       return 'a déplacé le dossier de panier'
     case 'case.assignee_changed': {

@@ -14,7 +14,8 @@ import {
   resolvePinnedColumns,
   resolveUnpinnedColumnOrder,
   resolveVisibleColumnNames,
-  TICKET_TABLE_ALERT_COLUMN_ID
+  TICKET_TABLE_ALERT_COLUMN_ID,
+  TICKET_TABLE_SELECTION_COLUMN_ID
 } from '@/shared/lib/ui-settings/tickets-table'
 import type { TicketRow, TicketsColumnMeta } from '@/shared/types'
 
@@ -67,17 +68,19 @@ describe('sql column kinds', () => {
 describe('buildTicketsColumns', () => {
   it('defines all schema columns for TanStack visibility and order', () => {
     const columns = buildTicketsColumns(schema)
-    expect(columns[0]?.id).toBe(TICKET_TABLE_ALERT_COLUMN_ID)
-    expect(columns.slice(1).map((c) => columnAccessorKey(c))).toEqual(schemaNames)
+    expect(columns[0]?.id).toBe(TICKET_TABLE_SELECTION_COLUMN_ID)
+    expect(columns[1]?.id).toBe(TICKET_TABLE_ALERT_COLUMN_ID)
+    expect(columns.slice(2).map((c) => columnAccessorKey(c))).toEqual(schemaNames)
     expect(DEFAULT_PINNED_COLUMNS).toEqual(['id_reclamation', 'id_locataire', 'id_lot'])
     const idCol = columns.find((c) => columnAccessorKey(c) === 'id_reclamation')
     expect(idCol?.enableHiding).toBe(true)
-    expect(resolveTicketColumnLabel('type_affaire')).toBe('type_affaire')
+    expect(resolveTicketColumnLabel('type_affaire')).toBe('Type de réclamation')
+    expect(resolveTicketColumnLabel('champ_personnalise')).toBe('Champ personnalise')
     expect(
       resolveTicketColumnLabel('motif', {
-        tickets: { table: { columnLabels: { motif: 'Motif' } } }
+        tickets: { table: { columnLabels: { motif: 'Motif organisme' } } }
       })
-    ).toBe('Motif')
+    ).toBe('Motif organisme')
     expect(typeof columns.find((c) => columnAccessorKey(c) === 'id_lot')?.header).toBe('function')
   })
 
@@ -85,10 +88,17 @@ describe('buildTicketsColumns', () => {
     const columns = buildTicketsColumns(schema, {
       hasUnread: (row) => row.id_reclamation === 'REQ-1'
     })
-    expect(columns[0]?.id).toBe(TICKET_TABLE_ALERT_COLUMN_ID)
+    expect(columns[0]?.id).toBe(TICKET_TABLE_SELECTION_COLUMN_ID)
     expect(columns[0]?.enableHiding).toBe(false)
-    expect(columns[0]?.enableResizing).toBe(false)
-    expect(columns.slice(1).map((c) => columnAccessorKey(c))).toEqual(schemaNames)
+    expect(columns[0]?.minSize).toBe(40)
+    expect(columns[0]?.maxSize).toBe(40)
+    expect(columns[1]?.id).toBe(TICKET_TABLE_ALERT_COLUMN_ID)
+    expect(columns[1]?.enableHiding).toBe(false)
+    expect(columns[1]?.enableSorting).toBe(false)
+    expect(columns[1]?.enableResizing).toBe(false)
+    expect(columns[1]?.minSize).toBe(40)
+    expect(columns[1]?.maxSize).toBe(40)
+    expect(columns.slice(2).map((c) => columnAccessorKey(c))).toEqual(schemaNames)
   })
 })
 

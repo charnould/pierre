@@ -129,7 +129,7 @@ export function statusChangeTimelineSentence(
     ]
   }
   return [
-    { type: 'text', text: 'a déplacé le dossier du groupe' },
+    { type: 'text', text: 'a changé la phase de' },
     { type: 'bucket', id: change.avant },
     { type: 'text', text: 'vers' },
     { type: 'bucket', id: change.apres }

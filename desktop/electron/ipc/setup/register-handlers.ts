@@ -123,6 +123,47 @@ export function registerSetupHandlers(partition: string): void {
     }
   )
 
+  ipcMain.handle(
+    IpcChannel.setup.verifyRepaymentMessage,
+    async (_, { url, text }: { url: string; text: string }) => {
+      try {
+        const resp = await netFetch(`${root(url)}/admin/setup/repayment/messages/verify`, {
+          session: ses(),
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        })
+        return await resp.json()
+      } catch (error) {
+        logMainError('verify-repayment-message', error)
+        return null
+      }
+    }
+  )
+
+  ipcMain.handle(
+    IpcChannel.setup.testRepaymentEmail,
+    async (_, { url, text }: { url: string; text: string }) => {
+      try {
+        const resp = await netFetch(`${root(url)}/admin/setup/repayment/messages/test-email`, {
+          session: ses(),
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        })
+        const body = (await resp.json()) as {
+          data?: { sent: true }
+          error?: { message: string }
+        }
+        if (!resp.ok) return body.error ? body : { error: { message: 'Envoi impossible' } }
+        return body
+      } catch (error) {
+        logMainError('test-repayment-email', error)
+        return null
+      }
+    }
+  )
+
   ipcMain.handle(IpcChannel.setup.emailTest, async (_, { url }: { url: string }) => {
     try {
       const resp = await netFetch(`${root(url)}/admin/providers/email/test`, {

@@ -1,4 +1,4 @@
-import { FileQuestionMark } from 'lucide-react'
+import { CircleQuestionMark, CircleUserRound, LayoutDashboard, Settings } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { Button } from '@/shared/components/ui/button'
@@ -13,6 +13,12 @@ const USER_MANUAL_URL =
   'https://github.com/charnould/pierre/blob/docs/master/docs/07-user-manual/index.md'
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPod|iPad/i.test(navigator.platform)
+
+const TITLE_BAR_ICONS = {
+  home: LayoutDashboard,
+  administration: Settings,
+  settings: CircleUserRound
+} as const
 
 interface Props {
   activeTab: Tab
@@ -33,7 +39,7 @@ function TitleBarTabButton({
   onTabChange: (tab: Tab) => void
 }) {
   const identity = PANEL_IDENTITY[tab]
-  const Icon = identity.icon
+  const Icon = TITLE_BAR_ICONS[tab]
 
   return (
     <Tooltip>
@@ -101,7 +107,7 @@ export function TitleBar({ activeTab, user, notifications, tasks, chat, onTabCha
                   />
                 }
               >
-                <FileQuestionMark />
+                <CircleQuestionMark />
               </TooltipTrigger>
               <TooltipContent side="bottom">Manuel</TooltipContent>
             </Tooltip>

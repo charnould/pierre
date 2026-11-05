@@ -21,7 +21,7 @@ const versions = (db: Database): number[] =>
     .map((row) => row.version)
 
 const future_migration: DatastoreMigration = {
-  version: 3,
+  version: 6,
   name: 'future-example',
   sql: 'CREATE TABLE future_records (id TEXT PRIMARY KEY, value TEXT NOT NULL)'
 }
@@ -39,7 +39,7 @@ describe('datastore migrations', () => {
     await migrate_datastore(PATH)
 
     using db = open()
-    expect(versions(db)).toEqual([1, 2])
+    expect(versions(db)).toEqual([1, 2, 3, 4, 5])
     expect(
       db
         .query<{ n: number }, []>("SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'setup'")
@@ -213,7 +213,7 @@ describe('datastore migrations', () => {
         )
         .get()?.n
     ).toBe(0)
-    expect(versions(db)).toEqual([1, 2])
+    expect(versions(db)).toEqual([1, 2, 3, 4, 5])
   })
 
   it('fails without rewriting a file that is not SQLite', async () => {
@@ -248,7 +248,7 @@ describe('datastore migrations', () => {
         )
         .get()?.n
     ).toBe(1)
-    expect(versions(db)).toEqual([1, 2])
+    expect(versions(db)).toEqual([1, 2, 3, 4, 5])
   })
 
   it('deletes stored reply automations', async () => {
@@ -276,14 +276,14 @@ describe('datastore migrations', () => {
     await migrate_datastore(PATH, [...APP_MIGRATIONS, future_migration])
 
     using db = open()
-    expect(versions(db)).toEqual([1, 2, 3])
+    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6])
     db.run("INSERT INTO future_records VALUES ('future-1', 'ok')")
   })
 
   it('rolls back both schema and ledger writes when a migration fails', async () => {
     await migrate_datastore(PATH)
     const failing: DatastoreMigration = {
-      version: 3,
+      version: 6,
       name: 'failing-example',
       sql: `
         CREATE TABLE half_created (id TEXT PRIMARY KEY);
@@ -294,7 +294,7 @@ describe('datastore migrations', () => {
     await expect(migrate_datastore(PATH, [...APP_MIGRATIONS, failing])).rejects.toThrow()
 
     using db = open()
-    expect(versions(db)).toEqual([1, 2])
+    expect(versions(db)).toEqual([1, 2, 3, 4, 5])
     expect(
       db
         .query<{ n: number }, []>(
@@ -310,7 +310,7 @@ describe('datastore migrations', () => {
     await expect(migrate_datastore(PATH)).rejects.toBeInstanceOf(DatastoreVersionError)
 
     using db = open()
-    expect(versions(db)).toEqual([1, 2, 3])
+    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6])
     expect(
       db
         .query<{ n: number }, []>(
@@ -318,5 +318,59 @@ describe('datastore migrations', () => {
         )
         .get()?.n
     ).toBe(1)
+  })
+
+  it('renames the stored repayment plan template', async () => {
+    await migrate_datastore(PATH, APP_MIGRATIONS.slice(0, 3))
+    const seeded = open()
+    seeded.run(`INSERT INTO setup (id, content) VALUES ('repayment/template.docx', X'504B0304')`)
+    seeded.close()
+
+    await migrate_datastore(PATH)
+
+    using db = open()
+    const rows = db
+      .query<{ id: string; content: Uint8Array }, []>('SELECT id, content FROM setup ORDER BY id')
+      .all()
+    expect(rows.map((row) => row.id)).toEqual(['repayment/plan.docx'])
+    expect(Array.from(rows[0]?.content ?? [])).toEqual([0x50, 0x4b, 0x03, 0x04])
+  })
+
+  it('keeps an existing plan document and drops the retired template id', async () => {
+    await migrate_datastore(PATH, APP_MIGRATIONS.slice(0, 3))
+    const seeded = open()
+    seeded.run(
+      `INSERT INTO setup (id, content) VALUES
+        ('repayment/template.docx', X'1111'),
+        ('repayment/plan.docx', X'2222')`
+    )
+    seeded.close()
+
+    await migrate_datastore(PATH)
+
+    using db = open()
+    const rows = db
+      .query<{ id: string; content: Uint8Array }, []>('SELECT id, content FROM setup ORDER BY id')
+      .all()
+    expect(rows.map((row) => row.id)).toEqual(['repayment/plan.docx'])
+    expect(Array.from(rows[0]?.content ?? [])).toEqual([0x22, 0x22])
+  })
+
+  it('drops stored repayment message files', async () => {
+    await migrate_datastore(PATH, APP_MIGRATIONS.slice(0, 4))
+    const seeded = open()
+    seeded.run(`INSERT INTO setup (id, content) VALUES ('repayment/templates/note.md', X'41')`)
+    seeded.close()
+
+    await migrate_datastore(PATH)
+
+    using db = open()
+    expect(
+      db
+        .query<{ n: number }, []>(
+          `SELECT COUNT(*) AS n FROM setup WHERE id LIKE 'repayment/templates/%'`
+        )
+        .get()?.n
+    ).toBe(0)
   })
 })

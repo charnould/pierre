@@ -33,11 +33,11 @@ import type { OrgUser } from '@/shared/types/users'
 
 import type { RcsComposeValue } from '../../../../../shared/rcs-message'
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
-import type { OutboundEmailResolved, OutboundRcsResolved } from '../lib/outbound-email-templates'
 import { repaymentDossierActionOptions } from '../lib/repayment-action'
 import type { ActiveRepaymentPlan } from '../lib/repayment-activity-text'
 import type { RepaymentGestionnaireAssignment } from '../lib/repayment-advancement'
 import { type RepaymentBucketId, repaymentBucketOptions } from '../lib/repayment-bucket'
+import type { ResolvedRepaymentEmail, ResolvedRepaymentRcs } from '../lib/repayment-messages'
 import { repaymentTagOptions } from '../lib/repayment-tags'
 import { RepaymentEmailReviewForm } from './RepaymentEmailReviewForm'
 import { RepaymentInlineNoteForm } from './RepaymentInlineNoteForm'
@@ -86,9 +86,9 @@ interface Props {
   onStartAdvancement: () => void
   onStartTags?: () => void
   onStartAssignGestionnaire?: () => void
-  onSelectRcsTemplate: (resolved: OutboundRcsResolved) => void
-  onSelectEmailTemplate: (resolved: OutboundEmailResolved) => void
-  onSelectMailtoTemplate: (resolved: OutboundEmailResolved) => void
+  onSelectRcsTemplate: (resolved: ResolvedRepaymentRcs) => void
+  onSelectEmailTemplate: (resolved: ResolvedRepaymentEmail) => void
+  onSelectMailtoTemplate: (resolved: ResolvedRepaymentEmail) => void
   onCreatePlan: () => void
   onEditPlan?: (row: Activity) => void
   onCancelCompose: () => void
@@ -130,7 +130,7 @@ function composeMeta(
       title: hasReferent ? 'Réaffecter à un référent' : 'Affecter à un référent'
     }
   }
-  return { icon: FolderKanban, title: 'Changer le groupe' }
+  return { icon: FolderKanban, title: 'Changer la phase' }
 }
 
 function ComposeDraft({
@@ -238,7 +238,7 @@ function ComposeDraft({
       onSave={props.onSubmitAdvancement}
       canSave={props.advancementCanSave}
       saving={props.submitting}
-      label="Groupe"
+      label="Phase"
     />
   )
 }
@@ -344,7 +344,7 @@ export function RepaymentComposeBlock(props: Props) {
           ) : null}
           <TimelineActionRow
             icon={FolderKanban}
-            label="Changer le groupe"
+            label="Changer la phase"
             onClick={props.onStartAdvancement}
           />
           {canEditTags ? (

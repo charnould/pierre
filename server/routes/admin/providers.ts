@@ -1,9 +1,15 @@
 import { serverBaseUrl } from '../../utils/auth'
 import type { AuthContext } from '../../utils/authenticate-user'
+import { mailevaToken } from '../../utils/maileva/http'
+import { decryptMailevaSecrets, encryptMailevaSecrets } from '../../utils/maileva/secrets'
+import { mailevaAccount, unsubmittedMailevaOperations } from '../../utils/maileva/send'
+import { decodeBase32 } from '../../utils/maileva/totp'
 import {
   emailConfigured,
   llmConfigured,
   type LlmType,
+  mailevaLines,
+  mailevaTarget,
   parseLlmType,
   type Providers,
   rcsConfigured,
@@ -37,8 +43,13 @@ function secret(): string {
   return bytes.toHex()
 }
 
-function view(providers: Providers) {
+function view(
+  providers: Providers,
+  secrets: { clientSecret: string; password: string; totpSecret: string }
+) {
   const origin = serverBaseUrl().replace(/\/$/, '')
+  const lines = mailevaLines(providers.mailevaAddress)
+  const target = mailevaTarget(providers.mailevaUsername)
   return {
     ai: {
       configured: llmConfigured(providers),
@@ -56,6 +67,22 @@ function view(providers: Providers) {
       configured: emailConfigured(providers),
       domain: providers.emailDomain,
       account: providers.emailAccount
+    },
+    maileva: {
+      configured: Boolean(
+        providers.mailevaClientId &&
+        providers.mailevaUsername &&
+        secrets.clientSecret &&
+        secrets.password
+      ),
+      clientId: providers.mailevaClientId,
+      username: providers.mailevaUsername,
+      senderId: providers.mailevaSenderId,
+      address: providers.mailevaAddress,
+      target,
+      postalReady: Boolean((lines[0] || lines[1]) && lines[5]),
+      electronicReady: Boolean(providers.mailevaSenderId && secrets.totpSecret),
+      secretsReadable: Boolean(providers.mailevaSecrets && secrets.clientSecret)
     },
     webhooks: {
       rcs: origin ? `${origin}/webhooks/rcs` : '',
@@ -85,7 +112,20 @@ async function probe(type: LlmType, baseUrl: string, apiKey: string): Promise<st
   }
 }
 
-export const getProviders = (c: AuthContext) => c.json({ data: view(readProviders()) })
+export const getProviders = async (c: AuthContext) => {
+  c.header('Cache-Control', 'no-store')
+  const providers = readProviders()
+  const secrets = providers.mailevaSecrets
+    ? await decryptMailevaSecrets(providers.mailevaSecrets)
+    : null
+  return c.json({
+    data: view(providers, {
+      clientSecret: secrets?.clientSecret ?? '',
+      password: secrets?.password ?? '',
+      totpSecret: secrets?.totpSecret ?? ''
+    })
+  })
+}
 
 export const putProviders = async (c: AuthContext) => {
   let body: Record<string, unknown>
@@ -165,6 +205,73 @@ export const putProviders = async (c: AuthContext) => {
       return invalid(c, 'L’identifiant de compte doit être un UUID avec ses tirets.')
     }
     writeProviders({ ...current, emailDomain, emailToken, emailAccount, emailSecret })
+    return c.json({ data: {} })
+  }
+
+  if (group === 'maileva') {
+    const clientId = text(body['clientId'])
+    const username = text(body['username'])
+    const senderId = text(body['senderId'])
+    const address = text(body['address'])
+    const sameAccount = current.mailevaClientId === clientId && current.mailevaUsername === username
+    const currentSecrets = current.mailevaSecrets
+      ? await decryptMailevaSecrets(current.mailevaSecrets)
+      : null
+    const clientSecret =
+      text(body['clientSecret']) || (sameAccount ? (currentSecrets?.clientSecret ?? '') : '')
+    const password = text(body['password']) || (sameAccount ? (currentSecrets?.password ?? '') : '')
+    const totpSecret =
+      text(body['totpSecret']) || (sameAccount ? (currentSecrets?.totpSecret ?? '') : '')
+    const target = mailevaTarget(username)
+    if (!clientId || !username || !clientSecret || !password || !target) {
+      return invalid(c, 'Maileva exige l’identifiant, l’utilisateur, le secret et le mot de passe.')
+    }
+    if (
+      senderId &&
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(senderId)
+    ) {
+      return invalid(c, 'L’expéditeur électronique est l’UUID Maileva, pas un nom.')
+    }
+    if (totpSecret) {
+      try {
+        decodeBase32(totpSecret)
+      } catch {
+        return invalid(
+          c,
+          'La clé TOTP est la clé permanente de 32 caractères, pas un code à 6 chiffres.'
+        )
+      }
+    }
+    const lines = mailevaLines(address)
+    if (lines.some((line) => line.length > 38)) {
+      return invalid(c, 'Chaque ligne d’adresse expéditeur fait 38 caractères maximum.')
+    }
+    if (lines.some(Boolean) && (!lines[1] || !/^\d{5}\s+\S/.test(lines[5] ?? ''))) {
+      return invalid(c, 'L’adresse exige un nom et un code postal suivi de la ville.')
+    }
+    const nextAccount = mailevaAccount(clientId, username)
+    const previousAccount = mailevaAccount(current.mailevaClientId, current.mailevaUsername)
+    if (
+      current.mailevaClientId &&
+      nextAccount !== previousAccount &&
+      unsubmittedMailevaOperations() > 0
+    ) {
+      return invalid(c, 'Un envoi Maileva n’est pas encore soumis.')
+    }
+    try {
+      await mailevaToken({ target, clientId, clientSecret, username, password }, true)
+    } catch {
+      return invalid(c, 'Maileva a refusé les identifiants.')
+    }
+    writeProviders({
+      ...current,
+      mailevaClientId: clientId,
+      mailevaUsername: username,
+      mailevaSenderId: senderId,
+      mailevaAddress: lines.join('\n'),
+      mailevaSecrets: await encryptMailevaSecrets({ clientSecret, password, totpSecret })
+    })
+    c.header('Cache-Control', 'no-store')
     return c.json({ data: {} })
   }
 

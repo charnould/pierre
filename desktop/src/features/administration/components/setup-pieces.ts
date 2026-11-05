@@ -4,6 +4,47 @@ export type SetupPiece = {
   label: string
 }
 
+export const REPAYMENT_DOCUMENTS = [
+  {
+    id: 'repayment/plan.docx',
+    fieldId: 'setup-document-plan',
+    label: 'Plan d’apurement',
+    description: 'Modèle Word du plan d’apurement.'
+  },
+  {
+    id: 'repayment/protocole.docx',
+    fieldId: 'setup-document-protocole',
+    label: 'Protocole de cohésion sociale',
+    description: 'Modèle Word du protocole de cohésion sociale.'
+  },
+  {
+    id: 'repayment/diagnostic.docx',
+    fieldId: 'setup-document-diagnostic',
+    label: 'Diagnostic social et financier',
+    description: 'Modèle Word du diagnostic social et financier.'
+  },
+  {
+    id: 'repayment/courrier.docx',
+    fieldId: 'setup-document-courrier',
+    label: 'Courrier standard',
+    description: 'Modèle Word du courrier postal du dossier.'
+  }
+] as const
+
+export function recordedPhrase(label: string): string {
+  if (label === 'Messages') return 'Messages, enregistrés'
+  if (
+    label.startsWith('Courrier') ||
+    label.startsWith('Modèle ') ||
+    label === 'Plan d’apurement' ||
+    label === 'Protocole de cohésion sociale' ||
+    label === 'Diagnostic social et financier'
+  ) {
+    return `${label}, enregistré`
+  }
+  return `${label}, enregistrée`
+}
+
 function stored(texts: Record<string, string | null>, id: string): boolean {
   const value = texts[id]
   return typeof value === 'string' && value.trim().length > 0
@@ -23,28 +64,6 @@ function consigne(id: string, texts: Record<string, string | null>): SetupPiece 
 
 function binary(id: string, binaries: readonly string[], label: string): SetupPiece {
   return piece(id, binaries.includes(id), label)
-}
-
-function repaymentTemplates(texts: Record<string, string | null>): SetupPiece[] {
-  const raw = texts.repayment
-  if (!raw?.trim()) return []
-  try {
-    const parsed = JSON.parse(raw) as { templates?: unknown }
-    if (!Array.isArray(parsed.templates)) return []
-    return parsed.templates.flatMap((name) =>
-      typeof name === 'string' && name.trim()
-        ? [
-            piece(
-              `repayment/templates/${name}`,
-              stored(texts, `repayment/templates/${name}`),
-              `Modèle ${name}`
-            )
-          ]
-        : []
-    )
-  } catch {
-    return []
-  }
 }
 
 export function setupPieces(
@@ -75,8 +94,8 @@ export function setupPieces(
     return [
       configuration('repayment', texts),
       consigne('repayment/AGENTS.md', texts),
-      binary('repayment/template.docx', binaries, 'Courrier'),
-      ...repaymentTemplates(texts)
+      ...REPAYMENT_DOCUMENTS.map((document) => binary(document.id, binaries, document.label)),
+      piece('repayment/messages', stored(texts, 'repayment/messages'), 'Messages')
     ]
   }
   if (entry === 'about/AGENTS.md') return [consigne('about/AGENTS.md', texts)]

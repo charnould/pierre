@@ -200,19 +200,11 @@ describe('bulk store', () => {
       'repayment',
       new TextEncoder().encode(
         JSON.stringify({
-          buckets: [
-            { id: 'non_traites', label: 'Non traités' },
-            { id: 'amiable', label: 'Amiable' },
-            { id: 'clients_partis', label: 'Partis' }
-          ],
-          actions: {
-            dossier: ['Analyser le dossier'],
-            bulk_operations: ['Envoyer un RCS de relance']
-          },
+          phases: ['Non traités', 'Amiable', 'Partis'],
+          caseActions: ['Analyser le dossier'],
+          batchActions: ['Envoyer un RCS de relance'],
           tags: ['+65 ans', 'Redémarrage APL'],
-          template_groups: ['RCS'],
-          templates: ['note.md'],
-          create_plan: { schedule: repaymentSchedule }
+          schedule: repaymentSchedule
         })
       )
     )

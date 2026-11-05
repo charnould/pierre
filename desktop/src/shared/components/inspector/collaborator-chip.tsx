@@ -30,7 +30,7 @@ export function CollaboratorChip({ identity, compact = false, title, className }
       title={title}
       className={cn(
         'max-w-full min-w-0 gap-1 overflow-hidden px-0 py-0 ps-px pe-1 align-middle leading-none',
-        !compact && 'pe-1.5 text-xs',
+        !compact && 'pe-1.5',
         className
       )}
     >

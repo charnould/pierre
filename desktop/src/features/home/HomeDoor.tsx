@@ -68,7 +68,7 @@ export function HomeDoor({
         {identity.label}
       </span>
       {hint ? (
-        <span className="line-clamp-3 font-serif text-[14px] leading-4.75 font-[350] text-balance">
+        <span className="line-clamp-3 font-serif text-sm leading-4.75 font-[350] text-balance">
           {hint}
         </span>
       ) : null}

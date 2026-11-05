@@ -3,6 +3,9 @@ import { Database } from 'bun:sqlite'
 import { openDatastore } from '../datastore-db'
 import baselineSql from './000.sql' with { type: 'text' }
 import dropReplyAutomationsSql from './001.sql' with { type: 'text' }
+import mailevaOperationsSql from './002.sql' with { type: 'text' }
+import repaymentDocumentsSql from './003.sql' with { type: 'text' }
+import dropRepaymentTemplatesSql from './004.sql' with { type: 'text' }
 
 export type DatastoreMigration = {
   version: number
@@ -12,7 +15,10 @@ export type DatastoreMigration = {
 
 export const APP_MIGRATIONS: readonly DatastoreMigration[] = [
   { version: 1, name: 'baseline', sql: baselineSql },
-  { version: 2, name: 'drop-reply-automations', sql: dropReplyAutomationsSql }
+  { version: 2, name: 'drop-reply-automations', sql: dropReplyAutomationsSql },
+  { version: 3, name: 'maileva-operations', sql: mailevaOperationsSql },
+  { version: 4, name: 'repayment-documents', sql: repaymentDocumentsSql },
+  { version: 5, name: 'drop-repayment-templates', sql: dropRepaymentTemplatesSql }
 ]
 
 const SCHEMA_MIGRATIONS_SQL = `

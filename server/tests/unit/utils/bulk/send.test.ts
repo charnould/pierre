@@ -303,7 +303,7 @@ describe('bulk execution', () => {
       name: 'Parcours',
       definition: {
         ...emptyBulkOperationDefinition(),
-        bucketId: 'amiable',
+        bucketId: 'Amiable',
         delivery: {
           kind: 'rich_rcs',
           action: 'Relancer',
@@ -499,7 +499,7 @@ describe('bulk execution', () => {
       name: 'Relance',
       definition: {
         ...emptyBulkOperationDefinition(),
-        bucketId: 'amiable',
+        bucketId: 'Amiable',
         delivery: {
           kind: 'fallback',
           steps: [

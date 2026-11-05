@@ -62,16 +62,16 @@ export function Schedule({
   value: CaseFile['echeancier']
   onChange: (value: CaseFile['echeancier']) => void
 }) {
-  const schedule = repaymentSetup().create_plan.schedule
-  const [pending, setPending] = useState<(typeof schedule.thresholds)[number] | null>(null)
-  const effortLimit = limitLabel(schedule.maxEffortRate, '%')
-  const remainderLimit = limitLabel(schedule.minDailyRemainder, 'euros')
+  const schedule = repaymentSetup().schedule
+  const [pending, setPending] = useState<{ installments: number; message: string } | null>(null)
+  const effortLimit = limitLabel(schedule.maxEffortPercent, '%')
+  const remainderLimit = limitLabel(schedule.minDailyRemainderEuros, 'euros')
 
   const add = () => {
     if (value.echeances.length >= MAX_SCHEDULE_MONTHS) return
-    const threshold = schedule.thresholds.find((item) => item.months === value.echeances.length)
-    if (threshold) {
-      setPending(threshold)
+    const message = schedule.confirmAfterInstallments[String(value.echeances.length)]
+    if (message) {
+      setPending({ installments: value.echeances.length, message })
       return
     }
     onChange({ ...value, echeances: [...value.echeances, { ...BLANK }] })
@@ -183,8 +183,8 @@ export function Schedule({
                   const alert = loanNetAlert(
                     figures.teLn,
                     figures.ravLn,
-                    schedule.maxEffortRate,
-                    schedule.minDailyRemainder
+                    schedule.maxEffortPercent,
+                    schedule.minDailyRemainderEuros
                   )
                   const cells = [
                     { text: money(figures.resources) },
@@ -260,7 +260,7 @@ export function Schedule({
           </AddButton>
           <ConfirmDialog
             open={pending != null}
-            title={pending ? `Plus de ${pending.months} mensualités !` : ''}
+            title={pending ? `Plus de ${pending.installments} mensualités !` : ''}
             description={pending?.message ?? ''}
             confirmLabel="J’ai compris"
             onConfirm={() => {

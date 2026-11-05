@@ -23,7 +23,9 @@ import { Select, SelectContent, SelectTrigger, SelectValue } from '@/shared/comp
 import { Textarea } from '@/shared/components/ui/textarea'
 import { toast } from '@/shared/components/ui/toast'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
-import type { ActivityContext, ActivityListItem } from '@/shared/types/activites'
+import type { ActivityContext } from '@/shared/types/activites'
+
+import { followRcsTest } from '../lib/rcs-test'
 
 type LlmType = 'anthropic' | 'openai' | 'openai-compatible'
 
@@ -51,35 +53,6 @@ const RCS_SEND_CONTEXTS = ['tickets', 'repayment', 'automations', 'bulk'] as con
 
 function rcsSendContext(moduleIds: readonly string[]): ActivityContext | null {
   return RCS_SEND_CONTEXTS.find((id) => moduleIds.includes(id)) ?? null
-}
-
-function channelLine(items: ActivityListItem[], channel: 'rcs' | 'sms'): string | null {
-  const sent = items.some((item) => item.type === 'communication.sent' && item.channel === channel)
-  if (!sent) return null
-  const name = channel === 'rcs' ? 'RCS' : 'SMS'
-  if (items.some((item) => item.type === 'communication.ok' && item.channel === channel)) {
-    return `${name} envoyé, webhook ok`
-  }
-  if (items.some((item) => item.type === 'communication.failed' && item.channel === channel)) {
-    return `${name} envoyé, webhook échec`
-  }
-  return `${name} envoyé`
-}
-
-function rcsReply(items: ActivityListItem[]): 'Oui' | 'Non' | null {
-  for (const item of items) {
-    if (item.type !== 'communication.received') continue
-    if (item.contenu.includes('« Oui »')) return 'Oui'
-    if (item.contenu.includes('« Non »')) return 'Non'
-  }
-  return null
-}
-
-function rcsTestReport(items: ActivityListItem[]): { text: string; done: boolean } {
-  const reply = rcsReply(items)
-  const lines = [channelLine(items, 'rcs'), channelLine(items, 'sms')]
-  if (reply) lines.push(`Réponse : ${reply}`)
-  return { text: lines.filter((line) => line != null).join(' · '), done: reply != null }
 }
 
 function isLlmType(value: string): value is LlmType {
@@ -115,10 +88,9 @@ type ProvidersView = {
     target: '' | 'sandbox' | 'production'
     postalReady: boolean
     electronicReady: boolean
-    tracking: '' | 'webhook' | 'poll'
     secretsReadable: boolean
   }
-  webhooks: { rcs: string; email: string; maileva: string }
+  webhooks: { rcs: string; email: string }
 }
 
 function desktopApi() {
@@ -186,6 +158,15 @@ function Row({
   )
 }
 
+function senderAddress(address: string): { name: string; street: string; city: string } {
+  const lines = address.split('\n')
+  return {
+    name: (lines[1] ?? '').trim(),
+    street: (lines[3] ?? '').trim(),
+    city: (lines[5] ?? '').trim()
+  }
+}
+
 async function copy(value: string) {
   try {
     await navigator.clipboard.writeText(value)
@@ -207,12 +188,7 @@ function CopyField({
   return (
     <Row title={label} description={description}>
       <InputGroup>
-        <InputGroupInput
-          className="py-0 font-mono leading-8"
-          readOnly
-          value={value}
-          aria-label={label}
-        />
+        <InputGroupInput mono readOnly value={value} aria-label={label} />
         <InputGroupAddon align="inline-end">
           <InputGroupButton
             type="button"
@@ -234,21 +210,24 @@ function MarkedInput({
   value,
   onChange,
   marked,
+  maxLength,
   secret = false
 }: {
   id: string
   value: string
   onChange: (value: string) => void
   marked: boolean
+  maxLength?: number
   secret?: boolean
 }) {
   return (
     <InputGroup>
       <InputGroupInput
         id={id}
-        className="py-0 font-mono leading-8"
+        mono
         type={secret ? 'password' : 'text'}
         value={value}
+        maxLength={maxLength}
         placeholder={secret && marked ? '••••••••' : undefined}
         autoComplete="off"
         spellCheck={false}
@@ -294,7 +273,9 @@ export function ProvidersPanel({
   const [mailevaPassword, setMailevaPassword] = useState('')
   const [mailevaSenderId, setMailevaSenderId] = useState('')
   const [mailevaTotp, setMailevaTotp] = useState('')
-  const [mailevaAddress, setMailevaAddress] = useState('')
+  const [mailevaName, setMailevaName] = useState('')
+  const [mailevaStreet, setMailevaStreet] = useState('')
+  const [mailevaCity, setMailevaCity] = useState('')
   const [emailHtml, setEmailHtml] = useState('')
   const [logoStored, setLogoStored] = useState(false)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
@@ -382,7 +363,10 @@ export function ProvidersPanel({
     setMailevaClientId(next.maileva.clientId)
     setMailevaUsername(next.maileva.username)
     setMailevaSenderId(next.maileva.senderId)
-    setMailevaAddress(next.maileva.address)
+    const address = senderAddress(next.maileva.address)
+    setMailevaName(address.name)
+    setMailevaStreet(address.street)
+    setMailevaCity(address.city)
   }
 
   async function reload() {
@@ -490,6 +474,16 @@ export function ProvidersPanel({
   }
 
   async function saveMaileva() {
+    const name = mailevaName.trim()
+    const street = mailevaStreet.trim()
+    const city = mailevaCity.trim()
+    if ((name || street || city) && (!name || !/^\d{5}\s+\S/.test(city))) {
+      setStatus((current) => ({
+        ...current,
+        maileva: 'L’adresse exige un nom et un code postal suivi de la ville.'
+      }))
+      return
+    }
     setPending(true)
     const maileva = await desktopApi()?.putAdminProviders?.({
       url,
@@ -501,7 +495,7 @@ export function ProvidersPanel({
         password: mailevaPassword,
         senderId: mailevaSenderId,
         totpSecret: mailevaTotp,
-        address: mailevaAddress
+        address: name || street || city ? `${name}\n${street}\n${city}` : ''
       }
     })
     if (!maileva || maileva.error) {
@@ -596,22 +590,20 @@ export function ProvidersPanel({
       setRcsTestStatus(response?.error.message ?? 'Envoi impossible')
       return
     }
-    for (let attempt = 0; attempt < 60; attempt++) {
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      if (generation !== rcsPoll.current) return
-      const listed = await desktopApi()?.getActivities?.({ url, contexte, ref, limit: 20 })
-      const report = rcsTestReport(listed?.data ?? [])
-      setRcsTestStatus(report.text || 'RCS envoyé')
-      if (report.done) {
-        setSendingRcsTest(false)
-        return
+    await followRcsTest({
+      url,
+      contexte,
+      ref,
+      isCurrent: () => generation === rcsPoll.current,
+      onStatus: (text) => {
+        if (generation !== rcsPoll.current) return
+        setRcsTestStatus((current) =>
+          text === 'Aucune réponse reçue' && current ? `${current} · ${text}` : text
+        )
       }
-    }
+    })
     if (generation !== rcsPoll.current) return
     setSendingRcsTest(false)
-    setRcsTestStatus((current) =>
-      current ? `${current} · Aucune réponse reçue` : 'Aucune réponse reçue'
-    )
   }
 
   async function sendTestEmail() {
@@ -664,7 +656,7 @@ export function ProvidersPanel({
               >
                 <Input
                   id={`${fieldId}-name`}
-                  className="py-0 font-mono leading-8"
+                  mono
                   value={orgName}
                   spellCheck={false}
                   onChange={(event) => {
@@ -693,7 +685,7 @@ export function ProvidersPanel({
               >
                 <Input
                   id={`${fieldId}-zone`}
-                  className="py-0 font-mono leading-8"
+                  mono
                   value={timezone}
                   spellCheck={false}
                   onChange={(event) => {
@@ -875,7 +867,7 @@ export function ProvidersPanel({
               >
                 <InputGroup>
                   <InputGroupInput
-                    className="py-0 font-mono leading-8"
+                    mono
                     readOnly
                     value={rcsSecret}
                     aria-label="Secret à recopier dans CM.com"
@@ -1071,7 +1063,8 @@ export function ProvidersPanel({
                   id={`${fieldId}-email-html`}
                   value={emailHtml}
                   spellCheck={false}
-                  className="max-h-96 font-mono"
+                  mono
+                  className="max-h-96"
                   onChange={(event) => {
                     setEmailHtml(event.target.value)
                     touch('email')
@@ -1103,10 +1096,10 @@ export function ProvidersPanel({
             <Rows>
               <Row
                 title="Environnement détecté"
-                description="Un utilisateur sandbox.* appelle la sandbox Maileva. Un utilisateur réel appelle la production. Remplacer les identifiants suffit à changer de cible."
+                description="Calculé d’après l’utilisateur API. Un identifiant qui commence par sandbox. appelle la sandbox Maileva."
               >
                 <Input
-                  className="py-0 font-mono leading-8"
+                  mono
                   readOnly
                   value={
                     mailevaUsername.trim().toLowerCase().startsWith('sandbox.')
@@ -1118,7 +1111,11 @@ export function ProvidersPanel({
                   aria-label="Environnement détecté"
                 />
               </Row>
-              <Row title="Identifiant client" htmlFor={`${fieldId}-maileva-client`}>
+              <Row
+                title="Identifiant de l’application"
+                description="Le client_id fourni par Maileva."
+                htmlFor={`${fieldId}-maileva-client`}
+              >
                 <MarkedInput
                   id={`${fieldId}-maileva-client`}
                   value={mailevaClientId}
@@ -1130,8 +1127,8 @@ export function ProvidersPanel({
                 />
               </Row>
               <Row
-                title="Secret client"
-                description="Un champ vide conserve le secret déjà enregistré pour le même compte."
+                title="Secret de l’application"
+                description="Le client_secret. Un champ vide conserve le secret du même compte."
                 htmlFor={`${fieldId}-maileva-secret`}
               >
                 <MarkedInput
@@ -1145,7 +1142,11 @@ export function ProvidersPanel({
                   }}
                 />
               </Row>
-              <Row title="Utilisateur" htmlFor={`${fieldId}-maileva-user`}>
+              <Row
+                title="Utilisateur API"
+                description="S’il commence par sandbox., Pierre appelle la sandbox. Sinon, la production."
+                htmlFor={`${fieldId}-maileva-user`}
+              >
                 <MarkedInput
                   id={`${fieldId}-maileva-user`}
                   value={mailevaUsername}
@@ -1157,8 +1158,8 @@ export function ProvidersPanel({
                 />
               </Row>
               <Row
-                title="Mot de passe"
-                description="Un champ vide conserve le mot de passe du même compte."
+                title="Mot de passe de l’utilisateur"
+                description="Distinct du secret de l’application. Un champ vide conserve le mot de passe du même compte."
                 htmlFor={`${fieldId}-maileva-password`}
               >
                 <MarkedInput
@@ -1173,24 +1174,56 @@ export function ProvidersPanel({
                 />
               </Row>
               <Row
-                title="Adresse expéditeur"
-                description="Six lignes maximum, 38 caractères par ligne. La ligne 6 contient le code postal et la ville."
-                htmlFor={`${fieldId}-maileva-address`}
+                title="Nom"
+                description="38 caractères maximum."
+                htmlFor={`${fieldId}-maileva-name`}
               >
-                <Textarea
-                  id={`${fieldId}-maileva-address`}
-                  value={mailevaAddress}
-                  spellCheck={false}
-                  className="max-h-96 font-mono"
-                  onChange={(event) => {
-                    setMailevaAddress(event.target.value)
+                <MarkedInput
+                  id={`${fieldId}-maileva-name`}
+                  value={mailevaName}
+                  maxLength={38}
+                  marked={saved(mailevaName, senderAddress(view?.maileva.address ?? '').name)}
+                  onChange={(value) => {
+                    setMailevaName(value)
                     touch('maileva')
                   }}
                 />
               </Row>
               <Row
-                title="Expéditeur LRE/ERE"
-                description="Identifiant Maileva de l’expéditeur électronique commun."
+                title="Voie"
+                description="Facultative. 38 caractères maximum."
+                htmlFor={`${fieldId}-maileva-street`}
+              >
+                <MarkedInput
+                  id={`${fieldId}-maileva-street`}
+                  value={mailevaStreet}
+                  maxLength={38}
+                  marked={saved(mailevaStreet, senderAddress(view?.maileva.address ?? '').street)}
+                  onChange={(value) => {
+                    setMailevaStreet(value)
+                    touch('maileva')
+                  }}
+                />
+              </Row>
+              <Row
+                title="Code postal et ville"
+                description="Par exemple 75002 Paris."
+                htmlFor={`${fieldId}-maileva-city`}
+              >
+                <MarkedInput
+                  id={`${fieldId}-maileva-city`}
+                  value={mailevaCity}
+                  maxLength={38}
+                  marked={saved(mailevaCity, senderAddress(view?.maileva.address ?? '').city)}
+                  onChange={(value) => {
+                    setMailevaCity(value)
+                    touch('maileva')
+                  }}
+                />
+              </Row>
+              <Row
+                title="Expéditeur électronique"
+                description="UUID Maileva. Inutile pour le courrier et le LRAR. Requis pour l’ERE et la LRE."
                 htmlFor={`${fieldId}-maileva-sender`}
               >
                 <MarkedInput
@@ -1205,7 +1238,7 @@ export function ProvidersPanel({
               </Row>
               <Row
                 title="Clé TOTP"
-                description="Clé permanente de l’expéditeur LRE. Pierre génère les codes à usage unique. Un champ vide conserve la clé du même compte."
+                description="Clé permanente de 32 caractères, pas le code à 6 chiffres. Utile seulement pour la LRE. Un champ vide conserve la clé du même compte."
                 htmlFor={`${fieldId}-maileva-totp`}
               >
                 <MarkedInput
@@ -1219,15 +1252,6 @@ export function ProvidersPanel({
                   }}
                 />
               </Row>
-              <CopyField
-                label="Webhook Maileva"
-                description={
-                  view?.maileva.tracking === 'webhook'
-                    ? 'Courrier et LRAR sont notifiés ici. LRE et ERE restent interrogés toutes les 15 minutes.'
-                    : 'Adresse non publique : Pierre interroge Maileva toutes les 15 minutes.'
-                }
-                value={view?.webhooks.maileva ?? ''}
-              />
             </Rows>
             {saveBar('maileva', () => void saveMaileva())}
           </Section>
