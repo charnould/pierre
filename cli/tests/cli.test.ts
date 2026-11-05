@@ -238,7 +238,7 @@ describe('release selection', () => {
       request: async () => ({ status: 500, body: '', url: '' })
     })
     await expect(fetchReleases(failed.ctx)).rejects.toThrow(
-      'Impossible de lire les releases GitHub.'
+      'Impossible de lire les releases GitHub (500).'
     )
     const empty = testContext(root, {
       request: async () => ({ status: 200, body: '[]', url: '' })
