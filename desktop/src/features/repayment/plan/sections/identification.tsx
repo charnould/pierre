@@ -1,16 +1,18 @@
 import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
 
-import type { CaseFile } from '../document'
+import type { CommonData } from '../../../../../../shared/repayment-plan'
 import { Row, Rows, Section, textField } from '../form'
 
 export function Identification({
   value,
   onChange
 }: {
-  value: CaseFile['identification']
-  onChange: (value: CaseFile['identification']) => void
+  value: CommonData
+  onChange: (value: CommonData) => void
 }) {
+  const ids = value.identification
+  const home = value.logement
   return (
     <Section id="identification" title="Identification">
       <Rows>
@@ -24,26 +26,26 @@ export function Identification({
             <FieldLegend className="sr-only">Identifiants</FieldLegend>
             <FieldGroup className="w-auto flex-row justify-end">
               <Field className="w-40 shrink-0">
-                <FieldLabel htmlFor="identifiant_client" className="sr-only">
-                  Identifiant-client
+                <FieldLabel htmlFor="id_client" className="sr-only">
+                  Identifiant client
                 </FieldLabel>
                 <Input
-                  id="identifiant_client"
+                  id="id_client"
                   placeholder="Identifiant client"
-                  {...textField(value.identifiant_client, (identifiant_client) =>
-                    onChange({ ...value, identifiant_client })
+                  {...textField(ids.id_client, (id_client) =>
+                    onChange({ ...value, identification: { ...ids, id_client } })
                   )}
                 />
               </Field>
               <Field className="w-40 shrink-0">
-                <FieldLabel htmlFor="identifiant_locataire" className="sr-only">
-                  Identifiant-locataire
+                <FieldLabel htmlFor="id_locataire" className="sr-only">
+                  Identifiant locataire
                 </FieldLabel>
                 <Input
-                  id="identifiant_locataire"
+                  id="id_locataire"
                   placeholder="Identifiant locataire"
-                  {...textField(value.identifiant_locataire, (identifiant_locataire) =>
-                    onChange({ ...value, identifiant_locataire })
+                  {...textField(ids.id_locataire, (id_locataire) =>
+                    onChange({ ...value, identification: { ...ids, id_locataire } })
                   )}
                 />
               </Field>
@@ -53,13 +55,13 @@ export function Identification({
         <Row
           title="Logement"
           description="Renseignez l'identifiant du logement concerné."
-          htmlFor="identifiant_logement"
+          htmlFor="id_lot"
         >
           <Input
-            id="identifiant_logement"
+            id="id_lot"
             placeholder="Identifiant logement"
-            {...textField(value.identifiant_logement, (identifiant_logement) =>
-              onChange({ ...value, identifiant_logement })
+            {...textField(ids.id_lot, (id_lot) =>
+              onChange({ ...value, identification: { ...ids, id_lot } })
             )}
           />
         </Row>
@@ -73,39 +75,39 @@ export function Identification({
             <FieldLegend className="sr-only">Adresse</FieldLegend>
             <FieldGroup className="w-auto flex-row justify-end">
               <Field className="w-64 shrink-0">
-                <FieldLabel htmlFor="adresse_voie" className="sr-only">
-                  Voie
+                <FieldLabel htmlFor="adresse" className="sr-only">
+                  Adresse
                 </FieldLabel>
                 <Input
-                  id="adresse_voie"
-                  placeholder="Voie"
-                  {...textField(value.adresse.voie, (voie) =>
-                    onChange({ ...value, adresse: { ...value.adresse, voie } })
+                  id="adresse"
+                  placeholder="Adresse"
+                  {...textField(home.adresse, (adresse) =>
+                    onChange({ ...value, logement: { ...home, adresse } })
                   )}
                 />
               </Field>
               <Field className="w-24 shrink-0">
-                <FieldLabel htmlFor="adresse_code_postal" className="sr-only">
+                <FieldLabel htmlFor="code_postal" className="sr-only">
                   Code postal
                 </FieldLabel>
                 <Input
-                  id="adresse_code_postal"
+                  id="code_postal"
                   placeholder="84110"
                   inputMode="numeric"
-                  {...textField(value.adresse.code_postal, (code_postal) =>
-                    onChange({ ...value, adresse: { ...value.adresse, code_postal } })
+                  {...textField(home.code_postal, (code_postal) =>
+                    onChange({ ...value, logement: { ...home, code_postal } })
                   )}
                 />
               </Field>
               <Field className="w-36 shrink-0">
-                <FieldLabel htmlFor="adresse_commune" className="sr-only">
+                <FieldLabel htmlFor="commune" className="sr-only">
                   Commune
                 </FieldLabel>
                 <Input
-                  id="adresse_commune"
+                  id="commune"
                   placeholder="Commune"
-                  {...textField(value.adresse.commune, (commune) =>
-                    onChange({ ...value, adresse: { ...value.adresse, commune } })
+                  {...textField(home.commune, (commune) =>
+                    onChange({ ...value, logement: { ...home, commune } })
                   )}
                 />
               </Field>

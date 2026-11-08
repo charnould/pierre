@@ -1,21 +1,11 @@
-export const STAGES = [
-  ['Recouvrement amiable', 'Recouvrement amiable'],
-  ['Commandement de payer', 'Commandement de payer'],
-  ['Assignation au tribunal', 'Assignation'],
-  ['Audience au tribunal', 'Audience'],
-  ['Décision en attente', 'Attente de décision'],
-  ['Décision du juge rendue', 'Décision du juge'],
-  ['Décision de justice signifiée', 'Signification'],
-  ['Commandement de quitter les lieux', 'Commandement de quitter les lieux']
-] as const
-
-export const BANK_OF_FRANCE = [
-  'Aucune procédure',
-  'Dossier recevable en cours d’instruction',
-  'Plan ou mesures imposés',
-  'Plan de redressement personnel (PRP)',
-  'Moratoire'
-] as const
+import {
+  type Adult,
+  calculatedSolidarityEnd,
+  type CommonData,
+  type OneOffLine,
+  type RepaymentForms,
+  type ScheduleAssessment
+} from '../../../../../shared/repayment-plan'
 
 export const JOBS = [
   'Salarié en CDI',
@@ -32,88 +22,6 @@ export const JOBS = [
   'Sans activité professionnelle',
   'Autre'
 ] as const
-
-export const MONTHLY_INCOME = [
-  [
-    'Ressources d’activité',
-    [
-      ['Salaire net', 'CDI, CDD, intérim, alternance'],
-      ['Revenus d’activité indépendante', 'auto-entreprise, entreprise, activité libérale'],
-      ['Allocations chômage', 'ARE, allocation de sécurisation professionnelle'],
-      ['Indemnités journalières', 'maladie, accident du travail, maternité']
-    ]
-  ],
-  [
-    'Pensions',
-    [
-      ['Pensions de retraite', 'retraite de base, complémentaire'],
-      ['Pensions d’invalidité', 'pension d’invalidité, rente d’incapacité'],
-      ['Pensions alimentaires reçues', 'pension versée pour les enfants']
-    ]
-  ],
-  [
-    'Prestations',
-    [
-      [
-        'Prestations familiales',
-        'allocations familiales, complément familial, allocation de soutien familial'
-      ],
-      ['Aides au logement', 'APL, ALF, ALS'],
-      ['Minima sociaux', 'RSA, allocation aux adultes handicapés'],
-      ['Prime d’activité', 'prime d’activité']
-    ]
-  ],
-  [
-    'Autres ressources',
-    [
-      ['Revenus locatifs', 'loyers perçus'],
-      ['Autres ressources', 'aide régulière d’un proche, autres revenus']
-    ]
-  ]
-] as const
-
-export const ONE_OFF_INCOME = [
-  ['Prime exceptionnelle', 'prime employeur, prime de fin d’année'],
-  ['Rappel de prestations', 'CAF, chômage, retraite'],
-  ['Indemnités exceptionnelles', 'indemnisation, dommages et intérêts'],
-  ['Héritage et donation', 'succession, don familial'],
-  ['Vente d’un bien', 'véhicule, mobilier, autre bien'],
-  ['Aide exceptionnelle', 'aide familiale, aide d’une association'],
-  ['Déblocage d’épargne', 'livret, épargne salariale'],
-  ['Remboursement exceptionnel', 'trop-perçu d’impôts, remboursement de frais'],
-  ['Autres ressources ponctuelles', 'rentrée d’argent exceptionnelle non couverte']
-] as const
-
-export const MONTHLY_EXPENSES = [
-  ['Crédits en cours', 'immobilier, consommation, automobile'],
-  ['Assurance habitation', 'multirisque, assurance locative'],
-  ['Santé', 'mutuelle, frais médicaux réguliers'],
-  ['Énergie et fluide', 'électricité, gaz, eau'],
-  ['Télécommunications', 'téléphone, internet, télévision'],
-  ['Transport', 'transports en commun, carburant, assurance automobile'],
-  ['Alimentation', 'courses alimentaires, produits courants'],
-  ['Garde et scolarité', 'crèche, cantine, garde d’enfants'],
-  ['Pensions alimentaires', 'pensions versées aux enfants ou à l’ex-conjoint'],
-  ['Impôts', 'taxe foncière et autres'],
-  ['Abonnements', 'plateformes, services, adhésions'],
-  ['Autres charges', 'dépenses récurrentes non couvertes']
-] as const
-
-export const ONE_OFF_EXPENSES = [
-  ['Dette à rembourser', 'dette familiale, crédit impayé, autre dette'],
-  ['Santé', 'soins dentaires, lunettes, frais médicaux exceptionnels'],
-  ['Véhicule', 'réparation, entretien, contrôle technique'],
-  ['Logement', 'réparation, mobilier, équipement indispensable'],
-  ['Énergie et fluide', 'régularisation de facture, impayé'],
-  ['Impôts', 'rappel, régularisation fiscale'],
-  ['Justice', 'frais d’avocat, frais de procédure'],
-  ['Enfants', 'rentrée scolaire, équipement, dépense exceptionnelle'],
-  ['Déménagement', 'transport, dépôt de garantie, frais d’installation'],
-  ['Famille', 'frais exceptionnels liés à un proche'],
-  ['Autres dépenses', 'dépense exceptionnelle non couverte']
-] as const
-
-export const UNASSIGNED_PERSON = 'Foyer (non assigné)'
 
 export const MOTIVES = [
   'Perte d’emploi',
@@ -137,333 +45,227 @@ export const AIDS = [
   'Ligue contre le cancer'
 ] as const
 
-export type SocialWorker = {
-  prenom_et_nom: string | null
-  organisme: string | null
-  coordonnees: string | null
-  date_dernier_contact_avec_le_bailleur: string | null
-  date_dernier_contact_avec_le_locataire: string | null
-}
+export const FOYER = 'foyer'
 
-export type Guarantor = {
-  prenom: string | null
-  nom: string | null
-}
+export type PersonChoice = { id: string; label: string }
 
-export type Adult = {
-  prenom: string | null
-  nom: string | null
-  date_naissance: string | null
-  type_emploi: string | null
-  employeur: string | null
-  numero_allocataire_caf: string | null
-  titulaire_du_bail: boolean
-  occupant_du_logement: boolean
-}
-
-export type Child = {
-  prenom: string | null
-  nom: string | null
-  date_naissance: string | null
-  a_charge: boolean
-}
-
-export type MonthlyIncome = {
-  type: string | null
-  personne: string
-  montant_euros: number | null
-}
-
-export type OneOffIncome = {
-  type: string | null
-  personne: string
-  date_imputation: string | null
-  montant_euros: number | null
-}
-
-export type MonthlyExpense = {
-  type: string | null
-  personne: string
-  date_fin: string | null
-  montant_euros: number | null
-}
-
-export type OneOffExpense = {
-  type: string | null
-  personne: string
-  date_imputation: string | null
-  montant_euros: number | null
-}
-
-export function householdPeople(foyer: CaseFile['foyer']): string[] {
-  const names: string[] = []
-  for (const member of [...foyer.adultes, ...foyer.enfants]) {
-    const label = [member.prenom, member.nom]
+export function householdPeople(foyer: CommonData['foyer']): PersonChoice[] {
+  const people = [...foyer.adultes, ...foyer.enfants].flatMap((person) => {
+    const label = [person.prenom, person.nom]
       .map((part) => part?.trim() ?? '')
       .filter((part) => part !== '')
       .join(' ')
-    if (label !== '' && !names.includes(label)) names.push(label)
-  }
-  return [UNASSIGNED_PERSON, ...names]
+    if (!label) return []
+    return [{ id: person.id_personne, label }]
+  })
+  return [{ id: FOYER, label: 'Foyer' }, ...people]
 }
 
-export function personChoices(people: readonly string[], current: string): string[] {
-  return people.includes(current) ? [...people] : [...people, current]
+export function personChoices(people: readonly PersonChoice[], current: string): PersonChoice[] {
+  return people.some((person) => person.id === current)
+    ? [...people]
+    : [...people, { id: current, label: current }]
 }
 
-export type Installment = {
-  date_echeance: string | null
-  mensualite_euros: number | null
+export function patchAdult(adult: Adult, patch: Partial<Adult>): Adult {
+  if (patch.date_fin_solidarite !== undefined) return { ...adult, ...patch }
+  const previous = calculatedSolidarityEnd(adult)
+  const next = { ...adult, ...patch }
+  if (adult.date_fin_solidarite == null || adult.date_fin_solidarite === previous) {
+    next.date_fin_solidarite = calculatedSolidarityEnd(next)
+  }
+  return next
 }
 
-export type CaseFile = {
-  identification: {
-    identifiant_client: string | null
-    identifiant_locataire: string | null
-    identifiant_logement: string | null
-    adresse: {
-      voie: string | null
-      code_postal: string | null
-      commune: string | null
-    }
-  }
-  dette: {
-    montant_restant_du_euros: number | null
-    date_premier_loyer_impaye: string | null
-    motifs_impaye: string[]
-    ancienne_dette_locative_euros: number | null
-  }
-  procedure: {
-    stade: string | null
-    date_du_stade: string | null
-    situation_banque_de_france: string | null
-    date_fin_moratoire: string | null
-  }
-  accompagnement: {
-    visite_a_domicile: boolean
-    travailleur_social: SocialWorker | null
-    date_saisine_ccapex_prevention_expulsions: string | null
-    date_saisine_ctesi_situations_individuelles: string | null
-    aides_mobilisables: string[]
-  }
-  bail: {
-    avenant_signe: boolean
-    date_depot_preavis_conge: string | null
-    contentieux_anterieur_sur_ce_contrat: boolean
-    garant: Guarantor | null
-  }
-  foyer: {
-    adultes: Adult[]
-    enfants: Child[]
-  }
-  budget: {
-    ressources_mensuelles: MonthlyIncome[]
-    ressources_ponctuelles: OneOffIncome[]
-    loyer_charges_moins_aides_au_logement_euros: number | null
-    charges_mensuelles: MonthlyExpense[]
-    charges_ponctuelles: OneOffExpense[]
-  }
-  echeancier: {
-    propose: boolean
-    echeances: Installment[]
-  }
-}
-
-export function replaceFirst<T>(rows: readonly T[], patch: Partial<T>): T[] {
-  return rows.map((row, index) => (index === 0 ? { ...row, ...patch } : row))
-}
-
-function assignedPerson(value: string | null | undefined): string {
-  if (value == null) return UNASSIGNED_PERSON
-  const text = value.trim()
-  return text === '' ? UNASSIGNED_PERSON : text
-}
-
-function blankToNull(value: string | null): string | null {
+function blank(value: string | null): string | null {
   if (value == null) return null
   const text = value.trim()
   return text === '' ? null : text
 }
 
-export function normalize(record: CaseFile): CaseFile {
-  const social = record.accompagnement.travailleur_social
-  const guarantor = record.bail.garant
+function money(value: number | null): number | null {
+  if (value == null || !Number.isFinite(value)) return null
+  return Math.round(value * 100) / 100
+}
+
+function lineMoney<T extends { montant_en_euros: number | null }>(line: T): T {
+  return { ...line, montant_en_euros: money(line.montant_en_euros) }
+}
+
+export function normalize(forms: RepaymentForms): RepaymentForms {
+  const common = forms.donnees_communes
+  const social = common.travailleur_social
+  const guarantor = common.bail.garant
+  const compte = common.compte_locataire
+  const contested =
+    compte.statut_contestation === 'non_conteste'
+      ? { montant_conteste_en_euros: 0, motif_contestation: null }
+      : compte.statut_contestation === 'inconnu'
+        ? { montant_conteste_en_euros: null, motif_contestation: null }
+        : {
+            montant_conteste_en_euros: money(compte.montant_conteste_en_euros),
+            motif_contestation: blank(compte.motif_contestation)
+          }
+  const diagnosis = forms.diagnostic_social_financier
+  const plan = forms.plan_apurement
+  const accepted = plan.accord_bailleur === 'oui' && plan.accord_menage === 'oui'
   return {
-    identification: {
-      identifiant_client: blankToNull(record.identification.identifiant_client),
-      identifiant_locataire: blankToNull(record.identification.identifiant_locataire),
-      identifiant_logement: blankToNull(record.identification.identifiant_logement),
-      adresse: {
-        voie: blankToNull(record.identification.adresse.voie),
-        code_postal: blankToNull(record.identification.adresse.code_postal),
-        commune: blankToNull(record.identification.adresse.commune)
-      }
-    },
-    dette: {
-      montant_restant_du_euros: record.dette.montant_restant_du_euros,
-      date_premier_loyer_impaye: blankToNull(record.dette.date_premier_loyer_impaye),
-      motifs_impaye: [...record.dette.motifs_impaye],
-      ancienne_dette_locative_euros: record.dette.ancienne_dette_locative_euros
-    },
-    procedure: {
-      stade: record.procedure.stade,
-      date_du_stade: blankToNull(record.procedure.date_du_stade),
-      situation_banque_de_france: record.procedure.situation_banque_de_france,
-      date_fin_moratoire:
-        record.procedure.situation_banque_de_france === 'Moratoire'
-          ? blankToNull(record.procedure.date_fin_moratoire)
-          : null
-    },
-    accompagnement: {
-      visite_a_domicile: record.accompagnement.visite_a_domicile,
+    donnees_communes: {
+      ...common,
+      identification: {
+        id_client: blank(common.identification.id_client),
+        id_locataire: blank(common.identification.id_locataire),
+        id_lot: blank(common.identification.id_lot)
+      },
+      logement: {
+        adresse: blank(common.logement.adresse),
+        code_postal: blank(common.logement.code_postal),
+        commune: blank(common.logement.commune)
+      },
+      bail: {
+        debut_bail: blank(common.bail.debut_bail),
+        garant: guarantor ? { prenom: blank(guarantor.prenom), nom: blank(guarantor.nom) } : null
+      },
+      foyer: {
+        adultes: common.foyer.adultes.map((adult) => ({
+          ...adult,
+          prenom: blank(adult.prenom),
+          nom: blank(adult.nom),
+          date_naissance: blank(adult.date_naissance),
+          type_emploi: blank(adult.type_emploi),
+          employeur: blank(adult.employeur),
+          allocataire_caf: blank(adult.allocataire_caf),
+          adresse_correspondance: adult.adresse_correspondance
+            ? {
+                adresse: blank(adult.adresse_correspondance.adresse),
+                code_postal: blank(adult.adresse_correspondance.code_postal),
+                commune: blank(adult.adresse_correspondance.commune)
+              }
+            : null,
+          date_effet_conge: blank(adult.date_effet_conge),
+          date_entree_nouveau_cotitulaire: blank(adult.date_entree_nouveau_cotitulaire),
+          date_fin_solidarite: blank(adult.date_fin_solidarite)
+        })),
+        enfants: common.foyer.enfants.map((child) => ({
+          ...child,
+          prenom: blank(child.prenom),
+          nom: blank(child.nom),
+          date_naissance: blank(child.date_naissance)
+        }))
+      },
+      compte_locataire: {
+        ...compte,
+        solde_compte_en_euros: money(compte.solde_compte_en_euros),
+        date_arrete_compte: blank(compte.date_arrete_compte),
+        date_premier_loyer_impaye: blank(compte.date_premier_loyer_impaye),
+        ...contested,
+        motifs_impaye: compte.motifs_impaye.map((motive) => motive.trim()).filter(Boolean),
+        ancienne_dette_hors_solde_en_euros: money(compte.ancienne_dette_hors_solde_en_euros)
+      },
+      budget: {
+        ressources_mensuelles: common.budget.ressources_mensuelles.map(cleanMonthly),
+        ressources_ponctuelles: common.budget.ressources_ponctuelles.map(cleanOneOff),
+        charges_mensuelles: common.budget.charges_mensuelles.map(cleanMonthly),
+        charges_ponctuelles: common.budget.charges_ponctuelles.map(cleanOneOff)
+      },
       travailleur_social: social
         ? {
-            prenom_et_nom: blankToNull(social.prenom_et_nom),
-            organisme: blankToNull(social.organisme),
-            coordonnees: blankToNull(social.coordonnees),
-            date_dernier_contact_avec_le_bailleur: blankToNull(
-              social.date_dernier_contact_avec_le_bailleur
-            ),
-            date_dernier_contact_avec_le_locataire: blankToNull(
-              social.date_dernier_contact_avec_le_locataire
-            )
+            prenom_et_nom: blank(social.prenom_et_nom),
+            organisme: blank(social.organisme),
+            coordonnees: blank(social.coordonnees)
           }
         : null,
-      date_saisine_ccapex_prevention_expulsions: blankToNull(
-        record.accompagnement.date_saisine_ccapex_prevention_expulsions
+      aides_mobilisables: common.aides_mobilisables.map((aid) => aid.trim()).filter(Boolean)
+    },
+    diagnostic_social_financier: {
+      ...diagnosis,
+      position_et_solutions_proposees_par_menage: blank(
+        diagnosis.position_et_solutions_proposees_par_menage
       ),
-      date_saisine_ctesi_situations_individuelles: blankToNull(
-        record.accompagnement.date_saisine_ctesi_situations_individuelles
+      observations_bailleur: blank(diagnosis.observations_bailleur),
+      vulnerabilites: diagnosis.vulnerabilites.map((item) => item.trim()).filter(Boolean),
+      impact_vulnerabilites: blank(diagnosis.impact_vulnerabilites),
+      orientation_logement: {
+        ...diagnosis.orientation_logement,
+        motifs: blank(diagnosis.orientation_logement.motifs)
+      },
+      motif_non_soutenabilite: assessmentMotive(
+        diagnosis.appreciation_echeancier,
+        diagnosis.motif_non_soutenabilite
       ),
-      aides_mobilisables: record.accompagnement.aides_mobilisables
-        .map((aid) => aid.trim())
-        .filter((aid) => aid !== '')
+      synthese_professionnelle: blank(diagnosis.synthese_professionnelle)
     },
-    bail: {
-      avenant_signe: record.bail.avenant_signe,
-      date_depot_preavis_conge: blankToNull(record.bail.date_depot_preavis_conge),
-      contentieux_anterieur_sur_ce_contrat: record.bail.contentieux_anterieur_sur_ce_contrat,
-      garant: guarantor
-        ? { prenom: blankToNull(guarantor.prenom), nom: blankToNull(guarantor.nom) }
-        : null
+    plan_apurement: {
+      ...plan,
+      date_accord: accepted ? blank(plan.date_accord) : null
     },
-    foyer: {
-      adultes: record.foyer.adultes.map((adult) => ({
-        prenom: blankToNull(adult.prenom),
-        nom: blankToNull(adult.nom),
-        date_naissance: blankToNull(adult.date_naissance),
-        type_emploi: adult.type_emploi,
-        employeur: blankToNull(adult.employeur),
-        numero_allocataire_caf: blankToNull(adult.numero_allocataire_caf),
-        titulaire_du_bail: adult.titulaire_du_bail,
-        occupant_du_logement: adult.occupant_du_logement
-      })),
-      enfants: record.foyer.enfants.map((child) => ({
-        prenom: blankToNull(child.prenom),
-        nom: blankToNull(child.nom),
-        date_naissance: blankToNull(child.date_naissance),
-        a_charge: child.a_charge
-      }))
-    },
-    budget: {
-      ressources_mensuelles: record.budget.ressources_mensuelles.map((row) => ({
-        ...row,
-        personne: assignedPerson(row.personne)
-      })),
-      ressources_ponctuelles: record.budget.ressources_ponctuelles.map((row) => ({
-        ...row,
-        personne: assignedPerson(row.personne),
-        date_imputation: blankToNull(row.date_imputation)
-      })),
-      loyer_charges_moins_aides_au_logement_euros:
-        record.budget.loyer_charges_moins_aides_au_logement_euros,
-      charges_mensuelles: record.budget.charges_mensuelles.map((row) => ({
-        ...row,
-        personne: assignedPerson(row.personne),
-        date_fin: blankToNull(row.date_fin)
-      })),
-      charges_ponctuelles: record.budget.charges_ponctuelles.map((row) => ({
-        ...row,
-        personne: assignedPerson(row.personne),
-        date_imputation: blankToNull(row.date_imputation)
-      }))
-    },
-    echeancier: {
-      propose: record.echeancier.propose,
-      echeances: record.echeancier.echeances.map((installment) => ({
-        date_echeance: blankToNull(installment.date_echeance),
-        mensualite_euros: installment.mensualite_euros
-      }))
-    }
+    protocole_cohesion_sociale: forms.protocole_cohesion_sociale,
+    echeancier: cleanSchedule(forms.echeancier)
   }
 }
 
-export function emptyCase(): CaseFile {
+function assessmentMotive(assessment: ScheduleAssessment, motive: string | null): string | null {
+  return assessment === 'non_soutenable' ? blank(motive) : null
+}
+
+function cleanMonthly(line: CommonData['budget']['charges_mensuelles'][number]) {
   return {
-    identification: {
-      identifiant_client: null,
-      identifiant_locataire: null,
-      identifiant_logement: null,
-      adresse: { voie: null, code_postal: null, commune: null }
-    },
-    dette: {
-      montant_restant_du_euros: null,
-      date_premier_loyer_impaye: null,
-      motifs_impaye: [],
-      ancienne_dette_locative_euros: null
-    },
-    procedure: {
-      stade: null,
-      date_du_stade: null,
-      situation_banque_de_france: null,
-      date_fin_moratoire: null
-    },
-    accompagnement: {
-      visite_a_domicile: false,
-      travailleur_social: null,
-      date_saisine_ccapex_prevention_expulsions: null,
-      date_saisine_ctesi_situations_individuelles: null,
-      aides_mobilisables: []
-    },
-    bail: {
-      avenant_signe: false,
-      date_depot_preavis_conge: null,
-      contentieux_anterieur_sur_ce_contrat: false,
-      garant: null
-    },
-    foyer: {
-      adultes: [
-        {
-          prenom: null,
-          nom: null,
-          date_naissance: null,
-          type_emploi: null,
-          employeur: null,
-          numero_allocataire_caf: null,
-          titulaire_du_bail: false,
-          occupant_du_logement: false
-        }
-      ],
-      enfants: [{ prenom: null, nom: null, date_naissance: null, a_charge: false }]
-    },
-    budget: {
-      ressources_mensuelles: [{ type: null, personne: UNASSIGNED_PERSON, montant_euros: null }],
-      ressources_ponctuelles: [
-        {
-          type: null,
-          personne: UNASSIGNED_PERSON,
-          date_imputation: null,
-          montant_euros: null
-        }
-      ],
-      loyer_charges_moins_aides_au_logement_euros: null,
-      charges_mensuelles: [
-        { type: null, personne: UNASSIGNED_PERSON, date_fin: null, montant_euros: null }
-      ],
-      charges_ponctuelles: [
-        { type: null, personne: UNASSIGNED_PERSON, date_imputation: null, montant_euros: null }
-      ]
-    },
-    echeancier: { propose: true, echeances: [] }
+    ...lineMoney(line),
+    type: blank(line.type),
+    date_debut: blank(line.date_debut),
+    date_fin: blank(line.date_fin),
+    date_niveau_preuve: blank(line.date_niveau_preuve)
   }
+}
+
+function cleanOneOff(line: OneOffLine) {
+  return {
+    ...lineMoney(line),
+    type: blank(line.type),
+    mois_imputation: blank(line.mois_imputation),
+    date_niveau_preuve: blank(line.date_niveau_preuve)
+  }
+}
+
+function cleanSchedule(schedule: RepaymentForms['echeancier']) {
+  return {
+    ...schedule,
+    montant_a_apurer_en_euros: money(schedule.montant_a_apurer_en_euros),
+    echeances: schedule.echeances.map((row) => ({
+      ...row,
+      date_echeance: blank(row.date_echeance),
+      montant_en_euros: money(row.montant_en_euros),
+      ressources_totales_du_mois_en_euros: money(row.ressources_totales_du_mois_en_euros),
+      charges_totales_du_mois_en_euros: money(row.charges_totales_du_mois_en_euros),
+      reste_a_vivre_loyer_net_par_unite_consommation_et_par_jour_en_euros: money(
+        row.reste_a_vivre_loyer_net_par_unite_consommation_et_par_jour_en_euros
+      ),
+      reste_a_vivre_global_par_unite_consommation_et_par_jour_en_euros: money(
+        row.reste_a_vivre_global_par_unite_consommation_et_par_jour_en_euros
+      )
+    }))
+  }
+}
+
+export function todayIso(): string {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
+
+export function withProof<
+  T extends { niveau_preuve: OneOffLine['niveau_preuve']; date_niveau_preuve: string | null }
+>(line: T, niveau_preuve: OneOffLine['niveau_preuve']): T {
+  return {
+    ...line,
+    niveau_preuve,
+    date_niveau_preuve: niveau_preuve == null ? null : todayIso()
+  }
+}
+
+export function storedPerson(value: string | null): string | null {
+  return value == null || value === FOYER ? null : value
+}
+
+export function selectedPerson(value: string | null): string {
+  return value ?? FOYER
 }

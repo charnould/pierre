@@ -1,5 +1,10 @@
+import {
+  emptyRepaymentForms,
+  HOUSING_COST,
+  type RepaymentForms
+} from '../../../../../shared/repayment-plan'
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
-import { type CaseFile, emptyCase, normalize } from './document'
+import { normalize } from './document'
 
 function tenantText(tenant: TenantRepaymentRow, ...keys: string[]): string | null {
   for (const key of keys) {
@@ -11,28 +16,29 @@ function tenantText(tenant: TenantRepaymentRow, ...keys: string[]): string | nul
   return null
 }
 
-export function caseFromTenant(tenant: TenantRepaymentRow): CaseFile {
-  const dossier = emptyCase()
-  const debt = Math.max(tenant.solde_locataire, 0)
+export function caseFromTenant(tenant: TenantRepaymentRow): RepaymentForms {
+  const forms = emptyRepaymentForms()
+  const common = forms.donnees_communes
+  common.identification.id_locataire = tenant.id_locataire || null
+  common.identification.id_client = tenant.id_client || null
+  common.identification.id_lot = tenantText(tenant, 'id_lot')
+  common.logement.adresse = tenantText(tenant, 'adresse')
+  common.logement.code_postal = tenantText(tenant, 'code_postal')
+  common.logement.commune = tenantText(tenant, 'commune', 'ville', 'nom_commune')
+  common.bail.debut_bail = tenantText(tenant, 'debut_bail')
+  common.compte_locataire.solde_compte_en_euros = Number.isFinite(tenant.solde_locataire)
+    ? Math.round(tenant.solde_locataire * 100) / 100
+    : null
   const rent =
-    tenant.ratio_dette_loyer != null && tenant.ratio_dette_loyer > 0
-      ? tenant.solde_locataire / tenant.ratio_dette_loyer
+    tenant.ratio_dette_loyer != null && tenant.ratio_dette_loyer > 0 && tenant.solde_locataire > 0
+      ? Math.round((tenant.solde_locataire / tenant.ratio_dette_loyer) * 100) / 100
       : null
-
-  dossier.identification.identifiant_locataire = tenant.id_locataire || null
-  dossier.identification.identifiant_client = tenant.id_client || null
-  dossier.identification.identifiant_logement = tenantText(tenant, 'id_lot')
-  dossier.identification.adresse.voie = tenantText(tenant, 'adresse')
-  dossier.identification.adresse.code_postal = tenantText(tenant, 'code_postal')
-  dossier.identification.adresse.commune = tenantText(tenant, 'commune', 'ville', 'nom_commune')
-  dossier.dette.montant_restant_du_euros = debt > 0 ? debt : null
-  if (rent != null && rent > 0) {
-    dossier.budget.loyer_charges_moins_aides_au_logement_euros = rent
-  }
-  return dossier
+  const housing = common.budget.charges_mensuelles.find((line) => line.type === HOUSING_COST)
+  if (housing && rent != null) housing.montant_en_euros = rent
+  return forms
 }
 
 /** Activity reference: the locataire id typed in the form, after trim. */
-export function planLocataireRef(dossier: CaseFile): string | null {
-  return normalize(dossier).identification.identifiant_locataire
+export function planLocataireRef(forms: RepaymentForms): string | null {
+  return normalize(forms).donnees_communes.identification.id_locataire
 }

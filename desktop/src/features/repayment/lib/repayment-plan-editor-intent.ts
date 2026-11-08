@@ -1,10 +1,10 @@
-import { type CaseFile, emptyCase } from '../plan/document'
+import { emptyRepaymentForms, type RepaymentForms } from '../../../../../shared/repayment-plan'
 import type { TenantRepaymentRow } from './classify-tenants'
 
 export type RepaymentPlanEditorRequest = {
   tenant: TenantRepaymentRow
   activityId?: number
-  dossier?: CaseFile
+  dossier?: RepaymentForms
 }
 
 type Listener = (request: RepaymentPlanEditorRequest) => void
@@ -22,7 +22,7 @@ export function subscribeRepaymentPlanEditor(listener: Listener): () => void {
 export function blankPlanEditorRequest(): RepaymentPlanEditorRequest {
   return {
     tenant: { id_locataire: '', id_client: '', solde_locataire: 0 },
-    dossier: emptyCase()
+    dossier: emptyRepaymentForms()
   }
 }
 

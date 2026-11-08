@@ -5,7 +5,7 @@ import { JSDOM } from 'jsdom'
 import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 import type { Activity } from '@/shared/types/activites'
 
-import { emptyCase } from '../plan/document'
+import { emptyRepaymentForms } from '../../../../../shared/repayment-plan'
 
 const originalGlobals = new Map<string, unknown>()
 
@@ -551,7 +551,7 @@ function planActivity(id: number, auteur: string): Activity {
     createdAt: '2026-08-19 20:00',
     type: 'repayment_plan.updated',
     channel: null,
-    contenu: JSON.stringify(emptyCase()),
+    contenu: JSON.stringify(emptyRepaymentForms()),
     mentions: [],
     threadId: `plan-${id}`
   }

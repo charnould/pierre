@@ -1,6 +1,5 @@
 import { FieldDescription, FieldLegend, FieldSet } from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
-import { Switch } from '@/shared/components/ui/switch'
 import {
   Table,
   TableBody,
@@ -11,60 +10,72 @@ import {
   TableRow
 } from '@/shared/components/ui/table'
 
-import { type Adult, type CaseFile, type Child, JOBS } from '../document'
-import { AddButton, DateField, PairSelect, RemoveButton, Section, textField } from '../form'
-
-const EMPTY_ADULT: Adult = {
-  prenom: null,
-  nom: null,
-  date_naissance: null,
-  type_emploi: null,
-  employeur: null,
-  numero_allocataire_caf: null,
-  titulaire_du_bail: false,
-  occupant_du_logement: false
-}
-
-const EMPTY_CHILD: Child = {
-  prenom: null,
-  nom: null,
-  date_naissance: null,
-  a_charge: false
-}
-
-function updateAt<T>(items: readonly T[], index: number, patch: Partial<T>): T[] {
-  return items.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item))
-}
+import {
+  type Adult,
+  blankAddress,
+  blankAdult,
+  blankChild,
+  type Child,
+  type CommonData,
+  LEASE_STATUSES,
+  nextPersonId,
+  RESIDENCE_MODES,
+  YES_NO
+} from '../../../../../../shared/repayment-plan'
+import { JOBS, patchAdult } from '../document'
+import {
+  AddButton,
+  CodeSelect,
+  DateField,
+  PairSelect,
+  RemoveButton,
+  Row,
+  Rows,
+  Section,
+  textField
+} from '../form'
 
 export function Household({
   value,
   onChange
 }: {
-  value: CaseFile['foyer']
-  onChange: (value: CaseFile['foyer']) => void
+  value: CommonData
+  onChange: (value: CommonData) => void
 }) {
+  const foyer = value.foyer
+  const set = (next: CommonData['foyer']) => onChange({ ...value, foyer: next })
   const updateAdult = (index: number, patch: Partial<Adult>) =>
-    onChange({ ...value, adultes: updateAt(value.adultes, index, patch) })
+    set({
+      ...foyer,
+      adultes: foyer.adultes.map((adult, itemIndex) =>
+        itemIndex === index ? patchAdult(adult, patch) : adult
+      )
+    })
   const updateChild = (index: number, patch: Partial<Child>) =>
-    onChange({ ...value, enfants: updateAt(value.enfants, index, patch) })
+    set({
+      ...foyer,
+      enfants: foyer.enfants.map((child, itemIndex) =>
+        itemIndex === index ? { ...child, ...patch } : child
+      )
+    })
 
   return (
-    <Section id="locatif" title="Membres du foyer">
+    <Section id="foyer" title="Membres du foyer">
       <FieldSet>
         <FieldLegend variant="legend">Adultes</FieldLegend>
         <FieldDescription>
-          Toutes les personnes de 18 ans et plus occupant le logement.
+          Toutes les personnes majeures du foyer, titulaires ou non.
         </FieldDescription>
         <Table className="table-fixed">
           <colgroup>
             <col className="w-col-11" />
             <col className="w-col-11" />
             <col className="w-col-14" />
-            <col className="w-col-18" />
             <col className="w-col-16" />
             <col className="w-col-12" />
-            <col className="w-col-7" />
-            <col className="w-col-6" />
+            <col className="w-col-8" />
+            <col className="w-col-12" />
+            <col className="w-col-11" />
             <col className="w-col-5" />
           </colgroup>
           <TableCaption className="sr-only">Adultes</TableCaption>
@@ -76,24 +87,24 @@ export function Household({
               <TableHead>Emploi</TableHead>
               <TableHead>Employeur</TableHead>
               <TableHead>N° CAF</TableHead>
-              <TableHead className="text-center">Titulaire</TableHead>
-              <TableHead className="text-center">Occupant</TableHead>
+              <TableHead>Bail</TableHead>
+              <TableHead>Résidence</TableHead>
               <TableHead className="text-center">
                 <span className="sr-only">Retirer</span>
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {value.adultes.map((adult, index) => (
-              <TableRow key={`adult-${index}`}>
+            {foyer.adultes.map((adult, index) => (
+              <TableRow key={adult.id_personne}>
                 <Identity
                   id={`adult_${index}`}
                   firstName={adult.prenom}
                   lastName={adult.nom}
                   birth={adult.date_naissance}
-                  onFirstName={(firstName) => updateAdult(index, { prenom: firstName })}
-                  onLastName={(lastName) => updateAdult(index, { nom: lastName })}
-                  onBirth={(birth) => updateAdult(index, { date_naissance: birth })}
+                  onFirstName={(prenom) => updateAdult(index, { prenom })}
+                  onLastName={(nom) => updateAdult(index, { nom })}
+                  onBirth={(date_naissance) => updateAdult(index, { date_naissance })}
                 />
                 <TableCell className="min-w-0">
                   <PairSelect
@@ -118,46 +129,42 @@ export function Household({
                 </TableCell>
                 <TableCell className="min-w-0">
                   <Input
-                    id={`adulte_${index}_numero_allocataire_caf`}
+                    id={`adulte_${index}_allocataire_caf`}
                     aria-label="N° CAF"
                     placeholder="N° CAF"
-                    {...textField(adult.numero_allocataire_caf, (numero_allocataire_caf) =>
-                      updateAdult(index, { numero_allocataire_caf })
+                    {...textField(adult.allocataire_caf, (allocataire_caf) =>
+                      updateAdult(index, { allocataire_caf })
                     )}
                   />
                 </TableCell>
                 <TableCell>
-                  <div className="flex justify-center">
-                    <Switch
-                      id={`adulte_${index}_titulaire_du_bail`}
-                      aria-label="Titulaire"
-                      checked={adult.titulaire_du_bail}
-                      onCheckedChange={(titulaire_du_bail) =>
-                        updateAdult(index, { titulaire_du_bail: titulaire_du_bail === true })
-                      }
-                    />
-                  </div>
+                  <CodeSelect
+                    label="Statut au regard du bail"
+                    value={adult.statut_bail}
+                    options={LEASE_STATUSES}
+                    onValueChange={(statut_bail) => {
+                      if (statut_bail) updateAdult(index, { statut_bail })
+                    }}
+                  />
                 </TableCell>
                 <TableCell>
-                  <div className="flex justify-center">
-                    <Switch
-                      id={`adulte_${index}_occupant_du_logement`}
-                      aria-label="Occupant"
-                      checked={adult.occupant_du_logement}
-                      onCheckedChange={(occupant_du_logement) =>
-                        updateAdult(index, { occupant_du_logement: occupant_du_logement === true })
-                      }
-                    />
-                  </div>
+                  <CodeSelect
+                    label="Mode de résidence"
+                    value={adult.mode_residence}
+                    options={RESIDENCE_MODES}
+                    onValueChange={(mode_residence) => updateAdult(index, { mode_residence })}
+                  />
                 </TableCell>
                 <TableCell className="text-center">
                   <RemoveButton
                     label={`Retirer ${adult.prenom ?? ''} ${adult.nom ?? ''}`.trim()}
-                    disabled={value.adultes.length === 1}
+                    disabled={foyer.adultes.length === 1}
                     onClick={() =>
-                      onChange({
-                        ...value,
-                        adultes: value.adultes.filter((_, itemIndex) => itemIndex !== index)
+                      set({
+                        ...foyer,
+                        adultes: foyer.adultes.filter(
+                          (item) => item.id_personne !== adult.id_personne
+                        )
                       })
                     }
                   />
@@ -168,26 +175,34 @@ export function Household({
         </Table>
         <AddButton
           className="ms-2"
-          onClick={() => onChange({ ...value, adultes: [...value.adultes, { ...EMPTY_ADULT }] })}
+          onClick={() =>
+            set({ ...foyer, adultes: [...foyer.adultes, blankAdult(nextPersonId(foyer))] })
+          }
         >
           Ajouter un adulte
         </AddButton>
       </FieldSet>
 
+      {foyer.adultes.map((adult, index) => (
+        <Solidarity
+          key={adult.id_personne}
+          index={index}
+          adult={adult}
+          onChange={(patch) => updateAdult(index, patch)}
+        />
+      ))}
+
       <FieldSet>
         <FieldLegend variant="legend">Enfants</FieldLegend>
-        <FieldDescription>
-          Toutes les personnes de moins de 18 ans occupant le logement.
-        </FieldDescription>
+        <FieldDescription>Toutes les personnes mineures du foyer.</FieldDescription>
         <Table className="table-fixed">
           <colgroup>
-            <col className="w-col-11" />
-            <col className="w-col-11" />
-            <col className="w-col-14" />
-            <col className="w-col-46" />
-            <col className="w-col-7" />
-            <col className="w-col-6" />
-            <col className="w-col-5" />
+            <col className="w-col-16" />
+            <col className="w-col-16" />
+            <col className="w-col-18" />
+            <col className="w-col-20" />
+            <col className="w-col-22" />
+            <col className="w-col-8" />
           </colgroup>
           <TableCaption className="sr-only">Enfants</TableCaption>
           <TableHeader>
@@ -195,54 +210,59 @@ export function Household({
               <TableHead>Prénom</TableHead>
               <TableHead>Nom</TableHead>
               <TableHead>Naissance</TableHead>
-              <TableHead />
-              <TableHead className="text-center">À charge</TableHead>
-              <TableHead />
+              <TableHead>À charge</TableHead>
+              <TableHead>Résidence</TableHead>
               <TableHead className="text-center">
                 <span className="sr-only">Retirer</span>
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {value.enfants.length === 0 ? (
+            {foyer.enfants.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7}>
+                <TableCell colSpan={6}>
                   <span className="text-muted-foreground">Aucun enfant renseigné.</span>
                 </TableCell>
               </TableRow>
             ) : (
-              value.enfants.map((child, index) => (
-                <TableRow key={`child-${index}`}>
+              foyer.enfants.map((child, index) => (
+                <TableRow key={child.id_personne}>
                   <Identity
                     id={`child_${index}`}
                     firstName={child.prenom}
                     lastName={child.nom}
                     birth={child.date_naissance}
-                    onFirstName={(firstName) => updateChild(index, { prenom: firstName })}
-                    onLastName={(lastName) => updateChild(index, { nom: lastName })}
-                    onBirth={(birth) => updateChild(index, { date_naissance: birth })}
+                    onFirstName={(prenom) => updateChild(index, { prenom })}
+                    onLastName={(nom) => updateChild(index, { nom })}
+                    onBirth={(date_naissance) => updateChild(index, { date_naissance })}
                   />
-                  <TableCell />
                   <TableCell>
-                    <div className="flex justify-center">
-                      <Switch
-                        id={`enfant_${index}_a_charge`}
-                        aria-label="À charge"
-                        checked={child.a_charge}
-                        onCheckedChange={(a_charge) =>
-                          updateChild(index, { a_charge: a_charge === true })
-                        }
-                      />
-                    </div>
+                    <CodeSelect
+                      label="À charge"
+                      value={child.a_charge}
+                      options={YES_NO}
+                      onValueChange={(a_charge) => {
+                        if (a_charge) updateChild(index, { a_charge })
+                      }}
+                    />
                   </TableCell>
-                  <TableCell />
+                  <TableCell>
+                    <CodeSelect
+                      label="Mode de résidence"
+                      value={child.mode_residence}
+                      options={RESIDENCE_MODES}
+                      onValueChange={(mode_residence) => updateChild(index, { mode_residence })}
+                    />
+                  </TableCell>
                   <TableCell className="text-center">
                     <RemoveButton
                       label={`Retirer ${child.prenom ?? ''} ${child.nom ?? ''}`.trim()}
                       onClick={() =>
-                        onChange({
-                          ...value,
-                          enfants: value.enfants.filter((_, itemIndex) => itemIndex !== index)
+                        set({
+                          ...foyer,
+                          enfants: foyer.enfants.filter(
+                            (item) => item.id_personne !== child.id_personne
+                          )
                         })
                       }
                     />
@@ -254,12 +274,125 @@ export function Household({
         </Table>
         <AddButton
           className="ms-2"
-          onClick={() => onChange({ ...value, enfants: [...value.enfants, { ...EMPTY_CHILD }] })}
+          onClick={() =>
+            set({ ...foyer, enfants: [...foyer.enfants, blankChild(nextPersonId(foyer))] })
+          }
         >
           Ajouter un enfant
         </AddButton>
       </FieldSet>
     </Section>
+  )
+}
+
+function Solidarity({
+  index,
+  adult,
+  onChange
+}: {
+  index: number
+  adult: Adult
+  onChange: (patch: Partial<Adult>) => void
+}) {
+  const name = [adult.prenom, adult.nom].filter(Boolean).join(' ') || `Adulte ${index + 1}`
+  const mail = adult.adresse_correspondance
+  return (
+    <FieldSet>
+      <FieldLegend variant="legend">Solidarité — {name}</FieldLegend>
+      <FieldDescription>
+        La date de fin de solidarité est proposée à partir du congé. Vous pouvez la modifier.
+      </FieldDescription>
+      <Rows>
+        <Row
+          title="Adresse de correspondance"
+          description="À renseigner si la personne n’habite plus le logement."
+        >
+          <CodeSelect
+            label="Adresse de correspondance"
+            value={mail ? 'oui' : 'non'}
+            options={[
+              ['oui', 'Oui'],
+              ['non', 'Non']
+            ]}
+            onValueChange={(next) =>
+              onChange({ adresse_correspondance: next === 'oui' ? (mail ?? blankAddress()) : null })
+            }
+          />
+        </Row>
+        {mail ? (
+          <>
+            <Row title="Adresse" htmlFor={`correspondance_${index}_adresse`}>
+              <Input
+                id={`correspondance_${index}_adresse`}
+                {...textField(mail.adresse, (adresse) =>
+                  onChange({ adresse_correspondance: { ...mail, adresse } })
+                )}
+              />
+            </Row>
+            <Row title="Code postal" htmlFor={`correspondance_${index}_code_postal`}>
+              <Input
+                id={`correspondance_${index}_code_postal`}
+                {...textField(mail.code_postal, (code_postal) =>
+                  onChange({ adresse_correspondance: { ...mail, code_postal } })
+                )}
+              />
+            </Row>
+            <Row title="Commune" htmlFor={`correspondance_${index}_commune`}>
+              <Input
+                id={`correspondance_${index}_commune`}
+                {...textField(mail.commune, (commune) =>
+                  onChange({ adresse_correspondance: { ...mail, commune } })
+                )}
+              />
+            </Row>
+          </>
+        ) : null}
+        <Row title="Effet du congé" htmlFor={`conge_${index}`}>
+          <DateField
+            id={`conge_${index}`}
+            value={adult.date_effet_conge}
+            onChange={(date_effet_conge) => onChange({ date_effet_conge })}
+          />
+        </Row>
+        <Row
+          title="Remplacement par un cotitulaire"
+          description="Oui si un nouveau cotitulaire entre au bail à la place de cette personne."
+          htmlFor={`remplacement_${index}`}
+        >
+          <CodeSelect
+            id={`remplacement_${index}`}
+            label="Remplacement"
+            value={adult.remplacement_cotitulaire}
+            options={YES_NO}
+            onValueChange={(remplacement_cotitulaire) => {
+              if (remplacement_cotitulaire) onChange({ remplacement_cotitulaire })
+            }}
+          />
+        </Row>
+        {adult.remplacement_cotitulaire === 'oui' ? (
+          <Row title="Entrée du nouveau cotitulaire" htmlFor={`entree_${index}`}>
+            <DateField
+              id={`entree_${index}`}
+              value={adult.date_entree_nouveau_cotitulaire}
+              onChange={(date_entree_nouveau_cotitulaire) =>
+                onChange({ date_entree_nouveau_cotitulaire })
+              }
+            />
+          </Row>
+        ) : null}
+        <Row
+          title="Fin de solidarité"
+          description="Date proposée, modifiable."
+          htmlFor={`solidarite_${index}`}
+        >
+          <DateField
+            id={`solidarite_${index}`}
+            value={adult.date_fin_solidarite}
+            onChange={(date_fin_solidarite) => onChange({ date_fin_solidarite })}
+          />
+        </Row>
+      </Rows>
+    </FieldSet>
   )
 }
 

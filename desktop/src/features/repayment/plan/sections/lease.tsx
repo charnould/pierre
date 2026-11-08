@@ -1,6 +1,6 @@
 import { Input } from '@/shared/components/ui/input'
 
-import type { CaseFile, Guarantor } from '../document'
+import type { CommonData, Guarantor } from '../../../../../../shared/repayment-plan'
 import { DateField, Detail, Row, Rows, Section, textField, YesNo } from '../form'
 
 const EMPTY: Guarantor = { prenom: null, nom: null }
@@ -9,44 +9,27 @@ export function Lease({
   value,
   onChange
 }: {
-  value: CaseFile['bail']
-  onChange: (value: CaseFile['bail']) => void
+  value: CommonData
+  onChange: (value: CommonData) => void
 }) {
-  const guarantor = value.garant
+  const bail = value.bail
+  const guarantor = bail.garant
 
   return (
     <Section id="bail" title="Bail">
       <Rows>
-        <YesNo
-          id="avenant_signe"
-          title="Avenant au bail"
-          description="Indiquez si un avenant au bail initial a été signé."
-          checked={value.avenant_signe}
-          onCheckedChange={(avenant_signe) => onChange({ ...value, avenant_signe })}
-        />
         <Row
-          title="Préavis de congé"
-          description="Indiquez la date de dépôt du préavis de congé. Laissez vide s’il n’a pas été déposé."
-          htmlFor="date_depot_preavis_conge"
+          title="Début du bail"
+          description="Date de prise d’effet du bail."
+          htmlFor="debut_bail"
         >
           <DateField
-            id="date_depot_preavis_conge"
-            value={value.date_depot_preavis_conge}
-            onChange={(date_depot_preavis_conge) =>
-              onChange({ ...value, date_depot_preavis_conge })
-            }
-            empty="Non déposé"
+            id="debut_bail"
+            value={bail.debut_bail}
+            onChange={(debut_bail) => onChange({ ...value, bail: { ...bail, debut_bail } })}
+            captionLayout="dropdown"
           />
         </Row>
-        <YesNo
-          id="contentieux_anterieur_sur_ce_contrat"
-          title="Déjà passé en contentieux sur le contrat présent"
-          description="Indiquez si une procédure contentieuse a déjà concerné ce contrat."
-          checked={value.contentieux_anterieur_sur_ce_contrat}
-          onCheckedChange={(contentieux_anterieur_sur_ce_contrat) =>
-            onChange({ ...value, contentieux_anterieur_sur_ce_contrat })
-          }
-        />
         <YesNo
           id="garant"
           title="Garant"
@@ -54,7 +37,7 @@ export function Lease({
           checked={guarantor != null}
           controls="garant_details"
           onCheckedChange={(enabled) =>
-            onChange({ ...value, garant: enabled ? { ...EMPTY } : null })
+            onChange({ ...value, bail: { ...bail, garant: enabled ? { ...EMPTY } : null } })
           }
         />
         {guarantor ? (
@@ -63,8 +46,8 @@ export function Lease({
               <Input
                 id="garant_prenom"
                 placeholder="Prénom"
-                {...textField(guarantor.prenom, (firstName) =>
-                  onChange({ ...value, garant: { ...guarantor, prenom: firstName } })
+                {...textField(guarantor.prenom, (prenom) =>
+                  onChange({ ...value, bail: { ...bail, garant: { ...guarantor, prenom } } })
                 )}
               />
             </Row>
@@ -72,8 +55,8 @@ export function Lease({
               <Input
                 id="garant_nom"
                 placeholder="Nom"
-                {...textField(guarantor.nom, (lastName) =>
-                  onChange({ ...value, garant: { ...guarantor, nom: lastName } })
+                {...textField(guarantor.nom, (nom) =>
+                  onChange({ ...value, bail: { ...bail, garant: { ...guarantor, nom } } })
                 )}
               />
             </Row>

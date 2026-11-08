@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, test } from 'bun:test'
 import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 import type { Activity } from '@/shared/types/activites'
 
-import { emptyCase } from '../plan/document'
+import { blankAdult, blankChild, emptyRepaymentForms } from '../../../../../shared/repayment-plan'
 import {
   formatRepaymentActivityBody,
   formatRepaymentStatusChangeText,
@@ -168,25 +168,26 @@ describe('repayment plan payload', () => {
   })
 
   test('lit le dossier enregistré', () => {
-    const dossier = emptyCase()
-    dossier.identification.identifiant_locataire = 'LOC-1'
-    dossier.identification.identifiant_client = 'CLI-1'
-    dossier.dette.montant_restant_du_euros = 1_200
-    dossier.foyer.adultes.push({ ...dossier.foyer.adultes[0]! })
-    dossier.foyer.enfants.push({
+    const forms = emptyRepaymentForms()
+    forms.donnees_communes.identification.id_locataire = 'LOC-1'
+    forms.donnees_communes.identification.id_client = 'CLI-1'
+    forms.donnees_communes.compte_locataire.solde_compte_en_euros = 1_200
+    forms.donnees_communes.foyer.adultes.push(blankAdult('personne_2'))
+    forms.donnees_communes.foyer.enfants.push({
+      ...blankChild('personne_3'),
       prenom: 'Lina',
-      nom: 'Martin',
-      date_naissance: null,
-      a_charge: true
+      nom: 'Martin'
     })
     const row = activity({
       type: 'repayment_plan.created',
-      contenu: JSON.stringify(dossier)
+      contenu: JSON.stringify(forms)
     })
 
-    expect(parseRepaymentPlanForm(row)?.foyer.adultes).toHaveLength(2)
-    expect(parseRepaymentPlanForm(row)?.foyer.enfants).toHaveLength(2)
-    expect(parseRepaymentPlanForm(row)?.dette.montant_restant_du_euros).toBe(1_200)
+    expect(parseRepaymentPlanForm(row)?.donnees_communes.foyer.adultes).toHaveLength(2)
+    expect(parseRepaymentPlanForm(row)?.donnees_communes.foyer.enfants).toHaveLength(1)
+    expect(
+      parseRepaymentPlanForm(row)?.donnees_communes.compte_locataire.solde_compte_en_euros
+    ).toBe(1_200)
     expect(parseRepaymentPlanProposal(row)).toEqual({ titre: 'Plan d’apurement' })
     expect(latestEditableRepaymentPlan([activity({}), row])?.id).toBe(row.id)
     expect(latestActiveRepaymentPlan([activity({}), row])).toEqual({ row })

@@ -55,7 +55,7 @@ const frenchDate = new Intl.DateTimeFormat('fr-FR', {
 export function textField(value: string | null, onChange: (value: string | null) => void) {
   return {
     value: value ?? '',
-    onChange: (event: ChangeEvent<HTMLInputElement>) => {
+    onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       onChange(event.target.value === '' ? null : event.target.value)
     }
   }
@@ -78,10 +78,10 @@ function useNumberDraft(
   }
 }
 
-function parseEuros(text: string): number | null {
+function parseEuros(text: string, signed = false): number | null {
   const cleaned = text.replace(/\s/g, '').replace(',', '.')
-  if (cleaned === '' || cleaned === '.') return null
-  if (!/^\d+\.?\d*$/.test(cleaned)) return null
+  if (cleaned === '' || cleaned === '.' || cleaned === '-' || cleaned === '-.') return null
+  if (!(signed ? /^-?\d+\.?\d*$/ : /^\d+\.?\d*$/).test(cleaned)) return null
   const amount = Number(cleaned)
   return Number.isFinite(amount) ? amount : null
 }
@@ -203,14 +203,21 @@ export function Euros({
   id,
   label,
   value,
+  signed = false,
   onChange
 }: {
   id?: string
   label?: string
   value: number | null
+  signed?: boolean
   onChange: (value: number | null) => void
 }) {
-  const draft = useNumberDraft(value, onChange, parseEuros, (amount) => euros.format(amount))
+  const draft = useNumberDraft(
+    value,
+    onChange,
+    (text) => parseEuros(text, signed),
+    (amount) => euros.format(amount)
+  )
   return (
     <InputGroup>
       <InputGroupInput
@@ -265,6 +272,41 @@ export function PairSelect({
           {labels.map((item) => (
             <SelectItem key={item} value={item}>
               {item}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  )
+}
+
+export function CodeSelect<T extends string>({
+  id,
+  label,
+  value,
+  onValueChange,
+  options
+}: {
+  id?: string
+  label: string
+  value: T | null
+  onValueChange: (value: T | null) => void
+  options: readonly (readonly [T, string] | readonly [T, string, string])[]
+}) {
+  return (
+    <Select
+      value={value}
+      onValueChange={(next) => onValueChange(typeof next === 'string' ? (next as T) : null)}
+      items={Object.fromEntries(options.map(([code, text]) => [code, text]))}
+    >
+      <SelectTrigger id={id} aria-label={label} className="w-full">
+        <SelectValue placeholder={label} />
+      </SelectTrigger>
+      <SelectContent alignItemWithTrigger={false} className="w-max">
+        <SelectGroup>
+          {options.map(([code, text, detail]) => (
+            <SelectItem key={code} value={code} description={detail}>
+              {text}
             </SelectItem>
           ))}
         </SelectGroup>
@@ -421,6 +463,54 @@ export function Chips({
         </ComboboxList>
       </ComboboxContent>
     </Combobox>
+  )
+}
+
+export function CreatableChips({
+  labelledBy,
+  ariaLabel,
+  placeholder,
+  empty,
+  suggestions,
+  value,
+  onValueChange
+}: {
+  labelledBy?: string
+  ariaLabel?: string
+  placeholder: string
+  empty: string
+  suggestions: readonly string[]
+  value: readonly string[]
+  onValueChange: (value: string[]) => void
+}) {
+  const [catalog, setCatalog] = useState<string[]>([...suggestions])
+  const [query, setQuery] = useState('')
+  const typed = query.trim()
+  const known = catalog.some((item) => item.toLocaleLowerCase() === typed.toLocaleLowerCase())
+  const items = typed && !known ? [...catalog, typed] : catalog
+
+  return (
+    <Chips
+      labelledBy={labelledBy}
+      ariaLabel={ariaLabel}
+      placeholder={placeholder}
+      empty={empty}
+      items={items}
+      value={value}
+      query={query}
+      onQueryChange={setQuery}
+      itemLabel={(item) => (catalog.includes(item) ? item : `Ajouter « ${item} »`)}
+      onValueChange={(next) => {
+        setCatalog((current) => {
+          const extra = next.filter(
+            (item) =>
+              !current.some((known) => known.toLocaleLowerCase() === item.toLocaleLowerCase())
+          )
+          return extra.length ? [...current, ...extra] : current
+        })
+        onValueChange(next)
+      }}
+    />
   )
 }
 

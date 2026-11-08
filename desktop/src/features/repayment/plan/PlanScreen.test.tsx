@@ -18,6 +18,15 @@ describe('PlanScreen', () => {
         onClose={() => {}}
       />
     )
+    expect(html.indexOf('Identification')).toBeLessThan(html.indexOf('Bail'))
+    expect(html.indexOf('Membres du foyer')).toBeLessThan(html.indexOf('Compte locataire'))
+    expect(html.indexOf('Budget du foyer')).toBeLessThan(html.indexOf('Accompagnement'))
+    expect(html.indexOf('Diagnostic social et financier')).toBeLessThan(
+      html.indexOf('Plan d’apurement')
+    )
+    expect(html.indexOf('Plan d’apurement')).toBeLessThan(html.lastIndexOf('Échéancier'))
+    expect(html).not.toContain('Reprendre la proposition du diagnostic')
+    expect(html).not.toContain('Reprendre le plan d’apurement')
     expect(html).toContain('Ajouter un adulte')
     expect(html).toContain('Ajouter un enfant')
     expect(html).toContain('Enregistrer')

@@ -7,7 +7,7 @@ import {
   parseRepaymentPlanContent
 } from '@/shared/types/activites'
 
-import type { CaseFile } from '../plan/document'
+import type { RepaymentForms } from '../../../../../shared/repayment-plan'
 import type { RepaymentBucketId } from './repayment-bucket'
 import {
   getRepaymentBucketMeta,
@@ -195,10 +195,10 @@ export function latestActiveRepaymentPlan(rows: Activity[]): ActiveRepaymentPlan
 }
 
 /** Dossier restored from the activity, or null when the row does not carry one. */
-export function parseRepaymentPlanForm(row: Activity): CaseFile | null {
+export function parseRepaymentPlanForm(row: Activity): RepaymentForms | null {
   if (!row.type.startsWith('repayment_plan.')) return null
   const content = parseRepaymentPlanContent(row.type, row.contenu)
-  return content ? (content as unknown as CaseFile) : null
+  return content
 }
 
 export function parseRepaymentPlanProposal(row: Activity): RepaymentPlanProposalDisplay | null {

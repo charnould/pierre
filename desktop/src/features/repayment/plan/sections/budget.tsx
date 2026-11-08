@@ -1,7 +1,6 @@
 import { Children, type ReactNode } from 'react'
 
 import { FieldDescription, FieldLegend, FieldSet } from '@/shared/components/ui/field'
-import { Input } from '@/shared/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -22,124 +21,74 @@ import {
 } from '@/shared/components/ui/table'
 
 import {
-  type CaseFile,
-  householdPeople,
+  blankMonthlyLine,
+  blankOneOffLine,
+  type CommonData,
   MONTHLY_EXPENSES,
   MONTHLY_INCOME,
-  type MonthlyExpense,
-  type MonthlyIncome,
+  type MonthlyLine,
   ONE_OFF_EXPENSES,
   ONE_OFF_INCOME,
-  type OneOffExpense,
-  type OneOffIncome,
+  type OneOffLine,
+  PROOF_LEVELS
+} from '../../../../../../shared/repayment-plan'
+import {
+  householdPeople,
   personChoices,
-  UNASSIGNED_PERSON
+  selectedPerson,
+  storedPerson,
+  withProof
 } from '../document'
-import { AddRow, DateField, Euros, RemoveButton, Section, SimpleSelect } from '../form'
-
-const EMPTY_MONTHLY_INCOME: MonthlyIncome = {
-  type: null,
-  personne: UNASSIGNED_PERSON,
-  montant_euros: null
-}
-
-const EMPTY_ONE_OFF_INCOME: OneOffIncome = {
-  type: null,
-  personne: UNASSIGNED_PERSON,
-  date_imputation: null,
-  montant_euros: null
-}
-
-const EMPTY_MONTHLY_EXPENSE: MonthlyExpense = {
-  type: null,
-  personne: UNASSIGNED_PERSON,
-  date_fin: null,
-  montant_euros: null
-}
-
-const EMPTY_ONE_OFF_EXPENSE: OneOffExpense = {
-  type: null,
-  personne: UNASSIGNED_PERSON,
-  date_imputation: null,
-  montant_euros: null
-}
+import { AddRow, CodeSelect, DateField, Euros, RemoveButton, Section } from '../form'
 
 function updateAt<T>(items: readonly T[], index: number, patch: Partial<T>): T[] {
   return items.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item))
 }
 
 export function Budget({
-  foyer,
   value,
   onChange
 }: {
-  foyer: CaseFile['foyer']
-  value: CaseFile['budget']
-  onChange: (value: CaseFile['budget']) => void
+  value: CommonData
+  onChange: (value: CommonData) => void
 }) {
-  const people = householdPeople(foyer)
-  const updateMonthly = (index: number, patch: Partial<MonthlyIncome>) =>
-    onChange({
-      ...value,
-      ressources_mensuelles: updateAt(value.ressources_mensuelles, index, patch)
-    })
-  const updateOneOff = (index: number, patch: Partial<OneOffIncome>) =>
-    onChange({
-      ...value,
-      ressources_ponctuelles: updateAt(value.ressources_ponctuelles, index, patch)
-    })
-  const updateExpense = (index: number, patch: Partial<MonthlyExpense>) =>
-    onChange({ ...value, charges_mensuelles: updateAt(value.charges_mensuelles, index, patch) })
-  const updateOneOffExpense = (index: number, patch: Partial<OneOffExpense>) =>
-    onChange({
-      ...value,
-      charges_ponctuelles: updateAt(value.charges_ponctuelles, index, patch)
-    })
+  const budget = value.budget
+  const people = householdPeople(value.foyer)
+  const set = (patch: Partial<CommonData['budget']>) =>
+    onChange({ ...value, budget: { ...budget, ...patch } })
 
   return (
     <Section id="budget" title="Budget du foyer">
       <FieldSet>
         <FieldLegend variant="legend">Ressources</FieldLegend>
         <FieldDescription>
-          Ensemble des sommes perçues par les membres du foyer, de façon régulière ou
-          exceptionnelle.
+          Sommes perçues par le foyer, régulièrement ou une seule fois. Laissez les dates vides si
+          la ligne s’applique tout le temps.
         </FieldDescription>
         <AddRow
           title="Mensuelles"
           description="Revenus perçus chaque mois."
           onAdd={() =>
-            onChange({
-              ...value,
-              ressources_mensuelles: [...value.ressources_mensuelles, { ...EMPTY_MONTHLY_INCOME }]
-            })
+            set({ ressources_mensuelles: [...budget.ressources_mensuelles, blankMonthlyLine()] })
           }
         >
-          <BudgetTable
-            caption="Ressources mensuelles"
-            heads={
-              <>
-                <TableHead>Type</TableHead>
-                <TableHead>Personne</TableHead>
-                <TableHead>
-                  <span className="sr-only">Date</span>
-                </TableHead>
-                <TableHead>Montant</TableHead>
-                <TableHead className="text-center">
-                  <span className="sr-only">Retirer</span>
-                </TableHead>
-              </>
-            }
-          >
-            {value.ressources_mensuelles.map((monthly, index) => (
+          <BudgetTable caption="Ressources mensuelles">
+            {budget.ressources_mensuelles.map((monthly, index) => (
               <TableRow key={`monthly-income-${index}`}>
                 <TableCell>
                   <Select
                     value={monthly.type}
                     onValueChange={(type) =>
-                      updateMonthly(index, { type: typeof type === 'string' ? type : null })
+                      set({
+                        ressources_mensuelles: updateAt(budget.ressources_mensuelles, index, {
+                          type: typeof type === 'string' ? type : null
+                        })
+                      })
                     }
                     items={Object.fromEntries(
-                      MONTHLY_INCOME.flatMap(([, rows]) => rows.map(([item]) => [item, item]))
+                      MONTHLY_INCOME.flatMap(([, rows]) =>
+                        rows.map(([code, label]) => [code, label])
+                      )
                     )}
                   >
                     <SelectTrigger aria-label="Type de ressource" className="w-full">
@@ -149,9 +98,9 @@ export function Budget({
                       {MONTHLY_INCOME.map(([group, rows]) => (
                         <SelectGroup key={group}>
                           <SelectLabel>{group}</SelectLabel>
-                          {rows.map(([item, detail]) => (
-                            <SelectItem key={item} value={item} description={detail}>
-                              {item}
+                          {rows.map(([code, label, detail]) => (
+                            <SelectItem key={code} value={code} description={detail}>
+                              {label}
                             </SelectItem>
                           ))}
                         </SelectGroup>
@@ -160,31 +109,60 @@ export function Budget({
                   </Select>
                 </TableCell>
                 <TableCell>
-                  <SimpleSelect
-                    label="Personne"
-                    value={monthly.personne}
-                    onValueChange={(personne) => {
-                      if (personne) updateMonthly(index, { personne })
-                    }}
-                    options={personChoices(people, monthly.personne)}
+                  <Person
+                    people={people}
+                    value={monthly.id_personne}
+                    onValueChange={(id_personne) =>
+                      set({
+                        ressources_mensuelles: updateAt(budget.ressources_mensuelles, index, {
+                          id_personne
+                        })
+                      })
+                    }
                   />
                 </TableCell>
-                <TableCell />
+                <TableCell>
+                  <Period
+                    line={monthly}
+                    onChange={(patch) =>
+                      set({
+                        ressources_mensuelles: updateAt(budget.ressources_mensuelles, index, patch)
+                      })
+                    }
+                  />
+                </TableCell>
                 <TableCell>
                   <Euros
-                    id={`ressource_mensuelle_${index}_montant_euros`}
+                    id={`ressource_mensuelle_${index}_montant`}
                     label="Montant de la ressource"
-                    value={monthly.montant_euros}
-                    onChange={(montant_euros) => updateMonthly(index, { montant_euros })}
+                    value={monthly.montant_en_euros}
+                    onChange={(montant_en_euros) =>
+                      set({
+                        ressources_mensuelles: updateAt(budget.ressources_mensuelles, index, {
+                          montant_en_euros
+                        })
+                      })
+                    }
+                  />
+                </TableCell>
+                <TableCell>
+                  <Proof
+                    line={monthly}
+                    onChange={(next) =>
+                      set({
+                        ressources_mensuelles: budget.ressources_mensuelles.map(
+                          (item, itemIndex) => (itemIndex === index ? next : item)
+                        )
+                      })
+                    }
                   />
                 </TableCell>
                 <TableCell className="text-center">
                   <RemoveButton
                     label="Retirer la ressource"
                     onClick={() =>
-                      onChange({
-                        ...value,
-                        ressources_mensuelles: value.ressources_mensuelles.filter(
+                      set({
+                        ressources_mensuelles: budget.ressources_mensuelles.filter(
                           (_, itemIndex) => itemIndex !== index
                         )
                       })
@@ -195,73 +173,87 @@ export function Budget({
             ))}
           </BudgetTable>
         </AddRow>
-
         <AddRow
           title="Ponctuelles"
-          description="Revenus et sommes perçus une seule fois."
+          description="Revenus perçus une seule fois, imputés à un mois."
           onAdd={() =>
-            onChange({
-              ...value,
-              ressources_ponctuelles: [...value.ressources_ponctuelles, { ...EMPTY_ONE_OFF_INCOME }]
-            })
+            set({ ressources_ponctuelles: [...budget.ressources_ponctuelles, blankOneOffLine()] })
           }
         >
-          <BudgetTable
-            caption="Ressources ponctuelles"
-            heads={
-              <>
-                <TableHead>Type</TableHead>
-                <TableHead>Personne</TableHead>
-                <TableHead>Mois d'imputation</TableHead>
-                <TableHead>Montant</TableHead>
-                <TableHead className="text-center">
-                  <span className="sr-only">Retirer</span>
-                </TableHead>
-              </>
-            }
-          >
-            {value.ressources_ponctuelles.map((oneOff, index) => (
+          <BudgetTable caption="Ressources ponctuelles">
+            {budget.ressources_ponctuelles.map((oneOff, index) => (
               <TableRow key={`one-off-income-${index}`}>
                 <TableCell>
-                  <SimpleSelect
+                  <CodeSelect
                     label="Type de ressource ponctuelle"
                     value={oneOff.type}
-                    onValueChange={(type) => updateOneOff(index, { type })}
                     options={ONE_OFF_INCOME}
+                    onValueChange={(type) =>
+                      set({
+                        ressources_ponctuelles: updateAt(budget.ressources_ponctuelles, index, {
+                          type
+                        })
+                      })
+                    }
                   />
                 </TableCell>
                 <TableCell>
-                  <SimpleSelect
-                    label="Personne"
-                    value={oneOff.personne}
-                    onValueChange={(personne) => {
-                      if (personne) updateOneOff(index, { personne })
-                    }}
-                    options={personChoices(people, oneOff.personne)}
+                  <Person
+                    people={people}
+                    value={oneOff.id_personne}
+                    onValueChange={(id_personne) =>
+                      set({
+                        ressources_ponctuelles: updateAt(budget.ressources_ponctuelles, index, {
+                          id_personne
+                        })
+                      })
+                    }
                   />
                 </TableCell>
                 <TableCell>
-                  <DateField
-                    value={oneOff.date_imputation}
-                    onChange={(date_imputation) => updateOneOff(index, { date_imputation })}
-                    label="Mois"
+                  <Month
+                    value={oneOff.mois_imputation}
+                    onChange={(mois_imputation) =>
+                      set({
+                        ressources_ponctuelles: updateAt(budget.ressources_ponctuelles, index, {
+                          mois_imputation
+                        })
+                      })
+                    }
                   />
                 </TableCell>
                 <TableCell>
                   <Euros
-                    id={`ressource_ponctuelle_${index}_montant_euros`}
+                    id={`ressource_ponctuelle_${index}_montant`}
                     label="Montant ponctuel"
-                    value={oneOff.montant_euros}
-                    onChange={(montant_euros) => updateOneOff(index, { montant_euros })}
+                    value={oneOff.montant_en_euros}
+                    onChange={(montant_en_euros) =>
+                      set({
+                        ressources_ponctuelles: updateAt(budget.ressources_ponctuelles, index, {
+                          montant_en_euros
+                        })
+                      })
+                    }
+                  />
+                </TableCell>
+                <TableCell>
+                  <Proof
+                    line={oneOff}
+                    onChange={(next) =>
+                      set({
+                        ressources_ponctuelles: budget.ressources_ponctuelles.map(
+                          (item, itemIndex) => (itemIndex === index ? next : item)
+                        )
+                      })
+                    }
                   />
                 </TableCell>
                 <TableCell className="text-center">
                   <RemoveButton
                     label="Retirer la ressource ponctuelle"
                     onClick={() =>
-                      onChange({
-                        ...value,
-                        ressources_ponctuelles: value.ressources_ponctuelles.filter(
+                      set({
+                        ressources_ponctuelles: budget.ressources_ponctuelles.filter(
                           (_, itemIndex) => itemIndex !== index
                         )
                       })
@@ -277,98 +269,84 @@ export function Budget({
       <FieldSet>
         <FieldLegend variant="legend">Charges</FieldLegend>
         <FieldDescription>
-          Ensemble des sommes dues par les membres du foyer, de façon régulière ou exceptionnelle.
+          Le coût net du logement est une charge : loyer et charges, déduction faite des aides au
+          logement.
         </FieldDescription>
         <AddRow
           title="Mensuelles"
           description="Dépenses dues chaque mois."
           onAdd={() =>
-            onChange({
-              ...value,
-              charges_mensuelles: [...value.charges_mensuelles, { ...EMPTY_MONTHLY_EXPENSE }]
-            })
+            set({ charges_mensuelles: [...budget.charges_mensuelles, blankMonthlyLine()] })
           }
         >
-          <BudgetTable
-            caption="Charges mensuelles"
-            heads={
-              <>
-                <TableHead>Type</TableHead>
-                <TableHead>Personne</TableHead>
-                <TableHead>Fin du crédit</TableHead>
-                <TableHead>Montant</TableHead>
-                <TableHead className="text-center">
-                  <span className="sr-only">Retirer</span>
-                </TableHead>
-              </>
-            }
-          >
-            <TableRow>
-              <TableCell>
-                <Input
-                  readOnly
-                  value="Loyer + Charges - Aides au logement"
-                  aria-label="Type de charge récurrente"
-                />
-              </TableCell>
-              <TableCell />
-              <TableCell>
-                <span className="text-muted-foreground">—</span>
-              </TableCell>
-              <TableCell>
-                <Euros
-                  id="loyer_charges_moins_aides_au_logement_euros"
-                  label="Montant du loyer"
-                  value={value.loyer_charges_moins_aides_au_logement_euros}
-                  onChange={(loyer_charges_moins_aides_au_logement_euros) =>
-                    onChange({ ...value, loyer_charges_moins_aides_au_logement_euros })
-                  }
-                />
-              </TableCell>
-              <TableCell />
-            </TableRow>
-            {value.charges_mensuelles.map((charge, index) => (
+          <BudgetTable caption="Charges mensuelles">
+            {budget.charges_mensuelles.map((charge, index) => (
               <TableRow key={`monthly-expense-${index}`}>
                 <TableCell>
-                  <SimpleSelect
+                  <CodeSelect
                     label="Type de charge récurrente"
                     value={charge.type}
-                    onValueChange={(type) => updateExpense(index, { type })}
                     options={MONTHLY_EXPENSES}
+                    onValueChange={(type) =>
+                      set({
+                        charges_mensuelles: updateAt(budget.charges_mensuelles, index, { type })
+                      })
+                    }
                   />
                 </TableCell>
                 <TableCell>
-                  <SimpleSelect
-                    label="Personne"
-                    value={charge.personne || UNASSIGNED_PERSON}
-                    onValueChange={(personne) => {
-                      if (personne) updateExpense(index, { personne })
-                    }}
-                    options={personChoices(people, charge.personne || UNASSIGNED_PERSON)}
+                  <Person
+                    people={people}
+                    value={charge.id_personne}
+                    onValueChange={(id_personne) =>
+                      set({
+                        charges_mensuelles: updateAt(budget.charges_mensuelles, index, {
+                          id_personne
+                        })
+                      })
+                    }
                   />
                 </TableCell>
                 <TableCell>
-                  <DateField
-                    value={charge.date_fin}
-                    onChange={(date_fin) => updateExpense(index, { date_fin })}
-                    label="Fin du crédit"
+                  <Period
+                    line={charge}
+                    onChange={(patch) =>
+                      set({ charges_mensuelles: updateAt(budget.charges_mensuelles, index, patch) })
+                    }
                   />
                 </TableCell>
                 <TableCell>
                   <Euros
-                    id={`charge_mensuelle_${index}_montant_euros`}
+                    id={`charge_mensuelle_${index}_montant`}
                     label="Montant de la charge"
-                    value={charge.montant_euros}
-                    onChange={(montant_euros) => updateExpense(index, { montant_euros })}
+                    value={charge.montant_en_euros}
+                    onChange={(montant_en_euros) =>
+                      set({
+                        charges_mensuelles: updateAt(budget.charges_mensuelles, index, {
+                          montant_en_euros
+                        })
+                      })
+                    }
+                  />
+                </TableCell>
+                <TableCell>
+                  <Proof
+                    line={charge}
+                    onChange={(next) =>
+                      set({
+                        charges_mensuelles: budget.charges_mensuelles.map((item, itemIndex) =>
+                          itemIndex === index ? next : item
+                        )
+                      })
+                    }
                   />
                 </TableCell>
                 <TableCell className="text-center">
                   <RemoveButton
                     label="Retirer la charge"
                     onClick={() =>
-                      onChange({
-                        ...value,
-                        charges_mensuelles: value.charges_mensuelles.filter(
+                      set({
+                        charges_mensuelles: budget.charges_mensuelles.filter(
                           (_, itemIndex) => itemIndex !== index
                         )
                       })
@@ -379,73 +357,85 @@ export function Budget({
             ))}
           </BudgetTable>
         </AddRow>
-
         <AddRow
           title="Ponctuelles"
           description="Dépenses limitées à un mois donné."
           onAdd={() =>
-            onChange({
-              ...value,
-              charges_ponctuelles: [...value.charges_ponctuelles, { ...EMPTY_ONE_OFF_EXPENSE }]
-            })
+            set({ charges_ponctuelles: [...budget.charges_ponctuelles, blankOneOffLine()] })
           }
         >
-          <BudgetTable
-            caption="Charges ponctuelles"
-            heads={
-              <>
-                <TableHead>Type</TableHead>
-                <TableHead>Personne</TableHead>
-                <TableHead>Mois d'imputation</TableHead>
-                <TableHead>Montant</TableHead>
-                <TableHead className="text-center">
-                  <span className="sr-only">Retirer</span>
-                </TableHead>
-              </>
-            }
-          >
-            {value.charges_ponctuelles.map((oneOffExpense, index) => (
+          <BudgetTable caption="Charges ponctuelles">
+            {budget.charges_ponctuelles.map((oneOff, index) => (
               <TableRow key={`one-off-expense-${index}`}>
                 <TableCell>
-                  <SimpleSelect
+                  <CodeSelect
                     label="Type de charge ponctuelle"
-                    value={oneOffExpense.type}
-                    onValueChange={(type) => updateOneOffExpense(index, { type })}
+                    value={oneOff.type}
                     options={ONE_OFF_EXPENSES}
+                    onValueChange={(type) =>
+                      set({
+                        charges_ponctuelles: updateAt(budget.charges_ponctuelles, index, { type })
+                      })
+                    }
                   />
                 </TableCell>
                 <TableCell>
-                  <SimpleSelect
-                    label="Personne"
-                    value={oneOffExpense.personne || UNASSIGNED_PERSON}
-                    onValueChange={(personne) => {
-                      if (personne) updateOneOffExpense(index, { personne })
-                    }}
-                    options={personChoices(people, oneOffExpense.personne || UNASSIGNED_PERSON)}
+                  <Person
+                    people={people}
+                    value={oneOff.id_personne}
+                    onValueChange={(id_personne) =>
+                      set({
+                        charges_ponctuelles: updateAt(budget.charges_ponctuelles, index, {
+                          id_personne
+                        })
+                      })
+                    }
                   />
                 </TableCell>
                 <TableCell>
-                  <DateField
-                    value={oneOffExpense.date_imputation}
-                    onChange={(date_imputation) => updateOneOffExpense(index, { date_imputation })}
-                    label="Mois"
+                  <Month
+                    value={oneOff.mois_imputation}
+                    onChange={(mois_imputation) =>
+                      set({
+                        charges_ponctuelles: updateAt(budget.charges_ponctuelles, index, {
+                          mois_imputation
+                        })
+                      })
+                    }
                   />
                 </TableCell>
                 <TableCell>
                   <Euros
-                    id={`charge_ponctuelle_${index}_montant_euros`}
+                    id={`charge_ponctuelle_${index}_montant`}
                     label="Montant de la charge ponctuelle"
-                    value={oneOffExpense.montant_euros}
-                    onChange={(montant_euros) => updateOneOffExpense(index, { montant_euros })}
+                    value={oneOff.montant_en_euros}
+                    onChange={(montant_en_euros) =>
+                      set({
+                        charges_ponctuelles: updateAt(budget.charges_ponctuelles, index, {
+                          montant_en_euros
+                        })
+                      })
+                    }
+                  />
+                </TableCell>
+                <TableCell>
+                  <Proof
+                    line={oneOff}
+                    onChange={(next) =>
+                      set({
+                        charges_ponctuelles: budget.charges_ponctuelles.map((item, itemIndex) =>
+                          itemIndex === index ? next : item
+                        )
+                      })
+                    }
                   />
                 </TableCell>
                 <TableCell className="text-center">
                   <RemoveButton
                     label="Retirer la charge ponctuelle"
                     onClick={() =>
-                      onChange({
-                        ...value,
-                        charges_ponctuelles: value.charges_ponctuelles.filter(
+                      set({
+                        charges_ponctuelles: budget.charges_ponctuelles.filter(
                           (_, itemIndex) => itemIndex !== index
                         )
                       })
@@ -461,47 +451,121 @@ export function Budget({
   )
 }
 
-function BudgetTable({
-  caption,
-  heads,
-  children
+function Person({
+  people,
+  value,
+  onValueChange
 }: {
-  caption: string
-  heads: ReactNode
-  children: ReactNode
+  people: ReturnType<typeof householdPeople>
+  value: string | null
+  onValueChange: (value: string | null) => void
 }) {
-  const rows = Children.toArray(children)
+  return (
+    <CodeSelect
+      label="Personne"
+      value={selectedPerson(value)}
+      options={personChoices(people, selectedPerson(value)).map(
+        (person) => [person.id, person.label] as const
+      )}
+      onValueChange={(next) => onValueChange(storedPerson(next))}
+    />
+  )
+}
 
+function Period({
+  line,
+  onChange
+}: {
+  line: MonthlyLine
+  onChange: (patch: Partial<MonthlyLine>) => void
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <DateField
+        value={line.date_debut}
+        onChange={(date_debut) => onChange({ date_debut })}
+        label="Début"
+        empty="Début"
+      />
+      <DateField
+        value={line.date_fin}
+        onChange={(date_fin) => onChange({ date_fin })}
+        label="Fin"
+        empty="Fin"
+      />
+    </div>
+  )
+}
+
+function Month({
+  value,
+  onChange
+}: {
+  value: string | null
+  onChange: (value: string | null) => void
+}) {
+  return (
+    <DateField
+      value={value ? `${value}-01` : null}
+      onChange={(date) => onChange(date ? date.slice(0, 7) : null)}
+      label="Mois"
+    />
+  )
+}
+
+function Proof<T extends MonthlyLine | OneOffLine>({
+  line,
+  onChange
+}: {
+  line: T
+  onChange: (line: T) => void
+}) {
+  return (
+    <CodeSelect
+      label="Niveau de preuve"
+      value={line.niveau_preuve}
+      options={PROOF_LEVELS}
+      onValueChange={(niveau_preuve) => onChange(withProof(line, niveau_preuve))}
+    />
+  )
+}
+
+function BudgetTable({ caption, children }: { caption: string; children: ReactNode }) {
+  const rows = Children.toArray(children)
   return (
     <Table className="table-fixed">
-      <BudgetColumns />
+      <colgroup>
+        <col className="w-col-22" />
+        <col className="w-col-18" />
+        <col className="w-col-20" />
+        <col className="w-col-16" />
+        <col className="w-col-16" />
+        <col className="w-col-8" />
+      </colgroup>
       <TableCaption className="sr-only">{caption}</TableCaption>
       <TableHeader>
-        <TableRow>{heads}</TableRow>
+        <TableRow>
+          <TableHead>Type</TableHead>
+          <TableHead>Personne</TableHead>
+          <TableHead>Période</TableHead>
+          <TableHead>Montant</TableHead>
+          <TableHead>Preuve</TableHead>
+          <TableHead className="text-center">
+            <span className="sr-only">Retirer</span>
+          </TableHead>
+        </TableRow>
       </TableHeader>
       <TableBody>
         {rows.length ? (
           rows
         ) : (
           <TableRow>
-            <TableCell colSpan={5}>
+            <TableCell colSpan={6}>
               <span className="text-muted-foreground">Aucune ligne renseignée.</span>
             </TableCell>
           </TableRow>
         )}
       </TableBody>
     </Table>
-  )
-}
-
-function BudgetColumns() {
-  return (
-    <colgroup>
-      <col className="w-col-34" />
-      <col className="w-col-22" />
-      <col className="w-col-20" />
-      <col className="w-col-16" />
-      <col className="w-col-8" />
-    </colgroup>
   )
 }

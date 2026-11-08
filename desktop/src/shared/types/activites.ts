@@ -27,7 +27,7 @@ export type {
 } from '../../../../shared/activities'
 
 export type { TaskContent } from '../../../../shared/activity-content'
-export type { RepaymentPlanCase } from '../../../../shared/repayment-plan'
+export type { RepaymentForms } from '../../../../shared/repayment-plan'
 
 export {
   ACTIVITY_CONTENT_VERSION,

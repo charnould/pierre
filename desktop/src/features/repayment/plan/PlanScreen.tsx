@@ -15,18 +15,28 @@ import {
 import { toast } from '@/shared/components/ui/toast'
 import { repaymentSetup } from '@/shared/lib/instance-customization'
 
+import {
+  amountToSettle,
+  blankInstallment,
+  type CommonData,
+  readRepaymentForms,
+  refreshForms,
+  type RepaymentForms,
+  type Schedule as ScheduleValue
+} from '../../../../../shared/repayment-plan'
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
 import { invalidateRepaymentTimelineCache } from '../lib/repayment-timeline-cache'
 import { caseFromTenant, planLocataireRef } from './case-from-tenant'
-import { type CaseFile, normalize } from './document'
+import { normalize } from './document'
 import { applyInstallmentEdit, installmentAmounts } from './schedule-metrics'
+import { Account } from './sections/account'
 import { Budget } from './sections/budget'
-import { Debt } from './sections/debt'
+import { Diagnosis } from './sections/diagnosis'
 import { Household } from './sections/household'
 import { Identification } from './sections/identification'
 import { Lease } from './sections/lease'
-import { Procedure } from './sections/procedure'
 import { Schedule } from './sections/schedule'
+import { Settlement } from './sections/settlement'
 import { Support } from './sections/support'
 
 import './plan.css'
@@ -46,7 +56,7 @@ export type PlanSavedPayload = {
 interface Props {
   url?: string
   tenant: TenantRepaymentRow
-  initialDossier?: CaseFile
+  initialDossier?: RepaymentForms
   existingActivityId?: number
   onClose: () => void
   onSaved?: (payload: PlanSavedPayload) => void
@@ -60,79 +70,65 @@ export function PlanScreen({
   onClose,
   onSaved
 }: Props) {
-  const [dossier, setDossier] = useState<CaseFile>(() => {
+  const [forms, setForms] = useState<RepaymentForms>(() => {
     const next = initialDossier ?? caseFromTenant(tenant)
-    if (existingActivityId || next.echeancier.echeances.length > 0) return next
+    if (existingActivityId || next.echeancier.echeances.length > 0) return refreshForms(next)
     const count = repaymentSetup().schedule.defaultInstallments
-    const blank = { date_echeance: null, mensualite_euros: null }
-    return {
+    return refreshForms({
       ...next,
       echeancier: {
         ...next.echeancier,
         echeances: applyInstallmentEdit(
-          next.dette.montant_restant_du_euros,
+          amountToSettle(next.donnees_communes, next.echeancier),
           [],
-          Array.from({ length: count }, () => ({ ...blank })),
+          Array.from({ length: count }, () => blankInstallment()),
           new Date()
         )
       }
-    }
+    })
   })
   const [saveState, setSaveState] = useState<SaveState>('pristine')
   const [saving, setSaving] = useState(false)
 
-  const update =
-    <K extends keyof CaseFile>(key: K) =>
-    (value: CaseFile[K]) => {
-      setSaveState('dirty')
-      setDossier((current) => ({ ...current, [key]: value }))
-    }
-
-  const updateDebt = (dette: CaseFile['dette']) => {
+  const change = (next: RepaymentForms) => {
     setSaveState('dirty')
-    setDossier((current) => {
-      const amounts = installmentAmounts(
-        dette.montant_restant_du_euros,
-        current.echeancier.echeances.length
-      )
-      return {
-        ...current,
-        dette,
-        echeancier: {
-          ...current.echeancier,
-          echeances: current.echeancier.echeances.map((row, index) => ({
-            ...row,
-            mensualite_euros: amounts[index] ?? null
-          }))
-        }
-      }
-    })
+    setForms(next)
   }
 
-  const updateSchedule = (echeancier: CaseFile['echeancier']) => {
+  const updateCommon = (common: CommonData) => {
     setSaveState('dirty')
-    setDossier((current) => ({
-      ...current,
-      echeancier: {
-        ...echeancier,
-        echeances: applyInstallmentEdit(
-          current.dette.montant_restant_du_euros,
-          current.echeancier.echeances,
-          echeancier.echeances,
-          new Date()
-        )
-      }
-    }))
+    setForms((current) =>
+      refreshForms({
+        ...current,
+        donnees_communes: common,
+        echeancier: amountsIfDebtChanged(current.donnees_communes, common, current.echeancier)
+      })
+    )
+  }
+
+  const updateSchedule = (next: ScheduleValue) => {
+    setSaveState('dirty')
+    setForms((current) =>
+      refreshForms({
+        ...current,
+        echeancier: scheduleChanged(current.donnees_communes, current.echeancier, next)
+      })
+    )
   }
 
   const save = async () => {
-    const saved = normalize(dossier)
+    const saved = normalize(forms)
+    const readable = readRepaymentForms(saved)
+    if (!readable.ok) {
+      toast.add({ title: readable.error, type: 'error' })
+      return
+    }
     const idLocataire = planLocataireRef(saved)
     if (!idLocataire) {
       toast.add({ title: 'Indiquez l’identifiant locataire', type: 'error' })
       return
     }
-    const contenu = JSON.stringify(saved)
+    const contenu = JSON.stringify(readable.value)
     if (!url) {
       toast.add({ title: 'Plan prêt (aperçu local)', type: 'success' })
       setSaveState('saved')
@@ -168,7 +164,7 @@ export function PlanScreen({
       }
       invalidateRepaymentTimelineCache(
         url,
-        saved.identification.identifiant_client ?? tenant.id_client,
+        saved.donnees_communes.identification.id_client ?? tenant.id_client,
         idLocataire
       )
       toast.add({ title: 'Plan enregistré', type: 'success' })
@@ -184,11 +180,17 @@ export function PlanScreen({
       toast.add({ title: 'Export impossible', type: 'error' })
       return
     }
+    const saved = normalize(forms)
+    const readable = readRepaymentForms(saved)
+    if (!readable.ok) {
+      toast.add({ title: readable.error, type: 'error' })
+      return
+    }
     const result = await window.api.exportRepaymentDocument({
       url,
       document: kind,
       format,
-      dossier: normalize(dossier)
+      dossier: readable.value
     })
     if (!result || !('bytes' in result)) {
       toast.add({
@@ -207,6 +209,8 @@ export function PlanScreen({
     URL.revokeObjectURL(link.href)
   }
 
+  const common = forms.donnees_communes
+
   return (
     <div className="bg-background flex min-h-0 min-w-0 flex-1 flex-col">
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
@@ -221,17 +225,26 @@ export function PlanScreen({
             >
               <ArrowLeft />
             </Button>
-            <Identification value={dossier.identification} onChange={update('identification')} />
-            <Debt value={dossier.dette} onChange={updateDebt} />
-            <Procedure value={dossier.procedure} onChange={update('procedure')} />
-            <Support value={dossier.accompagnement} onChange={update('accompagnement')} />
-            <Lease value={dossier.bail} onChange={update('bail')} />
-            <Household value={dossier.foyer} onChange={update('foyer')} />
-            <Budget foyer={dossier.foyer} value={dossier.budget} onChange={update('budget')} />
+            <Identification value={common} onChange={updateCommon} />
+            <Lease value={common} onChange={updateCommon} />
+            <Household value={common} onChange={updateCommon} />
+            <Account value={common} onChange={updateCommon} />
+            <Budget value={common} onChange={updateCommon} />
+            <Support value={common} onChange={updateCommon} />
+            <Diagnosis
+              value={forms.diagnostic_social_financier}
+              onChange={(diagnostic_social_financier) =>
+                change({ ...forms, diagnostic_social_financier })
+              }
+            />
+            <Settlement
+              value={forms.plan_apurement}
+              onChange={(plan_apurement) => change({ ...forms, plan_apurement })}
+            />
             <Schedule
-              foyer={dossier.foyer}
-              budget={dossier.budget}
-              value={dossier.echeancier}
+              id="echeancier"
+              title="Échéancier"
+              value={forms.echeancier}
               onChange={updateSchedule}
             />
             <footer className="mt-2 flex items-center justify-between gap-2 py-2">
@@ -299,4 +312,49 @@ export function PlanScreen({
       </div>
     </div>
   )
+}
+
+function amountsIfDebtChanged(
+  before: CommonData,
+  after: CommonData,
+  schedule: ScheduleValue
+): ScheduleValue {
+  if (amountToSettle(before, schedule) === amountToSettle(after, schedule)) return schedule
+  const amounts = installmentAmounts(amountToSettle(after, schedule), schedule.echeances.length)
+  return {
+    ...schedule,
+    echeances: schedule.echeances.map((row, index) => ({
+      ...row,
+      montant_en_euros: amounts[index] ?? null
+    }))
+  }
+}
+
+function scheduleChanged(
+  common: CommonData,
+  previous: ScheduleValue,
+  next: ScheduleValue
+): ScheduleValue {
+  const flagsChanged =
+    next.traitement_montant_conteste !== previous.traitement_montant_conteste ||
+    next.inclure_ancienne_dette_locative !== previous.inclure_ancienne_dette_locative
+  if (!flagsChanged) {
+    return {
+      ...next,
+      echeances: applyInstallmentEdit(
+        amountToSettle(common, next),
+        previous.echeances,
+        next.echeances,
+        new Date()
+      )
+    }
+  }
+  const amounts = installmentAmounts(amountToSettle(common, next), next.echeances.length)
+  return {
+    ...next,
+    echeances: next.echeances.map((row, index) => ({
+      ...row,
+      montant_en_euros: amounts[index] ?? null
+    }))
+  }
 }

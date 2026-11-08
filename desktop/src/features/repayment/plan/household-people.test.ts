@@ -1,27 +1,40 @@
 import { describe, expect, test } from 'bun:test'
 
-import { emptyCase, householdPeople, personChoices, UNASSIGNED_PERSON } from './document'
+import { blankChild, emptyRepaymentForms } from '../../../../../shared/repayment-plan'
+import { FOYER, householdPeople, personChoices } from './document'
 
 describe('householdPeople', () => {
   test('prend le prénom seul, le nom seul, ignore une ligne vide, adultes puis enfants', () => {
-    const file = emptyCase()
-    const adult = file.foyer.adultes[0]!
-    file.foyer.adultes = [
+    const file = emptyRepaymentForms()
+    const adult = file.donnees_communes.foyer.adultes[0]!
+    file.donnees_communes.foyer.adultes = [
       { ...adult, prenom: 'Ada', nom: null },
-      { ...adult, prenom: null, nom: null }
+      { ...adult, id_personne: 'personne_2', prenom: null, nom: null }
     ]
-    file.foyer.enfants = [
-      { prenom: null, nom: 'Martin', date_naissance: null, a_charge: false },
-      { prenom: '  ', nom: ' ', date_naissance: null, a_charge: false }
+    file.donnees_communes.foyer.enfants = [
+      { ...blankChild('personne_3'), nom: 'Martin' },
+      { ...blankChild('personne_4'), prenom: '  ', nom: ' ' }
     ]
-    expect(householdPeople(file.foyer)).toEqual([UNASSIGNED_PERSON, 'Ada', 'Martin'])
+    expect(householdPeople(file.donnees_communes.foyer)).toEqual([
+      { id: FOYER, label: 'Foyer' },
+      { id: 'personne_1', label: 'Ada' },
+      { id: 'personne_3', label: 'Martin' }
+    ])
   })
 
-  test('garde un nom qui n’est plus dans le foyer', () => {
-    expect(personChoices([UNASSIGNED_PERSON, 'Ada'], 'Lina Martin')).toEqual([
-      UNASSIGNED_PERSON,
-      'Ada',
-      'Lina Martin'
+  test('garde une personne qui n’est plus dans le foyer', () => {
+    expect(
+      personChoices(
+        [
+          { id: FOYER, label: 'Foyer' },
+          { id: 'personne_1', label: 'Ada' }
+        ],
+        'personne_9'
+      )
+    ).toEqual([
+      { id: FOYER, label: 'Foyer' },
+      { id: 'personne_1', label: 'Ada' },
+      { id: 'personne_9', label: 'personne_9' }
     ])
   })
 })
