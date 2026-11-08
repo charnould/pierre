@@ -1,5 +1,3 @@
-import { JSDOM } from 'jsdom'
-
 import type { AiStreamMessage } from '../../../shared/ai-stream-events'
 import type { AutomationRecord } from '../../../shared/automations'
 import { streamCopilot } from '../copilot-agent'
@@ -25,14 +23,11 @@ function messageText(message: AiStreamMessage): string {
 
 /** The stored report is the single article. Anything around it is discarded. */
 function reportArticle(transcript: string): string {
-  const dom = new JSDOM(transcript)
-  try {
-    const articles = [...dom.window.document.querySelectorAll('article.report')]
-    if (articles.length !== 1) throw new AutomationsError('Rapport invalide.', 'unavailable')
-    return articles[0]!.outerHTML
-  } finally {
-    dom.window.close()
-  }
+  const articles = [...transcript.matchAll(/<article\b([^>]*)>[\s\S]*?<\/article>/gi)].filter(
+    (match) => /\bclass\s*=\s*["'][^"']*\breport\b/.test(match[1] ?? '')
+  )
+  if (articles.length !== 1) throw new AutomationsError('Rapport invalide.', 'unavailable')
+  return articles[0]![0]
 }
 
 export async function execute_automation(
