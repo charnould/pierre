@@ -13,7 +13,7 @@
     },
     "cli": {
       "name": "@pierre/cli",
-      "version": "0.9.20",
+      "version": "0.9.21",
       "devDependencies": {
         "@types/bun": "catalog:",
       },
@@ -85,7 +85,7 @@
     },
     "server": {
       "name": "@pierre/server",
-      "version": "0.40.9",
+      "version": "0.40.11",
       "dependencies": {
         "@huggingface/tokenizers": "^0.2.0",
         "better-auth": "^1.7.15",
@@ -93,6 +93,7 @@
         "hono": "^4.13.16",
         "jsdom": "catalog:",
         "libphonenumber-js": "^1.13.15",
+        "lodash": "^4.18.1",
         "mammoth": "^1.13.0",
         "onnxruntime-node": "^1.31.1",
         "pizzip": "catalog:",

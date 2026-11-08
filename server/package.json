@@ -1,6 +1,6 @@
 {
   "name": "@pierre/server",
-  "version": "0.40.10",
+  "version": "0.40.11",
   "private": true,
   "license": "SEE LICENSE IN ../LICENSE.md",
   "type": "module",
@@ -11,6 +11,7 @@
     "hono": "^4.13.16",
     "jsdom": "catalog:",
     "libphonenumber-js": "^1.13.15",
+    "lodash": "^4.18.1",
     "mammoth": "^1.13.0",
     "onnxruntime-node": "^1.31.1",
     "pizzip": "catalog:",
