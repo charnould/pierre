@@ -232,34 +232,6 @@
       .article .shot img[data-zoomable] {
         cursor: zoom-in;
       }
-      .article .shot-title {
-        position: absolute;
-        top: calc(0.45rem + 6px);
-        left: -0.65rem;
-        z-index: 1;
-        max-width: calc(100% - 1rem);
-        padding: 0.15rem 0.55rem 0.08rem;
-        background: #ffe500;
-        color: #111;
-        font-family: Knewave, cursive;
-        font-size: 1.05rem;
-        font-weight: 400;
-        font-synthesis: none;
-        letter-spacing: 0.01em;
-        line-height: 1.15;
-        text-transform: uppercase;
-        text-wrap: balance;
-        transform: rotate(-2deg);
-        transform-origin: left center;
-        pointer-events: none;
-      }
-      .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) .shot-title {
-        top: calc(1.5rem + 6px);
-        left: -0.65rem;
-      }
-      body.is-zooming .shot-title {
-        opacity: 0;
-      }
 
       /*
  Solarized Color Schemes originally by Ethan Schoonover
@@ -427,10 +399,10 @@ green     #859900
         Tous les métiers HLM réunis dans une application IA-First, open code et gratuite.
       </h2>
       <p>
-        PIERRE réunit les équipes HLM dans une même expérience utilisateur et met l’intelligence
-        artificielle au coeur de leur travail. Proposée en <strong>open code</strong>, l'application
-        est auditable, <strong>auto-hébergeable</strong> et <strong>gratuite</strong> pour les
-        bailleurs sociaux.
+        PIERRE réunit les équipes HLM au sein d'une même expérience utilisateur et met
+        l’intelligence artificielle au coeur de leur travail. Proposée en
+        <strong>open code</strong>, l'application est auditable,
+        <strong>auto-hébergeable</strong> et <strong>gratuite</strong> pour les bailleurs sociaux.
       </p>
       <ol>
         <li>
@@ -438,14 +410,14 @@ green     #859900
             <strong>Une expérience commune à tous les métiers HLM</strong> : réclamations, impayés,
             relocation, assurance habitation… Les mêmes repères d’un métier à l’autre et une
             continuité entre les processus et les équipes. Moins de frictions et de ruptures,
-            davantage de capacité d’action et de performance opérationnelle au quotidien.
+            davantage de capacité d’action et de performance opérationnel.
           </p>
         </li>
         <li>
           <p>
             <strong>L’IA au coeur du travail, pas greffée sur les logiciels historiques</strong> :
-            votre agent comprend les dossiers, prépare les décisions et les communications, exécute
-            les tâches répétitives et mobilise les bonnes personnes au bon moment sur la base de
+            votre agent comprend les dossiers, prépare les décisions et communications, exécute les
+            tâches répétitives et mobilise les bonnes personnes au bon moment sur la base de
             <strong>vos</strong> processus. PIERRE fait travailler les humains et l’IA côte à côte.
           </p>
         </li>
@@ -463,7 +435,8 @@ green     #859900
         <li>
           <p>
             <strong>L'évident intégré nativement</strong> : collaboration, notifications, mentions,
-            SMS/RCS, emails, courriers postaux (avec ou sans recommandé) et signature électronique.
+            SMS/RCS, emails, courriers postaux (avec ou sans recommandé), signature électronique et
+            dictée vocale.
           </p>
         </li>
         <li>
@@ -477,7 +450,6 @@ green     #859900
       </ol>
       <p>
         <span class="shot"
-          ><span class="shot-title" aria-hidden="true">Le point de départ de PIERRE (alpha)</span
           ><img src="./assets/index/home.png" alt="Le point de départ de PIERRE (alpha)"
         /></span>
       </p>
@@ -489,7 +461,7 @@ green     #859900
         Le mouvement HLM consacre chaque année près de <strong>300 millions d’euros</strong> à ses
         applications métier. Sur vingt ans :
         <a
-          href="https://github.com/charnould/pierre/blob/master/docs/07-articles/2026-08-19-300M%E2%82%ACY-for-IT.md"
+          href="https://github.com/charnould/pierre/blob/master/docs/src/07-articles/2026-08-19-300M%E2%82%ACY-for-IT.md"
           >6 milliards</a
         >.
       </p>
@@ -520,7 +492,7 @@ green     #859900
       <p>
         Introduire l’IA dans les processus HLM ne consiste pas à superposer un chatbot à des
         logiciels inchangés. <strong>Il faut réinventer le logiciel lui-même</strong>, ainsi que la
-        structure des données sur lesquelles il repose.
+        structure des données sur laquelle il repose.
       </p>
       <p>
         PIERRE est un <strong>applicatif « User-First × IA-First »</strong> : l’intelligence
@@ -561,7 +533,7 @@ green     #859900
         d’ingénierie : privilégier la robustesse et la sobriété plutôt qu'une complexité inutile et
         datée. Ce parti pris est exposé dans «
         <a
-          href="https://github.com/charnould/pierre/blob/master/docs/07-articles/2026-05-27-rag-sqlite.md"
+          href="https://github.com/charnould/pierre/blob/master/docs/src/07-articles/2026-05-27-rag-sqlite.md"
           >SQLite et un harnais suffisent pour le logement social français</a
         >
         » (article en anglais).
@@ -592,10 +564,9 @@ green     #859900
         par utilisateur), et suggérer des améliorations qui profitent à l'ensemble du mouvement.
       </p>
       <p>
-        Son <strong>modèle économique</strong> repose sur les contributions libres des bailleurs
-        sociaux, dans l’esprit de très nombreux projets open source. Sa
-        <strong>gouvernance</strong> reste à inventer à l'intersection de l’USH, des fédérations,
-        des bailleurs et de leurs besoins.
+        Son <strong>modèle économique</strong> repose sur les contributions libres du mouvement HLM,
+        dans l’esprit de très nombreux projets open source. Sa <strong>gouvernance</strong> reste à
+        inventer à l'intersection de l’USH, des fédérations, des bailleurs et de leurs besoins.
       </p>
       <p>
         Depuis 1853, le mouvement HLM construit des communs immobiliers. Il peut désormais
@@ -682,9 +653,7 @@ green     #859900
     </article>
     <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
     <script>
-      const zoom = mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
-      zoom.on('open', () => document.body.classList.add('is-zooming'))
-      zoom.on('closed', () => document.body.classList.remove('is-zooming'))
+      mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
     </script>
   </body>
 </html>

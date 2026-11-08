@@ -21,6 +21,7 @@ require('prismjs/components/prism-yaml.js')
 require('prismjs/components/prism-bash.js')
 
 const ROOT = join(import.meta.dir, '..')
+const SRC = join(ROOT, 'src')
 const REPO = join(ROOT, '..')
 const TOC_JSON = join(ROOT, 'toc.json')
 const SITE = join(ROOT, 'site')
@@ -126,7 +127,7 @@ export function rewriteUnpublishedLinks(
     if (!path.endsWith('.md')) return match
     const repoRel = relative(REPO, join(fromDir, decodePath(path))).replaceAll('\\', '/')
     if (repoRel.startsWith('..') || !repoRel.startsWith('docs/')) return match
-    const docsRel = repoRel.slice('docs/'.length)
+    const docsRel = repoRel.slice('docs/'.length).replace(/^src\//, '')
     if (!inFolder(docsRel, unpublished) && !notItsIndex(docsRel, indexOnly)) return match
     const encoded = repoRel
       .split('/')
@@ -376,7 +377,7 @@ async function syncChangelogEntries(toc: TocEntry[]): Promise<TocEntry[]> {
   const changelog = next.find((e) => stripOrder(e.folder) === 'changelog')
   if (!changelog) return next
 
-  const changelogDir = join(ROOT, changelog.folder)
+  const changelogDir = join(SRC, changelog.folder)
   const entries: TocChangelogEntry[] = []
 
   try {
@@ -638,34 +639,6 @@ function pageHtml(
     .article .shot img[data-zoomable] {
       cursor: zoom-in;
     }
-    .article .shot-title {
-      position: absolute;
-      top: calc(0.45rem + 6px);
-      left: -0.65rem;
-      z-index: 1;
-      max-width: calc(100% - 1rem);
-      padding: 0.15rem 0.55rem 0.08rem;
-      background: #ffe500;
-      color: #111;
-      font-family: Knewave, cursive;
-      font-size: 1.05rem;
-      font-weight: 400;
-      font-synthesis: none;
-      letter-spacing: 0.01em;
-      line-height: 1.15;
-      text-transform: uppercase;
-      text-wrap: balance;
-      transform: rotate(-2deg);
-      transform-origin: left center;
-      pointer-events: none;
-    }
-    .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) .shot-title {
-      top: calc(1.5rem + 6px);
-      left: -0.65rem;
-    }
-    body.is-zooming .shot-title {
-      opacity: 0;
-    }
     ${extra?.css ?? ''}
     ${prismCss}
   </style>
@@ -676,9 +649,7 @@ function pageHtml(
   </article>
   <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
   <script>
-    const zoom = mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
-    zoom.on('open', () => document.body.classList.add('is-zooming'))
-    zoom.on('closed', () => document.body.classList.remove('is-zooming'))
+    mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
   </script>
 </body>
 </html>
@@ -758,9 +729,8 @@ function applyImages(html: string) {
     let img = `<img src="${nextSrc}" alt="${alt}"`
     if (zoom) img += ' data-zoomable=""'
     img += ' />'
-    const title = decodeAttr(alt).trim()
-    if (!title) return img
-    return `<span class="shot"><span class="shot-title" aria-hidden="true">${Bun.escapeHTML(title)}</span>${img}</span>`
+    if (!decodeAttr(alt).trim()) return img
+    return `<span class="shot">${img}</span>`
   })
 }
 
@@ -864,7 +834,8 @@ function renderHtml(
   outDir: string,
   label: string,
   unpublished: readonly string[],
-  indexOnly: readonly string[]
+  indexOnly: readonly string[],
+  linkDir = fromDir
 ) {
   let html = highlightFences(Bun.markdown.html(escapeUnknownTags(raw), { autolinks: true }))
   const ids = headingIds(raw)
@@ -876,7 +847,7 @@ function renderHtml(
   html = applyAlerts(html)
   if (raw.includes('<!-- carl -->')) html = html.replaceAll('<!-- carl -->', benchHtml())
   return retargetMdLinks(
-    rebaseLinks(rewriteUnpublishedLinks(html, fromDir, unpublished, indexOnly), fromDir, outDir)
+    rebaseLinks(rewriteUnpublishedLinks(html, fromDir, unpublished, indexOnly), linkDir, outDir)
   )
 }
 
@@ -899,11 +870,20 @@ async function renderPage(
 ) {
   const raw = prepare(await Bun.file(mdAbs).text())
   if (!raw.trim()) return false
-  const rel = relative(ROOT, mdAbs).replaceAll('\\', '/')
+  const rel = relative(SRC, mdAbs).replaceAll('\\', '/')
   const base = rel.split('/').pop()!.replace(/\.md$/, '')
   const title = firstH1(raw, humanize(base.replace(/^\d{4}-\d{2}-\d{2}-/, '')))
   const hasBench = raw.includes('<!-- carl -->')
-  const body = renderHtml(raw, dirname(mdAbs), dirname(outAbs), rel, unpublished, indexOnly)
+  const linkDir = dirname(join(ROOT, rel))
+  const body = renderHtml(
+    raw,
+    dirname(mdAbs),
+    dirname(outAbs),
+    rel,
+    unpublished,
+    indexOnly,
+    linkDir
+  )
   await mkdir(dirname(outAbs), { recursive: true })
   await Bun.write(
     outAbs,
@@ -963,9 +943,9 @@ export function missingRelativeMdLinks(
 }
 
 async function warnMissingMdLinks() {
-  for (const file of await readdir(ROOT, { recursive: true })) {
-    const abs = join(ROOT, String(file))
-    const rel = relative(ROOT, abs).replaceAll('\\', '/')
+  for (const file of await readdir(SRC, { recursive: true })) {
+    const abs = join(SRC, String(file))
+    const rel = relative(SRC, abs).replaceAll('\\', '/')
     if (!(await isMarkdownFile(abs)) || isSkippedPath(abs) || rel.startsWith('scripts/')) continue
     if (await isOutsideDocs(abs)) continue
     const raw = await Bun.file(abs).text()
@@ -976,7 +956,7 @@ async function warnMissingMdLinks() {
 }
 
 export async function build() {
-  const { updated } = await updateDocsToc({ docsDir: ROOT })
+  const { updated } = await updateDocsToc({ docsDir: SRC })
   if (updated.length) {
     console.log(`✓ intra-file toc (${updated.length})`)
     for (const file of updated) console.log(`  - ${relative(ROOT, file)}`)
@@ -989,10 +969,10 @@ export async function build() {
   await rm(SITE, { recursive: true, force: true })
   await rm(join(ROOT, 'index.html'), { force: true })
   let written = 0
-  for (const file of await readdir(ROOT, { recursive: true })) {
-    const abs = join(ROOT, String(file))
+  for (const file of await readdir(SRC, { recursive: true })) {
+    const abs = join(SRC, String(file))
     if (!(await isMarkdownFile(abs)) || isSkippedPath(abs)) continue
-    const rel = relative(ROOT, abs).replaceAll('\\', '/')
+    const rel = relative(SRC, abs).replaceAll('\\', '/')
     if (
       rel.startsWith('scripts/') ||
       rel.startsWith('site/') ||

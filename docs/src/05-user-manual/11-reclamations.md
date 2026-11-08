@@ -44,7 +44,7 @@ Au-dessus de chaque panier qui contient des réclamations :
 
 La première colonne coche une ou plusieurs réclamations. La sélection reste d’une page à l’autre et d’un panier à l’autre. La colonne suivante signale une **notification non lue**. Les autres colonnes viennent de vos données (`Réclamation`, `Locataire`, `Lot`, `Message`, `Dernier événement`, `Référent`…). Un menu sur chaque en-tête permet de filtrer. Les noms techniques des exports sont convertis en libellés lisibles ; les libellés paramétrés par l’organisme restent prioritaires. L’ordre et la largeur des colonnes sont mémorisés. Un panier vide n’a pas de tableau.
 
-`Agir sur N réclamations` peut changer le panier, ajouter ou retirer un tag, ou demander à Pierre une réponse possible, une synthèse ou une autre consigne. Pierre traite les réclamations l’une après l’autre, n’envoie rien, et enregistre chaque résultat dans l’historique.
+`Agir sur N réclamations` peut changer le panier, ajouter ou retirer un tag, ou demander à Pierre une réponse possible, une synthèse ou un autre prompt système. Pierre traite les réclamations l’une après l’autre, n’envoie rien, et enregistre chaque résultat dans l’historique.
 
 Cliquez une ligne pour ouvrir le dossier. Les notifications de cette réclamation passent alors à l’état lu.
 
