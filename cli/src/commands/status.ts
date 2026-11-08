@@ -106,7 +106,7 @@ async function endpointUp(ctx: Context, url: string): Promise<boolean> {
 }
 
 async function carlUpNow(ctx: Context): Promise<boolean> {
-  const response = await ctx.runtime.request('http://127.0.0.1:3000/api/models/carl', {
+  const response = await ctx.runtime.request('http://127.0.0.1:3000/carl', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: '{"texte":"la chaudière est en panne"}',
