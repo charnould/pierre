@@ -24,6 +24,11 @@ export type Providers = {
   emailToken: string
   emailAccount: string
   emailSecret: string
+  mailevaClientId: string
+  mailevaUsername: string
+  mailevaSenderId: string
+  mailevaAddress: string
+  mailevaSecrets: string
 }
 
 const EMPTY: Providers = {
@@ -38,7 +43,12 @@ const EMPTY: Providers = {
   emailDomain: '',
   emailToken: '',
   emailAccount: '',
-  emailSecret: ''
+  emailSecret: '',
+  mailevaClientId: '',
+  mailevaUsername: '',
+  mailevaSenderId: '',
+  mailevaAddress: '',
+  mailevaSecrets: ''
 }
 
 export function emptyProviders(): Providers {
@@ -51,6 +61,32 @@ export function providersPath(): string {
 
 function text(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
+}
+
+function addressText(value: unknown): string {
+  return typeof value === 'string' ? mailevaLines(value).join('\n') : ''
+}
+
+export function mailevaTarget(username: string): 'sandbox' | 'production' | '' {
+  const value = username.trim()
+  if (!value) return ''
+  return value.toLowerCase().startsWith('sandbox.') ? 'sandbox' : 'production'
+}
+
+const POSTAL_CITY = /^\d{5}\s+\S/
+
+export function mailevaLines(address: string): string[] {
+  const raw = address
+    .replace(/\r/g, '')
+    .split('\n')
+    .map((line) => line.trim())
+  while (raw.length < 6) raw.push('')
+  const lines = raw.slice(0, 6)
+  if (lines[5]) return lines
+  const filled = lines.filter(Boolean)
+  const last = filled.at(-1) ?? ''
+  if (!POSTAL_CITY.test(last)) return lines
+  return ['', filled[0] ?? '', '', filled.slice(1, -1).join(' '), '', last]
 }
 
 /** Absent or unreadable file: nothing is configured. The environment is not a fallback. */
@@ -69,7 +105,12 @@ export function readProviders(): Providers {
       emailDomain: text(parsed['emailDomain']).toLowerCase(),
       emailToken: text(parsed['emailToken']),
       emailAccount: text(parsed['emailAccount']),
-      emailSecret: text(parsed['emailSecret'])
+      emailSecret: text(parsed['emailSecret']),
+      mailevaClientId: text(parsed['mailevaClientId']),
+      mailevaUsername: text(parsed['mailevaUsername']),
+      mailevaSenderId: text(parsed['mailevaSenderId']),
+      mailevaAddress: addressText(parsed['mailevaAddress']),
+      mailevaSecrets: text(parsed['mailevaSecrets'])
     }
   } catch (error) {
     const missing = error instanceof Error && 'code' in error && error.code === 'ENOENT'

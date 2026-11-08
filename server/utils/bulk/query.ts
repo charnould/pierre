@@ -36,24 +36,18 @@ const AmountRangeSchema = z
   })
   .strict()
 
+function strings(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((entry: unknown): entry is string => typeof entry === 'string')
+    : []
+}
+
 function repaymentCatalog() {
   const repayment = repaymentReady()
-  const buckets = Array.isArray(repayment?.buckets) ? repayment.buckets : []
-  const tags = Array.isArray(repayment?.tags) ? repayment.tags : []
-  const actions = repayment?.actions as { dossier?: unknown; bulk_operations?: unknown } | undefined
   return {
-    buckets: new Set(
-      buckets.flatMap((entry: { id?: unknown }) =>
-        entry && typeof entry === 'object' && 'id' in entry ? [String(entry.id)] : []
-      )
-    ),
-    tags: new Set(tags.filter((tag: unknown): tag is string => typeof tag === 'string')),
-    actions: new Set(
-      [
-        ...(Array.isArray(actions?.dossier) ? actions.dossier : []),
-        ...(Array.isArray(actions?.bulk_operations) ? actions.bulk_operations : [])
-      ].filter((label): label is string => typeof label === 'string')
-    )
+    buckets: new Set(strings(repayment?.phases)),
+    tags: new Set(strings(repayment?.tags)),
+    actions: new Set([...strings(repayment?.caseActions), ...strings(repayment?.batchActions)])
   }
 }
 
@@ -217,19 +211,19 @@ const validate_audience = (
             ? catalog.actions
             : catalog.tags
       const label =
-        key === 'requiredBuckets' ? 'Panier' : key === 'requiredActions' ? 'Action' : 'Tag'
+        key === 'requiredBuckets' ? 'Phase' : key === 'requiredActions' ? 'Action' : 'Tag'
       if (!values.has(tag)) {
         ctx.addIssue({
           code: 'custom',
           path: [key, index],
-          message: `${label} inconnu${label === 'Action' ? 'e' : ''} : ${tag}`
+          message: `${label} ${label === 'Tag' ? 'inconnu' : 'inconnue'} : ${tag}`
         })
       }
       if (seen.has(tag)) {
         ctx.addIssue({
           code: 'custom',
           path: [key, index],
-          message: `${label} dupliqué${label === 'Action' ? 'e' : ''} : ${tag}`
+          message: `${label} ${label === 'Tag' ? 'dupliqué' : 'dupliquée'} : ${tag}`
         })
       }
       seen.add(tag)
@@ -284,8 +278,21 @@ export const BulkOperationDefinitionSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['bucketId'],
-        message: `Panier inconnu : ${definition.bucketId}`
+        message: `Phase inconnue : ${definition.bucketId}`
       })
+    }
+    const actions =
+      definition.delivery.kind === 'rich_rcs'
+        ? [definition.delivery.action]
+        : definition.delivery.steps.map((step) => step.action)
+    for (const action of actions) {
+      if (!repaymentCatalog().actions.has(action)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['delivery'],
+          message: `Action inconnue : ${action}`
+        })
+      }
     }
   }) as unknown as z.ZodType<BulkOperationDefinition>
 

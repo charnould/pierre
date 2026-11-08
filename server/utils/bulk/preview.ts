@@ -9,6 +9,7 @@ import type {
 } from '../../../shared/bulk-operations'
 import { latest_repayment_states, repayment_action_history } from '../activities/repayment'
 import { openDatastore } from '../datastore-db'
+import { resolveStoredRepaymentPhase } from '../setup-store'
 import { render_docx_pdf } from './docx'
 import {
   BulkPlaceholderError,
@@ -45,7 +46,7 @@ const in_audience = (
   actions: Map<string, Set<string>>,
   definition: BulkOperationDefinition
 ): boolean => {
-  const bucket = states.get(id)?.bucket ?? 'non_traites'
+  const bucket = resolveStoredRepaymentPhase(states.get(id)?.bucket)
   const history = actions.get(id) ?? new Set<string>()
   return (
     (definition.requiredBuckets.length === 0 || definition.requiredBuckets.includes(bucket)) &&

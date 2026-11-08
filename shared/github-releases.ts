@@ -29,7 +29,10 @@ export async function listGitHubReleases(
   const releases: Release[] = []
   for (let page = 1; page <= 5; page += 1) {
     const response = await load(`${RELEASES}?per_page=100&page=${page}`)
-    if (response.status !== 200) throw new Error('Impossible de lire les releases GitHub.')
+    if (response.status !== 200) {
+      if (releases.length > 0) break
+      throw new Error(`Impossible de lire les releases GitHub (${response.status}).`)
+    }
     const parsed = parseJson(response.body)
     if (!Array.isArray(parsed)) throw new Error('Les releases GitHub sont illisibles.')
     if (parsed.length === 0) break

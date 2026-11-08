@@ -77,11 +77,24 @@ async function installRelease(dir: string, release: Release): Promise<void> {
 }
 
 export async function ensureCarl(dir = CARL_DIR): Promise<void> {
-  const release = await latestRelease()
+  let release: Release | null
+  try {
+    release = await latestRelease()
+  } catch (error) {
+    if (!localCarlReady(dir)) throw error
+    const message =
+      error instanceof Error ? error.message : 'Impossible de lire les releases GitHub.'
+    console.warn(`${message} Le modèle carl déjà installé est conservé.`)
+    return
+  }
   if (!release) throw new Error("Aucune version de carl n'est publiée.")
   if (carlInstalled(dir, release.tag)) return
   console.log(`Téléchargement de carl ${release.tag}…`)
   await installRelease(dir, release)
+}
+
+function localCarlReady(dir: string): boolean {
+  return CARL_MODEL_FILES.every((name) => existsSync(join(dir, name)))
 }
 
 if (import.meta.main) {
