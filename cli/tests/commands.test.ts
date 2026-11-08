@@ -97,7 +97,7 @@ describe('environment and health', () => {
     const healthy = testContext(root, {
       request: async (url) => {
         if (url.includes('api.github.com')) return { status: 200, body: '[]', url }
-        if (url.includes('/api/models/carl')) return { status: 200, body: '{}', url }
+        if (url.includes('127.0.0.1:3000/carl')) return { status: 200, body: '{}', url }
         if (url.includes('api.anthropic.com')) return { status: 200, body: '', url }
         return { status: 200, body: 'ok', url }
       }
