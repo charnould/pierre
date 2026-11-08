@@ -78,7 +78,9 @@ export const postEmail = async (c: AuthContext) => {
   const from = moduleEmailFrom(parsed.data.contexte)
   if (!from) {
     return c.json(
-      { error: { code: 'not_configured', message: 'email_from manquant pour ce module' } },
+      {
+        error: { code: 'not_configured', message: 'adresse d’expédition manquante pour ce module' }
+      },
       503
     )
   }

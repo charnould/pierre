@@ -6,6 +6,7 @@ import { insert_bulk_visible_activity } from './activities'
 import type { BulkItemPayload } from './jobs'
 import { record_applied_outbound_with_db } from './outbound'
 import { preview_query_with_db } from './preview'
+import { BulkOperationDefinitionSchema } from './query'
 import { aggregate_bulk_run_with_db, finalize_bulk_item_with_db } from './reports'
 import { bulkRunResult, parseBulkRunContent, stringifyBulkRunContent } from './run-content'
 import { arm_bulk_scheduler } from './scheduler/queue'
@@ -60,6 +61,13 @@ export const execute_bulk_operation = async (
     }
     const deliveryError = bulkDeliveryError(bulkOperation.definition.delivery)
     if (deliveryError) throw new BulkExecutionError(deliveryError, 'invalid')
+    const catalog = BulkOperationDefinitionSchema.safeParse(bulkOperation.definition)
+    if (!catalog.success) {
+      throw new BulkExecutionError(
+        catalog.error.issues.map((issue) => issue.message).join('; '),
+        'invalid'
+      )
+    }
 
     confirmedAt = activityTimestamp()
     const now = confirmedAt

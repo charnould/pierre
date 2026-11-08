@@ -236,13 +236,22 @@ describe('ledger SQL queries', () => {
       auteur: 'system:repayment'
     })
 
+    create_trusted_activity('agent@example.org', {
+      contexte: 'repayment',
+      ref: 'LOC-1',
+      type: 'case.tags_changed',
+      contenu: JSON.stringify({ version: 2, before: [], after: ['Décès', '+65 ans'] }),
+      auteur: 'system:repayment'
+    })
+
     expect(
       list_ledger_balances({ ...LedgerPaginationQuery.parse({}), filters: {} }).data[0]
     ).toEqual(
       expect.objectContaining({
         bucket: 'amiable',
         gestionnaire: 'agent@example.org',
-        derniere_action_realisee: 'Relancer'
+        derniere_action_realisee: 'Relancer',
+        repayment_tags: ['Décès', '+65 ans']
       })
     )
   })

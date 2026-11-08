@@ -35,7 +35,7 @@ const camelCaseKeys = (value: unknown, opaque: ReadonlySet<string> = new Set()):
 describe('stored JSON', () => {
   test('persists bulk definitions with snake_case keys', () => {
     const stored = JSON.parse(stringifyStoredDefinition(emptyBulkOperationDefinition()))
-    expect(stored.bucket_id).toBe('non_traites')
+    expect(stored.bucket_id).toBe('Non traités')
     expect(stored.notify_manager).toBe(false)
     expect(stored.delivery.steps[0].placeholder_bindings).toEqual({})
     expect(camelCaseKeys(stored, new Set(['rich_content', 'values']))).toEqual([])

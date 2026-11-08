@@ -55,6 +55,12 @@ describe('BulkOperationDefinitionSchema', () => {
     ).toBe('Parcours')
   })
 
+  it('refuse une phase qui n’est plus au catalogue', () => {
+    const definition = emptyBulkOperationDefinition()
+    definition.bucketId = 'Ancienne phase'
+    expect(() => BulkOperationDefinitionSchema.parse(definition)).toThrow(/Phase inconnue/)
+  })
+
   it('requires one to six unique fallback media', () => {
     const definition = emptyBulkOperationDefinition()
     expect(() =>

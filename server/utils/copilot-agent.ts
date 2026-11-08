@@ -43,7 +43,7 @@ import {
   registerPendingUiRequest,
   releaseVm
 } from './vm-registry'
-import type { WorkflowPayload } from './workflow-payload'
+import { injectWorkflowPayload, type WorkflowPayload } from './workflow-payload'
 
 const configuredGenerationTimeout = Number(Bun.env['LLM_GENERATION_TIMEOUT_MS'] ?? 600_000)
 export const LLM_GENERATION_TIMEOUT_MS = Number.isFinite(configuredGenerationTimeout)
@@ -111,14 +111,7 @@ export async function buildConversationAgentsFile(
       }
     }
 
-    if (workflowPayload && raw.includes('<!-- WORKFLOW_PAYLOAD_HERE -->')) {
-      const compact = Object.fromEntries(
-        Object.entries(workflowPayload as Record<string, unknown>).filter(
-          ([, v]) => v !== null && v !== undefined && v !== ''
-        )
-      )
-      raw = raw.replace('<!-- WORKFLOW_PAYLOAD_HERE -->', JSON.stringify(compact, null, 2))
-    }
+    raw = injectWorkflowPayload(raw, workflowPayload)
 
     raw = insertAutomationPrompt(raw, automationPrompt)
 

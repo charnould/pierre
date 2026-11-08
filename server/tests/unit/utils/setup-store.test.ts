@@ -1,24 +1,30 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { mkdir, rm } from 'node:fs/promises'
 
+import { openDatastore } from '../../../utils/datastore-db'
 import { migrate_datastore } from '../../../utils/datastore-migrations'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
-import { automationsReady, SetupError, ticketsReady, writeSetup } from '../../../utils/setup-store'
+import {
+  automationsReady,
+  REPAYMENT_DOCUMENT_IDS,
+  repaymentGaps,
+  repaymentMessages,
+  repaymentReady,
+  SetupError,
+  ticketsReady,
+  writeSetup
+} from '../../../utils/setup-store'
 import { repaymentSchedule } from '../../seed-setup'
 
 const paths = testDatastorePaths('setup_store')
 
-function repaymentBody(schedule?: typeof repaymentSchedule): string {
+function repaymentBody(schedule?: object): string {
   return JSON.stringify({
-    buckets: [
-      { id: 'non_traites', label: 'Non traités' },
-      { id: 'clients_partis', label: 'Partis' }
-    ],
-    actions: { dossier: ['Analyser'], bulk_operations: ['Relancer'] },
+    phases: ['Non traités', 'Partis'],
+    caseActions: ['Analyser'],
+    batchActions: ['Relancer'],
     tags: ['décès'],
-    template_groups: ['RCS'],
-    templates: ['note.md'],
-    ...(schedule ? { create_plan: { schedule } } : {})
+    ...(schedule ? { schedule } : {})
   })
 }
 
@@ -60,17 +66,70 @@ describe('setup store', () => {
   it('rejects a repayment document without a schedule', async () => {
     await expect(
       writeSetup('repayment', new TextEncoder().encode(repaymentBody()))
-    ).rejects.toThrow('create_plan.schedule requis.')
+    ).rejects.toThrow('repayment.schedule requis.')
   })
 
   it('rejects a repayment threshold that cannot be confirmed', async () => {
     const schedule = {
       ...repaymentSchedule,
-      thresholds: [{ months: 36, message: 'Trop tard.' }]
+      confirmAfterInstallments: { '36': 'Trop tard.' }
     }
     await expect(
       writeSetup('repayment', new TextEncoder().encode(repaymentBody(schedule)))
-    ).rejects.toThrow('schedule.thresholds[0].months')
+    ).rejects.toThrow('schedule.confirmAfterInstallments.36')
+  })
+
+  it('rejects an unknown repayment key and the reserved phase', async () => {
+    const body = JSON.parse(repaymentBody(repaymentSchedule)) as Record<string, unknown>
+    await expect(
+      writeSetup('repayment', new TextEncoder().encode(JSON.stringify({ ...body, buckets: [] })))
+    ).rejects.toThrow('clé inconnue')
+    await expect(
+      writeSetup(
+        'repayment',
+        new TextEncoder().encode(
+          JSON.stringify({ ...body, phases: ['Non traités', 'À reclasser'] })
+        )
+      )
+    ).rejects.toThrow('réservé')
+  })
+
+  it('keeps repayment closed until the four word documents are stored', async () => {
+    const docx = new Uint8Array([0x50, 0x4b, 0x03, 0x04])
+    await writeSetup('repayment', new TextEncoder().encode(repaymentBody(repaymentSchedule)))
+    await writeSetup('repayment/AGENTS.md', new TextEncoder().encode('Impayés.'))
+    expect(repaymentMessages()).toEqual([])
+    expect(repaymentReady()).toBeNull()
+    expect(repaymentGaps()).toEqual([
+      'Plan d’apurement',
+      'Protocole de cohésion sociale',
+      'Diagnostic social et financier',
+      'Courrier standard'
+    ])
+    for (const id of REPAYMENT_DOCUMENT_IDS.slice(0, 3)) await writeSetup(id, docx)
+    expect(repaymentReady()).toBeNull()
+    expect(repaymentGaps()).toEqual(['Courrier standard'])
+    await writeSetup(REPAYMENT_DOCUMENT_IDS[3], docx)
+    expect(repaymentReady()?.phases).toEqual(['Non traités', 'Partis'])
+    expect(repaymentGaps()).toEqual([])
+    const db = openDatastore()
+    try {
+      db.run(
+        'INSERT INTO setup (id, content) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET content = excluded.content',
+        ['repayment/messages', new TextEncoder().encode('{')]
+      )
+    } finally {
+      db.close()
+    }
+    expect(repaymentMessages()).toEqual([])
+    expect(repaymentGaps()).toEqual([])
+    expect(repaymentReady()?.phases).toEqual(['Non traités', 'Partis'])
+  })
+
+  it('rejects the retired repayment template id', async () => {
+    await expect(
+      writeSetup('repayment/template.docx', new Uint8Array([0x50, 0x4b, 0x03, 0x04]))
+    ).rejects.toThrow('pièce inconnue.')
   })
 
   it('rejects a tickets document without the system bucket', async () => {

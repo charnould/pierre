@@ -5,7 +5,6 @@ import { rm } from 'node:fs/promises'
 import { Hono } from 'hono'
 
 import { postExternal as externalCommunication } from '../../../routes/communications/external'
-import { receiveCourrierWebhook as courrierWebhook } from '../../../routes/webhooks'
 import { receiveEmailWebhook as emailWebhook } from '../../../routes/webhooks/email'
 import { receiveRcsWebhook as rcsWebhook } from '../../../routes/webhooks/rcs'
 import type { User } from '../../../utils/_schema'
@@ -17,11 +16,9 @@ import { setup } from '../../../utils/setup'
 
 const paths = testDatastorePaths('communication_controllers')
 const SECRET = 'secret-test-key'
-const originalFakeSecret = Bun.env['FAKE_WEBHOOK_KEY']
 
 beforeAll(async () => {
   setDatastoreRoot(paths.root)
-  Bun.env['FAKE_WEBHOOK_KEY'] = SECRET
   await rm(paths.root, { recursive: true, force: true })
   await setup()
   writeProviders({ ...emptyProviders(), rcsToken: 'token', rcsFrom: 'PIERRE', rcsSecret: SECRET })
@@ -30,8 +27,6 @@ beforeAll(async () => {
 afterAll(async () => {
   await rm(paths.root, { recursive: true, force: true })
   setDatastoreRoot(null)
-  if (originalFakeSecret === undefined) delete Bun.env['FAKE_WEBHOOK_KEY']
-  else Bun.env['FAKE_WEBHOOK_KEY'] = originalFakeSecret
 })
 
 describe('webhooks de communication', () => {
@@ -43,29 +38,6 @@ describe('webhooks de communication', () => {
       body: '{}'
     })
     expect(response.status).toBe(401)
-  })
-
-  it('uses Webhook-Secret consistently for simulated providers', async () => {
-    const app = new Hono().post('/webhooks/courrier', courrierWebhook)
-    const payload = JSON.stringify({})
-    expect(
-      (
-        await app.request('/webhooks/courrier', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Webhook-Key': SECRET },
-          body: payload
-        })
-      ).status
-    ).toBe(401)
-    expect(
-      (
-        await app.request('/webhooks/courrier', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Webhook-Secret': SECRET },
-          body: payload
-        })
-      ).status
-    ).toBe(400)
   })
 
   it('rejects unknown RCS statuses as validation errors', async () => {

@@ -333,15 +333,63 @@ type SendCommunicationBase = {
   idempotencyKey: string
   contexte: ActivityContext
   ref: string
-  destinataire: string
 }
+
+export type PostalAddress = {
+  line1?: string
+  line2?: string
+  line3?: string
+  line4?: string
+  line5?: string
+  line6: string
+  country: string
+}
+
+export type ElectronicRecipient = {
+  email: string
+  legalStatus: 'PROFESSIONAL' | 'INDIVIDUAL'
+  firstName?: string
+  lastName?: string
+  company?: string
+}
+
+export type MailDocument = {
+  name: string
+  mediaType:
+    'application/pdf' | 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  contentBase64: string
+}
+
+export type ConsentProof = {
+  reference: string
+  grantedAt: string
+  source: string
+}
+
+type MailContent = { subject?: string; body: string; action?: string }
 
 export type SendCommunicationPayload = SendCommunicationBase &
   (
-    | { channel: 'rcs'; contenu: RcsContenu }
+    | { channel: 'rcs'; destinataire: string; contenu: RcsContenu }
+    | { channel: 'email'; destinataire: string; contenu: MailContent }
     | {
-        channel: Exclude<SubmittableChannel, 'rcs'>
-        contenu: { subject?: string; body: string; action?: string }
+        channel: 'postal_letter' | 'postal_registered_letter_with_acknowledgement'
+        destinataire: PostalAddress
+        document: MailDocument
+        contenu: MailContent
+      }
+    | {
+        channel: 'electronic_registered_delivery'
+        destinataire: ElectronicRecipient
+        document: MailDocument
+        contenu: MailContent
+      }
+    | {
+        channel: 'electronic_registered_letter'
+        destinataire: ElectronicRecipient
+        document: MailDocument
+        consent?: ConsentProof
+        contenu: MailContent
       }
   )
 

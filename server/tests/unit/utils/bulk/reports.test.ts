@@ -47,7 +47,7 @@ const operation = (reportsToKeep = 10) =>
     reportsToKeep,
     definition: {
       ...emptyBulkOperationDefinition(),
-      bucketId: 'amiable',
+      bucketId: 'Amiable',
       delivery: {
         kind: 'fallback',
         steps: [
