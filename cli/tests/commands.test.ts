@@ -560,6 +560,106 @@ describe('separate updates', () => {
     ).toBe(false)
   })
 
+  it('refuses a datastore reset outside an interactive terminal', async () => {
+    const root = await tempRoot('pierre-reset-non-interactive-')
+    await writeServerBundle(root, 'server-0.40.6')
+    await writeFile(join(root, 'pierre.env'), configuredText())
+    const database = join(root, 'home', 'datastore.sqlite')
+    await writeFile(database, 'database')
+    const ctx = testContext(root, { env: { PIERRE_SERVER_TAG: 'server-0.40.6' } })
+
+    expect(await updateServer(ctx.ctx, true)).toBe(1)
+    expect(readFileSync(database, 'utf8')).toBe('database')
+    expect(ctx.calls.some((call) => call.command === 'systemctl')).toBe(false)
+  })
+
+  it('resets the datastore while keeping the current installation', async () => {
+    const root = await tempRoot('pierre-reset-current-')
+    const release = await writeServerBundle(root, 'server-0.40.6')
+    await writeFile(join(root, 'pierre.env'), configuredText())
+    for (const name of ['files', 'knowledge', 'workspaces']) {
+      await mkdir(join(root, 'home', name), { recursive: true })
+      await writeFile(join(root, 'home', name, 'stale'), name)
+    }
+    await writeFile(join(root, 'home', 'datastore.sqlite'), 'database')
+    await writeFile(join(root, 'home', 'datastore.sqlite-wal'), 'wal')
+    const model = join(root, 'home', 'models', 'carl', 'model.onnx')
+    await mkdir(join(root, 'home', 'models', 'carl'), { recursive: true })
+    await writeFile(model, 'model')
+    const ctx = testContext(root, {
+      canPrompt: true,
+      readLine: async () => 'oui',
+      env: { PIERRE_SERVER_TAG: 'server-0.40.6' }
+    })
+
+    expect(await updateServer(ctx.ctx, true)).toBe(0)
+    for (const name of [
+      'datastore.sqlite',
+      'datastore.sqlite-wal',
+      'files',
+      'knowledge',
+      'workspaces'
+    ]) {
+      expect(existsSync(join(root, 'home', name))).toBe(false)
+    }
+    expect(readFileSync(model, 'utf8')).toBe('model')
+    expect(existsSync(release)).toBe(true)
+    expect(readFileSync(join(root, 'pierre.env'), 'utf8')).toContain('HOST=example.org')
+    expect(
+      ctx.calls.some(
+        (call) => call.command === 'systemctl' && call.args.join(' ') === 'stop pierre'
+      )
+    ).toBe(true)
+    expect(
+      ctx.calls.some(
+        (call) => call.command === 'systemctl' && call.args.join(' ') === 'start pierre'
+      )
+    ).toBe(true)
+  })
+
+  it('resets after stopping the old server and before starting the new one', async () => {
+    const root = await tempRoot('pierre-reset-update-')
+    const assets = join(root, 'assets')
+    await mkdir(assets)
+    await writeServerBundle(root, 'server-0.40.6')
+    await writeExe(join(assets, 'pierre'), '#!/bin/sh\necho server-0.41.0\n')
+    await writeFile(join(assets, 'libonnxruntime.so.1'), 'new library')
+    await writeFile(join(assets, 'pierre-linux-amd64.smolmachine'), 'new microvm')
+    await writeServerChecksums(assets)
+    await writeFile(join(root, 'pierre.env'), configuredText())
+    const database = join(root, 'home', 'datastore.sqlite')
+    await writeFile(database, 'database')
+    const transitions: string[] = []
+    const ctx = testContext(root, {
+      canPrompt: true,
+      readLine: async () => 'oui',
+      env: { PIERRE_SERVER_TAG: 'server-0.41.0', PIERRE_ASSET_DIR: assets },
+      start: (command, args) => {
+        if (command === 'systemctl') {
+          if (args[0] === 'stop' || args[0] === 'start') {
+            transitions.push(`${args[0]}:${existsSync(database)}`)
+          }
+          return {
+            finished: Promise.resolve({ code: 0, stdout: '', stderr: '' }),
+            kill: () => undefined
+          }
+        }
+        const proc = Bun.spawn([command, ...args], { stdout: 'pipe', stderr: 'pipe' })
+        return {
+          finished: Promise.all([
+            new Response(proc.stdout).text(),
+            new Response(proc.stderr).text(),
+            proc.exited
+          ]).then(([stdout, stderr, code]) => ({ code, stdout, stderr })),
+          kill: () => proc.kill()
+        }
+      }
+    })
+
+    expect(await updateServer(ctx.ctx, true)).toBe(0)
+    expect(transitions).toEqual(['stop:true', 'start:false'])
+  })
+
   it('installs a missing carl and restarts once when the server is current', async () => {
     const root = await tempRoot('pierre-carl-missing-')
     const assets = join(root, 'assets')
@@ -726,10 +826,38 @@ describe('separate updates', () => {
         return healthRequests <= 120
           ? { status: 0, body: '', url: '' }
           : { status: 200, body: 'ok', url: '' }
+      },
+      start: (command, args) => {
+        if (command === 'journalctl') {
+          return {
+            finished: Promise.resolve({
+              code: 0,
+              stdout: 'Datastore schema_migrations does not match APP_MIGRATIONS.\n',
+              stderr: ''
+            }),
+            kill: () => undefined
+          }
+        }
+        if (command === 'systemctl') {
+          return {
+            finished: Promise.resolve({ code: 0, stdout: '', stderr: '' }),
+            kill: () => undefined
+          }
+        }
+        const proc = Bun.spawn([command, ...args], { stdout: 'pipe', stderr: 'pipe' })
+        return {
+          finished: Promise.all([
+            new Response(proc.stdout).text(),
+            new Response(proc.stderr).text(),
+            proc.exited
+          ]).then(([stdout, stderr, code]) => ({ code, stdout, stderr })),
+          kill: () => proc.kill()
+        }
       }
     })
     expect(await updateServer(ctx.ctx)).toBe(1)
     expect(ctx.err()).toContain('La mise à jour du serveur a échoué.')
+    expect(ctx.err()).toContain('schema_migrations does not match')
     expect(
       readFileSync(join(root, 'home', 'server', 'current', 'libonnxruntime.so.1'), 'utf8')
     ).toBe('library')
@@ -797,7 +925,7 @@ describe('separate updates', () => {
       env: { PIERRE_ASSET_DIR: assets, PIERRE_CLI_TAG: 'cli-9.9.9' },
       start: (command, args) => {
         if (args[0] === 'update') {
-          handoff = args[1] === '--server'
+          handoff = args[1] === '--server' && args[2] === '--reset'
           return {
             finished: Promise.resolve({ code: 0, stdout: '', stderr: '' }),
             kill: () => undefined
@@ -814,7 +942,7 @@ describe('separate updates', () => {
         }
       }
     })
-    expect(await update(ctx.ctx)).toBe(0)
+    expect(await update(ctx.ctx, ['--reset'])).toBe(0)
     expect(handoff).toBe(true)
     expect(await Bun.$`${join(root, 'pierre')} --version`.text()).toBe('cli-9.9.9\n')
   })
