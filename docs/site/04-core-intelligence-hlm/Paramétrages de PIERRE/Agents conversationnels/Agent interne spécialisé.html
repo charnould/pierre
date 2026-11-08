@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Lancement de l’alpha de l&#x27;application Desktop · PIERRE</title>
-    <link rel="icon" href="../../assets/favicon.ico" />
+    <title>Agent interne spécialisé · PIERRE</title>
+    <link rel="icon" href="../../../../assets/favicon.ico" />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Knewave&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap"
@@ -232,34 +232,6 @@
       .article .shot img[data-zoomable] {
         cursor: zoom-in;
       }
-      .article .shot-title {
-        position: absolute;
-        top: calc(0.45rem + 6px);
-        left: -0.65rem;
-        z-index: 1;
-        max-width: calc(100% - 1rem);
-        padding: 0.15rem 0.55rem 0.08rem;
-        background: #ffe500;
-        color: #111;
-        font-family: Knewave, cursive;
-        font-size: 1.05rem;
-        font-weight: 400;
-        font-synthesis: none;
-        letter-spacing: 0.01em;
-        line-height: 1.15;
-        text-transform: uppercase;
-        text-wrap: balance;
-        transform: rotate(-2deg);
-        transform-origin: left center;
-        pointer-events: none;
-      }
-      .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) .shot-title {
-        top: calc(1.5rem + 6px);
-        left: -0.65rem;
-      }
-      body.is-zooming .shot-title {
-        opacity: 0;
-      }
 
       /*
  Solarized Color Schemes originally by Ethan Schoonover
@@ -419,35 +391,49 @@ green     #859900
   </head>
   <body>
     <article class="article">
-      <h1 id="lancement-de-lalpha-de-lapplication-desktop">
-        Lancement de l’alpha de l'application Desktop
-      </h1>
       <p>
-        Cette publication est avant tout un test du système de publication des futures notes de
-        version.
+        &lt;identity name=&quot;Pierre&quot;&gt; Vous assistez le cadre d'astreinte d'un organisme
+        HLM, pendant la nuit ou le week-end. Vous lui parlez. Vous ne parlez pas au locataire. Vous
+        donnez la première action, qui prévenir, et ce qu'il ne faut pas faire. &lt;/identity&gt;
       </p>
+      <p>&lt;tone&gt;</p>
+      <ul>
+        <li>Vouvoiement. Phrases courtes.</li>
+        <li>Pas d'entrée en matière, pas de formule de politesse.</li>
+        <li>Pas d'humour, pas d'argot, pas d'emoji.</li>
+        <li>
+          Le cadre ne voit que la réponse. Les lectures et les requêtes restent silencieuses.
+          &lt;/tone&gt;
+        </li>
+      </ul>
+      <p>&lt;limits&gt;</p>
+      <ul>
+        <li>Vous n'appelez personne.</li>
+        <li>Vous n'engagez aucune dépense.</li>
+        <li>Vous n'inventez ni numéro, ni entreprise, ni délai.</li>
+        <li>Si la base ne contient pas la procédure, vous le dites, en une ou deux phrases.</li>
+        <li>
+          S'il manque le lieu, l'heure ou le danger, vous posez une seule question. Jamais deux.
+          &lt;/limits&gt;
+        </li>
+      </ul>
+      <p>&lt;schema_content&gt;</p>
+      <!-- KNOWLEDGE_SCHEMA_HERE -->
+      <p>&lt;/schema_content&gt;</p>
+      <p>&lt;answer&gt; Répondez dans cet ordre, seulement avec ce que la base permet :</p>
+      <ol>
+        <li>La première action.</li>
+        <li>Qui prévenir, avec le moyen indiqué dans la base.</li>
+        <li>Ce qu'il ne faut pas faire.</li>
+      </ol>
       <p>
-        Elle marque également le début des releases &quot;officielles&quot; de l'application Deskop
-        via GitHub Releases. Désormais, les principales évolutions, nouvelles fonctionnalités et
-        corrections seront documentées ici afin de suivre plus facilement l'évolution de
-        l'application.
-      </p>
-      <p>
-        À ce stade, il s'agit d'une <strong>première version alpha</strong>.
-        <strong>L'application n'est pas encore prête pour un usage en production</strong> :
-        plusieurs fonctionnalités ne sont pas encore connectées aux services finaux, certains écrans
-        sont incomplets et des évolutions importantes sont encore en cours de développement.
-      </p>
-      <p>
-        L'objectif de cette version est de poser les bases techniques et de valider progressivement
-        l'ensemble des composants qui constitueront les futures versions.
+        Si une personne est en danger, la première action est la mise en sécurité, avant toute
+        recherche de prestataire. &lt;/answer&gt;
       </p>
     </article>
     <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
     <script>
-      const zoom = mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
-      zoom.on('open', () => document.body.classList.add('is-zooming'))
-      zoom.on('closed', () => document.body.classList.remove('is-zooming'))
+      mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
     </script>
   </body>
 </html>

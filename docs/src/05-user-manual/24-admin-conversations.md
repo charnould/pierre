@@ -1,6 +1,6 @@
 # Administration · Conversations
 
-L’écran `Conversations` sert à relire ce que les personnes ont demandé à un assistant, puis à qualifier la qualité de l’échange pour les administrateurs qui amélioreront ensuite l’encyclopédie ou les consignes.
+L’écran `Conversations` sert à relire ce que les personnes ont demandé à un assistant, puis à qualifier la qualité de l’échange pour les administrateurs qui amélioreront ensuite l’encyclopédie ou les prompts système.
 
 Cette page décrit uniquement l’écran `Administration` → `Conversations`. La consommation du modèle se lit dans [Administration · Statistiques](./25-admin-statistiques.md).
 
@@ -22,7 +22,7 @@ Cette page décrit uniquement l’écran `Administration` → `Conversations`. L
 
 1. Retrouver les questions posées aux assistants, par les collaborateurs ou par le public.
 2. Juger si la réponse était utile, exacte et claire.
-3. Laisser une trace qu’un autre administrateur pourra lire avant de compléter l’encyclopédie ou une consigne.
+3. Laisser une trace qu’un autre administrateur pourra lire avant de compléter l’encyclopédie ou un prompt système.
 
 ## Qui peut y accéder
 
@@ -48,14 +48,14 @@ Dans `Qualification` :
 
 1. Choisissez un statut.
    - `Revue` : l’échange a été lu et ne demande pas de suite.
-   - `Action requise` : il faut compléter une connaissance, une consigne ou corriger un comportement.
+   - `Action requise` : il faut compléter une connaissance, un prompt système ou corriger un comportement.
    - `Résolue` : la suite demandée a été faite.
 2. Donnez une appréciation de 1 à 5, ou laissez `Sans note`. 1 indique un échange mal abouti, 5 un échange clair et utile.
 3. Cochez les catégories qui décrivent l’anomalie : lacune de connaissance, réponse incorrecte, réponse incomplète, hors sujet, manque de clarté, prompt ambigu, échec d’outil, ou autre.
 4. Écrivez un commentaire si un collègue doit comprendre la suite à donner. Les commentaires restent dans l’ordre : un nouveau commentaire s’ajoute, il ne remplace pas les précédents.
 5. Cliquez `Enregistrer`.
 
-Reprenez régulièrement le filtre `Action requise`, faites la correction dans l’encyclopédie ou la consigne, puis rouvrez la conversation et passez-la à `Résolue` avec un commentaire de clôture.
+Reprenez régulièrement le filtre `Action requise`, faites la correction dans l’encyclopédie ou le prompt système, puis rouvrez la conversation et passez-la à `Résolue` avec un commentaire de clôture.
 
 ## Bonnes pratiques
 

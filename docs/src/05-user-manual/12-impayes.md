@@ -57,7 +57,7 @@ Sur chaque phase qui contient des dossiers : `Colonnes`, `Effacer les filtres`, 
 
 La première colonne coche un ou plusieurs dossiers. La sélection reste d’une phase à l’autre. La colonne `Alertes` signale une notification. Le tableau montre d’abord `Locataire`, `Client`, `Dette`, `Dette / loyer`, `Courriel`, `Téléphone`, `Référent` et `Dernière action`. Les autres colonnes s’affichent depuis `Colonnes`. Les noms techniques des exports sont convertis en libellés lisibles.
 
-`Agir sur N dossiers` peut changer la phase, ajouter ou retirer un tag, ou demander à Pierre une réponse possible, une synthèse ou une autre consigne. Pierre traite les dossiers l’un après l’autre, n’envoie rien, et enregistre chaque résultat dans l’historique du dossier.
+`Agir sur N dossiers` peut changer la phase, ajouter ou retirer un tag, ou demander à Pierre une réponse possible, une synthèse ou un autre prompt système. Pierre traite les dossiers l’un après l’autre, n’envoie rien, et enregistre chaque résultat dans l’historique du dossier.
 
 | Situation                           | Message                                                                          |
 | ----------------------------------- | -------------------------------------------------------------------------------- |

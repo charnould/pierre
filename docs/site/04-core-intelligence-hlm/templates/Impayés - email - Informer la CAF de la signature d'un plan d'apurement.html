@@ -234,34 +234,6 @@
       .article .shot img[data-zoomable] {
         cursor: zoom-in;
       }
-      .article .shot-title {
-        position: absolute;
-        top: calc(0.45rem + 6px);
-        left: -0.65rem;
-        z-index: 1;
-        max-width: calc(100% - 1rem);
-        padding: 0.15rem 0.55rem 0.08rem;
-        background: #ffe500;
-        color: #111;
-        font-family: Knewave, cursive;
-        font-size: 1.05rem;
-        font-weight: 400;
-        font-synthesis: none;
-        letter-spacing: 0.01em;
-        line-height: 1.15;
-        text-transform: uppercase;
-        text-wrap: balance;
-        transform: rotate(-2deg);
-        transform-origin: left center;
-        pointer-events: none;
-      }
-      .article p:has(> .shot) .shot:not(:has(img[data-zoomable])) .shot-title {
-        top: calc(1.5rem + 6px);
-        left: -0.65rem;
-      }
-      body.is-zooming .shot-title {
-        opacity: 0;
-      }
 
       /*
  Solarized Color Schemes originally by Ethan Schoonover
@@ -443,9 +415,7 @@ green     #859900
     </article>
     <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
     <script>
-      const zoom = mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
-      zoom.on('open', () => document.body.classList.add('is-zooming'))
-      zoom.on('closed', () => document.body.classList.remove('is-zooming'))
+      mediumZoom('[data-zoomable]', { background: '#fff', margin: 24 })
     </script>
   </body>
 </html>

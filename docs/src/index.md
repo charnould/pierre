@@ -4,15 +4,15 @@
 
 ## Tous les métiers HLM réunis dans une application IA-First, open code et gratuite.
 
-PIERRE réunit les équipes HLM dans une même expérience utilisateur et met l’intelligence artificielle au coeur de leur travail. Proposée en **open code**, l'application est auditable, **auto-hébergeable** et **gratuite** pour les bailleurs sociaux.
+PIERRE réunit les équipes HLM au sein d'une même expérience utilisateur et met l’intelligence artificielle au coeur de leur travail. Proposée en **open code**, l'application est auditable, **auto-hébergeable** et **gratuite** pour les bailleurs sociaux.
 
-1. **Une expérience commune à tous les métiers HLM** : réclamations, impayés, relocation, assurance habitation… Les mêmes repères d’un métier à l’autre et une continuité entre les processus et les équipes. Moins de frictions et de ruptures, davantage de capacité d’action et de performance opérationnelle au quotidien.
+1. **Une expérience commune à tous les métiers HLM** : réclamations, impayés, relocation, assurance habitation… Les mêmes repères d’un métier à l’autre et une continuité entre les processus et les équipes. Moins de frictions et de ruptures, davantage de capacité d’action et de performance opérationnel.
 
-2. **L’IA au coeur du travail, pas greffée sur les logiciels historiques** : votre agent comprend les dossiers, prépare les décisions et les communications, exécute les tâches répétitives et mobilise les bonnes personnes au bon moment sur la base de **vos** processus. PIERRE fait travailler les humains et l’IA côte à côte.
+2. **L’IA au coeur du travail, pas greffée sur les logiciels historiques** : votre agent comprend les dossiers, prépare les décisions et communications, exécute les tâches répétitives et mobilise les bonnes personnes au bon moment sur la base de **vos** processus. PIERRE fait travailler les humains et l’IA côte à côte.
 
 3. **Trois socles mutualisés pour inventer et construire l’IA HLM** : [Core Data HLM](./02-core-data-hlm/index.md) donne aux données un langage commun pour les humains et les machines. [Core Models HLM](./03-core-models-hlm/index.md) propose des modèles de langage ouverts, compacts et hyper-spécialisés. **Core Intelligence HLM** mutualise les connaissances métier, les instructions et les capacités d’action.
 
-4. **L'évident intégré nativement** : collaboration, notifications, mentions, SMS/RCS, emails, courriers postaux (avec ou sans recommandé) et signature électronique.
+4. **L'évident intégré nativement** : collaboration, notifications, mentions, SMS/RCS, emails, courriers postaux (avec ou sans recommandé), signature électronique et dictée vocale.
 
 5. **Un actif commun et souverain pour le mouvement HLM** : chaque bailleur garde la maîtrise de ses données, de son hébergement et du modèle d’IA qu’il utilise. Les organismes peuvent enrichir ensemble l'application et transformer leurs contributions locales en progrès collectif.
 
@@ -34,7 +34,7 @@ Au fil des décennies, **les logiciels HLM historiques ont trop accumulé**. Tro
 
 À l'image d'un directeur général HLM qui oublierait ce qu’est le métier de gardien, les éditeurs logiciels ont oublié le terrain.
 
-Introduire l’IA dans les processus HLM ne consiste pas à superposer un chatbot à des logiciels inchangés. **Il faut réinventer le logiciel lui-même**, ainsi que la structure des données sur lesquelles il repose.
+Introduire l’IA dans les processus HLM ne consiste pas à superposer un chatbot à des logiciels inchangés. **Il faut réinventer le logiciel lui-même**, ainsi que la structure des données sur laquelle il repose.
 
 PIERRE est un **applicatif « User-First × IA-First »** : l’intelligence artificielle n’est utile que lorsqu’elle simplifie concrètement le travail et renforce la capacité d’action des équipes. Son principe : « **Human + IA : side-by-side** ».
 
@@ -62,7 +62,7 @@ Le modèle historique des logiciels HLM repose sur des licences onéreuses, des 
 
 **PIERRE est disponible en open code** : son code est accessible, auditable et auto-hébergeable. Tous les bailleurs sociaux peuvent le télécharger, l’installer et l’utiliser **gratuitement** pour leurs propres besoins (sans licence ni coût par utilisateur), et suggérer des améliorations qui profitent à l'ensemble du mouvement.
 
-Son **modèle économique** repose sur les contributions libres des bailleurs sociaux, dans l’esprit de très nombreux projets open source. Sa **gouvernance** reste à inventer à l'intersection de l’USH, des fédérations, des bailleurs et de leurs besoins.
+Son **modèle économique** repose sur les contributions libres du mouvement HLM, dans l’esprit de très nombreux projets open source. Sa **gouvernance** reste à inventer à l'intersection de l’USH, des fédérations, des bailleurs et de leurs besoins.
 
 Depuis 1853, le mouvement HLM construit des communs immobiliers. Il peut désormais construire ses communs numériques. Le logiciel devient ainsi un actif plutôt qu’une dépendance. PIERRE entend constituer cette première brique de **souveraineté numérique** du mouvement HLM. Parce que l’époque est au _build_.
 

@@ -2,6 +2,7 @@
   {
     "folder": "01-changelog",
     "title": "Changelog",
+    "html": false,
     "entries": [
       {
         "slug": "2026-11-01-desktop-alpha",
