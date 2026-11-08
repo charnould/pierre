@@ -2,6 +2,7 @@ import { Database } from 'bun:sqlite'
 
 import { latest_repayment_states } from '../activities/repayment'
 import { openDatastore } from '../datastore-db'
+import { resolveStoredRepaymentPhase } from '../setup-store'
 import { sql_date_key } from '../sql-normalization'
 import {
   build_filters,
@@ -168,7 +169,8 @@ export const list_ledger_balances = (input: LedgerListInput): LedgerListResult =
       return {
         ...row,
         ...(pierreGestionnaire ? { gestionnaire: pierreGestionnaire } : {}),
-        bucket: state?.bucket ?? 'non_traites',
+        bucket: resolveStoredRepaymentPhase(state?.bucket),
+        repayment_tags: state?.tags ?? [],
         derniere_action_realisee: state?.derniere_action_realisee ?? null,
         date_derniere_action_realisee: state?.date_derniere_action_realisee ?? null
       }
