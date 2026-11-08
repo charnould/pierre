@@ -82,10 +82,16 @@ jobs:
 
       - name: Enable KVM
         run: |
+          sudo modprobe kvm || true
+          sudo modprobe kvm_intel || sudo modprobe kvm_amd || true
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
             | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
+          sudo udevadm control --reload-rules || true
+          sudo udevadm trigger --name-match=kvm || true
+          if [ ! -e /dev/kvm ]; then
+            sudo mknod /dev/kvm c 10 232
+          fi
+          sudo chmod 666 /dev/kvm
           test -r /dev/kvm
           test -w /dev/kvm
 
