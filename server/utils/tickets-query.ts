@@ -82,6 +82,19 @@ export class TicketsSchemaError extends Error {
   }
 }
 
+const parse_ticket_tags = (value: unknown): string[] => {
+  if (Array.isArray(value)) return value.filter((tag): tag is string => typeof tag === 'string')
+  if (typeof value !== 'string' || value.trim() === '') return []
+  try {
+    const parsed = JSON.parse(value) as unknown
+    return Array.isArray(parsed)
+      ? parsed.filter((tag): tag is string => typeof tag === 'string')
+      : []
+  } catch {
+    return []
+  }
+}
+
 const empty_meta = (
   limit: number,
   offset: number,
@@ -283,42 +296,62 @@ export const list_tickets = (input: TicketsListInput): TicketsListResult => {
     const params = [...merged.params, ...(input.bucket ? [input.bucket] : [])]
     const { column, direction } = parse_sort(sort)
     const address = lot_address_sql(db)
-    const ticketRows = (bucketSql: string, bucketJoin: string) => `ticket_rows AS (
+    const ticketRows = (bucketSql: string, tagsSql: string, joins: string) => `ticket_rows AS (
            SELECT reclamations.*,
              ${bucketSql} AS pierre_bucket,
+             ${tagsSql} AS pierre_tags,
              ${address.select}
            FROM reclamations
            ${address.join}
-           ${bucketJoin}
+           ${joins}
          )`
     const source = activities_table_exists(db)
       ? `WITH ranked_ticket_buckets AS (
            SELECT
              substr(rattachement, length('tickets:') + 1) AS id_reclamation,
-             json_extract(contenu, '$.bucket') AS bucket,
+             json_extract(contenu, '$.after') AS bucket,
              ROW_NUMBER() OVER (
                PARTITION BY rattachement
                ORDER BY date_creation DESC, id DESC
              ) AS row_number
            FROM activites
-           WHERE type = 'case_bucket_change'
+           WHERE type = 'case.bucket_changed'
              AND rattachement LIKE 'tickets:%'
              AND json_valid(contenu)
-             AND json_extract(contenu, '$.version') = 1
-             AND json_type(contenu, '$.bucket') = 'text'
-             AND trim(json_extract(contenu, '$.bucket')) <> ''
-             AND json_extract(contenu, '$.bucket') IN (${buckets.sql})
+             AND json_extract(contenu, '$.version') = 2
+             AND json_type(contenu, '$.after') = 'text'
+             AND trim(json_extract(contenu, '$.after')) <> ''
+             AND json_extract(contenu, '$.after') IN (${buckets.sql})
+         ),
+         ranked_ticket_tags AS (
+           SELECT
+             substr(rattachement, length('tickets:') + 1) AS id_reclamation,
+             json_extract(contenu, '$.after') AS tags,
+             ROW_NUMBER() OVER (
+               PARTITION BY rattachement
+               ORDER BY date_creation DESC, id DESC
+             ) AS row_number
+           FROM activites
+           WHERE type = 'case.tags_changed'
+             AND rattachement LIKE 'tickets:%'
+             AND json_valid(contenu)
+             AND json_extract(contenu, '$.version') = 2
+             AND json_type(contenu, '$.after') = 'array'
          ),
          ${ticketRows(
            `CASE
                WHEN latest.bucket IN (${buckets.sql}) THEN latest.bucket
                ELSE '${DEFAULT_TICKET_BUCKET}'
              END`,
+           `COALESCE(latest_tags.tags, '[]')`,
            `LEFT JOIN ranked_ticket_buckets latest
              ON latest.id_reclamation = CAST(reclamations.id_reclamation AS TEXT)
-            AND latest.row_number = 1`
+            AND latest.row_number = 1
+           LEFT JOIN ranked_ticket_tags latest_tags
+             ON latest_tags.id_reclamation = CAST(reclamations.id_reclamation AS TEXT)
+            AND latest_tags.row_number = 1`
          )}`
-      : `WITH ${ticketRows(`'${DEFAULT_TICKET_BUCKET}'`, '')}`
+      : `WITH ${ticketRows(`'${DEFAULT_TICKET_BUCKET}'`, `'[]'`, '')}`
 
     const paged = db
       .query<Record<string, unknown>, (string | number)[]>(
@@ -338,8 +371,8 @@ export const list_tickets = (input: TicketsListInput): TicketsListResult => {
             )
             .get(...params)!.n
     const rows = paged.map((row) => {
-      const { _total: _ignored, ...rest } = row
-      return rest
+      const { _total: _ignored, pierre_tags, ...rest } = row
+      return { ...rest, pierre_tags: parse_ticket_tags(pierre_tags) }
     })
 
     return {

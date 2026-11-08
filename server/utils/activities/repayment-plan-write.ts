@@ -67,7 +67,7 @@ const dossier_count = (db: Database, threadId: string): number =>
   db
     .query<{ count: number }, [string]>(
       `SELECT COUNT(*) AS count FROM activites
-       WHERE thread_id = ? AND json_type(contenu, '$.foyer') = 'object'`
+       WHERE thread_id = ? AND json_type(contenu, '$.donnees_communes') = 'object'`
     )
     .get(threadId)?.count ?? 0
 
@@ -76,7 +76,7 @@ const clear_dossier = (db: Database, existing: Activity): void => {
     .query<never, [number]>(
       `UPDATE activites
        SET contenu = '{}'
-       WHERE id = ? AND json_type(contenu, '$.foyer') = 'object'`
+       WHERE id = ? AND json_type(contenu, '$.donnees_communes') = 'object'`
     )
     .run(existing.id)
   if (result.changes !== 1) {

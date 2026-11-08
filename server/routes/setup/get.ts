@@ -4,8 +4,9 @@ import {
   automationsReady,
   defaultChatbotReady,
   name,
+  repaymentGaps,
+  repaymentMessages,
   repaymentReady,
-  repaymentTemplates,
   ticketsReady
 } from '../../utils/setup-store'
 
@@ -17,7 +18,8 @@ export const getSetup = (c: AuthContext) => {
     data: {
       name: name(),
       tickets,
-      repayments: repayment ? { ...repayment, templates: repaymentTemplates() } : null,
+      repayments: repayment ? { ...repayment, messages: repaymentMessages() } : null,
+      repaymentGaps: repayment ? [] : repaymentGaps(),
       docxSkillIds: tickets ? ['replies'] : [],
       about: aboutReady(),
       automations: automationsReady(),

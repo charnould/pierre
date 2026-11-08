@@ -16,7 +16,7 @@ import { parse_stored_choices, type RcsChoice } from './rcs-message'
 import {
   isRepaymentPlanEventType,
   parseRepaymentPlanContent,
-  type RepaymentPlanCase
+  type RepaymentForms
 } from './repayment-plan'
 
 type TaskSnapshot = {
@@ -71,6 +71,8 @@ export type CommunicationOpenedContent = {
   purpose?: 'general' | 'payment_plan' | 'bulk'
   related_id?: string
   fallback_from?: string
+  document?: { name: string; sha256: string }
+  consent?: { reference: string; grantedAt: string; source: string }
 }
 
 export type CommunicationStatusContent = {
@@ -128,7 +130,7 @@ export type ActivityContent =
   | ActivityMetaContent
   | TitledContent
   | SignatureContent
-  | RepaymentPlanCase
+  | RepaymentForms
 
 export const parseContentJson = (raw: string): Record<string, unknown> => {
   const value: unknown = JSON.parse(raw)
@@ -263,7 +265,9 @@ export const parseCommunicationOpenedContent = (raw: string): CommunicationOpene
       'provider',
       'purpose',
       'related_id',
-      'fallback_from'
+      'fallback_from',
+      'document',
+      'consent'
     ])
   ) {
     return null
@@ -286,6 +290,10 @@ export const parseCommunicationOpenedContent = (raw: string): CommunicationOpene
   }
   const choices = parse_stored_choices(value['choices'])
   if (!choices) return null
+  const document = parseMailDocument(value['document'])
+  if (value['document'] !== undefined && !document) return null
+  const consent = parseConsent(value['consent'])
+  if (value['consent'] !== undefined && !consent) return null
   const sms_fallback = asString(value['sms_fallback'])
   return {
     version: 2,
@@ -298,8 +306,37 @@ export const parseCommunicationOpenedContent = (raw: string): CommunicationOpene
     ...(asString(value['provider']) ? { provider: asString(value['provider']) } : {}),
     ...(purpose ? { purpose } : {}),
     ...(asString(value['related_id']) ? { related_id: asString(value['related_id']) } : {}),
-    ...(asString(value['fallback_from']) ? { fallback_from: asString(value['fallback_from']) } : {})
+    ...(asString(value['fallback_from'])
+      ? { fallback_from: asString(value['fallback_from']) }
+      : {}),
+    ...(document ? { document } : {}),
+    ...(consent ? { consent } : {})
   }
+}
+
+const parseConsent = (
+  value: unknown
+): { reference: string; grantedAt: string; source: string } | null => {
+  if (value === undefined) return null
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  const record = value as Record<string, unknown>
+  if (!hasOnlyKeys(record, ['reference', 'grantedAt', 'source'])) return null
+  const reference = asString(record['reference'])
+  const grantedAt = asString(record['grantedAt'])
+  const source = asString(record['source'])
+  if (!reference || !grantedAt || !source) return null
+  return { reference, grantedAt, source }
+}
+
+const parseMailDocument = (value: unknown): { name: string; sha256: string } | null => {
+  if (value === undefined) return null
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  const record = value as Record<string, unknown>
+  if (!hasOnlyKeys(record, ['name', 'sha256'])) return null
+  const name = asString(record['name'])
+  const sha256 = asString(record['sha256'])
+  if (!name || !sha256 || !/^[a-f0-9]{64}$/.test(sha256)) return null
+  return { name, sha256 }
 }
 
 export const parseCommunicationStatusContent = (raw: string): CommunicationStatusContent | null => {

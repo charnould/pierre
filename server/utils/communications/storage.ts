@@ -61,7 +61,9 @@ const opened_contenu = (raw: string, sender: string): string => {
       ...(value['provider'] !== undefined ? { provider: value['provider'] } : {}),
       ...(value['purpose'] !== undefined ? { purpose: value['purpose'] } : {}),
       ...(value['related_id'] !== undefined ? { related_id: value['related_id'] } : {}),
-      ...(value['fallback_from'] !== undefined ? { fallback_from: value['fallback_from'] } : {})
+      ...(value['fallback_from'] !== undefined ? { fallback_from: value['fallback_from'] } : {}),
+      ...(value['document'] !== undefined ? { document: value['document'] } : {}),
+      ...(value['consent'] !== undefined ? { consent: value['consent'] } : {})
     })
   )
   if (!content) throw new CommunicationsError('Contenu de communication invalide')
@@ -109,7 +111,7 @@ export const create_outbound_with_db = (db: Database, input: CreateOutboundInput
     ? { value: rawDestination.trim(), status: 'ok' as const }
     : input.type === 'rcs' || input.type === 'sms'
       ? normalize_telephone(rawDestination)
-      : input.type === 'email' || input.type === 'lre'
+      : input.type === 'email' || input.type === 'lre' || input.type === 'ere'
         ? normalize_email(rawDestination)
         : { value: rawDestination.trim(), status: 'ok' as const }
   if (

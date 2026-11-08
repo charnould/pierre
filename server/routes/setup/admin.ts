@@ -29,6 +29,7 @@ const TEXT = new Set([
   'tickets/AGENTS.md',
   'repayment',
   'repayment/AGENTS.md',
+  'repayment/messages',
   'chatbots/default',
   'chatbots/default/AGENTS.md'
 ])
