@@ -138,17 +138,12 @@ beforeEach(async () => {
   await writeSetup(
     'repayment',
     text({
-      buckets: [
-        { id: 'non_traites', label: 'Non traités' },
-        { id: 'amiable', label: 'Amiable' },
-        { id: 'clients_partis', label: 'Partis' }
-      ],
-      actions: { dossier: ['Analyser'], bulk_operations: ['Relancer'] },
+      phases: ['Non traités', 'Amiable', 'Partis'],
+      caseActions: ['Analyser'],
+      batchActions: ['Relancer'],
       tags: ['décès'],
-      template_groups: ['RCS'],
-      templates: ['note.md'],
-      email_from: 'loyer@dribble.football',
-      create_plan: { schedule: repaymentSchedule }
+      senderEmail: 'loyer@dribble.football',
+      schedule: repaymentSchedule
     })
   )
 })
@@ -164,16 +159,11 @@ describe('email transactionnel', () => {
       'repayment',
       new TextEncoder().encode(
         JSON.stringify({
-          buckets: [
-            { id: 'non_traites', label: 'Non traités' },
-            { id: 'amiable', label: 'Amiable' },
-            { id: 'clients_partis', label: 'Partis' }
-          ],
-          actions: { dossier: ['Analyser'], bulk_operations: ['Relancer'] },
+          phases: ['Non traités', 'Amiable', 'Partis'],
+          caseActions: ['Analyser'],
+          batchActions: ['Relancer'],
           tags: ['décès'],
-          template_groups: ['RCS'],
-          templates: ['note.md'],
-          create_plan: { schedule: repaymentSchedule }
+          schedule: repaymentSchedule
         })
       )
     )

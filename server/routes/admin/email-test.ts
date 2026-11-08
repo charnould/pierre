@@ -11,7 +11,10 @@ export const sendTestEmail = async (c: AuthContext) => {
   }
   const from = moduleEmailFrom('tickets') ?? moduleEmailFrom('repayment')
   if (!from) {
-    return c.json({ error: { code: 'not_configured', message: 'email_from manquant' } }, 503)
+    return c.json(
+      { error: { code: 'not_configured', message: 'adresse d’expédition manquante' } },
+      503
+    )
   }
   try {
     await send_transactional_email({

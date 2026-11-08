@@ -1,21 +1,17 @@
-import { writeSetup } from '../utils/setup-store'
+import { REPAYMENT_DOCUMENT_IDS, writeSetup } from '../utils/setup-store'
 
 const text = (value: unknown) => new TextEncoder().encode(JSON.stringify(value))
 const docx = new Uint8Array([0x50, 0x4b, 0x03, 0x04])
 const agents = (body: string) => new TextEncoder().encode(body)
 
 export const repaymentSchedule = {
-  defaultMonths: 6,
-  maxEffortRate: 35,
-  minDailyRemainder: 15,
-  thresholds: [
-    { months: 12, message: 'Un échéancier de plus de 12 mensualités doit être confirmé.' },
-    {
-      months: 24,
-      message:
-        'Un plan d’apurement de plus de 24 mensualités est réservé à des cas spéciaux documentés au sein de votre organisme.'
-    }
-  ]
+  defaultInstallments: 6,
+  maxEffortPercent: 35,
+  minDailyRemainderEuros: 15,
+  confirmAfterInstallments: {
+    '12': 'Un échéancier de plus de 12 mensualités doit être confirmé.',
+    '24': 'Un plan d’apurement de plus de 24 mensualités est réservé à des cas spéciaux documentés au sein de votre organisme.'
+  }
 }
 
 /** Lignes minimales pour les tests qui exercent un module déjà paramétré. */
@@ -38,24 +34,35 @@ export async function seedInstanceSetup(): Promise<void> {
   await writeSetup(
     'repayment',
     text({
-      buckets: [
-        { id: 'non_traites', label: 'Non traités' },
-        { id: 'amiable', label: 'Amiable' },
-        { id: 'clients_partis', label: 'Partis' }
+      phases: ['Non traités', 'Amiable', 'Partis'],
+      caseActions: ['Analyser le dossier'],
+      batchActions: [
+        'Envoyer un RCS de relance',
+        'Relancer',
+        'Relancer par SMS',
+        'RCS',
+        'RCS bis',
+        'Courriel',
+        'R1'
       ],
-      actions: {
-        dossier: ['Analyser le dossier'],
-        bulk_operations: ['Envoyer un RCS de relance']
-      },
       tags: ['décès', '+65 ans', 'Redémarrage APL'],
-      template_groups: ['RCS'],
-      templates: ['note.md'],
-      create_plan: { schedule: repaymentSchedule }
+      schedule: repaymentSchedule
     })
   )
   await writeSetup('repayment/AGENTS.md', agents('Impayés.'))
-  await writeSetup('repayment/template.docx', docx)
-  await writeSetup('repayment/templates/note.md', agents('Bonjour.'))
+  for (const id of REPAYMENT_DOCUMENT_IDS) await writeSetup(id, docx)
+  await writeSetup(
+    'repayment/messages',
+    text([
+      JSON.stringify({
+        group: 'RCS',
+        action: 'Relancer',
+        label: 'Relance',
+        body: 'Bonjour.',
+        choices: []
+      })
+    ])
+  )
   await writeSetup(
     'chatbots/default',
     text({

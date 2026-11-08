@@ -64,7 +64,7 @@ export const createPostAnswerController =
       }
       const payloadRaw = (formData.get('payload') as string | null) ?? ''
 
-      const workflowPayload = parseWorkflowPayload(payloadRaw)
+      const workflowPayload = parseWorkflowPayload(payloadRaw, skill)
       if (!workflowPayload) {
         return c.json(
           { error: { code: 'invalid_payload', message: 'Workflow payload is invalid' } },

@@ -5,6 +5,7 @@ import { mkdir, rm } from 'node:fs/promises'
 import { import_rows } from '../../../utils/knowledge/sqlite-table-import'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { setup } from '../../../utils/setup'
+import { writeSetup } from '../../../utils/setup-store'
 import {
   DEFAULT_TICKETS_SORT,
   get_ticket_column_facets,
@@ -89,6 +90,24 @@ const insert_ticket_bucket = (
   }
 }
 
+const insert_ticket_tags = (idReclamation: string, tags: string[], dateCreation: string): void => {
+  const db = new Database(DATASTORE_SQLITE)
+  try {
+    db.run(
+      `INSERT INTO activites (
+         date_creation, rattachement, auteur, type, mentions, contenu
+       ) VALUES (?, ?, 'user:test', 'case.tags_changed', '[]', ?)`,
+      [
+        dateCreation,
+        `tickets:${idReclamation}`,
+        JSON.stringify({ version: 2, before: [], after: tags })
+      ]
+    )
+  } finally {
+    db.close()
+  }
+}
+
 beforeAll(() => {
   setDatastoreRoot(paths.root)
 })
@@ -147,6 +166,7 @@ describe('list_tickets', () => {
     const result = list_tickets({ ...TicketsPaginationQuery.parse({}), filters: {} })
     expect(result.data).toHaveLength(4)
     expect(result.data.every((row) => row['pierre_bucket'] === 'non_traitees')).toBe(true)
+    expect(result.data.every((row) => Array.isArray(row['pierre_tags']))).toBe(true)
     expect(result.meta.total).toBe(4)
     expect(result.meta.columns).toEqual(table_columns().map(({ name, type }) => ({ name, type })))
   })
@@ -185,6 +205,38 @@ describe('list_tickets', () => {
     })
 
     expect(result.data.map((row) => row['id_reclamation'])).toContain('REQ-1')
+  })
+
+  it('reads the latest v2 bucket and tags', async () => {
+    await writeSetup(
+      'tickets',
+      new TextEncoder().encode(
+        JSON.stringify({
+          buckets: [
+            { id: 'non_traitees', label: 'Réclamations' },
+            { id: 'en_cours', label: 'En cours' }
+          ],
+          actions: { dossier: ['Analyser le dossier'] },
+          tags: ['Urgent']
+        })
+      )
+    )
+    await seed_tickets()
+    insert_ticket_bucket('REQ-1', 'en_cours', '2026-01-02T10:00:00Z')
+    insert_ticket_tags('REQ-1', ['Urgent'], '2026-01-02T11:00:00Z')
+
+    const moved = list_tickets({
+      ...TicketsPaginationQuery.parse({ bucket: 'en_cours' }),
+      filters: {}
+    })
+    expect(moved.data.map((row) => row['id_reclamation'])).toEqual(['REQ-1'])
+    expect(moved.data[0]?.['pierre_tags']).toEqual(['Urgent'])
+
+    const home = list_tickets({
+      ...TicketsPaginationQuery.parse({ bucket: 'non_traitees' }),
+      filters: {}
+    })
+    expect(home.data.map((row) => row['id_reclamation'])).not.toContain('REQ-1')
   })
 
   it('accepts a v2 case.bucket_changed fixture', async () => {
