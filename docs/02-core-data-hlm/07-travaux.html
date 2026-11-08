@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>core.travaux.csv · PIERRE</title>
+    <link rel="icon" href="../assets/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Knewave&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap"
+    />
+    <link rel="stylesheet" href="../assets/site-944avg06.css" />
+  </head>
+  <body>
+    <article class="article">
+      <h5 id="pierreindexmd--core-data-hlmindexmd--travaux">
+        <a href="../index.html">PIERRE</a> ∕ <a href="index.html">CORE DATA HLM</a> ∕ TRAVAUX
+      </h5>
+      <h1 id="coretravauxcsv">core.travaux.csv</h1>
+      <blockquote class="alert">
+        <p><strong>Note</strong></p>
+        <p>work-in-progress(2026-11-01) — Réflexion en cours</p>
+      </blockquote>
+      <blockquote class="alert">
+        <p><strong>Note</strong></p>
+        <p>
+          Il faut disposer d'une date de fin « crédible » pour - par exemple - suivre la
+          satisfaction des locataires après les interventions des prestataires.
+        </p>
+      </blockquote>
+      <h2 id="objectif">Objectif</h2>
+      <p>
+        Lister <strong>100 % des bons de commande de travaux</strong> émis sur le
+        <strong>patrimoine actuellement en gestion</strong>, au niveau <strong>lot</strong>,
+        <strong>bâtiment</strong> ou <strong>site</strong> (parties communes, résidence). Cas
+        d'usage : pilotage vacance et relocation, suivi de l'entretien courant, recouvrement via
+        <code>id_travaux</code> dans
+        <a href="04-comptes-locataires.html"><code>core.comptes_locataires</code></a
+        >.
+      </p>
+      <p>Le fichier est nommé <code>core.travaux.csv</code>.</p>
+      <h2 id="nature-du-fichier--historique-complet-de-bons-de-commande">
+        Nature du fichier : historique complet de bons de commande
+      </h2>
+      <p>
+        Chaque export est une photographie datée par <code>date_extraction</code> portant l'<strong
+          >historique complet</strong
+        >
+        des bons de commande du périmètre.
+      </p>
+      <p>
+        <strong>Fraîcheur des données</strong> : un <strong>export quotidien</strong> est
+        recommandée pour que l'avancement des chantiers et le pilotage des travaux de relocation
+        reflètent la réalité opérationnelle.
+      </p>
+      <p><strong>Périmètre recommandé</strong> :</p>
+      <ul>
+        <li>
+          <strong>Patrimoine actuellement en gestion</strong> : chaque bon porte les clés
+          patrimoniales du socle (<code>id_lot</code>, <code>id_site</code>, etc.) — immuables dans
+          le temps, jointure garantie.
+        </li>
+        <li>
+          <strong>Historique complet</strong> : tous les bons de commande non annulés du patrimoine
+          actuellement en gestion.
+        </li>
+        <li>
+          <strong>Familles couvertes</strong> : entretien courant et relocation, distinguées par
+          <code>contexte</code> — à l'exclusion de la
+          <strong>réhabilitation globale de programme</strong>, qui relève d'une autre nature de
+          travaux.
+        </li>
+      </ul>
+      <h2 id="entité-logique">Entité logique</h2>
+      <p>
+        Une ligne = un <strong>bon de commande</strong>, identifié de façon unique et stable par
+        <code>id_travaux</code>.
+      </p>
+      <h2 id="colonnes-normatives">Colonnes normatives</h2>
+      <p>
+        <code>core.travaux</code> reprend l'intégralité du
+        <a href="02-socle.html">socle normatif partagé</a> et y ajoute les colonnes obligatoires
+        ci-dessous. Toutes doivent figurer dans l'export ; leurs valeurs peuvent être
+        <code>null</code> lorsque le champ n'est pas applicable.
+      </p>
+      <div class="typeset-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Champ</th>
+              <th>Définition canonique</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>id_travaux</code></td>
+              <td>
+                Identifiant unique et stable du bon de commande dans le SI bailleur (ex.
+                <code>34567</code>)
+              </td>
+            </tr>
+            <tr>
+              <td><code>id_reclamation</code></td>
+              <td>
+                Jointure <strong>optionnelle</strong> vers <code>core.reclamations</code> ;
+                <code>null</code> si non applicable
+              </td>
+            </tr>
+            <tr>
+              <td><code>contexte</code></td>
+              <td>
+                Famille métier du bon de commande. Trois valeurs sont autorisées :
+                <code>entretien_courant</code>, <code>relocation</code> et
+                <code>rehabilitation</code>
+              </td>
+            </tr>
+            <tr>
+              <td><code>type</code></td>
+              <td>
+                Corps d'état ou nature commandée (ex. <code>PLO</code>, <code>AMI</code>,
+                <code>TCE</code>) ;
+                <strong>le diagnostic amiante doit impérativement valoir <code>AMI</code></strong>
+              </td>
+            </tr>
+            <tr>
+              <td><code>montant_en_euros</code></td>
+              <td>Montant du bon de commande</td>
+            </tr>
+            <tr>
+              <td><code>prestataire</code></td>
+              <td>Raison sociale du prestataire (ex. <code>expertam</code>)</td>
+            </tr>
+            <tr>
+              <td><code>siren_prestataire</code></td>
+              <td>Numéro SIREN/SIRET du prestataire</td>
+            </tr>
+            <tr>
+              <td><code>cree_le</code></td>
+              <td>
+                Date d'émission du bon de commande — correspond à la date à laquelle il a été
+                adressé au prestataire (ex. <code>2026-10-27</code>)
+              </td>
+            </tr>
+            <tr>
+              <td><code>debut_theorique</code></td>
+              <td>
+                Date inscrite sur le bon de commande à laquelle les travaux doivent théoriquement
+                débuter (ex. <code>2026-10-27</code>)
+              </td>
+            </tr>
+            <tr>
+              <td><code>fin_theorique</code></td>
+              <td>
+                Date inscrite sur le bon de commande à laquelle les travaux doivent théoriquement se
+                terminer (ex. <code>2026-10-27</code>)
+              </td>
+            </tr>
+            <tr>
+              <td><code>debut_reel</code></td>
+              <td>
+                Date à laquelle les travaux ont réellement commencé ; <code>null</code> si non
+                fiable ou indisponible
+              </td>
+            </tr>
+            <tr>
+              <td><code>fin_reelle</code></td>
+              <td>
+                Date à laquelle les travaux se sont réellement terminés ; <code>null</code> si non
+                fiable ou indisponible
+              </td>
+            </tr>
+            <tr>
+              <td><code>prestations_realisees</code></td>
+              <td>
+                Liste textuelle des prestations attendues ; <code>null</code> si non disponible
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h2 id="règles-métier">Règles métier</h2>
+      <p><strong>Locataire associé au bon de commande</strong></p>
+      <p>
+        Dans <code>core.travaux</code>, <code>id_locataire</code> et
+        <code>id_client</code> désignent le locataire <strong>associé au bon</strong> (souvent le
+        locataire <strong>sortant</strong> pour <code>contexte = relocation</code>).
+      </p>
+      <p><strong>Travaux sur parties communes</strong></p>
+      <p>
+        Ils sont dérivés automatiquement lorsque <code>id_lot</code> et
+        <code>id_locataire</code> sont <code>null</code>.
+      </p>
+      <p><strong>Contexte et classification</strong></p>
+      <ul>
+        <li><code>contexte = relocation</code> → bons liés à la remise en location</li>
+        <li>
+          <code>contexte = entretien_courant</code> → interventions d'entretien courant sur le parc
+        </li>
+        <li>Ne pas mélanger avec réhabilitation globale (autre nature)</li>
+      </ul>
+      <p><strong>Prestations</strong></p>
+      <p>
+        <code>prestations_realisees</code> est un texte libre. Si plusieurs prestations, les
+        concaténer
+        <strong
+          >uniquement avec le caractère <code>U+2063</code> (INVISIBLE SEPARATOR) comme séparateur
+          normatif</strong
+        >
+        — un séparateur Unicode invisible qui évite toute collision avec le texte des prestations.
+      </p>
+      <h2 id="exemples-de-colonnes-libres">Exemples de colonnes libres</h2>
+      <p>
+        Le bailleur est libre d'ajouter toutes autres colonnes pour ses besoins métier — ex. numéro
+        de chantier, code budget, codes analytiques, etc.
+      </p>
+      <div style="display: flex; justify-content: space-between; margin-top: 50px">
+        <p>←<a href="./05-reclamations.html">core.reclamations.csv</a></p>
+      </div>
+    </article>
+    <script src="../assets/site-ez7b7xmv.js" defer></script>
+  </body>
+</html>

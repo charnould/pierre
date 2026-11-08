@@ -1,0 +1,70 @@
+{
+  "phases": [
+    "Non traités",
+    "Recouvrement amiable",
+    "Plan amiable / EV en cours",
+    "Précontentieux",
+    "Commandement de payer",
+    "Plan suite CDP",
+    "Contentieux",
+    "Post-jugement",
+    "Surendettement en instruction",
+    "Plan / mesures BDF en cours",
+    "Moratoire Banque de France",
+    "Rétablissement personnel",
+    "Clos / soldé",
+    "Clients partis"
+  ],
+  "caseActions": [
+    "Analyser le dossier",
+    "Joindre le locataire",
+    "Constater un appel sans réponse",
+    "Réaliser une visite",
+    "Demander des pièces",
+    "Analyser un rejet de prélèvement",
+    "Modifier l’échéance de prélèvement",
+    "Proposer un plan",
+    "Préparer un projet de plan",
+    "Relancer une échéance de plan",
+    "Constater un incident de plan",
+    "Modifier un plan",
+    "Contacter la CAF",
+    "Transmettre une saisine CAF",
+    "Transmettre une mainlevée CAF",
+    "Contacter un travailleur social",
+    "Transmettre un dossier FSL",
+    "Solliciter un partenaire",
+    "Saisir la CCAPEX",
+    "Demander un commandement de payer",
+    "Enregistrer la signification du commandement de payer",
+    "Transférer le dossier au contentieux",
+    "Enregistrer une démarche Banque de France",
+    "Dénoncer un plan Banque de France",
+    "Contacter les héritiers ou le notaire",
+    "Enregistrer un paiement",
+    "Clôturer le dossier"
+  ],
+  "batchActions": [
+    "Envoyer un RCS de relance",
+    "Envoyer un SMS de relance",
+    "Envoyer un e-mail de relance",
+    "Envoyer un courrier",
+    "Envoyer une relance après rejet de prélèvement",
+    "Envoyer l’e-mail de pré-relance R0",
+    "Envoyer le courrier R1",
+    "Envoyer la mise en demeure R2",
+    "Envoyer une relance pour plan non respecté",
+    "Envoyer une mise en demeure Banque de France"
+  ],
+  "tags": ["Décès", "+65 ans", "Redémarrage APL"],
+  "senderEmail": "loyer@dribble.football",
+  "schedule": {
+    "defaultInstallments": 6,
+    "maxEffortPercent": 35,
+    "minDailyRemainderEuros": 15,
+    "confirmAfterInstallments": {
+      "12": "Un échéancier de plus de 12 mensualités doit être confirmé.",
+      "24": "Un plan d’apurement de plus de 24 mensualités est réservé à des cas spéciaux documentés au sein de votre organisme."
+    }
+  }
+}

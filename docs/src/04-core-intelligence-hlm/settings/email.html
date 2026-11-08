@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="supported-color-schemes" content="light dark" />
+
+    <style>
+      .text {
+        color: #222;
+        font-size: 16px;
+        line-height: 26px;
+        font-family: ui-serif, Georgia, 'Times New Roman', serif;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body {
+          color: #e8e8e8 !important;
+          background: #181818 !important;
+        }
+
+        .text {
+          color: #e8e8e8 !important;
+        }
+
+        .footer {
+          color: #999 !important;
+          border-top-color: #3a3a3a !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body
+    style="
+      margin: 0;
+      color: #222;
+      background: #fff;
+      padding: 32px 20px 40px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    "
+  >
+    <main class="container" style="max-width: 560px; margin: 0 auto">
+      <header class="header" style="margin-bottom: 40px">
+        <!-- LOGO (À MODIFIER : width) -->
+        <img
+          alt="logo"
+          src="{{ logo_inline_cid }}"
+          style="display: block; width: 180px; height: auto; margin-left: auto"
+        />
+      </header>
+
+      <div class="text">{{ message }}</div>
+
+      <!-- SIGNATURE (À MODIFIER : texte) -->
+      <div class="text" style="margin-top: 32px">
+        Cordialement,<br />
+        L’équipe de Grand Dijon Habitat
+      </div>
+
+      <!-- PIED DE PAGE (À MODIFIER : texte) -->
+      <footer
+        class="footer"
+        style="
+          color: #777;
+          font-size: 13px;
+          line-height: 20px;
+          margin-top: 48px;
+          padding-top: 20px;
+          border-top: 1px solid #e5e5e5;
+        "
+      >
+        Grand Dijon Habitat<br />
+        2 bis, rue Maréchal Leclerc, 21070 Dijon Cedex<br />
+        03 80 71 84 00 · www.granddijonhabitat.fr
+      </footer>
+    </main>
+  </body>
+</html>

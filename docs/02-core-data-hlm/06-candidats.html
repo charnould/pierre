@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>core.candidats.csv · PIERRE</title>
+    <link rel="icon" href="../assets/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Knewave&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap"
+    />
+    <link rel="stylesheet" href="../assets/site-944avg06.css" />
+  </head>
+  <body>
+    <article class="article">
+      <h5 id="pierreindexmd--core-data-hlmindexmd--candidats">
+        <a href="../index.html">PIERRE</a> ∕ <a href="index.html">CORE DATA HLM</a> ∕ CANDIDATS
+      </h5>
+      <h1 id="corecandidatscsv">core.candidats.csv</h1>
+      <blockquote class="alert">
+        <p><strong>Note</strong></p>
+        <p>work-in-progress (2026-11-01) — Réflexion en cours</p>
+      </blockquote>
+      <h2 id="objectif">Objectif</h2>
+      <p>
+        Exposer <strong>tous les candidats qu'il y a eu</strong> sur les lots actuellement en
+        gestion. Cas d'usage : suivi de l'attribution, gestion des réservataires, jointure avec les
+        rotations de lots.
+      </p>
+      <p>Le fichier est nommé <code>core.candidats.csv</code>.</p>
+      <h2 id="nature-du-fichier--photographie-des-candidats-à-un-logement-social">
+        Nature du fichier : photographie des candidats à un logement social
+      </h2>
+      <p>
+        Chaque export est une photographie datée par <code>date_extraction</code> portant la
+        <strong>photographie intégrale des candidats</strong>. Le fichier inclut les candidats en
+        cours, acceptés, refusés, désistés... — l'état est porté par les colonnes
+        <code>date_acceptation</code> / <code>date_refus</code> / <code>date_caleol</code>.
+      </p>
+      <h2 id="entité-logique">Entité logique</h2>
+      <p>
+        Une ligne = un <strong>candidat</strong>, identifié de façon unique et stable par
+        <code>id_candidat</code>.
+      </p>
+      <h2 id="colonnes-normatives">Colonnes normatives</h2>
+      <p>
+        <code>candidats</code> reprend l'intégralité du
+        <a href="02-socle.html">socle normatif partagé</a> et y ajoute les colonnes spécifiques
+        ci-dessous. Toutes doivent figurer dans l'export (<a
+          href="01-conventions.html#colonnes-requises-et-d%C3%A9finitions-canoniques"
+          >présence obligatoire</a
+        >) ; leurs valeurs peuvent être <code>null</code> lorsque le champ n'est pas applicable.
+      </p>
+      <div class="typeset-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Champ</th>
+              <th>Définition canonique</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>id_candidat</code></td>
+              <td>Identifiant unique et stable du candidat</td>
+            </tr>
+            <tr>
+              <td><code>contingent</code></td>
+              <td>
+                Contingent (gestion en flux) du candidat (<code>prefeecture</code>,
+                <code>action_logement</code>, <code>mairie</code>, <code>null</code>, etc.)
+              </td>
+            </tr>
+            <tr>
+              <td><code>nom_candidat</code></td>
+              <td>Nom du candidat (ex. <code>Becquerel</code>)</td>
+            </tr>
+            <tr>
+              <td><code>email_candidat</code></td>
+              <td>Email du candidat (ex. <code>henri.becquerel@gmail.com</code>)</td>
+            </tr>
+            <tr>
+              <td><code>telephone_candidat</code></td>
+              <td>Téléphone du candidat, de préférence mobile (ex. <code>+33621835027</code>)</td>
+            </tr>
+            <tr>
+              <td><code>date_creation</code></td>
+              <td>
+                Date de création de la candidature à un logement donné (ex. <code>2025-12-10</code>)
+              </td>
+            </tr>
+            <tr>
+              <td><code>date_expiration</code></td>
+              <td>
+                Date d'expiration de la candidature (ex. <code>2025-12-20</code>) ;
+                <code>null</code> si non applicable
+              </td>
+            </tr>
+            <tr>
+              <td><code>date_caleol</code></td>
+              <td>
+                Date de tenue de la CALEOL (ex. <code>2025-02-02</code>) ; <code>null</code> si non
+                applicable
+              </td>
+            </tr>
+            <tr>
+              <td><code>date_acceptation_caleol</code></td>
+              <td>
+                Date d'accord de la CALEOL (ex. <code>2025-01-08</code>) ; <code>null</code> si non
+                accepté
+              </td>
+            </tr>
+            <tr>
+              <td><code>date_rejet_caleol</code></td>
+              <td>
+                Date de rejets de la CALEOL (ex. <code>2025-01-08</code>) ; <code>null</code> si non
+                refusé
+              </td>
+            </tr>
+            <tr>
+              <td><code>date_visite_logement</code></td>
+              <td>
+                Date de la visite du logement par le candidat (ex. <code>2025-01-08</code>) ;
+                <code>null</code> si non effectuée
+              </td>
+            </tr>
+            <tr>
+              <td><code>date_acceptation_candidat</code></td>
+              <td>
+                Date d'acceptation par le candidat du logement (ex. <code>2025-01-08</code>) ;
+                <code>null</code> si non accepté
+              </td>
+            </tr>
+            <tr>
+              <td><code>date_refus_candiat</code></td>
+              <td>
+                Date de refus par le candidat du logement (ex. <code>2025-01-08</code>) ;
+                <code>null</code> si non refusé
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h2 id="exemples-de-colonnes-libres">Exemples de colonnes libres</h2>
+      <blockquote>
+        <p>
+          Ces colonnes ne sont pas obligatoires, il s'agit de suggestions pour enrichir
+          <code>core.candidats.csv</code>.
+        </p>
+      </blockquote>
+      <p><strong>Profil et situation</strong></p>
+      <ul>
+        <li>
+          <code>sne_candidat</code> : numéro d'enregistrement unique (ex. <code>SNE-12345</code>)
+        </li>
+        <li><code>situation_familiale</code> : seul(e), couple, monoparental, famille</li>
+        <li><code>nombre_enfants</code> : nombre d'enfants à charge</li>
+        <li><code>revenus_mensuels_euros</code> : revenus déclarés en euros</li>
+      </ul>
+      <p><strong>Critères d'attribution</strong></p>
+      <ul>
+        <li><code>priorite_attribution</code> : prioritaire, normal, liste_attente</li>
+        <li><code>motif_priorite</code> : mal_loge, suroccupation, accident_sinistre</li>
+        <li><code>mobilite_professionnelle</code> : oui, non</li>
+      </ul>
+      <div style="display: flex; justify-content: space-between; margin-top: 50px">
+        <p>←<a href="./05-reclamations.html">core.reclamations.csv</a></p>
+        <p><a href="./07-travaux.html">core.travaux.csv</a>→</p>
+      </div>
+    </article>
+    <script src="../assets/site-ez7b7xmv.js" defer></script>
+  </body>
+</html>

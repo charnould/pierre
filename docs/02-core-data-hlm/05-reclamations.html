@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>core.reclamations.csv · PIERRE</title>
+    <link rel="icon" href="../assets/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Knewave&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap"
+    />
+    <link rel="stylesheet" href="../assets/site-944avg06.css" />
+  </head>
+  <body>
+    <article class="article">
+      <h5 id="pierreindexmd--core-data-hlmindexmd--reclamations">
+        <a href="../index.html">PIERRE</a> ∕ <a href="index.html">CORE DATA HLM</a> ∕ RECLAMATIONS
+      </h5>
+      <h1 id="corereclamationscsv">core.reclamations.csv</h1>
+      <blockquote class="alert">
+        <p><strong>Note</strong></p>
+        <p>work-in-progress (2026-11-01) — Réflexion en cours</p>
+      </blockquote>
+      <h2 id="objectif">Objectif</h2>
+      <p>
+        Exposer <strong>toutes les affaires relation-client</strong> (réclamations, demandes,
+        tickets…) pour une <strong>vue intégrale</strong> de la relation locataire.
+      </p>
+      <p>Le fichier est nommé <code>core.reclamations.csv</code>.</p>
+      <p><strong>Périmètre recommandé</strong> :</p>
+      <ul>
+        <li>
+          <strong>Historique complet</strong> : toutes les réclamations depuis l’origine, sur le
+          <strong>patrimoine actuellement en gestion</strong> — permet de reconstituer 100 % des
+          affaires d’un lot, <strong>quel que soit le locataire</strong> ayant occupé le lot.
+        </li>
+        <li>
+          <strong>Affaires orientées client</strong> : uniquement les dossiers adressés aux
+          locataires (ou candidats).
+        </li>
+      </ul>
+      <p>
+        <strong>Fraîcheur des données</strong> : une <strong>mise à jour horaire</strong> de ce
+        fichier est recommandée — cas d’usage typique : routine de
+        <strong>pré-prise de poste d’astreinte</strong> (vue à jour des affaires en cours,
+        changements de statut, derniers événements).
+      </p>
+      <h2 id="entité-logique">Entité logique</h2>
+      <p>
+        Une ligne = une <strong>réclamation</strong> (affaire, dossier, ticket…), identifiée de
+        façon unique et stable par <code>id_reclamation</code>.
+      </p>
+      <h2 id="colonnes-normatives">Colonnes normatives</h2>
+      <p>
+        <code>core.reclamations.csv</code> reprend l’intégralité du
+        <a href="02-socle.html">socle normatif partagé</a> et y ajoute les colonnes spécifiques
+        ci-dessous. Toutes doivent figurer dans l’export ; leurs valeurs peuvent être
+        <code>null</code> lorsque le champ n’est pas applicable.
+      </p>
+      <div class="typeset-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Champ</th>
+              <th>Historisation auto.</th>
+              <th>Définition canonique</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>id_reclamation</code></td>
+              <td>non</td>
+              <td>
+                Identifiant unique et stable de l’affaire dans le SI bailleur (ex.
+                <code>677885</code>)
+              </td>
+            </tr>
+            <tr>
+              <td><code>message</code></td>
+              <td>non</td>
+              <td>Contenu intégral du message initial de l’affaire</td>
+            </tr>
+            <tr>
+              <td><code>ids_locataires_concernes</code></td>
+              <td>non</td>
+              <td>
+                Liste des <code>id_locataire</code> ayant eu un lien avec l’affaire sur le lot,
+                séparés par des virgules (ex. <code>00021048207, 00021048412</code>) ;
+                <code>null</code> si non applicable
+              </td>
+            </tr>
+            <tr>
+              <td><code>dernier_evenement_le</code></td>
+              <td>oui</td>
+              <td>
+                Date du dernier événement enregistré sur l’affaire ; idéalement une date ISO 8601
+                avec l'horaire précise
+              </td>
+            </tr>
+            <tr>
+              <td><code>dernier_evenement_type</code></td>
+              <td>oui</td>
+              <td>Type du dernier événement (ex. <code>Pièce jointe</code>)</td>
+            </tr>
+            <tr>
+              <td><code>dernier_evenement_contenu</code></td>
+              <td>oui</td>
+              <td>Contenu ou extrait du dernier événement</td>
+            </tr>
+            <tr>
+              <td><code>email_collaborateur_en_charge</code></td>
+              <td>oui</td>
+              <td>
+                Collaborateur nominativement en charge : <strong>email professionnel</strong> en
+                minuscules (ex. <code>collaborateur@bailleur.fr</code>). Cellule vide si l'annuaire
+                n'en fournit pas. Cette adresse est la clé d'une notification ; la colonne ne
+                déclenche rien par elle-même.
+              </td>
+            </tr>
+            <tr>
+              <td><code>unite_organisationnelle_en_charge_hierarchie</code></td>
+              <td>oui</td>
+              <td>
+                Unités en charge, de la plus générale à la plus précise (ex.
+                <code>direction_relation_client &gt; service_proximite &gt; agence_5_mansart</code>)
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h2 id="historisation-par-pierre-réflexion-en-cours">
+        Historisation par PIERRE (réflexion en cours)
+      </h2>
+      <blockquote class="alert">
+        <p><strong>Note</strong></p>
+        <p>
+          <strong>Le problème</strong> : le SI bailleur ne livre qu'une photo instantanée (datée par
+          <code>date_extraction</code>), sans mémoire des changements opérationnels.
+        </p>
+        <p>
+          <strong>La solution PIERRE</strong> : à chaque import (idéalement horaire), PIERRE diffe
+          ligne à ligne (clé <code>id_reclamation</code>) l'export courant contre le précédent. Deux
+          régimes selon la colonne :
+        </p>
+        <ul>
+          <li>
+            <strong>colonnes historisées</strong> → toute variation de valeur devient un événement
+            de progression, empilé dans le temps pour reconstituer la trajectoire de l'affaire ;
+          </li>
+          <li>
+            <strong>colonnes non historisées</strong> → simple snapshot : seule la dernière valeur
+            connue est gardée, sans trace des changements passés.
+          </li>
+        </ul>
+        <p>
+          Les 5 colonnes historisées : <code>dernier_evenement_le</code>,
+          <code>dernier_evenement_type</code>, <code>dernier_evenement_contenu</code>,
+          <code>email_collaborateur_en_charge</code>,
+          <code>unite_organisationnelle_en_charge_hierarchie</code>.
+        </p>
+        <p>
+          <strong>Pourquoi c'est stratégique</strong> : ce mécanisme (automatique, sans action du
+          bailleur) rend ce fichier unique dans PIERRE et permet de constuire le « cycle de vie »
+          d'une réclamation.
+        </p>
+      </blockquote>
+      <h2 id="exemples-de-colonnes-libres">Exemples de colonnes libres</h2>
+      <blockquote>
+        <p>
+          Ces colonnes ne sont pas obligatoires, il s'agit de suggestions pour enrichir
+          <code>core.reclamations.csv</code>.
+        </p>
+      </blockquote>
+      <p><strong>Taxonomie / Qualification</strong></p>
+      <ul>
+        <li>
+          <code>qualification_hierarchie</code> : Qualification de l'affaire, du plus général au
+          plus précis (ex. <code>technique &gt; plomberie &gt; fuite_de_lavabo</code>)
+        </li>
+      </ul>
+      <blockquote>
+        <p>
+          Lorsque vous utilisez PIERRE, nous ne recommandons pas d'ajouter ces notions de
+          <code>qualification</code>. En effet, PIERRE utilise
+          <a href="../03-core-models-hlm/CARL.html">CARL</a> pour qualifier finement les
+          réclamations. Dans ce cas, <strong>aucune colonne</strong> ne peut être nommée
+          <code>domaine</code>, <code>sous_domaine</code>, <code>motif</code>,
+          <code>integrite_physique</code>, <code>lieu</code>,
+          <code>obligation_reglementaire</code> et <code>ton</code>.
+        </p>
+      </blockquote>
+      <p><strong>État et traitement</strong></p>
+      <ul>
+        <li>
+          <code>vu_par_bailleur</code> : L'affaire a-t-elle été vue par le bailleur ? (ex.
+          <code>oui</code>, <code>non</code>)
+        </li>
+        <li>
+          <code>cree_le</code> : Date et heure de création de l'affaire (ex.
+          <code>2026-06-15T14:30:00</code>)
+        </li>
+        <li>
+          <code>cloture_le</code> : Date et heure de clôture (ex. <code>2026-06-15T14:30:00</code>)
+          ; <code>null</code> si affaire ouverte
+        </li>
+        <li>
+          <code>canal_contact</code> : Canal d'origine (ex. <code>appel entrant</code>,
+          <code>courrier simple</code>, <code>agence virtuelle</code>)
+        </li>
+      </ul>
+      <p><strong>Contexte spatial et métier</strong></p>
+      <ul>
+        <li>
+          <code>perimetre</code> : Portée spatiale de l'affaire (ex. <code>logement</code>,
+          <code>batiment</code>, <code>site</code>)
+        </li>
+      </ul>
+      <div style="display: flex; justify-content: space-between; margin-top: 50px">
+        <p>←<a href="./03-lots-locatifs.html">core.lots_locatifs.csv</a></p>
+        <p><a href="./06-candidats.html">core.candidats.csv</a>→</p>
+      </div>
+    </article>
+    <script src="../assets/site-ez7b7xmv.js" defer></script>
+  </body>
+</html>

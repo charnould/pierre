@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Socle normatif · PIERRE</title>
+    <link rel="icon" href="../assets/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Knewave&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap"
+    />
+    <link rel="stylesheet" href="../assets/site-944avg06.css" />
+  </head>
+  <body>
+    <article class="article">
+      <h5 id="pierreindexmd--core-data-hlmindexmd--socle-normatif">
+        <a href="../index.html">PIERRE</a> ∕ <a href="index.html">CORE DATA HLM</a> ∕ SOCLE NORMATIF
+      </h5>
+      <h1 id="socle-normatif">Socle normatif</h1>
+      <p>
+        Le <strong>socle normatif partagé</strong> est l’ensemble des colonnes
+        <strong>communes et obligatoires</strong> répétées dans chaque export des cinq
+        fichiers-sources. C’est ce socle qui rend les jointures inter-fichiers prévisibles pour
+        l’agent, tout en permettant des agrégations sans jointure excessive.
+      </p>
+      <p>Ce chapitre décrit le <strong>catalogue</strong> de ces colonnes partagées.</p>
+      <h2 id="snapshot-temporel">Snapshot temporel</h2>
+      <div class="typeset-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Colonne</th>
+              <th>Rôle ou définition</th>
+              <th>Cardinalité</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>date_extraction</code></td>
+              <td>Date de l’export ; même valeur sur toutes les lignes d’un export quotidien</td>
+              <td>N/A</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <strong>Modèle snapshot</strong> — Chaque export est une
+        <strong>photographie complète</strong> datée par <code>date_extraction</code>.
+      </p>
+      <h2 id="hiérarchie-spatiale-et-organisationnelle">
+        Hiérarchie spatiale et organisationnelle
+      </h2>
+      <p>
+        Le patrimoine se décline en clefs <code>id_*</code> hiérarchiques,
+        <strong>répétées sur chaque export</strong> (dénormalisées) — chaque fichier porte
+        l'intégralité de la hiérarchie. Valeur <code>null</code> si un niveau n'existe pas dans
+        l'organigramme du bailleur.
+      </p>
+      <div class="typeset-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Clef</th>
+              <th>Rôle ou définition</th>
+              <th>Cardinalité</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>id_rpls</code></td>
+              <td>Identifiant RPLS du logement lorsque applicable (<code>null</code> hors RPLS)</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code>id_lot</code></td>
+              <td>Unité de gestion la plus fine (logement, garage, commerce…)</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code>id_etage</code></td>
+              <td>Niveau dans le bâtiment</td>
+              <td>1 Étage → N Lots</td>
+            </tr>
+            <tr>
+              <td><code>id_entree</code></td>
+              <td>Cage d’escalier, hall</td>
+              <td>1 Entrée → N Étages</td>
+            </tr>
+            <tr>
+              <td><code>id_batiment</code></td>
+              <td>Immeuble, résidence</td>
+              <td>1 Bâtiment → N Entrées</td>
+            </tr>
+            <tr>
+              <td><code>id_site</code></td>
+              <td>Ensemble immobilier, groupe de résidences</td>
+              <td>1 Site → N Bâtiments</td>
+            </tr>
+            <tr>
+              <td><code>id_secteur</code></td>
+              <td>Secteur ou premier niveau organisationnel</td>
+              <td>1 Secteur → N Sites</td>
+            </tr>
+            <tr>
+              <td><code>id_agence</code></td>
+              <td>Agence ou niveau intermédiaire</td>
+              <td>1 Agence → N Secteurs</td>
+            </tr>
+            <tr>
+              <td><code>id_direction</code></td>
+              <td>Direction territoriale (ou équivalent)</td>
+              <td>1 Direction → N Agences</td>
+            </tr>
+            <tr>
+              <td><code>id_organisation</code></td>
+              <td>Organisation, société, filiale, le plus agrégé</td>
+              <td>1 Organisation → N Directions</td>
+            </tr>
+            <tr>
+              <td><code>code_postal</code></td>
+              <td>Code postal du lot (<strong>pas</strong> le code INSEE)</td>
+              <td>1 <code>code_postal</code> → N entités précédentes</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <blockquote class="alert">
+        <p><strong>Note</strong></p>
+        <p>
+          <strong>Remarque spécifique à PIERRE</strong> — Lorsque les exports alimentent PIERRE, ne
+          <strong>JAMAIS</strong> exposer le code INSEE, la commune, l'EPCI, le département, la
+          région, les zonages ABC et 123 et les coordonnées GPS. Dès qu'une colonne
+          <code>code_postal</code> est présente, PIERRE importe automatiquement ces notions. Les
+          ajouter dans l'export créerait une redondance avec des valeurs possiblement incohérentes.
+          <strong>Hors PIERRE</strong>, les bailleurs sont libres d'ajouter toutes données/colonnes
+          de localisation supplémentaires.
+        </p>
+      </blockquote>
+      <h2 id="entités-locatives">Entités locatives</h2>
+      <p>
+        Au sommet de la hiérarchie : les clés qui portent l'état actuel du locataire et du client.
+      </p>
+      <div class="typeset-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Clé</th>
+              <th>Rôle ou définition</th>
+              <th>Cardinalité</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>id_locataire</code></td>
+              <td>
+                Dossier de facturation du locataire <strong>en place</strong> ; <code>null</code> si
+                lot vacant
+              </td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><code>id_client</code></td>
+              <td>
+                Identifiant unique de la personne physique ou morale ; <code>null</code> si lot
+                vacant
+              </td>
+              <td>1 Client → N <code>id_locataire</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-top: 50px">
+        <p>←<a href="./01-conventions.html">Convention</a></p>
+        <p><a href="./03-lots-locatifs.html">core.lots_locatifs.csv</a>→</p>
+      </div>
+    </article>
+    <script src="../assets/site-ez7b7xmv.js" defer></script>
+  </body>
+</html>

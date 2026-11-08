@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>core.lots_locatifs.csv · PIERRE</title>
+    <link rel="icon" href="../assets/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Knewave&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap"
+    />
+    <link rel="stylesheet" href="../assets/site-944avg06.css" />
+  </head>
+  <body>
+    <article class="article">
+      <h5 id="pierreindexmd--core-data-hlmindexmd--lotslocatifs">
+        <a href="../index.html">PIERRE</a> ∕ <a href="index.html">CORE DATA HLM</a> ∕ LOTS_LOCATIFS
+      </h5>
+      <h1 id="corelotslocatifscsv">core.lots_locatifs.csv</h1>
+      <blockquote class="alert">
+        <p><strong>Note</strong></p>
+        <p>v1.0.0-beta (2026-11-01)</p>
+      </blockquote>
+      <h2 id="objectif">Objectif</h2>
+      <p>
+        Décrire le patrimoine locatif <strong>et</strong> l’état courant d’occupation de chaque lot
+        (vacance, assurance habitation, coordonnées du locataire en place) à l’instant T.
+      </p>
+      <p>Le fichier doit être nommé <code>core.lots_locatifs.csv</code>.</p>
+      <h2 id="un-rôle-dual--patrimoine--occupation">Un rôle dual : patrimoine + occupation</h2>
+      <p>
+        <code>lots_locatifs</code> fusionne <strong>patrimoine + occupation</strong> en un seul
+        export : chaque lot porte ses caractéristiques statiques et son état dynamique, ce qui
+        élimine les jointures pour la plupart des cas d'usage.
+      </p>
+      <p>
+        <strong>Fraîcheur des données</strong> : un <strong>export quotidien</strong> de ce fichier
+        est recommandé pour que la vacance et les coordonnées du locataire reflètent la réalité
+        opérationnelle. Le champ <code>date_extraction</code> (socle partagé) ancre l'instant T de
+        cette photographie.
+      </p>
+      <h2 id="entité-logique">Entité logique</h2>
+      <p>
+        Une ligne = un <strong>lot</strong> (logement, garage, commerce…) — la granularité de
+        gestion locative.<br />
+        Le bailleur choisit son périmètre : tout le parc ou un sous-ensemble (par type,
+        localisation, statut, etc.).
+      </p>
+      <h2 id="colonnes-normatives">Colonnes normatives</h2>
+      <p>
+        <code>core.lots_locatifs.csv</code> reprend l'intégralité du
+        <strong>socle normatif partagé</strong> et y ajoute les colonnes obligatoires ci-dessous.
+        Toutes doivent figurer dans l'export ; leurs valeurs peuvent être <code>null</code> (ex. lot
+        vacant, RGPD, etc.).
+      </p>
+      <div class="typeset-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Champ</th>
+              <th>Définition canonique</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>statut</code></td>
+              <td>
+                Valeurs autorisées : <code>null</code>, <code>a_vendre</code>,
+                <code>a_demolir</code>, <code>a_livrer</code>
+              </td>
+            </tr>
+            <tr>
+              <td><code>nom_locataire</code></td>
+              <td>
+                Nom du locataire en place (ex. <code>Becquerel</code>) ; <code>null</code> si vacant
+              </td>
+            </tr>
+            <tr>
+              <td><code>email_locataire</code></td>
+              <td>
+                Courriel du locataire en place (ex. <code>henri.becquerel@gmail.com</code>) ;
+                <code>null</code> si vacant
+              </td>
+            </tr>
+            <tr>
+              <td><code>telephone_locataire</code></td>
+              <td>
+                Téléphone du locataire en place, de préférence mobile (ex.
+                <code>+33611563959</code>) ; <code>null</code> si vacant
+              </td>
+            </tr>
+            <tr>
+              <td><code>allocataire_caf</code></td>
+              <td>384838849030493 ou <code>null</code> ; <code>null</code> si vacant</td>
+            </tr>
+            <tr>
+              <td><code>demande_sne</code></td>
+              <td>939492939399 ou <code>null</code> ; <code>null</code> si vacant</td>
+            </tr>
+            <tr>
+              <td><code>adresse</code></td>
+              <td>
+                Adresse du lot hors commune et code postal (ex. <code>20, rue des Pyramides</code>)
+              </td>
+            </tr>
+            <tr>
+              <td><code>debut_bail</code></td>
+              <td>
+                Date de début du quittancement (ex. <code>2026-12-12</code>) ; <code>null</code> si
+                vacant
+              </td>
+            </tr>
+            <tr>
+              <td><code>etat_des_lieux_entrant</code></td>
+              <td>
+                Date de l'état des lieux entrant du locataire (ex. <code>2026-12-12</code>) ;
+                <code>null</code> si vacant
+              </td>
+            </tr>
+            <tr>
+              <td><code>pre_etat_des_lieux_sortant</code></td>
+              <td>
+                Date de la visite-conseil du locataire (ex. <code>2026-12-12</code>) ;
+                <code>null</code> si vacant
+              </td>
+            </tr>
+            <tr>
+              <td><code>etat_des_lieux_sortant</code></td>
+              <td>
+                Date de l'état des lieux sortant du locataire (ex. <code>2026-12-12</code>) ;
+                <code>null</code> si vacant
+              </td>
+            </tr>
+            <tr>
+              <td><code>fin_bail</code></td>
+              <td>
+                Date de fin du quittancement (ex. <code>2026-12-12</code>) ; <code>null</code> si
+                vacant
+              </td>
+            </tr>
+            <tr>
+              <td><code>surface_en_m2</code></td>
+              <td>Surface du lot en m² ; renseignée pour tous les lots (y compris vacants)</td>
+            </tr>
+            <tr>
+              <td><code>loyer_mensuel_avec_charges_en_euros</code></td>
+              <td>
+                Loyer mensuel en vigueur avec charges en euros ; renseigné pour tous les lots (y
+                compris vacants)
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h2 id="règles-doccupation-et-vacance">Règles d’occupation et vacance</h2>
+      <p><strong>Définition de la vacance</strong></p>
+      <p>
+        Seul <code>id_locataire</code> et <code>id_client</code> font foi (<code>null</code> ou
+        vide). Ne pas créer de colonne redondante du type <code>est_loue</code> ou
+        <code>vacant</code> : c'est une redondance qui risque de confondre un agent IA.
+      </p>
+      <p><strong>Conséquences (champs null lors de vacance)</strong></p>
+      <p>
+        Lot vacant : les colonnes suivantes doivent être <code>null</code> : <code>id_client</code>,
+        <code>id_locataire</code>, <code>nom_locataire</code>, <code>email_locataire</code>,
+        <code>telephone_locataire</code>, <code>allocataire_caf</code>, <code>demande_sne</code>,
+        <code>debut_bail</code>, <code>etat_des_lieux_entrant</code>,
+        <code>pre_etat_des_lieux_sortant</code>, <code>etat_des_lieux_sortant</code>,
+        <code>fin_bail</code> (ou plus généralement, toute colonne pour laquelle les données sont
+        obsolètes ou inapplicables).
+      </p>
+      <p><strong>Exception (caractéristiques du lot restent renseignées)</strong></p>
+      <p>
+        <code>surface_en_m2</code> et <code>loyer_mensuel_avec_charges_en_euros</code> restent
+        renseignés même si le lot est vacant : ce sont les propriétés du lot lui-même, pas de
+        l'occupant actuel.
+      </p>
+      <p><strong>Précision</strong></p>
+      <p>
+        Il est entendu que si le bailleur a signé un bail avec un candidat qui prend effet dans le
+        futur (ex : dans quelques jours), alors la ligne doit contenir les identifiants de ce
+        nouveau locataire et indiquer notamment dans <code>debut_bail</code> la date de prise
+        d'effet du bail dans le futur.
+      </p>
+      <h2 id="exemples-de-colonnes-libres">Exemples de colonnes libres</h2>
+      <blockquote>
+        <p>
+          Ces colonnes ne sont pas obligatoires, il s'agit de suggestions pour enrichir
+          <code>core.lots_locatifs.csv</code>.
+        </p>
+      </blockquote>
+      <p><strong>Gestion patrimoniale</strong></p>
+      <ul>
+        <li><code>nature_du_lot</code> : logement, commerce, garage</li>
+        <li><code>typologie</code> : T1, T2, T3, T3bis</li>
+        <li><code>financement</code> : PLAI, PLUS, PLS, Libre</li>
+        <li>
+          <code>adaptation_handicap</code> : logement labellisable HSS, logement labellisé HSS
+        </li>
+        <li><code>chauffage</code> : collectif, individuel</li>
+        <li><code>ascenseur</code> : oui, non</li>
+        <li><code>prestataire_de_chauffage</code> : Iserba, X, Y</li>
+      </ul>
+      <p><strong>Gestion locative</strong></p>
+      <ul>
+        <li><code>charge_gestion_locative</code> : email du chargé de gestion locative</li>
+        <li><code>charge_de_commercialisation</code> : email du chargé de commercialisation</li>
+        <li><code>charge_de_proximite</code> : email du chargé de proximité</li>
+        <li><code>prise_en_gestion</code> : date (ex. <code>1984-12-12</code>)</li>
+      </ul>
+      <p><strong>Caractéristiques énergétiques et environnementales</strong></p>
+      <ul>
+        <li><code>classe_consommation_energetique</code> : A, B, C, D, E, F</li>
+        <li><code>classe_emission_gaz</code> : A, B, C, D, E, F</li>
+      </ul>
+      <p><strong>Localisation et zones</strong></p>
+      <ul>
+        <li><code>quartier_prioritaire_de_la_ville_(QPV)</code> : oui, non</li>
+        <li><code>zone_anru</code> : oui, non</li>
+        <li><code>incivilite</code> : oui, non</li>
+      </ul>
+      <div style="display: flex; justify-content: space-between; margin-top: 50px">
+        <p>←<a href="02-socle.html">Socle</a></p>
+        <p><a href="./04-comptes-locataires.html">core.comptes_locataires.csv</a>→</p>
+      </div>
+    </article>
+    <script src="../assets/site-ez7b7xmv.js" defer></script>
+  </body>
+</html>
