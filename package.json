@@ -42,7 +42,7 @@
     "knip:production": "knip --config ./config/knip.jsonc --no-config-hints --production --include files,dependencies",
     "pierre:config": "bun test config/checks/",
     "test:cli": "bun test cli/tests",
-    "docs": "bun --filter @pierre/docs build",
+    "docs": "bun --filter @pierre/docs generate",
     "pierre:version": "bun run server/utils/update-pierre.ts"
   },
   "devDependencies": {
