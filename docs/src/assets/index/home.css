@@ -1,0 +1,282 @@
+/**
+ * Home (`/`) — Basecamp-inspired, scoped under `.pierre-home`.
+ * Light-only static landing (no Nimbus shell).
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..800;1,14..32,400..800&family=Manrope:wght@400..800&display=swap');
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #ffffff;
+  color: #111111;
+  color-scheme: light;
+}
+
+.pierre-home {
+  --ph-bg: #ffffff;
+  --ph-fg: #111111;
+  --ph-muted: #444444;
+  --ph-border: #d4d4d4;
+  --ph-link: #0000ee;
+  --ph-accent: #ffe500;
+  --ph-frame: #f0f0f0;
+  --ph-measure: 54rem;
+
+  color-scheme: light;
+  background: var(--ph-bg);
+  color: var(--ph-fg);
+  font-family: Inter, system-ui, sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  line-height: 1.45;
+  width: 100%;
+  min-height: 100%;
+  padding: 3rem 2.25rem 4rem;
+  text-align: left;
+}
+
+@media (min-width: 768px) {
+  .pierre-home {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}
+
+.pierre-home a {
+  color: var(--ph-link);
+  text-underline-offset: 2px;
+}
+
+.pierre-home a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.pierre-home code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.875em;
+  background: var(--ph-frame);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+
+/* —— Hero —— */
+.pierre-home__hero {
+  max-width: var(--ph-measure);
+  margin: 0 0 3rem;
+  text-align: left;
+}
+
+.pierre-home__hero h1 {
+  font-family: Manrope, system-ui, sans-serif;
+  font-size: clamp(2.75rem, 7vw, 4.75rem);
+  font-weight: 800;
+  letter-spacing: -0.07em;
+  line-height: 0.85;
+  margin: 0 0 1rem;
+  text-wrap: balance;
+  color: var(--ph-fg);
+}
+
+.pierre-home__lead {
+  max-width: 36rem;
+  margin: 0 0 1.5rem;
+  font-size: 1.125rem;
+  line-height: 1.4;
+  color: var(--ph-muted);
+}
+
+.pierre-home__pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 0.6rem;
+}
+
+.pierre-home__pills a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 0.95rem;
+  border: 1px solid var(--ph-fg);
+  border-radius: 999px;
+  color: var(--ph-fg);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  background: var(--ph-bg);
+  transition: background 0.15s ease;
+}
+
+.pierre-home__pills a:hover {
+  background: var(--ph-frame);
+}
+
+/* —— Media —— */
+.pierre-home__media {
+  position: relative;
+  width: 100%;
+  max-width: none;
+  margin: 0 0 3.5rem;
+}
+
+.pierre-home__media--secondary {
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+}
+
+.pierre-home__media-tag {
+  position: absolute;
+  top: 0.85rem;
+  left: 0.85rem;
+  z-index: 1;
+  display: inline-block;
+  padding: 0.35rem 0.65rem;
+  background: var(--ph-accent);
+  color: var(--ph-fg);
+  font-family: Manrope, system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1.1;
+  transform: rotate(-2deg);
+}
+
+.pierre-home__media-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  background: var(--ph-frame);
+  border: 1px solid var(--ph-border);
+  border-radius: 8px;
+  color: var(--ph-muted);
+  font-size: 0.95rem;
+  text-align: center;
+  padding: 0;
+  overflow: hidden;
+}
+
+.pierre-home__media-frame--wide {
+  aspect-ratio: 21 / 9;
+  min-height: 12rem;
+}
+
+.pierre-home__media-frame:has(> p) {
+  padding: 1.5rem;
+}
+
+.pierre-home__media-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.pierre-home__media-frame p {
+  margin: 0;
+  max-width: 22rem;
+}
+
+/* —— Sections —— */
+.pierre-home__section {
+  max-width: 66rem;
+  margin: 0 0 3.25rem;
+}
+
+.pierre-home__section h2 {
+  font-family: Manrope, system-ui, sans-serif;
+  font-size: clamp(1.85rem, 3.6vw, 2.65rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.02;
+  margin: 0 0 0.65rem;
+  max-width: 66rem;
+  text-wrap: balance;
+  hyphens: none;
+  -webkit-hyphens: none;
+  overflow-wrap: normal;
+  word-break: normal;
+  color: var(--ph-fg);
+}
+
+.pierre-home__section > p {
+  margin: 0 0 0.75rem;
+  font-size: 1.0625rem;
+  line-height: 1.4;
+  color: var(--ph-muted);
+  max-width: 40rem;
+}
+
+.pierre-home__links {
+  margin-top: 0.4rem !important;
+  font-size: 1rem !important;
+}
+
+/* —— Embeds —— */
+.pierre-home__embeds {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 900px) {
+  .pierre-home__embeds {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.pierre-home__embed {
+  margin: 0;
+}
+
+.pierre-home__embed figcaption {
+  margin-bottom: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ph-muted);
+}
+
+.pierre-home__embed iframe {
+  display: block;
+  width: 100%;
+  height: 580px;
+  border: 1px solid var(--ph-border);
+  border-radius: 8px;
+  background: var(--ph-bg);
+}
+
+/* —— Legal (pierre-ia.org style) —— */
+.pierre-home__legal {
+  max-width: 32rem;
+  margin: 4rem 0 0;
+}
+
+.pierre-home__legal p {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 300;
+  line-height: 1.45;
+  color: var(--ph-muted);
+}
+
+.pierre-home__legal b {
+  font-weight: 600;
+  color: var(--ph-fg);
+}
+
+.pierre-home__legal a {
+  color: var(--ph-muted);
+}
