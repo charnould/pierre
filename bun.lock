@@ -85,7 +85,7 @@
     },
     "server": {
       "name": "@pierre/server",
-      "version": "0.40.13",
+      "version": "0.40.14",
       "dependencies": {
         "@huggingface/tokenizers": "^0.2.0",
         "better-auth": "^1.7.15",
