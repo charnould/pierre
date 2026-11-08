@@ -27,7 +27,8 @@ const fallback_status = (type: string | undefined, status: string): boolean =>
   status === 'failed' ||
   (type === 'courrier' && status === 'returned') ||
   (type === 'lrar' && (status === 'returned' || status === 'refused')) ||
-  (type === 'lre' && (status === 'refused' || status === 'expired'))
+  ((type === 'lre' || type === 'ere') &&
+    (status === 'refused' || status === 'expired' || status === 'unclaimed'))
 
 export const update_status_with_db = (
   db: Database,

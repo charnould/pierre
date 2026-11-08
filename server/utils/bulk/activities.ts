@@ -5,6 +5,7 @@ import { activityTimestamp } from '../../../shared/activities'
 import type { PreviewRow } from '../../../shared/bulk-operations'
 import { latest_repayment_states } from '../activities/repayment'
 import { insert_activity_row, login_from_email, user_destinataire } from '../activities/rows'
+import { resolveStoredRepaymentPhase } from '../setup-store'
 
 export type BulkVisibleActivityInput = {
   actor: string
@@ -96,4 +97,4 @@ export const apply_bucket_effect = (
 }
 
 const current_manager_state_bucket = (db: Database, idLocataire: string): string =>
-  latest_repayment_states(db, [idLocataire]).get(idLocataire)?.bucket ?? 'non_traites'
+  resolveStoredRepaymentPhase(latest_repayment_states(db, [idLocataire]).get(idLocataire)?.bucket)

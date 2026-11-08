@@ -13,14 +13,14 @@ export const PROMPTS = [
   },
   {
     id: 'replies',
-    label: 'Pré-génération de réponse',
-    access: 'automations',
+    label: 'Répondre à une réclamation',
+    access: 'tickets',
     publish: null
   },
   {
     id: 'repayment',
-    label: "Analyse des dossiers d'impayés",
-    access: 'automations',
+    label: 'Assister sur un dossier d’impayés',
+    access: 'repayment',
     publish: 'repayment'
   }
 ] as const

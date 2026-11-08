@@ -4,11 +4,18 @@ import { z } from 'zod'
 
 import type { ActivityListItem } from '../../shared/activities'
 import { parseTaskContent } from '../../shared/activity-content'
+import { readRepaymentForms } from '../../shared/repayment-plan'
 import { list_activities } from '../utils/activities/query'
 import { build_rattachement } from '../utils/activities/rows'
 import { authenticate, type AuthEnv } from '../utils/authenticate-user'
 import { authorizeModule } from '../utils/authorize-role'
 import { list_ledger_movements } from '../utils/ledger/query'
+import {
+  renderRepaymentDocument,
+  RepaymentDocumentError,
+  RepaymentDocumentRequestSchema
+} from '../utils/repayment-documents'
+import { readSetupBytes } from '../utils/setup-store'
 
 const RepaymentTimelineQuery = z
   .object({
@@ -87,6 +94,53 @@ export const listRepayment = (c: Context<AuthEnv>) => {
   })
 }
 
+export const exportRepaymentDocument = async (c: Context<AuthEnv>) => {
+  let body: unknown
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: { code: 'invalid_body', message: 'Dossier illisible.' } }, 400)
+  }
+  const parsed = RepaymentDocumentRequestSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: { code: 'invalid_body', message: 'Dossier illisible.' } }, 400)
+  }
+  const forms = readRepaymentForms(parsed.data.dossier)
+  if (!forms.ok) {
+    return c.json({ error: { code: 'invalid_body', message: 'Dossier illisible.' } }, 400)
+  }
+  const template = readSetupBytes(`repayment/${parsed.data.document}.docx`)
+  if (!template) {
+    return c.json(
+      { error: { code: 'missing_template', message: 'Déposez le modèle Word correspondant.' } },
+      400
+    )
+  }
+  try {
+    const rendered = await renderRepaymentDocument({
+      document: parsed.data.document,
+      format: parsed.data.format,
+      dossier: forms.value,
+      template,
+      email: c.get('user').email
+    })
+    const copy = new ArrayBuffer(rendered.bytes.byteLength)
+    new Uint8Array(copy).set(rendered.bytes)
+    return new Response(new Blob([copy]), {
+      headers: {
+        'content-type': rendered.mimeType,
+        'content-disposition': `attachment; filename*=UTF-8''${encodeURIComponent(rendered.filename)}`
+      }
+    })
+  } catch (error) {
+    if (error instanceof RepaymentDocumentError) {
+      return c.json({ error: { code: 'invalid_template', message: error.message } }, 400)
+    }
+    throw error
+  }
+}
+
 export const repayment = new Hono<AuthEnv>()
 
 repayment.get('/', authenticate, authorizeModule('repayment'), listRepayment)
+repayment.post('/documents', authenticate, authorizeModule('repayment'), exportRepaymentDocument)

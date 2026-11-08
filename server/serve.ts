@@ -8,6 +8,7 @@ import { refresh_stale_sms_contacts } from './utils/contacts'
 import { openDatastore } from './utils/datastore-db'
 import { ensureEnvAdmin } from './utils/ensure-env-admin'
 import { initializeKnowledgeBuildCoordinator } from './utils/knowledge/build-coordinator'
+import { startMailevaReconciliation } from './utils/maileva/track'
 import { datastorePaths } from './utils/paths'
 import { setup } from './utils/setup'
 import { initVmPool } from './utils/vm-pool'
@@ -57,6 +58,7 @@ if (command) {
   await setup()
   await ensureEnvAdmin()
   start_bulk_scheduler()
+  startMailevaReconciliation()
   await initializeKnowledgeBuildCoordinator()
   Bun.cron('0 4 * * *', () => {
     refresh_stale_sms_contacts()

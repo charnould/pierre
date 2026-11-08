@@ -99,7 +99,7 @@ export const emptyBulkOperationQueryDefinition = (): BulkOperationQueryDefinitio
 
 export const emptyBulkOperationDefinition = (): BulkOperationDefinition => ({
   source: 'comptes_locataires',
-  bucketId: 'non_traites',
+  bucketId: 'Non traités',
   delivery: {
     kind: 'fallback',
     steps: [

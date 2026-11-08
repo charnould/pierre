@@ -4,7 +4,13 @@ import { rm } from 'node:fs/promises'
 
 import { Hono } from 'hono'
 
-import { parseRepaymentPlanContent } from '../../../../shared/repayment-plan'
+import {
+  blankAdult,
+  blankChild,
+  blankInstallment,
+  emptyRepaymentForms,
+  parseRepaymentPlanContent
+} from '../../../../shared/repayment-plan'
 import { createActivity as postActivity } from '../../../routes/activities'
 import type { User } from '../../../utils/_schema'
 import { list_activities } from '../../../utils/activities/query'
@@ -16,64 +22,21 @@ const paths = testDatastorePaths('repayment_plan_activities')
 const DATABASE = paths.database
 const ALICE = 'alice@example.org'
 
-const plan_content = (adults = 1): string =>
-  JSON.stringify({
-    identification: {
-      identifiant_client: 'CLI-1',
-      identifiant_locataire: 'LOC-1',
-      identifiant_logement: null,
-      adresse: { voie: null, code_postal: null, commune: null }
-    },
-    dette: {
-      montant_restant_du_euros: 1200,
-      date_premier_loyer_impaye: null,
-      motifs_impaye: [],
-      ancienne_dette_locative_euros: null
-    },
-    procedure: {
-      stade: null,
-      date_du_stade: null,
-      situation_banque_de_france: null,
-      date_fin_moratoire: null
-    },
-    accompagnement: {
-      visite_a_domicile: false,
-      travailleur_social: null,
-      date_saisine_ccapex_prevention_expulsions: null,
-      date_saisine_ctesi_situations_individuelles: null,
-      aides_mobilisables: []
-    },
-    bail: {
-      avenant_signe: false,
-      date_depot_preavis_conge: null,
-      contentieux_anterieur_sur_ce_contrat: false,
-      garant: null
-    },
-    foyer: {
-      adultes: Array.from({ length: adults }, () => ({
-        prenom: 'Alice',
-        nom: 'Martin',
-        date_naissance: null,
-        type_emploi: null,
-        employeur: null,
-        numero_allocataire_caf: null,
-        titulaire_du_bail: true,
-        occupant_du_logement: true
-      })),
-      enfants: [{ prenom: 'Lina', nom: 'Martin', date_naissance: null, a_charge: true }]
-    },
-    budget: {
-      ressources_mensuelles: [],
-      ressources_ponctuelles: [],
-      loyer_charges_moins_aides_au_logement_euros: null,
-      charges_mensuelles: [],
-      charges_ponctuelles: []
-    },
-    echeancier: {
-      propose: true,
-      echeances: [{ date_echeance: '2026-11-05', mensualite_euros: 150 }]
-    }
-  })
+const plan_content = (adults = 1): string => {
+  const forms = emptyRepaymentForms()
+  forms.donnees_communes.identification.id_client = 'CLI-1'
+  forms.donnees_communes.identification.id_locataire = 'LOC-1'
+  forms.donnees_communes.foyer.adultes = Array.from({ length: adults }, (_, index) => ({
+    ...blankAdult(`personne_${index + 1}`),
+    prenom: 'Alice',
+    nom: 'Martin'
+  }))
+  forms.donnees_communes.foyer.enfants = [
+    { ...blankChild('enfant_1'), prenom: 'Lina', nom: 'Martin' }
+  ]
+  forms.echeancier.echeances = [blankInstallment('2026-11-05', 150)]
+  return JSON.stringify(forms)
+}
 
 const thread_rows = (threadId: string) =>
   list_activities(ALICE, { rattachement: 'repayment:LOC-1', limit: 100 })
@@ -82,7 +45,7 @@ const thread_rows = (threadId: string) =>
 
 const snapshots = (threadId: string) =>
   thread_rows(threadId).filter(
-    (row) => parseRepaymentPlanContent(row.type, row.contenu)?.foyer != null
+    (row) => parseRepaymentPlanContent(row.type, row.contenu)?.donnees_communes != null
   )
 
 beforeAll(() => {
@@ -110,7 +73,9 @@ describe('repayment plan activity lifecycle', () => {
     expect(created.revision).toBeNull()
     expect(created.threadId).toBeTruthy()
     expect(snapshots(created.threadId!)).toHaveLength(1)
-    expect(parseRepaymentPlanContent(created.type, created.contenu)?.foyer).toMatchObject({
+    expect(
+      parseRepaymentPlanContent(created.type, created.contenu)?.donnees_communes.foyer
+    ).toMatchObject({
       adultes: [{ prenom: 'Alice' }],
       enfants: [{ prenom: 'Lina' }]
     })
@@ -123,12 +88,12 @@ describe('repayment plan activity lifecycle', () => {
     expect(updated.threadId).toBe(created.threadId)
     expect(snapshots(created.threadId!).map((row) => row.id)).toEqual([updated.id])
     const stored = parseRepaymentPlanContent(updated.type, updated.contenu)
-    expect(stored?.foyer).toMatchObject({
+    expect(stored?.donnees_communes.foyer).toMatchObject({
       adultes: [{ prenom: 'Alice' }, { prenom: 'Alice' }],
       enfants: [{ prenom: 'Lina' }]
     })
     expect(stored?.echeancier).toMatchObject({
-      echeances: [{ date_echeance: '2026-11-05', mensualite_euros: 150 }]
+      echeances: [{ date_echeance: '2026-11-05', montant_en_euros: 150 }]
     })
     expect(
       parseRepaymentPlanContent(created.type, thread_rows(created.threadId!)[0]!.contenu)
