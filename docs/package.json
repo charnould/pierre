@@ -2,6 +2,9 @@
   "name": "@pierre/docs",
   "private": true,
   "type": "module",
+  "scripts": {
+    "generate": "bun run scripts/build.ts && cd .. && bun fmt"
+  },
   "dependencies": {
     "prismjs": "^1.30.0"
   }

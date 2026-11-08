@@ -83,11 +83,11 @@
         outline: 1px solid #111;
         outline-offset: 2px;
       }
-      .banc .exemples button[aria-pressed="true"] {
+      .banc .exemples button[aria-pressed='true'] {
         border-color: #111;
         background: #ffe500;
       }
-      .banc .exemples button[aria-pressed="true"]:hover {
+      .banc .exemples button[aria-pressed='true']:hover {
         background: #ffe500;
       }
       .banc .paire {
@@ -181,7 +181,7 @@
       </h5>
       <h1 id="carl">CARL</h1>
       <p>
-        CARL qualifie en 50 millisecondes le message d’un locataire ou d'un candidat HLM parmi 270
+        CARL qualifie en 25 millisecondes le message d’un locataire ou d'un candidat HLM parmi 270
         motifs possibles. Il ne répond pas : il qualifie, pour simplifier les traitements
         ultérieurs, humains, automatisés et agentiques.
       </p>
@@ -352,131 +352,131 @@
           </div>
         </div>
         <script>
-          const banc = document.currentScript.closest(".banc");
-          const API = "https://agent.pierre-ia.org/carl";
-          const ORIGINE = "https://agent.pierre-ia.org";
-          const PLACEHOLDER = "Écrire un message…";
-          const form = banc.querySelector("form");
-          const zone = banc.querySelector("textarea");
-          const erreur = banc.querySelector('[id^="erreur-"]');
-          const resultat = banc.querySelector('[id^="resultat-"]');
-          const attente = banc.querySelector('[id^="attente-"]');
-          const duree = banc.querySelector('[id^="duree-"]');
-          const envoyer = form.querySelector('button[type="submit"]');
-          const exemples = banc.querySelector(".exemples");
+          const banc = document.currentScript.closest('.banc')
+          const API = 'https://agent.pierre-ia.org/carl'
+          const ORIGINE = 'https://agent.pierre-ia.org'
+          const PLACEHOLDER = 'Écrire un message…'
+          const form = banc.querySelector('form')
+          const zone = banc.querySelector('textarea')
+          const erreur = banc.querySelector('[id^="erreur-"]')
+          const resultat = banc.querySelector('[id^="resultat-"]')
+          const attente = banc.querySelector('[id^="attente-"]')
+          const duree = banc.querySelector('[id^="duree-"]')
+          const envoyer = form.querySelector('button[type="submit"]')
+          const exemples = banc.querySelector('.exemples')
 
           function exempleDe(noeud) {
-            return noeud && noeud.closest ? noeud.closest("[data-texte]") : null;
+            return noeud && noeud.closest ? noeud.closest('[data-texte]') : null
           }
 
           function marquerExemples() {
-            for (const bouton of banc.querySelectorAll("[data-texte]")) {
+            for (const bouton of banc.querySelectorAll('[data-texte]')) {
               bouton.setAttribute(
-                "aria-pressed",
-                bouton.dataset.texte === zone.value ? "true" : "false",
-              );
+                'aria-pressed',
+                bouton.dataset.texte === zone.value ? 'true' : 'false'
+              )
             }
           }
 
           function majPlaceholder(cible) {
-            zone.placeholder = cible && cible.dataset.texte ? cible.dataset.texte : PLACEHOLDER;
+            zone.placeholder = cible && cible.dataset.texte ? cible.dataset.texte : PLACEHOLDER
           }
 
           function montrerErreur(message) {
-            resultat.hidden = true;
-            attente.hidden = true;
-            duree.textContent = "";
-            erreur.hidden = false;
-            erreur.textContent = message;
+            resultat.hidden = true
+            attente.hidden = true
+            duree.textContent = ''
+            erreur.hidden = false
+            erreur.textContent = message
           }
 
           function montrer(payload) {
-            erreur.hidden = true;
-            attente.hidden = true;
-            resultat.hidden = false;
-            resultat.textContent = JSON.stringify(payload.data.output, null, 2);
-            const ms = payload.data.milliseconds;
+            erreur.hidden = true
+            attente.hidden = true
+            resultat.hidden = false
+            resultat.textContent = JSON.stringify(payload.data.output, null, 2)
+            const ms = payload.data.milliseconds
             duree.textContent =
-              ms < 1000 ? ms + " ms" : (ms / 1000).toFixed(1).replace(".", ",") + " s";
+              ms < 1000 ? ms + ' ms' : (ms / 1000).toFixed(1).replace('.', ',') + ' s'
           }
 
           async function classer() {
-            const texte = zone.value;
+            const texte = zone.value
             if (!texte.trim()) {
-              montrerErreur("Écrivez un message, ou choisissez un exemple.");
-              zone.focus();
-              return;
+              montrerErreur('Écrivez un message, ou choisissez un exemple.')
+              zone.focus()
+              return
             }
-            envoyer.disabled = true;
-            envoyer.textContent = "Qualification…";
-            form.setAttribute("aria-busy", "true");
+            envoyer.disabled = true
+            envoyer.textContent = 'Qualification…'
+            form.setAttribute('aria-busy', 'true')
             try {
               const reponse = await fetch(API, {
-                method: "POST",
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify({ texte }),
-              });
-              const payload = await reponse.json().catch(() => null);
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ texte })
+              })
+              const payload = await reponse.json().catch(() => null)
               if (!reponse.ok) {
                 if (reponse.status === 503) {
-                  montrerErreur("Les poids ne sont pas installés.");
+                  montrerErreur('Les poids ne sont pas installés.')
                 } else if (!payload) {
-                  montrerErreur("Le serveur a répondu sans JSON.");
+                  montrerErreur('Le serveur a répondu sans JSON.')
                 } else {
                   montrerErreur(
                     payload.error && payload.error.message
                       ? payload.error.message
-                      : "Le classement a échoué.",
-                  );
+                      : 'Le classement a échoué.'
+                  )
                 }
-                return;
+                return
               }
-              montrer(payload);
+              montrer(payload)
             } catch {
-              montrerErreur("PIERRE ne répond pas sur " + ORIGINE + ".");
+              montrerErreur('PIERRE ne répond pas sur ' + ORIGINE + '.')
             } finally {
-              envoyer.disabled = false;
-              envoyer.textContent = "Qualifier";
-              form.removeAttribute("aria-busy");
+              envoyer.disabled = false
+              envoyer.textContent = 'Qualifier'
+              form.removeAttribute('aria-busy')
             }
           }
 
-          form.addEventListener("submit", (event) => {
-            event.preventDefault();
-            classer();
-          });
-          zone.addEventListener("input", marquerExemples);
-          exemples.addEventListener("mouseover", (event) => {
-            const bouton = exempleDe(event.target);
-            if (bouton) majPlaceholder(bouton);
-          });
-          exemples.addEventListener("mouseout", (event) => {
-            if (!exempleDe(event.target)) return;
-            const vers = exempleDe(event.relatedTarget);
+          form.addEventListener('submit', (event) => {
+            event.preventDefault()
+            classer()
+          })
+          zone.addEventListener('input', marquerExemples)
+          exemples.addEventListener('mouseover', (event) => {
+            const bouton = exempleDe(event.target)
+            if (bouton) majPlaceholder(bouton)
+          })
+          exemples.addEventListener('mouseout', (event) => {
+            if (!exempleDe(event.target)) return
+            const vers = exempleDe(event.relatedTarget)
             if (vers) {
-              majPlaceholder(vers);
-              return;
+              majPlaceholder(vers)
+              return
             }
-            const actif = document.activeElement;
-            majPlaceholder(actif && banc.contains(actif) ? exempleDe(actif) : null);
-          });
-          exemples.addEventListener("focusin", (event) => {
-            const bouton = exempleDe(event.target);
-            if (bouton) majPlaceholder(bouton);
-          });
-          exemples.addEventListener("focusout", (event) => {
-            if (exempleDe(event.relatedTarget)) return;
-            if (banc.querySelector("[data-texte]:hover")) return;
-            majPlaceholder(null);
-          });
-          for (const bouton of banc.querySelectorAll("[data-texte]")) {
-            bouton.addEventListener("click", () => {
-              zone.value = bouton.dataset.texte || "";
-              marquerExemples();
-              classer();
-            });
+            const actif = document.activeElement
+            majPlaceholder(actif && banc.contains(actif) ? exempleDe(actif) : null)
+          })
+          exemples.addEventListener('focusin', (event) => {
+            const bouton = exempleDe(event.target)
+            if (bouton) majPlaceholder(bouton)
+          })
+          exemples.addEventListener('focusout', (event) => {
+            if (exempleDe(event.relatedTarget)) return
+            if (banc.querySelector('[data-texte]:hover')) return
+            majPlaceholder(null)
+          })
+          for (const bouton of banc.querySelectorAll('[data-texte]')) {
+            bouton.addEventListener('click', () => {
+              zone.value = bouton.dataset.texte || ''
+              marquerExemples()
+              classer()
+            })
           }
-          zone.focus();
+          zone.focus()
         </script>
       </aside>
       <h2 id="présentation">Présentation</h2>

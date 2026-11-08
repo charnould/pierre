@@ -99,7 +99,7 @@ Ce sont les modules de travail de l’application, tels qu’ils apparaissent à
 - `Piloter les attributions`
 - `Piloter les ventes`
 
-Les **chatbots** proposés sont les agents internes enregistrés dans `Administration` → `Chatbot`. L’agent public `default` n’est pas une case à cocher : il est disponible pour tout collaborateur connecté dès que son entrée est prête et que `enabled` vaut `true`.
+Les **chatbots** proposés sont les agents internes enregistrés dans `Administration` → `Agents conversationnels`. L’agent public `default` n’est pas une case à cocher : il est disponible pour tout collaborateur connecté dès que son entrée est prête et que `enabled` vaut `true`.
 
 > [!NOTE]
 > Cocher `Renouveler les assurances`, `Piloter la relocation`, `Piloter les attributions` ou `Piloter les ventes` affiche la porte sur l’accueil. L’écran est encore vide.

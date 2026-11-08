@@ -85,7 +85,7 @@ Changer d’objet **efface** une synthèse déjà produite.
 
 Le titre du résultat reprend l’objet et l’identifiant, par exemple `Synthèse locataire · 18732`, plus la période. Le texte est mis en forme (titres, listes, tableaux). Pendant le travail : `Réflexion` ou `Génération`.
 
-La consigne suivie par l’agent n’est pas livrée avec l’instance. Dans `Administration`, porte `Synthèses`, collez [Réaliser une synthèse](../04-core-intelligence-hlm/prompts/Réaliser%20une%20synthèse.md), puis `Enregistrer`. Le module reste « non paramétré » tant que cette entrée n’est pas complète.
+Le prompt système suivi par l’agent n’est pas livré avec l’instance. Dans `Administration`, porte `Synthèses`, collez [Réaliser une synthèse](../04-core-intelligence-hlm/prompts/Réaliser%20une%20synthèse.md), puis `Enregistrer`. Le module reste « non paramétré » tant que cette entrée n’est pas complète.
 
 `Copier` place le texte dans le presse-papiers (`Copié` le confirme). Il n’y a pas d’export Word sur cet écran.
 

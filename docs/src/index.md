@@ -4,7 +4,7 @@
 
 ## Tous les métiers HLM réunis dans une application IA-First, open code et gratuite.
 
-PIERRE réunit les équipes HLM dans une même expérience utilisateur et met l’intelligence artificielle au coeur de leur travail. Proposée en **open code**, l'application est auditable, **auto-hébergeable** et **gratuite** pour les bailleurs sociaux.
+PIERRE réunit les équipes HLM au sein d'une même expérience utilisateur et met l’intelligence artificielle au coeur de leur travail. Proposée en **open code**, l'application est auditable, **auto-hébergeable** et **gratuite** pour les bailleurs sociaux.
 
 1. **Une expérience commune à tous les métiers HLM** : réclamations, impayés, relocation, assurance habitation… Les mêmes repères d’un métier à l’autre et une continuité entre les processus et les équipes. Moins de frictions et de ruptures, davantage de capacité d’action et de performance opérationnelle au quotidien.
 

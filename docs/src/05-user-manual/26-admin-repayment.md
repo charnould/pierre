@@ -2,7 +2,7 @@
 
 `repayment.json` règle le module « Impayés ». On le colle dans `Administration` → `Impayés` → `Configuration`. Les textes affichés sont en français. Les clés sont en anglais.
 
-La consigne de l’agent n’est pas dans ce JSON. Elle se dépose dans le champ `Consigne` (`repayment/AGENTS.md`). Pierre l’utilise lorsqu’un chargé lui demande, pour chaque dossier sélectionné, une réponse possible, une synthèse ou une autre consigne. Il n’envoie rien : le résultat est enregistré dans l’historique du dossier. Les quatre modèles Word se déposent dans `Documents` : plan d’apurement, protocole de cohésion sociale, diagnostic social et financier, courrier standard. L’export des trois premiers est décrit dans [Documents Word](#documents-word). Les messages RCS et courriel se collent dans `Messages`, une zone par message. `Vérifier`, sous chaque zone, contrôle le texte sans l’enregistrer. `Enregistrer` écrit toute la collection.
+Le prompt système de l’agent n’est pas dans ce JSON. Il se dépose dans le champ `Prompt système` (`repayment/AGENTS.md`). Pierre l’utilise lorsqu’un chargé lui demande, pour chaque dossier sélectionné, une réponse possible, une synthèse ou un autre prompt système. Il n’envoie rien : le résultat est enregistré dans l’historique du dossier. Les quatre modèles Word se déposent dans `Documents` : plan d’apurement, protocole de cohésion sociale, diagnostic social et financier, courrier standard. L’export des trois premiers est décrit dans [Documents Word](#documents-word). Les messages RCS et courriel se collent dans `Messages`, une zone par message. `Vérifier`, sous chaque zone, contrôle le texte sans l’enregistrer. `Enregistrer` écrit toute la collection.
 
 ## Exemple minimal
 

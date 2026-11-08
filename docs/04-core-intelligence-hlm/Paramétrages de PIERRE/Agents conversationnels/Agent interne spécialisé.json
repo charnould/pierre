@@ -1,0 +1,14 @@
+{
+  "id": "cadre-astreinte",
+  "display": "Cadre d'astreinte",
+  "community_knowledge": true,
+  "trace": "collapsed",
+  "attachments": true,
+  "greetings": ["Bonjour !", "Bienvenue.", "Hello.", "Enchanté."],
+  "examples": [
+    "Quelle est la procédure en cas de fuite d'eau la nuit ?",
+    "Une fuite d'eau dans la résidence Rosa Parks, que faire ?",
+    "Un ascenseur est bloqué avec une personne à l'intérieur. Que faire ?"
+  ],
+  "disclaimer": "Une IA peut se tromper. Vérifier les informations importantes."
+}
