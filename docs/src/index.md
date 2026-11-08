@@ -4,7 +4,7 @@
 
 ## Tous les métiers HLM réunis dans une application IA-First, open code et gratuite.
 
-PIERRE réunit les équipes HLM dans une même expérience utilisateur et met l’intelligence artificielle au coeur de leur travail. Proposée en **open code**, l'application est auditable, **auto-hébergeable** et **gratuite** pour les bailleurs sociaux.
+PIERRE réunit les équipes HLM au sein d'une même expérience utilisateur et met l’intelligence artificielle au coeur de leur travail. Proposée en **open code**, l'application est auditable, **auto-hébergeable** et **gratuite** pour les bailleurs sociaux.
 
 1. **Une expérience commune à tous les métiers HLM** : réclamations, impayés, relocation, assurance habitation… Les mêmes repères d’un métier à l’autre et une continuité entre les processus et les équipes. Moins de frictions et de ruptures, davantage de capacité d’action et de performance opérationnelle au quotidien.
 
@@ -12,7 +12,7 @@ PIERRE réunit les équipes HLM dans une même expérience utilisateur et met l�
 
 3. **Trois socles mutualisés pour inventer et construire l’IA HLM** : [Core Data HLM](./02-core-data-hlm/index.md) donne aux données un langage commun pour les humains et les machines. [Core Models HLM](./03-core-models-hlm/index.md) propose des modèles de langage ouverts, compacts et hyper-spécialisés. **Core Intelligence HLM** mutualise les connaissances métier, les instructions et les capacités d’action.
 
-4. **L'évident intégré nativement** : collaboration, notifications, mentions, SMS/RCS, emails, courriers postaux (avec ou sans recommandé) et signature électronique.
+4. **L'évident intégré nativement** : collaboration, notifications, mentions, SMS/RCS, emails, courriers postaux (avec ou sans recommandé), signature électronique et dictée vocale.
 
 5. **Un actif commun et souverain pour le mouvement HLM** : chaque bailleur garde la maîtrise de ses données, de son hébergement et du modèle d’IA qu’il utilise. Les organismes peuvent enrichir ensemble l'application et transformer leurs contributions locales en progrès collectif.
 

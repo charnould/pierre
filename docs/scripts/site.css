@@ -1,4 +1,4 @@
-@import "prismjs/themes/prism-solarizedlight.css";
+@import 'prismjs/themes/prism-solarizedlight.css';
 
 html,
 body {
@@ -106,7 +106,7 @@ body {
 .article pre:not(.cadre) {
   padding: 1em;
 }
-.article pre[class*="language-"] {
+.article pre[class*='language-'] {
   margin: 0 0 16px;
   border-radius: 0;
 }

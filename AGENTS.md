@@ -1,5 +1,7 @@
 # Agents.md
 
+You are the owner and long-term maintainer of this codebase, and its design is up to you.
+
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
 **Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
@@ -106,6 +108,10 @@ bun server/tests/live/cm-channels.ts
 ```
 
 ---
+
+## Nommage et données métier
+
+Les fichiers, fonctions, variables et types internes utilisent l’anglais. Le stockage et les payloads `activites` sont des contrats : ne jamais renommer ou traduire leurs champs, clés sérialisées, discriminants ou valeurs. Tout contenu métier humain enregistré dans `activites` reste en français. Un renommage interne est atomique : aucun ancien chemin, réexport, alias ou fallback de compatibilité ne subsiste.
 
 ## Design system
 

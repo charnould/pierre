@@ -35,18 +35,20 @@ Ces prompts procéduraux — généralement rédigés en « français contrôlé
 - **Répondre aux réclamations** — _à venir_
 - **Analyser un dossier d'impayés** — _à venir_
 
-## [Paramétrages de PIERRE](https://github.com/charnould/pierre/tree/master/docs/04-core-intelligence-hlm/settings)
+## [Paramétrages de PIERRE](https://github.com/charnould/pierre/tree/master/docs/04-core-intelligence-hlm/Param%C3%A9trages%20de%20PIERRE)
 
 Ces paramétrages sont nécessaires au fonctionnement de PIERRE. Ceux proposés ci-dessous accélèrent la mise en route et sont parfaitement personnalisables par chaque organisme (consulter la [documentation](../06-installation/index.md) de PIERRE).
 
 - `automations.md` — consigne du module « Générer un rapport »
 - `tickets.json` — paramétrage du module « Réclamations »
 - `repayment.json` — paramétrage du module « Impayés »
-- `icon.svg` — cette icône est celle du chatbot « grand public » lorsque l'on l'installe sur l'écran d'accueil de son smartphone.
 - `logo.png` — logo de votre organisme au format PNG, impérativement sur fond transparent sans fonds perdus (= bord à bord). C'est ce logo qui s'affichera systématiquement sur les emails transactionnels envoyés depuis PIERRE. Il conviendra d'ajuster sa taille dans `email.html`.
 - `email.html` — template d'email transactionnel
-- `default.json` — paramétrage du chatbot public
-- `default.md` — personnalité du chatbot public
+- `Agents conversationnels/Agent public.json` — paramétrage du chatbot public
+- `Agents conversationnels/Agent public.md` — personnalité du chatbot public
+- `Agents conversationnels/Agent public.svg` — icône du chatbot public, lorsque l'on l'installe sur l'écran d'accueil de son smartphone
+- `Agents conversationnels/Agent interne spécialisé.json` — paramétrage d'un agent interne (cadre d'astreinte)
+- `Agents conversationnels/Agent interne spécialisé.md` — personnalité de cet agent
 
 ## [Knowledge](https://github.com/charnould/pierre/tree/master/server/knowledge)
 
