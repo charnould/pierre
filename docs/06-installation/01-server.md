@@ -53,7 +53,7 @@ Chez votre registrar, dans vos `DNS`, créer un enregistrement `A` faisant point
 Connecté sur le serveur en root, saisissez cette commande pour installer le `CLI` :
 
 ```bash
-curl -fsSL https://github.com/charnould/pierre/releases/download/cli-0.9.20/install.sh | sh
+curl -fsSL https://github.com/charnould/pierre/releases/download/cli-0.9.22/install.sh | sh
 ```
 
 > Certains hébergeurs n'ouvrent pas le `22` : `ssh` prend alors `-p` et `scp` prend `-P`, par exemple `ssh -p 2234 root@le-serveur`.
@@ -87,11 +87,18 @@ pierre
 | `pierre`                        | Affiche l'état et les commandes.                |
 | `pierre install --host DOMAINE` | Installe les services.                          |
 | `pierre update`                 | Met à jour les services.                        |
+| `pierre update --reset`         | Met à jour après suppression des données.       |
 | `pierre restart`                | Redémarre les services.                         |
 | `pierre backup`                 | Sauvegarde `datastore.sqlite`, imports compris. |
 | `pierre logs`                   | Affiche les journaux.                           |
 | `pierre env`                    | Affiche le domaine et les secrets.              |
 | `pierre remove`                 | Supprime les services et les données.           |
+
+`pierre update --reset` demande confirmation, supprime les données applicatives, puis
+active la nouvelle version sur une base vide. Il conserve la configuration, Caddy, CARL,
+les releases et le runtime des microVM. Cette option sert notamment lorsqu’un historique de
+migrations est volontairement compressé pendant le développement. Exécutez `pierre backup`
+auparavant si les données doivent être conservées.
 
 Sur le Mac de développement, depuis la racine du dépôt, `bun server:env` crée `server/datastores/pierre.env` s’il manque. `bun server:dev` charge ce fichier. Le `.env` à la racine du dépôt n’est pas lu. `AUTH_PASSWORD` crée le compte `admin@pierre-ia.org` seulement s’il n’existe pas. Sur un serveur, `pierre install` reste le seul écrivain de `/etc/pierre.env`.
 
