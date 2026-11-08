@@ -60,8 +60,6 @@ if (command) {
   start_bulk_scheduler()
   startMailevaReconciliation()
   await initializeKnowledgeBuildCoordinator()
-  await cleanupOrphanedVms()
-  await initVmPool()
   Bun.cron('0 4 * * *', () => {
     refresh_stale_sms_contacts()
   })
@@ -80,4 +78,14 @@ if (command) {
       return application.fetch(request)
     }
   })
+  void prepareVirtualMachines()
+}
+
+async function prepareVirtualMachines(): Promise<void> {
+  try {
+    await cleanupOrphanedVms()
+    await initVmPool()
+  } catch (error) {
+    console.error(error)
+  }
 }
