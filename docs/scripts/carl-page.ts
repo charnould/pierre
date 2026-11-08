@@ -10,7 +10,7 @@ export type Bench = {
 
 const CARL: Bench = {
   name: 'Sélectionner un exemple ou saisir un message',
-  api: 'http://localhost:3000/api/models/carl',
+  api: 'https://agent.pierre-ia.org/carl',
   placeholder: 'Écrire un message…',
   groupes: [
     {
@@ -289,8 +289,8 @@ export function benchHtml(bench: Bench = CARL): string {
         erreur.hidden = true
         attente.hidden = true
         resultat.hidden = false
-        resultat.textContent = JSON.stringify(payload.output, null, 2)
-        const ms = payload.milliseconds
+        resultat.textContent = JSON.stringify(payload.data.output, null, 2)
+        const ms = payload.data.milliseconds
         duree.textContent = ms < 1000 ? ms + ' ms' : (ms / 1000).toFixed(1).replace('.', ',') + ' s'
       }
 
