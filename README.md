@@ -1,5 +1,7 @@
 # PIERRE
 
+> 🚧 — 2026-11-09 — PIERRE n'est PAS production-ready ; il le sera dans quelques semaines.
+
 ## Tous les métiers HLM réunis dans un applicatif IA-First et open code.
 
 > [**https://www.pierre-ia.org**](https://www.pierre-ia.org)
@@ -18,8 +20,8 @@ PIERRE réunit les équipes HLM dans une même expérience utilisateur et met l�
 
 ## Articles
 
-- [2026-05-27 — One SQLite File and One Harness Is Enough for French Social Housing (EN)](./docs/07-articles/2026-05-27-rag-sqlite.md)
-- [2026-08-19 — (NOTE) Estimation du coût annuel des applications-métiers du mouvement HLM](./docs/07-articles/2026-08-19-300M%E2%82%ACY-for-IT.md)
+- [2026-05-27 — One SQLite File and One Harness Is Enough for French Social Housing (EN)](./docs/src/07-articles/2026-05-27-rag-sqlite.md)
+- [2026-08-19 — (NOTE) Estimation du coût annuel des applications-métiers du mouvement HLM](./docs/src/07-articles/2026-08-19-300M%E2%82%ACY-for-IT.md)
 
 ## Licence
 
