@@ -62,6 +62,9 @@
     "docs": {
       "entry": ["scripts/build.ts!", "scripts/**/*.test.ts"]
     },
+    "marketing": {
+      "entry": ["scripts/render-poster.ts!"]
+    },
     "cli": {
       "entry": ["src/main.ts!", "tests/**/*.test.ts"],
       "project": ["src/**/*.ts!", "tests/**/*.ts!"]

@@ -1,0 +1,7 @@
+{
+  "name": "@pierre/marketing",
+  "private": true,
+  "scripts": {
+    "render": "bun scripts/render-poster.ts"
+  }
+}

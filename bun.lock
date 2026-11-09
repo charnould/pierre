@@ -83,6 +83,9 @@
         "prismjs": "^1.30.0",
       },
     },
+    "marketing": {
+      "name": "@pierre/marketing",
+    },
     "server": {
       "name": "@pierre/server",
       "version": "0.40.14",
@@ -565,6 +568,8 @@
     "@pierre/desktop": ["@pierre/desktop@workspace:desktop"],
 
     "@pierre/docs": ["@pierre/docs@workspace:docs"],
+
+    "@pierre/marketing": ["@pierre/marketing@workspace:marketing"],
 
     "@pierre/server": ["@pierre/server@workspace:server"],
 
