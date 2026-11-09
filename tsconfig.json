@@ -5,6 +5,7 @@
     { "path": "config" },
     { "path": "desktop" },
     { "path": "docs" },
+    { "path": "marketing" },
     { "path": "server" }
   ]
 }
