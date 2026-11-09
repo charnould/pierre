@@ -8,7 +8,8 @@
       "docs",
       "server",
       "desktop",
-      "cli"
+      "cli",
+      "marketing"
     ],
     "catalog": {
       "@tailwindcss/cli": "^4.3.5",
