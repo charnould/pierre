@@ -522,7 +522,7 @@
       }
     },
     {
-      "files": ["**/src/features/repayment/plan/form.tsx"],
+      "files": ["**/src/features/repayment/case-file/form-controls.tsx"],
       "rules": {
         "shadcn/no-restyle": [
           "error",
