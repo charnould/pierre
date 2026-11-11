@@ -14,7 +14,7 @@ const allowedRawControls = new Map<string, 'button' | 'file-input' | 'render-but
   ['desktop/src/shared/components/inspector/open-actions-card.tsx', 'button'],
   ['desktop/src/shared/components/ChoiceTile.tsx', 'render-button'],
   ['desktop/src/shared/components/timeline/timeline-communication-envelope.tsx', 'render-button'],
-  ['desktop/src/features/repayment/plan/sections/schedule.tsx', 'render-button'],
+  ['desktop/src/features/repayment/case-file/schedule-section.tsx', 'render-button'],
   ['desktop/src/shared/components/FileDrop.tsx', 'file-input'],
   ['desktop/src/features/chat/components/ChatComposer.tsx', 'file-input'],
   ['desktop/src/features/repayment/components/RepaymentComposeBlock.tsx', 'file-input'],
