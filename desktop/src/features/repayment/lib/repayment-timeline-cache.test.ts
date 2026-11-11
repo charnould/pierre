@@ -3,6 +3,7 @@ import { afterEach, describe, expect, test } from 'bun:test'
 import type { Activity, ActivityListItem } from '@/shared/types/activites'
 
 import {
+  clearRepaymentTimelineCache,
   getRepaymentTimelineCache,
   invalidateRepaymentTimelineCache,
   patchRepaymentTimelineActivity,
@@ -81,6 +82,42 @@ function timelineResponse({
 }
 
 describe('repayment-timeline-cache', () => {
+  test('keeps the sixteen newest timelines', () => {
+    clearRepaymentTimelineCache()
+    const entry = {
+      movements: [],
+      notifications: [],
+      openActionEvents: [],
+      movementsError: false,
+      notificationsError: false,
+      openActionsError: false
+    }
+    for (let index = 0; index < 16; index += 1) {
+      setRepaymentTimelineCache(
+        repaymentTimelineCacheKey('https://cache.test', 'CLI', `LOC-${index}`),
+        entry
+      )
+    }
+    setRepaymentTimelineCache(
+      repaymentTimelineCacheKey('https://cache.test', 'CLI', 'LOC-0'),
+      entry
+    )
+    setRepaymentTimelineCache(
+      repaymentTimelineCacheKey('https://cache.test', 'CLI', 'LOC-16'),
+      entry
+    )
+
+    expect(
+      getRepaymentTimelineCache(repaymentTimelineCacheKey('https://cache.test', 'CLI', 'LOC-0'))
+    ).toEqual(entry)
+    expect(
+      getRepaymentTimelineCache(repaymentTimelineCacheKey('https://cache.test', 'CLI', 'LOC-1'))
+    ).toBeNull()
+    expect(
+      getRepaymentTimelineCache(repaymentTimelineCacheKey('https://cache.test', 'CLI', 'LOC-16'))
+    ).toEqual(entry)
+  })
+
   test('stores and returns entries by key', () => {
     const key = repaymentTimelineCacheKey('https://example.test', 'CLI-1', 'LOC-1')
     setRepaymentTimelineCache(key, {

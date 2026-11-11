@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { mkdir, mkdtemp, readdir, rm } from 'node:fs/promises'
+import { mkdir, mkdtemp, readdir, rm, stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -7,6 +7,34 @@ import { buildChat, buildMain, buildPreloads, buildRenderer } from './build'
 import { compileCss } from './build-plugin'
 
 const DESKTOP = import.meta.dir
+
+// Five percent above the cold graph measured after splitting settings, activity and tasks:
+// entry 589096, modulepreload 482599, globals CSS 214052, main preload 11779.
+const COLD_ENTRY_MAX_BYTES = 618_551
+const COLD_MODULEPRELOAD_MAX_BYTES = 506_729
+const COLD_GLOBALS_MAX_BYTES = 224_755
+const MAIN_PRELOAD_MAX_BYTES = 12_368
+
+function quotedAttr(tag: string, name: string): string | undefined {
+  return new RegExp(`${name}="([^"]*)"`).exec(tag)?.[1]
+}
+
+function coldAssets(html: string): { entry: string; preloads: string[] } {
+  const tags = html.match(/<(?:script|link)\b[^>]*>/g) ?? []
+  let entry = ''
+  const preloads: string[] = []
+  for (const tag of tags) {
+    if (tag.startsWith('<script') && quotedAttr(tag, 'type') === 'module') {
+      entry = quotedAttr(tag, 'src') ?? entry
+    }
+    if (tag.startsWith('<link') && quotedAttr(tag, 'rel') === 'modulepreload') {
+      const href = quotedAttr(tag, 'href')
+      if (href) preloads.push(href)
+    }
+  }
+  if (!entry) throw new Error('renderer entry script missing')
+  return { entry, preloads }
+}
 
 async function tempDir(prefix: string) {
   return mkdtemp(join(tmpdir(), prefix))
@@ -40,6 +68,9 @@ describe('electron bundles', () => {
     try {
       await buildPreloads({ outdir, minify: true })
       expect((await readdir(outdir)).sort()).toEqual(['index.js', 'mascot.js'])
+      expect((await stat(join(outdir, 'index.js'))).size).toBeLessThanOrEqual(
+        MAIN_PRELOAD_MAX_BYTES
+      )
       for (const name of ['index.js', 'mascot.js']) {
         const source = await Bun.file(join(outdir, name)).text()
         expect(source).toMatch(/require\(["']electron["']\)/)
@@ -71,6 +102,35 @@ describe('electron bundles', () => {
       const font = files.find((file) => file.endsWith('.woff2'))
       expect(css).toBeTruthy()
       expect(font).toBeTruthy()
+
+      const { entry, preloads } = coldAssets(await Bun.file(join(outdir, 'index.html')).text())
+      expect(preloads.length).toBeGreaterThan(0)
+      expect((await stat(join(outdir, entry))).size).toBeLessThanOrEqual(COLD_ENTRY_MAX_BYTES)
+      const preloadBytes = await Promise.all(
+        preloads.map(async (href) => (await stat(join(outdir, href))).size)
+      )
+      expect(preloadBytes.reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(
+        COLD_MODULEPRELOAD_MAX_BYTES
+      )
+      const coldJs = (
+        await Promise.all([entry, ...preloads].map((href) => Bun.file(join(outdir, href)).text()))
+      ).join('\n')
+      const styles = [
+        ...new Set(
+          [...coldJs.matchAll(/href="(\.\/assets\/[^"]+\.css)"/g)].flatMap((match) =>
+            match[1] ? [match[1]] : []
+          )
+        )
+      ]
+      expect(styles).toHaveLength(1)
+      expect(styles[0]).toContain('globals-')
+      expect((await stat(join(outdir, styles[0]!))).size).toBeLessThanOrEqual(
+        COLD_GLOBALS_MAX_BYTES
+      )
+      expect(coldJs).not.toContain('Fermer les notifications')
+      expect(coldJs).not.toContain('Mes tâches et tâches assignées')
+      expect(coldJs).not.toContain('Copier le texte')
+      expect(coldJs).not.toContain('Cette action est immédiate.')
     } finally {
       await rm(outdir, { recursive: true, force: true })
     }

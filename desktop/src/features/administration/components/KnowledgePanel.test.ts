@@ -184,7 +184,7 @@ describe('knowledge assignment summary', () => {
       ])
     ).toEqual({
       profiles: ['Assistant', 'Réclamations'],
-      modules: [BUSINESS_MODULES.find((module) => module.id === 'tickets')?.label]
+      modules: [BUSINESS_MODULES.find((module) => module.id === 'tickets')?.label ?? '']
     })
     expect(knowledgeAssignmentSummary(entry('Guide', 'Guide', [], []), [])).toEqual({
       profiles: [],

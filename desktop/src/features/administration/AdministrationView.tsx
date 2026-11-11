@@ -38,7 +38,7 @@ const SECTIONS = [
   {
     id: 'conversations',
     label: 'Conversations',
-    hint: "Consulter les conversations entre les utilisateurs, clients, locataires et les agents pour identifier les éventuels manques de l'encylcopédie ou manques dans les consignes de l'agent.",
+    hint: "Consulter les conversations entre les utilisateurs, clients, locataires et les agents pour identifier les éventuels manques de l'encylcopédie ou manques dans les prompts système de l'agent.",
     action: 'Consulter les conversations'
   },
   {
@@ -74,9 +74,10 @@ const SETUP_HINT: Record<EntryId, string> = {
   'chatbots/default':
     "Paramétrer l'agent conversationnel public et ceux spécialisés et à l'usage unique des collaborateurs de l'organisme.",
   tickets: 'Paramétrer le module « Réclamations ».',
-  repayment: 'Phases du recouvrement, consigne de l’agent, documents Word et messages.',
-  'about/AGENTS.md': 'Consigne du briefing d’un locataire, d’un client, d’un lot ou d’un bâtiment.',
-  'automations/AGENTS.md': 'Consigne suivie quand une automatisation rédige un rapport.'
+  repayment: 'Phases du recouvrement, prompt système de l’agent, documents Word et messages.',
+  'about/AGENTS.md':
+    'Prompt système du briefing d’un locataire, d’un client, d’un lot ou d’un bâtiment.',
+  'automations/AGENTS.md': 'Prompt système suivi quand une automatisation rédige un rapport.'
 }
 
 const SETUP_FROM_REQUEST: Record<SetupEntry, EntryId> = {

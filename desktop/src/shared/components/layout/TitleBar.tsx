@@ -9,8 +9,7 @@ import type { Tab } from '@/shared/lib/tab-registry'
 import { cn } from '@/shared/lib/utils'
 import type { UserPrincipal } from '@/shared/types/users'
 
-const USER_MANUAL_URL =
-  'https://github.com/charnould/pierre/blob/docs/master/docs/07-user-manual/index.md'
+const USER_MANUAL_URL = 'https://github.com/charnould/pierre/tree/master/docs/src/05-user-manual'
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPod|iPad/i.test(navigator.platform)
 
@@ -74,44 +73,40 @@ export function TitleBar({ activeTab, user, notifications, tasks, chat, onTabCha
       data-pierre-titlebar=""
     >
       {user ? (
-        <div className={cn('flex shrink-0 items-center gap-2', isMac && 'ms-auto')}>
-          <div className="flex items-center">
-            <TitleBarTabButton tab="home" active={activeTab === 'home'} onTabChange={onTabChange} />
-            {tasks}
-            {notifications}
-            {chat}
-          </div>
-          <div className="flex items-center">
+        <div className={cn('flex shrink-0 items-center', isMac && 'ms-auto')}>
+          <TitleBarTabButton tab="home" active={activeTab === 'home'} onTabChange={onTabChange} />
+          {tasks}
+          {notifications}
+          {chat}
+          <TitleBarTabButton
+            tab="settings"
+            active={activeTab === 'settings'}
+            onTabChange={onTabChange}
+          />
+          {user.isAdministrator ? (
             <TitleBarTabButton
-              tab="settings"
-              active={activeTab === 'settings'}
+              tab="administration"
+              active={activeTab === 'administration'}
               onTabChange={onTabChange}
             />
-            {user.isAdministrator ? (
-              <TitleBarTabButton
-                tab="administration"
-                active={activeTab === 'administration'}
-                onTabChange={onTabChange}
-              />
-            ) : null}
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    className="no-drag"
-                    aria-label="Manuel"
-                    onClick={() => void window.api.openExternal(USER_MANUAL_URL)}
-                  />
-                }
-              >
-                <CircleQuestionMark />
-              </TooltipTrigger>
-              <TooltipContent side="bottom">Manuel</TooltipContent>
-            </Tooltip>
-          </div>
+          ) : null}
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="no-drag"
+                  aria-label="Manuel"
+                  onClick={() => void window.api.openExternal(USER_MANUAL_URL)}
+                />
+              }
+            >
+              <CircleQuestionMark />
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Manuel</TooltipContent>
+          </Tooltip>
         </div>
       ) : null}
     </header>

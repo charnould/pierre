@@ -236,20 +236,6 @@ export function AboutView({ hidden, settings, onNavigate, agentName }: Props) {
       year_to: to,
       context
     })
-    let files: Array<{ name: string; type: string; buffer: ArrayBuffer }> = []
-    try {
-      files = await Promise.all(
-        pendingFiles.map(async (file) => ({
-          name: file.name,
-          type: file.type,
-          buffer: await file.arrayBuffer()
-        }))
-      )
-    } catch {
-      setFileErrors(["Impossible de lire l'une des pièces jointes."])
-      return
-    }
-
     setSubmittedIdentity({
       subject: aboutSubject,
       entityId: id,
@@ -261,7 +247,7 @@ export function AboutView({ hidden, settings, onNavigate, agentName }: Props) {
       conv_id: convId.current,
       payload: serializeWorkflowPayload(payload),
       id_skill,
-      files,
+      files: pendingFiles,
       captureReasoning: true
     })
   }, [

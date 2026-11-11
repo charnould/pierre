@@ -181,7 +181,7 @@ declare global {
         message: string
         conv_id: string
         data?: string
-        files?: Array<{ name: string; type: string; buffer: ArrayBuffer }>
+        files?: File[]
       }) => Promise<boolean>
       logout: () => Promise<boolean>
       /** Cancel the stream associated with a request id. */
@@ -199,7 +199,7 @@ declare global {
         conv_id: string
         payload: string
         id_skill: string
-        files: Array<{ name: string; type: string; buffer: ArrayBuffer }>
+        files: File[]
       }) => Promise<boolean>
       /** `POST /chat/responses` — resume a pending native Pi questionnaire. */
       postAiUiResponse: (params: {
@@ -295,11 +295,7 @@ declare global {
         document: 'diagnostic' | 'plan' | 'protocole'
         format: 'docx' | 'pdf'
         dossier: unknown
-      }) => Promise<
-        | { bytes: ArrayBuffer; filename: string; mimeType: string }
-        | { error?: { message?: string } }
-        | null
-      >
+      }) => Promise<{ saved: true } | { canceled: true } | { error?: { message?: string } } | null>
       /** `GET /tickets/facets` — distinct column values from full table. */
       getTicketFacets: (params: {
         url: string

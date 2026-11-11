@@ -323,7 +323,7 @@ function Qualification({
               <FieldLabel>Statut</FieldLabel>
               <FieldDescription>
                 Revue si l’échange est clos. Action requise s’il faut corriger une connaissance ou
-                une consigne. Résolue quand la correction est faite.
+                un prompt système. Résolue quand la correction est faite.
               </FieldDescription>
             </FieldContent>
             <Select

@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react'
 
-import { ActivityReaderOverlay } from '@/features/activity/components/ActivityReaderOverlay'
 import type { NotificationsApi } from '@/features/activity/hooks/use-notifications'
 import type { ActivityFeedApi } from '@/features/activity/hooks/useActivityFeed'
 import type { ReaderTarget } from '@/features/activity/lib/reader-target'
@@ -13,6 +12,11 @@ import { useVisitedTabs } from '@/shared/lib/use-visited-tabs'
 import type { Settings } from '@/shared/types'
 import type { UserPrincipal } from '@/shared/types/users'
 
+const ActivityReaderOverlay = lazy(() =>
+  import('@/features/activity/components/ActivityReaderOverlay').then((module) => ({
+    default: module.ActivityReaderOverlay
+  }))
+)
 const ChatView = lazy(() =>
   import('@/features/chat/ChatView').then((m) => ({ default: m.ChatView }))
 )
@@ -95,17 +99,19 @@ export function TabWorkspace({
         />
       ) : null}
 
-      <SettingsView
-        hidden={activeTab !== 'settings'}
-        settings={settings}
-        isLoggedIn={isLoggedIn}
-        user={user}
-        agentName={agentName}
-        onHome={() => onTabChange('home')}
-        onLogin={onLogin}
-        onUserChange={onUserChange}
-        onLogout={onLogout}
-      />
+      {!isLoggedIn || activeTab === 'settings' ? (
+        <SettingsView
+          hidden={activeTab !== 'settings'}
+          settings={settings}
+          isLoggedIn={isLoggedIn}
+          user={user}
+          agentName={agentName}
+          onHome={() => onTabChange('home')}
+          onLogin={onLogin}
+          onUserChange={onUserChange}
+          onLogout={onLogout}
+        />
+      ) : null}
 
       <Suspense fallback={<LazyTabFallback />}>
         {visited.has('chat') ? (
@@ -176,7 +182,11 @@ export function TabWorkspace({
         ) : null
       )}
 
-      {readerTarget ? <ActivityReaderOverlay target={readerTarget} /> : null}
+      {readerTarget ? (
+        <Suspense fallback={null}>
+          <ActivityReaderOverlay target={readerTarget} />
+        </Suspense>
+      ) : null}
     </>
   )
 }

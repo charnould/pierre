@@ -1,10 +1,18 @@
 import { Activity, Inbox, ListTodo, type LucideIcon, SquareCheck, UserRound } from 'lucide-react'
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  lazy,
+  type ReactNode,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react'
 
 import { useResolvedUiSettings } from '@/contexts/UiSettingsContext'
 import { ActivityNotificationRow } from '@/features/activity/components/ActivityNotificationRow'
 import { selectAuthoredActivityItems } from '@/features/activity/components/ActivityScopeControls'
-import { ActivityTimelineList } from '@/features/activity/components/ActivityTimelineList'
 import type { ActivityFeedApi } from '@/features/activity/hooks/useActivityFeed'
 import { useActivityRail } from '@/features/activity/lib/ActivityRailContext'
 import type { ActivityNotificationItem } from '@/features/activity/lib/notification-types'
@@ -20,6 +28,12 @@ import type { Tab } from '@/shared/lib/tabs'
 import { resolveHomeSettings } from '@/shared/lib/ui-settings/schema'
 import { cn } from '@/shared/lib/utils'
 import type { UserPrincipal } from '@/shared/types/users'
+
+const ActivityTimelineList = lazy(() =>
+  import('@/features/activity/components/ActivityTimelineList').then((module) => ({
+    default: module.ActivityTimelineList
+  }))
+)
 
 const HOME_TILES = [
   'chat',
@@ -260,6 +274,17 @@ export function HomeView({
     [feed, openContextTarget, openReader]
   )
 
+  if (hidden) {
+    return (
+      <div
+        data-tab-panel
+        data-hidden=""
+        aria-label="Accueil"
+        className="bg-background absolute inset-0 hidden"
+      />
+    )
+  }
+
   return (
     <div
       data-tab-panel
@@ -365,16 +390,18 @@ export function HomeView({
               {activityItems.length === 0 ? (
                 <HomeStatus description="Aucune activité récente pour les personnes suivies." />
               ) : (
-                <ActivityTimelineList
-                  items={activityItems}
-                  emptyCopy={{
-                    title: 'Aucune activité',
-                    description: 'Aucune activité récente pour les personnes suivies.'
-                  }}
-                  emptyIcon={<Activity />}
-                  fit
-                  onOpen={openNotification}
-                />
+                <Suspense fallback={null}>
+                  <ActivityTimelineList
+                    items={activityItems}
+                    emptyCopy={{
+                      title: 'Aucune activité',
+                      description: 'Aucune activité récente pour les personnes suivies.'
+                    }}
+                    emptyIcon={<Activity />}
+                    fit
+                    onOpen={openNotification}
+                  />
+                </Suspense>
               )}
             </HomeSection>
           </section>

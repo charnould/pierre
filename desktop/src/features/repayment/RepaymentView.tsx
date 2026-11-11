@@ -340,24 +340,26 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
             }
           >
             {(scrollRef) =>
-              bucketSections.map((section) => (
-                <RepaymentBucketTableBlock
-                  key={section.bucket}
-                  bucket={section.bucket}
-                  bucketRows={section.rows}
-                  ledgerColumnIds={ledgerColumnIds}
-                  selectedId={selected?.id_locataire ?? null}
-                  snapshotDate={snapshotDate}
-                  columnValues={columnValues}
-                  onColumnValuesChange={setColumnValues}
-                  onRowClick={handleRowClick}
-                  onRowHover={handleRowHover}
-                  getBucket={getBucketForRow}
-                  getLastAction={getLastAction}
-                  getRowSignal={getRowSignal}
-                  scrollRef={scrollRef}
-                />
-              ))
+              hidden
+                ? null
+                : bucketSections.map((section) => (
+                    <RepaymentBucketTableBlock
+                      key={section.bucket}
+                      bucket={section.bucket}
+                      bucketRows={section.rows}
+                      ledgerColumnIds={ledgerColumnIds}
+                      selectedId={selected?.id_locataire ?? null}
+                      snapshotDate={snapshotDate}
+                      columnValues={columnValues}
+                      onColumnValuesChange={setColumnValues}
+                      onRowClick={handleRowClick}
+                      onRowHover={handleRowHover}
+                      getBucket={getBucketForRow}
+                      getLastAction={getLastAction}
+                      getRowSignal={getRowSignal}
+                      scrollRef={scrollRef}
+                    />
+                  ))
             }
           </BoardCanvas>
         </BoardSelectionProvider>

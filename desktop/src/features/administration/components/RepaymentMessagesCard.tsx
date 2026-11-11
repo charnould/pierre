@@ -292,7 +292,8 @@ export function RepaymentMessagesCard({
 
   async function test(key: string, destinataire: string): Promise<boolean> {
     const current = drafts.find((draft) => draft.key === key)
-    const message = current?.verified?.text === current?.text ? current.verified.message : null
+    const verified = current?.verified
+    const message = verified && current.text === verified.text ? verified.message : null
     if (!message) return false
     setDrafts((items) =>
       items.map((draft) => (draft.key === key ? { ...draft, testing: true } : draft))

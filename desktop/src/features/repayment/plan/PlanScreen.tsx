@@ -192,7 +192,8 @@ export function PlanScreen({
       format,
       dossier: readable.value
     })
-    if (!result || !('bytes' in result)) {
+    if (result && 'canceled' in result) return
+    if (!result || !('saved' in result)) {
       toast.add({
         title:
           result && 'error' in result
@@ -200,13 +201,7 @@ export function PlanScreen({
             : 'Export impossible',
         type: 'error'
       })
-      return
     }
-    const link = window.document.createElement('a')
-    link.href = URL.createObjectURL(new Blob([result.bytes], { type: result.mimeType }))
-    link.download = result.filename
-    link.click()
-    URL.revokeObjectURL(link.href)
   }
 
   const common = forms.donnees_communes

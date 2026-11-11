@@ -258,6 +258,145 @@ describe('SetupPanel', () => {
   })
 })
 
+describe('SetupPanel chatbots', () => {
+  test('shows the public agent and each other agent', async () => {
+    const previous = window.api
+    window.api = {
+      getAdminSetup: async () => ({
+        texts: {
+          'chatbots/default': '{ "id": "default" }',
+          'chatbots/default/AGENTS.md': 'Consigne publique.',
+          'chatbots/cadre': '{ "id": "cadre" }',
+          'chatbots/cadre/AGENTS.md': 'Consigne cadre.'
+        },
+        binaries: [],
+        ready: { 'chatbots/default': false }
+      })
+    } as unknown as typeof window.api
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const root = createRoot(host)
+    try {
+      await act(async () => {
+        root.render(
+          <SetupPanel url="http://localhost" entryId="chatbots/default" onBack={() => {}} />
+        )
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      })
+      const tabs = [...host.querySelectorAll('[role="tab"]')].map(
+        (tab) => tab.getAttribute('aria-label') || tab.textContent?.trim()
+      )
+      const panels = [...host.querySelectorAll('[role="tabpanel"]')]
+      const visible = panels.filter((panel) => !panel.hasAttribute('hidden'))
+      const create = host.querySelector('#nouvel-agent')
+      expect(host.textContent).toContain('Agents conversationnels')
+      expect(host.textContent).toContain('Pierre')
+      expect(host.textContent).toContain('http://localhost')
+      expect(host.textContent).not.toContain('[agentName]')
+      expect(host.textContent).not.toContain('url_page_agent')
+      expect(tabs).toEqual(['Agent public', 'cadre', 'Nouvel agent'])
+      expect(visible).toHaveLength(1)
+      const labels = [...(visible[0]?.querySelectorAll('label') ?? [])].map((label) =>
+        label.textContent?.trim()
+      )
+      expect(labels.slice(0, 3)).toEqual(['Icône', 'Configuration', 'Prompt système'])
+      expect(visible[0]?.textContent).not.toContain(
+        'Réservé aux collaborateurs auxquels il est attribué.'
+      )
+      expect(create?.textContent).toContain('La clé id nomme cet agent.')
+      expect(create?.textContent).not.toContain('Identifiant')
+      expect(create?.querySelector('input')).toBeNull()
+      expect(host.innerHTML).toContain('rows="3"')
+      expect(host.innerHTML).toContain('data-min-lines="3"')
+      expect(host.innerHTML).not.toContain('data-max-lines')
+    } finally {
+      await act(async () => root.unmount())
+      host.remove()
+      window.api = previous
+    }
+  })
+
+  test('records a new agent from the id in its JSON and refuses a duplicate', async () => {
+    const previous = window.api
+    const written: Array<{ id: string; body: string }> = []
+    const texts: Record<string, string> = {
+      'chatbots/default': '{ "id": "default" }',
+      'chatbots/default/AGENTS.md': 'Consigne publique.',
+      'chatbots/cadre': '{ "id": "cadre" }',
+      'chatbots/cadre/AGENTS.md': 'Consigne cadre.'
+    }
+    window.api = {
+      getAdminSetup: async () => ({
+        texts: { ...texts },
+        binaries: [],
+        ready: { 'chatbots/default': false }
+      }),
+      putAdminSetup: async (payload: { id: string; body?: string }) => {
+        const body = payload.body ?? ''
+        texts[payload.id] = body
+        written.push({ id: payload.id, body })
+        return { data: { id: payload.id } }
+      }
+    } as unknown as typeof window.api
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const root = createRoot(host)
+    const fill = async (id: string, value: string) => {
+      const textarea = host.querySelector(`[id="${id}"]`)
+      if (!(textarea instanceof HTMLTextAreaElement)) throw new Error(id)
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set?.call(
+          textarea,
+          value
+        )
+        textarea.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+    }
+    const save = async () => {
+      const button = [...host.querySelectorAll('button')].find(
+        (node) => node.textContent === 'Enregistrer'
+      )
+      if (!(button instanceof HTMLButtonElement)) throw new Error('Enregistrer')
+      await act(async () => {
+        button.click()
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      })
+    }
+    try {
+      await act(async () => {
+        root.render(
+          <SetupPanel url="http://localhost" entryId="chatbots/default" onBack={() => {}} />
+        )
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      })
+      await fill('chatbots/__draft__', '{ "id": "cadre", "display": "Doublon" }')
+      await save()
+      expect(host.textContent).toContain('Identifiant déjà utilisé.')
+      expect(written.map((row) => row.body)).not.toContain(
+        '{ "id": "cadre", "display": "Doublon" }'
+      )
+      written.length = 0
+      await fill('chatbots/__draft__', '{ "id": "astreinte" }')
+      await save()
+      expect(written).toEqual(
+        expect.arrayContaining([
+          { id: 'chatbots/astreinte', body: '{ "id": "astreinte" }' },
+          { id: 'chatbots/astreinte/AGENTS.md', body: '' }
+        ])
+      )
+      const cadre = written.find((row) => row.id === 'chatbots/cadre')
+      expect(cadre?.body).toBe('{ "id": "cadre" }')
+      expect(host.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.trim()).toBe(
+        'astreinte'
+      )
+    } finally {
+      await act(async () => root.unmount())
+      host.remove()
+      window.api = previous
+    }
+  })
+})
+
 describe('RepaymentDocuments', () => {
   test('lists the four documents and checks only the stored row', () => {
     const html = renderToStaticMarkup(

@@ -1,17 +1,9 @@
-import { MessageSquare } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { ChatPanel, type ChatPanelHandle } from '@/features/chat/ChatPanel'
 import { ProfileSelector } from '@/features/chat/components/ProfileSelector'
 import { createIpcChatTransport } from '@/features/chat/lib/ipc-chat-transport'
 import { ModuleGate } from '@/shared/components/ModuleGate'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle
-} from '@/shared/components/ui/empty'
 import { Spinner } from '@/shared/components/ui/spinner'
 import { releaseConversationVm } from '@/shared/lib/release-conversation-vm'
 import type { ChatBoot } from '@/shared/types'
@@ -101,22 +93,17 @@ export function DesktopChatBody({ url, agentName, active }: Props) {
           className="bg-background relative flex min-h-0 flex-1 flex-col overflow-hidden"
         >
           {showPlaceholder ? (
-            <div className="absolute inset-0 z-10 flex items-center justify-center">
-              <Empty className="max-w-sm">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    {showBootLoading ? <Spinner /> : <MessageSquare strokeWidth={1.5} />}
-                  </EmptyMedia>
-                  <EmptyTitle>Discuter avec {agentName}</EmptyTitle>
-                  <EmptyDescription>
-                    {!url
-                      ? 'Configurez et connectez-vous pour accéder au chatbot.'
-                      : showBootLoading
-                        ? 'Chargement du chatbot…'
-                        : 'Impossible de charger le chatbot.'}
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
+            <div className="absolute inset-0 z-10 flex items-center justify-center px-6">
+              <div className="flex max-w-sm flex-col items-center gap-2" role="status">
+                {showBootLoading ? <Spinner aria-hidden role="presentation" /> : null}
+                <p className="text-muted-foreground text-center text-balance">
+                  {!url
+                    ? 'Configurez et connectez-vous pour accéder au chatbot.'
+                    : showBootLoading
+                      ? 'Chargement du chatbot…'
+                      : 'Impossible de charger le chatbot.'}
+                </p>
+              </div>
             </div>
           ) : boot && transport ? (
             <ChatPanel

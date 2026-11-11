@@ -19,8 +19,25 @@ type CacheRecord = RepaymentTimelineCacheEntry & {
   promise?: Promise<RepaymentTimelineCacheEntry>
 }
 
+const MAX_REPAYMENT_TIMELINES = 16
 const cache = new Map<string, CacheRecord>()
 const generations = new Map<string, number>()
+
+function retainTimeline(key: string, record: CacheRecord): void {
+  cache.delete(key)
+  cache.set(key, record)
+  while (cache.size > MAX_REPAYMENT_TIMELINES) {
+    const oldest = cache.keys().next().value
+    if (oldest === undefined) return
+    cache.delete(oldest)
+    generations.delete(oldest)
+  }
+}
+
+export function clearRepaymentTimelineCache(): void {
+  cache.clear()
+  generations.clear()
+}
 
 export function repaymentTimelineCacheKey(
   url: string,
@@ -46,7 +63,7 @@ export function getRepaymentTimelineCache(key: string): RepaymentTimelineCacheEn
 export function setRepaymentTimelineCache(key: string, entry: RepaymentTimelineCacheEntry): void {
   const generation = (generations.get(key) ?? 0) + 1
   generations.set(key, generation)
-  cache.set(key, {
+  retainTimeline(key, {
     ...entry,
     generation,
     promise: undefined
@@ -97,7 +114,7 @@ export function patchRepaymentTimelineActivity(
   const generation = (generations.get(key) ?? 0) + 1
   generations.set(key, generation)
   if (!existing) return
-  cache.set(key, {
+  retainTimeline(key, {
     ...existing,
     notifications: replaceActivityById(existing.notifications, activity),
     openActionEvents: replaceActivityById(existing.openActionEvents, activity),
@@ -128,12 +145,12 @@ export function prefetchRepaymentTimeline(params: {
   }
   const promise = fetchRepaymentTimeline(params, fallback).then((entry) => {
     if (cache.get(key)?.generation === generation) {
-      cache.set(key, { ...entry, generation, promise: undefined })
+      retainTimeline(key, { ...entry, generation, promise: undefined })
     }
     return entry
   })
 
-  cache.set(key, {
+  retainTimeline(key, {
     ...fallback,
     generation,
     promise

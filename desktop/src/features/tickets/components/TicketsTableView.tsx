@@ -285,18 +285,130 @@ export const TicketsTableView = memo(function TicketsTableView({
     [columnSizing, debouncedPatch]
   )
 
+  if (hidden) return null
+
+  return (
+    <TicketsTableBoard
+      title={title}
+      data={data}
+      columns={columns}
+      settings={settings}
+      columnFilters={columnFilters}
+      url={url}
+      showSkeleton={showSkeleton}
+      hasUnread={hasUnread}
+      selectedId={selectedId}
+      checkedIds={checkedIds}
+      selectionDisabled={selectionDisabled}
+      onSelectionChange={onSelectionChange}
+      onRowClick={onRowClick}
+      scrollRef={scrollRef}
+      menuColumns={menuColumns}
+      hiddenColumns={hiddenColumns}
+      onHiddenChange={handleHiddenChange}
+      onClearAllFilters={handleClearAllFilters}
+      columnVisibility={columnVisibility}
+      tableColumnOrder={tableColumnOrder}
+      onColumnVisibilityChange={handleColumnVisibilityChange}
+      onColumnOrderChange={handleColumnOrderChange}
+      onColumnSizingChange={handleColumnSizingChange}
+      columnSizing={columnSizing}
+      sorting={sorting}
+      onSortingChange={setSorting}
+      onFiltersChange={handleFiltersChange}
+      total={meta?.total ?? 0}
+      offset={offset}
+      error={error}
+      canPrevPage={canPrevPage}
+      canNextPage={canNextPage}
+      onPrevPage={prevPage}
+      onNextPage={nextPage}
+    />
+  )
+})
+
+function TicketsTableBoard({
+  title,
+  data,
+  columns,
+  settings,
+  columnFilters,
+  url,
+  showSkeleton,
+  hasUnread,
+  selectedId,
+  checkedIds,
+  selectionDisabled,
+  onSelectionChange,
+  onRowClick,
+  scrollRef,
+  menuColumns,
+  hiddenColumns,
+  onHiddenChange,
+  onClearAllFilters,
+  columnVisibility,
+  tableColumnOrder,
+  onColumnVisibilityChange,
+  onColumnOrderChange,
+  onColumnSizingChange,
+  columnSizing,
+  sorting,
+  onSortingChange,
+  onFiltersChange,
+  total,
+  offset,
+  error,
+  canPrevPage,
+  canNextPage,
+  onPrevPage,
+  onNextPage
+}: {
+  title: string
+  data: TicketRow[]
+  columns: ReturnType<typeof useTickets>['columns']
+  settings: ReturnType<typeof useUiSettings>['settings']
+  columnFilters: ColumnFilters
+  url: string | undefined
+  showSkeleton: boolean
+  hasUnread: (row: TicketRow) => boolean
+  selectedId?: string
+  checkedIds: ReadonlySet<string>
+  selectionDisabled: boolean
+  onSelectionChange: (id: string, checked: boolean, row: TicketRow | null) => void
+  onRowClick: (row: TicketRow) => void
+  scrollRef: RefObject<HTMLElement | null>
+  menuColumns: ReturnType<typeof useTickets>['columns']
+  hiddenColumns: string[]
+  onHiddenChange: (next: string[]) => void
+  onClearAllFilters: () => void
+  columnVisibility: ColumnVisibilityState
+  tableColumnOrder: string[]
+  onColumnVisibilityChange: (updater: Updater<ColumnVisibilityState>) => void
+  onColumnOrderChange: (updater: Updater<string[]>) => void
+  onColumnSizingChange: (updater: Updater<ColumnSizingState>) => void
+  columnSizing: ColumnSizingState
+  sorting: SortingState
+  onSortingChange: (updater: Updater<SortingState>) => void
+  onFiltersChange: (next: ColumnFilters) => void
+  total: number
+  offset: number
+  error: string | null
+  canPrevPage: boolean
+  canNextPage: boolean
+  onPrevPage: () => void
+  onNextPage: () => void
+}) {
   const tableColumns = useMemo(
     () =>
       buildTicketsColumns(columns, {
         settings,
         columnFilters,
         url,
-        onColumnFiltersChange: showSkeleton ? undefined : handleFiltersChange,
+        onColumnFiltersChange: showSkeleton ? undefined : onFiltersChange,
         hasUnread
       }),
-    [columns, settings, columnFilters, url, handleFiltersChange, showSkeleton, hasUnread]
+    [columns, settings, columnFilters, url, onFiltersChange, showSkeleton, hasUnread]
   )
-
   const tableOptions = useMemo(
     () => ({
       features: pierreTableFeatures,
@@ -307,10 +419,10 @@ export const TicketsTableView = memo(function TicketsTableView({
       enableColumnResizing: true,
       columnResizeMode: 'onEnd' as const,
       manualSorting: ticketServerSort(sorting[0]) != null,
-      onSortingChange: setSorting,
-      onColumnVisibilityChange: handleColumnVisibilityChange,
-      onColumnOrderChange: handleColumnOrderChange,
-      onColumnSizingChange: handleColumnSizingChange,
+      onSortingChange,
+      onColumnVisibilityChange,
+      onColumnOrderChange,
+      onColumnSizingChange,
       state: {
         sorting,
         columnVisibility,
@@ -321,22 +433,20 @@ export const TicketsTableView = memo(function TicketsTableView({
     [
       data,
       tableColumns,
-      handleColumnVisibilityChange,
-      handleColumnOrderChange,
-      handleColumnSizingChange,
+      onColumnVisibilityChange,
+      onColumnOrderChange,
+      onColumnSizingChange,
+      onSortingChange,
       sorting,
       columnVisibility,
       tableColumnOrder,
       columnSizing
     ]
   )
-
   const dataTable = useTable(tableOptions)
   const tableRows = dataTable.getRowModel().rows
   const headerGroups = dataTable.getHeaderGroups()
   const leafHeaders = headerGroups[0]?.headers ?? []
-
-  const total = meta?.total ?? 0
   const rangeStart = total === 0 ? 0 : offset + 1
   const rangeEnd = offset + data.length
   const paginationLabel = showSkeleton
@@ -344,7 +454,6 @@ export const TicketsTableView = memo(function TicketsTableView({
     : total === 0
       ? '0 réclamation'
       : `${rangeStart}–${rangeEnd} sur ${total}`
-
   const hasActiveFilters = hasActiveColumnFilters(columnFilters)
   const selection = useMemo(
     () => ({
@@ -357,23 +466,20 @@ export const TicketsTableView = memo(function TicketsTableView({
     }),
     [checkedIds, data, onSelectionChange, selectionDisabled]
   )
-
-  if (hidden) return null
-
   const phaseActions = (
     <>
       <TicketsColumnVisibilityMenu
         columns={menuColumns}
         settings={settings}
         hiddenColumns={hiddenColumns}
-        onHiddenChange={handleHiddenChange}
+        onHiddenChange={onHiddenChange}
       />
       <Button
         type="button"
         variant="outline"
         size="sm"
         disabled={!hasActiveFilters || showSkeleton}
-        onClick={handleClearAllFilters}
+        onClick={onClearAllFilters}
       >
         <FilterX data-icon="inline-start" />
         Effacer les filtres
@@ -384,7 +490,7 @@ export const TicketsTableView = memo(function TicketsTableView({
             type="button"
             variant="outline"
             size="sm"
-            onClick={prevPage}
+            onClick={onPrevPage}
             disabled={showSkeleton || !canPrevPage}
           >
             Précédent
@@ -393,7 +499,7 @@ export const TicketsTableView = memo(function TicketsTableView({
             type="button"
             variant="outline"
             size="sm"
-            onClick={nextPage}
+            onClick={onNextPage}
             disabled={showSkeleton || !canNextPage}
           >
             Suivant
@@ -446,4 +552,4 @@ export const TicketsTableView = memo(function TicketsTableView({
       </BoardPhaseSection>
     </BoardSelectionProvider>
   )
-})
+}

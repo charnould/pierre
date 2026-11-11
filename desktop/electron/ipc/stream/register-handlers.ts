@@ -1,3 +1,5 @@
+import { openAsBlob } from 'node:fs'
+
 import { ipcMain, type IpcMainInvokeEvent, session } from 'electron'
 
 import { netFetch } from '../../lib/net-fetch'
@@ -13,7 +15,7 @@ type StreamStartParams = {
   message: string
   conv_id: string
   data?: string
-  files?: Array<{ name: string; type: string; buffer: ArrayBuffer }>
+  files?: Array<{ name: string; type: string; path: string }>
 }
 
 type GenerateAnswerParams = {
@@ -22,7 +24,7 @@ type GenerateAnswerParams = {
   conv_id: string
   payload: string
   id_skill: string
-  files: Array<{ name: string; type: string; buffer: ArrayBuffer }>
+  files: Array<{ name: string; type: string; path: string }>
 }
 
 type UiResponseParams = {
@@ -102,7 +104,7 @@ export function registerStreamHandlers(partition: string): void {
       formData.set('conversationId', params.conv_id)
       formData.set('data', params.data ?? '')
       for (const file of params.files ?? []) {
-        formData.append('files', new Blob([file.buffer], { type: file.type }), file.name)
+        formData.append('files', await openAsBlob(file.path, { type: file.type }), file.name)
       }
 
       return await streamResponseToRenderer(
@@ -131,7 +133,7 @@ export function registerStreamHandlers(partition: string): void {
 
     if (Array.isArray(params.files)) {
       for (const file of params.files) {
-        formData.append('files', new Blob([file.buffer], { type: file.type }), file.name)
+        formData.append('files', await openAsBlob(file.path, { type: file.type }), file.name)
       }
     }
 

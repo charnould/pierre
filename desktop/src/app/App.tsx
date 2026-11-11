@@ -16,15 +16,14 @@ import {
 } from '@/contexts/NavigationHistoryContext'
 import { ThemeProvider } from '@/contexts/ThemeProvider'
 import { UiSettingsProvider, useResolvedUiSettings } from '@/contexts/UiSettingsContext'
-import { ActivityPanel } from '@/features/activity'
 import { ActivityNotificationsTrigger } from '@/features/activity/components/ActivityNotificationsTrigger'
 import { ActivityTasksTrigger } from '@/features/activity/components/ActivityTasksTrigger'
 import { useActivityFeed } from '@/features/activity/hooks/useActivityFeed'
 import { ActivityRailProvider, useActivityRail } from '@/features/activity/lib/ActivityRailContext'
 import { restoreSession } from '@/features/auth'
 import { ChatWindowTrigger } from '@/features/chat/components/ChatWindowTrigger'
-import { TasksPanel } from '@/features/home/TasksPanel'
 import { useHomeOpenActions } from '@/features/home/use-home-open-actions'
+import { clearRepaymentTimelineCache } from '@/features/repayment/lib/repayment-timeline-cache'
 import { FindInPageBar } from '@/shared/components/find-in-page/FindInPageBar'
 import { TitleBar } from '@/shared/components/layout/TitleBar'
 import { toast, Toaster } from '@/shared/components/ui/toast'
@@ -46,6 +45,14 @@ import type { UserPrincipal } from '@/shared/types/users'
 
 import { TabWorkspace } from './TabWorkspace'
 
+const ActivityPanel = lazy(() =>
+  import('@/features/activity/ActivityPanel').then((module) => ({
+    default: module.ActivityPanel
+  }))
+)
+const TasksPanel = lazy(() =>
+  import('@/features/home/TasksPanel').then((module) => ({ default: module.TasksPanel }))
+)
 const ChatWindow = lazy(() =>
   import('@/features/chat').then((module) => ({ default: module.ChatWindow }))
 )
@@ -134,6 +141,7 @@ function AppContent({
       } else {
         setChatOpen(false)
         resetCustomization()
+        clearRepaymentTimelineCache()
         setAgentName(DEFAULT_AGENT_NAME)
         setIsLoggedIn(false)
         navigate({ tab: 'settings' }, { replace: true })
@@ -239,15 +247,19 @@ function AppContent({
           />
         </Suspense>
       ) : null}
-      <ActivityPanel feed={feed} url={settings.url} userLogin={userLogin} />
-      <TasksPanel
-        mine={mine}
-        delegated={delegated}
-        hasMoreMine={hasMoreMine}
-        hasMoreDelegated={hasMoreDelegated}
-        onLoadMoreMine={() => void loadMoreMine()}
-        onLoadMoreDelegated={() => void loadMoreDelegated()}
-      />
+      {user ? (
+        <Suspense fallback={null}>
+          <ActivityPanel feed={feed} url={settings.url} userLogin={userLogin} />
+          <TasksPanel
+            mine={mine}
+            delegated={delegated}
+            hasMoreMine={hasMoreMine}
+            hasMoreDelegated={hasMoreDelegated}
+            onLoadMoreMine={() => void loadMoreMine()}
+            onLoadMoreDelegated={() => void loadMoreDelegated()}
+          />
+        </Suspense>
+      ) : null}
       <main className="bg-background relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <TabWorkspace
           activeTab={activeTab}

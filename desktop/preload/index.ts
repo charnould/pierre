@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, webUtils } from 'electron'
 
 import type { RepaymentMessage } from '../../shared/repayment-messages'
 import {
@@ -123,6 +123,19 @@ const aiChunkSubscriptions = new Map<
   { channel: string; listener: (_event: unknown, chunk: string) => void }
 >()
 
+function nativeFiles(files: readonly File[] | undefined) {
+  return (files ?? []).map((file) => {
+    let path = ''
+    try {
+      path = webUtils.getPathForFile(file)
+    } catch {
+      path = ''
+    }
+    if (!path) throw new Error("Impossible de lire l'une des pièces jointes.")
+    return { name: file.name, type: file.type, path }
+  })
+}
+
 contextBridge.exposeInMainWorld('api', {
   getSettings: () => ipcRenderer.invoke(IpcChannel.settings.get) as Promise<Settings>,
   saveSettings: (data: Settings) =>
@@ -208,8 +221,12 @@ contextBridge.exposeInMainWorld('api', {
     message: string
     conv_id: string
     data?: string
-    files?: Array<{ name: string; type: string; buffer: ArrayBuffer }>
-  }) => ipcRenderer.invoke(IpcChannel.stream.start, params) as Promise<boolean>,
+    files?: File[]
+  }) =>
+    ipcRenderer.invoke(IpcChannel.stream.start, {
+      ...params,
+      files: nativeFiles(params.files)
+    }) as Promise<boolean>,
   logout: () => ipcRenderer.invoke(IpcChannel.auth.logout) as Promise<boolean>,
   cancelStream: (requestId: string) =>
     ipcRenderer.invoke(IpcChannel.stream.cancel, requestId) as Promise<void>,
@@ -236,8 +253,12 @@ contextBridge.exposeInMainWorld('api', {
     conv_id: string
     payload: string
     id_skill: string
-    files: Array<{ name: string; type: string; buffer: ArrayBuffer }>
-  }) => ipcRenderer.invoke(IpcChannel.stream.generateAnswer, params) as Promise<boolean>,
+    files: File[]
+  }) =>
+    ipcRenderer.invoke(IpcChannel.stream.generateAnswer, {
+      ...params,
+      files: nativeFiles(params.files)
+    }) as Promise<boolean>,
   postAiUiResponse: (params: {
     url: string
     conv_id: string
@@ -271,9 +292,7 @@ contextBridge.exposeInMainWorld('api', {
     dossier: unknown
   }) =>
     ipcRenderer.invoke(IpcChannel.ledger.exportRepaymentDocument, params) as Promise<
-      | { bytes: ArrayBuffer; filename: string; mimeType: string }
-      | { error?: { message?: string } }
-      | null
+      { saved: true } | { canceled: true } | { error?: { message?: string } } | null
     >,
   getTicketFacets: (params: { url: string; column: string; q?: string }) =>
     ipcRenderer.invoke(IpcChannel.tickets.facets, params) as Promise<TicketsFacetsResponse | null>,

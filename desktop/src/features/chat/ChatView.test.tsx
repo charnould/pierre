@@ -1,15 +1,13 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
-import { forwardRef, type ReactNode, useImperativeHandle } from 'react'
+import { forwardRef, useImperativeHandle } from 'react'
 
+import { resetCustomization } from '@/shared/lib/instance-customization'
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 import type { ChatBoot } from '@/shared/types'
 
 const releases: Array<{ url: string; convId: string }> = []
-
-mock.module('@/shared/components/ModuleGate', () => ({
-  ModuleGate: ({ children }: { children: ReactNode }) => children
-}))
 
 mock.module('@/features/chat/ChatPanel', () => ({
   ChatPanel: forwardRef(function MockChatPanel(_props, ref) {
@@ -97,6 +95,11 @@ afterAll(() => {
 
 beforeEach(() => {
   releases.length = 0
+  loadCustomizationFixture()
+})
+
+afterEach(() => {
+  resetCustomization()
 })
 
 describe('ChatView', () => {

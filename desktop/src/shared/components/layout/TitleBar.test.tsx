@@ -219,7 +219,7 @@ describe('TitleBar', () => {
     const manual = view.host.querySelector<HTMLButtonElement>('[aria-label="Manuel"]')
     await view.act(async () => manual?.click())
     expect(opened).toEqual([
-      'https://github.com/charnould/pierre/blob/docs/master/docs/07-user-manual/index.md'
+      'https://github.com/charnould/pierre/tree/master/docs/src/05-user-manual'
     ])
     window.api = previous
     await view.unmount()

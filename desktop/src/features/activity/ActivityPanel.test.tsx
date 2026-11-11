@@ -1,12 +1,17 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
+import { type ReactNode } from 'react'
 
 import type { ReaderTarget } from '@/features/activity/lib/reader-target'
+import { resetCustomization } from '@/shared/lib/instance-customization'
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 import type { ActivityListItem, ActivityType } from '@/shared/types/activites'
 
 mock.module('@/contexts/NavigationHistoryContext', () => ({
-  useNavigationHistory: () => ({ navigate: mock(() => {}) })
+  NavigationHistoryProvider: ({ children }: { children: ReactNode }) => children,
+  useNavigationHistory: () => ({ navigate: mock(() => {}) }),
+  useRegisterNavigationHandlers: () => {}
 }))
 
 mock.module('@/contexts/UiSettingsContext', () => ({
@@ -216,6 +221,7 @@ async function renderPanel(
   const { ActivityRailProvider, useActivityRail } =
     await import('@/features/activity/lib/ActivityRailContext')
 
+  loadCustomizationFixture()
   window.api = {
     getActivities: () => new Promise(() => {}),
     getTickets: options?.getTickets ?? (() => new Promise(() => {})),
@@ -287,6 +293,7 @@ async function renderPanel(
     async cleanup() {
       await act(async () => root.unmount())
       container.remove()
+      resetCustomization()
     }
   }
 }
@@ -565,12 +572,14 @@ describe('ActivityPanel', () => {
         entry.textContent?.includes('Message reçu')
       )
       await act(async () => {
+        await import('@/features/activity/components/ActivityInspectorContent')
         row?.click()
         await new Promise((resolve) => window.setTimeout(resolve, 20))
       })
-      expect(document.body.textContent).not.toContain('Dossier introuvable')
-      expect(document.querySelector('[aria-label="Chargement du dossier"]')).toBeNull()
-      expect(document.querySelector('[data-drawer-variant="inspector"]')).not.toBeNull()
+      const inspector = document.querySelector('[data-drawer-variant="inspector"]')
+      expect(inspector?.textContent).toContain('REC-1')
+      expect(inspector?.textContent).not.toContain('Dossier introuvable')
+      expect(inspector?.querySelector('[aria-label="Fermer le dossier"]')).not.toBeNull()
     } finally {
       await cleanup()
     }

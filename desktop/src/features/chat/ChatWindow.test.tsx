@@ -1,15 +1,13 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
-import { forwardRef, type ReactNode, useImperativeHandle } from 'react'
+import { forwardRef, useImperativeHandle } from 'react'
 
+import { resetCustomization } from '@/shared/lib/instance-customization'
+import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 import type { ChatBoot } from '@/shared/types'
 
 const releases: Array<{ url: string; convId: string }> = []
-
-mock.module('@/shared/components/ModuleGate', () => ({
-  ModuleGate: ({ children }: { children: ReactNode }) => children
-}))
 
 mock.module('@/features/chat/ChatPanel', () => ({
   ChatPanel: forwardRef(function MockChatPanel(_props, ref) {
@@ -97,6 +95,11 @@ afterAll(() => {
 
 beforeEach(() => {
   releases.length = 0
+  loadCustomizationFixture()
+})
+
+afterEach(() => {
+  resetCustomization()
 })
 
 describe('ChatWindow', () => {
@@ -149,7 +152,10 @@ describe('ChatWindow', () => {
     const panel = host.querySelector('[data-testid="chat-panel"]')
     expect(panel).not.toBeNull()
     expect(bootCalls).toBe(1)
-    expect(frame.className).toContain('shadow-(--shadow-chat-window)')
+    expect(frame.className.split(/\s+/)).toContain('border')
+    expect(frame.className).toContain('shadow-md')
+    expect(frame.className).not.toContain('border-2')
+    expect(frame.className).not.toContain('shadow-(--shadow-chat-window)')
 
     const moveHandle = host.querySelector<HTMLElement>('[aria-label^="Déplacer la conversation"]')
     await act(async () => {

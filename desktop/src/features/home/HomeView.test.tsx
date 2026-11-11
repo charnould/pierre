@@ -259,8 +259,7 @@ async function renderHome(options?: {
     )
   })
   await act(async () => {
-    await Promise.resolve()
-    await Promise.resolve()
+    await import('@/features/activity/components/ActivityTimelineList')
   })
 
   return {

@@ -185,7 +185,7 @@ export function CaseBulkActionDialog({
               </Field>
               {mission === 'autre' ? (
                 <Field>
-                  <FieldLabel htmlFor={`${formId}-instruction`}>Consigne</FieldLabel>
+                  <FieldLabel htmlFor={`${formId}-instruction`}>Prompt système</FieldLabel>
                   <Textarea
                     id={`${formId}-instruction`}
                     value={instruction}

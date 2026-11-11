@@ -16,7 +16,7 @@ describe('setupPieces', () => {
 
     expect(pieces.map((item) => [item.done, item.label])).toEqual([
       [true, 'Configuration'],
-      [true, 'Consigne'],
+      [true, 'Prompt système'],
       [false, 'Icône']
     ])
   })
@@ -46,7 +46,7 @@ describe('setupPieces', () => {
     )
     expect(pieces.map((item) => [item.done, item.label])).toEqual([
       [true, 'Configuration'],
-      [false, 'Consigne'],
+      [false, 'Prompt système'],
       [true, 'Plan d’apurement'],
       [false, 'Protocole de cohésion sociale'],
       [false, 'Diagnostic social et financier'],
@@ -68,6 +68,6 @@ describe('setupPieces', () => {
     expect(setupPieces('about/AGENTS.md', { 'about/AGENTS.md': 'Synthèse.' }, [])[0]?.done).toBe(
       true
     )
-    expect(setupPieces('automations/AGENTS.md', {}, [])[0]?.label).toBe('Consigne')
+    expect(setupPieces('automations/AGENTS.md', {}, [])[0]?.label).toBe('Prompt système')
   })
 })

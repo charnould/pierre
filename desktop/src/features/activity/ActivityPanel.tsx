@@ -12,6 +12,8 @@ import {
 import type { ActivityFeedApi } from '@/features/activity/hooks/useActivityFeed'
 import { type ActivityRailTab, useActivityRail } from '@/features/activity/lib/ActivityRailContext'
 import type { ActivityNotificationItem } from '@/features/activity/lib/notification-types'
+import { InspectorSplit } from '@/shared/components/inspector/inspector-split'
+import { InspectorTimelineSkeleton } from '@/shared/components/inspector/inspector-timeline-skeleton'
 import { Button } from '@/shared/components/ui/button'
 import { Checkbox } from '@/shared/components/ui/checkbox'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/shared/components/ui/drawer'
@@ -197,14 +199,14 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
   } = useActivityRail()
   const contextOpen = contextTarget != null
   const [routineNames, setRoutineNames] = useState<Record<string, string>>({})
-  const routineIdsKey = useMemo(
-    () =>
-      items
-        .flatMap((item) => (item.target?.view === 'automations' ? [item.target.automationId] : []))
-        .sort()
-        .join('\n'),
-    [items]
-  )
+  const listsOpen = open || contextOpen
+  const routineIdsKey = useMemo(() => {
+    if (!listsOpen) return ''
+    return items
+      .flatMap((item) => (item.target?.view === 'automations' ? [item.target.automationId] : []))
+      .sort()
+      .join('\n')
+  }, [items, listsOpen])
   const hasFollowedAnyone = followedPeopleCount(feed, userLogin) > 0
 
   useEffect(() => {
@@ -243,25 +245,23 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
     [closePanel]
   )
 
-  const notificationItems = useMemo(
-    () =>
-      sortNotifications(
-        items.filter((item) => {
-          if (item.source === 'activity') return false
-          return showRead || !item.isRead
-        })
-      ),
-    [items, showRead]
-  )
+  const notificationItems = useMemo(() => {
+    if (!open) return []
+    return sortNotifications(
+      items.filter((item) => {
+        if (item.source === 'activity') return false
+        return showRead || !item.isRead
+      })
+    )
+  }, [items, open, showRead])
 
-  const activityItems = useMemo(
-    () =>
-      selectAuthoredActivityItems(items, userLogin, {
-        followedActivityAuthors: feed.followedActivityAuthors,
-        showOwnActivity: feed.showOwnActivity
-      }),
-    [feed.followedActivityAuthors, feed.showOwnActivity, items, userLogin]
-  )
+  const activityItems = useMemo(() => {
+    if (!open) return []
+    return selectAuthoredActivityItems(items, userLogin, {
+      followedActivityAuthors: feed.followedActivityAuthors,
+      showOwnActivity: feed.showOwnActivity
+    })
+  }, [feed.followedActivityAuthors, feed.showOwnActivity, items, open, userLogin])
 
   const handleContextOpenChange = useCallback(
     (nextOpen: boolean) => {
@@ -427,7 +427,24 @@ export function ActivityPanel({ feed, url, userLogin }: Props) {
       >
         <DrawerContent variant="inspector">
           {contextOpen ? (
-            <Suspense fallback={null}>
+            <Suspense
+              fallback={
+                <InspectorSplit
+                  left={
+                    <InspectorTimelineSkeleton
+                      variant={contextTarget?.view === 'repayment' ? 'repayment' : 'ticket'}
+                      pane="present"
+                    />
+                  }
+                  right={
+                    <InspectorTimelineSkeleton
+                      variant={contextTarget?.view === 'repayment' ? 'repayment' : 'ticket'}
+                      pane="history"
+                    />
+                  }
+                />
+              }
+            >
               <ActivityInspectorContent url={url} userLogin={userLogin} />
             </Suspense>
           ) : null}

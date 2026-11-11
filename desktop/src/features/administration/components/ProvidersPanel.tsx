@@ -302,6 +302,27 @@ export function ProvidersPanel({
     maileva: 'Aucune modification'
   })
 
+  function applyView(next: ProvidersView) {
+    const type = isLlmType(next.ai.type) ? next.ai.type : 'anthropic'
+    setView(next)
+    setLlmType(type)
+    setLlmBaseUrl(next.ai.baseUrl || defaultUrl(type))
+    setLlmModel(next.ai.model || SUGGESTED_MODEL)
+    setLlmEffort(next.ai.effort || SUGGESTED_EFFORT)
+    setRcsFrom(next.rcs.from)
+    setRcsSecret((current) => next.rcs.secret || current)
+    setEmailDomain(next.email.domain)
+    setEmailAccount(next.email.account)
+    setMailevaClientId(next.maileva.clientId)
+    setMailevaUsername(next.maileva.username)
+    setMailevaSenderId(next.maileva.senderId)
+    const address = senderAddress(next.maileva.address)
+    setMailevaName(address.name)
+    setMailevaStreet(address.street)
+    setMailevaPostal(address.postal)
+    setMailevaCity(address.city)
+  }
+
   useEffect(() => {
     let cancelled = false
     void (async () => {
@@ -356,27 +377,6 @@ export function ProvidersPanel({
     setLlmType(next)
     setLlmBaseUrl(defaultUrl(next))
     touch('ai')
-  }
-
-  function applyView(next: ProvidersView) {
-    const type = isLlmType(next.ai.type) ? next.ai.type : 'anthropic'
-    setView(next)
-    setLlmType(type)
-    setLlmBaseUrl(next.ai.baseUrl || defaultUrl(type))
-    setLlmModel(next.ai.model || SUGGESTED_MODEL)
-    setLlmEffort(next.ai.effort || SUGGESTED_EFFORT)
-    setRcsFrom(next.rcs.from)
-    setRcsSecret((current) => next.rcs.secret || current)
-    setEmailDomain(next.email.domain)
-    setEmailAccount(next.email.account)
-    setMailevaClientId(next.maileva.clientId)
-    setMailevaUsername(next.maileva.username)
-    setMailevaSenderId(next.maileva.senderId)
-    const address = senderAddress(next.maileva.address)
-    setMailevaName(address.name)
-    setMailevaStreet(address.street)
-    setMailevaPostal(address.postal)
-    setMailevaCity(address.city)
   }
 
   async function reload() {

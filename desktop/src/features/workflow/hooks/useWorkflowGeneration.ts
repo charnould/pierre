@@ -19,7 +19,7 @@ export type WorkflowGenerateParams = {
   conv_id: string
   payload: string
   id_skill: string
-  files: Array<{ name: string; type: string; buffer: ArrayBuffer }>
+  files: File[]
   /** Override hook-level default for this run (e.g. from skill config). */
   captureReasoning?: boolean
 }
@@ -126,6 +126,7 @@ export function useWorkflowGeneration(options: Options = {}) {
       const workSession = createAgentWorkStreamState()
       const startedAt = performance.now()
       let reasoningEndedAt: number | null = null
+      let attachmentError = ''
 
       const streamThrottle = createRafThrottle(() => {
         const output = session.text.trim()
@@ -147,12 +148,22 @@ export function useWorkflowGeneration(options: Options = {}) {
 
       const { ok, cancelled } = await runNdjsonStream({
         requestId,
-        start: (activeRequestId) =>
-          window.api.generateAnswer({
-            ...params,
-            conv_id: convId.current,
-            requestId: activeRequestId
-          }),
+        start: async (activeRequestId) => {
+          try {
+            return await window.api.generateAnswer({
+              ...params,
+              conv_id: convId.current,
+              requestId: activeRequestId
+            })
+          } catch (error) {
+            attachmentError =
+              error instanceof Error &&
+              error.message === "Impossible de lire l'une des pièces jointes."
+                ? error.message
+                : ''
+            throw error
+          }
+        },
         isCancelled: () => !isGeneratingRef.current,
         onEvent: (event) => {
           if (event.type === 'error') {
@@ -201,7 +212,7 @@ export function useWorkflowGeneration(options: Options = {}) {
         activeRequestIdRef.current = null
         setState((s) => ({
           ...s,
-          errMsg: 'Erreur de génération.',
+          errMsg: attachmentError || 'Erreur de génération.',
           isStreaming: false,
           isReasoningPhase: false
         }))

@@ -314,7 +314,7 @@ export function ChatWindow({ open, agentName, url, onClose }: Props) {
       inert={!open}
       style={windowStyle}
       className={cn(
-        'border-foreground/50 bg-background text-foreground fixed z-[60] flex h-[min(36rem,calc(100dvh-var(--titlebar-height)-1rem))] min-h-0 w-96 flex-col overflow-hidden rounded-xl border-2 shadow-(--shadow-chat-window)',
+        'bg-background text-foreground fixed z-[60] flex h-[min(36rem,calc(100dvh-var(--titlebar-height)-1rem))] min-h-0 w-96 flex-col overflow-hidden rounded-xl border shadow-md',
         !geometry && cn('top-[calc(var(--titlebar-height)+0.5rem)]', isMac ? 'right-2' : 'left-2')
       )}
     >
