@@ -213,7 +213,7 @@ export function LoggedInSettingsPage({
 
   return (
     <div className="bg-background h-full min-h-0 w-full flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-4 py-8">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
+      <div className="max-w-document mx-auto flex w-full flex-col gap-4">
         <div className="flex items-center gap-3">
           <Button
             type="button"

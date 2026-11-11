@@ -4,7 +4,7 @@ import { MentionText } from '@/shared/components/inspector/mention-text'
 import { Badge } from '@/shared/components/ui/badge'
 import { communicationBodyParagraphs } from '@/shared/lib/timeline/timeline-communication'
 import { cn } from '@/shared/lib/utils'
-import type { ActivityValue } from '@/shared/types/activites'
+import type { ActivityValue } from '@/shared/types/activities'
 
 export function formatActivityValue(value: ActivityValue): string {
   if (value == null) return '—'

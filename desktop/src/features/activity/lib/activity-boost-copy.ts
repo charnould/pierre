@@ -1,4 +1,4 @@
-import type { ActivityType } from '@/shared/types/activites'
+import type { ActivityType } from '@/shared/types/activities'
 
 const BOOST_NOUNS: Partial<Record<ActivityType, string>> = {
   'note.published': 'note',

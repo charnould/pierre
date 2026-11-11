@@ -1,8 +1,7 @@
+import type { RepaymentMessage } from '@pierre/shared/repayment-messages'
 import { useSyncExternalStore } from 'react'
 
 import { warnRenderer } from '@/shared/lib/renderer-log'
-
-import type { RepaymentMessage } from '../../../../shared/repayment-messages'
 
 export type CustomizationStatus = 'idle' | 'loading' | 'ready' | 'error'
 
@@ -27,6 +26,11 @@ export type InstanceCustomization = {
       maxEffortPercent: number
       minDailyRemainderEuros: number
       confirmAfterInstallments: Readonly<Record<string, string>>
+    }
+    documentTags: {
+      diagnostic: string[] | null
+      plan: string[] | null
+      protocole: string[] | null
     }
     prompt?: string
   } | null
@@ -139,6 +143,15 @@ export async function hydrateCustomizationFromServer(url: string): Promise<strin
   }
 }
 
+function isDocumentTags(value: unknown): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const tags = value as Record<string, unknown>
+  return (['diagnostic', 'plan', 'protocole'] as const).every((kind) => {
+    const entry = tags[kind]
+    return entry === null || (Array.isArray(entry) && entry.every((tag) => typeof tag === 'string'))
+  })
+}
+
 export function isCustomizationPayload(value: unknown): value is InstanceCustomization {
   if (value == null || typeof value !== 'object' || Array.isArray(value)) return false
   const row = value as Record<string, unknown>
@@ -155,6 +168,7 @@ export function isCustomizationPayload(value: unknown): value is InstanceCustomi
   if (row.repayments != null) {
     const repayments = row.repayments as Record<string, unknown>
     if (!Array.isArray(repayments.messages)) return false
+    if (!isDocumentTags(repayments.documentTags)) return false
   }
   if (
     row.repaymentGaps != null &&

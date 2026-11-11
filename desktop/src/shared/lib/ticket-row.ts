@@ -1,6 +1,6 @@
-import type { TicketRow } from '@/shared/types'
+import { hierarchyLeaf } from '@pierre/shared/hierarchy'
 
-import { hierarchyLeaf } from '../../../../shared/hierarchy'
+import type { TicketRow } from '@/shared/types'
 
 /** Scalar values commonly stored in SQLite ticket cells. */
 export type TicketCellValue = string | number | boolean | null

@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { JSDOM } from 'jsdom'
 import type { ReactNode } from 'react'
 
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
@@ -108,7 +108,7 @@ describe('TimelineCommunicationEnvelope', () => {
       activity({
         type: 'communication.sent',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           sender: 'alice@exemple.fr',
           subject: 'Relance loyer',
           body: 'Merci de régulariser.'
@@ -119,7 +119,7 @@ describe('TimelineCommunicationEnvelope', () => {
       [
         activity({
           type: 'communication.ok',
-          contenu: JSON.stringify({ version: 2, result: 'delivered' })
+          contenu: JSON.stringify({ version: 1, result: 'delivered' })
         })
       ]
     )
@@ -158,7 +158,7 @@ describe('TimelineCommunicationEnvelope', () => {
         type: 'communication.sent',
         destinataire: long,
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           sender: 'alice@exemple.fr',
           subject: 'APL',
           body: 'Bonjour'
@@ -180,7 +180,7 @@ describe('TimelineCommunicationEnvelope', () => {
       type: 'communication.sent',
       channel: 'sms',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         sender: 'alice@exemple.fr',
         body: `${'bonjour '.repeat(40)}fin`
       })
@@ -218,7 +218,7 @@ describe('TimelineCommunicationEnvelope', () => {
       type: 'communication.sent',
       channel: 'sms',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         sender: 'alice@exemple.fr',
         body: `${'bonjour '.repeat(40)}fin`
       })
@@ -266,7 +266,7 @@ describe('TimelineCommunicationEnvelope', () => {
         type: 'communication.sent',
         channel: 'rcs',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           sender: 'alice@exemple.fr',
           body: 'Pouvez-vous confirmer ?',
           choices: [
@@ -294,7 +294,7 @@ describe('TimelineCommunicationEnvelope', () => {
       activity({
         type: 'communication.imported',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           sender: 'Alice <alice@bailleur.fr>',
           subject: 'Relance loyer',
           body: 'Merci de régulariser.'
@@ -320,7 +320,7 @@ describe('TimelineCommunicationEnvelope', () => {
       activity({
         type: 'communication.sent',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           sender: 'alice@exemple.fr',
           subject: 'Visite',
           body: 'Bonjour,\n\nJe vous fais suite.\n\nLe couple était présent.'
@@ -348,7 +348,7 @@ describe('TimelineCommunicationEnvelope', () => {
       activity({
         type: 'communication.sent',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           sender: 'alice@exemple.fr',
           subject: 'Dossier APL',
           body: 'Objet :\n\nMadame, Monsieur,\nEn réponse à votre demande.'
@@ -359,7 +359,7 @@ describe('TimelineCommunicationEnvelope', () => {
       [
         activity({
           type: 'communication.ok',
-          contenu: JSON.stringify({ version: 2, result: 'delivered' })
+          contenu: JSON.stringify({ version: 1, result: 'delivered' })
         })
       ]
     )
@@ -385,14 +385,14 @@ describe('TimelineCommunicationEnvelope', () => {
     const { container, cleanup } = await renderEnvelope(
       activity({
         type: 'communication.sent',
-        contenu: JSON.stringify({ version: 2, sender: 'alice@exemple.fr', body: 'Relance' })
+        contenu: JSON.stringify({ version: 1, sender: 'alice@exemple.fr', body: 'Relance' })
       }),
       true,
       undefined,
       [
         activity({
           type: 'communication.failed',
-          contenu: JSON.stringify({ version: 2, reason: 'bounced' })
+          contenu: JSON.stringify({ version: 1, reason: 'bounced' })
         })
       ]
     )

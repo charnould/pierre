@@ -1,3 +1,5 @@
+import { normalize_knowledge_name } from '@pierre/shared/knowledge'
+import { type BusinessModuleId, knowledgePublishModules } from '@pierre/shared/modules'
 import { useId, useState } from 'react'
 
 import { Button } from '@/shared/components/ui/button'
@@ -21,9 +23,6 @@ import {
 import { Input } from '@/shared/components/ui/input'
 import { Spinner } from '@/shared/components/ui/spinner'
 import type { KnowledgeEntry, KnowledgeProfile, KnowledgeSource } from '@/shared/types/knowledge'
-
-import { normalize_knowledge_name } from '../../../../../shared/knowledge'
-import { type BusinessModuleId, knowledgePublishModules } from '../../../../../shared/modules'
 
 interface Props {
   url: string

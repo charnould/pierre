@@ -14,10 +14,10 @@ import { cn } from '@/shared/lib/utils'
 
 interface Props {
   className?: string
-  onCreatePlan: () => void
+  onCreateCaseFile: () => void
 }
 
-export function RepaymentMissingTableEmpty({ className, onCreatePlan }: Props) {
+export function RepaymentMissingTableEmpty({ className, onCreateCaseFile }: Props) {
   return (
     <Empty className={cn('min-h-40 flex-1', className)}>
       <EmptyHeader>
@@ -28,13 +28,13 @@ export function RepaymentMissingTableEmpty({ className, onCreatePlan }: Props) {
           <Kbd>core.comptes_locataires.csv</Kbd> n’est pas disponible.
         </EmptyTitle>
         <EmptyDescription>
-          En conséquence, le suivi des dossiers d’impayés, des situations locatives et des
-          procédures de recouvrement n’est pas disponible.
+          Les écritures comptables ne sont pas disponibles. Les dossiers peuvent tout de même être
+          créés et suivis ici.
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button type="button" variant="outline" onClick={onCreatePlan}>
-          Créer un plan d’apurement
+        <Button type="button" variant="outline" onClick={onCreateCaseFile}>
+          Créer un dossier
         </Button>
       </EmptyContent>
     </Empty>

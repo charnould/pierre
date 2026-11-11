@@ -1,23 +1,20 @@
 import { useEffect } from 'react'
 
+import type { WorkflowStep } from '@/shared/lib/navigation-model'
+import { isTypingInField } from '@/shared/lib/typing-target'
+
 /**
  * Whether Escape should navigate to the agent hub vs. only cancel an in-flight generation.
  * During output/streaming we stay on the workflow panel.
  */
-export function shouldEscapeNavigateHome(step: 'form' | 'output', isStreaming: boolean): boolean {
+export function shouldEscapeNavigateHome(step: WorkflowStep, isStreaming: boolean): boolean {
   if (step === 'output' || isStreaming) return false
   return true
 }
 
-export function isTypingInField(target: EventTarget | null): boolean {
-  const el = target as HTMLTextAreaElement | HTMLInputElement | null
-  if (!el || !['TEXTAREA', 'INPUT'].includes(el.tagName)) return false
-  return !(el as HTMLTextAreaElement).readOnly
-}
-
 export type WorkflowKeyboardOptions = {
   hidden: boolean
-  step: 'form' | 'output'
+  step: WorkflowStep
   isStreaming: boolean
   canSubmit: boolean
   /** Allow Cmd/Ctrl+Enter to submit while step === 'output' (e.g. tickets context column). */

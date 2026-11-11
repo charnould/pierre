@@ -1,6 +1,6 @@
 import { session } from 'electron'
 
-import type { ActivitiesListResponse } from '../../src/shared/types/activites'
+import type { ActivitiesListResponse } from '../../src/shared/types/activities'
 import { netFetch } from '../lib/net-fetch'
 import { logMainError } from './logging'
 import { countUnreadRows } from './notification-badge-poller'

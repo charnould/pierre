@@ -1,3 +1,5 @@
+import { type RepaymentMessage, repaymentMessageKey } from '@pierre/shared/repayment-messages'
+
 import {
   DropdownMenuGroup,
   DropdownMenuItem,
@@ -6,10 +8,6 @@ import {
 } from '@/shared/components/ui/dropdown-menu'
 import { repaymentSetup } from '@/shared/lib/instance-customization'
 
-import {
-  type RepaymentMessage,
-  repaymentMessageKey
-} from '../../../../../shared/repayment-messages'
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
 import {
   type ResolvedRepaymentEmail,

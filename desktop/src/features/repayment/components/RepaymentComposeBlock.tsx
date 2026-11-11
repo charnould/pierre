@@ -1,3 +1,4 @@
+import type { RcsComposeValue } from '@pierre/shared/rcs-message'
 import {
   Check,
   FolderKanban,
@@ -28,13 +29,11 @@ import {
 } from '@/shared/components/ui/dropdown-menu'
 import type { ActionDraft } from '@/shared/lib/activities/action-activity'
 import type { ColumnValuesConfig } from '@/shared/lib/ui-settings/tickets-table'
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 import type { OrgUser } from '@/shared/types/users'
 
-import type { RcsComposeValue } from '../../../../../shared/rcs-message'
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
-import { repaymentDossierActionOptions } from '../lib/repayment-action'
-import type { ActiveRepaymentPlan } from '../lib/repayment-activity-text'
+import { repaymentActionOptions } from '../lib/repayment-action'
 import type { RepaymentGestionnaireAssignment } from '../lib/repayment-advancement'
 import { type RepaymentBucketId, repaymentBucketOptions } from '../lib/repayment-bucket'
 import type { ResolvedRepaymentEmail, ResolvedRepaymentRcs } from '../lib/repayment-messages'
@@ -56,7 +55,7 @@ export type RepaymentComposeMode =
   | null
 
 function actionLabels() {
-  return repaymentDossierActionOptions().map((option) => option.label)
+  return repaymentActionOptions().map((option) => option.label)
 }
 
 interface Props {
@@ -79,7 +78,7 @@ interface Props {
   url?: string
   assigningGestionnaire?: boolean
   submitting?: boolean
-  activePlan?: ActiveRepaymentPlan | null
+  caseFileActivity?: Activity | null
   onStartNote: () => void
   onStartTodo: () => void
   onStartAction: () => void
@@ -89,8 +88,8 @@ interface Props {
   onSelectRcsTemplate: (resolved: ResolvedRepaymentRcs) => void
   onSelectEmailTemplate: (resolved: ResolvedRepaymentEmail) => void
   onSelectMailtoTemplate: (resolved: ResolvedRepaymentEmail) => void
-  onCreatePlan: () => void
-  onEditPlan?: (row: Activity) => void
+  onCreateCaseFile: () => void
+  onEditCaseFile?: (row: Activity) => void
   onCancelCompose: () => void
   onSubmitNote: (comment?: string) => void
   onSubmitAdvancement: () => void
@@ -109,8 +108,8 @@ interface Props {
   onImportEml?: (file: File) => void
 }
 
-function planVerbLabel(plan: ActiveRepaymentPlan | null | undefined): string {
-  if (plan == null) return 'Créer un plan d’apurement'
+function caseFileVerbLabel(activity: Activity | null | undefined): string {
+  if (activity == null) return 'Créer un plan d’apurement'
   return 'Modifier le plan d’apurement'
 }
 
@@ -283,8 +282,8 @@ export function RepaymentComposeBlock(props: Props) {
   const { composeMode } = props
   const hasReferent = Boolean(props.currentGestionnaire.email || props.currentGestionnaire.login)
   const canEditTags = repaymentTagOptions().length > 0 && props.onStartTags != null
-  const activePlan = props.activePlan ?? null
-  const canOpenPlan = activePlan == null || props.onEditPlan != null
+  const caseFileActivity = props.caseFileActivity ?? null
+  const canOpenCaseFile = caseFileActivity == null || props.onEditCaseFile != null
   const emlInputRef = useRef<HTMLInputElement>(null)
   const draftRef = useInspectorComposeFocus(composeMode != null)
   const meta = composeMode != null ? composeMeta(composeMode, hasReferent) : null
@@ -325,13 +324,13 @@ export function RepaymentComposeBlock(props: Props) {
               onSelectMailto={props.onSelectMailtoTemplate}
             />
           </VerbMenu>
-          {canOpenPlan ? (
+          {canOpenCaseFile ? (
             <TimelineActionRow
               icon={PiggyBank}
-              label={planVerbLabel(activePlan)}
+              label={caseFileVerbLabel(caseFileActivity)}
               onClick={() => {
-                if (activePlan == null) props.onCreatePlan()
-                else props.onEditPlan?.(activePlan.row)
+                if (caseFileActivity == null) props.onCreateCaseFile()
+                else props.onEditCaseFile?.(caseFileActivity)
               }}
             />
           ) : null}

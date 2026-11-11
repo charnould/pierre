@@ -73,9 +73,9 @@ describe('session-tab', () => {
     expect(readStoredTab(s)).toBe('repayment')
   })
 
-  test('readStoredTab migrates retired outreach tab to automations', () => {
+  test('readStoredTab rejects the retired outreach id', () => {
     const s = mockStorage()
     s.setItem(ACTIVE_TAB_STORAGE_KEY, 'outreach')
-    expect(readStoredTab(s)).toBe('automations')
+    expect(readStoredTab(s)).toBeNull()
   })
 })

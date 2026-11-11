@@ -10,7 +10,7 @@ import {
   parseActionActivity,
   previousTodoContent
 } from '@/shared/lib/activities/action-activity'
-import { type Activity, type ActivityType, parseTaskContent } from '@/shared/types/activites'
+import { type Activity, type ActivityType, parseTaskContent } from '@/shared/types/activities'
 
 function taskRow({
   id,
@@ -43,7 +43,7 @@ function taskRow({
     channel: null,
     mentions: [],
     contenu: JSON.stringify({
-      version: 2,
+      version: 1,
       task: {
         title,
         state,
@@ -99,7 +99,7 @@ describe('action-activity v2', () => {
 
     expect(activity.type).toBe('task.created')
     expect(parseTaskContent(activity.contenu ?? '')).toEqual({
-      version: 2,
+      version: 1,
       task: {
         title: 'Contacter le garant',
         state: 'open',
@@ -118,7 +118,7 @@ describe('action-activity v2', () => {
     })
     expect(activity.type).toBe('task.completed')
     expect(parseTaskContent(activity.contenu ?? '')).toEqual({
-      version: 2,
+      version: 1,
       task: { title: 'Contacter le garant', state: 'completed' },
       result: 'Garant joint'
     })

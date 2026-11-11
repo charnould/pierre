@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 
-import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
+import { RECLASSIFY_PHASE } from '@pierre/shared/repayment-phases'
+import { loadCustomizationFixture } from '@test/instance-customization-fixture'
 
-import { RECLASSIFY_PHASE } from '../../../../../shared/repayment-phases'
 import type { TenantRepaymentRow } from './classify-tenants'
 import { groupRepaymentRowsByBucket } from './group-repayment-rows-by-bucket'
 import {

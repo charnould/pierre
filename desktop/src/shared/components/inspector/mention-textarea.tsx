@@ -13,6 +13,7 @@ import {
   insertMentionAt,
   type MentionTrigger
 } from '@/shared/lib/activities/mentions'
+import { isComposingEnter } from '@/shared/lib/ime-enter'
 import { cn } from '@/shared/lib/utils'
 
 interface Props {
@@ -102,6 +103,7 @@ export function MentionTextarea({
     }
 
     if (event.key === 'Enter' || event.key === 'Tab') {
+      if (isComposingEnter(event)) return
       event.preventDefault()
       const suggestion = suggestions[activeIndex]
       if (suggestion) {

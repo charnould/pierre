@@ -1,8 +1,9 @@
-import { CircleCheck, Trash2 } from 'lucide-react'
-import { type ReactNode, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import type { RepaymentMessage } from '@pierre/shared/repayment-messages'
+import { Trash2 } from 'lucide-react'
+import { type ReactNode, useEffect, useId, useState } from 'react'
 
 import { Button } from '@/shared/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -24,9 +25,9 @@ import { Input } from '@/shared/components/ui/input'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { toast } from '@/shared/components/ui/toast'
 
-import type { RepaymentMessage } from '../../../../../shared/repayment-messages'
 import type { TenantRepaymentRow } from '../../repayment/lib/classify-tenants'
 import { resolveRepaymentEmail, resolveRepaymentRcs } from '../../repayment/lib/repayment-messages'
+import { StoredMark } from './StoredMark'
 
 const TEST_NOTICE =
   'Les données envoyées et les placeholders sont fictifs. Le test est enregistré comme une activité technique, sans être rattaché à un dossier locataire. Ses réponses, webhooks et statuts ne sont pas affichés ici.'
@@ -126,11 +127,6 @@ export function RepaymentMessageTestDialog({
   )
 }
 
-function fit(node: HTMLTextAreaElement) {
-  node.style.height = 'auto'
-  node.style.height = `${node.scrollHeight}px`
-}
-
 function MessageZone({
   draft,
   saved,
@@ -146,14 +142,10 @@ function MessageZone({
   onRemove: () => void
   onTest: (destinataire: string) => Promise<boolean>
 }) {
-  const ref = useRef<HTMLTextAreaElement>(null)
   const [open, setOpen] = useState(false)
   const [destination, setDestination] = useState('')
   const verified = draft.verified?.text === draft.text ? draft.verified.message : null
   const canTest = verified !== null && !draft.testing
-  useLayoutEffect(() => {
-    if (ref.current) fit(ref.current)
-  }, [draft.text])
 
   function test() {
     if (!verified || draft.testing) return
@@ -172,30 +164,19 @@ function MessageZone({
   return (
     <Field data-invalid={draft.error ? true : undefined}>
       <Textarea
-        ref={ref}
         mono
         rows={1}
         spellCheck={false}
         placeholder="Coller un JSON ou un Markdown"
         aria-label="Texte du message"
-        className="field-sizing-fixed min-h-0 resize-none overflow-hidden"
+        className="min-h-0 resize-none overflow-hidden"
         value={draft.text}
-        onChange={(event) => {
-          fit(event.currentTarget)
-          onText(event.target.value)
-        }}
+        onChange={(event) => onText(event.target.value)}
       />
       <div className="flex min-w-0 flex-nowrap items-center gap-2">
         <Button type="button" variant="outline" onClick={onVerify}>
           Vérifier
         </Button>
-        {saved ? (
-          <CircleCheck
-            aria-label="Message, enregistré"
-            className="size-4 shrink-0"
-            strokeWidth={1.5}
-          />
-        ) : null}
         <Button type="button" variant="outline" disabled={!canTest} onClick={test}>
           Tester
         </Button>
@@ -204,16 +185,21 @@ function MessageZone({
             {verified.kind === 'rcs' ? 'RCS' : 'Courriel'} · {verified.label}
           </p>
         ) : null}
-        <Button
-          type="button"
-          variant="outline"
-          size="icon-sm"
-          aria-label="Supprimer le message"
-          className="ml-auto"
-          onClick={onRemove}
-        >
-          <Trash2 />
-        </Button>
+        <div className="ml-auto flex items-center gap-2">
+          <StoredMark
+            stored={saved}
+            name={saved ? 'Message, enregistré' : 'Message, à paramétrer'}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            aria-label="Supprimer le message"
+            onClick={onRemove}
+          >
+            <Trash2 />
+          </Button>
+        </div>
       </div>
       {draft.error ? <FieldError errors={[{ message: draft.error }]} /> : null}
       {open && verified ? (
@@ -292,7 +278,8 @@ export function RepaymentMessagesCard({
 
   async function test(key: string, destinataire: string): Promise<boolean> {
     const current = drafts.find((draft) => draft.key === key)
-    const message = current?.verified?.text === current?.text ? current.verified.message : null
+    const verified = current?.verified
+    const message = verified && current.text === verified.text ? verified.message : null
     if (!message) return false
     setDrafts((items) =>
       items.map((draft) => (draft.key === key ? { ...draft, testing: true } : draft))
@@ -331,12 +318,10 @@ export function RepaymentMessagesCard({
     <section aria-labelledby="setup-configuration">
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <CardTitle id="setup-configuration">Configuration</CardTitle>
-            {mark ? (
-              <CircleCheck aria-label={mark} className="size-4 shrink-0" strokeWidth={1.5} />
-            ) : null}
-          </div>
+          <CardTitle id="setup-configuration">Configuration</CardTitle>
+          <CardAction>
+            {mark ? <StoredMark name={mark} /> : <StoredMark stored={false} name="À paramétrer" />}
+          </CardAction>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-4">

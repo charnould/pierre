@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 
 import {
   buildRepaymentTimeline,
@@ -25,7 +25,7 @@ function sampleActivity(overrides: Partial<Activity> = {}): Activity {
     type: 'note.published',
     channel: null,
     mentions: [],
-    contenu: JSON.stringify({ version: 2, text: 'Relance effectuée @amartin' }),
+    contenu: JSON.stringify({ version: 1, text: 'Relance effectuée @amartin' }),
     ...overrides
   }
 }
@@ -127,7 +127,7 @@ describe('buildRepaymentTimeline', () => {
       threadId: 'mail-1',
       revision: 1,
       createdAt: '2026-06-10T10:00:00',
-      contenu: JSON.stringify({ version: 2, sender: 'Alice', body: 'Bonjour' })
+      contenu: JSON.stringify({ version: 1, sender: 'Alice', body: 'Bonjour' })
     })
     const failed = sampleActivity({
       id: 20,
@@ -136,7 +136,7 @@ describe('buildRepaymentTimeline', () => {
       threadId: 'rcs-1',
       revision: 1,
       createdAt: '2026-06-09T10:00:00',
-      contenu: JSON.stringify({ version: 2, sender: 'Alice', body: 'Bonjour' })
+      contenu: JSON.stringify({ version: 1, sender: 'Alice', body: 'Bonjour' })
     })
     const items = buildRepaymentTimeline(
       [],
@@ -147,7 +147,7 @@ describe('buildRepaymentTimeline', () => {
           threadId: 'mail-1',
           revision: 3,
           createdAt: '2026-06-10T12:00:00',
-          contenu: JSON.stringify({ version: 2, result: 'read' })
+          contenu: JSON.stringify({ version: 1, result: 'read' })
         }),
         sampleActivity({
           id: 11,
@@ -155,7 +155,7 @@ describe('buildRepaymentTimeline', () => {
           threadId: 'mail-1',
           revision: 2,
           createdAt: '2026-06-10T11:00:00',
-          contenu: JSON.stringify({ version: 2, result: 'delivered' })
+          contenu: JSON.stringify({ version: 1, result: 'delivered' })
         }),
         sampleActivity({
           id: 21,
@@ -163,14 +163,14 @@ describe('buildRepaymentTimeline', () => {
           threadId: 'rcs-1',
           revision: 2,
           createdAt: '2026-06-09T11:00:00',
-          contenu: JSON.stringify({ version: 2, reason: 'Destinataire inconnu' })
+          contenu: JSON.stringify({ version: 1, reason: 'Destinataire inconnu' })
         }),
         sampleActivity({
           id: 30,
           type: 'communication.failed',
           threadId: 'orphan',
           createdAt: '2026-06-11T11:00:00',
-          contenu: JSON.stringify({ version: 2, reason: 'Sans origine' })
+          contenu: JSON.stringify({ version: 1, reason: 'Sans origine' })
         }),
         failed,
         sent
@@ -201,7 +201,7 @@ describe('buildRepaymentTimeline', () => {
       sampleActivity({
         id: 11,
         createdAt: '2026-06-13T11:00:00',
-        contenu: JSON.stringify({ version: 2, text: 'Réponse @amartin' })
+        contenu: JSON.stringify({ version: 1, text: 'Réponse @amartin' })
       })
     ])
 
@@ -270,7 +270,7 @@ describe('buildRepaymentTimeline', () => {
         channel: 'email',
         createdAt: '2026-08-27T12:00:00Z',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           sender: 'Alice',
           subject: 'Relance',
           body: 'Bonjour'
@@ -432,7 +432,7 @@ describe('buildRepaymentTimeline open actions', () => {
         threadId: 'todo-20',
         revision: 1,
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           task: {
             title: 'Appeler le locataire',
             state: 'open',
@@ -447,7 +447,7 @@ describe('buildRepaymentTimeline open actions', () => {
         threadId: 'todo-21',
         revision: 1,
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           task: { title: 'Analyser le dossier', state: 'completed' }
         })
       })
@@ -469,7 +469,7 @@ describe('buildRepaymentTimeline reaction notifications', () => {
         type: 'activity.reaction_changed',
         createdAt: '2026-06-13T11:00:00',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           source_activity_id: 10,
           emoji: '👍'
         })

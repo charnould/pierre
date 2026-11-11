@@ -1,6 +1,6 @@
 import type { ReaderTarget } from '@/features/activity/lib/reader-target'
-import type { Activity } from '@/shared/types/activites'
-import { activityPayload, activityText } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
+import { activityPayload, activityText } from '@/shared/types/activities'
 
 import {
   type Automation,

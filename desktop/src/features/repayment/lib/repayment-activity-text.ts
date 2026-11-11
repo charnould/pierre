@@ -1,13 +1,14 @@
+import type { RepaymentCaseFile } from '@pierre/shared/repayment-case-file'
+
 import { formatTimelineCommunicationPlain } from '@/shared/lib/timeline/timeline-communication'
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 import {
   activityPayload,
   activityText,
   parseCaseChangeContent,
-  parseRepaymentPlanContent
-} from '@/shared/types/activites'
+  parseRepaymentCaseFileContent
+} from '@/shared/types/activities'
 
-import type { RepaymentForms } from '../../../../../shared/repayment-plan'
 import type { RepaymentBucketId } from './repayment-bucket'
 import {
   getRepaymentBucketMeta,
@@ -30,10 +31,6 @@ export type RepaymentStatusChangeDisplay =
       login: string | null
       avantUnset: boolean
     }
-
-export type RepaymentPlanProposalDisplay = {
-  titre: string
-}
 
 function formatStatusChangeValue(champ: string, value: unknown): string {
   if (value == null || value === '') {
@@ -173,37 +170,20 @@ export function formatRepaymentStatusChangeText(row: Activity): string | null {
   return `${quote(avant)} → ${quote(apres)}`
 }
 
-/** Newest repayment plan that still carries a dossier, or null. */
-export function latestEditableRepaymentPlan(rows: Activity[]): Activity | null {
+/** Newest case file that still carries its content, or null. */
+export function latestCaseFileActivity(rows: Activity[]): Activity | null {
   let latest: Activity | null = null
   for (const row of rows) {
-    if (!parseRepaymentPlanForm(row)) continue
+    if (!parseRepaymentCaseFile(row)) continue
     if (latest == null || row.id > latest.id) latest = row
   }
   return latest
 }
 
-export type ActiveRepaymentPlan = {
-  row: Activity
-}
-
-/** Latest dossier. `null` → the pile verb is « Créer ». */
-export function latestActiveRepaymentPlan(rows: Activity[]): ActiveRepaymentPlan | null {
-  const latest = latestEditableRepaymentPlan(rows)
-  if (!latest) return null
-  return { row: latest }
-}
-
-/** Dossier restored from the activity, or null when the row does not carry one. */
-export function parseRepaymentPlanForm(row: Activity): RepaymentForms | null {
+/** Case file restored from the activity, or null when the row does not carry one. */
+export function parseRepaymentCaseFile(row: Activity): RepaymentCaseFile | null {
   if (!row.type.startsWith('repayment_plan.')) return null
-  const content = parseRepaymentPlanContent(row.type, row.contenu)
-  return content
-}
-
-export function parseRepaymentPlanProposal(row: Activity): RepaymentPlanProposalDisplay | null {
-  if (!parseRepaymentPlanForm(row)) return null
-  return { titre: 'Plan d’apurement' }
+  return parseRepaymentCaseFileContent(row.type, row.contenu)
 }
 
 export function formatRepaymentActivityBody(row: Activity): string {
@@ -247,8 +227,7 @@ export function formatRepaymentActivityBody(row: Activity): string {
     return tagChange.note ? `${snapshot}\n${tagChange.note}` : snapshot
   }
 
-  const plan = parseRepaymentPlanProposal(row)
-  if (plan) return plan.titre
+  if (parseRepaymentCaseFile(row)) return 'Plan d’apurement'
 
   const message = formatTimelineCommunicationPlain(row)
   if (message) return message

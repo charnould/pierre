@@ -1,8 +1,5 @@
-import {
-  ABOUT_SUBJECTS,
-  type AboutSubject,
-  KNOWLEDGE_SKILL
-} from '@/features/tickets/lib/knowledge-skills'
+import { KNOWLEDGE_SKILL } from '@/features/tickets/lib/knowledge-skills'
+import { ABOUT_SUBJECTS, type AboutSubject } from '@/shared/lib/navigation-model'
 import type { AboutNavigationState } from '@/shared/lib/navigation-snapshot'
 import { formatNumericRangeLabel, normalizeNumericRange } from '@/shared/lib/range-slider'
 

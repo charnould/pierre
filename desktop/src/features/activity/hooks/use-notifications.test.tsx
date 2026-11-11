@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
-import type { ActivityListItem, GetActivitiesParams } from '@/shared/types/activites'
+import type { ActivityListItem, GetActivitiesParams } from '@/shared/types/activities'
 
 import { useNotifications } from './use-notifications'
 
@@ -44,7 +44,7 @@ function activityRow(id: number): ActivityListItem {
     type: 'note.published',
     channel: null,
     mentions: [{ destinataire: 'user:alice@pierre.test' }],
-    contenu: JSON.stringify({ version: 2, text: 'coucou' }),
+    contenu: JSON.stringify({ version: 1, text: 'coucou' }),
     my: { destinataire: 'user:alice@pierre.test' },
     read: false,
     reaction: null

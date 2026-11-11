@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 
 import {
   activityActorDestinataire,
@@ -21,7 +21,7 @@ function sampleActivity(overrides: Partial<Activity> = {}): Activity {
     type: 'note.published',
     channel: null,
     mentions: [],
-    contenu: JSON.stringify({ version: 2, text: 'Relance' }),
+    contenu: JSON.stringify({ version: 1, text: 'Relance' }),
     ...overrides
   }
 }

@@ -1,4 +1,4 @@
-import type { KeyboardEvent, MouseEvent } from 'react'
+import { type KeyboardEvent, type MouseEvent, useId } from 'react'
 
 import {
   activityRowContextLabel,
@@ -47,10 +47,11 @@ export function ActivityNotificationRow({
   const context = activityRowContextLabel(item, routineName)
   const title = isActivity ? item.body : showContext ? context : sender
   const preview = (isActivity ? (item.detail ?? '') : item.body).trim()
+  const titleId = useId()
   const avatar = <TimelineActorAvatar actor={actorForItem(item, sender)} className="size-5" />
 
-  function handleKeyDown(event: KeyboardEvent<HTMLLIElement>) {
-    if (!isOpenable || (event.key !== 'Enter' && event.key !== ' ')) return
+  function handleKeyDown(event: KeyboardEvent<HTMLSpanElement>) {
+    if (event.key !== 'Enter' && event.key !== ' ') return
     event.preventDefault()
     onOpen(item)
   }
@@ -62,22 +63,27 @@ export function ActivityNotificationRow({
 
   return (
     <li
-      role={isOpenable ? 'button' : undefined}
-      tabIndex={isOpenable ? 0 : undefined}
       className={cn(
-        'group border-border/80 min-w-0 rounded-md border',
-        isOpenable &&
-          'hover:bg-muted focus-visible:bg-muted focus-visible:ring-ring/20 cursor-pointer focus-visible:ring-2 focus-visible:outline-none'
+        'group border-border/80 relative min-w-0 rounded-md border',
+        isOpenable && 'hover:bg-muted has-[:focus-visible]:bg-muted cursor-pointer'
       )}
       onClick={() => {
         if (isOpenable) onOpen(item)
       }}
-      onKeyDown={handleKeyDown}
     >
+      {isOpenable ? (
+        <span
+          role="button"
+          tabIndex={0}
+          aria-labelledby={titleId}
+          className="focus-visible:ring-ring/20 pointer-events-none absolute inset-0 rounded-md focus-visible:ring-2 focus-visible:outline-none"
+          onKeyDown={handleKeyDown}
+        />
+      ) : null}
       <div className="flex min-w-0 items-start gap-2 px-3 py-2">
         <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1 text-start">
           {isNotification ? <span className="sr-only">{isUnread ? 'Non lue' : 'Lue'}</span> : null}
-          <div className="min-w-0">
+          <div id={isOpenable ? titleId : undefined} className="min-w-0">
             <p
               className={cn(
                 'min-w-0 text-sm leading-4 font-medium',

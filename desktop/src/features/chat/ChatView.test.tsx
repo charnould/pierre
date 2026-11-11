@@ -1,20 +1,22 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test'
 
+import { loadCustomizationFixture } from '@test/instance-customization-fixture'
 import { JSDOM } from 'jsdom'
-import { forwardRef, type ReactNode, useImperativeHandle } from 'react'
+import { forwardRef, useImperativeHandle } from 'react'
 
+import { resetCustomization } from '@/shared/lib/instance-customization'
 import type { ChatBoot } from '@/shared/types'
 
 const releases: Array<{ url: string; convId: string }> = []
-
-mock.module('@/shared/components/ModuleGate', () => ({
-  ModuleGate: ({ children }: { children: ReactNode }) => children
-}))
+const sentPrompts: string[] = []
 
 mock.module('@/features/chat/ChatPanel', () => ({
   ChatPanel: forwardRef(function MockChatPanel(_props, ref) {
     useImperativeHandle(ref, () => ({
       focus: () => {},
+      sendPrompt: (text: string) => {
+        sentPrompts.push(text)
+      },
       stop: () => {},
       clearMessages: () => {},
       resetAfterAbortedStop: () => {}
@@ -97,6 +99,12 @@ afterAll(() => {
 
 beforeEach(() => {
   releases.length = 0
+  sentPrompts.length = 0
+  loadCustomizationFixture()
+})
+
+afterEach(() => {
+  resetCustomization()
 })
 
 describe('ChatView', () => {
@@ -155,6 +163,88 @@ describe('ChatView', () => {
       }
     ])
 
+    host.remove()
+    window.api = previousApi
+  })
+
+  test('dispatches a pending home prompt once booted and consumes it', async () => {
+    const { act } = await import('react')
+    const { createRoot } = await import('react-dom/client')
+    const { ChatView } = await import('./ChatView')
+
+    const consumed: number[] = []
+    const previousApi = window.api
+    window.api = {
+      getChatBoot: async () => boot
+    } as unknown as typeof window.api
+
+    const host = document.createElement('div')
+    document.body.append(host)
+    const root = createRoot(host)
+
+    await act(async () => {
+      root.render(
+        <ChatView
+          hidden={false}
+          agentName="Pierre"
+          url="https://pierre.test"
+          pendingPrompt={{ id: 7, text: 'Synthétise le dossier', configId: null }}
+          onConsumePrompt={(id) => consumed.push(id)}
+        />
+      )
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+
+    expect(sentPrompts).toEqual(['Synthétise le dossier'])
+    expect(consumed).toEqual([7])
+
+    await act(async () => root.unmount())
+    host.remove()
+    window.api = previousApi
+  })
+
+  test('switches to the home profile before sending the prompt', async () => {
+    const { act } = await import('react')
+    const { createRoot } = await import('react-dom/client')
+    const { ChatView } = await import('./ChatView')
+
+    const consumed: number[] = []
+    const requested: Array<string | undefined> = []
+    const previousApi = window.api
+    window.api = {
+      getChatBoot: async (params: { config?: string }) => {
+        requested.push(params.config)
+        return {
+          ...boot,
+          configId: params.config ?? boot.configId,
+          convId: params.config ? '00000000-0000-4000-8000-000000000099' : boot.convId
+        }
+      }
+    } as unknown as typeof window.api
+
+    const host = document.createElement('div')
+    document.body.append(host)
+    const root = createRoot(host)
+
+    await act(async () => {
+      root.render(
+        <ChatView
+          hidden={false}
+          agentName="Pierre"
+          url="https://pierre.test"
+          pendingPrompt={{ id: 8, text: 'Bonjour', configId: 'astreinte' }}
+          onConsumePrompt={(id) => consumed.push(id)}
+        />
+      )
+      for (let step = 0; step < 6; step += 1) await Promise.resolve()
+    })
+
+    expect(requested).toEqual([undefined, 'astreinte'])
+    expect(sentPrompts).toEqual(['Bonjour'])
+    expect(consumed).toEqual([8])
+
+    await act(async () => root.unmount())
     host.remove()
     window.api = previousApi
   })

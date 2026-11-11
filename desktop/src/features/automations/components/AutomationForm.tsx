@@ -296,7 +296,7 @@ export function AutomationForm({
           <AutomationField
             id="auto-prompt"
             label="Instructions"
-            description={`Consignes envoyées à ${agentName} pour produire le rapport. Plus elles sont précises, plus le résultat est pertinent.`}
+            description={`Prompt système envoyé à ${agentName} pour produire le rapport. Plus il est précis, plus le résultat est pertinent.`}
           >
             <PromptMarkdownEditor
               id="auto-prompt"

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { pageIsFull } from '@/features/activity/hooks/activity-page'
 import { type ActionActivity, parseActionActivity } from '@/shared/lib/activities/action-activity'
 import { createRequestSequencer } from '@/shared/lib/request-sequencer'
-import type { ActivityListItem, GetActivitiesParams } from '@/shared/types/activites'
+import type { ActivityListItem, GetActivitiesParams } from '@/shared/types/activities'
 
 export const HOME_ACTIONS_POLL_MS = 30_000
 

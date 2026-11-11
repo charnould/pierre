@@ -11,6 +11,51 @@ import type { ColumnValuesConfig } from '@/shared/lib/ui-settings/tickets-table'
 
 import { CaseBucketBadge } from './case-bucket-badge'
 
+export function CaseBucketSelect({
+  id,
+  value,
+  onValueChange,
+  options,
+  columnValues,
+  disabled = false,
+  size = 'default',
+  className = 'w-full min-w-0',
+  placeholder = 'Sélectionner',
+  ariaLabel
+}: {
+  id?: string
+  value: string | null
+  onValueChange: (value: string | null) => void
+  options: readonly CaseBucketOption[]
+  columnValues?: ColumnValuesConfig
+  disabled?: boolean
+  size?: 'sm' | 'default'
+  className?: string
+  placeholder?: string
+  ariaLabel?: string
+}) {
+  const items = useMemo(
+    () => [
+      { label: <span className="text-muted-foreground">{placeholder}</span>, value: null },
+      ...options.map((option) => ({
+        label: <CaseBucketBadge bucket={option} columnValues={columnValues} />,
+        value: option.id
+      }))
+    ],
+    [columnValues, options, placeholder]
+  )
+  return (
+    <Select items={items} value={value} disabled={disabled} onValueChange={onValueChange}>
+      <SelectTrigger id={id} size={size} className={className} aria-label={ariaLabel}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent align="start">
+        <SelectItems items={items} />
+      </SelectContent>
+    </Select>
+  )
+}
+
 export function CaseBucketForm({
   bucket,
   options,
@@ -38,28 +83,19 @@ export function CaseBucketForm({
 }) {
   const bucketId = useId()
   const commentId = useId()
-  const items = useMemo(
-    () => [
-      { label: <span className="text-muted-foreground">Sélectionner</span>, value: null },
-      ...options.map((option) => ({
-        label: <CaseBucketBadge bucket={option} columnValues={columnValues} />,
-        value: option.id
-      }))
-    ],
-    [columnValues, options]
-  )
 
   return (
     <>
       <InspectorComposeField htmlFor={bucketId} label={label}>
-        <Select items={items} value={bucket} disabled={saving} onValueChange={onBucketChange}>
-          <SelectTrigger id={bucketId} size="sm" className="w-full min-w-0">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent align="start">
-            <SelectItems items={items} />
-          </SelectContent>
-        </Select>
+        <CaseBucketSelect
+          id={bucketId}
+          value={bucket}
+          options={options}
+          columnValues={columnValues}
+          disabled={saving}
+          size="sm"
+          onValueChange={onBucketChange}
+        />
       </InspectorComposeField>
       <InspectorComposeField htmlFor={commentId} label="Note (optionnel)">
         <MentionTextarea

@@ -1,3 +1,4 @@
+import { rcs_compose_payload } from '@pierre/shared/rcs-message'
 import { X } from 'lucide-react'
 import type { MouseEvent } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -22,20 +23,21 @@ import { listOpenActions } from '@/shared/lib/activities/action-activity'
 import { replyAuthorMentionSeed } from '@/shared/lib/activities/mentions'
 import { scrollBehavior } from '@/shared/lib/prefers-reduced-motion'
 import type { ColumnValuesConfig } from '@/shared/lib/ui-settings/tickets-table'
-import { type Activity, activityText } from '@/shared/types/activites'
+import { type Activity, activityText } from '@/shared/types/activities'
 import type { OrgUser } from '@/shared/types/users'
 
-import { rcs_compose_payload } from '../../../../../shared/rcs-message'
 import { useRepaymentComposeState } from '../hooks/use-repayment-compose-state'
 import { useRepaymentOutboundState } from '../hooks/use-repayment-outbound-state'
 import { useRepaymentTenantActions } from '../hooks/use-repayment-tenant-actions'
 import { useRepaymentTenantTimeline } from '../hooks/use-repayment-tenant-timeline'
 import { debtEpisodeTrend } from '../lib/build-tenant-balance-series'
+import type { ChronologyEntry } from '../lib/case-file-chronology'
+import { chronologyFromActivities } from '../lib/case-file-chronology'
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
 import { formatDebutBailDisplay } from '../lib/format-debut-bail'
 import type { RepaymentAdvancementContext } from '../lib/repayment-activity-mutations'
 import { sortRepaymentActivitiesDesc } from '../lib/repayment-activity-order'
-import { latestActiveRepaymentPlan } from '../lib/repayment-activity-text'
+import { latestCaseFileActivity } from '../lib/repayment-activity-text'
 import {
   deriveRepaymentAdvancementFromSorted,
   deriveRepaymentGestionnaireFromSorted
@@ -70,6 +72,7 @@ interface Props {
   tenant: TenantRepaymentRow | null
   columnValues?: ColumnValuesConfig
   highlightActivityId?: number
+  initialComposeMode?: 'note'
   onAddNote: (comment: string) => RepaymentMessageResult | Promise<RepaymentMessageResult>
   onAdvancementChange: (
     bucket: RepaymentBucketId | null,
@@ -87,8 +90,12 @@ interface Props {
     comment?: string
   ) => boolean | Promise<boolean>
   gestionnaireAssignable?: boolean
-  onCreatePlan: (tenant: TenantRepaymentRow) => void
-  onEditPlan?: (tenant: TenantRepaymentRow, row: Activity) => void
+  onCreateCaseFile: (tenant: TenantRepaymentRow, chronology: ChronologyEntry[]) => void
+  onEditCaseFile?: (
+    tenant: TenantRepaymentRow,
+    row: Activity,
+    chronology: ChronologyEntry[]
+  ) => void
 }
 
 export function RepaymentTenantDrawer({
@@ -102,13 +109,14 @@ export function RepaymentTenantDrawer({
   tenant,
   columnValues,
   highlightActivityId,
+  initialComposeMode,
   onAddNote,
   onAdvancementChange,
   onTagsChange,
   onAssignGestionnaire,
   gestionnaireAssignable = false,
-  onCreatePlan,
-  onEditPlan
+  onCreateCaseFile,
+  onEditCaseFile
 }: Props) {
   const [assigningGestionnaire, setAssigningGestionnaire] = useState(false)
   const [presented, setPresented] = useState(false)
@@ -149,7 +157,7 @@ export function RepaymentTenantDrawer({
     }),
     [sortedActivities]
   )
-  const activePlan = useMemo(() => latestActiveRepaymentPlan(notifications), [notifications])
+  const caseFileActivity = useMemo(() => latestCaseFileActivity(notifications), [notifications])
   const {
     mode: composeMode,
     bucket: draftBucket,
@@ -248,6 +256,12 @@ export function RepaymentTenantDrawer({
     resetCompose()
     resetOutbound()
   }, [resetCompose, resetOutbound, tenant?.id_locataire])
+
+  useEffect(() => {
+    if (!open || initialComposeMode !== 'note') return
+    startNote()
+    scrollComposeIntoView()
+  }, [initialComposeMode, open, scrollComposeIntoView, sheetOpenToken, startNote])
 
   const seenTimelineRefreshRef = useRef(timelineRefreshToken)
   useEffect(() => {
@@ -524,17 +538,17 @@ export function RepaymentTenantDrawer({
     })
   }, [emailBody])
 
-  const handleCreatePlan = () => {
+  const handleCreateCaseFile = () => {
     if (!tenant) return
-    onCreatePlan(tenant)
+    onCreateCaseFile(tenant, chronologyFromActivities('', notifications))
   }
 
-  const handleEditPlan = useCallback(
+  const handleEditCaseFile = useCallback(
     (row: Activity) => {
-      if (!tenant || !onEditPlan) return
-      onEditPlan(tenant, row)
+      if (!tenant || !onEditCaseFile) return
+      onEditCaseFile(tenant, row, chronologyFromActivities(row.threadId ?? '', notifications))
     },
-    [onEditPlan, tenant]
+    [notifications, onEditCaseFile, tenant]
   )
   const handleClose = useCallback(
     (event: MouseEvent<HTMLButtonElement>) => {
@@ -728,9 +742,9 @@ export function RepaymentTenantDrawer({
               onSelectRcsTemplate={handleSelectRcsTemplate}
               onSelectEmailTemplate={handleSelectEmailTemplate}
               onSelectMailtoTemplate={selectMailtoTemplate}
-              onCreatePlan={handleCreatePlan}
-              activePlan={activePlan}
-              onEditPlan={onEditPlan ? handleEditPlan : undefined}
+              onCreateCaseFile={handleCreateCaseFile}
+              caseFileActivity={caseFileActivity}
+              onEditCaseFile={onEditCaseFile ? handleEditCaseFile : undefined}
               onCancelCompose={handleCancelCompose}
               onSubmitNote={handleSubmitNote}
               onSubmitAdvancement={handleSubmitAdvancement}
@@ -775,7 +789,7 @@ export function RepaymentTenantDrawer({
                 journal={notifications}
                 highlightId={highlightActivityId}
                 userLogin={userLogin}
-                onEditPlan={onEditPlan ? handleEditPlan : undefined}
+                onEditCaseFile={onEditCaseFile ? handleEditCaseFile : undefined}
                 savingAction={submitting === 'action'}
                 onReopenAction={handleReopenAction}
                 onStartReply={handleStartReply}

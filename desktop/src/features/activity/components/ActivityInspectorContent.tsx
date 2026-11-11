@@ -1,9 +1,9 @@
 import { FolderX, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 
-import { RepaymentActivityDrawer } from '@/features/activity/components/RepaymentActivityDrawer'
-import { useNotifications } from '@/features/activity/hooks/use-notifications'
+import type { NotificationsApi } from '@/features/activity/hooks/use-notifications'
 import { useActivityRail } from '@/features/activity/lib/ActivityRailContext'
+import { RepaymentInspector } from '@/features/repayment/components/RepaymentInspector'
 import { TicketReclamationDrawer } from '@/features/tickets/components/TicketReclamationDrawer'
 import { InspectorSplit } from '@/shared/components/inspector/inspector-split'
 import { InspectorTimelineSkeleton } from '@/shared/components/inspector/inspector-timeline-skeleton'
@@ -18,11 +18,12 @@ import {
   EmptyTitle
 } from '@/shared/components/ui/empty'
 import type { TicketRow } from '@/shared/types'
-import type { ActivityType } from '@/shared/types/activites'
+import type { ActivityType } from '@/shared/types/activities'
 
 interface Props {
   url: string | undefined
   userLogin: string
+  notifications: NotificationsApi
 }
 
 type TicketState = {
@@ -92,9 +93,8 @@ function TicketInspectorState({
 }
 
 /** Contenu de l’Inspector droit ; ActivityPanel fournit le Drawer frère. */
-export function ActivityInspectorContent({ url, userLogin }: Props) {
+export function ActivityInspectorContent({ url, userLogin, notifications }: Props) {
   const { contextTarget, contextOpenToken, closeContextTarget } = useActivityRail()
-  const notifications = useNotifications(url, userLogin, Boolean(url) && contextTarget != null)
   const ticketKey =
     contextTarget?.view === 'tickets' ? `${url ?? ''}\u0000${contextTarget.id_reclamation}` : ''
   const [ticketState, setTicketState] = useState<TicketState>({
@@ -141,7 +141,7 @@ export function ActivityInspectorContent({ url, userLogin }: Props) {
         ref: contextTarget.id_reclamation,
         type: 'artifact.generated',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           title: 'Point de situation',
           values: { skill: 'ticket.summarize-ticket' },
           note: content
@@ -157,9 +157,10 @@ export function ActivityInspectorContent({ url, userLogin }: Props) {
   if (contextTarget.view === 'repayment') {
     return (
       <ModuleGate entry="repayment">
-        <RepaymentActivityDrawer
+        <RepaymentInspector
           url={url}
           userLogin={userLogin}
+          notifications={notifications}
           tenantId={contextTarget.tenantId}
           idClient={contextTarget.idClient}
           notificationId={contextTarget.activityId}

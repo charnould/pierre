@@ -1,3 +1,4 @@
+import { ATTACHMENT_SUPPORTED_EXTENSIONS } from '@pierre/shared/attachment-extensions'
 import { ArrowUpIcon, PaperclipIcon, SquareIcon } from 'lucide-react'
 import {
   type ChangeEvent,
@@ -20,8 +21,6 @@ import {
   InputGroupTextarea
 } from '@/shared/components/ui/input-group'
 import { cn } from '@/shared/lib/utils'
-
-import { ATTACHMENT_SUPPORTED_EXTENSIONS } from '../../../../../shared/attachment-extensions'
 
 const ACCEPT = [...ATTACHMENT_SUPPORTED_EXTENSIONS].map((extension) => `.${extension}`).join(',')
 
@@ -206,7 +205,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
             ) : (
               <InputGroupButton
                 type="submit"
-                variant={canSend ? 'default' : 'ghost'}
+                variant={canSend ? 'default' : 'outline'}
                 size="icon-sm"
                 aria-label="Envoyer"
                 disabled={!canSend}

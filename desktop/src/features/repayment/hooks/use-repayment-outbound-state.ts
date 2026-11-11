@@ -1,6 +1,6 @@
+import { empty_rcs_compose, type RcsComposeValue } from '@pierre/shared/rcs-message'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { empty_rcs_compose, type RcsComposeValue } from '../../../../../shared/rcs-message'
 import type { ResolvedRepaymentEmail, ResolvedRepaymentRcs } from '../lib/repayment-messages'
 
 const EMAIL_CONFIRM_FALLBACK_MS = 2000

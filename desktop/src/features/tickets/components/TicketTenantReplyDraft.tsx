@@ -1,3 +1,4 @@
+import { rcs_compose_ready, type RcsComposeValue } from '@pierre/shared/rcs-message'
 import { useId, useMemo } from 'react'
 
 import type { AgentWorkPart } from '@/shared/components/AgentWorkTrace'
@@ -8,7 +9,6 @@ import { Input } from '@/shared/components/ui/input'
 import { Select, SelectContent, SelectTrigger, SelectValue } from '@/shared/components/ui/select'
 import type { ExternalApplication } from '@/shared/lib/external-application'
 
-import { rcs_compose_ready, type RcsComposeValue } from '../../../../../shared/rcs-message'
 import { TicketAiComposeField } from './TicketAiComposeField'
 import { TicketOutboundMessageActions } from './TicketOutboundMessageActions'
 

@@ -6,7 +6,7 @@ import type { ActivityFeedApi } from '@/features/activity/hooks/useActivityFeed'
 import type { ActivityNotificationItem } from '@/features/activity/lib/notification-types'
 import type { ReaderTarget } from '@/features/activity/lib/reader-target'
 import { type ActionActivity, parseActionActivity } from '@/shared/lib/activities/action-activity'
-import type { ActivityListItem } from '@/shared/types/activites'
+import type { ActivityListItem } from '@/shared/types/activities'
 import type { UserPrincipal } from '@/shared/types/users'
 
 const resolvedUiSettings: {
@@ -117,7 +117,7 @@ function openTask(title: string, dueDate = todayIso(), id = 11): ActivityListIte
     channel: null,
     mentions: [],
     contenu: JSON.stringify({
-      version: 2,
+      version: 1,
       task: {
         title,
         state: 'open',
@@ -153,7 +153,7 @@ function followedActivity(): ActivityNotificationItem {
     type: 'note.published',
     channel: null,
     mentions: [],
-    contenu: JSON.stringify({ version: 2, text: 'A noté un appel' }),
+    contenu: JSON.stringify({ version: 1, text: 'A noté un appel' }),
     threadId: null,
     revision: null,
     my: null,
@@ -215,7 +215,11 @@ async function renderHome(options?: {
   mine?: ActivityListItem[]
   feed?: ActivityFeedApi
   user?: UserPrincipal
+  url?: string
+  configId?: string | null
+  onConfigId?: (configId: string) => void
   onNavigate?: (tab: string) => void
+  onSubmitPrompt?: (text: string) => void
 }) {
   const { act, useEffect } = await import('react')
   const { createRoot } = await import('react-dom/client')
@@ -248,6 +252,10 @@ async function renderHome(options?: {
         <HomeView
           hidden={false}
           onNavigate={options?.onNavigate ?? (() => {})}
+          onSubmitPrompt={options?.onSubmitPrompt ?? (() => {})}
+          url={options?.url}
+          configId={options?.configId ?? null}
+          onConfigId={options?.onConfigId ?? (() => {})}
           agentName="Pierre"
           user={options?.user ?? user}
           feed={options?.feed ?? feedStub()}
@@ -259,8 +267,7 @@ async function renderHome(options?: {
     )
   })
   await act(async () => {
-    await Promise.resolve()
-    await Promise.resolve()
+    await import('@/features/activity/components/ActivityTimelineList')
   })
 
   return {
@@ -287,7 +294,7 @@ describe('HomeView', () => {
       expect(document.body.textContent).toContain('Tâches')
       expect(document.body.textContent).toContain('Tâches assignées')
       expect(document.body.textContent).toContain('Activités')
-      expect(document.body.textContent).toContain('Discuter avec Pierre')
+      expect(document.body.textContent).not.toContain('Discuter avec Pierre')
       expect(document.body.textContent).toContain('Répondre aux réclamations')
       expect(document.body.textContent).toContain('Piloter les impayés')
       expect(document.body.textContent).toContain('Tout voir')
@@ -315,23 +322,11 @@ describe('HomeView', () => {
       ).toBe(true)
       expect(lines[1]?.className).toContain('font-serif')
       expect(lines[1]?.className).toContain('text-4xl')
-      const chatHint = doorHint('chat', 'Pierre')
       const automationsHint = doorHint('automations', 'Gustave')
-      expect(chatHint).toBe(
-        'Poser à Pierre une question sur vos pratiques, vos processus ou vos données.'
-      )
       expect(automationsHint).toBe(
         'Définir quand et comment Gustave intervient sur vos dossiers et vos données.'
       )
-      expect(chatHint).not.toContain('PIERRE')
       expect(automationsHint).not.toContain('PIERRE')
-      expect(document.body.textContent).toContain(chatHint!)
-      const hint = [...document.querySelectorAll('[data-door="chat"] span')].find(
-        (node) => node.textContent === chatHint
-      )
-      expect(hint?.className).toContain('font-serif')
-      expect(hint?.className).toContain('leading-4.75')
-      expect(hint?.className).toContain('font-[350]')
       expect(document.body.textContent).toContain(
         'Répondre aux candidats et aux locataires, puis coordonner le suivi avec votre équipe.'
       )
@@ -340,6 +335,21 @@ describe('HomeView', () => {
       expect(document.querySelector('.size-28')).toBeNull()
       expect(document.querySelector('.size-40')).toBeNull()
       const nav = document.querySelector('[aria-label="Métiers"]')
+      const { homeComposerPlaceholder } = await import('./HomePromptComposer')
+      const composer = nav?.querySelector('[data-slot="home-composer"]')
+      expect(composer?.className).toContain('home-composer')
+      expect(composer?.className).not.toContain('col-span-2')
+      expect(composer?.className).not.toContain('self-stretch')
+      expect(composer?.className).not.toContain('home-door')
+      expect(nav?.className).not.toContain('@container')
+      const group = composer?.querySelector('[data-slot="input-group"]')
+      expect(group?.className).toContain('bg-control')
+      expect(group?.className).toContain('border-input')
+      expect(group?.className).toContain('rounded-md')
+      expect(composer?.querySelector('textarea')?.getAttribute('placeholder')).toBe(
+        homeComposerPlaceholder()
+      )
+      expect(nav?.querySelector('[data-door="chat"]')).toBeNull()
       expect(nav?.className).toContain('grid-cols-4')
       expect(nav?.className).not.toContain('lg:grid-cols-3')
       const door = nav?.querySelector<HTMLElement>('[data-door="repayment"]')
@@ -363,11 +373,11 @@ describe('HomeView', () => {
       )
       expect(repaymentTitle?.className).toContain('text-lg')
       expect(repaymentTitle?.className).not.toContain('font-serif')
-      expect(nav?.querySelector('[data-door="chat"]')?.className).toContain('bg-home-chat')
       expect(nav?.querySelector('[data-door="tickets"]')?.className).toContain('bg-home-tickets')
       expect(door?.querySelector('.size-5')?.parentElement).toBe(door)
       const board = nav?.parentElement?.parentElement
-      expect(board?.className).toContain('max-w-7xl')
+      expect(board?.className).toContain('max-w-6xl')
+      expect(panel?.className).toContain('px-12')
       const band = nav?.parentElement
       expect(band?.className).toContain('gap-4')
       const work = nav?.nextElementSibling
@@ -411,16 +421,63 @@ describe('HomeView', () => {
     }
   })
 
-  test('opens Discuter as the chat tab', async () => {
-    const navigated: string[] = []
+  test('submits a prompt from the composer card', async () => {
+    const prompts: string[] = []
     const { act, cleanup } = await renderHome({
-      onNavigate: (tab) => navigated.push(tab)
+      onSubmitPrompt: (text) => prompts.push(text)
     })
     try {
-      const chat = document.querySelector<HTMLButtonElement>('[data-door="chat"]')
-      await act(async () => chat?.click())
-      expect(navigated).toEqual(['chat'])
+      const textarea = document.querySelector<HTMLTextAreaElement>(
+        '[data-slot="home-composer"] textarea'
+      )!
+      const setNativeValue = Object.getOwnPropertyDescriptor(
+        window.HTMLTextAreaElement.prototype,
+        'value'
+      )?.set
+      await act(async () => {
+        setNativeValue?.call(textarea, '  Bonjour Pierre  ')
+        textarea.dispatchEvent(new window.Event('input', { bubbles: true }))
+      })
+      const send = document.querySelector<HTMLButtonElement>('button[aria-label="Envoyer"]')
+      await act(async () => send?.click())
+      expect(prompts).toEqual(['Bonjour Pierre'])
+      expect(textarea.value).toBe('')
     } finally {
+      await cleanup()
+    }
+  })
+
+  test('shows the Discuter profile selector on the home composer', async () => {
+    const previous = window.api
+    window.api = {
+      getChatBoot: async () => ({
+        convId: 'conv',
+        configId: 'default',
+        dataParam: '',
+        greetings: [],
+        disclaimer: null,
+        examples: [],
+        displayableConfigs: [
+          { id: 'default', display: 'Pierre', isActive: true },
+          { id: 'astreinte', display: "Agent d'astreinte", isActive: false }
+        ],
+        trace: 'none',
+        attachments: false
+      })
+    } as unknown as typeof window.api
+    const { act, cleanup } = await renderHome({
+      url: 'https://pierre.test'
+    })
+    try {
+      await act(async () => {
+        await Promise.resolve()
+      })
+      const selector = document.querySelector('[aria-label="Profil de Pierre"]')
+      expect(selector).not.toBeNull()
+      expect(selector?.textContent).toContain('Pierre')
+      expect(document.querySelector('[data-slot="home-composer"]')?.contains(selector)).toBe(true)
+    } finally {
+      window.api = previous
       await cleanup()
     }
   })
@@ -605,8 +662,11 @@ describe('HomeView', () => {
         'font-serif'
       )
       expect(tasks?.className).toContain('aspect-[1.618]')
+      const row = message?.closest('li')
+      expect(row?.getAttribute('role')).toBeNull()
+      expect(row?.querySelector('[role="button"]')).not.toBeNull()
       await act(async () => {
-        message?.closest<HTMLElement>('li[role="button"]')?.click()
+        row?.click()
       })
       expect(rail.readerTarget).toEqual({
         kind: 'update',

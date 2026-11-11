@@ -1,7 +1,8 @@
-import type { Activity, CreateActivityBody } from '@/shared/types/activites'
+import type { RcsContenu } from '@pierre/shared/rcs-message'
+
+import type { Activity, CreateActivityBody } from '@/shared/types/activities'
 import type { RepaymentNotificationChannel } from '@/shared/types/notification-repayment'
 
-import type { RcsContenu } from '../../../../../shared/rcs-message'
 import { buildRepaymentMessageActivity } from './repayment-activity-mutations'
 
 export type RepaymentMessageResult =

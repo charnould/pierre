@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import type { ActivityListItem } from '@/shared/types/activites'
+import type { ActivityListItem } from '@/shared/types/activities'
 
 import {
   ACTIVITY_PAGE_SIZE,
@@ -21,7 +21,7 @@ function row(id: number): ActivityListItem {
     type: 'note.published',
     channel: null,
     mentions: [],
-    contenu: JSON.stringify({ version: 2, text: '' }),
+    contenu: JSON.stringify({ version: 1, text: '' }),
     my: null,
     read: true,
     reaction: null

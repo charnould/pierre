@@ -2,6 +2,7 @@ import { existsSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
+import { classifyLaunchTarget } from '@pierre/shared/external-application'
 import {
   app,
   autoUpdater,
@@ -13,7 +14,6 @@ import {
   type WebContents
 } from 'electron'
 
-import { classifyLaunchTarget } from '../../../../shared/external-application'
 import { SURFACE_BASE_HEX } from '../../../src/shared/lib/surface-colors'
 import {
   DEFAULT_WINDOW_BOUNDS,

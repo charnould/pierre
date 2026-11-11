@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 
 import { useNotificationTimeline } from './use-notification-timeline'
 
@@ -39,7 +39,7 @@ function activity(id: number): Activity {
     type: 'note.published',
     channel: null,
     mentions: [],
-    contenu: JSON.stringify({ version: 2, text: 'hello' })
+    contenu: JSON.stringify({ version: 1, text: 'hello' })
   }
 }
 

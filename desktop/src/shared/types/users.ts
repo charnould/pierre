@@ -1,4 +1,4 @@
-import type { BusinessModuleId } from '../../../../shared/modules'
+import type { BusinessModuleId } from '@pierre/shared/modules'
 
 export type OrgUser = {
   login: string

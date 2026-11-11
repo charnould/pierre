@@ -1,3 +1,8 @@
+import {
+  isNotificationDeliveryStatus,
+  notificationDeliveryStatusLabel
+} from '@pierre/shared/notification-delivery'
+
 import { parseActivityAuthor } from '@/shared/lib/timeline/parse-activity-author'
 import {
   type Activity,
@@ -5,12 +10,7 @@ import {
   isCommunicationOpenedType,
   parseCommunicationOpenedContent,
   parseCommunicationStatusContent
-} from '@/shared/types/activites'
-
-import {
-  isNotificationDeliveryStatus,
-  notificationDeliveryStatusLabel
-} from '../../../../../shared/notification-delivery'
+} from '@/shared/types/activities'
 
 export const TIMELINE_COMMUNICATION_PREVIEW_LIMIT = 240
 

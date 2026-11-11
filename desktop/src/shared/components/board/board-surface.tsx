@@ -71,13 +71,16 @@ export function BoardPhaseSection({
 
 export function BoardRefreshButton({
   loading,
-  onRefresh
+  onRefresh,
+  children
 }: {
   loading: boolean
   onRefresh: () => void
+  children?: ReactNode
 }) {
   return (
-    <div className="flex w-full items-center justify-end">
+    <div className="flex w-full items-center justify-end gap-2">
+      {children}
       <Button type="button" variant="outline" size="sm" disabled={loading} onClick={onRefresh}>
         <RefreshCw data-icon="inline-start" className={loading ? 'animate-spin' : undefined} />
         Actualiser

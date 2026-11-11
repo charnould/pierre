@@ -3,7 +3,7 @@ import {
   isCommunicationStatusType,
   isHiddenTimelineType,
   parseActivityMetaContent
-} from '@/shared/types/activites'
+} from '@/shared/types/activities'
 
 export type ProjectedTimelineItem =
   { kind: 'event'; row: Activity } | { kind: 'communication'; row: Activity; statuses: Activity[] }

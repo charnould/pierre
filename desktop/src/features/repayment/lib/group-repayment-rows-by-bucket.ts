@@ -1,4 +1,5 @@
-import { RECLASSIFY_PHASE } from '../../../../../shared/repayment-phases'
+import { RECLASSIFY_PHASE } from '@pierre/shared/repayment-phases'
+
 import type { TenantRepaymentRow } from './classify-tenants'
 import { type RepaymentBucketId, repaymentBucketIds } from './repayment-bucket'
 

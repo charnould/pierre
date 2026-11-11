@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 
-import { isTypingInField } from '@/features/workflow/lib/workflow-keyboard'
 import {
   hasOpenChatWindow,
   hasOpenDialog,
@@ -9,6 +8,7 @@ import {
 } from '@/shared/lib/app-escape-home'
 import { isFocusInHiddenPanel } from '@/shared/lib/release-hidden-panel-focus'
 import type { Tab } from '@/shared/lib/tabs'
+import { isTypingInField } from '@/shared/lib/typing-target'
 
 export function useAppEscapeHome(options: {
   activeTab: Tab

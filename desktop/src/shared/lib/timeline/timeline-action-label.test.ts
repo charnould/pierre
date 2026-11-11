@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import type { Activity, CommunicationChannel } from '@/shared/types/activites'
+import type { Activity, CommunicationChannel } from '@/shared/types/activities'
 
 import {
   formatTimelineActivityTitle,
@@ -20,7 +20,7 @@ function sampleActivity(overrides: Partial<Activity> = {}): Activity {
     type: 'note.published',
     channel: null,
     mentions: [],
-    contenu: JSON.stringify({ version: 2, text: 'Relance' }),
+    contenu: JSON.stringify({ version: 1, text: 'Relance' }),
     ...overrides
   }
 }
@@ -29,7 +29,7 @@ function sent(channel: CommunicationChannel, extras: Partial<Activity> = {}): Ac
   return sampleActivity({
     type: 'communication.sent',
     channel,
-    contenu: JSON.stringify({ version: 2, sender: 'Alice', body: 'Bonjour' }),
+    contenu: JSON.stringify({ version: 1, sender: 'Alice', body: 'Bonjour' }),
     ...extras
   })
 }
@@ -46,7 +46,7 @@ describe('timelineActivityActionVerb', () => {
         sampleActivity({
           type: 'communication.imported',
           channel: 'email',
-          contenu: JSON.stringify({ version: 2, sender: 'Alice', body: 'Bonjour' })
+          contenu: JSON.stringify({ version: 1, sender: 'Alice', body: 'Bonjour' })
         })
       )
     ).toBe('a importé un courriel')
@@ -96,7 +96,7 @@ describe('timelineActivityActionVerb', () => {
       timelineActivityActionVerb(
         sampleActivity({
           type: 'ticket.field_changed',
-          contenu: JSON.stringify({ version: 2, field: 'statut', before: 'ouvert', after: 'clos' })
+          contenu: JSON.stringify({ version: 1, field: 'statut', before: 'ouvert', after: 'clos' })
         })
       )
     ).toBe('a modifié statut')
@@ -107,7 +107,7 @@ describe('timelineActivityActionVerb', () => {
       timelineActivityActionVerb(
         sent('email', {
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             sender: 'Alice',
             action: 'Contacter la CAF',
             body: 'Bonjour'

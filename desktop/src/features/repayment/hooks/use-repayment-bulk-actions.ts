@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 
 import { useWorkflowGeneration } from '@/features/workflow/hooks/useWorkflowGeneration'
-import type { CreateActivityBody } from '@/shared/types/activites'
+import type { CreateActivityBody } from '@/shared/types/activities'
 
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
 import type { RepaymentBucketId } from '../lib/repayment-bucket'

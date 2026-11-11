@@ -128,7 +128,7 @@ export function TicketsView({
       postActivity(
         'artifact.generated',
         JSON.stringify({
-          version: 2,
+          version: 1,
           title: 'Point de situation',
           note: content
         })

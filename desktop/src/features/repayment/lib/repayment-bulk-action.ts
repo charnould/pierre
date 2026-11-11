@@ -1,4 +1,4 @@
-import { ACTIVITY_CONTENT_VERSION, type CreateActivityBody } from '@/shared/types/activites'
+import { ACTIVITY_CONTENT_VERSION, type CreateActivityBody } from '@/shared/types/activities'
 
 import type { TenantRepaymentRow } from './classify-tenants'
 import {

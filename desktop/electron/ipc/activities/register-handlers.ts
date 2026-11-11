@@ -14,7 +14,7 @@ import type {
   RecordExternalCommunicationPayload,
   SendCommunicationPayload,
   SendCommunicationResponse
-} from '../../../src/shared/types/activites'
+} from '../../../src/shared/types/activities'
 import { netFetch } from '../../lib/net-fetch'
 import { logMainError } from '../../services/logging'
 import { IpcChannel } from '../channels'

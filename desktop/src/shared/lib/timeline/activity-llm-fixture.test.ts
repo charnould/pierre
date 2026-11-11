@@ -10,7 +10,7 @@ import {
   parseSignatureContent,
   parseTaskContent,
   parseTitledContent
-} from '@/shared/types/activites'
+} from '@/shared/types/activities'
 
 import { projectTimelineItems } from './project-timeline'
 
@@ -39,18 +39,18 @@ function row(
 }
 
 const fixture: Activity[] = [
-  row(1, 'case.group_changed', { version: 2, before: 'non_traites', after: 'amiable' }),
+  row(1, 'case.group_changed', { version: 1, before: 'non_traites', after: 'amiable' }),
   row(2, 'case.assignee_changed', {
-    version: 2,
+    version: 1,
     before: null,
     after: { id: 'user:bob@exemple.fr', label: 'Bob' }
   }),
-  row(3, 'case.tags_changed', { version: 2, before: [], after: ['relance', 'plan'] }),
+  row(3, 'case.tags_changed', { version: 1, before: [], after: ['relance', 'plan'] }),
   row(
     4,
     'task.created',
     {
-      version: 2,
+      version: 1,
       task: {
         title: 'Appeler le locataire',
         state: 'open',
@@ -62,27 +62,27 @@ const fixture: Activity[] = [
   row(
     5,
     'task.completed',
-    { version: 2, task: { title: 'Vérifier le solde', state: 'completed' } },
+    { version: 1, task: { title: 'Vérifier le solde', state: 'completed' } },
     { threadId: 'task-2', revision: 1 }
   ),
   row(
     6,
     'communication.sent',
-    { version: 2, sender: 'Alice', subject: 'Relance', body: 'Merci de régulariser.' },
+    { version: 1, sender: 'Alice', subject: 'Relance', body: 'Merci de régulariser.' },
     { threadId: 'mail-1', revision: 1, channel: 'email' as CommunicationChannel }
   ),
   row(
     7,
     'communication.ok',
-    { version: 2, result: 'read' },
+    { version: 1, result: 'read' },
     { threadId: 'mail-1', revision: 2, channel: 'email' as CommunicationChannel }
   ),
-  row(8, 'repayment_plan.finalized', { version: 2, title: 'Plan d’apurement' }),
+  row(8, 'repayment_plan.finalized', { version: 1, title: 'Plan d’apurement' }),
   row(
     9,
     'document.sent_for_signature',
     {
-      version: 2,
+      version: 1,
       document: { id: 'doc-1', type: 'plan', title: 'Plan d’apurement', version: '1' },
       signers: [
         { id: 'jean', label: 'Jean', status: 'pending' },
@@ -95,7 +95,7 @@ const fixture: Activity[] = [
     10,
     'document.signed',
     {
-      version: 2,
+      version: 1,
       document: { id: 'doc-1', type: 'plan', title: 'Plan d’apurement', version: '1' },
       signers: [
         { id: 'jean', label: 'Jean', status: 'signed' },
@@ -159,25 +159,25 @@ describe('LLM fixture', () => {
       row(
         20,
         'communication.sent',
-        { version: 2, sender: 'Alice', body: 'Question' },
+        { version: 1, sender: 'Alice', body: 'Question' },
         { threadId: 'shared-thread', revision: 1, channel: 'rcs' }
       ),
       row(
         21,
         'communication.received',
-        { version: 2, sender: 'Locataire', body: 'Réponse' },
+        { version: 1, sender: 'Locataire', body: 'Réponse' },
         { threadId: 'shared-thread', revision: 2, channel: 'rcs' }
       ),
       row(
         23,
         'communication.imported',
-        { version: 2, sender: 'Locataire', body: 'Historique importé' },
+        { version: 1, sender: 'Locataire', body: 'Historique importé' },
         { threadId: 'shared-thread', revision: 2, channel: 'email' }
       ),
       row(
         22,
         'communication.ok',
-        { version: 2, result: 'delivered' },
+        { version: 1, result: 'delivered' },
         { threadId: 'shared-thread', revision: 3, channel: 'rcs' }
       )
     ])
@@ -196,13 +196,13 @@ describe('LLM fixture', () => {
       row(
         30,
         'communication.sent',
-        { version: 2, sender: 'Alice', body: 'Relance' },
+        { version: 1, sender: 'Alice', body: 'Relance' },
         { threadId: 'mail-order', revision: 1, channel: 'email' }
       ),
       row(
         33,
         'communication.ok',
-        { version: 2, result: 'delivered' },
+        { version: 1, result: 'delivered' },
         {
           threadId: 'mail-order',
           revision: 2,
@@ -213,7 +213,7 @@ describe('LLM fixture', () => {
       row(
         32,
         'communication.ok',
-        { version: 2, result: 'delivered' },
+        { version: 1, result: 'delivered' },
         {
           threadId: 'mail-order',
           revision: 2,
@@ -224,7 +224,7 @@ describe('LLM fixture', () => {
       row(
         31,
         'communication.ok',
-        { version: 2, result: 'read' },
+        { version: 1, result: 'read' },
         {
           threadId: 'mail-order',
           revision: 3,
@@ -247,25 +247,25 @@ describe('LLM fixture', () => {
       row(
         40,
         'communication.sent',
-        { version: 2, sender: 'Alice', body: 'RCS' },
+        { version: 1, sender: 'Alice', body: 'RCS' },
         { threadId: 'mobile-fallback', revision: 1, channel: 'rcs' }
       ),
       row(
         41,
         'communication.failed',
-        { version: 2, reason: 'failed' },
+        { version: 1, reason: 'failed' },
         { threadId: 'mobile-fallback', revision: 2, channel: 'rcs' }
       ),
       row(
         42,
         'communication.sent',
-        { version: 2, sender: 'Alice', body: 'SMS' },
+        { version: 1, sender: 'Alice', body: 'SMS' },
         { threadId: 'mobile-fallback', revision: 3, channel: 'sms' }
       ),
       row(
         43,
         'communication.ok',
-        { version: 2, result: 'delivered' },
+        { version: 1, result: 'delivered' },
         { threadId: 'mobile-fallback', revision: 4, channel: 'sms' }
       )
     ])

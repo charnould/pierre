@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { JSDOM } from 'jsdom'
 
 import type { ActionActivity } from '@/shared/lib/activities/action-activity'
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
@@ -41,7 +41,7 @@ function task(id: number, title: string): ActionActivity {
   return {
     row: { id, createdAt: '2026-09-01T00:00:00.000Z' } as Activity,
     contenu: {
-      version: 2,
+      version: 1,
       task: { title, state: 'open', due_date: '2099-01-01' }
     },
     event: 'task.created',

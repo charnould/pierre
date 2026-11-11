@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises'
+import { openAsBlob } from 'node:fs'
 import { basename } from 'node:path'
 
 import { BrowserWindow, dialog, ipcMain, session } from 'electron'
@@ -51,8 +51,7 @@ export function registerKnowledgeHandlers(partition: string): void {
     try {
       const form = new FormData()
       for (const path of result.filePaths) {
-        const bytes = await readFile(path)
-        form.append('files[]', new File([bytes], basename(path)))
+        form.append('files[]', await openAsBlob(path), basename(path))
       }
       const response = await netFetch(endpoint(url, '/sources'), {
         session: session.fromPartition(partition),

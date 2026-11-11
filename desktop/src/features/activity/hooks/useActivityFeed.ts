@@ -16,6 +16,7 @@ import {
   markScopeRead,
   resolveUpdatesReadSlugs
 } from '@/features/updates/lib/updates-notification'
+import { warnRenderer } from '@/shared/lib/renderer-log'
 import type { Settings } from '@/shared/types/settings'
 
 import { refreshWindowLimit } from './activity-page'
@@ -52,13 +53,18 @@ export function useActivityFeed({
   )
   const authoredActivity = useAuthoredActivity(settings.url, activityAuthors, isLoggedIn)
   const updates = useUpdatesNotification({ settings, onSettingsChange })
-  const notificationRowsLength = notifications.rows.length
+  const notificationRowsLength = useRef(0)
+  const authoredRowsLength = useRef(0)
   const replaceNotificationRows = notifications.replaceRows
-  const authoredRowsLength = authoredActivity.rows.length
   const replaceAuthoredRows = authoredActivity.replaceRows
   const feedEtag = useRef('')
   const syncInFlight = useRef(false)
   const authorsKey = activityAuthors.join('\n')
+
+  useEffect(() => {
+    notificationRowsLength.current = notifications.rows.length
+    authoredRowsLength.current = authoredActivity.rows.length
+  })
 
   useEffect(() => {
     feedEtag.current = ''
@@ -77,8 +83,8 @@ export function useActivityFeed({
     const poll = async () => {
       if (disposed || syncInFlight.current) return
       syncInFlight.current = true
-      const inboxLimit = refreshWindowLimit(notificationRowsLength)
-      const authoredLimit = refreshWindowLimit(authoredRowsLength)
+      const inboxLimit = refreshWindowLimit(notificationRowsLength.current)
+      const authoredLimit = refreshWindowLimit(authoredRowsLength.current)
       try {
         const result = await window.api.syncActivityFeed({
           url: settings.url!,
@@ -94,12 +100,15 @@ export function useActivityFeed({
           replaceNotificationRows(result.data.notifications, inboxLimit)
           replaceAuthoredRows(result.data.authored, authoredLimit)
         }
+      } catch (error) {
+        if (!disposed) warnRenderer('useActivityFeed.poll', error)
       } finally {
         syncInFlight.current = false
         schedule()
       }
     }
     const wake = () => {
+      if (syncInFlight.current) return
       if (timer !== undefined) window.clearTimeout(timer)
       void poll()
     }
@@ -125,9 +134,7 @@ export function useActivityFeed({
     }
   }, [
     activityAuthors,
-    authoredRowsLength,
     isLoggedIn,
-    notificationRowsLength,
     replaceAuthoredRows,
     replaceNotificationRows,
     settings.url,

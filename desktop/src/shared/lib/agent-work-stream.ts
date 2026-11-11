@@ -1,6 +1,6 @@
-import type { AgentToolPart, AgentWorkPart } from '@/shared/components/AgentWorkTrace'
+import type { AiMessageContent, AiStreamEvent } from '@pierre/shared/ai-stream-events'
 
-import type { AiMessageContent, AiStreamEvent } from '../../../../shared/ai-stream-events'
+import type { AgentToolPart, AgentWorkPart } from '@/shared/components/AgentWorkTrace'
 
 export type AgentWorkStreamState = {
   parts: AgentWorkPart[]

@@ -158,7 +158,7 @@ export function LlmStatisticsPanel({ url, onBack }: { url: string; onBack: () =>
 
   return (
     <div className="min-h-0 flex-1 overflow-auto px-4 py-8">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
+      <div className="max-w-document mx-auto flex w-full flex-col gap-4">
         <div className="flex items-center gap-3">
           <Button
             type="button"

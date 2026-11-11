@@ -10,7 +10,7 @@ import {
 import { mentionsToBoosts } from '@/features/activity/lib/notification-types'
 import { Button } from '@/shared/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
-import type { Activity, ActivityListItem } from '@/shared/types/activites'
+import type { Activity, ActivityListItem } from '@/shared/types/activities'
 
 interface Props {
   activity: Activity | ActivityListItem

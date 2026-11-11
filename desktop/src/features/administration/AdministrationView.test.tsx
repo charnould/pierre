@@ -31,7 +31,7 @@ function view(hidden = false) {
 describe('AdministrationView', () => {
   test('opens on the administration form', () => {
     const html = renderToStaticMarkup(view())
-    expect(html).toContain('max-w-5xl')
+    expect(html).toContain('max-w-document')
     expect(html).not.toContain('max-w-7xl')
     expect(html.match(/data-slot="card"(?=[\s>])/g)?.length).toBe(3)
     expect(html.match(/bg-control/g)?.length).toBe(11)
@@ -115,13 +115,13 @@ describe('AdministrationView readiness', () => {
       expect(row(id)?.querySelector('svg')).toBeNull()
     }
 
-    expect(row('chatbots/default')?.querySelector('.lucide-circle-check')).not.toBeNull()
-    expect(row('tickets')?.querySelector('.lucide-circle-check')).toBeNull()
+    expect(row('chatbots/default')?.querySelector('.lucide-check')).not.toBeNull()
     expect(row('tickets')?.querySelector('.lucide-circle')).not.toBeNull()
-    expect(row('repayment')?.querySelector('.lucide-circle-check')).not.toBeNull()
+    expect(row('tickets')?.querySelector('.lucide-check')).toBeNull()
+    expect(row('repayment')?.querySelector('.lucide-check')).not.toBeNull()
     expect(row('about/AGENTS.md')?.querySelector('.lucide-circle')).not.toBeNull()
-    expect(row('about/AGENTS.md')?.querySelector('.lucide-circle-check')).toBeNull()
-    expect(row('automations/AGENTS.md')?.querySelector('.lucide-circle-check')).not.toBeNull()
+    expect(row('about/AGENTS.md')?.querySelector('.lucide-check')).toBeNull()
+    expect(row('automations/AGENTS.md')?.querySelector('.lucide-check')).not.toBeNull()
     expect(document.querySelector('[data-slot="badge"]')).toBeNull()
 
     window.api = previousApi

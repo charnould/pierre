@@ -1,11 +1,11 @@
+import { dropTextBeforeLastTool } from '@pierre/shared/ai-stream-events'
+
 import type {
   ChatMessagePart,
   ChatTextPart,
   ChatThinkingPart,
   ChatToolPart
 } from '@/features/chat/lib/chat-session-types'
-
-import { dropTextBeforeLastTool } from '../../../../../shared/ai-stream-events'
 
 type ChatWorkPart = ChatThinkingPart | ChatToolPart
 

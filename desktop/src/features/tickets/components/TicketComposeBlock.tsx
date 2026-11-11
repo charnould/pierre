@@ -1,3 +1,4 @@
+import type { RcsComposeValue } from '@pierre/shared/rcs-message'
 import {
   Check,
   ClipboardList,
@@ -36,7 +37,6 @@ import { cn } from '@/shared/lib/utils'
 import type { TicketRow } from '@/shared/types'
 import type { OrgUser } from '@/shared/types/users'
 
-import type { RcsComposeValue } from '../../../../../shared/rcs-message'
 import { getTicketBucketMeta, type TicketBucketId, ticketBucketOptions } from '../lib/ticket-bucket'
 import { ticketTagOptions } from '../lib/ticket-tags'
 import type { TicketComposeMode } from '../lib/use-tickets-view-data'

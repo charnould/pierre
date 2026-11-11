@@ -1,13 +1,25 @@
-import { DesktopChatBody } from '@/features/chat/DesktopChatBody'
+import { DesktopChatBody, type PendingChatPrompt } from '@/features/chat/DesktopChatBody'
 import { cn } from '@/shared/lib/utils'
 
 interface Props {
   hidden: boolean
   agentName: string
   url?: string
+  configId?: string | null
+  onConfigId?: (configId: string) => void
+  pendingPrompt?: PendingChatPrompt | null
+  onConsumePrompt?: (id: number) => void
 }
 
-export function ChatView({ hidden, agentName, url }: Props) {
+export function ChatView({
+  hidden,
+  agentName,
+  url,
+  configId,
+  onConfigId,
+  pendingPrompt,
+  onConsumePrompt
+}: Props) {
   return (
     <div
       data-tab-panel
@@ -17,7 +29,15 @@ export function ChatView({ hidden, agentName, url }: Props) {
         hidden ? 'hidden' : 'flex'
       )}
     >
-      <DesktopChatBody active={!hidden} agentName={agentName} url={url} />
+      <DesktopChatBody
+        active={!hidden}
+        agentName={agentName}
+        url={url}
+        configId={configId}
+        onConfigId={onConfigId}
+        pendingPrompt={pendingPrompt}
+        onConsumePrompt={onConsumePrompt}
+      />
     </div>
   )
 }

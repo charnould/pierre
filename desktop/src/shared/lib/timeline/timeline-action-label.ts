@@ -1,5 +1,5 @@
 import { timelineActivityVerb } from '@/shared/lib/timeline/timeline-verb'
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 
 export const TIMELINE_MOVEMENT_TITLE = 'Mouvement comptable'
 

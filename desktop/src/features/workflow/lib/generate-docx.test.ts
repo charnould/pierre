@@ -10,7 +10,7 @@ const TEMPLATE_PATH = join(
   'docs',
   '04-core-intelligence-hlm',
   'templates',
-  'Courrier postal.docx'
+  'Global - docx - Courrier postal type.docx'
 )
 
 describe('generateDocxFilename', () => {

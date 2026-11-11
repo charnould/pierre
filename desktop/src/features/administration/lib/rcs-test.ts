@@ -1,4 +1,4 @@
-import type { ActivityContext, ActivityListItem } from '@/shared/types/activites'
+import type { ActivityContext, ActivityListItem } from '@/shared/types/activities'
 
 function channelLine(items: ActivityListItem[], channel: 'rcs' | 'sms'): string | null {
   const sent = items.some((item) => item.type === 'communication.sent' && item.channel === channel)

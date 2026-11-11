@@ -1,6 +1,6 @@
 import type { ActivityBoostEmoji } from '@/features/activity/lib/activity-boosts'
 import { parseActivityAuthor } from '@/shared/lib/timeline/parse-activity-author'
-import { type Activity, type ActivityPatch, isActivityMetaType } from '@/shared/types/activites'
+import { type Activity, type ActivityPatch, isActivityMetaType } from '@/shared/types/activities'
 
 export function activityActorDestinataire(userLogin: string): string {
   const raw = userLogin.trim().toLowerCase()

@@ -4,7 +4,7 @@ import type { ActivityBoostEmoji } from '@/features/activity/lib/activity-boosts
 import { toast } from '@/shared/components/ui/toast'
 import { type ActionDraft, buildActionActivity } from '@/shared/lib/activities/action-activity'
 import { parseEmlFile } from '@/shared/lib/activities/parse-eml'
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 
 import type { TenantRepaymentRow } from '../lib/classify-tenants'
 import type { TimelineRefreshResult } from './use-repayment-tenant-timeline'
@@ -105,7 +105,7 @@ export function useRepaymentTenantActions(params: {
         id,
         patch: {
           operation: 'edit_content',
-          contenu: JSON.stringify({ version: 2, text: contenu })
+          contenu: JSON.stringify({ version: 1, text: contenu })
         }
       })
       if (!response?.data?.id) {

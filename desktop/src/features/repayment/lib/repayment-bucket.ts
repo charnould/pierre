@@ -1,14 +1,14 @@
 import {
+  departedPhase,
+  RECLASSIFY_PHASE,
+  resolveRepaymentPhase
+} from '@pierre/shared/repayment-phases'
+
+import {
   type CaseBucketOption,
   normalizeCaseBucketOptions
 } from '@/shared/lib/activities/case-workflow-config'
 import { repaymentSetup } from '@/shared/lib/instance-customization'
-
-import {
-  departedPhase,
-  RECLASSIFY_PHASE,
-  resolveRepaymentPhase
-} from '../../../../../shared/repayment-phases'
 
 export { RECLASSIFY_PHASE }
 

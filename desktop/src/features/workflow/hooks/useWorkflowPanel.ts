@@ -1,11 +1,10 @@
 import { useCallback, useRef, useState } from 'react'
 
+import type { WorkflowStep } from '@/shared/lib/navigation-model'
 import type { Tab } from '@/shared/lib/tabs'
 
 import { useWorkflowExport } from './useWorkflowExport'
 import { useWorkflowGeneration } from './useWorkflowGeneration'
-
-export type WorkflowStep = 'form' | 'output'
 
 export type UseWorkflowPanelOptions = {
   url: string | undefined

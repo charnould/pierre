@@ -13,7 +13,7 @@ mock.module('@/contexts/UiSettingsContext', () => ({
 
 import { ContextTimeline } from '@/shared/components/timeline/context-timeline'
 import { parseActivityAuthor } from '@/shared/lib/timeline/parse-activity-author'
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 
 import { RepaymentActivityTimelineEvent } from './RepaymentActivityTimelineEvent'
 
@@ -29,7 +29,7 @@ function row(overrides: Partial<Activity> = {}): Activity {
     type: 'note.published',
     channel: null,
     mentions: [],
-    contenu: JSON.stringify({ version: 2, text: 'Relance' }),
+    contenu: JSON.stringify({ version: 1, text: 'Relance' }),
     ...overrides
   }
 }
@@ -62,7 +62,7 @@ describe('ActivityTimelineEvent', () => {
       row({
         type: 'case.group_changed',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           before: 'amiable',
           after: 'pre_contentieux',
           note: 'Échec des relances amiables.'
@@ -82,7 +82,7 @@ describe('ActivityTimelineEvent', () => {
         threadId: 'todo-1',
         revision: 1,
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           task: {
             title: 'Analyser un rejet',
             state: 'open',
@@ -103,7 +103,7 @@ describe('ActivityTimelineEvent', () => {
         auteur: 'user:bob@example.test',
         type: 'activity.reaction_changed',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           source_activity_id: 42,
           emoji: '👍'
         })

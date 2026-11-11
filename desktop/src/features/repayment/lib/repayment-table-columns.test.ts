@@ -83,6 +83,8 @@ describe('repayment-table-columns', () => {
 
   test('resolveRepaymentColumnLabel expose des libellés métier et humanise le reste', () => {
     expect(resolveRepaymentColumnLabel('solde_locataire')).toBe('Dette')
+    expect(resolveRepaymentColumnLabel('prenom')).toBe('Prénom')
+    expect(resolveRepaymentColumnLabel('nom')).toBe('Nom')
     expect(resolveRepaymentColumnLabel('ratio_dette_loyer')).toBe('Dette / loyer')
     expect(resolveRepaymentColumnLabel('id_site')).toBe('Site')
     expect(resolveRepaymentColumnLabel('champ_personnalise')).toBe('Champ personnalise')

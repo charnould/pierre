@@ -1,7 +1,7 @@
 import { getTicketCellText } from '@/shared/lib/ticket-row'
 import { projectTimelineItems } from '@/shared/lib/timeline/project-timeline'
 import type { TicketRow } from '@/shared/types'
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 
 export type TicketTimelineItem = {
   source: 'activity' | 'initial-reception'
@@ -46,7 +46,7 @@ function initialReception(ticket: TicketRow): TicketTimelineItem {
     channel: 'email',
     mentions: [],
     contenu: JSON.stringify({
-      version: 2,
+      version: 1,
       sender: 'Locataire',
       subject: `Réclamation ${id}`,
       body: message

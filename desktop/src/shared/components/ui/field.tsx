@@ -68,7 +68,7 @@ function FieldGroup({
 const fieldVariants = cva('group/field data-[invalid=true]:text-destructive w-full', {
   variants: {
     orientation: {
-      vertical: 'flex flex-col gap-2 *:w-full [&>.sr-only]:w-auto',
+      vertical: 'flex flex-col gap-2 *:w-full [&_[data-slot=date-field]]:w-fit [&>.sr-only]:w-auto',
       horizontal:
         'md:grid-cols-form grid grid-cols-1 items-center gap-x-6 gap-y-2 has-[>[data-slot=checkbox]]:flex has-[>[data-slot=checkbox]]:flex-row has-[>[data-slot=checkbox]]:items-start has-[>[data-slot=checkbox]]:gap-2 has-[>[data-slot=checkbox]]:*:data-[slot=field-label]:min-w-0 has-[>[data-slot=checkbox]]:*:data-[slot=field-label]:flex-auto has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px',
       wide: 'md:grid-cols-form-wide grid grid-cols-1 items-center gap-x-6 gap-y-2',
@@ -113,19 +113,6 @@ function FieldLabel({ className, ...props }: React.ComponentProps<typeof Label>)
       data-slot="field-label"
       className={cn(
         'group/field-label peer/field-label flex w-fit gap-2 group-data-[disabled=true]/field:opacity-50',
-        className
-      )}
-      {...props}
-    />
-  )
-}
-
-function FieldTitle({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
-      data-slot="field-label"
-      className={cn(
-        'flex w-fit items-center gap-2 text-sm leading-5 font-semibold group-data-[disabled=true]/field:opacity-50',
         className
       )}
       {...props}
@@ -232,6 +219,5 @@ export {
   FieldLegend,
   FieldSeparator,
   FieldSet,
-  FieldContent,
-  FieldTitle
+  FieldContent
 }

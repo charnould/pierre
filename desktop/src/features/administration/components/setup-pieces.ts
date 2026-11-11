@@ -38,7 +38,8 @@ export function recordedPhrase(label: string): string {
     label.startsWith('Modèle ') ||
     label === 'Plan d’apurement' ||
     label === 'Protocole de cohésion sociale' ||
-    label === 'Diagnostic social et financier'
+    label === 'Diagnostic social et financier' ||
+    label === 'Prompt système'
   ) {
     return `${label}, enregistré`
   }
@@ -59,7 +60,7 @@ function configuration(id: string, texts: Record<string, string | null>): SetupP
 }
 
 function consigne(id: string, texts: Record<string, string | null>): SetupPiece {
-  return piece(id, stored(texts, id), 'Consigne')
+  return piece(id, stored(texts, id), 'Prompt système')
 }
 
 function binary(id: string, binaries: readonly string[], label: string): SetupPiece {

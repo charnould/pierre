@@ -7,7 +7,7 @@ import {
   parseCaseChangeContent,
   parseCommunicationOpenedContent,
   parseSignatureContent
-} from '@/shared/types/activites'
+} from '@/shared/types/activities'
 
 function channelNoun(channel: CommunicationChannel): string {
   switch (channel) {

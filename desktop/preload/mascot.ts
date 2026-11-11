@@ -1,5 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
+import { readMascotUnreadCount } from '../src/mascot/unread-count'
+import type { DesktopApi } from '../src/shared/types/window-api'
+
 // Must match `electron/ipc/channels.ts`. Do not import that module: two preload
 // entries sharing it makes Rolldown emit `require('./chunks/…')`, which sandboxed
 // Electron cannot load.
@@ -9,7 +12,7 @@ const showMenu = 'mascot-show-menu'
 const lookEvent = 'mascot:look'
 const unreadCountEvent = 'mascot:unread-count'
 
-contextBridge.exposeInMainWorld('api', {
+const mascotApi = {
   activateFromMascot: () => ipcRenderer.invoke(activate) as Promise<boolean>,
   setMascotBounds: (params: {
     x?: number
@@ -20,15 +23,9 @@ contextBridge.exposeInMainWorld('api', {
   }) => ipcRenderer.invoke(setBounds, params) as Promise<boolean>,
   showMascotMenu: () => ipcRenderer.invoke(showMenu) as Promise<boolean>,
   onMascotUnreadCount: (cb: (payload: { count: number; orbit: boolean }) => void) => {
-    const listener = (_: unknown, payload: { count: number; orbit: boolean } | number) => {
-      if (typeof payload === 'number') {
-        cb({ count: payload, orbit: true })
-        return
-      }
-      cb({
-        count: typeof payload?.count === 'number' ? payload.count : 0,
-        orbit: payload?.orbit !== false
-      })
+    const listener = (_: unknown, payload: unknown) => {
+      const next = readMascotUnreadCount(payload)
+      if (next) cb(next)
     }
     ipcRenderer.on(unreadCountEvent, listener)
     return () => {
@@ -43,4 +40,13 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.removeListener(lookEvent, listener)
     }
   }
-})
+} satisfies Pick<
+  DesktopApi,
+  | 'activateFromMascot'
+  | 'setMascotBounds'
+  | 'showMascotMenu'
+  | 'onMascotUnreadCount'
+  | 'onMascotLook'
+>
+
+contextBridge.exposeInMainWorld('api', mascotApi)

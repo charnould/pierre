@@ -4,7 +4,7 @@ import {
   ABOUT_SUBJECT_CARD_OPTIONS,
   isAboutSubjectOption
 } from '@/features/about/components/AboutSubjectCards'
-import { ABOUT_SUBJECTS } from '@/features/tickets/lib/knowledge-skills'
+import { ABOUT_SUBJECTS } from '@/shared/lib/navigation-model'
 
 describe('ABOUT_SUBJECT_CARD_OPTIONS', () => {
   test('covers every about subject once', () => {

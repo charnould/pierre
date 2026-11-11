@@ -1,17 +1,16 @@
 import { beforeAll, describe, expect, test } from 'bun:test'
 
-import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
-import type { Activity } from '@/shared/types/activites'
+import { blankAdult, blankChild, emptyRepaymentCaseFile } from '@pierre/shared/repayment-case-file'
+import { loadCustomizationFixture } from '@test/instance-customization-fixture'
 
-import { blankAdult, blankChild, emptyRepaymentForms } from '../../../../../shared/repayment-plan'
+import type { Activity } from '@/shared/types/activities'
+
 import {
   formatRepaymentActivityBody,
   formatRepaymentStatusChangeText,
   formatStatusChangeTimelineSentence,
-  latestActiveRepaymentPlan,
-  latestEditableRepaymentPlan,
-  parseRepaymentPlanForm,
-  parseRepaymentPlanProposal,
+  latestCaseFileActivity,
+  parseRepaymentCaseFile,
   parseRepaymentStatusChange,
   parseRepaymentStatusChangeComment,
   statusChangeTimelineSentence
@@ -28,7 +27,7 @@ function activity(overrides: Partial<Activity>): Activity {
     type: 'note.published',
     channel: null,
     mentions: [],
-    contenu: JSON.stringify({ version: 2 }),
+    contenu: JSON.stringify({ version: 1 }),
     ...overrides
   }
 }
@@ -42,7 +41,7 @@ describe('repayment phase and assignment activities', () => {
     const row = activity({
       type: 'case.group_changed',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         before: 'Recouvrement amiable',
         after: 'Contentieux'
       })
@@ -67,7 +66,7 @@ describe('repayment phase and assignment activities', () => {
         activity({
           type: 'case.group_changed',
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             before: 'Recouvrement amiable',
             after: 'Contentieux',
             note: '  Échec des relances amiables.  '
@@ -82,7 +81,7 @@ describe('repayment phase and assignment activities', () => {
       activity({
         type: 'case.assignee_changed',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           before: null,
           after: { id: 'alice@example.org', label: 'alice' }
         })
@@ -101,7 +100,7 @@ describe('repayment phase and assignment activities', () => {
         activity({
           type: 'case.assignee_changed',
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             before: null,
             after: { id: 'alice@example.org', label: 'alice' },
             note: 'Dossier transféré.'
@@ -116,7 +115,7 @@ describe('repayment phase and assignment activities', () => {
       activity({
         type: 'case.assignee_changed',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           before: { id: 'abraconnier@example.org', label: 'abraconnier' },
           after: { id: 'avwoillard@example.org', label: 'avwoillard' }
         })
@@ -139,7 +138,7 @@ describe('repayment phase and assignment activities', () => {
         activity({
           type: 'case.tags_changed',
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             before: [],
             after: ['décès'],
             note: 'Prioritaire'
@@ -152,7 +151,7 @@ describe('repayment phase and assignment activities', () => {
         activity({
           type: 'case.tags_changed',
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             before: ['décès'],
             after: []
           })
@@ -168,7 +167,7 @@ describe('repayment plan payload', () => {
   })
 
   test('lit le dossier enregistré', () => {
-    const forms = emptyRepaymentForms()
+    const forms = emptyRepaymentCaseFile()
     forms.donnees_communes.identification.id_locataire = 'LOC-1'
     forms.donnees_communes.identification.id_client = 'CLI-1'
     forms.donnees_communes.compte_locataire.solde_compte_en_euros = 1_200
@@ -183,23 +182,22 @@ describe('repayment plan payload', () => {
       contenu: JSON.stringify(forms)
     })
 
-    expect(parseRepaymentPlanForm(row)?.donnees_communes.foyer.adultes).toHaveLength(2)
-    expect(parseRepaymentPlanForm(row)?.donnees_communes.foyer.enfants).toHaveLength(1)
+    expect(parseRepaymentCaseFile(row)?.donnees_communes.foyer.adultes).toHaveLength(2)
+    expect(parseRepaymentCaseFile(row)?.donnees_communes.foyer.enfants).toHaveLength(1)
     expect(
-      parseRepaymentPlanForm(row)?.donnees_communes.compte_locataire.solde_compte_en_euros
+      parseRepaymentCaseFile(row)?.donnees_communes.compte_locataire.solde_compte_en_euros
     ).toBe(1_200)
-    expect(parseRepaymentPlanProposal(row)).toEqual({ titre: 'Plan d’apurement' })
-    expect(latestEditableRepaymentPlan([activity({}), row])?.id).toBe(row.id)
-    expect(latestActiveRepaymentPlan([activity({}), row])).toEqual({ row })
+    expect(formatRepaymentActivityBody(row)).toBe('Plan d’apurement')
+    expect(latestCaseFileActivity([activity({}), row])?.id).toBe(row.id)
   })
 
   test('une ligne sans dossier n’est pas un plan actif', () => {
     const closed = activity({
       id: 11,
       type: 'repayment_plan.closed',
-      contenu: JSON.stringify({ version: 2, title: "Plan d'apurement" })
+      contenu: JSON.stringify({ version: 1, title: "Plan d'apurement" })
     })
-    expect(parseRepaymentPlanForm(closed)).toBeNull()
-    expect(latestActiveRepaymentPlan([closed])).toBeNull()
+    expect(parseRepaymentCaseFile(closed)).toBeNull()
+    expect(latestCaseFileActivity([closed])).toBeNull()
   })
 })

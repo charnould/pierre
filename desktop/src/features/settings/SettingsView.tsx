@@ -1,9 +1,16 @@
+import { lazy, Suspense } from 'react'
+
 import { cn } from '@/shared/lib/utils'
 import type { Settings } from '@/shared/types'
 import type { UserPrincipal } from '@/shared/types/users'
 
-import { LoggedInSettingsPage } from './components/LoggedInSettingsPage'
 import { LoginPanel } from './components/LoginPanel'
+
+const LoggedInSettingsPage = lazy(() =>
+  import('./components/LoggedInSettingsPage').then((module) => ({
+    default: module.LoggedInSettingsPage
+  }))
+)
 
 interface Props {
   hidden: boolean
@@ -37,14 +44,16 @@ export function SettingsView({
       )}
     >
       {isLoggedIn && user ? (
-        <LoggedInSettingsPage
-          settings={settings}
-          user={user}
-          agentName={agentName}
-          onHome={onHome}
-          onUserChange={onUserChange}
-          onLogout={onLogout}
-        />
+        <Suspense fallback={null}>
+          <LoggedInSettingsPage
+            settings={settings}
+            user={user}
+            agentName={agentName}
+            onHome={onHome}
+            onUserChange={onUserChange}
+            onLogout={onLogout}
+          />
+        </Suspense>
       ) : (
         <LoginPanel settings={settings} onLogin={onLogin} />
       )}

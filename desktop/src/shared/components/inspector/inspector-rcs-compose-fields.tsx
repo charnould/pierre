@@ -1,3 +1,9 @@
+import {
+  RCS_CHOICES_MAX,
+  rcs_compose_ready,
+  type RcsChoice,
+  type RcsComposeValue
+} from '@pierre/shared/rcs-message'
 import { Plus, Trash2 } from 'lucide-react'
 import { type ReactNode, useId } from 'react'
 
@@ -13,12 +19,6 @@ import { Input } from '@/shared/components/ui/input'
 import { Select, SelectContent, SelectTrigger, SelectValue } from '@/shared/components/ui/select'
 import { Textarea } from '@/shared/components/ui/textarea'
 
-import {
-  RCS_CHOICES_MAX,
-  rcs_compose_ready,
-  type RcsChoice,
-  type RcsComposeValue
-} from '../../../../../shared/rcs-message'
 import { InspectorComposeField } from './inspector-compose-field'
 import { InspectorComposeFooter } from './inspector-compose-shell'
 

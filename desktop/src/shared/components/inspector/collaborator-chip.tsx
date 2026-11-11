@@ -1,3 +1,5 @@
+import { isDesktopAgentIdentity } from '@pierre/shared/agent-identity'
+
 import { useAgentIdentity } from '@/contexts/AgentIdentityContext'
 import { AgentAvatar } from '@/shared/components/timeline/timeline-actor-avatar'
 import { Badge } from '@/shared/components/ui/badge'
@@ -5,8 +7,6 @@ import { UserAvatar } from '@/shared/components/UserAvatar'
 import { useUserAvatar } from '@/shared/hooks/useUserAvatar'
 import { formatMentionDisplay } from '@/shared/lib/activities/mentions'
 import { cn } from '@/shared/lib/utils'
-
-import { isDesktopAgentIdentity } from '../../../../../shared/agent-identity'
 
 interface Props {
   /** Login or email — resolved to org displayName, else capitalized login. */

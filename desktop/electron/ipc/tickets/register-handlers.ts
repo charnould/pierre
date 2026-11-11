@@ -1,7 +1,7 @@
 import { ipcMain, session } from 'electron'
 
-import type { Activity } from '../../../src/shared/types/activites'
-import { parseContentJson } from '../../../src/shared/types/activites'
+import type { Activity } from '../../../src/shared/types/activities'
+import { parseContentJson } from '../../../src/shared/types/activities'
 import type { GetTicketDraftResult, TicketDraft } from '../../../src/shared/types/ticket-draft'
 import type { TicketsQueryParams } from '../../../src/shared/types/tickets'
 import { netFetch } from '../../lib/net-fetch'

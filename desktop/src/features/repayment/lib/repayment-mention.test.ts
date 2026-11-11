@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, mock, test } from 'bun:test'
 
+import { desktopAgentMentionHandle } from '@pierre/shared/agent-identity'
+
 import {
   filterMentionSuggestions,
   formatMentionDisplay,
@@ -7,8 +9,6 @@ import {
 } from '@/shared/lib/activities/mentions'
 import { clearOrgUsersCache, fetchOrgUsers } from '@/shared/lib/org-users-cache'
 import type { OrgUser } from '@/shared/types/users'
-
-import { desktopAgentMentionHandle } from '../../../../../shared/agent-identity'
 
 const orgUser = (login: string, displayName = login): OrgUser => ({
   login,

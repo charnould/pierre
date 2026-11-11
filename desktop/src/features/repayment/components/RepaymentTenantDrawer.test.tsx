@@ -1,11 +1,10 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
 
+import { emptyRepaymentCaseFile } from '@pierre/shared/repayment-case-file'
+import { loadCustomizationFixture } from '@test/instance-customization-fixture'
 import { JSDOM } from 'jsdom'
 
-import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
-import type { Activity } from '@/shared/types/activites'
-
-import { emptyRepaymentForms } from '../../../../../shared/repayment-plan'
+import type { Activity } from '@/shared/types/activities'
 
 const originalGlobals = new Map<string, unknown>()
 
@@ -97,7 +96,7 @@ async function verifyClose(embedded: boolean) {
       onAddNote={() => ({ ok: true })}
       onAdvancementChange={() => true}
       onTagsChange={() => true}
-      onCreatePlan={() => {}}
+      onCreateCaseFile={() => {}}
     />
   )
   const hostFor = (sheetOpenToken: number) => {
@@ -174,7 +173,7 @@ function gestionnaireActivity(login: string, email: string): Activity {
     type: 'case.assignee_changed',
     channel: null,
     contenu: JSON.stringify({
-      version: 2,
+      version: 1,
       before: null,
       after: { id: email, label: login }
     }),
@@ -193,7 +192,7 @@ function tagActivity(tags: string[]): Activity {
     createdAt: '2026-08-09 18:00',
     type: 'case.tags_changed',
     channel: null,
-    contenu: JSON.stringify({ version: 2, before: [], after: tags }),
+    contenu: JSON.stringify({ version: 1, before: [], after: tags }),
     mentions: []
   }
 }
@@ -244,7 +243,7 @@ async function verifyGestionnaire(
             onAddNote={() => ({ ok: true })}
             onAdvancementChange={() => true}
             onTagsChange={() => true}
-            onCreatePlan={() => {}}
+            onCreateCaseFile={() => {}}
           />
         </DrawerContent>
       </Drawer>
@@ -309,7 +308,7 @@ describe('RepaymentTenantDrawer shell', () => {
             onAddNote={() => ({ ok: true })}
             onAdvancementChange={() => true}
             onTagsChange={() => true}
-            onCreatePlan={() => {}}
+            onCreateCaseFile={() => {}}
           />
         )
       })
@@ -330,7 +329,7 @@ describe('RepaymentTenantDrawer shell', () => {
             onAddNote={() => ({ ok: true })}
             onAdvancementChange={() => true}
             onTagsChange={() => true}
-            onCreatePlan={() => {}}
+            onCreateCaseFile={() => {}}
           />
         )
       })
@@ -487,6 +486,20 @@ describe('RepaymentTenantDrawer top card', () => {
     }
   })
 
+  test('ouvre la discussion directement sur la note', async () => {
+    const { cleanup } = await renderNotesDrawer('alice@exemple.fr', [], undefined, 'note')
+    try {
+      const present = [...document.querySelectorAll('div')].find((element) =>
+        element.classList.contains('w-2/5')
+      )
+      expect(present?.textContent).toContain('Laisser une note')
+      expect(present?.textContent).toContain('Ajouter')
+      expect(present?.textContent).not.toContain('Créer une tâche')
+    } finally {
+      await cleanup()
+    }
+  })
+
   test('sépare le présent et l’historique en deux colonnes', async () => {
     const own = noteActivity(1, 'user:alice@exemple.fr', 'Mon commentaire')
     const { cleanup } = await renderNotesDrawer('alice@exemple.fr', [own])
@@ -551,7 +564,7 @@ function planActivity(id: number, auteur: string): Activity {
     createdAt: '2026-08-19 20:00',
     type: 'repayment_plan.updated',
     channel: null,
-    contenu: JSON.stringify(emptyRepaymentForms()),
+    contenu: JSON.stringify(emptyRepaymentCaseFile()),
     mentions: [],
     threadId: `plan-${id}`
   }
@@ -568,7 +581,7 @@ function noteActivity(id: number, auteur: string, contenu: string): Activity {
     createdAt: '2026-08-09 12:00',
     type: 'note.published',
     channel: null,
-    contenu: JSON.stringify({ version: 2, text: contenu }),
+    contenu: JSON.stringify({ version: 1, text: contenu }),
     mentions: []
   }
 }
@@ -585,7 +598,7 @@ function openActionActivity(id: number): Activity {
     type: 'task.created',
     channel: null,
     contenu: JSON.stringify({
-      version: 2,
+      version: 1,
       task: {
         title: 'Appeler le locataire',
         state: 'open',
@@ -604,7 +617,7 @@ function completedActionActivity(id: number): Activity {
     ...openActionActivity(id),
     type: 'task.completed',
     contenu: JSON.stringify({
-      version: 2,
+      version: 1,
       task: {
         title: 'Appeler le locataire',
         state: 'completed',
@@ -644,7 +657,8 @@ async function renderNotesDrawer(
     id_locataire: 'LOC-NOTES',
     solde_locataire: 1000,
     debut_bail: '2023-09-01'
-  }
+  },
+  initialComposeMode?: 'note'
 ) {
   const { act } = await import('react')
   const { createRoot } = await import('react-dom/client')
@@ -698,13 +712,14 @@ async function renderNotesDrawer(
           open
           onOpenChange={() => {}}
           sheetOpenToken={1}
+          initialComposeMode={initialComposeMode}
           embedded
           tenant={nextTenant}
           onAddNote={() => ({ ok: true })}
           onAdvancementChange={() => true}
           onTagsChange={() => true}
-          onCreatePlan={() => {}}
-          onEditPlan={() => {}}
+          onCreateCaseFile={() => {}}
+          onEditCaseFile={() => {}}
         />
       </DrawerContent>
     </Drawer>
@@ -755,7 +770,7 @@ describe('RepaymentTenantDrawer courriel', () => {
       channel: 'email',
       destinataire: 'caf@example.fr',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         sender: 'gregoire@exemple.fr',
         action: 'Contacter la CAF',
         subject: 'Dossier APL',
@@ -798,7 +813,7 @@ describe('RepaymentTenantDrawer courriel', () => {
       channel: 'email',
       destinataire: 'Bob <bob@locataire.fr>',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         sender: 'Alice <alice@bailleur.fr>',
         subject: 'Relance loyer',
         body: 'Merci de régulariser.'
@@ -994,7 +1009,7 @@ describe('RepaymentTenantDrawer note edit/delete', () => {
           id: 3,
           patch: {
             operation: 'edit_content',
-            contenu: JSON.stringify({ version: 2, text: 'Texte modifié' })
+            contenu: JSON.stringify({ version: 1, text: 'Texte modifié' })
           }
         })
       )
@@ -1265,7 +1280,7 @@ describe('RepaymentTenantDrawer actions', () => {
   test('le libellé d’une action à faire n’est pas tronqué', async () => {
     const action = openActionActivity(12)
     action.contenu = JSON.stringify({
-      version: 2,
+      version: 1,
       task: {
         title: 'Relancer le locataire pour le\nvirement promis vendredi',
         state: 'open',
@@ -1401,7 +1416,7 @@ function statusChangeActivity(id: number, auteur: string): Activity {
     type: 'case.group_changed',
     channel: null,
     contenu: JSON.stringify({
-      version: 2,
+      version: 1,
       before: 'amiable',
       after: 'pre_contentieux'
     }),

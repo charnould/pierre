@@ -24,7 +24,7 @@ import {
   previewTimelineCommunicationParagraphs
 } from '@/shared/lib/timeline/timeline-communication'
 import { cn } from '@/shared/lib/utils'
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 
 const VALUE = 'text-foreground m-0 min-w-0 text-base leading-6'
 

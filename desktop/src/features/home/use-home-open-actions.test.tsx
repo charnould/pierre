@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
-import type { ActivityListItem, GetActivitiesParams } from '@/shared/types/activites'
+import type { ActivityListItem, GetActivitiesParams } from '@/shared/types/activities'
 
 import { useHomeOpenActions } from './use-home-open-actions'
 
@@ -42,7 +42,7 @@ function openTaskRow(id: number, title: string): ActivityListItem {
     channel: null,
     mentions: [],
     contenu: JSON.stringify({
-      version: 2,
+      version: 1,
       task: {
         title,
         state: 'open',

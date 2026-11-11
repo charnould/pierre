@@ -175,9 +175,9 @@ describe('parseUiSettings', () => {
     expect(parseUiSettings({ mascot: { color: 'magenta' } })).toEqual({})
   })
 
-  it('migrates a legacy mascot shape and keeps a free hex colour', () => {
+  it('drops a retired mascot shape and keeps a free hex colour', () => {
     expect(parseUiSettings({ mascot: { shape: 'blob', color: '#5b8c5a' } })).toEqual({
-      mascot: { shape: 'galet', color: '#5b8c5a' }
+      mascot: { color: '#5b8c5a' }
     })
   })
 

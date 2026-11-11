@@ -1,6 +1,6 @@
 import PostalMime, { type Address, type Mailbox } from 'postal-mime'
 
-import { activityTimestamp } from '@/shared/types/activites'
+import { activityTimestamp } from '@/shared/types/activities'
 
 export const MAX_EML_BYTES = 2 * 1024 * 1024
 

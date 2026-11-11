@@ -1,10 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test'
 
+import { empty_rcs_compose } from '@pierre/shared/rcs-message'
+import { loadCustomizationFixture } from '@test/instance-customization-fixture'
 import { JSDOM } from 'jsdom'
 
-import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
-
-import { empty_rcs_compose } from '../../../../../shared/rcs-message'
 import type { TicketComposeMode } from '../lib/use-tickets-view-data'
 import type { TicketAiGenerationProps } from './TicketComposeBlock'
 

@@ -15,11 +15,11 @@ import {
   isTaskType,
   parseCaseChangeContent,
   parseNoteContent,
-  parseRepaymentPlanContent,
+  parseRepaymentCaseFileContent,
   parseSignatureContent,
   parseTaskContent,
   parseTitledContent
-} from '@/shared/types/activites'
+} from '@/shared/types/activities'
 
 import { ContextTimelineEntryHeader } from './context-timeline-entry-header'
 import { ContextTimelineItem } from './context-timeline-item'
@@ -51,7 +51,7 @@ export interface ActivityTimelineEventProps {
   onActivate?: () => void
   body?: ReactNode
   header?: ReactNode
-  onEditPlan?: (row: Activity) => void
+  onEditCaseFile?: (row: Activity) => void
   userLogin?: string
   savingAction?: boolean
   onReopenAction?: (id: number, assigneA: string, dateEcheance: string) => void
@@ -98,7 +98,7 @@ function EventBody({
   savingAction,
   onReopenAction,
   currentActionEvent,
-  onEditPlan
+  onEditCaseFile
 }: Pick<
   ActivityTimelineEventProps,
   | 'row'
@@ -108,7 +108,7 @@ function EventBody({
   | 'savingAction'
   | 'onReopenAction'
   | 'currentActionEvent'
-  | 'onEditPlan'
+  | 'onEditCaseFile'
 >) {
   if (isCommunicationOpenedType(row.type)) {
     return (
@@ -219,18 +219,18 @@ function EventBody({
   }
 
   if (row.type.startsWith('repayment_plan.')) {
-    const plan = parseRepaymentPlanContent(row.type, row.contenu)
+    const plan = parseRepaymentCaseFileContent(row.type, row.contenu)
     if (!plan) return null
     return (
       <>
         <TimelineObject title="Plan d’apurement" />
-        {onEditPlan && row.type !== 'repayment_plan.closed' ? (
+        {onEditCaseFile && row.type !== 'repayment_plan.closed' ? (
           <Button
             type="button"
             variant="outline"
             size="xs"
             className="mt-2 w-fit"
-            onClick={() => onEditPlan(row)}
+            onClick={() => onEditCaseFile(row)}
           >
             Ouvrir
           </Button>
@@ -280,7 +280,7 @@ export function ActivityTimelineEvent({
   savingAction,
   onReopenAction,
   currentActionEvent,
-  onEditPlan,
+  onEditCaseFile,
   expandable = false,
   preview = false,
   children
@@ -295,7 +295,7 @@ export function ActivityTimelineEvent({
           savingAction,
           onReopenAction,
           currentActionEvent,
-          onEditPlan
+          onEditCaseFile
         })
       : body
 

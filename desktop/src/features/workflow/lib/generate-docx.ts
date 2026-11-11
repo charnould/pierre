@@ -24,6 +24,15 @@ export async function renderDocxTemplate(
   return doc.getZip().generate({ type: 'uint8array' })
 }
 
+export function postalLetterDate(now = new Date()): string {
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'Europe/Paris'
+  }).format(now)
+}
+
 export async function generateDocxFromTemplate(
   templateBuffer: ArrayBuffer,
   data: {
@@ -39,6 +48,7 @@ export async function generateDocxFromTemplate(
     BODY: data.BODY,
     ADRESSE: data.ADRESSE,
     CODE_POSTAL: data.CODE_POSTAL,
-    VILLE: data.VILLE
+    VILLE: data.VILLE,
+    DATE: postalLetterDate()
   })
 }

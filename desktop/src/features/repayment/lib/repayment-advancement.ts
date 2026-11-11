@@ -6,7 +6,7 @@ import {
   parseCaseChangeContent,
   parseCommunicationOpenedContent,
   parseTaskContent
-} from '@/shared/types/activites'
+} from '@/shared/types/activities'
 
 import type { RepaymentActionId } from './repayment-action'
 import { sortRepaymentActivitiesDesc } from './repayment-activity-order'

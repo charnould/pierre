@@ -1,15 +1,13 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test'
 
+import { loadCustomizationFixture } from '@test/instance-customization-fixture'
 import { JSDOM } from 'jsdom'
-import { forwardRef, type ReactNode, useImperativeHandle } from 'react'
+import { forwardRef, useImperativeHandle } from 'react'
 
+import { resetCustomization } from '@/shared/lib/instance-customization'
 import type { ChatBoot } from '@/shared/types'
 
 const releases: Array<{ url: string; convId: string }> = []
-
-mock.module('@/shared/components/ModuleGate', () => ({
-  ModuleGate: ({ children }: { children: ReactNode }) => children
-}))
 
 mock.module('@/features/chat/ChatPanel', () => ({
   ChatPanel: forwardRef(function MockChatPanel(_props, ref) {
@@ -97,6 +95,11 @@ afterAll(() => {
 
 beforeEach(() => {
   releases.length = 0
+  loadCustomizationFixture()
+})
+
+afterEach(() => {
+  resetCustomization()
 })
 
 describe('ChatWindow', () => {
@@ -149,7 +152,10 @@ describe('ChatWindow', () => {
     const panel = host.querySelector('[data-testid="chat-panel"]')
     expect(panel).not.toBeNull()
     expect(bootCalls).toBe(1)
-    expect(frame.className).toContain('shadow-(--shadow-chat-window)')
+    expect(frame.className.split(/\s+/)).toContain('border')
+    expect(frame.className).toContain('shadow-md')
+    expect(frame.className).not.toContain('border-2')
+    expect(frame.className).not.toContain('shadow-(--shadow-chat-window)')
 
     const moveHandle = host.querySelector<HTMLElement>('[aria-label^="Déplacer la conversation"]')
     await act(async () => {
@@ -297,5 +303,52 @@ describe('ChatWindow', () => {
       position: { x: 120, y: 130 },
       size: { width: 380, height: 370 }
     })
+  })
+})
+
+describe('chat boot failures', () => {
+  test('shows the existing error when the first boot rejects', async () => {
+    const { act } = await import('react')
+    const { createRoot } = await import('react-dom/client')
+    const { ChatWindow } = await import('./ChatWindow')
+    window.api = {
+      getChatBoot: async () => {
+        throw new Error('boot down')
+      }
+    } as unknown as typeof window.api
+    const host = document.createElement('div')
+    document.body.append(host)
+    const root = createRoot(host)
+    await act(async () => {
+      root.render(
+        <ChatWindow open agentName="Pierre" url="https://pierre.test" onClose={() => {}} />
+      )
+      await Promise.resolve()
+    })
+    expect(host.textContent).toContain('Impossible de charger le chatbot.')
+    await act(async () => root.unmount())
+    host.remove()
+  })
+
+  test('restores the stopped thread when switching profile fails', async () => {
+    const { switchChatProfile } = await import('./DesktopChatBody')
+    let restored = 0
+    window.api = {
+      getChatBoot: async () => {
+        throw new Error('profile down')
+      }
+    } as unknown as typeof window.api
+    const next = await switchChatProfile('https://pierre.test', boot, 'private', {
+      focus() {},
+      sendPrompt() {},
+      stop() {},
+      clearMessages() {},
+      resetAfterAbortedStop() {
+        restored += 1
+      }
+    })
+    expect(next).toBeNull()
+    expect(restored).toBe(1)
+    expect(releases).toEqual([{ url: 'https://pierre.test', convId: boot.convId }])
   })
 })

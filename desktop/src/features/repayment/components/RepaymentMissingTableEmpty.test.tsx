@@ -6,8 +6,8 @@ import { RepaymentMissingTableEmpty } from './RepaymentMissingTableEmpty'
 
 describe('RepaymentMissingTableEmpty', () => {
   test('propose de créer un plan', () => {
-    const html = renderToStaticMarkup(<RepaymentMissingTableEmpty onCreatePlan={() => {}} />)
-    expect(html).toContain('Créer un plan d’apurement')
+    const html = renderToStaticMarkup(<RepaymentMissingTableEmpty onCreateCaseFile={() => {}} />)
+    expect(html).toContain('Créer un dossier')
     expect(html).toContain('core.comptes_locataires.csv')
   })
 })

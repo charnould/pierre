@@ -3,7 +3,7 @@ import {
   buildCaseTagChangeActivity
 } from '@/shared/lib/activities/case-activities'
 import type { TicketRow } from '@/shared/types'
-import { ACTIVITY_CONTENT_VERSION, type CreateActivityBody } from '@/shared/types/activites'
+import { ACTIVITY_CONTENT_VERSION, type CreateActivityBody } from '@/shared/types/activities'
 
 import { resolveTicketBucket } from './ticket-bucket'
 import { canonicalizeTicketTags, ticketTagOptions } from './ticket-tags'

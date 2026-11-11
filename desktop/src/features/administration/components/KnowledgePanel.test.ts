@@ -1,8 +1,9 @@
 import { describe, expect, test } from 'bun:test'
 
+import { BUSINESS_MODULES } from '@pierre/shared/modules'
+
 import type { KnowledgeBuild, KnowledgeSource } from '@/shared/types/knowledge'
 
-import { BUSINESS_MODULES } from '../../../../../shared/modules'
 import {
   buildKnowledgeBuckets,
   isKnowledgeEntryAssigned,
@@ -184,7 +185,7 @@ describe('knowledge assignment summary', () => {
       ])
     ).toEqual({
       profiles: ['Assistant', 'Réclamations'],
-      modules: [BUSINESS_MODULES.find((module) => module.id === 'tickets')?.label]
+      modules: [BUSINESS_MODULES.find((module) => module.id === 'tickets')?.label ?? '']
     })
     expect(knowledgeAssignmentSummary(entry('Guide', 'Guide', [], []), [])).toEqual({
       profiles: [],

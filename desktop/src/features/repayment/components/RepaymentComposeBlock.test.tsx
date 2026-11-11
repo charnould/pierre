@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test'
 
+import { loadCustomizationFixture } from '@test/instance-customization-fixture'
 import { JSDOM } from 'jsdom'
 
 import type { ActionDraft } from '@/shared/lib/activities/action-activity'
-import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 
 import { repaymentTagOptions } from '../lib/repayment-tags'
 import { sampleRepaymentRow } from '../lib/repayment-test-fixtures'
@@ -101,7 +101,7 @@ async function renderCompose(
     gestionnaireAssignable?: boolean
     gestionnaireEmail?: string | null
     currentTags?: string[]
-    activePlan?: { row: import('@/shared/types/activites').Activity } | null
+    caseFileActivity?: import('@/shared/types/activities').Activity | null
     rcsCompose?: {
       destinataire: string
       body: string
@@ -119,8 +119,8 @@ async function renderCompose(
   const onStartNote = mock(() => {})
   const onStartTodo = mock(() => {})
   const onStartAction = mock(() => {})
-  const onCreatePlan = mock(() => {})
-  const onEditPlan = mock(() => {})
+  const onCreateCaseFile = mock(() => {})
+  const onEditCaseFile = mock(() => {})
   const onImportEml = mock((_file: File) => {})
   const container = document.createElement('div')
   document.body.append(container)
@@ -167,9 +167,9 @@ async function renderCompose(
         onSelectRcsTemplate={() => {}}
         onSelectEmailTemplate={() => {}}
         onSelectMailtoTemplate={() => {}}
-        onCreatePlan={onCreatePlan}
-        activePlan={options.activePlan}
-        onEditPlan={onEditPlan}
+        onCreateCaseFile={onCreateCaseFile}
+        caseFileActivity={options.caseFileActivity}
+        onEditCaseFile={onEditCaseFile}
         onCancelCompose={() => setComposeMode(null)}
         onSubmitNote={onSubmitNote}
         onSubmitAdvancement={() => {}}
@@ -200,8 +200,8 @@ async function renderCompose(
     onStartNote,
     onStartTodo,
     onStartAction,
-    onCreatePlan,
-    onEditPlan,
+    onCreateCaseFile,
+    onEditCaseFile,
     onImportEml,
     act,
     cleanup: async () => {
@@ -413,9 +413,9 @@ describe('RepaymentComposeBlock', () => {
       type: 'repayment_plan.created' as const,
       channel: null,
       mentions: [],
-      contenu: JSON.stringify({ version: 2, title: "Plan d'apurement" })
+      contenu: JSON.stringify({ version: 1, title: "Plan d'apurement" })
     }
-    const draft = await renderCompose(null, { activePlan: { row: unsigned } })
+    const draft = await renderCompose(null, { caseFileActivity: unsigned })
     try {
       expect(buttonLabels()).toContain('Modifier le plan d’apurement')
       expect(buttonLabels()).not.toContain('Créer un plan d’apurement')

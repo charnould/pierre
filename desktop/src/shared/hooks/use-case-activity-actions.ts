@@ -8,7 +8,7 @@ import {
   buildCaseTagChangeActivity
 } from '@/shared/lib/activities/case-activities'
 import { parseEmlFile } from '@/shared/lib/activities/parse-eml'
-import { ACTIVITY_CONTENT_VERSION, type ActivityContext } from '@/shared/types/activites'
+import { ACTIVITY_CONTENT_VERSION, type ActivityContext } from '@/shared/types/activities'
 import type { OrgUser } from '@/shared/types/users'
 
 export type CaseSubmissionKind = 'note' | 'action' | 'assignment' | 'bucket' | 'eml' | 'tags'

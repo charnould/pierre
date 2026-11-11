@@ -1,9 +1,10 @@
-import { ArrowLeft, CircleCheck, Copy, RefreshCw, Send } from 'lucide-react'
+import { ArrowLeft, Copy, RefreshCw, Send } from 'lucide-react'
 import { type ReactNode, useEffect, useId, useRef, useState } from 'react'
 
+import { FileDrop } from '@/shared/components/FileDrop'
 import { SelectItems, type SelectOption } from '@/shared/components/SelectItems'
 import { Button } from '@/shared/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import {
   Field,
   FieldContent,
@@ -23,9 +24,10 @@ import { Select, SelectContent, SelectTrigger, SelectValue } from '@/shared/comp
 import { Textarea } from '@/shared/components/ui/textarea'
 import { toast } from '@/shared/components/ui/toast'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
-import type { ActivityContext } from '@/shared/types/activites'
+import type { ActivityContext } from '@/shared/types/activities'
 
 import { followRcsTest } from '../lib/rcs-test'
+import { StoredMark } from './StoredMark'
 
 type LlmType = 'anthropic' | 'openai' | 'openai-compatible'
 
@@ -102,27 +104,26 @@ function Section({
   id,
   title,
   mark,
+  pending = false,
   children
 }: {
   id: string
   title: string
   mark?: string
+  pending?: boolean
   children: ReactNode
 }) {
+  const status = mark ? (
+    <StoredMark name={mark} />
+  ) : pending ? (
+    <StoredMark stored={false} name="À paramétrer" />
+  ) : null
   return (
     <section aria-labelledby={id}>
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <CardTitle id={id}>{title}</CardTitle>
-            {mark ? (
-              <CircleCheck
-                aria-label={mark}
-                className="text-primary size-4 shrink-0"
-                strokeWidth={1.5}
-              />
-            ) : null}
-          </div>
+          <CardTitle id={id}>{title}</CardTitle>
+          {status ? <CardAction>{status}</CardAction> : null}
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-6">{children}</div>
@@ -243,7 +244,7 @@ function MarkedInput({
       />
       {marked ? (
         <InputGroupAddon align="inline-end">
-          <CircleCheck aria-hidden className="size-4" strokeWidth={1.5} />
+          <StoredMark name="Enregistré" />
         </InputGroupAddon>
       ) : null}
     </InputGroup>
@@ -302,6 +303,27 @@ export function ProvidersPanel({
     maileva: 'Aucune modification'
   })
 
+  function applyView(next: ProvidersView) {
+    const type = isLlmType(next.ai.type) ? next.ai.type : 'anthropic'
+    setView(next)
+    setLlmType(type)
+    setLlmBaseUrl(next.ai.baseUrl || defaultUrl(type))
+    setLlmModel(next.ai.model || SUGGESTED_MODEL)
+    setLlmEffort(next.ai.effort || SUGGESTED_EFFORT)
+    setRcsFrom(next.rcs.from)
+    setRcsSecret((current) => next.rcs.secret || current)
+    setEmailDomain(next.email.domain)
+    setEmailAccount(next.email.account)
+    setMailevaClientId(next.maileva.clientId)
+    setMailevaUsername(next.maileva.username)
+    setMailevaSenderId(next.maileva.senderId)
+    const address = senderAddress(next.maileva.address)
+    setMailevaName(address.name)
+    setMailevaStreet(address.street)
+    setMailevaPostal(address.postal)
+    setMailevaCity(address.city)
+  }
+
   useEffect(() => {
     let cancelled = false
     void (async () => {
@@ -356,27 +378,6 @@ export function ProvidersPanel({
     setLlmType(next)
     setLlmBaseUrl(defaultUrl(next))
     touch('ai')
-  }
-
-  function applyView(next: ProvidersView) {
-    const type = isLlmType(next.ai.type) ? next.ai.type : 'anthropic'
-    setView(next)
-    setLlmType(type)
-    setLlmBaseUrl(next.ai.baseUrl || defaultUrl(type))
-    setLlmModel(next.ai.model || SUGGESTED_MODEL)
-    setLlmEffort(next.ai.effort || SUGGESTED_EFFORT)
-    setRcsFrom(next.rcs.from)
-    setRcsSecret((current) => next.rcs.secret || current)
-    setEmailDomain(next.email.domain)
-    setEmailAccount(next.email.account)
-    setMailevaClientId(next.maileva.clientId)
-    setMailevaUsername(next.maileva.username)
-    setMailevaSenderId(next.maileva.senderId)
-    const address = senderAddress(next.maileva.address)
-    setMailevaName(address.name)
-    setMailevaStreet(address.street)
-    setMailevaPostal(address.postal)
-    setMailevaCity(address.city)
   }
 
   async function reload() {
@@ -643,651 +644,650 @@ export function ProvidersPanel({
     EMAIL_FIELDS.every((field) => emailHtml.includes(`{{ ${field} }}`)) && logoStored
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-      <main className="bg-background min-h-full px-4 py-8">
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
-          <div className="flex items-center gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              aria-label="Retour"
-              onClick={onBack}
-            >
-              <ArrowLeft />
-            </Button>
-            <h1 className="font-serif text-4xl leading-tight font-normal">
-              Paramètres généraux + Services
-            </h1>
-          </div>
-          <Section id="organisme" title="Organisme">
-            <Rows>
-              <Row
-                title="Nom de l’agent"
-                description={
-                  <>
-                    Nom de l'agent à travers l'ensemble de l’application. On sollicite son
-                    intervention ou son aide dans un dossier, ou sur un sujet, en saisissant{' '}
-                    <Kbd>@{orgName.trim() || 'nom'}</Kbd> dans l'interface.
-                  </>
-                }
-                htmlFor={`${fieldId}-name`}
-              >
-                <Input
-                  id={`${fieldId}-name`}
-                  mono
-                  value={orgName}
-                  spellCheck={false}
-                  onChange={(event) => {
-                    setOrgName(event.target.value)
-                    touch('organism')
-                  }}
-                />
-              </Row>
-              <Row
-                title="Fuseau horaire"
-                description={
-                  <>
-                    Fuseau horaire utilisé à travers l'ensemble de l’instance. Indiquer{' '}
-                    <Kbd>Europe/Paris</Kbd> pour la métropole. Consulter{' '}
-                    <a
-                      href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      la liste complète
-                    </a>{' '}
-                    pour d'autres localisations.
-                  </>
-                }
-                htmlFor={`${fieldId}-zone`}
-              >
-                <Input
-                  id={`${fieldId}-zone`}
-                  mono
-                  value={timezone}
-                  spellCheck={false}
-                  onChange={(event) => {
-                    setTimezone(event.target.value)
-                    touch('organism')
-                  }}
-                />
-              </Row>
-            </Rows>
-            {saveBar('organism', () => void saveOrganism())}
-          </Section>
-
-          <Section id="langage" title="Intelligence artificielle (LLM)">
-            <Rows>
-              <Row
-                title="Type d'API utilisée"
-                description="Quel est le format de l'API utilisée par votre fournisseur d'inférence : Anthropic, OpenAI, ou OpenAI-compatible (par exemple Mistral ou Azure) ?"
-                htmlFor={`${fieldId}-kind`}
-              >
-                <Select
-                  items={TYPES}
-                  value={llmType}
-                  onValueChange={(next) => {
-                    if (next && isLlmType(next)) applyType(next)
-                  }}
-                >
-                  <SelectTrigger id={`${fieldId}-kind`} className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItems items={TYPES} />
-                  </SelectContent>
-                </Select>
-              </Row>
-              <Row
-                title="Modèle de langage"
-                description={
-                  <>
-                    Nom exact du modèle de langage qui sera utilisé à travers l'ensemble de
-                    l'application. Exemples et tarifications de modèles :{' '}
-                    <a
-                      href="https://platform.claude.com/docs/en/about-claude/pricing"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Anthropic
-                    </a>
-                    {', '}
-                    <a
-                      href="https://developers.openai.com/api/docs/pricing"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      OpenAI
-                    </a>
-                    {', '}
-                    <a
-                      href="https://docs.mistral.ai/inference/pricing"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Mistral
-                    </a>
-                    .
-                  </>
-                }
-                htmlFor={`${fieldId}-model`}
-              >
-                <MarkedInput
-                  id={`${fieldId}-model`}
-                  value={llmModel}
-                  marked={saved(llmModel, view?.ai.model)}
-                  onChange={(value) => {
-                    setLlmModel(value)
-                    touch('ai')
-                  }}
-                />
-              </Row>
-              <Row
-                title="Effort de raisonnement"
-                description="Combien de temps le modèle de langage réfléchit-il avant de répondre à une question. Un effort de raisonnement plus important consomme davantage de tokens. Tous les modèles n’acceptent pas tous les niveaux. Se référer à la documentation de votre fournisseur d'inférence."
-                htmlFor={`${fieldId}-effort`}
-              >
-                <MarkedInput
-                  id={`${fieldId}-effort`}
-                  value={llmEffort}
-                  marked={saved(llmEffort, view?.ai.effort)}
-                  onChange={(value) => {
-                    setLlmEffort(value)
-                    touch('ai')
-                  }}
-                />
-              </Row>
-              <Row
-                title="Adresse de l’API"
-                description="Point d’accès du fournisseur d'inférence. Pour Anthropic et OpenAI la complétion est automatique. Pour un autre fournsseur, se référer à sa documentation."
-                htmlFor={`${fieldId}-url`}
-              >
-                <MarkedInput
-                  id={`${fieldId}-url`}
-                  value={llmBaseUrl}
-                  marked={saved(llmBaseUrl, view?.ai.baseUrl)}
-                  onChange={(value) => {
-                    setLlmBaseUrl(value)
-                    touch('ai')
-                  }}
-                />
-              </Row>
-              <Row
-                title="Clé de l’API"
-                description="Obtenir une clé d'API auprès de votre fournisseur d'inférence. Ne pas divulguer cette clé. Un champ vide conserve la clé déjà enregistrée."
-                htmlFor={`${fieldId}-key`}
-              >
-                <MarkedInput
-                  id={`${fieldId}-key`}
-                  value={llmApiKey}
-                  secret
-                  marked={
-                    view?.ai.configured === true &&
-                    view.ai.type === llmType &&
-                    view.ai.baseUrl === llmBaseUrl &&
-                    llmApiKey === ''
-                  }
-                  onChange={(value) => {
-                    setLlmApiKey(value)
-                    touch('ai')
-                  }}
-                />
-              </Row>
-            </Rows>
-            {saveBar('ai', () => void saveAi())}
-          </Section>
-
-          <Section
-            id="rcs"
-            title="RCS/SMS (via CM.com)"
-            mark={view?.rcs.configured ? 'RCS paramétré' : undefined}
+    <main className="bg-background min-h-0 min-w-0 flex-1 overflow-y-auto px-4 py-8">
+      <div className="max-w-document mx-auto flex w-full flex-col gap-4">
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            aria-label="Retour"
+            onClick={onBack}
           >
-            <Rows>
-              <Row
-                title="Expéditeur RCS/SMS"
-                description="Nom de l'expéditeurqui s'affichera dans vos RCS/SMS adreessés aux locataires et candidats. Il s'agit du nom de votre organisme déclaré chez CM.com, pas celui de l’agent."
-                htmlFor={`${fieldId}-rcs-from`}
-              >
-                <MarkedInput
-                  id={`${fieldId}-rcs-from`}
-                  value={rcsFrom}
-                  marked={saved(rcsFrom, view?.rcs.from)}
-                  onChange={(value) => {
-                    setRcsFrom(value)
-                    touch('rcs')
-                  }}
-                />
-              </Row>
-              <Row
-                title="Product token"
-                description="Identifiant disponible sous ce nom de « product token » dans l'interface d'administration de CM.com. Un champ vide conserve le token déjà enregistré."
-                htmlFor={`${fieldId}-rcs-token`}
-              >
-                <MarkedInput
-                  id={`${fieldId}-rcs-token`}
-                  value={rcsToken}
-                  secret
-                  marked={view?.rcs.configured === true && rcsToken === ''}
-                  onChange={(value) => {
-                    setRcsToken(value)
-                    touch('rcs')
-                  }}
-                />
-              </Row>
-              <CopyField
-                label="Webhook RCS"
-                description="Adresse que CM.com appelle quand un message RCS arrive. À coller dans leur console."
-                value={view?.webhooks.rcs ?? ''}
+            <ArrowLeft />
+          </Button>
+          <h1 className="font-serif text-4xl leading-tight font-normal">
+            Paramètres généraux + Services
+          </h1>
+        </div>
+        <Section id="organisme" title="Organisme">
+          <Rows>
+            <Row
+              title="Nom de l’agent"
+              description={
+                <>
+                  Nom de l'agent à travers l'ensemble de l’application. On sollicite son
+                  intervention ou son aide dans un dossier, ou sur un sujet, en saisissant{' '}
+                  <Kbd>@{orgName.trim() || 'nom'}</Kbd> dans l'interface.
+                </>
+              }
+              htmlFor={`${fieldId}-name`}
+            >
+              <Input
+                id={`${fieldId}-name`}
+                mono
+                value={orgName}
+                spellCheck={false}
+                onChange={(event) => {
+                  setOrgName(event.target.value)
+                  touch('organism')
+                }}
               />
-              <Row
-                title="Secret à recopier dans CM.com"
-                description="Affiché une seule fois. À recopier dans CM.com pour qu’il signe ses appels."
+            </Row>
+            <Row
+              title="Fuseau horaire"
+              description={
+                <>
+                  Fuseau horaire utilisé à travers l'ensemble de l’instance. Indiquer{' '}
+                  <Kbd>Europe/Paris</Kbd> pour la métropole. Consulter{' '}
+                  <a
+                    href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    la liste complète
+                  </a>{' '}
+                  pour d'autres localisations.
+                </>
+              }
+              htmlFor={`${fieldId}-zone`}
+            >
+              <Input
+                id={`${fieldId}-zone`}
+                mono
+                value={timezone}
+                spellCheck={false}
+                onChange={(event) => {
+                  setTimezone(event.target.value)
+                  touch('organism')
+                }}
+              />
+            </Row>
+          </Rows>
+          {saveBar('organism', () => void saveOrganism())}
+        </Section>
+
+        <Section id="langage" title="Intelligence artificielle (LLM)">
+          <Rows>
+            <Row
+              title="Type d'API utilisée"
+              description="Quel est le format de l'API utilisée par votre fournisseur d'inférence : Anthropic, OpenAI, ou OpenAI-compatible (par exemple Mistral ou Azure) ?"
+              htmlFor={`${fieldId}-kind`}
+            >
+              <Select
+                items={TYPES}
+                value={llmType}
+                onValueChange={(next) => {
+                  if (next && isLlmType(next)) applyType(next)
+                }}
               >
+                <SelectTrigger id={`${fieldId}-kind`} className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItems items={TYPES} />
+                </SelectContent>
+              </Select>
+            </Row>
+            <Row
+              title="Modèle de langage"
+              description={
+                <>
+                  Nom exact du modèle de langage qui sera utilisé à travers l'ensemble de
+                  l'application. Exemples et tarifications de modèles :{' '}
+                  <a
+                    href="https://platform.claude.com/docs/en/about-claude/pricing"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Anthropic
+                  </a>
+                  {', '}
+                  <a
+                    href="https://developers.openai.com/api/docs/pricing"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    OpenAI
+                  </a>
+                  {', '}
+                  <a
+                    href="https://docs.mistral.ai/inference/pricing"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Mistral
+                  </a>
+                  .
+                </>
+              }
+              htmlFor={`${fieldId}-model`}
+            >
+              <MarkedInput
+                id={`${fieldId}-model`}
+                value={llmModel}
+                marked={saved(llmModel, view?.ai.model)}
+                onChange={(value) => {
+                  setLlmModel(value)
+                  touch('ai')
+                }}
+              />
+            </Row>
+            <Row
+              title="Effort de raisonnement"
+              description="Combien de temps le modèle de langage réfléchit-il avant de répondre à une question. Un effort de raisonnement plus important consomme davantage de tokens. Tous les modèles n’acceptent pas tous les niveaux. Se référer à la documentation de votre fournisseur d'inférence."
+              htmlFor={`${fieldId}-effort`}
+            >
+              <MarkedInput
+                id={`${fieldId}-effort`}
+                value={llmEffort}
+                marked={saved(llmEffort, view?.ai.effort)}
+                onChange={(value) => {
+                  setLlmEffort(value)
+                  touch('ai')
+                }}
+              />
+            </Row>
+            <Row
+              title="Adresse de l’API"
+              description="Point d’accès du fournisseur d'inférence. Pour Anthropic et OpenAI la complétion est automatique. Pour un autre fournsseur, se référer à sa documentation."
+              htmlFor={`${fieldId}-url`}
+            >
+              <MarkedInput
+                id={`${fieldId}-url`}
+                value={llmBaseUrl}
+                marked={saved(llmBaseUrl, view?.ai.baseUrl)}
+                onChange={(value) => {
+                  setLlmBaseUrl(value)
+                  touch('ai')
+                }}
+              />
+            </Row>
+            <Row
+              title="Clé de l’API"
+              description="Obtenir une clé d'API auprès de votre fournisseur d'inférence. Ne pas divulguer cette clé. Un champ vide conserve la clé déjà enregistrée."
+              htmlFor={`${fieldId}-key`}
+            >
+              <MarkedInput
+                id={`${fieldId}-key`}
+                value={llmApiKey}
+                secret
+                marked={
+                  view?.ai.configured === true &&
+                  view.ai.type === llmType &&
+                  view.ai.baseUrl === llmBaseUrl &&
+                  llmApiKey === ''
+                }
+                onChange={(value) => {
+                  setLlmApiKey(value)
+                  touch('ai')
+                }}
+              />
+            </Row>
+          </Rows>
+          {saveBar('ai', () => void saveAi())}
+        </Section>
+
+        <Section
+          id="rcs"
+          title="RCS/SMS (via CM.com)"
+          mark={view?.rcs.configured ? 'RCS paramétré' : undefined}
+          pending={view != null}
+        >
+          <Rows>
+            <Row
+              title="Expéditeur RCS/SMS"
+              description="Nom de l'expéditeurqui s'affichera dans vos RCS/SMS adreessés aux locataires et candidats. Il s'agit du nom de votre organisme déclaré chez CM.com, pas celui de l’agent."
+              htmlFor={`${fieldId}-rcs-from`}
+            >
+              <MarkedInput
+                id={`${fieldId}-rcs-from`}
+                value={rcsFrom}
+                marked={saved(rcsFrom, view?.rcs.from)}
+                onChange={(value) => {
+                  setRcsFrom(value)
+                  touch('rcs')
+                }}
+              />
+            </Row>
+            <Row
+              title="Product token"
+              description="Identifiant disponible sous ce nom de « product token » dans l'interface d'administration de CM.com. Un champ vide conserve le token déjà enregistré."
+              htmlFor={`${fieldId}-rcs-token`}
+            >
+              <MarkedInput
+                id={`${fieldId}-rcs-token`}
+                value={rcsToken}
+                secret
+                marked={view?.rcs.configured === true && rcsToken === ''}
+                onChange={(value) => {
+                  setRcsToken(value)
+                  touch('rcs')
+                }}
+              />
+            </Row>
+            <CopyField
+              label="Webhook RCS"
+              description="Adresse que CM.com appelle quand un message RCS arrive. À coller dans leur console."
+              value={view?.webhooks.rcs ?? ''}
+            />
+            <Row
+              title="Secret à recopier dans CM.com"
+              description="Affiché une seule fois. À recopier dans CM.com pour qu’il signe ses appels."
+            >
+              <InputGroup>
+                <InputGroupInput
+                  mono
+                  readOnly
+                  value={rcsSecret}
+                  aria-label="Secret à recopier dans CM.com"
+                />
+                <InputGroupAddon align="inline-end">
+                  <InputGroupButton
+                    type="button"
+                    size="icon-xs"
+                    aria-label="Copier Secret à recopier dans CM.com"
+                    disabled={!rcsSecret}
+                    onClick={() => void copy(rcsSecret)}
+                  >
+                    <Copy />
+                  </InputGroupButton>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <InputGroupButton
+                          type="button"
+                          size="icon-xs"
+                          aria-label="Nouveau secret"
+                          disabled={pending}
+                          onClick={() => {
+                            setRcsSecret(proposeSecret())
+                            touch('rcs')
+                          }}
+                        />
+                      }
+                    >
+                      <RefreshCw />
+                    </TooltipTrigger>
+                    <TooltipContent>Nouveau secret</TooltipContent>
+                  </Tooltip>
+                </InputGroupAddon>
+              </InputGroup>
+            </Row>
+            <Row
+              title="Test d'envoi RCS/SMS"
+              description="Adresse un RCS/SMS au numéro de téléphone spécifié."
+              htmlFor={`${fieldId}-rcs-test`}
+            >
+              <div className="flex flex-col gap-2">
                 <InputGroup>
                   <InputGroupInput
-                    mono
-                    readOnly
-                    value={rcsSecret}
-                    aria-label="Secret à recopier dans CM.com"
+                    id={`${fieldId}-rcs-test`}
+                    value={rcsTestPhone}
+                    spellCheck={false}
+                    onChange={(event) => setRcsTestPhone(event.target.value)}
                   />
                   <InputGroupAddon align="inline-end">
-                    <InputGroupButton
-                      type="button"
-                      size="icon-xs"
-                      aria-label="Copier Secret à recopier dans CM.com"
-                      disabled={!rcsSecret}
-                      onClick={() => void copy(rcsSecret)}
-                    >
-                      <Copy />
-                    </InputGroupButton>
                     <Tooltip>
                       <TooltipTrigger
                         render={
                           <InputGroupButton
                             type="button"
                             size="icon-xs"
-                            aria-label="Nouveau secret"
-                            disabled={pending}
-                            onClick={() => {
-                              setRcsSecret(proposeSecret())
-                              touch('rcs')
-                            }}
+                            aria-label="Envoyer"
+                            disabled={
+                              !view?.rcs.configured ||
+                              !rcsSendContext(moduleIds) ||
+                              !rcsTestPhone.trim() ||
+                              sendingRcsTest ||
+                              pending
+                            }
+                            onClick={() => void sendRcsTest()}
                           />
                         }
                       >
-                        <RefreshCw />
+                        <Send />
                       </TooltipTrigger>
-                      <TooltipContent>Nouveau secret</TooltipContent>
+                      <TooltipContent>Envoyer</TooltipContent>
                     </Tooltip>
                   </InputGroupAddon>
                 </InputGroup>
-              </Row>
-              <Row
-                title="Test d'envoi RCS/SMS"
-                description="Adresse un RCS/SMS au numéro de téléphone spécifié."
-                htmlFor={`${fieldId}-rcs-test`}
-              >
-                <div className="flex flex-col gap-2">
-                  <InputGroup>
-                    <InputGroupInput
-                      id={`${fieldId}-rcs-test`}
-                      value={rcsTestPhone}
-                      spellCheck={false}
-                      onChange={(event) => setRcsTestPhone(event.target.value)}
-                    />
-                    <InputGroupAddon align="inline-end">
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={
-                            <InputGroupButton
-                              type="button"
-                              size="icon-xs"
-                              aria-label="Envoyer"
-                              disabled={
-                                !view?.rcs.configured ||
-                                !rcsSendContext(moduleIds) ||
-                                !rcsTestPhone.trim() ||
-                                sendingRcsTest ||
-                                pending
-                              }
-                              onClick={() => void sendRcsTest()}
-                            />
-                          }
-                        >
-                          <Send />
-                        </TooltipTrigger>
-                        <TooltipContent>Envoyer</TooltipContent>
-                      </Tooltip>
-                    </InputGroupAddon>
-                  </InputGroup>
-                  {rcsTestStatus ? (
-                    <p className="text-muted-foreground text-xs leading-4" aria-live="polite">
-                      {rcsTestStatus}
-                    </p>
-                  ) : null}
-                </div>
-              </Row>
-            </Rows>
-            {saveBar('rcs', () => void saveRcs())}
-          </Section>
+                {rcsTestStatus ? (
+                  <p className="text-muted-foreground text-xs leading-4" aria-live="polite">
+                    {rcsTestStatus}
+                  </p>
+                ) : null}
+              </div>
+            </Row>
+          </Rows>
+          {saveBar('rcs', () => void saveRcs())}
+        </Section>
 
-          <Section id="email" title="Email">
-            <Rows>
-              <Row
-                title="Domaine d’envoi"
-                description="Domaine des adresses depuis lesquelles partent les e-mails."
-                htmlFor={`${fieldId}-email-domain`}
-              >
-                <MarkedInput
-                  id={`${fieldId}-email-domain`}
-                  value={emailDomain}
-                  marked={saved(emailDomain, view?.email.domain)}
-                  onChange={(value) => {
-                    setEmailDomain(value)
-                    touch('email')
-                  }}
-                />
-              </Row>
-              <Row
-                title="Compte CM.com"
-                description="Compte e-mail ouvert chez CM.com. L’identifiant est un UUID."
-                htmlFor={`${fieldId}-email-account`}
-              >
-                <MarkedInput
-                  id={`${fieldId}-email-account`}
-                  value={emailAccount}
-                  marked={saved(emailAccount, view?.email.account)}
-                  onChange={(value) => {
-                    setEmailAccount(value)
-                    touch('email')
-                  }}
-                />
-              </Row>
-              <CopyField
-                label="Webhook email"
-                description="Adresse que CM.com appelle quand un e-mail arrive. À coller dans leur console."
-                value={view?.webhooks.email ?? ''}
+        <Section id="email" title="Email">
+          <Rows>
+            <Row
+              title="Domaine d’envoi"
+              description="Domaine des adresses depuis lesquelles partent les e-mails."
+              htmlFor={`${fieldId}-email-domain`}
+            >
+              <MarkedInput
+                id={`${fieldId}-email-domain`}
+                value={emailDomain}
+                marked={saved(emailDomain, view?.email.domain)}
+                onChange={(value) => {
+                  setEmailDomain(value)
+                  touch('email')
+                }}
               />
-              <Row
-                title="Jeton produit"
-                description="Jeton remis par CM.com pour le canal e-mail. Un champ vide conserve le jeton déjà enregistré."
-                htmlFor={`${fieldId}-email-token`}
-              >
-                <MarkedInput
-                  id={`${fieldId}-email-token`}
-                  value={emailToken}
-                  secret
-                  marked={view?.email.configured === true && emailToken === ''}
-                  onChange={(value) => {
-                    setEmailToken(value)
-                    touch('email')
-                  }}
-                />
-              </Row>
-              <Row
-                title="Secret du webhook"
-                description="Secret fourni par CM.com, pour vérifier que l’appel vient bien de chez eux. Un champ vide conserve le secret déjà enregistré."
-                htmlFor={`${fieldId}-email-secret`}
-              >
-                <MarkedInput
-                  id={`${fieldId}-email-secret`}
-                  value={emailSecret}
-                  secret
-                  marked={view?.email.configured === true && emailSecret === ''}
-                  onChange={(value) => {
-                    setEmailSecret(value)
-                    touch('email')
-                  }}
-                />
-              </Row>
-              <Row
-                title="Logo"
-                description="Image de l’organisme dans les e-mails. PNG transparent, bord à bord."
-                htmlFor={`${fieldId}-logo`}
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  {logoUrl ? (
-                    <img
-                      src={logoUrl}
-                      alt="Logo enregistré"
-                      className="border-input bg-background h-8 w-auto max-w-48 shrink-0 rounded-md border object-contain p-0.5"
-                    />
-                  ) : null}
-                  <Input
-                    id={`${fieldId}-logo`}
-                    type="file"
-                    accept=".png"
-                    className="min-w-0 flex-1"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0]
-                      event.target.value = ''
-                      if (!file) return
-                      if (!isPng(file)) {
-                        toast.add({ title: 'Le logo doit être un PNG', type: 'error' })
-                        return
-                      }
-                      void uploadLogo(file)
-                    }}
+            </Row>
+            <Row
+              title="Compte CM.com"
+              description="Compte e-mail ouvert chez CM.com. L’identifiant est un UUID."
+              htmlFor={`${fieldId}-email-account`}
+            >
+              <MarkedInput
+                id={`${fieldId}-email-account`}
+                value={emailAccount}
+                marked={saved(emailAccount, view?.email.account)}
+                onChange={(value) => {
+                  setEmailAccount(value)
+                  touch('email')
+                }}
+              />
+            </Row>
+            <CopyField
+              label="Webhook email"
+              description="Adresse que CM.com appelle quand un e-mail arrive. À coller dans leur console."
+              value={view?.webhooks.email ?? ''}
+            />
+            <Row
+              title="Jeton produit"
+              description="Jeton remis par CM.com pour le canal e-mail. Un champ vide conserve le jeton déjà enregistré."
+              htmlFor={`${fieldId}-email-token`}
+            >
+              <MarkedInput
+                id={`${fieldId}-email-token`}
+                value={emailToken}
+                secret
+                marked={view?.email.configured === true && emailToken === ''}
+                onChange={(value) => {
+                  setEmailToken(value)
+                  touch('email')
+                }}
+              />
+            </Row>
+            <Row
+              title="Secret du webhook"
+              description="Secret fourni par CM.com, pour vérifier que l’appel vient bien de chez eux. Un champ vide conserve le secret déjà enregistré."
+              htmlFor={`${fieldId}-email-secret`}
+            >
+              <MarkedInput
+                id={`${fieldId}-email-secret`}
+                value={emailSecret}
+                secret
+                marked={view?.email.configured === true && emailSecret === ''}
+                onChange={(value) => {
+                  setEmailSecret(value)
+                  touch('email')
+                }}
+              />
+            </Row>
+            <Row
+              title="Logo"
+              description="Image de l’organisme dans les e-mails. PNG transparent, bord à bord."
+              htmlFor={`${fieldId}-logo`}
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt="Logo enregistré"
+                    className="border-input bg-background h-8 w-auto max-w-48 shrink-0 rounded-md border object-contain p-0.5"
                   />
-                </div>
-              </Row>
-              <Field>
-                <FieldLabel htmlFor={`${fieldId}-email-html`}>Gabarit</FieldLabel>
-                <FieldDescription>
-                  Mise en page des e-mails. {'{{ logo_inline_cid }}'} et {'{{ message }}'} restent :
-                  le premier place le logo, le second le texte envoyé.
-                </FieldDescription>
-                <Textarea
-                  id={`${fieldId}-email-html`}
-                  value={emailHtml}
-                  spellCheck={false}
-                  mono
-                  className="max-h-96"
-                  onChange={(event) => {
-                    setEmailHtml(event.target.value)
-                    touch('email')
+                ) : null}
+                <FileDrop
+                  id={`${fieldId}-logo`}
+                  className="min-w-0 flex-1"
+                  accept=".png"
+                  placeholder="Déposer le PNG"
+                  onFiles={(files) => {
+                    const file = files[0]
+                    if (!file) return
+                    if (!isPng(file)) {
+                      toast.add({ title: 'Le logo doit être un PNG', type: 'error' })
+                      return
+                    }
+                    void uploadLogo(file)
                   }}
                 />
-              </Field>
-              <Row
-                title="E-mail de test"
-                description="Envoie le gabarit et le logo déjà enregistrés, pour vérifier la mise en page."
+              </div>
+            </Row>
+            <Field>
+              <FieldLabel htmlFor={`${fieldId}-email-html`}>Gabarit</FieldLabel>
+              <FieldDescription>
+                Mise en page des e-mails. {'{{ logo_inline_cid }}'} et {'{{ message }}'} restent :
+                le premier place le logo, le second le texte envoyé.
+              </FieldDescription>
+              <Textarea
+                id={`${fieldId}-email-html`}
+                value={emailHtml}
+                spellCheck={false}
+                mono
+                className="max-h-96"
+                onChange={(event) => {
+                  setEmailHtml(event.target.value)
+                  touch('email')
+                }}
+              />
+            </Field>
+            <Row
+              title="E-mail de test"
+              description="Envoie le gabarit et le logo déjà enregistrés, pour vérifier la mise en page."
+            >
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!emailTestReady || sendingTest || pending}
+                onClick={() => void sendTestEmail()}
               >
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={!emailTestReady || sendingTest || pending}
-                  onClick={() => void sendTestEmail()}
-                >
-                  Envoyer
-                </Button>
-              </Row>
-            </Rows>
-            {saveBar('email', () => void saveEmail())}
-          </Section>
+                Envoyer
+              </Button>
+            </Row>
+          </Rows>
+          {saveBar('email', () => void saveEmail())}
+        </Section>
 
-          <Section
-            id="courrier"
-            title="Courrier (via La Poste)"
-            mark={view?.maileva.configured ? 'Identifiants Maileva enregistrés' : undefined}
-          >
-            <Rows>
-              <Row
-                title="Environnement détecté"
-                description="Déduit du Username. Un Username qui commence par sandbox. sélectionne la sandbox."
-              >
-                <Input
-                  mono
-                  readOnly
-                  value={
-                    mailevaUsername.trim().toLowerCase().startsWith('sandbox.')
-                      ? 'Sandbox'
-                      : mailevaUsername.trim()
-                        ? 'Production'
-                        : ''
-                  }
-                  aria-label="Environnement détecté"
-                />
-              </Row>
-              <Row
-                title="Client ID"
-                description="Identifiant de l’application fourni par Maileva."
-                htmlFor={`${fieldId}-maileva-client`}
-              >
-                <MarkedInput
-                  id={`${fieldId}-maileva-client`}
-                  value={mailevaClientId}
-                  marked={saved(mailevaClientId, view?.maileva.clientId)}
-                  onChange={(value) => {
-                    setMailevaClientId(value)
-                    touch('maileva')
-                  }}
-                />
-              </Row>
-              <Row
-                title="Client Secret"
-                description="Secret de l’application. Un champ vide conserve le secret du même compte."
-                htmlFor={`${fieldId}-maileva-secret`}
-              >
-                <MarkedInput
-                  id={`${fieldId}-maileva-secret`}
-                  value={mailevaClientSecret}
-                  secret
-                  marked={view?.maileva.configured === true && mailevaClientSecret === ''}
-                  onChange={(value) => {
-                    setMailevaClientSecret(value)
-                    touch('maileva')
-                  }}
-                />
-              </Row>
-              <Row
-                title="Username"
-                description="S’il commence par sandbox., Pierre sélectionne la sandbox. Sinon, la production."
-                htmlFor={`${fieldId}-maileva-user`}
-              >
-                <MarkedInput
-                  id={`${fieldId}-maileva-user`}
-                  value={mailevaUsername}
-                  marked={saved(mailevaUsername, view?.maileva.username)}
-                  onChange={(value) => {
-                    setMailevaUsername(value)
-                    touch('maileva')
-                  }}
-                />
-              </Row>
-              <Row
-                title="Password"
-                description="Mot de passe du Username, distinct du Client Secret. Un champ vide conserve celui du même compte."
-                htmlFor={`${fieldId}-maileva-password`}
-              >
-                <MarkedInput
-                  id={`${fieldId}-maileva-password`}
-                  value={mailevaPassword}
-                  secret
-                  marked={view?.maileva.configured === true && mailevaPassword === ''}
-                  onChange={(value) => {
-                    setMailevaPassword(value)
-                    touch('maileva')
-                  }}
-                />
-              </Row>
-              <Row
-                title="Nom / Société"
-                description="38 caractères maximum."
-                htmlFor={`${fieldId}-maileva-name`}
-              >
-                <MarkedInput
-                  id={`${fieldId}-maileva-name`}
-                  value={mailevaName}
-                  maxLength={38}
-                  marked={saved(mailevaName, senderAddress(view?.maileva.address ?? '').name)}
-                  onChange={(value) => {
-                    setMailevaName(value)
-                    touch('maileva')
-                  }}
-                />
-              </Row>
-              <Row
-                title="Adresse"
-                description="Facultative. 38 caractères maximum."
-                htmlFor={`${fieldId}-maileva-street`}
-              >
-                <MarkedInput
-                  id={`${fieldId}-maileva-street`}
-                  value={mailevaStreet}
-                  maxLength={38}
-                  marked={saved(mailevaStreet, senderAddress(view?.maileva.address ?? '').street)}
-                  onChange={(value) => {
-                    setMailevaStreet(value)
-                    touch('maileva')
-                  }}
-                />
-              </Row>
-              <Row title="Code postal" htmlFor={`${fieldId}-maileva-postal`}>
-                <MarkedInput
-                  id={`${fieldId}-maileva-postal`}
-                  value={mailevaPostal}
-                  maxLength={5}
-                  marked={saved(mailevaPostal, senderAddress(view?.maileva.address ?? '').postal)}
-                  onChange={(value) => {
-                    setMailevaPostal(value)
-                    touch('maileva')
-                  }}
-                />
-              </Row>
-              <Row title="Ville" htmlFor={`${fieldId}-maileva-city`}>
-                <MarkedInput
-                  id={`${fieldId}-maileva-city`}
-                  value={mailevaCity}
-                  maxLength={32}
-                  marked={saved(mailevaCity, senderAddress(view?.maileva.address ?? '').city)}
-                  onChange={(value) => {
-                    setMailevaCity(value)
-                    touch('maileva')
-                  }}
-                />
-              </Row>
-              <Row
-                title="Sender ID"
-                description="UUID renvoyé à la création de l’expéditeur. Inutile pour le courrier et le LRAR. Requis pour l’ERE et la LREQ."
-                htmlFor={`${fieldId}-maileva-sender`}
-              >
-                <MarkedInput
-                  id={`${fieldId}-maileva-sender`}
-                  value={mailevaSenderId}
-                  marked={saved(mailevaSenderId, view?.maileva.senderId)}
-                  onChange={(value) => {
-                    setMailevaSenderId(value)
-                    touch('maileva')
-                  }}
-                />
-              </Row>
-              <Row
-                title="Clé OTP"
-                description="Clé Base32 permanente reçue de Maileva, pas le code à 6 chiffres. Utile seulement pour la LREQ. Un champ vide conserve la clé du même compte."
-                htmlFor={`${fieldId}-maileva-totp`}
-              >
-                <MarkedInput
-                  id={`${fieldId}-maileva-totp`}
-                  value={mailevaTotp}
-                  secret
-                  marked={view?.maileva.electronicReady === true && mailevaTotp === ''}
-                  onChange={(value) => {
-                    setMailevaTotp(value)
-                    touch('maileva')
-                  }}
-                />
-              </Row>
-            </Rows>
-            {saveBar('maileva', () => void saveMaileva())}
-          </Section>
+        <Section
+          id="courrier"
+          title="Courrier (via La Poste)"
+          mark={view?.maileva.configured ? 'Identifiants Maileva enregistrés' : undefined}
+          pending={view != null}
+        >
+          <Rows>
+            <Row
+              title="Environnement détecté"
+              description="Déduit du Username. Un Username qui commence par sandbox. sélectionne la sandbox."
+            >
+              <Input
+                mono
+                readOnly
+                value={
+                  mailevaUsername.trim().toLowerCase().startsWith('sandbox.')
+                    ? 'Sandbox'
+                    : mailevaUsername.trim()
+                      ? 'Production'
+                      : ''
+                }
+                aria-label="Environnement détecté"
+              />
+            </Row>
+            <Row
+              title="Client ID"
+              description="Identifiant de l’application fourni par Maileva."
+              htmlFor={`${fieldId}-maileva-client`}
+            >
+              <MarkedInput
+                id={`${fieldId}-maileva-client`}
+                value={mailevaClientId}
+                marked={saved(mailevaClientId, view?.maileva.clientId)}
+                onChange={(value) => {
+                  setMailevaClientId(value)
+                  touch('maileva')
+                }}
+              />
+            </Row>
+            <Row
+              title="Client Secret"
+              description="Secret de l’application. Un champ vide conserve le secret du même compte."
+              htmlFor={`${fieldId}-maileva-secret`}
+            >
+              <MarkedInput
+                id={`${fieldId}-maileva-secret`}
+                value={mailevaClientSecret}
+                secret
+                marked={view?.maileva.configured === true && mailevaClientSecret === ''}
+                onChange={(value) => {
+                  setMailevaClientSecret(value)
+                  touch('maileva')
+                }}
+              />
+            </Row>
+            <Row
+              title="Username"
+              description="S’il commence par sandbox., Pierre sélectionne la sandbox. Sinon, la production."
+              htmlFor={`${fieldId}-maileva-user`}
+            >
+              <MarkedInput
+                id={`${fieldId}-maileva-user`}
+                value={mailevaUsername}
+                marked={saved(mailevaUsername, view?.maileva.username)}
+                onChange={(value) => {
+                  setMailevaUsername(value)
+                  touch('maileva')
+                }}
+              />
+            </Row>
+            <Row
+              title="Password"
+              description="Mot de passe du Username, distinct du Client Secret. Un champ vide conserve celui du même compte."
+              htmlFor={`${fieldId}-maileva-password`}
+            >
+              <MarkedInput
+                id={`${fieldId}-maileva-password`}
+                value={mailevaPassword}
+                secret
+                marked={view?.maileva.configured === true && mailevaPassword === ''}
+                onChange={(value) => {
+                  setMailevaPassword(value)
+                  touch('maileva')
+                }}
+              />
+            </Row>
+            <Row
+              title="Nom / Société"
+              description="38 caractères maximum."
+              htmlFor={`${fieldId}-maileva-name`}
+            >
+              <MarkedInput
+                id={`${fieldId}-maileva-name`}
+                value={mailevaName}
+                maxLength={38}
+                marked={saved(mailevaName, senderAddress(view?.maileva.address ?? '').name)}
+                onChange={(value) => {
+                  setMailevaName(value)
+                  touch('maileva')
+                }}
+              />
+            </Row>
+            <Row
+              title="Adresse"
+              description="Facultative. 38 caractères maximum."
+              htmlFor={`${fieldId}-maileva-street`}
+            >
+              <MarkedInput
+                id={`${fieldId}-maileva-street`}
+                value={mailevaStreet}
+                maxLength={38}
+                marked={saved(mailevaStreet, senderAddress(view?.maileva.address ?? '').street)}
+                onChange={(value) => {
+                  setMailevaStreet(value)
+                  touch('maileva')
+                }}
+              />
+            </Row>
+            <Row title="Code postal" htmlFor={`${fieldId}-maileva-postal`}>
+              <MarkedInput
+                id={`${fieldId}-maileva-postal`}
+                value={mailevaPostal}
+                maxLength={5}
+                marked={saved(mailevaPostal, senderAddress(view?.maileva.address ?? '').postal)}
+                onChange={(value) => {
+                  setMailevaPostal(value)
+                  touch('maileva')
+                }}
+              />
+            </Row>
+            <Row title="Ville" htmlFor={`${fieldId}-maileva-city`}>
+              <MarkedInput
+                id={`${fieldId}-maileva-city`}
+                value={mailevaCity}
+                maxLength={32}
+                marked={saved(mailevaCity, senderAddress(view?.maileva.address ?? '').city)}
+                onChange={(value) => {
+                  setMailevaCity(value)
+                  touch('maileva')
+                }}
+              />
+            </Row>
+            <Row
+              title="Sender ID"
+              description="UUID renvoyé à la création de l’expéditeur. Inutile pour le courrier et le LRAR. Requis pour l’ERE et la LREQ."
+              htmlFor={`${fieldId}-maileva-sender`}
+            >
+              <MarkedInput
+                id={`${fieldId}-maileva-sender`}
+                value={mailevaSenderId}
+                marked={saved(mailevaSenderId, view?.maileva.senderId)}
+                onChange={(value) => {
+                  setMailevaSenderId(value)
+                  touch('maileva')
+                }}
+              />
+            </Row>
+            <Row
+              title="Clé OTP"
+              description="Clé Base32 permanente reçue de Maileva, pas le code à 6 chiffres. Utile seulement pour la LREQ. Un champ vide conserve la clé du même compte."
+              htmlFor={`${fieldId}-maileva-totp`}
+            >
+              <MarkedInput
+                id={`${fieldId}-maileva-totp`}
+                value={mailevaTotp}
+                secret
+                marked={view?.maileva.electronicReady === true && mailevaTotp === ''}
+                onChange={(value) => {
+                  setMailevaTotp(value)
+                  touch('maileva')
+                }}
+              />
+            </Row>
+          </Rows>
+          {saveBar('maileva', () => void saveMaileva())}
+        </Section>
 
-          <Section id="signature" title="Signature électronique (via La Poste)">
-            <FieldDescription>Intégration en cours</FieldDescription>
-          </Section>
-        </div>
-      </main>
-    </div>
+        <Section id="signature" title="Signature électronique (via La Poste)">
+          <FieldDescription>Intégration en cours</FieldDescription>
+        </Section>
+      </div>
+    </main>
   )
 }

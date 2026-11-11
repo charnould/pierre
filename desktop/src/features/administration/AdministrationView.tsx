@@ -1,4 +1,4 @@
-import { ArrowLeft, Circle, CircleCheck } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { type ReactNode, useEffect, useState } from 'react'
 
 import { Button } from '@/shared/components/ui/button'
@@ -19,7 +19,7 @@ import { ConversationsPanel } from './components/ConversationsPanel'
 import { KnowledgePanel } from './components/KnowledgePanel'
 import { LlmStatisticsPanel } from './components/LlmStatisticsPanel'
 import { ProvidersPanel } from './components/ProvidersPanel'
-import { ENTRIES, type EntryId, SetupPanel } from './components/SetupPanel'
+import { ENTRIES, type EntryId, SetupPanel, StoredMark } from './components/SetupPanel'
 import { UsersPanel } from './components/UsersPanel'
 
 const SECTIONS = [
@@ -38,7 +38,7 @@ const SECTIONS = [
   {
     id: 'conversations',
     label: 'Conversations',
-    hint: "Consulter les conversations entre les utilisateurs, clients, locataires et les agents pour identifier les éventuels manques de l'encylcopédie ou manques dans les consignes de l'agent.",
+    hint: "Consulter les conversations entre les utilisateurs, clients, locataires et les agents pour identifier les éventuels manques de l'encylcopédie ou manques dans les prompts système de l'agent.",
     action: 'Consulter les conversations'
   },
   {
@@ -72,11 +72,12 @@ function sectionsFor(ids: readonly SectionId[]) {
 
 const SETUP_HINT: Record<EntryId, string> = {
   'chatbots/default':
-    "Paramétrer l'agent conversationnel public et ceux spécialisés et à l'usage unique des collaborateurs de l'organisme.",
+    'Configurer l’agent conversationnel destiné au public, ainsi que les agents spécialisés réservés aux collaborateurs de votre organisme.',
   tickets: 'Paramétrer le module « Réclamations ».',
-  repayment: 'Phases du recouvrement, consigne de l’agent, documents Word et messages.',
-  'about/AGENTS.md': 'Consigne du briefing d’un locataire, d’un client, d’un lot ou d’un bâtiment.',
-  'automations/AGENTS.md': 'Consigne suivie quand une automatisation rédige un rapport.'
+  repayment: 'Phases du recouvrement, prompt système de l’agent, documents Word et messages.',
+  'about/AGENTS.md':
+    'Prompt système du briefing d’un locataire, d’un client, d’un lot ou d’un bâtiment.',
+  'automations/AGENTS.md': 'Prompt système suivi quand une automatisation rédige un rapport.'
 }
 
 const SETUP_FROM_REQUEST: Record<SetupEntry, EntryId> = {
@@ -94,21 +95,6 @@ interface Props {
   onHome: () => void
   onCurrentUserPasswordChange: () => Promise<void>
   onUserChange: (user: UserPrincipal) => void
-}
-
-function ModuleState({ ready }: { ready: boolean }) {
-  return (
-    <span className="flex items-center gap-1">
-      {ready ? (
-        <CircleCheck aria-hidden className="size-4 shrink-0" strokeWidth={1.5} />
-      ) : (
-        <Circle aria-hidden className="size-4 shrink-0" strokeWidth={1.5} />
-      )}
-      <span className="text-muted-foreground text-xs leading-4">
-        {ready ? 'Paramétré' : 'À paramétrer'}
-      </span>
-    </span>
-  )
 }
 
 function AdminGroup({ id, title, children }: { id: string; title: string; children: ReactNode }) {
@@ -148,8 +134,10 @@ function AdminEntry({
         <FieldLabel>{label}</FieldLabel>
         <FieldDescription>{hint}</FieldDescription>
       </FieldContent>
-      <div className="flex items-center justify-end gap-4">
-        {ready === undefined ? null : <ModuleState ready={ready} />}
+      <div className="flex items-center justify-end gap-2">
+        {ready === undefined ? null : (
+          <StoredMark stored={ready} name={ready ? 'Paramétré' : 'À paramétrer'} />
+        )}
         <Button type="button" variant="outline" aria-label={`${action} ${label}`} onClick={onClick}>
           {action}
         </Button>
@@ -235,8 +223,8 @@ export function AdministrationView({
       )}
     >
       {current === null ? (
-        <div className="px-4 py-8">
-          <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
+        <div className="shrink-0 px-4 py-8">
+          <div className="max-w-document mx-auto flex w-full flex-col gap-4">
             <div className="flex items-center gap-3">
               <Button
                 type="button"

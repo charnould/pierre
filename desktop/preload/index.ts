@@ -1,6 +1,7 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import type { DocumentChronologyRow } from '@pierre/shared/repayment-document-fields'
+import type { RepaymentMessage } from '@pierre/shared/repayment-messages'
+import { contextBridge, ipcRenderer, webUtils } from 'electron'
 
-import type { RepaymentMessage } from '../../shared/repayment-messages'
 import {
   aiChunkEventChannel,
   AuthWindowLayoutSwapEvent,
@@ -10,6 +11,7 @@ import {
   MascotOpenNotificationsEvent,
   MascotUnreadCountEvent
 } from '../electron/ipc/channels'
+import { readMascotUnreadCount } from '../src/mascot/unread-count'
 import type { LoginResult } from '../src/shared/lib/login-errors'
 import type {
   TicketsTableSettings,
@@ -29,7 +31,7 @@ import type {
   RecordExternalCommunicationPayload,
   SendCommunicationPayload,
   SendCommunicationResponse
-} from '../src/shared/types/activites'
+} from '../src/shared/types/activities'
 import type {
   AdminError,
   ConversationDetailResponse,
@@ -117,13 +119,27 @@ import type {
   UploadMyAvatarResponse,
   UsersListResponse
 } from '../src/shared/types/users'
+import type { DesktopApi } from '../src/shared/types/window-api'
 
 const aiChunkSubscriptions = new Map<
   string,
   { channel: string; listener: (_event: unknown, chunk: string) => void }
 >()
 
-contextBridge.exposeInMainWorld('api', {
+function nativeFiles(files: readonly File[] | undefined) {
+  return (files ?? []).map((file) => {
+    let path = ''
+    try {
+      path = webUtils.getPathForFile(file)
+    } catch {
+      path = ''
+    }
+    if (!path) throw new Error("Impossible de lire l'une des pièces jointes.")
+    return { name: file.name, type: file.type, path }
+  })
+}
+
+const desktopApi = {
   getSettings: () => ipcRenderer.invoke(IpcChannel.settings.get) as Promise<Settings>,
   saveSettings: (data: Settings) =>
     ipcRenderer.invoke(IpcChannel.settings.save, data) as Promise<boolean>,
@@ -208,8 +224,12 @@ contextBridge.exposeInMainWorld('api', {
     message: string
     conv_id: string
     data?: string
-    files?: Array<{ name: string; type: string; buffer: ArrayBuffer }>
-  }) => ipcRenderer.invoke(IpcChannel.stream.start, params) as Promise<boolean>,
+    files?: File[]
+  }) =>
+    ipcRenderer.invoke(IpcChannel.stream.start, {
+      ...params,
+      files: nativeFiles(params.files)
+    }) as Promise<boolean>,
   logout: () => ipcRenderer.invoke(IpcChannel.auth.logout) as Promise<boolean>,
   cancelStream: (requestId: string) =>
     ipcRenderer.invoke(IpcChannel.stream.cancel, requestId) as Promise<void>,
@@ -236,8 +256,12 @@ contextBridge.exposeInMainWorld('api', {
     conv_id: string
     payload: string
     id_skill: string
-    files: Array<{ name: string; type: string; buffer: ArrayBuffer }>
-  }) => ipcRenderer.invoke(IpcChannel.stream.generateAnswer, params) as Promise<boolean>,
+    files: File[]
+  }) =>
+    ipcRenderer.invoke(IpcChannel.stream.generateAnswer, {
+      ...params,
+      files: nativeFiles(params.files)
+    }) as Promise<boolean>,
   postAiUiResponse: (params: {
     url: string
     conv_id: string
@@ -269,11 +293,10 @@ contextBridge.exposeInMainWorld('api', {
     document: 'diagnostic' | 'plan' | 'protocole'
     format: 'docx' | 'pdf'
     dossier: unknown
+    chronologie?: DocumentChronologyRow[]
   }) =>
     ipcRenderer.invoke(IpcChannel.ledger.exportRepaymentDocument, params) as Promise<
-      | { bytes: ArrayBuffer; filename: string; mimeType: string }
-      | { error?: { message?: string } }
-      | null
+      { saved: true } | { canceled: true } | { error?: { message?: string } } | null
     >,
   getTicketFacets: (params: { url: string; column: string; q?: string }) =>
     ipcRenderer.invoke(IpcChannel.tickets.facets, params) as Promise<TicketsFacetsResponse | null>,
@@ -575,8 +598,11 @@ contextBridge.exposeInMainWorld('api', {
   showMascotMenu: () => ipcRenderer.invoke(IpcChannel.mascot.showMenu) as Promise<boolean>,
   syncMascotVisibility: (loggedIn: boolean) =>
     ipcRenderer.invoke(IpcChannel.mascot.syncVisibility, loggedIn) as Promise<boolean>,
-  onMascotUnreadCount: (cb: (count: number) => void) => {
-    const listener = (_: unknown, count: number) => cb(count)
+  onMascotUnreadCount: (cb: (payload: { count: number; orbit: boolean }) => void) => {
+    const listener = (_: unknown, payload: unknown) => {
+      const next = readMascotUnreadCount(payload)
+      if (next) cb(next)
+    }
     ipcRenderer.on(MascotUnreadCountEvent, listener)
     return () => {
       ipcRenderer.removeListener(MascotUnreadCountEvent, listener)
@@ -597,4 +623,6 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.removeListener(MascotOpenNotificationsEvent, listener)
     }
   }
-})
+} satisfies DesktopApi
+
+contextBridge.exposeInMainWorld('api', desktopApi)

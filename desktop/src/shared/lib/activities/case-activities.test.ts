@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 
 import {
   buildCaseAssignmentActivity,
@@ -41,8 +41,18 @@ describe('case activity capabilities', () => {
       previousEmail: null,
       comment: '@bob prise en charge'
     })
-    expect(assignment?.type).toBe('case.assignee_changed')
-    expect(assignment?.recipients).toEqual(['alice', 'bob'])
+    expect(assignment).toEqual({
+      contexte: 'tickets',
+      ref: 'REC-1',
+      type: 'case.assignee_changed',
+      recipients: ['alice', 'bob'],
+      contenu: JSON.stringify({
+        version: 1,
+        before: null,
+        after: { id: 'alice@example.fr', label: 'alice' },
+        note: '@bob prise en charge'
+      })
+    })
 
     const tags = buildCaseTagChangeActivity({
       contexte: 'tickets',
@@ -51,7 +61,16 @@ describe('case activity capabilities', () => {
       previousTags: [],
       comment: ''
     })
-    expect(tags?.type).toBe('case.tags_changed')
+    expect(tags).toEqual({
+      contexte: 'tickets',
+      ref: 'REC-1',
+      type: 'case.tags_changed',
+      contenu: JSON.stringify({
+        version: 1,
+        before: [],
+        after: ['Urgent', 'Technique']
+      })
+    })
   })
 
   test('derives the latest persisted snapshots with source-data fallback', () => {
@@ -59,7 +78,7 @@ describe('case activity capabilities', () => {
       deriveCaseAssignment(
         [
           activity('case.assignee_changed', {
-            version: 2,
+            version: 1,
             before: null,
             after: { id: 'alice@example.fr', label: 'alice' }
           })
@@ -70,7 +89,7 @@ describe('case activity capabilities', () => {
     expect(
       deriveCaseTags([
         activity('case.tags_changed', {
-          version: 2,
+          version: 1,
           before: [],
           after: ['Urgent']
         })
@@ -81,7 +100,7 @@ describe('case activity capabilities', () => {
       deriveCaseBucket(
         [
           activity('case.bucket_changed', {
-            version: 2,
+            version: 1,
             before: 'non_traitees',
             after: 'en_cours'
           })
@@ -129,7 +148,7 @@ describe('case activity capabilities', () => {
     expect(result?.type).toBe('communication.imported')
     expect(result?.channel).toBe('email')
     expect(JSON.parse(result!.contenu!)).toMatchObject({
-      version: 2,
+      version: 1,
       subject: 'Fuite',
       body: 'Le message complet',
       sender: 'tenant@example.fr'

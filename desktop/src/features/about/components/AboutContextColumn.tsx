@@ -9,7 +9,6 @@ import {
   aboutYearRangeFromSliderValues,
   aboutYearRangeToSliderValues
 } from '@/features/about/lib/about-form'
-import type { AboutSubject } from '@/features/tickets/lib/knowledge-skills'
 import {
   Field,
   FieldDescription,
@@ -20,6 +19,7 @@ import {
 import { Input } from '@/shared/components/ui/input'
 import { Slider } from '@/shared/components/ui/slider'
 import { Textarea } from '@/shared/components/ui/textarea'
+import type { AboutSubject } from '@/shared/lib/navigation-model'
 import { formatNumericRangeLabel } from '@/shared/lib/range-slider'
 
 interface Props {

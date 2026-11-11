@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 
 import { useWorkflowGeneration } from '@/features/workflow/hooks/useWorkflowGeneration'
 import type { TicketRow } from '@/shared/types'
-import type { CreateActivityBody } from '@/shared/types/activites'
+import type { CreateActivityBody } from '@/shared/types/activities'
 
 import {
   runTicketBulk,

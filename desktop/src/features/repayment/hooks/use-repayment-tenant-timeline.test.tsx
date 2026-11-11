@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 import type { LedgerMovementRow } from '@/shared/types/ledger'
 
 import { invalidateRepaymentTimelineCache } from '../lib/repayment-timeline-cache'
@@ -137,7 +137,7 @@ describe('useRepaymentTenantTimeline', () => {
           type: 'note.published',
           channel: null,
           mentions: [],
-          contenu: JSON.stringify({ version: 2, text: 'Relance' }),
+          contenu: JSON.stringify({ version: 1, text: 'Relance' }),
           my: null,
           read: true,
           reaction: null
@@ -207,7 +207,7 @@ describe('useRepaymentTenantTimeline', () => {
       type: 'note.published' as const,
       channel: null,
       mentions: [],
-      contenu: JSON.stringify({ version: 2, text: 'Relance' }),
+      contenu: JSON.stringify({ version: 1, text: 'Relance' }),
       threadId: 'note-thread',
       revision: 1,
       my: null,
@@ -253,7 +253,7 @@ describe('useRepaymentTenantTimeline', () => {
         type: 'activity.reaction_changed',
         channel: null,
         mentions: [],
-        contenu: JSON.stringify({ version: 2, source_activity_id: note.id, emoji: '👏' })
+        contenu: JSON.stringify({ version: 1, source_activity_id: note.id, emoji: '👏' })
       }
       renders.at(-1)!.applyActivityPatch(reaction)
     })
@@ -272,7 +272,7 @@ describe('useRepaymentTenantTimeline', () => {
         type: 'note.updated',
         channel: null,
         mentions: [],
-        contenu: JSON.stringify({ version: 2, text: 'Relance corrigée' }),
+        contenu: JSON.stringify({ version: 1, text: 'Relance corrigée' }),
         threadId: note.threadId,
         revision: 2
       }
@@ -280,7 +280,7 @@ describe('useRepaymentTenantTimeline', () => {
     })
     expect(renders.at(-1)!.notifications[0]).toMatchObject({
       id: 3,
-      contenu: JSON.stringify({ version: 2, text: 'Relance corrigée' }),
+      contenu: JSON.stringify({ version: 1, text: 'Relance corrigée' }),
       reaction: '👏'
     })
 

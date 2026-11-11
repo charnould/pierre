@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 
-import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
-import type { Activity } from '@/shared/types/activites'
+import { loadCustomizationFixture } from '@test/instance-customization-fixture'
+
+import type { Activity } from '@/shared/types/activities'
 
 import { sortRepaymentActivitiesDesc } from './repayment-activity-order'
 import {
@@ -38,7 +39,7 @@ describe('deriveRepaymentAdvancement', () => {
           id: 1,
           createdAt: '2026-06-12 12:00',
           type: 'note.published',
-          contenu: JSON.stringify({ version: 2, text: 'action: relance, phase: amiable' })
+          contenu: JSON.stringify({ version: 1, text: 'action: relance, phase: amiable' })
         })
       ])
     ).toEqual({ bucket: null, action: null })
@@ -52,7 +53,7 @@ describe('deriveRepaymentAdvancement', () => {
           createdAt: '2026-06-10 10:00',
           type: 'case.group_changed',
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             before: 'Non traités',
             after: 'Recouvrement amiable'
           })
@@ -64,7 +65,7 @@ describe('deriveRepaymentAdvancement', () => {
           threadId: 'todo-1',
           revision: 2,
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             task: { title: 'Joindre le locataire', state: 'completed' }
           })
         }),
@@ -73,7 +74,7 @@ describe('deriveRepaymentAdvancement', () => {
           createdAt: '2026-06-09 09:00',
           type: 'case.group_changed',
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             before: 'Recouvrement amiable',
             after: 'Contentieux'
           })
@@ -89,7 +90,7 @@ describe('deriveRepaymentAdvancement', () => {
         createdAt: '2026-06-10 10:00',
         type: 'case.group_changed',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           before: 'Non traités',
           after: 'Recouvrement amiable'
         })
@@ -101,7 +102,7 @@ describe('deriveRepaymentAdvancement', () => {
         threadId: 'todo-1',
         revision: 2,
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           task: { title: 'Joindre le locataire', state: 'completed' }
         })
       }),
@@ -110,7 +111,7 @@ describe('deriveRepaymentAdvancement', () => {
         createdAt: '2026-06-09 09:00',
         type: 'case.group_changed',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           before: 'Recouvrement amiable',
           after: 'Contentieux'
         })
@@ -129,13 +130,13 @@ describe('deriveRepaymentAdvancement', () => {
           id: 1,
           createdAt: '2026-06-10 10:00',
           type: 'case.group_changed',
-          contenu: JSON.stringify({ version: 2, before: null, after: 'inconnu' })
+          contenu: JSON.stringify({ version: 1, before: null, after: 'inconnu' })
         }),
         activity({
           id: 2,
           createdAt: '2026-06-11 11:00',
           type: 'task.completed',
-          contenu: JSON.stringify({ version: 2, task: { title: '', state: 'completed' } })
+          contenu: JSON.stringify({ version: 1, task: { title: '', state: 'completed' } })
         })
       ])
     ).toEqual({ bucket: null, action: null })
@@ -155,7 +156,7 @@ describe('deriveRepaymentGestionnaire', () => {
           createdAt: '2026-06-10 10:00',
           type: 'case.assignee_changed',
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             before: null,
             after: { id: 'old@example.org', label: 'old' }
           })
@@ -165,7 +166,7 @@ describe('deriveRepaymentGestionnaire', () => {
           createdAt: '2026-06-11 11:00',
           type: 'case.assignee_changed',
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             before: { id: 'old@example.org', label: 'old' },
             after: { id: 'cdubois@example.org', label: 'cdubois' }
           })
@@ -181,7 +182,7 @@ describe('deriveRepaymentGestionnaire', () => {
         createdAt: '2026-06-10 10:00',
         type: 'case.assignee_changed',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           before: null,
           after: { id: 'old@example.org', label: 'old' }
         })
@@ -191,7 +192,7 @@ describe('deriveRepaymentGestionnaire', () => {
         createdAt: '2026-06-11 11:00',
         type: 'case.assignee_changed',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           before: { id: 'old@example.org', label: 'old' },
           after: { id: 'cdubois@example.org', label: 'cdubois' }
         })
@@ -210,19 +211,19 @@ describe('sortRepaymentActivitiesDesc', () => {
       id: 2,
       createdAt: '2026-06-10 10:00',
       type: 'note.published',
-      contenu: JSON.stringify({ version: 2, text: '' })
+      contenu: JSON.stringify({ version: 1, text: '' })
     })
     const newerLowId = activity({
       id: 1,
       createdAt: '2026-06-11 11:00',
       type: 'note.published',
-      contenu: JSON.stringify({ version: 2, text: '' })
+      contenu: JSON.stringify({ version: 1, text: '' })
     })
     const newerHighId = activity({
       id: 3,
       createdAt: '2026-06-11 11:00',
       type: 'note.published',
-      contenu: JSON.stringify({ version: 2, text: '' })
+      contenu: JSON.stringify({ version: 1, text: '' })
     })
 
     expect(
@@ -235,13 +236,13 @@ describe('sortRepaymentActivitiesDesc', () => {
       id: 1,
       createdAt: '2026-06-10 10:00',
       type: 'note.published',
-      contenu: JSON.stringify({ version: 2, text: '' })
+      contenu: JSON.stringify({ version: 1, text: '' })
     })
     const second = activity({
       id: 2,
       createdAt: '2026-06-11 11:00',
       type: 'note.published',
-      contenu: JSON.stringify({ version: 2, text: '' })
+      contenu: JSON.stringify({ version: 1, text: '' })
     })
     const input = [first, second]
 

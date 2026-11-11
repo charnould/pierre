@@ -1,3 +1,8 @@
+import {
+  isReservedDisplayName,
+  normalizeDisplayName,
+  normalizePreferredName
+} from '@pierre/shared/user-preferences'
 import { type PointerEvent, useEffect, useId, useRef, useState } from 'react'
 
 import { loginFromEmail } from '@/features/activity/lib/notification-types'
@@ -32,15 +37,10 @@ import {
   cropImageToWebpBlob
 } from '@/shared/lib/avatar/crop-square'
 import { bytesToDataUri } from '@/shared/lib/avatar/data-uri'
+import { isComposingEnter } from '@/shared/lib/ime-enter'
 import { applyLocalAvatar, fetchOrgUsers } from '@/shared/lib/org-users-cache'
 import { cn } from '@/shared/lib/utils'
 import type { PickedAvatarImage } from '@/shared/types/users'
-
-import {
-  isReservedDisplayName,
-  normalizeDisplayName,
-  normalizePreferredName
-} from '../../../../../shared/user-preferences'
 
 const PREVIEW = 144
 const SAVE_ERROR = 'Impossible d’enregistrer l’identité.'
@@ -355,10 +355,9 @@ export function IdentityField({
                 }}
                 onBlur={() => void commitDisplayName()}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    void commitDisplayName()
-                  }
+                  if (e.key !== 'Enter' || isComposingEnter(e)) return
+                  e.preventDefault()
+                  void commitDisplayName()
                 }}
               />
               {displayNameError ? (
@@ -386,10 +385,9 @@ export function IdentityField({
               onChange={(event) => setPreferredNameDraft(event.target.value)}
               onBlur={() => void commitPreferredName()}
               onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault()
-                  void commitPreferredName()
-                }
+                if (event.key !== 'Enter' || isComposingEnter(event)) return
+                event.preventDefault()
+                void commitPreferredName()
               }}
             />
           </Field>

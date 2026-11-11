@@ -5,7 +5,7 @@ import { relative, resolve } from 'node:path'
 import { JSDOM } from 'jsdom'
 
 import { clearUpdatesCache } from '@/features/updates/lib/github-updates'
-import type { ActivityListItem, GetActivitiesParams } from '@/shared/types/activites'
+import type { ActivityListItem, GetActivitiesParams } from '@/shared/types/activities'
 import type { Settings } from '@/shared/types/settings'
 
 import { useActivityFeed } from './useActivityFeed'
@@ -67,7 +67,7 @@ function activityRow(id: number, read: boolean): ActivityListItem {
     type: 'note.published',
     channel: null,
     mentions: [{ destinataire: 'user:alice@pierre.test' }],
-    contenu: JSON.stringify({ version: 2, text: 'coucou' }),
+    contenu: JSON.stringify({ version: 1, text: 'coucou' }),
     my: { destinataire: 'user:alice@pierre.test' },
     read,
     reaction: null
@@ -455,14 +455,10 @@ describe('inbox paging and the Lues toggle', () => {
 })
 
 /**
- * Every `useNotifications` call is a separate copy of the activity list, with its
- * own fetch and its own `refresh`. The app-wide one belongs to `useActivityFeed`;
- * the other two are deliberately narrow, context-scoped fetches. If this list
- * grows, the app has more than one badge source again.
+ * The app-wide store belongs to `useActivityFeed`. A second call would fetch and
+ * refresh a copy the badge cannot see.
  */
 const ALLOWED_CALLERS = [
-  'features/activity/components/ActivityInspectorContent.tsx',
-  'features/activity/components/RepaymentActivityDrawer.tsx',
   'features/activity/hooks/use-notifications.test.tsx',
   'features/activity/hooks/useActivityFeed.ts'
 ]

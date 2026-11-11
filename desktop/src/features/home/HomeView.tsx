@@ -1,16 +1,25 @@
 import { Activity, Inbox, ListTodo, type LucideIcon, SquareCheck, UserRound } from 'lucide-react'
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  lazy,
+  type ReactNode,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react'
 
 import { useResolvedUiSettings } from '@/contexts/UiSettingsContext'
 import { ActivityNotificationRow } from '@/features/activity/components/ActivityNotificationRow'
 import { selectAuthoredActivityItems } from '@/features/activity/components/ActivityScopeControls'
-import { ActivityTimelineList } from '@/features/activity/components/ActivityTimelineList'
 import type { ActivityFeedApi } from '@/features/activity/hooks/useActivityFeed'
 import { useActivityRail } from '@/features/activity/lib/ActivityRailContext'
 import type { ActivityNotificationItem } from '@/features/activity/lib/notification-types'
 import { activityToTarget } from '@/features/activity/lib/notification-types'
 import { HomeActionBuckets } from '@/features/home/HomeActionBuckets'
 import { HomeDoor, type HomeDoorId } from '@/features/home/HomeDoor'
+import { HomePromptComposer } from '@/features/home/HomePromptComposer'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { EmptyDescription } from '@/shared/components/ui/empty'
@@ -21,8 +30,13 @@ import { resolveHomeSettings } from '@/shared/lib/ui-settings/schema'
 import { cn } from '@/shared/lib/utils'
 import type { UserPrincipal } from '@/shared/types/users'
 
+const ActivityTimelineList = lazy(() =>
+  import('@/features/activity/components/ActivityTimelineList').then((module) => ({
+    default: module.ActivityTimelineList
+  }))
+)
+
 const HOME_TILES = [
-  'chat',
   'tickets',
   'repayment',
   'automations',
@@ -73,13 +87,17 @@ function pickOne<T>(items: readonly T[]): T {
   return items[Math.floor(Math.random() * items.length)]!
 }
 
-const HOME_BOARD = 'mx-auto flex w-full max-w-7xl flex-col gap-6'
+const HOME_BOARD = 'mx-auto flex w-full max-w-6xl flex-col gap-6'
 const HOME_GRID = 'grid grid-cols-4 items-start gap-4'
 const HOME_RATIO = 'aspect-[1.618]'
 
 interface Props {
   hidden: boolean
   onNavigate: (tab: Tab) => void
+  onSubmitPrompt: (text: string) => void
+  url?: string
+  configId: string | null
+  onConfigId: (configId: string) => void
   agentName: string
   user: UserPrincipal
   feed: ActivityFeedApi
@@ -140,6 +158,10 @@ function HomeSection({
 export function HomeView({
   hidden,
   onNavigate,
+  onSubmitPrompt,
+  url,
+  configId,
+  onConfigId,
   agentName,
   user,
   feed,
@@ -190,7 +212,6 @@ export function HomeView({
     [delegated, excerpts.delegated]
   )
   const visibleTiles = HOME_TILES.filter((entry) => {
-    if (entry === 'chat') return true
     if (!isPanelTabVisible(entry)) return false
     const moduleId = moduleIdForTab(entry)
     return moduleId === null || user.moduleIds.includes(moduleId)
@@ -260,13 +281,24 @@ export function HomeView({
     [feed, openContextTarget, openReader]
   )
 
+  if (hidden) {
+    return (
+      <div
+        data-tab-panel
+        data-hidden=""
+        aria-label="Accueil"
+        className="bg-background absolute inset-0 hidden"
+      />
+    )
+  }
+
   return (
     <div
       data-tab-panel
       data-hidden={hidden || undefined}
       aria-label="Accueil"
       className={cn(
-        'bg-background absolute inset-0 min-h-0 flex-col overflow-y-auto p-4',
+        'bg-background absolute inset-0 min-h-0 flex-col overflow-y-auto px-12 py-6',
         hidden ? 'hidden' : 'flex'
       )}
     >
@@ -279,6 +311,13 @@ export function HomeView({
         </header>
         <div className="flex flex-col gap-4">
           <nav className={HOME_GRID} aria-label="Métiers">
+            <HomePromptComposer
+              url={url}
+              agentName={agentName}
+              configId={configId}
+              onConfigId={onConfigId}
+              onSubmitPrompt={onSubmitPrompt}
+            />
             {visibleTiles.map((entry) => (
               <HomeDoor
                 key={entry}
@@ -365,16 +404,18 @@ export function HomeView({
               {activityItems.length === 0 ? (
                 <HomeStatus description="Aucune activité récente pour les personnes suivies." />
               ) : (
-                <ActivityTimelineList
-                  items={activityItems}
-                  emptyCopy={{
-                    title: 'Aucune activité',
-                    description: 'Aucune activité récente pour les personnes suivies.'
-                  }}
-                  emptyIcon={<Activity />}
-                  fit
-                  onOpen={openNotification}
-                />
+                <Suspense fallback={null}>
+                  <ActivityTimelineList
+                    items={activityItems}
+                    emptyCopy={{
+                      title: 'Aucune activité',
+                      description: 'Aucune activité récente pour les personnes suivies.'
+                    }}
+                    emptyIcon={<Activity />}
+                    fit
+                    onOpen={openNotification}
+                  />
+                </Suspense>
               )}
             </HomeSection>
           </section>

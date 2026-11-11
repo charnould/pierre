@@ -4,7 +4,7 @@ import {
   type Activity,
   type ActivityListItem,
   parseActivityMetaContent
-} from '@/shared/types/activites'
+} from '@/shared/types/activities'
 import type { LedgerMovementRow } from '@/shared/types/ledger'
 
 import { buildRepaymentTimeline, type RepaymentTimelineItem } from '../lib/build-repayment-timeline'

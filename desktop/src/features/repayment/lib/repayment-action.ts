@@ -35,7 +35,14 @@ export function repaymentBulkActionOptions(): RepaymentActionOption[] {
 }
 
 export function repaymentActionOptions(): RepaymentActionOption[] {
-  return [...repaymentDossierActionOptions(), ...repaymentBulkActionOptions()]
+  const seen = new Set<string>()
+  const options: RepaymentActionOption[] = []
+  for (const option of [...repaymentDossierActionOptions(), ...repaymentBulkActionOptions()]) {
+    if (seen.has(option.label)) continue
+    seen.add(option.label)
+    options.push(option)
+  }
+  return options
 }
 
 /** Libellé métier stocké tel quel dans les activités. */

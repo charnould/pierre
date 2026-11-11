@@ -1,8 +1,8 @@
 import { formatActivityBoostBody } from '@/features/activity/lib/activity-boost-copy'
 import { extractReportTitle } from '@/features/automations/lib/extract-report-title'
 import type { ActivityTarget } from '@/shared/lib/navigation-snapshot'
-import type { ActivityListItem, ActivityType, Mention } from '@/shared/types/activites'
-import { activityPayload, activityText } from '@/shared/types/activites'
+import type { ActivityListItem, ActivityType, Mention } from '@/shared/types/activities'
+import { activityPayload, activityText } from '@/shared/types/activities'
 
 type ActivityModule = 'tickets' | 'repayment' | 'automations' | 'bulk' | 'updates'
 

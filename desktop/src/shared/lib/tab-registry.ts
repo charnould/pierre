@@ -1,3 +1,4 @@
+import type { BusinessModuleId } from '@pierre/shared/modules'
 import {
   Activity,
   ArrowRightLeft,
@@ -14,8 +15,6 @@ import {
   Workflow
 } from 'lucide-react'
 import type { ComponentType } from 'react'
-
-import type { BusinessModuleId } from '../../../../shared/modules'
 
 interface TabIdentity {
   icon: ComponentType<{ className?: string; size?: number; strokeWidth?: number }>

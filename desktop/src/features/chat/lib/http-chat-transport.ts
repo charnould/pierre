@@ -1,7 +1,8 @@
+import type { AiStreamEvent } from '@pierre/shared/ai-stream-events'
+import { parseAiStreamLine } from '@pierre/shared/ai-stream-events'
+
 import { createNdjsonLineBuffer } from '@/shared/lib/ndjson-buffer'
 
-import type { AiStreamEvent } from '../../../../../shared/ai-stream-events'
-import { parseAiStreamLine } from '../../../../../shared/ai-stream-events'
 import type { ChatQuestionnaireRequest, ChatStreamRequest, ChatTransport } from './chat-transport'
 
 async function readNdjsonStream(

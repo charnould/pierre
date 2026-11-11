@@ -1,11 +1,12 @@
 import {
   type Activity,
   ACTIVITY_CONTENT_VERSION,
+  completedTaskContent,
   type CreateActivityBody,
   parseTaskContent,
   type TaskContent,
   type TaskState
-} from '@/shared/types/activites'
+} from '@/shared/types/activities'
 
 export type ActionDraft =
   | {
@@ -133,14 +134,10 @@ export function buildActionActivity(
           },
           ...(draft.note.trim() ? { note: draft.note.trim() } : {})
         }
-      : {
-          version: ACTIVITY_CONTENT_VERSION,
-          task: {
-            title: draft.action.trim(),
-            state: 'completed' as const
-          },
+      : completedTaskContent({
+          title: draft.action.trim(),
           ...(draft.resultat.trim() ? { result: draft.resultat.trim() } : {})
-        }
+        })
 
   return {
     contexte,

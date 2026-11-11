@@ -3,13 +3,8 @@ import type {
   ConversationListQuery,
   ConversationSummary,
   SaveConversationReview
-} from '../../../../shared/admin-conversations'
-import type {
-  LlmRun,
-  LlmRunSummary,
-  LlmUsageSummary,
-  UsagePeriod
-} from '../../../../shared/llm-usage'
+} from '@pierre/shared/admin-conversations'
+import type { LlmRun, LlmRunSummary, LlmUsageSummary, UsagePeriod } from '@pierre/shared/llm-usage'
 
 export type {
   ConversationDetail,
@@ -18,27 +13,22 @@ export type {
   ReviewCategory,
   ReviewStatus,
   SaveConversationReview
-} from '../../../../shared/admin-conversations'
+} from '@pierre/shared/admin-conversations'
 export {
   CONVERSATION_PAGE_SIZE,
   REVIEW_CATEGORIES,
   REVIEW_CATEGORY_LABELS,
   REVIEW_STATUSES,
   REVIEW_STATUS_LABELS
-} from '../../../../shared/admin-conversations'
-export type {
-  LlmRun,
-  LlmRunSummary,
-  LlmUsageSummary,
-  UsagePeriod
-} from '../../../../shared/llm-usage'
+} from '@pierre/shared/admin-conversations'
+export type { LlmRun, LlmRunSummary, LlmUsageSummary, UsagePeriod } from '@pierre/shared/llm-usage'
 export {
   LLM_OPERATION_LABELS,
   LLM_PAGE_SIZE,
   LLM_RUN_STATUS_LABELS,
   USAGE_PERIOD_LABELS,
   USAGE_PERIODS
-} from '../../../../shared/llm-usage'
+} from '@pierre/shared/llm-usage'
 
 export type AdminError = { error: { code?: string; message: string } }
 export type ConversationListResponse = {

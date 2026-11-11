@@ -51,29 +51,33 @@ function indexOrgUsers(url: string, users: OrgUser[]): void {
   bump()
 }
 
-function hydratePhotos(url: string, users: OrgUser[]): void {
-  if (!window.api?.getAvatar) return
-  for (const user of users) {
-    if (!user.hasAvatar) continue
-    const emailKey = user.email.trim().toLowerCase()
-    const cacheKey = photoKey(url, emailKey)
-    const version = user.avatarVersion
-    if (bytesByLogin.get(cacheKey) === version && photoByLogin.has(cacheKey)) continue
-    const key = `${cacheKey}:${version}`
-    if (photoInflight.has(key)) continue
-    const pending = (async () => {
-      try {
-        const bytes = await window.api.getAvatar({ url, email: user.email })
-        if (!bytes) return
-        photoByLogin.set(cacheKey, bytesToDataUri(bytes, 'image/webp'))
-        bytesByLogin.set(cacheKey, version)
-        bump()
-      } finally {
-        photoInflight.delete(key)
-      }
-    })()
-    photoInflight.set(key, pending)
-  }
+function loadPhoto(url: string, user: OrgUser): void {
+  if (!user.hasAvatar || !window.api?.getAvatar) return
+  const emailKey = user.email.trim().toLowerCase()
+  const cacheKey = photoKey(url, emailKey)
+  const version = user.avatarVersion
+  if (bytesByLogin.get(cacheKey) === version && photoByLogin.has(cacheKey)) return
+  const key = `${cacheKey}:${version}`
+  if (photoInflight.has(key)) return
+  const pending = (async () => {
+    try {
+      const bytes = await window.api.getAvatar({ url, email: user.email })
+      if (!bytes) return
+      photoByLogin.set(cacheKey, bytesToDataUri(bytes, 'image/webp'))
+      bytesByLogin.set(cacheKey, version)
+      bump()
+    } finally {
+      photoInflight.delete(key)
+    }
+  })()
+  photoInflight.set(key, pending)
+}
+
+export function ensureUserAvatar(login: string): void {
+  if (!activeUrl) return
+  const user = resolveOrgUserByLoginOrEmail(login)
+  if (!user) return
+  loadPhoto(activeUrl, user)
 }
 
 /** Fetches org users for a server URL, with in-memory cache + in-flight dedupe. */
@@ -82,7 +86,6 @@ export async function fetchOrgUsers(url: string): Promise<OrgUser[]> {
   const hit = cache.get(url)
   if (hit) {
     indexOrgUsers(url, hit)
-    hydratePhotos(url, hit)
     return hit
   }
 
@@ -103,10 +106,7 @@ export async function fetchOrgUsers(url: string): Promise<OrgUser[]> {
     inflight.set(url, pending)
   }
   const users = await pending
-  if (activation === activationVersion) {
-    indexOrgUsers(url, users)
-    hydratePhotos(url, users)
-  }
+  if (activation === activationVersion) indexOrgUsers(url, users)
   return users
 }
 

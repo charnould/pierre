@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
+import { warnRenderer } from '@/shared/lib/renderer-log'
 import type {
   TicketsTableSettings,
   UiSettings,
@@ -109,15 +110,19 @@ export function UiSettingsProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (!window.api?.getUiSettings) return
     let cancelled = false
-    void Promise.all([window.api.getUiSettings(), window.api.getUiSettingsPath()]).then(
-      ([nextSettings, path]) => {
+    void Promise.all([window.api.getUiSettings(), window.api.getUiSettingsPath()])
+      .then(([nextSettings, path]) => {
         if (cancelled) return
         setSettings(nextSettings)
         setSettingsPath(path)
         setSettingsEpoch((n) => n + 1)
         setHydrated(true)
-      }
-    )
+      })
+      .catch((error) => {
+        if (cancelled) return
+        warnRenderer('UiSettingsProvider.hydrate', error)
+        setHydrated(true)
+      })
     return () => {
       cancelled = true
     }

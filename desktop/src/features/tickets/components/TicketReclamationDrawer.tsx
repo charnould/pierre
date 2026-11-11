@@ -1,3 +1,4 @@
+import { rcs_compose_payload, type RcsContenu } from '@pierre/shared/rcs-message'
 import { X } from 'lucide-react'
 import { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -48,10 +49,9 @@ import {
   type MailDocument,
   type PostalAddress,
   type SendCommunicationPayload
-} from '@/shared/types/activites'
+} from '@/shared/types/activities'
 import type { OrgUser } from '@/shared/types/users'
 
-import { rcs_compose_payload, type RcsContenu } from '../../../../../shared/rcs-message'
 import {
   type TicketAiGenerationProps,
   TicketComposeBlock,
@@ -578,7 +578,7 @@ export function TicketReclamationDrawer({
                   void postAndRefresh(
                     'note.published',
                     'logged',
-                    JSON.stringify({ version: 2, text: comment.trim() })
+                    JSON.stringify({ version: 1, text: comment.trim() })
                   )
                 }
               }}

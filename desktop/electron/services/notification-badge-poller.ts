@@ -1,4 +1,4 @@
-import type { ActivitiesListResponse } from '../../src/shared/types/activites'
+import type { ActivitiesListResponse } from '../../src/shared/types/activities'
 import type { SettingsStore } from './settings-store'
 
 /** Same cadence as the renderer inbox poll (`useNotifications`). */

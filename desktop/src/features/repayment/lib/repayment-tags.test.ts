@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 
-import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
-import type { Activity } from '@/shared/types/activites'
+import { loadCustomizationFixture } from '@test/instance-customization-fixture'
+
+import type { Activity } from '@/shared/types/activities'
 
 import { sortRepaymentActivitiesDesc } from './repayment-activity-order'
 import {
@@ -65,7 +66,7 @@ describe('repayment-tags', () => {
           createdAt: '2026-06-10 10:00',
           type: 'case.tags_changed',
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             before: [],
             after: ['décès']
           })
@@ -75,7 +76,7 @@ describe('repayment-tags', () => {
           createdAt: '2026-06-11 11:00',
           type: 'case.tags_changed',
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             before: ['décès'],
             after: []
           })
@@ -92,7 +93,7 @@ describe('repayment-tags', () => {
           createdAt: '2026-06-10 10:00',
           type: 'case.tags_changed',
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             before: [],
             after: ['décès']
           })
@@ -102,7 +103,7 @@ describe('repayment-tags', () => {
           createdAt: '2026-06-11 11:00',
           type: 'case.tags_changed',
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             before: ['décès'],
             after: ['+65 ans']
           })
@@ -118,7 +119,7 @@ describe('repayment-tags', () => {
         createdAt: '2026-06-10 10:00',
         type: 'case.tags_changed',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           before: [],
           after: ['décès']
         })
@@ -128,7 +129,7 @@ describe('repayment-tags', () => {
         createdAt: '2026-06-11 11:00',
         type: 'case.tags_changed',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           before: ['décès'],
           after: ['+65 ans']
         })
@@ -148,7 +149,7 @@ describe('repayment-tags', () => {
           createdAt: '2026-06-11 11:00',
           type: 'case.tags_changed',
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             before: [],
             after: ['inconnu']
           })

@@ -11,7 +11,9 @@
     "skipLibCheck": true,
     "types": ["bun"],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@pierre/shared/*": ["../shared/*"],
+      "@test/*": ["./test/*"]
     }
   },
   "include": [

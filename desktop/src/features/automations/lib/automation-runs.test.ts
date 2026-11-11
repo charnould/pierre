@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 
 import { buildAutomationRunEntries } from '@/features/automations/lib/automation-runs'
 import { recordToAutomation } from '@/features/automations/lib/automation-types'
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 import type { AutomationRecord } from '@/shared/types/automations'
 
 type ReportAutomationRecord = Extract<AutomationRecord, { type: 'report' }>
@@ -47,7 +47,7 @@ describe('buildAutomationRunEntries', () => {
     const automation = recordToAutomation(record(), 'admin@pierre.test')
     const [entry] = buildAutomationRunEntries(
       automation,
-      [activity({ version: 2, title: 'Veille locative', note: REPORT_HTML })],
+      [activity({ version: 1, title: 'Veille locative', note: REPORT_HTML })],
       6
     )
 
@@ -64,7 +64,7 @@ describe('buildAutomationRunEntries', () => {
     const automation = recordToAutomation(record(), 'admin@pierre.test')
     const [entry] = buildAutomationRunEntries(
       automation,
-      [activity({ version: 2, title: 'Veille locative' })],
+      [activity({ version: 1, title: 'Veille locative' })],
       6
     )
 

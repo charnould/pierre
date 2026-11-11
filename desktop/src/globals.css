@@ -38,12 +38,7 @@
   --border: var(--color-stone-200);
   --input: var(--color-stone-300);
   --ring: var(--color-blue-600);
-  --shadow-chat-window:
-    0 2px 5px -1px color-mix(in oklab, var(--foreground) 24%, transparent),
-    0 18px 44px -14px color-mix(in oklab, var(--foreground) 36%, transparent),
-    0 42px 90px -28px color-mix(in oklab, var(--foreground) 30%, transparent);
   --home-ink: oklch(0.2 0.025 40);
-  --home-chat: oklch(0.68 0.193 42);
   --home-tickets: oklch(0.68 0.196 25);
   --home-repayment: oklch(0.68 0.158 155);
   --home-automations: oklch(0.68 0.162 280);
@@ -88,8 +83,10 @@
   --width-col-18: 18%;
   --width-col-20: 20%;
   --width-col-22: 22%;
+  --width-col-28: 28%;
   --width-col-34: 34%;
   --width-col-46: 46%;
+  --width-col-date: calc(8ch + 0.7em + 1.25rem + 2px + 1rem);
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.625rem;
@@ -118,7 +115,6 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-home-ink: var(--home-ink);
-  --color-home-chat: var(--home-chat);
   --color-home-tickets: var(--home-tickets);
   --color-home-repayment: var(--home-repayment);
   --color-home-automations: var(--home-automations);
@@ -215,10 +211,6 @@
       );
   }
 
-  .home-door[data-door='chat'] {
-    --home-door: var(--home-chat);
-  }
-
   .home-door[data-door='tickets'] {
     --home-door: var(--home-tickets);
   }
@@ -293,6 +285,10 @@
 }
 
 @layer utilities {
+  .max-w-document {
+    max-width: 68rem;
+  }
+
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
@@ -312,4 +308,25 @@
   padding-inline-end: calc(
     0.5rem + 100% - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100%)
   );
+}
+
+/* One métier tile, same ratio as HomeDoor. Unlayered so it wins over InputGroup h-auto. */
+.home-composer {
+  aspect-ratio: 1.618;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.home-composer > form,
+.home-composer [data-slot='input-group'] {
+  height: 100%;
+  min-height: 0;
+}
+
+.home-composer textarea {
+  field-sizing: fixed;
+  min-height: 0;
+  max-height: none;
+  flex: 1 1 auto;
+  overflow-y: auto;
 }

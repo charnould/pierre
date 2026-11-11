@@ -1,6 +1,6 @@
 import { actionTimelineDate } from '@/shared/lib/activities/action-activity'
 import { projectTimelineItems } from '@/shared/lib/timeline/project-timeline'
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 import type { LedgerMovementRow } from '@/shared/types/ledger'
 
 import {

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 
 import { buildTicketTimeline } from './build-ticket-timeline'
 
@@ -16,7 +16,7 @@ function sampleActivity(overrides: Partial<Activity> = {}): Activity {
     type: 'note.published',
     channel: null,
     mentions: [],
-    contenu: JSON.stringify({ version: 2, text: 'Relance effectuée' }),
+    contenu: JSON.stringify({ version: 1, text: 'Relance effectuée' }),
     ...overrides
   }
 }
@@ -37,14 +37,14 @@ describe('buildTicketTimeline', () => {
       sampleActivity({
         id: 11,
         createdAt: '2026-06-10T15:00:00',
-        contenu: JSON.stringify({ version: 2, text: 'Réponse @cdubois' })
+        contenu: JSON.stringify({ version: 1, text: 'Réponse @cdubois' })
       }),
       sampleActivity({
         id: 9,
         createdAt: '2026-06-09T10:00:00',
         type: 'communication.received',
         channel: 'rcs',
-        contenu: JSON.stringify({ version: 2, sender: 'Locataire', body: 'SMS' })
+        contenu: JSON.stringify({ version: 1, sender: 'Locataire', body: 'SMS' })
       })
     ])
     expect(items.map((item) => item.row.id)).toEqual([11, 10, 9])
@@ -58,7 +58,7 @@ describe('buildTicketTimeline', () => {
       threadId: 'mail-1',
       revision: 1,
       createdAt: '2026-06-10T10:00:00',
-      contenu: JSON.stringify({ version: 2, sender: 'Alice', body: 'Bonjour' })
+      contenu: JSON.stringify({ version: 1, sender: 'Alice', body: 'Bonjour' })
     })
     const failed = sampleActivity({
       id: 20,
@@ -67,7 +67,7 @@ describe('buildTicketTimeline', () => {
       threadId: 'rcs-1',
       revision: 1,
       createdAt: '2026-06-09T10:00:00',
-      contenu: JSON.stringify({ version: 2, sender: 'Alice', body: 'Bonjour' })
+      contenu: JSON.stringify({ version: 1, sender: 'Alice', body: 'Bonjour' })
     })
     const items = buildTicketTimeline([
       sampleActivity({
@@ -76,7 +76,7 @@ describe('buildTicketTimeline', () => {
         threadId: 'mail-1',
         revision: 3,
         createdAt: '2026-06-10T12:00:00',
-        contenu: JSON.stringify({ version: 2, result: 'read' })
+        contenu: JSON.stringify({ version: 1, result: 'read' })
       }),
       sampleActivity({
         id: 11,
@@ -84,7 +84,7 @@ describe('buildTicketTimeline', () => {
         threadId: 'mail-1',
         revision: 2,
         createdAt: '2026-06-10T11:00:00',
-        contenu: JSON.stringify({ version: 2, result: 'delivered' })
+        contenu: JSON.stringify({ version: 1, result: 'delivered' })
       }),
       sampleActivity({
         id: 21,
@@ -92,14 +92,14 @@ describe('buildTicketTimeline', () => {
         threadId: 'rcs-1',
         revision: 2,
         createdAt: '2026-06-09T11:00:00',
-        contenu: JSON.stringify({ version: 2, reason: 'Destinataire inconnu' })
+        contenu: JSON.stringify({ version: 1, reason: 'Destinataire inconnu' })
       }),
       sampleActivity({
         id: 30,
         type: 'communication.failed',
         threadId: 'orphan',
         createdAt: '2026-06-11T11:00:00',
-        contenu: JSON.stringify({ version: 2, reason: 'Sans origine' })
+        contenu: JSON.stringify({ version: 1, reason: 'Sans origine' })
       }),
       failed,
       sent
@@ -118,7 +118,7 @@ describe('buildTicketTimeline', () => {
         id: 11,
         type: 'activity.reaction_changed',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           source_activity_id: 10,
           emoji: '👍'
         })

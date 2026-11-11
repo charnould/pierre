@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
 
 import { JSDOM } from 'jsdom'
 
-import type { ActivityListItem } from '@/shared/types/activites'
+import type { ActivityListItem } from '@/shared/types/activities'
 
 let installedDom = false
 const originalGlobals = new Map<string, unknown>()
@@ -70,7 +70,7 @@ function sampleActivity(overrides: Partial<ActivityListItem> = {}): ActivityList
     type: 'note.published',
     channel: null,
     mentions: [],
-    contenu: JSON.stringify({ version: 2, text: 'Relance' }),
+    contenu: JSON.stringify({ version: 1, text: 'Relance' }),
     my: null,
     read: true,
     reaction: null,
@@ -129,7 +129,7 @@ describe('ActivityBoostControl', () => {
       sampleActivity({
         type: 'bulk.ran',
         bulkId: 'bulk-r1',
-        contenu: JSON.stringify({ version: 2, title: 'Courrier locataires' })
+        contenu: JSON.stringify({ version: 1, title: 'Courrier locataires' })
       }),
       'alice@exemple.fr'
     )

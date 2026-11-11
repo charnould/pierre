@@ -1,4 +1,4 @@
-import { type AiStreamEvent, parseAiStreamLine } from '@/features/workflow/lib/parse-workflow-chunk'
+import { type AiStreamEvent, parseAiStreamLine } from '@pierre/shared/ai-stream-events'
 
 import { createNdjsonLineBuffer } from './ndjson-buffer'
 import { warnRenderer } from './renderer-log'

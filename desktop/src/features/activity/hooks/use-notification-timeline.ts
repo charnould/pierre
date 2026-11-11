@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import type { Activity, ActivityContext } from '@/shared/types/activites'
+import type { Activity, ActivityContext } from '@/shared/types/activities'
 
 type TimelineState = {
   key: string | null

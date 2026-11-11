@@ -1,4 +1,4 @@
-import type { ActivityListItem } from './activites'
+import type { ActivityListItem } from './activities'
 
 export type LedgerRow = Record<string, unknown>
 

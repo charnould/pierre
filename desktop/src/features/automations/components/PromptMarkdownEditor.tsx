@@ -347,13 +347,43 @@ function MarkdownReaderPlugin({ readerRef }: { readerRef: RefObject<MarkdownRead
   return null
 }
 
+function fittedLineBox(editable: HTMLElement, lines: number): number {
+  const style = getComputedStyle(editable)
+  const parsed = Number.parseFloat(style.lineHeight)
+  const line = Number.isFinite(parsed) ? parsed : 20
+  const pad = Number.parseFloat(style.paddingTop) + Number.parseFloat(style.paddingBottom)
+  return lines * line + (Number.isFinite(pad) ? pad : 0)
+}
+
+function FitLinesPlugin({ min, max }: { min: number; max?: number }) {
+  const [editor] = useLexicalComposerContext()
+  useLayoutEffect(() => {
+    const fit = () => {
+      const editable = editor.getRootElement()
+      const body = editable?.parentElement
+      if (!editable || !body) return
+      editable.style.minHeight = '0px'
+      const content = Math.max(fittedLineBox(editable, min), editable.scrollHeight)
+      const next = max == null ? content : Math.min(fittedLineBox(editable, max), content)
+      body.style.height = `${next}px`
+      editable.style.minHeight = `${next}px`
+    }
+    fit()
+    return editor.registerUpdateListener(() => {
+      fit()
+    })
+  }, [editor, max, min])
+  return null
+}
+
 export function PromptMarkdownEditor({
   id,
   value,
   onChange,
   placeholder,
   className,
-  readerRef
+  readerRef,
+  lines
 }: {
   id: string
   value: string
@@ -361,6 +391,7 @@ export function PromptMarkdownEditor({
   placeholder: string
   className?: string
   readerRef?: RefObject<MarkdownReader | null>
+  lines?: { min: number; max?: number }
 }) {
   const initialMarkdown = useRef(value).current
 
@@ -379,15 +410,18 @@ export function PromptMarkdownEditor({
       }}
     >
       <div
+        data-min-lines={lines?.min}
+        data-max-lines={lines?.max}
         className={cn(
-          'border-input flex h-full min-h-78 w-full flex-col overflow-hidden rounded-lg border bg-transparent transition-colors',
+          'border-input flex w-full flex-col overflow-hidden rounded-lg border bg-transparent transition-colors',
           'has-[:focus-visible]:border-ring has-[:focus-visible]:ring-ring/50 has-[:focus-visible]:ring-3',
           'dark:bg-input/30',
+          lines ? 'h-auto' : 'h-full min-h-78',
           className
         )}
       >
         <PromptMarkdownToolbar />
-        <div className="relative min-h-0 flex-1 overflow-y-auto">
+        <div className={cn('relative min-h-0 overflow-y-auto', lines ? undefined : 'flex-1')}>
           <RichTextPlugin
             contentEditable={
               <ContentEditable
@@ -399,7 +433,7 @@ export function PromptMarkdownEditor({
                     {placeholder}
                   </div>
                 }
-                className="min-h-full px-2.5 py-2 text-sm outline-none"
+                className={cn('px-2.5 py-2 text-sm outline-none', lines ? undefined : 'min-h-full')}
               />
             }
             ErrorBoundary={LexicalErrorBoundary}
@@ -413,6 +447,7 @@ export function PromptMarkdownEditor({
       <MarkdownPastePlugin />
       {onChange ? <MarkdownSyncPlugin onChange={onChange} /> : null}
       {readerRef ? <MarkdownReaderPlugin readerRef={readerRef} /> : null}
+      {lines ? <FitLinesPlugin min={lines.min} max={lines.max} /> : null}
     </LexicalComposer>
   )
 }

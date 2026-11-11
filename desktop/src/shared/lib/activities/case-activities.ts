@@ -2,9 +2,10 @@ import {
   type Activity,
   ACTIVITY_CONTENT_VERSION,
   type ActivityContext,
+  caseChangeContent,
   type CreateActivityBody,
   parseCaseChangeContent
-} from '@/shared/types/activites'
+} from '@/shared/types/activities'
 
 import { canonicalizeCaseTags } from './case-workflow-config'
 import { extractMentionsFromText } from './mentions'
@@ -49,14 +50,15 @@ export function buildCaseAssignmentActivity(params: {
     ref: params.ref,
     type: 'case.assignee_changed',
     recipients: [...new Set([login, ...extractMentionsFromText(note)])],
-    contenu: JSON.stringify({
-      version: ACTIVITY_CONTENT_VERSION,
-      before: params.previousEmail
-        ? { id: params.previousEmail, label: params.previousEmail }
-        : null,
-      after: { id: email, label: login },
-      ...(note ? { note } : {})
-    })
+    contenu: JSON.stringify(
+      caseChangeContent({
+        before: params.previousEmail
+          ? { id: params.previousEmail, label: params.previousEmail }
+          : null,
+        after: { id: email, label: login },
+        ...(note ? { note } : {})
+      })
+    )
   }
 }
 
@@ -107,12 +109,13 @@ export function buildCaseTagChangeActivity(params: {
     ref: params.ref,
     type: 'case.tags_changed',
     ...(recipients.length > 0 ? { recipients } : {}),
-    contenu: JSON.stringify({
-      version: ACTIVITY_CONTENT_VERSION,
-      before: previousTags,
-      after: tags,
-      ...(note ? { note } : {})
-    })
+    contenu: JSON.stringify(
+      caseChangeContent({
+        before: previousTags,
+        after: tags,
+        ...(note ? { note } : {})
+      })
+    )
   }
 }
 
@@ -142,12 +145,13 @@ export function buildCaseBucketChangeActivity(params: {
     ref: params.ref,
     type: params.contexte === 'repayment' ? 'case.group_changed' : 'case.bucket_changed',
     ...(recipients.length > 0 ? { recipients } : {}),
-    contenu: JSON.stringify({
-      version: ACTIVITY_CONTENT_VERSION,
-      before: params.previousBucket,
-      after: bucket,
-      ...(note ? { note } : {})
-    })
+    contenu: JSON.stringify(
+      caseChangeContent({
+        before: params.previousBucket,
+        after: bucket,
+        ...(note ? { note } : {})
+      })
+    )
   }
 }
 

@@ -37,6 +37,7 @@ import type { ChatBoot } from '@/shared/types'
 
 export type ChatPanelHandle = {
   focus: () => void
+  sendPrompt: (text: string) => void
   stop: () => void
   clearMessages: () => void
   resetAfterAbortedStop: () => void
@@ -147,11 +148,15 @@ export const ChatPanel = forwardRef<ChatPanelHandle, Props>(function ChatPanel(
     ref,
     () => ({
       focus: () => composerFocusRef.current?.focus(),
+      sendPrompt: (text: string) => {
+        void sendMessage(text)
+        composerFocusRef.current?.focus()
+      },
       stop,
       clearMessages,
       resetAfterAbortedStop
     }),
-    [stop, clearMessages, resetAfterAbortedStop]
+    [sendMessage, stop, clearMessages, resetAfterAbortedStop]
   )
 
   const generating = isChatGenerating(status)

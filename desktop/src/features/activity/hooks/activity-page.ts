@@ -1,4 +1,4 @@
-import type { ActivityListItem } from '@/shared/types/activites'
+import type { ActivityListItem } from '@/shared/types/activities'
 
 export const ACTIVITY_PAGE_SIZE = 50
 

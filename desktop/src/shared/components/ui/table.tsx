@@ -96,7 +96,7 @@ function TableCell({
       data-slot="table-cell"
       data-variant={variant === 'board' ? 'board' : undefined}
       className={cn(
-        'px-2 align-middle [&:has([role=checkbox])]:pr-0',
+        'px-2 align-middle [&_[data-slot=date-field]]:justify-self-start [&_[data-slot=input-group]]:justify-self-start [&_[data-slot=select-trigger]]:justify-self-start [&:has([role=checkbox])]:pr-0',
         variant === 'board'
           ? 'h-8 py-0 font-sans text-[13px] leading-5 whitespace-nowrap'
           : 'h-10 py-1 whitespace-normal',

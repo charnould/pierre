@@ -1,1 +1,1 @@
-export type { RepaymentNotificationChannel } from '../../../../shared/notification-repayment'
+export type { RepaymentNotificationChannel } from '@pierre/shared/notification-repayment'

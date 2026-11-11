@@ -1,4 +1,10 @@
-import { ipcMain, session } from 'electron'
+import { createWriteStream } from 'node:fs'
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
+import type { ReadableStream as NodeReadableStream } from 'node:stream/web'
+
+import type { DocumentChronologyRow } from '@pierre/shared/repayment-document-fields'
+import { BrowserWindow, dialog, ipcMain, session } from 'electron'
 
 import type {
   LedgerQueryParams,
@@ -86,6 +92,7 @@ export function registerLedgerHandlers(partition: string): void {
         document: 'diagnostic' | 'plan' | 'protocole'
         format: 'docx' | 'pdf'
         dossier: unknown
+        chronologie?: DocumentChronologyRow[]
       }
     ) => {
       try {
@@ -96,21 +103,42 @@ export function registerLedgerHandlers(partition: string): void {
           body: JSON.stringify({
             document: params.document,
             format: params.format,
-            dossier: params.dossier
+            dossier: params.dossier,
+            ...(params.chronologie ? { chronologie: params.chronologie } : {})
           })
         })
         const type = response.headers.get('content-type') ?? ''
         if (type.includes('application/json') || !response.ok) {
           return (await response.json()) as { error?: { message?: string } }
         }
+        const body = response.body
+        if (!body) return { error: { message: 'Export impossible' } }
         const encoded = /filename\*=UTF-8''([^;]+)/i.exec(
           response.headers.get('content-disposition') ?? ''
         )?.[1]
-        return {
-          bytes: await response.arrayBuffer(),
-          filename: encoded ? decodeURIComponent(encoded) : `document.${params.format}`,
-          mimeType: type
+        const filename = encoded ? decodeURIComponent(encoded) : `document.${params.format}`
+        const parent = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
+        const options = {
+          defaultPath: filename,
+          filters: [
+            {
+              name: params.format === 'pdf' ? 'PDF' : 'Word',
+              extensions: [params.format]
+            }
+          ]
         }
+        const picked = parent
+          ? await dialog.showSaveDialog(parent, options)
+          : await dialog.showSaveDialog(options)
+        if (picked.canceled || !picked.filePath) {
+          await body.cancel()
+          return { canceled: true as const }
+        }
+        await pipeline(
+          Readable.fromWeb(body as unknown as NodeReadableStream<Uint8Array>),
+          createWriteStream(picked.filePath)
+        )
+        return { saved: true as const }
       } catch (error) {
         logMainError('export-repayment-document', error)
         return null

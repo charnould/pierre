@@ -4,7 +4,7 @@ import {
   MAX_ATTACHMENT_FILES,
   MAX_ATTACHMENT_TOTAL_BYTES,
   unsupportedAttachmentDescription
-} from '../../../../shared/attachment-extensions'
+} from '@pierre/shared/attachment-extensions'
 
 export type AttachmentMergeResult = {
   files: File[]

@@ -1,5 +1,5 @@
 import { actionTimelineDate } from '@/shared/lib/activities/action-activity'
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 
 export function sortRepaymentActivitiesDesc(activities: readonly Activity[]): Activity[] {
   return [...activities].sort((a, b) => {

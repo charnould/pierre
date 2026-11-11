@@ -41,6 +41,8 @@ const REPAYMENT_COLUMN_LABELS: Readonly<Record<string, string>> = {
   date_derniere_action_realisee: 'Date dernière action',
   id_locataire: 'Locataire',
   id_client: 'Client',
+  prenom: 'Prénom',
+  nom: 'Nom',
   solde_locataire: 'Dette',
   ratio_dette_loyer: 'Dette / loyer',
   email_status: 'Courriel',

@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useRegisterNavigationHandlers } from '@/contexts/NavigationHistoryContext'
@@ -10,31 +11,33 @@ import {
   BoardStatusLine
 } from '@/shared/components/board/board-surface'
 import { ModuleGate } from '@/shared/components/ModuleGate'
+import { Button } from '@/shared/components/ui/button'
 import { toast } from '@/shared/components/ui/toast'
 import { useDatastoreTables } from '@/shared/hooks/useDatastoreTables'
 import { moduleReady, useCustomizationStatus } from '@/shared/lib/instance-customization'
 import { cn } from '@/shared/lib/utils'
-import type { Activity } from '@/shared/types/activites'
+import type { Activity } from '@/shared/types/activities'
 
+import { type CaseFileSavedPayload, CaseFileScreen } from './case-file/case-file-screen'
 import { RepaymentBucketTableBlock } from './components/RepaymentBucketTableBlock'
 import { RepaymentBulkActionDialog } from './components/RepaymentBulkActionDialog'
 import { RepaymentMissingTableEmpty } from './components/RepaymentMissingTableEmpty'
 import { RepaymentTenantDrawer } from './components/RepaymentTenantDrawer'
 import { useRepaymentBulkActions } from './hooks/use-repayment-bulk-actions'
+import type { ChronologyEntry } from './lib/case-file-chronology'
+import {
+  blankCaseFileEditorRequest,
+  type CaseFileEditorRequest,
+  subscribeCaseFileEditor
+} from './lib/case-file-editor-intent'
 import type { TenantRepaymentRow } from './lib/classify-tenants'
 import { isComptesLocatairesMissing } from './lib/comptes-locataires-table'
 import { groupRepaymentRowsByBucket } from './lib/group-repayment-rows-by-bucket'
-import { parseRepaymentPlanForm } from './lib/repayment-activity-text'
+import { parseRepaymentCaseFile } from './lib/repayment-activity-text'
 import type { RepaymentBulkAction } from './lib/repayment-bulk-action'
-import {
-  blankPlanEditorRequest,
-  type RepaymentPlanEditorRequest,
-  subscribeRepaymentPlanEditor
-} from './lib/repayment-plan-editor-intent'
 import { prefetchRepaymentTimeline } from './lib/repayment-timeline-cache'
 import { useRepaymentColumnValues } from './lib/use-repayment-table-preferences'
 import { type RepaymentViewDataDeps, useRepaymentViewData } from './lib/use-repayment-view-data'
-import { type PlanSavedPayload, PlanScreen } from './plan/PlanScreen'
 
 interface Props {
   hidden: boolean
@@ -86,6 +89,7 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
     openTenantSheet,
     activityTarget,
     activityNoteId,
+    composeMode,
     reload
   } = useRepaymentViewData(url, hidden, repaymentDeps)
   const { columnValues, setColumnValues } = useRepaymentColumnValues()
@@ -94,7 +98,7 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
     !hidden
   )
   const comptesLocatairesMissing = isComptesLocatairesMissing(datastoreTables)
-  const [planEditor, setPlanEditor] = useState<RepaymentPlanEditorRequest | null>(null)
+  const [caseFileEditor, setCaseFileEditor] = useState<CaseFileEditorRequest | null>(null)
   const hoverTimerRef = useRef<number | null>(null)
   const { contextTarget } = useActivityRail()
 
@@ -197,38 +201,43 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
     [bulk, checkedIds]
   )
 
-  const handleCreateBlankPlan = useCallback(() => {
-    setPlanEditor(blankPlanEditorRequest())
+  const handleCreateBlankCaseFile = useCallback(() => {
+    setCaseFileEditor(blankCaseFileEditorRequest())
   }, [])
 
-  const handleCreatePlan = useCallback(
-    (tenant: TenantRepaymentRow) => {
+  const handleCreateCaseFile = useCallback(
+    (tenant: TenantRepaymentRow, chronology: ChronologyEntry[]) => {
       setSheetOpen(false)
-      setPlanEditor({ tenant })
+      setCaseFileEditor({ tenant, chronology })
     },
     [setSheetOpen]
   )
 
-  const handleEditPlan = useCallback(
-    (tenant: TenantRepaymentRow, row: Activity) => {
-      const dossier = parseRepaymentPlanForm(row)
-      if (!dossier) return
+  const handleEditCaseFile = useCallback(
+    (tenant: TenantRepaymentRow, row: Activity, chronology: ChronologyEntry[]) => {
+      const caseFile = parseRepaymentCaseFile(row)
+      if (!caseFile) return
       setSheetOpen(false)
-      setPlanEditor({ tenant, activityId: row.id, dossier })
+      setCaseFileEditor({ tenant, activityId: row.id, caseFile, chronology })
     },
     [setSheetOpen]
   )
 
-  const handleClosePlan = useCallback(() => {
-    setPlanEditor(null)
+  const handleCloseCaseFile = useCallback(() => {
+    setCaseFileEditor(null)
   }, [])
 
-  const handlePlanSaved = useCallback(
-    ({ id_locataire, activityId }: PlanSavedPayload) => {
-      setPlanEditor(null)
-      openTenantSheet(id_locataire, { activityId })
+  const handleCaseFileSaved = useCallback(
+    ({ tenant, activityId, composeMode: nextComposeMode }: CaseFileSavedPayload) => {
+      setCaseFileEditor(null)
+      openTenantSheet(tenant.id_locataire, {
+        activityId,
+        fallbackTenant: tenant,
+        composeMode: nextComposeMode
+      })
+      void reload()
     },
-    [openTenantSheet]
+    [openTenantSheet, reload]
   )
 
   const bucketSections = useMemo(
@@ -253,8 +262,8 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
 
   useEffect(
     () =>
-      subscribeRepaymentPlanEditor((request) => {
-        setPlanEditor(request)
+      subscribeCaseFileEditor((request) => {
+        setCaseFileEditor(request)
       }),
     []
   )
@@ -284,7 +293,7 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
     )
   }
 
-  if (planEditor) {
+  if (caseFileEditor) {
     return (
       <div
         data-tab-panel
@@ -293,14 +302,16 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
           hidden ? 'hidden' : 'flex'
         )}
       >
-        <PlanScreen
-          key={`${planEditor.activityId ?? 'new'}:${planEditor.tenant.id_locataire}`}
+        <CaseFileScreen
+          key={`${caseFileEditor.activityId ?? 'new'}:${caseFileEditor.tenant.id_locataire}`}
           url={url}
-          tenant={planEditor.tenant}
-          initialDossier={planEditor.dossier}
-          existingActivityId={planEditor.activityId}
-          onClose={handleClosePlan}
-          onSaved={handlePlanSaved}
+          tenant={caseFileEditor.tenant}
+          initialCaseFile={caseFileEditor.caseFile}
+          initialChronology={caseFileEditor.chronology}
+          columnValues={columnValues}
+          existingActivityId={caseFileEditor.activityId}
+          onClose={handleCloseCaseFile}
+          onSaved={handleCaseFileSaved}
         />
       </div>
     )
@@ -316,8 +327,8 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
     >
       {datastoreTablesLoading && datastoreTables === null ? (
         <RepaymentBoardStatus title="Chargement des soldes…" loading onReload={reload} />
-      ) : comptesLocatairesMissing ? (
-        <RepaymentMissingTableEmpty onCreatePlan={handleCreateBlankPlan} />
+      ) : comptesLocatairesMissing && !loading && allRows.length === 0 ? (
+        <RepaymentMissingTableEmpty onCreateCaseFile={handleCreateBlankCaseFile} />
       ) : loading && allRows.length === 0 ? (
         <RepaymentBoardStatus title="Chargement des soldes…" loading onReload={reload} />
       ) : error && allRows.length === 0 ? (
@@ -335,29 +346,41 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
                   onAct={() => setBulkOpen(true)}
                 />
               ) : (
-                <BoardRefreshButton loading={loading} onRefresh={reload} />
+                <BoardRefreshButton loading={loading} onRefresh={reload}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCreateBlankCaseFile}
+                  >
+                    <Plus data-icon="inline-start" />
+                    Créer un dossier
+                  </Button>
+                </BoardRefreshButton>
               )
             }
           >
             {(scrollRef) =>
-              bucketSections.map((section) => (
-                <RepaymentBucketTableBlock
-                  key={section.bucket}
-                  bucket={section.bucket}
-                  bucketRows={section.rows}
-                  ledgerColumnIds={ledgerColumnIds}
-                  selectedId={selected?.id_locataire ?? null}
-                  snapshotDate={snapshotDate}
-                  columnValues={columnValues}
-                  onColumnValuesChange={setColumnValues}
-                  onRowClick={handleRowClick}
-                  onRowHover={handleRowHover}
-                  getBucket={getBucketForRow}
-                  getLastAction={getLastAction}
-                  getRowSignal={getRowSignal}
-                  scrollRef={scrollRef}
-                />
-              ))
+              hidden
+                ? null
+                : bucketSections.map((section) => (
+                    <RepaymentBucketTableBlock
+                      key={section.bucket}
+                      bucket={section.bucket}
+                      bucketRows={section.rows}
+                      ledgerColumnIds={ledgerColumnIds}
+                      selectedId={selected?.id_locataire ?? null}
+                      snapshotDate={snapshotDate}
+                      columnValues={columnValues}
+                      onColumnValuesChange={setColumnValues}
+                      onRowClick={handleRowClick}
+                      onRowHover={handleRowHover}
+                      getBucket={getBucketForRow}
+                      getLastAction={getLastAction}
+                      getRowSignal={getRowSignal}
+                      scrollRef={scrollRef}
+                    />
+                  ))
             }
           </BoardCanvas>
         </BoardSelectionProvider>
@@ -373,13 +396,14 @@ export function RepaymentView({ hidden, url, repaymentDeps }: Props) {
         tenant={selected}
         columnValues={columnValues}
         highlightActivityId={activityNoteId}
+        initialComposeMode={composeMode}
         onAddNote={handleAddNote}
         onAdvancementChange={handleAdvancementChange}
         onTagsChange={handleTagsChange}
         onAssignGestionnaire={handleAssignGestionnaire}
         gestionnaireAssignable={gestionnaireAssignable}
-        onCreatePlan={handleCreatePlan}
-        onEditPlan={handleEditPlan}
+        onCreateCaseFile={handleCreateCaseFile}
+        onEditCaseFile={handleEditCaseFile}
       />
       <RepaymentBulkActionDialog
         open={bulkOpen}

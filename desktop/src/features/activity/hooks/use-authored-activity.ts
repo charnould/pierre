@@ -8,7 +8,8 @@ import {
   type ActivityNotificationItem,
   mapActivityRow
 } from '@/features/activity/lib/notification-types'
-import type { ActivityContext, ActivityListItem } from '@/shared/types/activites'
+import { warnRenderer } from '@/shared/lib/renderer-log'
+import type { ActivityContext, ActivityListItem } from '@/shared/types/activities'
 
 import {
   ACTIVITY_PAGE_SIZE,
@@ -76,15 +77,20 @@ export function useAuthoredActivity(url: string | undefined, authors: string[], 
     }
     const generation = ++requestGeneration.current
     const limit = refreshWindowLimit(rowsRef.current.length)
-    const response = await window.api.getActivities({
-      url,
-      auteurs,
-      limit,
-      offset: 0
-    })
-    if (!response || generation !== requestGeneration.current) return
-    setRows(response.data)
-    setHasMore(pageIsFull(response.data.length, limit))
+    try {
+      const response = await window.api.getActivities({
+        url,
+        auteurs,
+        limit,
+        offset: 0
+      })
+      if (!response || generation !== requestGeneration.current) return
+      setRows(response.data)
+      setHasMore(pageIsFull(response.data.length, limit))
+    } catch (error) {
+      if (generation !== requestGeneration.current) return
+      warnRenderer('useAuthoredActivity.refresh', error)
+    }
   }, [authorsKey, enabled, url])
 
   const loadMore = useCallback(async () => {
@@ -133,6 +139,10 @@ export function useAuthoredActivity(url: string | undefined, authors: string[], 
         if (!response || generation !== requestGeneration.current) return
         setRows(response.data)
         setHasMore(pageIsFull(response.data.length, limit))
+      })
+      .catch((error) => {
+        if (generation !== requestGeneration.current) return
+        warnRenderer('useAuthoredActivity.load', error)
       })
     return () => {
       requestGeneration.current += 1

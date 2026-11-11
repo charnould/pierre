@@ -6,15 +6,15 @@ export type {
   AutomationType,
   CreateAutomationBody,
   PatchAutomationBody
-} from '../../../../shared/automations'
+} from '@pierre/shared/automations'
 
-export { decodeCronToSchedule } from '../../../../shared/automations'
+export { decodeCronToSchedule } from '@pierre/shared/automations'
 
 import type {
   AutomationRecord,
   CreateAutomationBody,
   PatchAutomationBody
-} from '../../../../shared/automations'
+} from '@pierre/shared/automations'
 
 export type AutomationsListResponse = { data: AutomationRecord[] }
 export type AutomationResponse = { data: AutomationRecord }

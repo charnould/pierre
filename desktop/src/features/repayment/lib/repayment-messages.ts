@@ -1,8 +1,6 @@
-import type { RcsChoice } from '../../../../../shared/rcs-message'
-import type {
-  RepaymentEmailMessage,
-  RepaymentRcsMessage
-} from '../../../../../shared/repayment-messages'
+import type { RcsChoice } from '@pierre/shared/rcs-message'
+import type { RepaymentEmailMessage, RepaymentRcsMessage } from '@pierre/shared/repayment-messages'
+
 import type { TenantRepaymentRow } from './classify-tenants'
 
 const PLACEHOLDER_KEYS = ['id_locataire', 'id_client', 'email_client', 'telephone_client'] as const

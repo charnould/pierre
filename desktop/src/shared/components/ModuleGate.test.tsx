@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, test } from 'bun:test'
 
+import { loadCustomizationFixture } from '@test/instance-customization-fixture'
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import { resetCustomization } from '@/shared/lib/instance-customization'
-import { loadCustomizationFixture } from '@/shared/lib/instance-customization.fixture'
 
 import { ModuleGate } from './ModuleGate'
 

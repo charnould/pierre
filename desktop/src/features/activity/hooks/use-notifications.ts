@@ -10,12 +10,13 @@ import {
   mapActivityRow
 } from '@/features/activity/lib/notification-types'
 import { toast } from '@/shared/components/ui/toast'
+import { warnRenderer } from '@/shared/lib/renderer-log'
 import type {
   ActivityContext,
   ActivityListItem,
   CreateActivityBody
-} from '@/shared/types/activites'
-import { mentionOf } from '@/shared/types/activites'
+} from '@/shared/types/activities'
+import { mentionOf } from '@/shared/types/activities'
 
 import {
   ACTIVITY_PAGE_SIZE,
@@ -78,6 +79,9 @@ export function useNotifications(
       if (!res || generation !== requestGeneration.current) return
       setRows(res.data)
       setHasMore(pageIsFull(res.data.length, limit))
+    } catch (error) {
+      if (generation !== requestGeneration.current) return
+      warnRenderer('useNotifications.refresh', error)
     } finally {
       if (initial && generation === requestGeneration.current) setLoading(false)
     }
@@ -128,6 +132,11 @@ export function useNotifications(
         if (!res || generation !== requestGeneration.current) return
         setRows(res.data)
         setHasMore(pageIsFull(res.data.length, limit))
+        setLoading(false)
+      })
+      .catch((error) => {
+        if (generation !== requestGeneration.current) return
+        warnRenderer('useNotifications.load', error)
         setLoading(false)
       })
     return () => {
