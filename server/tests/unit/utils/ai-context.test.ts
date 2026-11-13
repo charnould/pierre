@@ -5,7 +5,6 @@ import { AIContext, type ChatbotConfig } from '../../../utils/_schema'
 const config: ChatbotConfig = {
   id: 'default',
   display: 'PIERRE',
-  enabled: true,
   community_knowledge: true,
   trace: 'none',
   attachments: false,

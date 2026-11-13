@@ -15,7 +15,7 @@ function dataQuery(c: Context): string {
 const getHome = async (c: Context) => {
   try {
     const config = await loadChatbotConfig('default')
-    if (!isDefaultChatbotConfig(config) || !config.enabled) {
+    if (!isDefaultChatbotConfig(config)) {
       return c.html(emptyPage(), 404)
     }
     return c.html(chatPage({ active_config: config, dataParam: dataQuery(c) }))
@@ -32,7 +32,7 @@ export const getEmbed = async (c: Context) => {
 
   try {
     const config = await loadChatbotConfig('default')
-    if (!isDefaultChatbotConfig(config) || !config.enabled) {
+    if (!isDefaultChatbotConfig(config)) {
       return c.html(emptyPage(), 404)
     }
     return c.html(chatPage({ active_config: config, dataParam: '', embed: true }))

@@ -27,7 +27,6 @@ const user: User = { ...admin, email: 'user@example.org', isAdministrator: false
 const config: ChatbotConfig = {
   id: 'default',
   display: 'PIERRE',
-  enabled: true,
   community_knowledge: true,
   trace: 'none',
   attachments: false

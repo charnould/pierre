@@ -13,15 +13,12 @@ const user = (chatbotIds: string[]): User => ({
 const publicOn: ChatbotConfig = {
   id: 'default',
   display: 'Public',
-  enabled: true,
   community_knowledge: true,
   trace: 'none',
   attachments: true,
   examples: [],
   disclaimer: null
 }
-
-const publicOff: ChatbotConfig = { ...publicOn, enabled: false }
 
 const interne: ChatbotConfig = {
   id: 'interne',
@@ -40,22 +37,10 @@ const load =
   }
 
 describe('resolveAuthorizedChatConfig', () => {
-  test('allows anonymous and session access to default when enabled', async () => {
+  test('allows anonymous and session access to the public agent', async () => {
     const loader = load({ default: publicOn })
     expect(await resolveAuthorizedChatConfig('default', null, loader)).toEqual(publicOn)
     expect(await resolveAuthorizedChatConfig('default', user([]), loader)).toEqual(publicOn)
-  })
-
-  test('forbids default when disabled', async () => {
-    const loader = load({ default: publicOff })
-    await expect(resolveAuthorizedChatConfig('default', null, loader)).rejects.toMatchObject({
-      status: 403
-    })
-    await expect(
-      resolveAuthorizedChatConfig('default', user(['interne']), loader)
-    ).rejects.toMatchObject({
-      status: 403
-    })
   })
 
   test('allows an assigned internal chatbot and forbids others', async () => {

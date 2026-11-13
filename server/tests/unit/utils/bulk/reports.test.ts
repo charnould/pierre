@@ -248,11 +248,15 @@ describe('bulk reports', () => {
     })
     stop_bulk_scheduler()
     now = new Date(now.getTime() + 61_000)
-    await drain_bulk_jobs()
-    stop_bulk_scheduler()
-    const queued = get_activity_by_idempotency_key(
-      `bulk:${result.executionId}:recipient:LOC-OK:attempt:0`
-    )!
+    const queuedKey = `bulk:${result.executionId}:recipient:LOC-OK:attempt:0`
+    let queued = get_activity_by_idempotency_key(queuedKey)
+    for (let attempt = 0; attempt < 2 && !queued; attempt += 1) {
+      await drain_bulk_jobs()
+      stop_bulk_scheduler()
+      queued = get_activity_by_idempotency_key(queuedKey)
+    }
+    expect(queued).not.toBeNull()
+    if (!queued) throw new Error('Bulk attempt was not queued')
     update_status({
       activity_id: queued.id,
       type: 'email',

@@ -19,6 +19,7 @@ const CLI_ADMIN: User = {
 }
 
 const readSessionUser = async (c: Context): Promise<User | null> => {
+  if (!c.req.header('cookie')) return null
   const { headers, response: session } = await getAuth().api.getSession({
     headers: c.req.raw.headers,
     returnHeaders: true

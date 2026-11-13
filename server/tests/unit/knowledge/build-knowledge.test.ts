@@ -742,7 +742,7 @@ describe('build_knowledge_databases', () => {
 
     it('marks a TEXT column with > 20 distinct YYYY-MM-DD values as date with min and max', async () => {
       const rows = Array.from({ length: 25 }, (_, i) => {
-        const d = new Date(2020, 0, i + 1)
+        const d = new Date(Date.UTC(2020, 0, i + 1))
         return { date_signature: d.toISOString().slice(0, 10) }
       })
       await write_json('events.json', rows)
@@ -763,7 +763,7 @@ describe('build_knowledge_databases', () => {
 
     it('does not mark as date a TEXT column where some values are not YYYY-MM-DD', async () => {
       const rows = Array.from({ length: 24 }, (_, i) => {
-        const d = new Date(2020, 0, i + 1)
+        const d = new Date(Date.UTC(2020, 0, i + 1))
         return { date_signature: d.toISOString().slice(0, 10) }
       })
       rows.push({ date_signature: 'not-a-date' })

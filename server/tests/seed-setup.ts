@@ -68,7 +68,6 @@ export async function seedInstanceSetup(): Promise<void> {
     text({
       id: 'default',
       display: 'PIERRE',
-      enabled: true,
       community_knowledge: true,
       trace: 'none',
       attachments: false,

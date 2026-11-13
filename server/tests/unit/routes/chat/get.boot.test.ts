@@ -10,7 +10,6 @@ import { listAccessibleChatbots } from '../../../../utils/chatbot-config'
 const publicOn: ChatbotConfig = {
   id: 'default',
   display: 'Public',
-  enabled: true,
   community_knowledge: true,
   trace: 'none',
   attachments: true,
@@ -43,7 +42,7 @@ describe('GET /chat/config', () => {
     })
   })
 
-  it('lists default when enabled plus assigned chatbots', async () => {
+  it('lists the public agent plus assigned chatbots', async () => {
     const app = new Hono<{ Variables: { user: User } }>()
     app.use('*', async (c, next) => {
       c.set('user', {
@@ -90,8 +89,7 @@ describe('GET /chat/config', () => {
     app.get(
       '/chat/config',
       createGetAiBootController({
-        loadConfig: async (id) => {
-          if (id === 'default') return { ...publicOn, enabled: false }
+        loadConfig: async () => {
           throw new Error('missing')
         }
       })

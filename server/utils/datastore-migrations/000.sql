@@ -9,8 +9,11 @@ CREATE TABLE conversations (
 );
 
 CREATE INDEX idx_conversations_updated_at ON conversations (updated_at DESC);
-CREATE INDEX idx_conversations_config_id ON conversations (config_id);
-CREATE INDEX idx_conversations_review_status ON conversations (json_extract(review, '$.status'));
+CREATE INDEX idx_conversations_config_id
+  ON conversations (config_id, updated_at DESC);
+CREATE INDEX idx_conversations_review_status
+  ON conversations (json_extract(review, '$.status'), updated_at DESC)
+  WHERE json_extract(review, '$.status') IS NOT NULL;
 
 CREATE TABLE llm_runs (
   id TEXT PRIMARY KEY NOT NULL,
@@ -23,7 +26,6 @@ CREATE TABLE llm_runs (
 );
 
 CREATE INDEX idx_llm_runs_started_at ON llm_runs (started_at DESC);
-CREATE INDEX idx_llm_runs_operation_started ON llm_runs (operation, started_at DESC);
 
 CREATE TABLE user_profiles (
   id TEXT PRIMARY KEY NOT NULL,
@@ -89,8 +91,12 @@ CREATE TABLE verification (
   updatedAt DATE NOT NULL
 );
 
+CREATE UNIQUE INDEX idx_users_email_lower ON users (lower(email));
+CREATE INDEX idx_users_profile_id
+  ON users (profile_id)
+  WHERE profile_id IS NOT NULL;
 CREATE INDEX session_userId_idx ON session (userId);
-CREATE INDEX account_userId_idx ON account (userId);
+CREATE INDEX account_userId_idx ON account (userId, providerId);
 CREATE INDEX verification_identifier_idx ON verification (identifier);
 
 CREATE TABLE telemetry (
@@ -99,9 +105,6 @@ CREATE TABLE telemetry (
   host TEXT NOT NULL,
   event TEXT NOT NULL
 );
-
-CREATE INDEX idx_telemetry_recorded_at
-  ON telemetry (recorded_at DESC, id DESC);
 
 CREATE TABLE knowledge_records (
   id TEXT PRIMARY KEY,
@@ -149,22 +152,24 @@ CREATE TABLE activites (
 CREATE INDEX idx_activites_rattachement
   ON activites (rattachement, date_creation DESC, id DESC);
 CREATE INDEX idx_activites_client
-  ON activites (id_client, date_creation DESC);
-CREATE INDEX idx_activites_locataire
-  ON activites (id_locataire, date_creation DESC);
+  ON activites (id_client, date_creation DESC)
+  WHERE id_client IS NOT NULL;
 CREATE INDEX idx_activites_locataire_type
-  ON activites (id_locataire, type, date_creation DESC, id DESC);
+  ON activites (id_locataire, type, date_creation DESC, id DESC)
+  WHERE id_locataire IS NOT NULL;
 CREATE INDEX idx_activites_lot
-  ON activites (id_lot, date_creation DESC);
+  ON activites (id_lot, date_creation DESC)
+  WHERE id_lot IS NOT NULL;
 CREATE INDEX idx_activites_type
-  ON activites (type, date_creation DESC);
+  ON activites (type, rattachement, date_creation DESC, id DESC);
 CREATE INDEX idx_activites_auteur
-  ON activites (auteur, date_creation DESC);
-CREATE INDEX idx_activites_rattachement_thread
-  ON activites (rattachement, type, thread_id, revision DESC)
-  WHERE thread_id IS NOT NULL;
+  ON activites (auteur, type, date_creation DESC, id DESC);
+CREATE INDEX idx_activites_task_thread
+  ON activites (thread_id, revision DESC)
+  WHERE thread_id IS NOT NULL
+    AND type LIKE 'task.%';
 CREATE INDEX idx_activites_repayment_plan_thread
-  ON activites (rattachement, thread_id, id DESC)
+  ON activites (thread_id, id DESC)
   WHERE type IN (
     'repayment_plan.created',
     'repayment_plan.updated',
@@ -179,13 +184,15 @@ CREATE UNIQUE INDEX idx_activites_repayment_plan_snapshot
     'repayment_plan.finalized',
     'repayment_plan.closed'
   )
-  AND json_type(contenu, '$.foyer') = 'object';
+  AND json_type(contenu, '$.donnees_communes') = 'object';
 CREATE INDEX idx_activites_bulk
-  ON activites (bulk_id, date_creation DESC);
+  ON activites (bulk_id, type, date_creation DESC)
+  WHERE bulk_id IS NOT NULL;
 CREATE INDEX idx_activites_execution
-  ON activites (execution_id, date_creation DESC);
+  ON activites (execution_id, type, date_creation DESC)
+  WHERE execution_id IS NOT NULL;
 CREATE INDEX idx_activites_inbound_thread
-  ON activites (type, destinataire, thread_id)
+  ON activites (channel, destinataire, thread_id)
   WHERE thread_id IS NOT NULL;
 CREATE UNIQUE INDEX idx_activites_idempotency
   ON activites (idempotency_key)
@@ -193,9 +200,22 @@ CREATE UNIQUE INDEX idx_activites_idempotency
 CREATE INDEX idx_activites_id_externe
   ON activites (id_externe)
   WHERE id_externe IS NOT NULL;
-CREATE INDEX idx_activites_case_group
-  ON activites (rattachement, date_creation DESC, id DESC)
-  WHERE type IN ('case.group_changed', 'case.bucket_changed');
+CREATE INDEX idx_activites_read_state
+  ON activites (
+    auteur,
+    json_extract(contenu, '$.source_activity_id'),
+    date_creation DESC,
+    id DESC
+  )
+  WHERE type IN ('activity.read', 'activity.unread');
+CREATE INDEX idx_activites_reaction
+  ON activites (
+    auteur,
+    json_extract(contenu, '$.source_activity_id'),
+    date_creation DESC,
+    id DESC
+  )
+  WHERE type = 'activity.reaction_changed';
 
 CREATE TRIGGER activites_no_update
 BEFORE UPDATE ON activites
@@ -205,7 +225,7 @@ WHEN NOT (
     'repayment_plan.updated',
     'repayment_plan.finalized'
   )
-  AND json_type(OLD.contenu, '$.foyer') = 'object'
+  AND json_type(OLD.contenu, '$.donnees_communes') = 'object'
   AND NEW.contenu = '{}'
   AND NEW.id IS OLD.id
   AND NEW.date_creation IS OLD.date_creation
@@ -253,7 +273,13 @@ CREATE TABLE automations (
 );
 
 CREATE INDEX idx_automations_due
-  ON automations (status, next_run_at);
+  ON automations (next_run_at)
+  WHERE status = 'scheduled'
+    AND next_run_at IS NOT NULL;
+CREATE INDEX idx_automations_stuck
+  ON automations (lease_expires_at)
+  WHERE status = 'running'
+    AND run_token IS NOT NULL;
 
 CREATE TABLE bulk_operations (
   id TEXT PRIMARY KEY,
@@ -283,11 +309,11 @@ CREATE TABLE bulk_jobs (
 );
 
 CREATE INDEX idx_bulk_jobs_report_operation_execution
-  ON bulk_jobs (bulk_operation_id, execution_id);
+  ON bulk_jobs (bulk_operation_id, report_status, execution_id);
 CREATE INDEX idx_bulk_jobs_report_execution_status
-  ON bulk_jobs (execution_id, report_status);
+  ON bulk_jobs (execution_id, report_status, run_at);
 CREATE INDEX idx_bulk_jobs_due
-  ON bulk_jobs (run_at)
+  ON bulk_jobs (run_at, id)
   WHERE report_status = 'in_progress' AND run_at IS NOT NULL;
 
 CREATE TABLE contacts (
@@ -295,6 +321,10 @@ CREATE TABLE contacts (
   status TEXT NOT NULL,
   checked_at TEXT NOT NULL
 );
+
+CREATE INDEX idx_contacts_stale_sms
+  ON contacts (checked_at)
+  WHERE status = 'sms_compatible';
 
 CREATE TABLE setup (
   id TEXT PRIMARY KEY,
@@ -317,3 +347,21 @@ CREATE TABLE communication_dispatch_claims (
   claimed_at TEXT NOT NULL,
   FOREIGN KEY (activity_id) REFERENCES activites(id) ON DELETE CASCADE
 );
+
+CREATE TABLE communication_provider_operations (
+  activity_id INTEGER PRIMARY KEY,
+  target TEXT NOT NULL,
+  account TEXT NOT NULL,
+  product TEXT NOT NULL,
+  sending_id TEXT,
+  document_id TEXT,
+  recipient_id TEXT,
+  step TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (activity_id) REFERENCES activites(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_communication_provider_operations_reconcile
+  ON communication_provider_operations (target, account, updated_at)
+  WHERE step = 'submitted'
+    AND sending_id IS NOT NULL;
