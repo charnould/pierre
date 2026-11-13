@@ -37,7 +37,7 @@ export async function resolveAuthorizedChatConfig(
 
   const isAllowed =
     requestedId === 'default'
-      ? isDefaultChatbotConfig(config) && config.enabled
+      ? isDefaultChatbotConfig(config)
       : Boolean(user?.chatbotIds.includes(requestedId))
 
   if (!isAllowed) {

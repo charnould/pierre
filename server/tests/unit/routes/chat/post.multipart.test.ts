@@ -112,7 +112,7 @@ describe('POST /chat multipart and stream boundary', () => {
       anonymousApp.post(
         '/chat',
         createPostAiController({
-          loadConfig: async (id) => ({ id, enabled: true }),
+          loadConfig: async (id) => ({ id }),
           processAttachments: async () => {
             throw new Error('should not process attachments')
           }
@@ -235,7 +235,7 @@ describe('POST /chat multipart and stream boundary', () => {
       '/chat',
       createPostAiController({
         workspacesPath: () => '/workspaces/public',
-        loadConfig: async (id) => (id === 'default' ? { id, enabled: true } : { id }),
+        loadConfig: async (id) => (id === 'default' ? { id } : { id }),
         processAttachments: async () => ({
           content: 'processed',
           images: [],
@@ -297,7 +297,7 @@ describe('POST /chat multipart and stream boundary', () => {
       '/chat',
       createPostAiController({
         workspacesPath: () => '/workspaces/public',
-        loadConfig: async (id) => (id === 'default' ? { id, enabled: true } : { id }),
+        loadConfig: async (id) => (id === 'default' ? { id } : { id }),
         parseContext: async (value) => value as never,
         processAttachments: async (_files, _path, message) => {
           processed = true

@@ -11,7 +11,6 @@ const paths = testDatastorePaths('handle_conversation')
 const config: ChatbotConfig = {
   id: 'default',
   display: 'PIERRE',
-  enabled: true,
   community_knowledge: true,
   trace: 'none',
   attachments: false,

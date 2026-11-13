@@ -68,9 +68,9 @@ export async function listAccessibleChatbots(
 
   try {
     const publicConfig = await loadConfig('default')
-    if (isDefaultChatbotConfig(publicConfig) && publicConfig.enabled) configs.push(publicConfig)
+    if (isDefaultChatbotConfig(publicConfig)) configs.push(publicConfig)
   } catch {
-    // Public chatbot is absent until its entry is ready and enabled.
+    // Public chatbot is absent until its three pieces are ready.
   }
 
   for (const id of assigned) {
