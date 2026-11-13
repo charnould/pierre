@@ -74,14 +74,15 @@ describe('activites schema', () => {
     db.close()
   })
 
-  it('indexe le journal par rattachement et thread', () => {
+  it('indexe les parcours chauds du journal', () => {
     const db = new Database(DATASTORE_PATH)
     const indexes = db
       .query<{ name: string }, []>("SELECT name FROM sqlite_master WHERE type = 'index'")
       .all()
       .map((row) => row.name)
     db.close()
-    expect(indexes).toContain('idx_activites_rattachement_thread')
+    expect(indexes).toContain('idx_activites_task_thread')
+    expect(indexes).toContain('idx_activites_inbound_thread')
     expect(indexes).toContain('idx_activites_idempotency')
     expect(indexes).toContain('idx_activites_repayment_plan_thread')
     expect(indexes).toContain('idx_activites_repayment_plan_snapshot')

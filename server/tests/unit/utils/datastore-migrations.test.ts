@@ -20,8 +20,10 @@ const versions = (db: Database): number[] =>
     .all()
     .map((row) => row.version)
 
+const APP_VERSIONS = APP_MIGRATIONS.map((migration) => migration.version)
+
 const future_migration: DatastoreMigration = {
-  version: 8,
+  version: APP_MIGRATIONS.length + 1,
   name: 'future-example',
   sql: 'CREATE TABLE future_records (id TEXT PRIMARY KEY, value TEXT NOT NULL)'
 }
@@ -39,7 +41,13 @@ describe('datastore migrations', () => {
     await migrate_datastore(PATH)
 
     using db = open()
-    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6, 7])
+    expect(
+      db
+        .query<{ version: number; name: string }, []>(
+          'SELECT version, name FROM schema_migrations ORDER BY version'
+        )
+        .all()
+    ).toEqual([{ version: 1, name: 'baseline' }])
     expect(
       db
         .query<{ n: number }, []>("SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'setup'")
@@ -63,6 +71,7 @@ describe('datastore migrations', () => {
            'bulk_operations',
            'bulk_jobs',
            'communication_dispatch_claims',
+           'communication_provider_operations',
            'contacts',
            'conversations',
            'knowledge_records',
@@ -73,9 +82,12 @@ describe('datastore migrations', () => {
            'users',
            'verification',
            'idx_activites_execution',
-           'idx_activites_case_group',
            'idx_activites_id_externe',
-           'idx_telemetry_recorded_at'
+           'idx_activites_inbound_thread',
+           'idx_activites_task_thread',
+           'idx_automations_stuck',
+           'idx_communication_provider_operations_reconcile',
+           'idx_contacts_stale_sms'
          )
          ORDER BY name`
       )
@@ -89,12 +101,16 @@ describe('datastore migrations', () => {
       'bulk_jobs',
       'bulk_operations',
       'communication_dispatch_claims',
+      'communication_provider_operations',
       'contacts',
       'conversations',
-      'idx_activites_case_group',
       'idx_activites_execution',
       'idx_activites_id_externe',
-      'idx_telemetry_recorded_at',
+      'idx_activites_inbound_thread',
+      'idx_activites_task_thread',
+      'idx_automations_stuck',
+      'idx_communication_provider_operations_reconcile',
+      'idx_contacts_stale_sms',
       'knowledge_records',
       'llm_runs',
       'session',
@@ -213,7 +229,7 @@ describe('datastore migrations', () => {
         )
         .get()?.n
     ).toBe(0)
-    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6, 7])
+    expect(versions(db)).toEqual(APP_VERSIONS)
   })
 
   it('fails without rewriting a file that is not SQLite', async () => {
@@ -248,27 +264,7 @@ describe('datastore migrations', () => {
         )
         .get()?.n
     ).toBe(1)
-    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6, 7])
-  })
-
-  it('deletes stored reply automations', async () => {
-    await migrate_datastore(PATH, APP_MIGRATIONS.slice(0, 1))
-    const seeded = open()
-    seeded.run(
-      `INSERT INTO automations
-         (id, type, name, status, owner, cron, config)
-       VALUES
-         ('reply', 'replies', 'Brouillons', 'scheduled', 'ada', '0 8 * * *', '{}'),
-         ('report', 'report', 'Rapport', 'scheduled', 'ada', '0 8 * * *', '{}')`
-    )
-    seeded.close()
-
-    await migrate_datastore(PATH)
-
-    using db = open()
-    expect(
-      db.query<{ type: string }, []>('SELECT type FROM automations ORDER BY type').all()
-    ).toEqual([{ type: 'report' }])
+    expect(versions(db)).toEqual(APP_VERSIONS)
   })
 
   it('applies ordered pending migrations to the baseline database', async () => {
@@ -276,14 +272,14 @@ describe('datastore migrations', () => {
     await migrate_datastore(PATH, [...APP_MIGRATIONS, future_migration])
 
     using db = open()
-    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
+    expect(versions(db)).toEqual([...APP_VERSIONS, future_migration.version])
     db.run("INSERT INTO future_records VALUES ('future-1', 'ok')")
   })
 
   it('rolls back both schema and ledger writes when a migration fails', async () => {
     await migrate_datastore(PATH)
     const failing: DatastoreMigration = {
-      version: 8,
+      version: APP_MIGRATIONS.length + 1,
       name: 'failing-example',
       sql: `
         CREATE TABLE half_created (id TEXT PRIMARY KEY);
@@ -294,7 +290,7 @@ describe('datastore migrations', () => {
     await expect(migrate_datastore(PATH, [...APP_MIGRATIONS, failing])).rejects.toThrow()
 
     using db = open()
-    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6, 7])
+    expect(versions(db)).toEqual(APP_VERSIONS)
     expect(
       db
         .query<{ n: number }, []>(
@@ -310,7 +306,7 @@ describe('datastore migrations', () => {
     await expect(migrate_datastore(PATH)).rejects.toBeInstanceOf(DatastoreVersionError)
 
     using db = open()
-    expect(versions(db)).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
+    expect(versions(db)).toEqual([...APP_VERSIONS, future_migration.version])
     expect(
       db
         .query<{ n: number }, []>(
@@ -318,82 +314,5 @@ describe('datastore migrations', () => {
         )
         .get()?.n
     ).toBe(1)
-  })
-
-  it('renames the stored repayment plan template', async () => {
-    await migrate_datastore(PATH, APP_MIGRATIONS.slice(0, 3))
-    const seeded = open()
-    seeded.run(`INSERT INTO setup (id, content) VALUES ('repayment/template.docx', X'504B0304')`)
-    seeded.close()
-
-    await migrate_datastore(PATH)
-
-    using db = open()
-    const rows = db
-      .query<{ id: string; content: Uint8Array }, []>('SELECT id, content FROM setup ORDER BY id')
-      .all()
-    expect(rows.map((row) => row.id)).toEqual(['repayment/plan.docx'])
-    expect(Array.from(rows[0]?.content ?? [])).toEqual([0x50, 0x4b, 0x03, 0x04])
-  })
-
-  it('keeps an existing plan document and drops the retired template id', async () => {
-    await migrate_datastore(PATH, APP_MIGRATIONS.slice(0, 3))
-    const seeded = open()
-    seeded.run(
-      `INSERT INTO setup (id, content) VALUES
-        ('repayment/template.docx', X'1111'),
-        ('repayment/plan.docx', X'2222')`
-    )
-    seeded.close()
-
-    await migrate_datastore(PATH)
-
-    using db = open()
-    const rows = db
-      .query<{ id: string; content: Uint8Array }, []>('SELECT id, content FROM setup ORDER BY id')
-      .all()
-    expect(rows.map((row) => row.id)).toEqual(['repayment/plan.docx'])
-    expect(Array.from(rows[0]?.content ?? [])).toEqual([0x22, 0x22])
-  })
-
-  it('drops stored repayment message files', async () => {
-    await migrate_datastore(PATH, APP_MIGRATIONS.slice(0, 4))
-    const seeded = open()
-    seeded.run(`INSERT INTO setup (id, content) VALUES ('repayment/templates/note.md', X'41')`)
-    seeded.close()
-
-    await migrate_datastore(PATH)
-
-    using db = open()
-    expect(
-      db
-        .query<{ n: number }, []>(
-          `SELECT COUNT(*) AS n FROM setup WHERE id LIKE 'repayment/templates/%'`
-        )
-        .get()?.n
-    ).toBe(0)
-  })
-
-  it('purges a repayment snapshot that has no root schedule', async () => {
-    await migrate_datastore(PATH, APP_MIGRATIONS.slice(0, 6))
-    const seeded = open()
-    seeded.run(
-      `INSERT INTO activites (date_creation, rattachement, auteur, type, contenu)
-       VALUES
-         ('2026-11-01T10:00:00Z', 'repayment:LOC-1', 'ada@example.org', 'repayment_plan.created', '{"donnees_communes":{}}'),
-         ('2026-11-02T10:00:00Z', 'repayment:LOC-2', 'ada@example.org', 'repayment_plan.created', '{"donnees_communes":{},"echeancier":{}}')`
-    )
-    seeded.close()
-
-    await migrate_datastore(PATH)
-
-    using db = open()
-    expect(
-      db
-        .query<{ rattachement: string }, []>(
-          `SELECT rattachement FROM activites WHERE type = 'repayment_plan.created' ORDER BY rattachement`
-        )
-        .all()
-    ).toEqual([{ rattachement: 'repayment:LOC-2' }])
   })
 })

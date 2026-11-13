@@ -32,19 +32,14 @@ const SharedChatbotFields = {
 
 export const InternalChatbotConfig = z.object(SharedChatbotFields).strict()
 
-export const DefaultChatbotConfig = z
-  .object({
-    ...SharedChatbotFields,
-    enabled: z.boolean()
-  })
-  .strict()
+export const DefaultChatbotConfig = InternalChatbotConfig
 
 export const ChatbotConfig = z.union([DefaultChatbotConfig, InternalChatbotConfig])
 
 export function isDefaultChatbotConfig(
   config: ChatbotConfig
 ): config is z.infer<typeof DefaultChatbotConfig> {
-  return 'enabled' in config
+  return config.id === 'default'
 }
 
 function chromeList(value: string[] | null | undefined): string[] {

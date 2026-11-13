@@ -316,8 +316,8 @@ function agentsText(id: string): string | null {
 }
 
 function parseDefaultChatbot(root: any): any {
+  delete root.enabled
   chatbotFields(root, 'default')
-  if (typeof root.enabled !== 'boolean') throw new SetupError('enabled requis.')
   if ('custom_data' in root) throw new SetupError('custom_data retiré.')
   return root
 }
@@ -593,13 +593,23 @@ export async function writeSetup(id: string, content: Uint8Array): Promise<void>
 }
 
 export function deleteInternalChatbot(id: string): void {
-  if (id === 'default' || !CHATBOT_ID.test(id)) throw new SetupError('chatbot inconnu.')
+  if (id === 'default') {
+    deleteSetupRows([
+      'chatbots/default',
+      'chatbots/default/AGENTS.md',
+      'chatbots/icons/icon.svg',
+      ...PHONE_ICONS.map(([iconId]) => iconId)
+    ])
+    return
+  }
+  if (!CHATBOT_ID.test(id)) throw new SetupError('chatbot inconnu.')
+  deleteSetupRows([`chatbots/${id}`, `chatbots/${id}/AGENTS.md`])
+}
+
+function deleteSetupRows(ids: readonly string[]): void {
   const db = openDatastore()
   try {
-    db.run('DELETE FROM setup WHERE id = ? OR id = ?', [
-      `chatbots/${id}`,
-      `chatbots/${id}/AGENTS.md`
-    ])
+    db.run(`DELETE FROM setup WHERE id IN (${ids.map(() => '?').join(', ')})`, [...ids])
   } finally {
     db.close()
   }

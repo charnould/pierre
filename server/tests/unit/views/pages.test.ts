@@ -9,7 +9,6 @@ import { emptyPage } from '../../../views/empty'
 const defaultConfig: ChatbotConfig = {
   id: 'default',
   display: 'PIERRE',
-  enabled: true,
   community_knowledge: true,
   trace: 'none',
   attachments: false,
