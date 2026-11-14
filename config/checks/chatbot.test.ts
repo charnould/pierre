@@ -16,10 +16,10 @@ const shared = {
   disclaimer: 'Vérifier.'
 }
 
-test('default schema requires enabled', () => {
-  expect(DefaultChatbotConfig.safeParse({ id: 'default', ...shared }).success).toBe(false)
+test('default schema has no enabled switch', () => {
+  expect(DefaultChatbotConfig.safeParse({ id: 'default', ...shared }).success).toBe(true)
   expect(DefaultChatbotConfig.safeParse({ id: 'default', ...shared, enabled: true }).success).toBe(
-    true
+    false
   )
 })
 
