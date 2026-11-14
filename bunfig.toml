@@ -8,5 +8,8 @@ sortImports = true
 sortTailwindcss = true
 ignorePatterns = ["**/*.js", "**/dist/**", "docs/assets/**", "**/plans/**"]
 
+[test]
+root = "config"
+
 [serve.static]
 plugins = ["./desktop/build-plugin.ts"]
