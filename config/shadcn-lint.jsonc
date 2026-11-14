@@ -42,7 +42,7 @@
       }
     },
     {
-      "files": ["**/src/features/outreach/components/BulkReports.tsx"],
+      "files": ["**/src/features/bulk/components/BulkReports.tsx"],
       "rules": {
         "shadcn/no-inline-styles": ["error", { "allow": ["top"] }]
       }
@@ -297,7 +297,7 @@
       }
     },
     {
-      "files": ["**/src/features/outreach/components/BulkEditor.tsx"],
+      "files": ["**/src/features/bulk/components/BulkEditor.tsx"],
       "rules": {
         "shadcn/no-restyle": [
           "error",
@@ -612,13 +612,13 @@
       }
     },
     {
-      "files": ["**/src/features/outreach/components/BulkEditor.tsx"],
+      "files": ["**/src/features/bulk/components/BulkMessagePreview.tsx"],
       "rules": {
         "shadcn/no-arbitrary-values": ["error", { "allow": ["h-[60vh]"] }]
       }
     },
     {
-      "files": ["**/src/features/outreach/components/BulkOperationsList.tsx"],
+      "files": ["**/src/features/bulk/components/BulkOperationsList.tsx"],
       "rules": {
         "shadcn/no-arbitrary-values": [
           "error",
