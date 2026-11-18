@@ -2,7 +2,8 @@ import { Database } from 'bun:sqlite'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
 import { mkdir, rm } from 'node:fs/promises'
 
-import { create_trusted_activity } from '../../../utils/activities/write'
+import { emptyRepaymentCaseFile } from '../../../../shared/repayment-case-file'
+import { create_activity, create_trusted_activity } from '../../../utils/activities/write'
 import { import_rows } from '../../../utils/knowledge/sqlite-table-import'
 import {
   get_ledger_column_facets,
@@ -290,6 +291,103 @@ describe('ledger SQL queries', () => {
     expect(
       list_ledger_balances({ ...LedgerPaginationQuery.parse({}), filters: {} }).data[0]?.['bucket']
     ).toBe('amiable')
+  })
+
+  it('lists a repayment dossier when comptes_locataires is absent', () => {
+    const forms = emptyRepaymentCaseFile()
+    forms.donnees_communes.identification.id_client = 'CLI-9'
+    forms.donnees_communes.identification.id_locataire = 'LOC-9'
+    forms.donnees_communes.compte_locataire.solde_compte_en_euros = 300
+    forms.donnees_communes.budget.charges_mensuelles[0]!.montant_en_euros = 100
+    forms.donnees_communes.bail.debut_bail = '2024-01-01'
+    forms.donnees_communes.foyer.adultes[0]!.prenom = 'Ada'
+    forms.donnees_communes.foyer.adultes[0]!.nom = 'Lovelace'
+    create_activity('agent@example.org', {
+      contexte: 'repayment',
+      ref: 'LOC-9',
+      type: 'repayment_plan.created',
+      contenu: JSON.stringify(forms),
+      chronologie: []
+    })
+    create_trusted_activity('agent@example.org', {
+      contexte: 'repayment',
+      ref: 'LOC-9',
+      type: 'case.group_changed',
+      contenu: JSON.stringify({ version: 1, before: null, after: 'amiable' }),
+      auteur: 'system:repayment'
+    })
+    create_trusted_activity('agent@example.org', {
+      contexte: 'repayment',
+      ref: 'LOC-9',
+      type: 'case.assignee_changed',
+      contenu: JSON.stringify({
+        version: 1,
+        before: null,
+        after: { id: 'user:agent@example.org', label: 'agent@example.org' }
+      }),
+      auteur: 'system:repayment'
+    })
+    create_trusted_activity('agent@example.org', {
+      contexte: 'repayment',
+      ref: 'LOC-9',
+      type: 'case.tags_changed',
+      contenu: JSON.stringify({ version: 1, before: [], after: ['Décès', '+65 ans'] }),
+      auteur: 'system:repayment'
+    })
+
+    const result = list_ledger_balances({ ...LedgerPaginationQuery.parse({}), filters: {} })
+    expect(result.data).toEqual([
+      expect.objectContaining({
+        id_locataire: 'LOC-9',
+        id_client: 'CLI-9',
+        solde_locataire: 300,
+        ratio_dette_loyer: 3,
+        debut_bail: '2024-01-01',
+        prenom: 'Ada',
+        nom: 'Lovelace',
+        statut: 'client',
+        bucket: 'amiable',
+        gestionnaire: 'agent@example.org',
+        repayment_tags: ['Décès', '+65 ans']
+      })
+    ])
+    expect(result.meta.total).toBe(1)
+    expect(get_ledger_column_facets({ column: 'id_client' }).values).toEqual(['CLI-9'])
+  })
+
+  it('adds a repayment dossier that is absent from the ledger and does not duplicate one', async () => {
+    await seed([movement('LOC-1', 400, '2030-01-01', { id_client: 'CLI-1' })])
+    const accounted = emptyRepaymentCaseFile()
+    accounted.donnees_communes.identification.id_client = 'CLI-1'
+    accounted.donnees_communes.identification.id_locataire = 'LOC-1'
+    accounted.donnees_communes.compte_locataire.solde_compte_en_euros = 1
+    create_activity('agent@example.org', {
+      contexte: 'repayment',
+      ref: 'LOC-1',
+      type: 'repayment_plan.created',
+      contenu: JSON.stringify(accounted),
+      chronologie: []
+    })
+    const manual = emptyRepaymentCaseFile()
+    manual.donnees_communes.identification.id_client = 'CLI-2'
+    manual.donnees_communes.identification.id_locataire = 'LOC-2'
+    manual.donnees_communes.compte_locataire.solde_compte_en_euros = 50
+    create_activity('agent@example.org', {
+      contexte: 'repayment',
+      ref: 'LOC-2',
+      type: 'repayment_plan.created',
+      contenu: JSON.stringify(manual),
+      chronologie: []
+    })
+
+    const rows = list_ledger_balances({ ...LedgerPaginationQuery.parse({}), filters: {} }).data
+    expect(rows.map((row) => row['id_locataire']).sort()).toEqual(['LOC-1', 'LOC-2'])
+    expect(rows.find((row) => row['id_locataire'] === 'LOC-1')).toEqual(
+      expect.objectContaining({ solde_locataire: 400, id_client: 'CLI-1' })
+    )
+    expect(rows.find((row) => row['id_locataire'] === 'LOC-2')).toEqual(
+      expect.objectContaining({ solde_locataire: 50, id_client: 'CLI-2', statut: 'client' })
+    )
   })
 
   it('filters, sorts and facets only declared output columns', async () => {
