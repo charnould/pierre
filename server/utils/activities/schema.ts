@@ -9,7 +9,8 @@ import {
   type Mention,
   type TaskState
 } from '../../../shared/activities'
-import { isRepaymentPlanEventType } from '../../../shared/repayment-plan'
+import { isCivilDay } from '../../../shared/activity-content'
+import { isRepaymentPlanEventType } from '../../../shared/repayment-case-file'
 
 export const MENTION_RE = /@([a-z0-9._-]+)/gi
 export const AUTHOR_RE = /^(user|agent|tenant|candidate|automation|system|external):.+$/
@@ -21,29 +22,98 @@ const MentionSchema = z.object({
 
 const MentionsSchema = z.array(MentionSchema)
 
-export const CreateActivityInput = z
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+const ChronologyCommentSchema = z
+  .union([z.string().trim(), z.null()])
+  .transform((value) => (value === '' ? null : value))
+
+const ChronologyDateSchema = z
+  .string()
+  .refine((value) => isCivilDay(value), { message: 'Invalid chronology date' })
+
+const ChronologyActionSchema = z
   .object({
-    contexte: z.enum(ACTIVITY_CONTEXTS),
-    ref: z.string().trim().min(1),
-    type: z.enum(ACTIVITY_TYPES),
-    channel: z.enum(COMMUNICATION_CHANNELS).nullable().optional(),
-    destinataire: z.string().trim().min(1).nullable().optional(),
-    recipients: z.array(z.string().trim().min(1)).optional(),
-    contenu: z.string().default(''),
-    threadId: z.string().trim().min(1).nullable().optional(),
-    idempotencyKey: z.string().trim().min(1).nullable().optional()
+    kind: z.literal('action'),
+    id: z.string().regex(UUID),
+    action: z.string().trim().min(1),
+    date_realisation: ChronologyDateSchema,
+    commentaire: ChronologyCommentSchema
   })
   .strict()
 
-export const TrustedCreateActivityInput = CreateActivityInput.extend({
-  auteur: z
-    .string()
-    .regex(/^(agent|automation|system):.+$/)
-    .optional(),
-  bulkId: z.string().trim().min(1).nullable().optional(),
-  executionId: z.string().trim().min(1).nullable().optional(),
-  dateCreation: z.iso.datetime().optional()
-}).strict()
+const ChronologyPhaseSchema = z
+  .object({
+    kind: z.literal('phase'),
+    phase: z.string().trim().min(1),
+    date_realisation: ChronologyDateSchema,
+    commentaire: ChronologyCommentSchema
+  })
+  .strict()
+
+const ChronologySchema = z
+  .array(z.discriminatedUnion('kind', [ChronologyActionSchema, ChronologyPhaseSchema]))
+  .superRefine((items, ctx) => {
+    const seen = new Set<string>()
+    for (const [index, item] of items.entries()) {
+      if (item.kind !== 'action' || !seen.has(item.id)) {
+        if (item.kind === 'action') seen.add(item.id)
+        continue
+      }
+      ctx.addIssue({ code: 'custom', path: [index, 'id'], message: 'Duplicate chronology id' })
+    }
+  })
+
+const requirePlanChronology = (
+  value: { type: string; chronologie?: unknown },
+  ctx: z.RefinementCtx
+) => {
+  if (value.type === 'repayment_plan.created') {
+    if (value.chronologie === undefined) {
+      ctx.addIssue({ code: 'custom', path: ['chronologie'], message: 'Chronology is required' })
+    }
+    return
+  }
+  if (value.chronologie !== undefined) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['chronologie'],
+      message: 'Chronology is not allowed on this activity'
+    })
+  }
+}
+
+const CreateActivityFields = {
+  contexte: z.enum(ACTIVITY_CONTEXTS),
+  ref: z.string().trim().min(1),
+  type: z.enum(ACTIVITY_TYPES),
+  channel: z.enum(COMMUNICATION_CHANNELS).nullable().optional(),
+  destinataire: z.string().trim().min(1).nullable().optional(),
+  recipients: z.array(z.string().trim().min(1)).optional(),
+  contenu: z.string().default(''),
+  chronologie: ChronologySchema.optional(),
+  threadId: z.string().trim().min(1).nullable().optional(),
+  idempotencyKey: z.string().trim().min(1).nullable().optional()
+}
+
+export const CreateActivityInput = z
+  .object(CreateActivityFields)
+  .strict()
+  .superRefine(requirePlanChronology)
+
+export const TrustedCreateActivityInput = z
+  .object({
+    ...CreateActivityFields,
+    auteur: z
+      .string()
+      .regex(/^(agent|automation|system):.+$/)
+      .optional(),
+    bulkId: z.string().trim().min(1).nullable().optional(),
+    executionId: z.string().trim().min(1).nullable().optional(),
+    dateCreation: z.iso.datetime().optional()
+  })
+  .strict()
+  .superRefine(requirePlanChronology)
 
 export type CreateActivityInput = z.infer<typeof CreateActivityInput>
 export type TrustedCreateActivityInput = z.infer<typeof TrustedCreateActivityInput>
@@ -139,7 +209,8 @@ export const ActivityPatchInput = z.discriminatedUnion('operation', [
   }),
   z.object({
     operation: z.literal('save_repayment_plan'),
-    contenu: z.string()
+    contenu: z.string(),
+    chronologie: ChronologySchema
   })
 ])
 

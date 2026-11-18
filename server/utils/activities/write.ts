@@ -183,16 +183,21 @@ const create_activity_internal = (
         }
         const contenu = normalize_activity_content(parsed.type, parsed.contenu)
         const mentions = build_mentions(db, contenu, parsed.recipients ?? [])
-        return create_repayment_plan(db, {
-          date_creation,
-          rattachement,
-          auteur: author,
-          facets,
-          mentions,
-          type: parsed.type,
-          contenu,
-          idempotency_key
-        })
+        if (!parsed.chronologie) throw new ActivitiesError('Chronology is required')
+        return create_repayment_plan(
+          db,
+          {
+            date_creation,
+            rattachement,
+            auteur: author,
+            facets,
+            mentions,
+            type: parsed.type,
+            contenu,
+            idempotency_key
+          },
+          parsed.chronologie
+        )
       }
 
       const contenu = normalize_activity_content(parsed.type, parsed.contenu)
@@ -376,7 +381,8 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
           return save_repayment_plan(db, {
             existing,
             auteur: destinataire,
-            contenu: parsed.contenu
+            contenu: parsed.contenu,
+            chronologie: parsed.chronologie
           })
         }
         throw new ActivitiesError('Invalid repayment plan operation', 'forbidden')

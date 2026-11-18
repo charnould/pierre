@@ -15,9 +15,9 @@ import {
 import { parse_stored_choices, type RcsChoice } from './rcs-message'
 import {
   isRepaymentPlanEventType,
-  parseRepaymentPlanContent,
-  type RepaymentForms
-} from './repayment-plan'
+  parseRepaymentCaseFileContent,
+  type RepaymentCaseFile
+} from './repayment-case-file'
 
 type TaskSnapshot = {
   title: string
@@ -163,7 +163,7 @@ export type ActivityContent =
   | ActivityMetaContent
   | TitledContent
   | SignatureContent
-  | RepaymentForms
+  | RepaymentCaseFile
 
 export const parseContentJson = (raw: string): Record<string, unknown> => {
   const value: unknown = JSON.parse(raw)
@@ -535,7 +535,7 @@ export const parseActivityContent = (type: string, raw: string): ActivityContent
     if (isCommunicationOpenedType(type)) return parseCommunicationOpenedContent(raw)
     if (isCommunicationStatusType(type)) return parseCommunicationStatusContent(raw)
     if (isActivityMetaType(type)) return parseActivityMetaContent(raw)
-    if (isRepaymentPlanEventType(type)) return parseRepaymentPlanContent(type, raw)
+    if (isRepaymentPlanEventType(type)) return parseRepaymentCaseFileContent(type, raw)
     if (isTitledType(type)) return parseTitledContent(raw)
     if (isSignatureType(type)) return parseSignatureContent(raw)
     return null
