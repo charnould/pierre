@@ -35,7 +35,12 @@ export async function seedInstanceSetup(): Promise<void> {
     'repayment',
     text({
       phases: ['Non traités', 'Amiable', 'Partis'],
-      caseActions: ['Analyser le dossier'],
+      caseActions: [
+        'Analyser le dossier',
+        'Visiter à domicile',
+        'Saisir la CTESI',
+        'Saisir la CCPAPEX'
+      ],
       batchActions: [
         'Envoyer un RCS de relance',
         'Relancer',

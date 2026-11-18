@@ -26,6 +26,86 @@ const value_label = (value: unknown): string | null => {
   return null
 }
 
+type TaskSignal = {
+  actions: { id_locataire: string; label: string; date: string }[]
+  history: { id_locataire: string; label: string }[]
+}
+
+const taskSignals = (db: Database, tenantIds: string[]): TaskSignal => {
+  const actions: TaskSignal['actions'] = []
+  const history: TaskSignal['history'] = []
+  const ids = [...new Set(tenantIds.filter(Boolean))]
+  if (ids.length === 0) return { actions, history }
+  const placeholders = ids.map(() => '?').join(', ')
+  const rows = db
+    .query<
+      {
+        id_locataire: string
+        thread_id: string
+        type: string
+        date_creation: string
+        contenu: string
+      },
+      string[]
+    >(
+      `SELECT id_locataire, thread_id, type, date_creation, contenu
+       FROM activites
+       WHERE id_locataire IN (${placeholders})
+         AND rattachement = 'repayment:' || id_locataire
+         AND type LIKE 'task.%'
+         AND thread_id IS NOT NULL
+       ORDER BY thread_id, revision DESC, id DESC`
+    )
+    .all(...ids)
+
+  type Thread = {
+    id_locataire: string
+    thread_id: string
+    head: ReturnType<typeof parseTaskContent>
+    headDate: string
+    completions: { label: string; date: string }[]
+  }
+  const threads: Thread[] = []
+  for (const row of rows) {
+    const content = parseTaskContent(row.contenu)
+    const title = content?.task.title.trim() ?? ''
+    let thread = threads.at(-1)
+    if (!thread || thread.thread_id !== row.thread_id) {
+      thread = {
+        id_locataire: row.id_locataire,
+        thread_id: row.thread_id,
+        head: content,
+        headDate: row.date_creation,
+        completions: []
+      }
+      threads.push(thread)
+    }
+    if (row.type === 'task.completed' && content?.task.state === 'completed' && title) {
+      thread.completions.push({ label: title, date: row.date_creation })
+    }
+  }
+
+  for (const thread of threads) {
+    const head = thread.head
+    if (!head || head.task.state === 'deleted') continue
+    const title = head.task.title.trim()
+    if (head.task.state === 'completed' && title) {
+      actions.push({
+        id_locataire: thread.id_locataire,
+        label: title,
+        date: head.completed_on ? `${head.completed_on}T12:00:00Z` : thread.headDate
+      })
+      history.push({ id_locataire: thread.id_locataire, label: title })
+      continue
+    }
+    for (const past of thread.completions) {
+      actions.push({ id_locataire: thread.id_locataire, label: past.label, date: past.date })
+      history.push({ id_locataire: thread.id_locataire, label: past.label })
+    }
+  }
+  return { actions, history }
+}
+
 export const latest_repayment_states = (
   db: Database,
   tenantIds: string[]
@@ -51,7 +131,7 @@ export const latest_repayment_states = (
          AND (
            type IN (
              'case.group_changed', 'case.assignee_changed', 'case.tags_changed',
-             'task.completed', 'bulk.applied'
+             'bulk.applied'
            )
            OR (
              type LIKE 'communication.%'
@@ -104,14 +184,12 @@ export const latest_repayment_states = (
         bucketResolved.add(row.id_locataire)
       }
     }
-    const task = row.type === 'task.completed' ? parseTaskContent(row.contenu) : null
     const actionLabel =
-      task?.task.title ??
-      (row.type === 'bulk.applied' && typeof metadata['title'] === 'string'
+      row.type === 'bulk.applied' && typeof metadata['title'] === 'string'
         ? metadata['title']
         : typeof metadata['action'] === 'string'
           ? metadata['action']
-          : null)
+          : null
     const actionDate = actionLabel ? row.date_creation : null
     const actionDateKey = actionDate ? chronological_date_key(actionDate) : null
     const latestActionDateKey = actionDates.get(row.id_locataire)
@@ -136,6 +214,23 @@ export const latest_repayment_states = (
     }
     result.set(row.id_locataire, state)
   }
+  for (const action of taskSignals(db, ids).actions) {
+    const actionDateKey = chronological_date_key(action.date)
+    const latestActionDateKey = actionDates.get(action.id_locataire)
+    if (!actionDateKey || (latestActionDateKey && actionDateKey <= latestActionDateKey)) continue
+    const state = result.get(action.id_locataire) ?? {
+      bucket: null,
+      derniere_action_realisee: null,
+      date_derniere_action_realisee: null,
+      gestionnaire: null,
+      gestionnaire_email: null,
+      tags: []
+    }
+    state.derniere_action_realisee = action.label
+    state.date_derniere_action_realisee = action.date
+    actionDates.set(action.id_locataire, actionDateKey)
+    result.set(action.id_locataire, state)
+  }
   return result
 }
 
@@ -154,11 +249,6 @@ export const repayment_action_history = (
        FROM (
          SELECT id_locataire,
            CASE
-             WHEN type = 'task.completed'
-               AND json_valid(contenu)
-               AND json_type(contenu, '$.task.title') = 'text'
-               AND trim(json_extract(contenu, '$.task.title')) <> ''
-             THEN trim(json_extract(contenu, '$.task.title'))
              WHEN type = 'bulk.applied'
                AND json_valid(contenu)
                AND json_type(contenu, '$.title') = 'text'
@@ -174,7 +264,7 @@ export const repayment_action_history = (
          WHERE id_locataire IN (${placeholders})
            AND rattachement = 'repayment:' || id_locataire
            AND (
-             type IN ('task.completed', 'bulk.applied')
+             type = 'bulk.applied'
              OR type LIKE 'communication.%'
            )
        )
@@ -182,6 +272,11 @@ export const repayment_action_history = (
     )
     .all(...ids)
   for (const row of rows) {
+    const set = result.get(row.id_locataire) ?? new Set<string>()
+    set.add(row.label)
+    result.set(row.id_locataire, set)
+  }
+  for (const row of taskSignals(db, ids).history) {
     const set = result.get(row.id_locataire) ?? new Set<string>()
     set.add(row.label)
     result.set(row.id_locataire, set)
