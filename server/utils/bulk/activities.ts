@@ -42,13 +42,13 @@ export const insert_bulk_visible_activity = (
       contenu:
         input.type === 'case.group_changed'
           ? JSON.stringify({
-              version: 2,
+              version: 1,
               before: input.content['before'] ?? null,
               after: input.content['after'] ?? input.content['bucket'],
               ...(manager ? { note: `Référent notifié : @${login_from_email(manager)}` } : {})
             })
           : JSON.stringify({
-              version: 2,
+              version: 1,
               title:
                 typeof input.content['title'] === 'string'
                   ? input.content['title']

@@ -91,7 +91,7 @@ export const execute_bulk_operation = async (
       type: 'bulk.ran',
       mentions: [],
       contenu: stringifyBulkRunContent({
-        version: 2,
+        version: 1,
         title: bulkOperation.name,
         values: {
           execution_id,

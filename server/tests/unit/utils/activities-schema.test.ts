@@ -40,7 +40,7 @@ describe('activites schema', () => {
       contexte: 'tickets',
       ref: 'REQ-1',
       type: 'note.published',
-      contenu: JSON.stringify({ version: 2, text: 'Bonjour' })
+      contenu: JSON.stringify({ version: 1, text: 'Bonjour' })
     })
     expect(typeof created.id).toBe('number')
     expect(Number.isInteger(created.id)).toBe(true)
@@ -61,7 +61,7 @@ describe('activites schema', () => {
       facets: { id_client: null, id_locataire: null, id_lot: null },
       type: 'communication.sent' as const,
       mentions: [],
-      contenu: JSON.stringify({ version: 2, sender: 'Alice', body: 'Hi' }),
+      contenu: JSON.stringify({ version: 1, sender: 'Alice', body: 'Hi' }),
       thread_id: 'thread-1',
       revision: 1
     }
@@ -99,7 +99,7 @@ describe('activites schema', () => {
         'tickets:REQ-1',
         user(ALICE),
         'note.published',
-        JSON.stringify({ version: 2, legacyText: 'Bonjour' }),
+        JSON.stringify({ version: 1, legacyText: 'Bonjour' }),
         'thread-legacy'
       ]
     )

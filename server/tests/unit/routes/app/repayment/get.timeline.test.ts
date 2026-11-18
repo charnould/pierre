@@ -88,7 +88,7 @@ describe('GET /repayment', () => {
       contexte: 'repayment',
       ref: 'LOC-1',
       type: 'case.group_changed',
-      contenu: JSON.stringify({ version: 2, before: null, after: 'amiable' }),
+      contenu: JSON.stringify({ version: 1, before: null, after: 'amiable' }),
       auteur: 'system:repayment'
     })
     create_activity(user.email, {
@@ -96,7 +96,7 @@ describe('GET /repayment', () => {
       ref: 'LOC-1',
       type: 'task.created',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         task: {
           title: 'Appeler le locataire',
           state: 'open',
@@ -129,7 +129,7 @@ describe('GET /repayment', () => {
       contexte: 'repayment',
       ref: 'LOC-2',
       type: 'case.tags_changed',
-      contenu: JSON.stringify({ version: 2, before: [], after: ['fragile'] }),
+      contenu: JSON.stringify({ version: 1, before: [], after: ['fragile'] }),
       auteur: 'system:repayment'
     })
 
@@ -154,7 +154,7 @@ describe('GET /repayment', () => {
       contexte: 'repayment',
       ref: 'LOC-1',
       type: 'case.tags_changed',
-      contenu: JSON.stringify({ version: 2, before: [], after: ['fragile'] }),
+      contenu: JSON.stringify({ version: 1, before: [], after: ['fragile'] }),
       auteur: 'system:repayment'
     })
 
@@ -195,7 +195,7 @@ describe('GET /repayment', () => {
       for (let index = 0; index < 2_001; index += 1) {
         insertTag.run(
           new Date(Date.UTC(2035, 0, 1, 0, 0, index)).toISOString(),
-          JSON.stringify({ version: 2, before: [], after: [`tag-${index}`] })
+          JSON.stringify({ version: 1, before: [], after: [`tag-${index}`] })
         )
       }
       for (let index = 0; index < 501; index += 1) {
@@ -203,7 +203,7 @@ describe('GET /repayment', () => {
         insertAction.run(
           date,
           JSON.stringify({
-            version: 2,
+            version: 1,
             task: {
               title: `Action ${index}`,
               state: 'open',

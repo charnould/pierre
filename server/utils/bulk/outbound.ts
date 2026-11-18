@@ -53,7 +53,7 @@ export const fallback_outbound_contenu = (
   rendered: { subject?: string; body: string }
 ): string =>
   JSON.stringify({
-    version: 2,
+    version: 1,
     action: step.action,
     body: 'fileBase64' in step ? step.summary : rendered.body,
     ...(rendered.subject ? { subject: rendered.subject } : {}),
@@ -67,7 +67,7 @@ export const rich_rcs_outbound_contenu = (
   nodeIndex: number
 ): string =>
   JSON.stringify({
-    version: 2,
+    version: 1,
     action: delivery.action,
     body: rendered.body,
     purpose: 'bulk',

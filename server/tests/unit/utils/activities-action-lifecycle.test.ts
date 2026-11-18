@@ -19,7 +19,7 @@ const paths = use_activities_test_env('action_lifecycle')
 
 const task_content = (assignee = BOB) =>
   JSON.stringify({
-    version: 2,
+    version: 1,
     task: {
       title: 'Contacter le garant',
       state: 'open',
@@ -55,7 +55,7 @@ describe('action lifecycle', () => {
       resultat: 'Garant joint.'
     })
     expect(parseContentJson(completed.contenu)).toMatchObject({
-      version: 2,
+      version: 1,
       task: { state: 'completed' },
       result: 'Garant joint.'
     })
@@ -81,7 +81,7 @@ describe('action lifecycle', () => {
       dateEcheance: '2026-09-02'
     })
     expect(parseContentJson(reopened.contenu)).toMatchObject({
-      version: 2,
+      version: 1,
       task: {
         state: 'open',
         assignee: { id: user(BOB) },
@@ -94,7 +94,7 @@ describe('action lifecycle', () => {
       motif: 'Sans objet.'
     })
     expect(parseContentJson(ignored.contenu)).toMatchObject({
-      version: 2,
+      version: 1,
       task: { state: 'ignored' },
       reason: 'Sans objet.'
     })
@@ -118,7 +118,7 @@ describe('action lifecycle', () => {
     expect(rows).toHaveLength(1)
     expect(rows[0]).toMatchObject({ type: 'task.deleted', revision: 5 })
     expect(parseContentJson(rows[0]!.contenu)).toMatchObject({
-      version: 2,
+      version: 1,
       task: { state: 'deleted' }
     })
   })
@@ -128,7 +128,7 @@ describe('action lifecycle', () => {
       contexte: 'repayment',
       ref: 'LOC-MESSAGE',
       type: 'note.published',
-      contenu: JSON.stringify({ version: 2, text: 'Message sensible' })
+      contenu: JSON.stringify({ version: 1, text: 'Message sensible' })
     })
 
     const withdrawn = patch_activity(ALICE, message.id, { operation: 'withdraw_note' })
@@ -137,7 +137,7 @@ describe('action lifecycle', () => {
       threadId: message.threadId,
       revision: 2
     })
-    expect(parseContentJson(withdrawn.contenu)).toEqual({ version: 2 })
+    expect(parseContentJson(withdrawn.contenu)).toEqual({ version: 1 })
     expect(get_activity(message.id)).not.toBeNull()
   })
 
@@ -149,7 +149,7 @@ describe('action lifecycle', () => {
         ref: 'LOC-NO-DUE',
         type: 'task.created',
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           task: {
             title: 'Sans date',
             state: 'open',
@@ -167,7 +167,7 @@ describe('action lifecycle', () => {
       ref: 'LOC-MINE-LATER',
       type: 'task.created',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         task: {
           title: 'Plus tard',
           state: 'open',
@@ -181,7 +181,7 @@ describe('action lifecycle', () => {
       ref: 'LOC-MINE-SOONER',
       type: 'task.created',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         task: {
           title: 'Plus tôt',
           state: 'open',
@@ -195,7 +195,7 @@ describe('action lifecycle', () => {
       ref: 'LOC-DELEGATED',
       type: 'task.created',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         task: {
           title: 'Pour Bob',
           state: 'open',
@@ -209,7 +209,7 @@ describe('action lifecycle', () => {
       ref: 'LOC-BOB-OWN',
       type: 'task.created',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         task: {
           title: 'À Bob par Bob',
           state: 'open',
@@ -306,7 +306,7 @@ describe('action lifecycle', () => {
       thread_id: created.threadId,
       revision: 2,
       content: {
-        version: 2,
+        version: 1,
         task: { title: 'Contacter le garant', state: 'completed' },
         result: 'Promesse confirmée.'
       }

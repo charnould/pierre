@@ -22,7 +22,7 @@ const ValuesSchema = z
 
 const BulkRunContentSchema = z
   .object({
-    version: z.literal(2),
+    version: z.literal(1),
     title: z.string().min(1),
     values: ValuesSchema
   })
@@ -32,7 +32,7 @@ export type BulkRunContent = z.infer<typeof BulkRunContentSchema>
 
 const BulkRunSummaryContentSchema = z
   .object({
-    version: z.literal(2),
+    version: z.literal(1),
     title: z.string().min(1),
     values: z
       .object({

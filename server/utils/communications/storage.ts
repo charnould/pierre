@@ -51,7 +51,7 @@ const opened_contenu = (raw: string, sender: string): string => {
     typeof value['sender'] === 'string' && value['sender'].trim() ? value['sender'].trim() : sender
   const content = parseCommunicationOpenedContent(
     JSON.stringify({
-      version: 2,
+      version: 1,
       sender: injectedSender,
       body: typeof value['body'] === 'string' ? value['body'] : '',
       ...(value['subject'] !== undefined ? { subject: value['subject'] } : {}),

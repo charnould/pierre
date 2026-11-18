@@ -142,7 +142,7 @@ const create_activity_internal = (
           ? entityRef(assigneeId, creation.task.assignee?.label ?? assigneeId)
           : undefined
         const content: TaskContent = {
-          version: 2,
+          version: 1,
           task: {
             title: creation.task.title,
             state: parsed.type === 'task.completed' ? 'completed' : 'open',
@@ -309,7 +309,7 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
           type: 'activity.reaction_changed',
           mentions: [{ destinataire: existing.auteur }],
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             source_activity_id: existing.id,
             ...(emoji ? { emoji } : {})
           })
@@ -337,7 +337,7 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
           },
           type: nextType,
           mentions: [],
-          contenu: JSON.stringify({ version: 2, source_activity_id: existing.id })
+          contenu: JSON.stringify({ version: 1, source_activity_id: existing.id })
         })
       }
 
@@ -360,7 +360,7 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
           },
           type: 'note.withdrawn',
           mentions: [],
-          contenu: JSON.stringify({ version: 2 }),
+          contenu: JSON.stringify({ version: 1 }),
           thread_id: existing.threadId,
           revision: latest_thread_revision(db, existing.threadId) + 1
         })
@@ -401,7 +401,7 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
             type: 'artifact.regenerated',
             mentions: [],
             contenu: JSON.stringify({
-              version: 2,
+              version: 1,
               title: current.title,
               values: {
                 ...values,
@@ -419,7 +419,7 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
           const incoming = parseNoteContent(parsed.contenu)
           if (!incoming) throw new ActivitiesError('Invalid note content')
           if (!existing.threadId) throw new ActivitiesError('Invalid note', 'invalid_body')
-          const contenu = JSON.stringify({ version: 2, text: incoming.text ?? '' })
+          const contenu = JSON.stringify({ version: 1, text: incoming.text ?? '' })
           return append(db, {
             date_creation: activityTimestamp(),
             rattachement: existing.rattachement,
@@ -457,7 +457,7 @@ export const patch_activity = (actor: string, id: number, patch: ActivityPatch):
           type: 'artifact.feedback_recorded',
           mentions: [],
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             title: current.title,
             values: {
               ...values,
@@ -503,7 +503,7 @@ export const delete_activity = (actor: string, id: number): void => {
           },
           type: 'note.withdrawn',
           mentions: [],
-          contenu: JSON.stringify({ version: 2 }),
+          contenu: JSON.stringify({ version: 1 }),
           thread_id: existing.threadId,
           revision: latest_thread_revision(db, existing.threadId) + 1
         })
@@ -530,7 +530,7 @@ export const delete_activity = (actor: string, id: number): void => {
           type: 'task.deleted',
           mentions: [],
           contenu: JSON.stringify({
-            version: 2,
+            version: 1,
             task: { ...task.task, state: 'deleted' }
           }),
           thread_id: existing.threadId,

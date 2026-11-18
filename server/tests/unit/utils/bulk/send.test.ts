@@ -123,7 +123,7 @@ describe('bulk execution', () => {
         .get(operation.id)!.definition
     )
     db.close()
-    expect(run.version).toBe(2)
+    expect(run.version).toBe(1)
     expect(run.values.execution_id).toBe(result.executionId)
     expect(storedOperation.delivery.steps[0].body).toContain('{{nom}}')
     expect(job.payload).not.toContain('Bonjour {{nom}}')
@@ -347,7 +347,7 @@ describe('bulk execution', () => {
       ref: 'LOC-1',
       type: 'rcs',
       auteur: 'tenant:LOC-1',
-      contenu: JSON.stringify({ version: 2, sender: 'tenant:LOC-1', body: 'Suite' }),
+      contenu: JSON.stringify({ version: 1, sender: 'tenant:LOC-1', body: 'Suite' }),
       occurred_at: next_status_timestamp(first, now),
       thread_id: first.threadId ?? undefined,
       idempotency_key: 'cm:reply-1'

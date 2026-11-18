@@ -274,7 +274,7 @@ export const aggregate_bulk_run_with_db = (
   if (status !== 'in_progress') {
     if (!run.completion_contenu) {
       run.completion_contenu = stringifyBulkRunSummaryContent({
-        version: 2,
+        version: 1,
         title: 'Exécution bulk terminée',
         values: {
           execution_id: executionId,

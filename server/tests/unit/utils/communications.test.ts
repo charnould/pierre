@@ -43,7 +43,7 @@ describe('communications', () => {
       ref: 'A-1',
       type: 'email',
       destinataire: 'tenant@example.org',
-      contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Premier' }),
+      contenu: JSON.stringify({ version: 1, sender: 'user:alice@example.org', body: 'Premier' }),
       idempotency_key: Bun.randomUUIDv7()
     })
     const second = create_outbound({
@@ -52,7 +52,7 @@ describe('communications', () => {
       ref: 'A-1',
       type: 'email',
       destinataire: 'tenant@example.org',
-      contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Second' }),
+      contenu: JSON.stringify({ version: 1, sender: 'user:alice@example.org', body: 'Second' }),
       idempotency_key: Bun.randomUUIDv7()
     })
     const rcs = create_outbound({
@@ -61,7 +61,7 @@ describe('communications', () => {
       ref: 'A-1',
       type: 'rcs',
       destinataire: '06 12 34 56 78',
-      contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'RCS' }),
+      contenu: JSON.stringify({ version: 1, sender: 'user:alice@example.org', body: 'RCS' }),
       idempotency_key: Bun.randomUUIDv7()
     })
 
@@ -79,7 +79,7 @@ describe('communications', () => {
       ref: 'A-2',
       type: 'email' as const,
       destinataire: 'tenant@example.org',
-      contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Identique' }),
+      contenu: JSON.stringify({ version: 1, sender: 'user:alice@example.org', body: 'Identique' }),
       idempotency_key: key
     }
     const first = create_outbound(base)
@@ -88,7 +88,7 @@ describe('communications', () => {
       create_outbound({
         ...base,
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           sender: 'user:alice@example.org',
           body: 'Autre'
         })
@@ -112,7 +112,7 @@ describe('communications', () => {
       ref: 'DISPATCH-1',
       type: 'rcs',
       destinataire: '+33612345678',
-      contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Bonjour' }),
+      contenu: JSON.stringify({ version: 1, sender: 'user:alice@example.org', body: 'Bonjour' }),
       idempotency_key: Bun.randomUUIDv7()
     })
     expect(claim_outbound_dispatch(activity.id)).toBe('claimed')
@@ -134,7 +134,7 @@ describe('communications', () => {
       type: 'rcs',
       destinataire: '+33612345678',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         sender: 'user:alice@example.org',
         body: 'RCS',
         sms_fallback: 'SMS'
@@ -163,7 +163,7 @@ describe('communications', () => {
       type: 'rcs',
       destinataire: '+33687654321',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         sender: 'user:alice@example.org',
         body: 'RCS',
         sms_fallback: 'SMS'
@@ -194,7 +194,7 @@ describe('communications', () => {
       ref: 'A-3',
       type: 'email',
       destinataire: 'tenant@example.org',
-      contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Statut' }),
+      contenu: JSON.stringify({ version: 1, sender: 'user:alice@example.org', body: 'Statut' }),
       idempotency_key: Bun.randomUUIDv7()
     })
     const delivered = update_status({
@@ -210,7 +210,7 @@ describe('communications', () => {
       occurred_at: '2029-08-26T19:59:59Z'
     })
     expect(delivered.type).toBe('communication.ok')
-    expect(JSON.parse(delivered.contenu)).toMatchObject({ version: 2, result: 'delivered' })
+    expect(JSON.parse(delivered.contenu)).toMatchObject({ version: 1, result: 'delivered' })
     expect(delayed.id).toBe(activity.id)
     const laterFailure = update_status({
       activity_id: activity.id,
@@ -230,7 +230,7 @@ describe('communications', () => {
     expect(() =>
       patch_activity('alice@example.org', activity.id, {
         operation: 'edit_content',
-        contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'x' })
+        contenu: JSON.stringify({ version: 1, sender: 'user:alice@example.org', body: 'x' })
       })
     ).toThrow()
     expect(() => delete_activity('alice@example.org', activity.id)).toThrow()
@@ -241,7 +241,7 @@ describe('communications', () => {
         type: 'communication.sent',
         channel: 'email',
         destinataire: 'tenant@example.org',
-        contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'x' })
+        contenu: JSON.stringify({ version: 1, sender: 'user:alice@example.org', body: 'x' })
       })
     ).toThrow()
   })
@@ -273,7 +273,7 @@ describe('communications', () => {
                   type === 'electronic_registered_letter'
                 ? 'tenant@example.org'
                 : '1 rue de la Paix',
-          contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Test' }),
+          contenu: JSON.stringify({ version: 1, sender: 'user:alice@example.org', body: 'Test' }),
           idempotency_key: Bun.randomUUIDv7()
         })
         const failed = update_status({
@@ -283,7 +283,7 @@ describe('communications', () => {
           occurred_at: '2031-01-01T00:00:00Z'
         })
         expect(failed.type).toBe('communication.failed')
-        expect(JSON.parse(failed.contenu)).toEqual({ version: 2, reason: status })
+        expect(JSON.parse(failed.contenu)).toEqual({ version: 1, reason: status })
       }
     }
   })
@@ -295,7 +295,7 @@ describe('communications', () => {
       ref: 'A-4',
       type: 'email',
       destinataire: 'tenant@example.org',
-      contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Question' }),
+      contenu: JSON.stringify({ version: 1, sender: 'user:alice@example.org', body: 'Question' }),
       idempotency_key: Bun.randomUUIDv7()
     })
     const inbound = create_inbound({
@@ -304,7 +304,7 @@ describe('communications', () => {
       type: 'email',
       auteur: 'external:tenant@example.org',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         sender: 'external:tenant@example.org',
         body: 'Réponse'
       }),
@@ -315,7 +315,7 @@ describe('communications', () => {
       type: 'email',
       auteur: 'external:unknown@example.org',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         sender: 'external:unknown@example.org',
         body: 'Inconnu'
       }),
@@ -337,7 +337,7 @@ describe('communications', () => {
       ref: 'HEURISTIC-1',
       type: 'email',
       destinataire: 'unique@example.org',
-      contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Unique' }),
+      contenu: JSON.stringify({ version: 1, sender: 'user:alice@example.org', body: 'Unique' }),
       idempotency_key: Bun.randomUUIDv7()
     })
     expect(find_recent_thread('email', 'unique@example.org')?.ref).toBe('HEURISTIC-1')
@@ -349,7 +349,7 @@ describe('communications', () => {
         ref,
         type: 'email',
         destinataire: 'shared@example.org',
-        contenu: JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: ref }),
+        contenu: JSON.stringify({ version: 1, sender: 'user:alice@example.org', body: ref }),
         idempotency_key: Bun.randomUUIDv7()
       })
     }
@@ -364,7 +364,7 @@ describe('communications', () => {
       type: 'rcs',
       destinataire: '+33612345678',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         sender: 'user:alice@example.org',
         body: 'Souhaitez-vous être rappelé ?',
         choices: [{ type: 'reply', label: 'Être rappelé' }]

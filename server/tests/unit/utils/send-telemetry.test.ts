@@ -76,7 +76,7 @@ describe('send_telemetry', () => {
       facets: { id_client: null, id_locataire: null, id_lot: null },
       type: 'note.published',
       mentions: [],
-      contenu: JSON.stringify({ version: 2, text: 'Bonjour' })
+      contenu: JSON.stringify({ version: 1, text: 'Bonjour' })
     })
     expect(telemetry_rows(db).map((row) => row.event)).toEqual(['note.published'])
   })

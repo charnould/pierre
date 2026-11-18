@@ -263,7 +263,7 @@ describe('automations worker', () => {
         ref: auto.id,
         type: 'automation.reported',
         recipients: ['alice'],
-        contenu: JSON.stringify({ version: 2, title: `Rapport ${i}` }),
+        contenu: JSON.stringify({ version: 1, title: `Rapport ${i}` }),
         auteur: `automation:${auto.id}`
       })
     }
