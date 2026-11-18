@@ -4,7 +4,8 @@ import { z } from 'zod'
 
 import type { ActivityListItem } from '../../shared/activities'
 import { parseTaskContent } from '../../shared/activity-content'
-import { readRepaymentForms } from '../../shared/repayment-plan'
+import { readRepaymentCaseFile } from '../../shared/repayment-case-file'
+import { defaultPhase } from '../../shared/repayment-phases'
 import { list_activities } from '../utils/activities/query'
 import { build_rattachement } from '../utils/activities/rows'
 import { authenticate, type AuthEnv } from '../utils/authenticate-user'
@@ -15,7 +16,7 @@ import {
   RepaymentDocumentError,
   RepaymentDocumentRequestSchema
 } from '../utils/repayment-documents'
-import { readSetupBytes } from '../utils/setup-store'
+import { readSetupBytes, repaymentPhases } from '../utils/setup-store'
 
 const RepaymentTimelineQuery = z
   .object({
@@ -105,8 +106,8 @@ export const exportRepaymentDocument = async (c: Context<AuthEnv>) => {
   if (!parsed.success) {
     return c.json({ error: { code: 'invalid_body', message: 'Dossier illisible.' } }, 400)
   }
-  const forms = readRepaymentForms(parsed.data.dossier)
-  if (!forms.ok) {
+  const caseFile = readRepaymentCaseFile(parsed.data.dossier)
+  if (!caseFile.ok) {
     return c.json({ error: { code: 'invalid_body', message: 'Dossier illisible.' } }, 400)
   }
   const template = readSetupBytes(`repayment/${parsed.data.document}.docx`)
@@ -120,9 +121,11 @@ export const exportRepaymentDocument = async (c: Context<AuthEnv>) => {
     const rendered = await renderRepaymentDocument({
       document: parsed.data.document,
       format: parsed.data.format,
-      dossier: forms.value,
+      caseFile: caseFile.value,
       template,
-      email: c.get('user').email
+      email: c.get('user').email,
+      chronology: parsed.data.chronologie,
+      stage: defaultPhase(repaymentPhases())
     })
     const copy = new ArrayBuffer(rendered.bytes.byteLength)
     new Uint8Array(copy).set(rendered.bytes)
