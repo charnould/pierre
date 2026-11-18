@@ -9,6 +9,98 @@ import {
 
 export const non_empty_locataire = `"id_locataire" IS NOT NULL AND TRIM(CAST("id_locataire" AS TEXT)) != ''`
 
+const PLAN_SNAPSHOT_TYPES = [
+  'repayment_plan.created',
+  'repayment_plan.updated',
+  'repayment_plan.finalized'
+] as const
+
+export const plan_dossiers_ctes = (): string => `
+plan_snapshots AS (
+  SELECT
+    id_locataire,
+    id_client AS facet_client,
+    contenu,
+    ROW_NUMBER() OVER (PARTITION BY id_locataire ORDER BY id DESC) AS rn
+  FROM activites
+  WHERE type IN (${PLAN_SNAPSHOT_TYPES.map((type) => `'${type}'`).join(', ')})
+    AND json_type(contenu, '$.donnees_communes') = 'object'
+    AND id_locataire IS NOT NULL
+    AND TRIM(id_locataire) != ''
+),
+plan_dossiers AS (
+  SELECT
+    id_locataire,
+    COALESCE(
+      NULLIF(TRIM(json_extract(contenu, '$.donnees_communes.identification.id_client')), ''),
+      facet_client
+    ) AS id_client,
+    NULLIF(TRIM(json_extract(contenu, '$.donnees_communes.identification.id_lot')), '') AS id_lot,
+    COALESCE(
+      CAST(json_extract(contenu, '$.donnees_communes.compte_locataire.solde_compte_en_euros') AS REAL),
+      0
+    ) AS solde_locataire,
+    NULLIF(TRIM(json_extract(contenu, '$.donnees_communes.bail.debut_bail')), '') AS debut_bail,
+    NULLIF(TRIM(json_extract(contenu, '$.donnees_communes.logement.adresse')), '') AS adresse,
+    NULLIF(TRIM(json_extract(contenu, '$.donnees_communes.logement.code_postal')), '') AS code_postal,
+    NULLIF(TRIM(json_extract(contenu, '$.donnees_communes.logement.commune')), '') AS commune,
+    NULLIF(TRIM(json_extract(contenu, '$.donnees_communes.foyer.adultes[0].prenom')), '') AS prenom,
+    NULLIF(TRIM(json_extract(contenu, '$.donnees_communes.foyer.adultes[0].nom')), '') AS nom,
+    (
+      SELECT CAST(json_extract(charge.value, '$.montant_en_euros') AS REAL)
+      FROM json_each(json_extract(contenu, '$.donnees_communes.budget.charges_mensuelles')) AS charge
+      WHERE json_extract(charge.value, '$.type') = 'cout_logement_net'
+      LIMIT 1
+    ) AS loyer_net
+  FROM plan_snapshots
+  WHERE rn = 1
+)`
+
+const plan_ratio = `CASE
+    WHEN loyer_net IS NOT NULL AND loyer_net > 0
+    THEN ROUND(solde_locataire / loyer_net, 1)
+    ELSE NULL
+  END`
+
+export const plan_only_ledger_sql = (): string => `
+WITH ${plan_dossiers_ctes()}
+SELECT
+  id_locataire AS id_locataire,
+  solde_locataire AS solde_locataire,
+  'client' AS statut,
+  ${plan_ratio} AS ratio_dette_loyer,
+  NULL AS email_status,
+  NULL AS telephone_status,
+  debut_bail AS debut_bail,
+  NULL AS fin_bail,
+  id_client AS id_client,
+  id_lot AS id_lot,
+  NULL AS gestionnaire,
+  prenom AS prenom,
+  nom AS nom
+FROM plan_dossiers`
+
+const plan_movement_value = (name: string): string => {
+  switch (name) {
+    case 'id_client':
+      return 'p.id_client'
+    case 'id_lot':
+      return 'p.id_lot'
+    case 'adresse':
+      return 'p.adresse'
+    case 'code_postal':
+      return 'p.code_postal'
+    case 'commune':
+      return 'p.commune'
+    case 'prenom':
+      return 'p.prenom'
+    case 'nom':
+      return 'p.nom'
+    default:
+      return 'NULL'
+  }
+}
+
 const build_movement_order = (movement_columns: Set<string>): string => {
   if (movement_columns.has('date_exigibilite')) {
     return `${sql_date_key('m."date_exigibilite"')} DESC, m.rowid DESC`
@@ -118,7 +210,8 @@ export const build_ledger_view_sql = (
   GROUP BY "id_locataire"
   HAVING SUM(${sql_money_cents('"montant_en_euros"')}) > 0
 )`,
-    build_latest_movement_cte(movement_column_list)
+    build_latest_movement_cte(movement_column_list),
+    plan_dossiers_ctes()
   ]
   if (join_lots) ctes.push(...build_deduplicated_lots_ctes(lots_columns))
 
@@ -166,6 +259,11 @@ export const build_ledger_view_sql = (
   LEFT JOIN "${CONTACTS_TABLE}" tel_c ON tel_c.value = lm."telephone_client"`
   }
 
+  const plan_movement_selects = movement_column_list
+    .filter((column) => column.name !== 'id_locataire' && !COMPUTED_LEDGER_COLUMNS.has(column.name))
+    .map((column) => `${plan_movement_value(column.name)} AS "${column.name}"`)
+    .join(',\n  ')
+
   return `
 WITH ${ctes.join(',\n')}
 SELECT
@@ -177,5 +275,19 @@ SELECT
   ${telephone_status} AS telephone_status,
   ${debut_bail} AS debut_bail,
   ${fin_bail} AS fin_bail${movement_selects.length > 0 ? `,\n  ${movement_selects}` : ''}
-FROM balances b${joins}`
+FROM balances b${joins}
+UNION ALL
+SELECT
+  p.id_locataire AS id_locataire,
+  p.solde_locataire AS solde_locataire,
+  'client' AS statut,
+  ${plan_ratio} AS ratio_dette_loyer,
+  NULL AS email_status,
+  NULL AS telephone_status,
+  p.debut_bail AS debut_bail,
+  NULL AS fin_bail${plan_movement_selects.length > 0 ? `,\n  ${plan_movement_selects}` : ''}
+FROM plan_dossiers p
+WHERE NOT EXISTS (
+  SELECT 1 FROM balances b WHERE b."id_locataire" = p.id_locataire
+)`
 }
