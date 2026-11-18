@@ -1,7 +1,7 @@
 import { TRACE_MODES } from '../../shared/chat'
 import { validateExternalApplication } from '../../shared/external-application'
+import { MAX_SCHEDULE_MONTHS } from '../../shared/repayment-case-file'
 import { RECLASSIFY_PHASE, resolveRepaymentPhase } from '../../shared/repayment-phases'
-import { MAX_SCHEDULE_MONTHS } from '../../shared/repayment-plan'
 import { openDatastore } from './datastore-db'
 import { formatText as formatWithBun } from './format-text'
 import { MAX_REPAYMENT_TEMPLATE_BYTES, repaymentTemplateIssue } from './repayment-documents'
