@@ -18,7 +18,7 @@ const activity = (read: boolean): ActivityListItem => ({
   type: 'note.published',
   channel: null,
   mentions: [{ destinataire: 'user:bob@example.test' }],
-  contenu: JSON.stringify({ version: 2, text: 'Test' }),
+  contenu: JSON.stringify({ version: 1, text: 'Test' }),
   threadId: 'thread-1',
   revision: 1,
   bulkId: null,

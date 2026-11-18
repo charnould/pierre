@@ -82,7 +82,7 @@ describe('webhooks de communication', () => {
       type: 'rcs',
       destinataire: '+33612345678',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         sender: 'user:alice@example.org',
         body: 'Relance RCS',
         sms_fallback: 'Relance SMS'
@@ -159,7 +159,7 @@ describe('webhooks de communication', () => {
       type: 'rcs',
       destinataire: '+33612345678',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         sender: 'user:alice@example.org',
         body: 'Choisissez',
         choices: [{ type: 'reply', label: 'Être rappelé' }]
@@ -275,7 +275,7 @@ describe('webhooks de communication', () => {
       ref: 'RCS-LINK-1',
       type: 'rcs',
       destinataire: '+33698765432',
-      contenu: JSON.stringify({ version: 2, body: 'Premier' }),
+      contenu: JSON.stringify({ version: 1, body: 'Premier' }),
       idempotency_key: Bun.randomUUIDv7()
     })
     const second = create_outbound({
@@ -284,7 +284,7 @@ describe('webhooks de communication', () => {
       ref: 'RCS-LINK-2',
       type: 'rcs',
       destinataire: '+33698765432',
-      contenu: JSON.stringify({ version: 2, body: 'Second' }),
+      contenu: JSON.stringify({ version: 1, body: 'Second' }),
       idempotency_key: Bun.randomUUIDv7()
     })
     const app = new Hono().post('/webhooks/rcs', rcsWebhook)
@@ -382,7 +382,7 @@ describe('webhooks de communication', () => {
       ref: 'SMS-REPLY',
       type: 'sms',
       destinataire: '+33611112222',
-      contenu: JSON.stringify({ version: 2, body: 'Répondez à ce SMS' }),
+      contenu: JSON.stringify({ version: 1, body: 'Répondez à ce SMS' }),
       idempotency_key: Bun.randomUUIDv7()
     })
     const app = new Hono().post('/webhooks/rcs', rcsWebhook)
@@ -445,7 +445,7 @@ describe('POST /communications/external et action', () => {
     expect(body.data.type).toBe('communication.sent')
     expect(body.data.channel).toBe('email')
     expect(JSON.parse(body.data.contenu)).toMatchObject({
-      version: 2,
+      version: 1,
       action: 'Contacter la CAF',
       subject: 'Dossier APL',
       body: 'Merci de rétablir l’APL.'
@@ -646,7 +646,7 @@ describe('POST /communications/external et action', () => {
     expect(body.data.channel).toBe('email')
     expect(body.data.destinataire).toBe('Bob <bob@locataire.fr>')
     expect(JSON.parse(body.data.contenu)).toMatchObject({
-      version: 2,
+      version: 1,
       subject: 'Relance loyer',
       body: 'Merci de régulariser.',
       sender: 'Alice <alice@bailleur.fr>'

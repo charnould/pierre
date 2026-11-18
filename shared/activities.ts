@@ -85,7 +85,7 @@ export const ACTIVITY_TYPES = [
 ] as const
 export type ActivityType = (typeof ACTIVITY_TYPES)[number]
 
-export const ACTIVITY_CONTENT_VERSION = 2 as const
+export const ACTIVITY_CONTENT_VERSION = 1 as const
 
 export type Mention = {
   destinataire: string

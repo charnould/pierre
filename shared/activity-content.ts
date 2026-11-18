@@ -26,7 +26,7 @@ type TaskSnapshot = {
   due_date?: string
 }
 
-type TaskChangeField = 'title' | 'assignee' | 'due_date' | 'note'
+type TaskChangeField = 'title' | 'assignee' | 'due_date' | 'note' | 'completed_on' | 'result'
 
 export type TaskChange = {
   field: TaskChangeField
@@ -35,21 +35,54 @@ export type TaskChange = {
 }
 
 export type NoteContent = {
-  version: 2
+  version: 1
   text?: string
 }
 
 export type TaskContent = {
-  version: 2
+  version: 1
   task: TaskSnapshot
   changes?: TaskChange[]
   note?: string
   result?: string
   reason?: string
+  completed_on?: string
+}
+
+export function noteContent(text?: string): NoteContent {
+  return { version: 1, ...(text ? { text } : {}) }
+}
+
+export function completedTaskContent(input: {
+  title: string
+  result?: string
+  completed_on?: string
+  changes?: TaskChange[]
+}): TaskContent {
+  return {
+    version: 1,
+    task: { title: input.title, state: 'completed' },
+    ...(input.completed_on ? { completed_on: input.completed_on } : {}),
+    ...(input.result ? { result: input.result } : {}),
+    ...(input.changes?.length ? { changes: input.changes } : {})
+  }
+}
+
+export function caseChangeContent(input: {
+  before: ActivityValue
+  after: ActivityValue
+  note?: string
+}): CaseChangeContent {
+  return {
+    version: 1,
+    before: input.before,
+    after: input.after,
+    ...(input.note ? { note: input.note } : {})
+  }
 }
 
 export type CaseChangeContent = {
-  version: 2
+  version: 1
   before: ActivityValue
   after: ActivityValue
   note?: string
@@ -60,7 +93,7 @@ type TicketChangeContent = CaseChangeContent & {
 }
 
 export type CommunicationOpenedContent = {
-  version: 2
+  version: 1
   sender: string
   subject?: string
   body: string
@@ -76,27 +109,27 @@ export type CommunicationOpenedContent = {
 }
 
 export type CommunicationStatusContent = {
-  version: 2
+  version: 1
   result?: 'sent' | 'delivered' | 'read' | 'opened'
   reason?: string
   provider_event_id?: string
 }
 
 export type ActivityMetaContent = {
-  version: 2
+  version: 1
   source_activity_id: number
   emoji?: string
 }
 
 export type TitledContent = {
-  version: 2
+  version: 1
   title: string
   values?: Record<string, ActivityValue>
   note?: string
 }
 
 export type SignatureContent = {
-  version: 2
+  version: 1
   document: {
     id: string
     type: string
@@ -149,6 +182,21 @@ const asString = (value: unknown): string | undefined =>
 const hasOnlyKeys = (value: Record<string, unknown>, keys: readonly string[]): boolean =>
   Object.keys(value).every((key) => keys.includes(key))
 
+export const isCivilDay = (value: unknown): value is string => {
+  if (typeof value !== 'string') return false
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (!match) return false
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+  const utc = new Date(Date.UTC(year, month - 1, day))
+  return (
+    utc.getUTCFullYear() === year && utc.getUTCMonth() === month - 1 && utc.getUTCDate() === day
+  )
+}
+
+const TASK_CHANGE_FIELDS = ['title', 'assignee', 'due_date', 'note', 'completed_on', 'result']
+
 const parseEntityRef = (value: unknown): EntityRef | null => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null
   const record = value as Record<string, unknown>
@@ -189,18 +237,22 @@ const parseTaskSnapshot = (value: unknown): TaskSnapshot | null => {
 export const parseNoteContent = (raw: string): NoteContent | null => {
   const value = parseContentJson(raw)
   if (!hasOnlyKeys(value, ['version', 'text'])) return null
-  if (value['version'] !== 2) return null
+  if (value['version'] !== 1) return null
   const text = value['text']
   if (text !== undefined && typeof text !== 'string') return null
-  return { version: 2, ...(typeof text === 'string' ? { text } : {}) }
+  return { version: 1, ...(typeof text === 'string' ? { text } : {}) }
 }
 
 export const parseTaskContent = (raw: string): TaskContent | null => {
   const value = parseContentJson(raw)
-  if (!hasOnlyKeys(value, ['version', 'task', 'changes', 'note', 'result', 'reason'])) return null
-  if (value['version'] !== 2) return null
+  if (
+    !hasOnlyKeys(value, ['version', 'task', 'changes', 'note', 'result', 'reason', 'completed_on'])
+  )
+    return null
+  if (value['version'] !== 1) return null
   const task = parseTaskSnapshot(value['task'])
   if (!task) return null
+  if (value['completed_on'] !== undefined && !isCivilDay(value['completed_on'])) return null
   const changes = value['changes']
   if (changes !== undefined) {
     if (!Array.isArray(changes)) return null
@@ -208,18 +260,19 @@ export const parseTaskContent = (raw: string): TaskContent | null => {
       if (!change || typeof change !== 'object' || Array.isArray(change)) return null
       const record = change as Record<string, unknown>
       if (!hasOnlyKeys(record, ['field', 'before', 'after'])) return null
-      if (!['title', 'assignee', 'due_date', 'note'].includes(String(record['field']))) return null
+      if (!TASK_CHANGE_FIELDS.includes(String(record['field']))) return null
       if (parseActivityValue(record['before']) === undefined) return null
       if (parseActivityValue(record['after']) === undefined) return null
     }
   }
   return {
-    version: 2,
+    version: 1,
     task,
     ...(Array.isArray(changes) ? { changes: changes as TaskChange[] } : {}),
     ...(asString(value['note']) ? { note: asString(value['note']) } : {}),
     ...(asString(value['result']) ? { result: asString(value['result']) } : {}),
-    ...(asString(value['reason']) ? { reason: asString(value['reason']) } : {})
+    ...(asString(value['reason']) ? { reason: asString(value['reason']) } : {}),
+    ...(isCivilDay(value['completed_on']) ? { completed_on: value['completed_on'] } : {})
   }
 }
 
@@ -229,12 +282,12 @@ const parseCaseChange = (raw: string, withField: boolean): CaseChangeContent | n
     ? ['version', 'field', 'before', 'after', 'note']
     : ['version', 'before', 'after', 'note']
   if (!hasOnlyKeys(value, keys)) return null
-  if (value['version'] !== 2) return null
+  if (value['version'] !== 1) return null
   const before = parseActivityValue(value['before'])
   const after = parseActivityValue(value['after'])
   if (before === undefined || after === undefined) return null
   return {
-    version: 2,
+    version: 1,
     before,
     after,
     ...(asString(value['note']) ? { note: asString(value['note']) } : {})
@@ -273,7 +326,7 @@ export const parseCommunicationOpenedContent = (raw: string): CommunicationOpene
     return null
   }
   if (
-    value['version'] !== 2 ||
+    value['version'] !== 1 ||
     !nonEmptyString(value['sender']) ||
     typeof value['body'] !== 'string'
   ) {
@@ -296,7 +349,7 @@ export const parseCommunicationOpenedContent = (raw: string): CommunicationOpene
   if (value['consent'] !== undefined && !consent) return null
   const sms_fallback = asString(value['sms_fallback'])
   return {
-    version: 2,
+    version: 1,
     sender: value['sender'].trim(),
     body: value['body'],
     ...(asString(value['subject']) ? { subject: asString(value['subject']) } : {}),
@@ -342,7 +395,7 @@ const parseMailDocument = (value: unknown): { name: string; sha256: string } | n
 export const parseCommunicationStatusContent = (raw: string): CommunicationStatusContent | null => {
   const value = parseContentJson(raw)
   if (!hasOnlyKeys(value, ['version', 'result', 'reason', 'provider_event_id'])) return null
-  if (value['version'] !== 2) return null
+  if (value['version'] !== 1) return null
   const result = value['result']
   if (
     result !== undefined &&
@@ -354,7 +407,7 @@ export const parseCommunicationStatusContent = (raw: string): CommunicationStatu
     return null
   }
   return {
-    version: 2,
+    version: 1,
     ...(result ? { result } : {}),
     ...(asString(value['reason']) ? { reason: asString(value['reason']) } : {}),
     ...(asString(value['provider_event_id'])
@@ -366,9 +419,9 @@ export const parseCommunicationStatusContent = (raw: string): CommunicationStatu
 export const parseActivityMetaContent = (raw: string): ActivityMetaContent | null => {
   const value = parseContentJson(raw)
   if (!hasOnlyKeys(value, ['version', 'source_activity_id', 'emoji'])) return null
-  if (value['version'] !== 2 || typeof value['source_activity_id'] !== 'number') return null
+  if (value['version'] !== 1 || typeof value['source_activity_id'] !== 'number') return null
   return {
-    version: 2,
+    version: 1,
     source_activity_id: value['source_activity_id'],
     ...(asString(value['emoji']) ? { emoji: asString(value['emoji']) } : {})
   }
@@ -377,7 +430,7 @@ export const parseActivityMetaContent = (raw: string): ActivityMetaContent | nul
 export const parseTitledContent = (raw: string): TitledContent | null => {
   const value = parseContentJson(raw)
   if (!hasOnlyKeys(value, ['version', 'title', 'values', 'note'])) return null
-  if (value['version'] !== 2 || !nonEmptyString(value['title'])) return null
+  if (value['version'] !== 1 || !nonEmptyString(value['title'])) return null
   const values = value['values']
   if (values !== undefined) {
     if (!values || typeof values !== 'object' || Array.isArray(values)) return null
@@ -386,7 +439,7 @@ export const parseTitledContent = (raw: string): TitledContent | null => {
     }
   }
   return {
-    version: 2,
+    version: 1,
     title: value['title'].trim(),
     ...(values ? { values: values as Record<string, ActivityValue> } : {}),
     ...(asString(value['note']) ? { note: asString(value['note']) } : {})
@@ -411,7 +464,7 @@ export const parseSignatureContent = (raw: string): SignatureContent | null => {
   ) {
     return null
   }
-  if (value['version'] !== 2 || !value['document'] || typeof value['document'] !== 'object') {
+  if (value['version'] !== 1 || !value['document'] || typeof value['document'] !== 'object') {
     return null
   }
   const document = value['document'] as Record<string, unknown>
@@ -450,7 +503,7 @@ export const parseSignatureContent = (raw: string): SignatureContent | null => {
   const method = value['method']
   if (method !== undefined && method !== 'electronic' && method !== 'offline') return null
   return {
-    version: 2,
+    version: 1,
     document: {
       id: document['id'].trim(),
       type: document['type'].trim(),

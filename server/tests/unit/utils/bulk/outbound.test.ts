@@ -32,7 +32,7 @@ describe('bulk outbound contenu', () => {
     const rendered = render_fallback_step(row(), '2026-08-29T08:00:00.000Z', step)
     expect(rendered.body).toBe('')
     expect(JSON.parse(fallback_outbound_contenu(step, rendered))).toEqual({
-      version: 2,
+      version: 1,
       action: 'R1',
       body: 'Relance amiable du solde.',
       purpose: 'bulk'
@@ -49,7 +49,7 @@ describe('bulk outbound contenu', () => {
     }
     const rendered = render_fallback_step(row(), '2026-08-29T08:00:00.000Z', step)
     expect(JSON.parse(fallback_outbound_contenu(step, rendered))).toEqual({
-      version: 2,
+      version: 1,
       action: 'Courriel',
       subject: 'Relance',
       body: 'Bonjour',

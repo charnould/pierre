@@ -35,7 +35,7 @@ const base = {
   contexte: 'tickets',
   ref: 'TICKET-1',
   type: 'note.published',
-  contenu: JSON.stringify({ version: 2, text: 'Bonjour' })
+  contenu: JSON.stringify({ version: 1, text: 'Bonjour' })
 }
 
 const jsonRequest = (method: string, body?: unknown, headers: Record<string, string> = {}) => ({
@@ -98,7 +98,7 @@ describe('activity write routes', () => {
           method === 'PATCH'
             ? {
                 operation: 'edit_content',
-                contenu: JSON.stringify({ version: 2, text: 'Tentative de Bob' })
+                contenu: JSON.stringify({ version: 1, text: 'Tentative de Bob' })
               }
             : undefined,
           { 'x-test-email': 'bob@example.org' }
@@ -112,7 +112,7 @@ describe('activity write routes', () => {
       `/activities/${created.data.id}`,
       jsonRequest('PATCH', {
         operation: 'edit_content',
-        contenu: JSON.stringify({ version: 2, text: 'Corrigé' })
+        contenu: JSON.stringify({ version: 1, text: 'Corrigé' })
       })
     )
     expect(edited.status).toBe(200)
@@ -133,7 +133,7 @@ describe('activity write routes', () => {
       [
         'PATCH',
         `/activities/${id}`,
-        { operation: 'edit_content', contenu: JSON.stringify({ version: 2, text: 'Non' }) }
+        { operation: 'edit_content', contenu: JSON.stringify({ version: 1, text: 'Non' }) }
       ],
       ['DELETE', `/activities/${id}`, undefined]
     ] as const) {
@@ -148,7 +148,7 @@ describe('activity write routes', () => {
       ref: 'REQ-DRAFT',
       type: 'artifact.generated',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         title: 'Réponse',
         values: {
           skill: 'ticket.answer-ticket',
@@ -190,7 +190,7 @@ describe('activity write routes', () => {
       ref: 'REQ-DISPOSABLE',
       type: 'artifact.generated',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         title: 'Mémo',
         values: {
           skill: 'ticket.write-memo',

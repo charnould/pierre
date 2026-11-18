@@ -41,7 +41,7 @@ function notify_run(automation: AutomationRecord, result: ExecutorResult): void 
     ref: automation.id,
     type: 'automation.reported',
     recipients,
-    contenu: JSON.stringify({ version: 2, title: automation.name, note: result.contenu }),
+    contenu: JSON.stringify({ version: 1, title: automation.name, note: result.contenu }),
     auteur: `automation:${automation.id}`
   })
 }

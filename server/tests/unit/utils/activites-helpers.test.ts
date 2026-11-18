@@ -9,37 +9,43 @@ import {
 } from '../../../../shared/activity-content'
 
 describe('shared/activities helpers', () => {
-  it('activityPayload exige un payload canonique version 2', () => {
+  it('activityPayload exige un payload canonique version 1', () => {
     expect(() => activityPayload('note.published', 'Bonjour')).toThrow()
     expect(() =>
-      activityPayload('note.published', JSON.stringify({ version: 1, text: 'Bonjour' }))
+      activityPayload('note.published', JSON.stringify({ version: 2, text: 'Bonjour' }))
     ).toThrow()
+    expect(
+      activityPayload('note.published', JSON.stringify({ version: 1, text: 'Bonjour' }))
+    ).toEqual({
+      version: 1,
+      text: 'Bonjour'
+    })
     expect(
       activityPayload(
         'communication.sent',
-        JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Corps' })
+        JSON.stringify({ version: 1, sender: 'user:alice@example.org', body: 'Corps' })
       )
-    ).toEqual({ version: 2, sender: 'user:alice@example.org', body: 'Corps' })
+    ).toEqual({ version: 1, sender: 'user:alice@example.org', body: 'Corps' })
   })
 
   it('activityText lit uniquement les payloads canoniques', () => {
-    expect(activityText('note.published', JSON.stringify({ version: 2, text: 'Texte' }))).toBe(
+    expect(activityText('note.published', JSON.stringify({ version: 1, text: 'Texte' }))).toBe(
       'Texte'
     )
     expect(
       activityText(
         'task.created',
-        JSON.stringify({ version: 2, task: { title: 'Relancer', state: 'open' } })
+        JSON.stringify({ version: 1, task: { title: 'Relancer', state: 'open' } })
       )
     ).toBe('Relancer')
     expect(
       activityText(
         'communication.sent',
-        JSON.stringify({ version: 2, sender: 'user:alice@example.org', body: 'Corps' })
+        JSON.stringify({ version: 1, sender: 'user:alice@example.org', body: 'Corps' })
       )
     ).toBe('Corps')
     expect(() =>
-      activityText('note.published', JSON.stringify({ version: 1, text: 'Ancien' }))
+      activityText('note.published', JSON.stringify({ version: 2, text: 'Ancien' }))
     ).toThrow()
   })
 
@@ -66,20 +72,20 @@ describe('shared/activities helpers', () => {
     expect(
       parseCaseChangeContent(
         JSON.stringify({
-          version: 2,
+          version: 1,
           before: ['décès'],
           after: ['+65 ans'],
           note: '  Suivi  '
         })
       )
     ).toEqual({
-      version: 2,
+      version: 1,
       before: ['décès'],
       after: ['+65 ans'],
       note: 'Suivi'
     })
     expect(
-      parseCaseChangeContent(JSON.stringify({ version: 1, before: null, after: [] }))
+      parseCaseChangeContent(JSON.stringify({ version: 2, before: null, after: [] }))
     ).toBeNull()
   })
 
@@ -87,7 +93,7 @@ describe('shared/activities helpers', () => {
     expect(activityTimestamp(new Date('2026-08-15T09:17:00.123Z'))).toBe('2026-08-15T09:17:00Z')
   })
 
-  it('expose uniquement les types v2', () => {
+  it('expose les types d’activité', () => {
     expect(ACTIVITY_TYPES).toContain('note.published')
     expect(ACTIVITY_TYPES).toContain('task.created')
     expect(ACTIVITY_TYPES).toContain('case.bucket_changed')
