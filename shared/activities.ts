@@ -248,6 +248,23 @@ export type ActivityListItem = Activity & {
   reaction: string | null
 }
 
+export type CaseFileChronologyAction = {
+  kind: 'action'
+  id: string
+  action: string
+  date_realisation: string
+  commentaire: string | null
+}
+
+export type CaseFileChronologyPhase = {
+  kind: 'phase'
+  phase: string
+  date_realisation: string
+  commentaire: string | null
+}
+
+export type CaseFileChronologyItem = CaseFileChronologyAction | CaseFileChronologyPhase
+
 export type CreateActivityBody = {
   contexte: ActivityContext
   ref: string
@@ -257,6 +274,7 @@ export type CreateActivityBody = {
   destinataire?: string | null
   recipients?: string[]
   contenu?: string
+  chronologie?: CaseFileChronologyItem[]
   threadId?: string | null
   bulkId?: string | null
   executionId?: string | null
@@ -284,7 +302,11 @@ export type ActivityPatch =
   | { operation: 'withdraw_note' }
   | { operation: 'set_mention'; lu?: boolean }
   | { operation: 'set_boost'; emoji: string | null }
-  | { operation: 'save_repayment_plan'; contenu: string }
+  | {
+      operation: 'save_repayment_plan'
+      contenu: string
+      chronologie: CaseFileChronologyItem[]
+    }
 
 export type GetActivitiesParams = {
   url: string
