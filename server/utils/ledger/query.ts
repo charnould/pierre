@@ -30,21 +30,7 @@ import {
   MAX_LEDGER_FACET_DISTINCT_VALUES,
   MAX_LEDGER_FACET_SEARCH_RESULTS
 } from './schema'
-import { build_ledger_view_sql, non_empty_locataire } from './view'
-
-const empty_meta = (
-  limit: number,
-  offset: number,
-  movement_column_list?: LedgerColumnMeta[]
-): LedgerListResult['meta'] => ({
-  total: 0,
-  limit,
-  offset,
-  snapshotDate: null,
-  columns: build_ledger_output_column_meta(movement_column_list ?? []),
-  defaultSort: DEFAULT_LEDGER_SORT,
-  gestionnaireAssignable: true
-})
+import { build_ledger_view_sql, non_empty_locataire, plan_only_ledger_sql } from './view'
 
 const table_exists = (db: Database, name: string): boolean =>
   db
@@ -99,6 +85,15 @@ const read_snapshot_date = (db: Database, movement_columns: Set<string>): string
   return row?.snapshot_date ?? null
 }
 
+const PLAN_ONLY_MOVEMENT_COLUMNS: LedgerColumnMeta[] = [
+  { name: 'id_locataire', type: 'TEXT' },
+  { name: 'id_client', type: 'TEXT' },
+  { name: 'id_lot', type: 'TEXT' },
+  { name: 'gestionnaire', type: 'TEXT' },
+  { name: 'prenom', type: 'TEXT' },
+  { name: 'nom', type: 'TEXT' }
+]
+
 const strip_internal_columns = (rows: Record<string, unknown>[]): Record<string, unknown>[] =>
   rows.map((row) => {
     const rest = { ...row }
@@ -114,13 +109,12 @@ export const list_ledger_balances = (input: LedgerListInput): LedgerListResult =
   const db = openDatastore({ readonly: true })
 
   try {
-    if (!table_exists(db, COMPTES_LOCATAIRES_TABLE)) {
-      return { data: [], meta: empty_meta(input.limit, input.offset) }
-    }
-
-    const movement_column_list = get_table_columns(db, COMPTES_LOCATAIRES_TABLE)
+    const comptes_present = table_exists(db, COMPTES_LOCATAIRES_TABLE)
+    const movement_column_list = comptes_present
+      ? get_table_columns(db, COMPTES_LOCATAIRES_TABLE)
+      : PLAN_ONLY_MOVEMENT_COLUMNS
     const movement_columns = new Set(movement_column_list.map((c) => c.name))
-    assert_core_comptes_locataires_columns(movement_column_list)
+    if (comptes_present) assert_core_comptes_locataires_columns(movement_column_list)
     const gestionnaire_assignable = is_gestionnaire_assignable(db)
 
     const output_column_meta = build_ledger_output_column_meta(movement_column_list)
@@ -131,18 +125,15 @@ export const list_ledger_balances = (input: LedgerListInput): LedgerListResult =
     const { where, params } = build_filters(input.filters)
     const { column, direction } = parse_sort(sort)
 
-    const has_lots = table_exists(db, LOTS_TABLE)
+    const has_lots = comptes_present && table_exists(db, LOTS_TABLE)
     const lots_columns = has_lots
       ? new Set(get_table_columns(db, LOTS_TABLE).map((c) => c.name))
       : new Set<string>()
-    const has_contacts = table_exists(db, CONTACTS_TABLE)
-    const view_sql = build_ledger_view_sql(
-      movement_column_list,
-      has_lots,
-      lots_columns,
-      has_contacts
-    )
-    const snapshot_date = read_snapshot_date(db, movement_columns)
+    const has_contacts = comptes_present && table_exists(db, CONTACTS_TABLE)
+    const view_sql = comptes_present
+      ? build_ledger_view_sql(movement_column_list, has_lots, lots_columns, has_contacts)
+      : plan_only_ledger_sql()
+    const snapshot_date = comptes_present ? read_snapshot_date(db, movement_columns) : null
 
     const rows = db
       .query<Record<string, unknown>, (string | number)[]>(
@@ -217,17 +208,11 @@ export const get_ledger_column_facets = (input: LedgerFacetsInput): LedgerFacets
   const db = openDatastore({ readonly: true })
 
   try {
-    if (!table_exists(db, COMPTES_LOCATAIRES_TABLE)) {
-      return {
-        column: input.column,
-        values: [],
-        total: 0,
-        filterable: true
-      }
-    }
-
-    const movement_column_list = get_table_columns(db, COMPTES_LOCATAIRES_TABLE)
-    assert_core_comptes_locataires_columns(movement_column_list)
+    const comptes_present = table_exists(db, COMPTES_LOCATAIRES_TABLE)
+    const movement_column_list = comptes_present
+      ? get_table_columns(db, COMPTES_LOCATAIRES_TABLE)
+      : PLAN_ONLY_MOVEMENT_COLUMNS
+    if (comptes_present) assert_core_comptes_locataires_columns(movement_column_list)
 
     const output_column_meta = build_ledger_output_column_meta(movement_column_list)
     const filterable_columns = build_output_column_set(output_column_meta)
@@ -236,17 +221,14 @@ export const get_ledger_column_facets = (input: LedgerFacetsInput): LedgerFacets
       throw new LedgerQueryError('invalid filter column')
     }
 
-    const has_lots = table_exists(db, LOTS_TABLE)
+    const has_lots = comptes_present && table_exists(db, LOTS_TABLE)
     const lots_columns = has_lots
       ? new Set(get_table_columns(db, LOTS_TABLE).map((c) => c.name))
       : new Set<string>()
-    const has_contacts = table_exists(db, CONTACTS_TABLE)
-    const view_sql = build_ledger_view_sql(
-      movement_column_list,
-      has_lots,
-      lots_columns,
-      has_contacts
-    )
+    const has_contacts = comptes_present && table_exists(db, CONTACTS_TABLE)
+    const view_sql = comptes_present
+      ? build_ledger_view_sql(movement_column_list, has_lots, lots_columns, has_contacts)
+      : plan_only_ledger_sql()
 
     const total =
       db
