@@ -14,7 +14,7 @@ import {
   DESKTOP_AGENT_DESTINATAIRE,
   desktopAgentMentionHandle
 } from '../../../shared/agent-identity'
-import { isRepaymentPlanEventType } from '../../../shared/repayment-plan'
+import { isRepaymentPlanEventType } from '../../../shared/repayment-case-file'
 import { openDatastore } from '../datastore-db'
 import { send_telemetry } from '../send-telemetry'
 import { name } from '../setup-store'
