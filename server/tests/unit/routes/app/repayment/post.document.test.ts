@@ -5,16 +5,18 @@ import { join } from 'node:path'
 
 import { Hono } from 'hono'
 
-import { emptyRepaymentForms } from '../../../../../../shared/repayment-plan'
+import { emptyRepaymentCaseFile } from '../../../../../../shared/repayment-case-file'
 import { exportRepaymentDocument } from '../../../../../routes/repayment'
 import type { AuthEnv } from '../../../../../utils/authenticate-user'
 import { authorizeModule } from '../../../../../utils/authorize-role'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../../utils/paths'
 import { setup } from '../../../../../utils/setup'
 import { writeSetup } from '../../../../../utils/setup-store'
+import { filledChronology, filledRepaymentCaseFile } from '../../../../repayment-document-fixture'
 
 const paths = testDatastorePaths('repayment_document_export')
-const dossier = emptyRepaymentForms()
+const dossier = emptyRepaymentCaseFile()
+const filled = filledRepaymentCaseFile()
 
 const app = new Hono<AuthEnv>()
 app.use('*', async (context, next) => {
@@ -67,7 +69,12 @@ describe('POST /repayment/documents', () => {
       )
     )
     await writeSetup('repayment/plan.docx', bytes)
-    const response = await request({ document: 'plan', format: 'docx', dossier })
+    const response = await request({
+      document: 'plan',
+      format: 'docx',
+      dossier: filled,
+      chronologie: filledChronology
+    })
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toContain('wordprocessingml')
     expect(decodeURIComponent(response.headers.get('content-disposition') ?? '')).toContain(

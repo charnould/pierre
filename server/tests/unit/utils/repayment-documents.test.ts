@@ -4,103 +4,17 @@ import { join } from 'node:path'
 
 import PizZip from 'pizzip'
 
-import {
-  blankAdult,
-  blankChild,
-  blankInstallment,
-  blankMonthlyLine,
-  blankOneOffLine,
-  emptyRepaymentForms,
-  type RepaymentForms
-} from '../../../../shared/repayment-plan'
+import { REPAYMENT_DOCUMENT_TAGS } from '../../../../shared/repayment-document-fields'
 import {
   MAX_REPAYMENT_TEMPLATE_BYTES,
   renderRepaymentDocument,
+  repaymentDocumentTags,
   repaymentTemplateIssue
 } from '../../../utils/repayment-documents'
+import { filledChronology, filledRepaymentCaseFile } from '../../repayment-document-fixture'
 
 const templates = join(import.meta.dir, '../../../../docs/04-core-intelligence-hlm/templates')
-
-const dossier: RepaymentForms = emptyRepaymentForms()
-dossier.donnees_communes.identification = {
-  id_client: 'CLI-1',
-  id_locataire: 'LOC-1',
-  id_lot: 'LOT-1'
-}
-dossier.donnees_communes.logement = {
-  adresse: '1 rue des Lilas',
-  code_postal: '21000',
-  commune: 'Dijon'
-}
-dossier.donnees_communes.compte_locataire.solde_compte_en_euros = 1200
-dossier.donnees_communes.compte_locataire.date_premier_loyer_impaye = '2026-01-05'
-dossier.donnees_communes.compte_locataire.motifs_impaye = ['Perte d’emploi']
-dossier.donnees_communes.compte_locataire.ancienne_dette_hors_solde_en_euros = 50
-dossier.donnees_communes.travailleur_social = {
-  prenom_et_nom: 'Camille Martin',
-  organisme: 'CCAS',
-  coordonnees: 'camille@example.org'
-}
-dossier.donnees_communes.aides_mobilisables = ['FSL']
-dossier.donnees_communes.bail.garant = { prenom: 'Paul', nom: 'Bernard' }
-dossier.donnees_communes.foyer.adultes = [
-  blankAdult('personne_1'),
-  {
-    ...blankAdult('personne_2'),
-    prenom: 'Ada',
-    nom: 'Lovelace',
-    date_naissance: '1980-12-10',
-    type_emploi: 'Salarié en CDI',
-    employeur: 'Atelier',
-    allocataire_caf: '1234567',
-    statut_bail: 'titulaire_origine_et_actuel',
-    mode_residence: 'permanente'
-  }
-]
-dossier.donnees_communes.foyer.enfants = [
-  blankChild('personne_3'),
-  {
-    ...blankChild('personne_4'),
-    prenom: 'Lina',
-    nom: 'Lovelace',
-    date_naissance: '2016-04-02',
-    a_charge: 'oui'
-  }
-]
-dossier.donnees_communes.budget.ressources_mensuelles = [
-  blankMonthlyLine(),
-  { ...blankMonthlyLine(), type: 'salaire_net', id_personne: 'personne_2', montant_en_euros: 1500 }
-]
-dossier.donnees_communes.budget.ressources_ponctuelles = [
-  {
-    ...blankOneOffLine(),
-    type: 'prime_exceptionnelle',
-    id_personne: 'personne_2',
-    mois_imputation: '2026-04',
-    montant_en_euros: 300
-  }
-]
-dossier.donnees_communes.budget.charges_mensuelles = [
-  { ...blankMonthlyLine(), type: 'cout_logement_net', montant_en_euros: 400 },
-  blankMonthlyLine(),
-  {
-    ...blankMonthlyLine(),
-    type: 'energie_eau',
-    id_personne: 'personne_2',
-    date_fin: '2027-01-01',
-    montant_en_euros: 80
-  }
-]
-dossier.donnees_communes.budget.charges_ponctuelles = [
-  {
-    ...blankOneOffLine(),
-    type: 'sante_ponctuelle',
-    id_personne: 'personne_2',
-    mois_imputation: '2026-05',
-    montant_en_euros: 120
-  }
-]
-dossier.echeancier.echeances = [blankInstallment(), blankInstallment('2026-06-01', 100)]
+const caseFile = filledRepaymentCaseFile()
 
 const template = (name: string) =>
   new Uint8Array(readFileSync(join(templates, `Impayés - docx - ${name}.docx`)))
@@ -112,10 +26,12 @@ describe('documents d’apurement', () => {
     const diagnostic = await renderRepaymentDocument({
       document: 'diagnostic',
       format: 'docx',
-      dossier,
+      caseFile,
       template: template('Diagnostic social et financier'),
       email: 'ada@example.org',
-      now: new Date('2026-11-06T12:00:00Z')
+      now: new Date('2026-11-06T12:00:00Z'),
+      chronology: filledChronology,
+      stage: 'Recouvrement amiable'
     })
     const diagnosticXml = xmlOf(diagnostic.bytes)
     expect(diagnostic.filename).toBe('Diagnostic social et financier.docx')
@@ -123,56 +39,90 @@ describe('documents d’apurement', () => {
     expect(diagnosticXml).toContain('Lovelace')
     expect(diagnosticXml).toContain('Prime exceptionnelle')
     expect(diagnosticXml).toContain('04/2026')
-    expect(diagnosticXml).toContain('Loyer + Charges - Aides au logement')
+    expect(diagnosticXml).toContain('Loyer net')
     expect(diagnosticXml).toContain('Santé')
     expect(diagnosticXml).toContain('05/2026')
-    expect(diagnosticXml).toContain('Non saisie')
+    expect(diagnosticXml).toContain('Recouvrement amiable')
+    expect(diagnosticXml).toContain('Perte d’emploi')
     expect(diagnosticXml).toContain('Non déposé')
     expect(diagnosticXml).toContain('06/11/2026')
     expect(diagnosticXml).toContain('ada@example.org')
     expect(diagnosticXml).not.toContain('{{')
     expect(diagnosticXml).not.toContain('CLAUSE_SOLIDARITE')
     expect(diagnosticXml).not.toContain('Paul')
-    expect(diagnosticXml).not.toContain('Perte')
 
     const plan = await renderRepaymentDocument({
       document: 'plan',
       format: 'docx',
-      dossier,
+      caseFile,
       template: template("Plan d'apurement"),
       email: 'ada@example.org',
-      now: new Date('2026-11-06T12:00:00Z')
+      now: new Date('2026-11-06T12:00:00Z'),
+      chronology: filledChronology,
+      stage: 'Recouvrement amiable'
     })
     const planXml = xmlOf(plan.bytes)
     expect(planXml).toContain('1 200,00')
     expect(planXml).toContain('01/06/2026')
     expect(planXml).toContain('100,00')
     expect(planXml).toContain('Prime exceptionnelle')
+    expect(planXml).toContain('Camille Martin')
     expect(planXml).not.toContain('{{')
-    expect(planXml).not.toContain('Camille')
 
     const protocole = await renderRepaymentDocument({
       document: 'protocole',
       format: 'docx',
-      dossier,
+      caseFile,
       template: template('Protocole de cohésion sociale'),
       email: 'ada@example.org',
-      now: new Date('2026-11-06T12:00:00Z')
+      now: new Date('2026-11-06T12:00:00Z'),
+      chronology: filledChronology,
+      stage: 'Recouvrement amiable'
     })
     const protocoleXml = xmlOf(protocole.bytes)
     expect(protocoleXml).toContain('01/06/2026')
     expect(protocoleXml).toContain('Santé')
     expect(protocoleXml).not.toContain('{{')
+    for (const xml of [diagnosticXml, planXml, protocoleXml]) assertValidWordDocumentXml(xml)
+  })
+
+  it('refuse d’exporter quand une balise du modèle n’est pas renseignée', async () => {
+    await expect(
+      renderRepaymentDocument({
+        document: 'plan',
+        format: 'docx',
+        caseFile: filledRepaymentCaseFile(),
+        template: template("Plan d'apurement"),
+        email: 'ada@example.org',
+        chronology: [],
+        stage: ''
+      })
+    ).rejects.toThrow('Il manque : Phase, Événement de chronologie.')
+  })
+
+  it('expose dans chaque modèle toutes les balises du formulaire dans un XML Word valide', () => {
+    for (const name of [
+      'Diagnostic social et financier',
+      "Plan d'apurement",
+      'Protocole de cohésion sociale'
+    ]) {
+      const bytes = template(name)
+      assertValidWordDocumentXml(xmlOf(bytes))
+      const tags = new Set(repaymentDocumentTags(bytes))
+      expect(REPAYMENT_DOCUMENT_TAGS.filter((tag) => !tags.has(tag))).toEqual([])
+    }
   })
 
   it('convertit le diagnostic en PDF sans police distante', async () => {
     const pdf = await renderRepaymentDocument({
       document: 'diagnostic',
       format: 'pdf',
-      dossier,
+      caseFile,
       template: template('Diagnostic social et financier'),
       email: 'ada@example.org',
-      now: new Date('2026-11-06T12:00:00Z')
+      now: new Date('2026-11-06T12:00:00Z'),
+      chronology: filledChronology,
+      stage: 'Recouvrement amiable'
     })
     expect(pdf.mimeType).toBe('application/pdf')
     expect(new TextDecoder().decode(pdf.bytes.slice(0, 5))).toBe('%PDF-')
@@ -206,3 +156,81 @@ describe('documents d’apurement', () => {
     expect(repaymentTemplateIssue('repayment/diagnostic.docx', bytes)).toContain('{{')
   })
 })
+
+type XmlNode = { name: string; attrs: string; children: XmlNode[] }
+
+function parseXmlTree(xml: string): XmlNode {
+  const root: XmlNode = { name: '#root', attrs: '', children: [] }
+  const stack = [root]
+  for (const token of xml.matchAll(
+    /<\?[\s\S]*?\?>|<!--[\s\S]*?-->|<(\/?)([A-Za-z0-9:_-]+)([^>]*?)(\/?)>/g
+  )) {
+    const closing = token[1] === '/'
+    const name = token[2]
+    const attrs = token[3] ?? ''
+    const selfClosing = token[4] === '/'
+    if (!name) continue
+    if (closing) {
+      const opened = stack.pop()
+      expect(opened?.name).toBe(name)
+      continue
+    }
+    const node: XmlNode = { name, attrs, children: [] }
+    stack.at(-1)!.children.push(node)
+    if (!selfClosing) stack.push(node)
+  }
+  expect(stack).toHaveLength(1)
+  expect(root.children).toHaveLength(1)
+  return root.children[0]!
+}
+
+function walkXml(
+  node: XmlNode,
+  visit: (current: XmlNode, ancestors: XmlNode[]) => void,
+  ancestors: XmlNode[] = []
+) {
+  visit(node, ancestors)
+  const next = [...ancestors, node]
+  for (const child of node.children) walkXml(child, visit, next)
+}
+
+function assertValidWordDocumentXml(xml: string) {
+  const doc = parseXmlTree(xml)
+  expect(doc.name).toBe('w:document')
+  const body = doc.children.find((child) => child.name === 'w:body')
+  expect(body).toBeDefined()
+  const bodyChildren = body!.children
+  expect(bodyChildren.at(-1)?.name).toBe('w:sectPr')
+  for (const child of bodyChildren.slice(0, -1)) {
+    expect(['w:p', 'w:tbl']).toContain(child.name)
+  }
+  walkXml(doc, (node, ancestors) => {
+    if (node.name === 'w:p' || node.name === 'w:tbl') {
+      expect(ancestors.some((ancestor) => ancestor.name === 'w:p')).toBe(false)
+    }
+    if (node.name === 'w:p') {
+      node.children.forEach((child, index) => {
+        if (child.name === 'w:pPr') expect(index).toBe(0)
+      })
+    }
+    if (node.name === 'w:tbl') {
+      expect(node.children[0]?.name).toBe('w:tblPr')
+      expect(node.children[1]?.name).toBe('w:tblGrid')
+      const cols = node.children[1]!.children.filter((child) => child.name === 'w:gridCol').length
+      expect(cols).toBeGreaterThan(0)
+      for (const row of node.children.slice(2)) {
+        expect(row.name).toBe('w:tr')
+        const cells = row.children.filter((child) => child.name === 'w:tc')
+        const span = cells.reduce((total, cell) => {
+          const tcPr = cell.children[0]
+          expect(tcPr?.name).toBe('w:tcPr')
+          expect(cell.children.some((child) => child.name === 'w:p')).toBe(true)
+          const gridSpan = tcPr?.children.find((child) => child.name === 'w:gridSpan')
+          const val = Number(/w:val="(\d+)"/.exec(gridSpan?.attrs ?? '')?.[1] ?? 1)
+          return total + val
+        }, 0)
+        expect(span).toBe(cols)
+      }
+    }
+  })
+}
