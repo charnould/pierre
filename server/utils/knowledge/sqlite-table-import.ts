@@ -113,7 +113,7 @@ const emit_reclamation_changes = (
         type: 'ticket.field_changed',
         mentions: [],
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           field,
           before: beforeValue,
           after: afterValue

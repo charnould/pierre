@@ -213,7 +213,7 @@ export const postMaileva = (product: MailevaProduct) => async (c: AuthContext) =
         type: product,
         destinataire,
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           provider: 'Maileva',
           ...(parsed.data.contenu.action ? { action: parsed.data.contenu.action } : {}),
           subject: parsed.data.contenu.subject ?? parsed.data.document.name,

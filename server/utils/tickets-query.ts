@@ -318,7 +318,7 @@ export const list_tickets = (input: TicketsListInput): TicketsListResult => {
            WHERE type = 'case.bucket_changed'
              AND rattachement LIKE 'tickets:%'
              AND json_valid(contenu)
-             AND json_extract(contenu, '$.version') = 2
+             AND json_extract(contenu, '$.version') = 1
              AND json_type(contenu, '$.after') = 'text'
              AND trim(json_extract(contenu, '$.after')) <> ''
              AND json_extract(contenu, '$.after') IN (${buckets.sql})
@@ -335,7 +335,7 @@ export const list_tickets = (input: TicketsListInput): TicketsListResult => {
            WHERE type = 'case.tags_changed'
              AND rattachement LIKE 'tickets:%'
              AND json_valid(contenu)
-             AND json_extract(contenu, '$.version') = 2
+             AND json_extract(contenu, '$.version') = 1
              AND json_type(contenu, '$.after') = 'array'
          ),
          ${ticketRows(

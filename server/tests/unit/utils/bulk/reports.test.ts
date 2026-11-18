@@ -270,7 +270,7 @@ describe('bulk reports', () => {
       type: 'email',
       destinataire: 'none@example.org',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         sender: 'user:alice@example.org',
         body: 'queued'
       }),
@@ -310,11 +310,11 @@ describe('bulk reports', () => {
       'communication.failed'
     ])
     expect(JSON.parse(queuedRows.at(-1)!.contenu)).toEqual({
-      version: 2,
+      version: 1,
       reason: 'bulk_operation_deleted'
     })
     expect(JSON.parse(cancelledRows.at(-1)!.contenu)).toEqual({
-      version: 2,
+      version: 1,
       reason: 'bulk_operation_deleted'
     })
   })

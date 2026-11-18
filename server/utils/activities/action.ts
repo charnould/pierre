@@ -93,6 +93,9 @@ export const patch_action = (
   }
   const action = parseTaskContent(latest.contenu)
   if (!action) throw new ActivitiesError('Invalid action content', 'invalid_body')
+  if (action.completed_on) {
+    throw new ActivitiesError('Chronology tasks are edited with the repayment plan', 'forbidden')
+  }
 
   const actorDestinataire = user_destinataire(actor)
   const assigneeId = action.task.assignee?.id ?? null
@@ -139,7 +142,7 @@ export const patch_action = (
     }
     type = 'task.updated'
     next = {
-      version: 2,
+      version: 1,
       task: {
         title: parsed.action,
         state: 'open',
@@ -155,7 +158,7 @@ export const patch_action = (
     }
     type = 'task.completed'
     next = {
-      version: 2,
+      version: 1,
       task: { ...action.task, state: 'completed' },
       ...(parsed.resultat?.trim() ? { result: parsed.resultat.trim() } : {})
     }
@@ -168,7 +171,7 @@ export const patch_action = (
     const assignee = assignee_ref(nextAssignee)
     type = 'task.reopened'
     next = {
-      version: 2,
+      version: 1,
       task: {
         title: action.task.title,
         state: 'open',
@@ -187,7 +190,7 @@ export const patch_action = (
     }
     type = 'task.ignored'
     next = {
-      version: 2,
+      version: 1,
       task: { ...action.task, state: 'ignored' },
       ...(parsed.motif?.trim() ? { reason: parsed.motif.trim() } : {})
     }

@@ -112,7 +112,7 @@ export const project_communication_status_with_db = (
   const failed = FAILURE_STATUSES.has(input.statut)
   const type = failed ? 'communication.failed' : 'communication.ok'
   const contenu = JSON.stringify({
-    version: 2,
+    version: 1,
     ...(failed
       ? { reason: input.reason?.trim() || input.statut }
       : {

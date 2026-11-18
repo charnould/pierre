@@ -126,7 +126,7 @@ try {
           ? recipient.filter(Boolean).join(', ')
           : credentials['MAILEVA_SENDER_EMAIL']!,
         contenu: JSON.stringify({
-          version: 2,
+          version: 1,
           subject: `Essai ${product}`,
           body: 'Essai sandbox Maileva',
           provider: 'Maileva',

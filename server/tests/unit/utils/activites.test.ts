@@ -47,7 +47,7 @@ describe('create_activity', () => {
       ref: 'REQ-1',
       type: 'note.published',
       recipients: ['jean.dupont', BOB],
-      contenu: JSON.stringify({ version: 2, text: 'Point avec @claire' })
+      contenu: JSON.stringify({ version: 1, text: 'Point avec @claire' })
     })
     expect(created).toMatchObject({
       rattachement: 'tickets:REQ-1',
@@ -59,7 +59,7 @@ describe('create_activity', () => {
       channel: null
     })
     expect(parseContentJson(created.contenu)).toEqual({
-      version: 2,
+      version: 1,
       text: 'Point avec @claire'
     })
     expect(created.mentions).toEqual([mention(CLAIRE), mention(JEAN), mention(BOB)])
@@ -91,20 +91,20 @@ describe('create_activity', () => {
       ref: 'REQ-AGENT',
       type: 'note.published',
       recipients: [user(BOB), 'ghost', 'pierre'],
-      contenu: JSON.stringify({ version: 2, text: 'Vu @inconnu et @bob et @pierre' })
+      contenu: JSON.stringify({ version: 1, text: 'Vu @inconnu et @bob et @pierre' })
     })
     expect(created.mentions).toEqual([mention(BOB), { destinataire: DESKTOP_AGENT_DESTINATAIRE }])
     expect(list_activities(DESKTOP_AGENT_DESTINATAIRE, { inbox: true })).toHaveLength(1)
     expect(list_activities('pierre@exemple.fr', { inbox: true })).toHaveLength(0)
   })
 
-  it('conserve l’auto-mention et refuse les payloads v1', async () => {
+  it('conserve l’auto-mention et refuse un rapport mal formé', async () => {
     await seed_users(ADMIN)
     const created = create_activity(ADMIN, {
       contexte: 'repayment',
       ref: 'LOC-2',
       type: 'note.published',
-      contenu: JSON.stringify({ version: 2, text: '@admin rappel perso' })
+      contenu: JSON.stringify({ version: 1, text: '@admin rappel perso' })
     })
     expect(created.mentions).toEqual([mention(ADMIN)])
     expect(list_activities(ADMIN, { inbox: true })[0]?.id).toBe(created.id)
@@ -125,14 +125,14 @@ describe('create_activity', () => {
         contexte: 'tickets',
         ref: 'REQ-1',
         type: 'note',
-        contenu: JSON.stringify({ version: 2, text: 'ancien alias' })
+        contenu: JSON.stringify({ version: 1, text: 'ancien alias' })
       }).success
     ).toBe(false)
     const generated = create_trusted_activity(ALICE, {
       contexte: 'tickets',
       ref: 'REQ-1',
       type: 'artifact.generated',
-      contenu: JSON.stringify({ version: 2, title: 'Mémo', note: 'Contenu' }),
+      contenu: JSON.stringify({ version: 1, title: 'Mémo', note: 'Contenu' }),
       auteur: 'agent:ticket.write-memo'
     })
     expect(generated).toMatchObject({
@@ -146,12 +146,12 @@ describe('create_activity', () => {
 describe('latest_repayment_states', () => {
   it('projette le groupe, la dernière tâche réalisée et le gestionnaire', () => {
     insert_repayment_activity('case.group_changed', 'LOC-1', '2026-06-10T10:00:00Z', {
-      version: 2,
+      version: 1,
       before: 'non_traites',
       after: 'amiable'
     })
     insert_repayment_activity('case.assignee_changed', 'LOC-1', '2026-06-10T11:00:00Z', {
-      version: 2,
+      version: 1,
       before: null,
       after: { id: user(CDUBOIS), label: CDUBOIS }
     })
@@ -160,7 +160,7 @@ describe('latest_repayment_states', () => {
       ref: 'LOC-1',
       type: 'task.created',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         task: {
           title: 'Joindre le locataire',
           state: 'open',
@@ -187,7 +187,7 @@ describe('latest_repayment_states', () => {
 
   it('ignore les autres rattachements et notifie le gestionnaire sur un entrant', () => {
     insert_repayment_activity('case.assignee_changed', 'LOC-5', '2026-06-10T10:00:00Z', {
-      version: 2,
+      version: 1,
       before: null,
       after: { id: user(CDUBOIS), label: CDUBOIS }
     })
@@ -198,7 +198,7 @@ describe('latest_repayment_states', () => {
        ) VALUES (
          '2099-08-26T19:00:00Z', 'tickets:REQ-5', 'system:test', 'LOC-5',
          'case.assignee_changed', '[]',
-         '{"version":2,"before":null,"after":"wrong@example.org"}'
+         '{"version":1,"before":null,"after":"wrong@example.org"}'
        )`
     )
     db.close()
@@ -209,7 +209,7 @@ describe('latest_repayment_states', () => {
       type: 'email',
       auteur: 'tenant:LOC-5',
       occurred_at: '2026-08-26T20:00:00Z',
-      contenu: JSON.stringify({ version: 2, sender: 'tenant:LOC-5', body: 'Réponse' })
+      contenu: JSON.stringify({ version: 1, sender: 'tenant:LOC-5', body: 'Réponse' })
     })
     expect(inbound.mentions).toEqual([mention(CDUBOIS)])
   })
@@ -222,18 +222,18 @@ describe('append-only patches', () => {
       contexte: 'tickets',
       ref: 'REQ-EDIT',
       type: 'note.published',
-      contenu: JSON.stringify({ version: 2, text: 'Salut @bob' })
+      contenu: JSON.stringify({ version: 1, text: 'Salut @bob' })
     })
     const updated = patch_activity(ALICE, created.id, {
       operation: 'edit_content',
-      contenu: JSON.stringify({ version: 2, text: 'Bonjour @bob' })
+      contenu: JSON.stringify({ version: 1, text: 'Bonjour @bob' })
     })
     expect(updated).toMatchObject({
       type: 'note.updated',
       threadId: created.threadId,
       revision: 2
     })
-    expect(parseContentJson(updated.contenu)).toEqual({ version: 2, text: 'Bonjour @bob' })
+    expect(parseContentJson(updated.contenu)).toEqual({ version: 1, text: 'Bonjour @bob' })
     expect(get_activity(created.id)?.contenu).toBe(created.contenu)
   })
 
@@ -244,13 +244,13 @@ describe('append-only patches', () => {
       ref: 'LOC-REACTION',
       type: 'note.published',
       recipients: [BOB],
-      contenu: JSON.stringify({ version: 2, text: 'Relance effectuée' })
+      contenu: JSON.stringify({ version: 1, text: 'Relance effectuée' })
     })
     patch_activity(BOB, created.id, { operation: 'set_mention', lu: true })
     const reaction = patch_activity(BOB, created.id, { operation: 'set_boost', emoji: '👍' })
     expect(reaction.type).toBe('activity.reaction_changed')
     expect(parseContentJson(reaction.contenu)).toEqual({
-      version: 2,
+      version: 1,
       source_activity_id: created.id,
       emoji: '👍'
     })
@@ -267,7 +267,7 @@ describe('append-only patches', () => {
       contexte: 'repayment',
       ref: 'LOC-WITHDRAW',
       type: 'note.published',
-      contenu: JSON.stringify({ version: 2, text: 'Privé' })
+      contenu: JSON.stringify({ version: 1, text: 'Privé' })
     })
     expect(() => delete_activity(BOB, created.id)).toThrow(ActivitiesError)
     expect(() =>

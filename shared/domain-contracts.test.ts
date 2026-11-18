@@ -61,7 +61,7 @@ describe('notification delivery contracts', () => {
 
 describe('communication content contracts', () => {
   test('stores RCS choices as typed buttons', () => {
-    const base = { version: 2, sender: 'alice@example.org', body: 'Choisissez' }
+    const base = { version: 1, sender: 'alice@example.org', body: 'Choisissez' }
     expect(
       parseCommunicationOpenedContent(
         JSON.stringify({
@@ -75,7 +75,7 @@ describe('communication content contracts', () => {
       choices: [{ type: 'reply', label: 'Être rappelé' }]
     })
     expect(parseCommunicationOpenedContent(JSON.stringify({ ...base, choices: [] }))).toEqual({
-      version: 2,
+      version: 1,
       sender: 'alice@example.org',
       body: 'Choisissez'
     })

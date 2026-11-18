@@ -274,7 +274,7 @@ function outbound(type: 'courrier' | 'lre') {
     type,
     destinataire: type === 'lre' ? 'ada@example.org' : '75001 Paris',
     contenu: JSON.stringify({
-      version: 2,
+      version: 1,
       sender: 'user:ada@example.org',
       subject: 'Courrier',
       body: 'Bonjour',

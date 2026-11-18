@@ -82,7 +82,7 @@ const insert_ticket_bucket = (
       [
         dateCreation,
         `tickets:${idReclamation}`,
-        JSON.stringify({ version: 2, before: null, after: bucket })
+        JSON.stringify({ version: 1, before: null, after: bucket })
       ]
     )
   } finally {
@@ -100,7 +100,7 @@ const insert_ticket_tags = (idReclamation: string, tags: string[], dateCreation:
       [
         dateCreation,
         `tickets:${idReclamation}`,
-        JSON.stringify({ version: 2, before: [], after: tags })
+        JSON.stringify({ version: 1, before: [], after: tags })
       ]
     )
   } finally {
@@ -207,7 +207,7 @@ describe('list_tickets', () => {
     expect(result.data.map((row) => row['id_reclamation'])).toContain('REQ-1')
   })
 
-  it('reads the latest v2 bucket and tags', async () => {
+  it('reads the latest bucket and tags', async () => {
     await writeSetup(
       'tickets',
       new TextEncoder().encode(
@@ -239,7 +239,7 @@ describe('list_tickets', () => {
     expect(home.data.map((row) => row['id_reclamation'])).not.toContain('REQ-1')
   })
 
-  it('accepts a v2 case.bucket_changed fixture', async () => {
+  it('accepts a case.bucket_changed fixture', async () => {
     await seed_tickets()
     insert_ticket_bucket('REQ-1', 'non_traitees', '2026-01-01T10:00:00Z')
 

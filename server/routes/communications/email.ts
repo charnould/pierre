@@ -93,7 +93,7 @@ export const postEmail = async (c: AuthContext) => {
       type: 'email',
       destinataire: destinataire.value,
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         ...(parsed.data.contenu.action ? { action: parsed.data.contenu.action } : {}),
         subject: parsed.data.contenu.subject,
         body: parsed.data.contenu.body

@@ -88,7 +88,7 @@ describe('reclamations import activity history', () => {
     const rows = activities(db)
     expect(rows).toHaveLength(1)
     expect(JSON.parse(rows[0]!.contenu)).toEqual({
-      version: 2,
+      version: 1,
       field: 'unite_organisationnelle_en_charge_hierarchie',
       before: 'direction > agence_mansart',
       after: 'direction > agence_becquerel'

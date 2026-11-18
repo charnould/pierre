@@ -211,7 +211,7 @@ describe('ledger SQL queries', () => {
       contexte: 'repayment',
       ref: 'LOC-1',
       type: 'case.group_changed',
-      contenu: JSON.stringify({ version: 2, before: null, after: 'amiable' }),
+      contenu: JSON.stringify({ version: 1, before: null, after: 'amiable' }),
       auteur: 'system:repayment'
     })
     create_trusted_activity('agent@example.org', {
@@ -219,7 +219,7 @@ describe('ledger SQL queries', () => {
       ref: 'LOC-1',
       type: 'case.assignee_changed',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         before: null,
         after: { id: 'user:agent@example.org', label: 'agent@example.org' }
       }),
@@ -230,7 +230,7 @@ describe('ledger SQL queries', () => {
       ref: 'LOC-1',
       type: 'task.completed',
       contenu: JSON.stringify({
-        version: 2,
+        version: 1,
         task: { title: 'Relancer', state: 'completed' }
       }),
       auteur: 'system:repayment'
@@ -240,7 +240,7 @@ describe('ledger SQL queries', () => {
       contexte: 'repayment',
       ref: 'LOC-1',
       type: 'case.tags_changed',
-      contenu: JSON.stringify({ version: 2, before: [], after: ['Décès', '+65 ans'] }),
+      contenu: JSON.stringify({ version: 1, before: [], after: ['Décès', '+65 ans'] }),
       auteur: 'system:repayment'
     })
 
@@ -269,7 +269,7 @@ describe('ledger SQL queries', () => {
         'system:repayment',
         'LOC-1',
         'case.group_changed',
-        JSON.stringify({ version: 2, before: null, after: 'amiable' })
+        JSON.stringify({ version: 1, before: null, after: 'amiable' })
       ]
     )
     db.run(
@@ -282,7 +282,7 @@ describe('ledger SQL queries', () => {
         'system:test',
         'LOC-1',
         'case.group_changed',
-        JSON.stringify({ version: 2, before: 'amiable', after: 'contentieux' })
+        JSON.stringify({ version: 1, before: 'amiable', after: 'contentieux' })
       ]
     )
     db.close()

@@ -372,7 +372,7 @@ describe('email transactionnel', () => {
       expect(rows.some((row) => row.contenu.includes('plus tard'))).toBe(false)
       const failed = rows.find((item) => item.type === 'communication.failed')
       expect(JSON.parse(failed?.contenu ?? '{}')).toMatchObject({
-        version: 2,
+        version: 1,
         reason: 'boîte pleine'
       })
     } finally {
