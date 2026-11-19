@@ -19,9 +19,9 @@
       "@types/react-dom": "^19.3.0",
       "docxtemplater": "^3.71.1",
       "jsdom": "^31.0.1",
-      "lucide-react": "1.73.0",
-      "marked": "^18.2.0",
-      "oxlint": "^1.93.0",
+      "lucide-react": "1.76.0",
+      "marked": "^18.2.1",
+      "oxlint": "^1.94.0",
       "pizzip": "^3.3.0",
       "react": "^19.3.1",
       "react-dom": "^19.3.1",
@@ -54,7 +54,7 @@
   "devDependencies": {
     "@shadcn/lint": "^0.2.5",
     "@types/bun": "catalog:",
-    "knip": "^6.45.1",
+    "knip": "^6.46.1",
     "oxlint": "catalog:"
   }
 }
