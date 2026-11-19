@@ -69,8 +69,8 @@ const database = (): Database => {
   )`)
   db.run('CREATE TABLE contacts (value TEXT PRIMARY KEY, status TEXT, checked_at TEXT)')
   db.run(`CREATE TABLE activites (
-    id INTEGER PRIMARY KEY, id_locataire TEXT, type TEXT, date_creation TEXT, contenu TEXT,
-    rattachement TEXT
+    id INTEGER PRIMARY KEY, id_locataire TEXT, id_client TEXT, type TEXT, date_creation TEXT,
+    contenu TEXT, rattachement TEXT
   )`)
   return db
 }
@@ -118,7 +118,7 @@ describe('compile_query', () => {
     const ledger = build_ledger_view_sql(movementColumnMeta, true, lotColumns, true)
     const compiled = compile_query(base(), movementColumnSet, true, lotColumns)
     expect(compiled.sql).toContain(`FROM (${ledger}) ledger`)
-    expect(compiled.sql).not.toContain(' LIMIT ')
+    expect(compiled.sql.replace(ledger, '')).not.toContain('LIMIT')
   })
 
   it('conserve solde positif, dernier mouvement, lot, coordonnées et ratio arrondi', () => {

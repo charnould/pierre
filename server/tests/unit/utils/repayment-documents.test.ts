@@ -35,21 +35,12 @@ describe('documents d’apurement', () => {
     })
     const diagnosticXml = xmlOf(diagnostic.bytes)
     expect(diagnostic.filename).toBe('Diagnostic social et financier.docx')
-    expect(diagnosticXml).toContain('Ada')
-    expect(diagnosticXml).toContain('Lovelace')
-    expect(diagnosticXml).toContain('Prime exceptionnelle')
-    expect(diagnosticXml).toContain('04/2026')
-    expect(diagnosticXml).toContain('Loyer net')
-    expect(diagnosticXml).toContain('Santé')
-    expect(diagnosticXml).toContain('05/2026')
-    expect(diagnosticXml).toContain('Recouvrement amiable')
     expect(diagnosticXml).toContain('Perte d’emploi')
-    expect(diagnosticXml).toContain('Non déposé')
-    expect(diagnosticXml).toContain('06/11/2026')
-    expect(diagnosticXml).toContain('ada@example.org')
+    expect(diagnosticXml).toContain('1 200,00')
+    expect(diagnosticXml).toContain('01/01/2020')
+    expect(diagnosticXml).toContain('CCAS')
     expect(diagnosticXml).not.toContain('{{')
     expect(diagnosticXml).not.toContain('CLAUSE_SOLIDARITE')
-    expect(diagnosticXml).not.toContain('Paul')
 
     const plan = await renderRepaymentDocument({
       document: 'plan',
@@ -62,11 +53,14 @@ describe('documents d’apurement', () => {
       stage: 'Recouvrement amiable'
     })
     const planXml = xmlOf(plan.bytes)
-    expect(planXml).toContain('1 200,00')
+    expect(planXml).toContain('Ada')
+    expect(planXml).toContain('Lovelace')
+    expect(planXml).toContain('Prime exceptionnelle')
+    expect(planXml).toContain('04/2026')
     expect(planXml).toContain('01/06/2026')
     expect(planXml).toContain('100,00')
-    expect(planXml).toContain('Prime exceptionnelle')
-    expect(planXml).toContain('Camille Martin')
+    expect(planXml).toContain('1 200,00')
+    expect(planXml).toContain('ada@example.org')
     expect(planXml).not.toContain('{{')
 
     const protocole = await renderRepaymentDocument({
@@ -82,34 +76,40 @@ describe('documents d’apurement', () => {
     const protocoleXml = xmlOf(protocole.bytes)
     expect(protocoleXml).toContain('01/06/2026')
     expect(protocoleXml).toContain('Santé')
+    expect(protocoleXml).toContain('Prime exceptionnelle')
     expect(protocoleXml).not.toContain('{{')
     for (const xml of [diagnosticXml, planXml, protocoleXml]) assertValidWordDocumentXml(xml)
   })
 
   it('refuse d’exporter quand une balise du modèle n’est pas renseignée', async () => {
+    const incomplete = filledRepaymentCaseFile()
+    incomplete.donnees_communes.bail.debut_bail = null
     await expect(
       renderRepaymentDocument({
-        document: 'plan',
+        document: 'diagnostic',
         format: 'docx',
-        caseFile: filledRepaymentCaseFile(),
-        template: template("Plan d'apurement"),
+        caseFile: incomplete,
+        template: template('Diagnostic social et financier'),
         email: 'ada@example.org',
-        chronology: [],
-        stage: ''
+        chronology: filledChronology,
+        stage: 'Recouvrement amiable'
       })
-    ).rejects.toThrow('Il manque : Phase, Événement de chronologie.')
+    ).rejects.toThrow('Il manque : Début du bail.')
   })
 
-  it('expose dans chaque modèle toutes les balises du formulaire dans un XML Word valide', () => {
-    for (const name of [
-      'Diagnostic social et financier',
-      "Plan d'apurement",
-      'Protocole de cohésion sociale'
-    ]) {
+  it('accepte dans chaque modèle un sous-ensemble des balises du formulaire', () => {
+    const catalog = new Set<string>(REPAYMENT_DOCUMENT_TAGS)
+    for (const [id, name] of [
+      ['repayment/diagnostic.docx', 'Diagnostic social et financier'],
+      ['repayment/plan.docx', "Plan d'apurement"],
+      ['repayment/protocole.docx', 'Protocole de cohésion sociale']
+    ] as const) {
       const bytes = template(name)
+      expect(repaymentTemplateIssue(id, bytes)).toBeNull()
       assertValidWordDocumentXml(xmlOf(bytes))
-      const tags = new Set(repaymentDocumentTags(bytes))
-      expect(REPAYMENT_DOCUMENT_TAGS.filter((tag) => !tags.has(tag))).toEqual([])
+      const tags = repaymentDocumentTags(bytes) ?? []
+      expect(tags.length).toBeGreaterThan(0)
+      expect(tags.filter((tag) => !catalog.has(tag))).toEqual([])
     }
   })
 
