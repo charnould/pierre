@@ -53,7 +53,7 @@ Chez votre registrar, dans vos `DNS`, créer un enregistrement `A` faisant point
 Connecté sur le serveur en root, saisissez cette commande pour installer le `CLI` :
 
 ```bash
-curl -fsSL https://github.com/charnould/pierre/releases/download/cli-0.9.22/install.sh | sh
+curl -fsSL https://github.com/charnould/pierre/releases/download/cli-0.9.24/install.sh | sh
 ```
 
 > Certains hébergeurs n'ouvrent pas le `22` : `ssh` prend alors `-p` et `scp` prend `-P`, par exemple `ssh -p 2234 root@le-serveur`.
