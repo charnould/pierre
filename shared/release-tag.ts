@@ -1,4 +1,4 @@
-const RELEASE_TAG = /^(?:carl|cli|server)-(\d+)\.(\d+)\.(\d+)$/
+const RELEASE_TAG = /^(?:carl|cli|server|speech)-(\d+)\.(\d+)\.(\d+)$/
 
 export function releaseParts(tag: string): [number, number, number] | null {
   const match = RELEASE_TAG.exec(tag)
