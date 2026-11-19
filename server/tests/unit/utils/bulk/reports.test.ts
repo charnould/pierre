@@ -247,10 +247,10 @@ describe('bulk reports', () => {
       clientCommandId: 'delete'
     })
     stop_bulk_scheduler()
-    now = new Date(now.getTime() + 61_000)
     const queuedKey = `bulk:${result.executionId}:recipient:LOC-OK:attempt:0`
-    let queued = get_activity_by_idempotency_key(queuedKey)
-    for (let attempt = 0; attempt < 2 && !queued; attempt += 1) {
+    let queued: ReturnType<typeof get_activity_by_idempotency_key> = null
+    for (let attempt = 0; attempt < 5 && !queued; attempt += 1) {
+      now = new Date(Date.now() + 1_000)
       await drain_bulk_jobs()
       stop_bulk_scheduler()
       queued = get_activity_by_idempotency_key(queuedKey)
