@@ -16,6 +16,10 @@ export const CARL_DIR = PIERRE_HOME
   ? join(PIERRE_HOME, 'models', 'carl')
   : join(SERVER_ROOT, 'models', 'carl')
 
+export const SPEECH_DIR = PIERRE_HOME
+  ? join(PIERRE_HOME, 'models', 'speech')
+  : join(SERVER_ROOT, 'models', 'speech')
+
 let datastoreRoot = DATASTORES_ROOT
 
 export function setDatastoreRoot(root: string | null): void {

@@ -40,7 +40,7 @@
     "pierre:config": "bun test config/checks/",
     "pierre:version": "bun run server/utils/update-pierre.ts",
     "server:build": "bun config/build-server.ts",
-    "server:dev": "cd server && bun run ./utils/ensure-carl.ts && DEBUG=true bun --env-file=datastores/pierre.env --watch run serve.ts",
+    "server:dev": "cd server && bun run ./utils/ensure-carl.ts && bun run ./utils/ensure-speech.ts && DEBUG=true bun --env-file=datastores/pierre.env --watch run serve.ts",
     "server:embed": "cd server && BUN_PORT=3001 bun --watch tests/e2e/host-demo.html",
     "server:env": "PIERRE_ENV_FILE=server/datastores/pierre.env bun cli/src/main.ts env --init",
     "server:e2e": "bun server/tests/e2e/run.ts",
