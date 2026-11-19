@@ -24,5 +24,9 @@
     "@types/bun": "catalog:",
     "@types/jsdom": "catalog:",
     "@types/turndown": "^5.0.6"
+  },
+  "optionalDependencies": {
+    "@transcribe-cpp/darwin-arm64-metal": "0.4.2",
+    "@transcribe-cpp/linux-x64-cpu-vulkan": "0.4.2"
   }
 }

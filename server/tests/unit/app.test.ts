@@ -30,7 +30,8 @@ describe('createApp', () => {
       ['POST', '/communications/external'],
       ['GET', '/chat/config'],
       ['DELETE', `/chat/sessions/${Bun.randomUUIDv7()}`],
-      ['POST', '/workflows']
+      ['POST', '/workflows'],
+      ['POST', '/speech/transcribe']
     ] as const) {
       const response = await app.request(path, { method })
       expect(response.status, `${method} ${path}`).toBe(401)
@@ -46,7 +47,8 @@ describe('createApp', () => {
       ['POST', '/chat/responses'],
       ['POST', '/webhooks/rcs'],
       ['POST', '/telemetry'],
-      ['POST', '/carl']
+      ['POST', '/carl'],
+      ['GET', '/speech']
     ] as const) {
       const response = await app.request(path, { method })
       expect(response.status, `${method} ${path}`).not.toBe(404)

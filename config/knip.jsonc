@@ -70,6 +70,10 @@
       "project": ["src/**/*.ts!", "tests/**/*.ts!"]
     },
     "server": {
+      "ignoreDependencies": [
+        "@transcribe-cpp/darwin-arm64-metal",
+        "@transcribe-cpp/linux-x64-cpu-vulkan"
+      ],
       "entry": [
         "app.ts!",
         "serve.ts!",
@@ -80,6 +84,7 @@
         "utils/knowledge/scrape-wikipedia.ts!",
         "utils/update-pierre.ts!",
         "utils/ensure-carl.ts!",
+        "utils/ensure-speech.ts!",
         "tests/live/cm-channels.ts!",
         "tests/**/*.test.ts"
       ],

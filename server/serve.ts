@@ -47,6 +47,12 @@ if (command === '--version' || command === '-v') {
   process.exit(0)
 }
 
+if (command === 'speech-worker') {
+  const { runSpeechWorker } = await import('./utils/speech-worker')
+  await runSpeechWorker()
+  process.exit(0)
+}
+
 if (command === 'backup') {
   backup()
   process.exit(0)

@@ -20,11 +20,13 @@ import { ledger } from './routes/ledger'
 import { publicRoutes } from './routes/public'
 import { repayment } from './routes/repayment'
 import { setup } from './routes/setup'
+import { getSpeech, postSpeech } from './routes/speech'
 import { postTelemetry } from './routes/telemetry'
 import { tickets } from './routes/tickets'
 import { webhooks } from './routes/webhooks'
 import { workflows } from './routes/workflows'
 import { getAuth } from './utils/auth'
+import { authenticate } from './utils/authenticate-user'
 import { SERVER_ROOT } from './utils/paths'
 import { name, readSetupBytes } from './utils/setup-store'
 import { emptyPage } from './views/empty'
@@ -134,6 +136,17 @@ export const createApp = () => {
     cors({ origin: '*', allowMethods: ['POST', 'OPTIONS'], allowHeaders: ['Content-Type'] })
   )
   app.post('/carl', smallJsonLimit, classifyCarl)
+  app.get('/speech', getSpeech)
+  app.post(
+    '/speech/transcribe',
+    authenticate,
+    bodyLimit({
+      maxSize: 4 * 1024 * 1024,
+      onError: (c) =>
+        c.json({ error: { code: 'body_too_large', message: 'La dictée est trop longue.' } }, 413)
+    }),
+    postSpeech
+  )
   app.get('/up', (c) => c.text('ok'))
 
   app.notFound((c) => {
