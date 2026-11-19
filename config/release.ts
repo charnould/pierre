@@ -53,8 +53,13 @@ const POLICIES: Record<Product, ReleasePolicy> = {
     title: (tag) => `desktop-${tag}`
   },
   server: {
-    assets: () => ['libonnxruntime.so.1', 'pierre', 'pierre-linux-amd64.smolmachine'],
-    notes: 'Serveur PIERRE et bibliothèque ONNX Runtime',
+    assets: () => [
+      'libonnxruntime.so.1',
+      'libtranscribe.tar.gz',
+      'pierre',
+      'pierre-linux-amd64.smolmachine'
+    ],
+    notes: 'Serveur PIERRE, ONNX Runtime et bibliothèque de dictée vocale',
     packagePath: 'server/package.json',
     prefix: 'server-',
     sourcePaths: ['server/package.json', 'server/microvm'],

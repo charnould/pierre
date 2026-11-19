@@ -180,6 +180,7 @@ describe('release reconciliation', () => {
         release: {
           assets: [
             { name: 'libonnxruntime.so.1' },
+            { name: 'libtranscribe.tar.gz' },
             { name: 'pierre' },
             { name: 'pierre-linux-amd64.smolmachine' }
           ],
@@ -236,6 +237,7 @@ describe('release reconciliation', () => {
         release: {
           assets: [
             { name: 'libonnxruntime.so.1' },
+            { name: 'libtranscribe.tar.gz' },
             { name: 'pierre' },
             { name: 'pierre-linux-amd64.smolmachine' }
           ],
@@ -287,6 +289,7 @@ describe('release reconciliation', () => {
     const assets = join(repo.root, 'assets')
     await mkdir(assets)
     await writeFile(join(assets, 'libonnxruntime.so.1'), 'library')
+    await writeFile(join(assets, 'libtranscribe.tar.gz'), 'transcribe')
     await writeFile(join(assets, 'pierre'), 'binary')
     await writeFile(join(assets, 'pierre-linux-amd64.smolmachine'), 'microvm')
 
@@ -301,6 +304,7 @@ describe('release reconciliation', () => {
     expect(state.release.name).toBe('server-1.1.0')
     expect(state.release.assets.map((asset: { name: string }) => asset.name).sort()).toEqual([
       'libonnxruntime.so.1',
+      'libtranscribe.tar.gz',
       'pierre',
       'pierre-linux-amd64.smolmachine'
     ])
@@ -315,6 +319,7 @@ describe('release reconciliation', () => {
     const assets = join(repo.root, 'assets')
     await mkdir(assets)
     await writeFile(join(assets, 'libonnxruntime.so.1'), 'library')
+    await writeFile(join(assets, 'libtranscribe.tar.gz'), 'transcribe')
     await writeFile(join(assets, 'pierre'), 'binary')
     await writeFile(join(assets, 'pierre-linux-amd64.smolmachine'), 'microvm')
 

@@ -9,6 +9,7 @@ import {
   selectCarlRelease,
   selectCliRelease,
   selectServerRelease,
+  selectSpeechRelease,
   versionGreater
 } from '../src/lib/github.ts'
 import { renderStatus } from '../src/lib/output.ts'
@@ -215,6 +216,9 @@ describe('release selection', () => {
     release('carl-1.2.0'),
     release('carl-1.10.0'),
     release('carl-2.0.0'),
+    release('speech-1.0.0'),
+    release('speech-1.1.0'),
+    release('SPEECH-9.9.9'),
     release('cli-0.9.0'),
     release('cli-0.9.1'),
     release('cli-2.0.0', { prerelease: true }),
@@ -227,6 +231,7 @@ describe('release selection', () => {
   it('keeps the highest lowercase server, carl and cli release', () => {
     expect(selectServerRelease(releases)?.tag).toBe('server-0.41.0')
     expect(selectCarlRelease(releases)?.tag).toBe('carl-2.0.0')
+    expect(selectSpeechRelease(releases)?.tag).toBe('speech-1.1.0')
     expect(selectCliRelease(releases)?.tag).toBe('cli-0.9.1')
     expect(versionGreater('cli-0.9.2', 'cli-0.9.1')).toBe(true)
     expect(() => versionGreater('cli-0.9.2', 'CLI-0.9.1')).toThrow('Version illisible.')

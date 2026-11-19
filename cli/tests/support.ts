@@ -6,6 +6,8 @@ import { join } from 'node:path'
 import { crc32 } from 'node:zlib'
 
 import { CARL_MODEL_FILES } from '../../shared/carl-model.ts'
+import { SPEECH_MODEL_FILE } from '../../shared/speech-model.ts'
+import { TRANSCRIBE_ARCHIVE } from '../src/lib/server-bundle.ts'
 import {
   type CommandResult,
   type Context,
@@ -55,8 +57,28 @@ export async function writeServerBundle(root: string, tag: string, version = tag
   await writeExe(join(release, 'pierre'), `#!/bin/sh\necho ${version}\n`)
   await writeFile(join(release, 'libonnxruntime.so.1'), 'library')
   await writeFile(join(release, 'pierre-linux-amd64.smolmachine'), 'microvm')
+  await writeTranscribeArchive(release)
   await symlink(release, join(serverRoot, 'current'))
   return release
+}
+
+export async function writeTranscribeArchive(directory: string) {
+  const stage = await mkdtemp(join(tmpdir(), 'pierre-transcribe-'))
+  await mkdir(join(stage, 'transcribe'), { recursive: true })
+  await writeFile(join(stage, 'transcribe', 'libtranscribe.so'), 'library')
+  const archive = join(directory, TRANSCRIBE_ARCHIVE)
+  const tar = Bun.spawn(['tar', '-czf', archive, '-C', stage, 'transcribe'], {
+    stdout: 'ignore',
+    stderr: 'pipe'
+  })
+  if ((await tar.exited) !== 0) {
+    throw new Error(await new Response(tar.stderr).text())
+  }
+}
+
+export async function writeSpeechModel(directory: string) {
+  await writeFile(join(directory, SPEECH_MODEL_FILE), SPEECH_MODEL_FILE)
+  await recordChecksum(directory, SPEECH_MODEL_FILE)
 }
 
 export async function recordChecksum(directory: string, name: string) {
