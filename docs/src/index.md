@@ -88,7 +88,7 @@ PIERRE est conçu pour une mise en œuvre progressive, sans projet d'intégratio
 ### Liens utiles
 
 - [Code source](https://github.com/charnould/pierre)
-- [Documentation](https://github.com/charnould/pierre/blob/master/docs/06-installation/index.md) (_en cours_)
+- [Documentation](https://github.com/charnould/pierre/blob/master/docs/src) (_en cours_)
 - [Core Data HLM](./02-core-data-hlm/index.md) (_en cours_)
 - [Core Models HLM](./03-core-models-hlm/index.md)
 
