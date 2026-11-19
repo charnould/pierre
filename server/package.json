@@ -1,6 +1,6 @@
 {
   "name": "@pierre/server",
-  "version": "0.40.17",
+  "version": "0.40.18",
   "private": true,
   "license": "SEE LICENSE IN ../LICENSE.md",
   "type": "module",
