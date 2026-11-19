@@ -65,7 +65,7 @@ jobs:
         run: |
           bun install --frozen-lockfile --filter @pierre/cli
           bun --cwd cli check
-          bun test cli/tests
+          bun test --cwd cli
           mkdir -p cli/dist
           bun build --compile --target=bun-linux-x64 --no-compile-autoload-dotenv \
             cli/src/main.ts --outfile cli/dist/pierre-cli-linux-x64
