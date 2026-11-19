@@ -485,7 +485,24 @@
               },
               {
                 "pattern": "^InputGroupButton$",
-                "allow": ["layout", "text-muted-foreground"]
+                "allow": ["layout", "text-muted-foreground", "disabled:opacity-100"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/src/features/chat/components/ProfileSelector.tsx"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "error",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^InputGroupButton$",
+                "allow": ["layout", "font-normal", "text-muted-foreground"]
               }
             ]
           }
