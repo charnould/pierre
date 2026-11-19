@@ -13,6 +13,7 @@ import {
 } from '../lib/server-bundle.ts'
 import { waitForBody, writeServerUnit } from '../lib/server-service.ts'
 import { ensureSmolvm } from '../lib/smolvm-runtime.ts'
+import { ensureLatestSpeech, type SpeechInstall } from '../lib/speech.ts'
 import { CommandFailed, type Context, must, runCommand } from '../lib/system.ts'
 import { confirm, done, failed, say, spin } from '../lib/text.ts'
 import { restart } from './restart.ts'
@@ -37,6 +38,27 @@ function carlLabel(result: CarlInstall): string {
     : `${result.tag} est installé.`
 }
 
+async function refreshSpeech(
+  ctx: Context
+): Promise<'current' | 'installed' | 'unchanged' | 'unavailable' | 'failed'> {
+  try {
+    const result = await spin(ctx, 'Speech', () => ensureLatestSpeech(ctx), speechLabel)
+    return result.status
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'L’installation de la dictée vocale a échoué.'
+    failed(ctx, message)
+    return 'failed'
+  }
+}
+
+function speechLabel(result: SpeechInstall): string {
+  if (!result.tag) return 'Speech'
+  return result.status === 'current'
+    ? `${result.tag} est déjà à jour.`
+    : `${result.tag} est installé.`
+}
+
 async function installedVersion(ctx: Context): Promise<string> {
   if (!existsSync(ctx.runtime.paths.bin)) return ''
   return commandVersion(ctx, ctx.runtime.paths.bin)
@@ -45,9 +67,20 @@ async function installedVersion(ctx: Context): Promise<string> {
 async function finishCurrent(ctx: Context, current: string): Promise<number> {
   const carl = await refreshCarl(ctx)
   if (carl === 'failed') return 1
-  if (carl === 'installed' && isConfigured(ctx.runtime)) return restart(ctx)
+  const speech = await refreshSpeech(ctx)
+  if (speech === 'failed') return 1
+  const installed = carl === 'installed' || speech === 'installed'
+  if (installed && isConfigured(ctx.runtime)) return restart(ctx)
+  if (carl === 'installed' && speech === 'installed') {
+    done(ctx, 'Carl et la dictée vocale sont installés.')
+    return 0
+  }
   if (carl === 'installed') {
     done(ctx, 'Carl est installé.')
+    return 0
+  }
+  if (speech === 'installed') {
+    done(ctx, 'La dictée vocale est installée.')
     return 0
   }
   done(ctx, `${current} est déjà à jour.`)
@@ -93,6 +126,7 @@ export async function updateServer(ctx: Context, reset = false): Promise<number>
 
 async function installServerRelease(ctx: Context, tag: string, reset: boolean): Promise<number> {
   if ((await refreshCarl(ctx)) === 'failed') return 1
+  if ((await refreshSpeech(ctx)) === 'failed') return 1
   try {
     await ensureSmolvm(ctx)
   } catch {
@@ -147,6 +181,7 @@ async function installServerRelease(ctx: Context, tag: string, reset: boolean): 
 
 async function resetCurrentServer(ctx: Context, current: string): Promise<number> {
   if ((await refreshCarl(ctx)) === 'failed') return 1
+  if ((await refreshSpeech(ctx)) === 'failed') return 1
   const configured = isConfigured(ctx.runtime)
   try {
     await spin(ctx, 'Remise à zéro', async () => {

@@ -19,11 +19,19 @@ import {
   testContext,
   writeCarlZip,
   writeExe,
-  writeServerBundle
+  writeServerBundle,
+  writeSpeechModel,
+  writeTranscribeArchive
 } from './support.ts'
 
 async function writeServerChecksums(directory: string) {
-  for (const name of ['pierre', 'libonnxruntime.so.1', 'pierre-linux-amd64.smolmachine']) {
+  if (!existsSync(join(directory, 'libtranscribe.tar.gz'))) await writeTranscribeArchive(directory)
+  for (const name of [
+    'pierre',
+    'libonnxruntime.so.1',
+    'pierre-linux-amd64.smolmachine',
+    'libtranscribe.tar.gz'
+  ]) {
     await recordChecksum(directory, name)
   }
 }
@@ -234,7 +242,8 @@ describe('atomic installation', () => {
                 prerelease: false,
                 assets: []
               },
-              { tag_name: 'carl-1.2.0', draft: false, prerelease: false, assets: [] }
+              { tag_name: 'carl-1.2.0', draft: false, prerelease: false, assets: [] },
+              { tag_name: 'speech-1.0.0', draft: false, prerelease: false, assets: [] }
             ]),
             url
           }
@@ -247,6 +256,7 @@ describe('atomic installation', () => {
     await writeFile(join(root, 'libonnxruntime.so.1'), 'library')
     await writeFile(join(root, 'pierre-linux-amd64.smolmachine'), 'image')
     await writeCarlZip(root)
+    await writeSpeechModel(root)
     await writeServerChecksums(root)
     const code = await installCommand(ctx.ctx, ['--host', 'example.org'])
     expect(code).toBe(0)
@@ -274,6 +284,10 @@ async function readyInstallation(root: string) {
   await mkdir(carl, { recursive: true })
   for (const name of CARL_MODEL_FILES) await writeFile(join(carl, name), name)
   await writeFile(join(carl, 'version'), 'carl-1.0.0\n')
+  const speech = join(root, 'home', 'models', 'speech')
+  await mkdir(speech, { recursive: true })
+  await writeFile(join(speech, 'model.gguf'), 'model.gguf')
+  await writeFile(join(speech, 'version'), 'speech-1.0.0\n')
 }
 
 describe('configuration', () => {

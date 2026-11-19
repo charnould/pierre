@@ -8,6 +8,7 @@ import {
   type Release
 } from '../../../shared/github-releases.ts'
 import { releaseParts, versionGreater } from '../../../shared/release-tag.ts'
+import { latestSpeechTag } from '../../../shared/speech-model.ts'
 import { CommandFailed, type Context, runCommand } from './system.ts'
 
 const REPO = 'https://github.com/charnould/pierre'
@@ -30,6 +31,14 @@ export function selectServerRelease(releases: Release[]): Release | null {
 
 export function selectCarlRelease(releases: Release[]): Release | null {
   const tag = latestCarlTag(
+    releases.filter((release) => !release.draft).map((release) => release.tag)
+  )
+  if (!tag) return null
+  return releases.find((release) => release.tag === tag && !release.draft) ?? null
+}
+
+export function selectSpeechRelease(releases: Release[]): Release | null {
+  const tag = latestSpeechTag(
     releases.filter((release) => !release.draft).map((release) => release.tag)
   )
   if (!tag) return null

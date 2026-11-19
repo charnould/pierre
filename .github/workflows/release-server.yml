@@ -67,6 +67,7 @@ jobs:
           path: |
             release-assets/pierre
             release-assets/libonnxruntime.so.1
+            release-assets/libtranscribe.tar.gz
           if-no-files-found: error
           retention-days: 1
 
@@ -137,6 +138,7 @@ jobs:
         run: |
           test -s release-assets/pierre
           test -s release-assets/libonnxruntime.so.1
+          test -s release-assets/libtranscribe.tar.gz
           test -s release-assets/pierre-linux-amd64.smolmachine
           BUNDLE="$RUNNER_TEMP/server/releases/$TAG"
           mkdir -p "$BUNDLE"

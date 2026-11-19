@@ -32,6 +32,7 @@ import {
 } from '../lib/server-bundle.ts'
 import { waitForBody, writeServerUnit } from '../lib/server-service.ts'
 import { ensureSmolvm } from '../lib/smolvm-runtime.ts'
+import { ensureLatestSpeech } from '../lib/speech.ts'
 import { CommandFailed, type Context, must, requireMachine, runCommand } from '../lib/system.ts'
 import { say, sayError, spin } from '../lib/text.ts'
 
@@ -181,6 +182,12 @@ async function ensureCarl(ctx: Context) {
   }
 }
 
+async function ensureSpeech(ctx: Context) {
+  if ((await ensureLatestSpeech(ctx)).status === 'unavailable') {
+    throw new CommandFailed(1, "Aucune version de dictée vocale n'est disponible.")
+  }
+}
+
 async function writeCaddy(ctx: Context, host: string) {
   writeCaddyFile(
     ctx,
@@ -241,7 +248,8 @@ async function runInstallation(ctx: Context): Promise<number> {
     ['Micro-VM', () => ensureSmolvm(ctx)],
     ['Caddy', () => ensureCaddy(ctx)],
     ['Server', () => ensureServer(ctx)],
-    ['Carl', () => ensureCarl(ctx)]
+    ['Carl', () => ensureCarl(ctx)],
+    ['Speech', () => ensureSpeech(ctx)]
   ]
   for (const [label, action] of steps) {
     try {

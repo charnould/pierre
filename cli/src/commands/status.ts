@@ -9,6 +9,7 @@ import {
   selectCarlRelease,
   selectCliRelease,
   selectServerRelease,
+  selectSpeechRelease,
   versionGreater
 } from '../lib/github.ts'
 import { renderStatus, type StatusLine } from '../lib/output.ts'
@@ -30,6 +31,8 @@ export async function collectStatus(ctx: Context): Promise<StatusLine[]> {
   const serverLatest = releases ? (selectServerRelease(releases)?.tag ?? '') : ''
   const carlVersion = installedCarl(ctx)
   const carlLatest = releases ? (selectCarlRelease(releases)?.tag ?? '') : ''
+  const speechVersion = installedSpeech(ctx)
+  const speechLatest = releases ? (selectSpeechRelease(releases)?.tag ?? '') : ''
   const cliLatest = releases ? (selectCliRelease(releases)?.tag ?? '') : ''
   const lines: StatusLine[] = [versionLine('cli', ctx.version, cliLatest, true)]
   if (!configured) {
@@ -40,11 +43,13 @@ export async function collectStatus(ctx: Context): Promise<StatusLine[]> {
     })
     lines.push(versionLine('server', serverVersion, serverLatest, null))
     lines.push(versionLine('carl', carlVersion, carlLatest, null))
+    lines.push(versionLine('speech', speechVersion, speechLatest, null))
   } else {
     const host = readEnvValue(ctx.runtime.paths.envFile, 'HOST')
     const local = await serviceUp(ctx)
     const publicUp = host ? await endpointUp(ctx, `https://${host}/up`) : false
     const carlUp = local ? await carlUpNow(ctx) : false
+    const speechUp = local ? await speechUpNow(ctx) : false
     lines.unshift({
       level: publicUp ? 'ok' : 'bad',
       label: 'www',
@@ -53,6 +58,7 @@ export async function collectStatus(ctx: Context): Promise<StatusLine[]> {
     })
     lines.push(versionLine('server', serverVersion, serverLatest, local))
     lines.push(versionLine('carl', carlVersion, carlLatest, carlUp))
+    lines.push(versionLine('speech', speechVersion, speechLatest, speechUp))
   }
   return lines
 }
@@ -75,7 +81,10 @@ function versionLine(
     label,
     value: installed === 'absent' ? 'indisponible' : value,
     next,
-    hint: label === 'carl' ? 'Relancer : pierre update' : 'Voir les journaux : pierre logs'
+    hint:
+      label === 'carl' || label === 'speech'
+        ? 'Relancer : pierre update'
+        : 'Voir les journaux : pierre logs'
   }
 }
 
@@ -89,7 +98,15 @@ async function installedServer(ctx: Context): Promise<string> {
 }
 
 function installedCarl(ctx: Context): string {
-  const file = join(ctx.runtime.paths.home, 'models', 'carl', 'version')
+  return installedStamp(ctx, 'carl')
+}
+
+function installedSpeech(ctx: Context): string {
+  return installedStamp(ctx, 'speech')
+}
+
+function installedStamp(ctx: Context, name: 'carl' | 'speech'): string {
+  const file = join(ctx.runtime.paths.home, 'models', name, 'version')
   if (!existsSync(file)) return 'absent'
   return readFileSync(file, 'utf8').replace(/\s+/g, '') || 'absent'
 }
@@ -112,5 +129,10 @@ async function carlUpNow(ctx: Context): Promise<boolean> {
     body: '{"texte":"la chaudière est en panne"}',
     timeoutMs: 8000
   })
+  return response.status === 200
+}
+
+async function speechUpNow(ctx: Context): Promise<boolean> {
+  const response = await ctx.runtime.request('http://127.0.0.1:3000/speech', { timeoutMs: 5000 })
   return response.status === 200
 }

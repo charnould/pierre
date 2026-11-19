@@ -23,12 +23,18 @@ import {
   releaseParts,
   selectServerRelease
 } from './github.ts'
-import { CommandFailed, type Context } from './system.ts'
+import { CommandFailed, type Context, must } from './system.ts'
 
 export const SERVER_BINARY = 'pierre'
 export const ONNX_LIBRARY = 'libonnxruntime.so.1'
 export const MICROVM_IMAGE = 'pierre-linux-amd64.smolmachine'
-export const SERVER_ASSETS = [SERVER_BINARY, ONNX_LIBRARY, MICROVM_IMAGE] as const
+export const TRANSCRIBE_ARCHIVE = 'libtranscribe.tar.gz'
+export const SERVER_ASSETS = [
+  SERVER_BINARY,
+  ONNX_LIBRARY,
+  MICROVM_IMAGE,
+  TRANSCRIBE_ARCHIVE
+] as const
 
 function requireFile(path: string, label: string) {
   if (!existsSync(path) || statSync(path).size === 0) {
@@ -57,6 +63,7 @@ export async function stageServerBundle(ctx: Context, tag: string, directory: st
   chmodSync(binary, 0o755)
   chmodSync(join(directory, ONNX_LIBRARY), 0o644)
   chmodSync(join(directory, MICROVM_IMAGE), 0o644)
+  chmodSync(join(directory, TRANSCRIBE_ARCHIVE), 0o644)
   for (const name of SERVER_ASSETS) {
     const file = join(directory, name)
     requireFile(file, name)
@@ -64,6 +71,7 @@ export async function stageServerBundle(ctx: Context, tag: string, directory: st
     if (!expected) throw new CommandFailed(1, `Empreinte absente pour ${name}.`)
     await expectSha256(name, file, expected)
   }
+  await must(ctx.runtime, 'tar', ['-xzf', join(directory, TRANSCRIBE_ARCHIVE), '-C', directory])
   if ((await commandVersion(ctx, binary)) !== tag) {
     throw new CommandFailed(1, `Le binaire serveur n’annonce pas ${tag}.`)
   }
