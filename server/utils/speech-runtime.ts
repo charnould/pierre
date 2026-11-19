@@ -1,9 +1,9 @@
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 
 import { SPEECH_MODEL_FILE } from '../../shared/speech-model'
-import { SERVER_ROOT, SPEECH_DIR } from './paths'
+import { SPEECH_DIR } from './paths'
 
 const require = createRequire(import.meta.url)
 
@@ -14,8 +14,9 @@ export function speechLibraryName(): string {
 }
 
 /** Directory that holds `libtranscribe` and its sibling ggml libraries. */
-export function speechLibraryDir(): string | null {
-  const beside = join(SERVER_ROOT, 'transcribe')
+export function speechLibraryDir(executable = process.execPath): string | null {
+  // The compiled server keeps assets in /$bunfs. The .so files are extracted beside the binary.
+  const beside = join(dirname(executable), 'transcribe')
   if (existsSync(join(beside, speechLibraryName()))) return beside
   const tuple =
     process.platform === 'darwin' && process.arch === 'arm64'
