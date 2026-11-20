@@ -480,6 +480,10 @@ export function listInternalChatbots(): Array<{ id: string; display: string }> {
   return listChatbots().filter((chatbot) => chatbot.id !== 'default')
 }
 
+export function anyChatbotReady(): boolean {
+  return defaultChatbotReady() != null || listInternalChatbots().length > 0
+}
+
 export function skillPrompt(id: string): string | null {
   if (id === 'about') return aboutReady()?.prompt ?? null
   if (id === 'report') return agentsText('automations/AGENTS.md')

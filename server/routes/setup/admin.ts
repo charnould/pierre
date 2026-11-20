@@ -8,6 +8,7 @@ import { writeProfileFiles } from '../../utils/knowledge/profile-files'
 import { datastorePaths } from '../../utils/paths'
 import {
   aboutReady,
+  anyChatbotReady,
   automationsReady,
   defaultChatbotReady,
   deleteInternalChatbot,
@@ -71,7 +72,7 @@ export const getAdminSetup = (c: AuthContext) =>
     binaries: binaries(),
     ready: {
       email: emailReady(),
-      'chatbots/default': defaultChatbotReady() != null,
+      'chatbots/default': anyChatbotReady(),
       tickets: ticketsReady() != null,
       repayment: repaymentReady() != null,
       'about/AGENTS.md': aboutReady() != null,
