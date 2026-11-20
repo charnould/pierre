@@ -2,8 +2,8 @@ import type { AuthContext } from '../../utils/authenticate-user'
 import { repaymentDocumentTags } from '../../utils/repayment-documents'
 import {
   aboutReady,
+  anyChatbotReady,
   automationsReady,
-  defaultChatbotReady,
   name,
   readSetupBytes,
   repaymentGaps,
@@ -26,7 +26,6 @@ const tagsOf = (id: string): string[] | null => {
 export const getSetup = (c: AuthContext) => {
   const tickets = ticketsReady()
   const repayment = repaymentReady()
-  const chatbot = defaultChatbotReady()
   return c.json({
     data: {
       name: name(),
@@ -38,7 +37,7 @@ export const getSetup = (c: AuthContext) => {
       docxSkillIds: tickets ? ['replies'] : [],
       about: aboutReady(),
       automations: automationsReady(),
-      chatbot: chatbot != null
+      chatbot: anyChatbotReady()
     }
   })
 }
