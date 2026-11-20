@@ -108,6 +108,7 @@ function draftAgentId(json: string, taken: readonly string[]): { id: string } | 
 function knownChatbotIds(texts: Record<string, string | null>): string[] {
   const ids = new Set<string>()
   for (const key of Object.keys(texts)) {
+    if (!storedText(texts, key)) continue
     const id = CHATBOT_KEY.exec(key)?.[1] ?? CHATBOT_PROSE.exec(key)?.[1]
     if (id) ids.add(id)
   }
@@ -115,7 +116,9 @@ function knownChatbotIds(texts: Record<string, string | null>): string[] {
 }
 
 function agentKnown(texts: Record<string, string | null>, id: string): boolean {
-  return Object.hasOwn(texts, `chatbots/${id}`) || Object.hasOwn(texts, `chatbots/${id}/AGENTS.md`)
+  return Boolean(
+    storedText(texts, `chatbots/${id}`) || storedText(texts, `chatbots/${id}/AGENTS.md`)
+  )
 }
 
 function storedText(texts: Record<string, string | null>, id: string): string {
@@ -809,7 +812,10 @@ function ChatbotsSetup({ url, onBack }: { url: string; onBack: () => void }) {
     })
     setStatus('Agent supprimé')
     setTab((current) => (current === id ? 'default' : current))
-    if (known) await load()
+    if (known) {
+      await load()
+      await hydrateCustomizationFromServer(url)
+    }
   }
 
   async function deactivatePublic() {
