@@ -5,7 +5,10 @@ import { openDatastore } from '../../../utils/datastore-db'
 import { migrate_datastore } from '../../../utils/datastore-migrations'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import {
+  anyChatbotReady,
   automationsReady,
+  defaultChatbotReady,
+  deleteInternalChatbot,
   REPAYMENT_DOCUMENT_IDS,
   repaymentGaps,
   repaymentMessages,
@@ -202,5 +205,34 @@ describe('setup store', () => {
     await expect(writeSetup('tickets', new TextEncoder().encode(body))).rejects.toBeInstanceOf(
       SetupError
     )
+  })
+
+  it('considers chatbots ready when an internal agent is complete without a public default', async () => {
+    expect(anyChatbotReady()).toBe(false)
+    expect(defaultChatbotReady()).toBeNull()
+
+    await writeSetup(
+      'chatbots/cadre-astreinte',
+      new TextEncoder().encode(
+        JSON.stringify({
+          id: 'cadre-astreinte',
+          display: "Cadre d'astreinte",
+          community_knowledge: true,
+          trace: 'collapsed',
+          attachments: true,
+          greetings: ["Que s'est-il passé ?"],
+          examples: ['Question ?'],
+          disclaimer: 'Vérifiez.'
+        })
+      )
+    )
+    expect(anyChatbotReady()).toBe(false)
+
+    await writeSetup('chatbots/cadre-astreinte/AGENTS.md', new TextEncoder().encode('réfléchis'))
+    expect(defaultChatbotReady()).toBeNull()
+    expect(anyChatbotReady()).toBe(true)
+
+    deleteInternalChatbot('cadre-astreinte')
+    expect(anyChatbotReady()).toBe(false)
   })
 })
