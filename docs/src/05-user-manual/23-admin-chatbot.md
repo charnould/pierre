@@ -62,7 +62,7 @@ Le réglage vaut pour tout l’organisme. Un JSON enregistré est celui de tous 
 
 ## Lire l’écran
 
-La porte s’appelle `Agents conversationnels`. Un cercle s’affiche tant qu’il manque une des trois pièces de l’agent public. La pastille s’affiche quand le JSON, le prompt système et l’icône sont là : l’agent public est alors disponible. Des agents internes peuvent déjà répondre aux équipes pendant que le public affiche encore le cercle.
+La porte s’appelle `Agents conversationnels`. Un cercle s’affiche tant qu’aucun agent (public ou interne) n’est prêt. La pastille s’affiche dès que l’agent public (JSON, prompt système et icône) ou au moins un agent interne (JSON et prompt système) est complet. Sur l’écran de paramétrage, la carte `Agent public` conserve son propre cercle tant qu’il lui manque une de ses trois pièces.
 
 Sous le titre, des onglets : `Agent public`, puis l’identifiant de chaque autre agent, puis `+` (`Nouvel agent`). Un seul agent est ouvert. Les autres restent dans la barre.
 
@@ -116,7 +116,7 @@ L’identifiant ne se renomme pas. Pour en changer, ouvrez `Nouvel agent`, colle
 
 `default` est le chatbot de l’adresse du serveur. Les locataires l’ouvrent dans un navigateur. Les collaborateurs le trouvent dans `Discuter`, sans case à cocher, dès que les trois pièces sont là.
 
-Prêt, pour lui : JSON valide, prompt système non vide, icône SVG. La pastille de la porte s’affiche alors, et l’agent public est disponible. S’il manque une pièce, un cercle reste à la place.
+Prêt, pour lui : JSON valide, prompt système non vide, icône SVG. La pastille de sa carte s’affiche alors, et l’agent public est disponible. S’il manque une pièce, un cercle reste à la place ; des agents internes peuvent toutefois déjà répondre aux équipes dans `Discuter`.
 
 Collez ceci dans `Configuration` de l’agent public, puis adaptez les phrases.
 
