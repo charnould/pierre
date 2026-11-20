@@ -52,4 +52,10 @@ describe('parseKnowledgeUpload', () => {
       code: 'empty_workbook'
     })
   })
+
+  it('rejects a corrupt docx file with invalid_file', async () => {
+    await expect(
+      parseKnowledgeUpload('docx', new TextEncoder().encode('not a zip'))
+    ).rejects.toMatchObject({ code: 'invalid_file' })
+  })
 })

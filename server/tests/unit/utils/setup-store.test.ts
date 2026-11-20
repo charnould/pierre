@@ -53,14 +53,75 @@ describe('setup store', () => {
 
   it('opens automations when the report prompt is set', async () => {
     expect(automationsReady()).toBeNull()
-    await writeSetup('automations/AGENTS.md', new TextEncoder().encode('Rapport.'))
-    expect(automationsReady()?.prompt).toContain('Rapport')
+    await expect(
+      writeSetup('automations/AGENTS.md', new TextEncoder().encode('  \n\n  '))
+    ).rejects.toThrow('AGENTS.md vide.')
+    await writeSetup(
+      'automations/AGENTS.md',
+      new TextEncoder().encode('#   Rapport\n\n\n\n-  un\n-   deux\n')
+    )
+    expect(automationsReady()?.prompt).toBe('# Rapport\n\n- un\n- deux')
   })
 
-  it('rejects an empty tickets document as invalid JSON', async () => {
+  it('rejects empty or malformed JSON with French SetupError messages', async () => {
     await expect(writeSetup('tickets', new TextEncoder().encode(''))).rejects.toThrow(
       'JSON invalide.'
     )
+    await expect(writeSetup('tickets', new TextEncoder().encode('{'))).rejects.toThrow(
+      'JSON invalide.'
+    )
+    await expect(writeSetup('repayment/messages', new TextEncoder().encode('{'))).rejects.toThrow(
+      'JSON invalide.'
+    )
+  })
+
+  it('pretty-prints stored JSON with JSON.stringify', async () => {
+    await writeSetup(
+      'global',
+      new TextEncoder().encode('{"name":"PIERRE","timezone":"Europe/Paris"}')
+    )
+    const db = openDatastore()
+    try {
+      const row = db
+        .query<{ content: Uint8Array }, [string]>('SELECT content FROM setup WHERE id = ?')
+        .get('global')
+      expect(new TextDecoder().decode(row!.content)).toBe(
+        '{\n  "name": "PIERRE",\n  "timezone": "Europe/Paris"\n}\n'
+      )
+    } finally {
+      db.close()
+    }
+  })
+
+  it('strips retired enabled and reasoning_effort keys when storing chatbots/default', async () => {
+    await writeSetup(
+      'chatbots/default',
+      new TextEncoder().encode(
+        JSON.stringify({
+          id: 'default',
+          display: 'PIERRE',
+          enabled: true,
+          reasoning_effort: 'medium',
+          community_knowledge: false,
+          attachments: false,
+          trace: 'none',
+          greetings: ['Bonjour'],
+          examples: ['Question'],
+          disclaimer: 'Vérifier.'
+        })
+      )
+    )
+    const db = openDatastore()
+    try {
+      const row = db
+        .query<{ content: Uint8Array }, [string]>('SELECT content FROM setup WHERE id = ?')
+        .get('chatbots/default')
+      const stored = JSON.parse(new TextDecoder().decode(row!.content)) as Record<string, unknown>
+      expect('enabled' in stored).toBe(false)
+      expect('reasoning_effort' in stored).toBe(false)
+    } finally {
+      db.close()
+    }
   })
 
   it('rejects a repayment document without a schedule', async () => {

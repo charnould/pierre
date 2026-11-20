@@ -8,13 +8,13 @@ import {
 import { isKnowledgeEntryAssigned, normalize_knowledge_name } from '../../../shared/knowledge'
 import { openDatastore } from '../datastore-db'
 import type { KnowledgeEntry, KnowledgeSource } from './catalog-schema'
-import { KnowledgeCsvError, type ParsedTable } from './ingest-files'
+import { type ParsedTable } from './ingest-files'
 import {
   findKnowledgeSourceByStorageName,
   insertKnowledgeSourceInDb,
   updateKnowledgeSourceFileInDb
 } from './knowledge-sources'
-import { KnowledgeSpreadsheetError, type ParsedSheet, parseKnowledgeUpload } from './parse-upload'
+import { KnowledgeUploadError, type ParsedSheet, parseKnowledgeUpload } from './parse-upload'
 import { listKnowledgeProfiles } from './profiles'
 import { dropSourceTables, sourceTableName } from './source-tables'
 import { type DataRow, import_rows } from './sqlite-table-import'
@@ -211,11 +211,10 @@ const prepareUploads = async (files: File[]): Promise<PreparedUpload[]> => {
         sheets: parsed.kind === 'workbook' ? parsed.sheets : []
       })
     } catch (error) {
-      if (error instanceof KnowledgeImportError || error instanceof KnowledgeCsvError) throw error
-      if (error instanceof KnowledgeSpreadsheetError) {
+      if (error instanceof KnowledgeUploadError) {
         throw new KnowledgeImportError(400, error.code, error.message)
       }
-      throw new KnowledgeImportError(400, 'invalid_file', `${originalName} ne peut pas être lu.`)
+      throw error
     }
   }
   return prepared

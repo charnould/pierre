@@ -4,7 +4,6 @@ import { mkdir, rm } from 'node:fs/promises'
 
 import { build_rattachement } from '../../../../utils/activities/rows'
 import { create_trusted_activity } from '../../../../utils/activities/write'
-import { format_automation_prompt } from '../../../../utils/automations/format-prompt'
 import {
   reset_automation_executor,
   run_automation_now,
@@ -133,21 +132,20 @@ describe('automations store', () => {
   })
 
   it('persists a formatted report prompt', async () => {
-    const messy = '-  item1\n-   item2'
     const auto = await create_automation('alice', {
       type: 'report',
       name: 'Fmt',
       frequency: 'daily',
       frequencyTime: '08:00',
-      prompt: messy
+      prompt: '-  item1\n-   item2\n\n\n'
     })
-    expect(auto.config).toMatchObject({ prompt: await format_automation_prompt(messy) })
+    expect(auto.config).toMatchObject({ prompt: '- item1\n- item2\n' })
 
     const patched = await update_automation(auto.id, 'alice', {
-      prompt: '**gras**  et   espaces'
+      prompt: '#   Titre\n\n**gras**'
     })
     expect(patched.config).toMatchObject({
-      prompt: await format_automation_prompt('**gras**  et   espaces')
+      prompt: '# Titre\n\n**gras**\n'
     })
   })
 })

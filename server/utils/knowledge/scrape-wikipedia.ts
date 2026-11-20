@@ -1,8 +1,6 @@
 import { JSDOM } from 'jsdom'
 import TurndownService from 'turndown'
 
-import { formatText } from '../format-text'
-
 // ── Wikipedia pages to scrape ────────────────────────────────────────────────
 // Add or uncomment entries to expand the knowledge base.
 // Page names must be URL-encoded (e.g. %27 for apostrophes).
@@ -256,7 +254,7 @@ function markdownTable(table: HTMLTableElement) {
 // ── Page processor ───────────────────────────────────────────────────────────
 
 /**
- * Converts a single Wikipedia page (HTML) to a formatted Markdown file
+ * Converts a single Wikipedia page (HTML) to Markdown
  * and writes it to {@link WIKI_OUTPUT_DIR}.
  *
  * @param title Human-readable page title used as the filename and H1.
@@ -265,15 +263,15 @@ function markdownTable(table: HTMLTableElement) {
 const process_wikipedia_page = async (title: string, html: string): Promise<void> => {
   const cleaned = clean_html(html, title)
   const markdown = html_to_markdown(cleaned)
-  await Bun.write(`${WIKI_OUTPUT_DIR}/${title}.md`, await formatText('a.md', markdown))
+  await Bun.write(`${WIKI_OUTPUT_DIR}/${title}.md`, markdown)
 }
 
 // ── Main entry point ─────────────────────────────────────────────────────────
 
 /**
  * Fetches each page listed in {@link WIKIPEDIA_PAGES} from the French Wikipedia
- * parse API, converts the result to Markdown, and writes one `.md` file per
- * page to {@link WIKI_OUTPUT_DIR}.
+ * parse API, converts the result to Markdown, writes one `.md` file per page to
+ * {@link WIKI_OUTPUT_DIR}, and formats the output directory in a single batch.
  *
  * A {@link RATE_LIMIT_MS} delay is applied between requests to comply with
  * Wikipedia's API usage guidelines.
@@ -311,6 +309,13 @@ export const scrape_wikipedia = async (): Promise<void> => {
       console.error(`❌ Scraping failed: "${page}"`, e)
     }
   }
+
+  const fmt = Bun.spawn([process.execPath, 'fmt', WIKI_OUTPUT_DIR], {
+    stdout: 'inherit',
+    stderr: 'inherit'
+  })
+  const exitCode = await fmt.exited
+  if (exitCode !== 0) throw new Error(`bun fmt exited ${exitCode}`)
 
   console.log('✅ Wikipedia scraped')
 }

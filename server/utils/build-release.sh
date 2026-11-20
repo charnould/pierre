@@ -11,13 +11,7 @@ mkdir -p "$OUT"
 cd "$SERVER"
 bun build --compile --target=bun \
   --no-compile-autoload-dotenv \
-  --external @prettier/plugin-oxc \
-  --external @prettier/plugin-hermes \
-  --external prettier-plugin-astro \
-  --external prettier-plugin-marko \
-  --external @zackad/prettier-plugin-twig \
-  --external @prettier/plugin-pug \
-  --external @shopify/prettier-plugin-liquid \
+  --no-compile-autoload-bunfig \
   --asset ./assets \
   --asset ./knowledge \
   --asset ./utils/automations \
@@ -42,3 +36,4 @@ chmod 644 "$OUT/libonnxruntime.so.1" "$OUT/libtranscribe.tar.gz"
 
 VERSION=$(node -p "require('./package.json').version")
 test "$("$OUT/pierre" --version)" = "server-$VERSION"
+test "$(printf -- '-  a\n' | env -i BUN_BE_BUN=1 "$OUT/pierre" fmt --no-config --no-editorconfig --no-script --embedded-language-formatting=off --parser markdown)" = "- a"

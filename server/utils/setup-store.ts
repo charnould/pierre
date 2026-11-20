@@ -3,7 +3,7 @@ import { validateExternalApplication } from '../../shared/external-application'
 import { MAX_SCHEDULE_MONTHS } from '../../shared/repayment-case-file'
 import { RECLASSIFY_PHASE, resolveRepaymentPhase } from '../../shared/repayment-phases'
 import { openDatastore } from './datastore-db'
-import { formatText as formatWithBun } from './format-text'
+import { formatMarkdown } from './format-markdown'
 import { MAX_REPAYMENT_TEMPLATE_BYTES, repaymentTemplateIssue } from './repayment-documents'
 import {
   parseRepaymentMessages,
@@ -77,15 +77,9 @@ function listIds(prefix: string): string[] {
   }
 }
 
-async function formatText(filename: string, source: string): Promise<string> {
-  try {
-    return await formatWithBun(filename, source)
-  } catch (error) {
-    throw new SetupError(error instanceof Error ? error.message : 'format invalide')
-  }
-}
+const formatJson = (value: unknown): string => `${JSON.stringify(value, null, 2)}\n`
 
-function objectOf(text: string): any {
+function objectOf(text: string): Record<string, unknown> {
   let value: unknown
   try {
     value = JSON.parse(text) as unknown
@@ -167,21 +161,21 @@ function isIana(timezone: string): boolean {
   }
 }
 
-function chatbotFields(root: any, id: string): any {
-  if (root.id !== id) throw new SetupError('id incohérent.')
-  requireString(root.display, 'display')
-  if (typeof root.community_knowledge !== 'boolean')
+function chatbotFields(root: Record<string, unknown>, id: string): Record<string, unknown> {
+  if (root['id'] !== id) throw new SetupError('id incohérent.')
+  requireString(root['display'], 'display')
+  if (typeof root['community_knowledge'] !== 'boolean')
     throw new SetupError('community_knowledge requis.')
-  if (typeof root.attachments !== 'boolean') throw new SetupError('attachments requis.')
-  delete root.reasoning_effort
-  if (!(TRACE_MODES as readonly string[]).includes(String(root.trace)))
+  if (typeof root['attachments'] !== 'boolean') throw new SetupError('attachments requis.')
+  if (!(TRACE_MODES as readonly string[]).includes(String(root['trace'])))
     throw new SetupError('trace requis.')
-  requireStringList(root.greetings, 'greetings')
-  requireStringList(root.examples, 'examples')
-  requireString(root.disclaimer, 'disclaimer')
+  requireStringList(root['greetings'], 'greetings')
+  requireStringList(root['examples'], 'examples')
+  requireString(root['disclaimer'], 'disclaimer')
   if ('instructions' in root || 'prompt' in root)
     throw new SetupError('prompt système hors du JSON.')
-  return root
+  const { reasoning_effort: _, ...clean } = root
+  return clean
 }
 
 function optionalEmail(root: any, label: string) {
@@ -315,17 +309,17 @@ function agentsText(id: string): string | null {
   return text ? text : null
 }
 
-function parseDefaultChatbot(root: any): any {
-  delete root.enabled
-  chatbotFields(root, 'default')
-  if ('custom_data' in root) throw new SetupError('custom_data retiré.')
-  return root
+function parseDefaultChatbot(root: Record<string, unknown>): Record<string, unknown> {
+  const { enabled: _, ...rest } = root
+  const clean = chatbotFields(rest, 'default')
+  if ('custom_data' in clean) throw new SetupError('custom_data retiré.')
+  return clean
 }
 
-function parseInternalChatbot(root: any, id: string): any {
-  chatbotFields(root, id)
-  if ('enabled' in root || 'custom_data' in root) throw new SetupError('champ public interdit.')
-  return root
+function parseInternalChatbot(root: Record<string, unknown>, id: string): Record<string, unknown> {
+  const clean = chatbotFields(root, id)
+  if ('enabled' in clean || 'custom_data' in clean) throw new SetupError('champ public interdit.')
+  return clean
 }
 
 function jsonText(id: string): any | null {
@@ -436,15 +430,16 @@ export function emailReady(): boolean {
 export function defaultChatbotReady(): any | null {
   const root = jsonText('chatbots/default')
   if (!root) return null
+  let chatbot: Record<string, unknown>
   try {
-    parseDefaultChatbot(root)
+    chatbot = parseDefaultChatbot(root)
   } catch {
     return null
   }
   const icon = readText('chatbots/icons/icon.svg') ?? ''
   if (!icon.includes('<svg')) return null
   if (!agentsText('chatbots/default/AGENTS.md')) return null
-  return root
+  return chatbot
 }
 
 export function name(): string {
@@ -462,9 +457,9 @@ export function internalChatbot(id: string): any | null {
   const root = jsonText(`chatbots/${id}`)
   if (!root) return null
   try {
-    parseInternalChatbot(root, id)
+    const chatbot = parseInternalChatbot(root, id)
     if (!agentsText(`chatbots/${id}/AGENTS.md`)) return null
-    return root
+    return chatbot
   } catch {
     return null
   }
@@ -556,37 +551,37 @@ export async function writeSetup(id: string, content: Uint8Array): Promise<void>
     return
   }
   if (id === 'repayment/messages') {
-    const formatted = await formatText('setup.json', textOf(content))
+    const text = textOf(content)
     try {
-      parseRepaymentMessages(formatted)
+      parseRepaymentMessages(text)
     } catch (error) {
       const message = error instanceof RepaymentMessageError ? error.message : 'messages invalides.'
       throw new SetupError(message)
     }
-    writeRow(id, bytesOf(formatted))
+    writeRow(id, bytesOf(formatJson(JSON.parse(text))))
     return
   }
   if (AGENTS_MD.test(id)) {
-    const formatted = await formatText('AGENTS.md', textOf(content))
-    if (!formatted.trim()) throw new SetupError('AGENTS.md vide.')
+    const formatted = await formatMarkdown(textOf(content))
+    if (!formatted) throw new SetupError('AGENTS.md vide.')
     writeRow(id, bytesOf(formatted))
     return
   }
   if (id === 'global' || id === 'tickets' || id === 'repayment' || id.startsWith('chatbots/')) {
-    const formatted = await formatText('setup.json', textOf(content))
-    const root = objectOf(formatted)
-    if (id === 'global') parseGlobal(root)
-    else if (id === 'tickets') parseTickets(root)
-    else if (id === 'repayment') parseRepayment(root)
-    else if (id === 'chatbots/default') parseDefaultChatbot(root)
+    const root = objectOf(textOf(content))
+    let stored: unknown
+    if (id === 'global') stored = parseGlobal(root)
+    else if (id === 'tickets') stored = parseTickets(root)
+    else if (id === 'repayment') stored = parseRepayment(root)
+    else if (id === 'chatbots/default') stored = parseDefaultChatbot(root)
     else {
       const chatbotId = id.slice('chatbots/'.length)
       if (chatbotId.includes('/') || !CHATBOT_ID.test(chatbotId) || chatbotId === 'default') {
         throw new SetupError('chatbot inconnu.')
       }
-      parseInternalChatbot(root, chatbotId)
+      stored = parseInternalChatbot(root, chatbotId)
     }
-    writeRow(id, bytesOf(formatted))
+    writeRow(id, bytesOf(formatJson(stored)))
     return
   }
   throw new SetupError('pièce inconnue.')

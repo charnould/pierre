@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx'
 import * as cpexcel from 'xlsx/dist/cpexcel.full.mjs'
 
 import { normalize_knowledge_name } from '../../../shared/knowledge'
-import { formatText } from '../format-text'
+import { formatMarkdown } from '../format-markdown'
 import {
   KnowledgeCsvError,
   normalize_sheet_value,
@@ -21,9 +21,10 @@ XLSX.stream.set_readable(Readable)
 
 const turndown = new TurndownService({ headingStyle: 'atx' })
 
-export class KnowledgeSpreadsheetError extends Error {
+export class KnowledgeUploadError extends Error {
   constructor(
     readonly code:
+      | 'invalid_file'
       | 'invalid_spreadsheet'
       | 'empty_workbook'
       | 'merged_cells'
@@ -33,7 +34,7 @@ export class KnowledgeSpreadsheetError extends Error {
     message: string
   ) {
     super(message)
-    this.name = 'KnowledgeSpreadsheetError'
+    this.name = 'KnowledgeUploadError'
   }
 }
 
@@ -48,7 +49,7 @@ const blank = (value: unknown): boolean => value == null || String(value).trim()
 
 const parseSheet = (sheet: XLSX.WorkSheet, name: string, index: number): ParsedSheet | null => {
   if ((sheet['!merges'] ?? []).length > 0) {
-    throw new KnowledgeSpreadsheetError(
+    throw new KnowledgeUploadError(
       'merged_cells',
       `L’onglet « ${name} » contient des cellules fusionnées.`
     )
@@ -62,20 +63,20 @@ const parseSheet = (sheet: XLSX.WorkSheet, name: string, index: number): ParsedS
   if (matrix.every((row) => row.every(blank))) return null
   const header = matrix[0] ?? []
   if (header.every(blank)) {
-    throw new KnowledgeSpreadsheetError(
+    throw new KnowledgeUploadError(
       'missing_spreadsheet_header',
       `L’onglet « ${name} » n’a pas d’en-têtes sur la première ligne.`
     )
   }
   const columns = header.map((cell) => normalize_knowledge_name(cell == null ? '' : String(cell)))
   if (columns.some((column) => !column)) {
-    throw new KnowledgeSpreadsheetError(
+    throw new KnowledgeUploadError(
       'invalid_spreadsheet_header',
       `Chaque colonne de l’onglet « ${name} » doit avoir un nom.`
     )
   }
   if (new Set(columns).size !== columns.length) {
-    throw new KnowledgeSpreadsheetError(
+    throw new KnowledgeUploadError(
       'duplicate_spreadsheet_header',
       `Les noms de colonnes de l’onglet « ${name} » doivent être uniques.`
     )
@@ -100,7 +101,7 @@ const parseWorkbook = (bytes: Uint8Array): ParsedUpload => {
   try {
     workbook = XLSX.read(bytes, { type: 'array', cellDates: true })
   } catch {
-    throw new KnowledgeSpreadsheetError('invalid_spreadsheet', 'Le classeur ne peut pas être lu.')
+    throw new KnowledgeUploadError('invalid_spreadsheet', 'Le classeur ne peut pas être lu.')
   }
   const sheets = workbook.SheetNames.flatMap((name, index) => {
     const sheet = workbook.Sheets[name]
@@ -109,7 +110,7 @@ const parseWorkbook = (bytes: Uint8Array): ParsedUpload => {
     return parsed ? [parsed] : []
   })
   if (sheets.length === 0) {
-    throw new KnowledgeSpreadsheetError('empty_workbook', 'Le classeur ne contient aucun tableau.')
+    throw new KnowledgeUploadError('empty_workbook', 'Le classeur ne contient aucun tableau.')
   }
   return { kind: 'workbook', sheets }
 }
@@ -120,15 +121,20 @@ const markdownDocument = async (fileType: 'md' | 'docx', bytes: Uint8Array): Pro
     try {
       text = new TextDecoder('utf-8', { fatal: true }).decode(bytes)
     } catch {
-      throw new KnowledgeCsvError('invalid_csv', 'Le fichier n’est pas encodé en UTF-8.')
+      throw new KnowledgeUploadError('invalid_file', 'Le fichier n’est pas encodé en UTF-8.')
     }
-    return formatText('document.md', text)
+    return formatMarkdown(text)
   }
-  const html = (await mammoth.convertToHtml({ buffer: Buffer.from(bytes) })).value.replace(
-    /<img[^>]*\/?>/g,
-    ''
-  )
-  return formatText('document.md', turndown.turndown(html))
+  let html: string
+  try {
+    html = (await mammoth.convertToHtml({ buffer: Buffer.from(bytes) })).value.replace(
+      /<img[^>]*\/?>/g,
+      ''
+    )
+  } catch {
+    throw new KnowledgeUploadError('invalid_file', 'Le document Word ne peut pas être lu.')
+  }
+  return formatMarkdown(turndown.turndown(html))
 }
 
 export const parseKnowledgeUpload = async (

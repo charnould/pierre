@@ -16,6 +16,7 @@ import type { User } from '../../../../../utils/_schema'
 import { authenticateAdministratorApi } from '../../../../../utils/authenticate-user'
 import { authorizeAdministrator } from '../../../../../utils/authorize-role'
 import { CORE_DATA_CONTRACT, DATASTORE_TABLES } from '../../../../../utils/datastore-tables'
+import * as markdownFormatter from '../../../../../utils/format-markdown'
 import * as buildCoordinator from '../../../../../utils/knowledge/build-coordinator'
 import {
   completeKnowledgeBuild,
@@ -820,5 +821,26 @@ describe('administrator knowledge API', () => {
       })
     })
     expect(response.status).toBe(409)
+  })
+
+  it('returns 400 on corrupt docx and 500 on markdown formatter failure', async () => {
+    const corruptDocx = new FormData()
+    corruptDocx.set('files[]', new File(['not a docx'], 'Corrompu.docx'))
+    expect(
+      (await request('/knowledge/sources', { method: 'POST', body: corruptDocx })).status
+    ).toBe(400)
+
+    const formatSpy = spyOn(markdownFormatter, 'formatMarkdown').mockRejectedValue(
+      new Error('bun fmt failed')
+    )
+    const errorSpy = spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      const md = new FormData()
+      md.set('files[]', new File(['# Guide'], 'Panne.md'))
+      expect((await request('/knowledge/sources', { method: 'POST', body: md })).status).toBe(500)
+    } finally {
+      formatSpy.mockRestore()
+      errorSpy.mockRestore()
+    }
   })
 })

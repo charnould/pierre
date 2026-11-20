@@ -137,7 +137,12 @@ export type ParsedTable = { columns: string[]; rows: DataRow[] }
 export const parseKnowledgeCsv = (text: string): ParsedTable => {
   if (text.startsWith('\uFEFF')) text = text.slice(1)
 
-  const workbook = XLSX.read(text, { type: 'string', FS: ';', raw: true })
+  let workbook: XLSX.WorkBook
+  try {
+    workbook = XLSX.read(text, { type: 'string', FS: ';', raw: true })
+  } catch {
+    throw new KnowledgeCsvError('invalid_csv', 'Le CSV ne peut pas être lu.')
+  }
   const sheetName = workbook.SheetNames[0]
   const sheet = sheetName ? workbook.Sheets[sheetName] : undefined
   if (!sheet) throw new KnowledgeCsvError('missing_csv_header', 'Le CSV est vide.')

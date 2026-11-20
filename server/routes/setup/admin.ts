@@ -120,16 +120,14 @@ export const putAdminSetup = async (c: AuthContext) => {
   const before = chatbotId ? communityKnowledge(chatbotId) : null
   try {
     await writeSetup(id, new Uint8Array(await c.req.arrayBuffer()))
-  } catch (error) {
-    const message = error instanceof SetupError ? error.message : 'Enregistrement impossible.'
-    return c.json({ error: { code: 'invalid', message } }, 400)
-  }
-  try {
     if (chatbotId) await syncChatbotKnowledge(chatbotId, id, before)
     if (id === 'automations/AGENTS.md') await writeProfileFiles('report')
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Enregistrement impossible.'
-    return c.json({ error: { code: 'invalid', message } }, 400)
+    if (error instanceof SetupError) {
+      return c.json({ error: { code: 'invalid', message: error.message } }, 400)
+    }
+    console.error('[setup.put]', error)
+    return c.json({ error: { code: 'internal_error', message: 'Enregistrement impossible.' } }, 500)
   }
   return c.json({ data: { id } })
 }

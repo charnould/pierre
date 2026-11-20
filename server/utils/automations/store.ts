@@ -1,7 +1,6 @@
 import { Database } from 'bun:sqlite'
 
 import {
-  type AutomationConfig,
   type AutomationLifecycleStatus,
   type AutomationRecord,
   type AutomationRunStatus,
@@ -13,9 +12,9 @@ import {
 import type { UserPreferences } from '../../../shared/user-preferences'
 import { login_from_email } from '../activities/rows'
 import { openDatastore } from '../datastore-db'
+import { formatMarkdown } from '../format-markdown'
 import { timezone } from '../setup-store'
 import { parseStoredUserPreferences, storedUserPreferences } from '../user-preferences-stored'
-import { format_automation_prompt } from './format-prompt'
 import { compute_next_run_at } from './schedule'
 import { automation_schedule_error } from './schemas'
 import { parseStoredAutomationState, storedAutomationConfig } from './stored'
@@ -101,10 +100,6 @@ function row_to_record(row: AutomationDbRow, pinned = false): AutomationRecord {
     pinned
   }
   return { ...record, type: state.type, config: state.config }
-}
-
-async function config_from_create(body: CreateAutomationBody): Promise<AutomationConfig> {
-  return { prompt: await format_automation_prompt(body.prompt), maxReports: body.maxReports ?? 6 }
 }
 
 const get_user_preferences_with_db = (db: Database, email: string): UserPreferences => {
@@ -227,7 +222,7 @@ export async function create_automation(
     frequencyDay: body.frequencyDay,
     frequencyTime: body.frequencyTime
   })
-  const config = await config_from_create(body)
+  const config = { prompt: await formatMarkdown(body.prompt), maxReports: body.maxReports ?? 6 }
   const canonicalOwner = owner.includes('@') ? owner.trim().toLowerCase() : owner
   const id = Bun.randomUUIDv7()
   const zone = timezone()
@@ -306,8 +301,7 @@ export async function update_automation(
   const report = existing.config
   const nextMax = patch.maxReports ?? report.maxReports
   const config = {
-    prompt:
-      patch.prompt !== undefined ? await format_automation_prompt(patch.prompt) : report.prompt,
+    prompt: patch.prompt !== undefined ? await formatMarkdown(patch.prompt) : report.prompt,
     maxReports: nextMax
   }
   const trimReportsTo =
