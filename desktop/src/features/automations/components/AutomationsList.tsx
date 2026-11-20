@@ -1,13 +1,17 @@
-import { ChevronDown, Pin, Plus, Search, Workflow } from 'lucide-react'
+import { ChevronDown, Pin, Plus, Search, Square, Workflow } from 'lucide-react'
 
 import type { ReaderTarget } from '@/features/activity/lib/reader-target'
-import { AutomationAccessAvatars } from '@/features/automations/components/AutomationAccessAvatars'
 import { AutomationRunsMenu } from '@/features/automations/components/AutomationRunsMenu'
-import { AutomationsListChrome } from '@/features/automations/components/AutomationsListChrome'
 import type { Automation } from '@/features/automations/lib/automation-types'
-import type { AutomationSortKey } from '@/features/automations/lib/sort-automations'
+import {
+  AUTOMATION_SORT_OPTIONS,
+  type AutomationSortKey
+} from '@/features/automations/lib/sort-automations'
+import { CollaboratorAccessAvatars } from '@/shared/components/CollaboratorAccessAvatars'
 import { DirectoryList, DirectoryRow } from '@/shared/components/DirectoryList'
+import { DirectoryListChrome } from '@/shared/components/DirectoryListChrome'
 import { TableCellValue } from '@/shared/components/table/TableCellValue'
+import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
   Empty,
@@ -16,6 +20,7 @@ import {
   EmptyMedia,
   EmptyTitle
 } from '@/shared/components/ui/empty'
+import { Spinner } from '@/shared/components/ui/spinner'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { useOrgUsers } from '@/shared/hooks/useOrgUsers'
 import { cn } from '@/shared/lib/utils'
@@ -29,6 +34,7 @@ interface AutomationItemProps {
   selected?: boolean
   onSelectAutomation: (automation: Automation) => void
   onTogglePin: (automation: Automation) => void
+  onStopRun: (automation: Automation) => void
   onOpenRun: (target: ReaderTarget) => void
 }
 
@@ -38,6 +44,7 @@ function AutomationItem({
   selected = false,
   onSelectAutomation,
   onTogglePin,
+  onStopRun,
   onOpenRun
 }: AutomationItemProps) {
   const lastDate = formatGenerationDate(automation.lastRunDate)
@@ -51,14 +58,46 @@ function AutomationItem({
           {automation.description || '—'}
         </p>
       </div>
-      <AutomationAccessAvatars automation={automation} />
+      <CollaboratorAccessAvatars owner={automation.owner} mentions={automation.mentions} />
       <span className="flex items-center gap-1 text-xs whitespace-nowrap">
-        <span className="tabular-nums">{lastDate}</span>
-        {outcome ? <TableCellValue display={outcome} /> : null}
-        <span className="text-muted-foreground" aria-hidden>
-          →
-        </span>
-        <span className="tabular-nums">{formatGenerationDate(automation.nextRunDate)}</span>
+        {automation.status === 'running' ? (
+          <>
+            <Badge variant="secondary">
+              <Spinner data-icon="inline-start" />
+              En cours
+            </Badge>
+            {automation.canManage ? (
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      type="button"
+                      size="icon-xs"
+                      variant="ghost"
+                      aria-label="Interrompre la génération"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onStopRun(automation)
+                      }}
+                    />
+                  }
+                >
+                  <Square />
+                </TooltipTrigger>
+                <TooltipContent>Interrompre la génération</TooltipContent>
+              </Tooltip>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <span className="tabular-nums">{lastDate}</span>
+            {outcome ? <TableCellValue display={outcome} /> : null}
+            <span className="text-muted-foreground" aria-hidden>
+              →
+            </span>
+            <span className="tabular-nums">{formatGenerationDate(automation.nextRunDate)}</span>
+          </>
+        )}
       </span>
       <div className="flex items-center gap-1">
         {isReportAutomation(automation) ? (
@@ -113,6 +152,7 @@ interface AutomationsListProps {
   selectedAutomationId?: string | null
   onSelectAutomation: (automation: Automation) => void
   onTogglePin: (automation: Automation) => void
+  onStopRun: (automation: Automation) => void
   onNewAutomation: () => void
   onOpenRun: (target: ReaderTarget) => void
 }
@@ -129,20 +169,26 @@ export function AutomationsList({
   selectedAutomationId = null,
   onSelectAutomation,
   onTogglePin,
+  onStopRun,
   onNewAutomation,
   onOpenRun
 }: AutomationsListProps) {
   useOrgUsers(url)
 
+  const countLabel = `${automations.length} automatisation${automations.length === 1 ? '' : 's'}`
+
   return (
     <section className="bg-background flex w-full min-w-0 flex-col [&:first-child>header]:border-t-0">
-      <AutomationsListChrome
-        visibleCount={automations.length}
+      <DirectoryListChrome
+        title="Automatisations"
+        countLabel={countLabel}
+        searchLabel="Rechercher une automatisation"
         query={query}
         onQueryChange={onQueryChange}
         sortKey={sortKey}
+        sortOptions={AUTOMATION_SORT_OPTIONS}
         onSortKeyChange={onSortKeyChange}
-        onNewAutomation={onNewAutomation}
+        onNew={onNewAutomation}
       />
       <div className="bg-background w-full min-w-0">
         {automations.length === 0 && normalizedQuery ? (
@@ -185,6 +231,7 @@ export function AutomationsList({
                 selected={automation.id === selectedAutomationId}
                 onSelectAutomation={onSelectAutomation}
                 onTogglePin={onTogglePin}
+                onStopRun={onStopRun}
                 onOpenRun={onOpenRun}
               />
             ))}

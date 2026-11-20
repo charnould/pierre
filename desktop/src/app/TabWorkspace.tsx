@@ -30,6 +30,9 @@ const RepaymentView = lazy(() =>
 const AutomationsView = lazy(() =>
   import('@/features/automations').then((m) => ({ default: m.AutomationsView }))
 )
+const IntakesView = lazy(() =>
+  import('@/features/intakes').then((m) => ({ default: m.IntakesView }))
+)
 const BulkOperationsView = lazy(() =>
   import('@/features/bulk/BulkOperationsView').then((m) => ({ default: m.BulkOperationsView }))
 )
@@ -184,8 +187,19 @@ export function TabWorkspace({
             hidden={activeTab !== 'automations'}
             agentName={agentName}
             userLogin={userLogin}
+            isAdministrator={user?.isAdministrator ?? false}
             settings={settings}
             notifications={notifications}
+          />
+        ) : null}
+
+        {visited.has('intake') ? (
+          <IntakesView
+            hidden={activeTab !== 'intake'}
+            agentName={agentName}
+            userLogin={userLogin}
+            isAdministrator={user?.isAdministrator ?? false}
+            settings={settings}
           />
         ) : null}
 
@@ -218,7 +232,7 @@ export function TabWorkspace({
 
       {readerTarget ? (
         <Suspense fallback={null}>
-          <ActivityReaderOverlay target={readerTarget} />
+          <ActivityReaderOverlay target={readerTarget} url={settings.url} />
         </Suspense>
       ) : null}
     </>

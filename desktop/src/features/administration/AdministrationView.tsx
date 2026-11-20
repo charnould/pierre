@@ -10,8 +10,11 @@ import {
   FieldGroup,
   FieldLabel
 } from '@/shared/components/ui/field'
-import type { SetupEntry } from '@/shared/lib/instance-customization'
-import { consumeSetupRequest, useSetupRequest } from '@/shared/lib/open-setup'
+import {
+  type AdminRequestTarget,
+  consumeSetupRequest,
+  useSetupRequest
+} from '@/shared/lib/open-setup'
 import { cn } from '@/shared/lib/utils'
 import type { UserPrincipal } from '@/shared/types/users'
 
@@ -80,12 +83,13 @@ const SETUP_HINT: Record<EntryId, string> = {
   'automations/AGENTS.md': 'Prompt système suivi quand une automatisation rédige un rapport.'
 }
 
-const SETUP_FROM_REQUEST: Record<SetupEntry, EntryId> = {
+const SCREEN_FROM_REQUEST: Record<AdminRequestTarget, Screen> = {
   chatbot: 'chatbots/default',
   tickets: 'tickets',
   repayment: 'repayment',
   about: 'about/AGENTS.md',
-  automations: 'automations/AGENTS.md'
+  automations: 'automations/AGENTS.md',
+  knowledge: 'knowledge'
 }
 
 interface Props {
@@ -158,7 +162,7 @@ export function AdministrationView({
   const [screen, setScreen] = useState<Screen | null>(null)
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [ready, setReady] = useState<Record<string, boolean> | null>(null)
-  const current = request ? SETUP_FROM_REQUEST[request] : screen
+  const current = request ? SCREEN_FROM_REQUEST[request] : screen
 
   function leave() {
     if (current === 'conversations' && conversationId) {

@@ -7,7 +7,6 @@ import { formatMentionDisplay } from '@/shared/lib/activities/mentions'
 import type { ActivityContext } from '@/shared/types/activities'
 
 export function moduleLabelForType(type: ActivityContext): string {
-  if (type === 'automations') return 'Routines'
   if (type === 'bulk') return 'Traitements de masse'
   return ACTIVITY_MODULE_LABELS[type as ActivityModuleView]
 }
@@ -29,18 +28,22 @@ export function activitySenderLabel(
   item: Pick<ActivityNotificationItem, 'type' | 'sender'>
 ): string {
   if (item.type === 'automations' || item.type === 'updates') return 'Pierre'
+  if (item.type === 'intake') return 'Collecte'
   const raw = item.sender.trim()
   if (!raw) return 'Pierre'
   return formatMentionDisplay(loginFromEmail(raw) || raw)
 }
 
 export function activityRowContextLabel(
-  item: Pick<ActivityNotificationItem, 'type' | 'ref' | 'moduleLabel'>,
+  item: Pick<ActivityNotificationItem, 'type' | 'ref' | 'moduleLabel' | 'intakeContent'>,
   routineName?: string
 ): string {
   const module = item.moduleLabel
   if (item.type === 'automations') {
     return routineName ? `${module} · ${routineName}` : module
+  }
+  if (item.type === 'intake') {
+    return item.intakeContent?.title ? `${module} · ${item.intakeContent.title}` : module
   }
   if (item.type === 'updates') return module
   if (item.type === 'tickets') return `${module} · #${item.ref}`

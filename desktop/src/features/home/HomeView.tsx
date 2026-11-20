@@ -17,6 +17,7 @@ import type { ActivityFeedApi } from '@/features/activity/hooks/useActivityFeed'
 import { useActivityRail } from '@/features/activity/lib/ActivityRailContext'
 import type { ActivityNotificationItem } from '@/features/activity/lib/notification-types'
 import { activityToTarget } from '@/features/activity/lib/notification-types'
+import { openActivityNotification } from '@/features/activity/lib/open-notification'
 import { HomeActionBuckets } from '@/features/home/HomeActionBuckets'
 import { HomeDoor, type HomeDoorId } from '@/features/home/HomeDoor'
 import { HomePromptComposer } from '@/features/home/HomePromptComposer'
@@ -40,6 +41,7 @@ const HOME_TILES = [
   'tickets',
   'repayment',
   'automations',
+  'intake',
   'bulk',
   'about',
   'insurance',
@@ -254,31 +256,13 @@ export function HomeView({
 
   const openNotification = useCallback(
     (item: ActivityNotificationItem) => {
-      if (item.type === 'automations' && item.target?.view === 'automations') {
-        if (item.readerContent?.trim()) {
-          void window.api?.openAutomationReport({ html: item.readerContent })
-        }
-        if (!item.isRead) void feed.markItemRead(item.id)
-        return
-      }
-      if (!item.target) {
-        return
-      }
-      if (item.target.view === 'updates') {
-        openReader({
-          kind: 'update',
-          slug: item.target.slug,
-          title: item.target.title,
-          date: item.target.date
-        })
-        if (!item.isRead) void feed.markItemRead(item.id)
-        return
-      }
-      if (item.target.view !== 'tickets' && item.target.view !== 'repayment') return
-      openContextTarget(item.target)
-      if (!item.isRead) void feed.markItemRead(item.id)
+      openActivityNotification(item, {
+        openReader,
+        openContextTarget,
+        markItemRead: feed.markItemRead
+      })
     },
-    [feed, openContextTarget, openReader]
+    [feed.markItemRead, openContextTarget, openReader]
   )
 
   if (hidden) {

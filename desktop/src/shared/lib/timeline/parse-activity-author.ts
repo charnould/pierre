@@ -2,6 +2,7 @@ const ACTIVITY_AUTHOR_KINDS = [
   'user',
   'agent',
   'automation',
+  'intake',
   'system',
   'tenant',
   'external',

@@ -1,0 +1,15 @@
+@import '../globals.css';
+
+/* Le desktop Electron fixe le viewport en overflow-hidden ; sur le web, le document défile. */
+@layer base {
+  html,
+  body,
+  #root {
+    height: auto;
+    min-height: 100%;
+  }
+
+  body {
+    overflow: visible;
+  }
+}

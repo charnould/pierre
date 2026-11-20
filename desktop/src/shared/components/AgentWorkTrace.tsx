@@ -1,3 +1,4 @@
+import { showsThinking, showsTools, type TraceMode } from '@pierre/shared/chat'
 import { CheckCircle2Icon, CircleXIcon, LoaderCircleIcon } from 'lucide-react'
 import { type ComponentProps, memo, useLayoutEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
@@ -21,7 +22,6 @@ import {
 import { readAskUserAnswers } from '@/shared/lib/read-ask-user-answers'
 import { createStreamingWordsPlugin } from '@/shared/lib/rehype-streaming-words'
 import { cn } from '@/shared/lib/utils'
-import { showsThinking, showsTools, type TraceMode } from '@/shared/types/chat'
 
 const TOOL_OUTPUT_LIMIT = 20_000
 const REMARK_PLUGINS = [remarkGfm]

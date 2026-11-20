@@ -23,6 +23,7 @@ const GLOBAL_KEYS = [
   'Image',
   'Element',
   'Node',
+  'NodeFilter',
   'Event',
   'InputEvent',
   'MouseEvent',

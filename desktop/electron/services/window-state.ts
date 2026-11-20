@@ -51,7 +51,7 @@ function windowIsWithinWorkArea(
   return right - left >= MIN_VISIBLE_PX && bottom - top >= MIN_VISIBLE_PX
 }
 
-export function ensureBoundsOnScreen(bounds: WindowBounds): WindowBounds {
+function ensureBoundsOnScreen(bounds: WindowBounds): WindowBounds {
   const { width, height } = clampSessionWindowSize(bounds.width, bounds.height)
   if (bounds.x === undefined || bounds.y === undefined) {
     return { width, height }

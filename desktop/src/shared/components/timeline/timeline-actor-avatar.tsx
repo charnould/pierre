@@ -19,6 +19,7 @@ function actorFallback(kind: TimelineActorKind, icon: ReactNode): ReactNode {
   switch (kind) {
     case 'agent':
     case 'automation':
+    case 'intake':
     case 'system':
       return <AvatarFallback tone="timeline-bot">{icon}</AvatarFallback>
     case 'database':
@@ -37,7 +38,7 @@ function actorFallback(kind: TimelineActorKind, icon: ReactNode): ReactNode {
 }
 
 function isPierreKind(kind: TimelineActorKind): boolean {
-  return kind === 'agent' || kind === 'automation' || kind === 'system'
+  return kind === 'agent' || kind === 'automation' || kind === 'intake' || kind === 'system'
 }
 
 function iconForKind(kind: TimelineActorKind, size: AvatarSize): ReactNode | null {

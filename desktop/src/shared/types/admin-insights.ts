@@ -8,14 +8,11 @@ import type { LlmRun, LlmRunSummary, LlmUsageSummary, UsagePeriod } from '@pierr
 
 export type {
   ConversationDetail,
-  ConversationReview,
   ConversationSummary,
   ReviewCategory,
-  ReviewStatus,
-  SaveConversationReview
+  ReviewStatus
 } from '@pierre/shared/admin-conversations'
 export {
-  CONVERSATION_PAGE_SIZE,
   REVIEW_CATEGORIES,
   REVIEW_CATEGORY_LABELS,
   REVIEW_STATUSES,
@@ -24,7 +21,6 @@ export {
 export type { LlmRun, LlmRunSummary, LlmUsageSummary, UsagePeriod } from '@pierre/shared/llm-usage'
 export {
   LLM_OPERATION_LABELS,
-  LLM_PAGE_SIZE,
   LLM_RUN_STATUS_LABELS,
   USAGE_PERIOD_LABELS,
   USAGE_PERIODS

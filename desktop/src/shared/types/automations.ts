@@ -1,5 +1,4 @@
 export type {
-  AutomationFrequency,
   AutomationLifecycleStatus,
   AutomationRecord,
   AutomationRunStatus,
@@ -7,8 +6,7 @@ export type {
   CreateAutomationBody,
   PatchAutomationBody
 } from '@pierre/shared/automations'
-
-export { decodeCronToSchedule } from '@pierre/shared/automations'
+export type { RecurrenceSchedule } from '@pierre/shared/schedule'
 
 import type {
   AutomationRecord,
@@ -19,7 +17,6 @@ import type {
 export type AutomationsListResponse = { data: AutomationRecord[] }
 export type AutomationResponse = { data: AutomationRecord }
 export type DeleteAutomationResponse = { data: { deleted: true } }
-export type AutomationApiFailure = { error: { message: string } }
 
 export type ListAutomationsParams = { url: string }
 export type CreateAutomationPayload = { url: string } & CreateAutomationBody

@@ -1,10 +1,6 @@
 import { ChevronDown, Plus, Search, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
-import {
-  BULK_OPERATION_SORT_OPTIONS,
-  type BulkOperationSortKey
-} from '@/features/bulk/lib/sort-bulk-operations'
 import { Button } from '@/shared/components/ui/button'
 import {
   DropdownMenu,
@@ -21,34 +17,45 @@ import {
 } from '@/shared/components/ui/input-group'
 import { cn } from '@/shared/lib/utils'
 
-interface Props {
-  visibleCount: number
+interface DirectorySortOption<SortKey extends string> {
+  readonly value: SortKey
+  readonly label: string
+}
+
+interface Props<SortKey extends string> {
+  title: string
+  countLabel: string
+  searchLabel: string
   query: string
   onQueryChange: (query: string) => void
-  sortKey: BulkOperationSortKey
-  onSortKeyChange: (key: BulkOperationSortKey) => void
+  sortKey: SortKey
+  sortOptions: readonly DirectorySortOption<SortKey>[]
+  onSortKeyChange: (key: SortKey) => void
   onNew: () => void
+  newLabel?: string
 }
 
 const titleType = 'font-sans text-xl leading-6 font-semibold tracking-tight text-balance'
 const metaType =
   'shrink-0 font-sans text-xl leading-6 font-medium tracking-tight text-muted-foreground'
 
-export function BulkOperationsListChrome({
-  visibleCount,
+export function DirectoryListChrome<SortKey extends string>({
+  title,
+  countLabel,
+  searchLabel,
   query,
   onQueryChange,
   sortKey,
+  sortOptions,
   onSortKeyChange,
-  onNew
-}: Props) {
+  onNew,
+  newLabel = 'Créer'
+}: Props<SortKey>) {
   const normalizedQuery = query.trim()
   const [searchOpen, setSearchOpen] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const showSearch = searchOpen || normalizedQuery.length > 0
-  const activeSortLabel =
-    BULK_OPERATION_SORT_OPTIONS.find((option) => option.value === sortKey)?.label ?? sortKey
-  const countLabel = `${visibleCount} traitement${visibleCount === 1 ? '' : 's'}`
+  const activeSortLabel = sortOptions.find((option) => option.value === sortKey)?.label ?? sortKey
 
   useEffect(() => {
     if (!showSearch) return
@@ -63,7 +70,7 @@ export function BulkOperationsListChrome({
   return (
     <header className="border-border bg-background sticky top-0 z-20 flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-b py-2 ps-4 pe-2">
       <div className="flex min-w-0 flex-1 items-baseline gap-2">
-        <h2 className={cn('m-0', titleType)}>Traitements de masse</h2>
+        <h2 className={cn('m-0', titleType)}>{title}</h2>
         <span className={metaType} aria-hidden>
           ·
         </span>
@@ -89,7 +96,7 @@ export function BulkOperationsListChrome({
                   setSearchOpen(false)
                 }}
                 placeholder="Rechercher…"
-                aria-label="Rechercher un traitement"
+                aria-label={searchLabel}
               />
               {normalizedQuery ? (
                 <InputGroupAddon align="inline-end">
@@ -113,7 +120,7 @@ export function BulkOperationsListChrome({
             type="button"
             variant="outline"
             size="icon-sm"
-            aria-label="Rechercher un traitement"
+            aria-label={searchLabel}
             onClick={() => setSearchOpen(true)}
           >
             <Search />
@@ -129,9 +136,9 @@ export function BulkOperationsListChrome({
           <DropdownMenuContent align="end">
             <DropdownMenuRadioGroup
               value={sortKey}
-              onValueChange={(value) => onSortKeyChange(value as BulkOperationSortKey)}
+              onValueChange={(value) => onSortKeyChange(value as SortKey)}
             >
-              {BULK_OPERATION_SORT_OPTIONS.map((option) => (
+              {sortOptions.map((option) => (
                 <DropdownMenuRadioItem key={option.value} value={option.value}>
                   {option.label}
                 </DropdownMenuRadioItem>
@@ -142,7 +149,7 @@ export function BulkOperationsListChrome({
 
         <Button type="button" onClick={onNew}>
           <Plus data-icon="inline-start" />
-          Créer
+          {newLabel}
         </Button>
       </div>
     </header>

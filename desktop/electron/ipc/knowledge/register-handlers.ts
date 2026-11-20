@@ -1,15 +1,18 @@
 import { openAsBlob } from 'node:fs'
 import { basename } from 'node:path'
 
+import type { BusinessModuleId } from '@pierre/shared/modules'
 import { BrowserWindow, dialog, ipcMain, session } from 'electron'
 
 import type {
   KnowledgeBuildResponse,
   KnowledgeBuildsResponse,
-  KnowledgeEntry,
   KnowledgeResponse,
   KnowledgeSourceResponse,
-  KnowledgeUploadResponse
+  KnowledgeUploadResponse,
+  PickedKnowledgeFile,
+  WorkbookInspectResponse,
+  WorkbookSheetConfig
 } from '../../../src/shared/types/knowledge'
 import { netFetch } from '../../lib/net-fetch'
 import { logMainError } from '../../services/logging'
@@ -31,7 +34,7 @@ export function registerKnowledgeHandlers(partition: string): void {
     }
   })
 
-  ipcMain.handle(IpcChannel.knowledge.upload, async (_, { url }: { url: string }) => {
+  ipcMain.handle(IpcChannel.knowledge.pick, async (): Promise<PickedKnowledgeFile[]> => {
     const win = windowForDialog()
     const options = {
       title: 'Ajouter des sources',
@@ -46,24 +49,62 @@ export function registerKnowledgeHandlers(partition: string): void {
     const result = win
       ? await dialog.showOpenDialog(win, options)
       : await dialog.showOpenDialog(options)
-    if (result.canceled || result.filePaths.length === 0) return null
-
-    try {
-      const form = new FormData()
-      for (const path of result.filePaths) {
-        form.append('files[]', await openAsBlob(path), basename(path))
-      }
-      const response = await netFetch(endpoint(url, '/sources'), {
-        session: session.fromPartition(partition),
-        method: 'POST',
-        body: form
-      })
-      return (await response.json()) as KnowledgeUploadResponse
-    } catch (error) {
-      logMainError('upload-knowledge-sources', error)
-      return null
-    }
+    if (result.canceled || result.filePaths.length === 0) return []
+    return result.filePaths.map((path) => ({ path, name: basename(path) }))
   })
+
+  ipcMain.handle(
+    IpcChannel.knowledge.inspect,
+    async (_, { url, filePath, maxRows }: { url: string; filePath: string; maxRows?: number }) => {
+      try {
+        const form = new FormData()
+        form.append('file', await openAsBlob(filePath), basename(filePath))
+        if (maxRows !== undefined) form.append('maxRows', String(maxRows))
+        const response = await netFetch(endpoint(url, '/sources/inspect'), {
+          session: session.fromPartition(partition),
+          method: 'POST',
+          body: form
+        })
+        return (await response.json()) as WorkbookInspectResponse
+      } catch (error) {
+        logMainError('inspect-knowledge-workbook', error)
+        return null
+      }
+    }
+  )
+
+  ipcMain.handle(
+    IpcChannel.knowledge.upload,
+    async (
+      _,
+      {
+        url,
+        filePaths,
+        sheet
+      }: {
+        url: string
+        filePaths: string[]
+        sheet?: WorkbookSheetConfig
+      }
+    ) => {
+      try {
+        const form = new FormData()
+        for (const path of filePaths) {
+          form.append('files[]', await openAsBlob(path), basename(path))
+        }
+        if (sheet) form.append('sheet', JSON.stringify(sheet))
+        const response = await netFetch(endpoint(url, '/sources'), {
+          session: session.fromPartition(partition),
+          method: 'POST',
+          body: form
+        })
+        return (await response.json()) as KnowledgeUploadResponse
+      } catch (error) {
+        logMainError('upload-knowledge-files', error)
+        return null
+      }
+    }
+  )
 
   ipcMain.handle(
     IpcChannel.knowledge.patch,
@@ -72,16 +113,25 @@ export function registerKnowledgeHandlers(partition: string): void {
       {
         url,
         id,
-        entries,
+        title,
+        profileIds,
+        moduleIds,
         updatedAt
-      }: { url: string; id: string; entries: KnowledgeEntry[]; updatedAt: string }
+      }: {
+        url: string
+        id: string
+        title: string
+        profileIds: string[]
+        moduleIds: BusinessModuleId[]
+        updatedAt: string
+      }
     ) => {
       try {
         const response = await netFetch(endpoint(url, `/sources/${encodeURIComponent(id)}`), {
           session: session.fromPartition(partition),
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ entries, updatedAt })
+          body: JSON.stringify({ title, profileIds, moduleIds, updatedAt })
         })
         return (await response.json()) as KnowledgeSourceResponse
       } catch (error) {

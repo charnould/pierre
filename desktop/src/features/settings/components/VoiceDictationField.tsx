@@ -1,9 +1,6 @@
+import { type DictationRecording, startDictationRecording } from '@pierre/shared/audio-recorder'
 import { useCallback, useEffect, useId, useState } from 'react'
 
-import {
-  type DictationRecording,
-  startDictationRecording
-} from '@/features/dictation/lib/audio-recorder'
 import {
   DEFAULT_DICTATION_SHORTCUT,
   shortcutFromEvent,

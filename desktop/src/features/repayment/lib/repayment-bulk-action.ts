@@ -46,13 +46,13 @@ export function pierreArtifactTitle(mission: 'reponse' | 'synthese' | 'autre'): 
   return 'Note de Pierre'
 }
 
-export function repaymentTagsOf(row: TenantRepaymentRow): string[] {
+function repaymentTagsOf(row: TenantRepaymentRow): string[] {
   const value = row['repayment_tags']
   if (!Array.isArray(value)) return []
   return canonicalizeRepaymentTags(value.filter((tag): tag is string => typeof tag === 'string'))
 }
 
-export function buildPierreArtifact(
+function buildPierreArtifact(
   ref: string,
   action: Extract<RepaymentBulkAction, { kind: 'pierre' }>,
   note: string,

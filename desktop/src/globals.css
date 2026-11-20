@@ -42,6 +42,7 @@
   --home-tickets: oklch(0.68 0.196 25);
   --home-repayment: oklch(0.68 0.158 155);
   --home-automations: oklch(0.68 0.162 280);
+  --home-intake: oklch(0.68 0.145 55);
   --home-bulk: oklch(0.68 0.131 85);
   --home-about: oklch(0.68 0.127 170);
   --home-insurance: oklch(0.68 0.16 332);
@@ -118,6 +119,7 @@
   --color-home-tickets: var(--home-tickets);
   --color-home-repayment: var(--home-repayment);
   --color-home-automations: var(--home-automations);
+  --color-home-intake: var(--home-intake);
   --color-home-bulk: var(--home-bulk);
   --color-home-about: var(--home-about);
   --color-home-insurance: var(--home-insurance);
@@ -221,6 +223,10 @@
 
   .home-door[data-door='automations'] {
     --home-door: var(--home-automations);
+  }
+
+  .home-door[data-door='intake'] {
+    --home-door: var(--home-intake);
   }
 
   .home-door[data-door='bulk'] {

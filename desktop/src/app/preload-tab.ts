@@ -14,6 +14,9 @@ export function preloadTab(tab: Tab): void {
     case 'automations':
       void import('@/features/automations')
       return
+    case 'intake':
+      void import('@/features/intakes')
+      return
     case 'bulk':
       void import('@/features/bulk/BulkOperationsView')
       return

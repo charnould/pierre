@@ -437,6 +437,138 @@ describe('SetupPanel chatbots', () => {
       window.api = previous
     }
   })
+
+  test('saves and removes an internal agent when default is unconfigured (null placeholders)', async () => {
+    const previous = window.api
+    const written: Array<{ id: string; body: string }> = []
+    let setupRefreshCount = 0
+    const texts: Record<string, string | null> = {
+      'chatbots/default': null,
+      'chatbots/default/AGENTS.md': null
+    }
+    window.api = {
+      getAdminSetup: async () => ({
+        texts: { ...texts },
+        binaries: [],
+        ready: { 'chatbots/default': false }
+      }),
+      putAdminSetup: async (payload: { id: string; body?: string }) => {
+        const body = payload.body ?? ''
+        if (
+          payload.id.endsWith('/AGENTS.md') &&
+          !body.trim() &&
+          payload.id === 'chatbots/default/AGENTS.md'
+        ) {
+          return { error: { code: 'invalid', message: 'AGENTS.md vide.' } }
+        }
+        texts[payload.id] = body
+        written.push({ id: payload.id, body })
+        return { data: { id: payload.id } }
+      },
+      deleteAdminChatbot: async (payload: { id: string }) => {
+        delete texts[`chatbots/${payload.id}`]
+        delete texts[`chatbots/${payload.id}/AGENTS.md`]
+        return { data: { id: payload.id } }
+      },
+      getSetup: async () => {
+        setupRefreshCount += 1
+        return {
+          data: {
+            name: 'PIERRE',
+            tickets: null,
+            repayments: null,
+            docxSkillIds: [],
+            about: null,
+            automations: null,
+            chatbot: Object.keys(texts).some(
+              (key) => key.startsWith('chatbots/') && texts[key] !== null
+            )
+          }
+        }
+      }
+    } as unknown as typeof window.api
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const root = createRoot(host)
+    const fill = async (id: string, value: string) => {
+      const textarea = host.querySelector(`[id="${id}"]`)
+      if (!(textarea instanceof HTMLTextAreaElement)) throw new Error(id)
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set?.call(
+          textarea,
+          value
+        )
+        textarea.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+    }
+    const click = async (label: string) => {
+      const button = [...document.querySelectorAll('button')].find(
+        (node) => node.textContent?.trim() === label
+      )
+      if (!(button instanceof HTMLButtonElement)) throw new Error(label)
+      await act(async () => {
+        button.click()
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      })
+    }
+    try {
+      await act(async () => {
+        root.render(
+          <SetupPanel url="http://localhost" entryId="chatbots/default" onBack={() => {}} />
+        )
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      })
+      const json = JSON.stringify({
+        id: 'cadre-astreinte',
+        display: "Cadre d'astreinte",
+        community_knowledge: true,
+        trace: 'collapsed',
+        attachments: true,
+        greetings: ["Que s'est-il passé ?"],
+        examples: ['Question ?'],
+        disclaimer: 'Vérifiez.'
+      })
+      await fill('chatbots/__draft__', json)
+      await click('Enregistrer')
+
+      expect(written.map((row) => row.id)).toEqual([
+        'chatbots/cadre-astreinte',
+        'chatbots/cadre-astreinte/AGENTS.md'
+      ])
+      expect(host.textContent).not.toContain('JSON invalide.')
+      expect(host.textContent).not.toContain('AGENTS.md vide.')
+      expect(setupRefreshCount).toBe(1)
+      expect(host.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.trim()).toBe(
+        "Cadre d'astreinte"
+      )
+
+      written.length = 0
+      await click('Enregistrer')
+      expect(written.map((row) => row.id)).toEqual([
+        'chatbots/cadre-astreinte',
+        'chatbots/cadre-astreinte/AGENTS.md'
+      ])
+      expect(host.textContent).not.toContain('JSON invalide.')
+      expect(host.textContent).not.toContain('AGENTS.md vide.')
+      expect(setupRefreshCount).toBe(2)
+
+      await click('Supprimer')
+      const confirmButtons = [...document.querySelectorAll('button')].filter(
+        (node) => node.textContent?.trim() === 'Supprimer'
+      )
+      const confirm = confirmButtons[confirmButtons.length - 1]
+      if (!(confirm instanceof HTMLButtonElement)) throw new Error('Confirm Supprimer')
+      await act(async () => {
+        confirm.click()
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      })
+      expect(setupRefreshCount).toBe(3)
+    } finally {
+      await act(async () => root.unmount())
+      host.remove()
+      window.api = previous
+    }
+  })
 })
 
 describe('RepaymentDocuments', () => {

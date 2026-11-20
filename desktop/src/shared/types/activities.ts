@@ -26,8 +26,7 @@ export type {
   TaskState
 } from '@pierre/shared/activities'
 
-export type { TaskContent } from '@pierre/shared/activity-content'
-export type { RepaymentCaseFile } from '@pierre/shared/repayment-case-file'
+export type { IntakeSubmittedContent, TaskContent } from '@pierre/shared/activity-content'
 
 export {
   ACTIVITY_CONTENT_VERSION,
@@ -41,7 +40,6 @@ export {
   isNoteType,
   isSignatureType,
   isTaskType,
-  mediumToChannel,
   mentionOf
 } from '@pierre/shared/activities'
 
@@ -56,6 +54,7 @@ export {
   parseCommunicationOpenedContent,
   parseCommunicationStatusContent,
   parseContentJson,
+  parseIntakeSubmittedContent,
   parseNoteContent,
   parseSignatureContent,
   parseTaskContent,

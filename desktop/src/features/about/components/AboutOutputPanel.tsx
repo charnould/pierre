@@ -1,3 +1,4 @@
+import { showsThinking, type TraceMode } from '@pierre/shared/chat'
 import { Activity, Check, Copy } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
@@ -22,7 +23,6 @@ import {
 } from '@/shared/components/ui/empty'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
-import { showsThinking, type TraceMode } from '@/shared/types/chat'
 
 export type AboutOutputPanelProps = {
   url?: string

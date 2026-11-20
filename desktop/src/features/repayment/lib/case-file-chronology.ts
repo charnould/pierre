@@ -32,7 +32,7 @@ export function sortChronology(entries: readonly ChronologyEntry[]): ChronologyE
     .map(({ entry }) => entry)
 }
 
-export function toChronologyPayload(entries: readonly ChronologyEntry[]): CaseFileChronologyItem[] {
+function toChronologyPayload(entries: readonly ChronologyEntry[]): CaseFileChronologyItem[] {
   return entries.flatMap((entry) => (entry.editable ? [entry.item] : []))
 }
 

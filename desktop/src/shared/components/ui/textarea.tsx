@@ -1,10 +1,10 @@
 import { cn } from 'cn'
 import * as React from 'react'
 
-import { DictationLive } from '@/features/dictation/DictationLive'
-import { DictationMark } from '@/features/dictation/DictationMark'
-import { useVoiceDictationOptional } from '@/features/dictation/VoiceDictationContext'
+import { DictationLive } from '@/shared/components/DictationLive'
+import { DictationMark } from '@/shared/components/DictationMark'
 import { Button } from '@/shared/components/ui/button'
+import { useVoiceDictationOptional } from '@/shared/lib/voice-dictation-context'
 
 function Textarea({
   className,

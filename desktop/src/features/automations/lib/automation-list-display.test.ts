@@ -1,8 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
-  accessText,
-  collaboratorLogins,
   formatGenerationDate,
   lastGenerationStatusLabel,
   runOutcomeDisplay
@@ -20,11 +18,9 @@ function report(overrides: Partial<Automation> = {}): Automation {
     status: 'scheduled',
     owner: 'alice',
     mentions: [],
-    isCreator: true,
+    canManage: true,
     pinned: false,
-    frequency: 'weekly',
-    frequencyTime: '08:00',
-    cron: '0 8 * * 1',
+    schedule: { frequency: 'weekly', days: [1], hour: 8, minute: 0 },
     prompt: '',
     maxReports: 6,
     runs: [],
@@ -74,20 +70,5 @@ describe('formatGenerationDate', () => {
   test('returns an em dash when missing or invalid', () => {
     expect(formatGenerationDate(undefined)).toBe('—')
     expect(formatGenerationDate('not-a-date')).toBe('—')
-  })
-})
-
-describe('collaboratorLogins', () => {
-  test('drops the owner from mentions', () => {
-    expect(collaboratorLogins(report())).toEqual([])
-    expect(collaboratorLogins(report({ mentions: ['alice', 'bob'] }))).toEqual(['bob'])
-  })
-})
-
-describe('accessText', () => {
-  test('shows owner, then collaborators', () => {
-    expect(accessText(report())).toBe('alice')
-    expect(accessText(report({ mentions: ['bob'] }))).toBe('alice + 1 personne')
-    expect(accessText(report({ mentions: ['bob', 'cara'] }))).toBe('alice + 2 personnes')
   })
 })

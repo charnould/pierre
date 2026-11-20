@@ -3,10 +3,17 @@ export type {
   KnowledgeBuildResponse,
   KnowledgeBuildsResponse,
   KnowledgeData,
-  KnowledgeEntry,
   KnowledgeProfile,
   KnowledgeResponse,
   KnowledgeSource,
   KnowledgeSourceResponse,
-  KnowledgeUploadResponse
+  KnowledgeUploadResponse,
+  WorkbookInspectResponse,
+  WorkbookInspectSheet,
+  WorkbookSheetConfig
 } from '@pierre/shared/knowledge'
+
+export type PickedKnowledgeFile = {
+  path: string
+  name: string
+}

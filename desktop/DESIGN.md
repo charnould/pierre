@@ -71,6 +71,7 @@ Chaque vue React appartient à **exactement un** type. Les overlays ne sont pas 
 | Réclamations       | Board        |
 | Impayés            | Board        |
 | Automatisations    | Directory    |
+| Collectes          | Directory    |
 | Contacter par lots | Directory    |
 | Synthèse           | Split        |
 | Paramètres         | Document     |
@@ -138,7 +139,7 @@ Hors de cette famille, Board, Directory, Inspector, Conversation, Home et le chr
 
 ### Directory
 
-Automatisations et Contacter par lots. Collection d’objets — ni Board ni Document. Flush. **Une rubrique par onglet** — même chrome que DualTable : `bg-background`, titre Geist Sans `text-xl` + · + compte, CTA outline + une primaire. **Interdit :** fusionner les buckets. Liste paper (`DirectoryList`). Lignes **identité empilée** (nom + description, 2 lignes max) + **métadonnées en colonnes alignées à gauche** (`text-start` partout, y compris actions). Séparateur `border-border/60` **ou** whitespace, jamais les deux. Hover / selected = `bg-muted`. Recherche `InputGroup`. Automatisations : formulaire = Dialog `max-w-2xl`. Contacter par lots : éditeur **plein cadre**, corps centré `max-w-4xl px-6` (requête / résultats / envoi), pas de Dialog de formulaire. Historique d’un traitement = pile de rubriques flush (même chrome DualTable : Geist Sans `text-xl` + · + méta), table Geist Sans 13 / thead 11, un scroll, pas DualTable, pas Document ; clic ligne = même Inspector Impayés. Le corps **peut** grouper les champs par `FieldSet` + `FieldLegend` (16/24). Pas de Card comme shell. Pas de filet « un bloc = un paramètre » (Document). Pas de DualTable.
+Automatisations, Collectes et Contacter par lots. Collection d’objets — ni Board ni Document. Flush. **Une rubrique par onglet** — même chrome que DualTable : `bg-background`, titre Geist Sans `text-xl` + · + compte, CTA outline + une primaire. **Interdit :** fusionner les buckets. Liste paper (`DirectoryList`). Lignes **identité empilée** (nom + description, 2 lignes max) + **métadonnées en colonnes alignées à gauche** (`text-start` partout, y compris actions). Séparateur `border-border/60` **ou** whitespace, jamais les deux. Hover / selected = `bg-muted`. Recherche `InputGroup`. Automatisations : formulaire = Dialog `max-w-2xl`. Contacter par lots : éditeur **plein cadre**, corps centré `max-w-4xl px-6` (requête / résultats / envoi), pas de Dialog de formulaire. Historique d’un traitement = pile de rubriques flush (même chrome DualTable : Geist Sans `text-xl` + · + méta), table Geist Sans 13 / thead 11, un scroll, pas DualTable, pas Document ; clic ligne = même Inspector Impayés. Le corps **peut** grouper les champs par `FieldSet` + `FieldLegend` (16/24). Pas de Card comme shell. Pas de filet « un bloc = un paramètre » (Document). Pas de DualTable.
 
 ### Administration
 
@@ -156,10 +157,12 @@ Administrateur reste hors profil. Libellé **Chatbots**. Identité profil = Avat
 nom. Les lignes utilisateurs portent une checkbox ; dès qu’une case est cochée, un CTA outline
 **Affecter un profil** ouvre le menu des profils. Pas de tout sélectionner.
 
-Encyclopédie est l’exception Directory à deux buckets : `Core Data HLM` puis `Autres sources`,
-sans fusion. Core Data affiche toujours le catalogue théorique complet, y compris les tables
-absentes ; ses identités sont les cinq noms réservés `core.*.csv` (L1) et le label métier (L2).
-Autres sources réunit toutes les entrées CSV/DOCX/Markdown/Excel non Core Data, affectées ou non.
+Encyclopédie est l’exception Directory à trois buckets : `Core Data HLM`, `Collectes` puis
+`Autres sources`, sans fusion. Core Data affiche toujours le catalogue théorique complet, y compris
+les tables absentes ; ses identités sont les cinq noms réservés `core.*.csv` (L1) et le label
+métier (L2). Collectes réunit les collectes publiées ayant rejoint l’encyclopédie (L1 = nom de la
+collecte, L2 = nom de table, sans suppression depuis l’encyclopédie). Autres sources réunit toutes
+les entrées CSV/DOCX/Markdown/Excel non Core Data, affectées ou non.
 Une ligne représente un fichier CSV/DOCX/Markdown ou un onglet Excel. Autres sources : L1 = titre
 encyclopédie tel quel (14 medium), L2 = nom de fichier uploadé avec extension. Les profils ne
 vivent pas dans l’identité. Icône à gauche alignée sur L1 (`h-5` / `size-4`) : `Table2` pour
@@ -176,9 +179,14 @@ ligne. Suppression fichier ou onglet depuis la ligne
 (`Trash2` + `ConfirmDialog`), jamais depuis le dialog. Le titre d’une source ordinaire est le nom
 de fichier ou d’onglet, overridable ; le vider restaure ce titre officiel. Une ligne d’aide montre
 le `snake_case` agent. Un titre Core
-est le stem sans `core.` et n’est pas éditable. Le dialog n’a ni URL, ni preview, ni supprimer,
-ni ligne d’en-têtes : Excel est refusé si les noms de colonnes ne sont pas sur la première ligne.
-Pas de téléchargement : l’original n’est pas conservé, seul l’import canonique l’est.
+est le stem sans `core.` et n’est pas éditable. Le dialog `Configurer` n’a ni URL, ni preview, ni
+supprimer, ni édition de ligne d’en-têtes. Un nouveau classeur Excel (ou un ré-upload dont la
+structure d’en-têtes a changé) ouvre un Dialog `max-w-2xl` d’ingestion par onglet, en séquence
+(aperçu `Table` numéroté après défusion automatique, ligne d’en-tête pré-détectée et cliquable
+dans le tableau, titre ; `Ignorer` passe à l’onglet suivant, `Importer` enregistre immédiatement,
+fermer interrompt la suite) avant enregistrement canonique. Les colonnes avec données sans titre ou
+en doublon sont refusées avec leurs lettres exactes. Pas de téléchargement : l’original n’est pas
+conservé, seul l’import canonique l’est.
 `Reconstructions` n’a ni CTA ni Dialog ; le polling du dernier build suffit.
 L’UI configure : upload, affectation et suppression ne publient qu’au clic sur `Reconstruire`.
 La CLI livre : un fichier affecté dont les octets changent déclenche la publication. Tant que le
@@ -246,6 +254,12 @@ Une primaire intrinsèque (`w-fit`, pas `w-full`). Jamais `disabled` pour le lé
 
 Bounds = TitleBar + `px-6 py-6` + pile **au repos**. Un micro-saut 1–2 lignes `FieldError` est licite. Jamais un `max-w-2xl`.
 
+### Collecte publique
+
+Page `/repondre`, hors Document. Colonne centrée `max-w-md`, `px-4 py-8`, rythme 16. `h1` `sr-only` : le titre du formulaire. Pas de nom d’organisme, pas de description. Une seule Card, sans titre : mot de passe, champs, mentions libres. Un titre de section du formulaire est un `FieldLegend`. Champs empilés. Mentions : `FieldDescription` serif 12/16, en bas de la carte. `Envoyer` suit la carte. La confirmation nomme l’organisme.
+
+Refusé : `max-w-document`, bandeau visible, titre « Accès », une carte par bloc, cartes imbriquées, une taille de texte nouvelle.
+
 ### Placeholder
 
 Assurances, Relocation, Attributions, Ventes. Uniquement Empty canonique. Pas de `p-8` / `text-lg` inventés. Pas d’illustration custom.
@@ -301,7 +315,7 @@ Le quick chat : la barre interne `h-7` porte la poignée de déplacement et `X`,
 invisibles avec curseur natif ; aucun glyphe, poignée ou état hover. Barre focusable : flèches =
 déplacer, `Shift` + flèches = redimensionner, par pas de 16. Le cadre entier reste borné dans le
 viewport ; position et taille restent en mémoire pendant la session. `X` ou le bouton TitleBar
-masquent la fenêtre sans libérer la conversation. Dialog, Menu et Select restent devant (`z-[70]`) ; toast au
+masquent la fenêtre sans libérer la conversation. Dialog, Menu, Select et Combobox restent devant (`z-[70]`) ; toast au
 sommet. Pas de titre, taille ou position persistée.
 
 Inspector ≠ Inbox / suivi ≠ Workspace. Inbox à gauche (24 rem), dossier à droite
@@ -755,6 +769,7 @@ AA avec chaque pigment dans ces trois états ; les pigments restent dans le gamu
 | tickets      | `home-tickets`      | réclamation, garance |
 | repayment    | `home-repayment`    | compte, vert de gris |
 | automations  | `home-automations`  | système, indigo      |
+| intake       | `home-intake`       | collecte, ambre      |
 | bulk         | `home-bulk`         | courrier, paille     |
 | about        | `home-about`        | synthèse, céladon    |
 | insurance    | `home-insurance`    | assurance, magenta   |
@@ -831,6 +846,7 @@ Ne pas empiler App + vue + enfant.
 | Surface                                      | Largeur                          |
 | -------------------------------------------- | -------------------------------- |
 | Document (formulaire structuré)              | `max-w-document` (68 rem)        |
+| Collecte publique `/repondre`                | `max-w-md`                       |
 | Home                                         | `max-w-6xl` centré               |
 | Login                                        | coquille (`LOGIN_WINDOW_BOUNDS`) |
 | Fenêtre connectée minimale                   | 1100 × 720                       |
@@ -1078,6 +1094,7 @@ Ne pas introduire / supprimer :
 | Burst Notifications WAAPI   | L’API `KeyframeEffect` reçoit la courbe canonique en valeur littérale ; elle ne résout pas les variables CSS du thème.                                                                                                                                                                                                               |
 | Login coquille compacte     | Première surface : fenêtre calée sur la pile                                                                                                                                                                                                                                                                                         |
 | Login, deux phrases légales | Serif 12/16 au lieu du 14/19 d’aide. La coquille ne tient pas ce corps. Refusé : une taille de `FieldDescription`, un `text-xs` sur le titre.                                                                                                                                                                                        |
+| Collecte publique           | Une Card `max-w-md` réunit mot de passe, champs et mentions 12/16. `Envoyer` suit la carte. `h1` `sr-only`. Le répondant externe n’est pas une page Document. Refusé : `max-w-document`, bandeau visible, titre « Accès », une carte par bloc, une nouvelle taille de texte.                                                         |
 | Prestataires, champs        | Adresses, modèles, clés, UUID, HTML et JSON se lisent en Geist Mono via `mono` sur `Input`, `InputGroupInput` ou `Textarea`. Refusé : `font-mono` au caller, Geist Sans sur ces champs, mono sur le reste de l’administration.                                                                                                       |
 | Contrôles HTML bruts        | HomeDoor, cadre Work feed, exemples Conversation, ancre 16 d’« À faire », cible `render={<button />}` et input fichier `sr-only`. La mascotte reste hors React. Refusé : un autre `<button>`, `<input>`, `<textarea>`, `<select>` ou `<dialog>`.                                                                                     |
 | Lecteur de note             | `Retour` seul en tête de colonne, le `h1` de l’article en dessous. Le titre est long : le coller au bouton le coupe. Refusé : la même ligne que les pages à `h1`.                                                                                                                                                                    |

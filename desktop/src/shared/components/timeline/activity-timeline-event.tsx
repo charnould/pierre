@@ -14,6 +14,7 @@ import {
   isSignatureType,
   isTaskType,
   parseCaseChangeContent,
+  parseIntakeSubmittedContent,
   parseNoteContent,
   parseRepaymentCaseFileContent,
   parseSignatureContent,
@@ -235,6 +236,28 @@ function EventBody({
             Ouvrir
           </Button>
         ) : null}
+      </>
+    )
+  }
+
+  if (row.type === 'intake.submitted') {
+    const intake = parseIntakeSubmittedContent(row.contenu)
+    if (!intake) return null
+    const values = intake.values ?? {}
+    return (
+      <>
+        <TimelineObject title={intake.title}>
+          {Object.entries(values).map(([label, value]) => (
+            <TimelineFact key={label} label={label} value={formatActivityValue(value)} />
+          ))}
+          {intake.files && intake.files.length > 0 ? (
+            <TimelineFact
+              label="Pièces jointes"
+              value={intake.files.map((file) => file.filename).join(', ')}
+            />
+          ) : null}
+        </TimelineObject>
+        {intake.note ? <TimelineQuote>{intake.note}</TimelineQuote> : null}
       </>
     )
   }

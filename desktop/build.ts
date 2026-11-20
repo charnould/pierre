@@ -105,15 +105,21 @@ export async function buildRenderer({ outdir, minify = false }: BundleOptions) {
   }
 }
 
-export async function buildChat(outdir: string) {
-  const { plugin: chatPlugin, sheets } = externalSheets()
+type WebManifestEntry = {
+  file: string
+  isEntry: true
+  css: string[]
+}
+
+async function buildWebEntry(entry: string, outdir: string): Promise<WebManifestEntry> {
+  const { plugin: webPlugin, sheets } = externalSheets()
   const result = await Bun.build({
-    entrypoints: [join(DESKTOP, 'src/chat-web/main.tsx')],
+    entrypoints: [join(DESKTOP, entry)],
     outdir,
     target: 'browser',
     minify: true,
     splitting: true,
-    plugins: [chatPlugin],
+    plugins: [webPlugin],
     tsconfig: TSCONFIG,
     root: DESKTOP,
     naming: {
@@ -124,7 +130,7 @@ export async function buildChat(outdir: string) {
   })
 
   if (sheets.length === 0) {
-    throw new Error('chat build produced no stylesheet')
+    throw new Error(`${entry} build produced no stylesheet`)
   }
 
   const cssFiles: string[] = []
@@ -146,15 +152,28 @@ export async function buildChat(outdir: string) {
     }))
   const js = produced.find((file) => file.kind === 'entry-point' && file.file.endsWith('.js'))
   if (!js) {
-    throw new Error(`chat build missing js: ${JSON.stringify(produced)}`)
+    throw new Error(`${entry} build missing js: ${JSON.stringify(produced)}`)
   }
 
+  return { file: js.file, isEntry: true, css: cssFiles }
+}
+
+export async function buildChat(outdir: string) {
+  return {
+    'src/chat-web/main.tsx': await buildWebEntry('src/chat-web/main.tsx', outdir)
+  }
+}
+
+export async function buildIntake(outdir: string) {
+  return {
+    'src/intake-web/main.tsx': await buildWebEntry('src/intake-web/main.tsx', outdir)
+  }
+}
+
+export async function buildServerWeb(outdir: string) {
   const manifest = {
-    'src/chat-web/main.tsx': {
-      file: js.file,
-      isEntry: true as const,
-      css: cssFiles
-    }
+    ...(await buildChat(outdir)),
+    ...(await buildIntake(outdir))
   }
   await Bun.write(join(outdir, 'manifest.json'), JSON.stringify(manifest))
   return manifest

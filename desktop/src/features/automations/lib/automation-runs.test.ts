@@ -18,7 +18,7 @@ function record(): ReportAutomationRecord {
     status: 'scheduled',
     owner: 'admin@pierre.test',
     mentions: ['bob'],
-    cron: '0 8 * * 1',
+    schedule: { frequency: 'weekly', days: [1], hour: 8, minute: 0 },
     nextRunAt: null,
     lastRunAt: null,
     lastRunStatus: null,
