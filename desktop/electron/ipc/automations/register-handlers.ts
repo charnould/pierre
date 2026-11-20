@@ -1,7 +1,6 @@
-import { ipcMain, session } from 'electron'
+import { ipcMain } from 'electron'
 
 import type {
-  AutomationApiFailure,
   AutomationResponse,
   AutomationsListResponse,
   CreateAutomationPayload,
@@ -12,102 +11,83 @@ import type {
   PinAutomationPayload,
   RunAutomationPayload
 } from '../../../src/shared/types/automations'
-import { netFetch } from '../../lib/net-fetch'
-import { logMainError } from '../../services/logging'
 import { IpcChannel } from '../channels'
+import { ipcJsonRequest, joinServerUrl } from '../http-json'
 
 export function registerAutomationsHandlers(partition: string): void {
   ipcMain.handle(IpcChannel.automations.list, async (_, params: ListAutomationsParams) => {
-    try {
-      const response = await netFetch(`${params.url}/automations`, {
-        session: session.fromPartition(partition)
-      })
-      if (!response.ok) throw new Error(`${response.status} ${await response.text()}`)
-      return (await response.json()) as AutomationsListResponse
-    } catch (error) {
-      logMainError('get-automations', error)
-      return null
-    }
+    const res = await ipcJsonRequest<AutomationsListResponse>(
+      partition,
+      joinServerUrl(params.url, '/automations'),
+      'GET',
+      'get-automations'
+    )
+    return res && 'data' in res ? res : null
   })
 
   ipcMain.handle(IpcChannel.automations.create, async (_, params: CreateAutomationPayload) => {
     const { url, ...body } = params
-    return request<AutomationResponse>(partition, `${url}/automations`, 'POST', body)
+    return ipcJsonRequest<AutomationResponse>(
+      partition,
+      joinServerUrl(url, '/automations'),
+      'POST',
+      'post-automation',
+      body
+    )
   })
 
   ipcMain.handle(IpcChannel.automations.patch, async (_, params: PatchAutomationPayload) => {
-    return request<AutomationResponse>(
+    return ipcJsonRequest<AutomationResponse>(
       partition,
-      `${params.url}/automations/${encodeURIComponent(params.id)}`,
+      joinServerUrl(params.url, `/automations/${encodeURIComponent(params.id)}`),
       'PATCH',
+      'patch-automation',
       params.patch
     )
   })
 
   ipcMain.handle(IpcChannel.automations.delete, async (_, params: DeleteAutomationPayload) => {
-    return request<DeleteAutomationResponse>(
+    return ipcJsonRequest<DeleteAutomationResponse>(
       partition,
-      `${params.url}/automations/${encodeURIComponent(params.id)}`,
-      'DELETE'
+      joinServerUrl(params.url, `/automations/${encodeURIComponent(params.id)}`),
+      'DELETE',
+      'delete-automation'
     )
   })
 
   ipcMain.handle(IpcChannel.automations.run, async (_, params: RunAutomationPayload) => {
-    return request<AutomationResponse>(
+    return ipcJsonRequest<AutomationResponse>(
       partition,
-      `${params.url}/automations/${encodeURIComponent(params.id)}/run`,
-      'POST'
+      joinServerUrl(params.url, `/automations/${encodeURIComponent(params.id)}/run`),
+      'POST',
+      'post-automation'
+    )
+  })
+
+  ipcMain.handle(IpcChannel.automations.stopRun, async (_, params: RunAutomationPayload) => {
+    return ipcJsonRequest<AutomationResponse>(
+      partition,
+      joinServerUrl(params.url, `/automations/${encodeURIComponent(params.id)}/run`),
+      'DELETE',
+      'delete-automation'
     )
   })
 
   ipcMain.handle(IpcChannel.automations.pin, async (_, params: PinAutomationPayload) => {
-    return request<AutomationResponse>(
+    return ipcJsonRequest<AutomationResponse>(
       partition,
-      `${params.url}/automations/${encodeURIComponent(params.id)}/pin`,
-      'POST'
+      joinServerUrl(params.url, `/automations/${encodeURIComponent(params.id)}/pin`),
+      'POST',
+      'post-automation'
     )
   })
 
   ipcMain.handle(IpcChannel.automations.unpin, async (_, params: PinAutomationPayload) => {
-    return request<AutomationResponse>(
+    return ipcJsonRequest<AutomationResponse>(
       partition,
-      `${params.url}/automations/${encodeURIComponent(params.id)}/pin`,
-      'DELETE'
+      joinServerUrl(params.url, `/automations/${encodeURIComponent(params.id)}/pin`),
+      'DELETE',
+      'delete-automation'
     )
   })
-}
-
-function apiFailure(payload: string): AutomationApiFailure | null {
-  try {
-    const parsed = JSON.parse(payload) as { error?: { message?: unknown } }
-    const message = typeof parsed.error?.message === 'string' ? parsed.error.message.trim() : ''
-    return message ? { error: { message } } : null
-  } catch {
-    return null
-  }
-}
-
-async function request<T>(
-  partition: string,
-  url: string,
-  method: 'POST' | 'PATCH' | 'DELETE',
-  body?: unknown
-): Promise<T | AutomationApiFailure | null> {
-  try {
-    const response = await netFetch(url, {
-      method,
-      headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body),
-      session: session.fromPartition(partition)
-    })
-    const payload = await response.text()
-    if (!response.ok) {
-      logMainError(`${method.toLowerCase()}-automation`, new Error(`${response.status} ${payload}`))
-      return apiFailure(payload)
-    }
-    return JSON.parse(payload) as T
-  } catch (error) {
-    logMainError(`${method.toLowerCase()}-automation`, error)
-    return null
-  }
 }

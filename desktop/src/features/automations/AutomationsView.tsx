@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
+import { DEFAULT_AUTOMATION_SCHEDULE } from '@pierre/shared/schedule'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useRegisterNavigationHandlers } from '@/contexts/NavigationHistoryContext'
 import { useUiSettings } from '@/contexts/UiSettingsContext'
@@ -16,18 +17,16 @@ import {
 import { openAutomationRun } from '@/features/automations/lib/open-automation-run'
 import { ModuleGate } from '@/shared/components/ModuleGate'
 import { toast } from '@/shared/components/ui/toast'
+import { ipcErrorMessage, isIpcData } from '@/shared/lib/ipc-error'
 import { cn } from '@/shared/lib/utils'
-import type {
-  AutomationApiFailure,
-  CreateAutomationBody,
-  PatchAutomationBody
-} from '@/shared/types/automations'
+import type { CreateAutomationBody, PatchAutomationBody } from '@/shared/types/automations'
 import type { Settings } from '@/shared/types/settings'
 
 interface Props {
   hidden: boolean
   agentName: string
   userLogin: string
+  isAdministrator?: boolean
   settings: Settings
   notifications?: NotificationsApi
 }
@@ -36,19 +35,11 @@ function automationsSheetTitle(isCreatingNew: boolean): string {
   return isCreatingNew ? 'Créer une automatisation' : "Modifier l'automatisation"
 }
 
-function automationRefusal(
-  res: { data?: unknown; error?: { message?: string } } | AutomationApiFailure | null,
-  fallback: string
-): string | null {
-  if (res && 'data' in res && res.data) return null
-  const message = res && 'error' in res ? res.error?.message?.trim() : ''
-  return message || fallback
-}
-
 export function AutomationsView({
   hidden,
   agentName,
   userLogin,
+  isAdministrator = false,
   settings,
   notifications: _notifications
 }: Props) {
@@ -58,8 +49,10 @@ export function AutomationsView({
   const [automations, setAutomations] = useState<Automation[]>([])
   const [selectedAutomationId, setSelectedAutomationId] = useState<string | null>(null)
   const [isCreatingNew, setIsCreatingNew] = useState(false)
+  const stoppedRunIdsRef = useRef(new Set<string>())
 
   const sheetOpen = isCreatingNew || selectedAutomationId !== null
+  const hasRunning = automations.some((a) => a.status === 'running')
   const selectedAutomation = automations.find((a) => a.id === selectedAutomationId) ?? null
   const { query, setQuery, sortKey, setSortKey, normalizedQuery, sortedAutomations } =
     useAutomationsListFilters(automations)
@@ -70,8 +63,8 @@ export function AutomationsView({
     }
     const res = await window.api.getAutomations({ url: settings.url })
     if (!res) return
-    setAutomations(res.data.map((row) => recordToAutomation(row, userLogin)))
-  }, [settings.url, userLogin])
+    setAutomations(res.data.map((row) => recordToAutomation(row, userLogin, isAdministrator)))
+  }, [isAdministrator, settings.url, userLogin])
 
   useEffect(() => {
     if (hidden || sheetOpen || !settings.url || !window.api?.getAutomations || !userLogin) return
@@ -79,13 +72,16 @@ export function AutomationsView({
     const login = userLogin
     void window.api.getAutomations({ url }).then((res) => {
       if (!res) return
-      setAutomations(res.data.map((row) => recordToAutomation(row, login)))
+      setAutomations(res.data.map((row) => recordToAutomation(row, login, isAdministrator)))
     })
-    const id = window.setInterval(() => {
-      void refresh()
-    }, 15_000)
+    const id = window.setInterval(
+      () => {
+        void refresh()
+      },
+      hasRunning ? 3_000 : 15_000
+    )
     return () => window.clearInterval(id)
-  }, [hidden, refresh, settings.url, sheetOpen, userLogin])
+  }, [hasRunning, hidden, isAdministrator, refresh, settings.url, sheetOpen, userLogin])
 
   useRegisterNavigationHandlers('automations', {
     getSnapshot: () =>
@@ -136,9 +132,7 @@ export function AutomationsView({
         name: data.name,
         description: data.description,
         mentions: data.mentions,
-        frequency: data.frequency,
-        frequencyDay: data.frequencyDay,
-        frequencyTime: data.frequencyTime
+        schedule: data.schedule
       }
       if ('prompt' in data) patch.prompt = (data as Partial<ReportAutomation>).prompt
       if ('maxReports' in data) patch.maxReports = (data as Partial<ReportAutomation>).maxReports
@@ -147,7 +141,7 @@ export function AutomationsView({
         id: selectedAutomationId,
         patch
       })
-      const refused = automationRefusal(res, 'Enregistrement impossible')
+      const refused = ipcErrorMessage(res, 'Enregistrement impossible')
       if (refused) {
         toast.add({ title: refused, type: 'error' })
         return
@@ -163,15 +157,13 @@ export function AutomationsView({
       name: data.name ?? 'Nouvelle automatisation',
       description: data.description ?? '',
       mentions: data.mentions ?? [],
-      frequency: data.frequency ?? 'weekly',
-      frequencyDay: data.frequencyDay,
-      frequencyTime: data.frequencyTime ?? '08:00',
+      schedule: data.schedule ?? DEFAULT_AUTOMATION_SCHEDULE,
       prompt: (data as Partial<ReportAutomation>).prompt ?? '',
       maxReports: (data as Partial<ReportAutomation>).maxReports ?? 6
     }
 
     const res = await window.api.createAutomation({ url: settings.url, ...body })
-    const refused = automationRefusal(res, 'Création impossible')
+    const refused = ipcErrorMessage(res, 'Création impossible')
     if (refused) {
       toast.add({ title: refused, type: 'error' })
       return
@@ -190,7 +182,7 @@ export function AutomationsView({
       id: automationId,
       patch: { status: current.status === 'paused' ? 'scheduled' : 'paused' }
     })
-    const refused = automationRefusal(res, 'Mise en pause impossible')
+    const refused = ipcErrorMessage(res, 'Mise en pause impossible')
     if (refused) {
       toast.add({ title: refused, type: 'error' })
       return
@@ -201,12 +193,14 @@ export function AutomationsView({
 
   async function handleDelete() {
     if (!selectedAutomationId || !settings.url || !window.api?.deleteAutomation) return
+    stoppedRunIdsRef.current.add(selectedAutomationId)
     const res = await window.api.deleteAutomation({
       url: settings.url,
       id: selectedAutomationId
     })
-    const refused = automationRefusal(res, 'Suppression impossible')
+    const refused = ipcErrorMessage(res, 'Suppression impossible')
     if (refused) {
+      stoppedRunIdsRef.current.delete(selectedAutomationId)
       toast.add({ title: refused, type: 'error' })
       return
     }
@@ -220,7 +214,7 @@ export function AutomationsView({
     const res = automation.pinned
       ? await window.api.unpinAutomation({ url: settings.url, id: automation.id })
       : await window.api.pinAutomation({ url: settings.url, id: automation.id })
-    const refused = automationRefusal(res, 'Épinglage impossible')
+    const refused = ipcErrorMessage(res, 'Épinglage impossible')
     if (refused) {
       toast.add({ title: refused, type: 'error' })
       return
@@ -228,19 +222,45 @@ export function AutomationsView({
     await refresh()
   }
 
-  async function handleLaunch() {
-    if (!selectedAutomationId || !settings.url || !window.api?.runAutomation) return
-    const res = await window.api.runAutomation({
+  async function handleStopRun(automationId: string) {
+    if (!settings.url || !window.api?.stopAutomationRun) return
+    stoppedRunIdsRef.current.add(automationId)
+    const res = await window.api.stopAutomationRun({
       url: settings.url,
-      id: selectedAutomationId
+      id: automationId
     })
-    if (!res || !('data' in res) || !res.data) {
-      const message = res && 'error' in res ? res.error?.message?.trim() : ''
-      toast.add({ title: message || 'Exécution impossible', type: 'error' })
+    const refused = ipcErrorMessage(res, 'Interruption impossible')
+    if (refused) {
+      stoppedRunIdsRef.current.delete(automationId)
+      toast.add({ title: refused, type: 'error' })
       return
     }
     await refresh()
-    closeSheet()
+    toast.add({ title: 'Génération interrompue', type: 'success' })
+  }
+
+  async function handleLaunch() {
+    const launchedId = selectedAutomationId
+    if (!launchedId || !settings.url || !window.api?.runAutomation) return
+    stoppedRunIdsRef.current.delete(launchedId)
+    setAutomations((prev) =>
+      prev.map((a) => (a.id === launchedId ? { ...a, status: 'running' } : a))
+    )
+    const res = await window.api.runAutomation({
+      url: settings.url,
+      id: launchedId
+    })
+    const wasStopped = stoppedRunIdsRef.current.delete(launchedId)
+    await refresh()
+    if (wasStopped) return
+    if (!isIpcData(res)) {
+      toast.add({
+        title: ipcErrorMessage(res, 'Exécution impossible') ?? 'Exécution impossible',
+        type: 'error'
+      })
+      return
+    }
+    setSelectedAutomationId((current) => (current === launchedId ? null : current))
     if (res.data.lastRunStatus === 'error') {
       toast.add({ title: 'Exécution impossible', type: 'error' })
       return
@@ -252,23 +272,29 @@ export function AutomationsView({
   }
 
   function renderDialogContent() {
-    if (isCreatingNew || selectedAutomation?.isCreator) {
+    if (isCreatingNew || selectedAutomation?.canManage) {
       return (
         <AutomationForm
           key={selectedAutomation?.id ?? 'new'}
           agentName={agentName}
           url={settings.url}
+          userLogin={userLogin}
           uiSettings={settingsUi}
           automation={isCreatingNew ? undefined : (selectedAutomation ?? undefined)}
           onCancel={closeSheet}
           onSave={(data) => void handleSave(data)}
-          onLaunch={selectedAutomation?.isCreator ? () => void handleLaunch() : undefined}
+          onLaunch={selectedAutomation?.canManage ? () => void handleLaunch() : undefined}
+          onStopRun={
+            selectedAutomation?.canManage && selectedAutomationId
+              ? () => void handleStopRun(selectedAutomationId)
+              : undefined
+          }
           onTogglePause={
-            selectedAutomation?.isCreator && selectedAutomationId
+            selectedAutomation?.canManage && selectedAutomationId
               ? () => void handleTogglePause(selectedAutomationId)
               : undefined
           }
-          onDelete={selectedAutomation?.isCreator ? () => void handleDelete() : undefined}
+          onDelete={selectedAutomation?.canManage ? () => void handleDelete() : undefined}
         />
       )
     }
@@ -303,6 +329,7 @@ export function AutomationsView({
               selectedAutomationId={selectedAutomationId}
               onSelectAutomation={handleSelectAutomation}
               onTogglePin={(automation) => void handleTogglePin(automation)}
+              onStopRun={(automation) => void handleStopRun(automation.id)}
               onNewAutomation={handleNewAutomation}
               onOpenRun={openAutomationRun}
             />

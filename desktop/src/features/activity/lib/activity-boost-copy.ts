@@ -18,7 +18,8 @@ const BOOST_NOUNS: Partial<Record<ActivityType, string>> = {
   'task.created': 'tâche',
   'ticket.field_changed': 'ticket',
   'artifact.generated': 'document',
-  'automation.reported': 'rapport'
+  'automation.reported': 'rapport',
+  'intake.submitted': 'réponse de collecte'
 }
 
 const BOOST_OBJECTS: Partial<Record<ActivityType, string>> = {
@@ -39,7 +40,8 @@ const BOOST_OBJECTS: Partial<Record<ActivityType, string>> = {
   'task.created': 'une tâche',
   'ticket.field_changed': 'un ticket',
   'artifact.generated': 'un document',
-  'automation.reported': 'un rapport'
+  'automation.reported': 'un rapport',
+  'intake.submitted': 'une réponse de collecte'
 }
 
 export function activityBoostNoun(type: ActivityType | string): string {

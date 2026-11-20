@@ -37,7 +37,7 @@ export type InstanceCustomization = {
   docxSkillIds: string[]
   repaymentGaps?: string[]
   about: { prompt: string } | null
-  automations: { prompt: string; timezone: string } | null
+  automations: { prompt: string } | null
   chatbot: boolean
 }
 
@@ -59,11 +59,11 @@ export function subscribeCustomization(listener: () => void) {
   }
 }
 
-export function customizationStatus(): CustomizationStatus {
+function customizationStatus(): CustomizationStatus {
   return status
 }
 
-export function beginCustomizationLoad() {
+function beginCustomizationLoad() {
   status = 'loading'
   emit()
 }
@@ -74,7 +74,7 @@ export function loadCustomization(next: InstanceCustomization) {
   emit()
 }
 
-export function failCustomization() {
+function failCustomization() {
   data = null
   status = 'error'
   emit()
@@ -152,7 +152,7 @@ function isDocumentTags(value: unknown): boolean {
   })
 }
 
-export function isCustomizationPayload(value: unknown): value is InstanceCustomization {
+function isCustomizationPayload(value: unknown): value is InstanceCustomization {
   if (value == null || typeof value !== 'object' || Array.isArray(value)) return false
   const row = value as Record<string, unknown>
   if (typeof row.name !== 'string' || !row.name.trim()) return false

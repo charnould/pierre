@@ -21,7 +21,7 @@ export function firstOfNextMonth(today: Date): string {
   return isoDate(next.getFullYear(), next.getMonth() + 1, 1)
 }
 
-export function scheduleDates(start: string, count: number, day: number): string[] {
+function scheduleDates(start: string, count: number, day: number): string[] {
   const year = Number(start.slice(0, 4))
   const month = Number(start.slice(5, 7))
   return Array.from({ length: count }, (_, index) => {

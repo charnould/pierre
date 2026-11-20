@@ -22,7 +22,7 @@ function rcsReply(items: ActivityListItem[]): 'Oui' | 'Non' | null {
   return null
 }
 
-export function rcsTestReport(items: ActivityListItem[]): { text: string; done: boolean } {
+function rcsTestReport(items: ActivityListItem[]): { text: string; done: boolean } {
   const reply = rcsReply(items)
   const lines = [channelLine(items, 'rcs'), channelLine(items, 'sms')]
   if (reply) lines.push(`Réponse : ${reply}`)

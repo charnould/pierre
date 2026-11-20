@@ -30,6 +30,7 @@ import { registerBulkOperationsHandlers } from './ipc/bulk-operations/register-h
 import { FoundInPageEvent } from './ipc/channels'
 import { registerDatastoreHandlers } from './ipc/datastore/register-handlers'
 import { registerDictationHandlers } from './ipc/dictation/register-handlers'
+import { registerIntakesHandlers } from './ipc/intakes/register-handlers'
 import { registerKnowledgeHandlers } from './ipc/knowledge/register-handlers'
 import { registerLedgerHandlers } from './ipc/ledger/register-handlers'
 import { registerMascotHandlers } from './ipc/mascot/register-handlers'
@@ -188,6 +189,7 @@ app.whenReady().then(() => {
   registerKnowledgeHandlers(PARTITION)
   registerActivitiesHandlers(PARTITION)
   registerAutomationsHandlers(PARTITION)
+  registerIntakesHandlers(PARTITION)
   registerBulkOperationsHandlers(PARTITION)
   registerDatastoreHandlers(PARTITION)
   registerSetupHandlers(PARTITION)

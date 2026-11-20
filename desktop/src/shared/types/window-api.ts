@@ -1,3 +1,5 @@
+import type { ChatBoot } from '@pierre/shared/chat'
+import type { BusinessModuleId } from '@pierre/shared/modules'
 import type { DocumentChronologyRow } from '@pierre/shared/repayment-document-fields'
 import type { RepaymentMessage } from '@pierre/shared/repayment-messages'
 
@@ -37,12 +39,10 @@ import type {
   SendCommunicationResponse
 } from './activities'
 import type {
-  AutomationApiFailure,
-  AutomationResponse,
+  AutomationRecord,
   AutomationsListResponse,
   CreateAutomationPayload,
   DeleteAutomationPayload,
-  DeleteAutomationResponse,
   ListAutomationsParams,
   PatchAutomationPayload,
   PinAutomationPayload,
@@ -65,15 +65,27 @@ import type {
   PreviewBulkOperationMessagePayload,
   PreviewBulkOperationQueryPayload
 } from './bulk-operations'
-import type { ChatBoot } from './chat'
 import type { DatastoreTablesResponse } from './datastore-tables'
+import type {
+  CreateIntakePayload,
+  DownloadIntakeFilePayload,
+  ExportIntakeZipPayload,
+  IntakeActionPayload,
+  IntakeRecord,
+  ListIntakesParams,
+  PatchIntakePayload,
+  RunIntakeActionPayload
+} from './intakes'
+import type { BinaryDownloadResult, IpcDataResult } from './ipc'
 import type {
   KnowledgeBuildResponse,
   KnowledgeBuildsResponse,
-  KnowledgeEntry,
   KnowledgeResponse,
   KnowledgeSourceResponse,
-  KnowledgeUploadResponse
+  KnowledgeUploadResponse,
+  PickedKnowledgeFile,
+  WorkbookInspectResponse,
+  WorkbookSheetConfig
 } from './knowledge'
 import type {
   LedgerListResponse,
@@ -241,7 +253,6 @@ export interface DesktopApi {
         target: '' | 'sandbox' | 'production'
         postalReady: boolean
         electronicReady: boolean
-        secretsReadable: boolean
       }
       webhooks: { rcs: string; email: string }
     }
@@ -296,7 +307,7 @@ export interface DesktopApi {
     format: 'docx' | 'pdf'
     dossier: unknown
     chronologie?: DocumentChronologyRow[]
-  }) => Promise<{ saved: true } | { canceled: true } | { error?: { message?: string } } | null>
+  }) => Promise<BinaryDownloadResult | null>
   /** `GET /tickets/facets` — distinct column values from full table. */
   getTicketFacets: (params: {
     url: string
@@ -342,11 +353,23 @@ export interface DesktopApi {
     id: string
   }) => Promise<DeleteAdminUserProfileResponse | null>
   getAdminKnowledge: (params: { url: string }) => Promise<KnowledgeResponse | null>
-  uploadKnowledgeSources: (params: { url: string }) => Promise<KnowledgeUploadResponse | null>
+  pickKnowledgeFiles: () => Promise<PickedKnowledgeFile[]>
+  inspectKnowledgeWorkbook: (params: {
+    url: string
+    filePath: string
+    maxRows?: number
+  }) => Promise<WorkbookInspectResponse | null>
+  uploadKnowledgeFiles: (params: {
+    url: string
+    filePaths: string[]
+    sheet?: WorkbookSheetConfig
+  }) => Promise<KnowledgeUploadResponse | null>
   patchKnowledgeSource: (params: {
     url: string
     id: string
-    entries: KnowledgeEntry[]
+    title: string
+    profileIds: string[]
+    moduleIds: BusinessModuleId[]
     updatedAt: string
   }) => Promise<KnowledgeSourceResponse | null>
   deleteKnowledgeSource: (params: { url: string; id: string }) => Promise<boolean>
@@ -372,24 +395,20 @@ export interface DesktopApi {
   patchActivity: (params: PatchActivityPayload) => Promise<ActivityResponse | null>
   deleteActivity: (params: DeleteActivityPayload) => Promise<DeleteActivityResponse | null>
   getAutomations: (params: ListAutomationsParams) => Promise<AutomationsListResponse | null>
-  createAutomation: (
-    params: CreateAutomationPayload
-  ) => Promise<AutomationResponse | AutomationApiFailure | null>
-  patchAutomation: (
-    params: PatchAutomationPayload
-  ) => Promise<AutomationResponse | AutomationApiFailure | null>
-  deleteAutomation: (
-    params: DeleteAutomationPayload
-  ) => Promise<DeleteAutomationResponse | AutomationApiFailure | null>
-  runAutomation: (
-    params: RunAutomationPayload
-  ) => Promise<AutomationResponse | AutomationApiFailure | null>
-  pinAutomation: (
-    params: PinAutomationPayload
-  ) => Promise<AutomationResponse | AutomationApiFailure | null>
-  unpinAutomation: (
-    params: PinAutomationPayload
-  ) => Promise<AutomationResponse | AutomationApiFailure | null>
+  createAutomation: (params: CreateAutomationPayload) => Promise<IpcDataResult<AutomationRecord>>
+  patchAutomation: (params: PatchAutomationPayload) => Promise<IpcDataResult<AutomationRecord>>
+  deleteAutomation: (params: DeleteAutomationPayload) => Promise<IpcDataResult<{ deleted: true }>>
+  runAutomation: (params: RunAutomationPayload) => Promise<IpcDataResult<AutomationRecord>>
+  stopAutomationRun: (params: RunAutomationPayload) => Promise<IpcDataResult<AutomationRecord>>
+  pinAutomation: (params: PinAutomationPayload) => Promise<IpcDataResult<AutomationRecord>>
+  unpinAutomation: (params: PinAutomationPayload) => Promise<IpcDataResult<AutomationRecord>>
+  getIntakes: (params: ListIntakesParams) => Promise<{ data: IntakeRecord[] } | null>
+  createIntake: (params: CreateIntakePayload) => Promise<IpcDataResult<IntakeRecord>>
+  patchIntake: (params: PatchIntakePayload) => Promise<IpcDataResult<IntakeRecord>>
+  deleteIntake: (params: IntakeActionPayload) => Promise<IpcDataResult<{ deleted: true }>>
+  runIntakeAction: (params: RunIntakeActionPayload) => Promise<IpcDataResult<IntakeRecord>>
+  exportIntakeZip: (params: ExportIntakeZipPayload) => Promise<BinaryDownloadResult | null>
+  downloadIntakeFile: (params: DownloadIntakeFilePayload) => Promise<BinaryDownloadResult | null>
   getBulkOperations: (
     params: ListBulkOperationsParams
   ) => Promise<BulkOperationsListResponse | null>

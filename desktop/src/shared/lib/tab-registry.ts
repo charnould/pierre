@@ -4,6 +4,7 @@ import {
   ArrowRightLeft,
   Bot,
   ClipboardList,
+  ClipboardPen,
   Handshake,
   House,
   Mails,
@@ -55,6 +56,12 @@ export const TAB_REGISTRY = [
     navGroup: 'panel',
     identity: { icon: Workflow, label: 'Créer des automatisations' },
     moduleId: 'automations'
+  },
+  {
+    id: 'intake',
+    navGroup: 'panel',
+    identity: { icon: ClipboardPen, label: 'Collecter des données' },
+    moduleId: 'intake'
   },
   {
     id: 'bulk',

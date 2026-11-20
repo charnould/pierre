@@ -15,7 +15,7 @@ const COMMON_FIELD_LABELS: Readonly<Record<string, string>> = {
   date_extraction: 'Date d’extraction'
 }
 
-export function humanizeFieldName(name: string): string {
+function humanizeFieldName(name: string): string {
   const words = name.trim().replaceAll('_', ' ').replace(/\s+/g, ' ')
 
   if (!words) return name

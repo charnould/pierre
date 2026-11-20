@@ -7,14 +7,12 @@ import { Button } from '@/shared/components/ui/button'
 import { FieldDescription } from '@/shared/components/ui/field'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip'
-import type { KnowledgeBuild, KnowledgeProfile } from '@/shared/types/knowledge'
+import type { KnowledgeBuild, KnowledgeProfile, KnowledgeSource } from '@/shared/types/knowledge'
 
 import {
-  isKnowledgeEntryAssigned,
+  isKnowledgeSourceAssigned,
   knowledgeAssignmentSummary,
-  knowledgeDeleteKind,
   knowledgeFileKind,
-  type KnowledgeItem,
   type KnowledgeItemState,
   knowledgeItemState,
   knowledgeRowDescription,
@@ -166,7 +164,7 @@ const formatDate = (value: string) =>
   }).format(new Date(value))
 
 export function KnowledgeRow({
-  item,
+  source,
   coreData,
   lastBuild,
   needsRebuild,
@@ -175,26 +173,26 @@ export function KnowledgeRow({
   onUnassign,
   onDelete
 }: {
-  item: KnowledgeItem | null
+  source: KnowledgeSource | null
   coreData?: { table: string; filename: string; label: string }
   lastBuild: KnowledgeBuild | null
   needsRebuild: boolean
   profiles: KnowledgeProfile[]
-  onOpen: (item: KnowledgeItem) => void
-  onUnassign: (item: KnowledgeItem) => void
-  onDelete: (item: KnowledgeItem) => void
+  onOpen: (source: KnowledgeSource) => void
+  onUnassign: (source: KnowledgeSource) => void
+  onDelete: (source: KnowledgeSource) => void
 }) {
-  const state = knowledgeItemState(item, lastBuild, needsRebuild)
-  const title = knowledgeRowTitle(item, coreData)
-  const description = knowledgeRowDescription(item, coreData)
-  const assignment = item
-    ? knowledgeAssignmentSummary(item.entry, profiles)
+  const state = knowledgeItemState(source, lastBuild, needsRebuild)
+  const title = knowledgeRowTitle(source, coreData)
+  const description = knowledgeRowDescription(source, coreData)
+  const assignment = source
+    ? knowledgeAssignmentSummary(source, profiles)
     : { profiles: [], modules: [] }
 
   return (
-    <DirectoryRow onSelect={item ? () => onOpen(item) : undefined}>
+    <DirectoryRow onSelect={source ? () => onOpen(source) : undefined}>
       <div className="flex min-w-0 items-start gap-2 overflow-hidden">
-        <KindIcon kind={knowledgeFileKind(item?.source.fileType)} state={state} />
+        <KindIcon kind={knowledgeFileKind(source?.fileType)} state={state} />
         <div className="flex min-w-0 flex-1 flex-col items-start overflow-hidden">
           <div className="block w-full min-w-0 truncate text-sm leading-5 font-medium">{title}</div>
           <FieldDescription>{description}</FieldDescription>
@@ -205,47 +203,49 @@ export function KnowledgeRow({
         <KnowledgeAssignmentMeta profiles={assignment.profiles} modules={assignment.modules} />
       </div>
       <div className="text-muted-foreground text-start text-xs tabular-nums">
-        {item ? formatDate(item.source.updatedAt) : '—'}
+        {source ? formatDate(source.updatedAt) : '—'}
       </div>
       <div className="flex items-center gap-1 text-start">
-        {item ? (
+        {source ? (
           <>
             <IconAction
               label="Modifier"
               aria-label={`Modifier ${title}`}
               onClick={(event) => {
                 event.stopPropagation()
-                onOpen(item)
+                onOpen(source)
               }}
             >
               <Pencil />
             </IconAction>
-            {isKnowledgeEntryAssigned(item.entry) ? (
+            {isKnowledgeSourceAssigned(source) ? (
               <IconAction
                 label="Désaffecter"
                 aria-label={`Désaffecter ${title}`}
                 onClick={(event) => {
                   event.stopPropagation()
-                  onUnassign(item)
+                  onUnassign(source)
                 }}
               >
                 <Unlink />
               </IconAction>
             ) : null}
-            <IconAction
-              label={knowledgeDeleteKind(item) === 'sheet' ? 'Retirer' : 'Supprimer'}
-              aria-label={
-                knowledgeDeleteKind(item) === 'sheet'
-                  ? `Retirer ${item.entry.sheetName ?? title}`
-                  : `Supprimer ${item.source.originalName}`
-              }
-              onClick={(event) => {
-                event.stopPropagation()
-                onDelete(item)
-              }}
-            >
-              <Trash2 />
-            </IconAction>
+            {source.fileType !== 'intake' ? (
+              <IconAction
+                label={source.fileType === 'xlsx' ? 'Retirer' : 'Supprimer'}
+                aria-label={
+                  source.fileType === 'xlsx'
+                    ? `Retirer ${source.sheetName ?? title}`
+                    : `Supprimer ${source.originalName}`
+                }
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onDelete(source)
+                }}
+              >
+                <Trash2 />
+              </IconAction>
+            ) : null}
           </>
         ) : null}
       </div>

@@ -1,10 +1,19 @@
 import { formatActivityBoostBody } from '@/features/activity/lib/activity-boost-copy'
 import { extractReportTitle } from '@/features/automations/lib/extract-report-title'
 import type { ActivityTarget } from '@/shared/lib/navigation-snapshot'
-import type { ActivityListItem, ActivityType, Mention } from '@/shared/types/activities'
-import { activityPayload, activityText } from '@/shared/types/activities'
+import type {
+  ActivityListItem,
+  ActivityType,
+  IntakeSubmittedContent,
+  Mention
+} from '@/shared/types/activities'
+import {
+  activityPayload,
+  activityText,
+  parseIntakeSubmittedContent
+} from '@/shared/types/activities'
 
-type ActivityModule = 'tickets' | 'repayment' | 'automations' | 'bulk' | 'updates'
+type ActivityModule = 'tickets' | 'repayment' | 'automations' | 'intake' | 'bulk' | 'updates'
 
 type ActivityFeedSource = 'mention' | 'activity' | 'update'
 
@@ -28,6 +37,8 @@ export type ActivityNotificationItem = {
   notificationId: number | string
   /** Markdown report body for automation reader (when available). */
   readerContent?: string
+  /** Structured submission or digest payload for `intake.submitted`. */
+  intakeContent?: IntakeSubmittedContent
   /** Emoji d’un activity_boost — absent si ce n’est pas un boost ou si l’emoji est vide. */
   boostEmoji?: string
 }
@@ -46,7 +57,9 @@ const splitRattachement = (rattachement: string): { type: ActivityModule; ref: s
   if (separator <= 0) return null
   const type = rattachement.slice(0, separator)
   const ref = rattachement.slice(separator + 1)
-  if (!['tickets', 'repayment', 'automations', 'bulk'].includes(type) || !ref) return null
+  if (!['tickets', 'repayment', 'automations', 'intake', 'bulk'].includes(type) || !ref) {
+    return null
+  }
   return { type: type as ActivityModule, ref }
 }
 
@@ -72,7 +85,7 @@ export function activityToTarget(row: ActivityListItem): ActivityTarget | null {
       activityId
     }
   }
-  if (parsed.type === 'bulk') return null
+  if (parsed.type === 'bulk' || parsed.type === 'intake') return null
   return { view: 'automations', automationId: parsed.ref, activityId }
 }
 
@@ -86,6 +99,10 @@ export function mapActivityRow(
 
   const payload = activityPayload(row.type, row.contenu)
   const contenu = activityText(row.type, row.contenu)
+  const intakeContent =
+    row.type === 'intake.submitted'
+      ? (parseIntakeSubmittedContent(row.contenu) ?? undefined)
+      : undefined
   const boostEmoji = typeof payload['emoji'] === 'string' ? payload['emoji'].trim() : ''
   const sourceType =
     typeof payload['type_activite_source'] === 'string'
@@ -94,11 +111,13 @@ export function mapActivityRow(
   const body =
     row.type === 'activity.reaction_changed'
       ? formatActivityBoostBody(sourceType, boostEmoji)
-      : parsed?.type === 'automations' && typeof payload['title'] === 'string'
-        ? payload['title']
-        : parsed?.type === 'automations' && contenu
-          ? extractReportTitle(contenu, row.type)
-          : contenu || row.type
+      : intakeContent
+        ? intakeContent.note || intakeContent.title
+        : parsed?.type === 'automations' && typeof payload['title'] === 'string'
+          ? payload['title']
+          : parsed?.type === 'automations' && contenu
+            ? extractReportTitle(contenu, row.type)
+            : contenu || row.type
 
   return {
     id: row.id,
@@ -115,6 +134,7 @@ export function mapActivityRow(
     moduleLabel,
     notificationId: row.id,
     readerContent: parsed?.type === 'automations' && contenu ? contenu : undefined,
+    intakeContent,
     boostEmoji: boostEmoji || undefined
   }
 }

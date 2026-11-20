@@ -14,9 +14,8 @@ import {
 
 import { ChatAttachmentItems } from '@/features/chat/components/ChatAttachmentItems'
 import { type ChatStatus, isChatGenerating } from '@/features/chat/lib/chat-session-types'
-import { DictationLive } from '@/features/dictation/DictationLive'
-import { DictationMark } from '@/features/dictation/DictationMark'
-import { useVoiceDictationOptional } from '@/features/dictation/VoiceDictationContext'
+import { DictationLive } from '@/shared/components/DictationLive'
+import { DictationMark } from '@/shared/components/DictationMark'
 import { FieldError } from '@/shared/components/ui/field'
 import {
   InputGroup,
@@ -25,6 +24,7 @@ import {
   InputGroupTextarea
 } from '@/shared/components/ui/input-group'
 import { cn } from '@/shared/lib/utils'
+import { useVoiceDictationOptional } from '@/shared/lib/voice-dictation-context'
 
 const ACCEPT = [...ATTACHMENT_SUPPORTED_EXTENSIONS].map((extension) => `.${extension}`).join(',')
 

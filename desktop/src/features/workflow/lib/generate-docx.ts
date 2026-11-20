@@ -6,7 +6,7 @@ export function generateDocxFilename(): string {
   return `${yyyy}-${mm}-${dd} - Courrier sortant`
 }
 
-export async function renderDocxTemplate(
+async function renderDocxTemplate(
   templateBuffer: ArrayBuffer,
   data: Record<string, unknown>
 ): Promise<Uint8Array> {
@@ -24,7 +24,7 @@ export async function renderDocxTemplate(
   return doc.getZip().generate({ type: 'uint8array' })
 }
 
-export function postalLetterDate(now = new Date()): string {
+function postalLetterDate(now = new Date()): string {
   return new Intl.DateTimeFormat('fr-FR', {
     day: 'numeric',
     month: 'long',

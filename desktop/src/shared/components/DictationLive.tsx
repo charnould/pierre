@@ -1,6 +1,6 @@
 import { SquareIcon } from 'lucide-react'
 
-import { DictationMark } from '@/features/dictation/DictationMark'
+import { DictationMark } from '@/shared/components/DictationMark'
 import { Button } from '@/shared/components/ui/button'
 
 export function DictationLive({ level, onStop }: { level: number; onStop: () => void }) {

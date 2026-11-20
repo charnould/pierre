@@ -4,8 +4,25 @@ import { toast } from '@/shared/components/ui/toast'
 import { warnRenderer } from '@/shared/lib/renderer-log'
 import type { KnowledgeData, KnowledgeSource } from '@/shared/types/knowledge'
 
-import type { KnowledgeItem } from './knowledge-model'
-import { replaceKnowledgeEntry } from './KnowledgeSourceDialog'
+import type { PendingWorkbookSheetImport } from './KnowledgeWorkbookImportDialog'
+
+const isWorkbookFilename = (name: string): boolean => {
+  const lower = name.toLowerCase()
+  return ['.xlsx', '.xls', '.xlsm', '.xlsb'].some((ext) => lower.endsWith(ext))
+}
+
+const STRUCTURE_ERROR_CODES = new Set([
+  'spreadsheet_structure_changed',
+  'missing_configured_sheet',
+  'missing_spreadsheet_header',
+  'invalid_spreadsheet_header',
+  'duplicate_spreadsheet_header'
+])
+
+export type UploadOutcome = {
+  immediateChangedSource: KnowledgeSource | null
+  pendingSheets: PendingWorkbookSheetImport[]
+}
 
 export function useKnowledgeCatalog(url: string) {
   const [data, setData] = useState<KnowledgeData | null>(null)
@@ -93,22 +110,125 @@ export function useKnowledgeCatalog(url: string) {
     void load()
   }
 
-  const upload = async (): Promise<KnowledgeSource | null> => {
+  const inspectForQueue = async (
+    filePath: string,
+    existingSources: KnowledgeSource[],
+    reason?: string
+  ): Promise<PendingWorkbookSheetImport[]> => {
+    const inspected = await window.api?.inspectKnowledgeWorkbook({ url, filePath })
+    if (!inspected) {
+      toast.add({ title: 'Impossible de joindre le serveur.', type: 'error' })
+      return []
+    }
+    if ('error' in inspected) {
+      toast.add({ title: inspected.error.message, type: 'error' })
+      return []
+    }
+    const existingBySheet = new Map(
+      existingSources
+        .filter((source) => source.sheetName !== null)
+        .map((source) => [source.sheetName!.toLocaleLowerCase('fr'), source])
+    )
+    const items: PendingWorkbookSheetImport[] = inspected.data.sheets.map((sheet) => ({
+      filePath,
+      originalName: inspected.data.originalName,
+      sheet,
+      existingSource: existingBySheet.get(sheet.name.toLocaleLowerCase('fr')) ?? null,
+      reason
+    }))
+    if (existingBySheet.size === 0) return items
+    return [
+      ...items.filter((item) => item.existingSource !== null),
+      ...items.filter((item) => item.existingSource === null)
+    ]
+  }
+
+  const upload = async (): Promise<UploadOutcome | null> => {
+    const picked = await window.api?.pickKnowledgeFiles()
+    if (!picked || picked.length === 0) return null
+
     setUploading(true)
     try {
-      const response = await window.api?.uploadKnowledgeSources({ url })
-      if (!response) return null
-      if ('error' in response) {
-        toast.add({ title: response.error.message, type: 'error' })
-        return null
+      const existingByFilename = new Map<string, KnowledgeSource[]>()
+      for (const source of data?.sources ?? []) {
+        const key = source.originalName.toLocaleLowerCase('fr')
+        const list = existingByFilename.get(key)
+        if (list) list.push(source)
+        else existingByFilename.set(key, [source])
       }
-      await load()
-      const changed = response.data.sources.find((result) => result.changed)
-      toast.add({
-        title: changed ? 'Sources mises à jour' : 'Fichiers inchangés',
-        type: 'success'
-      })
-      return changed?.source ?? null
+
+      const regularPaths: string[] = []
+      const knownWorkbooks: Array<{ path: string; existing: KnowledgeSource[] }> = []
+      const newWorkbookPaths: string[] = []
+
+      for (const file of picked) {
+        if (!isWorkbookFilename(file.name)) {
+          regularPaths.push(file.path)
+          continue
+        }
+        const key = file.name.normalize('NFC').toLocaleLowerCase('fr')
+        const existing = existingByFilename.get(key) ?? []
+        if (existing.length > 0) knownWorkbooks.push({ path: file.path, existing })
+        else newWorkbookPaths.push(file.path)
+      }
+
+      let immediateChangedSource: KnowledgeSource | null = null
+      let anyImmediateUploaded = false
+      let anyImmediateChanged = false
+      const pendingSheets: PendingWorkbookSheetImport[] = []
+
+      if (regularPaths.length > 0) {
+        const response = await window.api?.uploadKnowledgeFiles({ url, filePaths: regularPaths })
+        if (!response) {
+          toast.add({ title: 'Impossible de joindre le serveur.', type: 'error' })
+        } else if ('error' in response) {
+          toast.add({ title: response.error.message, type: 'error' })
+        } else {
+          anyImmediateUploaded = true
+          const changed = response.data.sources.find((result) => result.changed)
+          if (changed) {
+            anyImmediateChanged = true
+            immediateChangedSource = changed.source
+          }
+        }
+      }
+
+      for (const workbook of knownWorkbooks) {
+        const response = await window.api?.uploadKnowledgeFiles({
+          url,
+          filePaths: [workbook.path]
+        })
+        if (!response) {
+          toast.add({ title: 'Impossible de joindre le serveur.', type: 'error' })
+          continue
+        }
+        if ('error' in response) {
+          if (STRUCTURE_ERROR_CODES.has(response.error.code)) {
+            pendingSheets.push(
+              ...(await inspectForQueue(workbook.path, workbook.existing, response.error.message))
+            )
+          } else {
+            toast.add({ title: response.error.message, type: 'error' })
+          }
+          continue
+        }
+        anyImmediateUploaded = true
+        if (response.data.sources.some((result) => result.changed)) anyImmediateChanged = true
+      }
+
+      for (const filePath of newWorkbookPaths) {
+        pendingSheets.push(...(await inspectForQueue(filePath, [])))
+      }
+
+      if (anyImmediateUploaded) {
+        await load()
+        toast.add({
+          title: anyImmediateChanged ? 'Sources mises à jour' : 'Fichiers inchangés',
+          type: 'success'
+        })
+      }
+
+      return { immediateChangedSource, pendingSheets }
     } finally {
       setUploading(false)
     }
@@ -124,16 +244,14 @@ export function useKnowledgeCatalog(url: string) {
     await load()
   }
 
-  const unassign = async (item: KnowledgeItem) => {
+  const unassign = async (source: KnowledgeSource) => {
     const response = await window.api?.patchKnowledgeSource({
       url,
-      id: item.source.id,
-      entries: replaceKnowledgeEntry(item.source.entries, item.entryIndex, {
-        ...item.entry,
-        profileIds: [],
-        moduleIds: []
-      }),
-      updatedAt: item.source.updatedAt
+      id: source.id,
+      title: source.title,
+      profileIds: [],
+      moduleIds: [],
+      updatedAt: source.updatedAt
     })
     if (!response || 'error' in response) {
       toast.add({
@@ -148,36 +266,17 @@ export function useKnowledgeCatalog(url: string) {
     replaceSource(response.data.source)
   }
 
-  const removeSheet = async (item: KnowledgeItem): Promise<boolean> => {
-    const response = await window.api?.patchKnowledgeSource({
-      url,
-      id: item.source.id,
-      entries: item.source.entries.filter((_, index) => index !== item.entryIndex),
-      updatedAt: item.source.updatedAt
-    })
-    if (!response || 'error' in response) {
-      toast.add({
-        title:
-          response && 'error' in response
-            ? response.error.message
-            : 'Impossible de retirer cet onglet.',
-        type: 'error'
-      })
-      return false
-    }
-    replaceSource(response.data.source)
-    toast.add({ title: 'Onglet retiré', type: 'success' })
-    return true
-  }
-
-  const removeFile = async (source: KnowledgeSource): Promise<boolean> => {
+  const removeSource = async (source: KnowledgeSource): Promise<boolean> => {
     const deleted = await window.api?.deleteKnowledgeSource({ url, id: source.id })
     if (!deleted) {
       toast.add({ title: 'Impossible de supprimer la source.', type: 'error' })
       return false
     }
     await load()
-    toast.add({ title: 'Fichier supprimé', type: 'success' })
+    toast.add({
+      title: source.fileType === 'xlsx' ? 'Onglet retiré' : 'Fichier supprimé',
+      type: 'success'
+    })
     return true
   }
 
@@ -190,7 +289,6 @@ export function useKnowledgeCatalog(url: string) {
     upload,
     rebuild,
     unassign,
-    removeSheet,
-    removeFile
+    removeSource
   }
 }

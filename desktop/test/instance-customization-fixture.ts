@@ -40,7 +40,7 @@ export const CUSTOMIZATION_FIXTURE: InstanceCustomization = {
   },
   docxSkillIds: ['replies'],
   about: { prompt: 'synthèse' },
-  automations: { prompt: 'rapport', timezone: 'Europe/Paris' },
+  automations: { prompt: 'rapport' },
   chatbot: true
 }
 

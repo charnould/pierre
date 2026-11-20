@@ -1,5 +1,5 @@
-import { BookOpen, CircleAlert } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { BookOpen, CircleAlert, ClipboardPen } from 'lucide-react'
+import { type ReactNode, useMemo, useState } from 'react'
 
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { DirectoryList } from '@/shared/components/DirectoryList'
@@ -14,12 +14,17 @@ import {
   EmptyTitle
 } from '@/shared/components/ui/empty'
 import { Spinner } from '@/shared/components/ui/spinner'
+import { toast } from '@/shared/components/ui/toast'
 import type { KnowledgeSource } from '@/shared/types/knowledge'
 
-import { buildKnowledgeBuckets, knowledgeDeleteKind, type KnowledgeItem } from './knowledge-model'
+import { buildKnowledgeBuckets } from './knowledge-model'
 import { KnowledgeRow } from './KnowledgeRow'
 import { KnowledgeSourceDialog } from './KnowledgeSourceDialog'
 import { KnowledgeToolbar } from './KnowledgeToolbar'
+import {
+  KnowledgeWorkbookImportDialog,
+  type PendingWorkbookSheetImport
+} from './KnowledgeWorkbookImportDialog'
 import { useKnowledgeCatalog } from './useKnowledgeCatalog'
 
 interface Props {
@@ -27,18 +32,36 @@ interface Props {
   onBack: () => void
 }
 
-type PendingDelete =
-  { kind: 'file'; source: KnowledgeSource } | { kind: 'sheet'; item: KnowledgeItem }
+function KnowledgeBucketSection({
+  title,
+  count,
+  children
+}: {
+  title: string
+  count: number
+  children: ReactNode
+}) {
+  return (
+    <section>
+      <header className="border-border bg-background flex items-baseline gap-2 border-b px-4 py-2">
+        <CardTitle className="m-0">{title}</CardTitle>
+        <span className="text-muted-foreground text-sm leading-5">·</span>
+        <span className="text-muted-foreground text-sm leading-5 tabular-nums">{count}</span>
+      </header>
+      {children}
+    </section>
+  )
+}
 
 export function KnowledgePanel({ url, onBack }: Props) {
   const catalog = useKnowledgeCatalog(url)
   const [query, setQuery] = useState('')
-  const [editing, setEditing] = useState<{
-    source: KnowledgeSource
-    entryIndex: number
-    coreDataTable: string | null
+  const [editing, setEditing] = useState<KnowledgeSource | null>(null)
+  const [deleting, setDeleting] = useState<KnowledgeSource | null>(null)
+  const [sheetQueue, setSheetQueue] = useState<{
+    items: PendingWorkbookSheetImport[]
+    index: number
   } | null>(null)
-  const [deleting, setDeleting] = useState<PendingDelete | null>(null)
 
   const buckets = useMemo(
     () =>
@@ -46,42 +69,54 @@ export function KnowledgePanel({ url, onBack }: Props) {
     [catalog.data?.coreDataTables, catalog.data?.sources, query]
   )
   const itemCount =
-    buckets.coreData.filter(({ item }) => item !== null).length + buckets.other.length
+    buckets.coreData.filter(({ source }) => source !== null).length +
+    buckets.intakes.length +
+    buckets.other.length
   const buildActive =
     catalog.data?.lastBuild?.status === 'queued' || catalog.data?.lastBuild?.status === 'running'
 
-  const openEntry = (item: KnowledgeItem) =>
-    setEditing({
-      source: item.source,
-      entryIndex: item.entryIndex,
-      coreDataTable: item.coreDataTable
-    })
-
-  const requestDelete = (item: KnowledgeItem) =>
-    setDeleting(
-      knowledgeDeleteKind(item) === 'sheet'
-        ? { kind: 'sheet', item }
-        : { kind: 'file', source: item.source }
-    )
-
   async function confirmDelete() {
     if (!deleting) return
-    const removed =
-      deleting.kind === 'sheet'
-        ? await catalog.removeSheet(deleting.item)
-        : await catalog.removeFile(deleting.source)
+    const removed = await catalog.removeSource(deleting)
     if (removed) setDeleting(null)
   }
 
   async function upload() {
-    const source = await catalog.upload()
-    if (source?.entries[0]) {
-      setEditing({
-        source,
-        entryIndex: 0,
-        coreDataTable: source.coreDataEntries[0]?.table ?? null
-      })
+    const outcome = await catalog.upload()
+    if (!outcome) return
+    if (outcome.pendingSheets.length > 0) {
+      setSheetQueue({ items: outcome.pendingSheets, index: 0 })
+      return
     }
+    if (outcome.immediateChangedSource) {
+      setEditing(outcome.immediateChangedSource)
+    }
+  }
+
+  function advanceSheetQueue() {
+    setSheetQueue((current) => {
+      if (!current || current.index + 1 >= current.items.length) return null
+      return { ...current, index: current.index + 1 }
+    })
+  }
+
+  async function handleSheetImported(result: { changed: boolean }) {
+    await catalog.load()
+    toast.add({
+      title: result.changed ? 'Onglet importé' : 'Onglet inchangé',
+      type: 'success'
+    })
+    advanceSheetQueue()
+  }
+
+  const activeSheet = sheetQueue ? (sheetQueue.items[sheetQueue.index] ?? null) : null
+  const rowSharedProps = {
+    lastBuild: catalog.data?.lastBuild ?? null,
+    needsRebuild: catalog.data?.needsRebuild ?? false,
+    profiles: catalog.data?.profiles ?? [],
+    onOpen: setEditing,
+    onUnassign: (row: KnowledgeSource) => void catalog.unassign(row),
+    onDelete: setDeleting
   }
 
   return (
@@ -120,52 +155,47 @@ export function KnowledgePanel({ url, onBack }: Props) {
           </Empty>
         ) : (
           <div className="flex min-w-0 flex-col">
-            <section>
-              <header className="border-border bg-background flex items-baseline gap-2 border-b px-4 py-2">
-                <CardTitle className="m-0">Core Data HLM</CardTitle>
-                <span className="text-muted-foreground text-sm leading-5">·</span>
-                <span className="text-muted-foreground text-sm leading-5 tabular-nums">
-                  {buckets.coreData.length}
-                </span>
-              </header>
+            <KnowledgeBucketSection title="Core Data HLM" count={buckets.coreData.length}>
               <DirectoryList>
-                {buckets.coreData.map(({ contract, item }) => (
+                {buckets.coreData.map(({ contract, source }) => (
                   <KnowledgeRow
                     key={contract.table}
-                    item={item}
+                    source={source}
                     coreData={contract}
-                    lastBuild={catalog.data?.lastBuild ?? null}
-                    needsRebuild={catalog.data?.needsRebuild ?? false}
-                    profiles={catalog.data?.profiles ?? []}
-                    onOpen={openEntry}
-                    onUnassign={(row) => void catalog.unassign(row)}
-                    onDelete={requestDelete}
+                    {...rowSharedProps}
                   />
                 ))}
               </DirectoryList>
-            </section>
+            </KnowledgeBucketSection>
 
-            <section>
-              <header className="border-border bg-background flex items-baseline gap-2 border-b px-4 py-2">
-                <CardTitle className="m-0">Autres sources</CardTitle>
-                <span className="text-muted-foreground text-sm leading-5">·</span>
-                <span className="text-muted-foreground text-sm leading-5 tabular-nums">
-                  {buckets.other.length}
-                </span>
-              </header>
+            <KnowledgeBucketSection title="Collectes" count={buckets.intakes.length}>
+              {buckets.intakes.length > 0 ? (
+                <DirectoryList>
+                  {buckets.intakes.map((source) => (
+                    <KnowledgeRow key={source.id} source={source} {...rowSharedProps} />
+                  ))}
+                </DirectoryList>
+              ) : !query.trim() ? (
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <ClipboardPen />
+                    </EmptyMedia>
+                    <EmptyTitle>Aucune collecte publiée</EmptyTitle>
+                    <EmptyDescription>
+                      Activez « Rejoindre l’encyclopédie » sur une collecte publiée pour la voir
+                      apparaître ici.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : null}
+            </KnowledgeBucketSection>
+
+            <KnowledgeBucketSection title="Autres sources" count={buckets.other.length}>
               {buckets.other.length > 0 ? (
                 <DirectoryList>
-                  {buckets.other.map((item) => (
-                    <KnowledgeRow
-                      key={item.itemKey}
-                      item={item}
-                      lastBuild={catalog.data?.lastBuild ?? null}
-                      needsRebuild={catalog.data?.needsRebuild ?? false}
-                      profiles={catalog.data?.profiles ?? []}
-                      onOpen={openEntry}
-                      onUnassign={(row) => void catalog.unassign(row)}
-                      onDelete={requestDelete}
-                    />
+                  {buckets.other.map((source) => (
+                    <KnowledgeRow key={source.id} source={source} {...rowSharedProps} />
                   ))}
                 </DirectoryList>
               ) : itemCount === 0 ? (
@@ -181,37 +211,46 @@ export function KnowledgePanel({ url, onBack }: Props) {
                   </EmptyHeader>
                 </Empty>
               ) : null}
-            </section>
+            </KnowledgeBucketSection>
           </div>
         )}
       </div>
 
       {editing && catalog.data ? (
         <KnowledgeSourceDialog
-          key={`${editing.source.id}:${editing.entryIndex}`}
+          key={editing.id}
           url={url}
-          source={editing.source}
-          entryIndex={editing.entryIndex}
-          coreDataTable={editing.coreDataTable}
+          source={editing}
           profiles={catalog.data.profiles}
           onClose={() => setEditing(null)}
           onSaved={catalog.replaceSource}
         />
       ) : null}
 
+      {activeSheet && sheetQueue ? (
+        <KnowledgeWorkbookImportDialog
+          key={`${activeSheet.filePath}:${activeSheet.sheet.name}:${sheetQueue.index}`}
+          url={url}
+          pending={activeSheet}
+          position={sheetQueue.index + 1}
+          total={sheetQueue.items.length}
+          onSkip={advanceSheetQueue}
+          onCancel={() => setSheetQueue(null)}
+          onImported={(result) => void handleSheetImported(result)}
+        />
+      ) : null}
+
       <ConfirmDialog
         open={deleting !== null}
-        title={deleting?.kind === 'sheet' ? 'Retirer l’onglet' : 'Supprimer le fichier'}
+        title={deleting?.fileType === 'xlsx' ? 'Retirer l’onglet' : 'Supprimer le fichier'}
         description={
-          deleting?.kind === 'sheet'
-            ? `L’onglet ${deleting.item.entry.sheetName ?? deleting.item.entry.title} de ${deleting.item.source.originalName} sera retiré de l’encyclopédie.`
+          deleting?.fileType === 'xlsx'
+            ? `L’onglet ${deleting.sheetName ?? deleting.title} de ${deleting.originalName} sera retiré de l’encyclopédie.`
             : deleting
-              ? deleting.source.entries.length > 1
-                ? `${deleting.source.originalName} et ses ${deleting.source.entries.length} lignes seront supprimés définitivement.`
-                : `${deleting.source.originalName} sera supprimé définitivement.`
+              ? `${deleting.originalName} sera supprimé définitivement.`
               : 'Ce fichier sera supprimé définitivement.'
         }
-        confirmLabel={deleting?.kind === 'sheet' ? 'Retirer' : 'Supprimer'}
+        confirmLabel={deleting?.fileType === 'xlsx' ? 'Retirer' : 'Supprimer'}
         confirmVariant="destructive"
         onCancel={() => setDeleting(null)}
         onConfirm={() => void confirmDelete()}

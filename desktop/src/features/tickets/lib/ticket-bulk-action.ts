@@ -42,13 +42,13 @@ export function ticketPierreTitle(mission: 'reponse' | 'synthese' | 'autre'): st
   return 'Note de Pierre'
 }
 
-export function ticketTagsOf(row: TicketRow): string[] {
+function ticketTagsOf(row: TicketRow): string[] {
   const value = row.pierre_tags
   if (!Array.isArray(value)) return []
   return canonicalizeTicketTags(value.filter((tag): tag is string => typeof tag === 'string'))
 }
 
-export function buildTicketPierreArtifact(
+function buildTicketPierreArtifact(
   ref: string,
   action: Extract<TicketBulkAction, { kind: 'pierre' }>,
   note: string,

@@ -98,7 +98,7 @@ function OpenActionIconButton({
   )
 }
 
-export function OpenActionMeta({
+function OpenActionMeta({
   auteur,
   assigneA,
   dateEcheance,

@@ -103,6 +103,8 @@ export function timelineActivityVerb(row: Activity): string {
       return 'a évalué un document'
     case 'automation.reported':
       return 'a publié un rapport'
+    case 'intake.submitted':
+      return 'a reçu une réponse'
     case 'bulk.ran':
       return 'a exécuté un traitement de masse'
     case 'bulk.applied':

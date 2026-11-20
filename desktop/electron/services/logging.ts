@@ -8,8 +8,3 @@ export function logMainError(scope: string, error: unknown): void {
   const detail = error instanceof Error ? `${error.name}: ${error.message}` : String(error)
   console.error(`[main:${scope}] ${detail}`)
 }
-
-/** Non-fatal diagnostic log for auth and IPC flows (visible in the `bun desktop:dev` terminal). */
-export function logMainInfo(scope: string, detail: string): void {
-  console.log(`[main:${scope}] ${detail}`)
-}

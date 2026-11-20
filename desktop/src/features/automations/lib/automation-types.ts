@@ -1,18 +1,11 @@
+import { canManageCollaboratorResource } from '@/shared/lib/collaborator-access'
 import {
-  type AutomationFrequency,
   type AutomationLifecycleStatus,
   type AutomationRecord,
   type AutomationRunStatus,
   type AutomationType,
-  decodeCronToSchedule
+  type RecurrenceSchedule
 } from '@/shared/types/automations'
-
-/** Automation ownership uses the canonical account email. */
-export function sameAutomationLogin(a: string, b: string): boolean {
-  const left = a.trim().toLowerCase()
-  const right = b.trim().toLowerCase()
-  return Boolean(left) && left === right
-}
 
 export type { AutomationType }
 
@@ -28,12 +21,9 @@ type AutomationBase = {
   nextRunDate?: string
   owner: string
   mentions: string[]
-  isCreator: boolean
+  canManage: boolean
   pinned: boolean
-  frequency: AutomationFrequency
-  frequencyDay?: string
-  frequencyTime: string
-  cron: string
+  schedule: RecurrenceSchedule
 }
 
 export type ReportRun = {
@@ -65,8 +55,11 @@ export function automationMaxReports(automation: ReportAutomation): number {
   return automation.maxReports
 }
 
-export function recordToAutomation(record: AutomationRecord, viewerLogin: string): Automation {
-  const schedule = decodeCronToSchedule(record.cron)
+export function recordToAutomation(
+  record: AutomationRecord,
+  viewerLogin: string,
+  isAdministrator = false
+): Automation {
   const base: AutomationBase = {
     id: record.id,
     name: record.name,
@@ -77,12 +70,9 @@ export function recordToAutomation(record: AutomationRecord, viewerLogin: string
     nextRunDate: record.nextRunAt ?? undefined,
     owner: record.owner,
     mentions: record.mentions,
-    isCreator: sameAutomationLogin(record.owner, viewerLogin),
+    canManage: canManageCollaboratorResource(record.owner, viewerLogin, isAdministrator),
     pinned: Boolean(record.pinned),
-    frequency: schedule.frequency,
-    frequencyDay: schedule.frequencyDay,
-    frequencyTime: schedule.frequencyTime,
-    cron: record.cron
+    schedule: record.schedule
   }
   return {
     ...base,

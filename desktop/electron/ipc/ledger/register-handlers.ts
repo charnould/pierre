@@ -1,10 +1,5 @@
-import { createWriteStream } from 'node:fs'
-import { Readable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
-import type { ReadableStream as NodeReadableStream } from 'node:stream/web'
-
 import type { DocumentChronologyRow } from '@pierre/shared/repayment-document-fields'
-import { BrowserWindow, dialog, ipcMain, session } from 'electron'
+import { ipcMain, session } from 'electron'
 
 import type {
   LedgerQueryParams,
@@ -13,6 +8,8 @@ import type {
 import { netFetch } from '../../lib/net-fetch'
 import { logMainError } from '../../services/logging'
 import { IpcChannel } from '../channels'
+import { downloadBinary } from '../download-binary'
+import { joinServerUrl } from '../http-json'
 
 function ledgerSearch(params: LedgerQueryParams): string {
   const { limit, offset, sort, filters } = params
@@ -95,54 +92,26 @@ export function registerLedgerHandlers(partition: string): void {
         chronologie?: DocumentChronologyRow[]
       }
     ) => {
-      try {
-        const response = await netFetch(`${params.url.replace(/\/$/, '')}/repayment/documents`, {
-          session: session.fromPartition(partition),
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            document: params.document,
-            format: params.format,
-            dossier: params.dossier,
-            ...(params.chronologie ? { chronologie: params.chronologie } : {})
-          })
-        })
-        const type = response.headers.get('content-type') ?? ''
-        if (type.includes('application/json') || !response.ok) {
-          return (await response.json()) as { error?: { message?: string } }
-        }
-        const body = response.body
-        if (!body) return { error: { message: 'Export impossible' } }
-        const encoded = /filename\*=UTF-8''([^;]+)/i.exec(
-          response.headers.get('content-disposition') ?? ''
-        )?.[1]
-        const filename = encoded ? decodeURIComponent(encoded) : `document.${params.format}`
-        const parent = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
-        const options = {
-          defaultPath: filename,
-          filters: [
-            {
-              name: params.format === 'pdf' ? 'PDF' : 'Word',
-              extensions: [params.format]
-            }
-          ]
-        }
-        const picked = parent
-          ? await dialog.showSaveDialog(parent, options)
-          : await dialog.showSaveDialog(options)
-        if (picked.canceled || !picked.filePath) {
-          await body.cancel()
-          return { canceled: true as const }
-        }
-        await pipeline(
-          Readable.fromWeb(body as unknown as NodeReadableStream<Uint8Array>),
-          createWriteStream(picked.filePath)
-        )
-        return { saved: true as const }
-      } catch (error) {
-        logMainError('export-repayment-document', error)
-        return null
-      }
+      return downloadBinary({
+        partition,
+        url: joinServerUrl(params.url, '/repayment/documents'),
+        method: 'POST',
+        body: {
+          document: params.document,
+          format: params.format,
+          dossier: params.dossier,
+          ...(params.chronologie ? { chronologie: params.chronologie } : {})
+        },
+        fallbackFilename: `document.${params.format}`,
+        fallbackError: 'Export impossible',
+        label: 'export-repayment-document',
+        filters: [
+          {
+            name: params.format === 'pdf' ? 'PDF' : 'Word',
+            extensions: [params.format]
+          }
+        ]
+      })
     }
   )
 }

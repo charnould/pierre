@@ -1,9 +1,12 @@
 import { Mails, Plus, Search } from 'lucide-react'
 
-import { BulkOperationsListChrome } from '@/features/bulk/components/BulkOperationsListChrome'
 import { formatBulkOperationDate } from '@/features/bulk/lib/labels'
-import type { BulkOperationSortKey } from '@/features/bulk/lib/sort-bulk-operations'
+import {
+  BULK_OPERATION_SORT_OPTIONS,
+  type BulkOperationSortKey
+} from '@/features/bulk/lib/sort-bulk-operations'
 import { DirectoryList, DirectoryRow } from '@/shared/components/DirectoryList'
+import { DirectoryListChrome } from '@/shared/components/DirectoryListChrome'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -62,13 +65,18 @@ export function BulkOperationsList({
 }: Props) {
   useOrgUsers(url)
 
+  const countLabel = `${bulkOperations.length} traitement${bulkOperations.length === 1 ? '' : 's'}`
+
   return (
     <section className="bg-background flex w-full min-w-0 flex-col [&:first-child>header]:border-t-0">
-      <BulkOperationsListChrome
-        visibleCount={bulkOperations.length}
+      <DirectoryListChrome
+        title="Traitements de masse"
+        countLabel={countLabel}
+        searchLabel="Rechercher un traitement"
         query={query}
         onQueryChange={onQueryChange}
         sortKey={sortKey}
+        sortOptions={BULK_OPERATION_SORT_OPTIONS}
         onSortKeyChange={onSortKeyChange}
         onNew={onNew}
       />

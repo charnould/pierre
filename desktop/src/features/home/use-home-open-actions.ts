@@ -5,7 +5,7 @@ import { type ActionActivity, parseActionActivity } from '@/shared/lib/activitie
 import { createRequestSequencer } from '@/shared/lib/request-sequencer'
 import type { ActivityListItem, GetActivitiesParams } from '@/shared/types/activities'
 
-export const HOME_ACTIONS_POLL_MS = 30_000
+const HOME_ACTIONS_POLL_MS = 30_000
 
 function toOpenActions(rows: ActivityListItem[] | undefined): ActionActivity[] {
   return (rows ?? []).flatMap((row) => {

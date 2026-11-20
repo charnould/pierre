@@ -1,3 +1,4 @@
+import { intakeTableNameFromOriginalName } from '@pierre/shared/intakes'
 import { normalize_knowledge_name } from '@pierre/shared/knowledge'
 import { type BusinessModuleId, knowledgePublishModules } from '@pierre/shared/modules'
 import { useId, useState } from 'react'
@@ -22,53 +23,33 @@ import {
 } from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
 import { Spinner } from '@/shared/components/ui/spinner'
-import type { KnowledgeEntry, KnowledgeProfile, KnowledgeSource } from '@/shared/types/knowledge'
+import type { KnowledgeProfile, KnowledgeSource } from '@/shared/types/knowledge'
 
 interface Props {
   url: string
   source: KnowledgeSource
-  entryIndex: number
-  coreDataTable: string | null
   profiles: KnowledgeProfile[]
   onClose: () => void
   onSaved: (source: KnowledgeSource) => void
 }
 
-export const replaceKnowledgeEntry = (
-  entries: readonly KnowledgeEntry[],
-  index: number,
-  entry: KnowledgeEntry
-): KnowledgeEntry[] =>
-  entries.map((current, currentIndex) => (currentIndex === index ? entry : current))
-
 export const officialEncyclopediaTitle = (
-  source: Pick<KnowledgeSource, 'fileType' | 'originalName'>,
-  entry: Pick<KnowledgeEntry, 'sheetName'>
+  source: Pick<KnowledgeSource, 'fileType' | 'originalName' | 'sheetName'>
 ): string =>
   source.fileType === 'xlsx'
-    ? (entry.sheetName ?? source.originalName.replace(/\.[^.]+$/, ''))
+    ? (source.sheetName ?? source.originalName.replace(/\.[^.]+$/, ''))
     : source.originalName.replace(/\.[^.]+$/, '')
 
 export const encyclopediaTitleForSave = (
   title: string,
-  source: Pick<KnowledgeSource, 'fileType' | 'originalName'>,
-  entry: Pick<KnowledgeEntry, 'sheetName'>
-): string => title.trim() || officialEncyclopediaTitle(source, entry)
+  source: Pick<KnowledgeSource, 'fileType' | 'originalName' | 'sheetName'>
+): string => title.trim() || officialEncyclopediaTitle(source)
 
-export function KnowledgeSourceDialog({
-  url,
-  source,
-  entryIndex,
-  coreDataTable,
-  profiles,
-  onClose,
-  onSaved
-}: Props) {
+export function KnowledgeSourceDialog({ url, source, profiles, onClose, onSaved }: Props) {
   const fieldId = useId()
-  const entry = source.entries[entryIndex]!
-  const [title, setTitle] = useState(entry.title)
-  const [profileIds, setProfileIds] = useState(entry.profileIds)
-  const [moduleIds, setModuleIds] = useState(entry.moduleIds)
+  const [title, setTitle] = useState(source.title)
+  const [profileIds, setProfileIds] = useState(source.profileIds)
+  const [moduleIds, setModuleIds] = useState(source.moduleIds)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -87,16 +68,12 @@ export function KnowledgeSourceDialog({
   async function save() {
     setSaving(true)
     setError('')
-    const entries = replaceKnowledgeEntry(source.entries, entryIndex, {
-      ...entry,
-      title: encyclopediaTitleForSave(title, source, entry),
-      profileIds,
-      moduleIds
-    })
     const response = await window.api?.patchKnowledgeSource({
       url,
       id: source.id,
-      entries,
+      title: encyclopediaTitleForSave(title, source),
+      profileIds,
+      moduleIds,
       updatedAt: source.updatedAt
     })
     setSaving(false)
@@ -112,22 +89,36 @@ export function KnowledgeSourceDialog({
     onClose()
   }
 
-  const officialTitle = officialEncyclopediaTitle(source, entry)
-  const tableName = normalize_knowledge_name(encyclopediaTitleForSave(title, source, entry))
+  const intakeTableName =
+    source.fileType === 'intake'
+      ? (intakeTableNameFromOriginalName(source.originalName) ?? source.originalName)
+      : null
+  const isIntake = intakeTableName !== null
+  const officialTitle = officialEncyclopediaTitle(source)
+  const tableName = intakeTableName ?? normalize_knowledge_name(title.trim() || officialTitle)
   const identity =
-    source.fileType === 'xlsx' ? `${entry.sheetName} · ${source.originalName}` : source.originalName
+    source.fileType === 'xlsx'
+      ? `${source.sheetName} · ${source.originalName}`
+      : (intakeTableName ?? source.originalName)
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent viewport="form" className="overflow-y-auto sm:max-w-2xl" showCloseButton>
         <DialogHeader>
-          <DialogTitle>Configurer {entry.sheetName ?? source.originalName}</DialogTitle>
+          <DialogTitle>
+            Configurer {isIntake ? source.title : (source.sheetName ?? source.originalName)}
+          </DialogTitle>
         </DialogHeader>
 
         <FieldGroup>
           <FieldSet>
-            <FieldLegend>{source.fileType === 'xlsx' ? 'Onglet' : 'Document'}</FieldLegend>
-            <FieldDescription>{identity}</FieldDescription>
+            <FieldLegend>
+              {source.fileType === 'xlsx' ? 'Onglet' : isIntake ? 'Collecte' : 'Document'}
+            </FieldLegend>
+            <FieldDescription>
+              {identity}
+              {source.headerRow !== null ? ` · En-têtes ligne ${source.headerRow}` : null}
+            </FieldDescription>
           </FieldSet>
 
           <FieldSet>
@@ -139,11 +130,13 @@ export function KnowledgeSourceDialog({
                   id={`${fieldId}-title`}
                   value={title}
                   placeholder={officialTitle}
-                  disabled={coreDataTable !== null}
+                  disabled={source.coreDataTable !== null || isIntake}
                   onChange={(event) => setTitle(event.target.value)}
                 />
                 <FieldDescription>
-                  Nom sous lequel les assistants citent cette source.
+                  {isIntake
+                    ? 'Le nom et la suppression d’une collecte se gèrent depuis le module Collectes.'
+                    : 'Nom sous lequel les assistants citent cette source.'}
                   {tableName ? ` Table pour l’agent : ${tableName}.` : null}
                 </FieldDescription>
               </Field>

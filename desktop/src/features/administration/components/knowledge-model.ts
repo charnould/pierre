@@ -1,29 +1,18 @@
-import { isKnowledgeEntryAssigned } from '@pierre/shared/knowledge'
+import { intakeTableNameFromOriginalName } from '@pierre/shared/intakes'
+import { isKnowledgeSourceAssigned } from '@pierre/shared/knowledge'
 import { BUSINESS_MODULES } from '@pierre/shared/modules'
 
-import type {
-  KnowledgeBuild,
-  KnowledgeData,
-  KnowledgeEntry,
-  KnowledgeSource
-} from '@/shared/types/knowledge'
+import type { KnowledgeBuild, KnowledgeData, KnowledgeSource } from '@/shared/types/knowledge'
 
-export { isKnowledgeEntryAssigned }
-
-export type KnowledgeItem = {
-  source: KnowledgeSource
-  entry: KnowledgeEntry
-  entryIndex: number
-  itemKey: string
-  coreDataTable: KnowledgeSource['coreDataEntries'][number]['table'] | null
-}
+export { isKnowledgeSourceAssigned }
 
 export type KnowledgeBuckets = {
   coreData: Array<{
     contract: KnowledgeData['coreDataTables'][number]
-    item: KnowledgeItem | null
+    source: KnowledgeSource | null
   }>
-  other: KnowledgeItem[]
+  intakes: KnowledgeSource[]
+  other: KnowledgeSource[]
 }
 
 export type KnowledgeItemState =
@@ -34,63 +23,64 @@ export const buildKnowledgeBuckets = (
   coreDataTables: KnowledgeData['coreDataTables'],
   query = ''
 ): KnowledgeBuckets => {
-  const items = sources.flatMap((source) =>
-    source.entries.map((entry, entryIndex) => ({
-      source,
-      entry,
-      entryIndex,
-      itemKey: source.itemKeys[entryIndex]!,
-      coreDataTable:
-        source.coreDataEntries.find((candidate) => candidate.index === entryIndex)?.table ?? null
-    }))
-  )
-  const coreItems = new Map(
-    items.filter((item) => item.coreDataTable !== null).map((item) => [item.coreDataTable!, item])
+  const coreSources = new Map(
+    sources
+      .filter((source) => source.coreDataTable !== null)
+      .map((source) => [source.coreDataTable!, source])
   )
   const normalizedQuery = query.trim().toLocaleLowerCase('fr')
-  const other = items
-    .filter((item) => item.coreDataTable === null)
-    .filter((item) => {
-      if (!normalizedQuery) return true
-      return [item.source.originalName, item.entry.sheetName ?? '', item.entry.title].some(
-        (value) => value.toLocaleLowerCase('fr').includes(normalizedQuery)
-      )
-    })
+  const matchesQuery = (source: KnowledgeSource): boolean => {
+    if (!normalizedQuery) return true
+    return [source.originalName, source.sheetName ?? '', source.title].some((value) =>
+      value.toLocaleLowerCase('fr').includes(normalizedQuery)
+    )
+  }
+  const intakes = sources
+    .filter((source) => source.coreDataTable === null && source.fileType === 'intake')
+    .filter(matchesQuery)
     .sort(
       (a, b) =>
-        a.source.originalName.localeCompare(b.source.originalName, 'fr') ||
-        (a.entry.sheetName ?? a.entry.title).localeCompare(b.entry.sheetName ?? b.entry.title, 'fr')
+        a.title.localeCompare(b.title, 'fr') || a.originalName.localeCompare(b.originalName, 'fr')
+    )
+  const other = sources
+    .filter((source) => source.coreDataTable === null && source.fileType !== 'intake')
+    .filter(matchesQuery)
+    .sort(
+      (a, b) =>
+        a.originalName.localeCompare(b.originalName, 'fr') ||
+        (a.sheetName ?? a.title).localeCompare(b.sheetName ?? b.title, 'fr')
     )
   return {
     coreData: coreDataTables.map((contract) => ({
       contract,
-      item: coreItems.get(contract.table) ?? null
+      source: coreSources.get(contract.table) ?? null
     })),
+    intakes,
     other
   }
 }
 
 export const knowledgeAssignmentSummary = (
-  entry: Pick<KnowledgeEntry, 'profileIds' | 'moduleIds'>,
+  source: Pick<KnowledgeSource, 'profileIds' | 'moduleIds'>,
   profiles: ReadonlyArray<{ id: string; label: string }>
 ): { profiles: string[]; modules: string[] } => ({
-  profiles: entry.profileIds.map(
+  profiles: source.profileIds.map(
     (id) => profiles.find((profile) => profile.id === id)?.label ?? id
   ),
-  modules: BUSINESS_MODULES.filter((module) => entry.moduleIds.includes(module.id)).map(
+  modules: BUSINESS_MODULES.filter((module) => source.moduleIds.includes(module.id)).map(
     (module) => module.label
   )
 })
 
 export const knowledgeItemState = (
-  item: KnowledgeItem | null,
+  source: KnowledgeSource | null,
   build: KnowledgeBuild | null,
   needsRebuild: boolean
 ): KnowledgeItemState => {
-  if (!item) return 'absent'
-  if (!isKnowledgeEntryAssigned(item.entry)) return 'unassigned'
+  if (!source) return 'absent'
+  if (!isKnowledgeSourceAssigned(source)) return 'unassigned'
   if (build?.status === 'queued' || build?.status === 'running') return 'running'
-  const itemStatus = build?.items.find(({ key }) => key === item.itemKey)?.status
+  const itemStatus = build?.items.find(({ key }) => key === source.id)?.status
   if (build?.status === 'failed' && itemStatus === 'failed') return 'failed'
   if (needsRebuild) return 'pending'
   return itemStatus ?? 'pending'
@@ -100,15 +90,19 @@ export const knowledgeFileKind = (
   fileType: KnowledgeSource['fileType'] | undefined
 ): 'table' | 'document' => (fileType === 'md' || fileType === 'docx' ? 'document' : 'table')
 
-export const knowledgeDeleteKind = (item: KnowledgeItem): 'file' | 'sheet' =>
-  item.source.fileType === 'xlsx' && item.source.entries.length > 1 ? 'sheet' : 'file'
-
 export const knowledgeRowTitle = (
-  item: KnowledgeItem | null,
+  source: KnowledgeSource | null,
   coreData?: { filename: string }
-): string => (coreData ? coreData.filename : (item?.entry.title ?? ''))
+): string => (coreData ? coreData.filename : (source?.title ?? ''))
 
 export const knowledgeRowDescription = (
-  item: KnowledgeItem | null,
+  source: KnowledgeSource | null,
   coreData?: { label: string }
-): string => (coreData ? coreData.label : (item?.source.originalName ?? ''))
+): string => {
+  if (coreData) return coreData.label
+  if (!source) return ''
+  if (source.fileType === 'intake') {
+    return intakeTableNameFromOriginalName(source.originalName) ?? source.originalName
+  }
+  return source.originalName
+}

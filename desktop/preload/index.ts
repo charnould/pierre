@@ -1,3 +1,5 @@
+import type { ChatBoot } from '@pierre/shared/chat'
+import type { BusinessModuleId } from '@pierre/shared/modules'
 import type { DocumentChronologyRow } from '@pierre/shared/repayment-document-fields'
 import type { RepaymentMessage } from '@pierre/shared/repayment-messages'
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
@@ -47,12 +49,10 @@ import type {
   SaveAdminConversationReviewParams
 } from '../src/shared/types/admin-insights'
 import type {
-  AutomationApiFailure,
-  AutomationResponse,
+  AutomationRecord,
   AutomationsListResponse,
   CreateAutomationPayload,
   DeleteAutomationPayload,
-  DeleteAutomationResponse,
   ListAutomationsParams,
   PatchAutomationPayload,
   PinAutomationPayload,
@@ -75,15 +75,27 @@ import type {
   PreviewBulkOperationMessagePayload,
   PreviewBulkOperationQueryPayload
 } from '../src/shared/types/bulk-operations'
-import type { ChatBoot } from '../src/shared/types/chat'
 import type { DatastoreTablesResponse } from '../src/shared/types/datastore-tables'
+import type {
+  CreateIntakePayload,
+  DownloadIntakeFilePayload,
+  ExportIntakeZipPayload,
+  IntakeActionPayload,
+  IntakeRecord,
+  ListIntakesParams,
+  PatchIntakePayload,
+  RunIntakeActionPayload
+} from '../src/shared/types/intakes'
+import type { BinaryDownloadResult, IpcDataResult } from '../src/shared/types/ipc'
 import type {
   KnowledgeBuildResponse,
   KnowledgeBuildsResponse,
-  KnowledgeEntry,
   KnowledgeResponse,
   KnowledgeSourceResponse,
-  KnowledgeUploadResponse
+  KnowledgeUploadResponse,
+  PickedKnowledgeFile,
+  WorkbookInspectResponse,
+  WorkbookSheetConfig
 } from '../src/shared/types/knowledge'
 import type {
   LedgerListResponse,
@@ -305,9 +317,10 @@ const desktopApi = {
     dossier: unknown
     chronologie?: DocumentChronologyRow[]
   }) =>
-    ipcRenderer.invoke(IpcChannel.ledger.exportRepaymentDocument, params) as Promise<
-      { saved: true } | { canceled: true } | { error?: { message?: string } } | null
-    >,
+    ipcRenderer.invoke(
+      IpcChannel.ledger.exportRepaymentDocument,
+      params
+    ) as Promise<BinaryDownloadResult | null>,
   getTicketFacets: (params: { url: string; column: string; q?: string }) =>
     ipcRenderer.invoke(IpcChannel.tickets.facets, params) as Promise<TicketsFacetsResponse | null>,
   getTicketDraft: (params: { url: string; id_reclamation: string; id_skill?: string }) =>
@@ -336,7 +349,6 @@ const desktopApi = {
           target: '' | 'sandbox' | 'production'
           postalReady: boolean
           electronicReady: boolean
-          secretsReadable: boolean
         }
         webhooks: { rcs: string; email: string }
       }
@@ -441,7 +453,18 @@ const desktopApi = {
     ) as Promise<DeleteAdminUserProfileResponse | null>,
   getAdminKnowledge: (params: { url: string }) =>
     ipcRenderer.invoke(IpcChannel.knowledge.get, params) as Promise<KnowledgeResponse | null>,
-  uploadKnowledgeSources: (params: { url: string }) =>
+  pickKnowledgeFiles: () =>
+    ipcRenderer.invoke(IpcChannel.knowledge.pick) as Promise<PickedKnowledgeFile[]>,
+  inspectKnowledgeWorkbook: (params: { url: string; filePath: string; maxRows?: number }) =>
+    ipcRenderer.invoke(
+      IpcChannel.knowledge.inspect,
+      params
+    ) as Promise<WorkbookInspectResponse | null>,
+  uploadKnowledgeFiles: (params: {
+    url: string
+    filePaths: string[]
+    sheet?: WorkbookSheetConfig
+  }) =>
     ipcRenderer.invoke(
       IpcChannel.knowledge.upload,
       params
@@ -449,7 +472,9 @@ const desktopApi = {
   patchKnowledgeSource: (params: {
     url: string
     id: string
-    entries: KnowledgeEntry[]
+    title: string
+    profileIds: string[]
+    moduleIds: BusinessModuleId[]
     updatedAt: string
   }) =>
     ipcRenderer.invoke(
@@ -518,28 +543,54 @@ const desktopApi = {
     ) as Promise<AutomationsListResponse | null>,
   createAutomation: (params: CreateAutomationPayload) =>
     ipcRenderer.invoke(IpcChannel.automations.create, params) as Promise<
-      AutomationResponse | AutomationApiFailure | null
+      IpcDataResult<AutomationRecord>
     >,
   patchAutomation: (params: PatchAutomationPayload) =>
     ipcRenderer.invoke(IpcChannel.automations.patch, params) as Promise<
-      AutomationResponse | AutomationApiFailure | null
+      IpcDataResult<AutomationRecord>
     >,
   deleteAutomation: (params: DeleteAutomationPayload) =>
     ipcRenderer.invoke(IpcChannel.automations.delete, params) as Promise<
-      DeleteAutomationResponse | AutomationApiFailure | null
+      IpcDataResult<{ deleted: true }>
     >,
   runAutomation: (params: RunAutomationPayload) =>
     ipcRenderer.invoke(IpcChannel.automations.run, params) as Promise<
-      AutomationResponse | AutomationApiFailure | null
+      IpcDataResult<AutomationRecord>
+    >,
+  stopAutomationRun: (params: RunAutomationPayload) =>
+    ipcRenderer.invoke(IpcChannel.automations.stopRun, params) as Promise<
+      IpcDataResult<AutomationRecord>
     >,
   pinAutomation: (params: PinAutomationPayload) =>
     ipcRenderer.invoke(IpcChannel.automations.pin, params) as Promise<
-      AutomationResponse | AutomationApiFailure | null
+      IpcDataResult<AutomationRecord>
     >,
   unpinAutomation: (params: PinAutomationPayload) =>
     ipcRenderer.invoke(IpcChannel.automations.unpin, params) as Promise<
-      AutomationResponse | AutomationApiFailure | null
+      IpcDataResult<AutomationRecord>
     >,
+  getIntakes: (params: ListIntakesParams) =>
+    ipcRenderer.invoke(IpcChannel.intakes.list, params) as Promise<{ data: IntakeRecord[] } | null>,
+  createIntake: (params: CreateIntakePayload) =>
+    ipcRenderer.invoke(IpcChannel.intakes.create, params) as Promise<IpcDataResult<IntakeRecord>>,
+  patchIntake: (params: PatchIntakePayload) =>
+    ipcRenderer.invoke(IpcChannel.intakes.patch, params) as Promise<IpcDataResult<IntakeRecord>>,
+  deleteIntake: (params: IntakeActionPayload) =>
+    ipcRenderer.invoke(IpcChannel.intakes.delete, params) as Promise<
+      IpcDataResult<{ deleted: true }>
+    >,
+  runIntakeAction: (params: RunIntakeActionPayload) =>
+    ipcRenderer.invoke(IpcChannel.intakes.action, params) as Promise<IpcDataResult<IntakeRecord>>,
+  exportIntakeZip: (params: ExportIntakeZipPayload) =>
+    ipcRenderer.invoke(
+      IpcChannel.intakes.exportZip,
+      params
+    ) as Promise<BinaryDownloadResult | null>,
+  downloadIntakeFile: (params: DownloadIntakeFilePayload) =>
+    ipcRenderer.invoke(
+      IpcChannel.intakes.downloadFile,
+      params
+    ) as Promise<BinaryDownloadResult | null>,
   getBulkOperations: (params: ListBulkOperationsParams) =>
     ipcRenderer.invoke(
       IpcChannel.bulkOperations.list,

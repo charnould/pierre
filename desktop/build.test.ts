@@ -3,17 +3,17 @@ import { mkdir, mkdtemp, readdir, rm, stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { buildChat, buildMain, buildPreloads, buildRenderer } from './build'
+import { buildChat, buildIntake, buildMain, buildPreloads, buildRenderer } from './build'
 import { compileCss } from './build-plugin'
 
 const DESKTOP = import.meta.dir
 
 // Five percent above the measured cold graph:
-// entry 678386, modulepreload 482508, globals CSS 213559, main preload 12490.
+// entry 678386, modulepreload 482508, globals CSS 213559, main preload 13621.
 const COLD_ENTRY_MAX_BYTES = 712_306
 const COLD_MODULEPRELOAD_MAX_BYTES = 506_634
 const COLD_GLOBALS_MAX_BYTES = 224_237
-const MAIN_PRELOAD_MAX_BYTES = 13_115
+const MAIN_PRELOAD_MAX_BYTES = 14_302
 
 function quotedAttr(tag: string, name: string): string | undefined {
   return new RegExp(`${name}="([^"]*)"`).exec(tag)?.[1]
@@ -180,6 +180,29 @@ describe('chat manifest', () => {
       const cssFile = Bun.file(join(outdir, css))
       expect(await cssFile.exists()).toBe(true)
       const cssText = await cssFile.text()
+      const font = cssText.match(/url\("(\.\.\/assets\/[^"]+\.woff2)"\)/)
+      expect(font?.[1]).toBeTruthy()
+      if (!font?.[1]) return
+      expect(await Bun.file(join(outdir, 'css', font[1])).exists()).toBe(true)
+    } finally {
+      await rm(outdir, { recursive: true, force: true })
+    }
+  }, 180_000)
+
+  it('records a hashed intake entry and its desktop-themed stylesheet', async () => {
+    const outdir = await tempDir('pierre-intake-')
+    try {
+      const manifest = await buildIntake(outdir)
+      const entry = manifest['src/intake-web/main.tsx']
+      const css = entry?.css?.[0]
+      expect(entry?.isEntry).toBe(true)
+      expect(entry?.file).toMatch(/^js\/.+-[A-Za-z0-9_-]{8,}\.js$/)
+      expect(css).toMatch(/^css\/intake-[A-Za-z0-9_-]{8,}\.css$/)
+      if (!entry || !css) return
+      expect(await Bun.file(join(outdir, entry.file)).exists()).toBe(true)
+      const cssText = await Bun.file(join(outdir, css)).text()
+      expect(cssText).toContain('--color-stone-50')
+      expect(cssText).toContain('--color-blue-700')
       const font = cssText.match(/url\("(\.\.\/assets\/[^"]+\.woff2)"\)/)
       expect(font?.[1]).toBeTruthy()
       if (!font?.[1]) return

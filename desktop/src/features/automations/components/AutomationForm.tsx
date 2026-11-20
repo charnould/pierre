@@ -1,21 +1,12 @@
-import { Pause, Play, Plus, RotateCcw, Trash2 } from 'lucide-react'
-import { Fragment, type ReactNode, useMemo, useState } from 'react'
+import { DEFAULT_AUTOMATION_SCHEDULE, type RecurrenceSchedule } from '@pierre/shared/schedule'
+import { Pause, Play, Plus, RotateCcw, Square, Trash2 } from 'lucide-react'
+import { type ReactNode, useState } from 'react'
 
+import { CollaboratorsCombobox } from '@/shared/components/CollaboratorsCombobox'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
-import { OrgUserListItem } from '@/shared/components/OrgUserListItem'
+import { ScheduleFields } from '@/shared/components/ScheduleFields'
+import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
-import {
-  Combobox,
-  ComboboxChip,
-  ComboboxChips,
-  ComboboxChipsInput,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxItem,
-  ComboboxList,
-  ComboboxValue,
-  useComboboxAnchor
-} from '@/shared/components/ui/combobox'
 import {
   Field,
   FieldDescription,
@@ -24,24 +15,12 @@ import {
   FieldSet
 } from '@/shared/components/ui/field'
 import { Input } from '@/shared/components/ui/input'
+import { Spinner } from '@/shared/components/ui/spinner'
 import { Textarea } from '@/shared/components/ui/textarea'
-import { UserAvatar } from '@/shared/components/UserAvatar'
-import { useOrgUsers } from '@/shared/hooks/useOrgUsers'
-import { useUserAvatar } from '@/shared/hooks/useUserAvatar'
-import { collaboratorSearchLabel, orgUserListName } from '@/shared/lib/org-user-list-item'
-import { formatOrgCollaboratorLabel } from '@/shared/lib/org-users-cache'
 import type { UiSettings } from '@/shared/lib/ui-settings/schema'
 
 import { type Automation, isReportAutomation } from '../lib/automation-types'
-import { AutomationFormScheduleFields, normalizeFrequencyDay } from './AutomationFormScheduleFields'
 import { PromptMarkdownEditor } from './PromptMarkdownEditor'
-
-function CollaboratorChipAvatar({ login, name }: { login: string; name: string }) {
-  const photoUrl = useUserAvatar(login)
-  return (
-    <UserAvatar photoUrl={photoUrl} name={name} login={login} size="sm" className="size-3.5!" />
-  )
-}
 
 function AutomationField({
   id,
@@ -66,105 +45,26 @@ function AutomationField({
 interface AutomationFormProps {
   agentName: string
   url?: string
+  userLogin?: string
   uiSettings?: UiSettings
   automation?: Automation
   onCancel: () => void
   onSave: (data: Partial<Automation>) => void
   onLaunch?: () => void
+  onStopRun?: () => void
   onTogglePause?: () => void
   onDelete?: () => void
-}
-
-function CollaboratorsCombobox({
-  url,
-  ownerLogin,
-  value,
-  onValueChange
-}: {
-  url: string | undefined
-  ownerLogin: string
-  value: string[]
-  onValueChange: (logins: string[]) => void
-}) {
-  const anchor = useComboboxAnchor()
-  const { users: orgUsers } = useOrgUsers(url)
-
-  const usersByLogin = useMemo(
-    () => new Map(orgUsers.map((user) => [user.login.toLowerCase(), user])),
-    [orgUsers]
-  )
-
-  const items = useMemo(
-    () =>
-      [...orgUsers]
-        .filter((user) => user.login !== ownerLogin)
-        .sort((a, b) => a.login.localeCompare(b.login, 'fr'))
-        .map((user) => user.login),
-    [orgUsers, ownerLogin]
-  )
-
-  return (
-    <Combobox
-      multiple
-      autoHighlight
-      items={items}
-      value={value}
-      onValueChange={(next) => onValueChange(next as string[])}
-      itemToStringLabel={(login) => {
-        const user = usersByLogin.get(login.toLowerCase())
-        return user ? collaboratorSearchLabel(user) : login
-      }}
-    >
-      <ComboboxChips ref={anchor} className="w-full">
-        <ComboboxValue>
-          {(values) => (
-            <Fragment>
-              {values.map((login: string) => {
-                const user = usersByLogin.get(login.toLowerCase())
-                const label = user ? orgUserListName(user) : formatOrgCollaboratorLabel(login)
-                return (
-                  <ComboboxChip key={login}>
-                    <CollaboratorChipAvatar login={login} name={label} />
-                    <span className="truncate">{label}</span>
-                  </ComboboxChip>
-                )
-              })}
-              <ComboboxChipsInput
-                aria-label="Collaborateurs"
-                placeholder={values.length === 0 ? 'Rechercher un collaborateur…' : undefined}
-              />
-            </Fragment>
-          )}
-        </ComboboxValue>
-      </ComboboxChips>
-      <ComboboxContent anchor={anchor}>
-        <ComboboxEmpty>Aucun utilisateur trouvé.</ComboboxEmpty>
-        <ComboboxList>
-          {(login) => {
-            const user = usersByLogin.get(login.toLowerCase())
-            return (
-              <ComboboxItem key={login} value={login}>
-                {user ? (
-                  <OrgUserListItem user={user} />
-                ) : (
-                  <OrgUserListItem name={formatOrgCollaboratorLabel(login)} login={login} />
-                )}
-              </ComboboxItem>
-            )
-          }}
-        </ComboboxList>
-      </ComboboxContent>
-    </Combobox>
-  )
 }
 
 export function AutomationForm({
   agentName,
   url,
+  userLogin = '',
   automation,
   onCancel,
   onSave,
   onLaunch,
+  onStopRun,
   onTogglePause,
   onDelete
 }: AutomationFormProps) {
@@ -172,11 +72,9 @@ export function AutomationForm({
 
   const [name, setName] = useState(automation?.name ?? '')
   const [description, setDescription] = useState(automation?.description ?? '')
-  const [frequency, setFrequency] = useState<string>(automation?.frequency ?? 'weekly')
-  const [frequencyDay, setFrequencyDay] = useState<string | undefined>(() =>
-    normalizeFrequencyDay(automation?.frequency ?? 'weekly', automation?.frequencyDay)
+  const [schedule, setSchedule] = useState<RecurrenceSchedule>(
+    automation?.schedule ?? DEFAULT_AUTOMATION_SCHEDULE
   )
-  const [frequencyTime, setFrequencyTime] = useState(automation?.frequencyTime ?? '08:00')
   const [prompt, setPrompt] = useState(
     automation && isReportAutomation(automation) ? automation.prompt : ''
   )
@@ -188,12 +86,9 @@ export function AutomationForm({
   const [formSource, setFormSource] = useState(automation)
   if (formSource !== automation) {
     setFormSource(automation)
-    const nextFrequency = automation?.frequency ?? 'weekly'
     setName(automation?.name ?? '')
     setDescription(automation?.description ?? '')
-    setFrequency(nextFrequency)
-    setFrequencyDay(normalizeFrequencyDay(nextFrequency, automation?.frequencyDay))
-    setFrequencyTime(automation?.frequencyTime ?? '08:00')
+    setSchedule(automation?.schedule ?? DEFAULT_AUTOMATION_SCHEDULE)
     setCollaborators(automation?.mentions ?? [])
     if (automation && isReportAutomation(automation)) {
       setPrompt(automation.prompt)
@@ -202,16 +97,15 @@ export function AutomationForm({
   }
 
   const isPaused = automation?.status === 'paused'
-  const ownerLogin = automation?.owner ?? 'gensel'
-  const hasEditOps = isEdit && (onLaunch || onTogglePause || onDelete)
+  const isRunning = automation?.status === 'running'
+  const ownerLogin = automation?.owner ?? userLogin
+  const hasEditOps = isEdit && (onLaunch || onStopRun || onTogglePause || onDelete)
 
   function handleSubmit() {
     const base = {
       name,
       description,
-      frequency: frequency as Automation['frequency'],
-      frequencyDay,
-      frequencyTime,
+      schedule,
       mentions: collaborators
     }
     onSave({ ...base, type: 'report', prompt, maxReports })
@@ -267,17 +161,10 @@ export function AutomationForm({
           </AutomationField>
 
           <AutomationField
-            label="Fréquence"
+            label="Planification"
             description="La génération démarre approximativement à l’horaire indiqué. Selon la complexité, elle peut prendre plusieurs minutes. Anticipez ce délai si vous avez besoin du résultat à une heure précise."
           >
-            <AutomationFormScheduleFields
-              frequency={frequency}
-              frequencyDay={frequencyDay}
-              frequencyTime={frequencyTime}
-              onFrequencyChange={setFrequency}
-              onFrequencyDayChange={setFrequencyDay}
-              onFrequencyTimeChange={setFrequencyTime}
-            />
+            <ScheduleFields idPrefix="auto-schedule" value={schedule} onChange={setSchedule} />
           </AutomationField>
 
           <AutomationField
@@ -311,14 +198,33 @@ export function AutomationForm({
       <div className="flex flex-row flex-wrap items-center gap-2">
         {hasEditOps ? (
           <div className="flex flex-row flex-wrap items-center gap-2">
-            {onLaunch ? (
+            {isRunning ? (
+              <>
+                <Badge variant="secondary">
+                  <Spinner data-icon="inline-start" />
+                  En cours
+                </Badge>
+                {onStopRun ? (
+                  <Button type="button" variant="outline" size="sm" onClick={onStopRun}>
+                    <Square data-icon="inline-start" />
+                    Interrompre
+                  </Button>
+                ) : null}
+              </>
+            ) : onLaunch ? (
               <Button type="button" variant="outline" size="sm" onClick={onLaunch}>
                 <RotateCcw data-icon="inline-start" />
                 Lancer maintenant
               </Button>
             ) : null}
             {onTogglePause ? (
-              <Button type="button" variant="outline" size="sm" onClick={onTogglePause}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isRunning}
+                onClick={onTogglePause}
+              >
                 {isPaused ? <Play data-icon="inline-start" /> : <Pause data-icon="inline-start" />}
                 {isPaused ? 'Réactiver' : 'Désactiver'}
               </Button>
@@ -341,7 +247,7 @@ export function AutomationForm({
           <Button type="button" variant="outline" size="sm" onClick={onCancel}>
             Annuler
           </Button>
-          <Button type="button" size="sm" onClick={handleSubmit}>
+          <Button type="button" size="sm" disabled={isRunning} onClick={handleSubmit}>
             {isEdit ? (
               'Sauvegarder'
             ) : (

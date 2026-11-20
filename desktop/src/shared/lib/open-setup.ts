@@ -2,8 +2,10 @@ import { useSyncExternalStore } from 'react'
 
 import type { SetupEntry } from '@/shared/lib/instance-customization'
 
+export type AdminRequestTarget = SetupEntry | 'knowledge'
+
 let administrator = false
-let entry: SetupEntry | null = null
+let entry: AdminRequestTarget | null = null
 const listeners = new Set<() => void>()
 
 function emit() {
@@ -16,12 +18,12 @@ export function setSetupAdministrator(value: boolean) {
   emit()
 }
 
-export function requestSetup(next: SetupEntry) {
+export function requestSetup(next: AdminRequestTarget) {
   entry = next
   emit()
 }
 
-export function consumeSetupRequest(): SetupEntry | null {
+export function consumeSetupRequest(): AdminRequestTarget | null {
   const current = entry
   entry = null
   return current
@@ -37,7 +39,7 @@ export function useSetupAdministrator(): boolean {
   )
 }
 
-export function useSetupRequest(): SetupEntry | null {
+export function useSetupRequest(): AdminRequestTarget | null {
   return useSyncExternalStore(
     (listener) => {
       listeners.add(listener)

@@ -1,8 +1,7 @@
 import { AudioLines, Mic } from 'lucide-react'
 
 import { Spinner } from '@/shared/components/ui/spinner'
-
-import type { DictationPhase } from './VoiceDictationContext'
+import type { DictationPhase } from '@/shared/lib/voice-dictation-context'
 
 export function dictationWave(level: number): '0' | '1' | '2' | '3' | '4' {
   if (level >= 0.78) return '4'

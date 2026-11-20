@@ -69,6 +69,8 @@ export function ActivityRailProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const openReader = useCallback((target: ReaderTarget) => {
+    setOpenState(false)
+    setContextTarget(null)
     setReaderTarget(target)
   }, [])
 

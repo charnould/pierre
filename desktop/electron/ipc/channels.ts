@@ -77,7 +77,9 @@ export const IpcChannel = {
   },
   knowledge: {
     get: 'get-admin-knowledge',
-    upload: 'upload-knowledge-sources',
+    pick: 'pick-knowledge-files',
+    inspect: 'inspect-knowledge-workbook',
+    upload: 'upload-knowledge-files',
     patch: 'patch-knowledge-source',
     delete: 'delete-knowledge-source',
     builds: 'get-knowledge-builds',
@@ -98,8 +100,18 @@ export const IpcChannel = {
     patch: 'patch-automation',
     delete: 'delete-automation',
     run: 'run-automation',
+    stopRun: 'stop-automation-run',
     pin: 'pin-automation',
     unpin: 'unpin-automation'
+  },
+  intakes: {
+    list: 'get-intakes',
+    create: 'create-intake',
+    patch: 'patch-intake',
+    delete: 'delete-intake',
+    action: 'run-intake-action',
+    exportZip: 'export-intake-zip',
+    downloadFile: 'download-intake-file'
   },
   bulkOperations: {
     list: 'get-bulk-operations',

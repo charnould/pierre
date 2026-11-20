@@ -25,6 +25,9 @@ function actorForItem(item: ActivityNotificationItem, sender: string): ParsedAct
   if (item.type === 'automations') {
     return { kind: 'automation', id: item.ref, label: 'Pierre' }
   }
+  if (item.type === 'intake') {
+    return { kind: 'intake', id: item.ref, label: item.intakeContent?.title ?? 'Collecte' }
+  }
   if (item.type === 'updates') {
     return { kind: 'system', id: item.ref, label: 'Pierre' }
   }

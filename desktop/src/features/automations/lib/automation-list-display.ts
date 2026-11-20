@@ -1,7 +1,6 @@
 import {
   type Automation,
-  AUTOMATION_TYPE_LABELS,
-  sameAutomationLogin
+  AUTOMATION_TYPE_LABELS
 } from '@/features/automations/lib/automation-types'
 import { COLUMN_VALUE_COLOR_GROUPS } from '@/shared/lib/ui-settings/column-value-palette'
 import {
@@ -15,19 +14,6 @@ const BADGE_DEFAULTS = resolveColumnValueBadgeDefaults()
 function paletteStyle(familyId: string) {
   const family = COLUMN_VALUE_COLOR_GROUPS.find((group) => group.id === familyId)
   return family?.variants[0]
-}
-
-export function collaboratorLogins(automation: Automation): string[] {
-  return automation.mentions.filter(
-    (login) => login && !sameAutomationLogin(login, automation.owner)
-  )
-}
-
-export function accessText(automation: Automation): string {
-  const count = collaboratorLogins(automation).length
-  if (count === 0) return automation.owner
-  const label = count === 1 ? 'personne' : 'personnes'
-  return `${automation.owner} + ${count} ${label}`
 }
 
 export function formatGenerationDate(dateStr: string | undefined): string {

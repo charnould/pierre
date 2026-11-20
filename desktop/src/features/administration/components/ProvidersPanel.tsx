@@ -90,7 +90,6 @@ type ProvidersView = {
     target: '' | 'sandbox' | 'production'
     postalReady: boolean
     electronicReady: boolean
-    secretsReadable: boolean
   }
   webhooks: { rcs: string; email: string }
 }
