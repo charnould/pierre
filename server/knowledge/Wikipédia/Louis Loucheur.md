@@ -56,3 +56,4 @@ En France, plusieurs voies portent son nom :
 
 - Une rue dans le 17e arrondissement de Paris.
 - Une rue dans le 9e arrondissement de Lyon (depuis 1933).
+- Un boulevard à Clermont-Ferrand.

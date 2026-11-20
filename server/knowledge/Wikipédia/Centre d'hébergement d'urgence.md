@@ -2,7 +2,7 @@
 
 Un **centre d'hébergement d'urgence**, abrégé **CHU**, est une catégorie d'établissements sociaux intervenant dans le domaine de l'accueil, de l'hébergement et de la réinsertion sociale et professionnelle de toute personne sans domicile fixe. Il permet de mettre immédiatement à l’abri des personnes sans abri en situation de détresse médicale, psychique ou sociale. Il offre des prestations assurant le gîte, le couvert et l'hygiène, une première évaluation médicale, psychique et sociale et une orientation vers un professionnel ou une structure susceptible d'apporter à la personne l'aide justifiée par son état.
 
-Ce genre d'établissement peut également être mis en place lors de catastrophes dans des gymnases par exemple. Ils sont généralement mis en place par les Associations Agrées de Sécurité Civile ou les Réserves Communales de Sécurité Civile, en lien avec les pouvoirs publics.
+Ce genre d'établissement peut également être mis en place lors de catastrophes dans des gymnases par exemple. Ils sont généralement mis en place par les associations agréées de sécurité civile ou les réserves communales de sécurité civile, en lien avec les pouvoirs publics.
 
 ## Public accueilli
 
@@ -16,8 +16,8 @@ Conformément à l'article 4 de la loi DALO, le séjour dure aussi longtemps qu'
 
 Les droits fondamentaux des personnes accueillies sont identiques à ceux des autres catégories de publics accueillis ou accompagnés dans les autres catégories d’établissements et services sociaux et médico-sociaux (ESSMS).
 
-Principaux texte de référence dans la loi française L. 322-1 à L. 322-8, L. 345-2-2, L. 345-2-3 et L. 345-2-11 du Code de l’action sociale et des familles.
+Principaux textes de référence dans la loi française : articles L. 322-1 à L. 322-8, L. 345-2-2, L. 345-2-3 et L. 345-2-11 du Code de l’action sociale et des familles.
 
 ## L'apport du secteur associatif
 
-En France, de nombreuses associations et ONG humanitaires collaborent étroitement avec les pouvoirs publics sur les problématiques de l'accompagnement et de la réinsertion sociale. L'orientation des personnes dans le besoin est généralement gérée par le 115, qui est le numéro national d'assistance pour les sans-abri. La Fondation Abbé Pierre, le Secours Catholique, Secours Islamique France, Aurore, la Croix Rouge, le Secours Populaire, le Groupe SOS ou encore le SAMU social sont autant d'exemples d'acteurs majeurs de l'hébergement d'urgence dans l'Hexagone.
+En France, de nombreuses associations et ONG humanitaires collaborent étroitement avec les pouvoirs publics sur les problématiques de l'accompagnement et de la réinsertion sociale. L'orientation des personnes dans le besoin est généralement gérée par le 115, qui est le numéro national d'assistance pour les sans-abri. La Fondation Abbé-Pierre, le Secours catholique, Secours islamique France, Aurore, la Croix-Rouge, le Secours populaire, le Groupe SOS ou encore le SAMU social sont autant d'exemples d'acteurs majeurs de l'hébergement d'urgence dans l'Hexagone.
