@@ -10,6 +10,7 @@ import { ensureEnvAdmin } from './utils/ensure-env-admin'
 import { initializeKnowledgeBuildCoordinator } from './utils/knowledge/build-coordinator'
 import { startMailevaReconciliation } from './utils/maileva/track'
 import { datastorePaths } from './utils/paths'
+import { loadProviders } from './utils/providers'
 import { setup } from './utils/setup'
 import { initVmPool } from './utils/vm-pool'
 import { cleanupOrphanedVms } from './utils/vm-registry'
@@ -71,6 +72,7 @@ if (command) {
   usage()
 } else {
   await setup()
+  await loadProviders()
   await ensureEnvAdmin()
   start_bulk_scheduler()
   startMailevaReconciliation()

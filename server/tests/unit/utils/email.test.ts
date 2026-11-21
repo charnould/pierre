@@ -4,6 +4,7 @@ import { rm } from 'node:fs/promises'
 import { cm_signature_valid } from '../../../utils/email/cm'
 import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import { emptyProviders, writeProviders } from '../../../utils/providers'
+import { setup } from '../../../utils/setup'
 
 const SECRET = 'email-webhook-secret'
 const encoder = new TextEncoder()
@@ -24,9 +25,10 @@ const sign = async (id: string, timestamp: string, body: Uint8Array): Promise<st
   return new Uint8Array(await crypto.subtle.sign('HMAC', key, data)).toBase64()
 }
 
-beforeAll(() => {
+beforeAll(async () => {
   setDatastoreRoot(paths.root)
-  writeProviders({ ...emptyProviders(), emailSecret: SECRET })
+  await setup()
+  await writeProviders({ ...emptyProviders(), emailSecret: SECRET })
 })
 
 afterAll(async () => {

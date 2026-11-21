@@ -12,7 +12,6 @@ import {
   resourceId,
   singleflight
 } from './http'
-import { decryptMailevaSecrets } from './secrets'
 import { totpCode } from './totp'
 
 export type MailevaDelivery =
@@ -81,13 +80,15 @@ export async function dispatchMaileva(input: MailevaDispatch): Promise<string> {
 
 async function deliver(input: MailevaDispatch): Promise<string> {
   const providers = readProviders()
-  const secrets = providers.mailevaSecrets
-    ? await decryptMailevaSecrets(providers.mailevaSecrets)
-    : null
   const target = mailevaTarget(providers.mailevaUsername)
   const lines = mailevaLines(providers.mailevaAddress)
   const account = mailevaAccount(providers.mailevaClientId, providers.mailevaUsername)
-  if (!target || !secrets?.clientSecret || !secrets.password || !providers.mailevaClientId) {
+  if (
+    !target ||
+    !providers.mailevaClientSecret ||
+    !providers.mailevaPassword ||
+    !providers.mailevaClientId
+  ) {
     throw new MailevaError('Maileva n’est pas configuré', 'not_configured', false)
   }
   if (input.delivery.kind === 'postal' && (!(lines[0] || lines[1]) || !lines[5])) {
@@ -95,7 +96,7 @@ async function deliver(input: MailevaDispatch): Promise<string> {
   }
   if (
     input.delivery.kind === 'electronic' &&
-    (!providers.mailevaSenderId || (input.product === 'lre' && !secrets.totpSecret))
+    (!providers.mailevaSenderId || (input.product === 'lre' && !providers.mailevaTotpSecret))
   ) {
     throw new MailevaError(
       'L’expéditeur électronique Maileva est incomplet',
@@ -106,9 +107,9 @@ async function deliver(input: MailevaDispatch): Promise<string> {
   const auth: MailevaAuth = {
     target,
     clientId: providers.mailevaClientId,
-    clientSecret: secrets.clientSecret,
+    clientSecret: providers.mailevaClientSecret,
     username: providers.mailevaUsername,
-    password: secrets.password
+    password: providers.mailevaPassword
   }
   const existing = operation(input.activityId)
   if (
@@ -120,7 +121,7 @@ async function deliver(input: MailevaDispatch): Promise<string> {
     throw new MailevaError('La configuration Maileva a changé pendant cet envoi', 'rejected', false)
   }
   if (input.product === 'lre') {
-    await ensureLreSession(auth, providers.mailevaSenderId, secrets.totpSecret)
+    await ensureLreSession(auth, providers.mailevaSenderId, providers.mailevaTotpSecret)
   }
 
   let current = existing ?? {

@@ -80,7 +80,7 @@ beforeAll(() => {
 beforeEach(async () => {
   await rm(paths.root, { recursive: true, force: true })
   await setup()
-  writeProviders({
+  await writeProviders({
     ...emptyProviders(),
     rcsToken: 'product-token-test',
     rcsFrom: 'PIERRE-TEST',

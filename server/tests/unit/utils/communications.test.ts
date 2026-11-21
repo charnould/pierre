@@ -385,10 +385,10 @@ describe('communications', () => {
 })
 
 describe('cm_webhook_authorized', () => {
-  it('exige un secret non vide et identique au header', () => {
-    writeProviders(emptyProviders())
+  it('exige un secret non vide et identique au header', async () => {
+    await writeProviders(emptyProviders())
     expect(cm_webhook_authorized('anything')).toBe(false)
-    writeProviders({ ...emptyProviders(), rcsSecret: 'secret' })
+    await writeProviders({ ...emptyProviders(), rcsSecret: 'secret' })
     expect(cm_webhook_authorized(undefined)).toBe(false)
     expect(cm_webhook_authorized('wrong')).toBe(false)
     expect(cm_webhook_authorized('secret')).toBe(true)

@@ -21,7 +21,12 @@ beforeAll(async () => {
   setDatastoreRoot(paths.root)
   await rm(paths.root, { recursive: true, force: true })
   await setup()
-  writeProviders({ ...emptyProviders(), rcsToken: 'token', rcsFrom: 'PIERRE', rcsSecret: SECRET })
+  await writeProviders({
+    ...emptyProviders(),
+    rcsToken: 'token',
+    rcsFrom: 'PIERRE',
+    rcsSecret: SECRET
+  })
 })
 
 afterAll(async () => {

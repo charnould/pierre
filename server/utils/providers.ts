@@ -1,6 +1,4 @@
-import { chmodSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
-
+import { openDatastore } from './datastore-db'
 import { datastorePaths } from './paths'
 
 export type LlmType = 'anthropic' | 'openai' | 'openai-compatible'
@@ -28,7 +26,9 @@ export type Providers = {
   mailevaUsername: string
   mailevaSenderId: string
   mailevaAddress: string
-  mailevaSecrets: string
+  mailevaClientSecret: string
+  mailevaPassword: string
+  mailevaTotpSecret: string
 }
 
 const EMPTY: Providers = {
@@ -48,16 +48,22 @@ const EMPTY: Providers = {
   mailevaUsername: '',
   mailevaSenderId: '',
   mailevaAddress: '',
-  mailevaSecrets: ''
+  mailevaClientSecret: '',
+  mailevaPassword: '',
+  mailevaTotpSecret: ''
 }
 
 export function emptyProviders(): Providers {
   return { ...EMPTY }
 }
 
-export function providersPath(): string {
-  return join(datastorePaths().root, 'providers.json')
-}
+export const PROVIDERS_SETUP_ID = 'providers'
+
+const encoder = new TextEncoder()
+const decoder = new TextDecoder()
+const POSTAL_CITY = /^\d{5}\s+\S/
+
+let cache: { database: string; providers: Providers } | null = null
 
 function text(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
@@ -73,8 +79,6 @@ export function mailevaTarget(username: string): 'sandbox' | 'production' | '' {
   return value.toLowerCase().startsWith('sandbox.') ? 'sandbox' : 'production'
 }
 
-const POSTAL_CITY = /^\d{5}\s+\S/
-
 export function mailevaLines(address: string): string[] {
   const raw = address
     .replace(/\r/g, '')
@@ -89,44 +93,129 @@ export function mailevaLines(address: string): string[] {
   return ['', filled[0] ?? '', '', filled.slice(1, -1).join(' '), '', last]
 }
 
-/** Absent or unreadable file: nothing is configured. The environment is not a fallback. */
-export function readProviders(): Providers {
-  try {
-    const parsed = JSON.parse(readFileSync(providersPath(), 'utf8')) as Record<string, unknown>
-    return {
-      llmType: parseLlmType(text(parsed['llmType'])),
-      llmBaseUrl: text(parsed['llmBaseUrl']),
-      llmApiKey: text(parsed['llmApiKey']),
-      llmModel: text(parsed['llmModel']),
-      llmEffort: text(parsed['llmEffort']),
-      rcsToken: text(parsed['rcsToken']),
-      rcsFrom: text(parsed['rcsFrom']),
-      rcsSecret: text(parsed['rcsSecret']),
-      emailDomain: text(parsed['emailDomain']).toLowerCase(),
-      emailToken: text(parsed['emailToken']),
-      emailAccount: text(parsed['emailAccount']),
-      emailSecret: text(parsed['emailSecret']),
-      mailevaClientId: text(parsed['mailevaClientId']),
-      mailevaUsername: text(parsed['mailevaUsername']),
-      mailevaSenderId: text(parsed['mailevaSenderId']),
-      mailevaAddress: addressText(parsed['mailevaAddress']),
-      mailevaSecrets: text(parsed['mailevaSecrets'])
-    }
-  } catch (error) {
-    const missing = error instanceof Error && 'code' in error && error.code === 'ENOENT'
-    if (!missing) console.error(`providers.json illisible: ${providersPath()}`)
-    return emptyProviders()
+function parseProviders(parsed: Record<string, unknown>): Providers {
+  return {
+    llmType: parseLlmType(text(parsed['llmType'])),
+    llmBaseUrl: text(parsed['llmBaseUrl']),
+    llmApiKey: text(parsed['llmApiKey']),
+    llmModel: text(parsed['llmModel']),
+    llmEffort: text(parsed['llmEffort']),
+    rcsToken: text(parsed['rcsToken']),
+    rcsFrom: text(parsed['rcsFrom']),
+    rcsSecret: text(parsed['rcsSecret']),
+    emailDomain: text(parsed['emailDomain']).toLowerCase(),
+    emailToken: text(parsed['emailToken']),
+    emailAccount: text(parsed['emailAccount']),
+    emailSecret: text(parsed['emailSecret']),
+    mailevaClientId: text(parsed['mailevaClientId']),
+    mailevaUsername: text(parsed['mailevaUsername']),
+    mailevaSenderId: text(parsed['mailevaSenderId']),
+    mailevaAddress: addressText(parsed['mailevaAddress']),
+    mailevaClientSecret: text(parsed['mailevaClientSecret']),
+    mailevaPassword: text(parsed['mailevaPassword']),
+    mailevaTotpSecret: text(parsed['mailevaTotpSecret'])
   }
 }
 
-export function writeProviders(next: Providers): void {
-  const path = providersPath()
-  mkdirSync(datastorePaths().root, { recursive: true })
-  const temporary = `${path}.${process.pid}.tmp`
-  writeFileSync(temporary, `${JSON.stringify(next)}\n`, { mode: 0o600 })
-  chmodSync(temporary, 0o600)
-  renameSync(temporary, path)
-  chmodSync(path, 0o600)
+async function providersKey(): Promise<CryptoKey> {
+  const secret = Bun.env['AUTH_SECRET']
+  if (!secret || secret.length < 32) {
+    throw new Error('AUTH_SECRET must contain at least 32 characters')
+  }
+  const base = await crypto.subtle.importKey('raw', encoder.encode(secret), 'HKDF', false, [
+    'deriveKey'
+  ])
+  return crypto.subtle.deriveKey(
+    {
+      name: 'HKDF',
+      hash: 'SHA-256',
+      salt: encoder.encode('pierre-providers-v1'),
+      info: encoder.encode('providers')
+    },
+    base,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  )
+}
+
+async function sealProviders(providers: Providers): Promise<string> {
+  const iv = crypto.getRandomValues(new Uint8Array(12))
+  const encrypted = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    await providersKey(),
+    encoder.encode(JSON.stringify(providers))
+  )
+  return `v1.${iv.toBase64()}.${new Uint8Array(encrypted).toBase64()}`
+}
+
+async function openProviders(payload: string): Promise<Providers> {
+  const parts = payload.trim().split('.')
+  const [version, iv, data] = parts
+  if (parts.length !== 3 || version !== 'v1' || !iv || !data) {
+    throw new Error('Prestataires illisibles.')
+  }
+  const key = await providersKey()
+  try {
+    const clear = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: Uint8Array.fromBase64(iv) },
+      key,
+      Uint8Array.fromBase64(data)
+    )
+    const parsed = JSON.parse(decoder.decode(clear)) as unknown
+    if (parsed == null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new Error('Prestataires illisibles.')
+    }
+    return parseProviders(parsed as Record<string, unknown>)
+  } catch {
+    throw new Error('Prestataires illisibles.')
+  }
+}
+
+function remember(providers: Providers): Providers {
+  cache = { database: datastorePaths().database, providers: { ...providers } }
+  return { ...providers }
+}
+
+function readStoredText(): string | null {
+  const db = openDatastore({ readonly: true })
+  try {
+    const row = db
+      .query<{ content: Uint8Array }, [string]>('SELECT content FROM setup WHERE id = ?')
+      .get(PROVIDERS_SETUP_ID)
+    return row ? decoder.decode(row.content) : null
+  } finally {
+    db.close()
+  }
+}
+
+function writeStoredText(stored: string): void {
+  const db = openDatastore()
+  try {
+    db.run(
+      'INSERT INTO setup (id, content) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET content = excluded.content',
+      [PROVIDERS_SETUP_ID, encoder.encode(stored)]
+    )
+  } finally {
+    db.close()
+  }
+}
+
+export function readProviders(): Providers {
+  if (cache?.database === datastorePaths().database) return { ...cache.providers }
+  return emptyProviders()
+}
+
+export async function loadProviders(): Promise<Providers> {
+  const stored = readStoredText()
+  if (stored === null) return remember(emptyProviders())
+  return remember(await openProviders(stored))
+}
+
+export async function writeProviders(next: Providers): Promise<void> {
+  const normalized = parseProviders(next)
+  writeStoredText(await sealProviders(normalized))
+  remember(normalized)
 }
 
 export function readAi(providers: Providers = readProviders()): {

@@ -4,6 +4,7 @@ import { MAX_SCHEDULE_MONTHS } from '../../shared/repayment-case-file'
 import { RECLASSIFY_PHASE, resolveRepaymentPhase } from '../../shared/repayment-phases'
 import { openDatastore } from './datastore-db'
 import { formatMarkdown } from './format-markdown'
+import { PROVIDERS_SETUP_ID } from './providers'
 import { MAX_REPAYMENT_TEMPLATE_BYTES, repaymentTemplateIssue } from './repayment-documents'
 import {
   parseRepaymentMessages,
@@ -497,6 +498,7 @@ export function chatbotAgents(id: string): string {
 }
 
 export function readSetupBytes(id: string): Uint8Array | null {
+  if (id === PROVIDERS_SETUP_ID) return null
   return readRow(id)
 }
 
@@ -505,6 +507,20 @@ const PHONE_ICONS = [
   ['chatbots/icons/icon-192.png', 192],
   ['chatbots/icons/icon-512.png', 512]
 ] as const
+
+const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+
+const SETUP_FILE_TYPES: ReadonlyMap<string, string> = new Map<string, string>([
+  ['email/logo.png', 'image/png'],
+  ['tickets/letter.docx', DOCX_MIME],
+  ['chatbots/icons/icon.svg', 'image/svg+xml'],
+  ...REPAYMENT_DOCUMENT_IDS.map((id): [string, string] => [id, DOCX_MIME]),
+  ...PHONE_ICONS.map(([id]): [string, string] => [id, 'image/png'])
+])
+
+export function setupFileContentType(id: string): string | null {
+  return SETUP_FILE_TYPES.get(id) ?? null
+}
 
 async function writePhoneIcons(svg: string): Promise<void> {
   for (const [id, size] of PHONE_ICONS) {

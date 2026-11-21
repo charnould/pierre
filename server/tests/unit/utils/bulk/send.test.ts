@@ -51,7 +51,7 @@ beforeEach(async () => {
   await mkdir(paths.root, { recursive: true })
   await setup()
   await seedInstanceSetup()
-  writeProviders(emptyProviders())
+  await writeProviders(emptyProviders())
   const db = new Database(`${paths.root}/datastore.sqlite`)
   db.run(`
     CREATE TABLE comptes_locataires (
@@ -284,7 +284,12 @@ describe('bulk execution', () => {
   })
 
   it('sends rich RCS, follows an exact postback, and applies effects once', async () => {
-    writeProviders({ ...emptyProviders(), rcsToken: 'token', rcsFrom: 'PIERRE', rcsSecret: 's' })
+    await writeProviders({
+      ...emptyProviders(),
+      rcsToken: 'token',
+      rcsFrom: 'PIERRE',
+      rcsSecret: 's'
+    })
     globalThis.fetch = Object.assign(
       async (url: URL | RequestInfo, init?: BunFetchRequestInit | RequestInit) => {
         if (String(url) === TELEMETRY_URL) return new Response(null, { status: 204 })
@@ -426,7 +431,12 @@ describe('bulk execution', () => {
   })
 
   it('expires an unanswered interactive node at the configured deadline', async () => {
-    writeProviders({ ...emptyProviders(), rcsToken: 'token', rcsFrom: 'PIERRE', rcsSecret: 's' })
+    await writeProviders({
+      ...emptyProviders(),
+      rcsToken: 'token',
+      rcsFrom: 'PIERRE',
+      rcsSecret: 's'
+    })
     globalThis.fetch = Object.assign(
       async (url: URL | RequestInfo, init?: BunFetchRequestInit | RequestInit) => {
         if (String(url) === TELEMETRY_URL) return new Response(null, { status: 204 })
