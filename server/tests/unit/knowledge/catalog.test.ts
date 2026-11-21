@@ -10,13 +10,13 @@ import {
   getKnowledgeBuild,
   getKnowledgeCatalogSnapshot,
   insertKnowledgeSource,
-  isKnowledgeEntryAssigned,
+  isKnowledgeSourceAssigned,
   knowledgeProjections,
   knowledgePublishTargets,
   listKnowledgeBuilds,
   listKnowledgeSources,
   purgeOldKnowledgeBuilds,
-  replaceKnowledgeSourceEntries
+  updateKnowledgeSourceMetadata
 } from '../../../utils/knowledge/catalog'
 import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 
@@ -34,53 +34,47 @@ afterEach(async () => {
 })
 
 describe('knowledge catalog', () => {
-  it('stores an unassigned source as a strict JSON document', () => {
+  it('stores an unassigned flat source as a strict JSON document', () => {
     const source = insertKnowledgeSource({
-      storageName: 'guide.md',
       originalName: 'Guide.md',
       fileType: 'md',
       sizeBytes: 42,
       origin: 'ui',
-      entries: []
+      title: 'Guide',
+      profileIds: [],
+      moduleIds: []
     })
 
-    expect(source.entries).toEqual([])
     expect(listKnowledgeSources()).toEqual([source])
     const db = new Database(datastorePaths().database, { readonly: true })
     const document = JSON.parse(
       db.query<{ document: string }, []>('SELECT document FROM knowledge_records').get()!.document
     )
     db.close()
-    expect(document.storage_name).toBe('guide.md')
     expect(document.original_name).toBe('Guide.md')
     expect(document.file_type).toBe('md')
-    expect(document.storageName).toBeUndefined()
+    expect(document.title).toBe('Guide')
+    expect(document.originalName).toBeUndefined()
   })
 
   it('fingerprints only assigned build inputs and preserves the file hash on patch', () => {
     const initialFingerprint = getKnowledgeCatalogSnapshot().fingerprint
     const source = insertKnowledgeSource({
-      storageName: 'guide.md',
       originalName: 'Guide.md',
       fileType: 'md',
       sizeBytes: 42,
       contentHash: 'a'.repeat(64),
       origin: 'ui',
-      entries: []
+      title: 'Guide',
+      profileIds: [],
+      moduleIds: []
     })
 
     expect(getKnowledgeCatalogSnapshot().fingerprint).toBe(initialFingerprint)
 
-    const assigned = replaceKnowledgeSourceEntries(
+    const assigned = updateKnowledgeSourceMetadata(
       source.id,
-      [
-        {
-          title: 'Guide',
-          sheet: null,
-          sheetName: null,
-          profileIds: ['default']
-        }
-      ],
+      { title: 'Guide', profileIds: ['default'], moduleIds: [] },
       new Set(['default'])
     )
     expect(assigned?.contentHash).toBe('a'.repeat(64))
@@ -90,20 +84,14 @@ describe('knowledge catalog', () => {
   it('fingerprints unassigned Core Data sources', () => {
     const initialFingerprint = getKnowledgeCatalogSnapshot().fingerprint
     insertKnowledgeSource({
-      storageName: 'core_travaux.csv',
       originalName: 'core.travaux.csv',
       fileType: 'csv',
       sizeBytes: 12,
       contentHash: 'e'.repeat(64),
       origin: 'ui',
-      entries: [
-        {
-          title: 'travaux',
-          sheet: null,
-          sheetName: null,
-          profileIds: []
-        }
-      ]
+      title: 'travaux',
+      profileIds: [],
+      moduleIds: []
     })
 
     expect(getKnowledgeCatalogSnapshot().fingerprint).not.toBe(initialFingerprint)
@@ -125,47 +113,35 @@ describe('knowledge catalog', () => {
 
   it('rejects output collisions within a profile', () => {
     const first = insertKnowledgeSource({
-      storageName: 'a.md',
       originalName: 'A.md',
       fileType: 'md',
       sizeBytes: 1,
       origin: 'ui',
-      entries: []
+      title: 'A',
+      profileIds: [],
+      moduleIds: []
     })
     const second = insertKnowledgeSource({
-      storageName: 'b.md',
       originalName: 'B.md',
       fileType: 'md',
       sizeBytes: 1,
       origin: 'ui',
-      entries: []
+      title: 'B',
+      profileIds: [],
+      moduleIds: []
     })
     const profiles = new Set(['default'])
 
-    replaceKnowledgeSourceEntries(
+    updateKnowledgeSourceMetadata(
       first.id,
-      [
-        {
-          title: 'Guide CAF',
-          sheet: null,
-          sheetName: null,
-          profileIds: ['default']
-        }
-      ],
+      { title: 'Guide CAF', profileIds: ['default'], moduleIds: [] },
       profiles
     )
 
     expect(() =>
-      replaceKnowledgeSourceEntries(
+      updateKnowledgeSourceMetadata(
         second.id,
-        [
-          {
-            title: 'Guide CÀF',
-            sheet: null,
-            sheetName: null,
-            profileIds: ['default']
-          }
-        ],
+        { title: 'Guide CÀF', profileIds: ['default'], moduleIds: [] },
         profiles
       )
     ).toThrow('Knowledge title already used')
@@ -173,59 +149,68 @@ describe('knowledge catalog', () => {
 
   it('rejects a reserved Core Data title on an ordinary source', () => {
     const source = insertKnowledgeSource({
-      storageName: 'a.xlsx',
       originalName: 'A.xlsx',
       fileType: 'xlsx',
       sizeBytes: 1,
       origin: 'ui',
-      entries: []
+      title: 'Feuille',
+      sheetName: 'Feuille',
+      headerRow: 1,
+      headerHash: 'a'.repeat(64),
+      profileIds: [],
+      moduleIds: []
     })
 
     expect(() =>
-      replaceKnowledgeSourceEntries(
+      updateKnowledgeSourceMetadata(
         source.id,
-        [
-          {
-            title: 'Reclamations',
-            sheet: 0,
-            sheetName: 'Reclamations',
-            profileIds: ['default']
-          }
-        ],
+        { title: 'Reclamations', profileIds: ['default'], moduleIds: [] },
         new Set(['default'])
       )
     ).toThrow('Reserved Core Data title')
   })
 
-  it('rejects duplicate workbook sheet names', () => {
-    const workbook = insertKnowledgeSource({
-      storageName: 'workbook.xlsx',
+  it('rejects duplicate workbook sheet names case-insensitively', () => {
+    insertKnowledgeSource({
       originalName: 'Workbook.xlsx',
       fileType: 'xlsx',
       sizeBytes: 1,
       origin: 'ui',
-      entries: []
+      title: 'Premier',
+      sheetName: 'États',
+      headerRow: 1,
+      headerHash: 'a'.repeat(64),
+      profileIds: [],
+      moduleIds: []
     })
     expect(() =>
-      replaceKnowledgeSourceEntries(
-        workbook.id,
-        [
-          {
-            title: 'Premier',
-            sheet: 0,
-            sheetName: 'Données',
-            profileIds: []
-          },
-          {
-            title: 'Second',
-            sheet: 1,
-            sheetName: 'données',
-            profileIds: []
-          }
-        ],
-        new Set()
-      )
-    ).toThrow('Spreadsheet sheet names can only be selected once')
+      insertKnowledgeSource({
+        originalName: 'Workbook.xlsx',
+        fileType: 'xlsx',
+        sizeBytes: 1,
+        origin: 'ui',
+        title: 'Second',
+        sheetName: 'états',
+        headerRow: 1,
+        headerHash: 'b'.repeat(64),
+        profileIds: [],
+        moduleIds: []
+      })
+    ).toThrow('Knowledge source already exists')
+    expect(() =>
+      insertKnowledgeSource({
+        originalName: 'workbook.xlsx',
+        fileType: 'xlsx',
+        sizeBytes: 1,
+        origin: 'ui',
+        title: 'Troisième',
+        sheetName: 'États',
+        headerRow: 1,
+        headerHash: 'c'.repeat(64),
+        profileIds: [],
+        moduleIds: []
+      })
+    ).toThrow(/UNIQUE/)
   })
 
   it('marks interrupted builds as failed', () => {
@@ -264,23 +249,16 @@ describe('knowledge catalog', () => {
     db.run(
       "INSERT INTO knowledge_records (id, kind, document, created_at, updated_at) VALUES (?, 'source', ?, ?, ?)",
       [
-        'legacy-url',
+        'legacy-doc',
         JSON.stringify({
-          storageName: 'guide.md',
           originalName: 'Guide.md',
           fileType: 'md',
           sizeBytes: 1,
           contentHash: null,
           origin: 'ui',
-          entries: [
-            {
-              title: 'Guide',
-              sheet: null,
-              sheetName: null,
-              profileIds: [],
-              moduleIds: []
-            }
-          ]
+          title: 'Guide',
+          profileIds: [],
+          moduleIds: []
         }),
         now,
         now
@@ -293,14 +271,11 @@ describe('knowledge catalog', () => {
 
   it('publishes a module into its prompt database and ignores modules without one', () => {
     const assigned = {
-      title: 'Guide',
-      sheet: null,
-      sheetName: null,
       profileIds: [] as string[],
       moduleIds: ['about' as const]
     }
     const known = ['default', 'about', 'report', 'replies', 'repayment']
-    expect(isKnowledgeEntryAssigned(assigned)).toBe(true)
+    expect(isKnowledgeSourceAssigned(assigned)).toBe(true)
     expect(knowledgePublishTargets(assigned, known)).toEqual(['about'])
     expect(knowledgePublishTargets({ ...assigned, moduleIds: ['automations'] }, known)).toEqual([])
     expect(knowledgePublishTargets({ ...assigned, moduleIds: ['repayment'] }, known)).toEqual([
@@ -318,67 +293,46 @@ describe('knowledge catalog', () => {
     ).toEqual([])
 
     const first = insertKnowledgeSource({
-      storageName: 'a.md',
       originalName: 'A.md',
       fileType: 'md',
       sizeBytes: 1,
       origin: 'ui',
-      entries: []
+      title: 'A',
+      profileIds: [],
+      moduleIds: []
     })
     const second = insertKnowledgeSource({
-      storageName: 'b.md',
       originalName: 'B.md',
       fileType: 'md',
       sizeBytes: 1,
       origin: 'ui',
-      entries: []
+      title: 'B',
+      profileIds: [],
+      moduleIds: []
     })
     const profiles = new Set(known)
-    replaceKnowledgeSourceEntries(
+    updateKnowledgeSourceMetadata(
       first.id,
-      [
-        {
-          title: 'Guide CAF',
-          sheet: null,
-          sheetName: null,
-          profileIds: [],
-          moduleIds: ['about']
-        }
-      ],
+      { title: 'Guide CAF', profileIds: [], moduleIds: ['about'] },
       profiles
     )
     expect(() =>
-      replaceKnowledgeSourceEntries(
+      updateKnowledgeSourceMetadata(
         second.id,
-        [
-          {
-            title: 'Guide CÀF',
-            sheet: null,
-            sheetName: null,
-            profileIds: [],
-            moduleIds: ['about']
-          }
-        ],
+        { title: 'Guide CÀF', profileIds: [], moduleIds: ['about'] },
         profiles
       )
     ).toThrow('Knowledge title already used')
     expect(() =>
       insertKnowledgeSource(
         {
-          storageName: 'c.md',
           originalName: 'C.md',
           fileType: 'md',
           sizeBytes: 1,
           origin: 'ui',
-          entries: [
-            {
-              title: 'Guide CAF',
-              sheet: null,
-              sheetName: null,
-              profileIds: [],
-              moduleIds: ['about']
-            }
-          ]
+          title: 'Guide CAF',
+          profileIds: [],
+          moduleIds: ['about']
         },
         profiles
       )
@@ -396,10 +350,7 @@ describe('knowledge catalog', () => {
           ...snapshot,
           sources: snapshot.sources.map((source) => ({
             ...source,
-            entries: source.entries.map((entry) => ({
-              ...entry,
-              moduleIds: ['tickets' as const]
-            }))
+            moduleIds: ['tickets' as const]
           }))
         },
         known

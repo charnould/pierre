@@ -1,12 +1,79 @@
 import { describe, expect, it } from 'bun:test'
 
-import { isKnowledgeEntryAssigned, normalize_knowledge_name } from './knowledge'
+import {
+  isKnowledgeSourceAssigned,
+  normalize_knowledge_name,
+  validateSpreadsheetHeaders
+} from './knowledge'
 
-describe('isKnowledgeEntryAssigned', () => {
+describe('isKnowledgeSourceAssigned', () => {
   it('is assigned when a profile or a module is selected', () => {
-    expect(isKnowledgeEntryAssigned({ profileIds: [], moduleIds: [] })).toBe(false)
-    expect(isKnowledgeEntryAssigned({ profileIds: ['default'], moduleIds: [] })).toBe(true)
-    expect(isKnowledgeEntryAssigned({ profileIds: [], moduleIds: ['tickets'] })).toBe(true)
+    expect(isKnowledgeSourceAssigned({ profileIds: [], moduleIds: [] })).toBe(false)
+    expect(isKnowledgeSourceAssigned({ profileIds: ['default'], moduleIds: [] })).toBe(true)
+    expect(isKnowledgeSourceAssigned({ profileIds: [], moduleIds: ['tickets'] })).toBe(true)
+  })
+})
+
+describe('validateSpreadsheetHeaders', () => {
+  it('ignores completely empty columns and horizontal-merge spacer columns', () => {
+    const result = validateSpreadsheetHeaders(
+      [
+        { value: 'Désignation', own: true },
+        { value: 'Désignation', own: false },
+        { value: 'Quantité', own: true },
+        { value: null, own: false }
+      ],
+      [
+        { colIndex: 0, colLetter: 'A', lastNonEmptyRow: 10, lastOwnRow: 10 },
+        { colIndex: 1, colLetter: 'B', lastNonEmptyRow: 10, lastOwnRow: 2 },
+        { colIndex: 2, colLetter: 'C', lastNonEmptyRow: 10, lastOwnRow: 10 },
+        { colIndex: 3, colLetter: 'D', lastNonEmptyRow: 0, lastOwnRow: 0 }
+      ],
+      3
+    )
+    expect(result).toEqual({
+      ok: true,
+      columns: [
+        { colIndex: 0, colLetter: 'A', name: 'designation' },
+        { colIndex: 2, colLetter: 'C', name: 'quantite' }
+      ]
+    })
+  })
+
+  it('rejects untitled columns with data and duplicate normalized headers with column letters', () => {
+    const untitled = validateSpreadsheetHeaders(
+      [
+        { value: null, own: false },
+        { value: 'Adresse', own: true }
+      ],
+      [
+        { colIndex: 0, colLetter: 'A', lastNonEmptyRow: 5, lastOwnRow: 5 },
+        { colIndex: 1, colLetter: 'B', lastNonEmptyRow: 5, lastOwnRow: 5 }
+      ],
+      2
+    )
+    expect(untitled).toEqual({
+      ok: false,
+      code: 'invalid_spreadsheet_header',
+      message: 'Colonne sans titre : A.'
+    })
+
+    const duplicate = validateSpreadsheetHeaders(
+      [
+        { value: 'Niveau', own: true },
+        { value: 'niveau', own: true }
+      ],
+      [
+        { colIndex: 0, colLetter: 'O', lastNonEmptyRow: 5, lastOwnRow: 5 },
+        { colIndex: 1, colLetter: 'P', lastNonEmptyRow: 5, lastOwnRow: 5 }
+      ],
+      1
+    )
+    expect(duplicate).toMatchObject({
+      ok: false,
+      code: 'duplicate_spreadsheet_header',
+      message: 'Colonnes en doublon : O et P (« niveau »).'
+    })
   })
 })
 
@@ -47,36 +114,6 @@ describe('normalize_knowledge_name', () => {
 
     it('replaces ç via NFD decomposition', () => {
       expect(normalize_knowledge_name('garçon')).toBe('garcon')
-    })
-  })
-
-  describe('extension handling', () => {
-    it('normalizes extensions by default', () => {
-      expect(normalize_knowledge_name('Mon Fichier.json')).toBe('mon_fichier_json')
-      expect(normalize_knowledge_name('Data.XLSX')).toBe('data_xlsx')
-    })
-
-    it('preserves the file extension when requested', () => {
-      expect(normalize_knowledge_name('Mon Fichier.json', { preserve_extension: true })).toBe(
-        'mon_fichier.json'
-      )
-      expect(normalize_knowledge_name('Data.XLSX', { preserve_extension: true })).toBe('data.XLSX')
-    })
-
-    it('handles values without extension', () => {
-      expect(normalize_knowledge_name('mon fichier', { preserve_extension: true })).toBe(
-        'mon_fichier'
-      )
-    })
-
-    it('uses the last dot as extension separator when preserving extension', () => {
-      expect(normalize_knowledge_name('foo.bar.baz.md', { preserve_extension: true })).toBe(
-        'foo_bar_baz.md'
-      )
-    })
-
-    it('treats a leading dot as part of the name, even when preserving extension', () => {
-      expect(normalize_knowledge_name('.hidden', { preserve_extension: true })).toBe('hidden')
     })
   })
 })

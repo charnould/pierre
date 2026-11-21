@@ -1,27 +1,26 @@
 import { coreDataContractForFilename } from '../../../shared/core-data'
-import { isKnowledgeEntryAssigned, normalize_knowledge_name } from '../../../shared/knowledge'
+import { isKnowledgeSourceAssigned, normalize_knowledge_name } from '../../../shared/knowledge'
 import { publishModuleForPrompt } from '../../../shared/modules'
 import { version } from '../../package.json' with { type: 'json' }
 import {
   isReservedCoreDataTitle,
   type KnowledgeCatalogSnapshot,
-  type KnowledgeEntry,
   type KnowledgeProjection,
   type KnowledgeSource
 } from './catalog-schema'
 
-export const PROFILE_BUILD_EPOCH = `${version}:direct-import-1`
+export const PROFILE_BUILD_EPOCH = `${version}:direct-import-2`
 
-export { isKnowledgeEntryAssigned }
+export { isKnowledgeSourceAssigned }
 
 export const knowledgePublishTargets = (
-  entry: Pick<KnowledgeEntry, 'profileIds' | 'moduleIds'>,
+  source: Pick<KnowledgeSource, 'profileIds' | 'moduleIds'>,
   knownIds: Iterable<string>
 ): string[] => {
   const known = new Set(knownIds)
-  const targets = new Set([...entry.profileIds].filter((id) => known.has(id)))
-  if (entry.moduleIds.length === 0) return [...targets].sort()
-  const modules = new Set(entry.moduleIds)
+  const targets = new Set([...source.profileIds].filter((id) => known.has(id)))
+  if (source.moduleIds.length === 0) return [...targets].sort()
+  const modules = new Set(source.moduleIds)
   for (const id of known) {
     const moduleId = publishModuleForPrompt(id)
     if (moduleId && modules.has(moduleId)) targets.add(id)
@@ -34,34 +33,37 @@ export const assertNoOutputCollisions = (
   validProfileIds?: ReadonlySet<string>
 ): void => {
   const outputs = new Map<string, string>()
+  const sourceKeys = new Set<string>()
   for (const source of sources) {
+    const sourceKey = `${source.originalName.toLocaleLowerCase('fr')}:${(source.sheetName ?? '').toLocaleLowerCase('fr')}`
+    if (sourceKeys.has(sourceKey)) {
+      throw new Error(`Knowledge source already exists: ${source.originalName}`)
+    }
+    sourceKeys.add(sourceKey)
+
     const coreContract = coreDataContractForFilename(source.originalName)
     if (
       coreContract &&
-      (source.fileType !== 'csv' ||
-        source.entries.length !== 1 ||
-        normalize_knowledge_name(source.entries[0]!.title) !== coreContract.table)
+      (source.fileType !== 'csv' || normalize_knowledge_name(source.title) !== coreContract.table)
     ) {
       throw new Error(`Invalid Core Data source: ${source.originalName}`)
     }
-    for (const entry of source.entries) {
-      const key = normalize_knowledge_name(entry.title)
-      if (!key) throw new Error(`Invalid knowledge title: ${entry.title}`)
-      if (!coreContract && isReservedCoreDataTitle(key)) {
-        throw new Error(`Reserved Core Data title ${entry.title}; upload core.${key}.csv instead`)
+    const key = normalize_knowledge_name(source.title)
+    if (!key) throw new Error(`Invalid knowledge title: ${source.title}`)
+    if (!coreContract && isReservedCoreDataTitle(key)) {
+      throw new Error(`Reserved Core Data title ${source.title}; upload core.${key}.csv instead`)
+    }
+    for (const profileId of source.profileIds) {
+      if (validProfileIds && !validProfileIds.has(profileId)) {
+        throw new Error(`Unknown knowledge profile: ${profileId}`)
       }
-      for (const profileId of entry.profileIds) {
-        if (validProfileIds && !validProfileIds.has(profileId)) {
-          throw new Error(`Unknown knowledge profile: ${profileId}`)
-        }
+    }
+    for (const access of knowledgePublishTargets(source, validProfileIds ?? [])) {
+      const output = `${access}:${key}`
+      if (outputs.has(output)) {
+        throw new Error(`Knowledge title already used for profile ${access}: ${source.title}`)
       }
-      for (const access of knowledgePublishTargets(entry, validProfileIds ?? [])) {
-        const output = `${access}:${key}`
-        if (outputs.has(output)) {
-          throw new Error(`Knowledge title already used for profile ${access}: ${entry.title}`)
-        }
-        outputs.set(output, source.id)
-      }
+      outputs.set(output, source.id)
     }
   }
 }
@@ -69,24 +71,23 @@ export const assertNoOutputCollisions = (
 const isCoreDataSource = (source: Pick<KnowledgeSource, 'originalName'>): boolean =>
   coreDataContractForFilename(source.originalName) !== null
 
-const isFingerprintEntry = (source: KnowledgeSource, entry: KnowledgeEntry): boolean =>
-  isKnowledgeEntryAssigned(entry) || isCoreDataSource(source)
+const isFingerprintSource = (source: KnowledgeSource): boolean =>
+  isKnowledgeSourceAssigned(source) || isCoreDataSource(source)
 
 export const catalogFingerprint = (sources: readonly KnowledgeSource[]): string => {
   const inputs = sources
-    .flatMap((source) =>
-      source.entries
-        .filter((entry) => isFingerprintEntry(source, entry))
-        .map((entry) => ({
-          contentHash: source.contentHash,
-          fileType: source.fileType,
-          originalName: source.originalName,
-          title: entry.title,
-          sheet: entry.sheet,
-          profileIds: [...entry.profileIds].sort(),
-          moduleIds: [...entry.moduleIds].sort()
-        }))
-    )
+    .filter(isFingerprintSource)
+    .map((source) => ({
+      contentHash: source.contentHash,
+      fileType: source.fileType,
+      originalName: source.originalName,
+      title: source.title,
+      sheetName: source.sheetName,
+      headerRow: source.headerRow,
+      headerHash: source.headerHash,
+      profileIds: [...source.profileIds].sort(),
+      moduleIds: [...source.moduleIds].sort()
+    }))
     .sort((left, right) => {
       const leftValue = JSON.stringify(left)
       const rightValue = JSON.stringify(right)
@@ -95,18 +96,8 @@ export const catalogFingerprint = (sources: readonly KnowledgeSource[]): string 
   return String(Bun.hash(JSON.stringify(inputs)))
 }
 
-export const knowledgeItemKey = (sourceId: string, entry: KnowledgeEntry): string =>
-  `${sourceId}:${entry.sheetName ?? 'document'}`
-
-export const assignedKnowledgeItemKeys = (snapshot: KnowledgeCatalogSnapshot): string[] => [
-  ...new Set(
-    snapshot.sources.flatMap((source) =>
-      source.entries
-        .filter((entry) => isKnowledgeEntryAssigned(entry))
-        .map((entry) => knowledgeItemKey(source.id, entry))
-    )
-  )
-]
+export const assignedKnowledgeItemKeys = (snapshot: KnowledgeCatalogSnapshot): string[] =>
+  snapshot.sources.filter(isKnowledgeSourceAssigned).map((source) => source.id)
 
 export const coreDataFingerprint = (sources: readonly KnowledgeSource[]): string => {
   const inputs = sources
@@ -129,20 +120,19 @@ export const knowledgeProjections = (
   snapshot: KnowledgeCatalogSnapshot,
   knownIds: Iterable<string> = []
 ): KnowledgeProjection[] =>
-  snapshot.sources.flatMap((source) =>
-    source.entries.flatMap((entry) => {
-      const coreDataTable = coreDataContractForFilename(source.originalName)?.table ?? null
-      return knowledgePublishTargets(entry, knownIds).map((access) => ({
-        sourceId: source.id,
-        access,
-        title: entry.title,
-        sheet: entry.sheet,
-        fileType: source.fileType,
-        contentHash: source.contentHash,
-        coreDataTable
-      }))
-    })
-  )
+  snapshot.sources.flatMap((source) => {
+    const coreDataTable = coreDataContractForFilename(source.originalName)?.table ?? null
+    return knowledgePublishTargets(source, knownIds).map((access) => ({
+      sourceId: source.id,
+      access,
+      title: source.title,
+      fileType: source.fileType,
+      contentHash: source.contentHash,
+      headerRow: source.headerRow,
+      headerHash: source.headerHash,
+      coreDataTable
+    }))
+  })
 
 export const profileBuildFingerprint = (
   profile: { id: string; communityKnowledge: boolean },
@@ -154,7 +144,8 @@ export const profileBuildFingerprint = (
       contentHash: projection.contentHash,
       fileType: projection.fileType,
       title: projection.title,
-      sheet: projection.sheet
+      headerRow: projection.headerRow,
+      headerHash: projection.headerHash
     }))
     .sort((left, right) => {
       const leftValue = JSON.stringify(left)

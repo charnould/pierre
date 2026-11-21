@@ -145,7 +145,7 @@ export const runKnowledgePipeline = async (buildId: string): Promise<KnowledgePi
         for (const source of snapshot.sources) {
           const contract = coreDataContractForFilename(source.originalName)
           if (!contract || source.fileType !== 'csv') continue
-          corePayloads.set(contract.table, readDataTable(db, sourceTableName(source.id, 0)))
+          corePayloads.set(contract.table, readDataTable(db, sourceTableName(source.id)))
         }
       } finally {
         db.close()
@@ -172,7 +172,7 @@ export const runKnowledgePipeline = async (buildId: string): Promise<KnowledgePi
         if (projection.coreDataTable && corePayloads) return []
         const source = projection.coreDataTable
           ? projection.coreDataTable
-          : sourceTableName(projection.sourceId, projection.sheet ?? 0)
+          : sourceTableName(projection.sourceId)
         return [{ source, target: normalize_knowledge_name(projection.title) }]
       })
       const rowTables = assigned.flatMap((projection) => {

@@ -2,11 +2,13 @@ import { Database } from 'bun:sqlite'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
 import { mkdir, rm } from 'node:fs/promises'
 
+import * as XLSX from 'xlsx'
+
 import type { BusinessModuleId } from '../../../../shared/modules'
 import { FIELDS } from '../../../utils/carl'
 import { migrate_datastore } from '../../../utils/datastore-migrations'
 import { CORE_DATA_CONTRACT } from '../../../utils/datastore-tables'
-import { replaceKnowledgeSourceEntries } from '../../../utils/knowledge/catalog'
+import { updateKnowledgeSourceMetadata } from '../../../utils/knowledge/catalog'
 import { importKnowledgeFiles } from '../../../utils/knowledge/import-files'
 import { runKnowledgePipeline } from '../../../utils/knowledge/run-pipeline'
 import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
@@ -30,17 +32,13 @@ const upload = async (
   const imported = await importKnowledgeFiles([new File([body], filename)], 'ui')
   const source = imported.sources[0]!.source
   if (!entry.profileIds && !entry.moduleIds && !entry.title) return source
-  const current = source.entries[0]!
-  return replaceKnowledgeSourceEntries(
+  return updateKnowledgeSourceMetadata(
     source.id,
-    [
-      {
-        ...current,
-        title: entry.title ?? current.title,
-        profileIds: entry.profileIds ?? current.profileIds,
-        moduleIds: entry.moduleIds ?? current.moduleIds
-      }
-    ],
+    {
+      title: entry.title ?? source.title,
+      profileIds: entry.profileIds ?? source.profileIds,
+      moduleIds: entry.moduleIds ?? source.moduleIds
+    },
     PROFILES
   )!
 }
@@ -192,14 +190,13 @@ describe('knowledge pipeline', () => {
   it('rejects assignments to profiles that no longer exist', async () => {
     const source = await upload('Retired.md', '# Retiré')
     expect(() =>
-      replaceKnowledgeSourceEntries(
+      updateKnowledgeSourceMetadata(
         source.id,
-        [
-          {
-            ...source.entries[0]!,
-            profileIds: ['retired-profile']
-          }
-        ],
+        {
+          title: source.title,
+          profileIds: ['retired-profile'],
+          moduleIds: source.moduleIds
+        },
         PROFILES
       )
     ).toThrow('Unknown knowledge profile: retired-profile')
@@ -348,6 +345,62 @@ describe('knowledge pipeline', () => {
     datastore.close()
     expect(row).toEqual({ id_reclamation: 'REQ-EXISTING' })
     expect(cached).toBe(0)
+  }, 20_000)
+
+  it('publishes selected multi-sheet xlsx tables with custom headers and merges into the profile database', async () => {
+    const patrimoine = XLSX.utils.aoa_to_sheet([
+      ['Extraction patrimoine', null, null],
+      ['Catégorie', 'Résidence', null],
+      ['Collectif', 'Les Lilas', null],
+      [null, 'Les Acacias', null]
+    ])
+    patrimoine['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } },
+      { s: { r: 1, c: 1 }, e: { r: 1, c: 2 } },
+      { s: { r: 2, c: 0 }, e: { r: 3, c: 0 } },
+      { s: { r: 2, c: 1 }, e: { r: 2, c: 2 } },
+      { s: { r: 3, c: 1 }, e: { r: 3, c: 2 } }
+    ]
+    const contacts = XLSX.utils.aoa_to_sheet([
+      ['Nom', 'Agence'],
+      ['Alice', 'Nord']
+    ])
+    const book = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(book, patrimoine, 'Patrimoine')
+    XLSX.utils.book_append_sheet(book, contacts, 'Contacts')
+    const bytes = new Uint8Array(XLSX.write(book, { type: 'array', bookType: 'xlsx' }) as number[])
+
+    const first = await importKnowledgeFiles([new File([bytes], 'Carnet.xlsx')], 'ui', {
+      sheetName: 'Patrimoine',
+      headerRow: 2,
+      title: 'Patrimoine'
+    })
+    const second = await importKnowledgeFiles([new File([bytes], 'Carnet.xlsx')], 'ui', {
+      sheetName: 'Contacts',
+      headerRow: 1,
+      title: 'Contacts agences'
+    })
+    for (const source of [first.sources[0]!.source, second.sources[0]!.source]) {
+      updateKnowledgeSourceMetadata(
+        source.id,
+        { title: source.title, profileIds: [TEST_PROFILE], moduleIds: [] },
+        PROFILES
+      )
+    }
+
+    await runKnowledgePipeline(Bun.randomUUIDv7())
+
+    const db = new Database(knowledgeDatabase(), { readonly: true })
+    expect(
+      db.query<{ categorie: string; residence: string }, []>('SELECT * FROM patrimoine').all()
+    ).toEqual([
+      { categorie: 'collectif', residence: 'les lilas' },
+      { categorie: 'collectif', residence: 'les acacias' }
+    ])
+    expect(
+      db.query<{ nom: string; agence: string }, []>('SELECT * FROM contacts_agences').all()
+    ).toEqual([{ nom: 'alice', agence: 'nord' }])
+    db.close()
   }, 20_000)
 
   it('does not rebuild an unchanged profile', async () => {

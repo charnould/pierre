@@ -1,10 +1,10 @@
 export {
-  KnowledgeEntrySchema,
   type KnowledgeBuild,
   type KnowledgeBuildTrigger,
   type KnowledgeCatalogSnapshot,
   type KnowledgeDiagnostic,
-  type KnowledgeEntry,
+  KnowledgeModuleIdsSchema,
+  KnowledgeProfileIdsSchema,
   type KnowledgeProjection,
   type KnowledgeSource
 } from './catalog-schema'
@@ -12,12 +12,11 @@ export {
   assignedKnowledgeItemKeys,
   assertNoOutputCollisions,
   coreDataFingerprint,
+  isKnowledgeSourceAssigned,
   knowledgeProjections,
+  knowledgePublishTargets,
   PROFILE_BUILD_EPOCH,
-  profileBuildFingerprint,
-  isKnowledgeEntryAssigned,
-  knowledgeItemKey,
-  knowledgePublishTargets
+  profileBuildFingerprint
 } from './catalog-rules'
 export {
   completeKnowledgeBuild,
@@ -30,14 +29,15 @@ export {
   updateKnowledgeBuild
 } from './knowledge-builds'
 export {
+  assertKnowledgeCatalogValidInDb,
   deleteKnowledgeSource,
-  findKnowledgeSourceByStorageName,
+  findKnowledgeSourcesByFilename,
   getKnowledgeCatalogSnapshot,
   getKnowledgeSource,
   insertKnowledgeSource,
   insertKnowledgeSourceInDb,
   listKnowledgeSourceContents,
   listKnowledgeSources,
-  replaceKnowledgeSourceEntries,
-  updateKnowledgeSourceFileInDb
+  updateKnowledgeSourceFileInDb,
+  updateKnowledgeSourceMetadata
 } from './knowledge-sources'
