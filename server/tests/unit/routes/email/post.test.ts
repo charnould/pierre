@@ -134,7 +134,7 @@ beforeEach(async () => {
   await writeSetup('global', text({ name: 'PIERRE', timezone: 'Europe/Paris' }))
   await writeSetup('email/html', new TextEncoder().encode('{{ logo_inline_cid }} {{ message }}'))
   await writeSetup('email/logo.png', new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0, 0, 0, 0]))
-  emailProviders()
+  await emailProviders()
   await writeSetup(
     'repayment',
     text({
@@ -592,7 +592,7 @@ describe('email transactionnel', () => {
   })
 
   it('demande un rejeu si le domaine entrant manque', async () => {
-    emailProviders('')
+    await emailProviders('')
     const response = await postWebhook(
       {
         type: 'Inbound',

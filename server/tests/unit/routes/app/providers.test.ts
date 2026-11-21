@@ -1,19 +1,28 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, spyOn } from 'bun:test'
-import { statSync, writeFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 
 import { Hono } from 'hono'
 
 import { getProviders, putProviders } from '../../../../routes/admin/providers'
+import { getAdminSetup, getSetupFile } from '../../../../routes/setup/admin'
 import type { User } from '../../../../utils/_schema'
 import { authorizeAdministrator } from '../../../../utils/authorize-role'
+import { openDatastore } from '../../../../utils/datastore-db'
 import { setDatastoreRoot, testDatastorePaths } from '../../../../utils/paths'
 import {
   emptyProviders,
-  providersPath,
+  loadProviders,
+  PROVIDERS_SETUP_ID,
   readProviders,
   writeProviders
 } from '../../../../utils/providers'
+import { setup } from '../../../../utils/setup'
+import {
+  readSetupBytes,
+  SetupError,
+  setupFileContentType,
+  writeSetup
+} from '../../../../utils/setup-store'
 
 const paths = testDatastorePaths('providers_admin')
 const adminUser: User = {
@@ -30,6 +39,8 @@ app.use('*', async (c, next) => {
 })
 app.get('/admin/providers', authorizeAdministrator, getProviders)
 app.put('/admin/providers', authorizeAdministrator, putProviders)
+app.get('/admin/setup', authorizeAdministrator, getAdminSetup)
+app.get('/setup/:path{.+}', getSetupFile)
 
 const guest = new Hono<{ Variables: { user: User } }>()
 guest.use('*', async (c, next) => {
@@ -37,6 +48,7 @@ guest.use('*', async (c, next) => {
   await next()
 })
 guest.put('/admin/providers', authorizeAdministrator, putProviders)
+guest.get('/setup/:path{.+}', getSetupFile)
 
 const put = (body: unknown) =>
   app.request('/admin/providers', {
@@ -45,13 +57,26 @@ const put = (body: unknown) =>
     body: JSON.stringify(body)
   })
 
-beforeAll(() => {
+beforeAll(async () => {
   setDatastoreRoot(paths.root)
+  await setup()
 })
 
-beforeEach(() => {
-  writeProviders(emptyProviders())
+beforeEach(async () => {
+  await writeProviders(emptyProviders())
 })
+
+function storedProviders(): string {
+  const db = openDatastore({ readonly: true })
+  try {
+    const row = db
+      .query<{ content: Uint8Array }, [string]>('SELECT content FROM setup WHERE id = ?')
+      .get(PROVIDERS_SETUP_ID)
+    return row ? new TextDecoder().decode(row.content) : ''
+  } finally {
+    db.close()
+  }
+}
 
 afterAll(async () => {
   setDatastoreRoot(null)
@@ -115,7 +140,10 @@ describe('prestataires', () => {
       model: 'gpt-5.5',
       effort: 'medium'
     })
-    expect((statSync(providersPath()).mode & 0o777) === 0o600).toBe(true)
+    expect(storedProviders()).not.toContain('sk-ok')
+    const modules = await (await app.request('/admin/setup')).json()
+    expect(JSON.stringify(modules)).not.toContain('sk-ok')
+    expect(JSON.stringify(modules)).not.toContain(PROVIDERS_SETUP_ID)
   })
 
   it('conserve le secret RCS et le renvoie à la lecture', async () => {
@@ -188,9 +216,60 @@ describe('prestataires', () => {
     })
   })
 
-  it('refuse un type hors des trois valeurs', async () => {
-    writeFileSync(providersPath(), `${JSON.stringify({ llmType: 'nope', llmApiKey: 'sk' })}\n`)
-    expect(readProviders()).toMatchObject({ llmType: '', llmApiKey: 'sk' })
+  it('chiffre toute la ligne en un seul bloc et refuse un autre AUTH_SECRET', async () => {
+    await writeProviders({
+      ...emptyProviders(),
+      llmType: 'openai',
+      llmBaseUrl: 'https://api.openai.com/v1',
+      llmApiKey: 'sk-sealed',
+      emailDomain: '  Example.ORG  ',
+      mailevaClientId: 'client-1',
+      mailevaUsername: 'sandbox.pierre',
+      mailevaClientSecret: 'maileva-secret',
+      mailevaPassword: 'maileva-password',
+      mailevaTotpSecret: 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ'
+    })
+    expect(readProviders().emailDomain).toBe('example.org')
+    const stored = storedProviders()
+    expect(stored.startsWith('v1.')).toBe(true)
+    expect(stored).not.toContain('sk-sealed')
+    expect(stored).not.toContain('maileva-password')
+    expect(stored).not.toContain('openai')
+    const reloaded = await loadProviders()
+    expect(reloaded).toMatchObject({
+      llmType: 'openai',
+      llmApiKey: 'sk-sealed',
+      emailDomain: 'example.org',
+      mailevaClientSecret: 'maileva-secret',
+      mailevaPassword: 'maileva-password',
+      mailevaTotpSecret: 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ'
+    })
+    const previous = Bun.env['AUTH_SECRET']
+    Bun.env['AUTH_SECRET'] = 'b'.repeat(64)
+    try {
+      await expect(loadProviders()).rejects.toThrow('Prestataires illisibles.')
+      Bun.env['AUTH_SECRET'] = 'short'
+      await expect(loadProviders()).rejects.toThrow('AUTH_SECRET must contain at least 32')
+    } finally {
+      Bun.env['AUTH_SECRET'] = previous
+    }
+    expect(readSetupBytes(PROVIDERS_SETUP_ID)).toBeNull()
+    expect(setupFileContentType('toString')).toBeNull()
+    expect((await guest.request('/setup/providers')).status).toBe(404)
+    expect((await guest.request('/setup/toString')).status).toBe(404)
+    expect((await app.request('/setup/providers')).status).toBe(404)
+    await writeSetup(
+      'global',
+      new TextEncoder().encode('{"name":"PIERRE","timezone":"Europe/Paris"}')
+    )
+    expect((await guest.request('/setup/global')).status).toBe(404)
+    await writeSetup('email/logo.png', new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0, 0, 0, 0]))
+    const logo = await guest.request('/setup/email/logo.png')
+    expect(logo.status).toBe(200)
+    expect(logo.headers.get('content-type')).toBe('image/png')
+    await expect(writeSetup('providers', new TextEncoder().encode('{}'))).rejects.toBeInstanceOf(
+      SetupError
+    )
     const response = await put({
       group: 'ai',
       llmType: 'other',

@@ -17,6 +17,7 @@ import {
   readSetupBytes,
   repaymentReady,
   SetupError,
+  setupFileContentType,
   ticketsReady,
   writeSetup
 } from '../../utils/setup-store'
@@ -35,6 +36,14 @@ const TEXT = new Set([
   'chatbots/default/AGENTS.md'
 ])
 
+const CHATBOT_SETUP = /^chatbots\/([a-z0-9][a-z0-9_-]{0,63})(?:\/AGENTS\.md)?$/
+
+function isSetupText(id: string): boolean {
+  if (TEXT.has(id)) return true
+  const match = CHATBOT_SETUP.exec(id)
+  return Boolean(match && match[1] !== 'icons')
+}
+
 function texts(): Record<string, string | null> {
   const db = openDatastore()
   try {
@@ -44,7 +53,7 @@ function texts(): Record<string, string | null> {
     const result: Record<string, string | null> = {}
     for (const id of TEXT) result[id] = null
     for (const row of rows) {
-      if (row.id.endsWith('.png') || row.id.endsWith('.docx')) continue
+      if (!isSetupText(row.id)) continue
       result[row.id] = new TextDecoder().decode(row.content)
     }
     return result
@@ -60,7 +69,7 @@ function binaries(): string[] {
       .query<{ id: string }, []>('SELECT id FROM setup ORDER BY id')
       .all()
       .map((row) => row.id)
-      .filter((id) => id.endsWith('.png') || id.endsWith('.docx') || id.endsWith('.svg'))
+      .filter((id) => setupFileContentType(id) !== null)
   } finally {
     db.close()
   }
@@ -79,8 +88,6 @@ export const getAdminSetup = (c: AuthContext) =>
       'automations/AGENTS.md': automationsReady() != null
     }
   })
-
-const CHATBOT_SETUP = /^chatbots\/([a-z0-9][a-z0-9_-]{0,63})(?:\/AGENTS\.md)?$/
 
 function setupChatbotId(id: string): string | null {
   if (id === 'chatbots/icons/icon.svg') return 'default'
@@ -146,15 +153,10 @@ export const deleteAdminChatbot = (c: AuthContext) => {
 
 export const getSetupFile = (c: AuthContext) => {
   const id = c.req.param('path') ?? ''
+  const type = setupFileContentType(id)
+  if (!type) return c.json({ error: { code: 'not_found', message: 'Pièce absente.' } }, 404)
   const content = readSetupBytes(id)
   if (!content) return c.json({ error: { code: 'not_found', message: 'Pièce absente.' } }, 404)
-  const type = id.endsWith('.docx')
-    ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    : id.endsWith('.svg')
-      ? 'image/svg+xml'
-      : id.endsWith('.png')
-        ? 'image/png'
-        : 'application/octet-stream'
   const copy = new ArrayBuffer(content.byteLength)
   new Uint8Array(copy).set(content)
   return new Response(new Blob([copy]), { headers: { 'content-type': type } })

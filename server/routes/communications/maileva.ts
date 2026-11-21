@@ -16,7 +16,6 @@ import { normalize_email } from '../../utils/contacts'
 import { settle_delivery } from '../../utils/delivery-status'
 import { type MailevaProduct } from '../../utils/maileva/endpoints'
 import { MailevaError, singleflight } from '../../utils/maileva/http'
-import { decryptMailevaSecrets } from '../../utils/maileva/secrets'
 import { dispatchMaileva, type MailevaDelivery } from '../../utils/maileva/send'
 import { mailevaLines, mailevaTarget, readProviders } from '../../utils/providers'
 
@@ -164,18 +163,15 @@ export const postMaileva = (product: MailevaProduct) => async (c: AuthContext) =
       )
     }
     const providers = readProviders()
-    const secrets = providers.mailevaSecrets
-      ? await decryptMailevaSecrets(providers.mailevaSecrets)
-      : null
     const sender = mailevaLines(providers.mailevaAddress)
     if (
       !mailevaTarget(providers.mailevaUsername) ||
       !providers.mailevaClientId ||
-      !secrets?.clientSecret ||
-      !secrets.password ||
+      !providers.mailevaClientSecret ||
+      !providers.mailevaPassword ||
       (postal && (!(sender[0] || sender[1]) || !sender[5])) ||
       (!postal && !providers.mailevaSenderId) ||
-      (product === 'lre' && !secrets.totpSecret)
+      (product === 'lre' && !providers.mailevaTotpSecret)
     ) {
       return c.json(
         { error: { code: 'not_configured', message: 'Maileva n’est pas configuré' } },

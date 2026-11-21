@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
-import { readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 
 import { Hono } from 'hono'
@@ -7,11 +6,11 @@ import { Hono } from 'hono'
 import { postMaileva } from '../../../routes/communications/maileva'
 import type { User } from '../../../utils/_schema'
 import { create_outbound } from '../../../utils/communications/storage'
+import { openDatastore } from '../../../utils/datastore-db'
 import {
   clear_maileva_sessions_for_tests,
   set_maileva_transport_for_tests
 } from '../../../utils/maileva/http'
-import { encryptMailevaSecrets } from '../../../utils/maileva/secrets'
 import {
   clear_maileva_sender_sessions_for_tests,
   dispatchMaileva
@@ -22,7 +21,7 @@ import { setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 import {
   emptyProviders,
   mailevaLines,
-  providersPath,
+  PROVIDERS_SETUP_ID,
   readProviders,
   writeProviders
 } from '../../../utils/providers'
@@ -49,11 +48,11 @@ beforeAll(async () => {
   await setup()
 })
 
-beforeEach(() => {
+beforeEach(async () => {
   clear_maileva_sessions_for_tests()
   clear_maileva_sender_sessions_for_tests()
   set_maileva_transport_for_tests(null)
-  writeProviders(emptyProviders())
+  await writeProviders(emptyProviders())
 })
 
 afterAll(async () => {
@@ -71,14 +70,19 @@ describe('Maileva', () => {
   })
 
   it('chiffre les secrets sans les laisser en clair', async () => {
-    const encrypted = await encryptMailevaSecrets({
-      clientSecret: 'client-secret',
-      password: 'maileva-password',
-      totpSecret: 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ'
-    })
-    expect(encrypted.startsWith('v1.')).toBe(true)
-    expect(encrypted).not.toContain('maileva-password')
-    expect(encrypted).not.toContain('client-secret')
+    await configure('sandbox.pierre', true)
+    const db = openDatastore({ readonly: true })
+    try {
+      const row = db
+        .query<{ content: Uint8Array }, [string]>('SELECT content FROM setup WHERE id = ?')
+        .get(PROVIDERS_SETUP_ID)
+      const stored = new TextDecoder().decode(row?.content ?? new Uint8Array())
+      expect(stored.startsWith('v1.')).toBe(true)
+      expect(stored).not.toContain('maileva-password')
+      expect(stored).not.toContain('client-secret')
+    } finally {
+      db.close()
+    }
   })
 
   it('place le code postal en dernière ligne quand il est saisi plus haut', () => {
@@ -250,19 +254,27 @@ async function send(product: 'courrier' | 'lre'): Promise<string> {
 }
 
 async function configure(username: string, electronic = false): Promise<void> {
-  writeProviders({
+  await writeProviders({
     ...emptyProviders(),
     mailevaClientId: 'client-id',
     mailevaUsername: username,
     mailevaSenderId: electronic ? 'sender-1' : '',
     mailevaAddress: 'Bailleur\n\n\n1 rue de Pierre\n\n75001 Paris',
-    mailevaSecrets: await encryptMailevaSecrets({
-      clientSecret: 'client-secret',
-      password: 'maileva-password',
-      totpSecret: electronic ? 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ' : ''
-    })
+    mailevaClientSecret: 'client-secret',
+    mailevaPassword: 'maileva-password',
+    mailevaTotpSecret: electronic ? 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ' : ''
   })
-  expect(readFileSync(providersPath(), 'utf8')).not.toContain('maileva-password')
+  const db = openDatastore({ readonly: true })
+  try {
+    const row = db
+      .query<{ content: Uint8Array }, [string]>('SELECT content FROM setup WHERE id = ?')
+      .get(PROVIDERS_SETUP_ID)
+    expect(new TextDecoder().decode(row?.content ?? new Uint8Array())).not.toContain(
+      'maileva-password'
+    )
+  } finally {
+    db.close()
+  }
   expect(readProviders().mailevaUsername).toBe(username)
 }
 

@@ -21,7 +21,6 @@ import {
   mailevaRequest,
   resourceId
 } from '../../utils/maileva/http'
-import { encryptMailevaSecrets } from '../../utils/maileva/secrets'
 import { dispatchMaileva, type MailevaDelivery, remoteStatus } from '../../utils/maileva/send'
 import { decodeBase32 } from '../../utils/maileva/totp'
 import { setDatastoreRoot } from '../../utils/paths'
@@ -92,17 +91,15 @@ setDatastoreRoot(root)
 let failed = false
 try {
   await setup()
-  writeProviders({
+  await writeProviders({
     ...emptyProviders(),
     mailevaClientId: auth.clientId,
     mailevaUsername: auth.username,
     mailevaSenderId: deposit['MAILEVA_SENDER_ID']!,
     mailevaAddress: sender.join('\n'),
-    mailevaSecrets: await encryptMailevaSecrets({
-      clientSecret: auth.clientSecret,
-      password: auth.password,
-      totpSecret: deposit['MAILEVA_TOTP_SECRET']!
-    })
+    mailevaClientSecret: auth.clientSecret,
+    mailevaPassword: auth.password,
+    mailevaTotpSecret: deposit['MAILEVA_TOTP_SECRET']!
   })
   for (const product of products) {
     const postal = product === 'courrier' || product === 'lrar'

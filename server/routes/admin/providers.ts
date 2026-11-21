@@ -1,7 +1,6 @@
 import { serverBaseUrl } from '../../utils/auth'
 import type { AuthContext } from '../../utils/authenticate-user'
 import { mailevaToken } from '../../utils/maileva/http'
-import { decryptMailevaSecrets, encryptMailevaSecrets } from '../../utils/maileva/secrets'
 import { mailevaAccount, unsubmittedMailevaOperations } from '../../utils/maileva/send'
 import { decodeBase32 } from '../../utils/maileva/totp'
 import {
@@ -43,10 +42,7 @@ function secret(): string {
   return bytes.toHex()
 }
 
-function view(
-  providers: Providers,
-  secrets: { clientSecret: string; password: string; totpSecret: string }
-) {
+function view(providers: Providers) {
   const origin = serverBaseUrl().replace(/\/$/, '')
   const lines = mailevaLines(providers.mailevaAddress)
   const target = mailevaTarget(providers.mailevaUsername)
@@ -72,8 +68,8 @@ function view(
       configured: Boolean(
         providers.mailevaClientId &&
         providers.mailevaUsername &&
-        secrets.clientSecret &&
-        secrets.password
+        providers.mailevaClientSecret &&
+        providers.mailevaPassword
       ),
       clientId: providers.mailevaClientId,
       username: providers.mailevaUsername,
@@ -81,8 +77,7 @@ function view(
       address: providers.mailevaAddress,
       target,
       postalReady: Boolean((lines[0] || lines[1]) && lines[5]),
-      electronicReady: Boolean(providers.mailevaSenderId && secrets.totpSecret),
-      secretsReadable: Boolean(providers.mailevaSecrets && secrets.clientSecret)
+      electronicReady: Boolean(providers.mailevaSenderId && providers.mailevaTotpSecret)
     },
     webhooks: {
       rcs: origin ? `${origin}/webhooks/rcs` : '',
@@ -112,19 +107,9 @@ async function probe(type: LlmType, baseUrl: string, apiKey: string): Promise<st
   }
 }
 
-export const getProviders = async (c: AuthContext) => {
+export const getProviders = (c: AuthContext) => {
   c.header('Cache-Control', 'no-store')
-  const providers = readProviders()
-  const secrets = providers.mailevaSecrets
-    ? await decryptMailevaSecrets(providers.mailevaSecrets)
-    : null
-  return c.json({
-    data: view(providers, {
-      clientSecret: secrets?.clientSecret ?? '',
-      password: secrets?.password ?? '',
-      totpSecret: secrets?.totpSecret ?? ''
-    })
-  })
+  return c.json({ data: view(readProviders()) })
 }
 
 export const putProviders = async (c: AuthContext) => {
@@ -155,7 +140,7 @@ export const putProviders = async (c: AuthContext) => {
       const refused = await probe(llmType, llmBaseUrl, llmApiKey)
       if (refused) return invalid(c, refused)
     }
-    writeProviders({ ...current, llmType, llmBaseUrl, llmApiKey, llmModel, llmEffort })
+    await writeProviders({ ...current, llmType, llmBaseUrl, llmApiKey, llmModel, llmEffort })
     await invalidateAllVms()
     return c.json({ data: {} })
   }
@@ -163,7 +148,7 @@ export const putProviders = async (c: AuthContext) => {
   if (group === 'rcs' && body['regenerateSecret'] === true) {
     if (!rcsConfigured(current)) return invalid(c, 'Le RCS n’est pas encore enregistré.')
     const rcsSecret = secret()
-    writeProviders({ ...current, rcsSecret })
+    await writeProviders({ ...current, rcsSecret })
     return c.json({ data: { rcsSecret } })
   }
 
@@ -183,7 +168,7 @@ export const putProviders = async (c: AuthContext) => {
     }
     const generated = !current.rcsSecret && !pastedSecret
     const rcsSecret = pastedSecret || current.rcsSecret || secret()
-    writeProviders({ ...current, rcsToken, rcsFrom, rcsSecret })
+    await writeProviders({ ...current, rcsToken, rcsFrom, rcsSecret })
     return c.json({ data: generated ? { rcsSecret } : {} })
   }
 
@@ -204,7 +189,7 @@ export const putProviders = async (c: AuthContext) => {
     if (!UUID.test(emailAccount)) {
       return invalid(c, 'L’identifiant de compte doit être un UUID avec ses tirets.')
     }
-    writeProviders({ ...current, emailDomain, emailToken, emailAccount, emailSecret })
+    await writeProviders({ ...current, emailDomain, emailToken, emailAccount, emailSecret })
     return c.json({ data: {} })
   }
 
@@ -214,14 +199,10 @@ export const putProviders = async (c: AuthContext) => {
     const senderId = text(body['senderId'])
     const address = text(body['address'])
     const sameAccount = current.mailevaClientId === clientId && current.mailevaUsername === username
-    const currentSecrets = current.mailevaSecrets
-      ? await decryptMailevaSecrets(current.mailevaSecrets)
-      : null
     const clientSecret =
-      text(body['clientSecret']) || (sameAccount ? (currentSecrets?.clientSecret ?? '') : '')
-    const password = text(body['password']) || (sameAccount ? (currentSecrets?.password ?? '') : '')
-    const totpSecret =
-      text(body['totpSecret']) || (sameAccount ? (currentSecrets?.totpSecret ?? '') : '')
+      text(body['clientSecret']) || (sameAccount ? current.mailevaClientSecret : '')
+    const password = text(body['password']) || (sameAccount ? current.mailevaPassword : '')
+    const totpSecret = text(body['totpSecret']) || (sameAccount ? current.mailevaTotpSecret : '')
     const target = mailevaTarget(username)
     if (!clientId || !username || !clientSecret || !password || !target) {
       return invalid(c, 'Maileva exige l’identifiant, l’utilisateur, le secret et le mot de passe.')
@@ -263,13 +244,15 @@ export const putProviders = async (c: AuthContext) => {
     } catch {
       return invalid(c, 'Maileva a refusé les identifiants.')
     }
-    writeProviders({
+    await writeProviders({
       ...current,
       mailevaClientId: clientId,
       mailevaUsername: username,
       mailevaSenderId: senderId,
       mailevaAddress: lines.join('\n'),
-      mailevaSecrets: await encryptMailevaSecrets({ clientSecret, password, totpSecret })
+      mailevaClientSecret: clientSecret,
+      mailevaPassword: password,
+      mailevaTotpSecret: totpSecret
     })
     c.header('Cache-Control', 'no-store')
     return c.json({ data: {} })

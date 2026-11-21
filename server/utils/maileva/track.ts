@@ -5,22 +5,18 @@ import { openDatastore } from '../datastore-db'
 import { update_status } from '../delivery-status'
 import { mailevaTarget, readProviders } from '../providers'
 import { asRecord, type MailevaAuth, MailevaError, mailevaRequest } from './http'
-import { decryptMailevaSecrets } from './secrets'
 import { mailevaAccount, remoteStatus } from './send'
 
 export async function reconcileMaileva(): Promise<void> {
   const providers = readProviders()
   const target = mailevaTarget(providers.mailevaUsername)
-  const secrets = providers.mailevaSecrets
-    ? await decryptMailevaSecrets(providers.mailevaSecrets)
-    : null
-  if (!target || !secrets?.clientSecret || !secrets.password) return
+  if (!target || !providers.mailevaClientSecret || !providers.mailevaPassword) return
   const auth: MailevaAuth = {
     target,
     clientId: providers.mailevaClientId,
-    clientSecret: secrets.clientSecret,
+    clientSecret: providers.mailevaClientSecret,
     username: providers.mailevaUsername,
-    password: secrets.password
+    password: providers.mailevaPassword
   }
   const account = mailevaAccount(providers.mailevaClientId, providers.mailevaUsername)
   const cutoff = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()

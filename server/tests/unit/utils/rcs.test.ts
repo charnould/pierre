@@ -10,6 +10,7 @@ import {
   to_cm_suggestions,
   wrap_rcs_message
 } from '../../../utils/rcs/wrap'
+import { setup } from '../../../utils/setup'
 
 const PHONE_NATIONAL = '0621804969'
 const PHONE_SPACED = '06 21 80 49 69'
@@ -83,9 +84,10 @@ describe('send_rcs_message (fetch mocked, no live send)', () => {
   const paths = testDatastorePaths('rcs_send')
   let fetchSpy: ReturnType<typeof spyOn>
 
-  beforeEach(() => {
+  beforeEach(async () => {
     setDatastoreRoot(paths.root)
-    writeProviders({
+    await setup()
+    await writeProviders({
       ...emptyProviders(),
       rcsToken: 'test-token',
       rcsFrom: 'PIERRE',
@@ -111,7 +113,7 @@ describe('send_rcs_message (fetch mocked, no live send)', () => {
   })
 
   it('throws not_configured when the product token is empty', async () => {
-    writeProviders(emptyProviders())
+    await writeProviders(emptyProviders())
     await expect(
       send_rcs_message({
         phone: PHONE_CM,
