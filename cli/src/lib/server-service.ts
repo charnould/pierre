@@ -2,7 +2,7 @@ import { renameSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 
 import { fsyncPath } from './fs.ts'
-import { type Context, must, type Runtime } from './system.ts'
+import { CommandFailed, type Context, must, runCommand, type Runtime } from './system.ts'
 
 export function serverUnit(ctx: Context): string {
   const { bin, envFile, home, serverCurrent, smolvmCache, smolvmData, smolvmHome } =
@@ -59,4 +59,19 @@ export async function waitForBody(
     if (attempt < attempts) await runtime.sleep(1000)
   }
   return false
+}
+
+export async function printServiceFailure(ctx: Context, error?: unknown): Promise<void> {
+  const message =
+    error instanceof CommandFailed ? error.output : error instanceof Error ? error.message : ''
+  if (message) ctx.runtime.writeErr(message.endsWith('\n') ? message : `${message}\n`)
+  const journal = await runCommand(ctx.runtime, 'journalctl', [
+    '-u',
+    'pierre',
+    '-n',
+    '30',
+    '--no-pager'
+  ])
+  if (journal.stdout) ctx.runtime.writeErr(journal.stdout)
+  if (journal.stderr) ctx.runtime.writeErr(journal.stderr)
 }

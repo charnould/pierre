@@ -59,6 +59,50 @@ const apply = (db: Database, migrations: readonly DatastoreMigration[]): number[
   return migrations.map((migration) => migration.version)
 }
 
+const recreate_missing_tables = (db: Database, migrations: readonly DatastoreMigration[]): void => {
+  const reference = new Database(':memory:')
+  try {
+    for (const migration of migrations) reference.run(migration.sql)
+    const expected = reference
+      .query<{ name: string; sql: string }, []>(
+        `SELECT name, sql FROM sqlite_master
+         WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND sql IS NOT NULL`
+      )
+      .all()
+    const existing = new Set(
+      db
+        .query<{ name: string }, []>(
+          `SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'`
+        )
+        .all()
+        .map((row) => row.name)
+    )
+    const missing = expected.filter((table) => !existing.has(table.name))
+    if (missing.length === 0) return
+    const placeholders = missing.map(() => '?').join(', ')
+    const dependents = reference
+      .query<{ sql: string }, string[]>(
+        `SELECT sql FROM sqlite_master
+         WHERE type IN ('index', 'trigger')
+           AND tbl_name IN (${placeholders})
+           AND sql IS NOT NULL
+         ORDER BY CASE type WHEN 'index' THEN 0 ELSE 1 END`
+      )
+      .all(...missing.map((table) => table.name))
+    db.run('BEGIN IMMEDIATE')
+    try {
+      for (const table of missing) db.run(table.sql)
+      for (const item of dependents) db.run(item.sql)
+      db.run('COMMIT')
+    } catch (error) {
+      db.run('ROLLBACK')
+      throw error
+    }
+  } finally {
+    reference.close()
+  }
+}
+
 const bootstrap = (path: string, migrations: readonly DatastoreMigration[]): number[] => {
   const db = openDatastore({ path, create: true })
   try {
@@ -116,7 +160,9 @@ export const migrate_datastore = async (
   const db = open_existing(path)
   try {
     const current = applied_version(db, migrations)
-    return apply(db, migrations.slice(current))
+    const applied = apply(db, migrations.slice(current))
+    recreate_missing_tables(db, migrations)
+    return applied
   } finally {
     db.close()
   }

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, rmSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { version } from './package.json' with { type: 'json' }
@@ -28,15 +28,24 @@ function backup(): void {
     process.exit(1)
   }
   const backups = join(root, 'backups')
-  mkdirSync(backups, { recursive: true })
-  const destination = join(backups, 'datastore.sqlite')
-  rmSync(destination, { force: true })
+  mkdirSync(backups, { recursive: true, mode: 0o700 })
+  chmodSync(backups, 0o700)
+  const stamp = new Date()
+    .toISOString()
+    .replace(/[-:]/g, '')
+    .replace(/\.\d{3}/, '')
+  const destination = join(backups, `datastore-${stamp}.sqlite`)
+  if (existsSync(destination)) {
+    console.error(`Sauvegarde déjà présente: ${destination}`)
+    process.exit(1)
+  }
   const db = openDatastore()
   try {
     db.exec(`VACUUM INTO '${destination.replaceAll("'", "''")}'`)
   } finally {
     db.close()
   }
+  chmodSync(destination, 0o600)
   console.log(destination)
 }
 

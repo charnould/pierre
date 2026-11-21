@@ -3,7 +3,9 @@ import { initEnv, printEnv } from './commands/env.ts'
 import { installCommand } from './commands/install.ts'
 import { logs } from './commands/logs.ts'
 import { remove } from './commands/remove.ts'
+import { reset } from './commands/reset.ts'
 import { restart } from './commands/restart.ts'
+import { restore } from './commands/restore.ts'
 import { showStatus } from './commands/status.ts'
 import { update } from './commands/update.ts'
 import { withPierreLock } from './lib/file-lock.ts'
@@ -37,6 +39,10 @@ export async function run(argv: string[], ctx: Context): Promise<number> {
       return breathe(ctx, () => locked(ctx, () => restart(ctx)))
     case 'backup':
       return breathe(ctx, () => locked(ctx, () => backup(ctx)))
+    case 'restore':
+      return breathe(ctx, () => locked(ctx, () => restore(ctx, rest)))
+    case 'reset':
+      return breathe(ctx, () => locked(ctx, () => reset(ctx, rest)))
     case 'logs':
       return breathe(ctx, () => logs(ctx))
     case 'env':

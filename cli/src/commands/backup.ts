@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs'
+import { basename } from 'node:path'
 
 import { isConfigured, readEnvMap, readEnvValue } from '../lib/config.ts'
 import { type Context, runCommand } from '../lib/system.ts'
@@ -28,15 +29,18 @@ export async function backup(ctx: Context): Promise<number> {
   } catch {
     return 1
   }
-  const copy = `scp root@${host}:${path} .`
+  const name = basename(path)
+  const pull = `scp root@${host}:${path} .`
+  const push = `scp ${name} root@${host}:/tmp/ && ssh -t root@${host} pierre restore /tmp/${name}`
   if (!ctx.runtime.tty) {
     ctx.runtime.writeOut(`${path}\n`)
-    ctx.runtime.writeOut(`${copy}\n`)
+    ctx.runtime.writeOut(`${pull}\n`)
+    ctx.runtime.writeOut(`${push}\n`)
     return 0
   }
   const { dim, reset } = ctx.runtime.palette
   ctx.runtime.writeOut(
-    `\n  ${path}\n\n  ${copy}\n\n  ${dim}Autre port : scp -P 2234 root@${host}:${path} .${reset}\n`
+    `\n  ${path}\n\n  ${pull}\n  ${push}\n\n  ${dim}Autre port : scp -P 2234 / ssh -p 2234${reset}\n`
   )
   return 0
 }
