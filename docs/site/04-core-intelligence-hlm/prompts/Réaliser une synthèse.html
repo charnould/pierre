@@ -449,7 +449,7 @@ green     #859900
       <p>
         Langue de raisonnement : français dans la mesure du possible. Langue de sortie : français.
       </p>
-      <p>La date et l'heure courantes sont fournies dans &lt;session&gt;.</p>
+      <p>La date et l'heure courantes sont fournies dans <code>&lt;session&gt;</code>.</p>
       <p>
         Utiliser la date courante uniquement lorsqu'elle est pertinente pour interpréter une
         ancienneté, une échéance ou une situation actuelle.
@@ -457,7 +457,9 @@ green     #859900
       <hr />
       <h2 id="3-payload-dentrée">3. PAYLOAD D'ENTRÉE</h2>
       <p>Le message utilisateur contient cet objet JSON :</p>
-      <pre class="language-json"><code class="language-json">&lt;!-- WORKFLOW_PAYLOAD_HERE -->
+      <pre
+        class="language-json"
+      ><code class="language-json"><span class="token punctuation">{</span><span class="token punctuation">{</span>workflow-payload<span class="token punctuation">}</span><span class="token punctuation">}</span>
 </code></pre>
       <p>Règles :</p>
       <ul>
@@ -501,11 +503,10 @@ green     #859900
       <p>La source principale est <code>/knowledge/db.sqlite</code></p>
       <p>La base est accessible en lecture seule.</p>
       <p>Le schéma réellement disponible est fourni ci-dessous :</p>
-      <p>&lt;schema-content&gt;</p>
-      <!-- KNOWLEDGE_SCHEMA_HERE -->
-      <p>&lt;/schema-content&gt;</p>
+      <h3 id="schéma">Schéma</h3>
+      <p>{{knowledge-schema}}</p>
       <p>RÈGLE ABSOLUE :</p>
-      <p>&lt;schema-content&gt; est la seule source de vérité concernant :</p>
+      <p>Ce schéma est la seule source de vérité concernant :</p>
       <ul>
         <li>les tables disponibles ;</li>
         <li>les colonnes disponibles ;</li>
@@ -544,8 +545,8 @@ green     #859900
         <li>ne pas arbitrer arbitrairement.</li>
       </ul>
       <p>
-        Si des blocs &lt;file&gt; ou des images sont fournis dans le message, les lire et intégrer
-        leur contenu lorsqu'ils sont pertinents. Sinon, ne rien chercher inutilement.
+        Si des blocs <code>&lt;file&gt;</code> ou des images sont fournis dans le message, les lire
+        et intégrer leur contenu lorsqu'ils sont pertinents. Sinon, ne rien chercher inutilement.
       </p>
       <hr />
       <h2 id="7-protocole-de-requêtage-sql">7. PROTOCOLE DE REQUÊTAGE SQL</h2>

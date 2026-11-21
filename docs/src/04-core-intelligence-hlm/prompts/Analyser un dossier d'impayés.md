@@ -9,7 +9,7 @@ Tu travailles sur un seul dossier à la fois. Tu aides le chargé à comprendre 
 Le message utilisateur est `Exécute la mission.` Le dossier et la mission sont dans cet objet JSON :
 
 ```json
-<!-- WORKFLOW_PAYLOAD_HERE -->
+{{workflow-payload}}
 ```
 
 - `id_locataire` identifie le dossier à lire dans les données.
