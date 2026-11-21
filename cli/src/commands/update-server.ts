@@ -1,5 +1,4 @@
-import { existsSync, rmSync } from 'node:fs'
-import { join } from 'node:path'
+import { existsSync } from 'node:fs'
 
 import { type CarlInstall, ensureLatestCarl } from '../lib/carl.ts'
 import { isConfigured } from '../lib/config.ts'
@@ -11,11 +10,11 @@ import {
   publishServerBundle,
   serverInstalled
 } from '../lib/server-bundle.ts'
-import { waitForBody, writeServerUnit } from '../lib/server-service.ts'
+import { printServiceFailure, waitForBody, writeServerUnit } from '../lib/server-service.ts'
 import { ensureSmolvm } from '../lib/smolvm-runtime.ts'
 import { ensureLatestSpeech, type SpeechInstall } from '../lib/speech.ts'
-import { CommandFailed, type Context, must, runCommand } from '../lib/system.ts'
-import { confirm, done, failed, say, spin } from '../lib/text.ts'
+import { CommandFailed, type Context, must } from '../lib/system.ts'
+import { done, failed, spin } from '../lib/text.ts'
 import { restart } from './restart.ts'
 
 async function refreshCarl(
@@ -87,7 +86,7 @@ async function finishCurrent(ctx: Context, current: string): Promise<number> {
   return 0
 }
 
-export async function updateServer(ctx: Context, reset = false): Promise<number> {
+export async function updateServer(ctx: Context): Promise<number> {
   if (!serverInstalled(ctx)) {
     failed(ctx, 'Les services ne sont pas installés.')
     return 1
@@ -110,21 +109,13 @@ export async function updateServer(ctx: Context, reset = false): Promise<number>
     failed(ctx, 'Impossible de connaître la dernière version stable.')
     return 1
   }
-  if (reset) {
-    const answer = await confirm(ctx, 'Continuer et supprimer toutes les données applicatives ?')
-    if (answer === 2) return 1
-    if (answer !== 0) {
-      say(ctx, 'Remise à zéro annulée. Rien n’a été supprimé.')
-      return 0
-    }
-  }
   if (!versionGreater(tag, current)) {
-    return reset ? resetCurrentServer(ctx, current) : finishCurrent(ctx, current)
+    return finishCurrent(ctx, current)
   }
-  return installServerRelease(ctx, tag, reset)
+  return installServerRelease(ctx, tag)
 }
 
-async function installServerRelease(ctx: Context, tag: string, reset: boolean): Promise<number> {
+async function installServerRelease(ctx: Context, tag: string): Promise<number> {
   if ((await refreshCarl(ctx)) === 'failed') return 1
   if ((await refreshSpeech(ctx)) === 'failed') return 1
   try {
@@ -151,7 +142,6 @@ async function installServerRelease(ctx: Context, tag: string, reset: boolean): 
     await spin(ctx, 'Activation', async () => {
       if (configured) await must(ctx.runtime, 'systemctl', ['stop', 'pierre'])
       transitionStarted = true
-      if (reset) resetDatastore(ctx)
       activateServerRelease(ctx, published)
       await writeServerUnit(ctx)
       if (!configured) return
@@ -161,7 +151,7 @@ async function installServerRelease(ctx: Context, tag: string, reset: boolean): 
       }
     })
   } catch (error) {
-    await printActivationFailure(ctx, error)
+    await printServiceFailure(ctx, error)
     if (!transitionStarted) {
       failed(ctx, 'La mise à jour du serveur a échoué. Le serveur installé est inchangé.')
       return 1
@@ -177,61 +167,6 @@ async function installServerRelease(ctx: Context, tag: string, reset: boolean): 
   }
   done(ctx, configured ? `${tag} est installé et opérationnel.` : `${tag} est installé.`)
   return 0
-}
-
-async function resetCurrentServer(ctx: Context, current: string): Promise<number> {
-  if ((await refreshCarl(ctx)) === 'failed') return 1
-  if ((await refreshSpeech(ctx)) === 'failed') return 1
-  const configured = isConfigured(ctx.runtime)
-  try {
-    await spin(ctx, 'Remise à zéro', async () => {
-      if (configured) await must(ctx.runtime, 'systemctl', ['stop', 'pierre'])
-      resetDatastore(ctx)
-      if (!configured) return
-      await must(ctx.runtime, 'systemctl', ['start', 'pierre'])
-      if (!(await waitForBody(ctx.runtime, 'http://127.0.0.1:3000/up', 120))) {
-        throw new CommandFailed(1, 'Le serveur n’a pas répondu sur /up.')
-      }
-    })
-  } catch (error) {
-    await printActivationFailure(ctx, error)
-    failed(ctx, 'La remise à zéro a échoué.')
-    return 1
-  }
-  done(
-    ctx,
-    configured ? `${current} est remis à zéro et opérationnel.` : `${current} est remis à zéro.`
-  )
-  return 0
-}
-
-function resetDatastore(ctx: Context): void {
-  const root = ctx.runtime.paths.home
-  for (const name of [
-    'datastore.sqlite',
-    'datastore.sqlite-shm',
-    'datastore.sqlite-wal',
-    'files',
-    'knowledge',
-    'workspaces'
-  ]) {
-    rmSync(join(root, name), { recursive: true, force: true })
-  }
-}
-
-async function printActivationFailure(ctx: Context, error: unknown): Promise<void> {
-  const message =
-    error instanceof CommandFailed ? error.output : error instanceof Error ? error.message : ''
-  if (message) ctx.runtime.writeErr(message.endsWith('\n') ? message : `${message}\n`)
-  const journal = await runCommand(ctx.runtime, 'journalctl', [
-    '-u',
-    'pierre',
-    '-n',
-    '30',
-    '--no-pager'
-  ])
-  if (journal.stdout) ctx.runtime.writeErr(journal.stdout)
-  if (journal.stderr) ctx.runtime.writeErr(journal.stderr)
 }
 
 async function restoreServerRelease(

@@ -1,4 +1,4 @@
-import { waitForBody } from '../lib/server-service.ts'
+import { printServiceFailure, waitForBody } from '../lib/server-service.ts'
 import { type Context, must, runCommand } from '../lib/system.ts'
 import { spin } from '../lib/text.ts'
 
@@ -17,15 +17,7 @@ export async function restart(ctx: Context): Promise<number> {
     })
     return 0
   } catch {
-    const journal = await runCommand(ctx.runtime, 'journalctl', [
-      '-u',
-      'pierre',
-      '-n',
-      '30',
-      '--no-pager'
-    ])
-    if (journal.stdout) ctx.runtime.writeErr(journal.stdout)
-    if (journal.stderr) ctx.runtime.writeErr(journal.stderr)
+    await printServiceFailure(ctx)
     return 1
   }
 }

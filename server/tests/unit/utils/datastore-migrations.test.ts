@@ -315,4 +315,65 @@ describe('datastore migrations', () => {
         .get()?.n
     ).toBe(1)
   })
+
+  it('recreates dropped application tables at the latest schema with indexes and triggers', async () => {
+    const withColumn: DatastoreMigration = {
+      version: APP_MIGRATIONS.length + 1,
+      name: 'conversations-tag',
+      sql: 'ALTER TABLE conversations ADD COLUMN tag TEXT'
+    }
+    const migrations = [...APP_MIGRATIONS, withColumn]
+    await migrate_datastore(PATH, migrations)
+
+    const seeded = open()
+    seeded.run(
+      `INSERT INTO users
+         (id, name, email, emailVerified, createdAt, updatedAt, role)
+       VALUES ('u-1', 'Kept', 'kept@example.com', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'admin')`
+    )
+    seeded.run('PRAGMA foreign_keys = OFF')
+    seeded.run('DROP TABLE communication_dispatch_claims')
+    seeded.run('DROP TABLE communication_provider_operations')
+    seeded.run('DROP TABLE activites')
+    seeded.run('DROP TABLE conversations')
+    seeded.close()
+
+    await migrate_datastore(PATH, migrations)
+
+    using db = open()
+    expect(db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM users').get()?.n).toBe(1)
+    expect(
+      db
+        .query<{ name: string }, []>('PRAGMA table_info(conversations)')
+        .all()
+        .map((row) => row.name)
+    ).toContain('tag')
+    const recreated = db
+      .query<{ name: string }, []>(
+        `SELECT name FROM sqlite_master
+         WHERE name IN (
+           'activites',
+           'communication_dispatch_claims',
+           'communication_provider_operations',
+           'conversations',
+           'idx_activites_execution',
+           'idx_conversations_updated_at',
+           'activites_no_update',
+           'activites_no_delete'
+         )
+         ORDER BY name`
+      )
+      .all()
+      .map((row) => row.name)
+    expect(recreated).toEqual([
+      'activites',
+      'activites_no_delete',
+      'activites_no_update',
+      'communication_dispatch_claims',
+      'communication_provider_operations',
+      'conversations',
+      'idx_activites_execution',
+      'idx_conversations_updated_at'
+    ])
+  })
 })

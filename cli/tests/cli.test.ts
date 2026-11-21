@@ -30,7 +30,17 @@ describe('commands and privileges', () => {
   it('lists the commands', async () => {
     const root = await tempRoot('pierre-help-')
     const ctx = testContext(root)
-    const verbs = ['install', 'update', 'restart', 'backup', 'logs', 'env', 'remove']
+    const verbs = [
+      'install',
+      'update',
+      'restart',
+      'backup',
+      'restore',
+      'reset',
+      'logs',
+      'env',
+      'remove'
+    ]
     expect(await run([], ctx.ctx)).toBe(0)
     expect(
       ctx

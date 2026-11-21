@@ -14,6 +14,8 @@ const HELP: Array<[string, string]> = [
   ['update', 'Met à jour les services'],
   ['restart', 'Redémarre les services'],
   ['backup', 'Sauvegarde la base de données'],
+  ['restore', 'Restaure une sauvegarde de la base'],
+  ['reset', 'Réinitialise tout ou partie de la base'],
   ['logs', 'Affiche les journaux'],
   ['env', 'Affiche le domaine et les secrets'],
   ['remove', 'Supprime les services et les données']
