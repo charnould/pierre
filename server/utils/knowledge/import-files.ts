@@ -5,19 +5,25 @@ import {
   coreDataContractForFilename,
   resemblesCoreDataFilename
 } from '../../../shared/core-data'
-import { isKnowledgeEntryAssigned, normalize_knowledge_name } from '../../../shared/knowledge'
+import { isKnowledgeSourceAssigned, type WorkbookSheetConfig } from '../../../shared/knowledge'
 import { openDatastore } from '../datastore-db'
-import type { KnowledgeEntry, KnowledgeSource } from './catalog-schema'
+import type { KnowledgeSource, KnowledgeSourceDocumentInput } from './catalog-schema'
 import { type ParsedTable } from './ingest-files'
 import {
-  findKnowledgeSourceByStorageName,
+  assertKnowledgeCatalogValidInDb,
+  findKnowledgeSourcesByFilename,
   insertKnowledgeSourceInDb,
   updateKnowledgeSourceFileInDb
 } from './knowledge-sources'
-import { KnowledgeUploadError, type ParsedSheet, parseKnowledgeUpload } from './parse-upload'
+import {
+  KnowledgeUploadError,
+  type ParsedSheet,
+  parseKnowledgeUpload,
+  parseWorkbook
+} from './parse-upload'
 import { listKnowledgeProfiles } from './profiles'
-import { dropSourceTables, sourceTableName } from './source-tables'
-import { type DataRow, import_rows } from './sqlite-table-import'
+import { dropSourceTable, sourceTableName } from './source-tables'
+import { import_rows } from './sqlite-table-import'
 
 export class KnowledgeImportError extends Error {
   constructor(
@@ -36,22 +42,19 @@ export type ImportedKnowledgeSource = {
 }
 
 type FileType = KnowledgeSource['fileType']
+type UploadOrigin = 'ui' | 'cli'
 
-type PreparedUpload = {
-  fileType: FileType
-  originalName: string
-  storageName: string
-  source: KnowledgeSource | null
-  contentHash: string
-  sizeBytes: number
-  changed: boolean
-  coreContract: CoreDataContract | null
-  markdown: string | null
-  table: ParsedTable | null
-  sheets: ParsedSheet[]
-}
+type PreparedSourceWrite =
+  | { existing: KnowledgeSource; changed: false }
+  | {
+      existing: KnowledgeSource | null
+      changed: true
+      document: KnowledgeSourceDocumentInput
+      markdown: string | null
+      table: ParsedTable | null
+    }
 
-const inferFileType = (name: string): FileType | null => {
+export const inferKnowledgeFileType = (name: string): FileType | null => {
   const lower = name.toLowerCase()
   if (lower.endsWith('.csv')) return 'csv'
   if (lower.endsWith('.md')) return 'md'
@@ -67,77 +70,173 @@ const hashBytes = (bytes: Uint8Array): string =>
 
 const stemWithoutExtension = (filename: string): string => filename.replace(/\.[^.]+$/, '')
 
-const isAssigned = (source: KnowledgeSource): boolean =>
-  source.entries.some((entry) => isKnowledgeEntryAssigned(entry))
-
-const entriesForUpload = (
-  fileType: FileType,
-  originalName: string,
-  sheets: ParsedSheet[],
-  previous: readonly KnowledgeEntry[] = [],
-  coreContract: CoreDataContract | null = null
-): KnowledgeEntry[] => {
-  if (fileType !== 'xlsx') {
-    const existing = previous[0]
-    return [
-      existing
-        ? {
-            ...existing,
-            title: coreContract?.table ?? existing.title,
-            sheet: null,
-            sheetName: null
-          }
-        : {
-            title: coreContract?.table ?? stemWithoutExtension(originalName),
-            sheet: null,
-            sheetName: null,
-            profileIds: [],
-            moduleIds: []
-          }
-    ]
-  }
-  const previousByName = new Map(
-    previous
-      .filter((entry) => entry.sheetName !== null)
-      .map((entry) => [entry.sheetName!.toLocaleLowerCase('fr'), entry])
-  )
-  return sheets.map((sheet) => {
-    const existing = previousByName.get(sheet.name.toLocaleLowerCase('fr'))
-    return existing
-      ? { ...existing, sheet: sheet.index, sheetName: sheet.name }
-      : {
-          title: sheet.name,
-          sheet: sheet.index,
-          sheetName: sheet.name,
-          profileIds: [],
-          moduleIds: []
-        }
+const writeTable = (db: Database, sourceId: string, table: ParsedTable): void => {
+  dropSourceTable(db, sourceId)
+  void import_rows(db, sourceTableName(sourceId), table.rows, {
+    columns: table.columns,
+    transaction: false,
+    refreshPostalReference: false
   })
 }
 
-const writeTables = (db: Database, sourceId: string, item: PreparedUpload): void => {
-  const tables =
-    item.fileType === 'csv' && item.table
-      ? [{ sheet: 0, columns: item.table.columns, rows: item.table.rows }]
-      : item.sheets.map((sheet) => ({
-          sheet: sheet.index,
-          columns: sheet.columns,
-          rows: sheet.rows
-        }))
-  for (const table of tables) {
-    void import_rows(db, sourceTableName(sourceId, table.sheet), table.rows as DataRow[], {
-      columns: table.columns,
-      transaction: false,
-      refreshPostalReference: false
-    })
+const prepareSingleUpload = async (
+  fileType: 'csv' | 'md' | 'docx',
+  bytes: Uint8Array,
+  originalName: string,
+  origin: UploadOrigin,
+  coreContract: CoreDataContract | null,
+  existing: KnowledgeSource | null
+): Promise<PreparedSourceWrite> => {
+  const contentHash = hashBytes(bytes)
+  if (existing && existing.contentHash === contentHash) {
+    return { existing, changed: false }
+  }
+  try {
+    const parsed = await parseKnowledgeUpload(fileType, bytes)
+    return {
+      existing,
+      changed: true,
+      document: {
+        originalName,
+        fileType,
+        sizeBytes: bytes.byteLength,
+        contentHash,
+        origin,
+        title: coreContract?.table ?? existing?.title ?? stemWithoutExtension(originalName),
+        sheetName: null,
+        headerRow: null,
+        headerHash: null,
+        profileIds: existing?.profileIds ?? [],
+        moduleIds: existing?.moduleIds ?? []
+      },
+      markdown: parsed.kind === 'document' ? parsed.markdown : null,
+      table: parsed.kind === 'table' ? parsed.table : null
+    }
+  } catch (error) {
+    if (error instanceof KnowledgeUploadError) {
+      throw new KnowledgeImportError(400, error.code, error.message)
+    }
+    throw error
   }
 }
 
-const prepareUploads = async (files: File[]): Promise<PreparedUpload[]> => {
-  const prepared: PreparedUpload[] = []
+const prepareWorkbookSheetWrite = (
+  meta: { originalName: string; sizeBytes: number; origin: UploadOrigin },
+  sheet: ParsedSheet,
+  existing: KnowledgeSource | null,
+  sheetConfig: WorkbookSheetConfig | null
+): PreparedSourceWrite => {
+  const rewriteTable =
+    !existing ||
+    existing.contentHash !== sheet.contentHash ||
+    existing.headerRow !== sheet.headerRow ||
+    existing.headerHash !== sheet.headerHash
+  const nextTitle = sheetConfig ? sheetConfig.title.trim() : (existing?.title ?? sheet.name)
+  const metadataChanged =
+    !existing ||
+    existing.originalName !== meta.originalName ||
+    existing.title !== nextTitle ||
+    existing.sheetName !== sheet.name
+  if (existing && !rewriteTable && !metadataChanged) {
+    return { existing, changed: false }
+  }
+  return {
+    existing,
+    changed: true,
+    document: {
+      originalName: meta.originalName,
+      fileType: 'xlsx',
+      sizeBytes: meta.sizeBytes,
+      contentHash: sheet.contentHash,
+      origin: meta.origin,
+      title: nextTitle,
+      sheetName: sheet.name,
+      headerRow: sheet.headerRow,
+      headerHash: sheet.headerHash,
+      profileIds: existing?.profileIds ?? [],
+      moduleIds: existing?.moduleIds ?? []
+    },
+    markdown: null,
+    table: rewriteTable ? { columns: sheet.columns, rows: sheet.rows } : null
+  }
+}
+
+const prepareWorkbookUpload = (
+  bytes: Uint8Array,
+  originalName: string,
+  origin: UploadOrigin,
+  existingSources: readonly KnowledgeSource[],
+  sheetConfig?: WorkbookSheetConfig
+): PreparedSourceWrite[] => {
+  const meta = { originalName, sizeBytes: bytes.byteLength, origin }
+  const existingBySheet = new Map(
+    existingSources
+      .filter((source) => source.sheetName !== null)
+      .map((source) => [source.sheetName!.toLocaleLowerCase('fr'), source])
+  )
+
+  try {
+    if (sheetConfig) {
+      const [parsedSheet] = parseWorkbook(bytes, {
+        filename: originalName,
+        specs: [{ sheetName: sheetConfig.sheetName, headerRow: sheetConfig.headerRow }]
+      })
+      return [
+        prepareWorkbookSheetWrite(
+          meta,
+          parsedSheet!,
+          existingBySheet.get(parsedSheet!.name.toLocaleLowerCase('fr')) ?? null,
+          sheetConfig
+        )
+      ]
+    }
+
+    if (existingSources.length > 0) {
+      const parsedSheets = parseWorkbook(bytes, {
+        filename: originalName,
+        specs: existingSources.map((source) => ({
+          sheetName: source.sheetName!,
+          headerRow: source.headerRow!,
+          expectedHeaderHash: source.headerHash
+        }))
+      })
+      return parsedSheets.map((sheet) =>
+        prepareWorkbookSheetWrite(
+          meta,
+          sheet,
+          existingBySheet.get(sheet.name.toLocaleLowerCase('fr'))!,
+          null
+        )
+      )
+    }
+
+    const parsedSheets = parseWorkbook(bytes, { filename: originalName })
+    return parsedSheets.map((sheet) => prepareWorkbookSheetWrite(meta, sheet, null, null))
+  } catch (error) {
+    if (error instanceof KnowledgeUploadError) {
+      throw new KnowledgeImportError(400, error.code, error.message)
+    }
+    throw error
+  }
+}
+
+const prepareUploads = async (
+  files: File[],
+  origin: UploadOrigin,
+  sheetConfig?: WorkbookSheetConfig
+): Promise<PreparedSourceWrite[]> => {
+  if (sheetConfig && (files.length !== 1 || inferKnowledgeFileType(files[0]!.name) !== 'xlsx')) {
+    throw new KnowledgeImportError(
+      400,
+      'invalid_config',
+      'La configuration d’onglet ne s’applique qu’à un seul classeur Excel.'
+    )
+  }
+
+  const writes: PreparedSourceWrite[] = []
   const seen = new Set<string>()
   for (const file of files) {
-    const fileType = inferFileType(file.name)
+    const fileType = inferKnowledgeFileType(file.name)
     if (!fileType) {
       throw new KnowledgeImportError(
         400,
@@ -154,81 +253,46 @@ const prepareUploads = async (files: File[]): Promise<PreparedUpload[]> => {
         `Nom Core Data invalide : ${originalName}`
       )
     }
-    const storageName = normalize_knowledge_name(originalName.toLowerCase(), {
-      preserve_extension: true
-    })
-    if (seen.has(storageName)) {
+    const filenameKey = originalName.toLocaleLowerCase('fr')
+    if (seen.has(filenameKey)) {
       throw new KnowledgeImportError(
         409,
         'filename_conflict',
         `${originalName} est envoyé plusieurs fois.`
       )
     }
-    seen.add(storageName)
-    const source = findKnowledgeSourceByStorageName(storageName)
-    if (
-      source &&
-      source.originalName.toLocaleLowerCase('fr') !== originalName.toLocaleLowerCase('fr')
-    ) {
-      throw new KnowledgeImportError(
-        409,
-        'filename_conflict',
-        `${originalName} entre en conflit avec ${source.originalName}.`
-      )
-    }
+    seen.add(filenameKey)
+
+    const existingSources = findKnowledgeSourcesByFilename(originalName)
     const bytes = new Uint8Array(await file.arrayBuffer())
-    const contentHash = hashBytes(bytes)
-    const changed = source?.contentHash !== contentHash
-    if (!changed) {
-      prepared.push({
-        fileType,
-        originalName,
-        storageName,
-        source,
-        contentHash,
-        sizeBytes: bytes.byteLength,
-        changed: false,
-        coreContract,
-        markdown: null,
-        table: null,
-        sheets: []
-      })
+    if (fileType !== 'xlsx') {
+      writes.push(
+        await prepareSingleUpload(
+          fileType,
+          bytes,
+          originalName,
+          origin,
+          coreContract,
+          existingSources[0] ?? null
+        )
+      )
       continue
     }
-    try {
-      const parsed = await parseKnowledgeUpload(fileType, bytes)
-      prepared.push({
-        fileType,
-        originalName,
-        storageName,
-        source,
-        contentHash,
-        sizeBytes: bytes.byteLength,
-        changed: true,
-        coreContract,
-        markdown: parsed.kind === 'document' ? parsed.markdown : null,
-        table: parsed.kind === 'table' ? parsed.table : null,
-        sheets: parsed.kind === 'workbook' ? parsed.sheets : []
-      })
-    } catch (error) {
-      if (error instanceof KnowledgeUploadError) {
-        throw new KnowledgeImportError(400, error.code, error.message)
-      }
-      throw error
-    }
+
+    writes.push(...prepareWorkbookUpload(bytes, originalName, origin, existingSources, sheetConfig))
   }
-  return prepared
+  return writes
 }
 
 const conflictMessage = (error: unknown): string | null => {
   if (!(error instanceof Error)) return null
   if (
-    error.message.includes('globally unique') ||
     error.message.includes('Reserved Core Data title') ||
     error.message.includes('Knowledge title already used') ||
+    error.message.includes('Knowledge source already exists') ||
     error.message.includes('Unknown knowledge profile') ||
     error.message.includes('Invalid Core Data source') ||
-    error.message.includes('Spreadsheet structure')
+    error.message.includes('Invalid knowledge title')
   ) {
     return error.message
   }
@@ -236,70 +300,58 @@ const conflictMessage = (error: unknown): string | null => {
   return null
 }
 
+const isUnchangedWrite = (
+  write: PreparedSourceWrite
+): write is Extract<PreparedSourceWrite, { changed: false }> => !write.changed
+
 const applyUploads = (
-  prepared: PreparedUpload[],
-  origin: 'ui' | 'cli',
+  writes: PreparedSourceWrite[],
+  origin: UploadOrigin,
   validProfileIds: ReadonlySet<string>
 ): { sources: ImportedKnowledgeSource[]; shouldBuild: boolean } => {
-  if (prepared.every((item) => item.source && !item.changed)) {
+  if (writes.every(isUnchangedWrite)) {
     return {
-      sources: prepared.flatMap((item) =>
-        item.source ? [{ source: item.source, changed: false }] : []
-      ),
+      sources: writes.map((write) => ({ source: write.existing, changed: false })),
       shouldBuild: false
     }
   }
+
   const db = openDatastore()
   try {
     return db
       .transaction(() => {
         const results: ImportedKnowledgeSource[] = []
         let shouldBuild = false
-        for (const item of prepared) {
-          if (item.source && !item.changed) {
-            results.push({ source: item.source, changed: false })
+
+        for (const write of writes) {
+          if (!write.changed) {
+            results.push({ source: write.existing, changed: false })
             continue
           }
-          const entries = entriesForUpload(
-            item.fileType,
-            item.originalName,
-            item.sheets,
-            item.source?.entries ?? [],
-            item.coreContract
-          )
-          const metadata = {
-            originalName: item.originalName,
-            fileType: item.fileType,
-            sizeBytes: item.sizeBytes,
-            contentHash: item.contentHash,
-            origin,
-            entries
-          }
-          if (item.source) {
-            const wasAssigned = isAssigned(item.source)
-            dropSourceTables(db, item.source.id)
+          if (write.existing) {
+            const wasAssigned = isKnowledgeSourceAssigned(write.existing)
             const source = updateKnowledgeSourceFileInDb(
               db,
-              item.source.id,
-              metadata,
-              validProfileIds,
-              item.markdown
+              write.existing.id,
+              write.document,
+              write.markdown
             )
             if (!source) throw new Error('Knowledge source disappeared during upload')
-            writeTables(db, source.id, item)
-            if (origin === 'cli' && (wasAssigned || isAssigned(source))) shouldBuild = true
+            if (write.table) writeTable(db, source.id, write.table)
+            if (origin === 'cli' && (wasAssigned || isKnowledgeSourceAssigned(source))) {
+              shouldBuild = true
+            }
             results.push({ source, changed: true })
             continue
           }
-          const source = insertKnowledgeSourceInDb(
-            db,
-            { storageName: item.storageName, ...metadata },
-            validProfileIds,
-            item.markdown
-          )
-          writeTables(db, source.id, item)
+
+          const source = insertKnowledgeSourceInDb(db, write.document, write.markdown)
+          if (write.table) writeTable(db, source.id, write.table)
+          if (origin === 'cli' && isKnowledgeSourceAssigned(source)) shouldBuild = true
           results.push({ source, changed: true })
         }
+
+        assertKnowledgeCatalogValidInDb(db, validProfileIds)
         return { sources: results, shouldBuild }
       })
       .immediate()
@@ -322,11 +374,12 @@ const applyUploads = (
 
 export const importKnowledgeFiles = async (
   files: File[],
-  origin: 'ui' | 'cli'
+  origin: UploadOrigin,
+  sheetConfig?: WorkbookSheetConfig
 ): Promise<{ sources: ImportedKnowledgeSource[]; shouldBuild: boolean }> => {
   if (files.length === 0) {
     throw new KnowledgeImportError(400, 'missing_file', 'Aucun fichier fourni.')
   }
   const validProfileIds = new Set((await listKnowledgeProfiles()).map((profile) => profile.id))
-  return applyUploads(await prepareUploads(files), origin, validProfileIds)
+  return applyUploads(await prepareUploads(files, origin, sheetConfig), origin, validProfileIds)
 }

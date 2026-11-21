@@ -4,27 +4,16 @@ import type { DataRow } from './sqlite-table-import'
 
 const quote = (identifier: string): string => `"${identifier.replaceAll('"', '""')}"`
 
-export const sourceTableName = (sourceId: string, sheet: number): string => {
+export const sourceTableName = (sourceId: string): string => {
   const compact = sourceId.replaceAll('-', '')
-  if (!/^[0-9a-f]{32}$/i.test(compact) || !Number.isInteger(sheet) || sheet < 0) {
+  if (!/^[0-9a-f]{32}$/i.test(compact)) {
     throw new Error('Invalid knowledge source table')
   }
-  return `knowledge_source_${compact}_${sheet}`
+  return `knowledge_source_${compact}`
 }
 
-export const dropSourceSheet = (db: Database, sourceId: string, sheet: number): void => {
-  db.run(`DROP TABLE IF EXISTS ${quote(sourceTableName(sourceId, sheet))}`)
-}
-
-export const dropSourceTables = (db: Database, sourceId: string): void => {
-  const compact = sourceId.replaceAll('-', '')
-  if (!/^[0-9a-f]{32}$/i.test(compact)) return
-  const names = db
-    .query<{ name: string }, [string]>(
-      `SELECT name FROM sqlite_master WHERE type = 'table' AND name GLOB ?`
-    )
-    .all(`knowledge_source_${compact}_*`)
-  for (const { name } of names) db.run(`DROP TABLE ${quote(name)}`)
+export const dropSourceTable = (db: Database, sourceId: string): void => {
+  db.run(`DROP TABLE IF EXISTS ${quote(sourceTableName(sourceId))}`)
 }
 
 export const tableColumns = (db: Database, table: string, schema = 'main'): string[] =>

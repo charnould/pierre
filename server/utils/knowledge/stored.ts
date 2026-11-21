@@ -8,25 +8,19 @@ import {
   KnowledgeSourceDocumentSchema
 } from './catalog-schema'
 
-const StoredEntrySchema = z
-  .object({
-    title: z.string(),
-    sheet: z.number().nullable(),
-    sheet_name: z.string().nullable(),
-    profile_ids: z.array(z.string()),
-    module_ids: z.array(z.custom<BusinessModuleId>(isBusinessModuleId))
-  })
-  .strict()
-
 const StoredSourceSchema = z
   .object({
-    storage_name: z.string(),
     original_name: z.string(),
     file_type: z.enum(['csv', 'md', 'docx', 'xlsx']),
     size_bytes: z.number(),
     content_hash: z.string().nullable(),
     origin: z.enum(['ui', 'cli']),
-    entries: z.array(StoredEntrySchema)
+    title: z.string(),
+    sheet_name: z.string().nullable(),
+    header_row: z.number().int().positive().nullable(),
+    header_hash: z.string().nullable(),
+    profile_ids: z.array(z.string()),
+    module_ids: z.array(z.custom<BusinessModuleId>(isBusinessModuleId))
   })
   .strict()
 
@@ -64,37 +58,33 @@ const StoredBuildSchema = z
 
 const storedSourceDocument = (document: KnowledgeSourceDocument) =>
   StoredSourceSchema.parse({
-    storage_name: document.storageName,
     original_name: document.originalName,
     file_type: document.fileType,
     size_bytes: document.sizeBytes,
     content_hash: document.contentHash,
     origin: document.origin,
-    entries: document.entries.map((entry) => ({
-      title: entry.title,
-      sheet: entry.sheet,
-      sheet_name: entry.sheetName,
-      profile_ids: entry.profileIds,
-      module_ids: entry.moduleIds
-    }))
+    title: document.title,
+    sheet_name: document.sheetName,
+    header_row: document.headerRow,
+    header_hash: document.headerHash,
+    profile_ids: document.profileIds,
+    module_ids: document.moduleIds
   })
 
 export const parseStoredSourceDocument = (raw: unknown): KnowledgeSourceDocument => {
   const stored = StoredSourceSchema.parse(raw)
   return KnowledgeSourceDocumentSchema.parse({
-    storageName: stored.storage_name,
     originalName: stored.original_name,
     fileType: stored.file_type,
     sizeBytes: stored.size_bytes,
     contentHash: stored.content_hash,
     origin: stored.origin,
-    entries: stored.entries.map((entry) => ({
-      title: entry.title,
-      sheet: entry.sheet,
-      sheetName: entry.sheet_name,
-      profileIds: entry.profile_ids,
-      moduleIds: entry.module_ids
-    }))
+    title: stored.title,
+    sheetName: stored.sheet_name,
+    headerRow: stored.header_row,
+    headerHash: stored.header_hash,
+    profileIds: stored.profile_ids,
+    moduleIds: stored.module_ids
   })
 }
 

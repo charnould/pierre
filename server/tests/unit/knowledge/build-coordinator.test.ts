@@ -15,7 +15,7 @@ import {
   getKnowledgeBuild,
   getKnowledgeCatalogSnapshot,
   listKnowledgeBuilds,
-  replaceKnowledgeSourceEntries
+  updateKnowledgeSourceMetadata
 } from '../../../utils/knowledge/catalog'
 import { importKnowledgeFiles } from '../../../utils/knowledge/import-files'
 import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
@@ -64,21 +64,14 @@ it('coalesces concurrent rebuild requests into one persisted build', async () =>
 it('persists success and failure per assigned item', async () => {
   const imported = await importKnowledgeFiles([new File(['# Guide'], 'Guide.md')], 'ui')
   const source = imported.sources[0]!.source
-  replaceKnowledgeSourceEntries(
+  updateKnowledgeSourceMetadata(
     source.id,
-    [
-      {
-        title: 'Guide',
-        sheet: null,
-        sheetName: null,
-        profileIds: ['default']
-      }
-    ],
+    { title: 'Guide', profileIds: ['default'], moduleIds: [] },
     new Set(['default'])
   )
 
   const successful = await waitForBuild(requestKnowledgeBuild('patch', null).id)
-  expect(successful.items).toEqual([{ key: `${source.id}:document`, status: 'succeeded' }])
+  expect(successful.items).toEqual([{ key: source.id, status: 'succeeded' }])
   expect(successful.catalogFingerprint).toBe(getKnowledgeCatalogSnapshot().fingerprint)
 
   const db = new Database(`${datastorePaths().root}/datastore.sqlite`)
@@ -93,7 +86,7 @@ it('persists success and failure per assigned item', async () => {
   try {
     const failed = await waitForBuild(requestKnowledgeBuild('upload', null).id)
     expect(failed.status).toBe('failed')
-    expect(failed.items).toEqual([{ key: `${source.id}:document`, status: 'failed' }])
+    expect(failed.items).toEqual([{ key: source.id, status: 'failed' }])
     expect(errorSpy).toHaveBeenCalledTimes(1)
   } finally {
     errorSpy.mockRestore()

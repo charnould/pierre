@@ -118,8 +118,11 @@ CREATE TABLE knowledge_records (
 CREATE INDEX idx_knowledge_records_kind_created
   ON knowledge_records (kind, created_at DESC);
 
-CREATE UNIQUE INDEX idx_knowledge_records_storage_name
-  ON knowledge_records (json_extract(document, '$.storage_name'))
+CREATE UNIQUE INDEX idx_knowledge_records_source_sheet
+  ON knowledge_records (
+    lower(json_extract(document, '$.original_name')),
+    lower(coalesce(json_extract(document, '$.sheet_name'), ''))
+  )
   WHERE kind = 'source';
 
 CREATE UNIQUE INDEX idx_knowledge_records_active_build

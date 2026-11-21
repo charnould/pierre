@@ -9,23 +9,23 @@ import {
   getKnowledgeBuilds,
   MAX_KNOWLEDGE_UPLOAD_BYTES,
   patchKnowledgeSource,
+  postInspectKnowledgeWorkbook,
   postKnowledgeBuild,
   postKnowledgeSources
 } from './handlers'
+
+const uploadBodyLimit = bodyLimit({
+  maxSize: MAX_KNOWLEDGE_UPLOAD_BYTES + 64 * 1024,
+  onError: (c) =>
+    c.json({ error: { code: 'file_too_large', message: 'Le fichier dépasse 100 Mo.' } }, 413)
+})
 
 export const knowledge = new Hono<AuthEnv>()
 
 knowledge.use('*', authenticateAdministratorApi, authorizeAdministrator)
 knowledge.get('/', getKnowledge)
-knowledge.post(
-  '/sources',
-  bodyLimit({
-    maxSize: MAX_KNOWLEDGE_UPLOAD_BYTES + 64 * 1024,
-    onError: (c) =>
-      c.json({ error: { code: 'file_too_large', message: 'Le fichier dépasse 100 Mo.' } }, 413)
-  }),
-  postKnowledgeSources
-)
+knowledge.post('/sources/inspect', uploadBodyLimit, postInspectKnowledgeWorkbook)
+knowledge.post('/sources', uploadBodyLimit, postKnowledgeSources)
 knowledge.patch('/sources/:id', patchKnowledgeSource)
 knowledge.delete('/sources/:id', deleteKnowledgeSourceController)
 knowledge.get('/builds', getKnowledgeBuilds)

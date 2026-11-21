@@ -5,93 +5,57 @@ import { z } from 'zod/v4'
 import { DATASTORE_TABLES, type DatastoreTable } from '../../../shared/core-data'
 import { type BusinessModuleId, isBusinessModuleId } from '../../../shared/modules'
 
-export const KnowledgeEntrySchema = z
-  .object({
-    title: z.string().trim().min(1),
-    sheet: z.number().int().nonnegative().nullable(),
-    sheetName: z.string().trim().min(1).nullable().default(null),
-    url: z.unknown().optional(),
-    profileIds: z
-      .array(z.string().trim().min(1))
-      .refine((ids) => new Set(ids).size === ids.length, {
-        message: 'Duplicate profile'
-      }),
-    moduleIds: z
-      .array(z.custom<BusinessModuleId>(isBusinessModuleId))
-      .default([])
-      .refine((ids) => new Set(ids).size === ids.length, {
-        message: 'Duplicate module'
-      })
+const Sha256Hex = z.string().regex(/^[a-f0-9]{64}$/)
+
+export const KnowledgeProfileIdsSchema = z
+  .array(z.string().trim().min(1))
+  .refine((ids) => new Set(ids).size === ids.length, {
+    message: 'Duplicate profile'
   })
-  .strict()
-  .transform(({ url: _url, ...entry }) => entry)
+
+export const KnowledgeModuleIdsSchema = z
+  .array(z.custom<BusinessModuleId>(isBusinessModuleId))
+  .default([])
+  .refine((ids) => new Set(ids).size === ids.length, {
+    message: 'Duplicate module'
+  })
 
 export const KnowledgeSourceDocumentSchema = z
   .object({
-    storageName: z
+    originalName: z
       .string()
       .trim()
       .min(1)
-      .refine((name) => name === basename(name), { message: 'Invalid storage name' }),
-    originalName: z.string().trim().min(1),
+      .refine((name) => name === basename(name), { message: 'Invalid filename' }),
     fileType: z.enum(['csv', 'md', 'docx', 'xlsx']),
     sizeBytes: z.number().int().nonnegative(),
-    contentHash: z
-      .string()
-      .regex(/^[a-f0-9]{64}$/)
-      .nullable()
-      .default(null),
+    contentHash: Sha256Hex.nullable().default(null),
     origin: z.enum(['ui', 'cli']),
-    entries: z.array(KnowledgeEntrySchema)
+    title: z.string().trim().min(1),
+    sheetName: z.string().trim().min(1).nullable().default(null),
+    headerRow: z.number().int().positive().nullable().default(null),
+    headerHash: Sha256Hex.nullable().default(null),
+    profileIds: KnowledgeProfileIdsSchema,
+    moduleIds: KnowledgeModuleIdsSchema
   })
   .strict()
   .superRefine((source, context) => {
-    if (source.fileType !== 'xlsx' && source.entries.length > 1) {
+    if (source.fileType === 'xlsx') {
+      if (source.sheetName === null || source.headerRow === null || source.headerHash === null) {
+        context.addIssue({
+          code: 'custom',
+          path: ['sheetName'],
+          message: 'Spreadsheet sources require sheetName, headerRow and headerHash'
+        })
+      }
+      return
+    }
+    if (source.sheetName !== null || source.headerRow !== null || source.headerHash !== null) {
       context.addIssue({
         code: 'custom',
-        path: ['entries'],
-        message: 'Text sources have one entry'
+        path: ['sheetName'],
+        message: 'Non-spreadsheet sources cannot set spreadsheet fields'
       })
-    }
-    const sheets = new Set<number>()
-    const sheetNames = new Set<string>()
-    for (const [index, entry] of source.entries.entries()) {
-      const hasSpreadsheetCoordinates = entry.sheet !== null && entry.sheetName !== null
-      if (source.fileType === 'xlsx' && !hasSpreadsheetCoordinates) {
-        context.addIssue({
-          code: 'custom',
-          path: ['entries', index],
-          message: 'Spreadsheet entries require sheet'
-        })
-      }
-      if (source.fileType === 'xlsx' && entry.sheet !== null) {
-        if (sheets.has(entry.sheet)) {
-          context.addIssue({
-            code: 'custom',
-            path: ['entries', index, 'sheet'],
-            message: 'Spreadsheet sheets can only be selected once'
-          })
-        }
-        sheets.add(entry.sheet)
-      }
-      if (source.fileType === 'xlsx' && entry.sheetName !== null) {
-        const normalized = entry.sheetName.toLocaleLowerCase('fr')
-        if (sheetNames.has(normalized)) {
-          context.addIssue({
-            code: 'custom',
-            path: ['entries', index, 'sheetName'],
-            message: 'Spreadsheet sheet names can only be selected once'
-          })
-        }
-        sheetNames.add(normalized)
-      }
-      if (source.fileType !== 'xlsx' && (entry.sheet !== null || entry.sheetName !== null)) {
-        context.addIssue({
-          code: 'custom',
-          path: ['entries', index],
-          message: 'Text entries cannot select a sheet'
-        })
-      }
     }
   })
 
@@ -129,8 +93,6 @@ export const KnowledgeBuildDocumentSchema = z
   })
   .strict()
 
-export type KnowledgeEntry = z.infer<typeof KnowledgeEntrySchema>
-export type KnowledgeEntryInput = z.input<typeof KnowledgeEntrySchema>
 export type KnowledgeSourceDocument = z.infer<typeof KnowledgeSourceDocumentSchema>
 export type KnowledgeSourceDocumentInput = z.input<typeof KnowledgeSourceDocumentSchema>
 export type KnowledgeBuildDocument = z.infer<typeof KnowledgeBuildDocumentSchema>
@@ -153,9 +115,10 @@ export type KnowledgeProjection = {
   sourceId: string
   access: string
   title: string
-  sheet: number | null
   fileType: 'csv' | 'md' | 'docx' | 'xlsx'
   contentHash: string | null
+  headerRow: number | null
+  headerHash: string | null
   coreDataTable: DatastoreTable | null
 }
 
