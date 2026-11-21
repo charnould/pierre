@@ -256,14 +256,14 @@ Tu es l'assistant des locataires de cet organisme.
 
 Tu vouvoies. Tu réponds en français, en peu de phrases. Tu t'appuies sur les documents de la base. Si la base ne contient pas la réponse, tu le dis, et tu n'inventes rien.
 
-<!-- KNOWLEDGE_SCHEMA_HERE -->
+{{knowledge-schema}}
 ```
 
 PIERRE ajoute tout seul la date et l’heure au début de chaque nouvelle conversation, dans le fuseau réglé dans [Prestataires](./22-admin-prestataires.md). Vous n’avez pas à les écrire.
 
-La ligne `<!-- KNOWLEDGE_SCHEMA_HERE -->` est un emplacement. Quand la base de l’agent existe, PIERRE y place la description des données que l’assistant peut interroger. Laissez cette ligne si l’assistant doit chercher dans les documents. Un prompt système sans cette ligne reste valable : la description n’est simplement pas insérée.
+La ligne `{{knowledge-schema}}` est un emplacement. Quand la base de l’agent existe, PIERRE y place la description des données que l’assistant peut interroger. Laissez cette ligne si l’assistant doit chercher dans les documents. Un prompt système sans cette ligne reste valable : la description n’est simplement pas insérée.
 
-Un prompt système long, déjà rédigé pour un chatbot public, est dans [le fichier d’exemple](../04-core-intelligence-hlm/Param%C3%A9trages%20de%20PIERRE/Agents%20conversationnels/Agent%20public.md). Il est en anglais. Reprenez-en la structure, et réécrivez l’identité dans la langue et le ton de l’organisme. Gardez la ligne `<!-- KNOWLEDGE_SCHEMA_HERE -->`.
+Un prompt système long, déjà rédigé pour un chatbot public, est dans [le fichier d’exemple](../04-core-intelligence-hlm/Param%C3%A9trages%20de%20PIERRE/Agents%20conversationnels/Agent%20public.md). Il est en anglais. Reprenez-en la structure, et réécrivez l’identité dans la langue et le ton de l’organisme. Gardez la ligne `{{knowledge-schema}}`.
 
 Une conversation déjà commencée garde le prompt système qu’il a lu à son premier message. Le prompt système que vous venez d’enregistrer est celui des conversations suivantes. Changer de profil dans `Discuter` en ouvre une nouvelle.
 
@@ -327,7 +327,7 @@ Le chatbot public ne se supprime pas comme un agent interne. Pour le retirer de 
 - **Un identifiant par rôle**, stable et parlant : `cadre-astreinte`, `recouvrement`. Le `display` est la phrase que les équipes lisent.
 - **`trace` à `none` et `attachments` à `false` sur le public.** Les équipes qui doivent voir les outils ou joindre une lettre ont un agent interne.
 - **`community_knowledge` à `true` pour le public**, si les locataires doivent obtenir les réponses générales du logement social avant même que vos procédures soient déposées. **`false` pour un agent étroit**, qui ne doit lire qu’un fonds nommé dans l’encyclopédie.
-- **Gardez `<!-- KNOWLEDGE_SCHEMA_HERE -->`** dans un prompt système qui cherche dans les documents.
+- **Gardez `{{knowledge-schema}}`** dans un prompt système qui cherche dans les documents.
 - **Créez l’agent, puis cochez-le.** La case et le profil d’encyclopédie apparaissent quand il est prêt.
 - **`Enregistrer` écrit chaque agent**, y compris le brouillon de `Nouvel agent` s’il contient du texte. Un brouillon vide n’est pas envoyé.
 - **Aucun secret dans le JSON ni dans le prompt système.** La clé du modèle est dans Prestataires.

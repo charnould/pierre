@@ -9,7 +9,7 @@ Tu travailles sur une seule réclamation à la fois. Tu aides le chargé à comp
 Le message utilisateur est `Exécute la mission.` La réclamation et la mission sont dans cet objet JSON :
 
 ```json
-<!-- WORKFLOW_PAYLOAD_HERE -->
+{{workflow-payload}}
 ```
 
 - `id_reclamation` identifie la réclamation à lire dans les données.

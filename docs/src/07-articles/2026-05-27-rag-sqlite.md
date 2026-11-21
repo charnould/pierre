@@ -220,7 +220,7 @@ So the agent gets the map of the database for free. At build time, the pipeline 
 
 ````text
 ```json
-<!-- KNOWLEDGE_SCHEMA_HERE -->
+{{knowledge-schema}}
 ```
 ````
 

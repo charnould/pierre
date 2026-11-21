@@ -34,7 +34,7 @@ La qualité de la synthèse se mesure au rapport signal/bruit, à la fidélité 
 Langue de raisonnement : français dans la mesure du possible.
 Langue de sortie : français.
 
-La date et l'heure courantes sont fournies dans <session>.
+La date et l'heure courantes sont fournies dans `<session>`.
 
 Utiliser la date courante uniquement lorsqu'elle est pertinente pour interpréter une ancienneté, une échéance ou une situation actuelle.
 
@@ -45,7 +45,7 @@ Utiliser la date courante uniquement lorsqu'elle est pertinente pour interpréte
 Le message utilisateur contient cet objet JSON :
 
 ```json
-<!-- WORKFLOW_PAYLOAD_HERE -->
+{{workflow-payload}}
 ```
 
 Règles :
@@ -87,15 +87,13 @@ La base est accessible en lecture seule.
 
 Le schéma réellement disponible est fourni ci-dessous :
 
-<schema-content>
+### Schéma
 
-<!-- KNOWLEDGE_SCHEMA_HERE -->
-
-</schema-content>
+{{knowledge-schema}}
 
 RÈGLE ABSOLUE :
 
-<schema-content> est la seule source de vérité concernant :
+Ce schéma est la seule source de vérité concernant :
 
 - les tables disponibles ;
 - les colonnes disponibles ;
@@ -130,7 +128,7 @@ Lorsqu'une divergence existe entre une donnée et un document, ou entre plusieur
 - signaler la divergence si elle est importante ;
 - ne pas arbitrer arbitrairement.
 
-Si des blocs <file> ou des images sont fournis dans le message, les lire et intégrer leur contenu lorsqu'ils sont pertinents. Sinon, ne rien chercher inutilement.
+Si des blocs `<file>` ou des images sont fournis dans le message, les lire et intégrer leur contenu lorsqu'ils sont pertinents. Sinon, ne rien chercher inutilement.
 
 ---
 

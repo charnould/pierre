@@ -107,12 +107,12 @@ Les affectations (assistants, modules) ne figurent pas dans le titre : elles app
 
 Formats acceptés :
 
-| Format                                    | Usage typique                          | Comment PIERRE le lit                                                              |
-| ----------------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------- |
-| Word (`.docx`)                            | Notes, procédures, modèles de courrier | Comme un texte suivi                                                               |
-| Markdown (`.md`)                          | Même usage, en texte structuré         | Comme un texte suivi                                                               |
-| CSV (`.csv`)                              | Listes et exports tabulaires           | Un tableau ; la première ligne sert d’en-têtes                                     |
-| Excel (`.xlsx`, `.xls`, `.xlsm`, `.xlsb`) | Tableaux à plusieurs onglets           | **Un onglet = une ligne**. Les en-têtes sont obligatoirement sur la première ligne |
+| Format                                    | Usage typique                          | Comment PIERRE le lit                                                                |
+| ----------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------ |
+| Word (`.docx`)                            | Notes, procédures, modèles de courrier | Comme un texte suivi                                                                 |
+| Markdown (`.md`)                          | Même usage, en texte structuré         | Comme un texte suivi                                                                 |
+| CSV (`.csv`)                              | Listes et exports tabulaires           | Un tableau ; la première ligne sert d’en-têtes                                       |
+| Excel (`.xlsx`, `.xls`, `.xlsm`, `.xlsb`) | Tableaux à plusieurs onglets           | **Un onglet = une ligne**. Défusion automatique ; ligne d’en-tête choisie à l’import |
 
 Les PDF, images et autres formats sont refusés.
 
@@ -133,7 +133,7 @@ Cliquez sur la ligne, ou sur l’icône crayon. La fenêtre s’intitule `Config
 
 Sous le titre, PIERRE affiche le nom interne qu’utilisera l’agent. Il est calculé automatiquement : vous n’avez pas à le saisir.
 
-Les CSV et les classeurs Excel utilisent toujours leur première ligne comme en-têtes. PIERRE refuse un classeur dont une colonne n’a pas de nom, dont deux colonnes portent le même nom, ou qui contient une cellule fusionnée.
+Les CSV utilisent toujours leur première ligne comme en-têtes. Pour un nouveau classeur Excel, une fenêtre d’import s’ouvre successivement pour chaque onglet avec son aperçu défusionné afin de l’importer ou de l’ignorer, choisir la ligne d’en-tête et le titre ; ces réglages sont mémorisés pour les ré-uploads suivants (tant que la structure d’en-têtes de l’onglet ne change pas). PIERRE refuse les colonnes avec données sans titre et les noms de colonnes en doublon, en indiquant leurs lettres exactes.
 
 ### Profils autorisés
 
@@ -198,20 +198,19 @@ Les actions sont à droite de chaque ligne déposée. Un libellé s’affiche au
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | Modifier    | Ouvre la fenêtre de configuration.                                                                                                  |
 | Désaffecter | Retire tous les profils et tous les modules. La ligne reste, à l’état `Non affecté`. Visible seulement si le contenu était affecté. |
-| Supprimer   | Pour un fichier Word, Markdown, CSV, ou un Excel à un seul onglet : **supprime le fichier définitivement**.                         |
-| Retirer     | Pour un Excel à **plusieurs onglets** : retire **cet onglet** de l’encyclopédie, sans supprimer les autres.                         |
+| Supprimer   | Pour un fichier Word, Markdown ou CSV : **supprime le fichier définitivement**.                                                     |
+| Retirer     | Pour un onglet Excel : retire **cet onglet** de l’encyclopédie, sans toucher aux autres onglets du classeur.                        |
 
 Une confirmation est toujours demandée. Exemples de formulations :
 
-- fichier seul : `carnet-agences.docx sera supprimé définitivement` ;
-- fichier à plusieurs lignes : le nom du fichier **et le nombre de lignes** concernées ;
+- fichier : `carnet-agences.docx sera supprimé définitivement` ;
 - onglet : `L’onglet … de … sera retiré de l’encyclopédie`.
 
 Désaffecter n’efface pas le fichier. Supprimer, si.
 
 ## Bonnes pratiques
 
-- **Préparez les fichiers avant de les déposer.** Titres clairs, un sujet par section, tableaux vraiment tabulaires (pas de cellules fusionnées). Le guide de préparation évite la plupart des refus.
+- **Préparez les fichiers avant de les déposer.** Titres clairs, un sujet par section, colonnes toutes nommées et uniques. Les cellules fusionnées d’Excel sont défusionnées automatiquement.
 - **Affectez tout de suite.** Un dépôt « pour plus tard » reste `Non affecté` et ne sert à personne — y compris les Core Data.
 - **Reconstruisez après chaque campagne** d’ajouts ou de corrections, puis vérifiez que les lignes concernées passent à `OK`.
 - **Gardez les noms de fichiers stables** pour les mises à jour (surtout les cinq `core.*.csv` et les envois automatiques de la DSI).
@@ -314,7 +313,7 @@ Utilisez UTF-8, un point-virgule (`;`) comme séparateur et une première ligne 
 1. Ouvrez `Administration` puis `Encyclopédie` dans l'application desktop.
 2. Cliquez sur `Ajouter des fichiers` et sélectionnez vos documents.
 3. Donnez à chaque contenu un titre explicite et choisissez les profils autorisés.
-4. Pour un classeur, la première ligne de chaque onglet doit contenir les en-têtes. Un CSV suit la même règle.
+4. Pour un classeur Excel, une fenêtre d’import s’ouvre pour chaque onglet afin de l’importer ou de l’ignorer, choisir la ligne d’en-tête et le titre (les cellules fusionnées sont défusionnées automatiquement). Un CSV utilise toujours sa première ligne comme en-têtes.
 5. L’original n’est pas conservé : corrigez le fichier puis redéposez-le s’il doit changer.
 
 Un document sans profil reste visible comme `Non affecté`, mais son contenu n'est transmis à aucun agent. Après une modification, cliquez sur `Reconstruire` pour publier. Le détail de l’écran est dans [Administration · Encyclopédie](./20-admin-encyclopedie.md).

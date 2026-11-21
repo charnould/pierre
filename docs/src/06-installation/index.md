@@ -32,7 +32,7 @@ Règles :
 - renvoyer un fichier portant le même nom met à jour son contenu sans perdre son affectation ;
 - un fichier dont les octets n’ont pas changé ne réécrit rien ;
 - les fichiers Core Data utilisent la même route et un nom contractuel, par exemple `core.reclamations.csv` ;
-- un classeur Excel est refusé si ses en-têtes ne sont pas sur la première ligne, si une colonne n’a pas de nom, si deux colonnes portent le même nom, ou s’il contient une cellule fusionnée ;
+- pour un classeur Excel, les cellules fusionnées sont défusionnées automatiquement ; chaque onglet configuré est suivi par son empreinte de contenu et d’en-têtes (un ré-envoi CLI échoue si un onglet configuré a disparu ou si ses en-têtes ont changé, et un onglet dont une colonne avec données n’a pas de nom ou porte un doublon est refusé) ;
 - copier un fichier sur le disque du serveur ne met pas à jour le catalogue : seul cet endpoint importe.
 
 Le serveur transforme immédiatement chaque fichier et ne conserve pas l’original. Le Markdown et les tableaux importés vivent dans `/var/lib/pierre/datastore.sqlite`. `pierre backup` suffit donc à sauvegarder ces imports. `/var/lib/pierre/uploads/` contient uniquement les pièces jointes temporaires des conversations.

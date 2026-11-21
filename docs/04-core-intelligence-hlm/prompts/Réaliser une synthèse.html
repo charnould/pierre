@@ -79,7 +79,7 @@
       <hr />
       <h2 id="3-payload-dentrée">3. PAYLOAD D'ENTRÉE</h2>
       <p>Le message utilisateur contient cet objet JSON :</p>
-      <pre class="language-json"><code class="language-json">&lt;!-- WORKFLOW_PAYLOAD_HERE -->
+      <pre class="language-json"><code class="language-json">{{workflow-payload}}
 </code></pre>
       <p>Règles :</p>
       <ul>
@@ -123,11 +123,10 @@
       <p>La source principale est <code>/knowledge/db.sqlite</code></p>
       <p>La base est accessible en lecture seule.</p>
       <p>Le schéma réellement disponible est fourni ci-dessous :</p>
-      <p>&lt;schema-content&gt;</p>
-      <!-- KNOWLEDGE_SCHEMA_HERE -->
-      <p>&lt;/schema-content&gt;</p>
+      <h3 id="schéma">Schéma</h3>
+      <p>{{knowledge-schema}}</p>
       <p>RÈGLE ABSOLUE :</p>
-      <p>&lt;schema-content&gt; est la seule source de vérité concernant :</p>
+      <p>Ce schéma est la seule source de vérité concernant :</p>
       <ul>
         <li>les tables disponibles ;</li>
         <li>les colonnes disponibles ;</li>

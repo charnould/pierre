@@ -82,23 +82,51 @@ pierre
 pierre
 ```
 
-| Commande                        | Effet                                           |
-| ------------------------------- | ----------------------------------------------- |
-| `pierre`                        | Affiche l'état et les commandes.                |
-| `pierre install --host DOMAINE` | Installe les services.                          |
-| `pierre update`                 | Met à jour les services.                        |
-| `pierre update --reset`         | Met à jour après suppression des données.       |
-| `pierre restart`                | Redémarre les services.                         |
-| `pierre backup`                 | Sauvegarde `datastore.sqlite`, imports compris. |
-| `pierre logs`                   | Affiche les journaux.                           |
-| `pierre env`                    | Affiche le domaine et les secrets.              |
-| `pierre remove`                 | Supprime les services et les données.           |
+| Commande                        | Effet                                        |
+| ------------------------------- | -------------------------------------------- |
+| `pierre`                        | Affiche l'état et les commandes.             |
+| `pierre install --host DOMAINE` | Installe les services.                       |
+| `pierre update`                 | Met à jour les services.                     |
+| `pierre restart`                | Redémarre les services.                      |
+| `pierre backup`                 | Écrit une copie datée de `datastore.sqlite`. |
+| `pierre restore`                | Remplace la base par une sauvegarde.         |
+| `pierre reset`                  | Réinitialise tout ou partie de la base.      |
+| `pierre logs`                   | Affiche les journaux.                        |
+| `pierre env`                    | Affiche le domaine et les secrets.           |
+| `pierre remove`                 | Supprime les services et les données.        |
 
-`pierre update --reset` demande confirmation, supprime les données applicatives, puis
-active la nouvelle version sur une base vide. Il conserve la configuration, Caddy, CARL,
-les releases et le runtime des microVM. Cette option sert notamment lorsqu’un historique de
-migrations est volontairement compressé pendant le développement. Exécutez `pierre backup`
-auparavant si les données doivent être conservées.
+`pierre backup` écrit `datastore-AAAAMMJJTHHMMSSZ.sqlite` (droits `0600`) dans
+`/var/lib/pierre/backups/` sans écraser une copie existante, puis affiche les commandes
+`scp` pour la récupérer hors du serveur et la renvoyer en vue d’une restauration :
+
+```bash
+scp root@DOMAINE:/var/lib/pierre/backups/datastore-AAAAMMJJTHHMMSSZ.sqlite .
+scp datastore-AAAAMMJJTHHMMSSZ.sqlite root@DOMAINE:/tmp/ && ssh -t root@DOMAINE pierre restore /tmp/datastore-AAAAMMJJTHHMMSSZ.sqlite
+```
+
+`pierre restore` sans argument sélectionne la sauvegarde datée la plus récente dans
+`/var/lib/pierre/backups/`. Un chemin explicite (`/tmp/...`) restaure ce fichier. Avant
+d’arrêter le service, la commande vérifie l’intégrité SQLite (`PRAGMA quick_check`) et la
+présence de `schema_migrations`. Le service est ensuite arrêté, la base en service est mise
+de côté, la sauvegarde est installée, `-wal`/`-shm`, `knowledge/` et `workspaces/` sont nettoyés, puis le
+service redémarre. Si `/up` échoue (par exemple schéma plus récent ou `AUTH_SECRET`
+différent), la base précédente est automatiquement remise en place.
+
+Les prestataires (modèle de langage, CM.com, Maileva) sont stockés dans cette base en un
+seul bloc chiffré avec `AUTH_SECRET`. Une sauvegarde les emporte donc. **Restaurer une
+sauvegarde sur un autre serveur exige le même `AUTH_SECRET` dans `/etc/pierre.env`** pour
+que les secrets des prestataires restent lisibles. `/etc/pierre.env` reste hors de la base :
+domaine, secret d’authentification, jeton d’encyclopédie et taille des microVM.
+
+`pierre reset` affiche les tables de `datastore.sqlite` avec leur nombre de lignes et demande
+les tables à réinitialiser (séparées par des virgules) ou `tout` pour repartir d’une base
+vide. Les dépendances structurelles sont incluses et affichées avant confirmation (`users`
+entraîne `session` et `account`, `activites` entraîne les tables de suivi d’envoi,
+`bulk_operations` entraîne `bulk_jobs`, `knowledge_records` entraîne les tables
+d’encyclopédie et `knowledge/`, `intakes` entraîne les tables `intake_*` et `knowledge/`,
+`conversations` nettoie `workspaces/`). Les tables supprimées sont recréées vides au dernier schéma au
+redémarrage. `/etc/pierre.env`, Caddy, CARL, les releases et le runtime des microVM sont
+conservés. Exécutez `pierre backup` auparavant si les données doivent être conservées.
 
 Sur le Mac de développement, depuis la racine du dépôt, `bun server:env` crée `server/datastores/pierre.env` s’il manque. `bun server:dev` charge ce fichier. Le `.env` à la racine du dépôt n’est pas lu. `AUTH_PASSWORD` crée le compte `admin@pierre-ia.org` seulement s’il n’existe pas. Sur un serveur, `pierre install` reste le seul écrivain de `/etc/pierre.env`.
 
@@ -109,7 +137,7 @@ Les capacités par défaut correspondent au serveur recommandé de 64 Gio :
 | `PUBLIC_CHAT_PER_MINUTE` |  `600` | Requêtes anonymes par adresse et par minute.   |
 | `SMOLVM_MAX_ACTIVE`      |   `96` | MicroVM de conversation résidentes au maximum. |
 | `SMOLVM_POOL_SIZE`       |    `4` | MicroVM toujours prêtes pour absorber un pic.  |
-| `SMOLVM_CPUS`            |    `1` | vCPU par microVM.                              |
+| `SMOLVM_CPUS`            |    `2` | vCPU par microVM.                              |
 | `SMOLVM_MEMORY_MIB`      |  `512` | Mémoire maximale en Mio par microVM.           |
 
 Une microVM exécute Pi et appelle le LLM à distance : elle ne charge pas le modèle. Avec 512 Mio par VM, 96 conversations réservent au maximum 48 Gio et laissent 16 Gio au système, à Bun, SQLite et Caddy.
