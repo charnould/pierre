@@ -186,13 +186,3 @@ export const parseKnowledgeCsv = (text: string): ParsedTable => {
 
   return { columns, rows }
 }
-
-export const loadKnowledgeCsv = async (path: string): Promise<ParsedTable> => {
-  let text: string
-  try {
-    text = new TextDecoder('utf-8', { fatal: true }).decode(await Bun.file(path).bytes())
-  } catch {
-    throw new KnowledgeCsvError('invalid_csv', 'Le fichier n’est pas encodé en UTF-8.')
-  }
-  return parseKnowledgeCsv(text)
-}

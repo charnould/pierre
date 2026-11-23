@@ -23,7 +23,7 @@ export function parseIntakeJsonArray(value: unknown): string[] | null {
   }
 }
 
-export function sqlColumnDefinition(field: IntakeField): string | null {
+function sqlColumnDefinition(field: IntakeField): string | null {
   if (!isIntakeInputField(field)) return null
   const column = intakeFieldColumnName(field.label)
   const quoted = quoteSqlIdent(column)

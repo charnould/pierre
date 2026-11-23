@@ -48,7 +48,7 @@ export type SimulationOverride = (input: {
 }) => Promise<SimulationDecision>
 export type Clock = { now: () => Date }
 
-export let simulationOverride: SimulationOverride | null = null
+let simulationOverride: SimulationOverride | null = null
 let clock: Clock = { now: () => new Date() }
 let clockOverridden = false
 let transactionHook: ((point: 'fallback_created' | 'rich_created') => void) | null = null

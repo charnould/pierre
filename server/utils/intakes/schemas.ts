@@ -94,7 +94,7 @@ const FileFieldSchema = z
   })
   .strict()
 
-export const IntakeFieldSchema = z.discriminatedUnion('type', [
+const IntakeFieldSchema = z.discriminatedUnion('type', [
   SectionFieldSchema,
   SimpleInputFieldSchema,
   SingleChoiceFieldSchema,

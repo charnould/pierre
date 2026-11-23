@@ -4,7 +4,7 @@ import { DATASTORE_TABLES, type DatastoreTable } from '../../shared/core-data'
 import { openDatastore } from './datastore-db'
 import { datastorePaths } from './paths'
 
-export { CORE_DATA_CONTRACT, DATASTORE_TABLES, type DatastoreTable } from '../../shared/core-data'
+export { CORE_DATA_CONTRACT, DATASTORE_TABLES } from '../../shared/core-data'
 
 export type DatastoreTableStatus = {
   name: DatastoreTable

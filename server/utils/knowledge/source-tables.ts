@@ -16,16 +16,11 @@ export const dropSourceTable = (db: Database, sourceId: string): void => {
   db.run(`DROP TABLE IF EXISTS ${quote(sourceTableName(sourceId))}`)
 }
 
-export const tableColumns = (db: Database, table: string, schema = 'main'): string[] =>
+const tableColumns = (db: Database, table: string): string[] =>
   db
-    .query<{ name: string }, [string, string]>(
-      `SELECT name FROM pragma_table_info(?, ?) ORDER BY cid`
-    )
-    .all(table, schema)
+    .query<{ name: string }, [string]>(`SELECT name FROM pragma_table_info(?) ORDER BY cid`)
+    .all(table)
     .map((column) => column.name)
-
-export const tableExists = (db: Database, table: string, schema = 'main'): boolean =>
-  tableColumns(db, table, schema).length > 0
 
 export const readDataTable = (
   db: Database,

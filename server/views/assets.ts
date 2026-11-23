@@ -73,10 +73,6 @@ export function readChatWebEntry(): WebEntry {
   return readWebEntry('src/chat-web/main.tsx')
 }
 
-export function readIntakeWebEntry(): WebEntry {
-  return readWebEntry('src/intake-web/main.tsx')
-}
-
 const manifest = readManifest()
 const chatWeb = readWebEntry('src/chat-web/main.tsx', manifest)
 const intakeWeb = readWebEntry('src/intake-web/main.tsx', manifest)

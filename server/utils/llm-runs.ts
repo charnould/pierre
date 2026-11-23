@@ -84,7 +84,7 @@ export const neutralError = (error: unknown): string | null => {
   return clean ? clean.slice(0, 300) : null
 }
 
-export const jsonSafe = (value: unknown): unknown => {
+const jsonSafe = (value: unknown): unknown => {
   try {
     return JSON.parse(JSON.stringify(value ?? null)) as unknown
   } catch {

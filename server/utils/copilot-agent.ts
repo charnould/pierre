@@ -46,7 +46,7 @@ import {
 import { injectWorkflowPayload, type WorkflowPayload } from './workflow-payload'
 
 const configuredGenerationTimeout = Number(Bun.env['LLM_GENERATION_TIMEOUT_MS'] ?? 600_000)
-export const LLM_GENERATION_TIMEOUT_MS = Number.isFinite(configuredGenerationTimeout)
+const LLM_GENERATION_TIMEOUT_MS = Number.isFinite(configuredGenerationTimeout)
   ? Math.min(30 * 60 * 1000, Math.max(30_000, configuredGenerationTimeout))
   : 600_000
 

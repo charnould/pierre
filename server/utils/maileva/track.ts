@@ -7,7 +7,7 @@ import { mailevaTarget, readProviders } from '../providers'
 import { asRecord, type MailevaAuth, MailevaError, mailevaRequest } from './http'
 import { mailevaAccount, remoteStatus } from './send'
 
-export async function reconcileMaileva(): Promise<void> {
+async function reconcileMaileva(): Promise<void> {
   const providers = readProviders()
   const target = mailevaTarget(providers.mailevaUsername)
   if (!target || !providers.mailevaClientSecret || !providers.mailevaPassword) return
