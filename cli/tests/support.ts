@@ -98,7 +98,7 @@ export async function recordChecksum(directory: string, name: string) {
   await writeFile(file, `${kept.join('\n')}\n`)
 }
 
-export function storedZip(files: Array<{ name: string; data: Buffer }>): Buffer {
+function storedZip(files: Array<{ name: string; data: Buffer }>): Buffer {
   const locals: Buffer[] = []
   const centrals: Buffer[] = []
   let offset = 0
