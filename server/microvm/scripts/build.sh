@@ -122,7 +122,8 @@ test \"\$(node --version)\" = 'v$NODE_VERSION'
 "$SMOLVM" machine exec --name "$BUILD_VM" -- mkdir -p \
   /opt/pierre/agent \
   /opt/pierre/agent/document-extract \
-  /opt/pierre/extensions
+  /opt/pierre/extensions \
+  /opt/pierre/skills
 
 for file in package.json package-lock.json; do
   "$SMOLVM" machine cp "$GUEST/$file" "$BUILD_VM:/opt/pierre/agent/$file"
@@ -148,9 +149,33 @@ chmod +x \
   /opt/pierre/agent/document-extract/extract-spreadsheet.mjs
 "
 
-"$SMOLVM" machine cp \
-  "$GUEST/extensions/ask-user.ts" \
-  "$BUILD_VM:/opt/pierre/extensions/ask-user.ts"
+for file in "$GUEST"/extensions/*.ts; do
+  [ -f "$file" ] || continue
+  "$SMOLVM" machine cp "$file" "$BUILD_VM:/opt/pierre/extensions/$(basename "$file")"
+done
+
+if [ -d "$GUEST/skills" ]; then
+  while IFS= read -r -d '' file; do
+    rel="${file#"$GUEST/skills/"}"
+    dir="$(dirname "$rel")"
+    if [ "$dir" != "." ]; then
+      "$SMOLVM" machine exec --name "$BUILD_VM" -- mkdir -p "/opt/pierre/skills/$dir"
+    fi
+    "$SMOLVM" machine cp "$file" "$BUILD_VM:/opt/pierre/skills/$rel"
+  done < <(find "$GUEST/skills" -type f ! -name '.*' -print0)
+fi
+
+"$SMOLVM" machine exec --name "$BUILD_VM" -- bash -c '
+set -euo pipefail
+shopt -s nullglob
+for script in /opt/pierre/skills/*/scripts/*; do
+  [ -f "$script" ] || continue
+  chmod +x "$script"
+  name="$(basename "$script")"
+  ln -sf "$script" "/usr/local/bin/${name%.*}"
+done
+'
+
 "$SMOLVM" machine cp \
   "$GUEST/PI_SYSTEM_APPEND.md" \
   "$BUILD_VM:/opt/pierre/PI_SYSTEM_APPEND.md"
@@ -166,6 +191,7 @@ set -euo pipefail
 RPC_SMOKE=\$(printf '%s\n' \
   '{\"type\":\"get_state\"}' \
   '{\"type\":\"get_session_stats\"}' \
+  '{\"type\":\"get_commands\"}' \
   | timeout 20s pi \
       --mode rpc \
       --no-session \
@@ -178,15 +204,19 @@ RPC_SMOKE=\$(printf '%s\n' \
       --offline \
       --tools read,bash,edit,write,grep,find,ls,ask_user \
       --append-system-prompt /opt/pierre/PI_SYSTEM_APPEND.md \
-      -e /opt/pierre/extensions/ask-user.ts \
+      -e /opt/pierre \
 )
 printf '%s\n' \"\$RPC_SMOKE\" | jq -s -e '
   any(.[]; .type == \"response\" and .command == \"get_state\" and .success == true
     and .data.autoCompactionEnabled == true)
   and any(.[]; .type == \"response\" and .command == \"get_session_stats\" and .success == true)
+  and any(.[]; .type == \"response\" and .command == \"get_commands\" and .success == true
+    and any(.data.commands[]; .name == \"skill:carl\" and .source == \"skill\"))
   and all(.[]; .type != \"extension_error\")
 ' >/dev/null
 test -x /usr/local/bin/document-extract
+test -x /usr/local/bin/carl
+test -r /opt/pierre/skills/carl/SKILL.md
 test \"\$(tesseract --list-langs 2>/dev/null | grep -cx fra)\" = 1
 find / -xdev -type c -delete 2>/dev/null || true
 apt-get purge -y -qq xz-utils
@@ -226,7 +256,9 @@ jq --version
 rg --version
 fd --version
 test -x /usr/local/bin/document-extract
+test -x /usr/local/bin/carl
 test -f /opt/pierre/extensions/ask-user.ts
+test -r /opt/pierre/skills/carl/SKILL.md
 test -r /opt/pierre/PI_SYSTEM_APPEND.md
 test -r /knowledge/marker.txt
 ! touch /knowledge/forbidden
@@ -255,6 +287,7 @@ test \"\$(wc -c < /tmp/long.txt)\" -lt 263000
 RPC_SMOKE=\$(printf '%s\n' \
   '{\"type\":\"get_state\"}' \
   '{\"type\":\"get_session_stats\"}' \
+  '{\"type\":\"get_commands\"}' \
   | timeout 20s pi \
       --mode rpc \
       --no-session \
@@ -267,11 +300,13 @@ RPC_SMOKE=\$(printf '%s\n' \
       --offline \
       --tools read,bash,edit,write,grep,find,ls,ask_user \
       --append-system-prompt /opt/pierre/PI_SYSTEM_APPEND.md \
-      -e /opt/pierre/extensions/ask-user.ts \
+      -e /opt/pierre \
 )
 printf '%s\n' \"\$RPC_SMOKE\" | jq -s -e '
   any(.[]; .type == \"response\" and .command == \"get_state\" and .success == true)
   and any(.[]; .type == \"response\" and .command == \"get_session_stats\" and .success == true)
+  and any(.[]; .type == \"response\" and .command == \"get_commands\" and .success == true
+    and any(.data.commands[]; .name == \"skill:carl\" and .source == \"skill\"))
   and all(.[]; .type != \"extension_error\")
 ' >/dev/null
 "
