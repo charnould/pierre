@@ -13,7 +13,7 @@ describe('smolvm runtime activation', () => {
     await ensureSmolvm(ctx.ctx)
 
     expect(await readlink(join(root, 'smolvm-runtime', 'current'))).toBe(
-      join(root, 'smolvm-runtime', 'releases', '1.24.0')
+      join(root, 'smolvm-runtime', 'releases', '1.36.1')
     )
     expect(await readlink(join(root, 'smolvm'))).toBe(
       join(root, 'smolvm-runtime', 'current', 'smolvm')
@@ -24,10 +24,10 @@ describe('smolvm runtime activation', () => {
     const root = await tempRoot('pierre-smolvm-')
     const ctx = testContext(root)
     await writeFile(
-      join(root, 'smolvm-runtime', 'releases', '1.24.0', 'smolvm'),
+      join(root, 'smolvm-runtime', 'releases', '1.36.1', 'smolvm'),
       '#!/bin/sh\necho broken\n'
     )
 
-    await expect(ensureSmolvm(ctx.ctx)).rejects.toThrow('Runtime smolvm 1.24.0 invalide')
+    await expect(ensureSmolvm(ctx.ctx)).rejects.toThrow('Runtime smolvm 1.36.1 invalide')
   })
 })
