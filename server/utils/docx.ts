@@ -4,7 +4,7 @@ import { type FontBytesByVariant, Ream } from 'reamkit'
 
 const MAX_PDF_BYTES = 10_000_000
 
-export class DocxError extends Error {
+class DocxError extends Error {
   constructor(message: string) {
     super(message)
     this.name = 'DocxError'

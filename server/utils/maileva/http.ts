@@ -24,15 +24,10 @@ type MailevaTransport = (input: string | URL | Request, init?: RequestInit) => P
 
 const tokens = new Map<string, Token>()
 let transport: MailevaTransport = globalThis.fetch
-let clock = (): number => Date.now()
 
 export const set_maileva_transport_for_tests = (next: MailevaTransport | null): void => {
   transport = next ?? globalThis.fetch
   tokens.clear()
-}
-
-export const set_maileva_clock_for_tests = (next: (() => number) | null): void => {
-  clock = next ?? (() => Date.now())
 }
 
 export const clear_maileva_sessions_for_tests = (): void => {
@@ -75,7 +70,7 @@ async function readJson(response: Response): Promise<unknown> {
 export async function mailevaToken(auth: MailevaAuth, force = false): Promise<string> {
   const key = `${auth.target}:${auth.clientId}:${auth.username}`
   const cached = tokens.get(key)
-  if (!force && cached && cached.until > clock() + 30_000) return cached.value
+  if (!force && cached && cached.until > Date.now() + 30_000) return cached.value
   return singleflight(`token:${key}`, async () => {
     let response: Response
     try {
@@ -116,7 +111,7 @@ export async function mailevaToken(auth: MailevaAuth, force = false): Promise<st
         response.status !== 400 && response.status !== 401
       )
     }
-    tokens.set(key, { value: accessToken, until: clock() + expires * 1000 })
+    tokens.set(key, { value: accessToken, until: Date.now() + expires * 1000 })
     return accessToken
   })
 }

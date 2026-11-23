@@ -46,7 +46,7 @@ const categories = (value: unknown): ReviewCategory[] =>
       )
     : []
 
-export const parseReview = (value: string | null): ConversationReview | null => {
+const parseReview = (value: string | null): ConversationReview | null => {
   if (!value) return null
   const parsed = JSON.parse(value) as Partial<ConversationReview>
   const status = reviewStatus(parsed.status ?? null)

@@ -15,7 +15,7 @@ const PLAN_SNAPSHOT_TYPES = [
   'repayment_plan.finalized'
 ] as const
 
-export const plan_dossiers_ctes = (): string => `
+const plan_dossiers_ctes = (): string => `
 plan_snapshots AS (
   SELECT
     id_locataire,

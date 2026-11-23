@@ -20,13 +20,6 @@ const FAILURE_STATUSES = new Set([
   'unclaimed'
 ])
 
-export const is_communication_status = (_medium: string, status: string): boolean =>
-  status === 'sent' ||
-  status === 'delivered' ||
-  status === 'read' ||
-  status === 'opened' ||
-  FAILURE_STATUSES.has(status)
-
 const is_outbound_author = (author: string): boolean =>
   author.startsWith('user:') ||
   author.startsWith('agent:') ||
