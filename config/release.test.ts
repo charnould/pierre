@@ -67,9 +67,12 @@ type Repository = {
 }
 
 async function run(args: string[], cwd: string, env: Record<string, string> = {}) {
+  const childEnv: Record<string, string | undefined> = { ...Bun.env }
+  delete childEnv.GITHUB_SHA
+  delete childEnv.GITHUB_OUTPUT
   const process = Bun.spawn(args, {
     cwd,
-    env: { ...Bun.env, ...env },
+    env: { ...childEnv, ...env },
     stderr: 'pipe',
     stdout: 'pipe'
   })
