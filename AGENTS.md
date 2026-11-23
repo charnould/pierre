@@ -93,6 +93,8 @@ bun fmt <files>
 bun oxlint
 bun oxlint --fix <files>
 bun check
+bun knip
+bun knip:production
 ```
 
 Style (single quotes, no semicolons, `printWidth` 100, `sortImports`, `sortTailwindcss`, `sortPackageJson`) lives in `bunfig.toml`. Lint rules and ignore patterns live in `.oxlintrc.jsonc` at the repo root: Oxlint anchors those patterns on the config file's directory, so the file cannot live under `config/`. Bun 1.4.4 ships `bun fmt` only: `bun lint` is still canary, so this repo keeps oxlint. Do not add a `fmt` or `lint` script — a `fmt` script hides `bun fmt`, and a `lint` script would hide `bun lint` once a stable release includes it.
