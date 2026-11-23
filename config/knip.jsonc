@@ -16,6 +16,7 @@
         "config/build-updates.ts!",
         "config/release.ts!",
         "config/release.test.ts",
+        "config/test.ts!",
         "config/checks/*.test.ts",
         "config/root-tests/*.test.ts",
         "shared/**/*.test.ts"
@@ -88,9 +89,9 @@
         "assets/host/pierre.ts!",
         "microvm/update.ts!",
         "utils/knowledge/scrape-wikipedia.ts!",
-        "utils/update-pierre.ts!",
         "utils/ensure-carl.ts!",
         "utils/ensure-speech.ts!",
+        "tests/e2e/run.ts",
         "tests/live/cm-channels.ts!",
         "tests/live/maileva.ts!",
         "tests/**/*.test.ts"
