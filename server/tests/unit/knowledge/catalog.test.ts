@@ -2,21 +2,25 @@ import { Database } from 'bun:sqlite'
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { mkdir, rm } from 'node:fs/promises'
 
+import { isKnowledgeSourceAssigned } from '../../../../shared/knowledge'
+import {
+  knowledgeProjections,
+  knowledgePublishTargets
+} from '../../../utils/knowledge/catalog-rules'
 import {
   completeKnowledgeBuild,
   createKnowledgeBuild,
   failInterruptedKnowledgeBuilds,
   getKnowledgeBuild,
+  listKnowledgeBuilds,
+  purgeOldKnowledgeBuilds
+} from '../../../utils/knowledge/knowledge-builds'
+import {
   getKnowledgeCatalogSnapshot,
   insertKnowledgeSource,
-  isKnowledgeSourceAssigned,
-  knowledgeProjections,
-  knowledgePublishTargets,
-  listKnowledgeBuilds,
   listKnowledgeSources,
-  purgeOldKnowledgeBuilds,
   updateKnowledgeSourceMetadata
-} from '../../../utils/knowledge/catalog'
+} from '../../../utils/knowledge/knowledge-sources'
 import { migrate_datastore } from '../../../utils/migrations'
 import { datastorePaths, setDatastoreRoot, testDatastorePaths } from '../../../utils/paths'
 

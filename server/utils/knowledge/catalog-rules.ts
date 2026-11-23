@@ -10,9 +10,7 @@ import {
   type KnowledgeSource
 } from './catalog-schema'
 
-export const PROFILE_BUILD_EPOCH = `${version}:direct-import-2`
-
-export { isKnowledgeSourceAssigned }
+const PROFILE_BUILD_EPOCH = `${version}:direct-import-2`
 
 export const knowledgePublishTargets = (
   source: Pick<KnowledgeSource, 'profileIds' | 'moduleIds'>,
@@ -29,7 +27,7 @@ export const knowledgePublishTargets = (
   return [...targets].sort()
 }
 
-export const knowledgeOutputName = (
+const knowledgeOutputName = (
   source: Pick<KnowledgeSource, 'fileType' | 'originalName' | 'title'>
 ): string =>
   source.fileType === 'intake'
