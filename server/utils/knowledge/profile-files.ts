@@ -14,11 +14,11 @@ export async function writeProfileFiles(profileId: string): Promise<void> {
     isPromptId(profileId) ? (skillPrompt(profileId) ?? '') : chatbotInstructions(profileId)
   ).trim()
   const dbPath = join(dir, 'db.sqlite')
-  if (raw.includes('<!-- KNOWLEDGE_SCHEMA_HERE -->') && (await Bun.file(dbPath).exists())) {
+  if (raw.includes('{{knowledge-schema}}') && (await Bun.file(dbPath).exists())) {
     const db = new Database(dbPath, { readonly: true })
     try {
       const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
-      raw = raw.replace('<!-- KNOWLEDGE_SCHEMA_HERE -->', row?.content?.trim() ?? '')
+      raw = raw.replace('{{knowledge-schema}}', () => row?.content?.trim() ?? '')
     } finally {
       db.close()
     }

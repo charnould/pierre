@@ -37,7 +37,7 @@ const run = (
 
 describe('report consigne', () => {
   it('replaces the slot with the form prompt', () => {
-    const consigne = 'Consignes.\n\n<!-- AUTOMATION_PROMPT_HERE -->\n\nFin.'
+    const consigne = 'Consignes.\n\n{{automation-prompt}}\n\nFin.'
     expect(insertAutomationPrompt(consigne, 'Les impayés.')).toBe(
       'Consignes.\n\nLes impayés.\n\nFin.'
     )

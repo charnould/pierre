@@ -74,12 +74,13 @@ const locks = new Map<string, Promise<void>>()
  * Pi reads this file from its working directory (`/knowledge`) at startup.
  * Content: current date + AGENTS.md sections + SQLite schema.
  */
-const AUTOMATION_PROMPT_SLOT = '<!-- AUTOMATION_PROMPT_HERE -->'
+const AUTOMATION_PROMPT_SLOT = '{{automation-prompt}}'
+const KNOWLEDGE_SCHEMA_SLOT = '{{knowledge-schema}}'
 
 /** Replaces the slot. Does not insert the slot when the consigne has none. */
 export function insertAutomationPrompt(markdown: string, prompt: string | undefined): string {
   if (prompt === undefined || !markdown.includes(AUTOMATION_PROMPT_SLOT)) return markdown
-  return markdown.replace(AUTOMATION_PROMPT_SLOT, prompt)
+  return markdown.replace(AUTOMATION_PROMPT_SLOT, () => prompt)
 }
 
 export async function buildConversationAgentsFile(
@@ -101,11 +102,11 @@ export async function buildConversationAgentsFile(
   ).trim()
 
   if (raw) {
-    if (raw.includes('<!-- KNOWLEDGE_SCHEMA_HERE -->') && (await Bun.file(dbPath).exists())) {
+    if (raw.includes(KNOWLEDGE_SCHEMA_SLOT) && (await Bun.file(dbPath).exists())) {
       try {
         using db = new Database(dbPath, { readonly: true })
         const row = db.query<{ content: string }, []>('SELECT content FROM _readme').get()
-        raw = raw.replace('<!-- KNOWLEDGE_SCHEMA_HERE -->', row?.content?.trim() ?? '')
+        raw = raw.replace(KNOWLEDGE_SCHEMA_SLOT, () => row?.content?.trim() ?? '')
       } catch (err) {
         console.warn('[AGENT] Could not read db schema:', err)
       }
