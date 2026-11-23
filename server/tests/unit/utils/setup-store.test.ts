@@ -9,6 +9,7 @@ import {
   automationsReady,
   defaultChatbotReady,
   deleteInternalChatbot,
+  readSetupBytes,
   REPAYMENT_DOCUMENT_IDS,
   repaymentGaps,
   repaymentMessages,
@@ -244,5 +245,20 @@ describe('setup store', () => {
 
     deleteInternalChatbot('cadre-astreinte')
     expect(anyChatbotReady()).toBe(false)
+  })
+
+  it('rasterizes icon.svg into PNG phone icons', async () => {
+    const svg =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="#000"/></svg>'
+    await writeSetup('chatbots/icons/icon.svg', new TextEncoder().encode(svg))
+    for (const id of [
+      'chatbots/icons/apple-touch-icon.png',
+      'chatbots/icons/icon-192.png',
+      'chatbots/icons/icon-512.png'
+    ]) {
+      const png = readSetupBytes(id)
+      expect(png).not.toBeNull()
+      expect(Array.from(png!.slice(0, 4))).toEqual([0x89, 0x50, 0x4e, 0x47])
+    }
   })
 })

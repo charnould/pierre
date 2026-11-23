@@ -523,9 +523,10 @@ export function setupFileContentType(id: string): string | null {
 }
 
 async function writePhoneIcons(svg: string): Promise<void> {
+  const bin = Bun.which('magick') ?? 'convert'
   for (const [id, size] of PHONE_ICONS) {
     const proc = Bun.spawn(
-      ['magick', '-background', 'none', 'svg:-', '-resize', `${size}x${size}`, 'png:-'],
+      [bin, '-background', 'none', 'svg:-', '-resize', `${size}x${size}`, 'png:-'],
       { stdin: new Blob([svg]), stdout: 'pipe', stderr: 'pipe' }
     )
     const bytes = new Uint8Array(await new Response(proc.stdout).arrayBuffer())

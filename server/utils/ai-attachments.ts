@@ -286,10 +286,10 @@ async function existingAttachmentUsage(
 }
 
 async function resizeRasterWithImageMagick(inputPath: string, outputPath: string): Promise<void> {
-  const proc = Bun.spawn(
-    ['convert', inputPath, '-resize', '2000x2000>', '-quality', '85', outputPath],
-    { stderr: 'pipe' }
-  )
+  const bin = Bun.which('magick') ?? 'convert'
+  const proc = Bun.spawn([bin, inputPath, '-resize', '2000x2000>', '-quality', '85', outputPath], {
+    stderr: 'pipe'
+  })
 
   const exitCode = await proc.exited
   if (exitCode !== 0) {
