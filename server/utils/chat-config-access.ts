@@ -1,5 +1,4 @@
-import type { Config, User } from './_schema'
-import { isDefaultChatbotConfig } from './_schema'
+import { type ChatbotConfig, isDefaultChatbotConfig, type User } from './_schema'
 import { loadChatbotConfig } from './chatbot-config'
 
 const CONFIG_ID = /^[a-z0-9][a-z0-9_-]{0,63}$/
@@ -19,14 +18,14 @@ export async function resolveAuthorizedChatConfig(
   requestedId: string,
   user: User | null | undefined,
   loadConfig: (configName: string) => Promise<unknown> = loadChatbotConfig
-): Promise<Config> {
+): Promise<ChatbotConfig> {
   if (!CONFIG_ID.test(requestedId)) {
     throw new ChatConfigAccessError('invalid_config', 'Invalid chatbot configuration', 400)
   }
 
-  let config: Config
+  let config: ChatbotConfig
   try {
-    config = (await loadConfig(requestedId)) as Config
+    config = (await loadConfig(requestedId)) as ChatbotConfig
   } catch {
     throw new ChatConfigAccessError('invalid_config', 'Invalid chatbot configuration', 400)
   }

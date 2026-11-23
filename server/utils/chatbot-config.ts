@@ -1,10 +1,4 @@
-import {
-  type ChatbotConfig,
-  DefaultChatbotConfig,
-  InternalChatbotConfig,
-  isDefaultChatbotConfig,
-  type User
-} from './_schema'
+import { ChatbotConfig, isDefaultChatbotConfig, type User } from './_schema'
 import {
   chatbotAgents,
   defaultChatbotReady,
@@ -43,8 +37,7 @@ export async function loadChatbotConfig(requestedId: string): Promise<ChatbotCon
   const root = id === 'default' ? defaultChatbotReady() : internalChatbot(id)
   if (!root)
     throw new ChatbotConfigError('config_not_found', 'Chatbot configuration not found', 404)
-  const schema = id === 'default' ? DefaultChatbotConfig : InternalChatbotConfig
-  const parsed = schema.safeParse(withoutInstructions(root))
+  const parsed = ChatbotConfig.safeParse(withoutInstructions(root))
   if (!parsed.success || parsed.data.id !== id) {
     throw new ChatbotConfigError('invalid_config', 'Invalid chatbot configuration', 400)
   }

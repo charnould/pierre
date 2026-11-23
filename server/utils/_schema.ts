@@ -30,15 +30,9 @@ const SharedChatbotFields = {
   disclaimer: chromeDisclaimer
 }
 
-export const InternalChatbotConfig = z.object(SharedChatbotFields).strict()
+export const ChatbotConfig = z.object(SharedChatbotFields).strict()
 
-export const DefaultChatbotConfig = InternalChatbotConfig
-
-export const ChatbotConfig = z.union([DefaultChatbotConfig, InternalChatbotConfig])
-
-export function isDefaultChatbotConfig(
-  config: ChatbotConfig
-): config is z.infer<typeof DefaultChatbotConfig> {
+export function isDefaultChatbotConfig(config: ChatbotConfig): boolean {
   return config.id === 'default'
 }
 
@@ -108,8 +102,5 @@ export const AIContext = z.object({
 //
 //
 export type User = z.infer<typeof User>
-export type DefaultChatbotConfig = z.infer<typeof DefaultChatbotConfig>
-export type InternalChatbotConfig = z.infer<typeof InternalChatbotConfig>
 export type ChatbotConfig = z.infer<typeof ChatbotConfig>
-export type Config = ChatbotConfig
 export type AIContext = z.infer<typeof AIContext>
